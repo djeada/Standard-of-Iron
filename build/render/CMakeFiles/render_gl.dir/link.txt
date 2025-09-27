@@ -1,2 +1,0 @@
-/usr/bin/ar qc librender_gl.a CMakeFiles/render_gl.dir/render_gl_autogen/mocs_compilation.cpp.o CMakeFiles/render_gl.dir/gl/shader.cpp.o CMakeFiles/render_gl.dir/gl/buffer.cpp.o CMakeFiles/render_gl.dir/gl/mesh.cpp.o CMakeFiles/render_gl.dir/gl/texture.cpp.o CMakeFiles/render_gl.dir/gl/renderer.cpp.o CMakeFiles/render_gl.dir/gl/camera.cpp.o
-/usr/bin/ranlib librender_gl.a
