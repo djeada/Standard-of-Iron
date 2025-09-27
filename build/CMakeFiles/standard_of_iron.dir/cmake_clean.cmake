@@ -1,0 +1,40 @@
+file(REMOVE_RECURSE
+  ".rcc/qmlcache/standard_of_iron_ui/qml/GameView_qml.cpp"
+  ".rcc/qmlcache/standard_of_iron_ui/qml/HUD_qml.cpp"
+  ".rcc/qmlcache/standard_of_iron_ui/qml/Main_qml.cpp"
+  ".rcc/qrc_qmake_StandardOfIron.cpp"
+  ".rcc/qrc_standard_of_iron_raw_qml_0.cpp"
+  "CMakeFiles/standard_of_iron.dir/link.d"
+  "CMakeFiles/standard_of_iron_autogen.dir/AutogenUsed.txt"
+  "CMakeFiles/standard_of_iron_autogen.dir/ParseCache.txt"
+  "standard_of_iron_autogen"
+  "CMakeFiles/standard_of_iron.dir/build/.rcc/qmlcache/standard_of_iron_qmlcache_loader.cpp.o"
+  "CMakeFiles/standard_of_iron.dir/build/.rcc/qmlcache/standard_of_iron_qmlcache_loader.cpp.o.d"
+  "CMakeFiles/standard_of_iron.dir/build/.rcc/qmlcache/standard_of_iron_ui/qml/GameView_qml.cpp.o"
+  "CMakeFiles/standard_of_iron.dir/build/.rcc/qmlcache/standard_of_iron_ui/qml/GameView_qml.cpp.o.d"
+  "CMakeFiles/standard_of_iron.dir/build/.rcc/qmlcache/standard_of_iron_ui/qml/HUD_qml.cpp.o"
+  "CMakeFiles/standard_of_iron.dir/build/.rcc/qmlcache/standard_of_iron_ui/qml/HUD_qml.cpp.o.d"
+  "CMakeFiles/standard_of_iron.dir/build/.rcc/qmlcache/standard_of_iron_ui/qml/Main_qml.cpp.o"
+  "CMakeFiles/standard_of_iron.dir/build/.rcc/qmlcache/standard_of_iron_ui/qml/Main_qml.cpp.o.d"
+  "CMakeFiles/standard_of_iron.dir/build/.rcc/qrc_qmake_StandardOfIron.cpp.o"
+  "CMakeFiles/standard_of_iron.dir/build/.rcc/qrc_qmake_StandardOfIron.cpp.o.d"
+  "CMakeFiles/standard_of_iron.dir/build/.rcc/qrc_standard_of_iron_raw_qml_0.cpp.o"
+  "CMakeFiles/standard_of_iron.dir/build/.rcc/qrc_standard_of_iron_raw_qml_0.cpp.o.d"
+  "CMakeFiles/standard_of_iron.dir/main.cpp.o"
+  "CMakeFiles/standard_of_iron.dir/main.cpp.o.d"
+  "CMakeFiles/standard_of_iron.dir/standard_of_iron_autogen/mocs_compilation.cpp.o"
+  "CMakeFiles/standard_of_iron.dir/standard_of_iron_autogen/mocs_compilation.cpp.o.d"
+  "CMakeFiles/standard_of_iron.dir/standard_of_iron_qmltyperegistrations.cpp.o"
+  "CMakeFiles/standard_of_iron.dir/standard_of_iron_qmltyperegistrations.cpp.o.d"
+  "StandardOfIron/standard_of_iron.qmltypes"
+  "meta_types/qt6standard_of_iron_metatypes.json"
+  "meta_types/qt6standard_of_iron_metatypes.json.gen"
+  "standard_of_iron"
+  "standard_of_iron.pdb"
+  "standard_of_iron_qmltyperegistrations.cpp"
+)
+
+# Per-language clean rules from dependency scanning.
+foreach(lang CXX)
+  include(CMakeFiles/standard_of_iron.dir/cmake_clean_${lang}.cmake OPTIONAL)
+endforeach()

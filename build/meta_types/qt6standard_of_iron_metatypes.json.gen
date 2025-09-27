@@ -1,0 +1,19 @@
+[
+    {
+        "classes": [
+            {
+                "className": "GameEngine",
+                "object": true,
+                "qualifiedClassName": "GameEngine",
+                "superClasses": [
+                    {
+                        "access": "public",
+                        "name": "QObject"
+                    }
+                ]
+            }
+        ],
+        "inputFile": "main.cpp",
+        "outputRevision": 68
+    }
+]

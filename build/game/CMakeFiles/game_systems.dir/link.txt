@@ -1,0 +1,2 @@
+/usr/bin/ar qc libgame_systems.a CMakeFiles/game_systems.dir/game_systems_autogen/mocs_compilation.cpp.o CMakeFiles/game_systems.dir/systems/movement_system.cpp.o CMakeFiles/game_systems.dir/systems/combat_system.cpp.o CMakeFiles/game_systems.dir/systems/ai_system.cpp.o CMakeFiles/game_systems.dir/systems/pathfinding.cpp.o CMakeFiles/game_systems.dir/systems/selection_system.cpp.o
+/usr/bin/ranlib libgame_systems.a
