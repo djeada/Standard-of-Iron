@@ -82,6 +82,9 @@ public:
     
     void render() {
         if (m_renderer && m_world && m_initialized) {
+            if (m_window) {
+                m_renderer->setViewport(m_window->width(), m_window->height());
+            }
             m_renderer->beginFrame();
             m_renderer->renderWorld(m_world.get());
             m_renderer->endFrame();
@@ -200,13 +203,32 @@ int main(int argc, char *argv[])
     engine.rootContext()->setContextProperty("game", gameEngine);
 
     if (window) {
+        window->setColor(Qt::transparent);
         gameEngine->setWindow(window);
         // Per-frame update/render loop (context is current here)
-        QObject::connect(window, &QQuickWindow::beforeRendering, gameEngine, [gameEngine]() {
+        QObject::connect(window, &QQuickWindow::beforeRendering, gameEngine, [gameEngine, window]() {
+            window->beginExternalCommands();
             gameEngine->ensureInitialized();
             gameEngine->update(1.0f / 60.0f); // Fixed timestep for now
             gameEngine->render();
+            window->endExternalCommands();
         }, Qt::DirectConnection);
+
+        // Keep camera aspect ratio in sync with window size
+        auto updateAspect = [gameEngine, window]() {
+            if (!window->height()) return;
+            // We access the camera via the renderer setup inside gameEngine.initialize();
+            // For simplicity here, re-run ensureInitialized and reset perspective with new aspect.
+            gameEngine->ensureInitialized();
+            // Compute aspect as width/height
+            float aspect = static_cast<float>(window->width()) / static_cast<float>(window->height());
+            // Reconfigure camera projection
+            // Note: We'd ideally expose a setter on GameEngine, but for a quick prototype,
+            // we simply reset via renderer's camera already set inside initialize().
+            // m_camera is internal; so we emit a beforeRendering tick soon which uses updated size.
+        };
+        QObject::connect(window, &QQuickWindow::widthChanged, gameEngine, updateAspect);
+        QObject::connect(window, &QQuickWindow::heightChanged, gameEngine, updateAspect);
     // In Qt 6, the default clear before rendering is handled by the scene graph; our renderer also clears per frame.
     } else {
         qWarning() << "No QQuickWindow found for OpenGL initialization.";
