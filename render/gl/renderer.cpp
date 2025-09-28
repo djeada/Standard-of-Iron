@@ -51,6 +51,9 @@ void Renderer::shutdown() {
 }
 
 void Renderer::beginFrame() {
+    if (m_viewportWidth > 0 && m_viewportHeight > 0) {
+        glViewport(0, 0, m_viewportWidth, m_viewportHeight);
+    }
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     m_renderQueue.clear();
 }
@@ -65,6 +68,11 @@ void Renderer::setCamera(Camera* camera) {
 
 void Renderer::setClearColor(float r, float g, float b, float a) {
     glClearColor(r, g, b, a);
+}
+
+void Renderer::setViewport(int width, int height) {
+    m_viewportWidth = width;
+    m_viewportHeight = height;
 }
 
 void Renderer::drawMesh(Mesh* mesh, const QMatrix4x4& modelMatrix, Texture* texture) {
