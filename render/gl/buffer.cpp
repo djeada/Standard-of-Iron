@@ -3,8 +3,7 @@
 namespace Render::GL {
 
 Buffer::Buffer(Type type) : m_type(type) {
-    initializeOpenGLFunctions();
-    glGenBuffers(1, &m_buffer);
+    // Do not call GL without a current context; creation will be deferred to first bind
 }
 
 Buffer::~Buffer() {
@@ -14,6 +13,10 @@ Buffer::~Buffer() {
 }
 
 void Buffer::bind() {
+    if (!m_buffer) {
+        initializeOpenGLFunctions();
+        glGenBuffers(1, &m_buffer);
+    }
     glBindBuffer(getGLType(), m_buffer);
 }
 
@@ -46,8 +49,7 @@ GLenum Buffer::getGLUsage(Usage usage) const {
 
 // VertexArray implementation
 VertexArray::VertexArray() {
-    initializeOpenGLFunctions();
-    glGenVertexArrays(1, &m_vao);
+    // Defer creation until first bind when a context is current
 }
 
 VertexArray::~VertexArray() {
@@ -57,6 +59,10 @@ VertexArray::~VertexArray() {
 }
 
 void VertexArray::bind() {
+    if (!m_vao) {
+        initializeOpenGLFunctions();
+        glGenVertexArrays(1, &m_vao);
+    }
     glBindVertexArray(m_vao);
 }
 

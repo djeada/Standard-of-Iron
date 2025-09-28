@@ -102,7 +102,7 @@ private:
 int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
-    
+
     // Set up OpenGL 3.3 Core Profile
     QSurfaceFormat format;
     format.setVersion(3, 3);
@@ -111,45 +111,59 @@ int main(int argc, char *argv[])
     format.setStencilBufferSize(8);
     format.setSamples(4); // 4x MSAA
     QSurfaceFormat::setDefaultFormat(format);
-    
-    // Verify OpenGL context
-    QOpenGLContext context;
-    if (!context.create()) {
-        qFatal("Cannot create OpenGL context");
-    }
-    
-    qDebug() << "OpenGL Version:" << format.majorVersion() << "." << format.minorVersion();
-    qDebug() << "OpenGL Profile:" << (format.profile() == QSurfaceFormat::CoreProfile ? "Core" : "Compatibility");
-    
-    // Initialize game engine
-    GameEngine gameEngine;
-    gameEngine.initialize();
-    
+
     // Set up QML engine
     QQmlApplicationEngine engine;
-    
+
     // Register C++ types with QML if needed
     // qmlRegisterType<GameEngine>("StandardOfIron", 1, 0, "GameEngine");
-    
+
     const QUrl url(QStringLiteral("qrc:/ui/qml/Main.qml"));
-    
+
     QObject::connect(&engine, &QQmlApplicationEngine::objectCreated,
         &app, [url](QObject *obj, const QUrl &objUrl) {
             if (!obj && url == objUrl)
                 QCoreApplication::exit(-1);
         }, Qt::QueuedConnection);
-    
+
     // Load QML
     engine.load(url);
-    
+
     if (engine.rootObjects().isEmpty()) {
         qWarning() << "Failed to load QML file";
         return -1;
     }
-    
+
     qDebug() << "Application started successfully";
     qDebug() << "Assets directory:" << QDir::currentPath() + "/assets";
-    
+
+    // Get the QQuickWindow from the loaded QML
+    QObject* rootObj = engine.rootObjects().first();
+    QQuickWindow* window = qobject_cast<QQuickWindow*>(rootObj);
+    if (!window) {
+        // Try to find a QQuickWindow child
+        window = rootObj->findChild<QQuickWindow*>();
+    }
+
+    static GameEngine gameEngine;
+
+    if (window) {
+        // Connect to sceneGraphInitialized to safely initialize OpenGL resources
+        QObject::connect(window, &QQuickWindow::sceneGraphInitialized, &gameEngine, [&gameEngine]() {
+            gameEngine.initialize();
+            qDebug() << "Game engine initialized after scene graph.";
+        }, Qt::DirectConnection);
+
+        // Per-frame update/render loop
+        QObject::connect(window, &QQuickWindow::beforeRendering, &gameEngine, [&gameEngine]() {
+            gameEngine.update(1.0f / 60.0f); // Fixed timestep for now
+            gameEngine.render();
+        }, Qt::DirectConnection);
+        window->setClearBeforeRendering(false); // Let our renderer handle clearing
+    } else {
+        qWarning() << "No QQuickWindow found for OpenGL initialization.";
+    }
+
     return app.exec();
 }
 
