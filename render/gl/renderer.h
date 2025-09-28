@@ -38,6 +38,7 @@ public:
     
     // Immediate mode rendering
     void drawMesh(Mesh* mesh, const QMatrix4x4& modelMatrix, Texture* texture = nullptr);
+    void drawMeshColored(Mesh* mesh, const QMatrix4x4& modelMatrix, const QVector3D& color, Texture* texture = nullptr);
     void drawLine(const QVector3D& start, const QVector3D& end, const QVector3D& color);
     
     // Batch rendering
@@ -57,6 +58,7 @@ private:
     
     // Default resources
     std::unique_ptr<Mesh> m_quadMesh;
+    std::unique_ptr<Mesh> m_groundMesh;
     std::unique_ptr<Texture> m_whiteTexture;
     
     bool loadShaders();

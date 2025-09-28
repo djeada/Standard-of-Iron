@@ -3,6 +3,7 @@ import QtQuick.Controls 2.15
 
 Item {
     id: gameView
+    objectName: "GameView"
     
     property bool isPaused: false
     property real gameSpeed: 1.0
@@ -25,10 +26,10 @@ Item {
     }
     
     // OpenGL rendering area
-    Rectangle {
+        Rectangle {
         id: renderArea
         anchors.fill: parent
-        color: "#2c3e50"
+            color: "transparent"
         
         // This will be replaced by actual OpenGL rendering
         Text {
@@ -135,6 +136,9 @@ Item {
                     } else {
                         // Point selection
                         mapClicked(mouse.x, mouse.y)
+                        if (typeof game !== 'undefined' && game.onMapClicked) {
+                            game.onMapClicked(mouse.x, mouse.y)
+                        }
                     }
                 }
             }
