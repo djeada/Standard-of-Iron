@@ -44,10 +44,15 @@ need_cmd() {
 
 semver_ge() {
   # returns 0 if $1 >= $2
-  local a b
-  a=$(printf '%s' "$1" | awk -F. '{printf("%d.%d.%d", $1,$2,$3?$3:0)}')
-  b=$(printf '%s' "$2" | awk -F. '{printf("%d.%d.%d", $1,$2,$3?$3:0)}')
-  [ "$(printf '%s\n%s\n' "$b" "$a" | sort -V | tail -n1)" = "$a" ]
+  local IFS=. a1 a2 a3 b1 b2 b3
+  set -- $1; a1=${1:-0}; a2=${2:-0}; a3=${3:-0}
+  set -- $2; b1=${1:-0}; b2=${2:-0}; b3=${3:-0}
+  if [ "$a1" -gt "$b1" ]; then return 0; fi
+  if [ "$a1" -lt "$b1" ]; then return 1; fi
+  if [ "$a2" -gt "$b2" ]; then return 0; fi
+  if [ "$a2" -lt "$b2" ]; then return 1; fi
+  if [ "$a3" -ge "$b3" ]; then return 0; fi
+  return 1
 }
 
 detect_distro() {
