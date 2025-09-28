@@ -2,12 +2,13 @@
 #include "../../engine/core/world.h"
 #include "../../engine/core/component.h"
 #include <QDebug>
+#include <QOpenGLContext>
 #include <algorithm>
 
 namespace Render::GL {
 
 Renderer::Renderer() {
-    initializeOpenGLFunctions();
+    // Defer OpenGL function initialization until a valid context is current
 }
 
 Renderer::~Renderer() {
@@ -15,6 +16,13 @@ Renderer::~Renderer() {
 }
 
 bool Renderer::initialize() {
+    // Ensure an OpenGL context is current before using any GL calls
+    if (!QOpenGLContext::currentContext()) {
+        qWarning() << "Renderer::initialize called without a current OpenGL context";
+        return false;
+    }
+
+    initializeOpenGLFunctions();
     // Enable depth testing
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
@@ -214,13 +222,14 @@ bool Renderer::loadShaders() {
 
 void Renderer::createDefaultResources() {
     m_quadMesh = std::unique_ptr<Mesh>(createQuadMesh());
-    
+
     m_whiteTexture = std::make_unique<Texture>();
     m_whiteTexture->createEmpty(1, 1, Texture::Format::RGBA);
-    
+
     // Fill with white color
     unsigned char whitePixel[4] = {255, 255, 255, 255};
     m_whiteTexture->bind();
+    initializeOpenGLFunctions();
     glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, whitePixel);
 }
 
