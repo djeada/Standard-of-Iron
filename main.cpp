@@ -5,6 +5,7 @@
 #include <QDebug>
 #include <QDir>
 #include <QQuickWindow>
+#include <QQmlContext>
 
 #include "engine/core/world.h"
 #include "engine/core/component.h"
@@ -34,6 +35,22 @@ public:
         
         setupTestScene();
     }
+    Q_INVOKABLE void onMapClicked(qreal sx, qreal sy) {
+        if (!m_window) return;
+        ensureInitialized();
+        // Convert screen coords to world point on ground (y = 0)
+        QVector3D hit;
+        if (!screenToGround(QPointF(sx, sy), hit)) return;
+        // Move our unit to that point
+        if (auto* entity = m_world->getEntity(m_playerUnitId)) {
+            if (auto* move = entity->getComponent<Engine::Core::MovementComponent>()) {
+                move->targetX = hit.x();
+                move->targetY = hit.z();
+                move->hasTarget = true;
+            }
+        }
+    }
+    void setWindow(QQuickWindow* w) { m_window = w; }
     
     void initialize() {
         if (!m_renderer->initialize()) {
@@ -73,38 +90,70 @@ public:
 
 private:
     void setupTestScene() {
-        // Create some test units
-        for (int i = 0; i < 5; ++i) {
-            auto entity = m_world->createEntity();
-            
-            // Add transform component
-            auto transform = entity->addComponent<Engine::Core::TransformComponent>();
-            transform->position.x = i * 2.0f;
-            transform->position.y = 0.0f;
-            transform->position.z = 0.0f;
-            
-            // Add renderable component
-            auto renderable = entity->addComponent<Engine::Core::RenderableComponent>("", "");
-            renderable->visible = true;
-            
-            // Add unit component
-            auto unit = entity->addComponent<Engine::Core::UnitComponent>();
-            unit->unitType = "warrior";
-            unit->health = 100;
-            unit->maxHealth = 100;
-            unit->speed = 2.0f;
-            
-            // Add movement component
-            entity->addComponent<Engine::Core::MovementComponent>();
-        }
-        
-        qDebug() << "Test scene created with 5 units";
+        // Create a single archer unit at origin
+        auto entity = m_world->createEntity();
+        m_playerUnitId = entity->getId();
+
+        auto transform = entity->addComponent<Engine::Core::TransformComponent>();
+        transform->position = {0.0f, 0.0f, 0.0f};
+        transform->scale = {0.5f, 0.5f, 0.5f}; // smaller quad as a unit
+
+    auto renderable = entity->addComponent<Engine::Core::RenderableComponent>("", "");
+        renderable->visible = true;
+
+        auto unit = entity->addComponent<Engine::Core::UnitComponent>();
+        unit->unitType = "archer";
+        unit->health = 80;
+        unit->maxHealth = 80;
+        unit->speed = 3.0f;
+
+        entity->addComponent<Engine::Core::MovementComponent>();
+
+    // Rotate unit quad to lie on the ground (XZ plane)
+    transform->rotation.x = -90.0f;
+
+        qDebug() << "Test scene created with 1 archer (entity" << m_playerUnitId << ")";
+    }
+
+    bool screenToGround(const QPointF& screenPt, QVector3D& outWorld) {
+        if (!m_window || !m_camera) return false;
+        // Viewport
+        float w = static_cast<float>(m_window->width());
+        float h = static_cast<float>(m_window->height());
+        if (w <= 0 || h <= 0) return false;
+
+        // Convert to Normalized Device Coordinates
+        float x = (2.0f * static_cast<float>(screenPt.x()) / w) - 1.0f;
+        float y = 1.0f - (2.0f * static_cast<float>(screenPt.y()) / h);
+
+    bool ok = false;
+    QMatrix4x4 invVP = (m_camera->getProjectionMatrix() * m_camera->getViewMatrix()).inverted(&ok);
+    if (!ok) return false;
+
+        // Ray from near to far in world space
+        QVector4D nearClip(x, y, 0.0f, 1.0f);
+        QVector4D farClip(x, y, 1.0f, 1.0f);
+        QVector4D nearWorld4 = invVP * nearClip;
+        QVector4D farWorld4 = invVP * farClip;
+        if (nearWorld4.w() == 0.0f || farWorld4.w() == 0.0f) return false;
+        QVector3D rayOrigin = (nearWorld4 / nearWorld4.w()).toVector3D();
+        QVector3D rayEnd = (farWorld4 / farWorld4.w()).toVector3D();
+        QVector3D rayDir = (rayEnd - rayOrigin).normalized();
+
+        // Intersect with plane y=0
+        if (qFuzzyIsNull(rayDir.y())) return false; // parallel
+        float t = -rayOrigin.y() / rayDir.y();
+        if (t < 0.0f) return false; // behind camera
+        outWorld = rayOrigin + rayDir * t;
+        return true;
     }
 
     std::unique_ptr<Engine::Core::World> m_world;
     std::unique_ptr<Render::GL::Renderer> m_renderer;
     std::unique_ptr<Render::GL::Camera> m_camera;
     std::unique_ptr<Game::Systems::SelectionSystem> m_selectionSystem;
+    QQuickWindow* m_window = nullptr;
+    Engine::Core::EntityID m_playerUnitId = 0;
     bool m_initialized = false;
 };
 
@@ -147,8 +196,11 @@ int main(int argc, char *argv[])
     }
 
     auto gameEngine = new GameEngine();
+    // Expose to QML
+    engine.rootContext()->setContextProperty("game", gameEngine);
 
     if (window) {
+        gameEngine->setWindow(window);
         // Per-frame update/render loop (context is current here)
         QObject::connect(window, &QQuickWindow::beforeRendering, gameEngine, [gameEngine]() {
             gameEngine->ensureInitialized();

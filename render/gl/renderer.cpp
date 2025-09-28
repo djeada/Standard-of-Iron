@@ -97,6 +97,28 @@ void Renderer::drawMesh(Mesh* mesh, const QMatrix4x4& modelMatrix, Texture* text
     m_basicShader->release();
 }
 
+void Renderer::drawMeshColored(Mesh* mesh, const QMatrix4x4& modelMatrix, const QVector3D& color, Texture* texture) {
+    if (!mesh || !m_basicShader || !m_camera) {
+        return;
+    }
+    m_basicShader->use();
+    m_basicShader->setUniform("u_model", modelMatrix);
+    m_basicShader->setUniform("u_view", m_camera->getViewMatrix());
+    m_basicShader->setUniform("u_projection", m_camera->getProjectionMatrix());
+    if (texture) {
+        texture->bind(0);
+        m_basicShader->setUniform("u_texture", 0);
+        m_basicShader->setUniform("u_useTexture", true);
+    } else {
+        m_whiteTexture->bind(0);
+        m_basicShader->setUniform("u_texture", 0);
+        m_basicShader->setUniform("u_useTexture", false);
+    }
+    m_basicShader->setUniform("u_color", color);
+    mesh->draw();
+    m_basicShader->release();
+}
+
 void Renderer::drawLine(const QVector3D& start, const QVector3D& end, const QVector3D& color) {
     // Simple line drawing implementation
     // In a full implementation, you'd want a proper line renderer
@@ -114,7 +136,7 @@ void Renderer::flushBatch() {
     sortRenderQueue();
     
     for (const auto& command : m_renderQueue) {
-        drawMesh(command.mesh, command.modelMatrix, command.texture);
+        drawMeshColored(command.mesh, command.modelMatrix, command.color, command.texture);
     }
     
     m_renderQueue.clear();
@@ -123,6 +145,13 @@ void Renderer::flushBatch() {
 void Renderer::renderWorld(Engine::Core::World* world) {
     if (!world) {
         return;
+    }
+    // Draw ground plane first
+    if (m_groundMesh) {
+        QMatrix4x4 groundModel;
+        groundModel.translate(0.0f, 0.0f, 0.0f);
+        groundModel.scale(50.0f, 1.0f, 50.0f);
+        drawMeshColored(m_groundMesh.get(), groundModel, QVector3D(0.15f, 0.2f, 0.15f));
     }
     
     // Get all entities with both transform and renderable components
@@ -151,6 +180,8 @@ void Renderer::renderWorld(Engine::Core::World* world) {
         command.mesh = m_quadMesh.get(); // Default mesh for now
         command.texture = m_whiteTexture.get();
         
+        // Slight color tint for units
+        command.color = QVector3D(0.8f, 0.9f, 1.0f);
         submitRenderCommand(command);
     }
 }
@@ -222,6 +253,7 @@ bool Renderer::loadShaders() {
 
 void Renderer::createDefaultResources() {
     m_quadMesh = std::unique_ptr<Mesh>(createQuadMesh());
+    m_groundMesh = std::unique_ptr<Mesh>(createPlaneMesh(1.0f, 1.0f, 1));
 
     m_whiteTexture = std::make_unique<Texture>();
     m_whiteTexture->createEmpty(1, 1, Texture::Format::RGBA);
