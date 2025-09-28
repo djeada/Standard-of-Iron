@@ -31,14 +31,14 @@ Item {
         anchors.fill: parent
             color: "transparent"
         
-        // This will be replaced by actual OpenGL rendering
-        Text {
-            anchors.centerIn: parent
-            text: "3D Game World\n(OpenGL Render Area)\n\nPress WASD to move camera\nMouse to look around\nScroll to zoom"
-            color: "white"
-            font.pointSize: 16
-            horizontalAlignment: Text.AlignHCenter
-        }
+        // Placeholder text (disabled by default to not cover GL)
+        // Text {
+        //     anchors.centerIn: parent
+        //     text: "3D Game World\n(OpenGL Render Area)\n\nPress WASD to move camera\nMouse to look around\nScroll to zoom"
+        //     color: "white"
+        //     font.pointSize: 16
+        //     horizontalAlignment: Text.AlignHCenter
+        // }
         
         // Camera controls info
         Rectangle {
