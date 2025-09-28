@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Standard-of-Iron — dependency checker and auto-installer (Ubuntu/Debian)
+# Standard-of-Iron — dependency checker and auto-installer (Debian/Ubuntu family)
 #
 # Verifies required toolchain and Qt/QML runtime modules and installs any missing ones.
 # Safe to run multiple times. Requires sudo privileges for installation.
@@ -10,6 +10,7 @@
 #   ./scripts/setup-deps.sh --yes         # non-interactive (assume yes)
 #   ./scripts/setup-deps.sh --dry-run     # show actions without installing
 #   ./scripts/setup-deps.sh --no-install  # only verify, do not install
+#   ./scripts/setup-deps.sh --allow-similar  # allow proceeding on similar distros
 #
 set -euo pipefail
 
@@ -19,12 +20,14 @@ MIN_GXX="10.0.0"
 ASSUME_YES=false
 DRY_RUN=false
 NO_INSTALL=false
+ALLOW_SIMILAR=false
 
 for arg in "$@"; do
   case "$arg" in
     -y|--yes) ASSUME_YES=true ;;
     --dry-run) DRY_RUN=true ;;
     --no-install) NO_INSTALL=true ;;
+    --allow-similar) ALLOW_SIMILAR=true ;;
     -h|--help)
       grep '^#' "$0" | sed -e 's/^# \{0,1\}//'
       exit 0
@@ -55,13 +58,53 @@ semver_ge() {
   return 1
 }
 
-detect_distro() {
+read_os_release() {
+  # shellcheck disable=SC1091
   if [ -f /etc/os-release ]; then
     . /etc/os-release
-    echo "$ID"
+    echo "ID=${ID:-unknown}"
+    echo "ID_LIKE=${ID_LIKE:-}"
+    echo "PRETTY_NAME=${PRETTY_NAME:-}"
   else
-    echo "unknown"
+    echo "ID=unknown"
+    echo "ID_LIKE="
+    echo "PRETTY_NAME="
   fi
+}
+
+has_apt() { command -v apt-get >/dev/null 2>&1; }
+
+is_deb_family_exact() {
+  case "$1" in
+    ubuntu|debian) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+is_deb_family_like() {
+  # $1: ID_LIKE string
+  case " $1 " in
+    *" debian "*|*" ubuntu "*) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+detect_distro() {
+  local id like pretty
+  while IFS='=' read -r k v; do
+    case "$k" in
+      ID) id=${v} ;;
+      ID_LIKE) like=${v} ;;
+      PRETTY_NAME) pretty=${v} ;;
+    esac
+  done < <(read_os_release)
+
+  # strip quotes if present
+  id=${id%"}; id=${id#"}
+  like=${like%"}; like=${like#"}
+  pretty=${pretty%"}; pretty=${pretty#"}
+
+  echo "$id" "$like" "$pretty"
 }
 
 APT_PKGS=(
@@ -155,18 +198,43 @@ check_qt_runtime() {
 }
 
 main() {
-  local distro
-  distro=$(detect_distro)
-  case "$distro" in
-    ubuntu|debian)
-      info "Detected Debian/Ubuntu-based system ($distro)"
-      ;;
-    *)
-      warn "Unsupported distro '$distro'. This script currently targets Debian/Ubuntu (apt)."
-      warn "Please install equivalent packages manually: ${APT_PKGS[*]}"
+  local id like pretty
+  read -r id like pretty < <(detect_distro)
+
+  info "Detected system: ${pretty:-$id} (ID=$id; ID_LIKE='${like:-}')."
+
+  if is_deb_family_exact "$id"; then
+    info "Exact Debian/Ubuntu family detected ($id)."
+  elif is_deb_family_like "$like" && has_apt; then
+    warn "No exact match, but this system is *similar* to Debian/Ubuntu and has apt-get."
+    if $ALLOW_SIMILAR || $ASSUME_YES; then
+      info "Proceeding with Debian/Ubuntu-compatible steps due to --allow-similar/--yes."
+    else
+      echo
+      read -r -p "Proceed using Debian/Ubuntu package set on this similar distro? [Y/n] " ans
+      case "${ans:-Y}" in
+        y|Y) info "Continuing with Debian/Ubuntu-compatible steps." ;;
+        *) err "User declined proceeding on a similar distro."; exit 1 ;;
+      esac
+    fi
+  else
+    warn "Unsupported distro '$id'. This script targets apt-based Debian/Ubuntu family."
+    if has_apt; then
+      warn "apt-get is present, but ID/ID_LIKE do not indicate Debian/Ubuntu."
+      if $ALLOW_SIMILAR || $ASSUME_YES; then
+        info "Proceeding anyway due to --allow-similar/--yes."
+      else
+        read -r -p "Proceed anyway using apt? (may or may not work) [y/N] " ans
+        case "${ans:-N}" in
+          y|Y) info "Continuing with apt-based steps." ;;
+          *) err "Exiting to avoid misconfiguration. Use --allow-similar to override."; exit 1 ;;
+        esac
+      fi
+    else
+      err "No apt-get found and distro is not Debian/Ubuntu-like. Please install equivalent packages manually: ${APT_PKGS[*]}"
       exit 1
-      ;;
-  esac
+    fi
+  fi
 
   check_tool_versions
   check_qt_runtime
