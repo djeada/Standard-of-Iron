@@ -5,8 +5,7 @@
 namespace Render::GL {
 
 Texture::Texture() {
-    initializeOpenGLFunctions();
-    glGenTextures(1, &m_texture);
+    // Defer creation until first bind when a context is current
 }
 
 Texture::~Texture() {
@@ -16,6 +15,7 @@ Texture::~Texture() {
 }
 
 bool Texture::loadFromFile(const QString& path) {
+    initializeOpenGLFunctions();
     QImage image;
     if (!image.load(path)) {
         qWarning() << "Failed to load texture:" << path;
@@ -46,6 +46,7 @@ bool Texture::loadFromFile(const QString& path) {
 }
 
 bool Texture::createEmpty(int width, int height, Format format) {
+    initializeOpenGLFunctions();
     m_width = width;
     m_height = height;
     m_format = format;
@@ -73,11 +74,16 @@ bool Texture::createEmpty(int width, int height, Format format) {
 }
 
 void Texture::bind(int unit) {
+    initializeOpenGLFunctions();
+    if (!m_texture) {
+        glGenTextures(1, &m_texture);
+    }
     glActiveTexture(GL_TEXTURE0 + unit);
     glBindTexture(GL_TEXTURE_2D, m_texture);
 }
 
 void Texture::unbind() {
+    initializeOpenGLFunctions();
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
