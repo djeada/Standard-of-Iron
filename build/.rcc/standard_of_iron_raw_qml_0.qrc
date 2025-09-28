@@ -1,0 +1,11 @@
+<RCC>
+  <qresource prefix="/StandardOfIron/">
+    <file alias="ui/qml/Main.qml">/home/runner/work/Standard-of-Iron/Standard-of-Iron/ui/qml/Main.qml</file>
+    <file alias="ui/qml/HUD.qml">/home/runner/work/Standard-of-Iron/Standard-of-Iron/ui/qml/HUD.qml</file>
+    <file alias="ui/qml/GameView.qml">/home/runner/work/Standard-of-Iron/Standard-of-Iron/ui/qml/GameView.qml</file>
+    <file alias="assets/shaders/basic.vert">/home/runner/work/Standard-of-Iron/Standard-of-Iron/assets/shaders/basic.vert</file>
+    <file alias="assets/shaders/basic.frag">/home/runner/work/Standard-of-Iron/Standard-of-Iron/assets/shaders/basic.frag</file>
+    <file alias="assets/maps/test_map.txt">/home/runner/work/Standard-of-Iron/Standard-of-Iron/assets/maps/test_map.txt</file>
+  </qresource>
+</RCC>
+
