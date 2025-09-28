@@ -9,16 +9,19 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 # ---- Qt ----
-find_package(Qt6 REQUIRED COMPONENTS
-    Core
-    Widgets
-    OpenGL
-    Quick
-    Qml
-    QuickControls2
-)
-
-find_package(OpenGL REQUIRED)
+# Try Qt6 first, fall back to Qt5 if not available
+find_package(Qt6 QUIET COMPONENTS Core Widgets OpenGL Quick Qml QuickControls2)
+if(Qt6_FOUND)
+    message(STATUS "Using Qt6")
+    set(QT_VERSION_MAJOR 6)
+    find_package(OpenGL REQUIRED)
+else()
+    message(STATUS "Qt6 not found, trying Qt5")
+    find_package(Qt5 REQUIRED COMPONENTS Core Widgets OpenGL Quick Qml QuickControls2)
+    message(STATUS "Using Qt5")
+    set(QT_VERSION_MAJOR 5)
+    find_package(OpenGL REQUIRED)
+endif()
 
 if(COMMAND qt_standard_project_setup)
   qt_standard_project_setup()
@@ -35,39 +38,63 @@ add_subdirectory(ui)
 add_subdirectory(tools)
 
 # ---- Executable ----
-qt6_add_executable(standard_of_iron
-    main.cpp
-)
+if(QT_VERSION_MAJOR EQUAL 6)
+    qt6_add_executable(standard_of_iron main.cpp)
+else()
+    add_executable(standard_of_iron main.cpp)
+endif()
 
 # ---- QML module ----
-qt6_add_qml_module(standard_of_iron
-    URI StandardOfIron
-    VERSION 1.0
-    QML_FILES
-        ui/qml/Main.qml
-        ui/qml/HUD.qml
-        ui/qml/GameView.qml
-    RESOURCES
-        assets/shaders/basic.vert
-        assets/shaders/basic.frag
-        assets/maps/test_map.txt
-    DEPENDENCIES
-        Qt6::QuickControls2
-)
+if(QT_VERSION_MAJOR EQUAL 6)
+    qt6_add_qml_module(standard_of_iron
+        URI StandardOfIron
+        VERSION 1.0
+        QML_FILES
+            ui/qml/Main.qml
+            ui/qml/HUD.qml
+            ui/qml/GameView.qml
+        RESOURCES
+            assets/shaders/basic.vert
+            assets/shaders/basic.frag
+            assets/maps/test_map.txt
+        DEPENDENCIES
+            Qt6::QuickControls2
+    )
+else()
+    qt5_add_resources(standard_of_iron "qml_resources"
+        PREFIX "/StandardOfIron"
+        FILES
+            ui/qml/Main.qml
+            ui/qml/HUD.qml
+            ui/qml/GameView.qml
+    )
+    qt5_add_resources(standard_of_iron "assets" 
+        PREFIX "/"
+        FILES
+            assets/shaders/basic.vert
+            assets/shaders/basic.frag
+            assets/maps/test_map.txt
+    )
+endif()
 
 target_link_libraries(standard_of_iron
     PRIVATE
-        Qt6::Core
-        Qt6::Widgets
-        Qt6::OpenGL
-        Qt6::Quick
-        Qt6::Qml
-        Qt6::QuickControls2
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::OpenGL
+        Qt${QT_VERSION_MAJOR}::Quick
+        Qt${QT_VERSION_MAJOR}::Qml
         ${OPENGL_LIBRARIES}
         engine_core
         render_gl
         game_systems
 )
+
+if(QT_VERSION_MAJOR EQUAL 6)
+    target_link_libraries(standard_of_iron PRIVATE Qt6::QuickControls2)
+else()
+    target_link_libraries(standard_of_iron PRIVATE Qt5::QuickControls2)
+endif()
 
 # Copy assets next to the binary for dev runs
 file(COPY assets/ DESTINATION ${CMAKE_BINARY_DIR}/assets/)
