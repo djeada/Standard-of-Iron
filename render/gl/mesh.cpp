@@ -5,13 +5,13 @@ namespace Render::GL {
 
 Mesh::Mesh(const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices)
     : m_vertices(vertices), m_indices(indices) {
-    initializeOpenGLFunctions();
-    setupBuffers();
+    // Defer GL buffer setup until a context is current; will be created on first draw
 }
 
 Mesh::~Mesh() = default;
 
 void Mesh::setupBuffers() {
+    initializeOpenGLFunctions();
     m_vao = std::make_unique<VertexArray>();
     m_vbo = std::make_unique<Buffer>(Buffer::Type::Vertex);
     m_ebo = std::make_unique<Buffer>(Buffer::Type::Index);
@@ -33,10 +33,14 @@ void Mesh::setupBuffers() {
 }
 
 void Mesh::draw() {
+    if (!m_vao) {
+        setupBuffers();
+    }
     m_vao->bind();
     
     // Draw elements
-    glDrawElements(GL_TRIANGLES, m_indices.size(), GL_UNSIGNED_INT, nullptr);
+    initializeOpenGLFunctions();
+    glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(m_indices.size()), GL_UNSIGNED_INT, nullptr);
     
     m_vao->unbind();
 }
