@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-set -euo pipefail
 
 # Standard-of-Iron — dependency checker and auto-installer (Debian/Ubuntu family)
 #
@@ -12,6 +11,8 @@ set -euo pipefail
 #   ./scripts/setup-deps.sh --dry-run     # show actions without installing
 #   ./scripts/setup-deps.sh --no-install  # only verify, do not install
 #   ./scripts/setup-deps.sh --allow-similar  # allow proceeding on similar distros
+#
+set -euo pipefail
 
 MIN_CMAKE="3.21.0"
 MIN_GXX="10.0.0"
@@ -41,7 +42,10 @@ warn()  { echo -e "\033[1;33m[!]\033[0m $*"; }
 err()   { echo -e "\033[1;31m[x]\033[0m $*"; }
 
 need_cmd() {
-  command -v "$1" >/dev/null 2>&1 || { err "Required command '$1' not found"; return 1; }
+  if ! command -v "$1" >/dev/null 2>&1; then
+    err "Required command '$1' not found"
+    return 1
+  fi
 }
 
 semver_ge() {
@@ -106,24 +110,61 @@ detect_distro() {
   echo "$id" "$like" "$pretty"
 }
 
+# Base toolchain and common libs
 APT_PKGS=(
   build-essential
   cmake
   git
   pkg-config
   libgl1-mesa-dev
-  # Qt 6 development
+)
+
+# Qt6 development headers/tools (filtered for availability later)
+QT6_DEV_PKGS=(
   qt6-base-dev
+  qt6-base-dev-tools
   qt6-declarative-dev
   qt6-tools-dev
-  # QML runtime modules used by the app
+  qt6-tools-dev-tools
+  qt6-quickcontrols2-dev
+)
+
+# Qt6 QML runtime modules (filtered for availability)
+QT6_QML_RUN_PKGS=(
+  qml6-module-qtqml
+  qml6-module-qtqml-workerscript
   qml6-module-qtquick
-  qml6-module-qtquick-controls
   qml6-module-qtquick-window
   qml6-module-qtquick-layouts
   qml6-module-qtquick-templates
-  qml6-module-qtqml-workerscript
+  qml6-module-qtquick-controls
+  qml6-module-qt-labs-platform
 )
+
+# Fallback Qt5 QML runtime modules (only installed if present in repos)
+QT5_QML_RUN_PKGS=(
+  qml-module-qtqml
+  qml-module-qtqml-workerscript
+  qml-module-qtquick2
+  qml-module-qtquick-window2
+  qml-module-qtquick-layouts
+  qml-module-qtquick-templates2
+  qml-module-qtquick-controls
+)
+
+apt_pkg_available() {
+  apt-cache show "$1" >/dev/null 2>&1
+}
+
+filter_available_pkgs() {
+  local out=() p
+  for p in "$@"; do
+    if apt_pkg_available "$p"; then
+      out+=("$p")
+    fi
+  done
+  printf '%s\n' "${out[@]}"
+}
 
 check_tool_versions() {
   info "Checking toolchain versions"
@@ -165,6 +206,9 @@ apt_update_once() {
 apt_install() {
   local to_install=()
   for pkg in "$@"; do
+    if [ -z "${pkg:-}" ]; then
+      continue
+    fi
     if dpkg_installed "$pkg"; then
       ok "$pkg already installed"
     else
@@ -192,8 +236,20 @@ apt_install() {
 }
 
 check_qt_runtime() {
-  info "Checking Qt/QML runtime modules"
+  info "Installing base toolchain"
   apt_install "${APT_PKGS[@]}"
+
+  info "Installing Qt6 SDK/dev packages"
+  mapfile -t _qt6dev < <(filter_available_pkgs "${QT6_DEV_PKGS[@]}")
+  apt_install "${_qt6dev[@]}"
+
+  info "Installing Qt6 QML runtime modules"
+  mapfile -t _qt6qml < <(filter_available_pkgs "${QT6_QML_RUN_PKGS[@]}")
+  apt_install "${_qt6qml[@]}"
+
+  info "Installing Qt5 QML runtime modules (fallback, if available)"
+  mapfile -t _qt5qml < <(filter_available_pkgs "${QT5_QML_RUN_PKGS[@]}")
+  apt_install "${_qt5qml[@]}"
 }
 
 main() {
@@ -204,7 +260,7 @@ main() {
 
   if is_deb_family_exact "$id"; then
     info "Exact Debian/Ubuntu family detected ($id)."
-  elif is_deb_family_like "$like" && has_apt; then
+  elif is_deb_family_like "${like:-}" && has_apt; then
     warn "No exact match, but this system is *similar* to Debian/Ubuntu and has apt-get."
     if $ALLOW_SIMILAR || $ASSUME_YES; then
       info "Proceeding with Debian/Ubuntu-compatible steps due to --allow-similar/--yes."
@@ -230,7 +286,8 @@ main() {
         esac
       fi
     else
-      err "No apt-get found and distro is not Debian/Ubuntu-like. Please install equivalent packages manually: ${APT_PKGS[*]}"
+      err "No apt-get found and distro is not Debian/Ubuntu-like. Please install equivalent packages manually:
+${APT_PKGS[*]} ${QT6_DEV_PKGS[*]} ${QT6_QML_RUN_PKGS[*]}"
       exit 1
     fi
   fi
@@ -242,7 +299,7 @@ main() {
   ok "All required dependencies are present (or have been installed)."
   echo "- cmake >= $MIN_CMAKE"
   echo "- g++   >= $MIN_GXX"
-  echo "- Qt 6 base + declarative + tools + QML runtime modules"
+  echo "- Qt 6 base + declarative + tools + QML runtime modules (Qt5 QML fallback if available)"
 }
 
 main "$@"
