@@ -126,30 +126,28 @@ QT6_DEV_PKGS=(
   qt6-declarative-dev
   qt6-tools-dev
   qt6-tools-dev-tools
-  qt6-quickcontrols2-dev
 )
 
 # Qt6 QML runtime modules (filtered for availability)
 QT6_QML_RUN_PKGS=(
   qml6-module-qtqml
-  qml6-module-qtqml-workerscript
   qml6-module-qtquick
   qml6-module-qtquick-window
   qml6-module-qtquick-layouts
-  qml6-module-qtquick-templates
   qml6-module-qtquick-controls
-  qml6-module-qt-labs-platform
+  qml6-module-qtqml-workerscript
+  qml6-module-qtquick-templates
 )
 
-# Fallback Qt5 QML runtime modules (only installed if present in repos)
+# Fallback Qt5 QML runtime modules (only installed if present in repos)  
 QT5_QML_RUN_PKGS=(
   qml-module-qtqml
-  qml-module-qtqml-workerscript
   qml-module-qtquick2
   qml-module-qtquick-window2
   qml-module-qtquick-layouts
-  qml-module-qtquick-templates2
-  qml-module-qtquick-controls
+  qml-module-qtquick-controls2
+  qtbase5-dev
+  qtdeclarative5-dev
 )
 
 apt_pkg_available() {
@@ -198,7 +196,11 @@ dpkg_installed() {
 apt_update_once() {
   if [ "${_APT_UPDATED:-0}" != 1 ]; then
     info "Updating apt package lists"
-    ${DRY_RUN:+echo} sudo apt-get update -y
+    if $DRY_RUN; then
+      echo "sudo apt-get update -y"
+    else
+      sudo apt-get update -y
+    fi
     _APT_UPDATED=1
   fi
 }
@@ -231,7 +233,11 @@ apt_install() {
     fi
     apt_update_once
     info "Installing: ${to_install[*]}"
-    DEBIAN_FRONTEND=noninteractive ${DRY_RUN:+echo} sudo apt-get install -y "${to_install[@]}"
+    if $DRY_RUN; then
+      echo "sudo apt-get install -y ${to_install[*]}"
+    else
+      DEBIAN_FRONTEND=noninteractive sudo apt-get install -y "${to_install[@]}"
+    fi
   fi
 }
 
