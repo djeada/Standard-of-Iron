@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -euo pipefail
 
 # Standard-of-Iron — dependency checker and auto-installer (Debian/Ubuntu family)
 #
@@ -11,8 +12,6 @@
 #   ./scripts/setup-deps.sh --dry-run     # show actions without installing
 #   ./scripts/setup-deps.sh --no-install  # only verify, do not install
 #   ./scripts/setup-deps.sh --allow-similar  # allow proceeding on similar distros
-#
-set -euo pipefail
 
 MIN_CMAKE="3.21.0"
 MIN_GXX="10.0.0"
@@ -100,9 +99,9 @@ detect_distro() {
   done < <(read_os_release)
 
   # strip quotes if present
-  id=${id%"}; id=${id#"}
-  like=${like%"}; like=${like#"}
-  pretty=${pretty%"}; pretty=${pretty#"}
+  id=${id%\"}; id=${id#\"}
+  like=${like%\"}; like=${like#\"}
+  pretty=${pretty%\"}; pretty=${pretty#\"}
 
   echo "$id" "$like" "$pretty"
 }
