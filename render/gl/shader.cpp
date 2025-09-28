@@ -6,7 +6,7 @@
 namespace Render::GL {
 
 Shader::Shader() {
-    initializeOpenGLFunctions();
+    // Defer OpenGL function initialization until a context is current
 }
 
 Shader::~Shader() {
@@ -34,6 +34,7 @@ bool Shader::loadFromFiles(const QString& vertexPath, const QString& fragmentPat
 }
 
 bool Shader::loadFromSource(const QString& vertexSource, const QString& fragmentSource) {
+    initializeOpenGLFunctions();
     GLuint vertexShader = compileShader(vertexSource, GL_VERTEX_SHADER);
     GLuint fragmentShader = compileShader(fragmentSource, GL_FRAGMENT_SHADER);
     
@@ -50,10 +51,12 @@ bool Shader::loadFromSource(const QString& vertexSource, const QString& fragment
 }
 
 void Shader::use() {
+    initializeOpenGLFunctions();
     glUseProgram(m_program);
 }
 
 void Shader::release() {
+    initializeOpenGLFunctions();
     glUseProgram(0);
 }
 
@@ -90,6 +93,7 @@ void Shader::setUniform(const QString& name, bool value) {
 }
 
 GLuint Shader::compileShader(const QString& source, GLenum type) {
+    initializeOpenGLFunctions();
     GLuint shader = glCreateShader(type);
     
     QByteArray sourceBytes = source.toUtf8();
@@ -111,6 +115,7 @@ GLuint Shader::compileShader(const QString& source, GLenum type) {
 }
 
 bool Shader::linkProgram(GLuint vertexShader, GLuint fragmentShader) {
+    initializeOpenGLFunctions();
     m_program = glCreateProgram();
     glAttachShader(m_program, vertexShader);
     glAttachShader(m_program, fragmentShader);
