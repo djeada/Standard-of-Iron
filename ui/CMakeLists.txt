@@ -1,0 +1,1 @@
+# UI resources are handled by main CMakeLists.txt
