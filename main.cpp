@@ -4,6 +4,7 @@
 #include <QSurfaceFormat>
 #include <QDebug>
 #include <QDir>
+#include <QQuickWindow>
 
 #include "engine/core/world.h"
 #include "engine/core/component.h"
@@ -46,7 +47,14 @@ public:
         m_camera->setRTSView(QVector3D(0, 0, 0), 15.0f, 45.0f);
         m_camera->setPerspective(45.0f, 16.0f/9.0f, 0.1f, 1000.0f);
         
+        m_initialized = true;
         qDebug() << "Game engine initialized successfully";
+    }
+    
+    void ensureInitialized() {
+        if (!m_initialized) {
+            initialize();
+        }
     }
     
     void update(float deltaTime) {
@@ -56,7 +64,7 @@ public:
     }
     
     void render() {
-        if (m_renderer && m_world) {
+        if (m_renderer && m_world && m_initialized) {
             m_renderer->beginFrame();
             m_renderer->renderWorld(m_world.get());
             m_renderer->endFrame();
@@ -97,6 +105,7 @@ private:
     std::unique_ptr<Render::GL::Renderer> m_renderer;
     std::unique_ptr<Render::GL::Camera> m_camera;
     std::unique_ptr<Game::Systems::SelectionSystem> m_selectionSystem;
+    bool m_initialized = false;
 };
 
 int main(int argc, char *argv[])
@@ -118,16 +127,8 @@ int main(int argc, char *argv[])
     // Register C++ types with QML if needed
     // qmlRegisterType<GameEngine>("StandardOfIron", 1, 0, "GameEngine");
 
-    const QUrl url(QStringLiteral("qrc:/ui/qml/Main.qml"));
-
-    QObject::connect(&engine, &QQmlApplicationEngine::objectCreated,
-        &app, [url](QObject *obj, const QUrl &objUrl) {
-            if (!obj && url == objUrl)
-                QCoreApplication::exit(-1);
-        }, Qt::QueuedConnection);
-
-    // Load QML
-    engine.load(url);
+    // Load QML from the compiled resource path (see generated :/StandardOfIron/ui/qml/*)
+    engine.load(QUrl(QStringLiteral("qrc:/StandardOfIron/ui/qml/Main.qml")));
 
     if (engine.rootObjects().isEmpty()) {
         qWarning() << "Failed to load QML file";
@@ -145,21 +146,16 @@ int main(int argc, char *argv[])
         window = rootObj->findChild<QQuickWindow*>();
     }
 
-    static GameEngine gameEngine;
+    auto gameEngine = new GameEngine();
 
     if (window) {
-        // Connect to sceneGraphInitialized to safely initialize OpenGL resources
-        QObject::connect(window, &QQuickWindow::sceneGraphInitialized, &gameEngine, [&gameEngine]() {
-            gameEngine.initialize();
-            qDebug() << "Game engine initialized after scene graph.";
+        // Per-frame update/render loop (context is current here)
+        QObject::connect(window, &QQuickWindow::beforeRendering, gameEngine, [gameEngine]() {
+            gameEngine->ensureInitialized();
+            gameEngine->update(1.0f / 60.0f); // Fixed timestep for now
+            gameEngine->render();
         }, Qt::DirectConnection);
-
-        // Per-frame update/render loop
-        QObject::connect(window, &QQuickWindow::beforeRendering, &gameEngine, [&gameEngine]() {
-            gameEngine.update(1.0f / 60.0f); // Fixed timestep for now
-            gameEngine.render();
-        }, Qt::DirectConnection);
-        window->setClearBeforeRendering(false); // Let our renderer handle clearing
+    // In Qt 6, the default clear before rendering is handled by the scene graph; our renderer also clears per frame.
     } else {
         qWarning() << "No QQuickWindow found for OpenGL initialization.";
     }
