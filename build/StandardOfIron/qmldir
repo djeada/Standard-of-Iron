@@ -1,7 +1,0 @@
-module StandardOfIron
-typeinfo standard_of_iron.qmltypes
-prefer :/StandardOfIron/
-Main 1.0 ui/qml/Main.qml
-HUD 1.0 ui/qml/HUD.qml
-GameView 1.0 ui/qml/GameView.qml
-

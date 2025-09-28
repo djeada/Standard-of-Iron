@@ -1,6 +1,0 @@
-<RCC>
-  <qresource prefix="/StandardOfIron">
-    <file alias="qmldir">/home/runner/work/Standard-of-Iron/Standard-of-Iron/build/StandardOfIron/qmldir</file>
-  </qresource>
-</RCC>
-
