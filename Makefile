@@ -80,7 +80,23 @@ all: build
 .PHONY: run
 run: build
 	@echo "$(BOLD)$(BLUE)Running Standard of Iron...$(RESET)"
-	@cd $(BUILD_DIR) && ./$(BINARY_NAME)
+	@cd $(BUILD_DIR) && \
+	if [ -n "$$DISPLAY" ]; then \
+	  ./$(BINARY_NAME); \
+	else \
+	  echo "$(YELLOW)No DISPLAY detected; running with QT_QPA_PLATFORM=offscreen$(RESET)"; \
+	  QT_QPA_PLATFORM=offscreen ./$(BINARY_NAME); \
+	fi
+
+# Run with xvfb for headless environments (software rasterization)
+.PHONY: run-headless
+run-headless: build
+	@echo "$(BOLD)$(BLUE)Running Standard of Iron under xvfb...$(RESET)"
+	@if ! command -v xvfb-run >/dev/null 2>&1; then \
+	  echo "$(YELLOW)xvfb-run not found. Installing...$(RESET)"; \
+	  sudo apt-get update -y >/dev/null 2>&1 && sudo apt-get install -y xvfb >/dev/null 2>&1; \
+	fi
+	@cd $(BUILD_DIR) && xvfb-run -s "-screen 0 1280x720x24" ./$(BINARY_NAME)
 
 # Run the map editor
 .PHONY: editor
