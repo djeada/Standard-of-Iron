@@ -1,5 +1,6 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
+import StandardOfIron 1.0
 
 Item {
     id: gameView
@@ -25,11 +26,11 @@ Item {
         // Handle unit commands
     }
     
-    // OpenGL rendering area
-        Rectangle {
+    // OpenGL rendering item inside scene graph
+        GLView {
         id: renderArea
         anchors.fill: parent
-            color: "transparent"
+        engine: game // GameEngine object exposed from C++
         
         // Placeholder text (disabled by default to not cover GL)
         // Text {
@@ -40,7 +41,7 @@ Item {
         //     horizontalAlignment: Text.AlignHCenter
         // }
         
-        // Camera controls info
+        // Camera controls info overlays
         Rectangle {
             anchors.top: parent.top
             anchors.left: parent.left
