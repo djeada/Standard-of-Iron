@@ -5,6 +5,10 @@ add_library(render_gl STATIC
     gl/texture.cpp
     gl/renderer.cpp
     gl/camera.cpp
+    gl/resources.cpp
+    entity/registry.cpp
+    entity/archer_renderer.cpp
+    geom/selection_ring.cpp
 )
 
 target_include_directories(render_gl PUBLIC .)
