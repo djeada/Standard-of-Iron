@@ -31,8 +31,8 @@ bool Renderer::initialize() {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     
-    // Set default clear color
-    setClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+    // Set default clear color with alpha 0 to allow QML overlay compositing
+    setClearColor(0.2f, 0.3f, 0.3f, 0.0f);
     
     if (!loadShaders()) {
         return false;
