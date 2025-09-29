@@ -1,0 +1,15 @@
+#pragma once
+
+#include "map_definition.h"
+
+namespace Render { namespace GL { class Renderer; class Camera; } }
+
+namespace Game { namespace Map {
+
+// Applies camera and ground/grid environment based on map definition
+struct Environment {
+    static void apply(const MapDefinition& def, Render::GL::Renderer& renderer, Render::GL::Camera& camera);
+    static void applyDefault(Render::GL::Renderer& renderer, Render::GL::Camera& camera);
+};
+
+} } // namespace Game::Map

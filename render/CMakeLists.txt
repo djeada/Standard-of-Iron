@@ -9,6 +9,7 @@ add_library(render_gl STATIC
     entity/registry.cpp
     entity/archer_renderer.cpp
     geom/selection_ring.cpp
+    geom/arrow.cpp
 )
 
 target_include_directories(render_gl PUBLIC .)

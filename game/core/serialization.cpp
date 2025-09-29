@@ -13,8 +13,7 @@ QJsonObject Serialization::serializeEntity(const Entity* entity) {
     QJsonObject entityObj;
     entityObj["id"] = static_cast<qint64>(entity->getId());
     
-    // Serialize components (simplified for basic components)
-    if (auto transform = entity->getComponent<TransformComponent>()) {
+    if (auto transform = const_cast<Entity*>(entity)->getComponent<TransformComponent>()) {
         QJsonObject transformObj;
         transformObj["posX"] = transform->position.x;
         transformObj["posY"] = transform->position.y;
@@ -28,13 +27,14 @@ QJsonObject Serialization::serializeEntity(const Entity* entity) {
         entityObj["transform"] = transformObj;
     }
     
-    if (auto unit = entity->getComponent<UnitComponent>()) {
+    if (auto unit = const_cast<Entity*>(entity)->getComponent<UnitComponent>()) {
         QJsonObject unitObj;
         unitObj["health"] = unit->health;
         unitObj["maxHealth"] = unit->maxHealth;
         unitObj["speed"] = unit->speed;
         unitObj["selected"] = unit->selected;
         unitObj["unitType"] = QString::fromStdString(unit->unitType);
+        unitObj["ownerId"] = unit->ownerId;
         entityObj["unit"] = unitObj;
     }
     
@@ -42,7 +42,6 @@ QJsonObject Serialization::serializeEntity(const Entity* entity) {
 }
 
 void Serialization::deserializeEntity(Entity* entity, const QJsonObject& json) {
-    // Deserialize components
     if (json.contains("transform")) {
         auto transformObj = json["transform"].toObject();
         auto transform = entity->addComponent<TransformComponent>();
@@ -63,18 +62,15 @@ void Serialization::deserializeEntity(Entity* entity, const QJsonObject& json) {
         unit->health = unitObj["health"].toInt();
         unit->maxHealth = unitObj["maxHealth"].toInt();
         unit->speed = unitObj["speed"].toDouble();
-        unit->selected = unitObj["selected"].toBool();
-        unit->unitType = unitObj["unitType"].toString().toStdString();
+    unit->selected = unitObj["selected"].toBool();
+    unit->unitType = unitObj["unitType"].toString().toStdString();
+    unit->ownerId = unitObj["ownerId"].toInt(0);
     }
 }
 
 QJsonDocument Serialization::serializeWorld(const World* world) {
     QJsonObject worldObj;
     QJsonArray entitiesArray;
-    
-    // This is a simplified implementation
-    // In a real scenario, we'd need access to world's entities
-    
     worldObj["entities"] = entitiesArray;
     return QJsonDocument(worldObj);
 }
@@ -82,7 +78,6 @@ QJsonDocument Serialization::serializeWorld(const World* world) {
 void Serialization::deserializeWorld(World* world, const QJsonDocument& doc) {
     auto worldObj = doc.object();
     auto entitiesArray = worldObj["entities"].toArray();
-    
     for (const auto& value : entitiesArray) {
         auto entityObj = value.toObject();
         auto entity = world->createEntity();
@@ -96,7 +91,6 @@ bool Serialization::saveToFile(const QString& filename, const QJsonDocument& doc
         qWarning() << "Could not open file for writing:" << filename;
         return false;
     }
-    
     file.write(doc.toJson());
     return true;
 }
@@ -107,7 +101,6 @@ QJsonDocument Serialization::loadFromFile(const QString& filename) {
         qWarning() << "Could not open file for reading:" << filename;
         return QJsonDocument();
     }
-    
     QByteArray data = file.readAll();
     return QJsonDocument::fromJson(data);
 }

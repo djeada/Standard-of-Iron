@@ -4,6 +4,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonArray>
+#include <QString>
 
 namespace Game::Map {
 
@@ -65,6 +66,13 @@ bool MapLoader::loadFromJsonFile(const QString& path, MapDefinition& outMap, QSt
     auto root = doc.object();
 
     outMap.name = root.value("name").toString("Unnamed Map");
+
+    // Optional: coordinate system for spawns
+    if (root.contains("coordSystem")) {
+        const QString cs = root.value("coordSystem").toString().trimmed().toLower();
+        if (cs == "world") outMap.coordSystem = CoordSystem::World;
+        else outMap.coordSystem = CoordSystem::Grid;
+    }
 
     if (root.contains("grid") && root.value("grid").isObject()) {
         if (!readGrid(root.value("grid").toObject(), outMap.grid)) {

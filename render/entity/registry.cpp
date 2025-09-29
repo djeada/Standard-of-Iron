@@ -1,8 +1,8 @@
 #include "registry.h"
 #include "archer_renderer.h"
 #include "../gl/renderer.h"
-#include "../../engine/core/entity.h"
-#include "../../engine/core/component.h"
+#include "../../game/core/entity.h"
+#include "../../game/core/component.h"
 
 namespace Render::GL {
 
