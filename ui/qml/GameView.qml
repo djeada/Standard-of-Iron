@@ -94,6 +94,18 @@ Item {
             id: mouseArea
             anchors.fill: parent
             acceptedButtons: Qt.LeftButton | Qt.RightButton
+            hoverEnabled: true
+            propagateComposedEvents: true
+            onWheel: function(w) {
+                // Mouse wheel: move camera up/down (RTS-style height adjust)
+                // delta is in eighths of a degree; use angleDelta.y where available
+                var dy = (w.angleDelta ? w.angleDelta.y / 120 : w.delta / 120)
+                if (dy !== 0 && typeof game !== 'undefined' && game.cameraElevate) {
+                    // Scale to world units
+                    game.cameraElevate(-dy * 0.5)
+                }
+                w.accepted = true
+            }
             
             property bool isSelecting: false
             property real startX: 0
@@ -109,6 +121,10 @@ Item {
                     selectionBox.width = 0
                     selectionBox.height = 0
                     selectionBox.visible = true
+                } else if (mouse.button === Qt.RightButton) {
+                    if (typeof game !== 'undefined' && game.onRightClick) {
+                        game.onRightClick(mouse.x, mouse.y)
+                    }
                 }
             }
             
@@ -134,11 +150,17 @@ Item {
                         areaSelected(selectionBox.x, selectionBox.y, 
                                    selectionBox.x + selectionBox.width,
                                    selectionBox.y + selectionBox.height)
+                        if (typeof game !== 'undefined' && game.onAreaSelected) {
+                            game.onAreaSelected(selectionBox.x, selectionBox.y,
+                                                selectionBox.x + selectionBox.width,
+                                                selectionBox.y + selectionBox.height,
+                                                false)
+                        }
                     } else {
                         // Point selection
                         mapClicked(mouse.x, mouse.y)
-                        if (typeof game !== 'undefined' && game.onMapClicked) {
-                            game.onMapClicked(mouse.x, mouse.y)
+                        if (typeof game !== 'undefined' && game.onClickSelect) {
+                            game.onClickSelect(mouse.x, mouse.y, false)
                         }
                     }
                 }
@@ -155,107 +177,30 @@ Item {
         }
     }
     
-    // Edge scrolling areas
-    MouseArea {
-        id: leftEdge
-        anchors.left: parent.left
-        anchors.top: parent.top
-        anchors.bottom: parent.bottom
-        width: 10
-        hoverEnabled: true
-        
-        onEntered: {
-            scrollTimer.direction = "left"
-            scrollTimer.start()
-        }
-        onExited: scrollTimer.stop()
-    }
-    
-    MouseArea {
-        id: rightEdge
-        anchors.right: parent.right
-        anchors.top: parent.top
-        anchors.bottom: parent.bottom
-        width: 10
-        hoverEnabled: true
-        
-        onEntered: {
-            scrollTimer.direction = "right"
-            scrollTimer.start()
-        }
-        onExited: scrollTimer.stop()
-    }
-    
-    MouseArea {
-        id: topEdge
-        anchors.top: parent.top
-        anchors.left: parent.left
-        anchors.right: parent.right
-        height: 10
-        hoverEnabled: true
-        
-        onEntered: {
-            scrollTimer.direction = "up"
-            scrollTimer.start()
-        }
-        onExited: scrollTimer.stop()
-    }
-    
-    MouseArea {
-        id: bottomEdge
-        anchors.bottom: parent.bottom
-        anchors.left: parent.left
-        anchors.right: parent.right
-        height: 10
-        hoverEnabled: true
-        
-        onEntered: {
-            scrollTimer.direction = "down"
-            scrollTimer.start()
-        }
-        onExited: scrollTimer.stop()
-    }
-    
-    Timer {
-        id: scrollTimer
-        interval: 16 // ~60 FPS
-        repeat: true
-        
-        property string direction: ""
-        
-        onTriggered: {
-            // Handle camera movement based on direction
-            console.log("Edge scroll:", direction)
-        }
-    }
+    // Edge scrolling handled by Main.qml overlay for smoother behavior and to bypass overlays
     
     // Keyboard handling
     Keys.onPressed: function(event) {
+        if (typeof game === 'undefined') return
+        var yawStep = event.modifiers & Qt.ShiftModifier ? 4 : 2
+        var panStep = 0.6
         switch (event.key) {
-            case Qt.Key_W:
-                console.log("Move camera forward")
-                break
-            case Qt.Key_S:
-                console.log("Move camera backward")
-                break
-            case Qt.Key_A:
-                console.log("Move camera left")
-                break
-            case Qt.Key_D:
-                console.log("Move camera right")
-                break
-            case Qt.Key_Q:
-                console.log("Rotate camera left")
-                break
-            case Qt.Key_E:
-                console.log("Rotate camera right")
-                break
-            case Qt.Key_R:
-                console.log("Move camera up")
-                break
-            case Qt.Key_F:
-                console.log("Move camera down")
-                break
+            // WASD pans the camera just like arrow keys
+            case Qt.Key_W: game.cameraMove(0, panStep);  event.accepted = true; break
+            case Qt.Key_S: game.cameraMove(0, -panStep); event.accepted = true; break
+            case Qt.Key_A: game.cameraMove(-panStep, 0); event.accepted = true; break
+            case Qt.Key_D: game.cameraMove(panStep, 0);  event.accepted = true; break
+            // Arrow keys pan as well
+            case Qt.Key_Up:    game.cameraMove(0, panStep);  event.accepted = true; break
+            case Qt.Key_Down:  game.cameraMove(0, -panStep); event.accepted = true; break
+            case Qt.Key_Left:  game.cameraMove(-panStep, 0); event.accepted = true; break
+            case Qt.Key_Right: game.cameraMove(panStep, 0);  event.accepted = true; break
+            // Yaw rotation on Q/E
+            case Qt.Key_Q: game.cameraYaw(-yawStep); event.accepted = true; break
+            case Qt.Key_E: game.cameraYaw(yawStep);  event.accepted = true; break
+            // Elevation
+            case Qt.Key_R: game.cameraElevate(0.5);  event.accepted = true; break
+            case Qt.Key_F: game.cameraElevate(-0.5); event.accepted = true; break
         }
     }
     

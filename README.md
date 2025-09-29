@@ -69,7 +69,7 @@ make -j$(nproc)
 ## Project Structure
 
 ```
-├── engine/core/          # ECS, events, serialization
+├── game/core/            # ECS, events, serialization
 ├── render/gl/            # OpenGL rendering system
 ├── game/systems/         # Game logic systems (AI, combat, movement)
 ├── assets/               # Game assets
