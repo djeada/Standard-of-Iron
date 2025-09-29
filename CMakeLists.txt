@@ -64,7 +64,9 @@ if(QT_VERSION_MAJOR EQUAL 6)
         RESOURCES
             assets/shaders/basic.vert
             assets/shaders/basic.frag
+            assets/maps/test_map.json
             assets/maps/test_map.txt
+            assets/visuals/unit_visuals.json
         DEPENDENCIES
             Qt6::QuickControls2
     )
@@ -81,7 +83,9 @@ else()
         FILES
             assets/shaders/basic.vert
             assets/shaders/basic.frag
+            assets/maps/test_map.json
             assets/maps/test_map.txt
+            assets/visuals/unit_visuals.json
     )
 endif()
 

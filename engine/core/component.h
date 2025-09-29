@@ -21,12 +21,18 @@ public:
 // Renderable Component
 class RenderableComponent : public Component {
 public:
+    enum class MeshKind { None, Quad, Plane, Cube, Capsule, Ring };
+
     RenderableComponent(const std::string& meshPath, const std::string& texturePath)
-        : meshPath(meshPath), texturePath(texturePath), visible(true) {}
+        : meshPath(meshPath), texturePath(texturePath), visible(true), mesh(MeshKind::Cube) {
+        color[0] = color[1] = color[2] = 1.0f;
+    }
 
     std::string meshPath;
     std::string texturePath;
     bool visible;
+    MeshKind mesh;
+    float color[3]; // RGB 0..1
 };
 
 // Unit Component (for RTS units)
