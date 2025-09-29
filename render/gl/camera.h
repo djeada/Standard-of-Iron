@@ -39,6 +39,9 @@ public:
     const QVector3D& getPosition() const { return m_position; }
     const QVector3D& getTarget() const { return m_target; }
     float getFOV() const { return m_fov; }
+    float getAspect() const { return m_aspect; }
+    float getNear() const { return m_nearPlane; }
+    float getFar() const { return m_farPlane; }
 
 private:
     QVector3D m_position{0.0f, 0.0f, 0.0f};

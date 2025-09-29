@@ -1,0 +1,19 @@
+{
+  "name": "Test Map (JSON)",
+  "grid": {
+    "width": 100,
+    "height": 100,
+    "tileSize": 1.0
+  },
+  "camera": {
+    "center": [0.0, 0.0, 0.0],
+    "distance": 15.0,
+    "tiltDeg": 45.0,
+    "fovY": 45.0,
+    "near": 0.1,
+    "far": 1000.0
+  },
+  "spawns": [
+    { "type": "archer", "x": 0.0, "z": 0.0, "playerId": 1 }
+  ]
+}
