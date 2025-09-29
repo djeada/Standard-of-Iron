@@ -54,11 +54,14 @@ private:
     
     std::unique_ptr<Shader> m_basicShader;
     std::unique_ptr<Shader> m_lineShader;
+    std::unique_ptr<Shader> m_gridShader;
     
     std::vector<RenderCommand> m_renderQueue;
     
     // Default resources
     std::unique_ptr<Mesh> m_quadMesh;
+    std::unique_ptr<Mesh> m_capsuleMesh; // simple unit mesh
+    std::unique_ptr<Mesh> m_ringMesh;    // selection ring
     std::unique_ptr<Mesh> m_groundMesh;
     std::unique_ptr<Texture> m_whiteTexture;
 
@@ -68,6 +71,7 @@ private:
     bool loadShaders();
     void createDefaultResources();
     void sortRenderQueue();
+    void renderSelectionRing(const QMatrix4x4& model, const QVector3D& color);
 };
 
 } // namespace Render::GL
