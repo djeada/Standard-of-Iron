@@ -117,6 +117,10 @@ APT_PKGS=(
   git
   pkg-config
   libgl1-mesa-dev
+  mesa-utils
+  libglx-mesa0
+  mesa-vulkan-drivers
+  libegl1
 )
 
 # Qt6 development headers/tools (filtered for availability later)
