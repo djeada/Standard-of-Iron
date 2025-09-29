@@ -54,6 +54,8 @@ Item {
             Button {
                 text: "0.5x"
                 enabled: !gameIsPaused
+                checkable: true
+                checked: currentSpeed === 0.5 && !gameIsPaused
                 onClicked: {
                     currentSpeed = 0.5
                     speedChanged(currentSpeed)
@@ -63,6 +65,8 @@ Item {
             Button {
                 text: "1x"
                 enabled: !gameIsPaused
+                checkable: true
+                checked: currentSpeed === 1.0 && !gameIsPaused
                 onClicked: {
                     currentSpeed = 1.0
                     speedChanged(currentSpeed)
@@ -72,6 +76,8 @@ Item {
             Button {
                 text: "2x"
                 enabled: !gameIsPaused
+                checkable: true
+                checked: currentSpeed === 2.0 && !gameIsPaused
                 onClicked: {
                     currentSpeed = 2.0
                     speedChanged(currentSpeed)
