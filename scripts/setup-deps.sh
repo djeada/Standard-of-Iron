@@ -346,12 +346,16 @@ check_tool_versions() {
   fi
 
   need_cmd git; ok "git $(git --version | awk '{print $3}')"
-  need_cmd pkg-config || need_cmd pkgconf
+  local PKG_CMD=""
   if command -v pkg-config >/dev/null 2>&1; then
-    ok "pkg-config $(pkg-config --version)"
+    PKG_CMD="pkg-config"
+  elif command -v pkgconf >/dev/null 2>&1; then
+    PKG_CMD="pkgconf"
   else
-    ok "pkgconf $(pkgconf --version)"
+    error "Neither pkg-config nor pkgconf is installed. Please install one of them and rerun this script."
+    exit 1
   fi
+  ok "$PKG_CMD $($PKG_CMD --version)"
 }
 
 install_runtime_apt() {
