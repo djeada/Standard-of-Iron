@@ -4,9 +4,11 @@
 #include "camera.h"
 #include "mesh.h"
 #include "texture.h"
+#include "resources.h"
 #include <QOpenGLFunctions_3_3_Core>
 #include <memory>
 #include <vector>
+#include <optional>
 
 namespace Engine::Core {
 class World;
@@ -14,6 +16,7 @@ class Entity;
 }
 
 namespace Render::GL {
+class EntityRendererRegistry;
 
 struct RenderCommand {
     Mesh* mesh = nullptr;
@@ -36,6 +39,28 @@ public:
     
     void setCamera(Camera* camera);
     void setClearColor(float r, float g, float b, float a = 1.0f);
+    // Optional: inject an external ResourceManager owned by the app
+    void setResources(const std::shared_ptr<ResourceManager>& resources) { m_resources = resources; }
+
+    // Lightweight, app-facing helpers
+    void renderGridGround();
+
+    // Read-only access to default meshes/textures for app-side batching
+    Mesh* getMeshQuad()    const { return m_resources ? m_resources->quad()    : nullptr; }
+    Mesh* getMeshPlane()   const { return m_resources ? m_resources->ground()  : nullptr; }
+    Mesh* getMeshCube()    const { return m_resources ? m_resources->unit()    : nullptr; }
+    // Meshes now provided by entity-specific renderers or shared geom providers
+    Texture* getWhiteTexture() const { return m_resources ? m_resources->white() : nullptr; }
+    
+    struct GridParams {
+        float cellSize = 1.0f;
+        float thickness = 0.06f; // fraction of cell (0..0.5)
+        QVector3D gridColor{0.15f, 0.18f, 0.15f};
+        QVector3D lineColor{0.22f, 0.25f, 0.22f};
+        float extent = 50.0f; // half-size of plane scaling
+    };
+    void setGridParams(const GridParams& gp) { m_gridParams = gp; }
+    const GridParams& gridParams() const { return m_gridParams; }
     
     // Immediate mode rendering
     void drawMesh(Mesh* mesh, const QMatrix4x4& modelMatrix, Texture* texture = nullptr);
@@ -46,7 +71,7 @@ public:
     void submitRenderCommand(const RenderCommand& command);
     void flushBatch();
     
-    // Render ECS entities
+    // Legacy: still available but apps are encouraged to issue draw calls explicitly
     void renderWorld(Engine::Core::World* world);
     
 private:
@@ -59,19 +84,15 @@ private:
     std::vector<RenderCommand> m_renderQueue;
     
     // Default resources
-    std::unique_ptr<Mesh> m_quadMesh;
-    std::unique_ptr<Mesh> m_capsuleMesh; // simple unit mesh
-    std::unique_ptr<Mesh> m_ringMesh;    // selection ring
-    std::unique_ptr<Mesh> m_groundMesh;
-    std::unique_ptr<Texture> m_whiteTexture;
+    std::shared_ptr<ResourceManager> m_resources;
+    std::unique_ptr<EntityRendererRegistry> m_entityRegistry;
 
     int m_viewportWidth = 0;
     int m_viewportHeight = 0;
+    GridParams m_gridParams;
     
     bool loadShaders();
-    void createDefaultResources();
     void sortRenderQueue();
-    void renderSelectionRing(const QMatrix4x4& model, const QVector3D& color);
 };
 
 } // namespace Render::GL
