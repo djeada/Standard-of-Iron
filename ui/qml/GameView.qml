@@ -15,10 +15,14 @@ Item {
     
     function setPaused(paused) {
         isPaused = paused
+        if (typeof game !== 'undefined' && game.setPaused)
+            game.setPaused(paused)
     }
     
     function setGameSpeed(speed) {
         gameSpeed = speed
+        if (typeof game !== 'undefined' && game.setGameSpeed)
+            game.setGameSpeed(speed)
     }
     
     function issueCommand(command) {
