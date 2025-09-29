@@ -39,9 +39,17 @@ add_subdirectory(tools)
 
 # ---- Executable ----
 if(QT_VERSION_MAJOR EQUAL 6)
-    qt6_add_executable(standard_of_iron main.cpp)
+    qt6_add_executable(standard_of_iron
+        main.cpp
+        app/game_engine.cpp
+        ui/gl_view.cpp
+    )
 else()
-    add_executable(standard_of_iron main.cpp)
+    add_executable(standard_of_iron
+        main.cpp
+        app/game_engine.cpp
+        ui/gl_view.cpp
+    )
 endif()
 
 # ---- QML module ----
