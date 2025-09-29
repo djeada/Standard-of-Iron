@@ -237,6 +237,12 @@ void GameEngine::initialize() {
 void GameEngine::ensureInitialized() { if (!m_initialized) initialize(); }
 
 void GameEngine::update(float dt) {
+    // Apply pause and time scaling
+    if (m_paused) {
+        dt = 0.0f;
+    } else {
+        dt *= m_timeScale;
+    }
     if (m_world) m_world->update(dt);
     // Prune selection of dead units and keep flags in sync
     syncSelectionFlags();
