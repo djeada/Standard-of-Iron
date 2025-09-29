@@ -4,8 +4,13 @@
 #include "../gl/mesh.h"
 #include "../gl/texture.h"
 #include "../geom/selection_ring.h"
-#include "../../engine/core/component.h"
+#include "../../game/visuals/team_colors.h"
+#include "../../game/core/entity.h"
+#include "../../game/core/component.h"
 #include <QVector3D>
+#include <vector>
+#include <cmath>
+#include <memory>
 
 namespace Render::GL {
 
@@ -81,24 +86,27 @@ void registerArcherRenderer(EntityRendererRegistry& registry) {
     registry.registerRenderer("archer", [](const DrawParams& p){
         if (!p.renderer) return;
         QVector3D color(0.8f, 0.9f, 1.0f);
+        Engine::Core::UnitComponent* unit = nullptr;
+        Engine::Core::RenderableComponent* rc = nullptr;
         if (p.entity) {
-            if (auto* rc = p.entity->getComponent<Engine::Core::RenderableComponent>()) {
-                color = QVector3D(rc->color[0], rc->color[1], rc->color[2]);
-            }
+            unit = p.entity->getComponent<Engine::Core::UnitComponent>();
+            rc = p.entity->getComponent<Engine::Core::RenderableComponent>();
+        }
+        // Prefer team color based on ownerId if available; else fall back to Renderable color
+        if (unit && unit->ownerId > 0) {
+            color = Game::Visuals::teamColorForOwner(unit->ownerId);
+        } else if (rc) {
+            color = QVector3D(rc->color[0], rc->color[1], rc->color[2]);
         }
         // Draw capsule (archer body)
         p.renderer->drawMeshColored(getArcherCapsule(), p.model, color, nullptr);
         // Draw selection ring if selected
-        if (p.entity) {
-            if (auto* unit = p.entity->getComponent<Engine::Core::UnitComponent>()) {
-                if (unit->selected) {
-                    QMatrix4x4 ringM;
-                    QVector3D pos = p.model.column(3).toVector3D();
-                    ringM.translate(pos.x(), 0.01f, pos.z());
-                    ringM.scale(0.5f, 1.0f, 0.5f);
-                    p.renderer->drawMeshColored(Render::Geom::SelectionRing::get(), ringM, QVector3D(0.2f, 0.8f, 0.2f), nullptr);
-                }
-            }
+        if (unit && unit->selected) {
+            QMatrix4x4 ringM;
+            QVector3D pos = p.model.column(3).toVector3D();
+            ringM.translate(pos.x(), 0.01f, pos.z());
+            ringM.scale(0.5f, 1.0f, 0.5f);
+            p.renderer->drawMeshColored(Render::Geom::SelectionRing::get(), ringM, QVector3D(0.2f, 0.8f, 0.2f), nullptr);
         }
     });
 }

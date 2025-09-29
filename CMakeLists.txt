@@ -31,7 +31,7 @@ endif()
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
-add_subdirectory(engine)
+# engine core moved under game; no separate engine subdir target
 add_subdirectory(render)
 add_subdirectory(game)
 add_subdirectory(ui)
@@ -42,12 +42,14 @@ if(QT_VERSION_MAJOR EQUAL 6)
     qt6_add_executable(standard_of_iron
         main.cpp
         app/game_engine.cpp
+        app/selected_units_model.cpp
         ui/gl_view.cpp
     )
 else()
     add_executable(standard_of_iron
         main.cpp
         app/game_engine.cpp
+        app/selected_units_model.cpp
         ui/gl_view.cpp
     )
 endif()
@@ -64,8 +66,8 @@ if(QT_VERSION_MAJOR EQUAL 6)
         RESOURCES
             assets/shaders/basic.vert
             assets/shaders/basic.frag
+            assets/shaders/grid.frag
             assets/maps/test_map.json
-            assets/maps/test_map.txt
             assets/visuals/unit_visuals.json
         DEPENDENCIES
             Qt6::QuickControls2
@@ -83,8 +85,8 @@ else()
         FILES
             assets/shaders/basic.vert
             assets/shaders/basic.frag
+            assets/shaders/grid.frag
             assets/maps/test_map.json
-            assets/maps/test_map.txt
             assets/visuals/unit_visuals.json
     )
 endif()

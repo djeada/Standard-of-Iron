@@ -123,6 +123,18 @@ Item {
         color: "#2c3e50"
         border.color: "#34495e"
         border.width: 1
+        // Allow edge-scroll MouseArea under it to still receive hover at the very edge
+        // by adding a tiny pass-through strip
+        MouseArea {
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.bottom: parent.bottom
+            height: 8
+            hoverEnabled: true
+            acceptedButtons: Qt.NoButton
+            propagateComposedEvents: true
+            onEntered: { if (typeof game !== 'undefined') {/* noop - GameView bottomEdge handles scroll */} }
+        }
         
         RowLayout {
             anchors.fill: parent
@@ -152,13 +164,14 @@ Item {
                     ScrollView {
                         width: parent.width
                         height: parent.height - 20
+                        clip: true
+                        ScrollBar.vertical.policy: ScrollBar.AlwaysOn
                         
                         ListView {
                             id: selectedUnitsList
-                            model: ListModel {
-                                ListElement { name: "Warrior"; health: 100; maxHealth: 100 }
-                                ListElement { name: "Archer"; health: 75; maxHealth: 80 }
-                            }
+                            model: (typeof game !== 'undefined' && game.selectedUnitsModel) ? game.selectedUnitsModel : null
+                            boundsBehavior: Flickable.StopAtBounds
+                            flickableDirection: Flickable.VerticalFlick
                             
                             delegate: Rectangle {
                                 width: selectedUnitsList.width
@@ -172,7 +185,7 @@ Item {
                                     spacing: 4
                                     
                                     Text {
-                                        text: model.name
+                                        text: (typeof name !== 'undefined') ? name : "Unit"
                                         color: "white"
                                         font.pointSize: 9
                                     }
@@ -183,7 +196,7 @@ Item {
                                         color: "#e74c3c"
                                         
                                         Rectangle {
-                                            width: parent.width * (model.health / model.maxHealth)
+                                            width: parent.width * (typeof healthRatio !== 'undefined' ? healthRatio : 0)
                                             height: parent.height
                                             color: "#27ae60"
                                         }
@@ -227,8 +240,10 @@ Item {
                 Button {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    text: "Hold"
-                    onClicked: unitCommand("hold")
+                    text: "Follow"
+                    focusPolicy: Qt.NoFocus
+                    checkable: true
+                    onToggled: { if (typeof game !== 'undefined' && game.cameraFollowSelection) game.cameraFollowSelection(checked) }
                 }
                 
                 Button {

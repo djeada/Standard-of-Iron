@@ -3,7 +3,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonArray>
-#include "../../engine/core/component.h"
+#include "../core/component.h"
 
 namespace Game::Visuals {
 

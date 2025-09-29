@@ -1,7 +1,5 @@
 #pragma once
 
-#include "entity.h"
-#include <vector>
 #include <memory>
 
 namespace Engine::Core {
