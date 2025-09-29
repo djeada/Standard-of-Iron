@@ -28,11 +28,17 @@ struct UnitSpawn {
     int playerId = 0;
 };
 
+enum class CoordSystem {
+    Grid,   // x,z are grid indices [0..width-1], centered to world
+    World   // x,z are raw world coordinates
+};
+
 struct MapDefinition {
     QString name;
     GridDefinition grid;
     CameraDefinition camera;
     std::vector<UnitSpawn> spawns;
+    CoordSystem coordSystem = CoordSystem::Grid;
 };
 
 } // namespace Game::Map

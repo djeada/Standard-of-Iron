@@ -1,5 +1,6 @@
 {
   "name": "Test Map (JSON)",
+  "coordSystem": "grid",
   "grid": {
     "width": 100,
     "height": 100,
@@ -14,6 +15,15 @@
     "far": 1000.0
   },
   "spawns": [
-    { "type": "archer", "x": 0.0, "z": 0.0, "playerId": 1 }
+    { "type": "archer", "x": 50, "z": 50, "playerId": 1 },
+    { "type": "archer", "x": 52, "z": 50, "playerId": 1 },
+    { "type": "archer", "x": 50, "z": 52, "playerId": 1 },
+    { "type": "archer", "x": 48, "z": 52, "playerId": 1 },
+    { "type": "archer", "x": 52, "z": 52, "playerId": 1 },
+    
+    { "type": "archer", "x": 56, "z": 50, "playerId": 2 },
+    { "type": "archer", "x": 58, "z": 50, "playerId": 2 },
+    { "type": "archer", "x": 56, "z": 52, "playerId": 2 },
+    { "type": "archer", "x": 58, "z": 52, "playerId": 2 }
   ]
 }
