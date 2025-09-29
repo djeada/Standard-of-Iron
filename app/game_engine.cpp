@@ -39,6 +39,10 @@ void GameEngine::onMapClicked(qreal sx, qreal sy) {
             move->targetX = hit.x();
             move->targetY = hit.z();
             move->hasTarget = true;
+            // Set selected to true to visualize with ring
+            if (auto* unit = entity->getComponent<Engine::Core::UnitComponent>()) {
+                unit->selected = true;
+            }
         }
     }
 }
@@ -82,7 +86,7 @@ void GameEngine::setupTestScene() {
     auto transform = entity->addComponent<Engine::Core::TransformComponent>();
     transform->position = {0.0f, 0.0f, 0.0f};
     transform->scale    = {0.5f, 0.5f, 0.5f};
-    transform->rotation.x = -90.0f;
+    // Keep upright; camera provides the tilt
 
     auto renderable = entity->addComponent<Engine::Core::RenderableComponent>("", "");
     renderable->visible = true;

@@ -4,6 +4,7 @@
 #include <QDebug>
 #include <QOpenGLContext>
 #include <algorithm>
+#include <cmath>
 
 namespace Render::GL {
 
@@ -46,7 +47,10 @@ bool Renderer::initialize() {
 void Renderer::shutdown() {
     m_basicShader.reset();
     m_lineShader.reset();
+    m_gridShader.reset();
     m_quadMesh.reset();
+    m_capsuleMesh.reset();
+    m_ringMesh.reset();
     m_whiteTexture.reset();
 }
 
@@ -154,12 +158,25 @@ void Renderer::renderWorld(Engine::Core::World* world) {
     if (!world) {
         return;
     }
-    // Draw ground plane first
+    // Draw ground plane with grid
     if (m_groundMesh) {
         QMatrix4x4 groundModel;
         groundModel.translate(0.0f, 0.0f, 0.0f);
         groundModel.scale(50.0f, 1.0f, 50.0f);
-        drawMeshColored(m_groundMesh.get(), groundModel, QVector3D(0.15f, 0.2f, 0.15f));
+        if (m_gridShader) {
+            m_gridShader->use();
+            m_gridShader->setUniform("u_model", groundModel);
+            m_gridShader->setUniform("u_view", m_camera->getViewMatrix());
+            m_gridShader->setUniform("u_projection", m_camera->getProjectionMatrix());
+            m_gridShader->setUniform("u_gridColor", QVector3D(0.15f, 0.18f, 0.15f));
+            m_gridShader->setUniform("u_lineColor", QVector3D(0.22f, 0.25f, 0.22f));
+                m_gridShader->setUniform("u_cellSize", 1.0f);
+                m_gridShader->setUniform("u_thickness", 0.06f);
+            m_groundMesh->draw();
+            m_gridShader->release();
+        } else {
+            drawMeshColored(m_groundMesh.get(), groundModel, QVector3D(0.15f, 0.2f, 0.15f));
+        }
     }
     
     // Get all entities with both transform and renderable components
@@ -181,16 +198,22 @@ void Renderer::renderWorld(Engine::Core::World* world) {
         modelMatrix.rotate(transform->rotation.z, QVector3D(0, 0, 1));
         modelMatrix.scale(transform->scale.x, transform->scale.y, transform->scale.z);
         
-        // Create render command
+        // Use capsule mesh for units
         RenderCommand command;
         command.modelMatrix = modelMatrix;
-        // Note: In a full implementation, you'd load mesh and texture from paths
-        command.mesh = m_quadMesh.get(); // Default mesh for now
+        command.mesh = m_capsuleMesh ? m_capsuleMesh.get() : m_quadMesh.get();
         command.texture = m_whiteTexture.get();
-        
-        // Slight color tint for units
         command.color = QVector3D(0.8f, 0.9f, 1.0f);
         submitRenderCommand(command);
+
+        // Draw selection ring if selected
+        auto unit = entity->getComponent<Engine::Core::UnitComponent>();
+        if (unit && unit->selected) {
+            QMatrix4x4 ringModel;
+            ringModel.translate(transform->position.x, 0.01f, transform->position.z);
+            ringModel.scale(0.5f, 1.0f, 0.5f);
+            renderSelectionRing(ringModel, QVector3D(0.2f, 0.8f, 0.2f));
+        }
     }
 }
 
@@ -255,13 +278,109 @@ bool Renderer::loadShaders() {
         qWarning() << "Failed to load basic shader";
         return false;
     }
-    
+    // Grid shader
+    QString gridVertex = basicVertexSource;
+    QString gridFragment = R"(
+        #version 330 core
+        in vec3 v_normal;
+        in vec2 v_texCoord;
+        in vec3 v_worldPos;
+        
+        uniform vec3 u_gridColor;
+        uniform vec3 u_lineColor;
+        uniform float u_cellSize;
+        uniform float u_thickness; // fraction of cell (0..0.5)
+        
+        out vec4 FragColor;
+        
+        void main() {
+            vec2 coord = v_worldPos.xz / u_cellSize;
+            vec2 g = abs(fract(coord) - 0.5);
+            float lineX = step(0.5 - u_thickness, g.x);
+            float lineY = step(0.5 - u_thickness, g.y);
+            float lineMask = max(lineX, lineY);
+            vec3 col = mix(u_gridColor, u_lineColor, lineMask);
+            FragColor = vec4(col, 1.0);
+        }
+    )";
+    m_gridShader = std::make_unique<Shader>();
+    if (!m_gridShader->loadFromSource(gridVertex, gridFragment)) {
+        qWarning() << "Failed to load grid shader";
+        // Non-fatal
+        m_gridShader.reset();
+    }
     return true;
 }
 
 void Renderer::createDefaultResources() {
     m_quadMesh = std::unique_ptr<Mesh>(createQuadMesh());
-    m_groundMesh = std::unique_ptr<Mesh>(createPlaneMesh(1.0f, 1.0f, 1));
+    m_groundMesh = std::unique_ptr<Mesh>(createPlaneMesh(1.0f, 1.0f, 64));
+    // Create a simple identifiable "archer": crossed body panels + small head disk + front bow arc
+    {
+        std::vector<Vertex> verts;
+        std::vector<unsigned int> idx;
+        auto addQuad = [&](const QVector3D& a, const QVector3D& b, const QVector3D& c, const QVector3D& d, const QVector3D& n){
+            size_t base = verts.size();
+            verts.push_back({{a.x(), a.y(), a.z()}, {n.x(), n.y(), n.z()}, {0,0}});
+            verts.push_back({{b.x(), b.y(), b.z()}, {n.x(), n.y(), n.z()}, {1,0}});
+            verts.push_back({{c.x(), c.y(), c.z()}, {n.x(), n.y(), n.z()}, {1,1}});
+            verts.push_back({{d.x(), d.y(), d.z()}, {n.x(), n.y(), n.z()}, {0,1}});
+            idx.push_back(base+0); idx.push_back(base+1); idx.push_back(base+2);
+            idx.push_back(base+2); idx.push_back(base+3); idx.push_back(base+0);
+        };
+        float h = 1.6f; // height
+        float r = 0.25f; // width
+        // vertical crossed body
+        addQuad({-r,0,-0.0f},{ r,0, 0.0f},{ r,h, 0.0f},{-r,h, 0.0f},{0,0,1});
+        addQuad({0,-0.0f,-r},{0, 0.0f, r},{0, h, r},{0, h,-r},{1,0,0});
+        // head as small flat disk on top
+        {
+            int seg = 16; float headY = h + 0.15f; float headR = 0.18f; QVector3D n(0,1,0);
+            for (int i=0;i<seg;i++){
+                float a0 = (i    / float(seg)) * 6.2831853f;
+                float a1 = ((i+1)/ float(seg)) * 6.2831853f;
+                QVector3D c0(headR*std::cos(a0), headY, headR*std::sin(a0));
+                QVector3D c1(headR*std::cos(a1), headY, headR*std::sin(a1));
+                QVector3D center(0, headY, 0);
+                size_t base = verts.size();
+                verts.push_back({{center.x(),center.y(),center.z()},{n.x(),n.y(),n.z()},{0,0}});
+                verts.push_back({{c0.x(),c0.y(),c0.z()},{n.x(),n.y(),n.z()},{1,0}});
+                verts.push_back({{c1.x(),c1.y(),c1.z()},{n.x(),n.y(),n.z()},{1,1}});
+                idx.push_back(base+0); idx.push_back(base+1); idx.push_back(base+2);
+            }
+        }
+        // simple bow arc in front (thin quad strip)
+        {
+            float by0 = 0.4f, by1 = 1.2f; float bx = 0.35f; QVector3D n(0,0,1);
+            addQuad({bx,by0,-0.01f},{bx,by0,0.01f},{bx,by1,0.01f},{bx,by1,-0.01f}, n);
+        }
+        m_capsuleMesh = std::make_unique<Mesh>(verts, idx);
+    }
+    // Selection ring (flat torus approximated by triangle fan)
+    {
+        std::vector<Vertex> verts;
+        std::vector<unsigned int> idx;
+        int seg = 48;
+        float inner = 0.8f;
+        float outer = 1.0f;
+        for (int i=0;i<seg;i++){
+            float a0 = (i    / float(seg)) * 6.2831853f;
+            float a1 = ((i+1)/ float(seg)) * 6.2831853f;
+            QVector3D n(0,1,0);
+            QVector3D v0i(inner*std::cos(a0), 0.0f, inner*std::sin(a0));
+            QVector3D v0o(outer*std::cos(a0), 0.0f, outer*std::sin(a0));
+            QVector3D v1o(outer*std::cos(a1), 0.0f, outer*std::sin(a1));
+            QVector3D v1i(inner*std::cos(a1), 0.0f, inner*std::sin(a1));
+            size_t base = verts.size();
+            verts.push_back({{v0i.x(),0.0f,v0i.z()}, {n.x(),n.y(),n.z()}, {0,0}});
+            verts.push_back({{v0o.x(),0.0f,v0o.z()}, {n.x(),n.y(),n.z()}, {1,0}});
+            verts.push_back({{v1o.x(),0.0f,v1o.z()}, {n.x(),n.y(),n.z()}, {1,1}});
+            verts.push_back({{v1i.x(),0.0f,v1i.z()}, {n.x(),n.y(),n.z()}, {0,1}});
+            idx.push_back(base+0); idx.push_back(base+1); idx.push_back(base+2);
+            idx.push_back(base+2); idx.push_back(base+3); idx.push_back(base+0);
+        }
+        m_ringMesh = std::make_unique<Mesh>(verts, idx);
+    }
 
     m_whiteTexture = std::make_unique<Texture>();
     m_whiteTexture->createEmpty(1, 1, Texture::Format::RGBA);
@@ -279,6 +398,18 @@ void Renderer::sortRenderQueue() {
         [](const RenderCommand& a, const RenderCommand& b) {
             return a.texture < b.texture;
         });
+}
+
+void Renderer::renderSelectionRing(const QMatrix4x4& model, const QVector3D& color) {
+    if (!m_ringMesh || !m_basicShader || !m_camera) return;
+    m_basicShader->use();
+    m_basicShader->setUniform("u_model", model);
+    m_basicShader->setUniform("u_view", m_camera->getViewMatrix());
+    m_basicShader->setUniform("u_projection", m_camera->getProjectionMatrix());
+    m_basicShader->setUniform("u_useTexture", false);
+    m_basicShader->setUniform("u_color", color);
+    m_ringMesh->draw();
+    m_basicShader->release();
 }
 
 } // namespace Render::GL

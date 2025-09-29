@@ -45,10 +45,12 @@ public:
 // Movement Component
 class MovementComponent : public Component {
 public:
-    MovementComponent() : hasTarget(false), targetX(0.0f), targetY(0.0f) {}
+    MovementComponent() : hasTarget(false), targetX(0.0f), targetY(0.0f), vx(0.0f), vz(0.0f) {}
 
     bool hasTarget;
     float targetX, targetY;
+    // velocity in XZ plane for smoothing
+    float vx, vz;
     std::vector<std::pair<float, float>> path;
 };
 
