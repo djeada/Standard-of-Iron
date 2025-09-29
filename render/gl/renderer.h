@@ -32,6 +32,7 @@ public:
     
     void beginFrame();
     void endFrame();
+    void setViewport(int width, int height);
     
     void setCamera(Camera* camera);
     void setClearColor(float r, float g, float b, float a = 1.0f);
@@ -60,6 +61,9 @@ private:
     std::unique_ptr<Mesh> m_quadMesh;
     std::unique_ptr<Mesh> m_groundMesh;
     std::unique_ptr<Texture> m_whiteTexture;
+
+    int m_viewportWidth = 0;
+    int m_viewportHeight = 0;
     
     bool loadShaders();
     void createDefaultResources();
