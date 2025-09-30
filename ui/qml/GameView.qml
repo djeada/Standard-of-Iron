@@ -45,11 +45,12 @@ Item {
         //     horizontalAlignment: Text.AlignHCenter
         // }
         
-        // Camera controls info overlays
+        // Camera controls info overlay (offset below HUD top bar)
         Rectangle {
             anchors.top: parent.top
             anchors.left: parent.left
             anchors.margins: 10
+            anchors.topMargin: 70   // HUD top bar is 60px tall; keep some gap
             width: 200
             height: 120
             color: "#34495e"
