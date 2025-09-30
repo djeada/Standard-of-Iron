@@ -211,8 +211,6 @@ void Renderer::renderWorld(Engine::Core::World* world) {
                         model.scale(sx, 1.0f, sz);
                         // Shadow-like color (dark gray)
                         QVector3D c(0.0f, 0.0f, 0.0f);
-                        GLboolean depthEnabled = glIsEnabled(GL_DEPTH_TEST);
-                        if (!depthEnabled) glEnable(GL_DEPTH_TEST);
                         // Slightly bias depth to the ground and disable depth writes so later geometry can overwrite
                         glEnable(GL_POLYGON_OFFSET_FILL);
                         glPolygonOffset(1.0f, 1.0f);
