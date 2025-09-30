@@ -6,6 +6,7 @@
 #include <QPointF>
 #include <memory>
 #include <algorithm>
+#include <QVariant>
 
 namespace Engine { namespace Core {
 class World;
@@ -39,6 +40,7 @@ public:
     Q_INVOKABLE void onRightClick(qreal sx, qreal sy);
     Q_INVOKABLE void onClickSelect(qreal sx, qreal sy, bool additive = false);
     Q_INVOKABLE void onAreaSelected(qreal x1, qreal y1, qreal x2, qreal y2, bool additive = false);
+    Q_INVOKABLE void setHoverAtScreen(qreal sx, qreal sy);
 
     // Camera controls exposed to QML
     Q_INVOKABLE void cameraMove(float dx, float dz);      // move along ground plane (right/forward XZ)
@@ -51,6 +53,12 @@ public:
     // Game loop control
     Q_INVOKABLE void setPaused(bool paused) { m_paused = paused; }
     Q_INVOKABLE void setGameSpeed(float speed) { m_timeScale = std::max(0.0f, speed); }
+
+    // Selection queries and actions (for HUD/production)
+    Q_INVOKABLE bool hasSelectedType(const QString& type) const;
+    Q_INVOKABLE void recruitNearSelected(const QString& unitType);
+    Q_INVOKABLE QVariantMap getSelectedProductionState() const; // {hasBarracks, inProgress, timeRemaining, buildTime, producedCount, maxUnits}
+    Q_INVOKABLE void setRallyAtScreen(qreal sx, qreal sy);
 
     void setWindow(QQuickWindow* w) { m_window = w; }
 
@@ -96,6 +104,9 @@ private:
     float m_camFar = 1000.0f;
     QObject* m_selectedUnitsModel = nullptr;
     int m_localOwnerId = 1; // local player's owner/team id
+    // Hover state for subtle outline
+    Engine::Core::EntityID m_hoveredBuildingId = 0;
+    int m_hoverGraceTicks = 0; // small grace to avoid flicker when near edges
 signals:
     void selectedUnitsChanged();
 

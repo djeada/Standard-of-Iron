@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <cmath>
 #include "../entity/registry.h"
+#include "../geom/selection_ring.h"
 
 namespace Render::GL {
 
@@ -116,6 +117,7 @@ void Renderer::drawMesh(Mesh* mesh, const QMatrix4x4& modelMatrix, Texture* text
     m_basicShader->setUniform("u_model", modelMatrix);
     m_basicShader->setUniform("u_view", m_camera->getViewMatrix());
     m_basicShader->setUniform("u_projection", m_camera->getProjectionMatrix());
+    m_basicShader->setUniform("u_alpha", 1.0f);
     
     // Bind texture
     if (texture) {
@@ -145,6 +147,8 @@ void Renderer::drawMeshColored(Mesh* mesh, const QMatrix4x4& modelMatrix, const 
     m_basicShader->setUniform("u_model", modelMatrix);
     m_basicShader->setUniform("u_view", m_camera->getViewMatrix());
     m_basicShader->setUniform("u_projection", m_camera->getProjectionMatrix());
+    // Alpha default 1, caller can adjust via another shader call if needed
+    m_basicShader->setUniform("u_alpha", 1.0f);
     if (texture) {
         texture->bind(0);
         m_basicShader->setUniform("u_texture", 0);
@@ -190,18 +194,70 @@ void Renderer::renderWorld(Engine::Core::World* world) {
     }
     // Draw ground plane with grid using helper
     renderGridGround();
-    
+
+    // Draw hover ring before entities so buildings naturally occlude it
+    if (m_hoveredBuildingId) {
+        if (auto* hovered = world->getEntity(m_hoveredBuildingId)) {
+            if (hovered->hasComponent<Engine::Core::BuildingComponent>()) {
+                if (auto* t = hovered->getComponent<Engine::Core::TransformComponent>()) {
+                    Mesh* ring = Render::Geom::SelectionRing::get();
+                    if (ring && m_basicShader && m_camera) {
+                        const float marginXZ = 1.25f;
+                        const float pad = 1.06f;
+                        float sx = std::max(0.6f, t->scale.x * marginXZ * pad * 1.5f);
+                        float sz = std::max(0.6f, t->scale.z * marginXZ * pad * 1.5f);
+                        QMatrix4x4 model;
+                        model.translate(t->position.x, 0.01f, t->position.z);
+                        model.scale(sx, 1.0f, sz);
+                        // Shadow-like color (dark gray)
+                        QVector3D c(0.0f, 0.0f, 0.0f);
+                        GLboolean depthEnabled = glIsEnabled(GL_DEPTH_TEST);
+                        if (!depthEnabled) glEnable(GL_DEPTH_TEST);
+                        // Slightly bias depth to the ground and disable depth writes so later geometry can overwrite
+                        glEnable(GL_POLYGON_OFFSET_FILL);
+                        glPolygonOffset(1.0f, 1.0f);
+                        // Disable depth writes so later geometry can overwrite the ring
+                        glDepthMask(GL_FALSE);
+                        m_basicShader->use();
+                        m_basicShader->setUniform("u_model", model);
+                        m_basicShader->setUniform("u_view", m_camera->getViewMatrix());
+                        m_basicShader->setUniform("u_projection", m_camera->getProjectionMatrix());
+                        if (m_resources && m_resources->white()) {
+                            m_resources->white()->bind(0);
+                            m_basicShader->setUniform("u_texture", 0);
+                        }
+                        m_basicShader->setUniform("u_useTexture", false);
+                        m_basicShader->setUniform("u_color", c);
+                        // Soft shadow edge
+                        m_basicShader->setUniform("u_alpha", 0.10f);
+                        QMatrix4x4 feather = model; feather.scale(1.08f, 1.0f, 1.08f);
+                        m_basicShader->setUniform("u_model", feather);
+                        ring->draw();
+                        // Main shadow ring
+                        m_basicShader->setUniform("u_model", model);
+                        m_basicShader->setUniform("u_alpha", 0.28f);
+                        ring->draw();
+                        m_basicShader->release();
+                        glDepthMask(GL_TRUE);
+                        glDisable(GL_POLYGON_OFFSET_FILL);
+                        if (!depthEnabled) glDisable(GL_DEPTH_TEST);
+                    }
+                }
+            }
+        }
+    }
+
     // Get all entities with both transform and renderable components
     auto renderableEntities = world->getEntitiesWith<Engine::Core::RenderableComponent>();
-    
+
     for (auto entity : renderableEntities) {
         auto renderable = entity->getComponent<Engine::Core::RenderableComponent>();
         auto transform = entity->getComponent<Engine::Core::TransformComponent>();
-        
+
         if (!renderable->visible || !transform) {
             continue;
         }
-        
+
         // Build model matrix from transform
         QMatrix4x4 modelMatrix;
         modelMatrix.translate(transform->position.x, transform->position.y, transform->position.z);
@@ -209,7 +265,7 @@ void Renderer::renderWorld(Engine::Core::World* world) {
         modelMatrix.rotate(transform->rotation.y, QVector3D(0, 1, 0));
         modelMatrix.rotate(transform->rotation.z, QVector3D(0, 0, 1));
         modelMatrix.scale(transform->scale.x, transform->scale.y, transform->scale.z);
-        
+
         // If entity has a unitType, try registry-based renderer first
         bool drawnByRegistry = false;
         if (auto* unit = entity->getComponent<Engine::Core::UnitComponent>()) {
@@ -222,7 +278,23 @@ void Renderer::renderWorld(Engine::Core::World* world) {
                 }
             }
         }
-        if (drawnByRegistry) continue;
+        if (drawnByRegistry) {
+            // Draw rally flag marker if this is a barracks with a set rally
+            if (auto* unit = entity->getComponent<Engine::Core::UnitComponent>()) {
+                if (unit->unitType == "barracks") {
+                    if (auto* prod = entity->getComponent<Engine::Core::ProductionComponent>()) {
+                        if (prod->rallySet && m_resources) {
+                            QMatrix4x4 flagModel;
+                            flagModel.translate(prod->rallyX, 0.1f, prod->rallyZ);
+                            flagModel.scale(0.2f, 0.2f, 0.2f);
+                            drawMeshColored(m_resources->unit(), flagModel, QVector3D(1.0f, 0.9f, 0.2f), m_resources->white());
+                        }
+                    }
+                }
+            }
+            continue;
+        }
+
         // Else choose mesh based on RenderableComponent hint
         RenderCommand command;
         command.modelMatrix = modelMatrix;
@@ -242,6 +314,20 @@ void Renderer::renderWorld(Engine::Core::World* world) {
         // Use per-entity color if set, else a default
         command.color = QVector3D(renderable->color[0], renderable->color[1], renderable->color[2]);
         submitRenderCommand(command);
+
+        // If this render path drew a barracks (no custom renderer used), also draw rally flag
+        if (auto* unit = entity->getComponent<Engine::Core::UnitComponent>()) {
+            if (unit->unitType == "barracks") {
+                if (auto* prod = entity->getComponent<Engine::Core::ProductionComponent>()) {
+                    if (prod->rallySet && m_resources) {
+                        QMatrix4x4 flagModel;
+                        flagModel.translate(prod->rallyX, 0.1f, prod->rallyZ);
+                        flagModel.scale(0.2f, 0.2f, 0.2f);
+                        drawMeshColored(m_resources->unit(), flagModel, QVector3D(1.0f, 0.9f, 0.2f), m_resources->white());
+                    }
+                }
+            }
+        }
         // Selection ring is drawn by entity-specific renderer if desired
     }
 }
