@@ -431,8 +431,8 @@ void GameEngine::update(float dt) {
         dt *= m_timeScale;
     }
     if (m_world) m_world->update(dt);
-        // Decay hover grace window
-        if (m_hoverGraceTicks > 0) --m_hoverGraceTicks;
+    // Decay hover grace window
+    if (m_hoverGraceTicks > 0) --m_hoverGraceTicks;
     // Prune selection of dead units and keep flags in sync
     syncSelectionFlags();
     // Update camera follow behavior after world update so positions are fresh
