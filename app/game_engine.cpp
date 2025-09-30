@@ -109,16 +109,30 @@ void GameEngine::setHoverAtScreen(qreal sx, qreal sy) {
 
     // Helper: project a base rectangle (XZ) to screen and return bounds
     auto projectBounds = [&](const QVector3D& center, float hx, float hz, QRectF& out) -> bool {
-        QPointF p1, p2, p3, p4;
-        bool ok1 = worldToScreen(QVector3D(center.x() - hx, center.y() + 0.0f, center.z() - hz), p1);
-        bool ok2 = worldToScreen(QVector3D(center.x() + hx, center.y() + 0.0f, center.z() - hz), p2);
-        bool ok3 = worldToScreen(QVector3D(center.x() + hx, center.y() + 0.0f, center.z() + hz), p3);
-        bool ok4 = worldToScreen(QVector3D(center.x() - hx, center.y() + 0.0f, center.z() + hz), p4);
-        if (!(ok1 && ok2 && ok3 && ok4)) return false;
-        float minX = std::min(std::min(float(p1.x()), float(p2.x())), std::min(float(p3.x()), float(p4.x())));
-        float maxX = std::max(std::max(float(p1.x()), float(p2.x())), std::max(float(p3.x()), float(p4.x())));
-        float minY = std::min(std::min(float(p1.y()), float(p2.y())), std::min(float(p3.y()), float(p4.y())));
-        float maxY = std::max(std::max(float(p1.y()), float(p2.y())), std::max(float(p3.y()), float(p4.y())));
+        // Precompute the four corners in world space
+        QVector3D corners[4] = {
+            QVector3D(center.x() - hx, center.y(), center.z() - hz),
+            QVector3D(center.x() + hx, center.y(), center.z() - hz),
+            QVector3D(center.x() + hx, center.y(), center.z() + hz),
+            QVector3D(center.x() - hx, center.y(), center.z() + hz)
+        };
+        QPointF screenPts[4];
+        bool allOk = true;
+        for (int i = 0; i < 4; ++i) {
+            if (!worldToScreen(corners[i], screenPts[i])) {
+                allOk = false;
+                break;
+            }
+        }
+        if (!allOk) return false;
+        float minX = screenPts[0].x(), maxX = screenPts[0].x();
+        float minY = screenPts[0].y(), maxY = screenPts[0].y();
+        for (int i = 1; i < 4; ++i) {
+            minX = std::min(minX, float(screenPts[i].x()));
+            maxX = std::max(maxX, float(screenPts[i].x()));
+            minY = std::min(minY, float(screenPts[i].y()));
+            maxY = std::max(maxY, float(screenPts[i].y()));
+        }
         out = QRectF(QPointF(minX, minY), QPointF(maxX, maxY));
         return true;
     };
