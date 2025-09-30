@@ -379,9 +379,10 @@ Item {
                                 }
                             }
                             // Fallback info if no production building
-                            Item { visible: (selectionTick, (typeof game === 'undefined' || !game.hasSelectedType || !game.hasSelectedType("barracks"))); 
-                                  anchors.horizontalCenter: parent.horizontalCenter; width: 1; height: 1;
-                                  Text { text: "No production"; color: "#7f8c8d"; anchors.horizontalCenter: parent.horizontalCenter; font.pointSize: 10 }
+                            Item { 
+                                visible: (selectionTick, (typeof game === 'undefined' || !game.hasSelectedType || !game.hasSelectedType("barracks"))); 
+                                Layout.fillWidth: true
+                                Text { text: "No production"; color: "#7f8c8d"; anchors.horizontalCenter: parent.horizontalCenter; font.pointSize: 10 }
                             }
                         }
                     }
