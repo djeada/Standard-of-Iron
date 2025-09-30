@@ -12,6 +12,7 @@ Item {
     signal mapClicked(real x, real y)
     signal unitSelected(int unitId)
     signal areaSelected(real x1, real y1, real x2, real y2)
+    property bool setRallyMode: false
     
     function setPaused(paused) {
         isPaused = paused
@@ -102,6 +103,7 @@ Item {
             acceptedButtons: Qt.LeftButton | Qt.RightButton
             hoverEnabled: true
             propagateComposedEvents: true
+            preventStealing: true
             onWheel: function(w) {
                 // Mouse wheel: move camera up/down (RTS-style height adjust)
                 // delta is in eighths of a degree; use angleDelta.y where available
@@ -119,6 +121,14 @@ Item {
             
             onPressed: function(mouse) {
                 if (mouse.button === Qt.LeftButton) {
+                    if (gameView.setRallyMode) {
+                        // In rally mode, a left click sets rally and does not start selection drag
+                        if (typeof game !== 'undefined' && game.setRallyAtScreen) {
+                            game.setRallyAtScreen(mouse.x, mouse.y)
+                        }
+                        gameView.setRallyMode = false
+                        return
+                    }
                     isSelecting = true
                     startX = mouse.x
                     startY = mouse.y
@@ -143,6 +153,27 @@ Item {
                     selectionBox.y = Math.min(startY, endY)
                     selectionBox.width = Math.abs(endX - startX)
                     selectionBox.height = Math.abs(endY - startY)
+                } else {
+                    if (typeof game !== 'undefined' && game.setHoverAtScreen) {
+                        // Debug: trace hover feed
+                        // console.log("hover move", mouse.x, mouse.y)
+                        game.setHoverAtScreen(mouse.x, mouse.y)
+                    }
+                }
+            }
+            onEntered: function() {
+                if (typeof game !== 'undefined' && game.setHoverAtScreen) {
+                    game.setHoverAtScreen(mouseArea.mouseX, mouseArea.mouseY)
+                }
+            }
+            onExited: function() {
+                if (typeof game !== 'undefined' && game.setHoverAtScreen) {
+                    game.setHoverAtScreen(-1, -1)
+                }
+            }
+            onContainsMouseChanged: function() {
+                if (!mouseArea.containsMouse && typeof game !== 'undefined' && game.setHoverAtScreen) {
+                    game.setHoverAtScreen(-1, -1)
                 }
             }
             
@@ -163,12 +194,24 @@ Item {
                                                 false)
                         }
                     } else {
-                        // Point selection
+                        // Point selection (unless rally was set in onPressed)
                         mapClicked(mouse.x, mouse.y)
                         if (typeof game !== 'undefined' && game.onClickSelect) {
                             game.onClickSelect(mouse.x, mouse.y, false)
                         }
                     }
+                }
+            }
+        }
+
+        // Periodic hover updater in case position events are throttled by the scene graph
+        Timer {
+            interval: 33 // ~30 FPS is enough
+            running: true
+            repeat: true
+            onTriggered: {
+                if (mouseArea.containsMouse && typeof game !== 'undefined' && game.setHoverAtScreen) {
+                    game.setHoverAtScreen(mouseArea.mouseX, mouseArea.mouseY)
                 }
             }
         }

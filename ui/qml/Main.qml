@@ -43,6 +43,13 @@ ApplicationWindow {
         onUnitCommand: function(command) {
             gameViewItem.issueCommand(command)
         }
+
+        onRecruit: function(unitType) {
+            if (typeof game !== 'undefined' && game.recruitNearSelected)
+                game.recruitNearSelected(unitType)
+            // Return focus to the game view for keyboard controls
+            gameViewItem.forceActiveFocus()
+        }
     }
 
     // Edge scroll overlay (hover-only) above HUD to ensure bottom edge works
@@ -65,14 +72,24 @@ ApplicationWindow {
             onPositionChanged: function(mouse) {
                 edgeScrollOverlay.xPos = mouse.x
                 edgeScrollOverlay.yPos = mouse.y
+                // Also feed hover to the engine since this overlay sits above the GL view
+                if (typeof game !== 'undefined' && game.setHoverAtScreen) {
+                    game.setHoverAtScreen(mouse.x, mouse.y)
+                }
             }
             onEntered: function(mouse) {
                 edgeScrollTimer.start()
+                if (typeof game !== 'undefined' && game.setHoverAtScreen) {
+                    game.setHoverAtScreen(edgeScrollOverlay.xPos, edgeScrollOverlay.yPos)
+                }
             }
             onExited: function(mouse) {
                 edgeScrollTimer.stop()
                 edgeScrollOverlay.xPos = -1
                 edgeScrollOverlay.yPos = -1
+                if (typeof game !== 'undefined' && game.setHoverAtScreen) {
+                    game.setHoverAtScreen(-1, -1)
+                }
             }
         }
 
@@ -87,6 +104,8 @@ ApplicationWindow {
                 const x = edgeScrollOverlay.xPos
                 const y = edgeScrollOverlay.yPos
                 if (x < 0 || y < 0) return
+                // Keep hover updated even if positionChanged throttles
+                if (game.setHoverAtScreen) game.setHoverAtScreen(x, y)
                 const t = edgeScrollOverlay.threshold
                 const clamp = function(v, lo, hi) { return Math.max(lo, Math.min(hi, v)) }
                 // Distance from edges
