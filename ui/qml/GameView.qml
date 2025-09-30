@@ -35,6 +35,7 @@ Item {
         id: renderArea
         anchors.fill: parent
         engine: game // GameEngine object exposed from C++
+            focus: false
         
         // Placeholder text (disabled by default to not cover GL)
         // Text {
