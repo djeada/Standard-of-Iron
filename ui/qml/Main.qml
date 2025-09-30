@@ -30,10 +30,14 @@ ApplicationWindow {
         onPauseToggled: {
             // Handle pause/resume
             gameViewItem.setPaused(!gameViewItem.isPaused)
+            // Return focus to the game view for keyboard controls
+            gameViewItem.forceActiveFocus()
         }
         
         onSpeedChanged: function(speed) {
             gameViewItem.setGameSpeed(speed)
+            // Return focus to the game view for keyboard controls
+            gameViewItem.forceActiveFocus()
         }
         
         onUnitCommand: function(command) {
