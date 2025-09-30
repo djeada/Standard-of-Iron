@@ -1,6 +1,6 @@
 #include "selection_system.h"
-#include "../../engine/core/world.h"
-#include "../../engine/core/component.h"
+#include "../core/world.h"
+#include "../core/component.h"
 #include <algorithm>
 
 namespace Game::Systems {

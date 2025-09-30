@@ -1,6 +1,6 @@
 #include "renderer.h"
-#include "../../engine/core/world.h"
-#include "../../engine/core/component.h"
+#include "../../game/core/world.h"
+#include "../../game/core/component.h"
 #include <QDebug>
 #include <QOpenGLContext>
 #include <algorithm>
@@ -247,101 +247,25 @@ void Renderer::renderWorld(Engine::Core::World* world) {
 }
 
 bool Renderer::loadShaders() {
-    // Basic vertex shader
-    QString basicVertexSource = R"(
-        #version 330 core
-        layout (location = 0) in vec3 a_position;
-        layout (location = 1) in vec3 a_normal;
-        layout (location = 2) in vec2 a_texCoord;
-        
-        uniform mat4 u_model;
-        uniform mat4 u_view;
-        uniform mat4 u_projection;
-        
-        out vec3 v_normal;
-        out vec2 v_texCoord;
-        out vec3 v_worldPos;
-        
-        void main() {
-            v_normal = mat3(transpose(inverse(u_model))) * a_normal;
-            v_texCoord = a_texCoord;
-            v_worldPos = vec3(u_model * vec4(a_position, 1.0));
-            
-            gl_Position = u_projection * u_view * u_model * vec4(a_position, 1.0);
-        }
-    )";
-    
-    // Basic fragment shader
-    QString basicFragmentSource = R"(
-        #version 330 core
-        in vec3 v_normal;
-        in vec2 v_texCoord;
-        in vec3 v_worldPos;
-        
-        uniform sampler2D u_texture;
-        uniform vec3 u_color;
-        uniform bool u_useTexture;
-        
-        out vec4 FragColor;
-        
-        void main() {
-            vec3 color = u_color;
-            
-            if (u_useTexture) {
-                color *= texture(u_texture, v_texCoord).rgb;
-            }
-            
-            // Simple lighting
-            vec3 normal = normalize(v_normal);
-            vec3 lightDir = normalize(vec3(1.0, 1.0, 1.0));
-            float diff = max(dot(normal, lightDir), 0.2); // Ambient + diffuse
-            
-            color *= diff;
-            
-            FragColor = vec4(color, 1.0);
-        }
-    )";
-    
+    // Load shaders from assets
+    const QString base = QStringLiteral("assets/shaders/");
+    const QString basicVert = base + QStringLiteral("basic.vert");
+    const QString basicFrag = base + QStringLiteral("basic.frag");
+    const QString gridFrag  = base + QStringLiteral("grid.frag");
+
     m_basicShader = std::make_unique<Shader>();
-    if (!m_basicShader->loadFromSource(basicVertexSource, basicFragmentSource)) {
-        qWarning() << "Failed to load basic shader";
+    if (!m_basicShader->loadFromFiles(basicVert, basicFrag)) {
+        qWarning() << "Failed to load basic shader from files" << basicVert << basicFrag;
         return false;
     }
-    // Grid shader
-    QString gridVertex = basicVertexSource;
-    QString gridFragment = R"(
-        #version 330 core
-        in vec3 v_normal;
-        in vec2 v_texCoord;
-        in vec3 v_worldPos;
-        
-        uniform vec3 u_gridColor;
-        uniform vec3 u_lineColor;
-        uniform float u_cellSize;
-        uniform float u_thickness; // fraction of cell (0..0.5)
-        
-        out vec4 FragColor;
-        
-        void main() {
-            vec2 coord = v_worldPos.xz / u_cellSize;
-            vec2 g = abs(fract(coord) - 0.5);
-            float lineX = step(0.5 - u_thickness, g.x);
-            float lineY = step(0.5 - u_thickness, g.y);
-            float lineMask = max(lineX, lineY);
-            vec3 col = mix(u_gridColor, u_lineColor, lineMask);
-            FragColor = vec4(col, 1.0);
-        }
-    )";
     m_gridShader = std::make_unique<Shader>();
-    if (!m_gridShader->loadFromSource(gridVertex, gridFragment)) {
-        qWarning() << "Failed to load grid shader";
-        // Non-fatal
+    // Reuse the same vertex shader for grid; load vertex from file and fragment from grid
+    if (!m_gridShader->loadFromFiles(basicVert, gridFrag)) {
+        qWarning() << "Failed to load grid shader from files" << basicVert << gridFrag;
         m_gridShader.reset();
     }
     return true;
 }
-
-// Removed: default resource creation is now handled by ResourceManager
 
 void Renderer::sortRenderQueue() {
     // Simple sorting by texture to reduce state changes
@@ -350,7 +274,5 @@ void Renderer::sortRenderQueue() {
             return a.texture < b.texture;
         });
 }
-
-// Selection ring helper removed; entity renderers can draw ring using drawMeshColored with shared ring mesh
 
 } // namespace Render::GL

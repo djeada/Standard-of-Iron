@@ -5,6 +5,8 @@
 #include "mesh.h"
 #include "texture.h"
 
+#include "../geom/arrow.h"
+
 namespace Render::GL {
 
 class ResourceManager : protected QOpenGLFunctions_3_3_Core {
@@ -18,6 +20,7 @@ public:
     Mesh* quad() const { return m_quadMesh.get(); }
     Mesh* ground() const { return m_groundMesh.get(); }
     Mesh* unit() const { return m_unitMesh.get(); }
+    Mesh* arrow() const { return Render::Geom::Arrow::get(); }
     Texture* white() const { return m_whiteTexture.get(); }
 
 private:

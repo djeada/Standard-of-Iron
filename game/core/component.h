@@ -1,10 +1,13 @@
 #pragma once
 
 #include "entity.h"
+#include <string>
+#include <vector>
+
 
 namespace Engine::Core {
 
-// Transform Component
+
 class TransformComponent : public Component {
 public:
     TransformComponent(float x = 0.0f, float y = 0.0f, float z = 0.0f, 
@@ -18,7 +21,6 @@ public:
     Vec3 scale;
 };
 
-// Renderable Component
 class RenderableComponent : public Component {
 public:
     enum class MeshKind { None, Quad, Plane, Cube, Capsule, Ring };
@@ -32,32 +34,41 @@ public:
     std::string texturePath;
     bool visible;
     MeshKind mesh;
-    float color[3]; // RGB 0..1
+    float color[3];
 };
 
-// Unit Component (for RTS units)
 class UnitComponent : public Component {
 public:
     UnitComponent(int health = 100, int maxHealth = 100, float speed = 1.0f)
-        : health(health), maxHealth(maxHealth), speed(speed), selected(false) {}
+        : health(health), maxHealth(maxHealth), speed(speed), selected(false), ownerId(0) {}
 
     int health;
     int maxHealth;
     float speed;
     bool selected;
     std::string unitType;
+    int ownerId; // faction/player ownership
 };
 
-// Movement Component
 class MovementComponent : public Component {
 public:
     MovementComponent() : hasTarget(false), targetX(0.0f), targetY(0.0f), vx(0.0f), vz(0.0f) {}
 
     bool hasTarget;
     float targetX, targetY;
-    // velocity in XZ plane for smoothing
     float vx, vz;
     std::vector<std::pair<float, float>> path;
+};
+
+class AttackComponent : public Component {
+public:
+    AttackComponent(float range = 2.0f, int damage = 10, float cooldown = 1.0f)
+        : range(range), damage(damage), cooldown(cooldown), timeSinceLast(0.0f) {}
+
+    float range;
+    int damage;
+    float cooldown;
+    float timeSinceLast;
 };
 
 } // namespace Engine::Core

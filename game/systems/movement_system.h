@@ -1,8 +1,10 @@
 #pragma once
 
-#include "../../engine/core/system.h"
-#include "../../engine/core/world.h"
-#include "../../engine/core/component.h"
+#include "../core/system.h"
+#include "../core/world.h"
+#include "../core/component.h"
+
+namespace Engine { namespace Core { class Entity; } }
 
 namespace Game::Systems {
 
