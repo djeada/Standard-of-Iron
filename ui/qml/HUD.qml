@@ -32,6 +32,7 @@ Item {
             Button {
                 text: gameIsPaused ? "▶" : "⏸"
                 font.pointSize: 16
+                focusPolicy: Qt.NoFocus
                 onClicked: {
                     gameIsPaused = !gameIsPaused
                     pauseToggled()
@@ -56,6 +57,7 @@ Item {
                 enabled: !gameIsPaused
                 checkable: true
                 checked: currentSpeed === 0.5 && !gameIsPaused
+                focusPolicy: Qt.NoFocus
                 onClicked: {
                     currentSpeed = 0.5
                     speedChanged(currentSpeed)
@@ -67,6 +69,7 @@ Item {
                 enabled: !gameIsPaused
                 checkable: true
                 checked: currentSpeed === 1.0 && !gameIsPaused
+                focusPolicy: Qt.NoFocus
                 onClicked: {
                     currentSpeed = 1.0
                     speedChanged(currentSpeed)
@@ -78,6 +81,7 @@ Item {
                 enabled: !gameIsPaused
                 checkable: true
                 checked: currentSpeed === 2.0 && !gameIsPaused
+                focusPolicy: Qt.NoFocus
                 onClicked: {
                     currentSpeed = 2.0
                     speedChanged(currentSpeed)
@@ -226,6 +230,7 @@ Item {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     text: "Move"
+                    focusPolicy: Qt.NoFocus
                     onClicked: unitCommand("move")
                 }
                 
@@ -233,6 +238,7 @@ Item {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     text: "Attack"
+                    focusPolicy: Qt.NoFocus
                     onClicked: unitCommand("attack")
                 }
                 
@@ -240,6 +246,7 @@ Item {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     text: "Stop"
+                    focusPolicy: Qt.NoFocus
                     onClicked: unitCommand("stop")
                 }
                 
@@ -256,6 +263,7 @@ Item {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     text: "Patrol"
+                    focusPolicy: Qt.NoFocus
                     onClicked: unitCommand("patrol")
                 }
                 
@@ -263,6 +271,7 @@ Item {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     text: "Guard"
+                    focusPolicy: Qt.NoFocus
                     onClicked: unitCommand("guard")
                 }
             }
