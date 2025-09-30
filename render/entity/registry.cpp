@@ -1,5 +1,6 @@
 #include "registry.h"
 #include "archer_renderer.h"
+#include "barracks_renderer.h"
 #include "../gl/renderer.h"
 #include "../../game/core/entity.h"
 #include "../../game/core/component.h"
@@ -18,6 +19,7 @@ RenderFunc EntityRendererRegistry::get(const std::string& type) const {
 
 void registerBuiltInEntityRenderers(EntityRendererRegistry& registry) {
     registerArcherRenderer(registry);
+    registerBarracksRenderer(registry);
 }
 
 } // namespace Render::GL

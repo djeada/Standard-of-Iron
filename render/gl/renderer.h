@@ -41,6 +41,7 @@ public:
     void setClearColor(float r, float g, float b, float a = 1.0f);
     // Optional: inject an external ResourceManager owned by the app
     void setResources(const std::shared_ptr<ResourceManager>& resources) { m_resources = resources; }
+    void setHoveredBuildingId(unsigned int id) { m_hoveredBuildingId = id; }
 
     // Lightweight, app-facing helpers
     void renderGridGround();
@@ -86,6 +87,7 @@ private:
     // Default resources
     std::shared_ptr<ResourceManager> m_resources;
     std::unique_ptr<EntityRendererRegistry> m_entityRegistry;
+    unsigned int m_hoveredBuildingId = 0;
 
     int m_viewportWidth = 0;
     int m_viewportHeight = 0;

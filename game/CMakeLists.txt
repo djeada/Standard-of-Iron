@@ -18,6 +18,7 @@ add_library(game_systems STATIC
     systems/pathfinding.cpp
     systems/selection_system.cpp
     systems/arrow_system.cpp
+    systems/production_system.cpp
     map/map_loader.cpp
     map/map_transformer.cpp
     map/environment.cpp
@@ -25,6 +26,7 @@ add_library(game_systems STATIC
     units/unit.cpp
     units/archer.cpp
     units/factory.cpp
+    units/barracks.cpp
 )
 
 target_include_directories(game_systems PUBLIC .)

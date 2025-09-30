@@ -72,3 +72,29 @@ public:
 };
 
 } // namespace Engine::Core
+
+namespace Engine::Core {
+
+class BuildingComponent : public Component {
+public:
+    BuildingComponent() = default; // marker component for buildings (non-squad units)
+};
+
+class ProductionComponent : public Component {
+public:
+    ProductionComponent()
+                : inProgress(false), buildTime(4.0f), timeRemaining(0.0f),
+                    producedCount(0), maxUnits(5), productType("archer"),
+                    rallyX(0.0f), rallyZ(0.0f), rallySet(false) {}
+
+    bool inProgress;
+    float buildTime;      // seconds for one unit
+    float timeRemaining;  // seconds left for current production
+    int producedCount;    // how many produced by this building
+    int maxUnits;         // cap after which building can't produce more
+    std::string productType;
+    float rallyX, rallyZ; // rally point on ground plane (XZ)
+    bool rallySet;        // true if rally point explicitly set
+};
+
+} // namespace Engine::Core
