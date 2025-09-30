@@ -5,6 +5,7 @@
 #include <QMatrix4x4>
 #include <QPointF>
 #include <memory>
+#include <algorithm>
 
 namespace Engine { namespace Core {
 class World;
@@ -31,6 +32,8 @@ public:
     ~GameEngine();
 
     Q_PROPERTY(QObject* selectedUnitsModel READ selectedUnitsModel NOTIFY selectedUnitsChanged)
+    Q_PROPERTY(bool paused MEMBER m_paused)
+    Q_PROPERTY(float timeScale MEMBER m_timeScale)
 
     Q_INVOKABLE void onMapClicked(qreal sx, qreal sy);
     Q_INVOKABLE void onRightClick(qreal sx, qreal sy);
@@ -44,6 +47,10 @@ public:
     Q_INVOKABLE void cameraOrbit(float yawDeg, float pitchDeg); // orbit around target by yaw/pitch
     Q_INVOKABLE void cameraFollowSelection(bool enable);  // follow the currently selected troops
     Q_INVOKABLE void cameraSetFollowLerp(float alpha);    // 0..1, 1 = snap to center
+
+    // Game loop control
+    Q_INVOKABLE void setPaused(bool paused) { m_paused = paused; }
+    Q_INVOKABLE void setGameSpeed(float speed) { m_timeScale = std::max(0.0f, speed); }
 
     void setWindow(QQuickWindow* w) { m_window = w; }
 
@@ -70,6 +77,8 @@ private:
     QQuickWindow* m_window = nullptr;
     Engine::Core::EntityID m_playerUnitId = 0;
     bool m_initialized = false;
+    bool m_paused = false;
+    float m_timeScale = 1.0f;
     int m_viewW = 0;
     int m_viewH = 0;
     // Follow behavior
