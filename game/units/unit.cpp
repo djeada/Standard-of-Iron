@@ -31,18 +31,6 @@ void Unit::moveTo(float x, float z) {
     if (m_mv) { m_mv->targetX = x; m_mv->targetY = z; m_mv->hasTarget = true; }
 }
 
-void Unit::setSelected(bool sel) {
-    ensureCoreComponents();
-    if (m_u) m_u->selected = sel;
-}
-
-bool Unit::isSelected() const {
-    if (auto* e = entity()) {
-        if (auto* u = e->getComponent<Engine::Core::UnitComponent>()) return u->selected;
-    }
-    return false;
-}
-
 bool Unit::isAlive() const {
     if (auto* e = entity()) {
         if (auto* u = e->getComponent<Engine::Core::UnitComponent>()) return u->health > 0;
