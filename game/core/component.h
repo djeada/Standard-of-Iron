@@ -40,12 +40,11 @@ public:
 class UnitComponent : public Component {
 public:
     UnitComponent(int health = 100, int maxHealth = 100, float speed = 1.0f)
-        : health(health), maxHealth(maxHealth), speed(speed), selected(false), ownerId(0) {}
+        : health(health), maxHealth(maxHealth), speed(speed), ownerId(0) {}
 
     int health;
     int maxHealth;
     float speed;
-    bool selected;
     std::string unitType;
     int ownerId; // faction/player ownership
 };

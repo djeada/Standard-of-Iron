@@ -61,6 +61,17 @@ ApplicationWindow {
         property real maxSpeed: 1.2    // world units per tick at the very edge
         property real xPos: -1
         property real yPos: -1
+    // Shift vertical edge-scroll away from HUD panels by this many pixels
+    property int verticalShift: 6
+        // Computed guard zones derived from HUD panel heights
+        function inHudZone(x, y) {
+            // Guard against missing HUD object
+            var topH = (typeof hud !== 'undefined' && hud && hud.topPanelHeight) ? hud.topPanelHeight : 0
+            var bottomH = (typeof hud !== 'undefined' && hud && hud.bottomPanelHeight) ? hud.bottomPanelHeight : 0
+            if (y < topH) return true
+            if (y > (height - bottomH)) return true
+            return false
+        }
 
         // Hover tracker that does not consume clicks
         MouseArea {
@@ -72,15 +83,23 @@ ApplicationWindow {
             onPositionChanged: function(mouse) {
                 edgeScrollOverlay.xPos = mouse.x
                 edgeScrollOverlay.yPos = mouse.y
-                // Also feed hover to the engine since this overlay sits above the GL view
+                // Only feed hover to engine if not over HUD panels; otherwise clear hover
                 if (typeof game !== 'undefined' && game.setHoverAtScreen) {
-                    game.setHoverAtScreen(mouse.x, mouse.y)
+                    if (!edgeScrollOverlay.inHudZone(mouse.x, mouse.y)) {
+                        game.setHoverAtScreen(mouse.x, mouse.y)
+                    } else {
+                        game.setHoverAtScreen(-1, -1)
+                    }
                 }
             }
             onEntered: function(mouse) {
                 edgeScrollTimer.start()
                 if (typeof game !== 'undefined' && game.setHoverAtScreen) {
-                    game.setHoverAtScreen(edgeScrollOverlay.xPos, edgeScrollOverlay.yPos)
+                    if (!edgeScrollOverlay.inHudZone(edgeScrollOverlay.xPos, edgeScrollOverlay.yPos)) {
+                        game.setHoverAtScreen(edgeScrollOverlay.xPos, edgeScrollOverlay.yPos)
+                    } else {
+                        game.setHoverAtScreen(-1, -1)
+                    }
                 }
             }
             onExited: function(mouse) {
@@ -104,6 +123,11 @@ ApplicationWindow {
                 const x = edgeScrollOverlay.xPos
                 const y = edgeScrollOverlay.yPos
                 if (x < 0 || y < 0) return
+                // Skip camera movement and hover updates when over HUD panels
+                if (edgeScrollOverlay.inHudZone(x, y)) {
+                    if (game.setHoverAtScreen) game.setHoverAtScreen(-1, -1)
+                    return
+                }
                 // Keep hover updated even if positionChanged throttles
                 if (game.setHoverAtScreen) game.setHoverAtScreen(x, y)
                 const t = edgeScrollOverlay.threshold
@@ -111,8 +135,13 @@ ApplicationWindow {
                 // Distance from edges
                 const dl = x
                 const dr = w - x
-                const dt = y
-                const db = h - y
+                // Shift vertical edges inward to avoid overlapping HUD panels
+                const topBar = (typeof hud !== 'undefined' && hud && hud.topPanelHeight) ? hud.topPanelHeight : 0
+                const bottomBar = (typeof hud !== 'undefined' && hud && hud.bottomPanelHeight) ? hud.bottomPanelHeight : 0
+                const topEdge = topBar + edgeScrollOverlay.verticalShift
+                const bottomEdge = h - bottomBar - edgeScrollOverlay.verticalShift
+                const dt = Math.max(0, y - topEdge)
+                const db = Math.max(0, bottomEdge - y)
                 // Normalized intensities (0..1)
                 const il = clamp(1.0 - dl / t, 0, 1)
                 const ir = clamp(1.0 - dr / t, 0, 1)

@@ -12,6 +12,9 @@ Item {
     
     property bool gameIsPaused: false
     property real currentSpeed: 1.0
+    // Expose panel heights for other overlays (e.g., edge scroll) to avoid stealing input over UI
+    property int topPanelHeight: topPanel.height
+    property int bottomPanelHeight: bottomPanel.height
     // Tick to refresh bindings when selection changes in engine
     property int selectionTick: 0
 

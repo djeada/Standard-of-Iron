@@ -29,8 +29,6 @@ public:
 
     // Convenience controls that mutate ECS components
     void moveTo(float x, float z);
-    void setSelected(bool sel);
-    bool isSelected() const;
     bool isAlive() const;
     QVector3D position() const;
 
