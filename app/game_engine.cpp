@@ -24,11 +24,11 @@
 #include "game/systems/production_service.h"
 #include "game/systems/camera_follow_system.h"
 #include "game/systems/camera_controller.h"
-// Unused here after refactor; kept in loader/services
 
 #include "selected_units_model.h"
 #include <cmath>
 #include <limits>
+
 GameEngine::GameEngine() {
     m_world    = std::make_unique<Engine::Core::World>();
     m_renderer = std::make_unique<Render::GL::Renderer>();
@@ -46,10 +46,8 @@ GameEngine::GameEngine() {
     m_selectionSystem = std::make_unique<Game::Systems::SelectionSystem>();
     m_world->addSystem(std::make_unique<Game::Systems::SelectionSystem>());
 
-    // Create selected units model (owned by GameEngine)
-        m_selectedUnitsModel = new SelectedUnitsModel(this, this);
-        QMetaObject::invokeMethod(m_selectedUnitsModel, "refresh");
-    // Create picking service
+    m_selectedUnitsModel = new SelectedUnitsModel(this, this);
+    QMetaObject::invokeMethod(m_selectedUnitsModel, "refresh");
     m_pickingService = std::make_unique<Game::Systems::PickingService>();
 }
 
@@ -60,7 +58,6 @@ void GameEngine::onMapClicked(qreal sx, qreal sy) {
     ensureInitialized();
     QVector3D hit;
     if (!screenToGround(QPointF(sx, sy), hit)) return;
-    // Default behavior: treat left click as selection click (single)
     onClickSelect(sx, sy, false);
 }
 
@@ -70,7 +67,6 @@ void GameEngine::onRightClick(qreal sx, qreal sy) {
     QVector3D hit;
     if (!screenToGround(QPointF(sx, sy), hit)) return;
     qInfo() << "Right-click at screen" << QPointF(sx, sy) << "-> world" << hit;
-    // Issue move command to all selected units
     if (!m_selectionSystem) return;
     const auto& selected = m_selectionSystem->getSelectedUnits();
     if (selected.empty()) return;
@@ -89,7 +85,7 @@ void GameEngine::onClickSelect(qreal sx, qreal sy, bool additive) {
     if (!m_window || !m_selectionSystem) return;
     ensureInitialized();
     if (!m_pickingService || !m_camera || !m_world) return;
-    Engine::Core::EntityID picked = m_pickingService->pickSingle(float(sx), float(sy), *m_world, *m_camera, m_viewport.width, m_viewport.height, m_runtime.localOwnerId, /*preferBuildingsFirst*/ true);
+    Engine::Core::EntityID picked = m_pickingService->pickSingle(float(sx), float(sy), *m_world, *m_camera, m_viewport.width, m_viewport.height, m_runtime.localOwnerId, true);
     if (picked) {
         if (!additive) m_selectionSystem->clearSelection();
         m_selectionSystem->selectUnit(picked);
@@ -99,17 +95,14 @@ void GameEngine::onClickSelect(qreal sx, qreal sy, bool additive) {
         return;
     }
 
-    // No unit under cursor. If we have a current selection, interpret this as a move command
     const auto& selected = m_selectionSystem->getSelectedUnits();
     if (!selected.empty()) {
         QVector3D hit;
         if (!screenToGround(QPointF(sx, sy), hit)) {
-            // Could not project to ground; nothing to do
             return;
         }
         auto targets = Game::Systems::FormationPlanner::spreadFormation(int(selected.size()), hit, 1.0f);
         Game::Systems::CommandService::moveUnits(*m_world, selected, targets);
-        // Keep existing selection; just ensure selection rings remain synced
         syncSelectionFlags();
         return;
     }
@@ -128,11 +121,9 @@ void GameEngine::onAreaSelected(qreal x1, qreal y1, qreal x2, qreal y2, bool add
 }
 
 void GameEngine::initialize() {
-    // Bootstrap rendering
     if (!Render::GL::RenderBootstrap::initialize(*m_renderer, *m_camera, m_resources)) {
         return;
     }
-    // Load level and populate world
     QString mapPath = QString::fromUtf8("assets/maps/test_map.json");
     auto lr = Game::Map::LevelLoader::loadFromAssets(mapPath, *m_world, *m_renderer, *m_camera);
     m_level.mapName = lr.mapName;
@@ -144,23 +135,17 @@ void GameEngine::initialize() {
 void GameEngine::ensureInitialized() { if (!m_runtime.initialized) initialize(); }
 
 void GameEngine::update(float dt) {
-    // Apply pause and time scaling
     if (m_runtime.paused) {
         dt = 0.0f;
     } else {
         dt *= m_runtime.timeScale;
     }
     if (m_world) m_world->update(dt);
-    // Hover grace is now handled inside PickingService
-    // Prune selection of dead units and keep flags in sync
     syncSelectionFlags();
-    // Update camera follow behavior after world update so positions are fresh
     if (m_followSelectionEnabled && m_camera && m_selectionSystem && m_world) {
         Game::Systems::CameraFollowSystem cfs;
         cfs.update(*m_world, *m_selectionSystem, *m_camera);
     }
-
-    // Keep SelectedUnitsModel in sync with health changes even if selection IDs haven't changed
     if (m_selectedUnitsModel) QMetaObject::invokeMethod(m_selectedUnitsModel, "refresh", Qt::QueuedConnection);
 }
 
@@ -170,21 +155,17 @@ void GameEngine::render(int pixelWidth, int pixelHeight) {
         m_viewport.width = pixelWidth; m_viewport.height = pixelHeight;
         m_renderer->setViewport(pixelWidth, pixelHeight);
     }
-    // Provide current selection to renderer for selection rings, without mutating ECS flags
     if (m_selectionSystem) {
         const auto& sel = m_selectionSystem->getSelectedUnits();
         std::vector<unsigned int> ids(sel.begin(), sel.end());
         m_renderer->setSelectedEntities(ids);
     }
     m_renderer->beginFrame();
-    // Provide hovered id for subtle outline
     if (m_renderer) m_renderer->setHoveredBuildingId(m_hover.buildingId);
     m_renderer->renderWorld(m_world.get());
-    // Render arrows via entity-level VFX helper
     if (m_arrowSystem) { Render::GL::renderArrows(m_renderer.get(), m_resources.get(), *m_arrowSystem); }
     m_renderer->endFrame();
 }
-
 
 bool GameEngine::screenToGround(const QPointF& screenPt, QVector3D& outWorld) {
     if (!m_window || !m_camera || !m_pickingService) return false;
@@ -198,10 +179,8 @@ bool GameEngine::worldToScreen(const QVector3D& world, QPointF& outScreen) const
     return m_pickingService->worldToScreen(*m_camera, m_viewport.width, m_viewport.height, world, outScreen);
 }
 
-
 void GameEngine::syncSelectionFlags() {
     if (!m_world || !m_selectionSystem) return;
-    // Prune dead units from selection but don't mirror flags to components anymore
     const auto& sel = m_selectionSystem->getSelectedUnits();
     std::vector<Engine::Core::EntityID> toKeep;
     toKeep.reserve(sel.size());
@@ -218,7 +197,6 @@ void GameEngine::syncSelectionFlags() {
     }
 }
 
-// --- Camera control API (invokable from QML) ---
 void GameEngine::cameraMove(float dx, float dz) {
     ensureInitialized();
     if (!m_camera) return;
@@ -258,9 +236,6 @@ void GameEngine::cameraFollowSelection(bool enable) {
         Game::Systems::CameraFollowSystem cfs;
         cfs.snapToSelection(*m_world, *m_selectionSystem, *m_camera);
     } else if (m_camera) {
-        // Follow disabled: ensure camera vectors are stable and keep current look direction
-        // No target change; just recompute basis to avoid any drift
-        // (updateVectors is called inside camera lookAt/setTarget, so here we normalize front)
         auto pos = m_camera->getPosition();
         auto tgt = m_camera->getTarget();
         QVector3D front = (tgt - pos).normalized();
@@ -328,7 +303,6 @@ void GameEngine::setRallyAtScreen(qreal sx, qreal sy) {
     Game::Systems::ProductionService::setRallyForFirstSelectedBarracks(*m_world, m_selectionSystem->getSelectedUnits(), m_runtime.localOwnerId, hit.x(), hit.z());
 }
 
-// --- UI/View accessors ---
 void GameEngine::getSelectedUnitIds(std::vector<Engine::Core::EntityID>& out) const {
     out.clear();
     if (!m_selectionSystem) return;
@@ -349,7 +323,6 @@ bool GameEngine::getUnitInfo(Engine::Core::EntityID id, QString& name, int& heal
         alive = (u->health > 0);
         return true;
     }
-    // Non-unit entity
     name = QStringLiteral("Entity");
     health = maxHealth = 0;
     alive = true;
