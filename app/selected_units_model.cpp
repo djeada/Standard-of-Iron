@@ -81,6 +81,8 @@ void SelectedUnitsModel::refresh() {
     } else {
         for (auto id : ids) {
             if (auto* e = world->getEntity(id)) {
+                // Exclude buildings from list view
+                if (e->hasComponent<Engine::Core::BuildingComponent>()) continue;
                 if (auto* u = e->getComponent<Engine::Core::UnitComponent>()) {
                     if (u->health > 0) m_ids.push_back(id);
                 }

@@ -10,7 +10,7 @@ static Render::GL::Mesh* createRingMesh() {
     std::vector<Vertex> verts;
     std::vector<unsigned int> idx;
     const int seg = 48;
-    const float inner = 0.8f;
+    const float inner = 0.94f; // thinner ring band
     const float outer = 1.0f;
     for (int i = 0; i < seg; ++i) {
         float a0 = (i / float(seg)) * 6.2831853f;
