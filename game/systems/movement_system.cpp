@@ -71,17 +71,19 @@ void MovementSystem::moveUnit(Engine::Core::Entity* entity, float deltaTime) {
     transform->position.x += movement->vx * deltaTime;
     transform->position.z += movement->vz * deltaTime;
 
-    // Face movement direction smoothly
-    float speed2 = movement->vx*movement->vx + movement->vz*movement->vz;
-    if (speed2 > 1e-5f) {
-        float targetYaw = std::atan2(movement->vx, movement->vz) * 180.0f / 3.14159265f; // yaw around Y
-        // Smoothly interpolate rotation.y toward targetYaw
-        float current = transform->rotation.y;
-        // shortest angle difference
-        float diff = std::fmod((targetYaw - current + 540.0f), 360.0f) - 180.0f;
-        float turnSpeed = 720.0f; // deg/sec
-        float step = std::clamp(diff, -turnSpeed * deltaTime, turnSpeed * deltaTime);
-        transform->rotation.y = current + step;
+    // Face movement direction smoothly (units only; buildings remain stationary orientation)
+    if (!entity->hasComponent<Engine::Core::BuildingComponent>()) {
+        float speed2 = movement->vx*movement->vx + movement->vz*movement->vz;
+        if (speed2 > 1e-5f) {
+            float targetYaw = std::atan2(movement->vx, movement->vz) * 180.0f / 3.14159265f; // yaw around Y
+            // Smoothly interpolate rotation.y toward targetYaw
+            float current = transform->rotation.y;
+            // shortest angle difference
+            float diff = std::fmod((targetYaw - current + 540.0f), 360.0f) - 180.0f;
+            float turnSpeed = 720.0f; // deg/sec
+            float step = std::clamp(diff, -turnSpeed * deltaTime, turnSpeed * deltaTime);
+            transform->rotation.y = current + step;
+        }
     }
 }
 
