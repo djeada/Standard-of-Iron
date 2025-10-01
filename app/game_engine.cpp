@@ -185,7 +185,6 @@ void GameEngine::render(int pixelWidth, int pixelHeight) {
     m_renderer->endFrame();
 }
 
-// Removed fallback test unit setup (no longer used)
 
 bool GameEngine::screenToGround(const QPointF& screenPt, QVector3D& outWorld) {
     if (!m_window || !m_camera || !m_pickingService) return false;
