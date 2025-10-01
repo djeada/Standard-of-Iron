@@ -238,7 +238,6 @@ void Renderer::renderWorld(Engine::Core::World* world) {
                         m_basicShader->release();
                         glDepthMask(GL_TRUE);
                         glDisable(GL_POLYGON_OFFSET_FILL);
-                        if (!depthEnabled) glDisable(GL_DEPTH_TEST);
                     }
                 }
             }
