@@ -171,7 +171,12 @@ Engine::Core::EntityID PickingService::pickSingle(float sx, float sy,
             if (okCount == 8) {
                 float minX = pts[0].x(), maxX = pts[0].x();
                 float minY = pts[0].y(), maxY = pts[0].y();
-                for (int i=1;i<8;++i){ minX = std::min(minX, float(pts[i].x())); maxX = std::max(maxX, float(pts[i].x())); minY = std::min(minY, float(pts[i].y())); maxY = std::max(maxY, float(pts[i].y())); }
+                for (int i = 1; i < 8; ++i) {
+                    minX = std::min(minX, float(pts[i].x()));
+                    maxX = std::max(maxX, float(pts[i].x()));
+                    minY = std::min(minY, float(pts[i].y()));
+                    maxY = std::max(maxY, float(pts[i].y()));
+                }
                 if (float(sx) >= minX && float(sx) <= maxX && float(sy) >= minY && float(sy) <= maxY) {
                     hit = true; pickDist2 = d2;
                 }
