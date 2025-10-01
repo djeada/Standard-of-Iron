@@ -9,6 +9,7 @@
 #include <memory>
 #include <vector>
 #include <optional>
+#include <unordered_set>
 
 namespace Engine::Core {
 class World;
@@ -17,6 +18,11 @@ class Entity;
 
 namespace Render::GL {
 class EntityRendererRegistry;
+}
+
+namespace Game { namespace Systems { class ArrowSystem; } }
+
+namespace Render::GL {
 
 struct RenderCommand {
     Mesh* mesh = nullptr;
@@ -42,9 +48,15 @@ public:
     // Optional: inject an external ResourceManager owned by the app
     void setResources(const std::shared_ptr<ResourceManager>& resources) { m_resources = resources; }
     void setHoveredBuildingId(unsigned int id) { m_hoveredBuildingId = id; }
+    // Selection information provided by the app before rendering
+    void setSelectedEntities(const std::vector<unsigned int>& ids) {
+        m_selectedIds.clear();
+        m_selectedIds.insert(ids.begin(), ids.end());
+    }
 
     // Lightweight, app-facing helpers
     void renderGridGround();
+    // High-level helpers are provided in render/entity (see arrow_vfx_renderer)
 
     // Read-only access to default meshes/textures for app-side batching
     Mesh* getMeshQuad()    const { return m_resources ? m_resources->quad()    : nullptr; }
@@ -88,6 +100,7 @@ private:
     std::shared_ptr<ResourceManager> m_resources;
     std::unique_ptr<EntityRendererRegistry> m_entityRegistry;
     unsigned int m_hoveredBuildingId = 0;
+    std::unordered_set<unsigned int> m_selectedIds; // for selection rings at render time
 
     int m_viewportWidth = 0;
     int m_viewportHeight = 0;

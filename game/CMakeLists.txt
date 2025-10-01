@@ -18,8 +18,14 @@ add_library(game_systems STATIC
     systems/pathfinding.cpp
     systems/selection_system.cpp
     systems/arrow_system.cpp
+    systems/camera_follow_system.cpp
+    systems/camera_controller.cpp
+    systems/picking_service.cpp
+    systems/command_service.cpp
+    systems/production_service.cpp
     systems/production_system.cpp
     map/map_loader.cpp
+    map/level_loader.cpp
     map/map_transformer.cpp
     map/environment.cpp
     visuals/visual_catalog.cpp
