@@ -32,7 +32,6 @@ QJsonObject Serialization::serializeEntity(const Entity* entity) {
         unitObj["health"] = unit->health;
         unitObj["maxHealth"] = unit->maxHealth;
         unitObj["speed"] = unit->speed;
-        unitObj["selected"] = unit->selected;
         unitObj["unitType"] = QString::fromStdString(unit->unitType);
         unitObj["ownerId"] = unit->ownerId;
         entityObj["unit"] = unitObj;
@@ -62,7 +61,6 @@ void Serialization::deserializeEntity(Entity* entity, const QJsonObject& json) {
         unit->health = unitObj["health"].toInt();
         unit->maxHealth = unitObj["maxHealth"].toInt();
         unit->speed = unitObj["speed"].toDouble();
-    unit->selected = unitObj["selected"].toBool();
     unit->unitType = unitObj["unitType"].toString().toStdString();
     unit->ownerId = unitObj["ownerId"].toInt(0);
     }
