@@ -17,6 +17,7 @@ struct DrawParams {
     ResourceManager* resources = nullptr;
     Engine::Core::Entity* entity = nullptr;
     QMatrix4x4 model;
+    bool selected = false;
 };
 
 using RenderFunc = std::function<void(const DrawParams&)>;

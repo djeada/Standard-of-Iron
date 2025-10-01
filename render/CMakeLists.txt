@@ -6,9 +6,11 @@ add_library(render_gl STATIC
     gl/renderer.cpp
     gl/camera.cpp
     gl/resources.cpp
+    gl/bootstrap.cpp
     entity/registry.cpp
     entity/archer_renderer.cpp
     entity/barracks_renderer.cpp
+    entity/arrow_vfx_renderer.cpp
     geom/selection_ring.cpp
     geom/arrow.cpp
 )
