@@ -104,6 +104,10 @@ void Renderer::setClearColor(float r, float g, float b, float a) {
 void Renderer::setViewport(int width, int height) {
     m_viewportWidth = width;
     m_viewportHeight = height;
+    if (m_camera && height > 0) {
+        float aspect = float(width) / float(height);
+        m_camera->setPerspective(m_camera->getFOV(), aspect, m_camera->getNear(), m_camera->getFar());
+    }
 }
 
 void Renderer::drawMesh(Mesh* mesh, const QMatrix4x4& modelMatrix, Texture* texture) {
@@ -270,6 +274,8 @@ void Renderer::renderWorld(Engine::Core::World* world) {
                 auto fn = m_entityRegistry->get(unit->unitType);
                 if (fn) {
                     DrawParams params{this, m_resources.get(), entity, modelMatrix};
+                    // Selection routed from app via setSelectedEntities to avoid mutating ECS flags for rendering
+                    params.selected = (m_selectedIds.find(entity->getId()) != m_selectedIds.end());
                     fn(params);
                     drawnByRegistry = true;
                 }

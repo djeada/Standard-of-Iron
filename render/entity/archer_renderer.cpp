@@ -101,7 +101,7 @@ void registerArcherRenderer(EntityRendererRegistry& registry) {
         // Draw capsule (archer body)
         p.renderer->drawMeshColored(getArcherCapsule(), p.model, color, nullptr);
         // Draw selection ring if selected
-        if (unit && unit->selected) {
+        if (p.selected) {
             QMatrix4x4 ringM;
             QVector3D pos = p.model.column(3).toVector3D();
             ringM.translate(pos.x(), 0.01f, pos.z());
