@@ -26,12 +26,6 @@ namespace Render::GL {
 
 class Backend;
 
-struct RenderCommand { // legacy submission shape; mapped to DrawItem internally
-    Mesh* mesh = nullptr;
-    Texture* texture = nullptr;
-    QMatrix4x4 modelMatrix;
-    QVector3D color{1.0f, 1.0f, 1.0f};
-};
 
 class Renderer : public ISubmitter {
 public:
@@ -80,7 +74,6 @@ public:
               Texture* texture = nullptr, float alpha = 1.0f) override;
     void selectionRing(const QMatrix4x4& model, float alphaInner, float alphaOuter,
                        const QVector3D& color) override;
-    void submitRenderCommand(const RenderCommand& command);
     
     // Legacy: still available but apps are encouraged to issue draw calls explicitly
     void renderWorld(Engine::Core::World* world);

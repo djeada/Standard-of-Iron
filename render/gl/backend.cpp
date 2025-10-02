@@ -13,6 +13,7 @@ namespace {
 static const QString kShaderBase = QStringLiteral("assets/shaders/");
 static const QString kBasicVert = kShaderBase + QStringLiteral("basic.vert");
 static const QString kBasicFrag = kShaderBase + QStringLiteral("basic.frag");
+static const QString kGridFrag  = kShaderBase + QStringLiteral("grid.frag");
 }
 
 void Backend::initialize() {
@@ -26,6 +27,13 @@ void Backend::initialize() {
 	if (!m_basicShader->loadFromFiles(kBasicVert, kBasicFrag)) {
 		qWarning() << "Backend: failed to load basic shader" << kBasicVert << kBasicFrag;
 		m_basicShader.reset();
+	}
+
+	// Grid shader shares the same vertex stage and uses grid.frag
+	m_gridShader = std::make_unique<Shader>();
+	if (!m_gridShader->loadFromFiles(kBasicVert, kGridFrag)) {
+		qWarning() << "Backend: failed to load grid shader" << kBasicVert << kGridFrag;
+		m_gridShader.reset();
 	}
 }
 
@@ -71,8 +79,19 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam, const ResourceM
 			m_basicShader->setUniform("u_alpha", it.alpha);
 			it.mesh->draw();
 		} else if (std::holds_alternative<GridCmd>(cmd)) {
-			// TODO: implement grid overlay draw pass (separate shader)
-			// Currently no-op to keep behavior unchanged
+			if (!m_gridShader) continue;
+			const auto& gc = std::get<GridCmd>(cmd);
+			m_gridShader->use();
+			m_gridShader->setUniform("u_view", cam.getViewMatrix());
+			m_gridShader->setUniform("u_projection", cam.getProjectionMatrix());
+			m_gridShader->setUniform("u_model", gc.model);
+			m_gridShader->setUniform("u_gridColor", gc.color);
+			m_gridShader->setUniform("u_lineColor", QVector3D(0.22f, 0.25f, 0.22f));
+			m_gridShader->setUniform("u_cellSize", gc.cellSize);
+			m_gridShader->setUniform("u_thickness", gc.thickness);
+			// Draw a full plane using the default ground mesh if available
+			if (auto* plane = res.ground()) plane->draw();
+			m_gridShader->release();
 		} else if (std::holds_alternative<SelectionRingCmd>(cmd)) {
 			const auto& sc = std::get<SelectionRingCmd>(cmd);
 			Mesh* ring = Render::Geom::SelectionRing::get();

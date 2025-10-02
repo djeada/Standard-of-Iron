@@ -41,6 +41,7 @@ private:
     int m_viewportHeight{0};
     std::array<float,4> m_clearColor{0.2f,0.3f,0.3f,0.0f};
     std::unique_ptr<Shader> m_basicShader;
+    std::unique_ptr<Shader> m_gridShader;
 };
 
 } // namespace Render::GL

@@ -6,6 +6,8 @@ namespace Render { namespace GL {
 
 void GroundRenderer::recomputeModel() {
     m_model.setToIdentity();
+    // Slightly lower ground to avoid z-fighting and occluding unit bases at y≈0
+    m_model.translate(0.0f, -0.02f, 0.0f);
     if (m_width > 0 && m_height > 0) {
         float scaleX = float(m_width) * m_tileSize * 0.5f;
         float scaleZ = float(m_height) * m_tileSize * 0.5f;

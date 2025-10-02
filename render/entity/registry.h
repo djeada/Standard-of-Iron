@@ -6,21 +6,21 @@
 #include <unordered_map>
 #include <QMatrix4x4>
 #include <QVector3D>
+#include "../submitter.h"
 
 namespace Engine { namespace Core { class Entity; } }
-namespace Render { namespace GL { class Renderer; class ResourceManager; class Mesh; class Texture; } }
+namespace Render { namespace GL { class ResourceManager; class Mesh; class Texture; } }
 
 namespace Render::GL {
 
-struct DrawParams {
-    Renderer* renderer = nullptr;
+struct DrawContext {
     ResourceManager* resources = nullptr;
     Engine::Core::Entity* entity = nullptr;
     QMatrix4x4 model;
     bool selected = false;
 };
 
-using RenderFunc = std::function<void(const DrawParams&)>;
+using RenderFunc = std::function<void(const DrawContext&, ISubmitter& out)>;
 
 class EntityRendererRegistry {
 public:

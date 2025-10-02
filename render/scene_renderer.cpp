@@ -72,36 +72,24 @@ void Renderer::selectionRing(const QMatrix4x4& model, float alphaInner, float al
     m_queue.submit(cmd);
 }
 
-void Renderer::submitRenderCommand(const RenderCommand& command) {
-    mesh(command.mesh, command.modelMatrix, command.color, command.texture, 1.0f);
-}
+// submitRenderCommand removed; use mesh() directly
 
 void Renderer::renderWorld(Engine::Core::World* world) {
-    if (!world) {
-        return;
-    }
-    // Ground drawing delegated to backend/higher-level code
+    if (!world) return;
 
-    // Draw hover ring before entities so buildings naturally occlude it
+    // Draw hover ring (pure submission; model math only)
     if (m_hoveredBuildingId) {
         if (auto* hovered = world->getEntity(m_hoveredBuildingId)) {
             if (hovered->hasComponent<Engine::Core::BuildingComponent>()) {
                 if (auto* t = hovered->getComponent<Engine::Core::TransformComponent>()) {
-                    Mesh* ring = Render::Geom::SelectionRing::get();
-                    if (ring && m_camera) {
-                        const float marginXZ = 1.25f;
-                        const float pad = 1.06f;
-                        float sx = std::max(0.6f, t->scale.x * marginXZ * pad * 1.5f);
-                        float sz = std::max(0.6f, t->scale.z * marginXZ * pad * 1.5f);
-                        QMatrix4x4 model;
-                        model.translate(t->position.x, 0.01f, t->position.z);
-                        model.scale(sx, 1.0f, sz);
-                        // Shadow-like color (dark gray)
-                        QVector3D c(0.0f, 0.0f, 0.0f);
-                        QMatrix4x4 feather = model; feather.scale(1.08f, 1.0f, 1.08f);
-                        // For now we submit a single ring command; renderer may draw a feathered effect in backend
-                        selectionRing(model, 0.6f, 0.25f, c);
-                    }
+                    const float marginXZ = 1.25f;
+                    const float pad = 1.06f;
+                    float sx = std::max(0.6f, t->scale.x * marginXZ * pad * 1.5f);
+                    float sz = std::max(0.6f, t->scale.z * marginXZ * pad * 1.5f);
+                    QMatrix4x4 model;
+                    model.translate(t->position.x, 0.01f, t->position.z);
+                    model.scale(sx, 1.0f, sz);
+                    selectionRing(model, 0.28f, 0.10f, QVector3D(0.0f, 0.0f, 0.0f));
                 }
             }
         }
@@ -118,7 +106,7 @@ void Renderer::renderWorld(Engine::Core::World* world) {
             continue;
         }
 
-        // Build model matrix from transform
+    // Build model matrix from transform
         QMatrix4x4 modelMatrix;
         modelMatrix.translate(transform->position.x, transform->position.y, transform->position.z);
         modelMatrix.rotate(transform->rotation.x, QVector3D(1, 0, 0));
@@ -132,34 +120,17 @@ void Renderer::renderWorld(Engine::Core::World* world) {
             if (!unit->unitType.empty() && m_entityRegistry) {
                 auto fn = m_entityRegistry->get(unit->unitType);
                 if (fn) {
-                    DrawParams params{this, m_resources.get(), entity, modelMatrix};
+                    DrawContext ctx{m_resources.get(), entity, modelMatrix};
                     // Selection routed from app via setSelectedEntities to avoid mutating ECS flags for rendering
-                    params.selected = (m_selectedIds.find(entity->getId()) != m_selectedIds.end());
-                    fn(params);
+                    ctx.selected = (m_selectedIds.find(entity->getId()) != m_selectedIds.end());
+                    fn(ctx, *this);
                     drawnByRegistry = true;
                 }
             }
         }
-        if (drawnByRegistry) {
-            // Draw rally flag marker if this is a barracks with a set rally
-            if (auto* unit = entity->getComponent<Engine::Core::UnitComponent>()) {
-                if (unit->unitType == "barracks") {
-                    if (auto* prod = entity->getComponent<Engine::Core::ProductionComponent>()) {
-                        if (prod->rallySet && m_resources) {
-                            QMatrix4x4 flagModel;
-                            flagModel.translate(prod->rallyX, 0.1f, prod->rallyZ);
-                            flagModel.scale(0.2f, 0.2f, 0.2f);
-                            mesh(m_resources->unit(), flagModel, QVector3D(1.0f, 0.9f, 0.2f), m_resources->white(), 1.0f);
-                        }
-                    }
-                }
-            }
-            continue;
-        }
+        if (drawnByRegistry) continue;
 
-        // Else choose mesh based on RenderableComponent hint
-        RenderCommand command;
-        command.modelMatrix = modelMatrix;
+        // Else choose mesh based on RenderableComponent hint and submit
         Mesh* meshToDraw = nullptr;
         switch (renderable->mesh) {
             case Engine::Core::RenderableComponent::MeshKind::Quad:    meshToDraw = m_resources? m_resources->quad() : nullptr; break;
@@ -171,25 +142,10 @@ void Renderer::renderWorld(Engine::Core::World* world) {
         }
         if (!meshToDraw && m_resources) meshToDraw = m_resources->unit();
         if (!meshToDraw && m_resources) meshToDraw = m_resources->quad();
-        command.mesh = meshToDraw;
-        command.texture = (m_resources ? m_resources->white() : nullptr);
-        // Use per-entity color if set, else a default
-        command.color = QVector3D(renderable->color[0], renderable->color[1], renderable->color[2]);
-    submitRenderCommand(command);
+        QVector3D color = QVector3D(renderable->color[0], renderable->color[1], renderable->color[2]);
+        mesh(meshToDraw, modelMatrix, color, m_resources ? m_resources->white() : nullptr, 1.0f);
 
-        // If this render path drew a barracks (no custom renderer used), also draw rally flag
-        if (auto* unit = entity->getComponent<Engine::Core::UnitComponent>()) {
-            if (unit->unitType == "barracks") {
-                if (auto* prod = entity->getComponent<Engine::Core::ProductionComponent>()) {
-                    if (prod->rallySet && m_resources) {
-                        QMatrix4x4 flagModel;
-                        flagModel.translate(prod->rallyX, 0.1f, prod->rallyZ);
-                        flagModel.scale(0.2f, 0.2f, 0.2f);
-                        mesh(m_resources->unit(), flagModel, QVector3D(1.0f, 0.9f, 0.2f), m_resources->white(), 1.0f);
-                    }
-                }
-            }
-        }
+        // Rally flag drawing moved into barracks renderer
         // Selection ring is drawn by entity-specific renderer if desired
     }
 }
