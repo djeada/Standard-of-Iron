@@ -46,18 +46,11 @@ public:
     const std::vector<DrawCmd>& items() const { return m_items; }
     std::vector<DrawCmd>& items() { return m_items; }
     void sortForBatching() {
-        // Stable partition to group MeshCmds first while preserving relative order of non-mesh cmds
-        std::stable_sort(m_items.begin(), m_items.end(), [](const DrawCmd& a, const DrawCmd& b){
-            bool am = std::holds_alternative<MeshCmd>(a);
-            bool bm = std::holds_alternative<MeshCmd>(b);
-            if (am != bm) return am && !bm; // MeshCmds come first
-            if (!am && !bm) return false;   // preserve order among non-mesh
-            // Both are MeshCmds: sort by texture then mesh ptr for fewer state changes
-            const auto& ma = std::get<MeshCmd>(a);
-            const auto& mb = std::get<MeshCmd>(b);
-            if (ma.texture != mb.texture) return ma.texture < mb.texture;
-            return ma.mesh < mb.mesh;
+        // Conservative: keep submission order but group MeshCmd first for simple state changes
+        auto it = std::stable_partition(m_items.begin(), m_items.end(), [](const DrawCmd& c){
+            return std::holds_alternative<MeshCmd>(c);
         });
+        (void)it;
     }
 private:
     std::vector<DrawCmd> m_items;

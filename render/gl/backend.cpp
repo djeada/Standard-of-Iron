@@ -3,6 +3,7 @@
 #include "../draw_queue.h"
 #include "mesh.h"
 #include "texture.h"
+#include "../geom/selection_ring.h"
 #include <QDebug>
 
 namespace Render::GL {
@@ -73,11 +74,29 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam, const ResourceM
 			// TODO: implement grid overlay draw pass (separate shader)
 			// Currently no-op to keep behavior unchanged
 		} else if (std::holds_alternative<SelectionRingCmd>(cmd)) {
-			// TODO: implement ring-specific rendering (feathered alpha, polygon offset)
-			// For now, approximate with a simple mesh draw if a ring mesh is available via resources/geom.
 			const auto& sc = std::get<SelectionRingCmd>(cmd);
-			// No direct mesh handle here; leave as placeholder.
-			(void)sc; // suppress unused warning
+			Mesh* ring = Render::Geom::SelectionRing::get();
+			if (!ring) continue;
+			// Use white texture path for consistent shading
+			m_basicShader->setUniform("u_useTexture", false);
+			m_basicShader->setUniform("u_color", sc.color);
+			// Slight polygon offset to avoid z-fighting with ground
+			glEnable(GL_POLYGON_OFFSET_FILL);
+			glPolygonOffset(-1.0f, -1.0f);
+			// Outer feather
+			{
+				QMatrix4x4 m = sc.model; m.scale(1.08f, 1.0f, 1.08f);
+				m_basicShader->setUniform("u_model", m);
+				m_basicShader->setUniform("u_alpha", sc.alphaOuter);
+				ring->draw();
+			}
+			// Inner ring
+			{
+				m_basicShader->setUniform("u_model", sc.model);
+				m_basicShader->setUniform("u_alpha", sc.alphaInner);
+				ring->draw();
+			}
+			glDisable(GL_POLYGON_OFFSET_FILL);
 		}
 	}
 	m_basicShader->release();
