@@ -56,7 +56,7 @@ public:
 
     // Lightweight, app-facing helpers
     void renderGridGround();
-    // High-level helpers are provided in render/entity (see arrow_vfx_renderer)
+    // High-level helpers are provided in render/entity (see arrow)
 
     // Read-only access to default meshes/textures for app-side batching
     Mesh* getMeshQuad()    const { return m_resources ? m_resources->quad()    : nullptr; }
