@@ -10,7 +10,7 @@
 #include "render/gl/renderer.h"
 #include "render/gl/camera.h"
 #include "render/gl/resources.h"
-#include "render/entity/arrow_vfx_renderer.h"
+#include "render/geom/arrow.h"
 #include "render/gl/bootstrap.h"
 #include "game/map/level_loader.h"
 #include "game/systems/movement_system.h"
