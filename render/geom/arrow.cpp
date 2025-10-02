@@ -112,10 +112,11 @@ void renderArrows(Renderer* renderer,
         ) * 180.0f / 3.14159265f;
         model.rotate(pitchDeg, QVector3D(1,0,0));
 
-        const float zScale = 0.40f;
-        const float xyScale = 0.26f;
-        model.translate(0.0f, 0.0f, -zScale * 0.5f);
-        model.scale(xyScale, xyScale, zScale);
+        constexpr float ARROW_Z_SCALE = 0.40f;
+        constexpr float ARROW_XY_SCALE = 0.26f;
+        constexpr float ARROW_Z_TRANSLATE_FACTOR = 0.5f;
+        model.translate(0.0f, 0.0f, -ARROW_Z_SCALE * ARROW_Z_TRANSLATE_FACTOR);
+        model.scale(ARROW_XY_SCALE, ARROW_XY_SCALE, ARROW_Z_SCALE);
 
         renderer->drawMeshColored(arrowMesh, model, arrow.color);
     }
