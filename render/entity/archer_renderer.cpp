@@ -1,6 +1,6 @@
 #include "archer_renderer.h"
 #include "registry.h"
-#include "../gl/renderer.h"
+#include "../scene_renderer.h"
 #include "../gl/mesh.h"
 #include "../gl/texture.h"
 #include "../geom/selection_ring.h"
@@ -98,15 +98,15 @@ void registerArcherRenderer(EntityRendererRegistry& registry) {
         } else if (rc) {
             color = QVector3D(rc->color[0], rc->color[1], rc->color[2]);
         }
-        // Draw capsule (archer body)
-        p.renderer->drawMeshColored(getArcherCapsule(), p.model, color, nullptr);
+    // Enqueue capsule (archer body)
+    p.renderer->queueMeshColored(getArcherCapsule(), p.model, color, nullptr);
         // Draw selection ring if selected
         if (p.selected) {
             QMatrix4x4 ringM;
             QVector3D pos = p.model.column(3).toVector3D();
             ringM.translate(pos.x(), 0.01f, pos.z());
             ringM.scale(0.5f, 1.0f, 0.5f);
-            p.renderer->drawMeshColored(Render::Geom::SelectionRing::get(), ringM, QVector3D(0.2f, 0.8f, 0.2f), nullptr);
+            p.renderer->queueMeshColored(Render::Geom::SelectionRing::get(), ringM, QVector3D(0.2f, 0.8f, 0.2f), nullptr);
         }
     });
 }

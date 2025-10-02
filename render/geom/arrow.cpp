@@ -1,7 +1,7 @@
 #include "arrow.h"
 #include "../gl/mesh.h"
 #include "../entity/registry.h"
-#include "../gl/renderer.h"
+#include "../scene_renderer.h"
 #include "../gl/resources.h"
 #include "../../game/systems/arrow_system.h"
 
@@ -118,7 +118,7 @@ void renderArrows(Renderer* renderer,
         model.translate(0.0f, 0.0f, -ARROW_Z_SCALE * ARROW_Z_TRANSLATE_FACTOR);
         model.scale(ARROW_XY_SCALE, ARROW_XY_SCALE, ARROW_Z_SCALE);
 
-        renderer->drawMeshColored(arrowMesh, model, arrow.color);
+    renderer->queueMeshColored(arrowMesh, model, arrow.color);
     }
 }
 

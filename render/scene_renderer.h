@@ -1,11 +1,10 @@
 #pragma once
 
-#include "shader.h"
-#include "camera.h"
-#include "mesh.h"
-#include "texture.h"
-#include "resources.h"
-#include <QOpenGLFunctions_3_3_Core>
+#include "gl/camera.h"
+#include "gl/mesh.h"
+#include "gl/texture.h"
+#include "gl/resources.h"
+#include "draw_queue.h"
 #include <memory>
 #include <vector>
 #include <optional>
@@ -24,14 +23,16 @@ namespace Game { namespace Systems { class ArrowSystem; } }
 
 namespace Render::GL {
 
-struct RenderCommand {
+class Backend;
+
+struct RenderCommand { // legacy submission shape; mapped to DrawItem internally
     Mesh* mesh = nullptr;
     Texture* texture = nullptr;
     QMatrix4x4 modelMatrix;
     QVector3D color{1.0f, 1.0f, 1.0f};
 };
 
-class Renderer : protected QOpenGLFunctions_3_3_Core {
+class Renderer {
 public:
     Renderer();
     ~Renderer();
@@ -54,8 +55,6 @@ public:
         m_selectedIds.insert(ids.begin(), ids.end());
     }
 
-    // Lightweight, app-facing helpers
-    void renderGridGround();
     // High-level helpers are provided in render/entity (see arrow)
 
     // Read-only access to default meshes/textures for app-side batching
@@ -75,26 +74,17 @@ public:
     void setGridParams(const GridParams& gp) { m_gridParams = gp; }
     const GridParams& gridParams() const { return m_gridParams; }
     
-    // Immediate mode rendering
-    void drawMesh(Mesh* mesh, const QMatrix4x4& modelMatrix, Texture* texture = nullptr);
-    void drawMeshColored(Mesh* mesh, const QMatrix4x4& modelMatrix, const QVector3D& color, Texture* texture = nullptr);
-    void drawLine(const QVector3D& start, const QVector3D& end, const QVector3D& color);
-    
-    // Batch rendering
+    // Submission helpers (enqueue for backend)
+    void queueMeshColored(Mesh* mesh, const QMatrix4x4& modelMatrix, const QVector3D& color, Texture* texture = nullptr);
     void submitRenderCommand(const RenderCommand& command);
-    void flushBatch();
     
     // Legacy: still available but apps are encouraged to issue draw calls explicitly
     void renderWorld(Engine::Core::World* world);
     
 private:
     Camera* m_camera = nullptr;
-    
-    std::unique_ptr<Shader> m_basicShader;
-    std::unique_ptr<Shader> m_lineShader;
-    std::unique_ptr<Shader> m_gridShader;
-    
-    std::vector<RenderCommand> m_renderQueue;
+    std::shared_ptr<Backend> m_backend;
+    DrawQueue m_queue;
     
     // Default resources
     std::shared_ptr<ResourceManager> m_resources;
@@ -105,9 +95,6 @@ private:
     int m_viewportWidth = 0;
     int m_viewportHeight = 0;
     GridParams m_gridParams;
-    
-    bool loadShaders();
-    void sortRenderQueue();
 };
 
 } // namespace Render::GL

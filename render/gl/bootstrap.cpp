@@ -1,5 +1,5 @@
 #include "bootstrap.h"
-#include "renderer.h"
+#include "../scene_renderer.h"
 #include "camera.h"
 #include "resources.h"
 #include <QOpenGLContext>

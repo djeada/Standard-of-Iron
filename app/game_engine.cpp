@@ -7,9 +7,10 @@
 
 #include "game/core/world.h"
 #include "game/core/component.h"
-#include "render/gl/renderer.h"
+#include "render/scene_renderer.h"
 #include "render/gl/camera.h"
 #include "render/gl/resources.h"
+#include "render/ground/ground_renderer.h"
 #include "render/geom/arrow.h"
 #include "render/gl/bootstrap.h"
 #include "game/map/level_loader.h"
@@ -33,6 +34,7 @@ GameEngine::GameEngine() {
     m_world    = std::make_unique<Engine::Core::World>();
     m_renderer = std::make_unique<Render::GL::Renderer>();
     m_camera   = std::make_unique<Render::GL::Camera>();
+    m_ground   = std::make_unique<Render::GL::GroundRenderer>();
 
     std::unique_ptr<Engine::Core::System> arrowSys = std::make_unique<Game::Systems::ArrowSystem>();
     m_arrowSystem = static_cast<Game::Systems::ArrowSystem*>(arrowSys.get());
@@ -126,6 +128,10 @@ void GameEngine::initialize() {
     }
     QString mapPath = QString::fromUtf8("assets/maps/test_map.json");
     auto lr = Game::Map::LevelLoader::loadFromAssets(mapPath, *m_world, *m_renderer, *m_camera);
+    if (m_ground) {
+        if (lr.ok) m_ground->configure(lr.tileSize, lr.gridWidth, lr.gridHeight);
+        else m_ground->configureExtent(50.0f);
+    }
     m_level.mapName = lr.mapName;
     m_level.playerUnitId = lr.playerUnitId;
     m_level.camFov = lr.camFov; m_level.camNear = lr.camNear; m_level.camFar = lr.camFar;
@@ -161,6 +167,9 @@ void GameEngine::render(int pixelWidth, int pixelHeight) {
         m_renderer->setSelectedEntities(ids);
     }
     m_renderer->beginFrame();
+    if (m_ground && m_renderer && m_resources) {
+        m_ground->submit(*m_renderer, *m_resources);
+    }
     if (m_renderer) m_renderer->setHoveredBuildingId(m_hover.buildingId);
     m_renderer->renderWorld(m_world.get());
     if (m_arrowSystem) { Render::GL::renderArrows(m_renderer.get(), m_resources.get(), *m_arrowSystem); }

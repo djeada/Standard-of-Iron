@@ -3,10 +3,15 @@ add_library(render_gl STATIC
     gl/buffer.cpp
     gl/mesh.cpp
     gl/texture.cpp
-    gl/renderer.cpp
+    scene_renderer.cpp
     gl/camera.cpp
     gl/resources.cpp
     gl/bootstrap.cpp
+    gl/backend.cpp
+    gl/shader_cache.cpp
+    gl/state_scopes.cpp
+    draw_queue.cpp
+    ground/ground_renderer.cpp
     entity/registry.cpp
     entity/archer_renderer.cpp
     entity/barracks_renderer.cpp

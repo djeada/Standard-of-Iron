@@ -21,6 +21,7 @@ namespace Render { namespace GL {
 class Renderer;
 class Camera;
 class ResourceManager;
+class GroundRenderer;
 } }
 
 namespace Game { namespace Systems { class SelectionSystem; class ArrowSystem; class PickingService; } }
@@ -87,6 +88,7 @@ private:
     std::unique_ptr<Render::GL::Renderer> m_renderer;
     std::unique_ptr<Render::GL::Camera>   m_camera;
     std::shared_ptr<Render::GL::ResourceManager> m_resources;
+    std::unique_ptr<Render::GL::GroundRenderer> m_ground;
     std::unique_ptr<Game::Systems::SelectionSystem> m_selectionSystem;
     std::unique_ptr<Game::Systems::PickingService> m_pickingService;
     QQuickWindow* m_window = nullptr;

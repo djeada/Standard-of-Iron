@@ -1,5 +1,5 @@
 #include "arrow_system.h"
-#include "../../render/gl/renderer.h"
+#include "../../render/scene_renderer.h"
 #include "../../render/gl/resources.h"
 #include "../../render/geom/arrow.h"
 #include <algorithm>
