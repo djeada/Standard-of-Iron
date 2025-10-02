@@ -57,11 +57,16 @@ ApplicationWindow {
         id: edgeScrollOverlay
         anchors.fill: parent
         z: 2
-        property real threshold: 80    // px from edge where scrolling starts
-        property real maxSpeed: 1.2    // world units per tick at the very edge
+        // Horizontal edge-scroll sensitivity and speed
+        property real horzThreshold: 80     // px from left/right edge where scroll begins
+        property real horzMaxSpeed: 0.5     // world units per tick at the very edge (left/right)
+        // Vertical edge-scroll is intentionally less sensitive and slower
+        property real vertThreshold: 120    // px after dead-zone for top/bottom
+        property real verticalDeadZone: 32  // no scroll within this many px past HUD bars
+        property real vertMaxSpeed: 0.1     // world units per tick at the very edge (top/bottom)
         property real xPos: -1
         property real yPos: -1
-    // Shift vertical edge-scroll away from HUD panels by this many pixels
+        // Shift vertical edge-scroll away from HUD panels by this many pixels
     property int verticalShift: 6
         // Computed guard zones derived from HUD panel heights
         function inHudZone(x, y) {
@@ -130,7 +135,9 @@ ApplicationWindow {
                 }
                 // Keep hover updated even if positionChanged throttles
                 if (game.setHoverAtScreen) game.setHoverAtScreen(x, y)
-                const t = edgeScrollOverlay.threshold
+                const th = edgeScrollOverlay.horzThreshold
+                const tv = edgeScrollOverlay.vertThreshold
+                const vdz = edgeScrollOverlay.verticalDeadZone
                 const clamp = function(v, lo, hi) { return Math.max(lo, Math.min(hi, v)) }
                 // Distance from edges
                 const dl = x
@@ -140,19 +147,21 @@ ApplicationWindow {
                 const bottomBar = (typeof hud !== 'undefined' && hud && hud.bottomPanelHeight) ? hud.bottomPanelHeight : 0
                 const topEdge = topBar + edgeScrollOverlay.verticalShift
                 const bottomEdge = h - bottomBar - edgeScrollOverlay.verticalShift
-                const dt = Math.max(0, y - topEdge)
-                const db = Math.max(0, bottomEdge - y)
+                // Apply a vertical dead-zone beyond the HUD before scrolling starts
+                const dt = Math.max(0, (y - topEdge) - vdz)
+                const db = Math.max(0, (bottomEdge - y) - vdz)
                 // Normalized intensities (0..1)
-                const il = clamp(1.0 - dl / t, 0, 1)
-                const ir = clamp(1.0 - dr / t, 0, 1)
-                const iu = clamp(1.0 - dt / t, 0, 1)
-                const id = clamp(1.0 - db / t, 0, 1)
+                const il = clamp(1.0 - dl / th, 0, 1)
+                const ir = clamp(1.0 - dr / th, 0, 1)
+                const iu = clamp(1.0 - dt / tv, 0, 1)
+                const id = clamp(1.0 - db / tv, 0, 1)
                 if (il===0 && ir===0 && iu===0 && id===0) return
                 // Apply gentle curve for smoother start
-                const curve = function(a) { return a*a }
-                const maxS = edgeScrollOverlay.maxSpeed
-                const dx = (curve(ir) - curve(il)) * maxS
-                const dz = (curve(iu) - curve(id)) * maxS
+                const curveH = function(a) { return a*a }
+                // Vertical curve is gentler (cubic) to reduce early strength
+                const curveV = function(a) { return a*a*a }
+                const dx = (curveH(ir) - curveH(il)) * edgeScrollOverlay.horzMaxSpeed
+                const dz = (curveV(iu) - curveV(id)) * edgeScrollOverlay.vertMaxSpeed
                 if (dx !== 0 || dz !== 0) game.cameraMove(dx, dz)
             }
         }
