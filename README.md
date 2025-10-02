@@ -43,27 +43,26 @@ A modern real-time strategy (RTS) game engine built with C++20, Qt 6, and OpenGL
 
 ## Building
 
-### Ubuntu/Debian
-```bash
-# Install dependencies
-sudo apt update
-sudo apt install -y qt6-base-dev qt6-declarative-dev libgl-dev build-essential cmake
+### Linux
 
-# Clone and build
+We currently support Ubuntu/Debian and Majaro/Arch.
+
+```bash
+# Clone
 git clone https://github.com/djeada/Standard-of-Iron.git
 cd Standard-of-Iron
-mkdir build && cd build
-cmake ..
-make -j$(nproc)
+
+# Install dependencies
+make install
+
+# Build
+make build
 ```
 
 ### Running
 ```bash
 # Main game
-./standard_of_iron
-
-# Map editor
-./tools/map_editor/map_editor
+make run
 ```
 
 ## Project Structure
