@@ -32,7 +32,7 @@ void renderArrows(Renderer* renderer, ResourceManager* resources, const Game::Sy
         const float xyScale = 0.26f;
         model.translate(0.0f, 0.0f, -zScale * 0.5f);
         model.scale(xyScale, xyScale, zScale);
-    renderer->queueMeshColored(arrowMesh, model, arrow.color);
+    renderer->mesh(arrowMesh, model, arrow.color, nullptr, 1.0f);
     }
 }
 

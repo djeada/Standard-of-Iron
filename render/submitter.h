@@ -1,36 +1,39 @@
 #pragma once
-#include <QMatrix4x4>
-#include <QVector3D>
-namespace Render::GL { class Mesh; class Texture; class Renderer; }
-namespace Render::GL {
-struct Submitter {
-    Renderer* renderer{};
-    void meshColored(Mesh* mesh, const QMatrix4x4& model, const QVector3D& color, Texture* tex=nullptr);
-};
-}
-#pragma once
 
 #include <QMatrix4x4>
 #include <QVector3D>
 #include "draw_queue.h"
 
-namespace Render::GL { class Mesh; class Texture; class Renderer; }
+namespace Render::GL { class Mesh; class Texture; }
 
-namespace Render {
+namespace Render::GL {
 
-class Submitter {
+class ISubmitter {
 public:
-    explicit Submitter(DrawQueue* queue) : m_queue(queue) {}
+    virtual ~ISubmitter() = default;
+    virtual void mesh(Mesh* mesh, const QMatrix4x4& model, const QVector3D& color,
+                      Texture* tex = nullptr, float alpha = 1.0f) = 0;
+    virtual void selectionRing(const QMatrix4x4& model, float alphaInner, float alphaOuter,
+                               const QVector3D& color) = 0;
+};
 
-    void mesh(Render::GL::Mesh* mesh, const QMatrix4x4& model, const QVector3D& color,
-              Render::GL::Texture* tex = nullptr) {
-        if (!m_queue) return;
-        DrawItem it; it.mesh = mesh; it.texture = tex; it.model = model; it.color = color;
-        m_queue->add(it);
+class QueueSubmitter : public ISubmitter {
+public:
+    explicit QueueSubmitter(DrawQueue* queue) : m_queue(queue) {}
+    void mesh(Mesh* mesh, const QMatrix4x4& model, const QVector3D& color,
+              Texture* tex = nullptr, float alpha = 1.0f) override {
+        if (!m_queue || !mesh) return;
+        MeshCmd cmd; cmd.mesh = mesh; cmd.texture = tex; cmd.model = model; cmd.color = color; cmd.alpha = alpha;
+        m_queue->submit(cmd);
     }
-
+    void selectionRing(const QMatrix4x4& model, float alphaInner, float alphaOuter,
+                       const QVector3D& color) override {
+        if (!m_queue) return;
+        SelectionRingCmd cmd; cmd.model = model; cmd.alphaInner = alphaInner; cmd.alphaOuter = alphaOuter; cmd.color = color;
+        m_queue->submit(cmd);
+    }
 private:
     DrawQueue* m_queue = nullptr;
 };
 
-} // namespace Render
+} // namespace Render::GL

@@ -50,23 +50,35 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam, const ResourceM
 	m_basicShader->use();
 	m_basicShader->setUniform("u_view", cam.getViewMatrix());
 	m_basicShader->setUniform("u_projection", cam.getProjectionMatrix());
-	m_basicShader->setUniform("u_alpha", 1.0f);
-	for (const auto& it : queue.items()) {
-		if (!it.mesh) continue;
-		m_basicShader->setUniform("u_model", it.model);
-		if (it.texture) {
-			it.texture->bind(0);
-			m_basicShader->setUniform("u_texture", 0);
-			m_basicShader->setUniform("u_useTexture", true);
-		} else {
-			if (res.white()) {
-				res.white()->bind(0);
+	for (const auto& cmd : queue.items()) {
+		if (std::holds_alternative<MeshCmd>(cmd)) {
+			const auto& it = std::get<MeshCmd>(cmd);
+			if (!it.mesh) continue;
+			m_basicShader->setUniform("u_model", it.model);
+			if (it.texture) {
+				it.texture->bind(0);
 				m_basicShader->setUniform("u_texture", 0);
+				m_basicShader->setUniform("u_useTexture", true);
+			} else {
+				if (res.white()) {
+					res.white()->bind(0);
+					m_basicShader->setUniform("u_texture", 0);
+				}
+				m_basicShader->setUniform("u_useTexture", false);
 			}
-			m_basicShader->setUniform("u_useTexture", false);
+			m_basicShader->setUniform("u_color", it.color);
+			m_basicShader->setUniform("u_alpha", it.alpha);
+			it.mesh->draw();
+		} else if (std::holds_alternative<GridCmd>(cmd)) {
+			// TODO: implement grid overlay draw pass (separate shader)
+			// Currently no-op to keep behavior unchanged
+		} else if (std::holds_alternative<SelectionRingCmd>(cmd)) {
+			// TODO: implement ring-specific rendering (feathered alpha, polygon offset)
+			// For now, approximate with a simple mesh draw if a ring mesh is available via resources/geom.
+			const auto& sc = std::get<SelectionRingCmd>(cmd);
+			// No direct mesh handle here; leave as placeholder.
+			(void)sc; // suppress unused warning
 		}
-		m_basicShader->setUniform("u_color", it.color);
-		it.mesh->draw();
 	}
 	m_basicShader->release();
 }

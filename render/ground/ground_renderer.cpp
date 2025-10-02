@@ -17,7 +17,7 @@ void GroundRenderer::recomputeModel() {
 
 void GroundRenderer::submit(Renderer& renderer, ResourceManager& resources) {
     if (auto* plane = resources.ground()) {
-        renderer.queueMeshColored(plane, m_model, m_color, resources.white());
+        renderer.mesh(plane, m_model, m_color, resources.white(), 1.0f);
     }
 }
 

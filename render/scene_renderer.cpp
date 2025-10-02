@@ -39,6 +39,7 @@ void Renderer::beginFrame() {
 
 void Renderer::endFrame() {
     if (m_backend && m_camera && m_resources) {
+        m_queue.sortForBatching();
         m_backend->execute(m_queue, *m_camera, *m_resources);
     }
 }
@@ -58,14 +59,21 @@ void Renderer::setViewport(int width, int height) {
         m_camera->setPerspective(m_camera->getFOV(), aspect, m_camera->getNear(), m_camera->getFar());
     }
 }
-void Renderer::queueMeshColored(Mesh* mesh, const QMatrix4x4& modelMatrix, const QVector3D& color, Texture* texture) {
+void Renderer::mesh(Mesh* mesh, const QMatrix4x4& model, const QVector3D& color,
+                    Texture* texture, float alpha) {
     if (!mesh) return;
-    DrawItem item; item.mesh = mesh; item.texture = texture; item.model = modelMatrix; item.color = color;
-    m_queue.submit(item);
+    MeshCmd cmd; cmd.mesh = mesh; cmd.texture = texture; cmd.model = model; cmd.color = color; cmd.alpha = alpha;
+    m_queue.submit(cmd);
+}
+
+void Renderer::selectionRing(const QMatrix4x4& model, float alphaInner, float alphaOuter,
+                             const QVector3D& color) {
+    SelectionRingCmd cmd; cmd.model = model; cmd.alphaInner = alphaInner; cmd.alphaOuter = alphaOuter; cmd.color = color;
+    m_queue.submit(cmd);
 }
 
 void Renderer::submitRenderCommand(const RenderCommand& command) {
-    queueMeshColored(command.mesh, command.modelMatrix, command.color, command.texture);
+    mesh(command.mesh, command.modelMatrix, command.color, command.texture, 1.0f);
 }
 
 void Renderer::renderWorld(Engine::Core::World* world) {
@@ -91,8 +99,8 @@ void Renderer::renderWorld(Engine::Core::World* world) {
                         // Shadow-like color (dark gray)
                         QVector3D c(0.0f, 0.0f, 0.0f);
                         QMatrix4x4 feather = model; feather.scale(1.08f, 1.0f, 1.08f);
-                        queueMeshColored(ring, feather, c, m_resources ? m_resources->white() : nullptr);
-                        queueMeshColored(ring, model, c, m_resources ? m_resources->white() : nullptr);
+                        // For now we submit a single ring command; renderer may draw a feathered effect in backend
+                        selectionRing(model, 0.6f, 0.25f, c);
                     }
                 }
             }
@@ -141,7 +149,7 @@ void Renderer::renderWorld(Engine::Core::World* world) {
                             QMatrix4x4 flagModel;
                             flagModel.translate(prod->rallyX, 0.1f, prod->rallyZ);
                             flagModel.scale(0.2f, 0.2f, 0.2f);
-                            queueMeshColored(m_resources->unit(), flagModel, QVector3D(1.0f, 0.9f, 0.2f), m_resources->white());
+                            mesh(m_resources->unit(), flagModel, QVector3D(1.0f, 0.9f, 0.2f), m_resources->white(), 1.0f);
                         }
                     }
                 }
@@ -177,7 +185,7 @@ void Renderer::renderWorld(Engine::Core::World* world) {
                         QMatrix4x4 flagModel;
                         flagModel.translate(prod->rallyX, 0.1f, prod->rallyZ);
                         flagModel.scale(0.2f, 0.2f, 0.2f);
-                        queueMeshColored(m_resources->unit(), flagModel, QVector3D(1.0f, 0.9f, 0.2f), m_resources->white());
+                        mesh(m_resources->unit(), flagModel, QVector3D(1.0f, 0.9f, 0.2f), m_resources->white(), 1.0f);
                     }
                 }
             }

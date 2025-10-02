@@ -118,7 +118,7 @@ void renderArrows(Renderer* renderer,
         model.translate(0.0f, 0.0f, -ARROW_Z_SCALE * ARROW_Z_TRANSLATE_FACTOR);
         model.scale(ARROW_XY_SCALE, ARROW_XY_SCALE, ARROW_Z_SCALE);
 
-    renderer->queueMeshColored(arrowMesh, model, arrow.color);
+    renderer->mesh(arrowMesh, model, arrow.color, nullptr, 1.0f);
     }
 }
 

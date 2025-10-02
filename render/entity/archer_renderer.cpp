@@ -99,14 +99,14 @@ void registerArcherRenderer(EntityRendererRegistry& registry) {
             color = QVector3D(rc->color[0], rc->color[1], rc->color[2]);
         }
     // Enqueue capsule (archer body)
-    p.renderer->queueMeshColored(getArcherCapsule(), p.model, color, nullptr);
+    p.renderer->mesh(getArcherCapsule(), p.model, color, nullptr, 1.0f);
         // Draw selection ring if selected
         if (p.selected) {
             QMatrix4x4 ringM;
             QVector3D pos = p.model.column(3).toVector3D();
             ringM.translate(pos.x(), 0.01f, pos.z());
             ringM.scale(0.5f, 1.0f, 0.5f);
-            p.renderer->queueMeshColored(Render::Geom::SelectionRing::get(), ringM, QVector3D(0.2f, 0.8f, 0.2f), nullptr);
+            p.renderer->selectionRing(ringM, 0.6f, 0.25f, QVector3D(0.2f, 0.8f, 0.2f));
         }
     });
 }

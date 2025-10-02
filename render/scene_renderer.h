@@ -5,6 +5,7 @@
 #include "gl/texture.h"
 #include "gl/resources.h"
 #include "draw_queue.h"
+#include "submitter.h"
 #include <memory>
 #include <vector>
 #include <optional>
@@ -32,7 +33,7 @@ struct RenderCommand { // legacy submission shape; mapped to DrawItem internally
     QVector3D color{1.0f, 1.0f, 1.0f};
 };
 
-class Renderer {
+class Renderer : public ISubmitter {
 public:
     Renderer();
     ~Renderer();
@@ -74,8 +75,11 @@ public:
     void setGridParams(const GridParams& gp) { m_gridParams = gp; }
     const GridParams& gridParams() const { return m_gridParams; }
     
-    // Submission helpers (enqueue for backend)
-    void queueMeshColored(Mesh* mesh, const QMatrix4x4& modelMatrix, const QVector3D& color, Texture* texture = nullptr);
+    // ISubmitter implementation (enqueue for backend)
+    void mesh(Mesh* mesh, const QMatrix4x4& model, const QVector3D& color,
+              Texture* texture = nullptr, float alpha = 1.0f) override;
+    void selectionRing(const QMatrix4x4& model, float alphaInner, float alphaOuter,
+                       const QVector3D& color) override;
     void submitRenderCommand(const RenderCommand& command);
     
     // Legacy: still available but apps are encouraged to issue draw calls explicitly
