@@ -6,7 +6,7 @@
 #include "../units/factory.h"
 #include "../core/world.h"
 #include "../core/component.h"
-#include "../../render/gl/renderer.h"
+#include "../../render/scene_renderer.h"
 #include "../../render/gl/camera.h"
 #include <QDebug>
 
@@ -33,10 +33,11 @@ LevelLoadResult LevelLoader::loadFromAssets(const QString& mapPath,
     QString err;
     if (Game::Map::MapLoader::loadFromJsonFile(mapPath, def, &err)) {
         res.ok = true;
-        res.mapName = def.name;
+    res.mapName = def.name;
         // Apply environment
         Game::Map::Environment::apply(def, renderer, camera);
-        res.camFov = def.camera.fovY; res.camNear = def.camera.nearPlane; res.camFar = def.camera.farPlane;
+    res.camFov = def.camera.fovY; res.camNear = def.camera.nearPlane; res.camFar = def.camera.farPlane;
+    res.gridWidth = def.grid.width; res.gridHeight = def.grid.height; res.tileSize = def.grid.tileSize;
         // Populate world
         auto rt = Game::Map::MapTransformer::applyToWorld(def, world, &visualCatalog);
         if (!rt.unitIds.empty()) {
@@ -70,8 +71,9 @@ LevelLoadResult LevelLoader::loadFromAssets(const QString& mapPath,
     } else {
         qWarning() << "LevelLoader: Map load failed:" << err << " - applying default environment";
         Game::Map::Environment::applyDefault(renderer, camera);
-        res.ok = false;
+    res.ok = false;
         res.camFov = camera.getFOV(); res.camNear = camera.getNear(); res.camFar = camera.getFar();
+    res.gridWidth = 50; res.gridHeight = 50; res.tileSize = 1.0f;
         // Fallback archer spawn as last resort
         auto reg = Game::Map::MapTransformer::getFactoryRegistry();
         if (reg) {
