@@ -42,7 +42,7 @@ public:
     void setCamera(Camera* camera);
     void setClearColor(float r, float g, float b, float a = 1.0f);
     // Optional: inject an external ResourceManager owned by the app
-    void setResources(const std::shared_ptr<ResourceManager>& resources) { m_resources = resources; }
+    void setResources(const std::shared_ptr<ResourceManager>& resources);
     void setHoveredBuildingId(unsigned int id) { m_hoveredBuildingId = id; }
     // Selection information provided by the app before rendering
     void setSelectedEntities(const std::vector<unsigned int>& ids) {

@@ -9,31 +9,21 @@
 namespace Render::GL {
 Backend::~Backend() = default;
 
-namespace {
-static const QString kShaderBase = QStringLiteral("assets/shaders/");
-static const QString kBasicVert = kShaderBase + QStringLiteral("basic.vert");
-static const QString kBasicFrag = kShaderBase + QStringLiteral("basic.frag");
-static const QString kGridFrag  = kShaderBase + QStringLiteral("grid.frag");
-}
-
 void Backend::initialize() {
 	initializeOpenGLFunctions();
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	// Load basic shader
-	m_basicShader = std::make_unique<Shader>();
-	if (!m_basicShader->loadFromFiles(kBasicVert, kBasicFrag)) {
-		qWarning() << "Backend: failed to load basic shader" << kBasicVert << kBasicFrag;
-		m_basicShader.reset();
+	// Initialize shader cache and get commonly used shaders
+	m_shaderCache = std::make_unique<ShaderCache>();
+	m_basicShader = m_shaderCache->get(QStringLiteral("basic"));
+	if (!m_basicShader) {
+		qWarning() << "Backend: failed to load 'basic' shader";
 	}
-
-	// Grid shader shares the same vertex stage and uses grid.frag
-	m_gridShader = std::make_unique<Shader>();
-	if (!m_gridShader->loadFromFiles(kBasicVert, kGridFrag)) {
-		qWarning() << "Backend: failed to load grid shader" << kBasicVert << kGridFrag;
-		m_gridShader.reset();
+	m_gridShader = m_shaderCache->get(QStringLiteral("grid"));
+	if (!m_gridShader) {
+		qWarning() << "Backend: failed to load 'grid' shader";
 	}
 }
 
@@ -54,23 +44,39 @@ void Backend::setClearColor(float r, float g, float b, float a) {
 	m_clearColor[0]=r; m_clearColor[1]=g; m_clearColor[2]=b; m_clearColor[3]=a;
 }
 
-void Backend::execute(const DrawQueue& queue, const Camera& cam, const ResourceManager& res) {
+void Backend::execute(const DrawQueue& queue, const Camera& cam) {
 	if (!m_basicShader) return;
-	m_basicShader->use();
-	m_basicShader->setUniform("u_view", cam.getViewMatrix());
-	m_basicShader->setUniform("u_projection", cam.getProjectionMatrix());
+	Shader* current = nullptr;
+	auto bindBasic = [&]() {
+		if (current != m_basicShader) {
+			m_basicShader->use();
+			m_basicShader->setUniform("u_view", cam.getViewMatrix());
+			m_basicShader->setUniform("u_projection", cam.getProjectionMatrix());
+			current = m_basicShader;
+		}
+	};
+	auto bindGrid = [&]() {
+		if (!m_gridShader) return;
+		if (current != m_gridShader) {
+			m_gridShader->use();
+			m_gridShader->setUniform("u_view", cam.getViewMatrix());
+			m_gridShader->setUniform("u_projection", cam.getProjectionMatrix());
+			current = m_gridShader;
+		}
+	};
 	for (const auto& cmd : queue.items()) {
 		if (std::holds_alternative<MeshCmd>(cmd)) {
 			const auto& it = std::get<MeshCmd>(cmd);
 			if (!it.mesh) continue;
+			bindBasic();
 			m_basicShader->setUniform("u_model", it.model);
 			if (it.texture) {
 				it.texture->bind(0);
 				m_basicShader->setUniform("u_texture", 0);
 				m_basicShader->setUniform("u_useTexture", true);
 			} else {
-				if (res.white()) {
-					res.white()->bind(0);
+				if (m_resources && m_resources->white()) {
+					m_resources->white()->bind(0);
 					m_basicShader->setUniform("u_texture", 0);
 				}
 				m_basicShader->setUniform("u_useTexture", false);
@@ -81,21 +87,19 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam, const ResourceM
 		} else if (std::holds_alternative<GridCmd>(cmd)) {
 			if (!m_gridShader) continue;
 			const auto& gc = std::get<GridCmd>(cmd);
-			m_gridShader->use();
-			m_gridShader->setUniform("u_view", cam.getViewMatrix());
-			m_gridShader->setUniform("u_projection", cam.getProjectionMatrix());
+			bindGrid();
 			m_gridShader->setUniform("u_model", gc.model);
 			m_gridShader->setUniform("u_gridColor", gc.color);
 			m_gridShader->setUniform("u_lineColor", QVector3D(0.22f, 0.25f, 0.22f));
 			m_gridShader->setUniform("u_cellSize", gc.cellSize);
 			m_gridShader->setUniform("u_thickness", gc.thickness);
 			// Draw a full plane using the default ground mesh if available
-			if (auto* plane = res.ground()) plane->draw();
-			m_gridShader->release();
+			if (m_resources) { if (auto* plane = m_resources->ground()) plane->draw(); }
 		} else if (std::holds_alternative<SelectionRingCmd>(cmd)) {
 			const auto& sc = std::get<SelectionRingCmd>(cmd);
 			Mesh* ring = Render::Geom::SelectionRing::get();
 			if (!ring) continue;
+			bindBasic();
 			// Use white texture path for consistent shading
 			m_basicShader->setUniform("u_useTexture", false);
 			m_basicShader->setUniform("u_color", sc.color);
@@ -118,7 +122,7 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam, const ResourceM
 			glDisable(GL_POLYGON_OFFSET_FILL);
 		}
 	}
-	m_basicShader->release();
+	if (current) current->release();
 }
 
 } // namespace Render::GL

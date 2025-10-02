@@ -9,6 +9,7 @@ namespace Render::GL {
 
 class ShaderCache {
 public:
+    // Get by explicit vertex/fragment file paths
     Shader* getOrLoad(const QString& vertPath, const QString& fragPath) {
         auto key = vertPath + "|" + fragPath;
         auto it = m_cache.find(key);
@@ -19,6 +20,10 @@ public:
         m_cache.emplace(std::move(key), std::move(sh));
         return raw;
     }
+
+    // Get a commonly used shader by name (e.g., "basic", "grid")
+    // Returns nullptr if name is unknown or loading fails.
+    Shader* get(const QString& name);
 
     void clear() { m_cache.clear(); }
 

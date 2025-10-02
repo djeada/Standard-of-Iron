@@ -25,6 +25,8 @@ bool Renderer::initialize() {
     if (!m_resources->initialize()) {
         qWarning() << "Failed to initialize GL resources";
     }
+    // Backend owns and uses resources; SceneRenderer passes pointer
+    m_backend->setResources(m_resources);
     m_entityRegistry = std::make_unique<EntityRendererRegistry>();
     registerBuiltInEntityRenderers(*m_entityRegistry);
     return true;
@@ -40,12 +42,17 @@ void Renderer::beginFrame() {
 void Renderer::endFrame() {
     if (m_backend && m_camera && m_resources) {
         m_queue.sortForBatching();
-        m_backend->execute(m_queue, *m_camera, *m_resources);
+        m_backend->execute(m_queue, *m_camera);
     }
 }
 
 void Renderer::setCamera(Camera* camera) {
     m_camera = camera;
+}
+
+void Renderer::setResources(const std::shared_ptr<ResourceManager>& resources) {
+    m_resources = resources;
+    if (m_backend) m_backend->setResources(m_resources);
 }
 
 void Renderer::setClearColor(float r, float g, float b, float a) { if (m_backend) m_backend->setClearColor(r,g,b,a); }
