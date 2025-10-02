@@ -21,6 +21,9 @@ void GroundRenderer::submit(Renderer& renderer, ResourceManager& resources) {
     if (auto* plane = resources.ground()) {
         renderer.mesh(plane, m_model, m_color, resources.white(), 1.0f);
     }
+    if (m_showGrid) {
+        renderer.grid(m_model, m_gridColor, m_tileSize, m_gridThickness);
+    }
 }
 
 } }

@@ -12,6 +12,10 @@ public:
     }
     void configureExtent(float extent) { m_extent = extent; recomputeModel(); }
     void setColor(const QVector3D& c) { m_color = c; }
+    // Grid overlay controls (optional)
+    void enableGrid(bool enable) { m_showGrid = enable; }
+    void setGridThickness(float t) { m_gridThickness = t; }
+    void setGridColor(const QVector3D& c) { m_gridColor = c; }
     void submit(Renderer& renderer, ResourceManager& resources);
 private:
     void recomputeModel();
@@ -20,6 +24,10 @@ private:
     int m_height = 50;
     float m_extent = 50.0f; // alternative config
     QVector3D m_color{0.15f,0.18f,0.15f};
+    // Grid params
+    bool m_showGrid = true;
+    float m_gridThickness = 0.06f;
+    QVector3D m_gridColor{0.15f,0.18f,0.15f};
     QMatrix4x4 m_model;
 };
 

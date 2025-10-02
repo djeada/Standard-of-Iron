@@ -74,6 +74,8 @@ public:
               Texture* texture = nullptr, float alpha = 1.0f) override;
     void selectionRing(const QMatrix4x4& model, float alphaInner, float alphaOuter,
                        const QVector3D& color) override;
+    void grid(const QMatrix4x4& model, const QVector3D& color,
+              float cellSize, float thickness) override;
     
     // Legacy: still available but apps are encouraged to issue draw calls explicitly
     void renderWorld(Engine::Core::World* world);
