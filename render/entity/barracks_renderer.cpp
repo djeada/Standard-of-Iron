@@ -140,6 +140,23 @@ static void drawBarracks(const DrawContext& p, ISubmitter& out) {
             out.mesh(p.resources->unit(), flagModel, QVector3D(1.0f, 0.9f, 0.2f), p.resources->white(), 1.0f);
         }
     }
+
+    // Selection ring if selected
+    if (p.selected) {
+        QMatrix4x4 ringM;
+        QVector3D pos = p.model.column(3).toVector3D();
+        ringM.translate(pos.x(), 0.01f, pos.z());
+        ringM.scale(0.9f, 1.0f, 0.9f);
+        out.selectionRing(ringM, 0.6f, 0.25f, QVector3D(0.2f, 0.8f, 0.2f));
+    }
+    // Hover ring if hovered and not selected
+    else if (p.hovered) {
+        QMatrix4x4 ringM;
+        QVector3D pos = p.model.column(3).toVector3D();
+        ringM.translate(pos.x(), 0.01f, pos.z());
+        ringM.scale(0.9f, 1.0f, 0.9f);
+        out.selectionRing(ringM, 0.35f, 0.15f, QVector3D(0.90f, 0.90f, 0.25f));
+    }
 }
 
 void registerBarracksRenderer(EntityRendererRegistry& registry) {

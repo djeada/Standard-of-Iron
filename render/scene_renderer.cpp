@@ -8,7 +8,6 @@
 #include <algorithm>
 #include <cmath>
 #include "entity/registry.h"
-#include "geom/selection_ring.h"
 
 namespace Render::GL {
 
@@ -77,23 +76,7 @@ void Renderer::selectionRing(const QMatrix4x4& model, float alphaInner, float al
 void Renderer::renderWorld(Engine::Core::World* world) {
     if (!world) return;
 
-    // Draw hover ring (pure submission; model math only)
-    if (m_hoveredBuildingId) {
-        if (auto* hovered = world->getEntity(m_hoveredBuildingId)) {
-            if (hovered->hasComponent<Engine::Core::BuildingComponent>()) {
-                if (auto* t = hovered->getComponent<Engine::Core::TransformComponent>()) {
-                    const float marginXZ = 1.25f;
-                    const float pad = 1.06f;
-                    float sx = std::max(0.6f, t->scale.x * marginXZ * pad * 1.5f);
-                    float sz = std::max(0.6f, t->scale.z * marginXZ * pad * 1.5f);
-                    QMatrix4x4 model;
-                    model.translate(t->position.x, 0.01f, t->position.z);
-                    model.scale(sx, 1.0f, sz);
-                    selectionRing(model, 0.28f, 0.10f, QVector3D(0.0f, 0.0f, 0.0f));
-                }
-            }
-        }
-    }
+    // Hover ring is now entity-renderer-owned; we only pass hovered flag in context
 
     // Get all entities with both transform and renderable components
     auto renderableEntities = world->getEntitiesWith<Engine::Core::RenderableComponent>();
@@ -123,6 +106,7 @@ void Renderer::renderWorld(Engine::Core::World* world) {
                     DrawContext ctx{m_resources.get(), entity, modelMatrix};
                     // Selection routed from app via setSelectedEntities to avoid mutating ECS flags for rendering
                     ctx.selected = (m_selectedIds.find(entity->getId()) != m_selectedIds.end());
+                    ctx.hovered = (entity->getId() == m_hoveredBuildingId);
                     fn(ctx, *this);
                     drawnByRegistry = true;
                 }

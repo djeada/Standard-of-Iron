@@ -106,6 +106,16 @@ void registerArcherRenderer(EntityRendererRegistry& registry) {
             ringM.scale(0.5f, 1.0f, 0.5f);
             out.selectionRing(ringM, 0.6f, 0.25f, QVector3D(0.2f, 0.8f, 0.2f));
         }
+
+        // Hover ring (subtle) when hovered but not selected
+        if (p.hovered && !p.selected) {
+            QMatrix4x4 ringM;
+            QVector3D pos = p.model.column(3).toVector3D();
+            ringM.translate(pos.x(), 0.01f, pos.z());
+            ringM.scale(0.5f, 1.0f, 0.5f);
+            // Softer highlight color and alpha than selection
+            out.selectionRing(ringM, 0.35f, 0.15f, QVector3D(0.90f, 0.90f, 0.25f));
+        }
     });
 }
 

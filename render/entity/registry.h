@@ -18,6 +18,7 @@ struct DrawContext {
     Engine::Core::Entity* entity = nullptr;
     QMatrix4x4 model;
     bool selected = false;
+    bool hovered = false;
 };
 
 using RenderFunc = std::function<void(const DrawContext&, ISubmitter& out)>;
