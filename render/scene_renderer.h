@@ -81,7 +81,7 @@ public:
     void selectionRing(const QMatrix4x4& model, float alphaInner, float alphaOuter,
                        const QVector3D& color) override;
     // Enqueue a grid draw call
-    void grid(const QMatrix4x4& model, const QVector3D& color, float cellSize, float thickness, float extent);
+    void grid(const QMatrix4x4& model, const QVector3D& color, float cellSize, float thickness, float extent) override;
     // Enqueue a smoky selection overlay
     void selectionSmoke(const QMatrix4x4& model, const QVector3D& color, float baseAlpha = 0.15f) override;
     
