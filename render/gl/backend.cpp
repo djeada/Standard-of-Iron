@@ -47,6 +47,9 @@ void Backend::setClearColor(float r, float g, float b, float a) {
 void Backend::execute(const DrawQueue& queue, const Camera& cam) {
 	if (!m_basicShader) return;
 	Shader* current = nullptr;
+	int meshCount = 0;
+	int gridCount = 0;
+	int ringCount = 0;
 	auto bindBasic = [&]() {
 		if (current != m_basicShader) {
 			m_basicShader->use();
@@ -68,6 +71,7 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam) {
 		if (std::holds_alternative<MeshCmd>(cmd)) {
 			const auto& it = std::get<MeshCmd>(cmd);
 			if (!it.mesh) continue;
+			++meshCount;
 			bindBasic();
 			m_basicShader->setUniform("u_model", it.model);
 			if (it.texture) {
@@ -87,6 +91,7 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam) {
 		} else if (std::holds_alternative<GridCmd>(cmd)) {
 			if (!m_gridShader) continue;
 			const auto& gc = std::get<GridCmd>(cmd);
+			++gridCount;
 			bindGrid();
 			m_gridShader->setUniform("u_model", gc.model);
 			m_gridShader->setUniform("u_gridColor", gc.color);
@@ -97,6 +102,7 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam) {
 			if (m_resources) { if (auto* plane = m_resources->ground()) plane->draw(); }
 		} else if (std::holds_alternative<SelectionRingCmd>(cmd)) {
 			const auto& sc = std::get<SelectionRingCmd>(cmd);
+			++ringCount;
 			Mesh* ring = Render::Geom::SelectionRing::get();
 			if (!ring) continue;
 			bindBasic();
@@ -123,6 +129,7 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam) {
 		}
 	}
 	if (current) current->release();
+	qDebug() << "Backend frame: meshes" << meshCount << ", rings" << ringCount << ", grids" << gridCount;
 }
 
 } // namespace Render::GL
