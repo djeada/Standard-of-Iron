@@ -4,6 +4,7 @@
 #include "mesh.h"
 #include "texture.h"
 #include "../geom/selection_ring.h"
+#include "state_scopes.h"
 #include <QDebug>
 
 namespace Render::GL {
@@ -108,9 +109,10 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam, const ResourceM
 			// Use white texture path for consistent shading
 			m_basicShader->setUniform("u_useTexture", false);
 			m_basicShader->setUniform("u_color", sc.color);
-			// Slight polygon offset to avoid z-fighting with ground
-			glEnable(GL_POLYGON_OFFSET_FILL);
-			glPolygonOffset(-1.0f, -1.0f);
+			// Slight polygon offset and disable depth writes while blending
+			DepthMaskScope depthMask(false);
+			PolygonOffsetScope poly(-1.0f, -1.0f);
+			BlendScope blend(true);
 			// Outer feather
 			{
 				QMatrix4x4 m = sc.model; m.scale(1.08f, 1.0f, 1.08f);
@@ -124,7 +126,6 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam, const ResourceM
 				m_basicShader->setUniform("u_alpha", sc.alphaInner);
 				ring->draw();
 			}
-			glDisable(GL_POLYGON_OFFSET_FILL);
 		}
 	}
 	m_basicShader->release();
