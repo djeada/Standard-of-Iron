@@ -148,7 +148,7 @@ static void drawBarracks(const DrawContext& p, ISubmitter& out) {
         // Force ground-level placement; ignore model's Y height for discs
         m.translate(pos.x(), 0.0f, pos.z());
         m.scale(1.8f, 1.0f, 1.8f); // previously ~0.9, now doubled
-        out.selectionSmoke(m, QVector3D(0.2f, 0.8f, 0.2f), 0.22f);
+    out.selectionSmoke(m, QVector3D(0.2f, 0.8f, 0.2f), 0.32f);
     }
     // Hover smoke if hovered and not selected (subtle)
     else if (p.hovered) {
@@ -156,7 +156,7 @@ static void drawBarracks(const DrawContext& p, ISubmitter& out) {
         QVector3D pos = p.model.column(3).toVector3D();
         m.translate(pos.x(), 0.0f, pos.z());
         m.scale(1.8f, 1.0f, 1.8f);
-        out.selectionSmoke(m, QVector3D(0.90f, 0.90f, 0.25f), 0.12f);
+    out.selectionSmoke(m, QVector3D(0.90f, 0.90f, 0.25f), 0.20f);
     }
 }
 
