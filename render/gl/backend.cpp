@@ -152,8 +152,3 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam) {
 }
 
 } // namespace Render::GL
-#include "backend.h"
-
-namespace Render::GL {
-// Backend is thin; all inline for now.
-}
