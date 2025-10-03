@@ -59,10 +59,9 @@ void renderPatrolFlags(
             uint64_t posHash = (static_cast<uint64_t>(gridX) << 32) | static_cast<uint64_t>(gridZ);
             
             // Skip if we've already rendered a flag at this position
-            if (renderedPositions.find(posHash) != renderedPositions.end()) {
+            if (!renderedPositions.insert(posHash).second) {
                 continue;
             }
-            renderedPositions.insert(posHash);
             
             // Create green patrol flag (different from yellow rally flags)
             auto flag = Geom::Flag::create(
