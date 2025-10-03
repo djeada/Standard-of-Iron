@@ -74,18 +74,21 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam) {
 			const auto& it = std::get<MeshCmd>(cmd);
 			if (!it.mesh) continue;
 			++meshCount;
-				// Draw grid as a pure overlay without affecting depth buffer
-				GLboolean prevDepthMask;
-				glGetBooleanv(GL_DEPTH_WRITEMASK, &prevDepthMask);
-				glDepthMask(GL_FALSE);
 			bindBasic();
+			// Reset critical state for solid meshes
+			glEnable(GL_DEPTH_TEST);
+			glDepthMask(GL_TRUE);
+			glDisable(GL_POLYGON_OFFSET_FILL);
+				// Robust draw: ensure no unexpected culling and allow equal-depth fragments
+				GLint prevDepthFunc; glGetIntegerv(GL_DEPTH_FUNC, &prevDepthFunc);
+				glDepthFunc(GL_LEQUAL);
+				glDisable(GL_CULL_FACE);
 			m_basicShader->setUniform("u_model", it.model);
 			if (it.texture) {
 				it.texture->bind(0);
 				m_basicShader->setUniform("u_texture", 0);
 				m_basicShader->setUniform("u_useTexture", true);
 			} else {
-				glDepthMask(prevDepthMask);
 				if (m_resources && m_resources->white()) {
 					m_resources->white()->bind(0);
 					m_basicShader->setUniform("u_texture", 0);
@@ -95,11 +98,17 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam) {
 			m_basicShader->setUniform("u_color", it.color);
 			m_basicShader->setUniform("u_alpha", it.alpha);
 			it.mesh->draw();
+				// Restore depth func
+				glDepthFunc(prevDepthFunc);
 		} else if (std::holds_alternative<GridCmd>(cmd)) {
 			if (!m_gridShader) continue;
 			const auto& gc = std::get<GridCmd>(cmd);
 			++gridCount;
 			bindGrid();
+			// Draw grid as overlay without writing depth
+			GLboolean prevDepthMask;
+			glGetBooleanv(GL_DEPTH_WRITEMASK, &prevDepthMask);
+			glDepthMask(GL_FALSE);
 			m_gridShader->setUniform("u_model", gc.model);
 			m_gridShader->setUniform("u_gridColor", gc.color);
 			m_gridShader->setUniform("u_lineColor", QVector3D(0.22f, 0.25f, 0.22f));
@@ -107,6 +116,7 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam) {
 			m_gridShader->setUniform("u_thickness", gc.thickness);
 			// Draw a full plane using the default ground mesh if available
 			if (m_resources) { if (auto* plane = m_resources->ground()) plane->draw(); }
+			glDepthMask(prevDepthMask);
 		} else if (std::holds_alternative<SelectionRingCmd>(cmd)) {
 			const auto& sc = std::get<SelectionRingCmd>(cmd);
 			++ringCount;
