@@ -19,6 +19,8 @@ add_library(render_gl STATIC
     geom/selection_ring.cpp
     geom/selection_disc.cpp
     geom/arrow.cpp
+    geom/flag.cpp
+    geom/patrol_flags.cpp
 )
 
 target_include_directories(render_gl PUBLIC .)

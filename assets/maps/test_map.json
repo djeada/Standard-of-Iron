@@ -1,6 +1,7 @@
 {
   "name": "Test Map (JSON)",
   "coordSystem": "grid",
+  "maxTroopsPerPlayer": 30,
   "grid": {
     "width": 100,
     "height": 100,
