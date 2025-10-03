@@ -53,37 +53,51 @@ void CombatSystem::processAttacks(Engine::Core::World* world, float deltaTime) {
             continue; // still cooling down
         }
 
-        // Target selection: prioritize enemy units, but also attack enemy buildings
+        // Check for explicit attack target command first
+        auto* attackTarget = attacker->getComponent<Engine::Core::AttackTargetComponent>();
         Engine::Core::Entity* bestTarget = nullptr;
         
-        // First pass: look for enemy units (non-buildings)
-        for (auto target : units) {
-            if (target == attacker) {
-                continue;
-            }
-
-            auto targetUnit = target->getComponent<Engine::Core::UnitComponent>();
-            if (!targetUnit || targetUnit->health <= 0) {
-                continue;
-            }
-            // Friendly-fire check: only attack units with a different owner
-            if (targetUnit->ownerId == attackerUnit->ownerId) {
-                continue;
-            }
-            
-            // Skip buildings in first pass
-            if (target->hasComponent<Engine::Core::BuildingComponent>()) {
-                continue;
-            }
-
-            if (isInRange(attacker, target, range)) {
-                bestTarget = target;
-                break;
+        if (attackTarget && attackTarget->targetId != 0) {
+            // Explicit attack command - target specific entity
+            auto* target = world->getEntity(attackTarget->targetId);
+            if (target) {
+                auto* targetUnit = target->getComponent<Engine::Core::UnitComponent>();
+                
+                // Check if target is valid (alive and enemy)
+                if (targetUnit && targetUnit->health > 0 && 
+                    targetUnit->ownerId != attackerUnit->ownerId) {
+                    
+                    // Check if in range
+                    if (isInRange(attacker, target, range)) {
+                        bestTarget = target;
+                    } else if (attackTarget->shouldChase) {
+                        // Chase the target - set movement target
+                        auto* movement = attacker->getComponent<Engine::Core::MovementComponent>();
+                        if (!movement) {
+                            movement = attacker->addComponent<Engine::Core::MovementComponent>();
+                        }
+                        if (movement) {
+                            auto* targetTransform = target->getComponent<Engine::Core::TransformComponent>();
+                            if (targetTransform) {
+                                movement->targetX = targetTransform->position.x;
+                                movement->targetY = targetTransform->position.z;
+                                movement->hasTarget = true;
+                            }
+                        }
+                    }
+                } else {
+                    // Target is dead or invalid, clear attack target
+                    attacker->removeComponent<Engine::Core::AttackTargetComponent>();
+                }
+            } else {
+                // Target entity doesn't exist anymore
+                attacker->removeComponent<Engine::Core::AttackTargetComponent>();
             }
         }
         
-        // Second pass: if no units found, target enemy buildings
-        if (!bestTarget) {
+        // If no explicit target, use automatic targeting (units only, not buildings in auto-mode)
+        if (!bestTarget && !attackTarget) {
+            // Auto-targeting: only target enemy units (not buildings automatically)
             for (auto target : units) {
                 if (target == attacker) {
                     continue;
@@ -93,13 +107,13 @@ void CombatSystem::processAttacks(Engine::Core::World* world, float deltaTime) {
                 if (!targetUnit || targetUnit->health <= 0) {
                     continue;
                 }
-                // Friendly-fire check
+                // Friendly-fire check: only attack units with a different owner
                 if (targetUnit->ownerId == attackerUnit->ownerId) {
                     continue;
                 }
                 
-                // Only consider buildings in second pass
-                if (!target->hasComponent<Engine::Core::BuildingComponent>()) {
+                // Skip buildings in auto-targeting (but they CAN be targeted explicitly via AttackTargetComponent)
+                if (target->hasComponent<Engine::Core::BuildingComponent>()) {
                     continue;
                 }
 
@@ -122,7 +136,7 @@ void CombatSystem::processAttacks(Engine::Core::World* world, float deltaTime) {
                 QVector3D dir = (tPos - aPos).normalized();
                 // Raise bow height and offset a bit forward to avoid intersecting the capsule body
                 QVector3D start = aPos + QVector3D(0.0f, 0.6f, 0.0f) + dir * 0.35f;
-                QVector3D end   = tPos + QVector3D(0.0f, 0.5f, 0.0f);
+                QVector3D end   = tPos + QVector3D(0.5f, 0.5f, 0.0f);
                 QVector3D color = attU ? Game::Visuals::teamColorForOwner(attU->ownerId) : QVector3D(0.8f, 0.9f, 1.0f);
                 arrowSys->spawnArrow(start, end, color, 14.0f);
             }
@@ -158,106 +172,6 @@ void CombatSystem::dealDamage(Engine::Core::Entity* target, int damage) {
             }
         }
     }
-}
-
-void AISystem::update(Engine::Core::World* world, float deltaTime) {
-    updateProductionAI(world, deltaTime);
-    updateCombatAI(world, deltaTime);
-}
-
-void AISystem::updateProductionAI(Engine::Core::World* world, float deltaTime) {
-    if (!world) return;
-    
-    // Check production every 2 seconds
-    m_productionTimer += deltaTime;
-    if (m_productionTimer < 2.0f) return;
-    m_productionTimer = 0.0f;
-    
-    // Find all enemy barracks (ownerId == 2)
-    auto entities = world->getEntitiesWith<Engine::Core::UnitComponent>();
-    for (auto* e : entities) {
-        auto* u = e->getComponent<Engine::Core::UnitComponent>();
-        if (!u || u->ownerId != 2) continue; // AI is player 2
-        if (u->unitType != "barracks" || u->health <= 0) continue;
-        
-        auto* prod = e->getComponent<Engine::Core::ProductionComponent>();
-        if (!prod) continue;
-        
-        // If not producing and haven't reached cap, start producing
-        if (!prod->inProgress && prod->producedCount < prod->maxUnits) {
-            prod->productType = "archer";
-            prod->timeRemaining = prod->buildTime;
-            prod->inProgress = true;
-        }
-    }
-}
-
-void AISystem::updateCombatAI(Engine::Core::World* world, float deltaTime) {
-    if (!world) return;
-    
-    // Command units every 3 seconds
-    m_combatTimer += deltaTime;
-    if (m_combatTimer < 3.0f) return;
-    m_combatTimer = 0.0f;
-    
-    // Find all AI units (ownerId == 2)
-    std::vector<Engine::Core::Entity*> aiUnits;
-    std::vector<Engine::Core::Entity*> playerTargets;
-    
-    auto entities = world->getEntitiesWith<Engine::Core::UnitComponent>();
-    for (auto* e : entities) {
-        auto* u = e->getComponent<Engine::Core::UnitComponent>();
-        if (!u || u->health <= 0) continue;
-        
-        if (u->ownerId == 2 && u->unitType == "archer") {
-            aiUnits.push_back(e);
-        } else if (u->ownerId == 1) {
-            // Target both player units and buildings
-            playerTargets.push_back(e);
-        }
-    }
-    
-    if (aiUnits.empty() || playerTargets.empty()) return;
-    
-    // Simple AI strategy: attack nearest player target
-    for (auto* aiUnit : aiUnits) {
-        auto* t = aiUnit->getComponent<Engine::Core::TransformComponent>();
-        auto* m = aiUnit->getComponent<Engine::Core::MovementComponent>();
-        if (!t || !m) continue;
-        
-        // Skip if already moving
-        if (m->hasTarget) continue;
-        
-        // Find nearest player target
-        float minDist2 = std::numeric_limits<float>::max();
-        Engine::Core::Entity* nearestTarget = nullptr;
-        
-        for (auto* target : playerTargets) {
-            auto* targetT = target->getComponent<Engine::Core::TransformComponent>();
-            if (!targetT) continue;
-            
-            float dx = targetT->position.x - t->position.x;
-            float dz = targetT->position.z - t->position.z;
-            float dist2 = dx * dx + dz * dz;
-            
-            if (dist2 < minDist2) {
-                minDist2 = dist2;
-                nearestTarget = target;
-            }
-        }
-        
-        // Move toward nearest target if found and not already in range
-        if (nearestTarget && minDist2 > 4.0f) {
-            auto* targetT = nearestTarget->getComponent<Engine::Core::TransformComponent>();
-            m->hasTarget = true;
-            m->targetX = targetT->position.x;
-            m->targetY = targetT->position.z;
-        }
-    }
-}
-
-void AISystem::updateAI(Engine::Core::World* world, float deltaTime) {
-    // Legacy method - kept for compatibility but now handled by update()
 }
 
 } // namespace Game::Systems

@@ -156,7 +156,10 @@ Engine::Core::EntityID PickingService::pickSingle(float sx, float sy,
         if (!e->hasComponent<Engine::Core::UnitComponent>()) continue;
         auto* t = e->getComponent<Engine::Core::TransformComponent>();
         auto* u = e->getComponent<Engine::Core::UnitComponent>();
-        if (!u || u->ownerId != ownerFilter) continue;
+        
+        // Owner filter: 0 means no filter (pick any), otherwise pick only matching owner
+        if (ownerFilter != 0 && u->ownerId != ownerFilter) continue;
+        
         QPointF sp;
         if (!camera.worldToScreen(QVector3D(t->position.x, t->position.y, t->position.z), viewW, viewH, sp)) continue;
         float dx = float(sx) - float(sp.x());
