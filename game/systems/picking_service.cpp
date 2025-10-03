@@ -53,23 +53,27 @@ Engine::Core::EntityID PickingService::updateHover(float sx, float sy,
     if (prevHover) {
         if (auto* e = world.getEntity(prevHover)) {
             if (e->hasComponent<Engine::Core::BuildingComponent>()) {
-                if (auto* t = e->getComponent<Engine::Core::TransformComponent>()) {
-                    float pxPad = 12.0f;
-                    if (auto* prod = e->getComponent<Engine::Core::ProductionComponent>()) {
-                        if (prod->inProgress) pxPad = 24.0f;
-                    }
-                    const float marginXZ_keep = 1.10f;
-                    const float pad_keep  = 1.12f;
-                    float hxk = std::max(0.4f, t->scale.x * marginXZ_keep * pad_keep);
-                    float hzk = std::max(0.4f, t->scale.z * marginXZ_keep * pad_keep);
-                    QRectF bounds;
-                    if (projectBounds(camera, QVector3D(t->position.x, t->position.y, t->position.z), hxk, hzk, viewW, viewH, bounds)) {
-                        bounds.adjust(-pxPad, -pxPad, pxPad, pxPad);
-                        if (bounds.contains(QPointF(sx, sy))) {
-                            currentHover = prevHover;
-                            m_hoverGraceTicks = 6;
-                            m_prevHoverId = currentHover;
-                            return currentHover;
+                // Only allow hover for player's own buildings (ownerId == 1)
+                auto* u = e->getComponent<Engine::Core::UnitComponent>();
+                if (u && u->ownerId == 1) {
+                    if (auto* t = e->getComponent<Engine::Core::TransformComponent>()) {
+                        float pxPad = 12.0f;
+                        if (auto* prod = e->getComponent<Engine::Core::ProductionComponent>()) {
+                            if (prod->inProgress) pxPad = 24.0f;
+                        }
+                        const float marginXZ_keep = 1.10f;
+                        const float pad_keep  = 1.12f;
+                        float hxk = std::max(0.4f, t->scale.x * marginXZ_keep * pad_keep);
+                        float hzk = std::max(0.4f, t->scale.z * marginXZ_keep * pad_keep);
+                        QRectF bounds;
+                        if (projectBounds(camera, QVector3D(t->position.x, t->position.y, t->position.z), hxk, hzk, viewW, viewH, bounds)) {
+                            bounds.adjust(-pxPad, -pxPad, pxPad, pxPad);
+                            if (bounds.contains(QPointF(sx, sy))) {
+                                currentHover = prevHover;
+                                m_hoverGraceTicks = 6;
+                                m_prevHoverId = currentHover;
+                                return currentHover;
+                            }
                         }
                     }
                 }
@@ -82,6 +86,11 @@ Engine::Core::EntityID PickingService::updateHover(float sx, float sy,
     for (auto* e : ents) {
         if (!e->hasComponent<Engine::Core::UnitComponent>()) continue;
         if (!e->hasComponent<Engine::Core::BuildingComponent>()) continue;
+        
+        // Only allow hover for player's own buildings (ownerId == 1)
+        auto* u = e->getComponent<Engine::Core::UnitComponent>();
+        if (!u || u->ownerId != 1) continue;
+        
         auto* t = e->getComponent<Engine::Core::TransformComponent>();
         const float marginXZ = 1.10f;
         const float hoverPad  = 1.06f;
@@ -105,7 +114,8 @@ Engine::Core::EntityID PickingService::updateHover(float sx, float sy,
     if (currentHover == 0 && prevHover != 0) {
         if (auto* e = world.getEntity(prevHover)) {
             auto* t = e->getComponent<Engine::Core::TransformComponent>();
-            if (t && e->getComponent<Engine::Core::BuildingComponent>()) {
+            auto* u = e->getComponent<Engine::Core::UnitComponent>();
+            if (t && e->getComponent<Engine::Core::BuildingComponent>() && u && u->ownerId == 1) {
                 const float marginXZ = 1.12f;
                 const float keepPad  = (e->getComponent<Engine::Core::ProductionComponent>() && e->getComponent<Engine::Core::ProductionComponent>()->inProgress) ? 1.16f : 1.12f;
                 float hx = std::max(0.4f, t->scale.x * marginXZ * keepPad);
