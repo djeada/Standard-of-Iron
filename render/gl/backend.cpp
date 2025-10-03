@@ -56,6 +56,7 @@ void Backend::setClearColor(float r, float g, float b, float a) {
 
 void Backend::execute(const DrawQueue& queue, const Camera& cam, const ResourceManager& res) {
 	if (!m_basicShader) return;
+	// Bind once up front; we'll defensively rebind before draws that use it
 	m_basicShader->use();
 	m_basicShader->setUniform("u_view", cam.getViewMatrix());
 	m_basicShader->setUniform("u_projection", cam.getProjectionMatrix());
@@ -63,6 +64,10 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam, const ResourceM
 		if (std::holds_alternative<MeshCmd>(cmd)) {
 			const auto& it = std::get<MeshCmd>(cmd);
 			if (!it.mesh) continue;
+			// Ensure the correct program is bound in case a prior GridCmd changed it
+			m_basicShader->use();
+			m_basicShader->setUniform("u_view", cam.getViewMatrix());
+			m_basicShader->setUniform("u_projection", cam.getProjectionMatrix());
 			m_basicShader->setUniform("u_model", it.model);
 			if (it.texture) {
 				it.texture->bind(0);
@@ -91,11 +96,15 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam, const ResourceM
 			m_gridShader->setUniform("u_thickness", gc.thickness);
 			// Draw a full plane using the default ground mesh if available
 			if (auto* plane = res.ground()) plane->draw();
-			m_gridShader->release();
+			// Do not release to program 0 here; subsequent draws will rebind their shader as needed
 		} else if (std::holds_alternative<SelectionRingCmd>(cmd)) {
 			const auto& sc = std::get<SelectionRingCmd>(cmd);
 			Mesh* ring = Render::Geom::SelectionRing::get();
 			if (!ring) continue;
+			// Ensure basic program is bound
+			m_basicShader->use();
+			m_basicShader->setUniform("u_view", cam.getViewMatrix());
+			m_basicShader->setUniform("u_projection", cam.getProjectionMatrix());
 			// Use white texture path for consistent shading
 			m_basicShader->setUniform("u_useTexture", false);
 			m_basicShader->setUniform("u_color", sc.color);
