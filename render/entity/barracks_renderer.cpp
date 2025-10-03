@@ -141,22 +141,20 @@ static void drawBarracks(const DrawContext& p, ISubmitter& out) {
         }
     }
 
-    // Selection smoke if selected (twice the previous diameter ~ scale *2.0)
+    // Selection smoke if selected (billboarded gray particles)
     if (p.selected) {
         QMatrix4x4 m;
         QVector3D pos = p.model.column(3).toVector3D();
-        // Force ground-level placement; ignore model's Y height for discs
         m.translate(pos.x(), 0.0f, pos.z());
-        m.scale(1.8f, 1.0f, 1.8f); // previously ~0.9, now doubled
-    out.selectionSmoke(m, QVector3D(0.2f, 0.8f, 0.2f), 0.32f);
+        // Use more quads when selected
+        out.billboardSmoke(m, QVector3D(0.6f, 0.6f, 0.6f), 0.35f, 10);
     }
-    // Hover smoke if hovered and not selected (subtle)
+    // Hover smoke if hovered and not selected (subtler, fewer particles)
     else if (p.hovered) {
         QMatrix4x4 m;
         QVector3D pos = p.model.column(3).toVector3D();
         m.translate(pos.x(), 0.0f, pos.z());
-        m.scale(1.8f, 1.0f, 1.8f);
-    out.selectionSmoke(m, QVector3D(0.90f, 0.90f, 0.25f), 0.20f);
+        out.billboardSmoke(m, QVector3D(0.6f, 0.6f, 0.6f), 0.22f, 6);
     }
 }
 

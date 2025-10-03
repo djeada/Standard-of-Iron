@@ -44,8 +44,11 @@ public:
         const QString basicVert = kShaderBase + QStringLiteral("basic.vert");
         const QString basicFrag = kShaderBase + QStringLiteral("basic.frag");
         const QString gridFrag  = kShaderBase + QStringLiteral("grid.frag");
+    const QString smokeVert = kShaderBase + QStringLiteral("smoke.vert");
+    const QString smokeFrag = kShaderBase + QStringLiteral("smoke.frag");
         load(QStringLiteral("basic"), basicVert, basicFrag);
         load(QStringLiteral("grid"),  basicVert, gridFrag);
+    load(QStringLiteral("smoke"), smokeVert, smokeFrag);
     }
 
     void clear() { m_cache.clear(); }

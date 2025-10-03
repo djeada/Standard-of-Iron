@@ -77,6 +77,11 @@ void Renderer::selectionSmoke(const QMatrix4x4& model, const QVector3D& color, f
     m_queue.submit(cmd);
 }
 
+void Renderer::billboardSmoke(const QMatrix4x4& model, const QVector3D& color, float baseAlpha, int count) {
+    BillboardSmokeCmd cmd; cmd.model = model; cmd.color = color; cmd.baseAlpha = baseAlpha; cmd.count = count;
+    m_queue.submit(cmd);
+}
+
 // submitRenderCommand removed; use mesh() directly
 
 void Renderer::renderWorld(Engine::Core::World* world) {

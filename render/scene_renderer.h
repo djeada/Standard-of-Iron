@@ -84,6 +84,7 @@ public:
     void grid(const QMatrix4x4& model, const QVector3D& color, float cellSize, float thickness, float extent) override;
     // Enqueue a smoky selection overlay
     void selectionSmoke(const QMatrix4x4& model, const QVector3D& color, float baseAlpha = 0.15f) override;
+        void billboardSmoke(const QMatrix4x4& model, const QVector3D& color, float baseAlpha = 0.25f, int count = 8) override;
     
     // Legacy: still available but apps are encouraged to issue draw calls explicitly
     void renderWorld(Engine::Core::World* world);

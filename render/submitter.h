@@ -19,6 +19,8 @@ public:
                       float cellSize, float thickness, float extent) = 0;
     virtual void selectionSmoke(const QMatrix4x4& model, const QVector3D& color,
                                 float baseAlpha = 0.15f) = 0;
+    virtual void billboardSmoke(const QMatrix4x4& model, const QVector3D& color,
+                                float baseAlpha = 0.25f, int count = 8) = 0;
 };
 
 class QueueSubmitter : public ISubmitter {
@@ -46,6 +48,12 @@ public:
                         float baseAlpha = 0.15f) override {
         if (!m_queue) return;
         SelectionSmokeCmd cmd; cmd.model = model; cmd.color = color; cmd.baseAlpha = baseAlpha;
+        m_queue->submit(cmd);
+    }
+    void billboardSmoke(const QMatrix4x4& model, const QVector3D& color,
+                        float baseAlpha = 0.25f, int count = 8) override {
+        if (!m_queue) return;
+        BillboardSmokeCmd cmd; cmd.model = model; cmd.color = color; cmd.baseAlpha = baseAlpha; cmd.count = count;
         m_queue->submit(cmd);
     }
 private:

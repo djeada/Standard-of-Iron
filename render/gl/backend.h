@@ -56,6 +56,7 @@ private:
     // Cached pointers to named shaders (owned by m_shaderCache)
     Shader* m_basicShader = nullptr;
     Shader* m_gridShader = nullptr;
+    Shader* m_smokeShader = nullptr;
 };
 
 } // namespace Render::GL

@@ -26,6 +26,12 @@ void Backend::initialize() {
 	m_shaderCache->initializeDefaults();
 	m_basicShader = m_shaderCache->get(QStringLiteral("basic"));
 	m_gridShader  = m_shaderCache->get(QStringLiteral("grid"));
+	// Load smoke shader lazily
+	if (m_shaderCache) {
+		m_smokeShader = m_shaderCache->load(QStringLiteral("smoke"),
+			QStringLiteral("assets/shaders/smoke.vert"),
+			QStringLiteral("assets/shaders/smoke.frag"));
+	}
 	if (!m_basicShader) qWarning() << "Backend: basic shader missing";
 	if (!m_gridShader)  qWarning() << "Backend: grid shader missing";
 }
@@ -147,6 +153,48 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam) {
 				m_basicShader->setUniform("u_model", m);
 				m_basicShader->setUniform("u_alpha", a);
 				disc->draw();
+			}
+		} else if (std::holds_alternative<BillboardSmokeCmd>(cmd)) {
+			const auto& ps = std::get<BillboardSmokeCmd>(cmd);
+			if (!m_smokeShader || !m_resources || !m_resources->quad()) continue;
+			// Compute camera right/up from view matrix
+			QMatrix4x4 view = cam.getViewMatrix();
+			// Extract right (column 0 of inverse view rotation) and up (column 1)
+			QMatrix4x4 invView = view.inverted();
+			QVector3D camRight = invView.column(0).toVector3D().normalized();
+			QVector3D camUp    = invView.column(1).toVector3D().normalized();
+			Mesh* quad = m_resources->quad();
+			DepthMaskScope depthMask(false);
+			BlendScope blend(true);
+			m_smokeShader->use();
+			m_smokeShader->setUniform("u_view", view);
+			m_smokeShader->setUniform("u_projection", cam.getProjectionMatrix());
+			m_smokeShader->setUniform("u_color", ps.color);
+			m_smokeShader->setUniform("u_model", ps.model);
+			// Deterministic pseudo-random via LCG
+			unsigned int seed = ps.seed;
+			auto nextRand = [&seed]() {
+				seed = 1664525u * seed + 1013904223u;
+				return seed;
+			};
+			for (int i = 0; i < ps.count; ++i) {
+				// Random size, height, offset in a small radius
+				float r01 = (nextRand() & 0xFFFFFF) / float(0xFFFFFF);
+				float r02 = (nextRand() & 0xFFFFFF) / float(0xFFFFFF);
+				float r03 = (nextRand() & 0xFFFFFF) / float(0xFFFFFF);
+				float size = ps.sizeMin + (ps.sizeMax - ps.sizeMin) * r01;
+				float height = ps.heightMin + (ps.heightMax - ps.heightMin) * r02;
+				float angle = r03 * 6.2831853f;
+				float radius = 0.5f * r01; // cluster near center
+				QVector3D center(std::cos(angle) * radius, 0.0f, std::sin(angle) * radius);
+				float alpha = ps.baseAlpha * (0.8f + 0.4f * r02);
+				m_smokeShader->setUniform("u_camRight", camRight);
+				m_smokeShader->setUniform("u_camUp", camUp);
+				m_smokeShader->setUniform("u_center", center);
+				m_smokeShader->setUniform("u_size", size);
+				m_smokeShader->setUniform("u_height", height);
+				m_smokeShader->setUniform("u_alpha", alpha);
+				quad->draw();
 			}
 		}
 	}
