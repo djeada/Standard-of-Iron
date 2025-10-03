@@ -39,6 +39,7 @@ struct MapDefinition {
     CameraDefinition camera;
     std::vector<UnitSpawn> spawns;
     CoordSystem coordSystem = CoordSystem::Grid;
+    int maxTroopsPerPlayer = 50;  // Maximum number of units per player
 };
 
 } // namespace Game::Map

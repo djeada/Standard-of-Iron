@@ -1,6 +1,7 @@
 #include "barracks_renderer.h"
 #include "registry.h"
 #include "../gl/resources.h"
+#include "../geom/flag.h"
 #include "../../game/core/component.h"
 
 namespace Render::GL {
@@ -144,29 +145,50 @@ static void drawBarracks(const DrawContext& p, ISubmitter& out) {
     bannerTrim.scale(0.30f, 0.04f, 0.01f);
     out.mesh(p.resources->unit(), bannerTrim, QVector3D(team.x() * 0.6f, team.y() * 0.6f, team.z() * 0.6f), p.resources->white(), 1.0f);
 
-    // Rally flag if set (improved appearance)
+    // Rally flag if set (using Flag utility)
     if (auto* prod = p.entity->getComponent<Engine::Core::ProductionComponent>()) {
         if (prod->rallySet && p.resources) {
-            // Rally pole
-            QMatrix4x4 rallyPole;
-            rallyPole.translate(prod->rallyX, 0.15f, prod->rallyZ);
-            rallyPole.scale(0.03f, 0.30f, 0.03f);
-            out.mesh(p.resources->unit(), rallyPole, woodDark, p.resources->white(), 1.0f);
+            auto flag = Render::Geom::Flag::create(
+                prod->rallyX, 
+                prod->rallyZ,
+                QVector3D(1.0f, 0.9f, 0.2f),  // Yellow rally flag
+                woodDark,                      // Dark wood pole
+                1.0f                           // Normal scale
+            );
             
-            // Rally flag (small pennant)
-            QMatrix4x4 rallyFlag;
-            rallyFlag.translate(prod->rallyX + 0.10f, 0.25f, prod->rallyZ);
-            rallyFlag.scale(0.18f, 0.12f, 0.02f);
-            out.mesh(p.resources->unit(), rallyFlag, QVector3D(1.0f, 0.9f, 0.2f), p.resources->white(), 1.0f);
-            
-            // Rally flag pole finial
-            QMatrix4x4 rallyFinial;
-            rallyFinial.translate(prod->rallyX, 0.32f, prod->rallyZ);
-            rallyFinial.scale(0.05f, 0.05f, 0.05f);
-            out.mesh(p.resources->unit(), rallyFinial, QVector3D(1.0f, 0.9f, 0.2f), p.resources->white(), 1.0f);
+            out.mesh(p.resources->unit(), flag.pole, flag.poleColor, p.resources->white(), 1.0f);
+            out.mesh(p.resources->unit(), flag.pennant, flag.pennantColor, p.resources->white(), 1.0f);
+            out.mesh(p.resources->unit(), flag.finial, flag.pennantColor, p.resources->white(), 1.0f);
         }
     }
 
+    // Health bar for barracks (positioned above the building)
+    if (u && u->maxHealth > 0) {
+        float healthRatio = float(u->health) / float(u->maxHealth);
+        QVector3D pos = p.model.column(3).toVector3D();
+        
+        // Health bar background (dark red)
+        QMatrix4x4 bgBar;
+        bgBar.translate(pos.x(), 1.2f, pos.z()); // Above the building
+        bgBar.scale(1.5f, 0.08f, 0.04f); // Wide horizontal bar
+        out.mesh(p.resources->unit(), bgBar, QVector3D(0.3f, 0.1f, 0.1f), p.resources->white(), 1.0f);
+        
+        // Health bar foreground (green to red based on health)
+        QVector3D healthColor;
+        if (healthRatio > 0.6f) {
+            healthColor = QVector3D(0.2f, 0.8f, 0.2f); // Green
+        } else if (healthRatio > 0.3f) {
+            healthColor = QVector3D(0.9f, 0.7f, 0.2f); // Orange
+        } else {
+            healthColor = QVector3D(0.9f, 0.2f, 0.2f); // Red
+        }
+        
+        QMatrix4x4 fgBar;
+        fgBar.translate(pos.x() - 0.75f + (0.75f * healthRatio), 1.21f, pos.z());
+        fgBar.scale(1.5f * healthRatio, 0.06f, 0.03f);
+        out.mesh(p.resources->unit(), fgBar, healthColor, p.resources->white(), 1.0f);
+    }
+    
     // Selection smoke if selected (twice the previous diameter ~ scale *2.0)
     if (p.selected) {
         QMatrix4x4 m;

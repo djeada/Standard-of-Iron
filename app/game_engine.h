@@ -38,12 +38,21 @@ public:
     Q_PROPERTY(bool paused READ paused WRITE setPaused)
     Q_PROPERTY(float timeScale READ timeScale WRITE setGameSpeed)
     Q_PROPERTY(QString victoryState READ victoryState NOTIFY victoryStateChanged)
+    Q_PROPERTY(QString cursorMode READ cursorMode WRITE setCursorMode NOTIFY cursorModeChanged)
+    Q_PROPERTY(qreal globalCursorX READ globalCursorX NOTIFY globalCursorChanged)
+    Q_PROPERTY(qreal globalCursorY READ globalCursorY NOTIFY globalCursorChanged)
+    Q_PROPERTY(bool hasUnitsSelected READ hasUnitsSelected NOTIFY selectedUnitsChanged)
+    Q_PROPERTY(int playerTroopCount READ playerTroopCount NOTIFY troopCountChanged)
+    Q_PROPERTY(int maxTroopsPerPlayer READ maxTroopsPerPlayer NOTIFY troopCountChanged)
 
     Q_INVOKABLE void onMapClicked(qreal sx, qreal sy);
     Q_INVOKABLE void onRightClick(qreal sx, qreal sy);
     Q_INVOKABLE void onClickSelect(qreal sx, qreal sy, bool additive = false);
     Q_INVOKABLE void onAreaSelected(qreal x1, qreal y1, qreal x2, qreal y2, bool additive = false);
     Q_INVOKABLE void setHoverAtScreen(qreal sx, qreal sy);
+    Q_INVOKABLE void onAttackClick(qreal sx, qreal sy);
+    Q_INVOKABLE void onStopCommand();
+    Q_INVOKABLE void onPatrolClick(qreal sx, qreal sy);
 
     Q_INVOKABLE void cameraMove(float dx, float dz);
     Q_INVOKABLE void cameraElevate(float dy);
@@ -57,6 +66,13 @@ public:
     bool paused() const { return m_runtime.paused; }
     float timeScale() const { return m_runtime.timeScale; }
     QString victoryState() const { return m_runtime.victoryState; }
+    QString cursorMode() const { return m_runtime.cursorMode; }
+    void setCursorMode(const QString& mode);
+    qreal globalCursorX() const;
+    qreal globalCursorY() const;
+    bool hasUnitsSelected() const;
+    int playerTroopCount() const;
+    int maxTroopsPerPlayer() const { return m_level.maxTroopsPerPlayer; }
 
     Q_INVOKABLE bool hasSelectedType(const QString& type) const;
     Q_INVOKABLE void recruitNearSelected(const QString& unitType);
@@ -72,6 +88,10 @@ public:
     void getSelectedUnitIds(std::vector<Engine::Core::EntityID>& out) const;
     bool getUnitInfo(Engine::Core::EntityID id, QString& name, int& health, int& maxHealth,
                      bool& isBuilding, bool& alive) const;
+    
+    // Patrol preview state for rendering
+    bool hasPatrolPreviewWaypoint() const { return m_patrol.hasFirstWaypoint; }
+    QVector3D getPatrolPreviewWaypoint() const { return m_patrol.firstWaypoint; }
 
 private:
     struct RuntimeState { 
@@ -80,10 +100,23 @@ private:
         float timeScale = 1.0f; 
         int localOwnerId = 1; 
         QString victoryState = ""; // "", "victory", or "defeat"
+        QString cursorMode = "normal"; // "normal", "attack", "guard", "patrol"
+        int lastTroopCount = 0; // For change detection
     };
     struct ViewportState { int width = 0; int height = 0; };
-    struct LevelState { QString mapName; Engine::Core::EntityID playerUnitId = 0; float camFov = 45.0f; float camNear = 0.1f; float camFar = 1000.0f; };
+    struct LevelState { 
+        QString mapName; 
+        Engine::Core::EntityID playerUnitId = 0; 
+        float camFov = 45.0f; 
+        float camNear = 0.1f; 
+        float camFar = 1000.0f;
+        int maxTroopsPerPlayer = 50;
+    };
     struct HoverState { Engine::Core::EntityID buildingId = 0; };
+    struct PatrolState {
+        QVector3D firstWaypoint;
+        bool hasFirstWaypoint = false;
+    };
 
     Game::Systems::ArrowSystem* m_arrowSystem = nullptr;
     void initialize();
@@ -107,7 +140,11 @@ private:
     LevelState m_level;
     QObject* m_selectedUnitsModel = nullptr;
     HoverState m_hover;
+    PatrolState m_patrol;
 signals:
     void selectedUnitsChanged();
     void victoryStateChanged();
+    void cursorModeChanged();
+    void globalCursorChanged();
+    void troopCountChanged();
 };

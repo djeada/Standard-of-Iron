@@ -38,6 +38,7 @@ LevelLoadResult LevelLoader::loadFromAssets(const QString& mapPath,
         Game::Map::Environment::apply(def, renderer, camera);
     res.camFov = def.camera.fovY; res.camNear = def.camera.nearPlane; res.camFar = def.camera.farPlane;
     res.gridWidth = def.grid.width; res.gridHeight = def.grid.height; res.tileSize = def.grid.tileSize;
+    res.maxTroopsPerPlayer = def.maxTroopsPerPlayer;
         // Populate world
         auto rt = Game::Map::MapTransformer::applyToWorld(def, world, &visualCatalog);
         if (!rt.unitIds.empty()) {
