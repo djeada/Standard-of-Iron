@@ -19,17 +19,13 @@ Renderer::~Renderer() {
 
 bool Renderer::initialize() {
     if (!m_backend) m_backend = std::make_shared<Backend>();
-    if (!m_resources) m_resources = std::make_shared<ResourceManager>();
     m_backend->initialize();
-    if (!m_resources->initialize()) {
-        qWarning() << "Failed to initialize GL resources";
-    }
     m_entityRegistry = std::make_unique<EntityRendererRegistry>();
     registerBuiltInEntityRenderers(*m_entityRegistry);
     return true;
 }
 
-void Renderer::shutdown() { m_resources.reset(); m_backend.reset(); }
+void Renderer::shutdown() { m_backend.reset(); }
 
 void Renderer::beginFrame() {
     if (m_backend) m_backend->beginFrame();
@@ -37,9 +33,9 @@ void Renderer::beginFrame() {
 }
 
 void Renderer::endFrame() {
-    if (m_backend && m_camera && m_resources) {
+    if (m_backend && m_camera) {
         m_queue.sortForBatching();
-        m_backend->execute(m_queue, *m_camera, *m_resources);
+        m_backend->execute(m_queue, *m_camera);
     }
 }
 
@@ -103,7 +99,7 @@ void Renderer::renderWorld(Engine::Core::World* world) {
             if (!unit->unitType.empty() && m_entityRegistry) {
                 auto fn = m_entityRegistry->get(unit->unitType);
                 if (fn) {
-                    DrawContext ctx{m_resources.get(), entity, modelMatrix};
+                    DrawContext ctx{resources(), entity, modelMatrix};
                     // Selection routed from app via setSelectedEntities to avoid mutating ECS flags for rendering
                     ctx.selected = (m_selectedIds.find(entity->getId()) != m_selectedIds.end());
                     ctx.hovered = (entity->getId() == m_hoveredBuildingId);
@@ -116,18 +112,19 @@ void Renderer::renderWorld(Engine::Core::World* world) {
 
         // Else choose mesh based on RenderableComponent hint and submit
         Mesh* meshToDraw = nullptr;
+        ResourceManager* res = resources();
         switch (renderable->mesh) {
-            case Engine::Core::RenderableComponent::MeshKind::Quad:    meshToDraw = m_resources? m_resources->quad() : nullptr; break;
-            case Engine::Core::RenderableComponent::MeshKind::Plane:   meshToDraw = m_resources? m_resources->ground() : nullptr; break;
-            case Engine::Core::RenderableComponent::MeshKind::Cube:    meshToDraw = m_resources? m_resources->unit() : nullptr; break;
+            case Engine::Core::RenderableComponent::MeshKind::Quad:    meshToDraw = res? res->quad() : nullptr; break;
+            case Engine::Core::RenderableComponent::MeshKind::Plane:   meshToDraw = res? res->ground() : nullptr; break;
+            case Engine::Core::RenderableComponent::MeshKind::Cube:    meshToDraw = res? res->unit() : nullptr; break;
             case Engine::Core::RenderableComponent::MeshKind::Capsule: meshToDraw = nullptr; break; // handled by specific renderer when available
             case Engine::Core::RenderableComponent::MeshKind::Ring:    meshToDraw = nullptr; break; // rings are drawn explicitly when needed
             case Engine::Core::RenderableComponent::MeshKind::None:    default: break;
         }
-        if (!meshToDraw && m_resources) meshToDraw = m_resources->unit();
-        if (!meshToDraw && m_resources) meshToDraw = m_resources->quad();
+        if (!meshToDraw && res) meshToDraw = res->unit();
+        if (!meshToDraw && res) meshToDraw = res->quad();
         QVector3D color = QVector3D(renderable->color[0], renderable->color[1], renderable->color[2]);
-        mesh(meshToDraw, modelMatrix, color, m_resources ? m_resources->white() : nullptr, 1.0f);
+        mesh(meshToDraw, modelMatrix, color, res ? res->white() : nullptr, 1.0f);
 
         // Rally flag drawing moved into barracks renderer
         // Selection ring is drawn by entity-specific renderer if desired

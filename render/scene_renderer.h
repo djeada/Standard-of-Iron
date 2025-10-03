@@ -4,6 +4,7 @@
 #include "gl/mesh.h"
 #include "gl/texture.h"
 #include "gl/resources.h"
+#include "gl/backend.h" // Needed for resources() access in inline getters
 #include "draw_queue.h"
 #include "submitter.h"
 #include <memory>
@@ -41,8 +42,8 @@ public:
     
     void setCamera(Camera* camera);
     void setClearColor(float r, float g, float b, float a = 1.0f);
-    // Optional: inject an external ResourceManager owned by the app
-    void setResources(const std::shared_ptr<ResourceManager>& resources) { m_resources = resources; }
+    // Resource access via backend-owned manager (read-only)
+    ResourceManager* resources() const { return m_backend ? m_backend->resources() : nullptr; }
     void setHoveredBuildingId(unsigned int id) { m_hoveredBuildingId = id; }
     // Selection information provided by the app before rendering
     void setSelectedEntities(const std::vector<unsigned int>& ids) {
@@ -53,11 +54,11 @@ public:
     // High-level helpers are provided in render/entity (see arrow)
 
     // Read-only access to default meshes/textures for app-side batching
-    Mesh* getMeshQuad()    const { return m_resources ? m_resources->quad()    : nullptr; }
-    Mesh* getMeshPlane()   const { return m_resources ? m_resources->ground()  : nullptr; }
-    Mesh* getMeshCube()    const { return m_resources ? m_resources->unit()    : nullptr; }
+    Mesh* getMeshQuad()    const { return m_backend && m_backend->resources() ? m_backend->resources()->quad()   : nullptr; }
+    Mesh* getMeshPlane()   const { return m_backend && m_backend->resources() ? m_backend->resources()->ground() : nullptr; }
+    Mesh* getMeshCube()    const { return m_backend && m_backend->resources() ? m_backend->resources()->unit()   : nullptr; }
     // Meshes now provided by entity-specific renderers or shared geom providers
-    Texture* getWhiteTexture() const { return m_resources ? m_resources->white() : nullptr; }
+    Texture* getWhiteTexture() const { return m_backend && m_backend->resources() ? m_backend->resources()->white() : nullptr; }
     
     struct GridParams {
         float cellSize = 1.0f;
@@ -84,7 +85,7 @@ private:
     DrawQueue m_queue;
     
     // Default resources
-    std::shared_ptr<ResourceManager> m_resources;
+    // Resources now owned by Backend
     std::unique_ptr<EntityRendererRegistry> m_entityRegistry;
     unsigned int m_hoveredBuildingId = 0;
     std::unordered_set<unsigned int> m_selectedIds; // for selection rings at render time

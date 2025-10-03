@@ -87,7 +87,7 @@ private:
     std::unique_ptr<Engine::Core::World> m_world;
     std::unique_ptr<Render::GL::Renderer> m_renderer;
     std::unique_ptr<Render::GL::Camera>   m_camera;
-    std::shared_ptr<Render::GL::ResourceManager> m_resources;
+    std::shared_ptr<Render::GL::ResourceManager> m_resources; // deprecated; will be unused with backend-owned resources
     std::unique_ptr<Render::GL::GroundRenderer> m_ground;
     std::unique_ptr<Game::Systems::SelectionSystem> m_selectionSystem;
     std::unique_ptr<Game::Systems::PickingService> m_pickingService;

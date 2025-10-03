@@ -123,7 +123,7 @@ void GameEngine::onAreaSelected(qreal x1, qreal y1, qreal x2, qreal y2, bool add
 }
 
 void GameEngine::initialize() {
-    if (!Render::GL::RenderBootstrap::initialize(*m_renderer, *m_camera, m_resources)) {
+    if (!Render::GL::RenderBootstrap::initialize(*m_renderer, *m_camera)) {
         return;
     }
     QString mapPath = QString::fromUtf8("assets/maps/test_map.json");
@@ -167,12 +167,14 @@ void GameEngine::render(int pixelWidth, int pixelHeight) {
         m_renderer->setSelectedEntities(ids);
     }
     m_renderer->beginFrame();
-    if (m_ground && m_renderer && m_resources) {
-        m_ground->submit(*m_renderer, *m_resources);
+    if (m_ground && m_renderer) {
+        if (auto* res = m_renderer->resources()) m_ground->submit(*m_renderer, *res);
     }
     if (m_renderer) m_renderer->setHoveredBuildingId(m_hover.buildingId);
     m_renderer->renderWorld(m_world.get());
-    if (m_arrowSystem) { Render::GL::renderArrows(m_renderer.get(), m_resources.get(), *m_arrowSystem); }
+    if (m_arrowSystem) {
+        if (auto* res = m_renderer->resources()) Render::GL::renderArrows(m_renderer.get(), res, *m_arrowSystem);
+    }
     m_renderer->endFrame();
 }
 

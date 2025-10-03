@@ -10,32 +10,23 @@
 namespace Render::GL {
 Backend::~Backend() = default;
 
-namespace {
-static const QString kShaderBase = QStringLiteral("assets/shaders/");
-static const QString kBasicVert = kShaderBase + QStringLiteral("basic.vert");
-static const QString kBasicFrag = kShaderBase + QStringLiteral("basic.frag");
-static const QString kGridFrag  = kShaderBase + QStringLiteral("grid.frag");
-}
-
 void Backend::initialize() {
 	initializeOpenGLFunctions();
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	// Load basic shader
-	m_basicShader = std::make_unique<Shader>();
-	if (!m_basicShader->loadFromFiles(kBasicVert, kBasicFrag)) {
-		qWarning() << "Backend: failed to load basic shader" << kBasicVert << kBasicFrag;
-		m_basicShader.reset();
+	// Create resource and shader managers
+	m_resources = std::make_unique<ResourceManager>();
+	if (!m_resources->initialize()) {
+		qWarning() << "Backend: failed to initialize ResourceManager";
 	}
-
-	// Grid shader shares the same vertex stage and uses grid.frag
-	m_gridShader = std::make_unique<Shader>();
-	if (!m_gridShader->loadFromFiles(kBasicVert, kGridFrag)) {
-		qWarning() << "Backend: failed to load grid shader" << kBasicVert << kGridFrag;
-		m_gridShader.reset();
-	}
+	m_shaderCache = std::make_unique<ShaderCache>();
+	m_shaderCache->initializeDefaults();
+	m_basicShader = m_shaderCache->get(QStringLiteral("basic"));
+	m_gridShader  = m_shaderCache->get(QStringLiteral("grid"));
+	if (!m_basicShader) qWarning() << "Backend: basic shader missing";
+	if (!m_gridShader)  qWarning() << "Backend: grid shader missing";
 }
 
 void Backend::beginFrame() {
@@ -55,7 +46,7 @@ void Backend::setClearColor(float r, float g, float b, float a) {
 	m_clearColor[0]=r; m_clearColor[1]=g; m_clearColor[2]=b; m_clearColor[3]=a;
 }
 
-void Backend::execute(const DrawQueue& queue, const Camera& cam, const ResourceManager& res) {
+void Backend::execute(const DrawQueue& queue, const Camera& cam) {
 	if (!m_basicShader) return;
 	// Bind once up front; we'll defensively rebind before draws that use it
 	m_basicShader->use();
@@ -75,8 +66,8 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam, const ResourceM
 				m_basicShader->setUniform("u_texture", 0);
 				m_basicShader->setUniform("u_useTexture", true);
 			} else {
-				if (res.white()) {
-					res.white()->bind(0);
+				if (m_resources && m_resources->white()) {
+					m_resources->white()->bind(0);
 					m_basicShader->setUniform("u_texture", 0);
 				}
 				m_basicShader->setUniform("u_useTexture", false);
@@ -96,7 +87,9 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam, const ResourceM
 			m_gridShader->setUniform("u_cellSize", gc.cellSize);
 			m_gridShader->setUniform("u_thickness", gc.thickness);
 			// Draw a full plane using the default ground mesh if available
-			if (auto* plane = res.ground()) plane->draw();
+			if (m_resources) {
+				if (auto* plane = m_resources->ground()) plane->draw();
+			}
 			// Do not release to program 0 here; subsequent draws will rebind their shader as needed
 		} else if (std::holds_alternative<SelectionRingCmd>(cmd)) {
 			const auto& sc = std::get<SelectionRingCmd>(cmd);

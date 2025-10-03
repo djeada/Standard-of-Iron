@@ -8,15 +8,12 @@
 namespace Render { namespace GL {
 
 bool RenderBootstrap::initialize(Renderer& renderer,
-                                 Camera& camera,
-                                 std::shared_ptr<ResourceManager>& outResources) {
+                                 Camera& camera) {
     QOpenGLContext* ctx = QOpenGLContext::currentContext();
     if (!ctx || !ctx->isValid()) {
         qWarning() << "RenderBootstrap: no current valid OpenGL context";
         return false;
     }
-    outResources = std::make_shared<ResourceManager>();
-    renderer.setResources(outResources);
     if (!renderer.initialize()) {
         qWarning() << "RenderBootstrap: renderer initialize failed";
         return false;
