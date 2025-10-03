@@ -15,6 +15,8 @@ void Backend::initialize() {
 	glDepthFunc(GL_LESS);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	// Ensure face culling is disabled unless explicitly enabled later
+	glDisable(GL_CULL_FACE);
 	// Initialize shader cache and get commonly used shaders
 	m_shaderCache = std::make_unique<ShaderCache>();
 	m_basicShader = m_shaderCache->get(QStringLiteral("basic"));
@@ -72,6 +74,10 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam) {
 			const auto& it = std::get<MeshCmd>(cmd);
 			if (!it.mesh) continue;
 			++meshCount;
+				// Draw grid as a pure overlay without affecting depth buffer
+				GLboolean prevDepthMask;
+				glGetBooleanv(GL_DEPTH_WRITEMASK, &prevDepthMask);
+				glDepthMask(GL_FALSE);
 			bindBasic();
 			m_basicShader->setUniform("u_model", it.model);
 			if (it.texture) {
@@ -79,6 +85,7 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam) {
 				m_basicShader->setUniform("u_texture", 0);
 				m_basicShader->setUniform("u_useTexture", true);
 			} else {
+				glDepthMask(prevDepthMask);
 				if (m_resources && m_resources->white()) {
 					m_resources->white()->bind(0);
 					m_basicShader->setUniform("u_texture", 0);
