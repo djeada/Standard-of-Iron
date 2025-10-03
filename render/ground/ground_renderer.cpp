@@ -1,6 +1,7 @@
 #include "ground_renderer.h"
 #include "../scene_renderer.h"
 #include "../gl/resources.h"
+#include "../draw_queue.h"
 
 namespace Render { namespace GL {
 
@@ -18,9 +19,10 @@ void GroundRenderer::recomputeModel() {
 }
 
 void GroundRenderer::submit(Renderer& renderer, ResourceManager& resources) {
-    if (auto* plane = resources.ground()) {
-        renderer.mesh(plane, m_model, m_color, resources.white(), 1.0f);
-    }
+    // Submit a grid draw; backend will use the grid shader and draw the plane mesh
+    float cell = m_tileSize > 0.0f ? m_tileSize : 1.0f;
+    float extent = (m_width > 0 && m_height > 0) ? std::max(m_width, m_height) * m_tileSize * 0.5f : m_extent;
+    renderer.grid(m_model, m_color, cell, 0.06f, extent);
 }
 
 } }

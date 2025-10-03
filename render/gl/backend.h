@@ -25,6 +25,13 @@ public:
     // Access to GL resources for high-level systems that need mesh pointers
     ResourceManager* resources() const { return m_resources.get(); }
 
+    // Lazy shader access/loading for optional, entity-specific effects
+    Shader* shader(const QString& name) const { return m_shaderCache ? m_shaderCache->get(name) : nullptr; }
+    Shader* getOrLoadShader(const QString& name, const QString& vertPath, const QString& fragPath) {
+        if (!m_shaderCache) return nullptr;
+        return m_shaderCache->load(name, vertPath, fragPath);
+    }
+
     void enableDepthTest(bool enable) {
         if (enable) glEnable(GL_DEPTH_TEST); else glDisable(GL_DEPTH_TEST);
     }

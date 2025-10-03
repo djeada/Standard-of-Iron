@@ -81,7 +81,10 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam) {
 			m_gridShader->use();
 			m_gridShader->setUniform("u_view", cam.getViewMatrix());
 			m_gridShader->setUniform("u_projection", cam.getProjectionMatrix());
-			m_gridShader->setUniform("u_model", gc.model);
+			// Apply extent by scaling XZ on top of provided model
+			QMatrix4x4 model = gc.model;
+			model.scale(gc.extent, 1.0f, gc.extent);
+			m_gridShader->setUniform("u_model", model);
 			m_gridShader->setUniform("u_gridColor", gc.color);
 			m_gridShader->setUniform("u_lineColor", QVector3D(0.22f, 0.25f, 0.22f));
 			m_gridShader->setUniform("u_cellSize", gc.cellSize);

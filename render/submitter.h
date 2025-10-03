@@ -15,6 +15,8 @@ public:
                       Texture* tex = nullptr, float alpha = 1.0f) = 0;
     virtual void selectionRing(const QMatrix4x4& model, float alphaInner, float alphaOuter,
                                const QVector3D& color) = 0;
+    virtual void grid(const QMatrix4x4& model, const QVector3D& color,
+                      float cellSize, float thickness, float extent) = 0;
 };
 
 class QueueSubmitter : public ISubmitter {
@@ -30,6 +32,12 @@ public:
                        const QVector3D& color) override {
         if (!m_queue) return;
         SelectionRingCmd cmd; cmd.model = model; cmd.alphaInner = alphaInner; cmd.alphaOuter = alphaOuter; cmd.color = color;
+        m_queue->submit(cmd);
+    }
+    void grid(const QMatrix4x4& model, const QVector3D& color,
+              float cellSize, float thickness, float extent) override {
+        if (!m_queue) return;
+        GridCmd cmd; cmd.model = model; cmd.color = color; cmd.cellSize = cellSize; cmd.thickness = thickness; cmd.extent = extent;
         m_queue->submit(cmd);
     }
 private:

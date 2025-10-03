@@ -67,6 +67,11 @@ void Renderer::selectionRing(const QMatrix4x4& model, float alphaInner, float al
     m_queue.submit(cmd);
 }
 
+void Renderer::grid(const QMatrix4x4& model, const QVector3D& color, float cellSize, float thickness, float extent) {
+    GridCmd cmd; cmd.model = model; cmd.color = color; cmd.cellSize = cellSize; cmd.thickness = thickness; cmd.extent = extent;
+    m_queue.submit(cmd);
+}
+
 // submitRenderCommand removed; use mesh() directly
 
 void Renderer::renderWorld(Engine::Core::World* world) {

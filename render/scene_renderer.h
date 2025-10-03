@@ -59,6 +59,11 @@ public:
     Mesh* getMeshCube()    const { return m_backend && m_backend->resources() ? m_backend->resources()->unit()   : nullptr; }
     // Meshes now provided by entity-specific renderers or shared geom providers
     Texture* getWhiteTexture() const { return m_backend && m_backend->resources() ? m_backend->resources()->white() : nullptr; }
+    // Optional: allow advanced renderers to obtain or load shaders lazily by name
+    Shader* getShader(const QString& name) const { return m_backend ? m_backend->shader(name) : nullptr; }
+    Shader* loadShader(const QString& name, const QString& vertPath, const QString& fragPath) {
+        return m_backend ? m_backend->getOrLoadShader(name, vertPath, fragPath) : nullptr;
+    }
     
     struct GridParams {
         float cellSize = 1.0f;
@@ -75,6 +80,8 @@ public:
               Texture* texture = nullptr, float alpha = 1.0f) override;
     void selectionRing(const QMatrix4x4& model, float alphaInner, float alphaOuter,
                        const QVector3D& color) override;
+    // Enqueue a grid draw call
+    void grid(const QMatrix4x4& model, const QVector3D& color, float cellSize, float thickness, float extent);
     
     // Legacy: still available but apps are encouraged to issue draw calls explicitly
     void renderWorld(Engine::Core::World* world);
