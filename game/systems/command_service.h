@@ -17,6 +17,12 @@ public:
     static void moveUnits(Engine::Core::World& world,
                           const std::vector<Engine::Core::EntityID>& units,
                           const std::vector<QVector3D>& targets);
+    
+    // Issue attack command on specific target entity
+    static void attackTarget(Engine::Core::World& world,
+                            const std::vector<Engine::Core::EntityID>& units,
+                            Engine::Core::EntityID targetId,
+                            bool shouldChase = true);
 };
 
 } } // namespace Game::Systems

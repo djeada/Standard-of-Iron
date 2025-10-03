@@ -40,8 +40,16 @@ ApplicationWindow {
             gameViewItem.forceActiveFocus()
         }
         
-        onUnitCommand: function(command) {
-            gameViewItem.issueCommand(command)
+        onCommandModeChanged: function(mode) {
+            console.log("Main: Command mode changed to:", mode)
+            // Set cursor mode in game engine via property (not method call)
+            if (typeof game !== 'undefined') {
+                console.log("Main: Setting game.cursorMode property to", mode)
+                game.cursorMode = mode  // Set property directly, not setCursorMode()
+            } else {
+                console.log("Main: game is undefined")
+            }
+            gameViewItem.forceActiveFocus()
         }
 
         onRecruit: function(unitType) {
