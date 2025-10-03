@@ -43,13 +43,15 @@ struct SelectionSmokeCmd {
 // Billboarded smoke particles (cylindrical billboards facing camera)
 struct BillboardSmokeCmd {
     QMatrix4x4 model;        // translation = center; XZ scale ~ radius footprint
-    QVector3D color{0.6f,0.6f,0.6f};
+    QVector3D color{0.25f,0.25f,0.25f};
     float baseAlpha = 0.25f; // overall alpha multiplier
-    int count = 8;           // number of quads
-    float sizeMin = 0.4f;    // min quad half-size (world units)
-    float sizeMax = 0.8f;    // max quad half-size
-    float heightMin = 0.05f; // min Y above ground
-    float heightMax = 0.35f; // max Y above ground
+    int count = 12;          // number of quads
+    float sizeMin = 0.15f;   // min quad half-size (world units)
+    float sizeMax = 0.35f;   // max quad half-size
+    float heightMin = 0.06f; // min Y above ground
+    float heightMax = 0.30f; // max Y above ground
+    float radiusMin = 0.75f; // distribute around the footprint ring
+    float radiusMax = 1.15f;
     unsigned int seed = 1337;// deterministic jitter per-frame seed
 };
 

@@ -62,6 +62,9 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam) {
 	m_basicShader->use();
 	m_basicShader->setUniform("u_view", cam.getViewMatrix());
 	m_basicShader->setUniform("u_projection", cam.getProjectionMatrix());
+	// Simple time for animation
+	static float s_time = 0.0f;
+	s_time += 0.016f; // ~60 FPS assumption; could be wired to real dt later
 	for (const auto& cmd : queue.items()) {
 		if (std::holds_alternative<MeshCmd>(cmd)) {
 			const auto& it = std::get<MeshCmd>(cmd);
@@ -186,7 +189,7 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam) {
 			QVector3D camUp    = invView.column(1).toVector3D().normalized();
 			Mesh* quad = m_resources->quad();
 			DepthMaskScope depthMask(false);
-			DepthTestScope depthTest(false); // ensure visible over ground/grid
+			DepthTestScope depthTest(true); // test against scene depth so smoke is occluded by building
 			BlendScope blend(true);
 			m_smokeShader->use();
 			m_smokeShader->setUniform("u_view", view);
@@ -205,12 +208,15 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam) {
 				float r02 = (nextRand() & 0xFFFFFF) / float(0xFFFFFF);
 				float r03 = (nextRand() & 0xFFFFFF) / float(0xFFFFFF);
 				auto lerp = [](float a, float b, float t){ return a + (b - a) * t; };
-				float size = lerp(0.5f, 0.9f, r01);
-				float height = lerp(0.10f, 0.60f, r02);
-				float angle = r03 * 6.2831853f;
-				float radius = lerp(0.6f, 1.0f, r01); // cluster near outer ring
+				float size = lerp(ps.sizeMin, ps.sizeMax, r01);
+				float height = lerp(ps.heightMin, ps.heightMax, r02);
+				float angle = r03 * 6.2831853f + s_time * (0.2f + 0.3f * r01); // slow swirl
+				float radius = lerp(ps.radiusMin, ps.radiusMax, r01);
 				QVector3D center(std::cos(angle) * radius, 0.0f, std::sin(angle) * radius);
-				float alpha = ps.baseAlpha * (0.8f + 0.4f * r02);
+				// gentle upward drift and slight pulsation
+				height += 0.05f * std::sin(s_time * (0.5f + r03));
+				size   *= (0.9f + 0.2f * std::sin(s_time * (0.7f + r02)));
+				float alpha = ps.baseAlpha * (0.75f + 0.35f * r02);
 				m_smokeShader->setUniform("u_camRight", camRight);
 				m_smokeShader->setUniform("u_camUp", camUp);
 				m_smokeShader->setUniform("u_center", center);
@@ -219,7 +225,7 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam) {
 				m_smokeShader->setUniform("u_alpha", alpha);
 				quad->draw();
 			}
-			// Base soft disc to reinforce highlight visibility
+			// Base soft disc (very subtle) to reinforce highlight visibility
 			{
 				Mesh* disc = Render::Geom::SelectionDisc::get();
 				if (disc) {
@@ -230,7 +236,7 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam) {
 					m_basicShader->setUniform("u_color", ps.color);
 					QMatrix4x4 base = ps.model; base.translate(0.0f, 0.02f, 0.0f);
 					m_basicShader->setUniform("u_model", base);
-					m_basicShader->setUniform("u_alpha", ps.baseAlpha * 0.35f);
+					m_basicShader->setUniform("u_alpha", ps.baseAlpha * 0.15f);
 					disc->draw();
 				}
 			}
