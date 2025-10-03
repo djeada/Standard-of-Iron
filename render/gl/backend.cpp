@@ -56,6 +56,9 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam) {
 		if (std::holds_alternative<MeshCmd>(cmd)) {
 			const auto& it = std::get<MeshCmd>(cmd);
 			if (!it.mesh) continue;
+			// Reset critical state for opaque mesh pass
+			glDepthMask(GL_TRUE);
+			if (glIsEnabled(GL_POLYGON_OFFSET_FILL)) glDisable(GL_POLYGON_OFFSET_FILL);
 			// Ensure the correct program is bound in case a prior GridCmd changed it
 			m_basicShader->use();
 			m_basicShader->setUniform("u_view", cam.getViewMatrix());

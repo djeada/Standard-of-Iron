@@ -46,11 +46,15 @@ public:
     const std::vector<DrawCmd>& items() const { return m_items; }
     std::vector<DrawCmd>& items() { return m_items; }
     void sortForBatching() {
-        // Conservative: keep submission order but group MeshCmd first for simple state changes
-        auto it = std::stable_partition(m_items.begin(), m_items.end(), [](const DrawCmd& c){
-            return std::holds_alternative<MeshCmd>(c);
+        // Order: Grid first (background), then Mesh, then SelectionRing (foreground overlays)
+        auto weight = [](const DrawCmd& c) -> int {
+            if (std::holds_alternative<GridCmd>(c)) return 0;
+            if (std::holds_alternative<MeshCmd>(c)) return 1;
+            return 2; // SelectionRingCmd
+        };
+        std::stable_sort(m_items.begin(), m_items.end(), [&](const DrawCmd& a, const DrawCmd& b){
+            return weight(a) < weight(b);
         });
-        (void)it;
     }
 private:
     std::vector<DrawCmd> m_items;
