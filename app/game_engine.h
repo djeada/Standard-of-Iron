@@ -37,6 +37,7 @@ public:
     Q_PROPERTY(QObject* selectedUnitsModel READ selectedUnitsModel NOTIFY selectedUnitsChanged)
     Q_PROPERTY(bool paused READ paused WRITE setPaused)
     Q_PROPERTY(float timeScale READ timeScale WRITE setGameSpeed)
+    Q_PROPERTY(QString victoryState READ victoryState NOTIFY victoryStateChanged)
 
     Q_INVOKABLE void onMapClicked(qreal sx, qreal sy);
     Q_INVOKABLE void onRightClick(qreal sx, qreal sy);
@@ -55,6 +56,7 @@ public:
     Q_INVOKABLE void setGameSpeed(float speed) { m_runtime.timeScale = std::max(0.0f, speed); }
     bool paused() const { return m_runtime.paused; }
     float timeScale() const { return m_runtime.timeScale; }
+    QString victoryState() const { return m_runtime.victoryState; }
 
     Q_INVOKABLE bool hasSelectedType(const QString& type) const;
     Q_INVOKABLE void recruitNearSelected(const QString& unitType);
@@ -72,13 +74,20 @@ public:
                      bool& isBuilding, bool& alive) const;
 
 private:
-    struct RuntimeState { bool initialized = false; bool paused = false; float timeScale = 1.0f; int localOwnerId = 1; };
+    struct RuntimeState { 
+        bool initialized = false; 
+        bool paused = false; 
+        float timeScale = 1.0f; 
+        int localOwnerId = 1; 
+        QString victoryState = ""; // "", "victory", or "defeat"
+    };
     struct ViewportState { int width = 0; int height = 0; };
     struct LevelState { QString mapName; Engine::Core::EntityID playerUnitId = 0; float camFov = 45.0f; float camNear = 0.1f; float camFar = 1000.0f; };
     struct HoverState { Engine::Core::EntityID buildingId = 0; };
 
     Game::Systems::ArrowSystem* m_arrowSystem = nullptr;
     void initialize();
+    void checkVictoryCondition();
     bool screenToGround(const QPointF& screenPt, QVector3D& outWorld);
     bool worldToScreen(const QVector3D& world, QPointF& outScreen) const;
     void syncSelectionFlags();
@@ -100,4 +109,5 @@ private:
     HoverState m_hover;
 signals:
     void selectedUnitsChanged();
+    void victoryStateChanged();
 };
