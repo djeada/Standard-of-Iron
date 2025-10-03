@@ -146,15 +146,17 @@ static void drawBarracks(const DrawContext& p, ISubmitter& out) {
         QMatrix4x4 m;
         QVector3D pos = p.model.column(3).toVector3D();
         m.translate(pos.x(), 0.0f, pos.z());
+        m.scale(1.9f, 1.0f, 1.9f); // ensure smoke extends beyond foundation footprint
         // Use more quads when selected
-        out.billboardSmoke(m, QVector3D(0.6f, 0.6f, 0.6f), 0.35f, 10);
+        out.billboardSmoke(m, QVector3D(0.6f, 0.6f, 0.6f), 0.38f, 12);
     }
     // Hover smoke if hovered and not selected (subtler, fewer particles)
     else if (p.hovered) {
         QMatrix4x4 m;
         QVector3D pos = p.model.column(3).toVector3D();
         m.translate(pos.x(), 0.0f, pos.z());
-        out.billboardSmoke(m, QVector3D(0.6f, 0.6f, 0.6f), 0.22f, 6);
+        m.scale(1.7f, 1.0f, 1.7f);
+        out.billboardSmoke(m, QVector3D(0.6f, 0.6f, 0.6f), 0.24f, 7);
     }
 }
 

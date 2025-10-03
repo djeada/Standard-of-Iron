@@ -71,9 +71,9 @@ public:
         auto weight = [](const DrawCmd& c) -> int {
             if (std::holds_alternative<GridCmd>(c)) return 0;             // ground
             if (std::holds_alternative<SelectionSmokeCmd>(c)) return 1;    // disc smoke base under meshes
-            if (std::holds_alternative<BillboardSmokeCmd>(c)) return 1;    // billboard smoke under meshes
             if (std::holds_alternative<MeshCmd>(c)) return 2;              // entities
-            if (std::holds_alternative<SelectionRingCmd>(c)) return 3;     // thin overlays last
+            if (std::holds_alternative<BillboardSmokeCmd>(c)) return 3;    // billboard smoke overlays over meshes
+            if (std::holds_alternative<SelectionRingCmd>(c)) return 4;     // thin overlays last
             return 4;
         };
         std::stable_sort(m_items.begin(), m_items.end(), [&](const DrawCmd& a, const DrawCmd& b){

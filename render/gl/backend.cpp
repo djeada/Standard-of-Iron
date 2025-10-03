@@ -31,6 +31,9 @@ void Backend::initialize() {
 		m_smokeShader = m_shaderCache->load(QStringLiteral("smoke"),
 			QStringLiteral("assets/shaders/smoke.vert"),
 			QStringLiteral("assets/shaders/smoke.frag"));
+		if (!m_smokeShader) {
+			qWarning() << "Backend: smoke shader failed to load";
+		}
 	}
 	if (!m_basicShader) qWarning() << "Backend: basic shader missing";
 	if (!m_gridShader)  qWarning() << "Backend: grid shader missing";
@@ -156,7 +159,25 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam) {
 			}
 		} else if (std::holds_alternative<BillboardSmokeCmd>(cmd)) {
 			const auto& ps = std::get<BillboardSmokeCmd>(cmd);
-			if (!m_smokeShader || !m_resources || !m_resources->quad()) continue;
+			if (!m_resources) continue;
+			if (!m_smokeShader || !m_resources->quad()) {
+				// Fallback: draw a single disc so the highlight is still visible
+				Mesh* disc = Render::Geom::SelectionDisc::get();
+				if (!disc) continue;
+				m_basicShader->use();
+				m_basicShader->setUniform("u_view", cam.getViewMatrix());
+				m_basicShader->setUniform("u_projection", cam.getProjectionMatrix());
+				m_basicShader->setUniform("u_useTexture", false);
+				m_basicShader->setUniform("u_color", ps.color);
+				DepthMaskScope dms(false);
+				DepthTestScope dts(false);
+				BlendScope blend(true);
+				QMatrix4x4 m = ps.model; m.translate(0.0f, 0.02f, 0.0f);
+				m_basicShader->setUniform("u_model", m);
+				m_basicShader->setUniform("u_alpha", ps.baseAlpha);
+				disc->draw();
+				continue;
+			}
 			// Compute camera right/up from view matrix
 			QMatrix4x4 view = cam.getViewMatrix();
 			// Extract right (column 0 of inverse view rotation) and up (column 1)
@@ -165,6 +186,7 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam) {
 			QVector3D camUp    = invView.column(1).toVector3D().normalized();
 			Mesh* quad = m_resources->quad();
 			DepthMaskScope depthMask(false);
+			DepthTestScope depthTest(false); // ensure visible over ground/grid
 			BlendScope blend(true);
 			m_smokeShader->use();
 			m_smokeShader->setUniform("u_view", view);
@@ -182,10 +204,11 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam) {
 				float r01 = (nextRand() & 0xFFFFFF) / float(0xFFFFFF);
 				float r02 = (nextRand() & 0xFFFFFF) / float(0xFFFFFF);
 				float r03 = (nextRand() & 0xFFFFFF) / float(0xFFFFFF);
-				float size = ps.sizeMin + (ps.sizeMax - ps.sizeMin) * r01;
-				float height = ps.heightMin + (ps.heightMax - ps.heightMin) * r02;
+				auto lerp = [](float a, float b, float t){ return a + (b - a) * t; };
+				float size = lerp(0.5f, 0.9f, r01);
+				float height = lerp(0.10f, 0.60f, r02);
 				float angle = r03 * 6.2831853f;
-				float radius = 0.5f * r01; // cluster near center
+				float radius = lerp(0.6f, 1.0f, r01); // cluster near outer ring
 				QVector3D center(std::cos(angle) * radius, 0.0f, std::sin(angle) * radius);
 				float alpha = ps.baseAlpha * (0.8f + 0.4f * r02);
 				m_smokeShader->setUniform("u_camRight", camRight);
