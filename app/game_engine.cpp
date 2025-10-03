@@ -148,6 +148,7 @@ void GameEngine::update(float dt) {
     }
     if (m_world) m_world->update(dt);
     syncSelectionFlags();
+    checkVictoryCondition();
     if (m_followSelectionEnabled && m_camera && m_selectionSystem && m_world) {
         Game::Systems::CameraFollowSystem cfs;
         cfs.update(*m_world, *m_selectionSystem, *m_camera);
@@ -339,3 +340,39 @@ bool GameEngine::getUnitInfo(Engine::Core::EntityID id, QString& name, int& heal
     alive = true;
     return true;
 }
+
+void GameEngine::checkVictoryCondition() {
+    if (!m_world || m_runtime.victoryState != "") return; // Already won/lost
+    
+    // Check if enemy barracks (playerId 2) still exists and is alive
+    bool enemyBarracksAlive = false;
+    bool playerBarracksAlive = false;
+    
+    auto entities = m_world->getEntitiesWith<Engine::Core::UnitComponent>();
+    for (auto* e : entities) {
+        auto* unit = e->getComponent<Engine::Core::UnitComponent>();
+        if (!unit || unit->health <= 0) continue;
+        
+        if (unit->unitType == "barracks") {
+            if (unit->ownerId == 2) {
+                enemyBarracksAlive = true;
+            } else if (unit->ownerId == m_runtime.localOwnerId) {
+                playerBarracksAlive = true;
+            }
+        }
+    }
+    
+    // Victory if enemy barracks destroyed
+    if (!enemyBarracksAlive) {
+        m_runtime.victoryState = "victory";
+        emit victoryStateChanged();
+        qInfo() << "VICTORY! Enemy barracks destroyed!";
+    }
+    // Defeat if player barracks destroyed
+    else if (!playerBarracksAlive) {
+        m_runtime.victoryState = "defeat";
+        emit victoryStateChanged();
+        qInfo() << "DEFEAT! Your barracks was destroyed!";
+    }
+}
+
