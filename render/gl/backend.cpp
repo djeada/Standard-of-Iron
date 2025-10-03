@@ -136,8 +136,9 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam) {
 			m_basicShader->setUniform("u_useTexture", false);
 			m_basicShader->setUniform("u_color", sm.color);
 			DepthMaskScope depthMask(false);
-			// Draw before meshes to ensure it's beneath buildings; slight negative offset pulls it toward camera over the grid
-			PolygonOffsetScope poly(-0.2f, -0.2f);
+			DepthTestScope depthTest(false); // draw without depth test so smoke sits visible over ground
+			// Slight negative offset helps avoid coincident z with ground if depth test toggles elsewhere
+			PolygonOffsetScope poly(-0.1f, -0.1f);
 			BlendScope blend(true);
 			for (int i = 0; i < 7; ++i) {
 				float scale = 1.35f + 0.12f * i;

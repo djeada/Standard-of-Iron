@@ -39,4 +39,15 @@ struct BlendScope : GLStateScopes {
         if (!prevEnable) glDisable(GL_BLEND);
     }
 };
+
+struct DepthTestScope : GLStateScopes {
+    GLboolean prevEnable;
+    explicit DepthTestScope(bool enable) {
+        prevEnable = glIsEnabled(GL_DEPTH_TEST);
+        if (enable) glEnable(GL_DEPTH_TEST); else glDisable(GL_DEPTH_TEST);
+    }
+    ~DepthTestScope() {
+        if (prevEnable) glEnable(GL_DEPTH_TEST); else glDisable(GL_DEPTH_TEST);
+    }
+};
 }
