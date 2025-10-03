@@ -15,6 +15,9 @@ struct LevelLoadResult {
     float camFov = 45.0f;
     float camNear = 0.1f;
     float camFar = 1000.0f;
+    int gridWidth = 50;
+    int gridHeight = 50;
+    float tileSize = 1.0f;
 };
 
 class LevelLoader {

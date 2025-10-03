@@ -1,5 +1,5 @@
 #include "environment.h"
-#include "../../render/gl/renderer.h"
+#include "../../render/scene_renderer.h"
 #include "../../render/gl/camera.h"
 #include <algorithm>
 
