@@ -17,6 +17,7 @@ add_library(render_gl STATIC
     entity/barracks_renderer.cpp
     # entity/arrow.cpp removed; arrow VFX renderer code moved to geom/arrow.cpp
     geom/selection_ring.cpp
+    geom/selection_disc.cpp
     geom/arrow.cpp
 )
 

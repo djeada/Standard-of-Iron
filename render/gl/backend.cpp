@@ -4,6 +4,7 @@
 #include "mesh.h"
 #include "texture.h"
 #include "../geom/selection_ring.h"
+#include "../geom/selection_disc.h"
 #include "state_scopes.h"
 #include <QDebug>
 
@@ -127,24 +128,24 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam) {
 			}
 		} else if (std::holds_alternative<SelectionSmokeCmd>(cmd)) {
 			const auto& sm = std::get<SelectionSmokeCmd>(cmd);
-			Mesh* ring = Render::Geom::SelectionRing::get();
-			if (!ring) continue;
+			Mesh* disc = Render::Geom::SelectionDisc::get();
+			if (!disc) continue;
 			m_basicShader->use();
 			m_basicShader->setUniform("u_view", cam.getViewMatrix());
 			m_basicShader->setUniform("u_projection", cam.getProjectionMatrix());
 			m_basicShader->setUniform("u_useTexture", false);
 			m_basicShader->setUniform("u_color", sm.color);
 			DepthMaskScope depthMask(false);
-			PolygonOffsetScope poly(-1.0f, -1.0f);
+			// Draw before meshes to ensure it's beneath buildings; small negative offset to push below ground z-fight
+			PolygonOffsetScope poly(-1.5f, -1.5f);
 			BlendScope blend(true);
-			// Render 4 soft layers, expanding radius and fading alpha for a smoke-like base
-			for (int i = 0; i < 4; ++i) {
-				float scale = 1.4f + 0.15f * i; // start larger than ring, expand outward
-				float a = sm.baseAlpha * (1.0f - 0.18f * i);
-				QMatrix4x4 m = sm.model; m.scale(scale, 1.0f, scale);
+			for (int i = 0; i < 6; ++i) {
+				float scale = 1.4f + 0.12f * i;
+				float a = sm.baseAlpha * (1.0f - 0.12f * i);
+				QMatrix4x4 m = sm.model; m.translate(0.0f, -0.02f, 0.0f); m.scale(scale, 1.0f, scale);
 				m_basicShader->setUniform("u_model", m);
 				m_basicShader->setUniform("u_alpha", a);
-				ring->draw();
+				disc->draw();
 			}
 		}
 	}

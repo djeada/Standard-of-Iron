@@ -55,12 +55,11 @@ public:
     void sortForBatching() {
         // Order: Grid first (background), then Mesh, then SelectionRing (foreground overlays)
         auto weight = [](const DrawCmd& c) -> int {
-            if (std::holds_alternative<GridCmd>(c)) return 0;
-            if (std::holds_alternative<MeshCmd>(c)) return 1;
-            // Overlay passes last
-            if (std::holds_alternative<SelectionRingCmd>(c)) return 2;
-            if (std::holds_alternative<SelectionSmokeCmd>(c)) return 2;
-            return 3;
+            if (std::holds_alternative<GridCmd>(c)) return 0;             // ground
+            if (std::holds_alternative<SelectionSmokeCmd>(c)) return 1;    // smoke base under meshes
+            if (std::holds_alternative<MeshCmd>(c)) return 2;              // entities
+            if (std::holds_alternative<SelectionRingCmd>(c)) return 3;     // thin overlays last
+            return 4;
         };
         std::stable_sort(m_items.begin(), m_items.end(), [&](const DrawCmd& a, const DrawCmd& b){
             return weight(a) < weight(b);
