@@ -219,6 +219,21 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam) {
 				m_smokeShader->setUniform("u_alpha", alpha);
 				quad->draw();
 			}
+			// Base soft disc to reinforce highlight visibility
+			{
+				Mesh* disc = Render::Geom::SelectionDisc::get();
+				if (disc) {
+					m_basicShader->use();
+					m_basicShader->setUniform("u_view", cam.getViewMatrix());
+					m_basicShader->setUniform("u_projection", cam.getProjectionMatrix());
+					m_basicShader->setUniform("u_useTexture", false);
+					m_basicShader->setUniform("u_color", ps.color);
+					QMatrix4x4 base = ps.model; base.translate(0.0f, 0.02f, 0.0f);
+					m_basicShader->setUniform("u_model", base);
+					m_basicShader->setUniform("u_alpha", ps.baseAlpha * 0.35f);
+					disc->draw();
+				}
+			}
 		}
 	}
 	m_basicShader->release();
