@@ -34,7 +34,13 @@ struct SelectionRingCmd {
     float alphaOuter = 0.25f;
 };
 
-using DrawCmd = std::variant<MeshCmd, GridCmd, SelectionRingCmd>;
+struct SelectionSmokeCmd {
+    QMatrix4x4 model;
+    QVector3D color{1,1,1};
+    float baseAlpha = 0.15f; // alpha for the innermost layer; outer layers fade down
+};
+
+using DrawCmd = std::variant<MeshCmd, GridCmd, SelectionRingCmd, SelectionSmokeCmd>;
 
 class DrawQueue {
 public:
@@ -42,6 +48,7 @@ public:
     void submit(const MeshCmd& c) { m_items.emplace_back(c); }
     void submit(const GridCmd& c) { m_items.emplace_back(c); }
     void submit(const SelectionRingCmd& c) { m_items.emplace_back(c); }
+    void submit(const SelectionSmokeCmd& c) { m_items.emplace_back(c); }
     bool empty() const { return m_items.empty(); }
     const std::vector<DrawCmd>& items() const { return m_items; }
     std::vector<DrawCmd>& items() { return m_items; }
@@ -50,7 +57,10 @@ public:
         auto weight = [](const DrawCmd& c) -> int {
             if (std::holds_alternative<GridCmd>(c)) return 0;
             if (std::holds_alternative<MeshCmd>(c)) return 1;
-            return 2; // SelectionRingCmd
+            // Overlay passes last
+            if (std::holds_alternative<SelectionRingCmd>(c)) return 2;
+            if (std::holds_alternative<SelectionSmokeCmd>(c)) return 2;
+            return 3;
         };
         std::stable_sort(m_items.begin(), m_items.end(), [&](const DrawCmd& a, const DrawCmd& b){
             return weight(a) < weight(b);

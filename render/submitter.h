@@ -17,6 +17,8 @@ public:
                                const QVector3D& color) = 0;
     virtual void grid(const QMatrix4x4& model, const QVector3D& color,
                       float cellSize, float thickness, float extent) = 0;
+    virtual void selectionSmoke(const QMatrix4x4& model, const QVector3D& color,
+                                float baseAlpha = 0.15f) = 0;
 };
 
 class QueueSubmitter : public ISubmitter {
@@ -38,6 +40,12 @@ public:
               float cellSize, float thickness, float extent) override {
         if (!m_queue) return;
         GridCmd cmd; cmd.model = model; cmd.color = color; cmd.cellSize = cellSize; cmd.thickness = thickness; cmd.extent = extent;
+        m_queue->submit(cmd);
+    }
+    void selectionSmoke(const QMatrix4x4& model, const QVector3D& color,
+                        float baseAlpha = 0.15f) override {
+        if (!m_queue) return;
+        SelectionSmokeCmd cmd; cmd.model = model; cmd.color = color; cmd.baseAlpha = baseAlpha;
         m_queue->submit(cmd);
     }
 private:

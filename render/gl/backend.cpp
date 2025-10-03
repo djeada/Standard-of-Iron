@@ -125,6 +125,27 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam) {
 				m_basicShader->setUniform("u_alpha", sc.alphaInner);
 				ring->draw();
 			}
+		} else if (std::holds_alternative<SelectionSmokeCmd>(cmd)) {
+			const auto& sm = std::get<SelectionSmokeCmd>(cmd);
+			Mesh* ring = Render::Geom::SelectionRing::get();
+			if (!ring) continue;
+			m_basicShader->use();
+			m_basicShader->setUniform("u_view", cam.getViewMatrix());
+			m_basicShader->setUniform("u_projection", cam.getProjectionMatrix());
+			m_basicShader->setUniform("u_useTexture", false);
+			m_basicShader->setUniform("u_color", sm.color);
+			DepthMaskScope depthMask(false);
+			PolygonOffsetScope poly(-1.0f, -1.0f);
+			BlendScope blend(true);
+			// Render 4 soft layers, expanding radius and fading alpha for a smoke-like base
+			for (int i = 0; i < 4; ++i) {
+				float scale = 1.4f + 0.15f * i; // start larger than ring, expand outward
+				float a = sm.baseAlpha * (1.0f - 0.18f * i);
+				QMatrix4x4 m = sm.model; m.scale(scale, 1.0f, scale);
+				m_basicShader->setUniform("u_model", m);
+				m_basicShader->setUniform("u_alpha", a);
+				ring->draw();
+			}
 		}
 	}
 	m_basicShader->release();

@@ -141,21 +141,21 @@ static void drawBarracks(const DrawContext& p, ISubmitter& out) {
         }
     }
 
-    // Selection ring if selected
+    // Selection smoke if selected (twice the previous diameter ~ scale *2.0)
     if (p.selected) {
-        QMatrix4x4 ringM;
+        QMatrix4x4 m;
         QVector3D pos = p.model.column(3).toVector3D();
-        ringM.translate(pos.x(), 0.01f, pos.z());
-        ringM.scale(0.9f, 1.0f, 0.9f);
-        out.selectionRing(ringM, 0.6f, 0.25f, QVector3D(0.2f, 0.8f, 0.2f));
+        m.translate(pos.x(), 0.01f, pos.z());
+        m.scale(1.8f, 1.0f, 1.8f); // previously ~0.9, now doubled
+        out.selectionSmoke(m, QVector3D(0.2f, 0.8f, 0.2f), 0.22f);
     }
-    // Hover ring if hovered and not selected
+    // Hover smoke if hovered and not selected (subtle)
     else if (p.hovered) {
-        QMatrix4x4 ringM;
+        QMatrix4x4 m;
         QVector3D pos = p.model.column(3).toVector3D();
-        ringM.translate(pos.x(), 0.01f, pos.z());
-        ringM.scale(0.9f, 1.0f, 0.9f);
-        out.selectionRing(ringM, 0.35f, 0.15f, QVector3D(0.90f, 0.90f, 0.25f));
+        m.translate(pos.x(), 0.01f, pos.z());
+        m.scale(1.8f, 1.0f, 1.8f);
+        out.selectionSmoke(m, QVector3D(0.90f, 0.90f, 0.25f), 0.12f);
     }
 }
 

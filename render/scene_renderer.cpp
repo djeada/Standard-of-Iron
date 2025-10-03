@@ -72,6 +72,11 @@ void Renderer::grid(const QMatrix4x4& model, const QVector3D& color, float cellS
     m_queue.submit(cmd);
 }
 
+void Renderer::selectionSmoke(const QMatrix4x4& model, const QVector3D& color, float baseAlpha) {
+    SelectionSmokeCmd cmd; cmd.model = model; cmd.color = color; cmd.baseAlpha = baseAlpha;
+    m_queue.submit(cmd);
+}
+
 // submitRenderCommand removed; use mesh() directly
 
 void Renderer::renderWorld(Engine::Core::World* world) {
