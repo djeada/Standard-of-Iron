@@ -4,6 +4,8 @@
 #include "arrow_system.h"
 #include "../core/world.h"
 #include "../core/component.h"
+#include <limits>
+#include <algorithm>
 
 namespace Game::Systems {
 
@@ -159,20 +161,103 @@ void CombatSystem::dealDamage(Engine::Core::Entity* target, int damage) {
 }
 
 void AISystem::update(Engine::Core::World* world, float deltaTime) {
-    auto entities = world->getEntitiesWith<Engine::Core::UnitComponent>();
+    updateProductionAI(world, deltaTime);
+    updateCombatAI(world, deltaTime);
+}
+
+void AISystem::updateProductionAI(Engine::Core::World* world, float deltaTime) {
+    if (!world) return;
     
-    for (auto entity : entities) {
-        updateAI(entity, deltaTime);
+    // Check production every 2 seconds
+    m_productionTimer += deltaTime;
+    if (m_productionTimer < 2.0f) return;
+    m_productionTimer = 0.0f;
+    
+    // Find all enemy barracks (ownerId == 2)
+    auto entities = world->getEntitiesWith<Engine::Core::UnitComponent>();
+    for (auto* e : entities) {
+        auto* u = e->getComponent<Engine::Core::UnitComponent>();
+        if (!u || u->ownerId != 2) continue; // AI is player 2
+        if (u->unitType != "barracks" || u->health <= 0) continue;
+        
+        auto* prod = e->getComponent<Engine::Core::ProductionComponent>();
+        if (!prod) continue;
+        
+        // If not producing and haven't reached cap, start producing
+        if (!prod->inProgress && prod->producedCount < prod->maxUnits) {
+            prod->productType = "archer";
+            prod->timeRemaining = prod->buildTime;
+            prod->inProgress = true;
+        }
     }
 }
 
-void AISystem::updateAI(Engine::Core::Entity* entity, float deltaTime) {
-    // Simple AI logic placeholder
-    // In a real implementation, this would include:
-    // - State machines
-    // - Behavior trees
-    // - Goal-oriented action planning
-    // - Pathfinding integration
+void AISystem::updateCombatAI(Engine::Core::World* world, float deltaTime) {
+    if (!world) return;
+    
+    // Command units every 3 seconds
+    m_combatTimer += deltaTime;
+    if (m_combatTimer < 3.0f) return;
+    m_combatTimer = 0.0f;
+    
+    // Find all AI units (ownerId == 2)
+    std::vector<Engine::Core::Entity*> aiUnits;
+    std::vector<Engine::Core::Entity*> playerTargets;
+    
+    auto entities = world->getEntitiesWith<Engine::Core::UnitComponent>();
+    for (auto* e : entities) {
+        auto* u = e->getComponent<Engine::Core::UnitComponent>();
+        if (!u || u->health <= 0) continue;
+        
+        if (u->ownerId == 2 && u->unitType == "archer") {
+            aiUnits.push_back(e);
+        } else if (u->ownerId == 1) {
+            // Target both player units and buildings
+            playerTargets.push_back(e);
+        }
+    }
+    
+    if (aiUnits.empty() || playerTargets.empty()) return;
+    
+    // Simple AI strategy: attack nearest player target
+    for (auto* aiUnit : aiUnits) {
+        auto* t = aiUnit->getComponent<Engine::Core::TransformComponent>();
+        auto* m = aiUnit->getComponent<Engine::Core::MovementComponent>();
+        if (!t || !m) continue;
+        
+        // Skip if already moving
+        if (m->hasTarget) continue;
+        
+        // Find nearest player target
+        float minDist2 = std::numeric_limits<float>::max();
+        Engine::Core::Entity* nearestTarget = nullptr;
+        
+        for (auto* target : playerTargets) {
+            auto* targetT = target->getComponent<Engine::Core::TransformComponent>();
+            if (!targetT) continue;
+            
+            float dx = targetT->position.x - t->position.x;
+            float dz = targetT->position.z - t->position.z;
+            float dist2 = dx * dx + dz * dz;
+            
+            if (dist2 < minDist2) {
+                minDist2 = dist2;
+                nearestTarget = target;
+            }
+        }
+        
+        // Move toward nearest target if found and not already in range
+        if (nearestTarget && minDist2 > 4.0f) {
+            auto* targetT = nearestTarget->getComponent<Engine::Core::TransformComponent>();
+            m->hasTarget = true;
+            m->targetX = targetT->position.x;
+            m->targetY = targetT->position.z;
+        }
+    }
+}
+
+void AISystem::updateAI(Engine::Core::World* world, float deltaTime) {
+    // Legacy method - kept for compatibility but now handled by update()
 }
 
 } // namespace Game::Systems
