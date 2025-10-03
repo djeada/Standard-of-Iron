@@ -51,7 +51,10 @@ void CombatSystem::processAttacks(Engine::Core::World* world, float deltaTime) {
             continue; // still cooling down
         }
 
-        // Simple target selection: first valid target in range
+        // Target selection: prioritize enemy units, but also attack enemy buildings
+        Engine::Core::Entity* bestTarget = nullptr;
+        
+        // First pass: look for enemy units (non-buildings)
         for (auto target : units) {
             if (target == attacker) {
                 continue;
@@ -65,26 +68,64 @@ void CombatSystem::processAttacks(Engine::Core::World* world, float deltaTime) {
             if (targetUnit->ownerId == attackerUnit->ownerId) {
                 continue;
             }
+            
+            // Skip buildings in first pass
+            if (target->hasComponent<Engine::Core::BuildingComponent>()) {
+                continue;
+            }
 
             if (isInRange(attacker, target, range)) {
-                // Arrow visual: spawn arrow if ArrowSystem present
-                if (arrowSys) {
-                    auto attT = attacker->getComponent<Engine::Core::TransformComponent>();
-                    auto tgtT = target->getComponent<Engine::Core::TransformComponent>();
-                    auto attU = attacker->getComponent<Engine::Core::UnitComponent>();
-                    QVector3D aPos(attT->position.x, attT->position.y, attT->position.z);
-                    QVector3D tPos(tgtT->position.x, tgtT->position.y, tgtT->position.z);
-                    QVector3D dir = (tPos - aPos).normalized();
-                    // Raise bow height and offset a bit forward to avoid intersecting the capsule body
-                    QVector3D start = aPos + QVector3D(0.0f, 0.6f, 0.0f) + dir * 0.35f;
-                    QVector3D end   = tPos + QVector3D(0.0f, 0.5f, 0.0f);
-                    QVector3D color = attU ? Game::Visuals::teamColorForOwner(attU->ownerId) : QVector3D(0.8f, 0.9f, 1.0f);
-                    arrowSys->spawnArrow(start, end, color, 14.0f);
-                }
-                dealDamage(target, damage);
-                *tAccum = 0.0f; // reset cooldown
-                break; // Only attack one target per update
+                bestTarget = target;
+                break;
             }
+        }
+        
+        // Second pass: if no units found, target enemy buildings
+        if (!bestTarget) {
+            for (auto target : units) {
+                if (target == attacker) {
+                    continue;
+                }
+
+                auto targetUnit = target->getComponent<Engine::Core::UnitComponent>();
+                if (!targetUnit || targetUnit->health <= 0) {
+                    continue;
+                }
+                // Friendly-fire check
+                if (targetUnit->ownerId == attackerUnit->ownerId) {
+                    continue;
+                }
+                
+                // Only consider buildings in second pass
+                if (!target->hasComponent<Engine::Core::BuildingComponent>()) {
+                    continue;
+                }
+
+                if (isInRange(attacker, target, range)) {
+                    bestTarget = target;
+                    break;
+                }
+            }
+        }
+        
+        // Attack the selected target
+        if (bestTarget) {
+            // Arrow visual: spawn arrow if ArrowSystem present
+            if (arrowSys) {
+                auto attT = attacker->getComponent<Engine::Core::TransformComponent>();
+                auto tgtT = bestTarget->getComponent<Engine::Core::TransformComponent>();
+                auto attU = attacker->getComponent<Engine::Core::UnitComponent>();
+                QVector3D aPos(attT->position.x, attT->position.y, attT->position.z);
+                QVector3D tPos(tgtT->position.x, tgtT->position.y, tgtT->position.z);
+                QVector3D dir = (tPos - aPos).normalized();
+                // Raise bow height and offset a bit forward to avoid intersecting the capsule body
+                QVector3D start = aPos + QVector3D(0.0f, 0.6f, 0.0f) + dir * 0.35f;
+                QVector3D end   = tPos + QVector3D(0.0f, 0.5f, 0.0f);
+                QVector3D color = attU ? Game::Visuals::teamColorForOwner(attU->ownerId) : QVector3D(0.8f, 0.9f, 1.0f);
+                arrowSys->spawnArrow(start, end, color, 14.0f);
+            }
+            dealDamage(bestTarget, damage);
+            *tAccum = 0.0f; // reset cooldown
         }
     }
 }
