@@ -120,24 +120,50 @@ static void drawBarracks(const DrawContext& p, ISubmitter& out) {
     out.mesh(p.resources->unit(), post, woodDark, p.resources->white(), 1.0f);
     }
 
-    // Banner pole with team-colored flag
+    // Banner pole with team-colored flag (improved proportions)
     QMatrix4x4 pole = p.model;
     pole.translate(-0.9f, 0.55f, -0.55f);
-    pole.scale(0.05f, 0.7f, 0.05f);
+    pole.scale(0.04f, 0.8f, 0.04f);
     out.mesh(p.resources->unit(), pole, woodDark, p.resources->white(), 1.0f);
 
-    QMatrix4x4 banner = p.model;
-    banner.translate(-0.82f, 0.80f, -0.50f);
-    banner.scale(0.35f, 0.22f, 0.02f);
-    out.mesh(p.resources->unit(), banner, team, p.resources->white(), 1.0f);
+    // Flag finial (decorative top)
+    QMatrix4x4 finial = p.model;
+    finial.translate(-0.9f, 0.98f, -0.55f);
+    finial.scale(0.08f, 0.08f, 0.08f);
+    out.mesh(p.resources->unit(), finial, QVector3D(0.9f, 0.8f, 0.3f), p.resources->white(), 1.0f);
 
-    // Rally flag if set
+    // Team banner (taller and narrower, more flag-like)
+    QMatrix4x4 banner = p.model;
+    banner.translate(-0.78f, 0.75f, -0.53f);
+    banner.scale(0.28f, 0.32f, 0.02f);
+    out.mesh(p.resources->unit(), banner, team, p.resources->white(), 1.0f);
+    
+    // Banner trim/border (darker accent)
+    QMatrix4x4 bannerTrim = p.model;
+    bannerTrim.translate(-0.78f, 0.75f, -0.51f);
+    bannerTrim.scale(0.30f, 0.04f, 0.01f);
+    out.mesh(p.resources->unit(), bannerTrim, QVector3D(team.x() * 0.6f, team.y() * 0.6f, team.z() * 0.6f), p.resources->white(), 1.0f);
+
+    // Rally flag if set (improved appearance)
     if (auto* prod = p.entity->getComponent<Engine::Core::ProductionComponent>()) {
         if (prod->rallySet && p.resources) {
-            QMatrix4x4 flagModel;
-            flagModel.translate(prod->rallyX, 0.1f, prod->rallyZ);
-            flagModel.scale(0.2f, 0.2f, 0.2f);
-            out.mesh(p.resources->unit(), flagModel, QVector3D(1.0f, 0.9f, 0.2f), p.resources->white(), 1.0f);
+            // Rally pole
+            QMatrix4x4 rallyPole;
+            rallyPole.translate(prod->rallyX, 0.15f, prod->rallyZ);
+            rallyPole.scale(0.03f, 0.30f, 0.03f);
+            out.mesh(p.resources->unit(), rallyPole, woodDark, p.resources->white(), 1.0f);
+            
+            // Rally flag (small pennant)
+            QMatrix4x4 rallyFlag;
+            rallyFlag.translate(prod->rallyX + 0.10f, 0.25f, prod->rallyZ);
+            rallyFlag.scale(0.18f, 0.12f, 0.02f);
+            out.mesh(p.resources->unit(), rallyFlag, QVector3D(1.0f, 0.9f, 0.2f), p.resources->white(), 1.0f);
+            
+            // Rally flag pole finial
+            QMatrix4x4 rallyFinial;
+            rallyFinial.translate(prod->rallyX, 0.32f, prod->rallyZ);
+            rallyFinial.scale(0.05f, 0.05f, 0.05f);
+            out.mesh(p.resources->unit(), rallyFinial, QVector3D(1.0f, 0.9f, 0.2f), p.resources->white(), 1.0f);
         }
     }
 
