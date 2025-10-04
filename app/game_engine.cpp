@@ -4,6 +4,7 @@
 #include <QOpenGLContext>
 #include <QDebug>
 #include <QVariant>
+#include <QCursor>
 
 #include "game/core/world.h"
 #include "game/core/component.h"
@@ -12,10 +13,13 @@
 #include "render/gl/resources.h"
 #include "render/ground/ground_renderer.h"
 #include "render/geom/arrow.h"
+#include "render/geom/patrol_flags.h"
 #include "render/gl/bootstrap.h"
 #include "game/map/level_loader.h"
 #include "game/systems/movement_system.h"
 #include "game/systems/combat_system.h"
+#include "game/systems/ai_system.h"
+#include "game/systems/patrol_system.h"
 #include "game/systems/selection_system.h"
 #include "game/systems/arrow_system.h"
 #include "game/systems/production_system.h"
@@ -41,6 +45,7 @@ GameEngine::GameEngine() {
     m_world->addSystem(std::move(arrowSys));
 
     m_world->addSystem(std::make_unique<Game::Systems::MovementSystem>());
+    m_world->addSystem(std::make_unique<Game::Systems::PatrolSystem>());
     m_world->addSystem(std::make_unique<Game::Systems::CombatSystem>());
     m_world->addSystem(std::make_unique<Game::Systems::AISystem>());
     m_world->addSystem(std::make_unique<Game::Systems::ProductionSystem>());
@@ -66,20 +71,222 @@ void GameEngine::onMapClicked(qreal sx, qreal sy) {
 void GameEngine::onRightClick(qreal sx, qreal sy) {
     if (!m_window) return;
     ensureInitialized();
-    QVector3D hit;
-    if (!screenToGround(QPointF(sx, sy), hit)) return;
-    qInfo() << "Right-click at screen" << QPointF(sx, sy) << "-> world" << hit;
     if (!m_selectionSystem) return;
+    
+    // Right-click always clears selection and resets to normal mode (standard RTS behavior)
+    m_selectionSystem->clearSelection();
+    syncSelectionFlags();
+    emit selectedUnitsChanged();
+    if (m_selectedUnitsModel) QMetaObject::invokeMethod(m_selectedUnitsModel, "refresh");
+    
+    // Reset cursor mode to normal (cancel attack/patrol/guard modes)
+    setCursorMode("normal");
+}
+
+void GameEngine::onAttackClick(qreal sx, qreal sy) {
+    if (!m_window) return;
+    ensureInitialized();
+    if (!m_selectionSystem || !m_pickingService || !m_camera || !m_world) return;
+    
+    const auto& selected = m_selectionSystem->getSelectedUnits();
+    if (selected.empty()) {
+        setCursorMode("normal");
+        return;
+    }
+    
+    // Pick an enemy unit or building (don't filter by owner - we want enemies)
+    Engine::Core::EntityID targetId = m_pickingService->pickSingle(
+        float(sx), float(sy), *m_world, *m_camera, 
+        m_viewport.width, m_viewport.height, 
+        0, // owner filter = 0 means no owner filter
+        false // don't prefer buildings first
+    );
+    
+    if (targetId == 0) {
+        // No target found - don't reset cursor mode, let user try again
+        return;
+    }
+    
+    // Verify target is an enemy
+    auto* targetEntity = m_world->getEntity(targetId);
+    if (!targetEntity) return;
+    
+    auto* targetUnit = targetEntity->getComponent<Engine::Core::UnitComponent>();
+    if (!targetUnit) return;
+    
+    // Only attack enemies (not our own units)
+    if (targetUnit->ownerId == m_runtime.localOwnerId) {
+        return;
+    }
+    
+    // Issue attack command with chase enabled
+    Game::Systems::CommandService::attackTarget(*m_world, selected, targetId, true);
+    
+    // Reset cursor mode to normal after issuing attack command
+    setCursorMode("normal");
+}
+
+void GameEngine::onStopCommand() {
+    if (!m_selectionSystem || !m_world) return;
+    ensureInitialized();
+    
     const auto& selected = m_selectionSystem->getSelectedUnits();
     if (selected.empty()) return;
-    auto targets = Game::Systems::FormationPlanner::spreadFormation(int(selected.size()), hit, 1.0f);
-    Game::Systems::CommandService::moveUnits(*m_world, selected, targets);
+    
+    // Clear movement and attack targets for all selected units
+    for (auto id : selected) {
+        auto* entity = m_world->getEntity(id);
+        if (!entity) continue;
+        
+        // Clear movement target
+        if (auto* movement = entity->getComponent<Engine::Core::MovementComponent>()) {
+            movement->hasTarget = false;
+            movement->targetX = 0.0f;
+            movement->targetY = 0.0f;
+            movement->path.clear();
+        }
+        
+        // Clear attack target
+        if (auto* attack = entity->getComponent<Engine::Core::AttackTargetComponent>()) {
+            attack->targetId = 0;
+        }
+        
+        // Clear patrol route
+        if (auto* patrol = entity->getComponent<Engine::Core::PatrolComponent>()) {
+            patrol->patrolling = false;
+            patrol->waypoints.clear();
+        }
+    }
+    
+    // Reset cursor mode to normal
+    setCursorMode("normal");
+}
+
+void GameEngine::onPatrolClick(qreal sx, qreal sy) {
+    if (!m_selectionSystem || !m_world) return;
+    ensureInitialized();
+    
+    const auto& selected = m_selectionSystem->getSelectedUnits();
+    if (selected.empty()) return;
+    
+    // Convert screen to world position
+    QVector3D hit;
+    if (!screenToGround(QPointF(sx, sy), hit)) return;
+    
+    // First waypoint placement
+    if (!m_patrol.hasFirstWaypoint) {
+        m_patrol.firstWaypoint = hit;
+        m_patrol.hasFirstWaypoint = true;
+        
+        // TODO: Render first waypoint flag visually
+        return;
+    }
+    
+    // Second waypoint placement - complete patrol setup
+    QVector3D secondWaypoint = hit;
+    
+    // Set up patrol component on all selected units
+    for (auto id : selected) {
+        auto* entity = m_world->getEntity(id);
+        if (!entity) continue;
+        
+        // Only patrol units, not buildings
+        auto* building = entity->getComponent<Engine::Core::BuildingComponent>();
+        if (building) continue;
+        
+        // Get or add patrol component
+        auto* patrol = entity->getComponent<Engine::Core::PatrolComponent>();
+        if (!patrol) {
+            patrol = entity->addComponent<Engine::Core::PatrolComponent>();
+        }
+        
+        if (patrol) {
+            patrol->waypoints.clear();
+            patrol->waypoints.push_back({m_patrol.firstWaypoint.x(), m_patrol.firstWaypoint.z()});
+            patrol->waypoints.push_back({secondWaypoint.x(), secondWaypoint.z()});
+            patrol->currentWaypoint = 0;
+            patrol->patrolling = true;
+        }
+        
+        // Clear any existing movement/attack commands
+        if (auto* movement = entity->getComponent<Engine::Core::MovementComponent>()) {
+            movement->hasTarget = false;
+            movement->path.clear();
+        }
+        if (auto* attack = entity->getComponent<Engine::Core::AttackTargetComponent>()) {
+            attack->targetId = 0;
+        }
+    }
+    
+    // TODO: Render both waypoint flags visually
+    
+    // Reset patrol state and cursor mode
+    m_patrol.hasFirstWaypoint = false;
+    setCursorMode("normal");
+}
+
+void GameEngine::setCursorMode(const QString& mode) {
+    if (m_runtime.cursorMode == mode) return;
+    
+    // Clear patrol preview state when leaving patrol mode
+    if (m_runtime.cursorMode == "patrol" && mode != "patrol") {
+        m_patrol.hasFirstWaypoint = false;
+    }
+    
+    m_runtime.cursorMode = mode;
+    
+    // Immediately update cursor appearance when mode changes
+    if (m_window) {
+        if (mode == "normal") {
+            m_window->setCursor(Qt::ArrowCursor);
+        } else {
+            // Check if we're currently over the game view
+            // If not sure, set blank cursor anyway (it will be corrected on next hover event)
+            m_window->setCursor(Qt::BlankCursor);
+        }
+    }
+    
+    emit cursorModeChanged();
+    // Force custom cursor position update
+    emit globalCursorChanged();
+}
+
+qreal GameEngine::globalCursorX() const {
+    if (!m_window) return 0;
+    QPoint globalPos = QCursor::pos();
+    QPoint localPos = m_window->mapFromGlobal(globalPos);
+    return localPos.x();
+}
+
+qreal GameEngine::globalCursorY() const {
+    if (!m_window) return 0;
+    QPoint globalPos = QCursor::pos();
+    QPoint localPos = m_window->mapFromGlobal(globalPos);
+    return localPos.y();
 }
 
 void GameEngine::setHoverAtScreen(qreal sx, qreal sy) {
     if (!m_window) return;
     ensureInitialized();
     if (!m_pickingService || !m_camera || !m_world) return;
+    
+    // If hovering outside the game view (sx < 0 or sy < 0), restore normal cursor
+    if (sx < 0 || sy < 0) {
+        if (m_runtime.cursorMode != "normal") {
+            // Temporarily restore normal cursor when not over game view
+            m_window->setCursor(Qt::ArrowCursor);
+        }
+        m_hover.buildingId = 0;
+        return;
+    }
+    
+    // Over the game view - apply cursor mode
+    if (m_runtime.cursorMode == "normal") {
+        m_window->setCursor(Qt::ArrowCursor);
+    } else {
+        m_window->setCursor(Qt::BlankCursor);
+    }
+    
     m_hover.buildingId = m_pickingService->updateHover(float(sx), float(sy), *m_world, *m_camera, m_viewport.width, m_viewport.height);
 }
 
@@ -135,6 +342,7 @@ void GameEngine::initialize() {
     m_level.mapName = lr.mapName;
     m_level.playerUnitId = lr.playerUnitId;
     m_level.camFov = lr.camFov; m_level.camNear = lr.camNear; m_level.camFar = lr.camFar;
+    m_level.maxTroopsPerPlayer = lr.maxTroopsPerPlayer;
     m_runtime.initialized = true;
 }
 
@@ -148,6 +356,15 @@ void GameEngine::update(float dt) {
     }
     if (m_world) m_world->update(dt);
     syncSelectionFlags();
+    checkVictoryCondition();
+    
+    // Check for troop count changes
+    int currentTroopCount = playerTroopCount();
+    if (currentTroopCount != m_runtime.lastTroopCount) {
+        m_runtime.lastTroopCount = currentTroopCount;
+        emit troopCountChanged();
+    }
+    
     if (m_followSelectionEnabled && m_camera && m_selectionSystem && m_world) {
         Game::Systems::CameraFollowSystem cfs;
         cfs.update(*m_world, *m_selectionSystem, *m_camera);
@@ -175,7 +392,18 @@ void GameEngine::render(int pixelWidth, int pixelHeight) {
     if (m_arrowSystem) {
         if (auto* res = m_renderer->resources()) Render::GL::renderArrows(m_renderer.get(), res, *m_arrowSystem);
     }
+    // Render patrol waypoint flags (including preview during placement)
+    if (auto* res = m_renderer->resources()) {
+        std::optional<QVector3D> previewWaypoint;
+        if (m_patrol.hasFirstWaypoint) {
+            previewWaypoint = m_patrol.firstWaypoint;
+        }
+        Render::GL::renderPatrolFlags(m_renderer.get(), res, *m_world, previewWaypoint);
+    }
     m_renderer->endFrame();
+    
+    // Emit cursor position change every frame so QML cursor tracking updates
+    emit globalCursorChanged();
 }
 
 bool GameEngine::screenToGround(const QPointF& screenPt, QVector3D& outWorld) {
@@ -264,6 +492,31 @@ void GameEngine::cameraSetFollowLerp(float alpha) {
 
 QObject* GameEngine::selectedUnitsModel() { return m_selectedUnitsModel; }
 
+bool GameEngine::hasUnitsSelected() const {
+    if (!m_selectionSystem) return false;
+    const auto& sel = m_selectionSystem->getSelectedUnits();
+    return !sel.empty();
+}
+
+int GameEngine::playerTroopCount() const {
+    if (!m_world) return 0;
+    
+    int count = 0;
+    auto entities = m_world->getEntitiesWith<Engine::Core::UnitComponent>();
+    for (auto* entity : entities) {
+        auto* unit = entity->getComponent<Engine::Core::UnitComponent>();
+        if (!unit) continue;
+        
+        // Count alive units (not buildings) owned by local player
+        if (unit->ownerId == m_runtime.localOwnerId && 
+            unit->health > 0 && 
+            unit->unitType != "barracks") {
+            count++;
+        }
+    }
+    return count;
+}
+
 bool GameEngine::hasSelectedType(const QString& type) const {
     if (!m_selectionSystem || !m_world) return false;
     const auto& sel = m_selectionSystem->getSelectedUnits();
@@ -339,3 +592,39 @@ bool GameEngine::getUnitInfo(Engine::Core::EntityID id, QString& name, int& heal
     alive = true;
     return true;
 }
+
+void GameEngine::checkVictoryCondition() {
+    if (!m_world || m_runtime.victoryState != "") return; // Already won/lost
+    
+    // Check if enemy barracks (playerId 2) still exists and is alive
+    bool enemyBarracksAlive = false;
+    bool playerBarracksAlive = false;
+    
+    auto entities = m_world->getEntitiesWith<Engine::Core::UnitComponent>();
+    for (auto* e : entities) {
+        auto* unit = e->getComponent<Engine::Core::UnitComponent>();
+        if (!unit || unit->health <= 0) continue;
+        
+        if (unit->unitType == "barracks") {
+            if (unit->ownerId == 2) {
+                enemyBarracksAlive = true;
+            } else if (unit->ownerId == m_runtime.localOwnerId) {
+                playerBarracksAlive = true;
+            }
+        }
+    }
+    
+    // Victory if enemy barracks destroyed
+    if (!enemyBarracksAlive) {
+        m_runtime.victoryState = "victory";
+        emit victoryStateChanged();
+        qInfo() << "VICTORY! Enemy barracks destroyed!";
+    }
+    // Defeat if player barracks destroyed
+    else if (!playerBarracksAlive) {
+        m_runtime.victoryState = "defeat";
+        emit victoryStateChanged();
+        qInfo() << "DEFEAT! Your barracks was destroyed!";
+    }
+}
+

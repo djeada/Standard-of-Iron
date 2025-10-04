@@ -18,6 +18,7 @@ struct LevelLoadResult {
     int gridWidth = 50;
     int gridHeight = 50;
     float tileSize = 1.0f;
+    int maxTroopsPerPlayer = 50;
 };
 
 class LevelLoader {

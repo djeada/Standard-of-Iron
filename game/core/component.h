@@ -70,6 +70,23 @@ public:
     float timeSinceLast;
 };
 
+class AttackTargetComponent : public Component {
+public:
+    AttackTargetComponent() : targetId(0), shouldChase(false) {}
+    
+    EntityID targetId;     // Explicit target to attack
+    bool shouldChase;      // If true, unit will chase fleeing targets
+};
+
+class PatrolComponent : public Component {
+public:
+    PatrolComponent() : currentWaypoint(0), patrolling(false) {}
+    
+    std::vector<std::pair<float, float>> waypoints; // List of patrol points (x, z)
+    size_t currentWaypoint; // Index of current target waypoint
+    bool patrolling;        // Active patrol state
+};
+
 } // namespace Engine::Core
 
 namespace Engine::Core {
