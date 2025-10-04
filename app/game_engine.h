@@ -7,6 +7,7 @@
 #include <memory>
 #include <algorithm>
 #include <QVariant>
+#include <QStringList>
 #include <vector>
 
 namespace Engine { namespace Core {
@@ -44,6 +45,7 @@ public:
     Q_PROPERTY(bool hasUnitsSelected READ hasUnitsSelected NOTIFY selectedUnitsChanged)
     Q_PROPERTY(int playerTroopCount READ playerTroopCount NOTIFY troopCountChanged)
     Q_PROPERTY(int maxTroopsPerPlayer READ maxTroopsPerPlayer NOTIFY troopCountChanged)
+    Q_PROPERTY(QVariantList availableMaps READ availableMaps NOTIFY availableMapsChanged)
 
     Q_INVOKABLE void onMapClicked(qreal sx, qreal sy);
     Q_INVOKABLE void onRightClick(qreal sx, qreal sy);
@@ -78,6 +80,11 @@ public:
     Q_INVOKABLE void recruitNearSelected(const QString& unitType);
     Q_INVOKABLE QVariantMap getSelectedProductionState() const;
     Q_INVOKABLE void setRallyAtScreen(qreal sx, qreal sy);
+    Q_INVOKABLE QVariantList availableMaps() const;
+    Q_INVOKABLE void startSkirmish(const QString& mapPath);
+    Q_INVOKABLE void openSettings();
+    Q_INVOKABLE void loadSave();
+    Q_INVOKABLE void exitGame();
 
     void setWindow(QQuickWindow* w) { m_window = w; }
 
@@ -147,4 +154,5 @@ signals:
     void cursorModeChanged();
     void globalCursorChanged();
     void troopCountChanged();
+    void availableMapsChanged();
 };
