@@ -18,17 +18,37 @@ AISystem::AISystem() {
     m_enemyAI.playerId = 2;
     m_enemyAI.state = AIState::Idle;
     
-    // Register default behaviors
-    registerBehavior(std::make_unique<ProductionBehavior>());
-    registerBehavior(std::make_unique<GatherBehavior>());
-    registerBehavior(std::make_unique<AttackBehavior>());
+    // Register default behaviors (order matters for prioritization)
+    // Critical behaviors first
     registerBehavior(std::make_unique<DefendBehavior>());
+    
+    // High priority
+    registerBehavior(std::make_unique<ProductionBehavior>());
+    
+    // Normal priority
+    registerBehavior(std::make_unique<AttackBehavior>());
+    
+    // Low priority
+    registerBehavior(std::make_unique<GatherBehavior>());
 }
 
-AISystem::~AISystem() = default;
+AISystem::~AISystem() {
+    // Stop AI thread if running
+    if (m_aiThread && m_aiThread->joinable()) {
+        m_shouldStop = true;
+        m_aiCondition.notify_all();
+        m_aiThread->join();
+    }
+}
 
 void AISystem::registerBehavior(std::unique_ptr<AIBehavior> behavior) {
     m_behaviors.push_back(std::move(behavior));
+    
+    // Sort behaviors by priority (highest first)
+    std::sort(m_behaviors.begin(), m_behaviors.end(),
+        [](const std::unique_ptr<AIBehavior>& a, const std::unique_ptr<AIBehavior>& b) {
+            return a->getPriority() > b->getPriority();
+        });
 }
 
 void AISystem::update(Engine::Core::World* world, float deltaTime) {
@@ -46,12 +66,48 @@ void AISystem::update(Engine::Core::World* world, float deltaTime) {
     // Run state machine
     updateStateMachine(world, m_enemyAI, deltaTime);
     
-    // Execute behaviors
+    // Execute behaviors (threaded or sequential)
+    if (m_useThreading) {
+        executeBehaviorsThreaded(world, deltaTime);
+    } else {
+        executeBehaviors(world, deltaTime);
+    }
+}
+
+void AISystem::executeBehaviors(Engine::Core::World* world, float deltaTime) {
+    // Execute behaviors with priority and mutual exclusion
+    bool exclusiveBehaviorExecuted = false;
+    
     for (auto& behavior : m_behaviors) {
-        if (behavior && behavior->shouldExecute(world, m_enemyAI.playerId)) {
+        if (!behavior) continue;
+        
+        // Skip if an exclusive behavior already ran and this one can't run concurrently
+        if (exclusiveBehaviorExecuted && !behavior->canRunConcurrently()) {
+            continue;
+        }
+        
+        // Check if behavior should execute
+        if (behavior->shouldExecute(world, m_enemyAI.playerId)) {
             behavior->execute(world, m_enemyAI.playerId, deltaTime);
+            
+            // Mark that an exclusive behavior has run
+            if (!behavior->canRunConcurrently()) {
+                exclusiveBehaviorExecuted = true;
+            }
         }
     }
+}
+
+void AISystem::executeBehaviorsThreaded(Engine::Core::World* world, float deltaTime) {
+    // For now, keep it simple - execute on main thread
+    // Threading can cause race conditions with ECS, so we'd need thread-safe World access
+    // This is a placeholder for future async AI processing
+    executeBehaviors(world, deltaTime);
+    
+    // TODO: Implement proper threaded execution with:
+    // 1. Snapshot world state
+    // 2. Process AI decisions in background thread
+    // 3. Queue commands to be applied on main thread
 }
 
 void AISystem::updateContext(Engine::Core::World* world, AIContext& ctx) {
@@ -179,11 +235,6 @@ void AISystem::updateStateMachine(Engine::Core::World* world, AIContext& ctx, fl
     if (ctx.state != previousState) {
         ctx.stateTimer = 0.0f;
     }
-}
-
-void AISystem::executeCurrentState(Engine::Core::World* world, AIContext& ctx, float deltaTime) {
-    // State-specific high-level commands handled by behaviors
-    // This method can be extended for complex state-specific logic
 }
 
 // ============================================================================
