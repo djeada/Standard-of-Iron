@@ -7,11 +7,13 @@ Item {
     
     signal pauseToggled()
     signal speedChanged(real speed)
-    signal unitCommand(string command)
+    signal commandModeChanged(string mode) // "normal", "attack", "guard", "patrol", "stop"
     signal recruit(string unitType)
     
     property bool gameIsPaused: false
     property real currentSpeed: 1.0
+    property string currentCommandMode: "normal"
+    
     // Expose panel heights for other overlays (e.g., edge scroll) to avoid stealing input over UI
     property int topPanelHeight: topPanel.height
     property int bottomPanelHeight: bottomPanel.height
@@ -20,7 +22,9 @@ Item {
 
     Connections {
         target: (typeof game !== 'undefined') ? game : null
-        function onSelectedUnitsChanged() { selectionTick += 1 }
+        function onSelectedUnitsChanged() { 
+            selectionTick += 1
+        }
     }
 
     // Periodic refresh to update production timers and counters while building
@@ -32,27 +36,65 @@ Item {
         onTriggered: selectionTick += 1
     }
     
-    // Top panel
+    // Top panel - Responsive design
     Rectangle {
         id: topPanel
         anchors.top: parent.top
         anchors.left: parent.left
         anchors.right: parent.right
-        height: 60
-        color: "#2c3e50"
-        border.color: "#34495e"
-        border.width: 1
+        height: Math.max(50, parent.height * 0.08)
+        color: "#1a1a1a"
+        opacity: 0.95
+        
+        // Gradient overlay
+        Rectangle {
+            anchors.fill: parent
+            gradient: Gradient {
+                GradientStop { position: 0.0; color: "#2c3e50" }
+                GradientStop { position: 1.0; color: "#1a252f" }
+            }
+            opacity: 0.8
+        }
+        
+        // Border
+        Rectangle {
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.bottom: parent.bottom
+            height: 2
+            gradient: Gradient {
+                GradientStop { position: 0.0; color: "transparent" }
+                GradientStop { position: 0.5; color: "#3498db" }
+                GradientStop { position: 1.0; color: "transparent" }
+            }
+        }
         
         RowLayout {
             anchors.fill: parent
             anchors.margins: 8
-            spacing: 10
+            spacing: 15
             
             // Pause/Play button
             Button {
+                Layout.preferredWidth: 50
+                Layout.fillHeight: true
                 text: gameIsPaused ? "▶" : "⏸"
-                font.pointSize: 16
+                font.pointSize: 18
+                font.bold: true
                 focusPolicy: Qt.NoFocus
+                background: Rectangle {
+                    color: parent.pressed ? "#e74c3c" : (parent.hovered ? "#c0392b" : "#34495e")
+                    radius: 4
+                    border.color: "#2c3e50"
+                    border.width: 1
+                }
+                contentItem: Text {
+                    text: parent.text
+                    font: parent.font
+                    color: "#ecf0f1"
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                }
                 onClicked: {
                     gameIsPaused = !gameIsPaused
                     pauseToggled()
@@ -60,65 +102,199 @@ Item {
             }
             
             Rectangle {
-                width: 1
-                height: parent.height * 0.6
-                color: "#34495e"
+                width: 2
+                Layout.fillHeight: true
+                Layout.topMargin: 8
+                Layout.bottomMargin: 8
+                gradient: Gradient {
+                    GradientStop { position: 0.0; color: "transparent" }
+                    GradientStop { position: 0.5; color: "#34495e" }
+                    GradientStop { position: 1.0; color: "transparent" }
+                }
             }
             
             // Speed controls
-            Text {
-                text: "Speed:"
-                color: "white"
-                font.pointSize: 12
-            }
-            
-            Button {
-                text: "0.5x"
-                enabled: !gameIsPaused
-                checkable: true
-                checked: currentSpeed === 0.5 && !gameIsPaused
-                focusPolicy: Qt.NoFocus
-                onClicked: {
-                    currentSpeed = 0.5
-                    speedChanged(currentSpeed)
+            Row {
+                Layout.preferredWidth: 220
+                spacing: 8
+                
+                Text {
+                    text: "Speed:"
+                    color: "#ecf0f1"
+                    font.pointSize: 11
+                    font.bold: true
+                    anchors.verticalCenter: parent.verticalCenter
                 }
-            }
-            
-            Button {
-                text: "1x"
-                enabled: !gameIsPaused
-                checkable: true
-                checked: currentSpeed === 1.0 && !gameIsPaused
-                focusPolicy: Qt.NoFocus
-                onClicked: {
-                    currentSpeed = 1.0
-                    speedChanged(currentSpeed)
+                
+                ButtonGroup {
+                    id: speedGroup
                 }
-            }
-            
-            Button {
-                text: "2x"
-                enabled: !gameIsPaused
-                checkable: true
-                checked: currentSpeed === 2.0 && !gameIsPaused
-                focusPolicy: Qt.NoFocus
-                onClicked: {
-                    currentSpeed = 2.0
-                    speedChanged(currentSpeed)
+                
+                Button {
+                    width: 50
+                    height: 32
+                    text: "0.5x"
+                    enabled: !gameIsPaused
+                    checkable: true
+                    checked: currentSpeed === 0.5 && !gameIsPaused
+                    focusPolicy: Qt.NoFocus
+                    ButtonGroup.group: speedGroup
+                    background: Rectangle {
+                        color: parent.checked ? "#27ae60" : (parent.hovered ? "#34495e" : "#2c3e50")
+                        radius: 4
+                        border.color: parent.checked ? "#229954" : "#1a252f"
+                        border.width: 1
+                    }
+                    contentItem: Text {
+                        text: parent.text
+                        font.pointSize: 9
+                        font.bold: true
+                        color: parent.enabled ? "#ecf0f1" : "#7f8c8d"
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                    onClicked: {
+                        currentSpeed = 0.5
+                        speedChanged(currentSpeed)
+                    }
+                }
+                
+                Button {
+                    width: 50
+                    height: 32
+                    text: "1x"
+                    enabled: !gameIsPaused
+                    checkable: true
+                    checked: currentSpeed === 1.0 && !gameIsPaused
+                    focusPolicy: Qt.NoFocus
+                    ButtonGroup.group: speedGroup
+                    background: Rectangle {
+                        color: parent.checked ? "#27ae60" : (parent.hovered ? "#34495e" : "#2c3e50")
+                        radius: 4
+                        border.color: parent.checked ? "#229954" : "#1a252f"
+                        border.width: 1
+                    }
+                    contentItem: Text {
+                        text: parent.text
+                        font.pointSize: 9
+                        font.bold: true
+                        color: parent.enabled ? "#ecf0f1" : "#7f8c8d"
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                    onClicked: {
+                        currentSpeed = 1.0
+                        speedChanged(currentSpeed)
+                    }
+                }
+                
+                Button {
+                    width: 50
+                    height: 32
+                    text: "2x"
+                    enabled: !gameIsPaused
+                    checkable: true
+                    checked: currentSpeed === 2.0 && !gameIsPaused
+                    focusPolicy: Qt.NoFocus
+                    ButtonGroup.group: speedGroup
+                    background: Rectangle {
+                        color: parent.checked ? "#27ae60" : (parent.hovered ? "#34495e" : "#2c3e50")
+                        radius: 4
+                        border.color: parent.checked ? "#229954" : "#1a252f"
+                        border.width: 1
+                    }
+                    contentItem: Text {
+                        text: parent.text
+                        font.pointSize: 9
+                        font.bold: true
+                        color: parent.enabled ? "#ecf0f1" : "#7f8c8d"
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                    onClicked: {
+                        currentSpeed = 2.0
+                        speedChanged(currentSpeed)
+                    }
                 }
             }
             
             Rectangle {
-                width: 1
-                height: parent.height * 0.6
-                color: "#34495e"
+                width: 2
+                Layout.fillHeight: true
+                Layout.topMargin: 8
+                Layout.bottomMargin: 8
+                gradient: Gradient {
+                    GradientStop { position: 0.0; color: "transparent" }
+                    GradientStop { position: 0.5; color: "#34495e" }
+                    GradientStop { position: 1.0; color: "transparent" }
+                }
             }
             
-            // Resources display (placeholder)
+            // Camera controls
+            Row {
+                spacing: 8
+                
+                Text {
+                    text: "Camera:"
+                    color: "#ecf0f1"
+                    font.pointSize: 11
+                    font.bold: true
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+                
+                Button {
+                    width: 70
+                    height: 32
+                    text: "Follow"
+                    checkable: true
+                    checked: false
+                    focusPolicy: Qt.NoFocus
+                    background: Rectangle {
+                        color: parent.checked ? "#3498db" : (parent.hovered ? "#34495e" : "#2c3e50")
+                        radius: 4
+                        border.color: parent.checked ? "#2980b9" : "#1a252f"
+                        border.width: 1
+                    }
+                    contentItem: Text {
+                        text: parent.text
+                        font.pointSize: 9
+                        font.bold: true
+                        color: "#ecf0f1"
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                    onToggled: { 
+                        if (typeof game !== 'undefined' && game.cameraFollowSelection) 
+                            game.cameraFollowSelection(checked) 
+                    }
+                }
+            }
+            
+            Rectangle {
+                width: 2
+                Layout.fillHeight: true
+                Layout.topMargin: 8
+                Layout.bottomMargin: 8
+                gradient: Gradient {
+                    GradientStop { position: 0.0; color: "transparent" }
+                    GradientStop { position: 0.5; color: "#34495e" }
+                    GradientStop { position: 1.0; color: "transparent" }
+                }
+            }
+            
+            // Troop count display
             Text {
-                text: "Resources: 1000 Gold, 500 Wood"
-                color: "white"
-                font.pointSize: 12
+                text: "🗡️ " + (typeof game !== 'undefined' ? game.playerTroopCount : 0) + " / " + (typeof game !== 'undefined' ? game.maxTroopsPerPlayer : 0)
+                color: {
+                    if (typeof game === 'undefined') return "#95a5a6"
+                    var count = game.playerTroopCount
+                    var max = game.maxTroopsPerPlayer
+                    if (count >= max) return "#e74c3c"  // Red when at limit
+                    if (count >= max * 0.8) return "#f39c12"  // Orange when near limit
+                    return "#2ecc71"  // Green when plenty of room
+                }
+                font.pointSize: 11
+                font.bold: true
             }
             
             Item {
@@ -127,108 +303,153 @@ Item {
             
             // Minimap placeholder
             Rectangle {
-                width: 120
-                height: parent.height * 0.8
+                Layout.preferredWidth: Math.min(140, parent.width * 0.12)
+                Layout.fillHeight: true
+                Layout.topMargin: 4
+                Layout.bottomMargin: 4
                 color: "#1a252f"
-                border.color: "#34495e"
-                border.width: 1
+                border.width: 2
+                border.color: "#3498db"
+                radius: 4
                 
-                Text {
-                    anchors.centerIn: parent
-                    text: "Minimap"
-                    color: "#7f8c8d"
-                    font.pointSize: 10
+                Rectangle {
+                    anchors.fill: parent
+                    anchors.margins: 2
+                    color: "#0a0f14"
+                    
+                    Text {
+                        anchors.centerIn: parent
+                        text: "MINIMAP"
+                        color: "#34495e"
+                        font.pointSize: 9
+                        font.bold: true
+                    }
                 }
             }
         }
     }
     
-    // Bottom panel - Selection and orders
+    // Bottom panel - Selection and commands
     Rectangle {
         id: bottomPanel
         anchors.bottom: parent.bottom
         anchors.left: parent.left
         anchors.right: parent.right
-        height: 120
-        color: "#2c3e50"
-        border.color: "#34495e"
-        border.width: 1
-        // Allow edge-scroll MouseArea under it to still receive hover at the very edge
-        // by adding a tiny pass-through strip
-        MouseArea {
+        height: Math.max(140, parent.height * 0.20)
+        color: "#1a1a1a"
+        opacity: 0.95
+        
+        // Gradient overlay
+        Rectangle {
+            anchors.fill: parent
+            gradient: Gradient {
+                GradientStop { position: 0.0; color: "#1a252f" }
+                GradientStop { position: 1.0; color: "#2c3e50" }
+            }
+            opacity: 0.8
+        }
+        
+        // Top border
+        Rectangle {
             anchors.left: parent.left
             anchors.right: parent.right
-            anchors.bottom: parent.bottom
-            height: 8
-            hoverEnabled: true
-            acceptedButtons: Qt.NoButton
-            propagateComposedEvents: true
-            onEntered: { if (typeof game !== 'undefined') {/* noop - GameView bottomEdge handles scroll */} }
+            anchors.top: parent.top
+            height: 2
+            gradient: Gradient {
+                GradientStop { position: 0.0; color: "transparent" }
+                GradientStop { position: 0.5; color: "#3498db" }
+                GradientStop { position: 1.0; color: "transparent" }
+            }
         }
         
         RowLayout {
             anchors.fill: parent
-            anchors.margins: 8
-            spacing: 10
+            anchors.margins: 10
+            spacing: 12
             
             // Unit selection panel
             Rectangle {
-                Layout.preferredWidth: 200
+                Layout.preferredWidth: Math.max(200, parent.width * 0.18)
                 Layout.fillHeight: true
-                color: "#34495e"
-                border.color: "#1a252f"
-                border.width: 1
+                color: "#0f1419"
+                border.color: "#3498db"
+                border.width: 2
+                radius: 6
                 
                 Column {
                     anchors.fill: parent
-                    anchors.margins: 4
-                    spacing: 4
+                    anchors.margins: 6
+                    spacing: 6
                     
-                    Text {
-                        text: "Selected Units"
-                        color: "white"
-                        font.pointSize: 10
-                        font.bold: true
+                    Rectangle {
+                        width: parent.width
+                        height: 25
+                        color: "#1a252f"
+                        radius: 4
+                        
+                        Text {
+                            anchors.centerIn: parent
+                            text: "SELECTED UNITS"
+                            color: "#3498db"
+                            font.pointSize: 10
+                            font.bold: true
+                        }
                     }
                     
                     ScrollView {
                         width: parent.width
-                        height: parent.height - 20
+                        height: parent.height - 35
                         clip: true
-                        ScrollBar.vertical.policy: ScrollBar.AlwaysOn
+                        ScrollBar.vertical.policy: ScrollBar.AsNeeded
                         
                         ListView {
                             id: selectedUnitsList
                             model: (typeof game !== 'undefined' && game.selectedUnitsModel) ? game.selectedUnitsModel : null
                             boundsBehavior: Flickable.StopAtBounds
                             flickableDirection: Flickable.VerticalFlick
+                            spacing: 3
                             
                             delegate: Rectangle {
-                                width: selectedUnitsList.width
-                                height: 25
+                                width: selectedUnitsList.width - 10
+                                height: 28
                                 color: "#1a252f"
+                                radius: 4
+                                border.color: "#34495e"
+                                border.width: 1
                                 
                                 Row {
                                     anchors.left: parent.left
                                     anchors.verticalCenter: parent.verticalCenter
-                                    anchors.margins: 4
-                                    spacing: 4
+                                    anchors.margins: 6
+                                    spacing: 8
                                     
                                     Text {
                                         text: (typeof name !== 'undefined') ? name : "Unit"
-                                        color: "white"
+                                        color: "#ecf0f1"
                                         font.pointSize: 9
+                                        font.bold: true
+                                        width: 80
                                     }
                                     
+                                    // Health bar
                                     Rectangle {
-                                        width: 40
-                                        height: 8
-                                        color: "#e74c3c"
+                                        width: 60
+                                        height: 12
+                                        color: "#2c3e50"
+                                        radius: 6
+                                        border.color: "#1a252f"
+                                        border.width: 1
                                         
                                         Rectangle {
                                             width: parent.width * (typeof healthRatio !== 'undefined' ? healthRatio : 0)
                                             height: parent.height
-                                            color: "#27ae60"
+                                            color: {
+                                                var ratio = (typeof healthRatio !== 'undefined' ? healthRatio : 0)
+                                                if (ratio > 0.6) return "#27ae60"
+                                                if (ratio > 0.3) return "#f39c12"
+                                                return "#e74c3c"
+                                            }
+                                            radius: 6
                                         }
                                     }
                                 }
@@ -239,60 +460,215 @@ Item {
             }
             
             // Command buttons
-            GridLayout {
-                Layout.preferredWidth: 300
+            Column {
+                Layout.preferredWidth: Math.max(260, parent.width * 0.22)
                 Layout.fillHeight: true
-                columns: 3
-                rowSpacing: 4
-                columnSpacing: 4
+                spacing: 8
                 
-                Button {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    text: "Move"
-                    focusPolicy: Qt.NoFocus
-                    onClicked: unitCommand("move")
+                // Command mode indicator
+                Rectangle {
+                    width: parent.width
+                    height: 36
+                    color: currentCommandMode === "normal" ? "#0f1419" : "#1a252f"
+                    border.color: currentCommandMode === "normal" ? "#34495e" : "#3498db"
+                    border.width: 2
+                    radius: 6
+                    
+                    // Glow effect for active mode
+                    Rectangle {
+                        anchors.fill: parent
+                        anchors.margins: -4
+                        color: "transparent"
+                        border.color: "#3498db"
+                        border.width: currentCommandMode !== "normal" ? 1 : 0
+                        radius: 8
+                        opacity: 0.4
+                        visible: currentCommandMode !== "normal"
+                    }
+                    
+                    Text {
+                        anchors.centerIn: parent
+                        text: currentCommandMode === "normal" ? "◉ Normal Mode" :
+                              currentCommandMode === "attack" ? "⚔️ ATTACK MODE - Click Enemy" :
+                              currentCommandMode === "guard" ? "🛡️ GUARD MODE - Click Position" :
+                              currentCommandMode === "patrol" ? "🚶 PATROL MODE - Set Waypoints" :
+                              "⏹️ STOP COMMAND"
+                        color: currentCommandMode === "normal" ? "#7f8c8d" : "#3498db"
+                        font.pointSize: currentCommandMode === "normal" ? 10 : 11
+                        font.bold: currentCommandMode !== "normal"
+                    }
                 }
                 
-                Button {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    text: "Attack"
-                    focusPolicy: Qt.NoFocus
-                    onClicked: unitCommand("attack")
-                }
-                
-                Button {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    text: "Stop"
-                    focusPolicy: Qt.NoFocus
-                    onClicked: unitCommand("stop")
-                }
-                
-                Button {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    text: "Follow"
-                    focusPolicy: Qt.NoFocus
-                    checkable: true
-                    onToggled: { if (typeof game !== 'undefined' && game.cameraFollowSelection) game.cameraFollowSelection(checked) }
-                }
-                
-                Button {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    text: "Patrol"
-                    focusPolicy: Qt.NoFocus
-                    onClicked: unitCommand("patrol")
-                }
-                
-                Button {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    text: "Guard"
-                    focusPolicy: Qt.NoFocus
-                    onClicked: unitCommand("guard")
+                // Command buttons grid
+                GridLayout {
+                    width: parent.width
+                    columns: 3
+                    rowSpacing: 6
+                    columnSpacing: 6
+                    
+                    // Helper function for button styling
+                    function getButtonColor(btn, baseColor) {
+                        if (btn.pressed) return Qt.darker(baseColor, 1.3)
+                        if (btn.checked) return baseColor
+                        if (btn.hovered) return Qt.lighter(baseColor, 1.2)
+                        return "#2c3e50"
+                    }
+                    
+                    Button {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 38
+                        text: "Attack"
+                        focusPolicy: Qt.NoFocus
+                        enabled: (typeof game !== 'undefined' && game.hasUnitsSelected) ? game.hasUnitsSelected : false
+                        checkable: true
+                        checked: currentCommandMode === "attack"
+                        background: Rectangle {
+                            color: parent.enabled ? (parent.checked ? "#e74c3c" : (parent.hovered ? "#c0392b" : "#34495e")) : "#1a252f"
+                            radius: 6
+                            border.color: parent.checked ? "#c0392b" : "#1a252f"
+                            border.width: 2
+                        }
+                        contentItem: Text {
+                            text: "⚔️\n" + parent.text
+                            font.pointSize: 8
+                            font.bold: true
+                            color: parent.enabled ? "#ecf0f1" : "#7f8c8d"
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                        onClicked: {
+                            currentCommandMode = checked ? "attack" : "normal"
+                            commandModeChanged(currentCommandMode)
+                        }
+                        ToolTip.visible: hovered
+                        ToolTip.text: game.hasUnitsSelected ? "Attack enemy units or buildings.\nUnits will chase targets." : "Select units first"
+                        ToolTip.delay: 500
+                    }
+                    
+                    Button {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 38
+                        text: "Guard"
+                        focusPolicy: Qt.NoFocus
+                        enabled: (typeof game !== 'undefined' && game.hasUnitsSelected) ? game.hasUnitsSelected : false
+                        checkable: true
+                        checked: currentCommandMode === "guard"
+                        background: Rectangle {
+                            color: parent.enabled ? (parent.checked ? "#3498db" : (parent.hovered ? "#2980b9" : "#34495e")) : "#1a252f"
+                            radius: 6
+                            border.color: parent.checked ? "#2980b9" : "#1a252f"
+                            border.width: 2
+                        }
+                        contentItem: Text {
+                            text: "🛡️\n" + parent.text
+                            font.pointSize: 8
+                            font.bold: true
+                            color: parent.enabled ? "#ecf0f1" : "#7f8c8d"
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                        onClicked: {
+                            currentCommandMode = checked ? "guard" : "normal"
+                            commandModeChanged(currentCommandMode)
+                        }
+                        ToolTip.visible: hovered
+                        ToolTip.text: game.hasUnitsSelected ? "Guard a position.\nUnits will defend from all sides." : "Select units first"
+                        ToolTip.delay: 500
+                    }
+                    
+                    Button {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 38
+                        text: "Patrol"
+                        focusPolicy: Qt.NoFocus
+                        enabled: (typeof game !== 'undefined' && game.hasUnitsSelected) ? game.hasUnitsSelected : false
+                        checkable: true
+                        checked: currentCommandMode === "patrol"
+                        background: Rectangle {
+                            color: parent.enabled ? (parent.checked ? "#27ae60" : (parent.hovered ? "#229954" : "#34495e")) : "#1a252f"
+                            radius: 6
+                            border.color: parent.checked ? "#229954" : "#1a252f"
+                            border.width: 2
+                        }
+                        contentItem: Text {
+                            text: "🚶\n" + parent.text
+                            font.pointSize: 8
+                            font.bold: true
+                            color: parent.enabled ? "#ecf0f1" : "#7f8c8d"
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                        onClicked: {
+                            currentCommandMode = checked ? "patrol" : "normal"
+                            commandModeChanged(currentCommandMode)
+                        }
+                        ToolTip.visible: hovered
+                        ToolTip.text: game.hasUnitsSelected ? "Patrol between waypoints.\nClick start and end points." : "Select units first"
+                        ToolTip.delay: 500
+                    }
+                    
+                    Button {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 38
+                        text: "Stop"
+                        focusPolicy: Qt.NoFocus
+                        enabled: (typeof game !== 'undefined' && game.hasUnitsSelected) ? game.hasUnitsSelected : false
+                        background: Rectangle {
+                            color: parent.enabled ? (parent.pressed ? "#d35400" : (parent.hovered ? "#e67e22" : "#34495e")) : "#1a252f"
+                            radius: 6
+                            border.color: parent.enabled ? "#d35400" : "#1a252f"
+                            border.width: 2
+                        }
+                        contentItem: Text {
+                            text: "⏹️\n" + parent.text
+                            font.pointSize: 8
+                            font.bold: true
+                            color: parent.enabled ? "#ecf0f1" : "#7f8c8d"
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                        onClicked: {
+                            // Call C++ stop command to actually stop units
+                            if (typeof game !== 'undefined' && game.onStopCommand) {
+                                game.onStopCommand()
+                            }
+                            // Reset UI state
+                            currentCommandMode = "normal"
+                        }
+                        ToolTip.visible: hovered
+                        ToolTip.text: game.hasUnitsSelected ? "Stop all actions immediately" : "Select units first"
+                        ToolTip.delay: 500
+                    }
+                    
+                    Button {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 38
+                        text: "Hold"
+                        focusPolicy: Qt.NoFocus
+                        enabled: (typeof game !== 'undefined' && game.hasUnitsSelected) ? game.hasUnitsSelected : false
+                        background: Rectangle {
+                            color: parent.enabled ? (parent.pressed ? "#8e44ad" : (parent.hovered ? "#9b59b6" : "#34495e")) : "#1a252f"
+                            radius: 6
+                            border.color: parent.enabled ? "#8e44ad" : "#1a252f"
+                            border.width: 2
+                        }
+                        contentItem: Text {
+                            text: "📍\n" + parent.text
+                            font.pointSize: 8
+                            font.bold: true
+                            color: parent.enabled ? "#ecf0f1" : "#7f8c8d"
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                        onClicked: {
+                            currentCommandMode = "hold"
+                            commandModeChanged(currentCommandMode)
+                            Qt.callLater(function() { currentCommandMode = "normal" })
+                        }
+                        ToolTip.visible: hovered
+                        ToolTip.text: game.hasUnitsSelected ? "Hold position and defend" : "Select units first"
+                        ToolTip.delay: 500
+                    }
                 }
             }
             
