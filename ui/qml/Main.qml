@@ -1,3 +1,4 @@
+// main.qml
 import QtQuick 2.15
 import QtQuick.Window 2.15
 import QtQuick.Controls 2.15
@@ -8,44 +9,43 @@ ApplicationWindow {
     height: 720
     visible: true
     title: "Standard of Iron - RTS Game"
-    
+
     property alias gameView: gameViewItem
-    
-    // Main game view
+    property bool menuVisible: true
+
+    // Main game view (hidden while main menu is visible)
     GameView {
         id: gameViewItem
         anchors.fill: parent
         z: 0
-        focus: true
+        focus: !mainWindow.menuVisible
+        visible: !mainWindow.menuVisible
     }
-    
+
     // HUD overlay
     HUD {
         id: hud
         anchors.fill: parent
         z: 1
+        visible: !mainWindow.menuVisible
         // Keep keyboard focus on the game view when interacting with HUD controls
         onActiveFocusChanged: if (activeFocus) gameViewItem.forceActiveFocus()
-        
+
         onPauseToggled: {
-            // Handle pause/resume
             gameViewItem.setPaused(!gameViewItem.isPaused)
-            // Return focus to the game view for keyboard controls
             gameViewItem.forceActiveFocus()
         }
-        
+
         onSpeedChanged: function(speed) {
             gameViewItem.setGameSpeed(speed)
-            // Return focus to the game view for keyboard controls
             gameViewItem.forceActiveFocus()
         }
-        
+
         onCommandModeChanged: function(mode) {
             console.log("Main: Command mode changed to:", mode)
-            // Set cursor mode in game engine via property (not method call)
             if (typeof game !== 'undefined') {
                 console.log("Main: Setting game.cursorMode property to", mode)
-                game.cursorMode = mode  // Set property directly, not setCursorMode()
+                game.cursorMode = mode
             } else {
                 console.log("Main: game is undefined")
             }
@@ -55,30 +55,91 @@ ApplicationWindow {
         onRecruit: function(unitType) {
             if (typeof game !== 'undefined' && game.recruitNearSelected)
                 game.recruitNearSelected(unitType)
-            // Return focus to the game view for keyboard controls
             gameViewItem.forceActiveFocus()
         }
     }
 
+    // Main Menu overlay
+    MainMenu {
+        id: mainMenu
+        anchors.fill: parent
+        z: 20
+        visible: mainWindow.menuVisible
+
+        Component.onCompleted: {
+            if (mainWindow.menuVisible) mainMenu.forceActiveFocus()
+        }
+
+        onVisibleChanged: {
+            if (visible) {
+                mainMenu.forceActiveFocus()
+                gameViewItem.focus = false
+            }
+        }
+
+        onOpenSkirmish: function() {
+            mapSelect.visible = true
+            mainMenu.visible = false
+        }
+        onOpenSettings: function() {
+            if (typeof game !== 'undefined' && game.openSettings) game.openSettings()
+        }
+        onLoadSave: function() {
+            if (typeof game !== 'undefined' && game.loadSave) game.loadSave()
+        }
+        onExitRequested: function() {
+            if (typeof game !== 'undefined' && game.exitGame) game.exitGame()
+        }
+    }
+
+    MapSelect {
+        id: mapSelect
+        anchors.fill: parent
+        z: 21
+        visible: false
+
+        onVisibleChanged: {
+            if (visible) {
+                mapSelect.forceActiveFocus()
+                gameViewItem.focus = false
+            }
+        }
+
+        onMapChosen: function(mapPath) {
+            if (typeof game !== 'undefined' && game.startSkirmish) game.startSkirmish(mapPath)
+            mapSelect.visible = false
+            mainWindow.menuVisible = false
+        }
+        onCancelled: function() {
+            mapSelect.visible = false
+            mainMenu.visible = true
+        }
+    }
+
     // Edge scroll overlay (hover-only) above HUD to ensure bottom edge works
+    // Make it completely invisible (not in the scene graph) when menus are showing,
+    // so it cannot intercept any mouse events.
     Item {
         id: edgeScrollOverlay
         anchors.fill: parent
         z: 2
+        visible: !mainWindow.menuVisible && !mapSelect.visible
+        enabled: visible
+
         // Horizontal edge-scroll sensitivity and speed
-        property real horzThreshold: 80     // px from left/right edge where scroll begins
-        property real horzMaxSpeed: 0.5     // world units per tick at the very edge (left/right)
+        property real horzThreshold: 80
+        property real horzMaxSpeed: 0.5
         // Vertical edge-scroll is intentionally less sensitive and slower
-        property real vertThreshold: 120    // px after dead-zone for top/bottom
-        property real verticalDeadZone: 32  // no scroll within this many px past HUD bars
-        property real vertMaxSpeed: 0.1     // world units per tick at the very edge (top/bottom)
+        property real vertThreshold: 120
+        property real verticalDeadZone: 32
+        property real vertMaxSpeed: 0.1
         property real xPos: -1
         property real yPos: -1
         // Shift vertical edge-scroll away from HUD panels by this many pixels
-    property int verticalShift: 6
+        property int verticalShift: 6
+
         // Computed guard zones derived from HUD panel heights
         function inHudZone(x, y) {
-            // Guard against missing HUD object
             var topH = (typeof hud !== 'undefined' && hud && hud.topPanelHeight) ? hud.topPanelHeight : 0
             var bottomH = (typeof hud !== 'undefined' && hud && hud.bottomPanelHeight) ? hud.bottomPanelHeight : 0
             if (y < topH) return true
@@ -96,7 +157,6 @@ ApplicationWindow {
             onPositionChanged: function(mouse) {
                 edgeScrollOverlay.xPos = mouse.x
                 edgeScrollOverlay.yPos = mouse.y
-                // Only feed hover to engine if not over HUD panels; otherwise clear hover
                 if (typeof game !== 'undefined' && game.setHoverAtScreen) {
                     if (!edgeScrollOverlay.inHudZone(mouse.x, mouse.y)) {
                         game.setHoverAtScreen(mouse.x, mouse.y)
@@ -105,7 +165,7 @@ ApplicationWindow {
                     }
                 }
             }
-            onEntered: function(mouse) {
+            onEntered: function() {
                 edgeScrollTimer.start()
                 if (typeof game !== 'undefined' && game.setHoverAtScreen) {
                     if (!edgeScrollOverlay.inHudZone(edgeScrollOverlay.xPos, edgeScrollOverlay.yPos)) {
@@ -115,7 +175,7 @@ ApplicationWindow {
                     }
                 }
             }
-            onExited: function(mouse) {
+            onExited: function() {
                 edgeScrollTimer.stop()
                 edgeScrollOverlay.xPos = -1
                 edgeScrollOverlay.yPos = -1
