@@ -15,6 +15,7 @@ add_library(game_systems STATIC
     systems/movement_system.cpp
     systems/combat_system.cpp
     systems/ai_system.cpp
+    systems/patrol_system.cpp
     systems/pathfinding.cpp
     systems/selection_system.cpp
     systems/arrow_system.cpp

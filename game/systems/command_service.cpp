@@ -18,6 +18,31 @@ void CommandService::moveUnits(Engine::Core::World& world,
         mv->targetX = targets[i].x();
         mv->targetY = targets[i].z();
         mv->hasTarget = true;
+        
+        // Clear attack target when moving normally
+        e->removeComponent<Engine::Core::AttackTargetComponent>();
+    }
+}
+
+void CommandService::attackTarget(Engine::Core::World& world,
+                                  const std::vector<Engine::Core::EntityID>& units,
+                                  Engine::Core::EntityID targetId,
+                                  bool shouldChase) {
+    if (targetId == 0) return;
+    
+    for (auto unitId : units) {
+        auto* e = world.getEntity(unitId);
+        if (!e) continue;
+        
+        // Add or update attack target component
+        auto* attackTarget = e->getComponent<Engine::Core::AttackTargetComponent>();
+        if (!attackTarget) {
+            attackTarget = e->addComponent<Engine::Core::AttackTargetComponent>();
+        }
+        if (!attackTarget) continue;
+        
+        attackTarget->targetId = targetId;
+        attackTarget->shouldChase = shouldChase;
     }
 }
 
