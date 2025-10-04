@@ -103,7 +103,8 @@ public:
 private:
     struct RuntimeState { 
         bool initialized = false; 
-        bool paused = false; 
+        bool paused = false;
+        bool loading = false;  // Prevents updates during map reload
         float timeScale = 1.0f; 
         int localOwnerId = 1; 
         QString victoryState = ""; // "", "victory", or "defeat"

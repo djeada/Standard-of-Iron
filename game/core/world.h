@@ -16,6 +16,7 @@ public:
     Entity* createEntity();
     void destroyEntity(EntityID id);
     Entity* getEntity(EntityID id);
+    void clear(); // Clear all entities (for map reload)
     
     void addSystem(std::unique_ptr<System> system);
     void update(float deltaTime);
