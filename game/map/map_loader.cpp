@@ -73,6 +73,11 @@ bool MapLoader::loadFromJsonFile(const QString& path, MapDefinition& outMap, QSt
         if (cs == "world") outMap.coordSystem = CoordSystem::World;
         else outMap.coordSystem = CoordSystem::Grid;
     }
+    
+    // Optional: max troops per player
+    if (root.contains("maxTroopsPerPlayer")) {
+        outMap.maxTroopsPerPlayer = root.value("maxTroopsPerPlayer").toInt(50);
+    }
 
     if (root.contains("grid") && root.value("grid").isObject()) {
         if (!readGrid(root.value("grid").toObject(), outMap.grid)) {
