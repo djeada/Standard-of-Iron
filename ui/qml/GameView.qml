@@ -140,6 +140,8 @@ Item {
             // Control cursor shape directly here
             cursorShape: (gameView.cursorMode === "normal") ? Qt.ArrowCursor : Qt.BlankCursor
             
+            enabled: gameView.visible
+            
             onEntered: {
                 // Notify C++ that we're hovering over the game view
                 if (typeof game !== 'undefined' && game.setHoverAtScreen) {

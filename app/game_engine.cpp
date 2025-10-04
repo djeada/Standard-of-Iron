@@ -5,6 +5,7 @@
 #include <QDebug>
 #include <QVariant>
 #include <QCursor>
+#include <QCoreApplication>
 
 #include "game/core/world.h"
 #include "game/core/component.h"
@@ -33,6 +34,10 @@
 #include "selected_units_model.h"
 #include <cmath>
 #include <limits>
+#include <QDir>
+#include <QFile>
+#include <QJsonDocument>
+#include <QJsonObject>
 
 GameEngine::GameEngine() {
     m_world    = std::make_unique<Engine::Core::World>();
@@ -333,7 +338,8 @@ void GameEngine::initialize() {
     if (!Render::GL::RenderBootstrap::initialize(*m_renderer, *m_camera)) {
         return;
     }
-    QString mapPath = QString::fromUtf8("assets/maps/test_map.json");
+    // Allow overriding map path for skirmish start
+    QString mapPath = m_level.mapName.isEmpty() ? QString::fromUtf8("assets/maps/test_map.json") : m_level.mapName;
     auto lr = Game::Map::LevelLoader::loadFromAssets(mapPath, *m_world, *m_renderer, *m_camera);
     if (m_ground) {
         if (lr.ok) m_ground->configure(lr.tileSize, lr.gridWidth, lr.gridHeight);
@@ -565,6 +571,76 @@ void GameEngine::setRallyAtScreen(qreal sx, qreal sy) {
     QVector3D hit;
     if (!screenToGround(QPointF(sx, sy), hit)) return;
     Game::Systems::ProductionService::setRallyForFirstSelectedBarracks(*m_world, m_selectionSystem->getSelectedUnits(), m_runtime.localOwnerId, hit.x(), hit.z());
+}
+
+QVariantList GameEngine::availableMaps() const {
+    QVariantList list;
+    QDir mapsDir(QStringLiteral("assets/maps"));
+    if (!mapsDir.exists()) return list;
+
+    QStringList files = mapsDir.entryList(QStringList() << "*.json", QDir::Files, QDir::Name);
+    for (const QString& f : files) {
+        QString path = mapsDir.filePath(f);
+        QFile file(path);
+        QString name = f;
+        QString desc;
+        if (file.open(QIODevice::ReadOnly)) {
+            QByteArray data = file.readAll();
+            file.close();
+            QJsonParseError err;
+            QJsonDocument doc = QJsonDocument::fromJson(data, &err);
+            if (err.error == QJsonParseError::NoError && doc.isObject()) {
+                QJsonObject obj = doc.object();
+                if (obj.contains("name") && obj["name"].isString()) name = obj["name"].toString();
+                if (obj.contains("description") && obj["description"].isString()) desc = obj["description"].toString();
+            }
+        }
+        QVariantMap entry;
+        entry["name"] = name;
+        entry["description"] = desc;
+        entry["path"] = path;
+        list.append(entry);
+    }
+    return list;
+}
+
+void GameEngine::startSkirmish(const QString& mapPath) {
+    // Set the requested map and load it into the current world.
+    // DO NOT replace m_world here: other subsystems keep pointers into the World
+    m_level.mapName = mapPath;
+    // If engine isn't initialized yet, initialize normally (will load the map)
+    if (!m_runtime.initialized) {
+        initialize();
+        return;
+    }
+
+    // If already initialized, reload the level into the existing world
+    if (m_world && m_renderer && m_camera) {
+        auto lr = Game::Map::LevelLoader::loadFromAssets(m_level.mapName, *m_world, *m_renderer, *m_camera);
+        if (m_ground) {
+            if (lr.ok) m_ground->configure(lr.tileSize, lr.gridWidth, lr.gridHeight);
+            else m_ground->configureExtent(50.0f);
+        }
+        m_level.mapName = lr.mapName;
+        m_level.playerUnitId = lr.playerUnitId;
+        m_level.camFov = lr.camFov; m_level.camNear = lr.camNear; m_level.camFar = lr.camFar;
+        m_level.maxTroopsPerPlayer = lr.maxTroopsPerPlayer;
+    }
+}
+
+void GameEngine::openSettings() {
+    // Placeholder: settings are not implemented. Emit a log entry for now.
+    qInfo() << "Open settings requested";
+}
+
+void GameEngine::loadSave() {
+    // Placeholder: saved games not implemented yet.
+    qInfo() << "Load save requested (not implemented)";
+}
+
+void GameEngine::exitGame() {
+    qInfo() << "Exit requested";
+    QCoreApplication::quit();
 }
 
 void GameEngine::getSelectedUnitIds(std::vector<Engine::Core::EntityID>& out) const {
