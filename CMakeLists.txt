@@ -61,6 +61,8 @@ if(QT_VERSION_MAJOR EQUAL 6)
         VERSION 1.0
         QML_FILES
             ui/qml/Main.qml
+            ui/qml/MainMenu.qml
+            ui/qml/MapSelect.qml
             ui/qml/HUD.qml
             ui/qml/GameView.qml
         RESOURCES
@@ -77,6 +79,8 @@ else()
         PREFIX "/StandardOfIron"
         FILES
             ui/qml/Main.qml
+            ui/qml/MainMenu.qml
+            ui/qml/MapSelect.qml
             ui/qml/HUD.qml
             ui/qml/GameView.qml
     )
