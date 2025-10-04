@@ -4,6 +4,8 @@
 #include "arrow_system.h"
 #include "../core/world.h"
 #include "../core/component.h"
+#include <limits>
+#include <algorithm>
 
 namespace Game::Systems {
 
@@ -51,40 +53,95 @@ void CombatSystem::processAttacks(Engine::Core::World* world, float deltaTime) {
             continue; // still cooling down
         }
 
-        // Simple target selection: first valid target in range
-        for (auto target : units) {
-            if (target == attacker) {
-                continue;
-            }
-
-            auto targetUnit = target->getComponent<Engine::Core::UnitComponent>();
-            if (!targetUnit || targetUnit->health <= 0) {
-                continue;
-            }
-            // Friendly-fire check: only attack units with a different owner
-            if (targetUnit->ownerId == attackerUnit->ownerId) {
-                continue;
-            }
-
-            if (isInRange(attacker, target, range)) {
-                // Arrow visual: spawn arrow if ArrowSystem present
-                if (arrowSys) {
-                    auto attT = attacker->getComponent<Engine::Core::TransformComponent>();
-                    auto tgtT = target->getComponent<Engine::Core::TransformComponent>();
-                    auto attU = attacker->getComponent<Engine::Core::UnitComponent>();
-                    QVector3D aPos(attT->position.x, attT->position.y, attT->position.z);
-                    QVector3D tPos(tgtT->position.x, tgtT->position.y, tgtT->position.z);
-                    QVector3D dir = (tPos - aPos).normalized();
-                    // Raise bow height and offset a bit forward to avoid intersecting the capsule body
-                    QVector3D start = aPos + QVector3D(0.0f, 0.6f, 0.0f) + dir * 0.35f;
-                    QVector3D end   = tPos + QVector3D(0.0f, 0.5f, 0.0f);
-                    QVector3D color = attU ? Game::Visuals::teamColorForOwner(attU->ownerId) : QVector3D(0.8f, 0.9f, 1.0f);
-                    arrowSys->spawnArrow(start, end, color, 14.0f);
+        // Check for explicit attack target command first
+        auto* attackTarget = attacker->getComponent<Engine::Core::AttackTargetComponent>();
+        Engine::Core::Entity* bestTarget = nullptr;
+        
+        if (attackTarget && attackTarget->targetId != 0) {
+            // Explicit attack command - target specific entity
+            auto* target = world->getEntity(attackTarget->targetId);
+            if (target) {
+                auto* targetUnit = target->getComponent<Engine::Core::UnitComponent>();
+                
+                // Check if target is valid (alive and enemy)
+                if (targetUnit && targetUnit->health > 0 && 
+                    targetUnit->ownerId != attackerUnit->ownerId) {
+                    
+                    // Check if in range
+                    if (isInRange(attacker, target, range)) {
+                        bestTarget = target;
+                    } else if (attackTarget->shouldChase) {
+                        // Chase the target - set movement target
+                        auto* movement = attacker->getComponent<Engine::Core::MovementComponent>();
+                        if (!movement) {
+                            movement = attacker->addComponent<Engine::Core::MovementComponent>();
+                        }
+                        if (movement) {
+                            auto* targetTransform = target->getComponent<Engine::Core::TransformComponent>();
+                            if (targetTransform) {
+                                movement->targetX = targetTransform->position.x;
+                                movement->targetY = targetTransform->position.z;
+                                movement->hasTarget = true;
+                            }
+                        }
+                    }
+                } else {
+                    // Target is dead or invalid, clear attack target
+                    attacker->removeComponent<Engine::Core::AttackTargetComponent>();
                 }
-                dealDamage(target, damage);
-                *tAccum = 0.0f; // reset cooldown
-                break; // Only attack one target per update
+            } else {
+                // Target entity doesn't exist anymore
+                attacker->removeComponent<Engine::Core::AttackTargetComponent>();
             }
+        }
+        
+        // If no explicit target, use automatic targeting (units only, not buildings in auto-mode)
+        if (!bestTarget && !attackTarget) {
+            // Auto-targeting: only target enemy units (not buildings automatically)
+            for (auto target : units) {
+                if (target == attacker) {
+                    continue;
+                }
+
+                auto targetUnit = target->getComponent<Engine::Core::UnitComponent>();
+                if (!targetUnit || targetUnit->health <= 0) {
+                    continue;
+                }
+                // Friendly-fire check: only attack units with a different owner
+                if (targetUnit->ownerId == attackerUnit->ownerId) {
+                    continue;
+                }
+                
+                // Skip buildings in auto-targeting (but they CAN be targeted explicitly via AttackTargetComponent)
+                if (target->hasComponent<Engine::Core::BuildingComponent>()) {
+                    continue;
+                }
+
+                if (isInRange(attacker, target, range)) {
+                    bestTarget = target;
+                    break;
+                }
+            }
+        }
+        
+        // Attack the selected target
+        if (bestTarget) {
+            // Arrow visual: spawn arrow if ArrowSystem present
+            if (arrowSys) {
+                auto attT = attacker->getComponent<Engine::Core::TransformComponent>();
+                auto tgtT = bestTarget->getComponent<Engine::Core::TransformComponent>();
+                auto attU = attacker->getComponent<Engine::Core::UnitComponent>();
+                QVector3D aPos(attT->position.x, attT->position.y, attT->position.z);
+                QVector3D tPos(tgtT->position.x, tgtT->position.y, tgtT->position.z);
+                QVector3D dir = (tPos - aPos).normalized();
+                // Raise bow height and offset a bit forward to avoid intersecting the capsule body
+                QVector3D start = aPos + QVector3D(0.0f, 0.6f, 0.0f) + dir * 0.35f;
+                QVector3D end   = tPos + QVector3D(0.5f, 0.5f, 0.0f);
+                QVector3D color = attU ? Game::Visuals::teamColorForOwner(attU->ownerId) : QVector3D(0.8f, 0.9f, 1.0f);
+                arrowSys->spawnArrow(start, end, color, 14.0f);
+            }
+            dealDamage(bestTarget, damage);
+            *tAccum = 0.0f; // reset cooldown
         }
     }
 }
@@ -115,23 +172,6 @@ void CombatSystem::dealDamage(Engine::Core::Entity* target, int damage) {
             }
         }
     }
-}
-
-void AISystem::update(Engine::Core::World* world, float deltaTime) {
-    auto entities = world->getEntitiesWith<Engine::Core::UnitComponent>();
-    
-    for (auto entity : entities) {
-        updateAI(entity, deltaTime);
-    }
-}
-
-void AISystem::updateAI(Engine::Core::Entity* entity, float deltaTime) {
-    // Simple AI logic placeholder
-    // In a real implementation, this would include:
-    // - State machines
-    // - Behavior trees
-    // - Goal-oriented action planning
-    // - Pathfinding integration
 }
 
 } // namespace Game::Systems

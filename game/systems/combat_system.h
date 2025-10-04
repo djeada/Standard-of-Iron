@@ -16,12 +16,4 @@ private:
     void dealDamage(Engine::Core::Entity* target, int damage);
 };
 
-class AISystem : public Engine::Core::System {
-public:
-    void update(Engine::Core::World* world, float deltaTime) override;
-
-private:
-    void updateAI(Engine::Core::Entity* entity, float deltaTime);
-};
-
 } // namespace Game::Systems

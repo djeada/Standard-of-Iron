@@ -12,7 +12,8 @@ Item {
     signal mapClicked(real x, real y)
     signal unitSelected(int unitId)
     signal areaSelected(real x1, real y1, real x2, real y2)
-    property bool setRallyMode: false
+    
+    property string cursorMode: "normal"  // "normal", "attack", "guard", "patrol"
     
     function setPaused(paused) {
         isPaused = paused
@@ -36,7 +37,24 @@ Item {
         id: renderArea
         anchors.fill: parent
         engine: game // GameEngine object exposed from C++
-            focus: false
+        focus: false
+        
+        // Update cursor mode when engine changes it
+        Connections {
+            target: game
+            function onCursorModeChanged() {
+                if (typeof game !== 'undefined' && game.cursorMode) {
+                    gameView.cursorMode = game.cursorMode
+                }
+            }
+        }
+        
+        // Sync initial cursor mode state
+        Component.onCompleted: {
+            if (typeof game !== 'undefined' && game.cursorMode) {
+                gameView.cursorMode = game.cursorMode
+            }
+        }
         
         // Placeholder text (disabled by default to not cover GL)
         // Text {
@@ -54,7 +72,7 @@ Item {
             anchors.margins: 10
             anchors.topMargin: 70   // HUD top bar is 60px tall; keep some gap
             width: 200
-            height: 120
+            height: 160
             color: "#34495e"
             opacity: 0.8
             
@@ -94,6 +112,20 @@ Item {
                     color: "white"
                     font.pointSize: 9
                 }
+                
+                Rectangle {
+                    width: parent.width - 16
+                    height: 1
+                    color: "#7f8c8d"
+                    opacity: 0.5
+                }
+                
+                Text {
+                    text: "Cursor: " + gameView.cursorMode.toUpperCase()
+                    color: gameView.cursorMode === "normal" ? "#bdc3c7" : "#3498db"
+                    font.bold: gameView.cursorMode !== "normal"
+                    font.pointSize: 9
+                }
             }
         }
         
@@ -104,6 +136,41 @@ Item {
             hoverEnabled: true
             propagateComposedEvents: true
             preventStealing: true
+            
+            // Control cursor shape directly here
+            cursorShape: (gameView.cursorMode === "normal") ? Qt.ArrowCursor : Qt.BlankCursor
+            
+            onEntered: {
+                // Notify C++ that we're hovering over the game view
+                if (typeof game !== 'undefined' && game.setHoverAtScreen) {
+                    game.setHoverAtScreen(0, 0) // Will be updated by onPositionChanged
+                }
+            }
+            
+            onExited: {
+                // Notify C++ that we've left the game view - show normal cursor
+                if (typeof game !== 'undefined' && game.setHoverAtScreen) {
+                    game.setHoverAtScreen(-1, -1)
+                }
+            }
+            
+            onPositionChanged: function(mouse) {
+                // Position tracking now uses built-in mouseX/mouseY via direct binding
+                // This handles selection box during drag
+                if (isSelecting) {
+                    var endX = mouse.x
+                    var endY = mouse.y
+                    
+                    selectionBox.x = Math.min(startX, endX)
+                    selectionBox.y = Math.min(startY, endY)
+                    selectionBox.width = Math.abs(endX - startX)
+                    selectionBox.height = Math.abs(endY - startY)
+                } else {
+                    if (typeof game !== 'undefined' && game.setHoverAtScreen) {
+                        game.setHoverAtScreen(mouse.x, mouse.y)
+                    }
+                }
+            }
             onWheel: function(w) {
                 // Mouse wheel: move camera up/down (RTS-style height adjust)
                 // delta is in eighths of a degree; use angleDelta.y where available
@@ -121,14 +188,38 @@ Item {
             
             onPressed: function(mouse) {
                 if (mouse.button === Qt.LeftButton) {
+                    // Rally mode takes priority
                     if (gameView.setRallyMode) {
-                        // In rally mode, a left click sets rally and does not start selection drag
                         if (typeof game !== 'undefined' && game.setRallyAtScreen) {
                             game.setRallyAtScreen(mouse.x, mouse.y)
                         }
                         gameView.setRallyMode = false
                         return
                     }
+                    
+                    // Attack mode: issue attack command
+                    if (gameView.cursorMode === "attack") {
+                        if (typeof game !== 'undefined' && game.onAttackClick) {
+                            game.onAttackClick(mouse.x, mouse.y)
+                        }
+                        return
+                    }
+                    
+                    // Guard mode: issue guard command
+                    if (gameView.cursorMode === "guard") {
+                        // TODO: Implement guard command
+                        return
+                    }
+                    
+                    // Patrol mode: issue patrol command
+                    if (gameView.cursorMode === "patrol") {
+                        if (typeof game !== 'undefined' && game.onPatrolClick) {
+                            game.onPatrolClick(mouse.x, mouse.y)
+                        }
+                        return
+                    }
+                    
+                    // Normal mode: start selection drag
                     isSelecting = true
                     startX = mouse.x
                     startY = mouse.y
@@ -141,39 +232,6 @@ Item {
                     if (typeof game !== 'undefined' && game.onRightClick) {
                         game.onRightClick(mouse.x, mouse.y)
                     }
-                }
-            }
-            
-            onPositionChanged: function(mouse) {
-                if (isSelecting) {
-                    var endX = mouse.x
-                    var endY = mouse.y
-                    
-                    selectionBox.x = Math.min(startX, endX)
-                    selectionBox.y = Math.min(startY, endY)
-                    selectionBox.width = Math.abs(endX - startX)
-                    selectionBox.height = Math.abs(endY - startY)
-                } else {
-                    if (typeof game !== 'undefined' && game.setHoverAtScreen) {
-                        // Debug: trace hover feed
-                        // console.log("hover move", mouse.x, mouse.y)
-                        game.setHoverAtScreen(mouse.x, mouse.y)
-                    }
-                }
-            }
-            onEntered: function() {
-                if (typeof game !== 'undefined' && game.setHoverAtScreen) {
-                    game.setHoverAtScreen(mouseArea.mouseX, mouseArea.mouseY)
-                }
-            }
-            onExited: function() {
-                if (typeof game !== 'undefined' && game.setHoverAtScreen) {
-                    game.setHoverAtScreen(-1, -1)
-                }
-            }
-            onContainsMouseChanged: function() {
-                if (!mouseArea.containsMouse && typeof game !== 'undefined' && game.setHoverAtScreen) {
-                    game.setHoverAtScreen(-1, -1)
                 }
             }
             
@@ -204,18 +262,6 @@ Item {
             }
         }
 
-        // Periodic hover updater in case position events are throttled by the scene graph
-        Timer {
-            interval: 33 // ~30 FPS is enough
-            running: true
-            repeat: true
-            onTriggered: {
-                if (mouseArea.containsMouse && typeof game !== 'undefined' && game.setHoverAtScreen) {
-                    game.setHoverAtScreen(mouseArea.mouseX, mouseArea.mouseY)
-                }
-            }
-        }
-        
         // Selection box
         Rectangle {
             id: selectionBox
@@ -223,6 +269,168 @@ Item {
             border.color: "white"
             border.width: 1
             color: "transparent"
+        }
+    }
+    
+    // Custom cursor overlay - uses C++ global cursor tracking
+    Item {
+        id: customCursorContainer
+        visible: gameView.cursorMode !== "normal"
+        width: 32
+        height: 32
+        z: 999999
+        
+        // Bind to C++ global cursor position (QCursor::pos())
+        x: (typeof game !== 'undefined' && game.globalCursorX) ? game.globalCursorX - 16 : 0
+        y: (typeof game !== 'undefined' && game.globalCursorY) ? game.globalCursorY - 16 : 0
+        
+        // Attack cursor
+        Canvas {
+            id: attackCursor
+            visible: gameView.cursorMode === "attack"
+            anchors.fill: parent
+            onPaint: {
+                var ctx = getContext("2d")
+                ctx.clearRect(0, 0, width, height)
+                
+                // Red crosshair
+                ctx.strokeStyle = "#e74c3c"
+                ctx.lineWidth = 2
+                
+                // Vertical line
+                ctx.beginPath()
+                ctx.moveTo(16, 4)
+                ctx.lineTo(16, 28)
+                ctx.stroke()
+                
+                // Horizontal line
+                ctx.beginPath()
+                ctx.moveTo(4, 16)
+                ctx.lineTo(28, 16)
+                ctx.stroke()
+                
+                // Center dot
+                ctx.fillStyle = "#e74c3c"
+                ctx.beginPath()
+                ctx.arc(16, 16, 3, 0, Math.PI * 2)
+                ctx.fill()
+                
+                // Corner brackets
+                ctx.strokeStyle = "#c0392b"
+                ctx.lineWidth = 2
+                
+                // Top-left
+                ctx.beginPath()
+                ctx.moveTo(8, 12)
+                ctx.lineTo(8, 8)
+                ctx.lineTo(12, 8)
+                ctx.stroke()
+                
+                // Top-right
+                ctx.beginPath()
+                ctx.moveTo(20, 8)
+                ctx.lineTo(24, 8)
+                ctx.lineTo(24, 12)
+                ctx.stroke()
+                
+                // Bottom-left
+                ctx.beginPath()
+                ctx.moveTo(8, 20)
+                ctx.lineTo(8, 24)
+                ctx.lineTo(12, 24)
+                ctx.stroke()
+                
+                // Bottom-right
+                ctx.beginPath()
+                ctx.moveTo(20, 24)
+                ctx.lineTo(24, 24)
+                ctx.lineTo(24, 20)
+                ctx.stroke()
+            }
+            Component.onCompleted: requestPaint()
+        }
+        
+        // Guard cursor
+        Canvas {
+            id: guardCursor
+            visible: gameView.cursorMode === "guard"
+            anchors.fill: parent
+            onPaint: {
+                var ctx = getContext("2d")
+                ctx.clearRect(0, 0, width, height)
+                
+                // Blue shield
+                ctx.fillStyle = "#3498db"
+                ctx.strokeStyle = "#2980b9"
+                ctx.lineWidth = 2
+                
+                // Shield shape
+                ctx.beginPath()
+                ctx.moveTo(16, 6)
+                ctx.lineTo(24, 10)
+                ctx.lineTo(24, 18)
+                ctx.lineTo(16, 26)
+                ctx.lineTo(8, 18)
+                ctx.lineTo(8, 10)
+                ctx.closePath()
+                ctx.fill()
+                ctx.stroke()
+                
+                // Shield emblem (checkmark)
+                ctx.strokeStyle = "#ecf0f1"
+                ctx.lineWidth = 2
+                ctx.beginPath()
+                ctx.moveTo(13, 16)
+                ctx.lineTo(15, 18)
+                ctx.lineTo(19, 12)
+                ctx.stroke()
+            }
+            Component.onCompleted: requestPaint()
+        }
+        
+        // Patrol cursor
+        Canvas {
+            id: patrolCursor
+            visible: gameView.cursorMode === "patrol"
+            anchors.fill: parent
+            onPaint: {
+                var ctx = getContext("2d")
+                ctx.clearRect(0, 0, width, height)
+                
+                // Green waypoint marker
+                ctx.strokeStyle = "#27ae60"
+                ctx.lineWidth = 2
+                
+                // Circular path
+                ctx.beginPath()
+                ctx.arc(16, 16, 10, 0, Math.PI * 2)
+                ctx.stroke()
+                
+                // Direction arrows
+                ctx.fillStyle = "#27ae60"
+                
+                // Right arrow
+                ctx.beginPath()
+                ctx.moveTo(26, 16)
+                ctx.lineTo(22, 13)
+                ctx.lineTo(22, 19)
+                ctx.closePath()
+                ctx.fill()
+                
+                // Left arrow
+                ctx.beginPath()
+                ctx.moveTo(6, 16)
+                ctx.lineTo(10, 13)
+                ctx.lineTo(10, 19)
+                ctx.closePath()
+                ctx.fill()
+                
+                // Center dot
+                ctx.beginPath()
+                ctx.arc(16, 16, 3, 0, Math.PI * 2)
+                ctx.fill()
+            }
+            Component.onCompleted: requestPaint()
         }
     }
     
@@ -234,6 +442,13 @@ Item {
         var yawStep = event.modifiers & Qt.ShiftModifier ? 4 : 2
         var panStep = 0.6
         switch (event.key) {
+            // ESC cancels special cursor modes (attack, patrol, guard)
+            case Qt.Key_Escape:
+                if (game.cursorMode !== "normal") {
+                    game.cursorMode = "normal"
+                    event.accepted = true
+                }
+                break
             // WASD pans the camera just like arrow keys
             case Qt.Key_W: game.cameraMove(0, panStep);  event.accepted = true; break
             case Qt.Key_S: game.cameraMove(0, -panStep); event.accepted = true; break
