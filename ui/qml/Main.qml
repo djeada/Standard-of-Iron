@@ -1,4 +1,4 @@
-// main.qml
+
 import QtQuick 2.15
 import QtQuick.Window 2.15
 import QtQuick.Controls 2.15
@@ -12,25 +12,25 @@ ApplicationWindow {
 
     property alias gameView: gameViewItem
     property bool menuVisible: true
-    property bool gameStarted: false  // Track if a game has been started
-    property bool gamePaused: false   // Track if game is paused
+    property bool gameStarted: false  
+    property bool gamePaused: false   
 
-    // Main game view (always visible during gameplay, continues when menu shown)
+    
     GameView {
         id: gameViewItem
         anchors.fill: parent
         z: 0
         focus: !mainWindow.menuVisible
-        visible: gameStarted  // Visible once game starts, even when menu is shown
+        visible: gameStarted  
     }
 
-    // HUD overlay (hidden when main menu is shown)
+    
     HUD {
         id: hud
         anchors.fill: parent
         z: 1
         visible: !mainWindow.menuVisible && gameStarted
-        // Keep keyboard focus on the game view when interacting with HUD controls
+        
         onActiveFocusChanged: if (activeFocus) gameViewItem.forceActiveFocus()
 
         onPauseToggled: {
@@ -62,13 +62,13 @@ ApplicationWindow {
         }
     }
 
-    // Pause overlay (semi-transparent, shown when game is paused)
+    
     Rectangle {
         id: pauseOverlay
         anchors.fill: parent
         z: 10
         visible: mainWindow.gamePaused && gameStarted
-        color: "#80000000"  // Semi-transparent black
+        color: "#80000000"  
         
         Rectangle {
             anchors.centerIn: parent
@@ -101,7 +101,7 @@ ApplicationWindow {
         }
     }
 
-    // Main Menu overlay
+    
     MainMenu {
         id: mainMenu
         anchors.fill: parent
@@ -117,14 +117,14 @@ ApplicationWindow {
                 mainMenu.forceActiveFocus()
                 gameViewItem.focus = false
             } else if (gameStarted) {
-                // Menu closed during gameplay - restore focus to game
+                
                 gameViewItem.forceActiveFocus()
             }
         }
 
         onOpenSkirmish: function() {
             mapSelect.visible = true
-            mainWindow.menuVisible = false  // Use property binding, not direct assignment
+            mainWindow.menuVisible = false  
         }
         onOpenSettings: function() {
             if (typeof game !== 'undefined' && game.openSettings) game.openSettings()
@@ -154,8 +154,8 @@ ApplicationWindow {
             if (typeof game !== 'undefined' && game.startSkirmish) game.startSkirmish(mapPath)
             mapSelect.visible = false
             mainWindow.menuVisible = false
-            mainWindow.gameStarted = true  // Game has been started
-            mainWindow.gamePaused = false  // Start unpaused
+            mainWindow.gameStarted = true  
+            mainWindow.gamePaused = false  
             gameViewItem.forceActiveFocus()
         }
         onCancelled: function() {
@@ -164,9 +164,9 @@ ApplicationWindow {
         }
     }
 
-    // Edge scroll overlay (hover-only) above HUD to ensure bottom edge works
-    // Make it completely invisible (not in the scene graph) when menus are showing,
-    // so it cannot intercept any mouse events.
+    
+    
+    
     Item {
         id: edgeScrollOverlay
         anchors.fill: parent
@@ -174,19 +174,19 @@ ApplicationWindow {
         visible: !mainWindow.menuVisible && !mapSelect.visible
         enabled: visible
 
-        // Horizontal edge-scroll sensitivity and speed
+        
         property real horzThreshold: 80
         property real horzMaxSpeed: 0.5
-        // Vertical edge-scroll is intentionally less sensitive and slower
+        
         property real vertThreshold: 120
         property real verticalDeadZone: 32
         property real vertMaxSpeed: 0.1
         property real xPos: -1
         property real yPos: -1
-        // Shift vertical edge-scroll away from HUD panels by this many pixels
+        
         property int verticalShift: 6
 
-        // Computed guard zones derived from HUD panel heights
+        
         function inHudZone(x, y) {
             var topH = (typeof hud !== 'undefined' && hud && hud.topPanelHeight) ? hud.topPanelHeight : 0
             var bottomH = (typeof hud !== 'undefined' && hud && hud.bottomPanelHeight) ? hud.bottomPanelHeight : 0
@@ -195,7 +195,7 @@ ApplicationWindow {
             return false
         }
 
-        // Hover tracker that does not consume clicks
+        
         MouseArea {
             anchors.fill: parent
             hoverEnabled: true
@@ -244,37 +244,37 @@ ApplicationWindow {
                 const x = edgeScrollOverlay.xPos
                 const y = edgeScrollOverlay.yPos
                 if (x < 0 || y < 0) return
-                // Skip camera movement and hover updates when over HUD panels
+                
                 if (edgeScrollOverlay.inHudZone(x, y)) {
                     if (game.setHoverAtScreen) game.setHoverAtScreen(-1, -1)
                     return
                 }
-                // Keep hover updated even if positionChanged throttles
+                
                 if (game.setHoverAtScreen) game.setHoverAtScreen(x, y)
                 const th = edgeScrollOverlay.horzThreshold
                 const tv = edgeScrollOverlay.vertThreshold
                 const vdz = edgeScrollOverlay.verticalDeadZone
                 const clamp = function(v, lo, hi) { return Math.max(lo, Math.min(hi, v)) }
-                // Distance from edges
+                
                 const dl = x
                 const dr = w - x
-                // Shift vertical edges inward to avoid overlapping HUD panels
+                
                 const topBar = (typeof hud !== 'undefined' && hud && hud.topPanelHeight) ? hud.topPanelHeight : 0
                 const bottomBar = (typeof hud !== 'undefined' && hud && hud.bottomPanelHeight) ? hud.bottomPanelHeight : 0
                 const topEdge = topBar + edgeScrollOverlay.verticalShift
                 const bottomEdge = h - bottomBar - edgeScrollOverlay.verticalShift
-                // Apply a vertical dead-zone beyond the HUD before scrolling starts
+                
                 const dt = Math.max(0, (y - topEdge) - vdz)
                 const db = Math.max(0, (bottomEdge - y) - vdz)
-                // Normalized intensities (0..1)
+                
                 const il = clamp(1.0 - dl / th, 0, 1)
                 const ir = clamp(1.0 - dr / th, 0, 1)
                 const iu = clamp(1.0 - dt / tv, 0, 1)
                 const id = clamp(1.0 - db / tv, 0, 1)
                 if (il===0 && ir===0 && iu===0 && id===0) return
-                // Apply gentle curve for smoother start
+                
                 const curveH = function(a) { return a*a }
-                // Vertical curve is gentler (cubic) to reduce early strength
+                
                 const curveV = function(a) { return a*a*a }
                 const dx = (curveH(ir) - curveH(il)) * edgeScrollOverlay.horzMaxSpeed
                 const dz = (curveV(iu) - curveV(id)) * edgeScrollOverlay.vertMaxSpeed
