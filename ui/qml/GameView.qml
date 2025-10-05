@@ -8,6 +8,7 @@ Item {
     
     property bool isPaused: false
     property real gameSpeed: 1.0
+    property bool setRallyMode: false  // Rally point mode toggle
     
     signal mapClicked(real x, real y)
     signal unitSelected(int unitId)
@@ -231,6 +232,10 @@ Item {
                     selectionBox.height = 0
                     selectionBox.visible = true
                 } else if (mouse.button === Qt.RightButton) {
+                    // Right-click cancels rally mode, cursor modes, and deselects
+                    if (gameView.setRallyMode) {
+                        gameView.setRallyMode = false
+                    }
                     if (typeof game !== 'undefined' && game.onRightClick) {
                         game.onRightClick(mouse.x, mouse.y)
                     }
@@ -286,70 +291,95 @@ Item {
         x: (typeof game !== 'undefined' && game.globalCursorX) ? game.globalCursorX - 16 : 0
         y: (typeof game !== 'undefined' && game.globalCursorY) ? game.globalCursorY - 16 : 0
         
-        // Attack cursor
-        Canvas {
-            id: attackCursor
+        // Attack cursor with pulsing animation
+        Item {
+            id: attackCursorContainer
             visible: gameView.cursorMode === "attack"
             anchors.fill: parent
-            onPaint: {
-                var ctx = getContext("2d")
-                ctx.clearRect(0, 0, width, height)
-                
-                // Red crosshair
-                ctx.strokeStyle = "#e74c3c"
-                ctx.lineWidth = 2
-                
-                // Vertical line
-                ctx.beginPath()
-                ctx.moveTo(16, 4)
-                ctx.lineTo(16, 28)
-                ctx.stroke()
-                
-                // Horizontal line
-                ctx.beginPath()
-                ctx.moveTo(4, 16)
-                ctx.lineTo(28, 16)
-                ctx.stroke()
-                
-                // Center dot
-                ctx.fillStyle = "#e74c3c"
-                ctx.beginPath()
-                ctx.arc(16, 16, 3, 0, Math.PI * 2)
-                ctx.fill()
-                
-                // Corner brackets
-                ctx.strokeStyle = "#c0392b"
-                ctx.lineWidth = 2
-                
-                // Top-left
-                ctx.beginPath()
-                ctx.moveTo(8, 12)
-                ctx.lineTo(8, 8)
-                ctx.lineTo(12, 8)
-                ctx.stroke()
-                
-                // Top-right
-                ctx.beginPath()
-                ctx.moveTo(20, 8)
-                ctx.lineTo(24, 8)
-                ctx.lineTo(24, 12)
-                ctx.stroke()
-                
-                // Bottom-left
-                ctx.beginPath()
-                ctx.moveTo(8, 20)
-                ctx.lineTo(8, 24)
-                ctx.lineTo(12, 24)
-                ctx.stroke()
-                
-                // Bottom-right
-                ctx.beginPath()
-                ctx.moveTo(20, 24)
-                ctx.lineTo(24, 24)
-                ctx.lineTo(24, 20)
-                ctx.stroke()
+            
+            property real pulseScale: 1.0
+            
+            SequentialAnimation on pulseScale {
+                running: attackCursorContainer.visible
+                loops: Animation.Infinite
+                NumberAnimation { from: 1.0; to: 1.2; duration: 400; easing.type: Easing.InOutQuad }
+                NumberAnimation { from: 1.2; to: 1.0; duration: 400; easing.type: Easing.InOutQuad }
             }
-            Component.onCompleted: requestPaint()
+            
+            Canvas {
+                id: attackCursor
+                anchors.fill: parent
+                scale: attackCursorContainer.pulseScale
+                transformOrigin: Item.Center
+                
+                onPaint: {
+                    var ctx = getContext("2d")
+                    ctx.clearRect(0, 0, width, height)
+                    
+                    // Red crosshair - brighter for better visibility
+                    ctx.strokeStyle = "#ff4444"
+                    ctx.lineWidth = 3
+                    
+                    // Vertical line
+                    ctx.beginPath()
+                    ctx.moveTo(16, 4)
+                    ctx.lineTo(16, 28)
+                    ctx.stroke()
+                    
+                    // Horizontal line
+                    ctx.beginPath()
+                    ctx.moveTo(4, 16)
+                    ctx.lineTo(28, 16)
+                    ctx.stroke()
+                    
+                    // Center dot - larger and brighter
+                    ctx.fillStyle = "#ff2222"
+                    ctx.beginPath()
+                    ctx.arc(16, 16, 4, 0, Math.PI * 2)
+                    ctx.fill()
+                    
+                    // Outer glow
+                    ctx.strokeStyle = "rgba(255, 68, 68, 0.5)"
+                    ctx.lineWidth = 1
+                    ctx.beginPath()
+                    ctx.arc(16, 16, 7, 0, Math.PI * 2)
+                    ctx.stroke()
+                    
+                    // Corner brackets
+                    ctx.strokeStyle = "#e74c3c"
+                    ctx.lineWidth = 2
+                    
+                    // Top-left
+                    ctx.beginPath()
+                    ctx.moveTo(8, 12)
+                    ctx.lineTo(8, 8)
+                    ctx.lineTo(12, 8)
+                    ctx.stroke()
+                    
+                    // Top-right
+                    ctx.beginPath()
+                    ctx.moveTo(20, 8)
+                    ctx.lineTo(24, 8)
+                    ctx.lineTo(24, 12)
+                    ctx.stroke()
+                    
+                    // Bottom-left
+                    ctx.beginPath()
+                    ctx.moveTo(8, 20)
+                    ctx.lineTo(8, 24)
+                    ctx.lineTo(12, 24)
+                    ctx.stroke()
+                    
+                    // Bottom-right
+                    ctx.beginPath()
+                    ctx.moveTo(20, 24)
+                    ctx.lineTo(24, 24)
+                    ctx.lineTo(24, 20)
+                    ctx.stroke()
+                }
+                
+                Component.onCompleted: requestPaint()
+            }
         }
         
         // Guard cursor
@@ -444,10 +474,18 @@ Item {
         var yawStep = event.modifiers & Qt.ShiftModifier ? 4 : 2
         var panStep = 0.6
         switch (event.key) {
-            // ESC cancels special cursor modes (attack, patrol, guard)
+            // ESC opens main menu (closing is handled by MainMenu itself when it has focus)
             case Qt.Key_Escape:
-                if (game.cursorMode !== "normal") {
-                    game.cursorMode = "normal"
+                if (typeof mainWindow !== 'undefined' && !mainWindow.menuVisible) {
+                    mainWindow.menuVisible = true
+                    event.accepted = true
+                }
+                break
+            // Space toggles pause
+            case Qt.Key_Space:
+                if (typeof mainWindow !== 'undefined') {
+                    mainWindow.gamePaused = !mainWindow.gamePaused
+                    gameView.setPaused(mainWindow.gamePaused)
                     event.accepted = true
                 }
                 break
