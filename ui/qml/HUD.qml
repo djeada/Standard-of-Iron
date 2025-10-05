@@ -7,17 +7,17 @@ Item {
     
     signal pauseToggled()
     signal speedChanged(real speed)
-    signal commandModeChanged(string mode) // "normal", "attack", "guard", "patrol", "stop"
+    signal commandModeChanged(string mode) 
     signal recruit(string unitType)
     
     property bool gameIsPaused: false
     property real currentSpeed: 1.0
     property string currentCommandMode: "normal"
     
-    // Expose panel heights for other overlays (e.g., edge scroll) to avoid stealing input over UI
+    
     property int topPanelHeight: topPanel.height
     property int bottomPanelHeight: bottomPanel.height
-    // Tick to refresh bindings when selection changes in engine
+    
     property int selectionTick: 0
 
     Connections {
@@ -27,7 +27,7 @@ Item {
         }
     }
 
-    // Periodic refresh to update production timers and counters while building
+    
     Timer {
         id: productionRefresh
         interval: 100
@@ -36,7 +36,7 @@ Item {
         onTriggered: selectionTick += 1
     }
     
-    // Top panel moved to HUDTop.qml. Keep id topPanel for backwards compatibility.
+    
     Item {
         id: topPanel
         anchors.top: parent.top
@@ -53,7 +53,7 @@ Item {
         }
     }
     
-    // Bottom panel moved to HUDBottom.qml. Keep id bottomPanel for compatibility.
+    
     Item {
         id: bottomPanel
         anchors.bottom: parent.bottom
@@ -70,6 +70,6 @@ Item {
         }
     }
     
-    // Victory overlay moved to HUDVictory.qml
+    
     HUDVictory { anchors.fill: parent }
 }
