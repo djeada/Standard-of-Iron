@@ -17,6 +17,13 @@ void World::destroyEntity(EntityID id) {
     m_entities.erase(id);
 }
 
+void World::clear() {
+    // Remove all entities and reset ID counter
+    // Used when reloading a map to avoid entity ID conflicts and duplicates
+    m_entities.clear();
+    m_nextEntityId = 1;
+}
+
 Entity* World::getEntity(EntityID id) {
     auto it = m_entities.find(id);
     return it != m_entities.end() ? it->second.get() : nullptr;

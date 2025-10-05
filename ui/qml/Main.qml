@@ -12,27 +12,30 @@ ApplicationWindow {
 
     property alias gameView: gameViewItem
     property bool menuVisible: true
+    property bool gameStarted: false  // Track if a game has been started
+    property bool gamePaused: false   // Track if game is paused
 
-    // Main game view (hidden while main menu is visible)
+    // Main game view (always visible during gameplay, continues when menu shown)
     GameView {
         id: gameViewItem
         anchors.fill: parent
         z: 0
         focus: !mainWindow.menuVisible
-        visible: !mainWindow.menuVisible
+        visible: gameStarted  // Visible once game starts, even when menu is shown
     }
 
-    // HUD overlay
+    // HUD overlay (hidden when main menu is shown)
     HUD {
         id: hud
         anchors.fill: parent
         z: 1
-        visible: !mainWindow.menuVisible
+        visible: !mainWindow.menuVisible && gameStarted
         // Keep keyboard focus on the game view when interacting with HUD controls
         onActiveFocusChanged: if (activeFocus) gameViewItem.forceActiveFocus()
 
         onPauseToggled: {
-            gameViewItem.setPaused(!gameViewItem.isPaused)
+            mainWindow.gamePaused = !mainWindow.gamePaused
+            gameViewItem.setPaused(mainWindow.gamePaused)
             gameViewItem.forceActiveFocus()
         }
 
@@ -59,6 +62,45 @@ ApplicationWindow {
         }
     }
 
+    // Pause overlay (semi-transparent, shown when game is paused)
+    Rectangle {
+        id: pauseOverlay
+        anchors.fill: parent
+        z: 10
+        visible: mainWindow.gamePaused && gameStarted
+        color: "#80000000"  // Semi-transparent black
+        
+        Rectangle {
+            anchors.centerIn: parent
+            width: 300
+            height: 150
+            color: "#2c3e50"
+            radius: 8
+            border.color: "#34495e"
+            border.width: 2
+            
+            Column {
+                anchors.centerIn: parent
+                spacing: 20
+                
+                Text {
+                    text: "PAUSED"
+                    color: "#ecf0f1"
+                    font.pixelSize: 36
+                    font.bold: true
+                    anchors.horizontalCenter: parent.horizontalCenter
+                }
+                
+                Text {
+                    text: "Press Space to resume"
+                    color: "#bdc3c7"
+                    font.pixelSize: 14
+                    anchors.horizontalCenter: parent.horizontalCenter
+                }
+            }
+        }
+    }
+
     // Main Menu overlay
     MainMenu {
         id: mainMenu
@@ -74,12 +116,15 @@ ApplicationWindow {
             if (visible) {
                 mainMenu.forceActiveFocus()
                 gameViewItem.focus = false
+            } else if (gameStarted) {
+                // Menu closed during gameplay - restore focus to game
+                gameViewItem.forceActiveFocus()
             }
         }
 
         onOpenSkirmish: function() {
             mapSelect.visible = true
-            mainMenu.visible = false
+            mainWindow.menuVisible = false  // Use property binding, not direct assignment
         }
         onOpenSettings: function() {
             if (typeof game !== 'undefined' && game.openSettings) game.openSettings()
@@ -109,6 +154,9 @@ ApplicationWindow {
             if (typeof game !== 'undefined' && game.startSkirmish) game.startSkirmish(mapPath)
             mapSelect.visible = false
             mainWindow.menuVisible = false
+            mainWindow.gameStarted = true  // Game has been started
+            mainWindow.gamePaused = false  // Start unpaused
+            gameViewItem.forceActiveFocus()
         }
         onCancelled: function() {
             mapSelect.visible = false
