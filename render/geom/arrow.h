@@ -8,7 +8,7 @@ namespace Render {
 namespace Geom {
 class Arrow {
 public:
-    static GL::Mesh* get();
+  static GL::Mesh *get();
 };
 } // namespace Geom
 
@@ -21,13 +21,12 @@ class ResourceManager;
 namespace Game {
 namespace Systems {
 class ArrowSystem;
-} // namespace Systems
+}
 } // namespace Game
 
 namespace Render {
 namespace GL {
-void renderArrows(Renderer* renderer,
-                  ResourceManager* resources,
-                  const Game::Systems::ArrowSystem& arrowSystem);
-} // namespace GL
+void renderArrows(Renderer *renderer, ResourceManager *resources,
+                  const Game::Systems::ArrowSystem &arrowSystem);
+}
 } // namespace Render

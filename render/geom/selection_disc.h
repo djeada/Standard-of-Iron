@@ -7,9 +7,10 @@ namespace Render::Geom {
 
 class SelectionDisc {
 public:
-    static Render::GL::Mesh* get();
+  static Render::GL::Mesh *get();
+
 private:
-    static std::unique_ptr<Render::GL::Mesh> s_mesh;
+  static std::unique_ptr<Render::GL::Mesh> s_mesh;
 };
 
 } // namespace Render::Geom
