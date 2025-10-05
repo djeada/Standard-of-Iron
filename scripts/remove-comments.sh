@@ -52,7 +52,7 @@ else
 fi
 
 # Build find predicates for the extensions
-mapfile -t EXT_ARR < <(echo "$EXTS" | tr ',' ' ')
+mapfile -t EXT_ARR < <(echo "$EXTS" | tr ',' '\n')
 FIND_NAME=()
 for e in "${EXT_ARR[@]}"; do
   FIND_NAME+=(-o -name "*.${e}")
