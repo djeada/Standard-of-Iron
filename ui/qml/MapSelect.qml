@@ -1,4 +1,5 @@
-// MapSelect.qml — anchored-only, clean two-pane selector with solid UX
+// MapSelect.qml — restyled to match MainMenu.qml (colors, radii, borders, hover/active feel)
+// NOTE: All ids, signals, and structural names preserved.
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 
@@ -10,17 +11,20 @@ Item {
     signal mapChosen(string mapPath)
     signal cancelled()
 
-    // === Theme (kept subtle to fit your app) ===
-    readonly property color dim:        Qt.rgba(0,0,0,0.55)
-    readonly property color panelBg:    "#071216"
-    readonly property color panelBr:    "#0f2b34"
-    readonly property color cardA:      "#061316"
-    readonly property color cardB:      "#051214"
-    readonly property color cardSel:    "#0e2930"
-    readonly property color accent:     "#35a6cc"
-    readonly property color textMain:   "#eaf6ff"
-    readonly property color textSub:    "#8fb2bf"
-    readonly property color hint:       "#446b74"
+    // === Palette (mirrors MainMenu.qml) ===
+    readonly property color dim:         Qt.rgba(0, 0, 0, 0.45)
+    readonly property color panelBg:     "#071018"
+    readonly property color panelBr:     "#0f2430"
+    readonly property color cardBaseA:   "#051219"
+    readonly property color cardBaseB:   "#06141b"
+    readonly property color hoverBg:     "#184c7a"
+    readonly property color selectedBg:  "#1f8bf5"
+    readonly property color selectedBr:  "#1b74d1"
+    readonly property color textMain:    "#eaf6ff"
+    readonly property color textSub:     "#79a6b7"
+    readonly property color textSubLite: "#86a7b6"
+    readonly property color hint:        "#2a5e6e"
+    readonly property color thumbBr:     "#12323a"
 
     function mget(i) {
         var m = list.model
@@ -39,19 +43,23 @@ Item {
     Rectangle {
         id: panel
         anchors.centerIn: parent
-        width: Math.min(parent.width * 0.92, 1100)
-        height: Math.min(parent.height * 0.88, 680)
-        radius: 12
+        width: Math.min(parent.width * 0.78, 1100)
+        height: Math.min(parent.height * 0.78, 700)
+        radius: 14
         color: panelBg
         border.color: panelBr
         border.width: 1
+        opacity: 0.98
         clip: true
 
         // --- Left pane (list) ---
         Item {
             id: left
-            anchors { top: parent.top; bottom: footer.top; left: parent.left; topMargin: 16; leftMargin: 16; bottomMargin: 12 }
-            width: Math.max(320, Math.min(panel.width * 0.42, 420))
+            anchors {
+                top: parent.top; left: parent.left; bottom: footer.top
+                topMargin: 20; leftMargin: 20; bottomMargin: 12
+            }
+            width: Math.max(320, Math.min(panel.width * 0.45, 460))
 
             // header
             Text {
@@ -59,12 +67,12 @@ Item {
                 text: "Maps"
                 color: textMain
                 font.pixelSize: 18; font.bold: true
-                anchors { top: parent.top; left: parent.left; right: parent.right; bottomMargin: 8 }
+                anchors { top: parent.top; left: parent.left; right: parent.right }
             }
             Text {
                 id: leftSub
                 text: "(" + (list.count || 0) + ")"
-                color: textSub
+                color: textSubLite
                 font.pixelSize: 12
                 anchors { left: leftTitle.right; leftMargin: 8; verticalCenter: leftTitle.verticalCenter }
             }
@@ -72,33 +80,31 @@ Item {
             // list frame
             Rectangle {
                 id: listFrame
-                anchors { top: leftTitle.bottom; topMargin: 10; left: parent.left; right: parent.right; bottom: parent.bottom }
-                color: "transparent"; radius: 8
+                anchors { top: leftTitle.bottom; topMargin: 12; left: parent.left; right: parent.right; bottom: parent.bottom }
+                color: "transparent"; radius: 10
                 border.color: panelBr; border.width: 1
+                clip: true
             }
 
             // list itself
             ListView {
                 id: list
                 anchors.fill: listFrame
-                anchors.margins: 6
+                anchors.margins: 8
                 model: (typeof game !== "undefined" && game.availableMaps) ? game.availableMaps : []
                 clip: true
-                spacing: 6
+                spacing: 8
                 currentIndex: (count > 0 ? 0 : -1)
                 keyNavigationWraps: false
                 boundsBehavior: Flickable.StopAtBounds
 
-                // visible scrollbar (nice for long lists)
-                ScrollBar.vertical: ScrollBar {
-                    policy: ScrollBar.AsNeeded
-                }
+                ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
 
-                // selection highlight
+                // keep highlight for keyboard nav (we color the card itself)
                 highlight: Rectangle {
                     color: "transparent"
                     radius: 8
-                    border.color: accent
+                    border.color: selectedBr
                     border.width: 1
                 }
                 highlightMoveDuration: 120
@@ -106,36 +112,46 @@ Item {
 
                 delegate: Item {
                     id: row
-                    height: 70
                     width: list.width
+                    height: 68
                     property bool hovered: false
 
+                    // Hover selects (like MainMenu); press darkens
                     MouseArea {
+                        id: rowMouse
                         anchors.fill: parent
                         hoverEnabled: true
                         acceptedButtons: Qt.LeftButton
                         cursorShape: Qt.PointingHandCursor
-                        onEntered: { row.hovered = true; list.currentIndex = index }
-                        onExited:  { row.hovered = false }
-                        onDoubleClicked: playPrimary.clicked()
+                        onEntered: { hovered = true; list.currentIndex = index }
+                        onExited:  hovered = false
                         onClicked: list.currentIndex = index
+                        onDoubleClicked: playPrimary.clicked()
                     }
 
                     Rectangle {
                         id: card
                         anchors.fill: parent
                         radius: 8
-                        color: (index === list.currentIndex || row.hovered) ? cardSel : (index % 2 ? cardA : cardB)
-                        border.color: (index === list.currentIndex || row.hovered) ? accent : panelBr
-                        border.width: 1
                         clip: true
+
+                        // selected -> "#1f8bf5"
+                        // pressed  -> "#184c7a"
+                        // idle     -> transparent
+                        color: rowMouse.containsPress
+                               ? hoverBg
+                               : (index === list.currentIndex ? selectedBg : "transparent")
+                        border.width: 1
+                        border.color: (index === list.currentIndex) ? selectedBr : thumbBr
+                        Behavior on color { ColorAnimation { duration: 160 } }
+                        Behavior on border.color { ColorAnimation { duration: 160 } }
 
                         // thumbnail
                         Rectangle {
                             id: thumbWrap
-                            width: 70; height: 50; radius: 6
+                            width: 72; height: 50; radius: 6
                             color: "#031314"
-                            border.color: "#0b2a31"; border.width: 1
+                            border.color: thumbBr; border.width: 1
                             anchors { left: parent.left; leftMargin: 10; verticalCenter: parent.verticalCenter }
                             clip: true
                             Image {
@@ -149,7 +165,6 @@ Item {
 
                         // text block
                         Item {
-                            id: textBlock
                             anchors {
                                 left: thumbWrap.right; leftMargin: 10
                                 right: parent.right; rightMargin: 10
@@ -162,19 +177,29 @@ Item {
                                 text: (typeof name !== "undefined") ? String(name)
                                       : (typeof modelData === "string" ? modelData
                                       : (modelData && modelData.name ? String(modelData.name) : ""))
-                                color: textMain
-                                font.pixelSize: 16; font.bold: index === list.currentIndex
+                                color: (index === list.currentIndex) ? "white" : "#dff0ff"
+                                font.pixelSize: (index === list.currentIndex) ? 17 : 15
+                                font.bold: (index === list.currentIndex)
                                 elide: Text.ElideRight
                                 anchors { top: parent.top; left: parent.left; right: parent.right }
+                                Behavior on font.pixelSize { NumberAnimation { duration: 140 } }
                             }
                             Text {
                                 text: (typeof description !== "undefined") ? String(description)
                                       : (modelData && modelData.description ? String(modelData.description) : "")
-                                color: textSub
+                                color: (index === list.currentIndex) ? "#d0e8ff" : textSub
                                 font.pixelSize: 12
                                 elide: Text.ElideRight
                                 anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
                             }
+                        }
+
+                        // chevron to match MainMenu
+                        Text {
+                            text: "›"
+                            font.pointSize: 18
+                            color: (index === list.currentIndex) ? "white" : "#2a5e6e"
+                            anchors { right: parent.right; rightMargin: 10; verticalCenter: parent.verticalCenter }
                         }
                     }
                 }
@@ -198,7 +223,7 @@ Item {
             id: right
             anchors {
                 top: parent.top; bottom: footer.top; right: parent.right
-                left: left.right; leftMargin: 16; rightMargin: 16; topMargin: 16; bottomMargin: 12
+                left: left.right; leftMargin: 18; rightMargin: 20; topMargin: 20; bottomMargin: 12
             }
 
             // name/title
@@ -232,9 +257,9 @@ Item {
             // preview frame
             Rectangle {
                 id: preview
-                radius: 8
+                radius: 10
                 color: "#031314"
-                border.color: "#0b2a31"; border.width: 1
+                border.color: thumbBr; border.width: 1
                 clip: true
                 anchors {
                     top: descr.bottom; topMargin: 12
@@ -260,32 +285,100 @@ Item {
             }
         }
 
-        // --- Footer with actions ---
+        // --- Footer with actions (styled like MainMenu primary/secondary) ---
         Item {
             id: footer
-            height: 48
-            anchors { left: parent.left; right: parent.right; bottom: parent.bottom; leftMargin: 16; rightMargin: 16; bottomMargin: 16 }
+            height: 52
+            anchors { left: parent.left; right: parent.right; bottom: parent.bottom; leftMargin: 20; rightMargin: 20; bottomMargin: 16 }
 
+            // Secondary button (Back)
             Button {
                 id: backBtn
                 text: "Back"
                 anchors { left: parent.left; verticalCenter: parent.verticalCenter }
                 onClicked: root.cancelled()
-                ToolTip.visible: hovered
+                hoverEnabled: true
+
+                // pointer cursor
+                MouseArea {
+                    id: backHover
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    acceptedButtons: Qt.NoButton
+                    cursorShape: Qt.PointingHandCursor
+                }
+
+                contentItem: Text {
+                    text: backBtn.text
+                    font.pointSize: backHover.containsMouse ? 13 : 12
+                    font.bold: backHover.containsMouse
+                    color: "#dff0ff"
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                    elide: Text.ElideRight
+                    Behavior on font.pointSize { NumberAnimation { duration: 120 } }
+                }
+                background: Rectangle {
+                    implicitWidth: 110; implicitHeight: 38
+                    radius: 8
+                    color: backBtn.down ? hoverBg
+                          : (backHover.containsMouse ? "#0e2a3c" : "transparent")
+                    border.width: 1
+                    border.color: backHover.containsMouse ? thumbBr : panelBr
+                    Behavior on color { ColorAnimation { duration: 140 } }
+                    Behavior on border.color { ColorAnimation { duration: 140 } }
+                }
+
+                ToolTip.visible: backHover.containsMouse
                 ToolTip.text: "Esc"
             }
 
+            // Primary button (Play)
             Button {
                 id: playPrimary
                 text: "Play"
                 enabled: list.currentIndex >= 0 && list.count > 0
                 anchors { right: parent.right; verticalCenter: parent.verticalCenter }
+                hoverEnabled: true
+
+                // pointer cursor
+                MouseArea {
+                    id: playHover
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    acceptedButtons: Qt.NoButton
+                    cursorShape: Qt.PointingHandCursor
+                }
+
+                contentItem: Text {
+                    text: playPrimary.text
+                    font.pointSize: enabled ? (playHover.containsMouse ? 13 : 12) : 12
+                    font.bold: true
+                    color: enabled ? "white" : "#6f8793"
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                    elide: Text.ElideRight
+                    Behavior on font.pointSize { NumberAnimation { duration: 120 } }
+                }
+                background: Rectangle {
+                    implicitWidth: 120; implicitHeight: 40
+                    radius: 9
+                    color: enabled
+                           ? (playPrimary.down ? "#1b74d1" : (playHover.containsMouse ? "#2a7fe0" : selectedBg))
+                           : "#0a1a24"
+                    border.width: 1
+                    border.color: enabled ? selectedBr : panelBr
+                    Behavior on color { ColorAnimation { duration: 140 } }
+                    Behavior on border.color { ColorAnimation { duration: 140 } }
+                }
+
                 onClicked: {
                     var it = current()
                     var p = field(it, "path") || field(it, "file")
                     root.mapChosen(p)
                 }
-                ToolTip.visible: hovered
+
+                ToolTip.visible: playHover.containsMouse
                 ToolTip.text: "Enter"
             }
         }

@@ -136,8 +136,6 @@ void Renderer::renderWorld(Engine::Core::World* world) {
         QVector3D color = QVector3D(renderable->color[0], renderable->color[1], renderable->color[2]);
         mesh(meshToDraw, modelMatrix, color, res ? res->white() : nullptr, 1.0f);
 
-        // Rally flag drawing moved into barracks renderer
-        // Selection ring is drawn by entity-specific renderer if desired
     }
 }
 

@@ -257,21 +257,28 @@ Item {
                 }
             }
         }
+    }
 
-        // keyboard navigation
-        Keys.onPressed: {
-            if (event.key === Qt.Key_Down) {
-                container.selectedIndex = Math.min(container.selectedIndex + 1, menuModel.count - 1)
-                event.accepted = true
-            } else if (event.key === Qt.Key_Up) {
-                container.selectedIndex = Math.max(container.selectedIndex - 1, 0)
-                event.accepted = true
-            } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
-                var m = menuModel.get(container.selectedIndex)
-                if (m.idStr === "skirmish")      root.openSkirmish()
-                else if (m.idStr === "load")     root.loadSave()
-                else if (m.idStr === "settings") root.openSettings()
-                else if (m.idStr === "exit")     root.exitRequested()
+    // keyboard navigation (at root Item level, which has focus)
+    Keys.onPressed: {
+        if (event.key === Qt.Key_Down) {
+            container.selectedIndex = Math.min(container.selectedIndex + 1, menuModel.count - 1)
+            event.accepted = true
+        } else if (event.key === Qt.Key_Up) {
+            container.selectedIndex = Math.max(container.selectedIndex - 1, 0)
+            event.accepted = true
+        } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+            var m = menuModel.get(container.selectedIndex)
+            if (m.idStr === "skirmish")      root.openSkirmish()
+            else if (m.idStr === "load")     root.loadSave()
+            else if (m.idStr === "settings") root.openSettings()
+            else if (m.idStr === "exit")     root.exitRequested()
+            event.accepted = true
+        } else if (event.key === Qt.Key_Escape) {
+            // ESC closes the menu only if a game has been started
+            // (prevents closing to a blank screen at startup)
+            if (typeof mainWindow !== 'undefined' && mainWindow.menuVisible && mainWindow.gameStarted) {
+                mainWindow.menuVisible = false
                 event.accepted = true
             }
         }
