@@ -3,7 +3,6 @@
 #include "../visuals/team_colors.h"
 #include "arrow_system.h"
 #include "../core/world.h"
-#include "../core/component.h"
 #include <limits>
 #include <algorithm>
 
@@ -67,11 +66,11 @@ void CombatSystem::processAttacks(Engine::Core::World* world, float deltaTime) {
                 if (targetUnit && targetUnit->health > 0 && 
                     targetUnit->ownerId != attackerUnit->ownerId) {
                     
-                    // Check if in range
+                    // Check if in range - if so, we can attack
                     if (isInRange(attacker, target, range)) {
                         bestTarget = target;
                     } else if (attackTarget->shouldChase) {
-                        // Chase the target - set movement target
+                        // Not in range but should chase - move toward target
                         auto* movement = attacker->getComponent<Engine::Core::MovementComponent>();
                         if (!movement) {
                             movement = attacker->addComponent<Engine::Core::MovementComponent>();
@@ -84,9 +83,17 @@ void CombatSystem::processAttacks(Engine::Core::World* world, float deltaTime) {
                                 movement->hasTarget = true;
                             }
                         }
+                        // Still try to attack if somehow we got close enough
+                        // (movement might not have updated position yet)
+                        if (isInRange(attacker, target, range)) {
+                            bestTarget = target;
+                        }
+                    } else {
+                        // Not chasing and not in range - clear attack target
+                        attacker->removeComponent<Engine::Core::AttackTargetComponent>();
                     }
                 } else {
-                    // Target is dead or invalid, clear attack target
+                    // Target is dead, friendly, or invalid - clear attack target
                     attacker->removeComponent<Engine::Core::AttackTargetComponent>();
                 }
             } else {
@@ -126,6 +133,8 @@ void CombatSystem::processAttacks(Engine::Core::World* world, float deltaTime) {
         
         // Attack the selected target
         if (bestTarget) {
+            auto* bestTargetUnit = bestTarget->getComponent<Engine::Core::UnitComponent>();
+            
             // Arrow visual: spawn arrow if ArrowSystem present
             if (arrowSys) {
                 auto attT = attacker->getComponent<Engine::Core::TransformComponent>();
@@ -158,13 +167,33 @@ bool CombatSystem::isInRange(Engine::Core::Entity* attacker, Engine::Core::Entit
     float dz = targetTransform->position.z - attackerTransform->position.z;
     float distanceSquared = dx * dx + dz * dz;
     
-    return distanceSquared <= range * range;
+    // Account for target size (especially important for buildings)
+    // Add target's approximate radius to the attack range
+    float targetRadius = 0.0f;
+    if (target->hasComponent<Engine::Core::BuildingComponent>()) {
+        // Buildings are larger - use their scale to estimate radius
+        // Use the larger of X or Z scale as the radius estimate
+        float scaleX = targetTransform->scale.x;
+        float scaleZ = targetTransform->scale.z;
+        targetRadius = std::max(scaleX, scaleZ) * 0.5f; // half the scale is approx radius
+    } else {
+        // Regular units have smaller radius
+        float scaleX = targetTransform->scale.x;
+        float scaleZ = targetTransform->scale.z;
+        targetRadius = std::max(scaleX, scaleZ) * 0.5f;
+    }
+    
+    // Effective range includes target's size
+    float effectiveRange = range + targetRadius;
+    
+    return distanceSquared <= effectiveRange * effectiveRange;
 }
 
 void CombatSystem::dealDamage(Engine::Core::Entity* target, int damage) {
     auto unit = target->getComponent<Engine::Core::UnitComponent>();
     if (unit) {
         unit->health = std::max(0, unit->health - damage);
+        
         if (unit->health <= 0) {
             // Hide the renderable so dead units disappear
             if (auto* r = target->getComponent<Engine::Core::RenderableComponent>()) {

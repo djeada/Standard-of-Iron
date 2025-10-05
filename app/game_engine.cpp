@@ -104,30 +104,46 @@ void GameEngine::onAttackClick(qreal sx, qreal sy) {
         float(sx), float(sy), *m_world, *m_camera, 
         m_viewport.width, m_viewport.height, 
         0, // owner filter = 0 means no owner filter
-        false // don't prefer buildings first
+        true // prefer buildings first (to make barracks easier to click)
     );
     
     if (targetId == 0) {
-        // No target found - don't reset cursor mode, let user try again
+        // No target found - keep attack mode active for retry
         return;
     }
     
     // Verify target is an enemy
     auto* targetEntity = m_world->getEntity(targetId);
-    if (!targetEntity) return;
+    if (!targetEntity) {
+        return;
+    }
     
     auto* targetUnit = targetEntity->getComponent<Engine::Core::UnitComponent>();
-    if (!targetUnit) return;
+    if (!targetUnit) {
+        return;
+    }
     
     // Only attack enemies (not our own units)
     if (targetUnit->ownerId == m_runtime.localOwnerId) {
         return;
     }
     
-    // Issue attack command with chase enabled
+    // SUCCESS: Issue attack command with chase enabled
     Game::Systems::CommandService::attackTarget(*m_world, selected, targetId, true);
     
-    // Reset cursor mode to normal after issuing attack command
+    // Visual feedback: Spawn a red marker arrow at the target
+    if (m_arrowSystem) {
+        // Spawn a quick visual indicator arrow or marker at the target
+        auto* targetTrans = targetEntity->getComponent<Engine::Core::TransformComponent>();
+        if (targetTrans) {
+            QVector3D targetPos(targetTrans->position.x, targetTrans->position.y + 1.0f, targetTrans->position.z);
+            QVector3D aboveTarget = targetPos + QVector3D(0, 2.0f, 0);
+            // Spawn a red marker arrow pointing down at the target
+            m_arrowSystem->spawnArrow(aboveTarget, targetPos, QVector3D(1.0f, 0.2f, 0.2f), 6.0f);
+        }
+    }
+    
+    // Reset cursor mode to normal after successful attack command
     setCursorMode("normal");
 }
 
@@ -338,23 +354,21 @@ void GameEngine::initialize() {
     if (!Render::GL::RenderBootstrap::initialize(*m_renderer, *m_camera)) {
         return;
     }
-    // Allow overriding map path for skirmish start
-    QString mapPath = m_level.mapName.isEmpty() ? QString::fromUtf8("assets/maps/test_map.json") : m_level.mapName;
-    auto lr = Game::Map::LevelLoader::loadFromAssets(mapPath, *m_world, *m_renderer, *m_camera);
+    // Initialize rendering only - don't load map until user selects one
     if (m_ground) {
-        if (lr.ok) m_ground->configure(lr.tileSize, lr.gridWidth, lr.gridHeight);
-        else m_ground->configureExtent(50.0f);
+        m_ground->configureExtent(50.0f);
     }
-    m_level.mapName = lr.mapName;
-    m_level.playerUnitId = lr.playerUnitId;
-    m_level.camFov = lr.camFov; m_level.camNear = lr.camNear; m_level.camFar = lr.camFar;
-    m_level.maxTroopsPerPlayer = lr.maxTroopsPerPlayer;
     m_runtime.initialized = true;
 }
 
 void GameEngine::ensureInitialized() { if (!m_runtime.initialized) initialize(); }
 
 void GameEngine::update(float dt) {
+    // Skip updates while loading a new map to avoid race conditions
+    if (m_runtime.loading) {
+        return;
+    }
+    
     if (m_runtime.paused) {
         dt = 0.0f;
     } else {
@@ -616,6 +630,26 @@ void GameEngine::startSkirmish(const QString& mapPath) {
 
     // If already initialized, reload the level into the existing world
     if (m_world && m_renderer && m_camera) {
+        // CRITICAL: Prevent updates during reload to avoid race conditions
+        m_runtime.loading = true;
+        
+        // 1. Clear selection to avoid invalid entity IDs
+        if (m_selectionSystem) {
+            m_selectionSystem->clearSelection();
+        }
+        
+        // 2. Clear renderer's entity ID references
+        if (m_renderer) {
+            m_renderer->setSelectedEntities({});  // Clear selected entities
+            m_renderer->setHoveredBuildingId(0);  // Clear hovered building
+        }
+        
+        // 3. Clear hover state
+        m_hover.buildingId = 0;
+        
+        // 4. Clear all entities from the world
+        m_world->clear();
+        
         auto lr = Game::Map::LevelLoader::loadFromAssets(m_level.mapName, *m_world, *m_renderer, *m_camera);
         if (m_ground) {
             if (lr.ok) m_ground->configure(lr.tileSize, lr.gridWidth, lr.gridHeight);
@@ -625,6 +659,9 @@ void GameEngine::startSkirmish(const QString& mapPath) {
         m_level.playerUnitId = lr.playerUnitId;
         m_level.camFov = lr.camFov; m_level.camNear = lr.camNear; m_level.camFar = lr.camFar;
         m_level.maxTroopsPerPlayer = lr.maxTroopsPerPlayer;
+        
+        // Re-enable updates now that loading is complete
+        m_runtime.loading = false;
     }
 }
 
@@ -671,6 +708,9 @@ bool GameEngine::getUnitInfo(Engine::Core::EntityID id, QString& name, int& heal
 
 void GameEngine::checkVictoryCondition() {
     if (!m_world || m_runtime.victoryState != "") return; // Already won/lost
+    
+    // Don't check victory until map is loaded (level name is set)
+    if (m_level.mapName.isEmpty()) return;
     
     // Check if enemy barracks (playerId 2) still exists and is alive
     bool enemyBarracksAlive = false;
