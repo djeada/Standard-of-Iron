@@ -64,6 +64,9 @@ if(QT_VERSION_MAJOR EQUAL 6)
             ui/qml/MainMenu.qml
             ui/qml/MapSelect.qml
             ui/qml/HUD.qml
+            ui/qml/HUDTop.qml
+            ui/qml/HUDBottom.qml
+            ui/qml/HUDVictory.qml
             ui/qml/GameView.qml
         RESOURCES
             assets/shaders/basic.vert
@@ -82,6 +85,9 @@ else()
             ui/qml/MainMenu.qml
             ui/qml/MapSelect.qml
             ui/qml/HUD.qml
+            ui/qml/HUDTop.qml
+            ui/qml/HUDBottom.qml
+            ui/qml/HUDVictory.qml
             ui/qml/GameView.qml
     )
     qt5_add_resources(standard_of_iron "assets" 
