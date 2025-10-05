@@ -31,7 +31,7 @@ help:
 	@echo "  $(GREEN)clean$(RESET)       - Clean build directory"
 	@echo "  $(GREEN)rebuild$(RESET)     - Clean and build"
 	@echo "  $(GREEN)test$(RESET)        - Run tests (if any)"
-	@echo "  $(GREEN)format$(RESET)      - Format code and strip comments in ui/"
+	@echo "  $(GREEN)format$(RESET)      - Format code and strip comments in all dirs"
 	@echo "  $(GREEN)check-deps$(RESET)  - Check if dependencies are installed"
 	@echo "  $(GREEN)dev$(RESET)         - Set up development environment (install + configure + build)"
 	@echo "  $(GREEN)all$(RESET)         - Full build (configure + build)"
@@ -143,11 +143,11 @@ format:
 	else \
 		echo "$(YELLOW)clang-format not found. Skipping code formatting.$(RESET)"; \
 	fi
-	@echo "$(BOLD)$(BLUE)Stripping comments in ui/...$(RESET)"
+	@echo "$(BOLD)$(BLUE)Stripping comments in app/... game/... render/... tools/... ui/... $(RESET)"
 	@if [ -x scripts/remove-comments.sh ]; then \
-		./scripts/remove-comments.sh ui/; \
+		./scripts/remove-comments.sh app/ game/ render/ tools/ ui/; \
 	elif [ -f scripts/remove-comments.sh ]; then \
-		bash scripts/remove-comments.sh ui/; \
+		bash scripts/remove-comments.sh app/ game/ render/ tools/ ui/; \
 	else \
 		echo "$(RED)scripts/remove-comments.sh not found$(RESET)"; exit 1; \
 	fi
