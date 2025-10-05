@@ -1,53 +1,60 @@
 #pragma once
 
+#include <QVector3D>
 #include <memory>
 #include <string>
 #include <utility>
-#include <QVector3D>
 
-namespace Engine { namespace Core {
-class World; class Entity; using EntityID = unsigned int;
-struct TransformComponent; struct RenderableComponent; struct UnitComponent; struct MovementComponent; struct AttackComponent;
-} }
+namespace Engine {
+namespace Core {
+class World;
+class Entity;
+using EntityID = unsigned int;
+struct TransformComponent;
+struct RenderableComponent;
+struct UnitComponent;
+struct MovementComponent;
+struct AttackComponent;
+} // namespace Core
+} // namespace Engine
 
-namespace Game { namespace Units {
+namespace Game {
+namespace Units {
 
 struct SpawnParams {
-    // world coordinates (XZ plane)
-    QVector3D position{0,0,0};
-    int playerId = 0;
-    std::string unitType; // optional label; renderer may use it
+
+  QVector3D position{0, 0, 0};
+  int playerId = 0;
+  std::string unitType;
 };
 
-// Thin OOP facade over ECS components; no duplicate state.
 class Unit {
 public:
-    virtual ~Unit() = default;
+  virtual ~Unit() = default;
 
-    Engine::Core::EntityID id() const { return m_id; }
-    const std::string& type() const { return m_type; }
+  Engine::Core::EntityID id() const { return m_id; }
+  const std::string &type() const { return m_type; }
 
-    // Convenience controls that mutate ECS components
-    void moveTo(float x, float z);
-    bool isAlive() const;
-    QVector3D position() const;
+  void moveTo(float x, float z);
+  bool isAlive() const;
+  QVector3D position() const;
 
 protected:
-    Unit(Engine::Core::World& world, const std::string& type);
-    Engine::Core::Entity* entity() const; // cached but validated
+  Unit(Engine::Core::World &world, const std::string &type);
+  Engine::Core::Entity *entity() const;
 
-    // Helpers for derived classes to configure components
-    void ensureCoreComponents();
+  void ensureCoreComponents();
 
-    Engine::Core::World* m_world = nullptr;
-    Engine::Core::EntityID m_id = 0;
-    std::string m_type;
-    // Cached pointers (owned by ECS entity)
-    Engine::Core::TransformComponent* m_t = nullptr;
-    Engine::Core::RenderableComponent* m_r = nullptr;
-    Engine::Core::UnitComponent*       m_u = nullptr;
-    Engine::Core::MovementComponent*   m_mv = nullptr;
-    Engine::Core::AttackComponent*     m_atk = nullptr;
+  Engine::Core::World *m_world = nullptr;
+  Engine::Core::EntityID m_id = 0;
+  std::string m_type;
+
+  Engine::Core::TransformComponent *m_t = nullptr;
+  Engine::Core::RenderableComponent *m_r = nullptr;
+  Engine::Core::UnitComponent *m_u = nullptr;
+  Engine::Core::MovementComponent *m_mv = nullptr;
+  Engine::Core::AttackComponent *m_atk = nullptr;
 };
 
-} } // namespace Game::Units
+} // namespace Units
+} // namespace Game

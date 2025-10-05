@@ -6,50 +6,54 @@
 #include <limits>
 #include <vector>
 
-namespace Engine { namespace Core {
+namespace Engine {
+namespace Core {
 class World;
 using EntityID = unsigned int;
-} }
+} // namespace Core
+} // namespace Engine
 
-namespace Render { namespace GL { class Camera; } }
+namespace Render {
+namespace GL {
+class Camera;
+}
+} // namespace Render
 
-namespace Game { namespace Systems {
+namespace Game {
+namespace Systems {
 
 class PickingService {
 public:
-    PickingService() = default;
+  PickingService() = default;
 
-    // Update hover state given screen coordinates; returns current hovered building id (or 0).
-    Engine::Core::EntityID updateHover(float sx, float sy,
-                                       Engine::Core::World& world,
-                                       const Render::GL::Camera& camera,
-                                       int viewW, int viewH);
+  Engine::Core::EntityID updateHover(float sx, float sy,
+                                     Engine::Core::World &world,
+                                     const Render::GL::Camera &camera,
+                                     int viewW, int viewH);
 
-    // Projection helpers bound to the active camera/viewport
-    bool screenToGround(const Render::GL::Camera& camera, int viewW, int viewH,
-                        const QPointF& screenPt, QVector3D& outWorld) const;
-    bool worldToScreen(const Render::GL::Camera& camera, int viewW, int viewH,
-                        const QVector3D& world, QPointF& outScreen) const;
+  bool screenToGround(const Render::GL::Camera &camera, int viewW, int viewH,
+                      const QPointF &screenPt, QVector3D &outWorld) const;
+  bool worldToScreen(const Render::GL::Camera &camera, int viewW, int viewH,
+                     const QVector3D &world, QPointF &outScreen) const;
 
-    // Single click pick (returns 0 if none). Prefer buildings first toggles tie-breaking.
-    Engine::Core::EntityID pickSingle(float sx, float sy,
-                                      Engine::Core::World& world,
-                                      const Render::GL::Camera& camera,
-                                      int viewW, int viewH,
-                                      int ownerFilter,
-                                      bool preferBuildingsFirst) const;
+  Engine::Core::EntityID pickSingle(float sx, float sy,
+                                    Engine::Core::World &world,
+                                    const Render::GL::Camera &camera, int viewW,
+                                    int viewH, int ownerFilter,
+                                    bool preferBuildingsFirst) const;
 
-    // Rectangle selection pick; returns friendlies inside screen rect (excludes buildings).
-    std::vector<Engine::Core::EntityID> pickInRect(float x1, float y1, float x2, float y2,
-                                                   Engine::Core::World& world,
-                                                   const Render::GL::Camera& camera,
-                                                   int viewW, int viewH,
-                                                   int ownerFilter) const;
+  std::vector<Engine::Core::EntityID>
+  pickInRect(float x1, float y1, float x2, float y2, Engine::Core::World &world,
+             const Render::GL::Camera &camera, int viewW, int viewH,
+             int ownerFilter) const;
 
 private:
-    Engine::Core::EntityID m_prevHoverId = 0;
-    int m_hoverGraceTicks = 0;
-    bool projectBounds(const Render::GL::Camera& cam, const QVector3D& center, float hx, float hz, int viewW, int viewH, QRectF& out) const;
+  Engine::Core::EntityID m_prevHoverId = 0;
+  int m_hoverGraceTicks = 0;
+  bool projectBounds(const Render::GL::Camera &cam, const QVector3D &center,
+                     float hx, float hz, int viewW, int viewH,
+                     QRectF &out) const;
 };
 
-} } // namespace Game::Systems
+} // namespace Systems
+} // namespace Game
