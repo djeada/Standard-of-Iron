@@ -18,10 +18,10 @@ Item {
         color: "#1a1a1a"
         opacity: 0.95
 
-        // Gradient overlay
+        
         Rectangle { anchors.fill: parent; gradient: Gradient { GradientStop { position: 0.0; color: "#1a252f" } GradientStop { position: 1.0; color: "#2c3e50" } } opacity: 0.8 }
 
-        // Top border
+        
         Rectangle { anchors.left: parent.left; anchors.right: parent.right; anchors.top: parent.top; height: 2; gradient: Gradient { GradientStop { position: 0.0; color: "transparent" } GradientStop { position: 0.5; color: "#3498db" } GradientStop { position: 1.0; color: "transparent" } } }
 
         RowLayout {
@@ -29,7 +29,7 @@ Item {
             anchors.margins: 10
             spacing: 12
 
-            // Unit selection panel
+            
             Rectangle {
                 Layout.preferredWidth: Math.max(200, parent.width * 0.18)
                 Layout.fillHeight: true
@@ -104,7 +104,7 @@ Item {
                 }
             }
 
-            // Command buttons
+            
             Column { Layout.preferredWidth: Math.max(260, parent.width * 0.22); Layout.fillHeight: true; spacing: 8
                 Rectangle { width: parent.width; height: 36; color: bottomRoot.currentCommandMode === "normal" ? "#0f1419" : (bottomRoot.currentCommandMode === "attack" ? "#8b1a1a" : "#1a252f"); border.color: bottomRoot.currentCommandMode === "normal" ? "#34495e" : (bottomRoot.currentCommandMode === "attack" ? "#e74c3c" : "#3498db"); border.width: 2; radius: 6
                     SequentialAnimation on opacity { running: bottomRoot.currentCommandMode === "attack"; loops: Animation.Infinite; NumberAnimation { from: 0.8; to: 1.0; duration: 600 } NumberAnimation { from: 1.0; to: 0.8; duration: 600 } }
@@ -131,7 +131,7 @@ Item {
 
             Item { Layout.fillWidth: true }
 
-            // Production panel (contextual: shows when a Barracks is selected)
+            
             Rectangle {
                 Layout.preferredWidth: 220
                 Layout.fillHeight: true
@@ -159,15 +159,15 @@ Item {
                             width: prodScroll.width
                             spacing: 6
 
-                            // Show recruit buttons only when a barracks is in selection
+                            
                             Repeater {
-                                // Include selectionTick in binding so we refresh when selection changes
+                                
                                 model: (bottomRoot.selectionTick, (typeof game !== 'undefined' && game.hasSelectedType && game.hasSelectedType("barracks"))) ? 1 : 0
                                 delegate: Column {
                                     spacing: 6
                                     property var prod: (bottomRoot.selectionTick, (typeof game !== 'undefined' && game.getSelectedProductionState) ? game.getSelectedProductionState() : ({}))
 
-                                    // Production button
+                                    
                                     Button {
                                         id: recruitBtn
                                         text: "Recruit Archer"
@@ -183,7 +183,7 @@ Item {
                                         onPressed: bottomRoot.selectionTick += 1
                                     }
 
-                                    // Progress bar for build timer
+                                    
                                     Rectangle {
                                         width: 180
                                         height: 8
@@ -203,17 +203,17 @@ Item {
                                         }
                                     }
 
-                                    // Timer + population cap display
+                                    
                                     Row {
                                         spacing: 8
                                         Text { text: prod.inProgress ? ("Time left: " + Math.max(0, prod.timeRemaining).toFixed(1) + "s") : ("Build time: " + (prod.buildTime || 0).toFixed(0) + "s"); color: "#bdc3c7"; font.pointSize: 9 }
                                         Text { text: (prod.producedCount || 0) + "/" + (prod.maxUnits || 0); color: "#bdc3c7"; font.pointSize: 9 }
                                     }
 
-                                    // Cap reached message
+                                    
                                     Text { text: (prod.producedCount >= prod.maxUnits) ? "Cap reached" : ""; color: "#e67e22"; font.pointSize: 9 }
 
-                                    // Set Rally toggle: when active, next click in game view sets rally
+                                    
                                     Row {
                                         spacing: 6
                                         Button {
@@ -227,7 +227,7 @@ Item {
                                 }
                             }
 
-                            // Fallback info if no production building
+                            
                             Item {
                                 visible: (bottomRoot.selectionTick, (typeof game === 'undefined' || !game.hasSelectedType || !game.hasSelectedType("barracks")))
                                 Layout.fillWidth: true
