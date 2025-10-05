@@ -2,11 +2,13 @@
 
 #include "../core/system.h"
 
-namespace Game { namespace Systems {
+namespace Game {
+namespace Systems {
 
 class ProductionSystem : public Engine::Core::System {
 public:
-    void update(Engine::Core::World* world, float deltaTime) override;
+  void update(Engine::Core::World *world, float deltaTime) override;
 };
 
-} } // namespace Game::Systems
+} // namespace Systems
+} // namespace Game

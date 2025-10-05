@@ -9,6 +9,10 @@ BUILD_DIR := build
 BINARY_NAME := standard_of_iron
 MAP_EDITOR_BINARY := map_editor
 
+# Formatting config
+CLANG_FORMAT ?= clang-format
+FMT_GLOBS := -name "*.cpp" -o -name "*.c" -o -name "*.h" -o -name "*.hpp"
+
 # Colors for output
 BOLD := \033[1m
 GREEN := \033[32m
@@ -23,18 +27,19 @@ help:
 	@echo "$(BOLD)Standard of Iron - Build System$(RESET)"
 	@echo ""
 	@echo "$(BOLD)Available targets:$(RESET)"
-	@echo "  $(GREEN)install$(RESET)     - Install all dependencies"
-	@echo "  $(GREEN)configure$(RESET)   - Configure build with CMake"
-	@echo "  $(GREEN)build$(RESET)       - Build the project"
-	@echo "  $(GREEN)run$(RESET)         - Run the main application"
-	@echo "  $(GREEN)editor$(RESET)      - Run the map editor"
-	@echo "  $(GREEN)clean$(RESET)       - Clean build directory"
-	@echo "  $(GREEN)rebuild$(RESET)     - Clean and build"
-	@echo "  $(GREEN)test$(RESET)        - Run tests (if any)"
-	@echo "  $(GREEN)format$(RESET)      - Format code and strip comments in all dirs"
-	@echo "  $(GREEN)check-deps$(RESET)  - Check if dependencies are installed"
-	@echo "  $(GREEN)dev$(RESET)         - Set up development environment (install + configure + build)"
-	@echo "  $(GREEN)all$(RESET)         - Full build (configure + build)"
+	@echo "  $(GREEN)install$(RESET)       - Install all dependencies"
+	@echo "  $(GREEN)configure$(RESET)     - Configure build with CMake"
+	@echo "  $(GREEN)build$(RESET)         - Build the project"
+	@echo "  $(GREEN)run$(RESET)           - Run the main application"
+	@echo "  $(GREEN)editor$(RESET)        - Run the map editor"
+	@echo "  $(GREEN)clean$(RESET)         - Clean build directory"
+	@echo "  $(GREEN)rebuild$(RESET)       - Clean and build"
+	@echo "  $(GREEN)test$(RESET)          - Run tests (if any)"
+	@echo "  $(GREEN)format$(RESET)        - Strip comments then clang-format (strict)"
+	@echo "  $(GREEN)format-check$(RESET)  - Verify formatting (CI-friendly, no changes)"
+	@echo "  $(GREEN)check-deps$(RESET)    - Check if dependencies are installed"
+	@echo "  $(GREEN)dev$(RESET)           - Set up development environment (install + configure + build)"
+	@echo "  $(GREEN)all$(RESET)           - Full build (configure + build)"
 	@echo ""
 	@echo "$(BOLD)Examples:$(RESET)"
 	@echo "  make install    # Install dependencies"
@@ -133,17 +138,10 @@ test: build
 		echo "$(YELLOW)No tests found. Test suite not yet implemented.$(RESET)"; \
 	fi
 
-# Format code (clang-format) THEN strip comments in ui/ via your script
-.PHONY: format
+# ---- Formatting: strip comments first, then clang-format (strict) ----
+.PHONY: format format-check
 format:
-	@echo "$(BOLD)$(BLUE)Formatting code...$(RESET)"
-	@if command -v clang-format >/dev/null 2>&1; then \
-		find . -type f \( -name "*.cpp" -o -name "*.c" -o -name "*.h" -o -name "*.hpp" \) -not -path "./$(BUILD_DIR)/*" -exec clang-format -i {} +; \
-		echo "$(GREEN)✓ Code formatted$(RESET)"; \
-	else \
-		echo "$(YELLOW)clang-format not found. Skipping code formatting.$(RESET)"; \
-	fi
-	@echo "$(BOLD)$(BLUE)Stripping comments in app/... game/... render/... tools/... ui/... $(RESET)"
+	@echo "$(BOLD)$(BLUE)Stripping comments in app/... game/... render/... tools/... ui/...$(RESET)"
 	@if [ -x scripts/remove-comments.sh ]; then \
 		./scripts/remove-comments.sh app/ game/ render/ tools/ ui/; \
 	elif [ -f scripts/remove-comments.sh ]; then \
@@ -151,7 +149,25 @@ format:
 	else \
 		echo "$(RED)scripts/remove-comments.sh not found$(RESET)"; exit 1; \
 	fi
-	@echo "$(GREEN)✓ Format + comment strip complete$(RESET)"
+	@echo "$(BOLD)$(BLUE)Formatting with clang-format (strict)...$(RESET)"
+	@if command -v $(CLANG_FORMAT) >/dev/null 2>&1; then \
+		find . -type f \( $(FMT_GLOBS) \) -not -path "./$(BUILD_DIR)/*" -print0 \
+		| xargs -0 -r $(CLANG_FORMAT) -i --style=file; \
+		echo "$(GREEN)✓ Format + comment strip complete$(RESET)"; \
+	else \
+		echo "$(RED)clang-format not found. Please install it.$(RESET)"; exit 1; \
+	fi
+
+# CI/verification: fail if anything would be reformatted
+format-check:
+	@echo "$(BOLD)$(BLUE)Checking clang-format compliance...$(RESET)"
+	@if command -v $(CLANG_FORMAT) >/dev/null 2>&1; then \
+		find . -type f \( $(FMT_GLOBS) \) -not -path "./$(BUILD_DIR)/*" -print0 \
+		| xargs -0 -r $(CLANG_FORMAT) --dry-run -Werror --style=file; \
+		echo "$(GREEN)✓ Formatting OK$(RESET)"; \
+	else \
+		echo "$(RED)clang-format not found. Please install it.$(RESET)"; exit 1; \
+	fi
 
 # Debug build
 .PHONY: debug
@@ -193,3 +209,4 @@ quickstart:
 	@echo "3. Run the game: $(BLUE)make run$(RESET)"
 	@echo ""
 	@echo "Or use the shortcut: $(BLUE)make dev$(RESET)"
+
