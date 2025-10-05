@@ -19,7 +19,7 @@ Usage:
   scripts/remove_comments.sh [options] [PATH ...]
 
 Options:
-  -x, --ext       Comma-separated extensions to scan (default: c,cc,cpp,cxx,h,hh,hpp,hxx,ipp,inl,tpp)
+  -x, --ext       Comma-separated extensions to scan (default: c,cc,cpp,cxx,h,hh,hpp,hxx,ipp,inl,tpp,qml)
   -n, --dry-run   Show files that would be modified; don't write changes
   --no-backup     Do not create .bak backups (by default, a FILE.bak is kept)
   -q, --quiet     Less output
