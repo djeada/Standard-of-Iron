@@ -1,0 +1,61 @@
+# .clang-format
+BasedOnStyle: LLVM
+Language: Cpp
+
+# Black-like "one obvious way"
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+ColumnLimit: 88
+
+# Keep things broken over lines instead of packed
+AllowShortBlocksOnASingleLine: Never
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: None
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+BinPackArguments: false
+BinPackParameters: false
+
+# Braces & breaking
+BreakBeforeBraces: Attach
+BreakBeforeBinaryOperators: NonAssignment
+ConstructorInitializerAllOnOneLineOrOnePerLine: true
+BreakConstructorInitializers: BeforeComma
+
+# No pretty alignment games
+AlignOperands: false
+AlignConsecutiveAssignments: false
+AlignConsecutiveDeclarations: false
+DerivePointerAlignment: false
+PointerAlignment: Left
+
+# Namespaces & comments
+FixNamespaceComments: true
+NamespaceIndentation: All
+ReflowComments: true
+BreakStringLiterals: true
+
+# Deterministic include sorting & grouping (project first, then libs)
+SortIncludes: true
+IncludeBlocks: Regroup
+IncludeIsMainRegex: '(^|.*/)([^/]+)\.(h|hpp)'
+IncludeCategories:
+  - Regex: '^"(app|game|render|tools|ui|engine_core|game_systems|render_gl)/'
+    Priority: 1
+  - Regex: '^<Qt/'
+    Priority: 2
+  - Regex: '^<GL/|^<OpenGL/'
+    Priority: 3
+  - Regex: '^<.*>'
+    Priority: 4
+  - Regex: '^".*"'
+    Priority: 5
+
+# Parens & spacing
+SpaceBeforeParens: ControlStatements
+SpacesBeforeTrailingComments: 1
+
+# Templates
+AlwaysBreakTemplateDeclarations: Yes
+

@@ -2,14 +2,22 @@
 
 #include "map_definition.h"
 
-namespace Render { namespace GL { class Renderer; class Camera; } }
+namespace Render {
+namespace GL {
+class Renderer;
+class Camera;
+} // namespace GL
+} // namespace Render
 
-namespace Game { namespace Map {
+namespace Game {
+namespace Map {
 
-// Applies camera and ground/grid environment based on map definition
 struct Environment {
-    static void apply(const MapDefinition& def, Render::GL::Renderer& renderer, Render::GL::Camera& camera);
-    static void applyDefault(Render::GL::Renderer& renderer, Render::GL::Camera& camera);
+  static void apply(const MapDefinition &def, Render::GL::Renderer &renderer,
+                    Render::GL::Camera &camera);
+  static void applyDefault(Render::GL::Renderer &renderer,
+                           Render::GL::Camera &camera);
 };
 
-} } // namespace Game::Map
+} // namespace Map
+} // namespace Game
