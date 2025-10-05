@@ -184,7 +184,7 @@ PYEOF
       cp -p -- "$f" "$f.bak"
     fi
     mv -- "$tmp" "$f"
-    chmod --reference="$f.bak" "$f" 2>/dev/null || true
+    chmod --reference="$f" "$f" 2>/dev/null || true
     ((changed++))
   else
     rm -f "$tmp"
