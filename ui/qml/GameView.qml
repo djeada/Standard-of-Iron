@@ -8,13 +8,13 @@ Item {
     
     property bool isPaused: false
     property real gameSpeed: 1.0
-    property bool setRallyMode: false  // Rally point mode toggle
+    property bool setRallyMode: false  
     
     signal mapClicked(real x, real y)
     signal unitSelected(int unitId)
     signal areaSelected(real x1, real y1, real x2, real y2)
     
-    property string cursorMode: "normal"  // "normal", "attack", "guard", "patrol"
+    property string cursorMode: "normal"  
     
     function setPaused(paused) {
         isPaused = paused
@@ -30,17 +30,17 @@ Item {
     
     function issueCommand(command) {
         console.log("Command issued:", command)
-        // Handle unit commands
+        
     }
     
-    // OpenGL rendering item inside scene graph
+    
         GLView {
         id: renderArea
         anchors.fill: parent
-        engine: game // GameEngine object exposed from C++
+        engine: game 
         focus: false
         
-        // Update cursor mode when engine changes it
+        
         Connections {
             target: game
             function onCursorModeChanged() {
@@ -50,28 +50,28 @@ Item {
             }
         }
         
-        // Sync initial cursor mode state
+        
         Component.onCompleted: {
             if (typeof game !== 'undefined' && game.cursorMode) {
                 gameView.cursorMode = game.cursorMode
             }
         }
         
-        // Placeholder text (disabled by default to not cover GL)
-        // Text {
-        //     anchors.centerIn: parent
-        //     text: "3D Game World\n(OpenGL Render Area)\n\nPress WASD to move camera\nMouse to look around\nScroll to zoom"
-        //     color: "white"
-        //     font.pointSize: 16
-        //     horizontalAlignment: Text.AlignHCenter
-        // }
         
-        // Camera controls info overlay (offset below HUD top bar)
+        
+        
+        
+        
+        
+        
+        
+        
+        
         Rectangle {
             anchors.top: parent.top
             anchors.left: parent.left
             anchors.margins: 10
-            anchors.topMargin: 70   // HUD top bar is 60px tall; keep some gap
+            anchors.topMargin: 70   
             width: 200
             height: 160
             color: "#34495e"
@@ -138,28 +138,28 @@ Item {
             propagateComposedEvents: true
             preventStealing: true
             
-            // Control cursor shape directly here
+            
             cursorShape: (gameView.cursorMode === "normal") ? Qt.ArrowCursor : Qt.BlankCursor
             
             enabled: gameView.visible
             
             onEntered: {
-                // Notify C++ that we're hovering over the game view
+                
                 if (typeof game !== 'undefined' && game.setHoverAtScreen) {
-                    game.setHoverAtScreen(0, 0) // Will be updated by onPositionChanged
+                    game.setHoverAtScreen(0, 0) 
                 }
             }
             
             onExited: {
-                // Notify C++ that we've left the game view - show normal cursor
+                
                 if (typeof game !== 'undefined' && game.setHoverAtScreen) {
                     game.setHoverAtScreen(-1, -1)
                 }
             }
             
             onPositionChanged: function(mouse) {
-                // Position tracking now uses built-in mouseX/mouseY via direct binding
-                // This handles selection box during drag
+                
+                
                 if (isSelecting) {
                     var endX = mouse.x
                     var endY = mouse.y
@@ -175,11 +175,11 @@ Item {
                 }
             }
             onWheel: function(w) {
-                // Mouse wheel: move camera up/down (RTS-style height adjust)
-                // delta is in eighths of a degree; use angleDelta.y where available
+                
+                
                 var dy = (w.angleDelta ? w.angleDelta.y / 120 : w.delta / 120)
                 if (dy !== 0 && typeof game !== 'undefined' && game.cameraElevate) {
-                    // Scale to world units
+                    
                     game.cameraElevate(-dy * 0.5)
                 }
                 w.accepted = true
@@ -191,7 +191,7 @@ Item {
             
             onPressed: function(mouse) {
                 if (mouse.button === Qt.LeftButton) {
-                    // Rally mode takes priority
+                    
                     if (gameView.setRallyMode) {
                         if (typeof game !== 'undefined' && game.setRallyAtScreen) {
                             game.setRallyAtScreen(mouse.x, mouse.y)
@@ -200,7 +200,7 @@ Item {
                         return
                     }
                     
-                    // Attack mode: issue attack command
+                    
                     if (gameView.cursorMode === "attack") {
                         if (typeof game !== 'undefined' && game.onAttackClick) {
                             game.onAttackClick(mouse.x, mouse.y)
@@ -208,13 +208,13 @@ Item {
                         return
                     }
                     
-                    // Guard mode: issue guard command
+                    
                     if (gameView.cursorMode === "guard") {
-                        // TODO: Implement guard command
+                        
                         return
                     }
                     
-                    // Patrol mode: issue patrol command
+                    
                     if (gameView.cursorMode === "patrol") {
                         if (typeof game !== 'undefined' && game.onPatrolClick) {
                             game.onPatrolClick(mouse.x, mouse.y)
@@ -222,7 +222,7 @@ Item {
                         return
                     }
                     
-                    // Normal mode: start selection drag
+                    
                     isSelecting = true
                     startX = mouse.x
                     startY = mouse.y
@@ -232,7 +232,7 @@ Item {
                     selectionBox.height = 0
                     selectionBox.visible = true
                 } else if (mouse.button === Qt.RightButton) {
-                    // Right-click cancels rally mode, cursor modes, and deselects
+                    
                     if (gameView.setRallyMode) {
                         gameView.setRallyMode = false
                     }
@@ -248,7 +248,7 @@ Item {
                     selectionBox.visible = false
                     
                     if (selectionBox.width > 5 && selectionBox.height > 5) {
-                        // Area selection
+                        
                         areaSelected(selectionBox.x, selectionBox.y, 
                                    selectionBox.x + selectionBox.width,
                                    selectionBox.y + selectionBox.height)
@@ -259,7 +259,7 @@ Item {
                                                 false)
                         }
                     } else {
-                        // Point selection (unless rally was set in onPressed)
+                        
                         mapClicked(mouse.x, mouse.y)
                         if (typeof game !== 'undefined' && game.onClickSelect) {
                             game.onClickSelect(mouse.x, mouse.y, false)
@@ -269,7 +269,7 @@ Item {
             }
         }
 
-        // Selection box
+        
         Rectangle {
             id: selectionBox
             visible: false
@@ -279,7 +279,7 @@ Item {
         }
     }
     
-    // Custom cursor overlay - uses C++ global cursor tracking
+    
     Item {
         id: customCursorContainer
         visible: gameView.cursorMode !== "normal"
@@ -287,11 +287,11 @@ Item {
         height: 32
         z: 999999
         
-        // Bind to C++ global cursor position (QCursor::pos())
+        
         x: (typeof game !== 'undefined' && game.globalCursorX) ? game.globalCursorX - 16 : 0
         y: (typeof game !== 'undefined' && game.globalCursorY) ? game.globalCursorY - 16 : 0
         
-        // Attack cursor with pulsing animation
+        
         Item {
             id: attackCursorContainer
             visible: gameView.cursorMode === "attack"
@@ -316,61 +316,61 @@ Item {
                     var ctx = getContext("2d")
                     ctx.clearRect(0, 0, width, height)
                     
-                    // Red crosshair - brighter for better visibility
+                    
                     ctx.strokeStyle = "#ff4444"
                     ctx.lineWidth = 3
                     
-                    // Vertical line
+                    
                     ctx.beginPath()
                     ctx.moveTo(16, 4)
                     ctx.lineTo(16, 28)
                     ctx.stroke()
                     
-                    // Horizontal line
+                    
                     ctx.beginPath()
                     ctx.moveTo(4, 16)
                     ctx.lineTo(28, 16)
                     ctx.stroke()
                     
-                    // Center dot - larger and brighter
+                    
                     ctx.fillStyle = "#ff2222"
                     ctx.beginPath()
                     ctx.arc(16, 16, 4, 0, Math.PI * 2)
                     ctx.fill()
                     
-                    // Outer glow
+                    
                     ctx.strokeStyle = "rgba(255, 68, 68, 0.5)"
                     ctx.lineWidth = 1
                     ctx.beginPath()
                     ctx.arc(16, 16, 7, 0, Math.PI * 2)
                     ctx.stroke()
                     
-                    // Corner brackets
+                    
                     ctx.strokeStyle = "#e74c3c"
                     ctx.lineWidth = 2
                     
-                    // Top-left
+                    
                     ctx.beginPath()
                     ctx.moveTo(8, 12)
                     ctx.lineTo(8, 8)
                     ctx.lineTo(12, 8)
                     ctx.stroke()
                     
-                    // Top-right
+                    
                     ctx.beginPath()
                     ctx.moveTo(20, 8)
                     ctx.lineTo(24, 8)
                     ctx.lineTo(24, 12)
                     ctx.stroke()
                     
-                    // Bottom-left
+                    
                     ctx.beginPath()
                     ctx.moveTo(8, 20)
                     ctx.lineTo(8, 24)
                     ctx.lineTo(12, 24)
                     ctx.stroke()
                     
-                    // Bottom-right
+                    
                     ctx.beginPath()
                     ctx.moveTo(20, 24)
                     ctx.lineTo(24, 24)
@@ -382,7 +382,7 @@ Item {
             }
         }
         
-        // Guard cursor
+        
         Canvas {
             id: guardCursor
             visible: gameView.cursorMode === "guard"
@@ -391,12 +391,12 @@ Item {
                 var ctx = getContext("2d")
                 ctx.clearRect(0, 0, width, height)
                 
-                // Blue shield
+                
                 ctx.fillStyle = "#3498db"
                 ctx.strokeStyle = "#2980b9"
                 ctx.lineWidth = 2
                 
-                // Shield shape
+                
                 ctx.beginPath()
                 ctx.moveTo(16, 6)
                 ctx.lineTo(24, 10)
@@ -408,7 +408,7 @@ Item {
                 ctx.fill()
                 ctx.stroke()
                 
-                // Shield emblem (checkmark)
+                
                 ctx.strokeStyle = "#ecf0f1"
                 ctx.lineWidth = 2
                 ctx.beginPath()
@@ -420,7 +420,7 @@ Item {
             Component.onCompleted: requestPaint()
         }
         
-        // Patrol cursor
+        
         Canvas {
             id: patrolCursor
             visible: gameView.cursorMode === "patrol"
@@ -429,19 +429,19 @@ Item {
                 var ctx = getContext("2d")
                 ctx.clearRect(0, 0, width, height)
                 
-                // Green waypoint marker
+                
                 ctx.strokeStyle = "#27ae60"
                 ctx.lineWidth = 2
                 
-                // Circular path
+                
                 ctx.beginPath()
                 ctx.arc(16, 16, 10, 0, Math.PI * 2)
                 ctx.stroke()
                 
-                // Direction arrows
+                
                 ctx.fillStyle = "#27ae60"
                 
-                // Right arrow
+                
                 ctx.beginPath()
                 ctx.moveTo(26, 16)
                 ctx.lineTo(22, 13)
@@ -449,7 +449,7 @@ Item {
                 ctx.closePath()
                 ctx.fill()
                 
-                // Left arrow
+                
                 ctx.beginPath()
                 ctx.moveTo(6, 16)
                 ctx.lineTo(10, 13)
@@ -457,7 +457,7 @@ Item {
                 ctx.closePath()
                 ctx.fill()
                 
-                // Center dot
+                
                 ctx.beginPath()
                 ctx.arc(16, 16, 3, 0, Math.PI * 2)
                 ctx.fill()
@@ -466,22 +466,22 @@ Item {
         }
     }
     
-    // Edge scrolling handled by Main.qml overlay for smoother behavior and to bypass overlays
     
-    // Keyboard handling
+    
+    
     Keys.onPressed: function(event) {
         if (typeof game === 'undefined') return
         var yawStep = event.modifiers & Qt.ShiftModifier ? 4 : 2
         var panStep = 0.6
         switch (event.key) {
-            // ESC opens main menu (closing is handled by MainMenu itself when it has focus)
+            
             case Qt.Key_Escape:
                 if (typeof mainWindow !== 'undefined' && !mainWindow.menuVisible) {
                     mainWindow.menuVisible = true
                     event.accepted = true
                 }
                 break
-            // Space toggles pause
+            
             case Qt.Key_Space:
                 if (typeof mainWindow !== 'undefined') {
                     mainWindow.gamePaused = !mainWindow.gamePaused
@@ -489,20 +489,20 @@ Item {
                     event.accepted = true
                 }
                 break
-            // WASD pans the camera just like arrow keys
+            
             case Qt.Key_W: game.cameraMove(0, panStep);  event.accepted = true; break
             case Qt.Key_S: game.cameraMove(0, -panStep); event.accepted = true; break
             case Qt.Key_A: game.cameraMove(-panStep, 0); event.accepted = true; break
             case Qt.Key_D: game.cameraMove(panStep, 0);  event.accepted = true; break
-            // Arrow keys pan as well
+            
             case Qt.Key_Up:    game.cameraMove(0, panStep);  event.accepted = true; break
             case Qt.Key_Down:  game.cameraMove(0, -panStep); event.accepted = true; break
             case Qt.Key_Left:  game.cameraMove(-panStep, 0); event.accepted = true; break
             case Qt.Key_Right: game.cameraMove(panStep, 0);  event.accepted = true; break
-            // Yaw rotation on Q/E
+            
             case Qt.Key_Q: game.cameraYaw(-yawStep); event.accepted = true; break
             case Qt.Key_E: game.cameraYaw(yawStep);  event.accepted = true; break
-            // Elevation
+            
             case Qt.Key_R: game.cameraElevate(0.5);  event.accepted = true; break
             case Qt.Key_F: game.cameraElevate(-0.5); event.accepted = true; break
         }

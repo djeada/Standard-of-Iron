@@ -1,5 +1,5 @@
-// MapSelect.qml — restyled to match MainMenu.qml (colors, radii, borders, hover/active feel)
-// NOTE: All ids, signals, and structural names preserved.
+
+
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 
@@ -11,7 +11,7 @@ Item {
     signal mapChosen(string mapPath)
     signal cancelled()
 
-    // === Palette (mirrors MainMenu.qml) ===
+    
     readonly property color dim:         Qt.rgba(0, 0, 0, 0.45)
     readonly property color panelBg:     "#071018"
     readonly property color panelBr:     "#0f2430"
@@ -29,17 +29,17 @@ Item {
     function mget(i) {
         var m = list.model
         if (!m || i < 0 || i >= list.count) return null
-        if (m.get) return m.get(i)          // C++ QAbstractListModel
-        if (m[i] !== undefined) return m[i] // JS array
+        if (m.get) return m.get(i)          
+        if (m[i] !== undefined) return m[i] 
         return null
     }
     function field(obj, key) { return (obj && obj[key] !== undefined) ? String(obj[key]) : "" }
     function current() { return mget(list.currentIndex) }
 
-    // ==== Backdrop ====
+    
     Rectangle { anchors.fill: parent; color: dim }
 
-    // ==== Panel ====
+    
     Rectangle {
         id: panel
         anchors.centerIn: parent
@@ -52,7 +52,7 @@ Item {
         opacity: 0.98
         clip: true
 
-        // --- Left pane (list) ---
+        
         Item {
             id: left
             anchors {
@@ -61,7 +61,7 @@ Item {
             }
             width: Math.max(320, Math.min(panel.width * 0.45, 460))
 
-            // header
+            
             Text {
                 id: leftTitle
                 text: "Maps"
@@ -77,7 +77,7 @@ Item {
                 anchors { left: leftTitle.right; leftMargin: 8; verticalCenter: leftTitle.verticalCenter }
             }
 
-            // list frame
+            
             Rectangle {
                 id: listFrame
                 anchors { top: leftTitle.bottom; topMargin: 12; left: parent.left; right: parent.right; bottom: parent.bottom }
@@ -86,7 +86,7 @@ Item {
                 clip: true
             }
 
-            // list itself
+            
             ListView {
                 id: list
                 anchors.fill: listFrame
@@ -100,7 +100,7 @@ Item {
 
                 ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
 
-                // keep highlight for keyboard nav (we color the card itself)
+                
                 highlight: Rectangle {
                     color: "transparent"
                     radius: 8
@@ -116,7 +116,7 @@ Item {
                     height: 68
                     property bool hovered: false
 
-                    // Hover selects (like MainMenu); press darkens
+                    
                     MouseArea {
                         id: rowMouse
                         anchors.fill: parent
@@ -135,9 +135,9 @@ Item {
                         radius: 8
                         clip: true
 
-                        // selected -> "#1f8bf5"
-                        // pressed  -> "#184c7a"
-                        // idle     -> transparent
+                        
+                        
+                        
                         color: rowMouse.containsPress
                                ? hoverBg
                                : (index === list.currentIndex ? selectedBg : "transparent")
@@ -146,7 +146,7 @@ Item {
                         Behavior on color { ColorAnimation { duration: 160 } }
                         Behavior on border.color { ColorAnimation { duration: 160 } }
 
-                        // thumbnail
+                        
                         Rectangle {
                             id: thumbWrap
                             width: 72; height: 50; radius: 6
@@ -163,7 +163,7 @@ Item {
                             }
                         }
 
-                        // text block
+                        
                         Item {
                             anchors {
                                 left: thumbWrap.right; leftMargin: 10
@@ -194,7 +194,7 @@ Item {
                             }
                         }
 
-                        // chevron to match MainMenu
+                        
                         Text {
                             text: "›"
                             font.pointSize: 18
@@ -204,7 +204,7 @@ Item {
                     }
                 }
 
-                // empty state
+                
                 Item {
                     anchors.fill: parent
                     visible: list.count === 0
@@ -218,7 +218,7 @@ Item {
             }
         }
 
-        // --- Right pane (preview) ---
+        
         Item {
             id: right
             anchors {
@@ -226,7 +226,7 @@ Item {
                 left: left.right; leftMargin: 18; rightMargin: 20; topMargin: 20; bottomMargin: 12
             }
 
-            // name/title
+            
             Text {
                 id: title
                 text: {
@@ -240,7 +240,7 @@ Item {
                 anchors { top: parent.top; left: parent.left; right: parent.right }
             }
 
-            // description
+            
             Text {
                 id: descr
                 text: field(current(), "description")
@@ -254,7 +254,7 @@ Item {
                 maximumLineCount: 5
             }
 
-            // preview frame
+            
             Rectangle {
                 id: preview
                 radius: 10
@@ -285,13 +285,13 @@ Item {
             }
         }
 
-        // --- Footer with actions (styled like MainMenu primary/secondary) ---
+        
         Item {
             id: footer
             height: 52
             anchors { left: parent.left; right: parent.right; bottom: parent.bottom; leftMargin: 20; rightMargin: 20; bottomMargin: 16 }
 
-            // Secondary button (Back)
+            
             Button {
                 id: backBtn
                 text: "Back"
@@ -299,7 +299,7 @@ Item {
                 onClicked: root.cancelled()
                 hoverEnabled: true
 
-                // pointer cursor
+                
                 MouseArea {
                     id: backHover
                     anchors.fill: parent
@@ -333,7 +333,7 @@ Item {
                 ToolTip.text: "Esc"
             }
 
-            // Primary button (Play)
+            
             Button {
                 id: playPrimary
                 text: "Play"
@@ -341,7 +341,7 @@ Item {
                 anchors { right: parent.right; verticalCenter: parent.verticalCenter }
                 hoverEnabled: true
 
-                // pointer cursor
+                
                 MouseArea {
                     id: playHover
                     anchors.fill: parent
@@ -383,7 +383,7 @@ Item {
             }
         }
 
-        // keyboard flow
+        
         Keys.onPressed: {
             if (event.key === Qt.Key_Down) {
                 if (list.count > 0)

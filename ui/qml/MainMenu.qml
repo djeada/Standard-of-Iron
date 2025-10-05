@@ -1,4 +1,4 @@
-// MainMenu.qml (full, fixed to prevent text overflow and ensure clickability)
+
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.3
@@ -15,13 +15,13 @@ Item {
     signal loadSave()
     signal exitRequested()
 
-    // Dim background
+    
     Rectangle {
         anchors.fill: parent
         color: Qt.rgba(0, 0, 0, 0.45)
     }
 
-    // Main panel
+    
     Rectangle {
         id: container
         width: Math.min(parent.width * 0.78, 1100)
@@ -32,7 +32,7 @@ Item {
         border.color: "#0f2430"
         border.width: 1
         opacity: 0.98
-        clip: true                         // prevent any children from drawing outside
+        clip: true                         
 
         property int selectedIndex: 0
 
@@ -44,12 +44,12 @@ Item {
             columnSpacing: 18
             columns: parent.width > 900 ? 2 : 1
 
-            // LEFT COLUMN (menu)
+            
             ColumnLayout {
                 Layout.preferredWidth: parent.width > 900 ? parent.width * 0.45 : parent.width
                 spacing: 16
 
-                // Title
+                
                 ColumnLayout {
                     spacing: 6
                     Label {
@@ -71,7 +71,7 @@ Item {
                     }
                 }
 
-                // Menu model
+                
                 ListModel {
                     id: menuModel
                     ListElement { idStr: "skirmish"; title: "Play — Skirmish"; subtitle: "Select a map and start" }
@@ -80,7 +80,7 @@ Item {
                     ListElement { idStr: "exit";     title: "Exit";            subtitle: "Quit the game" }
                 }
 
-                // Menu list
+                
                 Repeater {
                     model: menuModel
                     delegate: Item {
@@ -105,10 +105,10 @@ Item {
                                 anchors.margins: 10
                                 spacing: 12
 
-                                // left spacer
+                                
                                 Item { Layout.fillWidth: true; Layout.preferredWidth: 1 }
 
-                                // titles
+                                
                                 ColumnLayout {
                                     Layout.fillWidth: true
                                     spacing: 2
@@ -129,7 +129,7 @@ Item {
                                     }
                                 }
 
-                                // chevron
+                                
                                 Text {
                                     text: "›"
                                     font.pointSize: 20
@@ -138,7 +138,7 @@ Item {
                             }
                         }
 
-                        // click area
+                        
                         MouseArea {
                             id: menuItemMouse
                             anchors.fill: parent
@@ -156,10 +156,10 @@ Item {
                     }
                 }
 
-                // flexible spacer
+                
                 Item { Layout.fillHeight: true }
 
-                // footer
+                
                 RowLayout {
                     spacing: 8
                     Label { text: "v0.9 — prototype"; color: "#4f6a75"; font.pointSize: 11 }
@@ -173,7 +173,7 @@ Item {
                 }
             }
 
-            // RIGHT COLUMN (cards)
+            
             Rectangle {
                 color: "transparent"
                 radius: 6
@@ -184,7 +184,7 @@ Item {
                     anchors.margins: 8
                     spacing: 12
 
-                    // featured card
+                    
                     Rectangle {
                         id: promo
                         color: "#061214"
@@ -217,14 +217,14 @@ Item {
                                 text: "Pick a map, adjust your forces and jump into battle. Modern controls and responsive UI."
                                 color: "#7daebc"
                                 wrapMode: Text.WordWrap
-                                maximumLineCount: 3           // keep height tidy
+                                maximumLineCount: 3           
                                 elide: Text.ElideRight
                                 Layout.fillWidth: true
                             }
                         }
                     }
 
-                    // tips card
+                    
                     Rectangle {
                         color: "#061418"
                         radius: 8
@@ -259,7 +259,7 @@ Item {
         }
     }
 
-    // keyboard navigation (at root Item level, which has focus)
+    
     Keys.onPressed: {
         if (event.key === Qt.Key_Down) {
             container.selectedIndex = Math.min(container.selectedIndex + 1, menuModel.count - 1)
@@ -275,8 +275,8 @@ Item {
             else if (m.idStr === "exit")     root.exitRequested()
             event.accepted = true
         } else if (event.key === Qt.Key_Escape) {
-            // ESC closes the menu only if a game has been started
-            // (prevents closing to a blank screen at startup)
+            
+            
             if (typeof mainWindow !== 'undefined' && mainWindow.menuVisible && mainWindow.gameStarted) {
                 mainWindow.menuVisible = false
                 event.accepted = true
