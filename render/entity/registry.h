@@ -11,7 +11,8 @@
 namespace Engine {
 namespace Core {
 class Entity;
-}
+class World;
+} // namespace Core
 } // namespace Engine
 namespace Render {
 namespace GL {
@@ -26,9 +27,11 @@ namespace Render::GL {
 struct DrawContext {
   ResourceManager *resources = nullptr;
   Engine::Core::Entity *entity = nullptr;
+  Engine::Core::World *world = nullptr;
   QMatrix4x4 model;
   bool selected = false;
   bool hovered = false;
+  float animationTime = 0.0f;
 };
 
 using RenderFunc = std::function<void(const DrawContext &, ISubmitter &out)>;

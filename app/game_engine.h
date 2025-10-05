@@ -98,6 +98,7 @@ public:
   Q_INVOKABLE bool hasSelectedType(const QString &type) const;
   Q_INVOKABLE void recruitNearSelected(const QString &unitType);
   Q_INVOKABLE QVariantMap getSelectedProductionState() const;
+  Q_INVOKABLE QString getSelectedUnitsCommandMode() const;
   Q_INVOKABLE void setRallyAtScreen(qreal sx, qreal sy);
   Q_INVOKABLE QVariantList availableMaps() const;
   Q_INVOKABLE void startSkirmish(const QString &mapPath);
