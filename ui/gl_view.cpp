@@ -6,7 +6,7 @@
 #include <QQuickWindow>
 
 GLView::GLView() {
-    setMirrorVertically(true); // typical for FBO backed items
+    setMirrorVertically(true); 
 }
 
 QQuickFramebufferObject::Renderer* GLView::createRenderer() const {
@@ -30,7 +30,7 @@ void GLView::GLRenderer::render() {
     m_engine->ensureInitialized();
     m_engine->update(1.0f/60.0f);
     m_engine->render(m_size.width(), m_size.height());
-    update(); // schedule next frame
+    update(); 
 }
 
 QOpenGLFramebufferObject* GLView::GLRenderer::createFramebufferObject(const QSize &size) {

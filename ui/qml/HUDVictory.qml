@@ -34,7 +34,7 @@ Rectangle {
             font.pointSize: 14
             focusPolicy: Qt.NoFocus
             onClicked: {
-                // Close overlay (game continues)
+                
                 victoryOverlay.visible = false
             }
         }
