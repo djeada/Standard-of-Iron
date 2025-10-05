@@ -30,7 +30,7 @@ void Barracks::init(const SpawnParams& params) {
 
     m_u = e->addComponent<Engine::Core::UnitComponent>();
     m_u->unitType = m_type;
-    m_u->health = 600; m_u->maxHealth = 600; m_u->speed = 0.0f; // static
+    m_u->health = 2000; m_u->maxHealth = 2000; m_u->speed = 0.0f; // static - increased HP for strategic importance
     m_u->ownerId = params.playerId;
 
     QVector3D tc = Game::Visuals::teamColorForOwner(m_u->ownerId);
