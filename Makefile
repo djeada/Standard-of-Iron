@@ -31,7 +31,7 @@ help:
 	@echo "  $(GREEN)clean$(RESET)       - Clean build directory"
 	@echo "  $(GREEN)rebuild$(RESET)     - Clean and build"
 	@echo "  $(GREEN)test$(RESET)        - Run tests (if any)"
-	@echo "  $(GREEN)format$(RESET)      - Format code (if clang-format available)"
+	@echo "  $(GREEN)format$(RESET)      - Format code and strip comments in ui/"
 	@echo "  $(GREEN)check-deps$(RESET)  - Check if dependencies are installed"
 	@echo "  $(GREEN)dev$(RESET)         - Set up development environment (install + configure + build)"
 	@echo "  $(GREEN)all$(RESET)         - Full build (configure + build)"
@@ -133,16 +133,25 @@ test: build
 		echo "$(YELLOW)No tests found. Test suite not yet implemented.$(RESET)"; \
 	fi
 
-# Format code (if clang-format is available)
+# Format code (clang-format) THEN strip comments in ui/ via your script
 .PHONY: format
 format:
 	@echo "$(BOLD)$(BLUE)Formatting code...$(RESET)"
 	@if command -v clang-format >/dev/null 2>&1; then \
-		find . -name "*.cpp" -o -name "*.h" | grep -v build | xargs clang-format -i; \
+		find . -type f \( -name "*.cpp" -o -name "*.c" -o -name "*.h" -o -name "*.hpp" \) -not -path "./$(BUILD_DIR)/*" -exec clang-format -i {} +; \
 		echo "$(GREEN)✓ Code formatted$(RESET)"; \
 	else \
 		echo "$(YELLOW)clang-format not found. Skipping code formatting.$(RESET)"; \
 	fi
+	@echo "$(BOLD)$(BLUE)Stripping comments in ui/...$(RESET)"
+	@if [ -x scripts/remove-comments.sh ]; then \
+		./scripts/remove-comments.sh ui/; \
+	elif [ -f scripts/remove-comments.sh ]; then \
+		bash scripts/remove-comments.sh ui/; \
+	else \
+		echo "$(RED)scripts/remove-comments.sh not found$(RESET)"; exit 1; \
+	fi
+	@echo "$(GREEN)✓ Format + comment strip complete$(RESET)"
 
 # Debug build
 .PHONY: debug
