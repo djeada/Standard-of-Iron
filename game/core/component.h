@@ -1,6 +1,7 @@
 #pragma once
 
 #include "entity.h"
+#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -59,12 +60,15 @@ public:
 class MovementComponent : public Component {
 public:
   MovementComponent()
-      : hasTarget(false), targetX(0.0f), targetY(0.0f), vx(0.0f), vz(0.0f) {}
+      : hasTarget(false), targetX(0.0f), targetY(0.0f), vx(0.0f), vz(0.0f),
+        pathPending(false), pendingRequestId(0) {}
 
   bool hasTarget;
   float targetX, targetY;
   float vx, vz;
   std::vector<std::pair<float, float>> path;
+  bool pathPending;
+  std::uint64_t pendingRequestId;
 };
 
 class AttackComponent : public Component {
