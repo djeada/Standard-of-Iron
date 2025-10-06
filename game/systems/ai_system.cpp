@@ -151,7 +151,12 @@ void AISystem::applyCommands(Engine::Core::World *world,
     case AICommandType::MoveUnits:
       if (!command.units.empty() &&
           command.units.size() == command.moveTargets.size()) {
-        CommandService::moveUnits(*world, command.units, command.moveTargets);
+
+        CommandService::MoveOptions opts;
+        opts.allowDirectFallback = false;
+        opts.clearAttackIntent = true;
+        CommandService::moveUnits(*world, command.units, command.moveTargets,
+                                  opts);
       }
       break;
     case AICommandType::AttackTarget:
