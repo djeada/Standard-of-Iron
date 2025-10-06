@@ -1,10 +1,14 @@
 #include "movement_system.h"
+#include "command_service.h"
 #include <algorithm>
 #include <cmath>
 
 namespace Game::Systems {
 
+static constexpr int MAX_WAYPOINT_SKIP_COUNT = 4;
+
 void MovementSystem::update(Engine::Core::World *world, float deltaTime) {
+  CommandService::processPathResults(*world);
   auto entities = world->getEntitiesWith<Engine::Core::MovementComponent>();
 
   for (auto entity : entities) {
@@ -29,20 +33,40 @@ void MovementSystem::moveUnit(Engine::Core::Entity *entity, float deltaTime) {
     movement->vx *= std::max(0.0f, 1.0f - damping * deltaTime);
     movement->vz *= std::max(0.0f, 1.0f - damping * deltaTime);
   } else {
+    float arriveRadius = std::clamp(maxSpeed * deltaTime * 2.0f, 0.05f, 0.25f);
+    float arriveRadiusSq = arriveRadius * arriveRadius;
+
     float dx = movement->targetX - transform->position.x;
     float dz = movement->targetY - transform->position.z;
     float dist2 = dx * dx + dz * dz;
-    float distance = std::sqrt(dist2);
 
-    const float arriveRadius = 0.25f;
-    if (distance < arriveRadius) {
+    int safetyCounter = MAX_WAYPOINT_SKIP_COUNT;
+    while (movement->hasTarget && dist2 < arriveRadiusSq &&
+           safetyCounter-- > 0) {
+      if (!movement->path.empty()) {
+        movement->path.erase(movement->path.begin());
+        if (!movement->path.empty()) {
+          movement->targetX = movement->path.front().first;
+          movement->targetY = movement->path.front().second;
+          dx = movement->targetX - transform->position.x;
+          dz = movement->targetY - transform->position.z;
+          dist2 = dx * dx + dz * dz;
+          continue;
+        }
+      }
 
       transform->position.x = movement->targetX;
       transform->position.z = movement->targetY;
       movement->hasTarget = false;
       movement->vx = movement->vz = 0.0f;
-    } else {
+      break;
+    }
 
+    if (!movement->hasTarget) {
+      movement->vx *= std::max(0.0f, 1.0f - damping * deltaTime);
+      movement->vz *= std::max(0.0f, 1.0f - damping * deltaTime);
+    } else {
+      float distance = std::sqrt(std::max(dist2, 0.0f));
       float nx = dx / std::max(0.0001f, distance);
       float nz = dz / std::max(0.0001f, distance);
       float desiredSpeed = maxSpeed;
