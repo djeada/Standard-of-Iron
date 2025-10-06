@@ -42,6 +42,12 @@ public:
                                     int viewH, int ownerFilter,
                                     bool preferBuildingsFirst) const;
 
+  Engine::Core::EntityID pickUnitFirst(float sx, float sy,
+                                       Engine::Core::World &world,
+                                       const Render::GL::Camera &camera,
+                                       int viewW, int viewH,
+                                       int ownerFilter) const;
+
   std::vector<Engine::Core::EntityID>
   pickInRect(float x1, float y1, float x2, float y2, Engine::Core::World &world,
              const Render::GL::Camera &camera, int viewW, int viewH,
