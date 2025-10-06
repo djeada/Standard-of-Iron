@@ -19,11 +19,39 @@ Item {
     property int bottomPanelHeight: bottomPanel.height
     
     property int selectionTick: 0
+    property bool hasMovableUnits: false
 
     Connections {
         target: (typeof game !== 'undefined') ? game : null
         function onSelectedUnitsChanged() { 
             selectionTick += 1
+            
+            
+            var hasTroops = false
+            if (typeof game !== 'undefined' && game.hasUnitsSelected && game.hasSelectedType) {
+                
+                var troopTypes = ["warrior", "archer"]
+                for (var i = 0; i < troopTypes.length; i++) {
+                    if (game.hasSelectedType(troopTypes[i])) {
+                        hasTroops = true
+                        break
+                    }
+                }
+            }
+            
+            
+            var actualMode = "normal"
+            if (hasTroops && typeof game !== 'undefined' && game.getSelectedUnitsCommandMode) {
+                actualMode = game.getSelectedUnitsCommandMode()
+            }
+            
+            
+            if (currentCommandMode !== actualMode) {
+                currentCommandMode = actualMode
+                commandModeChanged(actualMode)
+            }
+            
+            hasMovableUnits = hasTroops
         }
     }
 
@@ -33,7 +61,18 @@ Item {
         interval: 100
         repeat: true
         running: true
-        onTriggered: selectionTick += 1
+        onTriggered: {
+            selectionTick += 1
+            
+            
+            if (hasMovableUnits && typeof game !== 'undefined' && game.getSelectedUnitsCommandMode) {
+                var actualMode = game.getSelectedUnitsCommandMode()
+                if (currentCommandMode !== actualMode) {
+                    currentCommandMode = actualMode
+                    
+                }
+            }
+        }
     }
     
     
@@ -65,6 +104,7 @@ Item {
             anchors.fill: parent
             currentCommandMode: hud.currentCommandMode
             selectionTick: hud.selectionTick
+            hasMovableUnits: hud.hasMovableUnits
             onCommandModeChanged: function(m) { hud.currentCommandMode = m; hud.commandModeChanged(m); }
             onRecruit: function(t) { hud.recruit(t); }
         }

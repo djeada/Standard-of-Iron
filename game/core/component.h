@@ -21,6 +21,9 @@ public:
   Vec3 position;
   Vec3 rotation;
   Vec3 scale;
+
+  float desiredYaw = 0.0f;
+  bool hasDesiredYaw = false;
 };
 
 class RenderableComponent : public Component {
