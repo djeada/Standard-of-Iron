@@ -3,32 +3,28 @@
 #include "../core/world.h"
 #include "command_service.h"
 #include "formation_planner.h"
-#include <QVector3D>
 #include <algorithm>
 #include <cmath>
 
 namespace Game::Systems {
 
 AISystem::AISystem() {
-
   m_enemyAI.playerId = 2;
   m_enemyAI.state = AIState::Idle;
 
   registerBehavior(std::make_unique<DefendBehavior>());
-
   registerBehavior(std::make_unique<ProductionBehavior>());
-
   registerBehavior(std::make_unique<AttackBehavior>());
-
   registerBehavior(std::make_unique<GatherBehavior>());
+
+  m_aiThread = std::thread(&AISystem::workerLoop, this);
 }
 
 AISystem::~AISystem() {
-
-  if (m_aiThread && m_aiThread->joinable()) {
-    m_shouldStop = true;
-    m_aiCondition.notify_all();
-    m_aiThread->join();
+  m_shouldStop.store(true, std::memory_order_release);
+  m_jobCondition.notify_all();
+  if (m_aiThread.joinable()) {
+    m_aiThread.join();
   }
 }
 
@@ -46,102 +42,188 @@ void AISystem::update(Engine::Core::World *world, float deltaTime) {
   if (!world)
     return;
 
+  processResults(world);
+
   m_globalUpdateTimer += deltaTime;
   if (m_globalUpdateTimer < 0.5f)
     return;
-  deltaTime = m_globalUpdateTimer;
+
+  if (m_workerBusy.load(std::memory_order_acquire))
+    return;
+
+  AISnapshot snapshot = buildSnapshot(world);
+
+  AIJob job;
+  job.snapshot = std::move(snapshot);
+  job.context = m_enemyAI;
+  job.deltaTime = m_globalUpdateTimer;
+
+  {
+    std::lock_guard<std::mutex> lock(m_jobMutex);
+    m_pendingJob = std::move(job);
+    m_hasPendingJob = true;
+  }
+
+  m_workerBusy.store(true, std::memory_order_release);
+  m_jobCondition.notify_one();
+
   m_globalUpdateTimer = 0.0f;
+}
 
-  updateContext(world, m_enemyAI);
+AISnapshot AISystem::buildSnapshot(Engine::Core::World *world) const {
+  AISnapshot snapshot;
+  snapshot.playerId = m_enemyAI.playerId;
 
-  updateStateMachine(world, m_enemyAI, deltaTime);
+  auto entities = world->getEntitiesWith<Engine::Core::UnitComponent>();
+  snapshot.friendlies.reserve(entities.size());
 
-  if (m_useThreading) {
-    executeBehaviorsThreaded(world, deltaTime);
-  } else {
-    executeBehaviors(world, deltaTime);
+  for (auto *entity : entities) {
+    auto *unit = entity->getComponent<Engine::Core::UnitComponent>();
+    if (!unit || unit->health <= 0)
+      continue;
+
+    EntitySnapshot data;
+    data.id = entity->getId();
+    data.unitType = unit->unitType;
+    data.ownerId = unit->ownerId;
+    data.health = unit->health;
+    data.maxHealth = unit->maxHealth;
+    data.isBuilding = entity->hasComponent<Engine::Core::BuildingComponent>();
+
+    if (auto *transform =
+            entity->getComponent<Engine::Core::TransformComponent>()) {
+      data.position =
+          QVector3D(transform->position.x, 0.0f, transform->position.z);
+    }
+
+    if (auto *movement =
+            entity->getComponent<Engine::Core::MovementComponent>()) {
+      data.movement.hasComponent = true;
+      data.movement.hasTarget = movement->hasTarget;
+    }
+
+    if (auto *production =
+            entity->getComponent<Engine::Core::ProductionComponent>()) {
+      data.production.hasComponent = true;
+      data.production.inProgress = production->inProgress;
+      data.production.buildTime = production->buildTime;
+      data.production.timeRemaining = production->timeRemaining;
+      data.production.producedCount = production->producedCount;
+      data.production.maxUnits = production->maxUnits;
+      data.production.productType = production->productType;
+      data.production.rallySet = production->rallySet;
+      data.production.rallyX = production->rallyX;
+      data.production.rallyZ = production->rallyZ;
+    }
+
+    if (unit->ownerId == snapshot.playerId) {
+      snapshot.friendlies.push_back(std::move(data));
+    } else if (data.isBuilding) {
+      snapshot.enemyBuildings.push_back(std::move(data));
+    } else {
+      snapshot.enemyUnits.push_back(std::move(data));
+    }
+  }
+
+  return snapshot;
+}
+
+void AISystem::processResults(Engine::Core::World *world) {
+  std::vector<AIResult> results;
+  {
+    std::lock_guard<std::mutex> lock(m_resultMutex);
+    while (!m_results.empty()) {
+      results.push_back(std::move(m_results.front()));
+      m_results.pop();
+    }
+  }
+
+  for (auto &result : results) {
+    m_enemyAI = result.context;
+    applyCommands(world, result.commands);
   }
 }
 
-void AISystem::executeBehaviors(Engine::Core::World *world, float deltaTime) {
-
-  bool exclusiveBehaviorExecuted = false;
-
-  for (auto &behavior : m_behaviors) {
-    if (!behavior)
-      continue;
-
-    if (exclusiveBehaviorExecuted && !behavior->canRunConcurrently()) {
-      continue;
-    }
-
-    if (behavior->shouldExecute(world, m_enemyAI.playerId)) {
-      behavior->execute(world, m_enemyAI.playerId, deltaTime);
-
-      if (!behavior->canRunConcurrently()) {
-        exclusiveBehaviorExecuted = true;
+void AISystem::applyCommands(Engine::Core::World *world,
+                             const std::vector<AICommand> &commands) {
+  for (const auto &command : commands) {
+    switch (command.type) {
+    case AICommandType::MoveUnits:
+      if (!command.units.empty() &&
+          command.units.size() == command.moveTargets.size()) {
+        CommandService::moveUnits(*world, command.units, command.moveTargets);
       }
+      break;
+    case AICommandType::AttackTarget:
+      if (!command.units.empty() && command.targetId != 0) {
+        CommandService::attackTarget(*world, command.units, command.targetId,
+                                     command.shouldChase);
+      }
+      break;
+    case AICommandType::StartProduction: {
+      auto *entity = world->getEntity(command.buildingId);
+      if (!entity)
+        break;
+      auto *production =
+          entity->getComponent<Engine::Core::ProductionComponent>();
+      if (!production || production->inProgress)
+        break;
+      production->productType = command.productType;
+      production->timeRemaining = production->buildTime;
+      production->inProgress = true;
+      break;
+    }
     }
   }
 }
 
-void AISystem::executeBehaviorsThreaded(Engine::Core::World *world,
-                                        float deltaTime) {
-
-  executeBehaviors(world, deltaTime);
-}
-
-void AISystem::updateContext(Engine::Core::World *world, AIContext &ctx) {
-
+void AISystem::updateContext(const AISnapshot &snapshot, AIContext &ctx) {
   ctx.militaryUnits.clear();
   ctx.buildings.clear();
+  ctx.primaryBarracks = 0;
   ctx.totalUnits = 0;
   ctx.idleUnits = 0;
   ctx.combatUnits = 0;
+  ctx.averageHealth = 1.0f;
+  ctx.rallyX = 0.0f;
+  ctx.rallyZ = 0.0f;
+
   float totalHealthRatio = 0.0f;
 
-  auto entities = world->getEntitiesWith<Engine::Core::UnitComponent>();
-  for (auto *e : entities) {
-    auto *u = e->getComponent<Engine::Core::UnitComponent>();
-    if (!u || u->ownerId != ctx.playerId || u->health <= 0)
+  for (const auto &entity : snapshot.friendlies) {
+    if (entity.isBuilding) {
+      ctx.buildings.push_back(entity.id);
+      if (entity.unitType == "barracks" && ctx.primaryBarracks == 0) {
+        ctx.primaryBarracks = entity.id;
+        ctx.rallyX = entity.position.x() - 5.0f;
+        ctx.rallyZ = entity.position.z();
+      }
       continue;
+    }
 
-    if (e->hasComponent<Engine::Core::BuildingComponent>()) {
-      ctx.buildings.push_back(e->getId());
-      if (u->unitType == "barracks" && ctx.primaryBarracks == 0) {
-        ctx.primaryBarracks = e->getId();
+    ctx.militaryUnits.push_back(entity.id);
+    ctx.totalUnits++;
 
-        if (auto *t = e->getComponent<Engine::Core::TransformComponent>()) {
-          ctx.rallyX = t->position.x - 5.0f;
-          ctx.rallyZ = t->position.z;
-        }
-      }
+    if (!entity.movement.hasComponent || !entity.movement.hasTarget) {
+      ctx.idleUnits++;
     } else {
-      ctx.militaryUnits.push_back(e->getId());
-      ctx.totalUnits++;
+      ctx.combatUnits++;
+    }
 
-      auto *m = e->getComponent<Engine::Core::MovementComponent>();
-      if (!m || !m->hasTarget) {
-        ctx.idleUnits++;
-      } else {
-        ctx.combatUnits++;
-      }
-
-      if (u->maxHealth > 0) {
-        totalHealthRatio += float(u->health) / float(u->maxHealth);
-      }
+    if (entity.maxHealth > 0) {
+      totalHealthRatio += static_cast<float>(entity.health) /
+                          static_cast<float>(entity.maxHealth);
     }
   }
 
   if (ctx.totalUnits > 0) {
-    ctx.averageHealth = totalHealthRatio / float(ctx.totalUnits);
+    ctx.averageHealth = totalHealthRatio / static_cast<float>(ctx.totalUnits);
   } else {
     ctx.averageHealth = 1.0f;
   }
 }
 
-void AISystem::updateStateMachine(Engine::Core::World *world, AIContext &ctx,
-                                  float deltaTime) {
+void AISystem::updateStateMachine(AIContext &ctx, float deltaTime) {
   ctx.stateTimer += deltaTime;
   ctx.decisionTimer += deltaTime;
 
@@ -153,58 +235,39 @@ void AISystem::updateStateMachine(Engine::Core::World *world, AIContext &ctx,
 
   switch (ctx.state) {
   case AIState::Idle:
-
     if (ctx.idleUnits >= 3) {
       ctx.state = AIState::Gathering;
-    }
-
-    else if (ctx.averageHealth < 0.5f && ctx.totalUnits > 0) {
+    } else if (ctx.averageHealth < 0.5f && ctx.totalUnits > 0) {
       ctx.state = AIState::Defending;
     }
     break;
-
   case AIState::Gathering:
-
     if (ctx.totalUnits >= 5 && ctx.idleUnits < 2) {
       ctx.state = AIState::Attacking;
-    }
-
-    else if (ctx.totalUnits < 2) {
+    } else if (ctx.totalUnits < 2) {
       ctx.state = AIState::Idle;
     }
     break;
-
   case AIState::Attacking:
-
     if (ctx.averageHealth < 0.3f) {
       ctx.state = AIState::Retreating;
-    }
-
-    else if (ctx.totalUnits < 3) {
+    } else if (ctx.totalUnits < 3) {
       ctx.state = AIState::Gathering;
     }
     break;
-
   case AIState::Defending:
-
     if (ctx.averageHealth > 0.7f) {
       ctx.state = AIState::Idle;
-    }
-
-    else if (ctx.totalUnits >= 5 && ctx.averageHealth > 0.5f) {
+    } else if (ctx.totalUnits >= 5 && ctx.averageHealth > 0.5f) {
       ctx.state = AIState::Attacking;
     }
     break;
-
   case AIState::Retreating:
-
     if (ctx.stateTimer > 8.0f) {
       ctx.state = AIState::Defending;
     }
     break;
-
   case AIState::Expanding:
-
     ctx.state = AIState::Idle;
     break;
   }
@@ -214,243 +277,278 @@ void AISystem::updateStateMachine(Engine::Core::World *world, AIContext &ctx,
   }
 }
 
-void ProductionBehavior::execute(Engine::Core::World *world, int playerId,
-                                 float deltaTime) {
+void AISystem::executeBehaviors(const AISnapshot &snapshot, AIContext &ctx,
+                                float deltaTime,
+                                std::vector<AICommand> &outCommands) {
+  bool exclusiveBehaviorExecuted = false;
+
+  for (auto &behavior : m_behaviors) {
+    if (!behavior)
+      continue;
+
+    if (exclusiveBehaviorExecuted && !behavior->canRunConcurrently()) {
+      continue;
+    }
+
+    if (behavior->shouldExecute(snapshot, ctx)) {
+      behavior->execute(snapshot, ctx, deltaTime, outCommands);
+      if (!behavior->canRunConcurrently()) {
+        exclusiveBehaviorExecuted = true;
+      }
+    }
+  }
+}
+
+void AISystem::workerLoop() {
+  while (true) {
+    AIJob job;
+    {
+      std::unique_lock<std::mutex> lock(m_jobMutex);
+      m_jobCondition.wait(lock, [this]() {
+        return m_shouldStop.load(std::memory_order_acquire) || m_hasPendingJob;
+      });
+
+      if (m_shouldStop.load(std::memory_order_acquire) && !m_hasPendingJob) {
+        break;
+      }
+
+      job = std::move(m_pendingJob);
+      m_hasPendingJob = false;
+    }
+
+    AIResult result;
+    result.context = job.context;
+
+    updateContext(job.snapshot, result.context);
+    updateStateMachine(result.context, job.deltaTime);
+    executeBehaviors(job.snapshot, result.context, job.deltaTime,
+                     result.commands);
+
+    {
+      std::lock_guard<std::mutex> lock(m_resultMutex);
+      m_results.push(std::move(result));
+    }
+
+    m_workerBusy.store(false, std::memory_order_release);
+  }
+}
+
+void ProductionBehavior::execute(const AISnapshot &snapshot, AIContext &context,
+                                 float deltaTime,
+                                 std::vector<AICommand> &outCommands) {
   m_productionTimer += deltaTime;
   if (m_productionTimer < 2.0f)
     return;
   m_productionTimer = 0.0f;
 
-  auto entities = world->getEntitiesWith<Engine::Core::UnitComponent>();
-  for (auto *e : entities) {
-    auto *u = e->getComponent<Engine::Core::UnitComponent>();
-    if (!u || u->ownerId != playerId || u->health <= 0)
+  for (const auto &entity : snapshot.friendlies) {
+    if (!entity.isBuilding || entity.unitType != "barracks")
       continue;
-    if (u->unitType != "barracks")
+    if (!entity.production.hasComponent)
       continue;
-
-    auto *prod = e->getComponent<Engine::Core::ProductionComponent>();
-    if (!prod)
+    const auto &prod = entity.production;
+    if (prod.inProgress || prod.producedCount >= prod.maxUnits)
       continue;
 
-    if (!prod->inProgress && prod->producedCount < prod->maxUnits) {
-      prod->productType = "archer";
-      prod->timeRemaining = prod->buildTime;
-      prod->inProgress = true;
-    }
+    AICommand command;
+    command.type = AICommandType::StartProduction;
+    command.buildingId = entity.id;
+    command.productType = "archer";
+    outCommands.push_back(std::move(command));
   }
 }
 
-bool ProductionBehavior::shouldExecute(Engine::Core::World *world,
-                                       int playerId) const {
-
+bool ProductionBehavior::shouldExecute(const AISnapshot &snapshot,
+                                       const AIContext &context) const {
+  (void)snapshot;
+  (void)context;
   return true;
 }
 
-void GatherBehavior::execute(Engine::Core::World *world, int playerId,
-                             float deltaTime) {
+void GatherBehavior::execute(const AISnapshot &snapshot, AIContext &context,
+                             float deltaTime,
+                             std::vector<AICommand> &outCommands) {
   m_gatherTimer += deltaTime;
   if (m_gatherTimer < 4.0f)
     return;
   m_gatherTimer = 0.0f;
 
-  QVector3D rallyPoint(0.0f, 0.0f, 0.0f);
-  bool foundBarracks = false;
+  if (context.primaryBarracks == 0)
+    return;
 
-  auto entities = world->getEntitiesWith<Engine::Core::UnitComponent>();
-  for (auto *e : entities) {
-    auto *u = e->getComponent<Engine::Core::UnitComponent>();
-    if (!u || u->ownerId != playerId || u->health <= 0)
+  QVector3D rallyPoint(context.rallyX, 0.0f, context.rallyZ);
+
+  std::vector<const EntitySnapshot *> idleEntities;
+  for (const auto &entity : snapshot.friendlies) {
+    if (entity.isBuilding)
       continue;
-    if (u->unitType == "barracks") {
-      if (auto *t = e->getComponent<Engine::Core::TransformComponent>()) {
-        rallyPoint = QVector3D(t->position.x - 5.0f, 0.0f, t->position.z);
-        foundBarracks = true;
-        break;
-      }
+    if (!entity.movement.hasComponent || !entity.movement.hasTarget) {
+      idleEntities.push_back(&entity);
     }
   }
 
-  if (!foundBarracks)
+  if (idleEntities.empty())
     return;
 
-  std::vector<Engine::Core::EntityID> idleUnits;
-  for (auto *e : entities) {
-    auto *u = e->getComponent<Engine::Core::UnitComponent>();
-    if (!u || u->ownerId != playerId || u->health <= 0)
-      continue;
-    if (e->hasComponent<Engine::Core::BuildingComponent>())
-      continue;
+  auto formationTargets = FormationPlanner::spreadFormation(
+      static_cast<int>(idleEntities.size()), rallyPoint, 1.2f);
 
-    auto *m = e->getComponent<Engine::Core::MovementComponent>();
-    if (!m || m->hasTarget)
-      continue;
+  std::vector<Engine::Core::EntityID> unitsToMove;
+  std::vector<QVector3D> targetsToUse;
+  unitsToMove.reserve(idleEntities.size());
+  targetsToUse.reserve(idleEntities.size());
 
-    idleUnits.push_back(e->getId());
+  for (size_t i = 0; i < idleEntities.size(); ++i) {
+    const auto *entity = idleEntities[i];
+    const auto &target = formationTargets[i];
+    float dx = entity->position.x() - target.x();
+    float dz = entity->position.z() - target.z();
+    float distanceSq = dx * dx + dz * dz;
+    if (distanceSq < 0.25f * 0.25f)
+      continue;
+    unitsToMove.push_back(entity->id);
+    targetsToUse.push_back(target);
   }
 
-  if (idleUnits.empty())
+  if (unitsToMove.empty())
     return;
 
-  auto targets = FormationPlanner::spreadFormation(int(idleUnits.size()),
-                                                   rallyPoint, 1.2f);
-  CommandService::moveUnits(*world, idleUnits, targets);
+  AICommand command;
+  command.type = AICommandType::MoveUnits;
+  command.units = std::move(unitsToMove);
+  command.moveTargets = std::move(targetsToUse);
+  outCommands.push_back(std::move(command));
 }
 
-bool GatherBehavior::shouldExecute(Engine::Core::World *world,
-                                   int playerId) const {
-
+bool GatherBehavior::shouldExecute(const AISnapshot &snapshot,
+                                   const AIContext &context) const {
+  (void)context;
   int idleCount = 0;
-  auto entities = world->getEntitiesWith<Engine::Core::UnitComponent>();
-  for (auto *e : entities) {
-    auto *u = e->getComponent<Engine::Core::UnitComponent>();
-    if (!u || u->ownerId != playerId || u->health <= 0)
+  for (const auto &entity : snapshot.friendlies) {
+    if (entity.isBuilding)
       continue;
-    if (e->hasComponent<Engine::Core::BuildingComponent>())
-      continue;
-
-    auto *m = e->getComponent<Engine::Core::MovementComponent>();
-    if (!m || !m->hasTarget)
+    if (!entity.movement.hasComponent || !entity.movement.hasTarget) {
       idleCount++;
+    }
   }
   return idleCount >= 2;
 }
 
-void AttackBehavior::execute(Engine::Core::World *world, int playerId,
-                             float deltaTime) {
+void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
+                             float deltaTime,
+                             std::vector<AICommand> &outCommands) {
   m_attackTimer += deltaTime;
   if (m_attackTimer < 3.0f)
     return;
   m_attackTimer = 0.0f;
 
-  std::vector<Engine::Core::Entity *> enemyBuildings;
-  std::vector<Engine::Core::Entity *> enemyUnits;
-
-  auto entities = world->getEntitiesWith<Engine::Core::UnitComponent>();
-  for (auto *e : entities) {
-    auto *u = e->getComponent<Engine::Core::UnitComponent>();
-    if (!u || u->ownerId == playerId || u->health <= 0)
-      continue;
-
-    if (e->hasComponent<Engine::Core::BuildingComponent>()) {
-      enemyBuildings.push_back(e);
-    } else {
-      enemyUnits.push_back(e);
-    }
+  Engine::Core::EntityID targetId = 0;
+  if (!snapshot.enemyBuildings.empty()) {
+    targetId = snapshot.enemyBuildings.front().id;
+  } else if (!snapshot.enemyUnits.empty()) {
+    targetId = snapshot.enemyUnits.front().id;
   }
 
-  Engine::Core::Entity *mainTarget = nullptr;
-  if (!enemyBuildings.empty()) {
-    mainTarget = enemyBuildings[0];
-  } else if (!enemyUnits.empty()) {
-    mainTarget = enemyUnits[0];
-  }
-
-  if (!mainTarget)
+  if (targetId == 0)
     return;
 
   std::vector<Engine::Core::EntityID> attackers;
-  for (auto *e : entities) {
-    auto *u = e->getComponent<Engine::Core::UnitComponent>();
-    if (!u || u->ownerId != playerId || u->health <= 0)
+  for (const auto &entity : snapshot.friendlies) {
+    if (entity.isBuilding)
       continue;
-    if (e->hasComponent<Engine::Core::BuildingComponent>())
-      continue;
-
-    attackers.push_back(e->getId());
+    attackers.push_back(entity.id);
   }
 
   if (attackers.empty())
     return;
 
-  CommandService::attackTarget(*world, attackers, mainTarget->getId(), true);
+  AICommand command;
+  command.type = AICommandType::AttackTarget;
+  command.units = std::move(attackers);
+  command.targetId = targetId;
+  command.shouldChase = true;
+  outCommands.push_back(std::move(command));
 }
 
-bool AttackBehavior::shouldExecute(Engine::Core::World *world,
-                                   int playerId) const {
-
+bool AttackBehavior::shouldExecute(const AISnapshot &snapshot,
+                                   const AIContext &context) const {
+  (void)context;
   int unitCount = 0;
-  auto entities = world->getEntitiesWith<Engine::Core::UnitComponent>();
-  for (auto *e : entities) {
-    auto *u = e->getComponent<Engine::Core::UnitComponent>();
-    if (!u || u->ownerId != playerId || u->health <= 0)
-      continue;
-    if (!e->hasComponent<Engine::Core::BuildingComponent>())
+  for (const auto &entity : snapshot.friendlies) {
+    if (!entity.isBuilding)
       unitCount++;
   }
   return unitCount >= 4;
 }
 
-void DefendBehavior::execute(Engine::Core::World *world, int playerId,
-                             float deltaTime) {
+void DefendBehavior::execute(const AISnapshot &snapshot, AIContext &context,
+                             float deltaTime,
+                             std::vector<AICommand> &outCommands) {
   m_defendTimer += deltaTime;
   if (m_defendTimer < 3.0f)
     return;
   m_defendTimer = 0.0f;
 
-  QVector3D defendPos(0.0f, 0.0f, 0.0f);
-  bool foundBarracks = false;
+  if (context.primaryBarracks == 0)
+    return;
 
-  auto entities = world->getEntitiesWith<Engine::Core::UnitComponent>();
-  for (auto *e : entities) {
-    auto *u = e->getComponent<Engine::Core::UnitComponent>();
-    if (!u || u->ownerId != playerId || u->health <= 0)
-      continue;
-    if (u->unitType == "barracks") {
-      if (auto *t = e->getComponent<Engine::Core::TransformComponent>()) {
-        defendPos = QVector3D(t->position.x, 0.0f, t->position.z);
-        foundBarracks = true;
-        break;
-      }
+  QVector3D defendPos;
+  bool foundBarracks = false;
+  for (const auto &entity : snapshot.friendlies) {
+    if (entity.id == context.primaryBarracks) {
+      defendPos = entity.position;
+      foundBarracks = true;
+      break;
     }
   }
 
   if (!foundBarracks)
     return;
 
-  std::vector<Engine::Core::EntityID> defenders;
-  for (auto *e : entities) {
-    auto *u = e->getComponent<Engine::Core::UnitComponent>();
-    if (!u || u->ownerId != playerId || u->health <= 0)
+  std::vector<const EntitySnapshot *> defenders;
+  for (const auto &entity : snapshot.friendlies) {
+    if (entity.isBuilding)
       continue;
-    if (e->hasComponent<Engine::Core::BuildingComponent>())
-      continue;
-
-    defenders.push_back(e->getId());
+    defenders.push_back(&entity);
   }
 
   if (defenders.empty())
     return;
 
-  auto targets =
-      FormationPlanner::spreadFormation(int(defenders.size()), defendPos, 3.0f);
-  CommandService::moveUnits(*world, defenders, targets);
-}
+  auto targets = FormationPlanner::spreadFormation(
+      static_cast<int>(defenders.size()), defendPos, 3.0f);
 
-bool DefendBehavior::shouldExecute(Engine::Core::World *world,
-                                   int playerId) const {
+  std::vector<Engine::Core::EntityID> unitsToMove;
+  std::vector<QVector3D> targetsToUse;
+  unitsToMove.reserve(defenders.size());
+  targetsToUse.reserve(defenders.size());
 
-  float totalHealth = 0.0f;
-  int count = 0;
-
-  auto entities = world->getEntitiesWith<Engine::Core::UnitComponent>();
-  for (auto *e : entities) {
-    auto *u = e->getComponent<Engine::Core::UnitComponent>();
-    if (!u || u->ownerId != playerId || u->health <= 0)
+  for (size_t i = 0; i < defenders.size(); ++i) {
+    const auto *entity = defenders[i];
+    const auto &target = targets[i];
+    float dx = entity->position.x() - target.x();
+    float dz = entity->position.z() - target.z();
+    float distanceSq = dx * dx + dz * dz;
+    if (distanceSq < 1.0f * 1.0f)
       continue;
-    if (e->hasComponent<Engine::Core::BuildingComponent>())
-      continue;
-
-    if (u->maxHealth > 0) {
-      totalHealth += float(u->health) / float(u->maxHealth);
-      count++;
-    }
+    unitsToMove.push_back(entity->id);
+    targetsToUse.push_back(target);
   }
 
-  if (count == 0)
-    return false;
-  float avgHealth = totalHealth / float(count);
-  return avgHealth < 0.6f;
+  if (unitsToMove.empty())
+    return;
+
+  AICommand command;
+  command.type = AICommandType::MoveUnits;
+  command.units = std::move(unitsToMove);
+  command.moveTargets = std::move(targetsToUse);
+  outCommands.push_back(std::move(command));
+}
+
+bool DefendBehavior::shouldExecute(const AISnapshot &snapshot,
+                                   const AIContext &context) const {
+  (void)snapshot;
+  return context.averageHealth < 0.6f;
 }
 
 } // namespace Game::Systems

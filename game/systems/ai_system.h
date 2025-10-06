@@ -1,10 +1,13 @@
 #pragma once
 
 #include "../core/system.h"
+#include <QVector3D>
 #include <atomic>
 #include <condition_variable>
 #include <memory>
 #include <mutex>
+#include <queue>
+#include <string>
 #include <thread>
 #include <vector>
 
@@ -35,17 +38,6 @@ enum class BehaviorPriority {
   Critical = 4
 };
 
-class AIBehavior {
-public:
-  virtual ~AIBehavior() = default;
-  virtual void execute(Engine::Core::World *world, int playerId,
-                       float deltaTime) = 0;
-  virtual bool shouldExecute(Engine::Core::World *world,
-                             int playerId) const = 0;
-  virtual BehaviorPriority getPriority() const = 0;
-  virtual bool canRunConcurrently() const { return false; }
-};
-
 struct AIContext {
   int playerId = 2;
   AIState state = AIState::Idle;
@@ -64,9 +56,67 @@ struct AIContext {
   int idleUnits = 0;
   int combatUnits = 0;
   float averageHealth = 1.0f;
+};
 
-  std::mutex contextMutex;
-  std::atomic<bool> isProcessing{false};
+struct MovementSnapshot {
+  bool hasComponent = false;
+  bool hasTarget = false;
+};
+
+struct ProductionSnapshot {
+  bool hasComponent = false;
+  bool inProgress = false;
+  float buildTime = 0.0f;
+  float timeRemaining = 0.0f;
+  int producedCount = 0;
+  int maxUnits = 0;
+  std::string productType;
+  bool rallySet = false;
+  float rallyX = 0.0f;
+  float rallyZ = 0.0f;
+};
+
+struct EntitySnapshot {
+  Engine::Core::EntityID id = 0;
+  std::string unitType;
+  int ownerId = 0;
+  int health = 0;
+  int maxHealth = 0;
+  bool isBuilding = false;
+  QVector3D position;
+  MovementSnapshot movement;
+  ProductionSnapshot production;
+};
+
+struct AISnapshot {
+  int playerId = 0;
+  std::vector<EntitySnapshot> friendlies;
+  std::vector<EntitySnapshot> enemyUnits;
+  std::vector<EntitySnapshot> enemyBuildings;
+};
+
+enum class AICommandType { MoveUnits, AttackTarget, StartProduction };
+
+struct AICommand {
+  AICommandType type = AICommandType::MoveUnits;
+  std::vector<Engine::Core::EntityID> units;
+  std::vector<QVector3D> moveTargets;
+  Engine::Core::EntityID targetId = 0;
+  bool shouldChase = false;
+  Engine::Core::EntityID buildingId = 0;
+  std::string productType;
+};
+
+class AIBehavior {
+public:
+  virtual ~AIBehavior() = default;
+  virtual void execute(const AISnapshot &snapshot, AIContext &context,
+                       float deltaTime,
+                       std::vector<AICommand> &outCommands) = 0;
+  virtual bool shouldExecute(const AISnapshot &snapshot,
+                             const AIContext &context) const = 0;
+  virtual BehaviorPriority getPriority() const = 0;
+  virtual bool canRunConcurrently() const { return false; }
 };
 
 class AISystem : public Engine::Core::System {
@@ -78,32 +128,48 @@ public:
 
   void registerBehavior(std::unique_ptr<AIBehavior> behavior);
 
-  void setThreadedMode(bool enabled) { m_useThreading = enabled; }
-
 private:
-  void updateContext(Engine::Core::World *world, AIContext &ctx);
-  void updateStateMachine(Engine::Core::World *world, AIContext &ctx,
-                          float deltaTime);
-  void executeBehaviors(Engine::Core::World *world, float deltaTime);
-  void executeBehaviorsThreaded(Engine::Core::World *world, float deltaTime);
+  struct AIJob {
+    AISnapshot snapshot;
+    AIContext context;
+    float deltaTime = 0.0f;
+  };
+
+  struct AIResult {
+    AIContext context;
+    std::vector<AICommand> commands;
+  };
+
+  AISnapshot buildSnapshot(Engine::Core::World *world) const;
+  void updateContext(const AISnapshot &snapshot, AIContext &ctx);
+  void updateStateMachine(AIContext &ctx, float deltaTime);
+  void executeBehaviors(const AISnapshot &snapshot, AIContext &ctx,
+                        float deltaTime, std::vector<AICommand> &outCommands);
+  void workerLoop();
+  void processResults(Engine::Core::World *world);
+  void applyCommands(Engine::Core::World *world,
+                     const std::vector<AICommand> &commands);
 
   AIContext m_enemyAI;
   std::vector<std::unique_ptr<AIBehavior>> m_behaviors;
   float m_globalUpdateTimer = 0.0f;
-  bool m_useThreading = false;
-
-  std::unique_ptr<std::thread> m_aiThread;
-  std::condition_variable m_aiCondition;
-  std::mutex m_aiMutex;
+  std::thread m_aiThread;
+  std::mutex m_jobMutex;
+  std::condition_variable m_jobCondition;
+  bool m_hasPendingJob = false;
+  AIJob m_pendingJob;
+  std::mutex m_resultMutex;
+  std::queue<AIResult> m_results;
   std::atomic<bool> m_shouldStop{false};
-  std::atomic<bool> m_hasWork{false};
+  std::atomic<bool> m_workerBusy{false};
 };
 
 class ProductionBehavior : public AIBehavior {
 public:
-  void execute(Engine::Core::World *world, int playerId,
-               float deltaTime) override;
-  bool shouldExecute(Engine::Core::World *world, int playerId) const override;
+  void execute(const AISnapshot &snapshot, AIContext &context, float deltaTime,
+               std::vector<AICommand> &outCommands) override;
+  bool shouldExecute(const AISnapshot &snapshot,
+                     const AIContext &context) const override;
   BehaviorPriority getPriority() const override {
     return BehaviorPriority::High;
   }
@@ -115,9 +181,10 @@ private:
 
 class GatherBehavior : public AIBehavior {
 public:
-  void execute(Engine::Core::World *world, int playerId,
-               float deltaTime) override;
-  bool shouldExecute(Engine::Core::World *world, int playerId) const override;
+  void execute(const AISnapshot &snapshot, AIContext &context, float deltaTime,
+               std::vector<AICommand> &outCommands) override;
+  bool shouldExecute(const AISnapshot &snapshot,
+                     const AIContext &context) const override;
   BehaviorPriority getPriority() const override {
     return BehaviorPriority::Low;
   }
@@ -129,9 +196,10 @@ private:
 
 class AttackBehavior : public AIBehavior {
 public:
-  void execute(Engine::Core::World *world, int playerId,
-               float deltaTime) override;
-  bool shouldExecute(Engine::Core::World *world, int playerId) const override;
+  void execute(const AISnapshot &snapshot, AIContext &context, float deltaTime,
+               std::vector<AICommand> &outCommands) override;
+  bool shouldExecute(const AISnapshot &snapshot,
+                     const AIContext &context) const override;
   BehaviorPriority getPriority() const override {
     return BehaviorPriority::Normal;
   }
@@ -143,9 +211,10 @@ private:
 
 class DefendBehavior : public AIBehavior {
 public:
-  void execute(Engine::Core::World *world, int playerId,
-               float deltaTime) override;
-  bool shouldExecute(Engine::Core::World *world, int playerId) const override;
+  void execute(const AISnapshot &snapshot, AIContext &context, float deltaTime,
+               std::vector<AICommand> &outCommands) override;
+  bool shouldExecute(const AISnapshot &snapshot,
+                     const AIContext &context) const override;
   BehaviorPriority getPriority() const override {
     return BehaviorPriority::Critical;
   }

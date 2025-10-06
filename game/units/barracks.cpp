@@ -1,6 +1,7 @@
 #include "barracks.h"
 #include "../core/component.h"
 #include "../core/world.h"
+#include "../systems/building_collision_registry.h"
 #include "../visuals/team_colors.h"
 
 namespace Game {
@@ -41,6 +42,9 @@ void Barracks::init(const SpawnParams &params) {
   m_r->color[2] = tc.z();
 
   e->addComponent<Engine::Core::BuildingComponent>();
+
+  Game::Systems::BuildingCollisionRegistry::instance().registerBuilding(
+      m_id, m_type, m_t->position.x, m_t->position.z, m_u->ownerId);
 
   if (auto *prod = e->addComponent<Engine::Core::ProductionComponent>()) {
     prod->productType = "archer";
