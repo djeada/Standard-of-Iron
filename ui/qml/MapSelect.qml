@@ -35,9 +35,50 @@ Item {
     }
     function field(obj, key) { return (obj && obj[key] !== undefined) ? String(obj[key]) : "" }
     function current() { return mget(list.currentIndex) }
+    function acceptSelection() {
+        
+        if (!visible) return
+        if (list.currentIndex < 0 || list.count <= 0) return
+        var it = current()
+        var p = field(it, "path") || field(it, "file")
+        console.log("MapSelect: acceptSelection called, path=", p, "visible=", visible, "currentIndex=", list.currentIndex)
+        if (p && p.length > 0) {
+            console.log("MapSelect: emitting mapChosen for", p)
+            root.mapChosen(p)
+        } else {
+            console.log("MapSelect: no valid path to choose")
+        }
+    }
 
     
     Rectangle { anchors.fill: parent; color: dim }
+
+    
+    
+    Keys.onPressed: function(event) {
+        
+        
+        
+        if (!visible) return;
+
+        
+        
+    if (event.key === Qt.Key_Down) {
+            if (list.count > 0)
+                list.currentIndex = Math.min(list.currentIndex + 1, list.count - 1)
+            event.accepted = true
+        } else if (event.key === Qt.Key_Up) {
+            if (list.count > 0)
+                list.currentIndex = Math.max(list.currentIndex - 1, 0)
+            event.accepted = true
+        } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+            acceptSelection()
+            event.accepted = true
+        } else if (event.key === Qt.Key_Escape) {
+            backBtn.clicked()
+            event.accepted = true
+        }
+    }
 
     
     Rectangle {
@@ -98,6 +139,15 @@ Item {
                 keyNavigationWraps: false
                 boundsBehavior: Flickable.StopAtBounds
 
+                
+                
+                Keys.onPressed: function(event) {
+                    if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                        root.acceptSelection()
+                        event.accepted = true
+                    }
+                }
+
                 ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
 
                 
@@ -126,7 +176,7 @@ Item {
                         onEntered: { hovered = true; list.currentIndex = index }
                         onExited:  hovered = false
                         onClicked: list.currentIndex = index
-                        onDoubleClicked: playPrimary.clicked()
+                        onDoubleClicked: acceptSelection()
                     }
 
                     Rectangle {
@@ -372,11 +422,7 @@ Item {
                     Behavior on border.color { ColorAnimation { duration: 140 } }
                 }
 
-                onClicked: {
-                    var it = current()
-                    var p = field(it, "path") || field(it, "file")
-                    root.mapChosen(p)
-                }
+                onClicked: acceptSelection()
 
                 ToolTip.visible: playHover.containsMouse
                 ToolTip.text: "Enter"
@@ -384,26 +430,7 @@ Item {
         }
 
         
-        Keys.onPressed: {
-            if (event.key === Qt.Key_Down) {
-                if (list.count > 0)
-                    list.currentIndex = Math.min(list.currentIndex + 1, list.count - 1)
-                event.accepted = true
-            } else if (event.key === Qt.Key_Up) {
-                if (list.count > 0)
-                    list.currentIndex = Math.max(list.currentIndex - 1, 0)
-                event.accepted = true
-            } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
-                if (list.currentIndex >= 0 && list.count > 0) {
-                    var it = current()
-                    var p = field(it, "path") || field(it, "file")
-                    root.mapChosen(p)
-                }
-                event.accepted = true
-            } else if (event.key === Qt.Key_Escape) {
-                root.cancelled()
-                event.accepted = true
-            }
-        }
+        
+        
     }
 }

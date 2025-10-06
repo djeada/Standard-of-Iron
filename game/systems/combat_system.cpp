@@ -151,7 +151,8 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
                   if (needNewCommand) {
                     CommandService::MoveOptions options;
                     options.clearAttackIntent = false;
-                    options.allowDirectFallback = !targetIsBuilding;
+
+                    options.allowDirectFallback = false;
                     std::vector<Engine::Core::EntityID> unitIds = {
                         attacker->getId()};
                     std::vector<QVector3D> moveTargets = {desiredPos};
