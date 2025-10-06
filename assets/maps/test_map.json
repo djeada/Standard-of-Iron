@@ -3,17 +3,17 @@
   "coordSystem": "grid",
   "maxTroopsPerPlayer": 30,
   "grid": {
-    "width": 100,
-    "height": 100,
+    "width": 120,
+    "height": 120,
     "tileSize": 1.0
   },
   "camera": {
     "center": [0.0, 0.0, 0.0],
-    "distance": 15.0,
+    "distance": 25.0,
     "tiltDeg": 45.0,
     "fovY": 45.0,
     "near": 1.0,
-    "far": 200.0
+    "far": 400.0
   },
   "spawns": [
     { "type": "barracks", "x": 45, "z": 50, "playerId": 1 },
@@ -29,5 +29,35 @@
     
     { "type": "barracks", "x": 65, "z": 50, "playerId": 2 },
     { "type": "archer", "x": 56, "z": 50, "playerId": 2 }
+  ],
+  "terrain": [
+    {
+      "type": "mountain",
+      "x": 58,
+      "z": 42,
+      "radius": 18,
+      "height": 7.2,
+      "rotation": 18
+    },
+    {
+      "type": "mountain",
+      "x": 34,
+      "z": 86,
+      "radius": 16,
+      "height": 6.4,
+      "rotation": 108
+    },
+    {
+      "type": "hill",
+      "x": 78,
+      "z": 74,
+      "radius": 15,
+      "height": 3.1,
+      "entrances": [
+        { "x": 74, "z": 58 },
+        { "x": 88, "z": 78 },
+        { "x": 66, "z": 88 }
+      ]
+    }
   ]
 }
