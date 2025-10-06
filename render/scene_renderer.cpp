@@ -27,12 +27,16 @@ bool Renderer::initialize() {
 void Renderer::shutdown() { m_backend.reset(); }
 
 void Renderer::beginFrame() {
+  if (m_paused.load())
+    return;
   if (m_backend)
     m_backend->beginFrame();
   m_queue.clear();
 }
 
 void Renderer::endFrame() {
+  if (m_paused.load())
+    return;
   if (m_backend && m_camera) {
     m_queue.sortForBatching();
     m_backend->execute(m_queue, *m_camera);
@@ -101,8 +105,12 @@ void Renderer::selectionSmoke(const QMatrix4x4 &model, const QVector3D &color,
 }
 
 void Renderer::renderWorld(Engine::Core::World *world) {
+  if (m_paused.load())
+    return;
   if (!world)
     return;
+
+  std::lock_guard<std::mutex> guard(m_worldMutex);
 
   auto renderableEntities =
       world->getEntitiesWith<Engine::Core::RenderableComponent>();
@@ -133,7 +141,7 @@ void Renderer::renderWorld(Engine::Core::World *world) {
 
           ctx.selected =
               (m_selectedIds.find(entity->getId()) != m_selectedIds.end());
-          ctx.hovered = (entity->getId() == m_hoveredBuildingId);
+          ctx.hovered = (entity->getId() == m_hoveredEntityId);
           ctx.animationTime = m_accumulatedTime;
           fn(ctx, *this);
           drawnByRegistry = true;

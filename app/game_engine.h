@@ -143,7 +143,7 @@ private:
     int maxTroopsPerPlayer = 50;
   };
   struct HoverState {
-    Engine::Core::EntityID buildingId = 0;
+    Engine::Core::EntityID entityId = 0;
   };
   struct PatrolState {
     QVector3D firstWaypoint;
