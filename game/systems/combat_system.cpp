@@ -69,6 +69,20 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
 
           if (isInRange(attacker, target, range)) {
             bestTarget = target;
+
+            if (auto *attT =
+                    attacker
+                        ->getComponent<Engine::Core::TransformComponent>()) {
+              if (auto *tgtT =
+                      target
+                          ->getComponent<Engine::Core::TransformComponent>()) {
+                float dx = tgtT->position.x - attT->position.x;
+                float dz = tgtT->position.z - attT->position.z;
+                float yaw = std::atan2(dx, dz) * 180.0f / 3.14159265f;
+                attT->desiredYaw = yaw;
+                attT->hasDesiredYaw = true;
+              }
+            }
           } else if (attackTarget->shouldChase) {
 
             auto *movement =
@@ -135,6 +149,32 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
       auto *bestTargetUnit =
           bestTarget->getComponent<Engine::Core::UnitComponent>();
 
+      if (!attacker->hasComponent<Engine::Core::AttackTargetComponent>()) {
+        auto *newTarget =
+            attacker->addComponent<Engine::Core::AttackTargetComponent>();
+        newTarget->targetId = bestTarget->getId();
+        newTarget->shouldChase = false;
+      } else {
+        auto *existingTarget =
+            attacker->getComponent<Engine::Core::AttackTargetComponent>();
+        if (existingTarget->targetId != bestTarget->getId()) {
+          existingTarget->targetId = bestTarget->getId();
+          existingTarget->shouldChase = false;
+        }
+      }
+
+      if (auto *attT =
+              attacker->getComponent<Engine::Core::TransformComponent>()) {
+        if (auto *tgtT =
+                bestTarget->getComponent<Engine::Core::TransformComponent>()) {
+          float dx = tgtT->position.x - attT->position.x;
+          float dz = tgtT->position.z - attT->position.z;
+          float yaw = std::atan2(dx, dz) * 180.0f / 3.14159265f;
+          attT->desiredYaw = yaw;
+          attT->hasDesiredYaw = true;
+        }
+      }
+
       if (arrowSys) {
         auto attT = attacker->getComponent<Engine::Core::TransformComponent>();
         auto tgtT =
@@ -152,6 +192,12 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
       }
       dealDamage(bestTarget, damage);
       *tAccum = 0.0f;
+    } else {
+
+      if (!attackTarget &&
+          attacker->hasComponent<Engine::Core::AttackTargetComponent>()) {
+        attacker->removeComponent<Engine::Core::AttackTargetComponent>();
+      }
     }
   }
 }

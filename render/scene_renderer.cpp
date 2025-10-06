@@ -129,11 +129,12 @@ void Renderer::renderWorld(Engine::Core::World *world) {
       if (!unit->unitType.empty() && m_entityRegistry) {
         auto fn = m_entityRegistry->get(unit->unitType);
         if (fn) {
-          DrawContext ctx{resources(), entity, modelMatrix};
+          DrawContext ctx{resources(), entity, world, modelMatrix};
 
           ctx.selected =
               (m_selectedIds.find(entity->getId()) != m_selectedIds.end());
           ctx.hovered = (entity->getId() == m_hoveredBuildingId);
+          ctx.animationTime = m_accumulatedTime;
           fn(ctx, *this);
           drawnByRegistry = true;
         }

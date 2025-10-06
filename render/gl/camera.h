@@ -68,8 +68,9 @@ private:
   bool m_isPerspective = true;
   float m_fov = 45.0f;
   float m_aspect = 16.0f / 9.0f;
-  float m_nearPlane = 0.1f;
-  float m_farPlane = 1000.0f;
+
+  float m_nearPlane = 1.0f;
+  float m_farPlane = 200.0f;
 
   float m_orthoLeft = -10.0f;
   float m_orthoRight = 10.0f;

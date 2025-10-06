@@ -22,7 +22,8 @@ void Environment::apply(const MapDefinition &def,
 void Environment::applyDefault(Render::GL::Renderer &renderer,
                                Render::GL::Camera &camera) {
   camera.setRTSView(QVector3D(0, 0, 0), 15.0f, 45.0f);
-  camera.setPerspective(45.0f, 16.0f / 9.0f, 0.1f, 1000.0f);
+
+  camera.setPerspective(45.0f, 16.0f / 9.0f, 1.0f, 200.0f);
   Render::GL::Renderer::GridParams gp;
   gp.cellSize = 1.0f;
   gp.extent = 50.0f;
