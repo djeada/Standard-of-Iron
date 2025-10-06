@@ -63,6 +63,7 @@ MapTransformer::applyToWorld(const MapDefinition &def,
       auto *u = e->addComponent<Engine::Core::UnitComponent>();
       u->unitType = s.type.toStdString();
       u->ownerId = s.playerId;
+      u->visionRange = 14.0f;
 
       QVector3D tc;
       switch (u->ownerId) {
@@ -89,6 +90,7 @@ MapTransformer::applyToWorld(const MapDefinition &def,
         u->health = 80;
         u->maxHealth = 80;
         u->speed = 3.0f;
+        u->visionRange = 16.0f;
         auto *atk = e->addComponent<Engine::Core::AttackComponent>();
         atk->range = 6.0f;
         atk->damage = 12;
