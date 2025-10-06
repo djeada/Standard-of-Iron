@@ -46,6 +46,9 @@ public:
   void setCamera(Camera *camera);
   void setClearColor(float r, float g, float b, float a = 1.0f);
 
+  void updateAnimationTime(float deltaTime) { m_accumulatedTime += deltaTime; }
+  float getAnimationTime() const { return m_accumulatedTime; }
+
   ResourceManager *resources() const {
     return m_backend ? m_backend->resources() : nullptr;
   }
@@ -118,6 +121,7 @@ private:
   int m_viewportWidth = 0;
   int m_viewportHeight = 0;
   GridParams m_gridParams;
+  float m_accumulatedTime = 0.0f;
 };
 
 } // namespace Render::GL
