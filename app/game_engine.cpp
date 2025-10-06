@@ -12,6 +12,7 @@
 #include "game/map/level_loader.h"
 #include "game/systems/ai_system.h"
 #include "game/systems/arrow_system.h"
+#include "game/systems/building_collision_registry.h"
 #include "game/systems/camera_controller.h"
 #include "game/systems/camera_follow_system.h"
 #include "game/systems/combat_system.h"
@@ -30,7 +31,6 @@
 #include "render/gl/resources.h"
 #include "render/ground/ground_renderer.h"
 #include "render/scene_renderer.h"
-
 #include "selected_units_model.h"
 #include <QDir>
 #include <QFile>
@@ -750,6 +750,8 @@ void GameEngine::startSkirmish(const QString &mapPath) {
 
     m_world->clear();
 
+    Game::Systems::BuildingCollisionRegistry::instance().clear();
+
     auto lr = Game::Map::LevelLoader::loadFromAssets(m_level.mapName, *m_world,
                                                      *m_renderer, *m_camera);
     if (m_ground) {
@@ -758,6 +760,11 @@ void GameEngine::startSkirmish(const QString &mapPath) {
       else
         m_ground->configureExtent(50.0f);
     }
+
+    int mapWidth = lr.ok ? lr.gridWidth : 100;
+    int mapHeight = lr.ok ? lr.gridHeight : 100;
+    Game::Systems::CommandService::initialize(mapWidth, mapHeight);
+
     m_level.mapName = lr.mapName;
     m_level.playerUnitId = lr.playerUnitId;
     m_level.camFov = lr.camFov;
