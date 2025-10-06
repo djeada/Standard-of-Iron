@@ -7,6 +7,7 @@
 #include <QVariant>
 #include <QVector3D>
 #include <algorithm>
+#include <cstdint>
 #include <memory>
 #include <vector>
 
@@ -26,6 +27,8 @@ class Renderer;
 class Camera;
 class ResourceManager;
 class GroundRenderer;
+class TerrainRenderer;
+class FogRenderer;
 } // namespace GL
 } // namespace Render
 
@@ -129,6 +132,7 @@ private:
     QString victoryState = "";
     QString cursorMode = "normal";
     int lastTroopCount = 0;
+    std::uint64_t visibilityVersion = 0;
   };
   struct ViewportState {
     int width = 0;
@@ -163,6 +167,8 @@ private:
   std::unique_ptr<Render::GL::Camera> m_camera;
   std::shared_ptr<Render::GL::ResourceManager> m_resources;
   std::unique_ptr<Render::GL::GroundRenderer> m_ground;
+  std::unique_ptr<Render::GL::TerrainRenderer> m_terrain;
+  std::unique_ptr<Render::GL::FogRenderer> m_fog;
   std::unique_ptr<Game::Systems::SelectionSystem> m_selectionSystem;
   std::unique_ptr<Game::Systems::PickingService> m_pickingService;
   QQuickWindow *m_window = nullptr;

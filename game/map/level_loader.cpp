@@ -8,6 +8,7 @@
 #include "environment.h"
 #include "map_loader.h"
 #include "map_transformer.h"
+#include "terrain_service.h"
 #include <QDebug>
 
 namespace Game {
@@ -33,6 +34,8 @@ LevelLoadResult LevelLoader::loadFromAssets(const QString &mapPath,
   if (Game::Map::MapLoader::loadFromJsonFile(mapPath, def, &err)) {
     res.ok = true;
     res.mapName = def.name;
+
+    Game::Map::TerrainService::instance().initialize(def);
 
     Game::Map::Environment::apply(def, renderer, camera);
     res.camFov = def.camera.fovY;

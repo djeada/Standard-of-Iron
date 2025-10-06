@@ -8,11 +8,13 @@
 #include "../geom/transforms.h"
 #include "../gl/mesh.h"
 #include "../gl/primitives.h"
+#include "../gl/resources.h"
 #include "../gl/texture.h"
 #include "registry.h"
 
 #include <QMatrix4x4>
 #include <QVector3D>
+#include <algorithm>
 #include <cmath>
 #include <cstdint>
 
@@ -414,6 +416,23 @@ static inline void drawSelectionFX(const DrawContext &p, ISubmitter &out) {
   }
 }
 
+static inline void drawGroundShadow(const DrawContext &p, ISubmitter &out,
+                                    float formationWidth,
+                                    float formationDepth) {
+  if (!p.resources)
+    return;
+  Mesh *quad = p.resources->quad();
+  Texture *white = p.resources->white();
+  if (!quad || !white)
+    return;
+
+  QMatrix4x4 decal = p.model;
+  decal.translate(0.0f, 0.02f, 0.0f);
+  decal.rotate(-90.0f, 1.0f, 0.0f, 0.0f);
+  decal.scale(formationWidth * 0.55f, formationDepth * 0.45f, 1.0f);
+  out.mesh(quad, decal, QVector3D(0.07f, 0.07f, 0.066f), white, 0.52f);
+}
+
 void registerArcherRenderer(Render::GL::EntityRendererRegistry &registry) {
   registry.registerRenderer("archer", [](const DrawContext &p,
                                          ISubmitter &out) {
@@ -441,6 +460,9 @@ void registerArcherRenderer(Render::GL::EntityRendererRegistry &registry) {
     const float spacing = 0.75f;
 
     ArcherColors colors = makeColors(tunic);
+
+    drawGroundShadow(p, out, std::max(1, cols - 1) * spacing + 0.8f,
+                     std::max(1, rows - 1) * spacing + 0.9f);
 
     bool isMoving = false;
     bool isAttacking = false;
