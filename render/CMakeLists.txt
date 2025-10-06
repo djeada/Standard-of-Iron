@@ -3,6 +3,7 @@ add_library(render_gl STATIC
     gl/buffer.cpp
     gl/mesh.cpp
     gl/texture.cpp
+    gl/primitives.cpp
     scene_renderer.cpp
     gl/camera.cpp
     gl/resources.cpp
@@ -21,6 +22,7 @@ add_library(render_gl STATIC
     geom/arrow.cpp
     geom/flag.cpp
     geom/patrol_flags.cpp
+    geom/transforms.cpp
 )
 
 target_include_directories(render_gl PUBLIC .)

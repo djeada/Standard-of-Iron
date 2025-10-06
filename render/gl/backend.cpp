@@ -13,8 +13,12 @@ Backend::~Backend() = default;
 
 void Backend::initialize() {
   initializeOpenGLFunctions();
+
   glEnable(GL_DEPTH_TEST);
   glDepthFunc(GL_LESS);
+  glDepthRange(0.0, 1.0);
+  glDepthMask(GL_TRUE);
+
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -38,7 +42,13 @@ void Backend::beginFrame() {
   }
   glClearColor(m_clearColor[0], m_clearColor[1], m_clearColor[2],
                m_clearColor[3]);
+
+  glClearDepth(1.0);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+  glEnable(GL_DEPTH_TEST);
+  glDepthFunc(GL_LESS);
+  glDepthMask(GL_TRUE);
 }
 
 void Backend::setViewport(int w, int h) {
