@@ -260,7 +260,7 @@ Item {
     }
 
     
-    Keys.onPressed: {
+    Keys.onPressed: function(event) {
         if (event.key === Qt.Key_Down) {
             container.selectedIndex = Math.min(container.selectedIndex + 1, menuModel.count - 1)
             event.accepted = true

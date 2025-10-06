@@ -56,113 +56,17 @@ PickingService::updateHover(float sx, float sy, Engine::Core::World &world,
     return 0;
   }
   auto prevHover = m_prevHoverId;
-  Engine::Core::EntityID currentHover = 0;
 
-  if (prevHover) {
-    if (auto *e = world.getEntity(prevHover)) {
-      if (e->hasComponent<Engine::Core::BuildingComponent>()) {
+  Engine::Core::EntityID picked =
+      pickSingle(sx, sy, world, camera, viewW, viewH, 0, false);
 
-        auto *u = e->getComponent<Engine::Core::UnitComponent>();
-        if (u && u->ownerId == 1) {
-          if (auto *t = e->getComponent<Engine::Core::TransformComponent>()) {
-            float pxPad = 12.0f;
-            if (auto *prod =
-                    e->getComponent<Engine::Core::ProductionComponent>()) {
-              if (prod->inProgress)
-                pxPad = 24.0f;
-            }
-            const float marginXZ_keep = 1.10f;
-            const float pad_keep = 1.12f;
-            float hxk = std::max(0.4f, t->scale.x * marginXZ_keep * pad_keep);
-            float hzk = std::max(0.4f, t->scale.z * marginXZ_keep * pad_keep);
-            QRectF bounds;
-            if (projectBounds(
-                    camera,
-                    QVector3D(t->position.x, t->position.y, t->position.z), hxk,
-                    hzk, viewW, viewH, bounds)) {
-              bounds.adjust(-pxPad, -pxPad, pxPad, pxPad);
-              if (bounds.contains(QPointF(sx, sy))) {
-                currentHover = prevHover;
-                m_hoverGraceTicks = 6;
-                m_prevHoverId = currentHover;
-                return currentHover;
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-
-  float bestD2 = std::numeric_limits<float>::max();
-  auto ents = world.getEntitiesWith<Engine::Core::TransformComponent>();
-  for (auto *e : ents) {
-    if (!e->hasComponent<Engine::Core::UnitComponent>())
-      continue;
-    if (!e->hasComponent<Engine::Core::BuildingComponent>())
-      continue;
-
-    auto *u = e->getComponent<Engine::Core::UnitComponent>();
-    if (!u || u->ownerId != 1)
-      continue;
-
-    auto *t = e->getComponent<Engine::Core::TransformComponent>();
-    const float marginXZ = 1.10f;
-    const float hoverPad = 1.06f;
-    float hx = std::max(0.4f, t->scale.x * marginXZ * hoverPad);
-    float hz = std::max(0.4f, t->scale.z * marginXZ * hoverPad);
-    QRectF bounds;
-    if (!projectBounds(camera,
-                       QVector3D(t->position.x, t->position.y, t->position.z),
-                       hx, hz, viewW, viewH, bounds))
-      continue;
-    if (!bounds.contains(QPointF(sx, sy)))
-      continue;
-    QPointF centerSp;
-    if (!worldToScreen(camera, viewW, viewH,
-                       QVector3D(t->position.x, t->position.y, t->position.z),
-                       centerSp))
-      centerSp = bounds.center();
-    float dx = float(sx) - float(centerSp.x());
-    float dy = float(sy) - float(centerSp.y());
-    float d2 = dx * dx + dy * dy;
-    if (d2 < bestD2) {
-      bestD2 = d2;
-      currentHover = e->getId();
-    }
-  }
-
-  if (currentHover != 0 && currentHover != prevHover) {
+  if (picked != 0 && picked != prevHover) {
     m_hoverGraceTicks = 6;
   }
 
-  if (currentHover == 0 && prevHover != 0) {
-    if (auto *e = world.getEntity(prevHover)) {
-      auto *t = e->getComponent<Engine::Core::TransformComponent>();
-      auto *u = e->getComponent<Engine::Core::UnitComponent>();
-      if (t && e->getComponent<Engine::Core::BuildingComponent>() && u &&
-          u->ownerId == 1) {
-        const float marginXZ = 1.12f;
-        const float keepPad =
-            (e->getComponent<Engine::Core::ProductionComponent>() &&
-             e->getComponent<Engine::Core::ProductionComponent>()->inProgress)
-                ? 1.16f
-                : 1.12f;
-        float hx = std::max(0.4f, t->scale.x * marginXZ * keepPad);
-        float hz = std::max(0.4f, t->scale.z * marginXZ * keepPad);
-        QRectF bounds;
-        if (projectBounds(
-                camera, QVector3D(t->position.x, t->position.y, t->position.z),
-                hx, hz, viewW, viewH, bounds)) {
-          if (bounds.contains(QPointF(sx, sy))) {
-            currentHover = prevHover;
-          }
-        }
-      }
-    }
-  }
-
+  Engine::Core::EntityID currentHover = picked;
   if (currentHover == 0 && prevHover != 0 && m_hoverGraceTicks > 0) {
+
     currentHover = prevHover;
   }
 
@@ -177,8 +81,9 @@ PickingService::pickSingle(float sx, float sy, Engine::Core::World &world,
                            const Render::GL::Camera &camera, int viewW,
                            int viewH, int ownerFilter,
                            bool preferBuildingsFirst) const {
-  const float baseUnitPickRadius = 18.0f;
-  const float baseBuildingPickRadius = 28.0f;
+
+  const float baseUnitPickRadius = 30.0f;
+  const float baseBuildingPickRadius = 30.0f;
   float bestUnitDist2 = std::numeric_limits<float>::max();
   float bestBuildingDist2 = std::numeric_limits<float>::max();
   Engine::Core::EntityID bestUnitId = 0;
@@ -284,6 +189,18 @@ PickingService::pickSingle(float sx, float sy, Engine::Core::World &world,
       return bestBuildingId;
   }
   return 0;
+}
+
+Engine::Core::EntityID
+PickingService::pickUnitFirst(float sx, float sy, Engine::Core::World &world,
+                              const Render::GL::Camera &camera, int viewW,
+                              int viewH, int ownerFilter) const {
+
+  auto id = pickSingle(sx, sy, world, camera, viewW, viewH, ownerFilter, false);
+  if (id != 0)
+    return id;
+
+  return pickSingle(sx, sy, world, camera, viewW, viewH, ownerFilter, true);
 }
 
 std::vector<Engine::Core::EntityID>
