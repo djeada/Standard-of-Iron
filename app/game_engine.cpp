@@ -10,6 +10,8 @@
 #include "game/core/component.h"
 #include "game/core/world.h"
 #include "game/map/level_loader.h"
+#include "game/map/terrain_service.h"
+#include "game/map/visibility_service.h"
 #include "game/systems/ai_system.h"
 #include "game/systems/arrow_system.h"
 #include "game/systems/building_collision_registry.h"
@@ -24,12 +26,15 @@
 #include "game/systems/production_service.h"
 #include "game/systems/production_system.h"
 #include "game/systems/selection_system.h"
+#include "game/systems/terrain_alignment_system.h"
 #include "render/geom/arrow.h"
 #include "render/geom/patrol_flags.h"
 #include "render/gl/bootstrap.h"
 #include "render/gl/camera.h"
 #include "render/gl/resources.h"
+#include "render/ground/fog_renderer.h"
 #include "render/ground/ground_renderer.h"
+#include "render/ground/terrain_renderer.h"
 #include "render/scene_renderer.h"
 #include "selected_units_model.h"
 #include <QDir>
@@ -44,6 +49,8 @@ GameEngine::GameEngine() {
   m_renderer = std::make_unique<Render::GL::Renderer>();
   m_camera = std::make_unique<Render::GL::Camera>();
   m_ground = std::make_unique<Render::GL::GroundRenderer>();
+  m_terrain = std::make_unique<Render::GL::TerrainRenderer>();
+  m_fog = std::make_unique<Render::GL::FogRenderer>();
 
   std::unique_ptr<Engine::Core::System> arrowSys =
       std::make_unique<Game::Systems::ArrowSystem>();
@@ -55,6 +62,7 @@ GameEngine::GameEngine() {
   m_world->addSystem(std::make_unique<Game::Systems::CombatSystem>());
   m_world->addSystem(std::make_unique<Game::Systems::AISystem>());
   m_world->addSystem(std::make_unique<Game::Systems::ProductionSystem>());
+  m_world->addSystem(std::make_unique<Game::Systems::TerrainAlignmentSystem>());
 
   m_selectionSystem = std::make_unique<Game::Systems::SelectionSystem>();
   m_world->addSystem(std::make_unique<Game::Systems::SelectionSystem>());
@@ -398,8 +406,23 @@ void GameEngine::update(float dt) {
     m_renderer->updateAnimationTime(dt);
   }
 
-  if (m_world)
+  if (m_world) {
     m_world->update(dt);
+
+    auto &visibilityService = Game::Map::VisibilityService::instance();
+    if (visibilityService.isInitialized()) {
+      visibilityService.update(*m_world, m_runtime.localOwnerId);
+      const auto newVersion = visibilityService.version();
+      if (newVersion != m_runtime.visibilityVersion) {
+        if (m_fog) {
+          m_fog->updateMask(
+              visibilityService.getWidth(), visibilityService.getHeight(),
+              visibilityService.getTileSize(), visibilityService.cells());
+        }
+        m_runtime.visibilityVersion = newVersion;
+      }
+    }
+  }
   syncSelectionFlags();
   checkVictoryCondition();
 
@@ -436,6 +459,14 @@ void GameEngine::render(int pixelWidth, int pixelHeight) {
   if (m_ground && m_renderer) {
     if (auto *res = m_renderer->resources())
       m_ground->submit(*m_renderer, *res);
+  }
+  if (m_terrain && m_renderer) {
+    if (auto *res = m_renderer->resources())
+      m_terrain->submit(*m_renderer, *res);
+  }
+  if (m_fog && m_renderer) {
+    if (auto *res = m_renderer->resources())
+      m_fog->submit(*m_renderer, *res);
   }
   if (m_renderer)
     m_renderer->setHoveredEntityId(m_hover.entityId);
@@ -766,9 +797,29 @@ void GameEngine::startSkirmish(const QString &mapPath) {
         m_ground->configureExtent(50.0f);
     }
 
+    if (m_terrain) {
+      auto &terrainService = Game::Map::TerrainService::instance();
+      if (terrainService.isInitialized() && terrainService.getHeightMap()) {
+        m_terrain->configure(*terrainService.getHeightMap());
+      }
+    }
+
     int mapWidth = lr.ok ? lr.gridWidth : 100;
     int mapHeight = lr.ok ? lr.gridHeight : 100;
     Game::Systems::CommandService::initialize(mapWidth, mapHeight);
+
+    auto &visibilityService = Game::Map::VisibilityService::instance();
+    visibilityService.initialize(mapWidth, mapHeight, lr.tileSize);
+    if (m_world)
+      visibilityService.update(*m_world, m_runtime.localOwnerId);
+    if (m_fog && visibilityService.isInitialized()) {
+      m_fog->updateMask(
+          visibilityService.getWidth(), visibilityService.getHeight(),
+          visibilityService.getTileSize(), visibilityService.cells());
+      m_runtime.visibilityVersion = visibilityService.version();
+    } else {
+      m_runtime.visibilityVersion = 0;
+    }
 
     m_level.mapName = lr.mapName;
     m_level.playerUnitId = lr.playerUnitId;

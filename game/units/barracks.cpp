@@ -35,6 +35,7 @@ void Barracks::init(const SpawnParams &params) {
   m_u->maxHealth = 2000;
   m_u->speed = 0.0f;
   m_u->ownerId = params.playerId;
+  m_u->visionRange = 22.0f;
 
   QVector3D tc = Game::Visuals::teamColorForOwner(m_u->ownerId);
   m_r->color[0] = tc.x();
