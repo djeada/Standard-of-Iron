@@ -7,6 +7,8 @@ ApplicationWindow {
     id: mainWindow
     width: 1280
     height: 720
+    
+    visibility: Window.FullScreen
     visible: true
     title: "Standard of Iron - RTS Game"
 
@@ -151,6 +153,7 @@ ApplicationWindow {
         }
 
         onMapChosen: function(mapPath) {
+            console.log("Main: onMapChosen received", mapPath, "game=", typeof game, "startSkirmish=", (typeof game !== 'undefined' && !!game.startSkirmish))
             if (typeof game !== 'undefined' && game.startSkirmish) game.startSkirmish(mapPath)
             mapSelect.visible = false
             mainWindow.menuVisible = false
@@ -160,7 +163,7 @@ ApplicationWindow {
         }
         onCancelled: function() {
             mapSelect.visible = false
-            mainMenu.visible = true
+            mainWindow.menuVisible = true
         }
     }
 
