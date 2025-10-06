@@ -11,15 +11,17 @@ Flag::FlagMatrices Flag::create(float worldX, float worldZ,
   result.poleColor = poleColor;
 
   result.pole.setToIdentity();
-  result.pole.translate(worldX, 0.15f * scale, worldZ);
+
+  result.pole.translate(worldX, (0.15f + 0.02f) * scale, worldZ);
   result.pole.scale(0.03f * scale, 0.30f * scale, 0.03f * scale);
 
   result.pennant.setToIdentity();
-  result.pennant.translate(worldX + 0.10f * scale, 0.25f * scale, worldZ);
+  result.pennant.translate(worldX + 0.10f * scale, (0.25f + 0.02f) * scale,
+                           worldZ);
   result.pennant.scale(0.18f * scale, 0.12f * scale, 0.02f * scale);
 
   result.finial.setToIdentity();
-  result.finial.translate(worldX, 0.32f * scale, worldZ);
+  result.finial.translate(worldX, (0.32f + 0.02f) * scale, worldZ);
   result.finial.scale(0.05f * scale, 0.05f * scale, 0.05f * scale);
 
   return result;
