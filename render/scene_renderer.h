@@ -7,7 +7,9 @@
 #include "gl/resources.h"
 #include "gl/texture.h"
 #include "submitter.h"
+#include <atomic>
 #include <memory>
+#include <mutex>
 #include <optional>
 #include <unordered_set>
 #include <vector>
@@ -52,7 +54,7 @@ public:
   ResourceManager *resources() const {
     return m_backend ? m_backend->resources() : nullptr;
   }
-  void setHoveredBuildingId(unsigned int id) { m_hoveredBuildingId = id; }
+  void setHoveredEntityId(unsigned int id) { m_hoveredEntityId = id; }
 
   void setSelectedEntities(const std::vector<unsigned int> &ids) {
     m_selectedIds.clear();
@@ -96,6 +98,10 @@ public:
   void setGridParams(const GridParams &gp) { m_gridParams = gp; }
   const GridParams &gridParams() const { return m_gridParams; }
 
+  void pause() { m_paused = true; }
+  void resume() { m_paused = false; }
+  bool isPaused() const { return m_paused; }
+
   void mesh(Mesh *mesh, const QMatrix4x4 &model, const QVector3D &color,
             Texture *texture = nullptr, float alpha = 1.0f) override;
   void selectionRing(const QMatrix4x4 &model, float alphaInner,
@@ -109,19 +115,25 @@ public:
 
   void renderWorld(Engine::Core::World *world);
 
+  void lockWorldForModification() { m_worldMutex.lock(); }
+  void unlockWorldForModification() { m_worldMutex.unlock(); }
+
 private:
   Camera *m_camera = nullptr;
   std::shared_ptr<Backend> m_backend;
   DrawQueue m_queue;
 
   std::unique_ptr<EntityRendererRegistry> m_entityRegistry;
-  unsigned int m_hoveredBuildingId = 0;
+  unsigned int m_hoveredEntityId = 0;
   std::unordered_set<unsigned int> m_selectedIds;
 
   int m_viewportWidth = 0;
   int m_viewportHeight = 0;
   GridParams m_gridParams;
   float m_accumulatedTime = 0.0f;
+  std::atomic<bool> m_paused{false};
+
+  std::mutex m_worldMutex;
 };
 
 } // namespace Render::GL

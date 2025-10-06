@@ -105,9 +105,9 @@ void GameEngine::onAttackClick(qreal sx, qreal sy) {
     return;
   }
 
-  Engine::Core::EntityID targetId = m_pickingService->pickSingle(
-      float(sx), float(sy), *m_world, *m_camera, m_viewport.width,
-      m_viewport.height, 0, true);
+  Engine::Core::EntityID targetId =
+      m_pickingService->pickUnitFirst(float(sx), float(sy), *m_world, *m_camera,
+                                      m_viewport.width, m_viewport.height, 0);
 
   if (targetId == 0) {
 
@@ -297,7 +297,7 @@ void GameEngine::setHoverAtScreen(qreal sx, qreal sy) {
 
       m_window->setCursor(Qt::ArrowCursor);
     }
-    m_hover.buildingId = 0;
+    m_hover.entityId = 0;
     return;
   }
 
@@ -307,7 +307,7 @@ void GameEngine::setHoverAtScreen(qreal sx, qreal sy) {
     m_window->setCursor(Qt::BlankCursor);
   }
 
-  m_hover.buildingId =
+  m_hover.entityId =
       m_pickingService->updateHover(float(sx), float(sy), *m_world, *m_camera,
                                     m_viewport.width, m_viewport.height);
 }
@@ -419,7 +419,8 @@ void GameEngine::update(float dt) {
 }
 
 void GameEngine::render(int pixelWidth, int pixelHeight) {
-  if (!m_renderer || !m_world || !m_runtime.initialized)
+
+  if (!m_renderer || !m_world || !m_runtime.initialized || m_runtime.loading)
     return;
   if (pixelWidth > 0 && pixelHeight > 0) {
     m_viewport.width = pixelWidth;
@@ -437,7 +438,7 @@ void GameEngine::render(int pixelWidth, int pixelHeight) {
       m_ground->submit(*m_renderer, *res);
   }
   if (m_renderer)
-    m_renderer->setHoveredBuildingId(m_hover.buildingId);
+    m_renderer->setHoveredEntityId(m_hover.entityId);
   m_renderer->renderWorld(m_world.get());
   if (m_arrowSystem) {
     if (auto *res = m_renderer->resources())
@@ -742,11 +743,15 @@ void GameEngine::startSkirmish(const QString &mapPath) {
     }
 
     if (m_renderer) {
+
+      m_renderer->pause();
+
+      m_renderer->lockWorldForModification();
       m_renderer->setSelectedEntities({});
-      m_renderer->setHoveredBuildingId(0);
+      m_renderer->setHoveredEntityId(0);
     }
 
-    m_hover.buildingId = 0;
+    m_hover.entityId = 0;
 
     m_world->clear();
 
@@ -772,6 +777,11 @@ void GameEngine::startSkirmish(const QString &mapPath) {
     m_level.camFar = lr.camFar;
     m_level.maxTroopsPerPlayer = lr.maxTroopsPerPlayer;
 
+    if (m_renderer) {
+
+      m_renderer->unlockWorldForModification();
+      m_renderer->resume();
+    }
     m_runtime.loading = false;
   }
 }
