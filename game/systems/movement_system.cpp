@@ -79,6 +79,19 @@ void MovementSystem::moveUnit(Engine::Core::Entity *entity, float deltaTime) {
       float step =
           std::clamp(diff, -turnSpeed * deltaTime, turnSpeed * deltaTime);
       transform->rotation.y = current + step;
+    } else if (transform->hasDesiredYaw) {
+
+      float current = transform->rotation.y;
+      float targetYaw = transform->desiredYaw;
+      float diff = std::fmod((targetYaw - current + 540.0f), 360.0f) - 180.0f;
+      float turnSpeed = 180.0f;
+      float step =
+          std::clamp(diff, -turnSpeed * deltaTime, turnSpeed * deltaTime);
+      transform->rotation.y = current + step;
+
+      if (std::fabs(diff) < 0.5f) {
+        transform->hasDesiredYaw = false;
+      }
     }
   }
 }

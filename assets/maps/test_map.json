@@ -12,8 +12,8 @@
     "distance": 15.0,
     "tiltDeg": 45.0,
     "fovY": 45.0,
-    "near": 0.1,
-    "far": 1000.0
+    "near": 1.0,
+    "far": 200.0
   },
   "spawns": [
     { "type": "barracks", "x": 45, "z": 50, "playerId": 1 },
@@ -22,11 +22,12 @@
     { "type": "archer", "x": 50, "z": 52, "playerId": 1 },
     { "type": "archer", "x": 48, "z": 52, "playerId": 1 },
     { "type": "archer", "x": 52, "z": 52, "playerId": 1 },
+    { "type": "archer", "x": 48, "z": 48, "playerId": 1 },
+    { "type": "archer", "x": 52, "z": 48, "playerId": 1 },
+    { "type": "archer", "x": 50, "z": 48, "playerId": 1 },
+    { "type": "archer", "x": 48, "z": 48, "playerId": 1 },
     
     { "type": "barracks", "x": 65, "z": 50, "playerId": 2 },
-    { "type": "archer", "x": 56, "z": 50, "playerId": 2 },
-    { "type": "archer", "x": 58, "z": 50, "playerId": 2 },
-    { "type": "archer", "x": 56, "z": 52, "playerId": 2 },
-    { "type": "archer", "x": 58, "z": 52, "playerId": 2 }
+    { "type": "archer", "x": 56, "z": 50, "playerId": 2 }
   ]
 }

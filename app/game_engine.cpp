@@ -393,6 +393,11 @@ void GameEngine::update(float dt) {
   } else {
     dt *= m_runtime.timeScale;
   }
+
+  if (m_renderer) {
+    m_renderer->updateAnimationTime(dt);
+  }
+
   if (m_world)
     m_world->update(dt);
   syncSelectionFlags();
@@ -626,6 +631,50 @@ QVariantMap GameEngine::getSelectedProductionState() const {
   m["producedCount"] = st.producedCount;
   m["maxUnits"] = st.maxUnits;
   return m;
+}
+
+QString GameEngine::getSelectedUnitsCommandMode() const {
+  if (!m_selectionSystem || !m_world)
+    return "normal";
+
+  const auto &sel = m_selectionSystem->getSelectedUnits();
+  if (sel.empty())
+    return "normal";
+
+  int attackingCount = 0;
+  int patrollingCount = 0;
+  int totalUnits = 0;
+
+  for (auto id : sel) {
+    auto *e = m_world->getEntity(id);
+    if (!e)
+      continue;
+
+    auto *u = e->getComponent<Engine::Core::UnitComponent>();
+    if (!u)
+      continue;
+    if (u->unitType == "barracks")
+      continue;
+
+    totalUnits++;
+
+    if (e->getComponent<Engine::Core::AttackTargetComponent>())
+      attackingCount++;
+
+    auto *patrol = e->getComponent<Engine::Core::PatrolComponent>();
+    if (patrol && patrol->patrolling)
+      patrollingCount++;
+  }
+
+  if (totalUnits == 0)
+    return "normal";
+
+  if (patrollingCount == totalUnits)
+    return "patrol";
+  if (attackingCount == totalUnits)
+    return "attack";
+
+  return "normal";
 }
 
 void GameEngine::setRallyAtScreen(qreal sx, qreal sy) {

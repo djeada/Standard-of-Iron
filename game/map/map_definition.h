@@ -17,8 +17,9 @@ struct CameraDefinition {
   float distance = 15.0f;
   float tiltDeg = 45.0f;
   float fovY = 45.0f;
-  float nearPlane = 0.1f;
-  float farPlane = 1000.0f;
+
+  float nearPlane = 1.0f;
+  float farPlane = 200.0f;
 };
 
 struct UnitSpawn {
