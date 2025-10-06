@@ -3,6 +3,8 @@
 #include "../core/world.h"
 #include "../visuals/team_colors.h"
 #include "arrow_system.h"
+#include "building_collision_registry.h"
+#include "command_service.h"
 #include <algorithm>
 #include <limits>
 
@@ -85,19 +87,78 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
             }
           } else if (attackTarget->shouldChase) {
 
-            auto *movement =
-                attacker->getComponent<Engine::Core::MovementComponent>();
-            if (!movement) {
-              movement =
-                  attacker->addComponent<Engine::Core::MovementComponent>();
-            }
-            if (movement) {
-              auto *targetTransform =
-                  target->getComponent<Engine::Core::TransformComponent>();
-              if (targetTransform) {
-                movement->targetX = targetTransform->position.x;
-                movement->targetY = targetTransform->position.z;
-                movement->hasTarget = true;
+            auto *targetTransform =
+                target->getComponent<Engine::Core::TransformComponent>();
+            auto *attackerTransformComponent =
+                attacker->getComponent<Engine::Core::TransformComponent>();
+            if (targetTransform && attackerTransformComponent) {
+              QVector3D attackerPos(attackerTransformComponent->position.x,
+                                    0.0f,
+                                    attackerTransformComponent->position.z);
+              QVector3D targetPos(targetTransform->position.x, 0.0f,
+                                  targetTransform->position.z);
+              QVector3D desiredPos = targetPos;
+              bool holdPosition = false;
+
+              bool targetIsBuilding =
+                  target->hasComponent<Engine::Core::BuildingComponent>();
+              if (targetIsBuilding) {
+                float scaleX = targetTransform->scale.x;
+                float scaleZ = targetTransform->scale.z;
+                float targetRadius = std::max(scaleX, scaleZ) * 0.5f;
+                QVector3D direction = targetPos - attackerPos;
+                float distance = direction.length();
+                if (distance > 0.001f) {
+                  direction /= distance;
+                  float desiredDistance =
+                      targetRadius + std::max(range - 0.2f, 0.2f);
+                  if (distance > desiredDistance + 0.15f) {
+                    desiredPos = targetPos - direction * desiredDistance;
+                  } else {
+                    holdPosition = true;
+                  }
+                }
+              }
+
+              auto *movement =
+                  attacker->getComponent<Engine::Core::MovementComponent>();
+              if (!movement) {
+                movement =
+                    attacker->addComponent<Engine::Core::MovementComponent>();
+              }
+
+              if (movement) {
+                if (holdPosition) {
+                  movement->hasTarget = false;
+                  movement->vx = 0.0f;
+                  movement->vz = 0.0f;
+                  movement->path.clear();
+                } else {
+                  QVector3D plannedTarget(movement->targetX, 0.0f,
+                                          movement->targetY);
+                  if (!movement->path.empty()) {
+                    const auto &finalNode = movement->path.back();
+                    plannedTarget =
+                        QVector3D(finalNode.first, 0.0f, finalNode.second);
+                  }
+
+                  float diffSq = (plannedTarget - desiredPos).lengthSquared();
+                  bool needNewCommand = !movement->pathPending;
+                  if (movement->hasTarget && diffSq <= 0.25f * 0.25f) {
+                    needNewCommand = false;
+                  }
+
+                  if (needNewCommand) {
+                    CommandService::MoveOptions options;
+                    options.clearAttackIntent = false;
+                    options.allowDirectFallback = !targetIsBuilding;
+                    std::vector<Engine::Core::EntityID> unitIds = {
+                        attacker->getId()};
+                    std::vector<QVector3D> moveTargets = {desiredPos};
+                    CommandService::moveUnits(*world, unitIds, moveTargets,
+                                              options);
+                  }
+                }
               }
             }
 
@@ -241,6 +302,11 @@ void CombatSystem::dealDamage(Engine::Core::Entity *target, int damage) {
     unit->health = std::max(0, unit->health - damage);
 
     if (unit->health <= 0) {
+
+      if (target->hasComponent<Engine::Core::BuildingComponent>()) {
+        BuildingCollisionRegistry::instance().unregisterBuilding(
+            target->getId());
+      }
 
       if (auto *r = target->getComponent<Engine::Core::RenderableComponent>()) {
         r->visible = false;
