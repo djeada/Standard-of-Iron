@@ -1,5 +1,6 @@
 #pragma once
 
+#include "terrain.h"
 #include <QString>
 #include <QVector3D>
 #include <vector>
@@ -36,6 +37,7 @@ struct MapDefinition {
   GridDefinition grid;
   CameraDefinition camera;
   std::vector<UnitSpawn> spawns;
+  std::vector<TerrainFeature> terrain;
   CoordSystem coordSystem = CoordSystem::Grid;
   int maxTroopsPerPlayer = 50;
 };
