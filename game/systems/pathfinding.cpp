@@ -1,4 +1,5 @@
 #include "pathfinding.h"
+#include "../map/terrain_service.h"
 #include "building_collision_registry.h"
 #include <algorithm>
 #include <cmath>
@@ -59,6 +60,20 @@ void Pathfinding::updateBuildingObstacles() {
 
   for (auto &row : m_obstacles) {
     std::fill(row.begin(), row.end(), false);
+  }
+
+  auto &terrainService = Game::Map::TerrainService::instance();
+  if (terrainService.isInitialized()) {
+    for (int z = 0; z < m_height; ++z) {
+      for (int x = 0; x < m_width; ++x) {
+        int terrainX = x + static_cast<int>(m_gridOffsetX);
+        int terrainZ = z + static_cast<int>(m_gridOffsetZ);
+
+        if (!terrainService.isWalkable(terrainX, terrainZ)) {
+          m_obstacles[z][x] = true;
+        }
+      }
+    }
   }
 
   auto &registry = BuildingCollisionRegistry::instance();

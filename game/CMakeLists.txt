@@ -26,10 +26,14 @@ add_library(game_systems STATIC
     systems/command_service.cpp
     systems/production_service.cpp
     systems/production_system.cpp
+    systems/terrain_alignment_system.cpp
     map/map_loader.cpp
     map/level_loader.cpp
     map/map_transformer.cpp
     map/environment.cpp
+    map/terrain.cpp
+    map/terrain_service.cpp
+    map/visibility_service.cpp
     visuals/visual_catalog.cpp
     units/unit.cpp
     units/archer.cpp

@@ -13,6 +13,8 @@ add_library(render_gl STATIC
     gl/state_scopes.cpp
     draw_queue.cpp
     ground/ground_renderer.cpp
+    ground/fog_renderer.cpp
+    ground/terrain_renderer.cpp
     entity/registry.cpp
     entity/archer_renderer.cpp
     entity/barracks_renderer.cpp

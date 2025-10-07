@@ -53,6 +53,55 @@ static void readSpawns(const QJsonArray &arr, std::vector<UnitSpawn> &out) {
   }
 }
 
+static void readTerrain(const QJsonArray &arr, std::vector<TerrainFeature> &out,
+                        const GridDefinition &grid, CoordSystem coordSys) {
+  out.clear();
+  out.reserve(arr.size());
+
+  for (const auto &v : arr) {
+    auto o = v.toObject();
+    TerrainFeature feature;
+
+    QString typeStr = o.value("type").toString("flat").toLower();
+    if (typeStr == "mountain") {
+      feature.type = TerrainType::Mountain;
+    } else if (typeStr == "hill") {
+      feature.type = TerrainType::Hill;
+    } else {
+      feature.type = TerrainType::Flat;
+    }
+
+    float x = float(o.value("x").toDouble(0.0));
+    float z = float(o.value("z").toDouble(0.0));
+
+    if (coordSys == CoordSystem::Grid) {
+      const float tile = std::max(0.0001f, grid.tileSize);
+      feature.centerX = (x - (grid.width * 0.5f - 0.5f)) * tile;
+      feature.centerZ = (z - (grid.height * 0.5f - 0.5f)) * tile;
+    } else {
+      feature.centerX = x;
+      feature.centerZ = z;
+    }
+
+    feature.radius = float(o.value("radius").toDouble(5.0));
+    feature.height = float(o.value("height").toDouble(2.0));
+    feature.rotationDeg = float(o.value("rotation").toDouble(0.0));
+
+    if (o.contains("entrances") && o.value("entrances").isArray()) {
+      auto entranceArr = o.value("entrances").toArray();
+      for (const auto &e : entranceArr) {
+        auto eObj = e.toObject();
+        float ex = float(eObj.value("x").toDouble(0.0));
+        float ez = float(eObj.value("z").toDouble(0.0));
+
+        feature.entrances.push_back(QVector3D(ex, 0.0f, ez));
+      }
+    }
+
+    out.push_back(feature);
+  }
+}
+
 bool MapLoader::loadFromJsonFile(const QString &path, MapDefinition &outMap,
                                  QString *outError) {
   QFile f(path);
@@ -108,6 +157,11 @@ bool MapLoader::loadFromJsonFile(const QString &path, MapDefinition &outMap,
 
   if (root.contains("spawns") && root.value("spawns").isArray()) {
     readSpawns(root.value("spawns").toArray(), outMap.spawns);
+  }
+
+  if (root.contains("terrain") && root.value("terrain").isArray()) {
+    readTerrain(root.value("terrain").toArray(), outMap.terrain, outMap.grid,
+                outMap.coordSystem);
   }
 
   return true;
