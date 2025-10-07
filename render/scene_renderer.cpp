@@ -179,6 +179,22 @@ void Renderer::renderWorld(Engine::Core::World *world) {
       meshToDraw = res->quad();
     QVector3D color = QVector3D(renderable->color[0], renderable->color[1],
                                 renderable->color[2]);
+
+    if (res) {
+      Mesh *contactQuad = res->quad();
+      Texture *white = res->white();
+      if (contactQuad && white) {
+        QMatrix4x4 contact;
+        contact.translate(transform->position.x, transform->position.y + 0.03f,
+                          transform->position.z);
+        contact.rotate(-90.0f, 1.0f, 0.0f, 0.0f);
+        float footprint =
+            std::max({transform->scale.x, transform->scale.z, 0.6f});
+        contact.scale(footprint * 0.55f, footprint * 0.35f, 1.0f);
+        mesh(contactQuad, contact, QVector3D(0.08f, 0.08f, 0.075f), white,
+             0.55f);
+      }
+    }
     mesh(meshToDraw, modelMatrix, color, res ? res->white() : nullptr, 1.0f);
   }
 }
