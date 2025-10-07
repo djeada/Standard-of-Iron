@@ -3,6 +3,10 @@
 #include <algorithm>
 #include <cmath>
 
+namespace {
+constexpr float kDegToRad = static_cast<float>(M_PI) / 180.0f;
+}
+
 namespace Game::Map {
 
 TerrainHeightMap::TerrainHeightMap(int width, int height, float tileSize)
@@ -50,7 +54,7 @@ void TerrainHeightMap::buildFromFeatures(
       const int maxZ =
           std::min(m_height - 1, int(std::ceil(gridCenterZ + bound)));
 
-      const float angleRad = feature.rotationDeg * float(M_PI / 180.0f);
+  const float angleRad = feature.rotationDeg * kDegToRad;
       const float cosA = std::cos(angleRad);
       const float sinA = std::sin(angleRad);
 
