@@ -1,5 +1,7 @@
+#include <QDateTime>
 #include <QDebug>
 #include <QDir>
+#include <QFile>
 #include <QGuiApplication>
 #include <QOpenGLContext>
 #include <QQmlApplicationEngine>
@@ -7,6 +9,7 @@
 #include <QQuickWindow>
 #include <QSGRendererInterface>
 #include <QSurfaceFormat>
+#include <QTextStream>
 
 #include "app/game_engine.h"
 #include "ui/gl_view.h"
@@ -19,6 +22,8 @@ int main(int argc, char *argv[]) {
   qputenv("QT_OPENGL", "desktop");
   qputenv("QSG_RHI_BACKEND", "opengl");
   QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGLRhi);
+
+  (void)0;
 
   QSurfaceFormat fmt;
   fmt.setVersion(3, 3);

@@ -55,6 +55,7 @@ public:
     return m_backend ? m_backend->resources() : nullptr;
   }
   void setHoveredEntityId(unsigned int id) { m_hoveredEntityId = id; }
+  void setLocalOwnerId(int ownerId) { m_localOwnerId = ownerId; }
 
   void setSelectedEntities(const std::vector<unsigned int> &ids) {
     m_selectedIds.clear();
@@ -134,6 +135,7 @@ private:
   std::atomic<bool> m_paused{false};
 
   std::mutex m_worldMutex;
+  int m_localOwnerId = 1;
 };
 
 } // namespace Render::GL

@@ -21,6 +21,8 @@ struct CameraDefinition {
 
   float nearPlane = 1.0f;
   float farPlane = 200.0f;
+
+  float yawDeg = 225.0f;
 };
 
 struct UnitSpawn {
