@@ -569,7 +569,7 @@ Item {
             }
         }
         
-        if ((event.key === Qt.Key_Shift) || (event.key === Qt.Key_Shift || event.key === Qt.Key_Shift)) {
+        if (event.key === Qt.Key_Shift) {
             
             if (renderArea.keyPanCount === 0 && !renderArea.mousePanActive) {
                 mainWindow.edgeScrollDisabled = false
