@@ -1,4 +1,5 @@
 #include "scene_renderer.h"
+#include "../game/map/visibility_service.h"
 #include "entity/registry.h"
 #include "game/core/component.h"
 #include "game/core/world.h"
@@ -123,6 +124,16 @@ void Renderer::renderWorld(Engine::Core::World *world) {
       continue;
     }
 
+    auto *unitComp = entity->getComponent<Engine::Core::UnitComponent>();
+    if (unitComp && unitComp->ownerId != m_localOwnerId) {
+      auto &vis = Game::Map::VisibilityService::instance();
+      if (vis.isInitialized()) {
+        if (!vis.isVisibleWorld(transform->position.x, transform->position.z)) {
+          continue;
+        }
+      }
+    }
+
     QMatrix4x4 modelMatrix;
     modelMatrix.translate(transform->position.x, transform->position.y,
                           transform->position.z);
@@ -184,15 +195,40 @@ void Renderer::renderWorld(Engine::Core::World *world) {
       Mesh *contactQuad = res->quad();
       Texture *white = res->white();
       if (contactQuad && white) {
-        QMatrix4x4 contact;
-        contact.translate(transform->position.x, transform->position.y + 0.03f,
-                          transform->position.z);
-        contact.rotate(-90.0f, 1.0f, 0.0f, 0.0f);
+        QMatrix4x4 contactBase;
+        contactBase.translate(transform->position.x,
+                              transform->position.y + 0.03f,
+                              transform->position.z);
+        contactBase.rotate(-90.0f, 1.0f, 0.0f, 0.0f);
         float footprint =
             std::max({transform->scale.x, transform->scale.z, 0.6f});
-        contact.scale(footprint * 0.55f, footprint * 0.35f, 1.0f);
-        mesh(contactQuad, contact, QVector3D(0.08f, 0.08f, 0.075f), white,
-             0.55f);
+
+        float sizeRatio = 1.0f;
+        if (auto *unit = entity->getComponent<Engine::Core::UnitComponent>()) {
+          int mh = std::max(1, unit->maxHealth);
+          sizeRatio = std::clamp(unit->health / float(mh), 0.0f, 1.0f);
+        }
+        float eased = 0.25f + 0.75f * sizeRatio;
+
+        float baseScaleX = footprint * 0.55f * eased;
+        float baseScaleY = footprint * 0.35f * eased;
+
+        QVector3D col(0.03f, 0.03f, 0.03f);
+        float centerAlpha = 0.32f * eased;
+        float midAlpha = 0.16f * eased;
+        float outerAlpha = 0.07f * eased;
+
+        QMatrix4x4 c0 = contactBase;
+        c0.scale(baseScaleX * 0.60f, baseScaleY * 0.60f, 1.0f);
+        mesh(contactQuad, c0, col, white, centerAlpha);
+
+        QMatrix4x4 c1 = contactBase;
+        c1.scale(baseScaleX * 0.95f, baseScaleY * 0.95f, 1.0f);
+        mesh(contactQuad, c1, col, white, midAlpha);
+
+        QMatrix4x4 c2 = contactBase;
+        c2.scale(baseScaleX * 1.35f, baseScaleY * 1.35f, 1.0f);
+        mesh(contactQuad, c2, col, white, outerAlpha);
       }
     }
     mesh(meshToDraw, modelMatrix, color, res ? res->white() : nullptr, 1.0f);
