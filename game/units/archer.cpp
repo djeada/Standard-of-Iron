@@ -47,6 +47,7 @@ void Archer::init(const SpawnParams &params) {
   m_u->maxHealth = 80;
   m_u->speed = 3.0f;
   m_u->ownerId = params.playerId;
+  m_u->visionRange = 16.0f;
 
   QVector3D tc = teamColor(m_u->ownerId);
   m_r->color[0] = tc.x();
