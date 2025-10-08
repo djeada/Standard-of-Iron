@@ -62,78 +62,6 @@ Item {
         property bool mousePanActive: false
         
         
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        Rectangle {
-            anchors.top: parent.top
-            anchors.left: parent.left
-            anchors.margins: 10
-            anchors.topMargin: 70   
-            width: 200
-            height: 160
-            color: "#34495e"
-            opacity: 0.8
-            
-            Column {
-                anchors.fill: parent
-                anchors.margins: 8
-                spacing: 4
-                
-                Text {
-                    text: "Camera Controls:"
-                    color: "white"
-                    font.bold: true
-                    font.pointSize: 10
-                }
-                Text {
-                    text: "WASD - Move"
-                    color: "white"
-                    font.pointSize: 9
-                }
-                Text {
-                    text: "Mouse - Look"
-                    color: "white"
-                    font.pointSize: 9
-                }
-                Text {
-                    text: "Scroll - Zoom"
-                    color: "white"
-                    font.pointSize: 9
-                }
-                Text {
-                    text: "Q/E - Rotate"
-                    color: "white"
-                    font.pointSize: 9
-                }
-                Text {
-                    text: "R/F - Up/Down"
-                    color: "white"
-                    font.pointSize: 9
-                }
-                
-                Rectangle {
-                    width: parent.width - 16
-                    height: 1
-                    color: "#7f8c8d"
-                    opacity: 0.5
-                }
-                
-                Text {
-                    text: "Cursor: " + gameView.cursorMode.toUpperCase()
-                    color: gameView.cursorMode === "normal" ? "#bdc3c7" : "#3498db"
-                    font.bold: gameView.cursorMode !== "normal"
-                    font.pointSize: 9
-                }
-            }
-        }
-        
         MouseArea {
             id: mouseArea
             anchors.fill: parent
@@ -235,7 +163,7 @@ Item {
                     selectionBox.visible = true
                 } else if (mouse.button === Qt.RightButton) {
                     
-                    mousePanActive = true
+                    renderArea.mousePanActive = true
                     mainWindow.edgeScrollDisabled = true
 
                     if (gameView.setRallyMode) {
@@ -272,9 +200,9 @@ Item {
                     }
                 }
                 if (mouse.button === Qt.RightButton) {
-                    mousePanActive = false
-                    
-                    mainWindow.edgeScrollDisabled = (renderArea.keyPanCount > 0) || mousePanActive
+                    renderArea.mousePanActive = false
+
+                    mainWindow.edgeScrollDisabled = (renderArea.keyPanCount > 0) || renderArea.mousePanActive
                 }
             }
         }

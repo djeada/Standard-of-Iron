@@ -28,6 +28,7 @@
 #include "game/systems/selection_system.h"
 #include "game/systems/terrain_alignment_system.h"
 #include "render/geom/arrow.h"
+#include "game/core/event_manager.h"
 #include "render/geom/patrol_flags.h"
 #include "render/gl/bootstrap.h"
 #include "render/gl/camera.h"
@@ -64,12 +65,27 @@ GameEngine::GameEngine() {
   m_world->addSystem(std::make_unique<Game::Systems::ProductionSystem>());
   m_world->addSystem(std::make_unique<Game::Systems::TerrainAlignmentSystem>());
 
-  m_selectionSystem = std::make_unique<Game::Systems::SelectionSystem>();
-  m_world->addSystem(std::make_unique<Game::Systems::SelectionSystem>());
+  {
+    std::unique_ptr<Engine::Core::System> selSys =
+        std::make_unique<Game::Systems::SelectionSystem>();
+    m_selectionSystem =
+        dynamic_cast<Game::Systems::SelectionSystem *>(selSys.get());
+    m_world->addSystem(std::move(selSys));
+  }
 
   m_selectedUnitsModel = new SelectedUnitsModel(this, this);
   QMetaObject::invokeMethod(m_selectedUnitsModel, "refresh");
   m_pickingService = std::make_unique<Game::Systems::PickingService>();
+
+  // subscribe to unit died events to track enemy defeats
+  Engine::Core::EventManager::instance().subscribe<Engine::Core::UnitDiedEvent>(
+      [this](const Engine::Core::UnitDiedEvent &e) {
+        // increment only if the unit belonged to an enemy
+        if (e.ownerId != m_runtime.localOwnerId) {
+          m_enemyTroopsDefeated++;
+          emit enemyTroopsDefeatedChanged();
+        }
+      });
 }
 
 GameEngine::~GameEngine() = default;
@@ -91,13 +107,17 @@ void GameEngine::onRightClick(qreal sx, qreal sy) {
   if (!m_selectionSystem)
     return;
 
-  m_selectionSystem->clearSelection();
-  syncSelectionFlags();
-  emit selectedUnitsChanged();
-  if (m_selectedUnitsModel)
-    QMetaObject::invokeMethod(m_selectedUnitsModel, "refresh");
+  const auto &sel = m_selectionSystem->getSelectedUnits();
+  if (!sel.empty()) {
+    m_selectionSystem->clearSelection();
+    syncSelectionFlags();
+    emit selectedUnitsChanged();
+    if (m_selectedUnitsModel)
+      QMetaObject::invokeMethod(m_selectedUnitsModel, "refresh");
 
-  setCursorMode("normal");
+    setCursorMode("normal");
+    return;
+  }
 }
 
 void GameEngine::onAttackClick(qreal sx, qreal sy) {
@@ -416,6 +436,8 @@ void GameEngine::ensureInitialized() {
   if (!m_runtime.initialized)
     initialize();
 }
+
+int GameEngine::enemyTroopsDefeated() const { return m_enemyTroopsDefeated; }
 
 void GameEngine::update(float dt) {
 
