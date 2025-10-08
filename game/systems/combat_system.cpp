@@ -1,4 +1,5 @@
 #include "combat_system.h"
+#include "../core/event_manager.h"
 #include "../core/component.h"
 #include "../core/world.h"
 #include "../visuals/team_colors.h"
@@ -308,6 +309,10 @@ void CombatSystem::dealDamage(Engine::Core::Entity *target, int damage) {
     unit->health = std::max(0, unit->health - damage);
 
     if (unit->health <= 0) {
+
+      // publish unit died event
+      Engine::Core::EventManager::instance().publish(
+          Engine::Core::UnitDiedEvent(target->getId(), unit->ownerId));
 
       if (target->hasComponent<Engine::Core::BuildingComponent>()) {
         BuildingCollisionRegistry::instance().unregisterBuilding(
