@@ -54,7 +54,7 @@ void TerrainHeightMap::buildFromFeatures(
       const int maxZ =
           std::min(m_height - 1, int(std::ceil(gridCenterZ + bound)));
 
-  const float angleRad = feature.rotationDeg * kDegToRad;
+      const float angleRad = feature.rotationDeg * kDegToRad;
       const float cosA = std::cos(angleRad);
       const float sinA = std::sin(angleRad);
 

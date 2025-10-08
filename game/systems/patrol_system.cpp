@@ -92,6 +92,8 @@ void PatrolSystem::update(Engine::Core::World *world, float deltaTime) {
     movement->hasTarget = true;
     movement->targetX = targetX;
     movement->targetY = targetZ;
+    movement->goalX = targetX;
+    movement->goalY = targetZ;
   }
 }
 
