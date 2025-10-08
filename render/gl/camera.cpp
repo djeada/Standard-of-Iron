@@ -138,10 +138,6 @@ void Camera::orbit(float yawDeg, float pitchDeg) {
       qBound(m_pitchMinDeg, curPitch + pitchDeg, m_pitchMaxDeg);
   m_orbitTime = 0.0f;
   m_orbitPending = true;
-  qDebug() << "Camera::orbit start:" << "startYaw=" << m_orbitStartYaw
-           << "startPitch=" << m_orbitStartPitch
-           << "targetYaw=" << m_orbitTargetYaw
-           << "targetPitch=" << m_orbitTargetPitch;
 }
 
 void Camera::update(float dt) {
