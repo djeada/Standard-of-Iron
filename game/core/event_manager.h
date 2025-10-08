@@ -18,6 +18,10 @@ template <typename T> using EventHandler = std::function<void(const T &)>;
 
 class EventManager {
 public:
+  static EventManager &instance() {
+    static EventManager inst;
+    return inst;
+  }
   template <typename T> void subscribe(EventHandler<T> handler) {
     static_assert(std::is_base_of_v<Event, T>, "T must inherit from Event");
     auto wrapper = [handler](const void *event) {
@@ -54,6 +58,13 @@ public:
       : unitId(unitId), x(x), y(y) {}
   EntityID unitId;
   float x, y;
+};
+
+class UnitDiedEvent : public Event {
+public:
+  UnitDiedEvent(EntityID unitId, int ownerId) : unitId(unitId), ownerId(ownerId) {}
+  EntityID unitId;
+  int ownerId;
 };
 
 } // namespace Engine::Core
