@@ -17,7 +17,8 @@ public:
   void update(Engine::Core::World *world, float deltaTime) override;
 
 private:
-  void moveUnit(Engine::Core::Entity *entity, float deltaTime);
+  void moveUnit(Engine::Core::Entity *entity, Engine::Core::World *world,
+                float deltaTime);
   bool hasReachedTarget(const Engine::Core::TransformComponent *transform,
                         const Engine::Core::MovementComponent *movement);
 };

@@ -63,15 +63,18 @@ public:
 class MovementComponent : public Component {
 public:
   MovementComponent()
-      : hasTarget(false), targetX(0.0f), targetY(0.0f), vx(0.0f), vz(0.0f),
-        pathPending(false), pendingRequestId(0) {}
+      : hasTarget(false), targetX(0.0f), targetY(0.0f), goalX(0.0f),
+        goalY(0.0f), vx(0.0f), vz(0.0f), pathPending(false),
+        pendingRequestId(0), repathCooldown(0.0f) {}
 
   bool hasTarget;
   float targetX, targetY;
+  float goalX, goalY;
   float vx, vz;
   std::vector<std::pair<float, float>> path;
   bool pathPending;
   std::uint64_t pendingRequestId;
+  float repathCooldown;
 };
 
 class AttackComponent : public Component {

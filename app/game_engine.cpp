@@ -106,6 +106,8 @@ void GameEngine::onAttackClick(qreal sx, qreal sy) {
   ensureInitialized();
   if (!m_selectionSystem || !m_pickingService || !m_camera || !m_world)
     return;
+  (void)sx;
+  (void)sy;
 
   const auto &selected = m_selectionSystem->getSelectedUnits();
   if (selected.empty()) {
@@ -118,7 +120,7 @@ void GameEngine::onAttackClick(qreal sx, qreal sy) {
                                       m_viewport.width, m_viewport.height, 0);
 
   if (targetId == 0) {
-
+    setCursorMode("normal");
     return;
   }
 
@@ -129,6 +131,7 @@ void GameEngine::onAttackClick(qreal sx, qreal sy) {
 
   auto *targetUnit = targetEntity->getComponent<Engine::Core::UnitComponent>();
   if (!targetUnit) {
+    (void)targetId;
     return;
   }
 
@@ -173,10 +176,24 @@ void GameEngine::onStopCommand() {
 
     if (auto *movement =
             entity->getComponent<Engine::Core::MovementComponent>()) {
+      auto *transform =
+          entity->getComponent<Engine::Core::TransformComponent>();
       movement->hasTarget = false;
-      movement->targetX = 0.0f;
-      movement->targetY = 0.0f;
       movement->path.clear();
+      movement->pathPending = false;
+      movement->pendingRequestId = 0;
+      movement->repathCooldown = 0.0f;
+      if (transform) {
+        movement->targetX = transform->position.x;
+        movement->targetY = transform->position.z;
+        movement->goalX = transform->position.x;
+        movement->goalY = transform->position.z;
+      } else {
+        movement->targetX = 0.0f;
+        movement->targetY = 0.0f;
+        movement->goalX = 0.0f;
+        movement->goalY = 0.0f;
+      }
     }
 
     if (auto *attack =
@@ -242,6 +259,16 @@ void GameEngine::onPatrolClick(qreal sx, qreal sy) {
             entity->getComponent<Engine::Core::MovementComponent>()) {
       movement->hasTarget = false;
       movement->path.clear();
+      movement->pathPending = false;
+      movement->pendingRequestId = 0;
+      movement->repathCooldown = 0.0f;
+      if (auto *transform =
+              entity->getComponent<Engine::Core::TransformComponent>()) {
+        movement->targetX = transform->position.x;
+        movement->targetY = transform->position.z;
+        movement->goalX = transform->position.x;
+        movement->goalY = transform->position.z;
+      }
     }
     if (auto *attack =
             entity->getComponent<Engine::Core::AttackTargetComponent>()) {
@@ -406,6 +433,10 @@ void GameEngine::update(float dt) {
     m_renderer->updateAnimationTime(dt);
   }
 
+  if (m_camera) {
+    m_camera->update(dt);
+  }
+
   if (m_world) {
     m_world->update(dt);
 
@@ -470,6 +501,8 @@ void GameEngine::render(int pixelWidth, int pixelHeight) {
   }
   if (m_renderer)
     m_renderer->setHoveredEntityId(m_hover.entityId);
+  if (m_renderer)
+    m_renderer->setLocalOwnerId(m_runtime.localOwnerId);
   m_renderer->renderWorld(m_world.get());
   if (m_arrowSystem) {
     if (auto *res = m_renderer->resources())
@@ -525,14 +558,26 @@ void GameEngine::syncSelectionFlags() {
     for (auto id : toKeep)
       m_selectionSystem->selectUnit(id);
   }
+
+  if (m_selectionSystem->getSelectedUnits().empty()) {
+    if (m_runtime.cursorMode != "normal") {
+      setCursorMode("normal");
+    }
+  }
 }
 
 void GameEngine::cameraMove(float dx, float dz) {
   ensureInitialized();
   if (!m_camera)
     return;
+
+  float scale = 0.12f;
+  if (m_camera) {
+    float dist = m_camera->getDistance();
+    scale = std::max(0.12f, dist * 0.05f);
+  }
   Game::Systems::CameraController ctrl;
-  ctrl.move(*m_camera, dx, dz);
+  ctrl.move(*m_camera, dx * scale, dz * scale);
 }
 
 void GameEngine::cameraElevate(float dy) {
@@ -540,7 +585,56 @@ void GameEngine::cameraElevate(float dy) {
   if (!m_camera)
     return;
   Game::Systems::CameraController ctrl;
-  ctrl.elevate(*m_camera, dy);
+
+  float distance = m_camera ? m_camera->getDistance() : 10.0f;
+  float scale = std::clamp(distance * 0.05f, 0.1f, 5.0f);
+  ctrl.moveUp(*m_camera, dy * scale);
+}
+
+void GameEngine::resetCamera() {
+  ensureInitialized();
+  if (!m_camera || !m_world)
+    return;
+
+  Engine::Core::Entity *focusEntity = nullptr;
+  for (auto *e : m_world->getEntitiesWith<Engine::Core::UnitComponent>()) {
+    if (!e)
+      continue;
+    auto *u = e->getComponent<Engine::Core::UnitComponent>();
+    if (!u)
+      continue;
+    if (u->unitType == "barracks" && u->ownerId == m_runtime.localOwnerId &&
+        u->health > 0) {
+      focusEntity = e;
+      break;
+    }
+  }
+  if (!focusEntity && m_level.playerUnitId != 0)
+    focusEntity = m_world->getEntity(m_level.playerUnitId);
+
+  if (focusEntity) {
+    if (auto *t =
+            focusEntity->getComponent<Engine::Core::TransformComponent>()) {
+      QVector3D center(t->position.x, t->position.y, t->position.z);
+      if (m_camera) {
+        m_camera->setRTSView(center, 12.0f, 45.0f, 225.0f);
+      }
+    }
+  }
+}
+
+void GameEngine::cameraZoom(float delta) {
+  ensureInitialized();
+  if (!m_camera)
+    return;
+  Game::Systems::CameraController ctrl;
+  ctrl.zoomDistance(*m_camera, delta);
+}
+
+float GameEngine::cameraDistance() const {
+  if (!m_camera)
+    return 0.0f;
+  return m_camera->getDistance();
 }
 
 void GameEngine::cameraYaw(float degrees) {
@@ -555,8 +649,28 @@ void GameEngine::cameraOrbit(float yawDeg, float pitchDeg) {
   ensureInitialized();
   if (!m_camera)
     return;
+  qDebug() << "GameEngine::cameraOrbit called:" << "yaw=" << yawDeg
+           << "pitch=" << pitchDeg;
+  if (!std::isfinite(yawDeg) || !std::isfinite(pitchDeg)) {
+    qWarning()
+        << "GameEngine::cameraOrbit received invalid input, applying fallback"
+        << yawDeg << pitchDeg;
+    float fallback = 2.0f;
+
+    if (!std::isfinite(pitchDeg))
+      pitchDeg = fallback;
+    if (!std::isfinite(yawDeg))
+      yawDeg = 0.0f;
+  }
   Game::Systems::CameraController ctrl;
   ctrl.orbit(*m_camera, yawDeg, pitchDeg);
+}
+
+void GameEngine::cameraOrbitDirection(int direction, bool shift) {
+
+  float step = shift ? 8.0f : 4.0f;
+  float pitch = step * float(direction);
+  cameraOrbit(0.0f, pitch);
 }
 
 void GameEngine::cameraFollowSelection(bool enable) {
@@ -832,6 +946,37 @@ void GameEngine::startSkirmish(const QString &mapPath) {
 
       m_renderer->unlockWorldForModification();
       m_renderer->resume();
+    }
+
+    if (m_world && m_camera) {
+      Engine::Core::Entity *focusEntity = nullptr;
+
+      auto candidates = m_world->getEntitiesWith<Engine::Core::UnitComponent>();
+      for (auto *e : candidates) {
+        if (!e)
+          continue;
+        auto *u = e->getComponent<Engine::Core::UnitComponent>();
+        if (!u)
+          continue;
+        if (u->unitType == "barracks" && u->ownerId == m_runtime.localOwnerId &&
+            u->health > 0) {
+          focusEntity = e;
+          break;
+        }
+      }
+
+      if (!focusEntity && m_level.playerUnitId != 0) {
+        focusEntity = m_world->getEntity(m_level.playerUnitId);
+      }
+
+      if (focusEntity) {
+        if (auto *t =
+                focusEntity->getComponent<Engine::Core::TransformComponent>()) {
+          QVector3D center(t->position.x, t->position.y, t->position.z);
+
+          m_camera->setRTSView(center, 12.0f, 45.0f, 225.0f);
+        }
+      }
     }
     m_runtime.loading = false;
   }
