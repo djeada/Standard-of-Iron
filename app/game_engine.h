@@ -78,8 +78,12 @@ public:
 
   Q_INVOKABLE void cameraMove(float dx, float dz);
   Q_INVOKABLE void cameraElevate(float dy);
+  Q_INVOKABLE void resetCamera();
+  Q_INVOKABLE void cameraZoom(float delta);
+  Q_INVOKABLE float cameraDistance() const;
   Q_INVOKABLE void cameraYaw(float degrees);
   Q_INVOKABLE void cameraOrbit(float yawDeg, float pitchDeg);
+  Q_INVOKABLE void cameraOrbitDirection(int direction, bool shift);
   Q_INVOKABLE void cameraFollowSelection(bool enable);
   Q_INVOKABLE void cameraSetFollowLerp(float alpha);
 

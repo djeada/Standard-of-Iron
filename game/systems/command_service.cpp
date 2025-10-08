@@ -1,14 +1,17 @@
 #include "command_service.h"
 #include "../core/component.h"
 #include "../core/world.h"
-#include "building_collision_registry.h"
 #include "pathfinding.h"
 #include <QVector3D>
+#include <algorithm>
 #include <cmath>
-#include <cstdlib>
 
 namespace Game {
 namespace Systems {
+
+namespace {
+constexpr float SAME_TARGET_THRESHOLD_SQ = 0.01f;
+}
 
 std::unique_ptr<Pathfinding> CommandService::s_pathfinder = nullptr;
 std::unordered_map<std::uint64_t, CommandService::PendingPathRequest>
@@ -27,17 +30,14 @@ void CommandService::initialize(int worldWidth, int worldHeight) {
   }
   s_nextRequestId.store(1, std::memory_order_release);
 
-  float offsetX = -worldWidth / 2.0f;
-  float offsetZ = -worldHeight / 2.0f;
+  float offsetX = -(worldWidth * 0.5f - 0.5f);
+  float offsetZ = -(worldHeight * 0.5f - 0.5f);
   s_pathfinder->setGridOffset(offsetX, offsetZ);
 }
 
 Pathfinding *CommandService::getPathfinder() { return s_pathfinder.get(); }
-
 Point CommandService::worldToGrid(float worldX, float worldZ) {
-
   if (s_pathfinder) {
-
     int gridX =
         static_cast<int>(std::round(worldX - s_pathfinder->getGridOffsetX()));
     int gridZ =
@@ -100,9 +100,69 @@ void CommandService::moveUnits(Engine::Core::World &world,
       e->removeComponent<Engine::Core::AttackTargetComponent>();
     }
 
+    const float targetX = targets[i].x();
+    const float targetZ = targets[i].z();
+
+    bool matchedPending = false;
+    if (mv->pathPending) {
+      std::lock_guard<std::mutex> lock(s_pendingMutex);
+      auto requestIt = s_entityToRequest.find(units[i]);
+      if (requestIt != s_entityToRequest.end()) {
+        auto pendingIt = s_pendingRequests.find(requestIt->second);
+        if (pendingIt != s_pendingRequests.end()) {
+          float pdx = pendingIt->second.target.x() - targetX;
+          float pdz = pendingIt->second.target.z() - targetZ;
+          if (pdx * pdx + pdz * pdz <= SAME_TARGET_THRESHOLD_SQ) {
+            pendingIt->second.options = options;
+            matchedPending = true;
+          }
+        } else {
+          s_entityToRequest.erase(requestIt);
+        }
+      }
+    }
+
+    mv->goalX = targetX;
+    mv->goalY = targetZ;
+
+    if (matchedPending) {
+      continue;
+    }
+
+    if (!mv->pathPending) {
+      bool currentTargetMatches = mv->hasTarget && mv->path.empty();
+      if (currentTargetMatches) {
+        float dx = mv->targetX - targetX;
+        float dz = mv->targetY - targetZ;
+        if (dx * dx + dz * dz <= SAME_TARGET_THRESHOLD_SQ) {
+          continue;
+        }
+      }
+
+      if (!mv->path.empty()) {
+        const auto &lastWaypoint = mv->path.back();
+        float dx = lastWaypoint.first - targetX;
+        float dz = lastWaypoint.second - targetZ;
+        if (dx * dx + dz * dz <= SAME_TARGET_THRESHOLD_SQ) {
+          continue;
+        }
+      }
+    }
+
     if (s_pathfinder) {
       Point start = worldToGrid(transform->position.x, transform->position.z);
       Point end = worldToGrid(targets[i].x(), targets[i].z());
+
+      if (start == end) {
+        mv->targetX = targetX;
+        mv->targetY = targetZ;
+        mv->hasTarget = true;
+        mv->path.clear();
+        mv->pathPending = false;
+        mv->pendingRequestId = 0;
+        clearPendingRequest(units[i]);
+        continue;
+      }
 
       int dx = std::abs(end.x - start.x);
       int dz = std::abs(end.y - start.y);
@@ -113,14 +173,40 @@ void CommandService::moveUnits(Engine::Core::World &world,
 
       if (useDirectPath) {
 
-        mv->targetX = targets[i].x();
-        mv->targetY = targets[i].z();
+        mv->targetX = targetX;
+        mv->targetY = targetZ;
         mv->hasTarget = true;
         mv->path.clear();
         mv->pathPending = false;
         mv->pendingRequestId = 0;
         clearPendingRequest(units[i]);
       } else {
+
+        bool skipNewRequest = false;
+        {
+          std::lock_guard<std::mutex> lock(s_pendingMutex);
+          auto existingIt = s_entityToRequest.find(units[i]);
+          if (existingIt != s_entityToRequest.end()) {
+            auto pendingIt = s_pendingRequests.find(existingIt->second);
+            if (pendingIt != s_pendingRequests.end()) {
+              float dx = pendingIt->second.target.x() - targetX;
+              float dz = pendingIt->second.target.z() - targetZ;
+              if (dx * dx + dz * dz <= SAME_TARGET_THRESHOLD_SQ) {
+                pendingIt->second.options = options;
+                skipNewRequest = true;
+              } else {
+                s_pendingRequests.erase(pendingIt);
+                s_entityToRequest.erase(existingIt);
+              }
+            } else {
+              s_entityToRequest.erase(existingIt);
+            }
+          }
+        }
+
+        if (skipNewRequest) {
+          continue;
+        }
 
         mv->path.clear();
         mv->hasTarget = false;
@@ -132,11 +218,6 @@ void CommandService::moveUnits(Engine::Core::World &world,
 
         {
           std::lock_guard<std::mutex> lock(s_pendingMutex);
-          auto it = s_entityToRequest.find(units[i]);
-          if (it != s_entityToRequest.end()) {
-            s_pendingRequests.erase(it->second);
-            s_entityToRequest.erase(it);
-          }
           s_pendingRequests[requestId] = {units[i], targets[i], options};
           s_entityToRequest[units[i]] = requestId;
         }
@@ -145,8 +226,8 @@ void CommandService::moveUnits(Engine::Core::World &world,
       }
     } else {
 
-      mv->targetX = targets[i].x();
-      mv->targetY = targets[i].z();
+      mv->targetX = targetX;
+      mv->targetY = targetZ;
       mv->hasTarget = true;
       mv->path.clear();
       mv->pathPending = false;
@@ -185,20 +266,23 @@ void CommandService::processPathResults(Engine::Core::World &world) {
       }
     }
 
-    if (!found)
+    if (!found) {
       continue;
+    }
 
     auto *entity = world.getEntity(requestInfo.entityId);
     if (!entity)
       continue;
 
     auto *movement = entity->getComponent<Engine::Core::MovementComponent>();
-    if (!movement)
+    if (!movement) {
       continue;
+    }
 
     auto *transform = entity->getComponent<Engine::Core::TransformComponent>();
-    if (!transform)
+    if (!transform) {
       continue;
+    }
 
     if (!movement->pathPending ||
         movement->pendingRequestId != result.requestId) {
@@ -208,6 +292,8 @@ void CommandService::processPathResults(Engine::Core::World &world) {
     movement->pathPending = false;
     movement->pendingRequestId = 0;
     movement->path.clear();
+    movement->goalX = requestInfo.target.x();
+    movement->goalY = requestInfo.target.z();
 
     const auto &pathPoints = result.path;
 
@@ -224,6 +310,7 @@ void CommandService::processPathResults(Engine::Core::World &world) {
       continue;
     }
 
+    movement->path.reserve(pathPoints.size() > 1 ? pathPoints.size() - 1 : 0);
     for (size_t idx = 1; idx < pathPoints.size(); ++idx) {
       const auto &point = pathPoints[idx];
       QVector3D worldPos = gridToWorld(point);
@@ -265,7 +352,6 @@ void CommandService::attackTarget(
     Engine::Core::EntityID targetId, bool shouldChase) {
   if (targetId == 0)
     return;
-
   for (auto unitId : units) {
     auto *e = world.getEntity(unitId);
     if (!e)
@@ -280,6 +366,69 @@ void CommandService::attackTarget(
 
     attackTarget->targetId = targetId;
     attackTarget->shouldChase = shouldChase;
+
+    if (!shouldChase)
+      continue;
+
+    auto *targetEnt = world.getEntity(targetId);
+    if (!targetEnt)
+      continue;
+
+    auto *tTrans = targetEnt->getComponent<Engine::Core::TransformComponent>();
+    auto *attTrans = e->getComponent<Engine::Core::TransformComponent>();
+    if (!tTrans || !attTrans)
+      continue;
+
+    QVector3D targetPos(tTrans->position.x, 0.0f, tTrans->position.z);
+    QVector3D attackerPos(attTrans->position.x, 0.0f, attTrans->position.z);
+
+    QVector3D desiredPos = targetPos;
+
+    float range = 2.0f;
+    if (auto *atk = e->getComponent<Engine::Core::AttackComponent>()) {
+      range = std::max(0.1f, atk->range);
+    }
+
+    QVector3D direction = targetPos - attackerPos;
+    float distance = direction.length();
+    if (distance > 0.001f) {
+      direction /= distance;
+      if (targetEnt->hasComponent<Engine::Core::BuildingComponent>()) {
+        float scaleX = tTrans->scale.x;
+        float scaleZ = tTrans->scale.z;
+        float targetRadius = std::max(scaleX, scaleZ) * 0.5f;
+        float desiredDistance = targetRadius + std::max(range - 0.2f, 0.2f);
+        if (distance > desiredDistance + 0.15f) {
+          desiredPos = targetPos - direction * desiredDistance;
+        }
+      } else {
+        float desiredDistance = std::max(range - 0.2f, 0.2f);
+        if (distance > desiredDistance + 0.15f) {
+          desiredPos = targetPos - direction * desiredDistance;
+        }
+      }
+    }
+
+    CommandService::MoveOptions opts;
+    opts.clearAttackIntent = false;
+    opts.allowDirectFallback = true;
+    std::vector<Engine::Core::EntityID> unitIds = {unitId};
+    std::vector<QVector3D> moveTargets = {desiredPos};
+    CommandService::moveUnits(world, unitIds, moveTargets, opts);
+
+    auto *mv = e->getComponent<Engine::Core::MovementComponent>();
+    if (!mv) {
+      mv = e->addComponent<Engine::Core::MovementComponent>();
+    }
+    if (mv) {
+
+      mv->targetX = desiredPos.x();
+      mv->targetY = desiredPos.z();
+      mv->goalX = desiredPos.x();
+      mv->goalY = desiredPos.z();
+      mv->hasTarget = true;
+      mv->path.clear();
+    }
   }
 }
 

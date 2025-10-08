@@ -64,12 +64,21 @@ void Pathfinding::updateBuildingObstacles() {
 
   auto &terrainService = Game::Map::TerrainService::instance();
   if (terrainService.isInitialized()) {
+    const Game::Map::TerrainHeightMap *heightMap =
+        terrainService.getHeightMap();
+    const int terrainWidth = heightMap ? heightMap->getWidth() : 0;
+    const int terrainHeight = heightMap ? heightMap->getHeight() : 0;
+
     for (int z = 0; z < m_height; ++z) {
       for (int x = 0; x < m_width; ++x) {
-        int terrainX = x + static_cast<int>(m_gridOffsetX);
-        int terrainZ = z + static_cast<int>(m_gridOffsetZ);
+        bool blocked = false;
+        if (x < terrainWidth && z < terrainHeight) {
+          blocked = !terrainService.isWalkable(x, z);
+        } else {
+          blocked = true;
+        }
 
-        if (!terrainService.isWalkable(terrainX, terrainZ)) {
+        if (blocked) {
           m_obstacles[z][x] = true;
         }
       }
@@ -82,9 +91,8 @@ void Pathfinding::updateBuildingObstacles() {
   for (const auto &building : buildings) {
     auto cells = registry.getOccupiedGridCells(building, m_gridCellSize);
     for (const auto &cell : cells) {
-
-      int gridX = cell.first - static_cast<int>(m_gridOffsetX);
-      int gridZ = cell.second - static_cast<int>(m_gridOffsetZ);
+      int gridX = static_cast<int>(std::round(cell.first - m_gridOffsetX));
+      int gridZ = static_cast<int>(std::round(cell.second - m_gridOffsetZ));
 
       if (gridX >= 0 && gridX < m_width && gridZ >= 0 && gridZ < m_height) {
         m_obstacles[gridZ][gridX] = true;
@@ -233,6 +241,13 @@ std::vector<Point> Pathfinding::getNeighbors(const Point &point) const {
       int y = point.y + dy;
 
       if (x >= 0 && x < m_width && y >= 0 && y < m_height) {
+        if (dx != 0 && dy != 0) {
+
+          if (!isWalkable(point.x + dx, point.y) ||
+              !isWalkable(point.x, point.y + dy)) {
+            continue;
+          }
+        }
         neighbors.emplace_back(x, y);
       }
     }
