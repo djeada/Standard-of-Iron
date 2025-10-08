@@ -56,6 +56,10 @@ Item {
                 gameView.cursorMode = game.cursorMode
             }
         }
+
+        
+        property int keyPanCount: 0
+        property bool mousePanActive: false
         
         
         
@@ -175,12 +179,10 @@ Item {
                 }
             }
             onWheel: function(w) {
-                
-                
                 var dy = (w.angleDelta ? w.angleDelta.y / 120 : w.delta / 120)
-                if (dy !== 0 && typeof game !== 'undefined' && game.cameraElevate) {
+                if (dy !== 0 && typeof game !== 'undefined' && game.cameraZoom) {
                     
-                    game.cameraElevate(-dy * 0.5)
+                    game.cameraZoom(dy * 0.8)
                 }
                 w.accepted = true
             }
@@ -233,6 +235,9 @@ Item {
                     selectionBox.visible = true
                 } else if (mouse.button === Qt.RightButton) {
                     
+                    mousePanActive = true
+                    mainWindow.edgeScrollDisabled = true
+
                     if (gameView.setRallyMode) {
                         gameView.setRallyMode = false
                     }
@@ -265,6 +270,11 @@ Item {
                             game.onClickSelect(mouse.x, mouse.y, false)
                         }
                     }
+                }
+                if (mouse.button === Qt.RightButton) {
+                    mousePanActive = false
+                    
+                    mainWindow.edgeScrollDisabled = (renderArea.keyPanCount > 0) || mousePanActive
                 }
             }
         }
@@ -471,9 +481,11 @@ Item {
     
     Keys.onPressed: function(event) {
         if (typeof game === 'undefined') return
-        var yawStep = event.modifiers & Qt.ShiftModifier ? 4 : 2
-        var panStep = 0.6
-        switch (event.key) {
+    var yawStep = (event.modifiers & Qt.ShiftModifier) ? 8 : 4
+    
+    
+    var inputStep = event.modifiers & Qt.ShiftModifier ? 2 : 1
+    switch (event.key) {
             
             case Qt.Key_Escape:
                 if (typeof mainWindow !== 'undefined' && !mainWindow.menuVisible) {
@@ -490,23 +502,80 @@ Item {
                 }
                 break
             
-            case Qt.Key_W: game.cameraMove(0, panStep);  event.accepted = true; break
-            case Qt.Key_S: game.cameraMove(0, -panStep); event.accepted = true; break
-            case Qt.Key_A: game.cameraMove(-panStep, 0); event.accepted = true; break
-            case Qt.Key_D: game.cameraMove(panStep, 0);  event.accepted = true; break
+            case Qt.Key_W:
+                game.cameraMove(0, inputStep);
+                
+                renderArea.keyPanCount += 1
+                mainWindow.edgeScrollDisabled = true
+                event.accepted = true; break
+            case Qt.Key_S:
+                game.cameraMove(0, -inputStep);
+                renderArea.keyPanCount += 1
+                mainWindow.edgeScrollDisabled = true
+                event.accepted = true; break
+            case Qt.Key_A:
+                game.cameraMove(-inputStep, 0);
+                renderArea.keyPanCount += 1
+                mainWindow.edgeScrollDisabled = true
+                event.accepted = true; break
+            case Qt.Key_D:
+                game.cameraMove(inputStep, 0);
+                renderArea.keyPanCount += 1
+                mainWindow.edgeScrollDisabled = true
+                event.accepted = true; break
             
-            case Qt.Key_Up:    game.cameraMove(0, panStep);  event.accepted = true; break
-            case Qt.Key_Down:  game.cameraMove(0, -panStep); event.accepted = true; break
-            case Qt.Key_Left:  game.cameraMove(-panStep, 0); event.accepted = true; break
-            case Qt.Key_Right: game.cameraMove(panStep, 0);  event.accepted = true; break
+            case Qt.Key_Up:
+                game.cameraMove(0, inputStep);
+                renderArea.keyPanCount += 1
+                mainWindow.edgeScrollDisabled = true
+                event.accepted = true; break
+            case Qt.Key_Down:
+                game.cameraMove(0, -inputStep);
+                renderArea.keyPanCount += 1
+                mainWindow.edgeScrollDisabled = true
+                event.accepted = true; break
+            case Qt.Key_Left:
+                game.cameraMove(-inputStep, 0);
+                renderArea.keyPanCount += 1
+                mainWindow.edgeScrollDisabled = true
+                event.accepted = true; break
+            case Qt.Key_Right:
+                game.cameraMove(inputStep, 0);
+                renderArea.keyPanCount += 1
+                mainWindow.edgeScrollDisabled = true
+                event.accepted = true; break
             
             case Qt.Key_Q: game.cameraYaw(-yawStep); event.accepted = true; break
             case Qt.Key_E: game.cameraYaw(yawStep);  event.accepted = true; break
             
-            case Qt.Key_R: game.cameraElevate(0.5);  event.accepted = true; break
-            case Qt.Key_F: game.cameraElevate(-0.5); event.accepted = true; break
+            
+            
+            
+            
+            var shiftHeld = (event.modifiers & Qt.ShiftModifier) !== 0
+            var pitchStep = shiftHeld ? 8 : 4
+            
+            case Qt.Key_R: game.cameraOrbitDirection(1, shiftHeld);  event.accepted = true; break
+            case Qt.Key_F: game.cameraOrbitDirection(-1, shiftHeld); event.accepted = true; break
         }
     }
-    
+    Keys.onReleased: function(event) {
+        if (typeof game === 'undefined') return
+        var movementKeys = [Qt.Key_W, Qt.Key_A, Qt.Key_S, Qt.Key_D, Qt.Key_Up, Qt.Key_Down, Qt.Key_Left, Qt.Key_Right]
+        if (movementKeys.indexOf(event.key) !== -1) {
+            renderArea.keyPanCount = Math.max(0, renderArea.keyPanCount - 1)
+            if (renderArea.keyPanCount === 0 && !renderArea.mousePanActive) {
+                mainWindow.edgeScrollDisabled = false
+            }
+        }
+        
+        if (event.key === Qt.Key_Shift) {
+            
+            if (renderArea.keyPanCount === 0 && !renderArea.mousePanActive) {
+                mainWindow.edgeScrollDisabled = false
+            }
+        }
+    }
+
     focus: true
 }

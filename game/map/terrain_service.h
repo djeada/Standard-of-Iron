@@ -21,6 +21,10 @@ public:
 
   bool isHillEntrance(int gridX, int gridZ) const;
 
+  bool isForbidden(int gridX, int gridZ) const;
+
+  bool isForbiddenWorld(float worldX, float worldZ) const;
+
   TerrainType getTerrainType(int gridX, int gridZ) const;
 
   const TerrainHeightMap *getHeightMap() const { return m_heightMap.get(); }

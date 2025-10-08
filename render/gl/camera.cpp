@@ -1,4 +1,5 @@
 #include "camera.h"
+#include "../../game/map/visibility_service.h"
 #include <QtMath>
 #include <cmath>
 
@@ -77,6 +78,25 @@ void Camera::zoom(float delta) {
   }
 }
 
+void Camera::zoomDistance(float delta) {
+
+  QVector3D offset = m_position - m_target;
+  float r = offset.length();
+  if (r < 1e-4f)
+    r = 1e-4f;
+
+  float factor = 1.0f - delta * 0.15f;
+  factor = std::clamp(factor, 0.1f, 10.0f);
+  float newR = r * factor;
+
+  newR = std::clamp(newR, 1.0f, 500.0f);
+  QVector3D dir = offset.normalized();
+  m_position = m_target + dir * newR;
+  clampAboveGround();
+  m_front = (m_target - m_position).normalized();
+  updateVectors();
+}
+
 void Camera::rotate(float yaw, float pitch) { orbit(yaw, pitch); }
 
 void Camera::pan(float rightDist, float forwardDist) {
@@ -108,15 +128,38 @@ void Camera::yaw(float degrees) {
 void Camera::orbit(float yawDeg, float pitchDeg) {
 
   QVector3D offset = m_position - m_target;
-  if (offset.lengthSquared() < 1e-6f) {
-
-    offset = QVector3D(0, 0, 1);
-  }
   float curYaw = 0.f, curPitch = 0.f;
   computeYawPitchFromOffset(offset, curYaw, curPitch);
-  float newYaw = curYaw + yawDeg;
-  float newPitch = qBound(m_pitchMinDeg, curPitch + pitchDeg, m_pitchMaxDeg);
+
+  m_orbitStartYaw = curYaw;
+  m_orbitStartPitch = curPitch;
+  m_orbitTargetYaw = curYaw + yawDeg;
+  m_orbitTargetPitch =
+      qBound(m_pitchMinDeg, curPitch + pitchDeg, m_pitchMaxDeg);
+  m_orbitTime = 0.0f;
+  m_orbitPending = true;
+}
+
+void Camera::update(float dt) {
+  if (!m_orbitPending)
+    return;
+
+  m_orbitTime += dt;
+  float t = m_orbitDuration <= 0.0f
+                ? 1.0f
+                : std::clamp(m_orbitTime / m_orbitDuration, 0.0f, 1.0f);
+
+  float s = t * t * (3.0f - 2.0f * t);
+
+  float newYaw = m_orbitStartYaw + (m_orbitTargetYaw - m_orbitStartYaw) * s;
+  float newPitch =
+      m_orbitStartPitch + (m_orbitTargetPitch - m_orbitStartPitch) * s;
+
+  QVector3D offset = m_position - m_target;
   float r = offset.length();
+  if (r < 1e-4f)
+    r = 1e-4f;
+
   float yawRad = qDegreesToRadians(newYaw);
   float pitchRad = qDegreesToRadians(newPitch);
   QVector3D newDir(std::sin(yawRad) * std::cos(pitchRad), std::sin(pitchRad),
@@ -125,6 +168,10 @@ void Camera::orbit(float yawDeg, float pitchDeg) {
   clampAboveGround();
   m_front = (m_target - m_position).normalized();
   updateVectors();
+
+  if (t >= 1.0f) {
+    m_orbitPending = false;
+  }
 }
 
 bool Camera::screenToGround(float sx, float sy, float screenW, float screenH,
@@ -193,12 +240,20 @@ void Camera::updateFollow(const QVector3D &targetCenter) {
   updateVectors();
 }
 
-void Camera::setRTSView(const QVector3D &center, float distance, float angle) {
+void Camera::setRTSView(const QVector3D &center, float distance, float angle,
+                        float yawDeg) {
   m_target = center;
 
-  float radians = qDegreesToRadians(angle);
-  m_position =
-      center + QVector3D(0, distance * qSin(radians), distance * qCos(radians));
+  float pitchRad = qDegreesToRadians(angle);
+  float yawRad = qDegreesToRadians(yawDeg);
+
+  float y = distance * qSin(pitchRad);
+  float horiz = distance * qCos(pitchRad);
+
+  float x = std::sin(yawRad) * horiz;
+  float z = std::cos(yawRad) * horiz;
+
+  m_position = center + QVector3D(x, y, z);
 
   m_up = QVector3D(0, 1, 0);
   m_front = (m_target - m_position).normalized();
@@ -236,6 +291,21 @@ QMatrix4x4 Camera::getViewProjectionMatrix() const {
   return getProjectionMatrix() * getViewMatrix();
 }
 
+float Camera::getDistance() const { return (m_position - m_target).length(); }
+
+float Camera::getPitchDeg() const {
+  QVector3D off = m_position - m_target;
+  float yaw = 0.0f, pitch = 0.0f;
+
+  QVector3D dir = -off;
+  if (dir.lengthSquared() < 1e-6f) {
+    return 0.0f;
+  }
+  float lenXZ = std::sqrt(dir.x() * dir.x() + dir.z() * dir.z());
+  float pitchRad = std::atan2(dir.y(), lenXZ);
+  return qRadiansToDegrees(pitchRad);
+}
+
 void Camera::updateVectors() {
 
   QVector3D worldUp(0, 1, 0);
@@ -250,6 +320,23 @@ void Camera::updateVectors() {
 void Camera::clampAboveGround() {
   if (m_position.y() < m_groundY + m_minHeight) {
     m_position.setY(m_groundY + m_minHeight);
+  }
+
+  auto &vis = Game::Map::VisibilityService::instance();
+  if (vis.isInitialized()) {
+    const float tile = vis.getTileSize();
+    const float halfW = vis.getWidth() * 0.5f - 0.5f;
+    const float halfH = vis.getHeight() * 0.5f - 0.5f;
+    const float minX = -halfW * tile;
+    const float maxX = halfW * tile;
+    const float minZ = -halfH * tile;
+    const float maxZ = halfH * tile;
+
+    m_position.setX(std::clamp(m_position.x(), minX, maxX));
+    m_position.setZ(std::clamp(m_position.z(), minZ, maxZ));
+
+    m_target.setX(std::clamp(m_target.x(), minX, maxX));
+    m_target.setZ(std::clamp(m_target.z(), minZ, maxZ));
   }
 }
 

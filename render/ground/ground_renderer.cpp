@@ -11,8 +11,9 @@ void GroundRenderer::recomputeModel() {
 
   m_model.translate(0.0f, -0.02f, 0.0f);
   if (m_width > 0 && m_height > 0) {
-    float scaleX = float(m_width) * m_tileSize * 0.5f;
-    float scaleZ = float(m_height) * m_tileSize * 0.5f;
+
+    float scaleX = float(m_width) * m_tileSize;
+    float scaleZ = float(m_height) * m_tileSize;
     m_model.scale(scaleX, 1.0f, scaleZ);
   } else {
     m_model.scale(m_extent, 1.0f, m_extent);

@@ -39,6 +39,11 @@ void Unit::moveTo(float x, float z) {
     m_mv->targetX = x;
     m_mv->targetY = z;
     m_mv->hasTarget = true;
+    m_mv->goalX = x;
+    m_mv->goalY = z;
+    m_mv->path.clear();
+    m_mv->pathPending = false;
+    m_mv->pendingRequestId = 0;
   }
 }
 

@@ -17,6 +17,12 @@ void CameraController::elevate(Render::GL::Camera &camera, float dy) const {
     camera.captureFollowOffset();
 }
 
+void CameraController::moveUp(Render::GL::Camera &camera, float dy) const {
+  camera.moveUp(dy);
+  if (camera.isFollowEnabled())
+    camera.captureFollowOffset();
+}
+
 void CameraController::yaw(Render::GL::Camera &camera, float degrees) const {
   camera.yaw(degrees);
   if (camera.isFollowEnabled())
@@ -26,6 +32,13 @@ void CameraController::yaw(Render::GL::Camera &camera, float degrees) const {
 void CameraController::orbit(Render::GL::Camera &camera, float yawDeg,
                              float pitchDeg) const {
   camera.orbit(yawDeg, pitchDeg);
+  if (camera.isFollowEnabled())
+    camera.captureFollowOffset();
+}
+
+void CameraController::zoomDistance(Render::GL::Camera &camera,
+                                    float delta) const {
+  camera.zoomDistance(delta);
   if (camera.isFollowEnabled())
     camera.captureFollowOffset();
 }

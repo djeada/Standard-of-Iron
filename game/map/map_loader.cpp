@@ -36,6 +36,11 @@ static bool readCamera(const QJsonObject &obj, CameraDefinition &cam) {
     cam.nearPlane = float(obj.value("near").toDouble(cam.nearPlane));
   if (obj.contains("far"))
     cam.farPlane = float(obj.value("far").toDouble(cam.farPlane));
+  if (obj.contains("yaw") || obj.contains("yawDeg")) {
+
+    const QString k = obj.contains("yaw") ? "yaw" : "yawDeg";
+    cam.yawDeg = float(obj.value(k).toDouble(cam.yawDeg));
+  }
   return true;
 }
 
