@@ -16,6 +16,9 @@ ApplicationWindow {
     property bool menuVisible: true
     property bool gameStarted: false  
     property bool gamePaused: false   
+    
+    
+    property bool edgeScrollDisabled: false
 
     
     GameView {
@@ -178,12 +181,14 @@ ApplicationWindow {
         enabled: visible
 
         
-        property real horzThreshold: 80
-        property real horzMaxSpeed: 0.5
-        
-        property real vertThreshold: 120
-        property real verticalDeadZone: 32
-        property real vertMaxSpeed: 0.1
+    
+    
+    property real horzThreshold: 120
+    property real horzMaxSpeed: 0.25
+
+    property real vertThreshold: 160
+    property real verticalDeadZone: 48
+    property real vertMaxSpeed: 0.05
         property real xPos: -1
         property real yPos: -1
         
@@ -248,7 +253,7 @@ ApplicationWindow {
                 const y = edgeScrollOverlay.yPos
                 if (x < 0 || y < 0) return
                 
-                if (edgeScrollOverlay.inHudZone(x, y)) {
+                if (edgeScrollOverlay.inHudZone(x, y) || mainWindow.edgeScrollDisabled) {
                     if (game.setHoverAtScreen) game.setHoverAtScreen(-1, -1)
                     return
                 }
@@ -279,8 +284,11 @@ ApplicationWindow {
                 const curveH = function(a) { return a*a }
                 
                 const curveV = function(a) { return a*a*a }
-                const dx = (curveH(ir) - curveH(il)) * edgeScrollOverlay.horzMaxSpeed
-                const dz = (curveV(iu) - curveV(id)) * edgeScrollOverlay.vertMaxSpeed
+                const rawDx = (curveH(ir) - curveH(il)) * edgeScrollOverlay.horzMaxSpeed
+                const rawDz = (curveV(iu) - curveV(id)) * edgeScrollOverlay.vertMaxSpeed
+                
+                const dx = rawDx / edgeScrollOverlay.horzMaxSpeed
+                const dz = rawDz / edgeScrollOverlay.vertMaxSpeed
                 if (dx !== 0 || dz !== 0) game.cameraMove(dx, dz)
             }
         }
