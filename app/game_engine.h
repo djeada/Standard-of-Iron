@@ -65,6 +65,7 @@ public:
       int maxTroopsPerPlayer READ maxTroopsPerPlayer NOTIFY troopCountChanged)
   Q_PROPERTY(
       QVariantList availableMaps READ availableMaps NOTIFY availableMapsChanged)
+  Q_PROPERTY(int enemyTroopsDefeated READ enemyTroopsDefeated NOTIFY enemyTroopsDefeatedChanged)
 
   Q_INVOKABLE void onMapClicked(qreal sx, qreal sy);
   Q_INVOKABLE void onRightClick(qreal sx, qreal sy);
@@ -101,6 +102,7 @@ public:
   bool hasUnitsSelected() const;
   int playerTroopCount() const;
   int maxTroopsPerPlayer() const { return m_level.maxTroopsPerPlayer; }
+  int enemyTroopsDefeated() const;
 
   Q_INVOKABLE bool hasSelectedType(const QString &type) const;
   Q_INVOKABLE void recruitNearSelected(const QString &unitType);
@@ -173,7 +175,7 @@ private:
   std::unique_ptr<Render::GL::GroundRenderer> m_ground;
   std::unique_ptr<Render::GL::TerrainRenderer> m_terrain;
   std::unique_ptr<Render::GL::FogRenderer> m_fog;
-  std::unique_ptr<Game::Systems::SelectionSystem> m_selectionSystem;
+  Game::Systems::SelectionSystem *m_selectionSystem = nullptr;
   std::unique_ptr<Game::Systems::PickingService> m_pickingService;
   QQuickWindow *m_window = nullptr;
   RuntimeState m_runtime;
@@ -183,8 +185,10 @@ private:
   QObject *m_selectedUnitsModel = nullptr;
   HoverState m_hover;
   PatrolState m_patrol;
+  int m_enemyTroopsDefeated = 0;
 signals:
   void selectedUnitsChanged();
+  void enemyTroopsDefeatedChanged();
   void victoryStateChanged();
   void cursorModeChanged();
   void globalCursorChanged();
