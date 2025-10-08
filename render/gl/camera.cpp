@@ -171,7 +171,6 @@ void Camera::update(float dt) {
 
   if (t >= 1.0f) {
     m_orbitPending = false;
-    qDebug() << "Camera::update finished";
   }
 }
 
