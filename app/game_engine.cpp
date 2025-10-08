@@ -652,7 +652,7 @@ void GameEngine::cameraOrbit(float yawDeg, float pitchDeg) {
   qDebug() << "GameEngine::cameraOrbit called:" << "yaw=" << yawDeg
            << "pitch=" << pitchDeg;
   if (!std::isfinite(yawDeg) || !std::isfinite(pitchDeg)) {
-    qDebug()
+    qWarning()
         << "GameEngine::cameraOrbit received invalid input, applying fallback"
         << yawDeg << pitchDeg;
     float fallback = 2.0f;
