@@ -23,7 +23,6 @@ int main(int argc, char *argv[]) {
   qputenv("QSG_RHI_BACKEND", "opengl");
   QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGLRhi);
 
-  (void)0;
 
   QSurfaceFormat fmt;
   fmt.setVersion(3, 3);
