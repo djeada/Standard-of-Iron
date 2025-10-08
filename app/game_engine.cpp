@@ -670,8 +670,6 @@ void GameEngine::cameraOrbitDirection(int direction, bool shift) {
 
   float step = shift ? 8.0f : 4.0f;
   float pitch = step * float(direction);
-  qDebug() << "GameEngine::cameraOrbitDirection" << direction << shift
-           << "-> pitch=" << pitch;
   cameraOrbit(0.0f, pitch);
 }
 
