@@ -3,6 +3,7 @@
 #include "../core/component.h"
 #include "../core/world.h"
 #include "../units/factory.h"
+#include "terrain_service.h"
 #include <QDebug>
 #include <QVector3D>
 
@@ -36,6 +37,34 @@ MapTransformer::applyToWorld(const MapDefinition &def,
       const float tile = std::max(0.0001f, def.grid.tileSize);
       worldX = (s.x - (def.grid.width * 0.5f - 0.5f)) * tile;
       worldZ = (s.z - (def.grid.height * 0.5f - 0.5f)) * tile;
+    }
+
+    auto &terrain = Game::Map::TerrainService::instance();
+    if (terrain.isInitialized() && terrain.isForbiddenWorld(worldX, worldZ)) {
+      const float tile = std::max(0.0001f, def.grid.tileSize);
+      bool found = false;
+      const int maxRadius = 12;
+      for (int r = 1; r <= maxRadius && !found; ++r) {
+        for (int ox = -r; ox <= r && !found; ++ox) {
+          for (int oz = -r; oz <= r && !found; ++oz) {
+
+            if (std::abs(ox) != r && std::abs(oz) != r)
+              continue;
+            float candX = worldX + float(ox) * tile;
+            float candZ = worldZ + float(oz) * tile;
+            if (!terrain.isForbiddenWorld(candX, candZ)) {
+              worldX = candX;
+              worldZ = candZ;
+              found = true;
+            }
+          }
+        }
+      }
+      if (!found) {
+        qWarning()
+            << "MapTransformer: spawn at" << s.x << s.z
+            << "is forbidden and no nearby free tile found; spawning anyway";
+      }
     }
 
     Engine::Core::Entity *e = nullptr;

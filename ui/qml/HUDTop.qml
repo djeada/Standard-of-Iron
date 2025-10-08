@@ -123,6 +123,11 @@ Item {
                     contentItem: Text { text: parent.text; font.pointSize: 9; font.bold: true; color: "#ecf0f1"; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
                     onToggled: { if (typeof game !== 'undefined' && game.cameraFollowSelection) game.cameraFollowSelection(checked) }
                 }
+                Button { width: 80; height: 32; text: "Reset"; focusPolicy: Qt.NoFocus
+                    background: Rectangle { color: parent.hovered ? "#34495e" : "#2c3e50"; radius: 4; border.color: "#1a252f"; border.width: 1 }
+                    contentItem: Text { text: parent.text; font.pointSize: 9; font.bold: true; color: "#ecf0f1"; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
+                    onClicked: { if (typeof game !== 'undefined' && game.resetCamera) game.resetCamera() }
+                }
             }
 
             Rectangle { width: 2; Layout.fillHeight: true; Layout.topMargin: 8; Layout.bottomMargin: 8
