@@ -24,6 +24,8 @@ public:
   void moveRight(float distance);
   void moveUp(float distance);
   void zoom(float delta);
+
+  void zoomDistance(float delta);
   void rotate(float yaw, float pitch);
 
   void pan(float rightDist, float forwardDist);
@@ -31,6 +33,8 @@ public:
   void elevate(float dy);
   void yaw(float degrees);
   void orbit(float yawDeg, float pitchDeg);
+
+  void update(float dt);
   bool screenToGround(float sx, float sy, float screenW, float screenH,
                       QVector3D &outWorld) const;
   bool worldToScreen(const QVector3D &world, int screenW, int screenH,
@@ -44,7 +48,7 @@ public:
   void updateFollow(const QVector3D &targetCenter);
 
   void setRTSView(const QVector3D &center, float distance = 10.0f,
-                  float angle = 45.0f);
+                  float angle = 45.0f, float yawDeg = 45.0f);
   void setTopDownView(const QVector3D &center, float distance = 10.0f);
 
   QMatrix4x4 getViewMatrix() const;
@@ -53,6 +57,8 @@ public:
 
   const QVector3D &getPosition() const { return m_position; }
   const QVector3D &getTarget() const { return m_target; }
+  float getDistance() const;
+  float getPitchDeg() const;
   float getFOV() const { return m_fov; }
   float getAspect() const { return m_aspect; }
   float getNear() const { return m_nearPlane; }
@@ -86,6 +92,14 @@ private:
 
   float m_pitchMinDeg = -85.0f;
   float m_pitchMaxDeg = -5.0f;
+
+  bool m_orbitPending = false;
+  float m_orbitStartYaw = 0.0f;
+  float m_orbitStartPitch = 0.0f;
+  float m_orbitTargetYaw = 0.0f;
+  float m_orbitTargetPitch = 0.0f;
+  float m_orbitTime = 0.0f;
+  float m_orbitDuration = 0.12f;
 
   void updateVectors();
   void clampAboveGround();

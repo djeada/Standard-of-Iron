@@ -36,7 +36,6 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
 
     if (attackerUnit->health <= 0)
       continue;
-
     float range = 2.0f;
     int damage = 10;
     float cooldown = 1.0f;
@@ -133,6 +132,12 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
                   movement->vx = 0.0f;
                   movement->vz = 0.0f;
                   movement->path.clear();
+                  if (attackerTransformComponent) {
+                    movement->targetX = attackerTransformComponent->position.x;
+                    movement->targetY = attackerTransformComponent->position.z;
+                    movement->goalX = attackerTransformComponent->position.x;
+                    movement->goalY = attackerTransformComponent->position.z;
+                  }
                 } else {
                   QVector3D plannedTarget(movement->targetX, 0.0f,
                                           movement->targetY);
@@ -152,7 +157,7 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
                     CommandService::MoveOptions options;
                     options.clearAttackIntent = false;
 
-                    options.allowDirectFallback = false;
+                    options.allowDirectFallback = true;
                     std::vector<Engine::Core::EntityID> unitIds = {
                         attacker->getId()};
                     std::vector<QVector3D> moveTargets = {desiredPos};
