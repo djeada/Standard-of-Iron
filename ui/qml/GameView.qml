@@ -555,7 +555,6 @@ Item {
             var shiftHeld = (event.modifiers & Qt.ShiftModifier) !== 0
             var pitchStep = shiftHeld ? 8 : 4
             
-            console.log("GameView Keys: key=", event.key, "shift=", shiftHeld, "pitchStep=", pitchStep)
             case Qt.Key_R: game.cameraOrbitDirection(1, shiftHeld);  event.accepted = true; break
             case Qt.Key_F: game.cameraOrbitDirection(-1, shiftHeld); event.accepted = true; break
         }
