@@ -8,8 +8,10 @@
 #include <QVariant>
 
 #include "game/core/component.h"
+#include "game/core/event_manager.h"
 #include "game/core/world.h"
 #include "game/map/level_loader.h"
+#include "game/map/map_transformer.h"
 #include "game/map/terrain_service.h"
 #include "game/map/visibility_service.h"
 #include "game/systems/ai_system.h"
@@ -28,11 +30,11 @@
 #include "game/systems/selection_system.h"
 #include "game/systems/terrain_alignment_system.h"
 #include "render/geom/arrow.h"
-#include "game/core/event_manager.h"
 #include "render/geom/patrol_flags.h"
 #include "render/gl/bootstrap.h"
 #include "render/gl/camera.h"
 #include "render/gl/resources.h"
+#include "render/ground/biome_renderer.h"
 #include "render/ground/fog_renderer.h"
 #include "render/ground/ground_renderer.h"
 #include "render/ground/terrain_renderer.h"
@@ -51,6 +53,7 @@ GameEngine::GameEngine() {
   m_camera = std::make_unique<Render::GL::Camera>();
   m_ground = std::make_unique<Render::GL::GroundRenderer>();
   m_terrain = std::make_unique<Render::GL::TerrainRenderer>();
+  m_biome = std::make_unique<Render::GL::BiomeRenderer>();
   m_fog = std::make_unique<Render::GL::FogRenderer>();
 
   std::unique_ptr<Engine::Core::System> arrowSys =
@@ -77,10 +80,8 @@ GameEngine::GameEngine() {
   QMetaObject::invokeMethod(m_selectedUnitsModel, "refresh");
   m_pickingService = std::make_unique<Game::Systems::PickingService>();
 
-  // subscribe to unit died events to track enemy defeats
   Engine::Core::EventManager::instance().subscribe<Engine::Core::UnitDiedEvent>(
       [this](const Engine::Core::UnitDiedEvent &e) {
-        // increment only if the unit belonged to an enemy
         if (e.ownerId != m_runtime.localOwnerId) {
           m_enemyTroopsDefeated++;
           emit enemyTroopsDefeatedChanged();
@@ -395,7 +396,9 @@ void GameEngine::onClickSelect(qreal sx, qreal sy, bool additive) {
     }
     auto targets = Game::Systems::FormationPlanner::spreadFormation(
         int(selected.size()), hit, 1.0f);
-    Game::Systems::CommandService::moveUnits(*m_world, selected, targets);
+    Game::Systems::CommandService::MoveOptions opts;
+    opts.groupMove = selected.size() > 1;
+    Game::Systems::CommandService::moveUnits(*m_world, selected, targets, opts);
     syncSelectionFlags();
     return;
   }
@@ -464,13 +467,20 @@ void GameEngine::update(float dt) {
 
     auto &visibilityService = Game::Map::VisibilityService::instance();
     if (visibilityService.isInitialized()) {
-      visibilityService.update(*m_world, m_runtime.localOwnerId);
+
+      m_runtime.visibilityUpdateCounter++;
+      if (m_runtime.visibilityUpdateCounter >= 3) {
+        m_runtime.visibilityUpdateCounter = 0;
+        visibilityService.update(*m_world, m_runtime.localOwnerId);
+      }
+
       const auto newVersion = visibilityService.version();
       if (newVersion != m_runtime.visibilityVersion) {
         if (m_fog) {
-          m_fog->updateMask(
-              visibilityService.getWidth(), visibilityService.getHeight(),
-              visibilityService.getTileSize(), visibilityService.cells());
+          m_fog->updateMask(visibilityService.getWidth(),
+                            visibilityService.getHeight(),
+                            visibilityService.getTileSize(),
+                            visibilityService.snapshotCells());
         }
         m_runtime.visibilityVersion = newVersion;
       }
@@ -516,6 +526,9 @@ void GameEngine::render(int pixelWidth, int pixelHeight) {
   if (m_terrain && m_renderer) {
     if (auto *res = m_renderer->resources())
       m_terrain->submit(*m_renderer, *res);
+  }
+  if (m_biome && m_renderer) {
+    m_biome->submit(*m_renderer);
   }
   if (m_fog && m_renderer) {
     if (auto *res = m_renderer->resources())
@@ -924,19 +937,32 @@ void GameEngine::startSkirmish(const QString &mapPath) {
 
     Game::Systems::BuildingCollisionRegistry::instance().clear();
 
+    Game::Map::MapTransformer::setLocalOwnerId(m_runtime.localOwnerId);
+
     auto lr = Game::Map::LevelLoader::loadFromAssets(m_level.mapName, *m_world,
                                                      *m_renderer, *m_camera);
+    auto &terrainService = Game::Map::TerrainService::instance();
+
     if (m_ground) {
       if (lr.ok)
         m_ground->configure(lr.tileSize, lr.gridWidth, lr.gridHeight);
       else
         m_ground->configureExtent(50.0f);
+      if (terrainService.isInitialized())
+        m_ground->setBiome(terrainService.biomeSettings());
     }
 
     if (m_terrain) {
-      auto &terrainService = Game::Map::TerrainService::instance();
       if (terrainService.isInitialized() && terrainService.getHeightMap()) {
-        m_terrain->configure(*terrainService.getHeightMap());
+        m_terrain->configure(*terrainService.getHeightMap(),
+                             terrainService.biomeSettings());
+      }
+    }
+
+    if (m_biome) {
+      if (terrainService.isInitialized() && terrainService.getHeightMap()) {
+        m_biome->configure(*terrainService.getHeightMap(),
+                           terrainService.biomeSettings());
       }
     }
 
@@ -947,11 +973,11 @@ void GameEngine::startSkirmish(const QString &mapPath) {
     auto &visibilityService = Game::Map::VisibilityService::instance();
     visibilityService.initialize(mapWidth, mapHeight, lr.tileSize);
     if (m_world)
-      visibilityService.update(*m_world, m_runtime.localOwnerId);
+      visibilityService.computeImmediate(*m_world, m_runtime.localOwnerId);
     if (m_fog && visibilityService.isInitialized()) {
       m_fog->updateMask(
           visibilityService.getWidth(), visibilityService.getHeight(),
-          visibilityService.getTileSize(), visibilityService.cells());
+          visibilityService.getTileSize(), visibilityService.snapshotCells());
       m_runtime.visibilityVersion = visibilityService.version();
     } else {
       m_runtime.visibilityVersion = 0;
