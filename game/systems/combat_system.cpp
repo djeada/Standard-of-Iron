@@ -1,6 +1,6 @@
 #include "combat_system.h"
-#include "../core/event_manager.h"
 #include "../core/component.h"
+#include "../core/event_manager.h"
 #include "../core/world.h"
 #include "../visuals/team_colors.h"
 #include "arrow_system.h"
@@ -107,8 +107,9 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
                 float scaleZ = targetTransform->scale.z;
                 float targetRadius = std::max(scaleX, scaleZ) * 0.5f;
                 QVector3D direction = targetPos - attackerPos;
-                float distance = direction.length();
-                if (distance > 0.001f) {
+                float distanceSq = direction.lengthSquared();
+                if (distanceSq > 0.000001f) {
+                  float distance = std::sqrt(distanceSq);
                   direction /= distance;
                   float desiredDistance =
                       targetRadius + std::max(range - 0.2f, 0.2f);
@@ -310,7 +311,6 @@ void CombatSystem::dealDamage(Engine::Core::Entity *target, int damage) {
 
     if (unit->health <= 0) {
 
-      // publish unit died event
       Engine::Core::EventManager::instance().publish(
           Engine::Core::UnitDiedEvent(target->getId(), unit->ownerId));
 
