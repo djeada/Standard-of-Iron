@@ -40,6 +40,7 @@ struct MapDefinition {
   CameraDefinition camera;
   std::vector<UnitSpawn> spawns;
   std::vector<TerrainFeature> terrain;
+  BiomeSettings biome;
   CoordSystem coordSystem = CoordSystem::Grid;
   int maxTroopsPerPlayer = 50;
 };

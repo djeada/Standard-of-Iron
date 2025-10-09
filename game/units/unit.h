@@ -26,6 +26,7 @@ struct SpawnParams {
   QVector3D position{0, 0, 0};
   int playerId = 0;
   std::string unitType;
+  bool aiControlled = false;
 };
 
 class Unit {

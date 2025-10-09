@@ -62,7 +62,8 @@ public:
 
 class UnitDiedEvent : public Event {
 public:
-  UnitDiedEvent(EntityID unitId, int ownerId) : unitId(unitId), ownerId(ownerId) {}
+  UnitDiedEvent(EntityID unitId, int ownerId)
+      : unitId(unitId), ownerId(ownerId) {}
   EntityID unitId;
   int ownerId;
 };

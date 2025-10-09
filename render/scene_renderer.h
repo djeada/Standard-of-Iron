@@ -8,6 +8,7 @@
 #include "gl/texture.h"
 #include "submitter.h"
 #include <atomic>
+#include <cstdint>
 #include <memory>
 #include <mutex>
 #include <optional>
@@ -105,6 +106,8 @@ public:
 
   void mesh(Mesh *mesh, const QMatrix4x4 &model, const QVector3D &color,
             Texture *texture = nullptr, float alpha = 1.0f) override;
+  void cylinder(const QVector3D &start, const QVector3D &end, float radius,
+                const QVector3D &color, float alpha = 1.0f) override;
   void selectionRing(const QMatrix4x4 &model, float alphaInner,
                      float alphaOuter, const QVector3D &color) override;
 
@@ -113,16 +116,27 @@ public:
 
   void selectionSmoke(const QMatrix4x4 &model, const QVector3D &color,
                       float baseAlpha = 0.15f) override;
+  void terrainChunk(Mesh *mesh, const QMatrix4x4 &model,
+                    const TerrainChunkParams &params,
+                    std::uint16_t sortKey = 0x8000u, bool depthWrite = true,
+                    float depthBias = 0.0f);
 
   void renderWorld(Engine::Core::World *world);
 
   void lockWorldForModification() { m_worldMutex.lock(); }
   void unlockWorldForModification() { m_worldMutex.unlock(); }
 
+  void fogBatch(const FogInstanceData *instances, std::size_t count);
+  void grassBatch(Buffer *instanceBuffer, std::size_t instanceCount,
+                  const GrassBatchParams &params);
+
 private:
   Camera *m_camera = nullptr;
   std::shared_ptr<Backend> m_backend;
-  DrawQueue m_queue;
+  DrawQueue m_queues[2];
+  DrawQueue *m_activeQueue = nullptr;
+  int m_fillQueueIndex = 0;
+  int m_renderQueueIndex = 1;
 
   std::unique_ptr<EntityRendererRegistry> m_entityRegistry;
   unsigned int m_hoveredEntityId = 0;
@@ -136,6 +150,8 @@ private:
 
   std::mutex m_worldMutex;
   int m_localOwnerId = 1;
+
+  QMatrix4x4 m_viewProj;
 };
 
 } // namespace Render::GL

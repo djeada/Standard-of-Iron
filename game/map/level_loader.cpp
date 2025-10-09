@@ -58,6 +58,8 @@ LevelLoadResult LevelLoader::loadFromAssets(const QString &mapPath,
         sp.position = QVector3D(0.0f, 0.0f, 0.0f);
         sp.playerId = 0;
         sp.unitType = "archer";
+        sp.aiControlled =
+            (sp.playerId != Game::Map::MapTransformer::localOwnerId());
         if (auto unit = reg->create("archer", world, sp)) {
           res.playerUnitId = unit->id();
         } else {
@@ -82,6 +84,8 @@ LevelLoadResult LevelLoader::loadFromAssets(const QString &mapPath,
         sp.position = QVector3D(-4.0f, 0.0f, -3.0f);
         sp.playerId = 1;
         sp.unitType = "barracks";
+        sp.aiControlled =
+            (sp.playerId != Game::Map::MapTransformer::localOwnerId());
         reg2->create("barracks", world, sp);
       }
     }
@@ -103,6 +107,8 @@ LevelLoadResult LevelLoader::loadFromAssets(const QString &mapPath,
       sp.position = QVector3D(0.0f, 0.0f, 0.0f);
       sp.playerId = 0;
       sp.unitType = "archer";
+      sp.aiControlled =
+          (sp.playerId != Game::Map::MapTransformer::localOwnerId());
       if (auto unit = reg->create("archer", world, sp)) {
         res.playerUnitId = unit->id();
       }

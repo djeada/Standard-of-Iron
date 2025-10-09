@@ -47,6 +47,25 @@ public:
     const QString gridFrag = kShaderBase + QStringLiteral("grid.frag");
     load(QStringLiteral("basic"), basicVert, basicFrag);
     load(QStringLiteral("grid"), basicVert, gridFrag);
+    const QString cylVert =
+        kShaderBase + QStringLiteral("cylinder_instanced.vert");
+    const QString cylFrag =
+        kShaderBase + QStringLiteral("cylinder_instanced.frag");
+    load(QStringLiteral("cylinder_instanced"), cylVert, cylFrag);
+    const QString fogVert = kShaderBase + QStringLiteral("fog_instanced.vert");
+    const QString fogFrag = kShaderBase + QStringLiteral("fog_instanced.frag");
+    load(QStringLiteral("fog_instanced"), fogVert, fogFrag);
+    const QString grassVert =
+        kShaderBase + QStringLiteral("grass_instanced.vert");
+    const QString grassFrag =
+        kShaderBase + QStringLiteral("grass_instanced.frag");
+    load(QStringLiteral("grass_instanced"), grassVert, grassFrag);
+
+    const QString terrainVert =
+        kShaderBase + QStringLiteral("terrain_chunk.vert");
+    const QString terrainFrag =
+        kShaderBase + QStringLiteral("terrain_chunk.frag");
+    load(QStringLiteral("terrain_chunk"), terrainVert, terrainFrag);
   }
 
   void clear() {

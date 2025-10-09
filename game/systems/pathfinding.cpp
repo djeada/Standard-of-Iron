@@ -2,16 +2,18 @@
 #include "../map/terrain_service.h"
 #include "building_collision_registry.h"
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <limits>
-#include <queue>
+#include <utility>
 
 namespace Game::Systems {
 
 Pathfinding::Pathfinding(int width, int height)
     : m_width(width), m_height(height), m_gridCellSize(1.0f),
       m_gridOffsetX(0.0f), m_gridOffsetZ(0.0f) {
-  m_obstacles.resize(height, std::vector<bool>(width, false));
+  m_obstacles.resize(height, std::vector<std::uint8_t>(width, 0));
+  ensureWorkingBuffers();
   m_obstaclesDirty.store(true, std::memory_order_release);
   m_workerThread = std::thread(&Pathfinding::workerLoop, this);
 }
@@ -31,7 +33,7 @@ void Pathfinding::setGridOffset(float offsetX, float offsetZ) {
 
 void Pathfinding::setObstacle(int x, int y, bool isObstacle) {
   if (x >= 0 && x < m_width && y >= 0 && y < m_height) {
-    m_obstacles[y][x] = isObstacle;
+    m_obstacles[y][x] = static_cast<std::uint8_t>(isObstacle);
   }
 }
 
@@ -39,7 +41,7 @@ bool Pathfinding::isWalkable(int x, int y) const {
   if (x < 0 || x >= m_width || y < 0 || y >= m_height) {
     return false;
   }
-  return !m_obstacles[y][x];
+  return m_obstacles[y][x] == 0;
 }
 
 void Pathfinding::markObstaclesDirty() {
@@ -59,7 +61,7 @@ void Pathfinding::updateBuildingObstacles() {
   }
 
   for (auto &row : m_obstacles) {
-    std::fill(row.begin(), row.end(), false);
+    std::fill(row.begin(), row.end(), static_cast<std::uint8_t>(0));
   }
 
   auto &terrainService = Game::Map::TerrainService::instance();
@@ -79,7 +81,7 @@ void Pathfinding::updateBuildingObstacles() {
         }
 
         if (blocked) {
-          m_obstacles[z][x] = true;
+          m_obstacles[z][x] = static_cast<std::uint8_t>(1);
         }
       }
     }
@@ -95,7 +97,7 @@ void Pathfinding::updateBuildingObstacles() {
       int gridZ = static_cast<int>(std::round(cell.second - m_gridOffsetZ));
 
       if (gridX >= 0 && gridX < m_width && gridZ >= 0 && gridZ < m_height) {
-        m_obstacles[gridZ][gridX] = true;
+        m_obstacles[gridZ][gridX] = static_cast<std::uint8_t>(1);
       }
     }
   }
@@ -139,141 +141,297 @@ std::vector<Pathfinding::PathResult> Pathfinding::fetchCompletedPaths() {
 }
 
 std::vector<Point> Pathfinding::findPathInternal(const Point &start,
-                                                 const Point &end) const {
+                                                 const Point &end) {
+  ensureWorkingBuffers();
+
   if (!isWalkable(start.x, start.y) || !isWalkable(end.x, end.y)) {
     return {};
   }
 
-  if (start == end) {
+  const int startIdx = toIndex(start);
+  const int endIdx = toIndex(end);
+
+  if (startIdx == endIdx) {
     return {start};
   }
 
-  struct QueueNode {
-    Point position;
-    int fCost;
-    int gCost;
-  };
+  const std::uint32_t generation = nextGeneration();
 
-  auto compare = [](const QueueNode &a, const QueueNode &b) {
-    return a.fCost > b.fCost;
-  };
+  m_openHeap.clear();
 
-  std::priority_queue<QueueNode, std::vector<QueueNode>, decltype(compare)>
-      openQueue(compare);
+  setGCost(startIdx, generation, 0);
+  setParent(startIdx, generation, startIdx);
 
-  std::vector<std::vector<bool>> closedList(m_height,
-                                            std::vector<bool>(m_width, false));
-  std::vector<std::vector<int>> gCosts(
-      m_height, std::vector<int>(m_width, std::numeric_limits<int>::max()));
-  std::vector<std::vector<Point>> parents(
-      m_height, std::vector<Point>(m_width, Point(-1, -1)));
-
-  gCosts[start.y][start.x] = 0;
-  parents[start.y][start.x] = start;
-  openQueue.push({start, calculateHeuristic(start, end), 0});
+  pushOpenNode({startIdx, calculateHeuristic(start, end), 0});
 
   const int maxIterations = std::max(m_width * m_height, 1);
   int iterations = 0;
-  bool pathFound = false;
 
-  while (!openQueue.empty() && iterations < maxIterations) {
-    iterations++;
+  int finalCost = -1;
 
-    QueueNode current = openQueue.top();
-    openQueue.pop();
+  while (!m_openHeap.empty() && iterations < maxIterations) {
+    ++iterations;
 
-    const Point &currentPos = current.position;
+    QueueNode current = popOpenNode();
 
-    if (current.gCost > gCosts[currentPos.y][currentPos.x]) {
+    if (current.gCost > getGCost(current.index, generation)) {
       continue;
     }
 
-    if (closedList[currentPos.y][currentPos.x]) {
+    if (isClosed(current.index, generation)) {
       continue;
     }
 
-    closedList[currentPos.y][currentPos.x] = true;
+    setClosed(current.index, generation);
 
-    if (currentPos == end) {
-      pathFound = true;
+    if (current.index == endIdx) {
+      finalCost = current.gCost;
       break;
     }
 
-    for (const auto &neighborPos : getNeighbors(currentPos)) {
-      if (!isWalkable(neighborPos.x, neighborPos.y) ||
-          closedList[neighborPos.y][neighborPos.x]) {
+    const Point currentPoint = toPoint(current.index);
+    std::array<Point, 8> neighbors{};
+    const std::size_t neighborCount = collectNeighbors(currentPoint, neighbors);
+
+    for (std::size_t i = 0; i < neighborCount; ++i) {
+      const Point &neighbor = neighbors[i];
+      if (!isWalkable(neighbor.x, neighbor.y)) {
         continue;
       }
 
-      int tentativeGCost = current.gCost + 1;
-
-      if (tentativeGCost < gCosts[neighborPos.y][neighborPos.x]) {
-        gCosts[neighborPos.y][neighborPos.x] = tentativeGCost;
-        parents[neighborPos.y][neighborPos.x] = currentPos;
-
-        int hCost = calculateHeuristic(neighborPos, end);
-        openQueue.push({neighborPos, tentativeGCost + hCost, tentativeGCost});
+      const int neighborIdx = toIndex(neighbor);
+      if (isClosed(neighborIdx, generation)) {
+        continue;
       }
+
+      const int tentativeGCost = current.gCost + 1;
+      if (tentativeGCost >= getGCost(neighborIdx, generation)) {
+        continue;
+      }
+
+      setGCost(neighborIdx, generation, tentativeGCost);
+      setParent(neighborIdx, generation, current.index);
+
+      const int hCost = calculateHeuristic(neighbor, end);
+      pushOpenNode({neighborIdx, tentativeGCost + hCost, tentativeGCost});
     }
   }
 
-  if (!pathFound) {
+  if (finalCost < 0) {
     return {};
   }
 
-  return reconstructPath(start, end, parents);
+  std::vector<Point> path;
+  path.reserve(finalCost + 1);
+  buildPath(startIdx, endIdx, generation, finalCost + 1, path);
+  return path;
 }
 
 int Pathfinding::calculateHeuristic(const Point &a, const Point &b) const {
-
   return std::abs(a.x - b.x) + std::abs(a.y - b.y);
 }
 
-std::vector<Point> Pathfinding::getNeighbors(const Point &point) const {
-  std::vector<Point> neighbors;
+void Pathfinding::ensureWorkingBuffers() {
+  const std::size_t totalCells =
+      static_cast<std::size_t>(m_width) * static_cast<std::size_t>(m_height);
 
-  for (int dx = -1; dx <= 1; ++dx) {
-    for (int dy = -1; dy <= 1; ++dy) {
-      if (dx == 0 && dy == 0)
-        continue;
-
-      int x = point.x + dx;
-      int y = point.y + dy;
-
-      if (x >= 0 && x < m_width && y >= 0 && y < m_height) {
-        if (dx != 0 && dy != 0) {
-
-          if (!isWalkable(point.x + dx, point.y) ||
-              !isWalkable(point.x, point.y + dy)) {
-            continue;
-          }
-        }
-        neighbors.emplace_back(x, y);
-      }
-    }
+  if (m_closedGeneration.size() != totalCells) {
+    m_closedGeneration.assign(totalCells, 0);
+    m_gCostGeneration.assign(totalCells, 0);
+    m_gCostValues.assign(totalCells, std::numeric_limits<int>::max());
+    m_parentGeneration.assign(totalCells, 0);
+    m_parentValues.assign(totalCells, -1);
   }
 
-  return neighbors;
+  const std::size_t minOpenCapacity = std::max<std::size_t>(totalCells / 8, 64);
+  if (m_openHeap.capacity() < minOpenCapacity) {
+    m_openHeap.reserve(minOpenCapacity);
+  }
 }
 
-std::vector<Point> Pathfinding::reconstructPath(
-    const Point &start, const Point &end,
-    const std::vector<std::vector<Point>> &parents) const {
-  std::vector<Point> path;
-  Point current = end;
-  path.push_back(current);
+std::uint32_t Pathfinding::nextGeneration() {
+  auto next = ++m_generationCounter;
+  if (next == 0) {
+    resetGenerations();
+    next = ++m_generationCounter;
+  }
+  return next;
+}
 
-  while (!(current == start)) {
-    const Point &parent = parents[current.y][current.x];
-    if (parent.x == -1 && parent.y == -1) {
-      return {};
+void Pathfinding::resetGenerations() {
+  std::fill(m_closedGeneration.begin(), m_closedGeneration.end(), 0);
+  std::fill(m_gCostGeneration.begin(), m_gCostGeneration.end(), 0);
+  std::fill(m_parentGeneration.begin(), m_parentGeneration.end(), 0);
+  std::fill(m_gCostValues.begin(), m_gCostValues.end(),
+            std::numeric_limits<int>::max());
+  std::fill(m_parentValues.begin(), m_parentValues.end(), -1);
+  m_generationCounter = 0;
+}
+
+bool Pathfinding::isClosed(int index, std::uint32_t generation) const {
+  return index >= 0 &&
+         static_cast<std::size_t>(index) < m_closedGeneration.size() &&
+         m_closedGeneration[static_cast<std::size_t>(index)] == generation;
+}
+
+void Pathfinding::setClosed(int index, std::uint32_t generation) {
+  if (index >= 0 &&
+      static_cast<std::size_t>(index) < m_closedGeneration.size()) {
+    m_closedGeneration[static_cast<std::size_t>(index)] = generation;
+  }
+}
+
+int Pathfinding::getGCost(int index, std::uint32_t generation) const {
+  if (index < 0 ||
+      static_cast<std::size_t>(index) >= m_gCostGeneration.size()) {
+    return std::numeric_limits<int>::max();
+  }
+  if (m_gCostGeneration[static_cast<std::size_t>(index)] == generation) {
+    return m_gCostValues[static_cast<std::size_t>(index)];
+  }
+  return std::numeric_limits<int>::max();
+}
+
+void Pathfinding::setGCost(int index, std::uint32_t generation, int cost) {
+  if (index >= 0 &&
+      static_cast<std::size_t>(index) < m_gCostGeneration.size()) {
+    const auto idx = static_cast<std::size_t>(index);
+    m_gCostGeneration[idx] = generation;
+    m_gCostValues[idx] = cost;
+  }
+}
+
+bool Pathfinding::hasParent(int index, std::uint32_t generation) const {
+  return index >= 0 &&
+         static_cast<std::size_t>(index) < m_parentGeneration.size() &&
+         m_parentGeneration[static_cast<std::size_t>(index)] == generation;
+}
+
+int Pathfinding::getParent(int index, std::uint32_t generation) const {
+  if (hasParent(index, generation)) {
+    return m_parentValues[static_cast<std::size_t>(index)];
+  }
+  return -1;
+}
+
+void Pathfinding::setParent(int index, std::uint32_t generation,
+                            int parentIndex) {
+  if (index >= 0 &&
+      static_cast<std::size_t>(index) < m_parentGeneration.size()) {
+    const auto idx = static_cast<std::size_t>(index);
+    m_parentGeneration[idx] = generation;
+    m_parentValues[idx] = parentIndex;
+  }
+}
+
+std::size_t Pathfinding::collectNeighbors(const Point &point,
+                                          std::array<Point, 8> &buffer) const {
+  std::size_t count = 0;
+  for (int dx = -1; dx <= 1; ++dx) {
+    for (int dy = -1; dy <= 1; ++dy) {
+      if (dx == 0 && dy == 0) {
+        continue;
+      }
+
+      const int x = point.x + dx;
+      const int y = point.y + dy;
+
+      if (x < 0 || x >= m_width || y < 0 || y >= m_height) {
+        continue;
+      }
+
+      if (dx != 0 && dy != 0) {
+        if (!isWalkable(point.x + dx, point.y) ||
+            !isWalkable(point.x, point.y + dy)) {
+          continue;
+        }
+      }
+
+      buffer[count++] = Point{x, y};
+    }
+  }
+  return count;
+}
+
+void Pathfinding::buildPath(int startIndex, int endIndex,
+                            std::uint32_t generation, int expectedLength,
+                            std::vector<Point> &outPath) const {
+  outPath.clear();
+  if (expectedLength > 0) {
+    outPath.reserve(static_cast<std::size_t>(expectedLength));
+  }
+  int current = endIndex;
+
+  while (current >= 0) {
+    outPath.push_back(toPoint(current));
+    if (current == startIndex) {
+      std::reverse(outPath.begin(), outPath.end());
+      return;
+    }
+
+    if (!hasParent(current, generation)) {
+      outPath.clear();
+      return;
+    }
+
+    const int parent = getParent(current, generation);
+    if (parent == current || parent < 0) {
+      outPath.clear();
+      return;
     }
     current = parent;
-    path.push_back(current);
   }
 
-  std::reverse(path.begin(), path.end());
-  return path;
+  outPath.clear();
+}
+
+bool Pathfinding::heapLess(const QueueNode &lhs, const QueueNode &rhs) const {
+  if (lhs.fCost != rhs.fCost) {
+    return lhs.fCost < rhs.fCost;
+  }
+  return lhs.gCost < rhs.gCost;
+}
+
+void Pathfinding::pushOpenNode(const QueueNode &node) {
+  m_openHeap.push_back(node);
+  std::size_t index = m_openHeap.size() - 1;
+  while (index > 0) {
+    std::size_t parent = (index - 1) / 2;
+    if (heapLess(m_openHeap[parent], m_openHeap[index])) {
+      break;
+    }
+    std::swap(m_openHeap[parent], m_openHeap[index]);
+    index = parent;
+  }
+}
+
+Pathfinding::QueueNode Pathfinding::popOpenNode() {
+  QueueNode top = m_openHeap.front();
+  QueueNode last = m_openHeap.back();
+  m_openHeap.pop_back();
+  if (!m_openHeap.empty()) {
+    m_openHeap[0] = last;
+    std::size_t index = 0;
+    const std::size_t size = m_openHeap.size();
+    while (true) {
+      std::size_t left = index * 2 + 1;
+      std::size_t right = left + 1;
+      std::size_t smallest = index;
+
+      if (left < size && !heapLess(m_openHeap[smallest], m_openHeap[left])) {
+        smallest = left;
+      }
+      if (right < size && !heapLess(m_openHeap[smallest], m_openHeap[right])) {
+        smallest = right;
+      }
+      if (smallest == index) {
+        break;
+      }
+      std::swap(m_openHeap[index], m_openHeap[smallest]);
+      index = smallest;
+    }
+  }
+  return top;
 }
 
 void Pathfinding::workerLoop() {
