@@ -283,3 +283,4 @@ MIT License - see LICENSE file for details.
 ## Acknowledgments
 
 Built with modern C++20, Qt 6, and OpenGL 3.3 Core. Special thanks to the open-source community for excellent documentation and tools.
+

@@ -28,6 +28,7 @@ class Camera;
 class ResourceManager;
 class GroundRenderer;
 class TerrainRenderer;
+class BiomeRenderer;
 class FogRenderer;
 } // namespace GL
 } // namespace Render
@@ -65,7 +66,8 @@ public:
       int maxTroopsPerPlayer READ maxTroopsPerPlayer NOTIFY troopCountChanged)
   Q_PROPERTY(
       QVariantList availableMaps READ availableMaps NOTIFY availableMapsChanged)
-  Q_PROPERTY(int enemyTroopsDefeated READ enemyTroopsDefeated NOTIFY enemyTroopsDefeatedChanged)
+  Q_PROPERTY(int enemyTroopsDefeated READ enemyTroopsDefeated NOTIFY
+                 enemyTroopsDefeatedChanged)
 
   Q_INVOKABLE void onMapClicked(qreal sx, qreal sy);
   Q_INVOKABLE void onRightClick(qreal sx, qreal sy);
@@ -139,6 +141,7 @@ private:
     QString cursorMode = "normal";
     int lastTroopCount = 0;
     std::uint64_t visibilityVersion = 0;
+    int visibilityUpdateCounter = 0;
   };
   struct ViewportState {
     int width = 0;
@@ -174,6 +177,7 @@ private:
   std::shared_ptr<Render::GL::ResourceManager> m_resources;
   std::unique_ptr<Render::GL::GroundRenderer> m_ground;
   std::unique_ptr<Render::GL::TerrainRenderer> m_terrain;
+  std::unique_ptr<Render::GL::BiomeRenderer> m_biome;
   std::unique_ptr<Render::GL::FogRenderer> m_fog;
   Game::Systems::SelectionSystem *m_selectionSystem = nullptr;
   std::unique_ptr<Game::Systems::PickingService> m_pickingService;

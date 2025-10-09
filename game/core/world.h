@@ -33,6 +33,9 @@ public:
     return result;
   }
 
+  std::vector<Entity *> getUnitsOwnedBy(int ownerId);
+  std::vector<Entity *> getUnitsNotOwnedBy(int ownerId);
+
 private:
   EntityID m_nextEntityId = 1;
   std::unordered_map<EntityID, std::unique_ptr<Entity>> m_entities;

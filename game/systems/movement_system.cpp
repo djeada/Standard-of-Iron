@@ -15,53 +15,67 @@ static constexpr float REPATH_COOLDOWN_SECONDS = 0.4f;
 
 namespace {
 
-bool isSegmentWalkable(const QVector3D &from, const QVector3D &to,
-                       Engine::Core::EntityID ignoreEntity) {
+bool isPointAllowed(const QVector3D &pos, Engine::Core::EntityID ignoreEntity) {
   auto &registry = BuildingCollisionRegistry::instance();
   auto &terrainService = Game::Map::TerrainService::instance();
   Pathfinding *pathfinder = CommandService::getPathfinder();
 
-  auto samplePoint = [&](const QVector3D &pos) {
-    if (registry.isPointInBuilding(pos.x(), pos.z(), ignoreEntity)) {
-      return false;
-    }
-
-    if (pathfinder) {
-      int gridX =
-          static_cast<int>(std::round(pos.x() - pathfinder->getGridOffsetX()));
-      int gridZ =
-          static_cast<int>(std::round(pos.z() - pathfinder->getGridOffsetZ()));
-      if (!pathfinder->isWalkable(gridX, gridZ)) {
-        return false;
-      }
-    } else if (terrainService.isInitialized()) {
-      int gridX = static_cast<int>(std::round(pos.x()));
-      int gridZ = static_cast<int>(std::round(pos.z()));
-      if (!terrainService.isWalkable(gridX, gridZ)) {
-        return false;
-      }
-    }
-
-    return true;
-  };
-
-  QVector3D delta = to - from;
-  float distance = delta.length();
-
-  if (distance < 0.001f) {
-    return samplePoint(from);
+  if (registry.isPointInBuilding(pos.x(), pos.z(), ignoreEntity)) {
+    return false;
   }
 
-  int steps = std::max(1, static_cast<int>(std::ceil(distance)) * 2);
-  QVector3D step = delta / static_cast<float>(steps);
-  QVector3D pos = from;
-  for (int i = 0; i <= steps; ++i, pos += step) {
-    if (!samplePoint(pos)) {
+  if (pathfinder) {
+    int gridX =
+        static_cast<int>(std::round(pos.x() - pathfinder->getGridOffsetX()));
+    int gridZ =
+        static_cast<int>(std::round(pos.z() - pathfinder->getGridOffsetZ()));
+    if (!pathfinder->isWalkable(gridX, gridZ)) {
+      return false;
+    }
+  } else if (terrainService.isInitialized()) {
+    int gridX = static_cast<int>(std::round(pos.x()));
+    int gridZ = static_cast<int>(std::round(pos.z()));
+    if (!terrainService.isWalkable(gridX, gridZ)) {
       return false;
     }
   }
 
   return true;
+}
+
+bool isSegmentWalkable(const QVector3D &from, const QVector3D &to,
+                       Engine::Core::EntityID ignoreEntity) {
+  QVector3D delta = to - from;
+  float distance = delta.length();
+
+  bool startAllowed = isPointAllowed(from, ignoreEntity);
+  bool endAllowed = isPointAllowed(to, ignoreEntity);
+
+  if (distance < 0.001f) {
+    return endAllowed;
+  }
+
+  int steps = std::max(1, static_cast<int>(std::ceil(distance)) * 2);
+  QVector3D step = delta / static_cast<float>(steps);
+  bool exitedBlockedZone = startAllowed;
+
+  for (int i = 1; i <= steps; ++i) {
+    QVector3D pos = from + step * static_cast<float>(i);
+    bool allowed = isPointAllowed(pos, ignoreEntity);
+
+    if (!exitedBlockedZone) {
+      if (allowed) {
+        exitedBlockedZone = true;
+      }
+      continue;
+    }
+
+    if (!allowed) {
+      return false;
+    }
+  }
+
+  return endAllowed && exitedBlockedZone;
 }
 
 } // namespace
@@ -85,6 +99,19 @@ void MovementSystem::moveUnit(Engine::Core::Entity *entity,
     return;
   }
 
+  QVector3D finalGoal(movement->goalX, 0.0f, movement->goalY);
+  bool destinationAllowed = isPointAllowed(finalGoal, entity->getId());
+
+  if (movement->hasTarget && !destinationAllowed) {
+    movement->path.clear();
+    movement->hasTarget = false;
+    movement->pathPending = false;
+    movement->pendingRequestId = 0;
+    movement->vx = 0.0f;
+    movement->vz = 0.0f;
+    return;
+  }
+
   if (movement->repathCooldown > 0.0f) {
     movement->repathCooldown =
         std::max(0.0f, movement->repathCooldown - deltaTime);
@@ -95,8 +122,28 @@ void MovementSystem::moveUnit(Engine::Core::Entity *entity,
   const float damping = 6.0f;
 
   if (!movement->hasTarget) {
-    movement->vx *= std::max(0.0f, 1.0f - damping * deltaTime);
-    movement->vz *= std::max(0.0f, 1.0f - damping * deltaTime);
+    QVector3D currentPos(transform->position.x, 0.0f, transform->position.z);
+    float goalDistSq = (finalGoal - currentPos).lengthSquared();
+    constexpr float kStuckDistanceSq = 0.6f * 0.6f;
+
+    bool requestedRecoveryMove = false;
+    if (!movement->pathPending && movement->repathCooldown <= 0.0f &&
+        goalDistSq > kStuckDistanceSq && std::isfinite(goalDistSq) &&
+        destinationAllowed) {
+      CommandService::MoveOptions opts;
+      opts.clearAttackIntent = false;
+      opts.allowDirectFallback = true;
+      std::vector<Engine::Core::EntityID> ids = {entity->getId()};
+      std::vector<QVector3D> targets = {finalGoal};
+      CommandService::moveUnits(*world, ids, targets, opts);
+      movement->repathCooldown = REPATH_COOLDOWN_SECONDS;
+      requestedRecoveryMove = true;
+    }
+
+    if (!requestedRecoveryMove) {
+      movement->vx *= std::max(0.0f, 1.0f - damping * deltaTime);
+      movement->vz *= std::max(0.0f, 1.0f - damping * deltaTime);
+    }
   } else {
     QVector3D currentPos(transform->position.x, 0.0f, transform->position.z);
     QVector3D segmentTarget(movement->targetX, 0.0f, movement->targetY);
@@ -104,35 +151,69 @@ void MovementSystem::moveUnit(Engine::Core::Entity *entity,
       segmentTarget = QVector3D(movement->path.front().first, 0.0f,
                                 movement->path.front().second);
     }
-    QVector3D finalGoal(movement->goalX, 0.0f, movement->goalY);
+    auto refreshSegmentTarget = [&]() {
+      if (!movement->path.empty()) {
+        movement->targetX = movement->path.front().first;
+        movement->targetY = movement->path.front().second;
+        segmentTarget = QVector3D(movement->targetX, 0.0f, movement->targetY);
+      } else {
+        segmentTarget = QVector3D(movement->targetX, 0.0f, movement->targetY);
+      }
+    };
 
-    if (!isSegmentWalkable(currentPos, segmentTarget, entity->getId())) {
-      bool issuedPathRequest = false;
-      if (!movement->pathPending && movement->repathCooldown <= 0.0f) {
-        float goalDistSq = (finalGoal - currentPos).lengthSquared();
-        if (goalDistSq > 0.01f) {
-          CommandService::MoveOptions opts;
-          opts.clearAttackIntent = false;
-          opts.allowDirectFallback = false;
-          std::vector<Engine::Core::EntityID> ids = {entity->getId()};
-          std::vector<QVector3D> targets = {
-              QVector3D(movement->goalX, 0.0f, movement->goalY)};
-          CommandService::moveUnits(*world, ids, targets, opts);
-          movement->repathCooldown = REPATH_COOLDOWN_SECONDS;
-          issuedPathRequest = true;
+    auto tryAdvancePastBlockedSegment = [&]() {
+      bool recovered = false;
+      int skipsRemaining = MAX_WAYPOINT_SKIP_COUNT;
+      while (!movement->path.empty() && skipsRemaining-- > 0) {
+        movement->path.erase(movement->path.begin());
+        refreshSegmentTarget();
+        if (isSegmentWalkable(currentPos, segmentTarget, entity->getId())) {
+          recovered = true;
+          break;
         }
       }
 
-      if (!issuedPathRequest) {
-        movement->pathPending = false;
-        movement->pendingRequestId = 0;
+      if (!recovered && movement->path.empty()) {
+        refreshSegmentTarget();
+        if (isSegmentWalkable(currentPos, segmentTarget, entity->getId())) {
+          recovered = true;
+        }
       }
 
-      movement->path.clear();
-      movement->hasTarget = false;
-      movement->vx = 0.0f;
-      movement->vz = 0.0f;
-      return;
+      return recovered;
+    };
+
+    if (!isSegmentWalkable(currentPos, segmentTarget, entity->getId())) {
+      if (tryAdvancePastBlockedSegment()) {
+
+      } else {
+        bool issuedPathRequest = false;
+        if (!movement->pathPending && movement->repathCooldown <= 0.0f) {
+          float goalDistSq = (finalGoal - currentPos).lengthSquared();
+          if (goalDistSq > 0.01f && destinationAllowed) {
+            CommandService::MoveOptions opts;
+            opts.clearAttackIntent = false;
+            opts.allowDirectFallback = false;
+            std::vector<Engine::Core::EntityID> ids = {entity->getId()};
+            std::vector<QVector3D> targets = {
+                QVector3D(movement->goalX, 0.0f, movement->goalY)};
+            CommandService::moveUnits(*world, ids, targets, opts);
+            movement->repathCooldown = REPATH_COOLDOWN_SECONDS;
+            issuedPathRequest = true;
+          }
+        }
+
+        if (!issuedPathRequest) {
+          movement->pathPending = false;
+          movement->pendingRequestId = 0;
+        }
+
+        movement->path.clear();
+        movement->hasTarget = false;
+        movement->vx = 0.0f;
+        movement->vz = 0.0f;
+        return;
+      }
     }
 
     float arriveRadius = std::clamp(maxSpeed * deltaTime * 2.0f, 0.05f, 0.25f);
