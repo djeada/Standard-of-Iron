@@ -49,12 +49,22 @@ void Archer::init(const SpawnParams &params) {
   m_u->ownerId = params.playerId;
   m_u->visionRange = 16.0f;
 
+  if (params.aiControlled) {
+    e->addComponent<Engine::Core::AIControlledComponent>();
+  }
+
   QVector3D tc = teamColor(m_u->ownerId);
   m_r->color[0] = tc.x();
   m_r->color[1] = tc.y();
   m_r->color[2] = tc.z();
 
   m_mv = e->addComponent<Engine::Core::MovementComponent>();
+  if (m_mv) {
+    m_mv->goalX = params.position.x();
+    m_mv->goalY = params.position.z();
+    m_mv->targetX = params.position.x();
+    m_mv->targetY = params.position.z();
+  }
 
   m_atk = e->addComponent<Engine::Core::AttackComponent>();
   m_atk->range = 6.0f;

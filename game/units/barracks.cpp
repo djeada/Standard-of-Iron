@@ -37,6 +37,10 @@ void Barracks::init(const SpawnParams &params) {
   m_u->ownerId = params.playerId;
   m_u->visionRange = 22.0f;
 
+  if (params.aiControlled) {
+    e->addComponent<Engine::Core::AIControlledComponent>();
+  }
+
   QVector3D tc = Game::Visuals::teamColorForOwner(m_u->ownerId);
   m_r->color[0] = tc.x();
   m_r->color[1] = tc.y();

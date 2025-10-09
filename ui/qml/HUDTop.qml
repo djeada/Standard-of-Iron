@@ -9,7 +9,7 @@ Item {
     signal pauseToggled()
     signal speedChanged(real speed)
 
-    // --- Responsive helpers
+    
     readonly property int barMinHeight: 72
     readonly property bool compact: width < 800
     readonly property bool ultraCompact: width < 560
@@ -24,7 +24,7 @@ Item {
         opacity: 0.98
         clip: true
 
-        // Subtle gradient
+        
         Rectangle {
             anchors.fill: parent
             gradient: Gradient {
@@ -34,7 +34,7 @@ Item {
             opacity: 0.9
         }
 
-        // Bottom accent line
+        
         Rectangle {
             anchors.left: parent.left
             anchors.right: parent.right
@@ -47,25 +47,25 @@ Item {
             }
         }
 
-        // === Flex-like layout: left group | spacer | right group
+        
         RowLayout {
             id: barRow
             anchors.fill: parent
             anchors.margins: 8
             spacing: 12
 
-            // ---------- LEFT GROUP ----------
+            
             RowLayout {
                 id: leftGroup
                 spacing: 10
                 Layout.alignment: Qt.AlignVCenter
 
-                // Pause/Play
+                
                 Button {
                     id: pauseBtn
                     Layout.preferredWidth: topRoot.compact ? 48 : 56
                     Layout.preferredHeight: Math.min(40, topPanel.height - 12)
-                    text: topRoot.gameIsPaused ? "\u25B6" : "\u23F8" // ▶ / ⏸
+                    text: topRoot.gameIsPaused ? "\u25B6" : "\u23F8" 
                     font.pixelSize: 26
                     font.bold: true
                     focusPolicy: Qt.NoFocus
@@ -86,7 +86,7 @@ Item {
                     onClicked: topRoot.pauseToggled()
                 }
 
-                // Separator
+                
                 Rectangle {
                     width: 2; Layout.fillHeight: true; radius: 1
                     visible: !topRoot.compact
@@ -97,7 +97,7 @@ Item {
                     }
                 }
 
-                // Speed controls (buttons on wide, ComboBox on compact)
+                
                 RowLayout {
                     spacing: 8
                     Layout.alignment: Qt.AlignVCenter
@@ -166,7 +166,7 @@ Item {
                     }
                 }
 
-                // Separator
+                
                 Rectangle {
                     width: 2; Layout.fillHeight: true; radius: 1
                     visible: !topRoot.compact
@@ -177,7 +177,7 @@ Item {
                     }
                 }
 
-                // Camera controls
+                
                 RowLayout {
                     spacing: 8
                     Layout.alignment: Qt.AlignVCenter
@@ -215,7 +215,7 @@ Item {
                         id: resetBtn
                         Layout.preferredWidth: topRoot.compact ? 44 : 80
                         Layout.preferredHeight: Math.min(34, topPanel.height - 16)
-                        text: topRoot.compact ? "\u21BA" : "Reset" // ↺
+                        text: topRoot.compact ? "\u21BA" : "Reset" 
                         font.pixelSize: 13
                         focusPolicy: Qt.NoFocus
                         background: Rectangle {
@@ -231,16 +231,16 @@ Item {
                 }
             }
 
-            // Spacer creates "space-between"
+            
             Item { Layout.fillWidth: true }
 
-            // ---------- RIGHT GROUP ----------
+            
             RowLayout {
                 id: rightGroup
                 spacing: 12
                 Layout.alignment: Qt.AlignVCenter
 
-                // Stats side-by-side
+                
                 Row {
                     id: statsRow
                     spacing: 10
@@ -274,7 +274,7 @@ Item {
                     }
                 }
 
-                // Minimap (shrinks/hides on very small widths to prevent overflow)
+                
                 Item {
                     id: miniWrap
                     visible: !topRoot.ultraCompact
@@ -295,7 +295,7 @@ Item {
                             radius: 6
                             color: "#0a0f14"
 
-                            // placeholder content; replace with live minimap
+                            
                             Label {
                                 anchors.centerIn: parent
                                 text: "MINIMAP"
