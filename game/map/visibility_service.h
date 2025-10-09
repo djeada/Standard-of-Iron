@@ -1,6 +1,10 @@
 #pragma once
 
+#include <atomic>
 #include <cstdint>
+#include <future>
+#include <mutex>
+#include <shared_mutex>
 #include <vector>
 
 namespace Engine {
@@ -24,7 +28,8 @@ public:
 
   void initialize(int width, int height, float tileSize);
   void reset();
-  void update(Engine::Core::World &world, int playerId);
+  bool update(Engine::Core::World &world, int playerId);
+  void computeImmediate(Engine::Core::World &world, int playerId);
 
   bool isInitialized() const { return m_initialized; }
 
@@ -36,13 +41,44 @@ public:
   bool isVisibleWorld(float worldX, float worldZ) const;
   bool isExploredWorld(float worldX, float worldZ) const;
 
-  const std::vector<std::uint8_t> &cells() const { return m_cells; }
-  std::uint64_t version() const { return m_version; }
+  std::vector<std::uint8_t> snapshotCells() const;
+  std::uint64_t version() const {
+    return m_version.load(std::memory_order_relaxed);
+  }
 
 private:
   bool inBounds(int x, int z) const;
   int index(int x, int z) const;
   int worldToGrid(float worldCoord, float half) const;
+
+  struct VisionSource {
+    int centerX;
+    int centerZ;
+    int cellRadius;
+    float expandedRangeSq;
+  };
+
+  struct JobPayload {
+    int width;
+    int height;
+    float tileSize;
+    std::vector<std::uint8_t> cells;
+    std::vector<VisionSource> sources;
+    std::uint64_t generation;
+  };
+
+  struct JobResult {
+    std::vector<std::uint8_t> cells;
+    std::uint64_t generation;
+    bool changed;
+  };
+
+  std::vector<VisionSource> gatherVisionSources(Engine::Core::World &world,
+                                                int playerId) const;
+  JobPayload composeJobPayload(const std::vector<VisionSource> &sources) const;
+  void startAsyncJob(JobPayload &&payload);
+  bool integrateCompletedJob();
+  static JobResult executeJob(JobPayload payload);
 
   VisibilityService() = default;
 
@@ -53,9 +89,12 @@ private:
   float m_halfWidth = 0.0f;
   float m_halfHeight = 0.0f;
 
+  mutable std::shared_mutex m_cellsMutex;
   std::vector<std::uint8_t> m_cells;
-  std::vector<std::uint8_t> m_currentVisible;
-  std::uint64_t m_version = 0;
+  std::atomic<std::uint64_t> m_version{0};
+  std::atomic<std::uint64_t> m_generation{0};
+  std::future<JobResult> m_pendingJob;
+  std::atomic<bool> m_jobActive{false};
 };
 
 } // namespace Map

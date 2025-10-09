@@ -11,7 +11,8 @@ namespace Game::Map {
 
 namespace {
 std::shared_ptr<Game::Units::UnitFactoryRegistry> s_registry;
-}
+int s_localOwnerId = 1;
+} // namespace
 
 void MapTransformer::setFactoryRegistry(
     std::shared_ptr<Game::Units::UnitFactoryRegistry> reg) {
@@ -21,6 +22,10 @@ std::shared_ptr<Game::Units::UnitFactoryRegistry>
 MapTransformer::getFactoryRegistry() {
   return s_registry;
 }
+
+void MapTransformer::setLocalOwnerId(int ownerId) { s_localOwnerId = ownerId; }
+
+int MapTransformer::localOwnerId() { return s_localOwnerId; }
 
 MapRuntime
 MapTransformer::applyToWorld(const MapDefinition &def,
@@ -73,6 +78,7 @@ MapTransformer::applyToWorld(const MapDefinition &def,
       sp.position = QVector3D(worldX, 0.0f, worldZ);
       sp.playerId = s.playerId;
       sp.unitType = s.type.toStdString();
+      sp.aiControlled = (s.playerId != s_localOwnerId);
       auto obj = s_registry->create(s.type.toStdString(), world, sp);
       if (obj) {
         e = world.getEntity(obj->id());
@@ -93,6 +99,24 @@ MapTransformer::applyToWorld(const MapDefinition &def,
       u->unitType = s.type.toStdString();
       u->ownerId = s.playerId;
       u->visionRange = 14.0f;
+
+      if (s.playerId != s_localOwnerId) {
+        e->addComponent<Engine::Core::AIControlledComponent>();
+      }
+
+      if (auto *existingMv =
+              e->getComponent<Engine::Core::MovementComponent>()) {
+        existingMv->goalX = worldX;
+        existingMv->goalY = worldZ;
+        existingMv->targetX = worldX;
+        existingMv->targetY = worldZ;
+      } else if (auto *mv =
+                     e->addComponent<Engine::Core::MovementComponent>()) {
+        mv->goalX = worldX;
+        mv->goalY = worldZ;
+        mv->targetX = worldX;
+        mv->targetY = worldZ;
+      }
 
       QVector3D tc;
       switch (u->ownerId) {
@@ -125,7 +149,15 @@ MapTransformer::applyToWorld(const MapDefinition &def,
         atk->damage = 12;
         atk->cooldown = 1.2f;
       }
-      e->addComponent<Engine::Core::MovementComponent>();
+      if (!e->getComponent<Engine::Core::MovementComponent>()) {
+        auto *mv = e->addComponent<Engine::Core::MovementComponent>();
+        if (mv) {
+          mv->goalX = worldX;
+          mv->goalY = worldZ;
+          mv->targetX = worldX;
+          mv->targetY = worldZ;
+        }
+      }
       rt.unitIds.push_back(e->getId());
     }
 

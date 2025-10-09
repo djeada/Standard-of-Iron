@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../../game/map/terrain.h"
+#include "terrain_gpu.h"
 #include <QMatrix4x4>
 #include <QVector3D>
 #include <cmath>
@@ -10,6 +11,7 @@
 
 namespace Render {
 namespace GL {
+class Buffer;
 class Renderer;
 class ResourceManager;
 class Mesh;
@@ -20,7 +22,8 @@ public:
   TerrainRenderer();
   ~TerrainRenderer();
 
-  void configure(const Game::Map::TerrainHeightMap &heightMap);
+  void configure(const Game::Map::TerrainHeightMap &heightMap,
+                 const Game::Map::BiomeSettings &biomeSettings);
 
   void submit(Renderer &renderer, ResourceManager &resources);
 
@@ -41,17 +44,7 @@ private:
     QVector3D color{0.3f, 0.5f, 0.3f};
     float averageHeight = 0.0f;
     float tint = 1.0f;
-  };
-
-  enum class PropType { Pebble, Tuft, Stick };
-
-  struct PropInstance {
-    PropType type = PropType::Pebble;
-    QVector3D position{0.0f, 0.0f, 0.0f};
-    QVector3D scale{1.0f, 1.0f, 1.0f};
-    QVector3D color{0.4f, 0.4f, 0.4f};
-    float alpha = 1.0f;
-    float rotationDeg = 0.0f;
+    TerrainChunkParams params;
   };
 
   int m_width = 0;
@@ -62,7 +55,8 @@ private:
   std::vector<float> m_heightData;
   std::vector<Game::Map::TerrainType> m_terrainTypes;
   std::vector<ChunkMesh> m_chunks;
-  std::vector<PropInstance> m_props;
+  Game::Map::BiomeSettings m_biomeSettings;
+  std::uint32_t m_noiseSeed = 0u;
 };
 
 } // namespace GL

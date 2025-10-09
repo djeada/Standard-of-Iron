@@ -5,6 +5,7 @@
 #include "game/core/world.h"
 #include "gl/backend.h"
 #include "gl/camera.h"
+#include "gl/primitives.h"
 #include "gl/resources.h"
 #include <QDebug>
 #include <algorithm>
@@ -12,7 +13,13 @@
 
 namespace Render::GL {
 
-Renderer::Renderer() {}
+namespace {
+const QVector3D kAxisX(1.0f, 0.0f, 0.0f);
+const QVector3D kAxisY(0.0f, 1.0f, 0.0f);
+const QVector3D kAxisZ(0.0f, 0.0f, 1.0f);
+} // namespace
+
+Renderer::Renderer() { m_activeQueue = &m_queues[m_fillQueueIndex]; }
 
 Renderer::~Renderer() { shutdown(); }
 
@@ -28,19 +35,25 @@ bool Renderer::initialize() {
 void Renderer::shutdown() { m_backend.reset(); }
 
 void Renderer::beginFrame() {
-  if (m_paused.load())
-    return;
+  m_activeQueue = &m_queues[m_fillQueueIndex];
+  m_activeQueue->clear();
+
+  if (m_camera) {
+    m_viewProj = m_camera->getProjectionMatrix() * m_camera->getViewMatrix();
+  }
+
   if (m_backend)
     m_backend->beginFrame();
-  m_queue.clear();
 }
 
 void Renderer::endFrame() {
   if (m_paused.load())
     return;
   if (m_backend && m_camera) {
-    m_queue.sortForBatching();
-    m_backend->execute(m_queue, *m_camera);
+    std::swap(m_fillQueueIndex, m_renderQueueIndex);
+    DrawQueue &renderQueue = m_queues[m_renderQueueIndex];
+    renderQueue.sortForBatching();
+    m_backend->execute(renderQueue, *m_camera);
   }
 }
 
@@ -66,43 +79,109 @@ void Renderer::mesh(Mesh *mesh, const QMatrix4x4 &model, const QVector3D &color,
                     Texture *texture, float alpha) {
   if (!mesh)
     return;
+
+  if (mesh == getUnitCylinder() && (!texture)) {
+    QVector3D start, end;
+    float radius = 0.0f;
+    if (detail::decomposeUnitCylinder(model, start, end, radius)) {
+      cylinder(start, end, radius, color, alpha);
+      return;
+    }
+  }
   MeshCmd cmd;
   cmd.mesh = mesh;
   cmd.texture = texture;
   cmd.model = model;
+  cmd.mvp = m_viewProj * model;
   cmd.color = color;
   cmd.alpha = alpha;
-  m_queue.submit(cmd);
+  if (m_activeQueue)
+    m_activeQueue->submit(cmd);
+}
+
+void Renderer::cylinder(const QVector3D &start, const QVector3D &end,
+                        float radius, const QVector3D &color, float alpha) {
+  CylinderCmd cmd;
+  cmd.start = start;
+  cmd.end = end;
+  cmd.radius = radius;
+  cmd.color = color;
+  cmd.alpha = alpha;
+  if (m_activeQueue)
+    m_activeQueue->submit(cmd);
+}
+
+void Renderer::fogBatch(const FogInstanceData *instances, std::size_t count) {
+  if (!instances || count == 0 || !m_activeQueue)
+    return;
+  FogBatchCmd cmd;
+  cmd.instances = instances;
+  cmd.count = count;
+  m_activeQueue->submit(cmd);
+}
+
+void Renderer::grassBatch(Buffer *instanceBuffer, std::size_t instanceCount,
+                          const GrassBatchParams &params) {
+  if (!instanceBuffer || instanceCount == 0 || !m_activeQueue)
+    return;
+  GrassBatchCmd cmd;
+  cmd.instanceBuffer = instanceBuffer;
+  cmd.instanceCount = instanceCount;
+  cmd.params = params;
+  cmd.params.time = m_accumulatedTime;
+  m_activeQueue->submit(cmd);
+}
+
+void Renderer::terrainChunk(Mesh *mesh, const QMatrix4x4 &model,
+                            const TerrainChunkParams &params,
+                            std::uint16_t sortKey, bool depthWrite,
+                            float depthBias) {
+  if (!mesh || !m_activeQueue)
+    return;
+  TerrainChunkCmd cmd;
+  cmd.mesh = mesh;
+  cmd.model = model;
+  cmd.params = params;
+  cmd.sortKey = sortKey;
+  cmd.depthWrite = depthWrite;
+  cmd.depthBias = depthBias;
+  m_activeQueue->submit(cmd);
 }
 
 void Renderer::selectionRing(const QMatrix4x4 &model, float alphaInner,
                              float alphaOuter, const QVector3D &color) {
   SelectionRingCmd cmd;
   cmd.model = model;
+  cmd.mvp = m_viewProj * model;
   cmd.alphaInner = alphaInner;
   cmd.alphaOuter = alphaOuter;
   cmd.color = color;
-  m_queue.submit(cmd);
+  if (m_activeQueue)
+    m_activeQueue->submit(cmd);
 }
 
 void Renderer::grid(const QMatrix4x4 &model, const QVector3D &color,
                     float cellSize, float thickness, float extent) {
   GridCmd cmd;
   cmd.model = model;
+  cmd.mvp = m_viewProj * model;
   cmd.color = color;
   cmd.cellSize = cellSize;
   cmd.thickness = thickness;
   cmd.extent = extent;
-  m_queue.submit(cmd);
+  if (m_activeQueue)
+    m_activeQueue->submit(cmd);
 }
 
 void Renderer::selectionSmoke(const QMatrix4x4 &model, const QVector3D &color,
                               float baseAlpha) {
   SelectionSmokeCmd cmd;
   cmd.model = model;
+  cmd.mvp = m_viewProj * model;
   cmd.color = color;
   cmd.baseAlpha = baseAlpha;
-  m_queue.submit(cmd);
+  if (m_activeQueue)
+    m_activeQueue->submit(cmd);
 }
 
 void Renderer::renderWorld(Engine::Core::World *world) {
@@ -137,9 +216,9 @@ void Renderer::renderWorld(Engine::Core::World *world) {
     QMatrix4x4 modelMatrix;
     modelMatrix.translate(transform->position.x, transform->position.y,
                           transform->position.z);
-    modelMatrix.rotate(transform->rotation.x, QVector3D(1, 0, 0));
-    modelMatrix.rotate(transform->rotation.y, QVector3D(0, 1, 0));
-    modelMatrix.rotate(transform->rotation.z, QVector3D(0, 0, 1));
+    modelMatrix.rotate(transform->rotation.x, kAxisX);
+    modelMatrix.rotate(transform->rotation.y, kAxisY);
+    modelMatrix.rotate(transform->rotation.z, kAxisZ);
     modelMatrix.scale(transform->scale.x, transform->scale.y,
                       transform->scale.z);
 

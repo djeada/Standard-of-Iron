@@ -7,6 +7,22 @@
     "height": 300,
     "tileSize": 1.0
   },
+  "biome": {
+    "seed": 24567,
+    "patchDensity": 3.4,
+    "patchJitter": 0.85,
+    "bladeHeight": [0.6, 1.45],
+    "bladeWidth": [0.028, 0.058],
+    "swayStrength": 0.28,
+    "swaySpeed": 1.35,
+    "heightNoise": [0.22, 0.07],
+    "grassPrimary": [0.28, 0.6, 0.32],
+    "grassSecondary": [0.42, 0.72, 0.34],
+    "grassDry": [0.58, 0.5, 0.36],
+    "soilColor": [0.28, 0.24, 0.18],
+    "rockLow": [0.5, 0.48, 0.46],
+    "rockHigh": [0.68, 0.69, 0.73]
+  },
   "camera": {
     "center": [0, 0, 0],
     "distance": 25.0,
