@@ -2,10 +2,47 @@
 #include <QDebug>
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
 
 namespace {
 constexpr float kDegToRad = static_cast<float>(M_PI) / 180.0f;
+inline std::uint32_t hashCoords(int x, int z, std::uint32_t seed) {
+  std::uint32_t ux = static_cast<std::uint32_t>(x) * 73856093u;
+  std::uint32_t uz = static_cast<std::uint32_t>(z) * 19349663u;
+  std::uint32_t s = seed * 83492791u + 0x9e3779b9u;
+  return ux ^ uz ^ s;
 }
+
+inline float hashToFloat01(std::uint32_t h) {
+  h ^= h >> 17;
+  h *= 0xed5ad4bbu;
+  h ^= h >> 11;
+  h *= 0xac4c1b51u;
+  h ^= h >> 15;
+  h *= 0x31848babu;
+  h ^= h >> 14;
+  return (h & 0x00FFFFFFu) / float(0x01000000);
+}
+
+inline float valueNoise2D(float x, float z, std::uint32_t seed) {
+  int ix0 = static_cast<int>(std::floor(x));
+  int iz0 = static_cast<int>(std::floor(z));
+  int ix1 = ix0 + 1;
+  int iz1 = iz0 + 1;
+
+  float tx = x - static_cast<float>(ix0);
+  float tz = z - static_cast<float>(iz0);
+
+  float n00 = hashToFloat01(hashCoords(ix0, iz0, seed));
+  float n10 = hashToFloat01(hashCoords(ix1, iz0, seed));
+  float n01 = hashToFloat01(hashCoords(ix0, iz1, seed));
+  float n11 = hashToFloat01(hashCoords(ix1, iz1, seed));
+
+  float nx0 = n00 * (1.0f - tx) + n10 * tx;
+  float nx1 = n01 * (1.0f - tx) + n11 * tx;
+  return nx0 * (1.0f - tz) + nx1 * tz;
+}
+} // namespace
 
 namespace Game::Map {
 
@@ -348,6 +385,45 @@ float TerrainHeightMap::calculateFeatureHeight(const TerrainFeature &feature,
   float heightFactor = (std::cos(t * M_PI) + 1.0f) * 0.5f;
 
   return feature.height * heightFactor;
+}
+
+void TerrainHeightMap::applyBiomeVariation(const BiomeSettings &settings) {
+  if (m_heights.empty())
+    return;
+
+  const float amplitude = std::max(0.0f, settings.heightNoiseAmplitude);
+  if (amplitude <= 0.0001f)
+    return;
+
+  const float frequency = std::max(0.0001f, settings.heightNoiseFrequency);
+  const float halfWidth = m_width * 0.5f - 0.5f;
+  const float halfHeight = m_height * 0.5f - 0.5f;
+
+  for (int z = 0; z < m_height; ++z) {
+    for (int x = 0; x < m_width; ++x) {
+      int idx = indexAt(x, z);
+      TerrainType type = m_terrainTypes[idx];
+      if (type == TerrainType::Mountain)
+        continue;
+
+      float worldX = (static_cast<float>(x) - halfWidth) * m_tileSize;
+      float worldZ = (static_cast<float>(z) - halfHeight) * m_tileSize;
+      float sampleX = worldX * frequency;
+      float sampleZ = worldZ * frequency;
+
+      float baseNoise = valueNoise2D(sampleX, sampleZ, settings.seed);
+      float detailNoise = valueNoise2D(sampleX * 2.0f, sampleZ * 2.0f,
+                                       settings.seed ^ 0xA21C9E37u);
+
+      float blended = 0.65f * baseNoise + 0.35f * detailNoise;
+      float perturb = (blended - 0.5f) * 2.0f * amplitude;
+
+      if (type == TerrainType::Hill)
+        perturb *= 0.6f;
+
+      m_heights[idx] = std::max(0.0f, m_heights[idx] + perturb);
+    }
+  }
 }
 
 } // namespace Game::Map

@@ -56,6 +56,10 @@ struct AIContext {
   int idleUnits = 0;
   int combatUnits = 0;
   float averageHealth = 1.0f;
+  bool barracksUnderThreat = false;
+  int nearbyThreatCount = 0;
+  float closestThreatDistance = 0.0f;
+  QVector3D basePosition;
 };
 
 struct MovementSnapshot {
@@ -88,11 +92,16 @@ struct EntitySnapshot {
   ProductionSnapshot production;
 };
 
+struct ContactSnapshot {
+  Engine::Core::EntityID id = 0;
+  bool isBuilding = false;
+  QVector3D position;
+};
+
 struct AISnapshot {
   int playerId = 0;
   std::vector<EntitySnapshot> friendlies;
-  std::vector<EntitySnapshot> enemyUnits;
-  std::vector<EntitySnapshot> enemyBuildings;
+  std::vector<ContactSnapshot> visibleEnemies;
 };
 
 enum class AICommandType { MoveUnits, AttackTarget, StartProduction };
