@@ -5,6 +5,7 @@
 #include <QVector3D>
 #include <algorithm>
 #include <cmath>
+#include <limits>
 
 namespace Game {
 namespace Systems {
@@ -62,9 +63,25 @@ QVector3D CommandService::gridToWorld(const Point &gridPos) {
 void CommandService::clearPendingRequest(Engine::Core::EntityID entityId) {
   std::lock_guard<std::mutex> lock(s_pendingMutex);
   auto it = s_entityToRequest.find(entityId);
-  if (it != s_entityToRequest.end()) {
-    s_pendingRequests.erase(it->second);
-    s_entityToRequest.erase(it);
+  if (it == s_entityToRequest.end())
+    return;
+
+  std::uint64_t requestId = it->second;
+  s_entityToRequest.erase(it);
+
+  auto pendingIt = s_pendingRequests.find(requestId);
+  if (pendingIt == s_pendingRequests.end())
+    return;
+
+  auto members = pendingIt->second.groupMembers;
+  s_pendingRequests.erase(pendingIt);
+
+  for (auto memberId : members) {
+    auto memberEntry = s_entityToRequest.find(memberId);
+    if (memberEntry != s_entityToRequest.end() &&
+        memberEntry->second == requestId) {
+      s_entityToRequest.erase(memberEntry);
+    }
   }
 }
 
@@ -80,6 +97,11 @@ void CommandService::moveUnits(Engine::Core::World &world,
                                const MoveOptions &options) {
   if (units.size() != targets.size())
     return;
+
+  if (options.groupMove && units.size() > 1) {
+    moveGroup(world, units, targets, options);
+    return;
+  }
 
   for (size_t i = 0; i < units.size(); ++i) {
     auto *e = world.getEntity(units[i]);
@@ -218,7 +240,8 @@ void CommandService::moveUnits(Engine::Core::World &world,
 
         {
           std::lock_guard<std::mutex> lock(s_pendingMutex);
-          s_pendingRequests[requestId] = {units[i], targets[i], options};
+          s_pendingRequests[requestId] = {
+              units[i], targets[i], options, {}, {}};
           s_entityToRequest[units[i]] = requestId;
         }
 
@@ -235,6 +258,156 @@ void CommandService::moveUnits(Engine::Core::World &world,
       clearPendingRequest(units[i]);
     }
   }
+}
+
+void CommandService::moveGroup(Engine::Core::World &world,
+                               const std::vector<Engine::Core::EntityID> &units,
+                               const std::vector<QVector3D> &targets,
+                               const MoveOptions &options) {
+  struct MemberInfo {
+    Engine::Core::EntityID id;
+    Engine::Core::Entity *entity;
+    Engine::Core::TransformComponent *transform;
+    Engine::Core::MovementComponent *movement;
+    QVector3D target;
+  };
+
+  std::vector<MemberInfo> members;
+  members.reserve(units.size());
+
+  for (size_t i = 0; i < units.size(); ++i) {
+    auto *entity = world.getEntity(units[i]);
+    if (!entity)
+      continue;
+
+    auto *transform = entity->getComponent<Engine::Core::TransformComponent>();
+    if (!transform)
+      continue;
+
+    auto *movement = entity->getComponent<Engine::Core::MovementComponent>();
+    if (!movement)
+      movement = entity->addComponent<Engine::Core::MovementComponent>();
+    if (!movement)
+      continue;
+
+    if (options.clearAttackIntent) {
+      entity->removeComponent<Engine::Core::AttackTargetComponent>();
+    }
+
+    members.push_back({units[i], entity, transform, movement, targets[i]});
+  }
+
+  if (members.empty())
+    return;
+
+  if (members.size() == 1) {
+    std::vector<Engine::Core::EntityID> singleUnit = {members[0].id};
+    std::vector<QVector3D> singleTarget = {members[0].target};
+    MoveOptions singleOptions = options;
+    singleOptions.groupMove = false;
+    moveUnits(world, singleUnit, singleTarget, singleOptions);
+    return;
+  }
+
+  QVector3D average(0.0f, 0.0f, 0.0f);
+  for (const auto &member : members)
+    average += member.target;
+  average /= static_cast<float>(members.size());
+
+  std::size_t leaderIndex = 0;
+  float bestDistSq = std::numeric_limits<float>::infinity();
+  for (std::size_t i = 0; i < members.size(); ++i) {
+    float distSq = (members[i].target - average).lengthSquared();
+    if (distSq < bestDistSq) {
+      bestDistSq = distSq;
+      leaderIndex = i;
+    }
+  }
+
+  auto &leader = members[leaderIndex];
+  QVector3D leaderTarget = leader.target;
+
+  for (auto &member : members) {
+    clearPendingRequest(member.id);
+    auto *mv = member.movement;
+    mv->goalX = member.target.x();
+    mv->goalY = member.target.z();
+    mv->targetX = member.transform->position.x;
+    mv->targetY = member.transform->position.z;
+    mv->hasTarget = false;
+    mv->vx = 0.0f;
+    mv->vz = 0.0f;
+    mv->path.clear();
+    mv->pathPending = false;
+    mv->pendingRequestId = 0;
+  }
+
+  if (!s_pathfinder) {
+    for (auto &member : members) {
+      member.movement->targetX = member.target.x();
+      member.movement->targetY = member.target.z();
+      member.movement->hasTarget = true;
+    }
+    return;
+  }
+
+  Point start =
+      worldToGrid(leader.transform->position.x, leader.transform->position.z);
+  Point end = worldToGrid(leaderTarget.x(), leaderTarget.z());
+
+  if (start == end) {
+    for (auto &member : members) {
+      member.movement->targetX = member.target.x();
+      member.movement->targetY = member.target.z();
+      member.movement->hasTarget = true;
+    }
+    return;
+  }
+
+  int dx = std::abs(end.x - start.x);
+  int dz = std::abs(end.y - start.y);
+  bool useDirectPath = (dx + dz) <= CommandService::DIRECT_PATH_THRESHOLD;
+  if (!options.allowDirectFallback) {
+    useDirectPath = false;
+  }
+
+  if (useDirectPath) {
+    for (auto &member : members) {
+      member.movement->targetX = member.target.x();
+      member.movement->targetY = member.target.z();
+      member.movement->hasTarget = true;
+    }
+    return;
+  }
+
+  std::uint64_t requestId =
+      s_nextRequestId.fetch_add(1, std::memory_order_relaxed);
+
+  for (auto &member : members) {
+    member.movement->pathPending = true;
+    member.movement->pendingRequestId = requestId;
+  }
+
+  PendingPathRequest pending;
+  pending.entityId = leader.id;
+  pending.target = leaderTarget;
+  pending.options = options;
+  pending.groupMembers.reserve(members.size());
+  pending.groupTargets.reserve(members.size());
+  for (const auto &member : members) {
+    pending.groupMembers.push_back(member.id);
+    pending.groupTargets.push_back(member.target);
+  }
+
+  {
+    std::lock_guard<std::mutex> lock(s_pendingMutex);
+    s_pendingRequests[requestId] = std::move(pending);
+    for (const auto &member : members) {
+      s_entityToRequest[member.id] = requestId;
+    }
+  }
+
+  s_pathfinder->submitPathRequest(requestId, start, end);
 }
 
 void CommandService::processPathResults(Engine::Core::World &world) {
@@ -256,12 +429,6 @@ void CommandService::processPathResults(Engine::Core::World &world) {
         requestInfo = pendingIt->second;
         s_pendingRequests.erase(pendingIt);
 
-        auto entityIt = s_entityToRequest.find(requestInfo.entityId);
-        if (entityIt != s_entityToRequest.end() &&
-            entityIt->second == result.requestId) {
-          s_entityToRequest.erase(entityIt);
-        }
-
         found = true;
       }
     }
@@ -270,77 +437,117 @@ void CommandService::processPathResults(Engine::Core::World &world) {
       continue;
     }
 
-    auto *entity = world.getEntity(requestInfo.entityId);
-    if (!entity)
-      continue;
-
-    auto *movement = entity->getComponent<Engine::Core::MovementComponent>();
-    if (!movement) {
-      continue;
-    }
-
-    auto *transform = entity->getComponent<Engine::Core::TransformComponent>();
-    if (!transform) {
-      continue;
-    }
-
-    if (!movement->pathPending ||
-        movement->pendingRequestId != result.requestId) {
-      continue;
-    }
-
-    movement->pathPending = false;
-    movement->pendingRequestId = 0;
-    movement->path.clear();
-    movement->goalX = requestInfo.target.x();
-    movement->goalY = requestInfo.target.z();
-
     const auto &pathPoints = result.path;
 
-    if (pathPoints.size() <= 1) {
-      if (requestInfo.options.allowDirectFallback) {
-        movement->targetX = requestInfo.target.x();
-        movement->targetY = requestInfo.target.z();
-        movement->hasTarget = true;
-      } else {
-        movement->hasTarget = false;
-        movement->vx = 0.0f;
-        movement->vz = 0.0f;
-      }
-      continue;
-    }
-
-    movement->path.reserve(pathPoints.size() > 1 ? pathPoints.size() - 1 : 0);
-    for (size_t idx = 1; idx < pathPoints.size(); ++idx) {
-      const auto &point = pathPoints[idx];
-      QVector3D worldPos = gridToWorld(point);
-      movement->path.push_back({worldPos.x(), worldPos.z()});
-    }
-
     const float skipThresholdSq = CommandService::WAYPOINT_SKIP_THRESHOLD_SQ;
-    while (!movement->path.empty()) {
-      float dx = movement->path.front().first - transform->position.x;
-      float dz = movement->path.front().second - transform->position.z;
-      if (dx * dx + dz * dz <= skipThresholdSq) {
-        movement->path.erase(movement->path.begin());
+    const bool hasPath = pathPoints.size() > 1;
+
+    auto applyToMember = [&](Engine::Core::EntityID memberId,
+                             const QVector3D &target, const QVector3D &offset) {
+      auto *memberEntity = world.getEntity(memberId);
+      if (!memberEntity)
+        return;
+
+      auto *movementComponent =
+          memberEntity->getComponent<Engine::Core::MovementComponent>();
+      if (!movementComponent)
+        return;
+
+      auto *memberTransform =
+          memberEntity->getComponent<Engine::Core::TransformComponent>();
+      if (!memberTransform)
+        return;
+
+      if (!movementComponent->pathPending ||
+          movementComponent->pendingRequestId != result.requestId) {
+        movementComponent->pathPending = false;
+        movementComponent->pendingRequestId = 0;
+        return;
+      }
+
+      movementComponent->pathPending = false;
+      movementComponent->pendingRequestId = 0;
+      movementComponent->path.clear();
+      movementComponent->goalX = target.x();
+      movementComponent->goalY = target.z();
+      movementComponent->vx = 0.0f;
+      movementComponent->vz = 0.0f;
+
+      if (hasPath) {
+        movementComponent->path.reserve(pathPoints.size() - 1);
+        for (size_t idx = 1; idx < pathPoints.size(); ++idx) {
+          QVector3D worldPos = gridToWorld(pathPoints[idx]);
+          movementComponent->path.push_back(
+              {worldPos.x() + offset.x(), worldPos.z() + offset.z()});
+        }
+
+        while (!movementComponent->path.empty()) {
+          float dx = movementComponent->path.front().first -
+                     memberTransform->position.x;
+          float dz = movementComponent->path.front().second -
+                     memberTransform->position.z;
+          if (dx * dx + dz * dz <= skipThresholdSq) {
+            movementComponent->path.erase(movementComponent->path.begin());
+          } else {
+            break;
+          }
+        }
+
+        if (!movementComponent->path.empty()) {
+          movementComponent->targetX = movementComponent->path.front().first;
+          movementComponent->targetY = movementComponent->path.front().second;
+          movementComponent->hasTarget = true;
+          return;
+        }
+      }
+
+      if (requestInfo.options.allowDirectFallback) {
+        movementComponent->targetX = target.x();
+        movementComponent->targetY = target.z();
+        movementComponent->hasTarget = true;
       } else {
-        break;
+        movementComponent->hasTarget = false;
+      }
+    };
+
+    auto removeEntry = [&](Engine::Core::EntityID id) {
+      auto entry = s_entityToRequest.find(id);
+      if (entry != s_entityToRequest.end() &&
+          entry->second == result.requestId) {
+        s_entityToRequest.erase(entry);
+      }
+    };
+
+    {
+      std::lock_guard<std::mutex> lock(s_pendingMutex);
+      removeEntry(requestInfo.entityId);
+      for (auto memberId : requestInfo.groupMembers) {
+        removeEntry(memberId);
       }
     }
 
-    if (!movement->path.empty()) {
-      movement->targetX = movement->path[0].first;
-      movement->targetY = movement->path[0].second;
-      movement->hasTarget = true;
-    } else {
-      if (requestInfo.options.allowDirectFallback) {
-        movement->targetX = requestInfo.target.x();
-        movement->targetY = requestInfo.target.z();
-        movement->hasTarget = true;
-      } else {
-        movement->hasTarget = false;
-        movement->vx = 0.0f;
-        movement->vz = 0.0f;
+    QVector3D leaderTarget = requestInfo.target;
+    std::vector<Engine::Core::EntityID> processed;
+    processed.reserve(requestInfo.groupMembers.size() + 1);
+
+    auto addMember = [&](Engine::Core::EntityID id, const QVector3D &target) {
+      if (std::find(processed.begin(), processed.end(), id) != processed.end())
+        return;
+      QVector3D offset = target - leaderTarget;
+      applyToMember(id, target, offset);
+      processed.push_back(id);
+    };
+
+    addMember(requestInfo.entityId, leaderTarget);
+
+    if (!requestInfo.groupMembers.empty()) {
+      const std::size_t count = requestInfo.groupMembers.size();
+      for (std::size_t idx = 0; idx < count; ++idx) {
+        auto memberId = requestInfo.groupMembers[idx];
+        QVector3D target = (idx < requestInfo.groupTargets.size())
+                               ? requestInfo.groupTargets[idx]
+                               : leaderTarget;
+        addMember(memberId, target);
       }
     }
   }
