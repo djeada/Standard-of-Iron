@@ -1,4 +1,5 @@
 #include "terrain_service.h"
+#include <cmath>
 #include "../systems/building_collision_registry.h"
 #include "map_definition.h"
 #include <QDebug>

@@ -1,0 +1,12 @@
+<RCC>
+    <qresource prefix="/StandardOfIron">
+        <file>ui/qml/Main.qml</file>
+        <file>ui/qml/MainMenu.qml</file>
+        <file>ui/qml/MapSelect.qml</file>
+        <file>ui/qml/HUD.qml</file>
+        <file>ui/qml/HUDTop.qml</file>
+        <file>ui/qml/HUDBottom.qml</file>
+        <file>ui/qml/HUDVictory.qml</file>
+        <file>ui/qml/GameView.qml</file>
+    </qresource>
+</RCC>
