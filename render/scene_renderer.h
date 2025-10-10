@@ -129,6 +129,8 @@ public:
   void fogBatch(const FogInstanceData *instances, std::size_t count);
   void grassBatch(Buffer *instanceBuffer, std::size_t instanceCount,
                   const GrassBatchParams &params);
+  void stoneBatch(Buffer *instanceBuffer, std::size_t instanceCount,
+                  const StoneBatchParams &params);
 
 private:
   Camera *m_camera = nullptr;
