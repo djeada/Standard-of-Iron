@@ -37,6 +37,7 @@
 #include "render/ground/biome_renderer.h"
 #include "render/ground/fog_renderer.h"
 #include "render/ground/ground_renderer.h"
+#include "render/ground/stone_renderer.h"
 #include "render/ground/terrain_renderer.h"
 #include "render/scene_renderer.h"
 #include "selected_units_model.h"
@@ -55,6 +56,7 @@ GameEngine::GameEngine() {
   m_terrain = std::make_unique<Render::GL::TerrainRenderer>();
   m_biome = std::make_unique<Render::GL::BiomeRenderer>();
   m_fog = std::make_unique<Render::GL::FogRenderer>();
+  m_stone = std::make_unique<Render::GL::StoneRenderer>();
 
   std::unique_ptr<Engine::Core::System> arrowSys =
       std::make_unique<Game::Systems::ArrowSystem>();
@@ -530,6 +532,9 @@ void GameEngine::render(int pixelWidth, int pixelHeight) {
   if (m_biome && m_renderer) {
     m_biome->submit(*m_renderer);
   }
+  if (m_stone && m_renderer) {
+    m_stone->submit(*m_renderer);
+  }
   if (m_fog && m_renderer) {
     if (auto *res = m_renderer->resources())
       m_fog->submit(*m_renderer, *res);
@@ -684,19 +689,14 @@ void GameEngine::cameraOrbit(float yawDeg, float pitchDeg) {
   ensureInitialized();
   if (!m_camera)
     return;
-  qDebug() << "GameEngine::cameraOrbit called:" << "yaw=" << yawDeg
-           << "pitch=" << pitchDeg;
+  
   if (!std::isfinite(yawDeg) || !std::isfinite(pitchDeg)) {
     qWarning()
-        << "GameEngine::cameraOrbit received invalid input, applying fallback"
+        << "GameEngine::cameraOrbit received invalid input, ignoring:"
         << yawDeg << pitchDeg;
-    float fallback = 2.0f;
-
-    if (!std::isfinite(pitchDeg))
-      pitchDeg = fallback;
-    if (!std::isfinite(yawDeg))
-      yawDeg = 0.0f;
+    return;
   }
+  
   Game::Systems::CameraController ctrl;
   ctrl.orbit(*m_camera, yawDeg, pitchDeg);
 }
@@ -966,6 +966,13 @@ void GameEngine::startSkirmish(const QString &mapPath) {
       }
     }
 
+    if (m_stone) {
+      if (terrainService.isInitialized() && terrainService.getHeightMap()) {
+        m_stone->configure(*terrainService.getHeightMap(),
+                           terrainService.biomeSettings());
+      }
+    }
+
     int mapWidth = lr.ok ? lr.gridWidth : 100;
     int mapHeight = lr.ok ? lr.gridHeight : 100;
     Game::Systems::CommandService::initialize(mapWidth, mapHeight);
@@ -989,6 +996,10 @@ void GameEngine::startSkirmish(const QString &mapPath) {
     m_level.camNear = lr.camNear;
     m_level.camFar = lr.camFar;
     m_level.maxTroopsPerPlayer = lr.maxTroopsPerPlayer;
+
+    if (m_biome) {
+      m_biome->refreshGrass();
+    }
 
     if (m_renderer) {
 

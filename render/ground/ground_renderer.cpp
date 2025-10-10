@@ -46,6 +46,8 @@ void GroundRenderer::updateNoiseOffset() {
   newOffset.setX(spanX * 0.37f + seed * 0.21f);
   newOffset.setY(spanZ * 0.43f + seed * 0.17f);
 
+  m_noiseAngle = std::fmod(seed * 0.6180339887f, 1.0f) * 6.28318530718f;
+
   if (newOffset != m_noiseOffset) {
     m_noiseOffset = newOffset;
     invalidateParamsCache();
@@ -83,20 +85,34 @@ TerrainChunkParams GroundRenderer::buildParams() const {
   params.slopeRockThreshold = 0.72f;
   params.slopeRockSharpness = 4.5f;
 
-  params.soilBlendHeight = -0.38f;
+  params.soilBlendHeight = -0.65f;
   params.soilBlendSharpness = 2.6f;
 
   params.noiseOffset = m_noiseOffset;
+  params.noiseAngle = m_noiseAngle;
 
-  params.heightNoiseStrength = m_biomeSettings.heightNoiseAmplitude * 0.22f;
-  params.heightNoiseFrequency = m_biomeSettings.heightNoiseFrequency * 1.05f;
+  const float targetAmp =
+      std::clamp(m_biomeSettings.heightNoiseAmplitude * 0.22f, 0.10f, 0.20f);
+  params.heightNoiseStrength = targetAmp;
 
-  params.ambientBoost = m_biomeSettings.terrainAmbientBoost * 0.92f;
+  params.heightNoiseFrequency =
+      std::max(0.6f, m_biomeSettings.heightNoiseFrequency * 1.05f);
+
+  params.microBumpAmp = 0.07f;
+  params.microBumpFreq = 2.2f;
+  params.microNormalWeight = 0.65f;
+
+  params.albedoJitter = 0.05f;
+
+  params.ambientBoost = m_biomeSettings.terrainAmbientBoost * 0.85f;
 
   params.rockDetailStrength = m_biomeSettings.terrainRockDetailStrength * 0.18f;
 
   QVector3D L(0.35f, 0.85f, 0.42f);
   params.lightDirection = L.normalized();
+  
+  // Mark this as ground plane (not elevated terrain)
+  params.isGroundPlane = true;
 
   m_cachedParams = params;
   m_cachedParamsValid = true;
@@ -113,8 +129,10 @@ void GroundRenderer::submit(Renderer &renderer, ResourceManager &resources) {
       const bool modelChanged =
           m_modelDirty || (m_lastSubmittedModel != m_model);
       const bool stateChanged = (m_lastSubmittedStateVersion != m_stateVersion);
+      (void)modelChanged;
+      (void)stateChanged;
 
-      renderer.terrainChunk(plane, m_model, params, 0x0100u, false, 0.0f);
+      renderer.terrainChunk(plane, m_model, params, 0x0040u, true, +0.0008f);
 
       m_lastSubmittedModel = m_model;
       m_modelDirty = false;
