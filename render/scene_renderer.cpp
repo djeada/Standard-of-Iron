@@ -132,6 +132,17 @@ void Renderer::grassBatch(Buffer *instanceBuffer, std::size_t instanceCount,
   m_activeQueue->submit(cmd);
 }
 
+void Renderer::stoneBatch(Buffer *instanceBuffer, std::size_t instanceCount,
+                          const StoneBatchParams &params) {
+  if (!instanceBuffer || instanceCount == 0 || !m_activeQueue)
+    return;
+  StoneBatchCmd cmd;
+  cmd.instanceBuffer = instanceBuffer;
+  cmd.instanceCount = instanceCount;
+  cmd.params = params;
+  m_activeQueue->submit(cmd);
+}
+
 void Renderer::terrainChunk(Mesh *mesh, const QMatrix4x4 &model,
                             const TerrainChunkParams &params,
                             std::uint16_t sortKey, bool depthWrite,
