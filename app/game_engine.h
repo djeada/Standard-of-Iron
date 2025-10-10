@@ -30,6 +30,7 @@ class GroundRenderer;
 class TerrainRenderer;
 class BiomeRenderer;
 class FogRenderer;
+class StoneRenderer;
 } // namespace GL
 } // namespace Render
 
@@ -179,6 +180,7 @@ private:
   std::unique_ptr<Render::GL::TerrainRenderer> m_terrain;
   std::unique_ptr<Render::GL::BiomeRenderer> m_biome;
   std::unique_ptr<Render::GL::FogRenderer> m_fog;
+  std::unique_ptr<Render::GL::StoneRenderer> m_stone;
   Game::Systems::SelectionSystem *m_selectionSystem = nullptr;
   std::unique_ptr<Game::Systems::PickingService> m_pickingService;
   QQuickWindow *m_window = nullptr;
