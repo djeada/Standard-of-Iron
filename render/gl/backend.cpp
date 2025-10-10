@@ -550,9 +550,9 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       m_basicShader->setUniform(m_basicUniforms.useTexture, false);
       m_basicShader->setUniform(m_basicUniforms.color, sm.color);
       DepthMaskScope depthMask(false);
-      DepthTestScope depthTest(false);
+      DepthTestScope depthTest(true);
 
-      PolygonOffsetScope poly(-0.1f, -0.1f);
+      PolygonOffsetScope poly(-1.0f, -1.0f);
       BlendScope blend(true);
       for (int i = 0; i < 7; ++i) {
         float scale = 1.35f + 0.12f * i;

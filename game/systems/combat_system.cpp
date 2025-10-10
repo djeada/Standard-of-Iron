@@ -1,4 +1,5 @@
 #include "combat_system.h"
+#include <cmath>
 #include "../core/component.h"
 #include "../core/event_manager.h"
 #include "../core/world.h"
