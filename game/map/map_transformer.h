@@ -31,6 +31,9 @@ public:
   static void
   setFactoryRegistry(std::shared_ptr<Game::Units::UnitFactoryRegistry> reg);
   static std::shared_ptr<Game::Units::UnitFactoryRegistry> getFactoryRegistry();
+
+  static void setLocalOwnerId(int ownerId);
+  static int localOwnerId();
 };
 
 } // namespace Game::Map

@@ -43,6 +43,8 @@ void ProductionSystem::update(Engine::Core::World *world, float deltaTime) {
           sp.position = spawnPos;
           sp.playerId = u->ownerId;
           sp.unitType = prod->productType;
+          sp.aiControlled =
+              e->hasComponent<Engine::Core::AIControlledComponent>();
           reg->create(prod->productType, *world, sp);
         }
 

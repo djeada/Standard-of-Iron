@@ -29,6 +29,8 @@ public:
 
   const TerrainHeightMap *getHeightMap() const { return m_heightMap.get(); }
 
+  const BiomeSettings &biomeSettings() const { return m_biomeSettings; }
+
   bool isInitialized() const { return m_heightMap != nullptr; }
 
 private:
@@ -39,6 +41,7 @@ private:
   TerrainService &operator=(const TerrainService &) = delete;
 
   std::unique_ptr<TerrainHeightMap> m_heightMap;
+  BiomeSettings m_biomeSettings;
 };
 
 } // namespace Game::Map

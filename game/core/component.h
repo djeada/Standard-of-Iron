@@ -131,4 +131,9 @@ public:
   bool rallySet;
 };
 
+class AIControlledComponent : public Component {
+public:
+  AIControlledComponent() = default;
+};
+
 } // namespace Engine::Core
