@@ -370,7 +370,7 @@ void TerrainRenderer::buildMeshes() {
               quadSection(m_terrainTypes[idx0], m_terrainTypes[idx1],
                           m_terrainTypes[idx2], m_terrainTypes[idx3]);
 
-          if (sectionIndex > 0) {
+          if (sectionIndex >= 0) {
             SectionData &section = sections[sectionIndex];
             unsigned int v0 = ensureVertex(section, idx0);
             unsigned int v1 = ensureVertex(section, idx1);
