@@ -1,4 +1,5 @@
 #include "biome_renderer.h"
+#include "../../game/systems/building_collision_registry.h"
 #include "../gl/buffer.h"
 #include "../scene_renderer.h"
 #include <QDebug>
@@ -128,6 +129,8 @@ void BiomeRenderer::clear() {
   m_grassInstancesDirty = false;
 }
 
+void BiomeRenderer::refreshGrass() { generateGrassInstances(); }
+
 void BiomeRenderer::generateGrassInstances() {
   QElapsedTimer timer;
   timer.start();
@@ -204,7 +207,8 @@ void BiomeRenderer::generateGrassInstances() {
     int iz = std::clamp(int(std::floor(sgz + 0.5f)), 0, m_height - 1);
     int normalIdx = iz * m_width + ix;
 
-    if (m_terrainTypes[normalIdx] == Game::Map::TerrainType::Mountain)
+    if (m_terrainTypes[normalIdx] == Game::Map::TerrainType::Mountain ||
+        m_terrainTypes[normalIdx] == Game::Map::TerrainType::Hill)
       return false;
 
     QVector3D normal = normals[normalIdx];
@@ -215,6 +219,12 @@ void BiomeRenderer::generateGrassInstances() {
     float worldX = (gx - halfWidth) * m_tileSize;
     float worldZ = (gz - halfHeight) * m_tileSize;
     float worldY = sampleHeightAt(sgx, sgz);
+
+    auto &buildingRegistry =
+        Game::Systems::BuildingCollisionRegistry::instance();
+    if (buildingRegistry.isPointInBuilding(worldX, worldZ)) {
+      return false;
+    }
 
     float lushNoise =
         valueNoise(worldX * 0.06f, worldZ * 0.06f, m_noiseSeed ^ 0x9235u);
@@ -228,7 +238,7 @@ void BiomeRenderer::generateGrassInstances() {
 
     float height = remap(rand01(state), m_biomeSettings.bladeHeightMin,
                          m_biomeSettings.bladeHeightMax) *
-                   tileSafe;
+                   tileSafe * 0.5f;
     float width = remap(rand01(state), m_biomeSettings.bladeWidthMin,
                         m_biomeSettings.bladeWidthMax) *
                   tileSafe;
@@ -267,7 +277,9 @@ void BiomeRenderer::generateGrassInstances() {
     for (int chunkX = 0; chunkX < m_width - 1; chunkX += chunkSize) {
       int chunkMaxX = std::min(chunkX + chunkSize, m_width - 1);
 
-      std::array<int, 3> typeCounts = {0, 0, 0};
+      int flatCount = 0;
+      int hillCount = 0;
+      int mountainCount = 0;
       float chunkHeightSum = 0.0f;
       float chunkSlopeSum = 0.0f;
       int sampleCount = 0;
@@ -279,10 +291,19 @@ void BiomeRenderer::generateGrassInstances() {
           int idx2 = (z + 1) * m_width + x;
           int idx3 = idx2 + 1;
 
-          int sectionIdx =
-              quadSection(m_terrainTypes[idx0], m_terrainTypes[idx1],
-                          m_terrainTypes[idx2], m_terrainTypes[idx3]);
-          typeCounts[sectionIdx]++;
+          if (m_terrainTypes[idx0] == Game::Map::TerrainType::Mountain ||
+              m_terrainTypes[idx1] == Game::Map::TerrainType::Mountain ||
+              m_terrainTypes[idx2] == Game::Map::TerrainType::Mountain ||
+              m_terrainTypes[idx3] == Game::Map::TerrainType::Mountain) {
+            mountainCount++;
+          } else if (m_terrainTypes[idx0] == Game::Map::TerrainType::Hill ||
+                     m_terrainTypes[idx1] == Game::Map::TerrainType::Hill ||
+                     m_terrainTypes[idx2] == Game::Map::TerrainType::Hill ||
+                     m_terrainTypes[idx3] == Game::Map::TerrainType::Hill) {
+            hillCount++;
+          } else {
+            flatCount++;
+          }
 
           float quadHeight = (m_heightData[idx0] + m_heightData[idx1] +
                               m_heightData[idx2] + m_heightData[idx3]) *
@@ -301,19 +322,19 @@ void BiomeRenderer::generateGrassInstances() {
         continue;
 
       const float usableCoverage =
-          sampleCount > 0
-              ? float(typeCounts[0] + typeCounts[1]) / float(sampleCount)
-              : 0.0f;
+          sampleCount > 0 ? float(flatCount + hillCount) / float(sampleCount)
+                          : 0.0f;
       if (usableCoverage < 0.05f)
         continue;
 
-      int dominantType = (typeCounts[1] > typeCounts[0]) ? 1 : 0;
+      bool isPrimarilyFlat = flatCount >= hillCount;
 
       float avgSlope = chunkSlopeSum / float(sampleCount);
 
       uint32_t state = hashCoords(chunkX, chunkZ, m_noiseSeed ^ 0xC915872Bu);
       float slopePenalty = 1.0f - std::clamp(avgSlope * 1.35f, 0.0f, 0.75f);
-      float typeBias = (dominantType == 1) ? 0.85f : 1.0f;
+
+      float typeBias = 1.0f;
       constexpr float kClusterBoost = 1.35f;
       float expectedClusters =
           std::max(0.0f, m_biomeSettings.patchDensity * kClusterBoost *
@@ -383,7 +404,9 @@ void BiomeRenderer::generateGrassInstances() {
     for (int z = 0; z < m_height; ++z) {
       for (int x = 0; x < m_width; ++x) {
         int idx = z * m_width + x;
-        if (m_terrainTypes[idx] == Game::Map::TerrainType::Mountain)
+
+        if (m_terrainTypes[idx] == Game::Map::TerrainType::Mountain ||
+            m_terrainTypes[idx] == Game::Map::TerrainType::Hill)
           continue;
 
         QVector3D normal = normals[idx];
@@ -410,8 +433,23 @@ void BiomeRenderer::generateGrassInstances() {
   m_grassInstanceCount = m_grassInstances.size();
   m_grassInstancesDirty = m_grassInstanceCount > 0;
 
+  int debugFlatCount = 0;
+  int debugHillCount = 0;
+  int debugMountainCount = 0;
+  for (const auto &type : m_terrainTypes) {
+    if (type == Game::Map::TerrainType::Flat)
+      debugFlatCount++;
+    else if (type == Game::Map::TerrainType::Hill)
+      debugHillCount++;
+    else if (type == Game::Map::TerrainType::Mountain)
+      debugMountainCount++;
+  }
+
   qDebug() << "BiomeRenderer: generated" << m_grassInstanceCount
            << "grass instances in" << timer.elapsed() << "ms";
+  qDebug() << "  Terrain types - Flat:" << debugFlatCount
+           << "Hill:" << debugHillCount << "Mountain:" << debugMountainCount
+           << "Total:" << m_terrainTypes.size();
 }
 
 } // namespace Render::GL

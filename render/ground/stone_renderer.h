@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../../game/map/terrain.h"
-#include "grass_gpu.h"
+#include "stone_gpu.h"
 #include <QVector3D>
 #include <cstdint>
 #include <memory>
@@ -12,22 +12,20 @@ namespace GL {
 class Buffer;
 class Renderer;
 
-class BiomeRenderer {
+class StoneRenderer {
 public:
-  BiomeRenderer();
-  ~BiomeRenderer();
+  StoneRenderer();
+  ~StoneRenderer();
 
   void configure(const Game::Map::TerrainHeightMap &heightMap,
                  const Game::Map::BiomeSettings &biomeSettings);
 
   void submit(Renderer &renderer);
 
-  void refreshGrass();
-
   void clear();
 
 private:
-  void generateGrassInstances();
+  void generateStoneInstances();
 
   int m_width = 0;
   int m_height = 0;
@@ -38,11 +36,11 @@ private:
   Game::Map::BiomeSettings m_biomeSettings;
   std::uint32_t m_noiseSeed = 0u;
 
-  std::vector<GrassInstanceGpu> m_grassInstances;
-  std::unique_ptr<Buffer> m_grassInstanceBuffer;
-  std::size_t m_grassInstanceCount = 0;
-  GrassBatchParams m_grassParams;
-  bool m_grassInstancesDirty = false;
+  std::vector<StoneInstanceGpu> m_stoneInstances;
+  std::unique_ptr<Buffer> m_stoneInstanceBuffer;
+  std::size_t m_stoneInstanceCount = 0;
+  StoneBatchParams m_stoneParams;
+  bool m_stoneInstancesDirty = false;
 };
 
 } // namespace GL
