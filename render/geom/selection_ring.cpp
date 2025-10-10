@@ -1,5 +1,6 @@
 #include "selection_ring.h"
 #include <QVector3D>
+#include <cmath>
 
 namespace Render::Geom {
 
