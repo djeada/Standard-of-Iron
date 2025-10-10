@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ground/grass_gpu.h"
+#include "ground/stone_gpu.h"
 #include "ground/terrain_gpu.h"
 #include <QMatrix4x4>
 #include <QVector3D>
@@ -53,6 +54,12 @@ struct GrassBatchCmd {
   GrassBatchParams params;
 };
 
+struct StoneBatchCmd {
+  Buffer *instanceBuffer = nullptr;
+  std::size_t instanceCount = 0;
+  StoneBatchParams params;
+};
+
 struct TerrainChunkCmd {
   Mesh *mesh = nullptr;
   QMatrix4x4 model;
@@ -87,9 +94,9 @@ struct SelectionSmokeCmd {
   float baseAlpha = 0.15f;
 };
 
-using DrawCmd =
-    std::variant<GridCmd, SelectionRingCmd, SelectionSmokeCmd, CylinderCmd,
-                 MeshCmd, FogBatchCmd, GrassBatchCmd, TerrainChunkCmd>;
+using DrawCmd = std::variant<GridCmd, SelectionRingCmd, SelectionSmokeCmd,
+                             CylinderCmd, MeshCmd, FogBatchCmd, GrassBatchCmd,
+                             StoneBatchCmd, TerrainChunkCmd>;
 
 enum class DrawCmdType : std::uint8_t {
   Grid = 0,
@@ -99,7 +106,8 @@ enum class DrawCmdType : std::uint8_t {
   Mesh = 4,
   FogBatch = 5,
   GrassBatch = 6,
-  TerrainChunk = 7
+  StoneBatch = 7,
+  TerrainChunk = 8
 };
 
 constexpr std::size_t MeshCmdIndex =
@@ -116,6 +124,8 @@ constexpr std::size_t FogBatchCmdIndex =
     static_cast<std::size_t>(DrawCmdType::FogBatch);
 constexpr std::size_t GrassBatchCmdIndex =
     static_cast<std::size_t>(DrawCmdType::GrassBatch);
+constexpr std::size_t StoneBatchCmdIndex =
+    static_cast<std::size_t>(DrawCmdType::StoneBatch);
 constexpr std::size_t TerrainChunkCmdIndex =
     static_cast<std::size_t>(DrawCmdType::TerrainChunk);
 
@@ -134,6 +144,7 @@ public:
   void submit(const CylinderCmd &c) { m_items.emplace_back(c); }
   void submit(const FogBatchCmd &c) { m_items.emplace_back(c); }
   void submit(const GrassBatchCmd &c) { m_items.emplace_back(c); }
+  void submit(const StoneBatchCmd &c) { m_items.emplace_back(c); }
   void submit(const TerrainChunkCmd &c) { m_items.emplace_back(c); }
 
   bool empty() const { return m_items.empty(); }
@@ -212,7 +223,7 @@ private:
   }
 
   uint64_t computeSortKey(const DrawCmd &cmd) const {
-    static constexpr uint8_t kTypeOrder[] = {0, 1, 2, 3, 4, 7, 6, 5};
+    static constexpr uint8_t kTypeOrder[] = {0, 1, 2, 3, 4, 8, 6, 7, 5};
 
     const std::size_t typeIndex = cmd.index();
     constexpr std::size_t typeCount =
@@ -232,6 +243,11 @@ private:
     } else if (cmd.index() == GrassBatchCmdIndex) {
       const auto &grass = std::get<GrassBatchCmdIndex>(cmd);
       uint64_t bufferPtr = reinterpret_cast<uintptr_t>(grass.instanceBuffer) &
+                           0x0000FFFFFFFFFFFF;
+      key |= bufferPtr;
+    } else if (cmd.index() == StoneBatchCmdIndex) {
+      const auto &stone = std::get<StoneBatchCmdIndex>(cmd);
+      uint64_t bufferPtr = reinterpret_cast<uintptr_t>(stone.instanceBuffer) &
                            0x0000FFFFFFFFFFFF;
       key |= bufferPtr;
     } else if (cmd.index() == TerrainChunkCmdIndex) {
