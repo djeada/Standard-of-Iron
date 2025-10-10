@@ -27,6 +27,7 @@ public:
   struct MoveOptions {
     bool allowDirectFallback = true;
     bool clearAttackIntent = true;
+    bool groupMove = false;
   };
 
   static constexpr int DIRECT_PATH_THRESHOLD = 8;
@@ -58,6 +59,8 @@ private:
     Engine::Core::EntityID entityId;
     QVector3D target;
     MoveOptions options;
+    std::vector<Engine::Core::EntityID> groupMembers;
+    std::vector<QVector3D> groupTargets;
   };
 
   static std::unique_ptr<Pathfinding> s_pathfinder;
@@ -70,6 +73,10 @@ private:
   static Point worldToGrid(float worldX, float worldZ);
   static QVector3D gridToWorld(const Point &gridPos);
   static void clearPendingRequest(Engine::Core::EntityID entityId);
+  static void moveGroup(Engine::Core::World &world,
+                        const std::vector<Engine::Core::EntityID> &units,
+                        const std::vector<QVector3D> &targets,
+                        const MoveOptions &options);
 };
 
 } // namespace Systems

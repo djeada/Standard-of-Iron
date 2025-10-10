@@ -1,4 +1,5 @@
 #include "world.h"
+#include "component.h"
 
 namespace Engine::Core {
 
@@ -34,6 +35,34 @@ void World::update(float deltaTime) {
   for (auto &system : m_systems) {
     system->update(this, deltaTime);
   }
+}
+
+std::vector<Entity *> World::getUnitsOwnedBy(int ownerId) {
+  std::vector<Entity *> result;
+  result.reserve(m_entities.size());
+  for (auto &[id, entity] : m_entities) {
+    auto *unit = entity->getComponent<UnitComponent>();
+    if (!unit)
+      continue;
+    if (unit->ownerId == ownerId) {
+      result.push_back(entity.get());
+    }
+  }
+  return result;
+}
+
+std::vector<Entity *> World::getUnitsNotOwnedBy(int ownerId) {
+  std::vector<Entity *> result;
+  result.reserve(m_entities.size());
+  for (auto &[id, entity] : m_entities) {
+    auto *unit = entity->getComponent<UnitComponent>();
+    if (!unit)
+      continue;
+    if (unit->ownerId != ownerId) {
+      result.push_back(entity.get());
+    }
+  }
+  return result;
 }
 
 } // namespace Engine::Core

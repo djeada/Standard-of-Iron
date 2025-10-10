@@ -1,11 +1,14 @@
 #include "terrain_renderer.h"
 #include "../../game/map/visibility_service.h"
+#include "../gl/buffer.h"
 #include "../gl/mesh.h"
 #include "../gl/resources.h"
 #include "../scene_renderer.h"
 #include <QDebug>
 #include <QElapsedTimer>
 #include <QQuaternion>
+#include <QVector2D>
+#include <QtGlobal>
 #include <algorithm>
 #include <cmath>
 #include <unordered_map>
@@ -13,6 +16,8 @@
 namespace {
 
 using std::uint32_t;
+
+const QMatrix4x4 kIdentityMatrix;
 
 inline uint32_t hashCoords(int x, int z, uint32_t salt = 0u) {
   uint32_t ux = static_cast<uint32_t>(x * 73856093);
@@ -72,13 +77,16 @@ namespace Render::GL {
 TerrainRenderer::TerrainRenderer() = default;
 TerrainRenderer::~TerrainRenderer() = default;
 
-void TerrainRenderer::configure(const Game::Map::TerrainHeightMap &heightMap) {
+void TerrainRenderer::configure(const Game::Map::TerrainHeightMap &heightMap,
+                                const Game::Map::BiomeSettings &biomeSettings) {
   m_width = heightMap.getWidth();
   m_height = heightMap.getHeight();
   m_tileSize = heightMap.getTileSize();
 
   m_heightData = heightMap.getHeightData();
   m_terrainTypes = heightMap.getTerrainTypes();
+  m_biomeSettings = biomeSettings;
+  m_noiseSeed = biomeSettings.seed;
   buildMeshes();
 
   qDebug() << "TerrainRenderer configured:" << m_width << "x" << m_height
@@ -90,52 +98,10 @@ void TerrainRenderer::submit(Renderer &renderer, ResourceManager &resources) {
     return;
   }
 
-  Texture *white = resources.white();
-  if (!white)
-    return;
+  Q_UNUSED(resources);
 
   auto &visibility = Game::Map::VisibilityService::instance();
   const bool useVisibility = visibility.isInitialized();
-
-  Mesh *unitMesh = resources.unit();
-  Mesh *quadMesh = resources.quad();
-  const float halfWidth = m_width * 0.5f - 0.5f;
-  const float halfHeight = m_height * 0.5f - 0.5f;
-
-  auto sampleHeightAt = [&](float gx, float gz) {
-    gx = std::clamp(gx, 0.0f, float(m_width - 1));
-    gz = std::clamp(gz, 0.0f, float(m_height - 1));
-    int x0 = int(std::floor(gx));
-    int z0 = int(std::floor(gz));
-    int x1 = std::min(x0 + 1, m_width - 1);
-    int z1 = std::min(z0 + 1, m_height - 1);
-    float tx = gx - float(x0);
-    float tz = gz - float(z0);
-    float h00 = m_heightData[z0 * m_width + x0];
-    float h10 = m_heightData[z0 * m_width + x1];
-    float h01 = m_heightData[z1 * m_width + x0];
-    float h11 = m_heightData[z1 * m_width + x1];
-    float h0 = h00 * (1.0f - tx) + h10 * tx;
-    float h1 = h01 * (1.0f - tx) + h11 * tx;
-    return h0 * (1.0f - tz) + h1 * tz;
-  };
-
-  auto normalFromHeights = [&](float gx, float gz) {
-    float gx0 = std::clamp(gx - 1.0f, 0.0f, float(m_width - 1));
-    float gx1 = std::clamp(gx + 1.0f, 0.0f, float(m_width - 1));
-    float gz0 = std::clamp(gz - 1.0f, 0.0f, float(m_height - 1));
-    float gz1 = std::clamp(gz + 1.0f, 0.0f, float(m_height - 1));
-    float hL = sampleHeightAt(gx0, gz);
-    float hR = sampleHeightAt(gx1, gz);
-    float hD = sampleHeightAt(gx, gz0);
-    float hU = sampleHeightAt(gx, gz1);
-    QVector3D dx(2.0f * m_tileSize, hR - hL, 0.0f);
-    QVector3D dz(0.0f, hU - hD, 2.0f * m_tileSize);
-    QVector3D n = QVector3D::crossProduct(dz, dx);
-    if (n.lengthSquared() > 0.0f)
-      n.normalize();
-    return n.isNull() ? QVector3D(0, 1, 0) : n;
-  };
 
   for (const auto &chunk : m_chunks) {
     if (!chunk.mesh)
@@ -156,80 +122,8 @@ void TerrainRenderer::submit(Renderer &renderer, ResourceManager &resources) {
         continue;
     }
 
-    QMatrix4x4 model;
-    renderer.mesh(chunk.mesh.get(), model, chunk.color, white, 1.0f);
-  }
-
-  for (const auto &prop : m_props) {
-    if (useVisibility) {
-      int gridX = static_cast<int>(
-          std::floor(prop.position.x() / m_tileSize + halfWidth + 0.5f));
-      int gridZ = static_cast<int>(
-          std::floor(prop.position.z() / m_tileSize + halfHeight + 0.5f));
-      gridX = std::clamp(gridX, 0, m_width - 1);
-      gridZ = std::clamp(gridZ, 0, m_height - 1);
-      if (visibility.stateAt(gridX, gridZ) !=
-          Game::Map::VisibilityState::Visible)
-        continue;
-    }
-
-    Mesh *mesh = nullptr;
-    switch (prop.type) {
-    case PropType::Pebble:
-      mesh = unitMesh;
-      break;
-    case PropType::Tuft:
-      mesh = unitMesh;
-      break;
-    case PropType::Stick:
-      mesh = unitMesh;
-      break;
-    }
-    if (!mesh)
-      continue;
-
-    float gx = prop.position.x() / m_tileSize + halfWidth;
-    float gz = prop.position.z() / m_tileSize + halfHeight;
-    QVector3D n = normalFromHeights(gx, gz);
-    float slope = 1.0f - std::clamp(n.y(), 0.0f, 1.0f);
-
-    QQuaternion tilt = QQuaternion::rotationTo(QVector3D(0, 1, 0), n);
-
-    QMatrix4x4 model;
-    model.translate(prop.position);
-    model.rotate(tilt);
-    model.rotate(prop.rotationDeg, 0.0f, 1.0f, 0.0f);
-
-    QVector3D scale = prop.scale;
-    float along = 1.0f + 0.25f * (1.0f - slope);
-    float across = 1.0f - 0.15f * (1.0f - slope);
-    scale.setX(scale.x() * across);
-    scale.setZ(scale.z() * along);
-    model.scale(scale);
-
-    QVector3D propColor = prop.color;
-    float shade = 0.9f + 0.2f * (1.0f - slope);
-    propColor *= shade;
-    renderer.mesh(mesh, model, clamp01(propColor), white, prop.alpha);
-
-    if (quadMesh) {
-      QMatrix4x4 decal;
-      decal.translate(prop.position.x(), prop.position.y() + 0.01f,
-                      prop.position.z());
-      decal.rotate(-90.0f, 1.0f, 0.0f, 0.0f);
-      decal.rotate(tilt);
-      float scaleBoost = (prop.type == PropType::Tuft)
-                             ? 1.25f
-                             : (prop.type == PropType::Pebble ? 1.6f : 1.4f);
-      decal.scale(prop.scale.x() * scaleBoost, prop.scale.z() * scaleBoost,
-                  1.0f);
-      float ao = (prop.type == PropType::Tuft)
-                     ? 0.22f
-                     : (prop.type == PropType::Pebble ? 0.42f : 0.35f);
-      ao = std::clamp(ao + 0.15f * slope, 0.18f, 0.55f);
-      QVector3D aoColor(0.05f, 0.05f, 0.048f);
-      renderer.mesh(quadMesh, decal, aoColor, white, ao);
-    }
+    renderer.terrainChunk(chunk.mesh.get(), kIdentityMatrix, chunk.params,
+                          0x0080u);
   }
 }
 
@@ -250,7 +144,6 @@ void TerrainRenderer::buildMeshes() {
   timer.start();
 
   m_chunks.clear();
-  m_props.clear();
 
   if (m_width < 2 || m_height < 2 || m_heightData.empty()) {
     return;
@@ -280,6 +173,41 @@ void TerrainRenderer::buildMeshes() {
     normals[i0] += normal;
     normals[i1] += normal;
     normals[i2] += normal;
+  };
+
+  auto sampleHeightAt = [&](float gx, float gz) {
+    gx = std::clamp(gx, 0.0f, float(m_width - 1));
+    gz = std::clamp(gz, 0.0f, float(m_height - 1));
+    int x0 = int(std::floor(gx));
+    int z0 = int(std::floor(gz));
+    int x1 = std::min(x0 + 1, m_width - 1);
+    int z1 = std::min(z0 + 1, m_height - 1);
+    float tx = gx - float(x0);
+    float tz = gz - float(z0);
+    float h00 = m_heightData[z0 * m_width + x0];
+    float h10 = m_heightData[z0 * m_width + x1];
+    float h01 = m_heightData[z1 * m_width + x0];
+    float h11 = m_heightData[z1 * m_width + x1];
+    float h0 = h00 * (1.0f - tx) + h10 * tx;
+    float h1 = h01 * (1.0f - tx) + h11 * tx;
+    return h0 * (1.0f - tz) + h1 * tz;
+  };
+
+  auto normalFromHeightsAt = [&](float gx, float gz) {
+    float gx0 = std::clamp(gx - 1.0f, 0.0f, float(m_width - 1));
+    float gx1 = std::clamp(gx + 1.0f, 0.0f, float(m_width - 1));
+    float gz0 = std::clamp(gz - 1.0f, 0.0f, float(m_height - 1));
+    float gz1 = std::clamp(gz + 1.0f, 0.0f, float(m_height - 1));
+    float hL = sampleHeightAt(gx0, gz);
+    float hR = sampleHeightAt(gx1, gz);
+    float hD = sampleHeightAt(gx, gz0);
+    float hU = sampleHeightAt(gx, gz1);
+    QVector3D dx(2.0f * m_tileSize, hR - hL, 0.0f);
+    QVector3D dz(0.0f, hU - hD, 2.0f * m_tileSize);
+    QVector3D n = QVector3D::crossProduct(dz, dx);
+    if (n.lengthSquared() > 0.0f)
+      n.normalize();
+    return n.isNull() ? QVector3D(0, 1, 0) : n;
   };
 
   for (int z = 0; z < m_height - 1; ++z) {
@@ -359,7 +287,7 @@ void TerrainRenderer::buildMeshes() {
 
       SectionData sections[3];
 
-      uint32_t chunkSeed = hashCoords(chunkX, chunkZ);
+      uint32_t chunkSeed = hashCoords(chunkX, chunkZ, m_noiseSeed);
       uint32_t variantSeed = chunkSeed ^ 0x9e3779b9u;
       float rotationStep = static_cast<float>((variantSeed >> 5) & 3) * 90.0f;
       bool flip = ((variantSeed >> 7) & 1u) != 0u;
@@ -437,62 +365,61 @@ void TerrainRenderer::buildMeshes() {
           float maxHeight =
               std::max(std::max(m_heightData[idx0], m_heightData[idx1]),
                        std::max(m_heightData[idx2], m_heightData[idx3]));
-          if (maxHeight <= 0.05f) {
-            continue;
-          }
 
           int sectionIndex =
               quadSection(m_terrainTypes[idx0], m_terrainTypes[idx1],
                           m_terrainTypes[idx2], m_terrainTypes[idx3]);
 
-          SectionData &section = sections[sectionIndex];
-          unsigned int v0 = ensureVertex(section, idx0);
-          unsigned int v1 = ensureVertex(section, idx1);
-          unsigned int v2 = ensureVertex(section, idx2);
-          unsigned int v3 = ensureVertex(section, idx3);
-          section.indices.push_back(v0);
-          section.indices.push_back(v1);
-          section.indices.push_back(v2);
-          section.indices.push_back(v2);
-          section.indices.push_back(v1);
-          section.indices.push_back(v3);
+          if (sectionIndex > 0) {
+            SectionData &section = sections[sectionIndex];
+            unsigned int v0 = ensureVertex(section, idx0);
+            unsigned int v1 = ensureVertex(section, idx1);
+            unsigned int v2 = ensureVertex(section, idx2);
+            unsigned int v3 = ensureVertex(section, idx3);
+            section.indices.push_back(v0);
+            section.indices.push_back(v1);
+            section.indices.push_back(v2);
+            section.indices.push_back(v2);
+            section.indices.push_back(v1);
+            section.indices.push_back(v3);
 
-          float quadHeight = (m_heightData[idx0] + m_heightData[idx1] +
-                              m_heightData[idx2] + m_heightData[idx3]) *
-                             0.25f;
-          section.heightSum += quadHeight;
-          section.heightCount += 1;
+            float quadHeight = (m_heightData[idx0] + m_heightData[idx1] +
+                                m_heightData[idx2] + m_heightData[idx3]) *
+                               0.25f;
+            section.heightSum += quadHeight;
+            section.heightCount += 1;
 
-          float nY = (normals[idx0].y() + normals[idx1].y() +
-                      normals[idx2].y() + normals[idx3].y()) *
-                     0.25f;
-          float slope = 1.0f - std::clamp(nY, 0.0f, 1.0f);
-          section.slopeSum += slope;
+            float nY = (normals[idx0].y() + normals[idx1].y() +
+                        normals[idx2].y() + normals[idx3].y()) *
+                       0.25f;
+            float slope = 1.0f - std::clamp(nY, 0.0f, 1.0f);
+            section.slopeSum += slope;
 
-          float hmin =
-              std::min(std::min(m_heightData[idx0], m_heightData[idx1]),
-                       std::min(m_heightData[idx2], m_heightData[idx3]));
-          float hmax =
-              std::max(std::max(m_heightData[idx0], m_heightData[idx1]),
-                       std::max(m_heightData[idx2], m_heightData[idx3]));
-          section.heightVarSum += (hmax - hmin);
-          section.statCount += 1;
+            float hmin =
+                std::min(std::min(m_heightData[idx0], m_heightData[idx1]),
+                         std::min(m_heightData[idx2], m_heightData[idx3]));
+            float hmax =
+                std::max(std::max(m_heightData[idx0], m_heightData[idx1]),
+                         std::max(m_heightData[idx2], m_heightData[idx3]));
+            section.heightVarSum += (hmax - hmin);
+            section.statCount += 1;
 
-          auto H = [&](int gx, int gz) {
-            gx = std::clamp(gx, 0, m_width - 1);
-            gz = std::clamp(gz, 0, m_height - 1);
-            return m_heightData[gz * m_width + gx];
-          };
-          int cx = x, cz = z;
-          float hC = quadHeight;
-          float ao = 0.0f;
-          ao += std::max(0.0f, H(cx - 1, cz) - hC);
-          ao += std::max(0.0f, H(cx + 1, cz) - hC);
-          ao += std::max(0.0f, H(cx, cz - 1) - hC);
-          ao += std::max(0.0f, H(cx, cz + 1) - hC);
-          ao = std::clamp(ao * 0.15f, 0.0f, 1.0f);
-          section.aoSum += ao;
-          section.aoCount += 1;
+            auto H = [&](int gx, int gz) {
+              gx = std::clamp(gx, 0, m_width - 1);
+              gz = std::clamp(gz, 0, m_height - 1);
+              return m_heightData[gz * m_width + gx];
+            };
+            int cx = x, cz = z;
+            float hC = quadHeight;
+            float ao = 0.0f;
+            ao += std::max(0.0f, H(cx - 1, cz) - hC);
+            ao += std::max(0.0f, H(cx + 1, cz) - hC);
+            ao += std::max(0.0f, H(cx, cz - 1) - hC);
+            ao += std::max(0.0f, H(cx, cz + 1) - hC);
+            ao = std::clamp(ao * 0.15f, 0.0f, 1.0f);
+            section.aoSum += ao;
+            section.aoCount += 1;
+          }
         }
       }
 
@@ -528,7 +455,7 @@ void TerrainRenderer::buildMeshes() {
             (section.statCount > 0)
                 ? (section.heightVarSum / float(section.statCount))
                 : 0.0f;
-        QVector3D rockTint(0.52f, 0.49f, 0.47f);
+        QVector3D rockTint = m_biomeSettings.rockLow;
         float slopeMix = std::clamp(
             avgSlope *
                 ((chunk.type == Game::Map::TerrainType::Flat)
@@ -563,7 +490,8 @@ void TerrainRenderer::buildMeshes() {
         float centerGZ = 0.5f * (chunk.minZ + chunk.maxZ);
         float centerWX = (centerGX - halfWidth) * m_tileSize;
         float centerWZ = (centerGZ - halfHeight) * m_tileSize;
-        float macro = valueNoise(centerWX * 0.02f, centerWZ * 0.02f, 1337u);
+        float macro = valueNoise(centerWX * 0.02f, centerWZ * 0.02f,
+                                 m_noiseSeed ^ 0x51C3u);
         float macroShade = 0.9f + 0.2f * macro;
 
         float aoAvg = (section.aoCount > 0)
@@ -582,137 +510,61 @@ void TerrainRenderer::buildMeshes() {
         color = color * 0.96f + QVector3D(0.04f, 0.04f, 0.04f);
         chunk.color = clamp01(color);
 
-        if (chunk.type != Game::Map::TerrainType::Mountain) {
-          uint32_t propSeed = hashCoords(chunk.minX, chunk.minZ,
-                                         static_cast<uint32_t>(chunk.type));
-          uint32_t state = propSeed ^ 0x6d2b79f5u;
-          float spawnChance = rand01(state);
-          int clusterCount = 0;
-          if (spawnChance > 0.58f) {
-            clusterCount = 1;
-            if (rand01(state) > 0.7f)
-              clusterCount += 1;
-            if (rand01(state) > 0.9f)
-              clusterCount += 1;
-          }
+        TerrainChunkParams params;
+        auto tintColor = [&](const QVector3D &base) {
+          return clamp01(applyTint(base, chunk.tint));
+        };
+        params.grassPrimary = tintColor(m_biomeSettings.grassPrimary);
+        params.grassSecondary = tintColor(m_biomeSettings.grassSecondary);
+        params.grassDry = tintColor(m_biomeSettings.grassDry);
+        params.soilColor = tintColor(m_biomeSettings.soilColor);
+        params.rockLow = tintColor(m_biomeSettings.rockLow);
+        params.rockHigh = tintColor(m_biomeSettings.rockHigh);
+        params.tileSize = std::max(0.001f, m_tileSize);
+        params.macroNoiseScale = m_biomeSettings.terrainMacroNoiseScale;
+        params.detailNoiseScale = m_biomeSettings.terrainDetailNoiseScale;
 
-          for (int cluster = 0; cluster < clusterCount; ++cluster) {
-            float gridSpanX = float(chunk.maxX - chunk.minX + 1);
-            float gridSpanZ = float(chunk.maxZ - chunk.minZ + 1);
-            float centerGX2 = float(chunk.minX) + rand01(state) * gridSpanX;
-            float centerGZ2 = float(chunk.minZ) + rand01(state) * gridSpanZ;
+        float slopeThreshold = m_biomeSettings.terrainRockThreshold;
+        if (chunk.type == Game::Map::TerrainType::Hill)
+          slopeThreshold -= 0.05f;
+        else if (chunk.type == Game::Map::TerrainType::Mountain)
+          slopeThreshold -= 0.12f;
+        slopeThreshold -= std::clamp(avgSlope * 0.25f, 0.0f, 0.15f);
+        params.slopeRockThreshold = std::clamp(slopeThreshold, 0.05f, 0.9f);
+        params.slopeRockSharpness =
+            std::max(1.0f, m_biomeSettings.terrainRockSharpness);
 
-            int propsPerCluster = 2 + static_cast<int>(rand01(state) * 4.0f);
-            float scatterRadius =
-                remap(rand01(state), 0.25f, 0.85f) * m_tileSize;
+        float soilHeight = m_biomeSettings.terrainSoilHeight;
+        if (chunk.type == Game::Map::TerrainType::Hill)
+          soilHeight -= 0.08f;
+        else if (chunk.type == Game::Map::TerrainType::Mountain)
+          soilHeight -= 0.18f;
+        soilHeight += std::clamp((0.35f - avgSlope) * 0.18f, -0.12f, 0.12f);
+        params.soilBlendHeight = soilHeight;
+        params.soilBlendSharpness =
+            std::max(0.75f, m_biomeSettings.terrainSoilSharpness);
 
-            for (int p = 0; p < propsPerCluster; ++p) {
-              float angle = rand01(state) * 6.2831853f;
-              float radius = scatterRadius * std::sqrt(rand01(state));
-              float gx = centerGX2 + std::cos(angle) * radius / m_tileSize;
-              float gz = centerGZ2 + std::sin(angle) * radius / m_tileSize;
+        const uint32_t noiseKeyA =
+            hashCoords(chunk.minX, chunk.minZ, m_noiseSeed ^ 0xB5297A4Du);
+        const uint32_t noiseKeyB =
+            hashCoords(chunk.minX, chunk.minZ, m_noiseSeed ^ 0x68E31DA4u);
+        params.noiseOffset = QVector2D(hashTo01(noiseKeyA) * 256.0f,
+                                       hashTo01(noiseKeyB) * 256.0f);
 
-              float worldX = (gx - halfWidth) * m_tileSize;
-              float worldZ = (gz - halfHeight) * m_tileSize;
-              float worldY = 0.0f;
-              {
-                float sgx = std::clamp(gx, 0.0f, float(m_width - 1));
-                float sgz = std::clamp(gz, 0.0f, float(m_height - 1));
-                int x0 = int(std::floor(sgx));
-                int z0 = int(std::floor(sgz));
-                int x1 = std::min(x0 + 1, m_width - 1);
-                int z1 = std::min(z0 + 1, m_height - 1);
-                float tx = sgx - float(x0);
-                float tz = sgz - float(z0);
-                float h00 = m_heightData[z0 * m_width + x0];
-                float h10 = m_heightData[z0 * m_width + x1];
-                float h01 = m_heightData[z1 * m_width + x0];
-                float h11 = m_heightData[z1 * m_width + x1];
-                float h0 = h00 * (1.0f - tx) + h10 * tx;
-                float h1 = h01 * (1.0f - tx) + h11 * tx;
-                worldY = h0 * (1.0f - tz) + h1 * tz;
-              }
+        params.heightNoiseStrength =
+            m_biomeSettings.heightNoiseAmplitude *
+            (0.7f + 0.3f * std::clamp(roughness * 0.6f, 0.0f, 1.0f));
+        params.heightNoiseFrequency = m_biomeSettings.heightNoiseFrequency;
+        params.ambientBoost =
+            m_biomeSettings.terrainAmbientBoost *
+            (0.9f + 0.1f * (1.0f - std::clamp(aoAvg * 1.6f, 0.0f, 1.0f)));
+        params.rockDetailStrength =
+            m_biomeSettings.terrainRockDetailStrength *
+            (0.75f + 0.25f * std::clamp(avgSlope * 1.4f, 0.0f, 1.0f));
+        params.tint = clamp01(QVector3D(chunk.tint, chunk.tint, chunk.tint));
+        params.lightDirection = QVector3D(0.35f, 0.8f, 0.45f);
 
-              QVector3D n;
-              {
-                float sgx = std::clamp(gx, 0.0f, float(m_width - 1));
-                float sgz = std::clamp(gz, 0.0f, float(m_height - 1));
-                float gx0 = std::clamp(sgx - 1.0f, 0.0f, float(m_width - 1));
-                float gx1 = std::clamp(sgx + 1.0f, 0.0f, float(m_width - 1));
-                float gz0 = std::clamp(sgz - 1.0f, 0.0f, float(m_height - 1));
-                float gz1 = std::clamp(sgz + 1.0f, 0.0f, float(m_height - 1));
-                auto h = [&](float x, float z) {
-                  int xi = int(std::round(x));
-                  int zi = int(std::round(z));
-                  return m_heightData[zi * m_width + xi];
-                };
-                QVector3D dx(2.0f * m_tileSize, h(gx1, sgz) - h(gx0, sgz),
-                             0.0f);
-                QVector3D dz(0.0f, h(sgx, gz1) - h(sgx, gz0),
-                             2.0f * m_tileSize);
-                n = QVector3D::crossProduct(dz, dx);
-                if (n.lengthSquared() > 0.0f)
-                  n.normalize();
-                if (n.isNull())
-                  n = QVector3D(0, 1, 0);
-              }
-              float slope = 1.0f - std::clamp(n.y(), 0.0f, 1.0f);
-
-              float northnessP = std::clamp(
-                  QVector3D::dotProduct(n, QVector3D(0, 0, 1)) * 0.5f + 0.5f,
-                  0.0f, 1.0f);
-              auto Hs = [&](int ix, int iz) {
-                ix = std::clamp(ix, 0, m_width - 1);
-                iz = std::clamp(iz, 0, m_height - 1);
-                return m_heightData[iz * m_width + ix];
-              };
-              int ix = int(std::round(gx)), iz = int(std::round(gz));
-              float concav = std::max(0.0f, (Hs(ix - 1, iz) + Hs(ix + 1, iz) +
-                                             Hs(ix, iz - 1) + Hs(ix, iz + 1)) *
-                                                    0.25f -
-                                                Hs(ix, iz));
-              concav = std::clamp(concav * 0.15f, 0.0f, 1.0f);
-
-              float tuftAffinity = (1.0f - slope) * (0.6f + 0.4f * northnessP) *
-                                   (0.7f + 0.3f * concav);
-              float pebbleAffinity =
-                  (0.3f + 0.7f * slope) * (0.6f + 0.4f * concav);
-
-              float r = rand01(state);
-              PropInstance instance;
-              if (r < 0.55f * tuftAffinity && slope < 0.6f) {
-                instance.type = PropType::Tuft;
-                instance.color = applyTint(QVector3D(0.28f, 0.62f, 0.24f),
-                                           remap(rand01(state), 0.9f, 1.15f));
-                instance.scale = QVector3D(remap(rand01(state), 0.20f, 0.32f),
-                                           remap(rand01(state), 0.45f, 0.7f),
-                                           remap(rand01(state), 0.20f, 0.32f));
-                instance.alpha = 1.0f;
-              } else if (r < 0.85f * pebbleAffinity) {
-                instance.type = PropType::Pebble;
-                instance.color = applyTint(QVector3D(0.44f, 0.42f, 0.40f),
-                                           remap(rand01(state), 0.85f, 1.08f));
-                instance.scale = QVector3D(remap(rand01(state), 0.12f, 0.26f),
-                                           remap(rand01(state), 0.06f, 0.12f),
-                                           remap(rand01(state), 0.12f, 0.26f));
-                instance.alpha = 1.0f;
-              } else {
-                instance.type = PropType::Stick;
-                instance.color = applyTint(QVector3D(0.36f, 0.25f, 0.13f),
-                                           remap(rand01(state), 0.95f, 1.12f));
-                instance.scale = QVector3D(remap(rand01(state), 0.06f, 0.1f),
-                                           remap(rand01(state), 0.35f, 0.6f),
-                                           remap(rand01(state), 0.06f, 0.1f));
-                instance.alpha = 1.0f;
-              }
-              instance.rotationDeg = rand01(state) * 360.0f;
-              instance.position = QVector3D(worldX, worldY, worldZ);
-
-              if (slope < 0.95f)
-                m_props.push_back(instance);
-            }
-          }
-        }
+        chunk.params = params;
 
         totalTriangles += chunk.mesh->getIndices().size() / 3;
         m_chunks.push_back(std::move(chunk));
@@ -729,19 +581,26 @@ QVector3D TerrainRenderer::getTerrainColor(Game::Map::TerrainType type,
   switch (type) {
   case Game::Map::TerrainType::Mountain:
     if (height > 4.0f) {
-      return QVector3D(0.66f, 0.68f, 0.72f);
-    } else {
-      return QVector3D(0.50f, 0.48f, 0.46f);
+      return m_biomeSettings.rockHigh;
     }
+    return m_biomeSettings.rockLow;
   case Game::Map::TerrainType::Hill: {
     float t = std::clamp(height / 3.0f, 0.0f, 1.0f);
-    QVector3D lushGrass(0.34f, 0.66f, 0.30f);
-    QVector3D sunKissed(0.58f, 0.49f, 0.35f);
-    return lushGrass * (1.0f - t) + sunKissed * t;
+    QVector3D grass = m_biomeSettings.grassSecondary * (1.0f - t) +
+                      m_biomeSettings.grassDry * t;
+    QVector3D rock =
+        m_biomeSettings.rockLow * (1.0f - t) + m_biomeSettings.rockHigh * t;
+    float rockBlend = std::clamp(0.25f + 0.5f * t, 0.0f, 0.75f);
+    return grass * (1.0f - rockBlend) + rock * rockBlend;
   }
   case Game::Map::TerrainType::Flat:
-  default:
-    return QVector3D(0.27f, 0.58f, 0.30f);
+  default: {
+    float moisture = std::clamp((height - 0.5f) * 0.2f, 0.0f, 0.4f);
+    QVector3D base = m_biomeSettings.grassPrimary * (1.0f - moisture) +
+                     m_biomeSettings.grassSecondary * moisture;
+    float dryBlend = std::clamp((height - 2.0f) * 0.12f, 0.0f, 0.3f);
+    return base * (1.0f - dryBlend) + m_biomeSettings.grassDry * dryBlend;
+  }
   }
 }
 
