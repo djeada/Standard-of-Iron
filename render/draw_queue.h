@@ -223,7 +223,7 @@ private:
   }
 
   uint64_t computeSortKey(const DrawCmd &cmd) const {
-    static constexpr uint8_t kTypeOrder[] = {0, 1, 2, 3, 4, 8, 6, 7, 5};
+    static constexpr uint8_t kTypeOrder[] = {0, 4, 7, 6, 5, 8, 2, 3, 1};
 
     const std::size_t typeIndex = cmd.index();
     constexpr std::size_t typeCount =

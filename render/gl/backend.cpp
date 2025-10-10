@@ -514,6 +514,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       m_basicShader->setUniform(m_basicUniforms.color, sc.color);
 
       DepthMaskScope depthMask(false);
+      DepthTestScope depthTest(false);
       PolygonOffsetScope poly(-1.0f, -1.0f);
       BlendScope blend(true);
 
