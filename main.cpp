@@ -21,7 +21,9 @@ int main(int argc, char *argv[]) {
   }
   qputenv("QT_OPENGL", "desktop");
   qputenv("QSG_RHI_BACKEND", "opengl");
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
   QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGLRhi);
+#endif
 
   QSurfaceFormat fmt;
   fmt.setVersion(3, 3);

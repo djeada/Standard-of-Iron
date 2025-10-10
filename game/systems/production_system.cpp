@@ -1,4 +1,5 @@
 #include "production_system.h"
+#include <cmath>
 #include "../core/component.h"
 #include "../core/world.h"
 #include "../map/map_transformer.h"

@@ -31,6 +31,8 @@ endif()
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
+set(CMAKE_AUTOMOC ON)
+
 # engine core moved under game; no separate engine subdir target
 add_subdirectory(render)
 add_subdirectory(game)
@@ -78,27 +80,9 @@ if(QT_VERSION_MAJOR EQUAL 6)
             Qt6::QuickControls2
     )
 else()
-    qt5_add_resources(standard_of_iron "qml_resources"
-        PREFIX "/StandardOfIron"
-        FILES
-            ui/qml/Main.qml
-            ui/qml/MainMenu.qml
-            ui/qml/MapSelect.qml
-            ui/qml/HUD.qml
-            ui/qml/HUDTop.qml
-            ui/qml/HUDBottom.qml
-            ui/qml/HUDVictory.qml
-            ui/qml/GameView.qml
-    )
-    qt5_add_resources(standard_of_iron "assets" 
-        PREFIX "/"
-        FILES
-            assets/shaders/basic.vert
-            assets/shaders/basic.frag
-            assets/shaders/grid.frag
-            assets/maps/test_map.json
-            assets/visuals/unit_visuals.json
-    )
+    qt5_add_resources(qml_resources qml_resources.qrc)
+    qt5_add_resources(assets_resources assets.qrc)
+    target_sources(standard_of_iron PRIVATE ${qml_resources} ${assets_resources})
 endif()
 
 target_link_libraries(standard_of_iron
