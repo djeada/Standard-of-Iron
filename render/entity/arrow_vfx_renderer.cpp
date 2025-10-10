@@ -379,7 +379,7 @@ static inline void drawSelectionFX(const DrawContext &p, ISubmitter &out) {
   if (p.selected || p.hovered) {
     QMatrix4x4 ringM;
     QVector3D pos = p.model.column(3).toVector3D();
-    ringM.translate(pos.x(), 0.01f, pos.z());
+    ringM.translate(pos.x(), 0.15f, pos.z());
     ringM.scale(0.5f, 1.0f, 0.5f);
     if (p.selected)
       out.selectionRing(ringM, 0.6f, 0.25f, QVector3D(0.2f, 0.8f, 0.2f));
