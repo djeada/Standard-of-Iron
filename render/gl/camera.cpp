@@ -11,7 +11,7 @@ namespace {
 constexpr float kEps = 1e-6f;
 constexpr float kTiny = 1e-4f;
 constexpr float kMinDist = 1.0f;
-constexpr float kMaxDist = 500.0f;
+constexpr float kMaxDist = 200.0f;
 constexpr float kMinFov = 1.0f;
 constexpr float kMaxFov = 89.0f;
 
