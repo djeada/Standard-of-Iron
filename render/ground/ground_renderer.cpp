@@ -110,8 +110,7 @@ TerrainChunkParams GroundRenderer::buildParams() const {
 
   QVector3D L(0.35f, 0.85f, 0.42f);
   params.lightDirection = L.normalized();
-  
-  // Mark this as ground plane (not elevated terrain)
+
   params.isGroundPlane = true;
 
   m_cachedParams = params;
