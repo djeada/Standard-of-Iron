@@ -123,6 +123,15 @@ endif()
 # Copy assets next to the binary for dev runs
 file(COPY assets/ DESTINATION ${CMAKE_BINARY_DIR}/assets/)
 
+# Ensure shader files are copied on every build (not just configure)
+add_custom_target(copy_shaders ALL
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_SOURCE_DIR}/assets/shaders
+        ${CMAKE_BINARY_DIR}/assets/shaders
+    COMMENT "Copying shader files to build directory"
+)
+add_dependencies(standard_of_iron copy_shaders)
+
 # ---- clang-format helpers (optional but convenient) ----
 # Provides:
 #   - clang-format        : formats all C/C++ sources using .clang-format
