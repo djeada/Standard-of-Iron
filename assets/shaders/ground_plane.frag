@@ -29,18 +29,18 @@ void main(){
     float detail=noise21(wuv*(u_detailNoiseScale*2.0));
     
     // Large-scale moisture/roughness variation for visual depth
-    float moistureNoise=fbm(wuv*u_macroNoiseScale*0.4+vec2(7.3,2.1));
+    float moistureNoise=fbm(wuv*u_macroNoiseScale*1.8+vec2(7.3,2.1));
     float moistureFactor=smoothstep(0.3,0.7,moistureNoise);
     
     // Occasional mud/bare patches for realism
-    float patchNoise=noise21(wuv*u_macroNoiseScale*0.25+vec2(13.7,5.3));
-    float mudPatch=smoothstep(0.75,0.82,patchNoise);
+    float patchNoise=noise21(wuv*u_macroNoiseScale*0.8+vec2(13.7,5.3));
+    float mudPatch=smoothstep(0.72,0.80,patchNoise);
     
     float lush=smoothstep(0.2,0.8,macro);
     vec3 lushGrass=mix(u_grassPrimary,u_grassSecondary,lush);
     
     // Adjust dryness with moisture variation
-    float dryness=clamp(0.3*detail+0.15*(1.0-moistureFactor),0.0,0.5);
+    float dryness=clamp(0.3*detail+0.25*(1.0-moistureFactor),0.0,0.6);
     vec3 grassCol=mix(lushGrass,u_grassDry,dryness);
     
     float sw=max(0.01,1.0/max(u_soilBlendSharpness,1e-3));
@@ -49,8 +49,8 @@ void main(){
     soilMix=clamp(soilMix,0.0,1.0);
     
     // Blend in mud patches (darken and desaturate)
-    vec3 mudColor=u_soilColor*0.85;
-    grassCol=mix(grassCol,mudColor,mudPatch*0.6);
+    vec3 mudColor=u_soilColor*0.75;
+    grassCol=mix(grassCol,mudColor,mudPatch*0.75);
     
     vec3 baseCol=mix(grassCol,u_soilColor,soilMix);
     vec3 dx=dFdx(v_worldPos),dy=dFdy(v_worldPos);
@@ -68,7 +68,7 @@ void main(){
     
     // Enhanced jitter with subtle hue variation
     float jitter=(hash21(wuv*0.27+vec2(17.0,9.0))-0.5)*0.06;
-    float hueShift=(moistureNoise-0.5)*0.03;
+    float hueShift=(moistureNoise-0.5)*0.08;
     vec3 col=baseCol*(1.0+jitter+hueShift);
     col*=u_tint;
     vec3 L=normalize(u_lightDir);
