@@ -2,6 +2,7 @@
 #include "../../game/core/component.h"
 #include "../../game/core/entity.h"
 #include "../../game/core/world.h"
+#include "../../game/units/troop_config.h"
 #include "../../game/visuals/team_colors.h"
 #include "../geom/math_utils.h"
 #include "../geom/selection_disc.h"
@@ -441,8 +442,11 @@ void registerArcherRenderer(Render::GL::EntityRendererRegistry &registry) {
     if (p.entity)
       seed ^= uint32_t(reinterpret_cast<uintptr_t>(p.entity) & 0xFFFFFFFFu);
 
+    // Get the number of individuals from the global troop configuration
+    const int individualsPerUnit =
+        Game::Units::TroopConfig::instance().getIndividualsPerUnit("archer");
     const int rows = 2;
-    const int cols = 5;
+    const int cols = (individualsPerUnit + rows - 1) / rows; // Ceiling division
     const float spacing = 0.75f;
 
     ArcherColors colors = makeColors(tunic);
