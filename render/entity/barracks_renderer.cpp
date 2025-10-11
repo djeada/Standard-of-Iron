@@ -622,7 +622,7 @@ static inline void drawHealthBar(const DrawContext &p, ISubmitter &out,
 static inline void drawSelectionFX(const DrawContext &p, ISubmitter &out) {
   QMatrix4x4 M;
   QVector3D pos = p.model.column(3).toVector3D();
-  M.translate(pos.x(), 0.02f, pos.z());
+  M.translate(pos.x(), 0.1f, pos.z());
   M.scale(2.2f, 1.0f, 2.0f);
   if (p.selected)
     out.selectionRing(M, 0.6f, 0.25f, QVector3D(0.2f, 0.85f, 0.2f));
