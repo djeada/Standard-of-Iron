@@ -625,9 +625,9 @@ static inline void drawSelectionFX(const DrawContext &p, ISubmitter &out) {
   M.translate(pos.x(), 0.0f, pos.z());
   M.scale(2.2f, 1.0f, 2.0f);
   if (p.selected)
-    out.selectionRing(M, 0.6f, 0.25f, QVector3D(0.2f, 0.85f, 0.2f));
+    out.selectionSmoke(M, QVector3D(0.2f, 0.85f, 0.2f), 0.35f);
   else if (p.hovered)
-    out.selectionRing(M, 0.35f, 0.15f, QVector3D(0.95f, 0.92f, 0.25f));
+    out.selectionSmoke(M, QVector3D(0.95f, 0.92f, 0.25f), 0.22f);
 }
 
 static void drawBarracks(const DrawContext &p, ISubmitter &out) {
