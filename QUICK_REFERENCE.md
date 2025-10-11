@@ -26,18 +26,18 @@ Two shader files were enhanced to add visual variety to grass/terrain:
 
 1. **Moisture Noise**
    ```glsl
-   float moistureNoise = fbm(position * 0.4x);
+   float moistureNoise = fbm(position * 1.8x);
    ```
-   - Large smooth patches across terrain
-   - Affects dryness (+15%), roughness (-25%), brightness (±3%)
+   - Medium-scale visible patches across terrain
+   - Affects dryness (+25%), roughness (-25%), brightness (±8%)
 
 2. **Mud Patches**
    ```glsl
-   float mudPatch = smoothstep(0.75, 0.82, noise);
+   float mudPatch = smoothstep(0.72, 0.80, noise);
    ```
-   - Sparse coverage (~10-15% on flats)
-   - 15% darker than soil
-   - Smooth blending
+   - Visible coverage (~15-20% on flats)
+   - 25% darker than soil
+   - Strong blending (75%)
 
 3. **Variable Roughness**
    ```glsl
@@ -48,10 +48,11 @@ Two shader files were enhanced to add visual variety to grass/terrain:
 
 4. **Hue Variation**
    ```glsl
-   hueShift = (moisture - 0.5) * 0.03;
+   hueShift = (moisture - 0.5) * 0.08;  // ground plane
+   hueShift = (moisture - 0.5) * 0.06;  // terrain
    ```
-   - ±3% brightness variation
-   - Improves depth perception
+   - ±8% (ground) / ±6% (terrain) brightness variation
+   - Clearly visible depth perception
 
 ## Performance
 
@@ -65,35 +66,36 @@ If you need to adjust the effect, edit these values in the shaders:
 
 ### Moisture Strength
 ```glsl
-// Current: 0.15 (15% dryness increase in dry areas)
-float dryness = clamp(... + 0.15 * (1.0 - moistureFactor), ...);
+// Current: 0.25 (25% dryness increase in dry areas)
+float dryness = clamp(... + 0.25 * (1.0 - moistureFactor), ...);
 ```
-- Increase to 0.20 for stronger moisture effect
-- Decrease to 0.10 for subtler effect
+- Increase to 0.35 for stronger moisture effect
+- Decrease to 0.15 for subtler effect
 
 ### Mud Patch Coverage
 ```glsl
-// Current: 0.75-0.82 (sparse patches)
-float mudPatch = smoothstep(0.75, 0.82, patchNoise);
+// Current: 0.72-0.80 (visible patches ~15-20%)
+float mudPatch = smoothstep(0.72, 0.80, patchNoise);
 ```
-- Lower to 0.70-0.80 for more patches
-- Raise to 0.80-0.85 for fewer patches
+- Lower to 0.65-0.75 for more patches
+- Raise to 0.78-0.85 for fewer patches
 
-### Mud Patch Darkness
+### Mud Patch Darkness & Strength
 ```glsl
-// Current: 0.6 (60% blend) on ground, 0.5 on terrain
-grassCol = mix(grassCol, mudColor, mudPatch * 0.6);
+// Current: 0.75 (25% darker) with 75% blend on ground, 65% on terrain
+vec3 mudColor = u_soilColor * 0.75;
+grassCol = mix(grassCol, mudColor, mudPatch * 0.75);
 ```
-- Increase to 0.8 for darker patches
-- Decrease to 0.4 for lighter patches
+- Darker patches: 0.65 (35% darker) with 0.85 blend
+- Lighter patches: 0.85 (15% darker) with 0.55 blend
 
 ### Hue Variation
 ```glsl
-// Current: 0.03 (±3%)
-float hueShift = (moistureNoise - 0.5) * 0.03;
+// Current: 0.08 (±8%) on ground, 0.06 (±6%) on terrain
+float hueShift = (moistureNoise - 0.5) * 0.08;
 ```
-- Increase to 0.05 for more color variation
-- Decrease to 0.02 for subtler variation
+- Increase to 0.12 for more color variation
+- Decrease to 0.04 for subtler variation
 
 ## Testing Checklist
 

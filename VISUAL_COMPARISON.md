@@ -11,13 +11,13 @@
 
 **Technical approach:**
 ```
-moistureNoise = fbm(position * 0.4)  // Low frequency = large patches
+moistureNoise = fbm(position * 1.8)  // Medium frequency = visible patches
 moistureFactor = smoothstep(0.3, 0.7, moistureNoise)  // Smooth transitions
 
 Effects:
-- Dryness increases by 15% in low-moisture areas
+- Dryness increases by 25% in low-moisture areas
 - Surface roughness decreases by 25% in wet areas  
-- Subtle brightness variation of ±3%
+- Visible brightness variation of ±8% (ground) / ±6% (terrain)
 ```
 
 **Visual result:**
@@ -37,11 +37,11 @@ After:   [██░░████░░░░████████░░█�
 
 **Technical approach:**
 ```
-patchNoise = noise(position * 0.25)  // Very low frequency = large patches
-mudPatch = smoothstep(0.75, 0.82, patchNoise)  // Threshold for sparse patches
-mudColor = soilColor * 0.85  // Darker than regular soil
+patchNoise = noise(position * 0.8)  // Medium-low frequency = visible patches
+mudPatch = smoothstep(0.72, 0.80, patchNoise)  // Threshold for visible patches
+mudColor = soilColor * 0.75  // 25% darker than regular soil
 
-Result: Patches only appear where noise > 0.75 (~15% of area)
+Result: Patches appear where noise > 0.72 (~15-20% of area)
 ```
 
 **Visual result:**
@@ -97,9 +97,9 @@ Combined with existing jitter (±6%), creates natural color variation
 - Repetitive, "artificial" appearance
 
 **After:**
-- Large patches of varied moisture (visible color shifts)
-- Occasional darker mud/bare patches (~10-15% coverage)
-- Subtle brightness variation creating depth
+- Large patches of varied moisture (clearly visible color shifts)
+- Noticeable darker mud/bare patches (~15-20% coverage)
+- Visible brightness variation creating depth
 - More "organic" and natural appearance
 
 ### Elevated Terrain (terrain_chunk.frag)
@@ -121,38 +121,39 @@ If the effect is too strong/weak, these values can be adjusted:
 
 ### Moisture Strength
 ```glsl
-// Current: 0.15 (15% dryness increase)
-float dryness = clamp(0.3*detail + 0.15*(1.0-moistureFactor), 0.0, 0.5);
+// Current: 0.25 (25% dryness increase) on ground, 0.20 on terrain
+float dryness = clamp(0.3*detail + 0.25*(1.0-moistureFactor), 0.0, 0.6);
                                     ^^^^
-// Increase for more variation: 0.20 (20%)
-// Decrease for subtler: 0.10 (10%)
+// Increase for more variation: 0.35 (35%)
+// Decrease for subtler: 0.15 (15%)
 ```
 
 ### Mud Patch Coverage
 ```glsl
-// Current: 0.75-0.82 threshold (~10-15% coverage)
-float mudPatch = smoothstep(0.75, 0.82, patchNoise);
+// Current: 0.72-0.80 threshold (~15-20% coverage)
+float mudPatch = smoothstep(0.72, 0.80, patchNoise);
                            ^^^^^  ^^^^
-// More patches: 0.70-0.80 (~20-25% coverage)
-// Fewer patches: 0.80-0.85 (~5-10% coverage)
+// More patches: 0.65-0.75 (~25-30% coverage)
+// Fewer patches: 0.78-0.85 (~8-12% coverage)
 ```
 
 ### Mud Patch Strength
 ```glsl
-// Current: 60% blend on ground, 50% on terrain
-grassCol = mix(grassCol, mudColor, mudPatch * 0.6);
-                                             ^^^
-// Stronger (darker patches): 0.8
-// Subtler (lighter patches): 0.4
+// Current: 75% blend on ground, 65% on terrain, 25% darker
+vec3 mudColor = u_soilColor * 0.75;
+grassCol = mix(grassCol, mudColor, mudPatch * 0.75);
+                                             ^^^^
+// Stronger (darker patches): 0.85
+// Subtler (lighter patches): 0.55
 ```
 
 ### Hue Variation
 ```glsl
-// Current: ±3%
-float hueShift = (moistureNoise - 0.5) * 0.03;
+// Current: ±8% on ground, ±6% on terrain
+float hueShift = (moistureNoise - 0.5) * 0.08;  // ground
                                          ^^^^
-// More variation: 0.05 (±5%)
-// Less variation: 0.02 (±2%)
+// More variation: 0.12 (±12%)
+// Less variation: 0.04 (±4%)
 ```
 
 ## Performance Notes
