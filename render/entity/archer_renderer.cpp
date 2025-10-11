@@ -413,7 +413,7 @@ static inline void drawSelectionFX(const DrawContext &p, ISubmitter &out) {
     ringM.translate(pos.x(), pos.y() + 0.05f, pos.z());
     ringM.scale(0.5f, 1.0f, 0.5f);
     if (p.selected)
-out.selectionRing(ringM, 0.6f, 0.25f, QVector3D(0.2f, 0.4f, 1.0f));
+      out.selectionRing(ringM, 0.6f, 0.25f, QVector3D(0.2f, 0.4f, 1.0f));
     else
       out.selectionRing(ringM, 0.35f, 0.15f, QVector3D(0.90f, 0.90f, 0.25f));
   }
