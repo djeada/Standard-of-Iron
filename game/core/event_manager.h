@@ -62,10 +62,11 @@ public:
 
 class UnitDiedEvent : public Event {
 public:
-  UnitDiedEvent(EntityID unitId, int ownerId)
-      : unitId(unitId), ownerId(ownerId) {}
+  UnitDiedEvent(EntityID unitId, int ownerId, const std::string &unitType)
+      : unitId(unitId), ownerId(ownerId), unitType(unitType) {}
   EntityID unitId;
   int ownerId;
+  std::string unitType;
 };
 
 } // namespace Engine::Core
