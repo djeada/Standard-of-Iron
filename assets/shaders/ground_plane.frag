@@ -16,6 +16,9 @@ uniform float u_soilBlendHeight;
 uniform float u_soilBlendSharpness;
 uniform float u_ambientBoost;
 uniform vec3 u_lightDir;
+uniform float u_mapHalfWidth;
+uniform float u_mapHalfHeight;
+uniform float u_edgeFadeStart;
 
 float hash21(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453123);}
 float noise21(vec2 p){vec2 i=floor(p),f=fract(p);float a=hash21(i),b=hash21(i+vec2(1,0)),c=hash21(i+vec2(0,1)),d=hash21(i+vec2(1,1));vec2 u=f*f*(3.0-2.0*f);return mix(mix(a,b,u.x),mix(c,d,u.x),u.y);}
@@ -55,5 +58,12 @@ void main(){
     float fres=pow(1.0-max(dot(nMicro,vec3(0,1,0)),0.0),2.0);
     float shade=ambient+ndl*0.65+fres*0.08;
     vec3 lit=col*shade*u_ambientBoost;
-    FragColor=vec4(clamp(lit,0.0,1.0),1.0);
+    
+    float edgeDistX=abs(v_worldPos.x)/u_mapHalfWidth;
+    float edgeDistZ=abs(v_worldPos.z)/u_mapHalfHeight;
+    float maxEdgeDist=max(edgeDistX,edgeDistZ);
+    float edgeFade=1.0-smoothstep(u_edgeFadeStart,1.0,maxEdgeDist);
+    
+    vec3 finalCol=mix(vec3(0.0),lit,edgeFade);
+    FragColor=vec4(clamp(finalCol,0.0,1.0),1.0);
 }

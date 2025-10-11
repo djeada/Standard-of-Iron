@@ -111,6 +111,12 @@ TerrainChunkParams GroundRenderer::buildParams() const {
   QVector3D L(0.35f, 0.85f, 0.42f);
   params.lightDirection = L.normalized();
   
+  const float halfWidth = (m_width > 0 ? float(m_width) * m_tileSize * 0.5f : m_extent * 0.5f);
+  const float halfHeight = (m_height > 0 ? float(m_height) * m_tileSize * 0.5f : m_extent * 0.5f);
+  params.mapHalfWidth = halfWidth;
+  params.mapHalfHeight = halfHeight;
+  params.edgeFadeStart = 0.85f;
+  
   // Mark this as ground plane (not elevated terrain)
   params.isGroundPlane = true;
 

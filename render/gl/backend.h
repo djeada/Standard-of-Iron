@@ -138,6 +138,9 @@ private:
     Shader::UniformHandle soilBlendSharpness{Shader::InvalidUniform};
     Shader::UniformHandle ambientBoost{Shader::InvalidUniform};
     Shader::UniformHandle lightDir{Shader::InvalidUniform};
+    Shader::UniformHandle mapHalfWidth{Shader::InvalidUniform};
+    Shader::UniformHandle mapHalfHeight{Shader::InvalidUniform};
+    Shader::UniformHandle edgeFadeStart{Shader::InvalidUniform};
   } m_groundUniforms;
 
   struct TerrainUniforms {

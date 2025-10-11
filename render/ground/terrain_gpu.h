@@ -37,6 +37,11 @@ struct TerrainChunkParams {
 
   float albedoJitter = 0.05f;
   
+  // Map boundary parameters for edge treatment
+  float mapHalfWidth = 25.0f;
+  float mapHalfHeight = 25.0f;
+  float edgeFadeStart = 0.85f;
+  
   // Flag to indicate if this is the flat ground plane (not elevated terrain)
   bool isGroundPlane = false;
 };
