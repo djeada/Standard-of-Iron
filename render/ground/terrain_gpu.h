@@ -39,6 +39,9 @@ struct TerrainChunkParams {
   
   // Flag to indicate if this is the flat ground plane (not elevated terrain)
   bool isGroundPlane = false;
+  
+  float mapHalfWidth = 25.0f;
+  float mapHalfHeight = 25.0f;
 };
 
 } // namespace Render::GL

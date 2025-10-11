@@ -113,6 +113,15 @@ TerrainChunkParams GroundRenderer::buildParams() const {
   
   // Mark this as ground plane (not elevated terrain)
   params.isGroundPlane = true;
+  
+  const float halfWidth = (m_width > 0 && m_height > 0)
+                              ? float(m_width) * m_tileSize * 0.5f
+                              : m_extent * 0.5f;
+  const float halfHeight = (m_width > 0 && m_height > 0)
+                               ? float(m_height) * m_tileSize * 0.5f
+                               : m_extent * 0.5f;
+  params.mapHalfWidth = halfWidth;
+  params.mapHalfHeight = halfHeight;
 
   m_cachedParams = params;
   m_cachedParamsValid = true;

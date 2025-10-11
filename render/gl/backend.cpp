@@ -362,6 +362,12 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
             lightDir.normalize();
           activeShader->setUniform(m_groundUniforms.lightDir, lightDir);
         }
+        if (m_groundUniforms.mapHalfWidth != Shader::InvalidUniform)
+          activeShader->setUniform(m_groundUniforms.mapHalfWidth,
+                                      terrain.params.mapHalfWidth);
+        if (m_groundUniforms.mapHalfHeight != Shader::InvalidUniform)
+          activeShader->setUniform(m_groundUniforms.mapHalfHeight,
+                                      terrain.params.mapHalfHeight);
       } else {
         // Use terrain uniforms for elevated hills/mountains
         if (m_terrainUniforms.mvp != Shader::InvalidUniform)
@@ -919,6 +925,10 @@ void Backend::cacheGroundUniforms() {
   m_groundUniforms.ambientBoost =
       m_groundShader->uniformHandle("u_ambientBoost");
   m_groundUniforms.lightDir = m_groundShader->uniformHandle("u_lightDir");
+  m_groundUniforms.mapHalfWidth =
+      m_groundShader->uniformHandle("u_mapHalfWidth");
+  m_groundUniforms.mapHalfHeight =
+      m_groundShader->uniformHandle("u_mapHalfHeight");
 }
 
 void Backend::cacheTerrainUniforms() {
