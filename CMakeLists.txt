@@ -42,17 +42,25 @@ if(QT_VERSION_MAJOR EQUAL 6)
     qt6_add_executable(standard_of_iron
         main.cpp
         app/game_engine.cpp
+        app/game_engine.h
         app/selected_units_model.cpp
+        app/selected_units_model.h
         ui/gl_view.cpp
+        ui/gl_view.h
     )
 else()
     add_executable(standard_of_iron
         main.cpp
         app/game_engine.cpp
+        app/game_engine.h
         app/selected_units_model.cpp
+        app/selected_units_model.h
         ui/gl_view.cpp
+        ui/gl_view.h
     )
 endif()
+
+set_target_properties(standard_of_iron PROPERTIES AUTOMOC ON)
 
 # ---- QML module ----
 if(QT_VERSION_MAJOR EQUAL 6)
@@ -78,27 +86,8 @@ if(QT_VERSION_MAJOR EQUAL 6)
             Qt6::QuickControls2
     )
 else()
-    qt5_add_resources(standard_of_iron "qml_resources"
-        PREFIX "/StandardOfIron"
-        FILES
-            ui/qml/Main.qml
-            ui/qml/MainMenu.qml
-            ui/qml/MapSelect.qml
-            ui/qml/HUD.qml
-            ui/qml/HUDTop.qml
-            ui/qml/HUDBottom.qml
-            ui/qml/HUDVictory.qml
-            ui/qml/GameView.qml
-    )
-    qt5_add_resources(standard_of_iron "assets" 
-        PREFIX "/"
-        FILES
-            assets/shaders/basic.vert
-            assets/shaders/basic.frag
-            assets/shaders/grid.frag
-            assets/maps/test_map.json
-            assets/visuals/unit_visuals.json
-    )
+    qt5_add_resources(standard_of_iron qml_resources.qrc)
+    qt5_add_resources(standard_of_iron assets.qrc)
 endif()
 
 target_link_libraries(standard_of_iron

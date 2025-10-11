@@ -2,6 +2,7 @@
 #include "../systems/building_collision_registry.h"
 #include "map_definition.h"
 #include <QDebug>
+#include <cmath>
 
 namespace Game::Map {
 

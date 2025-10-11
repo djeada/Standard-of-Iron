@@ -7,6 +7,7 @@
 #include "building_collision_registry.h"
 #include "command_service.h"
 #include <algorithm>
+#include <cmath>
 #include <limits>
 
 namespace Game::Systems {

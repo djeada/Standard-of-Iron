@@ -3,6 +3,7 @@
 #include "../core/world.h"
 #include "../map/map_transformer.h"
 #include "../units/factory.h"
+#include <cmath>
 
 namespace Game {
 namespace Systems {
