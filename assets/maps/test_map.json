@@ -1,5 +1,5 @@
 {
-  "name": "Test Map - Central Triangle",
+  "name": "Test Map",
   "coordSystem": "grid",
   "maxTroopsPerPlayer": 30,
   "grid": {
@@ -68,8 +68,8 @@
       "type": "hill",
       "x": 150,
       "z": 110,
-      "radius": 7,
-      "height": 3.2,
+      "radius": 10,
+      "height": 3.4,
       "entrances": [
         { "x": 150, "z": 102 },
         { "x": 144, "z": 110 },
@@ -80,8 +80,8 @@
       "type": "hill",
       "x": 115,
       "z": 175,
-      "radius": 7,
-      "height": 3.2,
+      "radius": 9,
+      "height": 3.4,
       "entrances": [
         { "x": 108, "z": 175 },
         { "x": 115, "z": 168 },
@@ -92,31 +92,36 @@
       "type": "hill",
       "x": 185,
       "z": 175,
-      "radius": 7,
-      "height": 3.2,
+      "radius": 9,
+      "height": 3.4,
       "entrances": [
         { "x": 178, "z": 175 },
         { "x": 185, "z": 168 },
         { "x": 185, "z": 182 }
       ]
     },
-    { "type": "mountain", "x": 100, "z": 100, "radius": 8, "height": 8.0, "rotation": 10 },
-    { "type": "mountain", "x": 140, "z": 100, "radius": 8, "height": 8.0, "rotation": 20 },
-    { "type": "mountain", "x": 200, "z": 100, "radius": 8, "height": 8.0, "rotation": 30 },
-    { "type": "mountain", "x": 100, "z": 200, "radius": 8, "height": 8.0, "rotation": 40 },
-    { "type": "mountain", "x": 160, "z": 200, "radius": 8, "height": 8.0, "rotation": 50 },
-    { "type": "mountain", "x": 200, "z": 200, "radius": 8, "height": 8.0, "rotation": 60 },
-    { "type": "mountain", "x": 100, "z": 140, "radius": 8, "height": 8.0, "rotation": 70 },
-    { "type": "mountain", "x": 200, "z": 140, "radius": 8, "height": 8.0, "rotation": 80 },
-    { "type": "mountain", "x": 100, "z": 160, "radius": 8, "height": 8.0, "rotation": 90 },
-    { "type": "mountain", "x": 200, "z": 160, "radius": 8, "height": 8.0, "rotation": 100 },
-    { "type": "mountain", "x": 120, "z": 120, "radius": 7, "height": 7.5, "rotation": 15 },
-    { "type": "mountain", "x": 180, "z": 120, "radius": 7, "height": 7.5, "rotation": 25 },
-    { "type": "mountain", "x": 120, "z": 180, "radius": 7, "height": 7.5, "rotation": 35 },
-    { "type": "mountain", "x": 180, "z": 180, "radius": 7, "height": 7.5, "rotation": 45 },
-    { "type": "mountain", "x": 140, "z": 110, "radius": 6, "height": 7.0, "rotation": 55 },
-    { "type": "mountain", "x": 160, "z": 190, "radius": 6, "height": 7.0, "rotation": 65 },
-    { "type": "mountain", "x": 110, "z": 160, "radius": 6, "height": 7.0, "rotation": 75 },
-    { "type": "mountain", "x": 190, "z": 140, "radius": 6, "height": 7.0, "rotation": 85 }
+
+    { "type": "mountain", "x": 100, "z": 100, "radius": 10, "height": 9.0, "rotation": 10 },
+    { "type": "mountain", "x": 140, "z": 100, "radius": 11, "height": 9.0, "rotation": 20 },
+    { "type": "mountain", "x": 200, "z": 100, "radius": 11, "height": 9.5, "rotation": 30 },
+    { "type": "mountain", "x": 100, "z": 200, "radius": 10, "height": 9.0, "rotation": 40 },
+    { "type": "mountain", "x": 160, "z": 200, "radius": 12, "height": 9.2, "rotation": 50 },
+    { "type": "mountain", "x": 200, "z": 200, "radius": 12, "height": 9.5, "rotation": 60 },
+    { "type": "mountain", "x": 100, "z": 140, "radius": 10, "height": 8.5, "rotation": 70 },
+    { "type": "mountain", "x": 200, "z": 140, "radius": 10, "height": 8.5, "rotation": 80 },
+    { "type": "mountain", "x": 100, "z": 160, "radius": 10, "height": 8.8, "rotation": 90 },
+    { "type": "mountain", "x": 200, "z": 160, "radius": 10, "height": 8.8, "rotation": 100 },
+    { "type": "mountain", "x": 120, "z": 120, "radius": 9, "height": 8.0, "rotation": 15 },
+    { "type": "mountain", "x": 180, "z": 120, "radius": 9, "height": 8.0, "rotation": 25 },
+    { "type": "mountain", "x": 120, "z": 180, "radius": 9, "height": 8.0, "rotation": 35 },
+    { "type": "mountain", "x": 180, "z": 180, "radius": 9, "height": 8.0, "rotation": 45 },
+    { "type": "mountain", "x": 140, "z": 110, "radius": 8, "height": 7.8, "rotation": 55 },
+    { "type": "mountain", "x": 160, "z": 190, "radius": 8, "height": 7.8, "rotation": 65 },
+    { "type": "mountain", "x": 110, "z": 160, "radius": 8, "height": 7.8, "rotation": 75 },
+    { "type": "mountain", "x": 190, "z": 140, "radius": 8, "height": 7.8, "rotation": 85 },
+
+    { "type": "mountain", "x": 150, "z": 150, "radius": 12, "height": 10.0, "rotation": 0 },
+    { "type": "mountain", "x": 145, "z": 155, "radius": 10, "height": 9.5, "rotation": 15 },
+    { "type": "mountain", "x": 155, "z": 145, "radius": 10, "height": 9.5, "rotation": -15 }
   ]
 }
