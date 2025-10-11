@@ -24,8 +24,8 @@ void GroundRenderer::recomputeModel() {
   newModel.translate(0.0f, -0.5f, 0.0f);
 
   if (m_width > 0 && m_height > 0) {
-    const float scaleX = float(m_width) * m_tileSize;
-    const float scaleZ = float(m_height) * m_tileSize;
+    const float scaleX = std::sqrt(float(m_width)) * m_tileSize;
+    const float scaleZ = std::sqrt(float(m_height)) * m_tileSize;
     newModel.scale(scaleX, 1.0f, scaleZ);
   } else {
     newModel.scale(m_extent, 1.0f, m_extent);
