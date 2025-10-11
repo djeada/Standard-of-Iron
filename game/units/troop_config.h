@@ -34,7 +34,7 @@ private:
   TroopConfig() {
     // Initialize default troop types
     // Archers represent 10 individuals (2 rows x 5 cols)
-    m_individualsPerUnit["archer"] = 10;
+    m_individualsPerUnit["archer"] = 30;
 
     // Buildings and other non-troop units default to 1 (handled by default
     // return in getIndividualsPerUnit)
