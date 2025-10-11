@@ -2,6 +2,7 @@
 
 #include "../draw_queue.h"
 #include "../ground/grass_gpu.h"
+#include "../ground/stone_gpu.h"
 #include "../ground/terrain_gpu.h"
 #include "camera.h"
 #include "resources.h"
@@ -77,6 +78,8 @@ private:
   Shader *m_cylinderShader = nullptr;
   Shader *m_fogShader = nullptr;
   Shader *m_grassShader = nullptr;
+  Shader *m_stoneShader = nullptr;
+  Shader *m_groundShader = nullptr;
   Shader *m_terrainShader = nullptr;
 
   struct BasicUniforms {
@@ -113,6 +116,29 @@ private:
     Shader::UniformHandle soilColor{Shader::InvalidUniform};
     Shader::UniformHandle lightDir{Shader::InvalidUniform};
   } m_grassUniforms;
+
+  struct StoneUniforms {
+    Shader::UniformHandle viewProj{Shader::InvalidUniform};
+    Shader::UniformHandle lightDirection{Shader::InvalidUniform};
+  } m_stoneUniforms;
+
+  struct GroundUniforms {
+    Shader::UniformHandle mvp{Shader::InvalidUniform};
+    Shader::UniformHandle model{Shader::InvalidUniform};
+    Shader::UniformHandle grassPrimary{Shader::InvalidUniform};
+    Shader::UniformHandle grassSecondary{Shader::InvalidUniform};
+    Shader::UniformHandle grassDry{Shader::InvalidUniform};
+    Shader::UniformHandle soilColor{Shader::InvalidUniform};
+    Shader::UniformHandle tint{Shader::InvalidUniform};
+    Shader::UniformHandle noiseOffset{Shader::InvalidUniform};
+    Shader::UniformHandle tileSize{Shader::InvalidUniform};
+    Shader::UniformHandle macroNoiseScale{Shader::InvalidUniform};
+    Shader::UniformHandle detailNoiseScale{Shader::InvalidUniform};
+    Shader::UniformHandle soilBlendHeight{Shader::InvalidUniform};
+    Shader::UniformHandle soilBlendSharpness{Shader::InvalidUniform};
+    Shader::UniformHandle ambientBoost{Shader::InvalidUniform};
+    Shader::UniformHandle lightDir{Shader::InvalidUniform};
+  } m_groundUniforms;
 
   struct TerrainUniforms {
     Shader::UniformHandle mvp{Shader::InvalidUniform};
@@ -175,6 +201,12 @@ private:
   GLuint m_grassVertexBuffer = 0;
   GLsizei m_grassVertexCount = 0;
 
+  GLuint m_stoneVao = 0;
+  GLuint m_stoneVertexBuffer = 0;
+  GLuint m_stoneIndexBuffer = 0;
+  GLsizei m_stoneIndexCount = 0;
+  GLsizei m_stoneVertexCount = 0;
+
   void cacheBasicUniforms();
   void cacheGridUniforms();
   void cacheCylinderUniforms();
@@ -190,6 +222,10 @@ private:
   void cacheGrassUniforms();
   void initializeGrassPipeline();
   void shutdownGrassPipeline();
+  void cacheStoneUniforms();
+  void initializeStonePipeline();
+  void shutdownStonePipeline();
+  void cacheGroundUniforms();
   void cacheTerrainUniforms();
 
   Shader *m_lastBoundShader = nullptr;
