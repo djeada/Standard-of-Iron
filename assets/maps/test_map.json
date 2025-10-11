@@ -1,19 +1,122 @@
 {
-  "name": "Test Map (JSON)",
+  "name": "Test Map - Central Triangle",
+  "coordSystem": "grid",
+  "maxTroopsPerPlayer": 30,
   "grid": {
-    "width": 100,
-    "height": 100,
+    "width": 300,
+    "height": 300,
     "tileSize": 1.0
   },
+  "biome": {
+    "seed": 24567,
+    "patchDensity": 3.4,
+    "patchJitter": 0.85,
+    "bladeHeight": [0.6, 1.45],
+    "bladeWidth": [0.028, 0.058],
+    "swayStrength": 0.28,
+    "swaySpeed": 1.35,
+    "heightNoise": [0.22, 0.07],
+    "grassPrimary": [0.28, 0.6, 0.32],
+    "grassSecondary": [0.42, 0.72, 0.34],
+    "grassDry": [0.58, 0.5, 0.36],
+    "soilColor": [0.28, 0.24, 0.18],
+    "rockLow": [0.5, 0.48, 0.46],
+    "rockHigh": [0.68, 0.69, 0.73]
+  },
   "camera": {
-    "center": [0.0, 0.0, 0.0],
-    "distance": 15.0,
+    "center": [150, 0, 150],
+    "distance": 25.0,
     "tiltDeg": 45.0,
+    "yaw": 225.0,
     "fovY": 45.0,
-    "near": 0.1,
-    "far": 1000.0
+    "near": 1.0,
+    "far": 400.0
   },
   "spawns": [
-    { "type": "archer", "x": 0.0, "z": 0.0, "playerId": 1 }
+    { "type": "barracks", "x": 150, "z": 120, "playerId": 1 },
+    { "type": "archer", "x": 148, "z": 122, "playerId": 1 },
+    { "type": "archer", "x": 152, "z": 118, "playerId": 1 },
+    { "type": "archer", "x": 152, "z": 122, "playerId": 1 },
+    { "type": "archer", "x": 148, "z": 118, "playerId": 1 },
+    { "type": "archer", "x": 150, "z": 124, "playerId": 1 },
+    { "type": "archer", "x": 150, "z": 116, "playerId": 1 },
+    { "type": "archer", "x": 146, "z": 120, "playerId": 1 },
+    { "type": "archer", "x": 154, "z": 120, "playerId": 1 },
+
+    { "type": "barracks", "x": 125, "z": 175, "playerId": 2 },
+    { "type": "archer", "x": 123, "z": 177, "playerId": 2 },
+    { "type": "archer", "x": 127, "z": 173, "playerId": 2 },
+    { "type": "archer", "x": 127, "z": 177, "playerId": 2 },
+    { "type": "archer", "x": 123, "z": 173, "playerId": 2 },
+    { "type": "archer", "x": 125, "z": 179, "playerId": 2 },
+    { "type": "archer", "x": 125, "z": 171, "playerId": 2 },
+    { "type": "archer", "x": 121, "z": 175, "playerId": 2 },
+    { "type": "archer", "x": 129, "z": 175, "playerId": 2 },
+
+    { "type": "barracks", "x": 175, "z": 175, "playerId": 3 },
+    { "type": "archer", "x": 173, "z": 177, "playerId": 3 },
+    { "type": "archer", "x": 177, "z": 173, "playerId": 3 },
+    { "type": "archer", "x": 177, "z": 177, "playerId": 3 },
+    { "type": "archer", "x": 173, "z": 173, "playerId": 3 },
+    { "type": "archer", "x": 175, "z": 179, "playerId": 3 },
+    { "type": "archer", "x": 175, "z": 171, "playerId": 3 },
+    { "type": "archer", "x": 171, "z": 175, "playerId": 3 },
+    { "type": "archer", "x": 179, "z": 175, "playerId": 3 }
+  ],
+  "terrain": [
+    {
+      "type": "hill",
+      "x": 150,
+      "z": 110,
+      "radius": 7,
+      "height": 3.2,
+      "entrances": [
+        { "x": 150, "z": 102 },
+        { "x": 144, "z": 110 },
+        { "x": 156, "z": 110 }
+      ]
+    },
+    {
+      "type": "hill",
+      "x": 115,
+      "z": 175,
+      "radius": 7,
+      "height": 3.2,
+      "entrances": [
+        { "x": 108, "z": 175 },
+        { "x": 115, "z": 168 },
+        { "x": 115, "z": 182 }
+      ]
+    },
+    {
+      "type": "hill",
+      "x": 185,
+      "z": 175,
+      "radius": 7,
+      "height": 3.2,
+      "entrances": [
+        { "x": 178, "z": 175 },
+        { "x": 185, "z": 168 },
+        { "x": 185, "z": 182 }
+      ]
+    },
+    { "type": "mountain", "x": 100, "z": 100, "radius": 8, "height": 8.0, "rotation": 10 },
+    { "type": "mountain", "x": 140, "z": 100, "radius": 8, "height": 8.0, "rotation": 20 },
+    { "type": "mountain", "x": 200, "z": 100, "radius": 8, "height": 8.0, "rotation": 30 },
+    { "type": "mountain", "x": 100, "z": 200, "radius": 8, "height": 8.0, "rotation": 40 },
+    { "type": "mountain", "x": 160, "z": 200, "radius": 8, "height": 8.0, "rotation": 50 },
+    { "type": "mountain", "x": 200, "z": 200, "radius": 8, "height": 8.0, "rotation": 60 },
+    { "type": "mountain", "x": 100, "z": 140, "radius": 8, "height": 8.0, "rotation": 70 },
+    { "type": "mountain", "x": 200, "z": 140, "radius": 8, "height": 8.0, "rotation": 80 },
+    { "type": "mountain", "x": 100, "z": 160, "radius": 8, "height": 8.0, "rotation": 90 },
+    { "type": "mountain", "x": 200, "z": 160, "radius": 8, "height": 8.0, "rotation": 100 },
+    { "type": "mountain", "x": 120, "z": 120, "radius": 7, "height": 7.5, "rotation": 15 },
+    { "type": "mountain", "x": 180, "z": 120, "radius": 7, "height": 7.5, "rotation": 25 },
+    { "type": "mountain", "x": 120, "z": 180, "radius": 7, "height": 7.5, "rotation": 35 },
+    { "type": "mountain", "x": 180, "z": 180, "radius": 7, "height": 7.5, "rotation": 45 },
+    { "type": "mountain", "x": 140, "z": 110, "radius": 6, "height": 7.0, "rotation": 55 },
+    { "type": "mountain", "x": 160, "z": 190, "radius": 6, "height": 7.0, "rotation": 65 },
+    { "type": "mountain", "x": 110, "z": 160, "radius": 6, "height": 7.0, "rotation": 75 },
+    { "type": "mountain", "x": 190, "z": 140, "radius": 6, "height": 7.0, "rotation": 85 }
   ]
 }

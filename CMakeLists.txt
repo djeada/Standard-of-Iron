@@ -31,7 +31,9 @@ endif()
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
-add_subdirectory(engine)
+set(CMAKE_AUTOMOC ON)
+
+# engine core moved under game; no separate engine subdir target
 add_subdirectory(render)
 add_subdirectory(game)
 add_subdirectory(ui)
@@ -42,12 +44,14 @@ if(QT_VERSION_MAJOR EQUAL 6)
     qt6_add_executable(standard_of_iron
         main.cpp
         app/game_engine.cpp
+        app/selected_units_model.cpp
         ui/gl_view.cpp
     )
 else()
     add_executable(standard_of_iron
         main.cpp
         app/game_engine.cpp
+        app/selected_units_model.cpp
         ui/gl_view.cpp
     )
 endif()
@@ -59,34 +63,26 @@ if(QT_VERSION_MAJOR EQUAL 6)
         VERSION 1.0
         QML_FILES
             ui/qml/Main.qml
+            ui/qml/MainMenu.qml
+            ui/qml/MapSelect.qml
             ui/qml/HUD.qml
+            ui/qml/HUDTop.qml
+            ui/qml/HUDBottom.qml
+            ui/qml/HUDVictory.qml
             ui/qml/GameView.qml
         RESOURCES
             assets/shaders/basic.vert
             assets/shaders/basic.frag
+            assets/shaders/grid.frag
             assets/maps/test_map.json
-            assets/maps/test_map.txt
             assets/visuals/unit_visuals.json
         DEPENDENCIES
             Qt6::QuickControls2
     )
 else()
-    qt5_add_resources(standard_of_iron "qml_resources"
-        PREFIX "/StandardOfIron"
-        FILES
-            ui/qml/Main.qml
-            ui/qml/HUD.qml
-            ui/qml/GameView.qml
-    )
-    qt5_add_resources(standard_of_iron "assets" 
-        PREFIX "/"
-        FILES
-            assets/shaders/basic.vert
-            assets/shaders/basic.frag
-            assets/maps/test_map.json
-            assets/maps/test_map.txt
-            assets/visuals/unit_visuals.json
-    )
+    qt5_add_resources(qml_resources qml_resources.qrc)
+    qt5_add_resources(assets_resources assets.qrc)
+    target_sources(standard_of_iron PRIVATE ${qml_resources} ${assets_resources})
 endif()
 
 target_link_libraries(standard_of_iron
@@ -110,3 +106,37 @@ endif()
 
 # Copy assets next to the binary for dev runs
 file(COPY assets/ DESTINATION ${CMAKE_BINARY_DIR}/assets/)
+
+# ---- clang-format helpers (optional but convenient) ----
+# Provides:
+#   - clang-format        : formats all C/C++ sources using .clang-format
+#   - clang-format-check  : CI-style check (no changes), fails on violations
+find_program(CLANG_FORMAT_EXE NAMES clang-format)
+if (CLANG_FORMAT_EXE)
+  message(STATUS "Found clang-format: ${CLANG_FORMAT_EXE}")
+
+  file(GLOB_RECURSE ALL_CXX CONFIGURE_DEPENDS
+       "${CMAKE_SOURCE_DIR}/*.c"   "${CMAKE_SOURCE_DIR}/*.cpp"
+       "${CMAKE_SOURCE_DIR}/*.h"   "${CMAKE_SOURCE_DIR}/*.hpp")
+
+  # Exclude the current build tree (generated sources, moc_*.cpp, etc.)
+  list(FILTER ALL_CXX EXCLUDE REGEX "${CMAKE_BINARY_DIR}/.*")
+
+  if (ALL_CXX)
+    add_custom_target(clang-format
+      COMMAND "${CLANG_FORMAT_EXE}" -i --style=file ${ALL_CXX}
+      WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+      COMMENT "Running clang-format with .clang-format (strict)")
+
+    add_custom_target(clang-format-check
+      COMMAND "${CLANG_FORMAT_EXE}" --dry-run -Werror --style=file ${ALL_CXX}
+      WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+      COMMENT "Checking clang-format compliance")
+  else()
+    add_custom_target(clang-format
+      COMMAND "${CMAKE_COMMAND}" -E echo "No C/C++ files found to format.")
+    add_custom_target(clang-format-check
+      COMMAND "${CMAKE_COMMAND}" -E echo "No C/C++ files found to check.")
+  endif()
+endif()
+

@@ -8,111 +8,90 @@ Item {
     
     property bool isPaused: false
     property real gameSpeed: 1.0
+    property bool setRallyMode: false  
     
     signal mapClicked(real x, real y)
     signal unitSelected(int unitId)
     signal areaSelected(real x1, real y1, real x2, real y2)
     
+    property string cursorMode: "normal"  
+    
     function setPaused(paused) {
         isPaused = paused
+        if (typeof game !== 'undefined' && game.setPaused)
+            game.setPaused(paused)
     }
     
     function setGameSpeed(speed) {
         gameSpeed = speed
+        if (typeof game !== 'undefined' && game.setGameSpeed)
+            game.setGameSpeed(speed)
     }
     
     function issueCommand(command) {
         console.log("Command issued:", command)
-        // Handle unit commands
+        
     }
     
-    // OpenGL rendering item inside scene graph
+    
         GLView {
         id: renderArea
         anchors.fill: parent
-        engine: game // GameEngine object exposed from C++
+        engine: game 
+        focus: false
         
-        // Placeholder text (disabled by default to not cover GL)
-        // Text {
-        //     anchors.centerIn: parent
-        //     text: "3D Game World\n(OpenGL Render Area)\n\nPress WASD to move camera\nMouse to look around\nScroll to zoom"
-        //     color: "white"
-        //     font.pointSize: 16
-        //     horizontalAlignment: Text.AlignHCenter
-        // }
         
-        // Camera controls info overlays
-        Rectangle {
-            anchors.top: parent.top
-            anchors.left: parent.left
-            anchors.margins: 10
-            width: 200
-            height: 120
-            color: "#34495e"
-            opacity: 0.8
-            
-            Column {
-                anchors.fill: parent
-                anchors.margins: 8
-                spacing: 4
-                
-                Text {
-                    text: "Camera Controls:"
-                    color: "white"
-                    font.bold: true
-                    font.pointSize: 10
-                }
-                Text {
-                    text: "WASD - Move"
-                    color: "white"
-                    font.pointSize: 9
-                }
-                Text {
-                    text: "Mouse - Look"
-                    color: "white"
-                    font.pointSize: 9
-                }
-                Text {
-                    text: "Scroll - Zoom"
-                    color: "white"
-                    font.pointSize: 9
-                }
-                Text {
-                    text: "Q/E - Rotate"
-                    color: "white"
-                    font.pointSize: 9
-                }
-                Text {
-                    text: "R/F - Up/Down"
-                    color: "white"
-                    font.pointSize: 9
+        Connections {
+            target: game
+            function onCursorModeChanged() {
+                if (typeof game !== 'undefined' && game.cursorMode) {
+                    gameView.cursorMode = game.cursorMode
                 }
             }
         }
+        
+        
+        Component.onCompleted: {
+            if (typeof game !== 'undefined' && game.cursorMode) {
+                gameView.cursorMode = game.cursorMode
+            }
+        }
+
+        
+        property int keyPanCount: 0
+        property bool mousePanActive: false
+        
         
         MouseArea {
             id: mouseArea
             anchors.fill: parent
             acceptedButtons: Qt.LeftButton | Qt.RightButton
+            hoverEnabled: true
+            propagateComposedEvents: true
+            preventStealing: true
             
-            property bool isSelecting: false
-            property real startX: 0
-            property real startY: 0
             
-            onPressed: function(mouse) {
-                if (mouse.button === Qt.LeftButton) {
-                    isSelecting = true
-                    startX = mouse.x
-                    startY = mouse.y
-                    selectionBox.x = startX
-                    selectionBox.y = startY
-                    selectionBox.width = 0
-                    selectionBox.height = 0
-                    selectionBox.visible = true
+            cursorShape: (gameView.cursorMode === "normal") ? Qt.ArrowCursor : Qt.BlankCursor
+            
+            enabled: gameView.visible
+            
+            onEntered: {
+                
+                if (typeof game !== 'undefined' && game.setHoverAtScreen) {
+                    game.setHoverAtScreen(0, 0) 
+                }
+            }
+            
+            onExited: {
+                
+                if (typeof game !== 'undefined' && game.setHoverAtScreen) {
+                    game.setHoverAtScreen(-1, -1)
                 }
             }
             
             onPositionChanged: function(mouse) {
+                
+                
                 if (isSelecting) {
                     var endX = mouse.x
                     var endY = mouse.y
@@ -121,6 +100,78 @@ Item {
                     selectionBox.y = Math.min(startY, endY)
                     selectionBox.width = Math.abs(endX - startX)
                     selectionBox.height = Math.abs(endY - startY)
+                } else {
+                    if (typeof game !== 'undefined' && game.setHoverAtScreen) {
+                        game.setHoverAtScreen(mouse.x, mouse.y)
+                    }
+                }
+            }
+            onWheel: function(w) {
+                var dy = (w.angleDelta ? w.angleDelta.y / 120 : w.delta / 120)
+                if (dy !== 0 && typeof game !== 'undefined' && game.cameraZoom) {
+                    
+                    game.cameraZoom(dy * 0.8)
+                }
+                w.accepted = true
+            }
+            
+            property bool isSelecting: false
+            property real startX: 0
+            property real startY: 0
+            
+            onPressed: function(mouse) {
+                if (mouse.button === Qt.LeftButton) {
+                    
+                    if (gameView.setRallyMode) {
+                        if (typeof game !== 'undefined' && game.setRallyAtScreen) {
+                            game.setRallyAtScreen(mouse.x, mouse.y)
+                        }
+                        gameView.setRallyMode = false
+                        return
+                    }
+                    
+                    
+                    if (gameView.cursorMode === "attack") {
+                        if (typeof game !== 'undefined' && game.onAttackClick) {
+                            game.onAttackClick(mouse.x, mouse.y)
+                        }
+                        return
+                    }
+                    
+                    
+                    if (gameView.cursorMode === "guard") {
+                        
+                        return
+                    }
+                    
+                    
+                    if (gameView.cursorMode === "patrol") {
+                        if (typeof game !== 'undefined' && game.onPatrolClick) {
+                            game.onPatrolClick(mouse.x, mouse.y)
+                        }
+                        return
+                    }
+                    
+                    
+                    isSelecting = true
+                    startX = mouse.x
+                    startY = mouse.y
+                    selectionBox.x = startX
+                    selectionBox.y = startY
+                    selectionBox.width = 0
+                    selectionBox.height = 0
+                    selectionBox.visible = true
+                } else if (mouse.button === Qt.RightButton) {
+                    
+                    renderArea.mousePanActive = true
+                    mainWindow.edgeScrollDisabled = true
+
+                    if (gameView.setRallyMode) {
+                        gameView.setRallyMode = false
+                    }
+                    if (typeof game !== 'undefined' && game.onRightClick) {
+                        game.onRightClick(mouse.x, mouse.y)
+                    }
                 }
             }
             
@@ -130,22 +181,33 @@ Item {
                     selectionBox.visible = false
                     
                     if (selectionBox.width > 5 && selectionBox.height > 5) {
-                        // Area selection
+                        
                         areaSelected(selectionBox.x, selectionBox.y, 
                                    selectionBox.x + selectionBox.width,
                                    selectionBox.y + selectionBox.height)
+                        if (typeof game !== 'undefined' && game.onAreaSelected) {
+                            game.onAreaSelected(selectionBox.x, selectionBox.y,
+                                                selectionBox.x + selectionBox.width,
+                                                selectionBox.y + selectionBox.height,
+                                                false)
+                        }
                     } else {
-                        // Point selection
+                        
                         mapClicked(mouse.x, mouse.y)
-                        if (typeof game !== 'undefined' && game.onMapClicked) {
-                            game.onMapClicked(mouse.x, mouse.y)
+                        if (typeof game !== 'undefined' && game.onClickSelect) {
+                            game.onClickSelect(mouse.x, mouse.y, false)
                         }
                     }
                 }
+                if (mouse.button === Qt.RightButton) {
+                    renderArea.mousePanActive = false
+
+                    mainWindow.edgeScrollDisabled = (renderArea.keyPanCount > 0) || renderArea.mousePanActive
+                }
             }
         }
+
         
-        // Selection box
         Rectangle {
             id: selectionBox
             visible: false
@@ -155,109 +217,293 @@ Item {
         }
     }
     
-    // Edge scrolling areas
-    MouseArea {
-        id: leftEdge
-        anchors.left: parent.left
-        anchors.top: parent.top
-        anchors.bottom: parent.bottom
-        width: 10
-        hoverEnabled: true
+    
+    Item {
+        id: customCursorContainer
+        visible: gameView.cursorMode !== "normal"
+        width: 32
+        height: 32
+        z: 999999
         
-        onEntered: {
-            scrollTimer.direction = "left"
-            scrollTimer.start()
+        
+        x: (typeof game !== 'undefined' && game.globalCursorX) ? game.globalCursorX - 16 : 0
+        y: (typeof game !== 'undefined' && game.globalCursorY) ? game.globalCursorY - 16 : 0
+        
+        
+        Item {
+            id: attackCursorContainer
+            visible: gameView.cursorMode === "attack"
+            anchors.fill: parent
+            
+            property real pulseScale: 1.0
+            
+            SequentialAnimation on pulseScale {
+                running: attackCursorContainer.visible
+                loops: Animation.Infinite
+                NumberAnimation { from: 1.0; to: 1.2; duration: 400; easing.type: Easing.InOutQuad }
+                NumberAnimation { from: 1.2; to: 1.0; duration: 400; easing.type: Easing.InOutQuad }
+            }
+            
+            Canvas {
+                id: attackCursor
+                anchors.fill: parent
+                scale: attackCursorContainer.pulseScale
+                transformOrigin: Item.Center
+                
+                onPaint: {
+                    var ctx = getContext("2d")
+                    ctx.clearRect(0, 0, width, height)
+                    
+                    
+                    ctx.strokeStyle = "#ff4444"
+                    ctx.lineWidth = 3
+                    
+                    
+                    ctx.beginPath()
+                    ctx.moveTo(16, 4)
+                    ctx.lineTo(16, 28)
+                    ctx.stroke()
+                    
+                    
+                    ctx.beginPath()
+                    ctx.moveTo(4, 16)
+                    ctx.lineTo(28, 16)
+                    ctx.stroke()
+                    
+                    
+                    ctx.fillStyle = "#ff2222"
+                    ctx.beginPath()
+                    ctx.arc(16, 16, 4, 0, Math.PI * 2)
+                    ctx.fill()
+                    
+                    
+                    ctx.strokeStyle = "rgba(255, 68, 68, 0.5)"
+                    ctx.lineWidth = 1
+                    ctx.beginPath()
+                    ctx.arc(16, 16, 7, 0, Math.PI * 2)
+                    ctx.stroke()
+                    
+                    
+                    ctx.strokeStyle = "#e74c3c"
+                    ctx.lineWidth = 2
+                    
+                    
+                    ctx.beginPath()
+                    ctx.moveTo(8, 12)
+                    ctx.lineTo(8, 8)
+                    ctx.lineTo(12, 8)
+                    ctx.stroke()
+                    
+                    
+                    ctx.beginPath()
+                    ctx.moveTo(20, 8)
+                    ctx.lineTo(24, 8)
+                    ctx.lineTo(24, 12)
+                    ctx.stroke()
+                    
+                    
+                    ctx.beginPath()
+                    ctx.moveTo(8, 20)
+                    ctx.lineTo(8, 24)
+                    ctx.lineTo(12, 24)
+                    ctx.stroke()
+                    
+                    
+                    ctx.beginPath()
+                    ctx.moveTo(20, 24)
+                    ctx.lineTo(24, 24)
+                    ctx.lineTo(24, 20)
+                    ctx.stroke()
+                }
+                
+                Component.onCompleted: requestPaint()
+            }
         }
-        onExited: scrollTimer.stop()
+        
+        
+        Canvas {
+            id: guardCursor
+            visible: gameView.cursorMode === "guard"
+            anchors.fill: parent
+            onPaint: {
+                var ctx = getContext("2d")
+                ctx.clearRect(0, 0, width, height)
+                
+                
+                ctx.fillStyle = "#3498db"
+                ctx.strokeStyle = "#2980b9"
+                ctx.lineWidth = 2
+                
+                
+                ctx.beginPath()
+                ctx.moveTo(16, 6)
+                ctx.lineTo(24, 10)
+                ctx.lineTo(24, 18)
+                ctx.lineTo(16, 26)
+                ctx.lineTo(8, 18)
+                ctx.lineTo(8, 10)
+                ctx.closePath()
+                ctx.fill()
+                ctx.stroke()
+                
+                
+                ctx.strokeStyle = "#ecf0f1"
+                ctx.lineWidth = 2
+                ctx.beginPath()
+                ctx.moveTo(13, 16)
+                ctx.lineTo(15, 18)
+                ctx.lineTo(19, 12)
+                ctx.stroke()
+            }
+            Component.onCompleted: requestPaint()
+        }
+        
+        
+        Canvas {
+            id: patrolCursor
+            visible: gameView.cursorMode === "patrol"
+            anchors.fill: parent
+            onPaint: {
+                var ctx = getContext("2d")
+                ctx.clearRect(0, 0, width, height)
+                
+                
+                ctx.strokeStyle = "#27ae60"
+                ctx.lineWidth = 2
+                
+                
+                ctx.beginPath()
+                ctx.arc(16, 16, 10, 0, Math.PI * 2)
+                ctx.stroke()
+                
+                
+                ctx.fillStyle = "#27ae60"
+                
+                
+                ctx.beginPath()
+                ctx.moveTo(26, 16)
+                ctx.lineTo(22, 13)
+                ctx.lineTo(22, 19)
+                ctx.closePath()
+                ctx.fill()
+                
+                
+                ctx.beginPath()
+                ctx.moveTo(6, 16)
+                ctx.lineTo(10, 13)
+                ctx.lineTo(10, 19)
+                ctx.closePath()
+                ctx.fill()
+                
+                
+                ctx.beginPath()
+                ctx.arc(16, 16, 3, 0, Math.PI * 2)
+                ctx.fill()
+            }
+            Component.onCompleted: requestPaint()
+        }
     }
     
-    MouseArea {
-        id: rightEdge
-        anchors.right: parent.right
-        anchors.top: parent.top
-        anchors.bottom: parent.bottom
-        width: 10
-        hoverEnabled: true
-        
-        onEntered: {
-            scrollTimer.direction = "right"
-            scrollTimer.start()
-        }
-        onExited: scrollTimer.stop()
-    }
     
-    MouseArea {
-        id: topEdge
-        anchors.top: parent.top
-        anchors.left: parent.left
-        anchors.right: parent.right
-        height: 10
-        hoverEnabled: true
-        
-        onEntered: {
-            scrollTimer.direction = "up"
-            scrollTimer.start()
-        }
-        onExited: scrollTimer.stop()
-    }
     
-    MouseArea {
-        id: bottomEdge
-        anchors.bottom: parent.bottom
-        anchors.left: parent.left
-        anchors.right: parent.right
-        height: 10
-        hoverEnabled: true
-        
-        onEntered: {
-            scrollTimer.direction = "down"
-            scrollTimer.start()
-        }
-        onExited: scrollTimer.stop()
-    }
     
-    Timer {
-        id: scrollTimer
-        interval: 16 // ~60 FPS
-        repeat: true
-        
-        property string direction: ""
-        
-        onTriggered: {
-            // Handle camera movement based on direction
-            console.log("Edge scroll:", direction)
-        }
-    }
-    
-    // Keyboard handling
     Keys.onPressed: function(event) {
-        switch (event.key) {
+        if (typeof game === 'undefined') return
+    var yawStep = (event.modifiers & Qt.ShiftModifier) ? 8 : 4
+    
+    
+    var inputStep = event.modifiers & Qt.ShiftModifier ? 2 : 1
+    switch (event.key) {
+            
+            case Qt.Key_Escape:
+                if (typeof mainWindow !== 'undefined' && !mainWindow.menuVisible) {
+                    mainWindow.menuVisible = true
+                    event.accepted = true
+                }
+                break
+            
+            case Qt.Key_Space:
+                if (typeof mainWindow !== 'undefined') {
+                    mainWindow.gamePaused = !mainWindow.gamePaused
+                    gameView.setPaused(mainWindow.gamePaused)
+                    event.accepted = true
+                }
+                break
+            
             case Qt.Key_W:
-                console.log("Move camera forward")
-                break
+                game.cameraMove(0, inputStep);
+                
+                renderArea.keyPanCount += 1
+                mainWindow.edgeScrollDisabled = true
+                event.accepted = true; break
             case Qt.Key_S:
-                console.log("Move camera backward")
-                break
+                game.cameraMove(0, -inputStep);
+                renderArea.keyPanCount += 1
+                mainWindow.edgeScrollDisabled = true
+                event.accepted = true; break
             case Qt.Key_A:
-                console.log("Move camera left")
-                break
+                game.cameraMove(-inputStep, 0);
+                renderArea.keyPanCount += 1
+                mainWindow.edgeScrollDisabled = true
+                event.accepted = true; break
             case Qt.Key_D:
-                console.log("Move camera right")
-                break
-            case Qt.Key_Q:
-                console.log("Rotate camera left")
-                break
-            case Qt.Key_E:
-                console.log("Rotate camera right")
-                break
-            case Qt.Key_R:
-                console.log("Move camera up")
-                break
-            case Qt.Key_F:
-                console.log("Move camera down")
-                break
+                game.cameraMove(inputStep, 0);
+                renderArea.keyPanCount += 1
+                mainWindow.edgeScrollDisabled = true
+                event.accepted = true; break
+            
+            case Qt.Key_Up:
+                game.cameraMove(0, inputStep);
+                renderArea.keyPanCount += 1
+                mainWindow.edgeScrollDisabled = true
+                event.accepted = true; break
+            case Qt.Key_Down:
+                game.cameraMove(0, -inputStep);
+                renderArea.keyPanCount += 1
+                mainWindow.edgeScrollDisabled = true
+                event.accepted = true; break
+            case Qt.Key_Left:
+                game.cameraMove(-inputStep, 0);
+                renderArea.keyPanCount += 1
+                mainWindow.edgeScrollDisabled = true
+                event.accepted = true; break
+            case Qt.Key_Right:
+                game.cameraMove(inputStep, 0);
+                renderArea.keyPanCount += 1
+                mainWindow.edgeScrollDisabled = true
+                event.accepted = true; break
+            
+            case Qt.Key_Q: game.cameraYaw(-yawStep); event.accepted = true; break
+            case Qt.Key_E: game.cameraYaw(yawStep);  event.accepted = true; break
+            
+            
+            
+            
+            
+            var shiftHeld = (event.modifiers & Qt.ShiftModifier) !== 0
+            var pitchStep = shiftHeld ? 8 : 4
+            
+            case Qt.Key_R: game.cameraOrbitDirection(1, shiftHeld);  event.accepted = true; break
+            case Qt.Key_F: game.cameraOrbitDirection(-1, shiftHeld); event.accepted = true; break
         }
     }
-    
+    Keys.onReleased: function(event) {
+        if (typeof game === 'undefined') return
+        var movementKeys = [Qt.Key_W, Qt.Key_A, Qt.Key_S, Qt.Key_D, Qt.Key_Up, Qt.Key_Down, Qt.Key_Left, Qt.Key_Right]
+        if (movementKeys.indexOf(event.key) !== -1) {
+            renderArea.keyPanCount = Math.max(0, renderArea.keyPanCount - 1)
+            if (renderArea.keyPanCount === 0 && !renderArea.mousePanActive) {
+                mainWindow.edgeScrollDisabled = false
+            }
+        }
+        
+        if (event.key === Qt.Key_Shift) {
+            
+            if (renderArea.keyPanCount === 0 && !renderArea.mousePanActive) {
+                mainWindow.edgeScrollDisabled = false
+            }
+        }
+    }
+
     focus: true
 }

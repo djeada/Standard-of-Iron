@@ -1,35 +1,24 @@
 #version 330 core
 
-in vec3 FragPos;
-in vec3 Normal;
-in vec2 TexCoord;
+in vec3 v_normal;
+in vec2 v_texCoord;
+in vec3 v_worldPos;
+
+uniform sampler2D u_texture;
+uniform vec3 u_color;
+uniform bool u_useTexture;
+uniform float u_alpha;
 
 out vec4 FragColor;
 
-uniform sampler2D texture1;
-uniform vec3 lightPos;
-uniform vec3 lightColor;
-uniform vec3 viewPos;
-
-void main()
-{
-    // Ambient lighting
-    float ambientStrength = 0.1;
-    vec3 ambient = ambientStrength * lightColor;
-    
-    // Diffuse lighting
-    vec3 norm = normalize(Normal);
-    vec3 lightDir = normalize(lightPos - FragPos);
-    float diff = max(dot(norm, lightDir), 0.0);
-    vec3 diffuse = diff * lightColor;
-    
-    // Specular lighting
-    float specularStrength = 0.5;
-    vec3 viewDir = normalize(viewPos - FragPos);
-    vec3 reflectDir = reflect(-lightDir, norm);
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
-    vec3 specular = specularStrength * spec * lightColor;
-    
-    vec3 result = (ambient + diffuse + specular) * texture(texture1, TexCoord).rgb;
-    FragColor = vec4(result, 1.0);
+void main() {
+    vec3 color = u_color;
+    if (u_useTexture) {
+        color *= texture(u_texture, v_texCoord).rgb;
+    }
+    vec3 normal = normalize(v_normal);
+    vec3 lightDir = normalize(vec3(1.0, 1.0, 1.0));
+    float diff = max(dot(normal, lightDir), 0.2);
+    color *= diff;
+    FragColor = vec4(color, u_alpha);
 }

@@ -1,0 +1,9 @@
+<RCC>
+    <qresource prefix="/">
+        <file>assets/shaders/basic.vert</file>
+        <file>assets/shaders/basic.frag</file>
+        <file>assets/shaders/grid.frag</file>
+        <file>assets/maps/test_map.json</file>
+        <file>assets/visuals/unit_visuals.json</file>
+    </qresource>
+</RCC>
