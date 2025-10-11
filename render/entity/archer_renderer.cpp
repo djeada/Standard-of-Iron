@@ -445,8 +445,10 @@ void registerArcherRenderer(Render::GL::EntityRendererRegistry &registry) {
     // Get the number of individuals from the global troop configuration
     const int individualsPerUnit =
         Game::Units::TroopConfig::instance().getIndividualsPerUnit("archer");
-    const int rows = 2;
-    const int cols = (individualsPerUnit + rows - 1) / rows; // Ceiling division
+    const int maxUnitsPerRow =
+        Game::Units::TroopConfig::instance().getMaxUnitsPerRow("archer");
+    const int rows = (individualsPerUnit + maxUnitsPerRow - 1) / maxUnitsPerRow; // Ceiling division
+    const int cols = maxUnitsPerRow;
     const float spacing = 0.75f;
 
     ArcherColors colors = makeColors(tunic);
