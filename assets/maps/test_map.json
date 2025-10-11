@@ -1,7 +1,7 @@
 {
   "name": "Test Map",
   "coordSystem": "grid",
-  "maxTroopsPerPlayer": 30,
+  "maxTroopsPerPlayer": 500,
   "grid": {
     "width": 300,
     "height": 300,
