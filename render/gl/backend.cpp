@@ -299,10 +299,10 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
     }
     case TerrainChunkCmdIndex: {
       const auto &terrain = std::get<TerrainChunkCmdIndex>(cmd);
-      
-      // Choose shader based on whether this is ground plane or elevated terrain
-      Shader *activeShader = terrain.params.isGroundPlane ? m_groundShader : m_terrainShader;
-      
+
+      Shader *activeShader =
+          terrain.params.isGroundPlane ? m_groundShader : m_terrainShader;
+
       if (!terrain.mesh || !activeShader)
         break;
 
@@ -313,49 +313,48 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       }
 
       const QMatrix4x4 mvp = viewProj * terrain.model;
-      
+
       if (terrain.params.isGroundPlane) {
-        // Use ground uniforms for flat base plane
+
         if (m_groundUniforms.mvp != Shader::InvalidUniform)
           activeShader->setUniform(m_groundUniforms.mvp, mvp);
         if (m_groundUniforms.model != Shader::InvalidUniform)
           activeShader->setUniform(m_groundUniforms.model, terrain.model);
         if (m_groundUniforms.grassPrimary != Shader::InvalidUniform)
           activeShader->setUniform(m_groundUniforms.grassPrimary,
-                                      terrain.params.grassPrimary);
+                                   terrain.params.grassPrimary);
         if (m_groundUniforms.grassSecondary != Shader::InvalidUniform)
           activeShader->setUniform(m_groundUniforms.grassSecondary,
-                                      terrain.params.grassSecondary);
+                                   terrain.params.grassSecondary);
         if (m_groundUniforms.grassDry != Shader::InvalidUniform)
           activeShader->setUniform(m_groundUniforms.grassDry,
-                                      terrain.params.grassDry);
+                                   terrain.params.grassDry);
         if (m_groundUniforms.soilColor != Shader::InvalidUniform)
           activeShader->setUniform(m_groundUniforms.soilColor,
-                                      terrain.params.soilColor);
+                                   terrain.params.soilColor);
         if (m_groundUniforms.tint != Shader::InvalidUniform)
-          activeShader->setUniform(m_groundUniforms.tint,
-                                      terrain.params.tint);
+          activeShader->setUniform(m_groundUniforms.tint, terrain.params.tint);
         if (m_groundUniforms.noiseOffset != Shader::InvalidUniform)
           activeShader->setUniform(m_groundUniforms.noiseOffset,
-                                      terrain.params.noiseOffset);
+                                   terrain.params.noiseOffset);
         if (m_groundUniforms.tileSize != Shader::InvalidUniform)
           activeShader->setUniform(m_groundUniforms.tileSize,
-                                      terrain.params.tileSize);
+                                   terrain.params.tileSize);
         if (m_groundUniforms.macroNoiseScale != Shader::InvalidUniform)
           activeShader->setUniform(m_groundUniforms.macroNoiseScale,
-                                      terrain.params.macroNoiseScale);
+                                   terrain.params.macroNoiseScale);
         if (m_groundUniforms.detailNoiseScale != Shader::InvalidUniform)
           activeShader->setUniform(m_groundUniforms.detailNoiseScale,
-                                      terrain.params.detailNoiseScale);
+                                   terrain.params.detailNoiseScale);
         if (m_groundUniforms.soilBlendHeight != Shader::InvalidUniform)
           activeShader->setUniform(m_groundUniforms.soilBlendHeight,
-                                      terrain.params.soilBlendHeight);
+                                   terrain.params.soilBlendHeight);
         if (m_groundUniforms.soilBlendSharpness != Shader::InvalidUniform)
           activeShader->setUniform(m_groundUniforms.soilBlendSharpness,
-                                      terrain.params.soilBlendSharpness);
+                                   terrain.params.soilBlendSharpness);
         if (m_groundUniforms.ambientBoost != Shader::InvalidUniform)
           activeShader->setUniform(m_groundUniforms.ambientBoost,
-                                      terrain.params.ambientBoost);
+                                   terrain.params.ambientBoost);
         if (m_groundUniforms.lightDir != Shader::InvalidUniform) {
           QVector3D lightDir = terrain.params.lightDirection;
           if (!lightDir.isNull())
@@ -363,68 +362,67 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
           activeShader->setUniform(m_groundUniforms.lightDir, lightDir);
         }
       } else {
-        // Use terrain uniforms for elevated hills/mountains
+
         if (m_terrainUniforms.mvp != Shader::InvalidUniform)
           activeShader->setUniform(m_terrainUniforms.mvp, mvp);
         if (m_terrainUniforms.model != Shader::InvalidUniform)
           activeShader->setUniform(m_terrainUniforms.model, terrain.model);
         if (m_terrainUniforms.grassPrimary != Shader::InvalidUniform)
           activeShader->setUniform(m_terrainUniforms.grassPrimary,
-                                      terrain.params.grassPrimary);
+                                   terrain.params.grassPrimary);
         if (m_terrainUniforms.grassSecondary != Shader::InvalidUniform)
           activeShader->setUniform(m_terrainUniforms.grassSecondary,
-                                      terrain.params.grassSecondary);
+                                   terrain.params.grassSecondary);
         if (m_terrainUniforms.grassDry != Shader::InvalidUniform)
           activeShader->setUniform(m_terrainUniforms.grassDry,
-                                      terrain.params.grassDry);
+                                   terrain.params.grassDry);
         if (m_terrainUniforms.soilColor != Shader::InvalidUniform)
           activeShader->setUniform(m_terrainUniforms.soilColor,
-                                      terrain.params.soilColor);
+                                   terrain.params.soilColor);
         if (m_terrainUniforms.rockLow != Shader::InvalidUniform)
           activeShader->setUniform(m_terrainUniforms.rockLow,
-                                      terrain.params.rockLow);
+                                   terrain.params.rockLow);
         if (m_terrainUniforms.rockHigh != Shader::InvalidUniform)
           activeShader->setUniform(m_terrainUniforms.rockHigh,
-                                      terrain.params.rockHigh);
+                                   terrain.params.rockHigh);
         if (m_terrainUniforms.tint != Shader::InvalidUniform)
-          activeShader->setUniform(m_terrainUniforms.tint,
-                                      terrain.params.tint);
+          activeShader->setUniform(m_terrainUniforms.tint, terrain.params.tint);
         if (m_terrainUniforms.noiseOffset != Shader::InvalidUniform)
           activeShader->setUniform(m_terrainUniforms.noiseOffset,
-                                      terrain.params.noiseOffset);
+                                   terrain.params.noiseOffset);
         if (m_terrainUniforms.tileSize != Shader::InvalidUniform)
           activeShader->setUniform(m_terrainUniforms.tileSize,
-                                      terrain.params.tileSize);
+                                   terrain.params.tileSize);
         if (m_terrainUniforms.macroNoiseScale != Shader::InvalidUniform)
           activeShader->setUniform(m_terrainUniforms.macroNoiseScale,
-                                      terrain.params.macroNoiseScale);
+                                   terrain.params.macroNoiseScale);
         if (m_terrainUniforms.detailNoiseScale != Shader::InvalidUniform)
           activeShader->setUniform(m_terrainUniforms.detailNoiseScale,
-                                      terrain.params.detailNoiseScale);
+                                   terrain.params.detailNoiseScale);
         if (m_terrainUniforms.slopeRockThreshold != Shader::InvalidUniform)
           activeShader->setUniform(m_terrainUniforms.slopeRockThreshold,
-                                      terrain.params.slopeRockThreshold);
+                                   terrain.params.slopeRockThreshold);
         if (m_terrainUniforms.slopeRockSharpness != Shader::InvalidUniform)
           activeShader->setUniform(m_terrainUniforms.slopeRockSharpness,
-                                      terrain.params.slopeRockSharpness);
+                                   terrain.params.slopeRockSharpness);
         if (m_terrainUniforms.soilBlendHeight != Shader::InvalidUniform)
           activeShader->setUniform(m_terrainUniforms.soilBlendHeight,
-                                      terrain.params.soilBlendHeight);
+                                   terrain.params.soilBlendHeight);
         if (m_terrainUniforms.soilBlendSharpness != Shader::InvalidUniform)
           activeShader->setUniform(m_terrainUniforms.soilBlendSharpness,
-                                      terrain.params.soilBlendSharpness);
+                                   terrain.params.soilBlendSharpness);
         if (m_terrainUniforms.heightNoiseStrength != Shader::InvalidUniform)
           activeShader->setUniform(m_terrainUniforms.heightNoiseStrength,
-                                      terrain.params.heightNoiseStrength);
+                                   terrain.params.heightNoiseStrength);
         if (m_terrainUniforms.heightNoiseFrequency != Shader::InvalidUniform)
           activeShader->setUniform(m_terrainUniforms.heightNoiseFrequency,
-                                      terrain.params.heightNoiseFrequency);
+                                   terrain.params.heightNoiseFrequency);
         if (m_terrainUniforms.ambientBoost != Shader::InvalidUniform)
           activeShader->setUniform(m_terrainUniforms.ambientBoost,
-                                      terrain.params.ambientBoost);
+                                   terrain.params.ambientBoost);
         if (m_terrainUniforms.rockDetailStrength != Shader::InvalidUniform)
           activeShader->setUniform(m_terrainUniforms.rockDetailStrength,
-                                      terrain.params.rockDetailStrength);
+                                   terrain.params.rockDetailStrength);
         if (m_terrainUniforms.lightDir != Shader::InvalidUniform) {
           QVector3D lightDir = terrain.params.lightDirection;
           if (!lightDir.isNull())
@@ -905,8 +903,7 @@ void Backend::cacheGroundUniforms() {
   m_groundUniforms.grassDry = m_groundShader->uniformHandle("u_grassDry");
   m_groundUniforms.soilColor = m_groundShader->uniformHandle("u_soilColor");
   m_groundUniforms.tint = m_groundShader->uniformHandle("u_tint");
-  m_groundUniforms.noiseOffset =
-      m_groundShader->uniformHandle("u_noiseOffset");
+  m_groundUniforms.noiseOffset = m_groundShader->uniformHandle("u_noiseOffset");
   m_groundUniforms.tileSize = m_groundShader->uniformHandle("u_tileSize");
   m_groundUniforms.macroNoiseScale =
       m_groundShader->uniformHandle("u_macroNoiseScale");
