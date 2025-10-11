@@ -59,5 +59,11 @@ void main(){
     float shade=ambient+ndl*0.65+fres*0.08;
     vec3 lit=col*shade*u_ambientBoost;
     
-    FragColor=vec4(1.0,0.0,0.0,1.0);
+    float edgeDistX=abs(v_worldPos.x)/max(u_mapHalfWidth,1.0);
+    float edgeDistZ=abs(v_worldPos.z)/max(u_mapHalfHeight,1.0);
+    float maxEdgeDist=max(edgeDistX,edgeDistZ);
+    float edgeFade=1.0-smoothstep(u_edgeFadeStart,1.0,maxEdgeDist);
+    
+    vec3 finalCol=mix(vec3(0.0),lit,edgeFade);
+    FragColor=vec4(clamp(finalCol,0.0,1.0),1.0);
 }
