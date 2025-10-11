@@ -52,7 +52,7 @@ public:
   void setRTSView(const QVector3D &center, float distance = 10.0f,
                   float angle = 45.0f, float yawDeg = 45.0f);
   void setTopDownView(const QVector3D &center, float distance = 10.0f);
-void applySoftBoundaries(bool isPanning = false);
+  void applySoftBoundaries(bool isPanning = false);
 
   QMatrix4x4 getViewMatrix() const;
   QMatrix4x4 getProjectionMatrix() const;
@@ -73,8 +73,8 @@ private:
   QVector3D m_up{0.0f, 1.0f, 0.0f};
   QVector3D m_front{0.0f, 0.0f, -1.0f};
   QVector3D m_right{1.0f, 0.0f, 0.0f};
-  QVector3D m_lastPosition; // To track movement direction for panning
-                       
+  QVector3D m_lastPosition;
+
   bool m_isPerspective = true;
   float m_fov = 45.0f;
   float m_aspect = 16.0f / 9.0f;
@@ -107,7 +107,7 @@ private:
 
   void updateVectors();
 
-                       void clampAboveGround() ;
+  void clampAboveGround();
   void computeYawPitchFromOffset(const QVector3D &off, float &yawDeg,
                                  float &pitchDeg) const;
 };
