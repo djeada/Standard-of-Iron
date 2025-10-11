@@ -30,4 +30,4 @@ add_library(render_gl STATIC
 )
 
 target_include_directories(render_gl PUBLIC .)
-target_link_libraries(render_gl PUBLIC Qt6::Core Qt6::OpenGL ${OPENGL_LIBRARIES} engine_core)
+target_link_libraries(render_gl PUBLIC Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::OpenGL ${OPENGL_LIBRARIES} engine_core)
