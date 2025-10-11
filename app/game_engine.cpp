@@ -689,14 +689,13 @@ void GameEngine::cameraOrbit(float yawDeg, float pitchDeg) {
   ensureInitialized();
   if (!m_camera)
     return;
-  
+
   if (!std::isfinite(yawDeg) || !std::isfinite(pitchDeg)) {
-    qWarning()
-        << "GameEngine::cameraOrbit received invalid input, ignoring:"
-        << yawDeg << pitchDeg;
+    qWarning() << "GameEngine::cameraOrbit received invalid input, ignoring:"
+               << yawDeg << pitchDeg;
     return;
   }
-  
+
   Game::Systems::CameraController ctrl;
   ctrl.orbit(*m_camera, yawDeg, pitchDeg);
 }
