@@ -442,12 +442,11 @@ void registerArcherRenderer(Render::GL::EntityRendererRegistry &registry) {
     if (p.entity)
       seed ^= uint32_t(reinterpret_cast<uintptr_t>(p.entity) & 0xFFFFFFFFu);
 
-    // Get the number of individuals from the global troop configuration
     const int individualsPerUnit =
         Game::Units::TroopConfig::instance().getIndividualsPerUnit("archer");
     const int maxUnitsPerRow =
         Game::Units::TroopConfig::instance().getMaxUnitsPerRow("archer");
-    const int rows = (individualsPerUnit + maxUnitsPerRow - 1) / maxUnitsPerRow; // Ceiling division
+    const int rows = (individualsPerUnit + maxUnitsPerRow - 1) / maxUnitsPerRow;
     const int cols = maxUnitsPerRow;
     const float spacing = 0.75f;
 
