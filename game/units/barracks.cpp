@@ -62,7 +62,7 @@ void Barracks::init(const SpawnParams &params) {
     prod->rallyX = m_t->position.x + 4.0f;
     prod->rallyZ = m_t->position.z + 2.0f;
     prod->rallySet = true;
-    // Set villager cost based on individuals per unit from TroopConfig
+
     prod->villagerCost =
         Game::Units::TroopConfig::instance().getIndividualsPerUnit(
             prod->productType);
