@@ -14,10 +14,10 @@ constexpr float kMinDist = 1.0f;
 constexpr float kMaxDist = 200.0f;
 constexpr float kMinFov = 1.0f;
 constexpr float kMaxFov = 89.0f;
-// New constants for soft boundaries
-constexpr float kMinMarginPercent = 0.03f; // Minimum margin as % of map dimension
-constexpr float kMaxMarginPercent = 0.10f; // Maximum margin as % of map dimension
-constexpr float kBoundarySmoothness = 0.3f; // Lower = faster correction
+
+constexpr float kMinMarginPercent = 0.03f;
+constexpr float kMaxMarginPercent = 0.10f;
+constexpr float kBoundarySmoothness = 0.3f;
 
 inline bool finite(const QVector3D &v) {
   return qIsFinite(v.x()) && qIsFinite(v.y()) && qIsFinite(v.z());
@@ -69,23 +69,22 @@ inline void clampOrthoBox(float &left, float &right, float &bottom,
   }
 }
 
-// New function to calculate dynamic margin based on camera height and pitch
-inline float calculateDynamicMargin(float baseMargin, float cameraHeight, float pitchDeg) {
-  // Scale margin with height (higher = more margin needed)
+inline float calculateDynamicMargin(float baseMargin, float cameraHeight,
+                                    float pitchDeg) {
+
   float heightFactor = std::clamp(cameraHeight / 50.0f, 0.5f, 2.0f);
-  
-  // Scale margin with pitch (top-down view needs less margin than angled view)
+
   float pitchFactor = std::clamp(1.0f - std::abs(pitchDeg) / 90.0f, 0.5f, 1.5f);
-  
+
   return baseMargin * heightFactor * pitchFactor;
 }
 
-// Smooth approach function that decreases strength as we get closer to target
 inline float smoothApproach(float current, float target, float smoothness) {
   if (std::abs(current - target) < kTiny)
     return target;
-    
-  return current + (target - current) * std::clamp(1.0f - smoothness, 0.01f, 0.99f);
+
+  return current +
+         (target - current) * std::clamp(1.0f - smoothness, 0.01f, 0.99f);
 }
 
 } // namespace
@@ -133,7 +132,7 @@ void Camera::lookAt(const QVector3D &position, const QVector3D &target,
     return;
   m_position = position;
   m_target = (position == target) ? position + QVector3D(0, 0, -1) : target;
-  
+
   applySoftBoundaries();
 
   QVector3D f = (m_target - m_position);
@@ -258,8 +257,8 @@ void Camera::pan(float rightDist, float forwardDist) {
 
   m_position += delta;
   m_target += delta;
-  
-  applySoftBoundaries(true); // Use pan-specific boundary handling
+
+  applySoftBoundaries(true);
 }
 
 void Camera::elevate(float dy) {
@@ -322,9 +321,9 @@ void Camera::update(float dt) {
 
   QVector3D fwd = safeNormalize(newDir, m_front);
   m_position = m_target - fwd * r;
-  
+
   applySoftBoundaries();
-  
+
   orthonormalize((m_target - m_position), m_front, m_right, m_up);
 
   if (t >= 1.0f) {
@@ -417,9 +416,9 @@ void Camera::updateFollow(const QVector3D &targetCenter) {
 
   m_target = targetCenter;
   m_position = newPos;
-  
+
   applySoftBoundaries();
-  
+
   orthonormalize((m_target - m_position), m_front, m_right, m_up);
 }
 
@@ -444,7 +443,7 @@ void Camera::setRTSView(const QVector3D &center, float distance, float angle,
 
   QVector3D f = (m_target - m_position);
   orthonormalize(f, m_front, m_right, m_up);
-  
+
   applySoftBoundaries();
 }
 
@@ -457,7 +456,7 @@ void Camera::setTopDownView(const QVector3D &center, float distance) {
   m_up = QVector3D(0, 0, -1);
   m_front = safeNormalize((m_target - m_position), QVector3D(0, 0, 1));
   updateVectors();
-  
+
   applySoftBoundaries();
 }
 
@@ -503,13 +502,11 @@ void Camera::updateVectors() {
   orthonormalize(f, m_front, m_right, m_up);
 }
 
-// New soft boundaries implementation
 void Camera::applySoftBoundaries(bool isPanning) {
   if (!qIsFinite(m_position.y())) {
     return;
   }
 
-  // Ensure minimum height above ground
   if (m_position.y() < m_groundY + m_minHeight) {
     m_position.setY(m_groundY + m_minHeight);
   }
@@ -527,94 +524,83 @@ void Camera::applySoftBoundaries(bool isPanning) {
     return;
   }
 
-  // Calculate base map boundaries
   const float mapMinX = -halfW * tile;
   const float mapMaxX = halfW * tile;
   const float mapMinZ = -halfH * tile;
   const float mapMaxZ = halfH * tile;
-  
-  // Calculate dynamic margin based on height and pitch angle
+
   float cameraHeight = m_position.y() - m_groundY;
   float pitchDeg = getPitchDeg();
-  
-  // Base margin as percentage of map dimension
+
   float mapWidth = mapMaxX - mapMinX;
   float mapDepth = mapMaxZ - mapMinZ;
-  float baseMarginX = mapWidth * std::lerp(kMinMarginPercent, kMaxMarginPercent, 
-                                         std::min(cameraHeight / 50.0f, 1.0f));
-  float baseMarginZ = mapDepth * std::lerp(kMinMarginPercent, kMaxMarginPercent, 
-                                         std::min(cameraHeight / 50.0f, 1.0f));
-  
-  // Calculate dynamic margins
+  float baseMarginX =
+      mapWidth * std::lerp(kMinMarginPercent, kMaxMarginPercent,
+                           std::min(cameraHeight / 50.0f, 1.0f));
+  float baseMarginZ =
+      mapDepth * std::lerp(kMinMarginPercent, kMaxMarginPercent,
+                           std::min(cameraHeight / 50.0f, 1.0f));
+
   float marginX = calculateDynamicMargin(baseMarginX, cameraHeight, pitchDeg);
   float marginZ = calculateDynamicMargin(baseMarginZ, cameraHeight, pitchDeg);
-  
-  // Extended boundaries with margin
+
   float extMinX = mapMinX - marginX;
   float extMaxX = mapMaxX + marginX;
   float extMinZ = mapMinZ - marginZ;
   float extMaxZ = mapMaxZ + marginZ;
 
-  // Calculate vector from target to position
   QVector3D targetToPos = m_position - m_target;
   float targetToPosDist = targetToPos.length();
-  
-  // Handle position and target differently
+
   QVector3D positionAdjustment(0, 0, 0);
   QVector3D targetAdjustment(0, 0, 0);
-  
-  // Check if position is outside extended boundaries and calculate needed adjustment
+
   if (m_position.x() < extMinX)
     positionAdjustment.setX(extMinX - m_position.x());
   else if (m_position.x() > extMaxX)
     positionAdjustment.setX(extMaxX - m_position.x());
-  
+
   if (m_position.z() < extMinZ)
     positionAdjustment.setZ(extMinZ - m_position.z());
   else if (m_position.z() > extMaxZ)
     positionAdjustment.setZ(extMaxZ - m_position.z());
-    
-  // Check if target is outside map boundaries
+
   if (m_target.x() < mapMinX)
     targetAdjustment.setX(mapMinX - m_target.x());
   else if (m_target.x() > mapMaxX)
     targetAdjustment.setX(mapMaxX - m_target.x());
-    
+
   if (m_target.z() < mapMinZ)
     targetAdjustment.setZ(mapMinZ - m_target.z());
   else if (m_target.z() > mapMaxZ)
     targetAdjustment.setZ(mapMaxZ - m_target.z());
-    
-  // For panning, we want to ensure we don't fight user input
+
   if (isPanning) {
-    // If we're panning toward the valid region, don't apply adjustment in that dimension
+
     if ((positionAdjustment.x() > 0 && m_lastPosition.x() < m_position.x()) ||
         (positionAdjustment.x() < 0 && m_lastPosition.x() > m_position.x())) {
       positionAdjustment.setX(0);
     }
-    
+
     if ((positionAdjustment.z() > 0 && m_lastPosition.z() < m_position.z()) ||
         (positionAdjustment.z() < 0 && m_lastPosition.z() > m_position.z())) {
       positionAdjustment.setZ(0);
     }
   }
-  
-  // Apply smooth adjustment when needed
+
   if (!positionAdjustment.isNull()) {
     m_position += positionAdjustment * (isPanning ? 0.7f : kBoundarySmoothness);
   }
-  
+
   if (!targetAdjustment.isNull()) {
     m_target += targetAdjustment * (isPanning ? 0.7f : kBoundarySmoothness);
-    
-    // Maintain camera direction and distance
+
     if (targetToPosDist > kTiny) {
       QVector3D dir = targetToPos.normalized();
       m_position = m_target + dir * targetToPosDist;
     }
   }
-  
-  // Store position for detecting direction in next pan operation
+
   m_lastPosition = m_position;
 }
 
