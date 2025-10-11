@@ -36,8 +36,7 @@ struct TerrainChunkParams {
   float microNormalWeight = 0.65f;
 
   float albedoJitter = 0.05f;
-  
-  // Flag to indicate if this is the flat ground plane (not elevated terrain)
+
   bool isGroundPlane = false;
 };
 

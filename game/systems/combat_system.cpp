@@ -1,5 +1,4 @@
 #include "combat_system.h"
-#include <cmath>
 #include "../core/component.h"
 #include "../core/event_manager.h"
 #include "../core/world.h"
@@ -8,6 +7,7 @@
 #include "building_collision_registry.h"
 #include "command_service.h"
 #include <algorithm>
+#include <cmath>
 #include <limits>
 
 namespace Game::Systems {
