@@ -68,8 +68,10 @@
       "type": "hill",
       "x": 150,
       "z": 110,
-      "radius": 10,
+      "width": 18,
+      "depth": 8,
       "height": 3.4,
+      "rotation": 25,
       "entrances": [
         { "x": 150, "z": 102 },
         { "x": 144, "z": 110 },
