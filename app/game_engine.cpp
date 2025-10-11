@@ -28,6 +28,7 @@
 #include "game/systems/production_service.h"
 #include "game/systems/production_system.h"
 #include "game/systems/selection_system.h"
+#include "game/units/troop_config.h"
 #include "game/systems/terrain_alignment_system.h"
 #include "render/geom/arrow.h"
 #include "render/geom/patrol_flags.h"
@@ -85,7 +86,11 @@ GameEngine::GameEngine() {
   Engine::Core::EventManager::instance().subscribe<Engine::Core::UnitDiedEvent>(
       [this](const Engine::Core::UnitDiedEvent &e) {
         if (e.ownerId != m_runtime.localOwnerId) {
-          m_enemyTroopsDefeated++;
+          // Each unit represents multiple individuals based on its type
+          int individualsPerUnit =
+              Game::Units::TroopConfig::instance().getIndividualsPerUnit(
+                  e.unitType);
+          m_enemyTroopsDefeated += individualsPerUnit;
           emit enemyTroopsDefeatedChanged();
         }
       });
@@ -756,7 +761,11 @@ int GameEngine::playerTroopCount() const {
 
     if (unit->ownerId == m_runtime.localOwnerId && unit->health > 0 &&
         unit->unitType != "barracks") {
-      count++;
+      // Each unit represents multiple individuals based on its type
+      int individualsPerUnit =
+          Game::Units::TroopConfig::instance().getIndividualsPerUnit(
+              unit->unitType);
+      count += individualsPerUnit;
     }
   }
   return count;
