@@ -45,6 +45,8 @@ struct TerrainFeature {
   float centerX;
   float centerZ;
   float radius;
+  float width;
+  float depth;
   float height;
 
   std::vector<QVector3D> entrances;
