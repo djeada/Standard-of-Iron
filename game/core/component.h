@@ -129,7 +129,7 @@ public:
   std::string productType;
   float rallyX, rallyZ;
   bool rallySet;
-  int villagerCost; // Number of villagers required to recruit this unit
+  int villagerCost;
 };
 
 class AIControlledComponent : public Component {

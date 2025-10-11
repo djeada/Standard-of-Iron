@@ -197,12 +197,12 @@ static void readTerrain(const QJsonArray &arr, std::vector<TerrainFeature> &out,
     feature.radius = float(o.value("radius").toDouble(5.0));
     feature.width = float(o.value("width").toDouble(0.0));
     feature.depth = float(o.value("depth").toDouble(0.0));
-    
+
     if (feature.width == 0.0f && feature.depth == 0.0f) {
       feature.width = feature.radius;
       feature.depth = feature.radius;
     }
-    
+
     feature.height = float(o.value("height").toDouble(2.0));
     feature.rotationDeg = float(o.value("rotation").toDouble(0.0));
 
