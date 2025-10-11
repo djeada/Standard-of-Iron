@@ -142,26 +142,26 @@ void main(){
     float erosionNoise = triplanarNoise(v_worldPos, u_detailNoiseScale * 4.0 / tileScale + 17.0);
 
     // Large-scale patch noise for bare ground/mud patches
-    float patchNoise = noise21(worldCoord * u_macroNoiseScale * 0.4 + vec2(7.3, 2.1));
-    float mudPatch = smoothstep(0.55, 0.70, patchNoise);
+    float patchNoise = noise21(worldCoord * u_macroNoiseScale * 3.5 + vec2(7.3, 2.1));
+    float mudPatch = smoothstep(0.50, 0.75, patchNoise);
     
     // Moisture variation (large-scale darkening/lightening)
-    float moisture = fbm(worldCoord * u_macroNoiseScale * 0.5 + vec2(5.7, 9.3));
+    float moisture = fbm(worldCoord * u_macroNoiseScale * 2.2 + vec2(5.7, 9.3));
 
     float lushFactor = smoothstep(0.2, 0.8, macroNoise);
     vec3  lushGrass  = mix(u_grassPrimary, u_grassSecondary, lushFactor);
     float dryness    = clamp(0.55 * slope + 0.45 * detailNoise, 0.0, 1.0);
     vec3  grassColor = mix(lushGrass, u_grassDry, dryness);
     
-    // Apply moisture-based brightness variation (increased strength)
-    float moistureFactor = moisture * 0.30 - 0.15;
+    // Apply moisture-based brightness variation (very dramatic for visibility)
+    float moistureFactor = moisture * 0.50 - 0.25;
     grassColor *= (1.0 + moistureFactor);
     
-    // Define mud color (darker, more brown-tinted soil)
-    vec3 mudColor = u_soilColor * 0.65;
+    // Define mud color (much darker for visibility)
+    vec3 mudColor = u_soilColor * 0.50;
     
-    // Mix in mud patches (independent of height, but reduced on slopes) - increased strength
-    grassColor = mix(grassColor, mudColor, mudPatch * 0.75 * (1.0 - slope * 0.5));
+    // Mix in mud patches (independent of height, but reduced on slopes) - very strong
+    grassColor = mix(grassColor, mudColor, mudPatch * 0.85 * (1.0 - slope * 0.5));
 
     // ----- Soil band (height + toe expansion) -----
     float soilWidth = max(0.01, 1.0 / max(u_soilBlendSharpness, 0.001));
@@ -250,9 +250,9 @@ void main(){
     vec3 L = normalize(u_lightDir);
     float ndl = max(dot(microNormal, L), 0.0);
     
-    // Roughness variation based on moisture and patches (increased range)
-    float roughness = 0.35 + moisture * 0.18 - mudPatch * 0.25;
-    float ambient = clamp(roughness, 0.20, 0.60);
+    // Roughness variation based on moisture and patches (very dramatic range)
+    float roughness = 0.35 + moisture * 0.30 - mudPatch * 0.35;
+    float ambient = clamp(roughness, 0.15, 0.70);
     
     float fresnel = pow(1.0 - max(dot(microNormal, vec3(0.0,1.0,0.0)), 0.0), 2.0);
     float shade = ambient + ndl * 0.75 + fresnel * 0.12;
