@@ -86,7 +86,7 @@ GameEngine::GameEngine() {
   Engine::Core::EventManager::instance().subscribe<Engine::Core::UnitDiedEvent>(
       [this](const Engine::Core::UnitDiedEvent &e) {
         if (e.ownerId != m_runtime.localOwnerId) {
-          // Each unit represents multiple individuals based on its type
+
           int individualsPerUnit =
               Game::Units::TroopConfig::instance().getIndividualsPerUnit(
                   e.unitType);
@@ -761,7 +761,7 @@ int GameEngine::playerTroopCount() const {
 
     if (unit->ownerId == m_runtime.localOwnerId && unit->health > 0 &&
         unit->unitType != "barracks") {
-      // Each unit represents multiple individuals based on its type
+
       int individualsPerUnit =
           Game::Units::TroopConfig::instance().getIndividualsPerUnit(
               unit->unitType);
