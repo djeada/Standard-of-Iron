@@ -20,6 +20,7 @@ struct ProductionState {
   float buildTime = 0.0f;
   int producedCount = 0;
   int maxUnits = 0;
+  int villagerCost = 1;
 };
 
 class ProductionService {

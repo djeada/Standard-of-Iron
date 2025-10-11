@@ -807,6 +807,7 @@ QVariantMap GameEngine::getSelectedProductionState() const {
   m["buildTime"] = 0.0;
   m["producedCount"] = 0;
   m["maxUnits"] = 0;
+  m["villagerCost"] = 1;
   if (!m_selectionSystem || !m_world)
     return m;
   Game::Systems::ProductionState st;
@@ -819,6 +820,7 @@ QVariantMap GameEngine::getSelectedProductionState() const {
   m["buildTime"] = st.buildTime;
   m["producedCount"] = st.producedCount;
   m["maxUnits"] = st.maxUnits;
+  m["villagerCost"] = st.villagerCost;
   return m;
 }
 

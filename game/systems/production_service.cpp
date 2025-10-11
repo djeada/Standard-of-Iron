@@ -77,6 +77,7 @@ bool ProductionService::getSelectedBarracksState(
     outState.buildTime = p->buildTime;
     outState.producedCount = p->producedCount;
     outState.maxUnits = p->maxUnits;
+    outState.villagerCost = p->villagerCost;
   }
   return true;
 }
