@@ -7,6 +7,7 @@
 namespace Render::GL {
 
 class Camera {
+      friend void solveConstraints(Render::GL::Camera* self, bool allowTargetShift);
 public:
   Camera();
 

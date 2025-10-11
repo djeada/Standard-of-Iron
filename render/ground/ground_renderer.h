@@ -61,6 +61,7 @@ private:
   Game::Map::BiomeSettings m_biomeSettings;
   bool m_hasBiome = false;
   QVector2D m_noiseOffset{0.0f, 0.0f};
+  float m_noiseAngle = 0.0f;
 
   mutable Render::GL::TerrainChunkParams m_cachedParams{};
   mutable bool m_cachedParamsValid = false;
