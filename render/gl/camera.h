@@ -7,7 +7,8 @@
 namespace Render::GL {
 
 class Camera {
-      friend void solveConstraints(Render::GL::Camera* self, bool allowTargetShift);
+  friend void solveConstraints(Render::GL::Camera *self, bool allowTargetShift);
+
 public:
   Camera();
 
@@ -51,6 +52,7 @@ public:
   void setRTSView(const QVector3D &center, float distance = 10.0f,
                   float angle = 45.0f, float yawDeg = 45.0f);
   void setTopDownView(const QVector3D &center, float distance = 10.0f);
+  void applySoftBoundaries(bool isPanning = false);
 
   QMatrix4x4 getViewMatrix() const;
   QMatrix4x4 getProjectionMatrix() const;
@@ -71,6 +73,7 @@ private:
   QVector3D m_up{0.0f, 1.0f, 0.0f};
   QVector3D m_front{0.0f, 0.0f, -1.0f};
   QVector3D m_right{1.0f, 0.0f, 0.0f};
+  QVector3D m_lastPosition;
 
   bool m_isPerspective = true;
   float m_fov = 45.0f;
@@ -103,6 +106,7 @@ private:
   float m_orbitDuration = 0.12f;
 
   void updateVectors();
+
   void clampAboveGround();
   void computeYawPitchFromOffset(const QVector3D &off, float &yawDeg,
                                  float &pitchDeg) const;
