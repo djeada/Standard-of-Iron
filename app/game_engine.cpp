@@ -29,6 +29,7 @@
 #include "game/systems/production_system.h"
 #include "game/systems/selection_system.h"
 #include "game/systems/terrain_alignment_system.h"
+#include "game/units/troop_config.h"
 #include "render/geom/arrow.h"
 #include "render/geom/patrol_flags.h"
 #include "render/gl/bootstrap.h"
@@ -85,7 +86,11 @@ GameEngine::GameEngine() {
   Engine::Core::EventManager::instance().subscribe<Engine::Core::UnitDiedEvent>(
       [this](const Engine::Core::UnitDiedEvent &e) {
         if (e.ownerId != m_runtime.localOwnerId) {
-          m_enemyTroopsDefeated++;
+          // Each unit represents multiple individuals based on its type
+          int individualsPerUnit =
+              Game::Units::TroopConfig::instance().getIndividualsPerUnit(
+                  e.unitType);
+          m_enemyTroopsDefeated += individualsPerUnit;
           emit enemyTroopsDefeatedChanged();
         }
       });
@@ -756,7 +761,11 @@ int GameEngine::playerTroopCount() const {
 
     if (unit->ownerId == m_runtime.localOwnerId && unit->health > 0 &&
         unit->unitType != "barracks") {
-      count++;
+      // Each unit represents multiple individuals based on its type
+      int individualsPerUnit =
+          Game::Units::TroopConfig::instance().getIndividualsPerUnit(
+              unit->unitType);
+      count += individualsPerUnit;
     }
   }
   return count;
@@ -798,6 +807,7 @@ QVariantMap GameEngine::getSelectedProductionState() const {
   m["buildTime"] = 0.0;
   m["producedCount"] = 0;
   m["maxUnits"] = 0;
+  m["villagerCost"] = 1;
   if (!m_selectionSystem || !m_world)
     return m;
   Game::Systems::ProductionState st;
@@ -810,6 +820,7 @@ QVariantMap GameEngine::getSelectedProductionState() const {
   m["buildTime"] = st.buildTime;
   m["producedCount"] = st.producedCount;
   m["maxUnits"] = st.maxUnits;
+  m["villagerCost"] = st.villagerCost;
   return m;
 }
 
