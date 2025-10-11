@@ -313,7 +313,8 @@ void CombatSystem::dealDamage(Engine::Core::Entity *target, int damage) {
     if (unit->health <= 0) {
 
       Engine::Core::EventManager::instance().publish(
-          Engine::Core::UnitDiedEvent(target->getId(), unit->ownerId));
+          Engine::Core::UnitDiedEvent(target->getId(), unit->ownerId,
+                                       unit->unitType));
 
       if (target->hasComponent<Engine::Core::BuildingComponent>()) {
         BuildingCollisionRegistry::instance().unregisterBuilding(
