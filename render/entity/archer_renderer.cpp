@@ -409,10 +409,19 @@ static inline void drawBowAndArrow(const DrawContext &p, ISubmitter &out,
 
 static inline void drawSelectionFX(const DrawContext &p, ISubmitter &out) {
   if (p.selected || p.hovered) {
+    float ringSize = 0.5f;
+    if (p.entity) {
+      auto *unit = p.entity->getComponent<Engine::Core::UnitComponent>();
+      if (unit && !unit->unitType.empty()) {
+        ringSize = Game::Units::TroopConfig::instance().getSelectionRingSize(
+            unit->unitType);
+      }
+    }
+
     QMatrix4x4 ringM;
     QVector3D pos = p.model.column(3).toVector3D();
     ringM.translate(pos.x(), pos.y() + 0.05f, pos.z());
-    ringM.scale(0.5f, 1.0f, 0.5f);
+    ringM.scale(ringSize, 1.0f, ringSize);
     if (p.selected)
       out.selectionRing(ringM, 0.6f, 0.25f, QVector3D(0.2f, 0.4f, 1.0f));
     else
