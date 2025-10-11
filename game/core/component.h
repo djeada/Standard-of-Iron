@@ -119,7 +119,7 @@ public:
   ProductionComponent()
       : inProgress(false), buildTime(4.0f), timeRemaining(0.0f),
         producedCount(0), maxUnits(5), productType("archer"), rallyX(0.0f),
-        rallyZ(0.0f), rallySet(false) {}
+        rallyZ(0.0f), rallySet(false), villagerCost(1) {}
 
   bool inProgress;
   float buildTime;
@@ -129,6 +129,7 @@ public:
   std::string productType;
   float rallyX, rallyZ;
   bool rallySet;
+  int villagerCost; // Number of villagers required to recruit this unit
 };
 
 class AIControlledComponent : public Component {

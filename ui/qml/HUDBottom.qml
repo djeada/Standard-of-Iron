@@ -196,7 +196,7 @@ RowLayout {
 
                             Button {
                                 id: recruitBtn
-                                text: "Recruit Archer"
+                                text: "Recruit Archer (" + (prod.villagerCost || 1) + ")"
                                 focusPolicy: Qt.NoFocus
                                 enabled: (function(){
                                     if (typeof prod === 'undefined' || !prod) return false
@@ -206,6 +206,9 @@ RowLayout {
                                     return true
                                 })()
                                 onClicked: bottomRoot.recruit("archer")
+                                ToolTip.visible: hovered
+                                ToolTip.text: "Recruit 1 archer unit\nCost: " + (prod.villagerCost || 1) + " villagers"
+                                ToolTip.delay: 500
                             }
 
                             Rectangle {
