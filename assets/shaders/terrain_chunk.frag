@@ -141,10 +141,24 @@ void main(){
     float detailNoise  = triplanarNoise(v_worldPos, u_detailNoiseScale * 2.5 / tileScale);
     float erosionNoise = triplanarNoise(v_worldPos, u_detailNoiseScale * 4.0 / tileScale + 17.0);
 
+    // Large-scale moisture/roughness variation for visual depth
+    float moistureNoise = fbm(worldCoord * u_macroNoiseScale * 0.4 + vec2(7.3, 2.1));
+    float moistureFactor = smoothstep(0.3, 0.7, moistureNoise);
+    
+    // Occasional mud/bare patches for realism
+    float patchNoise = noise21(worldCoord * u_macroNoiseScale * 0.25 + vec2(13.7, 5.3));
+    float mudPatch = smoothstep(0.75, 0.82, patchNoise);
+
     float lushFactor = smoothstep(0.2, 0.8, macroNoise);
     vec3  lushGrass  = mix(u_grassPrimary, u_grassSecondary, lushFactor);
-    float dryness    = clamp(0.55 * slope + 0.45 * detailNoise, 0.0, 1.0);
+    
+    // Adjust dryness with moisture variation and slope
+    float dryness    = clamp(0.55 * slope + 0.45 * detailNoise + 0.12 * (1.0 - moistureFactor), 0.0, 1.0);
     vec3  grassColor = mix(lushGrass, u_grassDry, dryness);
+    
+    // Blend in mud patches (darken and desaturate)
+    vec3 mudColor = u_soilColor * 0.85;
+    grassColor = mix(grassColor, mudColor, mudPatch * 0.5 * (1.0 - slope));
 
     // ----- Soil band (height + toe expansion) -----
     float soilWidth = max(0.01, 1.0 / max(u_soilBlendSharpness, 0.001));
@@ -209,7 +223,9 @@ void main(){
     float hx = triplanarNoise(v_worldPos + vec3(microOffset.x, 0.0, 0.0), microDetailScale);
     float hz = triplanarNoise(v_worldPos + vec3(0.0, 0.0, microOffset.x), microDetailScale);
     vec3 microGrad = vec3((hx - h0) / microOffset.x, 0.0, (hz - h0) / microOffset.x);
-    float microAmp = 0.15 * u_rockDetailStrength * (0.2 + 0.8 * slope);
+    
+    // Adjust micro-roughness based on moisture (wetter = smoother) and slope
+    float microAmp = 0.15 * u_rockDetailStrength * (0.2 + 0.8 * slope) * (1.0 - moistureFactor * 0.2);
     microNormal = normalize(normal + microGrad * microAmp);
 
     // feature signals
@@ -225,9 +241,10 @@ void main(){
 
     vec3 terrainColor = mix(soilBlend, rockColor, rockMask);
 
-    // albedo jitter
+    // albedo jitter with subtle hue variation
     float jitter = (hash21(worldCoord * 0.27 + vec2(17.0, 9.0)) - 0.5) * 0.06;
-    terrainColor *= (1.0 + jitter) * u_tint;
+    float hueShift = (moistureNoise - 0.5) * 0.025;
+    terrainColor *= (1.0 + jitter + hueShift) * u_tint;
 
     // lighting
     vec3 L = normalize(u_lightDir);

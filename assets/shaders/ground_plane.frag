@@ -27,14 +27,31 @@ void main(){
     vec2 wuv=(v_worldPos.xz/ts)+u_noiseOffset;
     float macro=fbm(wuv*u_macroNoiseScale);
     float detail=noise21(wuv*(u_detailNoiseScale*2.0));
+    
+    // Large-scale moisture/roughness variation for visual depth
+    float moistureNoise=fbm(wuv*u_macroNoiseScale*0.4+vec2(7.3,2.1));
+    float moistureFactor=smoothstep(0.3,0.7,moistureNoise);
+    
+    // Occasional mud/bare patches for realism
+    float patchNoise=noise21(wuv*u_macroNoiseScale*0.25+vec2(13.7,5.3));
+    float mudPatch=smoothstep(0.75,0.82,patchNoise);
+    
     float lush=smoothstep(0.2,0.8,macro);
     vec3 lushGrass=mix(u_grassPrimary,u_grassSecondary,lush);
-    float dryness=clamp(0.3*detail,0.0,0.4);
+    
+    // Adjust dryness with moisture variation
+    float dryness=clamp(0.3*detail+0.15*(1.0-moistureFactor),0.0,0.5);
     vec3 grassCol=mix(lushGrass,u_grassDry,dryness);
+    
     float sw=max(0.01,1.0/max(u_soilBlendSharpness,1e-3));
     float sN=(noise21(wuv*4.0+9.7)-0.5)*sw*0.8;
     float soilMix=1.0-smoothstep(u_soilBlendHeight-sw+sN,u_soilBlendHeight+sw+sN,v_worldPos.y);
     soilMix=clamp(soilMix,0.0,1.0);
+    
+    // Blend in mud patches (darken and desaturate)
+    vec3 mudColor=u_soilColor*0.85;
+    grassCol=mix(grassCol,mudColor,mudPatch*0.6);
+    
     vec3 baseCol=mix(grassCol,u_soilColor,soilMix);
     vec3 dx=dFdx(v_worldPos),dy=dFdy(v_worldPos);
     float mScale=u_detailNoiseScale*8.0/ts;
@@ -44,10 +61,15 @@ void main(){
     vec2 g=vec2(hx-h0,hy-h0);
     vec3 t=normalize(dx - n*dot(n,dx));
     vec3 b=normalize(cross(n,t));
-    float microAmp=0.12;
+    
+    // Adjust micro-roughness based on moisture (wetter = smoother)
+    float microAmp=0.12*(1.0-moistureFactor*0.25);
     vec3 nMicro=normalize(n-(t*g.x + b*g.y)*microAmp);
+    
+    // Enhanced jitter with subtle hue variation
     float jitter=(hash21(wuv*0.27+vec2(17.0,9.0))-0.5)*0.06;
-    vec3 col=baseCol*(1.0+jitter);
+    float hueShift=(moistureNoise-0.5)*0.03;
+    vec3 col=baseCol*(1.0+jitter+hueShift);
     col*=u_tint;
     vec3 L=normalize(u_lightDir);
     float ndl=max(dot(nMicro,L),0.0);
