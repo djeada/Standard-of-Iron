@@ -6,19 +6,18 @@
 #include <QMatrix4x4>
 #include <QVector3D>
 #include <algorithm>
-<parameter name="cstddef">
+<parameter name = "cstddef">
 #include <cstdint>
 #include <vector>
 
-namespace Render::GL {
-class Mesh;
-class Texture;
-class Buffer;
-} // namespace Render::GL
+    namespace Render::GL {
+  class Mesh;
+  class Texture;
+  class Buffer;
+}
 
 namespace Render::GL {
 
-// Forward declarations of command types
 struct MeshCmd {
   Mesh *mesh = nullptr;
   Texture *texture = nullptr;
@@ -93,9 +92,6 @@ struct SelectionSmokeCmd {
   float baseAlpha = 0.15f;
 };
 
-// Optimized DrawQueue using SoA (Structure of Arrays) pattern
-// Separate arrays per command type eliminates variant overhead
-// Commands are pre-sorted by type, reducing sort work
 class DrawQueueSoA {
 public:
   void clear() {
@@ -110,10 +106,13 @@ public:
     m_terrainChunkCmds.clear();
   }
 
-  // Submit methods - each type goes to its own array
   void submit(const GridCmd &cmd) { m_gridCmds.push_back(cmd); }
-  void submit(const SelectionRingCmd &cmd) { m_selectionRingCmds.push_back(cmd); }
-  void submit(const SelectionSmokeCmd &cmd) { m_selectionSmokeCmds.push_back(cmd); }
+  void submit(const SelectionRingCmd &cmd) {
+    m_selectionRingCmds.push_back(cmd);
+  }
+  void submit(const SelectionSmokeCmd &cmd) {
+    m_selectionSmokeCmds.push_back(cmd);
+  }
   void submit(const CylinderCmd &cmd) { m_cylinderCmds.push_back(cmd); }
   void submit(const MeshCmd &cmd) { m_meshCmds.push_back(cmd); }
   void submit(const FogBatchCmd &cmd) { m_fogBatchCmds.push_back(cmd); }
@@ -129,25 +128,20 @@ public:
            m_terrainChunkCmds.empty();
   }
 
-  // Sort individual command arrays if needed
   void sortForBatching() {
-    // Sort mesh commands by texture to minimize state changes
+
     std::sort(m_meshCmds.begin(), m_meshCmds.end(),
               [](const MeshCmd &a, const MeshCmd &b) {
                 return reinterpret_cast<uintptr_t>(a.texture) <
                        reinterpret_cast<uintptr_t>(b.texture);
               });
 
-    // Sort terrain chunks by sort key
     std::sort(m_terrainChunkCmds.begin(), m_terrainChunkCmds.end(),
               [](const TerrainChunkCmd &a, const TerrainChunkCmd &b) {
                 return a.sortKey < b.sortKey;
               });
-
-    // Other command types don't need sorting (or are already batched)
   }
 
-  // Accessor methods for rendering
   const std::vector<GridCmd> &gridCmds() const { return m_gridCmds; }
   const std::vector<SelectionRingCmd> &selectionRingCmds() const {
     return m_selectionRingCmds;
@@ -155,9 +149,13 @@ public:
   const std::vector<SelectionSmokeCmd> &selectionSmokeCmds() const {
     return m_selectionSmokeCmds;
   }
-  const std::vector<CylinderCmd> &cylinderCmds() const { return m_cylinderCmds; }
+  const std::vector<CylinderCmd> &cylinderCmds() const {
+    return m_cylinderCmds;
+  }
   const std::vector<MeshCmd> &meshCmds() const { return m_meshCmds; }
-  const std::vector<FogBatchCmd> &fogBatchCmds() const { return m_fogBatchCmds; }
+  const std::vector<FogBatchCmd> &fogBatchCmds() const {
+    return m_fogBatchCmds;
+  }
   const std::vector<GrassBatchCmd> &grassBatchCmds() const {
     return m_grassBatchCmds;
   }
@@ -169,7 +167,6 @@ public:
   }
 
 private:
-  // Separate arrays for each command type (SoA pattern)
   std::vector<GridCmd> m_gridCmds;
   std::vector<SelectionRingCmd> m_selectionRingCmds;
   std::vector<SelectionSmokeCmd> m_selectionSmokeCmds;

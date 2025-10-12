@@ -30,9 +30,7 @@ public:
     return inst;
   }
 
-  [[nodiscard]] const CameraConfig &camera() const noexcept {
-    return m_camera;
-  }
+  [[nodiscard]] const CameraConfig &camera() const noexcept { return m_camera; }
   [[nodiscard]] const ArrowConfig &arrow() const noexcept { return m_arrow; }
   [[nodiscard]] const GameplayConfig &gameplay() const noexcept {
     return m_gameplay;
