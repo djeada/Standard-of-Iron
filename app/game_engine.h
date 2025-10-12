@@ -159,6 +159,17 @@ private:
     qreal lastCursorY = -1.0;
     int selectionRefreshCounter = 0;
   };
+  struct EntityCache {
+    int playerTroopCount = 0;
+    bool playerBarracksAlive = false;
+    bool enemyBarracksAlive = false;
+
+    void reset() {
+      playerTroopCount = 0;
+      playerBarracksAlive = false;
+      enemyBarracksAlive = false;
+    }
+  };
   struct ViewportState {
     int width = 0;
     int height = 0;
@@ -186,6 +197,9 @@ private:
   void syncSelectionFlags();
   void resetMovement(Engine::Core::Entity *entity);
   QObject *selectedUnitsModel();
+  void onUnitSpawned(const Engine::Core::UnitSpawnedEvent &event);
+  void onUnitDied(const Engine::Core::UnitDiedEvent &event);
+  void rebuildEntityCache();
 
   std::unique_ptr<Engine::Core::World> m_world;
   std::unique_ptr<Render::GL::Renderer> m_renderer;
@@ -209,6 +223,9 @@ private:
   int m_selectedPlayerId = 1;
   Engine::Core::ScopedEventSubscription<Engine::Core::UnitDiedEvent>
       m_unitDiedSubscription;
+  Engine::Core::ScopedEventSubscription<Engine::Core::UnitSpawnedEvent>
+      m_unitSpawnedSubscription;
+  EntityCache m_entityCache;
 signals:
   void selectedUnitsChanged();
   void enemyTroopsDefeatedChanged();
