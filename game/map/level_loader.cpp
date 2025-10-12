@@ -3,6 +3,7 @@
 #include "../../render/scene_renderer.h"
 #include "../core/component.h"
 #include "../core/world.h"
+#include "../systems/owner_registry.h"
 #include "../units/factory.h"
 #include "../visuals/visual_catalog.h"
 #include "environment.h"
@@ -59,7 +60,7 @@ LevelLoadResult LevelLoader::loadFromAssets(const QString &mapPath,
         sp.playerId = 0;
         sp.unitType = "archer";
         sp.aiControlled =
-            (sp.playerId != Game::Map::MapTransformer::localOwnerId());
+            !Game::Systems::OwnerRegistry::instance().isPlayer(sp.playerId);
         if (auto unit = reg->create("archer", world, sp)) {
           res.playerUnitId = unit->id();
         } else {
@@ -71,7 +72,8 @@ LevelLoadResult LevelLoader::loadFromAssets(const QString &mapPath,
     bool hasBarracks = false;
     for (auto *e : world.getEntitiesWith<Engine::Core::UnitComponent>()) {
       if (auto *u = e->getComponent<Engine::Core::UnitComponent>()) {
-        if (u->unitType == "barracks" && u->ownerId == 1) {
+        if (u->unitType == "barracks" &&
+            Game::Systems::OwnerRegistry::instance().isPlayer(u->ownerId)) {
           hasBarracks = true;
           break;
         }
@@ -82,10 +84,11 @@ LevelLoadResult LevelLoader::loadFromAssets(const QString &mapPath,
       if (reg2) {
         Game::Units::SpawnParams sp;
         sp.position = QVector3D(-4.0f, 0.0f, -3.0f);
-        sp.playerId = 1;
+        sp.playerId =
+            Game::Systems::OwnerRegistry::instance().getLocalPlayerId();
         sp.unitType = "barracks";
         sp.aiControlled =
-            (sp.playerId != Game::Map::MapTransformer::localOwnerId());
+            !Game::Systems::OwnerRegistry::instance().isPlayer(sp.playerId);
         reg2->create("barracks", world, sp);
       }
     }
@@ -108,7 +111,7 @@ LevelLoadResult LevelLoader::loadFromAssets(const QString &mapPath,
       sp.playerId = 0;
       sp.unitType = "archer";
       sp.aiControlled =
-          (sp.playerId != Game::Map::MapTransformer::localOwnerId());
+          !Game::Systems::OwnerRegistry::instance().isPlayer(sp.playerId);
       if (auto unit = reg->create("archer", world, sp)) {
         res.playerUnitId = unit->id();
       }
