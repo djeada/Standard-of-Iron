@@ -22,6 +22,9 @@ public:
 
   int registerOwner(OwnerType type, const std::string &name = "");
 
+  void registerOwnerWithId(int ownerId, OwnerType type,
+                           const std::string &name = "");
+
   void setLocalPlayerId(int playerId);
 
   int getLocalPlayerId() const;
