@@ -760,20 +760,21 @@ void GameEngine::cameraOrbitDirection(int direction, bool shift) {
 void GameEngine::cameraFollowSelection(bool enable) {
   ensureInitialized();
   m_followSelectionEnabled = enable;
-  if (m_camera) {
-    Game::Systems::CameraController ctrl;
-    ctrl.setFollowEnabled(*m_camera, enable);
-  }
-  if (enable && m_camera && m_world) {
+  if (!m_camera)
+    return;
+
+  Game::Systems::CameraController ctrl;
+  ctrl.setFollowEnabled(*m_camera, enable);
+
+  if (enable && m_world) {
     if (auto *selectionSystem =
             m_world->getSystem<Game::Systems::SelectionSystem>()) {
       Game::Systems::CameraFollowSystem cfs;
       cfs.snapToSelection(*m_world, *selectionSystem, *m_camera);
     }
-  } else if (m_camera) {
+  } else {
     auto pos = m_camera->getPosition();
     auto tgt = m_camera->getTarget();
-    QVector3D front = (tgt - pos).normalized();
     m_camera->lookAt(pos, tgt, QVector3D(0, 1, 0));
   }
 }
