@@ -51,7 +51,7 @@ Engine::Core::EntityID
 PickingService::updateHover(float sx, float sy, Engine::Core::World &world,
                             const Render::GL::Camera &camera, int viewW,
                             int viewH) {
-  if (sx < 0 || sy < 0) {
+  if (sx < 0 || sy < 0 || sx >= viewW || sy >= viewH) {
     m_prevHoverId = 0;
     return 0;
   }
