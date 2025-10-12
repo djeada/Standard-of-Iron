@@ -119,5 +119,10 @@
     { "type": "mountain", "x": 150, "z": 150, "radius": 12, "height": 10.0, "rotation": 0 },
     { "type": "mountain", "x": 145, "z": 155, "radius": 10, "height": 9.5, "rotation": 15 },
     { "type": "mountain", "x": 155, "z": 145, "radius": 10, "height": 9.5, "rotation": -15 }
-  ]
+  ],
+  "victory": {
+    "type": "elimination",
+    "key_structures": ["barracks"],
+    "defeat_conditions": ["no_key_structures"]
+  }
 }
