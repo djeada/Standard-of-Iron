@@ -18,8 +18,8 @@ bool PickingService::screenToGround(const Render::GL::Camera &cam, int viewW,
                                     QVector3D &outWorld) const {
   if (viewW <= 0 || viewH <= 0)
     return false;
-  return cam.screenToGround(screenPt.x(), screenPt.y(),
-                            qreal(viewW), qreal(viewH), outWorld);
+  return cam.screenToGround(screenPt.x(), screenPt.y(), qreal(viewW),
+                            qreal(viewH), outWorld);
 }
 
 bool PickingService::projectBounds(const Render::GL::Camera &cam,

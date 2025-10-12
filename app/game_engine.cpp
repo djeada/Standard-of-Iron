@@ -10,6 +10,7 @@
 #include "game/core/component.h"
 #include "game/core/event_manager.h"
 #include "game/core/world.h"
+#include "game/game_config.h"
 #include "game/map/level_loader.h"
 #include "game/map/map_transformer.h"
 #include "game/map/terrain_service.h"
@@ -32,7 +33,6 @@
 #include "game/systems/terrain_alignment_system.h"
 #include "game/systems/victory_service.h"
 #include "game/units/troop_config.h"
-#include "game/game_config.h"
 #include "render/geom/arrow.h"
 #include "render/geom/patrol_flags.h"
 #include "render/gl/bootstrap.h"
@@ -125,7 +125,6 @@ void GameEngine::onRightClick(qreal sx, qreal sy) {
   if (!selectionSystem)
     return;
 
-  // Cancel patrol mode if active (right-click always cancels special modes)
   if (m_runtime.cursorMode == "patrol" || m_runtime.cursorMode == "attack") {
     setCursorMode("normal");
     return;
@@ -197,9 +196,9 @@ void GameEngine::onAttackClick(qreal sx, qreal sy) {
                           targetTrans->position.z);
       QVector3D aboveTarget = targetPos + QVector3D(0, 2.0f, 0);
 
-      arrowSystem->spawnArrow(
-          aboveTarget, targetPos, QVector3D(1.0f, 0.2f, 0.2f),
-          Game::GameConfig::instance().arrow().speedAttack);
+      arrowSystem->spawnArrow(aboveTarget, targetPos,
+                              QVector3D(1.0f, 0.2f, 0.2f),
+                              Game::GameConfig::instance().arrow().speedAttack);
     }
   }
 
@@ -269,7 +268,7 @@ void GameEngine::onPatrolClick(qreal sx, qreal sy) {
 
   const auto &selected = selectionSystem->getSelectedUnits();
   if (selected.empty()) {
-    // Reset patrol state if selection is lost during waypoint setting
+
     if (m_patrol.hasFirstWaypoint) {
       m_patrol.hasFirstWaypoint = false;
       setCursorMode("normal");
@@ -279,7 +278,7 @@ void GameEngine::onPatrolClick(qreal sx, qreal sy) {
 
   QVector3D hit;
   if (!screenToGround(QPointF(sx, sy), hit)) {
-    // Reset patrol state if second waypoint click fails
+
     if (m_patrol.hasFirstWaypoint) {
       m_patrol.hasFirstWaypoint = false;
       setCursorMode("normal");
@@ -518,8 +517,7 @@ void GameEngine::update(float dt) {
     }
   }
   syncSelectionFlags();
-  
-  // Update victory service instead of old checkVictoryCondition
+
   if (m_victoryService && m_world) {
     m_victoryService->update(*m_world, dt);
   }
@@ -993,8 +991,7 @@ QVariantList GameEngine::availableMaps() const {
 void GameEngine::startSkirmish(const QString &mapPath) {
 
   m_level.mapName = mapPath;
-  
-  // Reset victory state
+
   m_runtime.victoryState = "";
 
   if (!m_runtime.initialized) {
@@ -1151,7 +1148,6 @@ void GameEngine::startSkirmish(const QString &mapPath) {
     m_level.camFar = lr.camFar;
     m_level.maxTroopsPerPlayer = lr.maxTroopsPerPlayer;
 
-    // Configure victory service with map victory config
     if (m_victoryService) {
       m_victoryService->configure(lr.victoryConfig, m_runtime.localOwnerId);
       m_victoryService->setVictoryCallback([this](const QString &state) {
