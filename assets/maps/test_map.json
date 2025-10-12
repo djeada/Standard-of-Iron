@@ -48,17 +48,11 @@
     { "type": "archer", "x": 127, "z": 173, "playerId": 2 },
     { "type": "archer", "x": 127, "z": 177, "playerId": 2 },
     { "type": "archer", "x": 123, "z": 173, "playerId": 2 },
-    { "type": "archer", "x": 125, "z": 179, "playerId": 2 },
-    { "type": "archer", "x": 125, "z": 171, "playerId": 2 },
-    { "type": "archer", "x": 121, "z": 175, "playerId": 2 },
     { "type": "archer", "x": 129, "z": 175, "playerId": 2 },
 
     { "type": "barracks", "x": 175, "z": 175, "playerId": 3 },
     { "type": "archer", "x": 173, "z": 177, "playerId": 3 },
     { "type": "archer", "x": 177, "z": 173, "playerId": 3 },
-    { "type": "archer", "x": 177, "z": 177, "playerId": 3 },
-    { "type": "archer", "x": 173, "z": 173, "playerId": 3 },
-    { "type": "archer", "x": 175, "z": 179, "playerId": 3 },
     { "type": "archer", "x": 175, "z": 171, "playerId": 3 },
     { "type": "archer", "x": 171, "z": 175, "playerId": 3 },
     { "type": "archer", "x": 179, "z": 175, "playerId": 3 }
