@@ -1,5 +1,6 @@
 #pragma once
 
+#include "map_definition.h"
 #include <QString>
 #include <memory>
 
@@ -30,6 +31,7 @@ struct LevelLoadResult {
   int gridHeight = 50;
   float tileSize = 1.0f;
   int maxTroopsPerPlayer = 50;
+  VictoryConfig victoryConfig;
 };
 
 class LevelLoader {

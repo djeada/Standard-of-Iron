@@ -28,6 +28,7 @@ add_library(game_systems STATIC
     systems/production_system.cpp
     systems/terrain_alignment_system.cpp
     systems/owner_registry.cpp
+    systems/victory_service.cpp
     map/map_loader.cpp
     map/level_loader.cpp
     map/map_transformer.cpp
