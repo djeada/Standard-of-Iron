@@ -1,5 +1,6 @@
 #include "archer.h"
 #include "../core/component.h"
+#include "../core/event_manager.h"
 #include "../core/world.h"
 static inline QVector3D teamColor(int ownerId) {
   switch (ownerId) {
@@ -70,6 +71,9 @@ void Archer::init(const SpawnParams &params) {
   m_atk->range = 6.0f;
   m_atk->damage = 12;
   m_atk->cooldown = 1.2f;
+
+  Engine::Core::EventManager::instance().publish(
+      Engine::Core::UnitSpawnedEvent(m_id, m_u->ownerId, m_u->unitType));
 }
 
 } // namespace Units
