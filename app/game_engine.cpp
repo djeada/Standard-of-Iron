@@ -114,6 +114,12 @@ void GameEngine::onRightClick(qreal sx, qreal sy) {
   if (!selectionSystem)
     return;
 
+  // Cancel patrol mode if active (right-click always cancels special modes)
+  if (m_runtime.cursorMode == "patrol" || m_runtime.cursorMode == "attack") {
+    setCursorMode("normal");
+    return;
+  }
+
   const auto &sel = selectionSystem->getSelectedUnits();
   if (!sel.empty()) {
     selectionSystem->clearSelection();
@@ -246,12 +252,24 @@ void GameEngine::onPatrolClick(qreal sx, qreal sy) {
   ensureInitialized();
 
   const auto &selected = selectionSystem->getSelectedUnits();
-  if (selected.empty())
+  if (selected.empty()) {
+    // Reset patrol state if selection is lost during waypoint setting
+    if (m_patrol.hasFirstWaypoint) {
+      m_patrol.hasFirstWaypoint = false;
+      setCursorMode("normal");
+    }
     return;
+  }
 
   QVector3D hit;
-  if (!screenToGround(QPointF(sx, sy), hit))
+  if (!screenToGround(QPointF(sx, sy), hit)) {
+    // Reset patrol state if second waypoint click fails
+    if (m_patrol.hasFirstWaypoint) {
+      m_patrol.hasFirstWaypoint = false;
+      setCursorMode("normal");
+    }
     return;
+  }
 
   if (!m_patrol.hasFirstWaypoint) {
     m_patrol.firstWaypoint = hit;
