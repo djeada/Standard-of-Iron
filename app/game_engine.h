@@ -153,7 +153,7 @@ private:
     QString cursorMode = "normal";
     int lastTroopCount = 0;
     std::uint64_t visibilityVersion = 0;
-    int visibilityUpdateCounter = 0;
+    float visibilityUpdateAccumulator = 0.0f;
   };
   struct ViewportState {
     int width = 0;
