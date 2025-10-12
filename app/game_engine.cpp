@@ -31,6 +31,7 @@
 #include "game/systems/selection_system.h"
 #include "game/systems/terrain_alignment_system.h"
 #include "game/units/troop_config.h"
+#include "game/game_config.h"
 #include "render/geom/arrow.h"
 #include "render/geom/patrol_flags.h"
 #include "render/gl/bootstrap.h"
@@ -187,8 +188,9 @@ void GameEngine::onAttackClick(qreal sx, qreal sy) {
                           targetTrans->position.z);
       QVector3D aboveTarget = targetPos + QVector3D(0, 2.0f, 0);
 
-      arrowSystem->spawnArrow(aboveTarget, targetPos,
-                              QVector3D(1.0f, 0.2f, 0.2f), 6.0f);
+      arrowSystem->spawnArrow(
+          aboveTarget, targetPos, QVector3D(1.0f, 0.2f, 0.2f),
+          Game::GameConfig::instance().arrow().speedAttack);
     }
   }
 
@@ -419,7 +421,8 @@ void GameEngine::onClickSelect(qreal sx, qreal sy, bool additive) {
       return;
     }
     auto targets = Game::Systems::FormationPlanner::spreadFormation(
-        int(selected.size()), hit, 1.0f);
+        int(selected.size()), hit,
+        Game::GameConfig::instance().gameplay().formationSpacingDefault);
     Game::Systems::CommandService::MoveOptions opts;
     opts.groupMove = selected.size() > 1;
     Game::Systems::CommandService::moveUnits(*m_world, selected, targets, opts);
@@ -495,7 +498,8 @@ void GameEngine::update(float dt) {
     if (visibilityService.isInitialized()) {
 
       m_runtime.visibilityUpdateAccumulator += dt;
-      const float visibilityUpdateInterval = 0.075f;
+      const float visibilityUpdateInterval =
+          Game::GameConfig::instance().gameplay().visibilityUpdateInterval;
       if (m_runtime.visibilityUpdateAccumulator >= visibilityUpdateInterval) {
         m_runtime.visibilityUpdateAccumulator = 0.0f;
         visibilityService.update(*m_world, m_runtime.localOwnerId);
@@ -700,7 +704,9 @@ void GameEngine::resetCamera() {
             focusEntity->getComponent<Engine::Core::TransformComponent>()) {
       QVector3D center(t->position.x, t->position.y, t->position.z);
       if (m_camera) {
-        m_camera->setRTSView(center, 12.0f, 45.0f, 225.0f);
+        const auto &camConfig = Game::GameConfig::instance().camera();
+        m_camera->setRTSView(center, camConfig.defaultDistance,
+                             camConfig.defaultPitch, camConfig.defaultYaw);
       }
     }
   }
@@ -745,7 +751,8 @@ void GameEngine::cameraOrbit(float yawDeg, float pitchDeg) {
 
 void GameEngine::cameraOrbitDirection(int direction, bool shift) {
 
-  float step = shift ? 8.0f : 4.0f;
+  const auto &camConfig = Game::GameConfig::instance().camera();
+  float step = shift ? camConfig.orbitStepShift : camConfig.orbitStepNormal;
   float pitch = step * float(direction);
   cameraOrbit(0.0f, pitch);
 }
@@ -1189,7 +1196,9 @@ void GameEngine::startSkirmish(const QString &mapPath) {
                 focusEntity->getComponent<Engine::Core::TransformComponent>()) {
           QVector3D center(t->position.x, t->position.y, t->position.z);
 
-          m_camera->setRTSView(center, 12.0f, 45.0f, 225.0f);
+          const auto &camConfig = Game::GameConfig::instance().camera();
+          m_camera->setRTSView(center, camConfig.defaultDistance,
+                               camConfig.defaultPitch, camConfig.defaultYaw);
         }
       }
     }
