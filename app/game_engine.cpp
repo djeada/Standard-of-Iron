@@ -195,6 +195,33 @@ void GameEngine::onAttackClick(qreal sx, qreal sy) {
   setCursorMode("normal");
 }
 
+void GameEngine::resetMovement(Engine::Core::Entity *entity) {
+  if (!entity)
+    return;
+
+  auto *movement = entity->getComponent<Engine::Core::MovementComponent>();
+  if (!movement)
+    return;
+
+  auto *transform = entity->getComponent<Engine::Core::TransformComponent>();
+  movement->hasTarget = false;
+  movement->path.clear();
+  movement->pathPending = false;
+  movement->pendingRequestId = 0;
+  movement->repathCooldown = 0.0f;
+  if (transform) {
+    movement->targetX = transform->position.x;
+    movement->targetY = transform->position.z;
+    movement->goalX = transform->position.x;
+    movement->goalY = transform->position.z;
+  } else {
+    movement->targetX = 0.0f;
+    movement->targetY = 0.0f;
+    movement->goalX = 0.0f;
+    movement->goalY = 0.0f;
+  }
+}
+
 void GameEngine::onStopCommand() {
   auto *selectionSystem = m_world->getSystem<Game::Systems::SelectionSystem>();
   if (!selectionSystem || !m_world)
@@ -210,27 +237,7 @@ void GameEngine::onStopCommand() {
     if (!entity)
       continue;
 
-    if (auto *movement =
-            entity->getComponent<Engine::Core::MovementComponent>()) {
-      auto *transform =
-          entity->getComponent<Engine::Core::TransformComponent>();
-      movement->hasTarget = false;
-      movement->path.clear();
-      movement->pathPending = false;
-      movement->pendingRequestId = 0;
-      movement->repathCooldown = 0.0f;
-      if (transform) {
-        movement->targetX = transform->position.x;
-        movement->targetY = transform->position.z;
-        movement->goalX = transform->position.x;
-        movement->goalY = transform->position.z;
-      } else {
-        movement->targetX = 0.0f;
-        movement->targetY = 0.0f;
-        movement->goalX = 0.0f;
-        movement->goalY = 0.0f;
-      }
-    }
+    resetMovement(entity);
 
     entity->removeComponent<Engine::Core::AttackTargetComponent>();
 
@@ -301,21 +308,7 @@ void GameEngine::onPatrolClick(qreal sx, qreal sy) {
       patrol->patrolling = true;
     }
 
-    if (auto *movement =
-            entity->getComponent<Engine::Core::MovementComponent>()) {
-      movement->hasTarget = false;
-      movement->path.clear();
-      movement->pathPending = false;
-      movement->pendingRequestId = 0;
-      movement->repathCooldown = 0.0f;
-      if (auto *transform =
-              entity->getComponent<Engine::Core::TransformComponent>()) {
-        movement->targetX = transform->position.x;
-        movement->targetY = transform->position.z;
-        movement->goalX = transform->position.x;
-        movement->goalY = transform->position.z;
-      }
-    }
+    resetMovement(entity);
     entity->removeComponent<Engine::Core::AttackTargetComponent>();
   }
 
