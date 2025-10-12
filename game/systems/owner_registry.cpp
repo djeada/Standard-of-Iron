@@ -28,6 +28,26 @@ int OwnerRegistry::registerOwner(OwnerType type, const std::string &name) {
   return ownerId;
 }
 
+void OwnerRegistry::registerOwnerWithId(int ownerId, OwnerType type,
+                                        const std::string &name) {
+  if (m_ownerIdToIndex.find(ownerId) != m_ownerIdToIndex.end()) {
+    return;
+  }
+
+  OwnerInfo info;
+  info.ownerId = ownerId;
+  info.type = type;
+  info.name = name.empty() ? ("Owner" + std::to_string(ownerId)) : name;
+
+  size_t index = m_owners.size();
+  m_owners.push_back(info);
+  m_ownerIdToIndex[ownerId] = index;
+
+  if (ownerId >= m_nextOwnerId) {
+    m_nextOwnerId = ownerId + 1;
+  }
+}
+
 void OwnerRegistry::setLocalPlayerId(int playerId) {
   m_localPlayerId = playerId;
 }
