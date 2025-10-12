@@ -150,6 +150,36 @@ static void readBiome(const QJsonObject &obj, BiomeSettings &out) {
                   .toDouble(out.backgroundScatterRadius));
 }
 
+static void readVictoryConfig(const QJsonObject &obj, VictoryConfig &out) {
+  // Parse victory type
+  if (obj.contains("type")) {
+    out.victoryType = obj.value("type").toString("elimination");
+  }
+
+  // Parse key structures
+  if (obj.contains("key_structures") && obj.value("key_structures").isArray()) {
+    out.keyStructures.clear();
+    auto arr = obj.value("key_structures").toArray();
+    for (const auto &v : arr) {
+      out.keyStructures.push_back(v.toString());
+    }
+  }
+
+  // Parse survive time duration
+  if (obj.contains("duration")) {
+    out.surviveTimeDuration = float(obj.value("duration").toDouble(0.0));
+  }
+
+  // Parse defeat conditions
+  if (obj.contains("defeat_conditions") && obj.value("defeat_conditions").isArray()) {
+    out.defeatConditions.clear();
+    auto arr = obj.value("defeat_conditions").toArray();
+    for (const auto &v : arr) {
+      out.defeatConditions.push_back(v.toString());
+    }
+  }
+}
+
 static void readSpawns(const QJsonArray &arr, std::vector<UnitSpawn> &out) {
   out.clear();
   out.reserve(arr.size());
@@ -285,6 +315,10 @@ bool MapLoader::loadFromJsonFile(const QString &path, MapDefinition &outMap,
 
   if (root.contains("biome") && root.value("biome").isObject()) {
     readBiome(root.value("biome").toObject(), outMap.biome);
+  }
+
+  if (root.contains("victory") && root.value("victory").isObject()) {
+    readVictoryConfig(root.value("victory").toObject(), outMap.victory);
   }
 
   return true;

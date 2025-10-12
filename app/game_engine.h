@@ -40,6 +40,7 @@ namespace Systems {
 class SelectionSystem;
 class ArrowSystem;
 class PickingService;
+class VictoryService;
 } // namespace Systems
 } // namespace Game
 
@@ -197,6 +198,7 @@ private:
   std::unique_ptr<Render::GL::FogRenderer> m_fog;
   std::unique_ptr<Render::GL::StoneRenderer> m_stone;
   std::unique_ptr<Game::Systems::PickingService> m_pickingService;
+  std::unique_ptr<Game::Systems::VictoryService> m_victoryService;
   QQuickWindow *m_window = nullptr;
   RuntimeState m_runtime;
   ViewportState m_viewport;
