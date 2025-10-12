@@ -1303,6 +1303,7 @@ void GameEngine::onUnitSpawned(const Engine::Core::UnitSpawnedEvent &event) {
     }
   } else if (Game::Systems::OwnerRegistry::instance().isAI(event.ownerId)) {
     if (event.unitType == "barracks") {
+      m_entityCache.enemyBarracksCount++;
       m_entityCache.enemyBarracksAlive = true;
     }
   }
@@ -1322,22 +1323,10 @@ void GameEngine::onUnitDied(const Engine::Core::UnitDiedEvent &event) {
     }
   } else if (Game::Systems::OwnerRegistry::instance().isAI(event.ownerId)) {
     if (event.unitType == "barracks") {
-
-      bool foundAnotherBarracks = false;
-      auto entities = m_world->getEntitiesWith<Engine::Core::UnitComponent>();
-      for (auto *e : entities) {
-        if (e->getId() == event.unitId)
-          continue;
-        auto *unit = e->getComponent<Engine::Core::UnitComponent>();
-        if (!unit || unit->health <= 0)
-          continue;
-        if (unit->unitType == "barracks" &&
-            Game::Systems::OwnerRegistry::instance().isAI(unit->ownerId)) {
-          foundAnotherBarracks = true;
-          break;
-        }
-      }
-      m_entityCache.enemyBarracksAlive = foundAnotherBarracks;
+      m_entityCache.enemyBarracksCount--;
+      m_entityCache.enemyBarracksCount =
+          std::max(0, m_entityCache.enemyBarracksCount);
+      m_entityCache.enemyBarracksAlive = (m_entityCache.enemyBarracksCount > 0);
     }
   }
 }
@@ -1367,6 +1356,7 @@ void GameEngine::rebuildEntityCache() {
       }
     } else if (Game::Systems::OwnerRegistry::instance().isAI(unit->ownerId)) {
       if (unit->unitType == "barracks") {
+        m_entityCache.enemyBarracksCount++;
         m_entityCache.enemyBarracksAlive = true;
       }
     }
