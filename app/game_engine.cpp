@@ -30,6 +30,7 @@
 #include "game/systems/production_system.h"
 #include "game/systems/selection_system.h"
 #include "game/systems/terrain_alignment_system.h"
+#include "game/systems/victory_service.h"
 #include "game/units/troop_config.h"
 #include "game/game_config.h"
 #include "render/geom/arrow.h"
@@ -84,6 +85,7 @@ GameEngine::GameEngine() {
   m_selectedUnitsModel = new SelectedUnitsModel(this, this);
   QMetaObject::invokeMethod(m_selectedUnitsModel, "refresh");
   m_pickingService = std::make_unique<Game::Systems::PickingService>();
+  m_victoryService = std::make_unique<Game::Systems::VictoryService>();
 
   m_unitDiedSubscription =
       Engine::Core::ScopedEventSubscription<Engine::Core::UnitDiedEvent>(
@@ -516,7 +518,11 @@ void GameEngine::update(float dt) {
     }
   }
   syncSelectionFlags();
-  checkVictoryCondition();
+  
+  // Update victory service instead of old checkVictoryCondition
+  if (m_victoryService && m_world) {
+    m_victoryService->update(*m_world, dt);
+  }
 
   int currentTroopCount = playerTroopCount();
   if (currentTroopCount != m_runtime.lastTroopCount) {
@@ -987,6 +993,9 @@ QVariantList GameEngine::availableMaps() const {
 void GameEngine::startSkirmish(const QString &mapPath) {
 
   m_level.mapName = mapPath;
+  
+  // Reset victory state
+  m_runtime.victoryState = "";
 
   if (!m_runtime.initialized) {
     initialize();
@@ -1142,6 +1151,17 @@ void GameEngine::startSkirmish(const QString &mapPath) {
     m_level.camFar = lr.camFar;
     m_level.maxTroopsPerPlayer = lr.maxTroopsPerPlayer;
 
+    // Configure victory service with map victory config
+    if (m_victoryService) {
+      m_victoryService->configure(lr.victoryConfig, m_runtime.localOwnerId);
+      m_victoryService->setVictoryCallback([this](const QString &state) {
+        if (m_runtime.victoryState != state) {
+          m_runtime.victoryState = state;
+          emit victoryStateChanged();
+        }
+      });
+    }
+
     if (m_biome) {
       m_biome->refreshGrass();
     }
@@ -1267,26 +1287,6 @@ bool GameEngine::getUnitInfo(Engine::Core::EntityID id, QString &name,
   health = maxHealth = 0;
   alive = true;
   return true;
-}
-
-void GameEngine::checkVictoryCondition() {
-  if (!m_world || m_runtime.victoryState != "")
-    return;
-
-  if (m_level.mapName.isEmpty())
-    return;
-
-  if (!m_entityCache.enemyBarracksAlive) {
-    m_runtime.victoryState = "victory";
-    emit victoryStateChanged();
-    qInfo() << "VICTORY! Enemy barracks destroyed!";
-  }
-
-  else if (!m_entityCache.playerBarracksAlive) {
-    m_runtime.victoryState = "defeat";
-    emit victoryStateChanged();
-    qInfo() << "DEFEAT! Your barracks was destroyed!";
-  }
 }
 
 void GameEngine::onUnitSpawned(const Engine::Core::UnitSpawnedEvent &event) {

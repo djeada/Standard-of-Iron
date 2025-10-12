@@ -7,6 +7,7 @@
 #include "../units/factory.h"
 #include "../visuals/visual_catalog.h"
 #include "environment.h"
+#include "map_definition.h"
 #include "map_loader.h"
 #include "map_transformer.h"
 #include "terrain_service.h"
@@ -46,6 +47,7 @@ LevelLoadResult LevelLoader::loadFromAssets(const QString &mapPath,
     res.gridHeight = def.grid.height;
     res.tileSize = def.grid.tileSize;
     res.maxTroopsPerPlayer = def.maxTroopsPerPlayer;
+    res.victoryConfig = def.victory;
 
     auto rt =
         Game::Map::MapTransformer::applyToWorld(def, world, &visualCatalog);
