@@ -86,17 +86,18 @@ GameEngine::GameEngine() {
   QMetaObject::invokeMethod(m_selectedUnitsModel, "refresh");
   m_pickingService = std::make_unique<Game::Systems::PickingService>();
 
-  Engine::Core::EventManager::instance().subscribe<Engine::Core::UnitDiedEvent>(
-      [this](const Engine::Core::UnitDiedEvent &e) {
-        if (e.ownerId != m_runtime.localOwnerId) {
+  m_unitDiedSubscription =
+      Engine::Core::ScopedEventSubscription<Engine::Core::UnitDiedEvent>(
+          [this](const Engine::Core::UnitDiedEvent &e) {
+            if (e.ownerId != m_runtime.localOwnerId) {
 
-          int individualsPerUnit =
-              Game::Units::TroopConfig::instance().getIndividualsPerUnit(
-                  e.unitType);
-          m_enemyTroopsDefeated += individualsPerUnit;
-          emit enemyTroopsDefeatedChanged();
-        }
-      });
+              int individualsPerUnit =
+                  Game::Units::TroopConfig::instance().getIndividualsPerUnit(
+                      e.unitType);
+              m_enemyTroopsDefeated += individualsPerUnit;
+              emit enemyTroopsDefeatedChanged();
+            }
+          });
 }
 
 GameEngine::~GameEngine() = default;
