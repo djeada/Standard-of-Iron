@@ -126,7 +126,7 @@ void GameEngine::onRightClick(qreal sx, qreal sy) {
     emit selectedUnitsChanged();
     if (m_selectedUnitsModel)
       QMetaObject::invokeMethod(m_selectedUnitsModel, "refresh");
-
+    m_runtime.selectionRefreshCounter = 0;
     setCursorMode("normal");
     return;
   }
@@ -396,6 +396,7 @@ void GameEngine::onClickSelect(qreal sx, qreal sy, bool additive) {
     emit selectedUnitsChanged();
     if (m_selectedUnitsModel)
       QMetaObject::invokeMethod(m_selectedUnitsModel, "refresh");
+    m_runtime.selectionRefreshCounter = 0;
     return;
   }
 
@@ -433,6 +434,7 @@ void GameEngine::onAreaSelected(qreal x1, qreal y1, qreal x2, qreal y2,
   emit selectedUnitsChanged();
   if (m_selectedUnitsModel)
     QMetaObject::invokeMethod(m_selectedUnitsModel, "refresh");
+  m_runtime.selectionRefreshCounter = 0;
 }
 
 void GameEngine::initialize() {
@@ -510,9 +512,16 @@ void GameEngine::update(float dt) {
     Game::Systems::CameraFollowSystem cfs;
     cfs.update(*m_world, *m_selectionSystem, *m_camera);
   }
-  if (m_selectedUnitsModel)
-    QMetaObject::invokeMethod(m_selectedUnitsModel, "refresh",
-                              Qt::QueuedConnection);
+
+  if (m_selectedUnitsModel && m_selectionSystem &&
+      !m_selectionSystem->getSelectedUnits().empty()) {
+    m_runtime.selectionRefreshCounter++;
+    if (m_runtime.selectionRefreshCounter >= 15) {
+      m_runtime.selectionRefreshCounter = 0;
+      QMetaObject::invokeMethod(m_selectedUnitsModel, "refresh",
+                                Qt::QueuedConnection);
+    }
+  }
 }
 
 void GameEngine::render(int pixelWidth, int pixelHeight) {
@@ -568,7 +577,13 @@ void GameEngine::render(int pixelWidth, int pixelHeight) {
   }
   m_renderer->endFrame();
 
-  emit globalCursorChanged();
+  qreal currentX = globalCursorX();
+  qreal currentY = globalCursorY();
+  if (currentX != m_runtime.lastCursorX || currentY != m_runtime.lastCursorY) {
+    m_runtime.lastCursorX = currentX;
+    m_runtime.lastCursorY = currentY;
+    emit globalCursorChanged();
+  }
 }
 
 bool GameEngine::screenToGround(const QPointF &screenPt, QVector3D &outWorld) {
