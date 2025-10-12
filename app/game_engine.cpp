@@ -517,13 +517,15 @@ void GameEngine::update(float dt) {
     }
   }
 
-  if (m_selectedUnitsModel && m_selectionSystem &&
-      !m_selectionSystem->getSelectedUnits().empty()) {
-    m_runtime.selectionRefreshCounter++;
-    if (m_runtime.selectionRefreshCounter >= 15) {
-      m_runtime.selectionRefreshCounter = 0;
-      QMetaObject::invokeMethod(m_selectedUnitsModel, "refresh",
-                                Qt::QueuedConnection);
+  if (m_selectedUnitsModel) {
+    auto* selectionSystem = m_world->getSystem<Game::Systems::SelectionSystem>();
+    if (selectionSystem && !selectionSystem->getSelectedUnits().empty()) {
+      m_runtime.selectionRefreshCounter++;
+      if (m_runtime.selectionRefreshCounter >= 15) {
+        m_runtime.selectionRefreshCounter = 0;
+        QMetaObject::invokeMethod(m_selectedUnitsModel, "refresh",
+                                  Qt::QueuedConnection);
+      }
     }
   }
 }
