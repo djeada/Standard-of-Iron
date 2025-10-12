@@ -484,9 +484,10 @@ void GameEngine::update(float dt) {
     auto &visibilityService = Game::Map::VisibilityService::instance();
     if (visibilityService.isInitialized()) {
 
-      m_runtime.visibilityUpdateCounter++;
-      if (m_runtime.visibilityUpdateCounter >= 3) {
-        m_runtime.visibilityUpdateCounter = 0;
+      m_runtime.visibilityUpdateAccumulator += dt;
+      const float visibilityUpdateInterval = 0.075f;
+      if (m_runtime.visibilityUpdateAccumulator >= visibilityUpdateInterval) {
+        m_runtime.visibilityUpdateAccumulator = 0.0f;
         visibilityService.update(*m_world, m_runtime.localOwnerId);
       }
 
@@ -1111,8 +1112,10 @@ void GameEngine::startSkirmish(const QString &mapPath) {
           visibilityService.getWidth(), visibilityService.getHeight(),
           visibilityService.getTileSize(), visibilityService.snapshotCells());
       m_runtime.visibilityVersion = visibilityService.version();
+      m_runtime.visibilityUpdateAccumulator = 0.0f;
     } else {
       m_runtime.visibilityVersion = 0;
+      m_runtime.visibilityUpdateAccumulator = 0.0f;
     }
 
     m_level.mapName = lr.mapName;
