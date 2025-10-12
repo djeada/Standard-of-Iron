@@ -69,6 +69,7 @@ public:
       QVariantList availableMaps READ availableMaps NOTIFY availableMapsChanged)
   Q_PROPERTY(int enemyTroopsDefeated READ enemyTroopsDefeated NOTIFY
                  enemyTroopsDefeatedChanged)
+  Q_PROPERTY(QVariantList ownerInfo READ getOwnerInfo NOTIFY ownerInfoChanged)
 
   Q_INVOKABLE void onMapClicked(qreal sx, qreal sy);
   Q_INVOKABLE void onRightClick(qreal sx, qreal sy);
@@ -117,6 +118,7 @@ public:
   Q_INVOKABLE void openSettings();
   Q_INVOKABLE void loadSave();
   Q_INVOKABLE void exitGame();
+  Q_INVOKABLE QVariantList getOwnerInfo() const;
 
   void setWindow(QQuickWindow *w) { m_window = w; }
 
@@ -200,4 +202,5 @@ signals:
   void globalCursorChanged();
   void troopCountChanged();
   void availableMapsChanged();
+  void ownerInfoChanged();
 };
