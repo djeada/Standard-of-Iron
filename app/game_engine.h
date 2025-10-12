@@ -1,5 +1,6 @@
 #pragma once
 
+#include "game/core/event_manager.h"
 #include <QMatrix4x4>
 #include <QObject>
 #include <QPointF>
@@ -154,6 +155,9 @@ private:
     int lastTroopCount = 0;
     std::uint64_t visibilityVersion = 0;
     float visibilityUpdateAccumulator = 0.0f;
+    qreal lastCursorX = -1.0;
+    qreal lastCursorY = -1.0;
+    int selectionRefreshCounter = 0;
   };
   struct ViewportState {
     int width = 0;
@@ -175,7 +179,6 @@ private:
     bool hasFirstWaypoint = false;
   };
 
-  Game::Systems::ArrowSystem *m_arrowSystem = nullptr;
   void initialize();
   void checkVictoryCondition();
   bool screenToGround(const QPointF &screenPt, QVector3D &outWorld);
@@ -192,7 +195,6 @@ private:
   std::unique_ptr<Render::GL::BiomeRenderer> m_biome;
   std::unique_ptr<Render::GL::FogRenderer> m_fog;
   std::unique_ptr<Render::GL::StoneRenderer> m_stone;
-  Game::Systems::SelectionSystem *m_selectionSystem = nullptr;
   std::unique_ptr<Game::Systems::PickingService> m_pickingService;
   QQuickWindow *m_window = nullptr;
   RuntimeState m_runtime;
@@ -204,6 +206,8 @@ private:
   PatrolState m_patrol;
   int m_enemyTroopsDefeated = 0;
   int m_selectedPlayerId = 1;
+  Engine::Core::ScopedEventSubscription<Engine::Core::UnitDiedEvent>
+      m_unitDiedSubscription;
 signals:
   void selectedUnitsChanged();
   void enemyTroopsDefeatedChanged();
