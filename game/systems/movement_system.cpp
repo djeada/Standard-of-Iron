@@ -46,15 +46,16 @@ bool isPointAllowed(const QVector3D &pos, Engine::Core::EntityID ignoreEntity) {
 bool isSegmentWalkable(const QVector3D &from, const QVector3D &to,
                        Engine::Core::EntityID ignoreEntity) {
   QVector3D delta = to - from;
-  float distance = delta.length();
+  float distanceSquared = delta.lengthSquared();
 
   bool startAllowed = isPointAllowed(from, ignoreEntity);
   bool endAllowed = isPointAllowed(to, ignoreEntity);
 
-  if (distance < 0.001f) {
+  if (distanceSquared < 0.000001f) { // 0.001^2
     return endAllowed;
   }
 
+  float distance = std::sqrt(distanceSquared);
   int steps = std::max(1, static_cast<int>(std::ceil(distance)) * 2);
   QVector3D step = delta / static_cast<float>(steps);
   bool exitedBlockedZone = startAllowed;
