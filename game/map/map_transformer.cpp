@@ -2,7 +2,9 @@
 
 #include "../core/component.h"
 #include "../core/world.h"
+#include "../systems/owner_registry.h"
 #include "../units/factory.h"
+#include "../visuals/team_colors.h"
 #include "terrain_service.h"
 #include <QDebug>
 #include <QVector3D>
@@ -11,7 +13,6 @@ namespace Game::Map {
 
 namespace {
 std::shared_ptr<Game::Units::UnitFactoryRegistry> s_registry;
-int s_localOwnerId = 1;
 } // namespace
 
 void MapTransformer::setFactoryRegistry(
@@ -23,9 +24,13 @@ MapTransformer::getFactoryRegistry() {
   return s_registry;
 }
 
-void MapTransformer::setLocalOwnerId(int ownerId) { s_localOwnerId = ownerId; }
+void MapTransformer::setLocalOwnerId(int ownerId) {
+  Game::Systems::OwnerRegistry::instance().setLocalPlayerId(ownerId);
+}
 
-int MapTransformer::localOwnerId() { return s_localOwnerId; }
+int MapTransformer::localOwnerId() {
+  return Game::Systems::OwnerRegistry::instance().getLocalPlayerId();
+}
 
 MapRuntime
 MapTransformer::applyToWorld(const MapDefinition &def,
@@ -78,7 +83,8 @@ MapTransformer::applyToWorld(const MapDefinition &def,
       sp.position = QVector3D(worldX, 0.0f, worldZ);
       sp.playerId = s.playerId;
       sp.unitType = s.type.toStdString();
-      sp.aiControlled = (s.playerId != s_localOwnerId);
+      sp.aiControlled =
+          !Game::Systems::OwnerRegistry::instance().isPlayer(s.playerId);
       auto obj = s_registry->create(s.type.toStdString(), world, sp);
       if (obj) {
         e = world.getEntity(obj->id());
@@ -100,7 +106,7 @@ MapTransformer::applyToWorld(const MapDefinition &def,
       u->ownerId = s.playerId;
       u->visionRange = 14.0f;
 
-      if (s.playerId != s_localOwnerId) {
+      if (!Game::Systems::OwnerRegistry::instance().isPlayer(s.playerId)) {
         e->addComponent<Engine::Core::AIControlledComponent>();
       }
 
@@ -118,24 +124,7 @@ MapTransformer::applyToWorld(const MapDefinition &def,
         mv->targetY = worldZ;
       }
 
-      QVector3D tc;
-      switch (u->ownerId) {
-      case 1:
-        tc = QVector3D(0.20f, 0.55f, 1.00f);
-        break;
-      case 2:
-        tc = QVector3D(1.00f, 0.30f, 0.30f);
-        break;
-      case 3:
-        tc = QVector3D(0.20f, 0.80f, 0.40f);
-        break;
-      case 4:
-        tc = QVector3D(1.00f, 0.80f, 0.20f);
-        break;
-      default:
-        tc = QVector3D(0.8f, 0.9f, 1.0f);
-        break;
-      }
+      QVector3D tc = Game::Visuals::teamColorForOwner(u->ownerId);
       r->color[0] = tc.x();
       r->color[1] = tc.y();
       r->color[2] = tc.z();

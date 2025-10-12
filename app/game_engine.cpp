@@ -23,6 +23,7 @@
 #include "game/systems/command_service.h"
 #include "game/systems/formation_planner.h"
 #include "game/systems/movement_system.h"
+#include "game/systems/owner_registry.h"
 #include "game/systems/patrol_system.h"
 #include "game/systems/picking_service.h"
 #include "game/systems/production_service.h"
@@ -947,6 +948,17 @@ void GameEngine::startSkirmish(const QString &mapPath) {
 
     Game::Systems::BuildingCollisionRegistry::instance().clear();
 
+    auto &ownerRegistry = Game::Systems::OwnerRegistry::instance();
+    ownerRegistry.clear();
+
+    int playerOwnerId =
+        ownerRegistry.registerOwner(Game::Systems::OwnerType::Player, "Player");
+    int aiOwnerId =
+        ownerRegistry.registerOwner(Game::Systems::OwnerType::AI, "AI");
+
+    ownerRegistry.setLocalPlayerId(playerOwnerId);
+    m_runtime.localOwnerId = playerOwnerId;
+
     Game::Map::MapTransformer::setLocalOwnerId(m_runtime.localOwnerId);
 
     auto lr = Game::Map::LevelLoader::loadFromAssets(m_level.mapName, *m_world,
@@ -1111,7 +1123,7 @@ void GameEngine::checkVictoryCondition() {
       continue;
 
     if (unit->unitType == "barracks") {
-      if (unit->ownerId == 2) {
+      if (Game::Systems::OwnerRegistry::instance().isAI(unit->ownerId)) {
         enemyBarracksAlive = true;
       } else if (unit->ownerId == m_runtime.localOwnerId) {
         playerBarracksAlive = true;
