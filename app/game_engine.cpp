@@ -369,7 +369,7 @@ void GameEngine::setHoverAtScreen(qreal sx, qreal sy) {
   if (!m_pickingService || !m_camera || !m_world)
     return;
 
-  if (sx < 0 || sy < 0) {
+  if (sx < 0 || sy < 0 || sx >= m_viewport.width || sy >= m_viewport.height) {
     m_hover.entityId = 0;
     return;
   }
@@ -612,11 +612,11 @@ bool GameEngine::screenToGround(const QPointF &screenPt, QVector3D &outWorld) {
 
 bool GameEngine::worldToScreen(const QVector3D &world,
                                QPointF &outScreen) const {
-  if (!m_camera || m_viewport.width <= 0 || m_viewport.height <= 0 ||
-      !m_pickingService)
+  if (!m_window || !m_camera || !m_pickingService)
     return false;
-  return m_pickingService->worldToScreen(*m_camera, m_viewport.width,
-                                         m_viewport.height, world, outScreen);
+  int w = (m_viewport.width > 0 ? m_viewport.width : m_window->width());
+  int h = (m_viewport.height > 0 ? m_viewport.height : m_window->height());
+  return m_pickingService->worldToScreen(*m_camera, w, h, world, outScreen);
 }
 
 void GameEngine::syncSelectionFlags() {
