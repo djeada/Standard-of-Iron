@@ -41,7 +41,7 @@ private:
   TroopConfig() {
 
     m_individualsPerUnit["archer"] = 30;
-    m_maxUnitsPerRow["archer"] = 8;
+    m_maxUnitsPerRow["archer"] = 6;
   }
 
   std::unordered_map<std::string, int> m_individualsPerUnit;
