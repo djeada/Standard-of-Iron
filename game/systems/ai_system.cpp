@@ -638,14 +638,16 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
 
   auto considerTarget = [&](const ContactSnapshot &enemy) {
     float score = 0.0f;
-    float distanceToGroup = (enemy.position - groupCenter).length();
-    score -= distanceToGroup;
+    // Use squared distance to avoid sqrt
+    float distanceToGroupSq = (enemy.position - groupCenter).lengthSquared();
+    score -= std::sqrt(distanceToGroupSq); // Only sqrt once if needed for score
 
     if (!enemy.isBuilding)
       score += 4.0f;
 
     if (context.primaryBarracks != 0) {
-      float distanceToBase = (enemy.position - context.basePosition).length();
+      float distanceToBaseSq = (enemy.position - context.basePosition).lengthSquared();
+      float distanceToBase = std::sqrt(distanceToBaseSq);
       score += std::max(0.0f, 12.0f - distanceToBase);
     }
 

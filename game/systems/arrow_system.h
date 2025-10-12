@@ -15,6 +15,7 @@ struct ArrowInstance {
   float speed;
   bool active;
   float arcHeight;
+  float invDist; // Precomputed 1/distance to avoid sqrt in update loop
 };
 
 class ArrowSystem : public Engine::Core::System {
