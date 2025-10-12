@@ -1,10 +1,10 @@
 
-
 #include "ai_system.h"
 #include "../core/component.h"
 #include "../core/world.h"
 #include "command_service.h"
 #include "formation_planner.h"
+#include "owner_registry.h"
 
 #include <algorithm>
 #include <cmath>
@@ -14,7 +14,10 @@
 namespace Game::Systems {
 
 AISystem::AISystem() {
-  m_enemyAI.playerId = 2;
+  auto &registry = OwnerRegistry::instance();
+  m_enemyAI.playerId = registry.getAIOwnerIds().empty()
+                           ? registry.registerOwner(OwnerType::AI, "AI Player")
+                           : registry.getAIOwnerIds()[0];
   m_enemyAI.state = AIState::Idle;
 
   registerBehavior(std::make_unique<DefendBehavior>());
