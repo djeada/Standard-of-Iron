@@ -1,5 +1,6 @@
 #pragma once
 
+#include "game/core/event_manager.h"
 #include <QMatrix4x4>
 #include <QObject>
 #include <QPointF>
@@ -204,6 +205,8 @@ private:
   PatrolState m_patrol;
   int m_enemyTroopsDefeated = 0;
   int m_selectedPlayerId = 1;
+  Engine::Core::ScopedEventSubscription<Engine::Core::UnitDiedEvent>
+      m_unitDiedSubscription;
 signals:
   void selectedUnitsChanged();
   void enemyTroopsDefeatedChanged();
