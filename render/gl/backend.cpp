@@ -96,6 +96,16 @@ void Backend::beginFrame() {
   glEnable(GL_DEPTH_TEST);
   glDepthFunc(GL_LESS);
   glDepthMask(GL_TRUE);
+
+  // Advance persistent ring buffers for new frame
+  if (m_usePersistentBuffers) {
+    if (m_cylinderPersistentBuffer.isValid()) {
+      m_cylinderPersistentBuffer.beginFrame();
+    }
+    if (m_fogPersistentBuffer.isValid()) {
+      m_fogPersistentBuffer.beginFrame();
+    }
+  }
 }
 
 void Backend::setViewport(int w, int h) {
@@ -652,13 +662,29 @@ void Backend::initializeCylinderPipeline() {
   glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex),
                         reinterpret_cast<void *>(offsetof(Vertex, texCoord)));
 
-  glGenBuffers(1, &m_cylinderInstanceBuffer);
-  glBindBuffer(GL_ARRAY_BUFFER, m_cylinderInstanceBuffer);
-  m_cylinderInstanceCapacity = 256;
-  glBufferData(GL_ARRAY_BUFFER,
-               m_cylinderInstanceCapacity * sizeof(CylinderInstanceGpu),
-               nullptr, GL_DYNAMIC_DRAW);
+  // Try to initialize persistent mapped buffer first (OpenGL 4.4+)
+  const std::size_t persistentCapacity = 10000; // 10k cylinders
+  if (m_cylinderPersistentBuffer.initialize(persistentCapacity, 3)) {
+    m_usePersistentBuffers = true;
+    qDebug() << "Backend: Persistent cylinder buffer initialized (" 
+             << persistentCapacity << "instances, triple buffered)";
+    
+    // Setup VAO to use persistent buffer
+    glBindBuffer(GL_ARRAY_BUFFER, m_cylinderPersistentBuffer.buffer());
+  } else {
+    m_usePersistentBuffers = false;
+    qDebug() << "Backend: Persistent buffers not available, using fallback";
+    
+    // Fallback: create traditional instance buffer
+    glGenBuffers(1, &m_cylinderInstanceBuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, m_cylinderInstanceBuffer);
+    m_cylinderInstanceCapacity = 256;
+    glBufferData(GL_ARRAY_BUFFER,
+                 m_cylinderInstanceCapacity * sizeof(CylinderInstanceGpu),
+                 nullptr, GL_DYNAMIC_DRAW);
+  }
 
+  // Setup instance attributes (works for both buffer types)
   const GLsizei stride = static_cast<GLsizei>(sizeof(CylinderInstanceGpu));
   glEnableVertexAttribArray(3);
   glVertexAttribPointer(
@@ -694,11 +720,15 @@ void Backend::initializeCylinderPipeline() {
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
-  m_cylinderScratch.reserve(m_cylinderInstanceCapacity);
+  m_cylinderScratch.reserve(m_usePersistentBuffers ? persistentCapacity : m_cylinderInstanceCapacity);
 }
 
 void Backend::shutdownCylinderPipeline() {
   initializeOpenGLFunctions();
+  
+  // Destroy persistent buffer
+  m_cylinderPersistentBuffer.destroy();
+  
   if (m_cylinderInstanceBuffer) {
     glDeleteBuffers(1, &m_cylinderInstanceBuffer);
     m_cylinderInstanceBuffer = 0;
@@ -721,10 +751,35 @@ void Backend::shutdownCylinderPipeline() {
 }
 
 void Backend::uploadCylinderInstances(std::size_t count) {
-  if (!m_cylinderInstanceBuffer || count == 0)
+  if (count == 0)
     return;
 
   initializeOpenGLFunctions();
+
+  // NEW PATH: Use persistent mapped buffer
+  if (m_usePersistentBuffers && m_cylinderPersistentBuffer.isValid()) {
+    if (count > m_cylinderPersistentBuffer.capacity()) {
+      qWarning() << "Backend: Too many cylinders:" << count 
+                 << "max:" << m_cylinderPersistentBuffer.capacity();
+      count = m_cylinderPersistentBuffer.capacity();
+    }
+    
+    // Zero-copy write directly to GPU memory!
+    m_cylinderPersistentBuffer.write(m_cylinderScratch.data(), count);
+    
+    // The buffer is already bound to the VAO, but we need to ensure
+    // the instance buffer is bound for the vertex attribute pointers
+    // This is a no-op if already bound, but ensures correctness
+    glBindBuffer(GL_ARRAY_BUFFER, m_cylinderPersistentBuffer.buffer());
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    
+    return;
+  }
+
+  // OLD PATH: Fallback for systems without ARB_buffer_storage
+  if (!m_cylinderInstanceBuffer)
+    return;
+
   glBindBuffer(GL_ARRAY_BUFFER, m_cylinderInstanceBuffer);
   if (count > m_cylinderInstanceCapacity) {
     m_cylinderInstanceCapacity = std::max<std::size_t>(
