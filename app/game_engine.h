@@ -163,11 +163,13 @@ private:
     int playerTroopCount = 0;
     bool playerBarracksAlive = false;
     bool enemyBarracksAlive = false;
+    int enemyBarracksCount = 0;
 
     void reset() {
       playerTroopCount = 0;
       playerBarracksAlive = false;
       enemyBarracksAlive = false;
+      enemyBarracksCount = 0;
     }
   };
   struct ViewportState {
