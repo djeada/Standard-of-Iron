@@ -1299,40 +1299,4 @@ bool GameEngine::getUnitInfo(Engine::Core::EntityID id, QString &name,
   return true;
 }
 
-void GameEngine::checkVictoryCondition() {
-  if (!m_world || m_runtime.victoryState != "")
-    return;
 
-  if (m_level.mapName.isEmpty())
-    return;
-
-  bool enemyBarracksAlive = false;
-  bool playerBarracksAlive = false;
-
-  auto entities = m_world->getEntitiesWith<Engine::Core::UnitComponent>();
-  for (auto *e : entities) {
-    auto *unit = e->getComponent<Engine::Core::UnitComponent>();
-    if (!unit || unit->health <= 0)
-      continue;
-
-    if (unit->unitType == "barracks") {
-      if (Game::Systems::OwnerRegistry::instance().isAI(unit->ownerId)) {
-        enemyBarracksAlive = true;
-      } else if (unit->ownerId == m_runtime.localOwnerId) {
-        playerBarracksAlive = true;
-      }
-    }
-  }
-
-  if (!enemyBarracksAlive) {
-    m_runtime.victoryState = "victory";
-    emit victoryStateChanged();
-    qInfo() << "VICTORY! Enemy barracks destroyed!";
-  }
-
-  else if (!playerBarracksAlive) {
-    m_runtime.victoryState = "defeat";
-    emit victoryStateChanged();
-    qInfo() << "DEFEAT! Your barracks was destroyed!";
-  }
-}

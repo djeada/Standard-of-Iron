@@ -35,6 +35,11 @@
   "spawns": [
     { "type": "barracks", "x": 100, "z": 80, "playerId": 1 }
   ],
+  "victory": {
+    "type": "elimination",
+    "key_structures": ["barracks"],
+    "defeat_conditions": ["no_key_structures"]
+  },
   "terrain": [
     {
       "type": "hill",
