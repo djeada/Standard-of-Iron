@@ -1067,6 +1067,23 @@ void GameEngine::startSkirmish(const QString &mapPath) {
 
     int playerOwnerId = m_selectedPlayerId;
 
+    if (!mapPlayerIds.contains(playerOwnerId)) {
+      if (!mapPlayerIds.isEmpty()) {
+        QList<int> sortedIds = mapPlayerIds.values();
+        std::sort(sortedIds.begin(), sortedIds.end());
+        playerOwnerId = sortedIds.first();
+        qWarning() << "Selected player ID" << m_selectedPlayerId
+                   << "not found in map spawns. Using" << playerOwnerId
+                   << "instead.";
+        m_selectedPlayerId = playerOwnerId;
+        emit selectedPlayerIdChanged();
+      } else {
+        qWarning() << "No valid player spawns found in map. Using default "
+                      "player ID"
+                   << playerOwnerId;
+      }
+    }
+
     ownerRegistry.registerOwnerWithId(
         playerOwnerId, Game::Systems::OwnerType::Player, "Player");
 
