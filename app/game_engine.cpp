@@ -23,6 +23,7 @@
 #include "game/systems/command_service.h"
 #include "game/systems/formation_planner.h"
 #include "game/systems/movement_system.h"
+#include "game/systems/owner_registry.h"
 #include "game/systems/patrol_system.h"
 #include "game/systems/picking_service.h"
 #include "game/systems/production_service.h"
@@ -44,8 +45,10 @@
 #include "selected_units_model.h"
 #include <QDir>
 #include <QFile>
+#include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QSet>
 #include <cmath>
 #include <limits>
 
@@ -893,6 +896,7 @@ QVariantList GameEngine::availableMaps() const {
     QFile file(path);
     QString name = f;
     QString desc;
+    QSet<int> playerIds;
     if (file.open(QIODevice::ReadOnly)) {
       QByteArray data = file.readAll();
       file.close();
@@ -904,12 +908,35 @@ QVariantList GameEngine::availableMaps() const {
           name = obj["name"].toString();
         if (obj.contains("description") && obj["description"].isString())
           desc = obj["description"].toString();
+
+        if (obj.contains("spawns") && obj["spawns"].isArray()) {
+          QJsonArray spawns = obj["spawns"].toArray();
+          for (const QJsonValue &spawnVal : spawns) {
+            if (spawnVal.isObject()) {
+              QJsonObject spawn = spawnVal.toObject();
+              if (spawn.contains("playerId")) {
+                int playerId = spawn["playerId"].toInt();
+                if (playerId > 0) {
+                  playerIds.insert(playerId);
+                }
+              }
+            }
+          }
+        }
       }
     }
     QVariantMap entry;
     entry["name"] = name;
     entry["description"] = desc;
     entry["path"] = path;
+    entry["playerCount"] = playerIds.size();
+    QVariantList playerIdList;
+    QList<int> sortedIds = playerIds.values();
+    std::sort(sortedIds.begin(), sortedIds.end());
+    for (int id : sortedIds) {
+      playerIdList.append(id);
+    }
+    entry["playerIds"] = playerIdList;
     list.append(entry);
   }
   return list;
@@ -946,6 +973,51 @@ void GameEngine::startSkirmish(const QString &mapPath) {
     m_world->clear();
 
     Game::Systems::BuildingCollisionRegistry::instance().clear();
+
+    QSet<int> mapPlayerIds;
+    QFile mapFile(mapPath);
+    if (mapFile.open(QIODevice::ReadOnly)) {
+      QByteArray data = mapFile.readAll();
+      mapFile.close();
+      QJsonParseError err;
+      QJsonDocument doc = QJsonDocument::fromJson(data, &err);
+      if (err.error == QJsonParseError::NoError && doc.isObject()) {
+        QJsonObject obj = doc.object();
+        if (obj.contains("spawns") && obj["spawns"].isArray()) {
+          QJsonArray spawns = obj["spawns"].toArray();
+          for (const QJsonValue &spawnVal : spawns) {
+            if (spawnVal.isObject()) {
+              QJsonObject spawn = spawnVal.toObject();
+              if (spawn.contains("playerId")) {
+                int playerId = spawn["playerId"].toInt();
+                if (playerId > 0) {
+                  mapPlayerIds.insert(playerId);
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    auto &ownerRegistry = Game::Systems::OwnerRegistry::instance();
+    ownerRegistry.clear();
+
+    int playerOwnerId = m_selectedPlayerId;
+
+    ownerRegistry.registerOwnerWithId(playerOwnerId,
+                                      Game::Systems::OwnerType::Player,
+                                      "Player");
+
+    for (int id : mapPlayerIds) {
+      if (id != playerOwnerId) {
+        ownerRegistry.registerOwnerWithId(id, Game::Systems::OwnerType::AI,
+                                          "AI " + std::to_string(id));
+      }
+    }
+
+    ownerRegistry.setLocalPlayerId(playerOwnerId);
+    m_runtime.localOwnerId = playerOwnerId;
 
     Game::Map::MapTransformer::setLocalOwnerId(m_runtime.localOwnerId);
 
@@ -1048,6 +1120,8 @@ void GameEngine::startSkirmish(const QString &mapPath) {
       }
     }
     m_runtime.loading = false;
+
+    emit ownerInfoChanged();
   }
 }
 
@@ -1061,6 +1135,37 @@ void GameEngine::loadSave() {
 void GameEngine::exitGame() {
   qInfo() << "Exit requested";
   QCoreApplication::quit();
+}
+
+QVariantList GameEngine::getOwnerInfo() const {
+  QVariantList result;
+  const auto &ownerRegistry = Game::Systems::OwnerRegistry::instance();
+  const auto &owners = ownerRegistry.getAllOwners();
+
+  for (const auto &owner : owners) {
+    QVariantMap ownerMap;
+    ownerMap["id"] = owner.ownerId;
+    ownerMap["name"] = QString::fromStdString(owner.name);
+
+    QString typeStr;
+    switch (owner.type) {
+    case Game::Systems::OwnerType::Player:
+      typeStr = "Player";
+      break;
+    case Game::Systems::OwnerType::AI:
+      typeStr = "AI";
+      break;
+    case Game::Systems::OwnerType::Neutral:
+      typeStr = "Neutral";
+      break;
+    }
+    ownerMap["type"] = typeStr;
+    ownerMap["isLocal"] = (owner.ownerId == m_runtime.localOwnerId);
+
+    result.append(ownerMap);
+  }
+
+  return result;
 }
 
 void GameEngine::getSelectedUnitIds(
@@ -1111,7 +1216,7 @@ void GameEngine::checkVictoryCondition() {
       continue;
 
     if (unit->unitType == "barracks") {
-      if (unit->ownerId == 2) {
+      if (Game::Systems::OwnerRegistry::instance().isAI(unit->ownerId)) {
         enemyBarracksAlive = true;
       } else if (unit->ownerId == m_runtime.localOwnerId) {
         playerBarracksAlive = true;
