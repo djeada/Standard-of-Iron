@@ -365,7 +365,7 @@ void GameEngine::setHoverAtScreen(qreal sx, qreal sy) {
   if (!m_pickingService || !m_camera || !m_world)
     return;
 
-  if (sx < 0 || sy < 0) {
+  if (sx < 0 || sy < 0 || sx >= m_viewport.width || sy >= m_viewport.height) {
     if (m_runtime.cursorMode != "normal") {
 
       m_window->setCursor(Qt::ArrowCursor);
