@@ -1060,6 +1060,8 @@ void GameEngine::startSkirmish(const QString &mapPath) {
       }
     }
     m_runtime.loading = false;
+
+    emit ownerInfoChanged();
   }
 }
 
@@ -1073,6 +1075,37 @@ void GameEngine::loadSave() {
 void GameEngine::exitGame() {
   qInfo() << "Exit requested";
   QCoreApplication::quit();
+}
+
+QVariantList GameEngine::getOwnerInfo() const {
+  QVariantList result;
+  const auto &ownerRegistry = Game::Systems::OwnerRegistry::instance();
+  const auto &owners = ownerRegistry.getAllOwners();
+
+  for (const auto &owner : owners) {
+    QVariantMap ownerMap;
+    ownerMap["id"] = owner.ownerId;
+    ownerMap["name"] = QString::fromStdString(owner.name);
+
+    QString typeStr;
+    switch (owner.type) {
+    case Game::Systems::OwnerType::Player:
+      typeStr = "Player";
+      break;
+    case Game::Systems::OwnerType::AI:
+      typeStr = "AI";
+      break;
+    case Game::Systems::OwnerType::Neutral:
+      typeStr = "Neutral";
+      break;
+    }
+    ownerMap["type"] = typeStr;
+    ownerMap["isLocal"] = (owner.ownerId == m_runtime.localOwnerId);
+
+    result.append(ownerMap);
+  }
+
+  return result;
 }
 
 void GameEngine::getSelectedUnitIds(
