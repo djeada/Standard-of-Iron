@@ -175,7 +175,6 @@ private:
     bool hasFirstWaypoint = false;
   };
 
-  Game::Systems::ArrowSystem *m_arrowSystem = nullptr;
   void initialize();
   void checkVictoryCondition();
   bool screenToGround(const QPointF &screenPt, QVector3D &outWorld);
@@ -192,7 +191,6 @@ private:
   std::unique_ptr<Render::GL::BiomeRenderer> m_biome;
   std::unique_ptr<Render::GL::FogRenderer> m_fog;
   std::unique_ptr<Render::GL::StoneRenderer> m_stone;
-  Game::Systems::SelectionSystem *m_selectionSystem = nullptr;
   std::unique_ptr<Game::Systems::PickingService> m_pickingService;
   QQuickWindow *m_window = nullptr;
   RuntimeState m_runtime;

@@ -23,6 +23,15 @@ public:
 
   std::vector<std::unique_ptr<System>> &systems() { return m_systems; }
 
+  template <typename T> T *getSystem() {
+    for (auto &system : m_systems) {
+      if (auto *ptr = dynamic_cast<T *>(system.get())) {
+        return ptr;
+      }
+    }
+    return nullptr;
+  }
+
   template <typename T> std::vector<Entity *> getEntitiesWith() {
     std::vector<Entity *> result;
     for (auto &[id, entity] : m_entities) {
