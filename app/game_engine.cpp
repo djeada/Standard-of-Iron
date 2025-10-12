@@ -125,7 +125,7 @@ void GameEngine::onRightClick(qreal sx, qreal sy) {
     emit selectedUnitsChanged();
     if (m_selectedUnitsModel)
       QMetaObject::invokeMethod(m_selectedUnitsModel, "refresh");
-
+    m_runtime.selectionRefreshCounter = 0;
     setCursorMode("normal");
     return;
   }
@@ -395,6 +395,7 @@ void GameEngine::onClickSelect(qreal sx, qreal sy, bool additive) {
     emit selectedUnitsChanged();
     if (m_selectedUnitsModel)
       QMetaObject::invokeMethod(m_selectedUnitsModel, "refresh");
+    m_runtime.selectionRefreshCounter = 0;
     return;
   }
 
@@ -432,6 +433,7 @@ void GameEngine::onAreaSelected(qreal x1, qreal y1, qreal x2, qreal y2,
   emit selectedUnitsChanged();
   if (m_selectedUnitsModel)
     QMetaObject::invokeMethod(m_selectedUnitsModel, "refresh");
+  m_runtime.selectionRefreshCounter = 0;
 }
 
 void GameEngine::initialize() {
