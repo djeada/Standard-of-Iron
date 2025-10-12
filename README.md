@@ -51,11 +51,18 @@ A modern real-time strategy (RTS) game built with C++20, Qt 6, and OpenGL 3.3 Co
 - **Real-time Updates**: Production timers and status update live
 - **Cursor Modes**: Visual feedback for attack, patrol, and guard modes
 
+### Map Configuration
+- **Data-Driven Victory Conditions**: Configure win/loss conditions via map JSON files
+- **Flexible Game Modes**: Support for elimination, survive time, and custom objectives
+- **Key Structure Definitions**: Specify which buildings must be protected or destroyed
+- **Map-Specific Rules**: Different maps can have unique victory conditions without engine changes
+
 ### Engine Architecture
 - **Entity-Component-System (ECS)**: Flexible game object system with templated components
 - **Event System**: Type-safe event management with subscription/publishing
 - **Serialization**: JSON-based world and entity persistence
 - **Multi-System Architecture**: Separate systems for AI, combat, movement, pathfinding, patrol, production
+- **VictoryService**: Standalone service for managing victory/defeat conditions with event-based monitoring
 
 ## Requirements
 
@@ -101,6 +108,7 @@ make run
 │   │   ├── production_system    # Unit production and queues
 │   │   ├── selection_system     # Unit/building selection
 │   │   ├── arrow_system         # Arrow projectile VFX
+│   │   ├── victory_service      # Victory/defeat condition management
 │   │   └── ...
 │   ├── map/               # Level loading and map data
 │   ├── units/             # Unit type definitions (archer, barracks)
@@ -240,6 +248,47 @@ void GameEngine::onMyCommand(qreal sx, qreal sy) {
 ### Adding UI Elements
 Edit QML files in `ui/qml/` to add new buttons, panels, or overlays.
 
+### Configuring Victory Conditions
+Maps can define custom victory and defeat conditions in their JSON files. Add a `"victory"` section:
+
+```json
+{
+  "name": "My Custom Map",
+  "victory": {
+    "type": "elimination",
+    "key_structures": ["barracks", "HQ"],
+    "defeat_conditions": ["no_key_structures"]
+  },
+  ...
+}
+```
+
+**Victory Types:**
+- `"elimination"`: Destroy all enemy key structures to win
+- `"survive_time"`: Survive for a specified duration (use `"duration"` in seconds)
+
+**Defeat Conditions:**
+- `"no_key_structures"`: Lose if all your key structures are destroyed
+- `"no_units"`: Lose if you have no units remaining
+
+**Example: Survival Mode**
+```json
+"victory": {
+  "type": "survive_time",
+  "duration": 600,
+  "defeat_conditions": ["no_units"]
+}
+```
+
+**Example: Headquarters Defense**
+```json
+"victory": {
+  "type": "elimination",
+  "key_structures": ["HQ", "barracks"],
+  "defeat_conditions": ["no_key_structures"]
+}
+```
+
 ## Contributing
 
 1. Fork the repository
@@ -255,7 +304,8 @@ Edit QML files in `ui/qml/` to add new buttons, panels, or overlays.
 - OpenGL rendering system
 - Unit production and AI
 - Combat and health systems
-- Victory/defeat conditions
+- Data-driven victory/defeat conditions
+- VictoryService with configurable game modes
 - Patrol system with visual waypoints
 - Selection and command interface
 - Rally point system
