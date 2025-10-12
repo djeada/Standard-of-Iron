@@ -8,6 +8,12 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+# ---- Compiler Optimization Flags ----
+if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -ffast-math")
+    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)  # Enable LTO
+endif()
+
 # ---- Qt ----
 # Try Qt6 first, fall back to Qt5 if not available
 find_package(Qt6 QUIET COMPONENTS Core Widgets OpenGL Quick Qml QuickControls2)

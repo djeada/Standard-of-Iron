@@ -5,6 +5,7 @@
 #include "../ground/stone_gpu.h"
 #include "../ground/terrain_gpu.h"
 #include "camera.h"
+#include "persistent_buffer.h"
 #include "resources.h"
 #include "shader.h"
 #include "shader_cache.h"
@@ -181,6 +182,8 @@ private:
   GLsizei m_cylinderIndexCount = 0;
   std::size_t m_cylinderInstanceCapacity = 0;
   std::vector<CylinderInstanceGpu> m_cylinderScratch;
+  PersistentRingBuffer<CylinderInstanceGpu> m_cylinderPersistentBuffer;
+  bool m_usePersistentBuffers = false;
 
   struct FogInstanceGpu {
     QVector3D center;
@@ -196,6 +199,7 @@ private:
   GLsizei m_fogIndexCount = 0;
   std::size_t m_fogInstanceCapacity = 0;
   std::vector<FogInstanceGpu> m_fogScratch;
+  PersistentRingBuffer<FogInstanceGpu> m_fogPersistentBuffer;
 
   GLuint m_grassVao = 0;
   GLuint m_grassVertexBuffer = 0;
