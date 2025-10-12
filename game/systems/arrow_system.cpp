@@ -1,4 +1,5 @@
 #include "arrow_system.h"
+#include "../game_config.h"
 #include "../../render/geom/arrow.h"
 #include "../../render/gl/resources.h"
 #include "../../render/scene_renderer.h"
@@ -18,7 +19,10 @@ void ArrowSystem::spawnArrow(const QVector3D &start, const QVector3D &end,
   a.speed = speed;
   a.active = true;
   float dist = (end - start).length();
-  a.arcHeight = std::clamp(0.15f * dist, 0.2f, 1.2f);
+  const auto &config = Game::GameConfig::instance();
+  a.arcHeight = std::clamp(config.getArrowArcHeightMultiplier() * dist,
+                           config.getArrowArcHeightMin(),
+                           config.getArrowArcHeightMax());
   m_arrows.push_back(a);
 }
 
