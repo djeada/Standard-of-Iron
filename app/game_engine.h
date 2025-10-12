@@ -184,6 +184,7 @@ private:
   bool screenToGround(const QPointF &screenPt, QVector3D &outWorld);
   bool worldToScreen(const QVector3D &world, QPointF &outScreen) const;
   void syncSelectionFlags();
+  void resetMovement(Engine::Core::Entity *entity);
   QObject *selectedUnitsModel();
 
   std::unique_ptr<Engine::Core::World> m_world;
