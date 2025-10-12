@@ -152,6 +152,7 @@ private:
     int localOwnerId = 1;
     QString victoryState = "";
     QString cursorMode = "normal";
+    Qt::CursorShape currentCursor = Qt::ArrowCursor;
     int lastTroopCount = 0;
     std::uint64_t visibilityVersion = 0;
     float visibilityUpdateAccumulator = 0.0f;
@@ -202,6 +203,7 @@ private:
   void onUnitSpawned(const Engine::Core::UnitSpawnedEvent &event);
   void onUnitDied(const Engine::Core::UnitDiedEvent &event);
   void rebuildEntityCache();
+  void updateCursor(Qt::CursorShape newCursor);
 
   std::unique_ptr<Engine::Core::World> m_world;
   std::unique_ptr<Render::GL::Renderer> m_renderer;
