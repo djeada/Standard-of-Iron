@@ -6,7 +6,7 @@
 
 namespace Game::Systems {
 
-ArrowSystem::ArrowSystem() {}
+ArrowSystem::ArrowSystem() : m_config(GameConfig::instance().arrow()) {}
 
 void ArrowSystem::spawnArrow(const QVector3D &start, const QVector3D &end,
                              const QVector3D &color, float speed) {
@@ -18,7 +18,8 @@ void ArrowSystem::spawnArrow(const QVector3D &start, const QVector3D &end,
   a.speed = speed;
   a.active = true;
   float dist = (end - start).length();
-  a.arcHeight = std::clamp(0.15f * dist, 0.2f, 1.2f);
+  a.arcHeight = std::clamp(m_config.arcHeightMultiplier * dist,
+                           m_config.arcHeightMin, m_config.arcHeightMax);
   m_arrows.push_back(a);
 }
 
