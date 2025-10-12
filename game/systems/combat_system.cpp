@@ -19,12 +19,7 @@ void CombatSystem::update(Engine::Core::World *world, float deltaTime) {
 void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
   auto units = world->getEntitiesWith<Engine::Core::UnitComponent>();
 
-  ArrowSystem *arrowSys = nullptr;
-  for (auto &sys : world->systems()) {
-    arrowSys = dynamic_cast<ArrowSystem *>(sys.get());
-    if (arrowSys)
-      break;
-  }
+  ArrowSystem *arrowSys = world->getSystem<ArrowSystem>();
 
   for (auto attacker : units) {
     auto attackerUnit = attacker->getComponent<Engine::Core::UnitComponent>();
