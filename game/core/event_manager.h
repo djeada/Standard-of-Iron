@@ -1,6 +1,7 @@
 #pragma once
 
 #include "entity.h"
+#include <algorithm>
 #include <functional>
 #include <memory>
 #include <typeindex>
@@ -16,34 +17,94 @@ public:
 
 template <typename T> using EventHandler = std::function<void(const T &)>;
 
+using SubscriptionHandle = std::size_t;
+
 class EventManager {
 public:
   static EventManager &instance() {
     static EventManager inst;
     return inst;
   }
-  template <typename T> void subscribe(EventHandler<T> handler) {
+
+  template <typename T> SubscriptionHandle subscribe(EventHandler<T> handler) {
     static_assert(std::is_base_of_v<Event, T>, "T must inherit from Event");
-    auto wrapper = [handler](const void *event) {
+    SubscriptionHandle handle = m_nextHandle++;
+    auto wrapper = [handler, handle](const void *event) {
       handler(*static_cast<const T *>(event));
     };
-    m_handlers[std::type_index(typeid(T))].push_back(wrapper);
+    HandlerEntry entry{handle, wrapper};
+    m_handlers[std::type_index(typeid(T))].push_back(entry);
+    return handle;
+  }
+
+  template <typename T> void unsubscribe(SubscriptionHandle handle) {
+    static_assert(std::is_base_of_v<Event, T>, "T must inherit from Event");
+    auto it = m_handlers.find(std::type_index(typeid(T)));
+    if (it != m_handlers.end()) {
+      auto &handlers = it->second;
+      handlers.erase(std::remove_if(handlers.begin(), handlers.end(),
+                                    [handle](const HandlerEntry &e) {
+                                      return e.handle == handle;
+                                    }),
+                     handlers.end());
+    }
   }
 
   template <typename T> void publish(const T &event) {
     static_assert(std::is_base_of_v<Event, T>, "T must inherit from Event");
     auto it = m_handlers.find(std::type_index(typeid(T)));
     if (it != m_handlers.end()) {
-      for (const auto &handler : it->second) {
-        handler(&event);
+      for (const auto &entry : it->second) {
+        entry.handler(&event);
       }
     }
   }
 
 private:
-  std::unordered_map<std::type_index,
-                     std::vector<std::function<void(const void *)>>>
-      m_handlers;
+  struct HandlerEntry {
+    SubscriptionHandle handle;
+    std::function<void(const void *)> handler;
+  };
+
+  std::unordered_map<std::type_index, std::vector<HandlerEntry>> m_handlers;
+  SubscriptionHandle m_nextHandle = 1;
+};
+
+template <typename T> class ScopedEventSubscription {
+public:
+  ScopedEventSubscription() : m_handle(0) {}
+
+  ScopedEventSubscription(EventHandler<T> handler)
+      : m_handle(EventManager::instance().subscribe<T>(handler)) {}
+
+  ~ScopedEventSubscription() { unsubscribe(); }
+
+  ScopedEventSubscription(const ScopedEventSubscription &) = delete;
+  ScopedEventSubscription &operator=(const ScopedEventSubscription &) = delete;
+
+  ScopedEventSubscription(ScopedEventSubscription &&other) noexcept
+      : m_handle(other.m_handle) {
+    other.m_handle = 0;
+  }
+
+  ScopedEventSubscription &operator=(ScopedEventSubscription &&other) noexcept {
+    if (this != &other) {
+      unsubscribe();
+      m_handle = other.m_handle;
+      other.m_handle = 0;
+    }
+    return *this;
+  }
+
+  void unsubscribe() {
+    if (m_handle != 0) {
+      EventManager::instance().unsubscribe<T>(m_handle);
+      m_handle = 0;
+    }
+  }
+
+private:
+  SubscriptionHandle m_handle;
 };
 
 class UnitSelectedEvent : public Event {
