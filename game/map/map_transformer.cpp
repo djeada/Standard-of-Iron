@@ -13,7 +13,7 @@ namespace Game::Map {
 
 namespace {
 std::shared_ptr<Game::Units::UnitFactoryRegistry> s_registry;
-} // namespace
+}
 
 void MapTransformer::setFactoryRegistry(
     std::shared_ptr<Game::Units::UnitFactoryRegistry> reg) {
