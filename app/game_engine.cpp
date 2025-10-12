@@ -103,9 +103,6 @@ void GameEngine::onMapClicked(qreal sx, qreal sy) {
   if (!m_window)
     return;
   ensureInitialized();
-  QVector3D hit;
-  if (!screenToGround(QPointF(sx, sy), hit))
-    return;
   onClickSelect(sx, sy, false);
 }
 
