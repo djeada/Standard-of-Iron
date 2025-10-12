@@ -663,11 +663,8 @@ void GameEngine::cameraMove(float dx, float dz) {
   if (!m_camera)
     return;
 
-  float scale = 0.12f;
-  if (m_camera) {
-    float dist = m_camera->getDistance();
-    scale = std::max(0.12f, dist * 0.05f);
-  }
+  float dist = m_camera->getDistance();
+  float scale = std::max(0.12f, dist * 0.05f);
   Game::Systems::CameraController ctrl;
   ctrl.move(*m_camera, dx * scale, dz * scale);
 }
@@ -678,7 +675,7 @@ void GameEngine::cameraElevate(float dy) {
     return;
   Game::Systems::CameraController ctrl;
 
-  float distance = m_camera ? m_camera->getDistance() : 10.0f;
+  float distance = m_camera->getDistance();
   float scale = std::clamp(distance * 0.05f, 0.1f, 5.0f);
   ctrl.moveUp(*m_camera, dy * scale);
 }
@@ -762,20 +759,21 @@ void GameEngine::cameraOrbitDirection(int direction, bool shift) {
 void GameEngine::cameraFollowSelection(bool enable) {
   ensureInitialized();
   m_followSelectionEnabled = enable;
-  if (m_camera) {
-    Game::Systems::CameraController ctrl;
-    ctrl.setFollowEnabled(*m_camera, enable);
-  }
-  if (enable && m_camera && m_world) {
+  if (!m_camera)
+    return;
+
+  Game::Systems::CameraController ctrl;
+  ctrl.setFollowEnabled(*m_camera, enable);
+
+  if (enable && m_world) {
     if (auto *selectionSystem =
             m_world->getSystem<Game::Systems::SelectionSystem>()) {
       Game::Systems::CameraFollowSystem cfs;
       cfs.snapToSelection(*m_world, *selectionSystem, *m_camera);
     }
-  } else if (m_camera) {
+  } else {
     auto pos = m_camera->getPosition();
     auto tgt = m_camera->getTarget();
-    QVector3D front = (tgt - pos).normalized();
     m_camera->lookAt(pos, tgt, QVector3D(0, 1, 0));
   }
 }
