@@ -318,6 +318,15 @@ void GameEngine::onPatrolClick(qreal sx, qreal sy) {
   setCursorMode("normal");
 }
 
+void GameEngine::updateCursor(Qt::CursorShape newCursor) {
+  if (!m_window)
+    return;
+  if (m_runtime.currentCursor != newCursor) {
+    m_runtime.currentCursor = newCursor;
+    m_window->setCursor(newCursor);
+  }
+}
+
 void GameEngine::setCursorMode(const QString &mode) {
   if (m_runtime.cursorMode == mode)
     return;
@@ -328,14 +337,9 @@ void GameEngine::setCursorMode(const QString &mode) {
 
   m_runtime.cursorMode = mode;
 
-  if (m_window) {
-    if (mode == "normal") {
-      m_window->setCursor(Qt::ArrowCursor);
-    } else {
-
-      m_window->setCursor(Qt::BlankCursor);
-    }
-  }
+  Qt::CursorShape desiredCursor =
+      (mode == "normal") ? Qt::ArrowCursor : Qt::BlankCursor;
+  updateCursor(desiredCursor);
 
   emit cursorModeChanged();
 
@@ -366,19 +370,13 @@ void GameEngine::setHoverAtScreen(qreal sx, qreal sy) {
     return;
 
   if (sx < 0 || sy < 0) {
-    if (m_runtime.cursorMode != "normal") {
-
-      m_window->setCursor(Qt::ArrowCursor);
-    }
     m_hover.entityId = 0;
     return;
   }
 
-  if (m_runtime.cursorMode == "normal") {
-    m_window->setCursor(Qt::ArrowCursor);
-  } else {
-    m_window->setCursor(Qt::BlankCursor);
-  }
+  Qt::CursorShape desiredCursor =
+      (m_runtime.cursorMode == "normal") ? Qt::ArrowCursor : Qt::BlankCursor;
+  updateCursor(desiredCursor);
 
   m_hover.entityId =
       m_pickingService->updateHover(float(sx), float(sy), *m_world, *m_camera,
