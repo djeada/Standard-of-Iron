@@ -70,8 +70,8 @@ public:
   Q_PROPERTY(int enemyTroopsDefeated READ enemyTroopsDefeated NOTIFY
                  enemyTroopsDefeatedChanged)
   Q_PROPERTY(QVariantList ownerInfo READ getOwnerInfo NOTIFY ownerInfoChanged)
-  Q_PROPERTY(int selectedPlayerId READ selectedPlayerId WRITE setSelectedPlayerId
-                 NOTIFY selectedPlayerIdChanged)
+  Q_PROPERTY(int selectedPlayerId READ selectedPlayerId WRITE
+                 setSelectedPlayerId NOTIFY selectedPlayerIdChanged)
 
   Q_INVOKABLE void onMapClicked(qreal sx, qreal sy);
   Q_INVOKABLE void onRightClick(qreal sx, qreal sy);
