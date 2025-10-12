@@ -154,7 +154,7 @@ private:
     QString cursorMode = "normal";
     int lastTroopCount = 0;
     std::uint64_t visibilityVersion = 0;
-    int visibilityUpdateCounter = 0;
+    float visibilityUpdateAccumulator = 0.0f;
     qreal lastCursorX = -1.0;
     qreal lastCursorY = -1.0;
     int selectionRefreshCounter = 0;
