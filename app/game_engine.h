@@ -154,6 +154,9 @@ private:
     int lastTroopCount = 0;
     std::uint64_t visibilityVersion = 0;
     int visibilityUpdateCounter = 0;
+    qreal lastCursorX = -1.0;
+    qreal lastCursorY = -1.0;
+    int selectionRefreshCounter = 0;
   };
   struct ViewportState {
     int width = 0;
