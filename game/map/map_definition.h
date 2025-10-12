@@ -34,6 +34,13 @@ struct UnitSpawn {
 
 enum class CoordSystem { Grid, World };
 
+struct VictoryConfig {
+  QString victoryType = "elimination";
+  std::vector<QString> keyStructures = {"barracks"};
+  float surviveTimeDuration = 0.0f;
+  std::vector<QString> defeatConditions = {"no_key_structures"};
+};
+
 struct MapDefinition {
   QString name;
   GridDefinition grid;
@@ -43,6 +50,7 @@ struct MapDefinition {
   BiomeSettings biome;
   CoordSystem coordSystem = CoordSystem::Grid;
   int maxTroopsPerPlayer = 50;
+  VictoryConfig victory;
 };
 
 } // namespace Game::Map

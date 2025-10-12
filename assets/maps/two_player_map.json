@@ -41,5 +41,10 @@
     { "type": "archer", "x": 98, "z": 102, "playerId": 5 },
     { "type": "archer", "x": 102, "z": 98, "playerId": 5 }
   ],
+  "victory": {
+    "type": "elimination",
+    "key_structures": ["barracks"],
+    "defeat_conditions": ["no_key_structures"]
+  },
   "terrain": []
 }
