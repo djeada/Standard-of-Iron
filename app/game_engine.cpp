@@ -978,12 +978,15 @@ void GameEngine::startSkirmish(const QString &mapPath) {
     ownerRegistry.clear();
 
     int playerOwnerId = m_selectedPlayerId;
-    ownerRegistry.registerOwner(Game::Systems::OwnerType::Player, "Player");
+
+    ownerRegistry.registerOwnerWithId(playerOwnerId,
+                                      Game::Systems::OwnerType::Player,
+                                      "Player");
 
     for (int id = 1; id <= 10; id++) {
       if (id != playerOwnerId) {
-        ownerRegistry.registerOwner(Game::Systems::OwnerType::AI,
-                                    "AI " + std::to_string(id));
+        ownerRegistry.registerOwnerWithId(id, Game::Systems::OwnerType::AI,
+                                          "AI " + std::to_string(id));
       }
     }
 
