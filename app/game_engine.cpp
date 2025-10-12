@@ -1005,9 +1005,8 @@ void GameEngine::startSkirmish(const QString &mapPath) {
 
     int playerOwnerId = m_selectedPlayerId;
 
-    ownerRegistry.registerOwnerWithId(playerOwnerId,
-                                      Game::Systems::OwnerType::Player,
-                                      "Player");
+    ownerRegistry.registerOwnerWithId(
+        playerOwnerId, Game::Systems::OwnerType::Player, "Player");
 
     for (int id : mapPlayerIds) {
       if (id != playerOwnerId) {

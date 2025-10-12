@@ -46,7 +46,7 @@ public:
   }
 
   void registerSelectionRingSize(const std::string &unitType,
-                                  float selectionRingSize) {
+                                 float selectionRingSize) {
     m_selectionRingSize[unitType] = selectionRingSize;
   }
 
