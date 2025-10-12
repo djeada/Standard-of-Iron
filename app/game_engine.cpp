@@ -661,11 +661,8 @@ void GameEngine::cameraMove(float dx, float dz) {
   if (!m_camera)
     return;
 
-  float scale = 0.12f;
-  if (m_camera) {
-    float dist = m_camera->getDistance();
-    scale = std::max(0.12f, dist * 0.05f);
-  }
+  float dist = m_camera->getDistance();
+  float scale = std::max(0.12f, dist * 0.05f);
   Game::Systems::CameraController ctrl;
   ctrl.move(*m_camera, dx * scale, dz * scale);
 }
@@ -676,7 +673,7 @@ void GameEngine::cameraElevate(float dy) {
     return;
   Game::Systems::CameraController ctrl;
 
-  float distance = m_camera ? m_camera->getDistance() : 10.0f;
+  float distance = m_camera->getDistance();
   float scale = std::clamp(distance * 0.05f, 0.1f, 5.0f);
   ctrl.moveUp(*m_camera, dy * scale);
 }
