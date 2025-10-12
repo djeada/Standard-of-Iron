@@ -301,7 +301,125 @@ Item {
                     top: title.bottom; topMargin: 8
                     left: parent.left; right: parent.right
                 }
-                maximumLineCount: 5
+                maximumLineCount: 3
+            }
+
+            
+            Rectangle {
+                id: playerSelectionPanel
+                anchors {
+                    top: descr.bottom; topMargin: 16
+                    left: parent.left; right: parent.right
+                }
+                height: playerSelectionContent.height + 20
+                radius: 8
+                color: cardBaseA
+                border.color: panelBr
+                border.width: 1
+                visible: {
+                    var it = current()
+                    return it && typeof it.playerCount !== 'undefined' && it.playerCount > 0
+                }
+
+                Column {
+                    id: playerSelectionContent
+                    anchors {
+                        left: parent.left; right: parent.right; top: parent.top
+                        margins: 10
+                    }
+                    spacing: 8
+
+                    Text {
+                        text: "Available Player Slots: " + (function() {
+                            var it = current()
+                            return (it && typeof it.playerCount !== 'undefined') ? it.playerCount : 0
+                        })()
+                        color: textMain
+                        font.pixelSize: 14
+                        font.bold: true
+                    }
+
+                    Text {
+                        text: "Select your player ID:"
+                        color: textSubLite
+                        font.pixelSize: 12
+                    }
+
+                    Flow {
+                        width: parent.width
+                        spacing: 8
+
+                        Repeater {
+                            model: {
+                                var it = current()
+                                return (it && it.playerIds) ? it.playerIds : []
+                            }
+
+                            delegate: Rectangle {
+                                width: 60
+                                height: 32
+                                radius: 6
+                                color: {
+                                    var pid = modelData
+                                    if (typeof game === 'undefined') return cardBaseB
+                                    return (game.selectedPlayerId === pid) ? selectedBg : cardBaseB
+                                }
+                                border.color: {
+                                    var pid = modelData
+                                    if (typeof game === 'undefined') return thumbBr
+                                    return (game.selectedPlayerId === pid) ? selectedBr : thumbBr
+                                }
+                                border.width: 1
+
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: "ID " + modelData
+                                    color: {
+                                        var pid = modelData
+                                        if (typeof game === 'undefined') return textSub
+                                        return (game.selectedPlayerId === pid) ? "white" : textSub
+                                    }
+                                    font.pixelSize: 12
+                                    font.bold: {
+                                        var pid = modelData
+                                        if (typeof game === 'undefined') return false
+                                        return game.selectedPlayerId === pid
+                                    }
+                                }
+
+                                MouseArea {
+                                    anchors.fill: parent
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: {
+                                        if (typeof game !== 'undefined') {
+                                            game.selectedPlayerId = modelData
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    Text {
+                        text: {
+                            if (typeof game === 'undefined') return ""
+                            var it = current()
+                            if (!it || !it.playerIds) return ""
+                            var others = []
+                            for (var i = 0; i < it.playerIds.length; i++) {
+                                if (it.playerIds[i] !== game.selectedPlayerId) {
+                                    others.push(it.playerIds[i])
+                                }
+                            }
+                            if (others.length === 0) return "All other slots will be CPU-controlled"
+                            return "CPU will control: ID " + others.join(", ID ")
+                        }
+                        color: textSubLite
+                        font.pixelSize: 11
+                        wrapMode: Text.WordWrap
+                        width: parent.width
+                    }
+                }
             }
 
             
@@ -312,7 +430,8 @@ Item {
                 border.color: thumbBr; border.width: 1
                 clip: true
                 anchors {
-                    top: descr.bottom; topMargin: 12
+                    top: playerSelectionPanel.visible ? playerSelectionPanel.bottom : descr.bottom
+                    topMargin: 12
                     left: parent.left; right: parent.right
                     bottom: parent.bottom; bottomMargin: 8
                 }

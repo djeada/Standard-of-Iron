@@ -45,8 +45,10 @@
 #include "selected_units_model.h"
 #include <QDir>
 #include <QFile>
+#include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QSet>
 #include <cmath>
 #include <limits>
 
@@ -894,6 +896,7 @@ QVariantList GameEngine::availableMaps() const {
     QFile file(path);
     QString name = f;
     QString desc;
+    QSet<int> playerIds;
     if (file.open(QIODevice::ReadOnly)) {
       QByteArray data = file.readAll();
       file.close();
@@ -905,12 +908,35 @@ QVariantList GameEngine::availableMaps() const {
           name = obj["name"].toString();
         if (obj.contains("description") && obj["description"].isString())
           desc = obj["description"].toString();
+
+        if (obj.contains("spawns") && obj["spawns"].isArray()) {
+          QJsonArray spawns = obj["spawns"].toArray();
+          for (const QJsonValue &spawnVal : spawns) {
+            if (spawnVal.isObject()) {
+              QJsonObject spawn = spawnVal.toObject();
+              if (spawn.contains("playerId")) {
+                int playerId = spawn["playerId"].toInt();
+                if (playerId > 0) {
+                  playerIds.insert(playerId);
+                }
+              }
+            }
+          }
+        }
       }
     }
     QVariantMap entry;
     entry["name"] = name;
     entry["description"] = desc;
     entry["path"] = path;
+    entry["playerCount"] = playerIds.size();
+    QVariantList playerIdList;
+    QList<int> sortedIds = playerIds.values();
+    std::sort(sortedIds.begin(), sortedIds.end());
+    for (int id : sortedIds) {
+      playerIdList.append(id);
+    }
+    entry["playerIds"] = playerIdList;
     list.append(entry);
   }
   return list;
@@ -951,10 +977,15 @@ void GameEngine::startSkirmish(const QString &mapPath) {
     auto &ownerRegistry = Game::Systems::OwnerRegistry::instance();
     ownerRegistry.clear();
 
-    int playerOwnerId =
-        ownerRegistry.registerOwner(Game::Systems::OwnerType::Player, "Player");
-    int aiOwnerId =
-        ownerRegistry.registerOwner(Game::Systems::OwnerType::AI, "AI");
+    int playerOwnerId = m_selectedPlayerId;
+    ownerRegistry.registerOwner(Game::Systems::OwnerType::Player, "Player");
+
+    for (int id = 1; id <= 10; id++) {
+      if (id != playerOwnerId) {
+        ownerRegistry.registerOwner(Game::Systems::OwnerType::AI,
+                                    "AI " + std::to_string(id));
+      }
+    }
 
     ownerRegistry.setLocalPlayerId(playerOwnerId);
     m_runtime.localOwnerId = playerOwnerId;
