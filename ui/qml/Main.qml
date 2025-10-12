@@ -183,12 +183,12 @@ ApplicationWindow {
         
     
     
-    property real horzThreshold: 150
+    property real horzThreshold: 120
     property real horzMaxSpeed: 0.15
 
-    property real vertThreshold: 200
-    property real verticalDeadZone: 60
-    property real vertMaxSpeed: 0.03
+    property real vertThreshold: 100
+    property real verticalDeadZone: 45
+    property real vertMaxSpeed: 0.01
         property real xPos: -1
         property real yPos: -1
         
