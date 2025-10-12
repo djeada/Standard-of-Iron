@@ -264,6 +264,52 @@ Item {
                         verticalAlignment: Text.AlignVCenter
                     }
 
+                    Rectangle {
+                        width: 2
+                        height: 24
+                        color: "#34495e"
+                        opacity: 0.5
+                        visible: !topRoot.compact
+                    }
+
+                    Label {
+                        id: ownersLbl
+                        text: {
+                            if (typeof game === 'undefined') return "Players: 0"
+                            var owners = game.ownerInfo
+                            var playerCount = 0
+                            var aiCount = 0
+                            for (var i = 0; i < owners.length; i++) {
+                                if (owners[i].type === "Player") playerCount++
+                                else if (owners[i].type === "AI") aiCount++
+                            }
+                            return "👥 " + playerCount + " | 🤖 " + aiCount
+                        }
+                        color: "#ecf0f1"
+                        font.pixelSize: 13
+                        font.bold: false
+                        visible: !topRoot.compact
+                        verticalAlignment: Text.AlignVCenter
+                        ToolTip.visible: ma.containsMouse
+                        ToolTip.delay: 500
+                        ToolTip.text: {
+                            if (typeof game === 'undefined') return ""
+                            var owners = game.ownerInfo
+                            var tip = "Owner IDs:\n"
+                            for (var i = 0; i < owners.length; i++) {
+                                tip += owners[i].id + ": " + owners[i].name + " (" + owners[i].type + ")"
+                                if (owners[i].isLocal) tip += " [You]"
+                                tip += "\n"
+                            }
+                            return tip
+                        }
+                        MouseArea {
+                            id: ma
+                            anchors.fill: parent
+                            hoverEnabled: true
+                        }
+                    }
+
                     Label {
                         id: enemyLbl
                         text: "💀 " + (typeof game !== 'undefined' ? game.enemyTroopsDefeated : 0)
