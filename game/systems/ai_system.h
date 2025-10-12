@@ -39,7 +39,7 @@ enum class BehaviorPriority {
 };
 
 struct AIContext {
-  int playerId = 2;
+  int playerId = 0;
   AIState state = AIState::Idle;
   float stateTimer = 0.0f;
   float decisionTimer = 0.0f;
