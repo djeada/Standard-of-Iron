@@ -10,7 +10,7 @@ namespace Systems {
 bool PickingService::worldToScreen(const Render::GL::Camera &cam, int viewW,
                                    int viewH, const QVector3D &world,
                                    QPointF &out) const {
-  return cam.worldToScreen(world, viewW, viewH, out);
+  return cam.worldToScreen(world, qreal(viewW), qreal(viewH), out);
 }
 
 bool PickingService::screenToGround(const Render::GL::Camera &cam, int viewW,
@@ -18,8 +18,8 @@ bool PickingService::screenToGround(const Render::GL::Camera &cam, int viewW,
                                     QVector3D &outWorld) const {
   if (viewW <= 0 || viewH <= 0)
     return false;
-  return cam.screenToGround(float(screenPt.x()), float(screenPt.y()),
-                            float(viewW), float(viewH), outWorld);
+  return cam.screenToGround(screenPt.x(), screenPt.y(),
+                            qreal(viewW), qreal(viewH), outWorld);
 }
 
 bool PickingService::projectBounds(const Render::GL::Camera &cam,
@@ -35,13 +35,13 @@ bool PickingService::projectBounds(const Render::GL::Camera &cam,
     if (!worldToScreen(cam, viewW, viewH, corners[i], screenPts[i]))
       return false;
   }
-  float minX = screenPts[0].x(), maxX = screenPts[0].x();
-  float minY = screenPts[0].y(), maxY = screenPts[0].y();
+  qreal minX = screenPts[0].x(), maxX = screenPts[0].x();
+  qreal minY = screenPts[0].y(), maxY = screenPts[0].y();
   for (int i = 1; i < 4; ++i) {
-    minX = std::min(minX, float(screenPts[i].x()));
-    maxX = std::max(maxX, float(screenPts[i].x()));
-    minY = std::min(minY, float(screenPts[i].y()));
-    maxY = std::max(maxY, float(screenPts[i].y()));
+    minX = std::min(minX, screenPts[i].x());
+    maxX = std::max(maxX, screenPts[i].x());
+    minY = std::min(minY, screenPts[i].y());
+    maxY = std::max(maxY, screenPts[i].y());
   }
   out = QRectF(QPointF(minX, minY), QPointF(maxX, maxY));
   return true;
@@ -103,8 +103,8 @@ PickingService::pickSingle(float sx, float sy, Engine::Core::World &world,
             QVector3D(t->position.x, t->position.y, t->position.z), viewW,
             viewH, sp))
       continue;
-    float dx = float(sx) - float(sp.x());
-    float dy = float(sy) - float(sp.y());
+    float dx = float(sx - sp.x());
+    float dy = float(sy - sp.y());
     float d2 = dx * dx + dy * dy;
     if (e->hasComponent<Engine::Core::BuildingComponent>()) {
       bool hit = false;
@@ -144,16 +144,15 @@ PickingService::pickSingle(float sx, float sy, Engine::Core::World &world,
           QVector3D(t->position.x - hx, t->position.y + hy, t->position.z + hz),
           pts[7]);
       if (okCount == 8) {
-        float minX = pts[0].x(), maxX = pts[0].x();
-        float minY = pts[0].y(), maxY = pts[0].y();
+        qreal minX = pts[0].x(), maxX = pts[0].x();
+        qreal minY = pts[0].y(), maxY = pts[0].y();
         for (int i = 1; i < 8; ++i) {
-          minX = std::min(minX, float(pts[i].x()));
-          maxX = std::max(maxX, float(pts[i].x()));
-          minY = std::min(minY, float(pts[i].y()));
-          maxY = std::max(maxY, float(pts[i].y()));
+          minX = std::min(minX, pts[i].x());
+          maxX = std::max(maxX, pts[i].x());
+          minY = std::min(minY, pts[i].y());
+          maxY = std::max(maxY, pts[i].y());
         }
-        if (float(sx) >= minX && float(sx) <= maxX && float(sy) >= minY &&
-            float(sy) <= maxY) {
+        if (sx >= minX && sx <= maxX && sy >= minY && sy <= maxY) {
           hit = true;
           pickDist2 = d2;
         }
