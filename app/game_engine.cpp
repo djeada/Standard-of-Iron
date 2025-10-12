@@ -524,7 +524,8 @@ void GameEngine::update(float dt) {
   }
 
   if (m_selectedUnitsModel) {
-    auto* selectionSystem = m_world->getSystem<Game::Systems::SelectionSystem>();
+    auto *selectionSystem =
+        m_world->getSystem<Game::Systems::SelectionSystem>();
     if (selectionSystem && !selectionSystem->getSelectedUnits().empty()) {
       m_runtime.selectionRefreshCounter++;
       if (m_runtime.selectionRefreshCounter >= 15) {
