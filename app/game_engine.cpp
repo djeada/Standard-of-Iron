@@ -114,7 +114,6 @@ void GameEngine::onRightClick(qreal sx, qreal sy) {
   if (!selectionSystem)
     return;
 
-  // Cancel patrol mode if active (right-click always cancels special modes)
   if (m_runtime.cursorMode == "patrol" || m_runtime.cursorMode == "attack") {
     setCursorMode("normal");
     return;
@@ -253,7 +252,7 @@ void GameEngine::onPatrolClick(qreal sx, qreal sy) {
 
   const auto &selected = selectionSystem->getSelectedUnits();
   if (selected.empty()) {
-    // Reset patrol state if selection is lost during waypoint setting
+
     if (m_patrol.hasFirstWaypoint) {
       m_patrol.hasFirstWaypoint = false;
       setCursorMode("normal");
@@ -263,7 +262,7 @@ void GameEngine::onPatrolClick(qreal sx, qreal sy) {
 
   QVector3D hit;
   if (!screenToGround(QPointF(sx, sy), hit)) {
-    // Reset patrol state if second waypoint click fails
+
     if (m_patrol.hasFirstWaypoint) {
       m_patrol.hasFirstWaypoint = false;
       setCursorMode("normal");
@@ -536,7 +535,8 @@ void GameEngine::update(float dt) {
   }
 
   if (m_selectedUnitsModel) {
-    auto* selectionSystem = m_world->getSystem<Game::Systems::SelectionSystem>();
+    auto *selectionSystem =
+        m_world->getSystem<Game::Systems::SelectionSystem>();
     if (selectionSystem && !selectionSystem->getSelectedUnits().empty()) {
       m_runtime.selectionRefreshCounter++;
       if (m_runtime.selectionRefreshCounter >= 15) {
@@ -1141,6 +1141,7 @@ void GameEngine::startSkirmish(const QString &mapPath) {
     m_level.camNear = lr.camNear;
     m_level.camFar = lr.camFar;
     m_level.maxTroopsPerPlayer = lr.maxTroopsPerPlayer;
+    m_level.victoryCondition = lr.victoryCondition;
 
     if (m_biome) {
       m_biome->refreshGrass();
@@ -1272,8 +1273,12 @@ void GameEngine::checkVictoryCondition() {
   if (m_level.mapName.isEmpty())
     return;
 
-  bool enemyBarracksAlive = false;
-  bool playerBarracksAlive = false;
+  QString keyStructure = m_level.victoryCondition;
+  if (keyStructure.isEmpty())
+    keyStructure = "barracks";
+
+  bool enemyKeyStructureAlive = false;
+  bool playerKeyStructureAlive = false;
 
   auto entities = m_world->getEntitiesWith<Engine::Core::UnitComponent>();
   for (auto *e : entities) {
@@ -1281,24 +1286,24 @@ void GameEngine::checkVictoryCondition() {
     if (!unit || unit->health <= 0)
       continue;
 
-    if (unit->unitType == "barracks") {
+    if (QString::fromStdString(unit->unitType) == keyStructure) {
       if (Game::Systems::OwnerRegistry::instance().isAI(unit->ownerId)) {
-        enemyBarracksAlive = true;
+        enemyKeyStructureAlive = true;
       } else if (unit->ownerId == m_runtime.localOwnerId) {
-        playerBarracksAlive = true;
+        playerKeyStructureAlive = true;
       }
     }
   }
 
-  if (!enemyBarracksAlive) {
+  if (!enemyKeyStructureAlive) {
     m_runtime.victoryState = "victory";
     emit victoryStateChanged();
-    qInfo() << "VICTORY! Enemy barracks destroyed!";
+    qInfo() << "VICTORY! Enemy" << keyStructure << "destroyed!";
   }
 
-  else if (!playerBarracksAlive) {
+  else if (!playerKeyStructureAlive) {
     m_runtime.victoryState = "defeat";
     emit victoryStateChanged();
-    qInfo() << "DEFEAT! Your barracks was destroyed!";
+    qInfo() << "DEFEAT! Your" << keyStructure << "was destroyed!";
   }
 }

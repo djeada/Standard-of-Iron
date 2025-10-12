@@ -46,6 +46,7 @@ LevelLoadResult LevelLoader::loadFromAssets(const QString &mapPath,
     res.gridHeight = def.grid.height;
     res.tileSize = def.grid.tileSize;
     res.maxTroopsPerPlayer = def.maxTroopsPerPlayer;
+    res.victoryCondition = def.victoryCondition;
 
     auto rt =
         Game::Map::MapTransformer::applyToWorld(def, world, &visualCatalog);

@@ -2,6 +2,7 @@
   "name": "Width/Depth Test Map",
   "coordSystem": "grid",
   "maxTroopsPerPlayer": 30,
+  "victoryCondition": "barracks",
   "grid": {
     "width": 200,
     "height": 200,

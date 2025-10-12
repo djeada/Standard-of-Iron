@@ -170,6 +170,7 @@ private:
     float camNear = 0.1f;
     float camFar = 1000.0f;
     int maxTroopsPerPlayer = 50;
+    QString victoryCondition = "barracks";
   };
   struct HoverState {
     Engine::Core::EntityID entityId = 0;

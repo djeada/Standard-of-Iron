@@ -43,6 +43,7 @@ struct MapDefinition {
   BiomeSettings biome;
   CoordSystem coordSystem = CoordSystem::Grid;
   int maxTroopsPerPlayer = 50;
+  QString victoryCondition = "barracks";
 };
 
 } // namespace Game::Map

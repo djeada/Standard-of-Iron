@@ -30,6 +30,7 @@ struct LevelLoadResult {
   int gridHeight = 50;
   float tileSize = 1.0f;
   int maxTroopsPerPlayer = 50;
+  QString victoryCondition = "barracks";
 };
 
 class LevelLoader {

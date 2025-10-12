@@ -262,6 +262,11 @@ bool MapLoader::loadFromJsonFile(const QString &path, MapDefinition &outMap,
     outMap.maxTroopsPerPlayer = root.value("maxTroopsPerPlayer").toInt(50);
   }
 
+  if (root.contains("victoryCondition")) {
+    outMap.victoryCondition =
+        root.value("victoryCondition").toString("barracks");
+  }
+
   if (root.contains("grid") && root.value("grid").isObject()) {
     if (!readGrid(root.value("grid").toObject(), outMap.grid)) {
       if (outError)
