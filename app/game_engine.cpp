@@ -49,6 +49,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QSet>
+#include <algorithm>
 #include <cmath>
 #include <limits>
 
@@ -643,7 +644,8 @@ void GameEngine::syncSelectionFlags() {
       }
     }
   }
-  if (toKeep.size() != sel.size()) {
+  if (toKeep.size() != sel.size() ||
+      !std::equal(toKeep.begin(), toKeep.end(), sel.begin())) {
     selectionSystem->clearSelection();
     for (auto id : toKeep)
       selectionSystem->selectUnit(id);
