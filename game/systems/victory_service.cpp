@@ -4,26 +4,24 @@
 #include "game/core/world.h"
 #include "game/map/map_definition.h"
 #include "game/systems/owner_registry.h"
-#include <algorithm>
 #include <QDebug>
+#include <algorithm>
 
 namespace Game {
 namespace Systems {
 
 VictoryService::VictoryService()
-    : m_unitDiedSubscription([this](const Engine::Core::UnitDiedEvent &e) {
-        onUnitDied(e);
-      }) {}
+    : m_unitDiedSubscription(
+          [this](const Engine::Core::UnitDiedEvent &e) { onUnitDied(e); }) {}
 
 VictoryService::~VictoryService() = default;
 
 void VictoryService::configure(const Game::Map::VictoryConfig &config,
-                                int localOwnerId) {
+                               int localOwnerId) {
   m_localOwnerId = localOwnerId;
   m_victoryState = "";
   m_elapsedTime = 0.0f;
 
-  // Parse victory type
   if (config.victoryType == "elimination") {
     m_victoryType = VictoryType::Elimination;
     m_keyStructures = config.keyStructures;
@@ -35,7 +33,6 @@ void VictoryService::configure(const Game::Map::VictoryConfig &config,
     m_keyStructures = {"barracks"};
   }
 
-  // Parse defeat conditions
   m_defeatConditions.clear();
   for (const auto &condition : config.defeatConditions) {
     if (condition == "no_units") {
@@ -45,7 +42,6 @@ void VictoryService::configure(const Game::Map::VictoryConfig &config,
     }
   }
 
-  // Default defeat condition if none specified
   if (m_defeatConditions.empty()) {
     m_defeatConditions.push_back(DefeatCondition::NoKeyStructures);
   }
@@ -68,10 +64,7 @@ void VictoryService::update(Engine::Core::World &world, float deltaTime) {
   checkDefeatConditions(world);
 }
 
-void VictoryService::onUnitDied(const Engine::Core::UnitDiedEvent &event) {
-  // Event is handled; actual victory/defeat checks happen in update()
-  // This allows us to react to unit deaths if needed in the future
-}
+void VictoryService::onUnitDied(const Engine::Core::UnitDiedEvent &event) {}
 
 void VictoryService::checkVictoryConditions(Engine::Core::World &world) {
   bool victory = false;
@@ -84,7 +77,7 @@ void VictoryService::checkVictoryConditions(Engine::Core::World &world) {
     victory = checkSurviveTime();
     break;
   case VictoryType::Custom:
-    // Future expansion point
+
     break;
   }
 
@@ -109,7 +102,7 @@ void VictoryService::checkDefeatConditions(Engine::Core::World &world) {
       defeat = checkNoKeyStructures(world);
       break;
     case DefeatCondition::TimeExpired:
-      // Future expansion
+
       break;
     }
 
@@ -125,7 +118,7 @@ void VictoryService::checkDefeatConditions(Engine::Core::World &world) {
 }
 
 bool VictoryService::checkElimination(Engine::Core::World &world) {
-  // Check if all enemy key structures are destroyed
+
   bool enemyKeyStructuresAlive = false;
 
   auto entities = world.getEntitiesWith<Engine::Core::UnitComponent>();
@@ -134,10 +127,10 @@ bool VictoryService::checkElimination(Engine::Core::World &world) {
     if (!unit || unit->health <= 0)
       continue;
 
-    // Check if this is an enemy key structure
     if (OwnerRegistry::instance().isAI(unit->ownerId)) {
       QString unitType = QString::fromStdString(unit->unitType);
-      if (std::find(m_keyStructures.begin(), m_keyStructures.end(), unitType) != m_keyStructures.end()) {
+      if (std::find(m_keyStructures.begin(), m_keyStructures.end(), unitType) !=
+          m_keyStructures.end()) {
         enemyKeyStructuresAlive = true;
         break;
       }
@@ -152,7 +145,7 @@ bool VictoryService::checkSurviveTime() {
 }
 
 bool VictoryService::checkNoUnits(Engine::Core::World &world) {
-  // Check if player has no units left
+
   auto entities = world.getEntitiesWith<Engine::Core::UnitComponent>();
   for (auto *e : entities) {
     auto *unit = e->getComponent<Engine::Core::UnitComponent>();
@@ -160,15 +153,15 @@ bool VictoryService::checkNoUnits(Engine::Core::World &world) {
       continue;
 
     if (unit->ownerId == m_localOwnerId) {
-      return false; // Player has at least one unit
+      return false;
     }
   }
 
-  return true; // No player units alive
+  return true;
 }
 
 bool VictoryService::checkNoKeyStructures(Engine::Core::World &world) {
-  // Check if player has no key structures left
+
   auto entities = world.getEntitiesWith<Engine::Core::UnitComponent>();
   for (auto *e : entities) {
     auto *unit = e->getComponent<Engine::Core::UnitComponent>();
@@ -177,13 +170,14 @@ bool VictoryService::checkNoKeyStructures(Engine::Core::World &world) {
 
     if (unit->ownerId == m_localOwnerId) {
       QString unitType = QString::fromStdString(unit->unitType);
-      if (std::find(m_keyStructures.begin(), m_keyStructures.end(), unitType) != m_keyStructures.end()) {
-        return false; // Player still has a key structure
+      if (std::find(m_keyStructures.begin(), m_keyStructures.end(), unitType) !=
+          m_keyStructures.end()) {
+        return false;
       }
     }
   }
 
-  return true; // No player key structures alive
+  return true;
 }
 
 } // namespace Systems

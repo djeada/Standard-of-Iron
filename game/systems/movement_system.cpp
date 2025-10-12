@@ -51,7 +51,7 @@ bool isSegmentWalkable(const QVector3D &from, const QVector3D &to,
   bool startAllowed = isPointAllowed(from, ignoreEntity);
   bool endAllowed = isPointAllowed(to, ignoreEntity);
 
-  if (distanceSquared < 0.000001f) { // 0.001^2
+  if (distanceSquared < 0.000001f) {
     return endAllowed;
   }
 
