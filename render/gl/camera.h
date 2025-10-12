@@ -37,9 +37,9 @@ public:
   void orbit(float yawDeg, float pitchDeg);
 
   void update(float dt);
-  bool screenToGround(float sx, float sy, float screenW, float screenH,
+  bool screenToGround(qreal sx, qreal sy, qreal screenW, qreal screenH,
                       QVector3D &outWorld) const;
-  bool worldToScreen(const QVector3D &world, int screenW, int screenH,
+  bool worldToScreen(const QVector3D &world, qreal screenW, qreal screenH,
                      QPointF &outScreen) const;
 
   void setFollowEnabled(bool enable) { m_followEnabled = enable; }

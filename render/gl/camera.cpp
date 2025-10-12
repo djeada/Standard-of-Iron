@@ -331,23 +331,23 @@ void Camera::update(float dt) {
   }
 }
 
-bool Camera::screenToGround(float sx, float sy, float screenW, float screenH,
+bool Camera::screenToGround(qreal sx, qreal sy, qreal screenW, qreal screenH,
                             QVector3D &outWorld) const {
   if (screenW <= 0 || screenH <= 0)
     return false;
-  if (!finite(sx) || !finite(sy))
+  if (!qIsFinite(sx) || !qIsFinite(sy))
     return false;
 
-  float x = (2.0f * sx / screenW) - 1.0f;
-  float y = 1.0f - (2.0f * sy / screenH);
+  double x = (2.0 * sx / screenW) - 1.0;
+  double y = 1.0 - (2.0 * sy / screenH);
 
   bool ok = false;
   QMatrix4x4 invVP = (getProjectionMatrix() * getViewMatrix()).inverted(&ok);
   if (!ok)
     return false;
 
-  QVector4D nearClip(x, y, 0.0f, 1.0f);
-  QVector4D farClip(x, y, 1.0f, 1.0f);
+  QVector4D nearClip(float(x), float(y), 0.0f, 1.0f);
+  QVector4D farClip(float(x), float(y), 1.0f, 1.0f);
   QVector4D nearWorld4 = invVP * nearClip;
   QVector4D farWorld4 = invVP * farClip;
 
@@ -371,7 +371,7 @@ bool Camera::screenToGround(float sx, float sy, float screenW, float screenH,
   return finite(outWorld);
 }
 
-bool Camera::worldToScreen(const QVector3D &world, int screenW, int screenH,
+bool Camera::worldToScreen(const QVector3D &world, qreal screenW, qreal screenH,
                            QPointF &outScreen) const {
   if (screenW <= 0 || screenH <= 0)
     return false;
@@ -389,8 +389,8 @@ bool Camera::worldToScreen(const QVector3D &world, int screenW, int screenH,
   if (ndc.z() < -1.0f || ndc.z() > 1.0f)
     return false;
 
-  float sx = (ndc.x() * 0.5f + 0.5f) * float(screenW);
-  float sy = (1.0f - (ndc.y() * 0.5f + 0.5f)) * float(screenH);
+  qreal sx = (ndc.x() * 0.5 + 0.5) * screenW;
+  qreal sy = (1.0 - (ndc.y() * 0.5 + 0.5)) * screenH;
   outScreen = QPointF(sx, sy);
   return qIsFinite(sx) && qIsFinite(sy);
 }
