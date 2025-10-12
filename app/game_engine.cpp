@@ -232,10 +232,7 @@ void GameEngine::onStopCommand() {
       }
     }
 
-    if (auto *attack =
-            entity->getComponent<Engine::Core::AttackTargetComponent>()) {
-      attack->targetId = 0;
-    }
+    entity->removeComponent<Engine::Core::AttackTargetComponent>();
 
     if (auto *patrol = entity->getComponent<Engine::Core::PatrolComponent>()) {
       patrol->patrolling = false;
@@ -319,10 +316,7 @@ void GameEngine::onPatrolClick(qreal sx, qreal sy) {
         movement->goalY = transform->position.z;
       }
     }
-    if (auto *attack =
-            entity->getComponent<Engine::Core::AttackTargetComponent>()) {
-      attack->targetId = 0;
-    }
+    entity->removeComponent<Engine::Core::AttackTargetComponent>();
   }
 
   m_patrol.hasFirstWaypoint = false;
