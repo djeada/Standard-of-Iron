@@ -1,6 +1,7 @@
 #pragma once
 #include "../core/system.h"
 #include "../core/world.h"
+#include "../game_config.h"
 #include <QVector3D>
 #include <vector>
 
@@ -26,6 +27,7 @@ public:
 
 private:
   std::vector<ArrowInstance> m_arrows;
+  ArrowConfig m_config;
 };
 
 } // namespace Game::Systems
