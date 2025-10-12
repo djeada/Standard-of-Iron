@@ -1,7 +1,7 @@
 #include "environment.h"
-#include "../game_config.h"
 #include "../../render/gl/camera.h"
 #include "../../render/scene_renderer.h"
+#include "../game_config.h"
 #include <algorithm>
 
 namespace Game {

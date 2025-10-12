@@ -151,12 +151,11 @@ static void readBiome(const QJsonObject &obj, BiomeSettings &out) {
 }
 
 static void readVictoryConfig(const QJsonObject &obj, VictoryConfig &out) {
-  // Parse victory type
+
   if (obj.contains("type")) {
     out.victoryType = obj.value("type").toString("elimination");
   }
 
-  // Parse key structures
   if (obj.contains("key_structures") && obj.value("key_structures").isArray()) {
     out.keyStructures.clear();
     auto arr = obj.value("key_structures").toArray();
@@ -165,13 +164,12 @@ static void readVictoryConfig(const QJsonObject &obj, VictoryConfig &out) {
     }
   }
 
-  // Parse survive time duration
   if (obj.contains("duration")) {
     out.surviveTimeDuration = float(obj.value("duration").toDouble(0.0));
   }
 
-  // Parse defeat conditions
-  if (obj.contains("defeat_conditions") && obj.value("defeat_conditions").isArray()) {
+  if (obj.contains("defeat_conditions") &&
+      obj.value("defeat_conditions").isArray()) {
     out.defeatConditions.clear();
     auto arr = obj.value("defeat_conditions").toArray();
     for (const auto &v : arr) {
