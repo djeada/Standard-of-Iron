@@ -70,6 +70,8 @@ public:
   Q_PROPERTY(int enemyTroopsDefeated READ enemyTroopsDefeated NOTIFY
                  enemyTroopsDefeatedChanged)
   Q_PROPERTY(QVariantList ownerInfo READ getOwnerInfo NOTIFY ownerInfoChanged)
+  Q_PROPERTY(int selectedPlayerId READ selectedPlayerId WRITE setSelectedPlayerId
+                 NOTIFY selectedPlayerIdChanged)
 
   Q_INVOKABLE void onMapClicked(qreal sx, qreal sy);
   Q_INVOKABLE void onRightClick(qreal sx, qreal sy);
@@ -107,6 +109,13 @@ public:
   int playerTroopCount() const;
   int maxTroopsPerPlayer() const { return m_level.maxTroopsPerPlayer; }
   int enemyTroopsDefeated() const;
+  int selectedPlayerId() const { return m_selectedPlayerId; }
+  void setSelectedPlayerId(int id) {
+    if (m_selectedPlayerId != id) {
+      m_selectedPlayerId = id;
+      emit selectedPlayerIdChanged();
+    }
+  }
 
   Q_INVOKABLE bool hasSelectedType(const QString &type) const;
   Q_INVOKABLE void recruitNearSelected(const QString &unitType);
@@ -194,6 +203,7 @@ private:
   HoverState m_hover;
   PatrolState m_patrol;
   int m_enemyTroopsDefeated = 0;
+  int m_selectedPlayerId = 1;
 signals:
   void selectedUnitsChanged();
   void enemyTroopsDefeatedChanged();
@@ -203,4 +213,5 @@ signals:
   void troopCountChanged();
   void availableMapsChanged();
   void ownerInfoChanged();
+  void selectedPlayerIdChanged();
 };
