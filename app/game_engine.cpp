@@ -974,6 +974,32 @@ void GameEngine::startSkirmish(const QString &mapPath) {
 
     Game::Systems::BuildingCollisionRegistry::instance().clear();
 
+    QSet<int> mapPlayerIds;
+    QFile mapFile(mapPath);
+    if (mapFile.open(QIODevice::ReadOnly)) {
+      QByteArray data = mapFile.readAll();
+      mapFile.close();
+      QJsonParseError err;
+      QJsonDocument doc = QJsonDocument::fromJson(data, &err);
+      if (err.error == QJsonParseError::NoError && doc.isObject()) {
+        QJsonObject obj = doc.object();
+        if (obj.contains("spawns") && obj["spawns"].isArray()) {
+          QJsonArray spawns = obj["spawns"].toArray();
+          for (const QJsonValue &spawnVal : spawns) {
+            if (spawnVal.isObject()) {
+              QJsonObject spawn = spawnVal.toObject();
+              if (spawn.contains("playerId")) {
+                int playerId = spawn["playerId"].toInt();
+                if (playerId > 0) {
+                  mapPlayerIds.insert(playerId);
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
     auto &ownerRegistry = Game::Systems::OwnerRegistry::instance();
     ownerRegistry.clear();
 
@@ -983,7 +1009,7 @@ void GameEngine::startSkirmish(const QString &mapPath) {
                                       Game::Systems::OwnerType::Player,
                                       "Player");
 
-    for (int id = 1; id <= 10; id++) {
+    for (int id : mapPlayerIds) {
       if (id != playerOwnerId) {
         ownerRegistry.registerOwnerWithId(id, Game::Systems::OwnerType::AI,
                                           "AI " + std::to_string(id));
