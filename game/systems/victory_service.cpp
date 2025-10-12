@@ -4,6 +4,7 @@
 #include "game/core/world.h"
 #include "game/map/map_definition.h"
 #include "game/systems/owner_registry.h"
+#include <algorithm>
 #include <QDebug>
 
 namespace Game {
@@ -136,7 +137,7 @@ bool VictoryService::checkElimination(Engine::Core::World &world) {
     // Check if this is an enemy key structure
     if (OwnerRegistry::instance().isAI(unit->ownerId)) {
       QString unitType = QString::fromStdString(unit->unitType);
-      if (m_keyStructures.contains(unitType)) {
+      if (std::find(m_keyStructures.begin(), m_keyStructures.end(), unitType) != m_keyStructures.end()) {
         enemyKeyStructuresAlive = true;
         break;
       }
@@ -176,7 +177,7 @@ bool VictoryService::checkNoKeyStructures(Engine::Core::World &world) {
 
     if (unit->ownerId == m_localOwnerId) {
       QString unitType = QString::fromStdString(unit->unitType);
-      if (m_keyStructures.contains(unitType)) {
+      if (std::find(m_keyStructures.begin(), m_keyStructures.end(), unitType) != m_keyStructures.end()) {
         return false; // Player still has a key structure
       }
     }
