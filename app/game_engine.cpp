@@ -88,6 +88,7 @@ GameEngine::GameEngine() {
   m_unitDiedSubscription =
       Engine::Core::ScopedEventSubscription<Engine::Core::UnitDiedEvent>(
           [this](const Engine::Core::UnitDiedEvent &e) {
+            onUnitDied(e);
             if (e.ownerId != m_runtime.localOwnerId) {
 
               int individualsPerUnit =
@@ -96,6 +97,12 @@ GameEngine::GameEngine() {
               m_enemyTroopsDefeated += individualsPerUnit;
               emit enemyTroopsDefeatedChanged();
             }
+          });
+
+  m_unitSpawnedSubscription =
+      Engine::Core::ScopedEventSubscription<Engine::Core::UnitSpawnedEvent>(
+          [this](const Engine::Core::UnitSpawnedEvent &e) {
+            onUnitSpawned(e);
           });
 }
 
@@ -795,26 +802,7 @@ bool GameEngine::hasUnitsSelected() const {
 }
 
 int GameEngine::playerTroopCount() const {
-  if (!m_world)
-    return 0;
-
-  int count = 0;
-  auto entities = m_world->getEntitiesWith<Engine::Core::UnitComponent>();
-  for (auto *entity : entities) {
-    auto *unit = entity->getComponent<Engine::Core::UnitComponent>();
-    if (!unit)
-      continue;
-
-    if (unit->ownerId == m_runtime.localOwnerId && unit->health > 0 &&
-        unit->unitType != "barracks") {
-
-      int individualsPerUnit =
-          Game::Units::TroopConfig::instance().getIndividualsPerUnit(
-              unit->unitType);
-      count += individualsPerUnit;
-    }
-  }
-  return count;
+  return m_entityCache.playerTroopCount;
 }
 
 bool GameEngine::hasSelectedType(const QString &type) const {
@@ -1029,6 +1017,8 @@ void GameEngine::startSkirmish(const QString &mapPath) {
 
     m_world->clear();
 
+    m_entityCache.reset();
+
     Game::Systems::BuildingCollisionRegistry::instance().clear();
 
     QSet<int> mapPlayerIds;
@@ -1198,6 +1188,8 @@ void GameEngine::startSkirmish(const QString &mapPath) {
     }
     m_runtime.loading = false;
 
+    rebuildEntityCache();
+
     emit ownerInfoChanged();
   }
 }
@@ -1286,8 +1278,77 @@ void GameEngine::checkVictoryCondition() {
   if (m_level.mapName.isEmpty())
     return;
 
-  bool enemyBarracksAlive = false;
-  bool playerBarracksAlive = false;
+  if (!m_entityCache.enemyBarracksAlive) {
+    m_runtime.victoryState = "victory";
+    emit victoryStateChanged();
+    qInfo() << "VICTORY! Enemy barracks destroyed!";
+  }
+
+  else if (!m_entityCache.playerBarracksAlive) {
+    m_runtime.victoryState = "defeat";
+    emit victoryStateChanged();
+    qInfo() << "DEFEAT! Your barracks was destroyed!";
+  }
+}
+
+void GameEngine::onUnitSpawned(const Engine::Core::UnitSpawnedEvent &event) {
+  if (event.ownerId == m_runtime.localOwnerId) {
+    if (event.unitType == "barracks") {
+      m_entityCache.playerBarracksAlive = true;
+    } else {
+      int individualsPerUnit =
+          Game::Units::TroopConfig::instance().getIndividualsPerUnit(
+              event.unitType);
+      m_entityCache.playerTroopCount += individualsPerUnit;
+    }
+  } else if (Game::Systems::OwnerRegistry::instance().isAI(event.ownerId)) {
+    if (event.unitType == "barracks") {
+      m_entityCache.enemyBarracksAlive = true;
+    }
+  }
+}
+
+void GameEngine::onUnitDied(const Engine::Core::UnitDiedEvent &event) {
+  if (event.ownerId == m_runtime.localOwnerId) {
+    if (event.unitType == "barracks") {
+      m_entityCache.playerBarracksAlive = false;
+    } else {
+      int individualsPerUnit =
+          Game::Units::TroopConfig::instance().getIndividualsPerUnit(
+              event.unitType);
+      m_entityCache.playerTroopCount -= individualsPerUnit;
+      m_entityCache.playerTroopCount =
+          std::max(0, m_entityCache.playerTroopCount);
+    }
+  } else if (Game::Systems::OwnerRegistry::instance().isAI(event.ownerId)) {
+    if (event.unitType == "barracks") {
+
+      bool foundAnotherBarracks = false;
+      auto entities = m_world->getEntitiesWith<Engine::Core::UnitComponent>();
+      for (auto *e : entities) {
+        if (e->getId() == event.unitId)
+          continue;
+        auto *unit = e->getComponent<Engine::Core::UnitComponent>();
+        if (!unit || unit->health <= 0)
+          continue;
+        if (unit->unitType == "barracks" &&
+            Game::Systems::OwnerRegistry::instance().isAI(unit->ownerId)) {
+          foundAnotherBarracks = true;
+          break;
+        }
+      }
+      m_entityCache.enemyBarracksAlive = foundAnotherBarracks;
+    }
+  }
+}
+
+void GameEngine::rebuildEntityCache() {
+  if (!m_world) {
+    m_entityCache.reset();
+    return;
+  }
+
+  m_entityCache.reset();
 
   auto entities = m_world->getEntitiesWith<Engine::Core::UnitComponent>();
   for (auto *e : entities) {
@@ -1295,24 +1356,19 @@ void GameEngine::checkVictoryCondition() {
     if (!unit || unit->health <= 0)
       continue;
 
-    if (unit->unitType == "barracks") {
-      if (Game::Systems::OwnerRegistry::instance().isAI(unit->ownerId)) {
-        enemyBarracksAlive = true;
-      } else if (unit->ownerId == m_runtime.localOwnerId) {
-        playerBarracksAlive = true;
+    if (unit->ownerId == m_runtime.localOwnerId) {
+      if (unit->unitType == "barracks") {
+        m_entityCache.playerBarracksAlive = true;
+      } else {
+        int individualsPerUnit =
+            Game::Units::TroopConfig::instance().getIndividualsPerUnit(
+                unit->unitType);
+        m_entityCache.playerTroopCount += individualsPerUnit;
+      }
+    } else if (Game::Systems::OwnerRegistry::instance().isAI(unit->ownerId)) {
+      if (unit->unitType == "barracks") {
+        m_entityCache.enemyBarracksAlive = true;
       }
     }
-  }
-
-  if (!enemyBarracksAlive) {
-    m_runtime.victoryState = "victory";
-    emit victoryStateChanged();
-    qInfo() << "VICTORY! Enemy barracks destroyed!";
-  }
-
-  else if (!playerBarracksAlive) {
-    m_runtime.victoryState = "defeat";
-    emit victoryStateChanged();
-    qInfo() << "DEFEAT! Your barracks was destroyed!";
   }
 }

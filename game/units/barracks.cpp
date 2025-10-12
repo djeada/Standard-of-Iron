@@ -1,5 +1,6 @@
 #include "barracks.h"
 #include "../core/component.h"
+#include "../core/event_manager.h"
 #include "../core/world.h"
 #include "../systems/building_collision_registry.h"
 #include "../visuals/team_colors.h"
@@ -67,6 +68,9 @@ void Barracks::init(const SpawnParams &params) {
         Game::Units::TroopConfig::instance().getIndividualsPerUnit(
             prod->productType);
   }
+
+  Engine::Core::EventManager::instance().publish(
+      Engine::Core::UnitSpawnedEvent(m_id, m_u->ownerId, m_u->unitType));
 }
 
 } // namespace Units
