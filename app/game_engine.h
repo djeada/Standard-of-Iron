@@ -1,6 +1,8 @@
 #pragma once
 
+#include "cursor_manager.h"
 #include "game/core/event_manager.h"
+#include "hover_tracker.h"
 #include "utils/engine_view_helpers.h"
 #include "utils/movement_utils.h"
 #include "utils/selection_utils.h"
@@ -107,7 +109,7 @@ public:
   bool paused() const { return m_runtime.paused; }
   float timeScale() const { return m_runtime.timeScale; }
   QString victoryState() const { return m_runtime.victoryState; }
-  QString cursorMode() const { return m_runtime.cursorMode; }
+  QString cursorMode() const;
   void setCursorMode(const QString &mode);
   qreal globalCursorX() const;
   qreal globalCursorY() const;
@@ -147,8 +149,8 @@ public:
   bool getUnitInfo(Engine::Core::EntityID id, QString &name, int &health,
                    int &maxHealth, bool &isBuilding, bool &alive) const;
 
-  bool hasPatrolPreviewWaypoint() const { return m_patrol.hasFirstWaypoint; }
-  QVector3D getPatrolPreviewWaypoint() const { return m_patrol.firstWaypoint; }
+  bool hasPatrolPreviewWaypoint() const;
+  QVector3D getPatrolPreviewWaypoint() const;
 
 private:
   struct RuntimeState {
@@ -158,8 +160,6 @@ private:
     float timeScale = 1.0f;
     int localOwnerId = 1;
     QString victoryState = "";
-    QString cursorMode = "normal";
-    Qt::CursorShape currentCursor = Qt::ArrowCursor;
     int lastTroopCount = 0;
     std::uint64_t visibilityVersion = 0;
     float visibilityUpdateAccumulator = 0.0f;
@@ -192,13 +192,6 @@ private:
     float camFar = 1000.0f;
     int maxTroopsPerPlayer = 50;
   };
-  struct HoverState {
-    Engine::Core::EntityID entityId = 0;
-  };
-  struct PatrolState {
-    QVector3D firstWaypoint;
-    bool hasFirstWaypoint = false;
-  };
 
   void initialize();
   bool screenToGround(const QPointF &screenPt, QVector3D &outWorld);
@@ -209,7 +202,6 @@ private:
   void onUnitSpawned(const Engine::Core::UnitSpawnedEvent &event);
   void onUnitDied(const Engine::Core::UnitDiedEvent &event);
   void rebuildEntityCache();
-  void updateCursor(Qt::CursorShape newCursor);
 
   std::unique_ptr<Engine::Core::World> m_world;
   std::unique_ptr<Render::GL::Renderer> m_renderer;
@@ -222,6 +214,8 @@ private:
   std::unique_ptr<Render::GL::StoneRenderer> m_stone;
   std::unique_ptr<Game::Systems::PickingService> m_pickingService;
   std::unique_ptr<Game::Systems::VictoryService> m_victoryService;
+  std::unique_ptr<CursorManager> m_cursorManager;
+  std::unique_ptr<HoverTracker> m_hoverTracker;
   std::unique_ptr<Game::Systems::CameraService> m_cameraService;
   QQuickWindow *m_window = nullptr;
   RuntimeState m_runtime;
@@ -229,8 +223,6 @@ private:
   bool m_followSelectionEnabled = false;
   LevelState m_level;
   QObject *m_selectedUnitsModel = nullptr;
-  HoverState m_hover;
-  PatrolState m_patrol;
   int m_enemyTroopsDefeated = 0;
   int m_selectedPlayerId = 1;
   Engine::Core::ScopedEventSubscription<Engine::Core::UnitDiedEvent>
