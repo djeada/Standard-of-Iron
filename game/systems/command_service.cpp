@@ -2,6 +2,7 @@
 #include "../core/component.h"
 #include "../core/world.h"
 #include "pathfinding.h"
+#include <QDebug>
 #include <QVector3D>
 #include <algorithm>
 #include <cmath>
@@ -12,7 +13,11 @@ namespace Systems {
 
 namespace {
 constexpr float SAME_TARGET_THRESHOLD_SQ = 0.01f;
-}
+
+constexpr float PATHFINDING_REQUEST_COOLDOWN = 1.0f;
+
+constexpr float TARGET_MOVEMENT_THRESHOLD_SQ = 4.0f;
+} // namespace
 
 std::unique_ptr<Pathfinding> CommandService::s_pathfinder = nullptr;
 std::unordered_map<std::uint64_t, CommandService::PendingPathRequest>
@@ -108,6 +113,12 @@ void CommandService::moveUnits(Engine::Core::World &world,
     if (!e)
       continue;
 
+    auto *atk = e->getComponent<Engine::Core::AttackComponent>();
+    if (atk && atk->inMeleeLock) {
+
+      continue;
+    }
+
     auto *transform = e->getComponent<Engine::Core::TransformComponent>();
     if (!transform)
       continue;
@@ -149,6 +160,22 @@ void CommandService::moveUnits(Engine::Core::World &world,
 
     if (matchedPending) {
       continue;
+    }
+
+    bool shouldSuppressPathRequest = false;
+    if (mv->timeSinceLastPathRequest < PATHFINDING_REQUEST_COOLDOWN) {
+
+      float lastGoalDx = mv->lastGoalX - targetX;
+      float lastGoalDz = mv->lastGoalY - targetZ;
+      float goalMovementSq = lastGoalDx * lastGoalDx + lastGoalDz * lastGoalDz;
+
+      if (goalMovementSq < TARGET_MOVEMENT_THRESHOLD_SQ) {
+        shouldSuppressPathRequest = true;
+
+        if (mv->hasTarget || mv->pathPending) {
+          continue;
+        }
+      }
     }
 
     if (!mv->pathPending) {
@@ -202,6 +229,10 @@ void CommandService::moveUnits(Engine::Core::World &world,
         mv->pathPending = false;
         mv->pendingRequestId = 0;
         clearPendingRequest(units[i]);
+
+        mv->timeSinceLastPathRequest = 0.0f;
+        mv->lastGoalX = targetX;
+        mv->lastGoalY = targetZ;
       } else {
 
         bool skipNewRequest = false;
@@ -246,6 +277,10 @@ void CommandService::moveUnits(Engine::Core::World &world,
         }
 
         s_pathfinder->submitPathRequest(requestId, start, end);
+
+        mv->timeSinceLastPathRequest = 0.0f;
+        mv->lastGoalX = targetX;
+        mv->lastGoalY = targetZ;
       }
     } else {
 
@@ -270,6 +305,7 @@ void CommandService::moveGroup(Engine::Core::World &world,
     Engine::Core::TransformComponent *transform;
     Engine::Core::MovementComponent *movement;
     QVector3D target;
+    bool isEngaged;
   };
 
   std::vector<MemberInfo> members;
@@ -290,11 +326,16 @@ void CommandService::moveGroup(Engine::Core::World &world,
     if (!movement)
       continue;
 
+    bool engaged =
+        entity->getComponent<Engine::Core::AttackTargetComponent>() != nullptr;
+
     if (options.clearAttackIntent) {
       entity->removeComponent<Engine::Core::AttackTargetComponent>();
+      engaged = false;
     }
 
-    members.push_back({units[i], entity, transform, movement, targets[i]});
+    members.push_back(
+        {units[i], entity, transform, movement, targets[i], engaged});
   }
 
   if (members.empty())
@@ -308,6 +349,48 @@ void CommandService::moveGroup(Engine::Core::World &world,
     moveUnits(world, singleUnit, singleTarget, singleOptions);
     return;
   }
+
+  std::vector<MemberInfo> movingMembers;
+  std::vector<MemberInfo> engagedMembers;
+
+  for (const auto &member : members) {
+    if (member.isEngaged) {
+      engagedMembers.push_back(member);
+    } else {
+      movingMembers.push_back(member);
+    }
+  }
+
+  if (movingMembers.empty()) {
+    qDebug() << "[CommandService] Group move cancelled: all units are engaged "
+                "in combat";
+    return;
+  }
+
+  if (s_pathfinder) {
+    bool anyTargetInvalid = false;
+    for (const auto &member : movingMembers) {
+      Point targetGrid = worldToGrid(member.target.x(), member.target.z());
+
+      if (targetGrid.x < 0 || targetGrid.y < 0) {
+        anyTargetInvalid = true;
+        break;
+      }
+
+      if (!s_pathfinder->isWalkable(targetGrid.x, targetGrid.y)) {
+        anyTargetInvalid = true;
+        break;
+      }
+    }
+
+    if (anyTargetInvalid) {
+      qDebug() << "[CommandService] Group move cancelled: one or more targets "
+                  "are invalid/unwalkable";
+      return;
+    }
+  }
+
+  members = movingMembers;
 
   QVector3D average(0.0f, 0.0f, 0.0f);
   for (const auto &member : members)
@@ -327,26 +410,55 @@ void CommandService::moveGroup(Engine::Core::World &world,
   auto &leader = members[leaderIndex];
   QVector3D leaderTarget = leader.target;
 
+  std::vector<MemberInfo *> unitsNeedingNewPath;
+  constexpr float SAME_GOAL_THRESHOLD_SQ = 4.0f;
+
   for (auto &member : members) {
-    clearPendingRequest(member.id);
     auto *mv = member.movement;
+
     mv->goalX = member.target.x();
     mv->goalY = member.target.z();
-    mv->targetX = member.transform->position.x;
-    mv->targetY = member.transform->position.z;
-    mv->hasTarget = false;
-    mv->vx = 0.0f;
-    mv->vz = 0.0f;
-    mv->path.clear();
-    mv->pathPending = false;
-    mv->pendingRequestId = 0;
+
+    bool alreadyMovingToGoal = false;
+    if (mv->hasTarget || mv->pathPending) {
+      float goalDx = mv->goalX - member.target.x();
+      float goalDz = mv->goalY - member.target.z();
+      float goalDistSq = goalDx * goalDx + goalDz * goalDz;
+
+      if (goalDistSq <= SAME_GOAL_THRESHOLD_SQ) {
+        alreadyMovingToGoal = true;
+      }
+    }
+
+    if (!alreadyMovingToGoal) {
+
+      clearPendingRequest(member.id);
+      mv->targetX = member.transform->position.x;
+      mv->targetY = member.transform->position.z;
+      mv->hasTarget = false;
+      mv->vx = 0.0f;
+      mv->vz = 0.0f;
+      mv->path.clear();
+      mv->pathPending = false;
+      mv->pendingRequestId = 0;
+      unitsNeedingNewPath.push_back(&member);
+    } else {
+      qDebug() << "[CommandService] Unit" << member.id
+               << "already moving to goal, keeping existing path";
+    }
+  }
+
+  if (unitsNeedingNewPath.empty()) {
+    qDebug() << "[CommandService] All units already moving to goal, skipping "
+                "path recalculation";
+    return;
   }
 
   if (!s_pathfinder) {
-    for (auto &member : members) {
-      member.movement->targetX = member.target.x();
-      member.movement->targetY = member.target.z();
-      member.movement->hasTarget = true;
+    for (auto *member : unitsNeedingNewPath) {
+      member->movement->targetX = member->target.x();
+      member->movement->targetY = member->target.z();
+      member->movement->hasTarget = true;
     }
     return;
   }
@@ -356,10 +468,10 @@ void CommandService::moveGroup(Engine::Core::World &world,
   Point end = worldToGrid(leaderTarget.x(), leaderTarget.z());
 
   if (start == end) {
-    for (auto &member : members) {
-      member.movement->targetX = member.target.x();
-      member.movement->targetY = member.target.z();
-      member.movement->hasTarget = true;
+    for (auto *member : unitsNeedingNewPath) {
+      member->movement->targetX = member->target.x();
+      member->movement->targetY = member->target.z();
+      member->movement->hasTarget = true;
     }
     return;
   }
@@ -372,10 +484,14 @@ void CommandService::moveGroup(Engine::Core::World &world,
   }
 
   if (useDirectPath) {
-    for (auto &member : members) {
-      member.movement->targetX = member.target.x();
-      member.movement->targetY = member.target.z();
-      member.movement->hasTarget = true;
+    for (auto *member : unitsNeedingNewPath) {
+      member->movement->targetX = member->target.x();
+      member->movement->targetY = member->target.z();
+      member->movement->hasTarget = true;
+
+      member->movement->timeSinceLastPathRequest = 0.0f;
+      member->movement->lastGoalX = member->target.x();
+      member->movement->lastGoalY = member->target.z();
     }
     return;
   }
@@ -383,29 +499,37 @@ void CommandService::moveGroup(Engine::Core::World &world,
   std::uint64_t requestId =
       s_nextRequestId.fetch_add(1, std::memory_order_relaxed);
 
-  for (auto &member : members) {
-    member.movement->pathPending = true;
-    member.movement->pendingRequestId = requestId;
+  for (auto *member : unitsNeedingNewPath) {
+    member->movement->pathPending = true;
+    member->movement->pendingRequestId = requestId;
+
+    member->movement->timeSinceLastPathRequest = 0.0f;
+    member->movement->lastGoalX = member->target.x();
+    member->movement->lastGoalY = member->target.z();
   }
 
   PendingPathRequest pending;
   pending.entityId = leader.id;
   pending.target = leaderTarget;
   pending.options = options;
-  pending.groupMembers.reserve(members.size());
-  pending.groupTargets.reserve(members.size());
-  for (const auto &member : members) {
-    pending.groupMembers.push_back(member.id);
-    pending.groupTargets.push_back(member.target);
+  pending.groupMembers.reserve(unitsNeedingNewPath.size());
+  pending.groupTargets.reserve(unitsNeedingNewPath.size());
+  for (const auto *member : unitsNeedingNewPath) {
+    pending.groupMembers.push_back(member->id);
+    pending.groupTargets.push_back(member->target);
   }
 
   {
     std::lock_guard<std::mutex> lock(s_pendingMutex);
     s_pendingRequests[requestId] = std::move(pending);
-    for (const auto &member : members) {
-      s_entityToRequest[member.id] = requestId;
+    for (const auto *member : unitsNeedingNewPath) {
+      s_entityToRequest[member->id] = requestId;
     }
   }
+
+  qDebug() << "[CommandService] Submitted group path request for"
+           << unitsNeedingNewPath.size() << "units (out of" << members.size()
+           << "total)";
 
   s_pathfinder->submitPathRequest(requestId, start, end);
 }

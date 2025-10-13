@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -12,6 +13,8 @@ struct OwnerInfo {
   int ownerId;
   OwnerType type;
   std::string name;
+  int teamId = 0;
+  std::array<float, 3> color = {0.8f, 0.9f, 1.0f};
 };
 
 class OwnerRegistry {
@@ -42,6 +45,16 @@ public:
   std::vector<int> getPlayerOwnerIds() const;
 
   std::vector<int> getAIOwnerIds() const;
+
+  void setOwnerTeam(int ownerId, int teamId);
+  int getOwnerTeam(int ownerId) const;
+  bool areAllies(int ownerId1, int ownerId2) const;
+  bool areEnemies(int ownerId1, int ownerId2) const;
+  std::vector<int> getAlliesOf(int ownerId) const;
+  std::vector<int> getEnemiesOf(int ownerId) const;
+
+  void setOwnerColor(int ownerId, float r, float g, float b);
+  std::array<float, 3> getOwnerColor(int ownerId) const;
 
 private:
   OwnerRegistry() = default;

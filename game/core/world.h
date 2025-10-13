@@ -42,8 +42,10 @@ public:
     return result;
   }
 
-  std::vector<Entity *> getUnitsOwnedBy(int ownerId);
-  std::vector<Entity *> getUnitsNotOwnedBy(int ownerId);
+  std::vector<Entity *> getUnitsOwnedBy(int ownerId) const;
+  std::vector<Entity *> getUnitsNotOwnedBy(int ownerId) const;
+  std::vector<Entity *> getAlliedUnits(int ownerId) const;
+  std::vector<Entity *> getEnemyUnits(int ownerId) const;
 
 private:
   EntityID m_nextEntityId = 1;
