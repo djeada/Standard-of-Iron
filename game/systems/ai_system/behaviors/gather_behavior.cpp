@@ -2,7 +2,6 @@
 #include "../../formation_planner.h"
 #include "../ai_utils.h"
 
-#include <QDebug>
 #include <QVector3D>
 
 namespace Game::Systems::AI {
@@ -88,11 +87,6 @@ void GatherBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   command.moveTargetX = std::move(filteredX);
   command.moveTargetY = std::move(filteredY);
   command.moveTargetZ = std::move(filteredZ);
-
-  qDebug() << "[GatherBehavior] Issuing MoveUnits for" << command.units.size()
-           << "units to rally point (" << context.rallyX << ","
-           << context.rallyZ << ")"
-           << "in state:" << static_cast<int>(context.state);
 
   outCommands.push_back(std::move(command));
 }

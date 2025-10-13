@@ -362,8 +362,6 @@ void CommandService::moveGroup(Engine::Core::World &world,
   }
 
   if (movingMembers.empty()) {
-    qDebug() << "[CommandService] Group move cancelled: all units are engaged "
-                "in combat";
     return;
   }
 
@@ -384,8 +382,6 @@ void CommandService::moveGroup(Engine::Core::World &world,
     }
 
     if (anyTargetInvalid) {
-      qDebug() << "[CommandService] Group move cancelled: one or more targets "
-                  "are invalid/unwalkable";
       return;
     }
   }
@@ -443,14 +439,10 @@ void CommandService::moveGroup(Engine::Core::World &world,
       mv->pendingRequestId = 0;
       unitsNeedingNewPath.push_back(&member);
     } else {
-      qDebug() << "[CommandService] Unit" << member.id
-               << "already moving to goal, keeping existing path";
     }
   }
 
   if (unitsNeedingNewPath.empty()) {
-    qDebug() << "[CommandService] All units already moving to goal, skipping "
-                "path recalculation";
     return;
   }
 
@@ -526,10 +518,6 @@ void CommandService::moveGroup(Engine::Core::World &world,
       s_entityToRequest[member->id] = requestId;
     }
   }
-
-  qDebug() << "[CommandService] Submitted group path request for"
-           << unitsNeedingNewPath.size() << "units (out of" << members.size()
-           << "total)";
 
   s_pathfinder->submitPathRequest(requestId, start, end);
 }
