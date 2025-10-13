@@ -24,7 +24,6 @@ public:
     initializeOpenGLFunctions();
 
     if (!hasOpenGLFeature(QOpenGLFunctions::Buffers)) {
-      qDebug() << "PersistentRingBuffer: OpenGL buffers not supported";
       return false;
     }
 
@@ -56,8 +55,6 @@ public:
             ctx->getProcAddress("glBufferStorage"));
 
     if (!glBufferStorage) {
-      qDebug() << "PersistentRingBuffer: glBufferStorage not available (OpenGL "
-                  "< 4.4)";
       glBindBuffer(GL_ARRAY_BUFFER, 0);
       glDeleteBuffers(1, &m_buffer);
       m_buffer = 0;

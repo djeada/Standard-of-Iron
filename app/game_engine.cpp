@@ -1,5 +1,7 @@
 #include "game_engine.h"
 
+#include "cursor_manager.h"
+#include "hover_tracker.h"
 #include <QCoreApplication>
 #include <QCursor>
 #include <QDebug>
@@ -20,8 +22,7 @@
 #include "game/systems/ai_system.h"
 #include "game/systems/arrow_system.h"
 #include "game/systems/building_collision_registry.h"
-#include "game/systems/camera_controller.h"
-#include "game/systems/camera_follow_system.h"
+#include "game/systems/camera_service.h"
 #include "game/systems/combat_system.h"
 #include "game/systems/command_service.h"
 #include "game/systems/formation_planner.h"
@@ -93,6 +94,15 @@ GameEngine::GameEngine() {
   QMetaObject::invokeMethod(m_selectedUnitsModel, "refresh");
   m_pickingService = std::make_unique<Game::Systems::PickingService>();
   m_victoryService = std::make_unique<Game::Systems::VictoryService>();
+  m_cameraService = std::make_unique<Game::Systems::CameraService>();
+
+  m_cursorManager = std::make_unique<CursorManager>();
+  m_hoverTracker = std::make_unique<HoverTracker>(m_pickingService.get());
+
+  connect(m_cursorManager.get(), &CursorManager::modeChanged, this,
+          &GameEngine::cursorModeChanged);
+  connect(m_cursorManager.get(), &CursorManager::globalCursorChanged, this,
+          &GameEngine::globalCursorChanged);
 
   m_unitDiedSubscription =
       Engine::Core::ScopedEventSubscription<Engine::Core::UnitDiedEvent>(
@@ -132,7 +142,7 @@ void GameEngine::onRightClick(qreal sx, qreal sy) {
   if (!selectionSystem)
     return;
 
-  if (m_runtime.cursorMode == "patrol" || m_runtime.cursorMode == "attack") {
+  if (m_cursorManager->mode() == "patrol" || m_cursorManager->mode() == "attack") {
     setCursorMode("normal");
     return;
   }
@@ -213,30 +223,7 @@ void GameEngine::onAttackClick(qreal sx, qreal sy) {
 }
 
 void GameEngine::resetMovement(Engine::Core::Entity *entity) {
-  if (!entity)
-    return;
-
-  auto *movement = entity->getComponent<Engine::Core::MovementComponent>();
-  if (!movement)
-    return;
-
-  auto *transform = entity->getComponent<Engine::Core::TransformComponent>();
-  movement->hasTarget = false;
-  movement->path.clear();
-  movement->pathPending = false;
-  movement->pendingRequestId = 0;
-  movement->repathCooldown = 0.0f;
-  if (transform) {
-    movement->targetX = transform->position.x;
-    movement->targetY = transform->position.z;
-    movement->goalX = transform->position.x;
-    movement->goalY = transform->position.z;
-  } else {
-    movement->targetX = 0.0f;
-    movement->targetY = 0.0f;
-    movement->goalX = 0.0f;
-    movement->goalY = 0.0f;
-  }
+  App::Utils::resetMovement(entity);
 }
 
 void GameEngine::onStopCommand() {
@@ -276,8 +263,8 @@ void GameEngine::onPatrolClick(qreal sx, qreal sy) {
   const auto &selected = selectionSystem->getSelectedUnits();
   if (selected.empty()) {
 
-    if (m_patrol.hasFirstWaypoint) {
-      m_patrol.hasFirstWaypoint = false;
+    if (m_cursorManager->hasPatrolFirstWaypoint()) {
+      m_cursorManager->clearPatrolFirstWaypoint();
       setCursorMode("normal");
     }
     return;
@@ -286,16 +273,15 @@ void GameEngine::onPatrolClick(qreal sx, qreal sy) {
   QVector3D hit;
   if (!screenToGround(QPointF(sx, sy), hit)) {
 
-    if (m_patrol.hasFirstWaypoint) {
-      m_patrol.hasFirstWaypoint = false;
+    if (m_cursorManager->hasPatrolFirstWaypoint()) {
+      m_cursorManager->clearPatrolFirstWaypoint();
       setCursorMode("normal");
     }
     return;
   }
 
-  if (!m_patrol.hasFirstWaypoint) {
-    m_patrol.firstWaypoint = hit;
-    m_patrol.hasFirstWaypoint = true;
+  if (!m_cursorManager->hasPatrolFirstWaypoint()) {
+    m_cursorManager->setPatrolFirstWaypoint(hit);
 
     return;
   }
@@ -318,8 +304,8 @@ void GameEngine::onPatrolClick(qreal sx, qreal sy) {
 
     if (patrol) {
       patrol->waypoints.clear();
-      patrol->waypoints.push_back(
-          {m_patrol.firstWaypoint.x(), m_patrol.firstWaypoint.z()});
+      QVector3D firstWaypoint = m_cursorManager->getPatrolFirstWaypoint();
+      patrol->waypoints.push_back({firstWaypoint.x(), firstWaypoint.z()});
       patrol->waypoints.push_back({secondWaypoint.x(), secondWaypoint.z()});
       patrol->currentWaypoint = 0;
       patrol->patrolling = true;
@@ -329,7 +315,7 @@ void GameEngine::onPatrolClick(qreal sx, qreal sy) {
     entity->removeComponent<Engine::Core::AttackTargetComponent>();
   }
 
-  m_patrol.hasFirstWaypoint = false;
+  m_cursorManager->clearPatrolFirstWaypoint();
   setCursorMode("normal");
 }
 
@@ -351,59 +337,41 @@ void GameEngine::setError(const QString &errorMessage) {
 }
 
 void GameEngine::setCursorMode(const QString &mode) {
-  if (m_runtime.cursorMode == mode)
+  if (!m_cursorManager)
     return;
+  m_cursorManager->setMode(mode);
+  m_cursorManager->updateCursorShape(m_window);
+}
 
-  if (m_runtime.cursorMode == "patrol" && mode != "patrol") {
-    m_patrol.hasFirstWaypoint = false;
-  }
-
-  m_runtime.cursorMode = mode;
-
-  Qt::CursorShape desiredCursor =
-      (mode == "normal") ? Qt::ArrowCursor : Qt::BlankCursor;
-  updateCursor(desiredCursor);
-
-  emit cursorModeChanged();
-
-  emit globalCursorChanged();
+QString GameEngine::cursorMode() const {
+  if (!m_cursorManager)
+    return "normal";
+  return m_cursorManager->mode();
 }
 
 qreal GameEngine::globalCursorX() const {
-  if (!m_window)
+  if (!m_cursorManager)
     return 0;
-  QPoint globalPos = QCursor::pos();
-  QPoint localPos = m_window->mapFromGlobal(globalPos);
-  return localPos.x();
+  return m_cursorManager->globalCursorX(m_window);
 }
 
 qreal GameEngine::globalCursorY() const {
-  if (!m_window)
+  if (!m_cursorManager)
     return 0;
-  QPoint globalPos = QCursor::pos();
-  QPoint localPos = m_window->mapFromGlobal(globalPos);
-  return localPos.y();
+  return m_cursorManager->globalCursorY(m_window);
 }
 
 void GameEngine::setHoverAtScreen(qreal sx, qreal sy) {
   if (!m_window)
     return;
   ensureInitialized();
-  if (!m_pickingService || !m_camera || !m_world)
+  if (!m_hoverTracker || !m_camera || !m_world)
     return;
 
-  if (sx < 0 || sy < 0 || sx >= m_viewport.width || sy >= m_viewport.height) {
-    m_hover.entityId = 0;
-    return;
-  }
+  m_cursorManager->updateCursorShape(m_window);
 
-  Qt::CursorShape desiredCursor =
-      (m_runtime.cursorMode == "normal") ? Qt::ArrowCursor : Qt::BlankCursor;
-  updateCursor(desiredCursor);
-
-  m_hover.entityId =
-      m_pickingService->updateHover(float(sx), float(sy), *m_world, *m_camera,
-                                    m_viewport.width, m_viewport.height);
+  m_hoverTracker->updateHover(float(sx), float(sy), *m_world, *m_camera,
+                              m_viewport.width, m_viewport.height);
 }
 
 void GameEngine::onClickSelect(qreal sx, qreal sy, bool additive) {
@@ -544,12 +512,8 @@ void GameEngine::update(float dt) {
     emit troopCountChanged();
   }
 
-  if (m_followSelectionEnabled && m_camera && m_world) {
-    if (auto *selectionSystem =
-            m_world->getSystem<Game::Systems::SelectionSystem>()) {
-      Game::Systems::CameraFollowSystem cfs;
-      cfs.update(*m_world, *selectionSystem, *m_camera);
-    }
+  if (m_followSelectionEnabled && m_camera && m_world && m_cameraService) {
+    m_cameraService->updateFollow(*m_camera, *m_world, m_followSelectionEnabled);
   }
 
   if (m_selectedUnitsModel) {
@@ -600,8 +564,8 @@ void GameEngine::render(int pixelWidth, int pixelHeight) {
     if (auto *res = m_renderer->resources())
       m_fog->submit(*m_renderer, *res);
   }
-  if (m_renderer)
-    m_renderer->setHoveredEntityId(m_hover.entityId);
+  if (m_renderer && m_hoverTracker)
+    m_renderer->setHoveredEntityId(m_hoverTracker->getLastHoveredEntity());
   if (m_renderer)
     m_renderer->setLocalOwnerId(m_runtime.localOwnerId);
   m_renderer->renderWorld(m_world.get());
@@ -612,8 +576,8 @@ void GameEngine::render(int pixelWidth, int pixelHeight) {
 
   if (auto *res = m_renderer->resources()) {
     std::optional<QVector3D> previewWaypoint;
-    if (m_patrol.hasFirstWaypoint) {
-      previewWaypoint = m_patrol.firstWaypoint;
+    if (m_cursorManager && m_cursorManager->hasPatrolFirstWaypoint()) {
+      previewWaypoint = m_cursorManager->getPatrolFirstWaypoint();
     }
     Render::GL::renderPatrolFlags(m_renderer.get(), res, *m_world,
                                   previewWaypoint);
@@ -630,46 +594,27 @@ void GameEngine::render(int pixelWidth, int pixelHeight) {
 }
 
 bool GameEngine::screenToGround(const QPointF &screenPt, QVector3D &outWorld) {
-  if (!m_window || !m_camera || !m_pickingService)
-    return false;
-  int w = (m_viewport.width > 0 ? m_viewport.width : m_window->width());
-  int h = (m_viewport.height > 0 ? m_viewport.height : m_window->height());
-  return m_pickingService->screenToGround(*m_camera, w, h, screenPt, outWorld);
+  return App::Utils::screenToGround(m_pickingService.get(), m_camera.get(),
+                                    m_window, m_viewport.width,
+                                    m_viewport.height, screenPt, outWorld);
 }
 
 bool GameEngine::worldToScreen(const QVector3D &world,
                                QPointF &outScreen) const {
-  if (!m_window || !m_camera || !m_pickingService)
-    return false;
-  int w = (m_viewport.width > 0 ? m_viewport.width : m_window->width());
-  int h = (m_viewport.height > 0 ? m_viewport.height : m_window->height());
-  return m_pickingService->worldToScreen(*m_camera, w, h, world, outScreen);
+  return App::Utils::worldToScreen(m_pickingService.get(), m_camera.get(),
+                                   m_window, m_viewport.width, m_viewport.height,
+                                   world, outScreen);
 }
 
 void GameEngine::syncSelectionFlags() {
   auto *selectionSystem = m_world->getSystem<Game::Systems::SelectionSystem>();
   if (!m_world || !selectionSystem)
     return;
-  const auto &sel = selectionSystem->getSelectedUnits();
-  std::vector<Engine::Core::EntityID> toKeep;
-  toKeep.reserve(sel.size());
-  for (auto id : sel) {
-    if (auto *e = m_world->getEntity(id)) {
-      if (auto *u = e->getComponent<Engine::Core::UnitComponent>()) {
-        if (u->health > 0)
-          toKeep.push_back(id);
-      }
-    }
-  }
-  if (toKeep.size() != sel.size() ||
-      !std::equal(toKeep.begin(), toKeep.end(), sel.begin())) {
-    selectionSystem->clearSelection();
-    for (auto id : toKeep)
-      selectionSystem->selectUnit(id);
-  }
+
+  App::Utils::sanitizeSelection(m_world.get(), selectionSystem);
 
   if (selectionSystem->getSelectedUnits().empty()) {
-    if (m_runtime.cursorMode != "normal") {
+    if (m_cursorManager && m_cursorManager->mode() != "normal") {
       setCursorMode("normal");
     }
   }
@@ -677,85 +622,54 @@ void GameEngine::syncSelectionFlags() {
 
 void GameEngine::cameraMove(float dx, float dz) {
   ensureInitialized();
-  if (!m_camera)
+  if (!m_camera || !m_cameraService)
     return;
 
-  float dist = m_camera->getDistance();
-  float scale = std::max(0.12f, dist * 0.05f);
-  Game::Systems::CameraController ctrl;
-  ctrl.move(*m_camera, dx * scale, dz * scale);
+  m_cameraService->move(*m_camera, dx, dz);
 }
 
 void GameEngine::cameraElevate(float dy) {
   ensureInitialized();
-  if (!m_camera)
+  if (!m_camera || !m_cameraService)
     return;
-  Game::Systems::CameraController ctrl;
 
-  float distance = m_camera->getDistance();
-  float scale = std::clamp(distance * 0.05f, 0.1f, 5.0f);
-  ctrl.moveUp(*m_camera, dy * scale);
+  m_cameraService->elevate(*m_camera, dy);
 }
 
 void GameEngine::resetCamera() {
   ensureInitialized();
-  if (!m_camera || !m_world)
+  if (!m_camera || !m_world || !m_cameraService)
     return;
 
-  Engine::Core::Entity *focusEntity = nullptr;
-  for (auto *e : m_world->getEntitiesWith<Engine::Core::UnitComponent>()) {
-    if (!e)
-      continue;
-    auto *u = e->getComponent<Engine::Core::UnitComponent>();
-    if (!u)
-      continue;
-    if (u->unitType == "barracks" && u->ownerId == m_runtime.localOwnerId &&
-        u->health > 0) {
-      focusEntity = e;
-      break;
-    }
-  }
-  if (!focusEntity && m_level.playerUnitId != 0)
-    focusEntity = m_world->getEntity(m_level.playerUnitId);
-
-  if (focusEntity) {
-    if (auto *t =
-            focusEntity->getComponent<Engine::Core::TransformComponent>()) {
-      QVector3D center(t->position.x, t->position.y, t->position.z);
-      if (m_camera) {
-        const auto &camConfig = Game::GameConfig::instance().camera();
-        m_camera->setRTSView(center, camConfig.defaultDistance,
-                             camConfig.defaultPitch, camConfig.defaultYaw);
-      }
-    }
-  }
+  m_cameraService->resetCamera(*m_camera, *m_world, m_runtime.localOwnerId,
+                               m_level.playerUnitId);
 }
 
 void GameEngine::cameraZoom(float delta) {
   ensureInitialized();
-  if (!m_camera)
+  if (!m_camera || !m_cameraService)
     return;
-  Game::Systems::CameraController ctrl;
-  ctrl.zoomDistance(*m_camera, delta);
+
+  m_cameraService->zoom(*m_camera, delta);
 }
 
 float GameEngine::cameraDistance() const {
-  if (!m_camera)
+  if (!m_camera || !m_cameraService)
     return 0.0f;
-  return m_camera->getDistance();
+  return m_cameraService->getDistance(*m_camera);
 }
 
 void GameEngine::cameraYaw(float degrees) {
   ensureInitialized();
-  if (!m_camera)
+  if (!m_camera || !m_cameraService)
     return;
-  Game::Systems::CameraController ctrl;
-  ctrl.yaw(*m_camera, degrees);
+
+  m_cameraService->yaw(*m_camera, degrees);
 }
 
 void GameEngine::cameraOrbit(float yawDeg, float pitchDeg) {
   ensureInitialized();
-  if (!m_camera)
+  if (!m_camera || !m_cameraService)
     return;
 
   if (!std::isfinite(yawDeg) || !std::isfinite(pitchDeg)) {
@@ -764,47 +678,31 @@ void GameEngine::cameraOrbit(float yawDeg, float pitchDeg) {
     return;
   }
 
-  Game::Systems::CameraController ctrl;
-  ctrl.orbit(*m_camera, yawDeg, pitchDeg);
+  m_cameraService->orbit(*m_camera, yawDeg, pitchDeg);
 }
 
 void GameEngine::cameraOrbitDirection(int direction, bool shift) {
+  if (!m_camera || !m_cameraService)
+    return;
 
-  const auto &camConfig = Game::GameConfig::instance().camera();
-  float step = shift ? camConfig.orbitStepShift : camConfig.orbitStepNormal;
-  float pitch = step * float(direction);
-  cameraOrbit(0.0f, pitch);
+  m_cameraService->orbitDirection(*m_camera, direction, shift);
 }
 
 void GameEngine::cameraFollowSelection(bool enable) {
   ensureInitialized();
   m_followSelectionEnabled = enable;
-  if (!m_camera)
+  if (!m_camera || !m_world || !m_cameraService)
     return;
 
-  Game::Systems::CameraController ctrl;
-  ctrl.setFollowEnabled(*m_camera, enable);
-
-  if (enable && m_world) {
-    if (auto *selectionSystem =
-            m_world->getSystem<Game::Systems::SelectionSystem>()) {
-      Game::Systems::CameraFollowSystem cfs;
-      cfs.snapToSelection(*m_world, *selectionSystem, *m_camera);
-    }
-  } else {
-    auto pos = m_camera->getPosition();
-    auto tgt = m_camera->getTarget();
-    m_camera->lookAt(pos, tgt, QVector3D(0, 1, 0));
-  }
+  m_cameraService->followSelection(*m_camera, *m_world, enable);
 }
 
 void GameEngine::cameraSetFollowLerp(float alpha) {
   ensureInitialized();
-  if (!m_camera)
+  if (!m_camera || !m_cameraService)
     return;
-  float a = std::clamp(alpha, 0.0f, 1.0f);
-  Game::Systems::CameraController ctrl;
-  ctrl.setFollowLerp(*m_camera, a);
+
+  m_cameraService->setFollowLerp(*m_camera, alpha);
 }
 
 QObject *GameEngine::selectedUnitsModel() { return m_selectedUnitsModel; }
@@ -1061,7 +959,9 @@ void GameEngine::startSkirmish(const QString &mapPath,
       m_renderer->setHoveredEntityId(0);
     }
 
-    m_hover.entityId = 0;
+    if (m_hoverTracker) {
+      m_hoverTracker->updateHover(-1, -1, *m_world, *m_camera, 0, 0);
+    }
 
     m_world->clear();
 
@@ -1127,8 +1027,6 @@ void GameEngine::startSkirmish(const QString &mapPath,
     std::set<int> processedPlayerIds;
 
     if (!playerConfigs.isEmpty()) {
-      qDebug() << "Processing" << playerConfigs.size()
-               << "player configurations from UI";
 
       for (const QVariant &configVar : playerConfigs) {
         QVariantMap config = configVar.toMap();
@@ -1138,21 +1036,16 @@ void GameEngine::startSkirmish(const QString &mapPath,
         bool isHuman = config.value("isHuman", false).toBool();
 
         if (isHuman && playerId != playerOwnerId) {
-          qDebug() << "  Remapping human player from ID" << playerId << "to"
-                   << playerOwnerId;
           playerId = playerOwnerId;
         }
 
         if (processedPlayerIds.count(playerId) > 0) {
-          qDebug() << "  Skipping duplicate config for player" << playerId;
           continue;
         }
 
         if (playerId >= 0) {
           processedPlayerIds.insert(playerId);
           teamOverrides[playerId] = teamId;
-          qDebug() << "  Player" << playerId << "-> Team:" << teamId
-                   << "Color:" << colorHex << "Human:" << isHuman;
 
           QVariantMap updatedConfig = config;
           updatedConfig["playerId"] = playerId;
@@ -1172,8 +1065,6 @@ void GameEngine::startSkirmish(const QString &mapPath,
     }
 
     if (!savedPlayerConfigs.isEmpty()) {
-      qDebug() << "Applying colors after map load for"
-               << savedPlayerConfigs.size() << "players";
       for (const QVariant &configVar : savedPlayerConfigs) {
         QVariantMap config = configVar.toMap();
         int playerId = config.value("playerId", -1).toInt();
@@ -1187,20 +1078,9 @@ void GameEngine::startSkirmish(const QString &mapPath,
           int b = colorHex.mid(5, 2).toInt(&ok, 16);
           ownerRegistry.setOwnerColor(playerId, r / 255.0f, g / 255.0f,
                                       b / 255.0f);
-          qDebug() << "  Player" << playerId << "color set to RGB("
-                   << (r / 255.0f) << "," << (g / 255.0f) << "," << (b / 255.0f)
-                   << ")";
         }
       }
 
-      qDebug() << "Verifying team assignments:";
-      for (const auto &[playerId, teamId] : teamOverrides) {
-        int actualTeam = ownerRegistry.getOwnerTeam(playerId);
-        qDebug() << "  Player" << playerId << "requested team:" << teamId
-                 << "actual team:" << actualTeam;
-      }
-
-      qDebug() << "Updating entity colors to match new owner colors...";
       if (m_world) {
         auto entities = m_world->getEntitiesWith<Engine::Core::UnitComponent>();
         std::unordered_map<int, int> ownerEntityCount;
@@ -1216,15 +1096,7 @@ void GameEngine::startSkirmish(const QString &mapPath,
             ownerEntityCount[unit->ownerId]++;
           }
         }
-        qDebug() << "Updated colors for" << entities.size() << "entities";
-        for (const auto &[ownerId, count] : ownerEntityCount) {
-          auto color = ownerRegistry.getOwnerColor(ownerId);
-          qDebug() << "  Owner" << ownerId << ":" << count
-                   << "entities with color RGB(" << color[0] << "," << color[1]
-                   << "," << color[2] << ")";
-        }
       }
-      qDebug() << "Entity color update complete.";
     }
     auto &terrainService = Game::Map::TerrainService::instance();
 
@@ -1496,3 +1368,14 @@ void GameEngine::rebuildEntityCache() {
     }
   }
 }
+
+bool GameEngine::hasPatrolPreviewWaypoint() const {
+  return m_cursorManager && m_cursorManager->hasPatrolFirstWaypoint();
+}
+
+QVector3D GameEngine::getPatrolPreviewWaypoint() const {
+  if (!m_cursorManager)
+    return QVector3D();
+  return m_cursorManager->getPatrolFirstWaypoint();
+}
+

@@ -91,16 +91,11 @@ const Nation *NationRegistry::getNationForPlayer(int playerId) const {
   auto it = m_playerNations.find(playerId);
   if (it != m_playerNations.end()) {
     auto *nation = getNation(it->second);
-    qDebug() << "[NationRegistry] Player" << playerId
-             << "assigned to nation:" << QString::fromStdString(it->second);
     return nation;
   }
 
   auto *nation = getNation(m_defaultNation);
   if (!nation) {
-    qDebug() << "[NationRegistry] ERROR: No default nation ("
-             << QString::fromStdString(m_defaultNation) << ") found for player"
-             << playerId;
   }
   return nation;
 }
@@ -112,8 +107,6 @@ void NationRegistry::setPlayerNation(int playerId,
 
 void NationRegistry::initializeDefaults() {
   clear();
-
-  qDebug() << "[NationRegistry] Initializing default nations...";
 
   Nation kingdomOfIron;
   kingdomOfIron.id = "kingdom_of_iron";
@@ -132,10 +125,6 @@ void NationRegistry::initializeDefaults() {
   registerNation(std::move(kingdomOfIron));
 
   m_defaultNation = "kingdom_of_iron";
-
-  qDebug() << "[NationRegistry] Registered nation:"
-           << QString::fromStdString(m_defaultNation) << "with"
-           << m_nations[0].availableTroops.size() << "troop types";
 }
 
 void NationRegistry::clear() {
