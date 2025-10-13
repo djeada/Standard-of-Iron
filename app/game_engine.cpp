@@ -91,7 +91,6 @@ GameEngine::GameEngine() {
   }
 
   m_selectedUnitsModel = new SelectedUnitsModel(this, this);
-  QMetaObject::invokeMethod(m_selectedUnitsModel, "refresh");
   m_pickingService = std::make_unique<Game::Systems::PickingService>();
   m_victoryService = std::make_unique<Game::Systems::VictoryService>();
   m_cameraService = std::make_unique<Game::Systems::CameraService>();
@@ -103,6 +102,13 @@ GameEngine::GameEngine() {
           &GameEngine::cursorModeChanged);
   connect(m_cursorManager.get(), &CursorManager::globalCursorChanged, this,
           &GameEngine::globalCursorChanged);
+
+  connect(this, SIGNAL(selectedUnitsChanged()), m_selectedUnitsModel,
+          SLOT(refresh()));
+  connect(this, SIGNAL(selectedUnitsDataChanged()), m_selectedUnitsModel,
+          SLOT(refresh()));
+
+  emit selectedUnitsChanged();
 
   m_unitDiedSubscription =
       Engine::Core::ScopedEventSubscription<Engine::Core::UnitDiedEvent>(
@@ -152,9 +158,6 @@ void GameEngine::onRightClick(qreal sx, qreal sy) {
     selectionSystem->clearSelection();
     syncSelectionFlags();
     emit selectedUnitsChanged();
-    if (m_selectedUnitsModel)
-      QMetaObject::invokeMethod(m_selectedUnitsModel, "refresh");
-    m_runtime.selectionRefreshCounter = 0;
     setCursorMode("normal");
     return;
   }
@@ -390,9 +393,6 @@ void GameEngine::onClickSelect(qreal sx, qreal sy, bool additive) {
     selectionSystem->selectUnit(picked);
     syncSelectionFlags();
     emit selectedUnitsChanged();
-    if (m_selectedUnitsModel)
-      QMetaObject::invokeMethod(m_selectedUnitsModel, "refresh");
-    m_runtime.selectionRefreshCounter = 0;
     return;
   }
 
@@ -430,9 +430,6 @@ void GameEngine::onAreaSelected(qreal x1, qreal y1, qreal x2, qreal y2,
     selectionSystem->selectUnit(id);
   syncSelectionFlags();
   emit selectedUnitsChanged();
-  if (m_selectedUnitsModel)
-    QMetaObject::invokeMethod(m_selectedUnitsModel, "refresh");
-  m_runtime.selectionRefreshCounter = 0;
 }
 
 void GameEngine::initialize() {
@@ -523,8 +520,7 @@ void GameEngine::update(float dt) {
       m_runtime.selectionRefreshCounter++;
       if (m_runtime.selectionRefreshCounter >= 15) {
         m_runtime.selectionRefreshCounter = 0;
-        QMetaObject::invokeMethod(m_selectedUnitsModel, "refresh",
-                                  Qt::QueuedConnection);
+        emit selectedUnitsDataChanged();
       }
     }
   }
