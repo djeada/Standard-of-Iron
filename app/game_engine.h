@@ -3,6 +3,9 @@
 #include "cursor_manager.h"
 #include "game/core/event_manager.h"
 #include "hover_tracker.h"
+#include "utils/engine_view_helpers.h"
+#include "utils/movement_utils.h"
+#include "utils/selection_utils.h"
 #include <QMatrix4x4>
 #include <QObject>
 #include <QPointF>
@@ -43,6 +46,7 @@ class SelectionSystem;
 class ArrowSystem;
 class PickingService;
 class VictoryService;
+class CameraService;
 } // namespace Systems
 } // namespace Game
 
@@ -212,6 +216,7 @@ private:
   std::unique_ptr<Game::Systems::VictoryService> m_victoryService;
   std::unique_ptr<CursorManager> m_cursorManager;
   std::unique_ptr<HoverTracker> m_hoverTracker;
+  std::unique_ptr<Game::Systems::CameraService> m_cameraService;
   QQuickWindow *m_window = nullptr;
   RuntimeState m_runtime;
   ViewportState m_viewport;

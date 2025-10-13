@@ -167,13 +167,6 @@ bool OwnerRegistry::areAllies(int ownerId1, int ownerId2) const {
 
   bool result = (team1 == team2);
 
-  static int logCount = 0;
-  if (result && logCount < 5) {
-    qDebug() << "[OwnerRegistry] Players" << ownerId1 << "and" << ownerId2
-             << "are ALLIES (both team" << team1 << ")";
-    logCount++;
-  }
-
   return result;
 }
 
