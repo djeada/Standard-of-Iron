@@ -80,9 +80,6 @@ void StoneRenderer::configure(const Game::Map::TerrainHeightMap &heightMap,
   m_stoneParams.time = 0.0f;
 
   generateStoneInstances();
-
-  qDebug() << "StoneRenderer configured: generated" << m_stoneInstances.size()
-           << "stone instances";
 }
 
 void StoneRenderer::submit(Renderer &renderer) {
@@ -259,9 +256,6 @@ void StoneRenderer::generateStoneInstances() {
 
   m_stoneInstanceCount = m_stoneInstances.size();
   m_stoneInstancesDirty = m_stoneInstanceCount > 0;
-
-  qDebug() << "StoneRenderer: generated" << m_stoneInstanceCount
-           << "stone instances in" << timer.elapsed() << "ms";
 }
 
 } // namespace Render::GL
