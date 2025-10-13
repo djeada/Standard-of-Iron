@@ -204,7 +204,6 @@ private:
     int maxTroopsPerPlayer = 50;
   };
 
-  void initialize();
   bool screenToGround(const QPointF &screenPt, QVector3D &outWorld);
   bool worldToScreen(const QVector3D &world, QPointF &outScreen) const;
   void syncSelectionFlags();
