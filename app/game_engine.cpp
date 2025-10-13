@@ -213,30 +213,7 @@ void GameEngine::onAttackClick(qreal sx, qreal sy) {
 }
 
 void GameEngine::resetMovement(Engine::Core::Entity *entity) {
-  if (!entity)
-    return;
-
-  auto *movement = entity->getComponent<Engine::Core::MovementComponent>();
-  if (!movement)
-    return;
-
-  auto *transform = entity->getComponent<Engine::Core::TransformComponent>();
-  movement->hasTarget = false;
-  movement->path.clear();
-  movement->pathPending = false;
-  movement->pendingRequestId = 0;
-  movement->repathCooldown = 0.0f;
-  if (transform) {
-    movement->targetX = transform->position.x;
-    movement->targetY = transform->position.z;
-    movement->goalX = transform->position.x;
-    movement->goalY = transform->position.z;
-  } else {
-    movement->targetX = 0.0f;
-    movement->targetY = 0.0f;
-    movement->goalX = 0.0f;
-    movement->goalY = 0.0f;
-  }
+  App::Utils::resetMovement(entity);
 }
 
 void GameEngine::onStopCommand() {
@@ -621,43 +598,24 @@ void GameEngine::render(int pixelWidth, int pixelHeight) {
 }
 
 bool GameEngine::screenToGround(const QPointF &screenPt, QVector3D &outWorld) {
-  if (!m_window || !m_camera || !m_pickingService)
-    return false;
-  int w = (m_viewport.width > 0 ? m_viewport.width : m_window->width());
-  int h = (m_viewport.height > 0 ? m_viewport.height : m_window->height());
-  return m_pickingService->screenToGround(*m_camera, w, h, screenPt, outWorld);
+  return App::Utils::screenToGround(m_pickingService.get(), m_camera.get(),
+                                    m_window, m_viewport.width,
+                                    m_viewport.height, screenPt, outWorld);
 }
 
 bool GameEngine::worldToScreen(const QVector3D &world,
                                QPointF &outScreen) const {
-  if (!m_window || !m_camera || !m_pickingService)
-    return false;
-  int w = (m_viewport.width > 0 ? m_viewport.width : m_window->width());
-  int h = (m_viewport.height > 0 ? m_viewport.height : m_window->height());
-  return m_pickingService->worldToScreen(*m_camera, w, h, world, outScreen);
+  return App::Utils::worldToScreen(m_pickingService.get(), m_camera.get(),
+                                   m_window, m_viewport.width, m_viewport.height,
+                                   world, outScreen);
 }
 
 void GameEngine::syncSelectionFlags() {
   auto *selectionSystem = m_world->getSystem<Game::Systems::SelectionSystem>();
   if (!m_world || !selectionSystem)
     return;
-  const auto &sel = selectionSystem->getSelectedUnits();
-  std::vector<Engine::Core::EntityID> toKeep;
-  toKeep.reserve(sel.size());
-  for (auto id : sel) {
-    if (auto *e = m_world->getEntity(id)) {
-      if (auto *u = e->getComponent<Engine::Core::UnitComponent>()) {
-        if (u->health > 0)
-          toKeep.push_back(id);
-      }
-    }
-  }
-  if (toKeep.size() != sel.size() ||
-      !std::equal(toKeep.begin(), toKeep.end(), sel.begin())) {
-    selectionSystem->clearSelection();
-    for (auto id : toKeep)
-      selectionSystem->selectUnit(id);
-  }
+
+  App::Utils::sanitizeSelection(m_world.get(), selectionSystem);
 
   if (selectionSystem->getSelectedUnits().empty()) {
     if (m_runtime.cursorMode != "normal") {
