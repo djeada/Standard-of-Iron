@@ -4,19 +4,12 @@
 #include "../command_service.h"
 #include "ai_utils.h"
 
-#include <QDebug>
 #include <QVector3D>
 
 namespace Game::Systems::AI {
 
 void AICommandApplier::apply(Engine::Core::World &world, int aiOwnerId,
                              const std::vector<AICommand> &commands) {
-
-  static int applyCounter = 0;
-  if (!commands.empty() && ++applyCounter % 5 == 0) {
-    qDebug() << "[AICommandApplier] Applying" << commands.size()
-             << "commands for AI" << aiOwnerId;
-  }
 
   for (const auto &command : commands) {
     switch (command.type) {
@@ -101,31 +94,21 @@ void AICommandApplier::apply(Engine::Core::World &world, int aiOwnerId,
     case AICommandType::StartProduction: {
       auto *entity = world.getEntity(command.buildingId);
       if (!entity) {
-        qDebug() << "[AICommandApplier] StartProduction: building entity not "
-                    "found (ID="
-                 << command.buildingId << ")";
         break;
       }
 
       auto *production =
           entity->getComponent<Engine::Core::ProductionComponent>();
       if (!production) {
-        qDebug() << "[AICommandApplier] StartProduction: no "
-                    "ProductionComponent on building";
         break;
       }
 
       if (production->inProgress) {
-        qDebug() << "[AICommandApplier] StartProduction: production already in "
-                    "progress";
         break;
       }
 
       auto *unit = entity->getComponent<Engine::Core::UnitComponent>();
       if (unit && unit->ownerId != aiOwnerId) {
-        qDebug() << "[AICommandApplier] StartProduction: ownership mismatch "
-                    "(building owner="
-                 << unit->ownerId << "AI owner=" << aiOwnerId << ")";
         break;
       }
 
@@ -135,9 +118,6 @@ void AICommandApplier::apply(Engine::Core::World &world, int aiOwnerId,
       production->timeRemaining = production->buildTime;
       production->inProgress = true;
 
-      qDebug() << "[AICommandApplier] ✓ Started production of"
-               << QString::fromStdString(command.productType) << "for AI"
-               << aiOwnerId;
       break;
     }
     }
