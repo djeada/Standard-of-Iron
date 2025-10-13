@@ -155,9 +155,11 @@ ApplicationWindow {
             }
         }
 
-        onMapChosen: function(mapPath) {
-            console.log("Main: onMapChosen received", mapPath, "game=", typeof game, "startSkirmish=", (typeof game !== 'undefined' && !!game.startSkirmish))
-            if (typeof game !== 'undefined' && game.startSkirmish) game.startSkirmish(mapPath)
+        onMapChosen: function(mapPath, playerConfigs) {
+            console.log("Main: onMapChosen received", mapPath, "with", playerConfigs.length, "player configs")
+            if (typeof game !== 'undefined' && game.startSkirmish) {
+                game.startSkirmish(mapPath, playerConfigs)
+            }
             mapSelect.visible = false
             mainWindow.menuVisible = false
             mainWindow.gameStarted = true  

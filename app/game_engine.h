@@ -125,7 +125,9 @@ public:
   Q_INVOKABLE QString getSelectedUnitsCommandMode() const;
   Q_INVOKABLE void setRallyAtScreen(qreal sx, qreal sy);
   Q_INVOKABLE QVariantList availableMaps() const;
-  Q_INVOKABLE void startSkirmish(const QString &mapPath);
+  Q_INVOKABLE void
+  startSkirmish(const QString &mapPath,
+                const QVariantList &playerConfigs = QVariantList());
   Q_INVOKABLE void openSettings();
   Q_INVOKABLE void loadSave();
   Q_INVOKABLE void exitGame();

@@ -34,6 +34,10 @@ public:
 
   static void setLocalOwnerId(int ownerId);
   static int localOwnerId();
+
+  static void
+  setPlayerTeamOverrides(const std::unordered_map<int, int> &overrides);
+  static void clearPlayerTeamOverrides();
 };
 
 } // namespace Game::Map

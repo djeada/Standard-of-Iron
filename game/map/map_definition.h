@@ -30,6 +30,7 @@ struct UnitSpawn {
   float x = 0.0f;
   float z = 0.0f;
   int playerId = 0;
+  int teamId = 0;
 };
 
 enum class CoordSystem { Grid, World };
