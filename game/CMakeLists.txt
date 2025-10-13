@@ -15,6 +15,18 @@ add_library(game_systems STATIC
     systems/movement_system.cpp
     systems/combat_system.cpp
     systems/ai_system.cpp
+    systems/ai_system/ai_command_applier.cpp
+    systems/ai_system/ai_command_filter.cpp
+    systems/ai_system/ai_snapshot_builder.cpp
+    systems/ai_system/ai_reasoner.cpp
+    systems/ai_system/ai_executor.cpp
+    systems/ai_system/ai_worker.cpp
+    systems/ai_system/ai_tactical.cpp
+    systems/ai_system/behaviors/production_behavior.cpp
+    systems/ai_system/behaviors/gather_behavior.cpp
+    systems/ai_system/behaviors/attack_behavior.cpp
+    systems/ai_system/behaviors/defend_behavior.cpp
+    systems/ai_system/behaviors/retreat_behavior.cpp
     systems/patrol_system.cpp
     systems/pathfinding.cpp
     systems/building_collision_registry.cpp
@@ -29,6 +41,7 @@ add_library(game_systems STATIC
     systems/terrain_alignment_system.cpp
     systems/owner_registry.cpp
     systems/victory_service.cpp
+    systems/nation_registry.cpp
     map/map_loader.cpp
     map/level_loader.cpp
     map/map_transformer.cpp
