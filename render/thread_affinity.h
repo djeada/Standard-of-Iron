@@ -31,7 +31,6 @@ public:
         pthread_setaffinity_np(nativeThread, sizeof(cpu_set_t), &cpuset);
 
     if (result == 0) {
-      qDebug() << "ThreadAffinity: Pinned thread to core" << coreId;
       return true;
     } else {
       qWarning() << "ThreadAffinity: Failed to pin thread to core" << coreId
@@ -39,7 +38,6 @@ public:
       return false;
     }
 #else
-    qDebug() << "ThreadAffinity: Not supported on this platform";
     return false;
 #endif
   }
@@ -54,7 +52,6 @@ public:
         pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
 
     if (result == 0) {
-      qDebug() << "ThreadAffinity: Pinned current thread to core" << coreId;
       return true;
     } else {
       qWarning() << "ThreadAffinity: Failed to pin current thread, error:"
@@ -63,7 +60,6 @@ public:
     }
 #else
     Q_UNUSED(coreId);
-    qDebug() << "ThreadAffinity: Not supported on this platform";
     return false;
 #endif
   }
@@ -88,7 +84,6 @@ public:
         pthread_setaffinity_np(nativeThread, sizeof(cpu_set_t), &cpuset);
 
     if (result == 0) {
-      qDebug() << "ThreadAffinity: Pinned thread to cores:" << coreIds.size();
       return true;
     } else {
       qWarning() << "ThreadAffinity: Failed to pin thread, error:" << result;
@@ -96,7 +91,6 @@ public:
     }
 #else
     Q_UNUSED(coreIds);
-    qDebug() << "ThreadAffinity: Not supported on this platform";
     return false;
 #endif
   }
