@@ -245,6 +245,7 @@ private:
   EntityCache m_entityCache;
 signals:
   void selectedUnitsChanged();
+  void selectedUnitsDataChanged();
   void enemyTroopsDefeatedChanged();
   void victoryStateChanged();
   void cursorModeChanged();
