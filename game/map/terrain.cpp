@@ -63,19 +63,10 @@ void TerrainHeightMap::buildFromFeatures(
   std::fill(m_hillEntrances.begin(), m_hillEntrances.end(), false);
   std::fill(m_hillWalkable.begin(), m_hillWalkable.end(), false);
 
-  qDebug() << "Building terrain from" << features.size() << "features";
-
   const float gridHalfWidth = m_width * 0.5f - 0.5f;
   const float gridHalfHeight = m_height * 0.5f - 0.5f;
 
   for (const auto &feature : features) {
-    qDebug() << "  Feature:"
-             << (feature.type == TerrainType::Mountain ? "Mountain"
-                 : feature.type == TerrainType::Hill   ? "Hill"
-                                                       : "Flat")
-             << "at (" << feature.centerX << "," << feature.centerZ << ")"
-             << "width:" << feature.width << "depth:" << feature.depth
-             << "height:" << feature.height;
 
     const float gridCenterX = (feature.centerX / m_tileSize) + gridHalfWidth;
     const float gridCenterZ = (feature.centerZ / m_tileSize) + gridHalfHeight;
