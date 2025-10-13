@@ -18,9 +18,6 @@ void TerrainService::initialize(const MapDefinition &mapDef) {
   m_heightMap->buildFromFeatures(mapDef.terrain);
   m_biomeSettings = mapDef.biome;
   m_heightMap->applyBiomeVariation(m_biomeSettings);
-
-  qDebug() << "TerrainService initialized with" << mapDef.terrain.size()
-           << "terrain features";
 }
 
 float TerrainService::getTerrainHeight(float worldX, float worldZ) const {

@@ -6,8 +6,6 @@
 #include "ai_system/behaviors/production_behavior.h"
 #include "ai_system/behaviors/retreat_behavior.h"
 #include "owner_registry.h"
-#include <QDebug>
-#include <iostream>
 
 namespace Game::Systems {
 
@@ -28,8 +26,6 @@ AISystem::AISystem() {
 }
 
 void AISystem::reinitialize() {
-  std::cout << "[AISystem] Reinitializing AI instances..." << std::endl;
-
   m_aiInstances.clear();
 
   initializeAIPlayers();
@@ -39,11 +35,7 @@ void AISystem::initializeAIPlayers() {
   auto &registry = OwnerRegistry::instance();
   const auto &aiOwnerIds = registry.getAIOwnerIds();
 
-  qDebug() << "[AISystem] Initializing AI players. Found" << aiOwnerIds.size()
-           << "AI owners";
-
   if (aiOwnerIds.empty()) {
-    qDebug() << "[AISystem] No AI players found in registry";
     return;
   }
 
@@ -56,9 +48,6 @@ void AISystem::initializeAIPlayers() {
                                                      m_behaviorRegistry);
 
     m_aiInstances.push_back(std::move(instance));
-
-    qDebug() << "[AISystem] Initialized AI for player" << playerId << "team"
-             << teamId << "(total AI instances:" << m_aiInstances.size() << ")";
   }
 }
 
