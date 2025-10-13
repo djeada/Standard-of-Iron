@@ -74,6 +74,7 @@ public:
   Q_PROPERTY(QVariantList ownerInfo READ getOwnerInfo NOTIFY ownerInfoChanged)
   Q_PROPERTY(int selectedPlayerId READ selectedPlayerId WRITE
                  setSelectedPlayerId NOTIFY selectedPlayerIdChanged)
+  Q_PROPERTY(QString lastError READ lastError NOTIFY lastErrorChanged)
 
   Q_INVOKABLE void onMapClicked(qreal sx, qreal sy);
   Q_INVOKABLE void onRightClick(qreal sx, qreal sy);
@@ -118,6 +119,7 @@ public:
       emit selectedPlayerIdChanged();
     }
   }
+  QString lastError() const { return m_runtime.lastError; }
 
   Q_INVOKABLE bool hasSelectedType(const QString &type) const;
   Q_INVOKABLE void recruitNearSelected(const QString &unitType);
@@ -155,6 +157,7 @@ private:
     int localOwnerId = 1;
     QString victoryState = "";
     QString cursorMode = "normal";
+    QString lastError = "";
     Qt::CursorShape currentCursor = Qt::ArrowCursor;
     int lastTroopCount = 0;
     std::uint64_t visibilityVersion = 0;
@@ -206,6 +209,7 @@ private:
   void onUnitDied(const Engine::Core::UnitDiedEvent &event);
   void rebuildEntityCache();
   void updateCursor(Qt::CursorShape newCursor);
+  void setError(const QString &errorMessage);
 
   std::unique_ptr<Engine::Core::World> m_world;
   std::unique_ptr<Render::GL::Renderer> m_renderer;
@@ -243,4 +247,5 @@ signals:
   void availableMapsChanged();
   void ownerInfoChanged();
   void selectedPlayerIdChanged();
+  void lastErrorChanged();
 };
