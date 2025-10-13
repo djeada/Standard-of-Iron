@@ -24,8 +24,14 @@ LevelLoadResult LevelLoader::loadFromAssets(const QString &mapPath,
 
   Game::Visuals::VisualCatalog visualCatalog;
   QString visualsErr;
-  visualCatalog.loadFromJsonFile("assets/visuals/unit_visuals.json",
-                                 &visualsErr);
+  if (!visualCatalog.loadFromJsonFile("assets/visuals/unit_visuals.json",
+                                      &visualsErr)) {
+    res.ok = false;
+    res.errorMessage =
+        QString("Failed to load visual catalog: %1").arg(visualsErr);
+    qWarning() << res.errorMessage;
+    return res;
+  }
 
   auto unitReg = std::make_shared<Game::Units::UnitFactoryRegistry>();
   Game::Units::registerBuiltInUnits(*unitReg);
@@ -95,6 +101,8 @@ LevelLoadResult LevelLoader::loadFromAssets(const QString &mapPath,
       }
     }
   } else {
+    res.ok = false;
+    res.errorMessage = QString("Map load failed: %1").arg(err);
     qWarning() << "LevelLoader: Map load failed:" << err
                << " - applying default environment";
     Game::Map::Environment::applyDefault(renderer, camera);

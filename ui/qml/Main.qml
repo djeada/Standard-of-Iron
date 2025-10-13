@@ -295,4 +295,41 @@ ApplicationWindow {
             }
         }
     }
+
+    Dialog {
+        id: errorDialog
+        anchors.centerIn: parent
+        width: Math.min(parent.width * 0.6, 500)
+        title: "Error"
+        modal: true
+        standardButtons: Dialog.Ok
+
+        contentItem: Rectangle {
+            color: "#2a2a2a"
+            implicitHeight: errorText.implicitHeight + 40
+
+            Text {
+                id: errorText
+                anchors.centerIn: parent
+                width: parent.width - 40
+                text: game ? game.lastError : ""
+                color: "#ffcccc"
+                wrapMode: Text.WordWrap
+                font.pixelSize: 14
+            }
+        }
+
+        onAccepted: {
+            if (game) game.clearError()
+        }
+    }
+
+    Connections {
+        target: game
+        function onLastErrorChanged() {
+            if (game.lastError !== "") {
+                errorDialog.open()
+            }
+        }
+    }
 }

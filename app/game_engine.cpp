@@ -319,6 +319,23 @@ void GameEngine::onPatrolClick(qreal sx, qreal sy) {
   setCursorMode("normal");
 }
 
+void GameEngine::updateCursor(Qt::CursorShape newCursor) {
+  if (!m_window)
+    return;
+  if (m_runtime.currentCursor != newCursor) {
+    m_runtime.currentCursor = newCursor;
+    m_window->setCursor(newCursor);
+  }
+}
+
+void GameEngine::setError(const QString &errorMessage) {
+  if (m_runtime.lastError != errorMessage) {
+    m_runtime.lastError = errorMessage;
+    qCritical() << "GameEngine error:" << errorMessage;
+    emit lastErrorChanged();
+  }
+}
+
 void GameEngine::setCursorMode(const QString &mode) {
   if (!m_cursorManager)
     return;
@@ -420,6 +437,7 @@ void GameEngine::onAreaSelected(qreal x1, qreal y1, qreal x2, qreal y2,
 
 void GameEngine::initialize() {
   if (!Render::GL::RenderBootstrap::initialize(*m_renderer, *m_camera)) {
+    setError("Failed to initialize OpenGL renderer");
     return;
   }
 
@@ -912,6 +930,8 @@ QVariantList GameEngine::availableMaps() const {
 void GameEngine::startSkirmish(const QString &mapPath,
                                const QVariantList &playerConfigs) {
 
+  clearError();
+
   m_level.mapName = mapPath;
 
   m_runtime.victoryState = "";
@@ -973,6 +993,8 @@ void GameEngine::startSkirmish(const QString &mapPath,
           }
         }
       }
+    } else {
+      qWarning() << "Could not open map file for reading player IDs:" << mapPath;
     }
 
     auto &ownerRegistry = Game::Systems::OwnerRegistry::instance();
@@ -1037,6 +1059,10 @@ void GameEngine::startSkirmish(const QString &mapPath,
 
     auto lr = Game::Map::LevelLoader::loadFromAssets(m_level.mapName, *m_world,
                                                      *m_renderer, *m_camera);
+
+    if (!lr.ok && !lr.errorMessage.isEmpty()) {
+      setError(lr.errorMessage);
+    }
 
     if (!savedPlayerConfigs.isEmpty()) {
       for (const QVariant &configVar : savedPlayerConfigs) {
