@@ -1,5 +1,6 @@
 #pragma once
 
+#include "formation_system.h"
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -21,6 +22,7 @@ struct Nation {
   std::string displayName;
   std::vector<TroopType> availableTroops;
   std::string primaryBuilding = "barracks";
+  FormationType formationType = FormationType::Roman;
 
   std::vector<const TroopType *> getMeleeTroops() const;
 
