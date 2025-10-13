@@ -86,8 +86,5 @@ int main(int argc, char *argv[]) {
                      app.exit(3);
                    });
 
-  qDebug() << "Application started successfully";
-  qDebug() << "Assets directory:" << QDir::currentPath() + "/assets";
-
   return app.exec();
 }

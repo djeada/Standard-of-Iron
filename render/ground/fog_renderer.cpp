@@ -71,9 +71,6 @@ void FogRenderer::buildChunks() {
       ++totalQuads;
     }
   }
-
-  qDebug() << "FogRenderer: built" << m_instances.size() << "instances in"
-           << timer.elapsed() << "ms" << "tile half-size:" << halfTile;
 }
 
 } // namespace Render::GL
