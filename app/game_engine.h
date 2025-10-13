@@ -120,6 +120,12 @@ public:
     }
   }
   QString lastError() const { return m_runtime.lastError; }
+  Q_INVOKABLE void clearError() { 
+    if (!m_runtime.lastError.isEmpty()) {
+      m_runtime.lastError = "";
+      emit lastErrorChanged();
+    }
+  }
 
   Q_INVOKABLE bool hasSelectedType(const QString &type) const;
   Q_INVOKABLE void recruitNearSelected(const QString &unitType);
