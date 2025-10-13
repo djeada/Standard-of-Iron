@@ -54,11 +54,7 @@ void Archer::init(const SpawnParams &params) {
 
   if (params.aiControlled) {
     e->addComponent<Engine::Core::AIControlledComponent>();
-    std::cout << "[Archer] Created AI-controlled archer for player "
-              << params.playerId << " at entity ID " << e->getId() << std::endl;
   } else {
-    std::cout << "[Archer] Created player-controlled archer for player "
-              << params.playerId << " at entity ID " << e->getId() << std::endl;
   }
 
   QVector3D tc = teamColor(m_u->ownerId);
