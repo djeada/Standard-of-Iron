@@ -52,6 +52,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
         app/game_engine.cpp
         app/selected_units_model.cpp
         ui/gl_view.cpp
+        ui/theme.cpp
     )
 else()
     add_executable(standard_of_iron
@@ -59,6 +60,7 @@ else()
         app/game_engine.cpp
         app/selected_units_model.cpp
         ui/gl_view.cpp
+        ui/theme.cpp
     )
 endif()
 

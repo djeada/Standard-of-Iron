@@ -1,4 +1,5 @@
 #include "world.h"
+#include "../systems/owner_registry.h"
 #include "component.h"
 
 namespace Engine::Core {
@@ -37,7 +38,7 @@ void World::update(float deltaTime) {
   }
 }
 
-std::vector<Entity *> World::getUnitsOwnedBy(int ownerId) {
+std::vector<Entity *> World::getUnitsOwnedBy(int ownerId) const {
   std::vector<Entity *> result;
   result.reserve(m_entities.size());
   for (auto &[id, entity] : m_entities) {
@@ -51,7 +52,7 @@ std::vector<Entity *> World::getUnitsOwnedBy(int ownerId) {
   return result;
 }
 
-std::vector<Entity *> World::getUnitsNotOwnedBy(int ownerId) {
+std::vector<Entity *> World::getUnitsNotOwnedBy(int ownerId) const {
   std::vector<Entity *> result;
   result.reserve(m_entities.size());
   for (auto &[id, entity] : m_entities) {
@@ -59,6 +60,41 @@ std::vector<Entity *> World::getUnitsNotOwnedBy(int ownerId) {
     if (!unit)
       continue;
     if (unit->ownerId != ownerId) {
+      result.push_back(entity.get());
+    }
+  }
+  return result;
+}
+
+std::vector<Entity *> World::getAlliedUnits(int ownerId) const {
+  std::vector<Entity *> result;
+  result.reserve(m_entities.size());
+  auto &ownerRegistry = Game::Systems::OwnerRegistry::instance();
+
+  for (auto &[id, entity] : m_entities) {
+    auto *unit = entity->getComponent<UnitComponent>();
+    if (!unit)
+      continue;
+
+    if (unit->ownerId == ownerId ||
+        ownerRegistry.areAllies(ownerId, unit->ownerId)) {
+      result.push_back(entity.get());
+    }
+  }
+  return result;
+}
+
+std::vector<Entity *> World::getEnemyUnits(int ownerId) const {
+  std::vector<Entity *> result;
+  result.reserve(m_entities.size());
+  auto &ownerRegistry = Game::Systems::OwnerRegistry::instance();
+
+  for (auto &[id, entity] : m_entities) {
+    auto *unit = entity->getComponent<UnitComponent>();
+    if (!unit)
+      continue;
+
+    if (ownerRegistry.areEnemies(ownerId, unit->ownerId)) {
       result.push_back(entity.get());
     }
   }

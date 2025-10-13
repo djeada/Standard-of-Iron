@@ -121,19 +121,26 @@ bool VictoryService::checkElimination(Engine::Core::World &world) {
 
   bool enemyKeyStructuresAlive = false;
 
+  auto &ownerRegistry = OwnerRegistry::instance();
+  int localTeam = ownerRegistry.getOwnerTeam(m_localOwnerId);
+
   auto entities = world.getEntitiesWith<Engine::Core::UnitComponent>();
   for (auto *e : entities) {
     auto *unit = e->getComponent<Engine::Core::UnitComponent>();
     if (!unit || unit->health <= 0)
       continue;
 
-    if (OwnerRegistry::instance().isAI(unit->ownerId)) {
-      QString unitType = QString::fromStdString(unit->unitType);
-      if (std::find(m_keyStructures.begin(), m_keyStructures.end(), unitType) !=
-          m_keyStructures.end()) {
-        enemyKeyStructuresAlive = true;
-        break;
-      }
+    if (unit->ownerId == m_localOwnerId)
+      continue;
+
+    if (ownerRegistry.areAllies(m_localOwnerId, unit->ownerId))
+      continue;
+
+    QString unitType = QString::fromStdString(unit->unitType);
+    if (std::find(m_keyStructures.begin(), m_keyStructures.end(), unitType) !=
+        m_keyStructures.end()) {
+      enemyKeyStructuresAlive = true;
+      break;
     }
   }
 
