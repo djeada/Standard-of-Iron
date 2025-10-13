@@ -439,9 +439,13 @@ void GameEngine::onAreaSelected(qreal x1, qreal y1, qreal x2, qreal y2,
 }
 
 void GameEngine::ensureInitialized() {
+  QString error;
   Game::Map::WorldBootstrap::ensureInitialized(m_runtime.initialized,
                                                *m_renderer, *m_camera,
-                                               m_ground.get());
+                                               m_ground.get(), &error);
+  if (!error.isEmpty()) {
+    setError(error);
+  }
 }
 
 int GameEngine::enemyTroopsDefeated() const { return m_enemyTroopsDefeated; }
