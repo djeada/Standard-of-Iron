@@ -7,8 +7,12 @@ namespace Map {
 
 bool WorldBootstrap::initialize(Render::GL::Renderer &renderer,
                                 Render::GL::Camera &camera,
-                                Render::GL::GroundRenderer *ground) {
+                                Render::GL::GroundRenderer *ground,
+                                QString *outError) {
   if (!Render::GL::RenderBootstrap::initialize(renderer, camera)) {
+    if (outError) {
+      *outError = "Failed to initialize OpenGL renderer";
+    }
     return false;
   }
 
@@ -22,9 +26,10 @@ bool WorldBootstrap::initialize(Render::GL::Renderer &renderer,
 void WorldBootstrap::ensureInitialized(bool &initialized,
                                       Render::GL::Renderer &renderer,
                                       Render::GL::Camera &camera,
-                                      Render::GL::GroundRenderer *ground) {
+                                      Render::GL::GroundRenderer *ground,
+                                      QString *outError) {
   if (!initialized) {
-    initialized = initialize(renderer, camera, ground);
+    initialized = initialize(renderer, camera, ground, outError);
   }
 }
 
