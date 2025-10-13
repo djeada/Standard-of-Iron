@@ -44,6 +44,7 @@ class SelectionSystem;
 class ArrowSystem;
 class PickingService;
 class VictoryService;
+class CameraService;
 } // namespace Systems
 } // namespace Game
 
@@ -221,6 +222,7 @@ private:
   std::unique_ptr<Render::GL::StoneRenderer> m_stone;
   std::unique_ptr<Game::Systems::PickingService> m_pickingService;
   std::unique_ptr<Game::Systems::VictoryService> m_victoryService;
+  std::unique_ptr<Game::Systems::CameraService> m_cameraService;
   QQuickWindow *m_window = nullptr;
   RuntimeState m_runtime;
   ViewportState m_viewport;
