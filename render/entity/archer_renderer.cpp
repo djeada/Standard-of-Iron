@@ -104,7 +104,7 @@ struct ArcherPose {
 };
 
 static inline ArcherPose makePose(uint32_t seed, float animTime, bool isMoving,
-                                  bool isAttacking) {
+                                  bool isAttacking, bool isMelee = false) {
   (void)seed;
   ArcherPose P;
 
@@ -117,22 +117,56 @@ static inline ArcherPose makePose(uint32_t seed, float animTime, bool isMoving,
     float attackCycleTime = 1.2f;
     float attackPhase = fmod(animTime * (1.0f / attackCycleTime), 1.0f);
 
-    QVector3D restPos(0.15f, HP::SHOULDER_Y + 0.15f, 0.20f);
-    QVector3D drawPos(0.35f, HP::SHOULDER_Y + 0.08f, -0.15f);
+    if (isMelee) {
 
-    if (attackPhase < 0.3f) {
+      QVector3D restPos(0.25f, HP::SHOULDER_Y, 0.10f);
+      QVector3D raisedPos(0.30f, HP::HEAD_TOP_Y + 0.2f, -0.05f);
+      QVector3D strikePos(0.35f, HP::WAIST_Y, 0.45f);
 
-      float t = attackPhase / 0.3f;
-      t = t * t;
-      P.handR = restPos * (1.0f - t) + drawPos * t;
-    } else if (attackPhase < 0.6f) {
+      if (attackPhase < 0.25f) {
 
-      P.handR = drawPos;
+        float t = attackPhase / 0.25f;
+        t = t * t;
+        P.handR = restPos * (1.0f - t) + raisedPos * t;
+        P.handL = QVector3D(-0.15f, HP::SHOULDER_Y - 0.1f * t, 0.20f);
+      } else if (attackPhase < 0.35f) {
+
+        P.handR = raisedPos;
+        P.handL = QVector3D(-0.15f, HP::SHOULDER_Y - 0.1f, 0.20f);
+      } else if (attackPhase < 0.55f) {
+
+        float t = (attackPhase - 0.35f) / 0.2f;
+        t = t * t * t;
+        P.handR = raisedPos * (1.0f - t) + strikePos * t;
+        P.handL = QVector3D(-0.15f, HP::SHOULDER_Y - 0.1f * (1.0f - t * 0.5f),
+                            0.20f + 0.15f * t);
+      } else {
+
+        float t = (attackPhase - 0.55f) / 0.45f;
+        t = 1.0f - (1.0f - t) * (1.0f - t);
+        P.handR = strikePos * (1.0f - t) + restPos * t;
+        P.handL = QVector3D(-0.15f, HP::SHOULDER_Y - 0.05f * (1.0f - t),
+                            0.35f * (1.0f - t) + 0.20f * t);
+      }
     } else {
 
-      float t = (attackPhase - 0.6f) / 0.4f;
-      t = 1.0f - (1.0f - t) * (1.0f - t);
-      P.handR = drawPos * (1.0f - t) + restPos * t;
+      QVector3D restPos(0.15f, HP::SHOULDER_Y + 0.15f, 0.20f);
+      QVector3D drawPos(0.35f, HP::SHOULDER_Y + 0.08f, -0.15f);
+
+      if (attackPhase < 0.3f) {
+
+        float t = attackPhase / 0.3f;
+        t = t * t;
+        P.handR = restPos * (1.0f - t) + drawPos * t;
+      } else if (attackPhase < 0.6f) {
+
+        P.handR = drawPos;
+      } else {
+
+        float t = (attackPhase - 0.6f) / 0.4f;
+        t = 1.0f - (1.0f - t) * (1.0f - t);
+        P.handR = drawPos * (1.0f - t) + restPos * t;
+      }
     }
   }
 
@@ -463,6 +497,7 @@ void registerArcherRenderer(Render::GL::EntityRendererRegistry &registry) {
 
     bool isMoving = false;
     bool isAttacking = false;
+    bool isMelee = false;
     float targetRotationY = 0.0f;
 
     if (p.entity) {
@@ -477,9 +512,15 @@ void registerArcherRenderer(Render::GL::EntityRendererRegistry &registry) {
       isMoving = (movement && movement->hasTarget);
 
       if (attack && attackTarget && attackTarget->targetId > 0 && transform) {
+
+        isMelee = (attack->currentMode ==
+                   Engine::Core::AttackComponent::CombatMode::Melee);
+
         bool stationary = !isMoving;
+        float currentCooldown =
+            isMelee ? attack->meleeCooldown : attack->cooldown;
         bool recentlyFired =
-            attack->timeSinceLast < std::min(attack->cooldown, 0.45f);
+            attack->timeSinceLast < std::min(currentCooldown, 0.45f);
         bool targetInRange = false;
 
         if (p.world) {
@@ -566,7 +607,7 @@ void registerArcherRenderer(Render::GL::EntityRendererRegistry &registry) {
       DrawContext instCtx{p.resources, p.entity, p.world, instModel};
 
       ArcherPose pose = makePose(instSeed, p.animationTime + phaseOffset,
-                                 isMoving, isAttacking);
+                                 isMoving, isAttacking, isMelee);
 
       drawQuiver(instCtx, out, colors, pose, instSeed);
       drawLegs(instCtx, out, pose, colors);

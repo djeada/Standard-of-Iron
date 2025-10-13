@@ -753,8 +753,6 @@ void Backend::uploadCylinderInstances(std::size_t count) {
 
   if (m_usePersistentBuffers && m_cylinderPersistentBuffer.isValid()) {
     if (count > m_cylinderPersistentBuffer.capacity()) {
-      qWarning() << "Backend: Too many cylinders:" << count
-                 << "max:" << m_cylinderPersistentBuffer.capacity();
       count = m_cylinderPersistentBuffer.capacity();
     }
 

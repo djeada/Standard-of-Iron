@@ -2,6 +2,7 @@
 
 #include "../core/component.h"
 #include "../core/world.h"
+#include "../systems/owner_registry.h"
 #include <algorithm>
 #include <cmath>
 
@@ -88,13 +89,18 @@ VisibilityService::gatherVisionSources(Engine::Core::World &world,
   auto entities = world.getEntitiesWith<Engine::Core::TransformComponent>();
   const float rangePadding = m_tileSize * 0.5f;
 
+  auto &ownerRegistry = Game::Systems::OwnerRegistry::instance();
+
   for (auto *entity : entities) {
     auto *transform = entity->getComponent<Engine::Core::TransformComponent>();
     auto *unit = entity->getComponent<Engine::Core::UnitComponent>();
     if (!transform || !unit)
       continue;
-    if (unit->ownerId != playerId)
+
+    if (unit->ownerId != playerId &&
+        !ownerRegistry.areAllies(playerId, unit->ownerId))
       continue;
+
     if (unit->health <= 0)
       continue;
 

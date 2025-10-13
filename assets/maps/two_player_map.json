@@ -34,12 +34,12 @@
     "far": 300.0
   },
   "spawns": [
-    { "type": "barracks", "x": 50, "z": 50, "playerId": 2 },
-    { "type": "archer", "x": 48, "z": 52, "playerId": 2 },
-    { "type": "archer", "x": 52, "z": 48, "playerId": 2 },
-    { "type": "barracks", "x": 100, "z": 100, "playerId": 5 },
-    { "type": "archer", "x": 98, "z": 102, "playerId": 5 },
-    { "type": "archer", "x": 102, "z": 98, "playerId": 5 }
+    { "type": "barracks", "x": 50, "z": 50, "playerId": 2, "teamId": 1 },
+    { "type": "archer", "x": 48, "z": 52, "playerId": 2, "teamId": 1 },
+    { "type": "archer", "x": 52, "z": 48, "playerId": 2, "teamId": 1 },
+    { "type": "barracks", "x": 100, "z": 100, "playerId": 5, "teamId": 2 },
+    { "type": "archer", "x": 98, "z": 102, "playerId": 5, "teamId": 2 },
+    { "type": "archer", "x": 102, "z": 98, "playerId": 5, "teamId": 2 }
   ],
   "victory": {
     "type": "elimination",
