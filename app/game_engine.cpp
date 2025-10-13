@@ -1032,6 +1032,8 @@ QVariantList GameEngine::availableMaps() const {
 void GameEngine::startSkirmish(const QString &mapPath,
                                const QVariantList &playerConfigs) {
 
+  clearError();
+
   m_level.mapName = mapPath;
 
   m_runtime.victoryState = "";
@@ -1091,6 +1093,8 @@ void GameEngine::startSkirmish(const QString &mapPath,
           }
         }
       }
+    } else {
+      qWarning() << "Could not open map file for reading player IDs:" << mapPath;
     }
 
     auto &ownerRegistry = Game::Systems::OwnerRegistry::instance();
