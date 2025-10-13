@@ -664,13 +664,10 @@ void Backend::initializeCylinderPipeline() {
   const std::size_t persistentCapacity = 10000;
   if (m_cylinderPersistentBuffer.initialize(persistentCapacity, 3)) {
     m_usePersistentBuffers = true;
-    qDebug() << "Backend: Persistent cylinder buffer initialized ("
-             << persistentCapacity << "instances, triple buffered)";
 
     glBindBuffer(GL_ARRAY_BUFFER, m_cylinderPersistentBuffer.buffer());
   } else {
     m_usePersistentBuffers = false;
-    qDebug() << "Backend: Persistent buffers not available, using fallback";
 
     glGenBuffers(1, &m_cylinderInstanceBuffer);
     glBindBuffer(GL_ARRAY_BUFFER, m_cylinderInstanceBuffer);

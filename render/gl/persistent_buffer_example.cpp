@@ -8,7 +8,6 @@ void Backend::initializeCylinderPipeline() {
 
   const std::size_t initialCapacity = 10000;
   if (m_cylinderPersistentBuffer.initialize(initialCapacity, 3)) {
-    qDebug() << "Persistent cylinder buffer initialized";
   } else {
     qWarning()
         << "Failed to init persistent buffer, falling back to old method";
