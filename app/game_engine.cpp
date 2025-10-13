@@ -1021,8 +1021,6 @@ void GameEngine::startSkirmish(const QString &mapPath,
     std::set<int> processedPlayerIds;
 
     if (!playerConfigs.isEmpty()) {
-      qDebug() << "Processing" << playerConfigs.size()
-               << "player configurations from UI";
 
       for (const QVariant &configVar : playerConfigs) {
         QVariantMap config = configVar.toMap();
@@ -1032,21 +1030,16 @@ void GameEngine::startSkirmish(const QString &mapPath,
         bool isHuman = config.value("isHuman", false).toBool();
 
         if (isHuman && playerId != playerOwnerId) {
-          qDebug() << "  Remapping human player from ID" << playerId << "to"
-                   << playerOwnerId;
           playerId = playerOwnerId;
         }
 
         if (processedPlayerIds.count(playerId) > 0) {
-          qDebug() << "  Skipping duplicate config for player" << playerId;
           continue;
         }
 
         if (playerId >= 0) {
           processedPlayerIds.insert(playerId);
           teamOverrides[playerId] = teamId;
-          qDebug() << "  Player" << playerId << "-> Team:" << teamId
-                   << "Color:" << colorHex << "Human:" << isHuman;
 
           QVariantMap updatedConfig = config;
           updatedConfig["playerId"] = playerId;
@@ -1062,8 +1055,6 @@ void GameEngine::startSkirmish(const QString &mapPath,
                                                      *m_renderer, *m_camera);
 
     if (!savedPlayerConfigs.isEmpty()) {
-      qDebug() << "Applying colors after map load for"
-               << savedPlayerConfigs.size() << "players";
       for (const QVariant &configVar : savedPlayerConfigs) {
         QVariantMap config = configVar.toMap();
         int playerId = config.value("playerId", -1).toInt();
@@ -1077,20 +1068,9 @@ void GameEngine::startSkirmish(const QString &mapPath,
           int b = colorHex.mid(5, 2).toInt(&ok, 16);
           ownerRegistry.setOwnerColor(playerId, r / 255.0f, g / 255.0f,
                                       b / 255.0f);
-          qDebug() << "  Player" << playerId << "color set to RGB("
-                   << (r / 255.0f) << "," << (g / 255.0f) << "," << (b / 255.0f)
-                   << ")";
         }
       }
 
-      qDebug() << "Verifying team assignments:";
-      for (const auto &[playerId, teamId] : teamOverrides) {
-        int actualTeam = ownerRegistry.getOwnerTeam(playerId);
-        qDebug() << "  Player" << playerId << "requested team:" << teamId
-                 << "actual team:" << actualTeam;
-      }
-
-      qDebug() << "Updating entity colors to match new owner colors...";
       if (m_world) {
         auto entities = m_world->getEntitiesWith<Engine::Core::UnitComponent>();
         std::unordered_map<int, int> ownerEntityCount;
@@ -1106,15 +1086,7 @@ void GameEngine::startSkirmish(const QString &mapPath,
             ownerEntityCount[unit->ownerId]++;
           }
         }
-        qDebug() << "Updated colors for" << entities.size() << "entities";
-        for (const auto &[ownerId, count] : ownerEntityCount) {
-          auto color = ownerRegistry.getOwnerColor(ownerId);
-          qDebug() << "  Owner" << ownerId << ":" << count
-                   << "entities with color RGB(" << color[0] << "," << color[1]
-                   << "," << color[2] << ")";
-        }
       }
-      qDebug() << "Entity color update complete.";
     }
     auto &terrainService = Game::Map::TerrainService::instance();
 
