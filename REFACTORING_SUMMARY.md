@@ -1,4 +1,98 @@
-# Cursor and Hover Refactoring Summary
+# Refactoring Summary
+
+## 1. World Bootstrap and Map Lifecycle Refactoring
+
+### Overview
+This refactoring separates world initialization, skirmish loading, and map catalog management from the `GameEngine` into clearly defined, modular services. The goal is to clarify the boundaries between engine setup, map I/O, and runtime world management—reducing coupling and improving testability of core loading logic.
+
+### New Services Created
+
+#### WorldBootstrap Class (game/map/world_bootstrap.h, game/map/world_bootstrap.cpp)
+**Purpose**: Responsible for initializing world and rendering context.
+
+**Responsibilities**:
+- World and renderer initialization
+- Ground renderer setup
+- Error handling for initialization failures
+
+**Public API**:
+- `initialize(Renderer, Camera, GroundRenderer, outError)` → `bool`
+- `ensureInitialized(initialized, Renderer, Camera, GroundRenderer, outError)` → `void`
+
+**Benefits**:
+- Clean entry point for creating a functional world ready for simulation and rendering
+- Error handling is explicit and testable
+- Decouples OpenGL setup from game logic
+
+#### SkirmishLoader Class (game/map/skirmish_loader.h, game/map/skirmish_loader.cpp)
+**Purpose**: Handles the full lifecycle of starting a skirmish map.
+
+**Responsibilities**:
+- Map I/O and parsing
+- Owner registry setup
+- Terrain and fog configuration
+- Visibility initialization
+- Camera focus calculation
+- Renderer lock/unlock flow
+- Player configuration and team management
+
+**Public API**:
+- `start(mapPath, playerConfigs, selectedPlayerId, outSelectedPlayerId)` → `SkirmishLoadResult`
+- `setGroundRenderer(GroundRenderer*)` - Dependency injection
+- `setTerrainRenderer(TerrainRenderer*)` - Dependency injection
+- `setBiomeRenderer(BiomeRenderer*)` - Dependency injection
+- `setFogRenderer(FogRenderer*)` - Dependency injection
+- `setStoneRenderer(StoneRenderer*)` - Dependency injection
+- `setOnOwnersUpdated(callback)` - Hook for owner registry updates
+- `setOnVisibilityMaskReady(callback)` - Hook for visibility mask updates
+
+**Benefits**:
+- Cleanly separates data loading and game state setup from engine runtime
+- All map loading concerns in one place
+- Easy to test independently
+- Clear callback hooks for state updates
+
+#### MapCatalog Class (game/map/map_catalog.h, game/map/map_catalog.cpp)
+**Purpose**: Manages map discovery and metadata.
+
+**Responsibilities**:
+- Reading available maps from `assets/maps/*.json`
+- Extracting map metadata (name, description, player slots, thumbnails)
+- Returning lightweight DTOs for UI consumption
+
+**Public API**:
+- `availableMaps()` → `QVariantList`
+
+**Benefits**:
+- Keeps file system and JSON parsing concerns out of the engine's core logic
+- Single source of truth for map metadata
+- Easy to extend with caching or filtering
+
+### GameEngine Changes
+**Removed** (~289 lines):
+- `initialize()` method - moved to `WorldBootstrap`
+- `availableMaps()` implementation - moved to `MapCatalog`
+- `startSkirmish()` implementation - moved to `SkirmishLoader`
+- All inline map file parsing logic
+- Owner registry setup code
+- Visibility service initialization
+- Terrain configuration logic
+
+**Added** (~44 lines):
+- Delegation to `WorldBootstrap::ensureInitialized()`
+- Delegation to `MapCatalog::availableMaps()`
+- Instantiation and configuration of `SkirmishLoader`
+- Callback hooks for owner and visibility updates
+
+### Impact
+- **GameEngine**: Reduced from complex map loading orchestrator to simple delegator
+- **Testability**: Each service can be unit tested independently
+- **Separation of Concerns**: Clear boundaries between initialization, loading, and cataloging
+- **Maintainability**: Future map formats or loading strategies can be added without touching GameEngine
+
+---
+
+## 2. Cursor and Hover Refactoring Summary
 
 ## Overview
 This refactoring decouples cursor and hover state management from the core `GameEngine` class into dedicated UI-focused components: `CursorManager` and `HoverTracker`.
