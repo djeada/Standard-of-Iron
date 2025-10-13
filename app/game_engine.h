@@ -1,6 +1,9 @@
 #pragma once
 
 #include "game/core/event_manager.h"
+#include "utils/engine_view_helpers.h"
+#include "utils/movement_utils.h"
+#include "utils/selection_utils.h"
 #include <QMatrix4x4>
 #include <QObject>
 #include <QPointF>
