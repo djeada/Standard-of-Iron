@@ -5,6 +5,7 @@
 #include "../systems/building_collision_registry.h"
 #include "../visuals/team_colors.h"
 #include "troop_config.h"
+#include <iostream>
 
 namespace Game {
 namespace Units {
@@ -41,6 +42,11 @@ void Barracks::init(const SpawnParams &params) {
 
   if (params.aiControlled) {
     e->addComponent<Engine::Core::AIControlledComponent>();
+    std::cout << "[Barracks] Created AI-controlled barracks for player "
+              << params.playerId << " at entity ID " << e->getId() << std::endl;
+  } else {
+    std::cout << "[Barracks] Created player-controlled barracks for player "
+              << params.playerId << " at entity ID " << e->getId() << std::endl;
   }
 
   QVector3D tc = Game::Visuals::teamColorForOwner(m_u->ownerId);

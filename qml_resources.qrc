@@ -3,10 +3,19 @@
         <file>ui/qml/Main.qml</file>
         <file>ui/qml/MainMenu.qml</file>
         <file>ui/qml/MapSelect.qml</file>
+        <file>ui/qml/MapListPanel.qml</file>
+        <file>ui/qml/PlayerListItem.qml</file>
+        <file>ui/qml/PlayerConfigPanel.qml</file>
+        <file>ui/qml/Constants.qml</file>
+        <file>ui/qml/StyleGuide.qml</file>
+        <file>ui/qml/StyledButton.qml</file>
+        <file>ui/qml/Colors.js</file>
+        <file>ui/qml/qmldir</file>
         <file>ui/qml/HUD.qml</file>
         <file>ui/qml/HUDTop.qml</file>
         <file>ui/qml/HUDBottom.qml</file>
         <file>ui/qml/HUDVictory.qml</file>
         <file>ui/qml/GameView.qml</file>
+        <file>ui/qml/CursorManager.qml</file>
     </qresource>
 </RCC>

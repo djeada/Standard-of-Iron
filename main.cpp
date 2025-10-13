@@ -13,6 +13,7 @@
 
 #include "app/game_engine.h"
 #include "ui/gl_view.h"
+#include "ui/theme.h"
 
 int main(int argc, char *argv[]) {
   if (qEnvironmentVariableIsSet("WAYLAND_DISPLAY") &&
@@ -39,7 +40,13 @@ int main(int argc, char *argv[]) {
 
   QQmlApplicationEngine engine;
   engine.rootContext()->setContextProperty("game", gameEngine);
+  engine.addImportPath("qrc:/StandardOfIron/ui/qml");
   qmlRegisterType<GLView>("StandardOfIron", 1, 0, "GLView");
+
+  // Register Theme singleton
+  qmlRegisterSingletonType<Theme>("StandardOfIron.UI", 1, 0, "Theme",
+                                  &Theme::create);
+
   engine.load(QUrl(QStringLiteral("qrc:/StandardOfIron/ui/qml/Main.qml")));
   if (engine.rootObjects().isEmpty()) {
     qWarning() << "Failed to load QML file";

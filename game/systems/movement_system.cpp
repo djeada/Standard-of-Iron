@@ -100,6 +100,17 @@ void MovementSystem::moveUnit(Engine::Core::Entity *entity,
     return;
   }
 
+  auto *atk = entity->getComponent<Engine::Core::AttackComponent>();
+  if (atk && atk->inMeleeLock) {
+
+    movement->hasTarget = false;
+    movement->vx = 0.0f;
+    movement->vz = 0.0f;
+    movement->path.clear();
+    movement->pathPending = false;
+    return;
+  }
+
   QVector3D finalGoal(movement->goalX, 0.0f, movement->goalY);
   bool destinationAllowed = isPointAllowed(finalGoal, entity->getId());
 
@@ -116,6 +127,10 @@ void MovementSystem::moveUnit(Engine::Core::Entity *entity,
   if (movement->repathCooldown > 0.0f) {
     movement->repathCooldown =
         std::max(0.0f, movement->repathCooldown - deltaTime);
+  }
+
+  if (movement->timeSinceLastPathRequest < 10.0f) {
+    movement->timeSinceLastPathRequest += deltaTime;
   }
 
   const float maxSpeed = std::max(0.1f, unit->speed);
