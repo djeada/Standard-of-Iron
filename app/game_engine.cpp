@@ -342,6 +342,14 @@ void GameEngine::updateCursor(Qt::CursorShape newCursor) {
   }
 }
 
+void GameEngine::setError(const QString &errorMessage) {
+  if (m_runtime.lastError != errorMessage) {
+    m_runtime.lastError = errorMessage;
+    qCritical() << "GameEngine error:" << errorMessage;
+    emit lastErrorChanged();
+  }
+}
+
 void GameEngine::setCursorMode(const QString &mode) {
   if (m_runtime.cursorMode == mode)
     return;
@@ -461,6 +469,7 @@ void GameEngine::onAreaSelected(qreal x1, qreal y1, qreal x2, qreal y2,
 
 void GameEngine::initialize() {
   if (!Render::GL::RenderBootstrap::initialize(*m_renderer, *m_camera)) {
+    setError("Failed to initialize OpenGL renderer");
     return;
   }
 
@@ -1153,6 +1162,10 @@ void GameEngine::startSkirmish(const QString &mapPath,
 
     auto lr = Game::Map::LevelLoader::loadFromAssets(m_level.mapName, *m_world,
                                                      *m_renderer, *m_camera);
+
+    if (!lr.ok && !lr.errorMessage.isEmpty()) {
+      setError(lr.errorMessage);
+    }
 
     if (!savedPlayerConfigs.isEmpty()) {
       qDebug() << "Applying colors after map load for"
