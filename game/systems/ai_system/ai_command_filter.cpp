@@ -1,5 +1,4 @@
 #include "ai_command_filter.h"
-#include <QDebug>
 #include <algorithm>
 #include <cmath>
 
@@ -10,14 +9,6 @@ AICommandFilter::filter(const std::vector<AICommand> &commands,
                         float currentTime) {
   std::vector<AICommand> filtered;
   filtered.reserve(commands.size());
-
-  static int filterCallCounter = 0;
-  bool shouldLog = (++filterCallCounter % 3 == 0);
-
-  if (shouldLog && !commands.empty()) {
-    qDebug() << "[AICommandFilter] Filter called with" << commands.size()
-             << "commands at time" << currentTime;
-  }
 
   for (const auto &cmd : commands) {
 
@@ -56,26 +47,12 @@ AICommandFilter::filter(const std::vector<AICommand> &commands,
     }
 
     if (blockedCount > 0) {
-      if (shouldLog) {
-        qDebug() << "[AICommandFilter] BLOCKING entire command: "
-                 << blockedCount << "of" << cmd.units.size()
-                 << "units still on cooldown"
-                 << "type=" << static_cast<int>(cmd.type);
-      }
       continue;
     }
 
     if (!validUnits.empty()) {
       AICommand filteredCmd = cmd;
       filteredCmd.units = validUnits;
-
-      if (shouldLog) {
-        qDebug() << "[AICommandFilter] Passing command with"
-                 << validUnits.size() << "units (filtered from"
-                 << cmd.units.size() << ")"
-                 << "type=" << static_cast<int>(cmd.type) << "at time"
-                 << currentTime;
-      }
 
       if (cmd.type == AICommandType::MoveUnits) {
         std::vector<float> newTargetX, newTargetY, newTargetZ;
@@ -121,14 +98,6 @@ bool AICommandFilter::isDuplicate(Engine::Core::EntityID unitId,
   for (const auto &entry : m_history) {
     if (entry.isSimilarTo(type, unitId, targetId, moveX, moveY, moveZ,
                           currentTime, m_cooldownPeriod)) {
-      static int dupCounter = 0;
-      if (++dupCounter % 5 == 0) {
-        qDebug() << "[AICommandFilter] Blocked duplicate command for unit"
-                 << unitId << "type=" << static_cast<int>(type)
-                 << "cooldown remaining="
-                 << (m_cooldownPeriod - (currentTime - entry.issuedTime))
-                 << "s";
-      }
       return true;
     }
   }
@@ -136,14 +105,6 @@ bool AICommandFilter::isDuplicate(Engine::Core::EntityID unitId,
 }
 
 void AICommandFilter::recordCommand(const AICommand &cmd, float currentTime) {
-  static int recordCounter = 0;
-  bool shouldLog = (++recordCounter % 3 == 0);
-
-  if (shouldLog && !cmd.units.empty()) {
-    qDebug() << "[AICommandFilter] Recording command for" << cmd.units.size()
-             << "units at time" << currentTime;
-  }
-
   for (size_t i = 0; i < cmd.units.size(); ++i) {
     CommandHistory entry;
     entry.unitId = cmd.units[i];
