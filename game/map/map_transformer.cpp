@@ -8,12 +8,15 @@
 #include "terrain_service.h"
 #include <QDebug>
 #include <QVector3D>
+#include <set>
+#include <unordered_map>
 
 namespace Game::Map {
 
 namespace {
 std::shared_ptr<Game::Units::UnitFactoryRegistry> s_registry;
-}
+std::unordered_map<int, int> s_playerTeamOverrides;
+} // namespace
 
 void MapTransformer::setFactoryRegistry(
     std::shared_ptr<Game::Units::UnitFactoryRegistry> reg) {
@@ -32,12 +35,76 @@ int MapTransformer::localOwnerId() {
   return Game::Systems::OwnerRegistry::instance().getLocalPlayerId();
 }
 
+void MapTransformer::setPlayerTeamOverrides(
+    const std::unordered_map<int, int> &overrides) {
+  s_playerTeamOverrides = overrides;
+}
+
+void MapTransformer::clearPlayerTeamOverrides() {
+  s_playerTeamOverrides.clear();
+}
+
 MapRuntime
 MapTransformer::applyToWorld(const MapDefinition &def,
                              Engine::Core::World &world,
                              const Game::Visuals::VisualCatalog *visuals) {
   MapRuntime rt;
   rt.unitIds.reserve(def.spawns.size());
+
+  auto &ownerRegistry = Game::Systems::OwnerRegistry::instance();
+  std::set<int> uniquePlayerIds;
+  std::unordered_map<int, int> playerIdToTeam;
+
+  for (const auto &spawn : def.spawns) {
+    uniquePlayerIds.insert(spawn.playerId);
+
+    if (spawn.teamId > 0) {
+      playerIdToTeam[spawn.playerId] = spawn.teamId;
+    }
+  }
+
+  for (int playerId : uniquePlayerIds) {
+
+    if (ownerRegistry.getOwnerType(playerId) ==
+        Game::Systems::OwnerType::Neutral) {
+
+      bool isLocalPlayer = (playerId == ownerRegistry.getLocalPlayerId());
+      Game::Systems::OwnerType ownerType =
+          isLocalPlayer ? Game::Systems::OwnerType::Player
+                        : Game::Systems::OwnerType::AI;
+
+      std::string ownerName = isLocalPlayer
+                                  ? "Player " + std::to_string(playerId)
+                                  : "AI Player " + std::to_string(playerId);
+
+      ownerRegistry.registerOwnerWithId(playerId, ownerType, ownerName);
+      qDebug() << "[MapTransformer] Registered player" << playerId << "as"
+               << (isLocalPlayer ? "HUMAN" : "AI");
+    }
+
+    int finalTeamId = 0;
+    auto overrideIt = s_playerTeamOverrides.find(playerId);
+    if (overrideIt != s_playerTeamOverrides.end()) {
+
+      finalTeamId = overrideIt->second;
+      qDebug() << "[MapTransformer] Player" << playerId
+               << "team from UI:" << finalTeamId;
+    } else {
+
+      auto teamIt = playerIdToTeam.find(playerId);
+      if (teamIt != playerIdToTeam.end()) {
+        finalTeamId = teamIt->second;
+        qDebug() << "[MapTransformer] Player" << playerId
+                 << "team from MAP:" << finalTeamId;
+      } else {
+        qDebug() << "[MapTransformer] Player" << playerId
+                 << "no team specified, defaulting to 0 (FFA)";
+      }
+    }
+    ownerRegistry.setOwnerTeam(playerId, finalTeamId);
+    qDebug() << "[MapTransformer] Player" << playerId
+             << "FINAL team set to:" << finalTeamId;
+  }
 
   for (const auto &s : def.spawns) {
 
@@ -106,8 +173,15 @@ MapTransformer::applyToWorld(const MapDefinition &def,
       u->ownerId = s.playerId;
       u->visionRange = 14.0f;
 
-      if (!Game::Systems::OwnerRegistry::instance().isPlayer(s.playerId)) {
+      bool isAI =
+          !Game::Systems::OwnerRegistry::instance().isPlayer(s.playerId);
+      if (isAI) {
         e->addComponent<Engine::Core::AIControlledComponent>();
+        qDebug() << "[MapTransformer] Unit" << e->getId() << "for player"
+                 << s.playerId << "marked as AI-controlled";
+      } else {
+        qDebug() << "[MapTransformer] Unit" << e->getId() << "for player"
+                 << s.playerId << "is PLAYER-controlled";
       }
 
       if (auto *existingMv =

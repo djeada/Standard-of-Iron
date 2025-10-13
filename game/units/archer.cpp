@@ -2,6 +2,8 @@
 #include "../core/component.h"
 #include "../core/event_manager.h"
 #include "../core/world.h"
+#include <iostream>
+
 static inline QVector3D teamColor(int ownerId) {
   switch (ownerId) {
   case 1:
@@ -52,6 +54,11 @@ void Archer::init(const SpawnParams &params) {
 
   if (params.aiControlled) {
     e->addComponent<Engine::Core::AIControlledComponent>();
+    std::cout << "[Archer] Created AI-controlled archer for player "
+              << params.playerId << " at entity ID " << e->getId() << std::endl;
+  } else {
+    std::cout << "[Archer] Created player-controlled archer for player "
+              << params.playerId << " at entity ID " << e->getId() << std::endl;
   }
 
   QVector3D tc = teamColor(m_u->ownerId);
@@ -68,9 +75,20 @@ void Archer::init(const SpawnParams &params) {
   }
 
   m_atk = e->addComponent<Engine::Core::AttackComponent>();
+
   m_atk->range = 6.0f;
   m_atk->damage = 12;
   m_atk->cooldown = 1.2f;
+
+  m_atk->meleeRange = 1.5f;
+  m_atk->meleeDamage = 5;
+  m_atk->meleeCooldown = 0.8f;
+
+  m_atk->preferredMode = Engine::Core::AttackComponent::CombatMode::Auto;
+  m_atk->currentMode = Engine::Core::AttackComponent::CombatMode::Ranged;
+  m_atk->canRanged = true;
+  m_atk->canMelee = true;
+  m_atk->maxHeightDifference = 2.0f;
 
   Engine::Core::EventManager::instance().publish(
       Engine::Core::UnitSpawnedEvent(m_id, m_u->ownerId, m_u->unitType));
