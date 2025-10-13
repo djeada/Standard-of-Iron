@@ -1,5 +1,7 @@
 #include "game_engine.h"
 
+#include "cursor_manager.h"
+#include "hover_tracker.h"
 #include <QCoreApplication>
 #include <QCursor>
 #include <QDebug>
@@ -94,6 +96,14 @@ GameEngine::GameEngine() {
   m_victoryService = std::make_unique<Game::Systems::VictoryService>();
   m_cameraService = std::make_unique<Game::Systems::CameraService>();
 
+  m_cursorManager = std::make_unique<CursorManager>();
+  m_hoverTracker = std::make_unique<HoverTracker>(m_pickingService.get());
+
+  connect(m_cursorManager.get(), &CursorManager::modeChanged, this,
+          &GameEngine::cursorModeChanged);
+  connect(m_cursorManager.get(), &CursorManager::globalCursorChanged, this,
+          &GameEngine::globalCursorChanged);
+
   m_unitDiedSubscription =
       Engine::Core::ScopedEventSubscription<Engine::Core::UnitDiedEvent>(
           [this](const Engine::Core::UnitDiedEvent &e) {
@@ -132,7 +142,7 @@ void GameEngine::onRightClick(qreal sx, qreal sy) {
   if (!selectionSystem)
     return;
 
-  if (m_runtime.cursorMode == "patrol" || m_runtime.cursorMode == "attack") {
+  if (m_cursorManager->mode() == "patrol" || m_cursorManager->mode() == "attack") {
     setCursorMode("normal");
     return;
   }
@@ -253,8 +263,8 @@ void GameEngine::onPatrolClick(qreal sx, qreal sy) {
   const auto &selected = selectionSystem->getSelectedUnits();
   if (selected.empty()) {
 
-    if (m_patrol.hasFirstWaypoint) {
-      m_patrol.hasFirstWaypoint = false;
+    if (m_cursorManager->hasPatrolFirstWaypoint()) {
+      m_cursorManager->clearPatrolFirstWaypoint();
       setCursorMode("normal");
     }
     return;
@@ -263,16 +273,15 @@ void GameEngine::onPatrolClick(qreal sx, qreal sy) {
   QVector3D hit;
   if (!screenToGround(QPointF(sx, sy), hit)) {
 
-    if (m_patrol.hasFirstWaypoint) {
-      m_patrol.hasFirstWaypoint = false;
+    if (m_cursorManager->hasPatrolFirstWaypoint()) {
+      m_cursorManager->clearPatrolFirstWaypoint();
       setCursorMode("normal");
     }
     return;
   }
 
-  if (!m_patrol.hasFirstWaypoint) {
-    m_patrol.firstWaypoint = hit;
-    m_patrol.hasFirstWaypoint = true;
+  if (!m_cursorManager->hasPatrolFirstWaypoint()) {
+    m_cursorManager->setPatrolFirstWaypoint(hit);
 
     return;
   }
@@ -295,8 +304,8 @@ void GameEngine::onPatrolClick(qreal sx, qreal sy) {
 
     if (patrol) {
       patrol->waypoints.clear();
-      patrol->waypoints.push_back(
-          {m_patrol.firstWaypoint.x(), m_patrol.firstWaypoint.z()});
+      QVector3D firstWaypoint = m_cursorManager->getPatrolFirstWaypoint();
+      patrol->waypoints.push_back({firstWaypoint.x(), firstWaypoint.z()});
       patrol->waypoints.push_back({secondWaypoint.x(), secondWaypoint.z()});
       patrol->currentWaypoint = 0;
       patrol->patrolling = true;
@@ -306,73 +315,46 @@ void GameEngine::onPatrolClick(qreal sx, qreal sy) {
     entity->removeComponent<Engine::Core::AttackTargetComponent>();
   }
 
-  m_patrol.hasFirstWaypoint = false;
+  m_cursorManager->clearPatrolFirstWaypoint();
   setCursorMode("normal");
 }
 
-void GameEngine::updateCursor(Qt::CursorShape newCursor) {
-  if (!m_window)
+void GameEngine::setCursorMode(const QString &mode) {
+  if (!m_cursorManager)
     return;
-  if (m_runtime.currentCursor != newCursor) {
-    m_runtime.currentCursor = newCursor;
-    m_window->setCursor(newCursor);
-  }
+  m_cursorManager->setMode(mode);
+  m_cursorManager->updateCursorShape(m_window);
 }
 
-void GameEngine::setCursorMode(const QString &mode) {
-  if (m_runtime.cursorMode == mode)
-    return;
-
-  if (m_runtime.cursorMode == "patrol" && mode != "patrol") {
-    m_patrol.hasFirstWaypoint = false;
-  }
-
-  m_runtime.cursorMode = mode;
-
-  Qt::CursorShape desiredCursor =
-      (mode == "normal") ? Qt::ArrowCursor : Qt::BlankCursor;
-  updateCursor(desiredCursor);
-
-  emit cursorModeChanged();
-
-  emit globalCursorChanged();
+QString GameEngine::cursorMode() const {
+  if (!m_cursorManager)
+    return "normal";
+  return m_cursorManager->mode();
 }
 
 qreal GameEngine::globalCursorX() const {
-  if (!m_window)
+  if (!m_cursorManager)
     return 0;
-  QPoint globalPos = QCursor::pos();
-  QPoint localPos = m_window->mapFromGlobal(globalPos);
-  return localPos.x();
+  return m_cursorManager->globalCursorX(m_window);
 }
 
 qreal GameEngine::globalCursorY() const {
-  if (!m_window)
+  if (!m_cursorManager)
     return 0;
-  QPoint globalPos = QCursor::pos();
-  QPoint localPos = m_window->mapFromGlobal(globalPos);
-  return localPos.y();
+  return m_cursorManager->globalCursorY(m_window);
 }
 
 void GameEngine::setHoverAtScreen(qreal sx, qreal sy) {
   if (!m_window)
     return;
   ensureInitialized();
-  if (!m_pickingService || !m_camera || !m_world)
+  if (!m_hoverTracker || !m_camera || !m_world)
     return;
 
-  if (sx < 0 || sy < 0 || sx >= m_viewport.width || sy >= m_viewport.height) {
-    m_hover.entityId = 0;
-    return;
-  }
+  m_cursorManager->updateCursorShape(m_window);
 
-  Qt::CursorShape desiredCursor =
-      (m_runtime.cursorMode == "normal") ? Qt::ArrowCursor : Qt::BlankCursor;
-  updateCursor(desiredCursor);
-
-  m_hover.entityId =
-      m_pickingService->updateHover(float(sx), float(sy), *m_world, *m_camera,
-                                    m_viewport.width, m_viewport.height);
+  m_hoverTracker->updateHover(float(sx), float(sy), *m_world, *m_camera,
+                              m_viewport.width, m_viewport.height);
 }
 
 void GameEngine::onClickSelect(qreal sx, qreal sy, bool additive) {
@@ -564,8 +546,8 @@ void GameEngine::render(int pixelWidth, int pixelHeight) {
     if (auto *res = m_renderer->resources())
       m_fog->submit(*m_renderer, *res);
   }
-  if (m_renderer)
-    m_renderer->setHoveredEntityId(m_hover.entityId);
+  if (m_renderer && m_hoverTracker)
+    m_renderer->setHoveredEntityId(m_hoverTracker->getLastHoveredEntity());
   if (m_renderer)
     m_renderer->setLocalOwnerId(m_runtime.localOwnerId);
   m_renderer->renderWorld(m_world.get());
@@ -576,8 +558,8 @@ void GameEngine::render(int pixelWidth, int pixelHeight) {
 
   if (auto *res = m_renderer->resources()) {
     std::optional<QVector3D> previewWaypoint;
-    if (m_patrol.hasFirstWaypoint) {
-      previewWaypoint = m_patrol.firstWaypoint;
+    if (m_cursorManager && m_cursorManager->hasPatrolFirstWaypoint()) {
+      previewWaypoint = m_cursorManager->getPatrolFirstWaypoint();
     }
     Render::GL::renderPatrolFlags(m_renderer.get(), res, *m_world,
                                   previewWaypoint);
@@ -614,7 +596,7 @@ void GameEngine::syncSelectionFlags() {
   App::Utils::sanitizeSelection(m_world.get(), selectionSystem);
 
   if (selectionSystem->getSelectedUnits().empty()) {
-    if (m_runtime.cursorMode != "normal") {
+    if (m_cursorManager && m_cursorManager->mode() != "normal") {
       setCursorMode("normal");
     }
   }
@@ -957,7 +939,9 @@ void GameEngine::startSkirmish(const QString &mapPath,
       m_renderer->setHoveredEntityId(0);
     }
 
-    m_hover.entityId = 0;
+    if (m_hoverTracker) {
+      m_hoverTracker->updateHover(-1, -1, *m_world, *m_camera, 0, 0);
+    }
 
     m_world->clear();
 
@@ -1358,3 +1342,14 @@ void GameEngine::rebuildEntityCache() {
     }
   }
 }
+
+bool GameEngine::hasPatrolPreviewWaypoint() const {
+  return m_cursorManager && m_cursorManager->hasPatrolFirstWaypoint();
+}
+
+QVector3D GameEngine::getPatrolPreviewWaypoint() const {
+  if (!m_cursorManager)
+    return QVector3D();
+  return m_cursorManager->getPatrolFirstWaypoint();
+}
+
