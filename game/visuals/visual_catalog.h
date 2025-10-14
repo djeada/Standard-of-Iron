@@ -9,7 +9,7 @@ namespace Engine {
 namespace Core {
 class RenderableComponent;
 }
-} // namespace Engine
+} 
 
 namespace Game::Visuals {
 
@@ -35,4 +35,4 @@ VisualDef::MeshKind meshKindFromString(const QString &s);
 void applyToRenderable(const VisualDef &def,
                        Engine::Core::RenderableComponent &r);
 
-} // namespace Game::Visuals
+} 
