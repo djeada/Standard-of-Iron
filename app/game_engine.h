@@ -1,6 +1,7 @@
 #pragma once
 
 #include "cursor_manager.h"
+#include "command_controller.h"
 #include "game/core/event_manager.h"
 #include "hover_tracker.h"
 #include "utils/engine_view_helpers.h"
@@ -43,6 +44,7 @@ class StoneRenderer;
 namespace Game {
 namespace Systems {
 class SelectionSystem;
+class SelectionController;
 class ArrowSystem;
 class PickingService;
 class VictoryService;
@@ -230,6 +232,8 @@ private:
   std::unique_ptr<CursorManager> m_cursorManager;
   std::unique_ptr<HoverTracker> m_hoverTracker;
   std::unique_ptr<Game::Systems::CameraService> m_cameraService;
+  std::unique_ptr<Game::Systems::SelectionController> m_selectionController;
+  std::unique_ptr<CommandController> m_commandController;
   QQuickWindow *m_window = nullptr;
   RuntimeState m_runtime;
   ViewportState m_viewport;

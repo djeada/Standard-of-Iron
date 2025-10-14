@@ -53,6 +53,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
         app/cursor_manager.cpp
         app/hover_tracker.cpp
         app/selected_units_model.cpp
+        app/command_controller.cpp
         ui/gl_view.cpp
         ui/theme.cpp
     )
@@ -63,6 +64,7 @@ else()
         app/cursor_manager.cpp
         app/hover_tracker.cpp
         app/selected_units_model.cpp
+        app/command_controller.cpp
         ui/gl_view.cpp
         ui/theme.cpp
     )

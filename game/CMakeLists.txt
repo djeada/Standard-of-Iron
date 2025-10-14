@@ -51,6 +51,7 @@ add_library(game_systems STATIC
     map/terrain_service.cpp
     map/visibility_service.cpp
     visuals/visual_catalog.cpp
+    visuals/action_vfx.cpp
     units/unit.cpp
     units/archer.cpp
     units/factory.cpp
