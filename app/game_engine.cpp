@@ -792,6 +792,8 @@ void GameEngine::startSkirmish(const QString &mapPath,
     m_level.camNear = result.camNear;
     m_level.camFar = result.camFar;
     m_level.maxTroopsPerPlayer = result.maxTroopsPerPlayer;
+    
+    Game::GameConfig::instance().setMaxTroopsPerPlayer(result.maxTroopsPerPlayer);
 
     if (m_victoryService) {
       m_victoryService->configure(result.victoryConfig, m_runtime.localOwnerId);

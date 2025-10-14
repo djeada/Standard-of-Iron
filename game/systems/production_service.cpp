@@ -1,6 +1,7 @@
 #include "production_service.h"
 #include "../core/component.h"
 #include "../core/world.h"
+#include "../game_config.h"
 
 namespace Game {
 namespace Systems {
@@ -37,6 +38,12 @@ bool ProductionService::startProductionForFirstSelectedBarracks(
     return false;
   if (p->inProgress)
     return false;
+  
+  int currentTroops = world.countTroopsForPlayer(ownerId);
+  int maxTroops = Game::GameConfig::instance().getMaxTroopsPerPlayer();
+  if (currentTroops >= maxTroops)
+    return false;
+  
   p->productType = unitType;
   p->timeRemaining = p->buildTime;
   p->inProgress = true;
