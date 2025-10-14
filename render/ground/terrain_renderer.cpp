@@ -96,9 +96,6 @@ void TerrainRenderer::configure(const Game::Map::TerrainHeightMap &heightMap,
   m_biomeSettings = biomeSettings;
   m_noiseSeed = biomeSettings.seed;
   buildMeshes();
-
-  qDebug() << "TerrainRenderer configured:" << m_width << "x" << m_height
-           << "grid";
 }
 
 void TerrainRenderer::submit(Renderer &renderer, ResourceManager &resources) {
@@ -677,9 +674,6 @@ void TerrainRenderer::buildMeshes() {
       }
     }
   }
-
-  qDebug() << "TerrainRenderer: built" << m_chunks.size() << "chunks in"
-           << timer.elapsed() << "ms" << "triangles:" << totalTriangles;
 }
 
 QVector3D TerrainRenderer::getTerrainColor(Game::Map::TerrainType type,
