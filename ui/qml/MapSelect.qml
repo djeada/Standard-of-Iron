@@ -16,6 +16,7 @@ Item {
     
     
     property var mapsModel: (typeof game !== "undefined" && game.availableMaps) ? game.availableMaps : []
+    property bool mapsLoading: (typeof game !== "undefined" && game.mapsLoading) ? game.mapsLoading : false
     ListModel { id: playersModel }
 
     property int    selectedMapIndex: -1
@@ -29,6 +30,10 @@ Item {
             selectedMapData = null
             selectedMapPath = ""
             playersModel.clear()
+            // Start loading maps progressively
+            if (typeof game !== "undefined" && game.startLoadingMaps) {
+                game.startLoadingMaps()
+            }
         }
     }
 
@@ -378,12 +383,45 @@ Item {
 
             Item {
                 anchors.fill: parent
-                visible: list.count === 0
+                visible: list.count === 0 && !mapsLoading
                 Text {
                     text: "No maps available"
                     color: Theme.textSub
                     font.pixelSize: 14
                     anchors.centerIn: parent
+                }
+            }
+            
+            // Loading indicator in the list when maps are being loaded
+            Item {
+                anchors.fill: parent
+                visible: mapsLoading
+                
+                Column {
+                    anchors.centerIn: parent
+                    spacing: Theme.spacingSmall
+                    
+                    Text {
+                        text: "⟳"
+                        font.pixelSize: 24
+                        color: Theme.accent
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        
+                        RotationAnimator on rotation {
+                            from: 0
+                            to: 360
+                            duration: 1500
+                            loops: Animation.Infinite
+                            running: mapsLoading
+                        }
+                    }
+                    
+                    Text {
+                        text: "Loading maps..."
+                        color: Theme.textSub
+                        font.pixelSize: 12
+                        anchors.horizontalCenter: parent.horizontalCenter
+                    }
                 }
             }
         }
@@ -412,6 +450,119 @@ Item {
                 anchors { top: parent.top; left: parent.left; right: parent.right }
             }
             
+            // Loading indicator for when maps are being loaded
+            Item {
+                id: loadingIndicator
+                visible: mapsLoading && list.count === 0
+                anchors {
+                    top: breadcrumb.bottom
+                    left: parent.left
+                    right: parent.right
+                    topMargin: Theme.spacingXLarge * 2
+                }
+                height: 100
+                
+                Column {
+                    anchors.centerIn: parent
+                    spacing: Theme.spacingMedium
+                    
+                    Text {
+                        text: "⟳"
+                        font.pixelSize: 40
+                        color: Theme.accent
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        
+                        RotationAnimator on rotation {
+                            from: 0
+                            to: 360
+                            duration: 1500
+                            loops: Animation.Infinite
+                            running: loadingIndicator.visible
+                        }
+                    }
+                    
+                    Text {
+                        text: "Loading maps..."
+                        color: Theme.textSub
+                        font.pixelSize: 14
+                        anchors.horizontalCenter: parent.horizontalCenter
+                    }
+                }
+            }
+            
+            // Loading skeleton when a map is selected but data hasn't fully loaded yet
+            Item {
+                id: loadingSkeleton
+                visible: !selectedMapData && !mapsLoading && list.currentIndex >= 0
+                anchors {
+                    top: breadcrumb.bottom
+                    left: parent.left
+                    right: parent.right
+                    topMargin: Theme.spacingMedium
+                }
+                height: 200
+                
+                Column {
+                    anchors.fill: parent
+                    spacing: Theme.spacingMedium
+                    
+                    // Skeleton title
+                    Rectangle {
+                        width: parent.width * 0.6
+                        height: 28
+                        radius: Theme.radiusSmall
+                        color: Theme.cardBase
+                        opacity: 0.3
+                        
+                        SequentialAnimation on opacity {
+                            loops: Animation.Infinite
+                            running: loadingSkeleton.visible
+                            NumberAnimation { to: 0.6; duration: 800 }
+                            NumberAnimation { to: 0.3; duration: 800 }
+                        }
+                    }
+                    
+                    // Skeleton description
+                    Rectangle {
+                        width: parent.width * 0.8
+                        height: 16
+                        radius: Theme.radiusSmall
+                        color: Theme.cardBase
+                        opacity: 0.3
+                        
+                        SequentialAnimation on opacity {
+                            loops: Animation.Infinite
+                            running: loadingSkeleton.visible
+                            NumberAnimation { to: 0.6; duration: 800; easing.type: Easing.InOutQuad }
+                            NumberAnimation { to: 0.3; duration: 800; easing.type: Easing.InOutQuad }
+                        }
+                    }
+                    
+                    Rectangle {
+                        width: parent.width * 0.7
+                        height: 16
+                        radius: Theme.radiusSmall
+                        color: Theme.cardBase
+                        opacity: 0.3
+                        
+                        SequentialAnimation on opacity {
+                            loops: Animation.Infinite
+                            running: loadingSkeleton.visible
+                            NumberAnimation { to: 0.6; duration: 800; easing.type: Easing.InOutQuad }
+                            NumberAnimation { to: 0.3; duration: 800; easing.type: Easing.InOutQuad }
+                        }
+                    }
+                    
+                    Text {
+                        text: "Loading map details..."
+                        color: Theme.textHint
+                        font.pixelSize: 12
+                        font.italic: true
+                        anchors.horizontalCenter: parent.horizontalCenter
+                    }
+                }
+            }
+            
             
             Text {
                 id: title
@@ -420,6 +571,7 @@ Item {
                     var t = field(it,"name")
                     return t || field(it,"path") || "No Map Selected"
                 }
+                visible: selectedMapData !== null
                 color: Theme.textMain
                 font.pixelSize: 24; font.bold: true
                 elide: Text.ElideRight
@@ -435,6 +587,7 @@ Item {
             Text {
                 id: descr
                 text: field(selectedMapData, "description")
+                visible: selectedMapData !== null
                 color: Theme.textSubLite
                 font.pixelSize: 13
                 wrapMode: Text.WordWrap
