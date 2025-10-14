@@ -15,6 +15,7 @@
         <file>ui/qml/HUDTop.qml</file>
         <file>ui/qml/HUDBottom.qml</file>
         <file>ui/qml/HUDVictory.qml</file>
+        <file>ui/qml/BattleSummary.qml</file>
         <file>ui/qml/GameView.qml</file>
         <file>ui/qml/CursorManager.qml</file>
     </qresource>

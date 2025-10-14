@@ -37,9 +37,16 @@ Rectangle {
             focusPolicy: Qt.NoFocus
             onClicked: {
                 victoryOverlay.visible = false;
+                battleSummary.show();
             }
         }
 
+    }
+
+    BattleSummary {
+        id: battleSummary
+
+        anchors.fill: parent
     }
 
 }
