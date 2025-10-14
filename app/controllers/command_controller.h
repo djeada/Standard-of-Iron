@@ -49,6 +49,7 @@ public:
 
 signals:
   void attackTargetSelected();
+  void troopLimitReached();
 
 private:
   Engine::Core::World *m_world;
