@@ -1,5 +1,7 @@
 #include "game_engine.h"
 
+#include "controllers/action_vfx.h"
+#include "controllers/command_controller.h"
 #include "cursor_manager.h"
 #include "hover_tracker.h"
 #include <QCoreApplication>
@@ -98,6 +100,13 @@ GameEngine::GameEngine() {
   m_victoryService = std::make_unique<Game::Systems::VictoryService>();
   m_cameraService = std::make_unique<Game::Systems::CameraService>();
 
+  auto *selectionSystem = m_world->getSystem<Game::Systems::SelectionSystem>();
+  m_selectionController =
+      std::make_unique<Game::Systems::SelectionController>(
+          m_world.get(), selectionSystem, m_pickingService.get());
+  m_commandController = std::make_unique<App::Controllers::CommandController>(
+      m_world.get(), selectionSystem, m_pickingService.get());
+
   m_cursorManager = std::make_unique<CursorManager>();
   m_hoverTracker = std::make_unique<HoverTracker>(m_pickingService.get());
 
@@ -105,6 +114,34 @@ GameEngine::GameEngine() {
           &GameEngine::cursorModeChanged);
   connect(m_cursorManager.get(), &CursorManager::globalCursorChanged, this,
           &GameEngine::globalCursorChanged);
+
+  connect(m_selectionController.get(),
+          &Game::Systems::SelectionController::selectionChanged, this,
+          &GameEngine::selectedUnitsChanged);
+  connect(m_selectionController.get(),
+          &Game::Systems::SelectionController::selectionModelRefreshRequested,
+          this, &GameEngine::selectedUnitsDataChanged);
+  connect(m_commandController.get(),
+          &App::Controllers::CommandController::attackTargetSelected,
+          [this]() {
+            if (auto *selSys =
+                    m_world->getSystem<Game::Systems::SelectionSystem>()) {
+              const auto &sel = selSys->getSelectedUnits();
+              if (!sel.empty()) {
+                auto *cam = m_camera.get();
+                auto *picking = m_pickingService.get();
+                if (cam && picking) {
+                  Engine::Core::EntityID targetId = picking->pickUnitFirst(
+                      0.0f, 0.0f, *m_world, *cam, m_viewport.width,
+                      m_viewport.height, 0);
+                  if (targetId != 0) {
+                    App::Controllers::ActionVFX::spawnAttackArrow(m_world.get(),
+                                                                 targetId);
+                  }
+                }
+              }
+            }
+          });
 
   connect(this, SIGNAL(selectedUnitsChanged()), m_selectedUnitsModel,
           SLOT(refresh()));
@@ -140,7 +177,11 @@ void GameEngine::onMapClicked(qreal sx, qreal sy) {
   if (!m_window)
     return;
   ensureInitialized();
-  onClickSelect(sx, sy, false);
+  if (m_selectionController && m_camera) {
+    m_selectionController->onClickSelect(sx, sy, false, m_viewport.width,
+                                        m_viewport.height, m_camera.get(),
+                                        m_runtime.localOwnerId);
+  }
 }
 
 void GameEngine::onRightClick(qreal sx, qreal sy) {
@@ -151,16 +192,17 @@ void GameEngine::onRightClick(qreal sx, qreal sy) {
   if (!selectionSystem)
     return;
 
-  if (m_cursorManager->mode() == "patrol" || m_cursorManager->mode() == "attack") {
+  if (m_cursorManager->mode() == "patrol" ||
+      m_cursorManager->mode() == "attack") {
     setCursorMode("normal");
     return;
   }
 
   const auto &sel = selectionSystem->getSelectedUnits();
   if (!sel.empty()) {
-    selectionSystem->clearSelection();
-    syncSelectionFlags();
-    emit selectedUnitsChanged();
+    if (m_selectionController) {
+      m_selectionController->onRightClickClearSelection();
+    }
     setCursorMode("normal");
     return;
   }
@@ -170,62 +212,38 @@ void GameEngine::onAttackClick(qreal sx, qreal sy) {
   if (!m_window)
     return;
   ensureInitialized();
+  if (!m_commandController || !m_camera)
+    return;
+
+  auto result = m_commandController->onAttackClick(
+      sx, sy, m_viewport.width, m_viewport.height, m_camera.get());
+
   auto *selectionSystem = m_world->getSystem<Game::Systems::SelectionSystem>();
   if (!selectionSystem || !m_pickingService || !m_camera || !m_world)
     return;
-  (void)sx;
-  (void)sy;
 
   const auto &selected = selectionSystem->getSelectedUnits();
-  if (selected.empty()) {
-    setCursorMode("normal");
-    return;
-  }
+  if (!selected.empty()) {
+    Engine::Core::EntityID targetId = m_pickingService->pickUnitFirst(
+        float(sx), float(sy), *m_world, *m_camera, m_viewport.width,
+        m_viewport.height, 0);
 
-  Engine::Core::EntityID targetId =
-      m_pickingService->pickUnitFirst(float(sx), float(sy), *m_world, *m_camera,
-                                      m_viewport.width, m_viewport.height, 0);
-
-  if (targetId == 0) {
-    setCursorMode("normal");
-    return;
-  }
-
-  auto *targetEntity = m_world->getEntity(targetId);
-  if (!targetEntity) {
-    return;
-  }
-
-  auto *targetUnit = targetEntity->getComponent<Engine::Core::UnitComponent>();
-  if (!targetUnit) {
-    (void)targetId;
-    return;
-  }
-
-  if (targetUnit->ownerId == m_runtime.localOwnerId) {
-    return;
-  }
-
-  Game::Systems::CommandService::attackTarget(*m_world, selected, targetId,
-                                              true);
-
-  if (auto *arrowSystem = m_world->getSystem<Game::Systems::ArrowSystem>()) {
-
-    auto *targetTrans =
-        targetEntity->getComponent<Engine::Core::TransformComponent>();
-    if (targetTrans) {
-      QVector3D targetPos(targetTrans->position.x,
-                          targetTrans->position.y + 1.0f,
-                          targetTrans->position.z);
-      QVector3D aboveTarget = targetPos + QVector3D(0, 2.0f, 0);
-
-      arrowSystem->spawnArrow(aboveTarget, targetPos,
-                              QVector3D(1.0f, 0.2f, 0.2f),
-                              Game::GameConfig::instance().arrow().speedAttack);
+    if (targetId != 0) {
+      auto *targetEntity = m_world->getEntity(targetId);
+      if (targetEntity) {
+        auto *targetUnit =
+            targetEntity->getComponent<Engine::Core::UnitComponent>();
+        if (targetUnit && targetUnit->ownerId != m_runtime.localOwnerId) {
+          App::Controllers::ActionVFX::spawnAttackArrow(m_world.get(),
+                                                       targetId);
+        }
+      }
     }
   }
 
-  setCursorMode("normal");
+  if (result.resetCursorToNormal) {
+    setCursorMode("normal");
+  }
 }
 
 void GameEngine::resetMovement(Engine::Core::Entity *entity) {
@@ -233,96 +251,26 @@ void GameEngine::resetMovement(Engine::Core::Entity *entity) {
 }
 
 void GameEngine::onStopCommand() {
-  auto *selectionSystem = m_world->getSystem<Game::Systems::SelectionSystem>();
-  if (!selectionSystem || !m_world)
+  if (!m_commandController)
     return;
   ensureInitialized();
 
-  const auto &selected = selectionSystem->getSelectedUnits();
-  if (selected.empty())
-    return;
-
-  for (auto id : selected) {
-    auto *entity = m_world->getEntity(id);
-    if (!entity)
-      continue;
-
-    resetMovement(entity);
-
-    entity->removeComponent<Engine::Core::AttackTargetComponent>();
-
-    if (auto *patrol = entity->getComponent<Engine::Core::PatrolComponent>()) {
-      patrol->patrolling = false;
-      patrol->waypoints.clear();
-    }
+  auto result = m_commandController->onStopCommand();
+  if (result.resetCursorToNormal) {
+    setCursorMode("normal");
   }
-
-  setCursorMode("normal");
 }
 
 void GameEngine::onPatrolClick(qreal sx, qreal sy) {
-  auto *selectionSystem = m_world->getSystem<Game::Systems::SelectionSystem>();
-  if (!selectionSystem || !m_world)
+  if (!m_commandController || !m_camera)
     return;
   ensureInitialized();
 
-  const auto &selected = selectionSystem->getSelectedUnits();
-  if (selected.empty()) {
-
-    if (m_cursorManager->hasPatrolFirstWaypoint()) {
-      m_cursorManager->clearPatrolFirstWaypoint();
-      setCursorMode("normal");
-    }
-    return;
+  auto result = m_commandController->onPatrolClick(
+      sx, sy, m_viewport.width, m_viewport.height, m_camera.get());
+  if (result.resetCursorToNormal) {
+    setCursorMode("normal");
   }
-
-  QVector3D hit;
-  if (!screenToGround(QPointF(sx, sy), hit)) {
-
-    if (m_cursorManager->hasPatrolFirstWaypoint()) {
-      m_cursorManager->clearPatrolFirstWaypoint();
-      setCursorMode("normal");
-    }
-    return;
-  }
-
-  if (!m_cursorManager->hasPatrolFirstWaypoint()) {
-    m_cursorManager->setPatrolFirstWaypoint(hit);
-
-    return;
-  }
-
-  QVector3D secondWaypoint = hit;
-
-  for (auto id : selected) {
-    auto *entity = m_world->getEntity(id);
-    if (!entity)
-      continue;
-
-    auto *building = entity->getComponent<Engine::Core::BuildingComponent>();
-    if (building)
-      continue;
-
-    auto *patrol = entity->getComponent<Engine::Core::PatrolComponent>();
-    if (!patrol) {
-      patrol = entity->addComponent<Engine::Core::PatrolComponent>();
-    }
-
-    if (patrol) {
-      patrol->waypoints.clear();
-      QVector3D firstWaypoint = m_cursorManager->getPatrolFirstWaypoint();
-      patrol->waypoints.push_back({firstWaypoint.x(), firstWaypoint.z()});
-      patrol->waypoints.push_back({secondWaypoint.x(), secondWaypoint.z()});
-      patrol->currentWaypoint = 0;
-      patrol->patrolling = true;
-    }
-
-    resetMovement(entity);
-    entity->removeComponent<Engine::Core::AttackTargetComponent>();
-  }
-
-  m_cursorManager->clearPatrolFirstWaypoint();
-  setCursorMode("normal");
 }
 
 void GameEngine::updateCursor(Qt::CursorShape newCursor) {
@@ -381,58 +329,26 @@ void GameEngine::setHoverAtScreen(qreal sx, qreal sy) {
 }
 
 void GameEngine::onClickSelect(qreal sx, qreal sy, bool additive) {
-  auto *selectionSystem = m_world->getSystem<Game::Systems::SelectionSystem>();
-  if (!m_window || !selectionSystem)
+  if (!m_window)
     return;
   ensureInitialized();
-  if (!m_pickingService || !m_camera || !m_world)
-    return;
-  Engine::Core::EntityID picked = m_pickingService->pickSingle(
-      float(sx), float(sy), *m_world, *m_camera, m_viewport.width,
-      m_viewport.height, m_runtime.localOwnerId, true);
-  if (picked) {
-    if (!additive)
-      selectionSystem->clearSelection();
-    selectionSystem->selectUnit(picked);
-    syncSelectionFlags();
-    emit selectedUnitsChanged();
-    return;
-  }
-
-  const auto &selected = selectionSystem->getSelectedUnits();
-  if (!selected.empty()) {
-    QVector3D hit;
-    if (!screenToGround(QPointF(sx, sy), hit)) {
-      return;
-    }
-    auto targets = Game::Systems::FormationPlanner::spreadFormation(
-        int(selected.size()), hit,
-        Game::GameConfig::instance().gameplay().formationSpacingDefault);
-    Game::Systems::CommandService::MoveOptions opts;
-    opts.groupMove = selected.size() > 1;
-    Game::Systems::CommandService::moveUnits(*m_world, selected, targets, opts);
-    syncSelectionFlags();
-    return;
+  if (m_selectionController && m_camera) {
+    m_selectionController->onClickSelect(sx, sy, additive, m_viewport.width,
+                                        m_viewport.height, m_camera.get(),
+                                        m_runtime.localOwnerId);
   }
 }
 
 void GameEngine::onAreaSelected(qreal x1, qreal y1, qreal x2, qreal y2,
                                 bool additive) {
-  auto *selectionSystem = m_world->getSystem<Game::Systems::SelectionSystem>();
-  if (!m_window || !selectionSystem)
+  if (!m_window)
     return;
   ensureInitialized();
-  if (!additive)
-    selectionSystem->clearSelection();
-  if (!m_pickingService || !m_camera || !m_world)
-    return;
-  auto picked = m_pickingService->pickInRect(
-      float(x1), float(y1), float(x2), float(y2), *m_world, *m_camera,
-      m_viewport.width, m_viewport.height, m_runtime.localOwnerId);
-  for (auto id : picked)
-    selectionSystem->selectUnit(id);
-  syncSelectionFlags();
-  emit selectedUnitsChanged();
+  if (m_selectionController && m_camera) {
+    m_selectionController->onAreaSelected(x1, y1, x2, y2, additive,
+                                         m_viewport.width, m_viewport.height,
+                                         m_camera.get(), m_runtime.localOwnerId);
+  }
 }
 
 void GameEngine::ensureInitialized() {
@@ -568,8 +484,8 @@ void GameEngine::render(int pixelWidth, int pixelHeight) {
 
   if (auto *res = m_renderer->resources()) {
     std::optional<QVector3D> previewWaypoint;
-    if (m_cursorManager && m_cursorManager->hasPatrolFirstWaypoint()) {
-      previewWaypoint = m_cursorManager->getPatrolFirstWaypoint();
+    if (m_commandController && m_commandController->hasPatrolFirstWaypoint()) {
+      previewWaypoint = m_commandController->getPatrolFirstWaypoint();
     }
     Render::GL::renderPatrolFlags(m_renderer.get(), res, *m_world,
                                   previewWaypoint);
@@ -700,13 +616,9 @@ void GameEngine::cameraSetFollowLerp(float alpha) {
 QObject *GameEngine::selectedUnitsModel() { return m_selectedUnitsModel; }
 
 bool GameEngine::hasUnitsSelected() const {
-  if (!m_world)
+  if (!m_selectionController)
     return false;
-  auto *selectionSystem = m_world->getSystem<Game::Systems::SelectionSystem>();
-  if (!selectionSystem)
-    return false;
-  const auto &sel = selectionSystem->getSelectedUnits();
-  return !sel.empty();
+  return m_selectionController->hasUnitsSelected();
 }
 
 int GameEngine::playerTroopCount() const {
@@ -714,35 +626,16 @@ int GameEngine::playerTroopCount() const {
 }
 
 bool GameEngine::hasSelectedType(const QString &type) const {
-  if (!m_world)
+  if (!m_selectionController)
     return false;
-  auto *selectionSystem = m_world->getSystem<Game::Systems::SelectionSystem>();
-  if (!selectionSystem)
-    return false;
-  const auto &sel = selectionSystem->getSelectedUnits();
-  for (auto id : sel) {
-    if (auto *e = m_world->getEntity(id)) {
-      if (auto *u = e->getComponent<Engine::Core::UnitComponent>()) {
-        if (QString::fromStdString(u->unitType) == type)
-          return true;
-      }
-    }
-  }
-  return false;
+  return m_selectionController->hasSelectedType(type);
 }
 
 void GameEngine::recruitNearSelected(const QString &unitType) {
   ensureInitialized();
-  if (!m_world)
+  if (!m_commandController)
     return;
-  auto *selectionSystem = m_world->getSystem<Game::Systems::SelectionSystem>();
-  if (!selectionSystem)
-    return;
-  const auto &sel = selectionSystem->getSelectedUnits();
-  if (sel.empty())
-    return;
-  Game::Systems::ProductionService::startProductionForFirstSelectedBarracks(
-      *m_world, sel, m_runtime.localOwnerId, unitType.toStdString());
+  m_commandController->recruitNearSelected(unitType, m_runtime.localOwnerId);
 }
 
 QVariantMap GameEngine::getSelectedProductionState() const {
@@ -822,17 +715,11 @@ QString GameEngine::getSelectedUnitsCommandMode() const {
 
 void GameEngine::setRallyAtScreen(qreal sx, qreal sy) {
   ensureInitialized();
-  if (!m_world)
+  if (!m_commandController || !m_camera)
     return;
-  auto *selectionSystem = m_world->getSystem<Game::Systems::SelectionSystem>();
-  if (!selectionSystem)
-    return;
-  QVector3D hit;
-  if (!screenToGround(QPointF(sx, sy), hit))
-    return;
-  Game::Systems::ProductionService::setRallyForFirstSelectedBarracks(
-      *m_world, selectionSystem->getSelectedUnits(), m_runtime.localOwnerId,
-      hit.x(), hit.z());
+  m_commandController->setRallyAtScreen(sx, sy, m_viewport.width,
+                                       m_viewport.height, m_camera.get(),
+                                       m_runtime.localOwnerId);
 }
 
 QVariantList GameEngine::availableMaps() const {
@@ -973,13 +860,9 @@ QVariantList GameEngine::getOwnerInfo() const {
 void GameEngine::getSelectedUnitIds(
     std::vector<Engine::Core::EntityID> &out) const {
   out.clear();
-  if (!m_world)
+  if (!m_selectionController)
     return;
-  auto *selectionSystem = m_world->getSystem<Game::Systems::SelectionSystem>();
-  if (!selectionSystem)
-    return;
-  const auto &ids = selectionSystem->getSelectedUnits();
-  out.assign(ids.begin(), ids.end());
+  m_selectionController->getSelectedUnitIds(out);
 }
 
 bool GameEngine::getUnitInfo(Engine::Core::EntityID id, QString &name,
@@ -1077,12 +960,12 @@ void GameEngine::rebuildEntityCache() {
 }
 
 bool GameEngine::hasPatrolPreviewWaypoint() const {
-  return m_cursorManager && m_cursorManager->hasPatrolFirstWaypoint();
+  return m_commandController && m_commandController->hasPatrolFirstWaypoint();
 }
 
 QVector3D GameEngine::getPatrolPreviewWaypoint() const {
-  if (!m_cursorManager)
+  if (!m_commandController)
     return QVector3D();
-  return m_cursorManager->getPatrolFirstWaypoint();
+  return m_commandController->getPatrolFirstWaypoint();
 }
 
