@@ -9,44 +9,59 @@ Rectangle {
     visible: (typeof game !== 'undefined' && game.victoryState !== "")
     z: 100
 
-    Column {
-        anchors.centerIn: parent
-        spacing: 20
+    property bool showingSummary: false
 
-        Text {
-            id: victoryText
+    Rectangle {
+        id: initialOverlay
+        
+        anchors.fill: parent
+        color: "transparent"
+        visible: !showingSummary
 
-            anchors.horizontalCenter: parent.horizontalCenter
-            text: (typeof game !== 'undefined' && game.victoryState === "victory") ? "VICTORY!" : "DEFEAT"
-            color: (typeof game !== 'undefined' && game.victoryState === "victory") ? "#27ae60" : "#e74c3c"
-            font.pointSize: 48
-            font.bold: true
-        }
+        Column {
+            anchors.centerIn: parent
+            spacing: 20
 
-        Text {
-            anchors.horizontalCenter: parent.horizontalCenter
-            text: (typeof game !== 'undefined' && game.victoryState === "victory") ? "Enemy barracks destroyed!" : "Your barracks was destroyed!"
-            color: "white"
-            font.pointSize: 18
-        }
+            Text {
+                id: victoryText
 
-        Button {
-            anchors.horizontalCenter: parent.horizontalCenter
-            text: "Continue"
-            font.pointSize: 14
-            focusPolicy: Qt.NoFocus
-            onClicked: {
-                victoryOverlay.visible = false;
-                battleSummary.show();
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: (typeof game !== 'undefined' && game.victoryState === "victory") ? "VICTORY!" : "DEFEAT"
+                color: (typeof game !== 'undefined' && game.victoryState === "victory") ? "#27ae60" : "#e74c3c"
+                font.pointSize: 48
+                font.bold: true
             }
-        }
 
+            Text {
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: (typeof game !== 'undefined' && game.victoryState === "victory") ? "Enemy barracks destroyed!" : "Your barracks was destroyed!"
+                color: "white"
+                font.pointSize: 18
+            }
+
+            Button {
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: "Continue"
+                font.pointSize: 14
+                focusPolicy: Qt.NoFocus
+                onClicked: {
+                    showingSummary = true;
+                    battleSummary.show();
+                }
+            }
+
+        }
     }
 
     BattleSummary {
         id: battleSummary
 
         anchors.fill: parent
+        visible: showingSummary
+        
+        onCloseRequested: {
+            showingSummary = false;
+        }
     }
 
 }
