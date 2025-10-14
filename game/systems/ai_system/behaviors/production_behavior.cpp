@@ -61,10 +61,12 @@ void ProductionBehavior::execute(const AISnapshot &snapshot, AIContext &context,
 
     const auto &prod = entity.production;
 
-    if (prod.inProgress)
+    if (prod.producedCount >= prod.maxUnits)
       continue;
 
-    if (prod.producedCount >= prod.maxUnits)
+    const int maxQueueSize = 5;
+    int totalInQueue = (prod.inProgress ? 1 : 0) + prod.queueSize;
+    if (totalInQueue >= maxQueueSize)
       continue;
 
     AICommand command;
