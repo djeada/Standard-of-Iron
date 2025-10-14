@@ -49,6 +49,7 @@ public:
                       int viewportWidth, int viewportHeight, void *camera,
                       int localOwnerId);
   void onRightClickClearSelection();
+  void selectAllPlayerTroops(int localOwnerId);
 
   bool hasUnitsSelected() const;
   void getSelectedUnitIds(std::vector<Engine::Core::EntityID> &out) const;
