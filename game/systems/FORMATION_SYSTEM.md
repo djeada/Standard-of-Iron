@@ -26,6 +26,8 @@ Currently implemented formation types:
 - **Roman**: Tight, defensive rectangular formation with closely-spaced units
 - **Barbarian**: Loose, scattered formation with randomized positioning
 
+**Note**: Currently only the Roman formation is actively used in the game, as only the "Kingdom of Iron" nation is configured with archer units. The Barbarian formation is implemented and ready for use when additional nations and unit types are added to the game.
+
 #### 3. `FormationSystem` (Singleton)
 The central system that manages formation types and calculates positions:
 ```cpp
