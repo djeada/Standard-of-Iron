@@ -1,6 +1,7 @@
 #include "production_system.h"
 #include "../core/component.h"
 #include "../core/world.h"
+#include "../game_config.h"
 #include "../map/map_transformer.h"
 #include "../units/factory.h"
 #include <cmath>
@@ -28,6 +29,14 @@ void ProductionSystem::update(Engine::Core::World *world, float deltaTime) {
       auto *t = e->getComponent<Engine::Core::TransformComponent>();
       auto *u = e->getComponent<Engine::Core::UnitComponent>();
       if (t && u) {
+
+        int currentTroops = world->countTroopsForPlayer(u->ownerId);
+        int maxTroops = Game::GameConfig::instance().getMaxTroopsPerPlayer();
+        if (currentTroops >= maxTroops) {
+          prod->inProgress = false;
+          prod->timeRemaining = 0.0f;
+          continue;
+        }
 
         QVector3D spawnPos;
         if (prod->rallySet) {
