@@ -1,6 +1,6 @@
 #include "ai_reasoner.h"
-#include "ai_utils.h"
 #include "../../game_config.h"
+#include "ai_utils.h"
 #include <algorithm>
 #include <cmath>
 #include <limits>

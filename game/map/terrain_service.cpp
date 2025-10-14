@@ -85,4 +85,4 @@ TerrainType TerrainService::getTerrainType(int gridX, int gridZ) const {
   return m_heightMap->getTerrainType(gridX, gridZ);
 }
 
-} 
+} // namespace Game::Map

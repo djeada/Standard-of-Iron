@@ -8,7 +8,7 @@
 namespace App::Controllers {
 
 void ActionVFX::spawnAttackArrow(Engine::Core::World *world,
-                                Engine::Core::EntityID targetId) {
+                                 Engine::Core::EntityID targetId) {
   if (!world)
     return;
 
@@ -30,7 +30,7 @@ void ActionVFX::spawnAttackArrow(Engine::Core::World *world,
   QVector3D aboveTarget = targetPos + QVector3D(0, 2.0f, 0);
 
   arrowSystem->spawnArrow(aboveTarget, targetPos, QVector3D(1.0f, 0.2f, 0.2f),
-                         Game::GameConfig::instance().arrow().speedAttack);
+                          Game::GameConfig::instance().arrow().speedAttack);
 }
 
-} 
+} // namespace App::Controllers

@@ -131,5 +131,5 @@ LevelLoadResult LevelLoader::loadFromAssets(const QString &mapPath,
   return res;
 }
 
-} 
-} 
+} // namespace Map
+} // namespace Game
