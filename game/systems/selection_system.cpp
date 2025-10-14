@@ -123,6 +123,31 @@ void SelectionController::onRightClickClearSelection() {
   emit selectionChanged();
 }
 
+void SelectionController::selectAllPlayerTroops(int localOwnerId) {
+  if (!m_selectionSystem || !m_world)
+    return;
+
+  m_selectionSystem->clearSelection();
+
+  auto entities = m_world->getEntitiesWith<Engine::Core::UnitComponent>();
+  for (auto *e : entities) {
+    auto *unit = e->getComponent<Engine::Core::UnitComponent>();
+    if (!unit || unit->ownerId != localOwnerId)
+      continue;
+
+    if (e->hasComponent<Engine::Core::BuildingComponent>())
+      continue;
+
+    if (unit->health <= 0)
+      continue;
+
+    m_selectionSystem->selectUnit(e->getId());
+  }
+
+  syncSelectionFlags();
+  emit selectionChanged();
+}
+
 bool SelectionController::hasUnitsSelected() const {
   if (!m_selectionSystem)
     return false;
