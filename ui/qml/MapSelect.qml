@@ -824,13 +824,13 @@ Item {
 
                                 
                                 Item {
-                                    width: Math.max(10, parent.parent.width - 285)
+                                    width: Math.max(10, parent.parent.width - 385)
                                     height: parent.height
                                 }
 
                                 
                                 Item {
-                                    width: 100
+                                    width: 200
                                     height: parent.height
                                     
                                     Text {
