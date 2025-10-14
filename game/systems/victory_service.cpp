@@ -3,6 +3,7 @@
 #include "game/core/component.h"
 #include "game/core/world.h"
 #include "game/map/map_definition.h"
+#include "game/systems/global_stats_registry.h"
 #include "game/systems/owner_registry.h"
 #include <QDebug>
 #include <algorithm>
@@ -84,6 +85,19 @@ void VictoryService::checkVictoryConditions(Engine::Core::World &world) {
   if (victory) {
     m_victoryState = "victory";
     qInfo() << "VICTORY! Conditions met.";
+    
+    // Mark game end for local player and log stats
+    auto &statsRegistry = Game::Systems::GlobalStatsRegistry::instance();
+    statsRegistry.markGameEnd(m_localOwnerId);
+    
+    const auto *stats = statsRegistry.getStats(m_localOwnerId);
+    if (stats) {
+      qInfo() << "Final Stats - Troops Recruited:" << stats->troopsRecruited
+              << "Enemies Killed:" << stats->enemiesKilled
+              << "Barracks Owned:" << stats->barracksOwned
+              << "Play Time:" << stats->playTimeSec << "seconds";
+    }
+    
     if (m_victoryCallback) {
       m_victoryCallback(m_victoryState);
     }
@@ -109,6 +123,19 @@ void VictoryService::checkDefeatConditions(Engine::Core::World &world) {
     if (defeat) {
       m_victoryState = "defeat";
       qInfo() << "DEFEAT! Condition met.";
+      
+      // Mark game end for local player and log stats
+      auto &statsRegistry = Game::Systems::GlobalStatsRegistry::instance();
+      statsRegistry.markGameEnd(m_localOwnerId);
+      
+      const auto *stats = statsRegistry.getStats(m_localOwnerId);
+      if (stats) {
+        qInfo() << "Final Stats - Troops Recruited:" << stats->troopsRecruited
+                << "Enemies Killed:" << stats->enemiesKilled
+                << "Barracks Owned:" << stats->barracksOwned
+                << "Play Time:" << stats->playTimeSec << "seconds";
+      }
+      
       if (m_victoryCallback) {
         m_victoryCallback(m_victoryState);
       }
