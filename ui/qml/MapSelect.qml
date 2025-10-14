@@ -13,27 +13,6 @@ Item {
     signal cancelled()
 
     
-    readonly property var playerColors: [
-        { name: "Red", hex: "#FF4040" },
-        { name: "Blue", hex: "#4080FF" },
-        { name: "Green", hex: "#40FF60" },
-        { name: "Yellow", hex: "#FFFF40" },
-        { name: "Orange", hex: "#FF9040" },
-        { name: "Purple", hex: "#B040FF" },
-        { name: "Cyan", hex: "#40FFFF" },
-        { name: "Pink", hex: "#FF40B0" }
-    ]
-
-    readonly property var teamIcons: ["⚪", "①", "②", "③", "④", "⑤", "⑥", "⑦", "⑧"]
-
-    readonly property var factions: [
-        { id: 0, name: "Standard" },
-        { id: 1, name: "Romans" },
-        { id: 2, name: "Egyptians" },
-        { id: 3, name: "Barbarians" }
-    ]
-
-    
     
     
     property var mapsModel: (typeof game !== "undefined" && game.availableMaps) ? game.availableMaps : []
@@ -77,12 +56,12 @@ Item {
             playerId: humanPlayerId,
             playerName: "Player " + (humanPlayerId + 1),
             colorIndex: 0,
-            colorHex: playerColors[0].hex,
-            colorName: playerColors[0].name,
+            colorHex: Theme.playerColors[0].hex,
+            colorName: Theme.playerColors[0].name,
             teamId: 0,
-            teamIcon: teamIcons[0],
+            teamIcon: Theme.teamIcons[0],
             factionId: 0,
-            factionName: factions[0].name,
+            factionName: Theme.factions[0].name,
             isHuman: true
         })
 
@@ -108,7 +87,7 @@ Item {
         for (let k=0; k<playersModel.count; k++) usedColors.push(playersModel.get(k).colorIndex)
 
         let colorIdx = 0
-        for (let c=0; c<playerColors.length; c++) {
+        for (let c=0; c<Theme.playerColors.length; c++) {
             if (usedColors.indexOf(c) === -1) { colorIdx = c; break }
         }
 
@@ -116,12 +95,12 @@ Item {
             playerId: nextId,
             playerName: "CPU " + nextId,
             colorIndex: colorIdx,
-            colorHex: playerColors[colorIdx].hex,
-            colorName: playerColors[colorIdx].name,
+            colorHex: Theme.playerColors[colorIdx].hex,
+            colorName: Theme.playerColors[colorIdx].name,
             teamId: 0,
-            teamIcon: teamIcons[0],
+            teamIcon: Theme.teamIcons[0],
             factionId: 0,
-            factionName: factions[0].name,
+            factionName: Theme.factions[0].name,
             isHuman: false
         })
     }
@@ -147,23 +126,23 @@ Item {
         
         
         let startIdx = p.colorIndex
-        let newIdx = (startIdx + 1) % playerColors.length
+        let newIdx = (startIdx + 1) % Theme.playerColors.length
         let attempts = 0
         
         
-        while (usedColors.indexOf(newIdx) !== -1 && attempts < playerColors.length) {
-            newIdx = (newIdx + 1) % playerColors.length
+        while (usedColors.indexOf(newIdx) !== -1 && attempts < Theme.playerColors.length) {
+            newIdx = (newIdx + 1) % Theme.playerColors.length
             attempts++
         }
         
         
-        if (attempts >= playerColors.length) {
-            newIdx = (startIdx + 1) % playerColors.length
+        if (attempts >= Theme.playerColors.length) {
+            newIdx = (startIdx + 1) % Theme.playerColors.length
         }
         
         playersModel.setProperty(index, "colorIndex", newIdx)
-        playersModel.setProperty(index, "colorHex", playerColors[newIdx].hex)
-        playersModel.setProperty(index, "colorName", playerColors[newIdx].name)
+        playersModel.setProperty(index, "colorHex", Theme.playerColors[newIdx].hex)
+        playersModel.setProperty(index, "colorName", Theme.playerColors[newIdx].name)
     }
 
     function cyclePlayerTeam(index) {
@@ -172,7 +151,7 @@ Item {
         let maxTeam = Math.min(8, playersModel.count)
         let newTeamId = (p.teamId + 1) % (maxTeam + 1)
         playersModel.setProperty(index, "teamId", newTeamId)
-        playersModel.setProperty(index, "teamIcon", teamIcons[newTeamId])
+        playersModel.setProperty(index, "teamIcon", Theme.teamIcons[newTeamId])
     }
 
     function getPlayerConfigs() {
@@ -351,8 +330,8 @@ Item {
                             Item {
                                 anchors {
                                     left: thumbWrap.right; right: parent.right
-                                    leftMargin: theme.spacingSmall
-                                    rightMargin: theme.spacingSmall
+                                    leftMargin: Theme.spacingSmall
+                                    rightMargin: Theme.spacingSmall
                                     verticalCenter: parent.verticalCenter
                                 }
                                 height: 54
@@ -367,7 +346,7 @@ Item {
                                     font.bold: (index === list.currentIndex)
                                     elide: Text.ElideRight
                                     anchors { top: parent.top; left: parent.left; right: parent.right }
-                                    Behavior on font.pixelSize { NumberAnimation { duration: theme.animNormal } }
+                                    Behavior on font.pixelSize { NumberAnimation { duration: Theme.animNormal } }
                                 }
 
                                 Text {
@@ -745,9 +724,9 @@ Item {
                 id: playerSelectionPanel
                 anchors {
                     top: playerConfigPanel.bottom; left: parent.left; right: parent.right
-                    topMargin: theme.spacingMedium
+                    topMargin: Theme.spacingMedium
                 }
-                radius: theme.radiusLarge
+                radius: Theme.radiusLarge
                 color: Theme.cardBaseA
                 border.color: Theme.panelBr
                 border.width: 1
@@ -758,9 +737,9 @@ Item {
                     id: playerSelectionContent
                     anchors {
                         left: parent.left; right: parent.right; top: parent.top
-                        margins: theme.spacingSmall
+                        margins: Theme.spacingSmall
                     }
-                    spacing: theme.spacingSmall
+                    spacing: Theme.spacingSmall
 
                     Text {
                         text: "Available Player Slots: " + (function(){
@@ -780,7 +759,7 @@ Item {
 
                     Flow {
                         width: parent.width
-                        spacing: theme.spacingSmall
+                        spacing: Theme.spacingSmall
 
                         Repeater {
                             model: {
@@ -788,7 +767,7 @@ Item {
                                 return (it && it.playerIds) ? it.playerIds : []
                             }
                             delegate: Rectangle {
-                                width: 60; height: 32; radius: theme.radiusMedium
+                                width: 60; height: 32; radius: Theme.radiusMedium
                                 color: {
                                     var pid = modelData
                                     if (typeof game === 'undefined') return Theme.cardBaseB
