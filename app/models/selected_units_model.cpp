@@ -1,8 +1,8 @@
 #include "selected_units_model.h"
-#include "../game/core/component.h"
-#include "../game/core/world.h"
-#include "../game/systems/selection_system.h"
-#include "game_engine.h"
+#include "../../game/core/component.h"
+#include "../../game/core/world.h"
+#include "../../game/systems/selection_system.h"
+#include "../core/game_engine.h"
 #include <algorithm>
 
 SelectedUnitsModel::SelectedUnitsModel(GameEngine *engine, QObject *parent)

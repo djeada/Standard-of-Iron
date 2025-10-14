@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../game/core/entity.h"
+#include "../../game/core/entity.h"
 #include <QAbstractListModel>
 #include <vector>
 
