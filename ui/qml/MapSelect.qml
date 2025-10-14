@@ -233,13 +233,6 @@ Item {
                 font.pixelSize: 20; font.bold: true
                 anchors { top: parent.top; left: parent.left; right: parent.right }
             }
-            Text {
-                id: leftSub
-                text: "(" + (list.count || 0) + ")"
-                color: Theme.textSubLite
-                font.pixelSize: 13
-                anchors { left: leftTitle.right; leftMargin: 8; verticalCenter: leftTitle.verticalCenter }
-            }
 
             Rectangle {
                 id: listFrame
