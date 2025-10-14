@@ -51,10 +51,8 @@ void GatherBehavior::execute(const AISnapshot &snapshot, AIContext &context,
     formationType = nation->formationType;
   }
 
-  auto formationTargets =
-      FormationSystem::instance().getFormationPositions(
-          formationType, static_cast<int>(unitsToGather.size()), rallyPoint,
-          1.4f);
+  auto formationTargets = FormationSystem::instance().getFormationPositions(
+      formationType, static_cast<int>(unitsToGather.size()), rallyPoint, 1.4f);
 
   std::vector<Engine::Core::EntityID> unitsToMove;
   std::vector<float> targetX, targetY, targetZ;
