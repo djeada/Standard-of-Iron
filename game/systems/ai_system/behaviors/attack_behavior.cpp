@@ -2,7 +2,6 @@
 #include "../ai_tactical.h"
 #include "../ai_utils.h"
 
-#include <QDebug>
 #include <algorithm>
 #include <cmath>
 #include <limits>
@@ -49,16 +48,8 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   if (readyUnits.empty()) {
 
     if (!engagedUnits.empty()) {
-      qDebug() << "[AttackBehavior] All" << engagedUnits.size()
-               << "units engaged in combat - maintaining fight position";
     }
     return;
-  }
-
-  if (!engagedUnits.empty()) {
-    qDebug() << "[AttackBehavior] Army split: " << readyUnits.size()
-             << "units forming attack group," << engagedUnits.size()
-             << "units engaged in combat";
   }
 
   float invCount = 1.0f / static_cast<float>(readyUnits.size());
@@ -168,13 +159,6 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
             targetY.push_back(0.0f);
             targetZ.push_back(attackPosZ);
           }
-
-          qDebug() << "[AttackBehavior] Group move:" << unitIds.size()
-                   << "units toward"
-                   << (targetBarracks ? "enemy barracks" : "enemy unit")
-                   << "at position (" << attackPosX << "," << attackPosZ << ")"
-                   << "| Engaged units staying in combat:"
-                   << engagedUnits.size();
 
           AICommand cmd;
           cmd.type = AICommandType::MoveUnits;

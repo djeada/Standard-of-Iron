@@ -95,9 +95,6 @@ void BiomeRenderer::configure(const Game::Map::TerrainHeightMap &heightMap,
   m_grassParams.time = 0.0f;
 
   generateGrassInstances();
-
-  qDebug() << "BiomeRenderer configured: generated" << m_grassInstances.size()
-           << "grass instances";
 }
 
 void BiomeRenderer::submit(Renderer &renderer) {
@@ -444,12 +441,6 @@ void BiomeRenderer::generateGrassInstances() {
     else if (type == Game::Map::TerrainType::Mountain)
       debugMountainCount++;
   }
-
-  qDebug() << "BiomeRenderer: generated" << m_grassInstanceCount
-           << "grass instances in" << timer.elapsed() << "ms";
-  qDebug() << "  Terrain types - Flat:" << debugFlatCount
-           << "Hill:" << debugHillCount << "Mountain:" << debugMountainCount
-           << "Total:" << m_terrainTypes.size();
 }
 
 } // namespace Render::GL

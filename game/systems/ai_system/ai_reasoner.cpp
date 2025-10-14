@@ -2,9 +2,7 @@
 #include "ai_utils.h"
 #include <algorithm>
 #include <cmath>
-#include <iostream>
 #include <limits>
-#include <unordered_map>
 
 namespace Game::Systems::AI {
 
@@ -125,18 +123,6 @@ void AIReasoner::updateContext(const AISnapshot &snapshot, AIContext &ctx) {
     if (!ctx.barracksUnderThreat) {
       ctx.closestThreatDistance = std::numeric_limits<float>::infinity();
     }
-  }
-
-  static std::unordered_map<int, int> debugCounters;
-  if (++debugCounters[ctx.playerId] % 3 == 0) {
-    std::cout << "[AI Player " << ctx.playerId << "] "
-              << "State: " << static_cast<int>(ctx.state)
-              << " (0=Idle,1=Gather,2=Attack,3=Defend,4=Retreat)"
-              << " | Units: " << ctx.totalUnits
-              << " | Enemies: " << ctx.visibleEnemyCount << " | Barracks: "
-              << (ctx.primaryBarracks != 0 ? "EXISTS" : "NONE")
-              << " | Threat: " << (ctx.barracksUnderThreat ? "YES" : "NO")
-              << " | AvgEnemyDist: " << ctx.averageEnemyDistance << std::endl;
   }
 }
 
