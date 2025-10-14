@@ -123,12 +123,13 @@ detect_distro() {
 
 # ===================== Package maps =====================
 
-# APT (Debian/Ubuntu) toolchain + GL/Vulkan
+# APT (Debian/Ubuntu) toolchain + GL/Vulkan + formatting tools
 APT_PKGS=(
   build-essential
   cmake
   git
   pkg-config
+  clang-format
   libgl1-mesa-dev
   mesa-utils
   libglx-mesa0
@@ -141,6 +142,7 @@ QT6_DEV_PKGS=(
   qt6-base-dev
   qt6-base-dev-tools
   qt6-declarative-dev
+  qt6-declarative-dev-tools
   qt6-tools-dev
   qt6-tools-dev-tools
 )
@@ -165,14 +167,16 @@ QT5_QML_RUN_PKGS=(
   qml-module-qtquick-controls2
   qtbase5-dev
   qtdeclarative5-dev
+  qtdeclarative5-dev-tools
 )
 
-# PACMAN (Arch/Manjaro) toolchain + GL/Vulkan
+# PACMAN (Arch/Manjaro) toolchain + GL/Vulkan + formatting tools
 PAC_PKGS=(
   base-devel      # build tools incl. gcc/g++
   cmake
   git
   pkgconf         # provides pkg-config
+  clang
   mesa            # GL/EGL/GLX (via libglvnd)
   mesa-demos      # glxinfo/glxgears (like mesa-utils)
   libglvnd
@@ -464,6 +468,8 @@ main() {
   echo "- cmake >= $MIN_CMAKE"
   echo "- g++   >= $MIN_GXX"
   echo "- Qt 6 base + declarative + tools + QML runtime modules (Qt5 QML fallback if available)"
+  echo "- clang-format (for C/C++ and shader formatting)"
+  echo "- qmlformat (for QML formatting, if Qt dev tools are available)"
 }
 
 main "$@"
