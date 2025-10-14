@@ -229,9 +229,12 @@ Item {
 
                         return ;
                     }
-                    if (gameView.cursorMode === "guard")
-                        return ;
+                    if (gameView.cursorMode === "guard") {
+                        if (typeof game !== 'undefined' && game.onGuardClick)
+                            game.onGuardClick(mouse.x, mouse.y);
 
+                        return ;
+                    }
                     if (gameView.cursorMode === "patrol") {
                         if (typeof game !== 'undefined' && game.onPatrolClick)
                             game.onPatrolClick(mouse.x, mouse.y);

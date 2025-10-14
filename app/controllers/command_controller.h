@@ -38,6 +38,8 @@ public:
   CommandResult onStopCommand();
   CommandResult onPatrolClick(qreal sx, qreal sy, int viewportWidth,
                               int viewportHeight, void *camera);
+  CommandResult onGuardClick(qreal sx, qreal sy, int viewportWidth,
+                             int viewportHeight, void *camera);
   CommandResult setRallyAtScreen(qreal sx, qreal sy, int viewportWidth,
                                  int viewportHeight, void *camera,
                                  int localOwnerId);

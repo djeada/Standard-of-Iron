@@ -35,6 +35,7 @@
 #include "game/systems/nation_registry.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/patrol_system.h"
+#include "game/systems/guard_system.h"
 #include "game/systems/picking_service.h"
 #include "game/systems/production_service.h"
 #include "game/systems/production_system.h"
@@ -86,6 +87,7 @@ GameEngine::GameEngine() {
 
   m_world->addSystem(std::make_unique<Game::Systems::MovementSystem>());
   m_world->addSystem(std::make_unique<Game::Systems::PatrolSystem>());
+  m_world->addSystem(std::make_unique<Game::Systems::GuardSystem>());
   m_world->addSystem(std::make_unique<Game::Systems::CombatSystem>());
   m_world->addSystem(std::make_unique<Game::Systems::AISystem>());
   m_world->addSystem(std::make_unique<Game::Systems::ProductionSystem>());
@@ -286,6 +288,18 @@ void GameEngine::onPatrolClick(qreal sx, qreal sy) {
   ensureInitialized();
 
   auto result = m_commandController->onPatrolClick(
+      sx, sy, m_viewport.width, m_viewport.height, m_camera.get());
+  if (result.resetCursorToNormal) {
+    setCursorMode("normal");
+  }
+}
+
+void GameEngine::onGuardClick(qreal sx, qreal sy) {
+  if (!m_commandController || !m_camera)
+    return;
+  ensureInitialized();
+
+  auto result = m_commandController->onGuardClick(
       sx, sy, m_viewport.width, m_viewport.height, m_camera.get());
   if (result.resetCursorToNormal) {
     setCursorMode("normal");
@@ -705,6 +719,7 @@ QString GameEngine::getSelectedUnitsCommandMode() const {
 
   int attackingCount = 0;
   int patrollingCount = 0;
+  int guardingCount = 0;
   int totalUnits = 0;
 
   for (auto id : sel) {
@@ -726,11 +741,17 @@ QString GameEngine::getSelectedUnitsCommandMode() const {
     auto *patrol = e->getComponent<Engine::Core::PatrolComponent>();
     if (patrol && patrol->patrolling)
       patrollingCount++;
+
+    auto *guard = e->getComponent<Engine::Core::GuardComponent>();
+    if (guard && guard->isGuarding)
+      guardingCount++;
   }
 
   if (totalUnits == 0)
     return "normal";
 
+  if (guardingCount == totalUnits)
+    return "guard";
   if (patrollingCount == totalUnits)
     return "patrol";
   if (attackingCount == totalUnits)

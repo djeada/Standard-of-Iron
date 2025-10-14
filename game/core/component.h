@@ -150,6 +150,18 @@ public:
   bool patrolling;
 };
 
+class GuardComponent : public Component {
+public:
+  GuardComponent()
+      : guardX(0.0f), guardZ(0.0f), guardRadius(10.0f), isGuarding(false),
+        returnToPosition(false) {}
+
+  float guardX, guardZ;
+  float guardRadius;
+  bool isGuarding;
+  bool returnToPosition;
+};
+
 } // namespace Engine::Core
 
 namespace Engine::Core {

@@ -103,6 +103,7 @@ public:
   Q_INVOKABLE void onAttackClick(qreal sx, qreal sy);
   Q_INVOKABLE void onStopCommand();
   Q_INVOKABLE void onPatrolClick(qreal sx, qreal sy);
+  Q_INVOKABLE void onGuardClick(qreal sx, qreal sy);
 
   Q_INVOKABLE void cameraMove(float dx, float dz);
   Q_INVOKABLE void cameraElevate(float dy);

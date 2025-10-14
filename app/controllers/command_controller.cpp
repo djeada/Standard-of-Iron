@@ -168,6 +168,62 @@ CommandResult CommandController::onPatrolClick(qreal sx, qreal sy,
   return result;
 }
 
+CommandResult CommandController::onGuardClick(qreal sx, qreal sy,
+                                              int viewportWidth,
+                                              int viewportHeight,
+                                              void *camera) {
+  CommandResult result;
+  if (!m_selectionSystem || !m_world || !m_pickingService || !camera) {
+    result.resetCursorToNormal = true;
+    return result;
+  }
+
+  const auto &selected = m_selectionSystem->getSelectedUnits();
+  if (selected.empty()) {
+    result.resetCursorToNormal = true;
+    return result;
+  }
+
+  auto *cam = static_cast<Render::GL::Camera *>(camera);
+  QVector3D hit;
+  if (!m_pickingService->screenToGround(QPointF(sx, sy), *cam, viewportWidth,
+                                        viewportHeight, hit)) {
+    result.resetCursorToNormal = true;
+    return result;
+  }
+
+  for (auto id : selected) {
+    auto *entity = m_world->getEntity(id);
+    if (!entity)
+      continue;
+
+    auto *building = entity->getComponent<Engine::Core::BuildingComponent>();
+    if (building)
+      continue;
+
+    auto *guard = entity->getComponent<Engine::Core::GuardComponent>();
+    if (!guard) {
+      guard = entity->addComponent<Engine::Core::GuardComponent>();
+    }
+
+    if (guard) {
+      guard->guardX = hit.x();
+      guard->guardZ = hit.z();
+      guard->guardRadius = 10.0f;
+      guard->isGuarding = true;
+      guard->returnToPosition = false;
+    }
+
+    resetMovement(entity);
+    entity->removeComponent<Engine::Core::AttackTargetComponent>();
+    entity->removeComponent<Engine::Core::PatrolComponent>();
+  }
+
+  result.inputConsumed = true;
+  result.resetCursorToNormal = true;
+  return result;
+}
+
 CommandResult CommandController::setRallyAtScreen(qreal sx, qreal sy,
                                                   int viewportWidth,
                                                   int viewportHeight,
