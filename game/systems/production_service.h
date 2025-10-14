@@ -13,6 +13,14 @@ using EntityID = unsigned int;
 namespace Game {
 namespace Systems {
 
+enum class ProductionResult {
+  Success,
+  NoBarracks,
+  PerBarracksLimitReached,
+  GlobalTroopLimitReached,
+  AlreadyInProgress
+};
+
 struct ProductionState {
   bool hasBarracks = false;
   bool inProgress = false;
@@ -25,7 +33,7 @@ struct ProductionState {
 
 class ProductionService {
 public:
-  static bool startProductionForFirstSelectedBarracks(
+  static ProductionResult startProductionForFirstSelectedBarracks(
       Engine::Core::World &world,
       const std::vector<Engine::Core::EntityID> &selected, int ownerId,
       const std::string &unitType);
