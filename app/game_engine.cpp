@@ -40,6 +40,7 @@
 #include "game/systems/production_system.h"
 #include "game/systems/selection_system.h"
 #include "game/systems/terrain_alignment_system.h"
+#include "game/systems/troop_count_registry.h"
 #include "game/systems/victory_service.h"
 #include "game/units/troop_config.h"
 #include "game/visuals/team_colors.h"
@@ -68,6 +69,7 @@
 GameEngine::GameEngine() {
 
   Game::Systems::NationRegistry::instance().initializeDefaults();
+  Game::Systems::TroopCountRegistry::instance().initialize();
 
   m_world = std::make_unique<Engine::Core::World>();
   m_renderer = std::make_unique<Render::GL::Renderer>();
@@ -155,6 +157,12 @@ GameEngine::GameEngine() {
                 }
               }
             }
+          });
+  
+  connect(m_commandController.get(),
+          &App::Controllers::CommandController::troopLimitReached,
+          [this]() {
+            setError("Maximum troop limit reached. Cannot produce more units.");
           });
 
   connect(this, SIGNAL(selectedUnitsChanged()), m_selectedUnitsModel,
@@ -813,6 +821,8 @@ void GameEngine::startSkirmish(const QString &mapPath,
     m_level.camNear = result.camNear;
     m_level.camFar = result.camFar;
     m_level.maxTroopsPerPlayer = result.maxTroopsPerPlayer;
+    
+    Game::GameConfig::instance().setMaxTroopsPerPlayer(result.maxTroopsPerPlayer);
 
     if (m_victoryService) {
       m_victoryService->configure(result.victoryConfig, m_runtime.localOwnerId);
@@ -837,6 +847,7 @@ void GameEngine::startSkirmish(const QString &mapPath,
     }
 
     rebuildEntityCache();
+    Game::Systems::TroopCountRegistry::instance().rebuildFromWorld(*m_world);
 
     emit ownerInfoChanged();
   }
