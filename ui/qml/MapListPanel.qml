@@ -98,7 +98,6 @@ Item {
                     hoverEnabled: true
                     acceptedButtons: Qt.LeftButton
                     cursorShape: Qt.PointingHandCursor
-                    onEntered: list.currentIndex = index
                     onClicked: list.currentIndex = index
                     onDoubleClicked: root.mapDoubleClicked()
                 }
@@ -108,9 +107,11 @@ Item {
                     radius: 8
                     clip: true
                     color: rowMouse.containsPress ? colors.hoverBg
-                            : (index === list.currentIndex ? colors.selectedBg : "transparent")
+                            : (index === list.currentIndex ? colors.selectedBg 
+                            : (rowMouse.containsMouse ? Qt.rgba(1, 1, 1, 0.03) : "transparent"))
                     border.width: 1
-                    border.color: (index === list.currentIndex) ? colors.selectedBr : colors.thumbBr
+                    border.color: (index === list.currentIndex) ? colors.selectedBr 
+                            : (rowMouse.containsMouse ? Qt.rgba(1, 1, 1, 0.15) : colors.thumbBr)
                     Behavior on color { ColorAnimation { duration: 160 } }
                     Behavior on border.color { ColorAnimation { duration: 160 } }
 
