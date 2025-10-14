@@ -42,6 +42,7 @@ add_library(game_systems STATIC
     systems/terrain_alignment_system.cpp
     systems/owner_registry.cpp
     systems/troop_count_registry.cpp
+    systems/global_stats_registry.cpp
     systems/victory_service.cpp
     systems/nation_registry.cpp
     systems/formation_system.cpp
