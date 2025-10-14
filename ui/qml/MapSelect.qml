@@ -689,21 +689,86 @@ Item {
                                 anchors.fill: parent
                                 anchors.margins: Theme.spacingSmall + 2
                                 spacing: Theme.spacingMedium
+                                layoutDirection: Qt.RightToLeft
 
                                 
-                                Item {
-                                    width: 100
-                                    height: parent.height
-                                    
+                                
+                                Rectangle {
+                                    width: 36
+                                    height: parent.height - 4
+                                    radius: Theme.radiusSmall
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    color: removeMA.containsMouse ? Theme.removeColor : Theme.cardBaseA
+                                    border.color: Theme.removeColor
+                                    border.width: removeMA.containsMouse ? 2 : 1
+                                    visible: !model.isHuman
+                                    Behavior on color { ColorAnimation { duration: Theme.animFast } }
+                                    Behavior on border.width { NumberAnimation { duration: Theme.animFast } }
+
                                     Text {
-                                        anchors.verticalCenter: parent.verticalCenter
-                                        anchors.left: parent.left
-                                        anchors.leftMargin: 4
-                                        text: model.playerName || ""
-                                        color: model.isHuman ? Theme.accentBright : Theme.textBright
-                                        font.pixelSize: model.isHuman ? 15 : 14
+                                        anchors.centerIn: parent
+                                        text: "✕"
+                                        color: Theme.textMain
+                                        font.pixelSize: 16
                                         font.bold: true
                                     }
+
+                                    MouseArea {
+                                        id: removeMA
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: removePlayer(index)
+                                    }
+                                    
+                                    ToolTip.visible: removeMA.containsMouse
+                                    ToolTip.text: "Remove player"
+                                }
+
+                                
+                                Rectangle {
+                                    width: 70
+                                    height: parent.height - 4
+                                    radius: Theme.radiusSmall
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    color: teamMA.containsMouse ? Qt.lighter(Theme.hoverBg, 1.2) : Theme.hoverBg
+                                    border.color: teamMA.containsMouse ? Theme.selectedBr : Theme.thumbBr
+                                    border.width: teamMA.containsMouse ? 2 : 1
+                                    Behavior on color { ColorAnimation { duration: Theme.animFast } }
+                                    Behavior on border.color { ColorAnimation { duration: Theme.animFast } }
+                                    Behavior on border.width { NumberAnimation { duration: Theme.animFast } }
+
+                                    Column {
+                                        anchors.centerIn: parent
+                                        spacing: 2
+                                        
+                                        Text {
+                                            anchors.horizontalCenter: parent.horizontalCenter
+                                            text: model.teamIcon || "⚪"
+                                            color: Theme.textMain
+                                            font.pixelSize: 20
+                                            font.bold: true
+                                        }
+                                        
+                                        Text {
+                                            anchors.horizontalCenter: parent.horizontalCenter
+                                            text: "Team " + (model.teamId || 0)
+                                            color: Theme.textBright
+                                            font.pixelSize: 10
+                                            font.bold: true
+                                        }
+                                    }
+
+                                    MouseArea {
+                                        id: teamMA
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: cyclePlayerTeam(index)
+                                    }
+                                    
+                                    ToolTip.visible: teamMA.containsMouse
+                                    ToolTip.text: "Team " + (model.teamId || 0) + " - Click to change"
                                 }
 
                                 
@@ -758,89 +823,25 @@ Item {
                                 }
 
                                 
-                                Rectangle {
-                                    width: 70
-                                    height: parent.height - 4
-                                    radius: Theme.radiusSmall
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    color: teamMA.containsMouse ? Qt.lighter(Theme.hoverBg, 1.2) : Theme.hoverBg
-                                    border.color: teamMA.containsMouse ? Theme.selectedBr : Theme.thumbBr
-                                    border.width: teamMA.containsMouse ? 2 : 1
-                                    Behavior on color { ColorAnimation { duration: Theme.animFast } }
-                                    Behavior on border.color { ColorAnimation { duration: Theme.animFast } }
-                                    Behavior on border.width { NumberAnimation { duration: Theme.animFast } }
-
-                                    Column {
-                                        anchors.centerIn: parent
-                                        spacing: 2
-                                        
-                                        Text {
-                                            anchors.horizontalCenter: parent.horizontalCenter
-                                            text: model.teamIcon || "⚪"
-                                            color: Theme.textMain
-                                            font.pixelSize: 20
-                                            font.bold: true
-                                        }
-                                        
-                                        Text {
-                                            anchors.horizontalCenter: parent.horizontalCenter
-                                            text: "Team " + (model.teamId || 0)
-                                            color: Theme.textBright
-                                            font.pixelSize: 10
-                                            font.bold: true
-                                        }
-                                    }
-
-                                    MouseArea {
-                                        id: teamMA
-                                        anchors.fill: parent
-                                        hoverEnabled: true
-                                        cursorShape: Qt.PointingHandCursor
-                                        onClicked: cyclePlayerTeam(index)
-                                    }
-                                    
-                                    ToolTip.visible: teamMA.containsMouse
-                                    ToolTip.text: "Team " + (model.teamId || 0) + " - Click to change"
-                                }
-
-                                
                                 Item {
                                     width: Math.max(10, parent.parent.width - 285)
                                     height: parent.height
                                 }
 
                                 
-                                
-                                Rectangle {
-                                    width: 36
-                                    height: parent.height - 4
-                                    radius: Theme.radiusSmall
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    color: removeMA.containsMouse ? Theme.removeColor : Theme.cardBaseA
-                                    border.color: Theme.removeColor
-                                    border.width: removeMA.containsMouse ? 2 : 1
-                                    visible: !model.isHuman
-                                    Behavior on color { ColorAnimation { duration: Theme.animFast } }
-                                    Behavior on border.width { NumberAnimation { duration: Theme.animFast } }
-
+                                Item {
+                                    width: 100
+                                    height: parent.height
+                                    
                                     Text {
-                                        anchors.centerIn: parent
-                                        text: "✕"
-                                        color: Theme.textMain
-                                        font.pixelSize: 16
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        anchors.right: parent.right
+                                        anchors.rightMargin: 4
+                                        text: model.playerName || ""
+                                        color: model.isHuman ? Theme.accentBright : Theme.textBright
+                                        font.pixelSize: model.isHuman ? 15 : 14
                                         font.bold: true
                                     }
-
-                                    MouseArea {
-                                        id: removeMA
-                                        anchors.fill: parent
-                                        hoverEnabled: true
-                                        cursorShape: Qt.PointingHandCursor
-                                        onClicked: removePlayer(index)
-                                    }
-                                    
-                                    ToolTip.visible: removeMA.containsMouse
-                                    ToolTip.text: "Remove player"
                                 }
                             }
                         }
