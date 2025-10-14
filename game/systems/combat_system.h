@@ -1,10 +1,10 @@
 #pragma once
 
+#include "../core/entity.h"
 #include "../core/system.h"
 
 namespace Engine {
 namespace Core {
-class Entity;
 class AttackComponent;
 } // namespace Core
 } // namespace Engine
