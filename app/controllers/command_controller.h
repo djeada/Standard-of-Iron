@@ -11,7 +11,7 @@ class World;
 class Entity;
 using EntityID = unsigned int;
 }
-} // namespace Engine
+} 
 
 namespace Game::Systems {
 class SelectionSystem;
@@ -62,4 +62,4 @@ private:
   void resetMovement(Engine::Core::Entity *entity);
 };
 
-} // namespace App::Controllers
+} 

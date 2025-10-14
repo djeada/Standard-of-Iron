@@ -112,7 +112,7 @@ GameEngine::GameEngine() {
   m_cursorManager = std::make_unique<CursorManager>();
   m_hoverTracker = std::make_unique<HoverTracker>(m_pickingService.get());
   
-  // Initialize MapCatalog for progressive loading
+  
   m_mapCatalog = std::make_unique<Game::Map::MapCatalog>();
   connect(m_mapCatalog.get(), &Game::Map::MapCatalog::mapLoaded, this, [this](QVariantMap mapData) {
     m_availableMaps.append(mapData);
