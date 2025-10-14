@@ -43,6 +43,7 @@ add_library(game_systems STATIC
     systems/owner_registry.cpp
     systems/victory_service.cpp
     systems/nation_registry.cpp
+    systems/formation_system.cpp
     map/map_loader.cpp
     map/level_loader.cpp
     map/map_transformer.cpp
