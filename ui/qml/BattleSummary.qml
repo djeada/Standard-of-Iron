@@ -10,8 +10,7 @@ Rectangle {
     z: 101
 
     property bool isVictory: (typeof game !== 'undefined' && game.victoryState === "victory")
-    
-    signal closeRequested()
+    property var onClose: null
 
     function show() {
         visible = true;
@@ -20,6 +19,9 @@ Rectangle {
 
     function hide() {
         visible = false;
+        if (onClose) {
+            onClose();
+        }
     }
 
     function buildPlayerList() {
@@ -28,12 +30,30 @@ Rectangle {
             return ;
         var owners = game.ownerInfo;
         var localOwnerId = -1;
+        var localTeamId = -1;
+        var winningTeamId = -1;
+        
         for (var i = 0; i < owners.length; i++) {
             if (owners[i].isLocal) {
                 localOwnerId = owners[i].id;
+                localTeamId = owners[i].teamId;
                 break;
             }
         }
+        
+        // Determine winning team based on isVictory and local player's team
+        if (isVictory) {
+            winningTeamId = localTeamId;
+        } else {
+            // Local team lost, so find a different team as winner
+            for (var t = 0; t < owners.length; t++) {
+                if (owners[t].teamId !== localTeamId && (owners[t].type === "Player" || owners[t].type === "AI")) {
+                    winningTeamId = owners[t].teamId;
+                    break;
+                }
+            }
+        }
+        
         var playerBanners = [];
         var aiColorIndex = 1;
         for (var j = 0; j < owners.length; j++) {
@@ -41,6 +61,7 @@ Rectangle {
             if (owner.type === "Player" || owner.type === "AI") {
                 var stats = game.getPlayerStats(owner.id);
                 var isLocalPlayer = (owner.id === localOwnerId);
+                var isWinner = (owner.teamId === winningTeamId);
                 var bannerColor = getBannerColor(owner.id, isLocalPlayer, owner.type === "AI", aiColorIndex);
                 if (owner.type === "AI")
                     aiColorIndex++;
@@ -51,6 +72,7 @@ Rectangle {
                     "name": owner.name,
                     "isLocalPlayer": isLocalPlayer,
                     "isAI": owner.type === "AI",
+                    "isWinner": isWinner,
                     "bannerColor": bannerColor,
                     "kills": stats.enemiesKilled,
                     "losses": stats.troopsRecruited - stats.enemiesKilled,
@@ -224,6 +246,27 @@ Rectangle {
                                     style: Text.Raised
                                     styleColor: "#000000"
                                 }
+                                
+                                Rectangle {
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    width: parent.width * 0.8
+                                    height: 24
+                                    color: model.isWinner ? "#228B22" : "#8B0000"
+                                    radius: 4
+                                    border.color: model.isWinner ? "#32CD32" : "#DC143C"
+                                    border.width: 2
+                                    
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: model.isWinner ? "VICTORIOUS" : "DEFEATED"
+                                        color: "white"
+                                        font.family: "serif"
+                                        font.pointSize: 11
+                                        font.bold: true
+                                        style: Text.Raised
+                                        styleColor: "#000000"
+                                    }
+                                }
 
                                 Rectangle {
                                     anchors.horizontalCenter: parent.horizontalCenter
@@ -244,6 +287,8 @@ Rectangle {
                                         font.family: "serif"
                                         font.pointSize: 13
                                         horizontalAlignment: Text.AlignHCenter
+                                        style: Text.Raised
+                                        styleColor: "#000000"
                                     }
 
                                     Text {
@@ -253,6 +298,8 @@ Rectangle {
                                         font.family: "serif"
                                         font.pointSize: 13
                                         horizontalAlignment: Text.AlignHCenter
+                                        style: Text.Raised
+                                        styleColor: "#000000"
                                     }
 
                                     Text {
@@ -262,6 +309,8 @@ Rectangle {
                                         font.family: "serif"
                                         font.pointSize: 13
                                         horizontalAlignment: Text.AlignHCenter
+                                        style: Text.Raised
+                                        styleColor: "#000000"
                                     }
 
                                     Text {
@@ -271,6 +320,8 @@ Rectangle {
                                         font.family: "serif"
                                         font.pointSize: 13
                                         horizontalAlignment: Text.AlignHCenter
+                                        style: Text.Raised
+                                        styleColor: "#000000"
                                     }
 
                                     Text {
@@ -280,6 +331,8 @@ Rectangle {
                                         font.family: "serif"
                                         font.pointSize: 13
                                         horizontalAlignment: Text.AlignHCenter
+                                        style: Text.Raised
+                                        styleColor: "#000000"
                                     }
 
                                 }
@@ -432,7 +485,7 @@ Rectangle {
             padding: 12
             focusPolicy: Qt.NoFocus
             onClicked: {
-                summaryOverlay.closeRequested();
+                summaryOverlay.hide();
             }
         }
 

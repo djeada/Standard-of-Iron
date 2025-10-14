@@ -59,7 +59,7 @@ Rectangle {
         anchors.fill: parent
         visible: showingSummary
         
-        onCloseRequested: {
+        onClose: function() {
             showingSummary = false;
         }
     }
