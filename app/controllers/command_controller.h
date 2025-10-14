@@ -1,8 +1,8 @@
 #pragma once
 
 #include <QObject>
-#include <QVector3D>
 #include <QString>
+#include <QVector3D>
 #include <vector>
 
 namespace Engine {
@@ -10,13 +10,13 @@ namespace Core {
 class World;
 class Entity;
 using EntityID = unsigned int;
-}
+} // namespace Core
 } // namespace Engine
 
 namespace Game::Systems {
 class SelectionSystem;
 class PickingService;
-}
+} // namespace Game::Systems
 
 namespace App::Controllers {
 
@@ -29,18 +29,18 @@ class CommandController : public QObject {
   Q_OBJECT
 public:
   CommandController(Engine::Core::World *world,
-                   Game::Systems::SelectionSystem *selectionSystem,
-                   Game::Systems::PickingService *pickingService,
-                   QObject *parent = nullptr);
+                    Game::Systems::SelectionSystem *selectionSystem,
+                    Game::Systems::PickingService *pickingService,
+                    QObject *parent = nullptr);
 
   CommandResult onAttackClick(qreal sx, qreal sy, int viewportWidth,
-                             int viewportHeight, void *camera);
+                              int viewportHeight, void *camera);
   CommandResult onStopCommand();
   CommandResult onPatrolClick(qreal sx, qreal sy, int viewportWidth,
-                             int viewportHeight, void *camera);
+                              int viewportHeight, void *camera);
   CommandResult setRallyAtScreen(qreal sx, qreal sy, int viewportWidth,
-                                int viewportHeight, void *camera,
-                                int localOwnerId);
+                                 int viewportHeight, void *camera,
+                                 int localOwnerId);
   void recruitNearSelected(const QString &unitType, int localOwnerId);
 
   bool hasPatrolFirstWaypoint() const { return m_hasPatrolFirstWaypoint; }

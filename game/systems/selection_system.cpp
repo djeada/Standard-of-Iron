@@ -1,12 +1,12 @@
 #include "selection_system.h"
+#include "../../app/utils/selection_utils.h"
+#include "../../render/gl/camera.h"
 #include "../core/component.h"
 #include "../core/world.h"
+#include "../game_config.h"
 #include "command_service.h"
 #include "formation_planner.h"
 #include "picking_service.h"
-#include "../game_config.h"
-#include "../../app/utils/selection_utils.h"
-#include "../../render/gl/camera.h"
 #include <QPointF>
 #include <QVector3D>
 #include <algorithm>
@@ -78,9 +78,9 @@ void SelectionController::onClickSelect(qreal sx, qreal sy, bool additive,
   const auto &selected = m_selectionSystem->getSelectedUnits();
   if (!selected.empty()) {
     QVector3D hit;
-    if (!m_pickingService || !m_pickingService->screenToGround(
-                                 QPointF(sx, sy), *cam, viewportWidth,
-                                 viewportHeight, hit)) {
+    if (!m_pickingService ||
+        !m_pickingService->screenToGround(QPointF(sx, sy), *cam, viewportWidth,
+                                          viewportHeight, hit)) {
       return;
     }
     auto targets = Game::Systems::FormationPlanner::spreadFormation(
@@ -94,10 +94,10 @@ void SelectionController::onClickSelect(qreal sx, qreal sy, bool additive,
   }
 }
 
-void SelectionController::onAreaSelected(qreal x1, qreal y1, qreal x2,
-                                         qreal y2, bool additive,
-                                         int viewportWidth, int viewportHeight,
-                                         void *camera, int localOwnerId) {
+void SelectionController::onAreaSelected(qreal x1, qreal y1, qreal x2, qreal y2,
+                                         bool additive, int viewportWidth,
+                                         int viewportHeight, void *camera,
+                                         int localOwnerId) {
   if (!m_selectionSystem || !m_pickingService || !camera || !m_world)
     return;
 
@@ -105,10 +105,9 @@ void SelectionController::onAreaSelected(qreal x1, qreal y1, qreal x2,
     m_selectionSystem->clearSelection();
 
   auto *cam = static_cast<Render::GL::Camera *>(camera);
-  auto picked = m_pickingService->pickInRect(float(x1), float(y1), float(x2),
-                                             float(y2), *m_world, *cam,
-                                             viewportWidth, viewportHeight,
-                                             localOwnerId);
+  auto picked = m_pickingService->pickInRect(
+      float(x1), float(y1), float(x2), float(y2), *m_world, *cam, viewportWidth,
+      viewportHeight, localOwnerId);
   for (auto id : picked)
     m_selectionSystem->selectUnit(id);
   syncSelectionFlags();
