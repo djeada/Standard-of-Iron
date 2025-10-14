@@ -15,7 +15,13 @@ RomanFormation::calculatePositions(int unitCount, const QVector3D &center,
   if (unitCount <= 0)
     return positions;
 
-  const float spacing = baseSpacing * 1.2f;
+  float spacing = baseSpacing * 1.2f;
+  
+  if (unitCount > 100) {
+    spacing *= 2.0f;
+  } else if (unitCount > 50) {
+    spacing *= 1.5f;
+  }
 
   int rows = std::max(1, static_cast<int>(std::sqrt(unitCount * 0.7f)));
   int cols = (unitCount + rows - 1) / rows;
@@ -43,7 +49,13 @@ BarbarianFormation::calculatePositions(int unitCount, const QVector3D &center,
   if (unitCount <= 0)
     return positions;
 
-  const float spacing = baseSpacing * 1.8f;
+  float spacing = baseSpacing * 1.8f;
+  
+  if (unitCount > 100) {
+    spacing *= 2.0f;
+  } else if (unitCount > 50) {
+    spacing *= 1.5f;
+  }
 
   std::mt19937 rng(42);
   std::uniform_real_distribution<float> dist(-0.3f, 0.3f);
