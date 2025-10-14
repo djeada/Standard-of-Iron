@@ -114,15 +114,6 @@ void NationRegistry::initializeDefaults() {
   kingdomOfIron.primaryBuilding = "barracks";
   kingdomOfIron.formationType = FormationType::Roman;
 
-  TroopType swordsman;
-  swordsman.unitType = "swordsman";
-  swordsman.displayName = "Swordsman";
-  swordsman.isMelee = true;
-  swordsman.cost = 75;
-  swordsman.buildTime = 6.0f;
-  swordsman.priority = 15;
-  kingdomOfIron.availableTroops.push_back(swordsman);
-
   TroopType archer;
   archer.unitType = "archer";
   archer.displayName = "Archer";
@@ -133,32 +124,6 @@ void NationRegistry::initializeDefaults() {
   kingdomOfIron.availableTroops.push_back(archer);
 
   registerNation(std::move(kingdomOfIron));
-
-  Nation barbarianTribes;
-  barbarianTribes.id = "barbarian_tribes";
-  barbarianTribes.displayName = "Barbarian Tribes";
-  barbarianTribes.primaryBuilding = "barracks";
-  barbarianTribes.formationType = FormationType::Barbarian;
-
-  TroopType berserker;
-  berserker.unitType = "berserker";
-  berserker.displayName = "Berserker";
-  berserker.isMelee = true;
-  berserker.cost = 80;
-  berserker.buildTime = 6.5f;
-  berserker.priority = 20;
-  barbarianTribes.availableTroops.push_back(berserker);
-
-  TroopType hunter;
-  hunter.unitType = "hunter";
-  hunter.displayName = "Hunter";
-  hunter.isMelee = false;
-  hunter.cost = 45;
-  hunter.buildTime = 4.5f;
-  hunter.priority = 12;
-  barbarianTribes.availableTroops.push_back(hunter);
-
-  registerNation(std::move(barbarianTribes));
 
   m_defaultNation = "kingdom_of_iron";
 }
