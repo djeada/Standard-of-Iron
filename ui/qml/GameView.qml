@@ -485,6 +485,11 @@ Item {
             
             case Qt.Key_R: game.cameraOrbitDirection(1, shiftHeld);  event.accepted = true; break
             case Qt.Key_F: game.cameraOrbitDirection(-1, shiftHeld); event.accepted = true; break
+            
+            case Qt.Key_X:
+                game.selectAllTroops()
+                event.accepted = true
+                break
         }
     }
     Keys.onReleased: function(event) {
