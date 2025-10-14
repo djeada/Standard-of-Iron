@@ -94,6 +94,7 @@ public:
   Q_INVOKABLE void onClickSelect(qreal sx, qreal sy, bool additive = false);
   Q_INVOKABLE void onAreaSelected(qreal x1, qreal y1, qreal x2, qreal y2,
                                   bool additive = false);
+  Q_INVOKABLE void selectAllTroops();
   Q_INVOKABLE void setHoverAtScreen(qreal sx, qreal sy);
   Q_INVOKABLE void onAttackClick(qreal sx, qreal sy);
   Q_INVOKABLE void onStopCommand();
