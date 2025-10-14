@@ -31,6 +31,7 @@
 #include "game/systems/combat_system.h"
 #include "game/systems/command_service.h"
 #include "game/systems/formation_planner.h"
+#include "game/systems/global_stats_registry.h"
 #include "game/systems/movement_system.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/owner_registry.h"
@@ -70,6 +71,7 @@ GameEngine::GameEngine() {
 
   Game::Systems::NationRegistry::instance().initializeDefaults();
   Game::Systems::TroopCountRegistry::instance().initialize();
+  Game::Systems::GlobalStatsRegistry::instance().initialize();
 
   m_world = std::make_unique<Engine::Core::World>();
   m_renderer = std::make_unique<Render::GL::Renderer>();
@@ -387,6 +389,29 @@ void GameEngine::ensureInitialized() {
 }
 
 int GameEngine::enemyTroopsDefeated() const { return m_enemyTroopsDefeated; }
+
+QVariantMap GameEngine::getPlayerStats(int ownerId) const {
+  QVariantMap result;
+  
+  auto &statsRegistry = Game::Systems::GlobalStatsRegistry::instance();
+  const auto *stats = statsRegistry.getStats(ownerId);
+  
+  if (stats) {
+    result["troopsRecruited"] = stats->troopsRecruited;
+    result["enemiesKilled"] = stats->enemiesKilled;
+    result["barracksOwned"] = stats->barracksOwned;
+    result["playTimeSec"] = stats->playTimeSec;
+    result["gameEnded"] = stats->gameEnded;
+  } else {
+    result["troopsRecruited"] = 0;
+    result["enemiesKilled"] = 0;
+    result["barracksOwned"] = 0;
+    result["playTimeSec"] = 0.0f;
+    result["gameEnded"] = false;
+  }
+  
+  return result;
+}
 
 void GameEngine::update(float dt) {
 
@@ -844,6 +869,20 @@ void GameEngine::startSkirmish(const QString &mapPath,
 
     rebuildEntityCache();
     Game::Systems::TroopCountRegistry::instance().rebuildFromWorld(*m_world);
+    
+    // Initialize global stats tracking for all players
+    auto &statsRegistry = Game::Systems::GlobalStatsRegistry::instance();
+    statsRegistry.rebuildFromWorld(*m_world);
+    
+    // Mark game start for all players/AI
+    auto &ownerRegistry = Game::Systems::OwnerRegistry::instance();
+    const auto &allOwners = ownerRegistry.getAllOwners();
+    for (const auto &owner : allOwners) {
+      if (owner.type == Game::Systems::OwnerType::Player ||
+          owner.type == Game::Systems::OwnerType::AI) {
+        statsRegistry.markGameStart(owner.ownerId);
+      }
+    }
 
     emit ownerInfoChanged();
   }
