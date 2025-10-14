@@ -49,6 +49,9 @@ class PickingService;
 class VictoryService;
 class CameraService;
 } // namespace Systems
+namespace Map {
+class MapCatalog;
+} // namespace Map
 } // namespace Game
 
 namespace App {
@@ -82,6 +85,7 @@ public:
       int maxTroopsPerPlayer READ maxTroopsPerPlayer NOTIFY troopCountChanged)
   Q_PROPERTY(
       QVariantList availableMaps READ availableMaps NOTIFY availableMapsChanged)
+  Q_PROPERTY(bool mapsLoading READ mapsLoading NOTIFY mapsLoadingChanged)
   Q_PROPERTY(int enemyTroopsDefeated READ enemyTroopsDefeated NOTIFY
                  enemyTroopsDefeatedChanged)
   Q_PROPERTY(QVariantList ownerInfo READ getOwnerInfo NOTIFY ownerInfoChanged)
@@ -110,6 +114,7 @@ public:
   Q_INVOKABLE void cameraOrbitDirection(int direction, bool shift);
   Q_INVOKABLE void cameraFollowSelection(bool enable);
   Q_INVOKABLE void cameraSetFollowLerp(float alpha);
+  Q_INVOKABLE void startLoadingMaps();
 
   Q_INVOKABLE void setPaused(bool paused) { m_runtime.paused = paused; }
   Q_INVOKABLE void setGameSpeed(float speed) {
@@ -147,6 +152,7 @@ public:
   Q_INVOKABLE QString getSelectedUnitsCommandMode() const;
   Q_INVOKABLE void setRallyAtScreen(qreal sx, qreal sy);
   Q_INVOKABLE QVariantList availableMaps() const;
+  bool mapsLoading() const { return m_mapsLoading; }
   Q_INVOKABLE void
   startSkirmish(const QString &mapPath,
                 const QVariantList &playerConfigs = QVariantList());
@@ -239,6 +245,7 @@ private:
   std::unique_ptr<Game::Systems::CameraService> m_cameraService;
   std::unique_ptr<Game::Systems::SelectionController> m_selectionController;
   std::unique_ptr<App::Controllers::CommandController> m_commandController;
+  std::unique_ptr<Game::Map::MapCatalog> m_mapCatalog;
   QQuickWindow *m_window = nullptr;
   RuntimeState m_runtime;
   ViewportState m_viewport;
@@ -247,6 +254,8 @@ private:
   QObject *m_selectedUnitsModel = nullptr;
   int m_enemyTroopsDefeated = 0;
   int m_selectedPlayerId = 1;
+  QVariantList m_availableMaps;
+  bool m_mapsLoading = false;
   Engine::Core::ScopedEventSubscription<Engine::Core::UnitDiedEvent>
       m_unitDiedSubscription;
   Engine::Core::ScopedEventSubscription<Engine::Core::UnitSpawnedEvent>
@@ -264,4 +273,5 @@ signals:
   void ownerInfoChanged();
   void selectedPlayerIdChanged();
   void lastErrorChanged();
+  void mapsLoadingChanged();
 };
