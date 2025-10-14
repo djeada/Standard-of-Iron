@@ -10,6 +10,8 @@ Rectangle {
     z: 100
 
     property bool showingSummary: false
+    
+    signal returnToMainMenuRequested()
 
     Rectangle {
         id: initialOverlay
@@ -61,6 +63,10 @@ Rectangle {
         
         onClose: function() {
             showingSummary = false;
+        }
+        
+        onReturnToMainMenu: function() {
+            victoryOverlay.returnToMainMenuRequested();
         }
     }
 
