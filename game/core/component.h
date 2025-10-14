@@ -65,7 +65,8 @@ public:
   MovementComponent()
       : hasTarget(false), targetX(0.0f), targetY(0.0f), goalX(0.0f),
         goalY(0.0f), vx(0.0f), vz(0.0f), pathPending(false),
-        pendingRequestId(0), repathCooldown(0.0f) {}
+        pendingRequestId(0), repathCooldown(0.0f), lastGoalX(0.0f),
+        lastGoalY(0.0f), timeSinceLastPathRequest(0.0f) {}
 
   bool hasTarget;
   float targetX, targetY;
@@ -75,17 +76,61 @@ public:
   bool pathPending;
   std::uint64_t pendingRequestId;
   float repathCooldown;
+
+  float lastGoalX, lastGoalY;
+  float timeSinceLastPathRequest;
 };
 
 class AttackComponent : public Component {
 public:
+  enum class CombatMode { Ranged, Melee, Auto };
+
   AttackComponent(float range = 2.0f, int damage = 10, float cooldown = 1.0f)
-      : range(range), damage(damage), cooldown(cooldown), timeSinceLast(0.0f) {}
+      : range(range), damage(damage), cooldown(cooldown), timeSinceLast(0.0f),
+        meleeRange(1.5f), meleeDamage(damage), meleeCooldown(cooldown),
+        preferredMode(CombatMode::Auto), currentMode(CombatMode::Ranged),
+        canMelee(true), canRanged(false), maxHeightDifference(2.0f),
+        inMeleeLock(false), meleeLockTargetId(0) {}
 
   float range;
   int damage;
   float cooldown;
   float timeSinceLast;
+
+  float meleeRange;
+  int meleeDamage;
+  float meleeCooldown;
+
+  CombatMode preferredMode;
+  CombatMode currentMode;
+
+  bool canMelee;
+  bool canRanged;
+
+  float maxHeightDifference;
+
+  bool inMeleeLock;
+  EntityID meleeLockTargetId;
+
+  bool isInMeleeRange(float distance, float heightDiff) const {
+    return distance <= meleeRange && heightDiff <= maxHeightDifference;
+  }
+
+  bool isInRangedRange(float distance) const {
+    return distance <= range && distance > meleeRange;
+  }
+
+  int getCurrentDamage() const {
+    return (currentMode == CombatMode::Melee) ? meleeDamage : damage;
+  }
+
+  float getCurrentCooldown() const {
+    return (currentMode == CombatMode::Melee) ? meleeCooldown : cooldown;
+  }
+
+  float getCurrentRange() const {
+    return (currentMode == CombatMode::Melee) ? meleeRange : range;
+  }
 };
 
 class AttackTargetComponent : public Component {

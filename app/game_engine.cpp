@@ -6,6 +6,8 @@
 #include <QOpenGLContext>
 #include <QQuickWindow>
 #include <QVariant>
+#include <set>
+#include <unordered_map>
 
 #include "game/core/component.h"
 #include "game/core/event_manager.h"
@@ -24,6 +26,7 @@
 #include "game/systems/command_service.h"
 #include "game/systems/formation_planner.h"
 #include "game/systems/movement_system.h"
+#include "game/systems/nation_registry.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/patrol_system.h"
 #include "game/systems/picking_service.h"
@@ -33,6 +36,7 @@
 #include "game/systems/terrain_alignment_system.h"
 #include "game/systems/victory_service.h"
 #include "game/units/troop_config.h"
+#include "game/visuals/team_colors.h"
 #include "render/geom/arrow.h"
 #include "render/geom/patrol_flags.h"
 #include "render/gl/bootstrap.h"
@@ -56,6 +60,9 @@
 #include <limits>
 
 GameEngine::GameEngine() {
+
+  Game::Systems::NationRegistry::instance().initializeDefaults();
+
   m_world = std::make_unique<Engine::Core::World>();
   m_renderer = std::make_unique<Render::GL::Renderer>();
   m_camera = std::make_unique<Render::GL::Camera>();
@@ -983,12 +990,38 @@ QVariantList GameEngine::availableMaps() const {
       playerIdList.append(id);
     }
     entry["playerIds"] = playerIdList;
+
+    QString thumbnail;
+    if (file.open(QIODevice::ReadOnly)) {
+      QByteArray data = file.readAll();
+      file.close();
+      QJsonParseError err;
+      QJsonDocument doc = QJsonDocument::fromJson(data, &err);
+      if (err.error == QJsonParseError::NoError && doc.isObject()) {
+        QJsonObject obj = doc.object();
+        if (obj.contains("thumbnail") && obj["thumbnail"].isString()) {
+          thumbnail = obj["thumbnail"].toString();
+        }
+      }
+    }
+
+    if (thumbnail.isEmpty()) {
+      QString baseName = QFileInfo(f).baseName();
+      thumbnail = QString("assets/maps/%1_thumb.png").arg(baseName);
+
+      if (!QFileInfo::exists(thumbnail)) {
+        thumbnail = "";
+      }
+    }
+    entry["thumbnail"] = thumbnail;
+
     list.append(entry);
   }
   return list;
 }
 
-void GameEngine::startSkirmish(const QString &mapPath) {
+void GameEngine::startSkirmish(const QString &mapPath,
+                               const QVariantList &playerConfigs) {
 
   m_level.mapName = mapPath;
 
@@ -1073,23 +1106,109 @@ void GameEngine::startSkirmish(const QString &mapPath) {
       }
     }
 
-    ownerRegistry.registerOwnerWithId(
-        playerOwnerId, Game::Systems::OwnerType::Player, "Player");
-
-    for (int id : mapPlayerIds) {
-      if (id != playerOwnerId) {
-        ownerRegistry.registerOwnerWithId(id, Game::Systems::OwnerType::AI,
-                                          "AI " + std::to_string(id));
-      }
-    }
-
     ownerRegistry.setLocalPlayerId(playerOwnerId);
     m_runtime.localOwnerId = playerOwnerId;
 
+    std::unordered_map<int, int> teamOverrides;
+    QVariantList savedPlayerConfigs;
+    std::set<int> processedPlayerIds;
+
+    if (!playerConfigs.isEmpty()) {
+      qDebug() << "Processing" << playerConfigs.size()
+               << "player configurations from UI";
+
+      for (const QVariant &configVar : playerConfigs) {
+        QVariantMap config = configVar.toMap();
+        int playerId = config.value("playerId", -1).toInt();
+        int teamId = config.value("teamId", 0).toInt();
+        QString colorHex = config.value("colorHex", "#FFFFFF").toString();
+        bool isHuman = config.value("isHuman", false).toBool();
+
+        if (isHuman && playerId != playerOwnerId) {
+          qDebug() << "  Remapping human player from ID" << playerId << "to"
+                   << playerOwnerId;
+          playerId = playerOwnerId;
+        }
+
+        if (processedPlayerIds.count(playerId) > 0) {
+          qDebug() << "  Skipping duplicate config for player" << playerId;
+          continue;
+        }
+
+        if (playerId >= 0) {
+          processedPlayerIds.insert(playerId);
+          teamOverrides[playerId] = teamId;
+          qDebug() << "  Player" << playerId << "-> Team:" << teamId
+                   << "Color:" << colorHex << "Human:" << isHuman;
+
+          QVariantMap updatedConfig = config;
+          updatedConfig["playerId"] = playerId;
+          savedPlayerConfigs.append(updatedConfig);
+        }
+      }
+    }
+
     Game::Map::MapTransformer::setLocalOwnerId(m_runtime.localOwnerId);
+    Game::Map::MapTransformer::setPlayerTeamOverrides(teamOverrides);
 
     auto lr = Game::Map::LevelLoader::loadFromAssets(m_level.mapName, *m_world,
                                                      *m_renderer, *m_camera);
+
+    if (!savedPlayerConfigs.isEmpty()) {
+      qDebug() << "Applying colors after map load for"
+               << savedPlayerConfigs.size() << "players";
+      for (const QVariant &configVar : savedPlayerConfigs) {
+        QVariantMap config = configVar.toMap();
+        int playerId = config.value("playerId", -1).toInt();
+        QString colorHex = config.value("colorHex", "#FFFFFF").toString();
+
+        if (playerId >= 0 && colorHex.startsWith("#") &&
+            colorHex.length() == 7) {
+          bool ok;
+          int r = colorHex.mid(1, 2).toInt(&ok, 16);
+          int g = colorHex.mid(3, 2).toInt(&ok, 16);
+          int b = colorHex.mid(5, 2).toInt(&ok, 16);
+          ownerRegistry.setOwnerColor(playerId, r / 255.0f, g / 255.0f,
+                                      b / 255.0f);
+          qDebug() << "  Player" << playerId << "color set to RGB("
+                   << (r / 255.0f) << "," << (g / 255.0f) << "," << (b / 255.0f)
+                   << ")";
+        }
+      }
+
+      qDebug() << "Verifying team assignments:";
+      for (const auto &[playerId, teamId] : teamOverrides) {
+        int actualTeam = ownerRegistry.getOwnerTeam(playerId);
+        qDebug() << "  Player" << playerId << "requested team:" << teamId
+                 << "actual team:" << actualTeam;
+      }
+
+      qDebug() << "Updating entity colors to match new owner colors...";
+      if (m_world) {
+        auto entities = m_world->getEntitiesWith<Engine::Core::UnitComponent>();
+        std::unordered_map<int, int> ownerEntityCount;
+        for (auto *entity : entities) {
+          auto *unit = entity->getComponent<Engine::Core::UnitComponent>();
+          auto *renderable =
+              entity->getComponent<Engine::Core::RenderableComponent>();
+          if (unit && renderable) {
+            QVector3D tc = Game::Visuals::teamColorForOwner(unit->ownerId);
+            renderable->color[0] = tc.x();
+            renderable->color[1] = tc.y();
+            renderable->color[2] = tc.z();
+            ownerEntityCount[unit->ownerId]++;
+          }
+        }
+        qDebug() << "Updated colors for" << entities.size() << "entities";
+        for (const auto &[ownerId, count] : ownerEntityCount) {
+          auto color = ownerRegistry.getOwnerColor(ownerId);
+          qDebug() << "  Owner" << ownerId << ":" << count
+                   << "entities with color RGB(" << color[0] << "," << color[1]
+                   << "," << color[2] << ")";
+        }
+      }
+      qDebug() << "Entity color update complete.";
+    }
     auto &terrainService = Game::Map::TerrainService::instance();
 
     if (m_ground) {
@@ -1201,6 +1320,10 @@ void GameEngine::startSkirmish(const QString &mapPath) {
       }
     }
     m_runtime.loading = false;
+
+    if (auto *aiSystem = m_world->getSystem<Game::Systems::AISystem>()) {
+      aiSystem->reinitialize();
+    }
 
     rebuildEntityCache();
 

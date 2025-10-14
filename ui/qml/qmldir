@@ -1,0 +1,4 @@
+module StandardOfIron.UI
+singleton Constants 1.0 Constants.qml
+singleton StyleGuide 1.0 StyleGuide.qml
+StyledButton 1.0 StyledButton.qml
