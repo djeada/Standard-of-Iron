@@ -16,9 +16,12 @@
 #include "game/core/world.h"
 #include "game/game_config.h"
 #include "game/map/level_loader.h"
+#include "game/map/map_catalog.h"
 #include "game/map/map_transformer.h"
+#include "game/map/skirmish_loader.h"
 #include "game/map/terrain_service.h"
 #include "game/map/visibility_service.h"
+#include "game/map/world_bootstrap.h"
 #include "game/systems/ai_system.h"
 #include "game/systems/arrow_system.h"
 #include "game/systems/building_collision_registry.h"
@@ -435,21 +438,10 @@ void GameEngine::onAreaSelected(qreal x1, qreal y1, qreal x2, qreal y2,
   m_runtime.selectionRefreshCounter = 0;
 }
 
-void GameEngine::initialize() {
-  if (!Render::GL::RenderBootstrap::initialize(*m_renderer, *m_camera)) {
-    setError("Failed to initialize OpenGL renderer");
-    return;
-  }
-
-  if (m_ground) {
-    m_ground->configureExtent(50.0f);
-  }
-  m_runtime.initialized = true;
-}
-
 void GameEngine::ensureInitialized() {
-  if (!m_runtime.initialized)
-    initialize();
+  Game::Map::WorldBootstrap::ensureInitialized(m_runtime.initialized,
+                                               *m_renderer, *m_camera,
+                                               m_ground.get());
 }
 
 int GameEngine::enemyTroopsDefeated() const { return m_enemyTroopsDefeated; }
@@ -844,87 +836,7 @@ void GameEngine::setRallyAtScreen(qreal sx, qreal sy) {
 }
 
 QVariantList GameEngine::availableMaps() const {
-  QVariantList list;
-  QDir mapsDir(QStringLiteral("assets/maps"));
-  if (!mapsDir.exists())
-    return list;
-
-  QStringList files =
-      mapsDir.entryList(QStringList() << "*.json", QDir::Files, QDir::Name);
-  for (const QString &f : files) {
-    QString path = mapsDir.filePath(f);
-    QFile file(path);
-    QString name = f;
-    QString desc;
-    QSet<int> playerIds;
-    if (file.open(QIODevice::ReadOnly)) {
-      QByteArray data = file.readAll();
-      file.close();
-      QJsonParseError err;
-      QJsonDocument doc = QJsonDocument::fromJson(data, &err);
-      if (err.error == QJsonParseError::NoError && doc.isObject()) {
-        QJsonObject obj = doc.object();
-        if (obj.contains("name") && obj["name"].isString())
-          name = obj["name"].toString();
-        if (obj.contains("description") && obj["description"].isString())
-          desc = obj["description"].toString();
-
-        if (obj.contains("spawns") && obj["spawns"].isArray()) {
-          QJsonArray spawns = obj["spawns"].toArray();
-          for (const QJsonValue &spawnVal : spawns) {
-            if (spawnVal.isObject()) {
-              QJsonObject spawn = spawnVal.toObject();
-              if (spawn.contains("playerId")) {
-                int playerId = spawn["playerId"].toInt();
-                if (playerId > 0) {
-                  playerIds.insert(playerId);
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-    QVariantMap entry;
-    entry["name"] = name;
-    entry["description"] = desc;
-    entry["path"] = path;
-    entry["playerCount"] = playerIds.size();
-    QVariantList playerIdList;
-    QList<int> sortedIds = playerIds.values();
-    std::sort(sortedIds.begin(), sortedIds.end());
-    for (int id : sortedIds) {
-      playerIdList.append(id);
-    }
-    entry["playerIds"] = playerIdList;
-
-    QString thumbnail;
-    if (file.open(QIODevice::ReadOnly)) {
-      QByteArray data = file.readAll();
-      file.close();
-      QJsonParseError err;
-      QJsonDocument doc = QJsonDocument::fromJson(data, &err);
-      if (err.error == QJsonParseError::NoError && doc.isObject()) {
-        QJsonObject obj = doc.object();
-        if (obj.contains("thumbnail") && obj["thumbnail"].isString()) {
-          thumbnail = obj["thumbnail"].toString();
-        }
-      }
-    }
-
-    if (thumbnail.isEmpty()) {
-      QString baseName = QFileInfo(f).baseName();
-      thumbnail = QString("assets/maps/%1_thumb.png").arg(baseName);
-
-      if (!QFileInfo::exists(thumbnail)) {
-        thumbnail = "";
-      }
-    }
-    entry["thumbnail"] = thumbnail;
-
-    list.append(entry);
-  }
-  return list;
+  return Game::Map::MapCatalog::availableMaps();
 }
 
 void GameEngine::startSkirmish(const QString &mapPath,
@@ -937,7 +849,7 @@ void GameEngine::startSkirmish(const QString &mapPath,
   m_runtime.victoryState = "";
 
   if (!m_runtime.initialized) {
-    initialize();
+    ensureInitialized();
     return;
   }
 
@@ -945,219 +857,50 @@ void GameEngine::startSkirmish(const QString &mapPath,
 
     m_runtime.loading = true;
 
-    if (auto *selectionSystem =
-            m_world->getSystem<Game::Systems::SelectionSystem>()) {
-      selectionSystem->clearSelection();
-    }
-
-    if (m_renderer) {
-
-      m_renderer->pause();
-
-      m_renderer->lockWorldForModification();
-      m_renderer->setSelectedEntities({});
-      m_renderer->setHoveredEntityId(0);
-    }
-
     if (m_hoverTracker) {
       m_hoverTracker->updateHover(-1, -1, *m_world, *m_camera, 0, 0);
     }
 
-    m_world->clear();
-
     m_entityCache.reset();
 
-    Game::Systems::BuildingCollisionRegistry::instance().clear();
+    Game::Map::SkirmishLoader loader(*m_world, *m_renderer, *m_camera);
+    loader.setGroundRenderer(m_ground.get());
+    loader.setTerrainRenderer(m_terrain.get());
+    loader.setBiomeRenderer(m_biome.get());
+    loader.setFogRenderer(m_fog.get());
+    loader.setStoneRenderer(m_stone.get());
 
-    QSet<int> mapPlayerIds;
-    QFile mapFile(mapPath);
-    if (mapFile.open(QIODevice::ReadOnly)) {
-      QByteArray data = mapFile.readAll();
-      mapFile.close();
-      QJsonParseError err;
-      QJsonDocument doc = QJsonDocument::fromJson(data, &err);
-      if (err.error == QJsonParseError::NoError && doc.isObject()) {
-        QJsonObject obj = doc.object();
-        if (obj.contains("spawns") && obj["spawns"].isArray()) {
-          QJsonArray spawns = obj["spawns"].toArray();
-          for (const QJsonValue &spawnVal : spawns) {
-            if (spawnVal.isObject()) {
-              QJsonObject spawn = spawnVal.toObject();
-              if (spawn.contains("playerId")) {
-                int playerId = spawn["playerId"].toInt();
-                if (playerId > 0) {
-                  mapPlayerIds.insert(playerId);
-                }
-              }
-            }
-          }
-        }
-      }
-    } else {
-      qWarning() << "Could not open map file for reading player IDs:" << mapPath;
-    }
+    loader.setOnOwnersUpdated([this]() {
+      emit ownerInfoChanged();
+    });
 
-    auto &ownerRegistry = Game::Systems::OwnerRegistry::instance();
-    ownerRegistry.clear();
-
-    int playerOwnerId = m_selectedPlayerId;
-
-    if (!mapPlayerIds.contains(playerOwnerId)) {
-      if (!mapPlayerIds.isEmpty()) {
-        QList<int> sortedIds = mapPlayerIds.values();
-        std::sort(sortedIds.begin(), sortedIds.end());
-        playerOwnerId = sortedIds.first();
-        qWarning() << "Selected player ID" << m_selectedPlayerId
-                   << "not found in map spawns. Using" << playerOwnerId
-                   << "instead.";
-        m_selectedPlayerId = playerOwnerId;
-        emit selectedPlayerIdChanged();
-      } else {
-        qWarning() << "No valid player spawns found in map. Using default "
-                      "player ID"
-                   << playerOwnerId;
-      }
-    }
-
-    ownerRegistry.setLocalPlayerId(playerOwnerId);
-    m_runtime.localOwnerId = playerOwnerId;
-
-    std::unordered_map<int, int> teamOverrides;
-    QVariantList savedPlayerConfigs;
-    std::set<int> processedPlayerIds;
-
-    if (!playerConfigs.isEmpty()) {
-
-      for (const QVariant &configVar : playerConfigs) {
-        QVariantMap config = configVar.toMap();
-        int playerId = config.value("playerId", -1).toInt();
-        int teamId = config.value("teamId", 0).toInt();
-        QString colorHex = config.value("colorHex", "#FFFFFF").toString();
-        bool isHuman = config.value("isHuman", false).toBool();
-
-        if (isHuman && playerId != playerOwnerId) {
-          playerId = playerOwnerId;
-        }
-
-        if (processedPlayerIds.count(playerId) > 0) {
-          continue;
-        }
-
-        if (playerId >= 0) {
-          processedPlayerIds.insert(playerId);
-          teamOverrides[playerId] = teamId;
-
-          QVariantMap updatedConfig = config;
-          updatedConfig["playerId"] = playerId;
-          savedPlayerConfigs.append(updatedConfig);
-        }
-      }
-    }
-
-    Game::Map::MapTransformer::setLocalOwnerId(m_runtime.localOwnerId);
-    Game::Map::MapTransformer::setPlayerTeamOverrides(teamOverrides);
-
-    auto lr = Game::Map::LevelLoader::loadFromAssets(m_level.mapName, *m_world,
-                                                     *m_renderer, *m_camera);
-
-    if (!lr.ok && !lr.errorMessage.isEmpty()) {
-      setError(lr.errorMessage);
-    }
-
-    if (!savedPlayerConfigs.isEmpty()) {
-      for (const QVariant &configVar : savedPlayerConfigs) {
-        QVariantMap config = configVar.toMap();
-        int playerId = config.value("playerId", -1).toInt();
-        QString colorHex = config.value("colorHex", "#FFFFFF").toString();
-
-        if (playerId >= 0 && colorHex.startsWith("#") &&
-            colorHex.length() == 7) {
-          bool ok;
-          int r = colorHex.mid(1, 2).toInt(&ok, 16);
-          int g = colorHex.mid(3, 2).toInt(&ok, 16);
-          int b = colorHex.mid(5, 2).toInt(&ok, 16);
-          ownerRegistry.setOwnerColor(playerId, r / 255.0f, g / 255.0f,
-                                      b / 255.0f);
-        }
-      }
-
-      if (m_world) {
-        auto entities = m_world->getEntitiesWith<Engine::Core::UnitComponent>();
-        std::unordered_map<int, int> ownerEntityCount;
-        for (auto *entity : entities) {
-          auto *unit = entity->getComponent<Engine::Core::UnitComponent>();
-          auto *renderable =
-              entity->getComponent<Engine::Core::RenderableComponent>();
-          if (unit && renderable) {
-            QVector3D tc = Game::Visuals::teamColorForOwner(unit->ownerId);
-            renderable->color[0] = tc.x();
-            renderable->color[1] = tc.y();
-            renderable->color[2] = tc.z();
-            ownerEntityCount[unit->ownerId]++;
-          }
-        }
-      }
-    }
-    auto &terrainService = Game::Map::TerrainService::instance();
-
-    if (m_ground) {
-      if (lr.ok)
-        m_ground->configure(lr.tileSize, lr.gridWidth, lr.gridHeight);
-      else
-        m_ground->configureExtent(50.0f);
-      if (terrainService.isInitialized())
-        m_ground->setBiome(terrainService.biomeSettings());
-    }
-
-    if (m_terrain) {
-      if (terrainService.isInitialized() && terrainService.getHeightMap()) {
-        m_terrain->configure(*terrainService.getHeightMap(),
-                             terrainService.biomeSettings());
-      }
-    }
-
-    if (m_biome) {
-      if (terrainService.isInitialized() && terrainService.getHeightMap()) {
-        m_biome->configure(*terrainService.getHeightMap(),
-                           terrainService.biomeSettings());
-      }
-    }
-
-    if (m_stone) {
-      if (terrainService.isInitialized() && terrainService.getHeightMap()) {
-        m_stone->configure(*terrainService.getHeightMap(),
-                           terrainService.biomeSettings());
-      }
-    }
-
-    int mapWidth = lr.ok ? lr.gridWidth : 100;
-    int mapHeight = lr.ok ? lr.gridHeight : 100;
-    Game::Systems::CommandService::initialize(mapWidth, mapHeight);
-
-    auto &visibilityService = Game::Map::VisibilityService::instance();
-    visibilityService.initialize(mapWidth, mapHeight, lr.tileSize);
-    if (m_world)
-      visibilityService.computeImmediate(*m_world, m_runtime.localOwnerId);
-    if (m_fog && visibilityService.isInitialized()) {
-      m_fog->updateMask(
-          visibilityService.getWidth(), visibilityService.getHeight(),
-          visibilityService.getTileSize(), visibilityService.snapshotCells());
-      m_runtime.visibilityVersion = visibilityService.version();
+    loader.setOnVisibilityMaskReady([this]() {
+      m_runtime.visibilityVersion = Game::Map::VisibilityService::instance().version();
       m_runtime.visibilityUpdateAccumulator = 0.0f;
-    } else {
-      m_runtime.visibilityVersion = 0;
-      m_runtime.visibilityUpdateAccumulator = 0.0f;
+    });
+
+    int updatedPlayerId = m_selectedPlayerId;
+    auto result = loader.start(mapPath, playerConfigs, m_selectedPlayerId, updatedPlayerId);
+
+    if (updatedPlayerId != m_selectedPlayerId) {
+      m_selectedPlayerId = updatedPlayerId;
+      emit selectedPlayerIdChanged();
     }
 
-    m_level.mapName = lr.mapName;
-    m_level.playerUnitId = lr.playerUnitId;
-    m_level.camFov = lr.camFov;
-    m_level.camNear = lr.camNear;
-    m_level.camFar = lr.camFar;
-    m_level.maxTroopsPerPlayer = lr.maxTroopsPerPlayer;
+    if (!result.ok && !result.errorMessage.isEmpty()) {
+      setError(result.errorMessage);
+    }
+
+    m_runtime.localOwnerId = updatedPlayerId;
+    m_level.mapName = result.mapName;
+    m_level.playerUnitId = result.playerUnitId;
+    m_level.camFov = result.camFov;
+    m_level.camNear = result.camNear;
+    m_level.camFar = result.camFar;
+    m_level.maxTroopsPerPlayer = result.maxTroopsPerPlayer;
 
     if (m_victoryService) {
-      m_victoryService->configure(lr.victoryConfig, m_runtime.localOwnerId);
+      m_victoryService->configure(result.victoryConfig, m_runtime.localOwnerId);
       m_victoryService->setVictoryCallback([this](const QString &state) {
         if (m_runtime.victoryState != state) {
           m_runtime.victoryState = state;
@@ -1166,48 +909,12 @@ void GameEngine::startSkirmish(const QString &mapPath,
       });
     }
 
-    if (m_biome) {
-      m_biome->refreshGrass();
+    if (result.hasFocusPosition && m_camera) {
+      const auto &camConfig = Game::GameConfig::instance().camera();
+      m_camera->setRTSView(result.focusPosition, camConfig.defaultDistance,
+                           camConfig.defaultPitch, camConfig.defaultYaw);
     }
 
-    if (m_renderer) {
-
-      m_renderer->unlockWorldForModification();
-      m_renderer->resume();
-    }
-
-    if (m_world && m_camera) {
-      Engine::Core::Entity *focusEntity = nullptr;
-
-      auto candidates = m_world->getEntitiesWith<Engine::Core::UnitComponent>();
-      for (auto *e : candidates) {
-        if (!e)
-          continue;
-        auto *u = e->getComponent<Engine::Core::UnitComponent>();
-        if (!u)
-          continue;
-        if (u->unitType == "barracks" && u->ownerId == m_runtime.localOwnerId &&
-            u->health > 0) {
-          focusEntity = e;
-          break;
-        }
-      }
-
-      if (!focusEntity && m_level.playerUnitId != 0) {
-        focusEntity = m_world->getEntity(m_level.playerUnitId);
-      }
-
-      if (focusEntity) {
-        if (auto *t =
-                focusEntity->getComponent<Engine::Core::TransformComponent>()) {
-          QVector3D center(t->position.x, t->position.y, t->position.z);
-
-          const auto &camConfig = Game::GameConfig::instance().camera();
-          m_camera->setRTSView(center, camConfig.defaultDistance,
-                               camConfig.defaultPitch, camConfig.defaultYaw);
-        }
-      }
-    }
     m_runtime.loading = false;
 
     if (auto *aiSystem = m_world->getSystem<Game::Systems::AISystem>()) {
