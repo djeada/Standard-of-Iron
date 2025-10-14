@@ -1,5 +1,5 @@
 #include "gl_view.h"
-#include "../app/game_engine.h"
+#include "../app/core/game_engine.h"
 
 #include <QOpenGLFramebufferObject>
 #include <QOpenGLFramebufferObjectFormat>
