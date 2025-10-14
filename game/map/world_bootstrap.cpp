@@ -19,19 +19,19 @@ bool WorldBootstrap::initialize(Render::GL::Renderer &renderer,
   if (ground) {
     ground->configureExtent(50.0f);
   }
-  
+
   return true;
 }
 
 void WorldBootstrap::ensureInitialized(bool &initialized,
-                                      Render::GL::Renderer &renderer,
-                                      Render::GL::Camera &camera,
-                                      Render::GL::GroundRenderer *ground,
-                                      QString *outError) {
+                                       Render::GL::Renderer &renderer,
+                                       Render::GL::Camera &camera,
+                                       Render::GL::GroundRenderer *ground,
+                                       QString *outError) {
   if (!initialized) {
     initialized = initialize(renderer, camera, ground, outError);
   }
 }
 
-}
-}
+} // namespace Map
+} // namespace Game

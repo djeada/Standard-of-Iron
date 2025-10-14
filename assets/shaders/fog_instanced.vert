@@ -17,14 +17,14 @@ out vec3 v_color;
 out float v_alpha;
 
 void main() {
-    vec3 worldPos = vec3(i_center.x + a_position.x * i_size,
-                         i_center.y + a_position.y,
-                         i_center.z + a_position.z * i_size);
+  vec3 worldPos =
+      vec3(i_center.x + a_position.x * i_size, i_center.y + a_position.y,
+           i_center.z + a_position.z * i_size);
 
-    v_worldPos = worldPos;
-    v_normal = vec3(0.0, 1.0, 0.0);
-    v_color = i_color;
-    v_alpha = i_alpha;
+  v_worldPos = worldPos;
+  v_normal = vec3(0.0, 1.0, 0.0);
+  v_color = i_color;
+  v_alpha = i_alpha;
 
-    gl_Position = u_viewProj * vec4(worldPos, 1.0);
+  gl_Position = u_viewProj * vec4(worldPos, 1.0);
 }
