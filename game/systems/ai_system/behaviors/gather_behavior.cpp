@@ -1,5 +1,7 @@
 #include "gather_behavior.h"
 #include "../../formation_planner.h"
+#include "../../formation_system.h"
+#include "../../nation_registry.h"
 #include "../ai_utils.h"
 
 #include <QVector3D>
@@ -42,8 +44,17 @@ void GatherBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   if (unitsToGather.empty())
     return;
 
-  auto formationTargets = FormationPlanner::spreadFormation(
-      static_cast<int>(unitsToGather.size()), rallyPoint, 1.4f);
+  const Nation *nation =
+      NationRegistry::instance().getNationForPlayer(context.playerId);
+  FormationType formationType = FormationType::Roman;
+  if (nation) {
+    formationType = nation->formationType;
+  }
+
+  auto formationTargets =
+      FormationSystem::instance().getFormationPositions(
+          formationType, static_cast<int>(unitsToGather.size()), rallyPoint,
+          1.4f);
 
   std::vector<Engine::Core::EntityID> unitsToMove;
   std::vector<float> targetX, targetY, targetZ;

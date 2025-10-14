@@ -1,5 +1,7 @@
 #include "defend_behavior.h"
 #include "../../formation_planner.h"
+#include "../../formation_system.h"
+#include "../../nation_registry.h"
 #include "../ai_tactical.h"
 #include "../ai_utils.h"
 
@@ -204,9 +206,17 @@ void DefendBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   if (unclaimedDefenders.empty())
     return;
 
+  const Nation *nation =
+      NationRegistry::instance().getNationForPlayer(context.playerId);
+  FormationType formationType = FormationType::Roman;
+  if (nation) {
+    formationType = nation->formationType;
+  }
+
   QVector3D defendPos(defendPosX, defendPosY, defendPosZ);
-  auto targets = FormationPlanner::spreadFormation(
-      static_cast<int>(unclaimedDefenders.size()), defendPos, 3.0f);
+  auto targets = FormationSystem::instance().getFormationPositions(
+      formationType, static_cast<int>(unclaimedDefenders.size()), defendPos,
+      3.0f);
 
   std::vector<Engine::Core::EntityID> unitsToMove;
   std::vector<float> targetX, targetY, targetZ;
