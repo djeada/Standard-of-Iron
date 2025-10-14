@@ -21,6 +21,7 @@ struct ArrowConfig {
 struct GameplayConfig {
   float visibilityUpdateInterval = 0.075f;
   float formationSpacingDefault = 1.0f;
+  int maxTroopsPerPlayer = 50;
 };
 
 class GameConfig {
@@ -118,6 +119,14 @@ public:
   }
   void setCameraOrbitStepShift(float value) noexcept {
     m_camera.orbitStepShift = value;
+  }
+
+  [[nodiscard]] int getMaxTroopsPerPlayer() const noexcept {
+    return m_gameplay.maxTroopsPerPlayer;
+  }
+
+  void setMaxTroopsPerPlayer(int value) noexcept {
+    m_gameplay.maxTroopsPerPlayer = value;
   }
 
 private:
