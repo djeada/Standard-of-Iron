@@ -43,12 +43,19 @@ class StoneRenderer;
 namespace Game {
 namespace Systems {
 class SelectionSystem;
+class SelectionController;
 class ArrowSystem;
 class PickingService;
 class VictoryService;
 class CameraService;
 } // namespace Systems
 } // namespace Game
+
+namespace App {
+namespace Controllers {
+class CommandController;
+}
+} // namespace App
 
 class QQuickWindow;
 
@@ -229,6 +236,8 @@ private:
   std::unique_ptr<CursorManager> m_cursorManager;
   std::unique_ptr<HoverTracker> m_hoverTracker;
   std::unique_ptr<Game::Systems::CameraService> m_cameraService;
+  std::unique_ptr<Game::Systems::SelectionController> m_selectionController;
+  std::unique_ptr<App::Controllers::CommandController> m_commandController;
   QQuickWindow *m_window = nullptr;
   RuntimeState m_runtime;
   ViewportState m_viewport;
