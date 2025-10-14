@@ -291,11 +291,18 @@ Maps can define custom victory and defeat conditions in their JSON files. Add a 
 
 ## Contributing
 
+We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines on:
+
+- Setting up your development environment
+- Code formatting requirements (C++, QML, shaders)
+- Building and testing the project
+- Submitting pull requests
+
+Quick start for contributors:
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+2. Run `make install` to set up dependencies
+3. Run `make format` before committing changes
+4. Open a Pull Request
 
 ## Development Status
 

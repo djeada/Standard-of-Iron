@@ -43,8 +43,7 @@ void TroopCountRegistry::onUnitSpawned(
   m_troopCounts[event.ownerId] += individualsPerUnit;
 }
 
-void TroopCountRegistry::onUnitDied(
-    const Engine::Core::UnitDiedEvent &event) {
+void TroopCountRegistry::onUnitDied(const Engine::Core::UnitDiedEvent &event) {
   if (event.unitType == "barracks")
     return;
 

@@ -10,7 +10,7 @@ namespace Engine {
 namespace Core {
 class Entity;
 class World;
-}
+} // namespace Core
 } // namespace Engine
 
 namespace Game::Systems {
@@ -41,7 +41,8 @@ class SelectionController : public QObject {
 public:
   SelectionController(Engine::Core::World *world,
                       SelectionSystem *selectionSystem,
-                      PickingService *pickingService, QObject *parent = nullptr);
+                      PickingService *pickingService,
+                      QObject *parent = nullptr);
 
   void onClickSelect(qreal sx, qreal sy, bool additive, int viewportWidth,
                      int viewportHeight, void *camera, int localOwnerId);
