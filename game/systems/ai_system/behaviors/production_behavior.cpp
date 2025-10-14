@@ -81,7 +81,7 @@ bool ProductionBehavior::shouldExecute(const AISnapshot &snapshot,
                                        const AIContext &context) const {
   (void)snapshot;
 
-  if (context.totalUnits >= 20)
+  if (context.totalUnits >= context.maxTroopsPerPlayer)
     return false;
 
   return true;

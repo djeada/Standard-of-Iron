@@ -1,5 +1,6 @@
 #include "ai_reasoner.h"
 #include "ai_utils.h"
+#include "../../game_config.h"
 #include <algorithm>
 #include <cmath>
 #include <limits>
@@ -31,6 +32,7 @@ void AIReasoner::updateContext(const AISnapshot &snapshot, AIContext &ctx) {
   ctx.visibleEnemyCount = 0;
   ctx.enemyBuildingsCount = 0;
   ctx.averageEnemyDistance = 0.0f;
+  ctx.maxTroopsPerPlayer = Game::GameConfig::instance().getMaxTroopsPerPlayer();
 
   float totalHealthRatio = 0.0f;
 
