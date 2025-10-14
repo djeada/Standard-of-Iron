@@ -1,10 +1,10 @@
 #pragma once
 
+#include "../core/entity.h"
 #include "../core/system.h"
 
 namespace Engine {
 namespace Core {
-class Entity;
 class AttackComponent;
 } // namespace Core
 } // namespace Engine
@@ -23,7 +23,7 @@ private:
   bool isInRange(Engine::Core::Entity *attacker, Engine::Core::Entity *target,
                  float range);
   void dealDamage(Engine::Core::World *world, Engine::Core::Entity *target,
-                  int damage);
+                  int damage, Engine::Core::EntityID attackerId = 0);
 };
 
 } // namespace Game::Systems
