@@ -23,7 +23,7 @@ private:
   bool isInRange(Engine::Core::Entity *attacker, Engine::Core::Entity *target,
                  float range);
   void dealDamage(Engine::Core::World *world, Engine::Core::Entity *target,
-                  int damage);
+                  int damage, Engine::Core::EntityID attackerId = 0);
 };
 
 } // namespace Game::Systems
