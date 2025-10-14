@@ -30,14 +30,14 @@ namespace Game {
 namespace Map {
 
 SkirmishLoader::SkirmishLoader(Engine::Core::World &world,
-                              Render::GL::Renderer &renderer,
-                              Render::GL::Camera &camera)
+                               Render::GL::Renderer &renderer,
+                               Render::GL::Camera &camera)
     : m_world(world), m_renderer(renderer), m_camera(camera) {}
 
 SkirmishLoadResult SkirmishLoader::start(const QString &mapPath,
-                                        const QVariantList &playerConfigs,
-                                        int selectedPlayerId,
-                                        int &outSelectedPlayerId) {
+                                         const QVariantList &playerConfigs,
+                                         int selectedPlayerId,
+                                         int &outSelectedPlayerId) {
   SkirmishLoadResult result;
 
   if (auto *selectionSystem =
@@ -140,8 +140,8 @@ SkirmishLoadResult SkirmishLoader::start(const QString &mapPath,
   Game::Map::MapTransformer::setLocalOwnerId(playerOwnerId);
   Game::Map::MapTransformer::setPlayerTeamOverrides(teamOverrides);
 
-  auto lr = Game::Map::LevelLoader::loadFromAssets(mapPath, m_world,
-                                                   m_renderer, m_camera);
+  auto lr = Game::Map::LevelLoader::loadFromAssets(mapPath, m_world, m_renderer,
+                                                   m_camera);
 
   if (!lr.ok && !lr.errorMessage.isEmpty()) {
     result.errorMessage = lr.errorMessage;
@@ -156,8 +156,7 @@ SkirmishLoadResult SkirmishLoader::start(const QString &mapPath,
       int playerId = config.value("playerId", -1).toInt();
       QString colorHex = config.value("colorHex", "#FFFFFF").toString();
 
-      if (playerId >= 0 && colorHex.startsWith("#") &&
-          colorHex.length() == 7) {
+      if (playerId >= 0 && colorHex.startsWith("#") && colorHex.length() == 7) {
         bool ok;
         int r = colorHex.mid(1, 2).toInt(&ok, 16);
         int g = colorHex.mid(3, 2).toInt(&ok, 16);
@@ -182,7 +181,7 @@ SkirmishLoadResult SkirmishLoader::start(const QString &mapPath,
       }
     }
   }
-  
+
   if (m_onOwnersUpdated) {
     m_onOwnersUpdated();
   }
@@ -226,12 +225,12 @@ SkirmishLoadResult SkirmishLoader::start(const QString &mapPath,
   auto &visibilityService = Game::Map::VisibilityService::instance();
   visibilityService.initialize(mapWidth, mapHeight, lr.tileSize);
   visibilityService.computeImmediate(m_world, playerOwnerId);
-  
+
   if (m_fog && visibilityService.isInitialized()) {
     m_fog->updateMask(
         visibilityService.getWidth(), visibilityService.getHeight(),
         visibilityService.getTileSize(), visibilityService.snapshotCells());
-    
+
     if (m_onVisibilityMaskReady) {
       m_onVisibilityMaskReady();
     }
@@ -267,7 +266,8 @@ SkirmishLoadResult SkirmishLoader::start(const QString &mapPath,
   if (focusEntity) {
     if (auto *t =
             focusEntity->getComponent<Engine::Core::TransformComponent>()) {
-      result.focusPosition = QVector3D(t->position.x, t->position.y, t->position.z);
+      result.focusPosition =
+          QVector3D(t->position.x, t->position.y, t->position.z);
       result.hasFocusPosition = true;
     }
   }
@@ -287,5 +287,5 @@ SkirmishLoadResult SkirmishLoader::start(const QString &mapPath,
   return result;
 }
 
-}
-}
+} // namespace Map
+} // namespace Game

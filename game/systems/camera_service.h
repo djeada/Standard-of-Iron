@@ -12,7 +12,7 @@ class Entity;
 namespace Render {
 namespace GL {
 class Camera;
-} // namespace GL
+}
 } // namespace Render
 
 namespace Game {

@@ -16,7 +16,7 @@ RomanFormation::calculatePositions(int unitCount, const QVector3D &center,
     return positions;
 
   float spacing = baseSpacing * 1.2f;
-  
+
   if (unitCount > 100) {
     spacing *= 2.0f;
   } else if (unitCount > 50) {
@@ -50,7 +50,7 @@ BarbarianFormation::calculatePositions(int unitCount, const QVector3D &center,
     return positions;
 
   float spacing = baseSpacing * 1.8f;
-  
+
   if (unitCount > 100) {
     spacing *= 2.0f;
   } else if (unitCount > 50) {
@@ -87,8 +87,7 @@ FormationSystem &FormationSystem::instance() {
 FormationSystem::FormationSystem() { initializeDefaults(); }
 
 void FormationSystem::initializeDefaults() {
-  registerFormation(FormationType::Roman,
-                    std::make_unique<RomanFormation>());
+  registerFormation(FormationType::Roman, std::make_unique<RomanFormation>());
   registerFormation(FormationType::Barbarian,
                     std::make_unique<BarbarianFormation>());
 }
