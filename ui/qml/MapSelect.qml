@@ -473,16 +473,16 @@ Item {
 
                     
                     Row {
-                        spacing: Theme.spacingSmall
+                        spacing: Theme.spacingSmall + 2
                         Text {
                             text: "Players"
                             color: Theme.textMain
-                            font.pixelSize: 16
+                            font.pixelSize: 17
                             font.bold: true
                         }
                         Rectangle {
-                            width: 28
-                            height: 20
+                            width: 30
+                            height: 22
                             radius: Theme.radiusSmall
                             color: Theme.selectedBg
                             anchors.verticalCenter: parent.verticalCenter
@@ -491,9 +491,17 @@ Item {
                                 anchors.centerIn: parent
                                 text: playersModel.count
                                 color: Theme.textMain
-                                font.pixelSize: 12
+                                font.pixelSize: 13
                                 font.bold: true
                             }
+                        }
+                        
+                        Text {
+                            text: "• Click color/team to cycle"
+                            color: Theme.textSubLite
+                            font.pixelSize: 11
+                            font.italic: true
+                            anchors.verticalCenter: parent.verticalCenter
                         }
                     }
 
@@ -502,18 +510,27 @@ Item {
                         width: parent.width
                         height: Math.min(200, playersModel.count * 60)
                         model: playersModel
-                        spacing: Theme.spacingSmall + 2
+                        spacing: Theme.spacingMedium
                         clip: true
 
                         delegate: Rectangle {
+                            id: playerCard
                             width: playersList.width
                             height: 52
                             radius: Theme.radiusMedium
-                            color: Theme.cardBaseB
-                            border.color: model.isHuman ? Theme.accent : Theme.thumbBr
-                            border.width: model.isHuman ? 1.5 : 1
+                            color: playerCardMouse.containsMouse ? Qt.lighter(Theme.cardBaseB, 1.1) : Theme.cardBaseB
+                            border.color: model.isHuman ? Theme.accent : (playerCardMouse.containsMouse ? Theme.selectedBr : Theme.thumbBr)
+                            border.width: model.isHuman ? 1.5 : (playerCardMouse.containsMouse ? 1.5 : 1)
                             Behavior on color { ColorAnimation { duration: Theme.animNormal } }
                             Behavior on border.color { ColorAnimation { duration: Theme.animNormal } }
+                            Behavior on border.width { NumberAnimation { duration: Theme.animNormal } }
+                            
+                            MouseArea {
+                                id: playerCardMouse
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                acceptedButtons: Qt.NoButton
+                            }
                             
                             
                             Rectangle {
@@ -525,11 +542,11 @@ Item {
                             Row {
                                 anchors.fill: parent
                                 anchors.margins: Theme.spacingSmall + 2
-                                spacing: Theme.spacingMedium - 2
+                                spacing: Theme.spacingMedium
 
                                 
                                 Item {
-                                    width: 90
+                                    width: 100
                                     height: parent.height
                                     
                                     Text {
@@ -538,8 +555,8 @@ Item {
                                         anchors.leftMargin: 4
                                         text: model.playerName || ""
                                         color: model.isHuman ? Theme.accentBright : Theme.textBright
-                                        font.pixelSize: 14
-                                        font.bold: model.isHuman || false
+                                        font.pixelSize: model.isHuman ? 15 : 14
+                                        font.bold: true
                                     }
                                 }
 
@@ -549,18 +566,28 @@ Item {
                                     height: parent.height - 4
                                     radius: Theme.radiusSmall + 1
                                     anchors.verticalCenter: parent.verticalCenter
-                                    color: model.colorHex || Theme.textDim
-                                    border.color: Qt.lighter(model.colorHex || Theme.textDim, 1.4)
-                                    border.width: 2
+                                    color: Theme.cardBase
+                                    border.color: model.colorHex || Theme.textDim
+                                    border.width: colorMA.containsMouse ? 3 : 2
+                                    Behavior on border.width { NumberAnimation { duration: Theme.animFast } }
+
+                                    // Inner glow effect using the player color
+                                    Rectangle {
+                                        anchors.fill: parent
+                                        anchors.margins: 1
+                                        radius: parent.radius - 1
+                                        color: "transparent"
+                                        border.color: model.colorHex || Theme.textDim
+                                        border.width: 1
+                                        opacity: 0.3
+                                    }
 
                                     Text {
                                         anchors.centerIn: parent
                                         text: model.colorName || "Color"
-                                        color: Theme.textMain
+                                        color: model.colorHex || Theme.textMain
                                         font.pixelSize: 13
                                         font.bold: true
-                                        style: Text.Outline
-                                        styleColor: Qt.rgba(0, 0, 0, 0.8)
                                     }
 
                                     MouseArea {
@@ -575,39 +602,46 @@ Item {
                                     Rectangle {
                                         anchors.fill: parent
                                         radius: parent.radius
-                                        color: Qt.rgba(1, 1, 1, 0.15)
-                                        opacity: colorMA.containsMouse ? 1 : 0
+                                        color: model.colorHex || Theme.textDim
+                                        opacity: colorMA.containsMouse ? 0.15 : 0
                                         Behavior on opacity { NumberAnimation { duration: Theme.animFast } }
                                     }
+                                    
+                                    ToolTip.visible: colorMA.containsMouse
+                                    ToolTip.text: "Player color: " + (model.colorName || "Color") + " - Click to change"
                                 }
 
                                 
                                 Rectangle {
-                                    width: 60
+                                    width: 70
                                     height: parent.height - 4
                                     radius: Theme.radiusSmall
                                     anchors.verticalCenter: parent.verticalCenter
-                                    color: Theme.hoverBg
+                                    color: teamMA.containsMouse ? Qt.lighter(Theme.hoverBg, 1.2) : Theme.hoverBg
                                     border.color: teamMA.containsMouse ? Theme.selectedBr : Theme.thumbBr
-                                    border.width: 1
+                                    border.width: teamMA.containsMouse ? 2 : 1
+                                    Behavior on color { ColorAnimation { duration: Theme.animFast } }
                                     Behavior on border.color { ColorAnimation { duration: Theme.animFast } }
+                                    Behavior on border.width { NumberAnimation { duration: Theme.animFast } }
 
                                     Column {
                                         anchors.centerIn: parent
-                                        spacing: 0
+                                        spacing: 2
                                         
                                         Text {
                                             anchors.horizontalCenter: parent.horizontalCenter
                                             text: model.teamIcon || "⚪"
                                             color: Theme.textMain
-                                            font.pixelSize: 16
+                                            font.pixelSize: 20
+                                            font.bold: true
                                         }
                                         
                                         Text {
                                             anchors.horizontalCenter: parent.horizontalCenter
-                                            text: "Team"
-                                            color: Theme.textDim
-                                            font.pixelSize: 9
+                                            text: "Team " + (model.teamId || 0)
+                                            color: Theme.textBright
+                                            font.pixelSize: 10
+                                            font.bold: true
                                         }
                                     }
 
@@ -625,7 +659,7 @@ Item {
 
                                 
                                 Item {
-                                    width: Math.max(10, parent.parent.width - 265)
+                                    width: Math.max(10, parent.parent.width - 285)
                                     height: parent.height
                                 }
 
