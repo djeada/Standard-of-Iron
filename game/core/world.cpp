@@ -1,5 +1,6 @@
 #include "world.h"
 #include "../systems/owner_registry.h"
+#include "../units/troop_config.h"
 #include "component.h"
 
 namespace Engine::Core {
@@ -111,7 +112,10 @@ int World::countTroopsForPlayer(int ownerId) const {
     if (unit->unitType == "barracks")
       continue;
     
-    count++;
+    int individualsPerUnit =
+        Game::Units::TroopConfig::instance().getIndividualsPerUnit(
+            unit->unitType);
+    count += individualsPerUnit;
   }
   return count;
 }
