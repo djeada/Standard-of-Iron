@@ -112,6 +112,7 @@ void NationRegistry::initializeDefaults() {
   kingdomOfIron.id = "kingdom_of_iron";
   kingdomOfIron.displayName = "Kingdom of Iron";
   kingdomOfIron.primaryBuilding = "barracks";
+  kingdomOfIron.formationType = FormationType::Roman;
 
   TroopType archer;
   archer.unitType = "archer";
