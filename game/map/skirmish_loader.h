@@ -11,8 +11,8 @@ namespace Engine {
 namespace Core {
 class World;
 using EntityID = unsigned int;
-}
-}
+} // namespace Core
+} // namespace Engine
 
 namespace Render {
 namespace GL {
@@ -23,8 +23,8 @@ class TerrainRenderer;
 class BiomeRenderer;
 class FogRenderer;
 class StoneRenderer;
-}
-}
+} // namespace GL
+} // namespace Render
 
 namespace Game {
 namespace Map {
@@ -51,12 +51,15 @@ public:
   using OwnersUpdatedCallback = std::function<void()>;
   using VisibilityMaskReadyCallback = std::function<void()>;
 
-  SkirmishLoader(Engine::Core::World &world,
-                Render::GL::Renderer &renderer,
-                Render::GL::Camera &camera);
+  SkirmishLoader(Engine::Core::World &world, Render::GL::Renderer &renderer,
+                 Render::GL::Camera &camera);
 
-  void setGroundRenderer(Render::GL::GroundRenderer *ground) { m_ground = ground; }
-  void setTerrainRenderer(Render::GL::TerrainRenderer *terrain) { m_terrain = terrain; }
+  void setGroundRenderer(Render::GL::GroundRenderer *ground) {
+    m_ground = ground;
+  }
+  void setTerrainRenderer(Render::GL::TerrainRenderer *terrain) {
+    m_terrain = terrain;
+  }
   void setBiomeRenderer(Render::GL::BiomeRenderer *biome) { m_biome = biome; }
   void setFogRenderer(Render::GL::FogRenderer *fog) { m_fog = fog; }
   void setStoneRenderer(Render::GL::StoneRenderer *stone) { m_stone = stone; }
@@ -64,15 +67,14 @@ public:
   void setOnOwnersUpdated(OwnersUpdatedCallback callback) {
     m_onOwnersUpdated = callback;
   }
-  
+
   void setOnVisibilityMaskReady(VisibilityMaskReadyCallback callback) {
     m_onVisibilityMaskReady = callback;
   }
 
   SkirmishLoadResult start(const QString &mapPath,
-                          const QVariantList &playerConfigs,
-                          int selectedPlayerId,
-                          int &outSelectedPlayerId);
+                           const QVariantList &playerConfigs,
+                           int selectedPlayerId, int &outSelectedPlayerId);
 
 private:
   Engine::Core::World &m_world;
@@ -87,5 +89,5 @@ private:
   VisibilityMaskReadyCallback m_onVisibilityMaskReady;
 };
 
-}
-}
+} // namespace Map
+} // namespace Game

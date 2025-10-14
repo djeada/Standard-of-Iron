@@ -51,7 +51,7 @@ class CameraService;
 } // namespace Systems
 namespace Map {
 class MapCatalog;
-} // namespace Map
+}
 } // namespace Game
 
 namespace App {
@@ -139,7 +139,7 @@ public:
     }
   }
   QString lastError() const { return m_runtime.lastError; }
-  Q_INVOKABLE void clearError() { 
+  Q_INVOKABLE void clearError() {
     if (!m_runtime.lastError.isEmpty()) {
       m_runtime.lastError = "";
       emit lastErrorChanged();

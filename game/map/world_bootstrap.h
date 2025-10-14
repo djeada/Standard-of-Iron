@@ -7,8 +7,8 @@ namespace GL {
 class Renderer;
 class Camera;
 class GroundRenderer;
-}
-}
+} // namespace GL
+} // namespace Render
 
 namespace Game {
 namespace Map {
@@ -19,7 +19,7 @@ public:
                          Render::GL::Camera &camera,
                          Render::GL::GroundRenderer *ground = nullptr,
                          QString *outError = nullptr);
-  
+
   static void ensureInitialized(bool &initialized,
                                 Render::GL::Renderer &renderer,
                                 Render::GL::Camera &camera,
@@ -27,5 +27,5 @@ public:
                                 QString *outError = nullptr);
 };
 
-}
-}
+} // namespace Map
+} // namespace Game
