@@ -109,6 +109,20 @@ GameEngine::GameEngine() {
 
   m_cursorManager = std::make_unique<CursorManager>();
   m_hoverTracker = std::make_unique<HoverTracker>(m_pickingService.get());
+  
+  // Initialize MapCatalog for progressive loading
+  m_mapCatalog = std::make_unique<Game::Map::MapCatalog>();
+  connect(m_mapCatalog.get(), &Game::Map::MapCatalog::mapLoaded, this, [this](QVariantMap mapData) {
+    m_availableMaps.append(mapData);
+    emit availableMapsChanged();
+  });
+  connect(m_mapCatalog.get(), &Game::Map::MapCatalog::loadingChanged, this, [this](bool loading) {
+    m_mapsLoading = loading;
+    emit mapsLoadingChanged();
+  });
+  connect(m_mapCatalog.get(), &Game::Map::MapCatalog::allMapsLoaded, this, [this]() {
+    emit availableMapsChanged();
+  });
 
   connect(m_cursorManager.get(), &CursorManager::modeChanged, this,
           &GameEngine::cursorModeChanged);
@@ -729,8 +743,15 @@ void GameEngine::setRallyAtScreen(qreal sx, qreal sy) {
                                        m_runtime.localOwnerId);
 }
 
+void GameEngine::startLoadingMaps() {
+  m_availableMaps.clear();
+  if (m_mapCatalog) {
+    m_mapCatalog->loadMapsAsync();
+  }
+}
+
 QVariantList GameEngine::availableMaps() const {
-  return Game::Map::MapCatalog::availableMaps();
+  return m_availableMaps;
 }
 
 void GameEngine::startSkirmish(const QString &mapPath,
