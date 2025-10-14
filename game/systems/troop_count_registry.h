@@ -30,7 +30,7 @@ private:
   TroopCountRegistry &operator=(const TroopCountRegistry &) = delete;
 
   std::unordered_map<int, int> m_troopCounts;
-  
+
   Engine::Core::ScopedEventSubscription<Engine::Core::UnitSpawnedEvent>
       m_unitSpawnedSubscription;
   Engine::Core::ScopedEventSubscription<Engine::Core::UnitDiedEvent>

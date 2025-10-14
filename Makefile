@@ -11,7 +11,11 @@ MAP_EDITOR_BINARY := map_editor
 
 # Formatting config
 CLANG_FORMAT ?= clang-format
+# Try to find qmlformat in common Qt installation paths if not in PATH
+QMLFORMAT ?= $(shell command -v qmlformat 2>/dev/null || echo /usr/lib/qt5/bin/qmlformat)
 FMT_GLOBS := -name "*.cpp" -o -name "*.c" -o -name "*.h" -o -name "*.hpp"
+SHADER_GLOBS := -name "*.frag" -o -name "*.vert"
+QML_GLOBS := -name "*.qml"
 
 # Colors for output
 BOLD := \033[1m
@@ -35,7 +39,7 @@ help:
 	@echo "  $(GREEN)clean$(RESET)         - Clean build directory"
 	@echo "  $(GREEN)rebuild$(RESET)       - Clean and build"
 	@echo "  $(GREEN)test$(RESET)          - Run tests (if any)"
-	@echo "  $(GREEN)format$(RESET)        - Strip comments then clang-format (strict)"
+	@echo "  $(GREEN)format$(RESET)        - Format all code (C++, QML, shaders)"
 	@echo "  $(GREEN)format-check$(RESET)  - Verify formatting (CI-friendly, no changes)"
 	@echo "  $(GREEN)check-deps$(RESET)    - Check if dependencies are installed"
 	@echo "  $(GREEN)dev$(RESET)           - Set up development environment (install + configure + build)"
@@ -138,7 +142,7 @@ test: build
 		echo "$(YELLOW)No tests found. Test suite not yet implemented.$(RESET)"; \
 	fi
 
-# ---- Formatting: strip comments first, then clang-format (strict) ----
+# ---- Formatting: strip comments first, then format (strict) ----
 .PHONY: format format-check
 format:
 	@echo "$(BOLD)$(BLUE)Stripping comments in app/... game/... render/... tools/... ui/...$(RESET)"
@@ -149,24 +153,65 @@ format:
 	else \
 		echo "$(RED)scripts/remove-comments.sh not found$(RESET)"; exit 1; \
 	fi
-	@echo "$(BOLD)$(BLUE)Formatting with clang-format (strict)...$(RESET)"
+	@echo "$(BOLD)$(BLUE)Formatting C/C++ files with clang-format...$(RESET)"
 	@if command -v $(CLANG_FORMAT) >/dev/null 2>&1; then \
 		find . -type f \( $(FMT_GLOBS) \) -not -path "./$(BUILD_DIR)/*" -print0 \
 		| xargs -0 -r $(CLANG_FORMAT) -i --style=file; \
-		echo "$(GREEN)✓ Format + comment strip complete$(RESET)"; \
+		echo "$(GREEN)✓ C/C++ formatting complete$(RESET)"; \
 	else \
 		echo "$(RED)clang-format not found. Please install it.$(RESET)"; exit 1; \
 	fi
+	@echo "$(BOLD)$(BLUE)Formatting QML files...$(RESET)"
+	@if command -v $(QMLFORMAT) >/dev/null 2>&1 || [ -x "$(QMLFORMAT)" ]; then \
+		find . -type f \( $(QML_GLOBS) \) -not -path "./$(BUILD_DIR)/*" -print0 \
+		| xargs -0 -r $(QMLFORMAT) -i; \
+		echo "$(GREEN)✓ QML formatting complete$(RESET)"; \
+	else \
+		echo "$(YELLOW)⚠ qmlformat not found. Skipping QML formatting.$(RESET)"; \
+		echo "$(YELLOW)  Install qmlformat (from Qt dev tools) to format QML files.$(RESET)"; \
+	fi
+	@echo "$(BOLD)$(BLUE)Formatting shader files (.frag, .vert)...$(RESET)"
+	@if command -v $(CLANG_FORMAT) >/dev/null 2>&1; then \
+		find . -type f \( $(SHADER_GLOBS) \) -not -path "./$(BUILD_DIR)/*" -print0 \
+		| xargs -0 -r $(CLANG_FORMAT) -i --style=file; \
+		echo "$(GREEN)✓ Shader formatting complete$(RESET)"; \
+	else \
+		echo "$(YELLOW)⚠ clang-format not found. Shader files not formatted.$(RESET)"; \
+	fi
+	@echo "$(GREEN)✓ All formatting complete$(RESET)"
 
 # CI/verification: fail if anything would be reformatted
 format-check:
-	@echo "$(BOLD)$(BLUE)Checking clang-format compliance...$(RESET)"
-	@if command -v $(CLANG_FORMAT) >/dev/null 2>&1; then \
+	@echo "$(BOLD)$(BLUE)Checking formatting compliance...$(RESET)"
+	@FAILED=0; \
+	if command -v $(CLANG_FORMAT) >/dev/null 2>&1; then \
+		echo "$(BLUE)Checking C/C++ files...$(RESET)"; \
 		find . -type f \( $(FMT_GLOBS) \) -not -path "./$(BUILD_DIR)/*" -print0 \
-		| xargs -0 -r $(CLANG_FORMAT) --dry-run -Werror --style=file; \
-		echo "$(GREEN)✓ Formatting OK$(RESET)"; \
+		| xargs -0 -r $(CLANG_FORMAT) --dry-run -Werror --style=file || FAILED=1; \
+		echo "$(BLUE)Checking shader files...$(RESET)"; \
+		find . -type f \( $(SHADER_GLOBS) \) -not -path "./$(BUILD_DIR)/*" -print0 \
+		| xargs -0 -r $(CLANG_FORMAT) --dry-run -Werror --style=file || FAILED=1; \
 	else \
 		echo "$(RED)clang-format not found. Please install it.$(RESET)"; exit 1; \
+	fi; \
+	if command -v $(QMLFORMAT) >/dev/null 2>&1 || [ -x "$(QMLFORMAT)" ]; then \
+		echo "$(BLUE)Checking QML files...$(RESET)"; \
+		for file in $$(find . -type f \( $(QML_GLOBS) \) -not -path "./$(BUILD_DIR)/*"); do \
+			$(QMLFORMAT) "$$file" > /tmp/qmlformat_check.tmp 2>/dev/null; \
+			if ! diff -q "$$file" /tmp/qmlformat_check.tmp >/dev/null 2>&1; then \
+				echo "$(RED)QML file needs formatting: $$file$(RESET)"; \
+				FAILED=1; \
+			fi; \
+		done; \
+		rm -f /tmp/qmlformat_check.tmp; \
+	else \
+		echo "$(YELLOW)⚠ qmlformat not found. Skipping QML format check.$(RESET)"; \
+	fi; \
+	if [ $$FAILED -eq 0 ]; then \
+		echo "$(GREEN)✓ All formatting checks passed$(RESET)"; \
+	else \
+		echo "$(RED)✗ Formatting check failed. Run 'make format' to fix.$(RESET)"; \
+		exit 1; \
 	fi
 
 # Debug build

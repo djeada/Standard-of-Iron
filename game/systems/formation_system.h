@@ -11,7 +11,7 @@ namespace Systems {
 
 enum class FormationType { Roman, Barbarian };
 
-} // namespace Systems
+}
 } // namespace Game
 
 namespace std {
@@ -20,7 +20,7 @@ template <> struct hash<Game::Systems::FormationType> {
     return std::hash<int>()(static_cast<int>(ft));
   }
 };
-}
+} // namespace std
 
 namespace Game {
 namespace Systems {
@@ -38,18 +38,18 @@ public:
 
 class RomanFormation : public IFormation {
 public:
-  std::vector<QVector3D> calculatePositions(int unitCount,
-                                            const QVector3D &center,
-                                            float baseSpacing = 1.0f) const override;
+  std::vector<QVector3D>
+  calculatePositions(int unitCount, const QVector3D &center,
+                     float baseSpacing = 1.0f) const override;
 
   FormationType getType() const override { return FormationType::Roman; }
 };
 
 class BarbarianFormation : public IFormation {
 public:
-  std::vector<QVector3D> calculatePositions(int unitCount,
-                                            const QVector3D &center,
-                                            float baseSpacing = 1.0f) const override;
+  std::vector<QVector3D>
+  calculatePositions(int unitCount, const QVector3D &center,
+                     float baseSpacing = 1.0f) const override;
 
   FormationType getType() const override { return FormationType::Barbarian; }
 };

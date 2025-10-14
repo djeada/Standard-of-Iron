@@ -38,12 +38,12 @@ ProductionResult ProductionService::startProductionForFirstSelectedBarracks(
     return ProductionResult::PerBarracksLimitReached;
   if (p->inProgress)
     return ProductionResult::AlreadyInProgress;
-  
+
   int currentTroops = world.countTroopsForPlayer(ownerId);
   int maxTroops = Game::GameConfig::instance().getMaxTroopsPerPlayer();
   if (currentTroops >= maxTroops)
     return ProductionResult::GlobalTroopLimitReached;
-  
+
   p->productType = unitType;
   p->timeRemaining = p->buildTime;
   p->inProgress = true;

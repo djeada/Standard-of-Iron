@@ -44,4 +44,4 @@ private:
   BiomeSettings m_biomeSettings;
 };
 
-} 
+} // namespace Game::Map
