@@ -19,14 +19,14 @@ Theme *Theme::create(QQmlEngine *engine, QJSEngine *scriptEngine) {
 
 QVariantList Theme::playerColors() const {
   QVariantList colors;
-  colors.append(QVariantMap{{"name", "Red"}, {"hex", "#FF4040"}});
-  colors.append(QVariantMap{{"name", "Blue"}, {"hex", "#4080FF"}});
-  colors.append(QVariantMap{{"name", "Green"}, {"hex", "#40FF60"}});
-  colors.append(QVariantMap{{"name", "Yellow"}, {"hex", "#FFFF40"}});
-  colors.append(QVariantMap{{"name", "Orange"}, {"hex", "#FF9040"}});
-  colors.append(QVariantMap{{"name", "Purple"}, {"hex", "#B040FF"}});
-  colors.append(QVariantMap{{"name", "Cyan"}, {"hex", "#40FFFF"}});
-  colors.append(QVariantMap{{"name", "Pink"}, {"hex", "#FF40B0"}});
+  colors.append(QVariantMap{{"name", "Red"}, {"hex", "#E74C3C"}});
+  colors.append(QVariantMap{{"name", "Blue"}, {"hex", "#3498DB"}});
+  colors.append(QVariantMap{{"name", "Green"}, {"hex", "#2ECC71"}});
+  colors.append(QVariantMap{{"name", "Yellow"}, {"hex", "#F1C40F"}});
+  colors.append(QVariantMap{{"name", "Orange"}, {"hex", "#E67E22"}});
+  colors.append(QVariantMap{{"name", "Purple"}, {"hex", "#9B59B6"}});
+  colors.append(QVariantMap{{"name", "Cyan"}, {"hex", "#1ABC9C"}});
+  colors.append(QVariantMap{{"name", "Pink"}, {"hex", "#E91E63"}});
   return colors;
 }
 
