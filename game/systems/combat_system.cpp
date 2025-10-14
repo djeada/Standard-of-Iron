@@ -380,7 +380,7 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
         }
       }
 
-      dealDamage(world, bestTarget, damage);
+      dealDamage(world, bestTarget, damage, attacker->getId());
       *tAccum = 0.0f;
     } else {
 
@@ -440,16 +440,30 @@ bool CombatSystem::isInRange(Engine::Core::Entity *attacker,
 }
 
 void CombatSystem::dealDamage(Engine::Core::World *world,
-                              Engine::Core::Entity *target, int damage) {
+                              Engine::Core::Entity *target, int damage,
+                              Engine::Core::EntityID attackerId) {
   auto unit = target->getComponent<Engine::Core::UnitComponent>();
   if (unit) {
     unit->health = std::max(0, unit->health - damage);
 
     if (unit->health <= 0) {
+      // Get killer's owner ID if killer exists
+      int killerOwnerId = 0;
+      if (attackerId != 0 && world) {
+        auto *attacker = world->getEntity(attackerId);
+        if (attacker) {
+          auto *attackerUnit =
+              attacker->getComponent<Engine::Core::UnitComponent>();
+          if (attackerUnit) {
+            killerOwnerId = attackerUnit->ownerId;
+          }
+        }
+      }
 
       Engine::Core::EventManager::instance().publish(
           Engine::Core::UnitDiedEvent(target->getId(), unit->ownerId,
-                                      unit->unitType));
+                                      unit->unitType, attackerId,
+                                      killerOwnerId));
 
       auto *targetAtk = target->getComponent<Engine::Core::AttackComponent>();
       if (targetAtk && targetAtk->inMeleeLock &&

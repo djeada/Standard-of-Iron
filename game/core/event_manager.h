@@ -123,11 +123,15 @@ public:
 
 class UnitDiedEvent : public Event {
 public:
-  UnitDiedEvent(EntityID unitId, int ownerId, const std::string &unitType)
-      : unitId(unitId), ownerId(ownerId), unitType(unitType) {}
+  UnitDiedEvent(EntityID unitId, int ownerId, const std::string &unitType,
+                EntityID killerId = 0, int killerOwnerId = 0)
+      : unitId(unitId), ownerId(ownerId), unitType(unitType),
+        killerId(killerId), killerOwnerId(killerOwnerId) {}
   EntityID unitId;
   int ownerId;
   std::string unitType;
+  EntityID killerId;       // ID of the entity that killed this unit (0 if unknown)
+  int killerOwnerId;       // Owner ID of the killer (0 if unknown)
 };
 
 class UnitSpawnedEvent : public Event {
