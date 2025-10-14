@@ -103,28 +103,27 @@ GameEngine::GameEngine() {
   m_cameraService = std::make_unique<Game::Systems::CameraService>();
 
   auto *selectionSystem = m_world->getSystem<Game::Systems::SelectionSystem>();
-  m_selectionController =
-      std::make_unique<Game::Systems::SelectionController>(
-          m_world.get(), selectionSystem, m_pickingService.get());
+  m_selectionController = std::make_unique<Game::Systems::SelectionController>(
+      m_world.get(), selectionSystem, m_pickingService.get());
   m_commandController = std::make_unique<App::Controllers::CommandController>(
       m_world.get(), selectionSystem, m_pickingService.get());
 
   m_cursorManager = std::make_unique<CursorManager>();
   m_hoverTracker = std::make_unique<HoverTracker>(m_pickingService.get());
-  
-  
+
   m_mapCatalog = std::make_unique<Game::Map::MapCatalog>();
-  connect(m_mapCatalog.get(), &Game::Map::MapCatalog::mapLoaded, this, [this](QVariantMap mapData) {
-    m_availableMaps.append(mapData);
-    emit availableMapsChanged();
-  });
-  connect(m_mapCatalog.get(), &Game::Map::MapCatalog::loadingChanged, this, [this](bool loading) {
-    m_mapsLoading = loading;
-    emit mapsLoadingChanged();
-  });
-  connect(m_mapCatalog.get(), &Game::Map::MapCatalog::allMapsLoaded, this, [this]() {
-    emit availableMapsChanged();
-  });
+  connect(m_mapCatalog.get(), &Game::Map::MapCatalog::mapLoaded, this,
+          [this](QVariantMap mapData) {
+            m_availableMaps.append(mapData);
+            emit availableMapsChanged();
+          });
+  connect(m_mapCatalog.get(), &Game::Map::MapCatalog::loadingChanged, this,
+          [this](bool loading) {
+            m_mapsLoading = loading;
+            emit mapsLoadingChanged();
+          });
+  connect(m_mapCatalog.get(), &Game::Map::MapCatalog::allMapsLoaded, this,
+          [this]() { emit availableMapsChanged(); });
 
   connect(m_cursorManager.get(), &CursorManager::modeChanged, this,
           &GameEngine::cursorModeChanged);
@@ -138,8 +137,7 @@ GameEngine::GameEngine() {
           &Game::Systems::SelectionController::selectionModelRefreshRequested,
           this, &GameEngine::selectedUnitsDataChanged);
   connect(m_commandController.get(),
-          &App::Controllers::CommandController::attackTargetSelected,
-          [this]() {
+          &App::Controllers::CommandController::attackTargetSelected, [this]() {
             if (auto *selSys =
                     m_world->getSystem<Game::Systems::SelectionSystem>()) {
               const auto &sel = selSys->getSelectedUnits();
@@ -152,16 +150,15 @@ GameEngine::GameEngine() {
                       m_viewport.height, 0);
                   if (targetId != 0) {
                     App::Controllers::ActionVFX::spawnAttackArrow(m_world.get(),
-                                                                 targetId);
+                                                                  targetId);
                   }
                 }
               }
             }
           });
-  
+
   connect(m_commandController.get(),
-          &App::Controllers::CommandController::troopLimitReached,
-          [this]() {
+          &App::Controllers::CommandController::troopLimitReached, [this]() {
             setError("Maximum troop limit reached. Cannot produce more units.");
           });
 
@@ -201,8 +198,8 @@ void GameEngine::onMapClicked(qreal sx, qreal sy) {
   ensureInitialized();
   if (m_selectionController && m_camera) {
     m_selectionController->onClickSelect(sx, sy, false, m_viewport.width,
-                                        m_viewport.height, m_camera.get(),
-                                        m_runtime.localOwnerId);
+                                         m_viewport.height, m_camera.get(),
+                                         m_runtime.localOwnerId);
   }
 }
 
@@ -257,7 +254,7 @@ void GameEngine::onAttackClick(qreal sx, qreal sy) {
             targetEntity->getComponent<Engine::Core::UnitComponent>();
         if (targetUnit && targetUnit->ownerId != m_runtime.localOwnerId) {
           App::Controllers::ActionVFX::spawnAttackArrow(m_world.get(),
-                                                       targetId);
+                                                        targetId);
         }
       }
     }
@@ -356,8 +353,8 @@ void GameEngine::onClickSelect(qreal sx, qreal sy, bool additive) {
   ensureInitialized();
   if (m_selectionController && m_camera) {
     m_selectionController->onClickSelect(sx, sy, additive, m_viewport.width,
-                                        m_viewport.height, m_camera.get(),
-                                        m_runtime.localOwnerId);
+                                         m_viewport.height, m_camera.get(),
+                                         m_runtime.localOwnerId);
   }
 }
 
@@ -367,9 +364,9 @@ void GameEngine::onAreaSelected(qreal x1, qreal y1, qreal x2, qreal y2,
     return;
   ensureInitialized();
   if (m_selectionController && m_camera) {
-    m_selectionController->onAreaSelected(x1, y1, x2, y2, additive,
-                                         m_viewport.width, m_viewport.height,
-                                         m_camera.get(), m_runtime.localOwnerId);
+    m_selectionController->onAreaSelected(
+        x1, y1, x2, y2, additive, m_viewport.width, m_viewport.height,
+        m_camera.get(), m_runtime.localOwnerId);
   }
 }
 
@@ -382,9 +379,8 @@ void GameEngine::selectAllTroops() {
 
 void GameEngine::ensureInitialized() {
   QString error;
-  Game::Map::WorldBootstrap::ensureInitialized(m_runtime.initialized,
-                                               *m_renderer, *m_camera,
-                                               m_ground.get(), &error);
+  Game::Map::WorldBootstrap::ensureInitialized(
+      m_runtime.initialized, *m_renderer, *m_camera, m_ground.get(), &error);
   if (!error.isEmpty()) {
     setError(error);
   }
@@ -451,7 +447,8 @@ void GameEngine::update(float dt) {
   }
 
   if (m_followSelectionEnabled && m_camera && m_world && m_cameraService) {
-    m_cameraService->updateFollow(*m_camera, *m_world, m_followSelectionEnabled);
+    m_cameraService->updateFollow(*m_camera, *m_world,
+                                  m_followSelectionEnabled);
   }
 
   if (m_selectedUnitsModel) {
@@ -539,8 +536,8 @@ bool GameEngine::screenToGround(const QPointF &screenPt, QVector3D &outWorld) {
 bool GameEngine::worldToScreen(const QVector3D &world,
                                QPointF &outScreen) const {
   return App::Utils::worldToScreen(m_pickingService.get(), m_camera.get(),
-                                   m_window, m_viewport.width, m_viewport.height,
-                                   world, outScreen);
+                                   m_window, m_viewport.width,
+                                   m_viewport.height, world, outScreen);
 }
 
 void GameEngine::syncSelectionFlags() {
@@ -747,8 +744,8 @@ void GameEngine::setRallyAtScreen(qreal sx, qreal sy) {
   if (!m_commandController || !m_camera)
     return;
   m_commandController->setRallyAtScreen(sx, sy, m_viewport.width,
-                                       m_viewport.height, m_camera.get(),
-                                       m_runtime.localOwnerId);
+                                        m_viewport.height, m_camera.get(),
+                                        m_runtime.localOwnerId);
 }
 
 void GameEngine::startLoadingMaps() {
@@ -758,9 +755,7 @@ void GameEngine::startLoadingMaps() {
   }
 }
 
-QVariantList GameEngine::availableMaps() const {
-  return m_availableMaps;
-}
+QVariantList GameEngine::availableMaps() const { return m_availableMaps; }
 
 void GameEngine::startSkirmish(const QString &mapPath,
                                const QVariantList &playerConfigs) {
@@ -793,17 +788,17 @@ void GameEngine::startSkirmish(const QString &mapPath,
     loader.setFogRenderer(m_fog.get());
     loader.setStoneRenderer(m_stone.get());
 
-    loader.setOnOwnersUpdated([this]() {
-      emit ownerInfoChanged();
-    });
+    loader.setOnOwnersUpdated([this]() { emit ownerInfoChanged(); });
 
     loader.setOnVisibilityMaskReady([this]() {
-      m_runtime.visibilityVersion = Game::Map::VisibilityService::instance().version();
+      m_runtime.visibilityVersion =
+          Game::Map::VisibilityService::instance().version();
       m_runtime.visibilityUpdateAccumulator = 0.0f;
     });
 
     int updatedPlayerId = m_selectedPlayerId;
-    auto result = loader.start(mapPath, playerConfigs, m_selectedPlayerId, updatedPlayerId);
+    auto result = loader.start(mapPath, playerConfigs, m_selectedPlayerId,
+                               updatedPlayerId);
 
     if (updatedPlayerId != m_selectedPlayerId) {
       m_selectedPlayerId = updatedPlayerId;
@@ -821,8 +816,9 @@ void GameEngine::startSkirmish(const QString &mapPath,
     m_level.camNear = result.camNear;
     m_level.camFar = result.camFar;
     m_level.maxTroopsPerPlayer = result.maxTroopsPerPlayer;
-    
-    Game::GameConfig::instance().setMaxTroopsPerPlayer(result.maxTroopsPerPlayer);
+
+    Game::GameConfig::instance().setMaxTroopsPerPlayer(
+        result.maxTroopsPerPlayer);
 
     if (m_victoryService) {
       m_victoryService->configure(result.victoryConfig, m_runtime.localOwnerId);
@@ -1007,4 +1003,3 @@ QVector3D GameEngine::getPatrolPreviewWaypoint() const {
     return QVector3D();
   return m_commandController->getPatrolFirstWaypoint();
 }
-

@@ -9,4 +9,4 @@ inline QVector3D teamColorForOwner(int ownerId) {
   auto color = registry.getOwnerColor(ownerId);
   return QVector3D(color[0], color[1], color[2]);
 }
-} 
+} // namespace Game::Visuals

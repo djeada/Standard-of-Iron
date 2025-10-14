@@ -33,5 +33,5 @@ inline void sanitizeSelection(Engine::Core::World *world,
   }
 }
 
-} 
-} 
+} // namespace Utils
+} // namespace App

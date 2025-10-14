@@ -13,15 +13,15 @@
 namespace App::Controllers {
 
 CommandController::CommandController(
-    Engine::Core::World *world,
-    Game::Systems::SelectionSystem *selectionSystem,
+    Engine::Core::World *world, Game::Systems::SelectionSystem *selectionSystem,
     Game::Systems::PickingService *pickingService, QObject *parent)
     : QObject(parent), m_world(world), m_selectionSystem(selectionSystem),
       m_pickingService(pickingService) {}
 
 CommandResult CommandController::onAttackClick(qreal sx, qreal sy,
-                                              int viewportWidth,
-                                              int viewportHeight, void *camera) {
+                                               int viewportWidth,
+                                               int viewportHeight,
+                                               void *camera) {
   CommandResult result;
   if (!m_selectionSystem || !m_pickingService || !camera || !m_world) {
     result.resetCursorToNormal = true;
@@ -94,8 +94,9 @@ CommandResult CommandController::onStopCommand() {
 }
 
 CommandResult CommandController::onPatrolClick(qreal sx, qreal sy,
-                                              int viewportWidth,
-                                              int viewportHeight, void *camera) {
+                                               int viewportWidth,
+                                               int viewportHeight,
+                                               void *camera) {
   CommandResult result;
   if (!m_selectionSystem || !m_world || !m_pickingService || !camera) {
     if (m_hasPatrolFirstWaypoint) {
@@ -117,7 +118,7 @@ CommandResult CommandController::onPatrolClick(qreal sx, qreal sy,
   auto *cam = static_cast<Render::GL::Camera *>(camera);
   QVector3D hit;
   if (!m_pickingService->screenToGround(QPointF(sx, sy), *cam, viewportWidth,
-                                       viewportHeight, hit)) {
+                                        viewportHeight, hit)) {
     if (m_hasPatrolFirstWaypoint) {
       clearPatrolFirstWaypoint();
       result.resetCursorToNormal = true;
@@ -168,10 +169,10 @@ CommandResult CommandController::onPatrolClick(qreal sx, qreal sy,
 }
 
 CommandResult CommandController::setRallyAtScreen(qreal sx, qreal sy,
-                                                 int viewportWidth,
-                                                 int viewportHeight,
-                                                 void *camera,
-                                                 int localOwnerId) {
+                                                  int viewportWidth,
+                                                  int viewportHeight,
+                                                  void *camera,
+                                                  int localOwnerId) {
   CommandResult result;
   if (!m_world || !m_selectionSystem || !m_pickingService || !camera)
     return result;
@@ -179,7 +180,7 @@ CommandResult CommandController::setRallyAtScreen(qreal sx, qreal sy,
   auto *cam = static_cast<Render::GL::Camera *>(camera);
   QVector3D hit;
   if (!m_pickingService->screenToGround(QPointF(sx, sy), *cam, viewportWidth,
-                                       viewportHeight, hit))
+                                        viewportHeight, hit))
     return result;
 
   Game::Systems::ProductionService::setRallyForFirstSelectedBarracks(
@@ -191,7 +192,7 @@ CommandResult CommandController::setRallyAtScreen(qreal sx, qreal sy,
 }
 
 void CommandController::recruitNearSelected(const QString &unitType,
-                                           int localOwnerId) {
+                                            int localOwnerId) {
   if (!m_world || !m_selectionSystem)
     return;
 
@@ -199,9 +200,10 @@ void CommandController::recruitNearSelected(const QString &unitType,
   if (sel.empty())
     return;
 
-  auto result = Game::Systems::ProductionService::startProductionForFirstSelectedBarracks(
-      *m_world, sel, localOwnerId, unitType.toStdString());
-  
+  auto result =
+      Game::Systems::ProductionService::startProductionForFirstSelectedBarracks(
+          *m_world, sel, localOwnerId, unitType.toStdString());
+
   if (result == Game::Systems::ProductionResult::GlobalTroopLimitReached) {
     emit troopLimitReached();
   }
@@ -211,4 +213,4 @@ void CommandController::resetMovement(Engine::Core::Entity *entity) {
   App::Utils::resetMovement(entity);
 }
 
-} 
+} // namespace App::Controllers

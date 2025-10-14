@@ -33,5 +33,5 @@ inline bool worldToScreen(const Game::Systems::PickingService *pickingService,
   return pickingService->worldToScreen(*camera, w, h, world, outScreen);
 }
 
-} 
-} 
+} // namespace Utils
+} // namespace App
