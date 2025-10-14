@@ -4,6 +4,8 @@
 #include <QColor>
 #include <QObject>
 #include <QQmlEngine>
+#include <QVariantList>
+#include <QVariantMap>
 
 class Theme : public QObject {
   Q_OBJECT
@@ -65,6 +67,10 @@ class Theme : public QObject {
   Q_PROPERTY(int fontSizeTitle READ fontSizeTitle CONSTANT)
   Q_PROPERTY(int fontSizeHero READ fontSizeHero CONSTANT)
 
+  Q_PROPERTY(QVariantList playerColors READ playerColors CONSTANT)
+  Q_PROPERTY(QVariantList teamIcons READ teamIcons CONSTANT)
+  Q_PROPERTY(QVariantList factions READ factions CONSTANT)
+
 public:
   static Theme *instance();
   static Theme *create(QQmlEngine *engine, QJSEngine *scriptEngine);
@@ -125,6 +131,10 @@ public:
   int fontSizeLarge() const { return 16; }
   int fontSizeTitle() const { return 18; }
   int fontSizeHero() const { return 28; }
+
+  QVariantList playerColors() const;
+  QVariantList teamIcons() const;
+  QVariantList factions() const;
 
 private:
   explicit Theme(QObject *parent = nullptr);
