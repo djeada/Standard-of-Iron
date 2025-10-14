@@ -265,7 +265,6 @@ Item {
                         id: row
                         width: list.width
                         height: 72
-                        property bool hovered: false
 
                         MouseArea {
                             id: rowMouse
@@ -273,8 +272,6 @@ Item {
                             hoverEnabled: true
                             acceptedButtons: Qt.LeftButton
                             cursorShape: Qt.PointingHandCursor
-                            onEntered: { hovered = true; list.currentIndex = index }
-                            onExited:  hovered = false
                             onClicked: list.currentIndex = index
                             onDoubleClicked: acceptSelection()
                         }
@@ -285,9 +282,11 @@ Item {
                             radius: Theme.radiusLarge
                             clip: true
                             color: rowMouse.containsPress ? Theme.hoverBg
-                                : (index === list.currentIndex ? Theme.selectedBg : Qt.rgba(0, 0, 0, 0))
+                                : (index === list.currentIndex ? Theme.selectedBg 
+                                : (rowMouse.containsMouse ? Qt.rgba(1, 1, 1, 0.03) : Qt.rgba(0, 0, 0, 0)))
                             border.width: 1
-                            border.color: (index === list.currentIndex) ? Theme.selectedBr : Theme.thumbBr
+                            border.color: (index === list.currentIndex) ? Theme.selectedBr 
+                                : (rowMouse.containsMouse ? Qt.rgba(1, 1, 1, 0.15) : Theme.thumbBr)
                             Behavior on color { ColorAnimation { duration: Theme.animNormal } }
                             Behavior on border.color { ColorAnimation { duration: Theme.animNormal } }
 
