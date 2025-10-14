@@ -835,12 +835,14 @@ Item {
                                     
                                     Text {
                                         anchors.verticalCenter: parent.verticalCenter
-                                        anchors.right: parent.right
-                                        anchors.rightMargin: 4
+                                        anchors.left: parent.left
+                                        anchors.leftMargin: 4
                                         text: model.playerName || ""
                                         color: model.isHuman ? Theme.accentBright : Theme.textBright
                                         font.pixelSize: model.isHuman ? 15 : 14
                                         font.bold: true
+                                        elide: Text.ElideRight
+                                        width: parent.width - 8
                                     }
                                 }
                             }
