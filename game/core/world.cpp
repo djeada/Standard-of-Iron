@@ -1,5 +1,6 @@
 #include "world.h"
 #include "../systems/owner_registry.h"
+#include "../systems/troop_count_registry.h"
 #include "component.h"
 
 namespace Engine::Core {
@@ -99,6 +100,10 @@ std::vector<Entity *> World::getEnemyUnits(int ownerId) const {
     }
   }
   return result;
+}
+
+int World::countTroopsForPlayer(int ownerId) const {
+  return Game::Systems::TroopCountRegistry::instance().getTroopCount(ownerId);
 }
 
 } // namespace Engine::Core

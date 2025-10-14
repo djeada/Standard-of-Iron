@@ -46,6 +46,7 @@ public:
   std::vector<Entity *> getUnitsNotOwnedBy(int ownerId) const;
   std::vector<Entity *> getAlliedUnits(int ownerId) const;
   std::vector<Entity *> getEnemyUnits(int ownerId) const;
+  int countTroopsForPlayer(int ownerId) const;
 
 private:
   EntityID m_nextEntityId = 1;
