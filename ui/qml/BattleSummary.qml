@@ -10,6 +10,8 @@ Rectangle {
     z: 101
 
     property bool isVictory: (typeof game !== 'undefined' && game.victoryState === "victory")
+    
+    signal closeRequested()
 
     function show() {
         visible = true;
@@ -430,7 +432,7 @@ Rectangle {
             padding: 12
             focusPolicy: Qt.NoFocus
             onClicked: {
-                summaryOverlay.hide();
+                summaryOverlay.closeRequested();
             }
         }
 
