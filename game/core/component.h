@@ -175,6 +175,7 @@ public:
   float rallyX, rallyZ;
   bool rallySet;
   int villagerCost;
+  std::vector<std::string> productionQueue;
 };
 
 class AIControlledComponent : public Component {

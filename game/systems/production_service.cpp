@@ -36,17 +36,27 @@ ProductionResult ProductionService::startProductionForFirstSelectedBarracks(
     return ProductionResult::NoBarracks;
   if (p->producedCount >= p->maxUnits)
     return ProductionResult::PerBarracksLimitReached;
-  if (p->inProgress)
-    return ProductionResult::AlreadyInProgress;
 
   int currentTroops = world.countTroopsForPlayer(ownerId);
   int maxTroops = Game::GameConfig::instance().getMaxTroopsPerPlayer();
   if (currentTroops >= maxTroops)
     return ProductionResult::GlobalTroopLimitReached;
 
-  p->productType = unitType;
-  p->timeRemaining = p->buildTime;
-  p->inProgress = true;
+  const int maxQueueSize = 5;
+  int totalInQueue = p->inProgress ? 1 : 0;
+  totalInQueue += static_cast<int>(p->productionQueue.size());
+
+  if (totalInQueue >= maxQueueSize)
+    return ProductionResult::QueueFull;
+
+  if (p->inProgress) {
+    p->productionQueue.push_back(unitType);
+  } else {
+    p->productType = unitType;
+    p->timeRemaining = p->buildTime;
+    p->inProgress = true;
+  }
+
   return ProductionResult::Success;
 }
 
@@ -80,11 +90,14 @@ bool ProductionService::getSelectedBarracksState(
   outState.hasBarracks = true;
   if (auto *p = e->getComponent<Engine::Core::ProductionComponent>()) {
     outState.inProgress = p->inProgress;
+    outState.productType = p->productType;
     outState.timeRemaining = p->timeRemaining;
     outState.buildTime = p->buildTime;
     outState.producedCount = p->producedCount;
     outState.maxUnits = p->maxUnits;
     outState.villagerCost = p->villagerCost;
+    outState.queueSize = static_cast<int>(p->productionQueue.size());
+    outState.productionQueue = p->productionQueue;
   }
   return true;
 }
