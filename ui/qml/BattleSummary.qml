@@ -33,12 +33,15 @@ Rectangle {
             }
         }
         var playerBanners = [];
+        var aiColorIndex = 1;
         for (var j = 0; j < owners.length; j++) {
             var owner = owners[j];
             if (owner.type === "Player" || owner.type === "AI") {
                 var stats = game.getPlayerStats(owner.id);
                 var isLocalPlayer = (owner.id === localOwnerId);
-                var bannerColor = getBannerColor(owner.id, isLocalPlayer);
+                var bannerColor = getBannerColor(owner.id, isLocalPlayer, owner.type === "AI", aiColorIndex);
+                if (owner.type === "AI")
+                    aiColorIndex++;
                 var score = calculateScore(stats);
                 var playTimeFormatted = formatPlayTime(stats.playTimeSec);
                 playerBanners.push({
@@ -48,7 +51,7 @@ Rectangle {
                     "isAI": owner.type === "AI",
                     "bannerColor": bannerColor,
                     "kills": stats.enemiesKilled,
-                    "losses": stats.troopsRecruited - (stats.barracksOwned > 0 ? 1 : 0),
+                    "losses": stats.troopsRecruited - stats.enemiesKilled,
                     "unitsTrained": stats.troopsRecruited,
                     "villages": stats.barracksOwned,
                     "playTime": playTimeFormatted,
@@ -67,12 +70,15 @@ Rectangle {
             playerBannersModel.append(playerBanners[k]);
     }
 
-    function getBannerColor(ownerId, isLocal) {
+    function getBannerColor(ownerId, isLocal, isAI, aiIndex) {
         var colors = ["#DC143C", "#228B22", "#FFD700", "#4169E1", "#9370DB", "#32CD32"];
         if (isLocal)
             return colors[0];
-        var index = (ownerId - 1) % colors.length;
-        return colors[index];
+        if (isAI) {
+            var idx = aiIndex % (colors.length - 1);
+            return colors[idx + 1];
+        }
+        return colors[1];
     }
 
     function calculateScore(stats) {
@@ -117,171 +123,271 @@ Rectangle {
                     id: bannerCard
 
                     width: 220
-                    height: 400
+                    height: 420
                     color: Qt.rgba(0, 0, 0, 0)
 
-                    Rectangle {
-                        id: banner
-
+                    Item {
                         anchors.fill: parent
-                        anchors.margins: 5
-                        color: model.bannerColor
-                        radius: 8
-                        border.color: "#8B7355"
-                        border.width: 3
-                        opacity: model.isLocalPlayer ? 0.75 : 0.95
 
                         Rectangle {
-                            anchors.fill: parent
-                            anchors.margins: 3
-                            color: "transparent"
-                            border.color: "#FFD700"
-                            border.width: 2
-                            radius: 6
-                        }
+                            id: bannerTop
 
-                        Rectangle {
-                            visible: model.isLocalPlayer
-                            anchors.fill: parent
-                            color: Qt.rgba(0, 0, 0, 0.3)
-                            radius: 8
-                        }
+                            anchors.top: parent.top
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            width: parent.width * 0.4
+                            height: 20
+                            color: "#8B7355"
+                            radius: 4
 
-                        Column {
-                            anchors.fill: parent
-                            anchors.margins: 15
-                            spacing: 12
-
-                            Text {
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                text: model.name
+                            Rectangle {
+                                anchors.centerIn: parent
+                                width: 8
+                                height: 8
+                                radius: 4
                                 color: "#FFD700"
-                                font.family: "serif"
-                                font.pointSize: 18
-                                font.bold: true
-                                horizontalAlignment: Text.AlignHCenter
-                                wrapMode: Text.WordWrap
-                                width: parent.width
-                                style: Text.Raised
-                                styleColor: "#000000"
+                            }
+
+                        }
+
+                        Rectangle {
+                            id: banner
+
+                            anchors.top: bannerTop.bottom
+                            anchors.topMargin: 5
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            width: parent.width - 10
+                            height: parent.height - 30
+                            color: model.bannerColor
+                            radius: 4
+                            border.color: "#8B7355"
+                            border.width: 4
+                            opacity: model.isLocalPlayer ? 0.8 : 0.95
+
+                            Rectangle {
+                                visible: model.isLocalPlayer
+                                anchors.fill: parent
+                                color: Qt.rgba(0, 0, 0, 0.2)
+                                radius: 4
+                            }
+
+                            Canvas {
+                                id: fabricTexture
+
+                                anchors.fill: parent
+                                opacity: 0.15
+                                onPaint: {
+                                    var ctx = getContext("2d");
+                                    ctx.clearRect(0, 0, width, height);
+                                    ctx.strokeStyle = Qt.rgba(0, 0, 0, 0.3);
+                                    ctx.lineWidth = 1;
+                                    for (var y = 0; y < height; y += 4) {
+                                        ctx.beginPath();
+                                        ctx.moveTo(0, y);
+                                        ctx.lineTo(width, y);
+                                        ctx.stroke();
+                                    }
+                                    for (var x = 0; x < width; x += 4) {
+                                        ctx.beginPath();
+                                        ctx.moveTo(x, 0);
+                                        ctx.lineTo(x, height);
+                                        ctx.stroke();
+                                    }
+                                }
                             }
 
                             Rectangle {
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                width: parent.width * 0.8
-                                height: 2
-                                color: "#8B7355"
+                                anchors.fill: parent
+                                anchors.margins: 4
+                                color: "transparent"
+                                border.color: "#FFD700"
+                                border.width: 2
+                                radius: 3
                             }
 
                             Column {
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                spacing: 8
-                                width: parent.width
+                                anchors.fill: parent
+                                anchors.margins: 18
+                                spacing: 10
 
                                 Text {
                                     anchors.horizontalCenter: parent.horizontalCenter
-                                    text: "Kills: " + model.kills
-                                    color: "#F5F5DC"
+                                    text: model.name
+                                    color: "#FFD700"
                                     font.family: "serif"
-                                    font.pointSize: 14
+                                    font.pointSize: 18
+                                    font.bold: true
                                     horizontalAlignment: Text.AlignHCenter
+                                    wrapMode: Text.WordWrap
+                                    width: parent.width
+                                    style: Text.Raised
+                                    styleColor: "#000000"
+                                }
+
+                                Rectangle {
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    width: parent.width * 0.9
+                                    height: 2
+                                    color: "#8B7355"
+                                }
+
+                                Column {
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    spacing: 8
+                                    width: parent.width
+
+                                    Text {
+                                        anchors.horizontalCenter: parent.horizontalCenter
+                                        text: "Kills: " + model.kills
+                                        color: "#F5F5DC"
+                                        font.family: "serif"
+                                        font.pointSize: 13
+                                        horizontalAlignment: Text.AlignHCenter
+                                    }
+
+                                    Text {
+                                        anchors.horizontalCenter: parent.horizontalCenter
+                                        text: "Losses: " + model.losses
+                                        color: "#F5F5DC"
+                                        font.family: "serif"
+                                        font.pointSize: 13
+                                        horizontalAlignment: Text.AlignHCenter
+                                    }
+
+                                    Text {
+                                        anchors.horizontalCenter: parent.horizontalCenter
+                                        text: "Units Trained: " + model.unitsTrained
+                                        color: "#F5F5DC"
+                                        font.family: "serif"
+                                        font.pointSize: 13
+                                        horizontalAlignment: Text.AlignHCenter
+                                    }
+
+                                    Text {
+                                        anchors.horizontalCenter: parent.horizontalCenter
+                                        text: "Villages: " + model.villages
+                                        color: "#F5F5DC"
+                                        font.family: "serif"
+                                        font.pointSize: 13
+                                        horizontalAlignment: Text.AlignHCenter
+                                    }
+
+                                    Text {
+                                        anchors.horizontalCenter: parent.horizontalCenter
+                                        text: "Play Time: " + model.playTime
+                                        color: "#F5F5DC"
+                                        font.family: "serif"
+                                        font.pointSize: 13
+                                        horizontalAlignment: Text.AlignHCenter
+                                    }
+
+                                }
+
+                                Item {
+                                    height: 8
+                                }
+
+                                Rectangle {
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    width: parent.width * 0.9
+                                    height: 2
+                                    color: "#8B7355"
                                 }
 
                                 Text {
                                     anchors.horizontalCenter: parent.horizontalCenter
-                                    text: "Losses: " + model.losses
-                                    color: "#F5F5DC"
+                                    text: "SCORE"
+                                    color: "#FFD700"
                                     font.family: "serif"
-                                    font.pointSize: 14
+                                    font.pointSize: 15
+                                    font.bold: true
                                     horizontalAlignment: Text.AlignHCenter
+                                    style: Text.Raised
+                                    styleColor: "#000000"
                                 }
 
                                 Text {
                                     anchors.horizontalCenter: parent.horizontalCenter
-                                    text: "Units Trained: " + model.unitsTrained
-                                    color: "#F5F5DC"
+                                    text: model.score
+                                    color: "#FFD700"
                                     font.family: "serif"
-                                    font.pointSize: 14
+                                    font.pointSize: 22
+                                    font.bold: true
                                     horizontalAlignment: Text.AlignHCenter
-                                }
-
-                                Text {
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                    text: "Villages: " + model.villages
-                                    color: "#F5F5DC"
-                                    font.family: "serif"
-                                    font.pointSize: 14
-                                    horizontalAlignment: Text.AlignHCenter
-                                }
-
-                                Text {
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                    text: "Play Time: " + model.playTime
-                                    color: "#F5F5DC"
-                                    font.family: "serif"
-                                    font.pointSize: 14
-                                    horizontalAlignment: Text.AlignHCenter
+                                    style: Text.Raised
+                                    styleColor: "#000000"
                                 }
 
                             }
 
-                            Item {
-                                height: 10
-                            }
+                            Canvas {
+                                id: tornEdge
 
-                            Rectangle {
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                width: parent.width * 0.8
-                                height: 2
-                                color: "#8B7355"
-                            }
-
-                            Text {
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                text: "SCORE"
-                                color: "#FFD700"
-                                font.family: "serif"
-                                font.pointSize: 16
-                                font.bold: true
-                                horizontalAlignment: Text.AlignHCenter
-                                style: Text.Raised
-                                styleColor: "#000000"
-                            }
-
-                            Text {
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                text: model.score
-                                color: "#FFD700"
-                                font.family: "serif"
-                                font.pointSize: 24
-                                font.bold: true
-                                horizontalAlignment: Text.AlignHCenter
-                                style: Text.Raised
-                                styleColor: "#000000"
+                                visible: model.isLocalPlayer
+                                anchors.bottom: parent.bottom
+                                anchors.left: parent.left
+                                anchors.right: parent.right
+                                height: 25
+                                onPaint: {
+                                    var ctx = getContext("2d");
+                                    ctx.clearRect(0, 0, width, height);
+                                    ctx.fillStyle = model.bannerColor;
+                                    ctx.beginPath();
+                                    ctx.moveTo(0, 0);
+                                    for (var i = 0; i <= width; i += 8) {
+                                        var y = Math.random() * height;
+                                        ctx.lineTo(i, y);
+                                    }
+                                    ctx.lineTo(width, height);
+                                    ctx.lineTo(0, height);
+                                    ctx.closePath();
+                                    ctx.fill();
+                                }
                             }
 
                         }
 
-                        Canvas {
-                            id: tornEdge
+                        Rectangle {
+                            id: tassel1
 
-                            visible: model.isLocalPlayer
-                            anchors.fill: parent
-                            onPaint: {
-                                var ctx = getContext("2d");
-                                ctx.clearRect(0, 0, width, height);
-                                ctx.strokeStyle = "#3a2a1a";
-                                ctx.lineWidth = 2;
-                                ctx.beginPath();
-                                for (var i = 0; i < width; i += 10) {
-                                    var y = height - 5 + Math.random() * 10;
-                                    if (i === 0)
-                                        ctx.moveTo(i, y);
-                                    else
-                                        ctx.lineTo(i, y);
-                                }
-                                ctx.stroke();
+                            anchors.bottom: banner.bottom
+                            anchors.bottomMargin: -15
+                            anchors.left: banner.left
+                            anchors.leftMargin: banner.width * 0.3
+                            width: 3
+                            height: 20
+                            color: "#8B7355"
+
+                            Rectangle {
+                                anchors.bottom: parent.bottom
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                width: 8
+                                height: 8
+                                radius: 4
+                                color: "#FFD700"
                             }
+
+                        }
+
+                        Rectangle {
+                            id: tassel2
+
+                            anchors.bottom: banner.bottom
+                            anchors.bottomMargin: -15
+                            anchors.right: banner.right
+                            anchors.rightMargin: banner.width * 0.3
+                            width: 3
+                            height: 20
+                            color: "#8B7355"
+
+                            Rectangle {
+                                anchors.bottom: parent.bottom
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                width: 8
+                                height: 8
+                                radius: 4
+                                color: "#FFD700"
+                            }
+
                         }
 
                     }
@@ -290,7 +396,7 @@ Rectangle {
                         visible: model.isLocalPlayer
                         anchors.left: parent.left
                         anchors.top: parent.top
-                        anchors.topMargin: 10
+                        anchors.topMargin: 25
                         anchors.leftMargin: -5
                         width: 80
                         height: 30
