@@ -131,6 +131,10 @@ public:
   int playerTroopCount() const;
   int maxTroopsPerPlayer() const { return m_level.maxTroopsPerPlayer; }
   int enemyTroopsDefeated() const;
+  
+  // Global statistics access
+  Q_INVOKABLE QVariantMap getPlayerStats(int ownerId) const;
+  
   int selectedPlayerId() const { return m_selectedPlayerId; }
   void setSelectedPlayerId(int id) {
     if (m_selectedPlayerId != id) {
