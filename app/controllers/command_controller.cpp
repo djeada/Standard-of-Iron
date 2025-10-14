@@ -199,8 +199,12 @@ void CommandController::recruitNearSelected(const QString &unitType,
   if (sel.empty())
     return;
 
-  Game::Systems::ProductionService::startProductionForFirstSelectedBarracks(
+  auto result = Game::Systems::ProductionService::startProductionForFirstSelectedBarracks(
       *m_world, sel, localOwnerId, unitType.toStdString());
+  
+  if (result == Game::Systems::ProductionResult::GlobalTroopLimitReached) {
+    emit troopLimitReached();
+  }
 }
 
 void CommandController::resetMovement(Engine::Core::Entity *entity) {
