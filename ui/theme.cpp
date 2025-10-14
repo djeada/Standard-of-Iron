@@ -44,3 +44,13 @@ QVariantList Theme::factions() const {
   factionsData.append(QVariantMap{{"id", 3}, {"name", "Barbarians"}});
   return factionsData;
 }
+
+QVariantMap Theme::unitIcons() const {
+  QVariantMap icons;
+  icons["archer"] = "🏹";
+  icons["warrior"] = "⚔️";
+  icons["spearman"] = "🗡️";
+  icons["cavalry"] = "🐎";
+  icons["default"] = "👤";
+  return icons;
+}
