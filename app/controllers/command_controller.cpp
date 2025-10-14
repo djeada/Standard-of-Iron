@@ -211,4 +211,4 @@ void CommandController::resetMovement(Engine::Core::Entity *entity) {
   App::Utils::resetMovement(entity);
 }
 
-} // namespace App::Controllers
+} 

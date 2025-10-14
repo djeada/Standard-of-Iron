@@ -14,7 +14,7 @@ public:
   
   static QVariantList availableMaps();
   
-  // Asynchronous progressive loading
+  
   Q_INVOKABLE void loadMapsAsync();
   
   bool isLoading() const { return m_loading; }

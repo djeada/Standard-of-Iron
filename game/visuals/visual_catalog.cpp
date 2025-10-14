@@ -95,4 +95,4 @@ void applyToRenderable(const VisualDef &def,
   }
 }
 
-} // namespace Game::Visuals
+} 
