@@ -38,24 +38,25 @@ void ProductionSystem::update(Engine::Core::World *world, float deltaTime) {
           continue;
         }
 
-        QVector3D spawnPos;
-        if (prod->rallySet) {
-          spawnPos = QVector3D(prod->rallyX, 0.0f, prod->rallyZ);
-        } else {
-          float radius = 3.0f + 0.3f * float(prod->producedCount % 10);
-          float angle = 0.6f * float(prod->producedCount);
-          spawnPos = QVector3D(t->position.x + radius * std::cos(angle), 0.0f,
-                               t->position.z + radius * std::sin(angle));
-        }
+        float exitOffset = 2.5f + 0.2f * float(prod->producedCount % 5);
+        float exitAngle = 0.5f * float(prod->producedCount % 8);
+        QVector3D exitPos =
+            QVector3D(t->position.x + exitOffset * std::cos(exitAngle), 0.0f,
+                      t->position.z + exitOffset * std::sin(exitAngle));
+
         auto reg = Game::Map::MapTransformer::getFactoryRegistry();
         if (reg) {
           Game::Units::SpawnParams sp;
-          sp.position = spawnPos;
+          sp.position = exitPos;
           sp.playerId = u->ownerId;
           sp.unitType = prod->productType;
           sp.aiControlled =
               e->hasComponent<Engine::Core::AIControlledComponent>();
-          reg->create(prod->productType, *world, sp);
+          auto unit = reg->create(prod->productType, *world, sp);
+
+          if (unit && prod->rallySet) {
+            unit->moveTo(prod->rallyX, prod->rallyZ);
+          }
         }
 
         prod->producedCount += 1;
