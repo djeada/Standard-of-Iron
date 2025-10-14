@@ -1,6 +1,6 @@
 #include "world.h"
 #include "../systems/owner_registry.h"
-#include "../units/troop_config.h"
+#include "../systems/troop_count_registry.h"
 #include "component.h"
 
 namespace Engine::Core {
@@ -103,21 +103,7 @@ std::vector<Entity *> World::getEnemyUnits(int ownerId) const {
 }
 
 int World::countTroopsForPlayer(int ownerId) const {
-  int count = 0;
-  for (auto &[id, entity] : m_entities) {
-    auto *unit = entity->getComponent<UnitComponent>();
-    if (!unit || unit->ownerId != ownerId)
-      continue;
-    
-    if (unit->unitType == "barracks")
-      continue;
-    
-    int individualsPerUnit =
-        Game::Units::TroopConfig::instance().getIndividualsPerUnit(
-            unit->unitType);
-    count += individualsPerUnit;
-  }
-  return count;
+  return Game::Systems::TroopCountRegistry::instance().getTroopCount(ownerId);
 }
 
 } // namespace Engine::Core
