@@ -49,6 +49,9 @@ class PickingService;
 class VictoryService;
 class CameraService;
 } // namespace Systems
+namespace Map {
+class MapCatalog;
+} // namespace Map
 } // namespace Game
 
 namespace App {
