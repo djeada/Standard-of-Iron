@@ -17,6 +17,7 @@ Item {
     signal speedChanged(real speed)
     signal commandModeChanged(string mode)
     signal recruit(string unitType)
+    signal returnToMainMenuRequested()
 
     Connections {
         function onSelectedUnitsChanged() {
@@ -116,6 +117,10 @@ Item {
 
     HUDVictory {
         anchors.fill: parent
+        
+        onReturnToMainMenuRequested: {
+            hud.returnToMainMenuRequested();
+        }
     }
 
 }

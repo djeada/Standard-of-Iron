@@ -11,6 +11,7 @@ Rectangle {
 
     property bool isVictory: (typeof game !== 'undefined' && game.victoryState === "victory")
     property var onClose: null
+    property var onReturnToMainMenu: null
 
     function show() {
         visible = true;
@@ -21,6 +22,13 @@ Rectangle {
         visible = false;
         if (onClose) {
             onClose();
+        }
+    }
+    
+    function returnToMainMenu() {
+        visible = false;
+        if (onReturnToMainMenu) {
+            onReturnToMainMenu();
         }
     }
 
@@ -95,7 +103,7 @@ Rectangle {
     }
 
     function getBannerColor(ownerId, isLocal, isAI, aiIndex) {
-        var colors = ["#DC143C", "#228B22", "#FFD700", "#4169E1", "#9370DB", "#32CD32"];
+        var colors = ["#DC143C", "#228B22", "#C9A200", "#4169E1", "#9370DB", "#32CD32"];
         if (isLocal)
             return colors[0];
         if (isAI) {
@@ -149,6 +157,16 @@ Rectangle {
                     width: 220
                     height: 420
                     color: Qt.rgba(0, 0, 0, 0)
+                    
+                    Rectangle {
+                        id: dropShadow
+                        anchors.fill: parent
+                        anchors.topMargin: 8
+                        anchors.leftMargin: 6
+                        color: Qt.rgba(0, 0, 0, 0.5)
+                        radius: 4
+                        z: -1
+                    }
 
                     Item {
                         anchors.fill: parent
@@ -243,7 +261,7 @@ Rectangle {
                                     horizontalAlignment: Text.AlignHCenter
                                     wrapMode: Text.WordWrap
                                     width: parent.width
-                                    style: Text.Raised
+                                    style: Text.Outline
                                     styleColor: "#000000"
                                 }
                                 
@@ -263,7 +281,7 @@ Rectangle {
                                         font.family: "serif"
                                         font.pointSize: 11
                                         font.bold: true
-                                        style: Text.Raised
+                                        style: Text.Outline
                                         styleColor: "#000000"
                                     }
                                 }
@@ -287,7 +305,7 @@ Rectangle {
                                         font.family: "serif"
                                         font.pointSize: 13
                                         horizontalAlignment: Text.AlignHCenter
-                                        style: Text.Raised
+                                        style: Text.Outline
                                         styleColor: "#000000"
                                     }
 
@@ -298,7 +316,7 @@ Rectangle {
                                         font.family: "serif"
                                         font.pointSize: 13
                                         horizontalAlignment: Text.AlignHCenter
-                                        style: Text.Raised
+                                        style: Text.Outline
                                         styleColor: "#000000"
                                     }
 
@@ -309,7 +327,7 @@ Rectangle {
                                         font.family: "serif"
                                         font.pointSize: 13
                                         horizontalAlignment: Text.AlignHCenter
-                                        style: Text.Raised
+                                        style: Text.Outline
                                         styleColor: "#000000"
                                     }
 
@@ -320,7 +338,7 @@ Rectangle {
                                         font.family: "serif"
                                         font.pointSize: 13
                                         horizontalAlignment: Text.AlignHCenter
-                                        style: Text.Raised
+                                        style: Text.Outline
                                         styleColor: "#000000"
                                     }
 
@@ -331,7 +349,7 @@ Rectangle {
                                         font.family: "serif"
                                         font.pointSize: 13
                                         horizontalAlignment: Text.AlignHCenter
-                                        style: Text.Raised
+                                        style: Text.Outline
                                         styleColor: "#000000"
                                     }
 
@@ -356,7 +374,7 @@ Rectangle {
                                     font.pointSize: 15
                                     font.bold: true
                                     horizontalAlignment: Text.AlignHCenter
-                                    style: Text.Raised
+                                    style: Text.Outline
                                     styleColor: "#000000"
                                 }
 
@@ -368,7 +386,7 @@ Rectangle {
                                     font.pointSize: 22
                                     font.bold: true
                                     horizontalAlignment: Text.AlignHCenter
-                                    style: Text.Raised
+                                    style: Text.Outline
                                     styleColor: "#000000"
                                 }
 
@@ -485,7 +503,7 @@ Rectangle {
             padding: 12
             focusPolicy: Qt.NoFocus
             onClicked: {
-                summaryOverlay.hide();
+                summaryOverlay.returnToMainMenu();
             }
         }
 
