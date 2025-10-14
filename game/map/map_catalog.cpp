@@ -125,7 +125,8 @@ void MapCatalog::loadMapsAsync() {
     return;
   }
   
-  // Start loading the first map
+  // Start loading the first map immediately
+  // Subsequent maps are loaded with a small delay to keep UI responsive
   QTimer::singleShot(0, this, &MapCatalog::loadNextMap);
 }
 
@@ -144,10 +145,12 @@ void MapCatalog::loadNextMap() {
   QVariantMap entry = loadSingleMap(path);
   if (!entry.isEmpty()) {
     m_maps.append(entry);
-    emit mapLoaded(entry);
+    emit mapLoaded(entry);  // Notify that a new map is available
   }
+  // Note: Failed/invalid maps are silently skipped
   
   // Schedule next map load with a small delay to keep UI responsive
+  // This allows the event loop to process UI updates between map loads
   if (!m_pendingFiles.isEmpty()) {
     QTimer::singleShot(10, this, &MapCatalog::loadNextMap);
   } else {
