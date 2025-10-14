@@ -45,7 +45,7 @@ void CameraService::yaw(Render::GL::Camera &camera, float degrees) {
 }
 
 void CameraService::orbit(Render::GL::Camera &camera, float yawDeg,
-                           float pitchDeg) {
+                          float pitchDeg) {
   if (!std::isfinite(yawDeg) || !std::isfinite(pitchDeg)) {
     return;
   }
@@ -109,8 +109,8 @@ void CameraService::snapToEntity(Render::GL::Camera &camera,
   if (auto *t = entity.getComponent<Engine::Core::TransformComponent>()) {
     QVector3D center(t->position.x, t->position.y, t->position.z);
     const auto &camConfig = Game::GameConfig::instance().camera();
-    camera.setRTSView(center, camConfig.defaultDistance,
-                      camConfig.defaultPitch, camConfig.defaultYaw);
+    camera.setRTSView(center, camConfig.defaultDistance, camConfig.defaultPitch,
+                      camConfig.defaultYaw);
   }
 }
 

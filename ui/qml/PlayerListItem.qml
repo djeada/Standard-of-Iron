@@ -1,15 +1,13 @@
-
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 
 Rectangle {
     id: root
-    width: parent ? parent.width : 400
-    height: 48
-    radius: 6
 
-    property var colors: ({})
-    property var playerData: ({})
+    property var colors: ({
+    })
+    property var playerData: ({
+    })
     property var teamIcons: []
     property bool canRemove: true
 
@@ -18,6 +16,9 @@ Rectangle {
     signal teamClicked()
     signal factionClicked()
 
+    width: parent ? parent.width : 400
+    height: 48
+    radius: 6
     color: colors.cardBaseB
     border.color: colors.thumbBr
     border.width: 1
@@ -27,11 +28,10 @@ Rectangle {
         anchors.margins: 8
         spacing: 10
 
-        
         Item {
             width: 80
             height: parent.height
-            
+
             Text {
                 anchors.centerIn: parent
                 text: playerData.playerName || ""
@@ -39,9 +39,9 @@ Rectangle {
                 font.pixelSize: 14
                 font.bold: playerData.isHuman || false
             }
+
         }
 
-        
         Rectangle {
             width: 90
             height: parent.height
@@ -71,9 +71,9 @@ Rectangle {
                 text: "Click to change color"
                 delay: 500
             }
+
         }
 
-        
         Rectangle {
             width: 50
             height: parent.height
@@ -89,8 +89,10 @@ Rectangle {
                 Text {
                     anchors.horizontalCenter: parent.horizontalCenter
                     text: {
-                        if (!playerData.teamId || !teamIcons || teamIcons.length === 0) return "●"
-                        return teamIcons[(playerData.teamId - 1) % teamIcons.length]
+                        if (!playerData.teamId || !teamIcons || teamIcons.length === 0)
+                            return "●";
+
+                        return teamIcons[(playerData.teamId - 1) % teamIcons.length];
                     }
                     color: colors.textMain
                     font.pixelSize: 18
@@ -102,6 +104,7 @@ Rectangle {
                     color: colors.textSubLite
                     font.pixelSize: 9
                 }
+
             }
 
             MouseArea {
@@ -116,9 +119,9 @@ Rectangle {
                 text: "Click to change team"
                 delay: 500
             }
+
         }
 
-        
         Rectangle {
             width: 140
             height: parent.height
@@ -126,7 +129,7 @@ Rectangle {
             color: colors.cardBaseA
             border.color: colors.thumbBr
             border.width: 1
-            opacity: 0.7 
+            opacity: 0.7
 
             Text {
                 anchors.centerIn: parent
@@ -140,19 +143,18 @@ Rectangle {
 
             MouseArea {
                 anchors.fill: parent
-                cursorShape: Qt.ArrowCursor 
+                cursorShape: Qt.ArrowCursor
                 enabled: false
                 onClicked: root.factionClicked()
             }
+
         }
 
-        
         Item {
             width: Math.max(10, parent.parent.width - 432)
             height: parent.height
         }
 
-        
         Rectangle {
             width: 32
             height: parent.height
@@ -161,7 +163,6 @@ Rectangle {
             border.color: colors.dangerColor
             border.width: 1
             visible: root.canRemove && !playerData.isHuman
-            Behavior on color { ColorAnimation { duration: 150 } }
 
             Text {
                 anchors.centerIn: parent
@@ -173,6 +174,7 @@ Rectangle {
 
             MouseArea {
                 id: removeMouseArea
+
                 anchors.fill: parent
                 hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
@@ -184,6 +186,16 @@ Rectangle {
                 text: "Remove player"
                 delay: 300
             }
+
+            Behavior on color {
+                ColorAnimation {
+                    duration: 150
+                }
+
+            }
+
         }
+
     }
+
 }

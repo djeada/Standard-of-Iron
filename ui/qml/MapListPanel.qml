@@ -1,51 +1,63 @@
-
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 
 Item {
     id: root
-    anchors.fill: parent
 
     property var mapsModel: []
     property int currentIndex: 0
-    property var colors: ({})
+    property var colors: ({
+    })
 
     signal mapSelected(int index)
     signal mapDoubleClicked()
 
     function field(obj, key) {
-        return (obj && obj[key] !== undefined) ? String(obj[key]) : ""
+        return (obj && obj[key] !== undefined) ? String(obj[key]) : "";
     }
 
-    
+    anchors.fill: parent
+
     Text {
         id: title
+
         text: "Maps"
         color: colors.textMain
         font.pixelSize: 18
         font.bold: true
+
         anchors {
             top: parent.top
             left: parent.left
             right: parent.right
         }
+
     }
 
     Text {
         id: countLabel
+
         text: "(" + (list.count || 0) + ")"
         color: colors.textSubLite
         font.pixelSize: 12
+
         anchors {
             left: title.right
             leftMargin: 8
             verticalCenter: title.verticalCenter
         }
+
     }
 
-    
     Rectangle {
         id: listFrame
+
+        color: "transparent"
+        radius: 10
+        border.color: colors.panelBr
+        border.width: 1
+        clip: true
+
         anchors {
             top: title.bottom
             topMargin: 12
@@ -53,14 +65,10 @@ Item {
             right: parent.right
             bottom: parent.bottom
         }
-        color: "transparent"
-        radius: 10
-        border.color: colors.panelBr
-        border.width: 1
-        clip: true
 
         ListView {
             id: list
+
             anchors.fill: parent
             anchors.margins: 8
             model: root.mapsModel
@@ -69,15 +77,31 @@ Item {
             currentIndex: root.currentIndex
             keyNavigationWraps: false
             boundsBehavior: Flickable.StopAtBounds
-
             onCurrentIndexChanged: {
-                root.currentIndex = currentIndex
-                if (currentIndex >= 0) {
-                    root.mapSelected(currentIndex)
+                root.currentIndex = currentIndex;
+                if (currentIndex >= 0)
+                    root.mapSelected(currentIndex);
+
+            }
+            highlightMoveDuration: 120
+            highlightFollowsCurrentItem: true
+
+            Item {
+                anchors.fill: parent
+                visible: list.count === 0
+
+                Text {
+                    text: "No maps available"
+                    color: colors.textSub
+                    font.pixelSize: 14
+                    anchors.centerIn: parent
                 }
+
             }
 
-            ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
+            ScrollBar.vertical: ScrollBar {
+                policy: ScrollBar.AsNeeded
+            }
 
             highlight: Rectangle {
                 color: "transparent"
@@ -85,8 +109,6 @@ Item {
                 border.color: colors.selectedBr
                 border.width: 1
             }
-            highlightMoveDuration: 120
-            highlightFollowsCurrentItem: true
 
             delegate: Item {
                 width: list.width
@@ -94,6 +116,7 @@ Item {
 
                 MouseArea {
                     id: rowMouse
+
                     anchors.fill: parent
                     hoverEnabled: true
                     acceptedButtons: Qt.LeftButton
@@ -106,29 +129,26 @@ Item {
                     anchors.fill: parent
                     radius: 8
                     clip: true
-                    color: rowMouse.containsPress ? colors.hoverBg
-                            : (index === list.currentIndex ? colors.selectedBg 
-                            : (rowMouse.containsMouse ? Qt.rgba(1, 1, 1, 0.03) : "transparent"))
+                    color: rowMouse.containsPress ? colors.hoverBg : (index === list.currentIndex ? colors.selectedBg : (rowMouse.containsMouse ? Qt.rgba(1, 1, 1, 0.03) : "transparent"))
                     border.width: 1
-                    border.color: (index === list.currentIndex) ? colors.selectedBr 
-                            : (rowMouse.containsMouse ? Qt.rgba(1, 1, 1, 0.15) : colors.thumbBr)
-                    Behavior on color { ColorAnimation { duration: 160 } }
-                    Behavior on border.color { ColorAnimation { duration: 160 } }
+                    border.color: (index === list.currentIndex) ? colors.selectedBr : (rowMouse.containsMouse ? Qt.rgba(1, 1, 1, 0.15) : colors.thumbBr)
 
                     Rectangle {
                         id: thumbWrap
+
                         width: 60
                         height: 42
                         radius: 6
                         color: "#031314"
                         border.color: colors.thumbBr
                         border.width: 1
+                        clip: true
+
                         anchors {
                             left: parent.left
                             leftMargin: 10
                             verticalCenter: parent.verticalCenter
                         }
-                        clip: true
 
                         Image {
                             anchors.fill: parent
@@ -137,9 +157,12 @@ Item {
                             fillMode: Image.PreserveAspectCrop
                             visible: status === Image.Ready
                         }
+
                     }
 
                     Column {
+                        spacing: 4
+
                         anchors {
                             left: thumbWrap.right
                             leftMargin: 10
@@ -147,7 +170,6 @@ Item {
                             rightMargin: 10
                             verticalCenter: parent.verticalCenter
                         }
-                        spacing: 4
 
                         Text {
                             text: (typeof name !== "undefined") ? String(name) : ""
@@ -165,21 +187,29 @@ Item {
                             elide: Text.ElideRight
                             width: parent.width
                         }
+
                     }
+
+                    Behavior on color {
+                        ColorAnimation {
+                            duration: 160
+                        }
+
+                    }
+
+                    Behavior on border.color {
+                        ColorAnimation {
+                            duration: 160
+                        }
+
+                    }
+
                 }
+
             }
 
-            
-            Item {
-                anchors.fill: parent
-                visible: list.count === 0
-                Text {
-                    text: "No maps available"
-                    color: colors.textSub
-                    font.pixelSize: 14
-                    anchors.centerIn: parent
-                }
-            }
         }
+
     }
+
 }
