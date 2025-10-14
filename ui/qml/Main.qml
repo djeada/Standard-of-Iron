@@ -62,6 +62,9 @@ ApplicationWindow {
 
             gameViewItem.forceActiveFocus();
         }
+        onReturnToMainMenuRequested: {
+            mainWindow.menuVisible = true;
+        }
     }
 
     Rectangle {
