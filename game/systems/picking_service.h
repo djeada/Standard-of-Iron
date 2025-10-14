@@ -33,6 +33,10 @@ public:
 
   bool screenToGround(const Render::GL::Camera &camera, int viewW, int viewH,
                       const QPointF &screenPt, QVector3D &outWorld) const;
+  bool screenToGround(const QPointF &screenPt, const Render::GL::Camera &camera,
+                      int viewW, int viewH, QVector3D &outWorld) const {
+    return screenToGround(camera, viewW, viewH, screenPt, outWorld);
+  }
   bool worldToScreen(const Render::GL::Camera &camera, int viewW, int viewH,
                      const QVector3D &world, QPointF &outScreen) const;
 
