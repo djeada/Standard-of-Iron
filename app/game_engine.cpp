@@ -390,6 +390,29 @@ void GameEngine::ensureInitialized() {
 
 int GameEngine::enemyTroopsDefeated() const { return m_enemyTroopsDefeated; }
 
+QVariantMap GameEngine::getPlayerStats(int ownerId) const {
+  QVariantMap result;
+  
+  auto &statsRegistry = Game::Systems::GlobalStatsRegistry::instance();
+  const auto *stats = statsRegistry.getStats(ownerId);
+  
+  if (stats) {
+    result["troopsRecruited"] = stats->troopsRecruited;
+    result["enemiesKilled"] = stats->enemiesKilled;
+    result["barracksOwned"] = stats->barracksOwned;
+    result["playTimeSec"] = stats->playTimeSec;
+    result["gameEnded"] = stats->gameEnded;
+  } else {
+    result["troopsRecruited"] = 0;
+    result["enemiesKilled"] = 0;
+    result["barracksOwned"] = 0;
+    result["playTimeSec"] = 0.0f;
+    result["gameEnded"] = false;
+  }
+  
+  return result;
+}
+
 void GameEngine::update(float dt) {
 
   if (m_runtime.loading) {
