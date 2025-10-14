@@ -6,6 +6,7 @@
 #include "arrow_system.h"
 #include "building_collision_registry.h"
 #include "command_service.h"
+#include "owner_registry.h"
 #include <algorithm>
 #include <cmath>
 #include <limits>
@@ -33,21 +34,87 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
 
     if (attackerUnit->health <= 0)
       continue;
+
+    if (attackerAtk && attackerAtk->inMeleeLock) {
+      auto *lockTarget = world->getEntity(attackerAtk->meleeLockTargetId);
+      if (!lockTarget) {
+
+        attackerAtk->inMeleeLock = false;
+        attackerAtk->meleeLockTargetId = 0;
+      } else {
+        auto *lockTargetUnit =
+            lockTarget->getComponent<Engine::Core::UnitComponent>();
+        if (!lockTargetUnit || lockTargetUnit->health <= 0) {
+
+          attackerAtk->inMeleeLock = false;
+          attackerAtk->meleeLockTargetId = 0;
+        } else {
+
+          auto *attT = attackerTransform;
+          auto *tgtT =
+              lockTarget->getComponent<Engine::Core::TransformComponent>();
+          if (attT && tgtT) {
+            float dx = tgtT->position.x - attT->position.x;
+            float dz = tgtT->position.z - attT->position.z;
+            float dist = std::sqrt(dx * dx + dz * dz);
+
+            const float IDEAL_MELEE_DISTANCE = 0.6f;
+            const float MAX_MELEE_SEPARATION = 0.9f;
+
+            if (dist > MAX_MELEE_SEPARATION) {
+              float pullAmount =
+                  (dist - IDEAL_MELEE_DISTANCE) * 0.3f * deltaTime * 5.0f;
+
+              if (dist > 0.001f) {
+                QVector3D direction(dx / dist, 0.0f, dz / dist);
+
+                attT->position.x += direction.x() * pullAmount;
+                attT->position.z += direction.z() * pullAmount;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    if (attackerAtk && attackerAtk->inMeleeLock &&
+        attackerAtk->meleeLockTargetId != 0) {
+      auto *lockTarget = world->getEntity(attackerAtk->meleeLockTargetId);
+      if (lockTarget) {
+
+        auto *attackTarget =
+            attacker->getComponent<Engine::Core::AttackTargetComponent>();
+        if (!attackTarget) {
+          attackTarget =
+              attacker->addComponent<Engine::Core::AttackTargetComponent>();
+        }
+        if (attackTarget) {
+          attackTarget->targetId = attackerAtk->meleeLockTargetId;
+          attackTarget->shouldChase = false;
+        }
+      }
+    }
+
     float range = 2.0f;
     int damage = 10;
     float cooldown = 1.0f;
     float *tAccum = nullptr;
     float tmpAccum = 0.0f;
+
     if (attackerAtk) {
-      range = std::max(0.1f, attackerAtk->range);
-      damage = std::max(0, attackerAtk->damage);
-      cooldown = std::max(0.05f, attackerAtk->cooldown);
+
+      updateCombatMode(attacker, world, attackerAtk);
+
+      range = attackerAtk->getCurrentRange();
+      damage = attackerAtk->getCurrentDamage();
+      cooldown = attackerAtk->getCurrentCooldown();
       attackerAtk->timeSinceLast += deltaTime;
       tAccum = &attackerAtk->timeSinceLast;
     } else {
       tmpAccum += deltaTime;
       tAccum = &tmpAccum;
     }
+
     if (*tAccum < cooldown) {
       continue;
     }
@@ -62,8 +129,12 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
       if (target) {
         auto *targetUnit = target->getComponent<Engine::Core::UnitComponent>();
 
+        auto &ownerRegistry = Game::Systems::OwnerRegistry::instance();
+        bool isAlly =
+            ownerRegistry.areAllies(attackerUnit->ownerId, targetUnit->ownerId);
+
         if (targetUnit && targetUnit->health > 0 &&
-            targetUnit->ownerId != attackerUnit->ownerId) {
+            targetUnit->ownerId != attackerUnit->ownerId && !isAlly) {
 
           if (isInRange(attacker, target, range)) {
             bestTarget = target;
@@ -185,6 +256,8 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
 
     if (!bestTarget && !attackTarget) {
 
+      auto &ownerRegistry = Game::Systems::OwnerRegistry::instance();
+
       for (auto target : units) {
         if (target == attacker) {
           continue;
@@ -196,6 +269,11 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
         }
 
         if (targetUnit->ownerId == attackerUnit->ownerId) {
+          continue;
+        }
+
+        if (ownerRegistry.areAllies(attackerUnit->ownerId,
+                                    targetUnit->ownerId)) {
           continue;
         }
 
@@ -245,17 +323,64 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
         auto tgtT =
             bestTarget->getComponent<Engine::Core::TransformComponent>();
         auto attU = attacker->getComponent<Engine::Core::UnitComponent>();
-        QVector3D aPos(attT->position.x, attT->position.y, attT->position.z);
-        QVector3D tPos(tgtT->position.x, tgtT->position.y, tgtT->position.z);
-        QVector3D dir = (tPos - aPos).normalized();
 
-        QVector3D start = aPos + QVector3D(0.0f, 0.6f, 0.0f) + dir * 0.35f;
-        QVector3D end = tPos + QVector3D(0.5f, 0.5f, 0.0f);
-        QVector3D color = attU ? Game::Visuals::teamColorForOwner(attU->ownerId)
-                               : QVector3D(0.8f, 0.9f, 1.0f);
-        arrowSys->spawnArrow(start, end, color, 14.0f);
+        if (!attackerAtk ||
+            attackerAtk->currentMode !=
+                Engine::Core::AttackComponent::CombatMode::Melee) {
+          QVector3D aPos(attT->position.x, attT->position.y, attT->position.z);
+          QVector3D tPos(tgtT->position.x, tgtT->position.y, tgtT->position.z);
+          QVector3D dir = (tPos - aPos).normalized();
+
+          QVector3D start = aPos + QVector3D(0.0f, 0.6f, 0.0f) + dir * 0.35f;
+          QVector3D end = tPos + QVector3D(0.5f, 0.5f, 0.0f);
+          QVector3D color =
+              attU ? Game::Visuals::teamColorForOwner(attU->ownerId)
+                   : QVector3D(0.8f, 0.9f, 1.0f);
+          arrowSys->spawnArrow(start, end, color, 14.0f);
+        }
       }
-      dealDamage(bestTarget, damage);
+
+      if (attackerAtk && attackerAtk->currentMode ==
+                             Engine::Core::AttackComponent::CombatMode::Melee) {
+
+        attackerAtk->inMeleeLock = true;
+        attackerAtk->meleeLockTargetId = bestTarget->getId();
+
+        auto *targetAtk =
+            bestTarget->getComponent<Engine::Core::AttackComponent>();
+        if (targetAtk) {
+          targetAtk->inMeleeLock = true;
+          targetAtk->meleeLockTargetId = attacker->getId();
+        }
+
+        auto *attT = attacker->getComponent<Engine::Core::TransformComponent>();
+        auto *tgtT =
+            bestTarget->getComponent<Engine::Core::TransformComponent>();
+        if (attT && tgtT) {
+          float dx = tgtT->position.x - attT->position.x;
+          float dz = tgtT->position.z - attT->position.z;
+          float dist = std::sqrt(dx * dx + dz * dz);
+
+          const float IDEAL_MELEE_DISTANCE = 0.6f;
+
+          if (dist > IDEAL_MELEE_DISTANCE + 0.1f) {
+
+            float moveAmount = (dist - IDEAL_MELEE_DISTANCE) * 0.5f;
+
+            if (dist > 0.001f) {
+              QVector3D direction(dx / dist, 0.0f, dz / dist);
+
+              attT->position.x += direction.x() * moveAmount;
+              attT->position.z += direction.z() * moveAmount;
+
+              tgtT->position.x -= direction.x() * moveAmount;
+              tgtT->position.z -= direction.z() * moveAmount;
+            }
+          }
+        }
+      }
+
+      dealDamage(world, bestTarget, damage);
       *tAccum = 0.0f;
     } else {
 
@@ -280,6 +405,7 @@ bool CombatSystem::isInRange(Engine::Core::Entity *attacker,
 
   float dx = targetTransform->position.x - attackerTransform->position.x;
   float dz = targetTransform->position.z - attackerTransform->position.z;
+  float dy = targetTransform->position.y - attackerTransform->position.y;
   float distanceSquared = dx * dx + dz * dz;
 
   float targetRadius = 0.0f;
@@ -297,10 +423,24 @@ bool CombatSystem::isInRange(Engine::Core::Entity *attacker,
 
   float effectiveRange = range + targetRadius;
 
-  return distanceSquared <= effectiveRange * effectiveRange;
+  if (distanceSquared > effectiveRange * effectiveRange) {
+    return false;
+  }
+
+  auto attackerAtk = attacker->getComponent<Engine::Core::AttackComponent>();
+  if (attackerAtk && attackerAtk->currentMode ==
+                         Engine::Core::AttackComponent::CombatMode::Melee) {
+    float heightDiff = std::abs(dy);
+    if (heightDiff > attackerAtk->maxHeightDifference) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
-void CombatSystem::dealDamage(Engine::Core::Entity *target, int damage) {
+void CombatSystem::dealDamage(Engine::Core::World *world,
+                              Engine::Core::Entity *target, int damage) {
   auto unit = target->getComponent<Engine::Core::UnitComponent>();
   if (unit) {
     unit->health = std::max(0, unit->health - damage);
@@ -311,6 +451,24 @@ void CombatSystem::dealDamage(Engine::Core::Entity *target, int damage) {
           Engine::Core::UnitDiedEvent(target->getId(), unit->ownerId,
                                       unit->unitType));
 
+      auto *targetAtk = target->getComponent<Engine::Core::AttackComponent>();
+      if (targetAtk && targetAtk->inMeleeLock &&
+          targetAtk->meleeLockTargetId != 0) {
+
+        if (world) {
+          auto *lockPartner = world->getEntity(targetAtk->meleeLockTargetId);
+          if (lockPartner) {
+            auto *partnerAtk =
+                lockPartner->getComponent<Engine::Core::AttackComponent>();
+            if (partnerAtk &&
+                partnerAtk->meleeLockTargetId == target->getId()) {
+              partnerAtk->inMeleeLock = false;
+              partnerAtk->meleeLockTargetId = 0;
+            }
+          }
+        }
+      }
+
       if (target->hasComponent<Engine::Core::BuildingComponent>()) {
         BuildingCollisionRegistry::instance().unregisterBuilding(
             target->getId());
@@ -320,6 +478,95 @@ void CombatSystem::dealDamage(Engine::Core::Entity *target, int damage) {
         r->visible = false;
       }
     }
+  }
+}
+
+void CombatSystem::updateCombatMode(Engine::Core::Entity *attacker,
+                                    Engine::Core::World *world,
+                                    Engine::Core::AttackComponent *attackComp) {
+  if (!attackComp) {
+    return;
+  }
+
+  if (attackComp->preferredMode !=
+      Engine::Core::AttackComponent::CombatMode::Auto) {
+    attackComp->currentMode = attackComp->preferredMode;
+    return;
+  }
+
+  auto attackerTransform =
+      attacker->getComponent<Engine::Core::TransformComponent>();
+  if (!attackerTransform) {
+    return;
+  }
+
+  auto attackerUnit = attacker->getComponent<Engine::Core::UnitComponent>();
+  if (!attackerUnit) {
+    return;
+  }
+
+  auto &ownerRegistry = Game::Systems::OwnerRegistry::instance();
+  auto units = world->getEntitiesWith<Engine::Core::UnitComponent>();
+
+  float closestEnemyDistSq = std::numeric_limits<float>::max();
+  float closestHeightDiff = 0.0f;
+
+  for (auto target : units) {
+    if (target == attacker) {
+      continue;
+    }
+
+    auto targetUnit = target->getComponent<Engine::Core::UnitComponent>();
+    if (!targetUnit || targetUnit->health <= 0) {
+      continue;
+    }
+
+    if (ownerRegistry.areAllies(attackerUnit->ownerId, targetUnit->ownerId)) {
+      continue;
+    }
+
+    auto targetTransform =
+        target->getComponent<Engine::Core::TransformComponent>();
+    if (!targetTransform) {
+      continue;
+    }
+
+    float dx = targetTransform->position.x - attackerTransform->position.x;
+    float dz = targetTransform->position.z - attackerTransform->position.z;
+    float dy = targetTransform->position.y - attackerTransform->position.y;
+    float distSq = dx * dx + dz * dz;
+
+    if (distSq < closestEnemyDistSq) {
+      closestEnemyDistSq = distSq;
+      closestHeightDiff = std::abs(dy);
+    }
+  }
+
+  if (closestEnemyDistSq == std::numeric_limits<float>::max()) {
+    if (attackComp->canRanged) {
+      attackComp->currentMode =
+          Engine::Core::AttackComponent::CombatMode::Ranged;
+    } else {
+      attackComp->currentMode =
+          Engine::Core::AttackComponent::CombatMode::Melee;
+    }
+    return;
+  }
+
+  float closestDist = std::sqrt(closestEnemyDistSq);
+
+  bool inMeleeRange =
+      attackComp->isInMeleeRange(closestDist, closestHeightDiff);
+  bool inRangedRange = attackComp->isInRangedRange(closestDist);
+
+  if (inMeleeRange && attackComp->canMelee) {
+    attackComp->currentMode = Engine::Core::AttackComponent::CombatMode::Melee;
+  } else if (inRangedRange && attackComp->canRanged) {
+    attackComp->currentMode = Engine::Core::AttackComponent::CombatMode::Ranged;
+  } else if (attackComp->canRanged) {
+    attackComp->currentMode = Engine::Core::AttackComponent::CombatMode::Ranged;
+  } else {
+    attackComp->currentMode = Engine::Core::AttackComponent::CombatMode::Melee;
   }
 }
 
