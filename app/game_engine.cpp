@@ -142,6 +142,12 @@ GameEngine::GameEngine() {
               }
             }
           });
+  
+  connect(m_commandController.get(),
+          &App::Controllers::CommandController::troopLimitReached,
+          [this]() {
+            setError("Maximum troop limit reached. Cannot produce more units.");
+          });
 
   connect(this, SIGNAL(selectedUnitsChanged()), m_selectedUnitsModel,
           SLOT(refresh()));

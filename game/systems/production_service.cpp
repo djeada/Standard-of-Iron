@@ -22,32 +22,32 @@ findFirstSelectedBarracks(Engine::Core::World &world,
   return nullptr;
 }
 
-bool ProductionService::startProductionForFirstSelectedBarracks(
+ProductionResult ProductionService::startProductionForFirstSelectedBarracks(
     Engine::Core::World &world,
     const std::vector<Engine::Core::EntityID> &selected, int ownerId,
     const std::string &unitType) {
   auto *e = findFirstSelectedBarracks(world, selected, ownerId);
   if (!e)
-    return false;
+    return ProductionResult::NoBarracks;
   auto *p = e->getComponent<Engine::Core::ProductionComponent>();
   if (!p)
     p = e->addComponent<Engine::Core::ProductionComponent>();
   if (!p)
-    return false;
+    return ProductionResult::NoBarracks;
   if (p->producedCount >= p->maxUnits)
-    return false;
+    return ProductionResult::PerBarracksLimitReached;
   if (p->inProgress)
-    return false;
+    return ProductionResult::AlreadyInProgress;
   
   int currentTroops = world.countTroopsForPlayer(ownerId);
   int maxTroops = Game::GameConfig::instance().getMaxTroopsPerPlayer();
   if (currentTroops >= maxTroops)
-    return false;
+    return ProductionResult::GlobalTroopLimitReached;
   
   p->productType = unitType;
   p->timeRemaining = p->buildTime;
   p->inProgress = true;
-  return true;
+  return ProductionResult::Success;
 }
 
 bool ProductionService::setRallyForFirstSelectedBarracks(
