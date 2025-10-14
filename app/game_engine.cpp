@@ -351,6 +351,13 @@ void GameEngine::onAreaSelected(qreal x1, qreal y1, qreal x2, qreal y2,
   }
 }
 
+void GameEngine::selectAllTroops() {
+  ensureInitialized();
+  if (m_selectionController) {
+    m_selectionController->selectAllPlayerTroops(m_runtime.localOwnerId);
+  }
+}
+
 void GameEngine::ensureInitialized() {
   QString error;
   Game::Map::WorldBootstrap::ensureInitialized(m_runtime.initialized,
