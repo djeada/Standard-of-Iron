@@ -124,6 +124,8 @@ struct AIContext {
   int visibleEnemyCount = 0;
   int enemyBuildingsCount = 0;
   float averageEnemyDistance = 0.0f;
+
+  int maxTroopsPerPlayer = 50;
 };
 
 struct AICommand {

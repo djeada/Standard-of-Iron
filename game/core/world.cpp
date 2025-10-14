@@ -101,4 +101,19 @@ std::vector<Entity *> World::getEnemyUnits(int ownerId) const {
   return result;
 }
 
+int World::countTroopsForPlayer(int ownerId) const {
+  int count = 0;
+  for (auto &[id, entity] : m_entities) {
+    auto *unit = entity->getComponent<UnitComponent>();
+    if (!unit || unit->ownerId != ownerId)
+      continue;
+    
+    if (unit->unitType == "barracks")
+      continue;
+    
+    count++;
+  }
+  return count;
+}
+
 } // namespace Engine::Core
