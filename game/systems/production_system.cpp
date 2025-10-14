@@ -40,8 +40,9 @@ void ProductionSystem::update(Engine::Core::World *world, float deltaTime) {
 
         float exitOffset = 2.5f + 0.2f * float(prod->producedCount % 5);
         float exitAngle = 0.5f * float(prod->producedCount % 8);
-        QVector3D exitPos = QVector3D(t->position.x + exitOffset * std::cos(exitAngle), 0.0f,
-                                      t->position.z + exitOffset * std::sin(exitAngle));
+        QVector3D exitPos =
+            QVector3D(t->position.x + exitOffset * std::cos(exitAngle), 0.0f,
+                      t->position.z + exitOffset * std::sin(exitAngle));
 
         auto reg = Game::Map::MapTransformer::getFactoryRegistry();
         if (reg) {
