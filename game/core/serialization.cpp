@@ -202,7 +202,8 @@ QJsonObject Serialization::serializeEntity(const Entity *entity) {
   if (const auto *capture = entity->getComponent<CaptureComponent>()) {
     QJsonObject captureObj;
     captureObj["capturingPlayerId"] = capture->capturingPlayerId;
-    captureObj["captureProgress"] = static_cast<double>(capture->captureProgress);
+    captureObj["captureProgress"] =
+        static_cast<double>(capture->captureProgress);
     captureObj["requiredTime"] = static_cast<double>(capture->requiredTime);
     captureObj["isBeingCaptured"] = capture->isBeingCaptured;
     entityObj["capture"] = captureObj;
