@@ -22,12 +22,11 @@ AISystem::AISystem() {
 
   m_behaviorRegistry.registerBehavior(std::make_unique<AI::GatherBehavior>());
 
-  m_buildingAttackedSubscription =
-      Engine::Core::ScopedEventSubscription<
-          Engine::Core::BuildingAttackedEvent>(
-          [this](const Engine::Core::BuildingAttackedEvent &event) {
-            this->onBuildingAttacked(event);
-          });
+  m_buildingAttackedSubscription = Engine::Core::ScopedEventSubscription<
+      Engine::Core::BuildingAttackedEvent>(
+      [this](const Engine::Core::BuildingAttackedEvent &event) {
+        this->onBuildingAttacked(event);
+      });
 
   initializeAIPlayers();
 }
