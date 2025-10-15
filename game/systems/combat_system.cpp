@@ -446,19 +446,29 @@ void CombatSystem::dealDamage(Engine::Core::World *world,
   if (unit) {
     unit->health = std::max(0, unit->health - damage);
 
-    if (unit->health <= 0) {
-
-      int killerOwnerId = 0;
-      if (attackerId != 0 && world) {
-        auto *attacker = world->getEntity(attackerId);
-        if (attacker) {
-          auto *attackerUnit =
-              attacker->getComponent<Engine::Core::UnitComponent>();
-          if (attackerUnit) {
-            killerOwnerId = attackerUnit->ownerId;
-          }
+    int attackerOwnerId = 0;
+    if (attackerId != 0 && world) {
+      auto *attacker = world->getEntity(attackerId);
+      if (attacker) {
+        auto *attackerUnit =
+            attacker->getComponent<Engine::Core::UnitComponent>();
+        if (attackerUnit) {
+          attackerOwnerId = attackerUnit->ownerId;
         }
       }
+    }
+
+    if (target->hasComponent<Engine::Core::BuildingComponent>() &&
+        unit->health > 0) {
+      Engine::Core::EventManager::instance().publish(
+          Engine::Core::BuildingAttackedEvent(
+              target->getId(), unit->ownerId, unit->unitType, attackerId,
+              attackerOwnerId, damage));
+    }
+
+    if (unit->health <= 0) {
+
+      int killerOwnerId = attackerOwnerId;
 
       Engine::Core::EventManager::instance().publish(
           Engine::Core::UnitDiedEvent(target->getId(), unit->ownerId,
