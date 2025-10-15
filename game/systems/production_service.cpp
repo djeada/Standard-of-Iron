@@ -2,6 +2,7 @@
 #include "../core/component.h"
 #include "../core/world.h"
 #include "../game_config.h"
+#include "../units/troop_config.h"
 
 namespace Game {
 namespace Systems {
@@ -34,12 +35,16 @@ ProductionResult ProductionService::startProductionForFirstSelectedBarracks(
     p = e->addComponent<Engine::Core::ProductionComponent>();
   if (!p)
     return ProductionResult::NoBarracks;
-  if (p->producedCount >= p->maxUnits)
+
+  int individualsPerUnit =
+      Game::Units::TroopConfig::instance().getIndividualsPerUnit(unitType);
+
+  if (p->producedCount + individualsPerUnit > p->maxUnits)
     return ProductionResult::PerBarracksLimitReached;
 
   int currentTroops = world.countTroopsForPlayer(ownerId);
   int maxTroops = Game::GameConfig::instance().getMaxTroopsPerPlayer();
-  if (currentTroops >= maxTroops)
+  if (currentTroops + individualsPerUnit > maxTroops)
     return ProductionResult::GlobalTroopLimitReached;
 
   const int maxQueueSize = 5;
