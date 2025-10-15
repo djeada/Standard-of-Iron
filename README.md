@@ -289,6 +289,54 @@ Maps can define custom victory and defeat conditions in their JSON files. Add a 
 }
 ```
 
+### Neutral (Unowned) Barracks
+Maps can include neutral barracks that start without an owner. These barracks are inactive until captured by a player.
+
+**To create a neutral barracks, omit the `playerId` field:**
+```json
+{
+  "type": "barracks",
+  "x": 50,
+  "z": 50,
+  "maxPopulation": 150
+}
+```
+
+**Properties of neutral barracks:**
+- Appear **gray/neutral** on the map
+- Do **not produce troops**
+- Do **not respond** to player or AI commands
+- Can be **captured** by players (capture mechanics handled separately)
+- AI systems automatically **skip** neutral barracks
+
+**Example map with neutral barracks:**
+```json
+"spawns": [
+  {
+    "type": "barracks",
+    "x": 30,
+    "z": 50,
+    "playerId": 1,
+    "maxPopulation": 100
+  },
+  {
+    "type": "barracks",
+    "x": 50,
+    "z": 50,
+    "maxPopulation": 150
+  },
+  {
+    "type": "barracks",
+    "x": 70,
+    "z": 50,
+    "playerId": 2,
+    "maxPopulation": 100
+  }
+]
+```
+
+In this example, the middle barracks starts neutral while players 1 and 2 each have their own barracks.
+
 ## Contributing
 
 We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines on:
