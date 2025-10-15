@@ -761,6 +761,8 @@ void CommandService::attackTarget(
       mv->goalY = desiredPos.z();
       mv->hasTarget = true;
       mv->path.clear();
+      mv->vx = 0.0f;
+      mv->vz = 0.0f;
     }
   }
 }
