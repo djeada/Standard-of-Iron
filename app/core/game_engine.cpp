@@ -1,9 +1,9 @@
 #include "game_engine.h"
 
-#include "controllers/action_vfx.h"
-#include "controllers/command_controller.h"
-#include "cursor_manager.h"
-#include "hover_tracker.h"
+#include "../controllers/action_vfx.h"
+#include "../controllers/command_controller.h"
+#include "../models/cursor_manager.h"
+#include "../models/hover_tracker.h"
 #include <QCoreApplication>
 #include <QCursor>
 #include <QDebug>
@@ -56,7 +56,7 @@
 #include "render/ground/stone_renderer.h"
 #include "render/ground/terrain_renderer.h"
 #include "render/scene_renderer.h"
-#include "selected_units_model.h"
+#include "../models/selected_units_model.h"
 #include <QDir>
 #include <QFile>
 #include <QJsonArray>

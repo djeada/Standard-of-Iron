@@ -49,10 +49,10 @@ add_subdirectory(tools)
 if(QT_VERSION_MAJOR EQUAL 6)
     qt6_add_executable(standard_of_iron
         main.cpp
-        app/game_engine.cpp
-        app/cursor_manager.cpp
-        app/hover_tracker.cpp
-        app/selected_units_model.cpp
+        app/core/game_engine.cpp
+        app/models/cursor_manager.cpp
+        app/models/hover_tracker.cpp
+        app/models/selected_units_model.cpp
         app/controllers/command_controller.cpp
         app/controllers/action_vfx.cpp
         ui/gl_view.cpp
@@ -61,10 +61,10 @@ if(QT_VERSION_MAJOR EQUAL 6)
 else()
     add_executable(standard_of_iron
         main.cpp
-        app/game_engine.cpp
-        app/cursor_manager.cpp
-        app/hover_tracker.cpp
-        app/selected_units_model.cpp
+        app/core/game_engine.cpp
+        app/models/cursor_manager.cpp
+        app/models/hover_tracker.cpp
+        app/models/selected_units_model.cpp
         app/controllers/command_controller.cpp
         app/controllers/action_vfx.cpp
         ui/gl_view.cpp

@@ -1,11 +1,11 @@
 #pragma once
 
-#include "cursor_manager.h"
+#include "../models/cursor_manager.h"
 #include "game/core/event_manager.h"
-#include "hover_tracker.h"
-#include "utils/engine_view_helpers.h"
-#include "utils/movement_utils.h"
-#include "utils/selection_utils.h"
+#include "../models/hover_tracker.h"
+#include "../utils/engine_view_helpers.h"
+#include "../utils/movement_utils.h"
+#include "../utils/selection_utils.h"
 #include <QMatrix4x4>
 #include <QObject>
 #include <QPointF>
