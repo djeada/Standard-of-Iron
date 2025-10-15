@@ -34,6 +34,7 @@
 #include "game/systems/arrow_system.h"
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/camera_service.h"
+#include "game/systems/capture_system.h"
 #include "game/systems/combat_system.h"
 #include "game/systems/command_service.h"
 #include "game/systems/formation_planner.h"
@@ -120,6 +121,7 @@ GameEngine::GameEngine() {
   m_world->addSystem(std::make_unique<Game::Systems::MovementSystem>());
   m_world->addSystem(std::make_unique<Game::Systems::PatrolSystem>());
   m_world->addSystem(std::make_unique<Game::Systems::CombatSystem>());
+  m_world->addSystem(std::make_unique<Game::Systems::CaptureSystem>(*m_world));
   m_world->addSystem(std::make_unique<Game::Systems::AISystem>());
   m_world->addSystem(std::make_unique<Game::Systems::ProductionSystem>());
   m_world->addSystem(std::make_unique<Game::Systems::TerrainAlignmentSystem>());

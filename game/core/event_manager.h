@@ -160,4 +160,14 @@ public:
   int damage;
 };
 
+class BarrackCapturedEvent : public Event {
+public:
+  BarrackCapturedEvent(EntityID barrackId, int previousOwnerId, int newOwnerId)
+      : barrackId(barrackId), previousOwnerId(previousOwnerId),
+        newOwnerId(newOwnerId) {}
+  EntityID barrackId;
+  int previousOwnerId;
+  int newOwnerId;
+};
+
 } // namespace Engine::Core
