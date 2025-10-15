@@ -34,12 +34,6 @@ namespace Render::GL {
 
 class Backend;
 
-struct FrameScope {
-  Renderer &r;
-  FrameScope(Renderer &renderer) : r(renderer) { r.beginFrame(); }
-  ~FrameScope() { r.endFrame(); }
-};
-
 class Renderer : public ISubmitter {
 public:
   Renderer();
@@ -160,6 +154,12 @@ private:
   int m_localOwnerId = 1;
 
   QMatrix4x4 m_viewProj;
+};
+
+struct FrameScope {
+  Renderer &r;
+  FrameScope(Renderer &renderer) : r(renderer) { r.beginFrame(); }
+  ~FrameScope() { r.endFrame(); }
 };
 
 } // namespace Render::GL
