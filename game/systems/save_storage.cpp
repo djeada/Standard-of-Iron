@@ -17,8 +17,8 @@ constexpr const char *kDriverName = "QSQLITE";
 constexpr int kCurrentSchemaVersion = 1;
 
 QString buildConnectionName(const SaveStorage *instance) {
-  return QStringLiteral("SaveStorage_%1").arg(
-      reinterpret_cast<quintptr>(instance), /*fieldWidth=*/0, /*base=*/16);
+  return QStringLiteral("SaveStorage_%1")
+      .arg(reinterpret_cast<quintptr>(instance), 0, 16);
 }
 
 QString lastErrorString(const QSqlError &error) {
@@ -109,8 +109,7 @@ bool SaveStorage::initialize(QString *outError) {
 bool SaveStorage::saveSlot(const QString &slotName, const QString &title,
                            const QJsonObject &metadata,
                            const QByteArray &worldState,
-                           const QByteArray &screenshot,
-                           QString *outError) {
+                           const QByteArray &screenshot, QString *outError) {
   if (!initialize(outError)) {
     return false;
   }
@@ -121,25 +120,24 @@ bool SaveStorage::saveSlot(const QString &slotName, const QString &title,
   }
 
   QSqlQuery query(m_database);
-  const QString insertSql =
-      QStringLiteral(
-          "INSERT INTO saves (slot_name, title, map_name, timestamp, "
-          "metadata, world_state, screenshot, created_at, updated_at) "
-          "VALUES (:slot_name, :title, :map_name, :timestamp, :metadata, "
-          ":world_state, :screenshot, :created_at, :updated_at) "
-          "ON CONFLICT(slot_name) DO UPDATE SET "
-          "title = excluded.title, "
-          "map_name = excluded.map_name, "
-          "timestamp = excluded.timestamp, "
-          "metadata = excluded.metadata, "
-          "world_state = excluded.world_state, "
-          "screenshot = excluded.screenshot, "
-          "updated_at = excluded.updated_at");
+  const QString insertSql = QStringLiteral(
+      "INSERT INTO saves (slot_name, title, map_name, timestamp, "
+      "metadata, world_state, screenshot, created_at, updated_at) "
+      "VALUES (:slot_name, :title, :map_name, :timestamp, :metadata, "
+      ":world_state, :screenshot, :created_at, :updated_at) "
+      "ON CONFLICT(slot_name) DO UPDATE SET "
+      "title = excluded.title, "
+      "map_name = excluded.map_name, "
+      "timestamp = excluded.timestamp, "
+      "metadata = excluded.metadata, "
+      "world_state = excluded.world_state, "
+      "screenshot = excluded.screenshot, "
+      "updated_at = excluded.updated_at");
 
   if (!query.prepare(insertSql)) {
     if (outError) {
       *outError = QStringLiteral("Failed to prepare save query: %1")
-                       .arg(lastErrorString(query.lastError()));
+                      .arg(lastErrorString(query.lastError()));
     }
     return false;
   }
@@ -171,7 +169,7 @@ bool SaveStorage::saveSlot(const QString &slotName, const QString &title,
   if (!query.exec()) {
     if (outError) {
       *outError = QStringLiteral("Failed to persist save slot: %1")
-                       .arg(lastErrorString(query.lastError()));
+                      .arg(lastErrorString(query.lastError()));
     }
     transaction.rollback();
     return false;
@@ -200,7 +198,7 @@ bool SaveStorage::loadSlot(const QString &slotName, QByteArray &worldState,
   if (!query.exec()) {
     if (outError) {
       *outError = QStringLiteral("Failed to read save slot: %1")
-                       .arg(lastErrorString(query.lastError()));
+                      .arg(lastErrorString(query.lastError()));
     }
     return false;
   }
@@ -232,7 +230,7 @@ QVariantList SaveStorage::listSlots(QString *outError) const {
           "FROM saves ORDER BY datetime(timestamp) DESC"))) {
     if (outError) {
       *outError = QStringLiteral("Failed to enumerate save slots: %1")
-                       .arg(lastErrorString(query.lastError()));
+                      .arg(lastErrorString(query.lastError()));
     }
     return result;
   }
@@ -257,7 +255,6 @@ QVariantList SaveStorage::listSlots(QString *outError) const {
       slot.insert(QStringLiteral("thumbnail"), QString());
     }
 
-    // Optional helpers for QML convenience
     if (metadataObj.contains("playTime")) {
       slot.insert(QStringLiteral("playTime"),
                   metadataObj.value("playTime").toString());
@@ -287,7 +284,7 @@ bool SaveStorage::deleteSlot(const QString &slotName, QString *outError) {
   if (!query.exec()) {
     if (outError) {
       *outError = QStringLiteral("Failed to delete save slot: %1")
-                       .arg(lastErrorString(query.lastError()));
+                      .arg(lastErrorString(query.lastError()));
     }
     transaction.rollback();
     return false;
@@ -322,7 +319,7 @@ bool SaveStorage::open(QString *outError) const {
   if (!m_database.open()) {
     if (outError) {
       *outError = QStringLiteral("Failed to open save database: %1")
-                       .arg(lastErrorString(m_database.lastError()));
+                      .arg(lastErrorString(m_database.lastError()));
     }
     return false;
   }
@@ -344,10 +341,11 @@ bool SaveStorage::ensureSchema(QString *outError) const {
 
   if (currentVersion > kCurrentSchemaVersion) {
     if (outError) {
-      *outError = QStringLiteral(
-          "Save database schema version %1 is newer than supported %2")
-                       .arg(currentVersion)
-                       .arg(kCurrentSchemaVersion);
+      *outError =
+          QStringLiteral(
+              "Save database schema version %1 is newer than supported %2")
+              .arg(currentVersion)
+              .arg(kCurrentSchemaVersion);
     }
     return false;
   }
@@ -383,7 +381,7 @@ int SaveStorage::schemaVersion(QString *outError) const {
   if (!pragmaQuery.exec(QStringLiteral("PRAGMA user_version"))) {
     if (outError) {
       *outError = QStringLiteral("Failed to read schema version: %1")
-                       .arg(lastErrorString(pragmaQuery.lastError()));
+                      .arg(lastErrorString(pragmaQuery.lastError()));
     }
     return -1;
   }
@@ -401,7 +399,7 @@ bool SaveStorage::setSchemaVersion(int version, QString *outError) const {
           QStringLiteral("PRAGMA user_version = %1").arg(version))) {
     if (outError) {
       *outError = QStringLiteral("Failed to update schema version: %1")
-                       .arg(lastErrorString(pragmaQuery.lastError()));
+                      .arg(lastErrorString(pragmaQuery.lastError()));
     }
     return false;
   }
@@ -410,24 +408,24 @@ bool SaveStorage::setSchemaVersion(int version, QString *outError) const {
 
 bool SaveStorage::createBaseSchema(QString *outError) const {
   QSqlQuery query(m_database);
-  const QString createSql = QStringLiteral(
-      "CREATE TABLE IF NOT EXISTS saves ("
-      "id INTEGER PRIMARY KEY AUTOINCREMENT, "
-      "slot_name TEXT UNIQUE NOT NULL, "
-      "title TEXT NOT NULL, "
-      "map_name TEXT, "
-      "timestamp TEXT NOT NULL, "
-      "metadata BLOB NOT NULL, "
-      "world_state BLOB NOT NULL, "
-      "screenshot BLOB, "
-      "created_at TEXT NOT NULL, "
-      "updated_at TEXT NOT NULL"
-      ")");
+  const QString createSql =
+      QStringLiteral("CREATE TABLE IF NOT EXISTS saves ("
+                     "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                     "slot_name TEXT UNIQUE NOT NULL, "
+                     "title TEXT NOT NULL, "
+                     "map_name TEXT, "
+                     "timestamp TEXT NOT NULL, "
+                     "metadata BLOB NOT NULL, "
+                     "world_state BLOB NOT NULL, "
+                     "screenshot BLOB, "
+                     "created_at TEXT NOT NULL, "
+                     "updated_at TEXT NOT NULL"
+                     ")");
 
   if (!query.exec(createSql)) {
     if (outError) {
       *outError = QStringLiteral("Failed to create save schema: %1")
-                       .arg(lastErrorString(query.lastError()));
+                      .arg(lastErrorString(query.lastError()));
     }
     return false;
   }
@@ -438,7 +436,7 @@ bool SaveStorage::createBaseSchema(QString *outError) const {
           "(updated_at DESC)"))) {
     if (outError) {
       *outError = QStringLiteral("Failed to build save index: %1")
-                       .arg(lastErrorString(indexQuery.lastError()));
+                      .arg(lastErrorString(indexQuery.lastError()));
     }
     return false;
   }
@@ -459,8 +457,8 @@ bool SaveStorage::migrateSchema(int fromVersion, QString *outError) const {
       break;
     default:
       if (outError) {
-        *outError = QStringLiteral("Unsupported migration path from %1")
-                         .arg(version);
+        *outError =
+            QStringLiteral("Unsupported migration path from %1").arg(version);
       }
       return false;
     }

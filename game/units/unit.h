@@ -27,6 +27,7 @@ struct SpawnParams {
   int playerId = 0;
   std::string unitType;
   bool aiControlled = false;
+  int maxPopulation = 100;
 };
 
 class Unit {
