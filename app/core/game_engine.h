@@ -163,6 +163,10 @@ public:
   Q_INVOKABLE void openSettings();
   Q_INVOKABLE void loadSave();
   Q_INVOKABLE void saveGame(const QString &filename = "savegame.json");
+  Q_INVOKABLE void saveGameToSlot(const QString &slotName);
+  Q_INVOKABLE void loadGameFromSlot(const QString &slotName);
+  Q_INVOKABLE QVariantList getSaveSlots() const;
+  Q_INVOKABLE bool deleteSaveSlot(const QString &slotName);
   Q_INVOKABLE void exitGame();
   Q_INVOKABLE QVariantList getOwnerInfo() const;
 
