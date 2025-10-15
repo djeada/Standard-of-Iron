@@ -17,8 +17,6 @@ RowLayout {
     anchors.margins: 10
     spacing: 12
 
-
-
     Rectangle {
         Layout.fillWidth: true
         Layout.preferredWidth: Math.max(240, bottomPanel.width * 0.3)
@@ -372,26 +370,20 @@ RowLayout {
 
     }
 
-    // ═══════════════════════════════════════════════════════════════
-    // PRODUCTION PANEL (Separate Component)
-    // ═══════════════════════════════════════════════════════════════
     ProductionPanel {
         Layout.fillWidth: true
         Layout.preferredWidth: Math.max(280, bottomPanel.width * 0.35)
         Layout.fillHeight: true
         Layout.alignment: Qt.AlignTop
-        
         selectionTick: bottomRoot.selectionTick
         gameInstance: (typeof game !== 'undefined') ? game : null
-        
         onRecruitUnit: function(unitType) {
             bottomRoot.recruit(unitType);
         }
-        
         onRallyModeToggled: {
-            if (typeof gameView !== 'undefined') {
+            if (typeof gameView !== 'undefined')
                 gameView.setRallyMode = !gameView.setRallyMode;
-            }
+
         }
     }
 

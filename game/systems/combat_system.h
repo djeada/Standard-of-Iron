@@ -6,7 +6,7 @@
 namespace Engine {
 namespace Core {
 class AttackComponent;
-} // namespace Core
+}
 } // namespace Engine
 
 namespace Game::Systems {
