@@ -14,6 +14,7 @@ public:
   ~World();
 
   Entity *createEntity();
+  Entity *createEntityWithId(EntityID id);
   void destroyEntity(EntityID id);
   Entity *getEntity(EntityID id);
   void clear();
@@ -52,6 +53,9 @@ public:
   const std::unordered_map<EntityID, std::unique_ptr<Entity>> &getEntities() const {
     return m_entities;
   }
+
+  EntityID getNextEntityId() const;
+  void setNextEntityId(EntityID nextId);
 
 private:
   EntityID m_nextEntityId = 1;

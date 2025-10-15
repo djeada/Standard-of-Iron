@@ -1,5 +1,52 @@
 #include "owner_registry.h"
 #include <QDebug>
+#include <algorithm>
+
+namespace {
+
+QString ownerTypeToString(Game::Systems::OwnerType type) {
+  using Game::Systems::OwnerType;
+  switch (type) {
+  case OwnerType::Player:
+    return QStringLiteral("player");
+  case OwnerType::AI:
+    return QStringLiteral("ai");
+  case OwnerType::Neutral:
+  default:
+    return QStringLiteral("neutral");
+  }
+}
+
+Game::Systems::OwnerType ownerTypeFromString(const QString &value) {
+  using Game::Systems::OwnerType;
+  if (value.compare(QStringLiteral("player"), Qt::CaseInsensitive) == 0) {
+    return OwnerType::Player;
+  }
+  if (value.compare(QStringLiteral("ai"), Qt::CaseInsensitive) == 0) {
+    return OwnerType::AI;
+  }
+  return OwnerType::Neutral;
+}
+
+QJsonArray colorToJson(const std::array<float, 3> &color) {
+  QJsonArray array;
+  array.append(color[0]);
+  array.append(color[1]);
+  array.append(color[2]);
+  return array;
+}
+
+std::array<float, 3> colorFromJson(const QJsonArray &array) {
+  std::array<float, 3> color{0.8f, 0.9f, 1.0f};
+  if (array.size() >= 3) {
+    color[0] = static_cast<float>(array.at(0).toDouble());
+    color[1] = static_cast<float>(array.at(1).toDouble());
+    color[2] = static_cast<float>(array.at(2).toDouble());
+  }
+  return color;
+}
+
+} // namespace
 
 namespace Game::Systems {
 
@@ -221,6 +268,57 @@ std::array<float, 3> OwnerRegistry::getOwnerColor(int ownerId) const {
   }
 
   return {0.8f, 0.9f, 1.0f};
+}
+
+QJsonObject OwnerRegistry::toJson() const {
+  QJsonObject root;
+  root["nextOwnerId"] = m_nextOwnerId;
+  root["localPlayerId"] = m_localPlayerId;
+
+  QJsonArray ownersArray;
+  for (const auto &owner : m_owners) {
+    QJsonObject ownerObj;
+    ownerObj["ownerId"] = owner.ownerId;
+    ownerObj["type"] = ownerTypeToString(owner.type);
+    ownerObj["name"] = QString::fromStdString(owner.name);
+    ownerObj["teamId"] = owner.teamId;
+    ownerObj["color"] = colorToJson(owner.color);
+    ownersArray.append(ownerObj);
+  }
+
+  root["owners"] = ownersArray;
+  return root;
+}
+
+void OwnerRegistry::fromJson(const QJsonObject &json) {
+  clear();
+
+  m_nextOwnerId = json["nextOwnerId"].toInt(1);
+  m_localPlayerId = json["localPlayerId"].toInt(1);
+
+  const auto ownersArray = json["owners"].toArray();
+  m_owners.reserve(ownersArray.size());
+  for (const auto &value : ownersArray) {
+    const auto ownerObj = value.toObject();
+    OwnerInfo info;
+    info.ownerId = ownerObj["ownerId"].toInt();
+    info.type = ownerTypeFromString(ownerObj["type"].toString());
+    info.name = ownerObj["name"].toString().toStdString();
+    info.teamId = ownerObj["teamId"].toInt(0);
+    if (ownerObj.contains("color")) {
+      info.color = colorFromJson(ownerObj["color"].toArray());
+    }
+
+    const size_t index = m_owners.size();
+    m_owners.push_back(info);
+    m_ownerIdToIndex[info.ownerId] = index;
+  }
+
+  for (const auto &owner : m_owners) {
+    if (owner.ownerId >= m_nextOwnerId) {
+      m_nextOwnerId = owner.ownerId + 1;
+    }
+  }
 }
 
 } // namespace Game::Systems

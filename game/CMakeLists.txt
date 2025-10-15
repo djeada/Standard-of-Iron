@@ -45,6 +45,7 @@ add_library(game_systems STATIC
     systems/global_stats_registry.cpp
     systems/victory_service.cpp
     systems/save_load_service.cpp
+    systems/save_storage.cpp
     systems/nation_registry.cpp
     systems/formation_system.cpp
     map/map_loader.cpp
@@ -65,4 +66,4 @@ add_library(game_systems STATIC
 )
 
 target_include_directories(game_systems PUBLIC .)
-target_link_libraries(game_systems PUBLIC Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Gui engine_core render_gl)
+target_link_libraries(game_systems PUBLIC Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Gui Qt${QT_VERSION_MAJOR}::Sql engine_core render_gl)
