@@ -132,14 +132,19 @@ ApplicationWindow {
             mapSelect.visible = true;
             mainWindow.menuVisible = false;
         }
+        onSaveGame: function() {
+            if (mainWindow.gameStarted) {
+                saveGamePanel.visible = true;
+                mainWindow.menuVisible = false;
+            }
+        }
+        onLoadSave: function() {
+            loadGamePanel.visible = true;
+            mainWindow.menuVisible = false;
+        }
         onOpenSettings: function() {
             if (typeof game !== 'undefined' && game.openSettings)
                 game.openSettings();
-
-        }
-        onLoadSave: function() {
-            if (typeof game !== 'undefined' && game.loadSave)
-                game.loadSave();
 
         }
         onExitRequested: function() {
@@ -174,6 +179,61 @@ ApplicationWindow {
         }
         onCancelled: function() {
             mapSelect.visible = false;
+            mainWindow.menuVisible = true;
+        }
+    }
+
+    SaveGamePanel {
+        id: saveGamePanel
+
+        anchors.fill: parent
+        z: 22
+        visible: false
+        onVisibleChanged: {
+            if (visible) {
+                saveGamePanel.forceActiveFocus();
+                gameViewItem.focus = false;
+            }
+        }
+        onSaveRequested: function(slotName) {
+            console.log("Main: Save requested for slot:", slotName);
+            if (typeof game !== 'undefined' && game.saveGameToSlot) {
+                game.saveGameToSlot(slotName);
+            }
+            saveGamePanel.visible = false;
+            mainWindow.menuVisible = true;
+        }
+        onCancelled: function() {
+            saveGamePanel.visible = false;
+            mainWindow.menuVisible = true;
+        }
+    }
+
+    LoadGamePanel {
+        id: loadGamePanel
+
+        anchors.fill: parent
+        z: 22
+        visible: false
+        onVisibleChanged: {
+            if (visible) {
+                loadGamePanel.forceActiveFocus();
+                gameViewItem.focus = false;
+            }
+        }
+        onLoadRequested: function(slotName) {
+            console.log("Main: Load requested for slot:", slotName);
+            if (typeof game !== 'undefined' && game.loadGameFromSlot) {
+                game.loadGameFromSlot(slotName);
+                loadGamePanel.visible = false;
+                mainWindow.menuVisible = false;
+                mainWindow.gameStarted = true;
+                mainWindow.gamePaused = false;
+                gameViewItem.forceActiveFocus();
+            }
+        }
+        onCancelled: function() {
+            loadGamePanel.visible = false;
             mainWindow.menuVisible = true;
         }
     }
