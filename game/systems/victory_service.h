@@ -45,6 +45,7 @@ public:
 
 private:
   void onUnitDied(const Engine::Core::UnitDiedEvent &event);
+  void onBarrackCaptured(const Engine::Core::BarrackCapturedEvent &event);
   void checkVictoryConditions(Engine::Core::World &world);
   void checkDefeatConditions(Engine::Core::World &world);
 
@@ -67,6 +68,10 @@ private:
 
   Engine::Core::ScopedEventSubscription<Engine::Core::UnitDiedEvent>
       m_unitDiedSubscription;
+  Engine::Core::ScopedEventSubscription<Engine::Core::BarrackCapturedEvent>
+      m_barrackCapturedSubscription;
+
+  Engine::Core::World *m_worldPtr = nullptr;
 };
 
 } // namespace Systems

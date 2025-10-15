@@ -13,7 +13,11 @@ namespace Systems {
 
 VictoryService::VictoryService()
     : m_unitDiedSubscription(
-          [this](const Engine::Core::UnitDiedEvent &e) { onUnitDied(e); }) {}
+          [this](const Engine::Core::UnitDiedEvent &e) { onUnitDied(e); }),
+      m_barrackCapturedSubscription(
+          [this](const Engine::Core::BarrackCapturedEvent &e) {
+            onBarrackCaptured(e);
+          }) {}
 
 VictoryService::~VictoryService() = default;
 
@@ -53,6 +57,8 @@ void VictoryService::update(Engine::Core::World &world, float deltaTime) {
     return;
   }
 
+  m_worldPtr = &world;
+
   if (m_victoryType == VictoryType::SurviveTime) {
     m_elapsedTime += deltaTime;
   }
@@ -66,6 +72,21 @@ void VictoryService::update(Engine::Core::World &world, float deltaTime) {
 }
 
 void VictoryService::onUnitDied(const Engine::Core::UnitDiedEvent &event) {}
+
+void VictoryService::onBarrackCaptured(
+    const Engine::Core::BarrackCapturedEvent &event) {
+
+  if (!m_worldPtr || !m_victoryState.isEmpty()) {
+    return;
+  }
+
+  checkVictoryConditions(*m_worldPtr);
+  if (!m_victoryState.isEmpty()) {
+    return;
+  }
+
+  checkDefeatConditions(*m_worldPtr);
+}
 
 void VictoryService::checkVictoryConditions(Engine::Core::World &world) {
   bool victory = false;
