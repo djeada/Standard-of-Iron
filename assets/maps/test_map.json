@@ -33,7 +33,7 @@
     "far": 400.0
   },
   "spawns": [
-    { "type": "barracks", "x": 150, "z": 120, "playerId": 1 },
+    { "type": "barracks", "x": 150, "z": 120, "playerId": 1, "maxPopulation": 150 },
     { "type": "archer", "x": 148, "z": 122, "playerId": 1 },
     { "type": "archer", "x": 152, "z": 118, "playerId": 1 },
     { "type": "archer", "x": 152, "z": 122, "playerId": 1 },
@@ -43,14 +43,14 @@
     { "type": "archer", "x": 146, "z": 120, "playerId": 1 },
     { "type": "archer", "x": 154, "z": 120, "playerId": 1 },
 
-    { "type": "barracks", "x": 125, "z": 175, "playerId": 2 },
+    { "type": "barracks", "x": 125, "z": 175, "playerId": 2, "maxPopulation": 75 },
     { "type": "archer", "x": 123, "z": 177, "playerId": 2 },
     { "type": "archer", "x": 127, "z": 173, "playerId": 2 },
     { "type": "archer", "x": 127, "z": 177, "playerId": 2 },
     { "type": "archer", "x": 123, "z": 173, "playerId": 2 },
     { "type": "archer", "x": 129, "z": 175, "playerId": 2 },
 
-    { "type": "barracks", "x": 175, "z": 175, "playerId": 3 },
+    { "type": "barracks", "x": 175, "z": 175, "playerId": 3, "maxPopulation": 200 },
     { "type": "archer", "x": 173, "z": 177, "playerId": 3 },
     { "type": "archer", "x": 177, "z": 173, "playerId": 3 },
     { "type": "archer", "x": 175, "z": 171, "playerId": 3 },
