@@ -547,12 +547,11 @@ static inline void drawBannerAndPole(const DrawContext &p, ISubmitter &out,
   if (p.entity) {
     auto *capture = p.entity->getComponent<Engine::Core::CaptureComponent>();
     if (capture && capture->isBeingCaptured) {
-      float progress =
-          std::clamp(capture->captureProgress / capture->requiredTime, 0.0f,
-                     1.0f);
+      float progress = std::clamp(
+          capture->captureProgress / capture->requiredTime, 0.0f, 1.0f);
 
-      QVector3D newTeamColor = Game::Visuals::teamColorForOwner(
-          capture->capturingPlayerId);
+      QVector3D newTeamColor =
+          Game::Visuals::teamColorForOwner(capture->capturingPlayerId);
       teamColor = lerp(C.team, clampVec01(newTeamColor), progress);
       teamTrimColor = lerp(
           C.teamTrim,
@@ -577,8 +576,7 @@ static inline void drawBannerAndPole(const DrawContext &p, ISubmitter &out,
                C.timberLight, white);
 
   float panelX = beamEnd.x() + (targetWidth * 0.5f - beamLength);
-  unitBox(out, unit, white, p.model,
-          QVector3D(panelX, flagY, poleZ + 0.01f),
+  unitBox(out, unit, white, p.model, QVector3D(panelX, flagY, poleZ + 0.01f),
           QVector3D(targetWidth / 2.0f, targetHeight / 2.0f, panelDepth),
           teamColor);
 
