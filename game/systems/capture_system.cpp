@@ -63,6 +63,10 @@ void CaptureSystem::transferBarrackOwnership(Engine::Core::Entity *barrack,
   int previousOwnerId = unit->ownerId;
   unit->ownerId = newOwnerId;
 
+  std::cout << "[Capture] Barrack " << barrack->getId()
+            << " captured! Previous owner: " << previousOwnerId
+            << ", New owner: " << newOwnerId << std::endl;
+
   QVector3D tc = Game::Visuals::teamColorForOwner(newOwnerId);
   renderable->color[0] = tc.x();
   renderable->color[1] = tc.y();
