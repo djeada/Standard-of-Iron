@@ -506,12 +506,6 @@ void GameEngine::update(float dt) {
     m_victoryService->update(*m_world, dt);
   }
 
-  int currentTroopCount = playerTroopCount();
-  if (currentTroopCount != m_runtime.lastTroopCount) {
-    m_runtime.lastTroopCount = currentTroopCount;
-    emit troopCountChanged();
-  }
-
   if (m_followSelectionEnabled && m_camera && m_world && m_cameraService) {
     m_cameraService->updateFollow(*m_camera, *m_world,
                                   m_followSelectionEnabled);
@@ -960,8 +954,6 @@ bool GameEngine::loadFromSlot(const QString &slot) {
   applyEnvironmentFromMetadata(meta);
   rebuildRegistriesAfterLoad();
   rebuildEntityCache();
-  m_runtime.lastTroopCount = m_entityCache.playerTroopCount;
-  emit troopCountChanged();
   if (m_victoryService) {
     m_victoryService->configure(Game::Map::VictoryConfig(),
                                 m_runtime.localOwnerId);
@@ -1104,6 +1096,14 @@ void GameEngine::onUnitSpawned(const Engine::Core::UnitSpawnedEvent &event) {
       m_entityCache.enemyBarracksAlive = true;
     }
   }
+
+  auto emitIfChanged = [&] {
+    if (m_entityCache.playerTroopCount != m_runtime.lastTroopCount) {
+      m_runtime.lastTroopCount = m_entityCache.playerTroopCount;
+      emit troopCountChanged();
+    }
+  };
+  emitIfChanged();
 }
 
 void GameEngine::onUnitDied(const Engine::Core::UnitDiedEvent &event) {
@@ -1128,6 +1128,14 @@ void GameEngine::onUnitDied(const Engine::Core::UnitDiedEvent &event) {
       m_entityCache.enemyBarracksAlive = (m_entityCache.enemyBarracksCount > 0);
     }
   }
+
+  auto emitIfChanged = [&] {
+    if (m_entityCache.playerTroopCount != m_runtime.lastTroopCount) {
+      m_runtime.lastTroopCount = m_entityCache.playerTroopCount;
+      emit troopCountChanged();
+    }
+  };
+  emitIfChanged();
 }
 
 void GameEngine::rebuildEntityCache() {
@@ -1161,6 +1169,14 @@ void GameEngine::rebuildEntityCache() {
       }
     }
   }
+
+  auto emitIfChanged = [&] {
+    if (m_entityCache.playerTroopCount != m_runtime.lastTroopCount) {
+      m_runtime.lastTroopCount = m_entityCache.playerTroopCount;
+      emit troopCountChanged();
+    }
+  };
+  emitIfChanged();
 }
 
 void GameEngine::rebuildRegistriesAfterLoad() {
