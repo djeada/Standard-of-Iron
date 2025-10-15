@@ -85,6 +85,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
             ui/qml/HUDTop.qml
             ui/qml/HUDBottom.qml
             ui/qml/HUDVictory.qml
+            ui/qml/BattleSummary.qml
             ui/qml/GameView.qml
         RESOURCES
             assets/shaders/basic.vert
