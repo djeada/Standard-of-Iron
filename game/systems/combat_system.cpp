@@ -461,9 +461,9 @@ void CombatSystem::dealDamage(Engine::Core::World *world,
     if (target->hasComponent<Engine::Core::BuildingComponent>() &&
         unit->health > 0) {
       Engine::Core::EventManager::instance().publish(
-          Engine::Core::BuildingAttackedEvent(
-              target->getId(), unit->ownerId, unit->unitType, attackerId,
-              attackerOwnerId, damage));
+          Engine::Core::BuildingAttackedEvent(target->getId(), unit->ownerId,
+                                              unit->unitType, attackerId,
+                                              attackerOwnerId, damage));
     }
 
     if (unit->health <= 0) {
