@@ -1,5 +1,6 @@
 #pragma once
 
+#include "cursor_mode.h"
 #include <QObject>
 #include <QString>
 #include <QVector3D>
@@ -12,8 +13,10 @@ class CursorManager : public QObject {
 public:
   explicit CursorManager(QObject *parent = nullptr);
 
-  QString mode() const { return m_cursorMode; }
+  CursorMode mode() const { return m_cursorMode; }
+  void setMode(CursorMode mode);
   void setMode(const QString &mode);
+  QString modeString() const { return CursorModeUtils::toString(m_cursorMode); }
 
   void updateCursorShape(QQuickWindow *window);
 
@@ -30,7 +33,7 @@ signals:
   void globalCursorChanged();
 
 private:
-  QString m_cursorMode = "normal";
+  CursorMode m_cursorMode{CursorMode::Normal};
   Qt::CursorShape m_currentCursor = Qt::ArrowCursor;
   bool m_hasFirstWaypoint = false;
   QVector3D m_firstWaypoint;
