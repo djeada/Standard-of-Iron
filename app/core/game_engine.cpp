@@ -936,115 +936,60 @@ void GameEngine::openSettings() {
   }
 }
 
-void GameEngine::loadSave() {
-  if (!m_saveLoadService || !m_world) {
-    qWarning() << "Cannot load save: service or world not initialized";
-    return;
-  }
-
-  const QString slotName = QStringLiteral("savegame");
-
-  bool success = m_saveLoadService->loadGameFromSlot(*m_world, slotName);
-
-  if (success) {
-    qInfo() << "Game loaded successfully from slot:" << slotName;
-    const QJsonObject metadata = m_saveLoadService->getLastMetadata();
-    applyEnvironmentFromMetadata(metadata);
-    rebuildRegistriesAfterLoad();
-    rebuildEntityCache();
-    m_runtime.lastTroopCount = m_entityCache.playerTroopCount;
-    emit troopCountChanged();
-    if (m_victoryService) {
-      m_victoryService->configure(Game::Map::VictoryConfig(),
-                                  m_runtime.localOwnerId);
-    }
-    emit selectedUnitsChanged();
-    emit ownerInfoChanged();
-  } else {
-    QString error = m_saveLoadService->getLastError();
-    qWarning() << "Failed to load game:" << error;
-    setError(error);
-  }
-}
+void GameEngine::loadSave() { loadFromSlot("savegame"); }
 
 void GameEngine::saveGame(const QString &filename) {
-  if (!m_saveLoadService || !m_world) {
-    qWarning() << "Cannot save game: service or world not initialized";
-    return;
-  }
-
-  const QString slotName = filename;
-  const QString title = slotName;
-
-  QJsonObject metadata = buildSaveMetadata();
-  metadata["title"] = title;
-
-  const QByteArray screenshot = captureSaveScreenshot();
-
-  bool success = m_saveLoadService->saveGameToSlot(
-      *m_world, slotName, title, m_level.mapName, metadata, screenshot);
-
-  if (success) {
-    qInfo() << "Game saved successfully to slot:" << slotName;
-    emit saveSlotsChanged();
-  } else {
-    QString error = m_saveLoadService->getLastError();
-    qWarning() << "Failed to save game:" << error;
-    setError(error);
-  }
+  saveToSlot(filename, filename);
 }
 
 void GameEngine::saveGameToSlot(const QString &slotName) {
-  if (!m_saveLoadService || !m_world) {
-    qWarning() << "Cannot save game: service or world not initialized";
-    return;
-  }
-
-  QJsonObject metadata = buildSaveMetadata();
-  metadata["title"] = slotName;
-
-  const QByteArray screenshot = captureSaveScreenshot();
-
-  bool success = m_saveLoadService->saveGameToSlot(
-      *m_world, slotName, slotName, m_level.mapName, metadata, screenshot);
-
-  if (success) {
-    qInfo() << "Game saved successfully to slot:" << slotName;
-    emit saveSlotsChanged();
-  } else {
-    QString error = m_saveLoadService->getLastError();
-    qWarning() << "Failed to save game:" << error;
-    setError(error);
-  }
+  saveToSlot(slotName, slotName);
 }
 
 void GameEngine::loadGameFromSlot(const QString &slotName) {
+  loadFromSlot(slotName);
+}
+
+bool GameEngine::loadFromSlot(const QString &slot) {
   if (!m_saveLoadService || !m_world) {
-    qWarning() << "Cannot load game: service or world not initialized";
-    return;
+    setError("Load: not initialized");
+    return false;
+  }
+  if (!m_saveLoadService->loadGameFromSlot(*m_world, slot)) {
+    setError(m_saveLoadService->getLastError());
+    return false;
   }
 
-  bool success = m_saveLoadService->loadGameFromSlot(*m_world, slotName);
-
-  if (success) {
-    qInfo() << "Game loaded successfully from slot:" << slotName;
-    const QJsonObject metadata = m_saveLoadService->getLastMetadata();
-    applyEnvironmentFromMetadata(metadata);
-    rebuildRegistriesAfterLoad();
-    rebuildEntityCache();
-    m_runtime.lastTroopCount = m_entityCache.playerTroopCount;
-    emit troopCountChanged();
-    if (m_victoryService) {
-      m_victoryService->configure(Game::Map::VictoryConfig(),
-                                  m_runtime.localOwnerId);
-    }
-    emit selectedUnitsChanged();
-    emit ownerInfoChanged();
-  } else {
-    QString error = m_saveLoadService->getLastError();
-    qWarning() << "Failed to load game:" << error;
-    setError(error);
+  const QJsonObject meta = m_saveLoadService->getLastMetadata();
+  applyEnvironmentFromMetadata(meta);
+  rebuildRegistriesAfterLoad();
+  rebuildEntityCache();
+  m_runtime.lastTroopCount = m_entityCache.playerTroopCount;
+  emit troopCountChanged();
+  if (m_victoryService) {
+    m_victoryService->configure(Game::Map::VictoryConfig(),
+                                m_runtime.localOwnerId);
   }
+  emit selectedUnitsChanged();
+  emit ownerInfoChanged();
+  return true;
+}
+
+bool GameEngine::saveToSlot(const QString &slot, const QString &title) {
+  if (!m_saveLoadService || !m_world) {
+    setError("Save: not initialized");
+    return false;
+  }
+  QJsonObject meta = buildSaveMetadata();
+  meta["title"] = title;
+  const QByteArray screenshot = captureSaveScreenshot();
+  if (!m_saveLoadService->saveGameToSlot(*m_world, slot, title, m_level.mapName,
+                                         meta, screenshot)) {
+    setError(m_saveLoadService->getLastError());
+    return false;
+  }
+  emit saveSlotsChanged();
+  return true;
 }
 
 QVariantList GameEngine::getSaveSlots() const {
