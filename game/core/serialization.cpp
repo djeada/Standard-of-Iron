@@ -70,6 +70,14 @@ void Serialization::deserializeEntity(Entity *entity, const QJsonObject &json) {
 QJsonDocument Serialization::serializeWorld(const World *world) {
   QJsonObject worldObj;
   QJsonArray entitiesArray;
+  
+  // Iterate over all entities and serialize them
+  const auto &entities = world->getEntities();
+  for (const auto &[id, entity] : entities) {
+    QJsonObject entityObj = serializeEntity(entity.get());
+    entitiesArray.append(entityObj);
+  }
+  
   worldObj["entities"] = entitiesArray;
   return QJsonDocument(worldObj);
 }

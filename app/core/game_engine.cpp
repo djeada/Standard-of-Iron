@@ -40,6 +40,7 @@
 #include "game/systems/picking_service.h"
 #include "game/systems/production_service.h"
 #include "game/systems/production_system.h"
+#include "game/systems/save_load_service.h"
 #include "game/systems/selection_system.h"
 #include "game/systems/terrain_alignment_system.h"
 #include "game/systems/troop_count_registry.h"
@@ -102,6 +103,7 @@ GameEngine::GameEngine() {
   m_selectedUnitsModel = new SelectedUnitsModel(this, this);
   m_pickingService = std::make_unique<Game::Systems::PickingService>();
   m_victoryService = std::make_unique<Game::Systems::VictoryService>();
+  m_saveLoadService = std::make_unique<Game::Systems::SaveLoadService>();
   m_cameraService = std::make_unique<Game::Systems::CameraService>();
 
   auto *selectionSystem = m_world->getSystem<Game::Systems::SelectionSystem>();
@@ -895,16 +897,60 @@ void GameEngine::startSkirmish(const QString &mapPath,
   }
 }
 
-void GameEngine::openSettings() { qInfo() << "Open settings requested"; }
+void GameEngine::openSettings() {
+  if (m_saveLoadService) {
+    m_saveLoadService->openSettings();
+  }
+}
 
 void GameEngine::loadSave() {
+  if (!m_saveLoadService || !m_world) {
+    qWarning() << "Cannot load save: service or world not initialized";
+    return;
+  }
 
-  qInfo() << "Load save requested (not implemented)";
+  // Use a default save file path for now
+  QString saveFilePath = "savegame.json";
+  
+  bool success = m_saveLoadService->loadGame(*m_world, saveFilePath);
+  
+  if (success) {
+    qInfo() << "Game loaded successfully";
+    // Rebuild caches and update UI after loading
+    rebuildEntityCache();
+    if (m_victoryService) {
+      m_victoryService->configure(Game::Map::VictoryConfig(), m_runtime.localOwnerId);
+    }
+    emit selectedUnitsChanged();
+    emit ownerInfoChanged();
+  } else {
+    QString error = m_saveLoadService->getLastError();
+    qWarning() << "Failed to load game:" << error;
+    setError(error);
+  }
+}
+
+void GameEngine::saveGame(const QString &filename) {
+  if (!m_saveLoadService || !m_world) {
+    qWarning() << "Cannot save game: service or world not initialized";
+    return;
+  }
+
+  bool success = m_saveLoadService->saveGame(*m_world, filename);
+  
+  if (success) {
+    qInfo() << "Game saved successfully to:" << filename;
+  } else {
+    QString error = m_saveLoadService->getLastError();
+    qWarning() << "Failed to save game:" << error;
+    setError(error);
+  }
 }
 
 void GameEngine::exitGame() {
-  qInfo() << "Exit requested";
-  QCoreApplication::quit();
+  if (m_saveLoadService) {
+    m_saveLoadService->exitGame();
+  }
 }
 
 QVariantList GameEngine::getOwnerInfo() const {

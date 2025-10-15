@@ -48,6 +48,7 @@ class ArrowSystem;
 class PickingService;
 class VictoryService;
 class CameraService;
+class SaveLoadService;
 } // namespace Systems
 namespace Map {
 class MapCatalog;
@@ -161,6 +162,7 @@ public:
                 const QVariantList &playerConfigs = QVariantList());
   Q_INVOKABLE void openSettings();
   Q_INVOKABLE void loadSave();
+  Q_INVOKABLE void saveGame(const QString &filename = "savegame.json");
   Q_INVOKABLE void exitGame();
   Q_INVOKABLE QVariantList getOwnerInfo() const;
 
@@ -243,6 +245,7 @@ private:
   std::unique_ptr<Render::GL::StoneRenderer> m_stone;
   std::unique_ptr<Game::Systems::PickingService> m_pickingService;
   std::unique_ptr<Game::Systems::VictoryService> m_victoryService;
+  std::unique_ptr<Game::Systems::SaveLoadService> m_saveLoadService;
   std::unique_ptr<CursorManager> m_cursorManager;
   std::unique_ptr<HoverTracker> m_hoverTracker;
   std::unique_ptr<Game::Systems::CameraService> m_cameraService;
