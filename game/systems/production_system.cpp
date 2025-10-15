@@ -4,6 +4,7 @@
 #include "../game_config.h"
 #include "../map/map_transformer.h"
 #include "../units/factory.h"
+#include "../units/troop_config.h"
 #include <cmath>
 
 namespace Game {
@@ -32,7 +33,10 @@ void ProductionSystem::update(Engine::Core::World *world, float deltaTime) {
 
         int currentTroops = world->countTroopsForPlayer(u->ownerId);
         int maxTroops = Game::GameConfig::instance().getMaxTroopsPerPlayer();
-        if (currentTroops >= maxTroops) {
+        int individualsPerUnit =
+            Game::Units::TroopConfig::instance().getIndividualsPerUnit(
+                prod->productType);
+        if (currentTroops + individualsPerUnit > maxTroops) {
           prod->inProgress = false;
           prod->timeRemaining = 0.0f;
           continue;
