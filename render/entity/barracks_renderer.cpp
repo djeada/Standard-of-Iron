@@ -1,5 +1,6 @@
 #include "barracks_renderer.h"
 #include "../../game/core/component.h"
+#include "../../game/visuals/team_colors.h"
 #include "../geom/flag.h"
 #include "../geom/math_utils.h"
 #include "../geom/transforms.h"
@@ -538,6 +539,34 @@ static inline void drawBannerAndPole(const DrawContext &p, ISubmitter &out,
 
   float beamLength = targetWidth * 0.45f;
   float beamY = poleHeight - targetHeight * 0.25f;
+
+  QVector3D teamColor = C.team;
+  QVector3D teamTrimColor = C.teamTrim;
+  float flagY = poleHeight - targetHeight / 2.0f;
+
+  if (p.entity) {
+    auto *capture = p.entity->getComponent<Engine::Core::CaptureComponent>();
+    if (capture && capture->isBeingCaptured) {
+      float progress =
+          std::clamp(capture->captureProgress / capture->requiredTime, 0.0f,
+                     1.0f);
+
+      QVector3D newTeamColor = Game::Visuals::teamColorForOwner(
+          capture->capturingPlayerId);
+      teamColor = lerp(C.team, clampVec01(newTeamColor), progress);
+      teamTrimColor = lerp(
+          C.teamTrim,
+          clampVec01(QVector3D(newTeamColor.x() * 0.6f, newTeamColor.y() * 0.6f,
+                               newTeamColor.z() * 0.6f)),
+          progress);
+
+      float loweredAmount = progress * targetHeight * 0.3f;
+      flagY -= loweredAmount;
+      targetHeight *= (1.0f - progress * 0.2f);
+      beamY -= loweredAmount;
+    }
+  }
+
   QVector3D beamStart(poleX + 0.02f, beamY, poleZ);
   QVector3D beamEnd(poleX + beamLength + 0.02f, beamY, poleZ);
   drawCylinder(out, p.model, beamStart, beamEnd, poleRadius * 0.35f, C.timber,
@@ -550,16 +579,16 @@ static inline void drawBannerAndPole(const DrawContext &p, ISubmitter &out,
 
   float panelX = beamEnd.x() + (targetWidth * 0.5f - beamLength);
   unitBox(out, unit, white, p.model,
-          QVector3D(panelX, poleHeight - targetHeight / 2.0f, poleZ + 0.01f),
+          QVector3D(panelX, flagY, poleZ + 0.01f),
           QVector3D(targetWidth / 2.0f, targetHeight / 2.0f, panelDepth),
-          C.team);
+          teamColor);
 
   unitBox(out, unit, white, p.model,
-          QVector3D(panelX, poleHeight - targetHeight + 0.04f, poleZ + 0.01f),
-          QVector3D(targetWidth / 2.0f + 0.02f, 0.04f, 0.015f), C.teamTrim);
+          QVector3D(panelX, flagY - targetHeight / 2.0f + 0.04f, poleZ + 0.01f),
+          QVector3D(targetWidth / 2.0f + 0.02f, 0.04f, 0.015f), teamTrimColor);
   unitBox(out, unit, white, p.model,
-          QVector3D(panelX, poleHeight - 0.04f, poleZ + 0.01f),
-          QVector3D(targetWidth / 2.0f + 0.02f, 0.04f, 0.015f), C.teamTrim);
+          QVector3D(panelX, flagY + targetHeight / 2.0f - 0.04f, poleZ + 0.01f),
+          QVector3D(targetWidth / 2.0f + 0.02f, 0.04f, 0.015f), teamTrimColor);
 }
 
 static inline void drawRallyFlagIfAny(const DrawContext &p, ISubmitter &out,
@@ -619,6 +648,43 @@ static inline void drawHealthBar(const DrawContext &p, ISubmitter &out,
           fgColor);
 }
 
+static inline void drawCaptureProgress(const DrawContext &p, ISubmitter &out,
+                                       Mesh *unit, Texture *white) {
+  if (!p.entity)
+    return;
+
+  auto *capture = p.entity->getComponent<Engine::Core::CaptureComponent>();
+  if (!capture || !capture->isBeingCaptured)
+    return;
+
+  float progress = std::clamp(capture->captureProgress / capture->requiredTime,
+                              0.0f, 1.0f);
+
+  constexpr float baseHeight = BuildingProportions::baseHeight;
+  constexpr float roofPitch = BuildingProportions::roofPitch;
+  float roofPeak = baseHeight + roofPitch;
+  float barY = roofPeak + 0.30f;
+
+  constexpr float barWidth = BuildingProportions::baseWidth * 0.8f;
+  constexpr float barHeight = 0.10f;
+  constexpr float barDepth = 0.14f;
+
+  QVector3D bgColor(0.12f, 0.12f, 0.12f);
+  unitBox(out, unit, white, p.model, QVector3D(0.0f, barY, 0.0f),
+          QVector3D(barWidth / 2.0f, barHeight / 2.0f, barDepth / 2.0f),
+          bgColor);
+
+  float fillWidth = barWidth * progress;
+  float fillX = -(barWidth - fillWidth) * 0.5f;
+
+  QVector3D captureColor(0.95f, 0.75f, 0.15f);
+
+  unitBox(out, unit, white, p.model, QVector3D(fillX, barY + 0.006f, 0.0f),
+          QVector3D(fillWidth / 2.0f, (barHeight / 2.0f) * 0.85f,
+                    (barDepth / 2.0f) * 0.90f),
+          captureColor);
+}
+
 static inline void drawSelectionFX(const DrawContext &p, ISubmitter &out) {
   QMatrix4x4 M;
   QVector3D pos = p.model.column(3).toVector3D();
@@ -657,6 +723,7 @@ static void drawBarracks(const DrawContext &p, ISubmitter &out) {
 
   drawRallyFlagIfAny(p, out, white, C);
   drawHealthBar(p, out, unit, white);
+  drawCaptureProgress(p, out, unit, white);
   drawSelectionFX(p, out);
 }
 
