@@ -22,6 +22,12 @@ AISystem::AISystem() {
 
   m_behaviorRegistry.registerBehavior(std::make_unique<AI::GatherBehavior>());
 
+  m_buildingAttackedSubscription = Engine::Core::ScopedEventSubscription<
+      Engine::Core::BuildingAttackedEvent>(
+      [this](const Engine::Core::BuildingAttackedEvent &event) {
+        this->onBuildingAttacked(event);
+      });
+
   initializeAIPlayers();
 }
 
@@ -75,6 +81,7 @@ void AISystem::update(Engine::Core::World *world, float deltaTime) {
 
     AI::AISnapshot snapshot =
         m_snapshotBuilder.build(*world, ai.context.playerId);
+    snapshot.gameTime = m_totalGameTime;
 
     AI::AIJob job;
     job.snapshot = std::move(snapshot);
@@ -105,6 +112,20 @@ void AISystem::processResults(Engine::Core::World &world) {
       m_applier.apply(world, ai.context.playerId, filteredCommands);
 
       results.pop();
+    }
+  }
+}
+
+void AISystem::onBuildingAttacked(
+    const Engine::Core::BuildingAttackedEvent &event) {
+  for (auto &ai : m_aiInstances) {
+    if (ai.context.playerId == event.ownerId) {
+      ai.context.buildingsUnderAttack[event.buildingId] = m_totalGameTime;
+
+      if (event.buildingId == ai.context.primaryBarracks) {
+        ai.context.barracksUnderThreat = true;
+      }
+      break;
     }
   }
 }

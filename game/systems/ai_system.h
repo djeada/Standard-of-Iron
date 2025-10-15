@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../core/event_manager.h"
 #include "../core/system.h"
 #include "ai_system/ai_behavior_registry.h"
 #include "ai_system/ai_command_applier.h"
@@ -46,9 +47,14 @@ private:
 
   float m_totalGameTime = 0.0f;
 
+  Engine::Core::ScopedEventSubscription<Engine::Core::BuildingAttackedEvent>
+      m_buildingAttackedSubscription;
+
   void initializeAIPlayers();
 
   void processResults(Engine::Core::World &world);
+
+  void onBuildingAttacked(const Engine::Core::BuildingAttackedEvent &event);
 };
 
 } // namespace Game::Systems
