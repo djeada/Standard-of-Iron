@@ -5,11 +5,11 @@
 
 CursorManager::CursorManager(QObject *parent) : QObject(parent) {}
 
-void CursorManager::setMode(const QString &mode) {
+void CursorManager::setMode(CursorMode mode) {
   if (m_cursorMode == mode)
     return;
 
-  if (m_cursorMode == "patrol" && mode != "patrol") {
+  if (m_cursorMode == CursorMode::Patrol && mode != CursorMode::Patrol) {
     m_hasFirstWaypoint = false;
   }
 
@@ -19,12 +19,16 @@ void CursorManager::setMode(const QString &mode) {
   emit globalCursorChanged();
 }
 
+void CursorManager::setMode(const QString &mode) {
+  setMode(CursorModeUtils::fromString(mode));
+}
+
 void CursorManager::updateCursorShape(QQuickWindow *window) {
   if (!window)
     return;
 
   Qt::CursorShape desiredCursor =
-      (m_cursorMode == "normal") ? Qt::ArrowCursor : Qt::BlankCursor;
+      (m_cursorMode == CursorMode::Normal) ? Qt::ArrowCursor : Qt::BlankCursor;
 
   if (m_currentCursor != desiredCursor) {
     m_currentCursor = desiredCursor;
