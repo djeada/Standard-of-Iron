@@ -21,6 +21,9 @@ struct VictoryConfig;
 namespace Game {
 namespace Systems {
 
+class GlobalStatsRegistry;
+class OwnerRegistry;
+
 class VictoryService {
 public:
   enum class VictoryType { Elimination, SurviveTime, Custom };
@@ -72,6 +75,9 @@ private:
       m_barrackCapturedSubscription;
 
   Engine::Core::World *m_worldPtr = nullptr;
+
+  Game::Systems::GlobalStatsRegistry &m_statsRegistry;
+  Game::Systems::OwnerRegistry &m_ownerRegistry;
 };
 
 } // namespace Systems
