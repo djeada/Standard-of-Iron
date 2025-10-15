@@ -127,7 +127,7 @@ GameEngine::GameEngine() {
   m_world->addSystem(std::make_unique<Game::Systems::MovementSystem>());
   m_world->addSystem(std::make_unique<Game::Systems::PatrolSystem>());
   m_world->addSystem(std::make_unique<Game::Systems::CombatSystem>());
-  m_world->addSystem(std::make_unique<Game::Systems::CaptureSystem>(*m_world));
+  m_world->addSystem(std::make_unique<Game::Systems::CaptureSystem>());
   m_world->addSystem(std::make_unique<Game::Systems::AISystem>());
   m_world->addSystem(std::make_unique<Game::Systems::ProductionSystem>());
   m_world->addSystem(std::make_unique<Game::Systems::TerrainAlignmentSystem>());
