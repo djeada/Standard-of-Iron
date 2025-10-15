@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../draw_queue.h"
+#include "../i_render_pass.h"
 #include <QMatrix4x4>
 #include <QVector3D>
 #include <cstdint>
@@ -12,7 +13,7 @@ namespace GL {
 class Renderer;
 class ResourceManager;
 
-class FogRenderer {
+class FogRenderer : public IRenderPass {
 public:
   FogRenderer() = default;
   ~FogRenderer() = default;
@@ -23,7 +24,7 @@ public:
   void updateMask(int width, int height, float tileSize,
                   const std::vector<std::uint8_t> &cells);
 
-  void submit(Renderer &renderer, ResourceManager &resources);
+  void submit(Renderer &renderer, ResourceManager *resources) override;
 
 private:
   void buildChunks();
