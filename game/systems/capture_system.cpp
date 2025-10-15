@@ -11,16 +11,15 @@
 
 namespace Game::Systems {
 
-CaptureSystem::CaptureSystem(Engine::Core::World &world) : m_world(world) {}
-
 void CaptureSystem::update(Engine::Core::World *world, float deltaTime) {
-  processBarrackCapture(deltaTime);
+  processBarrackCapture(world, deltaTime);
 }
 
-int CaptureSystem::countNearbyTroops(float barrackX, float barrackZ,
+int CaptureSystem::countNearbyTroops(Engine::Core::World *world,
+                                     float barrackX, float barrackZ,
                                      int ownerId, float radius) {
   int totalTroops = 0;
-  auto entities = m_world.getEntitiesWith<Engine::Core::UnitComponent>();
+  auto entities = world->getEntitiesWith<Engine::Core::UnitComponent>();
 
   for (auto *e : entities) {
     auto *unit = e->getComponent<Engine::Core::UnitComponent>();
@@ -50,7 +49,8 @@ int CaptureSystem::countNearbyTroops(float barrackX, float barrackZ,
   return totalTroops;
 }
 
-void CaptureSystem::transferBarrackOwnership(Engine::Core::Entity *barrack,
+void CaptureSystem::transferBarrackOwnership(Engine::Core::World *world,
+                                             Engine::Core::Entity *barrack,
                                              int newOwnerId) {
   auto *unit = barrack->getComponent<Engine::Core::UnitComponent>();
   auto *renderable = barrack->getComponent<Engine::Core::RenderableComponent>();
@@ -100,11 +100,12 @@ void CaptureSystem::transferBarrackOwnership(Engine::Core::Entity *barrack,
                                          newOwnerId));
 }
 
-void CaptureSystem::processBarrackCapture(float deltaTime) {
+void CaptureSystem::processBarrackCapture(Engine::Core::World *world,
+                                          float deltaTime) {
   constexpr float CAPTURE_RADIUS = 8.0f;
   constexpr int TROOP_ADVANTAGE_MULTIPLIER = 3;
 
-  auto barracks = m_world.getEntitiesWith<Engine::Core::BuildingComponent>();
+  auto barracks = world->getEntitiesWith<Engine::Core::BuildingComponent>();
 
   for (auto *barrack : barracks) {
     auto *unit = barrack->getComponent<Engine::Core::UnitComponent>();
@@ -128,7 +129,7 @@ void CaptureSystem::processBarrackCapture(float deltaTime) {
     int maxEnemyTroops = 0;
     int capturingPlayerId = -1;
 
-    auto entities = m_world.getEntitiesWith<Engine::Core::UnitComponent>();
+    auto entities = world->getEntitiesWith<Engine::Core::UnitComponent>();
     std::vector<int> playerIds;
     for (auto *e : entities) {
       auto *u = e->getComponent<Engine::Core::UnitComponent>();
@@ -142,8 +143,8 @@ void CaptureSystem::processBarrackCapture(float deltaTime) {
     }
 
     for (int playerId : playerIds) {
-      int troopCount =
-          countNearbyTroops(barrackX, barrackZ, playerId, CAPTURE_RADIUS);
+      int troopCount = countNearbyTroops(world, barrackX, barrackZ, playerId,
+                                         CAPTURE_RADIUS);
       if (troopCount > maxEnemyTroops) {
         maxEnemyTroops = troopCount;
         capturingPlayerId = playerId;
@@ -152,8 +153,8 @@ void CaptureSystem::processBarrackCapture(float deltaTime) {
 
     int defenderTroops = 0;
     if (!Game::Core::isNeutralOwner(barrackOwnerId)) {
-      defenderTroops =
-          countNearbyTroops(barrackX, barrackZ, barrackOwnerId, CAPTURE_RADIUS);
+      defenderTroops = countNearbyTroops(world, barrackX, barrackZ,
+                                         barrackOwnerId, CAPTURE_RADIUS);
     }
 
     bool canCapture =
@@ -169,7 +170,7 @@ void CaptureSystem::processBarrackCapture(float deltaTime) {
       capture->captureProgress += deltaTime;
 
       if (capture->captureProgress >= capture->requiredTime) {
-        transferBarrackOwnership(barrack, capturingPlayerId);
+        transferBarrackOwnership(world, barrack, capturingPlayerId);
         capture->captureProgress = 0.0f;
         capture->isBeingCaptured = false;
         capture->capturingPlayerId = -1;
