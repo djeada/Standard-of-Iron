@@ -185,14 +185,14 @@ Item {
                                 }
                                 if (count === 0)
                                     append({
-                                        "slotName": "No saves found",
-                                        "title": "",
-                                        "timestamp": 0,
-                                        "mapName": "",
-                                        "playTime": "",
-                                        "thumbnail": "",
-                                        "isEmpty": true
-                                    });
+                                    "slotName": "No saves found",
+                                    "title": "",
+                                    "timestamp": 0,
+                                    "mapName": "",
+                                    "playTime": "",
+                                    "thumbnail": "",
+                                    "isEmpty": true
+                                });
 
                             }
 
@@ -402,14 +402,14 @@ Item {
                     loadListModel.remove(slotIndex);
                     if (loadListModel.count === 0)
                         loadListModel.append({
-                            "slotName": "No saves found",
-                            "title": "",
-                            "timestamp": 0,
-                            "mapName": "",
-                            "playTime": "",
-                            "thumbnail": "",
-                            "isEmpty": true
-                        });
+                        "slotName": "No saves found",
+                        "title": "",
+                        "timestamp": 0,
+                        "mapName": "",
+                        "playTime": "",
+                        "thumbnail": "",
+                        "isEmpty": true
+                    });
 
                     if (loadListView.selectedIndex >= loadListModel.count)
                         loadListView.selectedIndex = loadListModel.count > 0 && !loadListModel.get(0).isEmpty ? loadListModel.count - 1 : -1;
