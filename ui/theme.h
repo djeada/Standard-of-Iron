@@ -70,6 +70,7 @@ class Theme : public QObject {
   Q_PROPERTY(QVariantList playerColors READ playerColors CONSTANT)
   Q_PROPERTY(QVariantList teamIcons READ teamIcons CONSTANT)
   Q_PROPERTY(QVariantList factions READ factions CONSTANT)
+  Q_PROPERTY(QVariantMap unitIcons READ unitIcons CONSTANT)
 
 public:
   static Theme *instance();
@@ -135,6 +136,7 @@ public:
   QVariantList playerColors() const;
   QVariantList teamIcons() const;
   QVariantList factions() const;
+  QVariantMap unitIcons() const;
 
 private:
   explicit Theme(QObject *parent = nullptr);

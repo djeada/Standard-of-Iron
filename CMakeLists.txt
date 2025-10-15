@@ -84,6 +84,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
             ui/qml/HUD.qml
             ui/qml/HUDTop.qml
             ui/qml/HUDBottom.qml
+            ui/qml/ProductionPanel.qml
             ui/qml/HUDVictory.qml
             ui/qml/GameView.qml
         RESOURCES
