@@ -87,7 +87,7 @@ void PatrolSystem::update(Engine::Core::World *world, float deltaTime) {
       waypoint = patrol->waypoints[patrol->currentWaypoint];
       targetX = waypoint.first;
       targetZ = waypoint.second;
-      
+
       movement->vx = 0.0f;
       movement->vz = 0.0f;
     }
