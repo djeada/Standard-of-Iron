@@ -1,6 +1,8 @@
 #include "ai_command_applier.h"
 #include "../../core/component.h"
 #include "../../core/world.h"
+#include "../../game_config.h"
+#include "../../units/troop_config.h"
 #include "../command_service.h"
 #include "ai_utils.h"
 
@@ -109,6 +111,18 @@ void AICommandApplier::apply(Engine::Core::World &world, int aiOwnerId,
 
       auto *unit = entity->getComponent<Engine::Core::UnitComponent>();
       if (unit && unit->ownerId != aiOwnerId) {
+        break;
+      }
+
+      int currentTroops = world.countTroopsForPlayer(aiOwnerId);
+      int maxTroops = Game::GameConfig::instance().getMaxTroopsPerPlayer();
+      std::string productType = command.productType.empty()
+                                    ? production->productType
+                                    : command.productType;
+      int individualsPerUnit =
+          Game::Units::TroopConfig::instance().getIndividualsPerUnit(
+              productType);
+      if (currentTroops + individualsPerUnit > maxTroops) {
         break;
       }
 
