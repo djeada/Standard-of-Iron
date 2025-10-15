@@ -199,6 +199,15 @@ QJsonObject Serialization::serializeEntity(const Entity *entity) {
     entityObj["aiControlled"] = true;
   }
 
+  if (const auto *capture = entity->getComponent<CaptureComponent>()) {
+    QJsonObject captureObj;
+    captureObj["capturingPlayerId"] = capture->capturingPlayerId;
+    captureObj["captureProgress"] = static_cast<double>(capture->captureProgress);
+    captureObj["requiredTime"] = static_cast<double>(capture->requiredTime);
+    captureObj["isBeingCaptured"] = capture->isBeingCaptured;
+    entityObj["capture"] = captureObj;
+  }
+
   return entityObj;
 }
 
@@ -363,6 +372,17 @@ void Serialization::deserializeEntity(Entity *entity, const QJsonObject &json) {
 
   if (json.contains("aiControlled") && json["aiControlled"].toBool()) {
     entity->addComponent<AIControlledComponent>();
+  }
+
+  if (json.contains("capture")) {
+    const auto captureObj = json["capture"].toObject();
+    auto capture = entity->addComponent<CaptureComponent>();
+    capture->capturingPlayerId = captureObj["capturingPlayerId"].toInt(-1);
+    capture->captureProgress =
+        static_cast<float>(captureObj["captureProgress"].toDouble(0.0));
+    capture->requiredTime =
+        static_cast<float>(captureObj["requiredTime"].toDouble(5.0));
+    capture->isBeingCaptured = captureObj["isBeingCaptured"].toBool(false);
   }
 }
 
