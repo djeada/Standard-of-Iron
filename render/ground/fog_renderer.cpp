@@ -21,7 +21,7 @@ void FogRenderer::updateMask(int width, int height, float tileSize,
   buildChunks();
 }
 
-void FogRenderer::submit(Renderer &renderer, ResourceManager &resources) {
+void FogRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   if (!m_enabled)
     return;
   if (m_width <= 0 || m_height <= 0)

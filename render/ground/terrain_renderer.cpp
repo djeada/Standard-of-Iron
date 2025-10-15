@@ -98,7 +98,7 @@ void TerrainRenderer::configure(const Game::Map::TerrainHeightMap &heightMap,
   buildMeshes();
 }
 
-void TerrainRenderer::submit(Renderer &renderer, ResourceManager &resources) {
+void TerrainRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   if (m_chunks.empty()) {
     return;
   }

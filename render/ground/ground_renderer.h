@@ -5,6 +5,7 @@
 #include <cstdint>
 
 #include "../../game/map/terrain.h"
+#include "../i_render_pass.h"
 #include "terrain_gpu.h"
 
 namespace Render {
@@ -14,7 +15,7 @@ class ResourceManager;
 class Mesh;
 class Texture;
 
-class GroundRenderer {
+class GroundRenderer : public IRenderPass {
 public:
   void configure(float tileSize, int width, int height) {
     m_tileSize = tileSize;
@@ -44,7 +45,7 @@ public:
     invalidateParamsCache();
   }
 
-  void submit(Renderer &renderer, ResourceManager &resources);
+  void submit(Renderer &renderer, ResourceManager *resources) override;
 
 private:
   void recomputeModel();

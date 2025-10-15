@@ -40,6 +40,7 @@ class TerrainRenderer;
 class BiomeRenderer;
 class FogRenderer;
 class StoneRenderer;
+struct IRenderPass;
 } // namespace GL
 } // namespace Render
 
@@ -260,6 +261,7 @@ private:
   std::unique_ptr<Render::GL::BiomeRenderer> m_biome;
   std::unique_ptr<Render::GL::FogRenderer> m_fog;
   std::unique_ptr<Render::GL::StoneRenderer> m_stone;
+  std::vector<Render::GL::IRenderPass *> m_passes;
   std::unique_ptr<Game::Systems::PickingService> m_pickingService;
   std::unique_ptr<Game::Systems::VictoryService> m_victoryService;
   std::unique_ptr<Game::Systems::SaveLoadService> m_saveLoadService;

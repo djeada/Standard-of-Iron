@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../../game/map/terrain.h"
+#include "../i_render_pass.h"
 #include "terrain_gpu.h"
 #include <QMatrix4x4>
 #include <QVector3D>
@@ -17,7 +18,7 @@ class ResourceManager;
 class Mesh;
 class Texture;
 
-class TerrainRenderer {
+class TerrainRenderer : public IRenderPass {
 public:
   TerrainRenderer();
   ~TerrainRenderer();
@@ -25,7 +26,7 @@ public:
   void configure(const Game::Map::TerrainHeightMap &heightMap,
                  const Game::Map::BiomeSettings &biomeSettings);
 
-  void submit(Renderer &renderer, ResourceManager &resources);
+  void submit(Renderer &renderer, ResourceManager *resources) override;
 
   void setWireframe(bool enable) { m_wireframe = enable; }
 
