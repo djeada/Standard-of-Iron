@@ -183,4 +183,16 @@ public:
   AIControlledComponent() = default;
 };
 
+class CaptureComponent : public Component {
+public:
+  CaptureComponent()
+      : capturingPlayerId(-1), captureProgress(0.0f), requiredTime(15.0f),
+        isBeingCaptured(false) {}
+
+  int capturingPlayerId;
+  float captureProgress;
+  float requiredTime;
+  bool isBeingCaptured;
+};
+
 } // namespace Engine::Core

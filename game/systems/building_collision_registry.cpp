@@ -91,6 +91,17 @@ void BuildingCollisionRegistry::updateBuildingPosition(unsigned int entityId,
   }
 }
 
+void BuildingCollisionRegistry::updateBuildingOwner(unsigned int entityId,
+                                                    int ownerId) {
+  auto it = m_entityToIndex.find(entityId);
+  if (it == m_entityToIndex.end()) {
+    return;
+  }
+
+  size_t index = it->second;
+  m_buildings[index].ownerId = ownerId;
+}
+
 bool BuildingCollisionRegistry::isPointInBuilding(
     float x, float z, unsigned int ignoreEntityId) const {
   for (const auto &building : m_buildings) {

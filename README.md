@@ -8,6 +8,7 @@ A modern real-time strategy (RTS) game built with C++20, Qt 6, and OpenGL 3.3 Co
 - **Unit Production**: Build archers from barracks with production queues
 - **Rally Points**: Set spawn locations for newly produced units (visual yellow flags)
 - **Combat System**: Ranged archer combat with health bars and visual arrow projectiles
+- **Barrack Capture**: Take control of neutral or enemy barracks with 3× troop advantage
 - **AI Opponents**: Computer-controlled enemy that produces units and attacks your base
 - **Victory/Defeat**: Win by destroying the enemy barracks, lose if yours is destroyed
 - **Team Colors**: Visual distinction between player (blue) and enemy (red) units
@@ -306,8 +307,35 @@ Maps can include neutral barracks that start without an owner. These barracks ar
 - Appear **gray/neutral** on the map
 - Do **not produce troops**
 - Do **not respond** to player or AI commands
-- Can be **captured** by players (capture mechanics handled separately)
+- Can be **captured** by players using the capture system
 - AI systems automatically **skip** neutral barracks
+
+### Barrack Capture System
+
+Players can capture neutral or enemy barracks by maintaining a sufficient troop presence:
+
+**Capture Requirements:**
+- **3× troop advantage** within 8 units of the barrack
+- Maintain advantage for **5 seconds**
+- Works with both neutral and enemy-owned barracks
+
+**Visual Feedback:**
+- **Progress bar** appears above barrack showing capture percentage (golden/yellow)
+- **Flag animation**: Flag lowers and transitions to capturing player's color
+- Flag returns to normal position when capture completes
+
+**Capture Effects:**
+- Ownership transfers to capturing player
+- Production component activated (for neutral → player captures)
+- Building color updates to new owner's team color
+- Rally point automatically set near the barrack
+
+**Capture Interruption:**
+If troop advantage is lost, progress decays at 2× the accumulation rate.
+
+**Example Map:** See `assets/maps/barrack_capture_test.json` for a test scenario.
+
+For detailed technical documentation, see `game/systems/CAPTURE_SYSTEM.md`.
 
 **Example map with neutral barracks:**
 ```json
