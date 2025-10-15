@@ -159,6 +159,8 @@ void CommandService::moveUnits(Engine::Core::World &world,
     mv->goalY = targetZ;
 
     if (matchedPending) {
+      mv->vx = 0.0f;
+      mv->vz = 0.0f;
       continue;
     }
 
@@ -173,6 +175,8 @@ void CommandService::moveUnits(Engine::Core::World &world,
         shouldSuppressPathRequest = true;
 
         if (mv->hasTarget || mv->pathPending) {
+          mv->vx = 0.0f;
+          mv->vz = 0.0f;
           continue;
         }
       }
@@ -184,6 +188,8 @@ void CommandService::moveUnits(Engine::Core::World &world,
         float dx = mv->targetX - targetX;
         float dz = mv->targetY - targetZ;
         if (dx * dx + dz * dz <= SAME_TARGET_THRESHOLD_SQ) {
+          mv->vx = 0.0f;
+          mv->vz = 0.0f;
           continue;
         }
       }
@@ -193,6 +199,8 @@ void CommandService::moveUnits(Engine::Core::World &world,
         float dx = lastWaypoint.first - targetX;
         float dz = lastWaypoint.second - targetZ;
         if (dx * dx + dz * dz <= SAME_TARGET_THRESHOLD_SQ) {
+          mv->vx = 0.0f;
+          mv->vz = 0.0f;
           continue;
         }
       }
@@ -447,6 +455,8 @@ void CommandService::moveGroup(Engine::Core::World &world,
       mv->pendingRequestId = 0;
       unitsNeedingNewPath.push_back(&member);
     } else {
+      mv->vx = 0.0f;
+      mv->vz = 0.0f;
     }
   }
 
