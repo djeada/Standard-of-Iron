@@ -156,15 +156,35 @@ void DefendBehavior::execute(const AISnapshot &snapshot, AIContext &context,
       }
 
       if (closestThreat && !readyDefenders.empty()) {
+        const Nation *nation =
+            NationRegistry::instance().getNationForPlayer(context.playerId);
+        FormationType formationType = FormationType::Roman;
+        if (nation) {
+          formationType = nation->formationType;
+        }
+
+        QVector3D interceptCenter(closestThreat->posX, closestThreat->posY,
+                                  closestThreat->posZ);
+        auto formationTargets =
+            FormationSystem::instance().getFormationPositions(
+                formationType, static_cast<int>(readyDefenders.size()),
+                interceptCenter, 2.5f);
 
         std::vector<Engine::Core::EntityID> defenderIds;
         std::vector<float> targetX, targetY, targetZ;
+        defenderIds.reserve(readyDefenders.size());
+        targetX.reserve(readyDefenders.size());
+        targetY.reserve(readyDefenders.size());
+        targetZ.reserve(readyDefenders.size());
 
-        for (const auto *unit : readyDefenders) {
+        for (size_t i = 0; i < readyDefenders.size(); ++i) {
+          const auto *unit = readyDefenders[i];
+          const auto &target = formationTargets[i];
+
           defenderIds.push_back(unit->id);
-          targetX.push_back(closestThreat->posX);
-          targetY.push_back(closestThreat->posY);
-          targetZ.push_back(closestThreat->posZ);
+          targetX.push_back(target.x());
+          targetY.push_back(target.y());
+          targetZ.push_back(target.z());
         }
 
         auto claimedUnits =

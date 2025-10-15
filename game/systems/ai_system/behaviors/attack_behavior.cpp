@@ -1,7 +1,10 @@
 #include "attack_behavior.h"
+#include "../../formation_system.h"
+#include "../../nation_registry.h"
 #include "../ai_tactical.h"
 #include "../ai_utils.h"
 
+#include <QVector3D>
 #include <algorithm>
 #include <cmath>
 #include <limits>
@@ -150,14 +153,34 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
         }
 
         if (needsNewCommand) {
+          const Nation *nation =
+              NationRegistry::instance().getNationForPlayer(context.playerId);
+          FormationType formationType = FormationType::Roman;
+          if (nation) {
+            formationType = nation->formationType;
+          }
+
+          QVector3D attackCenter(attackPosX, 0.0f, attackPosZ);
+          auto formationTargets =
+              FormationSystem::instance().getFormationPositions(
+                  formationType, static_cast<int>(readyUnits.size()),
+                  attackCenter, 1.8f);
+
           std::vector<Engine::Core::EntityID> unitIds;
           std::vector<float> targetX, targetY, targetZ;
+          unitIds.reserve(readyUnits.size());
+          targetX.reserve(readyUnits.size());
+          targetY.reserve(readyUnits.size());
+          targetZ.reserve(readyUnits.size());
 
-          for (const auto *unit : readyUnits) {
+          for (size_t i = 0; i < readyUnits.size(); ++i) {
+            const auto *unit = readyUnits[i];
+            const auto &target = formationTargets[i];
+
             unitIds.push_back(unit->id);
-            targetX.push_back(attackPosX);
-            targetY.push_back(0.0f);
-            targetZ.push_back(attackPosZ);
+            targetX.push_back(target.x());
+            targetY.push_back(target.y());
+            targetZ.push_back(target.z());
           }
 
           AICommand cmd;
