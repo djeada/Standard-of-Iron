@@ -145,10 +145,10 @@ QJsonObject Serialization::serializeEntity(const Entity *entity) {
     entityObj["attack"] = attackObj;
   }
 
-  if (const auto *attackTarget = entity->getComponent<AttackTargetComponent>()) {
+  if (const auto *attackTarget =
+          entity->getComponent<AttackTargetComponent>()) {
     QJsonObject attackTargetObj;
-    attackTargetObj["targetId"] =
-        static_cast<qint64>(attackTarget->targetId);
+    attackTargetObj["targetId"] = static_cast<qint64>(attackTarget->targetId);
     attackTargetObj["shouldChase"] = attackTarget->shouldChase;
     entityObj["attackTarget"] = attackTargetObj;
   }
@@ -216,7 +216,8 @@ void Serialization::deserializeEntity(Entity *entity, const QJsonObject &json) {
     transform->scale.y = static_cast<float>(transformObj["scaleY"].toDouble());
     transform->scale.z = static_cast<float>(transformObj["scaleZ"].toDouble());
     transform->hasDesiredYaw = transformObj["hasDesiredYaw"].toBool(false);
-    transform->desiredYaw = static_cast<float>(transformObj["desiredYaw"].toDouble());
+    transform->desiredYaw =
+        static_cast<float>(transformObj["desiredYaw"].toDouble());
   }
 
   if (json.contains("renderable")) {
@@ -226,8 +227,9 @@ void Serialization::deserializeEntity(Entity *entity, const QJsonObject &json) {
     renderable->texturePath =
         renderableObj["texturePath"].toString().toStdString();
     renderable->visible = renderableObj["visible"].toBool(true);
-    renderable->mesh = static_cast<RenderableComponent::MeshKind>(
-        renderableObj["mesh"].toInt(static_cast<int>(RenderableComponent::MeshKind::Cube)));
+    renderable->mesh =
+        static_cast<RenderableComponent::MeshKind>(renderableObj["mesh"].toInt(
+            static_cast<int>(RenderableComponent::MeshKind::Cube)));
     if (renderableObj.contains("color")) {
       deserializeColor(renderableObj["color"].toArray(), renderable->color);
     }
@@ -239,7 +241,8 @@ void Serialization::deserializeEntity(Entity *entity, const QJsonObject &json) {
     unit->health = unitObj["health"].toInt(100);
     unit->maxHealth = unitObj["maxHealth"].toInt(100);
     unit->speed = static_cast<float>(unitObj["speed"].toDouble());
-    unit->visionRange = static_cast<float>(unitObj["visionRange"].toDouble(12.0));
+    unit->visionRange =
+        static_cast<float>(unitObj["visionRange"].toDouble(12.0));
     unit->unitType = unitObj["unitType"].toString().toStdString();
     unit->ownerId = unitObj["ownerId"].toInt(0);
   }
@@ -257,11 +260,14 @@ void Serialization::deserializeEntity(Entity *entity, const QJsonObject &json) {
     movement->pathPending = movementObj["pathPending"].toBool(false);
     movement->pendingRequestId = static_cast<std::uint64_t>(
         movementObj["pendingRequestId"].toVariant().toULongLong());
-    movement->repathCooldown = static_cast<float>(movementObj["repathCooldown"].toDouble());
-    movement->lastGoalX = static_cast<float>(movementObj["lastGoalX"].toDouble());
-    movement->lastGoalY = static_cast<float>(movementObj["lastGoalY"].toDouble());
-    movement->timeSinceLastPathRequest = static_cast<float>(
-        movementObj["timeSinceLastPathRequest"].toDouble());
+    movement->repathCooldown =
+        static_cast<float>(movementObj["repathCooldown"].toDouble());
+    movement->lastGoalX =
+        static_cast<float>(movementObj["lastGoalX"].toDouble());
+    movement->lastGoalY =
+        static_cast<float>(movementObj["lastGoalY"].toDouble());
+    movement->timeSinceLastPathRequest =
+        static_cast<float>(movementObj["timeSinceLastPathRequest"].toDouble());
 
     movement->path.clear();
     const auto pathArray = movementObj["path"].toArray();
@@ -280,10 +286,13 @@ void Serialization::deserializeEntity(Entity *entity, const QJsonObject &json) {
     attack->range = static_cast<float>(attackObj["range"].toDouble());
     attack->damage = attackObj["damage"].toInt(0);
     attack->cooldown = static_cast<float>(attackObj["cooldown"].toDouble());
-    attack->timeSinceLast = static_cast<float>(attackObj["timeSinceLast"].toDouble());
-    attack->meleeRange = static_cast<float>(attackObj["meleeRange"].toDouble(1.5));
+    attack->timeSinceLast =
+        static_cast<float>(attackObj["timeSinceLast"].toDouble());
+    attack->meleeRange =
+        static_cast<float>(attackObj["meleeRange"].toDouble(1.5));
     attack->meleeDamage = attackObj["meleeDamage"].toInt(0);
-    attack->meleeCooldown = static_cast<float>(attackObj["meleeCooldown"].toDouble());
+    attack->meleeCooldown =
+        static_cast<float>(attackObj["meleeCooldown"].toDouble());
     attack->preferredMode =
         combatModeFromString(attackObj["preferredMode"].toString());
     attack->currentMode =
@@ -308,8 +317,8 @@ void Serialization::deserializeEntity(Entity *entity, const QJsonObject &json) {
   if (json.contains("patrol")) {
     const auto patrolObj = json["patrol"].toObject();
     auto patrol = entity->addComponent<PatrolComponent>();
-    patrol->currentWaypoint = static_cast<size_t>(
-        std::max(0, patrolObj["currentWaypoint"].toInt()));
+    patrol->currentWaypoint =
+        static_cast<size_t>(std::max(0, patrolObj["currentWaypoint"].toInt()));
     patrol->patrolling = patrolObj["patrolling"].toBool(false);
 
     patrol->waypoints.clear();
@@ -331,8 +340,10 @@ void Serialization::deserializeEntity(Entity *entity, const QJsonObject &json) {
     const auto productionObj = json["production"].toObject();
     auto production = entity->addComponent<ProductionComponent>();
     production->inProgress = productionObj["inProgress"].toBool(false);
-    production->buildTime = static_cast<float>(productionObj["buildTime"].toDouble());
-    production->timeRemaining = static_cast<float>(productionObj["timeRemaining"].toDouble());
+    production->buildTime =
+        static_cast<float>(productionObj["buildTime"].toDouble());
+    production->timeRemaining =
+        static_cast<float>(productionObj["timeRemaining"].toDouble());
     production->producedCount = productionObj["producedCount"].toInt(0);
     production->maxUnits = productionObj["maxUnits"].toInt(0);
     production->productType =
@@ -366,11 +377,9 @@ QJsonDocument Serialization::serializeWorld(const World *world) {
   }
 
   worldObj["entities"] = entitiesArray;
-  worldObj["nextEntityId"] =
-      static_cast<qint64>(world->getNextEntityId());
+  worldObj["nextEntityId"] = static_cast<qint64>(world->getNextEntityId());
   worldObj["schemaVersion"] = 1;
-  worldObj["ownerRegistry"] =
-      Game::Systems::OwnerRegistry::instance().toJson();
+  worldObj["ownerRegistry"] = Game::Systems::OwnerRegistry::instance().toJson();
 
   return QJsonDocument(worldObj);
 }
@@ -380,8 +389,8 @@ void Serialization::deserializeWorld(World *world, const QJsonDocument &doc) {
   auto entitiesArray = worldObj["entities"].toArray();
   for (const auto &value : entitiesArray) {
     auto entityObj = value.toObject();
-    const auto entityId = static_cast<EntityID>(
-        entityObj["id"].toVariant().toULongLong());
+    const auto entityId =
+        static_cast<EntityID>(entityObj["id"].toVariant().toULongLong());
     auto entity = entityId == NULL_ENTITY ? world->createEntity()
                                           : world->createEntityWithId(entityId);
     if (entity) {

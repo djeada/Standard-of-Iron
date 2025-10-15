@@ -30,8 +30,8 @@ SaveLoadService::SaveLoadService() {
 SaveLoadService::~SaveLoadService() = default;
 
 QString SaveLoadService::getSavesDirectory() const {
-  QString savesPath = QStandardPaths::writableLocation(
-      QStandardPaths::AppDataLocation);
+  QString savesPath =
+      QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
   return savesPath + "/saves";
 }
 
@@ -64,14 +64,13 @@ bool SaveLoadService::saveGameToSlot(Engine::Core::World &world,
 
     QJsonDocument worldDoc =
         Engine::Core::Serialization::serializeWorld(&world);
-    const QByteArray worldBytes =
-        worldDoc.toJson(QJsonDocument::Compact);
+    const QByteArray worldBytes = worldDoc.toJson(QJsonDocument::Compact);
 
     QJsonObject combinedMetadata = metadata;
     combinedMetadata["slotName"] = slotName;
     combinedMetadata["title"] = title;
-    combinedMetadata["timestamp"] = QDateTime::currentDateTimeUtc().toString(
-        Qt::ISODateWithMs);
+    combinedMetadata["timestamp"] =
+        QDateTime::currentDateTimeUtc().toString(Qt::ISODateWithMs);
     if (!combinedMetadata.contains("mapName")) {
       combinedMetadata["mapName"] =
           mapName.isEmpty() ? QStringLiteral("Unknown Map") : mapName;
@@ -124,8 +123,7 @@ bool SaveLoadService::loadGameFromSlot(Engine::Core::World &world,
     }
 
     QJsonParseError parseError{};
-    QJsonDocument doc =
-        QJsonDocument::fromJson(worldBytes, &parseError);
+    QJsonDocument doc = QJsonDocument::fromJson(worldBytes, &parseError);
     if (parseError.error != QJsonParseError::NoError || doc.isNull()) {
       m_lastError = QStringLiteral("Corrupted save data for slot '%1': %2")
                         .arg(slotName, parseError.errorString());
@@ -185,16 +183,11 @@ bool SaveLoadService::deleteSaveSlot(const QString &slotName) {
   return true;
 }
 
-void SaveLoadService::openSettings() {
-  qInfo() << "Open settings requested";
-  // TODO: Implement settings dialog/menu integration
-  // This could trigger a signal or callback to open the settings UI
-}
+void SaveLoadService::openSettings() { qInfo() << "Open settings requested"; }
 
 void SaveLoadService::exitGame() {
   qInfo() << "Exit game requested";
-  // Perform any cleanup before exit if needed
-  // Then quit the application
+
   QCoreApplication::quit();
 }
 
