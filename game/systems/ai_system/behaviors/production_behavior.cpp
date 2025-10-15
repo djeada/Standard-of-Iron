@@ -1,4 +1,5 @@
 #include "production_behavior.h"
+#include "../../../core/ownership_constants.h"
 #include "../../nation_registry.h"
 #include "../ai_tactical.h"
 
@@ -52,6 +53,9 @@ void ProductionBehavior::execute(const AISnapshot &snapshot, AIContext &context,
 
   for (const auto &entity : snapshot.friendlies) {
     if (!entity.isBuilding || entity.unitType != "barracks")
+      continue;
+
+    if (Game::Core::isNeutralOwner(entity.ownerId))
       continue;
 
     static int logCounter = 0;
