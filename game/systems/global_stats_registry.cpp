@@ -22,6 +22,12 @@ void GlobalStatsRegistry::initialize() {
   m_unitDiedSubscription =
       Engine::Core::ScopedEventSubscription<Engine::Core::UnitDiedEvent>(
           [this](const Engine::Core::UnitDiedEvent &e) { onUnitDied(e); });
+
+  m_barrackCapturedSubscription =
+      Engine::Core::ScopedEventSubscription<Engine::Core::BarrackCapturedEvent>(
+          [this](const Engine::Core::BarrackCapturedEvent &e) {
+            onBarrackCaptured(e);
+          });
 }
 
 void GlobalStatsRegistry::clear() { m_playerStats.clear(); }
@@ -104,6 +110,24 @@ void GlobalStatsRegistry::onUnitDied(const Engine::Core::UnitDiedEvent &event) {
       }
     }
   }
+}
+
+void GlobalStatsRegistry::onBarrackCaptured(
+    const Engine::Core::BarrackCapturedEvent &event) {
+
+  auto prevIt = m_playerStats.find(event.previousOwnerId);
+  if (prevIt != m_playerStats.end() && event.previousOwnerId != -1) {
+    prevIt->second.barracksOwned--;
+    if (prevIt->second.barracksOwned < 0) {
+      prevIt->second.barracksOwned = 0;
+    }
+  }
+
+  auto &newStats = m_playerStats[event.newOwnerId];
+  newStats.barracksOwned++;
+
+  qDebug() << "[Stats] Barrack captured - Previous owner" << event.previousOwnerId
+           << "lost barrack, new owner" << event.newOwnerId << "gained barrack";
 }
 
 void GlobalStatsRegistry::rebuildFromWorld(Engine::Core::World &world) {
