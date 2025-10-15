@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../models/cursor_manager.h"
+#include "../models/cursor_mode.h"
 #include "../models/hover_tracker.h"
 #include "../utils/engine_view_helpers.h"
 #include "../utils/movement_utils.h"
@@ -127,6 +128,7 @@ public:
   float timeScale() const { return m_runtime.timeScale; }
   QString victoryState() const { return m_runtime.victoryState; }
   QString cursorMode() const;
+  void setCursorMode(CursorMode mode);
   void setCursorMode(const QString &mode);
   qreal globalCursorX() const;
   qreal globalCursorY() const;
@@ -194,7 +196,7 @@ private:
     float timeScale = 1.0f;
     int localOwnerId = 1;
     QString victoryState = "";
-    QString cursorMode = "normal";
+    CursorMode cursorMode{CursorMode::Normal};
     QString lastError = "";
     Qt::CursorShape currentCursor = Qt::ArrowCursor;
     int lastTroopCount = 0;

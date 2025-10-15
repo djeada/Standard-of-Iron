@@ -247,9 +247,9 @@ void GameEngine::onRightClick(qreal sx, qreal sy) {
   if (!selectionSystem)
     return;
 
-  if (m_cursorManager->mode() == "patrol" ||
-      m_cursorManager->mode() == "attack") {
-    setCursorMode("normal");
+  if (m_cursorManager->mode() == CursorMode::Patrol ||
+      m_cursorManager->mode() == CursorMode::Attack) {
+    setCursorMode(CursorMode::Normal);
     return;
   }
 
@@ -258,7 +258,7 @@ void GameEngine::onRightClick(qreal sx, qreal sy) {
     if (m_selectionController) {
       m_selectionController->onRightClickClearSelection();
     }
-    setCursorMode("normal");
+    setCursorMode(CursorMode::Normal);
     return;
   }
 }
@@ -297,7 +297,7 @@ void GameEngine::onAttackClick(qreal sx, qreal sy) {
   }
 
   if (result.resetCursorToNormal) {
-    setCursorMode("normal");
+    setCursorMode(CursorMode::Normal);
   }
 }
 
@@ -312,7 +312,7 @@ void GameEngine::onStopCommand() {
 
   auto result = m_commandController->onStopCommand();
   if (result.resetCursorToNormal) {
-    setCursorMode("normal");
+    setCursorMode(CursorMode::Normal);
   }
 }
 
@@ -324,7 +324,7 @@ void GameEngine::onPatrolClick(qreal sx, qreal sy) {
   auto result = m_commandController->onPatrolClick(
       sx, sy, m_viewport.width, m_viewport.height, m_camera.get());
   if (result.resetCursorToNormal) {
-    setCursorMode("normal");
+    setCursorMode(CursorMode::Normal);
   }
 }
 
@@ -345,17 +345,21 @@ void GameEngine::setError(const QString &errorMessage) {
   }
 }
 
-void GameEngine::setCursorMode(const QString &mode) {
+void GameEngine::setCursorMode(CursorMode mode) {
   if (!m_cursorManager)
     return;
   m_cursorManager->setMode(mode);
   m_cursorManager->updateCursorShape(m_window);
 }
 
+void GameEngine::setCursorMode(const QString &mode) {
+  setCursorMode(CursorModeUtils::fromString(mode));
+}
+
 QString GameEngine::cursorMode() const {
   if (!m_cursorManager)
     return "normal";
-  return m_cursorManager->mode();
+  return m_cursorManager->modeString();
 }
 
 qreal GameEngine::globalCursorX() const {
@@ -607,8 +611,8 @@ void GameEngine::syncSelectionFlags() {
   App::Utils::sanitizeSelection(m_world.get(), selectionSystem);
 
   if (selectionSystem->getSelectedUnits().empty()) {
-    if (m_cursorManager && m_cursorManager->mode() != "normal") {
-      setCursorMode("normal");
+    if (m_cursorManager && m_cursorManager->mode() != CursorMode::Normal) {
+      setCursorMode(CursorMode::Normal);
     }
   }
 }
@@ -1255,7 +1259,7 @@ QJsonObject GameEngine::buildSaveMetadata() const {
   runtimeObj["paused"] = m_runtime.paused;
   runtimeObj["timeScale"] = m_runtime.timeScale;
   runtimeObj["victoryState"] = m_runtime.victoryState;
-  runtimeObj["cursorMode"] = m_runtime.cursorMode;
+  runtimeObj["cursorMode"] = CursorModeUtils::toInt(m_runtime.cursorMode);
   runtimeObj["selectedPlayerId"] = m_selectedPlayerId;
   runtimeObj["followSelection"] = m_followSelectionEnabled;
   metadata["runtime"] = runtimeObj;
@@ -1437,10 +1441,15 @@ void GameEngine::applyEnvironmentFromMetadata(const QJsonObject &metadata) {
       emit victoryStateChanged();
     }
 
-    const QString cursor =
-        runtimeObj.value("cursorMode").toString(m_runtime.cursorMode);
-    if (!cursor.isEmpty()) {
-      setCursorMode(cursor);
+    if (runtimeObj.contains("cursorMode")) {
+      const auto cursorValue = runtimeObj.value("cursorMode");
+      if (cursorValue.isDouble()) {
+        setCursorMode(
+            CursorModeUtils::fromInt(cursorValue.toInt(static_cast<int>(
+                CursorMode::Normal))));
+      } else if (cursorValue.isString()) {
+        setCursorMode(cursorValue.toString());
+      }
     }
 
     const int selectedId =
