@@ -13,7 +13,7 @@ A modern real-time strategy (RTS) game built with C++20, Qt 6, and OpenGL 3.3 Co
 - **Team Colors**: Visual distinction between player (blue) and enemy (red) units
 
 ### Advanced Unit Commands
-- **Move**: Right-click to move selected units to a location
+- **Move**: Left-click to move selected units to a location
 - **Attack**: Use Attack command to force units to target enemies
 - **Stop**: Halt all unit actions immediately
 - **Patrol**: Set two waypoints for units to patrol (green flags), auto-engaging nearby enemies
