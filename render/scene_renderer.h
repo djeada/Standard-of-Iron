@@ -34,6 +34,12 @@ namespace Render::GL {
 
 class Backend;
 
+struct FrameScope {
+  Renderer &r;
+  FrameScope(Renderer &renderer) : r(renderer) { r.beginFrame(); }
+  ~FrameScope() { r.endFrame(); }
+};
+
 class Renderer : public ISubmitter {
 public:
   Renderer();

@@ -97,7 +97,8 @@ void BiomeRenderer::configure(const Game::Map::TerrainHeightMap &heightMap,
   generateGrassInstances();
 }
 
-void BiomeRenderer::submit(Renderer &renderer) {
+void BiomeRenderer::submit(Renderer &renderer, ResourceManager *resources) {
+  Q_UNUSED(resources);
   if (m_grassInstanceCount > 0) {
     if (!m_grassInstanceBuffer) {
       m_grassInstanceBuffer = std::make_unique<Buffer>(Buffer::Type::Vertex);
