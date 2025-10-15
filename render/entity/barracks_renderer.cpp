@@ -1,5 +1,6 @@
 #include "barracks_renderer.h"
 #include "../../game/core/component.h"
+#include "../../game/visuals/team_colors.h"
 #include "../geom/flag.h"
 #include "../geom/math_utils.h"
 #include "../geom/transforms.h"
@@ -538,6 +539,33 @@ static inline void drawBannerAndPole(const DrawContext &p, ISubmitter &out,
 
   float beamLength = targetWidth * 0.45f;
   float beamY = poleHeight - targetHeight * 0.25f;
+
+  QVector3D teamColor = C.team;
+  QVector3D teamTrimColor = C.teamTrim;
+  float flagY = poleHeight - targetHeight / 2.0f;
+
+  if (p.entity) {
+    auto *capture = p.entity->getComponent<Engine::Core::CaptureComponent>();
+    if (capture && capture->isBeingCaptured) {
+      float progress =
+          std::clamp(capture->captureProgress / capture->requiredTime, 0.0f,
+                     1.0f);
+
+      QVector3D newTeamColor = Game::Visuals::teamColorForOwner(
+          capture->capturingPlayerId);
+      teamColor = lerp(C.team, clampVec01(newTeamColor), progress);
+      teamTrimColor = lerp(
+          C.teamTrim,
+          clampVec01(QVector3D(newTeamColor.x() * 0.6f, newTeamColor.y() * 0.6f,
+                               newTeamColor.z() * 0.6f)),
+          progress);
+
+      float loweredAmount = progress * poleHeight * 0.85f;
+      flagY -= loweredAmount;
+      beamY -= loweredAmount;
+    }
+  }
+
   QVector3D beamStart(poleX + 0.02f, beamY, poleZ);
   QVector3D beamEnd(poleX + beamLength + 0.02f, beamY, poleZ);
   drawCylinder(out, p.model, beamStart, beamEnd, poleRadius * 0.35f, C.timber,
@@ -550,16 +578,16 @@ static inline void drawBannerAndPole(const DrawContext &p, ISubmitter &out,
 
   float panelX = beamEnd.x() + (targetWidth * 0.5f - beamLength);
   unitBox(out, unit, white, p.model,
-          QVector3D(panelX, poleHeight - targetHeight / 2.0f, poleZ + 0.01f),
+          QVector3D(panelX, flagY, poleZ + 0.01f),
           QVector3D(targetWidth / 2.0f, targetHeight / 2.0f, panelDepth),
-          C.team);
+          teamColor);
 
   unitBox(out, unit, white, p.model,
-          QVector3D(panelX, poleHeight - targetHeight + 0.04f, poleZ + 0.01f),
-          QVector3D(targetWidth / 2.0f + 0.02f, 0.04f, 0.015f), C.teamTrim);
+          QVector3D(panelX, flagY - targetHeight / 2.0f + 0.04f, poleZ + 0.01f),
+          QVector3D(targetWidth / 2.0f + 0.02f, 0.04f, 0.015f), teamTrimColor);
   unitBox(out, unit, white, p.model,
-          QVector3D(panelX, poleHeight - 0.04f, poleZ + 0.01f),
-          QVector3D(targetWidth / 2.0f + 0.02f, 0.04f, 0.015f), C.teamTrim);
+          QVector3D(panelX, flagY + targetHeight / 2.0f - 0.04f, poleZ + 0.01f),
+          QVector3D(targetWidth / 2.0f + 0.02f, 0.04f, 0.015f), teamTrimColor);
 }
 
 static inline void drawRallyFlagIfAny(const DrawContext &p, ISubmitter &out,

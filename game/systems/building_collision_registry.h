@@ -40,6 +40,8 @@ public:
   void updateBuildingPosition(unsigned int entityId, float centerX,
                               float centerZ);
 
+  void updateBuildingOwner(unsigned int entityId, int ownerId);
+
   const std::vector<BuildingFootprint> &getAllBuildings() const {
     return m_buildings;
   }
