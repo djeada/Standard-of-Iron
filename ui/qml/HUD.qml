@@ -117,7 +117,6 @@ Item {
 
     HUDVictory {
         anchors.fill: parent
-        
         onReturnToMainMenuRequested: {
             hud.returnToMainMenuRequested();
         }

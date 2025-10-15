@@ -4,11 +4,6 @@ import QtQuick.Controls 2.15
 Rectangle {
     id: summaryOverlay
 
-    anchors.fill: parent
-    color: Qt.rgba(0, 0, 0, 0.85)
-    visible: false
-    z: 101
-
     property bool isVictory: (typeof game !== 'undefined' && game.victoryState === "victory")
     property var onClose: null
     property var onReturnToMainMenu: null
@@ -20,27 +15,27 @@ Rectangle {
 
     function hide() {
         visible = false;
-        if (onClose) {
+        if (onClose)
             onClose();
-        }
+
     }
-    
+
     function returnToMainMenu() {
         visible = false;
-        if (onReturnToMainMenu) {
+        if (onReturnToMainMenu)
             onReturnToMainMenu();
-        }
+
     }
 
     function buildPlayerList() {
         playerBannersModel.clear();
         if (typeof game === 'undefined')
             return ;
+
         var owners = game.ownerInfo;
         var localOwnerId = -1;
         var localTeamId = -1;
         var winningTeamId = -1;
-        
         for (var i = 0; i < owners.length; i++) {
             if (owners[i].isLocal) {
                 localOwnerId = owners[i].id;
@@ -48,12 +43,9 @@ Rectangle {
                 break;
             }
         }
-        
-        // Determine winning team based on isVictory and local player's team
         if (isVictory) {
             winningTeamId = localTeamId;
         } else {
-            // Local team lost, so find a different team as winner
             for (var t = 0; t < owners.length; t++) {
                 if (owners[t].teamId !== localTeamId && (owners[t].type === "Player" || owners[t].type === "AI")) {
                     winningTeamId = owners[t].teamId;
@@ -61,7 +53,6 @@ Rectangle {
                 }
             }
         }
-        
         var playerBanners = [];
         var aiColorIndex = 1;
         for (var j = 0; j < owners.length; j++) {
@@ -73,6 +64,7 @@ Rectangle {
                 var bannerColor = getBannerColor(owner.id, isLocalPlayer, owner.type === "AI", aiColorIndex);
                 if (owner.type === "AI")
                     aiColorIndex++;
+
                 var score = calculateScore(stats);
                 var playTimeFormatted = formatPlayTime(stats.playTimeSec);
                 playerBanners.push({
@@ -94,18 +86,20 @@ Rectangle {
         playerBanners.sort(function(a, b) {
             if (a.isLocalPlayer)
                 return -1;
+
             if (b.isLocalPlayer)
                 return 1;
+
             return 0;
         });
-        for (var k = 0; k < playerBanners.length; k++)
-            playerBannersModel.append(playerBanners[k]);
+        for (var k = 0; k < playerBanners.length; k++) playerBannersModel.append(playerBanners[k])
     }
 
     function getBannerColor(ownerId, isLocal, isAI, aiIndex) {
         var colors = ["#DC143C", "#228B22", "#C9A200", "#4169E1", "#9370DB", "#32CD32"];
         if (isLocal)
             return colors[0];
+
         if (isAI) {
             var idx = aiIndex % (colors.length - 1);
             return colors[idx + 1];
@@ -123,6 +117,11 @@ Rectangle {
         var s = Math.floor(seconds % 60);
         return (h < 10 ? "0" : "") + h + ":" + (m < 10 ? "0" : "") + m + ":" + (s < 10 ? "0" : "") + s;
     }
+
+    anchors.fill: parent
+    color: Qt.rgba(0, 0, 0, 0.85)
+    visible: false
+    z: 101
 
     Column {
         anchors.centerIn: parent
@@ -157,9 +156,10 @@ Rectangle {
                     width: 220
                     height: 420
                     color: Qt.rgba(0, 0, 0, 0)
-                    
+
                     Rectangle {
                         id: dropShadow
+
                         anchors.fill: parent
                         anchors.topMargin: 8
                         anchors.leftMargin: 6
@@ -264,7 +264,7 @@ Rectangle {
                                     style: Text.Outline
                                     styleColor: "#000000"
                                 }
-                                
+
                                 Rectangle {
                                     anchors.horizontalCenter: parent.horizontalCenter
                                     width: parent.width * 0.8
@@ -273,7 +273,7 @@ Rectangle {
                                     radius: 4
                                     border.color: model.isWinner ? "#32CD32" : "#DC143C"
                                     border.width: 2
-                                    
+
                                     Text {
                                         anchors.centerIn: parent
                                         text: model.isWinner ? "VICTORIOUS" : "DEFEATED"
@@ -284,6 +284,7 @@ Rectangle {
                                         style: Text.Outline
                                         styleColor: "#000000"
                                     }
+
                                 }
 
                                 Rectangle {
