@@ -10,6 +10,7 @@ Item {
     signal openSkirmish()
     signal openSettings()
     signal loadSave()
+    signal saveGame()
     signal exitRequested()
 
     anchors.fill: parent
@@ -26,6 +27,8 @@ Item {
             var m = menuModel.get(container.selectedIndex);
             if (m.idStr === "skirmish")
                 root.openSkirmish();
+            else if (m.idStr === "save")
+                root.saveGame();
             else if (m.idStr === "load")
                 root.loadSave();
             else if (m.idStr === "settings")
@@ -108,8 +111,14 @@ Item {
                     }
 
                     ListElement {
+                        idStr: "save"
+                        title: "Save Game"
+                        subtitle: "Save your current progress"
+                    }
+
+                    ListElement {
                         idStr: "load"
-                        title: "Load Save"
+                        title: "Load Game"
                         subtitle: "Resume a previous game"
                     }
 
@@ -214,6 +223,8 @@ Item {
                             onClicked: {
                                 if (model.idStr === "skirmish")
                                     root.openSkirmish();
+                                else if (model.idStr === "save")
+                                    root.saveGame();
                                 else if (model.idStr === "load")
                                     root.loadSave();
                                 else if (model.idStr === "settings")

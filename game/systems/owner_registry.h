@@ -1,5 +1,7 @@
 #pragma once
 
+#include <QJsonArray>
+#include <QJsonObject>
 #include <array>
 #include <string>
 #include <unordered_map>
@@ -55,6 +57,9 @@ public:
 
   void setOwnerColor(int ownerId, float r, float g, float b);
   std::array<float, 3> getOwnerColor(int ownerId) const;
+
+  QJsonObject toJson() const;
+  void fromJson(const QJsonObject &json);
 
 private:
   OwnerRegistry() = default;

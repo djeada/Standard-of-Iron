@@ -6,6 +6,8 @@
 #include "../utils/movement_utils.h"
 #include "../utils/selection_utils.h"
 #include "game/core/event_manager.h"
+#include <QJsonObject>
+#include <QList>
 #include <QMatrix4x4>
 #include <QObject>
 #include <QPointF>
@@ -48,6 +50,7 @@ class ArrowSystem;
 class PickingService;
 class VictoryService;
 class CameraService;
+class SaveLoadService;
 } // namespace Systems
 namespace Map {
 class MapCatalog;
@@ -161,6 +164,12 @@ public:
                 const QVariantList &playerConfigs = QVariantList());
   Q_INVOKABLE void openSettings();
   Q_INVOKABLE void loadSave();
+  Q_INVOKABLE void saveGame(const QString &filename = "savegame.json");
+  Q_INVOKABLE void saveGameToSlot(const QString &slotName);
+  Q_INVOKABLE void loadGameFromSlot(const QString &slotName);
+  Q_INVOKABLE QVariantList getSaveSlots() const;
+  Q_INVOKABLE void refreshSaveSlots();
+  Q_INVOKABLE bool deleteSaveSlot(const QString &slotName);
   Q_INVOKABLE void exitGame();
   Q_INVOKABLE QVariantList getOwnerInfo() const;
 
@@ -213,6 +222,7 @@ private:
     int height = 0;
   };
   struct LevelState {
+    QString mapPath;
     QString mapName;
     Engine::Core::EntityID playerUnitId = 0;
     float camFov = 45.0f;
@@ -229,6 +239,11 @@ private:
   void onUnitSpawned(const Engine::Core::UnitSpawnedEvent &event);
   void onUnitDied(const Engine::Core::UnitDiedEvent &event);
   void rebuildEntityCache();
+  void rebuildRegistriesAfterLoad();
+  void rebuildBuildingCollisions();
+  QJsonObject buildSaveMetadata() const;
+  void applyEnvironmentFromMetadata(const QJsonObject &metadata);
+  QByteArray captureSaveScreenshot() const;
   void updateCursor(Qt::CursorShape newCursor);
   void setError(const QString &errorMessage);
 
@@ -243,6 +258,7 @@ private:
   std::unique_ptr<Render::GL::StoneRenderer> m_stone;
   std::unique_ptr<Game::Systems::PickingService> m_pickingService;
   std::unique_ptr<Game::Systems::VictoryService> m_victoryService;
+  std::unique_ptr<Game::Systems::SaveLoadService> m_saveLoadService;
   std::unique_ptr<CursorManager> m_cursorManager;
   std::unique_ptr<HoverTracker> m_hoverTracker;
   std::unique_ptr<Game::Systems::CameraService> m_cameraService;
@@ -277,4 +293,5 @@ signals:
   void selectedPlayerIdChanged();
   void lastErrorChanged();
   void mapsLoadingChanged();
+  void saveSlotsChanged();
 };
