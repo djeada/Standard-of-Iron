@@ -67,7 +67,8 @@ AISnapshot AISnapshotBuilder::build(const Engine::Core::World &world,
       data.production.rallySet = production->rallySet;
       data.production.rallyX = production->rallyX;
       data.production.rallyZ = production->rallyZ;
-      data.production.queueSize = static_cast<int>(production->productionQueue.size());
+      data.production.queueSize =
+          static_cast<int>(production->productionQueue.size());
     }
 
     snapshot.friendlies.push_back(std::move(data));

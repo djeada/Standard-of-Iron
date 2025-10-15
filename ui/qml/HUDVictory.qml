@@ -4,18 +4,18 @@ import QtQuick.Controls 2.15
 Rectangle {
     id: victoryOverlay
 
+    property bool showingSummary: false
+
+    signal returnToMainMenuRequested()
+
     anchors.fill: parent
     color: Qt.rgba(0, 0, 0, 0.7)
     visible: (typeof game !== 'undefined' && game.victoryState !== "")
     z: 100
 
-    property bool showingSummary: false
-    
-    signal returnToMainMenuRequested()
-
     Rectangle {
         id: initialOverlay
-        
+
         anchors.fill: parent
         color: "transparent"
         visible: !showingSummary
@@ -53,6 +53,7 @@ Rectangle {
             }
 
         }
+
     }
 
     BattleSummary {
@@ -60,11 +61,9 @@ Rectangle {
 
         anchors.fill: parent
         visible: showingSummary
-        
         onClose: function() {
             showingSummary = false;
         }
-        
         onReturnToMainMenu: function() {
             victoryOverlay.returnToMainMenuRequested();
         }

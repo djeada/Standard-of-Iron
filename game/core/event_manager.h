@@ -130,8 +130,8 @@ public:
   EntityID unitId;
   int ownerId;
   std::string unitType;
-  EntityID killerId;       // ID of the entity that killed this unit (0 if unknown)
-  int killerOwnerId;       // Owner ID of the killer (0 if unknown)
+  EntityID killerId;
+  int killerOwnerId;
 };
 
 class UnitSpawnedEvent : public Event {
