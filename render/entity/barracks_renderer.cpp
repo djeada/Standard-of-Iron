@@ -560,9 +560,8 @@ static inline void drawBannerAndPole(const DrawContext &p, ISubmitter &out,
                                newTeamColor.z() * 0.6f)),
           progress);
 
-      float loweredAmount = progress * targetHeight * 0.3f;
+      float loweredAmount = progress * poleHeight * 0.85f;
       flagY -= loweredAmount;
-      targetHeight *= (1.0f - progress * 0.2f);
       beamY -= loweredAmount;
     }
   }
@@ -648,43 +647,6 @@ static inline void drawHealthBar(const DrawContext &p, ISubmitter &out,
           fgColor);
 }
 
-static inline void drawCaptureProgress(const DrawContext &p, ISubmitter &out,
-                                       Mesh *unit, Texture *white) {
-  if (!p.entity)
-    return;
-
-  auto *capture = p.entity->getComponent<Engine::Core::CaptureComponent>();
-  if (!capture || !capture->isBeingCaptured)
-    return;
-
-  float progress = std::clamp(capture->captureProgress / capture->requiredTime,
-                              0.0f, 1.0f);
-
-  constexpr float baseHeight = BuildingProportions::baseHeight;
-  constexpr float roofPitch = BuildingProportions::roofPitch;
-  float roofPeak = baseHeight + roofPitch;
-  float barY = roofPeak + 0.30f;
-
-  constexpr float barWidth = BuildingProportions::baseWidth * 0.8f;
-  constexpr float barHeight = 0.10f;
-  constexpr float barDepth = 0.14f;
-
-  QVector3D bgColor(0.12f, 0.12f, 0.12f);
-  unitBox(out, unit, white, p.model, QVector3D(0.0f, barY, 0.0f),
-          QVector3D(barWidth / 2.0f, barHeight / 2.0f, barDepth / 2.0f),
-          bgColor);
-
-  float fillWidth = barWidth * progress;
-  float fillX = -(barWidth - fillWidth) * 0.5f;
-
-  QVector3D captureColor(0.95f, 0.75f, 0.15f);
-
-  unitBox(out, unit, white, p.model, QVector3D(fillX, barY + 0.006f, 0.0f),
-          QVector3D(fillWidth / 2.0f, (barHeight / 2.0f) * 0.85f,
-                    (barDepth / 2.0f) * 0.90f),
-          captureColor);
-}
-
 static inline void drawSelectionFX(const DrawContext &p, ISubmitter &out) {
   QMatrix4x4 M;
   QVector3D pos = p.model.column(3).toVector3D();
@@ -723,7 +685,6 @@ static void drawBarracks(const DrawContext &p, ISubmitter &out) {
 
   drawRallyFlagIfAny(p, out, white, C);
   drawHealthBar(p, out, unit, white);
-  drawCaptureProgress(p, out, unit, white);
   drawSelectionFX(p, out);
 }
 

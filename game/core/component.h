@@ -186,7 +186,7 @@ public:
 class CaptureComponent : public Component {
 public:
   CaptureComponent()
-      : capturingPlayerId(-1), captureProgress(0.0f), requiredTime(5.0f),
+      : capturingPlayerId(-1), captureProgress(0.0f), requiredTime(15.0f),
         isBeingCaptured(false) {}
 
   int capturingPlayerId;
