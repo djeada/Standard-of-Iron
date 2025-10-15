@@ -2,6 +2,7 @@
 #include "../core/component.h"
 #include "../core/world.h"
 #include "../game_config.h"
+#include "../units/troop_config.h"
 
 namespace Game {
 namespace Systems {
@@ -39,7 +40,9 @@ ProductionResult ProductionService::startProductionForFirstSelectedBarracks(
 
   int currentTroops = world.countTroopsForPlayer(ownerId);
   int maxTroops = Game::GameConfig::instance().getMaxTroopsPerPlayer();
-  if (currentTroops >= maxTroops)
+  int individualsPerUnit =
+      Game::Units::TroopConfig::instance().getIndividualsPerUnit(unitType);
+  if (currentTroops + individualsPerUnit > maxTroops)
     return ProductionResult::GlobalTroopLimitReached;
 
   const int maxQueueSize = 5;
