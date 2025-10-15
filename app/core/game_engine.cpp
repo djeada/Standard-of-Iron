@@ -709,11 +709,20 @@ QVariantMap GameEngine::getSelectedProductionState() const {
       st);
   m["hasBarracks"] = st.hasBarracks;
   m["inProgress"] = st.inProgress;
+  m["productType"] = QString::fromStdString(st.productType);
   m["timeRemaining"] = st.timeRemaining;
   m["buildTime"] = st.buildTime;
   m["producedCount"] = st.producedCount;
   m["maxUnits"] = st.maxUnits;
   m["villagerCost"] = st.villagerCost;
+  m["queueSize"] = st.queueSize;
+  
+  QVariantList queueList;
+  for (const auto &unitType : st.productionQueue) {
+    queueList.append(QString::fromStdString(unitType));
+  }
+  m["productionQueue"] = queueList;
+  
   return m;
 }
 
