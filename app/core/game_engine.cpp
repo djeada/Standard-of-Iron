@@ -947,6 +947,73 @@ void GameEngine::saveGame(const QString &filename) {
   }
 }
 
+void GameEngine::saveGameToSlot(const QString &slotName) {
+  if (!m_saveLoadService || !m_world) {
+    qWarning() << "Cannot save game: service or world not initialized";
+    return;
+  }
+
+  bool success = m_saveLoadService->saveGameToSlot(*m_world, slotName, m_level.mapName);
+  
+  if (success) {
+    qInfo() << "Game saved successfully to slot:" << slotName;
+  } else {
+    QString error = m_saveLoadService->getLastError();
+    qWarning() << "Failed to save game:" << error;
+    setError(error);
+  }
+}
+
+void GameEngine::loadGameFromSlot(const QString &slotName) {
+  if (!m_saveLoadService || !m_world) {
+    qWarning() << "Cannot load game: service or world not initialized";
+    return;
+  }
+
+  bool success = m_saveLoadService->loadGameFromSlot(*m_world, slotName);
+  
+  if (success) {
+    qInfo() << "Game loaded successfully from slot:" << slotName;
+    // Rebuild caches and update UI after loading
+    rebuildEntityCache();
+    if (m_victoryService) {
+      m_victoryService->configure(Game::Map::VictoryConfig(), m_runtime.localOwnerId);
+    }
+    emit selectedUnitsChanged();
+    emit ownerInfoChanged();
+  } else {
+    QString error = m_saveLoadService->getLastError();
+    qWarning() << "Failed to load game:" << error;
+    setError(error);
+  }
+}
+
+QVariantList GameEngine::getSaveSlots() const {
+  if (!m_saveLoadService) {
+    qWarning() << "Cannot get save slots: service not initialized";
+    return QVariantList();
+  }
+
+  return m_saveLoadService->getSaveSlots();
+}
+
+bool GameEngine::deleteSaveSlot(const QString &slotName) {
+  if (!m_saveLoadService) {
+    qWarning() << "Cannot delete save slot: service not initialized";
+    return false;
+  }
+
+  bool success = m_saveLoadService->deleteSaveSlot(slotName);
+  
+  if (!success) {
+    QString error = m_saveLoadService->getLastError();
+    qWarning() << "Failed to delete save slot:" << error;
+    setError(error);
+  }
+  
+  return success;
+}
+
 void GameEngine::exitGame() {
   if (m_saveLoadService) {
     m_saveLoadService->exitGame();
