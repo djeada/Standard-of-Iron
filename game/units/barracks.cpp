@@ -1,6 +1,7 @@
 #include "barracks.h"
 #include "../core/component.h"
 #include "../core/event_manager.h"
+#include "../core/ownership_constants.h"
 #include "../core/world.h"
 #include "../systems/building_collision_registry.h"
 #include "../visuals/team_colors.h"
@@ -55,20 +56,22 @@ void Barracks::init(const SpawnParams &params) {
   Game::Systems::BuildingCollisionRegistry::instance().registerBuilding(
       m_id, m_type, m_t->position.x, m_t->position.z, m_u->ownerId);
 
-  if (auto *prod = e->addComponent<Engine::Core::ProductionComponent>()) {
-    prod->productType = "archer";
-    prod->buildTime = 10.0f;
-    prod->maxUnits = params.maxPopulation;
-    prod->inProgress = false;
-    prod->timeRemaining = 0.0f;
-    prod->producedCount = 0;
-    prod->rallyX = m_t->position.x + 4.0f;
-    prod->rallyZ = m_t->position.z + 2.0f;
-    prod->rallySet = true;
+  if (!Game::Core::isNeutralOwner(m_u->ownerId)) {
+    if (auto *prod = e->addComponent<Engine::Core::ProductionComponent>()) {
+      prod->productType = "archer";
+      prod->buildTime = 10.0f;
+      prod->maxUnits = params.maxPopulation;
+      prod->inProgress = false;
+      prod->timeRemaining = 0.0f;
+      prod->producedCount = 0;
+      prod->rallyX = m_t->position.x + 4.0f;
+      prod->rallyZ = m_t->position.z + 2.0f;
+      prod->rallySet = true;
 
-    prod->villagerCost =
-        Game::Units::TroopConfig::instance().getIndividualsPerUnit(
-            prod->productType);
+      prod->villagerCost =
+          Game::Units::TroopConfig::instance().getIndividualsPerUnit(
+              prod->productType);
+    }
   }
 
   Engine::Core::EventManager::instance().publish(
