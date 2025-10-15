@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
-import QtQuick.Layouts 2.15
+import QtQuick.Layouts 1.15
+import StandardOfIron.UI 1.0
 
 RowLayout {
     id: bottomRoot
@@ -15,6 +16,8 @@ RowLayout {
     anchors.fill: parent
     anchors.margins: 10
     spacing: 12
+
+
 
     Rectangle {
         Layout.fillWidth: true
@@ -369,167 +372,27 @@ RowLayout {
 
     }
 
-    Rectangle {
+    // ═══════════════════════════════════════════════════════════════
+    // PRODUCTION PANEL (Separate Component)
+    // ═══════════════════════════════════════════════════════════════
+    ProductionPanel {
         Layout.fillWidth: true
-        Layout.preferredWidth: Math.max(240, bottomPanel.width * 0.3)
+        Layout.preferredWidth: Math.max(280, bottomPanel.width * 0.35)
         Layout.fillHeight: true
         Layout.alignment: Qt.AlignTop
-        color: "#34495e"
-        border.color: "#1a252f"
-        border.width: 1
-
-        Column {
-            anchors.fill: parent
-            anchors.margins: 8
-            spacing: 6
-
-            Text {
-                id: prodHeader
-
-                text: "Production"
-                color: "white"
-                font.pointSize: 11
-                font.bold: true
-            }
-
-            ScrollView {
-                id: prodScroll
-
-                anchors.left: parent.left
-                anchors.right: parent.right
-                anchors.top: prodHeader.bottom
-                anchors.bottom: parent.bottom
-                clip: true
-                ScrollBar.vertical.policy: ScrollBar.AlwaysOn
-
-                Column {
-                    width: prodScroll.width
-                    spacing: 6
-
-                    Repeater {
-                        model: (bottomRoot.selectionTick, (typeof game !== 'undefined' && game.hasSelectedType && game.hasSelectedType("barracks"))) ? 1 : 0
-
-                        delegate: Column {
-                            property var prod: (bottomRoot.selectionTick, (typeof game !== 'undefined' && game.getSelectedProductionState) ? game.getSelectedProductionState() : ({
-                            }))
-
-                            spacing: 6
-
-                            Button {
-                                id: recruitBtn
-
-                                text: "Recruit Archer (" + (prod.villagerCost || 1) + ")"
-                                focusPolicy: Qt.NoFocus
-                                enabled: (function() {
-                                    if (typeof prod === 'undefined' || !prod)
-                                        return false;
-
-                                    if (!prod.hasBarracks)
-                                        return false;
-
-                                    if (prod.inProgress)
-                                        return false;
-
-                                    if (prod.producedCount >= prod.maxUnits)
-                                        return false;
-
-                                    return true;
-                                })()
-                                onClicked: bottomRoot.recruit("archer")
-                                ToolTip.visible: hovered
-                                ToolTip.text: "Recruit 1 archer unit\nCost: " + (prod.villagerCost || 1) + " villagers"
-                                ToolTip.delay: 500
-                            }
-
-                            Rectangle {
-                                width: 180
-                                height: 8
-                                radius: 4
-                                color: "#1a252f"
-                                border.color: "#2c3e50"
-                                border.width: 1
-                                visible: prod.inProgress
-
-                                Rectangle {
-                                    anchors.left: parent.left
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    height: parent.height
-                                    width: parent.width * (prod.buildTime > 0 ? (1 - Math.max(0, prod.timeRemaining) / prod.buildTime) : 0)
-                                    color: "#27ae60"
-                                    radius: 4
-                                }
-
-                            }
-
-                            Row {
-                                spacing: 8
-
-                                Text {
-                                    text: prod.inProgress ? ("Time left: " + Math.max(0, prod.timeRemaining).toFixed(1) + "s") : ("Build time: " + (prod.buildTime || 0).toFixed(0) + "s")
-                                    color: "#bdc3c7"
-                                    font.pointSize: 9
-                                }
-
-                                Text {
-                                    text: (prod.producedCount || 0) + "/" + (prod.maxUnits || 0)
-                                    color: "#bdc3c7"
-                                    font.pointSize: 9
-                                }
-
-                            }
-
-                            Text {
-                                text: (prod.producedCount >= prod.maxUnits) ? "Cap reached" : ""
-                                color: "#e67e22"
-                                font.pointSize: 9
-                            }
-
-                            Row {
-                                spacing: 6
-
-                                Button {
-                                    text: (typeof gameView !== 'undefined' && gameView.setRallyMode) ? "Click map to set rally (right-click to cancel)" : "Set Rally"
-                                    focusPolicy: Qt.NoFocus
-                                    enabled: !!prod.hasBarracks
-                                    onClicked: {
-                                        if (typeof gameView !== 'undefined')
-                                            gameView.setRallyMode = !gameView.setRallyMode;
-
-                                    }
-                                }
-
-                                Text {
-                                    text: (typeof gameView !== 'undefined' && gameView.setRallyMode) ? "Click on the map" : ""
-                                    color: "#bdc3c7"
-                                    font.pointSize: 9
-                                }
-
-                            }
-
-                        }
-
-                    }
-
-                    Item {
-                        visible: (bottomRoot.selectionTick, (typeof game === 'undefined' || !game.hasSelectedType || !game.hasSelectedType("barracks")))
-                        width: parent.width
-                        height: 30
-
-                        Text {
-                            text: "No production"
-                            color: "#7f8c8d"
-                            anchors.centerIn: parent
-                            font.pointSize: 10
-                        }
-
-                    }
-
-                }
-
-            }
-
+        
+        selectionTick: bottomRoot.selectionTick
+        gameInstance: (typeof game !== 'undefined') ? game : null
+        
+        onRecruitUnit: function(unitType) {
+            bottomRoot.recruit(unitType);
         }
-
+        
+        onRallyModeToggled: {
+            if (typeof gameView !== 'undefined') {
+                gameView.setRallyMode = !gameView.setRallyMode;
+            }
+        }
     }
 
 }

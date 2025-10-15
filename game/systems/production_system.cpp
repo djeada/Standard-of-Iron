@@ -64,6 +64,13 @@ void ProductionSystem::update(Engine::Core::World *world, float deltaTime) {
 
       prod->inProgress = false;
       prod->timeRemaining = 0.0f;
+
+      if (!prod->productionQueue.empty()) {
+        prod->productType = prod->productionQueue.front();
+        prod->productionQueue.erase(prod->productionQueue.begin());
+        prod->timeRemaining = prod->buildTime;
+        prod->inProgress = true;
+      }
     }
   }
 }
