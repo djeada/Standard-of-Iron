@@ -6,6 +6,8 @@
 #include "../utils/movement_utils.h"
 #include "../utils/selection_utils.h"
 #include "game/core/event_manager.h"
+#include <QJsonObject>
+#include <QList>
 #include <QMatrix4x4>
 #include <QObject>
 #include <QPointF>
@@ -166,6 +168,7 @@ public:
   Q_INVOKABLE void saveGameToSlot(const QString &slotName);
   Q_INVOKABLE void loadGameFromSlot(const QString &slotName);
   Q_INVOKABLE QVariantList getSaveSlots() const;
+  Q_INVOKABLE void refreshSaveSlots();
   Q_INVOKABLE bool deleteSaveSlot(const QString &slotName);
   Q_INVOKABLE void exitGame();
   Q_INVOKABLE QVariantList getOwnerInfo() const;
@@ -219,6 +222,7 @@ private:
     int height = 0;
   };
   struct LevelState {
+    QString mapPath;
     QString mapName;
     Engine::Core::EntityID playerUnitId = 0;
     float camFov = 45.0f;
@@ -235,6 +239,11 @@ private:
   void onUnitSpawned(const Engine::Core::UnitSpawnedEvent &event);
   void onUnitDied(const Engine::Core::UnitDiedEvent &event);
   void rebuildEntityCache();
+  void rebuildRegistriesAfterLoad();
+  void rebuildBuildingCollisions();
+  QJsonObject buildSaveMetadata() const;
+  void applyEnvironmentFromMetadata(const QJsonObject &metadata);
+  QByteArray captureSaveScreenshot() const;
   void updateCursor(Qt::CursorShape newCursor);
   void setError(const QString &errorMessage);
 
@@ -284,4 +293,5 @@ signals:
   void selectedPlayerIdChanged();
   void lastErrorChanged();
   void mapsLoadingChanged();
+  void saveSlotsChanged();
 };

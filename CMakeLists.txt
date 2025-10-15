@@ -16,14 +16,14 @@ endif()
 
 # ---- Qt ----
 # Try Qt6 first, fall back to Qt5 if not available
-find_package(Qt6 QUIET COMPONENTS Core Widgets OpenGL Quick Qml QuickControls2)
+find_package(Qt6 QUIET COMPONENTS Core Widgets OpenGL Quick Qml QuickControls2 Sql)
 if(Qt6_FOUND)
     message(STATUS "Using Qt6")
     set(QT_VERSION_MAJOR 6)
     find_package(OpenGL REQUIRED)
 else()
     message(STATUS "Qt6 not found, trying Qt5")
-    find_package(Qt5 REQUIRED COMPONENTS Core Widgets OpenGL Quick Qml QuickControls2)
+    find_package(Qt5 REQUIRED COMPONENTS Core Widgets OpenGL Quick Qml QuickControls2 Sql)
     message(STATUS "Using Qt5")
     set(QT_VERSION_MAJOR 5)
     find_package(OpenGL REQUIRED)
@@ -85,6 +85,8 @@ if(QT_VERSION_MAJOR EQUAL 6)
             ui/qml/HUDTop.qml
             ui/qml/HUDBottom.qml
             ui/qml/ProductionPanel.qml
+            ui/qml/SaveGamePanel.qml
+            ui/qml/LoadGamePanel.qml
             ui/qml/HUDVictory.qml
             ui/qml/BattleSummary.qml
             ui/qml/GameView.qml
@@ -110,6 +112,7 @@ target_link_libraries(standard_of_iron
         Qt${QT_VERSION_MAJOR}::OpenGL
         Qt${QT_VERSION_MAJOR}::Quick
         Qt${QT_VERSION_MAJOR}::Qml
+    Qt${QT_VERSION_MAJOR}::Sql
         ${OPENGL_LIBRARIES}
         engine_core
         render_gl
