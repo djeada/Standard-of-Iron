@@ -197,9 +197,9 @@ ApplicationWindow {
         }
         onSaveRequested: function(slotName) {
             console.log("Main: Save requested for slot:", slotName);
-            if (typeof game !== 'undefined' && game.saveGameToSlot) {
+            if (typeof game !== 'undefined' && game.saveGameToSlot)
                 game.saveGameToSlot(slotName);
-            }
+
             saveGamePanel.visible = false;
             mainWindow.menuVisible = true;
         }

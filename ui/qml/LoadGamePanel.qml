@@ -1,7 +1,7 @@
+import QtQml 2.15
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.3
-import QtQml 2.15
 import StandardOfIron.UI 1.0
 
 Item {
@@ -13,58 +13,77 @@ Item {
     anchors.fill: parent
     z: 25
     onVisibleChanged: {
-        if (!visible) {
-            return
-        }
+        if (!visible)
+            return ;
 
-        if (typeof loadListModel !== 'undefined') {
-            loadListModel.loadFromGame()
-        }
+        if (typeof loadListModel !== 'undefined')
+            loadListModel.loadFromGame();
 
-        if (typeof loadListView !== 'undefined') {
-            loadListView.selectedIndex = loadListModel.count > 0 && !loadListModel.get(0).isEmpty ? 0 : -1
+        if (typeof loadListView !== 'undefined')
+            loadListView.selectedIndex = loadListModel.count > 0 && !loadListModel.get(0).isEmpty ? 0 : -1;
+
+    }
+    Keys.onPressed: function(event) {
+        if (event.key === Qt.Key_Escape) {
+            root.cancelled();
+            event.accepted = true;
+        } else if (event.key === Qt.Key_Down) {
+            if (loadListView.selectedIndex < loadListModel.count - 1)
+                loadListView.selectedIndex++;
+
+            event.accepted = true;
+        } else if (event.key === Qt.Key_Up) {
+            if (loadListView.selectedIndex > 0)
+                loadListView.selectedIndex--;
+
+            event.accepted = true;
+        } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+            if (loadListView.selectedIndex >= 0 && !loadListModel.get(loadListView.selectedIndex).isEmpty)
+                root.loadRequested(loadListModel.get(loadListView.selectedIndex).slotName);
+
+            event.accepted = true;
         }
+    }
+    Component.onCompleted: {
+        forceActiveFocus();
+        if (loadListModel.count > 0 && !loadListModel.get(0).isEmpty)
+            loadListView.selectedIndex = 0;
+
     }
 
     Connections {
         target: typeof game !== 'undefined' ? game : null
         onSaveSlotsChanged: {
-            if (typeof loadListModel === 'undefined') {
-                return
-            }
+            if (typeof loadListModel === 'undefined')
+                return ;
 
-            var previousSlot = ""
+            var previousSlot = "";
             if (typeof loadListView !== 'undefined' && loadListView.selectedIndex >= 0 && loadListView.selectedIndex < loadListModel.count) {
-                var current = loadListModel.get(loadListView.selectedIndex)
-                if (current && !current.isEmpty) {
-                    previousSlot = current.slotName
-                }
+                var current = loadListModel.get(loadListView.selectedIndex);
+                if (current && !current.isEmpty)
+                    previousSlot = current.slotName;
+
             }
+            loadListModel.loadFromGame();
+            if (typeof loadListView === 'undefined')
+                return ;
 
-            loadListModel.loadFromGame()
-
-            if (typeof loadListView === 'undefined') {
-                return
-            }
-
-            var newIndex = -1
+            var newIndex = -1;
             if (previousSlot !== "") {
                 for (var i = 0; i < loadListModel.count; ++i) {
-                    var slot = loadListModel.get(i)
+                    var slot = loadListModel.get(i);
                     if (!slot.isEmpty && slot.slotName === previousSlot) {
-                        newIndex = i
-                        break
+                        newIndex = i;
+                        break;
                     }
                 }
             }
-
             if (newIndex === -1) {
-                if (loadListModel.count > 0 && !loadListModel.get(0).isEmpty) {
-                    newIndex = 0
-                }
-            }
+                if (loadListModel.count > 0 && !loadListModel.get(0).isEmpty)
+                    newIndex = 0;
 
-            loadListView.selectedIndex = newIndex
+            }
+            loadListView.selectedIndex = newIndex;
         }
     }
 
@@ -90,7 +109,6 @@ Item {
             anchors.margins: Theme.spacingXLarge
             spacing: Theme.spacingLarge
 
-            // Header
             RowLayout {
                 Layout.fillWidth: true
                 spacing: Theme.spacingMedium
@@ -107,6 +125,7 @@ Item {
                     text: "Cancel"
                     onClicked: root.cancelled()
                 }
+
             }
 
             Rectangle {
@@ -115,7 +134,6 @@ Item {
                 color: Theme.border
             }
 
-            // Save slots list
             Rectangle {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
@@ -134,62 +152,59 @@ Item {
 
                         property int selectedIndex: -1
 
+                        spacing: Theme.spacingSmall
+
                         model: ListModel {
                             id: loadListModel
 
                             function loadFromGame() {
-                                clear()
-
+                                clear();
                                 if (typeof game === 'undefined' || !game.getSaveSlots) {
                                     append({
-                                        slotName: "No saves found",
-                                        title: "",
-                                        timestamp: 0,
-                                        mapName: "",
-                                        playTime: "",
-                                        thumbnail: "",
-                                        isEmpty: true
-                                    })
-                                    return
+                                        "slotName": "No saves found",
+                                        "title": "",
+                                        "timestamp": 0,
+                                        "mapName": "",
+                                        "playTime": "",
+                                        "thumbnail": "",
+                                        "isEmpty": true
+                                    });
+                                    return ;
                                 }
-
-                                var slots = game.getSaveSlots()
+                                var slots = game.getSaveSlots();
                                 for (var i = 0; i < slots.length; i++) {
                                     append({
-                                        slotName: slots[i].slotName || slots[i].name,
-                                        title: slots[i].title || slots[i].name || slots[i].slotName || "Untitled Save",
-                                        timestamp: slots[i].timestamp,
-                                        mapName: slots[i].mapName || "Unknown Map",
-                                        playTime: slots[i].playTime || "",
-                                        thumbnail: slots[i].thumbnail || "",
-                                        isEmpty: false
-                                    })
+                                        "slotName": slots[i].slotName || slots[i].name,
+                                        "title": slots[i].title || slots[i].name || slots[i].slotName || "Untitled Save",
+                                        "timestamp": slots[i].timestamp,
+                                        "mapName": slots[i].mapName || "Unknown Map",
+                                        "playTime": slots[i].playTime || "",
+                                        "thumbnail": slots[i].thumbnail || "",
+                                        "isEmpty": false
+                                    });
                                 }
-
-                                if (count === 0) {
+                                if (count === 0)
                                     append({
-                                        slotName: "No saves found",
-                                        title: "",
-                                        timestamp: 0,
-                                        mapName: "",
-                                        playTime: "",
-                                        thumbnail: "",
-                                        isEmpty: true
-                                    })
-                                }
+                                        "slotName": "No saves found",
+                                        "title": "",
+                                        "timestamp": 0,
+                                        "mapName": "",
+                                        "playTime": "",
+                                        "thumbnail": "",
+                                        "isEmpty": true
+                                    });
+
                             }
 
                             Component.onCompleted: {
-                                loadFromGame()
+                                loadFromGame();
                             }
                         }
 
-                        spacing: Theme.spacingSmall
                         delegate: Rectangle {
                             width: loadListView.width
                             height: model.isEmpty ? 100 : 130
-                            color: loadListView.selectedIndex === index ? Theme.selectedBg : 
-                                   mouseArea.containsMouse ? Theme.hoverBg : Qt.rgba(0, 0, 0, 0)
+                            color: loadListView.selectedIndex === index ? Theme.selectedBg : mouseArea.containsMouse ? Theme.hoverBg : Qt.rgba(0, 0, 0, 0)
                             radius: Theme.radiusMedium
                             border.color: loadListView.selectedIndex === index ? Theme.selectedBr : Theme.cardBorder
                             border.width: 1
@@ -202,6 +217,7 @@ Item {
 
                                 Rectangle {
                                     id: loadThumbnail
+
                                     Layout.preferredWidth: 128
                                     Layout.preferredHeight: 80
                                     radius: Theme.radiusSmall
@@ -213,12 +229,11 @@ Item {
 
                                     Image {
                                         id: loadThumbnailImage
+
                                         anchors.fill: parent
                                         anchors.margins: 2
                                         fillMode: Image.PreserveAspectCrop
-                                        source: model.thumbnail && model.thumbnail.length > 0
-                                                    ? "data:image/png;base64," + model.thumbnail
-                                                    : ""
+                                        source: model.thumbnail && model.thumbnail.length > 0 ? "data:image/png;base64," + model.thumbnail : ""
                                         visible: source !== ""
                                     }
 
@@ -229,6 +244,7 @@ Item {
                                         color: Theme.textHint
                                         font.pointSize: Theme.fontSizeTiny
                                     }
+
                                 }
 
                                 ColumnLayout {
@@ -279,7 +295,9 @@ Item {
                                             font.pointSize: Theme.fontSizeSmall
                                             visible: model.playTime !== ""
                                         }
+
                                     }
+
                                 }
 
                                 Label {
@@ -296,7 +314,7 @@ Item {
                                     highlighted: true
                                     visible: !model.isEmpty
                                     onClicked: {
-                                        root.loadRequested(model.slotName)
+                                        root.loadRequested(model.slotName);
                                     }
                                 }
 
@@ -304,33 +322,38 @@ Item {
                                     text: "Delete"
                                     visible: !model.isEmpty
                                     onClicked: {
-                                        confirmDeleteDialog.slotName = model.slotName
-                                        confirmDeleteDialog.slotIndex = index
-                                        confirmDeleteDialog.open()
+                                        confirmDeleteDialog.slotName = model.slotName;
+                                        confirmDeleteDialog.slotIndex = index;
+                                        confirmDeleteDialog.open();
                                     }
                                 }
+
                             }
 
                             MouseArea {
                                 id: mouseArea
+
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 enabled: !model.isEmpty
                                 onClicked: {
-                                    loadListView.selectedIndex = index
+                                    loadListView.selectedIndex = index;
                                 }
                                 onDoubleClicked: {
-                                    if (!model.isEmpty) {
-                                        root.loadRequested(model.slotName)
-                                    }
+                                    if (!model.isEmpty)
+                                        root.loadRequested(model.slotName);
+
                                 }
                             }
+
                         }
+
                     }
+
                 }
+
             }
 
-            // Load button at bottom
             RowLayout {
                 Layout.fillWidth: true
                 spacing: Theme.spacingMedium
@@ -340,9 +363,7 @@ Item {
                 }
 
                 Label {
-                    text: loadListView.selectedIndex >= 0 && !loadListModel.get(loadListView.selectedIndex).isEmpty ? 
-                          "Selected: " + loadListModel.get(loadListView.selectedIndex).title : 
-                          "Select a save to load"
+                    text: loadListView.selectedIndex >= 0 && !loadListModel.get(loadListView.selectedIndex).isEmpty ? "Selected: " + loadListModel.get(loadListView.selectedIndex).title : "Select a save to load"
                     color: Theme.textSub
                     font.pointSize: Theme.fontSizeMedium
                 }
@@ -352,13 +373,16 @@ Item {
                     enabled: loadListView.selectedIndex >= 0 && !loadListModel.get(loadListView.selectedIndex).isEmpty
                     highlighted: true
                     onClicked: {
-                        if (loadListView.selectedIndex >= 0 && !loadListModel.get(loadListView.selectedIndex).isEmpty) {
-                            root.loadRequested(loadListModel.get(loadListView.selectedIndex).slotName)
-                        }
+                        if (loadListView.selectedIndex >= 0 && !loadListModel.get(loadListView.selectedIndex).isEmpty)
+                            root.loadRequested(loadListModel.get(loadListView.selectedIndex).slotName);
+
                     }
                 }
+
             }
+
         }
+
     }
 
     Dialog {
@@ -372,27 +396,24 @@ Item {
         title: "Confirm Delete"
         modal: true
         standardButtons: Dialog.Yes | Dialog.No
-
         onAccepted: {
             if (typeof game !== 'undefined' && game.deleteSaveSlot) {
                 if (game.deleteSaveSlot(slotName)) {
-                    loadListModel.remove(slotIndex)
-
-                    if (loadListModel.count === 0) {
+                    loadListModel.remove(slotIndex);
+                    if (loadListModel.count === 0)
                         loadListModel.append({
-                            slotName: "No saves found",
-                            title: "",
-                            timestamp: 0,
-                            mapName: "",
-                            playTime: "",
-                            thumbnail: "",
-                            isEmpty: true
-                        })
-                    }
+                            "slotName": "No saves found",
+                            "title": "",
+                            "timestamp": 0,
+                            "mapName": "",
+                            "playTime": "",
+                            "thumbnail": "",
+                            "isEmpty": true
+                        });
 
-                    if (loadListView.selectedIndex >= loadListModel.count) {
-                        loadListView.selectedIndex = loadListModel.count > 0 && !loadListModel.get(0).isEmpty ? loadListModel.count - 1 : -1
-                    }
+                    if (loadListView.selectedIndex >= loadListModel.count)
+                        loadListView.selectedIndex = loadListModel.count > 0 && !loadListModel.get(0).isEmpty ? loadListModel.count - 1 : -1;
+
                 }
             }
         }
@@ -408,42 +429,18 @@ Item {
 
                 Label {
                     id: warningText
+
                     text: "Are you sure you want to delete the save:\n\"" + confirmDeleteDialog.slotName + "\"?\n\nThis action cannot be undone."
                     color: Theme.textMain
                     wrapMode: Text.WordWrap
                     Layout.fillWidth: true
                     font.pointSize: Theme.fontSizeMedium
                 }
+
             }
+
         }
+
     }
 
-    Keys.onPressed: function(event) {
-        if (event.key === Qt.Key_Escape) {
-            root.cancelled()
-            event.accepted = true
-        } else if (event.key === Qt.Key_Down) {
-            if (loadListView.selectedIndex < loadListModel.count - 1) {
-                loadListView.selectedIndex++
-            }
-            event.accepted = true
-        } else if (event.key === Qt.Key_Up) {
-            if (loadListView.selectedIndex > 0) {
-                loadListView.selectedIndex--
-            }
-            event.accepted = true
-        } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
-            if (loadListView.selectedIndex >= 0 && !loadListModel.get(loadListView.selectedIndex).isEmpty) {
-                root.loadRequested(loadListModel.get(loadListView.selectedIndex).slotName)
-            }
-            event.accepted = true
-        }
-    }
-
-    Component.onCompleted: {
-        forceActiveFocus()
-        if (loadListModel.count > 0 && !loadListModel.get(0).isEmpty) {
-            loadListView.selectedIndex = 0
-        }
-    }
 }
