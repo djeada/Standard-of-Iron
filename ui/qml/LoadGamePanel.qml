@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.3
+import QtQml 2.15
 import StandardOfIron.UI 1.0
 
 Item {
@@ -11,6 +12,61 @@ Item {
 
     anchors.fill: parent
     z: 25
+    onVisibleChanged: {
+        if (!visible) {
+            return
+        }
+
+        if (typeof loadListModel !== 'undefined') {
+            loadListModel.loadFromGame()
+        }
+
+        if (typeof loadListView !== 'undefined') {
+            loadListView.selectedIndex = loadListModel.count > 0 && !loadListModel.get(0).isEmpty ? 0 : -1
+        }
+    }
+
+    Connections {
+        target: typeof game !== 'undefined' ? game : null
+        onSaveSlotsChanged: {
+            if (typeof loadListModel === 'undefined') {
+                return
+            }
+
+            var previousSlot = ""
+            if (typeof loadListView !== 'undefined' && loadListView.selectedIndex >= 0 && loadListView.selectedIndex < loadListModel.count) {
+                var current = loadListModel.get(loadListView.selectedIndex)
+                if (current && !current.isEmpty) {
+                    previousSlot = current.slotName
+                }
+            }
+
+            loadListModel.loadFromGame()
+
+            if (typeof loadListView === 'undefined') {
+                return
+            }
+
+            var newIndex = -1
+            if (previousSlot !== "") {
+                for (var i = 0; i < loadListModel.count; ++i) {
+                    var slot = loadListModel.get(i)
+                    if (!slot.isEmpty && slot.slotName === previousSlot) {
+                        newIndex = i
+                        break
+                    }
+                }
+            }
+
+            if (newIndex === -1) {
+                if (loadListModel.count > 0 && !loadListModel.get(0).isEmpty) {
+                    newIndex = 0
+                }
+            }
+
+            loadListView.selectedIndex = newIndex
+        }
+    }
 
     Rectangle {
         anchors.fill: parent
@@ -81,36 +137,57 @@ Item {
                         model: ListModel {
                             id: loadListModel
 
-                            Component.onCompleted: {
-                                // Populate with existing saves
-                                if (typeof game !== 'undefined' && game.getSaveSlots) {
-                                    var slots = game.getSaveSlots()
-                                    for (var i = 0; i < slots.length; i++) {
-                                        append({
-                                            slotName: slots[i].name,
-                                            timestamp: slots[i].timestamp,
-                                            mapName: slots[i].mapName || "Unknown Map",
-                                            playTime: slots[i].playTime || "Unknown"
-                                        })
-                                    }
-                                }
-                                
-                                if (count === 0) {
+                            function loadFromGame() {
+                                clear()
+
+                                if (typeof game === 'undefined' || !game.getSaveSlots) {
                                     append({
                                         slotName: "No saves found",
+                                        title: "",
                                         timestamp: 0,
                                         mapName: "",
                                         playTime: "",
+                                        thumbnail: "",
+                                        isEmpty: true
+                                    })
+                                    return
+                                }
+
+                                var slots = game.getSaveSlots()
+                                for (var i = 0; i < slots.length; i++) {
+                                    append({
+                                        slotName: slots[i].slotName || slots[i].name,
+                                        title: slots[i].title || slots[i].name || slots[i].slotName || "Untitled Save",
+                                        timestamp: slots[i].timestamp,
+                                        mapName: slots[i].mapName || "Unknown Map",
+                                        playTime: slots[i].playTime || "",
+                                        thumbnail: slots[i].thumbnail || "",
+                                        isEmpty: false
+                                    })
+                                }
+
+                                if (count === 0) {
+                                    append({
+                                        slotName: "No saves found",
+                                        title: "",
+                                        timestamp: 0,
+                                        mapName: "",
+                                        playTime: "",
+                                        thumbnail: "",
                                         isEmpty: true
                                     })
                                 }
+                            }
+
+                            Component.onCompleted: {
+                                loadFromGame()
                             }
                         }
 
                         spacing: Theme.spacingSmall
                         delegate: Rectangle {
                             width: loadListView.width
-                            height: model.isEmpty ? 100 : 120
+                            height: model.isEmpty ? 100 : 130
                             color: loadListView.selectedIndex === index ? Theme.selectedBg : 
                                    mouseArea.containsMouse ? Theme.hoverBg : Qt.rgba(0, 0, 0, 0)
                             radius: Theme.radiusMedium
@@ -123,16 +200,55 @@ Item {
                                 anchors.margins: Theme.spacingMedium
                                 spacing: Theme.spacingMedium
 
+                                Rectangle {
+                                    id: loadThumbnail
+                                    Layout.preferredWidth: 128
+                                    Layout.preferredHeight: 80
+                                    radius: Theme.radiusSmall
+                                    color: Theme.cardBase
+                                    border.color: Theme.cardBorder
+                                    border.width: 1
+                                    clip: true
+                                    visible: !model.isEmpty
+
+                                    Image {
+                                        id: loadThumbnailImage
+                                        anchors.fill: parent
+                                        anchors.margins: 2
+                                        fillMode: Image.PreserveAspectCrop
+                                        source: model.thumbnail && model.thumbnail.length > 0
+                                                    ? "data:image/png;base64," + model.thumbnail
+                                                    : ""
+                                        visible: source !== ""
+                                    }
+
+                                    Label {
+                                        anchors.centerIn: parent
+                                        visible: !loadThumbnailImage.visible
+                                        text: "No Preview"
+                                        color: Theme.textHint
+                                        font.pointSize: Theme.fontSizeTiny
+                                    }
+                                }
+
                                 ColumnLayout {
                                     Layout.fillWidth: true
                                     spacing: Theme.spacingTiny
                                     visible: !model.isEmpty
 
                                     Label {
-                                        text: model.slotName
+                                        text: model.title
                                         color: Theme.textMain
                                         font.pointSize: Theme.fontSizeLarge
                                         font.bold: true
+                                        Layout.fillWidth: true
+                                        elide: Label.ElideRight
+                                    }
+
+                                    Label {
+                                        text: "Slot: " + model.slotName
+                                        color: Theme.textSub
+                                        font.pointSize: Theme.fontSizeSmall
                                         Layout.fillWidth: true
                                         elide: Label.ElideRight
                                     }
@@ -225,7 +341,7 @@ Item {
 
                 Label {
                     text: loadListView.selectedIndex >= 0 && !loadListModel.get(loadListView.selectedIndex).isEmpty ? 
-                          "Selected: " + loadListModel.get(loadListView.selectedIndex).slotName : 
+                          "Selected: " + loadListModel.get(loadListView.selectedIndex).title : 
                           "Select a save to load"
                     color: Theme.textSub
                     font.pointSize: Theme.fontSizeMedium
@@ -236,7 +352,7 @@ Item {
                     enabled: loadListView.selectedIndex >= 0 && !loadListModel.get(loadListView.selectedIndex).isEmpty
                     highlighted: true
                     onClicked: {
-                        if (loadListView.selectedIndex >= 0) {
+                        if (loadListView.selectedIndex >= 0 && !loadListModel.get(loadListView.selectedIndex).isEmpty) {
                             root.loadRequested(loadListModel.get(loadListView.selectedIndex).slotName)
                         }
                     }
@@ -259,18 +375,24 @@ Item {
 
         onAccepted: {
             if (typeof game !== 'undefined' && game.deleteSaveSlot) {
-                game.deleteSaveSlot(slotName)
-                loadListModel.remove(slotIndex)
-                
-                // Add empty message if no saves left
-                if (loadListModel.count === 0) {
-                    loadListModel.append({
-                        slotName: "No saves found",
-                        timestamp: 0,
-                        mapName: "",
-                        playTime: "",
-                        isEmpty: true
-                    })
+                if (game.deleteSaveSlot(slotName)) {
+                    loadListModel.remove(slotIndex)
+
+                    if (loadListModel.count === 0) {
+                        loadListModel.append({
+                            slotName: "No saves found",
+                            title: "",
+                            timestamp: 0,
+                            mapName: "",
+                            playTime: "",
+                            thumbnail: "",
+                            isEmpty: true
+                        })
+                    }
+
+                    if (loadListView.selectedIndex >= loadListModel.count) {
+                        loadListView.selectedIndex = loadListModel.count > 0 && !loadListModel.get(0).isEmpty ? loadListModel.count - 1 : -1
+                    }
                 }
             }
         }
