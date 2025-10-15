@@ -142,8 +142,8 @@ void CaptureSystem::processBarrackCapture(float deltaTime) {
     }
 
     for (int playerId : playerIds) {
-      int troopCount = countNearbyTroops(barrackX, barrackZ, playerId,
-                                         CAPTURE_RADIUS);
+      int troopCount =
+          countNearbyTroops(barrackX, barrackZ, playerId, CAPTURE_RADIUS);
       if (troopCount > maxEnemyTroops) {
         maxEnemyTroops = troopCount;
         capturingPlayerId = playerId;
