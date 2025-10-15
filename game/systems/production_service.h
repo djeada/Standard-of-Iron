@@ -18,17 +18,21 @@ enum class ProductionResult {
   NoBarracks,
   PerBarracksLimitReached,
   GlobalTroopLimitReached,
-  AlreadyInProgress
+  AlreadyInProgress,
+  QueueFull
 };
 
 struct ProductionState {
   bool hasBarracks = false;
   bool inProgress = false;
+  std::string productType = "";
   float timeRemaining = 0.0f;
   float buildTime = 0.0f;
   int producedCount = 0;
   int maxUnits = 0;
   int villagerCost = 1;
+  int queueSize = 0;
+  std::vector<std::string> productionQueue;
 };
 
 class ProductionService {
