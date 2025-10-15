@@ -246,6 +246,8 @@ private:
   QByteArray captureSaveScreenshot() const;
   void updateCursor(Qt::CursorShape newCursor);
   void setError(const QString &errorMessage);
+  bool loadFromSlot(const QString &slot);
+  bool saveToSlot(const QString &slot, const QString &title);
 
   std::unique_ptr<Engine::Core::World> m_world;
   std::unique_ptr<Render::GL::Renderer> m_renderer;
