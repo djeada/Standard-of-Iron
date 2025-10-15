@@ -187,26 +187,25 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
               claimUnits(unitIds, BehaviorPriority::Normal, "advancing",
                          context, m_attackTimer + deltaTime, 2.0f);
 
-          if (claimedUnits.empty())
-            return;
-
-          std::vector<float> filteredX, filteredY, filteredZ;
-          for (size_t i = 0; i < unitIds.size(); ++i) {
-            if (std::find(claimedUnits.begin(), claimedUnits.end(),
-                          unitIds[i]) != claimedUnits.end()) {
-              filteredX.push_back(targetX[i]);
-              filteredY.push_back(targetY[i]);
-              filteredZ.push_back(targetZ[i]);
+          if (!claimedUnits.empty()) {
+            std::vector<float> filteredX, filteredY, filteredZ;
+            for (size_t i = 0; i < unitIds.size(); ++i) {
+              if (std::find(claimedUnits.begin(), claimedUnits.end(),
+                            unitIds[i]) != claimedUnits.end()) {
+                filteredX.push_back(targetX[i]);
+                filteredY.push_back(targetY[i]);
+                filteredZ.push_back(targetZ[i]);
+              }
             }
-          }
 
-          AICommand cmd;
-          cmd.type = AICommandType::MoveUnits;
-          cmd.units = std::move(claimedUnits);
-          cmd.moveTargetX = std::move(filteredX);
-          cmd.moveTargetY = std::move(filteredY);
-          cmd.moveTargetZ = std::move(filteredZ);
-          outCommands.push_back(cmd);
+            AICommand cmd;
+            cmd.type = AICommandType::MoveUnits;
+            cmd.units = std::move(claimedUnits);
+            cmd.moveTargetX = std::move(filteredX);
+            cmd.moveTargetY = std::move(filteredY);
+            cmd.moveTargetZ = std::move(filteredZ);
+            outCommands.push_back(cmd);
+          }
         }
       }
     }
