@@ -2,7 +2,7 @@
   "name": "Team Battle 2v2",
   "description": "Two teams of two players each. Team 1 (players 2 & 3) vs Team 2 (players 5 & 6)",
   "coordSystem": "grid",
-  "maxTroopsPerPlayer": 50,
+  "maxTroopsPerPlayer": 500,
   "grid": {
     "width": 200,
     "height": 200,
