@@ -187,7 +187,13 @@ static void readSpawns(const QJsonArray &arr, std::vector<UnitSpawn> &out) {
     s.type = o.value("type").toString();
     s.x = float(o.value("x").toDouble(0.0));
     s.z = float(o.value("z").toDouble(0.0));
-    s.playerId = o.value("playerId").toInt(0);
+
+    if (o.contains("playerId") && !o.value("playerId").isNull()) {
+      s.playerId = o.value("playerId").toInt(0);
+    } else {
+      s.playerId = -1;
+    }
+
     s.teamId = o.value("teamId").toInt(0);
     s.maxPopulation = o.value("maxPopulation").toInt(100);
     out.push_back(s);

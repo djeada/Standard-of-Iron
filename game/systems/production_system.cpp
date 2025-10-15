@@ -1,5 +1,6 @@
 #include "production_system.h"
 #include "../core/component.h"
+#include "../core/ownership_constants.h"
 #include "../core/world.h"
 #include "../game_config.h"
 #include "../map/map_transformer.h"
@@ -18,6 +19,12 @@ void ProductionSystem::update(Engine::Core::World *world, float deltaTime) {
     auto *prod = e->getComponent<Engine::Core::ProductionComponent>();
     if (!prod)
       continue;
+
+    auto *unitComp = e->getComponent<Engine::Core::UnitComponent>();
+    if (unitComp && Game::Core::isNeutralOwner(unitComp->ownerId)) {
+      continue;
+    }
+
     if (!prod->inProgress)
       continue;
 
