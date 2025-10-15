@@ -11,7 +11,7 @@
 #include <QSurfaceFormat>
 #include <QTextStream>
 
-#include "app/game_engine.h"
+#include "app/core/game_engine.h"
 #include "ui/gl_view.h"
 #include "ui/theme.h"
 
