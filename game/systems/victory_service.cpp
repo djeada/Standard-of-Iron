@@ -17,7 +17,9 @@ VictoryService::VictoryService()
       m_barrackCapturedSubscription(
           [this](const Engine::Core::BarrackCapturedEvent &e) {
             onBarrackCaptured(e);
-          }) {}
+          }),
+      m_statsRegistry(Game::Systems::GlobalStatsRegistry::instance()),
+      m_ownerRegistry(Game::Systems::OwnerRegistry::instance()) {}
 
 VictoryService::~VictoryService() = default;
 
@@ -107,10 +109,9 @@ void VictoryService::checkVictoryConditions(Engine::Core::World &world) {
     m_victoryState = "victory";
     qInfo() << "VICTORY! Conditions met.";
 
-    auto &statsRegistry = Game::Systems::GlobalStatsRegistry::instance();
-    statsRegistry.markGameEnd(m_localOwnerId);
+    m_statsRegistry.markGameEnd(m_localOwnerId);
 
-    const auto *stats = statsRegistry.getStats(m_localOwnerId);
+    const auto *stats = m_statsRegistry.getStats(m_localOwnerId);
     if (stats) {
       qInfo() << "Final Stats - Troops Recruited:" << stats->troopsRecruited
               << "Enemies Killed:" << stats->enemiesKilled
@@ -144,10 +145,9 @@ void VictoryService::checkDefeatConditions(Engine::Core::World &world) {
       m_victoryState = "defeat";
       qInfo() << "DEFEAT! Condition met.";
 
-      auto &statsRegistry = Game::Systems::GlobalStatsRegistry::instance();
-      statsRegistry.markGameEnd(m_localOwnerId);
+      m_statsRegistry.markGameEnd(m_localOwnerId);
 
-      const auto *stats = statsRegistry.getStats(m_localOwnerId);
+      const auto *stats = m_statsRegistry.getStats(m_localOwnerId);
       if (stats) {
         qInfo() << "Final Stats - Troops Recruited:" << stats->troopsRecruited
                 << "Enemies Killed:" << stats->enemiesKilled
@@ -167,8 +167,7 @@ bool VictoryService::checkElimination(Engine::Core::World &world) {
 
   bool enemyKeyStructuresAlive = false;
 
-  auto &ownerRegistry = OwnerRegistry::instance();
-  int localTeam = ownerRegistry.getOwnerTeam(m_localOwnerId);
+  int localTeam = m_ownerRegistry.getOwnerTeam(m_localOwnerId);
 
   auto entities = world.getEntitiesWith<Engine::Core::UnitComponent>();
   for (auto *e : entities) {
@@ -179,7 +178,7 @@ bool VictoryService::checkElimination(Engine::Core::World &world) {
     if (unit->ownerId == m_localOwnerId)
       continue;
 
-    if (ownerRegistry.areAllies(m_localOwnerId, unit->ownerId))
+    if (m_ownerRegistry.areAllies(m_localOwnerId, unit->ownerId))
       continue;
 
     QString unitType = QString::fromStdString(unit->unitType);
