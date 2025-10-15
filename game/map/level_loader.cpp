@@ -22,6 +22,8 @@ LevelLoadResult LevelLoader::loadFromAssets(const QString &mapPath,
                                             Render::GL::Camera &camera) {
   LevelLoadResult res;
 
+  auto &owners = Game::Systems::OwnerRegistry::instance();
+
   Game::Visuals::VisualCatalog visualCatalog;
   QString visualsErr;
   if (!visualCatalog.loadFromJsonFile("assets/visuals/unit_visuals.json",
@@ -67,8 +69,7 @@ LevelLoadResult LevelLoader::loadFromAssets(const QString &mapPath,
         sp.position = QVector3D(0.0f, 0.0f, 0.0f);
         sp.playerId = 0;
         sp.unitType = "archer";
-        sp.aiControlled =
-            !Game::Systems::OwnerRegistry::instance().isPlayer(sp.playerId);
+        sp.aiControlled = !owners.isPlayer(sp.playerId);
         if (auto unit = reg->create("archer", world, sp)) {
           res.playerUnitId = unit->id();
         } else {
@@ -80,8 +81,7 @@ LevelLoadResult LevelLoader::loadFromAssets(const QString &mapPath,
     bool hasBarracks = false;
     for (auto *e : world.getEntitiesWith<Engine::Core::UnitComponent>()) {
       if (auto *u = e->getComponent<Engine::Core::UnitComponent>()) {
-        if (u->unitType == "barracks" &&
-            Game::Systems::OwnerRegistry::instance().isPlayer(u->ownerId)) {
+        if (u->unitType == "barracks" && owners.isPlayer(u->ownerId)) {
           hasBarracks = true;
           break;
         }
@@ -92,11 +92,9 @@ LevelLoadResult LevelLoader::loadFromAssets(const QString &mapPath,
       if (reg2) {
         Game::Units::SpawnParams sp;
         sp.position = QVector3D(-4.0f, 0.0f, -3.0f);
-        sp.playerId =
-            Game::Systems::OwnerRegistry::instance().getLocalPlayerId();
+        sp.playerId = owners.getLocalPlayerId();
         sp.unitType = "barracks";
-        sp.aiControlled =
-            !Game::Systems::OwnerRegistry::instance().isPlayer(sp.playerId);
+        sp.aiControlled = !owners.isPlayer(sp.playerId);
         reg2->create("barracks", world, sp);
       }
     }
@@ -120,8 +118,7 @@ LevelLoadResult LevelLoader::loadFromAssets(const QString &mapPath,
       sp.position = QVector3D(0.0f, 0.0f, 0.0f);
       sp.playerId = 0;
       sp.unitType = "archer";
-      sp.aiControlled =
-          !Game::Systems::OwnerRegistry::instance().isPlayer(sp.playerId);
+      sp.aiControlled = !owners.isPlayer(sp.playerId);
       if (auto unit = reg->create("archer", world, sp)) {
         res.playerUnitId = unit->id();
       }
