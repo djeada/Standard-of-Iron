@@ -58,7 +58,7 @@ void Barracks::init(const SpawnParams &params) {
   if (auto *prod = e->addComponent<Engine::Core::ProductionComponent>()) {
     prod->productType = "archer";
     prod->buildTime = 10.0f;
-    prod->maxUnits = 100;
+    prod->maxUnits = params.maxPopulation;
     prod->inProgress = false;
     prod->timeRemaining = 0.0f;
     prod->producedCount = 0;
