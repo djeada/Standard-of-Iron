@@ -36,6 +36,7 @@ public:
 
   void onUnitSpawned(const Engine::Core::UnitSpawnedEvent &event);
   void onUnitDied(const Engine::Core::UnitDiedEvent &event);
+  void onBarrackCaptured(const Engine::Core::BarrackCapturedEvent &event);
 
   void rebuildFromWorld(Engine::Core::World &world);
 
@@ -51,6 +52,8 @@ private:
       m_unitSpawnedSubscription;
   Engine::Core::ScopedEventSubscription<Engine::Core::UnitDiedEvent>
       m_unitDiedSubscription;
+  Engine::Core::ScopedEventSubscription<Engine::Core::BarrackCapturedEvent>
+      m_barrackCapturedSubscription;
 };
 
 } // namespace Game::Systems
