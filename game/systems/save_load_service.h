@@ -1,8 +1,11 @@
 #pragma once
 
+#include <QByteArray>
+#include <QJsonObject>
+#include <QVariantList>
 #include <QString>
-#include <QVariant>
-#include <functional>
+
+#include <memory>
 
 namespace Engine {
 namespace Core {
@@ -13,20 +16,18 @@ class World;
 namespace Game {
 namespace Systems {
 
+class SaveStorage;
+
 class SaveLoadService {
 public:
   SaveLoadService();
   ~SaveLoadService();
 
-  // Save current game state to file
-  bool saveGame(Engine::Core::World &world, const QString &filename);
-
-  // Load game state from file
-  bool loadGame(Engine::Core::World &world, const QString &filename);
-
   // Save game to named slot with metadata
   bool saveGameToSlot(Engine::Core::World &world, const QString &slotName,
-                      const QString &mapName = QString());
+                      const QString &title, const QString &mapName,
+                      const QJsonObject &metadata = {},
+                      const QByteArray &screenshot = QByteArray());
 
   // Load game from named slot
   bool loadGameFromSlot(Engine::Core::World &world, const QString &slotName);
@@ -43,6 +44,10 @@ public:
   // Clear the last error
   void clearError() { m_lastError.clear(); }
 
+  QJsonObject getLastMetadata() const { return m_lastMetadata; }
+  QString getLastTitle() const { return m_lastTitle; }
+  QByteArray getLastScreenshot() const { return m_lastScreenshot; }
+
   // Settings-related functionality
   void openSettings();
 
@@ -50,11 +55,15 @@ public:
   void exitGame();
 
 private:
-  QString getSlotFilePath(const QString &slotName) const;
   QString getSavesDirectory() const;
+  QString getDatabasePath() const;
   void ensureSavesDirectoryExists() const;
 
-  QString m_lastError;
+  mutable QString m_lastError;
+  QJsonObject m_lastMetadata;
+  QString m_lastTitle;
+  QByteArray m_lastScreenshot;
+  std::unique_ptr<SaveStorage> m_storage;
 };
 
 } // namespace Systems

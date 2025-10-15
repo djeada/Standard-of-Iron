@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.3
+import QtQml 2.15
 import StandardOfIron.UI 1.0
 
 Item {
@@ -11,6 +12,28 @@ Item {
 
     anchors.fill: parent
     z: 25
+    onVisibleChanged: {
+        if (!visible) {
+            return
+        }
+
+        if (typeof saveListModel !== 'undefined') {
+            saveListModel.loadFromGame()
+        }
+
+        if (typeof saveNameField !== 'undefined' && saveNameField) {
+            saveNameField.text = "Save_" + Qt.formatDateTime(new Date(), "yyyy-MM-dd_HH-mm")
+        }
+    }
+
+    Connections {
+        target: typeof game !== 'undefined' ? game : null
+        onSaveSlotsChanged: {
+            if (typeof saveListModel !== 'undefined') {
+                saveListModel.loadFromGame()
+            }
+        }
+    }
 
     Rectangle {
         anchors.fill: parent
@@ -138,18 +161,27 @@ Item {
                                 return false
                             }
 
-                            Component.onCompleted: {
-                                // Populate with existing saves
-                                if (typeof game !== 'undefined' && game.getSaveSlots) {
-                                    var slots = game.getSaveSlots()
-                                    for (var i = 0; i < slots.length; i++) {
-                                        append({
-                                            slotName: slots[i].name,
-                                            timestamp: slots[i].timestamp,
-                                            mapName: slots[i].mapName || "Unknown Map"
-                                        })
-                                    }
+                            function loadFromGame() {
+                                clear()
+
+                                if (typeof game === 'undefined' || !game.getSaveSlots) {
+                                    return
                                 }
+
+                                var slots = game.getSaveSlots()
+                                for (var i = 0; i < slots.length; i++) {
+                                    append({
+                                        slotName: slots[i].slotName || slots[i].name,
+                                        title: slots[i].title || slots[i].name || slots[i].slotName || "Untitled Save",
+                                        timestamp: slots[i].timestamp,
+                                        mapName: slots[i].mapName || "Unknown Map",
+                                        thumbnail: slots[i].thumbnail || ""
+                                    })
+                                }
+                            }
+
+                            Component.onCompleted: {
+                                loadFromGame()
                             }
                         }
 
@@ -167,15 +199,53 @@ Item {
                                 anchors.margins: Theme.spacingMedium
                                 spacing: Theme.spacingMedium
 
+                                Rectangle {
+                                    id: thumbnailContainer
+                                    Layout.preferredWidth: 96
+                                    Layout.preferredHeight: 64
+                                    radius: Theme.radiusSmall
+                                    color: Theme.cardBase
+                                    border.color: Theme.cardBorder
+                                    border.width: 1
+                                    clip: true
+
+                                    Image {
+                                        id: thumbnailImage
+                                        anchors.fill: parent
+                                        anchors.margins: 2
+                                        fillMode: Image.PreserveAspectCrop
+                                        source: model.thumbnail && model.thumbnail.length > 0
+                                                    ? "data:image/png;base64," + model.thumbnail
+                                                    : ""
+                                        visible: source !== ""
+                                    }
+
+                                    Label {
+                                        anchors.centerIn: parent
+                                        visible: !thumbnailImage.visible
+                                        text: "No Preview"
+                                        color: Theme.textHint
+                                        font.pointSize: Theme.fontSizeTiny
+                                    }
+                                }
+
                                 ColumnLayout {
                                     Layout.fillWidth: true
                                     spacing: Theme.spacingTiny
 
                                     Label {
-                                        text: model.slotName
+                                        text: model.title
                                         color: Theme.textMain
                                         font.pointSize: Theme.fontSizeLarge
                                         font.bold: true
+                                        Layout.fillWidth: true
+                                        elide: Label.ElideRight
+                                    }
+
+                                    Label {
+                                        text: "Slot: " + model.slotName
+                                        color: Theme.textSub
+                                        font.pointSize: Theme.fontSizeSmall
                                         Layout.fillWidth: true
                                         elide: Label.ElideRight
                                     }
