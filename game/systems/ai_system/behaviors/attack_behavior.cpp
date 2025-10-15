@@ -183,12 +183,29 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
             targetZ.push_back(target.z());
           }
 
+          auto claimedUnits =
+              claimUnits(unitIds, BehaviorPriority::Normal, "advancing",
+                         context, m_attackTimer + deltaTime, 2.0f);
+
+          if (claimedUnits.empty())
+            return;
+
+          std::vector<float> filteredX, filteredY, filteredZ;
+          for (size_t i = 0; i < unitIds.size(); ++i) {
+            if (std::find(claimedUnits.begin(), claimedUnits.end(),
+                          unitIds[i]) != claimedUnits.end()) {
+              filteredX.push_back(targetX[i]);
+              filteredY.push_back(targetY[i]);
+              filteredZ.push_back(targetZ[i]);
+            }
+          }
+
           AICommand cmd;
           cmd.type = AICommandType::MoveUnits;
-          cmd.units = std::move(unitIds);
-          cmd.moveTargetX = std::move(targetX);
-          cmd.moveTargetY = std::move(targetY);
-          cmd.moveTargetZ = std::move(targetZ);
+          cmd.units = std::move(claimedUnits);
+          cmd.moveTargetX = std::move(filteredX);
+          cmd.moveTargetY = std::move(filteredY);
+          cmd.moveTargetZ = std::move(filteredZ);
           outCommands.push_back(cmd);
         }
       }
