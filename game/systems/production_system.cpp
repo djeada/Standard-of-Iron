@@ -63,7 +63,7 @@ void ProductionSystem::update(Engine::Core::World *world, float deltaTime) {
           }
         }
 
-        prod->producedCount += 1;
+        prod->producedCount += individualsPerUnit;
       }
 
       prod->inProgress = false;
