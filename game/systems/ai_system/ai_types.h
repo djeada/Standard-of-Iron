@@ -127,6 +127,8 @@ struct AIContext {
   float averageEnemyDistance = 0.0f;
 
   int maxTroopsPerPlayer = 50;
+
+  std::unordered_map<Engine::Core::EntityID, float> buildingsUnderAttack;
 };
 
 struct AICommand {
