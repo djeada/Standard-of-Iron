@@ -1,7 +1,7 @@
+import QtQml 2.15
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.3
-import QtQml 2.15
 import StandardOfIron.UI 1.0
 
 Item {
@@ -13,25 +13,32 @@ Item {
     anchors.fill: parent
     z: 25
     onVisibleChanged: {
-        if (!visible) {
-            return
-        }
+        if (!visible)
+            return ;
 
-        if (typeof saveListModel !== 'undefined') {
-            saveListModel.loadFromGame()
-        }
+        if (typeof saveListModel !== 'undefined')
+            saveListModel.loadFromGame();
 
-        if (typeof saveNameField !== 'undefined' && saveNameField) {
-            saveNameField.text = "Save_" + Qt.formatDateTime(new Date(), "yyyy-MM-dd_HH-mm")
+        if (typeof saveNameField !== 'undefined' && saveNameField)
+            saveNameField.text = "Save_" + Qt.formatDateTime(new Date(), "yyyy-MM-dd_HH-mm");
+
+    }
+    Keys.onPressed: function(event) {
+        if (event.key === Qt.Key_Escape) {
+            root.cancelled();
+            event.accepted = true;
         }
+    }
+    Component.onCompleted: {
+        forceActiveFocus();
     }
 
     Connections {
         target: typeof game !== 'undefined' ? game : null
         onSaveSlotsChanged: {
-            if (typeof saveListModel !== 'undefined') {
-                saveListModel.loadFromGame()
-            }
+            if (typeof saveListModel !== 'undefined')
+                saveListModel.loadFromGame();
+
         }
     }
 
@@ -57,7 +64,6 @@ Item {
             anchors.margins: Theme.spacingXLarge
             spacing: Theme.spacingLarge
 
-            // Header
             RowLayout {
                 Layout.fillWidth: true
                 spacing: Theme.spacingMedium
@@ -74,6 +80,7 @@ Item {
                     text: "Cancel"
                     onClicked: root.cancelled()
                 }
+
             }
 
             Rectangle {
@@ -82,7 +89,6 @@ Item {
                 color: Theme.border
             }
 
-            // Save slot name input
             RowLayout {
                 Layout.fillWidth: true
                 spacing: Theme.spacingMedium
@@ -95,20 +101,20 @@ Item {
 
                 TextField {
                     id: saveNameField
-                    
+
                     Layout.fillWidth: true
                     placeholderText: "Enter save name..."
                     text: "Save_" + Qt.formatDateTime(new Date(), "yyyy-MM-dd_HH-mm")
                     font.pointSize: Theme.fontSizeMedium
-                    
+                    color: Theme.textMain
+
                     background: Rectangle {
                         color: Theme.cardBase
                         border.color: saveNameField.activeFocus ? Theme.accent : Theme.border
                         border.width: 1
                         radius: Theme.radiusMedium
                     }
-                    
-                    color: Theme.textMain
+
                 }
 
                 Button {
@@ -117,16 +123,16 @@ Item {
                     highlighted: true
                     onClicked: {
                         if (saveListModel.slotExists(saveNameField.text)) {
-                            confirmOverwriteDialog.slotName = saveNameField.text
-                            confirmOverwriteDialog.open()
+                            confirmOverwriteDialog.slotName = saveNameField.text;
+                            confirmOverwriteDialog.open();
                         } else {
-                            root.saveRequested(saveNameField.text)
+                            root.saveRequested(saveNameField.text);
                         }
                     }
                 }
+
             }
 
-            // Existing saves list
             Label {
                 text: "Existing Saves"
                 color: Theme.textSub
@@ -149,43 +155,42 @@ Item {
                     ListView {
                         id: saveListView
 
+                        spacing: Theme.spacingSmall
+
                         model: ListModel {
                             id: saveListModel
 
                             function slotExists(name) {
                                 for (var i = 0; i < count; i++) {
-                                    if (get(i).slotName === name) {
-                                        return true
-                                    }
+                                    if (get(i).slotName === name)
+                                        return true;
+
                                 }
-                                return false
+                                return false;
                             }
 
                             function loadFromGame() {
-                                clear()
+                                clear();
+                                if (typeof game === 'undefined' || !game.getSaveSlots)
+                                    return ;
 
-                                if (typeof game === 'undefined' || !game.getSaveSlots) {
-                                    return
-                                }
-
-                                var slots = game.getSaveSlots()
+                                var slots = game.getSaveSlots();
                                 for (var i = 0; i < slots.length; i++) {
                                     append({
-                                        slotName: slots[i].slotName || slots[i].name,
-                                        title: slots[i].title || slots[i].name || slots[i].slotName || "Untitled Save",
-                                        timestamp: slots[i].timestamp,
-                                        mapName: slots[i].mapName || "Unknown Map",
-                                        thumbnail: slots[i].thumbnail || ""
-                                    })
+                                        "slotName": slots[i].slotName || slots[i].name,
+                                        "title": slots[i].title || slots[i].name || slots[i].slotName || "Untitled Save",
+                                        "timestamp": slots[i].timestamp,
+                                        "mapName": slots[i].mapName || "Unknown Map",
+                                        "thumbnail": slots[i].thumbnail || ""
+                                    });
                                 }
                             }
 
                             Component.onCompleted: {
-                                loadFromGame()
+                                loadFromGame();
                             }
                         }
 
-                        spacing: Theme.spacingSmall
                         delegate: Rectangle {
                             width: saveListView.width
                             height: 80
@@ -201,6 +206,7 @@ Item {
 
                                 Rectangle {
                                     id: thumbnailContainer
+
                                     Layout.preferredWidth: 96
                                     Layout.preferredHeight: 64
                                     radius: Theme.radiusSmall
@@ -211,12 +217,11 @@ Item {
 
                                     Image {
                                         id: thumbnailImage
+
                                         anchors.fill: parent
                                         anchors.margins: 2
                                         fillMode: Image.PreserveAspectCrop
-                                        source: model.thumbnail && model.thumbnail.length > 0
-                                                    ? "data:image/png;base64," + model.thumbnail
-                                                    : ""
+                                        source: model.thumbnail && model.thumbnail.length > 0 ? "data:image/png;base64," + model.thumbnail : ""
                                         visible: source !== ""
                                     }
 
@@ -227,6 +232,7 @@ Item {
                                         color: Theme.textHint
                                         font.pointSize: Theme.fontSizeTiny
                                     }
+
                                 }
 
                                 ColumnLayout {
@@ -265,30 +271,39 @@ Item {
                                         Layout.fillWidth: true
                                         elide: Label.ElideRight
                                     }
+
                                 }
 
                                 Button {
                                     text: "Overwrite"
                                     onClicked: {
-                                        confirmOverwriteDialog.slotName = model.slotName
-                                        confirmOverwriteDialog.open()
+                                        confirmOverwriteDialog.slotName = model.slotName;
+                                        confirmOverwriteDialog.open();
                                     }
                                 }
+
                             }
 
                             MouseArea {
                                 id: mouseArea
+
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 onClicked: {
-                                    saveNameField.text = model.slotName
+                                    saveNameField.text = model.slotName;
                                 }
                             }
+
                         }
+
                     }
+
                 }
+
             }
+
         }
+
     }
 
     Dialog {
@@ -301,9 +316,8 @@ Item {
         title: "Confirm Overwrite"
         modal: true
         standardButtons: Dialog.Yes | Dialog.No
-
         onAccepted: {
-            root.saveRequested(slotName)
+            root.saveRequested(slotName);
         }
 
         contentItem: Rectangle {
@@ -317,24 +331,18 @@ Item {
 
                 Label {
                     id: warningText
+
                     text: "Are you sure you want to overwrite the save:\n\"" + confirmOverwriteDialog.slotName + "\"?"
                     color: Theme.textMain
                     wrapMode: Text.WordWrap
                     Layout.fillWidth: true
                     font.pointSize: Theme.fontSizeMedium
                 }
+
             }
+
         }
+
     }
 
-    Keys.onPressed: function(event) {
-        if (event.key === Qt.Key_Escape) {
-            root.cancelled()
-            event.accepted = true
-        }
-    }
-
-    Component.onCompleted: {
-        forceActiveFocus()
-    }
 }
