@@ -142,6 +142,7 @@ MapTransformer::applyToWorld(const MapDefinition &def,
       sp.unitType = s.type.toStdString();
       sp.aiControlled =
           !Game::Systems::OwnerRegistry::instance().isPlayer(s.playerId);
+      sp.maxPopulation = s.maxPopulation;
       auto obj = s_registry->create(s.type.toStdString(), world, sp);
       if (obj) {
         e = world.getEntity(obj->id());
