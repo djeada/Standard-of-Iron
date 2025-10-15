@@ -14,6 +14,7 @@ public:
   ~World();
 
   Entity *createEntity();
+  Entity *createEntityWithId(EntityID id);
   void destroyEntity(EntityID id);
   Entity *getEntity(EntityID id);
   void clear();
@@ -47,6 +48,14 @@ public:
   std::vector<Entity *> getAlliedUnits(int ownerId) const;
   std::vector<Entity *> getEnemyUnits(int ownerId) const;
   int countTroopsForPlayer(int ownerId) const;
+
+  // For serialization purposes
+  const std::unordered_map<EntityID, std::unique_ptr<Entity>> &getEntities() const {
+    return m_entities;
+  }
+
+  EntityID getNextEntityId() const;
+  void setNextEntityId(EntityID nextId);
 
 private:
   EntityID m_nextEntityId = 1;
