@@ -39,6 +39,7 @@ class TerrainRenderer;
 class BiomeRenderer;
 class FogRenderer;
 class StoneRenderer;
+struct IRenderPass;
 } // namespace GL
 } // namespace Render
 
