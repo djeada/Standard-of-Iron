@@ -21,12 +21,12 @@
 #include "game/core/event_manager.h"
 #include "game/core/world.h"
 #include "game/game_config.h"
+#include "game/map/environment.h"
 #include "game/map/level_loader.h"
 #include "game/map/map_catalog.h"
 #include "game/map/map_loader.h"
 #include "game/map/map_transformer.h"
 #include "game/map/skirmish_loader.h"
-#include "game/map/environment.h"
 #include "game/map/terrain_service.h"
 #include "game/map/visibility_service.h"
 #include "game/map/world_bootstrap.h"
@@ -83,8 +83,7 @@ QJsonArray vec3ToJsonArray(const QVector3D &vec) {
   return arr;
 }
 
-QVector3D jsonArrayToVec3(const QJsonValue &value,
-                          const QVector3D &fallback) {
+QVector3D jsonArrayToVec3(const QJsonValue &value, const QVector3D &fallback) {
   if (!value.isArray()) {
     return fallback;
   }
@@ -1055,9 +1054,7 @@ QVariantList GameEngine::getSaveSlots() const {
   return m_saveLoadService->getSaveSlots();
 }
 
-void GameEngine::refreshSaveSlots() {
-  emit saveSlotsChanged();
-}
+void GameEngine::refreshSaveSlots() { emit saveSlotsChanged(); }
 
 bool GameEngine::deleteSaveSlot(const QString &slotName) {
   if (!m_saveLoadService) {
@@ -1066,7 +1063,7 @@ bool GameEngine::deleteSaveSlot(const QString &slotName) {
   }
 
   bool success = m_saveLoadService->deleteSaveSlot(slotName);
-  
+
   if (!success) {
     QString error = m_saveLoadService->getLastError();
     qWarning() << "Failed to delete save slot:" << error;
@@ -1074,7 +1071,7 @@ bool GameEngine::deleteSaveSlot(const QString &slotName) {
   } else {
     emit saveSlotsChanged();
   }
-  
+
   return success;
 }
 
@@ -1324,8 +1321,8 @@ void GameEngine::applyEnvironmentFromMetadata(const QJsonObject &metadata) {
     return;
 
   if (metadata.contains("localOwnerId")) {
-    m_runtime.localOwnerId = metadata.value("localOwnerId")
-                                 .toInt(m_runtime.localOwnerId);
+    m_runtime.localOwnerId =
+        metadata.value("localOwnerId").toInt(m_runtime.localOwnerId);
   }
 
   const QString mapPath = metadata.value("mapPath").toString();
@@ -1342,8 +1339,8 @@ void GameEngine::applyEnvironmentFromMetadata(const QJsonObject &metadata) {
         metadata.value("playerUnitId").toVariant().toULongLong());
   }
 
-  int maxTroops = metadata.value("maxTroopsPerPlayer")
-                      .toInt(m_level.maxTroopsPerPlayer);
+  int maxTroops =
+      metadata.value("maxTroopsPerPlayer").toInt(m_level.maxTroopsPerPlayer);
   if (maxTroops <= 0) {
     maxTroops = Game::GameConfig::instance().getMaxTroopsPerPlayer();
   }
@@ -1404,8 +1401,7 @@ void GameEngine::applyEnvironmentFromMetadata(const QJsonObject &metadata) {
       }
     }
 
-    Game::Systems::CommandService::initialize(def.grid.width,
-                                              def.grid.height);
+    Game::Systems::CommandService::initialize(def.grid.width, def.grid.height);
 
     auto &visibilityService = Game::Map::VisibilityService::instance();
     visibilityService.initialize(def.grid.width, def.grid.height,
@@ -1413,10 +1409,9 @@ void GameEngine::applyEnvironmentFromMetadata(const QJsonObject &metadata) {
     visibilityService.computeImmediate(*m_world, m_runtime.localOwnerId);
 
     if (m_fog && visibilityService.isInitialized()) {
-      m_fog->updateMask(visibilityService.getWidth(),
-                        visibilityService.getHeight(),
-                        visibilityService.getTileSize(),
-                        visibilityService.snapshotCells());
+      m_fog->updateMask(
+          visibilityService.getWidth(), visibilityService.getHeight(),
+          visibilityService.getTileSize(), visibilityService.snapshotCells());
     }
 
     m_runtime.visibilityVersion = visibilityService.version();
@@ -1446,10 +1441,9 @@ void GameEngine::applyEnvironmentFromMetadata(const QJsonObject &metadata) {
                                  fallbackTileSize);
     visibilityService.computeImmediate(*m_world, m_runtime.localOwnerId);
     if (m_fog && visibilityService.isInitialized()) {
-      m_fog->updateMask(visibilityService.getWidth(),
-                        visibilityService.getHeight(),
-                        visibilityService.getTileSize(),
-                        visibilityService.snapshotCells());
+      m_fog->updateMask(
+          visibilityService.getWidth(), visibilityService.getHeight(),
+          visibilityService.getTileSize(), visibilityService.snapshotCells());
     }
     m_runtime.visibilityVersion = visibilityService.version();
     m_runtime.visibilityUpdateAccumulator = 0.0f;
@@ -1465,15 +1459,14 @@ void GameEngine::applyEnvironmentFromMetadata(const QJsonObject &metadata) {
 
     const float nearPlane = static_cast<float>(
         cameraObj.value("near").toDouble(m_camera->getNear()));
-    const float farPlane = static_cast<float>(
-        cameraObj.value("far").toDouble(m_camera->getFar()));
-    const float fov = static_cast<float>(
-        cameraObj.value("fov").toDouble(m_camera->getFOV()));
+    const float farPlane =
+        static_cast<float>(cameraObj.value("far").toDouble(m_camera->getFar()));
+    const float fov =
+        static_cast<float>(cameraObj.value("fov").toDouble(m_camera->getFOV()));
 
     float aspect = m_camera->getAspect();
     if (m_viewport.height > 0) {
-      aspect = float(m_viewport.width) /
-               float(std::max(1, m_viewport.height));
+      aspect = float(m_viewport.width) / float(std::max(1, m_viewport.height));
     }
     m_camera->setPerspective(fov, aspect, nearPlane, farPlane);
   }
@@ -1533,8 +1526,8 @@ QByteArray GameEngine::captureSaveScreenshot() const {
   }
 
   const QSize targetSize(320, 180);
-  QImage scaled = image.scaled(targetSize, Qt::KeepAspectRatio,
-                               Qt::SmoothTransformation);
+  QImage scaled =
+      image.scaled(targetSize, Qt::KeepAspectRatio, Qt::SmoothTransformation);
 
   QByteArray buffer;
   QBuffer qBuffer(&buffer);

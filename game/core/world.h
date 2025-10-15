@@ -49,8 +49,8 @@ public:
   std::vector<Entity *> getEnemyUnits(int ownerId) const;
   int countTroopsForPlayer(int ownerId) const;
 
-  // For serialization purposes
-  const std::unordered_map<EntityID, std::unique_ptr<Entity>> &getEntities() const {
+  const std::unordered_map<EntityID, std::unique_ptr<Entity>> &
+  getEntities() const {
     return m_entities;
   }
 
