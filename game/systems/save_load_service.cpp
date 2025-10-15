@@ -10,8 +10,10 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QList>
 #include <QRegularExpression>
 #include <QStandardPaths>
+#include <QVariant>
 
 namespace Game {
 namespace Systems {

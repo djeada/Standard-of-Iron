@@ -1,8 +1,7 @@
 #pragma once
 
 #include <QString>
-#include <QVariantList>
-#include <QVariantMap>
+#include <QVariant>
 #include <functional>
 
 namespace Engine {
