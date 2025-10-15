@@ -45,6 +45,7 @@ struct ProductionSnapshot {
   bool rallySet = false;
   float rallyX = 0.0f;
   float rallyZ = 0.0f;
+  int queueSize = 0;
 };
 
 struct EntitySnapshot {
