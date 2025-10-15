@@ -81,7 +81,7 @@ void DefendBehavior::execute(const AISnapshot &snapshot, AIContext &context,
       readyDefenders.size() + engagedDefenders.size();
   std::size_t desiredCount = totalAvailable;
 
-  if (context.barracksUnderThreat) {
+  if (context.barracksUnderThreat || !context.buildingsUnderAttack.empty()) {
 
     desiredCount = totalAvailable;
   } else {
@@ -96,7 +96,7 @@ void DefendBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   if (readyDefenders.empty())
     return;
 
-  if (context.barracksUnderThreat) {
+  if (context.barracksUnderThreat || !context.buildingsUnderAttack.empty()) {
 
     std::vector<const ContactSnapshot *> nearbyThreats;
     nearbyThreats.reserve(snapshot.visibleEnemies.size());
@@ -140,7 +140,8 @@ void DefendBehavior::execute(const AISnapshot &snapshot, AIContext &context,
           return;
         }
       }
-    } else if (context.barracksUnderThreat) {
+    } else if (context.barracksUnderThreat ||
+               !context.buildingsUnderAttack.empty()) {
 
       const ContactSnapshot *closestThreat = nullptr;
       float closestDistSq = std::numeric_limits<float>::max();
@@ -278,7 +279,7 @@ bool DefendBehavior::shouldExecute(const AISnapshot &snapshot,
   if (context.primaryBarracks == 0)
     return false;
 
-  if (context.barracksUnderThreat)
+  if (context.barracksUnderThreat || !context.buildingsUnderAttack.empty())
     return true;
 
   if (context.state == AIState::Defending && context.idleUnits > 0)
