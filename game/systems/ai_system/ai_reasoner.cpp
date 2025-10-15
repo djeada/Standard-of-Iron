@@ -34,6 +34,25 @@ void AIReasoner::updateContext(const AISnapshot &snapshot, AIContext &ctx) {
   ctx.averageEnemyDistance = 0.0f;
   ctx.maxTroopsPerPlayer = Game::GameConfig::instance().getMaxTroopsPerPlayer();
 
+  constexpr float ATTACK_RECORD_TIMEOUT = 10.0f;
+  auto it = ctx.buildingsUnderAttack.begin();
+  while (it != ctx.buildingsUnderAttack.end()) {
+    bool stillExists = false;
+    for (const auto &entity : snapshot.friendlies) {
+      if (entity.id == it->first && entity.isBuilding) {
+        stillExists = true;
+        break;
+      }
+    }
+
+    if (!stillExists ||
+        (snapshot.gameTime - it->second) > ATTACK_RECORD_TIMEOUT) {
+      it = ctx.buildingsUnderAttack.erase(it);
+    } else {
+      ++it;
+    }
+  }
+
   float totalHealthRatio = 0.0f;
 
   for (const auto &entity : snapshot.friendlies) {
@@ -135,7 +154,8 @@ void AIReasoner::updateStateMachine(AIContext &ctx, float deltaTime) {
   constexpr float MIN_STATE_DURATION = 3.0f;
 
   AIState previousState = ctx.state;
-  if (ctx.barracksUnderThreat && ctx.state != AIState::Defending) {
+  if ((ctx.barracksUnderThreat || !ctx.buildingsUnderAttack.empty()) &&
+      ctx.state != AIState::Defending) {
 
     ctx.state = AIState::Defending;
   }
@@ -155,7 +175,8 @@ void AIReasoner::updateStateMachine(AIContext &ctx, float deltaTime) {
   previousState = ctx.state;
 
   if (ctx.stateTimer < MIN_STATE_DURATION &&
-      !(ctx.barracksUnderThreat && ctx.state != AIState::Defending)) {
+      !((ctx.barracksUnderThreat || !ctx.buildingsUnderAttack.empty()) &&
+        ctx.state != AIState::Defending)) {
     return;
   }
 
@@ -200,7 +221,7 @@ void AIReasoner::updateStateMachine(AIContext &ctx, float deltaTime) {
 
   case AIState::Defending:
 
-    if (ctx.barracksUnderThreat) {
+    if (ctx.barracksUnderThreat || !ctx.buildingsUnderAttack.empty()) {
 
     } else if (ctx.totalUnits >= 4 && ctx.averageHealth > 0.65f) {
 
