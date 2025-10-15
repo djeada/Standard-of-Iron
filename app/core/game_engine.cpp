@@ -1445,9 +1445,8 @@ void GameEngine::applyEnvironmentFromMetadata(const QJsonObject &metadata) {
     if (runtimeObj.contains("cursorMode")) {
       const auto cursorValue = runtimeObj.value("cursorMode");
       if (cursorValue.isDouble()) {
-        setCursorMode(
-            CursorModeUtils::fromInt(cursorValue.toInt(static_cast<int>(
-                CursorMode::Normal))));
+        setCursorMode(CursorModeUtils::fromInt(
+            cursorValue.toInt(static_cast<int>(CursorMode::Normal))));
       } else if (cursorValue.isString()) {
         setCursorMode(cursorValue.toString());
       }
