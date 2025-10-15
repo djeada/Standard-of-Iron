@@ -20,7 +20,12 @@ void ProductionSystem::update(Engine::Core::World *world, float deltaTime) {
       continue;
     if (!prod->inProgress)
       continue;
-    if (prod->producedCount >= prod->maxUnits) {
+
+    int individualsPerUnit =
+        Game::Units::TroopConfig::instance().getIndividualsPerUnit(
+            prod->productType);
+
+    if (prod->producedCount + individualsPerUnit > prod->maxUnits) {
       prod->inProgress = false;
       continue;
     }
@@ -33,9 +38,6 @@ void ProductionSystem::update(Engine::Core::World *world, float deltaTime) {
 
         int currentTroops = world->countTroopsForPlayer(u->ownerId);
         int maxTroops = Game::GameConfig::instance().getMaxTroopsPerPlayer();
-        int individualsPerUnit =
-            Game::Units::TroopConfig::instance().getIndividualsPerUnit(
-                prod->productType);
         if (currentTroops + individualsPerUnit > maxTroops) {
           prod->inProgress = false;
           prod->timeRemaining = 0.0f;

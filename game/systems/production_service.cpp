@@ -35,13 +35,15 @@ ProductionResult ProductionService::startProductionForFirstSelectedBarracks(
     p = e->addComponent<Engine::Core::ProductionComponent>();
   if (!p)
     return ProductionResult::NoBarracks;
-  if (p->producedCount >= p->maxUnits)
+
+  int individualsPerUnit =
+      Game::Units::TroopConfig::instance().getIndividualsPerUnit(unitType);
+
+  if (p->producedCount + individualsPerUnit > p->maxUnits)
     return ProductionResult::PerBarracksLimitReached;
 
   int currentTroops = world.countTroopsForPlayer(ownerId);
   int maxTroops = Game::GameConfig::instance().getMaxTroopsPerPlayer();
-  int individualsPerUnit =
-      Game::Units::TroopConfig::instance().getIndividualsPerUnit(unitType);
   if (currentTroops + individualsPerUnit > maxTroops)
     return ProductionResult::GlobalTroopLimitReached;
 
