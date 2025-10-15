@@ -1,6 +1,7 @@
 #include "map_transformer.h"
 
 #include "../core/component.h"
+#include "../core/ownership_constants.h"
 #include "../core/world.h"
 #include "../systems/owner_registry.h"
 #include "../units/factory.h"
@@ -56,6 +57,9 @@ MapTransformer::applyToWorld(const MapDefinition &def,
   std::unordered_map<int, int> playerIdToTeam;
 
   for (const auto &spawn : def.spawns) {
+    if (spawn.playerId == Game::Core::NEUTRAL_OWNER_ID) {
+      continue;
+    }
     uniquePlayerIds.insert(spawn.playerId);
 
     if (spawn.teamId > 0) {
