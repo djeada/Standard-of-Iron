@@ -143,4 +143,21 @@ public:
   std::string unitType;
 };
 
+class BuildingAttackedEvent : public Event {
+public:
+  BuildingAttackedEvent(EntityID buildingId, int ownerId,
+                        const std::string &buildingType,
+                        EntityID attackerId = 0, int attackerOwnerId = 0,
+                        int damage = 0)
+      : buildingId(buildingId), ownerId(ownerId), buildingType(buildingType),
+        attackerId(attackerId), attackerOwnerId(attackerOwnerId),
+        damage(damage) {}
+  EntityID buildingId;
+  int ownerId;
+  std::string buildingType;
+  EntityID attackerId;
+  int attackerOwnerId;
+  int damage;
+};
+
 } // namespace Engine::Core
