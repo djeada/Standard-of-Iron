@@ -1,11 +1,11 @@
 #pragma once
 
 #include "../models/cursor_manager.h"
-#include "game/core/event_manager.h"
 #include "../models/hover_tracker.h"
 #include "../utils/engine_view_helpers.h"
 #include "../utils/movement_utils.h"
 #include "../utils/selection_utils.h"
+#include "game/core/event_manager.h"
 #include <QMatrix4x4>
 #include <QObject>
 #include <QPointF>
@@ -131,10 +131,9 @@ public:
   int playerTroopCount() const;
   int maxTroopsPerPlayer() const { return m_level.maxTroopsPerPlayer; }
   int enemyTroopsDefeated() const;
-  
-  // Global statistics access
+
   Q_INVOKABLE QVariantMap getPlayerStats(int ownerId) const;
-  
+
   int selectedPlayerId() const { return m_selectedPlayerId; }
   void setSelectedPlayerId(int id) {
     if (m_selectedPlayerId != id) {

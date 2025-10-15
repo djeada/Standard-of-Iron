@@ -13,6 +13,7 @@
 #include <set>
 #include <unordered_map>
 
+#include "../models/selected_units_model.h"
 #include "game/core/component.h"
 #include "game/core/event_manager.h"
 #include "game/core/world.h"
@@ -56,7 +57,6 @@
 #include "render/ground/stone_renderer.h"
 #include "render/ground/terrain_renderer.h"
 #include "render/scene_renderer.h"
-#include "../models/selected_units_model.h"
 #include <QDir>
 #include <QFile>
 #include <QJsonArray>
@@ -392,10 +392,10 @@ int GameEngine::enemyTroopsDefeated() const { return m_enemyTroopsDefeated; }
 
 QVariantMap GameEngine::getPlayerStats(int ownerId) const {
   QVariantMap result;
-  
+
   auto &statsRegistry = Game::Systems::GlobalStatsRegistry::instance();
   const auto *stats = statsRegistry.getStats(ownerId);
-  
+
   if (stats) {
     result["troopsRecruited"] = stats->troopsRecruited;
     result["enemiesKilled"] = stats->enemiesKilled;
@@ -409,7 +409,7 @@ QVariantMap GameEngine::getPlayerStats(int ownerId) const {
     result["playTimeSec"] = 0.0f;
     result["gameEnded"] = false;
   }
-  
+
   return result;
 }
 
@@ -716,13 +716,13 @@ QVariantMap GameEngine::getSelectedProductionState() const {
   m["maxUnits"] = st.maxUnits;
   m["villagerCost"] = st.villagerCost;
   m["queueSize"] = st.queueSize;
-  
+
   QVariantList queueList;
   for (const auto &unitType : st.productionQueue) {
     queueList.append(QString::fromStdString(unitType));
   }
   m["productionQueue"] = queueList;
-  
+
   return m;
 }
 
@@ -878,12 +878,10 @@ void GameEngine::startSkirmish(const QString &mapPath,
 
     rebuildEntityCache();
     Game::Systems::TroopCountRegistry::instance().rebuildFromWorld(*m_world);
-    
-    // Initialize global stats tracking for all players
+
     auto &statsRegistry = Game::Systems::GlobalStatsRegistry::instance();
     statsRegistry.rebuildFromWorld(*m_world);
-    
-    // Mark game start for all players/AI
+
     auto &ownerRegistry = Game::Systems::OwnerRegistry::instance();
     const auto &allOwners = ownerRegistry.getAllOwners();
     for (const auto &owner : allOwners) {
