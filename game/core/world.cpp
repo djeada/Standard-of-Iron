@@ -2,6 +2,7 @@
 #include "../systems/owner_registry.h"
 #include "../systems/troop_count_registry.h"
 #include "component.h"
+#include <algorithm>
 
 namespace Engine::Core {
 
@@ -13,6 +14,22 @@ Entity *World::createEntity() {
   auto entity = std::make_unique<Entity>(id);
   auto ptr = entity.get();
   m_entities[id] = std::move(entity);
+  return ptr;
+}
+
+Entity *World::createEntityWithId(EntityID id) {
+  if (id == NULL_ENTITY) {
+    return nullptr;
+  }
+
+  auto entity = std::make_unique<Entity>(id);
+  auto ptr = entity.get();
+  m_entities[id] = std::move(entity);
+
+  if (id >= m_nextEntityId) {
+    m_nextEntityId = id + 1;
+  }
+
   return ptr;
 }
 
@@ -104,6 +121,12 @@ std::vector<Entity *> World::getEnemyUnits(int ownerId) const {
 
 int World::countTroopsForPlayer(int ownerId) const {
   return Game::Systems::TroopCountRegistry::instance().getTroopCount(ownerId);
+}
+
+EntityID World::getNextEntityId() const { return m_nextEntityId; }
+
+void World::setNextEntityId(EntityID nextId) {
+  m_nextEntityId = std::max(nextId, m_nextEntityId);
 }
 
 } // namespace Engine::Core
