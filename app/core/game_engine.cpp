@@ -114,11 +114,8 @@ GameEngine::GameEngine() {
   m_fog = std::make_unique<Render::GL::FogRenderer>();
   m_stone = std::make_unique<Render::GL::StoneRenderer>();
 
-  m_passes.push_back(m_ground.get());
-  m_passes.push_back(m_terrain.get());
-  m_passes.push_back(m_biome.get());
-  m_passes.push_back(m_stone.get());
-  m_passes.push_back(m_fog.get());
+  m_passes = {m_ground.get(), m_terrain.get(), m_biome.get(), m_stone.get(),
+              m_fog.get()};
 
   std::unique_ptr<Engine::Core::System> arrowSys =
       std::make_unique<Game::Systems::ArrowSystem>();
