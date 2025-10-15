@@ -209,6 +209,8 @@ void CommandService::moveUnits(Engine::Core::World &world,
         mv->path.clear();
         mv->pathPending = false;
         mv->pendingRequestId = 0;
+        mv->vx = 0.0f;
+        mv->vz = 0.0f;
         clearPendingRequest(units[i]);
         continue;
       }
@@ -228,6 +230,8 @@ void CommandService::moveUnits(Engine::Core::World &world,
         mv->path.clear();
         mv->pathPending = false;
         mv->pendingRequestId = 0;
+        mv->vx = 0.0f;
+        mv->vz = 0.0f;
         clearPendingRequest(units[i]);
 
         mv->timeSinceLastPathRequest = 0.0f;
@@ -264,6 +268,8 @@ void CommandService::moveUnits(Engine::Core::World &world,
         mv->path.clear();
         mv->hasTarget = false;
         mv->pathPending = true;
+        mv->vx = 0.0f;
+        mv->vz = 0.0f;
 
         std::uint64_t requestId =
             s_nextRequestId.fetch_add(1, std::memory_order_relaxed);
@@ -290,6 +296,8 @@ void CommandService::moveUnits(Engine::Core::World &world,
       mv->path.clear();
       mv->pathPending = false;
       mv->pendingRequestId = 0;
+      mv->vx = 0.0f;
+      mv->vz = 0.0f;
       clearPendingRequest(units[i]);
     }
   }
@@ -451,6 +459,8 @@ void CommandService::moveGroup(Engine::Core::World &world,
       member->movement->targetX = member->target.x();
       member->movement->targetY = member->target.z();
       member->movement->hasTarget = true;
+      member->movement->vx = 0.0f;
+      member->movement->vz = 0.0f;
     }
     return;
   }
@@ -464,6 +474,8 @@ void CommandService::moveGroup(Engine::Core::World &world,
       member->movement->targetX = member->target.x();
       member->movement->targetY = member->target.z();
       member->movement->hasTarget = true;
+      member->movement->vx = 0.0f;
+      member->movement->vz = 0.0f;
     }
     return;
   }
@@ -480,6 +492,8 @@ void CommandService::moveGroup(Engine::Core::World &world,
       member->movement->targetX = member->target.x();
       member->movement->targetY = member->target.z();
       member->movement->hasTarget = true;
+      member->movement->vx = 0.0f;
+      member->movement->vz = 0.0f;
 
       member->movement->timeSinceLastPathRequest = 0.0f;
       member->movement->lastGoalX = member->target.x();
