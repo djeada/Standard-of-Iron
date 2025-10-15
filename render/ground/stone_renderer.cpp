@@ -82,7 +82,8 @@ void StoneRenderer::configure(const Game::Map::TerrainHeightMap &heightMap,
   generateStoneInstances();
 }
 
-void StoneRenderer::submit(Renderer &renderer) {
+void StoneRenderer::submit(Renderer &renderer, ResourceManager *resources) {
+  Q_UNUSED(resources);
   if (m_stoneInstanceCount > 0) {
     if (!m_stoneInstanceBuffer) {
       m_stoneInstanceBuffer = std::make_unique<Buffer>(Buffer::Type::Vertex);

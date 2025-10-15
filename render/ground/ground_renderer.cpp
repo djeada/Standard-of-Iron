@@ -118,10 +118,12 @@ TerrainChunkParams GroundRenderer::buildParams() const {
   return params;
 }
 
-void GroundRenderer::submit(Renderer &renderer, ResourceManager &resources) {
+void GroundRenderer::submit(Renderer &renderer, ResourceManager *resources) {
+  if (!resources)
+    return;
 
   if (m_hasBiome) {
-    Mesh *plane = resources.ground();
+    Mesh *plane = resources->ground();
     if (plane) {
       const TerrainChunkParams params = buildParams();
 

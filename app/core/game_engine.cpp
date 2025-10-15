@@ -114,6 +114,12 @@ GameEngine::GameEngine() {
   m_fog = std::make_unique<Render::GL::FogRenderer>();
   m_stone = std::make_unique<Render::GL::StoneRenderer>();
 
+  m_passes.push_back(m_ground.get());
+  m_passes.push_back(m_terrain.get());
+  m_passes.push_back(m_biome.get());
+  m_passes.push_back(m_stone.get());
+  m_passes.push_back(m_fog.get());
+
   std::unique_ptr<Engine::Core::System> arrowSys =
       std::make_unique<Game::Systems::ArrowSystem>();
   m_world->addSystem(std::move(arrowSys));
@@ -539,23 +545,11 @@ void GameEngine::render(int pixelWidth, int pixelHeight) {
     m_renderer->setSelectedEntities(ids);
   }
   m_renderer->beginFrame();
-  if (m_ground && m_renderer) {
-    if (auto *res = m_renderer->resources())
-      m_ground->submit(*m_renderer, *res);
-  }
-  if (m_terrain && m_renderer) {
-    if (auto *res = m_renderer->resources())
-      m_terrain->submit(*m_renderer, *res);
-  }
-  if (m_biome && m_renderer) {
-    m_biome->submit(*m_renderer);
-  }
-  if (m_stone && m_renderer) {
-    m_stone->submit(*m_renderer);
-  }
-  if (m_fog && m_renderer) {
-    if (auto *res = m_renderer->resources())
-      m_fog->submit(*m_renderer, *res);
+  if (auto *res = m_renderer->resources()) {
+    for (auto *pass : m_passes) {
+      if (pass)
+        pass->submit(*m_renderer, res);
+    }
   }
   if (m_renderer && m_hoverTracker)
     m_renderer->setHoveredEntityId(m_hoverTracker->getLastHoveredEntity());
