@@ -41,4 +41,4 @@ inline CursorMode fromInt(int value) {
   }
 }
 
-}
+} // namespace CursorModeUtils
