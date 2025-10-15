@@ -918,6 +918,7 @@ QVariantList GameEngine::getOwnerInfo() const {
     QVariantMap ownerMap;
     ownerMap["id"] = owner.ownerId;
     ownerMap["name"] = QString::fromStdString(owner.name);
+    ownerMap["teamId"] = owner.teamId;
 
     QString typeStr;
     switch (owner.type) {
