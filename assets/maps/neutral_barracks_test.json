@@ -1,5 +1,6 @@
 {
   "name": "Neutral Barracks Test",
+  "description": "Test map demonstrating neutral (unowned) barracks. The barracks at (50, 50) has no playerId and will appear gray/neutral.",
   "coordSystem": "grid",
   "maxTroopsPerPlayer": 200,
   "grid": {
