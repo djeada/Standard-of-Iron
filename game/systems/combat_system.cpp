@@ -447,7 +447,7 @@ void CombatSystem::dealDamage(Engine::Core::World *world,
     unit->health = std::max(0, unit->health - damage);
 
     if (unit->health <= 0) {
-      // Get killer's owner ID if killer exists
+
       int killerOwnerId = 0;
       if (attackerId != 0 && world) {
         auto *attacker = world->getEntity(attackerId);
