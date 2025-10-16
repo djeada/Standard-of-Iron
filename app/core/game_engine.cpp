@@ -944,6 +944,10 @@ bool GameEngine::loadFromSlot(const QString &slot) {
   rebuildRegistriesAfterLoad();
   rebuildEntityCache();
 
+  if (auto *aiSystem = m_world->getSystem<Game::Systems::AISystem>()) {
+    aiSystem->reinitialize();
+  }
+
   if (m_victoryService) {
     m_victoryService->configure(Game::Map::VictoryConfig(),
                                 m_runtime.localOwnerId);
