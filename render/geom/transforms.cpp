@@ -126,4 +126,14 @@ QMatrix4x4 coneFromTo(const QMatrix4x4 &parent, const QVector3D &baseCenter,
   return cylinderBetween(parent, baseCenter, apex, baseRadius);
 }
 
+QMatrix4x4 capsuleBetween(const QVector3D &a, const QVector3D &b,
+                          float radius) {
+  return cylinderBetween(a, b, radius);
+}
+
+QMatrix4x4 capsuleBetween(const QMatrix4x4 &parent, const QVector3D &a,
+                          const QVector3D &b, float radius) {
+  return cylinderBetween(parent, a, b, radius);
+}
+
 } // namespace Render::Geom
