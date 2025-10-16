@@ -57,6 +57,9 @@ void SkirmishLoader::resetGameState() {
   auto &visibilityService = Game::Map::VisibilityService::instance();
   visibilityService.reset();
 
+  auto &terrainService = Game::Map::TerrainService::instance();
+  terrainService.clear();
+
   auto &statsRegistry = Game::Systems::GlobalStatsRegistry::instance();
   statsRegistry.clear();
 
