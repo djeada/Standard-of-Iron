@@ -57,8 +57,9 @@ public:
     float bowX = 0.0f;
     pose.handL = QVector3D(bowX - 0.05f + armAsymmetry,
                            HP::SHOULDER_Y + 0.05f + armHeightJitter, 0.55f);
-    pose.handR = QVector3D(0.15f - armAsymmetry * 0.5f,
-                           HP::SHOULDER_Y + 0.15f + armHeightJitter * 0.8f, 0.20f);
+    pose.handR =
+        QVector3D(0.15f - armAsymmetry * 0.5f,
+                  HP::SHOULDER_Y + 0.15f + armHeightJitter * 0.8f, 0.20f);
 
     if (anim.isAttacking) {
       float attackCycleTime = 1.2f;
@@ -88,9 +89,8 @@ public:
           float t = (attackPhase - 0.55f) / 0.45f;
           t = 1.0f - (1.0f - t) * (1.0f - t);
           pose.handR = strikePos * (1.0f - t) + restPos * t;
-          pose.handL =
-              QVector3D(-0.15f, HP::SHOULDER_Y - 0.05f * (1.0f - t),
-                        0.35f * (1.0f - t) + 0.20f * t);
+          pose.handL = QVector3D(-0.15f, HP::SHOULDER_Y - 0.05f * (1.0f - t),
+                                 0.35f * (1.0f - t) + 0.20f * t);
         }
       } else {
         QVector3D aimPos(0.18f, HP::SHOULDER_Y + 0.18f, 0.35f);
@@ -154,7 +154,8 @@ public:
   }
 
   void addAttachments(const DrawContext &ctx, const HumanoidVariant &v,
-                      const HumanoidPose &pose, ISubmitter &out) const override {
+                      const HumanoidPose &pose,
+                      ISubmitter &out) const override {
     using HP = HumanProportions;
 
     QVector3D teamTint = resolveTeamTint(ctx);
@@ -163,8 +164,7 @@ public:
       auto *unit = ctx.entity->getComponent<Engine::Core::UnitComponent>();
       if (unit)
         seed ^= uint32_t(unit->ownerId * 2654435761u);
-      seed ^=
-          uint32_t(reinterpret_cast<uintptr_t>(ctx.entity) & 0xFFFFFFFFu);
+      seed ^= uint32_t(reinterpret_cast<uintptr_t>(ctx.entity) & 0xFFFFFFFFu);
     }
 
     ArcherExtras extras;
@@ -200,7 +200,8 @@ private:
     QVector3D qBase(-0.10f, HP::CHEST_Y, -0.22f);
 
     float quiverR = HP::HEAD_RADIUS * 0.45f;
-    out.mesh(getUnitCylinder(), cylinderBetween(ctx.model, qBase, qTop, quiverR),
+    out.mesh(getUnitCylinder(),
+             cylinderBetween(ctx.model, qBase, qTop, quiverR),
              v.palette.leather, nullptr, 1.0f);
 
     float j = (hash01(seed) - 0.5f) * 0.04f;
@@ -268,8 +269,8 @@ private:
              cylinderBetween(ctx.model, pose.handR, nock, 0.0045f),
              extras.stringCol * 0.9f, nullptr, 1.0f);
 
-    bool showArrow =
-        !isAttacking || (isAttacking && attackPhase >= 0.0f && attackPhase < 0.52f);
+    bool showArrow = !isAttacking || (isAttacking && attackPhase >= 0.0f &&
+                                      attackPhase < 0.52f);
 
     if (showArrow) {
       QVector3D tail = nock - forward * 0.06f;
@@ -291,11 +292,11 @@ private:
 
 void registerArcherRenderer(Render::GL::EntityRendererRegistry &registry) {
   static ArcherRenderer renderer;
-  registry.registerRenderer("archer", [](const DrawContext &ctx,
-                                         ISubmitter &out) {
-    static ArcherRenderer staticRenderer;
-    staticRenderer.render(ctx, out);
-  });
+  registry.registerRenderer("archer",
+                            [](const DrawContext &ctx, ISubmitter &out) {
+                              static ArcherRenderer staticRenderer;
+                              staticRenderer.render(ctx, out);
+                            });
 }
 
 } // namespace Render::GL

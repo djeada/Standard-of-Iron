@@ -21,4 +21,4 @@ QVector3D elbowBendTorso(const QVector3D &shoulder, const QVector3D &hand,
          lateral * (lateralOffset * outwardSign) + QVector3D(0, yBias, 0);
 }
 
-}
+} // namespace Render::GL
