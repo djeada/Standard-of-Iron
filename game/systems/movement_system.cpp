@@ -111,6 +111,36 @@ void MovementSystem::moveUnit(Engine::Core::Entity *entity,
     return;
   }
 
+  // Stop ranged units (archers) from moving if they have an attack target
+  // and are already in range - they should hold position and attack
+  auto *attackTarget =
+      entity->getComponent<Engine::Core::AttackTargetComponent>();
+  if (atk && atk->canRanged && attackTarget && attackTarget->targetId != 0 &&
+      !attackTarget->shouldChase) {
+    // Check if target is still in range
+    auto *target = world->getEntity(attackTarget->targetId);
+    if (target) {
+      auto *targetTransform =
+          target->getComponent<Engine::Core::TransformComponent>();
+      if (targetTransform) {
+        float dx = targetTransform->position.x - transform->position.x;
+        float dz = targetTransform->position.z - transform->position.z;
+        float distSq = dx * dx + dz * dz;
+        float range = atk->range;
+        
+        // If in range, stop movement
+        if (distSq <= range * range) {
+          movement->hasTarget = false;
+          movement->vx = 0.0f;
+          movement->vz = 0.0f;
+          movement->path.clear();
+          movement->pathPending = false;
+          return;
+        }
+      }
+    }
+  }
+
   QVector3D finalGoal(movement->goalX, 0.0f, movement->goalY);
   bool destinationAllowed = isPointAllowed(finalGoal, entity->getId());
 
