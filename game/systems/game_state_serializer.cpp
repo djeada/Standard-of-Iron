@@ -8,9 +8,10 @@
 namespace Game {
 namespace Systems {
 
-QJsonObject GameStateSerializer::buildMetadata(
-    const Engine::Core::World &world, const Render::GL::Camera *camera,
-    const LevelSnapshot &level, const RuntimeSnapshot &runtime) {
+QJsonObject GameStateSerializer::buildMetadata(const Engine::Core::World &world,
+                                               const Render::GL::Camera *camera,
+                                               const LevelSnapshot &level,
+                                               const RuntimeSnapshot &runtime) {
 
   QJsonObject metadata;
   metadata["mapPath"] = level.mapPath;
@@ -54,9 +55,10 @@ QJsonObject GameStateSerializer::buildMetadata(
   return metadata;
 }
 
-void GameStateSerializer::restoreCameraFromMetadata(
-    const QJsonObject &metadata, Render::GL::Camera *camera, int viewportWidth,
-    int viewportHeight) {
+void GameStateSerializer::restoreCameraFromMetadata(const QJsonObject &metadata,
+                                                    Render::GL::Camera *camera,
+                                                    int viewportWidth,
+                                                    int viewportHeight) {
   if (!metadata.contains("camera") || !camera) {
     return;
   }
@@ -68,8 +70,8 @@ void GameStateSerializer::restoreCameraFromMetadata(
       cameraObj.value("target"), camera->getTarget());
   camera->lookAt(position, target, QVector3D(0.0f, 1.0f, 0.0f));
 
-  const float nearPlane = static_cast<float>(
-      cameraObj.value("near").toDouble(camera->getNear()));
+  const float nearPlane =
+      static_cast<float>(cameraObj.value("near").toDouble(camera->getNear()));
   const float farPlane =
       static_cast<float>(cameraObj.value("far").toDouble(camera->getFar()));
   const float fov =
