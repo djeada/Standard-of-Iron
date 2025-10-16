@@ -168,9 +168,9 @@ static inline ArcherPose makePose(uint32_t seed, float animTime, bool isMoving,
       }
     } else {
 
-      QVector3D aimPos(P.bowX + 0.02f, HP::SHOULDER_Y + 0.20f, 0.45f);
-      QVector3D drawPos(P.bowX + 0.60f, HP::SHOULDER_Y + 0.12f, -0.25f);
-      QVector3D releasePos(P.bowX + 0.08f, HP::SHOULDER_Y + 0.22f, 0.15f);
+      QVector3D aimPos(0.18f, HP::SHOULDER_Y + 0.18f, 0.35f);
+      QVector3D drawPos(0.22f, HP::SHOULDER_Y + 0.10f, -0.30f);
+      QVector3D releasePos(0.18f, HP::SHOULDER_Y + 0.20f, 0.10f);
 
       if (attackPhase < 0.20f) {
         float t = attackPhase / 0.20f;
