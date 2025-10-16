@@ -203,6 +203,9 @@ void Renderer::renderWorld(Engine::Core::World *world) {
 
   std::lock_guard<std::mutex> guard(m_worldMutex);
 
+  auto &vis = Game::Map::VisibilityService::instance();
+  const bool visibilityEnabled = vis.isInitialized();
+
   auto renderableEntities =
       world->getEntitiesWith<Engine::Core::RenderableComponent>();
 
@@ -216,8 +219,7 @@ void Renderer::renderWorld(Engine::Core::World *world) {
 
     auto *unitComp = entity->getComponent<Engine::Core::UnitComponent>();
     if (unitComp && unitComp->ownerId != m_localOwnerId) {
-      auto &vis = Game::Map::VisibilityService::instance();
-      if (vis.isInitialized()) {
+      if (visibilityEnabled) {
         if (!vis.isVisibleWorld(transform->position.x, transform->position.z)) {
           continue;
         }
@@ -234,19 +236,17 @@ void Renderer::renderWorld(Engine::Core::World *world) {
                       transform->scale.z);
 
     bool drawnByRegistry = false;
-    if (auto *unit = entity->getComponent<Engine::Core::UnitComponent>()) {
-      if (!unit->unitType.empty() && m_entityRegistry) {
-        auto fn = m_entityRegistry->get(unit->unitType);
-        if (fn) {
-          DrawContext ctx{resources(), entity, world, modelMatrix};
+    if (unitComp && !unitComp->unitType.empty() && m_entityRegistry) {
+      auto fn = m_entityRegistry->get(unitComp->unitType);
+      if (fn) {
+        DrawContext ctx{resources(), entity, world, modelMatrix};
 
-          ctx.selected =
-              (m_selectedIds.find(entity->getId()) != m_selectedIds.end());
-          ctx.hovered = (entity->getId() == m_hoveredEntityId);
-          ctx.animationTime = m_accumulatedTime;
-          fn(ctx, *this);
-          drawnByRegistry = true;
-        }
+        ctx.selected =
+            (m_selectedIds.find(entity->getId()) != m_selectedIds.end());
+        ctx.hovered = (entity->getId() == m_hoveredEntityId);
+        ctx.animationTime = m_accumulatedTime;
+        fn(ctx, *this);
+        drawnByRegistry = true;
       }
     }
     if (drawnByRegistry)
