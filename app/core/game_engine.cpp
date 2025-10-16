@@ -39,6 +39,7 @@
 #include "game/systems/combat_system.h"
 #include "game/systems/command_service.h"
 #include "game/systems/formation_planner.h"
+#include "game/systems/game_state_serializer.h"
 #include "game/systems/global_stats_registry.h"
 #include "game/systems/movement_system.h"
 #include "game/systems/nation_registry.h"
@@ -929,9 +930,20 @@ bool GameEngine::loadFromSlot(const QString &slot) {
   }
 
   const QJsonObject meta = m_saveLoadService->getLastMetadata();
-  applyEnvironmentFromMetadata(meta);
+
+  Game::Systems::GameStateSerializer::restoreLevelFromMetadata(meta, m_level);
+  Game::Systems::GameStateSerializer::restoreCameraFromMetadata(
+      meta, m_camera.get(), m_viewport.width, m_viewport.height);
+
+  Game::Systems::RuntimeSnapshot runtimeSnap = toRuntimeSnapshot();
+  Game::Systems::GameStateSerializer::restoreRuntimeFromMetadata(meta,
+                                                                 runtimeSnap);
+  applyRuntimeSnapshot(runtimeSnap);
+
+  restoreEnvironmentFromMetadata(meta);
   rebuildRegistriesAfterLoad();
   rebuildEntityCache();
+
   if (m_victoryService) {
     m_victoryService->configure(Game::Map::VictoryConfig(),
                                 m_runtime.localOwnerId);
@@ -946,9 +958,11 @@ bool GameEngine::saveToSlot(const QString &slot, const QString &title) {
     setError("Save: not initialized");
     return false;
   }
-  QJsonObject meta = buildSaveMetadata();
+  Game::Systems::RuntimeSnapshot runtimeSnap = toRuntimeSnapshot();
+  QJsonObject meta = Game::Systems::GameStateSerializer::buildMetadata(
+      *m_world, m_camera.get(), m_level, runtimeSnap);
   meta["title"] = title;
-  const QByteArray screenshot = captureSaveScreenshot();
+  const QByteArray screenshot = captureScreenshot();
   if (!m_saveLoadService->saveGameToSlot(*m_world, slot, title, m_level.mapName,
                                          meta, screenshot)) {
     setError(m_saveLoadService->getLastError());
@@ -1219,80 +1233,75 @@ void GameEngine::rebuildBuildingCollisions() {
   }
 }
 
-QJsonObject GameEngine::buildSaveMetadata() const {
-  QJsonObject metadata;
-  metadata["mapPath"] = m_level.mapPath;
-  metadata["mapName"] = m_level.mapName;
-  metadata["maxTroopsPerPlayer"] = m_level.maxTroopsPerPlayer;
-  metadata["localOwnerId"] = m_runtime.localOwnerId;
-  metadata["playerUnitId"] = static_cast<qint64>(m_level.playerUnitId);
-
-  metadata["gameMaxTroopsPerPlayer"] =
-      Game::GameConfig::instance().getMaxTroopsPerPlayer();
-
-  const auto &terrainService = Game::Map::TerrainService::instance();
-  if (const auto *heightMap = terrainService.getHeightMap()) {
-    metadata["gridWidth"] = heightMap->getWidth();
-    metadata["gridHeight"] = heightMap->getHeight();
-    metadata["tileSize"] = heightMap->getTileSize();
-  }
-
-  if (m_camera) {
-    QJsonObject cameraObj;
-    cameraObj["position"] =
-        App::JsonUtils::vec3ToJsonArray(m_camera->getPosition());
-    cameraObj["target"] =
-        App::JsonUtils::vec3ToJsonArray(m_camera->getTarget());
-    cameraObj["distance"] = m_camera->getDistance();
-    cameraObj["pitchDeg"] = m_camera->getPitchDeg();
-    cameraObj["fov"] = m_camera->getFOV();
-    cameraObj["near"] = m_camera->getNear();
-    cameraObj["far"] = m_camera->getFar();
-    metadata["camera"] = cameraObj;
-  }
-
-  QJsonObject runtimeObj;
-  runtimeObj["paused"] = m_runtime.paused;
-  runtimeObj["timeScale"] = m_runtime.timeScale;
-  runtimeObj["victoryState"] = m_runtime.victoryState;
-  runtimeObj["cursorMode"] = CursorModeUtils::toInt(m_runtime.cursorMode);
-  runtimeObj["selectedPlayerId"] = m_selectedPlayerId;
-  runtimeObj["followSelection"] = m_followSelectionEnabled;
-  metadata["runtime"] = runtimeObj;
-
-  return metadata;
+Game::Systems::RuntimeSnapshot GameEngine::toRuntimeSnapshot() const {
+  Game::Systems::RuntimeSnapshot snap;
+  snap.paused = m_runtime.paused;
+  snap.timeScale = m_runtime.timeScale;
+  snap.localOwnerId = m_runtime.localOwnerId;
+  snap.victoryState = m_runtime.victoryState;
+  snap.cursorMode = CursorModeUtils::toInt(m_runtime.cursorMode);
+  snap.selectedPlayerId = m_selectedPlayerId;
+  snap.followSelection = m_followSelectionEnabled;
+  return snap;
 }
 
-void GameEngine::applyEnvironmentFromMetadata(const QJsonObject &metadata) {
+void GameEngine::applyRuntimeSnapshot(
+    const Game::Systems::RuntimeSnapshot &snapshot) {
+  m_runtime.localOwnerId = snapshot.localOwnerId;
+  setPaused(snapshot.paused);
+  setGameSpeed(snapshot.timeScale);
+
+  if (snapshot.victoryState != m_runtime.victoryState) {
+    m_runtime.victoryState = snapshot.victoryState;
+    emit victoryStateChanged();
+  }
+
+  setCursorMode(CursorModeUtils::fromInt(snapshot.cursorMode));
+
+  if (snapshot.selectedPlayerId != m_selectedPlayerId) {
+    m_selectedPlayerId = snapshot.selectedPlayerId;
+    emit selectedPlayerIdChanged();
+  }
+
+  if (snapshot.followSelection != m_followSelectionEnabled) {
+    m_followSelectionEnabled = snapshot.followSelection;
+    if (m_camera && m_cameraService && m_world) {
+      m_cameraService->followSelection(*m_camera, *m_world,
+                                       m_followSelectionEnabled);
+    }
+  }
+}
+
+QByteArray GameEngine::captureScreenshot() const {
+  if (!m_window) {
+    return {};
+  }
+
+  QImage image = m_window->grabWindow();
+  if (image.isNull()) {
+    return {};
+  }
+
+  const QSize targetSize(320, 180);
+  QImage scaled =
+      image.scaled(targetSize, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+
+  QByteArray buffer;
+  QBuffer qBuffer(&buffer);
+  if (!qBuffer.open(QIODevice::WriteOnly)) {
+    return {};
+  }
+
+  if (!scaled.save(&qBuffer, "PNG")) {
+    return {};
+  }
+
+  return buffer;
+}
+
+void GameEngine::restoreEnvironmentFromMetadata(const QJsonObject &metadata) {
   if (!m_world)
     return;
-
-  if (metadata.contains("localOwnerId")) {
-    m_runtime.localOwnerId =
-        metadata.value("localOwnerId").toInt(m_runtime.localOwnerId);
-  }
-
-  const QString mapPath = metadata.value("mapPath").toString();
-  if (!mapPath.isEmpty()) {
-    m_level.mapPath = mapPath;
-  }
-
-  if (metadata.contains("mapName")) {
-    m_level.mapName = metadata.value("mapName").toString(m_level.mapName);
-  }
-
-  if (metadata.contains("playerUnitId")) {
-    m_level.playerUnitId = static_cast<Engine::Core::EntityID>(
-        metadata.value("playerUnitId").toVariant().toULongLong());
-  }
-
-  int maxTroops =
-      metadata.value("maxTroopsPerPlayer").toInt(m_level.maxTroopsPerPlayer);
-  if (maxTroops <= 0) {
-    maxTroops = Game::GameConfig::instance().getMaxTroopsPerPlayer();
-  }
-  m_level.maxTroopsPerPlayer = maxTroops;
-  Game::GameConfig::instance().setMaxTroopsPerPlayer(maxTroops);
 
   const auto fallbackGridWidth = metadata.value("gridWidth").toInt(50);
   const auto fallbackGridHeight = metadata.value("gridHeight").toInt(50);
@@ -1302,6 +1311,8 @@ void GameEngine::applyEnvironmentFromMetadata(const QJsonObject &metadata) {
   Game::Map::MapDefinition def;
   QString mapError;
   bool loadedDefinition = false;
+  const QString &mapPath = m_level.mapPath;
+
   if (!mapPath.isEmpty()) {
     loadedDefinition =
         Game::Map::MapLoader::loadFromJsonFile(mapPath, def, &mapError);
@@ -1372,7 +1383,7 @@ void GameEngine::applyEnvironmentFromMetadata(const QJsonObject &metadata) {
     fallbackDef.grid.width = fallbackGridWidth;
     fallbackDef.grid.height = fallbackGridHeight;
     fallbackDef.grid.tileSize = fallbackTileSize;
-    fallbackDef.maxTroopsPerPlayer = maxTroops;
+    fallbackDef.maxTroopsPerPlayer = m_level.maxTroopsPerPlayer;
     terrainService.initialize(fallbackDef);
 
     if (m_ground) {
@@ -1395,102 +1406,6 @@ void GameEngine::applyEnvironmentFromMetadata(const QJsonObject &metadata) {
     m_runtime.visibilityVersion = visibilityService.version();
     m_runtime.visibilityUpdateAccumulator = 0.0f;
   }
-
-  if (metadata.contains("camera") && m_camera) {
-    const auto cameraObj = metadata.value("camera").toObject();
-    const QVector3D position = App::JsonUtils::jsonArrayToVec3(
-        cameraObj.value("position"), m_camera->getPosition());
-    const QVector3D target = App::JsonUtils::jsonArrayToVec3(
-        cameraObj.value("target"), m_camera->getTarget());
-    m_camera->lookAt(position, target, QVector3D(0.0f, 1.0f, 0.0f));
-
-    const float nearPlane = static_cast<float>(
-        cameraObj.value("near").toDouble(m_camera->getNear()));
-    const float farPlane =
-        static_cast<float>(cameraObj.value("far").toDouble(m_camera->getFar()));
-    const float fov =
-        static_cast<float>(cameraObj.value("fov").toDouble(m_camera->getFOV()));
-
-    float aspect = m_camera->getAspect();
-    if (m_viewport.height > 0) {
-      aspect = float(m_viewport.width) / float(std::max(1, m_viewport.height));
-    }
-    m_camera->setPerspective(fov, aspect, nearPlane, farPlane);
-  }
-
-  if (metadata.contains("runtime")) {
-    const auto runtimeObj = metadata.value("runtime").toObject();
-
-    if (runtimeObj.contains("paused")) {
-      setPaused(runtimeObj.value("paused").toBool(m_runtime.paused));
-    }
-
-    if (runtimeObj.contains("timeScale")) {
-      setGameSpeed(static_cast<float>(
-          runtimeObj.value("timeScale").toDouble(m_runtime.timeScale)));
-    }
-
-    const QString victory =
-        runtimeObj.value("victoryState").toString(m_runtime.victoryState);
-    if (victory != m_runtime.victoryState) {
-      m_runtime.victoryState = victory;
-      emit victoryStateChanged();
-    }
-
-    if (runtimeObj.contains("cursorMode")) {
-      const auto cursorValue = runtimeObj.value("cursorMode");
-      if (cursorValue.isDouble()) {
-        setCursorMode(CursorModeUtils::fromInt(
-            cursorValue.toInt(static_cast<int>(CursorMode::Normal))));
-      } else if (cursorValue.isString()) {
-        setCursorMode(cursorValue.toString());
-      }
-    }
-
-    const int selectedId =
-        runtimeObj.value("selectedPlayerId").toInt(m_selectedPlayerId);
-    if (selectedId != m_selectedPlayerId) {
-      m_selectedPlayerId = selectedId;
-      emit selectedPlayerIdChanged();
-    }
-
-    const bool follow =
-        runtimeObj.value("followSelection").toBool(m_followSelectionEnabled);
-    if (follow != m_followSelectionEnabled) {
-      m_followSelectionEnabled = follow;
-      if (m_camera && m_cameraService && m_world) {
-        m_cameraService->followSelection(*m_camera, *m_world,
-                                         m_followSelectionEnabled);
-      }
-    }
-  }
-}
-
-QByteArray GameEngine::captureSaveScreenshot() const {
-  if (!m_window) {
-    return {};
-  }
-
-  QImage image = m_window->grabWindow();
-  if (image.isNull()) {
-    return {};
-  }
-
-  const QSize targetSize(320, 180);
-  QImage scaled =
-      image.scaled(targetSize, Qt::KeepAspectRatio, Qt::SmoothTransformation);
-
-  QByteArray buffer;
-  QBuffer qBuffer(&buffer);
-  if (!qBuffer.open(QIODevice::WriteOnly)) {
-    return {};
-  }
-
-  if (!scaled.save(&qBuffer, "PNG")) {
-    return {};
-  }
-
-  return buffer;
 }
 
 bool GameEngine::hasPatrolPreviewWaypoint() const {
