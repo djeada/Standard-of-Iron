@@ -926,8 +926,12 @@ bool GameEngine::loadFromSlot(const QString &slot) {
     setError("Load: not initialized");
     return false;
   }
+
+  m_runtime.loading = true;
+
   if (!m_saveLoadService->loadGameFromSlot(*m_world, slot)) {
     setError(m_saveLoadService->getLastError());
+    m_runtime.loading = false;
     return false;
   }
 
@@ -961,6 +965,10 @@ bool GameEngine::loadFromSlot(const QString &slot) {
     m_victoryService->configure(Game::Map::VictoryConfig(),
                                 m_runtime.localOwnerId);
   }
+
+  m_runtime.loading = false;
+  qInfo() << "Game load complete, victory/defeat checks re-enabled";
+
   emit selectedUnitsChanged();
   emit ownerInfoChanged();
   return true;
