@@ -263,6 +263,8 @@ void CommandService::moveUnits(Engine::Core::World &world,
 
         mv->path.clear();
         mv->hasTarget = false;
+        mv->vx = 0.0f;
+        mv->vz = 0.0f;
         mv->pathPending = true;
 
         std::uint64_t requestId =
@@ -408,12 +410,24 @@ void CommandService::moveGroup(Engine::Core::World &world,
 
   std::vector<MemberInfo *> unitsNeedingNewPath;
   constexpr float SAME_GOAL_THRESHOLD_SQ = 4.0f;
+  constexpr float NEAR_DESTINATION_THRESHOLD_SQ = 1.0f;
 
   for (auto &member : members) {
     auto *mv = member.movement;
 
     mv->goalX = member.target.x();
     mv->goalY = member.target.z();
+
+    // Check if unit is already very close to its destination
+    float distToTargetX = member.transform->position.x - member.target.x();
+    float distToTargetZ = member.transform->position.z - member.target.z();
+    float distToTargetSq =
+        distToTargetX * distToTargetX + distToTargetZ * distToTargetZ;
+
+    if (distToTargetSq <= NEAR_DESTINATION_THRESHOLD_SQ) {
+      // Unit is already at or very near destination, don't repath
+      continue;
+    }
 
     bool alreadyMovingToGoal = false;
     if (mv->hasTarget || mv->pathPending) {
@@ -579,11 +593,14 @@ void CommandService::processPathResults(Engine::Core::World &world) {
 
       movementComponent->pathPending = false;
       movementComponent->pendingRequestId = 0;
+
+      // Clear old path and velocity immediately to prevent wrong direction
+      // movement
       movementComponent->path.clear();
-      movementComponent->goalX = target.x();
-      movementComponent->goalY = target.z();
       movementComponent->vx = 0.0f;
       movementComponent->vz = 0.0f;
+      movementComponent->goalX = target.x();
+      movementComponent->goalY = target.z();
 
       if (hasPath) {
         movementComponent->path.reserve(pathPoints.size() - 1);
