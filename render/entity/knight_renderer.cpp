@@ -83,45 +83,45 @@ public:
 
       // Staged positions with anticipation and follow-through
       QVector3D restPos(0.20f, HP::SHOULDER_Y + 0.05f, 0.15f);
-      QVector3D preparePos(0.28f, HP::HEAD_TOP_Y + 0.12f, -0.05f); // wind-up behind head
-      QVector3D raisedPos(0.25f, HP::HEAD_TOP_Y + 0.15f, 0.05f);
-      QVector3D strikePos(0.35f, HP::WAIST_Y + 0.10f, 0.50f);
-      QVector3D recoverPos(0.22f, HP::SHOULDER_Y + 0.00f, 0.22f);
+      QVector3D preparePos(0.26f, HP::HEAD_TOP_Y + 0.18f, -0.06f); // higher & slightly back
+      QVector3D raisedPos(0.25f, HP::HEAD_TOP_Y + 0.22f, 0.02f);
+      QVector3D strikePos(0.30f, HP::HIP_Y - 0.05f, 0.50f);        // lower: top-to-bottom swing
+      QVector3D recoverPos(0.22f, HP::SHOULDER_Y + 0.02f, 0.22f);
 
       if (attackPhase < 0.18f) {
-        // Anticipation: dip left hand slightly, pull sword back
+        // Anticipation: lift high
         float t = easeInOutCubic(attackPhase / 0.18f);
         pose.handR = restPos * (1.0f - t) + preparePos * t;
         pose.handL = QVector3D(-0.21f, HP::SHOULDER_Y - 0.02f - 0.03f * t, 0.15f);
       } else if (attackPhase < 0.32f) {
-        // Rise to strike
+        // Set up above head
         float t = easeInOutCubic((attackPhase - 0.18f) / 0.14f);
         pose.handR = preparePos * (1.0f - t) + raisedPos * t;
-        pose.handL = QVector3D(-0.21f, HP::SHOULDER_Y - 0.05f, 0.15f);
+        pose.handL = QVector3D(-0.21f, HP::SHOULDER_Y - 0.05f, 0.17f);
       } else if (attackPhase < 0.52f) {
-        // Accelerated strike
+        // Top-to-bottom strike
         float t = (attackPhase - 0.32f) / 0.20f;
         t = t * t * t; // strong acceleration
         pose.handR = raisedPos * (1.0f - t) + strikePos * t;
         pose.handL = QVector3D(-0.21f, HP::SHOULDER_Y - 0.03f * (1.0f - 0.5f * t),
-                               0.15f + 0.18f * t);
+                               0.17f + 0.20f * t);
       } else if (attackPhase < 0.72f) {
         // Follow-through to recover
         float t = easeInOutCubic((attackPhase - 0.52f) / 0.20f);
         pose.handR = strikePos * (1.0f - t) + recoverPos * t;
         pose.handL = QVector3D(-0.20f, HP::SHOULDER_Y - 0.015f * (1.0f - t),
-                               lerp(0.33f, 0.18f, t));
+                               lerp(0.37f, 0.20f, t));
       } else {
         // Glide back to rest
         float t = smoothstep(0.72f, 1.0f, attackPhase);
         pose.handR = recoverPos * (1.0f - t) + restPos * t;
         pose.handL = QVector3D(-0.20f - 0.02f * (1.0f - t),
                                HP::SHOULDER_Y + armHeightJitter * (1.0f - t),
-                               lerp(0.18f, 0.15f, t));
+                               lerp(0.20f, 0.15f, t));
       }
     } else {
-      // Idle stance with gentle asymmetry and a subtle forward presentation of the shield
-      pose.handR = QVector3D(0.20f + armAsymmetry, HP::SHOULDER_Y + armHeightJitter, 0.20f);
+      // Idle stance: sword held more vertically
+      pose.handR = QVector3D(0.22f + armAsymmetry, HP::SHOULDER_Y + 0.06f + armHeightJitter, 0.18f);
       pose.handL = QVector3D(-0.22f - 0.5f * armAsymmetry, HP::SHOULDER_Y + 0.5f * armHeightJitter, 0.18f);
     }
   }
@@ -186,29 +186,43 @@ private:
   static void drawSword(const DrawContext &ctx, const HumanoidPose &pose,
                         const HumanoidVariant &v, const KnightExtras &extras,
                         bool isAttacking, float attackPhase, ISubmitter &out) {
-    const QVector3D forward(0.0f, 0.0f, 1.0f);
-
     QVector3D gripPos = pose.handR;
 
-    // Sword arc direction during strike
-    QVector3D swordDir = forward;
+    // Desired orientation: more vertical overall. During attack, top-to-bottom arc.
+    QVector3D upish(0.05f, 1.0f, 0.15f);   if (upish.lengthSquared()>1e-6f) upish.normalize();
+    QVector3D midish(0.08f, 0.20f, 1.0f);  if (midish.lengthSquared()>1e-6f) midish.normalize();
+    QVector3D downish(0.10f,-1.0f, 0.25f); if (downish.lengthSquared()>1e-6f) downish.normalize();
+
+    QVector3D swordDir = upish; // default idle: vertical with slight forward
+
     if (isAttacking) {
       if (attackPhase < 0.18f) {
+        // Keep blade vertical while lifting
         float t = easeInOutCubic(attackPhase / 0.18f);
-        swordDir = nlerp(QVector3D(0.0f, 0.2f, -1.0f), QVector3D(0.2f, 0.1f, 0.98f), t);
+        swordDir = nlerp(upish, upish, t);
       } else if (attackPhase < 0.32f) {
+        // Slight pre-rotation forward but still mostly up
         float t = easeInOutCubic((attackPhase - 0.18f) / 0.14f);
-        swordDir = nlerp(QVector3D(0.2f, 0.1f, 0.98f), QVector3D(0.35f, -0.05f, 0.93f), t);
+        swordDir = nlerp(upish, midish, t * 0.35f);
       } else if (attackPhase < 0.52f) {
-        // Swing through a large arc
-        float swingT = (attackPhase - 0.32f) / 0.20f;
-        float angle = swingT * 3.14159f * 0.7f; // wider, faster
-        swordDir = QVector3D(std::sin(angle) * 0.55f, -std::cos(angle) * 0.35f, std::cos(angle));
-        swordDir.normalize();
+        // Main cut: top -> bottom, curved via midish
+        float t = (attackPhase - 0.32f) / 0.20f; // 0..1
+        t = t * t * t; // accelerate
+        if (t < 0.5f) {
+          float u = t / 0.5f;                 // 0..1
+          swordDir = nlerp(upish, midish, u); // first half of the curve
+        } else {
+          float u = (t - 0.5f) / 0.5f;        // 0..1
+          swordDir = nlerp(midish, downish, u); // second half to downward
+        }
+      } else if (attackPhase < 0.72f) {
+        // Recover: bottom -> mid
+        float t = easeInOutCubic((attackPhase - 0.52f) / 0.20f);
+        swordDir = nlerp(downish, midish, t);
       } else {
-        // Recover
-        float t = easeInOutCubic((attackPhase - 0.52f) / 0.48f);
-        swordDir = nlerp(QVector3D(0.45f, -0.10f, 0.88f), forward, t);
+        // Settle back to vertical idle
+        float t = smoothstep(0.72f, 1.0f, attackPhase);
+        swordDir = nlerp(midish, upish, t);
       }
     }
 
@@ -221,7 +235,7 @@ private:
              cylinderBetween(ctx.model, handleEnd, bladeBase, extras.handleRadius),
              v.palette.leather, nullptr, 1.0f);
 
-    // Crossguard: slight curve suggestion via three segments
+    // Crossguard
     QVector3D guardCenter = bladeBase;
     float gw = extras.guardHalfWidth;
     QVector3D guardL = guardCenter + QVector3D(-gw, 0.0f, 0.0f);
@@ -229,26 +243,23 @@ private:
     out.mesh(getUnitCylinder(),
              cylinderBetween(ctx.model, guardL, guardR, 0.014f),
              extras.metalColor, nullptr, 1.0f);
-
-    // Guard end caps (quillon knobs)
+    // Guard end caps
     QMatrix4x4 gl = ctx.model; gl.translate(guardL); gl.scale(0.018f);
     out.mesh(getUnitSphere(), gl, extras.metalColor, nullptr, 1.0f);
     QMatrix4x4 gr = ctx.model; gr.translate(guardR); gr.scale(0.018f);
     out.mesh(getUnitSphere(), gr, extras.metalColor, nullptr, 1.0f);
 
-    // Blade shaping: ricasso (cyl), then tapered cone to tip
+    // Blade: ricasso (cyl) + tapered cone to tip
     float L = extras.swordLength;
     float ricassoLen = clampf(extras.bladeRicasso, 0.06f, L * 0.35f);
     QVector3D ricassoEnd = bladeBase + swordDir * ricassoLen;
     float baseW = extras.swordWidth;
     float midW  = baseW * 0.75f;
 
-    // Ricasso (stiff base)
     out.mesh(getUnitCylinder(),
              cylinderBetween(ctx.model, bladeBase, ricassoEnd, baseW),
              extras.metalColor, nullptr, 1.0f);
 
-    // Tapered blade (single cone from ricasso to tip)
     out.mesh(getUnitCone(),
              coneFromTo(ctx.model, ricassoEnd, bladeTip, midW),
              extras.metalColor, nullptr, 1.0f);
@@ -260,7 +271,7 @@ private:
     pommelMat.scale(extras.pommelRadius);
     out.mesh(getUnitSphere(), pommelMat, extras.metalColor, nullptr, 1.0f);
 
-    // Motion trail hint during fastest swing segment (single-radius cone)
+    // Motion trail hint during fastest swing (still vertical-ish plane)
     if (isAttacking && attackPhase >= 0.32f && attackPhase < 0.56f) {
       float t = (attackPhase - 0.32f) / 0.24f;
       float alpha = 0.35f * (1.0f - t);
