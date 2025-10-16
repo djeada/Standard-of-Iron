@@ -217,7 +217,15 @@ void Renderer::renderWorld(Engine::Core::World *world) {
       continue;
     }
 
+    if (entity->hasComponent<Engine::Core::PendingRemovalComponent>()) {
+      continue;
+    }
+
     auto *unitComp = entity->getComponent<Engine::Core::UnitComponent>();
+    if (unitComp && unitComp->health <= 0) {
+      continue;
+    }
+
     if (unitComp && unitComp->ownerId != m_localOwnerId) {
       if (visibilityEnabled) {
         if (!vis.isVisibleWorld(transform->position.x, transform->position.z)) {

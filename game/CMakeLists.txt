@@ -14,6 +14,7 @@ target_link_libraries(engine_core PUBLIC Qt${QT_VERSION_MAJOR}::Core)
 add_library(game_systems STATIC
     systems/movement_system.cpp
     systems/combat_system.cpp
+    systems/cleanup_system.cpp
     systems/ai_system.cpp
     systems/ai_system/ai_command_applier.cpp
     systems/ai_system/ai_command_filter.cpp
