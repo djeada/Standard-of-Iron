@@ -29,6 +29,7 @@ add_library(render_gl STATIC
     geom/transforms.cpp
     humanoid_math.cpp
     palette.cpp
+    humanoid_base.cpp
 )
 
 target_include_directories(render_gl PUBLIC .)
