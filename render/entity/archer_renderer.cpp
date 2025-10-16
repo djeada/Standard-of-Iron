@@ -35,35 +35,37 @@ using Render::Geom::sphereAt;
 
 struct HumanProportions {
 
-  static constexpr float TOTAL_HEIGHT = 2.00f;
-  static constexpr float HEAD_HEIGHT = 0.25f;
+  static constexpr float TOTAL_HEIGHT = 1.80f;
+  static constexpr float HEAD_HEIGHT = 0.23f;
 
   static constexpr float GROUND_Y = 0.0f;
   static constexpr float HEAD_TOP_Y = GROUND_Y + TOTAL_HEIGHT;
   static constexpr float CHIN_Y = HEAD_TOP_Y - HEAD_HEIGHT;
-  static constexpr float NECK_BASE_Y = CHIN_Y - 0.10f;
-  static constexpr float SHOULDER_Y = NECK_BASE_Y - 0.15f;
-  static constexpr float CHEST_Y = SHOULDER_Y - 0.35f;
-  static constexpr float WAIST_Y = CHEST_Y - 0.30f;
-  static constexpr float HIP_Y = WAIST_Y - 0.15f;
-  static constexpr float KNEE_Y = HIP_Y - 0.35f;
+  static constexpr float NECK_BASE_Y = CHIN_Y - 0.08f;
+  static constexpr float SHOULDER_Y = NECK_BASE_Y - 0.12f;
+  static constexpr float CHEST_Y = SHOULDER_Y - 0.38f;
+  static constexpr float WAIST_Y = CHEST_Y - 0.28f;
+  static constexpr float HIP_Y = WAIST_Y - 0.14f;
+  static constexpr float KNEE_Y = HIP_Y - 0.42f;
 
-  static constexpr float SHOULDER_WIDTH = HEAD_HEIGHT * 1.6f;
-  static constexpr float HEAD_RADIUS = HEAD_HEIGHT * 0.40f;
-  static constexpr float NECK_RADIUS = HEAD_RADIUS * 0.35f;
-  static constexpr float TORSO_TOP_R = HEAD_RADIUS * 1.0f;
-  static constexpr float TORSO_BOT_R = HEAD_RADIUS * 0.9f;
-  static constexpr float UPPER_ARM_R = HEAD_RADIUS * 0.30f;
-  static constexpr float FORE_ARM_R = HEAD_RADIUS * 0.25f;
-  static constexpr float HAND_RADIUS = HEAD_RADIUS * 0.22f;
-  static constexpr float UPPER_LEG_R = HEAD_RADIUS * 0.38f;
-  static constexpr float LOWER_LEG_R = HEAD_RADIUS * 0.32f;
+  static constexpr float SHOULDER_WIDTH = HEAD_HEIGHT * 1.85f;
+  static constexpr float HEAD_RADIUS = HEAD_HEIGHT * 0.42f;
+  static constexpr float NECK_RADIUS = HEAD_RADIUS * 0.38f;
+  static constexpr float TORSO_TOP_R = HEAD_RADIUS * 1.15f;
+  static constexpr float TORSO_BOT_R = HEAD_RADIUS * 1.05f;
+  static constexpr float UPPER_ARM_R = HEAD_RADIUS * 0.32f;
+  static constexpr float FORE_ARM_R = HEAD_RADIUS * 0.27f;
+  static constexpr float HAND_RADIUS = HEAD_RADIUS * 0.24f;
+  static constexpr float UPPER_LEG_R = HEAD_RADIUS * 0.42f;
+  static constexpr float LOWER_LEG_R = HEAD_RADIUS * 0.35f;
 
   static constexpr float UPPER_ARM_LEN = 0.28f;
   static constexpr float FORE_ARM_LEN = 0.30f;
-  static constexpr float UPPER_LEG_LEN = 0.35f;
-  static constexpr float LOWER_LEG_LEN = 0.35f;
+  static constexpr float UPPER_LEG_LEN = 0.42f;
+  static constexpr float LOWER_LEG_LEN = 0.42f;
 };
+
+enum class MaterialType : uint8_t { Cloth = 0, Leather = 1, Metal = 2, Wood = 3, Skin = 4 };
 
 struct ArcherColors {
   QVector3D tunic, skin, leather, leatherDark, wood, metal, metalHead,
@@ -105,13 +107,25 @@ struct ArcherPose {
 
 static inline ArcherPose makePose(uint32_t seed, float animTime, bool isMoving,
                                   bool isAttacking, bool isMelee = false) {
-  (void)seed;
   ArcherPose P;
 
   using HP = HumanProportions;
+  
+  auto hash01 = [](uint32_t x) {
+    x ^= x << 13;
+    x ^= x >> 17;
+    x ^= x << 5;
+    return (x & 0x00FFFFFF) / float(0x01000000);
+  };
+  
+  float footAngleJitter = (hash01(seed ^ 0x5678u) - 0.5f) * 0.06f;
+  float armHeightJitter = (hash01(seed ^ 0xABCDu) - 0.5f) * 0.02f;
 
-  P.handL = QVector3D(P.bowX - 0.05f, HP::SHOULDER_Y + 0.05f, 0.55f);
-  P.handR = QVector3D(0.15f, HP::SHOULDER_Y + 0.15f, 0.20f);
+  P.handL = QVector3D(P.bowX - 0.05f, HP::SHOULDER_Y + 0.05f + armHeightJitter, 0.55f);
+  P.handR = QVector3D(0.15f, HP::SHOULDER_Y + 0.15f + armHeightJitter * 0.8f, 0.20f);
+  
+  P.footL.setX(P.footL.x() + footAngleJitter);
+  P.footR.setX(P.footR.x() - footAngleJitter);
 
   if (isAttacking) {
     float attackCycleTime = 1.2f;
@@ -213,16 +227,30 @@ static inline ArcherPose makePose(uint32_t seed, float animTime, bool isMoving,
   return P;
 }
 
-static inline ArcherColors makeColors(const QVector3D &teamTint) {
+static inline ArcherColors makeColors(const QVector3D &teamTint, uint32_t seed) {
   ArcherColors C;
+  
+  auto hash01 = [](uint32_t x) {
+    x ^= x << 13;
+    x ^= x >> 17;
+    x ^= x << 5;
+    return (x & 0x00FFFFFF) / float(0x01000000);
+  };
+  
   auto tint = [&](float k) {
     return QVector3D(clamp01(teamTint.x() * k), clamp01(teamTint.y() * k),
                      clamp01(teamTint.z() * k));
   };
-  C.tunic = teamTint;
+  
+  float variation = (hash01(seed) - 0.5f) * 0.08f;
+  
+  C.tunic = clampVec01(teamTint * (1.0f + variation));
   C.skin = QVector3D(0.96f, 0.80f, 0.69f);
-  C.leather = QVector3D(0.35f, 0.22f, 0.12f);
-  C.leatherDark = C.leather * 0.9f;
+  
+  float leatherVar = (hash01(seed ^ 0x1234u) - 0.5f) * 0.06f;
+  C.leather = clampVec01(QVector3D(0.35f, 0.22f, 0.12f) * (1.0f + leatherVar));
+  C.leatherDark = C.leather * 0.88f;
+  
   C.wood = QVector3D(0.16f, 0.10f, 0.05f);
   C.metal = QVector3D(0.65f, 0.66f, 0.70f);
   C.metalHead = clampVec01(C.metal * 1.1f);
@@ -493,7 +521,7 @@ void registerArcherRenderer(Render::GL::EntityRendererRegistry &registry) {
     const int cols = maxUnitsPerRow;
     const float spacing = 0.75f;
 
-    ArcherColors colors = makeColors(tunic);
+    ArcherColors colors = makeColors(tunic, seed);
 
     bool isMoving = false;
     bool isAttacking = false;
@@ -575,9 +603,23 @@ void registerArcherRenderer(Render::GL::EntityRendererRegistry &registry) {
 
       uint32_t instSeed = seed ^ uint32_t(idx * 9176u);
 
-      float yawOffset = (float)((int)(instSeed & 0xFFu) - 128) / 128.0f * 6.0f;
+      auto hash01 = [](uint32_t x) {
+        x ^= x << 13;
+        x ^= x >> 17;
+        x ^= x << 5;
+        return (x & 0x00FFFFFF) / float(0x01000000);
+      };
 
-      float phaseOffset = float((instSeed >> 8) & 0xFFu) / 255.0f * 0.25f;
+      float posJitterX = (hash01(instSeed) - 0.5f) * 0.05f;
+      float posJitterZ = (hash01(instSeed ^ 0x12345u) - 0.5f) * 0.05f;
+      float verticalJitter = (hash01(instSeed ^ 0x9E37u) - 0.5f) * 0.03f;
+
+      offsetX += posJitterX;
+      offsetZ += posJitterZ;
+
+      float yawOffset = (hash01(instSeed ^ 0xABCDu) - 0.5f) * 5.0f;
+
+      float phaseOffset = hash01(instSeed >> 8) * 0.25f;
 
       if (p.entity) {
         if (auto *entT =
@@ -585,23 +627,21 @@ void registerArcherRenderer(Render::GL::EntityRendererRegistry &registry) {
           QMatrix4x4 M = kIdentityMatrix;
           M.translate(entT->position.x, entT->position.y, entT->position.z);
           float baseYaw = entT->rotation.y;
-          float appliedYaw = baseYaw + (isAttacking ? yawOffset : 0.0f);
+          float appliedYaw = baseYaw + yawOffset;
           M.rotate(appliedYaw, 0.0f, 1.0f, 0.0f);
           M.scale(entT->scale.x, entT->scale.y, entT->scale.z);
 
-          M.translate(offsetX, 0.0f, offsetZ);
+          M.translate(offsetX, verticalJitter, offsetZ);
           instModel = M;
         } else {
           instModel = p.model;
-          if (isAttacking)
-            instModel.rotate(yawOffset, 0.0f, 1.0f, 0.0f);
-          instModel.translate(offsetX, 0.0f, offsetZ);
+          instModel.rotate(yawOffset, 0.0f, 1.0f, 0.0f);
+          instModel.translate(offsetX, verticalJitter, offsetZ);
         }
       } else {
         instModel = p.model;
-        if (isAttacking)
-          instModel.rotate(yawOffset, 0.0f, 1.0f, 0.0f);
-        instModel.translate(offsetX, 0.0f, offsetZ);
+        instModel.rotate(yawOffset, 0.0f, 1.0f, 0.0f);
+        instModel.translate(offsetX, verticalJitter, offsetZ);
       }
 
       DrawContext instCtx{p.resources, p.entity, p.world, instModel};
