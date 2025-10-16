@@ -12,6 +12,9 @@
 #include "../gl/primitives.h"
 #include "../gl/resources.h"
 #include "../gl/texture.h"
+#include "../humanoid_math.h"
+#include "../humanoid_specs.h"
+#include "../palette.h"
 #include "registry.h"
 
 #include <QMatrix4x4>
@@ -32,46 +35,6 @@ using Render::Geom::clampVec01;
 using Render::Geom::coneFromTo;
 using Render::Geom::cylinderBetween;
 using Render::Geom::sphereAt;
-
-struct HumanProportions {
-
-  static constexpr float TOTAL_HEIGHT = 1.80f;
-  static constexpr float HEAD_HEIGHT = 0.23f;
-
-  static constexpr float GROUND_Y = 0.0f;
-  static constexpr float HEAD_TOP_Y = GROUND_Y + TOTAL_HEIGHT;
-  static constexpr float CHIN_Y = HEAD_TOP_Y - HEAD_HEIGHT;
-  static constexpr float NECK_BASE_Y = CHIN_Y - 0.08f;
-  static constexpr float SHOULDER_Y = NECK_BASE_Y - 0.12f;
-  static constexpr float CHEST_Y = SHOULDER_Y - 0.42f;
-  static constexpr float WAIST_Y = CHEST_Y - 0.30f;
-
-  static constexpr float UPPER_LEG_LEN = 0.35f;
-  static constexpr float LOWER_LEG_LEN = 0.35f;
-  static constexpr float KNEE_Y = WAIST_Y - UPPER_LEG_LEN;
-
-  static constexpr float SHOULDER_WIDTH = HEAD_HEIGHT * 1.85f;
-  static constexpr float HEAD_RADIUS = HEAD_HEIGHT * 0.42f;
-  static constexpr float NECK_RADIUS = HEAD_RADIUS * 0.38f;
-  static constexpr float TORSO_TOP_R = HEAD_RADIUS * 1.15f;
-  static constexpr float TORSO_BOT_R = HEAD_RADIUS * 1.05f;
-  static constexpr float UPPER_ARM_R = HEAD_RADIUS * 0.38f;
-  static constexpr float FORE_ARM_R = HEAD_RADIUS * 0.30f;
-  static constexpr float HAND_RADIUS = HEAD_RADIUS * 0.28f;
-  static constexpr float UPPER_LEG_R = HEAD_RADIUS * 0.50f;
-  static constexpr float LOWER_LEG_R = HEAD_RADIUS * 0.42f;
-
-  static constexpr float UPPER_ARM_LEN = 0.28f;
-  static constexpr float FORE_ARM_LEN = 0.30f;
-};
-
-enum class MaterialType : uint8_t {
-  Cloth = 0,
-  Leather = 1,
-  Metal = 2,
-  Wood = 3,
-  Skin = 4
-};
 
 struct ArcherColors {
   QVector3D tunic, skin, leather, leatherDark, wood, metal, metalHead,
@@ -108,13 +71,6 @@ static inline ArcherPose makePose(uint32_t seed, float animTime, bool isMoving,
   ArcherPose P;
 
   using HP = HumanProportions;
-
-  auto hash01 = [](uint32_t x) {
-    x ^= x << 13;
-    x ^= x >> 17;
-    x ^= x << 5;
-    return (x & 0x00FFFFFF) / float(0x01000000);
-  };
 
   float footAngleJitter = (hash01(seed ^ 0x5678u) - 0.5f) * 0.12f;
   float footDepthJitter = (hash01(seed ^ 0x9ABCu) - 0.5f) * 0.08f;
@@ -252,27 +208,6 @@ static inline ArcherPose makePose(uint32_t seed, float animTime, bool isMoving,
   QVector3D outwardL = -rightAxis;
   QVector3D outwardR = rightAxis;
 
-  auto elbowBendTorso = [&](const QVector3D &shoulder, const QVector3D &hand,
-                            const QVector3D &outwardDir, float alongFrac,
-                            float lateralOffset, float yBias,
-                            float outwardSign) {
-    QVector3D dir = hand - shoulder;
-    float dist = std::max(dir.length(), 1e-5f);
-    dir /= dist;
-
-    QVector3D lateral =
-        outwardDir - dir * QVector3D::dotProduct(outwardDir, dir);
-    if (lateral.lengthSquared() < 1e-8f) {
-      lateral = QVector3D::crossProduct(dir, QVector3D(0, 1, 0));
-    }
-    if (QVector3D::dotProduct(lateral, outwardDir) < 0.0f)
-      lateral = -lateral;
-    lateral.normalize();
-
-    return shoulder + dir * (dist * alongFrac) +
-           lateral * (lateralOffset * outwardSign) + QVector3D(0, yBias, 0);
-  };
-
   P.elbowL = elbowBendTorso(P.shoulderL, P.handL, outwardL, 0.45f, 0.15f,
                             -0.08f, +1.0f);
   P.elbowR = elbowBendTorso(P.shoulderR, P.handR, outwardR, 0.48f, 0.12f, 0.02f,
@@ -285,42 +220,23 @@ static inline ArcherColors makeColors(const QVector3D &teamTint,
                                       uint32_t seed) {
   ArcherColors C;
 
-  auto hash01 = [](uint32_t x) {
-    x ^= x << 13;
-    x ^= x >> 17;
-    x ^= x << 5;
-    return (x & 0x00FFFFFF) / float(0x01000000);
-  };
+  HumanoidPalette base = makeHumanoidPalette(teamTint, seed);
+  C.tunic = base.cloth;
+  C.skin = base.skin;
+  C.leather = base.leather;
+  C.leatherDark = base.leatherDark;
+  C.wood = base.wood;
+  C.metal = base.metal;
+
+  C.metalHead = clampVec01(C.metal * 1.15f);
+  C.stringCol = QVector3D(0.30f, 0.30f, 0.32f);
 
   auto tint = [&](float k) {
     return QVector3D(clamp01(teamTint.x() * k), clamp01(teamTint.y() * k),
                      clamp01(teamTint.z() * k));
   };
-
-  float variation = (hash01(seed) - 0.5f) * 0.08f;
-
-  C.tunic = clampVec01(teamTint * (1.0f + variation));
-  C.skin = QVector3D(0.96f, 0.80f, 0.69f);
-
-  float leatherVar = (hash01(seed ^ 0x1234u) - 0.5f) * 0.06f;
-  float r = teamTint.x();
-  float g = teamTint.y();
-  float b = teamTint.z();
-  float saturation = 0.6f;
-  float brightness = 0.5f;
-  QVector3D desaturated(r * saturation + (1.0f - saturation) * brightness,
-                        g * saturation + (1.0f - saturation) * brightness,
-                        b * saturation + (1.0f - saturation) * brightness);
-  C.leather = clampVec01(desaturated * (0.7f + leatherVar));
-  C.leatherDark = C.leather * 0.85f;
-
-  C.wood = QVector3D(0.16f, 0.10f, 0.05f);
-
-  QVector3D neutralGray(0.70f, 0.70f, 0.70f);
-  C.metal = clampVec01(teamTint * 0.25f + neutralGray * 0.75f);
-  C.metalHead = clampVec01(C.metal * 1.15f);
-  C.stringCol = QVector3D(0.30f, 0.30f, 0.32f);
   C.fletch = tint(0.9f);
+
   return C;
 }
 
@@ -343,13 +259,6 @@ static inline void drawTunicSkirt(const DrawContext &p, ISubmitter &out,
                                   float animTime, bool isMoving,
                                   uint32_t seed) {
   using HP = HumanProportions;
-
-  auto hash01 = [](uint32_t x) {
-    x ^= x << 13;
-    x ^= x >> 17;
-    x ^= x << 5;
-    return (x & 0x00FFFFFF) / float(0x01000000);
-  };
 
   const float waistY = HP::WAIST_Y;
   const float skirtLength = 0.25f;
@@ -673,13 +582,6 @@ static inline void drawQuiver(const DrawContext &p, ISubmitter &out,
                               uint32_t seed) {
   using HP = HumanProportions;
 
-  auto hash01 = [](uint32_t x) {
-    x ^= x << 13;
-    x ^= x >> 17;
-    x ^= x << 5;
-    return (x & 0x00FFFFFF) / float(0x01000000);
-  };
-
   QVector3D qTop(-0.08f, HP::SHOULDER_Y + 0.10f, -0.25f);
   QVector3D qBase(-0.10f, HP::CHEST_Y, -0.22f);
 
@@ -899,13 +801,6 @@ void registerArcherRenderer(Render::GL::EntityRendererRegistry &registry) {
       QMatrix4x4 instModel = p.model;
 
       uint32_t instSeed = seed ^ uint32_t(idx * 9176u);
-
-      auto hash01 = [](uint32_t x) {
-        x ^= x << 13;
-        x ^= x >> 17;
-        x ^= x << 5;
-        return (x & 0x00FFFFFF) / float(0x01000000);
-      };
 
       float posJitterX = (hash01(instSeed) - 0.5f) * 0.05f;
       float posJitterZ = (hash01(instSeed ^ 0x12345u) - 0.5f) * 0.05f;
