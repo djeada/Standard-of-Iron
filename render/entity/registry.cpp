@@ -4,6 +4,7 @@
 #include "../scene_renderer.h"
 #include "archer_renderer.h"
 #include "barracks_renderer.h"
+#include "knight_renderer.h"
 
 namespace Render::GL {
 
@@ -21,6 +22,7 @@ RenderFunc EntityRendererRegistry::get(const std::string &type) const {
 
 void registerBuiltInEntityRenderers(EntityRendererRegistry &registry) {
   registerArcherRenderer(registry);
+  registerKnightRenderer(registry);
   registerBarracksRenderer(registry);
 }
 
