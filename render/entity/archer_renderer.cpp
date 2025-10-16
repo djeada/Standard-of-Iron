@@ -85,17 +85,15 @@ struct ArcherPose {
   float headR = P::HEAD_RADIUS;
   QVector3D neckBase{0.0f, P::NECK_BASE_Y, 0.0f};
 
-  QVector3D shoulderL{-P::TORSO_TOP_R * 0.98f, P::SHOULDER_Y,
-                      P::TORSO_TOP_R * 0.05f};
-  QVector3D shoulderR{P::TORSO_TOP_R * 0.98f, P::SHOULDER_Y,
-                      P::TORSO_TOP_R * 0.05f};
+  QVector3D shoulderL{-P::TORSO_TOP_R * 0.98f, P::SHOULDER_Y, 0.0f};
+  QVector3D shoulderR{P::TORSO_TOP_R * 0.98f, P::SHOULDER_Y, 0.0f};
 
   QVector3D elbowL, elbowR;
   QVector3D handL, handR;
 
   float footYOffset = 0.02f;
-  QVector3D footL{-P::SHOULDER_WIDTH * 0.58f, P::GROUND_Y + footYOffset, 0.22f};
-  QVector3D footR{P::SHOULDER_WIDTH * 0.58f, P::GROUND_Y + footYOffset, -0.18f};
+  QVector3D footL{-P::SHOULDER_WIDTH * 0.58f, P::GROUND_Y + footYOffset, 0.0f};
+  QVector3D footR{P::SHOULDER_WIDTH * 0.58f, P::GROUND_Y + footYOffset, 0.0f};
 
   float bowX = 0.0f;
   float bowTopY = P::SHOULDER_Y + 0.55f;
@@ -195,17 +193,26 @@ static inline ArcherPose makePose(uint32_t seed, float animTime, bool isMoving,
 
     const float footYOffset = P.footYOffset;
     const float groundY = HP::GROUND_Y;
+    const float strideLength = 0.35f;
 
-    auto animateFoot = [groundY, footYOffset](QVector3D &foot, float phase) {
+    auto animateFoot = [groundY, footYOffset, strideLength](QVector3D &foot,
+                                                             float phase) {
       float lift = std::sin(phase * 2.0f * 3.14159f);
       if (lift > 0.0f) {
-        foot.setY(groundY + footYOffset + lift * 0.15f);
+        foot.setY(groundY + footYOffset + lift * 0.12f);
+      } else {
+        foot.setY(groundY + footYOffset);
       }
-      foot.setZ(foot.z() + std::sin((phase - 0.25f) * 2.0f * 3.14159f) * 0.20f);
+      foot.setZ(foot.z() + std::sin((phase - 0.25f) * 2.0f * 3.14159f) *
+                               strideLength);
     };
 
     animateFoot(P.footL, leftPhase);
     animateFoot(P.footR, rightPhase);
+
+    float hipSway = std::sin(walkPhase * 2.0f * 3.14159f) * 0.02f;
+    P.shoulderL.setX(P.shoulderL.x() + hipSway);
+    P.shoulderR.setX(P.shoulderR.x() + hipSway);
   }
 
   QVector3D rightAxis = P.shoulderR - P.shoulderL;
@@ -508,8 +515,8 @@ static inline void drawLegs(const DrawContext &p, ISubmitter &out,
   const float footLenMul = (5.5f * 0.1f);
   const float footRadMul = 0.70f;
 
-  const float kneeForward = 0.30f;
-  const float kneeDrop = 0.05f * HP::LOWER_LEG_LEN;
+  const float kneeForward = 0.15f;
+  const float kneeDrop = 0.02f * HP::LOWER_LEG_LEN;
 
   const QVector3D FWD(0.f, 0.f, 1.f);
   const QVector3D UP(0.f, 1.f, 0.f);
