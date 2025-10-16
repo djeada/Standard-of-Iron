@@ -1235,8 +1235,10 @@ QJsonObject GameEngine::buildSaveMetadata() const {
 
   if (m_camera) {
     QJsonObject cameraObj;
-    cameraObj["position"] = App::JsonUtils::vec3ToJsonArray(m_camera->getPosition());
-    cameraObj["target"] = App::JsonUtils::vec3ToJsonArray(m_camera->getTarget());
+    cameraObj["position"] =
+        App::JsonUtils::vec3ToJsonArray(m_camera->getPosition());
+    cameraObj["target"] =
+        App::JsonUtils::vec3ToJsonArray(m_camera->getTarget());
     cameraObj["distance"] = m_camera->getDistance();
     cameraObj["pitchDeg"] = m_camera->getPitchDeg();
     cameraObj["fov"] = m_camera->getFOV();
