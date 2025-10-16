@@ -85,7 +85,7 @@ public:
       QVector3D restPos(0.20f, HP::SHOULDER_Y + 0.05f, 0.15f);
       QVector3D preparePos(0.26f, HP::HEAD_TOP_Y + 0.18f, -0.06f); // higher & slightly back
       QVector3D raisedPos(0.25f, HP::HEAD_TOP_Y + 0.22f, 0.02f);
-      QVector3D strikePos(0.30f, HP::HIP_Y - 0.05f, 0.50f);        // lower: top-to-bottom swing
+      QVector3D strikePos(0.30f, HP::WAIST_Y - 0.1f, 0.50f);        // lower: top-to-bottom swing
       QVector3D recoverPos(0.22f, HP::SHOULDER_Y + 0.02f, 0.22f);
 
       if (attackPhase < 0.18f) {
