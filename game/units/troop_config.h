@@ -52,9 +52,9 @@ public:
 
 private:
   TroopConfig() {
-    m_individualsPerUnit["archer"] = 30;
-    m_maxUnitsPerRow["archer"] = 6;
-    m_selectionRingSize["archer"] = 1.5f;
+    m_individualsPerUnit["archer"] = 20;
+    m_maxUnitsPerRow["archer"] = 5;
+    m_selectionRingSize["archer"] = 1.2f;
   }
 
   std::unordered_map<std::string, int> m_individualsPerUnit;
