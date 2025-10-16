@@ -239,7 +239,8 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
       assessment.forceRatio >= 0.8f;
 
   // Ranged units (archers) should not chase if they're already in or near
-  // their effective attack range
+  // their effective attack range. Check if majority of units are ranged
+  // and within range - if so, disable chasing for all units in the group
   if (command.shouldChase) {
     const ContactSnapshot *target = nullptr;
     for (const auto &enemy : nearbyEnemies) {
@@ -250,37 +251,25 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
     }
 
     if (target) {
-      // Check if we have any archers in the claimed units
-      bool hasRangedUnits = false;
+      // Count archers and check their distance to target
+      int rangedCount = 0;
+      int rangedInRangeCount = 0;
+      const float ARCHER_PREFERRED_RANGE = 5.5f;
+
       for (const auto *unit : readyUnits) {
         if (unit->unitType == "archer") {
-          hasRangedUnits = true;
-          break;
+          rangedCount++;
+          float dist = distance(unit->posX, unit->posY, unit->posZ,
+                                target->posX, target->posY, target->posZ);
+          if (dist <= ARCHER_PREFERRED_RANGE) {
+            rangedInRangeCount++;
+          }
         }
       }
 
-      if (hasRangedUnits) {
-        // Calculate average distance to target for our ranged units
-        float totalDist = 0.0f;
-        int rangedCount = 0;
-        for (const auto *unit : readyUnits) {
-          if (unit->unitType == "archer") {
-            float dist = distance(unit->posX, unit->posY, unit->posZ,
-                                  target->posX, target->posY, target->posZ);
-            totalDist += dist;
-            rangedCount++;
-          }
-        }
-
-        if (rangedCount > 0) {
-          float avgDist = totalDist / static_cast<float>(rangedCount);
-          // Archers have range of 6.0, stop chasing if within ~5.5 units
-          // This gives them a buffer to stay at safe distance
-          const float ARCHER_PREFERRED_RANGE = 5.5f;
-          if (avgDist <= ARCHER_PREFERRED_RANGE) {
-            command.shouldChase = false;
-          }
-        }
+      // If we have archers and most of them are already in range, stop chasing
+      if (rangedCount > 0 && rangedInRangeCount >= rangedCount / 2) {
+        command.shouldChase = false;
       }
     }
   }
