@@ -243,6 +243,7 @@ private:
   bool saveToSlot(const QString &slot, const QString &title);
   Game::Systems::RuntimeSnapshot toRuntimeSnapshot() const;
   void applyRuntimeSnapshot(const Game::Systems::RuntimeSnapshot &snapshot);
+  QByteArray captureScreenshot() const;
 
   std::unique_ptr<Engine::Core::World> m_world;
   std::unique_ptr<Render::GL::Renderer> m_renderer;
