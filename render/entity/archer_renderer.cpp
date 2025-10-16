@@ -196,15 +196,15 @@ static inline ArcherPose makePose(uint32_t seed, float animTime, bool isMoving,
     const float strideLength = 0.35f;
 
     auto animateFoot = [groundY, footYOffset, strideLength](QVector3D &foot,
-                                                             float phase) {
+                                                            float phase) {
       float lift = std::sin(phase * 2.0f * 3.14159f);
       if (lift > 0.0f) {
         foot.setY(groundY + footYOffset + lift * 0.12f);
       } else {
         foot.setY(groundY + footYOffset);
       }
-      foot.setZ(foot.z() + std::sin((phase - 0.25f) * 2.0f * 3.14159f) *
-                               strideLength);
+      foot.setZ(foot.z() +
+                std::sin((phase - 0.25f) * 2.0f * 3.14159f) * strideLength);
     };
 
     animateFoot(P.footL, leftPhase);
@@ -311,7 +311,8 @@ static inline void drawTorso(const DrawContext &p, ISubmitter &out,
 
 static inline void drawTunicSkirt(const DrawContext &p, ISubmitter &out,
                                   const ArcherColors &C, const ArcherPose &P,
-                                  float animTime, bool isMoving, uint32_t seed) {
+                                  float animTime, bool isMoving,
+                                  uint32_t seed) {
   using HP = HumanProportions;
 
   auto hash01 = [](uint32_t x) {
@@ -427,14 +428,14 @@ static inline void drawTunicSkirt(const DrawContext &p, ISubmitter &out,
         hem2 - ((hem2 - QVector3D(0, hem2.y(), 0)).normalized() * 0.01f) +
         QVector3D(0, 0.002f, 0);
 
-    out.mesh(getUnitCylinder(),
-             Render::Geom::capsuleBetween(p.model, waist1Inner, hem1Inner,
-                                          0.011f),
-             C.tunic * 0.78f, nullptr, 0.85f);
-    out.mesh(getUnitCylinder(),
-             Render::Geom::capsuleBetween(p.model, waist2Inner, hem2Inner,
-                                          0.011f),
-             C.tunic * 0.78f, nullptr, 0.85f);
+    out.mesh(
+        getUnitCylinder(),
+        Render::Geom::capsuleBetween(p.model, waist1Inner, hem1Inner, 0.011f),
+        C.tunic * 0.78f, nullptr, 0.85f);
+    out.mesh(
+        getUnitCylinder(),
+        Render::Geom::capsuleBetween(p.model, waist2Inner, hem2Inner, 0.011f),
+        C.tunic * 0.78f, nullptr, 0.85f);
   }
 }
 
