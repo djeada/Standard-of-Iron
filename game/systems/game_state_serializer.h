@@ -5,8 +5,6 @@
 #include <QString>
 #include <QVector3D>
 
-class QQuickWindow;
-
 namespace Engine {
 namespace Core {
 class World;
@@ -59,8 +57,6 @@ public:
 
   static void restoreLevelFromMetadata(const QJsonObject &metadata,
                                       LevelSnapshot &level);
-
-  static QByteArray captureScreenshot(QQuickWindow *window);
 };
 
 } // namespace Systems
