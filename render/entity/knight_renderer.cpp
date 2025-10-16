@@ -52,7 +52,7 @@ struct KnightExtras {
   float swordWidth = 0.045f;
   float shieldRadius = 0.18f;
 
-  // New internal flavor knobs (no interface changes)
+  // Internal flavor knobs
   float guardHalfWidth = 0.10f;
   float handleRadius   = 0.018f;
   float pommelRadius   = 0.035f;
@@ -187,7 +187,6 @@ private:
                         const HumanoidVariant &v, const KnightExtras &extras,
                         bool isAttacking, float attackPhase, ISubmitter &out) {
     const QVector3D forward(0.0f, 0.0f, 1.0f);
-    const QVector3D up(0.0f, 1.0f, 0.0f);
 
     QVector3D gripPos = pose.handR;
 
@@ -237,29 +236,21 @@ private:
     QMatrix4x4 gr = ctx.model; gr.translate(guardR); gr.scale(0.018f);
     out.mesh(getUnitSphere(), gr, extras.metalColor, nullptr, 1.0f);
 
-    // Blade shaping: ricasso (cyl), then tapered cone to near tip, then needle tip cone
+    // Blade shaping: ricasso (cyl), then tapered cone to tip
     float L = extras.swordLength;
     float ricassoLen = clampf(extras.bladeRicasso, 0.06f, L * 0.35f);
     QVector3D ricassoEnd = bladeBase + swordDir * ricassoLen;
     float baseW = extras.swordWidth;
     float midW  = baseW * 0.75f;
-    float tipW  = baseW * 0.10f;
 
     // Ricasso (stiff base)
     out.mesh(getUnitCylinder(),
              cylinderBetween(ctx.model, bladeBase, ricassoEnd, baseW),
              extras.metalColor, nullptr, 1.0f);
 
-    // Main taper to near tip
-    float taperLen = L * extras.bladeTaperBias;
-    QVector3D taperEnd = gripPos + swordDir * taperLen;
+    // Tapered blade (single cone from ricasso to tip)
     out.mesh(getUnitCone(),
-             coneFromTo(ctx.model, ricassoEnd, taperEnd, midW, tipW),
-             extras.metalColor, nullptr, 1.0f);
-
-    // Needle tip
-    out.mesh(getUnitCone(),
-             coneFromTo(ctx.model, taperEnd, bladeTip, tipW, 0.001f),
+             coneFromTo(ctx.model, ricassoEnd, bladeTip, midW),
              extras.metalColor, nullptr, 1.0f);
 
     // Pommel
@@ -269,14 +260,14 @@ private:
     pommelMat.scale(extras.pommelRadius);
     out.mesh(getUnitSphere(), pommelMat, extras.metalColor, nullptr, 1.0f);
 
-    // Motion trail hint during fastest swing segment
+    // Motion trail hint during fastest swing segment (single-radius cone)
     if (isAttacking && attackPhase >= 0.32f && attackPhase < 0.56f) {
       float t = (attackPhase - 0.32f) / 0.24f;
       float alpha = 0.35f * (1.0f - t);
-      QVector3D trailStart = bladeBase - swordDir * 0.05f;
-      QVector3D trailEnd   = bladeBase - swordDir * (0.28f + 0.15f * t);
+      QVector3D trailStart = bladeBase - swordDir * 0.05f;               // apex (point)
+      QVector3D trailEnd   = bladeBase - swordDir * (0.28f + 0.15f * t); // base
       out.mesh(getUnitCone(),
-               coneFromTo(ctx.model, trailEnd, trailStart, 0.001f, baseW * 0.9f),
+               coneFromTo(ctx.model, trailEnd, trailStart, baseW * 0.9f),
                extras.metalColor * 0.9f, nullptr, clamp01(alpha));
     }
   }
@@ -284,10 +275,10 @@ private:
   static void drawShieldDecal(const DrawContext &ctx,
                               const QVector3D &center,
                               float radius,
-                              const QVector3D &baseColor,
+                              const QVector3D & /*baseColor*/,
                               const HumanoidVariant &v,
                               ISubmitter &out) {
-    // Two optional styles: cross or ring; color keyed to team cloth
+    // Two optional styles: cross; color keyed to team cloth
     QVector3D accent = v.palette.cloth * 1.2f;
     float barR = radius * 0.10f;
 
@@ -326,8 +317,6 @@ private:
   static void drawShield(const DrawContext &ctx, const HumanoidPose &pose,
                          const HumanoidVariant &v, const KnightExtras &extras,
                          ISubmitter &out) {
-    using HP = HumanProportions;
-
     // Slight tilt to face incoming blows
     QVector3D shieldCenter = pose.handL + QVector3D(0.0f, -0.05f, 0.05f);
     float tiltDeg = 12.0f;
@@ -348,14 +337,13 @@ private:
     backMat.scale(extras.shieldRadius * 0.98f, extras.shieldRadius * 0.98f, 0.010f);
     out.mesh(getUnitCylinder(), backMat, v.palette.leather * 0.8f, nullptr, 1.0f);
 
-    // Domed suggestion: shallow cone from center to rim
+    // Domed suggestion: shallow cone from center outward (single-radius cone)
     QVector3D domeA = shieldCenter + QVector3D(0.0f, 0.0f, 0.012f);
-    QVector3D domeB = shieldCenter + QVector3D(0.0f, 0.0f, 0.002f);
     out.mesh(getUnitCone(),
              coneFromTo(ctx.model,
-                        domeA + QVector3D(0.0f, 0.0f, 0.0f),
-                        shieldCenter + QVector3D(0.0f, 0.0f, -0.002f),
-                        extras.shieldRadius * 0.96f, extras.shieldRadius * 0.80f),
+                        domeA,                                                 // base center (front)
+                        shieldCenter + QVector3D(0.0f, 0.0f, -0.002f),        // apex (toward back)
+                        extras.shieldRadius * 0.96f),                          // base radius
              extras.shieldColor * 0.98f, nullptr, 1.0f);
 
     // Thick metal rim (segmented circle)
@@ -395,8 +383,12 @@ private:
     // Sheath body
     out.mesh(getUnitCylinder(), cylinderBetween(ctx.model, hip, tip, sheathR), v.palette.leather * 0.9f, nullptr, 1.0f);
 
-    // Sheath tip ferrule
-    out.mesh(getUnitCone(), coneFromTo(ctx.model, tip, tip + QVector3D(-0.02f, -0.02f, -0.02f), sheathR, 0.002f),
+    // Sheath tip ferrule (single-radius cone)
+    out.mesh(getUnitCone(),
+             coneFromTo(ctx.model,
+                        tip,                                                  // base
+                        tip + QVector3D(-0.02f, -0.02f, -0.02f),             // apex
+                        sheathR),                                             // base radius
              extras.metalColor, nullptr, 1.0f);
 
     // Straps to belt
