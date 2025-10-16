@@ -43,26 +43,26 @@ struct HumanProportions {
   static constexpr float CHIN_Y = HEAD_TOP_Y - HEAD_HEIGHT;
   static constexpr float NECK_BASE_Y = CHIN_Y - 0.08f;
   static constexpr float SHOULDER_Y = NECK_BASE_Y - 0.12f;
-  static constexpr float CHEST_Y = SHOULDER_Y - 0.38f;
-  static constexpr float WAIST_Y = CHEST_Y - 0.28f;
-  static constexpr float HIP_Y = WAIST_Y - 0.14f;
-  static constexpr float KNEE_Y = HIP_Y - 0.42f;
+  static constexpr float CHEST_Y = SHOULDER_Y - 0.42f;
+  static constexpr float WAIST_Y = CHEST_Y - 0.30f;
+  static constexpr float HIP_Y = WAIST_Y - 0.16f;
+  static constexpr float KNEE_Y = HIP_Y - 0.35f;
 
   static constexpr float SHOULDER_WIDTH = HEAD_HEIGHT * 1.85f;
   static constexpr float HEAD_RADIUS = HEAD_HEIGHT * 0.42f;
   static constexpr float NECK_RADIUS = HEAD_RADIUS * 0.38f;
   static constexpr float TORSO_TOP_R = HEAD_RADIUS * 1.15f;
   static constexpr float TORSO_BOT_R = HEAD_RADIUS * 1.05f;
-  static constexpr float UPPER_ARM_R = HEAD_RADIUS * 0.32f;
-  static constexpr float FORE_ARM_R = HEAD_RADIUS * 0.27f;
-  static constexpr float HAND_RADIUS = HEAD_RADIUS * 0.24f;
-  static constexpr float UPPER_LEG_R = HEAD_RADIUS * 0.42f;
-  static constexpr float LOWER_LEG_R = HEAD_RADIUS * 0.35f;
+  static constexpr float UPPER_ARM_R = HEAD_RADIUS * 0.38f;
+  static constexpr float FORE_ARM_R = HEAD_RADIUS * 0.30f;
+  static constexpr float HAND_RADIUS = HEAD_RADIUS * 0.28f;
+  static constexpr float UPPER_LEG_R = HEAD_RADIUS * 0.50f;
+  static constexpr float LOWER_LEG_R = HEAD_RADIUS * 0.42f;
 
   static constexpr float UPPER_ARM_LEN = 0.28f;
   static constexpr float FORE_ARM_LEN = 0.30f;
-  static constexpr float UPPER_LEG_LEN = 0.42f;
-  static constexpr float LOWER_LEG_LEN = 0.42f;
+  static constexpr float UPPER_LEG_LEN = 0.35f;
+  static constexpr float LOWER_LEG_LEN = 0.35f;
 };
 
 enum class MaterialType : uint8_t {
@@ -91,18 +91,18 @@ struct ArcherPose {
   QVector3D elbowL, elbowR;
   QVector3D handL, handR;
 
-  float hipSpacing = P::SHOULDER_WIDTH * 0.55f;
+  float hipSpacing = P::SHOULDER_WIDTH * 0.58f;
 
-  float hipXFactor = 0.45f;
-  float hipZOffset = 0.01f;
+  float hipXFactor = 0.48f;
+  float hipZOffset = 0.02f;
   QVector3D hipL{-hipSpacing * hipXFactor,
                  std::max(P::HIP_Y + 0.05f, P::GROUND_Y + 0.3f), hipZOffset};
   QVector3D hipR{hipSpacing * hipXFactor,
                  std::max(P::HIP_Y + 0.05f, P::GROUND_Y + 0.3f), -hipZOffset};
 
   float footYOffset = 0.02f;
-  QVector3D footL{-hipSpacing * 1.05f, P::GROUND_Y + footYOffset, 0.18f};
-  QVector3D footR{hipSpacing * 1.05f, P::GROUND_Y + footYOffset, -0.14f};
+  QVector3D footL{-hipSpacing * 1.15f, P::GROUND_Y + footYOffset, 0.22f};
+  QVector3D footR{hipSpacing * 1.15f, P::GROUND_Y + footYOffset, -0.18f};
   float bowX = 0.0f;
   float bowTopY = P::SHOULDER_Y + 0.55f;
   float bowBotY = P::HIP_Y - 0.25f;
@@ -124,16 +124,28 @@ static inline ArcherPose makePose(uint32_t seed, float animTime, bool isMoving,
     return (x & 0x00FFFFFF) / float(0x01000000);
   };
 
-  float footAngleJitter = (hash01(seed ^ 0x5678u) - 0.5f) * 0.06f;
-  float armHeightJitter = (hash01(seed ^ 0xABCDu) - 0.5f) * 0.02f;
-
-  P.handL = QVector3D(P.bowX - 0.05f, HP::SHOULDER_Y + 0.05f + armHeightJitter,
-                      0.55f);
-  P.handR =
-      QVector3D(0.15f, HP::SHOULDER_Y + 0.15f + armHeightJitter * 0.8f, 0.20f);
+  float footAngleJitter = (hash01(seed ^ 0x5678u) - 0.5f) * 0.12f;
+  float footDepthJitter = (hash01(seed ^ 0x9ABCu) - 0.5f) * 0.08f;
+  float armHeightJitter = (hash01(seed ^ 0xABCDu) - 0.5f) * 0.03f;
+  float armAsymmetry = (hash01(seed ^ 0xDEF0u) - 0.5f) * 0.04f;
+  float shoulderRotation = (hash01(seed ^ 0x1234u) - 0.5f) * 0.05f;
+  float legBendVariation = hash01(seed ^ 0x5555u) * 0.03f;
 
   P.footL.setX(P.footL.x() + footAngleJitter);
   P.footR.setX(P.footR.x() - footAngleJitter);
+  P.footL.setZ(P.footL.z() + footDepthJitter);
+  P.footR.setZ(P.footR.z() - footDepthJitter);
+
+  P.hipL.setY(P.hipL.y() - legBendVariation);
+  P.hipR.setY(P.hipR.y() - legBendVariation * 0.7f);
+
+  P.shoulderL.setY(P.shoulderL.y() + shoulderRotation);
+  P.shoulderR.setY(P.shoulderR.y() - shoulderRotation);
+
+  P.handL = QVector3D(P.bowX - 0.05f + armAsymmetry,
+                      HP::SHOULDER_Y + 0.05f + armHeightJitter, 0.55f);
+  P.handR = QVector3D(0.15f - armAsymmetry * 0.5f,
+                      HP::SHOULDER_Y + 0.15f + armHeightJitter * 0.8f, 0.20f);
 
   if (isAttacking) {
     float attackCycleTime = 1.2f;
@@ -329,6 +341,7 @@ static inline void drawArms(const DrawContext &p, ISubmitter &out,
   const float upperArmR = HP::UPPER_ARM_R;
   const float foreArmR = HP::FORE_ARM_R;
   const float jointR = HP::HAND_RADIUS * 1.05f;
+  const float handR = HP::HAND_RADIUS * 0.95f;
 
   out.mesh(getUnitCylinder(),
            cylinderBetween(p.model, P.shoulderL, P.elbowL, upperArmR), C.tunic,
@@ -338,6 +351,8 @@ static inline void drawArms(const DrawContext &p, ISubmitter &out,
   out.mesh(getUnitCylinder(),
            cylinderBetween(p.model, P.elbowL, P.handL, foreArmR),
            C.skin * 0.95f, nullptr, 1.0f);
+  out.mesh(getUnitSphere(), sphereAt(p.model, P.handL, handR),
+           C.leatherDark * 0.92f, nullptr, 1.0f);
 
   out.mesh(getUnitCylinder(),
            cylinderBetween(p.model, P.shoulderR, P.elbowR, upperArmR), C.tunic,
@@ -347,42 +362,60 @@ static inline void drawArms(const DrawContext &p, ISubmitter &out,
   out.mesh(getUnitCylinder(),
            cylinderBetween(p.model, P.elbowR, P.handR, foreArmR),
            C.skin * 0.95f, nullptr, 1.0f);
+  out.mesh(getUnitSphere(), sphereAt(p.model, P.handR, handR),
+           C.leatherDark * 0.92f, nullptr, 1.0f);
 }
 
 static inline void drawLegs(const DrawContext &p, ISubmitter &out,
                             const ArcherPose &P, const ArcherColors &C) {
   using HP = HumanProportions;
 
-  QVector3D kneeL = P.hipL + (P.footL - P.hipL) * 0.45f;
-  QVector3D kneeR = P.hipR + (P.footR - P.hipR) * 0.45f;
+  QVector3D kneeL = P.hipL + (P.footL - P.hipL) * 0.48f;
+  QVector3D kneeR = P.hipR + (P.footR - P.hipR) * 0.48f;
   kneeL.setY(HP::KNEE_Y + 0.05f);
   kneeR.setY(HP::KNEE_Y + 0.05f);
 
-  const float thighR = HP::UPPER_LEG_R;
-  const float shinR = HP::LOWER_LEG_R;
-  const float kneeJointR = thighR * 1.15f;
+  const float thighTopR = HP::UPPER_LEG_R * 1.05f;
+  const float thighKneeR = HP::UPPER_LEG_R * 0.75f;
+  const float shinTopR = HP::LOWER_LEG_R;
+  const float calfR = HP::LOWER_LEG_R * 1.08f;
+  const float ankleR = HP::LOWER_LEG_R * 0.70f;
+  const float kneeJointR = thighKneeR * 1.20f;
 
-  out.mesh(getUnitCone(), coneFromTo(p.model, P.hipL, kneeL, thighR), C.leather,
-           nullptr, 1.0f);
-  out.mesh(getUnitCone(), coneFromTo(p.model, P.hipR, kneeR, thighR), C.leather,
-           nullptr, 1.0f);
+  out.mesh(getUnitCone(), coneFromTo(p.model, P.hipL, kneeL, thighTopR),
+           C.leather, nullptr, 1.0f);
+  out.mesh(getUnitCone(), coneFromTo(p.model, P.hipR, kneeR, thighTopR),
+           C.leather, nullptr, 1.0f);
 
   out.mesh(getUnitSphere(), sphereAt(p.model, kneeL, kneeJointR),
            C.leather * 0.95f, nullptr, 1.0f);
   out.mesh(getUnitSphere(), sphereAt(p.model, kneeR, kneeJointR),
            C.leather * 0.95f, nullptr, 1.0f);
 
-  out.mesh(getUnitCone(), coneFromTo(p.model, kneeL, P.footL, shinR),
+  QVector3D calfPeakL = kneeL + (P.footL - kneeL) * 0.35f;
+  QVector3D calfPeakR = kneeR + (P.footR - kneeR) * 0.35f;
+
+  out.mesh(getUnitCone(), coneFromTo(p.model, kneeL, calfPeakL, shinTopR),
            C.leatherDark, nullptr, 1.0f);
-  out.mesh(getUnitCone(), coneFromTo(p.model, kneeR, P.footR, shinR),
+  out.mesh(getUnitCone(), coneFromTo(p.model, kneeR, calfPeakR, shinTopR),
            C.leatherDark, nullptr, 1.0f);
+
+  out.mesh(getUnitSphere(), sphereAt(p.model, calfPeakL, calfR),
+           C.leatherDark * 0.98f, nullptr, 1.0f);
+  out.mesh(getUnitSphere(), sphereAt(p.model, calfPeakR, calfR),
+           C.leatherDark * 0.98f, nullptr, 1.0f);
+
+  out.mesh(getUnitCone(), coneFromTo(p.model, calfPeakL, P.footL, ankleR),
+           C.leatherDark * 0.95f, nullptr, 1.0f);
+  out.mesh(getUnitCone(), coneFromTo(p.model, calfPeakR, P.footR, ankleR),
+           C.leatherDark * 0.95f, nullptr, 1.0f);
 
   QVector3D down(0.0f, -0.02f, 0.0f);
   out.mesh(getUnitCylinder(),
-           cylinderBetween(p.model, P.footL, P.footL + down, shinR * 1.1f),
+           cylinderBetween(p.model, P.footL, P.footL + down, ankleR * 1.2f),
            C.leatherDark, nullptr, 1.0f);
   out.mesh(getUnitCylinder(),
-           cylinderBetween(p.model, P.footR, P.footR + down, shinR * 1.1f),
+           cylinderBetween(p.model, P.footR, P.footR + down, ankleR * 1.2f),
            C.leatherDark, nullptr, 1.0f);
 }
 
