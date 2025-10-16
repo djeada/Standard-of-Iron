@@ -945,6 +945,7 @@ bool GameEngine::loadFromSlot(const QString &slot) {
   rebuildEntityCache();
 
   if (auto *aiSystem = m_world->getSystem<Game::Systems::AISystem>()) {
+    qInfo() << "Reinitializing AI system after loading saved game";
     aiSystem->reinitialize();
   }
 
