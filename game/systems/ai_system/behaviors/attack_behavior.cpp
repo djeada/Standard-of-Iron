@@ -238,6 +238,53 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
       (context.state == AIState::Attacking || context.barracksUnderThreat) &&
       assessment.forceRatio >= 0.8f;
 
+  // Ranged units (archers) should not chase if they're already in or near
+  // their effective attack range
+  if (command.shouldChase) {
+    const ContactSnapshot *target = nullptr;
+    for (const auto &enemy : nearbyEnemies) {
+      if (enemy->id == targetInfo.targetId) {
+        target = enemy;
+        break;
+      }
+    }
+
+    if (target) {
+      // Check if we have any archers in the claimed units
+      bool hasRangedUnits = false;
+      for (const auto *unit : readyUnits) {
+        if (unit->unitType == "archer") {
+          hasRangedUnits = true;
+          break;
+        }
+      }
+
+      if (hasRangedUnits) {
+        // Calculate average distance to target for our ranged units
+        float totalDist = 0.0f;
+        int rangedCount = 0;
+        for (const auto *unit : readyUnits) {
+          if (unit->unitType == "archer") {
+            float dist = distance(unit->posX, unit->posY, unit->posZ,
+                                  target->posX, target->posY, target->posZ);
+            totalDist += dist;
+            rangedCount++;
+          }
+        }
+
+        if (rangedCount > 0) {
+          float avgDist = totalDist / static_cast<float>(rangedCount);
+          // Archers have range of 6.0, stop chasing if within ~5.5 units
+          // This gives them a buffer to stay at safe distance
+          const float ARCHER_PREFERRED_RANGE = 5.5f;
+          if (avgDist <= ARCHER_PREFERRED_RANGE) {
+            command.shouldChase = false;
+          }
+        }
+      }
+    }
+  }
+
   outCommands.push_back(std::move(command));
 }
 bool AttackBehavior::shouldExecute(const AISnapshot &snapshot,

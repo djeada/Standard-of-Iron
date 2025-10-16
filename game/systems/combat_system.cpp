@@ -241,8 +241,32 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
               bestTarget = target;
             }
           } else {
-
-            attacker->removeComponent<Engine::Core::AttackTargetComponent>();
+            // shouldChase is false - ranged units should hold position
+            // and keep attacking if in range
+            if (isInRange(attacker, target, range)) {
+              bestTarget = target;
+              
+              // Stop any movement for ranged units
+              auto *movement =
+                  attacker->getComponent<Engine::Core::MovementComponent>();
+              if (movement) {
+                auto *attackerTransformComponent =
+                    attacker->getComponent<Engine::Core::TransformComponent>();
+                if (attackerTransformComponent) {
+                  movement->hasTarget = false;
+                  movement->vx = 0.0f;
+                  movement->vz = 0.0f;
+                  movement->path.clear();
+                  movement->targetX = attackerTransformComponent->position.x;
+                  movement->targetY = attackerTransformComponent->position.z;
+                  movement->goalX = attackerTransformComponent->position.x;
+                  movement->goalY = attackerTransformComponent->position.z;
+                }
+              }
+            } else {
+              // Target is out of range and we're not chasing, remove attack target
+              attacker->removeComponent<Engine::Core::AttackTargetComponent>();
+            }
           }
         } else {
 
