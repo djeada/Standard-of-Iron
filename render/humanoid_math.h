@@ -28,4 +28,4 @@ QVector3D elbowBendTorso(const QVector3D &shoulder, const QVector3D &hand,
                          const QVector3D &outwardDir, float alongFrac,
                          float lateralOffset, float yBias, float outwardSign);
 
-}
+} // namespace Render::GL

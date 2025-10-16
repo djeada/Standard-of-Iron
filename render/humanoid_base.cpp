@@ -70,9 +70,8 @@ FormationParams HumanoidRendererBase::resolveFormation(const DrawContext &ctx) {
       params.individualsPerUnit =
           Game::Units::TroopConfig::instance().getIndividualsPerUnit(
               unit->unitType);
-      params.maxPerRow =
-          Game::Units::TroopConfig::instance().getMaxUnitsPerRow(
-              unit->unitType);
+      params.maxPerRow = Game::Units::TroopConfig::instance().getMaxUnitsPerRow(
+          unit->unitType);
     }
   }
 
@@ -93,7 +92,8 @@ AnimationInputs HumanoidRendererBase::sampleAnimState(const DrawContext &ctx) {
   auto *attack = ctx.entity->getComponent<Engine::Core::AttackComponent>();
   auto *attackTarget =
       ctx.entity->getComponent<Engine::Core::AttackTargetComponent>();
-  auto *transform = ctx.entity->getComponent<Engine::Core::TransformComponent>();
+  auto *transform =
+      ctx.entity->getComponent<Engine::Core::TransformComponent>();
 
   anim.isMoving = (movement && movement->hasTarget);
 
@@ -119,13 +119,13 @@ AnimationInputs HumanoidRendererBase::sampleAnimState(const DrawContext &ctx) {
           float distSquared = dx * dx + dz * dz;
           float targetRadius = 0.0f;
           if (target->hasComponent<Engine::Core::BuildingComponent>()) {
-            targetRadius = std::max(targetTransform->scale.x,
-                                    targetTransform->scale.z) *
-                           0.5f;
+            targetRadius =
+                std::max(targetTransform->scale.x, targetTransform->scale.z) *
+                0.5f;
           } else {
-            targetRadius = std::max(targetTransform->scale.x,
-                                    targetTransform->scale.z) *
-                           0.5f;
+            targetRadius =
+                std::max(targetTransform->scale.x, targetTransform->scale.z) *
+                0.5f;
           }
           float effectiveRange = attack->range + targetRadius + 0.25f;
           targetInRange = (distSquared <= effectiveRange * effectiveRange);
@@ -152,10 +152,10 @@ void HumanoidRendererBase::computeLocomotionPose(uint32_t seed, float time,
   pose.shoulderR = QVector3D(HP::TORSO_TOP_R * 0.98f, HP::SHOULDER_Y, 0.0f);
 
   pose.footYOffset = 0.02f;
-  pose.footL =
-      QVector3D(-HP::SHOULDER_WIDTH * 0.58f, HP::GROUND_Y + pose.footYOffset, 0.0f);
-  pose.footR =
-      QVector3D(HP::SHOULDER_WIDTH * 0.58f, HP::GROUND_Y + pose.footYOffset, 0.0f);
+  pose.footL = QVector3D(-HP::SHOULDER_WIDTH * 0.58f,
+                         HP::GROUND_Y + pose.footYOffset, 0.0f);
+  pose.footR = QVector3D(HP::SHOULDER_WIDTH * 0.58f,
+                         HP::GROUND_Y + pose.footYOffset, 0.0f);
 
   float footAngleJitter = (hash01(seed ^ 0x5678u) - 0.5f) * 0.12f;
   float footDepthJitter = (hash01(seed ^ 0x9ABCu) - 0.5f) * 0.08f;
@@ -174,8 +174,9 @@ void HumanoidRendererBase::computeLocomotionPose(uint32_t seed, float time,
 
   pose.handL = QVector3D(-0.05f + armAsymmetry,
                          HP::SHOULDER_Y + 0.05f + armHeightJitter, 0.55f);
-  pose.handR = QVector3D(0.15f - armAsymmetry * 0.5f,
-                         HP::SHOULDER_Y + 0.15f + armHeightJitter * 0.8f, 0.20f);
+  pose.handR =
+      QVector3D(0.15f - armAsymmetry * 0.5f,
+                HP::SHOULDER_Y + 0.15f + armHeightJitter * 0.8f, 0.20f);
 
   if (isMoving) {
     float walkCycleTime = 0.8f;
@@ -187,7 +188,7 @@ void HumanoidRendererBase::computeLocomotionPose(uint32_t seed, float time,
     const float strideLength = 0.35f;
 
     auto animateFoot = [groundY, &pose, strideLength](QVector3D &foot,
-                                                       float phase) {
+                                                      float phase) {
       float lift = std::sin(phase * 2.0f * 3.14159f);
       if (lift > 0.0f) {
         foot.setY(groundY + pose.footYOffset + lift * 0.12f);
@@ -245,8 +246,7 @@ void HumanoidRendererBase::drawCommonBody(const DrawContext &ctx,
   QVector3D helmBase = pose.headPos + QVector3D(0.0f, headTopOffset, 0.0f);
   QVector3D helmApex = pose.headPos + QVector3D(0.0f, pose.headR * 2.4f, 0.0f);
   float helmBaseR = pose.headR * 1.45f;
-  out.mesh(getUnitCone(),
-           coneFromTo(ctx.model, helmBase, helmApex, helmBaseR),
+  out.mesh(getUnitCone(), coneFromTo(ctx.model, helmBase, helmApex, helmBaseR),
            v.palette.cloth, nullptr, 1.0f);
 
   QVector3D iris(0.06f, 0.06f, 0.07f);
@@ -449,9 +449,8 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
     seed ^= uint32_t(reinterpret_cast<uintptr_t>(ctx.entity) & 0xFFFFFFFFu);
   }
 
-  const int rows =
-      (formation.individualsPerUnit + formation.maxPerRow - 1) /
-      formation.maxPerRow;
+  const int rows = (formation.individualsPerUnit + formation.maxPerRow - 1) /
+                   formation.maxPerRow;
   const int cols = formation.maxPerRow;
 
   int visibleCount = rows * cols;
