@@ -168,19 +168,48 @@ static inline ArcherPose makePose(uint32_t seed, float animTime, bool isMoving,
       }
     } else {
 
-      QVector3D restPos(0.15f, HP::SHOULDER_Y + 0.15f, 0.20f);
-      QVector3D drawPos(0.35f, HP::SHOULDER_Y + 0.08f, -0.15f);
+      QVector3D aimPos(0.18f, HP::SHOULDER_Y + 0.18f, 0.35f);
+      QVector3D drawPos(0.22f, HP::SHOULDER_Y + 0.10f, -0.30f);
+      QVector3D releasePos(0.18f, HP::SHOULDER_Y + 0.20f, 0.10f);
 
-      if (attackPhase < 0.3f) {
-        float t = attackPhase / 0.3f;
+      if (attackPhase < 0.20f) {
+        float t = attackPhase / 0.20f;
         t = t * t;
-        P.handR = restPos * (1.0f - t) + drawPos * t;
-      } else if (attackPhase < 0.6f) {
+        P.handR = aimPos * (1.0f - t) + drawPos * t;
+        P.handL = QVector3D(P.bowX - 0.05f, HP::SHOULDER_Y + 0.05f, 0.55f);
+
+        float shoulderTwist = t * 0.08f;
+        P.shoulderR.setY(P.shoulderR.y() + shoulderTwist);
+        P.shoulderL.setY(P.shoulderL.y() - shoulderTwist * 0.5f);
+      } else if (attackPhase < 0.50f) {
         P.handR = drawPos;
+        P.handL = QVector3D(P.bowX - 0.05f, HP::SHOULDER_Y + 0.05f, 0.55f);
+
+        float shoulderTwist = 0.08f;
+        P.shoulderR.setY(P.shoulderR.y() + shoulderTwist);
+        P.shoulderL.setY(P.shoulderL.y() - shoulderTwist * 0.5f);
+      } else if (attackPhase < 0.58f) {
+        float t = (attackPhase - 0.50f) / 0.08f;
+        t = t * t * t;
+        P.handR = drawPos * (1.0f - t) + releasePos * t;
+        P.handL = QVector3D(P.bowX - 0.05f, HP::SHOULDER_Y + 0.05f, 0.55f);
+
+        float shoulderTwist = 0.08f * (1.0f - t * 0.6f);
+        P.shoulderR.setY(P.shoulderR.y() + shoulderTwist);
+        P.shoulderL.setY(P.shoulderL.y() - shoulderTwist * 0.5f);
+
+        P.headPos.setZ(P.headPos.z() - t * 0.04f);
       } else {
-        float t = (attackPhase - 0.6f) / 0.4f;
+        float t = (attackPhase - 0.58f) / 0.42f;
         t = 1.0f - (1.0f - t) * (1.0f - t);
-        P.handR = drawPos * (1.0f - t) + restPos * t;
+        P.handR = releasePos * (1.0f - t) + aimPos * t;
+        P.handL = QVector3D(P.bowX - 0.05f, HP::SHOULDER_Y + 0.05f, 0.55f);
+
+        float shoulderTwist = 0.08f * 0.4f * (1.0f - t);
+        P.shoulderR.setY(P.shoulderR.y() + shoulderTwist);
+        P.shoulderL.setY(P.shoulderL.y() - shoulderTwist * 0.5f);
+
+        P.headPos.setZ(P.headPos.z() - 0.04f * (1.0f - t));
       }
     }
   }
@@ -677,7 +706,8 @@ static inline void drawQuiver(const DrawContext &p, ISubmitter &out,
 }
 
 static inline void drawBowAndArrow(const DrawContext &p, ISubmitter &out,
-                                   const ArcherPose &P, const ArcherColors &C) {
+                                   const ArcherPose &P, const ArcherColors &C,
+                                   bool isAttacking, float attackPhase) {
   const QVector3D up(0.0f, 1.0f, 0.0f);
   const QVector3D forward(0.0f, 0.0f, 1.0f);
 
@@ -716,19 +746,24 @@ static inline void drawBowAndArrow(const DrawContext &p, ISubmitter &out,
   out.mesh(getUnitCylinder(), cylinderBetween(p.model, P.handR, nock, 0.0045f),
            C.stringCol * 0.9f, nullptr, 1.0f);
 
-  QVector3D tail = nock - forward * 0.06f;
-  QVector3D tip = tail + forward * 0.90f;
-  out.mesh(getUnitCylinder(), cylinderBetween(p.model, tail, tip, 0.018f),
-           C.wood, nullptr, 1.0f);
-  QVector3D headBase = tip - forward * 0.10f;
-  out.mesh(getUnitCone(), coneFromTo(p.model, headBase, tip, 0.05f),
-           C.metalHead, nullptr, 1.0f);
-  QVector3D f1b = tail - forward * 0.02f, f1a = f1b - forward * 0.06f;
-  QVector3D f2b = tail + forward * 0.02f, f2a = f2b + forward * 0.06f;
-  out.mesh(getUnitCone(), coneFromTo(p.model, f1b, f1a, 0.04f), C.fletch,
-           nullptr, 1.0f);
-  out.mesh(getUnitCone(), coneFromTo(p.model, f2a, f2b, 0.04f), C.fletch,
-           nullptr, 1.0f);
+  bool showArrow = !isAttacking ||
+                   (isAttacking && attackPhase >= 0.0f && attackPhase < 0.52f);
+
+  if (showArrow) {
+    QVector3D tail = nock - forward * 0.06f;
+    QVector3D tip = tail + forward * 0.90f;
+    out.mesh(getUnitCylinder(), cylinderBetween(p.model, tail, tip, 0.018f),
+             C.wood, nullptr, 1.0f);
+    QVector3D headBase = tip - forward * 0.10f;
+    out.mesh(getUnitCone(), coneFromTo(p.model, headBase, tip, 0.05f),
+             C.metalHead, nullptr, 1.0f);
+    QVector3D f1b = tail - forward * 0.02f, f1a = f1b - forward * 0.06f;
+    QVector3D f2b = tail + forward * 0.02f, f2a = f2b + forward * 0.06f;
+    out.mesh(getUnitCone(), coneFromTo(p.model, f1b, f1a, 0.04f), C.fletch,
+             nullptr, 1.0f);
+    out.mesh(getUnitCone(), coneFromTo(p.model, f2a, f2b, 0.04f), C.fletch,
+             nullptr, 1.0f);
+  }
 }
 
 static inline void drawSelectionFX(const DrawContext &p, ISubmitter &out) {
@@ -911,6 +946,13 @@ void registerArcherRenderer(Render::GL::EntityRendererRegistry &registry) {
       ArcherPose pose = makePose(instSeed, p.animationTime + phaseOffset,
                                  isMoving, isAttacking, isMelee);
 
+      float attackPhase = 0.0f;
+      if (isAttacking && !isMelee) {
+        float attackCycleTime = 1.2f;
+        attackPhase = fmod(
+            (p.animationTime + phaseOffset) * (1.0f / attackCycleTime), 1.0f);
+      }
+
       drawQuiver(instCtx, out, colors, pose, instSeed);
       drawLegs(instCtx, out, pose, colors);
       drawTorso(instCtx, out, colors, pose);
@@ -918,7 +960,8 @@ void registerArcherRenderer(Render::GL::EntityRendererRegistry &registry) {
                      isMoving, instSeed);
       drawArms(instCtx, out, pose, colors);
       drawHeadAndNeck(instCtx, out, pose, colors);
-      drawBowAndArrow(instCtx, out, pose, colors);
+      drawBowAndArrow(instCtx, out, pose, colors, isAttacking && !isMelee,
+                      attackPhase);
     }
 
     drawSelectionFX(p, out);
