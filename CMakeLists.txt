@@ -55,6 +55,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
         app/models/selected_units_model.cpp
         app/controllers/command_controller.cpp
         app/controllers/action_vfx.cpp
+        app/utils/json_vec_utils.cpp
         ui/gl_view.cpp
         ui/theme.cpp
     )
@@ -67,6 +68,7 @@ else()
         app/models/selected_units_model.cpp
         app/controllers/command_controller.cpp
         app/controllers/action_vfx.cpp
+        app/utils/json_vec_utils.cpp
         ui/gl_view.cpp
         ui/theme.cpp
     )
