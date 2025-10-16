@@ -9,7 +9,7 @@ namespace Engine {
 namespace Core {
 class World;
 using EntityID = unsigned int;
-}
+} // namespace Core
 } // namespace Engine
 
 namespace Render {
@@ -49,14 +49,14 @@ public:
                                    const RuntimeSnapshot &runtime);
 
   static void restoreCameraFromMetadata(const QJsonObject &metadata,
-                                       Render::GL::Camera *camera,
-                                       int viewportWidth, int viewportHeight);
+                                        Render::GL::Camera *camera,
+                                        int viewportWidth, int viewportHeight);
 
   static void restoreRuntimeFromMetadata(const QJsonObject &metadata,
-                                        RuntimeSnapshot &runtime);
+                                         RuntimeSnapshot &runtime);
 
   static void restoreLevelFromMetadata(const QJsonObject &metadata,
-                                      LevelSnapshot &level);
+                                       LevelSnapshot &level);
 };
 
 } // namespace Systems

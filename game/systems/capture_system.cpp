@@ -15,9 +15,9 @@ void CaptureSystem::update(Engine::Core::World *world, float deltaTime) {
   processBarrackCapture(world, deltaTime);
 }
 
-int CaptureSystem::countNearbyTroops(Engine::Core::World *world,
-                                     float barrackX, float barrackZ,
-                                     int ownerId, float radius) {
+int CaptureSystem::countNearbyTroops(Engine::Core::World *world, float barrackX,
+                                     float barrackZ, int ownerId,
+                                     float radius) {
   int totalTroops = 0;
   auto entities = world->getEntitiesWith<Engine::Core::UnitComponent>();
 
