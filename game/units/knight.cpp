@@ -1,0 +1,94 @@
+#include "knight.h"
+#include "../core/component.h"
+#include "../core/event_manager.h"
+#include "../core/world.h"
+#include <iostream>
+
+static inline QVector3D teamColor(int ownerId) {
+  switch (ownerId) {
+  case 1:
+    return QVector3D(0.20f, 0.55f, 1.00f);
+  case 2:
+    return QVector3D(1.00f, 0.30f, 0.30f);
+  case 3:
+    return QVector3D(0.20f, 0.80f, 0.40f);
+  case 4:
+    return QVector3D(1.00f, 0.80f, 0.20f);
+  default:
+    return QVector3D(0.8f, 0.8f, 0.8f);
+  }
+}
+
+namespace Game {
+namespace Units {
+
+Knight::Knight(Engine::Core::World &world) : Unit(world, "knight") {}
+
+std::unique_ptr<Knight> Knight::Create(Engine::Core::World &world,
+                                       const SpawnParams &params) {
+  auto unit = std::unique_ptr<Knight>(new Knight(world));
+  unit->init(params);
+  return unit;
+}
+
+void Knight::init(const SpawnParams &params) {
+
+  auto *e = m_world->createEntity();
+  m_id = e->getId();
+
+  m_t = e->addComponent<Engine::Core::TransformComponent>();
+  m_t->position = {params.position.x(), params.position.y(),
+                   params.position.z()};
+  m_t->scale = {0.6f, 0.6f, 0.6f};
+
+  m_r = e->addComponent<Engine::Core::RenderableComponent>("", "");
+  m_r->visible = true;
+
+  m_u = e->addComponent<Engine::Core::UnitComponent>();
+  m_u->unitType = m_type;
+  m_u->health = 150;
+  m_u->maxHealth = 150;
+  m_u->speed = 2.0f;
+  m_u->ownerId = params.playerId;
+  m_u->visionRange = 14.0f;
+
+  if (params.aiControlled) {
+    e->addComponent<Engine::Core::AIControlledComponent>();
+  } else {
+  }
+
+  QVector3D tc = teamColor(m_u->ownerId);
+  m_r->color[0] = tc.x();
+  m_r->color[1] = tc.y();
+  m_r->color[2] = tc.z();
+
+  m_mv = e->addComponent<Engine::Core::MovementComponent>();
+  if (m_mv) {
+    m_mv->goalX = params.position.x();
+    m_mv->goalY = params.position.z();
+    m_mv->targetX = params.position.x();
+    m_mv->targetY = params.position.z();
+  }
+
+  m_atk = e->addComponent<Engine::Core::AttackComponent>();
+
+  m_atk->range = 1.5f;
+  m_atk->damage = 5;
+  m_atk->cooldown = 2.0f;
+
+  m_atk->meleeRange = 1.5f;
+  m_atk->meleeDamage = 20;
+  m_atk->meleeCooldown = 0.6f;
+
+  m_atk->preferredMode = Engine::Core::AttackComponent::CombatMode::Melee;
+  m_atk->currentMode = Engine::Core::AttackComponent::CombatMode::Melee;
+  m_atk->canRanged = false;
+  m_atk->canMelee = true;
+  m_atk->maxHeightDifference = 2.0f;
+
+  Engine::Core::EventManager::instance().publish(
+      Engine::Core::UnitSpawnedEvent(m_id, m_u->ownerId, m_u->unitType));
+}
+
+} // namespace Units
+} // namespace Game
