@@ -63,6 +63,7 @@ add_library(game_systems STATIC
     visuals/visual_catalog.cpp
     units/unit.cpp
     units/archer.cpp
+    units/knight.cpp
     units/factory.cpp
     units/barracks.cpp
 )
