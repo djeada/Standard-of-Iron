@@ -53,6 +53,7 @@
 #include "game/systems/terrain_alignment_system.h"
 #include "game/systems/troop_count_registry.h"
 #include "game/systems/victory_service.h"
+#include "game/units/factory.h"
 #include "game/units/troop_config.h"
 #include "game/visuals/team_colors.h"
 #include "render/geom/arrow.h"
@@ -942,8 +943,19 @@ bool GameEngine::loadFromSlot(const QString &slot) {
   applyRuntimeSnapshot(runtimeSnap);
 
   restoreEnvironmentFromMetadata(meta);
+
+  auto unitReg = std::make_shared<Game::Units::UnitFactoryRegistry>();
+  Game::Units::registerBuiltInUnits(*unitReg);
+  Game::Map::MapTransformer::setFactoryRegistry(unitReg);
+  qInfo() << "Factory registry reinitialized after loading saved game";
+
   rebuildRegistriesAfterLoad();
   rebuildEntityCache();
+
+  if (auto *aiSystem = m_world->getSystem<Game::Systems::AISystem>()) {
+    qInfo() << "Reinitializing AI system after loading saved game";
+    aiSystem->reinitialize();
+  }
 
   if (m_victoryService) {
     m_victoryService->configure(Game::Map::VictoryConfig(),
