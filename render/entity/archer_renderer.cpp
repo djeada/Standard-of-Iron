@@ -45,14 +45,17 @@ struct HumanProportions {
   static constexpr float SHOULDER_Y = NECK_BASE_Y - 0.12f;
   static constexpr float CHEST_Y = SHOULDER_Y - 0.42f;
   static constexpr float WAIST_Y = CHEST_Y - 0.30f;
-  static constexpr float HIP_Y = WAIST_Y - 0.16f;
-  static constexpr float KNEE_Y = HIP_Y - 0.35f;
+
+  // Legs derived from waist only (hips removed)
+  static constexpr float UPPER_LEG_LEN = 0.35f;
+  static constexpr float LOWER_LEG_LEN = 0.35f;
+  static constexpr float KNEE_Y = WAIST_Y - UPPER_LEG_LEN;
 
   static constexpr float SHOULDER_WIDTH = HEAD_HEIGHT * 1.85f;
   static constexpr float HEAD_RADIUS = HEAD_HEIGHT * 0.42f;
   static constexpr float NECK_RADIUS = HEAD_RADIUS * 0.38f;
   static constexpr float TORSO_TOP_R = HEAD_RADIUS * 1.15f;
-  static constexpr float TORSO_BOT_R = HEAD_RADIUS * 1.05f;
+  static constexpr float TORSO_BOT_R = HEAD_RADIUS * 1.05f; // kept for torso shape
   static constexpr float UPPER_ARM_R = HEAD_RADIUS * 0.38f;
   static constexpr float FORE_ARM_R = HEAD_RADIUS * 0.30f;
   static constexpr float HAND_RADIUS = HEAD_RADIUS * 0.28f;
@@ -61,8 +64,6 @@ struct HumanProportions {
 
   static constexpr float UPPER_ARM_LEN = 0.28f;
   static constexpr float FORE_ARM_LEN = 0.30f;
-  static constexpr float UPPER_LEG_LEN = 0.35f;
-  static constexpr float LOWER_LEG_LEN = 0.35f;
 };
 
 enum class MaterialType : uint8_t {
@@ -78,6 +79,7 @@ struct ArcherColors {
       stringCol, fletch;
 };
 
+// Adjusted: shoulders originate at torso side surface with tiny forward bias
 struct ArcherPose {
   using P = HumanProportions;
 
@@ -85,27 +87,22 @@ struct ArcherPose {
   float headR = P::HEAD_RADIUS;
   QVector3D neckBase{0.0f, P::NECK_BASE_Y, 0.0f};
 
-  QVector3D shoulderL{-P::SHOULDER_WIDTH * 0.5f, P::SHOULDER_Y, 0.1f};
-  QVector3D shoulderR{P::SHOULDER_WIDTH * 0.5f, P::SHOULDER_Y, 0.1f};
+  // Anchor on torso surface (slightly inset to avoid gaps), minimal forward bias
+  QVector3D shoulderL{-P::TORSO_TOP_R * 0.98f, P::SHOULDER_Y, P::TORSO_TOP_R * 0.05f};
+  QVector3D shoulderR{ P::TORSO_TOP_R * 0.98f, P::SHOULDER_Y, P::TORSO_TOP_R * 0.05f};
 
   QVector3D elbowL, elbowR;
   QVector3D handL, handR;
 
-  float hipSpacing = P::SHOULDER_WIDTH * 0.58f;
-
-  float hipXFactor = 0.48f;
-  float hipZOffset = 0.02f;
-  QVector3D hipL{-hipSpacing * hipXFactor,
-                 std::max(P::HIP_Y + 0.05f, P::GROUND_Y + 0.3f), hipZOffset};
-  QVector3D hipR{hipSpacing * hipXFactor,
-                 std::max(P::HIP_Y + 0.05f, P::GROUND_Y + 0.3f), -hipZOffset};
-
+  // Feet anchors
   float footYOffset = 0.02f;
-  QVector3D footL{-hipSpacing * 1.15f, P::GROUND_Y + footYOffset, 0.22f};
-  QVector3D footR{hipSpacing * 1.15f, P::GROUND_Y + footYOffset, -0.18f};
+  QVector3D footL{-P::SHOULDER_WIDTH * 0.58f, P::GROUND_Y + footYOffset, 0.22f};
+  QVector3D footR{ P::SHOULDER_WIDTH * 0.58f, P::GROUND_Y + footYOffset,-0.18f};
+
+  // Bow params (bottom tied to waist now that hips are removed)
   float bowX = 0.0f;
   float bowTopY = P::SHOULDER_Y + 0.55f;
-  float bowBotY = P::HIP_Y - 0.25f;
+  float bowBotY = P::WAIST_Y - 0.25f;
   float bowRodR = 0.035f;
   float stringR = 0.008f;
   float bowDepth = 0.25f;
@@ -129,15 +126,11 @@ static inline ArcherPose makePose(uint32_t seed, float animTime, bool isMoving,
   float armHeightJitter = (hash01(seed ^ 0xABCDu) - 0.5f) * 0.03f;
   float armAsymmetry = (hash01(seed ^ 0xDEF0u) - 0.5f) * 0.04f;
   float shoulderRotation = (hash01(seed ^ 0x1234u) - 0.5f) * 0.05f;
-  float legBendVariation = hash01(seed ^ 0x5555u) * 0.03f;
 
   P.footL.setX(P.footL.x() + footAngleJitter);
   P.footR.setX(P.footR.x() - footAngleJitter);
   P.footL.setZ(P.footL.z() + footDepthJitter);
   P.footR.setZ(P.footR.z() - footDepthJitter);
-
-  P.hipL.setY(P.hipL.y() - legBendVariation);
-  P.hipR.setY(P.hipR.y() - legBendVariation * 0.7f);
 
   P.shoulderL.setY(P.shoulderL.y() + shoulderRotation);
   P.shoulderR.setY(P.shoulderR.y() - shoulderRotation);
@@ -299,16 +292,12 @@ static inline void drawTorso(const DrawContext &p, ISubmitter &out,
 
   float torsoRadius = HP::TORSO_TOP_R;
 
+  // Upper torso
   out.mesh(getUnitCylinder(),
            cylinderBetween(p.model, torsoTop, torsoBot, torsoRadius), C.tunic,
            nullptr, 1.0f);
 
-  QVector3D waist{0.0f, HP::WAIST_Y, 0.0f};
-  QVector3D hipCenter = (P.hipL + P.hipR) * 0.5f;
-
-  out.mesh(getUnitCone(),
-           coneFromTo(p.model, waist, hipCenter, HP::TORSO_BOT_R),
-           C.tunic * 0.9f, nullptr, 1.0f);
+  // (hips removed) — stop torso at waist without flaring to hips
 }
 
 static inline void drawHeadAndNeck(const DrawContext &p, ISubmitter &out,
@@ -344,14 +333,15 @@ static inline void drawHeadAndNeck(const DrawContext &p, ISubmitter &out,
            iris, nullptr, 1.0f);
 }
 
+// drawArms unchanged (no extra geometry added)
 static inline void drawArms(const DrawContext &p, ISubmitter &out,
                             const ArcherPose &P, const ArcherColors &C) {
   using HP = HumanProportions;
 
   const float upperArmR = HP::UPPER_ARM_R;
-  const float foreArmR = HP::FORE_ARM_R;
-  const float jointR = HP::HAND_RADIUS * 1.05f;
-  const float handR = HP::HAND_RADIUS * 0.95f;
+  const float foreArmR  = HP::FORE_ARM_R;
+  const float jointR    = HP::HAND_RADIUS * 1.05f;
+  const float handR     = HP::HAND_RADIUS * 0.95f;
 
   out.mesh(getUnitCylinder(),
            cylinderBetween(p.model, P.shoulderL, P.elbowL, upperArmR), C.tunic,
@@ -380,54 +370,158 @@ static inline void drawLegs(const DrawContext &p, ISubmitter &out,
                             const ArcherPose &P, const ArcherColors &C) {
   using HP = HumanProportions;
 
-  QVector3D kneeL = P.hipL + (P.footL - P.hipL) * 0.48f;
-  QVector3D kneeR = P.hipR + (P.footR - P.hipR) * 0.48f;
-  kneeL.setY(HP::KNEE_Y + 0.05f);
-  kneeR.setY(HP::KNEE_Y + 0.05f);
+  // ---------- Tunables ----------
+  const float hipHalf      = HP::UPPER_LEG_R * 1.7f;
+  const float maxStance    = hipHalf * 2.2f;
 
-  const float thighTopR = HP::UPPER_LEG_R * 1.05f;
-  const float thighKneeR = HP::UPPER_LEG_R * 0.75f;
-  const float shinTopR = HP::LOWER_LEG_R;
-  const float calfR = HP::LOWER_LEG_R * 1.08f;
-  const float ankleR = HP::LOWER_LEG_R * 0.70f;
-  const float kneeJointR = thighKneeR * 1.20f;
+  const float upperScale   = 1.40f * 3.0f;
+  const float lowerScale   = 1.35f * 3.0f;
+  const float footLenMul   = (5.5f * 0.1f);
+  const float footRadMul   = 0.70f;
 
-  out.mesh(getUnitCone(), coneFromTo(p.model, P.hipL, kneeL, thighTopR),
+  // Proper bend tuning
+  const float kneeForward  = 0.30f;  // amount knee pushed forward
+  const float kneeDrop     = 0.05f * HP::LOWER_LEG_LEN;
+
+  const QVector3D FWD(0.f, 0.f, 1.f);
+  const QVector3D UP (0.f, 1.f, 0.f);
+
+  const float upperR = HP::UPPER_LEG_R * upperScale;
+  const float lowerR = HP::LOWER_LEG_R * lowerScale;
+  const float footR  = lowerR * footRadMul;
+
+  // Small helpers
+  auto rotY = [](const QVector3D& v, float aRad) {
+    const float c = std::cos(aRad), s = std::sin(aRad);
+    return QVector3D(c*v.x() + s*v.z(), v.y(), -s*v.x() + c*v.z());
+  };
+  auto rightOf = [&](const QVector3D& fwd) {
+    return QVector3D::crossProduct(UP, fwd).normalized();
+  };
+  constexpr float DEG = 3.1415926535f / 180.f;
+
+  // ---------- Hip anchors ----------
+  const QVector3D waist(0.f, HP::WAIST_Y, 0.f);
+  const QVector3D hipL = waist + QVector3D(-hipHalf, 0.f, 0.f);
+  const QVector3D hipR = waist + QVector3D(+hipHalf, 0.f, 0.f);
+  const float midX = 0.5f * (hipL.x() + hipR.x());
+
+  // ---------- Feet placement (plant points from pose, clamped in X) ----------
+  auto clampX = [&](const QVector3D& v, float mid) {
+    const float dx = v.x() - mid;
+    const float mag = std::min(std::abs(dx), maxStance);
+    return QVector3D(mid + (dx < 0 ? -mag : mag), v.y(), v.z());
+  };
+  const QVector3D plantL = clampX(P.footL, midX);
+  const QVector3D plantR = clampX(P.footR, midX);
+
+  // Common foot sizing
+  const float footLen = footLenMul * lowerR;   // overall foot length along local forward
+  const float heelBackFrac = 0.15f;            // how much heel extends behind ankle
+  const float ballFrac     = 0.72f;            // ball location along the length
+  const float toeUpFrac    = 0.06f;            // tiny toe dorsiflex in neutral
+  const float yawOutDeg    = 12.0f;            // outward "duck" angle per foot
+  const float ankleFwdFrac = 0.10f;            // ankle sits slightly ahead of heel centerline
+  const float ankleUpFrac  = 0.50f;            // ankle is above foot centerline a bit
+  const float toeSplayFrac = 0.06f;            // lateral toe splay
+
+  // Per-foot local frames (slightly duck-footed)
+  const QVector3D fwdL = rotY(FWD, -yawOutDeg * DEG);
+  const QVector3D fwdR = rotY(FWD, +yawOutDeg * DEG);
+  const QVector3D rightL = rightOf(fwdL);
+  const QVector3D rightR = rightOf(fwdR);
+
+  // Height of the foot centerline so the sole touches the ground
+  const float footCLyL = plantL.y() + footR;
+  const float footCLyR = plantR.y() + footR;
+
+  // Heel centers (on the foot centerline)
+  QVector3D heelCenL(plantL.x(), footCLyL, plantL.z());
+  QVector3D heelCenR(plantR.x(), footCLyR, plantR.z());
+
+  // Ankles: a bit forward of heel and slightly higher (more natural calf connection)
+  QVector3D ankleL = heelCenL + fwdL * (ankleFwdFrac * footLen);
+  QVector3D ankleR = heelCenR + fwdR * (ankleFwdFrac * footLen);
+  ankleL.setY(heelCenL.y() + ankleUpFrac * footR);
+  ankleR.setY(heelCenR.y() + ankleUpFrac * footR);
+
+  // ---------- Knees (natural forward bend) ----------
+  const float kneeForwardPush = HP::LOWER_LEG_LEN * kneeForward;
+  const float kneeDropAbs = kneeDrop;
+
+  auto computeKnee = [&](const QVector3D &hip, const QVector3D &ankle) {
+    QVector3D dir = ankle - hip;
+    QVector3D knee = hip + 0.5f * dir;           // base midpoint
+    knee += QVector3D(0, 0, 1) * kneeForwardPush;// push forward (+Z in model space)
+    knee.setY(knee.y() - kneeDropAbs);           // drop slightly
+    knee.setX((hip.x() + ankle.x()) * 0.5f);     // avoid inward collapse
+    return knee;
+  };
+
+  QVector3D kneeL = computeKnee(hipL, ankleL);
+  QVector3D kneeR = computeKnee(hipR, ankleR);
+
+  // ---------- Feet geometry (two segments with hinge at the ball) ----------
+  const float heelBack = heelBackFrac * footLen;
+  const float ballLen  = ballFrac     * footLen;
+  const float toeLen   = (1.0f - ballFrac) * footLen;
+
+  // Ball joints
+  QVector3D ballL = heelCenL + fwdL * ballLen;
+  QVector3D ballR = heelCenR + fwdR * ballLen;
+
+  // Toe ends (slight dorsiflex + outward splay)
+  const float toeUpL = toeUpFrac * footLen;
+  const float toeUpR = toeUpFrac * footLen;
+  const float toeSplay = toeSplayFrac * footLen;
+
+  QVector3D toeL = ballL + fwdL * toeLen - rightL * toeSplay; // outward for left
+  QVector3D toeR = ballR + fwdR * toeLen + rightR * toeSplay; // outward for right
+  toeL.setY(ballL.y() + toeUpL);
+  toeR.setY(ballR.y() + toeUpR);
+
+  // Shift heel centers slightly behind the ankle to form a heel pad
+  heelCenL -= fwdL * heelBack;
+  heelCenR -= fwdR * heelBack;
+
+  // Slight taper: heel chunk a bit thicker than toes
+  const float heelRad = footR * 1.05f;
+  const float toeRad  = footR * 0.85f;
+
+  // ---------- Draw ----------
+  // Thighs
+  out.mesh(getUnitCapsule(8, 1),
+           Render::Geom::capsuleBetween(p.model, hipL, kneeL, upperR),
            C.leather, nullptr, 1.0f);
-  out.mesh(getUnitCone(), coneFromTo(p.model, P.hipR, kneeR, thighTopR),
+  out.mesh(getUnitCapsule(8, 1),
+           Render::Geom::capsuleBetween(p.model, hipR, kneeR, upperR),
            C.leather, nullptr, 1.0f);
 
-  out.mesh(getUnitSphere(), sphereAt(p.model, kneeL, kneeJointR),
-           C.leather * 0.95f, nullptr, 1.0f);
-  out.mesh(getUnitSphere(), sphereAt(p.model, kneeR, kneeJointR),
-           C.leather * 0.95f, nullptr, 1.0f);
-
-  QVector3D calfPeakL = kneeL + (P.footL - kneeL) * 0.35f;
-  QVector3D calfPeakR = kneeR + (P.footR - kneeR) * 0.35f;
-
-  out.mesh(getUnitCone(), coneFromTo(p.model, kneeL, calfPeakL, shinTopR),
+  // Calves → Ankles
+  out.mesh(getUnitCapsule(8, 1),
+           Render::Geom::capsuleBetween(p.model, kneeL, ankleL, lowerR),
            C.leatherDark, nullptr, 1.0f);
-  out.mesh(getUnitCone(), coneFromTo(p.model, kneeR, calfPeakR, shinTopR),
+  out.mesh(getUnitCapsule(8, 1),
+           Render::Geom::capsuleBetween(p.model, kneeR, ankleR, lowerR),
            C.leatherDark, nullptr, 1.0f);
 
-  out.mesh(getUnitSphere(), sphereAt(p.model, calfPeakL, calfR),
-           C.leatherDark * 0.98f, nullptr, 1.0f);
-  out.mesh(getUnitSphere(), sphereAt(p.model, calfPeakR, calfR),
-           C.leatherDark * 0.98f, nullptr, 1.0f);
-
-  out.mesh(getUnitCone(), coneFromTo(p.model, calfPeakL, P.footL, ankleR),
-           C.leatherDark * 0.95f, nullptr, 1.0f);
-  out.mesh(getUnitCone(), coneFromTo(p.model, calfPeakR, P.footR, ankleR),
-           C.leatherDark * 0.95f, nullptr, 1.0f);
-
-  QVector3D down(0.0f, -0.02f, 0.0f);
-  out.mesh(getUnitCylinder(),
-           cylinderBetween(p.model, P.footL, P.footL + down, ankleR * 1.2f),
+  // Feet (two-segment: heel→ball, ball→toe)
+  out.mesh(getUnitCapsule(8, 1),
+           Render::Geom::capsuleBetween(p.model, heelCenL, ballL, heelRad),
            C.leatherDark, nullptr, 1.0f);
-  out.mesh(getUnitCylinder(),
-           cylinderBetween(p.model, P.footR, P.footR + down, ankleR * 1.2f),
+  out.mesh(getUnitCapsule(8, 1),
+           Render::Geom::capsuleBetween(p.model, heelCenR, ballR, heelRad),
+           C.leatherDark, nullptr, 1.0f);
+
+  out.mesh(getUnitCapsule(8, 1),
+           Render::Geom::capsuleBetween(p.model, ballL, toeL, toeRad),
+           C.leatherDark, nullptr, 1.0f);
+  out.mesh(getUnitCapsule(8, 1),
+           Render::Geom::capsuleBetween(p.model, ballR, toeR, toeRad),
            C.leatherDark, nullptr, 1.0f);
 }
+
+
 
 static inline void drawQuiver(const DrawContext &p, ISubmitter &out,
                               const ArcherColors &C, const ArcherPose &P,
@@ -702,8 +796,8 @@ void registerArcherRenderer(Render::GL::EntityRendererRegistry &registry) {
                                  isMoving, isAttacking, isMelee);
 
       drawQuiver(instCtx, out, colors, pose, instSeed);
-      drawLegs(instCtx, out, pose, colors);
-      drawTorso(instCtx, out, colors, pose);
+      drawLegs(instCtx, out, pose, colors);      // simplified legs
+      drawTorso(instCtx, out, colors, pose);     // no hips
       drawArms(instCtx, out, pose, colors);
       drawHeadAndNeck(instCtx, out, pose, colors);
       drawBowAndArrow(instCtx, out, pose, colors);
