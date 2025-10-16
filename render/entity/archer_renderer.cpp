@@ -65,7 +65,13 @@ struct HumanProportions {
   static constexpr float LOWER_LEG_LEN = 0.42f;
 };
 
-enum class MaterialType : uint8_t { Cloth = 0, Leather = 1, Metal = 2, Wood = 3, Skin = 4 };
+enum class MaterialType : uint8_t {
+  Cloth = 0,
+  Leather = 1,
+  Metal = 2,
+  Wood = 3,
+  Skin = 4
+};
 
 struct ArcherColors {
   QVector3D tunic, skin, leather, leatherDark, wood, metal, metalHead,
@@ -110,20 +116,22 @@ static inline ArcherPose makePose(uint32_t seed, float animTime, bool isMoving,
   ArcherPose P;
 
   using HP = HumanProportions;
-  
+
   auto hash01 = [](uint32_t x) {
     x ^= x << 13;
     x ^= x >> 17;
     x ^= x << 5;
     return (x & 0x00FFFFFF) / float(0x01000000);
   };
-  
+
   float footAngleJitter = (hash01(seed ^ 0x5678u) - 0.5f) * 0.06f;
   float armHeightJitter = (hash01(seed ^ 0xABCDu) - 0.5f) * 0.02f;
 
-  P.handL = QVector3D(P.bowX - 0.05f, HP::SHOULDER_Y + 0.05f + armHeightJitter, 0.55f);
-  P.handR = QVector3D(0.15f, HP::SHOULDER_Y + 0.15f + armHeightJitter * 0.8f, 0.20f);
-  
+  P.handL = QVector3D(P.bowX - 0.05f, HP::SHOULDER_Y + 0.05f + armHeightJitter,
+                      0.55f);
+  P.handR =
+      QVector3D(0.15f, HP::SHOULDER_Y + 0.15f + armHeightJitter * 0.8f, 0.20f);
+
   P.footL.setX(P.footL.x() + footAngleJitter);
   P.footR.setX(P.footR.x() - footAngleJitter);
 
@@ -227,30 +235,31 @@ static inline ArcherPose makePose(uint32_t seed, float animTime, bool isMoving,
   return P;
 }
 
-static inline ArcherColors makeColors(const QVector3D &teamTint, uint32_t seed) {
+static inline ArcherColors makeColors(const QVector3D &teamTint,
+                                      uint32_t seed) {
   ArcherColors C;
-  
+
   auto hash01 = [](uint32_t x) {
     x ^= x << 13;
     x ^= x >> 17;
     x ^= x << 5;
     return (x & 0x00FFFFFF) / float(0x01000000);
   };
-  
+
   auto tint = [&](float k) {
     return QVector3D(clamp01(teamTint.x() * k), clamp01(teamTint.y() * k),
                      clamp01(teamTint.z() * k));
   };
-  
+
   float variation = (hash01(seed) - 0.5f) * 0.08f;
-  
+
   C.tunic = clampVec01(teamTint * (1.0f + variation));
   C.skin = QVector3D(0.96f, 0.80f, 0.69f);
-  
+
   float leatherVar = (hash01(seed ^ 0x1234u) - 0.5f) * 0.06f;
   C.leather = clampVec01(QVector3D(0.35f, 0.22f, 0.12f) * (1.0f + leatherVar));
   C.leatherDark = C.leather * 0.88f;
-  
+
   C.wood = QVector3D(0.16f, 0.10f, 0.05f);
   C.metal = QVector3D(0.65f, 0.66f, 0.70f);
   C.metalHead = clampVec01(C.metal * 1.1f);
