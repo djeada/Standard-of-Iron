@@ -4,6 +4,7 @@
 #include "../controllers/command_controller.h"
 #include "../models/cursor_manager.h"
 #include "../models/hover_tracker.h"
+#include "../utils/json_vec_utils.h"
 #include <QBuffer>
 #include <QCoreApplication>
 #include <QCursor>
@@ -73,31 +74,6 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
-
-namespace {
-
-QJsonArray vec3ToJsonArray(const QVector3D &vec) {
-  QJsonArray arr;
-  arr.append(vec.x());
-  arr.append(vec.y());
-  arr.append(vec.z());
-  return arr;
-}
-
-QVector3D jsonArrayToVec3(const QJsonValue &value, const QVector3D &fallback) {
-  if (!value.isArray()) {
-    return fallback;
-  }
-  const auto arr = value.toArray();
-  if (arr.size() < 3) {
-    return fallback;
-  }
-  return QVector3D(static_cast<float>(arr.at(0).toDouble(fallback.x())),
-                   static_cast<float>(arr.at(1).toDouble(fallback.y())),
-                   static_cast<float>(arr.at(2).toDouble(fallback.z())));
-}
-
-} // namespace
 
 GameEngine::GameEngine() {
 
@@ -1263,8 +1239,10 @@ QJsonObject GameEngine::buildSaveMetadata() const {
 
   if (m_camera) {
     QJsonObject cameraObj;
-    cameraObj["position"] = vec3ToJsonArray(m_camera->getPosition());
-    cameraObj["target"] = vec3ToJsonArray(m_camera->getTarget());
+    cameraObj["position"] =
+        App::JsonUtils::vec3ToJsonArray(m_camera->getPosition());
+    cameraObj["target"] =
+        App::JsonUtils::vec3ToJsonArray(m_camera->getTarget());
     cameraObj["distance"] = m_camera->getDistance();
     cameraObj["pitchDeg"] = m_camera->getPitchDeg();
     cameraObj["fov"] = m_camera->getFOV();
@@ -1420,10 +1398,10 @@ void GameEngine::applyEnvironmentFromMetadata(const QJsonObject &metadata) {
 
   if (metadata.contains("camera") && m_camera) {
     const auto cameraObj = metadata.value("camera").toObject();
-    const QVector3D position =
-        jsonArrayToVec3(cameraObj.value("position"), m_camera->getPosition());
-    const QVector3D target =
-        jsonArrayToVec3(cameraObj.value("target"), m_camera->getTarget());
+    const QVector3D position = App::JsonUtils::jsonArrayToVec3(
+        cameraObj.value("position"), m_camera->getPosition());
+    const QVector3D target = App::JsonUtils::jsonArrayToVec3(
+        cameraObj.value("target"), m_camera->getTarget());
     m_camera->lookAt(position, target, QVector3D(0.0f, 1.0f, 0.0f));
 
     const float nearPlane = static_cast<float>(
