@@ -35,34 +35,42 @@ using Render::Geom::sphereAt;
 
 struct HumanProportions {
 
-  static constexpr float TOTAL_HEIGHT = 2.00f;
-  static constexpr float HEAD_HEIGHT = 0.25f;
+  static constexpr float TOTAL_HEIGHT = 1.80f;
+  static constexpr float HEAD_HEIGHT = 0.23f;
 
   static constexpr float GROUND_Y = 0.0f;
   static constexpr float HEAD_TOP_Y = GROUND_Y + TOTAL_HEIGHT;
   static constexpr float CHIN_Y = HEAD_TOP_Y - HEAD_HEIGHT;
-  static constexpr float NECK_BASE_Y = CHIN_Y - 0.10f;
-  static constexpr float SHOULDER_Y = NECK_BASE_Y - 0.15f;
-  static constexpr float CHEST_Y = SHOULDER_Y - 0.35f;
+  static constexpr float NECK_BASE_Y = CHIN_Y - 0.08f;
+  static constexpr float SHOULDER_Y = NECK_BASE_Y - 0.12f;
+  static constexpr float CHEST_Y = SHOULDER_Y - 0.42f;
   static constexpr float WAIST_Y = CHEST_Y - 0.30f;
-  static constexpr float HIP_Y = WAIST_Y - 0.15f;
+  static constexpr float HIP_Y = WAIST_Y - 0.16f;
   static constexpr float KNEE_Y = HIP_Y - 0.35f;
 
-  static constexpr float SHOULDER_WIDTH = HEAD_HEIGHT * 1.6f;
-  static constexpr float HEAD_RADIUS = HEAD_HEIGHT * 0.40f;
-  static constexpr float NECK_RADIUS = HEAD_RADIUS * 0.35f;
-  static constexpr float TORSO_TOP_R = HEAD_RADIUS * 1.0f;
-  static constexpr float TORSO_BOT_R = HEAD_RADIUS * 0.9f;
-  static constexpr float UPPER_ARM_R = HEAD_RADIUS * 0.30f;
-  static constexpr float FORE_ARM_R = HEAD_RADIUS * 0.25f;
-  static constexpr float HAND_RADIUS = HEAD_RADIUS * 0.22f;
-  static constexpr float UPPER_LEG_R = HEAD_RADIUS * 0.38f;
-  static constexpr float LOWER_LEG_R = HEAD_RADIUS * 0.32f;
+  static constexpr float SHOULDER_WIDTH = HEAD_HEIGHT * 1.85f;
+  static constexpr float HEAD_RADIUS = HEAD_HEIGHT * 0.42f;
+  static constexpr float NECK_RADIUS = HEAD_RADIUS * 0.38f;
+  static constexpr float TORSO_TOP_R = HEAD_RADIUS * 1.15f;
+  static constexpr float TORSO_BOT_R = HEAD_RADIUS * 1.05f;
+  static constexpr float UPPER_ARM_R = HEAD_RADIUS * 0.38f;
+  static constexpr float FORE_ARM_R = HEAD_RADIUS * 0.30f;
+  static constexpr float HAND_RADIUS = HEAD_RADIUS * 0.28f;
+  static constexpr float UPPER_LEG_R = HEAD_RADIUS * 0.50f;
+  static constexpr float LOWER_LEG_R = HEAD_RADIUS * 0.42f;
 
   static constexpr float UPPER_ARM_LEN = 0.28f;
   static constexpr float FORE_ARM_LEN = 0.30f;
   static constexpr float UPPER_LEG_LEN = 0.35f;
   static constexpr float LOWER_LEG_LEN = 0.35f;
+};
+
+enum class MaterialType : uint8_t {
+  Cloth = 0,
+  Leather = 1,
+  Metal = 2,
+  Wood = 3,
+  Skin = 4
 };
 
 struct ArcherColors {
@@ -83,18 +91,18 @@ struct ArcherPose {
   QVector3D elbowL, elbowR;
   QVector3D handL, handR;
 
-  float hipSpacing = P::SHOULDER_WIDTH * 0.55f;
+  float hipSpacing = P::SHOULDER_WIDTH * 0.58f;
 
-  float hipXFactor = 0.45f;
-  float hipZOffset = 0.01f;
+  float hipXFactor = 0.48f;
+  float hipZOffset = 0.02f;
   QVector3D hipL{-hipSpacing * hipXFactor,
                  std::max(P::HIP_Y + 0.05f, P::GROUND_Y + 0.3f), hipZOffset};
   QVector3D hipR{hipSpacing * hipXFactor,
                  std::max(P::HIP_Y + 0.05f, P::GROUND_Y + 0.3f), -hipZOffset};
 
   float footYOffset = 0.02f;
-  QVector3D footL{-hipSpacing * 1.05f, P::GROUND_Y + footYOffset, 0.18f};
-  QVector3D footR{hipSpacing * 1.05f, P::GROUND_Y + footYOffset, -0.14f};
+  QVector3D footL{-hipSpacing * 1.15f, P::GROUND_Y + footYOffset, 0.22f};
+  QVector3D footR{hipSpacing * 1.15f, P::GROUND_Y + footYOffset, -0.18f};
   float bowX = 0.0f;
   float bowTopY = P::SHOULDER_Y + 0.55f;
   float bowBotY = P::HIP_Y - 0.25f;
@@ -105,13 +113,39 @@ struct ArcherPose {
 
 static inline ArcherPose makePose(uint32_t seed, float animTime, bool isMoving,
                                   bool isAttacking, bool isMelee = false) {
-  (void)seed;
   ArcherPose P;
 
   using HP = HumanProportions;
 
-  P.handL = QVector3D(P.bowX - 0.05f, HP::SHOULDER_Y + 0.05f, 0.55f);
-  P.handR = QVector3D(0.15f, HP::SHOULDER_Y + 0.15f, 0.20f);
+  auto hash01 = [](uint32_t x) {
+    x ^= x << 13;
+    x ^= x >> 17;
+    x ^= x << 5;
+    return (x & 0x00FFFFFF) / float(0x01000000);
+  };
+
+  float footAngleJitter = (hash01(seed ^ 0x5678u) - 0.5f) * 0.12f;
+  float footDepthJitter = (hash01(seed ^ 0x9ABCu) - 0.5f) * 0.08f;
+  float armHeightJitter = (hash01(seed ^ 0xABCDu) - 0.5f) * 0.03f;
+  float armAsymmetry = (hash01(seed ^ 0xDEF0u) - 0.5f) * 0.04f;
+  float shoulderRotation = (hash01(seed ^ 0x1234u) - 0.5f) * 0.05f;
+  float legBendVariation = hash01(seed ^ 0x5555u) * 0.03f;
+
+  P.footL.setX(P.footL.x() + footAngleJitter);
+  P.footR.setX(P.footR.x() - footAngleJitter);
+  P.footL.setZ(P.footL.z() + footDepthJitter);
+  P.footR.setZ(P.footR.z() - footDepthJitter);
+
+  P.hipL.setY(P.hipL.y() - legBendVariation);
+  P.hipR.setY(P.hipR.y() - legBendVariation * 0.7f);
+
+  P.shoulderL.setY(P.shoulderL.y() + shoulderRotation);
+  P.shoulderR.setY(P.shoulderR.y() - shoulderRotation);
+
+  P.handL = QVector3D(P.bowX - 0.05f + armAsymmetry,
+                      HP::SHOULDER_Y + 0.05f + armHeightJitter, 0.55f);
+  P.handR = QVector3D(0.15f - armAsymmetry * 0.5f,
+                      HP::SHOULDER_Y + 0.15f + armHeightJitter * 0.8f, 0.20f);
 
   if (isAttacking) {
     float attackCycleTime = 1.2f;
@@ -213,19 +247,44 @@ static inline ArcherPose makePose(uint32_t seed, float animTime, bool isMoving,
   return P;
 }
 
-static inline ArcherColors makeColors(const QVector3D &teamTint) {
+static inline ArcherColors makeColors(const QVector3D &teamTint,
+                                      uint32_t seed) {
   ArcherColors C;
+
+  auto hash01 = [](uint32_t x) {
+    x ^= x << 13;
+    x ^= x >> 17;
+    x ^= x << 5;
+    return (x & 0x00FFFFFF) / float(0x01000000);
+  };
+
   auto tint = [&](float k) {
     return QVector3D(clamp01(teamTint.x() * k), clamp01(teamTint.y() * k),
                      clamp01(teamTint.z() * k));
   };
-  C.tunic = teamTint;
+
+  float variation = (hash01(seed) - 0.5f) * 0.08f;
+
+  C.tunic = clampVec01(teamTint * (1.0f + variation));
   C.skin = QVector3D(0.96f, 0.80f, 0.69f);
-  C.leather = QVector3D(0.35f, 0.22f, 0.12f);
-  C.leatherDark = C.leather * 0.9f;
+
+  float leatherVar = (hash01(seed ^ 0x1234u) - 0.5f) * 0.06f;
+  float r = teamTint.x();
+  float g = teamTint.y();
+  float b = teamTint.z();
+  float saturation = 0.6f;
+  float brightness = 0.5f;
+  QVector3D desaturated(r * saturation + (1.0f - saturation) * brightness,
+                        g * saturation + (1.0f - saturation) * brightness,
+                        b * saturation + (1.0f - saturation) * brightness);
+  C.leather = clampVec01(desaturated * (0.7f + leatherVar));
+  C.leatherDark = C.leather * 0.85f;
+
   C.wood = QVector3D(0.16f, 0.10f, 0.05f);
-  C.metal = QVector3D(0.65f, 0.66f, 0.70f);
-  C.metalHead = clampVec01(C.metal * 1.1f);
+
+  QVector3D neutralGray(0.70f, 0.70f, 0.70f);
+  C.metal = clampVec01(teamTint * 0.25f + neutralGray * 0.75f);
+  C.metalHead = clampVec01(C.metal * 1.15f);
   C.stringCol = QVector3D(0.30f, 0.30f, 0.32f);
   C.fletch = tint(0.9f);
   return C;
@@ -292,6 +351,7 @@ static inline void drawArms(const DrawContext &p, ISubmitter &out,
   const float upperArmR = HP::UPPER_ARM_R;
   const float foreArmR = HP::FORE_ARM_R;
   const float jointR = HP::HAND_RADIUS * 1.05f;
+  const float handR = HP::HAND_RADIUS * 0.95f;
 
   out.mesh(getUnitCylinder(),
            cylinderBetween(p.model, P.shoulderL, P.elbowL, upperArmR), C.tunic,
@@ -301,6 +361,8 @@ static inline void drawArms(const DrawContext &p, ISubmitter &out,
   out.mesh(getUnitCylinder(),
            cylinderBetween(p.model, P.elbowL, P.handL, foreArmR),
            C.skin * 0.95f, nullptr, 1.0f);
+  out.mesh(getUnitSphere(), sphereAt(p.model, P.handL, handR),
+           C.leatherDark * 0.92f, nullptr, 1.0f);
 
   out.mesh(getUnitCylinder(),
            cylinderBetween(p.model, P.shoulderR, P.elbowR, upperArmR), C.tunic,
@@ -310,42 +372,60 @@ static inline void drawArms(const DrawContext &p, ISubmitter &out,
   out.mesh(getUnitCylinder(),
            cylinderBetween(p.model, P.elbowR, P.handR, foreArmR),
            C.skin * 0.95f, nullptr, 1.0f);
+  out.mesh(getUnitSphere(), sphereAt(p.model, P.handR, handR),
+           C.leatherDark * 0.92f, nullptr, 1.0f);
 }
 
 static inline void drawLegs(const DrawContext &p, ISubmitter &out,
                             const ArcherPose &P, const ArcherColors &C) {
   using HP = HumanProportions;
 
-  QVector3D kneeL = P.hipL + (P.footL - P.hipL) * 0.45f;
-  QVector3D kneeR = P.hipR + (P.footR - P.hipR) * 0.45f;
+  QVector3D kneeL = P.hipL + (P.footL - P.hipL) * 0.48f;
+  QVector3D kneeR = P.hipR + (P.footR - P.hipR) * 0.48f;
   kneeL.setY(HP::KNEE_Y + 0.05f);
   kneeR.setY(HP::KNEE_Y + 0.05f);
 
-  const float thighR = HP::UPPER_LEG_R;
-  const float shinR = HP::LOWER_LEG_R;
-  const float kneeJointR = thighR * 1.15f;
+  const float thighTopR = HP::UPPER_LEG_R * 1.05f;
+  const float thighKneeR = HP::UPPER_LEG_R * 0.75f;
+  const float shinTopR = HP::LOWER_LEG_R;
+  const float calfR = HP::LOWER_LEG_R * 1.08f;
+  const float ankleR = HP::LOWER_LEG_R * 0.70f;
+  const float kneeJointR = thighKneeR * 1.20f;
 
-  out.mesh(getUnitCone(), coneFromTo(p.model, P.hipL, kneeL, thighR), C.leather,
-           nullptr, 1.0f);
-  out.mesh(getUnitCone(), coneFromTo(p.model, P.hipR, kneeR, thighR), C.leather,
-           nullptr, 1.0f);
+  out.mesh(getUnitCone(), coneFromTo(p.model, P.hipL, kneeL, thighTopR),
+           C.leather, nullptr, 1.0f);
+  out.mesh(getUnitCone(), coneFromTo(p.model, P.hipR, kneeR, thighTopR),
+           C.leather, nullptr, 1.0f);
 
   out.mesh(getUnitSphere(), sphereAt(p.model, kneeL, kneeJointR),
            C.leather * 0.95f, nullptr, 1.0f);
   out.mesh(getUnitSphere(), sphereAt(p.model, kneeR, kneeJointR),
            C.leather * 0.95f, nullptr, 1.0f);
 
-  out.mesh(getUnitCone(), coneFromTo(p.model, kneeL, P.footL, shinR),
+  QVector3D calfPeakL = kneeL + (P.footL - kneeL) * 0.35f;
+  QVector3D calfPeakR = kneeR + (P.footR - kneeR) * 0.35f;
+
+  out.mesh(getUnitCone(), coneFromTo(p.model, kneeL, calfPeakL, shinTopR),
            C.leatherDark, nullptr, 1.0f);
-  out.mesh(getUnitCone(), coneFromTo(p.model, kneeR, P.footR, shinR),
+  out.mesh(getUnitCone(), coneFromTo(p.model, kneeR, calfPeakR, shinTopR),
            C.leatherDark, nullptr, 1.0f);
+
+  out.mesh(getUnitSphere(), sphereAt(p.model, calfPeakL, calfR),
+           C.leatherDark * 0.98f, nullptr, 1.0f);
+  out.mesh(getUnitSphere(), sphereAt(p.model, calfPeakR, calfR),
+           C.leatherDark * 0.98f, nullptr, 1.0f);
+
+  out.mesh(getUnitCone(), coneFromTo(p.model, calfPeakL, P.footL, ankleR),
+           C.leatherDark * 0.95f, nullptr, 1.0f);
+  out.mesh(getUnitCone(), coneFromTo(p.model, calfPeakR, P.footR, ankleR),
+           C.leatherDark * 0.95f, nullptr, 1.0f);
 
   QVector3D down(0.0f, -0.02f, 0.0f);
   out.mesh(getUnitCylinder(),
-           cylinderBetween(p.model, P.footL, P.footL + down, shinR * 1.1f),
+           cylinderBetween(p.model, P.footL, P.footL + down, ankleR * 1.2f),
            C.leatherDark, nullptr, 1.0f);
   out.mesh(getUnitCylinder(),
-           cylinderBetween(p.model, P.footR, P.footR + down, shinR * 1.1f),
+           cylinderBetween(p.model, P.footR, P.footR + down, ankleR * 1.2f),
            C.leatherDark, nullptr, 1.0f);
 }
 
@@ -493,7 +573,7 @@ void registerArcherRenderer(Render::GL::EntityRendererRegistry &registry) {
     const int cols = maxUnitsPerRow;
     const float spacing = 0.75f;
 
-    ArcherColors colors = makeColors(tunic);
+    ArcherColors colors = makeColors(tunic, seed);
 
     bool isMoving = false;
     bool isAttacking = false;
@@ -575,9 +655,23 @@ void registerArcherRenderer(Render::GL::EntityRendererRegistry &registry) {
 
       uint32_t instSeed = seed ^ uint32_t(idx * 9176u);
 
-      float yawOffset = (float)((int)(instSeed & 0xFFu) - 128) / 128.0f * 6.0f;
+      auto hash01 = [](uint32_t x) {
+        x ^= x << 13;
+        x ^= x >> 17;
+        x ^= x << 5;
+        return (x & 0x00FFFFFF) / float(0x01000000);
+      };
 
-      float phaseOffset = float((instSeed >> 8) & 0xFFu) / 255.0f * 0.25f;
+      float posJitterX = (hash01(instSeed) - 0.5f) * 0.05f;
+      float posJitterZ = (hash01(instSeed ^ 0x12345u) - 0.5f) * 0.05f;
+      float verticalJitter = (hash01(instSeed ^ 0x9E37u) - 0.5f) * 0.03f;
+
+      offsetX += posJitterX;
+      offsetZ += posJitterZ;
+
+      float yawOffset = (hash01(instSeed ^ 0xABCDu) - 0.5f) * 5.0f;
+
+      float phaseOffset = hash01(instSeed >> 8) * 0.25f;
 
       if (p.entity) {
         if (auto *entT =
@@ -585,23 +679,21 @@ void registerArcherRenderer(Render::GL::EntityRendererRegistry &registry) {
           QMatrix4x4 M = kIdentityMatrix;
           M.translate(entT->position.x, entT->position.y, entT->position.z);
           float baseYaw = entT->rotation.y;
-          float appliedYaw = baseYaw + (isAttacking ? yawOffset : 0.0f);
+          float appliedYaw = baseYaw + yawOffset;
           M.rotate(appliedYaw, 0.0f, 1.0f, 0.0f);
           M.scale(entT->scale.x, entT->scale.y, entT->scale.z);
 
-          M.translate(offsetX, 0.0f, offsetZ);
+          M.translate(offsetX, verticalJitter, offsetZ);
           instModel = M;
         } else {
           instModel = p.model;
-          if (isAttacking)
-            instModel.rotate(yawOffset, 0.0f, 1.0f, 0.0f);
-          instModel.translate(offsetX, 0.0f, offsetZ);
+          instModel.rotate(yawOffset, 0.0f, 1.0f, 0.0f);
+          instModel.translate(offsetX, verticalJitter, offsetZ);
         }
       } else {
         instModel = p.model;
-        if (isAttacking)
-          instModel.rotate(yawOffset, 0.0f, 1.0f, 0.0f);
-        instModel.translate(offsetX, 0.0f, offsetZ);
+        instModel.rotate(yawOffset, 0.0f, 1.0f, 0.0f);
+        instModel.translate(offsetX, verticalJitter, offsetZ);
       }
 
       DrawContext instCtx{p.resources, p.entity, p.world, instModel};
