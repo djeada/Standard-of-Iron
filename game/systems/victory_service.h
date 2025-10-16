@@ -21,6 +21,9 @@ struct VictoryConfig;
 namespace Game {
 namespace Systems {
 
+class GlobalStatsRegistry;
+class OwnerRegistry;
+
 class VictoryService {
 public:
   enum class VictoryType { Elimination, SurviveTime, Custom };
