@@ -45,14 +45,17 @@ struct HumanProportions {
   static constexpr float SHOULDER_Y = NECK_BASE_Y - 0.12f;
   static constexpr float CHEST_Y = SHOULDER_Y - 0.42f;
   static constexpr float WAIST_Y = CHEST_Y - 0.30f;
-  static constexpr float HIP_Y = WAIST_Y - 0.16f;
-  static constexpr float KNEE_Y = HIP_Y - 0.35f;
+
+  // Legs derived from waist only (hips removed)
+  static constexpr float UPPER_LEG_LEN = 0.35f;
+  static constexpr float LOWER_LEG_LEN = 0.35f;
+  static constexpr float KNEE_Y = WAIST_Y - UPPER_LEG_LEN;
 
   static constexpr float SHOULDER_WIDTH = HEAD_HEIGHT * 1.85f;
   static constexpr float HEAD_RADIUS = HEAD_HEIGHT * 0.42f;
   static constexpr float NECK_RADIUS = HEAD_RADIUS * 0.38f;
   static constexpr float TORSO_TOP_R = HEAD_RADIUS * 1.15f;
-  static constexpr float TORSO_BOT_R = HEAD_RADIUS * 1.05f;
+  static constexpr float TORSO_BOT_R = HEAD_RADIUS * 1.05f; // kept for torso shape
   static constexpr float UPPER_ARM_R = HEAD_RADIUS * 0.38f;
   static constexpr float FORE_ARM_R = HEAD_RADIUS * 0.30f;
   static constexpr float HAND_RADIUS = HEAD_RADIUS * 0.28f;
@@ -61,8 +64,6 @@ struct HumanProportions {
 
   static constexpr float UPPER_ARM_LEN = 0.28f;
   static constexpr float FORE_ARM_LEN = 0.30f;
-  static constexpr float UPPER_LEG_LEN = 0.35f;
-  static constexpr float LOWER_LEG_LEN = 0.35f;
 };
 
 enum class MaterialType : uint8_t {
@@ -91,21 +92,15 @@ struct ArcherPose {
   QVector3D elbowL, elbowR;
   QVector3D handL, handR;
 
-  float hipSpacing = P::SHOULDER_WIDTH * 0.58f;
-
-  float hipXFactor = 0.48f;
-  float hipZOffset = 0.02f;
-  QVector3D hipL{-hipSpacing * hipXFactor,
-                 std::max(P::HIP_Y + 0.05f, P::GROUND_Y + 0.3f), hipZOffset};
-  QVector3D hipR{hipSpacing * hipXFactor,
-                 std::max(P::HIP_Y + 0.05f, P::GROUND_Y + 0.3f), -hipZOffset};
-
+  // Feet anchors
   float footYOffset = 0.02f;
-  QVector3D footL{-hipSpacing * 1.15f, P::GROUND_Y + footYOffset, 0.22f};
-  QVector3D footR{hipSpacing * 1.15f, P::GROUND_Y + footYOffset, -0.18f};
+  QVector3D footL{-P::SHOULDER_WIDTH * 0.58f, P::GROUND_Y + footYOffset, 0.22f};
+  QVector3D footR{ P::SHOULDER_WIDTH * 0.58f, P::GROUND_Y + footYOffset,-0.18f};
+
+  // Bow params (bottom tied to waist now that hips are removed)
   float bowX = 0.0f;
   float bowTopY = P::SHOULDER_Y + 0.55f;
-  float bowBotY = P::HIP_Y - 0.25f;
+  float bowBotY = P::WAIST_Y - 0.25f;
   float bowRodR = 0.035f;
   float stringR = 0.008f;
   float bowDepth = 0.25f;
@@ -129,15 +124,11 @@ static inline ArcherPose makePose(uint32_t seed, float animTime, bool isMoving,
   float armHeightJitter = (hash01(seed ^ 0xABCDu) - 0.5f) * 0.03f;
   float armAsymmetry = (hash01(seed ^ 0xDEF0u) - 0.5f) * 0.04f;
   float shoulderRotation = (hash01(seed ^ 0x1234u) - 0.5f) * 0.05f;
-  float legBendVariation = hash01(seed ^ 0x5555u) * 0.03f;
 
   P.footL.setX(P.footL.x() + footAngleJitter);
   P.footR.setX(P.footR.x() - footAngleJitter);
   P.footL.setZ(P.footL.z() + footDepthJitter);
   P.footR.setZ(P.footR.z() - footDepthJitter);
-
-  P.hipL.setY(P.hipL.y() - legBendVariation);
-  P.hipR.setY(P.hipR.y() - legBendVariation * 0.7f);
 
   P.shoulderL.setY(P.shoulderL.y() + shoulderRotation);
   P.shoulderR.setY(P.shoulderR.y() - shoulderRotation);
@@ -299,16 +290,12 @@ static inline void drawTorso(const DrawContext &p, ISubmitter &out,
 
   float torsoRadius = HP::TORSO_TOP_R;
 
+  // Upper torso
   out.mesh(getUnitCylinder(),
            cylinderBetween(p.model, torsoTop, torsoBot, torsoRadius), C.tunic,
            nullptr, 1.0f);
 
-  QVector3D waist{0.0f, HP::WAIST_Y, 0.0f};
-  QVector3D hipCenter = (P.hipL + P.hipR) * 0.5f;
-
-  out.mesh(getUnitCone(),
-           coneFromTo(p.model, waist, hipCenter, HP::TORSO_BOT_R),
-           C.tunic * 0.9f, nullptr, 1.0f);
+  // (hips removed) — stop torso at waist without flaring to hips
 }
 
 static inline void drawHeadAndNeck(const DrawContext &p, ISubmitter &out,
@@ -376,56 +363,57 @@ static inline void drawArms(const DrawContext &p, ISubmitter &out,
            C.leatherDark * 0.92f, nullptr, 1.0f);
 }
 
+// Simplified legs: 3 parts per leg — thigh, calf, feet. Hips removed.
 static inline void drawLegs(const DrawContext &p, ISubmitter &out,
                             const ArcherPose &P, const ArcherColors &C) {
   using HP = HumanProportions;
 
-  QVector3D kneeL = P.hipL + (P.footL - P.hipL) * 0.48f;
-  QVector3D kneeR = P.hipR + (P.footR - P.hipR) * 0.48f;
-  kneeL.setY(HP::KNEE_Y + 0.05f);
-  kneeR.setY(HP::KNEE_Y + 0.05f);
+  // Derive leg roots directly from waist (slight outward splay on Z)
+  const float legX = HP::SHOULDER_WIDTH * 0.58f * 0.48f; // reuse old spacing heuristics
+  const float splayZ = 0.02f;
+  const QVector3D waistL(-legX, HP::WAIST_Y,  splayZ);
+  const QVector3D waistR( legX, HP::WAIST_Y, -splayZ);
 
-  const float thighTopR = HP::UPPER_LEG_R * 1.05f;
-  const float thighKneeR = HP::UPPER_LEG_R * 0.75f;
-  const float shinTopR = HP::LOWER_LEG_R;
-  const float calfR = HP::LOWER_LEG_R * 1.08f;
-  const float ankleR = HP::LOWER_LEG_R * 0.70f;
-  const float kneeJointR = thighKneeR * 1.20f;
+  // Knee height from proportions (independent of hips)
+  const float kneeY = HP::KNEE_Y;
 
-  out.mesh(getUnitCone(), coneFromTo(p.model, P.hipL, kneeL, thighTopR),
+  auto computeKnee = [&](const QVector3D& root, const QVector3D& foot) {
+    // Place knee along the line root->foot, clamped to kneeY
+    QVector3D dir = foot - root;
+    float t = (kneeY - root.y()) / std::max(1e-4f, dir.y());
+    t = std::clamp(t, 0.25f, 0.75f);
+    QVector3D knee = root + dir * t;
+    knee.setY(kneeY);
+    return knee;
+  };
+
+  QVector3D kneeL = computeKnee(waistL, P.footL);
+  QVector3D kneeR = computeKnee(waistR, P.footR);
+
+  // Radii
+  const float thighR = HP::UPPER_LEG_R;
+  const float calfR  = HP::LOWER_LEG_R;
+  const float footR  = HP::LOWER_LEG_R * 0.80f;
+
+  // 1) Thighs (waist -> knee)
+  out.mesh(getUnitCylinder(), cylinderBetween(p.model, waistL, kneeL, thighR),
            C.leather, nullptr, 1.0f);
-  out.mesh(getUnitCone(), coneFromTo(p.model, P.hipR, kneeR, thighTopR),
+  out.mesh(getUnitCylinder(), cylinderBetween(p.model, waistR, kneeR, thighR),
            C.leather, nullptr, 1.0f);
 
-  out.mesh(getUnitSphere(), sphereAt(p.model, kneeL, kneeJointR),
-           C.leather * 0.95f, nullptr, 1.0f);
-  out.mesh(getUnitSphere(), sphereAt(p.model, kneeR, kneeJointR),
-           C.leather * 0.95f, nullptr, 1.0f);
-
-  QVector3D calfPeakL = kneeL + (P.footL - kneeL) * 0.35f;
-  QVector3D calfPeakR = kneeR + (P.footR - kneeR) * 0.35f;
-
-  out.mesh(getUnitCone(), coneFromTo(p.model, kneeL, calfPeakL, shinTopR),
+  // 2) Calves/Shins (knee -> foot)
+  out.mesh(getUnitCylinder(), cylinderBetween(p.model, kneeL, P.footL, calfR),
            C.leatherDark, nullptr, 1.0f);
-  out.mesh(getUnitCone(), coneFromTo(p.model, kneeR, calfPeakR, shinTopR),
+  out.mesh(getUnitCylinder(), cylinderBetween(p.model, kneeR, P.footR, calfR),
            C.leatherDark, nullptr, 1.0f);
 
-  out.mesh(getUnitSphere(), sphereAt(p.model, calfPeakL, calfR),
-           C.leatherDark * 0.98f, nullptr, 1.0f);
-  out.mesh(getUnitSphere(), sphereAt(p.model, calfPeakR, calfR),
-           C.leatherDark * 0.98f, nullptr, 1.0f);
-
-  out.mesh(getUnitCone(), coneFromTo(p.model, calfPeakL, P.footL, ankleR),
-           C.leatherDark * 0.95f, nullptr, 1.0f);
-  out.mesh(getUnitCone(), coneFromTo(p.model, calfPeakR, P.footR, ankleR),
-           C.leatherDark * 0.95f, nullptr, 1.0f);
-
+  // 3) Feet (short vertical cylinder to suggest contact with ground)
   QVector3D down(0.0f, -0.02f, 0.0f);
   out.mesh(getUnitCylinder(),
-           cylinderBetween(p.model, P.footL, P.footL + down, ankleR * 1.2f),
+           cylinderBetween(p.model, P.footL, P.footL + down, footR),
            C.leatherDark, nullptr, 1.0f);
   out.mesh(getUnitCylinder(),
-           cylinderBetween(p.model, P.footR, P.footR + down, ankleR * 1.2f),
+           cylinderBetween(p.model, P.footR, P.footR + down, footR),
            C.leatherDark, nullptr, 1.0f);
 }
 
@@ -702,8 +690,8 @@ void registerArcherRenderer(Render::GL::EntityRendererRegistry &registry) {
                                  isMoving, isAttacking, isMelee);
 
       drawQuiver(instCtx, out, colors, pose, instSeed);
-      drawLegs(instCtx, out, pose, colors);
-      drawTorso(instCtx, out, colors, pose);
+      drawLegs(instCtx, out, pose, colors);      // simplified legs
+      drawTorso(instCtx, out, colors, pose);     // no hips
       drawArms(instCtx, out, pose, colors);
       drawHeadAndNeck(instCtx, out, pose, colors);
       drawBowAndArrow(instCtx, out, pose, colors);
