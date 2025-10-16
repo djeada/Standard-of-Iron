@@ -21,6 +21,10 @@ QMatrix4x4 coneFromTo(const QVector3D &baseCenter, const QVector3D &apex,
 QMatrix4x4 coneFromTo(const QMatrix4x4 &parent, const QVector3D &baseCenter,
                       const QVector3D &apex, float baseRadius);
 
+QMatrix4x4 capsuleBetween(const QVector3D &a, const QVector3D &b, float radius);
+QMatrix4x4 capsuleBetween(const QMatrix4x4 &parent, const QVector3D &a,
+                          const QVector3D &b, float radius);
+
 inline Render::Math::Mat3x4 cylinderBetweenPOD(const Render::Math::Vec3 &a,
                                                const Render::Math::Vec3 &b,
                                                float radius) {
