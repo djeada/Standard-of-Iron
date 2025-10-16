@@ -28,26 +28,31 @@ float noise(vec2 p) {
   return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
 }
 
-vec3 proceduralMaterialVariation(vec3 baseColor, vec3 worldPos) {
+vec3 proceduralMaterialVariation(vec3 baseColor, vec3 worldPos, vec3 normal) {
   vec2 uv = worldPos.xz * 4.0;
-
-  float n = noise(uv);
 
   float avgColor = (baseColor.r + baseColor.g + baseColor.b) / 3.0;
 
   vec3 variation = baseColor;
-  if (avgColor < 0.25) {
-    float metalNoise = noise(uv * 2.5);
-    variation += vec3(metalNoise * 0.08);
-  } else if (avgColor > 0.7) {
-    float clothNoise = noise(uv * 1.5);
-    variation *= (1.0 + clothNoise * 0.12 - 0.06);
+
+  if (avgColor < 0.30) {
+    float metalNoise = noise(uv * 8.0) * 0.015;
+    float viewAngle = abs(dot(normal, normalize(vec3(0.0, 1.0, 0.5))));
+    float fresnel = pow(1.0 - viewAngle, 2.0) * 0.08;
+    variation = baseColor + vec3(metalNoise + fresnel);
+  } else if (avgColor > 0.65) {
+    float weaveX = sin(worldPos.x * 50.0);
+    float weaveZ = sin(worldPos.z * 50.0);
+    float weavePattern = weaveX * weaveZ * 0.02;
+    float clothNoise = noise(uv * 2.0) * 0.08 - 0.04;
+    variation = baseColor * (1.0 + clothNoise + weavePattern);
   } else {
-    float leatherNoise = noise(uv * 3.0);
-    variation *= (1.0 + leatherNoise * 0.15 - 0.075);
+    float leatherNoise = noise(uv * 5.0);
+    float blotches = noise(uv * 1.5) * 0.1 - 0.05;
+    variation = baseColor * (1.0 + leatherNoise * 0.12 - 0.06 + blotches);
   }
 
-  return variation;
+  return clamp(variation, 0.0, 1.0);
 }
 
 void main() {
@@ -56,9 +61,9 @@ void main() {
     color *= texture(u_texture, v_texCoord).rgb;
   }
 
-  color = proceduralMaterialVariation(color, v_worldPos);
-
   vec3 normal = normalize(v_normal);
+  color = proceduralMaterialVariation(color, v_worldPos, normal);
+
   vec3 lightDir = normalize(vec3(1.0, 1.0, 1.0));
   float diff = max(dot(normal, lightDir), 0.2);
   color *= diff;
