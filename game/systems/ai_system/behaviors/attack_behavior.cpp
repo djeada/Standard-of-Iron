@@ -153,20 +153,41 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
           std::vector<Engine::Core::EntityID> unitIds;
           std::vector<float> targetX, targetY, targetZ;
 
+          // Check if we have archers that are already in range
+          // Don't move archers that can already attack
+          const float ARCHER_PREFERRED_RANGE = 5.5f;
+          
           for (const auto *unit : readyUnits) {
-            unitIds.push_back(unit->id);
-            targetX.push_back(attackPosX);
-            targetY.push_back(0.0f);
-            targetZ.push_back(attackPosZ);
+            bool shouldMove = true;
+            
+            // If this is an archer, check if it's already in attack range
+            if (unit->unitType == "archer") {
+              float distToTarget = distance(unit->posX, unit->posY, unit->posZ,
+                                           target->posX, target->posY, target->posZ);
+              if (distToTarget <= ARCHER_PREFERRED_RANGE) {
+                // Archer is already in range, don't issue move command
+                shouldMove = false;
+              }
+            }
+            
+            if (shouldMove) {
+              unitIds.push_back(unit->id);
+              targetX.push_back(attackPosX);
+              targetY.push_back(0.0f);
+              targetZ.push_back(attackPosZ);
+            }
           }
 
-          AICommand cmd;
-          cmd.type = AICommandType::MoveUnits;
-          cmd.units = std::move(unitIds);
-          cmd.moveTargetX = std::move(targetX);
-          cmd.moveTargetY = std::move(targetY);
-          cmd.moveTargetZ = std::move(targetZ);
-          outCommands.push_back(cmd);
+          // Only issue move command if we have units that need to move
+          if (!unitIds.empty()) {
+            AICommand cmd;
+            cmd.type = AICommandType::MoveUnits;
+            cmd.units = std::move(unitIds);
+            cmd.moveTargetX = std::move(targetX);
+            cmd.moveTargetY = std::move(targetY);
+            cmd.moveTargetZ = std::move(targetZ);
+            outCommands.push_back(cmd);
+          }
         }
       }
     }
