@@ -13,6 +13,16 @@ Rectangle {
     visible: (typeof game !== 'undefined' && game.victoryState !== "")
     z: 100
 
+    Connections {
+        target: (typeof game !== 'undefined') ? game : null
+        function onVictoryStateChanged() {
+            if (typeof game !== 'undefined' && game.victoryState === "") {
+                showingSummary = false;
+                battleSummary.visible = false;
+            }
+        }
+    }
+
     Rectangle {
         id: initialOverlay
 
