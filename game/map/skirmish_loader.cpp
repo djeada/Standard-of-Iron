@@ -7,8 +7,10 @@
 #include "game/map/visibility_service.h"
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/command_service.h"
+#include "game/systems/global_stats_registry.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/selection_system.h"
+#include "game/systems/troop_count_registry.h"
 #include "game/visuals/team_colors.h"
 #include "render/ground/biome_renderer.h"
 #include "render/ground/fog_renderer.h"
@@ -34,12 +36,7 @@ SkirmishLoader::SkirmishLoader(Engine::Core::World &world,
                                Render::GL::Camera &camera)
     : m_world(world), m_renderer(renderer), m_camera(camera) {}
 
-SkirmishLoadResult SkirmishLoader::start(const QString &mapPath,
-                                         const QVariantList &playerConfigs,
-                                         int selectedPlayerId,
-                                         int &outSelectedPlayerId) {
-  SkirmishLoadResult result;
-
+void SkirmishLoader::resetGameState() {
   if (auto *selectionSystem =
           m_world.getSystem<Game::Systems::SelectionSystem>()) {
     selectionSystem->clearSelection();
@@ -53,6 +50,34 @@ SkirmishLoadResult SkirmishLoader::start(const QString &mapPath,
   m_world.clear();
 
   Game::Systems::BuildingCollisionRegistry::instance().clear();
+
+  auto &ownerRegistry = Game::Systems::OwnerRegistry::instance();
+  ownerRegistry.clear();
+
+  auto &visibilityService = Game::Map::VisibilityService::instance();
+  visibilityService.reset();
+
+  auto &terrainService = Game::Map::TerrainService::instance();
+  terrainService.clear();
+
+  auto &statsRegistry = Game::Systems::GlobalStatsRegistry::instance();
+  statsRegistry.clear();
+
+  auto &troopRegistry = Game::Systems::TroopCountRegistry::instance();
+  troopRegistry.clear();
+
+  if (m_fog) {
+    m_fog->updateMask(0, 0, 1.0f, {});
+  }
+}
+
+SkirmishLoadResult SkirmishLoader::start(const QString &mapPath,
+                                         const QVariantList &playerConfigs,
+                                         int selectedPlayerId,
+                                         int &outSelectedPlayerId) {
+  SkirmishLoadResult result;
+
+  resetGameState();
 
   QSet<int> mapPlayerIds;
   QFile mapFile(mapPath);
@@ -83,7 +108,6 @@ SkirmishLoadResult SkirmishLoader::start(const QString &mapPath,
   }
 
   auto &ownerRegistry = Game::Systems::OwnerRegistry::instance();
-  ownerRegistry.clear();
 
   int playerOwnerId = selectedPlayerId;
 
