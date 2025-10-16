@@ -47,6 +47,7 @@ add_library(game_systems STATIC
     systems/victory_service.cpp
     systems/save_load_service.cpp
     systems/save_storage.cpp
+    systems/game_state_serializer.cpp
     systems/nation_registry.cpp
     systems/formation_system.cpp
     map/map_loader.cpp

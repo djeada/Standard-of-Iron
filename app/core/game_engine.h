@@ -7,6 +7,7 @@
 #include "../utils/movement_utils.h"
 #include "../utils/selection_utils.h"
 #include "game/core/event_manager.h"
+#include "game/systems/game_state_serializer.h"
 #include <QJsonObject>
 #include <QList>
 #include <QMatrix4x4>
@@ -224,15 +225,6 @@ private:
     int width = 0;
     int height = 0;
   };
-  struct LevelState {
-    QString mapPath;
-    QString mapName;
-    Engine::Core::EntityID playerUnitId = 0;
-    float camFov = 45.0f;
-    float camNear = 0.1f;
-    float camFar = 1000.0f;
-    int maxTroopsPerPlayer = 50;
-  };
 
   bool screenToGround(const QPointF &screenPt, QVector3D &outWorld);
   bool worldToScreen(const QVector3D &world, QPointF &outScreen) const;
@@ -244,13 +236,14 @@ private:
   void rebuildEntityCache();
   void rebuildRegistriesAfterLoad();
   void rebuildBuildingCollisions();
-  QJsonObject buildSaveMetadata() const;
-  void applyEnvironmentFromMetadata(const QJsonObject &metadata);
-  QByteArray captureSaveScreenshot() const;
+  void restoreEnvironmentFromMetadata(const QJsonObject &metadata);
   void updateCursor(Qt::CursorShape newCursor);
   void setError(const QString &errorMessage);
   bool loadFromSlot(const QString &slot);
   bool saveToSlot(const QString &slot, const QString &title);
+  Game::Systems::RuntimeSnapshot toRuntimeSnapshot() const;
+  void applyRuntimeSnapshot(const Game::Systems::RuntimeSnapshot &snapshot);
+  QByteArray captureScreenshot() const;
 
   std::unique_ptr<Engine::Core::World> m_world;
   std::unique_ptr<Render::GL::Renderer> m_renderer;
@@ -275,7 +268,7 @@ private:
   RuntimeState m_runtime;
   ViewportState m_viewport;
   bool m_followSelectionEnabled = false;
-  LevelState m_level;
+  Game::Systems::LevelSnapshot m_level;
   QObject *m_selectedUnitsModel = nullptr;
   int m_enemyTroopsDefeated = 0;
   int m_selectedPlayerId = 1;
