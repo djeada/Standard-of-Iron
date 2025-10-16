@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../../game/map/terrain.h"
+#include "../i_render_pass.h"
 #include "grass_gpu.h"
 #include <QVector3D>
 #include <cstdint>
@@ -12,7 +13,7 @@ namespace GL {
 class Buffer;
 class Renderer;
 
-class BiomeRenderer {
+class BiomeRenderer : public IRenderPass {
 public:
   BiomeRenderer();
   ~BiomeRenderer();
@@ -20,7 +21,7 @@ public:
   void configure(const Game::Map::TerrainHeightMap &heightMap,
                  const Game::Map::BiomeSettings &biomeSettings);
 
-  void submit(Renderer &renderer);
+  void submit(Renderer &renderer, ResourceManager *resources) override;
 
   void refreshGrass();
 
