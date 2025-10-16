@@ -366,6 +366,7 @@ static inline void drawArms(const DrawContext &p, ISubmitter &out,
            C.leatherDark * 0.92f, nullptr, 1.0f);
 }
 
+// Simplified legs: 3 parts per leg — thigh, calf, feet. Hips removed.
 static inline void drawLegs(const DrawContext &p, ISubmitter &out,
                             const ArcherPose &P, const ArcherColors &C) {
   using HP = HumanProportions;

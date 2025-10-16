@@ -13,6 +13,8 @@ public:
 
   void initialize(const MapDefinition &mapDef);
 
+  void clear();
+
   float getTerrainHeight(float worldX, float worldZ) const;
 
   float getTerrainHeightGrid(int gridX, int gridZ) const;
