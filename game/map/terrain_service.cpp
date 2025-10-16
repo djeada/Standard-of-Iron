@@ -20,6 +20,11 @@ void TerrainService::initialize(const MapDefinition &mapDef) {
   m_heightMap->applyBiomeVariation(m_biomeSettings);
 }
 
+void TerrainService::clear() {
+  m_heightMap.reset();
+  m_biomeSettings = BiomeSettings();
+}
+
 float TerrainService::getTerrainHeight(float worldX, float worldZ) const {
   if (!m_heightMap)
     return 0.0f;
