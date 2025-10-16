@@ -686,8 +686,27 @@ void CommandService::attackTarget(
     attackTarget->targetId = targetId;
     attackTarget->shouldChase = shouldChase;
 
-    if (!shouldChase)
+    if (!shouldChase) {
+      // Issue halt command - stop any ongoing movement
+      auto *mv = e->getComponent<Engine::Core::MovementComponent>();
+      if (!mv) {
+        mv = e->addComponent<Engine::Core::MovementComponent>();
+      }
+      if (mv) {
+        auto *attTrans = e->getComponent<Engine::Core::TransformComponent>();
+        if (attTrans) {
+          mv->hasTarget = false;
+          mv->vx = 0.0f;
+          mv->vz = 0.0f;
+          mv->path.clear();
+          mv->targetX = attTrans->position.x;
+          mv->targetY = attTrans->position.z;
+          mv->goalX = attTrans->position.x;
+          mv->goalY = attTrans->position.z;
+        }
+      }
       continue;
+    }
 
     auto *targetEnt = world.getEntity(targetId);
     if (!targetEnt)
