@@ -302,6 +302,73 @@ static inline void drawTorso(const DrawContext &p, ISubmitter &out,
            nullptr, 1.0f);
 }
 
+static inline void drawTunicSkirt(const DrawContext &p, ISubmitter &out,
+                                  const ArcherColors &C, const ArcherPose &P,
+                                  float animTime, bool isMoving, uint32_t seed) {
+  using HP = HumanProportions;
+
+  auto hash01 = [](uint32_t x) {
+    x ^= x << 13;
+    x ^= x >> 17;
+    x ^= x << 5;
+    return (x & 0x00FFFFFF) / float(0x01000000);
+  };
+
+  const float waistY = HP::WAIST_Y;
+  const float skirtLength = 0.25f;
+  const float hemY = waistY - skirtLength;
+  const float waistRadius = HP::TORSO_BOT_R * 1.05f;
+  const float hemRadius = HP::TORSO_BOT_R * 1.35f;
+
+  const int segments = 8;
+  const float windStrength = 0.15f;
+  const float swayAmount = 0.04f;
+
+  float characterVelX = isMoving ? std::sin(animTime * 3.0f) * 0.5f : 0.0f;
+  float characterVelZ = isMoving ? std::cos(animTime * 3.0f) * 0.5f : 0.0f;
+
+  float windPhase = animTime * 2.0f;
+  float windX = std::sin(windPhase) * windStrength;
+  float windZ = std::cos(windPhase * 0.7f) * windStrength;
+
+  float swingX = windX - characterVelX * 0.8f;
+  float swingZ = windZ - characterVelZ * 0.8f;
+
+  for (int i = 0; i < segments; ++i) {
+    float angle1 = (i / float(segments)) * 2.0f * 3.14159f;
+    float angle2 = ((i + 1) / float(segments)) * 2.0f * 3.14159f;
+
+    float randomOffset = hash01(seed ^ (i * 7919u)) * 0.02f - 0.01f;
+    float flutter = std::sin(animTime * 8.0f + i * 0.5f) * 0.015f;
+
+    float offsetX = (swingX + flutter + randomOffset) * swayAmount;
+    float offsetZ = (swingZ + flutter + randomOffset) * swayAmount;
+
+    QVector3D waist1(std::cos(angle1) * waistRadius, waistY,
+                     std::sin(angle1) * waistRadius);
+    QVector3D waist2(std::cos(angle2) * waistRadius, waistY,
+                     std::sin(angle2) * waistRadius);
+
+    QVector3D hem1(std::cos(angle1) * hemRadius + offsetX, hemY,
+                   std::sin(angle1) * hemRadius + offsetZ);
+    QVector3D hem2(std::cos(angle2) * hemRadius + offsetX, hemY,
+                   std::sin(angle2) * hemRadius + offsetZ);
+
+    QMatrix4x4 triModel1 = p.model;
+    QMatrix4x4 triModel2 = p.model;
+
+    out.mesh(getUnitCylinder(),
+             Render::Geom::capsuleBetween(p.model, waist1, hem1, 0.015f),
+             C.tunic * 0.92f, nullptr, 1.0f);
+    out.mesh(getUnitCylinder(),
+             Render::Geom::capsuleBetween(p.model, waist2, hem2, 0.015f),
+             C.tunic * 0.92f, nullptr, 1.0f);
+    out.mesh(getUnitCylinder(),
+             Render::Geom::capsuleBetween(p.model, hem1, hem2, 0.018f),
+             C.tunic * 0.88f, nullptr, 1.0f);
+  }
+}
+
 static inline void drawHeadAndNeck(const DrawContext &p, ISubmitter &out,
                                    const ArcherPose &P, const ArcherColors &C) {
   using HP = HumanProportions;
@@ -777,6 +844,8 @@ void registerArcherRenderer(Render::GL::EntityRendererRegistry &registry) {
       drawQuiver(instCtx, out, colors, pose, instSeed);
       drawLegs(instCtx, out, pose, colors);
       drawTorso(instCtx, out, colors, pose);
+      drawTunicSkirt(instCtx, out, colors, pose, p.animationTime + phaseOffset,
+                     isMoving, instSeed);
       drawArms(instCtx, out, pose, colors);
       drawHeadAndNeck(instCtx, out, pose, colors);
       drawBowAndArrow(instCtx, out, pose, colors);
