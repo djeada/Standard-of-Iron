@@ -77,6 +77,7 @@ public:
                            int selectedPlayerId, int &outSelectedPlayerId);
 
 private:
+  void resetGameState();
   Engine::Core::World &m_world;
   Render::GL::Renderer &m_renderer;
   Render::GL::Camera &m_camera;
