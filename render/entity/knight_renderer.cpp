@@ -111,7 +111,7 @@ private:
     
     float shieldHue = hash01(seed ^ 0x12345u);
     if (shieldHue < 0.5f) {
-      e.shieldColor = v.palette.tunic * 1.1f;
+      e.shieldColor = v.palette.cloth * 1.1f;
     } else {
       e.shieldColor = v.palette.leather * 1.3f;
     }
