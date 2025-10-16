@@ -246,13 +246,64 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
             if (isInRange(attacker, target, range)) {
               bestTarget = target;
               
-              // Stop any movement for ranged units
-              auto *movement =
-                  attacker->getComponent<Engine::Core::MovementComponent>();
-              if (movement) {
-                auto *attackerTransformComponent =
-                    attacker->getComponent<Engine::Core::TransformComponent>();
-                if (attackerTransformComponent) {
+              // For ranged units, check if target is too close
+              auto *attackerTransformComponent =
+                  attacker->getComponent<Engine::Core::TransformComponent>();
+              auto *targetTransform =
+                  target->getComponent<Engine::Core::TransformComponent>();
+              
+              if (attackerTransformComponent && targetTransform && attackerAtk &&
+                  attackerAtk->canRanged) {
+                float dx = targetTransform->position.x -
+                           attackerTransformComponent->position.x;
+                float dz = targetTransform->position.z -
+                           attackerTransformComponent->position.z;
+                float distToTarget = std::sqrt(dx * dx + dz * dz);
+                
+                // If enemy is too close (within melee range + buffer), back away
+                const float MIN_SAFE_DISTANCE = attackerAtk->meleeRange + 1.0f;
+                if (distToTarget < MIN_SAFE_DISTANCE) {
+                  // Calculate retreat position: move away from target
+                  float retreatDist = MIN_SAFE_DISTANCE - distToTarget + 1.5f;
+                  if (distToTarget > 0.001f) {
+                    QVector3D directionAway(-dx / distToTarget, 0.0f,
+                                            -dz / distToTarget);
+                    QVector3D retreatPos(
+                        attackerTransformComponent->position.x +
+                            directionAway.x() * retreatDist,
+                        0.0f, attackerTransformComponent->position.z +
+                                  directionAway.z() * retreatDist);
+                    
+                    // Issue retreat movement
+                    CommandService::MoveOptions options;
+                    options.clearAttackIntent = false;
+                    options.allowDirectFallback = true;
+                    std::vector<Engine::Core::EntityID> unitIds = {
+                        attacker->getId()};
+                    std::vector<QVector3D> moveTargets = {retreatPos};
+                    CommandService::moveUnits(*world, unitIds, moveTargets,
+                                              options);
+                  }
+                } else {
+                  // Target is at good distance, stop any movement
+                  auto *movement =
+                      attacker->getComponent<Engine::Core::MovementComponent>();
+                  if (movement) {
+                    movement->hasTarget = false;
+                    movement->vx = 0.0f;
+                    movement->vz = 0.0f;
+                    movement->path.clear();
+                    movement->targetX = attackerTransformComponent->position.x;
+                    movement->targetY = attackerTransformComponent->position.z;
+                    movement->goalX = attackerTransformComponent->position.x;
+                    movement->goalY = attackerTransformComponent->position.z;
+                  }
+                }
+              } else {
+                // Not a ranged unit or missing components, just stop movement
+                auto *movement =
+                    attacker->getComponent<Engine::Core::MovementComponent>();
+                if (movement && attackerTransformComponent) {
                   movement->hasTarget = false;
                   movement->vx = 0.0f;
                   movement->vz = 0.0f;
