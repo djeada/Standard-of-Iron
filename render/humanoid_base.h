@@ -56,10 +56,8 @@ public:
                              const AnimationInputs &anim, uint32_t seed,
                              HumanoidPose &ioPose) const;
 
-  virtual void addAttachments(const DrawContext &ctx,
-                              const HumanoidVariant &v,
-                              const HumanoidPose &pose,
-                              ISubmitter &out) const;
+  virtual void addAttachments(const DrawContext &ctx, const HumanoidVariant &v,
+                              const HumanoidPose &pose, ISubmitter &out) const;
 
   void render(const DrawContext &ctx, ISubmitter &out) const;
 
