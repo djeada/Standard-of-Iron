@@ -45,7 +45,11 @@ vec3 proceduralMaterialVariation(vec3 baseColor, vec3 worldPos, vec3 normal) {
     float weaveZ = sin(worldPos.z * 50.0);
     float weavePattern = weaveX * weaveZ * 0.02;
     float clothNoise = noise(uv * 2.0) * 0.08 - 0.04;
-    variation = baseColor * (1.0 + clothNoise + weavePattern);
+
+    float viewAngle = abs(dot(normal, normalize(vec3(0.0, 1.0, 0.5))));
+    float sheen = pow(1.0 - viewAngle, 3.0) * 0.12;
+
+    variation = baseColor * (1.0 + clothNoise + weavePattern) + vec3(sheen);
   } else {
     float leatherNoise = noise(uv * 5.0);
     float blotches = noise(uv * 1.5) * 0.1 - 0.05;
@@ -65,7 +69,13 @@ void main() {
   color = proceduralMaterialVariation(color, v_worldPos, normal);
 
   vec3 lightDir = normalize(vec3(1.0, 1.0, 1.0));
-  float diff = max(dot(normal, lightDir), 0.2);
+
+  float avgColor = (u_color.r + u_color.g + u_color.b) / 3.0;
+  float wrapAmount = avgColor > 0.65 ? 0.5 : 0.0;
+
+  float nDotL = dot(normal, lightDir);
+  float diff = max(nDotL * (1.0 - wrapAmount) + wrapAmount, 0.2);
+
   color *= diff;
   FragColor = vec4(color, u_alpha);
 }
