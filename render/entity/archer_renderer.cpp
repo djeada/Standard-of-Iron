@@ -269,12 +269,22 @@ static inline ArcherColors makeColors(const QVector3D &teamTint,
   C.skin = QVector3D(0.96f, 0.80f, 0.69f);
 
   float leatherVar = (hash01(seed ^ 0x1234u) - 0.5f) * 0.06f;
-  C.leather = clampVec01(QVector3D(0.35f, 0.22f, 0.12f) * (1.0f + leatherVar));
-  C.leatherDark = C.leather * 0.88f;
+  float r = teamTint.x();
+  float g = teamTint.y();
+  float b = teamTint.z();
+  float saturation = 0.6f;
+  float brightness = 0.5f;
+  QVector3D desaturated(r * saturation + (1.0f - saturation) * brightness,
+                        g * saturation + (1.0f - saturation) * brightness,
+                        b * saturation + (1.0f - saturation) * brightness);
+  C.leather = clampVec01(desaturated * (0.7f + leatherVar));
+  C.leatherDark = C.leather * 0.85f;
 
   C.wood = QVector3D(0.16f, 0.10f, 0.05f);
-  C.metal = QVector3D(0.65f, 0.66f, 0.70f);
-  C.metalHead = clampVec01(C.metal * 1.1f);
+
+  QVector3D neutralGray(0.70f, 0.70f, 0.70f);
+  C.metal = clampVec01(teamTint * 0.25f + neutralGray * 0.75f);
+  C.metalHead = clampVec01(C.metal * 1.15f);
   C.stringCol = QVector3D(0.30f, 0.30f, 0.32f);
   C.fletch = tint(0.9f);
   return C;
