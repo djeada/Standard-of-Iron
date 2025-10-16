@@ -327,13 +327,16 @@ Rectangle {
                         }
 
                         Rectangle {
+                            property int queueTotal: (unitGridContent.prod.inProgress ? 1 : 0) + (unitGridContent.prod.queueSize || 0)
+                            property bool isEnabled: unitGridContent.prod.hasBarracks && unitGridContent.prod.producedCount < unitGridContent.prod.maxUnits && queueTotal < 5
+
                             width: 110
                             height: 80
                             radius: 6
-                            color: "#1a1a1a"
-                            border.color: "#2a2a2a"
+                            color: isEnabled ? (knightMouseArea.containsMouse ? "#34495e" : "#2c3e50") : "#1a1a1a"
+                            border.color: isEnabled ? "#4a6572" : "#2a2a2a"
                             border.width: 2
-                            opacity: 0.3
+                            opacity: isEnabled ? 1 : 0.5
 
                             Column {
                                 anchors.centerIn: parent
@@ -341,18 +344,58 @@ Rectangle {
 
                                 Text {
                                     anchors.horizontalCenter: parent.horizontalCenter
-                                    text: "🔒"
-                                    color: "#3a3a3a"
+                                    text: (typeof Theme !== 'undefined' && Theme.unitIcons) ? Theme.unitIcons["knight"] || "⚔️" : "⚔️"
+                                    color: parent.parent.parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
                                     font.pointSize: 24
                                 }
 
                                 Text {
                                     anchors.horizontalCenter: parent.horizontalCenter
-                                    text: "Locked"
-                                    color: "#3a3a3a"
-                                    font.pointSize: 9
+                                    text: "Knight"
+                                    color: parent.parent.parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
+                                    font.pointSize: 10
+                                    font.bold: true
                                 }
 
+                                Row {
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    spacing: 4
+
+                                    Text {
+                                        text: "👥"
+                                        color: parent.parent.parent.parent.isEnabled ? "#f39c12" : "#5a5a5a"
+                                        font.pointSize: 9
+                                    }
+
+                                    Text {
+                                        text: unitGridContent.prod.villagerCost || 1
+                                        color: parent.parent.parent.parent.isEnabled ? "#f39c12" : "#5a5a5a"
+                                        font.pointSize: 9
+                                        font.bold: true
+                                    }
+
+                                }
+
+                            }
+
+                            MouseArea {
+                                id: knightMouseArea
+
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                enabled: parent.isEnabled
+                                onClicked: productionPanel.recruitUnit("knight")
+                                cursorShape: parent.isEnabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
+                                ToolTip.visible: containsMouse
+                                ToolTip.text: parent.isEnabled ? "Recruit Knight\nCost: " + (unitGridContent.prod.villagerCost || 1) + " villagers\nBuild time: " + (unitGridContent.prod.buildTime || 0).toFixed(0) + "s" : (parent.queueTotal >= 5 ? "Queue is full (5/5)" : (unitGridContent.prod.producedCount >= unitGridContent.prod.maxUnits ? "Unit cap reached" : "Cannot recruit"))
+                                ToolTip.delay: 300
+                            }
+
+                            Rectangle {
+                                anchors.fill: parent
+                                color: "#ffffff"
+                                opacity: knightMouseArea.pressed ? 0.2 : 0
+                                radius: parent.radius
                             }
 
                         }
