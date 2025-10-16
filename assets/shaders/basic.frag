@@ -30,11 +30,11 @@ float noise(vec2 p) {
 
 vec3 proceduralMaterialVariation(vec3 baseColor, vec3 worldPos) {
   vec2 uv = worldPos.xz * 4.0;
-  
+
   float n = noise(uv);
-  
+
   float avgColor = (baseColor.r + baseColor.g + baseColor.b) / 3.0;
-  
+
   vec3 variation = baseColor;
   if (avgColor < 0.25) {
     float metalNoise = noise(uv * 2.5);
@@ -46,7 +46,7 @@ vec3 proceduralMaterialVariation(vec3 baseColor, vec3 worldPos) {
     float leatherNoise = noise(uv * 3.0);
     variation *= (1.0 + leatherNoise * 0.15 - 0.075);
   }
-  
+
   return variation;
 }
 
@@ -55,9 +55,9 @@ void main() {
   if (u_useTexture) {
     color *= texture(u_texture, v_texCoord).rgb;
   }
-  
+
   color = proceduralMaterialVariation(color, v_worldPos);
-  
+
   vec3 normal = normalize(v_normal);
   vec3 lightDir = normalize(vec3(1.0, 1.0, 1.0));
   float diff = max(dot(normal, lightDir), 0.2);
