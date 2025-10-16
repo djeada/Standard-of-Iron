@@ -29,12 +29,14 @@ A modern real-time strategy (RTS) game built with C++20, Qt 6, and OpenGL 3.3 Co
 
 ### Visual Systems
 - **3D Rendering**: OpenGL-based rendering with custom shaders
-- **Unit Visuals**: Distinct archer models with team-colored details
+- **Unit Visuals**: Distinct archer models with team-colored details and dynamic cloth simulation
+- **Cloth Physics**: Real-time tunic skirt simulation with wind, movement response, and leg collision
 - **Building Visuals**: Detailed barracks with banners and production indicators
 - **Health Bars**: Visible health for all units and buildings
 - **Flag Markers**: Rally points (yellow) and patrol waypoints (green)
 - **Arrow VFX**: Animated arrow projectiles with arcing trajectories
 - **Terrain Grid**: Optional grid overlay for tactical planning
+- **Material Shading**: View-dependent sheen effects and wrap diffuse lighting for fabric
 
 ### Camera System
 - **Free Movement**: WASD or arrow keys to pan camera
