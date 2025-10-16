@@ -29,11 +29,13 @@ MapTransformer::getFactoryRegistry() {
 }
 
 void MapTransformer::setLocalOwnerId(int ownerId) {
-  Game::Systems::OwnerRegistry::instance().setLocalPlayerId(ownerId);
+  auto &owners = Game::Systems::OwnerRegistry::instance();
+  owners.setLocalPlayerId(ownerId);
 }
 
 int MapTransformer::localOwnerId() {
-  return Game::Systems::OwnerRegistry::instance().getLocalPlayerId();
+  auto &owners = Game::Systems::OwnerRegistry::instance();
+  return owners.getLocalPlayerId();
 }
 
 void MapTransformer::setPlayerTeamOverrides(
@@ -144,8 +146,7 @@ MapTransformer::applyToWorld(const MapDefinition &def,
       sp.position = QVector3D(worldX, 0.0f, worldZ);
       sp.playerId = s.playerId;
       sp.unitType = s.type.toStdString();
-      sp.aiControlled =
-          !Game::Systems::OwnerRegistry::instance().isPlayer(s.playerId);
+      sp.aiControlled = !ownerRegistry.isPlayer(s.playerId);
       sp.maxPopulation = s.maxPopulation;
       auto obj = s_registry->create(s.type.toStdString(), world, sp);
       if (obj) {
@@ -168,8 +169,7 @@ MapTransformer::applyToWorld(const MapDefinition &def,
       u->ownerId = s.playerId;
       u->visionRange = 14.0f;
 
-      bool isAI =
-          !Game::Systems::OwnerRegistry::instance().isPlayer(s.playerId);
+      bool isAI = !ownerRegistry.isPlayer(s.playerId);
       if (isAI) {
         e->addComponent<Engine::Core::AIControlledComponent>();
       } else {

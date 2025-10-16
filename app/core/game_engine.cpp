@@ -912,7 +912,8 @@ void GameEngine::startSkirmish(const QString &mapPath,
     }
 
     rebuildEntityCache();
-    Game::Systems::TroopCountRegistry::instance().rebuildFromWorld(*m_world);
+    auto &troops = Game::Systems::TroopCountRegistry::instance();
+    troops.rebuildFromWorld(*m_world);
 
     auto &statsRegistry = Game::Systems::GlobalStatsRegistry::instance();
     statsRegistry.rebuildFromWorld(*m_world);
@@ -1091,6 +1092,8 @@ bool GameEngine::getUnitInfo(Engine::Core::EntityID id, QString &name,
 }
 
 void GameEngine::onUnitSpawned(const Engine::Core::UnitSpawnedEvent &event) {
+  auto &owners = Game::Systems::OwnerRegistry::instance();
+
   if (event.ownerId == m_runtime.localOwnerId) {
     if (event.unitType == "barracks") {
       m_entityCache.playerBarracksAlive = true;
@@ -1100,7 +1103,7 @@ void GameEngine::onUnitSpawned(const Engine::Core::UnitSpawnedEvent &event) {
               event.unitType);
       m_entityCache.playerTroopCount += individualsPerUnit;
     }
-  } else if (Game::Systems::OwnerRegistry::instance().isAI(event.ownerId)) {
+  } else if (owners.isAI(event.ownerId)) {
     if (event.unitType == "barracks") {
       m_entityCache.enemyBarracksCount++;
       m_entityCache.enemyBarracksAlive = true;
@@ -1109,6 +1112,8 @@ void GameEngine::onUnitSpawned(const Engine::Core::UnitSpawnedEvent &event) {
 }
 
 void GameEngine::onUnitDied(const Engine::Core::UnitDiedEvent &event) {
+  auto &owners = Game::Systems::OwnerRegistry::instance();
+
   if (event.ownerId == m_runtime.localOwnerId) {
     if (event.unitType == "barracks") {
       m_entityCache.playerBarracksAlive = false;
@@ -1120,7 +1125,7 @@ void GameEngine::onUnitDied(const Engine::Core::UnitDiedEvent &event) {
       m_entityCache.playerTroopCount =
           std::max(0, m_entityCache.playerTroopCount);
     }
-  } else if (Game::Systems::OwnerRegistry::instance().isAI(event.ownerId)) {
+  } else if (owners.isAI(event.ownerId)) {
     if (event.unitType == "barracks") {
       m_entityCache.enemyBarracksCount--;
       m_entityCache.enemyBarracksCount =
@@ -1138,6 +1143,7 @@ void GameEngine::rebuildEntityCache() {
 
   m_entityCache.reset();
 
+  auto &owners = Game::Systems::OwnerRegistry::instance();
   auto entities = m_world->getEntitiesWith<Engine::Core::UnitComponent>();
   for (auto *e : entities) {
     auto *unit = e->getComponent<Engine::Core::UnitComponent>();
@@ -1153,7 +1159,7 @@ void GameEngine::rebuildEntityCache() {
                 unit->unitType);
         m_entityCache.playerTroopCount += individualsPerUnit;
       }
-    } else if (Game::Systems::OwnerRegistry::instance().isAI(unit->ownerId)) {
+    } else if (owners.isAI(unit->ownerId)) {
       if (unit->unitType == "barracks") {
         m_entityCache.enemyBarracksCount++;
         m_entityCache.enemyBarracksAlive = true;
@@ -1169,7 +1175,8 @@ void GameEngine::rebuildRegistriesAfterLoad() {
   auto &ownerRegistry = Game::Systems::OwnerRegistry::instance();
   m_runtime.localOwnerId = ownerRegistry.getLocalPlayerId();
 
-  Game::Systems::TroopCountRegistry::instance().rebuildFromWorld(*m_world);
+  auto &troops = Game::Systems::TroopCountRegistry::instance();
+  troops.rebuildFromWorld(*m_world);
 
   auto &statsRegistry = Game::Systems::GlobalStatsRegistry::instance();
   statsRegistry.rebuildFromWorld(*m_world);
