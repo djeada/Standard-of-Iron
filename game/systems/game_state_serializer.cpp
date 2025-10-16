@@ -5,12 +5,6 @@
 #include "game/map/terrain_service.h"
 #include "render/gl/camera.h"
 
-#include <QBuffer>
-#include <QDebug>
-#include <QImage>
-#include <QQuickWindow>
-#include <QSize>
-
 namespace Game {
 namespace Systems {
 
@@ -150,33 +144,6 @@ void GameStateSerializer::restoreLevelFromMetadata(const QJsonObject &metadata,
   }
   level.maxTroopsPerPlayer = maxTroops;
   Game::GameConfig::instance().setMaxTroopsPerPlayer(maxTroops);
-}
-
-QByteArray GameStateSerializer::captureScreenshot(QQuickWindow *window) {
-  if (!window) {
-    return {};
-  }
-
-  QImage image = window->grabWindow();
-  if (image.isNull()) {
-    return {};
-  }
-
-  const QSize targetSize(320, 180);
-  QImage scaled =
-      image.scaled(targetSize, Qt::KeepAspectRatio, Qt::SmoothTransformation);
-
-  QByteArray buffer;
-  QBuffer qBuffer(&buffer);
-  if (!qBuffer.open(QIODevice::WriteOnly)) {
-    return {};
-  }
-
-  if (!scaled.save(&qBuffer, "PNG")) {
-    return {};
-  }
-
-  return buffer;
 }
 
 } // namespace Systems

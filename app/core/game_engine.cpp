@@ -962,8 +962,7 @@ bool GameEngine::saveToSlot(const QString &slot, const QString &title) {
   QJsonObject meta = Game::Systems::GameStateSerializer::buildMetadata(
       *m_world, m_camera.get(), m_level, runtimeSnap);
   meta["title"] = title;
-  const QByteArray screenshot =
-      Game::Systems::GameStateSerializer::captureScreenshot(m_window);
+  const QByteArray screenshot = captureScreenshot();
   if (!m_saveLoadService->saveGameToSlot(*m_world, slot, title, m_level.mapName,
                                          meta, screenshot)) {
     setError(m_saveLoadService->getLastError());
@@ -1271,6 +1270,33 @@ void GameEngine::applyRuntimeSnapshot(
                                        m_followSelectionEnabled);
     }
   }
+}
+
+QByteArray GameEngine::captureScreenshot() const {
+  if (!m_window) {
+    return {};
+  }
+
+  QImage image = m_window->grabWindow();
+  if (image.isNull()) {
+    return {};
+  }
+
+  const QSize targetSize(320, 180);
+  QImage scaled =
+      image.scaled(targetSize, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+
+  QByteArray buffer;
+  QBuffer qBuffer(&buffer);
+  if (!qBuffer.open(QIODevice::WriteOnly)) {
+    return {};
+  }
+
+  if (!scaled.save(&qBuffer, "PNG")) {
+    return {};
+  }
+
+  return buffer;
 }
 
 void GameEngine::restoreEnvironmentFromMetadata(const QJsonObject &metadata) {
