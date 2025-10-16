@@ -203,6 +203,9 @@ void Renderer::renderWorld(Engine::Core::World *world) {
 
   std::lock_guard<std::mutex> guard(m_worldMutex);
 
+  auto &vis = Game::Map::VisibilityService::instance();
+  const bool visibilityEnabled = vis.isInitialized();
+
   auto renderableEntities =
       world->getEntitiesWith<Engine::Core::RenderableComponent>();
 
@@ -216,8 +219,7 @@ void Renderer::renderWorld(Engine::Core::World *world) {
 
     auto *unitComp = entity->getComponent<Engine::Core::UnitComponent>();
     if (unitComp && unitComp->ownerId != m_localOwnerId) {
-      auto &vis = Game::Map::VisibilityService::instance();
-      if (vis.isInitialized()) {
+      if (visibilityEnabled) {
         if (!vis.isVisibleWorld(transform->position.x, transform->position.z)) {
           continue;
         }
