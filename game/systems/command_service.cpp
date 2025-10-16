@@ -226,6 +226,8 @@ void CommandService::moveUnits(Engine::Core::World &world,
         mv->targetY = targetZ;
         mv->hasTarget = true;
         mv->path.clear();
+        mv->vx = 0.0f;
+        mv->vz = 0.0f;
         mv->pathPending = false;
         mv->pendingRequestId = 0;
         clearPendingRequest(units[i]);
