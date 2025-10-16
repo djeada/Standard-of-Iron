@@ -48,6 +48,7 @@ QVariantList Theme::factions() const {
 QVariantMap Theme::unitIcons() const {
   QVariantMap icons;
   icons["archer"] = "🏹";
+  icons["knight"] = "⚔️";
   icons["warrior"] = "⚔️";
   icons["spearman"] = "🗡️";
   icons["cavalry"] = "🐎";
