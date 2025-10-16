@@ -85,7 +85,7 @@ public:
       QVector3D restPos(0.20f, HP::SHOULDER_Y + 0.05f, 0.15f);
       QVector3D preparePos(0.26f, HP::HEAD_TOP_Y + 0.18f, -0.06f); // higher & slightly back
       QVector3D raisedPos(0.25f, HP::HEAD_TOP_Y + 0.22f, 0.02f);
-      QVector3D strikePos(0.30f, HP::WAIST_Y - 0.1f, 0.50f);        // lower: top-to-bottom swing
+      QVector3D strikePos(0.30f, HP::WAIST_Y - 0.05f, 0.50f);      // lower: top-to-bottom swing
       QVector3D recoverPos(0.22f, HP::SHOULDER_Y + 0.02f, 0.22f);
 
       if (attackPhase < 0.18f) {
@@ -166,8 +166,8 @@ private:
       e.shieldColor = e.metalColor * 0.95f;
     }
 
-    // Weapon & shield dimensions with small individual variance
-    e.swordLength   = 0.65f + (hash01(seed ^ 0xABCDu) - 0.5f) * 0.10f;
+    // Make swords longer overall with slight variance
+    e.swordLength   = 0.80f + (hash01(seed ^ 0xABCDu) - 0.5f) * 0.16f; // ~0.72..0.88
     e.swordWidth    = 0.043f + (hash01(seed ^ 0x7777u) - 0.5f) * 0.008f;
     e.shieldRadius  = 0.16f + (hash01(seed ^ 0xDEF0u) - 0.5f) * 0.04f;
 
@@ -289,7 +289,7 @@ private:
                               const QVector3D & /*baseColor*/,
                               const HumanoidVariant &v,
                               ISubmitter &out) {
-    // Two optional styles: cross; color keyed to team cloth
+    // Simple heraldic cross decal; color keyed to team cloth
     QVector3D accent = v.palette.cloth * 1.2f;
     float barR = radius * 0.10f;
 
@@ -328,40 +328,29 @@ private:
   static void drawShield(const DrawContext &ctx, const HumanoidPose &pose,
                          const HumanoidVariant &v, const KnightExtras &extras,
                          ISubmitter &out) {
-    // Slight tilt to face incoming blows
+    // Position
     QVector3D shieldCenter = pose.handL + QVector3D(0.0f, -0.05f, 0.05f);
-    float tiltDeg = 12.0f;
 
-    float shieldHalfDepth = 0.035f;
-    QVector3D localZ(0.0f, 0.0f, 1.0f);
+    // Make the shield body as thin as possible (essentially a disc)
+    const float paperThin = 0.0006f; // near-zero thickness
+    const float halfThin  = paperThin;
 
-    // Front & back discs with tilt
+    // Front & back "discs" (ultra-thin cylinders), no dome
     QMatrix4x4 frontMat = ctx.model;
-    frontMat.translate(shieldCenter + localZ * shieldHalfDepth);
-    frontMat.rotate(tiltDeg, 1.0f, 0.0f, 0.0f);
-    frontMat.scale(extras.shieldRadius, extras.shieldRadius, 0.010f);
+    frontMat.translate(shieldCenter + QVector3D(0.0f, 0.0f, halfThin));
+    frontMat.scale(extras.shieldRadius, extras.shieldRadius, paperThin);
     out.mesh(getUnitCylinder(), frontMat, extras.shieldColor, nullptr, 1.0f);
 
     QMatrix4x4 backMat = ctx.model;
-    backMat.translate(shieldCenter - localZ * shieldHalfDepth);
-    backMat.rotate(tiltDeg, 1.0f, 0.0f, 0.0f);
-    backMat.scale(extras.shieldRadius * 0.98f, extras.shieldRadius * 0.98f, 0.010f);
+    backMat.translate(shieldCenter - QVector3D(0.0f, 0.0f, halfThin));
+    backMat.scale(extras.shieldRadius * 0.985f, extras.shieldRadius * 0.985f, paperThin);
     out.mesh(getUnitCylinder(), backMat, v.palette.leather * 0.8f, nullptr, 1.0f);
 
-    // Domed suggestion: shallow cone from center outward (single-radius cone)
-    QVector3D domeA = shieldCenter + QVector3D(0.0f, 0.0f, 0.012f);
-    out.mesh(getUnitCone(),
-             coneFromTo(ctx.model,
-                        domeA,                                                 // base center (front)
-                        shieldCenter + QVector3D(0.0f, 0.0f, -0.002f),        // apex (toward back)
-                        extras.shieldRadius * 0.96f),                          // base radius
-             extras.shieldColor * 0.98f, nullptr, 1.0f);
+    // Thin metal rim (keep, but it reads slimmer)
+    drawShieldRing(ctx, shieldCenter, extras.shieldRadius, 0.010f, (extras.metalColor * 0.95f), out);
 
-    // Thick metal rim (segmented circle)
-    drawShieldRing(ctx, shieldCenter, extras.shieldRadius, 0.012f, (extras.metalColor * 0.95f), out);
-
-    // Decorative inner ring
-    drawShieldRing(ctx, shieldCenter, extras.shieldRadius * 0.70f, 0.008f, v.palette.leather * 0.9f, out);
+    // Decorative inner ring (slim)
+    drawShieldRing(ctx, shieldCenter, extras.shieldRadius * 0.72f, 0.006f, v.palette.leather * 0.9f, out);
 
     // Boss
     QMatrix4x4 bossMat = ctx.model;
@@ -376,8 +365,8 @@ private:
 
     // Optional heraldic cross on shield front
     if (extras.shieldCrossDecal && (extras.shieldColor != extras.metalColor)) {
-      drawShieldDecal(ctx, shieldCenter + QVector3D(0.0f, 0.0f, 0.011f), extras.shieldRadius * 0.85f,
-                      extras.shieldColor, v, out);
+      drawShieldDecal(ctx, shieldCenter + QVector3D(0.0f, 0.0f, paperThin + 0.001f),
+                      extras.shieldRadius * 0.85f, extras.shieldColor, v, out);
     }
   }
 
