@@ -173,6 +173,9 @@ GameEngine::GameEngine() {
           &Game::Systems::SelectionController::selectionChanged, this,
           &GameEngine::selectedUnitsChanged);
   connect(m_selectionController.get(),
+          &Game::Systems::SelectionController::selectionChanged, this,
+          &GameEngine::syncSelectionFlags);
+  connect(m_selectionController.get(),
           &Game::Systems::SelectionController::selectionModelRefreshRequested,
           this, &GameEngine::selectedUnitsDataChanged);
   connect(m_commandController.get(),
@@ -500,7 +503,6 @@ void GameEngine::update(float dt) {
       }
     }
   }
-  syncSelectionFlags();
 
   if (m_victoryService && m_world) {
     m_victoryService->update(*m_world, dt);
@@ -1128,6 +1130,8 @@ void GameEngine::onUnitDied(const Engine::Core::UnitDiedEvent &event) {
       m_entityCache.enemyBarracksAlive = (m_entityCache.enemyBarracksCount > 0);
     }
   }
+
+  syncSelectionFlags();
 
   auto emitIfChanged = [&] {
     if (m_entityCache.playerTroopCount != m_runtime.lastTroopCount) {
