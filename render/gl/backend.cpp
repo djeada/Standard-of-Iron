@@ -10,8 +10,10 @@
 #include "texture.h"
 #include <QDebug>
 #include <algorithm>
+#include <cmath>
 #include <cstddef>
 #include <memory>
+#include <vector>
 
 namespace Render::GL {
 
@@ -25,6 +27,7 @@ Backend::~Backend() {
   shutdownFogPipeline();
   shutdownGrassPipeline();
   shutdownStonePipeline();
+  shutdownPlantPipeline();
 }
 
 void Backend::initialize() {
@@ -50,6 +53,8 @@ void Backend::initialize() {
   m_fogShader = m_shaderCache->get(QStringLiteral("fog_instanced"));
   m_grassShader = m_shaderCache->get(QStringLiteral("grass_instanced"));
   m_stoneShader = m_shaderCache->get(QStringLiteral("stone_instanced"));
+  m_plantShader = m_shaderCache->get(QStringLiteral("plant_instanced"));
+  m_pineShader = m_shaderCache->get(QStringLiteral("pine_instanced"));
   m_groundShader = m_shaderCache->get(QStringLiteral("ground_plane"));
   m_terrainShader = m_shaderCache->get(QStringLiteral("terrain_chunk"));
   m_archerShader = m_shaderCache->get(QStringLiteral("archer"));
@@ -66,6 +71,10 @@ void Backend::initialize() {
     qWarning() << "Backend: grass shader missing";
   if (!m_stoneShader)
     qWarning() << "Backend: stone shader missing";
+  if (!m_plantShader)
+    qWarning() << "Backend: plant shader missing - check plant_instanced.vert/frag";
+  if (!m_pineShader)
+    qWarning() << "Backend: pine shader missing - check pine_instanced.vert/frag";
   if (!m_groundShader)
     qWarning() << "Backend: ground_plane shader missing";
   if (!m_terrainShader)
@@ -83,12 +92,16 @@ void Backend::initialize() {
   cacheFogUniforms();
   cacheGrassUniforms();
   cacheStoneUniforms();
+  cachePlantUniforms();
+  cachePineUniforms();
   cacheGroundUniforms();
   cacheTerrainUniforms();
   initializeCylinderPipeline();
   initializeFogPipeline();
   initializeGrassPipeline();
   initializeStonePipeline();
+  initializePlantPipeline();
+  initializePinePipeline();
 }
 
 void Backend::beginFrame() {
@@ -311,6 +324,143 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
                               GL_UNSIGNED_SHORT, nullptr,
                               static_cast<GLsizei>(stone.instanceCount));
       glBindVertexArray(0);
+
+      break;
+    }
+    case PlantBatchCmdIndex: {
+      const auto &plant = std::get<PlantBatchCmdIndex>(cmd);
+      
+      if (!plant.instanceBuffer || plant.instanceCount == 0 || !m_plantShader ||
+          !m_plantVao || m_plantIndexCount == 0) {
+        break;
+      }
+
+      // IMPORTANT: Plants need depth testing ENABLED to render behind units
+      DepthMaskScope depthMask(false); // Don't write to depth buffer
+      // But still TEST against it
+      glEnable(GL_DEPTH_TEST);
+      BlendScope blend(true);
+      glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+      GLboolean prevCull = glIsEnabled(GL_CULL_FACE);
+      if (prevCull)
+        glDisable(GL_CULL_FACE);
+
+      if (m_lastBoundShader != m_plantShader) {
+        m_plantShader->use();
+        m_lastBoundShader = m_plantShader;
+        m_lastBoundTexture = nullptr;
+      }
+
+      if (m_plantUniforms.viewProj != Shader::InvalidUniform) {
+        m_plantShader->setUniform(m_plantUniforms.viewProj, viewProj);
+      }
+      if (m_plantUniforms.time != Shader::InvalidUniform) {
+        m_plantShader->setUniform(m_plantUniforms.time, plant.params.time);
+      }
+      if (m_plantUniforms.windStrength != Shader::InvalidUniform) {
+        m_plantShader->setUniform(m_plantUniforms.windStrength,
+                                  plant.params.windStrength);
+      }
+      if (m_plantUniforms.windSpeed != Shader::InvalidUniform) {
+        m_plantShader->setUniform(m_plantUniforms.windSpeed,
+                                  plant.params.windSpeed);
+      }
+      if (m_plantUniforms.lightDirection != Shader::InvalidUniform) {
+        QVector3D lightDir = plant.params.lightDirection;
+        if (!lightDir.isNull())
+          lightDir.normalize();
+        m_plantShader->setUniform(m_plantUniforms.lightDirection, lightDir);
+      }
+
+      glBindVertexArray(m_plantVao);
+      plant.instanceBuffer->bind();
+      const GLsizei stride = static_cast<GLsizei>(sizeof(PlantInstanceGpu));
+      glVertexAttribPointer(
+          3, 4, GL_FLOAT, GL_FALSE, stride,
+          reinterpret_cast<void *>(offsetof(PlantInstanceGpu, posScale)));
+      glVertexAttribPointer(
+          4, 4, GL_FLOAT, GL_FALSE, stride,
+          reinterpret_cast<void *>(offsetof(PlantInstanceGpu, colorSway)));
+      glVertexAttribPointer(
+          5, 4, GL_FLOAT, GL_FALSE, stride,
+          reinterpret_cast<void *>(offsetof(PlantInstanceGpu, typeParams)));
+      plant.instanceBuffer->unbind();
+
+      glDrawElementsInstanced(GL_TRIANGLES, m_plantIndexCount,
+                              GL_UNSIGNED_SHORT, nullptr,
+                              static_cast<GLsizei>(plant.instanceCount));
+      glBindVertexArray(0);
+
+      if (prevCull)
+        glEnable(GL_CULL_FACE);
+
+      break;
+    }
+    case PineBatchCmdIndex: {
+      const auto &pine = std::get<PineBatchCmdIndex>(cmd);
+      
+      if (!pine.instanceBuffer || pine.instanceCount == 0 || !m_pineShader ||
+          !m_pineVao || m_pineIndexCount == 0) {
+        break;
+      }
+
+      // Pine trees: similar rendering to plants but taller geometry
+      DepthMaskScope depthMask(false); // Don't write to depth buffer
+      glEnable(GL_DEPTH_TEST);
+      BlendScope blend(true);
+      glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+      GLboolean prevCull = glIsEnabled(GL_CULL_FACE);
+      if (prevCull)
+        glDisable(GL_CULL_FACE);
+
+      if (m_lastBoundShader != m_pineShader) {
+        m_pineShader->use();
+        m_lastBoundShader = m_pineShader;
+        m_lastBoundTexture = nullptr;
+      }
+
+      if (m_pineUniforms.viewProj != Shader::InvalidUniform) {
+        m_pineShader->setUniform(m_pineUniforms.viewProj, viewProj);
+      }
+      if (m_pineUniforms.time != Shader::InvalidUniform) {
+        m_pineShader->setUniform(m_pineUniforms.time, pine.params.time);
+      }
+      if (m_pineUniforms.windStrength != Shader::InvalidUniform) {
+        m_pineShader->setUniform(m_pineUniforms.windStrength,
+                                  pine.params.windStrength);
+      }
+      if (m_pineUniforms.windSpeed != Shader::InvalidUniform) {
+        m_pineShader->setUniform(m_pineUniforms.windSpeed,
+                                  pine.params.windSpeed);
+      }
+      if (m_pineUniforms.lightDirection != Shader::InvalidUniform) {
+        QVector3D lightDir = pine.params.lightDirection;
+        if (!lightDir.isNull())
+          lightDir.normalize();
+        m_pineShader->setUniform(m_pineUniforms.lightDirection, lightDir);
+      }
+
+      glBindVertexArray(m_pineVao);
+      pine.instanceBuffer->bind();
+      const GLsizei stride = static_cast<GLsizei>(sizeof(PineInstanceGpu));
+      glVertexAttribPointer(
+          3, 4, GL_FLOAT, GL_FALSE, stride,
+          reinterpret_cast<void *>(offsetof(PineInstanceGpu, posScale)));
+      glVertexAttribPointer(
+          4, 4, GL_FLOAT, GL_FALSE, stride,
+          reinterpret_cast<void *>(offsetof(PineInstanceGpu, colorSway)));
+      glVertexAttribPointer(
+          5, 4, GL_FLOAT, GL_FALSE, stride,
+          reinterpret_cast<void *>(offsetof(PineInstanceGpu, rotation)));
+      pine.instanceBuffer->unbind();
+
+      glDrawElementsInstanced(GL_TRIANGLES, m_pineIndexCount,
+                              GL_UNSIGNED_SHORT, nullptr,
+                              static_cast<GLsizei>(pine.instanceCount));
+      glBindVertexArray(0);
+
+      if (prevCull)
+        glEnable(GL_CULL_FACE);
 
       break;
     }
@@ -1202,6 +1352,301 @@ void Backend::shutdownStonePipeline() {
   }
   m_stoneVertexCount = 0;
   m_stoneIndexCount = 0;
+}
+
+void Backend::cachePlantUniforms() {
+  if (m_plantShader) {
+    m_plantUniforms.viewProj = m_plantShader->uniformHandle("uViewProj");
+    m_plantUniforms.time = m_plantShader->uniformHandle("uTime");
+    m_plantUniforms.windStrength =
+        m_plantShader->uniformHandle("uWindStrength");
+    m_plantUniforms.windSpeed = m_plantShader->uniformHandle("uWindSpeed");
+    m_plantUniforms.lightDirection =
+        m_plantShader->uniformHandle("uLightDirection");
+  }
+}
+
+void Backend::cachePineUniforms() {
+  if (m_pineShader) {
+    m_pineUniforms.viewProj = m_pineShader->uniformHandle("uViewProj");
+    m_pineUniforms.time = m_pineShader->uniformHandle("uTime");
+    m_pineUniforms.windStrength =
+        m_pineShader->uniformHandle("uWindStrength");
+    m_pineUniforms.windSpeed = m_pineShader->uniformHandle("uWindSpeed");
+    m_pineUniforms.lightDirection =
+        m_pineShader->uniformHandle("uLightDirection");
+  }
+}
+
+void Backend::initializePlantPipeline() {
+  initializeOpenGLFunctions();
+  shutdownPlantPipeline();
+
+  struct PlantVertex {
+    QVector3D position;
+    QVector2D texCoord;
+    QVector3D normal;
+  };
+
+  // Cross-quad billboard for realistic 3D plant appearance (not grass!)
+  // Creates an X-shape when viewed from above, visible from all angles
+  const PlantVertex plantVertices[] = {
+      // First quad (front-back aligned)
+      {{-0.5f, 0.0f, 0.0f}, {0.0f, 0.0f}, {0.0f, 0.0f, 1.0f}},  // bottom left
+      {{0.5f, 0.0f, 0.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}},   // bottom right
+      {{0.5f, 1.0f, 0.0f}, {1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}},   // top right
+      {{-0.5f, 1.0f, 0.0f}, {0.0f, 1.0f}, {0.0f, 0.0f, 1.0f}},  // top left
+      
+      // First quad back face
+      {{0.5f, 0.0f, 0.0f}, {0.0f, 0.0f}, {0.0f, 0.0f, -1.0f}},
+      {{-0.5f, 0.0f, 0.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, -1.0f}},
+      {{-0.5f, 1.0f, 0.0f}, {1.0f, 1.0f}, {0.0f, 0.0f, -1.0f}},
+      {{0.5f, 1.0f, 0.0f}, {0.0f, 1.0f}, {0.0f, 0.0f, -1.0f}},
+      
+      // Second quad (perpendicular, left-right aligned for X shape)
+      {{0.0f, 0.0f, -0.5f}, {0.0f, 0.0f}, {1.0f, 0.0f, 0.0f}},  // bottom left
+      {{0.0f, 0.0f, 0.5f}, {1.0f, 0.0f}, {1.0f, 0.0f, 0.0f}},   // bottom right
+      {{0.0f, 1.0f, 0.5f}, {1.0f, 1.0f}, {1.0f, 0.0f, 0.0f}},   // top right
+      {{0.0f, 1.0f, -0.5f}, {0.0f, 1.0f}, {1.0f, 0.0f, 0.0f}},  // top left
+      
+      // Second quad back face
+      {{0.0f, 0.0f, 0.5f}, {0.0f, 0.0f}, {-1.0f, 0.0f, 0.0f}},
+      {{0.0f, 0.0f, -0.5f}, {1.0f, 0.0f}, {-1.0f, 0.0f, 0.0f}},
+      {{0.0f, 1.0f, -0.5f}, {1.0f, 1.0f}, {-1.0f, 0.0f, 0.0f}},
+      {{0.0f, 1.0f, 0.5f}, {0.0f, 1.0f}, {-1.0f, 0.0f, 0.0f}},
+  };
+
+  const unsigned short plantIndices[] = {
+      // First quad front
+      0, 1, 2, 0, 2, 3,
+      // First quad back
+      4, 5, 6, 4, 6, 7,
+      // Second quad front
+      8, 9, 10, 8, 10, 11,
+      // Second quad back
+      12, 13, 14, 12, 14, 15,
+  };
+
+  glGenVertexArrays(1, &m_plantVao);
+  glBindVertexArray(m_plantVao);
+
+  glGenBuffers(1, &m_plantVertexBuffer);
+  glBindBuffer(GL_ARRAY_BUFFER, m_plantVertexBuffer);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(plantVertices), plantVertices,
+               GL_STATIC_DRAW);
+  m_plantVertexCount = 16;  // 16 vertices for cross-quad
+
+  // Position attribute
+  glEnableVertexAttribArray(0);
+  glVertexAttribPointer(
+      0, 3, GL_FLOAT, GL_FALSE, sizeof(PlantVertex),
+      reinterpret_cast<void *>(offsetof(PlantVertex, position)));
+  // TexCoord attribute
+  glEnableVertexAttribArray(1);
+  glVertexAttribPointer(
+      1, 2, GL_FLOAT, GL_FALSE, sizeof(PlantVertex),
+      reinterpret_cast<void *>(offsetof(PlantVertex, texCoord)));
+  // Normal attribute
+  glEnableVertexAttribArray(2);
+  glVertexAttribPointer(
+      2, 3, GL_FLOAT, GL_FALSE, sizeof(PlantVertex),
+      reinterpret_cast<void *>(offsetof(PlantVertex, normal)));
+
+  // Index buffer
+  glGenBuffers(1, &m_plantIndexBuffer);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_plantIndexBuffer);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(plantIndices), plantIndices,
+               GL_STATIC_DRAW);
+  m_plantIndexCount = 24;  // 24 indices (4 quads × 6 indices)
+
+  // Instance attributes (will be set per-draw)
+  glEnableVertexAttribArray(3);
+  glVertexAttribDivisor(3, 1);
+  glEnableVertexAttribArray(4);
+  glVertexAttribDivisor(4, 1);
+  glEnableVertexAttribArray(5);
+  glVertexAttribDivisor(5, 1);
+
+  glBindVertexArray(0);
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+}
+
+void Backend::shutdownPlantPipeline() {
+  initializeOpenGLFunctions();
+  if (m_plantIndexBuffer) {
+    glDeleteBuffers(1, &m_plantIndexBuffer);
+    m_plantIndexBuffer = 0;
+  }
+  if (m_plantVertexBuffer) {
+    glDeleteBuffers(1, &m_plantVertexBuffer);
+    m_plantVertexBuffer = 0;
+  }
+  if (m_plantVao) {
+    glDeleteVertexArrays(1, &m_plantVao);
+    m_plantVao = 0;
+  }
+  m_plantVertexCount = 0;
+  m_plantIndexCount = 0;
+}
+
+void Backend::initializePinePipeline() {
+  initializeOpenGLFunctions();
+  shutdownPinePipeline();
+
+  struct PineVertex {
+    QVector3D position;
+    QVector2D texCoord;
+    QVector3D normal;
+  };
+
+  constexpr int kSegments = 6;
+  constexpr float kTwoPi = 6.28318530718f;
+
+  std::vector<PineVertex> vertices;
+  vertices.reserve(kSegments * 5 + 1);
+
+  std::vector<unsigned short> indices;
+  indices.reserve(kSegments * 6 * 4 + kSegments * 3);
+
+  auto addRing = [&](float radius, float y, float normalUp,
+                     float vCoord) -> int {
+    const int start = static_cast<int>(vertices.size());
+    for (int i = 0; i < kSegments; ++i) {
+      const float t = static_cast<float>(i) / static_cast<float>(kSegments);
+      const float angle = t * kTwoPi;
+      const float nx = std::cos(angle);
+      const float nz = std::sin(angle);
+      QVector3D normal(nx, normalUp, nz);
+      normal.normalize();
+      QVector3D position(radius * nx, y, radius * nz);
+      QVector2D texCoord(t, vCoord);
+      vertices.push_back({position, texCoord, normal});
+    }
+    return start;
+  };
+
+  auto connectRings = [&](int lowerStart, int upperStart) {
+    for (int i = 0; i < kSegments; ++i) {
+      const int next = (i + 1) % kSegments;
+      const unsigned short lower0 =
+          static_cast<unsigned short>(lowerStart + i);
+      const unsigned short lower1 =
+          static_cast<unsigned short>(lowerStart + next);
+      const unsigned short upper0 =
+          static_cast<unsigned short>(upperStart + i);
+      const unsigned short upper1 =
+          static_cast<unsigned short>(upperStart + next);
+
+      indices.push_back(lower0);
+      indices.push_back(lower1);
+      indices.push_back(upper1);
+      indices.push_back(lower0);
+      indices.push_back(upper1);
+      indices.push_back(upper0);
+    }
+  };
+
+  const int trunkBottom = addRing(0.12f, 0.0f, 0.0f, 0.0f);
+  const int trunkMid = addRing(0.11f, 0.35f, 0.0f, 0.12f);
+  const int trunkTop = addRing(0.10f, 0.58f, 0.05f, 0.30f);
+  const int branchBase = addRing(0.60f, 0.64f, 0.35f, 0.46f);
+  const int branchMid = addRing(0.42f, 0.82f, 0.6f, 0.68f);
+  const int branchUpper = addRing(0.24f, 1.00f, 0.7f, 0.88f);
+  const int branchTip = addRing(0.12f, 1.10f, 0.85f, 0.96f);
+
+  connectRings(trunkBottom, trunkMid);
+  connectRings(trunkMid, trunkTop);
+  connectRings(trunkTop, branchBase);
+  connectRings(branchBase, branchMid);
+  connectRings(branchMid, branchUpper);
+  connectRings(branchUpper, branchTip);
+
+  const unsigned short trunkCapIndex =
+      static_cast<unsigned short>(vertices.size());
+  vertices.push_back({QVector3D(0.0f, 0.0f, 0.0f), QVector2D(0.5f, 0.0f),
+                      QVector3D(0.0f, -1.0f, 0.0f)});
+  for (int i = 0; i < kSegments; ++i) {
+    const int next = (i + 1) % kSegments;
+    indices.push_back(static_cast<unsigned short>(trunkBottom + next));
+    indices.push_back(static_cast<unsigned short>(trunkBottom + i));
+    indices.push_back(trunkCapIndex);
+  }
+
+  const unsigned short apexIndex =
+      static_cast<unsigned short>(vertices.size());
+  vertices.push_back({QVector3D(0.0f, 1.18f, 0.0f), QVector2D(0.5f, 1.0f),
+                      QVector3D(0.0f, 1.0f, 0.0f)});
+  for (int i = 0; i < kSegments; ++i) {
+    const int next = (i + 1) % kSegments;
+    indices.push_back(static_cast<unsigned short>(branchTip + i));
+    indices.push_back(static_cast<unsigned short>(branchTip + next));
+    indices.push_back(apexIndex);
+  }
+
+  glGenVertexArrays(1, &m_pineVao);
+  glBindVertexArray(m_pineVao);
+
+  glGenBuffers(1, &m_pineVertexBuffer);
+  glBindBuffer(GL_ARRAY_BUFFER, m_pineVertexBuffer);
+  glBufferData(GL_ARRAY_BUFFER,
+               static_cast<GLsizeiptr>(vertices.size() * sizeof(PineVertex)),
+               vertices.data(), GL_STATIC_DRAW);
+  m_pineVertexCount = static_cast<GLsizei>(vertices.size());
+
+  // Position attribute
+  glEnableVertexAttribArray(0);
+  glVertexAttribPointer(
+      0, 3, GL_FLOAT, GL_FALSE, sizeof(PineVertex),
+      reinterpret_cast<void *>(offsetof(PineVertex, position)));
+  // TexCoord attribute
+  glEnableVertexAttribArray(1);
+  glVertexAttribPointer(
+      1, 2, GL_FLOAT, GL_FALSE, sizeof(PineVertex),
+      reinterpret_cast<void *>(offsetof(PineVertex, texCoord)));
+  // Normal attribute
+  glEnableVertexAttribArray(2);
+  glVertexAttribPointer(
+      2, 3, GL_FLOAT, GL_FALSE, sizeof(PineVertex),
+      reinterpret_cast<void *>(offsetof(PineVertex, normal)));
+
+  // Index buffer
+  glGenBuffers(1, &m_pineIndexBuffer);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_pineIndexBuffer);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+               static_cast<GLsizeiptr>(indices.size() * sizeof(unsigned short)),
+               indices.data(), GL_STATIC_DRAW);
+  m_pineIndexCount = static_cast<GLsizei>(indices.size());  // triangles * 3
+
+  // Instance attributes (will be set per-draw)
+  glEnableVertexAttribArray(3);
+  glVertexAttribDivisor(3, 1);
+  glEnableVertexAttribArray(4);
+  glVertexAttribDivisor(4, 1);
+  glEnableVertexAttribArray(5);
+  glVertexAttribDivisor(5, 1);
+
+  glBindVertexArray(0);
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+}
+
+void Backend::shutdownPinePipeline() {
+  initializeOpenGLFunctions();
+  if (m_pineIndexBuffer) {
+    glDeleteBuffers(1, &m_pineIndexBuffer);
+    m_pineIndexBuffer = 0;
+  }
+  if (m_pineVertexBuffer) {
+    glDeleteBuffers(1, &m_pineVertexBuffer);
+    m_pineVertexBuffer = 0;
+  }
+  if (m_pineVao) {
+    glDeleteVertexArrays(1, &m_pineVao);
+    m_pineVao = 0;
+  }
+  m_pineVertexCount = 0;
+  m_pineIndexCount = 0;
 }
 
 } // namespace Render::GL

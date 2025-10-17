@@ -65,6 +65,8 @@
 #include "render/ground/biome_renderer.h"
 #include "render/ground/fog_renderer.h"
 #include "render/ground/ground_renderer.h"
+#include "render/ground/pine_renderer.h"
+#include "render/ground/plant_renderer.h"
 #include "render/ground/stone_renderer.h"
 #include "render/ground/terrain_renderer.h"
 #include "render/scene_renderer.h"
@@ -92,9 +94,11 @@ GameEngine::GameEngine() {
   m_biome = std::make_unique<Render::GL::BiomeRenderer>();
   m_fog = std::make_unique<Render::GL::FogRenderer>();
   m_stone = std::make_unique<Render::GL::StoneRenderer>();
+  m_plant = std::make_unique<Render::GL::PlantRenderer>();
+  m_pine = std::make_unique<Render::GL::PineRenderer>();
 
   m_passes = {m_ground.get(), m_terrain.get(), m_biome.get(), m_stone.get(),
-              m_fog.get()};
+              m_plant.get(), m_pine.get(), m_fog.get()};
 
   std::unique_ptr<Engine::Core::System> arrowSys =
       std::make_unique<Game::Systems::ArrowSystem>();
@@ -828,6 +832,8 @@ void GameEngine::startSkirmish(const QString &mapPath,
     loader.setBiomeRenderer(m_biome.get());
     loader.setFogRenderer(m_fog.get());
     loader.setStoneRenderer(m_stone.get());
+    loader.setPlantRenderer(m_plant.get());
+    loader.setPineRenderer(m_pine.get());
 
     loader.setOnOwnersUpdated([this]() { emit ownerInfoChanged(); });
 
