@@ -72,13 +72,28 @@ public:
     float armAsymmetry = (hash01(seed ^ 0xDEF0u) - 0.5f) * 0.04f;
 
     float bowX = 0.0f;
-    pose.handL = QVector3D(bowX - 0.05f + armAsymmetry,
-                           HP::SHOULDER_Y + 0.05f + armHeightJitter, 0.55f);
-    pose.handR =
-        QVector3D(0.15f - armAsymmetry * 0.5f,
-                  HP::SHOULDER_Y + 0.15f + armHeightJitter * 0.8f, 0.20f);
 
-    if (anim.isAttacking) {
+    if (anim.isInHoldMode) {
+      pose.footYOffset = -0.25f;
+      pose.footL.setY(HP::GROUND_Y + pose.footYOffset);
+      pose.footR.setY(HP::GROUND_Y + pose.footYOffset);
+
+      pose.shoulderL.setY(pose.shoulderL.y() - 0.15f);
+      pose.shoulderR.setY(pose.shoulderR.y() - 0.15f);
+      pose.headPos.setY(pose.headPos.y() - 0.10f);
+      pose.neckBase.setY(pose.neckBase.y() - 0.12f);
+
+      pose.handL = QVector3D(bowX - 0.10f, HP::SHOULDER_Y - 0.10f, 0.65f);
+      pose.handR = QVector3D(0.10f, HP::SHOULDER_Y + 0.05f, 0.30f);
+    } else {
+      pose.handL = QVector3D(bowX - 0.05f + armAsymmetry,
+                             HP::SHOULDER_Y + 0.05f + armHeightJitter, 0.55f);
+      pose.handR =
+          QVector3D(0.15f - armAsymmetry * 0.5f,
+                    HP::SHOULDER_Y + 0.15f + armHeightJitter * 0.8f, 0.20f);
+    }
+
+    if (anim.isAttacking && !anim.isInHoldMode) {
       float attackCycleTime = 1.2f;
       float attackPhase = fmod(anim.time * (1.0f / attackCycleTime), 1.0f);
 

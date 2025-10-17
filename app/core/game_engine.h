@@ -108,6 +108,7 @@ public:
   Q_INVOKABLE void setHoverAtScreen(qreal sx, qreal sy);
   Q_INVOKABLE void onAttackClick(qreal sx, qreal sy);
   Q_INVOKABLE void onStopCommand();
+  Q_INVOKABLE void onHoldCommand();
   Q_INVOKABLE void onPatrolClick(qreal sx, qreal sy);
 
   Q_INVOKABLE void cameraMove(float dx, float dz);
