@@ -339,10 +339,10 @@ RowLayout {
                 focusPolicy: Qt.NoFocus
                 enabled: bottomRoot.hasMovableUnits
                 onClicked: {
-                    bottomRoot.commandModeChanged("hold");
-                    Qt.callLater(function() {
-                        bottomRoot.commandModeChanged("normal");
-                    });
+                    if (typeof game !== 'undefined' && game.onHoldCommand)
+                        game.onHoldCommand();
+
+                    bottomRoot.commandModeChanged("normal");
                 }
                 ToolTip.visible: hovered
                 ToolTip.text: bottomRoot.hasMovableUnits ? "Hold position and defend" : "Select troops first"
