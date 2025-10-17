@@ -123,6 +123,15 @@ void NationRegistry::initializeDefaults() {
   archer.priority = 10;
   kingdomOfIron.availableTroops.push_back(archer);
 
+  TroopType knight;
+  knight.unitType = "knight";
+  knight.displayName = "Knight";
+  knight.isMelee = true;
+  knight.cost = 100;
+  knight.buildTime = 8.0f;
+  knight.priority = 10;
+  kingdomOfIron.availableTroops.push_back(knight);
+
   registerNation(std::move(kingdomOfIron));
 
   m_defaultNation = "kingdom_of_iron";
