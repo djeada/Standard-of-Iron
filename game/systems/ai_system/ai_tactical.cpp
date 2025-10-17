@@ -202,7 +202,7 @@ float TacticalUtils::getUnitTypePriority(const std::string &unitType) {
     return 3.0f;
   }
 
-  if (unitType == "warrior" || unitType == "melee") {
+  if (unitType == "warrior" || unitType == "melee" || unitType == "knight") {
     return 2.0f;
   }
 
