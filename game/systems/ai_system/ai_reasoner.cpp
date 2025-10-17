@@ -1,5 +1,6 @@
 #include "ai_reasoner.h"
 #include "../../game_config.h"
+#include "../nation_registry.h"
 #include "ai_utils.h"
 #include <algorithm>
 #include <cmath>
@@ -8,6 +9,11 @@
 namespace Game::Systems::AI {
 
 void AIReasoner::updateContext(const AISnapshot &snapshot, AIContext &ctx) {
+
+  if (!ctx.nation) {
+    ctx.nation =
+        Game::Systems::NationRegistry::instance().getNationForPlayer(ctx.playerId);
+  }
 
   cleanupDeadUnits(snapshot, ctx);
 
@@ -73,11 +79,12 @@ void AIReasoner::updateContext(const AISnapshot &snapshot, AIContext &ctx) {
     ctx.militaryUnits.push_back(entity.id);
     ctx.totalUnits++;
 
-    if (entity.unitType == "archer") {
-      ctx.rangedCount++;
-    } else if (entity.unitType == "swordsman" || entity.unitType == "warrior" ||
-               entity.unitType == "knight") {
-      ctx.meleeCount++;
+    if (ctx.nation) {
+      if (ctx.nation->isRangedUnit(entity.unitType)) {
+        ctx.rangedCount++;
+      } else if (ctx.nation->isMeleeUnit(entity.unitType)) {
+        ctx.meleeCount++;
+      }
     }
 
     if (!entity.movement.hasComponent || !entity.movement.hasTarget) {
