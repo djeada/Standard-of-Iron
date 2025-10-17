@@ -1,0 +1,272 @@
+#include "pine_renderer.h"
+#include "../../game/systems/building_collision_registry.h"
+#include "../gl/buffer.h"
+#include "../scene_renderer.h"
+#include <QVector2D>
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <optional>
+
+namespace {
+
+using std::uint32_t;
+
+inline uint32_t hashCoords(int x, int z, uint32_t salt = 0u) {
+  uint32_t ux = static_cast<uint32_t>(x * 73856093);
+  uint32_t uz = static_cast<uint32_t>(z * 19349663);
+  return ux ^ uz ^ (salt * 83492791u);
+}
+
+inline float rand01(uint32_t &state) {
+  state = state * 1664525u + 1013904223u;
+  return static_cast<float>((state >> 8) & 0xFFFFFF) /
+         static_cast<float>(0xFFFFFF);
+}
+
+inline float remap(float value, float minOut, float maxOut) {
+  return minOut + (maxOut - minOut) * value;
+}
+
+inline float valueNoise(float x, float z, uint32_t seed) {
+  int ix = static_cast<int>(std::floor(x));
+  int iz = static_cast<int>(std::floor(z));
+  float fx = x - static_cast<float>(ix);
+  float fz = z - static_cast<float>(iz);
+
+  fx = fx * fx * (3.0f - 2.0f * fx);
+  fz = fz * fz * (3.0f - 2.0f * fz);
+
+  uint32_t s00 = hashCoords(ix, iz, seed);
+  uint32_t s10 = hashCoords(ix + 1, iz, seed);
+  uint32_t s01 = hashCoords(ix, iz + 1, seed);
+  uint32_t s11 = hashCoords(ix + 1, iz + 1, seed);
+
+  float v00 = rand01(s00);
+  float v10 = rand01(s10);
+  float v01 = rand01(s01);
+  float v11 = rand01(s11);
+
+  float v0 = v00 * (1.0f - fx) + v10 * fx;
+  float v1 = v01 * (1.0f - fx) + v11 * fx;
+  return v0 * (1.0f - fz) + v1 * fz;
+}
+
+} // namespace
+
+namespace Render::GL {
+
+PineRenderer::PineRenderer() = default;
+PineRenderer::~PineRenderer() = default;
+
+void PineRenderer::configure(const Game::Map::TerrainHeightMap &heightMap,
+                              const Game::Map::BiomeSettings &biomeSettings) {
+  m_width = heightMap.getWidth();
+  m_height = heightMap.getHeight();
+  m_tileSize = heightMap.getTileSize();
+  m_heightData = heightMap.getHeightData();
+  m_terrainTypes = heightMap.getTerrainTypes();
+  m_biomeSettings = biomeSettings;
+  m_noiseSeed = biomeSettings.seed;
+
+  m_pineInstances.clear();
+  m_pineInstanceBuffer.reset();
+  m_pineInstanceCount = 0;
+  m_pineInstancesDirty = false;
+
+  m_pineParams.lightDirection = QVector3D(0.35f, 0.8f, 0.45f);
+  m_pineParams.time = 0.0f;
+  m_pineParams.windStrength = 0.3f;  // Gentler than plants
+  m_pineParams.windSpeed = 0.5f;     // Slower than plants
+
+  generatePineInstances();
+}
+
+void PineRenderer::submit(Renderer &renderer, ResourceManager *resources) {
+  (void)resources;
+  
+  m_pineInstanceCount = static_cast<uint32_t>(m_pineInstances.size());
+
+  if (m_pineInstanceCount > 0) {
+    if (!m_pineInstanceBuffer) {
+      m_pineInstanceBuffer = std::make_unique<Buffer>(Buffer::Type::Vertex);
+    }
+    if (m_pineInstancesDirty && m_pineInstanceBuffer) {
+      m_pineInstanceBuffer->setData(m_pineInstances, Buffer::Usage::Static);
+      m_pineInstancesDirty = false;
+    }
+  } else {
+    m_pineInstanceBuffer.reset();
+    return;
+  }
+
+  if (m_pineInstanceBuffer && m_pineInstanceCount > 0) {
+    PineBatchParams params = m_pineParams;
+    params.time = renderer.getAnimationTime();
+    renderer.pineBatch(m_pineInstanceBuffer.get(), m_pineInstanceCount,
+                        params);
+  }
+}
+
+void PineRenderer::clear() {
+  m_pineInstances.clear();
+  m_pineInstanceBuffer.reset();
+  m_pineInstanceCount = 0;
+  m_pineInstancesDirty = false;
+}
+
+void PineRenderer::generatePineInstances() {
+  m_pineInstances.clear();
+
+  if (m_width < 2 || m_height < 2 || m_heightData.empty()) {
+    return;
+  }
+
+  const float halfWidth = static_cast<float>(m_width) * 0.5f;
+  const float halfHeight = static_cast<float>(m_height) * 0.5f;
+  const float tileSafe = std::max(0.1f, m_tileSize);
+
+  // Pine density from biome settings (default 0.2, much lower than plants)
+  float pineDensity = 0.2f;
+  if (m_biomeSettings.plantDensity > 0.0f) {
+    // Reuse plantDensity but at reduced rate for trees
+    pineDensity = m_biomeSettings.plantDensity * 0.3f;
+  }
+
+  // Pre-compute normals for slope calculation
+  std::vector<QVector3D> normals(m_width * m_height, QVector3D(0, 1, 0));
+  for (int z = 1; z < m_height - 1; ++z) {
+    for (int x = 1; x < m_width - 1; ++x) {
+      int idx = z * m_width + x;
+      float hL = m_heightData[(z)*m_width + (x - 1)];
+      float hR = m_heightData[(z)*m_width + (x + 1)];
+      float hD = m_heightData[(z - 1) * m_width + (x)];
+      float hU = m_heightData[(z + 1) * m_width + (x)];
+
+      QVector3D n = QVector3D(hL - hR, 2.0f * tileSafe, hD - hU);
+      if (n.lengthSquared() > 0.0f) {
+        n.normalize();
+      } else {
+        n = QVector3D(0, 1, 0);
+      }
+      normals[idx] = n;
+    }
+  }
+
+  auto addPine = [&](float gx, float gz, uint32_t &state) -> bool {
+    float sgx = std::clamp(gx, 0.0f, float(m_width - 1));
+    float sgz = std::clamp(gz, 0.0f, float(m_height - 1));
+
+    int ix = std::clamp(int(std::floor(sgx + 0.5f)), 0, m_width - 1);
+    int iz = std::clamp(int(std::floor(sgz + 0.5f)), 0, m_height - 1);
+    int normalIdx = iz * m_width + ix;
+
+    // Pines prefer hills and moderate terrain
+    // Avoid extremely steep slopes
+    QVector3D normal = normals[normalIdx];
+    float slope = 1.0f - std::clamp(normal.y(), 0.0f, 1.0f);
+
+    // Pines can handle more slope than plants but not extreme
+    if (slope > 0.75f)
+      return false;
+
+    float worldX = (gx - halfWidth) * m_tileSize;
+    float worldZ = (gz - halfHeight) * m_tileSize;
+    float worldY = m_heightData[normalIdx];
+
+    auto &buildingRegistry =
+        Game::Systems::BuildingCollisionRegistry::instance();
+    if (buildingRegistry.isPointInBuilding(worldX, worldZ)) {
+      return false;
+    }
+
+    // Pines are TALL trees (3-6 units instead of 0.3-0.8 for plants)
+    float scale = remap(rand01(state), 3.0f, 6.0f) * tileSafe;
+
+    // Pine color variation (darker green/brown tones)
+    float colorVar = remap(rand01(state), 0.0f, 1.0f);
+    QVector3D baseColor(0.15f, 0.35f, 0.20f);  // Dark pine green
+    QVector3D varColor(0.20f, 0.40f, 0.25f);   // Slightly lighter
+    QVector3D tintColor = baseColor * (1.0f - colorVar) + varColor * colorVar;
+
+    // Add brownish tint for trunk variation
+    float brownMix = remap(rand01(state), 0.10f, 0.25f);
+    QVector3D brownTint(0.35f, 0.30f, 0.20f);
+    tintColor = tintColor * (1.0f - brownMix) + brownTint * brownMix;
+
+  // Sway parameters (gentler and slower than plants)
+  float swayPhase = rand01(state) * 6.2831853f;
+
+  // Y-axis rotation for variety
+  float rotation = rand01(state) * 6.2831853f;
+
+  // Additional per-instance variation for silhouette and shading
+  float silhouetteSeed = rand01(state);
+  float needleSeed = rand01(state);
+  float barkSeed = rand01(state);
+
+    PineInstanceGpu instance;
+    // Pine trees on ground level (not elevated like plants were)
+    instance.posScale = QVector4D(worldX, worldY, worldZ, scale);
+    instance.colorSway =
+        QVector4D(tintColor.x(), tintColor.y(), tintColor.z(), swayPhase);
+  instance.rotation = QVector4D(rotation, silhouetteSeed, needleSeed, barkSeed);
+    m_pineInstances.push_back(instance);
+    return true;
+  };
+
+  // Generate pines in a sparse grid pattern (every 6 tiles instead of 3)
+  // Lower density for trees compared to plants
+  for (int z = 0; z < m_height; z += 6) {
+    for (int x = 0; x < m_width; x += 6) {
+      int idx = z * m_width + x;
+
+      // Check terrain slope - avoid steep areas
+      QVector3D normal = normals[idx];
+      float slope = 1.0f - std::clamp(normal.y(), 0.0f, 1.0f);
+      if (slope > 0.75f)
+        continue;
+
+      uint32_t state = hashCoords(
+          x, z, m_noiseSeed ^ 0xAB12CD34u ^ static_cast<uint32_t>(idx));
+
+      float worldX = (x - halfWidth) * m_tileSize;
+      float worldZ = (z - halfHeight) * m_tileSize;
+
+      // Use forest/tree clustering noise
+      float clusterNoise =
+          valueNoise(worldX * 0.03f, worldZ * 0.03f, m_noiseSeed ^ 0x7F8E9D0Au);
+
+      // Pines cluster in forest areas
+      if (clusterNoise < 0.35f)
+        continue;
+
+      // Terrain-based density multiplier
+      float densityMult = 1.0f;
+      if (m_terrainTypes[idx] == Game::Map::TerrainType::Hill) {
+        densityMult = 1.2f; // More trees on hills
+      } else if (m_terrainTypes[idx] == Game::Map::TerrainType::Mountain) {
+        densityMult = 0.4f; // Fewer on mountains
+      }
+
+      // Calculate pine count (much lower than plants)
+      float effectiveDensity = pineDensity * densityMult * 0.8f;
+      int pineCount = static_cast<int>(std::floor(effectiveDensity));
+      float frac = effectiveDensity - float(pineCount);
+      if (rand01(state) < frac)
+        pineCount += 1;
+
+      // Place pines in small clusters
+      for (int i = 0; i < pineCount; ++i) {
+        float gx = float(x) + rand01(state) * 6.0f;
+        float gz = float(z) + rand01(state) * 6.0f;
+        addPine(gx, gz, state);
+      }
+    }
+  }
+
+  m_pineInstanceCount = m_pineInstances.size();
+  m_pineInstancesDirty = m_pineInstanceCount > 0;
+}
+
+} // namespace Render::GL
