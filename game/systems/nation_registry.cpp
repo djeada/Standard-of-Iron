@@ -59,6 +59,16 @@ const TroopType *Nation::getBestRangedTroop() const {
   return *it;
 }
 
+bool Nation::isMeleeUnit(const std::string &unitType) const {
+  const auto *troop = getTroop(unitType);
+  return troop != nullptr && troop->isMelee;
+}
+
+bool Nation::isRangedUnit(const std::string &unitType) const {
+  const auto *troop = getTroop(unitType);
+  return troop != nullptr && !troop->isMelee;
+}
+
 NationRegistry &NationRegistry::instance() {
   static NationRegistry inst;
   return inst;
@@ -122,6 +132,15 @@ void NationRegistry::initializeDefaults() {
   archer.buildTime = 5.0f;
   archer.priority = 10;
   kingdomOfIron.availableTroops.push_back(archer);
+
+  TroopType knight;
+  knight.unitType = "knight";
+  knight.displayName = "Knight";
+  knight.isMelee = true;
+  knight.cost = 100;
+  knight.buildTime = 8.0f;
+  knight.priority = 10;
+  kingdomOfIron.availableTroops.push_back(knight);
 
   registerNation(std::move(kingdomOfIron));
 

@@ -8,6 +8,10 @@ namespace Engine::Core {
 using EntityID = unsigned int;
 }
 
+namespace Game::Systems {
+struct Nation;
+}
+
 namespace Game::Systems::AI {
 
 enum class AIState {
@@ -90,6 +94,8 @@ struct AIContext {
   AIState state = AIState::Idle;
   float stateTimer = 0.0f;
   float decisionTimer = 0.0f;
+
+  const Game::Systems::Nation *nation = nullptr;
 
   std::vector<Engine::Core::EntityID> militaryUnits;
   std::vector<Engine::Core::EntityID> buildings;

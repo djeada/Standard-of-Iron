@@ -1,4 +1,5 @@
 #include "ai_tactical.h"
+#include "../nation_registry.h"
 #include "ai_utils.h"
 #include <algorithm>
 #include <cmath>
@@ -97,7 +98,7 @@ TacticalUtils::TargetScore TacticalUtils::selectFocusFireTarget(
       }
     }
 
-    float typePriority = getUnitTypePriority(enemy->unitType);
+    float typePriority = getUnitTypePriority(enemy->unitType, context.nation);
     score += typePriority * 3.0f;
 
     if (!enemy->isBuilding) {
@@ -196,14 +197,16 @@ bool TacticalUtils::isTargetIsolated(
   return (nearbyAllies <= 1);
 }
 
-float TacticalUtils::getUnitTypePriority(const std::string &unitType) {
+float TacticalUtils::getUnitTypePriority(const std::string &unitType,
+                                         const Game::Systems::Nation *nation) {
 
-  if (unitType == "archer" || unitType == "ranged") {
-    return 3.0f;
-  }
-
-  if (unitType == "warrior" || unitType == "melee") {
-    return 2.0f;
+  if (nation) {
+    if (nation->isRangedUnit(unitType)) {
+      return 3.0f;
+    }
+    if (nation->isMeleeUnit(unitType)) {
+      return 2.0f;
+    }
   }
 
   if (unitType == "worker" || unitType == "villager") {
