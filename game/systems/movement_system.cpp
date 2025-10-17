@@ -105,6 +105,16 @@ void MovementSystem::moveUnit(Engine::Core::Entity *entity,
     return;
   }
 
+  auto *holdMode = entity->getComponent<Engine::Core::HoldModeComponent>();
+  if (holdMode && holdMode->active) {
+    movement->hasTarget = false;
+    movement->vx = 0.0f;
+    movement->vz = 0.0f;
+    movement->path.clear();
+    movement->pathPending = false;
+    return;
+  }
+
   auto *atk = entity->getComponent<Engine::Core::AttackComponent>();
   if (atk && atk->inMeleeLock) {
 

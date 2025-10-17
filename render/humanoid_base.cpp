@@ -85,6 +85,7 @@ AnimationInputs HumanoidRendererBase::sampleAnimState(const DrawContext &ctx) {
   anim.isMoving = false;
   anim.isAttacking = false;
   anim.isMelee = false;
+  anim.isInHoldMode = false;
 
   if (!ctx.entity)
     return anim;
@@ -95,7 +96,9 @@ AnimationInputs HumanoidRendererBase::sampleAnimState(const DrawContext &ctx) {
       ctx.entity->getComponent<Engine::Core::AttackTargetComponent>();
   auto *transform =
       ctx.entity->getComponent<Engine::Core::TransformComponent>();
+  auto *holdMode = ctx.entity->getComponent<Engine::Core::HoldModeComponent>();
 
+  anim.isInHoldMode = (holdMode && holdMode->active);
   anim.isMoving = (movement && movement->hasTarget);
 
   if (attack && attackTarget && attackTarget->targetId > 0 && transform) {
