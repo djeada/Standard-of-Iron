@@ -91,6 +91,9 @@ public:
                      : nullptr;
   }
 
+  void setCurrentShader(Shader *shader) { m_currentShader = shader; }
+  Shader *getCurrentShader() const { return m_currentShader; }
+
   struct GridParams {
     float cellSize = 1.0f;
     float thickness = 0.06f;
@@ -154,6 +157,7 @@ private:
   int m_localOwnerId = 1;
 
   QMatrix4x4 m_viewProj;
+  Shader *m_currentShader = nullptr;
 };
 
 struct FrameScope {

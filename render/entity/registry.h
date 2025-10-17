@@ -19,6 +19,7 @@ namespace GL {
 class ResourceManager;
 class Mesh;
 class Texture;
+class Backend;
 } // namespace GL
 } // namespace Render
 
@@ -32,6 +33,7 @@ struct DrawContext {
   bool selected = false;
   bool hovered = false;
   float animationTime = 0.0f;
+  class Backend *backend = nullptr;
 };
 
 using RenderFunc = std::function<void(const DrawContext &, ISubmitter &out)>;
