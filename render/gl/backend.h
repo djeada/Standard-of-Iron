@@ -82,6 +82,8 @@ private:
   Shader *m_stoneShader = nullptr;
   Shader *m_groundShader = nullptr;
   Shader *m_terrainShader = nullptr;
+  Shader *m_archerShader = nullptr;
+  Shader *m_knightShader = nullptr;
 
   struct BasicUniforms {
     Shader::UniformHandle mvp{Shader::InvalidUniform};
@@ -91,6 +93,9 @@ private:
     Shader::UniformHandle color{Shader::InvalidUniform};
     Shader::UniformHandle alpha{Shader::InvalidUniform};
   } m_basicUniforms;
+
+  BasicUniforms m_archerUniforms;
+  BasicUniforms m_knightUniforms;
 
   struct GridUniforms {
     Shader::UniformHandle mvp{Shader::InvalidUniform};
@@ -212,6 +217,8 @@ private:
   GLsizei m_stoneVertexCount = 0;
 
   void cacheBasicUniforms();
+  void cacheArcherUniforms();
+  void cacheKnightUniforms();
   void cacheGridUniforms();
   void cacheCylinderUniforms();
   void initializeCylinderPipeline();

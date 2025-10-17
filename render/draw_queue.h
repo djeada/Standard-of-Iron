@@ -15,6 +15,7 @@ namespace Render::GL {
 class Mesh;
 class Texture;
 class Buffer;
+class Shader;
 } // namespace Render::GL
 
 namespace Render::GL {
@@ -26,6 +27,7 @@ struct MeshCmd {
   QMatrix4x4 mvp;
   QVector3D color{1, 1, 1};
   float alpha = 1.0f;
+  class Shader *shader = nullptr;
 };
 
 struct CylinderCmd {
