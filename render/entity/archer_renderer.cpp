@@ -73,18 +73,29 @@ public:
 
     float bowX = 0.0f;
 
-    if (anim.isInHoldMode) {
-      pose.footYOffset = -0.25f;
+    if (anim.isInHoldMode || anim.holdExitProgress > 0.0f) {
+      float t = anim.isInHoldMode ? 1.0f : (1.0f - anim.holdExitProgress);
+
+      float targetFootOffset = -0.25f * t;
+      pose.footYOffset = targetFootOffset;
       pose.footL.setY(HP::GROUND_Y + pose.footYOffset);
       pose.footR.setY(HP::GROUND_Y + pose.footYOffset);
 
-      pose.shoulderL.setY(pose.shoulderL.y() - 0.15f);
-      pose.shoulderR.setY(pose.shoulderR.y() - 0.15f);
-      pose.headPos.setY(pose.headPos.y() - 0.10f);
-      pose.neckBase.setY(pose.neckBase.y() - 0.12f);
+      pose.shoulderL.setY(pose.shoulderL.y() - 0.15f * t);
+      pose.shoulderR.setY(pose.shoulderR.y() - 0.15f * t);
+      pose.headPos.setY(pose.headPos.y() - 0.10f * t);
+      pose.neckBase.setY(pose.neckBase.y() - 0.12f * t);
 
-      pose.handL = QVector3D(bowX - 0.10f, HP::SHOULDER_Y - 0.10f, 0.65f);
-      pose.handR = QVector3D(0.10f, HP::SHOULDER_Y + 0.05f, 0.30f);
+      QVector3D holdHandL(bowX - 0.12f, HP::SHOULDER_Y + 0.20f, 0.45f);
+      QVector3D holdHandR(bowX + 0.08f, HP::SHOULDER_Y + 0.50f, 0.15f);
+      QVector3D normalHandL(bowX - 0.05f + armAsymmetry,
+                            HP::SHOULDER_Y + 0.05f + armHeightJitter, 0.55f);
+      QVector3D normalHandR(0.15f - armAsymmetry * 0.5f,
+                            HP::SHOULDER_Y + 0.15f + armHeightJitter * 0.8f,
+                            0.20f);
+
+      pose.handL = normalHandL * (1.0f - t) + holdHandL * t;
+      pose.handR = normalHandR * (1.0f - t) + holdHandR * t;
     } else {
       pose.handL = QVector3D(bowX - 0.05f + armAsymmetry,
                              HP::SHOULDER_Y + 0.05f + armHeightJitter, 0.55f);

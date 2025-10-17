@@ -82,6 +82,7 @@ void Unit::setHoldMode(bool enabled) {
       holdComp = e->addComponent<Engine::Core::HoldModeComponent>();
     }
     holdComp->active = true;
+    holdComp->exitCooldown = 0.0f;
 
     auto *mv = e->getComponent<Engine::Core::MovementComponent>();
     if (mv) {
@@ -92,6 +93,7 @@ void Unit::setHoldMode(bool enabled) {
   } else {
     if (holdComp) {
       holdComp->active = false;
+      holdComp->exitCooldown = holdComp->standUpDuration;
     }
   }
 }
