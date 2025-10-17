@@ -45,6 +45,13 @@ void Unit::moveTo(float x, float z) {
     m_mv->pathPending = false;
     m_mv->pendingRequestId = 0;
   }
+
+  if (auto *e = entity()) {
+    auto *holdComp = e->getComponent<Engine::Core::HoldModeComponent>();
+    if (holdComp) {
+      holdComp->active = false;
+    }
+  }
 }
 
 bool Unit::isAlive() const {
@@ -61,6 +68,43 @@ QVector3D Unit::position() const {
       return QVector3D(t->position.x, t->position.y, t->position.z);
   }
   return QVector3D();
+}
+
+void Unit::setHoldMode(bool enabled) {
+  auto *e = entity();
+  if (!e)
+    return;
+
+  auto *holdComp = e->getComponent<Engine::Core::HoldModeComponent>();
+
+  if (enabled) {
+    if (!holdComp) {
+      holdComp = e->addComponent<Engine::Core::HoldModeComponent>();
+    }
+    holdComp->active = true;
+    holdComp->exitCooldown = 0.0f;
+
+    auto *mv = e->getComponent<Engine::Core::MovementComponent>();
+    if (mv) {
+      mv->hasTarget = false;
+      mv->path.clear();
+      mv->pathPending = false;
+    }
+  } else {
+    if (holdComp) {
+      holdComp->active = false;
+      holdComp->exitCooldown = holdComp->standUpDuration;
+    }
+  }
+}
+
+bool Unit::isInHoldMode() const {
+  auto *e = entity();
+  if (!e)
+    return false;
+
+  auto *holdComp = e->getComponent<Engine::Core::HoldModeComponent>();
+  return holdComp && holdComp->active;
 }
 
 } // namespace Units

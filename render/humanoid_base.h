@@ -20,6 +20,8 @@ struct AnimationInputs {
   bool isMoving;
   bool isAttacking;
   bool isMelee;
+  bool isInHoldMode;
+  float holdExitProgress;
 };
 
 struct FormationParams {

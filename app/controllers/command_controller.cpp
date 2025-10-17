@@ -93,6 +93,51 @@ CommandResult CommandController::onStopCommand() {
   return result;
 }
 
+CommandResult CommandController::onHoldCommand() {
+  CommandResult result;
+  if (!m_selectionSystem || !m_world) {
+    return result;
+  }
+
+  const auto &selected = m_selectionSystem->getSelectedUnits();
+  if (selected.empty())
+    return result;
+
+  for (auto id : selected) {
+    auto *entity = m_world->getEntity(id);
+    if (!entity)
+      continue;
+
+    resetMovement(entity);
+
+    entity->removeComponent<Engine::Core::AttackTargetComponent>();
+
+    if (auto *patrol = entity->getComponent<Engine::Core::PatrolComponent>()) {
+      patrol->patrolling = false;
+      patrol->waypoints.clear();
+    }
+
+    auto *holdMode = entity->getComponent<Engine::Core::HoldModeComponent>();
+    if (!holdMode) {
+      holdMode = entity->addComponent<Engine::Core::HoldModeComponent>();
+    }
+    holdMode->active = true;
+
+    auto *movement = entity->getComponent<Engine::Core::MovementComponent>();
+    if (movement) {
+      movement->hasTarget = false;
+      movement->path.clear();
+      movement->pathPending = false;
+      movement->vx = 0.0f;
+      movement->vz = 0.0f;
+    }
+  }
+
+  result.inputConsumed = true;
+  result.resetCursorToNormal = true;
+  return result;
+}
+
 CommandResult CommandController::onPatrolClick(qreal sx, qreal sy,
                                                int viewportWidth,
                                                int viewportHeight,

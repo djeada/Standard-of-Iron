@@ -200,4 +200,14 @@ public:
   PendingRemovalComponent() = default;
 };
 
+class HoldModeComponent : public Component {
+public:
+  HoldModeComponent()
+      : active(true), exitCooldown(0.0f), standUpDuration(0.8f) {}
+
+  bool active;
+  float exitCooldown;
+  float standUpDuration;
+};
+
 } // namespace Engine::Core
