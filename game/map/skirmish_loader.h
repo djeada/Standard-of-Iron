@@ -23,6 +23,8 @@ class TerrainRenderer;
 class BiomeRenderer;
 class FogRenderer;
 class StoneRenderer;
+class PlantRenderer;
+class PineRenderer;
 } // namespace GL
 } // namespace Render
 
@@ -63,6 +65,8 @@ public:
   void setBiomeRenderer(Render::GL::BiomeRenderer *biome) { m_biome = biome; }
   void setFogRenderer(Render::GL::FogRenderer *fog) { m_fog = fog; }
   void setStoneRenderer(Render::GL::StoneRenderer *stone) { m_stone = stone; }
+  void setPlantRenderer(Render::GL::PlantRenderer *plant) { m_plant = plant; }
+  void setPineRenderer(Render::GL::PineRenderer *pine) { m_pine = pine; }
 
   void setOnOwnersUpdated(OwnersUpdatedCallback callback) {
     m_onOwnersUpdated = callback;
@@ -86,6 +90,8 @@ private:
   Render::GL::BiomeRenderer *m_biome = nullptr;
   Render::GL::FogRenderer *m_fog = nullptr;
   Render::GL::StoneRenderer *m_stone = nullptr;
+  Render::GL::PlantRenderer *m_plant = nullptr;
+  Render::GL::PineRenderer *m_pine = nullptr;
   OwnersUpdatedCallback m_onOwnersUpdated;
   VisibilityMaskReadyCallback m_onVisibilityMaskReady;
 };
