@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ground/grass_gpu.h"
+#include "ground/plant_gpu.h"
 #include "ground/stone_gpu.h"
 #include "ground/terrain_gpu.h"
 #include <QMatrix4x4>
@@ -59,6 +60,12 @@ struct StoneBatchCmd {
   StoneBatchParams params;
 };
 
+struct PlantBatchCmd {
+  Buffer *instanceBuffer = nullptr;
+  std::size_t instanceCount = 0;
+  PlantBatchParams params;
+};
+
 struct TerrainChunkCmd {
   Mesh *mesh = nullptr;
   QMatrix4x4 model;
@@ -103,6 +110,7 @@ public:
     m_fogBatchCmds.clear();
     m_grassBatchCmds.clear();
     m_stoneBatchCmds.clear();
+    m_plantBatchCmds.clear();
     m_terrainChunkCmds.clear();
   }
 
@@ -118,6 +126,7 @@ public:
   void submit(const FogBatchCmd &cmd) { m_fogBatchCmds.push_back(cmd); }
   void submit(const GrassBatchCmd &cmd) { m_grassBatchCmds.push_back(cmd); }
   void submit(const StoneBatchCmd &cmd) { m_stoneBatchCmds.push_back(cmd); }
+  void submit(const PlantBatchCmd &cmd) { m_plantBatchCmds.push_back(cmd); }
   void submit(const TerrainChunkCmd &cmd) { m_terrainChunkCmds.push_back(cmd); }
 
   bool empty() const {
@@ -125,7 +134,7 @@ public:
            m_selectionSmokeCmds.empty() && m_cylinderCmds.empty() &&
            m_meshCmds.empty() && m_fogBatchCmds.empty() &&
            m_grassBatchCmds.empty() && m_stoneBatchCmds.empty() &&
-           m_terrainChunkCmds.empty();
+           m_plantBatchCmds.empty() && m_terrainChunkCmds.empty();
   }
 
   void sortForBatching() {
@@ -162,6 +171,9 @@ public:
   const std::vector<StoneBatchCmd> &stoneBatchCmds() const {
     return m_stoneBatchCmds;
   }
+  const std::vector<PlantBatchCmd> &plantBatchCmds() const {
+    return m_plantBatchCmds;
+  }
   const std::vector<TerrainChunkCmd> &terrainChunkCmds() const {
     return m_terrainChunkCmds;
   }
@@ -175,6 +187,7 @@ private:
   std::vector<FogBatchCmd> m_fogBatchCmds;
   std::vector<GrassBatchCmd> m_grassBatchCmds;
   std::vector<StoneBatchCmd> m_stoneBatchCmds;
+  std::vector<PlantBatchCmd> m_plantBatchCmds;
   std::vector<TerrainChunkCmd> m_terrainChunkCmds;
 };
 
