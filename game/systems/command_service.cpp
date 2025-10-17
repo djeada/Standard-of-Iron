@@ -113,6 +113,11 @@ void CommandService::moveUnits(Engine::Core::World &world,
     if (!e)
       continue;
 
+    auto *holdMode = e->getComponent<Engine::Core::HoldModeComponent>();
+    if (holdMode) {
+      holdMode->active = false;
+    }
+
     auto *atk = e->getComponent<Engine::Core::AttackComponent>();
     if (atk && atk->inMeleeLock) {
 
@@ -675,6 +680,11 @@ void CommandService::attackTarget(
     auto *e = world.getEntity(unitId);
     if (!e)
       continue;
+
+    auto *holdMode = e->getComponent<Engine::Core::HoldModeComponent>();
+    if (holdMode) {
+      holdMode->active = false;
+    }
 
     auto *attackTarget = e->getComponent<Engine::Core::AttackTargetComponent>();
     if (!attackTarget) {

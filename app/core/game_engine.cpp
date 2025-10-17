@@ -306,6 +306,17 @@ void GameEngine::onStopCommand() {
   }
 }
 
+void GameEngine::onHoldCommand() {
+  if (!m_commandController)
+    return;
+  ensureInitialized();
+
+  auto result = m_commandController->onHoldCommand();
+  if (result.resetCursorToNormal) {
+    setCursorMode(CursorMode::Normal);
+  }
+}
+
 void GameEngine::onPatrolClick(qreal sx, qreal sy) {
   if (!m_commandController || !m_camera)
     return;
