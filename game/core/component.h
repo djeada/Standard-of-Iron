@@ -195,4 +195,9 @@ public:
   bool isBeingCaptured;
 };
 
+class PendingRemovalComponent : public Component {
+public:
+  PendingRemovalComponent() = default;
+};
+
 } // namespace Engine::Core
