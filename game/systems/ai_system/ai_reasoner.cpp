@@ -75,7 +75,8 @@ void AIReasoner::updateContext(const AISnapshot &snapshot, AIContext &ctx) {
 
     if (entity.unitType == "archer") {
       ctx.rangedCount++;
-    } else if (entity.unitType == "swordsman" || entity.unitType == "warrior") {
+    } else if (entity.unitType == "swordsman" || entity.unitType == "warrior" ||
+               entity.unitType == "knight") {
       ctx.meleeCount++;
     }
 
