@@ -78,6 +78,12 @@
       "playerId": 1
     },
     {
+      "type": "knight",
+      "x": 38,
+      "z": 60,
+      "playerId": 1
+    },
+    {
       "type": "barracks",
       "x": 50,
       "z": 60,
@@ -106,6 +112,12 @@
       "type": "archer",
       "x": 66,
       "z": 58,
+      "playerId": 2
+    },
+    {
+      "type": "knight",
+      "x": 67,
+      "z": 60,
       "playerId": 2
     },
     {

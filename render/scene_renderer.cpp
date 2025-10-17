@@ -80,7 +80,7 @@ void Renderer::mesh(Mesh *mesh, const QMatrix4x4 &model, const QVector3D &color,
   if (!mesh)
     return;
 
-  if (mesh == getUnitCylinder() && (!texture)) {
+  if (mesh == getUnitCylinder() && (!texture) && (!m_currentShader)) {
     QVector3D start, end;
     float radius = 0.0f;
     if (detail::decomposeUnitCylinder(model, start, end, radius)) {
@@ -95,6 +95,7 @@ void Renderer::mesh(Mesh *mesh, const QMatrix4x4 &model, const QVector3D &color,
   cmd.mvp = m_viewProj * model;
   cmd.color = color;
   cmd.alpha = alpha;
+  cmd.shader = m_currentShader;
   if (m_activeQueue)
     m_activeQueue->submit(cmd);
 }
@@ -253,6 +254,7 @@ void Renderer::renderWorld(Engine::Core::World *world) {
             (m_selectedIds.find(entity->getId()) != m_selectedIds.end());
         ctx.hovered = (entity->getId() == m_hoveredEntityId);
         ctx.animationTime = m_accumulatedTime;
+        ctx.backend = m_backend.get();
         fn(ctx, *this);
         drawnByRegistry = true;
       }

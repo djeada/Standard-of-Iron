@@ -52,6 +52,8 @@ void Backend::initialize() {
   m_stoneShader = m_shaderCache->get(QStringLiteral("stone_instanced"));
   m_groundShader = m_shaderCache->get(QStringLiteral("ground_plane"));
   m_terrainShader = m_shaderCache->get(QStringLiteral("terrain_chunk"));
+  m_archerShader = m_shaderCache->get(QStringLiteral("archer"));
+  m_knightShader = m_shaderCache->get(QStringLiteral("knight"));
   if (!m_basicShader)
     qWarning() << "Backend: basic shader missing";
   if (!m_gridShader)
@@ -68,8 +70,14 @@ void Backend::initialize() {
     qWarning() << "Backend: ground_plane shader missing";
   if (!m_terrainShader)
     qWarning() << "Backend: terrain shader missing";
+  if (!m_archerShader)
+    qWarning() << "Backend: archer shader missing";
+  if (!m_knightShader)
+    qWarning() << "Backend: knight shader missing";
 
   cacheBasicUniforms();
+  cacheArcherUniforms();
+  cacheKnightUniforms();
   cacheGridUniforms();
   cacheCylinderUniforms();
   cacheFogUniforms();
@@ -458,13 +466,23 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       if (glIsEnabled(GL_POLYGON_OFFSET_FILL))
         glDisable(GL_POLYGON_OFFSET_FILL);
 
-      if (m_lastBoundShader != m_basicShader) {
-        m_basicShader->use();
-        m_lastBoundShader = m_basicShader;
+      Shader *activeShader = it.shader ? it.shader : m_basicShader;
+      if (!activeShader)
+        break;
+
+      BasicUniforms *uniforms = &m_basicUniforms;
+      if (activeShader == m_archerShader)
+        uniforms = &m_archerUniforms;
+      else if (activeShader == m_knightShader)
+        uniforms = &m_knightUniforms;
+
+      if (m_lastBoundShader != activeShader) {
+        activeShader->use();
+        m_lastBoundShader = activeShader;
       }
 
-      m_basicShader->setUniform(m_basicUniforms.mvp, it.mvp);
-      m_basicShader->setUniform(m_basicUniforms.model, it.model);
+      activeShader->setUniform(uniforms->mvp, it.mvp);
+      activeShader->setUniform(uniforms->model, it.model);
 
       Texture *texToUse = it.texture
                               ? it.texture
@@ -472,13 +490,12 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       if (texToUse && texToUse != m_lastBoundTexture) {
         texToUse->bind(0);
         m_lastBoundTexture = texToUse;
-        m_basicShader->setUniform(m_basicUniforms.texture, 0);
+        activeShader->setUniform(uniforms->texture, 0);
       }
 
-      m_basicShader->setUniform(m_basicUniforms.useTexture,
-                                it.texture != nullptr);
-      m_basicShader->setUniform(m_basicUniforms.color, it.color);
-      m_basicShader->setUniform(m_basicUniforms.alpha, it.alpha);
+      activeShader->setUniform(uniforms->useTexture, it.texture != nullptr);
+      activeShader->setUniform(uniforms->color, it.color);
+      activeShader->setUniform(uniforms->alpha, it.alpha);
       it.mesh->draw();
       break;
     }
@@ -596,6 +613,30 @@ void Backend::cacheBasicUniforms() {
   m_basicUniforms.useTexture = m_basicShader->uniformHandle("u_useTexture");
   m_basicUniforms.color = m_basicShader->uniformHandle("u_color");
   m_basicUniforms.alpha = m_basicShader->uniformHandle("u_alpha");
+}
+
+void Backend::cacheArcherUniforms() {
+  if (!m_archerShader)
+    return;
+
+  m_archerUniforms.mvp = m_archerShader->uniformHandle("u_mvp");
+  m_archerUniforms.model = m_archerShader->uniformHandle("u_model");
+  m_archerUniforms.texture = m_archerShader->uniformHandle("u_texture");
+  m_archerUniforms.useTexture = m_archerShader->uniformHandle("u_useTexture");
+  m_archerUniforms.color = m_archerShader->uniformHandle("u_color");
+  m_archerUniforms.alpha = m_archerShader->uniformHandle("u_alpha");
+}
+
+void Backend::cacheKnightUniforms() {
+  if (!m_knightShader)
+    return;
+
+  m_knightUniforms.mvp = m_knightShader->uniformHandle("u_mvp");
+  m_knightUniforms.model = m_knightShader->uniformHandle("u_model");
+  m_knightUniforms.texture = m_knightShader->uniformHandle("u_texture");
+  m_knightUniforms.useTexture = m_knightShader->uniformHandle("u_useTexture");
+  m_knightUniforms.color = m_knightShader->uniformHandle("u_color");
+  m_knightUniforms.alpha = m_knightShader->uniformHandle("u_alpha");
 }
 
 void Backend::cacheGridUniforms() {
