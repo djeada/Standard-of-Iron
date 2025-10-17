@@ -21,7 +21,8 @@
     "grassDry": [0.6, 0.5, 0.35],
     "soilColor": [0.3, 0.25, 0.2],
     "rockLow": [0.5, 0.5, 0.45],
-    "rockHigh": [0.7, 0.7, 0.75]
+    "rockHigh": [0.7, 0.7, 0.75],
+    "plantDensity": 0.55
   },
   "camera": {
     "center": [100, 0, 100],
