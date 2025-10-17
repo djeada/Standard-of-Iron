@@ -36,6 +36,7 @@ public:
   CommandResult onAttackClick(qreal sx, qreal sy, int viewportWidth,
                               int viewportHeight, void *camera);
   CommandResult onStopCommand();
+  CommandResult onHoldCommand();
   CommandResult onPatrolClick(qreal sx, qreal sy, int viewportWidth,
                               int viewportHeight, void *camera);
   CommandResult setRallyAtScreen(qreal sx, qreal sy, int viewportWidth,
