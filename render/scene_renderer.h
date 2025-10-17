@@ -134,6 +134,10 @@ public:
                   const GrassBatchParams &params);
   void stoneBatch(Buffer *instanceBuffer, std::size_t instanceCount,
                   const StoneBatchParams &params);
+  void plantBatch(Buffer *instanceBuffer, std::size_t instanceCount,
+                  const PlantBatchParams &params);
+  void pineBatch(Buffer *instanceBuffer, std::size_t instanceCount,
+                 const PineBatchParams &params);
 
 private:
   Camera *m_camera = nullptr;
