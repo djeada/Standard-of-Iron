@@ -48,7 +48,8 @@ public:
                    const std::vector<const ContactSnapshot *> &allEnemies,
                    float isolationRadius = 8.0f);
 
-  static float getUnitTypePriority(const std::string &unitType);
+  static float getUnitTypePriority(const std::string &unitType,
+                                   const Game::Systems::Nation *nation = nullptr);
 };
 
 } // namespace Game::Systems::AI
