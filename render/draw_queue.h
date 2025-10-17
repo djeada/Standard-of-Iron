@@ -110,10 +110,10 @@ struct SelectionSmokeCmd {
   float baseAlpha = 0.15f;
 };
 
-using DrawCmd = std::variant<GridCmd, SelectionRingCmd, SelectionSmokeCmd,
-                             CylinderCmd, MeshCmd, FogBatchCmd, GrassBatchCmd,
-                             StoneBatchCmd, PlantBatchCmd, PineBatchCmd,
-                             TerrainChunkCmd>;
+using DrawCmd =
+    std::variant<GridCmd, SelectionRingCmd, SelectionSmokeCmd, CylinderCmd,
+                 MeshCmd, FogBatchCmd, GrassBatchCmd, StoneBatchCmd,
+                 PlantBatchCmd, PineBatchCmd, TerrainChunkCmd>;
 
 enum class DrawCmdType : std::uint8_t {
   Grid = 0,
@@ -248,38 +248,33 @@ private:
   }
 
   uint64_t computeSortKey(const DrawCmd &cmd) const {
-    // Rendering order (lower order value = earlier in frame):
-    // TerrainChunk (0) → GrassBatch (1) → StoneBatch (2) → PlantBatch (3) → 
-    // PineBatch (4) → FogBatch (5) → Mesh (6) → Cylinder (7) → SelectionSmoke (8) → SelectionRing (9) → Grid (10)
-    
+
     enum class RenderOrder : uint8_t {
-      TerrainChunk = 0,    // Opaque ground base (renders first)
-      GrassBatch = 1,      // Grass on terrain
-      StoneBatch = 2,      // Stones on terrain
-      PlantBatch = 3,      // Plants on terrain (3rd biome layer)
-      PineBatch = 4,       // Pine trees on terrain (4th biome layer)
-      FogBatch = 5,        // Fog of war (covers all biome layers)
-      Mesh = 6,            // Units and objects
-      Cylinder = 7,        // Unit body parts
-      SelectionSmoke = 8,  // Selection effects
-      SelectionRing = 9,   // Selection UI
-      Grid = 10            // Debug grid (renders last)
+      TerrainChunk = 0,
+      GrassBatch = 1,
+      StoneBatch = 2,
+      PlantBatch = 3,
+      PineBatch = 4,
+      FogBatch = 5,
+      Mesh = 6,
+      Cylinder = 7,
+      SelectionSmoke = 8,
+      SelectionRing = 9,
+      Grid = 10
     };
-    
-    // Map variant index to render order using enum values
+
     static constexpr uint8_t kTypeOrder[] = {
-      static_cast<uint8_t>(RenderOrder::Grid),           // Grid (variant index 0)
-      static_cast<uint8_t>(RenderOrder::SelectionRing),  // SelectionRing (variant index 1)
-      static_cast<uint8_t>(RenderOrder::SelectionSmoke), // SelectionSmoke (variant index 2)
-      static_cast<uint8_t>(RenderOrder::Cylinder),       // Cylinder (variant index 3)
-      static_cast<uint8_t>(RenderOrder::Mesh),           // Mesh (variant index 4)
-      static_cast<uint8_t>(RenderOrder::FogBatch),       // FogBatch (variant index 5)
-      static_cast<uint8_t>(RenderOrder::GrassBatch),     // GrassBatch (variant index 6)
-      static_cast<uint8_t>(RenderOrder::StoneBatch),     // StoneBatch (variant index 7)
-      static_cast<uint8_t>(RenderOrder::PlantBatch),     // PlantBatch (variant index 8)
-      static_cast<uint8_t>(RenderOrder::PineBatch),      // PineBatch (variant index 9)
-      static_cast<uint8_t>(RenderOrder::TerrainChunk)    // TerrainChunk (variant index 10)
-    };
+        static_cast<uint8_t>(RenderOrder::Grid),
+        static_cast<uint8_t>(RenderOrder::SelectionRing),
+        static_cast<uint8_t>(RenderOrder::SelectionSmoke),
+        static_cast<uint8_t>(RenderOrder::Cylinder),
+        static_cast<uint8_t>(RenderOrder::Mesh),
+        static_cast<uint8_t>(RenderOrder::FogBatch),
+        static_cast<uint8_t>(RenderOrder::GrassBatch),
+        static_cast<uint8_t>(RenderOrder::StoneBatch),
+        static_cast<uint8_t>(RenderOrder::PlantBatch),
+        static_cast<uint8_t>(RenderOrder::PineBatch),
+        static_cast<uint8_t>(RenderOrder::TerrainChunk)};
 
     const std::size_t typeIndex = cmd.index();
     constexpr std::size_t typeCount =
@@ -313,8 +308,8 @@ private:
       key |= bufferPtr;
     } else if (cmd.index() == PineBatchCmdIndex) {
       const auto &pine = std::get<PineBatchCmdIndex>(cmd);
-      uint64_t bufferPtr = reinterpret_cast<uintptr_t>(pine.instanceBuffer) &
-                           0x0000FFFFFFFFFFFF;
+      uint64_t bufferPtr =
+          reinterpret_cast<uintptr_t>(pine.instanceBuffer) & 0x0000FFFFFFFFFFFF;
       key |= bufferPtr;
     } else if (cmd.index() == TerrainChunkCmdIndex) {
       const auto &terrain = std::get<TerrainChunkCmdIndex>(cmd);
