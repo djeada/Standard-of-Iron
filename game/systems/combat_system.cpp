@@ -109,6 +109,14 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
       range = attackerAtk->getCurrentRange();
       damage = attackerAtk->getCurrentDamage();
       cooldown = attackerAtk->getCurrentCooldown();
+
+      auto *holdMode = attacker->getComponent<Engine::Core::HoldModeComponent>();
+      if (holdMode && holdMode->active &&
+          attackerUnit->unitType == "archer") {
+        range *= 1.5f;
+        damage = static_cast<int>(damage * 1.3f);
+      }
+
       attackerAtk->timeSinceLast += deltaTime;
       tAccum = &attackerAtk->timeSinceLast;
     } else {
@@ -154,6 +162,15 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
               }
             }
           } else if (attackTarget->shouldChase) {
+
+            auto *holdMode =
+                attacker->getComponent<Engine::Core::HoldModeComponent>();
+            if (holdMode && holdMode->active) {
+              if (!isInRange(attacker, target, range)) {
+                attacker->removeComponent<Engine::Core::AttackTargetComponent>();
+              }
+              continue;
+            }
 
             auto *targetTransform =
                 target->getComponent<Engine::Core::TransformComponent>();

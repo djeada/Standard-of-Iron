@@ -200,4 +200,11 @@ public:
   PendingRemovalComponent() = default;
 };
 
+class HoldModeComponent : public Component {
+public:
+  HoldModeComponent() : active(true) {}
+
+  bool active;
+};
+
 } // namespace Engine::Core
