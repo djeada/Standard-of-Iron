@@ -13,6 +13,8 @@ Rectangle {
     visible: (typeof game !== 'undefined' && game.victoryState !== "")
     z: 100
 
+    // Reset overlay state when a new game starts
+    // This ensures no residual overlay remains after map reload or skirmish restart
     Connections {
         target: (typeof game !== 'undefined') ? game : null
         function onVictoryStateChanged() {
