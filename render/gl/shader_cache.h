@@ -78,6 +78,14 @@ public:
     const QString terrainFrag =
         kShaderBase + QStringLiteral("terrain_chunk.frag");
     load(QStringLiteral("terrain_chunk"), terrainVert, terrainFrag);
+
+    const QString archerVert = kShaderBase + QStringLiteral("archer.vert");
+    const QString archerFrag = kShaderBase + QStringLiteral("archer.frag");
+    load(QStringLiteral("archer"), archerVert, archerFrag);
+
+    const QString knightVert = kShaderBase + QStringLiteral("knight.vert");
+    const QString knightFrag = kShaderBase + QStringLiteral("knight.frag");
+    load(QStringLiteral("knight"), knightVert, knightFrag);
   }
 
   void clear() {

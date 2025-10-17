@@ -43,12 +43,15 @@ inline bool decomposeUnitCylinder(const QMatrix4x4 &model, QVector3D &start,
 class QueueSubmitter : public ISubmitter {
 public:
   explicit QueueSubmitter(DrawQueue *queue) : m_queue(queue) {}
+
+  void setShader(Shader *shader) { m_shader = shader; }
+
   void mesh(Mesh *mesh, const QMatrix4x4 &model, const QVector3D &color,
             Texture *tex = nullptr, float alpha = 1.0f) override {
     if (!m_queue || !mesh)
       return;
 
-    if (mesh == getUnitCylinder() && (!tex)) {
+    if (mesh == getUnitCylinder() && (!tex) && (!m_shader)) {
       QVector3D start, end;
       float radius = 0.0f;
       if (detail::decomposeUnitCylinder(model, start, end, radius)) {
@@ -68,6 +71,7 @@ public:
     cmd.model = model;
     cmd.color = color;
     cmd.alpha = alpha;
+    cmd.shader = m_shader;
     m_queue->submit(cmd);
   }
   void cylinder(const QVector3D &start, const QVector3D &end, float radius,
@@ -118,6 +122,7 @@ public:
 
 private:
   DrawQueue *m_queue = nullptr;
+  Shader *m_shader = nullptr;
 };
 
 } // namespace Render::GL
