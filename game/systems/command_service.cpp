@@ -162,17 +162,13 @@ void CommandService::moveUnits(Engine::Core::World &world,
       continue;
     }
 
-    // Check if the new target is significantly different from current path
+    // Check if the new target is significantly different from current movement
     // If so, we must clear the old path even during cooldown
-    bool targetDirectionChanged = false;
-    if (mv->hasTarget || !mv->path.empty()) {
-      QVector3D currentTarget;
-      if (!mv->path.empty()) {
-        currentTarget =
-            QVector3D(mv->path.back().first, 0.0f, mv->path.back().second);
-      } else {
-        currentTarget = QVector3D(mv->targetX, 0.0f, mv->targetY);
-      }
+    bool shouldClearPath = false;
+    if (mv->hasTarget || mv->pathPending || !mv->path.empty()) {
+      // Determine where the unit is currently heading (immediate target, not
+      // final goal)
+      QVector3D currentTarget = QVector3D(mv->targetX, 0.0f, mv->targetY);
       QVector3D newTarget = QVector3D(targetX, 0.0f, targetZ);
       QVector3D currentPos =
           QVector3D(transform->position.x, 0.0f, transform->position.z);
@@ -185,20 +181,23 @@ void CommandService::moveUnits(Engine::Core::World &world,
       float newDirLenSq = newDir.lengthSquared();
 
       // If either direction is significant, check if they differ
-      if (oldDirLenSq > 0.1f && newDirLenSq > 0.1f) {
+      if (oldDirLenSq > 0.01f && newDirLenSq > 0.01f) {
         oldDir.normalize();
         newDir.normalize();
         float dotProduct = QVector3D::dotProduct(oldDir, newDir);
 
-        // If dot product < 0.9 (~25 degrees), direction changed significantly
-        if (dotProduct < 0.9f) {
-          targetDirectionChanged = true;
+        // If dot product < 0.95 (~18 degrees), direction changed significantly
+        if (dotProduct < 0.95f) {
+          shouldClearPath = true;
         }
+      } else if (newDirLenSq > 0.01f) {
+        // If old target is very close but new target is not, clear the path
+        shouldClearPath = true;
       }
     }
 
     // If direction changed significantly, clear old path immediately
-    if (targetDirectionChanged) {
+    if (shouldClearPath) {
       mv->path.clear();
       mv->hasTarget = false;
       mv->vx = 0.0f;
