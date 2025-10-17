@@ -245,6 +245,11 @@ void Renderer::renderWorld(Engine::Core::World *world) {
 
     bool drawnByRegistry = false;
     if (unitComp && !unitComp->unitType.empty() && m_entityRegistry) {
+      if (unitComp->health <= 0 ||
+          entity->hasComponent<Engine::Core::PendingRemovalComponent>()) {
+        continue;
+      }
+
       auto fn = m_entityRegistry->get(unitComp->unitType);
       if (fn) {
         DrawContext ctx{resources(), entity, world, modelMatrix};
