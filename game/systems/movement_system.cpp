@@ -105,6 +105,31 @@ void MovementSystem::moveUnit(Engine::Core::Entity *entity,
     return;
   }
 
+  auto *holdMode = entity->getComponent<Engine::Core::HoldModeComponent>();
+  if (holdMode) {
+    if (holdMode->exitCooldown > 0.0f) {
+      holdMode->exitCooldown = std::max(0.0f, holdMode->exitCooldown - deltaTime);
+    }
+
+    if (holdMode->active) {
+      movement->hasTarget = false;
+      movement->vx = 0.0f;
+      movement->vz = 0.0f;
+      movement->path.clear();
+      movement->pathPending = false;
+      return;
+    }
+
+    if (holdMode->exitCooldown > 0.0f) {
+      movement->hasTarget = false;
+      movement->vx = 0.0f;
+      movement->vz = 0.0f;
+      movement->path.clear();
+      movement->pathPending = false;
+      return;
+    }
+  }
+
   auto *atk = entity->getComponent<Engine::Core::AttackComponent>();
   if (atk && atk->inMeleeLock) {
 

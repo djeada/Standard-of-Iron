@@ -41,6 +41,9 @@ public:
   bool isAlive() const;
   QVector3D position() const;
 
+  void setHoldMode(bool enabled);
+  bool isInHoldMode() const;
+
 protected:
   Unit(Engine::Core::World &world, const std::string &type);
   Engine::Core::Entity *entity() const;
