@@ -59,6 +59,16 @@ const TroopType *Nation::getBestRangedTroop() const {
   return *it;
 }
 
+bool Nation::isMeleeUnit(const std::string &unitType) const {
+  const auto *troop = getTroop(unitType);
+  return troop != nullptr && troop->isMelee;
+}
+
+bool Nation::isRangedUnit(const std::string &unitType) const {
+  const auto *troop = getTroop(unitType);
+  return troop != nullptr && !troop->isMelee;
+}
+
 NationRegistry &NationRegistry::instance() {
   static NationRegistry inst;
   return inst;
