@@ -32,6 +32,9 @@ struct Nation {
 
   const TroopType *getBestMeleeTroop() const;
   const TroopType *getBestRangedTroop() const;
+
+  bool isMeleeUnit(const std::string &unitType) const;
+  bool isRangedUnit(const std::string &unitType) const;
 };
 
 class NationRegistry {
