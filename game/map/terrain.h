@@ -37,6 +37,7 @@ struct BiomeSettings {
   float terrainRockDetailStrength = 0.35f;
   float backgroundSwayVariance = 0.2f;
   float backgroundScatterRadius = 0.35f;
+  float plantDensity = 0.5f;
   std::uint32_t seed = 1337u;
 };
 

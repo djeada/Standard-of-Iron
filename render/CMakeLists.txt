@@ -17,6 +17,8 @@ add_library(render_gl STATIC
     ground/terrain_renderer.cpp
     ground/biome_renderer.cpp
     ground/stone_renderer.cpp
+    ground/plant_renderer.cpp
+    ground/pine_renderer.cpp
     entity/registry.cpp
     entity/archer_renderer.cpp
     entity/knight_renderer.cpp
