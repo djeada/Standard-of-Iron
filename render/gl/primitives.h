@@ -13,4 +13,6 @@ Mesh *getUnitCone(int radialSegments = 32);
 
 Mesh *getUnitCapsule(int radialSegments = 32, int heightSegments = 1);
 
+Mesh *getUnitTorso(int radialSegments = 32, int heightSegments = 8);
+
 } // namespace Render::GL
