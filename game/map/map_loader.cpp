@@ -148,6 +148,9 @@ static void readBiome(const QJsonObject &obj, BiomeSettings &out) {
     out.backgroundScatterRadius =
         float(obj.value("backgroundScatterRadius")
                   .toDouble(out.backgroundScatterRadius));
+  if (obj.contains("plantDensity"))
+    out.plantDensity =
+        float(obj.value("plantDensity").toDouble(out.plantDensity));
 }
 
 static void readVictoryConfig(const QJsonObject &obj, VictoryConfig &out) {

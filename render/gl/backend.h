@@ -2,6 +2,7 @@
 
 #include "../draw_queue.h"
 #include "../ground/grass_gpu.h"
+#include "../ground/plant_gpu.h"
 #include "../ground/stone_gpu.h"
 #include "../ground/terrain_gpu.h"
 #include "camera.h"
@@ -80,6 +81,8 @@ private:
   Shader *m_fogShader = nullptr;
   Shader *m_grassShader = nullptr;
   Shader *m_stoneShader = nullptr;
+  Shader *m_plantShader = nullptr;
+  Shader *m_pineShader = nullptr;
   Shader *m_groundShader = nullptr;
   Shader *m_terrainShader = nullptr;
   Shader *m_archerShader = nullptr;
@@ -127,6 +130,22 @@ private:
     Shader::UniformHandle viewProj{Shader::InvalidUniform};
     Shader::UniformHandle lightDirection{Shader::InvalidUniform};
   } m_stoneUniforms;
+
+  struct PlantUniforms {
+    Shader::UniformHandle viewProj{Shader::InvalidUniform};
+    Shader::UniformHandle time{Shader::InvalidUniform};
+    Shader::UniformHandle windStrength{Shader::InvalidUniform};
+    Shader::UniformHandle windSpeed{Shader::InvalidUniform};
+    Shader::UniformHandle lightDirection{Shader::InvalidUniform};
+  } m_plantUniforms;
+
+  struct PineUniforms {
+    Shader::UniformHandle viewProj{Shader::InvalidUniform};
+    Shader::UniformHandle time{Shader::InvalidUniform};
+    Shader::UniformHandle windStrength{Shader::InvalidUniform};
+    Shader::UniformHandle windSpeed{Shader::InvalidUniform};
+    Shader::UniformHandle lightDirection{Shader::InvalidUniform};
+  } m_pineUniforms;
 
   struct GroundUniforms {
     Shader::UniformHandle mvp{Shader::InvalidUniform};
@@ -216,6 +235,18 @@ private:
   GLsizei m_stoneIndexCount = 0;
   GLsizei m_stoneVertexCount = 0;
 
+  GLuint m_plantVao = 0;
+  GLuint m_plantVertexBuffer = 0;
+  GLuint m_plantIndexBuffer = 0;
+  GLsizei m_plantIndexCount = 0;
+  GLsizei m_plantVertexCount = 0;
+
+  GLuint m_pineVao = 0;
+  GLuint m_pineVertexBuffer = 0;
+  GLuint m_pineIndexBuffer = 0;
+  GLsizei m_pineIndexCount = 0;
+  GLsizei m_pineVertexCount = 0;
+
   void cacheBasicUniforms();
   void cacheArcherUniforms();
   void cacheKnightUniforms();
@@ -236,6 +267,12 @@ private:
   void cacheStoneUniforms();
   void initializeStonePipeline();
   void shutdownStonePipeline();
+  void cachePlantUniforms();
+  void initializePlantPipeline();
+  void shutdownPlantPipeline();
+  void cachePineUniforms();
+  void initializePinePipeline();
+  void shutdownPinePipeline();
   void cacheGroundUniforms();
   void cacheTerrainUniforms();
 
