@@ -100,6 +100,11 @@ void MovementSystem::moveUnit(Engine::Core::Entity *entity,
     return;
   }
 
+  if (unit->health <= 0 ||
+      entity->hasComponent<Engine::Core::PendingRemovalComponent>()) {
+    return;
+  }
+
   auto *atk = entity->getComponent<Engine::Core::AttackComponent>();
   if (atk && atk->inMeleeLock) {
 
