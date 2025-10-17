@@ -32,7 +32,8 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
       continue;
     }
 
-    if (attackerUnit->health <= 0)
+    if (attackerUnit->health <= 0 ||
+        attacker->hasComponent<Engine::Core::PendingRemovalComponent>())
       continue;
 
     if (attackerAtk && attackerAtk->inMeleeLock) {
@@ -501,6 +502,17 @@ void CombatSystem::dealDamage(Engine::Core::World *world,
       if (auto *r = target->getComponent<Engine::Core::RenderableComponent>()) {
         r->visible = false;
       }
+
+      if (auto *movement =
+              target->getComponent<Engine::Core::MovementComponent>()) {
+        movement->hasTarget = false;
+        movement->vx = 0.0f;
+        movement->vz = 0.0f;
+        movement->path.clear();
+        movement->pathPending = false;
+      }
+
+      target->addComponent<Engine::Core::PendingRemovalComponent>();
     }
   }
 }
