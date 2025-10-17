@@ -15,6 +15,8 @@
 #include "render/ground/biome_renderer.h"
 #include "render/ground/fog_renderer.h"
 #include "render/ground/ground_renderer.h"
+#include "render/ground/pine_renderer.h"
+#include "render/ground/plant_renderer.h"
 #include "render/ground/stone_renderer.h"
 #include "render/ground/terrain_renderer.h"
 #include "render/scene_renderer.h"
@@ -239,6 +241,20 @@ SkirmishLoadResult SkirmishLoader::start(const QString &mapPath,
     if (terrainService.isInitialized() && terrainService.getHeightMap()) {
       m_stone->configure(*terrainService.getHeightMap(),
                          terrainService.biomeSettings());
+    }
+  }
+
+  if (m_plant) {
+    if (terrainService.isInitialized() && terrainService.getHeightMap()) {
+      m_plant->configure(*terrainService.getHeightMap(),
+                         terrainService.biomeSettings());
+    }
+  }
+
+  if (m_pine) {
+    if (terrainService.isInitialized() && terrainService.getHeightMap()) {
+      m_pine->configure(*terrainService.getHeightMap(),
+                        terrainService.biomeSettings());
     }
   }
 
