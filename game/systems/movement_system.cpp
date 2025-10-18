@@ -108,7 +108,8 @@ void MovementSystem::moveUnit(Engine::Core::Entity *entity,
   auto *holdMode = entity->getComponent<Engine::Core::HoldModeComponent>();
   if (holdMode) {
     if (holdMode->exitCooldown > 0.0f) {
-      holdMode->exitCooldown = std::max(0.0f, holdMode->exitCooldown - deltaTime);
+      holdMode->exitCooldown =
+          std::max(0.0f, holdMode->exitCooldown - deltaTime);
     }
 
     if (holdMode->active) {
