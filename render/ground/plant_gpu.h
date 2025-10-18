@@ -6,10 +6,9 @@
 namespace Render::GL {
 
 struct PlantInstanceGpu {
-  QVector4D posScale;   // xyz=world pos, w=scale
-  QVector4D colorSway;  // rgb=tint color, a=sway phase
-  QVector4D typeParams; // x=plant type, y=rotation, z=sway strength, w=sway
-                        // speed
+  QVector4D posScale;
+  QVector4D colorSway;
+  QVector4D typeParams;
 };
 
 struct PlantBatchParams {

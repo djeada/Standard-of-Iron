@@ -72,9 +72,11 @@ void Backend::initialize() {
   if (!m_stoneShader)
     qWarning() << "Backend: stone shader missing";
   if (!m_plantShader)
-    qWarning() << "Backend: plant shader missing - check plant_instanced.vert/frag";
+    qWarning()
+        << "Backend: plant shader missing - check plant_instanced.vert/frag";
   if (!m_pineShader)
-    qWarning() << "Backend: pine shader missing - check pine_instanced.vert/frag";
+    qWarning()
+        << "Backend: pine shader missing - check pine_instanced.vert/frag";
   if (!m_groundShader)
     qWarning() << "Backend: ground_plane shader missing";
   if (!m_terrainShader)
@@ -329,15 +331,14 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
     }
     case PlantBatchCmdIndex: {
       const auto &plant = std::get<PlantBatchCmdIndex>(cmd);
-      
+
       if (!plant.instanceBuffer || plant.instanceCount == 0 || !m_plantShader ||
           !m_plantVao || m_plantIndexCount == 0) {
         break;
       }
 
-      // IMPORTANT: Plants need depth testing ENABLED to render behind units
-      DepthMaskScope depthMask(false); // Don't write to depth buffer
-      // But still TEST against it
+      DepthMaskScope depthMask(false);
+
       glEnable(GL_DEPTH_TEST);
       BlendScope blend(true);
       glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -398,14 +399,13 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
     }
     case PineBatchCmdIndex: {
       const auto &pine = std::get<PineBatchCmdIndex>(cmd);
-      
+
       if (!pine.instanceBuffer || pine.instanceCount == 0 || !m_pineShader ||
           !m_pineVao || m_pineIndexCount == 0) {
         break;
       }
 
-      // Pine trees: similar rendering to plants but taller geometry
-      DepthMaskScope depthMask(false); // Don't write to depth buffer
+      DepthMaskScope depthMask(false);
       glEnable(GL_DEPTH_TEST);
       BlendScope blend(true);
       glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -427,11 +427,11 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       }
       if (m_pineUniforms.windStrength != Shader::InvalidUniform) {
         m_pineShader->setUniform(m_pineUniforms.windStrength,
-                                  pine.params.windStrength);
+                                 pine.params.windStrength);
       }
       if (m_pineUniforms.windSpeed != Shader::InvalidUniform) {
         m_pineShader->setUniform(m_pineUniforms.windSpeed,
-                                  pine.params.windSpeed);
+                                 pine.params.windSpeed);
       }
       if (m_pineUniforms.lightDirection != Shader::InvalidUniform) {
         QVector3D lightDir = pine.params.lightDirection;
@@ -454,8 +454,8 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
           reinterpret_cast<void *>(offsetof(PineInstanceGpu, rotation)));
       pine.instanceBuffer->unbind();
 
-      glDrawElementsInstanced(GL_TRIANGLES, m_pineIndexCount,
-                              GL_UNSIGNED_SHORT, nullptr,
+      glDrawElementsInstanced(GL_TRIANGLES, m_pineIndexCount, GL_UNSIGNED_SHORT,
+                              nullptr,
                               static_cast<GLsizei>(pine.instanceCount));
       glBindVertexArray(0);
 
@@ -1370,8 +1370,7 @@ void Backend::cachePineUniforms() {
   if (m_pineShader) {
     m_pineUniforms.viewProj = m_pineShader->uniformHandle("uViewProj");
     m_pineUniforms.time = m_pineShader->uniformHandle("uTime");
-    m_pineUniforms.windStrength =
-        m_pineShader->uniformHandle("uWindStrength");
+    m_pineUniforms.windStrength = m_pineShader->uniformHandle("uWindStrength");
     m_pineUniforms.windSpeed = m_pineShader->uniformHandle("uWindSpeed");
     m_pineUniforms.lightDirection =
         m_pineShader->uniformHandle("uLightDirection");
@@ -1388,28 +1387,23 @@ void Backend::initializePlantPipeline() {
     QVector3D normal;
   };
 
-  // Cross-quad billboard for realistic 3D plant appearance (not grass!)
-  // Creates an X-shape when viewed from above, visible from all angles
   const PlantVertex plantVertices[] = {
-      // First quad (front-back aligned)
-      {{-0.5f, 0.0f, 0.0f}, {0.0f, 0.0f}, {0.0f, 0.0f, 1.0f}},  // bottom left
-      {{0.5f, 0.0f, 0.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}},   // bottom right
-      {{0.5f, 1.0f, 0.0f}, {1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}},   // top right
-      {{-0.5f, 1.0f, 0.0f}, {0.0f, 1.0f}, {0.0f, 0.0f, 1.0f}},  // top left
-      
-      // First quad back face
+
+      {{-0.5f, 0.0f, 0.0f}, {0.0f, 0.0f}, {0.0f, 0.0f, 1.0f}},
+      {{0.5f, 0.0f, 0.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}},
+      {{0.5f, 1.0f, 0.0f}, {1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}},
+      {{-0.5f, 1.0f, 0.0f}, {0.0f, 1.0f}, {0.0f, 0.0f, 1.0f}},
+
       {{0.5f, 0.0f, 0.0f}, {0.0f, 0.0f}, {0.0f, 0.0f, -1.0f}},
       {{-0.5f, 0.0f, 0.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, -1.0f}},
       {{-0.5f, 1.0f, 0.0f}, {1.0f, 1.0f}, {0.0f, 0.0f, -1.0f}},
       {{0.5f, 1.0f, 0.0f}, {0.0f, 1.0f}, {0.0f, 0.0f, -1.0f}},
-      
-      // Second quad (perpendicular, left-right aligned for X shape)
-      {{0.0f, 0.0f, -0.5f}, {0.0f, 0.0f}, {1.0f, 0.0f, 0.0f}},  // bottom left
-      {{0.0f, 0.0f, 0.5f}, {1.0f, 0.0f}, {1.0f, 0.0f, 0.0f}},   // bottom right
-      {{0.0f, 1.0f, 0.5f}, {1.0f, 1.0f}, {1.0f, 0.0f, 0.0f}},   // top right
-      {{0.0f, 1.0f, -0.5f}, {0.0f, 1.0f}, {1.0f, 0.0f, 0.0f}},  // top left
-      
-      // Second quad back face
+
+      {{0.0f, 0.0f, -0.5f}, {0.0f, 0.0f}, {1.0f, 0.0f, 0.0f}},
+      {{0.0f, 0.0f, 0.5f}, {1.0f, 0.0f}, {1.0f, 0.0f, 0.0f}},
+      {{0.0f, 1.0f, 0.5f}, {1.0f, 1.0f}, {1.0f, 0.0f, 0.0f}},
+      {{0.0f, 1.0f, -0.5f}, {0.0f, 1.0f}, {1.0f, 0.0f, 0.0f}},
+
       {{0.0f, 0.0f, 0.5f}, {0.0f, 0.0f}, {-1.0f, 0.0f, 0.0f}},
       {{0.0f, 0.0f, -0.5f}, {1.0f, 0.0f}, {-1.0f, 0.0f, 0.0f}},
       {{0.0f, 1.0f, -0.5f}, {1.0f, 1.0f}, {-1.0f, 0.0f, 0.0f}},
@@ -1417,13 +1411,13 @@ void Backend::initializePlantPipeline() {
   };
 
   const unsigned short plantIndices[] = {
-      // First quad front
-      0, 1, 2, 0, 2, 3,
-      // First quad back
-      4, 5, 6, 4, 6, 7,
-      // Second quad front
-      8, 9, 10, 8, 10, 11,
-      // Second quad back
+
+      0,  1,  2,  0,  2,  3,
+
+      4,  5,  6,  4,  6,  7,
+
+      8,  9,  10, 8,  10, 11,
+
       12, 13, 14, 12, 14, 15,
   };
 
@@ -1434,32 +1428,29 @@ void Backend::initializePlantPipeline() {
   glBindBuffer(GL_ARRAY_BUFFER, m_plantVertexBuffer);
   glBufferData(GL_ARRAY_BUFFER, sizeof(plantVertices), plantVertices,
                GL_STATIC_DRAW);
-  m_plantVertexCount = 16;  // 16 vertices for cross-quad
+  m_plantVertexCount = 16;
 
-  // Position attribute
   glEnableVertexAttribArray(0);
   glVertexAttribPointer(
       0, 3, GL_FLOAT, GL_FALSE, sizeof(PlantVertex),
       reinterpret_cast<void *>(offsetof(PlantVertex, position)));
-  // TexCoord attribute
+
   glEnableVertexAttribArray(1);
   glVertexAttribPointer(
       1, 2, GL_FLOAT, GL_FALSE, sizeof(PlantVertex),
       reinterpret_cast<void *>(offsetof(PlantVertex, texCoord)));
-  // Normal attribute
+
   glEnableVertexAttribArray(2);
   glVertexAttribPointer(
       2, 3, GL_FLOAT, GL_FALSE, sizeof(PlantVertex),
       reinterpret_cast<void *>(offsetof(PlantVertex, normal)));
 
-  // Index buffer
   glGenBuffers(1, &m_plantIndexBuffer);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_plantIndexBuffer);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(plantIndices), plantIndices,
                GL_STATIC_DRAW);
-  m_plantIndexCount = 24;  // 24 indices (4 quads × 6 indices)
+  m_plantIndexCount = 24;
 
-  // Instance attributes (will be set per-draw)
   glEnableVertexAttribArray(3);
   glVertexAttribDivisor(3, 1);
   glEnableVertexAttribArray(4);
@@ -1529,12 +1520,10 @@ void Backend::initializePinePipeline() {
   auto connectRings = [&](int lowerStart, int upperStart) {
     for (int i = 0; i < kSegments; ++i) {
       const int next = (i + 1) % kSegments;
-      const unsigned short lower0 =
-          static_cast<unsigned short>(lowerStart + i);
+      const unsigned short lower0 = static_cast<unsigned short>(lowerStart + i);
       const unsigned short lower1 =
           static_cast<unsigned short>(lowerStart + next);
-      const unsigned short upper0 =
-          static_cast<unsigned short>(upperStart + i);
+      const unsigned short upper0 = static_cast<unsigned short>(upperStart + i);
       const unsigned short upper1 =
           static_cast<unsigned short>(upperStart + next);
 
@@ -1573,8 +1562,7 @@ void Backend::initializePinePipeline() {
     indices.push_back(trunkCapIndex);
   }
 
-  const unsigned short apexIndex =
-      static_cast<unsigned short>(vertices.size());
+  const unsigned short apexIndex = static_cast<unsigned short>(vertices.size());
   vertices.push_back({QVector3D(0.0f, 1.18f, 0.0f), QVector2D(0.5f, 1.0f),
                       QVector3D(0.0f, 1.0f, 0.0f)});
   for (int i = 0; i < kSegments; ++i) {
@@ -1594,31 +1582,27 @@ void Backend::initializePinePipeline() {
                vertices.data(), GL_STATIC_DRAW);
   m_pineVertexCount = static_cast<GLsizei>(vertices.size());
 
-  // Position attribute
   glEnableVertexAttribArray(0);
   glVertexAttribPointer(
       0, 3, GL_FLOAT, GL_FALSE, sizeof(PineVertex),
       reinterpret_cast<void *>(offsetof(PineVertex, position)));
-  // TexCoord attribute
+
   glEnableVertexAttribArray(1);
   glVertexAttribPointer(
       1, 2, GL_FLOAT, GL_FALSE, sizeof(PineVertex),
       reinterpret_cast<void *>(offsetof(PineVertex, texCoord)));
-  // Normal attribute
-  glEnableVertexAttribArray(2);
-  glVertexAttribPointer(
-      2, 3, GL_FLOAT, GL_FALSE, sizeof(PineVertex),
-      reinterpret_cast<void *>(offsetof(PineVertex, normal)));
 
-  // Index buffer
+  glEnableVertexAttribArray(2);
+  glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(PineVertex),
+                        reinterpret_cast<void *>(offsetof(PineVertex, normal)));
+
   glGenBuffers(1, &m_pineIndexBuffer);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_pineIndexBuffer);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER,
                static_cast<GLsizeiptr>(indices.size() * sizeof(unsigned short)),
                indices.data(), GL_STATIC_DRAW);
-  m_pineIndexCount = static_cast<GLsizei>(indices.size());  // triangles * 3
+  m_pineIndexCount = static_cast<GLsizei>(indices.size());
 
-  // Instance attributes (will be set per-draw)
   glEnableVertexAttribArray(3);
   glVertexAttribDivisor(3, 1);
   glEnableVertexAttribArray(4);
