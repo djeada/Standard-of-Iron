@@ -48,9 +48,12 @@ public:
   QVector3D getPatrolFirstWaypoint() const { return m_patrolFirstWaypoint; }
   void clearPatrolFirstWaypoint() { m_hasPatrolFirstWaypoint = false; }
 
+  Q_INVOKABLE bool anySelectedInHoldMode() const;
+
 signals:
   void attackTargetSelected();
   void troopLimitReached();
+  void holdModeChanged(bool active);
 
 private:
   Engine::Core::World *m_world;

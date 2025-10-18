@@ -307,8 +307,6 @@ RowLayout {
                 onClicked: {
                     if (typeof game !== 'undefined' && game.onStopCommand)
                         game.onStopCommand();
-
-                    bottomRoot.commandModeChanged("normal");
                 }
                 ToolTip.visible: hovered
                 ToolTip.text: bottomRoot.hasMovableUnits ? "Stop all actions immediately" : "Select troops first"
@@ -333,30 +331,46 @@ RowLayout {
             }
 
             Button {
+                id: holdButton
                 Layout.fillWidth: true
                 Layout.preferredHeight: 38
                 text: "Hold"
                 focusPolicy: Qt.NoFocus
                 enabled: bottomRoot.hasMovableUnits
+                
+                property bool isHoldActive: (bottomRoot.selectionTick, (typeof game !== 'undefined' && game.anySelectedInHoldMode) ? game.anySelectedInHoldMode() : false)
+                
                 onClicked: {
                     if (typeof game !== 'undefined' && game.onHoldCommand)
                         game.onHoldCommand();
-
-                    bottomRoot.commandModeChanged("normal");
                 }
+                
+                Connections {
+                    target: (typeof game !== 'undefined') ? game : null
+                    function onHoldModeChanged(active) {
+                        holdButton.isHoldActive = (typeof game !== 'undefined' && game.anySelectedInHoldMode) ? game.anySelectedInHoldMode() : false;
+                    }
+                }
+                
                 ToolTip.visible: hovered
-                ToolTip.text: bottomRoot.hasMovableUnits ? "Hold position and defend" : "Select troops first"
+                ToolTip.text: bottomRoot.hasMovableUnits ? (isHoldActive ? "Exit hold mode (toggle)" : "Hold position and defend") : "Select troops first"
                 ToolTip.delay: 500
 
                 background: Rectangle {
-                    color: parent.enabled ? (parent.pressed ? "#8e44ad" : (parent.hovered ? "#9b59b6" : "#34495e")) : "#1a252f"
+                    color: {
+                        if (!parent.enabled) return "#1a252f";
+                        if (parent.isHoldActive) return "#8e44ad";  // Active purple
+                        if (parent.pressed) return "#8e44ad";
+                        if (parent.hovered) return "#9b59b6";
+                        return "#34495e";
+                    }
                     radius: 6
-                    border.color: parent.enabled ? "#8e44ad" : "#1a252f"
-                    border.width: 2
+                    border.color: parent.enabled ? (parent.isHoldActive ? "#d35400" : "#8e44ad") : "#1a252f"
+                    border.width: parent.isHoldActive ? 3 : 2
                 }
 
                 contentItem: Text {
-                    text: "📍\n" + parent.text
+                    text: (parent.isHoldActive ? "✓ " : "") + "📍\n" + parent.text
                     font.pointSize: 8
                     font.bold: true
                     color: parent.enabled ? "#ecf0f1" : "#7f8c8d"
