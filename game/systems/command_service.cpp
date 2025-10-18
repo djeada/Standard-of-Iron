@@ -114,8 +114,10 @@ void CommandService::moveUnits(Engine::Core::World &world,
       continue;
 
     auto *holdMode = e->getComponent<Engine::Core::HoldModeComponent>();
-    if (holdMode) {
+    if (holdMode && holdMode->active) {
+      // Only start stand-up transition if unit was actually in hold mode
       holdMode->active = false;
+      holdMode->exitCooldown = holdMode->standUpDuration;
     }
 
     auto *atk = e->getComponent<Engine::Core::AttackComponent>();
@@ -320,6 +322,13 @@ void CommandService::moveGroup(Engine::Core::World &world,
     auto *entity = world.getEntity(units[i]);
     if (!entity)
       continue;
+
+    // Handle hold mode exit for archers in group moves
+    auto *holdMode = entity->getComponent<Engine::Core::HoldModeComponent>();
+    if (holdMode && holdMode->active) {
+      holdMode->active = false;
+      holdMode->exitCooldown = holdMode->standUpDuration;
+    }
 
     auto *transform = entity->getComponent<Engine::Core::TransformComponent>();
     if (!transform)
@@ -682,8 +691,10 @@ void CommandService::attackTarget(
       continue;
 
     auto *holdMode = e->getComponent<Engine::Core::HoldModeComponent>();
-    if (holdMode) {
+    if (holdMode && holdMode->active) {
+      // Only start stand-up transition if unit was actually in hold mode
       holdMode->active = false;
+      holdMode->exitCooldown = holdMode->standUpDuration;
     }
 
     auto *attackTarget = e->getComponent<Engine::Core::AttackTargetComponent>();

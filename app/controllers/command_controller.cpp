@@ -78,13 +78,22 @@ CommandResult CommandController::onStopCommand() {
     if (!entity)
       continue;
 
+    // STOP clears ALL modes and actions
     resetMovement(entity);
-
     entity->removeComponent<Engine::Core::AttackTargetComponent>();
 
+    // Clear patrol mode
     if (auto *patrol = entity->getComponent<Engine::Core::PatrolComponent>()) {
       patrol->patrolling = false;
       patrol->waypoints.clear();
+    }
+
+    // Clear hold mode (archers stand up immediately)
+    auto *holdMode = entity->getComponent<Engine::Core::HoldModeComponent>();
+    if (holdMode && holdMode->active) {
+      holdMode->active = false;
+      holdMode->exitCooldown = holdMode->standUpDuration;  // Start stand-up transition
+      emit holdModeChanged(false);
     }
   }
 
@@ -108,20 +117,38 @@ CommandResult CommandController::onHoldCommand() {
     if (!entity)
       continue;
 
-    resetMovement(entity);
+    // HOLD MODE ONLY FOR ARCHERS (ranged units)
+    auto *unit = entity->getComponent<Engine::Core::UnitComponent>();
+    if (!unit || unit->unitType != "archer")
+      continue;
 
+    auto *holdMode = entity->getComponent<Engine::Core::HoldModeComponent>();
+    
+    // TOGGLE: If already in hold mode, exit it
+    if (holdMode && holdMode->active) {
+      holdMode->active = false;
+      holdMode->exitCooldown = holdMode->standUpDuration;
+      emit holdModeChanged(false);
+      continue;  // Don't clear other actions when toggling off
+    }
+
+    // ENTER HOLD MODE: Clear all other modes and actions
+    resetMovement(entity);
     entity->removeComponent<Engine::Core::AttackTargetComponent>();
 
+    // Clear patrol mode
     if (auto *patrol = entity->getComponent<Engine::Core::PatrolComponent>()) {
       patrol->patrolling = false;
       patrol->waypoints.clear();
     }
 
-    auto *holdMode = entity->getComponent<Engine::Core::HoldModeComponent>();
+    // Activate hold mode
     if (!holdMode) {
       holdMode = entity->addComponent<Engine::Core::HoldModeComponent>();
     }
     holdMode->active = true;
+    holdMode->exitCooldown = 0.0f;
+    emit holdModeChanged(true);
 
     auto *movement = entity->getComponent<Engine::Core::MovementComponent>();
     if (movement) {
@@ -256,6 +283,26 @@ void CommandController::recruitNearSelected(const QString &unitType,
 
 void CommandController::resetMovement(Engine::Core::Entity *entity) {
   App::Utils::resetMovement(entity);
+}
+
+bool CommandController::anySelectedInHoldMode() const {
+  if (!m_selectionSystem || !m_world) {
+    return false;
+  }
+
+  const auto &selected = m_selectionSystem->getSelectedUnits();
+  for (Engine::Core::EntityID entityId : selected) {
+    Engine::Core::Entity *entity = m_world->getEntity(entityId);
+    if (!entity)
+      continue;
+
+    auto *holdMode = entity->getComponent<Engine::Core::HoldModeComponent>();
+    if (holdMode && holdMode->active) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 } // namespace App::Controllers
