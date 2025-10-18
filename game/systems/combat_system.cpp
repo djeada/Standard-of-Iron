@@ -26,6 +26,10 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
   ArrowSystem *arrowSys = world->getSystem<ArrowSystem>();
 
   for (auto attacker : units) {
+    // Skip entities pending removal to avoid accessing destroyed objects
+    if (attacker->hasComponent<Engine::Core::PendingRemovalComponent>())
+      continue;
+
     auto attackerUnit = attacker->getComponent<Engine::Core::UnitComponent>();
     auto attackerTransform =
         attacker->getComponent<Engine::Core::TransformComponent>();
@@ -35,13 +39,12 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
       continue;
     }
 
-    if (attackerUnit->health <= 0 ||
-        attacker->hasComponent<Engine::Core::PendingRemovalComponent>())
+    if (attackerUnit->health <= 0)
       continue;
 
     if (attackerAtk && attackerAtk->inMeleeLock) {
       auto *lockTarget = world->getEntity(attackerAtk->meleeLockTargetId);
-      if (!lockTarget) {
+      if (!lockTarget || lockTarget->hasComponent<Engine::Core::PendingRemovalComponent>()) {
 
         attackerAtk->inMeleeLock = false;
         attackerAtk->meleeLockTargetId = 0;
@@ -84,7 +87,7 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
     if (attackerAtk && attackerAtk->inMeleeLock &&
         attackerAtk->meleeLockTargetId != 0) {
       auto *lockTarget = world->getEntity(attackerAtk->meleeLockTargetId);
-      if (lockTarget) {
+      if (lockTarget && !lockTarget->hasComponent<Engine::Core::PendingRemovalComponent>()) {
 
         auto *attackTarget =
             attacker->getComponent<Engine::Core::AttackTargetComponent>();
@@ -138,7 +141,7 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
     if (attackTarget && attackTarget->targetId != 0) {
 
       auto *target = world->getEntity(attackTarget->targetId);
-      if (target) {
+      if (target && !target->hasComponent<Engine::Core::PendingRemovalComponent>()) {
         auto *targetUnit = target->getComponent<Engine::Core::UnitComponent>();
 
         auto &ownerRegistry = Game::Systems::OwnerRegistry::instance();
@@ -534,7 +537,7 @@ void CombatSystem::dealDamage(Engine::Core::World *world,
 
         if (world) {
           auto *lockPartner = world->getEntity(targetAtk->meleeLockTargetId);
-          if (lockPartner) {
+          if (lockPartner && !lockPartner->hasComponent<Engine::Core::PendingRemovalComponent>()) {
             auto *partnerAtk =
                 lockPartner->getComponent<Engine::Core::AttackComponent>();
             if (partnerAtk &&
@@ -674,13 +677,13 @@ void CombatSystem::processAutoEngagement(Engine::Core::World *world,
   }
 
   for (auto unit : units) {
-    auto unitComp = unit->getComponent<Engine::Core::UnitComponent>();
-    if (!unitComp || unitComp->health <= 0) {
+    // Skip if unit is not alive or pending removal
+    if (unit->hasComponent<Engine::Core::PendingRemovalComponent>()) {
       continue;
     }
 
-    // Skip if unit is not alive or pending removal
-    if (unit->hasComponent<Engine::Core::PendingRemovalComponent>()) {
+    auto unitComp = unit->getComponent<Engine::Core::UnitComponent>();
+    if (!unitComp || unitComp->health <= 0) {
       continue;
     }
 
@@ -786,6 +789,11 @@ Engine::Core::Entity *CombatSystem::findNearestEnemy(
 
   for (auto target : units) {
     if (target == unit) {
+      continue;
+    }
+
+    // Skip entities pending removal
+    if (target->hasComponent<Engine::Core::PendingRemovalComponent>()) {
       continue;
     }
 
