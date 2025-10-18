@@ -5,23 +5,31 @@ Rectangle {
     id: victoryOverlay
 
     property bool showingSummary: false
+    property bool manuallyHidden: false
 
     signal returnToMainMenuRequested()
 
     function resetState() {
         showingSummary = false;
-        battleSummary.visible = false;
+        manuallyHidden = false;
+    }
+    
+    function forceHide() {
+        resetState();
+        manuallyHidden = true;
     }
 
     anchors.fill: parent
     color: Qt.rgba(0, 0, 0, 0.7)
-    visible: (typeof game !== 'undefined' && game.victoryState !== "")
+    visible: !manuallyHidden && (typeof game !== 'undefined' && game.victoryState !== "")
     z: 100
 
     Connections {
         function onVictoryStateChanged() {
             if (typeof game !== 'undefined' && game.victoryState === "") {
                 resetState();
+            } else if (typeof game !== 'undefined' && game.victoryState !== "") {
+                manuallyHidden = false;
             }
         }
 
