@@ -151,6 +151,15 @@ static void readBiome(const QJsonObject &obj, BiomeSettings &out) {
   if (obj.contains("plantDensity"))
     out.plantDensity =
         float(obj.value("plantDensity").toDouble(out.plantDensity));
+  if (obj.contains("groundIrregularityEnabled"))
+    out.groundIrregularityEnabled = obj.value("groundIrregularityEnabled")
+                                        .toBool(out.groundIrregularityEnabled);
+  if (obj.contains("irregularityScale"))
+    out.irregularityScale =
+        float(obj.value("irregularityScale").toDouble(out.irregularityScale));
+  if (obj.contains("irregularityAmplitude"))
+    out.irregularityAmplitude = float(
+        obj.value("irregularityAmplitude").toDouble(out.irregularityAmplitude));
 }
 
 static void readVictoryConfig(const QJsonObject &obj, VictoryConfig &out) {

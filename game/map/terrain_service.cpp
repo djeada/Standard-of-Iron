@@ -18,6 +18,7 @@ void TerrainService::initialize(const MapDefinition &mapDef) {
   m_heightMap->buildFromFeatures(mapDef.terrain);
   m_biomeSettings = mapDef.biome;
   m_heightMap->applyBiomeVariation(m_biomeSettings);
+  m_heightMap->applyGroundIrregularities(m_biomeSettings);
 }
 
 void TerrainService::clear() {

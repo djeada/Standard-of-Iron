@@ -451,4 +451,52 @@ void TerrainHeightMap::applyBiomeVariation(const BiomeSettings &settings) {
   }
 }
 
+void TerrainHeightMap::applyGroundIrregularities(
+    const BiomeSettings &settings) {
+  if (m_heights.empty())
+    return;
+
+  if (!settings.groundIrregularityEnabled)
+    return;
+
+  const float amplitude = std::max(0.0f, settings.irregularityAmplitude);
+  if (amplitude <= 0.0001f)
+    return;
+
+  const float frequency = std::max(0.0001f, settings.irregularityScale);
+  const float halfWidth = m_width * 0.5f - 0.5f;
+  const float halfHeight = m_height * 0.5f - 0.5f;
+
+  for (int z = 0; z < m_height; ++z) {
+    for (int x = 0; x < m_width; ++x) {
+      int idx = indexAt(x, z);
+      TerrainType type = m_terrainTypes[idx];
+
+      if (type != TerrainType::Flat)
+        continue;
+
+      float baseHeight = m_heights[idx];
+      if (baseHeight > 0.5f)
+        continue;
+
+      float worldX = (static_cast<float>(x) - halfWidth) * m_tileSize;
+      float worldZ = (static_cast<float>(z) - halfHeight) * m_tileSize;
+      float sampleX = worldX * frequency;
+      float sampleZ = worldZ * frequency;
+
+      float noise1 =
+          valueNoise2D(sampleX, sampleZ, settings.seed ^ 0x1A2B3C4Du);
+      float noise2 = valueNoise2D(sampleX * 2.5f, sampleZ * 2.5f,
+                                  settings.seed ^ 0x5E6F7A8Bu);
+      float noise3 = valueNoise2D(sampleX * 5.0f, sampleZ * 5.0f,
+                                  settings.seed ^ 0x9C8D7B6Au);
+
+      float combined = 0.5f * noise1 + 0.3f * noise2 + 0.2f * noise3;
+      float perturb = (combined - 0.5f) * 2.0f * amplitude;
+
+      m_heights[idx] = std::max(0.0f, baseHeight + perturb);
+    }
+  }
+}
+
 } // namespace Game::Map

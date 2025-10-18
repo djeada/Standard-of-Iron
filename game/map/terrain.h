@@ -39,6 +39,9 @@ struct BiomeSettings {
   float backgroundScatterRadius = 0.35f;
   float plantDensity = 0.5f;
   std::uint32_t seed = 1337u;
+  bool groundIrregularityEnabled = true;
+  float irregularityScale = 0.15f;
+  float irregularityAmplitude = 0.08f;
 };
 
 struct TerrainFeature {
@@ -81,6 +84,8 @@ public:
   }
 
   void applyBiomeVariation(const BiomeSettings &settings);
+
+  void applyGroundIrregularities(const BiomeSettings &settings);
 
 private:
   int m_width;

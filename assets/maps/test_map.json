@@ -22,7 +22,10 @@
     "soilColor": [0.28, 0.24, 0.18],
     "rockLow": [0.5, 0.48, 0.46],
     "rockHigh": [0.68, 0.69, 0.73],
-    "plantDensity": 0.6
+    "plantDensity": 0.6,
+    "groundIrregularityEnabled": true,
+    "irregularityScale": 0.15,
+    "irregularityAmplitude": 0.08
   },
   "camera": {
     "center": [150, 0, 150],
