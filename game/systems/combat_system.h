@@ -2,6 +2,7 @@
 
 #include "../core/entity.h"
 #include "../core/system.h"
+#include <unordered_map>
 
 namespace Engine {
 namespace Core {
@@ -24,6 +25,14 @@ private:
                  float range);
   void dealDamage(Engine::Core::World *world, Engine::Core::Entity *target,
                   int damage, Engine::Core::EntityID attackerId = 0);
+  void processAutoEngagement(Engine::Core::World *world, float deltaTime);
+  bool isUnitIdle(Engine::Core::Entity *unit);
+  Engine::Core::Entity *findNearestEnemy(Engine::Core::Entity *unit,
+                                         Engine::Core::World *world,
+                                         float maxRange);
+
+  std::unordered_map<Engine::Core::EntityID, float> m_engagementCooldowns;
+  static constexpr float ENGAGEMENT_COOLDOWN = 0.5f;
 };
 
 } // namespace Game::Systems
