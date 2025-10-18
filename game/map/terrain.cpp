@@ -371,6 +371,9 @@ bool TerrainHeightMap::isWalkable(int gridX, int gridZ) const {
   if (type == TerrainType::Mountain)
     return false;
 
+  if (type == TerrainType::River)
+    return false;
+
   if (type == TerrainType::Hill) {
     return m_hillWalkable[indexAt(gridX, gridZ)];
   }
@@ -447,6 +450,58 @@ void TerrainHeightMap::applyBiomeVariation(const BiomeSettings &settings) {
         perturb *= 0.6f;
 
       m_heights[idx] = std::max(0.0f, m_heights[idx] + perturb);
+    }
+  }
+}
+
+void TerrainHeightMap::addRiverSegments(
+    const std::vector<RiverSegment> &riverSegments) {
+  m_riverSegments = riverSegments;
+
+  const float gridHalfWidth = m_width * 0.5f - 0.5f;
+  const float gridHalfHeight = m_height * 0.5f - 0.5f;
+
+  for (const auto &river : riverSegments) {
+    QVector3D dir = river.end - river.start;
+    float length = dir.length();
+    if (length < 0.01f)
+      continue;
+
+    dir.normalize();
+    QVector3D perpendicular(-dir.z(), 0.0f, dir.x());
+
+    int steps = static_cast<int>(std::ceil(length / m_tileSize)) + 1;
+
+    for (int i = 0; i < steps; ++i) {
+      float t = static_cast<float>(i) / std::max(1.0f, static_cast<float>(steps - 1));
+      QVector3D centerPos = river.start + dir * (length * t);
+
+      float gridCenterX = (centerPos.x() / m_tileSize) + gridHalfWidth;
+      float gridCenterZ = (centerPos.z() / m_tileSize) + gridHalfHeight;
+
+      float halfWidth = river.width * 0.5f / m_tileSize;
+
+      int minX = std::max(0, static_cast<int>(std::floor(gridCenterX - halfWidth - 1.0f)));
+      int maxX = std::min(m_width - 1, static_cast<int>(std::ceil(gridCenterX + halfWidth + 1.0f)));
+      int minZ = std::max(0, static_cast<int>(std::floor(gridCenterZ - halfWidth - 1.0f)));
+      int maxZ = std::min(m_height - 1, static_cast<int>(std::ceil(gridCenterZ + halfWidth + 1.0f)));
+
+      for (int z = minZ; z <= maxZ; ++z) {
+        for (int x = minX; x <= maxX; ++x) {
+          float dx = static_cast<float>(x) - gridCenterX;
+          float dz = static_cast<float>(z) - gridCenterZ;
+
+          float distAlongPerp = std::abs(dx * perpendicular.x() + dz * perpendicular.z());
+
+          if (distAlongPerp <= halfWidth) {
+            int idx = indexAt(x, z);
+            if (m_terrainTypes[idx] != TerrainType::Mountain) {
+              m_terrainTypes[idx] = TerrainType::River;
+              m_heights[idx] = 0.0f;
+            }
+          }
+        }
+      }
     }
   }
 }

@@ -67,6 +67,7 @@
 #include "render/ground/ground_renderer.h"
 #include "render/ground/pine_renderer.h"
 #include "render/ground/plant_renderer.h"
+#include "render/ground/river_renderer.h"
 #include "render/ground/stone_renderer.h"
 #include "render/ground/terrain_renderer.h"
 #include "render/scene_renderer.h"
@@ -92,12 +93,13 @@ GameEngine::GameEngine() {
   m_ground = std::make_unique<Render::GL::GroundRenderer>();
   m_terrain = std::make_unique<Render::GL::TerrainRenderer>();
   m_biome = std::make_unique<Render::GL::BiomeRenderer>();
+  m_river = std::make_unique<Render::GL::RiverRenderer>();
   m_fog = std::make_unique<Render::GL::FogRenderer>();
   m_stone = std::make_unique<Render::GL::StoneRenderer>();
   m_plant = std::make_unique<Render::GL::PlantRenderer>();
   m_pine = std::make_unique<Render::GL::PineRenderer>();
 
-  m_passes = {m_ground.get(), m_terrain.get(), m_biome.get(), m_stone.get(),
+  m_passes = {m_ground.get(), m_terrain.get(), m_river.get(), m_biome.get(), m_stone.get(),
               m_plant.get(),  m_pine.get(),    m_fog.get()};
 
   std::unique_ptr<Engine::Core::System> arrowSys =
@@ -1389,6 +1391,9 @@ void GameEngine::restoreEnvironmentFromMetadata(const QJsonObject &metadata) {
     if (auto *heightMap = terrainService.getHeightMap()) {
       if (m_terrain) {
         m_terrain->configure(*heightMap, terrainService.biomeSettings());
+      }
+      if (m_river) {
+        m_river->configure(heightMap->getRiverSegments(), heightMap->getTileSize());
       }
       if (m_biome) {
         m_biome->configure(*heightMap, terrainService.biomeSettings());

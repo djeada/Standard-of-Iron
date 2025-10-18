@@ -260,6 +260,57 @@ static void readTerrain(const QJsonArray &arr, std::vector<TerrainFeature> &out,
   }
 }
 
+static void readRivers(const QJsonArray &arr, std::vector<RiverSegment> &out,
+                       const GridDefinition &grid, CoordSystem coordSys) {
+  out.clear();
+  out.reserve(arr.size());
+
+  for (const auto &v : arr) {
+    auto o = v.toObject();
+    RiverSegment segment;
+
+    if (o.contains("start") && o.value("start").isArray()) {
+      auto startArr = o.value("start").toArray();
+      if (startArr.size() >= 2) {
+        float x = float(startArr[0].toDouble(0.0));
+        float z = float(startArr[1].toDouble(0.0));
+
+        if (coordSys == CoordSystem::Grid) {
+          const float tile = std::max(0.0001f, grid.tileSize);
+          segment.start.setX((x - (grid.width * 0.5f - 0.5f)) * tile);
+          segment.start.setY(0.0f);
+          segment.start.setZ((z - (grid.height * 0.5f - 0.5f)) * tile);
+        } else {
+          segment.start = QVector3D(x, 0.0f, z);
+        }
+      }
+    }
+
+    if (o.contains("end") && o.value("end").isArray()) {
+      auto endArr = o.value("end").toArray();
+      if (endArr.size() >= 2) {
+        float x = float(endArr[0].toDouble(0.0));
+        float z = float(endArr[1].toDouble(0.0));
+
+        if (coordSys == CoordSystem::Grid) {
+          const float tile = std::max(0.0001f, grid.tileSize);
+          segment.end.setX((x - (grid.width * 0.5f - 0.5f)) * tile);
+          segment.end.setY(0.0f);
+          segment.end.setZ((z - (grid.height * 0.5f - 0.5f)) * tile);
+        } else {
+          segment.end = QVector3D(x, 0.0f, z);
+        }
+      }
+    }
+
+    if (o.contains("width")) {
+      segment.width = float(o.value("width").toDouble(2.0));
+    }
+
+    out.push_back(segment);
+  }
+}
+
 bool MapLoader::loadFromJsonFile(const QString &path, MapDefinition &outMap,
                                  QString *outError) {
   QFile f(path);
@@ -320,6 +371,11 @@ bool MapLoader::loadFromJsonFile(const QString &path, MapDefinition &outMap,
   if (root.contains("terrain") && root.value("terrain").isArray()) {
     readTerrain(root.value("terrain").toArray(), outMap.terrain, outMap.grid,
                 outMap.coordSystem);
+  }
+
+  if (root.contains("rivers") && root.value("rivers").isArray()) {
+    readRivers(root.value("rivers").toArray(), outMap.rivers, outMap.grid,
+               outMap.coordSystem);
   }
 
   if (root.contains("biome") && root.value("biome").isObject()) {

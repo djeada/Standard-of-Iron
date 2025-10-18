@@ -16,6 +16,7 @@ void TerrainService::initialize(const MapDefinition &mapDef) {
       mapDef.grid.width, mapDef.grid.height, mapDef.grid.tileSize);
 
   m_heightMap->buildFromFeatures(mapDef.terrain);
+  m_heightMap->addRiverSegments(mapDef.rivers);
   m_biomeSettings = mapDef.biome;
   m_heightMap->applyBiomeVariation(m_biomeSettings);
 }
