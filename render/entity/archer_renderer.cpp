@@ -68,42 +68,70 @@ public:
                      uint32_t seed, HumanoidPose &pose) const override {
     using HP = HumanProportions;
 
-    float armHeightJitter = (hash01(seed ^ 0xABCDu) - 0.5f) * 0.03f;
-    float armAsymmetry = (hash01(seed ^ 0xDEF0u) - 0.5f) * 0.04f;
+    const float armHeightJitter = (hash01(seed ^ 0xABCDu) - 0.5f) * 0.03f;
+    const float armAsymmetry    = (hash01(seed ^ 0xDEF0u) - 0.5f) * 0.04f;
 
-    float bowX = 0.0f;
+    const float bowX = 0.0f;
+
+    // Standing references for blending
+    const QVector3D standFootL(-0.09f, HP::GROUND_Y, -0.02f);
+    const QVector3D standFootR(+0.11f, HP::GROUND_Y, +0.06f);
+
+    auto handsIdleL = [&](float yDrop){
+      return QVector3D(bowX - 0.05f + armAsymmetry,
+                       HP::SHOULDER_Y + 0.05f + armHeightJitter - yDrop,
+                       0.55f);
+    };
+    auto handsIdleR = [&](float yDrop){
+      return QVector3D(0.15f - armAsymmetry * 0.5f,
+                       HP::SHOULDER_Y + 0.15f + armHeightJitter * 0.8f - yDrop,
+                       0.20f);
+    };
+
+    float rigDrop = 0.0f;
+    float kneelT  = 0.0f;
 
     if (anim.isInHoldMode || anim.holdExitProgress > 0.0f) {
-      float t = anim.isInHoldMode ? 1.0f : (1.0f - anim.holdExitProgress);
+      kneelT = anim.isInHoldMode ? 1.0f : (1.0f - anim.holdExitProgress);
 
-      float targetFootOffset = -0.25f * t;
-      pose.footYOffset = targetFootOffset;
-      pose.footL.setY(HP::GROUND_Y + pose.footYOffset);
-      pose.footR.setY(HP::GROUND_Y + pose.footYOffset);
+      // Feet define a true kneel (left knee back/in, right foot forward/out)
+      const QVector3D kneelFootL(-0.10f, HP::GROUND_Y, -0.26f);
+      const QVector3D kneelFootR(+0.14f, HP::GROUND_Y, +0.16f);
+      pose.footL = standFootL * (1.0f - kneelT) + kneelFootL * kneelT;
+      pose.footR = standFootR * (1.0f - kneelT) + kneelFootR * kneelT;
 
-      pose.shoulderL.setY(pose.shoulderL.y() - 0.15f * t);
-      pose.shoulderR.setY(pose.shoulderR.y() - 0.15f * t);
-      pose.headPos.setY(pose.headPos.y() - 0.10f * t);
-      pose.neckBase.setY(pose.neckBase.y() - 0.12f * t);
+      // Slight ankle sink to hint one knee down; keep modest
+      pose.footYOffset = -0.08f * kneelT;
 
-      QVector3D holdHandL(bowX - 0.12f, HP::SHOULDER_Y + 0.20f, 0.45f);
-      QVector3D holdHandR(bowX + 0.08f, HP::SHOULDER_Y + 0.50f, 0.15f);
-      QVector3D normalHandL(bowX - 0.05f + armAsymmetry,
-                            HP::SHOULDER_Y + 0.05f + armHeightJitter, 0.55f);
-      QVector3D normalHandR(0.15f - armAsymmetry * 0.5f,
-                            HP::SHOULDER_Y + 0.15f + armHeightJitter * 0.8f,
-                            0.20f);
+      // Rigidly lower the entire upper body so proportions are preserved
+      rigDrop = 0.30f * kneelT;
 
-      pose.handL = normalHandL * (1.0f - t) + holdHandL * t;
-      pose.handR = normalHandR * (1.0f - t) + holdHandR * t;
+      // Proper hold hands, shifted by the same rigDrop so arm lengths stay natural
+      const QVector3D holdHandL(bowX - 0.08f, HP::SHOULDER_Y + 0.08f - rigDrop, 0.62f);
+      const QVector3D holdHandR(bowX + 0.02f, HP::SHOULDER_Y + 0.18f - rigDrop, 0.12f);
+
+      const QVector3D idleL = handsIdleL(rigDrop);
+      const QVector3D idleR = handsIdleR(rigDrop);
+
+      pose.handL = idleL * (1.0f - kneelT) + holdHandL * kneelT;
+      pose.handR = idleR * (1.0f - kneelT) + holdHandR * kneelT;
+
+      // Apply the rigid drop to the upper body nodes
+      pose.shoulderL.setY(pose.shoulderL.y() - rigDrop);
+      pose.shoulderR.setY(pose.shoulderR.y() - rigDrop);
+      pose.neckBase .setY(pose.neckBase .y() - rigDrop);
+      pose.headPos  .setY(pose.headPos  .y() - rigDrop);
+
     } else {
-      pose.handL = QVector3D(bowX - 0.05f + armAsymmetry,
-                             HP::SHOULDER_Y + 0.05f + armHeightJitter, 0.55f);
-      pose.handR =
-          QVector3D(0.15f - armAsymmetry * 0.5f,
-                    HP::SHOULDER_Y + 0.15f + armHeightJitter * 0.8f, 0.20f);
+      // Standing / not in hold
+      pose.footYOffset = 0.0f;
+      pose.footL = standFootL;
+      pose.footR = standFootR;
+      pose.handL = handsIdleL(0.0f);
+      pose.handR = handsIdleR(0.0f);
     }
 
+    // Attack animations (unchanged flow; only run when not in hold)
     if (anim.isAttacking && !anim.isInHoldMode) {
       float attackCycleTime = 1.2f;
       float attackPhase = fmod(anim.time * (1.0f / attackCycleTime), 1.0f);
@@ -114,20 +142,18 @@ public:
         QVector3D strikePos(0.35f, HP::WAIST_Y, 0.45f);
 
         if (attackPhase < 0.25f) {
-          float t = attackPhase / 0.25f;
-          t = t * t;
+          float t = attackPhase / 0.25f; t = t * t;
           pose.handR = restPos * (1.0f - t) + raisedPos * t;
           pose.handL = QVector3D(-0.15f, HP::SHOULDER_Y - 0.1f * t, 0.20f);
         } else if (attackPhase < 0.35f) {
           pose.handR = raisedPos;
           pose.handL = QVector3D(-0.15f, HP::SHOULDER_Y - 0.1f, 0.20f);
         } else if (attackPhase < 0.55f) {
-          float t = (attackPhase - 0.35f) / 0.2f;
-          t = t * t * t;
+          float t = (attackPhase - 0.35f) / 0.2f; t = t * t * t;
           pose.handR = raisedPos * (1.0f - t) + strikePos * t;
-          pose.handL =
-              QVector3D(-0.15f, HP::SHOULDER_Y - 0.1f * (1.0f - t * 0.5f),
-                        0.20f + 0.15f * t);
+          pose.handL = QVector3D(-0.15f,
+                                 HP::SHOULDER_Y - 0.1f * (1.0f - t * 0.5f),
+                                 0.20f + 0.15f * t);
         } else {
           float t = (attackPhase - 0.55f) / 0.45f;
           t = 1.0f - (1.0f - t) * (1.0f - t);
@@ -141,8 +167,7 @@ public:
         QVector3D releasePos(0.18f, HP::SHOULDER_Y + 0.20f, 0.10f);
 
         if (attackPhase < 0.20f) {
-          float t = attackPhase / 0.20f;
-          t = t * t;
+          float t = attackPhase / 0.20f; t = t * t;
           pose.handR = aimPos * (1.0f - t) + drawPos * t;
           pose.handL = QVector3D(bowX - 0.05f, HP::SHOULDER_Y + 0.05f, 0.55f);
 
@@ -157,8 +182,7 @@ public:
           pose.shoulderR.setY(pose.shoulderR.y() + shoulderTwist);
           pose.shoulderL.setY(pose.shoulderL.y() - shoulderTwist * 0.5f);
         } else if (attackPhase < 0.58f) {
-          float t = (attackPhase - 0.50f) / 0.08f;
-          t = t * t * t;
+          float t = (attackPhase - 0.50f) / 0.08f; t = t * t * t;
           pose.handR = drawPos * (1.0f - t) + releasePos * t;
           pose.handL = QVector3D(bowX - 0.05f, HP::SHOULDER_Y + 0.05f, 0.55f);
 
@@ -182,18 +206,18 @@ public:
       }
     }
 
+    // Solve elbows from hands/shoulders
     QVector3D rightAxis = pose.shoulderR - pose.shoulderL;
     rightAxis.setY(0.0f);
-    if (rightAxis.lengthSquared() < 1e-8f)
-      rightAxis = QVector3D(1, 0, 0);
+    if (rightAxis.lengthSquared() < 1e-8f) rightAxis = QVector3D(1, 0, 0);
     rightAxis.normalize();
-    QVector3D outwardL = -rightAxis;
-    QVector3D outwardR = rightAxis;
+    const QVector3D outwardL = -rightAxis;
+    const QVector3D outwardR =  rightAxis;
 
-    pose.elbowL = elbowBendTorso(pose.shoulderL, pose.handL, outwardL, 0.45f,
-                                 0.15f, -0.08f, +1.0f);
-    pose.elbowR = elbowBendTorso(pose.shoulderR, pose.handR, outwardR, 0.48f,
-                                 0.12f, 0.02f, +1.0f);
+    pose.elbowL = elbowBendTorso(pose.shoulderL, pose.handL, outwardL,
+                                 0.45f, 0.15f, -0.08f, +1.0f);
+    pose.elbowR = elbowBendTorso(pose.shoulderR, pose.handR, outwardR,
+                                 0.48f, 0.12f,  0.02f, +1.0f);
   }
 
   void addAttachments(const DrawContext &ctx, const HumanoidVariant &v,
@@ -232,15 +256,23 @@ public:
       }
     }
 
-    drawQuiver(ctx, v, extras, seed, out);
+    // Compute same kneel factor and rig drop so attachments follow the body
+    float kneelT = (anim.isInHoldMode || anim.holdExitProgress > 0.0f)
+                     ? (anim.isInHoldMode ? 1.0f : (1.0f - anim.holdExitProgress))
+                     : 0.0f;
+    float rigDrop = 0.30f * kneelT;
+
+    // Quiver now follows the shoulder (no more floating)
+    drawQuiver(ctx, v, extras, seed, pose, out);
 
     float attackPhase = 0.0f;
     if (anim.isAttacking && !anim.isMelee) {
       float attackCycleTime = 1.2f;
       attackPhase = fmod(anim.time * (1.0f / attackCycleTime), 1.0f);
     }
+    // Bow reacts to rigDrop (limb endpoints lowered with the body)
     drawBowAndArrow(ctx, pose, v, extras, anim.isAttacking && !anim.isMelee,
-                    attackPhase, out);
+                    attackPhase, rigDrop, out);
   }
 
   void drawHelmet(const DrawContext &ctx, const HumanoidVariant &v,
@@ -330,8 +362,8 @@ public:
     QVector3D leatherTrim = v.palette.leatherDark * 0.90f;
 
     QVector3D mailTop(0, yTopCover + 0.01f, 0);
-    QVector3D mailMid(0, (yTopCover + HP::WAIST_Y) * 0.5f, 0);
-    QVector3D mailBot(0, HP::WAIST_Y + 0.08f, 0);
+    QVector3D mailMid(0, (yTopCover + HumanProportions::WAIST_Y) * 0.5f, 0);
+    QVector3D mailBot(0, HumanProportions::WAIST_Y + 0.08f, 0);
     float rTop = torsoR * 1.10f;
     float rMid = torsoR * 1.08f;
 
@@ -389,15 +421,15 @@ public:
     drawManica(pose.shoulderL, pose.elbowL);
     drawManica(pose.shoulderR, pose.elbowR);
 
-    QVector3D beltTop(0, HP::WAIST_Y + 0.06f, 0);
-    QVector3D beltBot(0, HP::WAIST_Y - 0.02f, 0);
+    QVector3D beltTop(0, HumanProportions::WAIST_Y + 0.06f, 0);
+    QVector3D beltBot(0, HumanProportions::WAIST_Y - 0.02f, 0);
     float beltR = torsoR * 1.12f;
     out.mesh(getUnitCylinder(),
              cylinderBetween(ctx.model, beltTop, beltBot, beltR), leatherTrim,
              nullptr, 1.0f);
 
     QVector3D brassColor = v.palette.metal * QVector3D(1.2f, 1.0f, 0.65f);
-    ring(QVector3D(0, HP::WAIST_Y + 0.02f, 0), beltR * 1.02f, 0.010f,
+    ring(QVector3D(0, HumanProportions::WAIST_Y + 0.02f, 0), beltR * 1.02f, 0.010f,
          brassColor);
 
     auto drawPteruge = [&](float angle, float yStart, float length) {
@@ -416,7 +448,7 @@ public:
       drawPteruge(angle, shoulderPterugeY, 0.14f);
     }
 
-    float waistPterugeY = HP::WAIST_Y - 0.04f;
+    float waistPterugeY = HumanProportions::WAIST_Y - 0.04f;
     for (int i = 0; i < 10; ++i) {
       float angle = (i / 10.0f) * 2.0f * 3.14159265f;
       drawPteruge(angle, waistPterugeY, 0.18f);
@@ -426,7 +458,7 @@ public:
     QVector3D collarBot(0, yTopCover - 0.008f, 0);
     out.mesh(getUnitCylinder(),
              cylinderBetween(ctx.model, collarTop, collarBot,
-                             HP::NECK_RADIUS * 1.8f),
+                             HumanProportions::NECK_RADIUS * 1.8f),
              mailColor * 1.05f, nullptr, 1.0f);
   }
 
@@ -446,7 +478,6 @@ public:
     };
 
     drawPhalera(pose.shoulderL + QVector3D(0, 0.05f, 0.02f));
-
     drawPhalera(pose.shoulderR + QVector3D(0, 0.05f, 0.02f));
 
     QVector3D claspPos(0, yNeck + 0.02f, 0.08f);
@@ -465,13 +496,15 @@ public:
   }
 
 private:
+  // UPDATED: pass pose so quiver follows torso
   static void drawQuiver(const DrawContext &ctx, const HumanoidVariant &v,
                          const ArcherExtras &extras, uint32_t seed,
-                         ISubmitter &out) {
+                         const HumanoidPose &pose, ISubmitter &out) {
     using HP = HumanProportions;
 
-    QVector3D qTop(-0.08f, HP::SHOULDER_Y + 0.10f, -0.25f);
-    QVector3D qBase(-0.10f, HP::CHEST_Y, -0.22f);
+    // Anchor near left scapula; follows shoulder height automatically.
+    QVector3D qBase = pose.shoulderL + QVector3D(-0.08f, -0.20f, -0.20f);
+    QVector3D qTop  = pose.shoulderL + QVector3D(-0.06f, +0.10f, -0.25f);
 
     float quiverR = HP::HEAD_RADIUS * 0.45f;
     out.mesh(getUnitCylinder(),
@@ -496,29 +529,40 @@ private:
              extras.fletch, nullptr, 1.0f);
   }
 
+  // UPDATED: extra yOffset so bow endpoints track rig drop; dynamic curvature + arrow flex
   static void drawBowAndArrow(const DrawContext &ctx, const HumanoidPose &pose,
                               const HumanoidVariant &v,
                               const ArcherExtras &extras, bool isAttacking,
-                              float attackPhase, ISubmitter &out) {
+                              float attackPhase, float yOffset,
+                              ISubmitter &out) {
     const QVector3D up(0.0f, 1.0f, 0.0f);
     const QVector3D forward(0.0f, 0.0f, 1.0f);
 
-    QVector3D grip = pose.handL;
-    QVector3D topEnd(extras.bowX, extras.bowTopY, grip.z());
-    QVector3D botEnd(extras.bowX, extras.bowBotY, grip.z());
+    const QVector3D grip = pose.handL;
+    QVector3D topEnd(extras.bowX, extras.bowTopY - yOffset, grip.z());
+    QVector3D botEnd(extras.bowX, extras.bowBotY - yOffset, grip.z());
 
+    // Nock at right hand (string hand) with deeper draw allowance
     QVector3D nock(
         extras.bowX,
-        clampf(pose.handR.y(), extras.bowBotY + 0.05f, extras.bowTopY - 0.05f),
-        clampf(pose.handR.z(), grip.z() - 0.30f, grip.z() + 0.30f));
+        clampf(pose.handR.y(), (extras.bowBotY - yOffset) + 0.05f,
+                               (extras.bowTopY - yOffset) - 0.05f),
+        clampf(pose.handR.z(), grip.z() - 0.45f, grip.z() + 0.10f));
 
+    // Draw amount (positive when pulled back)
+    const float drawAmt = clampf(grip.z() - nock.z(), 0.0f, 0.55f);
+
+    // --- Bow (dynamic curvature from draw) ---
     const int segs = 22;
     auto qBezier = [](const QVector3D &a, const QVector3D &c,
                       const QVector3D &b, float t) {
       float u = 1.0f - t;
       return u * u * a + 2.0f * u * t * c + t * t * b;
     };
-    QVector3D ctrl = nock + forward * extras.bowDepth;
+
+    const float bowDepth = extras.bowDepth + drawAmt * 1.10f;
+    QVector3D ctrl = nock + forward * bowDepth;
+
     QVector3D prev = botEnd;
     for (int i = 1; i <= segs; ++i) {
       float t = float(i) / float(segs);
@@ -528,39 +572,90 @@ private:
                v.palette.wood, nullptr, 1.0f);
       prev = cur;
     }
+
+    // Grip wrap
     out.mesh(getUnitCylinder(),
              cylinderBetween(ctx.model, grip - up * 0.05f, grip + up * 0.05f,
                              extras.bowRodR * 1.45f),
              v.palette.wood, nullptr, 1.0f);
 
+    // String segments
     out.mesh(getUnitCylinder(),
              cylinderBetween(ctx.model, topEnd, nock, extras.stringR),
              extras.stringCol, nullptr, 1.0f);
     out.mesh(getUnitCylinder(),
              cylinderBetween(ctx.model, nock, botEnd, extras.stringR),
              extras.stringCol, nullptr, 1.0f);
+
+    // Short connector from right hand to nock (fingers on the string)
     out.mesh(getUnitCylinder(),
              cylinderBetween(ctx.model, pose.handR, nock, 0.0045f),
              extras.stringCol * 0.9f, nullptr, 1.0f);
 
-    bool showArrow = !isAttacking || (isAttacking && attackPhase >= 0.0f &&
-                                      attackPhase < 0.52f);
+    // --- Arrow (with brief flex on release) ---
+    const bool showArrow = !isAttacking || (isAttacking && attackPhase < 0.62f);
+    if (!showArrow) return;
 
-    if (showArrow) {
-      QVector3D tail = nock - forward * 0.06f;
-      QVector3D tip = tail + forward * 0.90f;
-      out.mesh(getUnitCylinder(), cylinderBetween(ctx.model, tail, tip, 0.018f),
-               v.palette.wood, nullptr, 1.0f);
-      QVector3D headBase = tip - forward * 0.10f;
-      out.mesh(getUnitCone(), coneFromTo(ctx.model, headBase, tip, 0.05f),
-               extras.metalHead, nullptr, 1.0f);
-      QVector3D f1b = tail - forward * 0.02f, f1a = f1b - forward * 0.06f;
-      QVector3D f2b = tail + forward * 0.02f, f2a = f2b + forward * 0.06f;
-      out.mesh(getUnitCone(), coneFromTo(ctx.model, f1b, f1a, 0.04f),
-               extras.fletch, nullptr, 1.0f);
-      out.mesh(getUnitCone(), coneFromTo(ctx.model, f2a, f2b, 0.04f),
-               extras.fletch, nullptr, 1.0f);
+    const float shaftLen = 0.90f;
+    const QVector3D tail = nock - forward * 0.06f;
+    const QVector3D straightTip = tail + forward * shaftLen;
+
+    // Find "right" across shoulders to flex sideways around the riser
+    QVector3D rightAxis = pose.shoulderR - pose.shoulderL;
+    rightAxis.setY(0.0f);
+    if (rightAxis.lengthSquared() < 1e-8f) rightAxis = QVector3D(1, 0, 0);
+    rightAxis.normalize();
+    const QVector3D paradoxAxis = -rightAxis; // right-handed bow → flex left first
+
+    // Flex amplitude
+    float flexA = 0.0f;
+    if (isAttacking) {
+      if (attackPhase < 0.50f) {
+        flexA = 0.008f * (drawAmt / 0.55f); // small static pre-flex at full draw
+      } else if (attackPhase < 0.62f) {
+        const float rel = (attackPhase - 0.50f) / 0.12f;  // 0..1
+        flexA = 0.05f * std::sin(rel * 3.14159265f) * (1.0f - 0.5f * rel);
+        flexA *= clampf(drawAmt / 0.55f, 0.0f, 1.0f);
+      }
     }
+
+    // Shaft as a gentle quadratic curve sideways toward paradoxAxis
+    const int shaftSegs = 12;
+    const QVector3D arrowCtrl = (tail + straightTip) * 0.5f + paradoxAxis * flexA;
+
+    auto arrowBezier = [&](float t) {
+      return qBezier(tail, arrowCtrl, straightTip, t);
+    };
+
+    QVector3D prevP = tail;
+    for (int i = 1; i <= shaftSegs; ++i) {
+      const float t = float(i) / float(shaftSegs);
+      QVector3D curP = arrowBezier(t);
+      out.mesh(getUnitCylinder(),
+               cylinderBetween(ctx.model, prevP, curP, 0.018f),
+               v.palette.wood, nullptr, 1.0f);
+      prevP = curP;
+    }
+
+    // Tip aligned to curve direction
+    const float eps = 1.0f / float(shaftSegs);
+    const QVector3D tipP   = arrowBezier(1.0f);
+    const QVector3D tipDir = (tipP - arrowBezier(1.0f - eps));
+    const float tipDirLen  = std::max(1e-5f, tipDir.length());
+    const QVector3D tipBase = tipP - (tipDir / tipDirLen) * 0.10f;
+    out.mesh(getUnitCone(), coneFromTo(ctx.model, tipBase, tipP, 0.05f),
+             extras.metalHead, nullptr, 1.0f);
+
+    // Fletching along tail direction
+    const QVector3D tailDir = (arrowBezier(eps) - tail);
+    const float tailDirLen  = std::max(1e-5f, tailDir.length());
+    const QVector3D tailDirN = tailDir / tailDirLen;
+    const QVector3D f1b = tail - tailDirN * 0.02f, f1a = f1b - tailDirN * 0.06f;
+    const QVector3D f2b = tail + tailDirN * 0.02f, f2a = f2b + tailDirN * 0.06f;
+    out.mesh(getUnitCone(), coneFromTo(ctx.model, f1b, f1a, 0.04f),
+             extras.fletch, nullptr, 1.0f);
+    out.mesh(getUnitCone(), coneFromTo(ctx.model, f2a, f2b, 0.04f),
+             extras.fletch, nullptr, 1.0f);
   }
 };
 
