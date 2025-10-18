@@ -21,6 +21,7 @@ struct AnimationInputs {
   bool isAttacking;
   bool isMelee;
   bool isInHoldMode;
+  bool isExitingHold;  // True during stand-up transition
   float holdExitProgress;
 };
 
@@ -38,6 +39,10 @@ struct HumanoidPose {
   QVector3D shoulderL, shoulderR;
   QVector3D elbowL, elbowR;
   QVector3D handL, handR;
+
+  // Pelvis/hip position for proper leg articulation
+  QVector3D pelvisPos;
+  QVector3D kneeL, kneeR;
 
   float footYOffset;
   QVector3D footL, footR;
