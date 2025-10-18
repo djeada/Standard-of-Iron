@@ -1,4 +1,5 @@
 #include "pine_renderer.h"
+#include "../../game/map/visibility_service.h"
 #include "../../game/systems/building_collision_registry.h"
 #include "../gl/buffer.h"
 #include "../scene_renderer.h"
@@ -87,24 +88,45 @@ void PineRenderer::submit(Renderer &renderer, ResourceManager *resources) {
 
   m_pineInstanceCount = static_cast<uint32_t>(m_pineInstances.size());
 
-  if (m_pineInstanceCount > 0) {
-    if (!m_pineInstanceBuffer) {
-      m_pineInstanceBuffer = std::make_unique<Buffer>(Buffer::Type::Vertex);
-    }
-    if (m_pineInstancesDirty && m_pineInstanceBuffer) {
-      m_pineInstanceBuffer->setData(m_pineInstances, Buffer::Usage::Static);
-      m_pineInstancesDirty = false;
-    }
-  } else {
+  if (m_pineInstanceCount == 0) {
     m_pineInstanceBuffer.reset();
     return;
   }
 
-  if (m_pineInstanceBuffer && m_pineInstanceCount > 0) {
-    PineBatchParams params = m_pineParams;
-    params.time = renderer.getAnimationTime();
-    renderer.pineBatch(m_pineInstanceBuffer.get(), m_pineInstanceCount, params);
+  // Filter instances based on fog of war visibility
+  auto &visibility = Game::Map::VisibilityService::instance();
+  const bool useVisibility = visibility.isInitialized();
+
+  std::vector<PineInstanceGpu> visibleInstances;
+  if (useVisibility) {
+    visibleInstances.reserve(m_pineInstanceCount);
+    for (const auto &instance : m_pineInstances) {
+      float worldX = instance.posScale.x();
+      float worldZ = instance.posScale.z();
+      if (visibility.isVisibleWorld(worldX, worldZ)) {
+        visibleInstances.push_back(instance);
+      }
+    }
+  } else {
+    visibleInstances = m_pineInstances;
   }
+
+  const uint32_t visibleCount = static_cast<uint32_t>(visibleInstances.size());
+  if (visibleCount == 0) {
+    m_pineInstanceBuffer.reset();
+    return;
+  }
+
+  if (!m_pineInstanceBuffer) {
+    m_pineInstanceBuffer = std::make_unique<Buffer>(Buffer::Type::Vertex);
+  }
+  
+  // Always update buffer with visible instances
+  m_pineInstanceBuffer->setData(visibleInstances, Buffer::Usage::Static);
+
+  PineBatchParams params = m_pineParams;
+  params.time = renderer.getAnimationTime();
+  renderer.pineBatch(m_pineInstanceBuffer.get(), visibleCount, params);
 }
 
 void PineRenderer::clear() {
