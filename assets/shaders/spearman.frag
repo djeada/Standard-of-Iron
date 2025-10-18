@@ -52,8 +52,7 @@ void main() {
 
   float colorHue =
       max(max(color.r, color.g), color.b) - min(min(color.r, color.g), color.b);
-  bool isMetal =
-      (avgColor > 0.45 && avgColor <= 0.65 && colorHue < 0.15);
+  bool isMetal = (avgColor > 0.45 && avgColor <= 0.65 && colorHue < 0.15);
   bool isLeather = (avgColor > 0.30 && avgColor <= 0.50 && colorHue < 0.20);
   bool isFabric = (avgColor > 0.25 && !isMetal && !isLeather);
 
@@ -69,8 +68,7 @@ void main() {
     color += vec3(metalSheen + metalFresnel);
     color += vec3(metalBrushed);
     color -= vec3(rust * 0.35 + dents * 0.25);
-  }
-  else if (isLeather) {
+  } else if (isLeather) {
     float leather = leatherGrain(uv);
     float wear = noise(uv * 4.0) * 0.12 - 0.06;
 
@@ -79,8 +77,7 @@ void main() {
 
     color *= 1.0 + leather - 0.08 + wear;
     color += vec3(leatherSheen);
-  }
-  else if (isFabric) {
+  } else if (isFabric) {
     float weave = fabricWeave(v_worldPos.xz);
     float fabricFuzz = noise(uv * 18.0) * 0.08;
     float folds = noise(uv * 5.0) * 0.10 - 0.05;
@@ -90,8 +87,7 @@ void main() {
 
     color *= 1.0 + fabricFuzz - 0.04 + folds;
     color += vec3(weave + fabricSheen);
-  }
-  else {
+  } else {
     float detail = noise(uv * 8.0) * 0.14;
     color *= 1.0 + detail - 0.07;
   }

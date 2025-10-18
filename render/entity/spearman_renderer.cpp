@@ -267,8 +267,7 @@ public:
       QVector3D stripTop(0, y, 0);
       QVector3D stripBot(0, y - 0.030f, 0);
 
-      out.mesh(getUnitCone(),
-               coneFromTo(ctx.model, stripTop, stripBot, r),
+      out.mesh(getUnitCone(), coneFromTo(ctx.model, stripTop, stripBot, r),
                leatherColor * (0.98f - i * 0.02f), nullptr, 1.0f);
     }
   }
@@ -276,8 +275,7 @@ public:
   void drawShoulderDecorations(const DrawContext &ctx, const HumanoidVariant &v,
                                const HumanoidPose &pose, float yTopCover,
                                float yNeck, const QVector3D &rightAxis,
-                               ISubmitter &out) const override {
-  }
+                               ISubmitter &out) const override {}
 
 private:
   static SpearmanExtras computeSpearmanExtras(uint32_t seed,
@@ -318,7 +316,7 @@ private:
         QVector3D attackDir = QVector3D(0.05f, 0.02f, 1.0f);
         if (attackDir.lengthSquared() > 1e-6f)
           attackDir.normalize();
-        
+
         spearDir = spearDir * (1.0f - t) + attackDir * t;
         if (spearDir.lengthSquared() > 1e-6f)
           spearDir.normalize();
