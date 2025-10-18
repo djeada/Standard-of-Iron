@@ -2,6 +2,7 @@
 #include "../core/component.h"
 #include "../core/event_manager.h"
 #include "../core/world.h"
+#include "../units/troop_config.h"
 #include "../visuals/team_colors.h"
 #include "arrow_system.h"
 #include "building_collision_registry.h"
@@ -10,6 +11,7 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#include <random>
 
 namespace Game::Systems {
 
@@ -349,13 +351,44 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
           QVector3D aPos(attT->position.x, attT->position.y, attT->position.z);
           QVector3D tPos(tgtT->position.x, tgtT->position.y, tgtT->position.z);
           QVector3D dir = (tPos - aPos).normalized();
-
-          QVector3D start = aPos + QVector3D(0.0f, 0.6f, 0.0f) + dir * 0.35f;
-          QVector3D end = tPos + QVector3D(0.5f, 0.5f, 0.0f);
           QVector3D color =
               attU ? Game::Visuals::teamColorForOwner(attU->ownerId)
                    : QVector3D(0.8f, 0.9f, 1.0f);
-          arrowSys->spawnArrow(start, end, color, 14.0f);
+
+          int arrowCount = 1;
+          if (attU) {
+            int troopSize =
+                Game::Units::TroopConfig::instance().getIndividualsPerUnit(
+                    attU->unitType);
+            int maxArrows = std::max(1, troopSize / 3);
+
+            static thread_local std::mt19937 gen(std::random_device{}());
+            std::uniform_int_distribution<> dist(1, maxArrows);
+            arrowCount = dist(gen);
+          }
+
+          for (int i = 0; i < arrowCount; ++i) {
+            static thread_local std::mt19937 spreadGen(std::random_device{}());
+            std::uniform_real_distribution<float> spreadDist(-0.15f, 0.15f);
+
+            QVector3D perpendicular(-dir.z(), 0.0f, dir.x());
+            QVector3D upVector(0.0f, 1.0f, 0.0f);
+
+            float lateralOffset = spreadDist(spreadGen);
+            float verticalOffset = spreadDist(spreadGen) * 0.5f;
+            float depthOffset = spreadDist(spreadGen) * 0.3f;
+
+            QVector3D startOffset =
+                perpendicular * lateralOffset + upVector * verticalOffset;
+            QVector3D endOffset = perpendicular * lateralOffset +
+                                  upVector * verticalOffset + dir * depthOffset;
+
+            QVector3D start =
+                aPos + QVector3D(0.0f, 0.6f, 0.0f) + dir * 0.35f + startOffset;
+            QVector3D end = tPos + QVector3D(0.5f, 0.5f, 0.0f) + endOffset;
+
+            arrowSys->spawnArrow(start, end, color, 14.0f);
+          }
         }
       }
 
