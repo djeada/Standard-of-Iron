@@ -255,11 +255,11 @@ private:
       StoneBatch = 2,
       PlantBatch = 3,
       PineBatch = 4,
-      FogBatch = 5,
-      Mesh = 6,
-      Cylinder = 7,
-      SelectionSmoke = 8,
-      SelectionRing = 9,
+      SelectionRing = 5,
+      FogBatch = 6,
+      Mesh = 7,
+      Cylinder = 8,
+      SelectionSmoke = 9,
       Grid = 10
     };
 
