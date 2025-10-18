@@ -405,7 +405,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         break;
       }
 
-      DepthMaskScope depthMask(false);
+      DepthMaskScope depthMask(true);
       glEnable(GL_DEPTH_TEST);
       BlendScope blend(true);
       glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -688,7 +688,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       m_basicShader->setUniform(m_basicUniforms.color, sc.color);
 
       DepthMaskScope depthMask(false);
-      DepthTestScope depthTest(false);
+      DepthTestScope depthTest(true);
       PolygonOffsetScope poly(-1.0f, -1.0f);
       BlendScope blend(true);
 
