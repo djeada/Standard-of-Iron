@@ -17,7 +17,6 @@ Rectangle {
         function onVictoryStateChanged() {
             if (typeof game !== 'undefined' && game.victoryState === "") {
                 showingSummary = false;
-                battleSummary.visible = false;
             }
         }
 
