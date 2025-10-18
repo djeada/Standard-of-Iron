@@ -83,8 +83,8 @@ void PlantRenderer::configure(const Game::Map::TerrainHeightMap &heightMap,
 }
 
 void PlantRenderer::submit(Renderer &renderer, ResourceManager *resources) {
-  (void)resources; // Unused parameter
-  
+  (void)resources;
+
   m_plantInstanceCount = static_cast<uint32_t>(m_plantInstances.size());
 
   if (m_plantInstanceCount > 0) {
@@ -124,12 +124,11 @@ void PlantRenderer::generatePlantInstances() {
     return;
   }
 
-  // Use plant density from biome settings (default to moderate density)
   const float plantDensity =
       std::clamp(m_biomeSettings.plantDensity, 0.0f, 2.0f);
-  qDebug() << "PlantRenderer: plantDensity =" << plantDensity 
+  qDebug() << "PlantRenderer: plantDensity =" << plantDensity
            << "from biome settings";
-  
+
   if (plantDensity < 0.01f) {
     qDebug() << "PlantRenderer: plantDensity too low, skipping generation";
     m_plantInstanceCount = 0;
@@ -162,7 +161,6 @@ void PlantRenderer::generatePlantInstances() {
     return h0 * (1.0f - tz) + h1 * tz;
   };
 
-  // Compute normals for slope detection
   for (int z = 0; z < m_height; ++z) {
     for (int x = 0; x < m_width; ++x) {
       int idx = z * m_width + x;
@@ -196,14 +194,12 @@ void PlantRenderer::generatePlantInstances() {
     int iz = std::clamp(int(std::floor(sgz + 0.5f)), 0, m_height - 1);
     int normalIdx = iz * m_width + ix;
 
-    // Plants prefer flat terrain, avoid mountains
     if (m_terrainTypes[normalIdx] == Game::Map::TerrainType::Mountain)
       return false;
 
     QVector3D normal = normals[normalIdx];
     float slope = 1.0f - std::clamp(normal.y(), 0.0f, 1.0f);
 
-    // Avoid steep slopes
     if (slope > 0.65f)
       return false;
 
@@ -217,24 +213,19 @@ void PlantRenderer::generatePlantInstances() {
       return false;
     }
 
-    // Plants are taller than grass for visibility
     float scale = remap(rand01(state), 0.30f, 0.80f) * tileSafe;
 
-    // Plant type variation (0-3 for different plant models)
     float plantType = std::floor(rand01(state) * 4.0f);
 
-    // Plants use darker, more saturated colors than grass
     float colorVar = remap(rand01(state), 0.0f, 1.0f);
-    QVector3D baseColor = m_biomeSettings.grassPrimary * 0.7f; // Darker than grass
+    QVector3D baseColor = m_biomeSettings.grassPrimary * 0.7f;
     QVector3D varColor = m_biomeSettings.grassSecondary * 0.8f;
     QVector3D tintColor = baseColor * (1.0f - colorVar) + varColor * colorVar;
 
-    // Add brownish/woody tint for plant stems and variety
     float brownMix = remap(rand01(state), 0.15f, 0.35f);
     QVector3D brownTint(0.55f, 0.50f, 0.35f);
     tintColor = tintColor * (1.0f - brownMix) + brownTint * brownMix;
 
-    // Sway parameters
     float swayPhase = rand01(state) * 6.2831853f;
     float swayStrength = remap(rand01(state), 0.6f, 1.2f);
     float swaySpeed = remap(rand01(state), 0.8f, 1.3f);
@@ -242,26 +233,25 @@ void PlantRenderer::generatePlantInstances() {
     float rotation = rand01(state) * 6.2831853f;
 
     PlantInstanceGpu instance;
-    // Plants elevated slightly above terrain to avoid z-fighting
+
     instance.posScale = QVector4D(worldX, worldY + 0.05f, worldZ, scale);
     instance.colorSway =
         QVector4D(tintColor.x(), tintColor.y(), tintColor.z(), swayPhase);
-    instance.typeParams = QVector4D(plantType, rotation, swayStrength, swaySpeed);
+    instance.typeParams =
+        QVector4D(plantType, rotation, swayStrength, swaySpeed);
     m_plantInstances.push_back(instance);
     return true;
   };
 
-  // Generate plants in a grid pattern with clustering
   int cellsChecked = 0;
   int cellsPassed = 0;
   int plantsAdded = 0;
-  
+
   for (int z = 0; z < m_height; z += 3) {
     for (int x = 0; x < m_width; x += 3) {
       cellsChecked++;
       int idx = z * m_width + x;
 
-      // Skip mountains completely
       if (m_terrainTypes[idx] == Game::Map::TerrainType::Mountain)
         continue;
 
@@ -276,30 +266,25 @@ void PlantRenderer::generatePlantInstances() {
       float worldX = (x - halfWidth) * m_tileSize;
       float worldZ = (z - halfHeight) * m_tileSize;
 
-      // Use clustering noise to create natural-looking plant distribution
       float clusterNoise =
           valueNoise(worldX * 0.05f, worldZ * 0.05f, m_noiseSeed ^ 0x4B9D2F1Au);
 
-      // Plants cluster in certain areas
       if (clusterNoise < 0.45f)
         continue;
-      
+
       cellsPassed++;
 
-      // Adjust density based on terrain type
       float densityMult = 1.0f;
       if (m_terrainTypes[idx] == Game::Map::TerrainType::Hill) {
-        densityMult = 0.6f; // Fewer plants on hills
+        densityMult = 0.6f;
       }
 
-      // Calculate plant count (higher multiplier for visibility)
       float effectiveDensity = plantDensity * densityMult * 2.0f;
       int plantCount = static_cast<int>(std::floor(effectiveDensity));
       float frac = effectiveDensity - float(plantCount);
       if (rand01(state) < frac)
         plantCount += 1;
 
-      // Place plants in small clusters
       for (int i = 0; i < plantCount; ++i) {
         float gx = float(x) + rand01(state) * 3.0f;
         float gz = float(z) + rand01(state) * 3.0f;
