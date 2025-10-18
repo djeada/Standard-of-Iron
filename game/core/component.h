@@ -203,11 +203,11 @@ public:
 class HoldModeComponent : public Component {
 public:
   HoldModeComponent()
-      : active(true), exitCooldown(0.0f), standUpDuration(0.8f) {}
+      : active(true), exitCooldown(0.0f), standUpDuration(2.0f) {}
 
   bool active;
   float exitCooldown;
-  float standUpDuration;
+  float standUpDuration;  // Time it takes to stand up from kneeling (seconds)
 };
 
 } // namespace Engine::Core
