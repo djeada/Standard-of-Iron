@@ -8,6 +8,11 @@ Rectangle {
 
     signal returnToMainMenuRequested()
 
+    function resetState() {
+        showingSummary = false;
+        battleSummary.visible = false;
+    }
+
     anchors.fill: parent
     color: Qt.rgba(0, 0, 0, 0.7)
     visible: (typeof game !== 'undefined' && game.victoryState !== "")
@@ -16,11 +21,17 @@ Rectangle {
     Connections {
         function onVictoryStateChanged() {
             if (typeof game !== 'undefined' && game.victoryState === "") {
-                showingSummary = false;
+                resetState();
             }
         }
 
         target: (typeof game !== 'undefined') ? game : null
+    }
+
+    onVisibleChanged: {
+        if (!visible) {
+            resetState();
+        }
     }
 
     Rectangle {
@@ -75,7 +86,7 @@ Rectangle {
             showingSummary = false;
         }
         onReturnToMainMenu: function() {
-            showingSummary = false;
+            resetState();
             victoryOverlay.returnToMainMenuRequested();
         }
     }

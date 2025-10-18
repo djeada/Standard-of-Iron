@@ -9,16 +9,19 @@ Rectangle {
     property var onReturnToMainMenu: null
 
     function show() {
+        visible = true;
         buildPlayerList();
     }
 
     function hide() {
+        visible = false;
         if (onClose)
             onClose();
 
     }
 
     function returnToMainMenu() {
+        visible = false;
         if (onReturnToMainMenu)
             onReturnToMainMenu();
 
