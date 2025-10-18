@@ -73,21 +73,84 @@ public:
 
     float bowX = 0.0f;
 
-    if (anim.isInHoldMode || anim.holdExitProgress > 0.0f) {
+    // Apply kneeling pose if in hold mode OR transitioning out
+    if (anim.isInHoldMode || anim.isExitingHold) {
+      // t: 1.0 = fully kneeling, 0.0 = fully standing
       float t = anim.isInHoldMode ? 1.0f : (1.0f - anim.holdExitProgress);
 
-      float targetFootOffset = -0.25f * t;
-      pose.footYOffset = targetFootOffset;
-      pose.footL.setY(HP::GROUND_Y + pose.footYOffset);
-      pose.footR.setY(HP::GROUND_Y + pose.footYOffset);
+      // LEG-DRIVEN KNEEL: Sniper-style stance
+      // - Narrow stance (legs close together, not spread)
+      // - Left knee on ground, shin horizontal back
+      // - Right leg forms L-shape: thigh down, shin back to planted foot
+      
+      float kneelDepth = 0.45f * t;  // How much character lowers
+      
+      // PELVIS lowers via leg bending
+      float pelvisY = HP::WAIST_Y - kneelDepth;
+      pose.pelvisPos.setY(pelvisY);
+      
+      // SNIPER STANCE: Narrow stance, legs close to body centerline
+      float stanceNarrow = 0.12f;  // Narrow stance
+      
+      // LEFT LEG: Knee on ground, shin ~parallel to ground, foot back
+      // Upper leg: pelvis → knee (should be ~0.35 units)
+      // Lower leg: knee → foot (should be ~0.35 units)
+      float leftKneeY = HP::GROUND_Y + 0.08f * t;  // Knee on/near ground
+      float leftKneeZ = -0.05f * t;  // Knee at body center
+      
+      pose.kneeL = QVector3D(-stanceNarrow, leftKneeY, leftKneeZ);
+      
+      // Foot behind knee - shin horizontal/slightly angled back
+      pose.footL = QVector3D(
+        -stanceNarrow - 0.03f,  // Foot slightly outward
+        HP::GROUND_Y,
+        leftKneeZ - HP::LOWER_LEG_LEN * 0.95f * t  // Full shin length back
+      );
+      
+      // RIGHT LEG: SNIPER L-SHAPE - ROTATED 90°
+      // Thigh HORIZONTAL (parallel to ground, extending forward from pelvis)
+      // Calf VERTICAL (drops down from knee to foot on ground)
+      // 
+      // Pelvis is at (0, pelvisY, ~0)
+      // Knee should be FORWARD from pelvis at roughly same Y height
+      // Foot on ground below knee
+      
+      float rightFootZ = 0.30f * t;  // Foot forward for stability
+      pose.footR = QVector3D(
+        stanceNarrow,  // Narrow stance
+        HP::GROUND_Y + pose.footYOffset,
+        rightFootZ  // Foot forward on ground
+      );
+      
+      // Knee: forward from pelvis, at roughly pelvis height (thigh horizontal!)
+      // The thigh extends forward in +Z direction, not down in -Y
+      float rightKneeY = pelvisY - 0.10f;  // Knee slightly below pelvis (not hanging down!)
+      float rightKneeZ = rightFootZ - 0.05f;  // Knee directly above/behind foot
+      
+      pose.kneeR = QVector3D(
+        stanceNarrow,
+        rightKneeY,
+        rightKneeZ  // Knee above foot, creating vertical calf
+      );
 
-      pose.shoulderL.setY(pose.shoulderL.y() - 0.15f * t);
-      pose.shoulderR.setY(pose.shoulderR.y() - 0.15f * t);
-      pose.headPos.setY(pose.headPos.y() - 0.10f * t);
-      pose.neckBase.setY(pose.neckBase.y() - 0.12f * t);
+      // RIGID UPPER BODY DROP: Entire upper rig translates down (NO COMPRESSION!)
+      float upperBodyDrop = kneelDepth;
+      
+      pose.shoulderL.setY(HP::SHOULDER_Y - upperBodyDrop);
+      pose.shoulderR.setY(HP::SHOULDER_Y - upperBodyDrop);
+      pose.neckBase.setY(HP::NECK_BASE_Y - upperBodyDrop);
+      pose.headPos.setY((HP::HEAD_TOP_Y + HP::CHIN_Y) * 0.5f - upperBodyDrop);
 
-      QVector3D holdHandL(bowX - 0.12f, HP::SHOULDER_Y + 0.20f, 0.45f);
-      QVector3D holdHandR(bowX + 0.08f, HP::SHOULDER_Y + 0.50f, 0.15f);
+      // Slight forward lean for archer stance
+      float forwardLean = 0.10f * t;
+      pose.shoulderL.setZ(pose.shoulderL.z() + forwardLean);
+      pose.shoulderR.setZ(pose.shoulderR.z() + forwardLean);
+      pose.neckBase.setZ(pose.neckBase.z() + forwardLean * 0.8f);
+      pose.headPos.setZ(pose.headPos.z() + forwardLean * 0.7f);
+
+      // Hand positions for holding bow raised (sky-facing stance)
+      QVector3D holdHandL(bowX - 0.15f, pose.shoulderL.y() + 0.30f, 0.55f);
+      QVector3D holdHandR(bowX + 0.12f, pose.shoulderR.y() + 0.15f, 0.10f);
       QVector3D normalHandL(bowX - 0.05f + armAsymmetry,
                             HP::SHOULDER_Y + 0.05f + armHeightJitter, 0.55f);
       QVector3D normalHandR(0.15f - armAsymmetry * 0.5f,
@@ -232,7 +295,7 @@ public:
       }
     }
 
-    drawQuiver(ctx, v, extras, seed, out);
+    drawQuiver(ctx, v, pose, extras, seed, out);
 
     float attackPhase = 0.0f;
     if (anim.isAttacking && !anim.isMelee) {
@@ -329,9 +392,13 @@ public:
     QVector3D mailColor = v.palette.metal * QVector3D(0.85f, 0.87f, 0.92f);
     QVector3D leatherTrim = v.palette.leatherDark * 0.90f;
 
+    // Use pose.pelvisPos.y() instead of hardcoded HP::WAIST_Y
+    // so armor follows the body when kneeling
+    float waistY = pose.pelvisPos.y();
+    
     QVector3D mailTop(0, yTopCover + 0.01f, 0);
-    QVector3D mailMid(0, (yTopCover + HP::WAIST_Y) * 0.5f, 0);
-    QVector3D mailBot(0, HP::WAIST_Y + 0.08f, 0);
+    QVector3D mailMid(0, (yTopCover + waistY) * 0.5f, 0);
+    QVector3D mailBot(0, waistY + 0.08f, 0);
     float rTop = torsoR * 1.10f;
     float rMid = torsoR * 1.08f;
 
@@ -389,15 +456,16 @@ public:
     drawManica(pose.shoulderL, pose.elbowL);
     drawManica(pose.shoulderR, pose.elbowR);
 
-    QVector3D beltTop(0, HP::WAIST_Y + 0.06f, 0);
-    QVector3D beltBot(0, HP::WAIST_Y - 0.02f, 0);
+    // Belt follows pelvis position (not hardcoded WAIST_Y)
+    QVector3D beltTop(0, waistY + 0.06f, 0);
+    QVector3D beltBot(0, waistY - 0.02f, 0);
     float beltR = torsoR * 1.12f;
     out.mesh(getUnitCylinder(),
              cylinderBetween(ctx.model, beltTop, beltBot, beltR), leatherTrim,
              nullptr, 1.0f);
 
     QVector3D brassColor = v.palette.metal * QVector3D(1.2f, 1.0f, 0.65f);
-    ring(QVector3D(0, HP::WAIST_Y + 0.02f, 0), beltR * 1.02f, 0.010f,
+    ring(QVector3D(0, waistY + 0.02f, 0), beltR * 1.02f, 0.010f,
          brassColor);
 
     auto drawPteruge = [&](float angle, float yStart, float length) {
@@ -416,7 +484,8 @@ public:
       drawPteruge(angle, shoulderPterugeY, 0.14f);
     }
 
-    float waistPterugeY = HP::WAIST_Y - 0.04f;
+    // Waist pteruges follow pelvis position
+    float waistPterugeY = waistY - 0.04f;
     for (int i = 0; i < 10; ++i) {
       float angle = (i / 10.0f) * 2.0f * 3.14159265f;
       drawPteruge(angle, waistPterugeY, 0.18f);
@@ -466,12 +535,17 @@ public:
 
 private:
   static void drawQuiver(const DrawContext &ctx, const HumanoidVariant &v,
+                         const HumanoidPose &pose,
                          const ArcherExtras &extras, uint32_t seed,
                          ISubmitter &out) {
     using HP = HumanProportions;
 
-    QVector3D qTop(-0.08f, HP::SHOULDER_Y + 0.10f, -0.25f);
-    QVector3D qBase(-0.10f, HP::CHEST_Y, -0.22f);
+    // SPINE-ANCHORED QUIVER: Position relative to shoulder midpoint (spine)
+    // with stable left/back offset that doesn't drift in hold mode
+    QVector3D spineMid = (pose.shoulderL + pose.shoulderR) * 0.5f;
+    QVector3D quiverOffset(-0.08f, 0.10f, -0.25f);  // Stable left/back offset
+    QVector3D qTop = spineMid + quiverOffset;
+    QVector3D qBase = qTop + QVector3D(-0.02f, -0.30f, 0.03f);
 
     float quiverR = HP::HEAD_RADIUS * 0.45f;
     out.mesh(getUnitCylinder(),
@@ -504,13 +578,17 @@ private:
     const QVector3D forward(0.0f, 0.0f, 1.0f);
 
     QVector3D grip = pose.handL;
-    QVector3D topEnd(extras.bowX, extras.bowTopY, grip.z());
-    QVector3D botEnd(extras.bowX, extras.bowBotY, grip.z());
+    
+    // BOW STAYS IN CONSISTENT VERTICAL PLANE
+    // Ends are vertically aligned at fixed Z (slightly forward from body center)
+    float bowPlaneZ = 0.45f;  // Fixed Z position - bow always faces forward
+    QVector3D topEnd(extras.bowX, extras.bowTopY, bowPlaneZ);
+    QVector3D botEnd(extras.bowX, extras.bowBotY, bowPlaneZ);
 
     QVector3D nock(
         extras.bowX,
         clampf(pose.handR.y(), extras.bowBotY + 0.05f, extras.bowTopY - 0.05f),
-        clampf(pose.handR.z(), grip.z() - 0.30f, grip.z() + 0.30f));
+        clampf(pose.handR.z(), bowPlaneZ - 0.30f, bowPlaneZ + 0.30f));
 
     const int segs = 22;
     auto qBezier = [](const QVector3D &a, const QVector3D &c,
@@ -518,7 +596,20 @@ private:
       float u = 1.0f - t;
       return u * u * a + 2.0f * u * t * c + t * t * b;
     };
-    QVector3D ctrl = nock + forward * extras.bowDepth;
+    
+    // SKY-FACING BOW CURVE: Move control point toward +Y (upward) AND slightly +Z (depth)
+    // The bow curves upward by pushing the control point HIGH above the midpoint
+    // Also maintain some forward depth for realistic bow shape
+    float bowMidY = (topEnd.y() + botEnd.y()) * 0.5f;
+    
+    // Push control point SIGNIFICANTLY upward to create sky-facing arc
+    // The higher ctrlY, the more the bow points up toward sky
+    float ctrlY = bowMidY + 0.45f;  // Strong upward bias for sky-facing
+    
+    // Control point: high in Y (sky), modest forward in Z (depth)
+    // Prioritize upward over forward
+    QVector3D ctrl(extras.bowX, ctrlY, bowPlaneZ + extras.bowDepth * 0.6f);
+    
     QVector3D prev = botEnd;
     for (int i = 1; i <= segs; ++i) {
       float t = float(i) / float(segs);

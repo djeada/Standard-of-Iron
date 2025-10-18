@@ -106,6 +106,7 @@ void MovementSystem::moveUnit(Engine::Core::Entity *entity,
   }
 
   auto *holdMode = entity->getComponent<Engine::Core::HoldModeComponent>();
+  bool inHoldMode = false;
   if (holdMode) {
     if (holdMode->exitCooldown > 0.0f) {
       holdMode->exitCooldown =
@@ -118,17 +119,37 @@ void MovementSystem::moveUnit(Engine::Core::Entity *entity,
       movement->vz = 0.0f;
       movement->path.clear();
       movement->pathPending = false;
-      return;
+      inHoldMode = true;
     }
 
-    if (holdMode->exitCooldown > 0.0f) {
-      movement->hasTarget = false;
+    // During stand-up transition (exitCooldown > 0), block movement execution
+    // but DON'T clear movement targets - unit remembers where to go
+    if (holdMode->exitCooldown > 0.0f && !inHoldMode) {
       movement->vx = 0.0f;
       movement->vz = 0.0f;
-      movement->path.clear();
-      movement->pathPending = false;
+      // Keep hasTarget, path, and pathPending intact!
+      // Unit will start moving once exitCooldown reaches 0
       return;
     }
+  }
+
+  if (inHoldMode) {
+    if (!entity->hasComponent<Engine::Core::BuildingComponent>()) {
+      if (transform->hasDesiredYaw) {
+        float current = transform->rotation.y;
+        float targetYaw = transform->desiredYaw;
+        float diff = std::fmod((targetYaw - current + 540.0f), 360.0f) - 180.0f;
+        float turnSpeed = 180.0f;
+        float step =
+            std::clamp(diff, -turnSpeed * deltaTime, turnSpeed * deltaTime);
+        transform->rotation.y = current + step;
+
+        if (std::fabs(diff) < 0.5f) {
+          transform->hasDesiredYaw = false;
+        }
+      }
+    }
+    return;
   }
 
   auto *atk = entity->getComponent<Engine::Core::AttackComponent>();
