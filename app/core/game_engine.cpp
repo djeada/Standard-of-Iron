@@ -98,7 +98,7 @@ GameEngine::GameEngine() {
   m_pine = std::make_unique<Render::GL::PineRenderer>();
 
   m_passes = {m_ground.get(), m_terrain.get(), m_biome.get(), m_stone.get(),
-              m_plant.get(), m_pine.get(), m_fog.get()};
+              m_plant.get(),  m_pine.get(),    m_fog.get()};
 
   std::unique_ptr<Engine::Core::System> arrowSys =
       std::make_unique<Game::Systems::ArrowSystem>();

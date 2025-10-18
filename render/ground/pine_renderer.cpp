@@ -60,7 +60,7 @@ PineRenderer::PineRenderer() = default;
 PineRenderer::~PineRenderer() = default;
 
 void PineRenderer::configure(const Game::Map::TerrainHeightMap &heightMap,
-                              const Game::Map::BiomeSettings &biomeSettings) {
+                             const Game::Map::BiomeSettings &biomeSettings) {
   m_width = heightMap.getWidth();
   m_height = heightMap.getHeight();
   m_tileSize = heightMap.getTileSize();
@@ -76,15 +76,15 @@ void PineRenderer::configure(const Game::Map::TerrainHeightMap &heightMap,
 
   m_pineParams.lightDirection = QVector3D(0.35f, 0.8f, 0.45f);
   m_pineParams.time = 0.0f;
-  m_pineParams.windStrength = 0.3f;  // Gentler than plants
-  m_pineParams.windSpeed = 0.5f;     // Slower than plants
+  m_pineParams.windStrength = 0.3f;
+  m_pineParams.windSpeed = 0.5f;
 
   generatePineInstances();
 }
 
 void PineRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   (void)resources;
-  
+
   m_pineInstanceCount = static_cast<uint32_t>(m_pineInstances.size());
 
   if (m_pineInstanceCount > 0) {
@@ -103,8 +103,7 @@ void PineRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   if (m_pineInstanceBuffer && m_pineInstanceCount > 0) {
     PineBatchParams params = m_pineParams;
     params.time = renderer.getAnimationTime();
-    renderer.pineBatch(m_pineInstanceBuffer.get(), m_pineInstanceCount,
-                        params);
+    renderer.pineBatch(m_pineInstanceBuffer.get(), m_pineInstanceCount, params);
   }
 }
 
@@ -126,14 +125,12 @@ void PineRenderer::generatePineInstances() {
   const float halfHeight = static_cast<float>(m_height) * 0.5f;
   const float tileSafe = std::max(0.1f, m_tileSize);
 
-  // Pine density from biome settings (default 0.2, much lower than plants)
   float pineDensity = 0.2f;
   if (m_biomeSettings.plantDensity > 0.0f) {
-    // Reuse plantDensity but at reduced rate for trees
+
     pineDensity = m_biomeSettings.plantDensity * 0.3f;
   }
 
-  // Pre-compute normals for slope calculation
   std::vector<QVector3D> normals(m_width * m_height, QVector3D(0, 1, 0));
   for (int z = 1; z < m_height - 1; ++z) {
     for (int x = 1; x < m_width - 1; ++x) {
@@ -161,12 +158,9 @@ void PineRenderer::generatePineInstances() {
     int iz = std::clamp(int(std::floor(sgz + 0.5f)), 0, m_height - 1);
     int normalIdx = iz * m_width + ix;
 
-    // Pines prefer hills and moderate terrain
-    // Avoid extremely steep slopes
     QVector3D normal = normals[normalIdx];
     float slope = 1.0f - std::clamp(normal.y(), 0.0f, 1.0f);
 
-    // Pines can handle more slope than plants but not extreme
     if (slope > 0.75f)
       return false;
 
@@ -180,48 +174,40 @@ void PineRenderer::generatePineInstances() {
       return false;
     }
 
-    // Pines are TALL trees (3-6 units instead of 0.3-0.8 for plants)
     float scale = remap(rand01(state), 3.0f, 6.0f) * tileSafe;
 
-    // Pine color variation (darker green/brown tones)
     float colorVar = remap(rand01(state), 0.0f, 1.0f);
-    QVector3D baseColor(0.15f, 0.35f, 0.20f);  // Dark pine green
-    QVector3D varColor(0.20f, 0.40f, 0.25f);   // Slightly lighter
+    QVector3D baseColor(0.15f, 0.35f, 0.20f);
+    QVector3D varColor(0.20f, 0.40f, 0.25f);
     QVector3D tintColor = baseColor * (1.0f - colorVar) + varColor * colorVar;
 
-    // Add brownish tint for trunk variation
     float brownMix = remap(rand01(state), 0.10f, 0.25f);
     QVector3D brownTint(0.35f, 0.30f, 0.20f);
     tintColor = tintColor * (1.0f - brownMix) + brownTint * brownMix;
 
-  // Sway parameters (gentler and slower than plants)
-  float swayPhase = rand01(state) * 6.2831853f;
+    float swayPhase = rand01(state) * 6.2831853f;
 
-  // Y-axis rotation for variety
-  float rotation = rand01(state) * 6.2831853f;
+    float rotation = rand01(state) * 6.2831853f;
 
-  // Additional per-instance variation for silhouette and shading
-  float silhouetteSeed = rand01(state);
-  float needleSeed = rand01(state);
-  float barkSeed = rand01(state);
+    float silhouetteSeed = rand01(state);
+    float needleSeed = rand01(state);
+    float barkSeed = rand01(state);
 
     PineInstanceGpu instance;
-    // Pine trees on ground level (not elevated like plants were)
+
     instance.posScale = QVector4D(worldX, worldY, worldZ, scale);
     instance.colorSway =
         QVector4D(tintColor.x(), tintColor.y(), tintColor.z(), swayPhase);
-  instance.rotation = QVector4D(rotation, silhouetteSeed, needleSeed, barkSeed);
+    instance.rotation =
+        QVector4D(rotation, silhouetteSeed, needleSeed, barkSeed);
     m_pineInstances.push_back(instance);
     return true;
   };
 
-  // Generate pines in a sparse grid pattern (every 6 tiles instead of 3)
-  // Lower density for trees compared to plants
   for (int z = 0; z < m_height; z += 6) {
     for (int x = 0; x < m_width; x += 6) {
       int idx = z * m_width + x;
 
-      // Check terrain slope - avoid steep areas
       QVector3D normal = normals[idx];
       float slope = 1.0f - std::clamp(normal.y(), 0.0f, 1.0f);
       if (slope > 0.75f)
@@ -233,30 +219,25 @@ void PineRenderer::generatePineInstances() {
       float worldX = (x - halfWidth) * m_tileSize;
       float worldZ = (z - halfHeight) * m_tileSize;
 
-      // Use forest/tree clustering noise
       float clusterNoise =
           valueNoise(worldX * 0.03f, worldZ * 0.03f, m_noiseSeed ^ 0x7F8E9D0Au);
 
-      // Pines cluster in forest areas
       if (clusterNoise < 0.35f)
         continue;
 
-      // Terrain-based density multiplier
       float densityMult = 1.0f;
       if (m_terrainTypes[idx] == Game::Map::TerrainType::Hill) {
-        densityMult = 1.2f; // More trees on hills
+        densityMult = 1.2f;
       } else if (m_terrainTypes[idx] == Game::Map::TerrainType::Mountain) {
-        densityMult = 0.4f; // Fewer on mountains
+        densityMult = 0.4f;
       }
 
-      // Calculate pine count (much lower than plants)
       float effectiveDensity = pineDensity * densityMult * 0.8f;
       int pineCount = static_cast<int>(std::floor(effectiveDensity));
       float frac = effectiveDensity - float(pineCount);
       if (rand01(state) < frac)
         pineCount += 1;
 
-      // Place pines in small clusters
       for (int i = 0; i < pineCount; ++i) {
         float gx = float(x) + rand01(state) * 6.0f;
         float gz = float(z) + rand01(state) * 6.0f;
