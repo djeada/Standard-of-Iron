@@ -662,6 +662,14 @@ void CombatSystem::processAutoEngagement(Engine::Core::World *world,
       continue;
     }
 
+    // Only auto-engage for pure melee units or units that prefer melee
+    // This prevents ranged units from unnecessarily running into melee range
+    if (attackComp->canRanged &&
+        attackComp->preferredMode !=
+            Engine::Core::AttackComponent::CombatMode::Melee) {
+      continue;
+    }
+
     // Skip if unit is on engagement cooldown
     if (m_engagementCooldowns.find(unit->getId()) !=
         m_engagementCooldowns.end()) {
