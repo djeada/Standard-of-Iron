@@ -11,8 +11,8 @@ namespace Game::Systems::AI {
 void AIReasoner::updateContext(const AISnapshot &snapshot, AIContext &ctx) {
 
   if (!ctx.nation) {
-    ctx.nation =
-        Game::Systems::NationRegistry::instance().getNationForPlayer(ctx.playerId);
+    ctx.nation = Game::Systems::NationRegistry::instance().getNationForPlayer(
+        ctx.playerId);
   }
 
   cleanupDeadUnits(snapshot, ctx);
