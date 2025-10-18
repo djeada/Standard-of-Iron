@@ -18,6 +18,13 @@ Item {
     signal commandModeChanged(string mode)
     signal recruit(string unitType)
     signal returnToMainMenuRequested()
+    signal hudBecameVisible()
+
+    onVisibleChanged: {
+        if (visible) {
+            hudBecameVisible();
+        }
+    }
 
     Connections {
         function onSelectedUnitsChanged() {
@@ -116,9 +123,20 @@ Item {
     }
 
     HUDVictory {
+        id: hudVictory
+        
         anchors.fill: parent
         onReturnToMainMenuRequested: {
             hud.returnToMainMenuRequested();
+        }
+        
+        Connections {
+            target: hud
+            function onHudBecameVisible() {
+                if (typeof game !== 'undefined' && game.victoryState === "") {
+                    hudVictory.forceHide();
+                }
+            }
         }
     }
 
