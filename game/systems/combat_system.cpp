@@ -26,7 +26,7 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
   ArrowSystem *arrowSys = world->getSystem<ArrowSystem>();
 
   for (auto attacker : units) {
-    // Skip entities pending removal to avoid accessing destroyed objects
+
     if (attacker->hasComponent<Engine::Core::PendingRemovalComponent>())
       continue;
 
@@ -44,7 +44,8 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
 
     if (attackerAtk && attackerAtk->inMeleeLock) {
       auto *lockTarget = world->getEntity(attackerAtk->meleeLockTargetId);
-      if (!lockTarget || lockTarget->hasComponent<Engine::Core::PendingRemovalComponent>()) {
+      if (!lockTarget ||
+          lockTarget->hasComponent<Engine::Core::PendingRemovalComponent>()) {
 
         attackerAtk->inMeleeLock = false;
         attackerAtk->meleeLockTargetId = 0;
@@ -87,7 +88,8 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
     if (attackerAtk && attackerAtk->inMeleeLock &&
         attackerAtk->meleeLockTargetId != 0) {
       auto *lockTarget = world->getEntity(attackerAtk->meleeLockTargetId);
-      if (lockTarget && !lockTarget->hasComponent<Engine::Core::PendingRemovalComponent>()) {
+      if (lockTarget &&
+          !lockTarget->hasComponent<Engine::Core::PendingRemovalComponent>()) {
 
         auto *attackTarget =
             attacker->getComponent<Engine::Core::AttackTargetComponent>();
@@ -141,7 +143,8 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
     if (attackTarget && attackTarget->targetId != 0) {
 
       auto *target = world->getEntity(attackTarget->targetId);
-      if (target && !target->hasComponent<Engine::Core::PendingRemovalComponent>()) {
+      if (target &&
+          !target->hasComponent<Engine::Core::PendingRemovalComponent>()) {
         auto *targetUnit = target->getComponent<Engine::Core::UnitComponent>();
 
         auto &ownerRegistry = Game::Systems::OwnerRegistry::instance();
@@ -537,7 +540,9 @@ void CombatSystem::dealDamage(Engine::Core::World *world,
 
         if (world) {
           auto *lockPartner = world->getEntity(targetAtk->meleeLockTargetId);
-          if (lockPartner && !lockPartner->hasComponent<Engine::Core::PendingRemovalComponent>()) {
+          if (lockPartner &&
+              !lockPartner
+                   ->hasComponent<Engine::Core::PendingRemovalComponent>()) {
             auto *partnerAtk =
                 lockPartner->getComponent<Engine::Core::AttackComponent>();
             if (partnerAtk &&
@@ -665,7 +670,6 @@ void CombatSystem::processAutoEngagement(Engine::Core::World *world,
                                          float deltaTime) {
   auto units = world->getEntitiesWith<Engine::Core::UnitComponent>();
 
-  // Update cooldowns
   for (auto it = m_engagementCooldowns.begin();
        it != m_engagementCooldowns.end();) {
     it->second -= deltaTime;
@@ -677,7 +681,7 @@ void CombatSystem::processAutoEngagement(Engine::Core::World *world,
   }
 
   for (auto unit : units) {
-    // Skip if unit is not alive or pending removal
+
     if (unit->hasComponent<Engine::Core::PendingRemovalComponent>()) {
       continue;
     }
@@ -687,52 +691,45 @@ void CombatSystem::processAutoEngagement(Engine::Core::World *world,
       continue;
     }
 
-    // Skip if unit is a building
     if (unit->hasComponent<Engine::Core::BuildingComponent>()) {
       continue;
     }
 
-    // Skip if unit doesn't have attack capability or is not melee-capable
     auto attackComp = unit->getComponent<Engine::Core::AttackComponent>();
     if (!attackComp || !attackComp->canMelee) {
       continue;
     }
 
-    // Only auto-engage for pure melee units or units that prefer melee
-    // This prevents ranged units from unnecessarily running into melee range
     if (attackComp->canRanged &&
         attackComp->preferredMode !=
             Engine::Core::AttackComponent::CombatMode::Melee) {
       continue;
     }
 
-    // Skip if unit is on engagement cooldown
     if (m_engagementCooldowns.find(unit->getId()) !=
         m_engagementCooldowns.end()) {
       continue;
     }
 
-    // Skip if unit is not idle
     if (!isUnitIdle(unit)) {
       continue;
     }
 
-    // Find nearest enemy within vision range
     float visionRange = unitComp->visionRange;
     auto *nearestEnemy = findNearestEnemy(unit, world, visionRange);
 
     if (nearestEnemy) {
-      // Issue attack command to engage the enemy
+
       auto *attackTarget =
           unit->getComponent<Engine::Core::AttackTargetComponent>();
       if (!attackTarget) {
-        attackTarget = unit->addComponent<Engine::Core::AttackTargetComponent>();
+        attackTarget =
+            unit->addComponent<Engine::Core::AttackTargetComponent>();
       }
       if (attackTarget) {
         attackTarget->targetId = nearestEnemy->getId();
         attackTarget->shouldChase = true;
 
-        // Add cooldown to prevent rapid re-engagement
         m_engagementCooldowns[unit->getId()] = ENGAGEMENT_COOLDOWN;
       }
     }
@@ -740,31 +737,28 @@ void CombatSystem::processAutoEngagement(Engine::Core::World *world,
 }
 
 bool CombatSystem::isUnitIdle(Engine::Core::Entity *unit) {
-  // Check if unit is in hold mode
+
   auto *holdMode = unit->getComponent<Engine::Core::HoldModeComponent>();
   if (holdMode && holdMode->active) {
     return false;
   }
 
-  // Check if unit already has an attack target
-  auto *attackTarget = unit->getComponent<Engine::Core::AttackTargetComponent>();
+  auto *attackTarget =
+      unit->getComponent<Engine::Core::AttackTargetComponent>();
   if (attackTarget && attackTarget->targetId != 0) {
     return false;
   }
 
-  // Check if unit is currently moving to a target
   auto *movement = unit->getComponent<Engine::Core::MovementComponent>();
   if (movement && movement->hasTarget) {
     return false;
   }
 
-  // Check if unit is in melee lock
   auto *attackComp = unit->getComponent<Engine::Core::AttackComponent>();
   if (attackComp && attackComp->inMeleeLock) {
     return false;
   }
 
-  // Check if unit is patrolling
   auto *patrol = unit->getComponent<Engine::Core::PatrolComponent>();
   if (patrol && patrol->patrolling) {
     return false;
@@ -773,8 +767,9 @@ bool CombatSystem::isUnitIdle(Engine::Core::Entity *unit) {
   return true;
 }
 
-Engine::Core::Entity *CombatSystem::findNearestEnemy(
-    Engine::Core::Entity *unit, Engine::Core::World *world, float maxRange) {
+Engine::Core::Entity *CombatSystem::findNearestEnemy(Engine::Core::Entity *unit,
+                                                     Engine::Core::World *world,
+                                                     float maxRange) {
   auto unitComp = unit->getComponent<Engine::Core::UnitComponent>();
   auto unitTransform = unit->getComponent<Engine::Core::TransformComponent>();
   if (!unitComp || !unitTransform) {
@@ -792,7 +787,6 @@ Engine::Core::Entity *CombatSystem::findNearestEnemy(
       continue;
     }
 
-    // Skip entities pending removal
     if (target->hasComponent<Engine::Core::PendingRemovalComponent>()) {
       continue;
     }
@@ -802,7 +796,6 @@ Engine::Core::Entity *CombatSystem::findNearestEnemy(
       continue;
     }
 
-    // Skip allies and same team
     if (targetUnit->ownerId == unitComp->ownerId) {
       continue;
     }
@@ -810,7 +803,6 @@ Engine::Core::Entity *CombatSystem::findNearestEnemy(
       continue;
     }
 
-    // Skip buildings for melee units (they should not auto-engage buildings)
     if (target->hasComponent<Engine::Core::BuildingComponent>()) {
       continue;
     }

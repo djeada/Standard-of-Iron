@@ -59,6 +59,7 @@ void Backend::initialize() {
   m_terrainShader = m_shaderCache->get(QStringLiteral("terrain_chunk"));
   m_archerShader = m_shaderCache->get(QStringLiteral("archer"));
   m_knightShader = m_shaderCache->get(QStringLiteral("knight"));
+  m_spearmanShader = m_shaderCache->get(QStringLiteral("spearman"));
   if (!m_basicShader)
     qWarning() << "Backend: basic shader missing";
   if (!m_gridShader)
@@ -85,10 +86,13 @@ void Backend::initialize() {
     qWarning() << "Backend: archer shader missing";
   if (!m_knightShader)
     qWarning() << "Backend: knight shader missing";
+  if (!m_spearmanShader)
+    qWarning() << "Backend: spearman shader missing";
 
   cacheBasicUniforms();
   cacheArcherUniforms();
   cacheKnightUniforms();
+  cacheSpearmanUniforms();
   cacheGridUniforms();
   cacheCylinderUniforms();
   cacheFogUniforms();
@@ -625,6 +629,8 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         uniforms = &m_archerUniforms;
       else if (activeShader == m_knightShader)
         uniforms = &m_knightUniforms;
+      else if (activeShader == m_spearmanShader)
+        uniforms = &m_spearmanUniforms;
 
       if (m_lastBoundShader != activeShader) {
         activeShader->use();
@@ -787,6 +793,19 @@ void Backend::cacheKnightUniforms() {
   m_knightUniforms.useTexture = m_knightShader->uniformHandle("u_useTexture");
   m_knightUniforms.color = m_knightShader->uniformHandle("u_color");
   m_knightUniforms.alpha = m_knightShader->uniformHandle("u_alpha");
+}
+
+void Backend::cacheSpearmanUniforms() {
+  if (!m_spearmanShader)
+    return;
+
+  m_spearmanUniforms.mvp = m_spearmanShader->uniformHandle("u_mvp");
+  m_spearmanUniforms.model = m_spearmanShader->uniformHandle("u_model");
+  m_spearmanUniforms.texture = m_spearmanShader->uniformHandle("u_texture");
+  m_spearmanUniforms.useTexture =
+      m_spearmanShader->uniformHandle("u_useTexture");
+  m_spearmanUniforms.color = m_spearmanShader->uniformHandle("u_color");
+  m_spearmanUniforms.alpha = m_spearmanShader->uniformHandle("u_alpha");
 }
 
 void Backend::cacheGridUniforms() {

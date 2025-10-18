@@ -87,6 +87,7 @@ private:
   Shader *m_terrainShader = nullptr;
   Shader *m_archerShader = nullptr;
   Shader *m_knightShader = nullptr;
+  Shader *m_spearmanShader = nullptr;
 
   struct BasicUniforms {
     Shader::UniformHandle mvp{Shader::InvalidUniform};
@@ -99,6 +100,7 @@ private:
 
   BasicUniforms m_archerUniforms;
   BasicUniforms m_knightUniforms;
+  BasicUniforms m_spearmanUniforms;
 
   struct GridUniforms {
     Shader::UniformHandle mvp{Shader::InvalidUniform};
@@ -250,6 +252,7 @@ private:
   void cacheBasicUniforms();
   void cacheArcherUniforms();
   void cacheKnightUniforms();
+  void cacheSpearmanUniforms();
   void cacheGridUniforms();
   void cacheCylinderUniforms();
   void initializeCylinderPipeline();

@@ -93,7 +93,6 @@ void PineRenderer::submit(Renderer &renderer, ResourceManager *resources) {
     return;
   }
 
-  // Filter instances based on fog of war visibility
   auto &visibility = Game::Map::VisibilityService::instance();
   const bool useVisibility = visibility.isInitialized();
 
@@ -120,8 +119,7 @@ void PineRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   if (!m_pineInstanceBuffer) {
     m_pineInstanceBuffer = std::make_unique<Buffer>(Buffer::Type::Vertex);
   }
-  
-  // Always update buffer with visible instances
+
   m_pineInstanceBuffer->setData(visibleInstances, Buffer::Usage::Static);
 
   PineBatchParams params = m_pineParams;

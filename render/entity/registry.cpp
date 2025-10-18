@@ -5,6 +5,7 @@
 #include "archer_renderer.h"
 #include "barracks_renderer.h"
 #include "knight_renderer.h"
+#include "spearman_renderer.h"
 
 namespace Render::GL {
 
@@ -23,6 +24,7 @@ RenderFunc EntityRendererRegistry::get(const std::string &type) const {
 void registerBuiltInEntityRenderers(EntityRendererRegistry &registry) {
   registerArcherRenderer(registry);
   registerKnightRenderer(registry);
+  registerSpearmanRenderer(registry);
   registerBarracksRenderer(registry);
 }
 
