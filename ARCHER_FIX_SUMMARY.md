@@ -12,14 +12,15 @@ The combat system's chase behavior did not differentiate between melee and range
 
 #### Added Ranged Unit Detection
 - Identifies ranged units by checking `canRanged` flag and current combat mode
-- Differentiates behavior between ranged and melee units during target pursuit
+- Differentiates behavior between ranged and melee units in all combat scenarios
 
 #### Stop Movement When In Range
-When a ranged unit's target is within attack range:
+When a ranged unit has ANY enemy within attack range:
 - Immediately stops all movement (`hasTarget = false`)
 - Clears movement velocity and path
 - Sets goal/target position to current position
 - Allows unit to attack from current position
+- **Works regardless of why the unit was moving** (defending, attacking, general movement, etc.)
 
 #### Optimal Range Positioning
 When approaching a target that's out of range:
@@ -29,13 +30,15 @@ When approaching a target that's out of range:
 
 #### Code Flow
 ```
-1. Check if attacker is ranged unit (has ranged attack, currently in ranged mode)
-2. Check if target is in range
-3. If ranged AND in range:
-   - STOP all movement
-   - Set position to current location
-   - Engage target
-4. If not in range:
+For ALL ranged units in the game:
+1. Check if unit has a specific attack target or if there's any enemy in range
+2. When enemy is found within attack range:
+   - Identify if attacker is ranged unit (has ranged attack, currently in ranged mode)
+   - If ranged AND enemy in range:
+     * STOP all movement (regardless of original movement reason)
+     * Set position to current location
+     * Engage target
+3. If not in range but chasing a target:
    - Calculate optimal approach position (85% of max range)
    - Move to optimal position
    - Stop when close enough
