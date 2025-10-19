@@ -21,7 +21,6 @@ Rectangle {
     }
 
     function returnToMainMenu() {
-        visible = false;
         if (onReturnToMainMenu)
             onReturnToMainMenu();
 
