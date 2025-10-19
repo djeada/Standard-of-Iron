@@ -27,6 +27,7 @@ public:
   void beginFrame();
   void setViewport(int w, int h);
   void setClearColor(float r, float g, float b, float a);
+  void setAnimationTime(float time) { m_animationTime = time; }
   void execute(const DrawQueue &queue, const Camera &cam);
 
   ResourceManager *resources() const { return m_resources.get(); }
@@ -85,6 +86,8 @@ private:
   Shader *m_pineShader = nullptr;
   Shader *m_groundShader = nullptr;
   Shader *m_terrainShader = nullptr;
+  Shader *m_riverShader = nullptr;
+  Shader *m_bridgeShader = nullptr;
   Shader *m_archerShader = nullptr;
   Shader *m_knightShader = nullptr;
 
@@ -99,6 +102,20 @@ private:
 
   BasicUniforms m_archerUniforms;
   BasicUniforms m_knightUniforms;
+
+  struct RiverUniforms {
+    Shader::UniformHandle model{Shader::InvalidUniform};
+    Shader::UniformHandle view{Shader::InvalidUniform};
+    Shader::UniformHandle projection{Shader::InvalidUniform};
+    Shader::UniformHandle time{Shader::InvalidUniform};
+  } m_riverUniforms;
+
+  struct BridgeUniforms {
+    Shader::UniformHandle mvp{Shader::InvalidUniform};
+    Shader::UniformHandle model{Shader::InvalidUniform};
+    Shader::UniformHandle color{Shader::InvalidUniform};
+    Shader::UniformHandle lightDirection{Shader::InvalidUniform};
+  } m_bridgeUniforms;
 
   struct GridUniforms {
     Shader::UniformHandle mvp{Shader::InvalidUniform};
@@ -275,11 +292,14 @@ private:
   void shutdownPinePipeline();
   void cacheGroundUniforms();
   void cacheTerrainUniforms();
+  void cacheRiverUniforms();
+  void cacheBridgeUniforms();
 
   Shader *m_lastBoundShader = nullptr;
   Texture *m_lastBoundTexture = nullptr;
   bool m_depthTestEnabled = true;
   bool m_blendEnabled = false;
+  float m_animationTime = 0.0f;
 };
 
 } // namespace Render::GL

@@ -1,5 +1,5 @@
 {
-  "name": "River Test Map",
+  "name": "River Crossroads",
   "coordSystem": "grid",
   "maxTroopsPerPlayer": 200,
   "grid": {
@@ -37,7 +37,7 @@
     { "type": "barracks", "x": 30, "z": 30, "playerId": 1, "maxPopulation": 100 },
     { "type": "archer", "x": 28, "z": 32, "playerId": 1 },
     { "type": "archer", "x": 32, "z": 28, "playerId": 1 },
-    
+
     { "type": "barracks", "x": 70, "z": 70, "playerId": 2, "maxPopulation": 100 },
     { "type": "archer", "x": 68, "z": 72, "playerId": 2 },
     { "type": "archer", "x": 72, "z": 68, "playerId": 2 }
@@ -45,13 +45,28 @@
   "terrain": [
     { "type": "mountain", "x": 25, "z": 75, "radius": 8, "height": 8.0, "rotation": 15 },
     { "type": "mountain", "x": 75, "z": 25, "radius": 8, "height": 8.0, "rotation": 45 },
-    { "type": "hill", "x": 50, "z": 25, "width": 12, "depth": 8, "height": 3.0, "rotation": 0, "entrances": [{"x": 50, "z": 18}, {"x": 50, "z": 32}] }
+
+    { "type": "hill", "x": 50, "z": 25, "width": 12, "depth": 8, "height": 3.0, "rotation": 0,
+      "entrances": [{"x": 50, "z": 18}, {"x": 50, "z": 32}] },
+
+    { "type": "hill", "x": 50, "z": 75, "width": 12, "depth": 8, "height": 3.0, "rotation": 180,
+      "entrances": [{"x": 50, "z": 68}, {"x": 50, "z": 82}] }
   ],
   "rivers": [
     { "start": [10, 10], "end": [10, 90], "width": 3.0 },
     { "start": [90, 10], "end": [90, 90], "width": 3.0 },
-    { "start": [10, 50], "end": [45, 50], "width": 2.5 },
-    { "start": [55, 50], "end": [90, 50], "width": 2.5 }
+    { "start": [10, 50], "end": [90, 50], "width": 2.5 }   
+  ],
+  "bridges": [
+    { "start": [8, 30], "end": [12, 30], "width": 4.0, "height": 0.5 },  
+    { "start": [8, 50], "end": [12, 50], "width": 4.0, "height": 0.5 },  
+    { "start": [8, 70], "end": [12, 70], "width": 4.0, "height": 0.5 }, 
+
+    { "start": [48, 50], "end": [52, 50], "width": 4.0, "height": 0.5 },  
+
+    { "start": [88, 30], "end": [92, 30], "width": 4.0, "height": 0.5 }, 
+    { "start": [88, 50], "end": [92, 50], "width": 4.0, "height": 0.5 },  
+    { "start": [88, 70], "end": [92, 70], "width": 4.0, "height": 0.5 }   
   ],
   "victory": {
     "type": "elimination",

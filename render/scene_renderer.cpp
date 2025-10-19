@@ -53,6 +53,7 @@ void Renderer::endFrame() {
     std::swap(m_fillQueueIndex, m_renderQueueIndex);
     DrawQueue &renderQueue = m_queues[m_renderQueueIndex];
     renderQueue.sortForBatching();
+    m_backend->setAnimationTime(m_accumulatedTime);
     m_backend->execute(renderQueue, *m_camera);
   }
 }
