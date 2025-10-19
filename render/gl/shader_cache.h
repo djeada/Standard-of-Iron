@@ -95,6 +95,10 @@ public:
     const QString riverFrag = kShaderBase + QStringLiteral("river.frag");
     load(QStringLiteral("river"), riverVert, riverFrag);
 
+    const QString bridgeVert = kShaderBase + QStringLiteral("bridge.vert");
+    const QString bridgeFrag = kShaderBase + QStringLiteral("bridge.frag");
+    load(QStringLiteral("bridge"), bridgeVert, bridgeFrag);
+
     const QString archerVert = kShaderBase + QStringLiteral("archer.vert");
     const QString archerFrag = kShaderBase + QStringLiteral("archer.frag");
     load(QStringLiteral("archer"), archerVert, archerFrag);

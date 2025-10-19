@@ -13,10 +13,12 @@
 #include "game/systems/troop_count_registry.h"
 #include "game/visuals/team_colors.h"
 #include "render/ground/biome_renderer.h"
+#include "render/ground/bridge_renderer.h"
 #include "render/ground/fog_renderer.h"
 #include "render/ground/ground_renderer.h"
 #include "render/ground/pine_renderer.h"
 #include "render/ground/plant_renderer.h"
+#include "render/ground/river_renderer.h"
 #include "render/ground/stone_renderer.h"
 #include "render/ground/terrain_renderer.h"
 #include "render/scene_renderer.h"
@@ -234,6 +236,24 @@ SkirmishLoadResult SkirmishLoader::start(const QString &mapPath,
     if (terrainService.isInitialized() && terrainService.getHeightMap()) {
       m_biome->configure(*terrainService.getHeightMap(),
                          terrainService.biomeSettings());
+    }
+  }
+
+  if (m_river) {
+    if (terrainService.isInitialized() && terrainService.getHeightMap()) {
+      qDebug() << "SkirmishLoader: Configuring river renderer with" 
+               << terrainService.getHeightMap()->getRiverSegments().size() << "segments";
+      m_river->configure(terrainService.getHeightMap()->getRiverSegments(),
+                        terrainService.getHeightMap()->getTileSize());
+    }
+  }
+
+  if (m_bridge) {
+    if (terrainService.isInitialized() && terrainService.getHeightMap()) {
+      qDebug() << "SkirmishLoader: Configuring bridge renderer with" 
+               << terrainService.getHeightMap()->getBridges().size() << "bridges";
+      m_bridge->configure(terrainService.getHeightMap()->getBridges(),
+                         terrainService.getHeightMap()->getTileSize());
     }
   }
 

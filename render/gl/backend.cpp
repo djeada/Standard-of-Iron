@@ -57,6 +57,8 @@ void Backend::initialize() {
   m_pineShader = m_shaderCache->get(QStringLiteral("pine_instanced"));
   m_groundShader = m_shaderCache->get(QStringLiteral("ground_plane"));
   m_terrainShader = m_shaderCache->get(QStringLiteral("terrain_chunk"));
+  m_riverShader = m_shaderCache->get(QStringLiteral("river"));
+  m_bridgeShader = m_shaderCache->get(QStringLiteral("bridge"));
   m_archerShader = m_shaderCache->get(QStringLiteral("archer"));
   m_knightShader = m_shaderCache->get(QStringLiteral("knight"));
   if (!m_basicShader)
@@ -81,6 +83,10 @@ void Backend::initialize() {
     qWarning() << "Backend: ground_plane shader missing";
   if (!m_terrainShader)
     qWarning() << "Backend: terrain shader missing";
+  if (!m_riverShader)
+    qWarning() << "Backend: river shader missing";
+  if (!m_bridgeShader)
+    qWarning() << "Backend: bridge shader missing";
   if (!m_archerShader)
     qWarning() << "Backend: archer shader missing";
   if (!m_knightShader)
@@ -98,6 +104,8 @@ void Backend::initialize() {
   cachePineUniforms();
   cacheGroundUniforms();
   cacheTerrainUniforms();
+  cacheRiverUniforms();
+  cacheBridgeUniforms();
   initializeCylinderPipeline();
   initializeFogPipeline();
   initializeGrassPipeline();
@@ -619,6 +627,42 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       Shader *activeShader = it.shader ? it.shader : m_basicShader;
       if (!activeShader)
         break;
+
+      // Handle river shader specially
+      if (activeShader == m_riverShader) {
+        if (m_lastBoundShader != activeShader) {
+          activeShader->use();
+          m_lastBoundShader = activeShader;
+        }
+
+        activeShader->setUniform(m_riverUniforms.model, it.model);
+        activeShader->setUniform(m_riverUniforms.view, cam.getViewMatrix());
+        activeShader->setUniform(m_riverUniforms.projection, cam.getProjectionMatrix());
+        activeShader->setUniform(m_riverUniforms.time, m_animationTime);
+
+        it.mesh->draw();
+        break;
+      }
+
+      // Handle bridge shader specially
+      if (activeShader == m_bridgeShader) {
+        if (m_lastBoundShader != activeShader) {
+          activeShader->use();
+          m_lastBoundShader = activeShader;
+        }
+
+        // Use proper bridge uniforms
+        activeShader->setUniform(m_bridgeUniforms.mvp, it.mvp);
+        activeShader->setUniform(m_bridgeUniforms.model, it.model);
+        activeShader->setUniform(m_bridgeUniforms.color, it.color);
+        
+        // Set light direction for stone shading
+        QVector3D lightDir(0.35f, 0.8f, 0.45f);
+        activeShader->setUniform(m_bridgeUniforms.lightDirection, lightDir);
+
+        it.mesh->draw();
+        break;
+      }
 
       BasicUniforms *uniforms = &m_basicUniforms;
       if (activeShader == m_archerShader)
@@ -1187,6 +1231,26 @@ void Backend::cacheTerrainUniforms() {
   m_terrainUniforms.rockDetailStrength =
       m_terrainShader->uniformHandle("u_rockDetailStrength");
   m_terrainUniforms.lightDir = m_terrainShader->uniformHandle("u_lightDir");
+}
+
+void Backend::cacheRiverUniforms() {
+  if (!m_riverShader)
+    return;
+
+  m_riverUniforms.model = m_riverShader->uniformHandle("model");
+  m_riverUniforms.view = m_riverShader->uniformHandle("view");
+  m_riverUniforms.projection = m_riverShader->uniformHandle("projection");
+  m_riverUniforms.time = m_riverShader->uniformHandle("time");
+}
+
+void Backend::cacheBridgeUniforms() {
+  if (!m_bridgeShader)
+    return;
+
+  m_bridgeUniforms.mvp = m_bridgeShader->uniformHandle("u_mvp");
+  m_bridgeUniforms.model = m_bridgeShader->uniformHandle("u_model");
+  m_bridgeUniforms.color = m_bridgeShader->uniformHandle("u_color");
+  m_bridgeUniforms.lightDirection = m_bridgeShader->uniformHandle("u_lightDirection");
 }
 
 void Backend::initializeGrassPipeline() {
