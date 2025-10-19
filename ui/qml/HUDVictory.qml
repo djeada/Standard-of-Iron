@@ -76,6 +76,7 @@ Rectangle {
             showingSummary = false;
         }
         onReturnToMainMenu: function() {
+            showingSummary = false;
             victoryOverlay.returnToMainMenuRequested();
         }
     }
