@@ -15,6 +15,7 @@ add_library(render_gl STATIC
     ground/ground_renderer.cpp
     ground/fog_renderer.cpp
     ground/terrain_renderer.cpp
+    ground/river_renderer.cpp
     ground/biome_renderer.cpp
     ground/stone_renderer.cpp
     ground/plant_renderer.cpp
