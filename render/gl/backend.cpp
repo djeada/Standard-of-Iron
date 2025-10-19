@@ -632,7 +632,6 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       if (!activeShader)
         break;
 
-      // Handle river shader specially
       if (activeShader == m_riverShader) {
         if (m_lastBoundShader != activeShader) {
           activeShader->use();
@@ -641,26 +640,24 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
 
         activeShader->setUniform(m_riverUniforms.model, it.model);
         activeShader->setUniform(m_riverUniforms.view, cam.getViewMatrix());
-        activeShader->setUniform(m_riverUniforms.projection, cam.getProjectionMatrix());
+        activeShader->setUniform(m_riverUniforms.projection,
+                                 cam.getProjectionMatrix());
         activeShader->setUniform(m_riverUniforms.time, m_animationTime);
 
         it.mesh->draw();
         break;
       }
 
-      // Handle bridge shader specially
       if (activeShader == m_bridgeShader) {
         if (m_lastBoundShader != activeShader) {
           activeShader->use();
           m_lastBoundShader = activeShader;
         }
 
-        // Use proper bridge uniforms
         activeShader->setUniform(m_bridgeUniforms.mvp, it.mvp);
         activeShader->setUniform(m_bridgeUniforms.model, it.model);
         activeShader->setUniform(m_bridgeUniforms.color, it.color);
-        
-        // Set light direction for stone shading
+
         QVector3D lightDir(0.35f, 0.8f, 0.45f);
         activeShader->setUniform(m_bridgeUniforms.lightDirection, lightDir);
 
@@ -1269,7 +1266,8 @@ void Backend::cacheBridgeUniforms() {
   m_bridgeUniforms.mvp = m_bridgeShader->uniformHandle("u_mvp");
   m_bridgeUniforms.model = m_bridgeShader->uniformHandle("u_model");
   m_bridgeUniforms.color = m_bridgeShader->uniformHandle("u_color");
-  m_bridgeUniforms.lightDirection = m_bridgeShader->uniformHandle("u_lightDirection");
+  m_bridgeUniforms.lightDirection =
+      m_bridgeShader->uniformHandle("u_lightDirection");
 }
 
 void Backend::initializeGrassPipeline() {
