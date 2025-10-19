@@ -248,7 +248,7 @@ Rectangle {
 
                     Grid {
                         anchors.horizontalCenter: parent.horizontalCenter
-                        columns: 2
+                        columns: 3
                         columnSpacing: 8
                         rowSpacing: 8
 
@@ -395,6 +395,80 @@ Rectangle {
                                 anchors.fill: parent
                                 color: "#ffffff"
                                 opacity: knightMouseArea.pressed ? 0.2 : 0
+                                radius: parent.radius
+                            }
+
+                        }
+
+                        Rectangle {
+                            property int queueTotal: (unitGridContent.prod.inProgress ? 1 : 0) + (unitGridContent.prod.queueSize || 0)
+                            property bool isEnabled: unitGridContent.prod.hasBarracks && unitGridContent.prod.producedCount < unitGridContent.prod.maxUnits && queueTotal < 5
+
+                            width: 110
+                            height: 80
+                            radius: 6
+                            color: isEnabled ? (spearmanMouseArea.containsMouse ? "#34495e" : "#2c3e50") : "#1a1a1a"
+                            border.color: isEnabled ? "#4a6572" : "#2a2a2a"
+                            border.width: 2
+                            opacity: isEnabled ? 1 : 0.5
+
+                            Column {
+                                anchors.centerIn: parent
+                                spacing: 4
+
+                                Text {
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    text: (typeof Theme !== 'undefined' && Theme.unitIcons) ? Theme.unitIcons["spearman"] || "🛡️" : "🛡️"
+                                    color: parent.parent.parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
+                                    font.pointSize: 24
+                                }
+
+                                Text {
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    text: "Spearman"
+                                    color: parent.parent.parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
+                                    font.pointSize: 10
+                                    font.bold: true
+                                }
+
+                                Row {
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    spacing: 4
+
+                                    Text {
+                                        text: "👥"
+                                        color: parent.parent.parent.parent.isEnabled ? "#f39c12" : "#5a5a5a"
+                                        font.pointSize: 9
+                                    }
+
+                                    Text {
+                                        text: unitGridContent.prod.villagerCost || 1
+                                        color: parent.parent.parent.parent.isEnabled ? "#f39c12" : "#5a5a5a"
+                                        font.pointSize: 9
+                                        font.bold: true
+                                    }
+
+                                }
+
+                            }
+
+                            MouseArea {
+                                id: spearmanMouseArea
+
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                enabled: parent.isEnabled
+                                onClicked: productionPanel.recruitUnit("spearman")
+                                cursorShape: parent.isEnabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
+                                ToolTip.visible: containsMouse
+                                ToolTip.text: parent.isEnabled ? "Recruit Spearman\nCost: " + (unitGridContent.prod.villagerCost || 1) + " villagers\nBuild time: " + (unitGridContent.prod.buildTime || 0).toFixed(0) + "s" : (parent.queueTotal >= 5 ? "Queue is full (5/5)" : (unitGridContent.prod.producedCount >= unitGridContent.prod.maxUnits ? "Unit cap reached" : "Cannot recruit"))
+                                ToolTip.delay: 300
+                            }
+
+                            Rectangle {
+                                anchors.fill: parent
+                                color: "#ffffff"
+                                opacity: spearmanMouseArea.pressed ? 0.2 : 0
                                 radius: parent.radius
                             }
 
