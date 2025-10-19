@@ -124,6 +124,11 @@ void StoneRenderer::generateStoneInstances() {
   const float halfHeight = m_height * 0.5f - 0.5f;
   const float tileSafe = std::max(0.001f, m_tileSize);
 
+  const float edgePadding =
+      std::clamp(m_biomeSettings.spawnEdgePadding, 0.0f, 0.5f);
+  const float edgeMarginX = static_cast<float>(m_width) * edgePadding;
+  const float edgeMarginZ = static_cast<float>(m_height) * edgePadding;
+
   std::vector<QVector3D> normals(m_width * m_height,
                                  QVector3D(0.0f, 1.0f, 0.0f));
 
@@ -171,6 +176,11 @@ void StoneRenderer::generateStoneInstances() {
   }
 
   auto addStone = [&](float gx, float gz, uint32_t &state) -> bool {
+    if (gx < edgeMarginX || gx > m_width - 1 - edgeMarginX ||
+        gz < edgeMarginZ || gz > m_height - 1 - edgeMarginZ) {
+      return false;
+    }
+
     float sgx = std::clamp(gx, 0.0f, float(m_width - 1));
     float sgz = std::clamp(gz, 0.0f, float(m_height - 1));
 
