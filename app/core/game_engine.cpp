@@ -317,6 +317,12 @@ void GameEngine::onHoldCommand() {
   }
 }
 
+bool GameEngine::anySelectedInHoldMode() const {
+  if (!m_commandController)
+    return false;
+  return m_commandController->anySelectedInHoldMode();
+}
+
 void GameEngine::onPatrolClick(qreal sx, qreal sy) {
   if (!m_commandController || !m_camera)
     return;

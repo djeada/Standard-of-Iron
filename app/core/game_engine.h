@@ -111,6 +111,7 @@ public:
   Q_INVOKABLE void onAttackClick(qreal sx, qreal sy);
   Q_INVOKABLE void onStopCommand();
   Q_INVOKABLE void onHoldCommand();
+  Q_INVOKABLE bool anySelectedInHoldMode() const;
   Q_INVOKABLE void onPatrolClick(qreal sx, qreal sy);
 
   Q_INVOKABLE void cameraMove(float dx, float dz);
