@@ -101,7 +101,8 @@ GameEngine::GameEngine() {
   m_plant = std::make_unique<Render::GL::PlantRenderer>();
   m_pine = std::make_unique<Render::GL::PineRenderer>();
 
-  m_passes = {m_ground.get(), m_terrain.get(), m_river.get(), m_bridge.get(), m_biome.get(), m_stone.get(),
+  m_passes = {m_ground.get(), m_terrain.get(), m_river.get(),
+              m_bridge.get(), m_biome.get(),   m_stone.get(),
               m_plant.get(),  m_pine.get(),    m_fog.get()};
 
   std::unique_ptr<Engine::Core::System> arrowSys =
@@ -1406,8 +1407,10 @@ void GameEngine::restoreEnvironmentFromMetadata(const QJsonObject &metadata) {
         m_terrain->configure(*heightMap, terrainService.biomeSettings());
       }
       if (m_river) {
-        qDebug() << "GameEngine: Configuring river renderer with" << heightMap->getRiverSegments().size() << "segments";
-        m_river->configure(heightMap->getRiverSegments(), heightMap->getTileSize());
+        qDebug() << "GameEngine: Configuring river renderer with"
+                 << heightMap->getRiverSegments().size() << "segments";
+        m_river->configure(heightMap->getRiverSegments(),
+                           heightMap->getTileSize());
       }
       if (m_biome) {
         m_biome->configure(*heightMap, terrainService.biomeSettings());

@@ -309,7 +309,8 @@ static void readRivers(const QJsonArray &arr, std::vector<RiverSegment> &out,
       segment.width = float(o.value("width").toDouble(2.0));
     }
 
-    qDebug() << "  River segment: start=" << segment.start << "end=" << segment.end << "width=" << segment.width;
+    qDebug() << "  River segment: start=" << segment.start
+             << "end=" << segment.end << "width=" << segment.width;
     out.push_back(segment);
   }
   qDebug() << "readRivers: Loaded" << out.size() << "river segments";
@@ -334,7 +335,7 @@ static void readBridges(const QJsonArray &arr, std::vector<Bridge> &out,
         if (coordSys == CoordSystem::Grid) {
           const float tile = std::max(0.0001f, grid.tileSize);
           bridge.start.setX((x - (grid.width * 0.5f - 0.5f)) * tile);
-          bridge.start.setY(0.2f); // Slightly above ground
+          bridge.start.setY(0.2f);
           bridge.start.setZ((z - (grid.height * 0.5f - 0.5f)) * tile);
         } else {
           bridge.start = QVector3D(x, 0.2f, z);
@@ -351,7 +352,7 @@ static void readBridges(const QJsonArray &arr, std::vector<Bridge> &out,
         if (coordSys == CoordSystem::Grid) {
           const float tile = std::max(0.0001f, grid.tileSize);
           bridge.end.setX((x - (grid.width * 0.5f - 0.5f)) * tile);
-          bridge.end.setY(0.2f); // Slightly above ground
+          bridge.end.setY(0.2f);
           bridge.end.setZ((z - (grid.height * 0.5f - 0.5f)) * tile);
         } else {
           bridge.end = QVector3D(x, 0.2f, z);
@@ -362,12 +363,13 @@ static void readBridges(const QJsonArray &arr, std::vector<Bridge> &out,
     if (o.contains("width")) {
       bridge.width = float(o.value("width").toDouble(3.0));
     }
-    
+
     if (o.contains("height")) {
       bridge.height = float(o.value("height").toDouble(0.5));
     }
 
-    qDebug() << "  Bridge: start=" << bridge.start << "end=" << bridge.end << "width=" << bridge.width;
+    qDebug() << "  Bridge: start=" << bridge.start << "end=" << bridge.end
+             << "width=" << bridge.width;
     out.push_back(bridge);
   }
   qDebug() << "readBridges: Loaded" << out.size() << "bridges";

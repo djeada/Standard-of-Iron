@@ -334,16 +334,16 @@ RowLayout {
             Button {
                 id: holdButton
 
+                property bool isHoldActive: {
+                    bottomRoot.selectionTick;
+                    return (typeof game !== 'undefined' && game.anySelectedInHoldMode) ? game.anySelectedInHoldMode() : false;
+                }
+
                 Layout.fillWidth: true
                 Layout.preferredHeight: 38
                 text: "Hold"
                 focusPolicy: Qt.NoFocus
                 enabled: bottomRoot.hasMovableUnits
-                
-                property bool isHoldActive: {
-                    bottomRoot.selectionTick;
-                    return (typeof game !== 'undefined' && game.anySelectedInHoldMode) ? game.anySelectedInHoldMode() : false;
-                }
                 onClicked: {
                     if (typeof game !== 'undefined' && game.onHoldCommand)
                         game.onHoldCommand();

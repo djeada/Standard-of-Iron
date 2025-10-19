@@ -15,9 +15,9 @@ void main() {
   // Transform normal to world space
   v_normal = normalize(mat3(transpose(inverse(u_model))) * a_normal);
   v_texCoord = a_texCoord;
-  
+
   // World position for lighting and fog
   v_worldPos = vec3(u_model * vec4(a_position, 1.0));
-  
+
   gl_Position = u_mvp * vec4(a_position, 1.0);
 }
