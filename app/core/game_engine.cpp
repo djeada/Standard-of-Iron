@@ -819,7 +819,10 @@ void GameEngine::startSkirmish(const QString &mapPath,
   m_level.mapPath = mapPath;
   m_level.mapName = mapPath;
 
-  m_runtime.victoryState = "";
+  if (!m_runtime.victoryState.isEmpty()) {
+    m_runtime.victoryState = "";
+    emit victoryStateChanged();
+  }
   m_enemyTroopsDefeated = 0;
 
   if (!m_runtime.initialized) {
