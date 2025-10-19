@@ -38,6 +38,7 @@ struct BiomeSettings {
   float backgroundSwayVariance = 0.2f;
   float backgroundScatterRadius = 0.35f;
   float plantDensity = 0.5f;
+  float spawnEdgePadding = 0.08f;
   std::uint32_t seed = 1337u;
 };
 
