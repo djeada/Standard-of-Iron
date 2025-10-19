@@ -21,9 +21,9 @@ Item {
     signal hudBecameVisible()
 
     onVisibleChanged: {
-        if (visible) {
+        if (visible)
             hudBecameVisible();
-        }
+
     }
 
     Connections {
@@ -124,20 +124,22 @@ Item {
 
     HUDVictory {
         id: hudVictory
-        
+
         anchors.fill: parent
         onReturnToMainMenuRequested: {
             hud.returnToMainMenuRequested();
         }
-        
+
         Connections {
-            target: hud
             function onHudBecameVisible() {
-                if (typeof game !== 'undefined' && game.victoryState === "") {
+                if (typeof game !== 'undefined' && game.victoryState === "")
                     hudVictory.forceHide();
-                }
+
             }
+
+            target: hud
         }
+
     }
 
 }
