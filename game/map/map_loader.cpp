@@ -1,5 +1,6 @@
 #include "map_loader.h"
 
+#include <QDebug>
 #include <QFile>
 #include <QJsonArray>
 #include <QJsonDocument>
@@ -262,6 +263,7 @@ static void readTerrain(const QJsonArray &arr, std::vector<TerrainFeature> &out,
 
 static void readRivers(const QJsonArray &arr, std::vector<RiverSegment> &out,
                        const GridDefinition &grid, CoordSystem coordSys) {
+  qDebug() << "readRivers: Processing" << arr.size() << "river segments";
   out.clear();
   out.reserve(arr.size());
 
@@ -307,8 +309,68 @@ static void readRivers(const QJsonArray &arr, std::vector<RiverSegment> &out,
       segment.width = float(o.value("width").toDouble(2.0));
     }
 
+    qDebug() << "  River segment: start=" << segment.start << "end=" << segment.end << "width=" << segment.width;
     out.push_back(segment);
   }
+  qDebug() << "readRivers: Loaded" << out.size() << "river segments";
+}
+
+static void readBridges(const QJsonArray &arr, std::vector<Bridge> &out,
+                        const GridDefinition &grid, CoordSystem coordSys) {
+  qDebug() << "readBridges: Processing" << arr.size() << "bridges";
+  out.clear();
+  out.reserve(arr.size());
+
+  for (const auto &v : arr) {
+    auto o = v.toObject();
+    Bridge bridge;
+
+    if (o.contains("start") && o.value("start").isArray()) {
+      auto startArr = o.value("start").toArray();
+      if (startArr.size() >= 2) {
+        float x = float(startArr[0].toDouble(0.0));
+        float z = float(startArr[1].toDouble(0.0));
+
+        if (coordSys == CoordSystem::Grid) {
+          const float tile = std::max(0.0001f, grid.tileSize);
+          bridge.start.setX((x - (grid.width * 0.5f - 0.5f)) * tile);
+          bridge.start.setY(0.2f); // Slightly above ground
+          bridge.start.setZ((z - (grid.height * 0.5f - 0.5f)) * tile);
+        } else {
+          bridge.start = QVector3D(x, 0.2f, z);
+        }
+      }
+    }
+
+    if (o.contains("end") && o.value("end").isArray()) {
+      auto endArr = o.value("end").toArray();
+      if (endArr.size() >= 2) {
+        float x = float(endArr[0].toDouble(0.0));
+        float z = float(endArr[1].toDouble(0.0));
+
+        if (coordSys == CoordSystem::Grid) {
+          const float tile = std::max(0.0001f, grid.tileSize);
+          bridge.end.setX((x - (grid.width * 0.5f - 0.5f)) * tile);
+          bridge.end.setY(0.2f); // Slightly above ground
+          bridge.end.setZ((z - (grid.height * 0.5f - 0.5f)) * tile);
+        } else {
+          bridge.end = QVector3D(x, 0.2f, z);
+        }
+      }
+    }
+
+    if (o.contains("width")) {
+      bridge.width = float(o.value("width").toDouble(3.0));
+    }
+    
+    if (o.contains("height")) {
+      bridge.height = float(o.value("height").toDouble(0.5));
+    }
+
+    qDebug() << "  Bridge: start=" << bridge.start << "end=" << bridge.end << "width=" << bridge.width;
+    out.push_back(bridge);
+  }
+  qDebug() << "readBridges: Loaded" << out.size() << "bridges";
 }
 
 bool MapLoader::loadFromJsonFile(const QString &path, MapDefinition &outMap,
@@ -376,6 +438,11 @@ bool MapLoader::loadFromJsonFile(const QString &path, MapDefinition &outMap,
   if (root.contains("rivers") && root.value("rivers").isArray()) {
     readRivers(root.value("rivers").toArray(), outMap.rivers, outMap.grid,
                outMap.coordSystem);
+  }
+
+  if (root.contains("bridges") && root.value("bridges").isArray()) {
+    readBridges(root.value("bridges").toArray(), outMap.bridges, outMap.grid,
+                outMap.coordSystem);
   }
 
   if (root.contains("biome") && root.value("biome").isObject()) {
