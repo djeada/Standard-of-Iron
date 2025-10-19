@@ -163,6 +163,30 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
           if (isInRange(attacker, target, range)) {
             bestTarget = target;
 
+            bool isRangedUnit = false;
+            if (attackerAtk && attackerAtk->canRanged &&
+                attackerAtk->currentMode ==
+                    Engine::Core::AttackComponent::CombatMode::Ranged) {
+              isRangedUnit = true;
+            }
+
+            if (isRangedUnit) {
+              auto *movement =
+                  attacker->getComponent<Engine::Core::MovementComponent>();
+              if (movement && movement->hasTarget) {
+                movement->hasTarget = false;
+                movement->vx = 0.0f;
+                movement->vz = 0.0f;
+                movement->path.clear();
+                if (attackerTransform) {
+                  movement->targetX = attackerTransform->position.x;
+                  movement->targetY = attackerTransform->position.z;
+                  movement->goalX = attackerTransform->position.x;
+                  movement->goalY = attackerTransform->position.z;
+                }
+              }
+            }
+
             if (auto *attT =
                     attacker
                         ->getComponent<Engine::Core::TransformComponent>()) {
@@ -382,6 +406,30 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
         if (existingTarget->targetId != bestTarget->getId()) {
           existingTarget->targetId = bestTarget->getId();
           existingTarget->shouldChase = false;
+        }
+      }
+
+      bool isRangedUnit = false;
+      if (attackerAtk && attackerAtk->canRanged &&
+          attackerAtk->currentMode ==
+              Engine::Core::AttackComponent::CombatMode::Ranged) {
+        isRangedUnit = true;
+      }
+
+      if (isRangedUnit) {
+        auto *movement =
+            attacker->getComponent<Engine::Core::MovementComponent>();
+        if (movement && movement->hasTarget) {
+          movement->hasTarget = false;
+          movement->vx = 0.0f;
+          movement->vz = 0.0f;
+          movement->path.clear();
+          if (attackerTransform) {
+            movement->targetX = attackerTransform->position.x;
+            movement->targetY = attackerTransform->position.z;
+            movement->goalX = attackerTransform->position.x;
+            movement->goalY = attackerTransform->position.z;
+          }
         }
       }
 
