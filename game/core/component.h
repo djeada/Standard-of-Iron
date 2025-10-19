@@ -207,7 +207,7 @@ public:
 
   bool active;
   float exitCooldown;
-  float standUpDuration;  // Time it takes to stand up from kneeling (seconds)
+  float standUpDuration;
 };
 
 } // namespace Engine::Core

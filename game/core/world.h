@@ -3,6 +3,7 @@
 #include "entity.h"
 #include "system.h"
 #include <memory>
+#include <mutex>
 #include <unordered_map>
 #include <vector>
 
@@ -34,6 +35,7 @@ public:
   }
 
   template <typename T> std::vector<Entity *> getEntitiesWith() {
+    std::lock_guard<std::recursive_mutex> lock(m_entityMutex);
     std::vector<Entity *> result;
     for (auto &[id, entity] : m_entities) {
       if (entity->hasComponent<T>()) {
@@ -57,10 +59,15 @@ public:
   EntityID getNextEntityId() const;
   void setNextEntityId(EntityID nextId);
 
+  // Thread safety for entity operations (render thread vs game thread)
+  // Uses recursive_mutex to allow nested locking within the same thread
+  std::recursive_mutex &getEntityMutex() { return m_entityMutex; }
+
 private:
   EntityID m_nextEntityId = 1;
   std::unordered_map<EntityID, std::unique_ptr<Entity>> m_entities;
   std::vector<std::unique_ptr<System>> m_systems;
+  mutable std::recursive_mutex m_entityMutex; // Allows nested locks from same thread
 };
 
 } // namespace Engine::Core

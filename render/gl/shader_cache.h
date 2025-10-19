@@ -98,6 +98,10 @@ public:
     const QString knightVert = kShaderBase + QStringLiteral("knight.vert");
     const QString knightFrag = kShaderBase + QStringLiteral("knight.frag");
     load(QStringLiteral("knight"), knightVert, knightFrag);
+
+    const QString spearmanVert = kShaderBase + QStringLiteral("spearman.vert");
+    const QString spearmanFrag = kShaderBase + QStringLiteral("spearman.frag");
+    load(QStringLiteral("spearman"), spearmanVert, spearmanFrag);
   }
 
   void clear() {
