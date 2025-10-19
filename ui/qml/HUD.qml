@@ -24,7 +24,7 @@ Item {
             selectionTick += 1;
             var hasTroops = false;
             if (typeof game !== 'undefined' && game.hasUnitsSelected && game.hasSelectedType) {
-                var troopTypes = ["warrior", "archer"];
+                var troopTypes = ["warrior", "archer", "knight", "spearman"];
                 for (var i = 0; i < troopTypes.length; i++) {
                     if (game.hasSelectedType(troopTypes[i])) {
                         hasTroops = true;

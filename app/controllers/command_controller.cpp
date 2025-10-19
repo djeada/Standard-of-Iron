@@ -78,21 +78,18 @@ CommandResult CommandController::onStopCommand() {
     if (!entity)
       continue;
 
-    // STOP clears ALL modes and actions
     resetMovement(entity);
     entity->removeComponent<Engine::Core::AttackTargetComponent>();
 
-    // Clear patrol mode
     if (auto *patrol = entity->getComponent<Engine::Core::PatrolComponent>()) {
       patrol->patrolling = false;
       patrol->waypoints.clear();
     }
 
-    // Clear hold mode (archers stand up immediately)
     auto *holdMode = entity->getComponent<Engine::Core::HoldModeComponent>();
     if (holdMode && holdMode->active) {
       holdMode->active = false;
-      holdMode->exitCooldown = holdMode->standUpDuration;  // Start stand-up transition
+      holdMode->exitCooldown = holdMode->standUpDuration;
       emit holdModeChanged(false);
     }
   }
@@ -117,32 +114,28 @@ CommandResult CommandController::onHoldCommand() {
     if (!entity)
       continue;
 
-    // HOLD MODE ONLY FOR ARCHERS (ranged units)
     auto *unit = entity->getComponent<Engine::Core::UnitComponent>();
-    if (!unit || unit->unitType != "archer")
+    // Hold mode is available for archers and spearmen (defensive formations)
+    if (!unit || (unit->unitType != "archer" && unit->unitType != "spearman"))
       continue;
 
     auto *holdMode = entity->getComponent<Engine::Core::HoldModeComponent>();
-    
-    // TOGGLE: If already in hold mode, exit it
+
     if (holdMode && holdMode->active) {
       holdMode->active = false;
       holdMode->exitCooldown = holdMode->standUpDuration;
       emit holdModeChanged(false);
-      continue;  // Don't clear other actions when toggling off
+      continue;
     }
 
-    // ENTER HOLD MODE: Clear all other modes and actions
     resetMovement(entity);
     entity->removeComponent<Engine::Core::AttackTargetComponent>();
 
-    // Clear patrol mode
     if (auto *patrol = entity->getComponent<Engine::Core::PatrolComponent>()) {
       patrol->patrolling = false;
       patrol->waypoints.clear();
     }
 
-    // Activate hold mode
     if (!holdMode) {
       holdMode = entity->addComponent<Engine::Core::HoldModeComponent>();
     }
