@@ -7,7 +7,7 @@
 
 namespace Game::Map {
 
-enum class TerrainType { Flat, Hill, Mountain };
+enum class TerrainType { Flat, Hill, Mountain, River };
 
 struct BiomeSettings {
   QVector3D grassPrimary{0.30f, 0.60f, 0.28f};
@@ -56,11 +56,26 @@ struct TerrainFeature {
   float rotationDeg = 0.0f;
 };
 
+struct RiverSegment {
+  QVector3D start;
+  QVector3D end;
+  float width = 2.0f;
+};
+
+struct Bridge {
+  QVector3D start;
+  QVector3D end;
+  float width = 3.0f;
+  float height = 0.5f; // Height above water
+};
+
 class TerrainHeightMap {
 public:
   TerrainHeightMap(int width, int height, float tileSize);
 
   void buildFromFeatures(const std::vector<TerrainFeature> &features);
+
+  void addRiverSegments(const std::vector<RiverSegment> &riverSegments);
 
   float getHeightAt(float worldX, float worldZ) const;
 
@@ -80,6 +95,14 @@ public:
   const std::vector<TerrainType> &getTerrainTypes() const {
     return m_terrainTypes;
   }
+  const std::vector<RiverSegment> &getRiverSegments() const {
+    return m_riverSegments;
+  }
+  
+  void addBridges(const std::vector<Bridge> &bridges);
+  const std::vector<Bridge> &getBridges() const {
+    return m_bridges;
+  }
 
   void applyBiomeVariation(const BiomeSettings &settings);
 
@@ -92,6 +115,8 @@ private:
   std::vector<TerrainType> m_terrainTypes;
   std::vector<bool> m_hillEntrances;
   std::vector<bool> m_hillWalkable;
+  std::vector<RiverSegment> m_riverSegments;
+  std::vector<Bridge> m_bridges;
 
   int indexAt(int x, int z) const;
   bool inBounds(int x, int z) const;
