@@ -216,6 +216,8 @@ void CommandService::moveUnits(Engine::Core::World &world,
         mv->path.clear();
         mv->pathPending = false;
         mv->pendingRequestId = 0;
+        mv->vx = 0.0f;
+        mv->vz = 0.0f;
         clearPendingRequest(units[i]);
         continue;
       }
@@ -235,6 +237,8 @@ void CommandService::moveUnits(Engine::Core::World &world,
         mv->path.clear();
         mv->pathPending = false;
         mv->pendingRequestId = 0;
+        mv->vx = 0.0f;
+        mv->vz = 0.0f;
         clearPendingRequest(units[i]);
 
         mv->timeSinceLastPathRequest = 0.0f;
@@ -299,6 +303,8 @@ void CommandService::moveUnits(Engine::Core::World &world,
       mv->path.clear();
       mv->pathPending = false;
       mv->pendingRequestId = 0;
+      mv->vx = 0.0f;
+      mv->vz = 0.0f;
       clearPendingRequest(units[i]);
     }
   }
