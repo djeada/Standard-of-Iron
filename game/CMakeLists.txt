@@ -65,6 +65,7 @@ add_library(game_systems STATIC
     units/unit.cpp
     units/archer.cpp
     units/knight.cpp
+    units/spearman.cpp
     units/factory.cpp
     units/barracks.cpp
 )

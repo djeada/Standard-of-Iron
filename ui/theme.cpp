@@ -50,7 +50,7 @@ QVariantMap Theme::unitIcons() const {
   icons["archer"] = "🏹";
   icons["knight"] = "⚔️";
   icons["warrior"] = "⚔️";
-  icons["spearman"] = "🗡️";
+  icons["spearman"] = "🛡️";
   icons["cavalry"] = "🐎";
   icons["default"] = "👤";
   return icons;

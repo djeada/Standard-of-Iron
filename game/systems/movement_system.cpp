@@ -122,13 +122,10 @@ void MovementSystem::moveUnit(Engine::Core::Entity *entity,
       inHoldMode = true;
     }
 
-    // During stand-up transition (exitCooldown > 0), block movement execution
-    // but DON'T clear movement targets - unit remembers where to go
     if (holdMode->exitCooldown > 0.0f && !inHoldMode) {
       movement->vx = 0.0f;
       movement->vz = 0.0f;
-      // Keep hasTarget, path, and pathPending intact!
-      // Unit will start moving once exitCooldown reaches 0
+
       return;
     }
   }
