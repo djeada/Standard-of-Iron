@@ -307,6 +307,7 @@ RowLayout {
                 onClicked: {
                     if (typeof game !== 'undefined' && game.onStopCommand)
                         game.onStopCommand();
+
                 }
                 ToolTip.visible: hovered
                 ToolTip.text: bottomRoot.hasMovableUnits ? "Stop all actions immediately" : "Select troops first"
@@ -332,36 +333,48 @@ RowLayout {
 
             Button {
                 id: holdButton
+
                 Layout.fillWidth: true
                 Layout.preferredHeight: 38
                 text: "Hold"
                 focusPolicy: Qt.NoFocus
                 enabled: bottomRoot.hasMovableUnits
                 
-                property bool isHoldActive: (bottomRoot.selectionTick, (typeof game !== 'undefined' && game.anySelectedInHoldMode) ? game.anySelectedInHoldMode() : false)
-                
+                property bool isHoldActive: {
+                    bottomRoot.selectionTick;
+                    return (typeof game !== 'undefined' && game.anySelectedInHoldMode) ? game.anySelectedInHoldMode() : false;
+                }
                 onClicked: {
                     if (typeof game !== 'undefined' && game.onHoldCommand)
                         game.onHoldCommand();
+
                 }
-                
-                Connections {
-                    target: (typeof game !== 'undefined') ? game : null
-                    function onHoldModeChanged(active) {
-                        holdButton.isHoldActive = (typeof game !== 'undefined' && game.anySelectedInHoldMode) ? game.anySelectedInHoldMode() : false;
-                    }
-                }
-                
                 ToolTip.visible: hovered
                 ToolTip.text: bottomRoot.hasMovableUnits ? (isHoldActive ? "Exit hold mode (toggle)" : "Hold position and defend") : "Select troops first"
                 ToolTip.delay: 500
 
+                Connections {
+                    function onHoldModeChanged(active) {
+                        holdButton.isHoldActive = (typeof game !== 'undefined' && game.anySelectedInHoldMode) ? game.anySelectedInHoldMode() : false;
+                    }
+
+                    target: (typeof game !== 'undefined') ? game : null
+                }
+
                 background: Rectangle {
                     color: {
-                        if (!parent.enabled) return "#1a252f";
-                        if (parent.isHoldActive) return "#8e44ad";  // Active purple
-                        if (parent.pressed) return "#8e44ad";
-                        if (parent.hovered) return "#9b59b6";
+                        if (!parent.enabled)
+                            return "#1a252f";
+
+                        if (parent.isHoldActive)
+                            return "#8e44ad";
+
+                        if (parent.pressed)
+                            return "#8e44ad";
+
+                        if (parent.hovered)
+                            return "#9b59b6";
+
                         return "#34495e";
                     }
                     radius: 6
