@@ -129,9 +129,21 @@ All files compile cleanly. New dependencies:
 - ai_tactical.cpp
 - retreat_behavior.cpp
 
+## Recent Improvements
+
+### 9. Ranged Unit Combat Behavior (Archers)
+- **Problem**: Archers continued walking into melee range even when enemies were in firing range
+- **Solution**: Enhanced CombatSystem to detect ranged units and stop movement when within attack range
+- **Implementation**:
+  - Ranged units stop all movement when target is within range
+  - Maintain optimal firing distance (85% of max range) when approaching
+  - Hold position instead of chasing when in effective range
+  - Prevents ranged units from walking into melee combat unnecessarily
+- **Impact**: Archers now engage from safe distance, maintain tactical advantage
+
 ## Next Steps (Optional Enhancements)
 
-1. **Kiting Behavior** - Ranged units retreat while attacking
+1. **Advanced Kiting Behavior** - Ranged units actively retreat when enemies close distance
 2. **Squad System** - Group units into persistent squads
 3. **Threat Map** - Track enemy positions over time
 4. **Difficulty Levels** - Configurable reaction times, mistakes
