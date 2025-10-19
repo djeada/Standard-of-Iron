@@ -25,6 +25,8 @@ class FogRenderer;
 class StoneRenderer;
 class PlantRenderer;
 class PineRenderer;
+class RiverRenderer;
+class BridgeRenderer;
 } // namespace GL
 } // namespace Render
 
@@ -63,6 +65,8 @@ public:
     m_terrain = terrain;
   }
   void setBiomeRenderer(Render::GL::BiomeRenderer *biome) { m_biome = biome; }
+  void setRiverRenderer(Render::GL::RiverRenderer *river) { m_river = river; }
+  void setBridgeRenderer(Render::GL::BridgeRenderer *bridge) { m_bridge = bridge; }
   void setFogRenderer(Render::GL::FogRenderer *fog) { m_fog = fog; }
   void setStoneRenderer(Render::GL::StoneRenderer *stone) { m_stone = stone; }
   void setPlantRenderer(Render::GL::PlantRenderer *plant) { m_plant = plant; }
@@ -88,6 +92,8 @@ private:
   Render::GL::GroundRenderer *m_ground = nullptr;
   Render::GL::TerrainRenderer *m_terrain = nullptr;
   Render::GL::BiomeRenderer *m_biome = nullptr;
+  Render::GL::RiverRenderer *m_river = nullptr;
+  Render::GL::BridgeRenderer *m_bridge = nullptr;
   Render::GL::FogRenderer *m_fog = nullptr;
   Render::GL::StoneRenderer *m_stone = nullptr;
   Render::GL::PlantRenderer *m_plant = nullptr;

@@ -63,6 +63,7 @@
 #include "render/gl/camera.h"
 #include "render/gl/resources.h"
 #include "render/ground/biome_renderer.h"
+#include "render/ground/bridge_renderer.h"
 #include "render/ground/fog_renderer.h"
 #include "render/ground/ground_renderer.h"
 #include "render/ground/pine_renderer.h"
@@ -94,12 +95,13 @@ GameEngine::GameEngine() {
   m_terrain = std::make_unique<Render::GL::TerrainRenderer>();
   m_biome = std::make_unique<Render::GL::BiomeRenderer>();
   m_river = std::make_unique<Render::GL::RiverRenderer>();
+  m_bridge = std::make_unique<Render::GL::BridgeRenderer>();
   m_fog = std::make_unique<Render::GL::FogRenderer>();
   m_stone = std::make_unique<Render::GL::StoneRenderer>();
   m_plant = std::make_unique<Render::GL::PlantRenderer>();
   m_pine = std::make_unique<Render::GL::PineRenderer>();
 
-  m_passes = {m_ground.get(), m_terrain.get(), m_river.get(), m_biome.get(), m_stone.get(),
+  m_passes = {m_ground.get(), m_terrain.get(), m_river.get(), m_bridge.get(), m_biome.get(), m_stone.get(),
               m_plant.get(),  m_pine.get(),    m_fog.get()};
 
   std::unique_ptr<Engine::Core::System> arrowSys =
@@ -843,6 +845,8 @@ void GameEngine::startSkirmish(const QString &mapPath,
     loader.setGroundRenderer(m_ground.get());
     loader.setTerrainRenderer(m_terrain.get());
     loader.setBiomeRenderer(m_biome.get());
+    loader.setRiverRenderer(m_river.get());
+    loader.setBridgeRenderer(m_bridge.get());
     loader.setFogRenderer(m_fog.get());
     loader.setStoneRenderer(m_stone.get());
     loader.setPlantRenderer(m_plant.get());
@@ -1393,6 +1397,7 @@ void GameEngine::restoreEnvironmentFromMetadata(const QJsonObject &metadata) {
         m_terrain->configure(*heightMap, terrainService.biomeSettings());
       }
       if (m_river) {
+        qDebug() << "GameEngine: Configuring river renderer with" << heightMap->getRiverSegments().size() << "segments";
         m_river->configure(heightMap->getRiverSegments(), heightMap->getTileSize());
       }
       if (m_biome) {
