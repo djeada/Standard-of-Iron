@@ -14,7 +14,7 @@ out vec4 FragColor;
 
 // === Utility ===
 float saturate(float x) { return clamp(x, 0.0, 1.0); }
-vec3  saturate(vec3  v) { return clamp(v, 0.0, 1.0); }
+vec3 saturate(vec3 v) { return clamp(v, 0.0, 1.0); }
 
 float hash(vec2 p) {
   vec3 p3 = fract(vec3(p.xyx) * 0.1031);
@@ -101,7 +101,8 @@ void buildTBN(out vec3 T, out vec3 B, out vec3 N, vec3 n, vec3 pos, vec2 uv) {
 }
 
 // Cheap bump from a procedural height map in UV space
-vec3 perturbNormalFromHeight(vec3 n, vec3 pos, vec2 uv, float height, float scale, float strength) {
+vec3 perturbNormalFromHeight(vec3 n, vec3 pos, vec2 uv, float height,
+                             float scale, float strength) {
   vec3 T, B, N;
   buildTBN(T, B, N, n, pos, uv);
 
@@ -127,16 +128,18 @@ void main() {
   vec2 uv = v_texCoord * 4.5;
 
   float avgColor = (color.r + color.g + color.b) / 3.0;
-  float colorHue = max(max(color.r, color.g), color.b) - min(min(color.r, color.g), color.b);
+  float colorHue =
+      max(max(color.r, color.g), color.b) - min(min(color.r, color.g), color.b);
 
   // Material classification preserved
-  bool isMetal   = (avgColor > 0.45 && avgColor <= 0.65 && colorHue < 0.15);
+  bool isMetal = (avgColor > 0.45 && avgColor <= 0.65 && colorHue < 0.15);
   bool isLeather = (avgColor > 0.30 && avgColor <= 0.50 && colorHue < 0.20);
-  bool isFabric  = (avgColor > 0.25 && !isMetal && !isLeather);
+  bool isFabric = (avgColor > 0.25 && !isMetal && !isLeather);
 
   // Lighting basis (kept compatible with prior shader)
   vec3 L = normalize(vec3(1.0, 1.15, 1.0));
-  // Approximate view vector from world origin; nudged to avoid degenerate normalization
+  // Approximate view vector from world origin; nudged to avoid degenerate
+  // normalization
   vec3 V = normalize(-v_worldPos + N * 0.001);
   vec3 H = normalize(L + V);
 
@@ -151,21 +154,22 @@ void main() {
   // Shared wrap diffuse (preserved behavior, slight tweak via saturate)
   float wrapAmount = isMetal ? 0.12 : (isLeather ? 0.25 : 0.35);
   float diffWrap = max(NdotL * (1.0 - wrapAmount) + wrapAmount, 0.20);
-  if (isMetal) diffWrap = pow(diffWrap, 0.88);
+  if (isMetal)
+    diffWrap = pow(diffWrap, 0.88);
 
   // Edge & cavity masks (for wear/rust/shine)
-  float edgeMask   = edgeWearMask(N);           // bright edges
-  float cavityMask = 1.0 - edgeMask;           // crevices
+  float edgeMask = edgeWearMask(N);  // bright edges
+  float cavityMask = 1.0 - edgeMask; // crevices
   // Gravity bias: downward-facing areas collect more dirt/rust
-  float downBias   = saturate((-N.y) * 0.6 + 0.4);
+  float downBias = saturate((-N.y) * 0.6 + 0.4);
   cavityMask *= downBias;
 
   // === Material models ===
-  vec3  F0 = vec3(0.04); // default dielectric reflectance
+  vec3 F0 = vec3(0.04);  // default dielectric reflectance
   float roughness = 0.6; // default roughness
   float cavityAO = 1.0;  // occlusion multiplier
-  vec3  albedo = color;  // base diffuse/albedo
-  vec3  specular = vec3(0.0);
+  vec3 albedo = color;   // base diffuse/albedo
+  vec3 specular = vec3(0.0);
 
   if (isMetal) {
     // Use texture UVs for stability (as in original)
@@ -173,20 +177,24 @@ void main() {
 
     // Brushed/anisotropic micro-lines & microdents
     float brushed = abs(sin(v_texCoord.y * 85.0)) * 0.022;
-    float dents   = noise(metalUV * 6.0) * 0.035;
+    float dents = noise(metalUV * 6.0) * 0.035;
     float rustTex = noise(metalUV * 8.0) * 0.10;
 
     // Small directional scratches
-    float scratchLines = smoothstep(0.97, 1.0, abs(sin(metalUV.x * 160.0 + noise(metalUV * 3.0) * 2.0)));
+    float scratchLines = smoothstep(
+        0.97, 1.0, abs(sin(metalUV.x * 160.0 + noise(metalUV * 3.0) * 2.0)));
     scratchLines *= 0.08;
 
     // Procedural height for bumping (kept subtle to avoid shimmer)
     float height = noise(metalUV * 12.0) * 0.5 + brushed * 2.0 + scratchLines;
-    vec3  Np = perturbNormalFromHeight(N, v_worldPos, v_texCoord, height, 12.0, 0.55);
+    vec3 Np =
+        perturbNormalFromHeight(N, v_worldPos, v_texCoord, height, 12.0, 0.55);
     N = mix(N, Np, 0.65); // blend to keep stable
 
     // Physically-based specular with GGX
-    roughness = clamp(0.18 + brushed * 0.35 + dents * 0.25 + rustTex * 0.30 - edgeMask * 0.12, 0.05, 0.9);
+    roughness = clamp(0.18 + brushed * 0.35 + dents * 0.25 + rustTex * 0.30 -
+                          edgeMask * 0.12,
+                      0.05, 0.9);
     float a = max(0.001, roughness * roughness);
 
     // Metals take F0 from their base color
@@ -211,7 +219,7 @@ void main() {
 
     float D = distributionGGX(NdotH, a);
     float G = geometrySmith(NdotV, NdotL, roughness);
-    vec3  F = fresnelSchlick(VdotH, F0);
+    vec3 F = fresnelSchlick(VdotH, F0);
 
     specular = (D * G * F) / max(4.0 * NdotL * NdotV, 1e-4);
 
@@ -219,7 +227,7 @@ void main() {
     float aCoat = 0.04; // ~roughness 0.2
     float Dcoat = distributionGGX(NdotH, aCoat);
     float Gcoat = geometrySmith(NdotV, NdotL, sqrt(aCoat));
-    vec3  Fcoat = fresnelSchlick(VdotH, vec3(0.04));
+    vec3 Fcoat = fresnelSchlick(VdotH, vec3(0.04));
     specular += 0.06 * (Dcoat * Gcoat * Fcoat) / max(4.0 * NdotL * NdotV, 1e-4);
 
     // Metals have almost no diffuse term
@@ -230,9 +238,8 @@ void main() {
     cavityAO = 1.0 - rustMask * 0.6;
 
     // Final combine (ambient + wrapped diffuse + specular)
-    vec3 lit = ambient * albedo * cavityAO
-             + diffWrap * albedo * diffuse
-             + specular * NdotL;
+    vec3 lit = ambient * albedo * cavityAO + diffWrap * albedo * diffuse +
+               specular * NdotL;
 
     // Small addition of brushed sheen from the original
     lit += vec3(brushed) * 0.8;
@@ -242,7 +249,7 @@ void main() {
   } else if (isLeather) {
     // Leather microstructure & wear
     float leather = leatherGrain(uvW);
-    float wear    = noise(uvW * 4.0) * 0.12 - 0.06;
+    float wear = noise(uvW * 4.0) * 0.12 - 0.06;
 
     float viewAngle = abs(dot(N, normalize(vec3(0.0, 1.0, 0.5))));
     float leatherSheen = pow(1.0 - viewAngle, 5.0) * 0.12;
@@ -256,7 +263,7 @@ void main() {
 
     float D = distributionGGX(NdotH, a);
     float G = geometrySmith(NdotV, NdotL, roughness);
-    vec3  F = fresnelSchlick(VdotH, F0);
+    vec3 F = fresnelSchlick(VdotH, F0);
     specular = (D * G * F) / max(4.0 * NdotL * NdotV, 1e-4);
 
     float kD = 1.0 - max(max(F.r, F.g), F.b);
@@ -264,9 +271,7 @@ void main() {
 
     cavityAO = 1.0 - (noise(uvW * 3.0) * 0.15) * cavityMask;
 
-    color = ambient * albedo * cavityAO
-          + diffWrap * diffuse
-          + specular * NdotL;
+    color = ambient * albedo * cavityAO + diffWrap * diffuse + specular * NdotL;
 
   } else if (isFabric) {
     float weave = fabricWeave(v_worldPos.xz);
@@ -284,7 +289,7 @@ void main() {
 
     float D = distributionGGX(NdotH, a);
     float G = geometrySmith(NdotV, NdotL, roughness);
-    vec3  F = fresnelSchlick(VdotH, F0);
+    vec3 F = fresnelSchlick(VdotH, F0);
     specular = (D * G * F) / max(4.0 * NdotL * NdotV, 1e-4);
 
     float kD = 1.0 - max(max(F.r, F.g), F.b);
@@ -292,9 +297,7 @@ void main() {
 
     cavityAO = 1.0 - (noise(uvW * 2.5) * 0.10) * cavityMask;
 
-    color = ambient * albedo * cavityAO
-          + diffWrap * diffuse
-          + specular * NdotL;
+    color = ambient * albedo * cavityAO + diffWrap * diffuse + specular * NdotL;
 
   } else {
     // Generic matte
@@ -306,15 +309,13 @@ void main() {
 
     float D = distributionGGX(NdotH, a);
     float G = geometrySmith(NdotV, NdotL, roughness);
-    vec3  F = fresnelSchlick(VdotH, F0);
+    vec3 F = fresnelSchlick(VdotH, F0);
     specular = (D * G * F) / max(4.0 * NdotL * NdotV, 1e-4);
 
     float kD = 1.0 - max(max(F.r, F.g), F.b);
     vec3 diffuse = kD * albedo;
 
-    color = ambient * albedo
-          + diffWrap * diffuse
-          + specular * NdotL;
+    color = ambient * albedo + diffWrap * diffuse + specular * NdotL;
   }
 
   // Final color clamp and alpha preserved

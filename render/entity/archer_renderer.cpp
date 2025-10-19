@@ -51,7 +51,7 @@ struct ArcherExtras {
 class ArcherRenderer : public HumanoidRendererBase {
 public:
   QVector3D getProportionScaling() const override {
-    // Slightly more refined proportions for archer
+
     return QVector3D(0.94f, 1.01f, 0.96f);
   }
 
@@ -276,26 +276,22 @@ public:
                   const HumanoidPose &pose, ISubmitter &out) const override {
     using HP = HumanProportions;
 
-    // Enhanced metallic helmet with better detailing
     QVector3D helmetColor = v.palette.metal * QVector3D(1.08f, 0.98f, 0.78f);
     QVector3D helmetAccent = helmetColor * 1.12f;
-    
+
     QVector3D helmetTop(0, pose.headPos.y() + pose.headR * 1.28f, 0);
     QVector3D helmetBot(0, pose.headPos.y() + pose.headR * 0.08f, 0);
     float helmetR = pose.headR * 1.10f;
 
-    // Main helmet body with slight taper
     out.mesh(getUnitCylinder(),
              cylinderBetween(ctx.model, helmetBot, helmetTop, helmetR),
              helmetColor, nullptr, 1.0f);
 
-    // Smoother conical top
     QVector3D apexPos(0, pose.headPos.y() + pose.headR * 1.48f, 0);
     out.mesh(getUnitCone(),
              coneFromTo(ctx.model, helmetTop, apexPos, helmetR * 0.97f),
              helmetAccent, nullptr, 1.0f);
 
-    // Reinforcement rings for visual interest
     auto ring = [&](const QVector3D &center, float r, float h,
                     const QVector3D &col) {
       QVector3D a = center + QVector3D(0, h * 0.5f, 0);
@@ -303,37 +299,33 @@ public:
       out.mesh(getUnitCylinder(), cylinderBetween(ctx.model, a, b, r), col,
                nullptr, 1.0f);
     };
-    
-    // Brow reinforcement
+
     QVector3D browPos(0, pose.headPos.y() + pose.headR * 0.35f, 0);
     ring(browPos, helmetR * 1.07f, 0.020f, helmetAccent);
-    
-    // Temple bands
-    ring(QVector3D(0, pose.headPos.y() + pose.headR * 0.65f, 0), 
+
+    ring(QVector3D(0, pose.headPos.y() + pose.headR * 0.65f, 0),
          helmetR * 1.03f, 0.015f, helmetColor * 1.05f);
-    ring(QVector3D(0, pose.headPos.y() + pose.headR * 0.95f, 0), 
+    ring(QVector3D(0, pose.headPos.y() + pose.headR * 0.95f, 0),
          helmetR * 1.01f, 0.012f, helmetColor * 1.03f);
 
-    // Improved cheek guards - more realistic positioning
     float cheekW = pose.headR * 0.48f;
     QVector3D cheekTop(0, pose.headPos.y() + pose.headR * 0.22f, 0);
     QVector3D cheekBot(0, pose.headPos.y() - pose.headR * 0.42f, 0);
 
-    // Left cheek guard
     QVector3D cheekLTop = cheekTop + QVector3D(-cheekW, 0, pose.headR * 0.38f);
-    QVector3D cheekLBot = cheekBot + QVector3D(-cheekW * 0.82f, 0, pose.headR * 0.28f);
+    QVector3D cheekLBot =
+        cheekBot + QVector3D(-cheekW * 0.82f, 0, pose.headR * 0.28f);
     out.mesh(getUnitCylinder(),
              cylinderBetween(ctx.model, cheekLBot, cheekLTop, 0.028f),
              helmetColor * 0.96f, nullptr, 1.0f);
 
-    // Right cheek guard
     QVector3D cheekRTop = cheekTop + QVector3D(cheekW, 0, pose.headR * 0.38f);
-    QVector3D cheekRBot = cheekBot + QVector3D(cheekW * 0.82f, 0, pose.headR * 0.28f);
+    QVector3D cheekRBot =
+        cheekBot + QVector3D(cheekW * 0.82f, 0, pose.headR * 0.28f);
     out.mesh(getUnitCylinder(),
              cylinderBetween(ctx.model, cheekRBot, cheekRTop, 0.028f),
              helmetColor * 0.96f, nullptr, 1.0f);
 
-    // Enhanced neck guard
     QVector3D neckGuardTop(0, pose.headPos.y() + pose.headR * 0.03f,
                            -pose.headR * 0.82f);
     QVector3D neckGuardBot(0, pose.headPos.y() - pose.headR * 0.32f,
@@ -343,24 +335,18 @@ public:
         cylinderBetween(ctx.model, neckGuardBot, neckGuardTop, helmetR * 0.88f),
         helmetColor * 0.93f, nullptr, 1.0f);
 
-    // More prominent crest/plume holder
     QVector3D crestBase = apexPos;
     QVector3D crestMid = crestBase + QVector3D(0, 0.09f, 0);
     QVector3D crestTop = crestMid + QVector3D(0, 0.12f, 0);
-    
-    // Metallic base
+
     out.mesh(getUnitCylinder(),
              cylinderBetween(ctx.model, crestBase, crestMid, 0.018f),
              helmetAccent, nullptr, 1.0f);
-    
-    // Decorative plume
-    out.mesh(getUnitCone(),
-             coneFromTo(ctx.model, crestMid, crestTop, 0.042f),
+
+    out.mesh(getUnitCone(), coneFromTo(ctx.model, crestMid, crestTop, 0.042f),
              QVector3D(0.88f, 0.18f, 0.18f), nullptr, 1.0f);
-    
-    // Small ornamental tip
-    out.mesh(getUnitSphere(), 
-             sphereAt(ctx.model, crestTop, 0.020f),
+
+    out.mesh(getUnitSphere(), sphereAt(ctx.model, crestTop, 0.020f),
              helmetAccent, nullptr, 1.0f);
   }
 

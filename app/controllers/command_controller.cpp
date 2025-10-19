@@ -115,7 +115,7 @@ CommandResult CommandController::onHoldCommand() {
       continue;
 
     auto *unit = entity->getComponent<Engine::Core::UnitComponent>();
-    // Hold mode is available for archers and spearmen (defensive formations)
+
     if (!unit || (unit->unitType != "archer" && unit->unitType != "spearman"))
       continue;
 

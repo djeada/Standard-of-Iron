@@ -473,7 +473,8 @@ void TerrainHeightMap::addRiverSegments(
     int steps = static_cast<int>(std::ceil(length / m_tileSize)) + 1;
 
     for (int i = 0; i < steps; ++i) {
-      float t = static_cast<float>(i) / std::max(1.0f, static_cast<float>(steps - 1));
+      float t =
+          static_cast<float>(i) / std::max(1.0f, static_cast<float>(steps - 1));
       QVector3D centerPos = river.start + dir * (length * t);
 
       float gridCenterX = (centerPos.x() / m_tileSize) + gridHalfWidth;
@@ -481,17 +482,24 @@ void TerrainHeightMap::addRiverSegments(
 
       float halfWidth = river.width * 0.5f / m_tileSize;
 
-      int minX = std::max(0, static_cast<int>(std::floor(gridCenterX - halfWidth - 1.0f)));
-      int maxX = std::min(m_width - 1, static_cast<int>(std::ceil(gridCenterX + halfWidth + 1.0f)));
-      int minZ = std::max(0, static_cast<int>(std::floor(gridCenterZ - halfWidth - 1.0f)));
-      int maxZ = std::min(m_height - 1, static_cast<int>(std::ceil(gridCenterZ + halfWidth + 1.0f)));
+      int minX = std::max(
+          0, static_cast<int>(std::floor(gridCenterX - halfWidth - 1.0f)));
+      int maxX =
+          std::min(m_width - 1,
+                   static_cast<int>(std::ceil(gridCenterX + halfWidth + 1.0f)));
+      int minZ = std::max(
+          0, static_cast<int>(std::floor(gridCenterZ - halfWidth - 1.0f)));
+      int maxZ =
+          std::min(m_height - 1,
+                   static_cast<int>(std::ceil(gridCenterZ + halfWidth + 1.0f)));
 
       for (int z = minZ; z <= maxZ; ++z) {
         for (int x = minX; x <= maxX; ++x) {
           float dx = static_cast<float>(x) - gridCenterX;
           float dz = static_cast<float>(z) - gridCenterZ;
 
-          float distAlongPerp = std::abs(dx * perpendicular.x() + dz * perpendicular.z());
+          float distAlongPerp =
+              std::abs(dx * perpendicular.x() + dz * perpendicular.z());
 
           if (distAlongPerp <= halfWidth) {
             int idx = indexAt(x, z);
@@ -509,8 +517,7 @@ void TerrainHeightMap::addRiverSegments(
 void TerrainHeightMap::addBridges(const std::vector<Bridge> &bridges) {
   m_bridges = bridges;
   qDebug() << "TerrainHeightMap: Added" << bridges.size() << "bridges";
-  
-  // Make bridge areas walkable by restoring terrain type
+
   const float gridHalfWidth = m_width * 0.5f - 0.5f;
   const float gridHalfHeight = m_height * 0.5f - 0.5f;
 
@@ -526,11 +533,11 @@ void TerrainHeightMap::addBridges(const std::vector<Bridge> &bridges) {
     int steps = static_cast<int>(std::ceil(length / m_tileSize)) + 1;
 
     for (int i = 0; i < steps; ++i) {
-      float t = static_cast<float>(i) / std::max(1.0f, static_cast<float>(steps - 1));
+      float t =
+          static_cast<float>(i) / std::max(1.0f, static_cast<float>(steps - 1));
       QVector3D centerPos = bridge.start + dir * (length * t);
-      
-      // Calculate bridge deck height at this position (matching bridge_renderer.cpp logic)
-      float archCurve = 4.0f * t * (1.0f - t); // Peaks at t=0.5
+
+      float archCurve = 4.0f * t * (1.0f - t);
       float archHeight = bridge.height * archCurve * 0.8f;
       float deckHeight = bridge.start.y() + bridge.height + archHeight * 0.5f;
 
@@ -539,24 +546,29 @@ void TerrainHeightMap::addBridges(const std::vector<Bridge> &bridges) {
 
       float halfWidth = bridge.width * 0.5f / m_tileSize;
 
-      int minX = std::max(0, static_cast<int>(std::floor(gridCenterX - halfWidth)));
-      int maxX = std::min(m_width - 1, static_cast<int>(std::ceil(gridCenterX + halfWidth)));
-      int minZ = std::max(0, static_cast<int>(std::floor(gridCenterZ - halfWidth)));
-      int maxZ = std::min(m_height - 1, static_cast<int>(std::ceil(gridCenterZ + halfWidth)));
+      int minX =
+          std::max(0, static_cast<int>(std::floor(gridCenterX - halfWidth)));
+      int maxX = std::min(m_width - 1,
+                          static_cast<int>(std::ceil(gridCenterX + halfWidth)));
+      int minZ =
+          std::max(0, static_cast<int>(std::floor(gridCenterZ - halfWidth)));
+      int maxZ = std::min(m_height - 1,
+                          static_cast<int>(std::ceil(gridCenterZ + halfWidth)));
 
       for (int z = minZ; z <= maxZ; ++z) {
         for (int x = minX; x <= maxX; ++x) {
           float dx = static_cast<float>(x) - gridCenterX;
           float dz = static_cast<float>(z) - gridCenterZ;
 
-          float distAlongPerp = std::abs(dx * perpendicular.x() + dz * perpendicular.z());
+          float distAlongPerp =
+              std::abs(dx * perpendicular.x() + dz * perpendicular.z());
 
           if (distAlongPerp <= halfWidth) {
             int idx = indexAt(x, z);
-            // Make bridge areas walkable (convert River back to Flat)
+
             if (m_terrainTypes[idx] == TerrainType::River) {
               m_terrainTypes[idx] = TerrainType::Flat;
-              // Set height to match the bridge deck surface
+
               m_heights[idx] = deckHeight;
             }
           }
@@ -564,7 +576,7 @@ void TerrainHeightMap::addBridges(const std::vector<Bridge> &bridges) {
       }
     }
   }
-  
+
   qDebug() << "TerrainHeightMap: Bridges configured - areas are now walkable";
 }
 
