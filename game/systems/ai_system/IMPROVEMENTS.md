@@ -135,11 +135,12 @@ All files compile cleanly. New dependencies:
 - **Problem**: Archers continued walking into melee range even when enemies were in firing range
 - **Solution**: Enhanced CombatSystem to detect ranged units and stop movement when within attack range
 - **Implementation**:
-  - Ranged units stop all movement when target is within range
-  - Maintain optimal firing distance (85% of max range) when approaching
-  - Hold position instead of chasing when in effective range
+  - Ranged units stop all movement when any enemy is within range, regardless of movement reason
+  - Works for archers moving to defend, attack, or any other command
+  - Maintain optimal firing distance (85% of max range) when approaching targets during chase
+  - Hold position instead of continuing movement when enemies enter effective range
   - Prevents ranged units from walking into melee combat unnecessarily
-- **Impact**: Archers now engage from safe distance, maintain tactical advantage
+- **Impact**: Archers now engage from safe distance in all scenarios, maintain tactical advantage
 
 ## Next Steps (Optional Enhancements)
 
