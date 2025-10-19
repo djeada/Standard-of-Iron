@@ -234,9 +234,11 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   command.units = std::move(claimedUnits);
   command.targetId = targetInfo.targetId;
 
-  command.shouldChase =
+  bool shouldChaseAggressive =
       (context.state == AIState::Attacking || context.barracksUnderThreat) &&
       assessment.forceRatio >= 0.8f;
+
+  command.shouldChase = shouldChaseAggressive;
 
   outCommands.push_back(std::move(command));
 }
