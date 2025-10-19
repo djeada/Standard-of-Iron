@@ -92,6 +92,10 @@ AnimationInputs HumanoidRendererBase::sampleAnimState(const DrawContext &ctx) {
   if (!ctx.entity)
     return anim;
 
+  // Early exit if entity is pending removal to avoid accessing corrupted components
+  if (ctx.entity->hasComponent<Engine::Core::PendingRemovalComponent>())
+    return anim;
+
   auto *movement = ctx.entity->getComponent<Engine::Core::MovementComponent>();
   auto *attack = ctx.entity->getComponent<Engine::Core::AttackComponent>();
   auto *attackTarget =
@@ -176,10 +180,8 @@ void HumanoidRendererBase::computeLocomotionPose(
   pose.footR = QVector3D(HP::SHOULDER_WIDTH * 0.58f * sWidth,
                          HP::GROUND_Y + pose.footYOffset, 0.0f);
 
-  // Initialize pelvis at waist height by default
   pose.pelvisPos = QVector3D(0.0f, HP::WAIST_Y * hScale, 0.0f);
 
-  // Initialize knees at default standing position
   pose.kneeL = QVector3D(pose.footL.x(), HP::KNEE_Y * hScale, pose.footL.z());
   pose.kneeR = QVector3D(pose.footR.x(), HP::KNEE_Y * hScale, pose.footR.z());
 
@@ -280,13 +282,15 @@ void HumanoidRendererBase::drawCommonBody(const DrawContext &ctx,
   const float yTopCover = std::max(yShoulder + 0.04f, yNeck + 0.00f);
 
   QVector3D tunicTop{0.0f, yTopCover - 0.006f, 0.0f};
-  // Use pelvisPos instead of hardcoded WAIST_Y so torso follows when kneeling
+
   QVector3D tunicBot{0.0f, pose.pelvisPos.y() + 0.03f, 0.0f};
   out.mesh(getUnitTorso(),
            cylinderBetween(ctx.model, tunicTop, tunicBot, torsoR),
            v.palette.cloth, nullptr, 1.0f);
 
-  QVector3D chinPos{0.0f, HP::CHIN_Y, 0.0f};
+  // Chin position should be at the bottom of the head sphere, not a fixed constant
+  // This ensures neck connects properly even when head is lowered (e.g., kneeling pose)
+  QVector3D chinPos{0.0f, pose.headPos.y() - pose.headR, 0.0f};
   out.mesh(getUnitCylinder(),
            cylinderBetween(ctx.model, pose.neckBase, chinPos,
                            HP::NECK_RADIUS * widthScale),
@@ -355,7 +359,6 @@ void HumanoidRendererBase::drawCommonBody(const DrawContext &ctx,
 
   constexpr float DEG = 3.1415926535f / 180.f;
 
-  // Use pose.pelvisPos instead of hardcoded waist for proper kneeling
   const QVector3D hipL = pose.pelvisPos + QVector3D(-hipHalf, 0.f, 0.f);
   const QVector3D hipR = pose.pelvisPos + QVector3D(+hipHalf, 0.f, 0.f);
   const float midX = 0.5f * (hipL.x() + hipR.x());
@@ -396,12 +399,10 @@ void HumanoidRendererBase::drawCommonBody(const DrawContext &ctx,
   const float kneeForwardPush = HP::LOWER_LEG_LEN * kneeForward;
   const float kneeDropAbs = kneeDrop;
 
-  // Use pose's knee positions if they've been customized (e.g., for kneeling)
-  // Otherwise compute default standing knees
   QVector3D kneeL, kneeR;
-  bool useCustomKnees = (pose.kneeL.y() < HP::KNEE_Y * 0.9f || 
+  bool useCustomKnees = (pose.kneeL.y() < HP::KNEE_Y * 0.9f ||
                          pose.kneeR.y() < HP::KNEE_Y * 0.9f);
-  
+
   if (useCustomKnees) {
     kneeL = pose.kneeL;
     kneeR = pose.kneeR;

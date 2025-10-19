@@ -22,6 +22,7 @@ add_library(render_gl STATIC
     entity/registry.cpp
     entity/archer_renderer.cpp
     entity/knight_renderer.cpp
+    entity/spearman_renderer.cpp
     entity/barracks_renderer.cpp
     # entity/arrow.cpp removed; arrow VFX renderer code moved to geom/arrow.cpp
     geom/selection_ring.cpp
