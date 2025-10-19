@@ -147,6 +147,11 @@ void PineRenderer::generatePineInstances() {
   const float halfHeight = static_cast<float>(m_height) * 0.5f;
   const float tileSafe = std::max(0.1f, m_tileSize);
 
+  const float edgePadding =
+      std::clamp(m_biomeSettings.spawnEdgePadding, 0.0f, 0.5f);
+  const float edgeMarginX = static_cast<float>(m_width) * edgePadding;
+  const float edgeMarginZ = static_cast<float>(m_height) * edgePadding;
+
   float pineDensity = 0.2f;
   if (m_biomeSettings.plantDensity > 0.0f) {
 
@@ -173,6 +178,11 @@ void PineRenderer::generatePineInstances() {
   }
 
   auto addPine = [&](float gx, float gz, uint32_t &state) -> bool {
+    if (gx < edgeMarginX || gx > m_width - 1 - edgeMarginX ||
+        gz < edgeMarginZ || gz > m_height - 1 - edgeMarginZ) {
+      return false;
+    }
+
     float sgx = std::clamp(gx, 0.0f, float(m_width - 1));
     float sgz = std::clamp(gz, 0.0f, float(m_height - 1));
 
