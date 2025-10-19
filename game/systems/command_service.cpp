@@ -717,8 +717,12 @@ void CommandService::attackTarget(
     QVector3D desiredPos = targetPos;
 
     float range = 2.0f;
+    bool isRangedUnit = false;
     if (auto *atk = e->getComponent<Engine::Core::AttackComponent>()) {
       range = std::max(0.1f, atk->range);
+      if (atk->canRanged && atk->range > atk->meleeRange * 1.5f) {
+        isRangedUnit = true;
+      }
     }
 
     QVector3D direction = targetPos - attackerPos;
@@ -735,6 +739,9 @@ void CommandService::attackTarget(
         }
       } else {
         float desiredDistance = std::max(range - 0.2f, 0.2f);
+        if (isRangedUnit) {
+          desiredDistance = range * 0.85f;
+        }
         if (distance > desiredDistance + 0.15f) {
           desiredPos = targetPos - direction * desiredDistance;
         }
