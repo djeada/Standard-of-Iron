@@ -270,6 +270,8 @@ void CommandService::moveUnits(Engine::Core::World &world,
 
         mv->path.clear();
         mv->hasTarget = false;
+        mv->vx = 0.0f;
+        mv->vz = 0.0f;
         mv->pathPending = true;
 
         std::uint64_t requestId =
@@ -428,31 +430,16 @@ void CommandService::moveGroup(Engine::Core::World &world,
     mv->goalX = member.target.x();
     mv->goalY = member.target.z();
 
-    bool alreadyMovingToGoal = false;
-    if (mv->hasTarget || mv->pathPending) {
-      float goalDx = mv->goalX - member.target.x();
-      float goalDz = mv->goalY - member.target.z();
-      float goalDistSq = goalDx * goalDx + goalDz * goalDz;
-
-      if (goalDistSq <= SAME_GOAL_THRESHOLD_SQ) {
-        alreadyMovingToGoal = true;
-      }
-    }
-
-    if (!alreadyMovingToGoal) {
-
-      clearPendingRequest(member.id);
-      mv->targetX = member.transform->position.x;
-      mv->targetY = member.transform->position.z;
-      mv->hasTarget = false;
-      mv->vx = 0.0f;
-      mv->vz = 0.0f;
-      mv->path.clear();
-      mv->pathPending = false;
-      mv->pendingRequestId = 0;
-      unitsNeedingNewPath.push_back(&member);
-    } else {
-    }
+    clearPendingRequest(member.id);
+    mv->targetX = member.transform->position.x;
+    mv->targetY = member.transform->position.z;
+    mv->hasTarget = false;
+    mv->vx = 0.0f;
+    mv->vz = 0.0f;
+    mv->path.clear();
+    mv->pathPending = false;
+    mv->pendingRequestId = 0;
+    unitsNeedingNewPath.push_back(&member);
   }
 
   if (unitsNeedingNewPath.empty()) {
