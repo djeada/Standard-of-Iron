@@ -227,8 +227,6 @@ void Renderer::renderWorld(Engine::Core::World *world) {
   if (!world)
     return;
 
-  // Lock World's recursive mutex for entire render to prevent entities from being
-  // deleted while we iterate. Recursive mutex allows World methods to lock again.
   std::lock_guard<std::recursive_mutex> guard(world->getEntityMutex());
 
   auto &vis = Game::Map::VisibilityService::instance();
@@ -238,7 +236,7 @@ void Renderer::renderWorld(Engine::Core::World *world) {
       world->getEntitiesWith<Engine::Core::RenderableComponent>();
 
   for (auto entity : renderableEntities) {
-    // Skip entities pending removal first, before accessing any components
+
     if (entity->hasComponent<Engine::Core::PendingRemovalComponent>()) {
       continue;
     }

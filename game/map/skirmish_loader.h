@@ -66,7 +66,9 @@ public:
   }
   void setBiomeRenderer(Render::GL::BiomeRenderer *biome) { m_biome = biome; }
   void setRiverRenderer(Render::GL::RiverRenderer *river) { m_river = river; }
-  void setBridgeRenderer(Render::GL::BridgeRenderer *bridge) { m_bridge = bridge; }
+  void setBridgeRenderer(Render::GL::BridgeRenderer *bridge) {
+    m_bridge = bridge;
+  }
   void setFogRenderer(Render::GL::FogRenderer *fog) { m_fog = fog; }
   void setStoneRenderer(Render::GL::StoneRenderer *stone) { m_stone = stone; }
   void setPlantRenderer(Render::GL::PlantRenderer *plant) { m_plant = plant; }

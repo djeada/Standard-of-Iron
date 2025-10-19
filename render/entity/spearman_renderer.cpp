@@ -82,142 +82,123 @@ public:
     float armHeightJitter = (hash01(seed ^ 0xABCDu) - 0.5f) * 0.03f;
     float armAsymmetry = (hash01(seed ^ 0xDEF0u) - 0.5f) * 0.04f;
 
-    // Hold mode: defensive stance with braced spear (pike square formation)
     if (anim.isInHoldMode || anim.isExitingHold) {
       float t = anim.isInHoldMode ? 1.0f : (1.0f - anim.holdExitProgress);
 
-      // Kneel down into defensive position
       float kneelDepth = 0.35f * t;
       float pelvisY = HP::WAIST_Y - kneelDepth;
       pose.pelvisPos.setY(pelvisY);
 
-      // Narrow stance for stability
       float stanceNarrow = 0.10f;
 
-      // Left knee on ground (kneeling)
       float leftKneeY = HP::GROUND_Y + 0.06f * t;
       float leftKneeZ = -0.08f * t;
       pose.kneeL = QVector3D(-stanceNarrow, leftKneeY, leftKneeZ);
       pose.footL = QVector3D(-stanceNarrow - 0.02f, HP::GROUND_Y,
                              leftKneeZ - HP::LOWER_LEG_LEN * 0.90f * t);
 
-      // Right leg bent but supporting weight
-      float rightKneeY = HP::WAIST_Y * 0.45f * (1.0f - t) + HP::WAIST_Y * 0.30f * t;
+      float rightKneeY =
+          HP::WAIST_Y * 0.45f * (1.0f - t) + HP::WAIST_Y * 0.30f * t;
       pose.kneeR = QVector3D(stanceNarrow + 0.05f, rightKneeY, 0.15f * t);
       pose.footR = QVector3D(stanceNarrow + 0.08f, HP::GROUND_Y, 0.25f * t);
 
-      // PROPERLY lower the upper body (shoulders, neck, head) - don't stretch torso!
       float upperBodyDrop = kneelDepth;
       pose.shoulderL.setY(HP::SHOULDER_Y - upperBodyDrop);
       pose.shoulderR.setY(HP::SHOULDER_Y - upperBodyDrop);
       pose.neckBase.setY(HP::NECK_BASE_Y - upperBodyDrop);
-      
-      // Head and chin need to be lowered together
-      // The neck in humanoid_base draws from neckBase to HP::CHIN_Y (hardcoded)
-      // So we need to position the head such that its bottom (chin) is at the lowered chin position
+
       float loweredChinY = HP::CHIN_Y - upperBodyDrop;
-      // Head center should be: chin + headRadius
+
       pose.headPos.setY(loweredChinY + pose.headR);
 
-      // Slight forward lean for defensive posture
       float forwardLean = 0.08f * t;
       pose.shoulderL.setZ(pose.shoulderL.z() + forwardLean);
       pose.shoulderR.setZ(pose.shoulderR.z() + forwardLean);
       pose.neckBase.setZ(pose.neckBase.z() + forwardLean * 0.8f);
       pose.headPos.setZ(pose.headPos.z() + forwardLean * 0.7f);
 
-      // PROPER DEFENSIVE SPEAR GRIP (triangular arm frame)
-      // Spear angled 30-45° forward, butt at waist level (not ground)
-      
-      // Hand positions need to account for lowered shoulders!
       float loweredShoulderY = HP::SHOULDER_Y - upperBodyDrop;
-      
-      // Rear hand (right/dominant): Grips spear near butt at waist level
-      pose.handR = QVector3D(
-          0.18f * (1.0f - t) + 0.22f * t,           // X: slightly right of center
-          loweredShoulderY * (1.0f - t) + (pelvisY + 0.05f) * t,  // Y: transitions to just above lowered waist
-          0.15f * (1.0f - t) + 0.20f * t            // Z: close to body
-      );
 
-      // Front hand (left): Grips shaft forward, slightly lower than shoulder
+      pose.handR =
+          QVector3D(0.18f * (1.0f - t) + 0.22f * t,
+                    loweredShoulderY * (1.0f - t) + (pelvisY + 0.05f) * t,
+                    0.15f * (1.0f - t) + 0.20f * t);
+
       pose.handL = QVector3D(
-          0.0f,          // X: turned more inward toward body
-          loweredShoulderY * (1.0f - t) + (loweredShoulderY - 0.10f) * t,  // Y: slightly below lowered shoulder
-          0.30f * (1.0f - t) + 0.55f * t            // Z: forward but not too extended
-      );
+          0.0f, loweredShoulderY * (1.0f - t) + (loweredShoulderY - 0.10f) * t,
+          0.30f * (1.0f - t) + 0.55f * t);
 
-      // Fix BOTH elbow positions - force them DOWN not UP
-      // Right arm
       QVector3D shoulderToHandR = pose.handR - pose.shoulderR;
       float armLengthR = shoulderToHandR.length();
       QVector3D armDirR = shoulderToHandR.normalized();
-      pose.elbowR = pose.shoulderR + armDirR * (armLengthR * 0.5f) + QVector3D(0.08f, -0.15f, -0.05f);
-      
-      // Left arm
+      pose.elbowR = pose.shoulderR + armDirR * (armLengthR * 0.5f) +
+                    QVector3D(0.08f, -0.15f, -0.05f);
+
       QVector3D shoulderToHandL = pose.handL - pose.shoulderL;
       float armLengthL = shoulderToHandL.length();
       QVector3D armDirL = shoulderToHandL.normalized();
-      pose.elbowL = pose.shoulderL + armDirL * (armLengthL * 0.5f) + QVector3D(-0.08f, -0.12f, 0.05f);
+      pose.elbowL = pose.shoulderL + armDirL * (armLengthL * 0.5f) +
+                    QVector3D(-0.08f, -0.12f, 0.05f);
 
     } else if (anim.isAttacking && anim.isMelee && !anim.isInHoldMode) {
       const float attackCycleTime = 0.8f;
       float attackPhase = std::fmod(anim.time * (1.0f / attackCycleTime), 1.0f);
 
-      // Spear thrust positions - keep hands at shoulder height for horizontal thrust
       QVector3D guardPos(0.28f, HP::SHOULDER_Y + 0.05f, 0.25f);
-      QVector3D preparePos(0.35f, HP::SHOULDER_Y + 0.08f, 0.05f);  // Pull back slightly
-      QVector3D thrustPos(0.32f, HP::SHOULDER_Y + 0.10f, 0.90f);   // Thrust forward horizontally
+      QVector3D preparePos(0.35f, HP::SHOULDER_Y + 0.08f, 0.05f);
+      QVector3D thrustPos(0.32f, HP::SHOULDER_Y + 0.10f, 0.90f);
       QVector3D recoverPos(0.28f, HP::SHOULDER_Y + 0.06f, 0.40f);
 
       if (attackPhase < 0.20f) {
-        // Preparation: pull spear back
+
         float t = easeInOutCubic(attackPhase / 0.20f);
         pose.handR = guardPos * (1.0f - t) + preparePos * t;
-        // Left hand stays on shaft for stability
-        pose.handL = QVector3D(-0.10f, HP::SHOULDER_Y - 0.05f, 0.20f * (1.0f - t) + 0.08f * t);
+
+        pose.handL = QVector3D(-0.10f, HP::SHOULDER_Y - 0.05f,
+                               0.20f * (1.0f - t) + 0.08f * t);
       } else if (attackPhase < 0.30f) {
-        // Hold at peak preparation
+
         pose.handR = preparePos;
         pose.handL = QVector3D(-0.10f, HP::SHOULDER_Y - 0.05f, 0.08f);
       } else if (attackPhase < 0.50f) {
-        // Explosive thrust forward
+
         float t = (attackPhase - 0.30f) / 0.20f;
-        t = t * t * t;  // Sharp acceleration
+        t = t * t * t;
         pose.handR = preparePos * (1.0f - t) + thrustPos * t;
-        // Left hand pushes forward on shaft
+
         pose.handL =
-            QVector3D(-0.10f + 0.05f * t, 
-                      HP::SHOULDER_Y - 0.05f + 0.03f * t,
+            QVector3D(-0.10f + 0.05f * t, HP::SHOULDER_Y - 0.05f + 0.03f * t,
                       0.08f + 0.45f * t);
       } else if (attackPhase < 0.70f) {
-        // Retract spear
+
         float t = easeInOutCubic((attackPhase - 0.50f) / 0.20f);
         pose.handR = thrustPos * (1.0f - t) + recoverPos * t;
         pose.handL = QVector3D(-0.05f * (1.0f - t) - 0.10f * t,
                                HP::SHOULDER_Y - 0.02f * (1.0f - t) - 0.06f * t,
                                lerp(0.53f, 0.35f, t));
       } else {
-        // Return to guard stance
+
         float t = smoothstep(0.70f, 1.0f, attackPhase);
         pose.handR = recoverPos * (1.0f - t) + guardPos * t;
         pose.handL = QVector3D(-0.10f - 0.02f * (1.0f - t),
-                               HP::SHOULDER_Y - 0.06f + 0.01f * t + armHeightJitter * (1.0f - t),
+                               HP::SHOULDER_Y - 0.06f + 0.01f * t +
+                                   armHeightJitter * (1.0f - t),
                                lerp(0.35f, 0.25f, t));
       }
     } else {
       pose.handR = QVector3D(0.28f + armAsymmetry,
                              HP::SHOULDER_Y - 0.02f + armHeightJitter, 0.30f);
-      // Position left hand to grip spear shaft - more forward and inward
-      pose.handL = QVector3D(-0.08f - 0.5f * armAsymmetry,
-                             HP::SHOULDER_Y - 0.08f + 0.5f * armHeightJitter, 0.45f);
-      
-      // Fix elbow for normal stance - force it DOWN not UP
+
+      pose.handL =
+          QVector3D(-0.08f - 0.5f * armAsymmetry,
+                    HP::SHOULDER_Y - 0.08f + 0.5f * armHeightJitter, 0.45f);
+
       QVector3D shoulderToHand = pose.handR - pose.shoulderR;
       float armLength = shoulderToHand.length();
       QVector3D armDir = shoulderToHand.normalized();
-      
-      // Position elbow along the arm but bent DOWNWARD (negative Y offset)
-      pose.elbowR = pose.shoulderR + armDir * (armLength * 0.5f) + QVector3D(0.06f, -0.12f, -0.04f);
+
+      pose.elbowR = pose.shoulderR + armDir * (armLength * 0.5f) +
+                    QVector3D(0.06f, -0.12f, -0.04f);
     }
   }
 
@@ -247,7 +228,6 @@ public:
     }
 
     drawSpear(ctx, pose, v, extras, anim, isAttacking, attackPhase, out);
-    // Shields removed - spearmen use two-handed spear grip
   }
 
   void drawHelmet(const DrawContext &ctx, const HumanoidVariant &v,
@@ -257,15 +237,18 @@ public:
     QVector3D ironColor = v.palette.metal * QVector3D(0.88f, 0.90f, 0.92f);
 
     float helmR = pose.headR * 1.12f;
-    // Use pose.headPos for X, Y, AND Z so helmet follows head lean/tilt
-    QVector3D helmBot(pose.headPos.x(), pose.headPos.y() - pose.headR * 0.15f, pose.headPos.z());
-    QVector3D helmTop(pose.headPos.x(), pose.headPos.y() + pose.headR * 1.25f, pose.headPos.z());
+
+    QVector3D helmBot(pose.headPos.x(), pose.headPos.y() - pose.headR * 0.15f,
+                      pose.headPos.z());
+    QVector3D helmTop(pose.headPos.x(), pose.headPos.y() + pose.headR * 1.25f,
+                      pose.headPos.z());
 
     out.mesh(getUnitCylinder(),
              cylinderBetween(ctx.model, helmBot, helmTop, helmR), ironColor,
              nullptr, 1.0f);
 
-    QVector3D capTop(pose.headPos.x(), pose.headPos.y() + pose.headR * 1.32f, pose.headPos.z());
+    QVector3D capTop(pose.headPos.x(), pose.headPos.y() + pose.headR * 1.32f,
+                     pose.headPos.z());
     out.mesh(getUnitCylinder(),
              cylinderBetween(ctx.model, helmTop, capTop, helmR * 0.96f),
              ironColor * 1.04f, nullptr, 1.0f);
@@ -278,10 +261,12 @@ public:
                nullptr, 1.0f);
     };
 
-    ring(QVector3D(pose.headPos.x(), pose.headPos.y() + pose.headR * 0.95f, pose.headPos.z()), helmR * 1.01f,
-         0.012f, ironColor * 1.06f);
-    ring(QVector3D(pose.headPos.x(), pose.headPos.y() - pose.headR * 0.02f, pose.headPos.z()), helmR * 1.01f,
-         0.012f, ironColor * 1.06f);
+    ring(QVector3D(pose.headPos.x(), pose.headPos.y() + pose.headR * 0.95f,
+                   pose.headPos.z()),
+         helmR * 1.01f, 0.012f, ironColor * 1.06f);
+    ring(QVector3D(pose.headPos.x(), pose.headPos.y() - pose.headR * 0.02f,
+                   pose.headPos.z()),
+         helmR * 1.01f, 0.012f, ironColor * 1.06f);
 
     float visorY = pose.headPos.y() + pose.headR * 0.10f;
     float visorZ = pose.headPos.z() + helmR * 0.68f;
@@ -386,34 +371,28 @@ private:
 
   static void drawSpear(const DrawContext &ctx, const HumanoidPose &pose,
                         const HumanoidVariant &v, const SpearmanExtras &extras,
-                        const AnimationInputs &anim, bool isAttacking, 
+                        const AnimationInputs &anim, bool isAttacking,
                         float attackPhase, ISubmitter &out) {
     QVector3D gripPos = pose.handR;
 
-    // More vertical spear orientation for idle stance (pointing upward/forward)
-    // Realistic spearman hold: spear at ~60-70 degrees from horizontal
     QVector3D spearDir = QVector3D(0.05f, 0.55f, 0.85f);
     if (spearDir.lengthSquared() > 1e-6f)
       spearDir.normalize();
 
-    // Hold mode: spear braced at 25-35° angle (pike formation defensive stance)
     if (anim.isInHoldMode || anim.isExitingHold) {
       float t = anim.isInHoldMode ? 1.0f : (1.0f - anim.holdExitProgress);
-      
-      // Braced spear: butt at waist level, tip aimed forward at enemy chest/face height
-      // ~30° from horizontal (butt raised from ground to waist)
-      // Slight lateral tilt for realism
+
       QVector3D bracedDir = QVector3D(0.05f, 0.40f, 0.91f);
       if (bracedDir.lengthSquared() > 1e-6f)
         bracedDir.normalize();
-      
+
       spearDir = spearDir * (1.0f - t) + bracedDir * t;
       if (spearDir.lengthSquared() > 1e-6f)
         spearDir.normalize();
     } else if (isAttacking) {
       if (attackPhase >= 0.30f && attackPhase < 0.50f) {
         float t = (attackPhase - 0.30f) / 0.20f;
-        // Thrust forward and downward during attack to target enemy torso
+
         QVector3D attackDir = QVector3D(0.03f, -0.15f, 1.0f);
         if (attackDir.lengthSquared() > 1e-6f)
           attackDir.normalize();
@@ -424,26 +403,22 @@ private:
       }
     }
 
-    // Slight curve/bend to spear shaft for realism
     QVector3D shaftBase = gripPos - spearDir * 0.28f;
     QVector3D shaftMid = gripPos + spearDir * (extras.spearLength * 0.5f);
     QVector3D shaftTip = gripPos + spearDir * extras.spearLength;
-    
-    // Add slight upward curve to mid-section
+
     shaftMid.setY(shaftMid.y() + 0.02f);
 
-    // Draw shaft in two segments for curved effect
     out.mesh(getUnitCylinder(),
              cylinderBetween(ctx.model, shaftBase, shaftMid,
                              extras.spearShaftRadius),
              extras.spearShaftColor, nullptr, 1.0f);
-    
+
     out.mesh(getUnitCylinder(),
              cylinderBetween(ctx.model, shaftMid, shaftTip,
                              extras.spearShaftRadius * 0.95f),
              extras.spearShaftColor * 0.98f, nullptr, 1.0f);
 
-    // Spearhead
     QVector3D spearheadBase = shaftTip;
     QVector3D spearheadTip = shaftTip + spearDir * extras.spearheadLength;
 
@@ -452,7 +427,6 @@ private:
                         extras.spearShaftRadius * 1.8f),
              extras.spearheadColor, nullptr, 1.0f);
 
-    // Grip wrap
     QVector3D gripEnd = gripPos + spearDir * 0.10f;
     out.mesh(getUnitCylinder(),
              cylinderBetween(ctx.model, gripPos, gripEnd,

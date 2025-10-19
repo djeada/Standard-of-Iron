@@ -13,7 +13,7 @@ Rectangle {
         showingSummary = false;
         manuallyHidden = false;
     }
-    
+
     function forceHide() {
         resetState();
         manuallyHidden = true;
@@ -23,23 +23,21 @@ Rectangle {
     color: Qt.rgba(0, 0, 0, 0.7)
     visible: !manuallyHidden && (typeof game !== 'undefined' && game.victoryState !== "")
     z: 100
+    onVisibleChanged: {
+        if (!visible)
+            resetState();
+
+    }
 
     Connections {
         function onVictoryStateChanged() {
-            if (typeof game !== 'undefined' && game.victoryState === "") {
+            if (typeof game !== 'undefined' && game.victoryState === "")
                 resetState();
-            } else if (typeof game !== 'undefined' && game.victoryState !== "") {
+            else if (typeof game !== 'undefined' && game.victoryState !== "")
                 manuallyHidden = false;
-            }
         }
 
         target: (typeof game !== 'undefined') ? game : null
-    }
-
-    onVisibleChanged: {
-        if (!visible) {
-            resetState();
-        }
     }
 
     Rectangle {

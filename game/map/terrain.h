@@ -66,7 +66,7 @@ struct Bridge {
   QVector3D start;
   QVector3D end;
   float width = 3.0f;
-  float height = 0.5f; // Height above water
+  float height = 0.5f;
 };
 
 class TerrainHeightMap {
@@ -98,11 +98,9 @@ public:
   const std::vector<RiverSegment> &getRiverSegments() const {
     return m_riverSegments;
   }
-  
+
   void addBridges(const std::vector<Bridge> &bridges);
-  const std::vector<Bridge> &getBridges() const {
-    return m_bridges;
-  }
+  const std::vector<Bridge> &getBridges() const { return m_bridges; }
 
   void applyBiomeVariation(const BiomeSettings &settings);
 

@@ -17,8 +17,7 @@ public:
   BridgeRenderer();
   ~BridgeRenderer();
 
-  void configure(const std::vector<Game::Map::Bridge> &bridges,
-                 float tileSize);
+  void configure(const std::vector<Game::Map::Bridge> &bridges, float tileSize);
 
   void submit(Renderer &renderer, ResourceManager *resources) override;
 

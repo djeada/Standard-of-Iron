@@ -92,7 +92,6 @@ AnimationInputs HumanoidRendererBase::sampleAnimState(const DrawContext &ctx) {
   if (!ctx.entity)
     return anim;
 
-  // Early exit if entity is pending removal to avoid accessing corrupted components
   if (ctx.entity->hasComponent<Engine::Core::PendingRemovalComponent>())
     return anim;
 
@@ -288,8 +287,6 @@ void HumanoidRendererBase::drawCommonBody(const DrawContext &ctx,
            cylinderBetween(ctx.model, tunicTop, tunicBot, torsoR),
            v.palette.cloth, nullptr, 1.0f);
 
-  // Chin position should be at the bottom of the head sphere, not a fixed constant
-  // This ensures neck connects properly even when head is lowered (e.g., kneeling pose)
   QVector3D chinPos{0.0f, pose.headPos.y() - pose.headR, 0.0f};
   out.mesh(getUnitCylinder(),
            cylinderBetween(ctx.model, pose.neckBase, chinPos,

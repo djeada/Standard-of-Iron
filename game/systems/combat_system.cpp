@@ -122,11 +122,11 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
           attacker->getComponent<Engine::Core::HoldModeComponent>();
       if (holdMode && holdMode->active) {
         if (attackerUnit->unitType == "archer") {
-          // Archers: improved range and accuracy when kneeling
+
           range *= 1.5f;
           damage = static_cast<int>(damage * 1.3f);
         } else if (attackerUnit->unitType == "spearman") {
-          // Spearmen: braced spear formation increases damage against charges
+
           damage = static_cast<int>(damage * 1.4f);
         }
       }

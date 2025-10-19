@@ -133,9 +133,9 @@ int World::countTroopsForPlayer(int ownerId) const {
   return Game::Systems::TroopCountRegistry::instance().getTroopCount(ownerId);
 }
 
-EntityID World::getNextEntityId() const { 
+EntityID World::getNextEntityId() const {
   std::lock_guard<std::recursive_mutex> lock(m_entityMutex);
-  return m_nextEntityId; 
+  return m_nextEntityId;
 }
 
 void World::setNextEntityId(EntityID nextId) {
