@@ -1,0 +1,71 @@
+{
+  "name": "Spearman Test Map",
+  "coordSystem": "grid",
+  "maxTroopsPerPlayer": 500,
+  "grid": {
+    "width": 200,
+    "height": 200,
+    "tileSize": 1.0
+  },
+  "biome": {
+    "seed": 12345,
+    "patchDensity": 3.0,
+    "patchJitter": 0.8,
+    "bladeHeight": [0.6, 1.4],
+    "bladeWidth": [0.03, 0.06],
+    "swayStrength": 0.3,
+    "swaySpeed": 1.4,
+    "heightNoise": [0.2, 0.08],
+    "grassPrimary": [0.3, 0.6, 0.3],
+    "grassSecondary": [0.4, 0.7, 0.35],
+    "grassDry": [0.6, 0.5, 0.35],
+    "soilColor": [0.3, 0.25, 0.2],
+    "rockLow": [0.5, 0.5, 0.45],
+    "rockHigh": [0.7, 0.7, 0.75],
+    "plantDensity": 0.55
+  },
+  "camera": {
+    "center": [100, 0, 100],
+    "distance": 25.0,
+    "tiltDeg": 45.0,
+    "yaw": 225.0,
+    "fovY": 45.0,
+    "near": 1.0,
+    "far": 400.0
+  },
+  "spawns": [
+    { "type": "barracks", "x": 100, "z": 80, "playerId": 1, "maxPopulation": 200 },
+    { "type": "spearman", "x": 95, "z": 85, "playerId": 1 },
+    { "type": "spearman", "x": 100, "z": 85, "playerId": 1 },
+    { "type": "spearman", "x": 105, "z": 85, "playerId": 1 },
+    { "type": "knight", "x": 90, "z": 90, "playerId": 1 },
+    { "type": "archer", "x": 110, "z": 90, "playerId": 1 },
+
+    { "type": "barracks", "x": 100, "z": 120, "playerId": 2, "maxPopulation": 200 },
+    { "type": "spearman", "x": 95, "z": 115, "playerId": 2 },
+    { "type": "spearman", "x": 100, "z": 115, "playerId": 2 },
+    { "type": "spearman", "x": 105, "z": 115, "playerId": 2 },
+    { "type": "knight", "x": 90, "z": 110, "playerId": 2 },
+    { "type": "archer", "x": 110, "z": 110, "playerId": 2 }
+  ],
+  "terrain": [
+    {
+      "type": "hill",
+      "x": 100,
+      "z": 100,
+      "radius": 8,
+      "height": 2.5,
+      "entrances": [
+        { "x": 100, "z": 92 },
+        { "x": 100, "z": 108 },
+        { "x": 92, "z": 100 },
+        { "x": 108, "z": 100 }
+      ]
+    }
+  ],
+  "victory": {
+    "type": "elimination",
+    "key_structures": ["barracks"],
+    "defeat_conditions": ["no_key_structures"]
+  }
+}
