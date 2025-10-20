@@ -114,7 +114,7 @@ Item {
                 spacing: Theme.spacingMedium
 
                 Label {
-                    text: "Load Game"
+                    text: qsTr("Load Game")
                     color: Theme.textMain
                     font.pointSize: Theme.fontSizeHero
                     font.bold: true
@@ -122,7 +122,7 @@ Item {
                 }
 
                 Button {
-                    text: "Cancel"
+                    text: qsTr("Cancel")
                     onClicked: root.cancelled()
                 }
 
@@ -161,7 +161,7 @@ Item {
                                 clear();
                                 if (typeof game === 'undefined' || !game.getSaveSlots) {
                                     append({
-                                        "slotName": "No saves found",
+                                        "slotName": qsTr("No saves found"),
                                         "title": "",
                                         "timestamp": 0,
                                         "mapName": "",
@@ -185,7 +185,7 @@ Item {
                                 }
                                 if (count === 0)
                                     append({
-                                    "slotName": "No saves found",
+                                    "slotName": qsTr("No saves found"),
                                     "title": "",
                                     "timestamp": 0,
                                     "mapName": "",
@@ -240,7 +240,7 @@ Item {
                                     Label {
                                         anchors.centerIn: parent
                                         visible: !loadThumbnailImage.visible
-                                        text: "No Preview"
+                                        text: qsTr("No Preview")
                                         color: Theme.textHint
                                         font.pointSize: Theme.fontSizeTiny
                                     }
@@ -262,7 +262,7 @@ Item {
                                     }
 
                                     Label {
-                                        text: "Slot: " + model.slotName
+                                        text: qsTr("Slot: %1").arg(model.slotName)
                                         color: Theme.textSub
                                         font.pointSize: Theme.fontSizeSmall
                                         Layout.fillWidth: true
@@ -282,7 +282,7 @@ Item {
                                         spacing: Theme.spacingLarge
 
                                         Label {
-                                            text: "Last saved: " + Qt.formatDateTime(new Date(model.timestamp), "yyyy-MM-dd hh:mm:ss")
+                                            text: qsTr("Last saved: %1").arg(Qt.formatDateTime(new Date(model.timestamp), "yyyy-MM-dd hh:mm:ss"))
                                             color: Theme.textHint
                                             font.pointSize: Theme.fontSizeSmall
                                             Layout.fillWidth: true
@@ -290,7 +290,7 @@ Item {
                                         }
 
                                         Label {
-                                            text: model.playTime !== "" ? "Play time: " + model.playTime : ""
+                                            text: model.playTime !== "" ? qsTr("Play time: %1").arg(model.playTime) : ""
                                             color: Theme.textHint
                                             font.pointSize: Theme.fontSizeSmall
                                             visible: model.playTime !== ""
@@ -310,7 +310,7 @@ Item {
                                 }
 
                                 Button {
-                                    text: "Load"
+                                    text: qsTr("Load")
                                     highlighted: true
                                     visible: !model.isEmpty
                                     onClicked: {
@@ -319,7 +319,7 @@ Item {
                                 }
 
                                 Button {
-                                    text: "Delete"
+                                    text: qsTr("Delete")
                                     visible: !model.isEmpty
                                     onClicked: {
                                         confirmDeleteDialog.slotName = model.slotName;
@@ -363,13 +363,13 @@ Item {
                 }
 
                 Label {
-                    text: loadListView.selectedIndex >= 0 && !loadListModel.get(loadListView.selectedIndex).isEmpty ? "Selected: " + loadListModel.get(loadListView.selectedIndex).title : "Select a save to load"
+                    text: loadListView.selectedIndex >= 0 && !loadListModel.get(loadListView.selectedIndex).isEmpty ? qsTr("Selected: %1").arg(loadListModel.get(loadListView.selectedIndex).title) : qsTr("Select a save to load")
                     color: Theme.textSub
                     font.pointSize: Theme.fontSizeMedium
                 }
 
                 Button {
-                    text: "Load Selected"
+                    text: qsTr("Load Selected")
                     enabled: loadListView.selectedIndex >= 0 && !loadListModel.get(loadListView.selectedIndex).isEmpty
                     highlighted: true
                     onClicked: {
@@ -393,7 +393,7 @@ Item {
 
         anchors.centerIn: parent
         width: Math.min(parent.width * 0.5, 400)
-        title: "Confirm Delete"
+        title: qsTr("Confirm Delete")
         modal: true
         standardButtons: Dialog.Yes | Dialog.No
         onAccepted: {
@@ -402,7 +402,7 @@ Item {
                     loadListModel.remove(slotIndex);
                     if (loadListModel.count === 0)
                         loadListModel.append({
-                        "slotName": "No saves found",
+                        "slotName": qsTr("No saves found"),
                         "title": "",
                         "timestamp": 0,
                         "mapName": "",
@@ -430,7 +430,7 @@ Item {
                 Label {
                     id: warningText
 
-                    text: "Are you sure you want to delete the save:\n\"" + confirmDeleteDialog.slotName + "\"?\n\nThis action cannot be undone."
+                    text: qsTr("Are you sure you want to delete the save:\n\"%1\"?\n\nThis action cannot be undone.").arg(confirmDeleteDialog.slotName)
                     color: Theme.textMain
                     wrapMode: Text.WordWrap
                     Layout.fillWidth: true

@@ -15,7 +15,7 @@ ApplicationWindow {
     height: 720
     visibility: Window.FullScreen
     visible: true
-    title: "Standard of Iron - RTS Game"
+    title: qsTr("Standard of Iron - RTS Game")
 
     GameView {
         id: gameViewItem
@@ -89,7 +89,7 @@ ApplicationWindow {
                 spacing: 20
 
                 Text {
-                    text: "PAUSED"
+                    text: qsTr("PAUSED")
                     color: "#ecf0f1"
                     font.pixelSize: 36
                     font.bold: true
@@ -97,7 +97,7 @@ ApplicationWindow {
                 }
 
                 Text {
-                    text: "Press Space to resume"
+                    text: qsTr("Press Space to resume")
                     color: "#bdc3c7"
                     font.pixelSize: 14
                     anchors.horizontalCenter: parent.horizontalCenter

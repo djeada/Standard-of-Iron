@@ -55,7 +55,7 @@ Rectangle {
                 id: victoryText
 
                 anchors.horizontalCenter: parent.horizontalCenter
-                text: (typeof game !== 'undefined' && game.victoryState === "victory") ? "VICTORY!" : "DEFEAT"
+                text: (typeof game !== 'undefined' && game.victoryState === "victory") ? qsTr("VICTORY!") : qsTr("DEFEAT")
                 color: (typeof game !== 'undefined' && game.victoryState === "victory") ? "#27ae60" : "#e74c3c"
                 font.pointSize: 48
                 font.bold: true
@@ -63,14 +63,14 @@ Rectangle {
 
             Text {
                 anchors.horizontalCenter: parent.horizontalCenter
-                text: (typeof game !== 'undefined' && game.victoryState === "victory") ? "Enemy barracks destroyed!" : "Your barracks was destroyed!"
+                text: (typeof game !== 'undefined' && game.victoryState === "victory") ? qsTr("Enemy barracks destroyed!") : qsTr("Your barracks was destroyed!")
                 color: "white"
                 font.pointSize: 18
             }
 
             Button {
                 anchors.horizontalCenter: parent.horizontalCenter
-                text: "Continue"
+                text: qsTr("Continue")
                 font.pointSize: 14
                 focusPolicy: Qt.NoFocus
                 onClicked: {

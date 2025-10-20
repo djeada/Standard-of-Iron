@@ -131,7 +131,7 @@ Rectangle {
             id: mainTitle
 
             anchors.horizontalCenter: parent.horizontalCenter
-            text: isVictory ? "VICTORY!" : "FAILURE!"
+            text: isVictory ? qsTr("VICTORY!") : qsTr("FAILURE!")
             color: "#FFD700"
             font.family: "serif"
             font.pointSize: 64
@@ -275,7 +275,7 @@ Rectangle {
 
                                     Text {
                                         anchors.centerIn: parent
-                                        text: model.isWinner ? "VICTORIOUS" : "DEFEATED"
+                                        text: model.isWinner ? qsTr("VICTORIOUS") : qsTr("DEFEATED")
                                         color: "white"
                                         font.family: "serif"
                                         font.pointSize: 11
@@ -300,7 +300,7 @@ Rectangle {
 
                                     Text {
                                         anchors.horizontalCenter: parent.horizontalCenter
-                                        text: "Kills: " + model.kills
+                                        text: qsTr("Kills: %1").arg(model.kills)
                                         color: "#F5F5DC"
                                         font.family: "serif"
                                         font.pointSize: 13
@@ -311,7 +311,7 @@ Rectangle {
 
                                     Text {
                                         anchors.horizontalCenter: parent.horizontalCenter
-                                        text: "Losses: " + model.losses
+                                        text: qsTr("Losses: %1").arg(model.losses)
                                         color: "#F5F5DC"
                                         font.family: "serif"
                                         font.pointSize: 13
@@ -322,7 +322,7 @@ Rectangle {
 
                                     Text {
                                         anchors.horizontalCenter: parent.horizontalCenter
-                                        text: "Units Trained: " + model.unitsTrained
+                                        text: qsTr("Units Trained: %1").arg(model.unitsTrained)
                                         color: "#F5F5DC"
                                         font.family: "serif"
                                         font.pointSize: 13
@@ -333,7 +333,7 @@ Rectangle {
 
                                     Text {
                                         anchors.horizontalCenter: parent.horizontalCenter
-                                        text: "Villages: " + model.villages
+                                        text: qsTr("Villages: %1").arg(model.villages)
                                         color: "#F5F5DC"
                                         font.family: "serif"
                                         font.pointSize: 13
@@ -344,7 +344,7 @@ Rectangle {
 
                                     Text {
                                         anchors.horizontalCenter: parent.horizontalCenter
-                                        text: "Play Time: " + model.playTime
+                                        text: qsTr("Play Time: %1").arg(model.playTime)
                                         color: "#F5F5DC"
                                         font.family: "serif"
                                         font.pointSize: 13
@@ -368,7 +368,7 @@ Rectangle {
 
                                 Text {
                                     anchors.horizontalCenter: parent.horizontalCenter
-                                    text: "SCORE"
+                                    text: qsTr("SCORE")
                                     color: "#FFD700"
                                     font.family: "serif"
                                     font.pointSize: 15
@@ -480,7 +480,7 @@ Rectangle {
 
                         Text {
                             anchors.centerIn: parent
-                            text: "YOU"
+                            text: qsTr("YOU")
                             color: "#FFD700"
                             font.family: "serif"
                             font.pointSize: 12
@@ -497,7 +497,7 @@ Rectangle {
 
         Button {
             anchors.horizontalCenter: parent.horizontalCenter
-            text: "Return to Menu"
+            text: qsTr("Return to Menu")
             font.pointSize: 16
             font.bold: true
             padding: 12
