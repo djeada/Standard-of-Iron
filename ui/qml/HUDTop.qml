@@ -142,7 +142,7 @@ Item {
                     Layout.alignment: Qt.AlignVCenter
 
                     Label {
-                        text: "Speed:"
+                        text: qsTr("Speed:")
                         visible: !topRoot.compact
                         color: "#ecf0f1"
                         font.pixelSize: 14
@@ -247,7 +247,7 @@ Item {
                     Layout.alignment: Qt.AlignVCenter
 
                     Label {
-                        text: "Camera:"
+                        text: qsTr("Camera:")
                         visible: !topRoot.compact
                         color: "#ecf0f1"
                         font.pixelSize: 14
@@ -261,7 +261,7 @@ Item {
                         Layout.preferredWidth: topRoot.compact ? 44 : 80
                         Layout.preferredHeight: Math.min(34, topPanel.height - 16)
                         checkable: true
-                        text: topRoot.compact ? "\u2609" : "Follow"
+                        text: topRoot.compact ? "\u2609" : qsTr("Follow")
                         font.pixelSize: 13
                         focusPolicy: Qt.NoFocus
                         onToggled: {
@@ -292,7 +292,7 @@ Item {
 
                         Layout.preferredWidth: topRoot.compact ? 44 : 80
                         Layout.preferredHeight: Math.min(34, topPanel.height - 16)
-                        text: topRoot.compact ? "\u21BA" : "Reset"
+                        text: topRoot.compact ? "\u21BA" : qsTr("Reset")
                         font.pixelSize: 13
                         focusPolicy: Qt.NoFocus
                         onClicked: {
@@ -455,7 +455,7 @@ Item {
 
                             Label {
                                 anchors.centerIn: parent
-                                text: "MINIMAP"
+                                text: qsTr("MINIMAP")
                                 color: "#3f5362"
                                 font.pixelSize: 12
                                 font.bold: true
