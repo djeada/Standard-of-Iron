@@ -91,52 +91,63 @@ public:
     float armHeightJitter = (hash01(seed ^ 0xABCDu) - 0.5f) * 0.03f;
     float armAsymmetry = (hash01(seed ^ 0xDEF0u) - 0.5f) * 0.04f;
 
+    const float saddleHeight = -0.12f;
+    const float offsetY = saddleHeight - pose.pelvisPos.y();
+
     if (anim.isAttacking && anim.isMelee) {
       const float attackCycleTime = 0.8f;
       float attackPhase = std::fmod(anim.time * (1.0f / attackCycleTime), 1.0f);
 
-      QVector3D restPos(0.35f, HP::SHOULDER_Y + 0.10f, 0.20f);
-      QVector3D preparePos(0.40f, HP::HEAD_TOP_Y + 0.25f, -0.10f);
-      QVector3D raisedPos(0.38f, HP::HEAD_TOP_Y + 0.30f, 0.05f);
-      QVector3D strikePos(0.45f, HP::SHOULDER_Y - 0.10f, 0.70f);
-      QVector3D recoverPos(0.35f, HP::SHOULDER_Y + 0.05f, 0.30f);
+      QVector3D restPos(0.35f, HP::SHOULDER_Y + 0.10f + offsetY, 0.20f);
+      QVector3D preparePos(0.40f, HP::HEAD_TOP_Y + 0.25f + offsetY, -0.10f);
+      QVector3D raisedPos(0.38f, HP::HEAD_TOP_Y + 0.30f + offsetY, 0.05f);
+      QVector3D strikePos(0.45f, HP::SHOULDER_Y - 0.10f + offsetY, 0.70f);
+      QVector3D recoverPos(0.35f, HP::SHOULDER_Y + 0.05f + offsetY, 0.30f);
 
       if (attackPhase < 0.20f) {
         float t = easeInOutCubic(attackPhase / 0.20f);
         pose.handR = restPos * (1.0f - t) + preparePos * t;
-        pose.handL =
-            QVector3D(-0.28f, HP::SHOULDER_Y - 0.02f - 0.03f * t, 0.10f);
+        pose.handL = QVector3D(
+            -0.28f, HP::SHOULDER_Y - 0.02f - 0.03f * t + offsetY, 0.10f);
       } else if (attackPhase < 0.35f) {
         float t = easeInOutCubic((attackPhase - 0.20f) / 0.15f);
         pose.handR = preparePos * (1.0f - t) + raisedPos * t;
-        pose.handL = QVector3D(-0.28f, HP::SHOULDER_Y - 0.05f, 0.12f);
+        pose.handL = QVector3D(-0.28f, HP::SHOULDER_Y - 0.05f + offsetY, 0.12f);
       } else if (attackPhase < 0.55f) {
         float t = (attackPhase - 0.35f) / 0.20f;
         t = t * t * t;
         pose.handR = raisedPos * (1.0f - t) + strikePos * t;
-        pose.handL =
-            QVector3D(-0.28f, HP::SHOULDER_Y - 0.03f * (1.0f - 0.5f * t),
-                      0.12f + 0.25f * t);
+        pose.handL = QVector3D(
+            -0.28f, HP::SHOULDER_Y - 0.03f * (1.0f - 0.5f * t) + offsetY,
+            0.12f + 0.25f * t);
       } else if (attackPhase < 0.75f) {
         float t = easeInOutCubic((attackPhase - 0.55f) / 0.20f);
         pose.handR = strikePos * (1.0f - t) + recoverPos * t;
-        pose.handL = QVector3D(-0.26f, HP::SHOULDER_Y - 0.015f * (1.0f - t),
-                               lerp(0.37f, 0.15f, t));
+        pose.handL =
+            QVector3D(-0.26f, HP::SHOULDER_Y - 0.015f * (1.0f - t) + offsetY,
+                      lerp(0.37f, 0.15f, t));
       } else {
         float t = smoothstep(0.75f, 1.0f, attackPhase);
         pose.handR = recoverPos * (1.0f - t) + restPos * t;
-        pose.handL = QVector3D(-0.26f - 0.02f * (1.0f - t),
-                               HP::SHOULDER_Y + armHeightJitter * (1.0f - t),
-                               lerp(0.15f, 0.10f, t));
+        pose.handL =
+            QVector3D(-0.26f - 0.02f * (1.0f - t),
+                      HP::SHOULDER_Y + armHeightJitter * (1.0f - t) + offsetY,
+                      lerp(0.15f, 0.10f, t));
       }
     } else {
-      pose.handR = QVector3D(0.35f + armAsymmetry,
-                             HP::SHOULDER_Y + 0.00f + armHeightJitter, 0.40f);
-      pose.handL = QVector3D(-0.28f - 0.5f * armAsymmetry,
-                             HP::SHOULDER_Y + 0.5f * armHeightJitter, 0.12f);
+      pose.handR =
+          QVector3D(0.35f + armAsymmetry,
+                    HP::SHOULDER_Y + 0.00f + armHeightJitter + offsetY, 0.40f);
+      pose.handL =
+          QVector3D(-0.28f - 0.5f * armAsymmetry,
+                    HP::SHOULDER_Y + 0.5f * armHeightJitter + offsetY, 0.12f);
     }
 
-    pose.pelvisPos.setY(-0.12f);
+    pose.headPos.setY(pose.headPos.y() + offsetY);
+    pose.neckBase.setY(pose.neckBase.y() + offsetY);
+    pose.shoulderL.setY(pose.shoulderL.y() + offsetY);
+    pose.shoulderR.setY(pose.shoulderR.y() + offsetY);
+    pose.pelvisPos.setY(saddleHeight);
 
     pose.footL.setY(-0.22f);
     pose.footR.setY(-0.22f);
