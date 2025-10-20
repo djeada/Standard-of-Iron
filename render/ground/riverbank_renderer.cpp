@@ -15,13 +15,26 @@ RiverbankRenderer::~RiverbankRenderer() = default;
 void RiverbankRenderer::configure(
     const std::vector<Game::Map::RiverSegment> &riverSegments,
     const Game::Map::TerrainHeightMap &heightMap) {
-  qDebug() << "RiverbankRenderer::configure called with" << riverSegments.size() << "river segments";
+  qWarning() << "========================================";
+  qWarning() << "RiverbankRenderer::configure called with" << riverSegments.size() << "river segments";
+  if (riverSegments.empty()) {
+    qWarning() << "  WARNING: No river segments provided to riverbank renderer!";
+  } else {
+    for (size_t i = 0; i < riverSegments.size() && i < 3; ++i) {
+      qWarning() << "  Segment" << i << ":" 
+                 << "start=" << riverSegments[i].start
+                 << "end=" << riverSegments[i].end
+                 << "width=" << riverSegments[i].width;
+    }
+  }
   m_riverSegments = riverSegments;
   m_tileSize = heightMap.getTileSize();
   m_gridWidth = heightMap.getWidth();
   m_gridHeight = heightMap.getHeight();
   m_heights = heightMap.getHeightData();
-  qDebug() << "  Grid size:" << m_gridWidth << "x" << m_gridHeight << "tile size:" << m_tileSize;
+  qWarning() << "  Grid size:" << m_gridWidth << "x" << m_gridHeight << "tile size:" << m_tileSize;
+  qWarning() << "  Height data size:" << m_heights.size();
+  qWarning() << "========================================";
   buildMeshes();
 }
 
@@ -236,6 +249,8 @@ void RiverbankRenderer::buildMeshes() {
 
 void RiverbankRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   static int callCount = 0;
+  static bool configureWarned = false;
+  
   if (callCount < 5) {
     qDebug() << "RiverbankRenderer::submit called (call" << callCount << ")";
     callCount++;
@@ -243,8 +258,12 @@ void RiverbankRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   
   if (!m_mesh || m_riverSegments.empty()) {
     if (callCount <= 5) {
-      qDebug() << "  Skipping: mesh=" << (m_mesh ? "exists" : "null") 
-               << "segments=" << m_riverSegments.size();
+      qWarning() << "  Skipping: mesh=" << (m_mesh ? "exists" : "null") 
+                 << "segments=" << m_riverSegments.size();
+      if (!configureWarned && callCount == 5) {
+        qWarning() << "  NOTE: If configure() was never called, check map loading code!";
+        configureWarned = true;
+      }
     }
     return;
   }
