@@ -1407,8 +1407,6 @@ void GameEngine::restoreEnvironmentFromMetadata(const QJsonObject &metadata) {
         m_terrain->configure(*heightMap, terrainService.biomeSettings());
       }
       if (m_river) {
-        qDebug() << "GameEngine: Configuring river renderer with"
-                 << heightMap->getRiverSegments().size() << "segments";
         m_river->configure(heightMap->getRiverSegments(),
                            heightMap->getTileSize());
       }

@@ -241,9 +241,6 @@ SkirmishLoadResult SkirmishLoader::start(const QString &mapPath,
 
   if (m_river) {
     if (terrainService.isInitialized() && terrainService.getHeightMap()) {
-      qDebug() << "SkirmishLoader: Configuring river renderer with"
-               << terrainService.getHeightMap()->getRiverSegments().size()
-               << "segments";
       m_river->configure(terrainService.getHeightMap()->getRiverSegments(),
                          terrainService.getHeightMap()->getTileSize());
     }
@@ -251,9 +248,6 @@ SkirmishLoadResult SkirmishLoader::start(const QString &mapPath,
 
   if (m_bridge) {
     if (terrainService.isInitialized() && terrainService.getHeightMap()) {
-      qDebug() << "SkirmishLoader: Configuring bridge renderer with"
-               << terrainService.getHeightMap()->getBridges().size()
-               << "bridges";
       m_bridge->configure(terrainService.getHeightMap()->getBridges(),
                           terrainService.getHeightMap()->getTileSize());
     }
