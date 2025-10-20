@@ -18,7 +18,7 @@ public:
   ~RiverbankRenderer();
 
   void configure(const std::vector<Game::Map::RiverSegment> &riverSegments,
-                 float tileSize);
+                 const Game::Map::TerrainHeightMap &heightMap);
 
   void submit(Renderer &renderer, ResourceManager *resources) override;
 
@@ -27,6 +27,9 @@ private:
 
   std::vector<Game::Map::RiverSegment> m_riverSegments;
   float m_tileSize = 1.0f;
+  int m_gridWidth = 0;
+  int m_gridHeight = 0;
+  std::vector<float> m_heights;
   std::unique_ptr<Mesh> m_mesh;
 };
 
