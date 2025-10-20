@@ -516,7 +516,6 @@ void TerrainHeightMap::addRiverSegments(
 
 void TerrainHeightMap::addBridges(const std::vector<Bridge> &bridges) {
   m_bridges = bridges;
-  qDebug() << "TerrainHeightMap: Added" << bridges.size() << "bridges";
 
   const float gridHalfWidth = m_width * 0.5f - 0.5f;
   const float gridHalfHeight = m_height * 0.5f - 0.5f;
@@ -576,8 +575,6 @@ void TerrainHeightMap::addBridges(const std::vector<Bridge> &bridges) {
       }
     }
   }
-
-  qDebug() << "TerrainHeightMap: Bridges configured - areas are now walkable";
 }
 
 } // namespace Game::Map

@@ -263,7 +263,6 @@ static void readTerrain(const QJsonArray &arr, std::vector<TerrainFeature> &out,
 
 static void readRivers(const QJsonArray &arr, std::vector<RiverSegment> &out,
                        const GridDefinition &grid, CoordSystem coordSys) {
-  qDebug() << "readRivers: Processing" << arr.size() << "river segments";
   out.clear();
   out.reserve(arr.size());
 
@@ -309,16 +308,12 @@ static void readRivers(const QJsonArray &arr, std::vector<RiverSegment> &out,
       segment.width = float(o.value("width").toDouble(2.0));
     }
 
-    qDebug() << "  River segment: start=" << segment.start
-             << "end=" << segment.end << "width=" << segment.width;
     out.push_back(segment);
   }
-  qDebug() << "readRivers: Loaded" << out.size() << "river segments";
 }
 
 static void readBridges(const QJsonArray &arr, std::vector<Bridge> &out,
                         const GridDefinition &grid, CoordSystem coordSys) {
-  qDebug() << "readBridges: Processing" << arr.size() << "bridges";
   out.clear();
   out.reserve(arr.size());
 
@@ -368,11 +363,8 @@ static void readBridges(const QJsonArray &arr, std::vector<Bridge> &out,
       bridge.height = float(o.value("height").toDouble(0.5));
     }
 
-    qDebug() << "  Bridge: start=" << bridge.start << "end=" << bridge.end
-             << "width=" << bridge.width;
     out.push_back(bridge);
   }
-  qDebug() << "readBridges: Loaded" << out.size() << "bridges";
 }
 
 bool MapLoader::loadFromJsonFile(const QString &path, MapDefinition &outMap,
