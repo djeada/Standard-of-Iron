@@ -97,7 +97,7 @@ void RiverbankRenderer::buildMeshes() {
     float halfWidth = segment.width * 0.5f;
     
     // Riverbank transition zone width (extends beyond water edge)
-    float bankWidth = 0.6f;
+    float bankWidth = 0.2f;
 
     int lengthSteps =
         static_cast<int>(std::ceil(length / (m_tileSize * 0.5f))) + 1;
