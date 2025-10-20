@@ -53,7 +53,7 @@ Rectangle {
 
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter
-                        text: "PRODUCTION QUEUE"
+                        text: qsTr("PRODUCTION QUEUE")
                         color: "#3498db"
                         font.pointSize: 8
                         font.bold: true
@@ -207,7 +207,7 @@ Rectangle {
 
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter
-                        text: "Units Produced: " + (productionContent.prod.producedCount || 0) + " / " + (productionContent.prod.maxUnits || 0)
+                        text: qsTr("Units Produced: %1 / %2").arg(productionContent.prod.producedCount || 0).arg(productionContent.prod.maxUnits || 0)
                         color: (productionContent.prod.producedCount >= productionContent.prod.maxUnits) ? "#e74c3c" : "#bdc3c7"
                         font.pointSize: 8
                     }
@@ -240,7 +240,7 @@ Rectangle {
 
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter
-                        text: "RECRUIT UNITS"
+                        text: qsTr("RECRUIT UNITS")
                         color: "#3498db"
                         font.pointSize: 8
                         font.bold: true
@@ -277,7 +277,7 @@ Rectangle {
 
                                 Text {
                                     anchors.horizontalCenter: parent.horizontalCenter
-                                    text: "Archer"
+                                    text: qsTr("Archer")
                                     color: parent.parent.parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
                                     font.pointSize: 10
                                     font.bold: true
@@ -313,7 +313,7 @@ Rectangle {
                                 onClicked: productionPanel.recruitUnit("archer")
                                 cursorShape: parent.isEnabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
-                                ToolTip.text: parent.isEnabled ? "Recruit Archer\nCost: " + (unitGridContent.prod.villagerCost || 1) + " villagers\nBuild time: " + (unitGridContent.prod.buildTime || 0).toFixed(0) + "s" : (parent.queueTotal >= 5 ? "Queue is full (5/5)" : (unitGridContent.prod.producedCount >= unitGridContent.prod.maxUnits ? "Unit cap reached" : "Cannot recruit"))
+                                ToolTip.text: parent.isEnabled ? qsTr("Recruit Archer\nCost: %1 villagers\nBuild time: %2s").arg(unitGridContent.prod.villagerCost || 1).arg((unitGridContent.prod.buildTime || 0).toFixed(0)) : (parent.queueTotal >= 5 ? qsTr("Queue is full (5/5)") : (unitGridContent.prod.producedCount >= unitGridContent.prod.maxUnits ? qsTr("Unit cap reached") : qsTr("Cannot recruit")))
                                 ToolTip.delay: 300
                             }
 
@@ -351,7 +351,7 @@ Rectangle {
 
                                 Text {
                                     anchors.horizontalCenter: parent.horizontalCenter
-                                    text: "Knight"
+                                    text: qsTr("Knight")
                                     color: parent.parent.parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
                                     font.pointSize: 10
                                     font.bold: true
@@ -387,7 +387,7 @@ Rectangle {
                                 onClicked: productionPanel.recruitUnit("knight")
                                 cursorShape: parent.isEnabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
-                                ToolTip.text: parent.isEnabled ? "Recruit Knight\nCost: " + (unitGridContent.prod.villagerCost || 1) + " villagers\nBuild time: " + (unitGridContent.prod.buildTime || 0).toFixed(0) + "s" : (parent.queueTotal >= 5 ? "Queue is full (5/5)" : (unitGridContent.prod.producedCount >= unitGridContent.prod.maxUnits ? "Unit cap reached" : "Cannot recruit"))
+                                ToolTip.text: parent.isEnabled ? qsTr("Recruit Knight\nCost: %1 villagers\nBuild time: %2s").arg(unitGridContent.prod.villagerCost || 1).arg((unitGridContent.prod.buildTime || 0).toFixed(0)) : (parent.queueTotal >= 5 ? qsTr("Queue is full (5/5)") : (unitGridContent.prod.producedCount >= unitGridContent.prod.maxUnits ? qsTr("Unit cap reached") : qsTr("Cannot recruit")))
                                 ToolTip.delay: 300
                             }
 
@@ -425,7 +425,7 @@ Rectangle {
 
                                 Text {
                                     anchors.horizontalCenter: parent.horizontalCenter
-                                    text: "Spearman"
+                                    text: qsTr("Spearman")
                                     color: parent.parent.parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
                                     font.pointSize: 10
                                     font.bold: true
@@ -461,7 +461,7 @@ Rectangle {
                                 onClicked: productionPanel.recruitUnit("spearman")
                                 cursorShape: parent.isEnabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
-                                ToolTip.text: parent.isEnabled ? "Recruit Spearman\nCost: " + (unitGridContent.prod.villagerCost || 1) + " villagers\nBuild time: " + (unitGridContent.prod.buildTime || 0).toFixed(0) + "s" : (parent.queueTotal >= 5 ? "Queue is full (5/5)" : (unitGridContent.prod.producedCount >= unitGridContent.prod.maxUnits ? "Unit cap reached" : "Cannot recruit"))
+                                ToolTip.text: parent.isEnabled ? qsTr("Recruit Spearman\nCost: %1 villagers\nBuild time: %2s").arg(unitGridContent.prod.villagerCost || 1).arg((unitGridContent.prod.buildTime || 0).toFixed(0)) : (parent.queueTotal >= 5 ? qsTr("Queue is full (5/5)") : (unitGridContent.prod.producedCount >= unitGridContent.prod.maxUnits ? qsTr("Unit cap reached") : qsTr("Cannot recruit")))
                                 ToolTip.delay: 300
                             }
 
@@ -515,12 +515,12 @@ Rectangle {
                         anchors.horizontalCenter: parent.horizontalCenter
                         width: parent.parent.width - 20
                         height: 32
-                        text: (typeof gameView !== 'undefined' && gameView.setRallyMode) ? "📍 Click Map to Set Rally" : "📍 Set Rally Point"
+                        text: (typeof gameView !== 'undefined' && gameView.setRallyMode) ? qsTr("📍 Click Map to Set Rally") : qsTr("📍 Set Rally Point")
                         focusPolicy: Qt.NoFocus
                         enabled: rallyContent.prod.hasBarracks
                         onClicked: productionPanel.rallyModeToggled()
                         ToolTip.visible: hovered
-                        ToolTip.text: "Set where newly recruited units will gather.\nRight-click to cancel."
+                        ToolTip.text: qsTr("Set where newly recruited units will gather.\nRight-click to cancel.")
                         ToolTip.delay: 500
 
                         background: Rectangle {
@@ -543,7 +543,7 @@ Rectangle {
 
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter
-                        text: (typeof gameView !== 'undefined' && gameView.setRallyMode) ? "Right-click to cancel" : ""
+                        text: (typeof gameView !== 'undefined' && gameView.setRallyMode) ? qsTr("Right-click to cancel") : ""
                         color: "#7f8c8d"
                         font.pointSize: 8
                         font.italic: true
@@ -580,7 +580,7 @@ Rectangle {
 
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter
-                        text: "No Barracks Selected"
+                        text: qsTr("No Barracks Selected")
                         color: "#7f8c8d"
                         font.pointSize: 11
                         font.bold: true
@@ -588,7 +588,7 @@ Rectangle {
 
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter
-                        text: "Select a barracks to recruit units"
+                        text: qsTr("Select a barracks to recruit units")
                         color: "#5a6c7d"
                         font.pointSize: 9
                     }
