@@ -150,7 +150,7 @@ void RiverbankRenderer::buildMeshes() {
       float heightOuterLeft = sampleHeight(outerLeft.x(), outerLeft.z());
       
       leftInner.position[0] = innerLeft.x();
-      leftInner.position[1] = heightInnerLeft + 0.01f; // Slightly above terrain
+      leftInner.position[1] = heightInnerLeft + 0.05f; // Slightly above terrain
       leftInner.position[2] = innerLeft.z();
       leftInner.normal[0] = normal[0];
       leftInner.normal[1] = normal[1];
@@ -160,7 +160,7 @@ void RiverbankRenderer::buildMeshes() {
       vertices.push_back(leftInner);
 
       leftOuter.position[0] = outerLeft.x();
-      leftOuter.position[1] = heightOuterLeft + 0.01f;
+      leftOuter.position[1] = heightOuterLeft + 0.05f;
       leftOuter.position[2] = outerLeft.z();
       leftOuter.normal[0] = normal[0];
       leftOuter.normal[1] = normal[1];
@@ -175,7 +175,7 @@ void RiverbankRenderer::buildMeshes() {
       float heightOuterRight = sampleHeight(outerRight.x(), outerRight.z());
       
       rightInner.position[0] = innerRight.x();
-      rightInner.position[1] = heightInnerRight + 0.01f;
+      rightInner.position[1] = heightInnerRight + 0.05f;
       rightInner.position[2] = innerRight.z();
       rightInner.normal[0] = normal[0];
       rightInner.normal[1] = normal[1];
@@ -185,7 +185,7 @@ void RiverbankRenderer::buildMeshes() {
       vertices.push_back(rightInner);
 
       rightOuter.position[0] = outerRight.x();
-      rightOuter.position[1] = heightOuterRight + 0.01f;
+      rightOuter.position[1] = heightOuterRight + 0.05f;
       rightOuter.position[2] = outerRight.z();
       rightOuter.normal[0] = normal[0];
       rightOuter.normal[1] = normal[1];
