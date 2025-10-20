@@ -2,7 +2,6 @@
 #include "../gl/mesh.h"
 #include "../gl/resources.h"
 #include "../scene_renderer.h"
-#include <QDebug>
 #include <QVector2D>
 #include <QVector3D>
 #include <cmath>
@@ -15,38 +14,20 @@ RiverbankRenderer::~RiverbankRenderer() = default;
 void RiverbankRenderer::configure(
     const std::vector<Game::Map::RiverSegment> &riverSegments,
     const Game::Map::TerrainHeightMap &heightMap) {
-  qWarning() << "========================================";
-  qWarning() << "RiverbankRenderer::configure called with" << riverSegments.size() << "river segments";
-  if (riverSegments.empty()) {
-    qWarning() << "  WARNING: No river segments provided to riverbank renderer!";
-  } else {
-    for (size_t i = 0; i < riverSegments.size() && i < 3; ++i) {
-      qWarning() << "  Segment" << i << ":" 
-                 << "start=" << riverSegments[i].start
-                 << "end=" << riverSegments[i].end
-                 << "width=" << riverSegments[i].width;
-    }
-  }
   m_riverSegments = riverSegments;
   m_tileSize = heightMap.getTileSize();
   m_gridWidth = heightMap.getWidth();
   m_gridHeight = heightMap.getHeight();
   m_heights = heightMap.getHeightData();
-  qWarning() << "  Grid size:" << m_gridWidth << "x" << m_gridHeight << "tile size:" << m_tileSize;
-  qWarning() << "  Height data size:" << m_heights.size();
-  qWarning() << "========================================";
   buildMeshes();
 }
 
 void RiverbankRenderer::buildMeshes() {
-  qDebug() << "RiverbankRenderer::buildMeshes called";
   if (m_riverSegments.empty()) {
-    qDebug() << "  No river segments - clearing mesh";
     m_mesh.reset();
     return;
   }
 
-  qDebug() << "  Processing" << m_riverSegments.size() << "river segments";
   std::vector<Vertex> vertices;
   std::vector<unsigned int> indices;
 
@@ -116,7 +97,7 @@ void RiverbankRenderer::buildMeshes() {
     float halfWidth = segment.width * 0.5f;
     
     // Riverbank transition zone width (extends beyond water edge)
-    float bankWidth = 1.2f;
+    float bankWidth = 0.6f;
 
     int lengthSteps =
         static_cast<int>(std::ceil(length / (m_tileSize * 0.5f))) + 1;
@@ -238,33 +219,15 @@ void RiverbankRenderer::buildMeshes() {
   }
 
   if (vertices.empty() || indices.empty()) {
-    qDebug() << "  No vertices or indices generated - clearing mesh";
     m_mesh.reset();
     return;
   }
 
-  qDebug() << "  Created mesh with" << vertices.size() << "vertices and" << indices.size() << "indices";
   m_mesh = std::make_unique<Mesh>(vertices, indices);
 }
 
 void RiverbankRenderer::submit(Renderer &renderer, ResourceManager *resources) {
-  static int callCount = 0;
-  static bool configureWarned = false;
-  
-  if (callCount < 5) {
-    qDebug() << "RiverbankRenderer::submit called (call" << callCount << ")";
-    callCount++;
-  }
-  
   if (!m_mesh || m_riverSegments.empty()) {
-    if (callCount <= 5) {
-      qWarning() << "  Skipping: mesh=" << (m_mesh ? "exists" : "null") 
-                 << "segments=" << m_riverSegments.size();
-      if (!configureWarned && callCount == 5) {
-        qWarning() << "  NOTE: If configure() was never called, check map loading code!";
-        configureWarned = true;
-      }
-    }
     return;
   }
 
@@ -272,16 +235,7 @@ void RiverbankRenderer::submit(Renderer &renderer, ResourceManager *resources) {
 
   auto shader = renderer.getShader("riverbank");
   if (!shader) {
-    static bool warned = false;
-    if (!warned) {
-      qWarning() << "  Riverbank shader not found!";
-      warned = true;
-    }
     return;
-  }
-  
-  if (callCount <= 5) {
-    qDebug() << "  Rendering riverbank with shader";
   }
 
   renderer.setCurrentShader(shader);
