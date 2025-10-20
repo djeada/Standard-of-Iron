@@ -1413,8 +1413,7 @@ void GameEngine::restoreEnvironmentFromMetadata(const QJsonObject &metadata) {
                            heightMap->getTileSize());
       }
       if (m_riverbank) {
-        m_riverbank->configure(heightMap->getRiverSegments(),
-                               heightMap->getTileSize());
+        m_riverbank->configure(heightMap->getRiverSegments(), *heightMap);
       }
       if (m_biome) {
         m_biome->configure(*heightMap, terrainService.biomeSettings());
