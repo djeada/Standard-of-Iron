@@ -12,9 +12,13 @@ RiverbankRenderer::RiverbankRenderer() = default;
 RiverbankRenderer::~RiverbankRenderer() = default;
 
 void RiverbankRenderer::configure(
-    const std::vector<Game::Map::RiverSegment> &riverSegments, float tileSize) {
+    const std::vector<Game::Map::RiverSegment> &riverSegments,
+    const Game::Map::TerrainHeightMap &heightMap) {
   m_riverSegments = riverSegments;
-  m_tileSize = tileSize;
+  m_tileSize = heightMap.getTileSize();
+  m_gridWidth = heightMap.getWidth();
+  m_gridHeight = heightMap.getHeight();
+  m_heights = heightMap.getHeightData();
   buildMeshes();
 }
 
@@ -48,6 +52,37 @@ void RiverbankRenderer::buildMeshes() {
 
     return a * (1.0f - fx) * (1.0f - fy) + b * fx * (1.0f - fy) +
            c * (1.0f - fx) * fy + d * fx * fy;
+  };
+
+  // Helper to sample terrain height at world position
+  auto sampleHeight = [&](float worldX, float worldZ) -> float {
+    if (m_heights.empty() || m_gridWidth == 0 || m_gridHeight == 0)
+      return 0.0f;
+    
+    float halfWidth = m_gridWidth * 0.5f - 0.5f;
+    float halfHeight = m_gridHeight * 0.5f - 0.5f;
+    float gx = (worldX / m_tileSize) + halfWidth;
+    float gz = (worldZ / m_tileSize) + halfHeight;
+    
+    gx = std::clamp(gx, 0.0f, float(m_gridWidth - 1));
+    gz = std::clamp(gz, 0.0f, float(m_gridHeight - 1));
+    
+    int x0 = int(std::floor(gx));
+    int z0 = int(std::floor(gz));
+    int x1 = std::min(x0 + 1, m_gridWidth - 1);
+    int z1 = std::min(z0 + 1, m_gridHeight - 1);
+    
+    float tx = gx - float(x0);
+    float tz = gz - float(z0);
+    
+    float h00 = m_heights[z0 * m_gridWidth + x0];
+    float h10 = m_heights[z0 * m_gridWidth + x1];
+    float h01 = m_heights[z1 * m_gridWidth + x0];
+    float h11 = m_heights[z1 * m_gridWidth + x1];
+    
+    float h0 = h00 * (1.0f - tx) + h10 * tx;
+    float h1 = h01 * (1.0f - tx) + h11 * tx;
+    return h0 * (1.0f - tz) + h1 * tz;
   };
 
   // Create riverbank transition zones on both sides of each river segment
@@ -111,8 +146,11 @@ void RiverbankRenderer::buildMeshes() {
 
       // Left bank strip (4 vertices per segment)
       Vertex leftInner, leftOuter;
+      float heightInnerLeft = sampleHeight(innerLeft.x(), innerLeft.z());
+      float heightOuterLeft = sampleHeight(outerLeft.x(), outerLeft.z());
+      
       leftInner.position[0] = innerLeft.x();
-      leftInner.position[1] = innerLeft.y() + 0.01f; // Slightly above water
+      leftInner.position[1] = heightInnerLeft + 0.01f; // Slightly above terrain
       leftInner.position[2] = innerLeft.z();
       leftInner.normal[0] = normal[0];
       leftInner.normal[1] = normal[1];
@@ -122,7 +160,7 @@ void RiverbankRenderer::buildMeshes() {
       vertices.push_back(leftInner);
 
       leftOuter.position[0] = outerLeft.x();
-      leftOuter.position[1] = outerLeft.y() + 0.01f;
+      leftOuter.position[1] = heightOuterLeft + 0.01f;
       leftOuter.position[2] = outerLeft.z();
       leftOuter.normal[0] = normal[0];
       leftOuter.normal[1] = normal[1];
@@ -133,8 +171,11 @@ void RiverbankRenderer::buildMeshes() {
 
       // Right bank strip
       Vertex rightInner, rightOuter;
+      float heightInnerRight = sampleHeight(innerRight.x(), innerRight.z());
+      float heightOuterRight = sampleHeight(outerRight.x(), outerRight.z());
+      
       rightInner.position[0] = innerRight.x();
-      rightInner.position[1] = innerRight.y() + 0.01f;
+      rightInner.position[1] = heightInnerRight + 0.01f;
       rightInner.position[2] = innerRight.z();
       rightInner.normal[0] = normal[0];
       rightInner.normal[1] = normal[1];
@@ -144,7 +185,7 @@ void RiverbankRenderer::buildMeshes() {
       vertices.push_back(rightInner);
 
       rightOuter.position[0] = outerRight.x();
-      rightOuter.position[1] = outerRight.y() + 0.01f;
+      rightOuter.position[1] = heightOuterRight + 0.01f;
       rightOuter.position[2] = outerRight.z();
       rightOuter.normal[0] = normal[0];
       rightOuter.normal[1] = normal[1];
