@@ -171,8 +171,11 @@ void BridgeRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   auto &visibility = Game::Map::VisibilityService::instance();
   const bool useVisibility = visibility.isInitialized();
 
+  float alpha = 1.0f;
+  QVector3D colorMultiplier(1.0f, 1.0f, 1.0f);
+
   if (useVisibility) {
-    bool anyVisible = false;
+    int maxVisibilityState = 0;
 
     for (const auto &bridge : m_bridges) {
       QVector3D dir = bridge.end - bridge.start;
@@ -182,23 +185,29 @@ void BridgeRenderer::submit(Renderer &renderer, ResourceManager *resources) {
 
       dir.normalize();
 
-      for (int i = 0; i <= 2 && !anyVisible; ++i) {
-        float t = i * 0.5f;
+      int samplesPerBridge = 5;
+      for (int i = 0; i < samplesPerBridge; ++i) {
+        float t =
+            static_cast<float>(i) / static_cast<float>(samplesPerBridge - 1);
         QVector3D pos = bridge.start + dir * (length * t);
 
         if (visibility.isVisibleWorld(pos.x(), pos.z())) {
-          anyVisible = true;
+          maxVisibilityState = 2;
           break;
+        } else if (visibility.isExploredWorld(pos.x(), pos.z())) {
+          maxVisibilityState = std::max(maxVisibilityState, 1);
         }
       }
 
-      if (anyVisible)
+      if (maxVisibilityState == 2)
         break;
     }
 
-    if (!anyVisible) {
-
+    if (maxVisibilityState == 0) {
       return;
+    } else if (maxVisibilityState == 1) {
+      alpha = 0.5f;
+      colorMultiplier = QVector3D(0.4f, 0.4f, 0.45f);
     }
   }
 
@@ -216,8 +225,11 @@ void BridgeRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   model.setToIdentity();
 
   QVector3D stoneColor(0.55f, 0.52f, 0.48f);
+  QVector3D finalColor(stoneColor.x() * colorMultiplier.x(),
+                       stoneColor.y() * colorMultiplier.y(),
+                       stoneColor.z() * colorMultiplier.z());
 
-  renderer.mesh(m_mesh.get(), model, stoneColor, nullptr, 1.0f);
+  renderer.mesh(m_mesh.get(), model, finalColor, nullptr, alpha);
 
   renderer.setCurrentShader(nullptr);
 }
