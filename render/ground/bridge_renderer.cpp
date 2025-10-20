@@ -4,7 +4,6 @@
 #include "../gl/resources.h"
 #include "../scene_renderer.h"
 #include "terrain_gpu.h"
-#include <QDebug>
 #include <QVector2D>
 #include <QVector3D>
 #include <cmath>
