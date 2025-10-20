@@ -1,7 +1,6 @@
 #include "terrain_service.h"
 #include "../systems/building_collision_registry.h"
 #include "map_definition.h"
-#include <QDebug>
 #include <cmath>
 
 namespace Game::Map {
@@ -16,11 +15,7 @@ void TerrainService::initialize(const MapDefinition &mapDef) {
       mapDef.grid.width, mapDef.grid.height, mapDef.grid.tileSize);
 
   m_heightMap->buildFromFeatures(mapDef.terrain);
-  qDebug() << "TerrainService: Adding" << mapDef.rivers.size()
-           << "river segments to height map";
   m_heightMap->addRiverSegments(mapDef.rivers);
-  qDebug() << "TerrainService: Adding" << mapDef.bridges.size()
-           << "bridges to height map";
   m_heightMap->addBridges(mapDef.bridges);
   m_biomeSettings = mapDef.biome;
   m_heightMap->applyBiomeVariation(m_biomeSettings);
