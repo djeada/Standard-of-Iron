@@ -81,7 +81,7 @@ Item {
                     spacing: Theme.spacingSmall
 
                     Label {
-                        text: "STANDARD OF IRON"
+                        text: qsTr("STANDARD OF IRON")
                         color: Theme.textMain
                         font.pointSize: Theme.fontSizeHero
                         font.bold: true
@@ -91,7 +91,7 @@ Item {
                     }
 
                     Label {
-                        text: "A tiny but ambitious RTS"
+                        text: qsTr("A tiny but ambitious RTS")
                         color: Theme.textSub
                         font.pointSize: Theme.fontSizeMedium
                         horizontalAlignment: Text.AlignLeft
@@ -106,32 +106,32 @@ Item {
 
                     ListElement {
                         idStr: "skirmish"
-                        title: "Play — Skirmish"
-                        subtitle: "Select a map and start"
+                        title: QT_TR_NOOP("Play — Skirmish")
+                        subtitle: QT_TR_NOOP("Select a map and start")
                     }
 
                     ListElement {
                         idStr: "save"
-                        title: "Save Game"
-                        subtitle: "Save your current progress"
+                        title: QT_TR_NOOP("Save Game")
+                        subtitle: QT_TR_NOOP("Save your current progress")
                     }
 
                     ListElement {
                         idStr: "load"
-                        title: "Load Game"
-                        subtitle: "Resume a previous game"
+                        title: QT_TR_NOOP("Load Game")
+                        subtitle: QT_TR_NOOP("Resume a previous game")
                     }
 
                     ListElement {
                         idStr: "settings"
-                        title: "Settings"
-                        subtitle: "Adjust graphics & controls"
+                        title: QT_TR_NOOP("Settings")
+                        subtitle: QT_TR_NOOP("Adjust graphics & controls")
                     }
 
                     ListElement {
                         idStr: "exit"
-                        title: "Exit"
-                        subtitle: "Quit the game"
+                        title: QT_TR_NOOP("Exit")
+                        subtitle: QT_TR_NOOP("Quit the game")
                     }
 
                 }
@@ -170,7 +170,7 @@ Item {
                                     spacing: Theme.spacingTiny
 
                                     Text {
-                                        text: model.title
+                                        text: qsTr(model.title)
                                         Layout.fillWidth: true
                                         elide: Text.ElideRight
                                         color: container.selectedIndex === idx ? Theme.textMain : Theme.textBright
@@ -179,7 +179,7 @@ Item {
                                     }
 
                                     Text {
-                                        text: model.subtitle
+                                        text: qsTr(model.subtitle)
                                         Layout.fillWidth: true
                                         elide: Text.ElideRight
                                         color: container.selectedIndex === idx ? Theme.accentBright : Theme.textSubLite
@@ -246,7 +246,7 @@ Item {
                     spacing: Theme.spacingSmall
 
                     Label {
-                        text: "v0.9 — prototype"
+                        text: qsTr("v0.9 — prototype")
                         color: Theme.textDim
                         font.pointSize: Theme.fontSizeSmall
                     }
@@ -292,7 +292,7 @@ Item {
                             spacing: Theme.spacingSmall
 
                             Label {
-                                text: "Featured"
+                                text: qsTr("Featured")
                                 color: Theme.accent
                                 font.pointSize: Theme.fontSizeMedium
                                 Layout.fillWidth: true
@@ -300,7 +300,7 @@ Item {
                             }
 
                             Label {
-                                text: "Skirmish Mode"
+                                text: qsTr("Skirmish Mode")
                                 color: Theme.textMain
                                 font.pointSize: Theme.fontSizeTitle
                                 font.bold: true
@@ -309,7 +309,7 @@ Item {
                             }
 
                             Text {
-                                text: "Pick a map, adjust your forces and jump into battle. Modern controls and responsive UI."
+                                text: qsTr("Pick a map, adjust your forces and jump into battle. Modern controls and responsive UI.")
                                 color: Theme.textSubLite
                                 wrapMode: Text.WordWrap
                                 maximumLineCount: 3
@@ -335,7 +335,7 @@ Item {
                             spacing: Theme.spacingSmall
 
                             Label {
-                                text: "Tips"
+                                text: qsTr("Tips")
                                 color: Theme.accent
                                 font.pointSize: Theme.fontSizeMedium
                                 Layout.fillWidth: true
@@ -343,7 +343,7 @@ Item {
                             }
 
                             Text {
-                                text: "Hover menu items or use Up/Down and Enter to navigate. Play opens map selection."
+                                text: qsTr("Hover menu items or use Up/Down and Enter to navigate. Play opens map selection.")
                                 color: Theme.textSubLite
                                 wrapMode: Text.WordWrap
                                 maximumLineCount: 3
