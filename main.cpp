@@ -12,6 +12,7 @@
 #include <QTextStream>
 
 #include "app/core/game_engine.h"
+#include "app/core/language_manager.h"
 #include "ui/gl_view.h"
 #include "ui/theme.h"
 
@@ -36,9 +37,11 @@ int main(int argc, char *argv[]) {
 
   QGuiApplication app(argc, argv);
 
+  auto languageManager = new LanguageManager();
   auto gameEngine = new GameEngine();
 
   QQmlApplicationEngine engine;
+  engine.rootContext()->setContextProperty("languageManager", languageManager);
   engine.rootContext()->setContextProperty("game", gameEngine);
   engine.addImportPath("qrc:/StandardOfIron/ui/qml");
   qmlRegisterType<GLView>("StandardOfIron", 1, 0, "GLView");
