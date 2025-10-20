@@ -87,6 +87,8 @@ public:
 
   TerrainType getTerrainType(int gridX, int gridZ) const;
 
+  bool isRiverOrNearby(int gridX, int gridZ, int margin = 1) const;
+
   int getWidth() const { return m_width; }
   int getHeight() const { return m_height; }
   float getTileSize() const { return m_tileSize; }
