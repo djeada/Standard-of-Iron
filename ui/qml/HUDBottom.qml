@@ -40,7 +40,7 @@ RowLayout {
 
                 Text {
                     anchors.centerIn: parent
-                    text: "SELECTED UNITS"
+                    text: qsTr("SELECTED UNITS")
                     color: "#3498db"
                     font.pointSize: 10
                     font.bold: true
@@ -154,7 +154,7 @@ RowLayout {
 
             Text {
                 anchors.centerIn: parent
-                text: !bottomRoot.hasMovableUnits ? "◉ Select Troops for Commands" : (bottomRoot.currentCommandMode === "normal" ? "◉ Normal Mode" : bottomRoot.currentCommandMode === "attack" ? "⚔️ ATTACK MODE - Click Enemy" : bottomRoot.currentCommandMode === "guard" ? "🛡️ GUARD MODE - Click Position" : bottomRoot.currentCommandMode === "patrol" ? "🚶 PATROL MODE - Set Waypoints" : "⏹️ STOP COMMAND")
+                text: !bottomRoot.hasMovableUnits ? qsTr("◉ Select Troops for Commands") : (bottomRoot.currentCommandMode === "normal" ? qsTr("◉ Normal Mode") : bottomRoot.currentCommandMode === "attack" ? qsTr("⚔️ ATTACK MODE - Click Enemy") : bottomRoot.currentCommandMode === "guard" ? qsTr("🛡️ GUARD MODE - Click Position") : bottomRoot.currentCommandMode === "patrol" ? qsTr("🚶 PATROL MODE - Set Waypoints") : qsTr("⏹️ STOP COMMAND"))
                 color: !bottomRoot.hasMovableUnits ? "#5a6c7d" : (bottomRoot.currentCommandMode === "normal" ? "#7f8c8d" : (bottomRoot.currentCommandMode === "attack" ? "#ff6b6b" : "#3498db"))
                 font.pointSize: bottomRoot.currentCommandMode === "normal" ? 10 : 11
                 font.bold: bottomRoot.currentCommandMode !== "normal" && bottomRoot.hasMovableUnits
@@ -202,7 +202,7 @@ RowLayout {
             Button {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 38
-                text: "Attack"
+                text: qsTr("Attack")
                 focusPolicy: Qt.NoFocus
                 enabled: bottomRoot.hasMovableUnits
                 checkable: true
@@ -211,7 +211,7 @@ RowLayout {
                     bottomRoot.commandModeChanged(checked ? "attack" : "normal");
                 }
                 ToolTip.visible: hovered
-                ToolTip.text: bottomRoot.hasMovableUnits ? "Attack enemy units or buildings.\nUnits will chase targets." : "Select troops first"
+                ToolTip.text: bottomRoot.hasMovableUnits ? qsTr("Attack enemy units or buildings.\nUnits will chase targets.") : qsTr("Select troops first")
                 ToolTip.delay: 500
 
                 background: Rectangle {
@@ -235,7 +235,7 @@ RowLayout {
             Button {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 38
-                text: "Guard"
+                text: qsTr("Guard")
                 focusPolicy: Qt.NoFocus
                 enabled: bottomRoot.hasMovableUnits
                 checkable: true
@@ -244,7 +244,7 @@ RowLayout {
                     bottomRoot.commandModeChanged(checked ? "guard" : "normal");
                 }
                 ToolTip.visible: hovered
-                ToolTip.text: bottomRoot.hasMovableUnits ? "Guard a position.\nUnits will defend from all sides." : "Select troops first"
+                ToolTip.text: bottomRoot.hasMovableUnits ? qsTr("Guard a position.\nUnits will defend from all sides.") : qsTr("Select troops first")
                 ToolTip.delay: 500
 
                 background: Rectangle {
@@ -268,7 +268,7 @@ RowLayout {
             Button {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 38
-                text: "Patrol"
+                text: qsTr("Patrol")
                 focusPolicy: Qt.NoFocus
                 enabled: bottomRoot.hasMovableUnits
                 checkable: true
@@ -277,7 +277,7 @@ RowLayout {
                     bottomRoot.commandModeChanged(checked ? "patrol" : "normal");
                 }
                 ToolTip.visible: hovered
-                ToolTip.text: bottomRoot.hasMovableUnits ? "Patrol between waypoints.\nClick start and end points." : "Select troops first"
+                ToolTip.text: bottomRoot.hasMovableUnits ? qsTr("Patrol between waypoints.\nClick start and end points.") : qsTr("Select troops first")
                 ToolTip.delay: 500
 
                 background: Rectangle {
@@ -301,7 +301,7 @@ RowLayout {
             Button {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 38
-                text: "Stop"
+                text: qsTr("Stop")
                 focusPolicy: Qt.NoFocus
                 enabled: bottomRoot.hasMovableUnits
                 onClicked: {
@@ -310,7 +310,7 @@ RowLayout {
 
                 }
                 ToolTip.visible: hovered
-                ToolTip.text: bottomRoot.hasMovableUnits ? "Stop all actions immediately" : "Select troops first"
+                ToolTip.text: bottomRoot.hasMovableUnits ? qsTr("Stop all actions immediately") : qsTr("Select troops first")
                 ToolTip.delay: 500
 
                 background: Rectangle {
@@ -341,7 +341,7 @@ RowLayout {
 
                 Layout.fillWidth: true
                 Layout.preferredHeight: 38
-                text: "Hold"
+                text: qsTr("Hold")
                 focusPolicy: Qt.NoFocus
                 enabled: bottomRoot.hasMovableUnits
                 onClicked: {
@@ -350,7 +350,7 @@ RowLayout {
 
                 }
                 ToolTip.visible: hovered
-                ToolTip.text: bottomRoot.hasMovableUnits ? (isHoldActive ? "Exit hold mode (toggle)" : "Hold position and defend") : "Select troops first"
+                ToolTip.text: bottomRoot.hasMovableUnits ? (isHoldActive ? qsTr("Exit hold mode (toggle)") : qsTr("Hold position and defend")) : qsTr("Select troops first")
                 ToolTip.delay: 500
 
                 Connections {

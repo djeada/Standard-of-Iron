@@ -69,7 +69,7 @@ Item {
                 spacing: Theme.spacingMedium
 
                 Label {
-                    text: "Save Game"
+                    text: qsTr("Save Game")
                     color: Theme.textMain
                     font.pointSize: Theme.fontSizeHero
                     font.bold: true
@@ -77,7 +77,7 @@ Item {
                 }
 
                 Button {
-                    text: "Cancel"
+                    text: qsTr("Cancel")
                     onClicked: root.cancelled()
                 }
 
@@ -94,7 +94,7 @@ Item {
                 spacing: Theme.spacingMedium
 
                 Label {
-                    text: "Save Name:"
+                    text: qsTr("Save Name:")
                     color: Theme.textSub
                     font.pointSize: Theme.fontSizeMedium
                 }
@@ -103,7 +103,7 @@ Item {
                     id: saveNameField
 
                     Layout.fillWidth: true
-                    placeholderText: "Enter save name..."
+                    placeholderText: qsTr("Enter save name...")
                     text: "Save_" + Qt.formatDateTime(new Date(), "yyyy-MM-dd_HH-mm")
                     font.pointSize: Theme.fontSizeMedium
                     color: Theme.textMain
@@ -118,7 +118,7 @@ Item {
                 }
 
                 Button {
-                    text: "Save"
+                    text: qsTr("Save")
                     enabled: saveNameField.text.length > 0
                     highlighted: true
                     onClicked: {
@@ -134,7 +134,7 @@ Item {
             }
 
             Label {
-                text: "Existing Saves"
+                text: qsTr("Existing Saves")
                 color: Theme.textSub
                 font.pointSize: Theme.fontSizeMedium
             }
@@ -228,7 +228,7 @@ Item {
                                     Label {
                                         anchors.centerIn: parent
                                         visible: !thumbnailImage.visible
-                                        text: "No Preview"
+                                        text: qsTr("No Preview")
                                         color: Theme.textHint
                                         font.pointSize: Theme.fontSizeTiny
                                     }
@@ -249,7 +249,7 @@ Item {
                                     }
 
                                     Label {
-                                        text: "Slot: " + model.slotName
+                                        text: qsTr("Slot: %1").arg(model.slotName)
                                         color: Theme.textSub
                                         font.pointSize: Theme.fontSizeSmall
                                         Layout.fillWidth: true
@@ -265,7 +265,7 @@ Item {
                                     }
 
                                     Label {
-                                        text: "Last saved: " + Qt.formatDateTime(new Date(model.timestamp), "yyyy-MM-dd hh:mm:ss")
+                                        text: qsTr("Last saved: %1").arg(Qt.formatDateTime(new Date(model.timestamp), "yyyy-MM-dd hh:mm:ss"))
                                         color: Theme.textHint
                                         font.pointSize: Theme.fontSizeSmall
                                         Layout.fillWidth: true
@@ -275,7 +275,7 @@ Item {
                                 }
 
                                 Button {
-                                    text: "Overwrite"
+                                    text: qsTr("Overwrite")
                                     onClicked: {
                                         confirmOverwriteDialog.slotName = model.slotName;
                                         confirmOverwriteDialog.open();
@@ -313,7 +313,7 @@ Item {
 
         anchors.centerIn: parent
         width: Math.min(parent.width * 0.5, 400)
-        title: "Confirm Overwrite"
+        title: qsTr("Confirm Overwrite")
         modal: true
         standardButtons: Dialog.Yes | Dialog.No
         onAccepted: {
@@ -332,7 +332,7 @@ Item {
                 Label {
                     id: warningText
 
-                    text: "Are you sure you want to overwrite the save:\n\"" + confirmOverwriteDialog.slotName + "\"?"
+                    text: qsTr("Are you sure you want to overwrite the save:\n\"%1\"?").arg(confirmOverwriteDialog.slotName)
                     color: Theme.textMain
                     wrapMode: Text.WordWrap
                     Layout.fillWidth: true
