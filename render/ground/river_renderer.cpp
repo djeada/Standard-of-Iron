@@ -16,20 +16,15 @@ void RiverRenderer::configure(
     const std::vector<Game::Map::RiverSegment> &riverSegments, float tileSize) {
   m_riverSegments = riverSegments;
   m_tileSize = tileSize;
-  qDebug() << "RiverRenderer::configure() called with" << riverSegments.size()
-           << "segments, tileSize:" << tileSize;
   buildMeshes();
 }
 
 void RiverRenderer::buildMeshes() {
   if (m_riverSegments.empty()) {
-    qDebug() << "RiverRenderer::buildMeshes() - No river segments to build";
     m_mesh.reset();
     return;
   }
 
-  qDebug() << "RiverRenderer::buildMeshes() - Building meshes for"
-           << m_riverSegments.size() << "river segments";
   std::vector<Vertex> vertices;
   std::vector<unsigned int> indices;
 
@@ -143,19 +138,15 @@ void RiverRenderer::buildMeshes() {
   }
 
   if (vertices.empty() || indices.empty()) {
-    qDebug() << "RiverRenderer::buildMeshes() - No vertices/indices generated";
     m_mesh.reset();
     return;
   }
 
-  qDebug() << "RiverRenderer::buildMeshes() - Created mesh with"
-           << vertices.size() << "vertices and" << indices.size() << "indices";
   m_mesh = std::make_unique<Mesh>(vertices, indices);
 }
 
 void RiverRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   if (!m_mesh || m_riverSegments.empty()) {
-    qDebug() << "RiverRenderer::submit() - No mesh or empty segments, skipping";
     return;
   }
 
@@ -163,7 +154,6 @@ void RiverRenderer::submit(Renderer &renderer, ResourceManager *resources) {
 
   auto shader = renderer.getShader("river");
   if (!shader) {
-    qDebug() << "RiverRenderer::submit() - River shader not found!";
     return;
   }
 
