@@ -353,7 +353,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         break;
       }
 
-      DepthMaskScope depthMask(false);
+      DepthMaskScope depthMask(true);
 
       glEnable(GL_DEPTH_TEST);
       BlendScope blend(true);
