@@ -163,6 +163,30 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
           if (isInRange(attacker, target, range)) {
             bestTarget = target;
 
+            bool isRangedUnit = false;
+            if (attackerAtk && attackerAtk->canRanged &&
+                attackerAtk->currentMode ==
+                    Engine::Core::AttackComponent::CombatMode::Ranged) {
+              isRangedUnit = true;
+            }
+
+            if (isRangedUnit) {
+              auto *movement =
+                  attacker->getComponent<Engine::Core::MovementComponent>();
+              if (movement && movement->hasTarget) {
+                movement->hasTarget = false;
+                movement->vx = 0.0f;
+                movement->vz = 0.0f;
+                movement->path.clear();
+                if (attackerTransform) {
+                  movement->targetX = attackerTransform->position.x;
+                  movement->targetY = attackerTransform->position.z;
+                  movement->goalX = attackerTransform->position.x;
+                  movement->goalY = attackerTransform->position.z;
+                }
+              }
+            }
+
             if (auto *attT =
                     attacker
                         ->getComponent<Engine::Core::TransformComponent>()) {
@@ -188,91 +212,136 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
               continue;
             }
 
-            auto *targetTransform =
-                target->getComponent<Engine::Core::TransformComponent>();
-            auto *attackerTransformComponent =
-                attacker->getComponent<Engine::Core::TransformComponent>();
-            if (targetTransform && attackerTransformComponent) {
-              QVector3D attackerPos(attackerTransformComponent->position.x,
-                                    0.0f,
-                                    attackerTransformComponent->position.z);
-              QVector3D targetPos(targetTransform->position.x, 0.0f,
-                                  targetTransform->position.z);
-              QVector3D desiredPos = targetPos;
-              bool holdPosition = false;
-
-              bool targetIsBuilding =
-                  target->hasComponent<Engine::Core::BuildingComponent>();
-              if (targetIsBuilding) {
-                float scaleX = targetTransform->scale.x;
-                float scaleZ = targetTransform->scale.z;
-                float targetRadius = std::max(scaleX, scaleZ) * 0.5f;
-                QVector3D direction = targetPos - attackerPos;
-                float distanceSq = direction.lengthSquared();
-                if (distanceSq > 0.000001f) {
-                  float distance = std::sqrt(distanceSq);
-                  direction /= distance;
-                  float desiredDistance =
-                      targetRadius + std::max(range - 0.2f, 0.2f);
-                  if (distance > desiredDistance + 0.15f) {
-                    desiredPos = targetPos - direction * desiredDistance;
-                  } else {
-                    holdPosition = true;
-                  }
-                }
-              }
-
-              auto *movement =
-                  attacker->getComponent<Engine::Core::MovementComponent>();
-              if (!movement) {
-                movement =
-                    attacker->addComponent<Engine::Core::MovementComponent>();
-              }
-
-              if (movement) {
-                if (holdPosition) {
-                  movement->hasTarget = false;
-                  movement->vx = 0.0f;
-                  movement->vz = 0.0f;
-                  movement->path.clear();
-                  if (attackerTransformComponent) {
-                    movement->targetX = attackerTransformComponent->position.x;
-                    movement->targetY = attackerTransformComponent->position.z;
-                    movement->goalX = attackerTransformComponent->position.x;
-                    movement->goalY = attackerTransformComponent->position.z;
-                  }
-                } else {
-                  QVector3D plannedTarget(movement->targetX, 0.0f,
-                                          movement->targetY);
-                  if (!movement->path.empty()) {
-                    const auto &finalNode = movement->path.back();
-                    plannedTarget =
-                        QVector3D(finalNode.first, 0.0f, finalNode.second);
-                  }
-
-                  float diffSq = (plannedTarget - desiredPos).lengthSquared();
-                  bool needNewCommand = !movement->pathPending;
-                  if (movement->hasTarget && diffSq <= 0.25f * 0.25f) {
-                    needNewCommand = false;
-                  }
-
-                  if (needNewCommand) {
-                    CommandService::MoveOptions options;
-                    options.clearAttackIntent = false;
-
-                    options.allowDirectFallback = true;
-                    std::vector<Engine::Core::EntityID> unitIds = {
-                        attacker->getId()};
-                    std::vector<QVector3D> moveTargets = {desiredPos};
-                    CommandService::moveUnits(*world, unitIds, moveTargets,
-                                              options);
-                  }
-                }
-              }
+            bool isRangedUnit = false;
+            if (attackerAtk && attackerAtk->canRanged &&
+                attackerAtk->currentMode ==
+                    Engine::Core::AttackComponent::CombatMode::Ranged) {
+              isRangedUnit = true;
             }
 
-            if (isInRange(attacker, target, range)) {
+            bool currentlyInRange = isInRange(attacker, target, range);
+
+            if (isRangedUnit && currentlyInRange) {
+              auto *movement =
+                  attacker->getComponent<Engine::Core::MovementComponent>();
+              if (movement) {
+                movement->hasTarget = false;
+                movement->vx = 0.0f;
+                movement->vz = 0.0f;
+                movement->path.clear();
+                auto *attackerTransformComponent =
+                    attacker->getComponent<Engine::Core::TransformComponent>();
+                if (attackerTransformComponent) {
+                  movement->targetX = attackerTransformComponent->position.x;
+                  movement->targetY = attackerTransformComponent->position.z;
+                  movement->goalX = attackerTransformComponent->position.x;
+                  movement->goalY = attackerTransformComponent->position.z;
+                }
+              }
               bestTarget = target;
+            } else {
+
+              auto *targetTransform =
+                  target->getComponent<Engine::Core::TransformComponent>();
+              auto *attackerTransformComponent =
+                  attacker->getComponent<Engine::Core::TransformComponent>();
+              if (targetTransform && attackerTransformComponent) {
+                QVector3D attackerPos(attackerTransformComponent->position.x,
+                                      0.0f,
+                                      attackerTransformComponent->position.z);
+                QVector3D targetPos(targetTransform->position.x, 0.0f,
+                                    targetTransform->position.z);
+                QVector3D desiredPos = targetPos;
+                bool holdPosition = false;
+
+                bool targetIsBuilding =
+                    target->hasComponent<Engine::Core::BuildingComponent>();
+                if (targetIsBuilding) {
+                  float scaleX = targetTransform->scale.x;
+                  float scaleZ = targetTransform->scale.z;
+                  float targetRadius = std::max(scaleX, scaleZ) * 0.5f;
+                  QVector3D direction = targetPos - attackerPos;
+                  float distanceSq = direction.lengthSquared();
+                  if (distanceSq > 0.000001f) {
+                    float distance = std::sqrt(distanceSq);
+                    direction /= distance;
+                    float desiredDistance =
+                        targetRadius + std::max(range - 0.2f, 0.2f);
+                    if (distance > desiredDistance + 0.15f) {
+                      desiredPos = targetPos - direction * desiredDistance;
+                    } else {
+                      holdPosition = true;
+                    }
+                  }
+                } else if (isRangedUnit) {
+                  QVector3D direction = targetPos - attackerPos;
+                  float distanceSq = direction.lengthSquared();
+                  if (distanceSq > 0.000001f) {
+                    float distance = std::sqrt(distanceSq);
+                    direction /= distance;
+                    float optimalRange = range * 0.85f;
+                    if (distance > optimalRange + 0.5f) {
+                      desiredPos = targetPos - direction * optimalRange;
+                    } else {
+                      holdPosition = true;
+                    }
+                  }
+                }
+
+                auto *movement =
+                    attacker->getComponent<Engine::Core::MovementComponent>();
+                if (!movement) {
+                  movement =
+                      attacker->addComponent<Engine::Core::MovementComponent>();
+                }
+
+                if (movement) {
+                  if (holdPosition) {
+                    movement->hasTarget = false;
+                    movement->vx = 0.0f;
+                    movement->vz = 0.0f;
+                    movement->path.clear();
+                    if (attackerTransformComponent) {
+                      movement->targetX =
+                          attackerTransformComponent->position.x;
+                      movement->targetY =
+                          attackerTransformComponent->position.z;
+                      movement->goalX = attackerTransformComponent->position.x;
+                      movement->goalY = attackerTransformComponent->position.z;
+                    }
+                  } else {
+                    QVector3D plannedTarget(movement->targetX, 0.0f,
+                                            movement->targetY);
+                    if (!movement->path.empty()) {
+                      const auto &finalNode = movement->path.back();
+                      plannedTarget =
+                          QVector3D(finalNode.first, 0.0f, finalNode.second);
+                    }
+
+                    float diffSq = (plannedTarget - desiredPos).lengthSquared();
+                    bool needNewCommand = !movement->pathPending;
+                    if (movement->hasTarget && diffSq <= 0.25f * 0.25f) {
+                      needNewCommand = false;
+                    }
+
+                    if (needNewCommand) {
+                      CommandService::MoveOptions options;
+                      options.clearAttackIntent = false;
+
+                      options.allowDirectFallback = true;
+                      std::vector<Engine::Core::EntityID> unitIds = {
+                          attacker->getId()};
+                      std::vector<QVector3D> moveTargets = {desiredPos};
+                      CommandService::moveUnits(*world, unitIds, moveTargets,
+                                                options);
+                    }
+                  }
+                }
+              }
+
+              if (isInRange(attacker, target, range)) {
+                bestTarget = target;
+              }
             }
           } else {
 
@@ -337,6 +406,30 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
         if (existingTarget->targetId != bestTarget->getId()) {
           existingTarget->targetId = bestTarget->getId();
           existingTarget->shouldChase = false;
+        }
+      }
+
+      bool isRangedUnit = false;
+      if (attackerAtk && attackerAtk->canRanged &&
+          attackerAtk->currentMode ==
+              Engine::Core::AttackComponent::CombatMode::Ranged) {
+        isRangedUnit = true;
+      }
+
+      if (isRangedUnit) {
+        auto *movement =
+            attacker->getComponent<Engine::Core::MovementComponent>();
+        if (movement && movement->hasTarget) {
+          movement->hasTarget = false;
+          movement->vx = 0.0f;
+          movement->vz = 0.0f;
+          movement->path.clear();
+          if (attackerTransform) {
+            movement->targetX = attackerTransform->position.x;
+            movement->targetY = attackerTransform->position.z;
+            movement->goalX = attackerTransform->position.x;
+            movement->goalY = attackerTransform->position.z;
+          }
         }
       }
 
