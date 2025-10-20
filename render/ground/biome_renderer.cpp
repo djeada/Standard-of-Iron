@@ -219,6 +219,24 @@ void BiomeRenderer::generateGrassInstances() {
         m_terrainTypes[normalIdx] == Game::Map::TerrainType::Hill)
       return false;
 
+    if (m_terrainTypes[normalIdx] == Game::Map::TerrainType::River)
+      return false;
+
+    constexpr int kRiverMargin = 1;
+    for (int dz = -kRiverMargin; dz <= kRiverMargin; ++dz) {
+      for (int dx = -kRiverMargin; dx <= kRiverMargin; ++dx) {
+        if (dx == 0 && dz == 0)
+          continue;
+        int nx = ix + dx;
+        int nz = iz + dz;
+        if (nx >= 0 && nx < m_width && nz >= 0 && nz < m_height) {
+          int nIdx = nz * m_width + nx;
+          if (m_terrainTypes[nIdx] == Game::Map::TerrainType::River)
+            return false;
+        }
+      }
+    }
+
     QVector3D normal = normals[normalIdx];
     float slope = 1.0f - std::clamp(normal.y(), 0.0f, 1.0f);
     if (slope > 0.92f)
@@ -302,7 +320,11 @@ void BiomeRenderer::generateGrassInstances() {
           if (m_terrainTypes[idx0] == Game::Map::TerrainType::Mountain ||
               m_terrainTypes[idx1] == Game::Map::TerrainType::Mountain ||
               m_terrainTypes[idx2] == Game::Map::TerrainType::Mountain ||
-              m_terrainTypes[idx3] == Game::Map::TerrainType::Mountain) {
+              m_terrainTypes[idx3] == Game::Map::TerrainType::Mountain ||
+              m_terrainTypes[idx0] == Game::Map::TerrainType::River ||
+              m_terrainTypes[idx1] == Game::Map::TerrainType::River ||
+              m_terrainTypes[idx2] == Game::Map::TerrainType::River ||
+              m_terrainTypes[idx3] == Game::Map::TerrainType::River) {
             mountainCount++;
           } else if (m_terrainTypes[idx0] == Game::Map::TerrainType::Hill ||
                      m_terrainTypes[idx1] == Game::Map::TerrainType::Hill ||
@@ -367,7 +389,8 @@ void BiomeRenderer::generateGrassInstances() {
             int cx = std::clamp(int(std::round(candidateGX)), 0, m_width - 1);
             int cz = std::clamp(int(std::round(candidateGZ)), 0, m_height - 1);
             int centerIdx = cz * m_width + cx;
-            if (m_terrainTypes[centerIdx] == Game::Map::TerrainType::Mountain)
+            if (m_terrainTypes[centerIdx] == Game::Map::TerrainType::Mountain ||
+                m_terrainTypes[centerIdx] == Game::Map::TerrainType::River)
               continue;
 
             QVector3D centerNormal = normals[centerIdx];
@@ -414,7 +437,8 @@ void BiomeRenderer::generateGrassInstances() {
         int idx = z * m_width + x;
 
         if (m_terrainTypes[idx] == Game::Map::TerrainType::Mountain ||
-            m_terrainTypes[idx] == Game::Map::TerrainType::Hill)
+            m_terrainTypes[idx] == Game::Map::TerrainType::Hill ||
+            m_terrainTypes[idx] == Game::Map::TerrainType::River)
           continue;
 
         QVector3D normal = normals[idx];
