@@ -125,10 +125,6 @@ void GlobalStatsRegistry::onBarrackCaptured(
 
   auto &newStats = m_playerStats[event.newOwnerId];
   newStats.barracksOwned++;
-
-  qDebug() << "[Stats] Barrack captured - Previous owner"
-           << event.previousOwnerId << "lost barrack, new owner"
-           << event.newOwnerId << "gained barrack";
 }
 
 void GlobalStatsRegistry::rebuildFromWorld(Engine::Core::World &world) {
