@@ -3,9 +3,9 @@
 #include <QDebug>
 
 LanguageManager::LanguageManager(QObject *parent)
-    : QObject(parent), m_currentLanguage("en"), m_translator(new QTranslator(this)) {
-  m_availableLanguages << "en"
-                       << "de";
+    : QObject(parent), m_currentLanguage("en"),
+      m_translator(new QTranslator(this)) {
+  m_availableLanguages << "en" << "de";
 
 #ifndef DEFAULT_LANG
 #define DEFAULT_LANG "en"
@@ -28,7 +28,8 @@ QStringList LanguageManager::availableLanguages() const {
 }
 
 void LanguageManager::setLanguage(const QString &language) {
-  if (language == m_currentLanguage || !m_availableLanguages.contains(language)) {
+  if (language == m_currentLanguage ||
+      !m_availableLanguages.contains(language)) {
     return;
   }
 
@@ -38,7 +39,8 @@ void LanguageManager::setLanguage(const QString &language) {
 void LanguageManager::loadLanguage(const QString &language) {
   QCoreApplication::removeTranslator(m_translator);
 
-  QString qmFile = QString(":/StandardOfIron/translations/app_%1.qm").arg(language);
+  QString qmFile =
+      QString(":/StandardOfIron/translations/app_%1.qm").arg(language);
 
   if (m_translator->load(qmFile)) {
     QCoreApplication::installTranslator(m_translator);
