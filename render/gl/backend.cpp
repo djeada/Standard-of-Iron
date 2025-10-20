@@ -58,6 +58,7 @@ void Backend::initialize() {
   m_groundShader = m_shaderCache->get(QStringLiteral("ground_plane"));
   m_terrainShader = m_shaderCache->get(QStringLiteral("terrain_chunk"));
   m_riverShader = m_shaderCache->get(QStringLiteral("river"));
+  m_riverbankShader = m_shaderCache->get(QStringLiteral("riverbank"));
   m_bridgeShader = m_shaderCache->get(QStringLiteral("bridge"));
   m_archerShader = m_shaderCache->get(QStringLiteral("archer"));
   m_knightShader = m_shaderCache->get(QStringLiteral("knight"));
@@ -86,6 +87,8 @@ void Backend::initialize() {
     qWarning() << "Backend: terrain shader missing";
   if (!m_riverShader)
     qWarning() << "Backend: river shader missing";
+  if (!m_riverbankShader)
+    qWarning() << "Backend: riverbank shader missing";
   if (!m_bridgeShader)
     qWarning() << "Backend: bridge shader missing";
   if (!m_archerShader)
@@ -109,6 +112,7 @@ void Backend::initialize() {
   cacheGroundUniforms();
   cacheTerrainUniforms();
   cacheRiverUniforms();
+  cacheRiverbankUniforms();
   cacheBridgeUniforms();
   initializeCylinderPipeline();
   initializeFogPipeline();
@@ -643,6 +647,22 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         activeShader->setUniform(m_riverUniforms.projection,
                                  cam.getProjectionMatrix());
         activeShader->setUniform(m_riverUniforms.time, m_animationTime);
+
+        it.mesh->draw();
+        break;
+      }
+
+      if (activeShader == m_riverbankShader) {
+        if (m_lastBoundShader != activeShader) {
+          activeShader->use();
+          m_lastBoundShader = activeShader;
+        }
+
+        activeShader->setUniform(m_riverbankUniforms.model, it.model);
+        activeShader->setUniform(m_riverbankUniforms.view, cam.getViewMatrix());
+        activeShader->setUniform(m_riverbankUniforms.projection,
+                                 cam.getProjectionMatrix());
+        activeShader->setUniform(m_riverbankUniforms.time, m_animationTime);
 
         it.mesh->draw();
         break;
@@ -1257,6 +1277,16 @@ void Backend::cacheRiverUniforms() {
   m_riverUniforms.view = m_riverShader->uniformHandle("view");
   m_riverUniforms.projection = m_riverShader->uniformHandle("projection");
   m_riverUniforms.time = m_riverShader->uniformHandle("time");
+}
+
+void Backend::cacheRiverbankUniforms() {
+  if (!m_riverbankShader)
+    return;
+
+  m_riverbankUniforms.model = m_riverbankShader->uniformHandle("model");
+  m_riverbankUniforms.view = m_riverbankShader->uniformHandle("view");
+  m_riverbankUniforms.projection = m_riverbankShader->uniformHandle("projection");
+  m_riverbankUniforms.time = m_riverbankShader->uniformHandle("time");
 }
 
 void Backend::cacheBridgeUniforms() {
