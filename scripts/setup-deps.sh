@@ -1,15 +1,19 @@
-#!/usr/bin/env bash
-# Standard-of-Iron — dependency checker and auto-installer (Debian/Ubuntu + Arch/Manjaro + macOS/Homebrew)
+#!/ usr / bin / env bash
+#Standard - of - Iron — dependency checker and auto -                          \
+    installer(Debian / Ubuntu + Arch / Manjaro + macOS / Homebrew)
 #
-# Verifies required toolchain and Qt/QML runtime modules and installs any missing ones.
-# Safe to run multiple times. Requires sudo privileges for Linux installation; Homebrew for macOS.
+#Verifies required toolchain and Qt /                                          \
+    QML runtime modules and installs any missing ones.
+#Safe to run multiple times.Requires sudo privileges for Linux installation;   \
+    Homebrew for macOS.
 #
-# Usage:
-#   ./scripts/setup-deps.sh               # interactive install as needed
-#   ./scripts/setup-deps.sh --yes         # non-interactive (assume yes)
-#   ./scripts/setup-deps.sh --dry-run     # show actions without installing
-#   ./scripts/setup-deps.sh --no-install  # only verify, do not install
-#   ./scripts/setup-deps.sh --allow-similar  # allow proceeding on similar distros
+#Usage:
+#./ scripts / setup - deps.sh #interactive install as needed
+#./ scripts / setup - deps.sh -- yes #non - interactive(assume yes)
+#./ scripts / setup - deps.sh -- dry - run #show actions without installing
+#./ scripts / setup - deps.sh -- no - install #only verify, do not install
+#./ scripts / setup - deps.sh -- allow -                                       \
+    similar #allow proceeding on similar distros
 #
 set -euo pipefail
 
@@ -21,7 +25,8 @@ DRY_RUN=false
 NO_INSTALL=false
 ALLOW_SIMILAR=false
 
-for arg in "$@"; do
+for arg in "$@";
+do
   case "$arg" in
     -y|--yes) ASSUME_YES=true ;;
     --dry-run) DRY_RUN=true ;;
@@ -48,39 +53,48 @@ need_cmd() {
 }
 
 semver_ge() {
-  # returns 0 if $1 >= $2
+#returns 0 if $1 >= $2
   local IFS=. a1 a2 a3 b1 b2 b3
-  set -- $1; a1=${1:-0}; a2=${2:-0}; a3=${3:-0}
-  set -- $2; b1=${1:-0}; b2=${2:-0}; b3=${3:-0}
-  if [ "$a1" -gt "$b1" ]; then return 0; fi
-  if [ "$a1" -lt "$b1" ]; then return 1; fi
-  if [ "$a2" -gt "$b2" ]; then return 0; fi
-  if [ "$a2" -lt "$b2" ]; then return 1; fi
-  if [ "$a3" -ge "$b3" ]; then return 0; fi
-  return 1
-}
+  set -- $1; a1=${1:
+    - 0
+  }
+  ;
+  a2 = ${2 : -0};
+  a3 = ${3 : -0} set-- $2;
+  b1 = ${1 : -0};
+  b2 = ${2 : -0};
+  b3 = $ { 3 : -0 }
+  if
+    ["$a1" - gt "$b1"];
+  then return 0;
+  fi if["$a1" - lt "$b1"];
+  then return 1;
+  fi if["$a2" - gt "$b2"];
+  then return 0;
+  fi if["$a2" - lt "$b2"];
+  then return 1;
+  fi if["$a3" - ge "$b3"];
+  then return 0;
+  fi return 1
+  }
 
-is_macos() { [ "$(uname -s)" = "Darwin" ]; }
+  is_macos() { ["$(uname -s)" = "Darwin"]; }
 
-read_os_release() {
-  # shellcheck disable=SC1091
-  if [ -f /etc/os-release ]; then
-    . /etc/os-release
-    echo "ID=${ID:-unknown}"
-    echo "ID_LIKE=${ID_LIKE:-}"
-    echo "PRETTY_NAME=${PRETTY_NAME:-}"
-  else
-    echo "ID=unknown"
-    echo "ID_LIKE="
-    echo "PRETTY_NAME="
-  fi
-}
+  read_os_release() {
+#shellcheck disable = SC1091
+    if
+      [-f / etc / os - release];
+    then./ etc / os - release echo "ID=${ID:-unknown}" echo
+                                   "ID_LIKE=${ID_LIKE:-}" echo
+                                   "PRETTY_NAME=${PRETTY_NAME:-}" else echo
+        "ID=unknown" echo "ID_LIKE=" echo "PRETTY_NAME=" fi
+  }
 
-has_apt()    { command -v apt-get >/dev/null 2>&1; }
-has_pacman() { command -v pacman  >/dev/null 2>&1; }
-has_brew()   { command -v brew    >/dev/null 2>&1; }
+  has_apt() { command - v apt - get > / dev / null 2 > &1; }
+  has_pacman() { command - v pacman > / dev / null 2 > &1; }
+  has_brew() { command - v brew > / dev / null 2 > &1; }
 
-is_deb_family_exact() {
+  is_deb_family_exact() {
   case "$1" in
     ubuntu|debian|linuxmint|pop) return 0 ;;
     *) return 1 ;;
@@ -127,9 +141,9 @@ detect_distro() {
   echo "$id" "$like" "$pretty"
 }
 
-# ===================== Package maps =====================
+#== == == == == == == == == == = Package maps == == == == == == == == == == =
 
-# APT (Debian/Ubuntu) toolchain + GL/Vulkan + formatting tools
+#APT(Debian / Ubuntu) toolchain + GL / Vulkan + formatting tools
 APT_PKGS=(
   build-essential
   cmake
@@ -143,7 +157,7 @@ APT_PKGS=(
   libegl1
 )
 
-# APT Qt6 dev headers/tools (filtered later)
+#APT Qt6 dev headers / tools(filtered later)
 QT6_DEV_PKGS=(
   qt6-base-dev
   qt6-base-dev-tools
@@ -151,9 +165,10 @@ QT6_DEV_PKGS=(
   qt6-declarative-dev-tools
   qt6-tools-dev
   qt6-tools-dev-tools
+  qt6-multimedia-dev
 )
 
-# APT Qt6 QML runtime modules (filtered)
+#APT Qt6 QML runtime modules(filtered)
 QT6_QML_RUN_PKGS=(
   qml6-module-qtqml
   qml6-module-qtquick
@@ -164,7 +179,7 @@ QT6_QML_RUN_PKGS=(
   qml6-module-qtquick-templates
 )
 
-# APT Qt5 fallback (filtered)
+#APT Qt5 fallback(filtered)
 QT5_QML_RUN_PKGS=(
   qml-module-qtqml
   qml-module-qtquick2
@@ -174,9 +189,12 @@ QT5_QML_RUN_PKGS=(
   qtbase5-dev
   qtdeclarative5-dev
   qtdeclarative5-dev-tools
+  qtmultimedia5-dev
+  libqt5multimedia5-plugins
+  qtquickcontrols2-5-dev
 )
 
-# PACMAN (Arch/Manjaro) toolchain + GL/Vulkan + formatting tools
+#PACMAN(Arch / Manjaro) toolchain + GL / Vulkan + formatting tools
 PAC_PKGS=(
   base-devel
   cmake
@@ -190,12 +208,13 @@ PAC_PKGS=(
   vulkan-tools
 )
 
-# PACMAN Qt6 dev / runtime
+#PACMAN Qt6 dev / runtime
 QT6_DEV_PAC=(
   qt6-base
   qt6-declarative
   qt6-tools
   qt6-shadertools
+  qt6-multimedia
 )
 
 QT6_QML_RUN_PAC=(
@@ -203,14 +222,15 @@ QT6_QML_RUN_PAC=(
   qt6-quickcontrols2
 )
 
-# PACMAN Qt5 fallback
+#PACMAN Qt5 fallback
 QT5_QML_RUN_PAC=(
   qt5-base
   qt5-declarative
   qt5-quickcontrols2
+  qt5-multimedia
 )
 
-# ---------- BREW (macOS) ----------
+#-- -- -- -- -- BREW(macOS) -- -- -- -- --
 BREW_PKGS=(
   cmake
   git
@@ -227,7 +247,7 @@ BREW_VK=(
   vulkan-tools
 )
 
-# ===================== APT helpers =====================
+#== == == == == == == == == == = APT helpers == == == == == == == == == == =
 
 apt_pkg_available() { apt-cache show "$1" >/dev/null 2>&1; }
 
@@ -287,7 +307,8 @@ apt_install() {
   fi
 }
 
-# ===================== PACMAN helpers =====================
+#== == == == == == == == == == =                                             \
+      PACMAN helpers == == == == == == == == == == =
 
 pacman_pkg_available() { sudo pacman -Si "$1" >/dev/null 2>&1 || pacman -Si "$1" >/dev/null 2>&1; }
 
@@ -349,7 +370,8 @@ pacman_install() {
   fi
 }
 
-# ===================== BREW helpers (macOS) =====================
+#== == == == == == == == == == =                                             \
+      BREW helpers(macOS) == == == == == == == == == == =
 
 brew_installed() { brew list --versions "$1" >/dev/null 2>&1; }
 
@@ -393,7 +415,7 @@ brew_install() {
 }
 
 post_brew_qt_note() {
-  # qt is keg-only; ensure users have it on PATH or CMake can find it
+#qt is keg - only; ensure users have it on PATH or CMake can find it
   local qp
   qp=$(brew --prefix qt 2>/dev/null || true)
   if [ -n "$qp" ]; then
@@ -412,7 +434,7 @@ post_brew_qt_note() {
   fi
 }
 
-# ===================== Checks =====================
+#== == == == == == == == == == = Checks == == == == == == == == == == =
 
 check_tool_versions() {
   info "Checking toolchain versions"
@@ -426,7 +448,7 @@ check_tool_versions() {
     warn "cmake $cmv (< $MIN_CMAKE) — will attempt to install newer via package manager"
   fi
 
-  # Accept either g++ or clang++ (macOS typically uses clang++)
+#Accept either g++ or clang++(macOS typically uses clang++)
   local CXX_BIN=""
   if command -v g++ >/dev/null 2>&1; then
     CXX_BIN="g++"
@@ -447,7 +469,7 @@ check_tool_versions() {
       warn "g++ $gxv (< $MIN_GXX) — will attempt to install a newer compiler"
     fi
   else
-    # clang++ version parsing (Apple clang prints different format)
+#clang++ version parsing(Apple clang prints different format)
     gxv=$($CXX_BIN --version | head -n1 | sed -E 's/.*version ([0-9]+(\.[0-9]+){0,2}).*/\1/')
     ok "clang++ $gxv (Apple/LLVM) — accepted"
   fi
