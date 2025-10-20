@@ -246,6 +246,13 @@ SkirmishLoadResult SkirmishLoader::start(const QString &mapPath,
     }
   }
 
+  if (m_riverbank) {
+    if (terrainService.isInitialized() && terrainService.getHeightMap()) {
+      m_riverbank->configure(terrainService.getHeightMap()->getRiverSegments(),
+                             *terrainService.getHeightMap());
+    }
+  }
+
   if (m_bridge) {
     if (terrainService.isInitialized() && terrainService.getHeightMap()) {
       m_bridge->configure(terrainService.getHeightMap()->getBridges(),
