@@ -268,7 +268,7 @@ Item {
             Text {
                 id: leftTitle
 
-                text: "Maps"
+                text: qsTr("Maps")
                 color: Theme.textMain
                 font.pixelSize: 20
                 font.bold: true
@@ -483,7 +483,7 @@ Item {
                 visible: list.count === 0 && !mapsLoading
 
                 Text {
-                    text: "No maps available"
+                    text: qsTr("No maps available")
                     color: Theme.textSub
                     font.pixelSize: 14
                     anchors.centerIn: parent
@@ -516,7 +516,7 @@ Item {
                     }
 
                     Text {
-                        text: "Loading maps..."
+                        text: qsTr("Loading maps...")
                         color: Theme.textSub
                         font.pixelSize: 12
                         anchors.horizontalCenter: parent.horizontalCenter
@@ -545,7 +545,7 @@ Item {
             Text {
                 id: breadcrumb
 
-                text: selectedMapData ? "► " + field(selectedMapData, "name") : "Select a map to continue"
+                text: selectedMapData ? qsTr("► %1").arg(field(selectedMapData, "name")) : qsTr("Select a map to continue")
                 color: selectedMapData ? Theme.accent : Theme.textHint
                 font.pixelSize: 13
                 font.italic: !selectedMapData
@@ -593,7 +593,7 @@ Item {
                     }
 
                     Text {
-                        text: "Loading maps..."
+                        text: qsTr("Loading maps...")
                         color: Theme.textSub
                         font.pixelSize: 14
                         anchors.horizontalCenter: parent.horizontalCenter
@@ -700,7 +700,7 @@ Item {
                     }
 
                     Text {
-                        text: "Loading map details..."
+                        text: qsTr("Loading map details...")
                         color: Theme.textHint
                         font.pixelSize: 12
                         font.italic: true
@@ -717,7 +717,7 @@ Item {
                 text: {
                     var it = selectedMapData;
                     var t = field(it, "name");
-                    return t || field(it, "path") || "No Map Selected";
+                    return t || field(it, "path") || qsTr("No Map Selected");
                 }
                 visible: selectedMapData !== null
                 color: Theme.textMain
@@ -783,7 +783,7 @@ Item {
                         spacing: Theme.spacingSmall + 2
 
                         Text {
-                            text: "Players"
+                            text: qsTr("Players")
                             color: Theme.textMain
                             font.pixelSize: 17
                             font.bold: true
@@ -807,7 +807,7 @@ Item {
                         }
 
                         Text {
-                            text: "• Click color/team to cycle"
+                            text: qsTr("• Click color/team to cycle")
                             color: Theme.textSubLite
                             font.pixelSize: 11
                             font.italic: true
@@ -885,7 +885,7 @@ Item {
                                         border.color: model.colorHex || Theme.textDim
                                         border.width: colorMA.containsMouse ? 3 : 2
                                         ToolTip.visible: colorMA.containsMouse
-                                        ToolTip.text: "Player color: " + (model.colorName || "Color") + " - Click to change"
+                                        ToolTip.text: qsTr("Player color: %1 - Click to change").arg(model.colorName || qsTr("Color"))
 
                                         Rectangle {
                                             anchors.fill: parent
@@ -947,7 +947,7 @@ Item {
                                         border.color: teamMA.containsMouse ? Theme.selectedBr : Theme.thumbBr
                                         border.width: teamMA.containsMouse ? 2 : 1
                                         ToolTip.visible: teamMA.containsMouse
-                                        ToolTip.text: "Team " + (model.teamId || 0) + " - Click to change"
+                                        ToolTip.text: qsTr("Team %1 - Click to change").arg(model.teamId || 0)
 
                                         Column {
                                             anchors.centerIn: parent
@@ -963,7 +963,7 @@ Item {
 
                                             Text {
                                                 anchors.horizontalCenter: parent.horizontalCenter
-                                                text: "Team " + (model.teamId || 0)
+                                                text: qsTr("Team %1").arg(model.teamId || 0)
                                                 color: Theme.textBright
                                                 font.pixelSize: 10
                                                 font.bold: true
@@ -1013,7 +1013,7 @@ Item {
                                         border.width: removeMA.containsMouse ? 2 : 1
                                         visible: !model.isHuman
                                         ToolTip.visible: removeMA.containsMouse
-                                        ToolTip.text: "Remove player"
+                                        ToolTip.text: qsTr("Remove player")
 
                                         Text {
                                             anchors.centerIn: parent
@@ -1084,14 +1084,14 @@ Item {
                     }
 
                     Button {
-                        text: "+ Add CPU"
+                        text: qsTr("+ Add CPU")
                         enabled: playersModel.count < (selectedMapData && selectedMapData.playerIds ? selectedMapData.playerIds.length : 0)
                         onClicked: addCPU()
                         hoverEnabled: true
                         implicitHeight: 38
                         implicitWidth: 120
                         ToolTip.visible: addCpuHover.containsMouse && parent.enabled
-                        ToolTip.text: "Add AI opponent"
+                        ToolTip.text: qsTr("Add AI opponent")
 
                         MouseArea {
                             id: addCpuHover
@@ -1321,13 +1321,13 @@ Item {
             }
 
             Button {
-                text: "Back"
+                text: qsTr("Back")
                 onClicked: root.cancelled()
                 hoverEnabled: true
                 implicitHeight: 42
                 implicitWidth: 120
                 ToolTip.visible: backHover.containsMouse
-                ToolTip.text: "Return to main menu (Esc)"
+                ToolTip.text: qsTr("Return to main menu (Esc)")
 
                 anchors {
                     left: parent.left
@@ -1401,14 +1401,14 @@ Item {
             }
 
             Button {
-                text: "Play"
+                text: qsTr("Play")
                 enabled: list.currentIndex >= 0 && list.count > 0 && playersModel.count >= 2
                 onClicked: acceptSelection()
                 hoverEnabled: true
                 implicitHeight: 42
                 implicitWidth: 130
                 ToolTip.visible: playHover.containsMouse && parent.enabled
-                ToolTip.text: "Start game (Enter)"
+                ToolTip.text: qsTr("Start game (Enter)")
 
                 anchors {
                     right: parent.right
