@@ -2,7 +2,6 @@
 #include "../game/core/component.h"
 #include "../game/core/entity.h"
 #include "../game/core/world.h"
-#include "../game/map/terrain_service.h"
 #include "../game/units/troop_config.h"
 #include "../game/visuals/team_colors.h"
 #include "geom/math_utils.h"
@@ -512,14 +511,7 @@ void HumanoidRendererBase::drawSelectionFX(const DrawContext &ctx,
 
     QMatrix4x4 ringM;
     QVector3D pos = ctx.model.column(3).toVector3D();
-
-    float surfaceHeight = pos.y();
-    auto &terrainService = Game::Map::TerrainService::instance();
-    if (terrainService.isInitialized()) {
-      surfaceHeight = terrainService.getTerrainHeight(pos.x(), pos.z());
-    }
-
-    ringM.translate(pos.x(), surfaceHeight + 0.05f, pos.z());
+    ringM.translate(pos.x(), pos.y() + 0.05f, pos.z());
     ringM.scale(ringSize, 1.0f, ringSize);
     if (ctx.selected)
       out.selectionRing(ringM, 0.6f, 0.25f, QVector3D(0.2f, 0.4f, 1.0f));

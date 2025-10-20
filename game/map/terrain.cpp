@@ -537,7 +537,8 @@ void TerrainHeightMap::addBridges(const std::vector<Bridge> &bridges) {
 
       float archCurve = 4.0f * t * (1.0f - t);
       float archHeight = bridge.height * archCurve * 0.8f;
-      float deckHeight = bridge.start.y() + bridge.height + archHeight * 0.5f;
+
+      float deckHeight = bridge.start.y() + bridge.height + archHeight * 0.3f;
 
       float gridCenterX = (centerPos.x() / m_tileSize) + gridHalfWidth;
       float gridCenterZ = (centerPos.z() / m_tileSize) + gridHalfHeight;

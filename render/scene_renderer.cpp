@@ -1,5 +1,4 @@
 #include "scene_renderer.h"
-#include "../game/map/terrain_service.h"
 #include "../game/map/visibility_service.h"
 #include "entity/registry.h"
 #include "game/core/component.h"
@@ -322,15 +321,9 @@ void Renderer::renderWorld(Engine::Core::World *world) {
       Mesh *contactQuad = res->quad();
       Texture *white = res->white();
       if (contactQuad && white) {
-        float surfaceHeight = transform->position.y;
-        auto &terrainService = Game::Map::TerrainService::instance();
-        if (terrainService.isInitialized()) {
-          surfaceHeight = terrainService.getTerrainHeight(
-              transform->position.x, transform->position.z);
-        }
-
         QMatrix4x4 contactBase;
-        contactBase.translate(transform->position.x, surfaceHeight + 0.03f,
+        contactBase.translate(transform->position.x,
+                              transform->position.y + 0.03f,
                               transform->position.z);
         contactBase.rotate(-90.0f, 1.0f, 0.0f, 0.0f);
         float footprint =
