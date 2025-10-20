@@ -2,6 +2,7 @@
 #include "../gl/mesh.h"
 #include "../gl/resources.h"
 #include "../scene_renderer.h"
+#include <QDebug>
 #include <QVector2D>
 #include <QVector3D>
 #include <cmath>
@@ -14,20 +15,25 @@ RiverbankRenderer::~RiverbankRenderer() = default;
 void RiverbankRenderer::configure(
     const std::vector<Game::Map::RiverSegment> &riverSegments,
     const Game::Map::TerrainHeightMap &heightMap) {
+  qDebug() << "RiverbankRenderer::configure called with" << riverSegments.size() << "river segments";
   m_riverSegments = riverSegments;
   m_tileSize = heightMap.getTileSize();
   m_gridWidth = heightMap.getWidth();
   m_gridHeight = heightMap.getHeight();
   m_heights = heightMap.getHeightData();
+  qDebug() << "  Grid size:" << m_gridWidth << "x" << m_gridHeight << "tile size:" << m_tileSize;
   buildMeshes();
 }
 
 void RiverbankRenderer::buildMeshes() {
+  qDebug() << "RiverbankRenderer::buildMeshes called";
   if (m_riverSegments.empty()) {
+    qDebug() << "  No river segments - clearing mesh";
     m_mesh.reset();
     return;
   }
 
+  qDebug() << "  Processing" << m_riverSegments.size() << "river segments";
   std::vector<Vertex> vertices;
   std::vector<unsigned int> indices;
 
@@ -219,15 +225,27 @@ void RiverbankRenderer::buildMeshes() {
   }
 
   if (vertices.empty() || indices.empty()) {
+    qDebug() << "  No vertices or indices generated - clearing mesh";
     m_mesh.reset();
     return;
   }
 
+  qDebug() << "  Created mesh with" << vertices.size() << "vertices and" << indices.size() << "indices";
   m_mesh = std::make_unique<Mesh>(vertices, indices);
 }
 
 void RiverbankRenderer::submit(Renderer &renderer, ResourceManager *resources) {
+  static int callCount = 0;
+  if (callCount < 5) {
+    qDebug() << "RiverbankRenderer::submit called (call" << callCount << ")";
+    callCount++;
+  }
+  
   if (!m_mesh || m_riverSegments.empty()) {
+    if (callCount <= 5) {
+      qDebug() << "  Skipping: mesh=" << (m_mesh ? "exists" : "null") 
+               << "segments=" << m_riverSegments.size();
+    }
     return;
   }
 
@@ -235,7 +253,16 @@ void RiverbankRenderer::submit(Renderer &renderer, ResourceManager *resources) {
 
   auto shader = renderer.getShader("riverbank");
   if (!shader) {
+    static bool warned = false;
+    if (!warned) {
+      qWarning() << "  Riverbank shader not found!";
+      warned = true;
+    }
     return;
+  }
+  
+  if (callCount <= 5) {
+    qDebug() << "  Rendering riverbank with shader";
   }
 
   renderer.setCurrentShader(shader);
