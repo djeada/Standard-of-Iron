@@ -30,6 +30,8 @@ ui_*.h
 Makefile*
 *build-*
 *.qm
+# Exception: keep translation files
+!translations/*.qm
 *.prl
 
 # Qt unit tests
