@@ -1,6 +1,5 @@
 #include "map_loader.h"
 
-#include <QDebug>
 #include <QFile>
 #include <QJsonArray>
 #include <QJsonDocument>

@@ -3,7 +3,6 @@
 #include "../core/world.h"
 #include "../units/troop_config.h"
 #include "owner_registry.h"
-#include <QDebug>
 
 namespace Game::Systems {
 
