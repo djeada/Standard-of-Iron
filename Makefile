@@ -8,6 +8,7 @@
 BUILD_DIR := build
 BINARY_NAME := standard_of_iron
 MAP_EDITOR_BINARY := map_editor
+DEFAULT_LANG ?= en
 
 # Formatting config
 CLANG_FORMAT ?= clang-format
@@ -49,6 +50,7 @@ help:
 	@echo "  make install    # Install dependencies"
 	@echo "  make dev        # Complete development setup"
 	@echo "  make run        # Build and run the game"
+	@echo "  DEFAULT_LANG=de make build  # Build with German as default language"
 
 # Install dependencies
 .PHONY: install
@@ -71,7 +73,7 @@ build-dir:
 .PHONY: configure
 configure: build-dir
 	@echo "$(BOLD)$(BLUE)Configuring build with CMake...$(RESET)"
-	@cd $(BUILD_DIR) && cmake ..
+	@cd $(BUILD_DIR) && cmake -DDEFAULT_LANG=$(DEFAULT_LANG) ..
 	@echo "$(GREEN)✓ Configuration complete$(RESET)"
 
 # Build the project
