@@ -87,6 +87,7 @@ private:
   Shader *m_groundShader = nullptr;
   Shader *m_terrainShader = nullptr;
   Shader *m_riverShader = nullptr;
+  Shader *m_riverbankShader = nullptr;
   Shader *m_bridgeShader = nullptr;
   Shader *m_archerShader = nullptr;
   Shader *m_knightShader = nullptr;
@@ -111,6 +112,13 @@ private:
     Shader::UniformHandle projection{Shader::InvalidUniform};
     Shader::UniformHandle time{Shader::InvalidUniform};
   } m_riverUniforms;
+
+  struct RiverbankUniforms {
+    Shader::UniformHandle model{Shader::InvalidUniform};
+    Shader::UniformHandle view{Shader::InvalidUniform};
+    Shader::UniformHandle projection{Shader::InvalidUniform};
+    Shader::UniformHandle time{Shader::InvalidUniform};
+  } m_riverbankUniforms;
 
   struct BridgeUniforms {
     Shader::UniformHandle mvp{Shader::InvalidUniform};
@@ -296,6 +304,7 @@ private:
   void cacheGroundUniforms();
   void cacheTerrainUniforms();
   void cacheRiverUniforms();
+  void cacheRiverbankUniforms();
   void cacheBridgeUniforms();
 
   Shader *m_lastBoundShader = nullptr;
