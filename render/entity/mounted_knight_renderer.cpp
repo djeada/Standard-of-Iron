@@ -136,8 +136,13 @@ public:
                              HP::SHOULDER_Y + 0.5f * armHeightJitter, 0.12f);
     }
 
-    pose.footL.setY(-0.50f);
-    pose.footR.setY(-0.50f);
+    pose.pelvisPos.setY(-0.12f);
+
+    pose.footL.setY(-0.22f);
+    pose.footR.setY(-0.22f);
+
+    pose.kneeL.setY((pose.pelvisPos.y() + pose.footL.y()) * 0.5f);
+    pose.kneeR.setY((pose.pelvisPos.y() + pose.footR.y()) * 0.5f);
   }
 
   void addAttachments(const DrawContext &ctx, const HumanoidVariant &v,
