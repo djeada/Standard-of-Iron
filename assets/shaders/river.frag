@@ -6,225 +6,136 @@ in vec3 WorldPos;
 uniform float time;
 
 // ------------------------------------------------------------
-// Helpers
-// ------------------------------------------------------------
 const float PI = 3.14159265359;
+float saturate(float x){ return clamp(x, 0.0, 1.0); }
+vec3  saturate(vec3 v){ return clamp(v, vec3(0.0), vec3(1.0)); }
+mat2 rot(float a){ float c=cos(a), s=sin(a); return mat2(c,-s,s,c); }
 
-mat2 rot(float a) {
-  float c = cos(a), s = sin(a);
-  return mat2(c, -s, s, c);
+float hash(vec2 p){ p=fract(p*vec2(123.34,456.21)); p+=dot(p,p+45.32); return fract(p.x*p.y); }
+float noise(vec2 p){ vec2 i=floor(p), f=fract(p); f=f*f*(3.0-2.0*f);
+  float a=hash(i), b=hash(i+vec2(1,0)), c=hash(i+vec2(0,1)), d=hash(i+vec2(1,1));
+  return mix(mix(a,b,f.x), mix(c,d,f.x), f.y);
+}
+float fbm(vec2 p){ float v=0., a=.5, f=1.; for(int i=0;i<5;i++){ v+=a*noise(p*f); f*=2.; a*=.5; } return v; }
+
+vec3 skyColor(vec3 rd, vec3 sunDir){
+  float t = saturate(rd.y*0.5+0.5);
+  vec3 horizon=vec3(0.68,0.84,0.95), zenith=vec3(0.15,0.36,0.70);
+  vec3 sky=mix(horizon,zenith,t);
+  float sun = pow(max(dot(rd,sunDir),0.0), 260.0);
+  float halo= pow(max(dot(rd,sunDir),0.0), 6.0) * 0.03;
+  return sky + vec3(1.0,0.96,0.88) * (sun*1.0 + halo);
+}
+float fresnelSchlick(float c, float F0){ return F0 + (1.0 - F0) * pow(1.0 - c, 5.0); }
+float ggxSpec(vec3 N, vec3 V, vec3 L, float rough, float F0){
+  vec3 H=normalize(V+L);
+  float NdotV=max(dot(N,V),0.0), NdotL=max(dot(N,L),0.0);
+  float NdotH=max(dot(N,H),0.0), VdotH=max(dot(V,H),0.0);
+  float a=max(rough*rough,0.001), a2=a*a;
+  float denom=(NdotH*NdotH*(a2-1.0)+1.0);
+  float D=a2/(PI*denom*denom);
+  float k=(a+1.0); k=(k*k)/8.0;
+  float Gv=NdotV/(NdotV*(1.0-k)+k), Gl=NdotL/(NdotL*(1.0-k)+k);
+  float F=fresnelSchlick(VdotH,F0);
+  return (D*Gv*Gl*F)/max(4.0*NdotV*NdotL,0.001);
 }
 
-// Hash / noise / fbm (kept compatible with original)
-float hash(vec2 p) {
-  p = fract(p * vec2(123.34, 456.21));
-  p += dot(p, p + 45.32);
-  return fract(p.x * p.y);
-}
-
-float noise(vec2 p) {
-  vec2 i = floor(p);
-  vec2 f = fract(p);
-  f = f * f * (3.0 - 2.0 * f);
-  float a = hash(i);
-  float b = hash(i + vec2(1.0, 0.0));
-  float c = hash(i + vec2(0.0, 1.0));
-  float d = hash(i + vec2(1.0, 1.0));
-  return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
-}
-
-float fbm(vec2 p) {
-  float v = 0.0;
-  float a = 0.5;
-  float f = 1.0;
-  for (int i = 0; i < 5; i++) {
-    v += a * noise(p * f);
-    f *= 2.0;
-    a *= 0.5;
-  }
-  return v;
-}
-
-// Lightweight Voronoi for animated caustics
-float voronoi(vec2 p) {
-  vec2 n = floor(p);
-  vec2 f = fract(p);
-  float md = 1.0;
-  for (int j = -1; j <= 1; j++) {
-    for (int i = -1; i <= 1; i++) {
-      vec2 g = vec2(float(i), float(j));
-      vec2 r = vec2(hash(n + g), hash(n + g + 1.37));
-      r = 0.5 + 0.5 * sin(time * 0.5 + 6.2831 * r);
-      vec2 d = g + r - f;
-      md = min(md, length(d));
-    }
-  }
-  return md;
-}
-
-// ------------------------------------------------------------
-// Water surface synthesis (height field only for shading)
-// ------------------------------------------------------------
-
-// Domain warping to break tiling and add turbulence
-vec2 warp(vec2 uv) {
-  vec2 w = vec2(fbm(uv * 0.8 + time * 0.05), fbm(uv * 0.9 - time * 0.04));
-  return uv + 0.25 * w;
-}
-
-// Multi-directional sine/gerstner-ish waves (height only)
-float waveHeight(vec2 uv) {
-  // Three primary swell directions
-  vec2 d1 = normalize(vec2(1.0, 0.3));
-  vec2 d2 = normalize(vec2(-0.6, 1.0));
-  vec2 d3 = normalize(vec2(0.2, 1.0));
-
-  uv = warp(uv);
-
+// ---------------- water field (isotropic, world-space) ---------------
+float waterHeight(vec2 uv){
+  vec2 p = uv;
+  vec2 w1 = vec2(fbm(p*0.6 + time*0.05), fbm(p*0.6 - time*0.04));
+  vec2 w2 = vec2(fbm(rot(1.3)*p*0.9 - time*0.03), fbm(rot(2.1)*p*0.7 + time*0.02));
+  p += 0.75*w1 + 0.45*w2;
   float h = 0.0;
-  float t = time;
-
-  // Long swells
-  h += 0.35 * sin(dot(uv * 1.6, d1) * 6.0 - t * 0.8);
-  h += 0.25 * sin(dot(uv * 1.9, d2) * 7.0 - t * 0.9);
-  // Choppy mid-frequency
-  h += 0.20 * sin(dot(uv * 3.2, d3) * 10.5 - t * 1.6);
-  // Fine ripples via fbm
-  h += 0.10 * (fbm(uv * 4.0 + t * 0.2) - 0.5);
-  h += 0.05 * (fbm(rot(1.2) * uv * 7.0 - t * 0.35) - 0.5);
-
+  h += 0.55 * (fbm(p*1.6 - time*0.15)          - 0.5);
+  h += 0.30 * (fbm(rot(0.8)*p*2.8 + time*0.20) - 0.5);
+  h += 0.15 * (fbm(rot(2.4)*p*5.0 - time*0.35) - 0.5);
   return h;
 }
 
-// Estimate normal from screen-space derivatives of the height field
-vec3 waterNormal(float h) {
-  // Derivatives of height across screen; scale to control "normal strength"
-  float sx = dFdx(h);
-  float sy = dFdy(h);
-  float strength = 8.0; // increase for choppier normals
-  vec3 N = normalize(vec3(-sx * strength, 1.0, -sy * strength));
-  return N;
+void heightDeriv(vec2 uv, out float h, out vec2 grad, out float lap){
+  float s = max(0.003, 0.35 * length(fwidth(uv)));
+  vec2  e = vec2(s);
+  float hc  = waterHeight(uv);
+  float hx1 = waterHeight(uv + vec2(e.x,0));
+  float hx2 = waterHeight(uv - vec2(e.x,0));
+  float hy1 = waterHeight(uv + vec2(0,e.y));
+  float hy2 = waterHeight(uv - vec2(0,e.y));
+  grad = vec2((hx1-hx2)/(2.0*e.x), (hy1-hy2)/(2.0*e.y)) * 0.85;
+  lap  = (hx1+hx2+hy1+hy2-4.0*hc)/(e.x*e.x+e.y*e.y);
+  h = hc;
 }
 
-// Simple sky model for reflections
-vec3 skyColor(vec3 rd, vec3 sunDir) {
-  float t = clamp(rd.y * 0.5 + 0.5, 0.0, 1.0);
-  vec3 horizon = vec3(0.75, 0.85, 0.95);
-  vec3 zenith = vec3(0.20, 0.42, 0.70);
-  vec3 sky = mix(horizon, zenith, t);
-  // Sun glow
-  float sun = pow(max(dot(rd, sunDir), 0.0), 600.0);
-  sky += vec3(1.0, 0.95, 0.85) * sun * 2.5;
-  return sky;
+vec3 microNormal(vec2 uv){
+  float s=7.0;
+  vec2 e = vec2(max(0.0015, 0.5 * length(fwidth(uv))));
+  float mx1=fbm(uv*s+time*0.6+vec2(e.x,0)), mx2=fbm(uv*s+time*0.6-vec2(e.x,0));
+  float my1=fbm(uv*s+time*0.6+vec2(0,e.y)), my2=fbm(uv*s+time*0.6-vec2(0,e.y));
+  vec2 g=vec2((mx1-mx2)/(2.0*e.x), (my1-my2)/(2.0*e.y));
+  return normalize(vec3(-g.x, 0.35, -g.y));
+}
+vec3 waterNormal(vec2 uv, vec2 grad){
+  float k=3.2;
+  vec3 N = normalize(vec3(-grad.x*k, 1.0, -grad.y*k));
+  return normalize(mix(N, normalize(N + 0.22*(microNormal(uv)-vec3(0,1,0))), 0.35));
 }
 
-// Schlick Fresnel
-float fresnelSchlick(float cosTheta, float F0) {
-  return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
-}
+// ---------------- main ----------------
+void main(){
+  // world-space UV so no seams
+  vec2 uv = rot(0.35) * (WorldPos.xz * 0.38);
 
-// Minimal GGX specular (Smith-Schlick) for a crisp sun highlight
-float ggxSpecular(vec3 N, vec3 V, vec3 L, float rough, float F0) {
-  vec3 H = normalize(V + L);
-  float NdotV = max(dot(N, V), 0.0);
-  float NdotL = max(dot(N, L), 0.0);
-  float NdotH = max(dot(N, H), 0.0);
-  float VdotH = max(dot(V, H), 0.0);
+  float h, lap; vec2 grad;
+  heightDeriv(uv, h, grad, lap);
+  vec3 N = waterNormal(uv, grad);
 
-  float a = max(rough * rough, 0.001);
-  float a2 = a * a;
+  vec3 sunDir = normalize(vec3(0.28, 0.85, 0.43));
+  vec3 V      = normalize(vec3(0.0, 0.7, 0.7));
 
-  float denom = (NdotH * NdotH * (a2 - 1.0) + 1.0);
-  float D = a2 / (PI * denom * denom);
+  float NdotV = max(dot(N,V), 0.0);
+  float F0 = 0.02;
 
-  float k = (a + 1.0);
-  k = (k * k) / 8.0;
-  float Gv = NdotV / (NdotV * (1.0 - k) + k);
-  float Gl = NdotL / (NdotL * (1.0 - k) + k);
-  float G = Gv * Gl;
+  // ---------- transmission (make it BLUER) ----------
+  vec3 deepWater    = vec3(0.008, 0.035, 0.080);  // deeper, bluer
+  vec3 shallowWater = vec3(0.060, 0.180, 0.300);
 
-  float F = fresnelSchlick(VdotH, F0);
-  return (D * G * F) / max(4.0 * NdotV * NdotL, 0.001);
-}
+  float calm = smoothstep(0.0, 0.45, abs(h));
+  float shallow = saturate(0.35 + 0.35 * (fbm(uv*0.6) * (1.0 - calm)));
 
-// ------------------------------------------------------------
-// Main
-// ------------------------------------------------------------
-void main() {
-  // Use a mix of TexCoord and WorldPos to reduce tiling and anchor to world
-  vec2 uv = TexCoord * 4.0 + WorldPos.xz * 0.15;
+  // stronger red/green absorption so blue survives
+  vec3  absorb    = vec3(0.90, 0.45, 0.12);
+  float thickness = mix(0.6, 3.5, 1.0 - shallow) * (0.35 + pow(1.0 - NdotV, 0.7));
+  vec3  transBase = mix(deepWater, shallowWater, shallow);
+  vec3  transmission = transBase * exp(-absorb * thickness);
 
-  // Height field and derived features
-  float h = waveHeight(uv);
-  vec3 N = waterNormal(h);
-
-  // Lighting setup (constants: no new uniforms)
-  vec3 sunDir = normalize(vec3(0.28, 0.85, 0.43)); // warm afternoon sun
-  vec3 V = normalize(vec3(0.0, 0.7, 0.7)); // approximate view from above
-  // (If you prefer a fixed camera anchor, uncomment this instead)
-  // vec3 camPos = vec3(0.0, 2.7, 3.0);
-  // vec3 V = normalize(camPos - WorldPos);
-
-  // Fresnel & reflection
-  float NdotV = max(dot(N, V), 0.0);
-  float F0 = 0.02; // water IOR ~1.33
-  float F = fresnelSchlick(NdotV, F0);
-
+  // ---------- reflection (dim + blue-tinted) ----------
   vec3 R = reflect(-V, N);
   vec3 reflection = skyColor(R, sunDir);
+  reflection *= 0.70;                              // dim
+  reflection *= vec3(0.60, 0.75, 1.00);            // blue tint
+  float F = fresnelSchlick(NdotV, F0) * 0.40;      // less mirror
 
-  // Base transmission color (absorption-tinted)
-  vec3 deepWater = vec3(0.02, 0.07, 0.11);
-  vec3 shallowWater = vec3(0.12, 0.30, 0.38);
-
-  // Pseudo "shallowness": calmer patches look shallower; also tie to uv to vary
-  float calm = smoothstep(0.0, 0.45, abs(h));
-  float shallowFactor =
-      clamp(0.35 + 0.35 * (fbm(uv * 0.6) * (1.0 - calm)), 0.0, 1.0);
-  vec3 transmission = mix(deepWater, shallowWater, shallowFactor);
-
-  // Caustics: brighten transmission where cells converge
-  float c1 = voronoi(uv * 2.0 + time * 0.1);
-  float c2 = voronoi(rot(0.7) * (uv * 1.5 - time * 0.08));
-  float caustics = pow(1.0 - 0.7 * (c1 * 0.6 + c2 * 0.4), 2.5);
-  transmission += vec3(0.55, 0.70, 0.85) * caustics * 0.20;
-
-  // Sun lighting (GGX specular + a touch of diffuse subsurface)
-  float roughness =
-      mix(0.08, 0.18, smoothstep(0.0, 0.6, length(vec2(dFdx(h), dFdy(h)))));
-  float spec = ggxSpecular(N, V, sunDir, roughness, F0);
+  // ---------- lighting (tamed) ----------
   float NdotL = max(dot(N, sunDir), 0.0);
-  vec3 sunDiffuse = transmission * NdotL * 0.25;
+  float rough = mix(0.12, 0.26, smoothstep(0.0, 0.6, length(grad)));
+  float spec  = ggxSpec(N, V, sunDir, rough, F0) * 0.50; // half energy
+  vec3  specCol = vec3(0.75, 0.85, 1.10) * spec;         // watery tint
+  vec3  sunDiffuse = transmission * NdotL * 0.20;
 
-  // Foam: crest (steepness) + screen edge foam from original idea
-  float steep = length(vec2(dFdx(h), dFdy(h)));
-  float crestFoam = smoothstep(0.38, 0.95, steep);
-  // Animate foam breakup
-  crestFoam *= 0.6 + 0.4 * fbm(uv * 3.5 + time * 0.7);
+  // shoreline foam only (softer & less white)
+  float shore = 1.0 - (smoothstep(0.07, 0.28, TexCoord.y) *
+                       smoothstep(0.07, 0.28, 1.0 - TexCoord.y));
+  float foam  = shore * (0.45 + 0.55 * fbm(uv*3.0 + time*0.6));
+  vec3  foamCol = vec3(0.92, 0.96, 1.0);
+  foam = clamp(foam * 0.35, 0.0, 1.0);             // much less foam
 
-  // Edge foam (reuse TexCoord idea but subtler and 2D)
-  float edgeX = smoothstep(0.02, 0.12, TexCoord.x) *
-                smoothstep(0.02, 0.12, 1.0 - TexCoord.x);
-  float edgeY = smoothstep(0.02, 0.12, TexCoord.y) *
-                smoothstep(0.02, 0.12, 1.0 - TexCoord.y);
-  float frameEdge = (1.0 - edgeX * edgeY);
-  float foamNoise = noise(uv * 6.0 + time * 0.5);
-  float foam = clamp(crestFoam * 0.85 + frameEdge * foamNoise * 0.35, 0.0, 1.0);
+  // ---------- combine (energy aware) ----------
+  vec3 color = transmission * (1.0 - F) + reflection * F; // avoid whitening
+  color += specCol + sunDiffuse;
+  color = mix(color, foamCol * mix(0.82, 1.0, NdotL), foam);
 
-  vec3 foamColor = vec3(0.93, 0.96, 1.0);
+  // gentle blue rim
+  color += vec3(0.03, 0.06, 0.12) * pow(1.0 - NdotV, 3.0);
 
-  // Combine transmission and reflection with Fresnel
-  vec3 color = mix(transmission, reflection, F);
-  // Add lighting
-  color += vec3(1.0) * spec * 1.2;
-  color += sunDiffuse;
-
-  // Mix in foam on top
-  color = mix(color, foamColor, foam);
-
-  // Subtle blue highlight along glancing angles
-  color += vec3(0.05, 0.08, 0.12) * pow(1.0 - NdotV, 3.0);
-
-  // Final tone and alpha
-  FragColor = vec4(color, 0.85);
+  FragColor = vec4(saturate(color), 0.85);
 }
