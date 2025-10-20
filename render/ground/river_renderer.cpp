@@ -2,7 +2,6 @@
 #include "../gl/mesh.h"
 #include "../gl/resources.h"
 #include "../scene_renderer.h"
-#include <QDebug>
 #include <QVector2D>
 #include <QVector3D>
 #include <cmath>

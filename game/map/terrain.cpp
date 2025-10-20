@@ -1,5 +1,4 @@
 #include "terrain.h"
-#include <QDebug>
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
