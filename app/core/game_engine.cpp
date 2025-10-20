@@ -858,6 +858,7 @@ void GameEngine::startSkirmish(const QString &mapPath,
     loader.setTerrainRenderer(m_terrain.get());
     loader.setBiomeRenderer(m_biome.get());
     loader.setRiverRenderer(m_river.get());
+    loader.setRiverbankRenderer(m_riverbank.get());
     loader.setBridgeRenderer(m_bridge.get());
     loader.setFogRenderer(m_fog.get());
     loader.setStoneRenderer(m_stone.get());
