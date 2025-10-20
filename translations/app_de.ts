@@ -1,66 +1,66 @@
 <?xml version='1.0' encoding='utf-8'?>
-<TS version="2.1" language="en_US">
+<TS version="2.1" language="de_DE">
 <context>
     <name>BattleSummary</name>
     <message>
         <location filename="../ui/qml/BattleSummary.qml" line="134" />
         <source>VICTORY!</source>
-        <translation>VICTORY!</translation>
+        <translation>SIEG!</translation>
     </message>
     <message>
         <location filename="../ui/qml/BattleSummary.qml" line="134" />
         <source>FAILURE!</source>
-        <translation>FAILURE!</translation>
+        <translation>NIEDERLAGE!</translation>
     </message>
     <message>
         <location filename="../ui/qml/BattleSummary.qml" line="278" />
         <source>VICTORIOUS</source>
-        <translation>VICTORIOUS</translation>
+        <translation>SIEGREICH</translation>
     </message>
     <message>
         <location filename="../ui/qml/BattleSummary.qml" line="278" />
         <source>DEFEATED</source>
-        <translation>DEFEATED</translation>
+        <translation>BESIEGT</translation>
     </message>
     <message>
         <location filename="../ui/qml/BattleSummary.qml" line="303" />
         <source>Kills: %1</source>
-        <translation>Kills: %1</translation>
+        <translation>Abschüsse: %1</translation>
     </message>
     <message>
         <location filename="../ui/qml/BattleSummary.qml" line="314" />
         <source>Losses: %1</source>
-        <translation>Losses: %1</translation>
+        <translation>Verluste: %1</translation>
     </message>
     <message>
         <location filename="../ui/qml/BattleSummary.qml" line="325" />
         <source>Units Trained: %1</source>
-        <translation>Units Trained: %1</translation>
+        <translation>Einheiten ausgebildet: %1</translation>
     </message>
     <message>
         <location filename="../ui/qml/BattleSummary.qml" line="336" />
         <source>Villages: %1</source>
-        <translation>Villages: %1</translation>
+        <translation>Dörfer: %1</translation>
     </message>
     <message>
         <location filename="../ui/qml/BattleSummary.qml" line="347" />
         <source>Play Time: %1</source>
-        <translation>Play Time: %1</translation>
+        <translation>Spielzeit: %1</translation>
     </message>
     <message>
         <location filename="../ui/qml/BattleSummary.qml" line="371" />
         <source>SCORE</source>
-        <translation>SCORE</translation>
+        <translation>PUNKTZAHL</translation>
     </message>
     <message>
         <location filename="../ui/qml/BattleSummary.qml" line="483" />
         <source>YOU</source>
-        <translation>YOU</translation>
+        <translation>DU</translation>
     </message>
     <message>
         <location filename="../ui/qml/BattleSummary.qml" line="500" />
         <source>Return to Menu</source>
-        <translation>Return to Menu</translation>
+        <translation>Zurück zum Menü</translation>
     </message>
 </context>
 <context>
@@ -68,49 +68,49 @@
     <message>
         <location filename="../ui/qml/HUDBottom.qml" line="43" />
         <source>SELECTED UNITS</source>
-        <translation>SELECTED UNITS</translation>
+        <translation>AUSGEWÄHLTE EINHEITEN</translation>
     </message>
     <message>
         <location filename="../ui/qml/HUDBottom.qml" line="157" />
         <source>◉ Select Troops for Commands</source>
-        <translation>◉ Select Troops for Commands</translation>
+        <translation>◉ Wähle Truppen für Befehle</translation>
     </message>
     <message>
         <location filename="../ui/qml/HUDBottom.qml" line="157" />
         <source>◉ Normal Mode</source>
-        <translation>◉ Normal Mode</translation>
+        <translation>◉ Normaler Modus</translation>
     </message>
     <message>
         <location filename="../ui/qml/HUDBottom.qml" line="157" />
         <source>⚔️ ATTACK MODE - Click Enemy</source>
-        <translation>⚔️ ATTACK MODE - Click Enemy</translation>
+        <translation>⚔️ ANGRIFFSMODUS - Feind anklicken</translation>
     </message>
     <message>
         <location filename="../ui/qml/HUDBottom.qml" line="157" />
         <source>🛡️ GUARD MODE - Click Position</source>
-        <translation>🛡️ GUARD MODE - Click Position</translation>
+        <translation>🛡️ WACHMODUS - Position anklicken</translation>
     </message>
     <message>
         <location filename="../ui/qml/HUDBottom.qml" line="157" />
         <source>🚶 PATROL MODE - Set Waypoints</source>
-        <translation>🚶 PATROL MODE - Set Waypoints</translation>
+        <translation>🚶 PATROUILLENMODUS - Wegpunkte setzen</translation>
     </message>
     <message>
         <location filename="../ui/qml/HUDBottom.qml" line="157" />
         <source>⏹️ STOP COMMAND</source>
-        <translation>⏹️ STOP COMMAND</translation>
+        <translation>⏹️ STOPP-BEFEHL</translation>
     </message>
     <message>
         <location filename="../ui/qml/HUDBottom.qml" line="205" />
         <source>Attack</source>
-        <translation>Attack</translation>
+        <translation>Angriff</translation>
     </message>
     <message>
         <location filename="../ui/qml/HUDBottom.qml" line="214" />
         <source>Attack enemy units or buildings.
 Units will chase targets.</source>
-        <translation>Attack enemy units or buildings.
-Units will chase targets.</translation>
+        <translation>Feindliche Einheiten oder Gebäude angreifen.
+Einheiten verfolgen Ziele.</translation>
     </message>
     <message>
         <location filename="../ui/qml/HUDBottom.qml" line="214" />
@@ -119,56 +119,56 @@ Units will chase targets.</translation>
         <location filename="../ui/qml/HUDBottom.qml" line="313" />
         <location filename="../ui/qml/HUDBottom.qml" line="353" />
         <source>Select troops first</source>
-        <translation>Select troops first</translation>
+        <translation>Wähle zuerst Truppen aus</translation>
     </message>
     <message>
         <location filename="../ui/qml/HUDBottom.qml" line="238" />
         <source>Guard</source>
-        <translation>Guard</translation>
+        <translation>Bewachen</translation>
     </message>
     <message>
         <location filename="../ui/qml/HUDBottom.qml" line="247" />
         <source>Guard a position.
 Units will defend from all sides.</source>
-        <translation>Guard a position.
-Units will defend from all sides.</translation>
+        <translation>Eine Position bewachen.
+Einheiten verteidigen von allen Seiten.</translation>
     </message>
     <message>
         <location filename="../ui/qml/HUDBottom.qml" line="271" />
         <source>Patrol</source>
-        <translation>Patrol</translation>
+        <translation>Patrouille</translation>
     </message>
     <message>
         <location filename="../ui/qml/HUDBottom.qml" line="280" />
         <source>Patrol between waypoints.
 Click start and end points.</source>
-        <translation>Patrol between waypoints.
-Click start and end points.</translation>
+        <translation>Zwischen Wegpunkten patrouillieren.
+Start- und Endpunkte anklicken.</translation>
     </message>
     <message>
         <location filename="../ui/qml/HUDBottom.qml" line="304" />
         <source>Stop</source>
-        <translation>Stop</translation>
+        <translation>Stopp</translation>
     </message>
     <message>
         <location filename="../ui/qml/HUDBottom.qml" line="313" />
         <source>Stop all actions immediately</source>
-        <translation>Stop all actions immediately</translation>
+        <translation>Alle Aktionen sofort stoppen</translation>
     </message>
     <message>
         <location filename="../ui/qml/HUDBottom.qml" line="344" />
         <source>Hold</source>
-        <translation>Hold</translation>
+        <translation>Halten</translation>
     </message>
     <message>
         <location filename="../ui/qml/HUDBottom.qml" line="353" />
         <source>Exit hold mode (toggle)</source>
-        <translation>Exit hold mode (toggle)</translation>
+        <translation>Haltemodus beenden (umschalten)</translation>
     </message>
     <message>
         <location filename="../ui/qml/HUDBottom.qml" line="353" />
         <source>Hold position and defend</source>
-        <translation>Hold position and defend</translation>
+        <translation>Position halten und verteidigen</translation>
     </message>
 </context>
 <context>
@@ -176,27 +176,27 @@ Click start and end points.</translation>
     <message>
         <location filename="../ui/qml/HUDTop.qml" line="145" />
         <source>Speed:</source>
-        <translation>Speed:</translation>
+        <translation>Geschwindigkeit:</translation>
     </message>
     <message>
         <location filename="../ui/qml/HUDTop.qml" line="250" />
         <source>Camera:</source>
-        <translation>Camera:</translation>
+        <translation>Kamera:</translation>
     </message>
     <message>
         <location filename="../ui/qml/HUDTop.qml" line="264" />
         <source>Follow</source>
-        <translation>Follow</translation>
+        <translation>Folgen</translation>
     </message>
     <message>
         <location filename="../ui/qml/HUDTop.qml" line="295" />
         <source>Reset</source>
-        <translation>Reset</translation>
+        <translation>Zurücksetzen</translation>
     </message>
     <message>
         <location filename="../ui/qml/HUDTop.qml" line="458" />
         <source>MINIMAP</source>
-        <translation>MINIMAP</translation>
+        <translation>MINIKARTE</translation>
     </message>
 </context>
 <context>
@@ -204,27 +204,27 @@ Click start and end points.</translation>
     <message>
         <location filename="../ui/qml/HUDVictory.qml" line="58" />
         <source>VICTORY!</source>
-        <translation>VICTORY!</translation>
+        <translation>SIEG!</translation>
     </message>
     <message>
         <location filename="../ui/qml/HUDVictory.qml" line="58" />
         <source>DEFEAT</source>
-        <translation>DEFEAT</translation>
+        <translation>NIEDERLAGE</translation>
     </message>
     <message>
         <location filename="../ui/qml/HUDVictory.qml" line="66" />
         <source>Enemy barracks destroyed!</source>
-        <translation>Enemy barracks destroyed!</translation>
+        <translation>Feindliche Kaserne zerstört!</translation>
     </message>
     <message>
         <location filename="../ui/qml/HUDVictory.qml" line="66" />
         <source>Your barracks was destroyed!</source>
-        <translation>Your barracks was destroyed!</translation>
+        <translation>Deine Kaserne wurde zerstört!</translation>
     </message>
     <message>
         <location filename="../ui/qml/HUDVictory.qml" line="73" />
         <source>Continue</source>
-        <translation>Continue</translation>
+        <translation>Weiter</translation>
     </message>
 </context>
 <context>
@@ -232,69 +232,69 @@ Click start and end points.</translation>
     <message>
         <location filename="../ui/qml/LoadGamePanel.qml" line="117" />
         <source>Load Game</source>
-        <translation>Load Game</translation>
+        <translation>Spiel laden</translation>
     </message>
     <message>
         <location filename="../ui/qml/LoadGamePanel.qml" line="125" />
         <source>Cancel</source>
-        <translation>Cancel</translation>
+        <translation>Abbrechen</translation>
     </message>
     <message>
         <location filename="../ui/qml/LoadGamePanel.qml" line="164" />
         <location filename="../ui/qml/LoadGamePanel.qml" line="188" />
         <location filename="../ui/qml/LoadGamePanel.qml" line="405" />
         <source>No saves found</source>
-        <translation>No saves found</translation>
+        <translation>Keine Speicherstände gefunden</translation>
     </message>
     <message>
         <location filename="../ui/qml/LoadGamePanel.qml" line="243" />
         <source>No Preview</source>
-        <translation>No Preview</translation>
+        <translation>Keine Vorschau</translation>
     </message>
     <message>
         <location filename="../ui/qml/LoadGamePanel.qml" line="265" />
         <source>Slot: %1</source>
-        <translation>Slot: %1</translation>
+        <translation>Speicherplatz: %1</translation>
     </message>
     <message>
         <location filename="../ui/qml/LoadGamePanel.qml" line="285" />
         <source>Last saved: %1</source>
-        <translation>Last saved: %1</translation>
+        <translation>Zuletzt gespeichert: %1</translation>
     </message>
     <message>
         <location filename="../ui/qml/LoadGamePanel.qml" line="293" />
         <source>Play time: %1</source>
-        <translation>Play time: %1</translation>
+        <translation>Spielzeit: %1</translation>
     </message>
     <message>
         <location filename="../ui/qml/LoadGamePanel.qml" line="313" />
         <source>Load</source>
-        <translation>Load</translation>
+        <translation>Laden</translation>
     </message>
     <message>
         <location filename="../ui/qml/LoadGamePanel.qml" line="322" />
         <source>Delete</source>
-        <translation>Delete</translation>
+        <translation>Löschen</translation>
     </message>
     <message>
         <location filename="../ui/qml/LoadGamePanel.qml" line="366" />
         <source>Selected: %1</source>
-        <translation>Selected: %1</translation>
+        <translation>Ausgewählt: %1</translation>
     </message>
     <message>
         <location filename="../ui/qml/LoadGamePanel.qml" line="366" />
         <source>Select a save to load</source>
-        <translation>Select a save to load</translation>
+        <translation>Wähle einen Speicherstand zum Laden</translation>
     </message>
     <message>
         <location filename="../ui/qml/LoadGamePanel.qml" line="372" />
         <source>Load Selected</source>
-        <translation>Load Selected</translation>
+        <translation>Ausgewähltes laden</translation>
     </message>
     <message>
         <location filename="../ui/qml/LoadGamePanel.qml" line="396" />
         <source>Confirm Delete</source>
-        <translation>Confirm Delete</translation>
+        <translation>Löschen bestätigen</translation>
     </message>
     <message>
         <location filename="../ui/qml/LoadGamePanel.qml" line="433" />
@@ -302,10 +302,10 @@ Click start and end points.</translation>
 "%1"?
 
 This action cannot be undone.</source>
-        <translation>Are you sure you want to delete the save:
+        <translation>Bist du sicher, dass du den Speicherstand löschen möchtest:
 "%1"?
 
-This action cannot be undone.</translation>
+Diese Aktion kann nicht rückgängig gemacht werden.</translation>
     </message>
 </context>
 <context>
@@ -313,17 +313,17 @@ This action cannot be undone.</translation>
     <message>
         <location filename="../ui/qml/Main.qml" line="18" />
         <source>Standard of Iron - RTS Game</source>
-        <translation>Standard of Iron - RTS Game</translation>
+        <translation>Standard of Iron - RTS-Spiel</translation>
     </message>
     <message>
         <location filename="../ui/qml/Main.qml" line="92" />
         <source>PAUSED</source>
-        <translation>PAUSED</translation>
+        <translation>PAUSIERT</translation>
     </message>
     <message>
         <location filename="../ui/qml/Main.qml" line="100" />
         <source>Press Space to resume</source>
-        <translation>Press Space to resume</translation>
+        <translation>Drücke Leertaste zum Fortsetzen</translation>
     </message>
 </context>
 <context>
@@ -336,87 +336,87 @@ This action cannot be undone.</translation>
     <message>
         <location filename="../ui/qml/MainMenu.qml" line="94" />
         <source>A tiny but ambitious RTS</source>
-        <translation>A tiny but ambitious RTS</translation>
+        <translation>Ein kleines, aber ambitioniertes RTS</translation>
     </message>
     <message>
         <location filename="../ui/qml/MainMenu.qml" line="109" />
         <source>Play — Skirmish</source>
-        <translation>Play — Skirmish</translation>
+        <translation>Spielen — Gefecht</translation>
     </message>
     <message>
         <location filename="../ui/qml/MainMenu.qml" line="110" />
         <source>Select a map and start</source>
-        <translation>Select a map and start</translation>
+        <translation>Wähle eine Karte und starte</translation>
     </message>
     <message>
         <location filename="../ui/qml/MainMenu.qml" line="115" />
         <source>Save Game</source>
-        <translation>Save Game</translation>
+        <translation>Spiel speichern</translation>
     </message>
     <message>
         <location filename="../ui/qml/MainMenu.qml" line="116" />
         <source>Save your current progress</source>
-        <translation>Save your current progress</translation>
+        <translation>Speichere deinen aktuellen Fortschritt</translation>
     </message>
     <message>
         <location filename="../ui/qml/MainMenu.qml" line="121" />
         <source>Load Game</source>
-        <translation>Load Game</translation>
+        <translation>Spiel laden</translation>
     </message>
     <message>
         <location filename="../ui/qml/MainMenu.qml" line="122" />
         <source>Resume a previous game</source>
-        <translation>Resume a previous game</translation>
+        <translation>Setze ein vorheriges Spiel fort</translation>
     </message>
     <message>
         <location filename="../ui/qml/MainMenu.qml" line="127" />
         <source>Settings</source>
-        <translation>Settings</translation>
+        <translation>Einstellungen</translation>
     </message>
     <message>
         <location filename="../ui/qml/MainMenu.qml" line="128" />
         <source>Adjust graphics &amp; controls</source>
-        <translation>Adjust graphics &amp; controls</translation>
+        <translation>Grafik &amp; Steuerung anpassen</translation>
     </message>
     <message>
         <location filename="../ui/qml/MainMenu.qml" line="133" />
         <source>Exit</source>
-        <translation>Exit</translation>
+        <translation>Beenden</translation>
     </message>
     <message>
         <location filename="../ui/qml/MainMenu.qml" line="134" />
         <source>Quit the game</source>
-        <translation>Quit the game</translation>
+        <translation>Spiel verlassen</translation>
     </message>
     <message>
         <location filename="../ui/qml/MainMenu.qml" line="249" />
         <source>v0.9 — prototype</source>
-        <translation>v0.9 — prototype</translation>
+        <translation>v0.9 — Prototyp</translation>
     </message>
     <message>
         <location filename="../ui/qml/MainMenu.qml" line="295" />
         <source>Featured</source>
-        <translation>Featured</translation>
+        <translation>Vorgestellt</translation>
     </message>
     <message>
         <location filename="../ui/qml/MainMenu.qml" line="303" />
         <source>Skirmish Mode</source>
-        <translation>Skirmish Mode</translation>
+        <translation>Gefecht-Modus</translation>
     </message>
     <message>
         <location filename="../ui/qml/MainMenu.qml" line="312" />
         <source>Pick a map, adjust your forces and jump into battle. Modern controls and responsive UI.</source>
-        <translation>Pick a map, adjust your forces and jump into battle. Modern controls and responsive UI.</translation>
+        <translation>Wähle eine Karte, passe deine Streitkräfte an und springe in die Schlacht. Moderne Steuerung und reaktionsschnelle Benutzeroberfläche.</translation>
     </message>
     <message>
         <location filename="../ui/qml/MainMenu.qml" line="338" />
         <source>Tips</source>
-        <translation>Tips</translation>
+        <translation>Tipps</translation>
     </message>
     <message>
         <location filename="../ui/qml/MainMenu.qml" line="346" />
         <source>Hover menu items or use Up/Down and Enter to navigate. Play opens map selection.</source>
-        <translation>Hover menu items or use Up/Down and Enter to navigate. Play opens map selection.</translation>
+        <translation>Bewege den Mauszeiger über Menüeinträge oder verwende Auf/Ab und Enter zur Navigation. Spielen öffnet die Kartenauswahl.</translation>
     </message>
 </context>
 <context>
@@ -424,18 +424,18 @@ This action cannot be undone.</translation>
     <message>
         <location filename="../ui/qml/MapSelect.qml" line="271" />
         <source>Maps</source>
-        <translation>Maps</translation>
+        <translation>Karten</translation>
     </message>
     <message>
         <location filename="../ui/qml/MapSelect.qml" line="486" />
         <source>No maps available</source>
-        <translation>No maps available</translation>
+        <translation>Keine Karten verfügbar</translation>
     </message>
     <message>
         <location filename="../ui/qml/MapSelect.qml" line="519" />
         <location filename="../ui/qml/MapSelect.qml" line="596" />
         <source>Loading maps...</source>
-        <translation>Loading maps...</translation>
+        <translation>Karten werden geladen...</translation>
     </message>
     <message>
         <location filename="../ui/qml/MapSelect.qml" line="548" />
@@ -445,42 +445,42 @@ This action cannot be undone.</translation>
     <message>
         <location filename="../ui/qml/MapSelect.qml" line="548" />
         <source>Select a map to continue</source>
-        <translation>Select a map to continue</translation>
+        <translation>Wähle eine Karte zum Fortfahren</translation>
     </message>
     <message>
         <location filename="../ui/qml/MapSelect.qml" line="703" />
         <source>Loading map details...</source>
-        <translation>Loading map details...</translation>
+        <translation>Kartendetails werden geladen...</translation>
     </message>
     <message>
         <location filename="../ui/qml/MapSelect.qml" line="720" />
         <source>No Map Selected</source>
-        <translation>No Map Selected</translation>
+        <translation>Keine Karte ausgewählt</translation>
     </message>
     <message>
         <location filename="../ui/qml/MapSelect.qml" line="786" />
         <source>Players</source>
-        <translation>Players</translation>
+        <translation>Spieler</translation>
     </message>
     <message>
         <location filename="../ui/qml/MapSelect.qml" line="810" />
         <source>• Click color/team to cycle</source>
-        <translation>• Click color/team to cycle</translation>
+        <translation>• Klicke auf Farbe/Team zum Wechseln</translation>
     </message>
     <message>
         <location filename="../ui/qml/MapSelect.qml" line="888" />
         <source>Player color: %1 - Click to change</source>
-        <translation>Player color: %1 - Click to change</translation>
+        <translation>Spielerfarbe: %1 - Klicken zum Ändern</translation>
     </message>
     <message>
         <location filename="../ui/qml/MapSelect.qml" line="888" />
         <source>Color</source>
-        <translation>Color</translation>
+        <translation>Farbe</translation>
     </message>
     <message>
         <location filename="../ui/qml/MapSelect.qml" line="950" />
         <source>Team %1 - Click to change</source>
-        <translation>Team %1 - Click to change</translation>
+        <translation>Team %1 - Klicken zum Ändern</translation>
     </message>
     <message>
         <location filename="../ui/qml/MapSelect.qml" line="966" />
@@ -490,37 +490,37 @@ This action cannot be undone.</translation>
     <message>
         <location filename="../ui/qml/MapSelect.qml" line="1016" />
         <source>Remove player</source>
-        <translation>Remove player</translation>
+        <translation>Spieler entfernen</translation>
     </message>
     <message>
         <location filename="../ui/qml/MapSelect.qml" line="1087" />
         <source>+ Add CPU</source>
-        <translation>+ Add CPU</translation>
+        <translation>+ CPU hinzufügen</translation>
     </message>
     <message>
         <location filename="../ui/qml/MapSelect.qml" line="1094" />
         <source>Add AI opponent</source>
-        <translation>Add AI opponent</translation>
+        <translation>KI-Gegner hinzufügen</translation>
     </message>
     <message>
         <location filename="../ui/qml/MapSelect.qml" line="1324" />
         <source>Back</source>
-        <translation>Back</translation>
+        <translation>Zurück</translation>
     </message>
     <message>
         <location filename="../ui/qml/MapSelect.qml" line="1330" />
         <source>Return to main menu (Esc)</source>
-        <translation>Return to main menu (Esc)</translation>
+        <translation>Zurück zum Hauptmenü (Esc)</translation>
     </message>
     <message>
         <location filename="../ui/qml/MapSelect.qml" line="1404" />
         <source>Play</source>
-        <translation>Play</translation>
+        <translation>Spielen</translation>
     </message>
     <message>
         <location filename="../ui/qml/MapSelect.qml" line="1411" />
         <source>Start game (Enter)</source>
-        <translation>Start game (Enter)</translation>
+        <translation>Spiel starten (Enter)</translation>
     </message>
 </context>
 <context>
@@ -528,112 +528,112 @@ This action cannot be undone.</translation>
     <message>
         <location filename="../ui/qml/ProductionPanel.qml" line="56" />
         <source>PRODUCTION QUEUE</source>
-        <translation>PRODUCTION QUEUE</translation>
+        <translation>PRODUKTIONSWARTESCHLANGE</translation>
     </message>
     <message>
         <location filename="../ui/qml/ProductionPanel.qml" line="210" />
         <source>Units Produced: %1 / %2</source>
-        <translation>Units Produced: %1 / %2</translation>
+        <translation>Produzierte Einheiten: %1 / %2</translation>
     </message>
     <message>
         <location filename="../ui/qml/ProductionPanel.qml" line="243" />
         <source>RECRUIT UNITS</source>
-        <translation>RECRUIT UNITS</translation>
+        <translation>EINHEITEN REKRUTIEREN</translation>
     </message>
     <message>
         <location filename="../ui/qml/ProductionPanel.qml" line="280" />
         <source>Archer</source>
-        <translation>Archer</translation>
+        <translation>Bogenschütze</translation>
     </message>
     <message>
         <location filename="../ui/qml/ProductionPanel.qml" line="316" />
         <source>Recruit Archer
 Cost: %1 villagers
 Build time: %2s</source>
-        <translation>Recruit Archer
-Cost: %1 villagers
-Build time: %2s</translation>
+        <translation>Bogenschütze rekrutieren
+Kosten: %1 Dorfbewohner
+Bauzeit: %2s</translation>
     </message>
     <message>
         <location filename="../ui/qml/ProductionPanel.qml" line="316" />
         <location filename="../ui/qml/ProductionPanel.qml" line="390" />
         <location filename="../ui/qml/ProductionPanel.qml" line="464" />
         <source>Queue is full (5/5)</source>
-        <translation>Queue is full (5/5)</translation>
+        <translation>Warteschlange ist voll (5/5)</translation>
     </message>
     <message>
         <location filename="../ui/qml/ProductionPanel.qml" line="316" />
         <location filename="../ui/qml/ProductionPanel.qml" line="390" />
         <location filename="../ui/qml/ProductionPanel.qml" line="464" />
         <source>Unit cap reached</source>
-        <translation>Unit cap reached</translation>
+        <translation>Einheitenlimit erreicht</translation>
     </message>
     <message>
         <location filename="../ui/qml/ProductionPanel.qml" line="316" />
         <location filename="../ui/qml/ProductionPanel.qml" line="390" />
         <location filename="../ui/qml/ProductionPanel.qml" line="464" />
         <source>Cannot recruit</source>
-        <translation>Cannot recruit</translation>
+        <translation>Kann nicht rekrutieren</translation>
     </message>
     <message>
         <location filename="../ui/qml/ProductionPanel.qml" line="354" />
         <source>Knight</source>
-        <translation>Knight</translation>
+        <translation>Ritter</translation>
     </message>
     <message>
         <location filename="../ui/qml/ProductionPanel.qml" line="390" />
         <source>Recruit Knight
 Cost: %1 villagers
 Build time: %2s</source>
-        <translation>Recruit Knight
-Cost: %1 villagers
-Build time: %2s</translation>
+        <translation>Ritter rekrutieren
+Kosten: %1 Dorfbewohner
+Bauzeit: %2s</translation>
     </message>
     <message>
         <location filename="../ui/qml/ProductionPanel.qml" line="428" />
         <source>Spearman</source>
-        <translation>Spearman</translation>
+        <translation>Speerträger</translation>
     </message>
     <message>
         <location filename="../ui/qml/ProductionPanel.qml" line="464" />
         <source>Recruit Spearman
 Cost: %1 villagers
 Build time: %2s</source>
-        <translation>Recruit Spearman
-Cost: %1 villagers
-Build time: %2s</translation>
+        <translation>Speerträger rekrutieren
+Kosten: %1 Dorfbewohner
+Bauzeit: %2s</translation>
     </message>
     <message>
         <location filename="../ui/qml/ProductionPanel.qml" line="518" />
         <source>📍 Click Map to Set Rally</source>
-        <translation>📍 Click Map to Set Rally</translation>
+        <translation>📍 Karte anklicken zum Setzen des Sammelpunkts</translation>
     </message>
     <message>
         <location filename="../ui/qml/ProductionPanel.qml" line="518" />
         <source>📍 Set Rally Point</source>
-        <translation>📍 Set Rally Point</translation>
+        <translation>📍 Sammelpunkt setzen</translation>
     </message>
     <message>
         <location filename="../ui/qml/ProductionPanel.qml" line="523" />
         <source>Set where newly recruited units will gather.
 Right-click to cancel.</source>
-        <translation>Set where newly recruited units will gather.
-Right-click to cancel.</translation>
+        <translation>Lege fest, wo sich neu rekrutierte Einheiten sammeln.
+Rechtsklick zum Abbrechen.</translation>
     </message>
     <message>
         <location filename="../ui/qml/ProductionPanel.qml" line="546" />
         <source>Right-click to cancel</source>
-        <translation>Right-click to cancel</translation>
+        <translation>Rechtsklick zum Abbrechen</translation>
     </message>
     <message>
         <location filename="../ui/qml/ProductionPanel.qml" line="583" />
         <source>No Barracks Selected</source>
-        <translation>No Barracks Selected</translation>
+        <translation>Keine Kaserne ausgewählt</translation>
     </message>
     <message>
         <location filename="../ui/qml/ProductionPanel.qml" line="591" />
         <source>Select a barracks to recruit units</source>
-        <translation>Select a barracks to recruit units</translation>
+        <translation>Wähle eine Kaserne zum Rekrutieren von Einheiten</translation>
     </message>
 </context>
 <context>
@@ -641,63 +641,63 @@ Right-click to cancel.</translation>
     <message>
         <location filename="../ui/qml/SaveGamePanel.qml" line="72" />
         <source>Save Game</source>
-        <translation>Save Game</translation>
+        <translation>Spiel speichern</translation>
     </message>
     <message>
         <location filename="../ui/qml/SaveGamePanel.qml" line="80" />
         <source>Cancel</source>
-        <translation>Cancel</translation>
+        <translation>Abbrechen</translation>
     </message>
     <message>
         <location filename="../ui/qml/SaveGamePanel.qml" line="97" />
         <source>Save Name:</source>
-        <translation>Save Name:</translation>
+        <translation>Speichername:</translation>
     </message>
     <message>
         <location filename="../ui/qml/SaveGamePanel.qml" line="106" />
         <source>Enter save name...</source>
-        <translation>Enter save name...</translation>
+        <translation>Speichernamen eingeben...</translation>
     </message>
     <message>
         <location filename="../ui/qml/SaveGamePanel.qml" line="121" />
         <source>Save</source>
-        <translation>Save</translation>
+        <translation>Speichern</translation>
     </message>
     <message>
         <location filename="../ui/qml/SaveGamePanel.qml" line="137" />
         <source>Existing Saves</source>
-        <translation>Existing Saves</translation>
+        <translation>Vorhandene Speicherstände</translation>
     </message>
     <message>
         <location filename="../ui/qml/SaveGamePanel.qml" line="231" />
         <source>No Preview</source>
-        <translation>No Preview</translation>
+        <translation>Keine Vorschau</translation>
     </message>
     <message>
         <location filename="../ui/qml/SaveGamePanel.qml" line="252" />
         <source>Slot: %1</source>
-        <translation>Slot: %1</translation>
+        <translation>Speicherplatz: %1</translation>
     </message>
     <message>
         <location filename="../ui/qml/SaveGamePanel.qml" line="268" />
         <source>Last saved: %1</source>
-        <translation>Last saved: %1</translation>
+        <translation>Zuletzt gespeichert: %1</translation>
     </message>
     <message>
         <location filename="../ui/qml/SaveGamePanel.qml" line="278" />
         <source>Overwrite</source>
-        <translation>Overwrite</translation>
+        <translation>Überschreiben</translation>
     </message>
     <message>
         <location filename="../ui/qml/SaveGamePanel.qml" line="316" />
         <source>Confirm Overwrite</source>
-        <translation>Confirm Overwrite</translation>
+        <translation>Überschreiben bestätigen</translation>
     </message>
     <message>
         <location filename="../ui/qml/SaveGamePanel.qml" line="335" />
         <source>Are you sure you want to overwrite the save:
 "%1"?</source>
-        <translation>Are you sure you want to overwrite the save:
+        <translation>Bist du sicher, dass du den Speicherstand überschreiben möchtest:
 "%1"?</translation>
     </message>
 </context>
