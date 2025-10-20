@@ -4,7 +4,6 @@
 #include "../gl/resources.h"
 #include "../scene_renderer.h"
 #include "terrain_gpu.h"
-#include <QDebug>
 #include <QVector2D>
 #include <QVector3D>
 #include <cmath>
@@ -18,20 +17,15 @@ void BridgeRenderer::configure(const std::vector<Game::Map::Bridge> &bridges,
                                float tileSize) {
   m_bridges = bridges;
   m_tileSize = tileSize;
-  qDebug() << "BridgeRenderer::configure() called with" << bridges.size()
-           << "bridges, tileSize:" << tileSize;
   buildMeshes();
 }
 
 void BridgeRenderer::buildMeshes() {
   if (m_bridges.empty()) {
-    qDebug() << "BridgeRenderer::buildMeshes() - No bridges to build";
     m_mesh.reset();
     return;
   }
 
-  qDebug() << "BridgeRenderer::buildMeshes() - Building meshes for"
-           << m_bridges.size() << "bridges";
   std::vector<Vertex> vertices;
   std::vector<unsigned int> indices;
 
@@ -160,13 +154,10 @@ void BridgeRenderer::buildMeshes() {
   }
 
   if (vertices.empty() || indices.empty()) {
-    qDebug() << "BridgeRenderer::buildMeshes() - No vertices/indices generated";
     m_mesh.reset();
     return;
   }
 
-  qDebug() << "BridgeRenderer::buildMeshes() - Created mesh with"
-           << vertices.size() << "vertices and" << indices.size() << "indices";
   m_mesh = std::make_unique<Mesh>(vertices, indices);
 }
 
@@ -213,11 +204,8 @@ void BridgeRenderer::submit(Renderer &renderer, ResourceManager *resources) {
 
   auto shader = renderer.getShader("bridge");
   if (!shader) {
-    qDebug() << "BridgeRenderer::submit() - Bridge shader not found! Falling "
-                "back to basic shader";
     shader = renderer.getShader("basic");
     if (!shader) {
-      qDebug() << "BridgeRenderer::submit() - Basic shader also not found!";
       return;
     }
   }
