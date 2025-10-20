@@ -11,14 +11,12 @@ Item {
 
     anchors.fill: parent
     z: 25
-
     Keys.onPressed: function(event) {
         if (event.key === Qt.Key_Escape) {
             root.cancelled();
             event.accepted = true;
         }
     }
-
     Component.onCompleted: {
         forceActiveFocus();
     }
@@ -61,6 +59,7 @@ Item {
                     text: qsTr("Close")
                     onClicked: root.cancelled()
                 }
+
             }
 
             Rectangle {
@@ -69,7 +68,6 @@ Item {
                 color: Theme.border
             }
 
-            // Language Settings Section
             ColumnLayout {
                 Layout.fillWidth: true
                 spacing: Theme.spacingMedium
@@ -102,23 +100,32 @@ Item {
 
                     ComboBox {
                         id: languageComboBox
+
                         Layout.fillWidth: true
                         model: typeof languageManager !== 'undefined' ? languageManager.availableLanguages : []
                         currentIndex: {
                             if (typeof languageManager === 'undefined')
                                 return 0;
+
                             var idx = languageManager.availableLanguages.indexOf(languageManager.currentLanguage);
                             return idx >= 0 ? idx : 0;
                         }
-
                         displayText: {
                             if (typeof languageManager === 'undefined' || !currentText)
                                 return "";
+
                             return languageManager.languageDisplayName(currentText);
+                        }
+                        onCurrentTextChanged: {
+                            if (typeof languageManager !== 'undefined' && currentText)
+                                languageManager.setLanguage(currentText);
+
                         }
 
                         delegate: ItemDelegate {
                             width: languageComboBox.width
+                            highlighted: languageComboBox.highlightedIndex === index
+
                             contentItem: Text {
                                 text: typeof languageManager !== 'undefined' ? languageManager.languageDisplayName(modelData) : modelData
                                 color: Theme.textMain
@@ -126,14 +133,9 @@ Item {
                                 elide: Text.ElideRight
                                 verticalAlignment: Text.AlignVCenter
                             }
-                            highlighted: languageComboBox.highlightedIndex === index
+
                         }
 
-                        onCurrentTextChanged: {
-                            if (typeof languageManager !== 'undefined' && currentText) {
-                                languageManager.setLanguage(currentText);
-                            }
-                        }
                     }
 
                     Label {
@@ -143,14 +145,15 @@ Item {
                         opacity: 0.7
                         Layout.columnSpan: 2
                     }
+
                 }
+
             }
 
             Item {
                 Layout.fillHeight: true
             }
 
-            // Info text
             Label {
                 Layout.fillWidth: true
                 text: qsTr("More settings coming soon...")
@@ -159,6 +162,9 @@ Item {
                 opacity: 0.6
                 horizontalAlignment: Text.AlignHCenter
             }
+
         }
+
     }
+
 }
