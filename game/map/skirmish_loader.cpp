@@ -19,6 +19,7 @@
 #include "render/ground/pine_renderer.h"
 #include "render/ground/plant_renderer.h"
 #include "render/ground/river_renderer.h"
+#include "render/ground/riverbank_renderer.h"
 #include "render/ground/stone_renderer.h"
 #include "render/ground/terrain_renderer.h"
 #include "render/scene_renderer.h"
@@ -243,6 +244,13 @@ SkirmishLoadResult SkirmishLoader::start(const QString &mapPath,
     if (terrainService.isInitialized() && terrainService.getHeightMap()) {
       m_river->configure(terrainService.getHeightMap()->getRiverSegments(),
                          terrainService.getHeightMap()->getTileSize());
+    }
+  }
+
+  if (m_riverbank) {
+    if (terrainService.isInitialized() && terrainService.getHeightMap()) {
+      m_riverbank->configure(terrainService.getHeightMap()->getRiverSegments(),
+                             *terrainService.getHeightMap());
     }
   }
 
