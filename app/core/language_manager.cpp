@@ -38,7 +38,7 @@ void LanguageManager::setLanguage(const QString &language) {
 void LanguageManager::loadLanguage(const QString &language) {
   QCoreApplication::removeTranslator(m_translator);
 
-  QString qmFile = QString(":/translations/translations/app_%1.qm").arg(language);
+  QString qmFile = QString(":/StandardOfIron/translations/app_%1.qm").arg(language);
 
   if (m_translator->load(qmFile)) {
     QCoreApplication::installTranslator(m_translator);

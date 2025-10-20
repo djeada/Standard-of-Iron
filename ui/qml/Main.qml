@@ -143,9 +143,8 @@ ApplicationWindow {
             mainWindow.menuVisible = false;
         }
         onOpenSettings: function() {
-            if (typeof game !== 'undefined' && game.openSettings)
-                game.openSettings();
-
+            settingsPanel.visible = true;
+            mainWindow.menuVisible = false;
         }
         onExitRequested: function() {
             if (typeof game !== 'undefined' && game.exitGame)
@@ -234,6 +233,24 @@ ApplicationWindow {
         }
         onCancelled: function() {
             loadGamePanel.visible = false;
+            mainWindow.menuVisible = true;
+        }
+    }
+
+    SettingsPanel {
+        id: settingsPanel
+
+        anchors.fill: parent
+        z: 22
+        visible: false
+        onVisibleChanged: {
+            if (visible) {
+                settingsPanel.forceActiveFocus();
+                gameViewItem.focus = false;
+            }
+        }
+        onCancelled: function() {
+            settingsPanel.visible = false;
             mainWindow.menuVisible = true;
         }
     }

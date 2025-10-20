@@ -701,4 +701,37 @@ Right-click to cancel.</translation>
 "%1"?</translation>
     </message>
 </context>
+<context>
+    <name>SettingsPanel</name>
+    <message>
+        <location filename="../ui/qml/SettingsPanel.qml" line="53" />
+        <source>Settings</source>
+        <translation>Settings</translation>
+    </message>
+    <message>
+        <location filename="../ui/qml/SettingsPanel.qml" line="61" />
+        <source>Close</source>
+        <translation>Close</translation>
+    </message>
+    <message>
+        <location filename="../ui/qml/SettingsPanel.qml" line="78" />
+        <source>Language</source>
+        <translation>Language</translation>
+    </message>
+    <message>
+        <location filename="../ui/qml/SettingsPanel.qml" line="98" />
+        <source>Select Language:</source>
+        <translation>Select Language:</translation>
+    </message>
+    <message>
+        <location filename="../ui/qml/SettingsPanel.qml" line="140" />
+        <source>Language changes apply immediately</source>
+        <translation>Language changes apply immediately</translation>
+    </message>
+    <message>
+        <location filename="../ui/qml/SettingsPanel.qml" line="156" />
+        <source>More settings coming soon...</source>
+        <translation>More settings coming soon...</translation>
+    </message>
+</context>
 </TS>
