@@ -45,11 +45,19 @@ add_subdirectory(game)
 add_subdirectory(ui)
 add_subdirectory(tools)
 
+# ---- Translation support ----
+# Define default language (can be overridden with -DDEFAULT_LANG=de)
+if(NOT DEFINED DEFAULT_LANG)
+    set(DEFAULT_LANG "en")
+endif()
+add_compile_definitions(DEFAULT_LANG="${DEFAULT_LANG}")
+
 # ---- Executable ----
 if(QT_VERSION_MAJOR EQUAL 6)
     qt6_add_executable(standard_of_iron
         main.cpp
         app/core/game_engine.cpp
+        app/core/language_manager.cpp
         app/models/cursor_manager.cpp
         app/models/hover_tracker.cpp
         app/models/selected_units_model.cpp
@@ -63,6 +71,7 @@ else()
     add_executable(standard_of_iron
         main.cpp
         app/core/game_engine.cpp
+        app/core/language_manager.cpp
         app/models/cursor_manager.cpp
         app/models/hover_tracker.cpp
         app/models/selected_units_model.cpp
@@ -98,13 +107,16 @@ if(QT_VERSION_MAJOR EQUAL 6)
             assets/shaders/grid.frag
             assets/maps/test_map.json
             assets/visuals/unit_visuals.json
+            translations/app_en.qm
+            translations/app_de.qm
         DEPENDENCIES
             Qt6::QuickControls2
     )
 else()
     qt5_add_resources(qml_resources qml_resources.qrc)
     qt5_add_resources(assets_resources assets.qrc)
-    target_sources(standard_of_iron PRIVATE ${qml_resources} ${assets_resources})
+    qt5_add_resources(translations_resources translations.qrc)
+    target_sources(standard_of_iron PRIVATE ${qml_resources} ${assets_resources} ${translations_resources})
 endif()
 
 target_link_libraries(standard_of_iron
