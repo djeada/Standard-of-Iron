@@ -392,8 +392,7 @@ TerrainType TerrainHeightMap::getTerrainType(int gridX, int gridZ) const {
   return m_terrainTypes[indexAt(gridX, gridZ)];
 }
 
-bool TerrainHeightMap::isRiverOrNearby(int gridX, int gridZ,
-                                       int margin) const {
+bool TerrainHeightMap::isRiverOrNearby(int gridX, int gridZ, int margin) const {
   if (!inBounds(gridX, gridZ))
     return false;
 
