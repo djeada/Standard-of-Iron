@@ -126,11 +126,8 @@ void PlantRenderer::generatePlantInstances() {
 
   const float plantDensity =
       std::clamp(m_biomeSettings.plantDensity, 0.0f, 2.0f);
-  qDebug() << "PlantRenderer: plantDensity =" << plantDensity
-           << "from biome settings";
 
   if (plantDensity < 0.01f) {
-    qDebug() << "PlantRenderer: plantDensity too low, skipping generation";
     m_plantInstanceCount = 0;
     m_plantInstancesDirty = false;
     return;
