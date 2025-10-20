@@ -392,6 +392,29 @@ TerrainType TerrainHeightMap::getTerrainType(int gridX, int gridZ) const {
   return m_terrainTypes[indexAt(gridX, gridZ)];
 }
 
+bool TerrainHeightMap::isRiverOrNearby(int gridX, int gridZ, int margin) const {
+  if (!inBounds(gridX, gridZ))
+    return false;
+
+  if (m_terrainTypes[indexAt(gridX, gridZ)] == TerrainType::River)
+    return true;
+
+  for (int dz = -margin; dz <= margin; ++dz) {
+    for (int dx = -margin; dx <= margin; ++dx) {
+      if (dx == 0 && dz == 0)
+        continue;
+      int nx = gridX + dx;
+      int nz = gridZ + dz;
+      if (inBounds(nx, nz) &&
+          m_terrainTypes[indexAt(nx, nz)] == TerrainType::River) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
 int TerrainHeightMap::indexAt(int x, int z) const { return z * m_width + x; }
 
 bool TerrainHeightMap::inBounds(int x, int z) const {
