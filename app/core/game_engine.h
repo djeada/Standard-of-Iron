@@ -298,6 +298,7 @@ private:
 
   void updateAmbientState(float dt);
   bool isPlayerInCombat() const;
+  void loadAudioResources();
 signals:
   void selectedUnitsChanged();
   void selectedUnitsDataChanged();
