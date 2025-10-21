@@ -19,7 +19,10 @@ The event system is implemented in `game/core/event_manager.h` and consists of:
 - ✅ Multiple subscribers per event type
 - ✅ Manual and automatic (RAII) subscription management
 - ✅ Zero-cost abstractions with compile-time type checking
-- ✅ Thread-safe singleton instance
+- ✅ Thread-safe event publishing and subscription
+- ✅ Event statistics tracking (publish counts, subscriber counts)
+- ✅ Named event types for debugging
+- ✅ Lock-free event dispatch (copies handlers before calling)
 
 ## Event Types
 
@@ -283,11 +286,103 @@ public:
     }
     
     void handleAudioTrigger(const AudioTriggerEvent& event) {
-        // Play the sound
+        // Play the sound using audio system
+        AudioSystem::getInstance().playSound(
+            event.soundId, event.volume, event.loop, event.priority
+        );
     }
     
     void handleMusicTrigger(const MusicTriggerEvent& event) {
-        // Play the music
+        // Play the music using audio system
+        AudioSystem::getInstance().playMusic(
+            event.musicId, event.volume, event.crossfade
+        );
+    }
+};
+```
+
+### Integrating with Audio System
+
+The event system can trigger audio through dedicated audio events:
+
+```cpp
+// In combat system, when battle starts
+void CombatSystem::startBattle(EntityID attacker, EntityID defender) {
+    // Publish battle event
+    EventManager::instance().publish(
+        BattleStartedEvent(attacker, defender, posX, posY)
+    );
+    
+    // Trigger battle sound effect
+    EventManager::instance().publish(
+        AudioTriggerEvent("sword_clash", 0.8f, false, 5)
+    );
+}
+
+// In victory service, when player wins
+void VictoryService::handleVictory() {
+    // Change ambient state
+    EventManager::instance().publish(
+        AmbientStateChangedEvent(AmbientState::VICTORY, previousState)
+    );
+    
+    // Play victory music
+    EventManager::instance().publish(
+        MusicTriggerEvent("victory_theme", 1.0f, true)
+    );
+}
+```
+
+### Responding to Game State Changes
+
+Listen to game events and respond with audio:
+
+```cpp
+class GameAudioManager {
+private:
+    ScopedEventSubscription<AmbientStateChangedEvent> ambientSub;
+    ScopedEventSubscription<BattleStartedEvent> battleSub;
+    ScopedEventSubscription<UnitDiedEvent> unitDiedSub;
+    
+public:
+    GameAudioManager() {
+        // Change music based on ambient state
+        ambientSub = ScopedEventSubscription<AmbientStateChangedEvent>(
+            [](const AmbientStateChangedEvent& event) {
+                switch (event.newState) {
+                    case AmbientState::PEACEFUL:
+                        EventManager::instance().publish(
+                            MusicTriggerEvent("peaceful_theme", 0.6f)
+                        );
+                        break;
+                    case AmbientState::COMBAT:
+                        EventManager::instance().publish(
+                            MusicTriggerEvent("battle_theme", 0.9f)
+                        );
+                        break;
+                    // ... other states
+                }
+            }
+        );
+        
+        // Play battle sounds
+        battleSub = ScopedEventSubscription<BattleStartedEvent>(
+            [](const BattleStartedEvent& event) {
+                EventManager::instance().publish(
+                    AudioTriggerEvent("battle_start", 0.7f)
+                );
+            }
+        );
+        
+        // Play death sounds
+        unitDiedSub = ScopedEventSubscription<UnitDiedEvent>(
+            [](const UnitDiedEvent& event) {
+                std::string deathSound = event.unitType + "_death";
+                EventManager::instance().publish(
+                    AudioTriggerEvent(deathSound, 0.8f)
+                );
+            }
+        );
     }
 };
 ```
@@ -344,13 +439,40 @@ EventManager::instance().subscribe<MyCustomEvent>([](const MyCustomEvent& e) {
 EventManager::instance().publish(MyCustomEvent(123));
 ```
 
+## Thread Safety
+
+The event system is fully thread-safe:
+
+- All operations (subscribe, unsubscribe, publish) are protected by mutexes
+- Event dispatch makes a copy of handlers before calling them
+- This prevents deadlocks when handlers modify subscriptions
+- Multiple threads can safely publish and subscribe concurrently
+
+## Event Statistics
+
+The EventManager tracks statistics for each event type:
+
+```cpp
+#include <typeindex>
+
+// Get statistics for an event type
+auto stats = EventManager::instance().getStats(typeid(UnitDiedEvent));
+std::cout << "Published: " << stats.publishCount << std::endl;
+std::cout << "Subscribers: " << stats.subscriberCount << std::endl;
+
+// Get current subscriber count
+size_t count = EventManager::instance().getSubscriberCount(typeid(BattleStartedEvent));
+```
+
 ## Performance Considerations
 
 - Event dispatch is O(n) where n = number of subscribers for that event type
 - Type checking happens at compile time (zero runtime cost)
 - EventManager uses a singleton pattern (initialized on first use)
-- No dynamic memory allocation during event dispatch
+- Handler copying during dispatch adds minimal overhead but prevents deadlocks
 - Handlers are stored as type-erased function pointers for efficiency
+- Mutex overhead is minimal for single-threaded use
+- Statistics tracking adds negligible overhead
 
 ## Future Enhancements
 
@@ -359,6 +481,6 @@ Potential improvements for the event system:
 - [ ] Event queuing and deferred processing
 - [ ] Priority-based event dispatch
 - [ ] Event filtering/interception
-- [ ] Thread-safe event publishing
 - [ ] Event replay/recording for debugging
 - [ ] Performance profiling hooks
+- [ ] Weak pointer support for automatic cleanup

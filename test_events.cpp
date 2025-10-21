@@ -269,6 +269,54 @@ void testComplexEventScenario(TestResults &results) {
   EventManager::instance().unsubscribe<BattleStartedEvent>(battleHandle);
 }
 
+void testEventStats(TestResults &results) {
+  std::cout << "\n11. Testing event statistics..." << std::endl;
+
+  auto handle1 = EventManager::instance().subscribe<UnitDiedEvent>(
+      [](const UnitDiedEvent &) {});
+  auto handle2 = EventManager::instance().subscribe<UnitDiedEvent>(
+      [](const UnitDiedEvent &) {});
+
+  auto stats1 = EventManager::instance().getStats(typeid(UnitDiedEvent));
+  results.recordTest("Subscriber count correct", stats1.subscriberCount == 2);
+
+  EventManager::instance().publish(UnitDiedEvent(1, 0, "test"));
+  EventManager::instance().publish(UnitDiedEvent(2, 0, "test"));
+
+  auto stats2 = EventManager::instance().getStats(typeid(UnitDiedEvent));
+  results.recordTest("Publish count tracked", stats2.publishCount == 2);
+
+  EventManager::instance().unsubscribe<UnitDiedEvent>(handle1);
+  auto stats3 = EventManager::instance().getStats(typeid(UnitDiedEvent));
+  results.recordTest("Subscriber count updated after unsubscribe",
+                     stats3.subscriberCount == 1);
+
+  EventManager::instance().unsubscribe<UnitDiedEvent>(handle2);
+}
+
+void testEventTypeNames(TestResults &results) {
+  std::cout << "\n12. Testing event type names..." << std::endl;
+
+  UnitSelectedEvent unitEvent(1);
+  results.recordTest("UNIT_SELECTED type name",
+                     std::string(unitEvent.getTypeName()) == "UNIT_SELECTED");
+
+  BattleStartedEvent battleStart(1, 2);
+  results.recordTest("BATTLE_STARTED type name",
+                     std::string(battleStart.getTypeName()) ==
+                         "BATTLE_STARTED");
+
+  BattleEndedEvent battleEnd(1, 2);
+  results.recordTest("BATTLE_ENDED type name",
+                     std::string(battleEnd.getTypeName()) == "BATTLE_ENDED");
+
+  AmbientStateChangedEvent ambientEvent(AmbientState::COMBAT,
+                                        AmbientState::PEACEFUL);
+  results.recordTest("AMBIENT_STATE_CHANGED type name",
+                     std::string(ambientEvent.getTypeName()) ==
+                         "AMBIENT_STATE_CHANGED");
+}
+
 int main(int argc, char *argv[]) {
   QCoreApplication app(argc, argv);
 
@@ -288,6 +336,8 @@ int main(int argc, char *argv[]) {
   testEventDataIntegrity(results);
   testNoSubscribers(results);
   testComplexEventScenario(results);
+  testEventStats(results);
+  testEventTypeNames(results);
 
   results.printSummary();
 
