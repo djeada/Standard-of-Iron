@@ -73,3 +73,5 @@ add_library(game_systems STATIC
 
 target_include_directories(game_systems PUBLIC .)
 target_link_libraries(game_systems PUBLIC Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Gui Qt${QT_VERSION_MAJOR}::Sql engine_core render_gl)
+
+add_subdirectory(audio)
