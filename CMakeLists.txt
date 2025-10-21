@@ -145,6 +145,33 @@ endif()
 # Copy assets next to the binary for dev runs
 file(COPY assets/ DESTINATION ${CMAKE_BINARY_DIR}/assets/)
 
+# ---- Test applications ----
+# Event system test
+if(QT_VERSION_MAJOR EQUAL 6)
+    qt6_add_executable(test_events test_events.cpp)
+else()
+    add_executable(test_events test_events.cpp)
+endif()
+
+target_link_libraries(test_events
+    PRIVATE
+        Qt${QT_VERSION_MAJOR}::Core
+        engine_core
+)
+
+# Audio system test
+if(QT_VERSION_MAJOR EQUAL 6)
+    qt6_add_executable(test_audio test_audio.cpp)
+else()
+    add_executable(test_audio test_audio.cpp)
+endif()
+
+target_link_libraries(test_audio
+    PRIVATE
+        Qt${QT_VERSION_MAJOR}::Core
+        audio_system
+)
+
 # ---- clang-format helpers (optional but convenient) ----
 # Provides:
 #   - clang-format        : formats all C/C++ sources using .clang-format
