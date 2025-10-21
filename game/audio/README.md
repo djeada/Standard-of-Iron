@@ -190,21 +190,12 @@ Current audio files are simple sine wave tones for testing. Replace with actual 
 
 ## Testing
 
-Two test executables are provided:
+The audio system can be tested through the main application by:
+- Selecting units to trigger voice lines
+- Observing ambient state changes to hear music transitions
+- Publishing audio events through the event system
 
-### test_audio_event_handler
-Basic test of the audio event handler functionality:
-```bash
-cd build
-./test_audio_event_handler
-```
-
-### test_audio_integration
-Full integration test with unit creation and event publishing:
-```bash
-cd build
-./test_audio_integration
-```
+Note: Dedicated test executables are not currently part of the build configuration.
 
 ## Dependencies
 
