@@ -109,7 +109,13 @@ void VictoryService::checkVictoryConditions(Engine::Core::World &world) {
     m_victoryState = "victory";
     qInfo() << "VICTORY! Conditions met.";
 
-    m_statsRegistry.markGameEnd(m_localOwnerId);
+    const auto &allOwners = m_ownerRegistry.getAllOwners();
+    for (const auto &owner : allOwners) {
+      if (owner.type == Game::Systems::OwnerType::Player ||
+          owner.type == Game::Systems::OwnerType::AI) {
+        m_statsRegistry.markGameEnd(owner.ownerId);
+      }
+    }
 
     const auto *stats = m_statsRegistry.getStats(m_localOwnerId);
     if (stats) {
@@ -145,7 +151,13 @@ void VictoryService::checkDefeatConditions(Engine::Core::World &world) {
       m_victoryState = "defeat";
       qInfo() << "DEFEAT! Condition met.";
 
-      m_statsRegistry.markGameEnd(m_localOwnerId);
+      const auto &allOwners = m_ownerRegistry.getAllOwners();
+      for (const auto &owner : allOwners) {
+        if (owner.type == Game::Systems::OwnerType::Player ||
+            owner.type == Game::Systems::OwnerType::AI) {
+          m_statsRegistry.markGameEnd(owner.ownerId);
+        }
+      }
 
       const auto *stats = m_statsRegistry.getStats(m_localOwnerId);
       if (stats) {
