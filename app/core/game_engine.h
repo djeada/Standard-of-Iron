@@ -6,6 +6,7 @@
 #include "../utils/engine_view_helpers.h"
 #include "../utils/movement_utils.h"
 #include "../utils/selection_utils.h"
+#include "game/audio/AudioEventHandler.h"
 #include "game/core/event_manager.h"
 #include "game/systems/game_state_serializer.h"
 #include <QJsonObject>
@@ -276,6 +277,7 @@ private:
   std::unique_ptr<Game::Systems::SelectionController> m_selectionController;
   std::unique_ptr<App::Controllers::CommandController> m_commandController;
   std::unique_ptr<Game::Map::MapCatalog> m_mapCatalog;
+  std::unique_ptr<Game::Audio::AudioEventHandler> m_audioEventHandler;
   QQuickWindow *m_window = nullptr;
   RuntimeState m_runtime;
   ViewportState m_viewport;
@@ -291,6 +293,12 @@ private:
   Engine::Core::ScopedEventSubscription<Engine::Core::UnitSpawnedEvent>
       m_unitSpawnedSubscription;
   EntityCache m_entityCache;
+  Engine::Core::AmbientState m_currentAmbientState = Engine::Core::AmbientState::PEACEFUL;
+  float m_ambientCheckTimer = 0.0f;
+
+  void updateAmbientState(float dt);
+  bool isPlayerInCombat() const;
+  void loadAudioResources();
 signals:
   void selectedUnitsChanged();
   void selectedUnitsDataChanged();
