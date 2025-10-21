@@ -2,6 +2,7 @@
 #include "archer.h"
 #include "barracks.h"
 #include "knight.h"
+#include "mounted_knight.h"
 #include "spearman.h"
 
 namespace Game {
@@ -16,6 +17,10 @@ void registerBuiltInUnits(UnitFactoryRegistry &reg) {
       "knight", [](Engine::Core::World &world, const SpawnParams &params) {
         return Knight::Create(world, params);
       });
+  reg.registerFactory("mounted_knight", [](Engine::Core::World &world,
+                                           const SpawnParams &params) {
+    return MountedKnight::Create(world, params);
+  });
   reg.registerFactory(
       "spearman", [](Engine::Core::World &world, const SpawnParams &params) {
         return Spearman::Create(world, params);

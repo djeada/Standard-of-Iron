@@ -113,6 +113,13 @@ public:
     const QString knightFrag = kShaderBase + QStringLiteral("knight.frag");
     load(QStringLiteral("knight"), knightVert, knightFrag);
 
+    const QString mountedKnightVert =
+        kShaderBase + QStringLiteral("mounted_knight.vert");
+    const QString mountedKnightFrag =
+        kShaderBase + QStringLiteral("mounted_knight.frag");
+    load(QStringLiteral("mounted_knight"), mountedKnightVert,
+         mountedKnightFrag);
+
     const QString spearmanVert = kShaderBase + QStringLiteral("spearman.vert");
     const QString spearmanFrag = kShaderBase + QStringLiteral("spearman.frag");
     load(QStringLiteral("spearman"), spearmanVert, spearmanFrag);
