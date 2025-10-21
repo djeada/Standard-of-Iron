@@ -1,4 +1,5 @@
 #include "river_renderer.h"
+#include "../../game/map/visibility_service.h"
 #include "../gl/mesh.h"
 #include "../gl/resources.h"
 #include "../scene_renderer.h"
@@ -19,13 +20,11 @@ void RiverRenderer::configure(
 }
 
 void RiverRenderer::buildMeshes() {
+  m_meshes.clear();
+
   if (m_riverSegments.empty()) {
-    m_mesh.reset();
     return;
   }
-
-  std::vector<Vertex> vertices;
-  std::vector<unsigned int> indices;
 
   auto noiseHash = [](float x, float y) -> float {
     float n = std::sin(x * 127.1f + y * 311.7f) * 43758.5453123f;
@@ -53,8 +52,10 @@ void RiverRenderer::buildMeshes() {
   for (const auto &segment : m_riverSegments) {
     QVector3D dir = segment.end - segment.start;
     float length = dir.length();
-    if (length < 0.01f)
+    if (length < 0.01f) {
+      m_meshes.push_back(nullptr);
       continue;
+    }
 
     dir.normalize();
     QVector3D perpendicular(-dir.z(), 0.0f, dir.x());
@@ -64,7 +65,8 @@ void RiverRenderer::buildMeshes() {
         static_cast<int>(std::ceil(length / (m_tileSize * 0.5f))) + 1;
     lengthSteps = std::max(lengthSteps, 8);
 
-    unsigned int baseIndex = static_cast<unsigned int>(vertices.size());
+    std::vector<Vertex> vertices;
+    std::vector<unsigned int> indices;
 
     for (int i = 0; i < lengthSteps; ++i) {
       float t = static_cast<float>(i) / static_cast<float>(lengthSteps - 1);
@@ -120,7 +122,7 @@ void RiverRenderer::buildMeshes() {
       vertices.push_back(rightVertex);
 
       if (i < lengthSteps - 1) {
-        unsigned int idx0 = baseIndex + i * 2;
+        unsigned int idx0 = i * 2;
         unsigned int idx1 = idx0 + 1;
         unsigned int idx2 = idx0 + 2;
         unsigned int idx3 = idx0 + 3;
@@ -134,22 +136,24 @@ void RiverRenderer::buildMeshes() {
         indices.push_back(idx3);
       }
     }
-  }
 
-  if (vertices.empty() || indices.empty()) {
-    m_mesh.reset();
-    return;
+    if (!vertices.empty() && !indices.empty()) {
+      m_meshes.push_back(std::make_unique<Mesh>(vertices, indices));
+    } else {
+      m_meshes.push_back(nullptr);
+    }
   }
-
-  m_mesh = std::make_unique<Mesh>(vertices, indices);
 }
 
 void RiverRenderer::submit(Renderer &renderer, ResourceManager *resources) {
-  if (!m_mesh || m_riverSegments.empty()) {
+  if (m_meshes.empty() || m_riverSegments.empty()) {
     return;
   }
 
   Q_UNUSED(resources);
+
+  auto &visibility = Game::Map::VisibilityService::instance();
+  const bool useVisibility = visibility.isInitialized();
 
   auto shader = renderer.getShader("river");
   if (!shader) {
@@ -161,8 +165,55 @@ void RiverRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   QMatrix4x4 model;
   model.setToIdentity();
 
-  renderer.mesh(m_mesh.get(), model, QVector3D(1.0f, 1.0f, 1.0f), nullptr,
-                1.0f);
+  size_t meshIndex = 0;
+  for (const auto &segment : m_riverSegments) {
+    if (meshIndex >= m_meshes.size())
+      break;
+
+    auto *mesh = m_meshes[meshIndex].get();
+    ++meshIndex;
+
+    if (!mesh) {
+      continue;
+    }
+
+    QVector3D dir = segment.end - segment.start;
+    float length = dir.length();
+
+    float alpha = 1.0f;
+    QVector3D colorMultiplier(1.0f, 1.0f, 1.0f);
+
+    if (useVisibility) {
+      int maxVisibilityState = 0;
+      dir.normalize();
+
+      int samplesPerSegment = 5;
+      for (int i = 0; i < samplesPerSegment; ++i) {
+        float t =
+            static_cast<float>(i) / static_cast<float>(samplesPerSegment - 1);
+        QVector3D pos = segment.start + dir * (length * t);
+
+        if (visibility.isVisibleWorld(pos.x(), pos.z())) {
+          maxVisibilityState = 2;
+          break;
+        } else if (visibility.isExploredWorld(pos.x(), pos.z())) {
+          maxVisibilityState = std::max(maxVisibilityState, 1);
+        }
+      }
+
+      if (maxVisibilityState == 0) {
+        continue;
+      } else if (maxVisibilityState == 1) {
+        alpha = 0.5f;
+        colorMultiplier = QVector3D(0.4f, 0.4f, 0.45f);
+      }
+    }
+
+    QVector3D finalColor(colorMultiplier.x(), colorMultiplier.y(),
+                         colorMultiplier.z());
+
+    renderer.mesh(mesh, model, finalColor, nullptr, alpha);
+  }
 
   renderer.setCurrentShader(nullptr);
 }

@@ -1,4 +1,5 @@
 #include "riverbank_renderer.h"
+#include "../../game/map/visibility_service.h"
 #include "../gl/mesh.h"
 #include "../gl/resources.h"
 #include "../scene_renderer.h"
@@ -23,13 +24,11 @@ void RiverbankRenderer::configure(
 }
 
 void RiverbankRenderer::buildMeshes() {
+  m_meshes.clear();
+
   if (m_riverSegments.empty()) {
-    m_mesh.reset();
     return;
   }
-
-  std::vector<Vertex> vertices;
-  std::vector<unsigned int> indices;
 
   auto noiseHash = [](float x, float y) -> float {
     float n = std::sin(x * 127.1f + y * 311.7f) * 43758.5453123f;
@@ -58,28 +57,28 @@ void RiverbankRenderer::buildMeshes() {
   auto sampleHeight = [&](float worldX, float worldZ) -> float {
     if (m_heights.empty() || m_gridWidth == 0 || m_gridHeight == 0)
       return 0.0f;
-    
+
     float halfWidth = m_gridWidth * 0.5f - 0.5f;
     float halfHeight = m_gridHeight * 0.5f - 0.5f;
     float gx = (worldX / m_tileSize) + halfWidth;
     float gz = (worldZ / m_tileSize) + halfHeight;
-    
+
     gx = std::clamp(gx, 0.0f, float(m_gridWidth - 1));
     gz = std::clamp(gz, 0.0f, float(m_gridHeight - 1));
-    
+
     int x0 = int(std::floor(gx));
     int z0 = int(std::floor(gz));
     int x1 = std::min(x0 + 1, m_gridWidth - 1);
     int z1 = std::min(z0 + 1, m_gridHeight - 1);
-    
+
     float tx = gx - float(x0);
     float tz = gz - float(z0);
-    
+
     float h00 = m_heights[z0 * m_gridWidth + x0];
     float h10 = m_heights[z0 * m_gridWidth + x1];
     float h01 = m_heights[z1 * m_gridWidth + x0];
     float h11 = m_heights[z1 * m_gridWidth + x1];
-    
+
     float h0 = h00 * (1.0f - tx) + h10 * tx;
     float h1 = h01 * (1.0f - tx) + h11 * tx;
     return h0 * (1.0f - tz) + h1 * tz;
@@ -89,13 +88,15 @@ void RiverbankRenderer::buildMeshes() {
   for (const auto &segment : m_riverSegments) {
     QVector3D dir = segment.end - segment.start;
     float length = dir.length();
-    if (length < 0.01f)
+    if (length < 0.01f) {
+      m_meshes.push_back(nullptr);
       continue;
+    }
 
     dir.normalize();
     QVector3D perpendicular(-dir.z(), 0.0f, dir.x());
     float halfWidth = segment.width * 0.5f;
-    
+
     // Riverbank transition zone width (extends beyond water edge)
     float bankWidth = 0.2f;
 
@@ -103,7 +104,8 @@ void RiverbankRenderer::buildMeshes() {
         static_cast<int>(std::ceil(length / (m_tileSize * 0.5f))) + 1;
     lengthSteps = std::max(lengthSteps, 8);
 
-    unsigned int baseIndex = static_cast<unsigned int>(vertices.size());
+    std::vector<Vertex> vertices;
+    std::vector<unsigned int> indices;
 
     for (int i = 0; i < lengthSteps; ++i) {
       float t = static_cast<float>(i) / static_cast<float>(lengthSteps - 1);
@@ -134,13 +136,18 @@ void RiverbankRenderer::buildMeshes() {
 
       // Create riverbank zones on both sides
       // Inner edge (water edge)
-      QVector3D innerLeft = centerPos - perpendicular * (halfWidth + widthVariation);
-      QVector3D innerRight = centerPos + perpendicular * (halfWidth + widthVariation);
-      
+      QVector3D innerLeft =
+          centerPos - perpendicular * (halfWidth + widthVariation);
+      QVector3D innerRight =
+          centerPos + perpendicular * (halfWidth + widthVariation);
+
       // Outer edge (land edge) - with additional variation
-      float outerVariation = noise(centerPos.x() * 8.0f, centerPos.z() * 8.0f) * 0.5f;
-      QVector3D outerLeft = innerLeft - perpendicular * (bankWidth + outerVariation);
-      QVector3D outerRight = innerRight + perpendicular * (bankWidth + outerVariation);
+      float outerVariation =
+          noise(centerPos.x() * 8.0f, centerPos.z() * 8.0f) * 0.5f;
+      QVector3D outerLeft =
+          innerLeft - perpendicular * (bankWidth + outerVariation);
+      QVector3D outerRight =
+          innerRight + perpendicular * (bankWidth + outerVariation);
 
       float normal[3] = {0.0f, 1.0f, 0.0f};
 
@@ -148,7 +155,7 @@ void RiverbankRenderer::buildMeshes() {
       Vertex leftInner, leftOuter;
       float heightInnerLeft = sampleHeight(innerLeft.x(), innerLeft.z());
       float heightOuterLeft = sampleHeight(outerLeft.x(), outerLeft.z());
-      
+
       leftInner.position[0] = innerLeft.x();
       leftInner.position[1] = heightInnerLeft + 0.05f; // Slightly above terrain
       leftInner.position[2] = innerLeft.z();
@@ -173,7 +180,7 @@ void RiverbankRenderer::buildMeshes() {
       Vertex rightInner, rightOuter;
       float heightInnerRight = sampleHeight(innerRight.x(), innerRight.z());
       float heightOuterRight = sampleHeight(outerRight.x(), outerRight.z());
-      
+
       rightInner.position[0] = innerRight.x();
       rightInner.position[1] = heightInnerRight + 0.05f;
       rightInner.position[2] = innerRight.z();
@@ -195,43 +202,45 @@ void RiverbankRenderer::buildMeshes() {
       vertices.push_back(rightOuter);
 
       if (i < lengthSteps - 1) {
-        unsigned int idx0 = baseIndex + i * 4;
-        
+        unsigned int idx0 = i * 4;
+
         // Left bank triangles
-        indices.push_back(idx0 + 0);     // left inner
-        indices.push_back(idx0 + 4);     // next left inner
-        indices.push_back(idx0 + 1);     // left outer
-        
-        indices.push_back(idx0 + 1);     // left outer
-        indices.push_back(idx0 + 4);     // next left inner
-        indices.push_back(idx0 + 5);     // next left outer
+        indices.push_back(idx0 + 0); // left inner
+        indices.push_back(idx0 + 4); // next left inner
+        indices.push_back(idx0 + 1); // left outer
+
+        indices.push_back(idx0 + 1); // left outer
+        indices.push_back(idx0 + 4); // next left inner
+        indices.push_back(idx0 + 5); // next left outer
 
         // Right bank triangles
-        indices.push_back(idx0 + 2);     // right inner
-        indices.push_back(idx0 + 3);     // right outer
-        indices.push_back(idx0 + 6);     // next right inner
-        
-        indices.push_back(idx0 + 3);     // right outer
-        indices.push_back(idx0 + 7);     // next right outer
-        indices.push_back(idx0 + 6);     // next right inner
+        indices.push_back(idx0 + 2); // right inner
+        indices.push_back(idx0 + 3); // right outer
+        indices.push_back(idx0 + 6); // next right inner
+
+        indices.push_back(idx0 + 3); // right outer
+        indices.push_back(idx0 + 7); // next right outer
+        indices.push_back(idx0 + 6); // next right inner
       }
     }
-  }
 
-  if (vertices.empty() || indices.empty()) {
-    m_mesh.reset();
-    return;
+    if (!vertices.empty() && !indices.empty()) {
+      m_meshes.push_back(std::make_unique<Mesh>(vertices, indices));
+    } else {
+      m_meshes.push_back(nullptr);
+    }
   }
-
-  m_mesh = std::make_unique<Mesh>(vertices, indices);
 }
 
 void RiverbankRenderer::submit(Renderer &renderer, ResourceManager *resources) {
-  if (!m_mesh || m_riverSegments.empty()) {
+  if (m_meshes.empty() || m_riverSegments.empty()) {
     return;
   }
 
   Q_UNUSED(resources);
+
+  auto &visibility = Game::Map::VisibilityService::instance();
+  const bool useVisibility = visibility.isInitialized();
 
   auto shader = renderer.getShader("riverbank");
   if (!shader) {
@@ -243,8 +252,55 @@ void RiverbankRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   QMatrix4x4 model;
   model.setToIdentity();
 
-  renderer.mesh(m_mesh.get(), model, QVector3D(1.0f, 1.0f, 1.0f), nullptr,
-                1.0f);
+  size_t meshIndex = 0;
+  for (const auto &segment : m_riverSegments) {
+    if (meshIndex >= m_meshes.size())
+      break;
+
+    auto *mesh = m_meshes[meshIndex].get();
+    ++meshIndex;
+
+    if (!mesh) {
+      continue;
+    }
+
+    QVector3D dir = segment.end - segment.start;
+    float length = dir.length();
+
+    float alpha = 1.0f;
+    QVector3D colorMultiplier(1.0f, 1.0f, 1.0f);
+
+    if (useVisibility) {
+      int maxVisibilityState = 0;
+      dir.normalize();
+
+      int samplesPerSegment = 5;
+      for (int i = 0; i < samplesPerSegment; ++i) {
+        float t =
+            static_cast<float>(i) / static_cast<float>(samplesPerSegment - 1);
+        QVector3D pos = segment.start + dir * (length * t);
+
+        if (visibility.isVisibleWorld(pos.x(), pos.z())) {
+          maxVisibilityState = 2;
+          break;
+        } else if (visibility.isExploredWorld(pos.x(), pos.z())) {
+          maxVisibilityState = std::max(maxVisibilityState, 1);
+        }
+      }
+
+      if (maxVisibilityState == 0) {
+        continue;
+      } else if (maxVisibilityState == 1) {
+        alpha = 0.5f;
+        colorMultiplier = QVector3D(0.4f, 0.4f, 0.45f);
+      }
+    }
+
+    QVector3D finalColor(colorMultiplier.x(), colorMultiplier.y(),
+                         colorMultiplier.z());
+
+    renderer.mesh(mesh, model, finalColor, nullptr, alpha);
+  }
 
   renderer.setCurrentShader(nullptr);
 }
