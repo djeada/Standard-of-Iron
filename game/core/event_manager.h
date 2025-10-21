@@ -224,30 +224,6 @@ public:
   int newOwnerId;
 };
 
-class BattleStartedEvent : public Event {
-public:
-  BattleStartedEvent(EntityID attackerId, EntityID defenderId,
-                     float posX = 0.0f, float posY = 0.0f)
-      : attackerId(attackerId), defenderId(defenderId), posX(posX), posY(posY) {
-  }
-  EntityID attackerId;
-  EntityID defenderId;
-  float posX;
-  float posY;
-  const char *getTypeName() const override { return "BATTLE_STARTED"; }
-};
-
-class BattleEndedEvent : public Event {
-public:
-  BattleEndedEvent(EntityID winnerId, EntityID loserId,
-                   bool defenderDied = false)
-      : winnerId(winnerId), loserId(loserId), defenderDied(defenderDied) {}
-  EntityID winnerId;
-  EntityID loserId;
-  bool defenderDied;
-  const char *getTypeName() const override { return "BATTLE_ENDED"; }
-};
-
 enum class AmbientState { PEACEFUL, TENSE, COMBAT, VICTORY, DEFEAT };
 
 class AmbientStateChangedEvent : public Event {
