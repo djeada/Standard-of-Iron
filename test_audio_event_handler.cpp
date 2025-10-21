@@ -32,10 +32,8 @@ int main(int argc, char *argv[]) {
   std::cout << "   ✓ Audio Event Handler initialized" << std::endl;
 
   std::cout << "\n4. Loading placeholder audio resources..." << std::endl;
-  audioSystem.loadSound("archer_voice",
-                        "assets/audio/voices/archer_voice.wav");
-  audioSystem.loadSound("knight_voice",
-                        "assets/audio/voices/knight_voice.wav");
+  audioSystem.loadSound("archer_voice", "assets/audio/voices/archer_voice.wav");
+  audioSystem.loadSound("knight_voice", "assets/audio/voices/knight_voice.wav");
   audioSystem.loadSound("spearman_voice",
                         "assets/audio/voices/spearman_voice.wav");
   std::cout << "   ✓ Loaded unit voice sounds" << std::endl;
