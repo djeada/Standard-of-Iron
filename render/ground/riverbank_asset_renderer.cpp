@@ -82,9 +82,43 @@ void RiverbankAssetRenderer::submit(Renderer &renderer,
                                     ResourceManager *resources) {
   Q_UNUSED(resources);
 
-  if (m_assetInstanceCount > 0) {
-    if (!m_assetInstanceBuffer) {
-      m_assetInstanceBuffer = std::make_unique<Buffer>(Buffer::Type::Vertex);
+  if (m_assetInstanceCount == 0) {
+    return;
+  }
+
+  if (!m_assetInstanceBuffer) {
+    m_assetInstanceBuffer = std::make_unique<Buffer>(Buffer::Type::Vertex);
+  }
+  if (m_assetInstancesDirty && m_assetInstanceBuffer) {
+    m_assetInstanceBuffer->setData(m_assetInstances, Buffer::Usage::Static);
+    m_assetInstancesDirty = false;
+  }
+
+  auto &visibility = Game::Map::VisibilityService::instance();
+  const bool useVisibility = visibility.isInitialized();
+
+  std::vector<RiverbankAssetInstanceGpu> visibleInstances;
+
+  for (const auto &instance : m_assetInstances) {
+    float alpha = 1.0f;
+    bool shouldRender = true;
+
+    if (useVisibility) {
+      float worldX = instance.position[0];
+      float worldZ = instance.position[2];
+
+      if (visibility.isVisibleWorld(worldX, worldZ)) {
+
+        alpha = 1.0f;
+      } else if (visibility.isExploredWorld(worldX, worldZ)) {
+
+        alpha = 0.5f;
+
+        shouldRender = false;
+      } else {
+
+        shouldRender = false;
+      }
     }
 
     if (shouldRender) {
@@ -92,47 +126,11 @@ void RiverbankAssetRenderer::submit(Renderer &renderer,
     }
   }
 
-  // Check visibility service to respect fog of war
-  auto &visibility = Game::Map::VisibilityService::instance();
-  const bool useVisibility = visibility.isInitialized();
+  if (!visibleInstances.empty()) {
 
-  if (useVisibility) {
-    bool anyVisible = false;
-
-    // Check if any riverbank asset is in visible area
-    for (const auto &segment : m_riverSegments) {
-      QVector3D dir = segment.end - segment.start;
-      float length = dir.length();
-      if (length < 0.01f)
-        continue;
-
-      dir.normalize();
-
-      // Sample at start, middle, and end of segment
-      for (int i = 0; i <= 2 && !anyVisible; ++i) {
-        float t = i * 0.5f;
-        QVector3D pos = segment.start + dir * (length * t);
-
-        if (visibility.isVisibleWorld(pos.x(), pos.z())) {
-          anyVisible = true;
-          break;
-        }
-      }
-
-      if (anyVisible)
-        break;
-    }
-
-    // If no riverbank assets are visible, skip rendering
-    if (!anyVisible) {
-      return;
-    }
-  }
-
-  if (m_assetInstanceBuffer && m_assetInstanceCount > 0) {
-    // TODO: Implement actual instanced rendering when shaders are ready
-    qDebug() << "RiverbankAssetRenderer: Would render" << m_assetInstanceCount
-             << "riverbank assets";
+    qDebug() << "RiverbankAssetRenderer: Would render"
+             << visibleInstances.size() << "of" << m_assetInstanceCount
+             << "riverbank assets (fog of war applied)";
   }
 }
 
