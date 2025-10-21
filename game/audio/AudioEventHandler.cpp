@@ -1,8 +1,8 @@
 #include "AudioEventHandler.h"
-#include "AudioSystem.h"
 #include "../core/component.h"
 #include "../core/entity.h"
 #include "../core/world.h"
+#include "AudioSystem.h"
 
 namespace Game {
 namespace Audio {
@@ -17,11 +17,11 @@ bool AudioEventHandler::initialize() {
     return true;
   }
 
-  m_unitSelectedSub = Engine::Core::ScopedEventSubscription<
-      Engine::Core::UnitSelectedEvent>(
-      [this](const Engine::Core::UnitSelectedEvent &event) {
-        onUnitSelected(event);
-      });
+  m_unitSelectedSub =
+      Engine::Core::ScopedEventSubscription<Engine::Core::UnitSelectedEvent>(
+          [this](const Engine::Core::UnitSelectedEvent &event) {
+            onUnitSelected(event);
+          });
 
   m_ambientChangedSub = Engine::Core::ScopedEventSubscription<
       Engine::Core::AmbientStateChangedEvent>(
