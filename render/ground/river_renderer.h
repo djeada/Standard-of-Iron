@@ -27,7 +27,7 @@ private:
 
   std::vector<Game::Map::RiverSegment> m_riverSegments;
   float m_tileSize = 1.0f;
-  std::unique_ptr<Mesh> m_mesh;
+  std::vector<std::unique_ptr<Mesh>> m_meshes;
 };
 
 } // namespace GL
