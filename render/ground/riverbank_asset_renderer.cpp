@@ -97,7 +97,6 @@ void RiverbankAssetRenderer::submit(Renderer &renderer,
   auto &visibility = Game::Map::VisibilityService::instance();
   const bool useVisibility = visibility.isInitialized();
 
-  // Filter instances by visibility
   std::vector<RiverbankAssetInstanceGpu> visibleInstances;
 
   for (const auto &instance : m_assetInstances) {
@@ -109,16 +108,15 @@ void RiverbankAssetRenderer::submit(Renderer &renderer,
       float worldZ = instance.position[2];
 
       if (visibility.isVisibleWorld(worldX, worldZ)) {
-        // Fully visible
+
         alpha = 1.0f;
       } else if (visibility.isExploredWorld(worldX, worldZ)) {
-        // Explored but not currently visible - darken
+
         alpha = 0.5f;
-        // For explored assets, we could either skip them or render darkened
-        // Skipping for consistency with bridges/riverbanks
+
         shouldRender = false;
       } else {
-        // Unseen - don't render
+
         shouldRender = false;
       }
     }
@@ -128,12 +126,8 @@ void RiverbankAssetRenderer::submit(Renderer &renderer,
     }
   }
 
-  // For now, we'll render these using the stone batch renderer
-  // In a full implementation, you'd create a custom shader for riverbank assets
-  // This is a simplified version that reuses existing rendering infrastructure
   if (!visibleInstances.empty()) {
-    // Note: This would require extending the renderer to support riverbank
-    // assets For minimal changes, we'll just prepare the data
+
     qDebug() << "RiverbankAssetRenderer: Would render"
              << visibleInstances.size() << "of" << m_assetInstanceCount
              << "riverbank assets (fog of war applied)";
@@ -177,7 +171,6 @@ void RiverbankAssetRenderer::generateAssetInstances() {
     return h0 * (1.0f - tz) + h1 * tz;
   };
 
-  // Generate assets along each river segment
   for (size_t segIdx = 0; segIdx < m_riverSegments.size(); ++segIdx) {
     const auto &segment = m_riverSegments[segIdx];
 
@@ -189,9 +182,8 @@ void RiverbankAssetRenderer::generateAssetInstances() {
     dir.normalize();
     QVector3D perpendicular(-dir.z(), 0.0f, dir.x());
     float halfRiverWidth = segment.width * 0.5f;
-    float bankZoneWidth = 1.5f; // Zone where we place assets
+    float bankZoneWidth = 1.5f;
 
-    // Number of potential asset positions along the river
     int numSteps = static_cast<int>(length / 0.8f) + 1;
 
     uint32_t rng = m_noiseSeed + static_cast<uint32_t>(segIdx * 1000);
@@ -201,15 +193,12 @@ void RiverbankAssetRenderer::generateAssetInstances() {
           static_cast<float>(i) / static_cast<float>(std::max(numSteps - 1, 1));
       QVector3D centerPos = segment.start + dir * (length * t);
 
-      // Random placement on either side of river
       for (int side = 0; side < 2; ++side) {
         float sideSign = (side == 0) ? -1.0f : 1.0f;
 
-        // Randomly decide if we place an asset here
         if (rand01(rng) > 0.3f)
-          continue; // 30% chance to place asset
+          continue;
 
-        // Random position within bank zone
         float distFromWater = halfRiverWidth + rand01(rng) * bankZoneWidth;
         float alongRiver = (rand01(rng) - 0.5f) * 0.6f;
 
@@ -217,7 +206,6 @@ void RiverbankAssetRenderer::generateAssetInstances() {
                              perpendicular * (sideSign * distFromWater) +
                              dir * alongRiver;
 
-        // Convert to grid coordinates
         float gx = (assetPos.x() / m_tileSize) + halfWidth;
         float gz = (assetPos.z() / m_tileSize) + halfHeight;
 
@@ -228,7 +216,6 @@ void RiverbankAssetRenderer::generateAssetInstances() {
         int iz = static_cast<int>(gz);
         int idx = iz * m_width + ix;
 
-        // Don't place on rivers, mountains, or hills
         if (m_terrainTypes[idx] != Game::Map::TerrainType::Flat)
           continue;
 
@@ -239,38 +226,35 @@ void RiverbankAssetRenderer::generateAssetInstances() {
         instance.position[1] = worldY;
         instance.position[2] = assetPos.z();
 
-        // Random asset type
         float typeRand = rand01(rng);
         if (typeRand < 0.7f) {
-          // Pebble (most common)
+
           instance.assetType = 0.0f;
           float size = 0.05f + rand01(rng) * 0.1f;
           instance.scale[0] = size * (0.8f + rand01(rng) * 0.4f);
           instance.scale[1] = size * (0.6f + rand01(rng) * 0.3f);
           instance.scale[2] = size * (0.8f + rand01(rng) * 0.4f);
 
-          // Gray/brown pebble colors
           float colorVar = 0.3f + rand01(rng) * 0.4f;
           instance.color[0] = colorVar;
           instance.color[1] = colorVar * 0.9f;
           instance.color[2] = colorVar * 0.85f;
         } else if (typeRand < 0.9f) {
-          // Small rock
+
           instance.assetType = 1.0f;
           float size = 0.1f + rand01(rng) * 0.15f;
           instance.scale[0] = size;
           instance.scale[1] = size * (0.7f + rand01(rng) * 0.4f);
           instance.scale[2] = size;
 
-          // Rock colors
           float colorVar = 0.35f + rand01(rng) * 0.25f;
           instance.color[0] = colorVar;
           instance.color[1] = colorVar * 0.95f;
           instance.color[2] = colorVar * 0.9f;
         } else {
-          // Reed cluster (near water)
+
           if (distFromWater > halfRiverWidth + 0.5f)
-            continue; // Only near water edge
+            continue;
 
           instance.assetType = 2.0f;
           float size = 0.3f + rand01(rng) * 0.4f;
@@ -278,14 +262,12 @@ void RiverbankAssetRenderer::generateAssetInstances() {
           instance.scale[1] = size;
           instance.scale[2] = size * 0.3f;
 
-          // Green/brown reed colors
           instance.color[0] = 0.25f + rand01(rng) * 0.15f;
           instance.color[1] = 0.35f + rand01(rng) * 0.25f;
           instance.color[2] = 0.15f + rand01(rng) * 0.1f;
         }
 
-        // Random rotation
-        float angle = rand01(rng) * 6.28318f; // 2*PI
+        float angle = rand01(rng) * 6.28318f;
         instance.rotation[0] = 0.0f;
         instance.rotation[1] = std::sin(angle * 0.5f);
         instance.rotation[2] = 0.0f;
