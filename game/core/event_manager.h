@@ -170,4 +170,57 @@ public:
   int newOwnerId;
 };
 
+class BattleStartedEvent : public Event {
+public:
+  BattleStartedEvent(EntityID attackerId, EntityID defenderId,
+                     float posX = 0.0f, float posY = 0.0f)
+      : attackerId(attackerId), defenderId(defenderId), posX(posX), posY(posY) {
+  }
+  EntityID attackerId;
+  EntityID defenderId;
+  float posX;
+  float posY;
+};
+
+class BattleEndedEvent : public Event {
+public:
+  BattleEndedEvent(EntityID winnerId, EntityID loserId,
+                   bool defenderDied = false)
+      : winnerId(winnerId), loserId(loserId), defenderDied(defenderDied) {}
+  EntityID winnerId;
+  EntityID loserId;
+  bool defenderDied;
+};
+
+enum class AmbientState { PEACEFUL, TENSE, COMBAT, VICTORY, DEFEAT };
+
+class AmbientStateChangedEvent : public Event {
+public:
+  AmbientStateChangedEvent(AmbientState newState, AmbientState previousState)
+      : newState(newState), previousState(previousState) {}
+  AmbientState newState;
+  AmbientState previousState;
+};
+
+class AudioTriggerEvent : public Event {
+public:
+  AudioTriggerEvent(const std::string &soundId, float volume = 1.0f,
+                    bool loop = false, int priority = 0)
+      : soundId(soundId), volume(volume), loop(loop), priority(priority) {}
+  std::string soundId;
+  float volume;
+  bool loop;
+  int priority;
+};
+
+class MusicTriggerEvent : public Event {
+public:
+  MusicTriggerEvent(const std::string &musicId, float volume = 1.0f,
+                    bool crossfade = true)
+      : musicId(musicId), volume(volume), crossfade(crossfade) {}
+  std::string musicId;
+  float volume;
+  bool crossfade;
+};
+
 } // namespace Engine::Core

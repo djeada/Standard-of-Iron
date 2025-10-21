@@ -138,10 +138,17 @@ dev: install build
 .PHONY: test
 test: build
 	@echo "$(BOLD)$(BLUE)Running tests...$(RESET)"
-	@if [ -f "$(BUILD_DIR)/tests" ]; then \
-		cd $(BUILD_DIR) && ./tests; \
-	else \
-		echo "$(YELLOW)No tests found. Test suite not yet implemented.$(RESET)"; \
+	@if [ -f "$(BUILD_DIR)/test_events" ]; then \
+		echo "$(BOLD)$(BLUE)Running event system tests...$(RESET)"; \
+		cd $(BUILD_DIR) && ./test_events; \
+		echo ""; \
+	fi
+	@if [ -f "$(BUILD_DIR)/test_audio" ]; then \
+		echo "$(BOLD)$(BLUE)Running audio system tests...$(RESET)"; \
+		cd $(BUILD_DIR) && ./test_audio; \
+	fi
+	@if [ ! -f "$(BUILD_DIR)/test_events" ] && [ ! -f "$(BUILD_DIR)/test_audio" ]; then \
+		echo "$(YELLOW)No test executables found.$(RESET)"; \
 	fi
 
 # ---- Formatting: strip comments first, then format (strict) ----
