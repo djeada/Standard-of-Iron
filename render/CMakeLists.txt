@@ -26,6 +26,7 @@ add_library(render_gl STATIC
     entity/registry.cpp
     entity/archer_renderer.cpp
     entity/knight_renderer.cpp
+    entity/horse_renderer.cpp
     entity/mounted_knight_renderer.cpp
     entity/spearman_renderer.cpp
     entity/barracks_renderer.cpp

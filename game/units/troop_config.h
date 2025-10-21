@@ -63,6 +63,10 @@ private:
     m_individualsPerUnit["spearman"] = 24;
     m_maxUnitsPerRow["spearman"] = 6;
     m_selectionRingSize["spearman"] = 1.4f;
+
+    m_individualsPerUnit["mounted_knight"] = 10;
+    m_maxUnitsPerRow["mounted_knight"] = 5;
+    m_selectionRingSize["mounted_knight"] = 1.0f;
   }
 
   std::unordered_map<std::string, int> m_individualsPerUnit;
