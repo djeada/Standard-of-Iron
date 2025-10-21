@@ -22,13 +22,12 @@ DRY_RUN=false
 NO_INSTALL=false
 ALLOW_SIMILAR=false
 
-for arg in "$@";
-do
+for arg in "$@"; do
   case "$arg" in
-    -y|--yes) ASSUME_YES=true ;;
-    --dry-run) DRY_RUN=true ;;
-    --no-install) NO_INSTALL=true ;;
-    --allow-similar) ALLOW_SIMILAR=true ;;
+    -y|--yes)            ASSUME_YES=true ;;
+    --dry-run)           DRY_RUN=true ;;
+    --no-install)        NO_INSTALL=true ;;
+    --allow-similar)     ALLOW_SIMILAR=true ;;
     -h|--help)
       grep '^#' "$0" | sed -e 's/^# \{0,1\}//'
       exit 0
@@ -37,60 +36,57 @@ do
   esac
 done
 
-info()  { echo -e "\033[1;34m[i]\033[0m $*"; }
-ok()    { echo -e "\033[1;32m[✓]\033[0m $*"; }
-warn()  { echo -e "\033[1;33m[!]\033[0m $*"; }
-err()   { echo -e "\033[1;31m[x]\033[0m $*"; }
+# -----------------------------------------------------------------------------
+# UI helpers
+# -----------------------------------------------------------------------------
+info() { echo -e "\033[1;34m[i]\033[0m $*"; }
+ok()   { echo -e "\033[1;32m[✓]\033[0m $*"; }
+warn() { echo -e "\033[1;33m[!]\033[0m $*"; }
+err()  { echo -e "\033[1;31m[x]\033[0m $*"; }
 
-need_cmd() {
-  if ! command -v "$1" >/dev/null 2>&1; then
-    err "Required command '$1' not found"
-    return 1
+# -----------------------------------------------------------------------------
+# Small utilities
+# -----------------------------------------------------------------------------
+semver_ge() {
+  # Returns 0 if $1 >= $2, else 1 (supports X.Y[.Z])
+  local IFS=.
+  local a1 a2 a3 b1 b2 b3
+  read -r a1 a2 a3 <<< "$1"
+  read -r b1 b2 b3 <<< "$2"
+  a1=${a1:-0}; a2=${a2:-0}; a3=${a3:-0}
+  b1=${b1:-0}; b2=${b2:-0}; b3=${b3:-0}
+  (( a1 > b1 )) && return 0
+  (( a1 < b1 )) && return 1
+  (( a2 > b2 )) && return 0
+  (( a2 < b2 )) && return 1
+  (( a3 >= b3 )) && return 0
+  return 1
+}
+
+is_macos() { [ "$(uname -s)" = "Darwin" ]; }
+
+read_os_release() {
+  # Reads /etc/os-release and prints ID, ID_LIKE, and PRETTY_NAME
+  # shellcheck disable=SC1091
+  if [ -f /etc/os-release ]; then
+    (
+      . /etc/os-release
+      printf 'ID=%s\n' "${ID:-unknown}"
+      printf 'ID_LIKE=%s\n' "${ID_LIKE:-}"
+      printf 'PRETTY_NAME=%s\n' "${PRETTY_NAME:-}"
+    )
+  else
+    printf 'ID=%s\n' "unknown"
+    printf 'ID_LIKE=%s\n' ""
+    printf 'PRETTY_NAME=%s\n' ""
   fi
 }
 
-semver_ge() {
-#returns 0 if $1 >= $2
-  local IFS=. a1 a2 a3 b1 b2 b3
-  set -- $1; a1=${1:
-    - 0
-  };
-  a2 = ${2 : -0};
-  a3 = ${3 : -0} set-- $2;
-  b1 = ${1 : -0};
-  b2 = ${2 : -0};
-  b3 = $ { 3 : -0 }
-  if
-    ["$a1" - gt "$b1"];
-  then return 0;
-  fi if["$a1" - lt "$b1"];
-  then return 1;
-  fi if["$a2" - gt "$b2"];
-  then return 0;
-  fi if["$a2" - lt "$b2"];
-  then return 1;
-  fi if["$a3" - ge "$b3"];
-  then return 0;
-  fi return 1
-  }
+has_apt()    { command -v apt-get >/dev/null 2>&1; }
+has_pacman() { command -v pacman  >/dev/null 2>&1; }
+has_brew()   { command -v brew    >/dev/null 2>&1; }
 
-  is_macos() { ["$(uname -s)" = "Darwin"]; }
-
-  read_os_release() {
-#shellcheck disable = SC1091
-    if
-      [-f / etc / os - release];
-    then./ etc / os - release echo "ID=${ID:-unknown}" echo
-                                   "ID_LIKE=${ID_LIKE:-}" echo
-                                   "PRETTY_NAME=${PRETTY_NAME:-}" else echo
-        "ID=unknown" echo "ID_LIKE=" echo "PRETTY_NAME=" fi
-  }
-
-  has_apt() { command - v apt - get > / dev / null 2 > &1; }
-  has_pacman() { command - v pacman > / dev / null 2 > &1; }
-  has_brew() { command - v brew > / dev / null 2 > &1; }
-
-  is_deb_family_exact() {
+is_deb_family_exact() {
   case "$1" in
     ubuntu|debian|linuxmint|pop) return 0 ;;
     *) return 1 ;;
@@ -98,11 +94,10 @@ semver_ge() {
 }
 is_deb_family_like() {
   case " $1 " in
-    *" debian "*|*" ubuntu "*) return 0 ;;
+    *"debian"*|*"ubuntu"*) return 0 ;;
     *) return 1 ;;
   esac
 }
-
 is_arch_family_exact() {
   case "$1" in
     arch|manjaro|endeavouros|garuda) return 0 ;;
@@ -111,17 +106,17 @@ is_arch_family_exact() {
 }
 is_arch_family_like() {
   case " $1 " in
-    *" arch "*) return 0 ;;
+    *"arch"*) return 0 ;;
     *) return 1 ;;
   esac
 }
 
 detect_distro() {
   if is_macos; then
-    echo "darwin" "" "macOS"
+    printf 'darwin||macOS\n'   # id|like|pretty
     return
   fi
-  local id like pretty
+  local id=unknown like= pretty=
   while IFS='=' read -r k v; do
     case "$k" in
       ID) id=${v} ;;
@@ -130,16 +125,18 @@ detect_distro() {
     esac
   done < <(read_os_release)
 
+  # strip optional quotes
   id=${id%\"}; id=${id#\"}
   like=${like%\"}; like=${like#\"}
   pretty=${pretty%\"}; pretty=${pretty#\"}
 
-  echo "$id" "$like" "$pretty"
+  printf '%s|%s|%s\n' "$id" "$like" "$pretty"
 }
 
-#== == == == == == == == == == = Package maps == == == == == == == == == == =
-
-#APT(Debian / Ubuntu) toolchain + GL / Vulkan + formatting tools
+# -----------------------------------------------------------------------------
+# Package maps
+# -----------------------------------------------------------------------------
+# APT (Debian/Ubuntu) toolchain + GL/Vulkan + formatting tools
 APT_PKGS=(
   build-essential
   cmake
@@ -153,7 +150,7 @@ APT_PKGS=(
   libegl1
 )
 
-#APT Qt6 dev headers / tools(filtered later)
+# APT Qt6 dev headers / tools
 QT6_DEV_PKGS=(
   qt6-base-dev
   qt6-base-dev-tools
@@ -164,7 +161,7 @@ QT6_DEV_PKGS=(
   qt6-multimedia-dev
 )
 
-#APT Qt6 QML runtime modules(filtered)
+# APT Qt6 QML runtime modules
 QT6_QML_RUN_PKGS=(
   qml6-module-qtqml
   qml6-module-qtquick
@@ -175,7 +172,7 @@ QT6_QML_RUN_PKGS=(
   qml6-module-qtquick-templates
 )
 
-#APT Qt5 fallback(filtered)
+# APT Qt5 fallback (if Qt6 pieces not available)
 QT5_QML_RUN_PKGS=(
   qml-module-qtqml
   qml-module-qtquick2
@@ -190,7 +187,7 @@ QT5_QML_RUN_PKGS=(
   qtquickcontrols2-5-dev
 )
 
-#PACMAN(Arch / Manjaro) toolchain + GL / Vulkan + formatting tools
+# PACMAN (Arch/Manjaro) toolchain + GL/Vulkan + formatting tools
 PAC_PKGS=(
   base-devel
   cmake
@@ -204,7 +201,7 @@ PAC_PKGS=(
   vulkan-tools
 )
 
-#PACMAN Qt6 dev / runtime
+# PACMAN Qt6 dev/runtime
 QT6_DEV_PAC=(
   qt6-base
   qt6-declarative
@@ -212,13 +209,12 @@ QT6_DEV_PAC=(
   qt6-shadertools
   qt6-multimedia
 )
-
 QT6_QML_RUN_PAC=(
   qt6-declarative
   qt6-quickcontrols2
 )
 
-#PACMAN Qt5 fallback
+# PACMAN Qt5 fallback
 QT5_QML_RUN_PAC=(
   qt5-base
   qt5-declarative
@@ -226,33 +222,26 @@ QT5_QML_RUN_PAC=(
   qt5-multimedia
 )
 
-#-- -- -- -- -- BREW(macOS) -- -- -- -- --
+# Homebrew (macOS)
 BREW_PKGS=(
   cmake
   git
   pkg-config
-  llvm            # provides clang-format
-  ninja           # nice-to-have for faster CMake builds
+  llvm     # provides clang-format
+  ninja    # nice-to-have for faster CMake builds
 )
-BREW_QT=(
-  qt              # keg-only; contains Qt6 base/declarative/tools/Quick Controls 2
-)
-BREW_VK=(
-  molten-vk
-  vulkan-loader
-  vulkan-tools
-)
+BREW_QT=( qt )          # keg-only; contains Qt6 base/declarative/tools/Quick Controls 2
+BREW_VK=( molten-vk vulkan-loader vulkan-tools )
 
-#== == == == == == == == == == = APT helpers == == == == == == == == == == =
-
+# -----------------------------------------------------------------------------
+# APT helpers
+# -----------------------------------------------------------------------------
 apt_pkg_available() { apt-cache show "$1" >/dev/null 2>&1; }
 
 filter_available_pkgs_apt() {
   local out=() p
   for p in "$@"; do
-    if apt_pkg_available "$p"; then
-      out+=("$p")
-    fi
+    if apt_pkg_available "$p"; then out+=("$p"); fi
   done
   printf '%s\n' "${out[@]}"
 }
@@ -263,17 +252,16 @@ apt_update_once() {
   if [ "${_APT_UPDATED:-0}" != 1 ]; then
     info "Updating apt package lists"
     if $DRY_RUN; then
-      echo "sudo apt-get update -y"
+      echo "sudo apt-get update"
     else
-      sudo apt-get update -y
+      sudo apt-get update
     fi
     _APT_UPDATED=1
   fi
 }
 
 apt_install() {
-  local to_install=()
-  local pkg
+  local to_install=() pkg
   for pkg in "$@"; do
     [ -n "${pkg:-}" ] || continue
     if dpkg_installed "$pkg"; then
@@ -282,7 +270,6 @@ apt_install() {
       to_install+=("$pkg")
     fi
   done
-
   if [ ${#to_install[@]} -gt 0 ]; then
     if $NO_INSTALL; then
       warn "Missing packages: ${to_install[*]} (skipping install due to --no-install)"
@@ -303,17 +290,15 @@ apt_install() {
   fi
 }
 
-#== == == == == == == == == == =                                             \
-      PACMAN helpers == == == == == == == == == == =
-
-pacman_pkg_available() { sudo pacman -Si "$1" >/dev/null 2>&1 || pacman -Si "$1" >/dev/null 2>&1; }
+# -----------------------------------------------------------------------------
+# PACMAN helpers
+# -----------------------------------------------------------------------------
+pacman_pkg_available() { pacman -Si "$1" >/dev/null 2>&1 || sudo pacman -Si "$1" >/dev/null 2>&1; }
 
 filter_available_pkgs_pacman() {
   local out=() p
   for p in "$@"; do
-    if pacman_pkg_available "$p"; then
-      out+=("$p")
-    fi
+    if pacman_pkg_available "$p"; then out+=("$p"); fi
   done
   printf '%s\n' "${out[@]}"
 }
@@ -333,8 +318,7 @@ pacman_update_once() {
 }
 
 pacman_install() {
-  local to_install=()
-  local pkg
+  local to_install=() pkg
   for pkg in "$@"; do
     [ -n "${pkg:-}" ] || continue
     if pacman_installed "$pkg"; then
@@ -343,7 +327,6 @@ pacman_install() {
       to_install+=("$pkg")
     fi
   done
-
   if [ ${#to_install[@]} -gt 0 ]; then
     if $NO_INSTALL; then
       warn "Missing packages: ${to_install[*]} (skipping install due to --no-install)"
@@ -366,22 +349,25 @@ pacman_install() {
   fi
 }
 
-#== == == == == == == == == == =                                             \
-      BREW helpers(macOS) == == == == == == == == == == =
-
+# -----------------------------------------------------------------------------
+# BREW helpers (macOS)
+# -----------------------------------------------------------------------------
 brew_installed() { brew list --versions "$1" >/dev/null 2>&1; }
 
 brew_update_once() {
   if [ "${_BREW_UPDATED:-0}" != 1 ]; then
     info "Updating Homebrew formulae"
-    $DRY_RUN && echo "brew update" || brew update
+    if $DRY_RUN; then
+      echo "brew update"
+    else
+      brew update
+    fi
     _BREW_UPDATED=1
   fi
 }
 
 brew_install() {
-  local to_install=()
-  local pkg
+  local to_install=() pkg
   for pkg in "$@"; do
     [ -n "${pkg:-}" ] || continue
     if brew_installed "$pkg"; then
@@ -411,7 +397,7 @@ brew_install() {
 }
 
 post_brew_qt_note() {
-#qt is keg - only; ensure users have it on PATH or CMake can find it
+  # Qt is keg-only; ensure users have it on PATH or CMake can find it
   local qp
   qp=$(brew --prefix qt 2>/dev/null || true)
   if [ -n "$qp" ]; then
@@ -422,68 +408,77 @@ post_brew_qt_note() {
   fi
   local lp
   lp=$(brew --prefix llvm 2>/dev/null || true)
-  if [ -n "$lp" ]; then
-    if ! command -v clang-format >/dev/null 2>&1; then
-      warn "clang-format from Homebrew LLVM isn't on PATH."
-      echo "   Add to PATH: export PATH=\"$lp/bin:\$PATH\""
-    fi
+  if [ -n "$lp" ] && ! command -v clang-format >/dev/null 2>&1; then
+    warn "clang-format from Homebrew LLVM isn't on PATH."
+    echo "   Add to PATH: export PATH=\"$lp/bin:\$PATH\""
   fi
 }
 
-#== == == == == == == == == == = Checks == == == == == == == == == == =
-
+# -----------------------------------------------------------------------------
+# Checks
+# -----------------------------------------------------------------------------
 check_tool_versions() {
   info "Checking toolchain versions"
 
-  need_cmd cmake
-  local cmv
-  cmv=$(cmake --version | head -n1 | awk '{print $3}')
-  if semver_ge "$cmv" "$MIN_CMAKE"; then
-    ok "cmake $cmv (>= $MIN_CMAKE)"
+  # cmake
+  if command -v cmake >/dev/null 2>&1; then
+    local cmv
+    cmv=$(cmake --version | head -n1 | awk '{print $3}')
+    if semver_ge "$cmv" "$MIN_CMAKE"; then
+      ok "cmake $cmv (>= $MIN_CMAKE)"
+    else
+      warn "cmake $cmv (< $MIN_CMAKE)"
+    fi
   else
-    warn "cmake $cmv (< $MIN_CMAKE) — will attempt to install newer via package manager"
+    warn "cmake not found"
   fi
 
-#Accept either g++ or clang++(macOS typically uses clang++)
+  # C++ compiler (prefer g++, accept clang++)
   local CXX_BIN=""
   if command -v g++ >/dev/null 2>&1; then
     CXX_BIN="g++"
   elif command -v clang++ >/dev/null 2>&1; then
     CXX_BIN="clang++"
   fi
+
   if [ -z "$CXX_BIN" ]; then
-    err "No C++ compiler found (g++ or clang++)."
-    exit 1
-  fi
-
-  local gxv
-  if [ "$CXX_BIN" = "g++" ]; then
-    gxv=$(g++ --version | head -n1 | awk '{print $NF}')
-    if semver_ge "$gxv" "$MIN_GXX"; then
-      ok "g++ $gxv (>= $MIN_GXX)"
+    warn "No C++ compiler found (g++ or clang++)."
+  else
+    local gxv
+    if [ "$CXX_BIN" = "g++" ]; then
+      gxv=$(g++ --version | head -n1 | awk '{print $NF}')
+      if semver_ge "$gxv" "$MIN_GXX"; then
+        ok "g++ $gxv (>= $MIN_GXX)"
+      else
+        warn "g++ $gxv (< $MIN_GXX)"
+      fi
     else
-      warn "g++ $gxv (< $MIN_GXX) — will attempt to install a newer compiler"
+      # clang++ version parsing (Apple/LLVM format)
+      gxv=$($CXX_BIN --version | head -n1 | sed -E 's/.*version ([0-9]+(\.[0-9]+){0,2}).*/\1/')
+      ok "clang++ $gxv (Apple/LLVM) — accepted"
     fi
-  else
-#clang++ version parsing(Apple clang prints different format)
-    gxv=$($CXX_BIN --version | head -n1 | sed -E 's/.*version ([0-9]+(\.[0-9]+){0,2}).*/\1/')
-    ok "clang++ $gxv (Apple/LLVM) — accepted"
   fi
 
-  need_cmd git; ok "git $(git --version | awk '{print $3}')"
+  # git
+  if command -v git >/dev/null 2>&1; then
+    ok "git $(git --version | awk '{print $3}')"
+  else
+    warn "git not found"
+  fi
 
-  local PKG_CMD=""
+  # pkg-config or pkgconf
   if command -v pkg-config >/dev/null 2>&1; then
-    PKG_CMD="pkg-config"
+    ok "pkg-config $(pkg-config --version)"
   elif command -v pkgconf >/dev/null 2>&1; then
-    PKG_CMD="pkgconf"
+    ok "pkgconf $(pkgconf --version)"
   else
-    err "Neither pkg-config nor pkgconf is installed. Please install one and rerun."
-    exit 1
+    warn "Neither pkg-config nor pkgconf found"
   fi
-  ok "$PKG_CMD $($PKG_CMD --version)"
 }
 
+# -----------------------------------------------------------------------------
+# Installers
+# -----------------------------------------------------------------------------
 install_runtime_apt() {
   info "Installing base toolchain (APT)"
   apt_install "${APT_PKGS[@]}"
@@ -536,10 +531,12 @@ install_runtime_brew() {
   post_brew_qt_note
 }
 
+# -----------------------------------------------------------------------------
+# Main
+# -----------------------------------------------------------------------------
 main() {
   local id like pretty
-  read -r id like pretty < <(detect_distro)
-
+  IFS='|' read -r id like pretty <<< "$(detect_distro)"
   info "Detected system: ${pretty:-$id} (ID=$id; ID_LIKE='${like:-}')."
 
   local pm=""
@@ -596,8 +593,7 @@ main() {
     fi
   fi
 
-  check_tool_versions
-
+  # Install first, then verify versions (so fresh systems don't bail early).
   case "$pm" in
     apt)    install_runtime_apt ;;
     pacman) install_runtime_pacman ;;
@@ -606,7 +602,10 @@ main() {
   esac
 
   echo
-  ok "All required dependencies are present (or have been installed)."
+  check_tool_versions
+
+  echo
+  ok "All required dependencies should now be present."
   echo "- cmake >= $MIN_CMAKE"
   echo "- C++ compiler (g++ >= $MIN_GXX or clang++)"
   echo "- Qt 6 base + declarative + tools + QML runtime modules (Qt5 QML fallback if available)"
