@@ -73,6 +73,9 @@ FormationParams HumanoidRendererBase::resolveFormation(const DrawContext &ctx) {
               unit->unitType);
       params.maxPerRow = Game::Units::TroopConfig::instance().getMaxUnitsPerRow(
           unit->unitType);
+      if (unit->unitType == "mounted_knight") {
+        params.spacing = 1.35f; // wider footprint so horses do not overlap
+      }
     }
   }
 

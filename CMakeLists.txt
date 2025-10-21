@@ -16,14 +16,14 @@ endif()
 
 # ---- Qt ----
 # Try Qt6 first, fall back to Qt5 if not available
-find_package(Qt6 QUIET COMPONENTS Core Widgets OpenGL Quick Qml QuickControls2 Sql)
+find_package(Qt6 QUIET COMPONENTS Core Widgets OpenGL Quick Qml QuickControls2 Sql Multimedia)
 if(Qt6_FOUND)
     message(STATUS "Using Qt6")
     set(QT_VERSION_MAJOR 6)
     find_package(OpenGL REQUIRED)
 else()
     message(STATUS "Qt6 not found, trying Qt5")
-    find_package(Qt5 REQUIRED COMPONENTS Core Widgets OpenGL Quick Qml QuickControls2 Sql)
+    find_package(Qt5 REQUIRED COMPONENTS Core Widgets OpenGL Quick Qml QuickControls2 Sql Multimedia)
     message(STATUS "Using Qt5")
     set(QT_VERSION_MAJOR 5)
     find_package(OpenGL REQUIRED)
@@ -128,10 +128,12 @@ target_link_libraries(standard_of_iron
         Qt${QT_VERSION_MAJOR}::Quick
         Qt${QT_VERSION_MAJOR}::Qml
     Qt${QT_VERSION_MAJOR}::Sql
+        Qt${QT_VERSION_MAJOR}::Multimedia
         ${OPENGL_LIBRARIES}
         engine_core
         render_gl
         game_systems
+        audio_system
 )
 
 if(QT_VERSION_MAJOR EQUAL 6)
@@ -142,6 +144,21 @@ endif()
 
 # Copy assets next to the binary for dev runs
 file(COPY assets/ DESTINATION ${CMAKE_BINARY_DIR}/assets/)
+
+# ---- Test executables ----
+if(QT_VERSION_MAJOR EQUAL 6)
+    qt6_add_executable(test_audio_event_handler test_audio_event_handler.cpp)
+else()
+    add_executable(test_audio_event_handler test_audio_event_handler.cpp)
+endif()
+
+target_link_libraries(test_audio_event_handler
+    PRIVATE
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Multimedia
+        engine_core
+        audio_system
+)
 
 # ---- clang-format helpers (optional but convenient) ----
 # Provides:
