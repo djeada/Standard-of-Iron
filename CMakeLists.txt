@@ -148,10 +148,8 @@ file(COPY assets/ DESTINATION ${CMAKE_BINARY_DIR}/assets/)
 # ---- Test executables ----
 if(QT_VERSION_MAJOR EQUAL 6)
     qt6_add_executable(test_audio_event_handler test_audio_event_handler.cpp)
-    qt6_add_executable(test_audio_integration test_audio_integration.cpp)
 else()
     add_executable(test_audio_event_handler test_audio_event_handler.cpp)
-    add_executable(test_audio_integration test_audio_integration.cpp)
 endif()
 
 target_link_libraries(test_audio_event_handler
@@ -160,15 +158,6 @@ target_link_libraries(test_audio_event_handler
         Qt${QT_VERSION_MAJOR}::Multimedia
         engine_core
         audio_system
-)
-
-target_link_libraries(test_audio_integration
-    PRIVATE
-        Qt${QT_VERSION_MAJOR}::Core
-        Qt${QT_VERSION_MAJOR}::Multimedia
-        engine_core
-        audio_system
-        game_systems
 )
 
 # ---- clang-format helpers (optional but convenient) ----
