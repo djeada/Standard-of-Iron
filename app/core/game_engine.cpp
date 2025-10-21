@@ -156,7 +156,6 @@ GameEngine::GameEngine() {
   connect(m_mapCatalog.get(), &Game::Map::MapCatalog::allMapsLoaded, this,
           [this]() { emit availableMapsChanged(); });
 
-  // Initialize Audio System
   if (AudioSystem::getInstance().initialize()) {
     qInfo() << "AudioSystem initialized successfully";
     loadAudioResources();
@@ -164,23 +163,26 @@ GameEngine::GameEngine() {
     qWarning() << "Failed to initialize AudioSystem";
   }
 
-  // Initialize AudioEventHandler
-  m_audioEventHandler = std::make_unique<Game::Audio::AudioEventHandler>(m_world.get());
+  m_audioEventHandler =
+      std::make_unique<Game::Audio::AudioEventHandler>(m_world.get());
   if (m_audioEventHandler->initialize()) {
     qInfo() << "AudioEventHandler initialized successfully";
-    
-    // Register unit voice mappings
+
     m_audioEventHandler->loadUnitVoiceMapping("archer", "archer_voice");
     m_audioEventHandler->loadUnitVoiceMapping("knight", "knight_voice");
     m_audioEventHandler->loadUnitVoiceMapping("spearman", "spearman_voice");
-    
-    // Register ambient music mappings
-    m_audioEventHandler->loadAmbientMusic(Engine::Core::AmbientState::PEACEFUL, "music_peaceful");
-    m_audioEventHandler->loadAmbientMusic(Engine::Core::AmbientState::TENSE, "music_tense");
-    m_audioEventHandler->loadAmbientMusic(Engine::Core::AmbientState::COMBAT, "music_combat");
-    m_audioEventHandler->loadAmbientMusic(Engine::Core::AmbientState::VICTORY, "music_victory");
-    m_audioEventHandler->loadAmbientMusic(Engine::Core::AmbientState::DEFEAT, "music_defeat");
-    
+
+    m_audioEventHandler->loadAmbientMusic(Engine::Core::AmbientState::PEACEFUL,
+                                          "music_peaceful");
+    m_audioEventHandler->loadAmbientMusic(Engine::Core::AmbientState::TENSE,
+                                          "music_tense");
+    m_audioEventHandler->loadAmbientMusic(Engine::Core::AmbientState::COMBAT,
+                                          "music_combat");
+    m_audioEventHandler->loadAmbientMusic(Engine::Core::AmbientState::VICTORY,
+                                          "music_victory");
+    m_audioEventHandler->loadAmbientMusic(Engine::Core::AmbientState::DEFEAT,
+                                          "music_defeat");
+
     qInfo() << "Audio mappings configured";
   } else {
     qWarning() << "Failed to initialize AudioEventHandler";
@@ -255,7 +257,7 @@ GameEngine::GameEngine() {
 }
 
 GameEngine::~GameEngine() {
-  // Shutdown audio subsystem
+
   if (m_audioEventHandler) {
     m_audioEventHandler->shutdown();
   }
@@ -515,7 +517,6 @@ void GameEngine::update(float dt) {
     dt *= m_runtime.timeScale;
   }
 
-  // Update ambient state for audio
   if (!m_runtime.paused && !m_runtime.loading) {
     updateAmbientState(dt);
   }
@@ -978,11 +979,9 @@ void GameEngine::startSkirmish(const QString &mapPath,
       }
     }
 
-    // Initialize ambient state for the new game
     m_currentAmbientState = Engine::Core::AmbientState::PEACEFUL;
     m_ambientCheckTimer = 0.0f;
-    
-    // Trigger initial peaceful music
+
     Engine::Core::EventManager::instance().publish(
         Engine::Core::AmbientStateChangedEvent(
             Engine::Core::AmbientState::PEACEFUL,
@@ -1538,19 +1537,17 @@ QVector3D GameEngine::getPatrolPreviewWaypoint() const {
 }
 
 void GameEngine::updateAmbientState(float dt) {
-  // Update ambient state check every 2 seconds to avoid overhead
+
   m_ambientCheckTimer += dt;
   const float CHECK_INTERVAL = 2.0f;
-  
+
   if (m_ambientCheckTimer < CHECK_INTERVAL) {
     return;
   }
   m_ambientCheckTimer = 0.0f;
 
-  // Determine the new ambient state based on game conditions
   Engine::Core::AmbientState newState = Engine::Core::AmbientState::PEACEFUL;
 
-  // Check victory/defeat first
   if (!m_runtime.victoryState.isEmpty()) {
     if (m_runtime.victoryState == "victory") {
       newState = Engine::Core::AmbientState::VICTORY;
@@ -1558,22 +1555,22 @@ void GameEngine::updateAmbientState(float dt) {
       newState = Engine::Core::AmbientState::DEFEAT;
     }
   } else if (isPlayerInCombat()) {
-    // Check if player units are engaged in combat
+
     newState = Engine::Core::AmbientState::COMBAT;
-  } else if (m_entityCache.enemyBarracksAlive && m_entityCache.playerBarracksAlive) {
-    // If both sides have barracks alive, it's tense
+  } else if (m_entityCache.enemyBarracksAlive &&
+             m_entityCache.playerBarracksAlive) {
+
     newState = Engine::Core::AmbientState::TENSE;
   }
 
-  // Publish state change event if state changed
   if (newState != m_currentAmbientState) {
     Engine::Core::AmbientState previousState = m_currentAmbientState;
     m_currentAmbientState = newState;
-    
+
     Engine::Core::EventManager::instance().publish(
         Engine::Core::AmbientStateChangedEvent(newState, previousState));
-    
-    qInfo() << "Ambient state changed from" << static_cast<int>(previousState) 
+
+    qInfo() << "Ambient state changed from" << static_cast<int>(previousState)
             << "to" << static_cast<int>(newState);
   }
 }
@@ -1583,7 +1580,6 @@ bool GameEngine::isPlayerInCombat() const {
     return false;
   }
 
-  // Check if any player unit has an attack target or is under attack
   auto units = m_world->getEntitiesWith<Engine::Core::UnitComponent>();
   const float COMBAT_CHECK_RADIUS = 15.0f;
 
@@ -1593,25 +1589,25 @@ bool GameEngine::isPlayerInCombat() const {
       continue;
     }
 
-    // Check if unit has an attack target
     if (entity->hasComponent<Engine::Core::AttackTargetComponent>()) {
       return true;
     }
 
-    // Check if there are enemies nearby
     auto *transform = entity->getComponent<Engine::Core::TransformComponent>();
     if (!transform) {
       continue;
     }
 
     for (auto *otherEntity : units) {
-      auto *otherUnit = otherEntity->getComponent<Engine::Core::UnitComponent>();
-      if (!otherUnit || otherUnit->ownerId == m_runtime.localOwnerId || 
+      auto *otherUnit =
+          otherEntity->getComponent<Engine::Core::UnitComponent>();
+      if (!otherUnit || otherUnit->ownerId == m_runtime.localOwnerId ||
           otherUnit->health <= 0) {
         continue;
       }
 
-      auto *otherTransform = otherEntity->getComponent<Engine::Core::TransformComponent>();
+      auto *otherTransform =
+          otherEntity->getComponent<Engine::Core::TransformComponent>();
       if (!otherTransform) {
         continue;
       }
@@ -1631,59 +1627,67 @@ bool GameEngine::isPlayerInCombat() const {
 
 void GameEngine::loadAudioResources() {
   auto &audioSys = AudioSystem::getInstance();
-  
-  // Get base path for assets
+
   QString basePath = QCoreApplication::applicationDirPath() + "/assets/audio/";
-  
-  // Load unit voice sounds
-  if (audioSys.loadSound("archer_voice", (basePath + "voices/archer_voice.wav").toStdString())) {
+
+  if (audioSys.loadSound(
+          "archer_voice",
+          (basePath + "voices/archer_voice.wav").toStdString())) {
     qInfo() << "Loaded archer voice";
   } else {
     qWarning() << "Failed to load archer voice";
   }
-  
-  if (audioSys.loadSound("knight_voice", (basePath + "voices/knight_voice.wav").toStdString())) {
+
+  if (audioSys.loadSound(
+          "knight_voice",
+          (basePath + "voices/knight_voice.wav").toStdString())) {
     qInfo() << "Loaded knight voice";
   } else {
     qWarning() << "Failed to load knight voice";
   }
-  
-  if (audioSys.loadSound("spearman_voice", (basePath + "voices/spearman_voice.wav").toStdString())) {
+
+  if (audioSys.loadSound(
+          "spearman_voice",
+          (basePath + "voices/spearman_voice.wav").toStdString())) {
     qInfo() << "Loaded spearman voice";
   } else {
     qWarning() << "Failed to load spearman voice";
   }
-  
-  // Load ambient music
-  if (audioSys.loadMusic("music_peaceful", (basePath + "music/peaceful.wav").toStdString())) {
+
+  if (audioSys.loadMusic("music_peaceful",
+                         (basePath + "music/peaceful.wav").toStdString())) {
     qInfo() << "Loaded peaceful music";
   } else {
     qWarning() << "Failed to load peaceful music";
   }
-  
-  if (audioSys.loadMusic("music_tense", (basePath + "music/tense.wav").toStdString())) {
+
+  if (audioSys.loadMusic("music_tense",
+                         (basePath + "music/tense.wav").toStdString())) {
     qInfo() << "Loaded tense music";
   } else {
     qWarning() << "Failed to load tense music";
   }
-  
-  if (audioSys.loadMusic("music_combat", (basePath + "music/combat.wav").toStdString())) {
+
+  if (audioSys.loadMusic("music_combat",
+                         (basePath + "music/combat.wav").toStdString())) {
     qInfo() << "Loaded combat music";
   } else {
     qWarning() << "Failed to load combat music";
   }
-  
-  if (audioSys.loadMusic("music_victory", (basePath + "music/victory.wav").toStdString())) {
+
+  if (audioSys.loadMusic("music_victory",
+                         (basePath + "music/victory.wav").toStdString())) {
     qInfo() << "Loaded victory music";
   } else {
     qWarning() << "Failed to load victory music";
   }
-  
-  if (audioSys.loadMusic("music_defeat", (basePath + "music/defeat.wav").toStdString())) {
+
+  if (audioSys.loadMusic("music_defeat",
+                         (basePath + "music/defeat.wav").toStdString())) {
     qInfo() << "Loaded defeat music";
   } else {
     qWarning() << "Failed to load defeat music";
   }
-  
+
   qInfo() << "Audio resources loading complete";
 }
