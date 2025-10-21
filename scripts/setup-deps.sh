@@ -1,20 +1,17 @@
-#!/ usr / bin / env bash
-#Standard - of - Iron — dependency checker and auto -                          \
-    installer(Debian / Ubuntu + Arch / Manjaro + macOS / Homebrew)
+#!/usr/bin/env bash
+# Standard-of-Iron — dependency checker and auto-installer
+# (Debian/Ubuntu + Arch/Manjaro + macOS/Homebrew)
 #
-#Verifies required toolchain and Qt /                                          \
-    QML runtime modules and installs any missing ones.
-#Safe to run multiple times.Requires sudo privileges for Linux installation;   \
-    Homebrew for macOS.
+# Verifies required toolchain and Qt/QML runtime modules and installs any missing ones.
+# Safe to run multiple times. Requires sudo privileges for Linux installation; Homebrew for macOS.
 #
-#Usage:
-#./ scripts / setup - deps.sh #interactive install as needed
-#./ scripts / setup - deps.sh -- yes #non - interactive(assume yes)
-#./ scripts / setup - deps.sh -- dry - run #show actions without installing
-#./ scripts / setup - deps.sh -- no - install #only verify, do not install
-#./ scripts / setup - deps.sh -- allow -                                       \
-    similar #allow proceeding on similar distros
-#
+# Usage:
+#   ./scripts/setup-deps.sh                  # interactive install as needed
+#   ./scripts/setup-deps.sh --yes            # non-interactive (assume yes)
+#   ./scripts/setup-deps.sh --dry-run        # show actions without installing
+#   ./scripts/setup-deps.sh --no-install     # only verify, do not install
+#   ./scripts/setup-deps.sh --allow-similar  # allow proceeding on similar distros
+
 set -euo pipefail
 
 MIN_CMAKE="3.21.0"
