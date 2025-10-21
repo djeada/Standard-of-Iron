@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <functional>
 #include <memory>
+#include <mutex>
 #include <typeindex>
 #include <unordered_map>
 #include <vector>
@@ -13,11 +14,17 @@ namespace Engine::Core {
 class Event {
 public:
   virtual ~Event() = default;
+  virtual const char *getTypeName() const { return "Event"; }
 };
 
 template <typename T> using EventHandler = std::function<void(const T &)>;
 
 using SubscriptionHandle = std::size_t;
+
+struct EventStats {
+  size_t publishCount = 0;
+  size_t subscriberCount = 0;
+};
 
 class EventManager {
 public:
@@ -28,36 +35,80 @@ public:
 
   template <typename T> SubscriptionHandle subscribe(EventHandler<T> handler) {
     static_assert(std::is_base_of_v<Event, T>, "T must inherit from Event");
+    std::lock_guard<std::mutex> lock(m_mutex);
+
     SubscriptionHandle handle = m_nextHandle++;
     auto wrapper = [handler, handle](const void *event) {
       handler(*static_cast<const T *>(event));
     };
     HandlerEntry entry{handle, wrapper};
     m_handlers[std::type_index(typeid(T))].push_back(entry);
+
+    m_stats[std::type_index(typeid(T))].subscriberCount++;
+
     return handle;
   }
 
   template <typename T> void unsubscribe(SubscriptionHandle handle) {
     static_assert(std::is_base_of_v<Event, T>, "T must inherit from Event");
+    std::lock_guard<std::mutex> lock(m_mutex);
+
     auto it = m_handlers.find(std::type_index(typeid(T)));
     if (it != m_handlers.end()) {
       auto &handlers = it->second;
+      auto sizeBefore = handlers.size();
       handlers.erase(std::remove_if(handlers.begin(), handlers.end(),
                                     [handle](const HandlerEntry &e) {
                                       return e.handle == handle;
                                     }),
                      handlers.end());
+
+      if (handlers.size() < sizeBefore) {
+        m_stats[std::type_index(typeid(T))].subscriberCount--;
+      }
     }
   }
 
   template <typename T> void publish(const T &event) {
     static_assert(std::is_base_of_v<Event, T>, "T must inherit from Event");
-    auto it = m_handlers.find(std::type_index(typeid(T)));
-    if (it != m_handlers.end()) {
-      for (const auto &entry : it->second) {
-        entry.handler(&event);
+    std::vector<HandlerEntry> handlersCopy;
+
+    {
+      std::lock_guard<std::mutex> lock(m_mutex);
+      auto it = m_handlers.find(std::type_index(typeid(T)));
+      if (it != m_handlers.end()) {
+        handlersCopy = it->second;
+        m_stats[std::type_index(typeid(T))].publishCount++;
       }
     }
+
+    for (const auto &entry : handlersCopy) {
+      entry.handler(&event);
+    }
+  }
+
+  EventStats getStats(const std::type_index &eventType) const {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    auto it = m_stats.find(eventType);
+    if (it != m_stats.end()) {
+      return it->second;
+    }
+    return EventStats{};
+  }
+
+  size_t getSubscriberCount(const std::type_index &eventType) const {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    auto it = m_handlers.find(eventType);
+    if (it != m_handlers.end()) {
+      return it->second.size();
+    }
+    return 0;
+  }
+
+  void clearAllSubscriptions() {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    m_handlers.clear();
+    m_stats.clear();
   }
 
 private:
@@ -66,7 +117,9 @@ private:
     std::function<void(const void *)> handler;
   };
 
+  mutable std::mutex m_mutex;
   std::unordered_map<std::type_index, std::vector<HandlerEntry>> m_handlers;
+  std::unordered_map<std::type_index, EventStats> m_stats;
   SubscriptionHandle m_nextHandle = 1;
 };
 
@@ -111,6 +164,7 @@ class UnitSelectedEvent : public Event {
 public:
   UnitSelectedEvent(EntityID unitId) : unitId(unitId) {}
   EntityID unitId;
+  const char *getTypeName() const override { return "UNIT_SELECTED"; }
 };
 
 class UnitMovedEvent : public Event {
@@ -180,6 +234,7 @@ public:
   EntityID defenderId;
   float posX;
   float posY;
+  const char *getTypeName() const override { return "BATTLE_STARTED"; }
 };
 
 class BattleEndedEvent : public Event {
@@ -190,6 +245,7 @@ public:
   EntityID winnerId;
   EntityID loserId;
   bool defenderDied;
+  const char *getTypeName() const override { return "BATTLE_ENDED"; }
 };
 
 enum class AmbientState { PEACEFUL, TENSE, COMBAT, VICTORY, DEFEAT };
@@ -200,6 +256,7 @@ public:
       : newState(newState), previousState(previousState) {}
   AmbientState newState;
   AmbientState previousState;
+  const char *getTypeName() const override { return "AMBIENT_STATE_CHANGED"; }
 };
 
 class AudioTriggerEvent : public Event {
