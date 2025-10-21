@@ -1285,7 +1285,8 @@ void Backend::cacheRiverbankUniforms() {
 
   m_riverbankUniforms.model = m_riverbankShader->uniformHandle("model");
   m_riverbankUniforms.view = m_riverbankShader->uniformHandle("view");
-  m_riverbankUniforms.projection = m_riverbankShader->uniformHandle("projection");
+  m_riverbankUniforms.projection =
+      m_riverbankShader->uniformHandle("projection");
   m_riverbankUniforms.time = m_riverbankShader->uniformHandle("time");
 }
 

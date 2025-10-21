@@ -29,8 +29,8 @@ public:
 
 private:
   void onUnitSelected(const Engine::Core::UnitSelectedEvent &event);
-  void onAmbientStateChanged(
-      const Engine::Core::AmbientStateChangedEvent &event);
+  void
+  onAmbientStateChanged(const Engine::Core::AmbientStateChangedEvent &event);
   void onAudioTrigger(const Engine::Core::AudioTriggerEvent &event);
   void onMusicTrigger(const Engine::Core::MusicTriggerEvent &event);
 

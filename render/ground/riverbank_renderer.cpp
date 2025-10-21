@@ -53,7 +53,6 @@ void RiverbankRenderer::buildMeshes() {
            c * (1.0f - fx) * fy + d * fx * fy;
   };
 
-  // Helper to sample terrain height at world position
   auto sampleHeight = [&](float worldX, float worldZ) -> float {
     if (m_heights.empty() || m_gridWidth == 0 || m_gridHeight == 0)
       return 0.0f;
@@ -84,7 +83,6 @@ void RiverbankRenderer::buildMeshes() {
     return h0 * (1.0f - tz) + h1 * tz;
   };
 
-  // Create riverbank transition zones on both sides of each river segment
   for (const auto &segment : m_riverSegments) {
     QVector3D dir = segment.end - segment.start;
     float length = dir.length();
@@ -97,7 +95,6 @@ void RiverbankRenderer::buildMeshes() {
     QVector3D perpendicular(-dir.z(), 0.0f, dir.x());
     float halfWidth = segment.width * 0.5f;
 
-    // Riverbank transition zone width (extends beyond water edge)
     float bankWidth = 0.2f;
 
     int lengthSteps =
@@ -111,7 +108,6 @@ void RiverbankRenderer::buildMeshes() {
       float t = static_cast<float>(i) / static_cast<float>(lengthSteps - 1);
       QVector3D centerPos = segment.start + dir * (length * t);
 
-      // Edge variation using noise
       float noiseFreq1 = 2.0f;
       float noiseFreq2 = 5.0f;
       float noiseFreq3 = 10.0f;
@@ -129,19 +125,15 @@ void RiverbankRenderer::buildMeshes() {
 
       float widthVariation = combinedNoise * halfWidth * 0.35f;
 
-      // Meander for natural curves
       float meander = noise(t * 3.0f, length * 0.1f) * 0.3f;
       QVector3D centerOffset = perpendicular * meander;
       centerPos += centerOffset;
 
-      // Create riverbank zones on both sides
-      // Inner edge (water edge)
       QVector3D innerLeft =
           centerPos - perpendicular * (halfWidth + widthVariation);
       QVector3D innerRight =
           centerPos + perpendicular * (halfWidth + widthVariation);
 
-      // Outer edge (land edge) - with additional variation
       float outerVariation =
           noise(centerPos.x() * 8.0f, centerPos.z() * 8.0f) * 0.5f;
       QVector3D outerLeft =
@@ -151,18 +143,17 @@ void RiverbankRenderer::buildMeshes() {
 
       float normal[3] = {0.0f, 1.0f, 0.0f};
 
-      // Left bank strip (4 vertices per segment)
       Vertex leftInner, leftOuter;
       float heightInnerLeft = sampleHeight(innerLeft.x(), innerLeft.z());
       float heightOuterLeft = sampleHeight(outerLeft.x(), outerLeft.z());
 
       leftInner.position[0] = innerLeft.x();
-      leftInner.position[1] = heightInnerLeft + 0.05f; // Slightly above terrain
+      leftInner.position[1] = heightInnerLeft + 0.05f;
       leftInner.position[2] = innerLeft.z();
       leftInner.normal[0] = normal[0];
       leftInner.normal[1] = normal[1];
       leftInner.normal[2] = normal[2];
-      leftInner.texCoord[0] = 0.0f; // Inner = wet
+      leftInner.texCoord[0] = 0.0f;
       leftInner.texCoord[1] = t;
       vertices.push_back(leftInner);
 
@@ -172,11 +163,10 @@ void RiverbankRenderer::buildMeshes() {
       leftOuter.normal[0] = normal[0];
       leftOuter.normal[1] = normal[1];
       leftOuter.normal[2] = normal[2];
-      leftOuter.texCoord[0] = 1.0f; // Outer = dry
+      leftOuter.texCoord[0] = 1.0f;
       leftOuter.texCoord[1] = t;
       vertices.push_back(leftOuter);
 
-      // Right bank strip
       Vertex rightInner, rightOuter;
       float heightInnerRight = sampleHeight(innerRight.x(), innerRight.z());
       float heightOuterRight = sampleHeight(outerRight.x(), outerRight.z());
@@ -187,7 +177,7 @@ void RiverbankRenderer::buildMeshes() {
       rightInner.normal[0] = normal[0];
       rightInner.normal[1] = normal[1];
       rightInner.normal[2] = normal[2];
-      rightInner.texCoord[0] = 0.0f; // Inner = wet
+      rightInner.texCoord[0] = 0.0f;
       rightInner.texCoord[1] = t;
       vertices.push_back(rightInner);
 
@@ -197,30 +187,28 @@ void RiverbankRenderer::buildMeshes() {
       rightOuter.normal[0] = normal[0];
       rightOuter.normal[1] = normal[1];
       rightOuter.normal[2] = normal[2];
-      rightOuter.texCoord[0] = 1.0f; // Outer = dry
+      rightOuter.texCoord[0] = 1.0f;
       rightOuter.texCoord[1] = t;
       vertices.push_back(rightOuter);
 
       if (i < lengthSteps - 1) {
         unsigned int idx0 = i * 4;
 
-        // Left bank triangles
-        indices.push_back(idx0 + 0); // left inner
-        indices.push_back(idx0 + 4); // next left inner
-        indices.push_back(idx0 + 1); // left outer
+        indices.push_back(idx0 + 0);
+        indices.push_back(idx0 + 4);
+        indices.push_back(idx0 + 1);
 
-        indices.push_back(idx0 + 1); // left outer
-        indices.push_back(idx0 + 4); // next left inner
-        indices.push_back(idx0 + 5); // next left outer
+        indices.push_back(idx0 + 1);
+        indices.push_back(idx0 + 4);
+        indices.push_back(idx0 + 5);
 
-        // Right bank triangles
-        indices.push_back(idx0 + 2); // right inner
-        indices.push_back(idx0 + 3); // right outer
-        indices.push_back(idx0 + 6); // next right inner
+        indices.push_back(idx0 + 2);
+        indices.push_back(idx0 + 3);
+        indices.push_back(idx0 + 6);
 
-        indices.push_back(idx0 + 3); // right outer
-        indices.push_back(idx0 + 7); // next right outer
-        indices.push_back(idx0 + 6); // next right inner
+        indices.push_back(idx0 + 3);
+        indices.push_back(idx0 + 7);
+        indices.push_back(idx0 + 6);
       }
     }
 
