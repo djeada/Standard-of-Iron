@@ -30,7 +30,7 @@ private:
   int m_gridWidth = 0;
   int m_gridHeight = 0;
   std::vector<float> m_heights;
-  std::unique_ptr<Mesh> m_mesh;
+  std::vector<std::unique_ptr<Mesh>> m_meshes;
 };
 
 } // namespace GL
