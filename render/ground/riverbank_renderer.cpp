@@ -192,7 +192,7 @@ void RiverbankRenderer::buildMeshes() {
       vertices.push_back(rightOuter);
 
       if (i < lengthSteps - 1) {
-        unsigned int idx0 = baseIndex + i * 4;
+        unsigned int idx0 = i * 4;
 
         indices.push_back(idx0 + 0);
         indices.push_back(idx0 + 4);
@@ -227,42 +227,8 @@ void RiverbankRenderer::submit(Renderer &renderer, ResourceManager *resources) {
 
   Q_UNUSED(resources);
 
-  // Check visibility service to respect fog of war
   auto &visibility = Game::Map::VisibilityService::instance();
   const bool useVisibility = visibility.isInitialized();
-
-  if (useVisibility) {
-    bool anyVisible = false;
-
-    // Sample visibility at multiple points along each river segment
-    for (const auto &segment : m_riverSegments) {
-      QVector3D dir = segment.end - segment.start;
-      float length = dir.length();
-      if (length < 0.01f)
-        continue;
-
-      dir.normalize();
-
-      // Check start, middle, and end points of each segment
-      for (int i = 0; i <= 2 && !anyVisible; ++i) {
-        float t = i * 0.5f;
-        QVector3D pos = segment.start + dir * (length * t);
-
-        if (visibility.isVisibleWorld(pos.x(), pos.z())) {
-          anyVisible = true;
-          break;
-        }
-      }
-
-      if (anyVisible)
-        break;
-    }
-
-    // If no part of any riverbank is visible, skip rendering entirely
-    if (!anyVisible) {
-      return;
-    }
-  }
 
   auto shader = renderer.getShader("riverbank");
   if (!shader) {
