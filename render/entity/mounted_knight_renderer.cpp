@@ -149,11 +149,20 @@ public:
     pose.shoulderR.setY(pose.shoulderR.y() + offsetY);
     pose.pelvisPos.setY(saddleHeight);
 
-    pose.footL.setY(-0.22f);
-    pose.footR.setY(-0.22f);
+    pose.shoulderL.setZ(0.0f);
+    pose.shoulderR.setZ(0.0f);
 
-    pose.kneeL.setY((pose.pelvisPos.y() + pose.footL.y()) * 0.5f);
-    pose.kneeR.setY((pose.pelvisPos.y() + pose.footR.y()) * 0.5f);
+    const float shoulderWidth = HP::TORSO_TOP_R * 0.98f;
+    pose.shoulderL.setX(-shoulderWidth);
+    pose.shoulderR.setX(shoulderWidth);
+
+    const float stirrupFootSpacing = 0.20f;
+    pose.footL = QVector3D(-stirrupFootSpacing, -0.22f, 0.0f);
+    pose.footR = QVector3D(stirrupFootSpacing, -0.22f, 0.0f);
+
+    const float kneeY = (pose.pelvisPos.y() + pose.footL.y()) * 0.5f;
+    pose.kneeL = QVector3D(pose.footL.x(), kneeY, 0.0f);
+    pose.kneeR = QVector3D(pose.footR.x(), kneeY, 0.0f);
   }
 
   void addAttachments(const DrawContext &ctx, const HumanoidVariant &v,
