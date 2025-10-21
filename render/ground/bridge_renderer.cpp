@@ -21,19 +21,19 @@ void BridgeRenderer::configure(const std::vector<Game::Map::Bridge> &bridges,
 }
 
 void BridgeRenderer::buildMeshes() {
+  m_meshes.clear();
+
   if (m_bridges.empty()) {
-    m_mesh.reset();
     return;
   }
-
-  std::vector<Vertex> vertices;
-  std::vector<unsigned int> indices;
 
   for (const auto &bridge : m_bridges) {
     QVector3D dir = bridge.end - bridge.start;
     float length = dir.length();
-    if (length < 0.01f)
+    if (length < 0.01f) {
+      m_meshes.push_back(nullptr);
       continue;
+    }
 
     dir.normalize();
     QVector3D perpendicular(-dir.z(), 0.0f, dir.x());
@@ -43,7 +43,8 @@ void BridgeRenderer::buildMeshes() {
         static_cast<int>(std::ceil(length / (m_tileSize * 0.3f)));
     lengthSegments = std::max(lengthSegments, 8);
 
-    unsigned int baseIndex = static_cast<unsigned int>(vertices.size());
+    std::vector<Vertex> vertices;
+    std::vector<unsigned int> indices;
 
     for (int i = 0; i <= lengthSegments; ++i) {
       float t = static_cast<float>(i) / static_cast<float>(lengthSegments);
@@ -113,7 +114,7 @@ void BridgeRenderer::buildMeshes() {
       }
 
       if (i < lengthSegments) {
-        unsigned int idx = baseIndex + i * 6;
+        unsigned int idx = i * 6;
 
         indices.push_back(idx + 0);
         indices.push_back(idx + 6);
@@ -151,18 +152,17 @@ void BridgeRenderer::buildMeshes() {
         indices.push_back(idx + 7);
       }
     }
-  }
 
-  if (vertices.empty() || indices.empty()) {
-    m_mesh.reset();
-    return;
+    if (!vertices.empty() && !indices.empty()) {
+      m_meshes.push_back(std::make_unique<Mesh>(vertices, indices));
+    } else {
+      m_meshes.push_back(nullptr);
+    }
   }
-
-  m_mesh = std::make_unique<Mesh>(vertices, indices);
 }
 
 void BridgeRenderer::submit(Renderer &renderer, ResourceManager *resources) {
-  if (!m_mesh || m_bridges.empty()) {
+  if (m_meshes.empty() || m_bridges.empty()) {
     return;
   }
 
@@ -170,37 +170,6 @@ void BridgeRenderer::submit(Renderer &renderer, ResourceManager *resources) {
 
   auto &visibility = Game::Map::VisibilityService::instance();
   const bool useVisibility = visibility.isInitialized();
-
-  if (useVisibility) {
-    bool anyVisible = false;
-
-    for (const auto &bridge : m_bridges) {
-      QVector3D dir = bridge.end - bridge.start;
-      float length = dir.length();
-      if (length < 0.01f)
-        continue;
-
-      dir.normalize();
-
-      for (int i = 0; i <= 2 && !anyVisible; ++i) {
-        float t = i * 0.5f;
-        QVector3D pos = bridge.start + dir * (length * t);
-
-        if (visibility.isVisibleWorld(pos.x(), pos.z())) {
-          anyVisible = true;
-          break;
-        }
-      }
-
-      if (anyVisible)
-        break;
-    }
-
-    if (!anyVisible) {
-
-      return;
-    }
-  }
 
   auto shader = renderer.getShader("bridge");
   if (!shader) {
@@ -217,7 +186,56 @@ void BridgeRenderer::submit(Renderer &renderer, ResourceManager *resources) {
 
   QVector3D stoneColor(0.55f, 0.52f, 0.48f);
 
-  renderer.mesh(m_mesh.get(), model, stoneColor, nullptr, 1.0f);
+  size_t meshIndex = 0;
+  for (const auto &bridge : m_bridges) {
+    if (meshIndex >= m_meshes.size())
+      break;
+
+    auto *mesh = m_meshes[meshIndex].get();
+    ++meshIndex;
+
+    if (!mesh) {
+      continue;
+    }
+
+    QVector3D dir = bridge.end - bridge.start;
+    float length = dir.length();
+
+    float alpha = 1.0f;
+    QVector3D colorMultiplier(1.0f, 1.0f, 1.0f);
+
+    if (useVisibility) {
+      int maxVisibilityState = 0;
+      dir.normalize();
+
+      int samplesPerBridge = 5;
+      for (int i = 0; i < samplesPerBridge; ++i) {
+        float t =
+            static_cast<float>(i) / static_cast<float>(samplesPerBridge - 1);
+        QVector3D pos = bridge.start + dir * (length * t);
+
+        if (visibility.isVisibleWorld(pos.x(), pos.z())) {
+          maxVisibilityState = 2;
+          break;
+        } else if (visibility.isExploredWorld(pos.x(), pos.z())) {
+          maxVisibilityState = std::max(maxVisibilityState, 1);
+        }
+      }
+
+      if (maxVisibilityState == 0) {
+        continue;
+      } else if (maxVisibilityState == 1) {
+        alpha = 0.5f;
+        colorMultiplier = QVector3D(0.4f, 0.4f, 0.45f);
+      }
+    }
+
+    QVector3D finalColor(stoneColor.x() * colorMultiplier.x(),
+                         stoneColor.y() * colorMultiplier.y(),
+                         stoneColor.z() * colorMultiplier.z());
+
+    renderer.mesh(mesh, model, finalColor, nullptr, alpha);
+  }
 
   renderer.setCurrentShader(nullptr);
 }
