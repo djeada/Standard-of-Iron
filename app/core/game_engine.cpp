@@ -5,6 +5,7 @@
 #include "../models/cursor_manager.h"
 #include "../models/hover_tracker.h"
 #include "../utils/json_vec_utils.h"
+#include "game/audio/AudioSystem.h"
 #include <QBuffer>
 #include <QCoreApplication>
 #include <QCursor>
@@ -155,6 +156,21 @@ GameEngine::GameEngine() {
   connect(m_mapCatalog.get(), &Game::Map::MapCatalog::allMapsLoaded, this,
           [this]() { emit availableMapsChanged(); });
 
+  // Initialize Audio System
+  if (AudioSystem::getInstance().initialize()) {
+    qInfo() << "AudioSystem initialized successfully";
+  } else {
+    qWarning() << "Failed to initialize AudioSystem";
+  }
+
+  // Initialize AudioEventHandler
+  m_audioEventHandler = std::make_unique<Game::Audio::AudioEventHandler>(m_world.get());
+  if (m_audioEventHandler->initialize()) {
+    qInfo() << "AudioEventHandler initialized successfully";
+  } else {
+    qWarning() << "Failed to initialize AudioEventHandler";
+  }
+
   connect(m_cursorManager.get(), &CursorManager::modeChanged, this,
           &GameEngine::cursorModeChanged);
   connect(m_cursorManager.get(), &CursorManager::globalCursorChanged, this,
@@ -223,7 +239,14 @@ GameEngine::GameEngine() {
           });
 }
 
-GameEngine::~GameEngine() = default;
+GameEngine::~GameEngine() {
+  // Shutdown audio subsystem
+  if (m_audioEventHandler) {
+    m_audioEventHandler->shutdown();
+  }
+  AudioSystem::getInstance().shutdown();
+  qInfo() << "AudioSystem shut down";
+}
 
 void GameEngine::onMapClicked(qreal sx, qreal sy) {
   if (!m_window)
@@ -475,6 +498,11 @@ void GameEngine::update(float dt) {
     dt = 0.0f;
   } else {
     dt *= m_runtime.timeScale;
+  }
+
+  // Update ambient state for audio
+  if (!m_runtime.paused && !m_runtime.loading) {
+    updateAmbientState(dt);
   }
 
   if (m_renderer) {
@@ -1482,4 +1510,96 @@ QVector3D GameEngine::getPatrolPreviewWaypoint() const {
   if (!m_commandController)
     return QVector3D();
   return m_commandController->getPatrolFirstWaypoint();
+}
+
+void GameEngine::updateAmbientState(float dt) {
+  // Update ambient state check every 2 seconds to avoid overhead
+  m_ambientCheckTimer += dt;
+  const float CHECK_INTERVAL = 2.0f;
+  
+  if (m_ambientCheckTimer < CHECK_INTERVAL) {
+    return;
+  }
+  m_ambientCheckTimer = 0.0f;
+
+  // Determine the new ambient state based on game conditions
+  Engine::Core::AmbientState newState = Engine::Core::AmbientState::PEACEFUL;
+
+  // Check victory/defeat first
+  if (!m_runtime.victoryState.isEmpty()) {
+    if (m_runtime.victoryState == "victory") {
+      newState = Engine::Core::AmbientState::VICTORY;
+    } else if (m_runtime.victoryState == "defeat") {
+      newState = Engine::Core::AmbientState::DEFEAT;
+    }
+  } else if (isPlayerInCombat()) {
+    // Check if player units are engaged in combat
+    newState = Engine::Core::AmbientState::COMBAT;
+  } else if (m_entityCache.enemyBarracksAlive && m_entityCache.playerBarracksAlive) {
+    // If both sides have barracks alive, it's tense
+    newState = Engine::Core::AmbientState::TENSE;
+  }
+
+  // Publish state change event if state changed
+  if (newState != m_currentAmbientState) {
+    Engine::Core::AmbientState previousState = m_currentAmbientState;
+    m_currentAmbientState = newState;
+    
+    Engine::Core::EventManager::instance().publish(
+        Engine::Core::AmbientStateChangedEvent(newState, previousState));
+    
+    qInfo() << "Ambient state changed from" << static_cast<int>(previousState) 
+            << "to" << static_cast<int>(newState);
+  }
+}
+
+bool GameEngine::isPlayerInCombat() const {
+  if (!m_world) {
+    return false;
+  }
+
+  // Check if any player unit has an attack target or is under attack
+  auto units = m_world->getEntitiesWith<Engine::Core::UnitComponent>();
+  const float COMBAT_CHECK_RADIUS = 15.0f;
+
+  for (auto *entity : units) {
+    auto *unit = entity->getComponent<Engine::Core::UnitComponent>();
+    if (!unit || unit->ownerId != m_runtime.localOwnerId || unit->health <= 0) {
+      continue;
+    }
+
+    // Check if unit has an attack target
+    if (entity->hasComponent<Engine::Core::AttackTargetComponent>()) {
+      return true;
+    }
+
+    // Check if there are enemies nearby
+    auto *transform = entity->getComponent<Engine::Core::TransformComponent>();
+    if (!transform) {
+      continue;
+    }
+
+    for (auto *otherEntity : units) {
+      auto *otherUnit = otherEntity->getComponent<Engine::Core::UnitComponent>();
+      if (!otherUnit || otherUnit->ownerId == m_runtime.localOwnerId || 
+          otherUnit->health <= 0) {
+        continue;
+      }
+
+      auto *otherTransform = otherEntity->getComponent<Engine::Core::TransformComponent>();
+      if (!otherTransform) {
+        continue;
+      }
+
+      float dx = transform->position.x - otherTransform->position.x;
+      float dz = transform->position.z - otherTransform->position.z;
+      float distSq = dx * dx + dz * dz;
+
+      if (distSq < COMBAT_CHECK_RADIUS * COMBAT_CHECK_RADIUS) {
+        return true;
+      }
+    }
+  }
+
+  return false;
 }
