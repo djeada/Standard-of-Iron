@@ -1,0 +1,24 @@
+#pragma once
+
+#include <memory>
+#include <string>
+
+class QMediaPlayer;
+
+class Music {
+public:
+  Music(const std::string &filePath);
+  ~Music();
+
+  bool isLoaded() const;
+  void play(float volume = 1.0f, bool loop = true);
+  void stop();
+  void pause();
+  void resume();
+  void setVolume(float volume);
+
+private:
+  std::unique_ptr<QMediaPlayer> player;
+  std::string filepath;
+  bool loaded;
+};
