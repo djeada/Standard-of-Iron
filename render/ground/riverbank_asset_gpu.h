@@ -10,7 +10,7 @@ struct RiverbankAssetInstanceGpu {
   std::array<float, 3> scale;
   std::array<float, 4> rotation;
   std::array<float, 3> color;
-  float assetType; // 0=pebble, 1=small rock, 2=reed cluster
+  float assetType;
 };
 
 struct RiverbankAssetBatchParams {
