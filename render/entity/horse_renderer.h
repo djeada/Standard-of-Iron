@@ -5,7 +5,6 @@
 
 namespace Render::GL {
 
-// Forward declarations (defined elsewhere, e.g. in humanoid_base.h)
 struct DrawContext;
 struct AnimationInputs;
 class ISubmitter;
@@ -65,21 +64,16 @@ struct HorseProfile {
   HorseGait gait;
 };
 
-// Seeded generators
 HorseDimensions makeHorseDimensions(uint32_t seed);
-HorseVariant    makeHorseVariant(uint32_t seed,
-                                 const QVector3D& leatherBase,
-                                 const QVector3D& clothBase);
-HorseProfile    makeHorseProfile(uint32_t seed,
-                                 const QVector3D& leatherBase,
-                                 const QVector3D& clothBase);
+HorseVariant makeHorseVariant(uint32_t seed, const QVector3D &leatherBase,
+                              const QVector3D &clothBase);
+HorseProfile makeHorseProfile(uint32_t seed, const QVector3D &leatherBase,
+                              const QVector3D &clothBase);
 
 class HorseRenderer {
 public:
-  void render(const DrawContext& ctx,
-              const AnimationInputs& anim,
-              const HorseProfile& profile,
-              ISubmitter& out) const;
+  void render(const DrawContext &ctx, const AnimationInputs &anim,
+              const HorseProfile &profile, ISubmitter &out) const;
 };
 
 } // namespace Render::GL

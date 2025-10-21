@@ -16,8 +16,8 @@ out vec4 FragColor;
 // ---------------------
 const float PI = 3.14159265359;
 
-float saturate(float x){ return clamp(x, 0.0, 1.0); }
-vec3  saturate(vec3  x){ return clamp(x, 0.0, 1.0); }
+float saturate(float x) { return clamp(x, 0.0, 1.0); }
+vec3 saturate(vec3 x) { return clamp(x, 0.0, 1.0); }
 
 float hash(vec2 p) {
   vec3 p3 = fract(vec3(p.xyx) * 0.1031);
@@ -39,7 +39,7 @@ float noise(vec2 p) {
 float fbm(vec2 p) {
   float a = 0.5;
   float f = 0.0;
-  for(int i=0;i<5;++i){
+  for (int i = 0; i < 5; ++i) {
     f += a * noise(p);
     p *= 2.03;
     a *= 0.5;
@@ -78,12 +78,14 @@ float chainmailRings(vec2 p) {
   vec2 g0 = fract(uv) - 0.5;
   float r0 = length(g0);
   float fw0 = fwidth(r0) * 1.2;
-  float ring0 = smoothstep(0.30 + fw0, 0.30 - fw0, r0) - smoothstep(0.20 + fw0, 0.20 - fw0, r0);
+  float ring0 = smoothstep(0.30 + fw0, 0.30 - fw0, r0) -
+                smoothstep(0.20 + fw0, 0.20 - fw0, r0);
 
   vec2 g1 = fract(uv + vec2(0.5, 0.0)) - 0.5;
   float r1 = length(g1);
   float fw1 = fwidth(r1) * 1.2;
-  float ring1 = smoothstep(0.30 + fw1, 0.30 - fw1, r1) - smoothstep(0.20 + fw1, 0.20 - fw1, r1);
+  float ring1 = smoothstep(0.30 + fw1, 0.30 - fw1, r1) -
+                smoothstep(0.20 + fw1, 0.20 - fw1, r1);
 
   return (ring0 + ring1) * 0.15;
 }
@@ -103,9 +105,9 @@ vec3 fresnelSchlick(float cosTheta, vec3 F0) {
 }
 
 float D_GGX(float NdotH, float rough) {
-  float a  = max(0.001, rough);
+  float a = max(0.001, rough);
   float a2 = a * a;
-  float d  = (NdotH * NdotH) * (a2 - 1.0) + 1.0;
+  float d = (NdotH * NdotH) * (a2 - 1.0) + 1.0;
   return a2 / max(1e-6, (PI * d * d));
 }
 
@@ -131,7 +133,7 @@ vec3 perturbNormalWS(vec3 N, vec3 worldPos, float h, float scale) {
 
 // hemisphere ambient (sky/ground)
 vec3 hemilight(vec3 N) {
-  vec3 sky    = vec3(0.55, 0.64, 0.80);
+  vec3 sky = vec3(0.55, 0.64, 0.80);
   vec3 ground = vec3(0.23, 0.20, 0.17);
   float t = saturate(N.y * 0.5 + 0.5);
   return mix(ground, sky, t) * 0.28;
@@ -142,24 +144,28 @@ vec3 hemilight(vec3 N) {
 // ---------------------
 void main() {
   vec3 baseColor = u_color;
-  if (u_useTexture) baseColor *= texture(u_texture, v_texCoord).rgb;
+  if (u_useTexture)
+    baseColor *= texture(u_texture, v_texCoord).rgb;
 
   vec3 N = normalize(v_normal);
   vec2 uv = v_worldPos.xz * 5.0;
 
-  float avg = (baseColor.r + baseColor.g + baseColor.b) * (1.0/3.0);
-  float hueSpan = max(max(baseColor.r, baseColor.g), baseColor.b) - min(min(baseColor.r, baseColor.g), baseColor.b);
+  float avg = (baseColor.r + baseColor.g + baseColor.b) * (1.0 / 3.0);
+  float hueSpan = max(max(baseColor.r, baseColor.g), baseColor.b) -
+                  min(min(baseColor.r, baseColor.g), baseColor.b);
 
-  bool isBrass     = (baseColor.r > baseColor.g * 1.15 && baseColor.r > baseColor.b * 1.20 && avg > 0.50);
-  bool isSteel     = (avg > 0.60 && !isBrass);
-  bool isChain     = (!isSteel && !isBrass && avg > 0.40 && avg <= 0.60);
-  bool isFabric    = (!isSteel && !isBrass && !isChain && avg > 0.25);
-  bool isLeather   = (!isSteel && !isBrass && !isChain && !isFabric);
+  bool isBrass = (baseColor.r > baseColor.g * 1.15 &&
+                  baseColor.r > baseColor.b * 1.20 && avg > 0.50);
+  bool isSteel = (avg > 0.60 && !isBrass);
+  bool isChain = (!isSteel && !isBrass && avg > 0.40 && avg <= 0.60);
+  bool isFabric = (!isSteel && !isBrass && !isChain && avg > 0.25);
+  bool isLeather = (!isSteel && !isBrass && !isChain && !isFabric);
   bool isHorseHide = (avg < 0.40 && hueSpan < 0.12 && v_worldPos.y < 0.8);
 
   // lighting frame
   vec3 L = normalize(vec3(1.0, 1.2, 1.0));
-  vec3 V = normalize(vec3(0.0, 1.0, 0.5));        // stable view proxy (keeps interface unchanged)
+  vec3 V = normalize(
+      vec3(0.0, 1.0, 0.5)); // stable view proxy (keeps interface unchanged)
   vec3 H = normalize(L + V);
 
   float NdotL = saturate(dot(N, L));
@@ -173,9 +179,9 @@ void main() {
 
   // base material params
   float roughness = 0.5;
-  vec3  F0 = vec3(0.04);     // dielectric default
+  vec3 F0 = vec3(0.04); // dielectric default
   float metalness = 0.0;
-  vec3  albedo = baseColor;
+  vec3 albedo = baseColor;
 
   // micro details / masks (re-used)
   float nSmall = fbm(uv * 6.0);
@@ -193,10 +199,11 @@ void main() {
     vec3 up = vec3(0.0, 1.0, 0.0);
     vec3 T = normalize(cross(up, N) + 1e-4); // hair tangent guess
     float flowNoise = fbm(uv * 10.0);
-    float aniso = pow(saturate(dot(normalize(reflect(-L, N)), T)), 14.0) * 0.08 * (0.6 + 0.4 * flowNoise);
+    float aniso = pow(saturate(dot(normalize(reflect(-L, N)), T)), 14.0) *
+                  0.08 * (0.6 + 0.4 * flowNoise);
 
     float hideTex = horseHidePattern(v_worldPos.xz);
-    float sheen   = pow(1.0 - NdotV, 4.0) * 0.07;
+    float sheen = pow(1.0 - NdotV, 4.0) * 0.07;
 
     roughness = 0.58 - hideTex * 0.08;
     F0 = vec3(0.035);
@@ -212,15 +219,16 @@ void main() {
     // microfacet spec
     float D = D_GGX(saturate(dot(N, H)), roughness);
     float G = G_Smith(saturate(dot(N, V)), saturate(dot(N, L)), roughness);
-    vec3  F = fresnelSchlick(VdotH, F0);
-    vec3  spec = (D * G) * F / max(1e-5, 4.0 * NdotV * NdotL);
+    vec3 F = fresnelSchlick(VdotH, F0);
+    vec3 spec = (D * G) * F / max(1e-5, 4.0 * NdotV * NdotL);
     col += NdotL_wrap * (albedo * (1.0 - F) * 0.95) + spec * 0.8;
     col += aniso + sheen;
 
   } else if (isSteel) {
-    float brushed = abs(sin(v_worldPos.y * 95.0)) * 0.02 + noise(uv * 35.0) * 0.015;
-    float dents   = noise(uv * 8.0) * 0.03;
-    float plates  = armorPlates(v_worldPos.xz, v_worldPos.y);
+    float brushed =
+        abs(sin(v_worldPos.y * 95.0)) * 0.02 + noise(uv * 35.0) * 0.015;
+    float dents = noise(uv * 8.0) * 0.03;
+    float plates = armorPlates(v_worldPos.xz, v_worldPos.y);
 
     // bump from brushing
     float h = fbm(vec2(v_worldPos.y * 25.0, v_worldPos.z * 6.0));
@@ -239,8 +247,8 @@ void main() {
     // microfacet spec only for metals
     float D = D_GGX(saturate(dot(N, H)), roughness);
     float G = G_Smith(saturate(dot(N, V)), saturate(dot(N, L)), roughness);
-    vec3  F = fresnelSchlick(VdotH, F0 * albedo); // slight tint
-    vec3  spec = (D * G) * F / max(1e-5, 4.0 * NdotV * NdotL);
+    vec3 F = fresnelSchlick(VdotH, F0 * albedo); // slight tint
+    vec3 spec = (D * G) * F / max(1e-5, 4.0 * NdotV * NdotL);
 
     col += ambient * 0.3; // metals rely more on spec
     col += NdotL_wrap * spec * 1.5;
@@ -261,8 +269,8 @@ void main() {
 
     float D = D_GGX(saturate(dot(N, H)), roughness);
     float G = G_Smith(saturate(dot(N, V)), saturate(dot(N, L)), roughness);
-    vec3  F = fresnelSchlick(VdotH, F0);
-    vec3  spec = (D * G) * F / max(1e-5, 4.0 * NdotV * NdotL);
+    vec3 F = fresnelSchlick(VdotH, F0);
+    vec3 spec = (D * G) * F / max(1e-5, 4.0 * NdotV * NdotL);
 
     col += ambient * 0.25;
     col += NdotL_wrap * spec * 1.35;
@@ -282,8 +290,8 @@ void main() {
 
     float D = D_GGX(saturate(dot(N, H)), roughness);
     float G = G_Smith(saturate(dot(N, V)), saturate(dot(N, L)), roughness);
-    vec3  F = fresnelSchlick(VdotH, F0);
-    vec3  spec = (D * G) * F / max(1e-5, 4.0 * NdotV * NdotL);
+    vec3 F = fresnelSchlick(VdotH, F0);
+    vec3 spec = (D * G) * F / max(1e-5, 4.0 * NdotV * NdotL);
 
     col += ambient * 0.25;
     col += NdotL_wrap * (spec * (1.2 + rings)) + vec3(ringHi);
@@ -293,7 +301,7 @@ void main() {
   } else if (isFabric) {
     float weaveX = sin(v_worldPos.x * 70.0);
     float weaveZ = sin(v_worldPos.z * 70.0);
-    float weave  = weaveX * weaveZ * 0.04;
+    float weave = weaveX * weaveZ * 0.04;
     float embroidery = fbm(uv * 6.0) * 0.08;
 
     float h = fbm(uv * 22.0) * 0.7 + weave * 0.6;
@@ -306,17 +314,18 @@ void main() {
     vec3 F = fresnelSchlick(VdotH, F0);
     float D = D_GGX(saturate(dot(N, H)), roughness);
     float G = G_Smith(saturate(dot(N, V)), saturate(dot(N, L)), roughness);
-    vec3  spec = (D * G) * F / max(1e-5, 4.0 * NdotV * NdotL);
+    vec3 spec = (D * G) * F / max(1e-5, 4.0 * NdotV * NdotL);
 
     float sheen = pow(1.0 - NdotV, 6.0) * 0.10;
     albedo *= 1.0 + fbm(uv * 5.0) * 0.10 - 0.05;
 
     col += ambient * albedo;
-    col += NdotL_wrap * (albedo * (1.0 - F) + spec * 0.3) + vec3(weave + embroidery + sheen);
+    col += NdotL_wrap * (albedo * (1.0 - F) + spec * 0.3) +
+           vec3(weave + embroidery + sheen);
 
   } else { // leather
     float grain = fbm(uv * 10.0) * 0.15;
-    float wear  = fbm(uv * 3.0) * 0.12;
+    float wear = fbm(uv * 3.0) * 0.12;
 
     float h = fbm(uv * 18.0);
     N = perturbNormalWS(N, v_worldPos, h, 0.28);
@@ -328,7 +337,7 @@ void main() {
     vec3 F = fresnelSchlick(VdotH, F0);
     float D = D_GGX(saturate(dot(N, H)), roughness);
     float G = G_Smith(saturate(dot(N, V)), saturate(dot(N, L)), roughness);
-    vec3  spec = (D * G) * F / max(1e-5, 4.0 * NdotV * NdotL);
+    vec3 spec = (D * G) * F / max(1e-5, 4.0 * NdotV * NdotL);
 
     float sheen = pow(1.0 - NdotV, 4.0) * 0.06;
 
