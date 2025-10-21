@@ -2,6 +2,7 @@
 #include "../../app/utils/selection_utils.h"
 #include "../../render/gl/camera.h"
 #include "../core/component.h"
+#include "../core/event_manager.h"
 #include "../core/world.h"
 #include "../game_config.h"
 #include "command_service.h"
@@ -19,6 +20,8 @@ void SelectionSystem::selectUnit(Engine::Core::EntityID unitId) {
   auto it = std::find(m_selectedUnits.begin(), m_selectedUnits.end(), unitId);
   if (it == m_selectedUnits.end()) {
     m_selectedUnits.push_back(unitId);
+    Engine::Core::EventManager::instance().publish(
+        Engine::Core::UnitSelectedEvent(unitId));
   }
 }
 
