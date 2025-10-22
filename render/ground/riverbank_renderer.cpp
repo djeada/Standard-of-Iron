@@ -252,14 +252,11 @@ void RiverbankRenderer::submit(Renderer &renderer, ResourceManager *resources) {
       continue;
     }
 
-    QVector3D dir = segment.end - segment.start;
-    float length = dir.length();
-
-    float alpha = 1.0f;
-    QVector3D colorMultiplier(1.0f, 1.0f, 1.0f);
-
     if (useVisibility) {
-      int maxVisibilityState = 0;
+      QVector3D dir = segment.end - segment.start;
+      float length = dir.length();
+
+      bool allVisible = true;
       dir.normalize();
 
       int samplesPerSegment = 5;
@@ -268,26 +265,18 @@ void RiverbankRenderer::submit(Renderer &renderer, ResourceManager *resources) {
             static_cast<float>(i) / static_cast<float>(samplesPerSegment - 1);
         QVector3D pos = segment.start + dir * (length * t);
 
-        if (visibility.isVisibleWorld(pos.x(), pos.z())) {
-          maxVisibilityState = 2;
+        if (!visibility.isVisibleWorld(pos.x(), pos.z())) {
+          allVisible = false;
           break;
-        } else if (visibility.isExploredWorld(pos.x(), pos.z())) {
-          maxVisibilityState = std::max(maxVisibilityState, 1);
         }
       }
 
-      if (maxVisibilityState == 0) {
+      if (!allVisible) {
         continue;
-      } else if (maxVisibilityState == 1) {
-        alpha = 0.5f;
-        colorMultiplier = QVector3D(0.4f, 0.4f, 0.45f);
       }
     }
 
-    QVector3D finalColor(colorMultiplier.x(), colorMultiplier.y(),
-                         colorMultiplier.z());
-
-    renderer.mesh(mesh, model, finalColor, nullptr, alpha);
+    renderer.mesh(mesh, model, QVector3D(1.0f, 1.0f, 1.0f), nullptr, 1.0f);
   }
 
   renderer.setCurrentShader(nullptr);

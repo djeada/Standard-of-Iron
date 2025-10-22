@@ -4,6 +4,7 @@
 #include <string>
 
 class QSoundEffect;
+class QThread;
 
 class Sound {
 public:
@@ -16,7 +17,10 @@ public:
   void setVolume(float volume);
 
 private:
+  void cleanupSoundEffect();
+
   std::unique_ptr<QSoundEffect> soundEffect;
+  QThread *mainThread;
   std::string filepath;
   bool loaded;
 };

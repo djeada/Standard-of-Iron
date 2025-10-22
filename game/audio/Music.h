@@ -4,6 +4,7 @@
 #include <string>
 
 class QMediaPlayer;
+class QThread;
 
 class Music {
 public:
@@ -18,7 +19,10 @@ public:
   void setVolume(float volume);
 
 private:
+  void cleanupPlayer();
+
   std::unique_ptr<QMediaPlayer> player;
+  QThread *mainThread;
   std::string filepath;
   bool loaded;
 };

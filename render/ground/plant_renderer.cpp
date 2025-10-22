@@ -1,4 +1,5 @@
 #include "plant_renderer.h"
+#include "../../game/map/visibility_service.h"
 #include "../../game/systems/building_collision_registry.h"
 #include "../gl/buffer.h"
 #include "../scene_renderer.h"
@@ -100,17 +101,51 @@ void PlantRenderer::submit(Renderer &renderer, ResourceManager *resources) {
     return;
   }
 
-  if (m_plantInstanceBuffer && m_plantInstanceCount > 0) {
+  auto &visibility = Game::Map::VisibilityService::instance();
+  const bool useVisibility = visibility.isInitialized();
+
+  if (useVisibility) {
+
+    std::vector<PlantInstanceGpu> visibleInstances;
+    visibleInstances.reserve(m_plantInstances.size());
+
+    for (const auto &instance : m_plantInstances) {
+      float worldX = instance.posScale.x();
+      float worldZ = instance.posScale.z();
+
+      if (visibility.isVisibleWorld(worldX, worldZ)) {
+        visibleInstances.push_back(instance);
+      }
+    }
+
+    if (visibleInstances.empty()) {
+      return;
+    }
+
+    if (!m_visibleInstanceBuffer) {
+      m_visibleInstanceBuffer = std::make_unique<Buffer>(Buffer::Type::Vertex);
+    }
+    m_visibleInstanceBuffer->setData(visibleInstances, Buffer::Usage::Stream);
+
     PlantBatchParams params = m_plantParams;
     params.time = renderer.getAnimationTime();
-    renderer.plantBatch(m_plantInstanceBuffer.get(), m_plantInstanceCount,
-                        params);
+    renderer.plantBatch(m_visibleInstanceBuffer.get(),
+                        static_cast<uint32_t>(visibleInstances.size()), params);
+  } else {
+
+    if (m_plantInstanceBuffer && m_plantInstanceCount > 0) {
+      PlantBatchParams params = m_plantParams;
+      params.time = renderer.getAnimationTime();
+      renderer.plantBatch(m_plantInstanceBuffer.get(), m_plantInstanceCount,
+                          params);
+    }
   }
 }
 
 void PlantRenderer::clear() {
   m_plantInstances.clear();
   m_plantInstanceBuffer.reset();
+  m_visibleInstanceBuffer.reset();
   m_plantInstanceCount = 0;
   m_plantInstancesDirty = false;
 }

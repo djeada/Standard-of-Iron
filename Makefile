@@ -35,6 +35,8 @@ help:
 	@echo "  $(GREEN)install$(RESET)       - Install all dependencies"
 	@echo "  $(GREEN)configure$(RESET)     - Configure build with CMake"
 	@echo "  $(GREEN)build$(RESET)         - Build the project"
+	@echo "  $(GREEN)debug$(RESET)         - Build with debug symbols and GDB support (no optimizations)"
+	@echo "  $(GREEN)release$(RESET)       - Build optimized release version"
 	@echo "  $(GREEN)run$(RESET)           - Run the main application"
 	@echo "  $(GREEN)editor$(RESET)        - Run the map editor"
 	@echo "  $(GREEN)clean$(RESET)         - Clean build directory"
@@ -49,6 +51,7 @@ help:
 	@echo "$(BOLD)Examples:$(RESET)"
 	@echo "  make install    # Install dependencies"
 	@echo "  make dev        # Complete development setup"
+	@echo "  make debug      # Build for debugging with GDB"
 	@echo "  make run        # Build and run the game"
 	@echo "  DEFAULT_LANG=de make build  # Build with German as default language"
 
@@ -219,10 +222,20 @@ format-check:
 # Debug build
 .PHONY: debug
 debug: build-dir
-	@echo "$(BOLD)$(BLUE)Configuring debug build...$(RESET)"
-	@cd $(BUILD_DIR) && cmake -DCMAKE_BUILD_TYPE=Debug ..
+	@echo "$(BOLD)$(BLUE)Configuring debug build with GDB support...$(RESET)"
+	@cd $(BUILD_DIR) && cmake -DCMAKE_BUILD_TYPE=Debug -DDEFAULT_LANG=$(DEFAULT_LANG) ..
+	@echo "$(BOLD)$(BLUE)Building debug version...$(RESET)"
 	@cd $(BUILD_DIR) && make -j$$(nproc)
 	@echo "$(GREEN)✓ Debug build complete$(RESET)"
+	@echo "$(BOLD)Debug Info:$(RESET)"
+	@echo "  Debug symbols: $(GREEN)Enabled (-g3 -ggdb3)$(RESET)"
+	@echo "  Optimizations: $(YELLOW)Disabled (-O0)$(RESET)"
+	@echo "  Frame pointers: $(GREEN)Preserved$(RESET)"
+	@echo "  Inlining: $(YELLOW)Disabled$(RESET)"
+	@echo ""
+	@echo "$(BOLD)Run with GDB:$(RESET)"
+	@echo "  cd $(BUILD_DIR) && gdb ./$(BINARY_NAME)"
+	@echo "  cd $(BUILD_DIR) && gdb --args ./$(BINARY_NAME) [args]"
 
 # Release build
 .PHONY: release
