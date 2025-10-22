@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../units/troop_type.h"
 #include <string>
 #include <vector>
 
@@ -25,14 +26,14 @@ enum class ProductionResult {
 struct ProductionState {
   bool hasBarracks = false;
   bool inProgress = false;
-  std::string productType = "";
+  Game::Units::TroopType productType = Game::Units::TroopType::Archer;
   float timeRemaining = 0.0f;
   float buildTime = 0.0f;
   int producedCount = 0;
   int maxUnits = 0;
   int villagerCost = 1;
   int queueSize = 0;
-  std::vector<std::string> productionQueue;
+  std::vector<Game::Units::TroopType> productionQueue;
 };
 
 class ProductionService {
@@ -40,7 +41,15 @@ public:
   static ProductionResult startProductionForFirstSelectedBarracks(
       Engine::Core::World &world,
       const std::vector<Engine::Core::EntityID> &selected, int ownerId,
-      const std::string &unitType);
+      Game::Units::TroopType unitType);
+
+  static ProductionResult startProductionForFirstSelectedBarracks(
+      Engine::Core::World &world,
+      const std::vector<Engine::Core::EntityID> &selected, int ownerId,
+      const std::string &unitType) {
+    return startProductionForFirstSelectedBarracks(
+        world, selected, ownerId, Game::Units::troopTypeFromString(unitType));
+  }
 
   static bool setRallyForFirstSelectedBarracks(
       Engine::Core::World &world,

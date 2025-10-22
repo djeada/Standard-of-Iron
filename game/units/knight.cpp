@@ -22,7 +22,7 @@ static inline QVector3D teamColor(int ownerId) {
 namespace Game {
 namespace Units {
 
-Knight::Knight(Engine::Core::World &world) : Unit(world, "knight") {}
+Knight::Knight(Engine::Core::World &world) : Unit(world, TroopType::Knight) {}
 
 std::unique_ptr<Knight> Knight::Create(Engine::Core::World &world,
                                        const SpawnParams &params) {
@@ -45,7 +45,7 @@ void Knight::init(const SpawnParams &params) {
   m_r->visible = true;
 
   m_u = e->addComponent<Engine::Core::UnitComponent>();
-  m_u->unitType = m_type;
+  m_u->unitType = m_typeString;
   m_u->health = 150;
   m_u->maxHealth = 150;
   m_u->speed = 2.0f;
