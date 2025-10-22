@@ -46,5 +46,5 @@ private:
   bool m_grassInstancesDirty = false;
 };
 
-} // namespace GL
-} // namespace Render
+} 
+} 

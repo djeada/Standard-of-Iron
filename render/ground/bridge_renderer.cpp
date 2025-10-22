@@ -240,4 +240,4 @@ void BridgeRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   renderer.setCurrentShader(nullptr);
 }
 
-} // namespace Render::GL
+} 

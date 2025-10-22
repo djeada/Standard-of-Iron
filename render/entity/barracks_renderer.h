@@ -4,7 +4,7 @@ namespace Render {
 namespace GL {
 class EntityRendererRegistry;
 }
-} // namespace Render
+} 
 
 namespace Render::GL {
 

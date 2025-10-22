@@ -18,7 +18,7 @@ class Mesh;
 class Texture;
 class Buffer;
 class Shader;
-} // namespace Render::GL
+} 
 
 namespace Render::GL {
 
@@ -329,4 +329,4 @@ private:
   std::vector<uint32_t> m_tempIndices;
 };
 
-} // namespace Render::GL
+} 

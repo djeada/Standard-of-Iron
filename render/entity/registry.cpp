@@ -30,4 +30,4 @@ void registerBuiltInEntityRenderers(EntityRendererRegistry &registry) {
   registerBarracksRenderer(registry);
 }
 
-} // namespace Render::GL
+} 

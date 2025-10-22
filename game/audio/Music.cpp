@@ -21,27 +21,33 @@ Music::Music(const std::string &filePath)
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
   audioOutput = new QAudioOutput(player);
   player->setAudioOutput(audioOutput);
-  
-  // Add debugging signal connections
+
   QObject::connect(player, &QMediaPlayer::errorOccurred,
-                   [filepath = this->filepath](QMediaPlayer::Error error, const QString &desc) {
-                     qWarning() << "QMediaPlayer error for" << QString::fromStdString(filepath)
-                                << "- Error code:" << static_cast<int>(error) << "Message:" << desc;
+                   [filepath = this->filepath](QMediaPlayer::Error error,
+                                               const QString &desc) {
+                     qWarning() << "QMediaPlayer error for"
+                                << QString::fromStdString(filepath)
+                                << "- Error code:" << static_cast<int>(error)
+                                << "Message:" << desc;
                    });
-  
-  QObject::connect(player, &QMediaPlayer::mediaStatusChanged,
-                   [filepath = this->filepath, this](QMediaPlayer::MediaStatus status) {
-                     qDebug() << "Media status for" << QString::fromStdString(filepath) << ":" << static_cast<int>(status);
-                     if (status == QMediaPlayer::EndOfMedia) {
-                       playing = false;
-                     }
-                   });
-  
-  QObject::connect(player, &QMediaPlayer::playbackStateChanged,
-                   [filepath = this->filepath](QMediaPlayer::PlaybackState state) {
-                     qDebug() << "Playback state for" << QString::fromStdString(filepath) << ":" << static_cast<int>(state);
-                   });
-  
+
+  QObject::connect(
+      player, &QMediaPlayer::mediaStatusChanged,
+      [filepath = this->filepath, this](QMediaPlayer::MediaStatus status) {
+        qDebug() << "Media status for" << QString::fromStdString(filepath)
+                 << ":" << static_cast<int>(status);
+        if (status == QMediaPlayer::EndOfMedia) {
+          playing = false;
+        }
+      });
+
+  QObject::connect(
+      player, &QMediaPlayer::playbackStateChanged,
+      [filepath = this->filepath](QMediaPlayer::PlaybackState state) {
+        qDebug() << "Playback state for" << QString::fromStdString(filepath)
+                 << ":" << static_cast<int>(state);
+      });
+
   player->setSource(QUrl::fromLocalFile(QString::fromStdString(filePath)));
   loaded = (player->error() == QMediaPlayer::NoError);
 #else
@@ -60,13 +66,11 @@ void Music::cleanupPlayer() {
 
   markedForDeletion = true;
   QMediaPlayer *rawPlayer = player.data();
-  
+
   if (!rawPlayer) {
     return;
   }
 
-  // Don't call stop() - it can cause GStreamer double-free issues
-  // The destructor will handle cleanup properly
   if (QCoreApplication::instance() && mainThread) {
     rawPlayer->deleteLater();
   }
@@ -86,7 +90,6 @@ void Music::play(float volume, bool loop) {
     return;
   }
 
-  // Check if already playing - if so, just update volume
   QMetaObject::invokeMethod(
       QCoreApplication::instance(),
       [p, output, volume, loop, this]() {
@@ -94,21 +97,23 @@ void Music::play(float volume, bool loop) {
           return;
         }
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
-        // Check current state
-        bool isCurrentlyPlaying = (p->playbackState() == QMediaPlayer::PlayingState);
-        
+
+        bool isCurrentlyPlaying =
+            (p->playbackState() == QMediaPlayer::PlayingState);
+
         if (output) {
           output->setVolume(volume);
         }
         p->setLoops(loop ? QMediaPlayer::Infinite : 1);
-        
-        // Only call play() if not already playing
+
         if (!isCurrentlyPlaying) {
-          qDebug() << "Starting playback for" << QString::fromStdString(filepath);
+          qDebug() << "Starting playback for"
+                   << QString::fromStdString(filepath);
           playing = true;
           p->play();
         } else {
-          qDebug() << "Already playing" << QString::fromStdString(filepath) << "- updating volume only";
+          qDebug() << "Already playing" << QString::fromStdString(filepath)
+                   << "- updating volume only";
         }
 #else
         p->setVolume(static_cast<int>(volume * 100));
@@ -226,7 +231,6 @@ void Music::fadeOut() {
     return;
   }
 
-  // Fade to 0 volume then pause - safer than immediate stop
   QMetaObject::invokeMethod(
       QCoreApplication::instance(),
       [p, this]() {
@@ -237,10 +241,11 @@ void Music::fadeOut() {
         if (p->audioOutput()) {
           p->audioOutput()->setVolume(0.0f);
         }
-        // Small delay before pausing to let volume change take effect
+
         QTimer::singleShot(50, [p, this]() {
           if (p && p->playbackState() == QMediaPlayer::PlayingState) {
-            qDebug() << "Fading out and pausing" << QString::fromStdString(filepath);
+            qDebug() << "Fading out and pausing"
+                     << QString::fromStdString(filepath);
             p->pause();
             playing = false;
           }
