@@ -26,7 +26,7 @@ struct SpawnParams {
 
   QVector3D position{0, 0, 0};
   int playerId = 0;
-  TroopType unitType = TroopType::Archer;
+  std::string unitType = "archer";
   bool aiControlled = false;
   int maxPopulation = 100;
 };
@@ -55,13 +55,6 @@ protected:
   Engine::Core::World *m_world = nullptr;
   Engine::Core::EntityID m_id = 0;
   std::string m_typeString;
-
-  Engine::Core::TransformComponent *m_t = nullptr;
-  Engine::Core::RenderableComponent *m_r = nullptr;
-  Engine::Core::UnitComponent *m_u = nullptr;
-  Engine::Core::MovementComponent *m_mv = nullptr;
-  Engine::Core::AttackComponent *m_atk = nullptr;
-};
 
   Engine::Core::TransformComponent *m_t = nullptr;
   Engine::Core::RenderableComponent *m_r = nullptr;
