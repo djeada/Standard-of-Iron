@@ -17,6 +17,7 @@ namespace {
 using Render::Geom::clamp01;
 using Render::Geom::clampVec01;
 using Render::Geom::cylinderBetween;
+using Render::Geom::lerp;
 using Render::Geom::sphereAt;
 
 struct BuildingProportions {
@@ -71,10 +72,6 @@ static inline BarracksPalette makePalette(const QVector3D &team) {
   p.teamTrim =
       clampVec01(QVector3D(team.x() * 0.6f, team.y() * 0.6f, team.z() * 0.6f));
   return p;
-}
-
-static inline QVector3D lerp(const QVector3D &a, const QVector3D &b, float t) {
-  return a * (1.0f - t) + b * t;
 }
 
 static inline void drawCylinder(ISubmitter &out, const QMatrix4x4 &model,
