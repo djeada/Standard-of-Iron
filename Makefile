@@ -149,6 +149,10 @@ test: build
 
 # ---- Formatting: strip comments first, then format (strict) ----
 .PHONY: format format-check
+
+EXCLUDE_DIRS := ./$(BUILD_DIR) ./third_party
+EXCLUDE_FIND := $(foreach d,$(EXCLUDE_DIRS),-not -path "$(d)/*")
+
 format:
 	@echo "$(BOLD)$(BLUE)Stripping comments in app/... game/... render/... tools/... ui/...$(RESET)"
 	@if [ -x scripts/remove-comments.sh ]; then \
@@ -158,31 +162,35 @@ format:
 	else \
 		echo "$(RED)scripts/remove-comments.sh not found$(RESET)"; exit 1; \
 	fi
+
 	@echo "$(BOLD)$(BLUE)Formatting C/C++ files with clang-format...$(RESET)"
 	@if command -v $(CLANG_FORMAT) >/dev/null 2>&1; then \
-		find . -type f \( $(FMT_GLOBS) \) -not -path "./$(BUILD_DIR)/* ./third_party/*" -print0 \
+		find . -type f \( $(FMT_GLOBS) \) $(EXCLUDE_FIND) -print0 \
 		| xargs -0 -r $(CLANG_FORMAT) -i --style=file; \
 		echo "$(GREEN)✓ C/C++ formatting complete$(RESET)"; \
 	else \
 		echo "$(RED)clang-format not found. Please install it.$(RESET)"; exit 1; \
 	fi
+
 	@echo "$(BOLD)$(BLUE)Formatting QML files...$(RESET)"
 	@if command -v $(QMLFORMAT) >/dev/null 2>&1 || [ -x "$(QMLFORMAT)" ]; then \
-		find . -type f \( $(QML_GLOBS) \) -not -path "./$(BUILD_DIR)/*" -print0 \
+		find . -type f \( $(QML_GLOBS) \) $(EXCLUDE_FIND) -print0 \
 		| xargs -0 -r $(QMLFORMAT) -i; \
 		echo "$(GREEN)✓ QML formatting complete$(RESET)"; \
 	else \
 		echo "$(YELLOW)⚠ qmlformat not found. Skipping QML formatting.$(RESET)"; \
 		echo "$(YELLOW)  Install qmlformat (from Qt dev tools) to format QML files.$(RESET)"; \
 	fi
+
 	@echo "$(BOLD)$(BLUE)Formatting shader files (.frag, .vert)...$(RESET)"
 	@if command -v $(CLANG_FORMAT) >/dev/null 2>&1; then \
-		find . -type f \( $(SHADER_GLOBS) \) -not -path "./$(BUILD_DIR)/*" -print0 \
+		find . -type f \( $(SHADER_GLOBS) \) $(EXCLUDE_FIND) -print0 \
 		| xargs -0 -r $(CLANG_FORMAT) -i --style=file; \
 		echo "$(GREEN)✓ Shader formatting complete$(RESET)"; \
 	else \
 		echo "$(YELLOW)⚠ clang-format not found. Shader files not formatted.$(RESET)"; \
 	fi
+
 	@echo "$(GREEN)✓ All formatting complete$(RESET)"
 
 # CI/verification: fail if anything would be reformatted
