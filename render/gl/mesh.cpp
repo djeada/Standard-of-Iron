@@ -122,4 +122,4 @@ Mesh *createPlaneMesh(float width, float height, int subdivisions) {
   return new Mesh(vertices, indices);
 }
 
-} 
+} // namespace Render::GL

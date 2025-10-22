@@ -22,5 +22,5 @@ bool RenderBootstrap::initialize(Renderer &renderer, Camera &camera) {
   return true;
 }
 
-} 
-} 
+} // namespace GL
+} // namespace Render

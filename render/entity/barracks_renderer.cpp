@@ -683,10 +683,10 @@ static void drawBarracks(const DrawContext &p, ISubmitter &out) {
   drawSelectionFX(p, out);
 }
 
-} 
+} // namespace
 
 void registerBarracksRenderer(Render::GL::EntityRendererRegistry &registry) {
   registry.registerRenderer("barracks", drawBarracks);
 }
 
-} 
+} // namespace Render::GL
