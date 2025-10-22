@@ -21,11 +21,7 @@ inline QVector3D clampVec(const QVector3D &c, float minVal, float maxVal) {
                    clampf(c.z(), minVal, maxVal));
 }
 
-// Interpolation and easing functions
-
-inline float lerp(float a, float b, float t) {
-  return a * (1.0f - t) + b * t;
-}
+inline float lerp(float a, float b, float t) { return a * (1.0f - t) + b * t; }
 
 inline QVector3D lerp(const QVector3D &a, const QVector3D &b, float t) {
   return a * (1.0f - t) + b * t;
