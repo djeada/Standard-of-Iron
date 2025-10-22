@@ -5,7 +5,9 @@
         <file>assets/shaders/bridge.vert</file>
         <file>assets/shaders/bridge.frag</file>
         <file>assets/shaders/grid.frag</file>
-        <file>assets/maps/test_map.json</file>
+        <file>assets/maps/map_forest.json</file>
+        <file>assets/maps/map_rivers.json</file>
+        <file>assets/maps/map_mountain.json</file>
         <file>assets/visuals/unit_visuals.json</file>
     </qresource>
 </RCC>
