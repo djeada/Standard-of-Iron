@@ -222,7 +222,6 @@ void BiomeRenderer::generateGrassInstances() {
     if (m_terrainTypes[normalIdx] == Game::Map::TerrainType::River)
       return false;
 
-    // Check for riverbank proximity - allow sparse grass instead of complete exclusion
     constexpr int kRiverMargin = 1;
     int nearRiverCount = 0;
     for (int dz = -kRiverMargin; dz <= kRiverMargin; ++dz) {
@@ -238,11 +237,10 @@ void BiomeRenderer::generateGrassInstances() {
         }
       }
     }
-    
-    // If near river, reduce grass density based on proximity
+
     if (nearRiverCount > 0) {
-      // Use random sampling to thin out grass near water
-      float riverbankDensity = 0.15f; // Only 15% of normal density near water
+
+      float riverbankDensity = 0.15f;
       if (rand01(state) > riverbankDensity)
         return false;
     }
