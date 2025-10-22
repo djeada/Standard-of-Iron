@@ -2,11 +2,15 @@
 #include "component.h"
 #include "entity.h"
 #include "world.h"
+#include "../map/terrain.h"
+#include "../map/terrain_service.h"
 #include <QDebug>
 #include <QFile>
 #include <QJsonArray>
 #include <QJsonObject>
+#include <QVector3D>
 #include <algorithm>
+#include <memory>
 
 #include "../systems/owner_registry.h"
 
@@ -387,6 +391,261 @@ void Serialization::deserializeEntity(Entity *entity, const QJsonObject &json) {
   }
 }
 
+QJsonObject Serialization::serializeTerrain(
+    const Game::Map::TerrainHeightMap *heightMap,
+    const Game::Map::BiomeSettings &biome) {
+  QJsonObject terrainObj;
+
+  if (!heightMap) {
+    return terrainObj;
+  }
+
+  terrainObj["width"] = heightMap->getWidth();
+  terrainObj["height"] = heightMap->getHeight();
+  terrainObj["tileSize"] = heightMap->getTileSize();
+
+  QJsonArray heightsArray;
+  const auto &heights = heightMap->getHeightData();
+  for (float h : heights) {
+    heightsArray.append(h);
+  }
+  terrainObj["heights"] = heightsArray;
+
+  QJsonArray terrainTypesArray;
+  const auto &terrainTypes = heightMap->getTerrainTypes();
+  for (auto type : terrainTypes) {
+    terrainTypesArray.append(static_cast<int>(type));
+  }
+  terrainObj["terrainTypes"] = terrainTypesArray;
+
+  QJsonArray riversArray;
+  const auto &rivers = heightMap->getRiverSegments();
+  for (const auto &river : rivers) {
+    QJsonObject riverObj;
+    riverObj["startX"] = river.start.x();
+    riverObj["startY"] = river.start.y();
+    riverObj["startZ"] = river.start.z();
+    riverObj["endX"] = river.end.x();
+    riverObj["endY"] = river.end.y();
+    riverObj["endZ"] = river.end.z();
+    riverObj["width"] = river.width;
+    riversArray.append(riverObj);
+  }
+  terrainObj["rivers"] = riversArray;
+
+  QJsonArray bridgesArray;
+  const auto &bridges = heightMap->getBridges();
+  for (const auto &bridge : bridges) {
+    QJsonObject bridgeObj;
+    bridgeObj["startX"] = bridge.start.x();
+    bridgeObj["startY"] = bridge.start.y();
+    bridgeObj["startZ"] = bridge.start.z();
+    bridgeObj["endX"] = bridge.end.x();
+    bridgeObj["endY"] = bridge.end.y();
+    bridgeObj["endZ"] = bridge.end.z();
+    bridgeObj["width"] = bridge.width;
+    bridgeObj["height"] = bridge.height;
+    bridgesArray.append(bridgeObj);
+  }
+  terrainObj["bridges"] = bridgesArray;
+
+  QJsonObject biomeObj;
+  biomeObj["grassPrimaryR"] = biome.grassPrimary.x();
+  biomeObj["grassPrimaryG"] = biome.grassPrimary.y();
+  biomeObj["grassPrimaryB"] = biome.grassPrimary.z();
+  biomeObj["grassSecondaryR"] = biome.grassSecondary.x();
+  biomeObj["grassSecondaryG"] = biome.grassSecondary.y();
+  biomeObj["grassSecondaryB"] = biome.grassSecondary.z();
+  biomeObj["grassDryR"] = biome.grassDry.x();
+  biomeObj["grassDryG"] = biome.grassDry.y();
+  biomeObj["grassDryB"] = biome.grassDry.z();
+  biomeObj["soilColorR"] = biome.soilColor.x();
+  biomeObj["soilColorG"] = biome.soilColor.y();
+  biomeObj["soilColorB"] = biome.soilColor.z();
+  biomeObj["rockLowR"] = biome.rockLow.x();
+  biomeObj["rockLowG"] = biome.rockLow.y();
+  biomeObj["rockLowB"] = biome.rockLow.z();
+  biomeObj["rockHighR"] = biome.rockHigh.x();
+  biomeObj["rockHighG"] = biome.rockHigh.y();
+  biomeObj["rockHighB"] = biome.rockHigh.z();
+  biomeObj["patchDensity"] = biome.patchDensity;
+  biomeObj["patchJitter"] = biome.patchJitter;
+  biomeObj["backgroundBladeDensity"] = biome.backgroundBladeDensity;
+  biomeObj["bladeHeightMin"] = biome.bladeHeightMin;
+  biomeObj["bladeHeightMax"] = biome.bladeHeightMax;
+  biomeObj["bladeWidthMin"] = biome.bladeWidthMin;
+  biomeObj["bladeWidthMax"] = biome.bladeWidthMax;
+  biomeObj["swayStrength"] = biome.swayStrength;
+  biomeObj["swaySpeed"] = biome.swaySpeed;
+  biomeObj["heightNoiseAmplitude"] = biome.heightNoiseAmplitude;
+  biomeObj["heightNoiseFrequency"] = biome.heightNoiseFrequency;
+  biomeObj["terrainMacroNoiseScale"] = biome.terrainMacroNoiseScale;
+  biomeObj["terrainDetailNoiseScale"] = biome.terrainDetailNoiseScale;
+  biomeObj["terrainSoilHeight"] = biome.terrainSoilHeight;
+  biomeObj["terrainSoilSharpness"] = biome.terrainSoilSharpness;
+  biomeObj["terrainRockThreshold"] = biome.terrainRockThreshold;
+  biomeObj["terrainRockSharpness"] = biome.terrainRockSharpness;
+  biomeObj["terrainAmbientBoost"] = biome.terrainAmbientBoost;
+  biomeObj["terrainRockDetailStrength"] = biome.terrainRockDetailStrength;
+  biomeObj["backgroundSwayVariance"] = biome.backgroundSwayVariance;
+  biomeObj["backgroundScatterRadius"] = biome.backgroundScatterRadius;
+  biomeObj["plantDensity"] = biome.plantDensity;
+  biomeObj["spawnEdgePadding"] = biome.spawnEdgePadding;
+  biomeObj["seed"] = static_cast<qint64>(biome.seed);
+  terrainObj["biome"] = biomeObj;
+
+  return terrainObj;
+}
+
+void Serialization::deserializeTerrain(Game::Map::TerrainHeightMap *heightMap,
+                                       Game::Map::BiomeSettings &biome,
+                                       const QJsonObject &json) {
+  if (!heightMap || json.isEmpty()) {
+    return;
+  }
+
+  if (json.contains("biome")) {
+    const auto biomeObj = json["biome"].toObject();
+    biome.grassPrimary = QVector3D(
+        static_cast<float>(biomeObj["grassPrimaryR"].toDouble(0.3)),
+        static_cast<float>(biomeObj["grassPrimaryG"].toDouble(0.6)),
+        static_cast<float>(biomeObj["grassPrimaryB"].toDouble(0.28)));
+    biome.grassSecondary = QVector3D(
+        static_cast<float>(biomeObj["grassSecondaryR"].toDouble(0.44)),
+        static_cast<float>(biomeObj["grassSecondaryG"].toDouble(0.7)),
+        static_cast<float>(biomeObj["grassSecondaryB"].toDouble(0.32)));
+    biome.grassDry = QVector3D(
+        static_cast<float>(biomeObj["grassDryR"].toDouble(0.72)),
+        static_cast<float>(biomeObj["grassDryG"].toDouble(0.66)),
+        static_cast<float>(biomeObj["grassDryB"].toDouble(0.48)));
+    biome.soilColor = QVector3D(
+        static_cast<float>(biomeObj["soilColorR"].toDouble(0.28)),
+        static_cast<float>(biomeObj["soilColorG"].toDouble(0.24)),
+        static_cast<float>(biomeObj["soilColorB"].toDouble(0.18)));
+    biome.rockLow = QVector3D(
+        static_cast<float>(biomeObj["rockLowR"].toDouble(0.48)),
+        static_cast<float>(biomeObj["rockLowG"].toDouble(0.46)),
+        static_cast<float>(biomeObj["rockLowB"].toDouble(0.44)));
+    biome.rockHigh = QVector3D(
+        static_cast<float>(biomeObj["rockHighR"].toDouble(0.68)),
+        static_cast<float>(biomeObj["rockHighG"].toDouble(0.69)),
+        static_cast<float>(biomeObj["rockHighB"].toDouble(0.73)));
+    biome.patchDensity =
+        static_cast<float>(biomeObj["patchDensity"].toDouble(4.5));
+    biome.patchJitter =
+        static_cast<float>(biomeObj["patchJitter"].toDouble(0.95));
+    biome.backgroundBladeDensity =
+        static_cast<float>(biomeObj["backgroundBladeDensity"].toDouble(0.65));
+    biome.bladeHeightMin =
+        static_cast<float>(biomeObj["bladeHeightMin"].toDouble(0.55));
+    biome.bladeHeightMax =
+        static_cast<float>(biomeObj["bladeHeightMax"].toDouble(1.35));
+    biome.bladeWidthMin =
+        static_cast<float>(biomeObj["bladeWidthMin"].toDouble(0.025));
+    biome.bladeWidthMax =
+        static_cast<float>(biomeObj["bladeWidthMax"].toDouble(0.055));
+    biome.swayStrength =
+        static_cast<float>(biomeObj["swayStrength"].toDouble(0.25));
+    biome.swaySpeed = static_cast<float>(biomeObj["swaySpeed"].toDouble(1.4));
+    biome.heightNoiseAmplitude =
+        static_cast<float>(biomeObj["heightNoiseAmplitude"].toDouble(0.16));
+    biome.heightNoiseFrequency =
+        static_cast<float>(biomeObj["heightNoiseFrequency"].toDouble(0.05));
+    biome.terrainMacroNoiseScale =
+        static_cast<float>(biomeObj["terrainMacroNoiseScale"].toDouble(0.035));
+    biome.terrainDetailNoiseScale =
+        static_cast<float>(biomeObj["terrainDetailNoiseScale"].toDouble(0.14));
+    biome.terrainSoilHeight =
+        static_cast<float>(biomeObj["terrainSoilHeight"].toDouble(0.6));
+    biome.terrainSoilSharpness =
+        static_cast<float>(biomeObj["terrainSoilSharpness"].toDouble(3.8));
+    biome.terrainRockThreshold =
+        static_cast<float>(biomeObj["terrainRockThreshold"].toDouble(0.42));
+    biome.terrainRockSharpness =
+        static_cast<float>(biomeObj["terrainRockSharpness"].toDouble(3.1));
+    biome.terrainAmbientBoost =
+        static_cast<float>(biomeObj["terrainAmbientBoost"].toDouble(1.08));
+    biome.terrainRockDetailStrength = static_cast<float>(
+        biomeObj["terrainRockDetailStrength"].toDouble(0.35));
+    biome.backgroundSwayVariance =
+        static_cast<float>(biomeObj["backgroundSwayVariance"].toDouble(0.2));
+    biome.backgroundScatterRadius =
+        static_cast<float>(biomeObj["backgroundScatterRadius"].toDouble(0.35));
+    biome.plantDensity =
+        static_cast<float>(biomeObj["plantDensity"].toDouble(0.5));
+    biome.spawnEdgePadding =
+        static_cast<float>(biomeObj["spawnEdgePadding"].toDouble(0.08));
+    if (biomeObj.contains("seed")) {
+      biome.seed = static_cast<std::uint32_t>(
+          biomeObj["seed"].toVariant().toULongLong());
+    } else {
+      biome.seed = 1337u;
+    }
+  }
+
+  std::vector<float> heights;
+  if (json.contains("heights")) {
+    const auto heightsArray = json["heights"].toArray();
+    heights.reserve(heightsArray.size());
+    for (const auto &val : heightsArray) {
+      heights.push_back(static_cast<float>(val.toDouble(0.0)));
+    }
+  }
+
+  std::vector<Game::Map::TerrainType> terrainTypes;
+  if (json.contains("terrainTypes")) {
+    const auto typesArray = json["terrainTypes"].toArray();
+    terrainTypes.reserve(typesArray.size());
+    for (const auto &val : typesArray) {
+      terrainTypes.push_back(
+          static_cast<Game::Map::TerrainType>(val.toInt(0)));
+    }
+  }
+
+  std::vector<Game::Map::RiverSegment> rivers;
+  if (json.contains("rivers")) {
+    const auto riversArray = json["rivers"].toArray();
+    rivers.reserve(riversArray.size());
+    for (const auto &val : riversArray) {
+      const auto riverObj = val.toObject();
+      Game::Map::RiverSegment river;
+      river.start = QVector3D(
+          static_cast<float>(riverObj["startX"].toDouble(0.0)),
+          static_cast<float>(riverObj["startY"].toDouble(0.0)),
+          static_cast<float>(riverObj["startZ"].toDouble(0.0)));
+      river.end = QVector3D(
+          static_cast<float>(riverObj["endX"].toDouble(0.0)),
+          static_cast<float>(riverObj["endY"].toDouble(0.0)),
+          static_cast<float>(riverObj["endZ"].toDouble(0.0)));
+      river.width = static_cast<float>(riverObj["width"].toDouble(2.0));
+      rivers.push_back(river);
+    }
+  }
+
+  std::vector<Game::Map::Bridge> bridges;
+  if (json.contains("bridges")) {
+    const auto bridgesArray = json["bridges"].toArray();
+    bridges.reserve(bridgesArray.size());
+    for (const auto &val : bridgesArray) {
+      const auto bridgeObj = val.toObject();
+      Game::Map::Bridge bridge;
+      bridge.start = QVector3D(
+          static_cast<float>(bridgeObj["startX"].toDouble(0.0)),
+          static_cast<float>(bridgeObj["startY"].toDouble(0.0)),
+          static_cast<float>(bridgeObj["startZ"].toDouble(0.0)));
+      bridge.end = QVector3D(
+          static_cast<float>(bridgeObj["endX"].toDouble(0.0)),
+          static_cast<float>(bridgeObj["endY"].toDouble(0.0)),
+          static_cast<float>(bridgeObj["endZ"].toDouble(0.0)));
+      bridge.width = static_cast<float>(bridgeObj["width"].toDouble(3.0));
+      bridge.height = static_cast<float>(bridgeObj["height"].toDouble(0.5));
+      bridges.push_back(bridge);
+    }
+  }
+
+  heightMap->restoreFromData(heights, terrainTypes, rivers, bridges);
+}
+
 QJsonDocument Serialization::serializeWorld(const World *world) {
   QJsonObject worldObj;
   QJsonArray entitiesArray;
@@ -401,6 +660,12 @@ QJsonDocument Serialization::serializeWorld(const World *world) {
   worldObj["nextEntityId"] = static_cast<qint64>(world->getNextEntityId());
   worldObj["schemaVersion"] = 1;
   worldObj["ownerRegistry"] = Game::Systems::OwnerRegistry::instance().toJson();
+
+  const auto &terrainService = Game::Map::TerrainService::instance();
+  if (terrainService.isInitialized() && terrainService.getHeightMap()) {
+    worldObj["terrain"] = serializeTerrain(terrainService.getHeightMap(),
+                                           terrainService.biomeSettings());
+  }
 
   return QJsonDocument(worldObj);
 }
@@ -428,6 +693,30 @@ void Serialization::deserializeWorld(World *world, const QJsonDocument &doc) {
   if (worldObj.contains("ownerRegistry")) {
     Game::Systems::OwnerRegistry::instance().fromJson(
         worldObj["ownerRegistry"].toObject());
+  }
+
+  if (worldObj.contains("terrain")) {
+    const auto terrainObj = worldObj["terrain"].toObject();
+    const int width = terrainObj["width"].toInt(50);
+    const int height = terrainObj["height"].toInt(50);
+    const float tileSize =
+        static_cast<float>(terrainObj["tileSize"].toDouble(1.0));
+
+    Game::Map::BiomeSettings biome;
+    std::vector<float> heights;
+    std::vector<Game::Map::TerrainType> terrainTypes;
+    std::vector<Game::Map::RiverSegment> rivers;
+    std::vector<Game::Map::Bridge> bridges;
+
+    auto tempHeightMap =
+        std::make_unique<Game::Map::TerrainHeightMap>(width, height, tileSize);
+    deserializeTerrain(tempHeightMap.get(), biome, terrainObj);
+
+    auto &terrainService = Game::Map::TerrainService::instance();
+    terrainService.restoreFromSerialized(
+        width, height, tileSize, tempHeightMap->getHeightData(),
+        tempHeightMap->getTerrainTypes(), tempHeightMap->getRiverSegments(),
+        tempHeightMap->getBridges(), biome);
   }
 }
 
