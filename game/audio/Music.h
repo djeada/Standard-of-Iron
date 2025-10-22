@@ -4,6 +4,7 @@
 #include <string>
 
 class QMediaPlayer;
+class QAudioOutput;
 class QThread;
 
 class Music {
@@ -22,7 +23,9 @@ private:
   void cleanupPlayer();
 
   std::unique_ptr<QMediaPlayer> player;
+  QAudioOutput *audioOutput; // Owned by player as child QObject
   QThread *mainThread;
   std::string filepath;
   bool loaded;
+  bool playing;
 };
