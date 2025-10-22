@@ -21,5 +21,7 @@
         <file>ui/qml/BattleSummary.qml</file>
         <file>ui/qml/GameView.qml</file>
         <file>ui/qml/CursorManager.qml</file>
+        <file>ui/qml/Minimap.qml</file>
+        <file>ui/qml/MinimapOverlay.qml</file>
     </qresource>
 </RCC>

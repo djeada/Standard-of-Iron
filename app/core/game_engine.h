@@ -3,6 +3,7 @@
 #include "../models/cursor_manager.h"
 #include "../models/cursor_mode.h"
 #include "../models/hover_tracker.h"
+#include "../models/minimap_provider.h"
 #include "../utils/engine_view_helpers.h"
 #include "../utils/movement_utils.h"
 #include "../utils/selection_utils.h"
@@ -82,6 +83,8 @@ public:
 
   Q_PROPERTY(QObject *selectedUnitsModel READ selectedUnitsModel NOTIFY
                  selectedUnitsChanged)
+  Q_PROPERTY(QObject *minimapProvider READ minimapProvider NOTIFY
+                 minimapProviderChanged)
   Q_PROPERTY(bool paused READ paused WRITE setPaused)
   Q_PROPERTY(float timeScale READ timeScale WRITE setGameSpeed)
   Q_PROPERTY(QString victoryState READ victoryState NOTIFY victoryStateChanged)
@@ -129,6 +132,8 @@ public:
   Q_INVOKABLE void cameraFollowSelection(bool enable);
   Q_INVOKABLE void cameraSetFollowLerp(float alpha);
   Q_INVOKABLE void startLoadingMaps();
+  Q_INVOKABLE void minimapCameraMoveTo(qreal worldX, qreal worldZ);
+  Q_INVOKABLE void minimapSendTroopsTo(qreal worldX, qreal worldZ);
 
   Q_INVOKABLE void setPaused(bool paused) { m_runtime.paused = paused; }
   Q_INVOKABLE void setGameSpeed(float speed) {
@@ -185,6 +190,9 @@ public:
   Q_INVOKABLE void exitGame();
   Q_INVOKABLE QVariantList getOwnerInfo() const;
 
+  Engine::Core::World *getWorld() const { return m_world.get(); }
+  Render::GL::Camera *getCamera() const { return m_camera.get(); }
+
   void setWindow(QQuickWindow *w) { m_window = w; }
 
   void ensureInitialized();
@@ -239,6 +247,7 @@ private:
   void syncSelectionFlags();
   void resetMovement(Engine::Core::Entity *entity);
   QObject *selectedUnitsModel();
+  QObject *minimapProvider();
   void onUnitSpawned(const Engine::Core::UnitSpawnedEvent &event);
   void onUnitDied(const Engine::Core::UnitDiedEvent &event);
   void rebuildEntityCache();
@@ -284,6 +293,7 @@ private:
   bool m_followSelectionEnabled = false;
   Game::Systems::LevelSnapshot m_level;
   QObject *m_selectedUnitsModel = nullptr;
+  QObject *m_minimapProvider = nullptr;
   int m_enemyTroopsDefeated = 0;
   int m_selectedPlayerId = 1;
   QVariantList m_availableMaps;
@@ -314,4 +324,5 @@ signals:
   void lastErrorChanged();
   void mapsLoadingChanged();
   void saveSlotsChanged();
+  void minimapProviderChanged();
 };

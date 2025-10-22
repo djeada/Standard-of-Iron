@@ -32,6 +32,7 @@ ApplicationWindow {
         anchors.fill: parent
         z: 1
         visible: !mainWindow.menuVisible && gameStarted
+        minimapProvider: typeof game !== 'undefined' ? game.minimapProvider : null
         onActiveFocusChanged: {
             if (activeFocus)
                 gameViewItem.forceActiveFocus();
@@ -64,6 +65,16 @@ ApplicationWindow {
         }
         onReturnToMainMenuRequested: {
             mainWindow.menuVisible = true;
+        }
+        onCameraMoveTo: function(worldX, worldZ) {
+            if (typeof game !== 'undefined' && game.minimapCameraMoveTo)
+                game.minimapCameraMoveTo(worldX, worldZ);
+
+        }
+        onSendTroopsTo: function(worldX, worldZ) {
+            if (typeof game !== 'undefined' && game.minimapSendTroopsTo)
+                game.minimapSendTroopsTo(worldX, worldZ);
+
         }
     }
 

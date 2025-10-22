@@ -4,6 +4,7 @@
 #include "../controllers/command_controller.h"
 #include "../models/cursor_manager.h"
 #include "../models/hover_tracker.h"
+#include "../models/minimap_provider.h"
 #include "../utils/json_vec_utils.h"
 #include "game/audio/AudioSystem.h"
 #include "game/units/troop_type.h"
@@ -129,6 +130,7 @@ GameEngine::GameEngine() {
   }
 
   m_selectedUnitsModel = new SelectedUnitsModel(this, this);
+  m_minimapProvider = new MinimapProvider(this, this);
   m_pickingService = std::make_unique<Game::Systems::PickingService>();
   m_victoryService = std::make_unique<Game::Systems::VictoryService>();
   m_saveLoadService = std::make_unique<Game::Systems::SaveLoadService>();
@@ -742,7 +744,50 @@ void GameEngine::cameraSetFollowLerp(float alpha) {
   m_cameraService->setFollowLerp(*m_camera, alpha);
 }
 
+void GameEngine::minimapCameraMoveTo(qreal worldX, qreal worldZ) {
+  ensureInitialized();
+  if (!m_camera || !m_cameraService)
+    return;
+
+  // Set camera target to the clicked position
+  m_camera->setTarget(QVector3D(static_cast<float>(worldX), 0.0f,
+                                 static_cast<float>(worldZ)));
+}
+
+void GameEngine::minimapSendTroopsTo(qreal worldX, qreal worldZ) {
+  ensureInitialized();
+  if (!m_world || !m_selectionController)
+    return;
+
+  // Send selected units to the clicked position
+  // This uses the same logic as clicking on the map with right mouse button
+  QVector3D targetPos(static_cast<float>(worldX), 0.0f,
+                       static_cast<float>(worldZ));
+  
+  // Get all selected unit IDs
+  auto selectedIds = m_selectionController->getSelectedIds();
+  if (selectedIds.empty())
+    return;
+
+  // Issue move command to each selected unit
+  for (auto id : selectedIds) {
+    auto *entity = m_world->getEntity(id);
+    if (!entity)
+      continue;
+
+    auto *movement = entity->get<Engine::Core::MovementComponent>();
+    if (!movement)
+      continue;
+
+    movement->target = targetPos;
+    movement->isMoving = true;
+    movement->patrol = false;
+  }
+}
+
 QObject *GameEngine::selectedUnitsModel() { return m_selectedUnitsModel; }
+
+QObject *GameEngine::minimapProvider() { return m_minimapProvider; }
 
 bool GameEngine::hasUnitsSelected() const {
   if (!m_selectionController)

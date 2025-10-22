@@ -12,6 +12,7 @@ Item {
     property int bottomPanelHeight: bottomPanel.height
     property int selectionTick: 0
     property bool hasMovableUnits: false
+    property var minimapProvider: null
 
     signal pauseToggled()
     signal speedChanged(real speed)
@@ -19,6 +20,8 @@ Item {
     signal recruit(string unitType)
     signal returnToMainMenuRequested()
     signal hudBecameVisible()
+    signal cameraMoveTo(real worldX, real worldZ)
+    signal sendTroopsTo(real worldX, real worldZ)
 
     onVisibleChanged: {
         if (visible)
@@ -84,6 +87,7 @@ Item {
             anchors.fill: parent
             gameIsPaused: hud.gameIsPaused
             currentSpeed: hud.currentSpeed
+            minimapProvider: hud.minimapProvider
             onPauseToggled: {
                 hud.gameIsPaused = !hud.gameIsPaused;
                 hud.pauseToggled();
@@ -91,6 +95,9 @@ Item {
             onSpeedChanged: function(s) {
                 hud.currentSpeed = s;
                 hud.speedChanged(s);
+            }
+            onMinimapDoubleClicked: {
+                minimapOverlay.visible = true;
             }
         }
 
@@ -140,6 +147,26 @@ Item {
             target: hud
         }
 
+    }
+
+    MinimapOverlay {
+        id: minimapOverlay
+
+        anchors.fill: parent
+        minimapProvider: hud.minimapProvider
+        visible: false
+
+        onClosed: {
+            minimapOverlay.visible = false;
+        }
+
+        onCameraMoveTo: function(worldX, worldZ) {
+            hud.cameraMoveTo(worldX, worldZ);
+        }
+
+        onSendTroopsTo: function(worldX, worldZ) {
+            hud.sendTroopsTo(worldX, worldZ);
+        }
     }
 
 }

@@ -10,9 +10,11 @@ Item {
     readonly property int barMinHeight: 72
     readonly property bool compact: width < 800
     readonly property bool ultraCompact: width < 560
+    property var minimapProvider: null
 
     signal pauseToggled()
     signal speedChanged(real speed)
+    signal minimapDoubleClicked()
 
     Rectangle {
         id: topPanel
@@ -440,29 +442,18 @@ Item {
                     Layout.minimumWidth: Math.round(topPanel.height * 1.6)
                     Layout.preferredHeight: topPanel.height - 8
 
-                    Rectangle {
+                    Minimap {
+                        id: smallMinimap
                         anchors.fill: parent
-                        color: "#0f1a22"
-                        radius: 8
-                        border.width: 2
-                        border.color: "#3498db"
+                        minimapProvider: topRoot.minimapProvider
+                        clickable: false
 
-                        Rectangle {
+                        MouseArea {
                             anchors.fill: parent
-                            anchors.margins: 3
-                            radius: 6
-                            color: "#0a0f14"
-
-                            Label {
-                                anchors.centerIn: parent
-                                text: qsTr("MINIMAP")
-                                color: "#3f5362"
-                                font.pixelSize: 12
-                                font.bold: true
+                            onDoubleClicked: {
+                                topRoot.minimapDoubleClicked();
                             }
-
                         }
-
                     }
 
                 }
