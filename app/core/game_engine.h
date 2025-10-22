@@ -70,6 +70,9 @@ namespace App {
 namespace Controllers {
 class CommandController;
 }
+namespace Models {
+class AudioSystemProxy;
+}
 } // namespace App
 
 class QQuickWindow;
@@ -104,6 +107,7 @@ public:
   Q_PROPERTY(int selectedPlayerId READ selectedPlayerId WRITE
                  setSelectedPlayerId NOTIFY selectedPlayerIdChanged)
   Q_PROPERTY(QString lastError READ lastError NOTIFY lastErrorChanged)
+  Q_PROPERTY(QObject *audioSystem READ audioSystem CONSTANT)
 
   Q_INVOKABLE void onMapClicked(qreal sx, qreal sy);
   Q_INVOKABLE void onRightClick(qreal sx, qreal sy);
@@ -184,6 +188,8 @@ public:
   Q_INVOKABLE bool deleteSaveSlot(const QString &slotName);
   Q_INVOKABLE void exitGame();
   Q_INVOKABLE QVariantList getOwnerInfo() const;
+
+  QObject *audioSystem() { return m_audioSystemProxy.get(); }
 
   void setWindow(QQuickWindow *w) { m_window = w; }
 
@@ -278,6 +284,7 @@ private:
   std::unique_ptr<App::Controllers::CommandController> m_commandController;
   std::unique_ptr<Game::Map::MapCatalog> m_mapCatalog;
   std::unique_ptr<Game::Audio::AudioEventHandler> m_audioEventHandler;
+  std::unique_ptr<App::Models::AudioSystemProxy> m_audioSystemProxy;
   QQuickWindow *m_window = nullptr;
   RuntimeState m_runtime;
   ViewportState m_viewport;
