@@ -24,7 +24,7 @@ std::vector<const TroopType *> Nation::getRangedTroops() const {
   return result;
 }
 
-const TroopType *Nation::getTroop(const std::string &unitType) const {
+const TroopType *Nation::getTroop(Game::Units::TroopType unitType) const {
   for (const auto &troop : availableTroops) {
     if (troop.unitType == unitType) {
       return &troop;
@@ -59,12 +59,12 @@ const TroopType *Nation::getBestRangedTroop() const {
   return *it;
 }
 
-bool Nation::isMeleeUnit(const std::string &unitType) const {
+bool Nation::isMeleeUnit(Game::Units::TroopType unitType) const {
   const auto *troop = getTroop(unitType);
   return troop != nullptr && troop->isMelee;
 }
 
-bool Nation::isRangedUnit(const std::string &unitType) const {
+bool Nation::isRangedUnit(Game::Units::TroopType unitType) const {
   const auto *troop = getTroop(unitType);
   return troop != nullptr && !troop->isMelee;
 }
@@ -125,7 +125,7 @@ void NationRegistry::initializeDefaults() {
   kingdomOfIron.formationType = FormationType::Roman;
 
   TroopType archer;
-  archer.unitType = "archer";
+  archer.unitType = Game::Units::TroopType::Archer;
   archer.displayName = "Archer";
   archer.isMelee = false;
   archer.cost = 50;
@@ -134,7 +134,7 @@ void NationRegistry::initializeDefaults() {
   kingdomOfIron.availableTroops.push_back(archer);
 
   TroopType knight;
-  knight.unitType = "knight";
+  knight.unitType = Game::Units::TroopType::Knight;
   knight.displayName = "Knight";
   knight.isMelee = true;
   knight.cost = 100;

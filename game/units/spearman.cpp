@@ -22,7 +22,7 @@ static inline QVector3D teamColor(int ownerId) {
 namespace Game {
 namespace Units {
 
-Spearman::Spearman(Engine::Core::World &world) : Unit(world, "spearman") {}
+Spearman::Spearman(Engine::Core::World &world) : Unit(world, TroopType::Spearman) {}
 
 std::unique_ptr<Spearman> Spearman::Create(Engine::Core::World &world,
                                            const SpawnParams &params) {
@@ -45,7 +45,7 @@ void Spearman::init(const SpawnParams &params) {
   m_r->visible = true;
 
   m_u = e->addComponent<Engine::Core::UnitComponent>();
-  m_u->unitType = m_type;
+  m_u->unitType = m_typeString;
   m_u->health = 120;
   m_u->maxHealth = 120;
   m_u->speed = 2.5f;

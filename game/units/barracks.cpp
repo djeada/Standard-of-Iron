@@ -58,7 +58,7 @@ void Barracks::init(const SpawnParams &params) {
 
   if (!Game::Core::isNeutralOwner(m_u->ownerId)) {
     if (auto *prod = e->addComponent<Engine::Core::ProductionComponent>()) {
-      prod->productType = "archer";
+      prod->productType = TroopType::Archer;
       prod->buildTime = 10.0f;
       prod->maxUnits = params.maxPopulation;
       prod->inProgress = false;
