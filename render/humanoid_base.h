@@ -10,8 +10,8 @@ namespace Engine {
 namespace Core {
 class Entity;
 class World;
-} 
-} 
+} // namespace Core
+} // namespace Engine
 
 namespace Render::GL {
 
@@ -140,4 +140,4 @@ protected:
   static void drawSelectionFX(const DrawContext &ctx, ISubmitter &out);
 };
 
-} 
+} // namespace Render::GL

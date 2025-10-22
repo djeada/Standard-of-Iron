@@ -9,7 +9,7 @@ const QVector3D kYAxis(0, 1, 0);
 const float kRadToDeg = 57.2957795131f;
 const float kEpsilon = 1e-6f;
 const float kEpsilonSq = kEpsilon * kEpsilon;
-} 
+} // namespace
 
 QMatrix4x4 cylinderBetween(const QVector3D &a, const QVector3D &b,
                            float radius) {
@@ -136,4 +136,4 @@ QMatrix4x4 capsuleBetween(const QMatrix4x4 &parent, const QVector3D &a,
   return cylinderBetween(parent, a, b, radius);
 }
 
-} 
+} // namespace Render::Geom

@@ -23,5 +23,5 @@ public:
          float scale = 1.0f);
 };
 
-} 
-} 
+} // namespace Geom
+} // namespace Render

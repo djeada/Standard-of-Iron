@@ -20,4 +20,4 @@ bool ResourceManager::initialize() {
   return true;
 }
 
-} 
+} // namespace Render::GL

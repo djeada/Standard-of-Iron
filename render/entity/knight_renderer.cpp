@@ -79,7 +79,8 @@ public:
     float armAsymmetry = (hash01(seed ^ 0xDEF0u) - 0.5f) * 0.04f;
 
     if (anim.isAttacking && anim.isMelee) {
-      float attackPhase = std::fmod(anim.time * KNIGHT_INV_ATTACK_CYCLE_TIME, 1.0f);
+      float attackPhase =
+          std::fmod(anim.time * KNIGHT_INV_ATTACK_CYCLE_TIME, 1.0f);
 
       QVector3D restPos(0.20f, HP::SHOULDER_Y + 0.05f, 0.15f);
       QVector3D preparePos(0.26f, HP::HEAD_TOP_Y + 0.18f, -0.06f);
@@ -836,4 +837,4 @@ void registerKnightRenderer(Render::GL::EntityRendererRegistry &registry) {
       });
 }
 
-} 
+} // namespace Render::GL

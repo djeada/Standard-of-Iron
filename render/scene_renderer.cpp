@@ -17,7 +17,7 @@ namespace {
 const QVector3D kAxisX(1.0f, 0.0f, 0.0f);
 const QVector3D kAxisY(0.0f, 1.0f, 0.0f);
 const QVector3D kAxisZ(0.0f, 0.0f, 1.0f);
-} 
+} // namespace
 
 Renderer::Renderer() { m_activeQueue = &m_queues[m_fillQueueIndex]; }
 
@@ -253,25 +253,24 @@ void Renderer::renderWorld(Engine::Core::World *world) {
       continue;
     }
 
-    
     if (m_camera && unitComp) {
-      
-      float cullRadius = 3.0f; 
+
+      float cullRadius = 3.0f;
       if (!unitComp->unitType.empty()) {
-        
+
         if (unitComp->unitType.find("mounted") != std::string::npos) {
           cullRadius = 4.0f;
-        } else if (unitComp->unitType == "spearman" || 
-                   unitComp->unitType == "archer" || 
+        } else if (unitComp->unitType == "spearman" ||
+                   unitComp->unitType == "archer" ||
                    unitComp->unitType == "knight") {
           cullRadius = 2.5f;
         }
       }
-      
-      QVector3D unitPos(transform->position.x, transform->position.y, 
+
+      QVector3D unitPos(transform->position.x, transform->position.y,
                         transform->position.z);
       if (!m_camera->isInFrustum(unitPos, cullRadius)) {
-        continue; 
+        continue;
       }
     }
 
@@ -383,4 +382,4 @@ void Renderer::renderWorld(Engine::Core::World *world) {
   }
 }
 
-} 
+} // namespace Render::GL
