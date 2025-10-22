@@ -147,4 +147,4 @@ private:
   int m_currentFrame = 0;
 };
 
-} // namespace Render::GL
+} 

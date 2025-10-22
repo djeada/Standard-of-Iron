@@ -1,13 +1,14 @@
 #include "AudioSystem.h"
+#include "MiniaudioBackend.h"
 #include "MusicPlayer.h"
 #include "Sound.h"
-#include "MiniaudioBackend.h"
 #include <QDebug>
 #include <algorithm>
 
 AudioSystem::AudioSystem()
     : isRunning(false), masterVolume(1.0f), soundVolume(1.0f),
-      musicVolume(1.0f), voiceVolume(1.0f), maxChannels(32), m_musicPlayer(nullptr) {}
+      musicVolume(1.0f), voiceVolume(1.0f), maxChannels(32),
+      m_musicPlayer(nullptr) {}
 
 AudioSystem::~AudioSystem() { shutdown(); }
 
@@ -21,7 +22,6 @@ bool AudioSystem::initialize() {
     return true;
   }
 
-  // Initialize the singleton music player
   m_musicPlayer = &Game::Audio::MusicPlayer::getInstance();
   if (!m_musicPlayer->initialize()) {
     qWarning() << "Failed to initialize MusicPlayer";
@@ -49,7 +49,6 @@ void AudioSystem::shutdown() {
     audioThread.join();
   }
 
-  // Shutdown music player
   if (m_musicPlayer) {
     m_musicPlayer->shutdown();
     m_musicPlayer = nullptr;
@@ -69,7 +68,7 @@ void AudioSystem::playSound(const std::string &soundId, float volume, bool loop,
                             int priority, AudioCategory category) {
   std::lock_guard<std::mutex> lock(queueMutex);
   eventQueue.push(AudioEvent(AudioEventType::PLAY_SOUND, soundId, volume, loop,
-                              priority, category));
+                             priority, category));
   queueCondition.notify_one();
 }
 
@@ -102,7 +101,7 @@ void AudioSystem::setMasterVolume(float volume) {
         (it != soundCategories.end()) ? it->second : AudioCategory::SFX;
     sound.second->setVolume(getEffectiveVolume(category, 1.0f));
   }
-  // Update music player volume
+
   if (m_musicPlayer) {
     m_musicPlayer->setVolume(masterVolume * musicVolume);
   }
@@ -161,8 +160,8 @@ bool AudioSystem::loadSound(const std::string &soundId,
     return true;
   }
 
-  // Get backend from MusicPlayer for sound effects
-  MiniaudioBackend* backend = m_musicPlayer ? m_musicPlayer->getBackend() : nullptr;
+  MiniaudioBackend *backend =
+      m_musicPlayer ? m_musicPlayer->getBackend() : nullptr;
   auto sound = std::make_unique<Sound>(filePath, backend);
   if (!sound || !sound->isLoaded()) {
     return false;
@@ -177,13 +176,12 @@ bool AudioSystem::loadSound(const std::string &soundId,
 bool AudioSystem::loadMusic(const std::string &musicId,
                             const std::string &filePath) {
   std::lock_guard<std::mutex> lock(resourceMutex);
-  
+
   if (!m_musicPlayer) {
     qWarning() << "MusicPlayer not initialized";
     return false;
   }
 
-  // Register the track with the music player
   m_musicPlayer->registerTrack(musicId, filePath);
   activeResources.insert(musicId);
   return true;
@@ -211,19 +209,19 @@ void AudioSystem::unloadAllSounds() {
 
 void AudioSystem::unloadAllMusic() {
   std::lock_guard<std::mutex> lock(resourceMutex);
-  // Stop the music player and clear all registered tracks
+
   if (m_musicPlayer) {
     m_musicPlayer->stop();
   }
-  // Clear music-related resources from active set
+
   std::vector<std::string> musicResources;
-  for (const auto& res : activeResources) {
-    // Heuristic: if it's not in sounds map, it's likely a music resource
+  for (const auto &res : activeResources) {
+
     if (sounds.find(res) == sounds.end()) {
       musicResources.push_back(res);
     }
   }
-  for (const auto& res : musicResources) {
+  for (const auto &res : musicResources) {
     activeResources.erase(res);
   }
 }
@@ -345,7 +343,6 @@ void AudioSystem::processEvent(const AudioEvent &event) {
       activeResources.erase(event.resourceId);
     }
 
-    // Music tracks are just registered IDs, nothing to unload from player
     activeResources.erase(event.resourceId);
     break;
   }
@@ -366,7 +363,7 @@ bool AudioSystem::canPlaySound(int priority) {
 
 void AudioSystem::evictLowestPrioritySound() {
   std::string soundIdToStop;
-  
+
   {
     std::lock_guard<std::mutex> activeLock(activeSoundsMutex);
 
@@ -374,21 +371,21 @@ void AudioSystem::evictLowestPrioritySound() {
       return;
     }
 
-    auto lowestIt = std::min_element(
-        activeSounds.begin(), activeSounds.end(),
-        [](const ActiveSound &a, const ActiveSound &b) {
-          if (a.priority != b.priority) {
-            return a.priority < b.priority;
-          }
-          return a.startTime < b.startTime;
-        });
+    auto lowestIt =
+        std::min_element(activeSounds.begin(), activeSounds.end(),
+                         [](const ActiveSound &a, const ActiveSound &b) {
+                           if (a.priority != b.priority) {
+                             return a.priority < b.priority;
+                           }
+                           return a.startTime < b.startTime;
+                         });
 
     if (lowestIt != activeSounds.end()) {
       soundIdToStop = lowestIt->id;
       activeSounds.erase(lowestIt);
     }
   }
-  
+
   if (!soundIdToStop.empty()) {
     std::lock_guard<std::mutex> resourceLock(resourceMutex);
     auto it = sounds.find(soundIdToStop);
@@ -400,7 +397,7 @@ void AudioSystem::evictLowestPrioritySound() {
 
 void AudioSystem::evictLowestPrioritySoundLocked() {
   std::string soundIdToStop;
-  
+
   {
     std::lock_guard<std::mutex> activeLock(activeSoundsMutex);
 
@@ -408,21 +405,21 @@ void AudioSystem::evictLowestPrioritySoundLocked() {
       return;
     }
 
-    auto lowestIt = std::min_element(
-        activeSounds.begin(), activeSounds.end(),
-        [](const ActiveSound &a, const ActiveSound &b) {
-          if (a.priority != b.priority) {
-            return a.priority < b.priority;
-          }
-          return a.startTime < b.startTime;
-        });
+    auto lowestIt =
+        std::min_element(activeSounds.begin(), activeSounds.end(),
+                         [](const ActiveSound &a, const ActiveSound &b) {
+                           if (a.priority != b.priority) {
+                             return a.priority < b.priority;
+                           }
+                           return a.startTime < b.startTime;
+                         });
 
     if (lowestIt != activeSounds.end()) {
       soundIdToStop = lowestIt->id;
       activeSounds.erase(lowestIt);
     }
   }
-  
+
   if (!soundIdToStop.empty()) {
     auto it = sounds.find(soundIdToStop);
     if (it != sounds.end()) {
@@ -435,21 +432,20 @@ void AudioSystem::cleanupInactiveSounds() {
   std::lock_guard<std::mutex> resourceLock(resourceMutex);
   std::lock_guard<std::mutex> activeLock(activeSoundsMutex);
 
-  activeSounds.erase(
-      std::remove_if(activeSounds.begin(), activeSounds.end(),
-                     [this](const ActiveSound &as) {
-                       if (as.loop) {
-                         return false;
-                       }
+  activeSounds.erase(std::remove_if(activeSounds.begin(), activeSounds.end(),
+                                    [this](const ActiveSound &as) {
+                                      if (as.loop) {
+                                        return false;
+                                      }
 
-                       auto it = sounds.find(as.id);
-                       if (it == sounds.end()) {
-                         return true;
-                       }
+                                      auto it = sounds.find(as.id);
+                                      if (it == sounds.end()) {
+                                        return true;
+                                      }
 
-                       return false;
-                     }),
-      activeSounds.end());
+                                      return false;
+                                    }),
+                     activeSounds.end());
 }
 
 float AudioSystem::getEffectiveVolume(AudioCategory category,

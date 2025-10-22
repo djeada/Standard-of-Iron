@@ -160,7 +160,7 @@ format:
 	fi
 	@echo "$(BOLD)$(BLUE)Formatting C/C++ files with clang-format...$(RESET)"
 	@if command -v $(CLANG_FORMAT) >/dev/null 2>&1; then \
-		find . -type f \( $(FMT_GLOBS) \) -not -path "./$(BUILD_DIR)/*" -print0 \
+		find . -type f \( $(FMT_GLOBS) \) -not -path "./$(BUILD_DIR)/* ./third_party/*" -print0 \
 		| xargs -0 -r $(CLANG_FORMAT) -i --style=file; \
 		echo "$(GREEN)✓ C/C++ formatting complete$(RESET)"; \
 	else \

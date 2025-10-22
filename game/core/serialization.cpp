@@ -1,10 +1,10 @@
 #include "serialization.h"
+#include "../map/terrain.h"
+#include "../map/terrain_service.h"
 #include "../units/troop_type.h"
 #include "component.h"
 #include "entity.h"
 #include "world.h"
-#include "../map/terrain.h"
-#include "../map/terrain_service.h"
 #include <QDebug>
 #include <QFile>
 #include <QJsonArray>
@@ -185,8 +185,8 @@ QJsonObject Serialization::serializeEntity(const Entity *entity) {
     productionObj["timeRemaining"] = production->timeRemaining;
     productionObj["producedCount"] = production->producedCount;
     productionObj["maxUnits"] = production->maxUnits;
-    productionObj["productType"] =
-        QString::fromStdString(Game::Units::troopTypeToString(production->productType));
+    productionObj["productType"] = QString::fromStdString(
+        Game::Units::troopTypeToString(production->productType));
     productionObj["rallyX"] = production->rallyX;
     productionObj["rallyZ"] = production->rallyZ;
     productionObj["rallySet"] = production->rallySet;
@@ -194,7 +194,8 @@ QJsonObject Serialization::serializeEntity(const Entity *entity) {
 
     QJsonArray queueArray;
     for (const auto &queued : production->productionQueue) {
-      queueArray.append(QString::fromStdString(Game::Units::troopTypeToString(queued)));
+      queueArray.append(
+          QString::fromStdString(Game::Units::troopTypeToString(queued)));
     }
     productionObj["queue"] = queueArray;
     entityObj["production"] = productionObj;
@@ -361,8 +362,8 @@ void Serialization::deserializeEntity(Entity *entity, const QJsonObject &json) {
         static_cast<float>(productionObj["timeRemaining"].toDouble());
     production->producedCount = productionObj["producedCount"].toInt(0);
     production->maxUnits = productionObj["maxUnits"].toInt(0);
-    production->productType =
-        Game::Units::troopTypeFromString(productionObj["productType"].toString().toStdString());
+    production->productType = Game::Units::troopTypeFromString(
+        productionObj["productType"].toString().toStdString());
     production->rallyX = static_cast<float>(productionObj["rallyX"].toDouble());
     production->rallyZ = static_cast<float>(productionObj["rallyZ"].toDouble());
     production->rallySet = productionObj["rallySet"].toBool(false);
@@ -372,7 +373,8 @@ void Serialization::deserializeEntity(Entity *entity, const QJsonObject &json) {
     const auto queueArray = productionObj["queue"].toArray();
     production->productionQueue.reserve(queueArray.size());
     for (const auto &value : queueArray) {
-      production->productionQueue.push_back(Game::Units::troopTypeFromString(value.toString().toStdString()));
+      production->productionQueue.push_back(
+          Game::Units::troopTypeFromString(value.toString().toStdString()));
     }
   }
 
@@ -392,9 +394,9 @@ void Serialization::deserializeEntity(Entity *entity, const QJsonObject &json) {
   }
 }
 
-QJsonObject Serialization::serializeTerrain(
-    const Game::Map::TerrainHeightMap *heightMap,
-    const Game::Map::BiomeSettings &biome) {
+QJsonObject
+Serialization::serializeTerrain(const Game::Map::TerrainHeightMap *heightMap,
+                                const Game::Map::BiomeSettings &biome) {
   QJsonObject terrainObj;
 
   if (!heightMap) {
@@ -507,30 +509,30 @@ void Serialization::deserializeTerrain(Game::Map::TerrainHeightMap *heightMap,
 
   if (json.contains("biome")) {
     const auto biomeObj = json["biome"].toObject();
-    biome.grassPrimary = QVector3D(
-        static_cast<float>(biomeObj["grassPrimaryR"].toDouble(0.3)),
-        static_cast<float>(biomeObj["grassPrimaryG"].toDouble(0.6)),
-        static_cast<float>(biomeObj["grassPrimaryB"].toDouble(0.28)));
+    biome.grassPrimary =
+        QVector3D(static_cast<float>(biomeObj["grassPrimaryR"].toDouble(0.3)),
+                  static_cast<float>(biomeObj["grassPrimaryG"].toDouble(0.6)),
+                  static_cast<float>(biomeObj["grassPrimaryB"].toDouble(0.28)));
     biome.grassSecondary = QVector3D(
         static_cast<float>(biomeObj["grassSecondaryR"].toDouble(0.44)),
         static_cast<float>(biomeObj["grassSecondaryG"].toDouble(0.7)),
         static_cast<float>(biomeObj["grassSecondaryB"].toDouble(0.32)));
-    biome.grassDry = QVector3D(
-        static_cast<float>(biomeObj["grassDryR"].toDouble(0.72)),
-        static_cast<float>(biomeObj["grassDryG"].toDouble(0.66)),
-        static_cast<float>(biomeObj["grassDryB"].toDouble(0.48)));
-    biome.soilColor = QVector3D(
-        static_cast<float>(biomeObj["soilColorR"].toDouble(0.28)),
-        static_cast<float>(biomeObj["soilColorG"].toDouble(0.24)),
-        static_cast<float>(biomeObj["soilColorB"].toDouble(0.18)));
-    biome.rockLow = QVector3D(
-        static_cast<float>(biomeObj["rockLowR"].toDouble(0.48)),
-        static_cast<float>(biomeObj["rockLowG"].toDouble(0.46)),
-        static_cast<float>(biomeObj["rockLowB"].toDouble(0.44)));
-    biome.rockHigh = QVector3D(
-        static_cast<float>(biomeObj["rockHighR"].toDouble(0.68)),
-        static_cast<float>(biomeObj["rockHighG"].toDouble(0.69)),
-        static_cast<float>(biomeObj["rockHighB"].toDouble(0.73)));
+    biome.grassDry =
+        QVector3D(static_cast<float>(biomeObj["grassDryR"].toDouble(0.72)),
+                  static_cast<float>(biomeObj["grassDryG"].toDouble(0.66)),
+                  static_cast<float>(biomeObj["grassDryB"].toDouble(0.48)));
+    biome.soilColor =
+        QVector3D(static_cast<float>(biomeObj["soilColorR"].toDouble(0.28)),
+                  static_cast<float>(biomeObj["soilColorG"].toDouble(0.24)),
+                  static_cast<float>(biomeObj["soilColorB"].toDouble(0.18)));
+    biome.rockLow =
+        QVector3D(static_cast<float>(biomeObj["rockLowR"].toDouble(0.48)),
+                  static_cast<float>(biomeObj["rockLowG"].toDouble(0.46)),
+                  static_cast<float>(biomeObj["rockLowB"].toDouble(0.44)));
+    biome.rockHigh =
+        QVector3D(static_cast<float>(biomeObj["rockHighR"].toDouble(0.68)),
+                  static_cast<float>(biomeObj["rockHighG"].toDouble(0.69)),
+                  static_cast<float>(biomeObj["rockHighB"].toDouble(0.73)));
     biome.patchDensity =
         static_cast<float>(biomeObj["patchDensity"].toDouble(4.5));
     biome.patchJitter =
@@ -598,8 +600,7 @@ void Serialization::deserializeTerrain(Game::Map::TerrainHeightMap *heightMap,
     const auto typesArray = json["terrainTypes"].toArray();
     terrainTypes.reserve(typesArray.size());
     for (const auto &val : typesArray) {
-      terrainTypes.push_back(
-          static_cast<Game::Map::TerrainType>(val.toInt(0)));
+      terrainTypes.push_back(static_cast<Game::Map::TerrainType>(val.toInt(0)));
     }
   }
 
@@ -610,14 +611,13 @@ void Serialization::deserializeTerrain(Game::Map::TerrainHeightMap *heightMap,
     for (const auto &val : riversArray) {
       const auto riverObj = val.toObject();
       Game::Map::RiverSegment river;
-      river.start = QVector3D(
-          static_cast<float>(riverObj["startX"].toDouble(0.0)),
-          static_cast<float>(riverObj["startY"].toDouble(0.0)),
-          static_cast<float>(riverObj["startZ"].toDouble(0.0)));
-      river.end = QVector3D(
-          static_cast<float>(riverObj["endX"].toDouble(0.0)),
-          static_cast<float>(riverObj["endY"].toDouble(0.0)),
-          static_cast<float>(riverObj["endZ"].toDouble(0.0)));
+      river.start =
+          QVector3D(static_cast<float>(riverObj["startX"].toDouble(0.0)),
+                    static_cast<float>(riverObj["startY"].toDouble(0.0)),
+                    static_cast<float>(riverObj["startZ"].toDouble(0.0)));
+      river.end = QVector3D(static_cast<float>(riverObj["endX"].toDouble(0.0)),
+                            static_cast<float>(riverObj["endY"].toDouble(0.0)),
+                            static_cast<float>(riverObj["endZ"].toDouble(0.0)));
       river.width = static_cast<float>(riverObj["width"].toDouble(2.0));
       rivers.push_back(river);
     }
@@ -630,14 +630,14 @@ void Serialization::deserializeTerrain(Game::Map::TerrainHeightMap *heightMap,
     for (const auto &val : bridgesArray) {
       const auto bridgeObj = val.toObject();
       Game::Map::Bridge bridge;
-      bridge.start = QVector3D(
-          static_cast<float>(bridgeObj["startX"].toDouble(0.0)),
-          static_cast<float>(bridgeObj["startY"].toDouble(0.0)),
-          static_cast<float>(bridgeObj["startZ"].toDouble(0.0)));
-      bridge.end = QVector3D(
-          static_cast<float>(bridgeObj["endX"].toDouble(0.0)),
-          static_cast<float>(bridgeObj["endY"].toDouble(0.0)),
-          static_cast<float>(bridgeObj["endZ"].toDouble(0.0)));
+      bridge.start =
+          QVector3D(static_cast<float>(bridgeObj["startX"].toDouble(0.0)),
+                    static_cast<float>(bridgeObj["startY"].toDouble(0.0)),
+                    static_cast<float>(bridgeObj["startZ"].toDouble(0.0)));
+      bridge.end =
+          QVector3D(static_cast<float>(bridgeObj["endX"].toDouble(0.0)),
+                    static_cast<float>(bridgeObj["endY"].toDouble(0.0)),
+                    static_cast<float>(bridgeObj["endZ"].toDouble(0.0)));
       bridge.width = static_cast<float>(bridgeObj["width"].toDouble(3.0));
       bridge.height = static_cast<float>(bridgeObj["height"].toDouble(0.5));
       bridges.push_back(bridge);

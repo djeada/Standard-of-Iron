@@ -19,4 +19,4 @@ struct PineBatchParams {
   float windSpeed = 0.5f;
 };
 
-} // namespace Render::GL
+} 

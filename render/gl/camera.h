@@ -114,4 +114,4 @@ private:
                                  float &pitchDeg) const;
 };
 
-} // namespace Render::GL
+} 

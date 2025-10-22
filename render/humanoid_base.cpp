@@ -637,4 +637,4 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
   drawSelectionFX(ctx, out);
 }
 
-} // namespace Render::GL
+} 

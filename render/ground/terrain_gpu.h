@@ -40,4 +40,4 @@ struct TerrainChunkParams {
   bool isGroundPlane = false;
 };
 
-} // namespace Render::GL
+} 

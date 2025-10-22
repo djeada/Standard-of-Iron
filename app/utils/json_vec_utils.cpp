@@ -24,5 +24,5 @@ QVector3D jsonArrayToVec3(const QJsonValue &value, const QVector3D &fallback) {
                    static_cast<float>(arr.at(2).toDouble(fallback.z())));
 }
 
-} // namespace JsonUtils
-} // namespace App
+} 
+} 

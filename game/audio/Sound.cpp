@@ -1,30 +1,23 @@
 #include "Sound.h"
 #include "MiniaudioBackend.h"
+#include <QCryptographicHash>
 #include <QDebug>
 #include <QFileInfo>
-#include <QCryptographicHash>
 
-Sound::Sound(const std::string &filePath, MiniaudioBackend* backend)
-    : QObject(nullptr)
-    , m_filepath(filePath)
-    , m_backend(backend)
-    , m_loaded(false)
-    , m_volume(1.0f) {
-  
-  // Generate a unique track ID from the file path
+Sound::Sound(const std::string &filePath, MiniaudioBackend *backend)
+    : QObject(nullptr), m_filepath(filePath), m_backend(backend),
+      m_loaded(false), m_volume(1.0f) {
+
   QByteArray hash = QCryptographicHash::hash(
-    QByteArray::fromStdString(filePath), 
-    QCryptographicHash::Md5
-  );
+      QByteArray::fromStdString(filePath), QCryptographicHash::Md5);
   m_trackId = "sound_" + QString(hash.toHex());
-  
+
   QFileInfo fi(QString::fromStdString(m_filepath));
   if (!fi.exists()) {
     qWarning() << "Sound: File does not exist:" << fi.absoluteFilePath();
     return;
   }
 
-  // If backend is available, predecode the sound
   if (m_backend) {
     m_loaded = m_backend->predecode(m_trackId, fi.absoluteFilePath());
     if (m_loaded) {
@@ -33,16 +26,14 @@ Sound::Sound(const std::string &filePath, MiniaudioBackend* backend)
   }
 }
 
-Sound::~Sound() {
-  // Sound data stays in backend cache
-}
+Sound::~Sound() {}
 
-void Sound::setBackend(MiniaudioBackend* backend) {
-  if (m_backend == backend) return;
-  
+void Sound::setBackend(MiniaudioBackend *backend) {
+  if (m_backend == backend)
+    return;
+
   m_backend = backend;
-  
-  // Reload if we have a new backend
+
   if (m_backend && !m_loaded) {
     QFileInfo fi(QString::fromStdString(m_filepath));
     if (fi.exists()) {
@@ -51,9 +42,7 @@ void Sound::setBackend(MiniaudioBackend* backend) {
   }
 }
 
-bool Sound::isLoaded() const {
-  return m_loaded.load();
-}
+bool Sound::isLoaded() const { return m_loaded.load(); }
 
 void Sound::play(float volume, bool loop) {
   if (!m_backend || !m_loaded) {
@@ -63,18 +52,11 @@ void Sound::play(float volume, bool loop) {
 
   m_volume = volume;
   m_backend->playSound(m_trackId, volume, loop);
-  
-  qDebug() << "Sound: Playing" << QString::fromStdString(m_filepath) 
+
+  qDebug() << "Sound: Playing" << QString::fromStdString(m_filepath)
            << "volume:" << volume << "loop:" << loop;
 }
 
-void Sound::stop() {
-  // Note: Individual sound effect stopping not implemented yet
-  // Sound effects play to completion or can be stopped by clearing all
-}
+void Sound::stop() {}
 
-void Sound::setVolume(float volume) {
-  m_volume = volume;
-  // Note: Volume change for already-playing sounds not implemented
-  // This will affect next playback
-}
+void Sound::setVolume(float volume) { m_volume = volume; }

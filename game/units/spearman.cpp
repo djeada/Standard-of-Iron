@@ -22,7 +22,8 @@ static inline QVector3D teamColor(int ownerId) {
 namespace Game {
 namespace Units {
 
-Spearman::Spearman(Engine::Core::World &world) : Unit(world, TroopType::Spearman) {}
+Spearman::Spearman(Engine::Core::World &world)
+    : Unit(world, TroopType::Spearman) {}
 
 std::unique_ptr<Spearman> Spearman::Create(Engine::Core::World &world,
                                            const SpawnParams &params) {

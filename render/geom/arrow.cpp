@@ -82,7 +82,7 @@ GL::Mesh *Arrow::get() {
   return mesh;
 }
 
-} // namespace Geom
+} 
 
 namespace GL {
 
@@ -129,5 +129,5 @@ void renderArrows(Renderer *renderer, ResourceManager *resources,
   }
 }
 
-} // namespace GL
-} // namespace Render
+} 
+} 

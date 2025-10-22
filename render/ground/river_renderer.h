@@ -30,5 +30,5 @@ private:
   std::vector<std::unique_ptr<Mesh>> m_meshes;
 };
 
-} // namespace GL
-} // namespace Render
+} 
+} 
