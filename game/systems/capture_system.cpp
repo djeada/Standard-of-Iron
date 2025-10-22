@@ -74,7 +74,7 @@ void CaptureSystem::transferBarrackOwnership(Engine::Core::World *world,
   if (!Game::Core::isNeutralOwner(newOwnerId) && !prod) {
     prod = barrack->addComponent<Engine::Core::ProductionComponent>();
     if (prod) {
-      prod->productType = "archer";
+      prod->productType = Game::Units::TroopType::Archer;
       prod->buildTime = 10.0f;
       prod->maxUnits = 150;
       prod->inProgress = false;
