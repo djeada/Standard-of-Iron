@@ -1419,12 +1419,16 @@ void GameEngine::restoreEnvironmentFromMetadata(const QJsonObject &metadata) {
   const float fallbackTileSize =
       static_cast<float>(metadata.value("tileSize").toDouble(1.0));
 
+  auto &terrainService = Game::Map::TerrainService::instance();
+  
+  bool terrainAlreadyRestored = terrainService.isInitialized();
+
   Game::Map::MapDefinition def;
   QString mapError;
   bool loadedDefinition = false;
   const QString &mapPath = m_level.mapPath;
 
-  if (!mapPath.isEmpty()) {
+  if (!terrainAlreadyRestored && !mapPath.isEmpty()) {
     loadedDefinition =
         Game::Map::MapLoader::loadFromJsonFile(mapPath, def, &mapError);
     if (!loadedDefinition) {
@@ -1433,9 +1437,7 @@ void GameEngine::restoreEnvironmentFromMetadata(const QJsonObject &metadata) {
     }
   }
 
-  auto &terrainService = Game::Map::TerrainService::instance();
-
-  if (loadedDefinition) {
+  if (!terrainAlreadyRestored && loadedDefinition) {
     terrainService.initialize(def);
 
     if (!def.name.isEmpty()) {
@@ -1445,19 +1447,28 @@ void GameEngine::restoreEnvironmentFromMetadata(const QJsonObject &metadata) {
     m_level.camFov = def.camera.fovY;
     m_level.camNear = def.camera.nearPlane;
     m_level.camFar = def.camera.farPlane;
+  }
 
-    if (m_renderer && m_camera) {
+  if (m_renderer && m_camera) {
+    if (loadedDefinition) {
       Game::Map::Environment::apply(def, *m_renderer, *m_camera);
+    } else {
+      Game::Map::Environment::applyDefault(*m_renderer, *m_camera);
     }
+  }
+
+  if (terrainService.isInitialized()) {
+    const auto *heightMap = terrainService.getHeightMap();
+    const int gridWidth = heightMap ? heightMap->getWidth() : fallbackGridWidth;
+    const int gridHeight = heightMap ? heightMap->getHeight() : fallbackGridHeight;
+    const float tileSize = heightMap ? heightMap->getTileSize() : fallbackTileSize;
 
     if (m_ground) {
-      m_ground->configure(def.grid.tileSize, def.grid.width, def.grid.height);
-      if (terrainService.isInitialized()) {
-        m_ground->setBiome(terrainService.biomeSettings());
-      }
+      m_ground->configure(tileSize, gridWidth, gridHeight);
+      m_ground->setBiome(terrainService.biomeSettings());
     }
 
-    if (auto *heightMap = terrainService.getHeightMap()) {
+    if (heightMap) {
       if (m_terrain) {
         m_terrain->configure(*heightMap, terrainService.biomeSettings());
       }
@@ -1468,6 +1479,9 @@ void GameEngine::restoreEnvironmentFromMetadata(const QJsonObject &metadata) {
       if (m_riverbank) {
         m_riverbank->configure(heightMap->getRiverSegments(), *heightMap);
       }
+      if (m_bridge) {
+        m_bridge->configure(heightMap->getBridges(), heightMap->getTileSize());
+      }
       if (m_biome) {
         m_biome->configure(*heightMap, terrainService.biomeSettings());
         m_biome->refreshGrass();
@@ -1475,13 +1489,18 @@ void GameEngine::restoreEnvironmentFromMetadata(const QJsonObject &metadata) {
       if (m_stone) {
         m_stone->configure(*heightMap, terrainService.biomeSettings());
       }
+      if (m_plant) {
+        m_plant->configure(*heightMap, terrainService.biomeSettings());
+      }
+      if (m_pine) {
+        m_pine->configure(*heightMap, terrainService.biomeSettings());
+      }
     }
 
-    Game::Systems::CommandService::initialize(def.grid.width, def.grid.height);
+    Game::Systems::CommandService::initialize(gridWidth, gridHeight);
 
     auto &visibilityService = Game::Map::VisibilityService::instance();
-    visibilityService.initialize(def.grid.width, def.grid.height,
-                                 def.grid.tileSize);
+    visibilityService.initialize(gridWidth, gridHeight, tileSize);
     visibilityService.computeImmediate(*m_world, m_runtime.localOwnerId);
 
     if (m_fog && visibilityService.isInitialized()) {
