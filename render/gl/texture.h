@@ -39,4 +39,4 @@ private:
   GLenum getGLWrap(Wrap wrap) const;
 };
 
-} // namespace Render::GL
+} 

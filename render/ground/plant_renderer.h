@@ -45,5 +45,5 @@ private:
   bool m_plantInstancesDirty = false;
 };
 
-} // namespace GL
-} // namespace Render
+} 
+} 

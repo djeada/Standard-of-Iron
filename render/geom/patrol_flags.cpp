@@ -71,4 +71,4 @@ void renderPatrolFlags(Renderer *renderer, ResourceManager *resources,
   }
 }
 
-} // namespace Render::GL
+} 

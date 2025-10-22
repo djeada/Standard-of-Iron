@@ -111,9 +111,9 @@ Item {
                             value: 100
                             stepSize: 1
                             onValueChanged: {
-                                if (typeof gameEngine !== 'undefined' && gameEngine.audioSystem) {
-                                    gameEngine.audioSystem.setMasterVolume(value / 100.0);
-                                }
+                                if (typeof gameEngine !== 'undefined' && gameEngine.audioSystem)
+                                    gameEngine.audioSystem.setMasterVolume(value / 100);
+
                             }
                         }
 
@@ -145,9 +145,9 @@ Item {
                             value: 100
                             stepSize: 1
                             onValueChanged: {
-                                if (typeof gameEngine !== 'undefined' && gameEngine.audioSystem) {
-                                    gameEngine.audioSystem.setMusicVolume(value / 100.0);
-                                }
+                                if (typeof gameEngine !== 'undefined' && gameEngine.audioSystem)
+                                    gameEngine.audioSystem.setMusicVolume(value / 100);
+
                             }
                         }
 
@@ -179,9 +179,9 @@ Item {
                             value: 100
                             stepSize: 1
                             onValueChanged: {
-                                if (typeof gameEngine !== 'undefined' && gameEngine.audioSystem) {
-                                    gameEngine.audioSystem.setSoundVolume(value / 100.0);
-                                }
+                                if (typeof gameEngine !== 'undefined' && gameEngine.audioSystem)
+                                    gameEngine.audioSystem.setSoundVolume(value / 100);
+
                             }
                         }
 
@@ -213,9 +213,9 @@ Item {
                             value: 100
                             stepSize: 1
                             onValueChanged: {
-                                if (typeof gameEngine !== 'undefined' && gameEngine.audioSystem) {
-                                    gameEngine.audioSystem.setVoiceVolume(value / 100.0);
-                                }
+                                if (typeof gameEngine !== 'undefined' && gameEngine.audioSystem)
+                                    gameEngine.audioSystem.setVoiceVolume(value / 100);
+
                             }
                         }
 

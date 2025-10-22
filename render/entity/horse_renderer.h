@@ -76,4 +76,4 @@ public:
               const HorseProfile &profile, ISubmitter &out) const;
 };
 
-} // namespace Render::GL
+} 

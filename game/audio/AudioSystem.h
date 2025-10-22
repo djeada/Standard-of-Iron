@@ -13,7 +13,11 @@
 #include <vector>
 
 class Sound;
-namespace Game { namespace Audio { class MusicPlayer; } }
+namespace Game {
+namespace Audio {
+class MusicPlayer;
+}
+} // namespace Game
 
 enum class AudioEventType {
   PLAY_SOUND,
@@ -39,8 +43,7 @@ struct AudioEvent {
   AudioCategory category = AudioCategory::SFX;
 
   AudioEvent(AudioEventType t, const std::string &id = "", float vol = 1.0f,
-             bool l = false, int p = 0,
-             AudioCategory cat = AudioCategory::SFX)
+             bool l = false, int p = 0, AudioCategory cat = AudioCategory::SFX)
       : type(t), resourceId(id), volume(vol), loop(l), priority(p),
         category(cat) {}
 };
@@ -101,9 +104,8 @@ private:
   std::unordered_map<std::string, AudioCategory> soundCategories;
   std::unordered_set<std::string> activeResources;
   mutable std::mutex resourceMutex;
-  
-  // Use singleton MusicPlayer instead of individual Music objects
-  Game::Audio::MusicPlayer* m_musicPlayer;
+
+  Game::Audio::MusicPlayer *m_musicPlayer;
 
   std::thread audioThread;
   std::queue<AudioEvent> eventQueue;

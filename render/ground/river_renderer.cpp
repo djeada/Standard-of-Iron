@@ -218,4 +218,4 @@ void RiverRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   renderer.setCurrentShader(nullptr);
 }
 
-} // namespace Render::GL
+} 

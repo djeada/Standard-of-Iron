@@ -96,8 +96,7 @@ void TerrainService::restoreFromSerialized(
     const std::vector<TerrainType> &terrainTypes,
     const std::vector<RiverSegment> &rivers, const std::vector<Bridge> &bridges,
     const BiomeSettings &biome) {
-  m_heightMap =
-      std::make_unique<TerrainHeightMap>(width, height, tileSize);
+  m_heightMap = std::make_unique<TerrainHeightMap>(width, height, tileSize);
   m_heightMap->restoreFromData(heights, terrainTypes, rivers, bridges);
   m_biomeSettings = biome;
 }

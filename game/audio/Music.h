@@ -20,7 +20,7 @@ public:
   void pause();
   void resume();
   void setVolume(float volume);
-  void fadeOut(); // Safer than immediate stop/pause
+  void fadeOut();
 
 private:
   void cleanupPlayer();

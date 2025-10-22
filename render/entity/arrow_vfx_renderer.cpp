@@ -433,4 +433,4 @@ void registerArcherRenderer(Render::GL::EntityRendererRegistry &registry) {
       });
 }
 
-} // namespace Render::GL
+} 

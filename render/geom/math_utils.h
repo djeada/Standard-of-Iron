@@ -21,28 +21,32 @@ inline QVector3D clampVec(const QVector3D &c, float minVal, float maxVal) {
                    clampf(c.z(), minVal, maxVal));
 }
 
-inline float lerp(float a, float b, float t) { return a * (1.0f - t) + b * t; }
 
-inline QVector3D lerp(const QVector3D &a, const QVector3D &b, float t) {
+constexpr inline float lerp(float a, float b, float t) noexcept { 
+  return a * (1.0f - t) + b * t; 
+}
+
+inline QVector3D lerp(const QVector3D &a, const QVector3D &b, float t) noexcept {
   return a * (1.0f - t) + b * t;
 }
 
-inline float easeInOutCubic(float t) {
-  t = clamp01(t);
-  return t < 0.5f ? 4.0f * t * t * t
-                  : 1.0f - std::pow(-2.0f * t + 2.0f, 3.0f) / 2.0f;
+constexpr inline float easeInOutCubic(float t) noexcept {
+  const float clamped = (t < 0.0f) ? 0.0f : ((t > 1.0f) ? 1.0f : t);
+  return clamped < 0.5f ? 4.0f * clamped * clamped * clamped
+                        : 1.0f - std::pow(-2.0f * clamped + 2.0f, 3.0f) / 2.0f;
 }
 
-inline float smoothstep(float a, float b, float x) {
-  x = clamp01((x - a) / (b - a));
-  return x * x * (3.0f - 2.0f * x);
+constexpr inline float smoothstep(float a, float b, float x) noexcept {
+  const float t = (x - a) / (b - a);
+  const float clamped = (t < 0.0f) ? 0.0f : ((t > 1.0f) ? 1.0f : t);
+  return clamped * clamped * (3.0f - 2.0f * clamped);
 }
 
-inline QVector3D nlerp(const QVector3D &a, const QVector3D &b, float t) {
+inline QVector3D nlerp(const QVector3D &a, const QVector3D &b, float t) noexcept {
   QVector3D v = a * (1.0f - t) + b * t;
   if (v.lengthSquared() > 1e-6f)
     v.normalize();
   return v;
 }
 
-} // namespace Render::Geom
+} 
