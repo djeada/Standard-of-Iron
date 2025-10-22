@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../core/event_manager.h"
+#include <chrono>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -37,6 +38,11 @@ private:
   Engine::Core::World *m_world;
   std::unordered_map<std::string, std::string> m_unitVoiceMap;
   std::unordered_map<Engine::Core::AmbientState, std::string> m_ambientMusicMap;
+
+  // Throttling for unit selection sounds
+  std::chrono::steady_clock::time_point m_lastSelectionSoundTime;
+  std::string m_lastSelectionUnitType;
+  static constexpr int SELECTION_SOUND_COOLDOWN_MS = 300; // 300ms cooldown
 
   Engine::Core::ScopedEventSubscription<Engine::Core::UnitSelectedEvent>
       m_unitSelectedSub;

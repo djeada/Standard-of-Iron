@@ -89,7 +89,19 @@ void AudioEventHandler::onUnitSelected(
 
   auto it = m_unitVoiceMap.find(unitComponent->unitType);
   if (it != m_unitVoiceMap.end()) {
-    AudioSystem::getInstance().playSound(it->second);
+    // Throttle: only play sound if enough time has passed OR unit type changed
+    auto now = std::chrono::steady_clock::now();
+    auto timeSinceLastSound = std::chrono::duration_cast<std::chrono::milliseconds>(
+        now - m_lastSelectionSoundTime).count();
+    
+    bool shouldPlay = (timeSinceLastSound >= SELECTION_SOUND_COOLDOWN_MS) ||
+                      (unitComponent->unitType != m_lastSelectionUnitType);
+    
+    if (shouldPlay) {
+      AudioSystem::getInstance().playSound(it->second);
+      m_lastSelectionSoundTime = now;
+      m_lastSelectionUnitType = unitComponent->unitType;
+    }
   }
 }
 
