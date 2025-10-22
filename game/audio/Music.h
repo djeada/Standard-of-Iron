@@ -1,5 +1,7 @@
 #pragma once
 
+#include <QPointer>
+#include <atomic>
 #include <memory>
 #include <string>
 
@@ -18,14 +20,16 @@ public:
   void pause();
   void resume();
   void setVolume(float volume);
+  void fadeOut(); // Safer than immediate stop/pause
 
 private:
   void cleanupPlayer();
 
-  std::unique_ptr<QMediaPlayer> player;
-  QAudioOutput *audioOutput; // Owned by player as child QObject
+  QPointer<QMediaPlayer> player;
+  QAudioOutput *audioOutput;
   QThread *mainThread;
   std::string filepath;
   bool loaded;
   bool playing;
+  std::atomic<bool> markedForDeletion;
 };
