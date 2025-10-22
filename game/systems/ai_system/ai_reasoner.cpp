@@ -1,5 +1,6 @@
 #include "ai_reasoner.h"
 #include "../../game_config.h"
+#include "../../units/troop_type.h"
 #include "../nation_registry.h"
 #include "ai_utils.h"
 #include <algorithm>
@@ -80,9 +81,10 @@ void AIReasoner::updateContext(const AISnapshot &snapshot, AIContext &ctx) {
     ctx.totalUnits++;
 
     if (ctx.nation) {
-      if (ctx.nation->isRangedUnit(entity.unitType)) {
+      auto troopType = Game::Units::troopTypeFromString(entity.unitType);
+      if (ctx.nation->isRangedUnit(troopType)) {
         ctx.rangedCount++;
-      } else if (ctx.nation->isMeleeUnit(entity.unitType)) {
+      } else if (ctx.nation->isMeleeUnit(troopType)) {
         ctx.meleeCount++;
       }
     }
