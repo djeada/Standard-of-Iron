@@ -87,7 +87,7 @@ inline float smoothApproach(float current, float target, float smoothness) {
          (target - current) * std::clamp(1.0f - smoothness, 0.01f, 0.99f);
 }
 
-} 
+} // namespace
 
 Camera::Camera() { updateVectors(); }
 
@@ -630,51 +630,43 @@ void Camera::computeYawPitchFromOffset(const QVector3D &off, float &yawDeg,
 }
 
 bool Camera::isInFrustum(const QVector3D &center, float radius) const {
-  
-  
+
   QMatrix4x4 vp = getViewProjectionMatrix();
-  
-  
-  
+
   float m[16];
   const float *data = vp.constData();
-  for (int i = 0; i < 16; ++i) m[i] = data[i];
-  
-  
+  for (int i = 0; i < 16; ++i)
+    m[i] = data[i];
+
   QVector3D leftN(m[3] + m[0], m[7] + m[4], m[11] + m[8]);
   float leftD = m[15] + m[12];
-  
-  
+
   QVector3D rightN(m[3] - m[0], m[7] - m[4], m[11] - m[8]);
   float rightD = m[15] - m[12];
-  
-  
+
   QVector3D bottomN(m[3] + m[1], m[7] + m[5], m[11] + m[9]);
   float bottomD = m[15] + m[13];
-  
-  
+
   QVector3D topN(m[3] - m[1], m[7] - m[5], m[11] - m[9]);
   float topD = m[15] - m[13];
-  
-  
+
   QVector3D nearN(m[3] + m[2], m[7] + m[6], m[11] + m[10]);
   float nearD = m[15] + m[14];
-  
-  
+
   QVector3D farN(m[3] - m[2], m[7] - m[6], m[11] - m[10]);
   float farD = m[15] - m[14];
-  
-  
+
   auto testPlane = [&center, radius](const QVector3D &n, float d) -> bool {
     float len = n.length();
-    if (len < 1e-6f) return true;
+    if (len < 1e-6f)
+      return true;
     float dist = QVector3D::dotProduct(center, n) + d;
     return dist >= -radius * len;
   };
-  
+
   return testPlane(leftN, leftD) && testPlane(rightN, rightD) &&
          testPlane(bottomN, bottomD) && testPlane(topN, topD) &&
          testPlane(nearN, nearD) && testPlane(farN, farD);
 }
 
-} 
+} // namespace Render::GL

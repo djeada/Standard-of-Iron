@@ -15,7 +15,7 @@ inline QVector3D saturate(const QVector3D &c) {
   return QVector3D(std::clamp(c.x(), 0.0f, 1.0f), std::clamp(c.y(), 0.0f, 1.0f),
                    std::clamp(c.z(), 0.0f, 1.0f));
 }
-} 
+} // namespace
 
 static QVector3D clamp01(const QVector3D &c) { return saturate(c); }
 
@@ -149,5 +149,5 @@ void GroundRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   renderer.grid(m_model, m_color, cell, 0.06f, extent);
 }
 
-} 
-} 
+} // namespace GL
+} // namespace Render

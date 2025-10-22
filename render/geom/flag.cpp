@@ -30,5 +30,5 @@ Flag::FlagMatrices Flag::create(float worldX, float worldZ,
   return result;
 }
 
-} 
-} 
+} // namespace Geom
+} // namespace Render

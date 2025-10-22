@@ -30,7 +30,6 @@
 
 namespace Render::GL {
 
-
 using Render::Geom::clamp01;
 using Render::Geom::clampf;
 using Render::Geom::coneFromTo;
@@ -129,7 +128,8 @@ public:
                             (pose.shoulderR.z() + restHandR.z()) * 0.5f);
 
     if (anim.isAttacking && anim.isMelee) {
-      float attackPhase = std::fmod(anim.time * MOUNTED_KNIGHT_INV_ATTACK_CYCLE_TIME, 1.0f);
+      float attackPhase =
+          std::fmod(anim.time * MOUNTED_KNIGHT_INV_ATTACK_CYCLE_TIME, 1.0f);
 
       QVector3D restPos = restHandR;
       QVector3D windupPos = QVector3D(
@@ -215,7 +215,8 @@ public:
     bool isAttacking = anim.isAttacking && anim.isMelee;
     float attackPhase = 0.0f;
     if (isAttacking) {
-      attackPhase = std::fmod(anim.time * MOUNTED_KNIGHT_INV_ATTACK_CYCLE_TIME, 1.0f);
+      attackPhase =
+          std::fmod(anim.time * MOUNTED_KNIGHT_INV_ATTACK_CYCLE_TIME, 1.0f);
     }
 
     if (extras.hasSword) {
@@ -269,14 +270,14 @@ public:
     QVector3D visorHL(-helmR * 0.35f, visorY, visorZ);
     QVector3D visorHR(helmR * 0.35f, visorY, visorZ);
     out.mesh(getUnitCylinder(),
-             cylinderBetween(ctx.model, visorHL, visorHR, 0.012f),
-             visorColor, nullptr, 1.0f);
+             cylinderBetween(ctx.model, visorHL, visorHR, 0.012f), visorColor,
+             nullptr, 1.0f);
 
     QVector3D visorVT(0, visorY + helmR * 0.25f, visorZ);
     QVector3D visorVB(0, visorY - helmR * 0.25f, visorZ);
     out.mesh(getUnitCylinder(),
-             cylinderBetween(ctx.model, visorVB, visorVT, 0.012f),
-             visorColor, nullptr, 1.0f);
+             cylinderBetween(ctx.model, visorVB, visorVT, 0.012f), visorColor,
+             nullptr, 1.0f);
 
     auto drawBreathingHole = [&](float x, float y) {
       QVector3D pos(x, pose.headPos.y() + y, helmR * 0.70f);
@@ -745,4 +746,4 @@ void registerMountedKnightRenderer(
       });
 }
 
-} 
+} // namespace Render::GL

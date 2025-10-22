@@ -72,7 +72,7 @@ inline uint32_t colorHash(const QVector3D &c) {
   return v;
 }
 
-} 
+} // namespace
 
 HorseDimensions makeHorseDimensions(uint32_t seed) {
   HorseDimensions d;
@@ -723,4 +723,4 @@ void HorseRenderer::render(const DrawContext &ctx, const AnimationInputs &anim,
   }
 }
 
-} 
+} // namespace Render::GL

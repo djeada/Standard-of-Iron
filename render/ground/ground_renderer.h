@@ -79,5 +79,5 @@ private:
   }
 };
 
-} 
-} 
+} // namespace GL
+} // namespace Render

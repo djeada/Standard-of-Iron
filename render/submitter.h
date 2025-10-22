@@ -8,7 +8,7 @@
 namespace Render::GL {
 class Mesh;
 class Texture;
-} 
+} // namespace Render::GL
 
 namespace Render::GL {
 
@@ -38,7 +38,7 @@ inline bool decomposeUnitCylinder(const QMatrix4x4 &model, QVector3D &start,
   radius = 0.5f * (sx.length() + sz.length());
   return radius > 0.0f;
 }
-} 
+} // namespace detail
 
 class QueueSubmitter : public ISubmitter {
 public:
@@ -125,4 +125,4 @@ private:
   Shader *m_shader = nullptr;
 };
 
-} 
+} // namespace Render::GL

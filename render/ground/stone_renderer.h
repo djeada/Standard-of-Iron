@@ -44,5 +44,5 @@ private:
   bool m_stoneInstancesDirty = false;
 };
 
-} 
-} 
+} // namespace GL
+} // namespace Render

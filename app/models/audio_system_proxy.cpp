@@ -38,5 +38,5 @@ float AudioSystemProxy::getVoiceVolume() const {
   return AudioSystem::getInstance().getVoiceVolume();
 }
 
-} 
-} 
+} // namespace Models
+} // namespace App

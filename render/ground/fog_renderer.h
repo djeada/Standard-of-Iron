@@ -41,5 +41,5 @@ private:
   std::vector<FogInstance> m_instances;
 };
 
-} 
-} 
+} // namespace GL
+} // namespace Render

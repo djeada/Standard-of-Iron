@@ -60,4 +60,4 @@ struct DepthTestScope {
       glDisable(GL_DEPTH_TEST);
   }
 };
-} 
+} // namespace Render::GL

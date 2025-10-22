@@ -66,7 +66,7 @@ inline int sectionFor(Game::Map::TerrainType type) {
   }
 }
 
-} 
+} // namespace
 
 namespace Render::GL {
 
@@ -486,4 +486,4 @@ void BiomeRenderer::generateGrassInstances() {
   }
 }
 
-} 
+} // namespace Render::GL

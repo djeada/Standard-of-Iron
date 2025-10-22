@@ -294,4 +294,4 @@ inline Mat3x4 sphereAtFast(const Mat3x4 &parent, const Vec3 &pos,
   return parent * local;
 }
 
-} 
+} // namespace Render::Math
