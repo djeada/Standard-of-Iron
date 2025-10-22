@@ -8,9 +8,12 @@ The audio system provides thread-safe audio playback for sounds and music using 
 - **Thread-Safe**: Event queue with dedicated audio thread
 - **Sound Effects**: Short sounds with priority and looping support
 - **Music Streams**: Background music with crossfade capability
-- **Volume Controls**: Master, sound, and music volume controls
-- **Resource Management**: Load and manage multiple audio files
+- **Volume Controls**: Master, sound, music, and voice volume controls
+- **Resource Management**: Load and manage multiple audio files with dynamic loading/unloading
 - **Event Integration**: Automatic audio responses to game events
+- **Channel Management**: Configurable max channels with priority-based sound eviction
+- **Audio Categories**: Separate volume control for SFX, Voice, and Music
+- **Memory Optimization**: Dynamic resource loading and unloading for efficient memory usage
 
 ## Components
 
@@ -40,13 +43,29 @@ handler.initialize();
 ### Loading Audio
 
 ```cpp
-// Load sound effects
-audioSystem.loadSound("archer_voice", "assets/audio/voices/archer_voice.wav");
-audioSystem.loadSound("explosion", "assets/sounds/explosion.wav");
+// Load sound effects with categories
+audioSystem.loadSound("archer_voice", "assets/audio/voices/archer_voice.wav", AudioCategory::VOICE);
+audioSystem.loadSound("explosion", "assets/sounds/explosion.wav", AudioCategory::SFX);
 
 // Load background music
 audioSystem.loadMusic("peaceful", "assets/audio/music/peaceful.wav");
 audioSystem.loadMusic("combat", "assets/audio/music/combat.wav");
+```
+
+### Dynamic Resource Management
+
+```cpp
+// Unload specific resources when no longer needed
+audioSystem.unloadSound("explosion");
+audioSystem.unloadMusic("old_track");
+
+// Bulk unload for level transitions
+audioSystem.unloadAllSounds();
+audioSystem.unloadAllMusic();
+
+// Configure channel limits
+audioSystem.setMaxChannels(32);
+size_t activeChannels = audioSystem.getActiveChannelCount();
 ```
 
 ### Configuring Event Mappings
@@ -64,8 +83,9 @@ handler.loadAmbientMusic(Engine::Core::AmbientState::COMBAT, "combat");
 ### Playing Audio
 
 ```cpp
-// Direct playback
-audioSystem.playSound("explosion", 1.0f, false, 10);
+// Direct playback with category
+audioSystem.playSound("explosion", 1.0f, false, 10, AudioCategory::SFX);
+audioSystem.playSound("unit_voice", 1.0f, false, 5, AudioCategory::VOICE);
 audioSystem.playMusic("theme", 0.8f, true);
 
 // Event-triggered playback
@@ -87,6 +107,15 @@ audioSystem.setSoundVolume(0.7f);
 
 // Set music volume
 audioSystem.setMusicVolume(0.6f);
+
+// Set voice volume (separate from SFX)
+audioSystem.setVoiceVolume(0.8f);
+
+// Get current volume levels
+float master = audioSystem.getMasterVolume();
+float sfx = audioSystem.getSoundVolume();
+float music = audioSystem.getMusicVolume();
+float voice = audioSystem.getVoiceVolume();
 ```
 
 ### Stopping Audio
@@ -169,8 +198,26 @@ Current audio files are simple sine wave tones for testing. Replace with actual 
 ### AudioSystem
 - Thread-safe event queue for audio commands
 - Dedicated audio thread for non-blocking playback
-- Resource management for sounds and music
-- Volume controls with proper mixing
+- Resource management for sounds and music with dynamic loading/unloading
+- Volume controls with proper mixing for Master, SFX, Music, and Voice
+- Channel management with configurable limits
+- Priority-based sound eviction when channel limit is reached
+- Memory-safe cleanup on shutdown
+- Atomic volume controls for thread safety
+
+### Channel Management
+The system implements intelligent channel management:
+- Configurable maximum simultaneous sounds (default: 32 channels)
+- Priority-based eviction when channel limit is reached
+- Lower priority sounds are stopped to make room for higher priority sounds
+- Non-looping sounds are automatically cleaned up when finished
+- Active channel count tracking for monitoring
+
+### Audio Categories
+Three distinct audio categories with independent volume control:
+- **SFX**: Sound effects (explosions, impacts, etc.)
+- **VOICE**: Unit voices and dialogue
+- **MUSIC**: Background music and themes
 
 ### AudioEventHandler
 - Subscribes to game events via EventManager
@@ -211,5 +258,5 @@ Note: Dedicated test executables are not currently part of the build configurati
 - [ ] Voice line queuing to prevent overlaps
 - [ ] Audio resource hot-reloading
 - [ ] Audio pooling for frequently used sounds
-- [ ] Compression and streaming optimization
+- [ ] Fade-in/fade-out effects for smooth transitions
 

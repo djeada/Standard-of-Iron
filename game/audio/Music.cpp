@@ -10,9 +10,11 @@ Music::Music(const std::string &filePath)
     : filepath(filePath), loaded(false), audioOutput(nullptr),
       mainThread(nullptr), playing(false) {
 
-  if (QCoreApplication::instance()) {
-    mainThread = QCoreApplication::instance()->thread();
+  if (!QCoreApplication::instance()) {
+    return;
   }
+
+  mainThread = QCoreApplication::instance()->thread();
 
   player = std::make_unique<QMediaPlayer>();
 
@@ -21,10 +23,9 @@ Music::Music(const std::string &filePath)
   }
 
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
-  // Create audio output once and set it as a child of player
   audioOutput = new QAudioOutput(player.get());
   player->setAudioOutput(audioOutput);
-  
+
   player->setSource(QUrl::fromLocalFile(QString::fromStdString(filePath)));
   loaded = (player->error() == QMediaPlayer::NoError);
 #else
@@ -45,17 +46,20 @@ void Music::cleanupPlayer() {
     player->stop();
     player.reset();
   } else {
-
     QMediaPlayer *rawPlayer = player.release();
-    QMetaObject::invokeMethod(
-        QCoreApplication::instance(),
-        [rawPlayer]() {
-          if (rawPlayer) {
-            rawPlayer->stop();
-            delete rawPlayer;
-          }
-        },
-        Qt::QueuedConnection);
+    if (QCoreApplication::instance()) {
+      QMetaObject::invokeMethod(
+          QCoreApplication::instance(),
+          [rawPlayer]() {
+            if (rawPlayer) {
+              rawPlayer->stop();
+              delete rawPlayer;
+            }
+          },
+          Qt::QueuedConnection);
+    } else {
+      delete rawPlayer;
+    }
   }
 }
 
