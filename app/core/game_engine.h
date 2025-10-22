@@ -293,7 +293,8 @@ private:
   Engine::Core::ScopedEventSubscription<Engine::Core::UnitSpawnedEvent>
       m_unitSpawnedSubscription;
   EntityCache m_entityCache;
-  Engine::Core::AmbientState m_currentAmbientState = Engine::Core::AmbientState::PEACEFUL;
+  Engine::Core::AmbientState m_currentAmbientState =
+      Engine::Core::AmbientState::PEACEFUL;
   float m_ambientCheckTimer = 0.0f;
 
   void updateAmbientState(float dt);
