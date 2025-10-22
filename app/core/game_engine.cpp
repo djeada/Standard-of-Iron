@@ -6,6 +6,7 @@
 #include "../models/hover_tracker.h"
 #include "../utils/json_vec_utils.h"
 #include "game/audio/AudioSystem.h"
+#include "game/units/troop_type.h"
 #include <QBuffer>
 #include <QCoreApplication>
 #include <QCursor>
@@ -786,7 +787,7 @@ QVariantMap GameEngine::getSelectedProductionState() const {
       st);
   m["hasBarracks"] = st.hasBarracks;
   m["inProgress"] = st.inProgress;
-  m["productType"] = QString::fromStdString(st.productType);
+  m["productType"] = QString::fromStdString(Game::Units::troopTypeToString(st.productType));
   m["timeRemaining"] = st.timeRemaining;
   m["buildTime"] = st.buildTime;
   m["producedCount"] = st.producedCount;
@@ -796,7 +797,7 @@ QVariantMap GameEngine::getSelectedProductionState() const {
 
   QVariantList queueList;
   for (const auto &unitType : st.productionQueue) {
-    queueList.append(QString::fromStdString(unitType));
+    queueList.append(QString::fromStdString(Game::Units::troopTypeToString(unitType)));
   }
   m["productionQueue"] = queueList;
 
