@@ -46,5 +46,5 @@ private:
   bool m_assetInstancesDirty = false;
 };
 
-} // namespace GL
-} // namespace Render
+} 
+} 

@@ -35,4 +35,4 @@ HumanoidPalette makeHumanoidPalette(const QVector3D &teamTint, uint32_t seed) {
   return p;
 }
 
-} // namespace Render::GL
+} 

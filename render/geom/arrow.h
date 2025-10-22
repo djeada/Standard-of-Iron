@@ -10,23 +10,23 @@ class Arrow {
 public:
   static GL::Mesh *get();
 };
-} // namespace Geom
+} 
 
 namespace GL {
 class Renderer;
 class ResourceManager;
-} // namespace GL
-} // namespace Render
+} 
+} 
 
 namespace Game {
 namespace Systems {
 class ArrowSystem;
 }
-} // namespace Game
+} 
 
 namespace Render {
 namespace GL {
 void renderArrows(Renderer *renderer, ResourceManager *resources,
                   const Game::Systems::ArrowSystem &arrowSystem);
 }
-} // namespace Render
+} 

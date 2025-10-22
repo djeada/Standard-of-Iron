@@ -10,13 +10,13 @@ namespace Core {
 class World;
 class Entity;
 using EntityID = unsigned int;
-} // namespace Core
-} // namespace Engine
+} 
+} 
 
 namespace Game::Systems {
 class SelectionSystem;
 class PickingService;
-} // namespace Game::Systems
+} 
 
 namespace App::Controllers {
 
@@ -66,4 +66,4 @@ private:
   void resetMovement(Engine::Core::Entity *entity);
 };
 
-} // namespace App::Controllers
+} 

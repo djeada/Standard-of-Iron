@@ -18,7 +18,7 @@
 namespace Engine::Core {
 class World;
 class Entity;
-} // namespace Engine::Core
+} 
 
 namespace Render::GL {
 class EntityRendererRegistry;
@@ -28,7 +28,7 @@ namespace Game {
 namespace Systems {
 class ArrowSystem;
 }
-} // namespace Game
+} 
 
 namespace Render::GL {
 
@@ -170,4 +170,4 @@ struct FrameScope {
   ~FrameScope() { r.endFrame(); }
 };
 
-} // namespace Render::GL
+} 

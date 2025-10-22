@@ -35,4 +35,4 @@ Render::GL::Mesh *SelectionDisc::get() {
   return s_mesh.get();
 }
 
-} // namespace Render::Geom
+} 

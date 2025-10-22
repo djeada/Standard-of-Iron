@@ -214,4 +214,4 @@ bool Shader::linkProgram(GLuint vertexShader, GLuint fragmentShader) {
   return true;
 }
 
-} // namespace Render::GL
+} 

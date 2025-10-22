@@ -30,6 +30,7 @@
 
 namespace Render::GL {
 
+
 using Render::Geom::clamp01;
 using Render::Geom::clampf;
 using Render::Geom::coneFromTo;
@@ -39,41 +40,6 @@ using Render::Geom::lerp;
 using Render::Geom::nlerp;
 using Render::Geom::smoothstep;
 using Render::Geom::sphereAt;
-
-static constexpr std::size_t MAX_EXTRAS_CACHE_SIZE = 10000;
-
-// Optimized math helpers - constexpr for compile-time evaluation
-static constexpr inline float easeInOutCubic(float t) noexcept {
-  const float clamped = (t < 0.0f) ? 0.0f : ((t > 1.0f) ? 1.0f : t);
-  return clamped < 0.5f ? 4.0f * clamped * clamped * clamped
-                        : 1.0f - std::pow(-2.0f * clamped + 2.0f, 3.0f) / 2.0f;
-}
-
-static constexpr inline float smoothstep(float a, float b, float x) noexcept {
-  const float t = (x - a) / (b - a);
-  const float clamped = (t < 0.0f) ? 0.0f : ((t > 1.0f) ? 1.0f : t);
-  return clamped * clamped * (3.0f - 2.0f * clamped);
-}
-
-static constexpr inline float lerp(float a, float b, float t) noexcept {
-  return a * (1.0f - t) + b * t;
-}
-
-// Frequently used constants
-static constexpr float ATTACK_CYCLE_TIME = 0.70f;
-static constexpr float INV_ATTACK_CYCLE_TIME = 1.0f / ATTACK_CYCLE_TIME;
-
-// Common color multipliers (computed at compile time where possible)
-static const QVector3D STEEL_TINT(0.95f, 0.96f, 1.0f);
-static const QVector3D BRASS_TINT(1.3f, 1.1f, 0.7f);
-static const QVector3D CHAINMAIL_TINT(0.85f, 0.88f, 0.92f);
-
-static inline QVector3D nlerp(const QVector3D &a, const QVector3D &b, float t) noexcept {
-  QVector3D v = a * (1.0f - t) + b * t;
-  if (v.lengthSquared() > 1e-6f)
-    v.normalize();
-  return v;
-}
 
 struct MountedKnightExtras {
   QVector3D metalColor;
@@ -163,7 +129,7 @@ public:
                             (pose.shoulderR.z() + restHandR.z()) * 0.5f);
 
     if (anim.isAttacking && anim.isMelee) {
-      float attackPhase = std::fmod(anim.time * INV_ATTACK_CYCLE_TIME, 1.0f);
+      float attackPhase = std::fmod(anim.time * MOUNTED_KNIGHT_INV_ATTACK_CYCLE_TIME, 1.0f);
 
       QVector3D restPos = restHandR;
       QVector3D windupPos = QVector3D(
@@ -249,7 +215,7 @@ public:
     bool isAttacking = anim.isAttacking && anim.isMelee;
     float attackPhase = 0.0f;
     if (isAttacking) {
-      attackPhase = std::fmod(anim.time * INV_ATTACK_CYCLE_TIME, 1.0f);
+      attackPhase = std::fmod(anim.time * MOUNTED_KNIGHT_INV_ATTACK_CYCLE_TIME, 1.0f);
     }
 
     if (extras.hasSword) {
@@ -779,4 +745,4 @@ void registerMountedKnightRenderer(
       });
 }
 
-} // namespace Render::GL
+} 

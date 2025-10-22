@@ -12,16 +12,16 @@ namespace Engine {
 namespace Core {
 class Entity;
 class World;
-} // namespace Core
-} // namespace Engine
+} 
+} 
 namespace Render {
 namespace GL {
 class ResourceManager;
 class Mesh;
 class Texture;
 class Backend;
-} // namespace GL
-} // namespace Render
+} 
+} 
 
 namespace Render::GL {
 
@@ -49,4 +49,4 @@ private:
 
 void registerBuiltInEntityRenderers(EntityRendererRegistry &registry);
 
-} // namespace Render::GL
+} 

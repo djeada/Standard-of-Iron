@@ -25,10 +25,10 @@ void registerBuiltInUnits(UnitFactoryRegistry &reg) {
                                               const SpawnParams &params) {
     return Spearman::Create(world, params);
   });
-  reg.registerFactory("barracks", [](Engine::Core::World &world,
-                                     const SpawnParams &params) {
-    return Barracks::Create(world, params);
-  });
+  reg.registerFactory(
+      "barracks", [](Engine::Core::World &world, const SpawnParams &params) {
+        return Barracks::Create(world, params);
+      });
 }
 
 } // namespace Units

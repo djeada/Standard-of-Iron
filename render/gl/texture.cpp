@@ -129,4 +129,4 @@ GLenum Texture::getGLWrap(Wrap wrap) const {
   return GL_REPEAT;
 }
 
-} // namespace Render::GL
+} 
