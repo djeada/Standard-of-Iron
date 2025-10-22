@@ -1,10 +1,23 @@
 #include "Music.h"
 #include <QAudioOutput>
+#include <QCoreApplication>
 #include <QMediaPlayer>
+#include <QMetaObject>
+#include <QThread>
 #include <QUrl>
 
-Music::Music(const std::string &filePath) : filepath(filePath), loaded(false) {
+Music::Music(const std::string &filePath)
+    : filepath(filePath), loaded(false), mainThread(nullptr) {
+
+  if (QCoreApplication::instance()) {
+    mainThread = QCoreApplication::instance()->thread();
+  }
+
   player = std::make_unique<QMediaPlayer>();
+
+  if (mainThread && QThread::currentThread() != mainThread) {
+    player->moveToThread(mainThread);
+  }
 
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
   player->setSource(QUrl::fromLocalFile(QString::fromStdString(filePath)));
@@ -16,9 +29,28 @@ Music::Music(const std::string &filePath) : filepath(filePath), loaded(false) {
 #endif
 }
 
-Music::~Music() {
-  if (player) {
+Music::~Music() { cleanupPlayer(); }
+
+void Music::cleanupPlayer() {
+  if (!player) {
+    return;
+  }
+
+  if (!mainThread || QThread::currentThread() == mainThread) {
     player->stop();
+    player.reset();
+  } else {
+
+    QMediaPlayer *rawPlayer = player.release();
+    QMetaObject::invokeMethod(
+        QCoreApplication::instance(),
+        [rawPlayer]() {
+          if (rawPlayer) {
+            rawPlayer->stop();
+            delete rawPlayer;
+          }
+        },
+        Qt::QueuedConnection);
   }
 }
 
@@ -29,58 +61,88 @@ void Music::play(float volume, bool loop) {
     return;
   }
 
-#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
-  auto audioOutput = new QAudioOutput();
-  audioOutput->setVolume(volume);
-  player->setAudioOutput(audioOutput);
-  player->setLoops(loop ? QMediaPlayer::Infinite : 1);
-#else
-  player->setVolume(static_cast<int>(volume * 100));
-  if (loop) {
-    QObject::connect(player.get(), &QMediaPlayer::mediaStatusChanged,
-                     [this](QMediaPlayer::MediaStatus status) {
-                       if (status == QMediaPlayer::EndOfMedia) {
-                         player->play();
-                       }
-                     });
-  }
-#endif
+  QMediaPlayer *p = player.get();
 
-  player->play();
+  QMetaObject::invokeMethod(
+      p,
+      [p, volume, loop]() {
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+        auto audioOutput = new QAudioOutput(p);
+        audioOutput->setVolume(volume);
+        p->setAudioOutput(audioOutput);
+        p->setLoops(loop ? QMediaPlayer::Infinite : 1);
+#else
+        p->setVolume(static_cast<int>(volume * 100));
+        if (loop) {
+          QObject::connect(p, &QMediaPlayer::mediaStatusChanged,
+                           [p](QMediaPlayer::MediaStatus status) {
+                             if (status == QMediaPlayer::EndOfMedia) {
+                               p->play();
+                             }
+                           });
+        }
+#endif
+        p->play();
+      },
+      Qt::QueuedConnection);
 }
 
 void Music::stop() {
-  if (player) {
-    player->stop();
+  if (!player) {
+    return;
   }
+
+  QMediaPlayer *p = player.get();
+  QMetaObject::invokeMethod(p, [p]() { p->stop(); }, Qt::QueuedConnection);
 }
 
 void Music::pause() {
-  if (player) {
-    player->pause();
+  if (!player) {
+    return;
   }
+
+  QMediaPlayer *p = player.get();
+  QMetaObject::invokeMethod(p, [p]() { p->pause(); }, Qt::QueuedConnection);
 }
 
 void Music::resume() {
+  if (!player) {
+    return;
+  }
+
+  QMediaPlayer *p = player.get();
+  QMetaObject::invokeMethod(
+      p,
+      [p]() {
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
-  if (player && player->playbackState() == QMediaPlayer::PausedState) {
-    player->play();
-  }
+        if (p->playbackState() == QMediaPlayer::PausedState) {
+          p->play();
+        }
 #else
-  if (player && player->state() == QMediaPlayer::PausedState) {
-    player->play();
-  }
+        if (p->state() == QMediaPlayer::PausedState) {
+          p->play();
+        }
 #endif
+      },
+      Qt::QueuedConnection);
 }
 
 void Music::setVolume(float volume) {
+  if (!player) {
+    return;
+  }
+
+  QMediaPlayer *p = player.get();
+  QMetaObject::invokeMethod(
+      p,
+      [p, volume]() {
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
-  if (player && player->audioOutput()) {
-    player->audioOutput()->setVolume(volume);
-  }
+        if (p->audioOutput()) {
+          p->audioOutput()->setVolume(volume);
+        }
 #else
-  if (player) {
-    player->setVolume(static_cast<int>(volume * 100));
-  }
+        p->setVolume(static_cast<int>(volume * 100));
 #endif
+      },
+      Qt::QueuedConnection);
 }

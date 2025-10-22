@@ -100,23 +100,13 @@ void RiverbankAssetRenderer::submit(Renderer &renderer,
   std::vector<RiverbankAssetInstanceGpu> visibleInstances;
 
   for (const auto &instance : m_assetInstances) {
-    float alpha = 1.0f;
     bool shouldRender = true;
 
     if (useVisibility) {
       float worldX = instance.position[0];
       float worldZ = instance.position[2];
 
-      if (visibility.isVisibleWorld(worldX, worldZ)) {
-
-        alpha = 1.0f;
-      } else if (visibility.isExploredWorld(worldX, worldZ)) {
-
-        alpha = 0.5f;
-
-        shouldRender = false;
-      } else {
-
+      if (!visibility.isVisibleWorld(worldX, worldZ)) {
         shouldRender = false;
       }
     }
