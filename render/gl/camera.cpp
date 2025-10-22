@@ -629,4 +629,52 @@ void Camera::computeYawPitchFromOffset(const QVector3D &off, float &yawDeg,
   pitchDeg = pitch;
 }
 
+bool Camera::isInFrustum(const QVector3D &center, float radius) const {
+  // Simple frustum culling using sphere-frustum test
+  // Extract frustum planes from view-projection matrix
+  QMatrix4x4 vp = getViewProjectionMatrix();
+  
+  // Frustum planes (left, right, bottom, top, near, far)
+  // In clip space, planes are: x=-w, x=w, y=-w, y=w, z=-w, z=w
+  float m[16];
+  const float *data = vp.constData();
+  for (int i = 0; i < 16; ++i) m[i] = data[i];
+  
+  // Left plane: m03 + m00, m13 + m10, m23 + m20, m33 + m30
+  QVector3D leftN(m[3] + m[0], m[7] + m[4], m[11] + m[8]);
+  float leftD = m[15] + m[12];
+  
+  // Right plane: m03 - m00, m13 - m10, m23 - m20, m33 - m30
+  QVector3D rightN(m[3] - m[0], m[7] - m[4], m[11] - m[8]);
+  float rightD = m[15] - m[12];
+  
+  // Bottom plane: m03 + m01, m13 + m11, m23 + m21, m33 + m31
+  QVector3D bottomN(m[3] + m[1], m[7] + m[5], m[11] + m[9]);
+  float bottomD = m[15] + m[13];
+  
+  // Top plane: m03 - m01, m13 - m11, m23 - m21, m33 - m31
+  QVector3D topN(m[3] - m[1], m[7] - m[5], m[11] - m[9]);
+  float topD = m[15] - m[13];
+  
+  // Near plane: m03 + m02, m13 + m12, m23 + m22, m33 + m32
+  QVector3D nearN(m[3] + m[2], m[7] + m[6], m[11] + m[10]);
+  float nearD = m[15] + m[14];
+  
+  // Far plane: m03 - m02, m13 - m12, m23 - m22, m33 - m32
+  QVector3D farN(m[3] - m[2], m[7] - m[6], m[11] - m[10]);
+  float farD = m[15] - m[14];
+  
+  // Test sphere against each plane
+  auto testPlane = [&center, radius](const QVector3D &n, float d) -> bool {
+    float len = n.length();
+    if (len < 1e-6f) return true;
+    float dist = QVector3D::dotProduct(center, n) + d;
+    return dist >= -radius * len;
+  };
+  
+  return testPlane(leftN, leftD) && testPlane(rightN, rightD) &&
+         testPlane(bottomN, bottomD) && testPlane(topN, topD) &&
+         testPlane(nearN, nearD) && testPlane(farN, farD);
+}
+
 } // namespace Render::GL
