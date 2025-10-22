@@ -20,6 +20,8 @@ namespace Render::GL {
 using Render::Geom::clamp01;
 using Render::Geom::coneFromTo;
 using Render::Geom::cylinderBetween;
+using Render::Geom::lerp;
+using Render::Geom::smoothstep;
 
 namespace {
 
@@ -39,16 +41,7 @@ inline float randBetween(uint32_t seed, uint32_t salt, float minV, float maxV) {
   return minV + (maxV - minV) * t;
 }
 
-inline QVector3D lerpVec(const QVector3D &a, const QVector3D &b, float t) {
-  return a * (1.0f - t) + b * t;
-}
-
 inline float saturate(float x) { return std::min(1.0f, std::max(0.0f, x)); }
-
-inline float smoothstep(float e0, float e1, float x) {
-  float t = saturate((x - e0) / (e1 - e0));
-  return t * t * (3.0f - 2.0f * t);
-}
 
 inline QVector3D rotateAroundY(const QVector3D &v, float angle) {
   float s = std::sin(angle), c = std::cos(angle);
@@ -133,17 +126,17 @@ HorseVariant makeHorseVariant(uint32_t seed, const QVector3D &leatherBase,
 
   float blazeChance = hash01(seed ^ 0x1122u);
   if (blazeChance > 0.82f) {
-    v.coatColor = lerpVec(v.coatColor, QVector3D(0.92f, 0.92f, 0.90f), 0.25f);
+    v.coatColor = lerp(v.coatColor, QVector3D(0.92f, 0.92f, 0.90f), 0.25f);
   }
 
-  v.maneColor = lerpVec(v.coatColor, QVector3D(0.10f, 0.09f, 0.08f),
-                        randBetween(seed, 0x3344u, 0.55f, 0.85f));
-  v.tailColor = lerpVec(v.maneColor, v.coatColor, 0.35f);
+  v.maneColor = lerp(v.coatColor, QVector3D(0.10f, 0.09f, 0.08f),
+                     randBetween(seed, 0x3344u, 0.55f, 0.85f));
+  v.tailColor = lerp(v.maneColor, v.coatColor, 0.35f);
 
-  v.muzzleColor = lerpVec(v.coatColor, QVector3D(0.18f, 0.14f, 0.12f), 0.65f);
+  v.muzzleColor = lerp(v.coatColor, QVector3D(0.18f, 0.14f, 0.12f), 0.65f);
   v.hoofColor =
-      lerpVec(QVector3D(0.16f, 0.14f, 0.12f), QVector3D(0.40f, 0.35f, 0.32f),
-              randBetween(seed, 0x5566u, 0.15f, 0.65f));
+      lerp(QVector3D(0.16f, 0.14f, 0.12f), QVector3D(0.40f, 0.35f, 0.32f),
+           randBetween(seed, 0x5566u, 0.15f, 0.65f));
 
   float leatherTone = randBetween(seed, 0x7788u, 0.78f, 0.96f);
   float tackTone = randBetween(seed, 0x88AAu, 0.58f, 0.78f);
@@ -151,7 +144,7 @@ HorseVariant makeHorseVariant(uint32_t seed, const QVector3D &leatherBase,
   QVector3D tackTint = leatherBase * tackTone;
   if (blazeChance > 0.90f) {
 
-    tackTint = lerpVec(tackTint, QVector3D(0.18f, 0.19f, 0.22f), 0.25f);
+    tackTint = lerp(tackTint, QVector3D(0.18f, 0.19f, 0.22f), 0.25f);
   }
   v.saddleColor = leatherTint;
   v.tackColor = tackTint;
@@ -272,7 +265,7 @@ void HorseRenderer::render(const DrawContext &ctx, const AnimationInputs &anim,
   float neckRadius = d.bodyWidth * 0.42f;
 
   QVector3D neckMid =
-      lerpVec(neckBase, neckTop, 0.55f) +
+      lerp(neckBase, neckTop, 0.55f) +
       QVector3D(0.0f, d.bodyHeight * 0.02f, d.bodyLength * 0.02f);
   out.mesh(getUnitCylinder(),
            cylinderBetween(ctx.model, neckBase, neckMid, neckRadius * 1.00f),
@@ -413,7 +406,7 @@ void HorseRenderer::render(const DrawContext &ctx, const AnimationInputs &anim,
       neckTop + QVector3D(0.0f, d.headHeight * 0.20f, -d.headLength * 0.20f);
   for (int i = 0; i < 12; ++i) {
     float t = i / 11.0f;
-    QVector3D segStart = lerpVec(maneRoot, neckBase, t);
+    QVector3D segStart = lerp(maneRoot, neckBase, t);
     segStart.setY(segStart.y() + (0.07f - t * 0.05f));
     float sway =
         (anim.isMoving ? std::sin((phase + t * 0.15f) * 2.0f * kPi) * 0.04f
@@ -571,7 +564,7 @@ void HorseRenderer::render(const DrawContext &ctx, const AnimationInputs &anim,
 
     out.mesh(getUnitCylinder(),
              cylinderBetween(ctx.model, cannon, fetlock, pasternR * 1.05f),
-             lerpVec(v.coatColor * 0.94f, distalColor, tSock * 0.8f), nullptr,
+             lerp(v.coatColor * 0.94f, distalColor, tSock * 0.8f), nullptr,
              1.0f);
 
     QVector3D hoofColor = v.hoofColor;
@@ -719,7 +712,7 @@ void HorseRenderer::render(const DrawContext &ctx, const AnimationInputs &anim,
                                                  -d.saddleThickness * 0.3f,
                                                  d.seatForwardOffset * 0.15f);
 
-    QVector3D mid = lerpVec(reinStart, reinEnd, 0.5f) +
+    QVector3D mid = lerp(reinStart, reinEnd, 0.5f) +
                     QVector3D(0.0f, -d.bodyHeight * 0.10f, 0.0f);
     out.mesh(getUnitCylinder(),
              cylinderBetween(ctx.model, reinStart, mid, d.bodyWidth * 0.02f),

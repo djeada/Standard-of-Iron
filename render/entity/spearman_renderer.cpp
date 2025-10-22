@@ -17,6 +17,7 @@
 #include "../scene_renderer.h"
 #include "../submitter.h"
 #include "registry.h"
+#include "renderer_constants.h"
 
 #include <QMatrix4x4>
 #include <QString>
@@ -32,6 +33,9 @@ using Render::Geom::clamp01;
 using Render::Geom::clampf;
 using Render::Geom::coneFromTo;
 using Render::Geom::cylinderBetween;
+using Render::Geom::easeInOutCubic;
+using Render::Geom::lerp;
+using Render::Geom::smoothstep;
 using Render::Geom::sphereAt;
 
 static constexpr std::size_t MAX_EXTRAS_CACHE_SIZE = 10000;
