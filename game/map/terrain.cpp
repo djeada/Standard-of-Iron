@@ -599,4 +599,35 @@ void TerrainHeightMap::addBridges(const std::vector<Bridge> &bridges) {
   }
 }
 
+void TerrainHeightMap::restoreFromData(
+    const std::vector<float> &heights,
+    const std::vector<TerrainType> &terrainTypes,
+    const std::vector<RiverSegment> &rivers,
+    const std::vector<Bridge> &bridges) {
+  
+  const size_t expectedSize = static_cast<size_t>(m_width * m_height);
+  
+  if (heights.size() == expectedSize) {
+    m_heights = heights;
+  }
+  
+  if (terrainTypes.size() == expectedSize) {
+    m_terrainTypes = terrainTypes;
+  }
+  
+  m_hillEntrances.clear();
+  m_hillEntrances.resize(expectedSize, false);
+  m_hillWalkable.clear();
+  m_hillWalkable.resize(expectedSize, true);
+  
+  for (size_t i = 0; i < m_terrainTypes.size(); ++i) {
+    if (m_terrainTypes[i] == TerrainType::Hill) {
+      m_hillWalkable[i] = false;
+    }
+  }
+  
+  m_riverSegments = rivers;
+  m_bridges = bridges;
+}
+
 } // namespace Game::Map

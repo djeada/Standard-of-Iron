@@ -9,7 +9,7 @@ add_library(engine_core STATIC
 )
 
 target_include_directories(engine_core PUBLIC .)
-target_link_libraries(engine_core PUBLIC Qt${QT_VERSION_MAJOR}::Core)
+target_link_libraries(engine_core PUBLIC Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Gui)
 
 add_library(game_systems STATIC
     systems/movement_system.cpp
