@@ -22,7 +22,7 @@ static inline QVector3D teamColor(int ownerId) {
 namespace Game {
 namespace Units {
 
-Archer::Archer(Engine::Core::World &world) : Unit(world, "archer") {}
+Archer::Archer(Engine::Core::World &world) : Unit(world, TroopType::Archer) {}
 
 std::unique_ptr<Archer> Archer::Create(Engine::Core::World &world,
                                        const SpawnParams &params) {
@@ -45,7 +45,7 @@ void Archer::init(const SpawnParams &params) {
   m_r->visible = true;
 
   m_u = e->addComponent<Engine::Core::UnitComponent>();
-  m_u->unitType = m_type;
+  m_u->unitType = m_typeString;
   m_u->health = 80;
   m_u->maxHealth = 80;
   m_u->speed = 3.0f;
