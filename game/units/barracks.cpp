@@ -34,7 +34,7 @@ void Barracks::init(const SpawnParams &params) {
   m_r->mesh = Engine::Core::RenderableComponent::MeshKind::Cube;
 
   m_u = e->addComponent<Engine::Core::UnitComponent>();
-  m_u->unitType = m_type;
+  m_u->unitType = m_typeString;
   m_u->health = 2000;
   m_u->maxHealth = 2000;
   m_u->speed = 0.0f;
