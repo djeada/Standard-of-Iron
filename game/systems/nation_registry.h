@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../units/troop_type.h"
 #include "formation_system.h"
 #include <memory>
 #include <string>
@@ -9,7 +10,7 @@
 namespace Game::Systems {
 
 struct TroopType {
-  std::string unitType;
+  Game::Units::TroopType unitType;
   std::string displayName;
   bool isMelee = false;
   int cost = 100;
@@ -28,13 +29,13 @@ struct Nation {
 
   std::vector<const TroopType *> getRangedTroops() const;
 
-  const TroopType *getTroop(const std::string &unitType) const;
+  const TroopType *getTroop(Game::Units::TroopType unitType) const;
 
   const TroopType *getBestMeleeTroop() const;
   const TroopType *getBestRangedTroop() const;
 
-  bool isMeleeUnit(const std::string &unitType) const;
-  bool isRangedUnit(const std::string &unitType) const;
+  bool isMeleeUnit(Game::Units::TroopType unitType) const;
+  bool isRangedUnit(Game::Units::TroopType unitType) const;
 };
 
 class NationRegistry {

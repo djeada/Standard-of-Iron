@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../units/troop_type.h"
 #include "entity.h"
 #include <cstdint>
 #include <string>
@@ -163,7 +164,7 @@ class ProductionComponent : public Component {
 public:
   ProductionComponent()
       : inProgress(false), buildTime(4.0f), timeRemaining(0.0f),
-        producedCount(0), maxUnits(5), productType("archer"), rallyX(0.0f),
+        producedCount(0), maxUnits(5), productType(Game::Units::TroopType::Archer), rallyX(0.0f),
         rallyZ(0.0f), rallySet(false), villagerCost(1) {}
 
   bool inProgress;
@@ -171,11 +172,11 @@ public:
   float timeRemaining;
   int producedCount;
   int maxUnits;
-  std::string productType;
+  Game::Units::TroopType productType;
   float rallyX, rallyZ;
   bool rallySet;
   int villagerCost;
-  std::vector<std::string> productionQueue;
+  std::vector<Game::Units::TroopType> productionQueue;
 };
 
 class AIControlledComponent : public Component {

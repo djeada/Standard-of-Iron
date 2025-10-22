@@ -5,8 +5,11 @@
 namespace Game {
 namespace Units {
 
+Unit::Unit(Engine::Core::World &world, TroopType type)
+    : m_world(&world), m_typeString(troopTypeToString(type)) {}
+
 Unit::Unit(Engine::Core::World &world, const std::string &type)
-    : m_world(&world), m_type(type) {}
+    : m_world(&world), m_typeString(type) {}
 
 Engine::Core::Entity *Unit::entity() const {
   return m_world ? m_world->getEntity(m_id) : nullptr;
