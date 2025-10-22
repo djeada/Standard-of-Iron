@@ -17,6 +17,7 @@
 #include "../scene_renderer.h"
 #include "../submitter.h"
 #include "registry.h"
+#include "renderer_constants.h"
 #include <unordered_map>
 
 #include <QMatrix4x4>
@@ -32,31 +33,11 @@ using Render::Geom::clamp01;
 using Render::Geom::clampf;
 using Render::Geom::coneFromTo;
 using Render::Geom::cylinderBetween;
+using Render::Geom::easeInOutCubic;
+using Render::Geom::lerp;
+using Render::Geom::nlerp;
+using Render::Geom::smoothstep;
 using Render::Geom::sphereAt;
-
-static constexpr std::size_t MAX_EXTRAS_CACHE_SIZE = 10000;
-
-static inline float easeInOutCubic(float t) {
-  t = clamp01(t);
-  return t < 0.5f ? 4.0f * t * t * t
-                  : 1.0f - std::pow(-2.0f * t + 2.0f, 3.0f) / 2.0f;
-}
-
-static inline float smoothstep(float a, float b, float x) {
-  x = clamp01((x - a) / (b - a));
-  return x * x * (3.0f - 2.0f * x);
-}
-
-static inline float lerp(float a, float b, float t) {
-  return a * (1.0f - t) + b * t;
-}
-
-static inline QVector3D nlerp(const QVector3D &a, const QVector3D &b, float t) {
-  QVector3D v = a * (1.0f - t) + b * t;
-  if (v.lengthSquared() > 1e-6f)
-    v.normalize();
-  return v;
-}
 
 struct KnightExtras {
   QVector3D metalColor;
