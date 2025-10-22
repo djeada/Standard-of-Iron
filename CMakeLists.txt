@@ -159,6 +159,16 @@ else()
     target_link_libraries(standard_of_iron PRIVATE Qt5::QuickControls2)
 endif()
 
+set_target_properties(standard_of_iron PROPERTIES
+  RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+)
+if (WIN32)
+  set_target_properties(standard_of_iron PROPERTIES WIN32_EXECUTABLE TRUE)
+endif()
+
+install(TARGETS standard_of_iron RUNTIME DESTINATION .)
+install(DIRECTORY assets/ DESTINATION assets)
+
 # Copy assets next to the binary for dev runs
 file(COPY assets/ DESTINATION ${CMAKE_BINARY_DIR}/assets/)
 
