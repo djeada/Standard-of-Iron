@@ -35,6 +35,13 @@ public:
 
   bool isInitialized() const { return m_heightMap != nullptr; }
 
+  void restoreFromSerialized(int width, int height, float tileSize,
+                             const std::vector<float> &heights,
+                             const std::vector<TerrainType> &terrainTypes,
+                             const std::vector<RiverSegment> &rivers,
+                             const std::vector<Bridge> &bridges,
+                             const BiomeSettings &biome);
+
 private:
   TerrainService() = default;
   ~TerrainService() = default;
