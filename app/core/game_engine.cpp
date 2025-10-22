@@ -2,6 +2,7 @@
 
 #include "../controllers/action_vfx.h"
 #include "../controllers/command_controller.h"
+#include "../models/audio_system_proxy.h"
 #include "../models/cursor_manager.h"
 #include "../models/hover_tracker.h"
 #include "../utils/json_vec_utils.h"
@@ -163,6 +164,8 @@ GameEngine::GameEngine() {
   } else {
     qWarning() << "Failed to initialize AudioSystem";
   }
+
+  m_audioSystemProxy = std::make_unique<App::Models::AudioSystemProxy>(this);
 
   m_audioEventHandler =
       std::make_unique<Game::Audio::AudioEventHandler>(m_world.get());
@@ -743,6 +746,8 @@ void GameEngine::cameraSetFollowLerp(float alpha) {
 }
 
 QObject *GameEngine::selectedUnitsModel() { return m_selectedUnitsModel; }
+
+QObject *GameEngine::audioSystem() { return m_audioSystemProxy.get(); }
 
 bool GameEngine::hasUnitsSelected() const {
   if (!m_selectionController)
@@ -1652,7 +1657,8 @@ void GameEngine::loadAudioResources() {
 
   if (audioSys.loadSound(
           "archer_voice",
-          (basePath + "voices/archer_voice.wav").toStdString())) {
+          (basePath + "voices/archer_voice.wav").toStdString(),
+          AudioCategory::VOICE)) {
     qInfo() << "Loaded archer voice";
   } else {
     qWarning() << "Failed to load archer voice";
@@ -1660,7 +1666,8 @@ void GameEngine::loadAudioResources() {
 
   if (audioSys.loadSound(
           "knight_voice",
-          (basePath + "voices/knight_voice.wav").toStdString())) {
+          (basePath + "voices/knight_voice.wav").toStdString(),
+          AudioCategory::VOICE)) {
     qInfo() << "Loaded knight voice";
   } else {
     qWarning() << "Failed to load knight voice";
@@ -1668,7 +1675,8 @@ void GameEngine::loadAudioResources() {
 
   if (audioSys.loadSound(
           "spearman_voice",
-          (basePath + "voices/spearman_voice.wav").toStdString())) {
+          (basePath + "voices/spearman_voice.wav").toStdString(),
+          AudioCategory::VOICE)) {
     qInfo() << "Loaded spearman voice";
   } else {
     qWarning() << "Failed to load spearman voice";

@@ -253,6 +253,28 @@ void Renderer::renderWorld(Engine::Core::World *world) {
       continue;
     }
 
+    // Frustum culling: skip units outside camera view
+    if (m_camera && unitComp) {
+      // Use conservative culling radius based on unit type
+      float cullRadius = 3.0f; // Default conservative radius
+      if (!unitComp->unitType.empty()) {
+        // Larger radius for mounted units, smaller for infantry
+        if (unitComp->unitType.find("mounted") != std::string::npos) {
+          cullRadius = 4.0f;
+        } else if (unitComp->unitType == "spearman" || 
+                   unitComp->unitType == "archer" || 
+                   unitComp->unitType == "knight") {
+          cullRadius = 2.5f;
+        }
+      }
+      
+      QVector3D unitPos(transform->position.x, transform->position.y, 
+                        transform->position.z);
+      if (!m_camera->isInFrustum(unitPos, cullRadius)) {
+        continue; // Skip rendering this unit - it's outside the view frustum
+      }
+    }
+
     if (unitComp && unitComp->ownerId != m_localOwnerId) {
       if (visibilityEnabled) {
         if (!vis.isVisibleWorld(transform->position.x, transform->position.z)) {

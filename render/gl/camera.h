@@ -67,6 +67,8 @@ public:
   float getNear() const { return m_nearPlane; }
   float getFar() const { return m_farPlane; }
 
+  bool isInFrustum(const QVector3D &center, float radius) const;
+
 private:
   QVector3D m_position{0.0f, 0.0f, 0.0f};
   QVector3D m_target{0.0f, 0.0f, -1.0f};
