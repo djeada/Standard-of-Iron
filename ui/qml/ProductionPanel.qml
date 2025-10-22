@@ -492,7 +492,7 @@ Rectangle {
 
                                 Text {
                                     anchors.horizontalCenter: parent.horizontalCenter
-                                    text: (typeof Theme !== 'undefined' && Theme.unitIcons) ? Theme.unitIcons["mounted_knight"] || "🐴" : "🐴"
+                                    text: (typeof StyleGuide !== 'undefined' && StyleGuide.unitIcons) ? StyleGuide.unitIcons["mounted_knight"] || "🐴" : "🐴"
                                     color: parent.parent.parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
                                     font.pointSize: 24
                                 }
