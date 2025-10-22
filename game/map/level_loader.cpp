@@ -68,7 +68,7 @@ LevelLoadResult LevelLoader::loadFromAssets(const QString &mapPath,
         Game::Units::SpawnParams sp;
         sp.position = QVector3D(0.0f, 0.0f, 0.0f);
         sp.playerId = 0;
-        sp.unitType = Game::Units::TroopType::Archer;
+        sp.unitType = "archer";
         sp.aiControlled = !owners.isPlayer(sp.playerId);
         if (auto unit = reg->create(Game::Units::TroopType::Archer, world, sp)) {
           res.playerUnitId = unit->id();
@@ -117,7 +117,7 @@ LevelLoadResult LevelLoader::loadFromAssets(const QString &mapPath,
       Game::Units::SpawnParams sp;
       sp.position = QVector3D(0.0f, 0.0f, 0.0f);
       sp.playerId = 0;
-      sp.unitType = Game::Units::TroopType::Archer;
+      sp.unitType = "archer";
       sp.aiControlled = !owners.isPlayer(sp.playerId);
       if (auto unit = reg->create(Game::Units::TroopType::Archer, world, sp)) {
         res.playerUnitId = unit->id();
