@@ -9,9 +9,22 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 # ---- Compiler Optimization Flags ----
-if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    # Debug build: enable debugging symbols and disable optimizations
+    set(CMAKE_CXX_FLAGS_DEBUG "-g3 -O0 -DDEBUG")
+    set(CMAKE_C_FLAGS_DEBUG "-g3 -O0 -DDEBUG")
+    # Additional GDB-friendly flags
+    add_compile_options(-ggdb3)           # Maximum debug info for GDB
+    add_compile_options(-fno-omit-frame-pointer)  # Keep frame pointers for better backtraces
+    add_compile_options(-fno-inline)      # Don't inline functions for easier debugging
+    # Disable optimizations that make debugging harder
+    add_compile_options(-fno-optimize-sibling-calls)
+    message(STATUS "Building in DEBUG mode with GDB support")
+else()
+    # Release/RelWithDebInfo: optimize for performance
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -ffast-math")
     set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)  # Enable LTO
+    message(STATUS "Building in RELEASE mode with optimizations")
 endif()
 
 # ---- Qt ----

@@ -39,6 +39,7 @@ private:
 
   std::vector<PlantInstanceGpu> m_plantInstances;
   std::unique_ptr<Buffer> m_plantInstanceBuffer;
+  std::unique_ptr<Buffer> m_visibleInstanceBuffer;
   std::size_t m_plantInstanceCount = 0;
   PlantBatchParams m_plantParams;
   bool m_plantInstancesDirty = false;

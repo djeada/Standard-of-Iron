@@ -1,18 +1,51 @@
 #include "Sound.h"
+#include <QCoreApplication>
+#include <QMetaObject>
 #include <QSoundEffect>
+#include <QThread>
 #include <QUrl>
 
-Sound::Sound(const std::string &filePath) : filepath(filePath), loaded(false) {
+Sound::Sound(const std::string &filePath)
+    : filepath(filePath), loaded(false), mainThread(nullptr) {
+
+  if (QCoreApplication::instance()) {
+    mainThread = QCoreApplication::instance()->thread();
+  }
+
   soundEffect = std::make_unique<QSoundEffect>();
+
+  if (mainThread && QThread::currentThread() != mainThread) {
+    soundEffect->moveToThread(mainThread);
+  }
+
   soundEffect->setSource(QUrl::fromLocalFile(QString::fromStdString(filePath)));
 
   loaded = (soundEffect->status() == QSoundEffect::Ready ||
             soundEffect->status() == QSoundEffect::Loading);
 }
 
-Sound::~Sound() {
-  if (soundEffect) {
+Sound::~Sound() { cleanupSoundEffect(); }
+
+void Sound::cleanupSoundEffect() {
+  if (!soundEffect) {
+    return;
+  }
+
+  if (!mainThread || QThread::currentThread() == mainThread) {
     soundEffect->stop();
+    soundEffect.reset();
+  } else {
+
+    QSoundEffect *rawEffect = soundEffect.release();
+    QMetaObject::invokeMethod(
+        QCoreApplication::instance(),
+        [rawEffect]() {
+          if (rawEffect) {
+            rawEffect->stop();
+            delete rawEffect;
+          }
+        },
+        Qt::QueuedConnection);
   }
 }
 
@@ -23,19 +56,32 @@ void Sound::play(float volume, bool loop) {
     return;
   }
 
-  soundEffect->setVolume(volume);
-  soundEffect->setLoopCount(loop ? QSoundEffect::Infinite : 1);
-  soundEffect->play();
+  QSoundEffect *se = soundEffect.get();
+  QMetaObject::invokeMethod(
+      se,
+      [se, volume, loop]() {
+        se->setVolume(volume);
+        se->setLoopCount(loop ? QSoundEffect::Infinite : 1);
+        se->play();
+      },
+      Qt::QueuedConnection);
 }
 
 void Sound::stop() {
-  if (soundEffect) {
-    soundEffect->stop();
+  if (!soundEffect) {
+    return;
   }
+
+  QSoundEffect *se = soundEffect.get();
+  QMetaObject::invokeMethod(se, [se]() { se->stop(); }, Qt::QueuedConnection);
 }
 
 void Sound::setVolume(float volume) {
-  if (soundEffect) {
-    soundEffect->setVolume(volume);
+  if (!soundEffect) {
+    return;
   }
+
+  QSoundEffect *se = soundEffect.get();
+  QMetaObject::invokeMethod(
+      se, [se, volume]() { se->setVolume(volume); }, Qt::QueuedConnection);
 }
