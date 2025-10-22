@@ -106,6 +106,11 @@ public:
 
   void applyBiomeVariation(const BiomeSettings &settings);
 
+  void restoreFromData(const std::vector<float> &heights,
+                       const std::vector<TerrainType> &terrainTypes,
+                       const std::vector<RiverSegment> &rivers,
+                       const std::vector<Bridge> &bridges);
+
 private:
   int m_width;
   int m_height;
