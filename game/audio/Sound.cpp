@@ -8,9 +8,11 @@
 Sound::Sound(const std::string &filePath)
     : filepath(filePath), loaded(false), mainThread(nullptr) {
 
-  if (QCoreApplication::instance()) {
-    mainThread = QCoreApplication::instance()->thread();
+  if (!QCoreApplication::instance()) {
+    return;
   }
+
+  mainThread = QCoreApplication::instance()->thread();
 
   soundEffect = std::make_unique<QSoundEffect>();
 
@@ -35,17 +37,20 @@ void Sound::cleanupSoundEffect() {
     soundEffect->stop();
     soundEffect.reset();
   } else {
-
     QSoundEffect *rawEffect = soundEffect.release();
-    QMetaObject::invokeMethod(
-        QCoreApplication::instance(),
-        [rawEffect]() {
-          if (rawEffect) {
-            rawEffect->stop();
-            delete rawEffect;
-          }
-        },
-        Qt::QueuedConnection);
+    if (QCoreApplication::instance()) {
+      QMetaObject::invokeMethod(
+          QCoreApplication::instance(),
+          [rawEffect]() {
+            if (rawEffect) {
+              rawEffect->stop();
+              delete rawEffect;
+            }
+          },
+          Qt::QueuedConnection);
+    } else {
+      delete rawEffect;
+    }
   }
 }
 
