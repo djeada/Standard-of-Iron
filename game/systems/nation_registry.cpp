@@ -24,7 +24,7 @@ std::vector<const TroopType *> Nation::getRangedTroops() const {
   return result;
 }
 
-const TroopType *Nation::getTroop(const std::string &unitType) const {
+const TroopType *Nation::getTroop(Game::Units::TroopType unitType) const {
   for (const auto &troop : availableTroops) {
     if (troop.unitType == unitType) {
       return &troop;
@@ -59,12 +59,12 @@ const TroopType *Nation::getBestRangedTroop() const {
   return *it;
 }
 
-bool Nation::isMeleeUnit(const std::string &unitType) const {
+bool Nation::isMeleeUnit(Game::Units::TroopType unitType) const {
   const auto *troop = getTroop(unitType);
   return troop != nullptr && troop->isMelee;
 }
 
-bool Nation::isRangedUnit(const std::string &unitType) const {
+bool Nation::isRangedUnit(Game::Units::TroopType unitType) const {
   const auto *troop = getTroop(unitType);
   return troop != nullptr && !troop->isMelee;
 }
@@ -125,7 +125,7 @@ void NationRegistry::initializeDefaults() {
   kingdomOfIron.formationType = FormationType::Roman;
 
   TroopType archer;
-  archer.unitType = "archer";
+  archer.unitType = Game::Units::TroopType::Archer;
   archer.displayName = "Archer";
   archer.isMelee = false;
   archer.cost = 50;
@@ -134,13 +134,31 @@ void NationRegistry::initializeDefaults() {
   kingdomOfIron.availableTroops.push_back(archer);
 
   TroopType knight;
-  knight.unitType = "knight";
+  knight.unitType = Game::Units::TroopType::Knight;
   knight.displayName = "Knight";
   knight.isMelee = true;
   knight.cost = 100;
   knight.buildTime = 8.0f;
   knight.priority = 10;
   kingdomOfIron.availableTroops.push_back(knight);
+
+  TroopType spearman;
+  spearman.unitType = Game::Units::TroopType::Spearman;
+  spearman.displayName = "Spearman";
+  spearman.isMelee = true;
+  spearman.cost = 75;
+  spearman.buildTime = 6.0f;
+  spearman.priority = 5;
+  kingdomOfIron.availableTroops.push_back(spearman);
+
+  TroopType mountedKnight;
+  mountedKnight.unitType = Game::Units::TroopType::MountedKnight;
+  mountedKnight.displayName = "Mounted Knight";
+  mountedKnight.isMelee = true;
+  mountedKnight.cost = 150;
+  mountedKnight.buildTime = 10.0f;
+  mountedKnight.priority = 15;
+  kingdomOfIron.availableTroops.push_back(mountedKnight);
 
   registerNation(std::move(kingdomOfIron));
 

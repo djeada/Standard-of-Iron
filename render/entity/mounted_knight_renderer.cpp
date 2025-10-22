@@ -18,6 +18,7 @@
 #include "../submitter.h"
 #include "horse_renderer.h"
 #include "registry.h"
+#include "renderer_constants.h"
 #include <unordered_map>
 
 #include <QMatrix4x4>
@@ -33,6 +34,10 @@ using Render::Geom::clamp01;
 using Render::Geom::clampf;
 using Render::Geom::coneFromTo;
 using Render::Geom::cylinderBetween;
+using Render::Geom::easeInOutCubic;
+using Render::Geom::lerp;
+using Render::Geom::nlerp;
+using Render::Geom::smoothstep;
 using Render::Geom::sphereAt;
 
 static constexpr std::size_t MAX_EXTRAS_CACHE_SIZE = 10000;
