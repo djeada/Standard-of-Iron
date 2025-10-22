@@ -43,6 +43,14 @@ public:
       const std::vector<Engine::Core::EntityID> &selected, int ownerId,
       Game::Units::TroopType unitType);
 
+  static ProductionResult startProductionForFirstSelectedBarracks(
+      Engine::Core::World &world,
+      const std::vector<Engine::Core::EntityID> &selected, int ownerId,
+      const std::string &unitType) {
+    return startProductionForFirstSelectedBarracks(
+        world, selected, ownerId, Game::Units::troopTypeFromString(unitType));
+  }
+
   static bool setRallyForFirstSelectedBarracks(
       Engine::Core::World &world,
       const std::vector<Engine::Core::EntityID> &selected, int ownerId, float x,
