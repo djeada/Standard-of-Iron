@@ -746,6 +746,8 @@ void GameEngine::cameraSetFollowLerp(float alpha) {
 
 QObject *GameEngine::selectedUnitsModel() { return m_selectedUnitsModel; }
 
+QObject *GameEngine::audioSystem() { return m_audioSystemProxy.get(); }
+
 bool GameEngine::hasUnitsSelected() const {
   if (!m_selectionController)
     return false;
