@@ -119,7 +119,9 @@ if(QT_VERSION_MAJOR EQUAL 6)
             assets/shaders/basic.vert
             assets/shaders/basic.frag
             assets/shaders/grid.frag
-            assets/maps/test_map.json
+            assets/maps/map_forest.json
+            assets/maps/map_rivers.json
+            assets/maps/map_mountain.json
             assets/visuals/unit_visuals.json
             translations/app_en.qm
             translations/app_de.qm
