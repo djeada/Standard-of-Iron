@@ -91,4 +91,15 @@ TerrainType TerrainService::getTerrainType(int gridX, int gridZ) const {
   return m_heightMap->getTerrainType(gridX, gridZ);
 }
 
+void TerrainService::restoreFromSerialized(
+    int width, int height, float tileSize, const std::vector<float> &heights,
+    const std::vector<TerrainType> &terrainTypes,
+    const std::vector<RiverSegment> &rivers, const std::vector<Bridge> &bridges,
+    const BiomeSettings &biome) {
+  m_heightMap =
+      std::make_unique<TerrainHeightMap>(width, height, tileSize);
+  m_heightMap->restoreFromData(heights, terrainTypes, rivers, bridges);
+  m_biomeSettings = biome;
+}
+
 } // namespace Game::Map
