@@ -36,6 +36,13 @@ struct Nation {
 
   bool isMeleeUnit(Game::Units::TroopType unitType) const;
   bool isRangedUnit(Game::Units::TroopType unitType) const;
+
+  bool isMeleeUnit(const std::string &unitType) const {
+    return isMeleeUnit(Game::Units::troopTypeFromString(unitType));
+  }
+  bool isRangedUnit(const std::string &unitType) const {
+    return isRangedUnit(Game::Units::troopTypeFromString(unitType));
+  }
 };
 
 class NationRegistry {
