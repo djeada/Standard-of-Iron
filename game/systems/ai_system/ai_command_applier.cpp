@@ -116,9 +116,7 @@ void AICommandApplier::apply(Engine::Core::World &world, int aiOwnerId,
 
       int currentTroops = world.countTroopsForPlayer(aiOwnerId);
       int maxTroops = Game::GameConfig::instance().getMaxTroopsPerPlayer();
-      std::string productType = command.productType.empty()
-                                    ? production->productType
-                                    : command.productType;
+      Game::Units::TroopType productType = production->productType;
       int individualsPerUnit =
           Game::Units::TroopConfig::instance().getIndividualsPerUnit(
               productType);
@@ -126,8 +124,7 @@ void AICommandApplier::apply(Engine::Core::World &world, int aiOwnerId,
         break;
       }
 
-      if (!command.productType.empty())
-        production->productType = command.productType;
+      production->productType = command.productType;
 
       production->timeRemaining = production->buildTime;
       production->inProgress = true;

@@ -68,9 +68,9 @@ LevelLoadResult LevelLoader::loadFromAssets(const QString &mapPath,
         Game::Units::SpawnParams sp;
         sp.position = QVector3D(0.0f, 0.0f, 0.0f);
         sp.playerId = 0;
-        sp.unitType = "archer";
+        sp.unitType = Game::Units::TroopType::Archer;
         sp.aiControlled = !owners.isPlayer(sp.playerId);
-        if (auto unit = reg->create("archer", world, sp)) {
+        if (auto unit = reg->create(Game::Units::TroopType::Archer, world, sp)) {
           res.playerUnitId = unit->id();
         } else {
           qWarning() << "LevelLoader: Fallback archer spawn failed";
@@ -117,9 +117,9 @@ LevelLoadResult LevelLoader::loadFromAssets(const QString &mapPath,
       Game::Units::SpawnParams sp;
       sp.position = QVector3D(0.0f, 0.0f, 0.0f);
       sp.playerId = 0;
-      sp.unitType = "archer";
+      sp.unitType = Game::Units::TroopType::Archer;
       sp.aiControlled = !owners.isPlayer(sp.playerId);
-      if (auto unit = reg->create("archer", world, sp)) {
+      if (auto unit = reg->create(Game::Units::TroopType::Archer, world, sp)) {
         res.playerUnitId = unit->id();
       }
     }
