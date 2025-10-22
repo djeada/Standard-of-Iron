@@ -1,4 +1,5 @@
 #include "serialization.h"
+#include "../units/troop_type.h"
 #include "component.h"
 #include "entity.h"
 #include "world.h"
@@ -185,7 +186,7 @@ QJsonObject Serialization::serializeEntity(const Entity *entity) {
     productionObj["producedCount"] = production->producedCount;
     productionObj["maxUnits"] = production->maxUnits;
     productionObj["productType"] =
-        QString::fromStdString(production->productType);
+        QString::fromStdString(Game::Units::troopTypeToString(production->productType));
     productionObj["rallyX"] = production->rallyX;
     productionObj["rallyZ"] = production->rallyZ;
     productionObj["rallySet"] = production->rallySet;
@@ -193,7 +194,7 @@ QJsonObject Serialization::serializeEntity(const Entity *entity) {
 
     QJsonArray queueArray;
     for (const auto &queued : production->productionQueue) {
-      queueArray.append(QString::fromStdString(queued));
+      queueArray.append(QString::fromStdString(Game::Units::troopTypeToString(queued)));
     }
     productionObj["queue"] = queueArray;
     entityObj["production"] = productionObj;
@@ -361,7 +362,7 @@ void Serialization::deserializeEntity(Entity *entity, const QJsonObject &json) {
     production->producedCount = productionObj["producedCount"].toInt(0);
     production->maxUnits = productionObj["maxUnits"].toInt(0);
     production->productType =
-        productionObj["productType"].toString().toStdString();
+        Game::Units::troopTypeFromString(productionObj["productType"].toString().toStdString());
     production->rallyX = static_cast<float>(productionObj["rallyX"].toDouble());
     production->rallyZ = static_cast<float>(productionObj["rallyZ"].toDouble());
     production->rallySet = productionObj["rallySet"].toBool(false);
@@ -371,7 +372,7 @@ void Serialization::deserializeEntity(Entity *entity, const QJsonObject &json) {
     const auto queueArray = productionObj["queue"].toArray();
     production->productionQueue.reserve(queueArray.size());
     for (const auto &value : queueArray) {
-      production->productionQueue.push_back(value.toString().toStdString());
+      production->productionQueue.push_back(Game::Units::troopTypeFromString(value.toString().toStdString()));
     }
   }
 

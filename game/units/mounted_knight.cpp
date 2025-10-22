@@ -23,7 +23,7 @@ namespace Game {
 namespace Units {
 
 MountedKnight::MountedKnight(Engine::Core::World &world)
-    : Unit(world, "mounted_knight") {}
+    : Unit(world, TroopType::MountedKnight) {}
 
 std::unique_ptr<MountedKnight>
 MountedKnight::Create(Engine::Core::World &world, const SpawnParams &params) {
@@ -46,7 +46,7 @@ void MountedKnight::init(const SpawnParams &params) {
   m_r->visible = true;
 
   m_u = e->addComponent<Engine::Core::UnitComponent>();
-  m_u->unitType = m_type;
+  m_u->unitType = m_typeString;
   m_u->health = 200;
   m_u->maxHealth = 200;
   m_u->speed = 4.0f;
