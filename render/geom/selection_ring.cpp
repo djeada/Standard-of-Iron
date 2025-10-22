@@ -42,4 +42,4 @@ Render::GL::Mesh *SelectionRing::get() {
   return s_mesh.get();
 }
 
-} 
+} // namespace Render::Geom

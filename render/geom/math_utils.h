@@ -21,12 +21,12 @@ inline QVector3D clampVec(const QVector3D &c, float minVal, float maxVal) {
                    clampf(c.z(), minVal, maxVal));
 }
 
-
-constexpr inline float lerp(float a, float b, float t) noexcept { 
-  return a * (1.0f - t) + b * t; 
+constexpr inline float lerp(float a, float b, float t) noexcept {
+  return a * (1.0f - t) + b * t;
 }
 
-inline QVector3D lerp(const QVector3D &a, const QVector3D &b, float t) noexcept {
+inline QVector3D lerp(const QVector3D &a, const QVector3D &b,
+                      float t) noexcept {
   return a * (1.0f - t) + b * t;
 }
 
@@ -42,11 +42,12 @@ constexpr inline float smoothstep(float a, float b, float x) noexcept {
   return clamped * clamped * (3.0f - 2.0f * clamped);
 }
 
-inline QVector3D nlerp(const QVector3D &a, const QVector3D &b, float t) noexcept {
+inline QVector3D nlerp(const QVector3D &a, const QVector3D &b,
+                       float t) noexcept {
   QVector3D v = a * (1.0f - t) + b * t;
   if (v.lengthSquared() > 1e-6f)
     v.normalize();
   return v;
 }
 
-} 
+} // namespace Render::Geom

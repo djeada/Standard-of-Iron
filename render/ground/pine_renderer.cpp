@@ -53,7 +53,7 @@ inline float valueNoise(float x, float z, uint32_t seed) {
   return v0 * (1.0f - fz) + v1 * fz;
 }
 
-} 
+} // namespace
 
 namespace Render::GL {
 
@@ -280,4 +280,4 @@ void PineRenderer::generatePineInstances() {
   m_pineInstancesDirty = m_pineInstanceCount > 0;
 }
 
-} 
+} // namespace Render::GL

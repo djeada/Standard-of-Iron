@@ -92,4 +92,4 @@ void VertexArray::setIndexBuffer(Buffer &buffer) {
   buffer.bind();
 }
 
-} 
+} // namespace Render::GL

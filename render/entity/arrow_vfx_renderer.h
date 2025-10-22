@@ -7,13 +7,13 @@ namespace Render {
 namespace GL {
 class Renderer;
 class ResourceManager;
-} 
-} 
+} // namespace GL
+} // namespace Render
 namespace Game {
 namespace Systems {
 class ArrowSystem;
 }
-} 
+} // namespace Game
 
 namespace Render::GL {
 

@@ -44,5 +44,5 @@ private:
   bool m_pineInstancesDirty = false;
 };
 
-} 
-} 
+} // namespace GL
+} // namespace Render
