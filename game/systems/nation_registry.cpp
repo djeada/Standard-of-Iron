@@ -142,6 +142,24 @@ void NationRegistry::initializeDefaults() {
   knight.priority = 10;
   kingdomOfIron.availableTroops.push_back(knight);
 
+  TroopType spearman;
+  spearman.unitType = Game::Units::TroopType::Spearman;
+  spearman.displayName = "Spearman";
+  spearman.isMelee = true;
+  spearman.cost = 75;
+  spearman.buildTime = 6.0f;
+  spearman.priority = 5;
+  kingdomOfIron.availableTroops.push_back(spearman);
+
+  TroopType mountedKnight;
+  mountedKnight.unitType = Game::Units::TroopType::MountedKnight;
+  mountedKnight.displayName = "Mounted Knight";
+  mountedKnight.isMelee = true;
+  mountedKnight.cost = 150;
+  mountedKnight.buildTime = 10.0f;
+  mountedKnight.priority = 15;
+  kingdomOfIron.availableTroops.push_back(mountedKnight);
+
   registerNation(std::move(kingdomOfIron));
 
   m_defaultNation = "kingdom_of_iron";
