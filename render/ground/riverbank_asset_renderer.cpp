@@ -1,4 +1,5 @@
 #include "riverbank_asset_renderer.h"
+#include "../../game/map/visibility_service.h"
 #include "../gl/buffer.h"
 #include "../scene_renderer.h"
 #include <QDebug>
@@ -85,17 +86,51 @@ void RiverbankAssetRenderer::submit(Renderer &renderer,
     if (!m_assetInstanceBuffer) {
       m_assetInstanceBuffer = std::make_unique<Buffer>(Buffer::Type::Vertex);
     }
-    if (m_assetInstancesDirty && m_assetInstanceBuffer) {
-      m_assetInstanceBuffer->setData(m_assetInstances, Buffer::Usage::Static);
-      m_assetInstancesDirty = false;
+
+    if (shouldRender) {
+      visibleInstances.push_back(instance);
     }
-  } else {
-    m_assetInstanceBuffer.reset();
-    return;
+  }
+
+  // Check visibility service to respect fog of war
+  auto &visibility = Game::Map::VisibilityService::instance();
+  const bool useVisibility = visibility.isInitialized();
+
+  if (useVisibility) {
+    bool anyVisible = false;
+
+    // Check if any riverbank asset is in visible area
+    for (const auto &segment : m_riverSegments) {
+      QVector3D dir = segment.end - segment.start;
+      float length = dir.length();
+      if (length < 0.01f)
+        continue;
+
+      dir.normalize();
+
+      // Sample at start, middle, and end of segment
+      for (int i = 0; i <= 2 && !anyVisible; ++i) {
+        float t = i * 0.5f;
+        QVector3D pos = segment.start + dir * (length * t);
+
+        if (visibility.isVisibleWorld(pos.x(), pos.z())) {
+          anyVisible = true;
+          break;
+        }
+      }
+
+      if (anyVisible)
+        break;
+    }
+
+    // If no riverbank assets are visible, skip rendering
+    if (!anyVisible) {
+      return;
+    }
   }
 
   if (m_assetInstanceBuffer && m_assetInstanceCount > 0) {
-
+    // TODO: Implement actual instanced rendering when shaders are ready
     qDebug() << "RiverbankAssetRenderer: Would render" << m_assetInstanceCount
              << "riverbank assets";
   }
