@@ -130,13 +130,13 @@ HorseVariant makeHorseVariant(uint32_t seed, const QVector3D &leatherBase,
   }
 
   v.maneColor = lerp(v.coatColor, QVector3D(0.10f, 0.09f, 0.08f),
-                        randBetween(seed, 0x3344u, 0.55f, 0.85f));
+                     randBetween(seed, 0x3344u, 0.55f, 0.85f));
   v.tailColor = lerp(v.maneColor, v.coatColor, 0.35f);
 
   v.muzzleColor = lerp(v.coatColor, QVector3D(0.18f, 0.14f, 0.12f), 0.65f);
   v.hoofColor =
       lerp(QVector3D(0.16f, 0.14f, 0.12f), QVector3D(0.40f, 0.35f, 0.32f),
-              randBetween(seed, 0x5566u, 0.15f, 0.65f));
+           randBetween(seed, 0x5566u, 0.15f, 0.65f));
 
   float leatherTone = randBetween(seed, 0x7788u, 0.78f, 0.96f);
   float tackTone = randBetween(seed, 0x88AAu, 0.58f, 0.78f);
