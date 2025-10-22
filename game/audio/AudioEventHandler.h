@@ -28,6 +28,8 @@ public:
   void loadAmbientMusic(Engine::Core::AmbientState state,
                         const std::string &musicId);
 
+  void setVoiceSoundCategory(bool useVoiceCategory);
+
 private:
   void onUnitSelected(const Engine::Core::UnitSelectedEvent &event);
   void
@@ -39,10 +41,11 @@ private:
   std::unordered_map<std::string, std::string> m_unitVoiceMap;
   std::unordered_map<Engine::Core::AmbientState, std::string> m_ambientMusicMap;
 
-  // Throttling for unit selection sounds
+  bool m_useVoiceCategory;
+
   std::chrono::steady_clock::time_point m_lastSelectionSoundTime;
   std::string m_lastSelectionUnitType;
-  static constexpr int SELECTION_SOUND_COOLDOWN_MS = 300; // 300ms cooldown
+  static constexpr int SELECTION_SOUND_COOLDOWN_MS = 300;
 
   Engine::Core::ScopedEventSubscription<Engine::Core::UnitSelectedEvent>
       m_unitSelectedSub;
