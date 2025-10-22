@@ -34,7 +34,7 @@ void Barracks::init(const SpawnParams &params) {
   m_r->mesh = Engine::Core::RenderableComponent::MeshKind::Cube;
 
   m_u = e->addComponent<Engine::Core::UnitComponent>();
-  m_u->unitType = m_type;
+  m_u->unitType = m_typeString;
   m_u->health = 2000;
   m_u->maxHealth = 2000;
   m_u->speed = 0.0f;
@@ -54,11 +54,11 @@ void Barracks::init(const SpawnParams &params) {
   e->addComponent<Engine::Core::BuildingComponent>();
 
   Game::Systems::BuildingCollisionRegistry::instance().registerBuilding(
-      m_id, m_type, m_t->position.x, m_t->position.z, m_u->ownerId);
+      m_id, m_typeString, m_t->position.x, m_t->position.z, m_u->ownerId);
 
   if (!Game::Core::isNeutralOwner(m_u->ownerId)) {
     if (auto *prod = e->addComponent<Engine::Core::ProductionComponent>()) {
-      prod->productType = "archer";
+      prod->productType = TroopType::Archer;
       prod->buildTime = 10.0f;
       prod->maxUnits = params.maxPopulation;
       prod->inProgress = false;

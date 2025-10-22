@@ -26,7 +26,7 @@ findFirstSelectedBarracks(Engine::Core::World &world,
 ProductionResult ProductionService::startProductionForFirstSelectedBarracks(
     Engine::Core::World &world,
     const std::vector<Engine::Core::EntityID> &selected, int ownerId,
-    const std::string &unitType) {
+    Game::Units::TroopType unitType) {
   auto *e = findFirstSelectedBarracks(world, selected, ownerId);
   if (!e)
     return ProductionResult::NoBarracks;

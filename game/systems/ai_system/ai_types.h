@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../../units/troop_type.h"
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -45,7 +46,7 @@ struct ProductionSnapshot {
   float timeRemaining = 0.0f;
   int producedCount = 0;
   int maxUnits = 0;
-  std::string productType;
+  Game::Units::TroopType productType = Game::Units::TroopType::Archer;
   bool rallySet = false;
   float rallyX = 0.0f;
   float rallyZ = 0.0f;
@@ -148,7 +149,7 @@ struct AICommand {
   Engine::Core::EntityID targetId = 0;
   bool shouldChase = false;
   Engine::Core::EntityID buildingId = 0;
-  std::string productType;
+  Game::Units::TroopType productType = Game::Units::TroopType::Archer;
 };
 
 struct AIResult {
