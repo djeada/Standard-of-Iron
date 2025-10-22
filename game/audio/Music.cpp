@@ -7,7 +7,8 @@
 #include <QUrl>
 
 Music::Music(const std::string &filePath)
-    : filepath(filePath), loaded(false), mainThread(nullptr) {
+    : filepath(filePath), loaded(false), audioOutput(nullptr),
+      mainThread(nullptr), playing(false) {
 
   if (QCoreApplication::instance()) {
     mainThread = QCoreApplication::instance()->thread();
@@ -20,6 +21,10 @@ Music::Music(const std::string &filePath)
   }
 
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+  // Create audio output once and set it as a child of player
+  audioOutput = new QAudioOutput(player.get());
+  player->setAudioOutput(audioOutput);
+  
   player->setSource(QUrl::fromLocalFile(QString::fromStdString(filePath)));
   loaded = (player->error() == QMediaPlayer::NoError);
 #else
@@ -61,15 +66,23 @@ void Music::play(float volume, bool loop) {
     return;
   }
 
+  // Already playing, just update volume
+  if (playing) {
+    setVolume(volume);
+    return;
+  }
+
+  playing = true;
   QMediaPlayer *p = player.get();
 
   QMetaObject::invokeMethod(
       p,
-      [p, volume, loop]() {
+      [p, volume, loop, this]() {
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
-        auto audioOutput = new QAudioOutput(p);
-        audioOutput->setVolume(volume);
-        p->setAudioOutput(audioOutput);
+        // Audio output already set in constructor, just update volume and play
+        if (audioOutput) {
+          audioOutput->setVolume(volume);
+        }
         p->setLoops(loop ? QMediaPlayer::Infinite : 1);
 #else
         p->setVolume(static_cast<int>(volume * 100));
@@ -92,6 +105,7 @@ void Music::stop() {
     return;
   }
 
+  playing = false;
   QMediaPlayer *p = player.get();
   QMetaObject::invokeMethod(p, [p]() { p->stop(); }, Qt::QueuedConnection);
 }
