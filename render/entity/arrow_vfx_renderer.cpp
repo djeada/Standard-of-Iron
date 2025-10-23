@@ -376,28 +376,6 @@ static inline void drawBowAndArrow(const DrawContext &p, ISubmitter &out,
            nullptr, 1.0f);
 }
 
-static inline void drawSelectionFX(const DrawContext &p, ISubmitter &out) {
-  if (p.selected || p.hovered) {
-    float ringSize = 0.5f;
-    if (p.entity) {
-      auto *unit = p.entity->getComponent<Engine::Core::UnitComponent>();
-      if (unit && !unit->unitType.empty()) {
-        ringSize = Game::Units::TroopConfig::instance().getSelectionRingSize(
-            unit->unitType);
-      }
-    }
-
-    QMatrix4x4 ringM;
-    QVector3D pos = p.model.column(3).toVector3D();
-    ringM.translate(pos.x(), 0.15f, pos.z());
-    ringM.scale(ringSize, 1.0f, ringSize);
-    if (p.selected)
-      out.selectionRing(ringM, 0.6f, 0.25f, QVector3D(0.2f, 0.8f, 0.2f));
-    else
-      out.selectionRing(ringM, 0.35f, 0.15f, QVector3D(0.90f, 0.90f, 0.25f));
-  }
-}
-
 void registerArcherRenderer(Render::GL::EntityRendererRegistry &registry) {
   registry.registerRenderer(
       "archer", [](const DrawContext &p, ISubmitter &out) {
@@ -429,7 +407,6 @@ void registerArcherRenderer(Render::GL::EntityRendererRegistry &registry) {
         drawArms(p, out, pose, colors);
         drawHeadAndNeck(p, out, pose, colors);
         drawBowAndArrow(p, out, pose, colors);
-        drawSelectionFX(p, out);
       });
 }
 

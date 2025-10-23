@@ -18,6 +18,8 @@
 namespace Engine::Core {
 class World;
 class Entity;
+class TransformComponent;
+class UnitComponent;
 } // namespace Engine::Core
 
 namespace Render::GL {
@@ -142,6 +144,11 @@ public:
                      const FireCampBatchParams &params);
 
 private:
+  void enqueueSelectionRing(Engine::Core::Entity *entity,
+                            Engine::Core::TransformComponent *transform,
+                            Engine::Core::UnitComponent *unitComp,
+                            bool selected, bool hovered);
+
   Camera *m_camera = nullptr;
   std::shared_ptr<Backend> m_backend;
   DrawQueue m_queues[2];

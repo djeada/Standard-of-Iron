@@ -3,6 +3,7 @@
 #include "../core/entity.h"
 #include "../core/world.h"
 #include "../map/terrain_service.h"
+#include "../units/troop_config.h"
 
 namespace Game::Systems {
 
@@ -31,8 +32,15 @@ void TerrainAlignmentSystem::alignEntityToTerrain(
   float terrainHeight = terrainService.getTerrainHeight(transform->position.x,
                                                         transform->position.z);
 
-  const float entityBaseOffset = 0.0f;
-  transform->position.y = terrainHeight + entityBaseOffset;
+  float entityBaseOffset = 0.0f;
+  if (auto *unit = entity->getComponent<Engine::Core::UnitComponent>()) {
+    if (!unit->unitType.empty()) {
+      entityBaseOffset = Game::Units::TroopConfig::instance()
+                              .getSelectionRingGroundOffset(unit->unitType);
+    }
+  }
+
+  transform->position.y = terrainHeight + entityBaseOffset * transform->scale.y;
 }
 
 } // namespace Game::Systems

@@ -137,7 +137,6 @@ protected:
   void drawCommonBody(const DrawContext &ctx, const HumanoidVariant &v,
                       const HumanoidPose &pose, ISubmitter &out) const;
 
-  static void drawSelectionFX(const DrawContext &ctx, ISubmitter &out);
 };
 
 } // namespace Render::GL

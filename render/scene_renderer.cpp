@@ -1,5 +1,7 @@
 #include "scene_renderer.h"
+#include "../game/map/terrain_service.h"
 #include "../game/map/visibility_service.h"
+#include "../game/units/troop_config.h"
 #include "entity/registry.h"
 #include "game/core/component.h"
 #include "game/core/world.h"
@@ -233,6 +235,46 @@ void Renderer::selectionSmoke(const QMatrix4x4 &model, const QVector3D &color,
     m_activeQueue->submit(cmd);
 }
 
+void Renderer::enqueueSelectionRing(Engine::Core::Entity * /*entity*/,
+                                    Engine::Core::TransformComponent *transform,
+                                    Engine::Core::UnitComponent *unitComp,
+                                    bool selected, bool hovered) {
+  if ((!selected && !hovered) || !transform)
+    return;
+
+  float ringSize = 0.5f;
+  float ringOffset = 0.05f;
+  float groundOffset = 0.0f;
+
+  if (unitComp && !unitComp->unitType.empty()) {
+    auto &config = Game::Units::TroopConfig::instance();
+    ringSize = config.getSelectionRingSize(unitComp->unitType);
+    ringOffset += config.getSelectionRingYOffset(unitComp->unitType);
+    groundOffset = config.getSelectionRingGroundOffset(unitComp->unitType);
+  }
+
+  QVector3D pos(transform->position.x, transform->position.y,
+                transform->position.z);
+  auto &terrainService = Game::Map::TerrainService::instance();
+  float terrainY = transform->position.y;
+  if (terrainService.isInitialized()) {
+    terrainY = terrainService.getTerrainHeight(pos.x(), pos.z());
+  } else {
+    terrainY -= groundOffset * transform->scale.y;
+  }
+  pos.setY(terrainY);
+
+  QMatrix4x4 ringModel;
+  ringModel.translate(pos.x(), pos.y() + ringOffset, pos.z());
+  ringModel.scale(ringSize, 1.0f, ringSize);
+
+  if (selected) {
+    selectionRing(ringModel, 0.6f, 0.25f, QVector3D(0.2f, 0.4f, 1.0f));
+  } else if (hovered) {
+    selectionRing(ringModel, 0.35f, 0.15f, QVector3D(0.90f, 0.90f, 0.25f));
+  }
+}
+
 void Renderer::renderWorld(Engine::Core::World *world) {
   if (m_paused.load())
     return;
@@ -294,6 +336,10 @@ void Renderer::renderWorld(Engine::Core::World *world) {
       }
     }
 
+    bool isSelected =
+        (m_selectedIds.find(entity->getId()) != m_selectedIds.end());
+    bool isHovered = (entity->getId() == m_hoveredEntityId);
+
     QMatrix4x4 modelMatrix;
     modelMatrix.translate(transform->position.x, transform->position.y,
                           transform->position.z);
@@ -309,12 +355,13 @@ void Renderer::renderWorld(Engine::Core::World *world) {
       if (fn) {
         DrawContext ctx{resources(), entity, world, modelMatrix};
 
-        ctx.selected =
-            (m_selectedIds.find(entity->getId()) != m_selectedIds.end());
-        ctx.hovered = (entity->getId() == m_hoveredEntityId);
+        ctx.selected = isSelected;
+        ctx.hovered = isHovered;
         ctx.animationTime = m_accumulatedTime;
         ctx.backend = m_backend.get();
         fn(ctx, *this);
+        enqueueSelectionRing(entity, transform, unitComp, isSelected,
+                             isHovered);
         drawnByRegistry = true;
       }
     }
@@ -390,6 +437,7 @@ void Renderer::renderWorld(Engine::Core::World *world) {
         mesh(contactQuad, c2, col, white, outerAlpha);
       }
     }
+    enqueueSelectionRing(entity, transform, unitComp, isSelected, isHovered);
     mesh(meshToDraw, modelMatrix, color, res ? res->white() : nullptr, 1.0f);
   }
 }
