@@ -34,6 +34,14 @@ struct UnitSpawn {
   int maxPopulation = 100;
 };
 
+struct FireCamp {
+  float x = 0.0f;
+  float z = 0.0f;
+  float intensity = 1.0f;
+  float radius = 3.0f;
+  bool persistent = true;
+};
+
 enum class CoordSystem { Grid, World };
 
 struct VictoryConfig {
@@ -51,6 +59,7 @@ struct MapDefinition {
   std::vector<TerrainFeature> terrain;
   std::vector<RiverSegment> rivers;
   std::vector<Bridge> bridges;
+  std::vector<FireCamp> firecamps;
   BiomeSettings biome;
   CoordSystem coordSystem = CoordSystem::Grid;
   int maxTroopsPerPlayer = 50;
