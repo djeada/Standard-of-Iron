@@ -9,7 +9,7 @@ class World;
 namespace Render::GL {
 class Renderer;
 class ResourceManager;
-} 
+} // namespace Render::GL
 
 namespace Render::GL {
 

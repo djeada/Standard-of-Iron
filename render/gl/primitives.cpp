@@ -466,7 +466,7 @@ Mesh *createUnitTorsoMesh(int radialSegments, int heightSegments) {
   return new Mesh(v, idx);
 }
 
-} 
+} // namespace
 
 Mesh *getUnitCylinder(int radialSegments) {
   static std::unique_ptr<Mesh> s_mesh(createUnitCylinderMesh(radialSegments));
@@ -496,4 +496,4 @@ Mesh *getUnitTorso(int radialSegments, int heightSegments) {
   return s_mesh.get();
 }
 
-} 
+} // namespace Render::GL

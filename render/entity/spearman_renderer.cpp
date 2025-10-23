@@ -29,7 +29,6 @@
 
 namespace Render::GL {
 
-
 using Render::Geom::clamp01;
 using Render::Geom::clampf;
 using Render::Geom::coneFromTo;
@@ -129,7 +128,8 @@ public:
                     QVector3D(-0.08f, -0.12f, 0.05f);
 
     } else if (anim.isAttacking && anim.isMelee && !anim.isInHoldMode) {
-      float attackPhase = std::fmod(anim.time * SPEARMAN_INV_ATTACK_CYCLE_TIME, 1.0f);
+      float attackPhase =
+          std::fmod(anim.time * SPEARMAN_INV_ATTACK_CYCLE_TIME, 1.0f);
 
       QVector3D guardPos(0.28f, HP::SHOULDER_Y + 0.05f, 0.25f);
       QVector3D preparePos(0.35f, HP::SHOULDER_Y + 0.08f, 0.05f);
@@ -262,8 +262,8 @@ public:
       QVector3D visorL(pose.headPos.x() - helmR * 0.30f, y, visorZ);
       QVector3D visorR(pose.headPos.x() + helmR * 0.30f, y, visorZ);
       out.mesh(getUnitCylinder(),
-               cylinderBetween(ctx.model, visorL, visorR, 0.010f),
-               DARK_METAL, nullptr, 1.0f);
+               cylinderBetween(ctx.model, visorL, visorR, 0.010f), DARK_METAL,
+               nullptr, 1.0f);
     }
   }
 
@@ -441,4 +441,4 @@ void registerSpearmanRenderer(Render::GL::EntityRendererRegistry &registry) {
       });
 }
 
-} 
+} // namespace Render::GL

@@ -314,4 +314,4 @@ private:
   float m_animationTime = 0.0f;
 };
 
-} 
+} // namespace Render::GL

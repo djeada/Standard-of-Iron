@@ -792,7 +792,8 @@ QVariantMap GameEngine::getSelectedProductionState() const {
       st);
   m["hasBarracks"] = st.hasBarracks;
   m["inProgress"] = st.inProgress;
-  m["productType"] = QString::fromStdString(Game::Units::troopTypeToString(st.productType));
+  m["productType"] =
+      QString::fromStdString(Game::Units::troopTypeToString(st.productType));
   m["timeRemaining"] = st.timeRemaining;
   m["buildTime"] = st.buildTime;
   m["producedCount"] = st.producedCount;
@@ -802,7 +803,8 @@ QVariantMap GameEngine::getSelectedProductionState() const {
 
   QVariantList queueList;
   for (const auto &unitType : st.productionQueue) {
-    queueList.append(QString::fromStdString(Game::Units::troopTypeToString(unitType)));
+    queueList.append(
+        QString::fromStdString(Game::Units::troopTypeToString(unitType)));
   }
   m["productionQueue"] = queueList;
 
@@ -1426,7 +1428,7 @@ void GameEngine::restoreEnvironmentFromMetadata(const QJsonObject &metadata) {
       static_cast<float>(metadata.value("tileSize").toDouble(1.0));
 
   auto &terrainService = Game::Map::TerrainService::instance();
-  
+
   bool terrainAlreadyRestored = terrainService.isInitialized();
 
   Game::Map::MapDefinition def;
@@ -1466,8 +1468,10 @@ void GameEngine::restoreEnvironmentFromMetadata(const QJsonObject &metadata) {
   if (terrainService.isInitialized()) {
     const auto *heightMap = terrainService.getHeightMap();
     const int gridWidth = heightMap ? heightMap->getWidth() : fallbackGridWidth;
-    const int gridHeight = heightMap ? heightMap->getHeight() : fallbackGridHeight;
-    const float tileSize = heightMap ? heightMap->getTileSize() : fallbackTileSize;
+    const int gridHeight =
+        heightMap ? heightMap->getHeight() : fallbackGridHeight;
+    const float tileSize =
+        heightMap ? heightMap->getTileSize() : fallbackTileSize;
 
     if (m_ground) {
       m_ground->configure(tileSize, gridWidth, gridHeight);
@@ -1655,28 +1659,25 @@ void GameEngine::loadAudioResources() {
 
   QString basePath = QCoreApplication::applicationDirPath() + "/assets/audio/";
 
-  if (audioSys.loadSound(
-          "archer_voice",
-          (basePath + "voices/archer_voice.wav").toStdString(),
-          AudioCategory::VOICE)) {
+  if (audioSys.loadSound("archer_voice",
+                         (basePath + "voices/archer_voice.wav").toStdString(),
+                         AudioCategory::VOICE)) {
     qInfo() << "Loaded archer voice";
   } else {
     qWarning() << "Failed to load archer voice";
   }
 
-  if (audioSys.loadSound(
-          "knight_voice",
-          (basePath + "voices/knight_voice.wav").toStdString(),
-          AudioCategory::VOICE)) {
+  if (audioSys.loadSound("knight_voice",
+                         (basePath + "voices/knight_voice.wav").toStdString(),
+                         AudioCategory::VOICE)) {
     qInfo() << "Loaded knight voice";
   } else {
     qWarning() << "Failed to load knight voice";
   }
 
-  if (audioSys.loadSound(
-          "spearman_voice",
-          (basePath + "voices/spearman_voice.wav").toStdString(),
-          AudioCategory::VOICE)) {
+  if (audioSys.loadSound("spearman_voice",
+                         (basePath + "voices/spearman_voice.wav").toStdString(),
+                         AudioCategory::VOICE)) {
     qInfo() << "Loaded spearman voice";
   } else {
     qWarning() << "Failed to load spearman voice";

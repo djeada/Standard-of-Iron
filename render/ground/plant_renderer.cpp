@@ -53,7 +53,7 @@ inline float valueNoise(float x, float z, uint32_t salt = 0u) {
   return nx0 * (1 - tz) + nx1 * tz;
 }
 
-} 
+} // namespace
 
 namespace Render::GL {
 
@@ -360,4 +360,4 @@ void PlantRenderer::generatePlantInstances() {
   m_plantInstancesDirty = m_plantInstanceCount > 0;
 }
 
-} 
+} // namespace Render::GL

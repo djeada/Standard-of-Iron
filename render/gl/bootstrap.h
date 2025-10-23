@@ -15,5 +15,5 @@ public:
   static bool initialize(Renderer &renderer, Camera &camera);
 };
 
-} 
-} 
+} // namespace GL
+} // namespace Render

@@ -57,4 +57,4 @@ inline QVector3D toQVector3D(const Render::Math::Vec3 &v) {
   return QVector3D(v.x, v.y, v.z);
 }
 
-} 
+} // namespace Render::Geom

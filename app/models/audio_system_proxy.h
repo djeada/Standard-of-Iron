@@ -22,5 +22,5 @@ public:
   Q_INVOKABLE float getVoiceVolume() const;
 };
 
-} 
-} 
+} // namespace Models
+} // namespace App
