@@ -5,6 +5,7 @@
 #include "../core/world.h"
 #include "../systems/owner_registry.h"
 #include "../units/factory.h"
+#include "../units/spawn_type.h"
 #include "../visuals/team_colors.h"
 #include "terrain_service.h"
 #include <QDebug>
@@ -145,80 +146,32 @@ MapTransformer::applyToWorld(const MapDefinition &def,
       Game::Units::SpawnParams sp;
       sp.position = QVector3D(worldX, 0.0f, worldZ);
       sp.playerId = s.playerId;
-      sp.unitType = s.type.toStdString();
+      sp.spawnType = s.type;
+      sp.unitType = Game::Units::spawnTypeToString(s.type);
       sp.aiControlled = !ownerRegistry.isPlayer(s.playerId);
       sp.maxPopulation = s.maxPopulation;
-      auto obj = s_registry->create(s.type.toStdString(), world, sp);
+      auto obj = s_registry->create(s.type, world, sp);
       if (obj) {
         e = world.getEntity(obj->id());
         rt.unitIds.push_back(obj->id());
-      }
-    }
-    if (!e) {
-
-      e = world.createEntity();
-      if (!e)
-        continue;
-      auto *t = e->addComponent<Engine::Core::TransformComponent>();
-      t->position = {worldX, 0.0f, worldZ};
-      t->scale = {0.5f, 0.5f, 0.5f};
-      auto *r = e->addComponent<Engine::Core::RenderableComponent>("", "");
-      r->visible = true;
-      auto *u = e->addComponent<Engine::Core::UnitComponent>();
-      u->unitType = s.type.toStdString();
-      u->ownerId = s.playerId;
-      u->visionRange = 14.0f;
-
-      bool isAI = !ownerRegistry.isPlayer(s.playerId);
-      if (isAI) {
-        e->addComponent<Engine::Core::AIControlledComponent>();
       } else {
+        qWarning() << "MapTransformer: no factory for spawn type"
+                   << Game::Units::spawnTypeToQString(s.type)
+                   << "- skipping spawn at" << worldX << worldZ;
+        continue;
       }
-
-      if (auto *existingMv =
-              e->getComponent<Engine::Core::MovementComponent>()) {
-        existingMv->goalX = worldX;
-        existingMv->goalY = worldZ;
-        existingMv->targetX = worldX;
-        existingMv->targetY = worldZ;
-      } else if (auto *mv =
-                     e->addComponent<Engine::Core::MovementComponent>()) {
-        mv->goalX = worldX;
-        mv->goalY = worldZ;
-        mv->targetX = worldX;
-        mv->targetY = worldZ;
-      }
-
-      QVector3D tc = Game::Visuals::teamColorForOwner(u->ownerId);
-      r->color[0] = tc.x();
-      r->color[1] = tc.y();
-      r->color[2] = tc.z();
-      if (s.type == "archer") {
-        u->health = 80;
-        u->maxHealth = 80;
-        u->speed = 3.0f;
-        u->visionRange = 16.0f;
-        auto *atk = e->addComponent<Engine::Core::AttackComponent>();
-        atk->range = 6.0f;
-        atk->damage = 12;
-        atk->cooldown = 1.2f;
-      }
-      if (!e->getComponent<Engine::Core::MovementComponent>()) {
-        auto *mv = e->addComponent<Engine::Core::MovementComponent>();
-        if (mv) {
-          mv->goalX = worldX;
-          mv->goalY = worldZ;
-          mv->targetX = worldX;
-          mv->targetY = worldZ;
-        }
-      }
-      rt.unitIds.push_back(e->getId());
+    } else {
+      qWarning() << "MapTransformer: no factory registry set; skipping spawn";
+      continue;
     }
+
+    if (!e)
+      continue;
 
     if (auto *r = e->getComponent<Engine::Core::RenderableComponent>()) {
       if (visuals) {
         Game::Visuals::VisualDef defv;
-        if (visuals->lookup(s.type.toStdString(), defv)) {
+        if (visuals->lookup(Game::Units::spawnTypeToString(s.type), defv)) {
           Game::Visuals::applyToRenderable(defv, *r);
         }
       }
@@ -228,7 +181,8 @@ MapTransformer::applyToWorld(const MapDefinition &def,
     }
 
     if (auto *t = e->getComponent<Engine::Core::TransformComponent>()) {
-      qInfo() << "Spawned" << s.type << "id=" << e->getId() << "at"
+      qInfo() << "Spawned" << Game::Units::spawnTypeToQString(s.type)
+              << "id=" << e->getId() << "at"
               << QVector3D(t->position.x, t->position.y, t->position.z)
               << "(coordSystem="
               << (def.coordSystem == CoordSystem::Grid ? "Grid" : "World")
