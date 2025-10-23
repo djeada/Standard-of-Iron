@@ -95,11 +95,16 @@ all: build
 run: build
 	@echo "$(BOLD)$(BLUE)Running Standard of Iron...$(RESET)"
 	@cd $(BUILD_DIR) && \
+	BIN_PATH="./bin/$(BINARY_NAME)"; \
+	if [ ! -x "$$BIN_PATH" ]; then \
+		echo "$(RED)$(BINARY_NAME) not found at $$BIN_PATH$(RESET)"; \
+		exit 127; \
+	fi; \
 	if [ -n "$$DISPLAY" ]; then \
-	  ./$(BINARY_NAME); \
+		"$${BIN_PATH}"; \
 	else \
-	  echo "$(YELLOW)No DISPLAY detected; running with QT_QPA_PLATFORM=offscreen$(RESET)"; \
-	  QT_QPA_PLATFORM=offscreen ./$(BINARY_NAME); \
+		echo "$(YELLOW)No DISPLAY detected; running with QT_QPA_PLATFORM=offscreen$(RESET)"; \
+		QT_QPA_PLATFORM=offscreen "$${BIN_PATH}"; \
 	fi
 
 # Run with xvfb for headless environments (software rasterization)
@@ -110,7 +115,13 @@ run-headless: build
 	  echo "$(YELLOW)xvfb-run not found. Installing...$(RESET)"; \
 	  sudo apt-get update -y >/dev/null 2>&1 && sudo apt-get install -y xvfb >/dev/null 2>&1; \
 	fi
-	@cd $(BUILD_DIR) && xvfb-run -s "-screen 0 1280x720x24" ./$(BINARY_NAME)
+	@cd $(BUILD_DIR) && \
+	BIN_PATH="./bin/$(BINARY_NAME)"; \
+	if [ ! -x "$$BIN_PATH" ]; then \
+		echo "$(RED)$(BINARY_NAME) not found at $$BIN_PATH$(RESET)"; \
+		exit 127; \
+	fi; \
+	xvfb-run -s "-screen 0 1280x720x24" "$$BIN_PATH"
 
 # Run the map editor
 .PHONY: editor
@@ -277,4 +288,3 @@ quickstart:
 	@echo "3. Run the game: $(BLUE)make run$(RESET)"
 	@echo ""
 	@echo "Or use the shortcut: $(BLUE)make dev$(RESET)"
-
