@@ -62,6 +62,18 @@ public:
     return getSelectionRingYOffset(troopTypeFromString(unitType));
   }
 
+  float getSelectionRingGroundOffset(TroopType unitType) const {
+    auto it = m_selectionRingGroundOffset.find(unitType);
+    if (it != m_selectionRingGroundOffset.end()) {
+      return it->second;
+    }
+    return 0.0f;
+  }
+
+  float getSelectionRingGroundOffset(const std::string &unitType) const {
+    return getSelectionRingGroundOffset(troopTypeFromString(unitType));
+  }
+
   void registerTroopType(TroopType unitType, int individualsPerUnit) {
     m_individualsPerUnit[unitType] = individualsPerUnit;
   }
@@ -78,33 +90,42 @@ public:
     m_selectionRingYOffset[unitType] = offset;
   }
 
+  void registerSelectionRingGroundOffset(TroopType unitType, float offset) {
+    m_selectionRingGroundOffset[unitType] = offset;
+  }
+
 private:
   TroopConfig() {
     m_individualsPerUnit[TroopType::Archer] = 20;
     m_maxUnitsPerRow[TroopType::Archer] = 5;
     m_selectionRingSize[TroopType::Archer] = 1.2f;
     m_selectionRingYOffset[TroopType::Archer] = 0.0f;
+    m_selectionRingGroundOffset[TroopType::Archer] = 0.0f;
 
     m_individualsPerUnit[TroopType::Knight] = 15;
     m_maxUnitsPerRow[TroopType::Knight] = 5;
     m_selectionRingSize[TroopType::Knight] = 1.1f;
     m_selectionRingYOffset[TroopType::Knight] = 0.0f;
+    m_selectionRingGroundOffset[TroopType::Knight] = 0.0f;
 
     m_individualsPerUnit[TroopType::Spearman] = 24;
     m_maxUnitsPerRow[TroopType::Spearman] = 6;
     m_selectionRingSize[TroopType::Spearman] = 1.4f;
     m_selectionRingYOffset[TroopType::Spearman] = 0.0f;
+    m_selectionRingGroundOffset[TroopType::Spearman] = 0.0f;
 
     m_individualsPerUnit[TroopType::MountedKnight] = 9;
     m_maxUnitsPerRow[TroopType::MountedKnight] = 3;
     m_selectionRingSize[TroopType::MountedKnight] = 2.0f;
     m_selectionRingYOffset[TroopType::MountedKnight] = 0.0f;
+    m_selectionRingGroundOffset[TroopType::MountedKnight] = 1.35f;
   }
 
   std::unordered_map<TroopType, int> m_individualsPerUnit;
   std::unordered_map<TroopType, int> m_maxUnitsPerRow;
   std::unordered_map<TroopType, float> m_selectionRingSize;
   std::unordered_map<TroopType, float> m_selectionRingYOffset;
+  std::unordered_map<TroopType, float> m_selectionRingGroundOffset;
 };
 
 } // namespace Units
