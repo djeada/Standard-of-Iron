@@ -40,6 +40,41 @@ using Render::Geom::nlerp;
 using Render::Geom::smoothstep;
 using Render::Geom::sphereAt;
 
+static constexpr std::size_t MAX_EXTRAS_CACHE_SIZE = 10000;
+
+// Optimized math helpers - constexpr for compile-time evaluation
+static constexpr inline float easeInOutCubic(float t) noexcept {
+  const float clamped = (t < 0.0f) ? 0.0f : ((t > 1.0f) ? 1.0f : t);
+  return clamped < 0.5f ? 4.0f * clamped * clamped * clamped
+                        : 1.0f - std::pow(-2.0f * clamped + 2.0f, 3.0f) / 2.0f;
+}
+
+static constexpr inline float smoothstep(float a, float b, float x) noexcept {
+  const float t = (x - a) / (b - a);
+  const float clamped = (t < 0.0f) ? 0.0f : ((t > 1.0f) ? 1.0f : t);
+  return clamped * clamped * (3.0f - 2.0f * clamped);
+}
+
+static constexpr inline float lerp(float a, float b, float t) noexcept {
+  return a * (1.0f - t) + b * t;
+}
+
+// Frequently used constants
+static constexpr float ATTACK_CYCLE_TIME = 0.70f;
+static constexpr float INV_ATTACK_CYCLE_TIME = 1.0f / ATTACK_CYCLE_TIME;
+
+// Common color multipliers (computed at compile time where possible)
+static const QVector3D STEEL_TINT(0.95f, 0.96f, 1.0f);
+static const QVector3D BRASS_TINT(1.3f, 1.1f, 0.7f);
+static const QVector3D CHAINMAIL_TINT(0.85f, 0.88f, 0.92f);
+
+static inline QVector3D nlerp(const QVector3D &a, const QVector3D &b, float t) noexcept {
+  QVector3D v = a * (1.0f - t) + b * t;
+  if (v.lengthSquared() > 1e-6f)
+    v.normalize();
+  return v;
+}
+
 struct MountedKnightExtras {
   QVector3D metalColor;
   HorseProfile horseProfile;
@@ -128,8 +163,7 @@ public:
                             (pose.shoulderR.z() + restHandR.z()) * 0.5f);
 
     if (anim.isAttacking && anim.isMelee) {
-      const float attackCycleTime = 0.70f;
-      float attackPhase = std::fmod(anim.time / attackCycleTime, 1.0f);
+      float attackPhase = std::fmod(anim.time * INV_ATTACK_CYCLE_TIME, 1.0f);
 
       QVector3D restPos = restHandR;
       QVector3D windupPos = QVector3D(
@@ -215,8 +249,7 @@ public:
     bool isAttacking = anim.isAttacking && anim.isMelee;
     float attackPhase = 0.0f;
     if (isAttacking) {
-      float attackCycleTime = 0.7f;
-      attackPhase = std::fmod(anim.time * (1.0f / attackCycleTime), 1.0f);
+      attackPhase = std::fmod(anim.time * INV_ATTACK_CYCLE_TIME, 1.0f);
     }
 
     if (extras.hasSword) {
@@ -240,7 +273,7 @@ public:
                nullptr, 1.0f);
     };
 
-    QVector3D steelColor = v.palette.metal * QVector3D(0.95f, 0.96f, 1.0f);
+    const QVector3D steelColor = v.palette.metal * STEEL_TINT;
 
     float helmR = pose.headR * 1.15f;
     QVector3D helmBot(0, pose.headPos.y() - pose.headR * 0.20f, 0);
@@ -255,27 +288,29 @@ public:
              cylinderBetween(ctx.model, helmTop, capTop, helmR * 0.98f),
              steelColor * 1.05f, nullptr, 1.0f);
 
+    const QVector3D ringColor = steelColor * 1.08f;
     ring(QVector3D(0, pose.headPos.y() + pose.headR * 1.25f, 0), helmR * 1.02f,
-         0.015f, steelColor * 1.08f);
+         0.015f, ringColor);
     ring(QVector3D(0, pose.headPos.y() + pose.headR * 0.50f, 0), helmR * 1.02f,
-         0.015f, steelColor * 1.08f);
+         0.015f, ringColor);
     ring(QVector3D(0, pose.headPos.y() - pose.headR * 0.05f, 0), helmR * 1.02f,
-         0.015f, steelColor * 1.08f);
+         0.015f, ringColor);
 
-    float visorY = pose.headPos.y() + pose.headR * 0.15f;
-    float visorZ = helmR * 0.72f;
+    const float visorY = pose.headPos.y() + pose.headR * 0.15f;
+    const float visorZ = helmR * 0.72f;
+    static const QVector3D visorColor(0.1f, 0.1f, 0.1f);
 
     QVector3D visorHL(-helmR * 0.35f, visorY, visorZ);
     QVector3D visorHR(helmR * 0.35f, visorY, visorZ);
     out.mesh(getUnitCylinder(),
              cylinderBetween(ctx.model, visorHL, visorHR, 0.012f),
-             QVector3D(0.1f, 0.1f, 0.1f), nullptr, 1.0f);
+             visorColor, nullptr, 1.0f);
 
     QVector3D visorVT(0, visorY + helmR * 0.25f, visorZ);
     QVector3D visorVB(0, visorY - helmR * 0.25f, visorZ);
     out.mesh(getUnitCylinder(),
              cylinderBetween(ctx.model, visorVB, visorVT, 0.012f),
-             QVector3D(0.1f, 0.1f, 0.1f), nullptr, 1.0f);
+             visorColor, nullptr, 1.0f);
 
     auto drawBreathingHole = [&](float x, float y) {
       QVector3D pos(x, pose.headPos.y() + y, helmR * 0.70f);
@@ -293,8 +328,8 @@ public:
       drawBreathingHole(-helmR * 0.50f, pose.headR * (0.05f - i * 0.10f));
     }
 
-    QVector3D plumeBase(0, pose.headPos.y() + pose.headR * 1.50f, 0);
-    QVector3D brassColor = v.palette.metal * QVector3D(1.3f, 1.1f, 0.7f);
+    const QVector3D plumeBase(0, pose.headPos.y() + pose.headR * 1.50f, 0);
+    const QVector3D brassColor = v.palette.metal * BRASS_TINT;
 
     QMatrix4x4 plume = ctx.model;
     plume.translate(plumeBase);
@@ -329,9 +364,9 @@ public:
                nullptr, 1.0f);
     };
 
-    QVector3D steelColor = v.palette.metal * QVector3D(0.95f, 0.96f, 1.0f);
-    QVector3D darkSteel = steelColor * 0.85f;
-    QVector3D brassColor = v.palette.metal * QVector3D(1.3f, 1.1f, 0.7f);
+    const QVector3D steelColor = v.palette.metal * STEEL_TINT;
+    const QVector3D darkSteel = steelColor * 0.85f;
+    const QVector3D brassColor = v.palette.metal * BRASS_TINT;
 
     QVector3D bpTop(0, yTopCover + 0.02f, 0);
     QVector3D bpMid(0, (yTopCover + pose.pelvisPos.y()) * 0.5f + 0.04f, 0);
@@ -428,9 +463,9 @@ public:
                                ISubmitter &out) const override {
     using HP = HumanProportions;
 
-    QVector3D brassColor = v.palette.metal * QVector3D(1.3f, 1.1f, 0.7f);
-    QVector3D chainmailColor = v.palette.metal * QVector3D(0.85f, 0.88f, 0.92f);
-    QVector3D mantlingColor = v.palette.cloth;
+    const QVector3D brassColor = v.palette.metal * BRASS_TINT;
+    const QVector3D chainmailColor = v.palette.metal * CHAINMAIL_TINT;
+    const QVector3D mantlingColor = v.palette.cloth;
 
     for (int i = 0; i < 5; ++i) {
       float y = yNeck - i * 0.022f;

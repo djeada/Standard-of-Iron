@@ -38,6 +38,33 @@ using Render::Geom::lerp;
 using Render::Geom::smoothstep;
 using Render::Geom::sphereAt;
 
+static constexpr std::size_t MAX_EXTRAS_CACHE_SIZE = 10000;
+
+// Optimized math helpers - constexpr for compile-time evaluation
+static constexpr inline float easeInOutCubic(float t) noexcept {
+  const float clamped = (t < 0.0f) ? 0.0f : ((t > 1.0f) ? 1.0f : t);
+  return clamped < 0.5f ? 4.0f * clamped * clamped * clamped
+                        : 1.0f - std::pow(-2.0f * clamped + 2.0f, 3.0f) / 2.0f;
+}
+
+static constexpr inline float smoothstep(float a, float b, float x) noexcept {
+  const float t = (x - a) / (b - a);
+  const float clamped = (t < 0.0f) ? 0.0f : ((t > 1.0f) ? 1.0f : t);
+  return clamped * clamped * (3.0f - 2.0f * clamped);
+}
+
+static constexpr inline float lerp(float a, float b, float t) noexcept {
+  return a * (1.0f - t) + b * t;
+}
+
+// Frequently used constants
+static constexpr float ATTACK_CYCLE_TIME = 0.80f;
+static constexpr float INV_ATTACK_CYCLE_TIME = 1.0f / ATTACK_CYCLE_TIME;
+
+// Common color multipliers
+static const QVector3D IRON_TINT(0.88f, 0.90f, 0.92f);
+static const QVector3D DARK_METAL(0.15f, 0.15f, 0.15f);
+
 struct SpearmanExtras {
   QVector3D spearShaftColor;
   QVector3D spearheadColor;
@@ -128,8 +155,7 @@ public:
                     QVector3D(-0.08f, -0.12f, 0.05f);
 
     } else if (anim.isAttacking && anim.isMelee && !anim.isInHoldMode) {
-      const float attackCycleTime = 0.8f;
-      float attackPhase = std::fmod(anim.time * (1.0f / attackCycleTime), 1.0f);
+      float attackPhase = std::fmod(anim.time * INV_ATTACK_CYCLE_TIME, 1.0f);
 
       QVector3D guardPos(0.28f, HP::SHOULDER_Y + 0.05f, 0.25f);
       QVector3D preparePos(0.35f, HP::SHOULDER_Y + 0.08f, 0.05f);
@@ -210,8 +236,7 @@ public:
     bool isAttacking = anim.isAttacking && anim.isMelee;
     float attackPhase = 0.0f;
     if (isAttacking) {
-      float attackCycleTime = 0.8f;
-      attackPhase = std::fmod(anim.time * (1.0f / attackCycleTime), 1.0f);
+      attackPhase = std::fmod(anim.time * INV_ATTACK_CYCLE_TIME, 1.0f);
     }
 
     drawSpear(ctx, pose, v, extras, anim, isAttacking, attackPhase, out);
@@ -221,9 +246,9 @@ public:
                   const HumanoidPose &pose, ISubmitter &out) const override {
     using HP = HumanProportions;
 
-    QVector3D ironColor = v.palette.metal * QVector3D(0.88f, 0.90f, 0.92f);
+    const QVector3D ironColor = v.palette.metal * IRON_TINT;
 
-    float helmR = pose.headR * 1.12f;
+    const float helmR = pose.headR * 1.12f;
 
     QVector3D helmBot(pose.headPos.x(), pose.headPos.y() - pose.headR * 0.15f,
                       pose.headPos.z());
@@ -264,7 +289,7 @@ public:
       QVector3D visorR(pose.headPos.x() + helmR * 0.30f, y, visorZ);
       out.mesh(getUnitCylinder(),
                cylinderBetween(ctx.model, visorL, visorR, 0.010f),
-               QVector3D(0.15f, 0.15f, 0.15f), nullptr, 1.0f);
+               DARK_METAL, nullptr, 1.0f);
     }
   }
 
@@ -275,8 +300,8 @@ public:
                         ISubmitter &out) const override {
     using HP = HumanProportions;
 
-    QVector3D ironColor = v.palette.metal * QVector3D(0.88f, 0.90f, 0.92f);
-    QVector3D leatherColor = v.palette.leather * 0.95f;
+    const QVector3D ironColor = v.palette.metal * IRON_TINT;
+    const QVector3D leatherColor = v.palette.leather * 0.95f;
 
     QVector3D chestTop(0, yTopCover + 0.02f, 0);
     QVector3D chestBot(0, HP::WAIST_Y + 0.08f, 0);
