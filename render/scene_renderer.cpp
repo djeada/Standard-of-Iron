@@ -169,6 +169,18 @@ void Renderer::pineBatch(Buffer *instanceBuffer, std::size_t instanceCount,
   m_activeQueue->submit(cmd);
 }
 
+void Renderer::firecampBatch(Buffer *instanceBuffer, std::size_t instanceCount,
+                              const FireCampBatchParams &params) {
+  if (!instanceBuffer || instanceCount == 0 || !m_activeQueue)
+    return;
+  FireCampBatchCmd cmd;
+  cmd.instanceBuffer = instanceBuffer;
+  cmd.instanceCount = instanceCount;
+  cmd.params = params;
+  cmd.params.time = m_accumulatedTime;
+  m_activeQueue->submit(cmd);
+}
+
 void Renderer::terrainChunk(Mesh *mesh, const QMatrix4x4 &model,
                             const TerrainChunkParams &params,
                             std::uint16_t sortKey, bool depthWrite,

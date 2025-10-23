@@ -31,6 +31,7 @@ private:
   int m_gridHeight = 0;
   std::vector<float> m_heights;
   std::vector<std::unique_ptr<Mesh>> m_meshes;
+  std::vector<std::vector<QVector3D>> m_visibilitySamples;
 };
 
 } // namespace GL
