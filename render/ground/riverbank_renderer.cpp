@@ -5,6 +5,7 @@
 #include "../scene_renderer.h"
 #include <QVector2D>
 #include <QVector3D>
+#include <algorithm>
 #include <cmath>
 
 namespace Render::GL {
@@ -25,6 +26,7 @@ void RiverbankRenderer::configure(
 
 void RiverbankRenderer::buildMeshes() {
   m_meshes.clear();
+  m_visibilitySamples.clear();
 
   if (m_riverSegments.empty()) {
     return;
@@ -88,6 +90,7 @@ void RiverbankRenderer::buildMeshes() {
     float length = dir.length();
     if (length < 0.01f) {
       m_meshes.push_back(nullptr);
+      m_visibilitySamples.emplace_back();
       continue;
     }
 
@@ -103,6 +106,7 @@ void RiverbankRenderer::buildMeshes() {
 
     std::vector<Vertex> vertices;
     std::vector<unsigned int> indices;
+    std::vector<QVector3D> samples;
 
     for (int i = 0; i < lengthSteps; ++i) {
       float t = static_cast<float>(i) / static_cast<float>(lengthSteps - 1);
@@ -133,6 +137,8 @@ void RiverbankRenderer::buildMeshes() {
           centerPos - perpendicular * (halfWidth + widthVariation);
       QVector3D innerRight =
           centerPos + perpendicular * (halfWidth + widthVariation);
+      samples.push_back(innerLeft);
+      samples.push_back(innerRight);
 
       float outerVariation =
           noise(centerPos.x() * 8.0f, centerPos.z() * 8.0f) * 0.5f;
@@ -214,8 +220,10 @@ void RiverbankRenderer::buildMeshes() {
 
     if (!vertices.empty() && !indices.empty()) {
       m_meshes.push_back(std::make_unique<Mesh>(vertices, indices));
+      m_visibilitySamples.push_back(std::move(samples));
     } else {
       m_meshes.push_back(nullptr);
+      m_visibilitySamples.emplace_back();
     }
   }
 }
@@ -253,25 +261,23 @@ void RiverbankRenderer::submit(Renderer &renderer, ResourceManager *resources) {
     }
 
     if (useVisibility) {
-      QVector3D dir = segment.end - segment.start;
-      float length = dir.length();
-
-      bool allVisible = true;
-      dir.normalize();
-
-      int samplesPerSegment = 5;
-      for (int i = 0; i < samplesPerSegment; ++i) {
-        float t =
-            static_cast<float>(i) / static_cast<float>(samplesPerSegment - 1);
-        QVector3D pos = segment.start + dir * (length * t);
-
-        if (!visibility.isVisibleWorld(pos.x(), pos.z())) {
-          allVisible = false;
-          break;
+      bool anyVisible = false;
+      if (meshIndex - 1 < m_visibilitySamples.size()) {
+        const auto &samples = m_visibilitySamples[meshIndex - 1];
+        const int minRequired =
+            std::max<int>(2, static_cast<int>(samples.size() * 0.3f));
+        int visibleCount = 0;
+        for (const auto &pos : samples) {
+          if (visibility.isVisibleWorld(pos.x(), pos.z())) {
+            ++visibleCount;
+            if (visibleCount >= minRequired) {
+              anyVisible = true;
+              break;
+            }
+          }
         }
       }
-
-      if (!allVisible) {
+      if (!anyVisible) {
         continue;
       }
     }

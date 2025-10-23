@@ -84,6 +84,7 @@ private:
   Shader *m_stoneShader = nullptr;
   Shader *m_plantShader = nullptr;
   Shader *m_pineShader = nullptr;
+  Shader *m_firecampShader = nullptr;
   Shader *m_groundShader = nullptr;
   Shader *m_terrainShader = nullptr;
   Shader *m_riverShader = nullptr;
@@ -173,6 +174,17 @@ private:
     Shader::UniformHandle windSpeed{Shader::InvalidUniform};
     Shader::UniformHandle lightDirection{Shader::InvalidUniform};
   } m_pineUniforms;
+
+  struct FireCampUniforms {
+    Shader::UniformHandle viewProj{Shader::InvalidUniform};
+    Shader::UniformHandle time{Shader::InvalidUniform};
+    Shader::UniformHandle flickerSpeed{Shader::InvalidUniform};
+    Shader::UniformHandle flickerAmount{Shader::InvalidUniform};
+    Shader::UniformHandle glowStrength{Shader::InvalidUniform};
+    Shader::UniformHandle fireTexture{Shader::InvalidUniform};
+    Shader::UniformHandle cameraRight{Shader::InvalidUniform};
+    Shader::UniformHandle cameraForward{Shader::InvalidUniform};
+  } m_firecampUniforms;
 
   struct GroundUniforms {
     Shader::UniformHandle mvp{Shader::InvalidUniform};
@@ -274,6 +286,12 @@ private:
   GLsizei m_pineIndexCount = 0;
   GLsizei m_pineVertexCount = 0;
 
+  GLuint m_firecampVao = 0;
+  GLuint m_firecampVertexBuffer = 0;
+  GLuint m_firecampIndexBuffer = 0;
+  GLsizei m_firecampIndexCount = 0;
+  GLsizei m_firecampVertexCount = 0;
+
   void cacheBasicUniforms();
   void cacheArcherUniforms();
   void cacheKnightUniforms();
@@ -301,6 +319,9 @@ private:
   void cachePineUniforms();
   void initializePinePipeline();
   void shutdownPinePipeline();
+  void cacheFireCampUniforms();
+  void initializeFireCampPipeline();
+  void shutdownFireCampPipeline();
   void cacheGroundUniforms();
   void cacheTerrainUniforms();
   void cacheRiverUniforms();
