@@ -76,9 +76,9 @@ private:
     m_maxUnitsPerRow[TroopType::Spearman] = 6;
     m_selectionRingSize[TroopType::Spearman] = 1.4f;
 
-    m_individualsPerUnit[TroopType::MountedKnight] = 10;
-    m_maxUnitsPerRow[TroopType::MountedKnight] = 5;
-    m_selectionRingSize[TroopType::MountedKnight] = 1.0f;
+    m_individualsPerUnit[TroopType::MountedKnight] = 9;
+    m_maxUnitsPerRow[TroopType::MountedKnight] = 3;
+    m_selectionRingSize[TroopType::MountedKnight] = 2.0f;
   }
 
   std::unordered_map<TroopType, int> m_individualsPerUnit;
