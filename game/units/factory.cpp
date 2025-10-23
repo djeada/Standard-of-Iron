@@ -9,26 +9,26 @@ namespace Game {
 namespace Units {
 
 void registerBuiltInUnits(UnitFactoryRegistry &reg) {
-  reg.registerFactory(
-      "archer", [](Engine::Core::World &world, const SpawnParams &params) {
-        return Archer::Create(world, params);
-      });
-  reg.registerFactory(
-      "knight", [](Engine::Core::World &world, const SpawnParams &params) {
-        return Knight::Create(world, params);
-      });
-  reg.registerFactory("mounted_knight", [](Engine::Core::World &world,
-                                           const SpawnParams &params) {
+  reg.registerFactory(TroopType::Archer, [](Engine::Core::World &world,
+                                            const SpawnParams &params) {
+    return Archer::Create(world, params);
+  });
+  reg.registerFactory(TroopType::Knight, [](Engine::Core::World &world,
+                                            const SpawnParams &params) {
+    return Knight::Create(world, params);
+  });
+  reg.registerFactory(TroopType::MountedKnight, [](Engine::Core::World &world,
+                                                   const SpawnParams &params) {
     return MountedKnight::Create(world, params);
   });
-  reg.registerFactory(
-      "spearman", [](Engine::Core::World &world, const SpawnParams &params) {
-        return Spearman::Create(world, params);
-      });
-  reg.registerFactory(
-      "barracks", [](Engine::Core::World &world, const SpawnParams &params) {
-        return Barracks::Create(world, params);
-      });
+  reg.registerFactory(TroopType::Spearman, [](Engine::Core::World &world,
+                                              const SpawnParams &params) {
+    return Spearman::Create(world, params);
+  });
+  reg.registerFactory("barracks", [](Engine::Core::World &world,
+                                     const SpawnParams &params) {
+    return Barracks::Create(world, params);
+  });
 }
 
 } // namespace Units

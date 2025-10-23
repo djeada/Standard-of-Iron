@@ -1,4 +1,5 @@
 #include "ai_tactical.h"
+#include "../../units/troop_type.h"
 #include "../nation_registry.h"
 #include "ai_utils.h"
 #include <algorithm>
@@ -201,10 +202,11 @@ float TacticalUtils::getUnitTypePriority(const std::string &unitType,
                                          const Game::Systems::Nation *nation) {
 
   if (nation) {
-    if (nation->isRangedUnit(unitType)) {
+    auto troopType = Game::Units::troopTypeFromString(unitType);
+    if (nation->isRangedUnit(troopType)) {
       return 3.0f;
     }
-    if (nation->isMeleeUnit(unitType)) {
+    if (nation->isMeleeUnit(troopType)) {
       return 2.0f;
     }
   }
