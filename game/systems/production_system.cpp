@@ -62,10 +62,11 @@ void ProductionSystem::update(Engine::Core::World *world, float deltaTime) {
           Game::Units::SpawnParams sp;
           sp.position = exitPos;
           sp.playerId = u->ownerId;
-          sp.unitType = Game::Units::troopTypeToString(prod->productType);
+          sp.spawnType = Game::Units::spawnTypeFromTroopType(prod->productType);
+          sp.unitType = Game::Units::spawnTypeToString(sp.spawnType);
           sp.aiControlled =
               e->hasComponent<Engine::Core::AIControlledComponent>();
-          auto unit = reg->create(prod->productType, *world, sp);
+          auto unit = reg->create(sp.spawnType, *world, sp);
 
           if (unit && prod->rallySet) {
             unit->moveTo(prod->rallyX, prod->rallyZ);
