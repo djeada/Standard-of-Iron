@@ -8,21 +8,38 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+# ---- Windows-specific definitions ----
+if(WIN32)
+    add_compile_definitions(NOMINMAX)  # Prevent min/max macros from windows.h
+endif()
+
 # ---- Compiler Optimization Flags ----
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    # Debug build: enable debugging symbols and disable optimizations
-    set(CMAKE_CXX_FLAGS_DEBUG "-g3 -O0 -DDEBUG")
-    set(CMAKE_C_FLAGS_DEBUG "-g3 -O0 -DDEBUG")
-    # Additional GDB-friendly flags
-    add_compile_options(-ggdb3)           # Maximum debug info for GDB
-    add_compile_options(-fno-omit-frame-pointer)  # Keep frame pointers for better backtraces
-    add_compile_options(-fno-inline)      # Don't inline functions for easier debugging
-    # Disable optimizations that make debugging harder
-    add_compile_options(-fno-optimize-sibling-calls)
+    if(MSVC)
+        # MSVC Debug flags
+        set(CMAKE_CXX_FLAGS_DEBUG "/Od /Zi /DDEBUG")
+        set(CMAKE_C_FLAGS_DEBUG "/Od /Zi /DDEBUG")
+    else()
+        # GCC/Clang Debug flags
+        set(CMAKE_CXX_FLAGS_DEBUG "-g3 -O0 -DDEBUG")
+        set(CMAKE_C_FLAGS_DEBUG "-g3 -O0 -DDEBUG")
+        # Additional GDB-friendly flags
+        add_compile_options(-ggdb3)           # Maximum debug info for GDB
+        add_compile_options(-fno-omit-frame-pointer)  # Keep frame pointers for better backtraces
+        add_compile_options(-fno-inline)      # Don't inline functions for easier debugging
+        # Disable optimizations that make debugging harder
+        add_compile_options(-fno-optimize-sibling-calls)
+    endif()
     message(STATUS "Building in DEBUG mode with GDB support")
 else()
     # Release/RelWithDebInfo: optimize for performance
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -ffast-math")
+    if(MSVC)
+        # MSVC Release flags
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /O2")
+    else()
+        # GCC/Clang Release flags
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -ffast-math")
+    endif()
     set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)  # Enable LTO
     message(STATUS "Building in RELEASE mode with optimizations")
 endif()
