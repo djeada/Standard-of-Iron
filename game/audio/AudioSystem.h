@@ -13,7 +13,7 @@
 #include <vector>
 
 class Sound;
-class Music;
+namespace Game { namespace Audio { class MusicPlayer; } }
 
 enum class AudioEventType {
   PLAY_SOUND,
@@ -94,12 +94,16 @@ private:
   void cleanupInactiveSounds();
   bool canPlaySound(int priority);
   void evictLowestPrioritySound();
+  void evictLowestPrioritySoundLocked();
   float getEffectiveVolume(AudioCategory category, float eventVolume) const;
 
   std::unordered_map<std::string, std::unique_ptr<Sound>> sounds;
-  std::unordered_map<std::string, std::unique_ptr<Music>> music;
   std::unordered_map<std::string, AudioCategory> soundCategories;
   std::unordered_set<std::string> activeResources;
+  mutable std::mutex resourceMutex;
+  
+  // Use singleton MusicPlayer instead of individual Music objects
+  Game::Audio::MusicPlayer* m_musicPlayer;
 
   std::thread audioThread;
   std::queue<AudioEvent> eventQueue;

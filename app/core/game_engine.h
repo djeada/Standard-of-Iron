@@ -189,7 +189,7 @@ public:
   Q_INVOKABLE void exitGame();
   Q_INVOKABLE QVariantList getOwnerInfo() const;
 
-  QObject *audioSystem() { return m_audioSystemProxy.get(); }
+  QObject *audioSystem();
 
   void setWindow(QQuickWindow *w) { m_window = w; }
 
