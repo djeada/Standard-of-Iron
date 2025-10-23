@@ -138,6 +138,8 @@ public:
                   const PlantBatchParams &params);
   void pineBatch(Buffer *instanceBuffer, std::size_t instanceCount,
                  const PineBatchParams &params);
+  void firecampBatch(Buffer *instanceBuffer, std::size_t instanceCount,
+                     const FireCampBatchParams &params);
 
 private:
   Camera *m_camera = nullptr;

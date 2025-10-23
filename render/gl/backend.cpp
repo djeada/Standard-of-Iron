@@ -55,6 +55,7 @@ void Backend::initialize() {
   m_stoneShader = m_shaderCache->get(QStringLiteral("stone_instanced"));
   m_plantShader = m_shaderCache->get(QStringLiteral("plant_instanced"));
   m_pineShader = m_shaderCache->get(QStringLiteral("pine_instanced"));
+  m_firecampShader = m_shaderCache->get(QStringLiteral("firecamp"));
   m_groundShader = m_shaderCache->get(QStringLiteral("ground_plane"));
   m_terrainShader = m_shaderCache->get(QStringLiteral("terrain_chunk"));
   m_riverShader = m_shaderCache->get(QStringLiteral("river"));
@@ -81,6 +82,9 @@ void Backend::initialize() {
   if (!m_pineShader)
     qWarning()
         << "Backend: pine shader missing - check pine_instanced.vert/frag";
+  if (!m_firecampShader)
+    qWarning()
+        << "Backend: firecamp shader missing - check firecamp.vert/frag";
   if (!m_groundShader)
     qWarning() << "Backend: ground_plane shader missing";
   if (!m_terrainShader)
@@ -109,6 +113,7 @@ void Backend::initialize() {
   cacheStoneUniforms();
   cachePlantUniforms();
   cachePineUniforms();
+  cacheFireCampUniforms();
   cacheGroundUniforms();
   cacheTerrainUniforms();
   cacheRiverUniforms();
@@ -120,6 +125,7 @@ void Backend::initialize() {
   initializeStonePipeline();
   initializePlantPipeline();
   initializePinePipeline();
+  initializeFireCampPipeline();
 }
 
 void Backend::beginFrame() {
@@ -480,6 +486,98 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
 
       break;
     }
+    case FireCampBatchCmdIndex: {
+      const auto &firecamp = std::get<FireCampBatchCmdIndex>(cmd);
+
+      if (!firecamp.instanceBuffer || firecamp.instanceCount == 0 ||
+          !m_firecampShader || !m_firecampVao || m_firecampIndexCount == 0) {
+        break;
+      }
+
+      DepthMaskScope depthMask(true);
+      glEnable(GL_DEPTH_TEST);
+      BlendScope blend(true);
+      glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+      GLboolean prevCull = glIsEnabled(GL_CULL_FACE);
+      if (prevCull)
+        glDisable(GL_CULL_FACE);
+
+      if (m_lastBoundShader != m_firecampShader) {
+        m_firecampShader->use();
+        m_lastBoundShader = m_firecampShader;
+        m_lastBoundTexture = nullptr;
+      }
+
+      if (m_firecampUniforms.viewProj != Shader::InvalidUniform) {
+        m_firecampShader->setUniform(m_firecampUniforms.viewProj, viewProj);
+      }
+      if (m_firecampUniforms.time != Shader::InvalidUniform) {
+        m_firecampShader->setUniform(m_firecampUniforms.time,
+                                     firecamp.params.time);
+      }
+      if (m_firecampUniforms.flickerSpeed != Shader::InvalidUniform) {
+        m_firecampShader->setUniform(m_firecampUniforms.flickerSpeed,
+                                     firecamp.params.flickerSpeed);
+      }
+      if (m_firecampUniforms.flickerAmount != Shader::InvalidUniform) {
+        m_firecampShader->setUniform(m_firecampUniforms.flickerAmount,
+                                     firecamp.params.flickerAmount);
+      }
+      if (m_firecampUniforms.glowStrength != Shader::InvalidUniform) {
+        m_firecampShader->setUniform(m_firecampUniforms.glowStrength,
+                                     firecamp.params.glowStrength);
+      }
+      if (m_firecampUniforms.cameraRight != Shader::InvalidUniform) {
+        QVector3D cameraRight = cam.getRightVector();
+        if (cameraRight.lengthSquared() < 1e-6f) {
+          cameraRight = QVector3D(1.0f, 0.0f, 0.0f);
+        } else {
+          cameraRight.normalize();
+        }
+        m_firecampShader->setUniform(m_firecampUniforms.cameraRight,
+                                     cameraRight);
+      }
+      if (m_firecampUniforms.cameraForward != Shader::InvalidUniform) {
+        QVector3D cameraForward = cam.getForwardVector();
+        if (cameraForward.lengthSquared() < 1e-6f) {
+          cameraForward = QVector3D(0.0f, 0.0f, -1.0f);
+        } else {
+          cameraForward.normalize();
+        }
+        m_firecampShader->setUniform(m_firecampUniforms.cameraForward,
+                                     cameraForward);
+      }
+
+      // Bind white texture if no fire texture is available
+      if (m_firecampUniforms.fireTexture != Shader::InvalidUniform) {
+        if (m_resources && m_resources->white()) {
+          m_resources->white()->bind(0);
+          m_firecampShader->setUniform(m_firecampUniforms.fireTexture, 0);
+        }
+      }
+
+      glBindVertexArray(m_firecampVao);
+      firecamp.instanceBuffer->bind();
+      const GLsizei stride =
+          static_cast<GLsizei>(sizeof(FireCampInstanceGpu));
+      glVertexAttribPointer(
+          3, 4, GL_FLOAT, GL_FALSE, stride,
+          reinterpret_cast<void *>(offsetof(FireCampInstanceGpu, posIntensity)));
+      glVertexAttribPointer(
+          4, 4, GL_FLOAT, GL_FALSE, stride,
+          reinterpret_cast<void *>(offsetof(FireCampInstanceGpu, radiusPhase)));
+      firecamp.instanceBuffer->unbind();
+
+      glDrawElementsInstanced(GL_TRIANGLES, m_firecampIndexCount,
+                              GL_UNSIGNED_SHORT, nullptr,
+                              static_cast<GLsizei>(firecamp.instanceCount));
+      glBindVertexArray(0);
+
+      if (prevCull)
+        glEnable(GL_CULL_FACE);
+
+      break;
+    }
     case TerrainChunkCmdIndex: {
       const auto &terrain = std::get<TerrainChunkCmdIndex>(cmd);
 
@@ -755,7 +853,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       m_basicShader->setUniform(m_basicUniforms.color, sc.color);
 
       DepthMaskScope depthMask(false);
-      DepthTestScope depthTest(true);
+      DepthTestScope depthTest(false);
       PolygonOffsetScope poly(-1.0f, -1.0f);
       BlendScope blend(true);
 
@@ -1489,6 +1587,25 @@ void Backend::cachePineUniforms() {
   }
 }
 
+void Backend::cacheFireCampUniforms() {
+  if (m_firecampShader) {
+    m_firecampUniforms.viewProj = m_firecampShader->uniformHandle("u_viewProj");
+    m_firecampUniforms.time = m_firecampShader->uniformHandle("u_time");
+    m_firecampUniforms.flickerSpeed =
+        m_firecampShader->uniformHandle("u_flickerSpeed");
+    m_firecampUniforms.flickerAmount =
+        m_firecampShader->uniformHandle("u_flickerAmount");
+    m_firecampUniforms.glowStrength =
+        m_firecampShader->uniformHandle("u_glowStrength");
+    m_firecampUniforms.fireTexture =
+        m_firecampShader->uniformHandle("fireTexture");
+    m_firecampUniforms.cameraRight =
+        m_firecampShader->uniformHandle("u_cameraRight");
+    m_firecampUniforms.cameraForward =
+        m_firecampShader->uniformHandle("u_cameraForward");
+  }
+}
+
 void Backend::initializePlantPipeline() {
   initializeOpenGLFunctions();
   shutdownPlantPipeline();
@@ -1743,6 +1860,101 @@ void Backend::shutdownPinePipeline() {
   }
   m_pineVertexCount = 0;
   m_pineIndexCount = 0;
+}
+
+void Backend::initializeFireCampPipeline() {
+  initializeOpenGLFunctions();
+  shutdownFireCampPipeline();
+
+  // Simple quad for billboard fire camp rendering
+  struct FireCampVertex {
+    QVector3D position;
+    QVector2D texCoord;
+  };
+
+  std::vector<FireCampVertex> vertices;
+  vertices.reserve(12);
+  std::vector<unsigned short> indices;
+  indices.reserve(18);
+
+  auto appendPlane = [&](float planeIndex) {
+    unsigned short base = static_cast<unsigned short>(vertices.size());
+    vertices.push_back({QVector3D(-1.0f, 0.0f, planeIndex),
+                        QVector2D(0.0f, 0.0f)}); // bottom-left
+    vertices.push_back({QVector3D(1.0f, 0.0f, planeIndex),
+                        QVector2D(1.0f, 0.0f)}); // bottom-right
+    vertices.push_back({QVector3D(1.0f, 2.0f, planeIndex),
+                        QVector2D(1.0f, 1.0f)}); // top-right
+    vertices.push_back({QVector3D(-1.0f, 2.0f, planeIndex),
+                        QVector2D(0.0f, 1.0f)}); // top-left
+
+    indices.push_back(base + 0);
+    indices.push_back(base + 1);
+    indices.push_back(base + 2);
+    indices.push_back(base + 0);
+    indices.push_back(base + 2);
+    indices.push_back(base + 3);
+  };
+
+  appendPlane(0.0f);
+  appendPlane(1.0f);
+  appendPlane(2.0f);
+
+  glGenVertexArrays(1, &m_firecampVao);
+  glBindVertexArray(m_firecampVao);
+
+  glGenBuffers(1, &m_firecampVertexBuffer);
+  glBindBuffer(GL_ARRAY_BUFFER, m_firecampVertexBuffer);
+  glBufferData(
+      GL_ARRAY_BUFFER,
+      static_cast<GLsizeiptr>(vertices.size() * sizeof(FireCampVertex)),
+      vertices.data(), GL_STATIC_DRAW);
+  m_firecampVertexCount = static_cast<GLsizei>(vertices.size());
+
+  glEnableVertexAttribArray(0);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(FireCampVertex),
+                        reinterpret_cast<void *>(0));
+
+  glEnableVertexAttribArray(1);
+  glVertexAttribPointer(
+      1, 2, GL_FLOAT, GL_FALSE, sizeof(FireCampVertex),
+      reinterpret_cast<void *>(offsetof(FireCampVertex, texCoord)));
+
+  glGenBuffers(1, &m_firecampIndexBuffer);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_firecampIndexBuffer);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+               static_cast<GLsizeiptr>(indices.size() * sizeof(unsigned short)),
+               indices.data(), GL_STATIC_DRAW);
+  m_firecampIndexCount = static_cast<GLsizei>(indices.size());
+
+  // Setup instance attribute pointers (will be set per-instance)
+  glEnableVertexAttribArray(3);
+  glVertexAttribDivisor(3, 1);
+
+  glEnableVertexAttribArray(4);
+  glVertexAttribDivisor(4, 1);
+
+  glBindVertexArray(0);
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+}
+
+void Backend::shutdownFireCampPipeline() {
+  initializeOpenGLFunctions();
+  if (m_firecampIndexBuffer) {
+    glDeleteBuffers(1, &m_firecampIndexBuffer);
+    m_firecampIndexBuffer = 0;
+  }
+  if (m_firecampVertexBuffer) {
+    glDeleteBuffers(1, &m_firecampVertexBuffer);
+    m_firecampVertexBuffer = 0;
+  }
+  if (m_firecampVao) {
+    glDeleteVertexArrays(1, &m_firecampVao);
+    m_firecampVao = 0;
+  }
+  m_firecampVertexCount = 0;
+  m_firecampIndexCount = 0;
 }
 
 } // namespace Render::GL

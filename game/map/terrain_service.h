@@ -2,10 +2,12 @@
 
 #include "terrain.h"
 #include <memory>
+#include <vector>
 
 namespace Game::Map {
 
 struct MapDefinition;
+struct FireCamp;
 
 class TerrainService {
 public:
@@ -33,6 +35,8 @@ public:
 
   const BiomeSettings &biomeSettings() const { return m_biomeSettings; }
 
+  const std::vector<FireCamp> &fireCamps() const { return m_fireCamps; }
+
   bool isInitialized() const { return m_heightMap != nullptr; }
 
   void restoreFromSerialized(int width, int height, float tileSize,
@@ -51,6 +55,7 @@ private:
 
   std::unique_ptr<TerrainHeightMap> m_heightMap;
   BiomeSettings m_biomeSettings;
+  std::vector<FireCamp> m_fireCamps;
 };
 
 } // namespace Game::Map

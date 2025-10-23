@@ -88,6 +88,21 @@
     { "type": "mounted_knight", "x": 192, "z": 58, "playerId": 4 },
     { "type": "spearman", "x": 190, "z": 55, "playerId": 4 }
   ],
+  "firecamps": [
+    { "x": 54, "z": 65, "intensity": 1.0, "radius": 3.0 },
+    { "x": 66, "z": 54, "intensity": 1.1, "radius": 3.2 },
+    { "x": 184, "z": 195, "intensity": 0.9, "radius": 2.8 },
+    { "x": 196, "z": 184, "intensity": 1.0, "radius": 3.0 },
+    { "x": 120, "z": 130, "intensity": 1.2, "radius": 3.5 },
+    { "x": 54, "z": 195, "intensity": 1.0, "radius": 3.0 },
+    { "x": 66, "z": 184, "intensity": 0.95, "radius": 3.1 },
+    { "x": 184, "z": 54, "intensity": 1.05, "radius": 3.2 },
+    { "x": 196, "z": 66, "intensity": 1.0, "radius": 3.0 },
+    { "x": 80, "z": 80, "intensity": 0.85, "radius": 2.5 },
+    { "x": 170, "z": 170, "intensity": 0.9, "radius": 2.7 },
+    { "x": 80, "z": 170, "intensity": 0.88, "radius": 2.6 },
+    { "x": 170, "z": 80, "intensity": 0.92, "radius": 2.8 }
+  ],
   "terrain": [
     {
       "type": "hill",
