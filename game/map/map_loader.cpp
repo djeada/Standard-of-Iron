@@ -1,5 +1,6 @@
 #include "map_loader.h"
 
+#include <QDebug>
 #include <QFile>
 #include <QJsonArray>
 #include <QJsonDocument>
@@ -187,7 +188,11 @@ static void readSpawns(const QJsonArray &arr, std::vector<UnitSpawn> &out) {
   for (const auto &v : arr) {
     auto o = v.toObject();
     UnitSpawn s;
-    s.type = o.value("type").toString();
+    const QString typeStr = o.value("type").toString();
+    if (!Game::Units::tryParseSpawnType(typeStr, s.type)) {
+      qWarning() << "MapLoader: unknown spawn type" << typeStr << "- skipping";
+      continue;
+    }
     s.x = float(o.value("x").toDouble(0.0));
     s.z = float(o.value("z").toDouble(0.0));
 

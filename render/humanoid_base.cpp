@@ -2,6 +2,7 @@
 #include "../game/core/component.h"
 #include "../game/core/entity.h"
 #include "../game/core/world.h"
+#include "../game/map/terrain_service.h"
 #include "../game/units/troop_config.h"
 #include "../game/visuals/team_colors.h"
 #include "geom/math_utils.h"
@@ -504,17 +505,45 @@ void HumanoidRendererBase::drawSelectionFX(const DrawContext &ctx,
                                            ISubmitter &out) {
   if (ctx.selected || ctx.hovered) {
     float ringSize = 0.5f;
+    float ringOffset = 0.05f;
     if (ctx.entity) {
       auto *unit = ctx.entity->getComponent<Engine::Core::UnitComponent>();
       if (unit && !unit->unitType.empty()) {
         ringSize = Game::Units::TroopConfig::instance().getSelectionRingSize(
             unit->unitType);
+        ringOffset += Game::Units::TroopConfig::instance()
+                          .getSelectionRingYOffset(unit->unitType);
       }
     }
 
-    QMatrix4x4 ringM;
     QVector3D pos = ctx.model.column(3).toVector3D();
-    ringM.translate(pos.x(), pos.y() + 0.05f, pos.z());
+    float groundY = pos.y();
+    bool haveTransformPosition = false;
+    auto &terrainService = Game::Map::TerrainService::instance();
+    if (terrainService.isInitialized()) {
+      groundY = terrainService.getTerrainHeight(pos.x(), pos.z());
+    } else if (ctx.entity) {
+      if (auto *transform =
+              ctx.entity->getComponent<Engine::Core::TransformComponent>()) {
+        groundY = transform->position.y;
+        pos.setX(transform->position.x);
+        pos.setZ(transform->position.z);
+        haveTransformPosition = true;
+      }
+    }
+
+    if (!haveTransformPosition && ctx.entity) {
+      if (auto *transform =
+              ctx.entity->getComponent<Engine::Core::TransformComponent>()) {
+        pos.setX(transform->position.x);
+        pos.setZ(transform->position.z);
+      }
+    }
+
+    pos.setY(groundY);
+
+    QMatrix4x4 ringM;
+    ringM.translate(pos.x(), pos.y() + ringOffset, pos.z());
     ringM.scale(ringSize, 1.0f, ringSize);
     if (ctx.selected)
       out.selectionRing(ringM, 0.6f, 0.25f, QVector3D(0.2f, 0.4f, 1.0f));

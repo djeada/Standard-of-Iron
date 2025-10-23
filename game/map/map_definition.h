@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../units/spawn_type.h"
 #include "terrain.h"
 #include <QString>
 #include <QVector3D>
@@ -26,7 +27,7 @@ struct CameraDefinition {
 };
 
 struct UnitSpawn {
-  QString type;
+  Game::Units::SpawnType type = Game::Units::SpawnType::Archer;
   float x = 0.0f;
   float z = 0.0f;
   int playerId = 0;

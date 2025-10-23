@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../units/troop_type.h"
 #include "unit.h"
+#include "spawn_type.h"
 #include <functional>
 #include <memory>
 #include <string>
@@ -15,34 +15,26 @@ public:
   using Factory = std::function<std::unique_ptr<Unit>(Engine::Core::World &,
                                                       const SpawnParams &)>;
 
-  void registerFactory(TroopType type, Factory f) {
-    m_enumMap[type] = std::move(f);
+  void registerFactory(SpawnType type, Factory f) {
+    m_factories[type] = std::move(f);
   }
 
-  void registerFactory(const std::string &type, Factory f) {
-    m_stringMap[type] = std::move(f);
+  std::unique_ptr<Unit> create(SpawnType type, Engine::Core::World &world,
+                               const SpawnParams &params) const {
+    auto it = m_factories.find(type);
+    if (it == m_factories.end())
+      return nullptr;
+    return it->second(world, params);
   }
 
   std::unique_ptr<Unit> create(TroopType type, Engine::Core::World &world,
                                const SpawnParams &params) const {
-    auto it = m_enumMap.find(type);
-    if (it == m_enumMap.end())
-      return nullptr;
-    return it->second(world, params);
-  }
-
-  std::unique_ptr<Unit> create(const std::string &type,
-                               Engine::Core::World &world,
-                               const SpawnParams &params) const {
-    auto it = m_stringMap.find(type);
-    if (it == m_stringMap.end())
-      return nullptr;
-    return it->second(world, params);
+    const SpawnType spawnType = spawnTypeFromTroopType(type);
+    return create(spawnType, world, params);
   }
 
 private:
-  std::unordered_map<TroopType, Factory> m_enumMap;
-  std::unordered_map<std::string, Factory> m_stringMap;
+  std::unordered_map<SpawnType, Factory> m_factories;
 };
 
 void registerBuiltInUnits(UnitFactoryRegistry &reg);
