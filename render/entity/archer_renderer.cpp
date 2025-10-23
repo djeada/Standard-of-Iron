@@ -133,8 +133,7 @@ public:
     }
 
     if (anim.isAttacking && !anim.isInHoldMode) {
-      float attackCycleTime = 1.2f;
-      float attackPhase = fmod(anim.time * (1.0f / attackCycleTime), 1.0f);
+      float attackPhase = fmod(anim.time * ARCHER_INV_ATTACK_CYCLE_TIME, 1.0f);
 
       if (anim.isMelee) {
         QVector3D restPos(0.25f, HP::SHOULDER_Y, 0.10f);
@@ -264,8 +263,7 @@ public:
 
     float attackPhase = 0.0f;
     if (anim.isAttacking && !anim.isMelee) {
-      float attackCycleTime = 1.2f;
-      attackPhase = fmod(anim.time * (1.0f / attackCycleTime), 1.0f);
+      attackPhase = fmod(anim.time * ARCHER_INV_ATTACK_CYCLE_TIME, 1.0f);
     }
     drawBowAndArrow(ctx, pose, v, extras, anim.isAttacking && !anim.isMelee,
                     attackPhase, out);
@@ -633,4 +631,4 @@ void registerArcherRenderer(Render::GL::EntityRendererRegistry &registry) {
       });
 }
 
-} // namespace Render::GL
+} 

@@ -44,4 +44,4 @@ enum class MaterialType : uint8_t {
   Skin = 4
 };
 
-} // namespace Render::GL
+} 

@@ -16,4 +16,4 @@ struct HumanoidPalette {
 
 HumanoidPalette makeHumanoidPalette(const QVector3D &teamTint, uint32_t seed);
 
-} // namespace Render::GL
+} 

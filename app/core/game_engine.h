@@ -29,8 +29,8 @@ using EntityID = unsigned int;
 struct MovementComponent;
 struct TransformComponent;
 struct RenderableComponent;
-} // namespace Core
-} // namespace Engine
+} 
+} 
 
 namespace Render {
 namespace GL {
@@ -48,8 +48,8 @@ class StoneRenderer;
 class PlantRenderer;
 class PineRenderer;
 struct IRenderPass;
-} // namespace GL
-} // namespace Render
+} 
+} 
 
 namespace Game {
 namespace Systems {
@@ -60,11 +60,11 @@ class PickingService;
 class VictoryService;
 class CameraService;
 class SaveLoadService;
-} // namespace Systems
+} 
 namespace Map {
 class MapCatalog;
 }
-} // namespace Game
+} 
 
 namespace App {
 namespace Controllers {
@@ -73,7 +73,7 @@ class CommandController;
 namespace Models {
 class AudioSystemProxy;
 }
-} // namespace App
+} 
 
 class QQuickWindow;
 

@@ -39,4 +39,4 @@ Mesh *createQuadMesh();
 Mesh *createCubeMesh();
 Mesh *createPlaneMesh(float width, float height, int subdivisions = 1);
 
-} // namespace Render::GL
+} 

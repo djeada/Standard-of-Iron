@@ -29,6 +29,7 @@
 
 namespace Render::GL {
 
+
 using Render::Geom::clamp01;
 using Render::Geom::clampf;
 using Render::Geom::coneFromTo;
@@ -37,33 +38,6 @@ using Render::Geom::easeInOutCubic;
 using Render::Geom::lerp;
 using Render::Geom::smoothstep;
 using Render::Geom::sphereAt;
-
-static constexpr std::size_t MAX_EXTRAS_CACHE_SIZE = 10000;
-
-// Optimized math helpers - constexpr for compile-time evaluation
-static constexpr inline float easeInOutCubic(float t) noexcept {
-  const float clamped = (t < 0.0f) ? 0.0f : ((t > 1.0f) ? 1.0f : t);
-  return clamped < 0.5f ? 4.0f * clamped * clamped * clamped
-                        : 1.0f - std::pow(-2.0f * clamped + 2.0f, 3.0f) / 2.0f;
-}
-
-static constexpr inline float smoothstep(float a, float b, float x) noexcept {
-  const float t = (x - a) / (b - a);
-  const float clamped = (t < 0.0f) ? 0.0f : ((t > 1.0f) ? 1.0f : t);
-  return clamped * clamped * (3.0f - 2.0f * clamped);
-}
-
-static constexpr inline float lerp(float a, float b, float t) noexcept {
-  return a * (1.0f - t) + b * t;
-}
-
-// Frequently used constants
-static constexpr float ATTACK_CYCLE_TIME = 0.80f;
-static constexpr float INV_ATTACK_CYCLE_TIME = 1.0f / ATTACK_CYCLE_TIME;
-
-// Common color multipliers
-static const QVector3D IRON_TINT(0.88f, 0.90f, 0.92f);
-static const QVector3D DARK_METAL(0.15f, 0.15f, 0.15f);
 
 struct SpearmanExtras {
   QVector3D spearShaftColor;
@@ -155,7 +129,7 @@ public:
                     QVector3D(-0.08f, -0.12f, 0.05f);
 
     } else if (anim.isAttacking && anim.isMelee && !anim.isInHoldMode) {
-      float attackPhase = std::fmod(anim.time * INV_ATTACK_CYCLE_TIME, 1.0f);
+      float attackPhase = std::fmod(anim.time * SPEARMAN_INV_ATTACK_CYCLE_TIME, 1.0f);
 
       QVector3D guardPos(0.28f, HP::SHOULDER_Y + 0.05f, 0.25f);
       QVector3D preparePos(0.35f, HP::SHOULDER_Y + 0.08f, 0.05f);
@@ -236,7 +210,7 @@ public:
     bool isAttacking = anim.isAttacking && anim.isMelee;
     float attackPhase = 0.0f;
     if (isAttacking) {
-      attackPhase = std::fmod(anim.time * INV_ATTACK_CYCLE_TIME, 1.0f);
+      attackPhase = std::fmod(anim.time * SPEARMAN_INV_ATTACK_CYCLE_TIME, 1.0f);
     }
 
     drawSpear(ctx, pose, v, extras, anim, isAttacking, attackPhase, out);
@@ -467,4 +441,4 @@ void registerSpearmanRenderer(Render::GL::EntityRendererRegistry &registry) {
       });
 }
 
-} // namespace Render::GL
+} 
