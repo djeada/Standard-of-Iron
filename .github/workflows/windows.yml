@@ -1,0 +1,171 @@
+name: Windows Build (tags only)
+
+on:
+  push:
+    tags:
+      - 'v*'   # run only on tags like v1.2.3
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    env:
+      BUILD_TYPE: Release
+      APP_NAME: standard_of_iron
+      APP_DIR: build\bin
+      QML_DIR: ui\qml
+
+      QT_VERSION: 6.8.2
+      QT_ARCH: win64_msvc2022_64
+      QT_ROOT: D:\a\Standard-of-Iron\Qt
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - uses: ilammy/msvc-dev-cmd@v1
+
+      # Fast path: official installer (allowed to fail)
+      - name: Install Qt (fast path)
+        id: fastqt
+        continue-on-error: true
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: ${{ env.QT_VERSION }}
+          host: windows
+          arch:  ${{ env.QT_ARCH }}
+          cache: true
+          aqtversion: '==3.3.0'
+          modules: 'qt5compat qtmultimedia'
+          tools-only: false
+
+      # Fallback: install with aqt directly if fast path fails
+      - name: Install Qt (fallback via aqt)
+        if: ${{ steps.fastqt.outcome != 'success' }}
+        shell: pwsh
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install "aqtinstall==3.3.0" "py7zr==1.0.*"
+
+          $qtDir = Join-Path $env:QT_ROOT "$env:QT_VERSION\$env:QT_ARCH"
+          New-Item -ItemType Directory -Force -Path $qtDir | Out-Null
+
+          try {
+            python -m aqt install-qt windows desktop $env:QT_VERSION $env:QT_ARCH `
+              --outputdir "$env:QT_ROOT" `
+              -m qtmultimedia qt5compat qtdeclarative
+          } catch {
+            Write-Warning "Explicit module install failed. Falling back to '-m all'. Error: $($_.Exception.Message)"
+            python -m aqt install-qt windows desktop $env:QT_VERSION $env:QT_ARCH `
+              --outputdir "$env:QT_ROOT" -m all
+          }
+
+          if (!(Test-Path "$qtDir\lib\cmake\Qt6\Qt6Config.cmake")) {
+            Write-Error "Qt6Config.cmake not found in $qtDir after fallback install."
+            exit 1
+          }
+
+          # Export env and PATH
+          echo "Qt6_DIR=$qtDir" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          echo "$qtDir\bin"       | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      # Normalize env for both paths
+      - name: Normalize Qt env
+        shell: pwsh
+        run: |
+          $candidates = @()
+          if ($env:Qt6_DIR)     { $candidates += $env:Qt6_DIR }
+          if ($env:QT_ROOT_DIR) { $candidates += $env:QT_ROOT_DIR }
+          $candidates += (Join-Path $env:QT_ROOT "$env:QT_VERSION\$env:QT_ARCH")
+
+          $qtDir = $null
+          foreach ($c in $candidates | Select-Object -Unique) {
+            if ($c -and (Test-Path (Join-Path $c 'lib\cmake\Qt6\Qt6Config.cmake'))) { $qtDir = $c; break }
+          }
+          if (-not $qtDir) { Write-Error "Could not locate Qt6. Checked: $($candidates -join ', ')"; exit 1 }
+
+          echo "Qt6_DIR=$qtDir" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          echo "$qtDir\bin"     | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          Write-Host "Qt6_DIR=$qtDir"
+
+      - name: Verify Qt installation
+        shell: pwsh
+        run: |
+          Write-Host "Qt6_DIR=$env:Qt6_DIR"
+          if (!(Test-Path "$env:Qt6_DIR\lib\cmake\Qt6\Qt6Config.cmake")) { Write-Error "Qt6Config.cmake not found in $env:Qt6_DIR"; exit 1 }
+          if (!(Get-Command windeployqt -ErrorAction SilentlyContinue))   { Write-Error "windeployqt not found on PATH"; exit 1 }
+
+      - name: Configure (CMake + Ninja)
+        shell: pwsh
+        run: |
+          cmake -S . -B build -G "Ninja" `
+            -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} `
+            -DDEFAULT_LANG=en `
+            -DCMAKE_PREFIX_PATH="$env:Qt6_DIR"
+
+      - name: Build
+        run: cmake --build build
+
+      - name: Deploy Qt
+        shell: pwsh
+        run: |
+          $mode = if ("${{ env.BUILD_TYPE }}" -eq "Debug") { "--debug" } else { "--release" }
+          windeployqt $mode --compiler-runtime --qmldir "$env:QML_DIR" "$env:APP_DIR\${{ env.APP_NAME }}.exe"
+
+      # SAFE: write qt.conf without here-strings
+      - name: Write qt.conf
+        shell: pwsh
+        run: |
+          @(
+            '[Paths]'
+            'Plugins = .'
+            'Imports = qml'
+            'Qml2Imports = qml'
+            'Translations = translations'
+          ) | Set-Content -Encoding ASCII "$env:APP_DIR\qt.conf"
+
+      # SAFE: write run_debug.cmd without here-strings
+      - name: Add run_debug.cmd
+        shell: pwsh
+        run: |
+          @(
+            '@echo off'
+            'setlocal'
+            'set QT_DEBUG_PLUGINS=1'
+            'set QT_LOGGING_RULES=qt.*=true;qt.qml=true;qqml.*=true'
+            'set QT_QPA_PLATFORM=windows'
+            '"%~dp0standard_of_iron.exe" 1> "%~dp0runlog.txt" 2>&1'
+            'echo ExitCode: %ERRORLEVEL%>> "%~dp0runlog.txt"'
+            'pause'
+          ) | Set-Content -Encoding ASCII "$env:APP_DIR\run_debug.cmd"
+
+      - name: Copy assets
+        shell: pwsh
+        run: |
+          if (!(Test-Path "$env:APP_DIR\assets")) { New-Item -ItemType Directory -Path "$env:APP_DIR\assets" | Out-Null }
+          robocopy assets "$env:APP_DIR\assets" /E /NFL /NDL /NJH /NJS /nc /ns /np
+          if ($LASTEXITCODE -ge 8) { exit $LASTEXITCODE } else { exit 0 }
+
+      - name: Sanity check deployed files
+        shell: pwsh
+        run: |
+          if (!(Test-Path "$env:APP_DIR\platforms\qwindows.dll")) { Write-Error "Missing platforms\qwindows.dll"; exit 1 }
+          if (!(Test-Path "$env:APP_DIR\Qt6Core.dll"))            { Write-Error "Missing Qt6Core.dll"; exit 1 }
+          if (!(Test-Path "$env:APP_DIR\Qt6Gui.dll"))             { Write-Error "Missing Qt6Gui.dll"; exit 1 }
+          if (!(Test-Path "$env:APP_DIR\Qt6Qml.dll"))             { Write-Error "Missing Qt6Qml.dll (QML app?)"; exit 1 }
+          Write-Host "Deployment looks OK."
+
+      - name: Zip
+        shell: pwsh
+        run: |
+          $zip = "standard_of_iron-win-x64-${{ env.BUILD_TYPE }}.zip"
+          if (Test-Path $zip) { Remove-Item $zip -Force }
+          Compress-Archive -Path "$env:APP_DIR\*" -DestinationPath $zip -Force
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-${{ env.BUILD_TYPE }}
+          path: standard_of_iron-win-x64-${{ env.BUILD_TYPE }}.zip
