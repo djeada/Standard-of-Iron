@@ -86,6 +86,17 @@
       "maxPopulation": 150
     }
   ],
+  "firecamps": [
+    { "x": 68, "z": 80, "intensity": 1.0, "radius": 3.0 },
+    { "x": 82, "z": 68, "intensity": 1.1, "radius": 3.2 },
+    { "x": 218, "z": 232, "intensity": 0.9, "radius": 2.8 },
+    { "x": 232, "z": 218, "intensity": 1.0, "radius": 3.0 },
+    { "x": 145, "z": 155, "intensity": 1.2, "radius": 3.5 },
+    { "x": 68, "z": 232, "intensity": 1.0, "radius": 3.0 },
+    { "x": 232, "z": 68, "intensity": 1.05, "radius": 3.2 },
+    { "x": 100, "z": 100, "intensity": 0.85, "radius": 2.5 },
+    { "x": 200, "z": 200, "intensity": 0.9, "radius": 2.7 }
+  ],
   "terrain": [
     {
       "type": "hill",

@@ -60,6 +60,9 @@ public:
 
   const QVector3D &getPosition() const { return m_position; }
   const QVector3D &getTarget() const { return m_target; }
+  const QVector3D &getUpVector() const { return m_up; }
+  const QVector3D &getRightVector() const { return m_right; }
+  const QVector3D &getForwardVector() const { return m_front; }
   float getDistance() const;
   float getPitchDeg() const;
   float getFOV() const { return m_fov; }
