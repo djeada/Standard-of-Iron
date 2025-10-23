@@ -49,7 +49,7 @@ void MountedKnight::init(const SpawnParams &params) {
   m_u->unitType = m_typeString;
   m_u->health = 200;
   m_u->maxHealth = 200;
-  m_u->speed = 4.0f;
+  m_u->speed = 9.5f;
   m_u->ownerId = params.playerId;
   m_u->visionRange = 16.0f;
 

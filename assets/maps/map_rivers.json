@@ -44,7 +44,7 @@
     },
     { "type": "archer", "x": 28, "z": 32, "playerId": 1 },
     { "type": "archer", "x": 32, "z": 28, "playerId": 1 },
-    { "type": "knight", "x": 30, "z": 35, "playerId": 1 },
+    { "type": "mounted_knight", "x": 30, "z": 35, "playerId": 1 },
     { "type": "spearman", "x": 35, "z": 30, "playerId": 1 },
     {
       "type": "barracks",
@@ -75,6 +75,16 @@
       "z": 30,
       "maxPopulation": 150
     }
+  ],
+  "firecamps": [
+    { "x": 23, "z": 28, "intensity": 1.0, "radius": 3.0 },
+    { "x": 37, "z": 23, "intensity": 1.1, "radius": 3.2 },
+    { "x": 83, "z": 97, "intensity": 0.9, "radius": 2.8 },
+    { "x": 97, "z": 83, "intensity": 1.0, "radius": 3.0 },
+    { "x": 23, "z": 97, "intensity": 1.0, "radius": 3.0 },
+    { "x": 97, "z": 23, "intensity": 1.05, "radius": 3.2 },
+    { "x": 50, "z": 50, "intensity": 0.85, "radius": 2.5 },
+    { "x": 70, "z": 70, "intensity": 0.9, "radius": 2.7 }
   ],
   "terrain": [
     {
