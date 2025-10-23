@@ -19,11 +19,13 @@ void TerrainService::initialize(const MapDefinition &mapDef) {
   m_heightMap->addBridges(mapDef.bridges);
   m_biomeSettings = mapDef.biome;
   m_heightMap->applyBiomeVariation(m_biomeSettings);
+  m_fireCamps = mapDef.firecamps;
 }
 
 void TerrainService::clear() {
   m_heightMap.reset();
   m_biomeSettings = BiomeSettings();
+  m_fireCamps.clear();
 }
 
 float TerrainService::getTerrainHeight(float worldX, float worldZ) const {

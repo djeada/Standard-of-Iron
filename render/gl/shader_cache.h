@@ -79,6 +79,10 @@ public:
         kShaderBase + QStringLiteral("pine_instanced.frag");
     load(QStringLiteral("pine_instanced"), pineVert, pineFrag);
 
+    const QString firecampVert = kShaderBase + QStringLiteral("firecamp.vert");
+    const QString firecampFrag = kShaderBase + QStringLiteral("firecamp.frag");
+    load(QStringLiteral("firecamp"), firecampVert, firecampFrag);
+
     const QString groundVert =
         kShaderBase + QStringLiteral("ground_plane.vert");
     const QString groundFrag =

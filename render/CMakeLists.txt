@@ -23,6 +23,7 @@ add_library(render_gl STATIC
     ground/stone_renderer.cpp
     ground/plant_renderer.cpp
     ground/pine_renderer.cpp
+    ground/firecamp_renderer.cpp
     entity/registry.cpp
     entity/archer_renderer.cpp
     entity/knight_renderer.cpp

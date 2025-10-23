@@ -203,6 +203,21 @@ static void readSpawns(const QJsonArray &arr, std::vector<UnitSpawn> &out) {
   }
 }
 
+static void readFireCamps(const QJsonArray &arr, std::vector<FireCamp> &out) {
+  out.clear();
+  out.reserve(arr.size());
+  for (const auto &v : arr) {
+    auto o = v.toObject();
+    FireCamp fc;
+    fc.x = float(o.value("x").toDouble(0.0));
+    fc.z = float(o.value("z").toDouble(0.0));
+    fc.intensity = float(o.value("intensity").toDouble(1.0));
+    fc.radius = float(o.value("radius").toDouble(3.0));
+    fc.persistent = o.value("persistent").toBool(true);
+    out.push_back(fc);
+  }
+}
+
 static void readTerrain(const QJsonArray &arr, std::vector<TerrainFeature> &out,
                         const GridDefinition &grid, CoordSystem coordSys) {
   out.clear();
@@ -421,6 +436,10 @@ bool MapLoader::loadFromJsonFile(const QString &path, MapDefinition &outMap,
 
   if (root.contains("spawns") && root.value("spawns").isArray()) {
     readSpawns(root.value("spawns").toArray(), outMap.spawns);
+  }
+
+  if (root.contains("firecamps") && root.value("firecamps").isArray()) {
+    readFireCamps(root.value("firecamps").toArray(), outMap.firecamps);
   }
 
   if (root.contains("terrain") && root.value("terrain").isArray()) {
