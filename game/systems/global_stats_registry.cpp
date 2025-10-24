@@ -147,7 +147,8 @@ void GlobalStatsRegistry::rebuildFromWorld(Engine::Core::World &world) {
 
     auto &stats = m_playerStats[unit->ownerId];
 
-    if (unit->unitType == "barracks") {
+    if (unit->spawnTypeEnum && 
+        *unit->spawnTypeEnum == Game::Units::SpawnType::Barracks) {
       stats.barracksOwned++;
     } else {
       int individualsPerUnit =

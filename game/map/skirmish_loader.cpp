@@ -351,7 +351,9 @@ SkirmishLoadResult SkirmishLoader::start(const QString &mapPath,
     auto *u = e->getComponent<Engine::Core::UnitComponent>();
     if (!u)
       continue;
-    if (u->unitType == "barracks" && u->ownerId == playerOwnerId &&
+    if (u->spawnTypeEnum && 
+        *u->spawnTypeEnum == Game::Units::SpawnType::Barracks && 
+        u->ownerId == playerOwnerId &&
         u->health > 0) {
       focusEntity = e;
       break;

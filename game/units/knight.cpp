@@ -46,6 +46,7 @@ void Knight::init(const SpawnParams &params) {
 
   m_u = e->addComponent<Engine::Core::UnitComponent>();
   m_u->unitType = m_typeString;
+  m_u->spawnTypeEnum = params.spawnType;
   m_u->health = 150;
   m_u->maxHealth = 150;
   m_u->speed = 2.0f;

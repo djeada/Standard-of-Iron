@@ -31,7 +31,8 @@ int CaptureSystem::countNearbyTroops(Engine::Core::World *world, float barrackX,
     if (unit->ownerId != ownerId)
       continue;
 
-    if (unit->unitType == "barracks")
+    if (unit->spawnTypeEnum && 
+        *unit->spawnTypeEnum == Game::Units::SpawnType::Barracks)
       continue;
 
     float dx = transform->position.x - barrackX;

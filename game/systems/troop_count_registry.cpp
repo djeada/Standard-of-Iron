@@ -65,7 +65,8 @@ void TroopCountRegistry::rebuildFromWorld(Engine::Core::World &world) {
     if (!unit || unit->health <= 0)
       continue;
 
-    if (unit->unitType == "barracks")
+    if (unit->spawnTypeEnum && 
+        *unit->spawnTypeEnum == Game::Units::SpawnType::Barracks)
       continue;
 
     int individualsPerUnit =
