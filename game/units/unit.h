@@ -28,7 +28,6 @@ struct SpawnParams {
   QVector3D position{0, 0, 0};
   int playerId = 0;
   SpawnType spawnType = SpawnType::Archer;
-  std::string unitType = "archer";
   bool aiControlled = false;
   int maxPopulation = 100;
 };

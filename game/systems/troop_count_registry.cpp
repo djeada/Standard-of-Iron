@@ -34,22 +34,22 @@ int TroopCountRegistry::getTroopCount(int ownerId) const {
 
 void TroopCountRegistry::onUnitSpawned(
     const Engine::Core::UnitSpawnedEvent &event) {
-  if (event.unitType == "barracks")
+  if (event.spawnType == Game::Units::SpawnType::Barracks)
     return;
 
   int individualsPerUnit =
       Game::Units::TroopConfig::instance().getIndividualsPerUnit(
-          event.unitType);
+          event.spawnType);
   m_troopCounts[event.ownerId] += individualsPerUnit;
 }
 
 void TroopCountRegistry::onUnitDied(const Engine::Core::UnitDiedEvent &event) {
-  if (event.unitType == "barracks")
+  if (event.spawnType == Game::Units::SpawnType::Barracks)
     return;
 
   int individualsPerUnit =
       Game::Units::TroopConfig::instance().getIndividualsPerUnit(
-          event.unitType);
+          event.spawnType);
   m_troopCounts[event.ownerId] -= individualsPerUnit;
   if (m_troopCounts[event.ownerId] < 0) {
     m_troopCounts[event.ownerId] = 0;
@@ -65,13 +65,12 @@ void TroopCountRegistry::rebuildFromWorld(Engine::Core::World &world) {
     if (!unit || unit->health <= 0)
       continue;
 
-    if (unit->spawnTypeEnum && 
-        *unit->spawnTypeEnum == Game::Units::SpawnType::Barracks)
+    if (unit->spawnType == Game::Units::SpawnType::Barracks)
       continue;
 
     int individualsPerUnit =
         Game::Units::TroopConfig::instance().getIndividualsPerUnit(
-            unit->unitType);
+            unit->spawnType);
     m_troopCounts[unit->ownerId] += individualsPerUnit;
   }
 }

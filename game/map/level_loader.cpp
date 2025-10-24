@@ -69,7 +69,6 @@ LevelLoadResult LevelLoader::loadFromAssets(const QString &mapPath,
         sp.position = QVector3D(0.0f, 0.0f, 0.0f);
         sp.playerId = 0;
         sp.spawnType = Game::Units::SpawnType::Archer;
-        sp.unitType = Game::Units::spawnTypeToString(sp.spawnType);
         sp.aiControlled = !owners.isPlayer(sp.playerId);
         if (auto unit =
                 reg->create(Game::Units::SpawnType::Archer, world, sp)) {
@@ -83,8 +82,7 @@ LevelLoadResult LevelLoader::loadFromAssets(const QString &mapPath,
     bool hasBarracks = false;
     for (auto *e : world.getEntitiesWith<Engine::Core::UnitComponent>()) {
       if (auto *u = e->getComponent<Engine::Core::UnitComponent>()) {
-        if (u->spawnTypeEnum && 
-            *u->spawnTypeEnum == Game::Units::SpawnType::Barracks &&
+        if (u->spawnType == Game::Units::SpawnType::Barracks &&
             owners.isPlayer(u->ownerId)) {
           hasBarracks = true;
           break;
@@ -98,7 +96,6 @@ LevelLoadResult LevelLoader::loadFromAssets(const QString &mapPath,
         sp.position = QVector3D(-4.0f, 0.0f, -3.0f);
         sp.playerId = owners.getLocalPlayerId();
         sp.spawnType = Game::Units::SpawnType::Barracks;
-        sp.unitType = Game::Units::spawnTypeToString(sp.spawnType);
         sp.aiControlled = !owners.isPlayer(sp.playerId);
         reg2->create(Game::Units::SpawnType::Barracks, world, sp);
       }
@@ -123,7 +120,6 @@ LevelLoadResult LevelLoader::loadFromAssets(const QString &mapPath,
       sp.position = QVector3D(0.0f, 0.0f, 0.0f);
       sp.playerId = 0;
       sp.spawnType = Game::Units::SpawnType::Archer;
-      sp.unitType = Game::Units::spawnTypeToString(sp.spawnType);
       sp.aiControlled = !owners.isPlayer(sp.playerId);
       if (auto unit = reg->create(Game::Units::SpawnType::Archer, world, sp)) {
         res.playerUnitId = unit->id();

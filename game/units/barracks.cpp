@@ -34,8 +34,7 @@ void Barracks::init(const SpawnParams &params) {
   m_r->mesh = Engine::Core::RenderableComponent::MeshKind::Cube;
 
   m_u = e->addComponent<Engine::Core::UnitComponent>();
-  m_u->unitType = m_typeString;
-  m_u->spawnTypeEnum = params.spawnType;
+  m_u->spawnType = params.spawnType;
   m_u->health = 2000;
   m_u->maxHealth = 2000;
   m_u->speed = 0.0f;
@@ -76,7 +75,7 @@ void Barracks::init(const SpawnParams &params) {
   }
 
   Engine::Core::EventManager::instance().publish(
-      Engine::Core::UnitSpawnedEvent(m_id, m_u->ownerId, m_u->unitType));
+      Engine::Core::UnitSpawnedEvent(m_id, m_u->ownerId, m_u->spawnType));
 }
 
 } // namespace Units
