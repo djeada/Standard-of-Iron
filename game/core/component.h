@@ -1,8 +1,10 @@
 #pragma once
 
+#include "../units/spawn_type.h"
 #include "../units/troop_type.h"
 #include "entity.h"
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -57,6 +59,7 @@ public:
   int maxHealth;
   float speed;
   std::string unitType;
+  std::optional<Game::Units::SpawnType> spawnTypeEnum;
   int ownerId;
   float visionRange;
 };

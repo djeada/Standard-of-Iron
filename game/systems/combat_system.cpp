@@ -121,11 +121,13 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
       auto *holdMode =
           attacker->getComponent<Engine::Core::HoldModeComponent>();
       if (holdMode && holdMode->active) {
-        if (attackerUnit->unitType == "archer") {
+        if (attackerUnit->spawnTypeEnum && 
+            *attackerUnit->spawnTypeEnum == Game::Units::SpawnType::Archer) {
 
           range *= 1.5f;
           damage = static_cast<int>(damage * 1.3f);
-        } else if (attackerUnit->unitType == "spearman") {
+        } else if (attackerUnit->spawnTypeEnum && 
+                   *attackerUnit->spawnTypeEnum == Game::Units::SpawnType::Spearman) {
 
           damage = static_cast<int>(damage * 1.4f);
         }
