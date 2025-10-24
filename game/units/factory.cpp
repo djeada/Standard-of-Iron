@@ -9,30 +9,30 @@ namespace Game {
 namespace Units {
 
 void registerBuiltInUnits(UnitFactoryRegistry &reg) {
-  reg.registerFactory(SpawnType::Archer,
-                      [](Engine::Core::World &world, const SpawnParams &params) {
-                        return Archer::Create(world, params);
-                      });
+  reg.registerFactory(SpawnType::Archer, [](Engine::Core::World &world,
+                                            const SpawnParams &params) {
+    return Archer::Create(world, params);
+  });
 
-  reg.registerFactory(SpawnType::Knight,
-                      [](Engine::Core::World &world, const SpawnParams &params) {
-                        return Knight::Create(world, params);
-                      });
+  reg.registerFactory(SpawnType::Knight, [](Engine::Core::World &world,
+                                            const SpawnParams &params) {
+    return Knight::Create(world, params);
+  });
 
-  reg.registerFactory(SpawnType::MountedKnight,
-                      [](Engine::Core::World &world, const SpawnParams &params) {
-                        return MountedKnight::Create(world, params);
-                      });
+  reg.registerFactory(SpawnType::MountedKnight, [](Engine::Core::World &world,
+                                                   const SpawnParams &params) {
+    return MountedKnight::Create(world, params);
+  });
 
-  reg.registerFactory(SpawnType::Spearman,
-                      [](Engine::Core::World &world, const SpawnParams &params) {
-                        return Spearman::Create(world, params);
-                      });
+  reg.registerFactory(SpawnType::Spearman, [](Engine::Core::World &world,
+                                              const SpawnParams &params) {
+    return Spearman::Create(world, params);
+  });
 
-  reg.registerFactory(SpawnType::Barracks,
-                      [](Engine::Core::World &world, const SpawnParams &params) {
-                        return Barracks::Create(world, params);
-                      });
+  reg.registerFactory(SpawnType::Barracks, [](Engine::Core::World &world,
+                                              const SpawnParams &params) {
+    return Barracks::Create(world, params);
+  });
 }
 
 } // namespace Units

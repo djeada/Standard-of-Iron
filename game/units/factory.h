@@ -1,7 +1,7 @@
 #pragma once
 
-#include "unit.h"
 #include "spawn_type.h"
+#include "unit.h"
 #include <functional>
 #include <memory>
 #include <string>

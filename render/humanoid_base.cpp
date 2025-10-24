@@ -610,7 +610,6 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
 
     addAttachments(instCtx, variant, pose, anim, out);
   }
-
 }
 
 } // namespace Render::GL

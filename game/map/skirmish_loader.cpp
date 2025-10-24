@@ -287,32 +287,31 @@ SkirmishLoadResult SkirmishLoader::start(const QString &mapPath,
     if (terrainService.isInitialized() && terrainService.getHeightMap()) {
       m_firecamp->configure(*terrainService.getHeightMap(),
                             terrainService.biomeSettings());
-      
-      // Load explicit firecamps from map definition
+
       const auto &fireCamps = terrainService.fireCamps();
       if (!fireCamps.empty()) {
         std::vector<QVector3D> positions;
         std::vector<float> intensities;
         std::vector<float> radii;
-        
+
         const auto *heightMap = terrainService.getHeightMap();
         const float tileSize = heightMap->getTileSize();
         const int width = heightMap->getWidth();
         const int height = heightMap->getHeight();
         const float halfWidth = width * 0.5f;
         const float halfHeight = height * 0.5f;
-        
+
         for (const auto &fc : fireCamps) {
-          // Convert grid coordinates to world coordinates
+
           float worldX = (fc.x - halfWidth) * tileSize;
           float worldZ = (fc.z - halfHeight) * tileSize;
           float worldY = terrainService.getTerrainHeight(worldX, worldZ);
-          
+
           positions.push_back(QVector3D(worldX, worldY, worldZ));
           intensities.push_back(fc.intensity);
           radii.push_back(fc.radius);
         }
-        
+
         m_firecamp->setExplicitFireCamps(positions, intensities, radii);
       }
     }

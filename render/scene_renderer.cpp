@@ -172,7 +172,7 @@ void Renderer::pineBatch(Buffer *instanceBuffer, std::size_t instanceCount,
 }
 
 void Renderer::firecampBatch(Buffer *instanceBuffer, std::size_t instanceCount,
-                              const FireCampBatchParams &params) {
+                             const FireCampBatchParams &params) {
   if (!instanceBuffer || instanceCount == 0 || !m_activeQueue)
     return;
   FireCampBatchCmd cmd;
@@ -235,7 +235,7 @@ void Renderer::selectionSmoke(const QMatrix4x4 &model, const QVector3D &color,
     m_activeQueue->submit(cmd);
 }
 
-void Renderer::enqueueSelectionRing(Engine::Core::Entity * /*entity*/,
+void Renderer::enqueueSelectionRing(Engine::Core::Entity *,
                                     Engine::Core::TransformComponent *transform,
                                     Engine::Core::UnitComponent *unitComp,
                                     bool selected, bool hovered) {
