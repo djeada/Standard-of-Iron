@@ -35,6 +35,8 @@ public:
 
   void configure(const Game::Map::VictoryConfig &config, int localOwnerId);
 
+  void reset();
+
   void update(Engine::Core::World &world, float deltaTime);
 
   QString getVictoryState() const { return m_victoryState; }
