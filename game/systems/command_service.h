@@ -34,6 +34,8 @@ public:
 
   static constexpr float WAYPOINT_SKIP_THRESHOLD_SQ = 0.16f;
 
+  static constexpr float GROUP_REGROUP_DISTANCE_THRESHOLD = 15.0f;
+
   static void initialize(int worldWidth, int worldHeight);
 
   static Pathfinding *getPathfinder();

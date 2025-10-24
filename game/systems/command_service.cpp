@@ -409,6 +409,47 @@ void CommandService::moveGroup(Engine::Core::World &world,
 
   members = movingMembers;
 
+  std::vector<MemberInfo> nearbyUnits;
+  std::vector<MemberInfo> distantUnits;
+
+  const float thresholdSq =
+      GROUP_REGROUP_DISTANCE_THRESHOLD * GROUP_REGROUP_DISTANCE_THRESHOLD;
+
+  for (auto &member : members) {
+    QVector3D currentPos(member.transform->position.x, 0.0f,
+                         member.transform->position.z);
+    QVector3D targetPos(member.target.x(), 0.0f, member.target.z());
+    float distanceToTargetSq = (targetPos - currentPos).lengthSquared();
+
+    if (distanceToTargetSq <= thresholdSq) {
+      nearbyUnits.push_back(member);
+    } else {
+      distantUnits.push_back(member);
+    }
+  }
+
+  if (!nearbyUnits.empty()) {
+    std::vector<Engine::Core::EntityID> nearbyIds;
+    std::vector<QVector3D> nearbyTargets;
+    nearbyIds.reserve(nearbyUnits.size());
+    nearbyTargets.reserve(nearbyUnits.size());
+
+    for (const auto &member : nearbyUnits) {
+      nearbyIds.push_back(member.id);
+      nearbyTargets.push_back(member.target);
+    }
+
+    MoveOptions directOptions = options;
+    directOptions.groupMove = false;
+    moveUnits(world, nearbyIds, nearbyTargets, directOptions);
+  }
+
+  if (distantUnits.empty()) {
+    return;
+  }
+
+  members = distantUnits;
+
   QVector3D average(0.0f, 0.0f, 0.0f);
   for (const auto &member : members)
     average += member.target;
