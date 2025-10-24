@@ -36,7 +36,7 @@ AISnapshot AISnapshotBuilder::build(const Engine::Core::World &world,
 
     EntitySnapshot data;
     data.id = entity->getId();
-    data.unitType = unit->unitType;
+    data.spawnType = unit->spawnType;
     data.ownerId = unit->ownerId;
     data.health = unit->health;
     data.maxHealth = unit->maxHealth;
@@ -97,7 +97,7 @@ AISnapshot AISnapshotBuilder::build(const Engine::Core::World &world,
 
     contact.health = unit->health;
     contact.maxHealth = unit->maxHealth;
-    contact.unitType = unit->unitType;
+    contact.spawnType = unit->spawnType;
 
     snapshot.visibleEnemies.push_back(std::move(contact));
   }

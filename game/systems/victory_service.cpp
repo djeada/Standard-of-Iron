@@ -200,8 +200,9 @@ bool VictoryService::checkElimination(Engine::Core::World &world) {
     if (m_ownerRegistry.areAllies(m_localOwnerId, unit->ownerId))
       continue;
 
-    QString unitType = QString::fromStdString(unit->unitType);
-    if (std::find(m_keyStructures.begin(), m_keyStructures.end(), unitType) !=
+    QString unitTypeStr = 
+        QString::fromStdString(Game::Units::spawnTypeToString(unit->spawnType));
+    if (std::find(m_keyStructures.begin(), m_keyStructures.end(), unitTypeStr) !=
         m_keyStructures.end()) {
       enemyKeyStructuresAlive = true;
       break;
@@ -240,8 +241,9 @@ bool VictoryService::checkNoKeyStructures(Engine::Core::World &world) {
       continue;
 
     if (unit->ownerId == m_localOwnerId) {
-      QString unitType = QString::fromStdString(unit->unitType);
-      if (std::find(m_keyStructures.begin(), m_keyStructures.end(), unitType) !=
+      QString unitTypeStr = 
+          QString::fromStdString(Game::Units::spawnTypeToString(unit->spawnType));
+      if (std::find(m_keyStructures.begin(), m_keyStructures.end(), unitTypeStr) !=
           m_keyStructures.end()) {
         return false;
       }

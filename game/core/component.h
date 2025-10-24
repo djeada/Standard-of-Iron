@@ -1,8 +1,10 @@
 #pragma once
 
+#include "../units/spawn_type.h"
 #include "../units/troop_type.h"
 #include "entity.h"
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -51,12 +53,12 @@ public:
   UnitComponent(int health = 100, int maxHealth = 100, float speed = 1.0f,
                 float vision = 12.0f)
       : health(health), maxHealth(maxHealth), speed(speed), ownerId(0),
-        visionRange(vision) {}
+        visionRange(vision), spawnType(Game::Units::SpawnType::Archer) {}
 
   int health;
   int maxHealth;
   float speed;
-  std::string unitType;
+  Game::Units::SpawnType spawnType;
   int ownerId;
   float visionRange;
 };
