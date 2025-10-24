@@ -1,0 +1,78 @@
+{
+    "classes": [
+        {
+            "className": "LanguageManager",
+            "methods": [
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "language",
+                            "type": "QString"
+                        }
+                    ],
+                    "name": "setLanguage",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "language",
+                            "type": "QString"
+                        }
+                    ],
+                    "name": "languageDisplayName",
+                    "returnType": "QString"
+                }
+            ],
+            "object": true,
+            "properties": [
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 0,
+                    "name": "currentLanguage",
+                    "notify": "languageChanged",
+                    "read": "currentLanguage",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "QString",
+                    "user": false,
+                    "write": "setLanguage"
+                },
+                {
+                    "constant": true,
+                    "designable": true,
+                    "final": false,
+                    "index": 1,
+                    "name": "availableLanguages",
+                    "read": "availableLanguages",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "QStringList",
+                    "user": false
+                }
+            ],
+            "qualifiedClassName": "LanguageManager",
+            "signals": [
+                {
+                    "access": "public",
+                    "name": "languageChanged",
+                    "returnType": "void"
+                }
+            ],
+            "superClasses": [
+                {
+                    "access": "public",
+                    "name": "QObject"
+                }
+            ]
+        }
+    ],
+    "inputFile": "language_manager.h",
+    "outputRevision": 68
+}
