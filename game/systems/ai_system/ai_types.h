@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../../units/spawn_type.h"
 #include "../../units/troop_type.h"
 #include <string>
 #include <unordered_map>
@@ -55,7 +56,7 @@ struct ProductionSnapshot {
 
 struct EntitySnapshot {
   Engine::Core::EntityID id = 0;
-  std::string unitType;
+  Game::Units::SpawnType spawnType = Game::Units::SpawnType::Archer;
   int ownerId = 0;
   int health = 0;
   int maxHealth = 0;
@@ -79,7 +80,7 @@ struct ContactSnapshot {
 
   int health = 0;
   int maxHealth = 0;
-  std::string unitType;
+  Game::Units::SpawnType spawnType = Game::Units::SpawnType::Archer;
 };
 
 struct AISnapshot {

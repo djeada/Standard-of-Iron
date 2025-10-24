@@ -7,6 +7,7 @@
 #include "../models/hover_tracker.h"
 #include "../utils/json_vec_utils.h"
 #include "game/audio/AudioSystem.h"
+#include "game/units/spawn_type.h"
 #include "game/units/troop_type.h"
 #include <QBuffer>
 #include <QCoreApplication>
@@ -250,7 +251,7 @@ GameEngine::GameEngine() {
 
               int individualsPerUnit =
                   Game::Units::TroopConfig::instance().getIndividualsPerUnit(
-                      e.unitType);
+                      e.spawnType);
               m_enemyTroopsDefeated += individualsPerUnit;
               emit enemyTroopsDefeatedChanged();
             }
@@ -837,7 +838,7 @@ QString GameEngine::getSelectedUnitsCommandMode() const {
     auto *u = e->getComponent<Engine::Core::UnitComponent>();
     if (!u)
       continue;
-    if (u->unitType == "barracks")
+    if (u->spawnType == Game::Units::SpawnType::Barracks)
       continue;
 
     totalUnits++;
@@ -1181,7 +1182,7 @@ bool GameEngine::getUnitInfo(Engine::Core::EntityID id, QString &name,
     return false;
   isBuilding = e->hasComponent<Engine::Core::BuildingComponent>();
   if (auto *u = e->getComponent<Engine::Core::UnitComponent>()) {
-    name = QString::fromStdString(u->unitType);
+    name = QString::fromStdString(Game::Units::spawnTypeToString(u->spawnType));
     health = u->health;
     maxHealth = u->maxHealth;
     alive = (u->health > 0);
@@ -1197,16 +1198,16 @@ void GameEngine::onUnitSpawned(const Engine::Core::UnitSpawnedEvent &event) {
   auto &owners = Game::Systems::OwnerRegistry::instance();
 
   if (event.ownerId == m_runtime.localOwnerId) {
-    if (event.unitType == "barracks") {
+    if (event.spawnType == Game::Units::SpawnType::Barracks) {
       m_entityCache.playerBarracksAlive = true;
     } else {
       int individualsPerUnit =
           Game::Units::TroopConfig::instance().getIndividualsPerUnit(
-              event.unitType);
+              event.spawnType);
       m_entityCache.playerTroopCount += individualsPerUnit;
     }
   } else if (owners.isAI(event.ownerId)) {
-    if (event.unitType == "barracks") {
+    if (event.spawnType == Game::Units::SpawnType::Barracks) {
       m_entityCache.enemyBarracksCount++;
       m_entityCache.enemyBarracksAlive = true;
     }
@@ -1225,18 +1226,18 @@ void GameEngine::onUnitDied(const Engine::Core::UnitDiedEvent &event) {
   auto &owners = Game::Systems::OwnerRegistry::instance();
 
   if (event.ownerId == m_runtime.localOwnerId) {
-    if (event.unitType == "barracks") {
+    if (event.spawnType == Game::Units::SpawnType::Barracks) {
       m_entityCache.playerBarracksAlive = false;
     } else {
       int individualsPerUnit =
           Game::Units::TroopConfig::instance().getIndividualsPerUnit(
-              event.unitType);
+              event.spawnType);
       m_entityCache.playerTroopCount -= individualsPerUnit;
       m_entityCache.playerTroopCount =
           std::max(0, m_entityCache.playerTroopCount);
     }
   } else if (owners.isAI(event.ownerId)) {
-    if (event.unitType == "barracks") {
+    if (event.spawnType == Game::Units::SpawnType::Barracks) {
       m_entityCache.enemyBarracksCount--;
       m_entityCache.enemyBarracksCount =
           std::max(0, m_entityCache.enemyBarracksCount);
@@ -1271,16 +1272,16 @@ void GameEngine::rebuildEntityCache() {
       continue;
 
     if (unit->ownerId == m_runtime.localOwnerId) {
-      if (unit->unitType == "barracks") {
+      if (unit->spawnType == Game::Units::SpawnType::Barracks) {
         m_entityCache.playerBarracksAlive = true;
       } else {
         int individualsPerUnit =
             Game::Units::TroopConfig::instance().getIndividualsPerUnit(
-                unit->unitType);
+                unit->spawnType);
         m_entityCache.playerTroopCount += individualsPerUnit;
       }
     } else if (owners.isAI(unit->ownerId)) {
-      if (unit->unitType == "barracks") {
+      if (unit->spawnType == Game::Units::SpawnType::Barracks) {
         m_entityCache.enemyBarracksCount++;
         m_entityCache.enemyBarracksAlive = true;
       }
@@ -1350,7 +1351,8 @@ void GameEngine::rebuildBuildingCollisions() {
     if (!transform || !unit)
       continue;
 
-    registry.registerBuilding(entity->getId(), unit->unitType,
+    registry.registerBuilding(entity->getId(), 
+                              Game::Units::spawnTypeToString(unit->spawnType),
                               transform->position.x, transform->position.z,
                               unit->ownerId);
   }

@@ -121,11 +121,11 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
       auto *holdMode =
           attacker->getComponent<Engine::Core::HoldModeComponent>();
       if (holdMode && holdMode->active) {
-        if (attackerUnit->unitType == "archer") {
+        if (attackerUnit->spawnType == Game::Units::SpawnType::Archer) {
 
           range *= 1.5f;
           damage = static_cast<int>(damage * 1.3f);
-        } else if (attackerUnit->unitType == "spearman") {
+        } else if (attackerUnit->spawnType == Game::Units::SpawnType::Spearman) {
 
           damage = static_cast<int>(damage * 1.4f);
         }
@@ -465,7 +465,7 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
           if (attU) {
             int troopSize =
                 Game::Units::TroopConfig::instance().getIndividualsPerUnit(
-                    attU->unitType);
+                    attU->spawnType);
             int maxArrows = std::max(1, troopSize / 3);
 
             static thread_local std::mt19937 gen(std::random_device{}());
@@ -620,7 +620,7 @@ void CombatSystem::dealDamage(Engine::Core::World *world,
         unit->health > 0) {
       Engine::Core::EventManager::instance().publish(
           Engine::Core::BuildingAttackedEvent(target->getId(), unit->ownerId,
-                                              unit->unitType, attackerId,
+                                              unit->spawnType, attackerId,
                                               attackerOwnerId, damage));
     }
 
@@ -630,7 +630,7 @@ void CombatSystem::dealDamage(Engine::Core::World *world,
 
       Engine::Core::EventManager::instance().publish(
           Engine::Core::UnitDiedEvent(target->getId(), unit->ownerId,
-                                      unit->unitType, attackerId,
+                                      unit->spawnType, attackerId,
                                       killerOwnerId));
 
       auto *targetAtk = target->getComponent<Engine::Core::AttackComponent>();
