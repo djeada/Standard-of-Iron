@@ -167,6 +167,20 @@ SkirmishLoadResult SkirmishLoader::start(const QString &mapPath,
     }
   }
 
+  // Validate that we have at least 2 distinct teams
+  std::set<int> uniqueTeams;
+  for (const auto &[playerId, teamId] : teamOverrides) {
+    uniqueTeams.insert(teamId);
+  }
+  
+  if (teamOverrides.size() >= 2 && uniqueTeams.size() < 2) {
+    result.errorMessage = "Invalid team configuration: At least two teams must be selected to start a match.";
+    m_renderer.unlockWorldForModification();
+    m_renderer.resume();
+    qWarning() << "SkirmishLoader: " << result.errorMessage;
+    return result;
+  }
+
   Game::Map::MapTransformer::setLocalOwnerId(playerOwnerId);
   Game::Map::MapTransformer::setPlayerTeamOverrides(teamOverrides);
 
