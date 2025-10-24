@@ -1,5 +1,6 @@
 #pragma once
 
+#include <optional>
 #include <string>
 
 namespace Game {
@@ -31,6 +32,18 @@ inline TroopType troopTypeFromString(const std::string &str) {
   if (str == "mounted_knight")
     return TroopType::MountedKnight;
   return TroopType::Archer;
+}
+
+inline std::optional<TroopType> tryParseTroopType(const std::string &str) {
+  if (str == "archer")
+    return TroopType::Archer;
+  if (str == "knight")
+    return TroopType::Knight;
+  if (str == "spearman")
+    return TroopType::Spearman;
+  if (str == "mounted_knight")
+    return TroopType::MountedKnight;
+  return std::nullopt;
 }
 
 } // namespace Units

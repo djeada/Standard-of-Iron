@@ -1,6 +1,7 @@
 #include "scene_renderer.h"
 #include "../game/map/terrain_service.h"
 #include "../game/map/visibility_service.h"
+#include "../game/units/spawn_type.h"
 #include "../game/units/troop_config.h"
 #include "entity/registry.h"
 #include "game/core/component.h"
@@ -246,11 +247,11 @@ void Renderer::enqueueSelectionRing(Engine::Core::Entity *,
   float ringOffset = 0.05f;
   float groundOffset = 0.0f;
 
-  if (unitComp && !unitComp->unitType.empty()) {
+  if (unitComp) {
     auto &config = Game::Units::TroopConfig::instance();
-    ringSize = config.getSelectionRingSize(unitComp->unitType);
-    ringOffset += config.getSelectionRingYOffset(unitComp->unitType);
-    groundOffset = config.getSelectionRingGroundOffset(unitComp->unitType);
+    ringSize = config.getSelectionRingSize(unitComp->spawnType);
+    ringOffset += config.getSelectionRingYOffset(unitComp->spawnType);
+    groundOffset = config.getSelectionRingGroundOffset(unitComp->spawnType);
   }
 
   QVector3D pos(transform->position.x, transform->position.y,
@@ -310,15 +311,13 @@ void Renderer::renderWorld(Engine::Core::World *world) {
     if (m_camera && unitComp) {
 
       float cullRadius = 3.0f;
-      if (!unitComp->unitType.empty()) {
-
-        if (unitComp->unitType.find("mounted") != std::string::npos) {
-          cullRadius = 4.0f;
-        } else if (unitComp->unitType == "spearman" ||
-                   unitComp->unitType == "archer" ||
-                   unitComp->unitType == "knight") {
-          cullRadius = 2.5f;
-        }
+      
+      if (unitComp->spawnType == Game::Units::SpawnType::MountedKnight) {
+        cullRadius = 4.0f;
+      } else if (unitComp->spawnType == Game::Units::SpawnType::Spearman ||
+                 unitComp->spawnType == Game::Units::SpawnType::Archer ||
+                 unitComp->spawnType == Game::Units::SpawnType::Knight) {
+        cullRadius = 2.5f;
       }
 
       QVector3D unitPos(transform->position.x, transform->position.y,
@@ -350,8 +349,9 @@ void Renderer::renderWorld(Engine::Core::World *world) {
                       transform->scale.z);
 
     bool drawnByRegistry = false;
-    if (unitComp && !unitComp->unitType.empty() && m_entityRegistry) {
-      auto fn = m_entityRegistry->get(unitComp->unitType);
+    if (unitComp && m_entityRegistry) {
+      std::string unitTypeStr = Game::Units::spawnTypeToString(unitComp->spawnType);
+      auto fn = m_entityRegistry->get(unitTypeStr);
       if (fn) {
         DrawContext ctx{resources(), entity, world, modelMatrix};
 

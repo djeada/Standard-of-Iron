@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../units/spawn_type.h"
 #include "entity.h"
 #include <algorithm>
 #include <functional>
@@ -177,30 +178,30 @@ public:
 
 class UnitDiedEvent : public Event {
 public:
-  UnitDiedEvent(EntityID unitId, int ownerId, const std::string &unitType,
+  UnitDiedEvent(EntityID unitId, int ownerId, Game::Units::SpawnType spawnType,
                 EntityID killerId = 0, int killerOwnerId = 0)
-      : unitId(unitId), ownerId(ownerId), unitType(unitType),
+      : unitId(unitId), ownerId(ownerId), spawnType(spawnType),
         killerId(killerId), killerOwnerId(killerOwnerId) {}
   EntityID unitId;
   int ownerId;
-  std::string unitType;
+  Game::Units::SpawnType spawnType;
   EntityID killerId;
   int killerOwnerId;
 };
 
 class UnitSpawnedEvent : public Event {
 public:
-  UnitSpawnedEvent(EntityID unitId, int ownerId, const std::string &unitType)
-      : unitId(unitId), ownerId(ownerId), unitType(unitType) {}
+  UnitSpawnedEvent(EntityID unitId, int ownerId, Game::Units::SpawnType spawnType)
+      : unitId(unitId), ownerId(ownerId), spawnType(spawnType) {}
   EntityID unitId;
   int ownerId;
-  std::string unitType;
+  Game::Units::SpawnType spawnType;
 };
 
 class BuildingAttackedEvent : public Event {
 public:
   BuildingAttackedEvent(EntityID buildingId, int ownerId,
-                        const std::string &buildingType,
+                        Game::Units::SpawnType buildingType,
                         EntityID attackerId = 0, int attackerOwnerId = 0,
                         int damage = 0)
       : buildingId(buildingId), ownerId(ownerId), buildingType(buildingType),
@@ -208,7 +209,7 @@ public:
         damage(damage) {}
   EntityID buildingId;
   int ownerId;
-  std::string buildingType;
+  Game::Units::SpawnType buildingType;
   EntityID attackerId;
   int attackerOwnerId;
   int damage;
