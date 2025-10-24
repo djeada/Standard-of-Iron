@@ -409,6 +409,11 @@ void CommandService::moveGroup(Engine::Core::World &world,
 
   members = movingMembers;
 
+  QVector3D groupCentroid(0.0f, 0.0f, 0.0f);
+  for (const auto &member : members)
+    groupCentroid += member.target;
+  groupCentroid /= static_cast<float>(members.size());
+
   std::vector<MemberInfo> nearbyUnits;
   std::vector<MemberInfo> distantUnits;
 
@@ -418,10 +423,9 @@ void CommandService::moveGroup(Engine::Core::World &world,
   for (auto &member : members) {
     QVector3D currentPos(member.transform->position.x, 0.0f,
                          member.transform->position.z);
-    QVector3D targetPos(member.target.x(), 0.0f, member.target.z());
-    float distanceToTargetSq = (targetPos - currentPos).lengthSquared();
+    float distanceToCentroidSq = (groupCentroid - currentPos).lengthSquared();
 
-    if (distanceToTargetSq <= thresholdSq) {
+    if (distanceToCentroidSq <= thresholdSq) {
       nearbyUnits.push_back(member);
     } else {
       distantUnits.push_back(member);
