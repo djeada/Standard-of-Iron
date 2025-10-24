@@ -117,10 +117,10 @@ struct SelectionSmokeCmd {
   float baseAlpha = 0.15f;
 };
 
-using DrawCmd =
-    std::variant<GridCmd, SelectionRingCmd, SelectionSmokeCmd, CylinderCmd,
-                 MeshCmd, FogBatchCmd, GrassBatchCmd, StoneBatchCmd,
-                 PlantBatchCmd, PineBatchCmd, FireCampBatchCmd, TerrainChunkCmd>;
+using DrawCmd = std::variant<GridCmd, SelectionRingCmd, SelectionSmokeCmd,
+                             CylinderCmd, MeshCmd, FogBatchCmd, GrassBatchCmd,
+                             StoneBatchCmd, PlantBatchCmd, PineBatchCmd,
+                             FireCampBatchCmd, TerrainChunkCmd>;
 
 enum class DrawCmdType : std::uint8_t {
   Grid = 0,
@@ -327,7 +327,8 @@ private:
     } else if (cmd.index() == FireCampBatchCmdIndex) {
       const auto &firecamp = std::get<FireCampBatchCmdIndex>(cmd);
       uint64_t bufferPtr =
-          reinterpret_cast<uintptr_t>(firecamp.instanceBuffer) & 0x0000FFFFFFFFFFFF;
+          reinterpret_cast<uintptr_t>(firecamp.instanceBuffer) &
+          0x0000FFFFFFFFFFFF;
       key |= bufferPtr;
     } else if (cmd.index() == TerrainChunkCmdIndex) {
       const auto &terrain = std::get<TerrainChunkCmdIndex>(cmd);

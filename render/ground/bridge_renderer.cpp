@@ -48,8 +48,7 @@ void BridgeRenderer::buildMeshes() {
     std::vector<unsigned int> indices;
 
     const int vertsPerSegment = 12;
-    const float deckThickness =
-        std::clamp(bridge.width * 0.25f, 0.35f, 0.8f);
+    const float deckThickness = std::clamp(bridge.width * 0.25f, 0.35f, 0.8f);
     const float parapetHeight = std::clamp(bridge.width * 0.25f, 0.25f, 0.55f);
     const float parapetOffset = halfWidth * 1.05f;
 
@@ -98,11 +97,9 @@ void BridgeRenderer::buildMeshes() {
       QVector3D leftNormal = (-perpendicular).normalized();
       QVector3D rightNormal = perpendicular.normalized();
 
-      QVector3D topLeft =
-          centerPos + perpendicular * (-halfWidth);
+      QVector3D topLeft = centerPos + perpendicular * (-halfWidth);
       topLeft.setY(deckY);
-      QVector3D topRight =
-          centerPos + perpendicular * (halfWidth);
+      QVector3D topRight = centerPos + perpendicular * (halfWidth);
       topRight.setY(deckY);
 
       QVector3D bottomLeft = topLeft;
@@ -131,41 +128,37 @@ void BridgeRenderer::buildMeshes() {
       float texU1 = 1.0f;
       float texV = t * length * 0.4f;
 
-      addVertex(topLeft, QVector3D(0.0f, 1.0f, 0.0f), texU0, texV);   // 0
-      addVertex(topRight, QVector3D(0.0f, 1.0f, 0.0f), texU1, texV);  // 1
-      addVertex(bottomLeft, QVector3D(0.0f, -1.0f, 0.0f), texU0,
-                texV);                                                // 2
-      addVertex(bottomRight, QVector3D(0.0f, -1.0f, 0.0f), texU1,
-                texV);                                                // 3
-      addVertex(sideLeftTop, leftNormal, texU0, texV);                // 4
-      addVertex(sideLeftBottom, leftNormal, texU0, texV);             // 5
-      addVertex(sideRightTop, rightNormal, texU1, texV);              // 6
-      addVertex(sideRightBottom, rightNormal, texU1, texV);           // 7
-      addVertex(parapetLeftTop, leftNormal, texU0, texV);             // 8
-      addVertex(parapetLeftBottom, leftNormal, texU0, texV);          // 9
-      addVertex(parapetRightTop, rightNormal, texU1, texV);           // 10
-      addVertex(parapetRightBottom, rightNormal, texU1, texV);        // 11
+      addVertex(topLeft, QVector3D(0.0f, 1.0f, 0.0f), texU0, texV);
+      addVertex(topRight, QVector3D(0.0f, 1.0f, 0.0f), texU1, texV);
+      addVertex(bottomLeft, QVector3D(0.0f, -1.0f, 0.0f), texU0, texV);
+      addVertex(bottomRight, QVector3D(0.0f, -1.0f, 0.0f), texU1, texV);
+      addVertex(sideLeftTop, leftNormal, texU0, texV);
+      addVertex(sideLeftBottom, leftNormal, texU0, texV);
+      addVertex(sideRightTop, rightNormal, texU1, texV);
+      addVertex(sideRightBottom, rightNormal, texU1, texV);
+      addVertex(parapetLeftTop, leftNormal, texU0, texV);
+      addVertex(parapetLeftBottom, leftNormal, texU0, texV);
+      addVertex(parapetRightTop, rightNormal, texU1, texV);
+      addVertex(parapetRightBottom, rightNormal, texU1, texV);
 
       if (i < lengthSegments) {
         unsigned int baseIdx = static_cast<unsigned int>(i * vertsPerSegment);
         unsigned int nextIdx = baseIdx + vertsPerSegment;
 
-        // Deck top
         pushQuad(baseIdx + 0, baseIdx + 1, nextIdx + 1, nextIdx + 0);
-        // Deck bottom
+
         pushQuad(nextIdx + 3, nextIdx + 2, baseIdx + 2, baseIdx + 3);
-        // Left side wall
+
         pushQuad(baseIdx + 4, baseIdx + 5, nextIdx + 5, nextIdx + 4);
-        // Right side wall
+
         pushQuad(baseIdx + 6, baseIdx + 7, nextIdx + 7, nextIdx + 6);
-        // Parapet left outer face
+
         pushQuad(baseIdx + 9, baseIdx + 8, nextIdx + 8, nextIdx + 9);
-        // Parapet right outer face
+
         pushQuad(baseIdx + 11, baseIdx + 10, nextIdx + 10, nextIdx + 11);
       }
     }
 
-    // Add end caps to close the bridge slab
     if (!vertices.empty()) {
       unsigned int startIdx = 0;
       unsigned int endIdx =
