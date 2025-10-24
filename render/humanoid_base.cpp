@@ -67,13 +67,13 @@ FormationParams HumanoidRendererBase::resolveFormation(const DrawContext &ctx) {
 
   if (ctx.entity) {
     auto *unit = ctx.entity->getComponent<Engine::Core::UnitComponent>();
-    if (unit && !unit->unitType.empty()) {
+    if (unit) {
       params.individualsPerUnit =
           Game::Units::TroopConfig::instance().getIndividualsPerUnit(
-              unit->unitType);
+              unit->spawnType);
       params.maxPerRow = Game::Units::TroopConfig::instance().getMaxUnitsPerRow(
-          unit->unitType);
-      if (unit->unitType == "mounted_knight") {
+          unit->spawnType);
+      if (unit->spawnType == Game::Units::SpawnType::MountedKnight) {
         params.spacing = 1.35f;
       }
     }
