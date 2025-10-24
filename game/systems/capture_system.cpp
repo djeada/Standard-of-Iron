@@ -31,8 +31,7 @@ int CaptureSystem::countNearbyTroops(Engine::Core::World *world, float barrackX,
     if (unit->ownerId != ownerId)
       continue;
 
-    if (unit->spawnTypeEnum && 
-        *unit->spawnTypeEnum == Game::Units::SpawnType::Barracks)
+    if (unit->spawnType == Game::Units::SpawnType::Barracks)
       continue;
 
     float dx = transform->position.x - barrackX;
@@ -42,7 +41,7 @@ int CaptureSystem::countNearbyTroops(Engine::Core::World *world, float barrackX,
     if (distSq <= radius * radius) {
       int individualsPerUnit =
           Game::Units::TroopConfig::instance().getIndividualsPerUnit(
-              unit->unitType);
+              unit->spawnType);
       totalTroops += individualsPerUnit;
     }
   }
@@ -111,8 +110,7 @@ void CaptureSystem::processBarrackCapture(Engine::Core::World *world,
     if (!unit || !transform)
       continue;
 
-    if (!unit->spawnTypeEnum || 
-        *unit->spawnTypeEnum != Game::Units::SpawnType::Barracks)
+    if (unit->spawnType != Game::Units::SpawnType::Barracks)
       continue;
 
     auto *capture = barrack->getComponent<Engine::Core::CaptureComponent>();
