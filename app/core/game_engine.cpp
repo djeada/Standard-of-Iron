@@ -1665,13 +1665,21 @@ void GameEngine::loadAudioResources() {
   auto &audioSys = AudioSystem::getInstance();
 
   QString basePath = QCoreApplication::applicationDirPath() + "/assets/audio/";
+  qInfo() << "Loading audio resources from:" << basePath;
+
+  QDir audioDir(basePath);
+  if (!audioDir.exists()) {
+    qWarning() << "Audio assets directory does not exist:" << basePath;
+    qWarning() << "Application directory:" << QCoreApplication::applicationDirPath();
+    return;
+  }
 
   if (audioSys.loadSound("archer_voice",
                          (basePath + "voices/archer_voice.wav").toStdString(),
                          AudioCategory::VOICE)) {
     qInfo() << "Loaded archer voice";
   } else {
-    qWarning() << "Failed to load archer voice";
+    qWarning() << "Failed to load archer voice from:" << (basePath + "voices/archer_voice.wav");
   }
 
   if (audioSys.loadSound("knight_voice",
@@ -1679,7 +1687,7 @@ void GameEngine::loadAudioResources() {
                          AudioCategory::VOICE)) {
     qInfo() << "Loaded knight voice";
   } else {
-    qWarning() << "Failed to load knight voice";
+    qWarning() << "Failed to load knight voice from:" << (basePath + "voices/knight_voice.wav");
   }
 
   if (audioSys.loadSound("spearman_voice",
@@ -1687,42 +1695,42 @@ void GameEngine::loadAudioResources() {
                          AudioCategory::VOICE)) {
     qInfo() << "Loaded spearman voice";
   } else {
-    qWarning() << "Failed to load spearman voice";
+    qWarning() << "Failed to load spearman voice from:" << (basePath + "voices/spearman_voice.wav");
   }
 
   if (audioSys.loadMusic("music_peaceful",
                          (basePath + "music/peaceful.wav").toStdString())) {
     qInfo() << "Loaded peaceful music";
   } else {
-    qWarning() << "Failed to load peaceful music";
+    qWarning() << "Failed to load peaceful music from:" << (basePath + "music/peaceful.wav");
   }
 
   if (audioSys.loadMusic("music_tense",
                          (basePath + "music/tense.wav").toStdString())) {
     qInfo() << "Loaded tense music";
   } else {
-    qWarning() << "Failed to load tense music";
+    qWarning() << "Failed to load tense music from:" << (basePath + "music/tense.wav");
   }
 
   if (audioSys.loadMusic("music_combat",
                          (basePath + "music/combat.wav").toStdString())) {
     qInfo() << "Loaded combat music";
   } else {
-    qWarning() << "Failed to load combat music";
+    qWarning() << "Failed to load combat music from:" << (basePath + "music/combat.wav");
   }
 
   if (audioSys.loadMusic("music_victory",
                          (basePath + "music/victory.wav").toStdString())) {
     qInfo() << "Loaded victory music";
   } else {
-    qWarning() << "Failed to load victory music";
+    qWarning() << "Failed to load victory music from:" << (basePath + "music/victory.wav");
   }
 
   if (audioSys.loadMusic("music_defeat",
                          (basePath + "music/defeat.wav").toStdString())) {
     qInfo() << "Loaded defeat music";
   } else {
-    qWarning() << "Failed to load defeat music";
+    qWarning() << "Failed to load defeat music from:" << (basePath + "music/defeat.wav");
   }
 
   qInfo() << "Audio resources loading complete";

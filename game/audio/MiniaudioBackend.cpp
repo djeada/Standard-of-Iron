@@ -50,6 +50,10 @@ bool MiniaudioBackend::initialize(int deviceRate, int outChannels,
 
   m_device = new ma_device();
   if (ma_device_init(nullptr, &cfg, m_device) != MA_SUCCESS) {
+    qWarning() << "MiniaudioBackend: Failed to initialize audio device";
+    qWarning() << "  Requested sample rate:" << m_rate;
+    qWarning() << "  Requested channels:" << m_outCh;
+    qWarning() << "  This may indicate no audio device is available";
     delete m_device;
     m_device = nullptr;
     delete wrap;
@@ -65,6 +69,7 @@ bool MiniaudioBackend::initialize(int deviceRate, int outChannels,
     sfx = SoundEffect{};
 
   if (ma_device_start(m_device) != MA_SUCCESS) {
+    qWarning() << "MiniaudioBackend: Failed to start audio device";
     ma_device_uninit(m_device);
     delete m_device;
     m_device = nullptr;
@@ -72,6 +77,10 @@ bool MiniaudioBackend::initialize(int deviceRate, int outChannels,
     return false;
   }
 
+  qInfo() << "MiniaudioBackend: Initialized successfully";
+  qInfo() << "  Sample rate:" << m_rate;
+  qInfo() << "  Channels:" << m_outCh;
+  qInfo() << "  Music channels:" << musicChannels;
   return true;
 }
 
