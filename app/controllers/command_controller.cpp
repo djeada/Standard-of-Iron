@@ -116,7 +116,8 @@ CommandResult CommandController::onHoldCommand() {
 
     auto *unit = entity->getComponent<Engine::Core::UnitComponent>();
 
-    if (!unit || (unit->unitType != "archer" && unit->unitType != "spearman"))
+    if (!unit || (unit->spawnType != Game::Units::SpawnType::Archer && 
+                  unit->spawnType != Game::Units::SpawnType::Spearman))
       continue;
 
     auto *holdMode = entity->getComponent<Engine::Core::HoldModeComponent>();
