@@ -16,7 +16,8 @@ findFirstSelectedBarracks(Engine::Core::World &world,
       auto *u = e->getComponent<Engine::Core::UnitComponent>();
       if (!u || u->ownerId != ownerId)
         continue;
-      if (u->unitType == "barracks")
+      if (u->spawnTypeEnum && 
+          *u->spawnTypeEnum == Game::Units::SpawnType::Barracks)
         return e;
     }
   }

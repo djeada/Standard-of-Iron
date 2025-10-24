@@ -83,8 +83,8 @@ LevelLoadResult LevelLoader::loadFromAssets(const QString &mapPath,
     bool hasBarracks = false;
     for (auto *e : world.getEntitiesWith<Engine::Core::UnitComponent>()) {
       if (auto *u = e->getComponent<Engine::Core::UnitComponent>()) {
-        if (u->unitType == Game::Units::spawnTypeToString(
-                               Game::Units::SpawnType::Barracks) &&
+        if (u->spawnTypeEnum && 
+            *u->spawnTypeEnum == Game::Units::SpawnType::Barracks &&
             owners.isPlayer(u->ownerId)) {
           hasBarracks = true;
           break;

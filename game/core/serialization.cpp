@@ -1,6 +1,7 @@
 #include "serialization.h"
 #include "../map/terrain.h"
 #include "../map/terrain_service.h"
+#include "../units/spawn_type.h"
 #include "../units/troop_type.h"
 #include "component.h"
 #include "entity.h"
@@ -261,6 +262,15 @@ void Serialization::deserializeEntity(Entity *entity, const QJsonObject &json) {
         static_cast<float>(unitObj["visionRange"].toDouble(12.0));
     unit->unitType = unitObj["unitType"].toString().toStdString();
     unit->ownerId = unitObj["ownerId"].toInt(0);
+    
+    Game::Units::SpawnType spawnType;
+    if (Game::Units::tryParseSpawnType(
+            QString::fromStdString(unit->unitType), spawnType)) {
+      unit->spawnTypeEnum = spawnType;
+    } else {
+      qWarning() << "Unknown spawn type in save file:" 
+                 << QString::fromStdString(unit->unitType);
+    }
   }
 
   if (json.contains("movement")) {
