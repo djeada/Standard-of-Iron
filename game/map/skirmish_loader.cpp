@@ -167,7 +167,8 @@ SkirmishLoadResult SkirmishLoader::start(const QString &mapPath,
     }
   }
 
-  // Validate that we have at least 2 distinct teams
+  // Validate that we have at least 2 distinct teams when there are 2+ players
+  // Single-player scenarios are allowed (e.g., practice mode)
   std::set<int> uniqueTeams;
   for (const auto &[playerId, teamId] : teamOverrides) {
     uniqueTeams.insert(teamId);
