@@ -63,7 +63,6 @@ void ProductionSystem::update(Engine::Core::World *world, float deltaTime) {
           sp.position = exitPos;
           sp.playerId = u->ownerId;
           sp.spawnType = Game::Units::spawnTypeFromTroopType(prod->productType);
-          sp.unitType = Game::Units::spawnTypeToString(sp.spawnType);
           sp.aiControlled =
               e->hasComponent<Engine::Core::AIControlledComponent>();
           auto unit = reg->create(sp.spawnType, *world, sp);
