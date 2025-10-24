@@ -1,2 +1,0 @@
-"/usr/bin/gcc-ar-13" qc libaudio_system.a CMakeFiles/audio_system.dir/audio_system_autogen/mocs_compilation.cpp.o CMakeFiles/audio_system.dir/AudioSystem.cpp.o CMakeFiles/audio_system.dir/Sound.cpp.o CMakeFiles/audio_system.dir/MusicPlayer.cpp.o CMakeFiles/audio_system.dir/MiniaudioBackend.cpp.o CMakeFiles/audio_system.dir/AudioEventHandler.cpp.o
-"/usr/bin/gcc-ranlib-13" libaudio_system.a
