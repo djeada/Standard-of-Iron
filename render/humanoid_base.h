@@ -136,7 +136,6 @@ protected:
 
   void drawCommonBody(const DrawContext &ctx, const HumanoidVariant &v,
                       const HumanoidPose &pose, ISubmitter &out) const;
-
 };
 
 } // namespace Render::GL

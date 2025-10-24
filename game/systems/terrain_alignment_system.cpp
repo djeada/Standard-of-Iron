@@ -35,8 +35,9 @@ void TerrainAlignmentSystem::alignEntityToTerrain(
   float entityBaseOffset = 0.0f;
   if (auto *unit = entity->getComponent<Engine::Core::UnitComponent>()) {
     if (!unit->unitType.empty()) {
-      entityBaseOffset = Game::Units::TroopConfig::instance()
-                              .getSelectionRingGroundOffset(unit->unitType);
+      entityBaseOffset =
+          Game::Units::TroopConfig::instance().getSelectionRingGroundOffset(
+              unit->unitType);
     }
   }
 

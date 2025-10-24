@@ -83,8 +83,7 @@ void Backend::initialize() {
     qWarning()
         << "Backend: pine shader missing - check pine_instanced.vert/frag";
   if (!m_firecampShader)
-    qWarning()
-        << "Backend: firecamp shader missing - check firecamp.vert/frag";
+    qWarning() << "Backend: firecamp shader missing - check firecamp.vert/frag";
   if (!m_groundShader)
     qWarning() << "Backend: ground_plane shader missing";
   if (!m_terrainShader)
@@ -548,7 +547,6 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
                                      cameraForward);
       }
 
-      // Bind white texture if no fire texture is available
       if (m_firecampUniforms.fireTexture != Shader::InvalidUniform) {
         if (m_resources && m_resources->white()) {
           m_resources->white()->bind(0);
@@ -558,11 +556,10 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
 
       glBindVertexArray(m_firecampVao);
       firecamp.instanceBuffer->bind();
-      const GLsizei stride =
-          static_cast<GLsizei>(sizeof(FireCampInstanceGpu));
-      glVertexAttribPointer(
-          3, 4, GL_FLOAT, GL_FALSE, stride,
-          reinterpret_cast<void *>(offsetof(FireCampInstanceGpu, posIntensity)));
+      const GLsizei stride = static_cast<GLsizei>(sizeof(FireCampInstanceGpu));
+      glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, stride,
+                            reinterpret_cast<void *>(
+                                offsetof(FireCampInstanceGpu, posIntensity)));
       glVertexAttribPointer(
           4, 4, GL_FLOAT, GL_FALSE, stride,
           reinterpret_cast<void *>(offsetof(FireCampInstanceGpu, radiusPhase)));
@@ -1865,7 +1862,6 @@ void Backend::initializeFireCampPipeline() {
   initializeOpenGLFunctions();
   shutdownFireCampPipeline();
 
-  // Simple quad for billboard fire camp rendering
   struct FireCampVertex {
     QVector3D position;
     QVector2D texCoord;
@@ -1878,14 +1874,14 @@ void Backend::initializeFireCampPipeline() {
 
   auto appendPlane = [&](float planeIndex) {
     unsigned short base = static_cast<unsigned short>(vertices.size());
-    vertices.push_back({QVector3D(-1.0f, 0.0f, planeIndex),
-                        QVector2D(0.0f, 0.0f)}); // bottom-left
-    vertices.push_back({QVector3D(1.0f, 0.0f, planeIndex),
-                        QVector2D(1.0f, 0.0f)}); // bottom-right
-    vertices.push_back({QVector3D(1.0f, 2.0f, planeIndex),
-                        QVector2D(1.0f, 1.0f)}); // top-right
-    vertices.push_back({QVector3D(-1.0f, 2.0f, planeIndex),
-                        QVector2D(0.0f, 1.0f)}); // top-left
+    vertices.push_back(
+        {QVector3D(-1.0f, 0.0f, planeIndex), QVector2D(0.0f, 0.0f)});
+    vertices.push_back(
+        {QVector3D(1.0f, 0.0f, planeIndex), QVector2D(1.0f, 0.0f)});
+    vertices.push_back(
+        {QVector3D(1.0f, 2.0f, planeIndex), QVector2D(1.0f, 1.0f)});
+    vertices.push_back(
+        {QVector3D(-1.0f, 2.0f, planeIndex), QVector2D(0.0f, 1.0f)});
 
     indices.push_back(base + 0);
     indices.push_back(base + 1);
@@ -1926,7 +1922,6 @@ void Backend::initializeFireCampPipeline() {
                indices.data(), GL_STATIC_DRAW);
   m_firecampIndexCount = static_cast<GLsizei>(indices.size());
 
-  // Setup instance attribute pointers (will be set per-instance)
   glEnableVertexAttribArray(3);
   glVertexAttribDivisor(3, 1);
 

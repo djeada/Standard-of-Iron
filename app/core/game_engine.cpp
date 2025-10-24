@@ -108,9 +108,10 @@ GameEngine::GameEngine() {
   m_pine = std::make_unique<Render::GL::PineRenderer>();
   m_firecamp = std::make_unique<Render::GL::FireCampRenderer>();
 
-  m_passes = {m_ground.get(), m_terrain.get(), m_river.get(), m_riverbank.get(),
-              m_bridge.get(), m_biome.get(),   m_stone.get(), m_plant.get(),
-              m_pine.get(),   m_firecamp.get(), m_fog.get()};
+  m_passes = {m_ground.get(),    m_terrain.get(), m_river.get(),
+              m_riverbank.get(), m_bridge.get(),  m_biome.get(),
+              m_stone.get(),     m_plant.get(),   m_pine.get(),
+              m_firecamp.get(),  m_fog.get()};
 
   std::unique_ptr<Engine::Core::System> arrowSys =
       std::make_unique<Game::Systems::ArrowSystem>();

@@ -54,9 +54,7 @@ inline bool tryParseSpawnType(const QString &value, SpawnType &out) {
   return false;
 }
 
-inline bool isTroopSpawn(SpawnType type) {
-  return type != SpawnType::Barracks;
-}
+inline bool isTroopSpawn(SpawnType type) { return type != SpawnType::Barracks; }
 
 inline std::optional<TroopType> spawnTypeToTroopType(SpawnType type) {
   switch (type) {
