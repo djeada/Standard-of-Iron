@@ -23,11 +23,18 @@ VictoryService::VictoryService()
 
 VictoryService::~VictoryService() = default;
 
-void VictoryService::configure(const Game::Map::VictoryConfig &config,
-                               int localOwnerId) {
-  m_localOwnerId = localOwnerId;
+void VictoryService::reset() {
   m_victoryState = "";
   m_elapsedTime = 0.0f;
+  m_worldPtr = nullptr;
+  m_victoryCallback = nullptr;
+}
+
+void VictoryService::configure(const Game::Map::VictoryConfig &config,
+                               int localOwnerId) {
+  reset();
+  
+  m_localOwnerId = localOwnerId;
 
   if (config.victoryType == "elimination") {
     m_victoryType = VictoryType::Elimination;
