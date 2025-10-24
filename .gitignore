@@ -59,6 +59,6 @@ compile_commands.json
 build/
 build-*/
 dist/
-
-# CodeQL
+_codeql_build_dir/
 _codeql_detected_source_root
+
