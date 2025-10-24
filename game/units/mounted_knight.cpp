@@ -47,6 +47,7 @@ void MountedKnight::init(const SpawnParams &params) {
 
   m_u = e->addComponent<Engine::Core::UnitComponent>();
   m_u->unitType = m_typeString;
+  m_u->spawnTypeEnum = params.spawnType;
   m_u->health = 200;
   m_u->maxHealth = 200;
   m_u->speed = 8.0f;

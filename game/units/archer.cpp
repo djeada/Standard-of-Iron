@@ -46,6 +46,7 @@ void Archer::init(const SpawnParams &params) {
 
   m_u = e->addComponent<Engine::Core::UnitComponent>();
   m_u->unitType = m_typeString;
+  m_u->spawnTypeEnum = params.spawnType;
   m_u->health = 80;
   m_u->maxHealth = 80;
   m_u->speed = 3.0f;
