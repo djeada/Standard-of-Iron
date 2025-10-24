@@ -33,7 +33,7 @@ void VictoryService::reset() {
 void VictoryService::configure(const Game::Map::VictoryConfig &config,
                                int localOwnerId) {
   reset();
-  
+
   m_localOwnerId = localOwnerId;
 
   if (config.victoryType == "elimination") {
