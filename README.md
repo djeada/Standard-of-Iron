@@ -409,7 +409,11 @@ Quick start for contributors:
 - Campaign mode
 - Advanced AI behaviors
 - Save/load game state
-- Sound effects and music
+- ~~Sound effects and music~~ ✅ Implemented (see [Audio System Documentation](docs/AUDIO_SYSTEM.md))
+
+## Documentation
+
+- [Audio System Guide](docs/AUDIO_SYSTEM.md) - Comprehensive guide to the audio system architecture, troubleshooting, and development
 
 ## License
 
