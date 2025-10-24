@@ -91,7 +91,8 @@ void AudioEventHandler::onUnitSelected(
     return;
   }
 
-  auto it = m_unitVoiceMap.find(unitComponent->unitType);
+  std::string unitTypeStr = Game::Units::spawnTypeToString(unitComponent->spawnType);
+  auto it = m_unitVoiceMap.find(unitTypeStr);
   if (it != m_unitVoiceMap.end()) {
     auto now = std::chrono::steady_clock::now();
     auto timeSinceLastSound =
@@ -100,7 +101,7 @@ void AudioEventHandler::onUnitSelected(
             .count();
 
     bool shouldPlay = (timeSinceLastSound >= SELECTION_SOUND_COOLDOWN_MS) ||
-                      (unitComponent->unitType != m_lastSelectionUnitType);
+                      (unitTypeStr != m_lastSelectionUnitType);
 
     if (shouldPlay) {
       AudioCategory category =
@@ -108,7 +109,7 @@ void AudioEventHandler::onUnitSelected(
       AudioSystem::getInstance().playSound(it->second, 1.0f, false, 5,
                                            category);
       m_lastSelectionSoundTime = now;
-      m_lastSelectionUnitType = unitComponent->unitType;
+      m_lastSelectionUnitType = unitTypeStr;
     }
   }
 }

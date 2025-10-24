@@ -66,7 +66,8 @@ void AIReasoner::updateContext(const AISnapshot &snapshot, AIContext &ctx) {
     if (entity.isBuilding) {
       ctx.buildings.push_back(entity.id);
 
-      if (entity.unitType == "barracks" && ctx.primaryBarracks == 0) {
+      if (entity.spawnType == Game::Units::SpawnType::Barracks && 
+          ctx.primaryBarracks == 0) {
         ctx.primaryBarracks = entity.id;
         ctx.rallyX = entity.posX - 5.0f;
         ctx.rallyZ = entity.posZ;
@@ -81,11 +82,14 @@ void AIReasoner::updateContext(const AISnapshot &snapshot, AIContext &ctx) {
     ctx.totalUnits++;
 
     if (ctx.nation) {
-      auto troopType = Game::Units::troopTypeFromString(entity.unitType);
-      if (ctx.nation->isRangedUnit(troopType)) {
-        ctx.rangedCount++;
-      } else if (ctx.nation->isMeleeUnit(troopType)) {
-        ctx.meleeCount++;
+      auto troopTypeOpt = Game::Units::spawnTypeToTroopType(entity.spawnType);
+      if (troopTypeOpt) {
+        auto troopType = *troopTypeOpt;
+        if (ctx.nation->isRangedUnit(troopType)) {
+          ctx.rangedCount++;
+        } else if (ctx.nation->isMeleeUnit(troopType)) {
+          ctx.meleeCount++;
+        }
       }
     }
 

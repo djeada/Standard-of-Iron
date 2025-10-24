@@ -99,7 +99,8 @@ TacticalUtils::TargetScore TacticalUtils::selectFocusFireTarget(
       }
     }
 
-    float typePriority = getUnitTypePriority(enemy->unitType, context.nation);
+    float typePriority = getUnitTypePriority(
+        Game::Units::spawnTypeToString(enemy->spawnType), context.nation);
     score += typePriority * 3.0f;
 
     if (!enemy->isBuilding) {
