@@ -7,8 +7,10 @@ This script automates the Windows build process by:
 1. Checking for required tools (CMake, Ninja, MSVC, Qt)
 2. Guiding installation of missing dependencies
 3. Configuring and building the project with proper MSVC setup
-4. Deploying Qt dependencies
-5. Copying assets and creating a distributable package
+4. Deploying Qt dependencies with runtime libraries
+5. Writing qt.conf and diagnostic scripts (run_debug.cmd, run_debug_softwaregl.cmd)
+6. Copying GL/ANGLE fallback DLLs for graphics compatibility
+7. Copying assets and creating a distributable package
 
 Usage:
     python scripts/build-windows.py                    # Full build with checks
@@ -358,6 +360,86 @@ def deploy_qt(build_dir: Path, qt_path: Path, app_name: str, build_type: str) ->
     
     success("Qt dependencies deployed")
 
+def write_qt_conf(app_dir: Path) -> None:
+    """Write qt.conf to configure Qt plugin paths."""
+    info("Writing qt.conf...")
+    
+    qt_conf_content = """[Paths]
+Plugins = .
+Imports = qml
+Qml2Imports = qml
+Translations = translations
+"""
+    
+    qt_conf_path = app_dir / "qt.conf"
+    qt_conf_path.write_text(qt_conf_content, encoding='ascii')
+    success("qt.conf written")
+
+def write_debug_scripts(app_dir: Path, app_name: str) -> None:
+    """Write diagnostic scripts for troubleshooting."""
+    info("Writing diagnostic scripts...")
+    
+    # run_debug.cmd
+    run_debug_content = """@echo off
+setlocal
+cd /d "%~dp0"
+set QT_DEBUG_PLUGINS=1
+set QT_LOGGING_RULES=qt.*=true;qt.qml=true;qqml.*=true
+set QT_QPA_PLATFORM=windows
+"%~dp0{app_name}.exe" 1> "%~dp0runlog.txt" 2>&1
+echo ExitCode: %ERRORLEVEL%>> "%~dp0runlog.txt"
+pause
+""".format(app_name=app_name)
+    
+    run_debug_path = app_dir / "run_debug.cmd"
+    run_debug_path.write_text(run_debug_content, encoding='ascii')
+    
+    # run_debug_softwaregl.cmd
+    run_debug_softwaregl_content = """@echo off
+setlocal
+cd /d "%~dp0"
+set QT_DEBUG_PLUGINS=1
+set QT_LOGGING_RULES=qt.*=true;qt.qml=true;qqml.*=true;qt.quick.*=true
+set QT_OPENGL=software
+set QT_QPA_PLATFORM=windows
+"%~dp0{app_name}.exe" 1> "%~dp0runlog.txt" 2>&1
+echo ExitCode: %ERRORLEVEL%>> "%~dp0runlog.txt"
+pause
+""".format(app_name=app_name)
+    
+    run_debug_softwaregl_path = app_dir / "run_debug_softwaregl.cmd"
+    run_debug_softwaregl_path.write_text(run_debug_softwaregl_content, encoding='ascii')
+    
+    success(f"Diagnostic scripts written: run_debug.cmd, run_debug_softwaregl.cmd")
+
+def copy_gl_angle_fallbacks(app_dir: Path, qt_path: Path) -> None:
+    """Copy GL/ANGLE fallback DLLs for graphics compatibility."""
+    info("Copying GL/ANGLE fallback DLLs...")
+    
+    qt_bin = qt_path / "bin"
+    fallback_dlls = [
+        "d3dcompiler_47.dll",
+        "opengl32sw.dll",
+        "libEGL.dll",
+        "libGLESv2.dll"
+    ]
+    
+    copied_count = 0
+    for dll_name in fallback_dlls:
+        src = qt_bin / dll_name
+        if src.exists():
+            dst = app_dir / dll_name
+            shutil.copy2(src, dst)
+            info(f"  Copied {dll_name}")
+            copied_count += 1
+        else:
+            warning(f"  {dll_name} not found in Qt bin directory")
+    
+    if copied_count > 0:
+        success(f"Copied {copied_count} GL/ANGLE fallback DLL(s)")
+    else:
+        warning("No GL/ANGLE fallback DLLs found")
+
 def copy_assets(build_dir: Path) -> None:
     """Copy assets to build directory."""
     info("Copying assets...")
@@ -466,6 +548,16 @@ def main() -> int:
     # Deploy Qt
     if qt_path:
         deploy_qt(build_dir, qt_path, "standard_of_iron", args.build_type)
+        
+        # Write qt.conf
+        app_dir = build_dir / "bin"
+        write_qt_conf(app_dir)
+        
+        # Write diagnostic scripts
+        write_debug_scripts(app_dir, "standard_of_iron")
+        
+        # Copy GL/ANGLE fallbacks
+        copy_gl_angle_fallbacks(app_dir, qt_path)
     else:
         warning("Qt path not found, skipping windeployqt")
     
