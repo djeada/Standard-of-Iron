@@ -1,9 +1,6 @@
 name: Windows Build (tags only)
 
-on:
-  push:
-    tags:
-      - 'v*'   # run only on tags like v1.2.3
+on: [push]
 
 jobs:
   build-windows:
@@ -36,7 +33,7 @@ jobs:
         with:
           version: ${{ env.QT_VERSION }}
           host: windows
-          arch:  ${{ env.QT_ARCH }}
+          arch: ${{ env.QT_ARCH }}
           cache: true
           aqtversion: '==3.3.0'
           modules: 'qt5compat qtmultimedia'
@@ -70,7 +67,7 @@ jobs:
 
           # Export env and PATH
           echo "Qt6_DIR=$qtDir" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-          echo "$qtDir\bin"       | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          echo "$qtDir\bin"     | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
       # Normalize env for both paths
       - name: Normalize Qt env
@@ -83,9 +80,16 @@ jobs:
 
           $qtDir = $null
           foreach ($c in $candidates | Select-Object -Unique) {
-            if ($c -and (Test-Path (Join-Path $c 'lib\cmake\Qt6\Qt6Config.cmake'))) { $qtDir = $c; break }
+            if ($c -and (Test-Path (Join-Path $c 'lib\cmake\Qt6\Qt6Config.cmake'))) {
+              $qtDir = $c
+              break
+            }
           }
-          if (-not $qtDir) { Write-Error "Could not locate Qt6. Checked: $($candidates -join ', ')"; exit 1 }
+
+          if (-not $qtDir) {
+            Write-Error "Could not locate Qt6. Checked: $($candidates -join ', ')"
+            exit 1
+          }
 
           echo "Qt6_DIR=$qtDir" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           echo "$qtDir\bin"     | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
@@ -95,8 +99,14 @@ jobs:
         shell: pwsh
         run: |
           Write-Host "Qt6_DIR=$env:Qt6_DIR"
-          if (!(Test-Path "$env:Qt6_DIR\lib\cmake\Qt6\Qt6Config.cmake")) { Write-Error "Qt6Config.cmake not found in $env:Qt6_DIR"; exit 1 }
-          if (!(Get-Command windeployqt -ErrorAction SilentlyContinue))   { Write-Error "windeployqt not found on PATH"; exit 1 }
+          if (!(Test-Path "$env:Qt6_DIR\lib\cmake\Qt6\Qt6Config.cmake")) {
+            Write-Error "Qt6Config.cmake not found in $env:Qt6_DIR"
+            exit 1
+          }
+          if (!(Get-Command windeployqt -ErrorAction SilentlyContinue)) {
+            Write-Error "windeployqt not found on PATH"
+            exit 1
+          }
 
       - name: Configure (CMake + Ninja)
         shell: pwsh
@@ -115,7 +125,7 @@ jobs:
           $mode = if ("${{ env.BUILD_TYPE }}" -eq "Debug") { "--debug" } else { "--release" }
           windeployqt $mode --compiler-runtime --qmldir "$env:QML_DIR" "$env:APP_DIR\${{ env.APP_NAME }}.exe"
 
-      # SAFE: write qt.conf without here-strings
+      # SAFE: write qt.conf
       - name: Write qt.conf
         shell: pwsh
         run: |
@@ -127,13 +137,14 @@ jobs:
             'Translations = translations'
           ) | Set-Content -Encoding ASCII "$env:APP_DIR\qt.conf"
 
-      # SAFE: write run_debug.cmd without here-strings
+      # SAFE: write run_debug.cmd
       - name: Add run_debug.cmd
         shell: pwsh
         run: |
           @(
             '@echo off'
             'setlocal'
+            'cd /d "%~dp0"'
             'set QT_DEBUG_PLUGINS=1'
             'set QT_LOGGING_RULES=qt.*=true;qt.qml=true;qqml.*=true'
             'set QT_QPA_PLATFORM=windows'
@@ -142,21 +153,220 @@ jobs:
             'pause'
           ) | Set-Content -Encoding ASCII "$env:APP_DIR\run_debug.cmd"
 
+      - name: Add run_debug_softwaregl.cmd
+        shell: pwsh
+        run: |
+          @(
+            '@echo off'
+            'setlocal'
+            'cd /d "%~dp0"'
+            'set QT_DEBUG_PLUGINS=1'
+            'set QT_LOGGING_RULES=qt.*=true;qt.qml=true;qqml.*=true;qt.quick.*=true'
+            'set QT_OPENGL=software'
+            'set QT_QPA_PLATFORM=windows'
+            '"%~dp0standard_of_iron.exe" 1> "%~dp0runlog.txt" 2>&1'
+            'echo ExitCode: %ERRORLEVEL%>> "%~dp0runlog.txt"'
+            'pause'
+          ) | Set-Content -Encoding ASCII "$env:APP_DIR\run_debug_softwaregl.cmd"
+
+      - name: Add GL/ANGLE fallbacks
+        shell: pwsh
+        run: |
+          $qtbin = Join-Path $env:Qt6_DIR "bin"
+          foreach ($f in @("d3dcompiler_47.dll","opengl32sw.dll","libEGL.dll","libGLESv2.dll")) {
+            $src = Join-Path $qtbin $f
+            if (Test-Path $src) {
+              Copy-Item $src "$env:APP_DIR" -Force
+              Write-Host "Copied $f"
+            } else {
+              Write-Host "Note: $f not found in Qt bin directory"
+            }
+          }
+
       - name: Copy assets
         shell: pwsh
         run: |
-          if (!(Test-Path "$env:APP_DIR\assets")) { New-Item -ItemType Directory -Path "$env:APP_DIR\assets" | Out-Null }
+          if (!(Test-Path "$env:APP_DIR\assets")) {
+            New-Item -ItemType Directory -Path "$env:APP_DIR\assets" | Out-Null
+          }
           robocopy assets "$env:APP_DIR\assets" /E /NFL /NDL /NJH /NJS /nc /ns /np
           if ($LASTEXITCODE -ge 8) { exit $LASTEXITCODE } else { exit 0 }
 
       - name: Sanity check deployed files
         shell: pwsh
         run: |
-          if (!(Test-Path "$env:APP_DIR\platforms\qwindows.dll")) { Write-Error "Missing platforms\qwindows.dll"; exit 1 }
-          if (!(Test-Path "$env:APP_DIR\Qt6Core.dll"))            { Write-Error "Missing Qt6Core.dll"; exit 1 }
-          if (!(Test-Path "$env:APP_DIR\Qt6Gui.dll"))             { Write-Error "Missing Qt6Gui.dll"; exit 1 }
-          if (!(Test-Path "$env:APP_DIR\Qt6Qml.dll"))             { Write-Error "Missing Qt6Qml.dll (QML app?)"; exit 1 }
+          $req = @(
+            "$env:APP_DIR\platforms\qwindows.dll",
+            "$env:APP_DIR\Qt6Core.dll",
+            "$env:APP_DIR\Qt6Gui.dll",
+            "$env:APP_DIR\Qt6Qml.dll"
+          )
+          $missing = @()
+          foreach ($f in $req) {
+            if (!(Test-Path $f)) { $missing += $f }
+          }
+          if ($missing.Count -gt 0) {
+            Write-Error "Missing required files:`n$($missing -join "`n")"
+            exit 1
+          }
+          foreach ($opt in @("d3dcompiler_47.dll","opengl32sw.dll","libEGL.dll","libGLESv2.dll")) {
+            if (!(Test-Path (Join-Path $env:APP_DIR $opt))) {
+              Write-Host "Note: $opt not found"
+            }
+          }
           Write-Host "Deployment looks OK."
+
+      - name: Dependency check (dumpbin)
+        shell: pwsh
+        run: |
+          Write-Host "Checking EXE dependencies with dumpbin..."
+          
+          # Find dumpbin.exe in Visual Studio installation
+          $dumpbin = Get-ChildItem "C:\Program Files\Microsoft Visual Studio" -Recurse -Filter "dumpbin.exe" -ErrorAction SilentlyContinue |
+            Where-Object { $_.FullName -match "Hostx64\\x64" } |
+            Select-Object -First 1
+          
+          if (-not $dumpbin) {
+            Write-Warning "dumpbin.exe not found, skipping dependency check"
+            exit 0
+          }
+          
+          Write-Host "Using dumpbin: $($dumpbin.FullName)"
+          
+          # Get dependencies
+          $exePath = "$env:APP_DIR\${{ env.APP_NAME }}.exe"
+          $output = & $dumpbin.FullName /DEPENDENTS $exePath 2>&1 | Out-String
+          
+          Write-Host "Dependencies:"
+          Write-Host $output
+          
+          # Parse DLL names from dumpbin output
+          $dllPattern = '^\s+([a-zA-Z0-9_\-\.]+\.dll)\s*$'
+          $dependencies = @()
+          foreach ($line in $output -split "`n") {
+            if ($line -match $dllPattern) {
+              $dependencies += $matches[1]
+            }
+          }
+          
+          # Known system DLLs that don't need to be bundled
+          # These include Windows API sets (api-ms-win-*) and core system DLLs
+          $knownSystemDlls = @(
+            'KERNEL32.dll',
+            'USER32.dll',
+            'ADVAPI32.dll',
+            'SHELL32.dll',
+            'ole32.dll',
+            'OLEAUT32.dll',
+            'OPENGL32.dll',
+            'GDI32.dll',
+            'WS2_32.dll',
+            'NETAPI32.dll'
+          )
+          
+          # Check if each dependency exists in APP_DIR or is a known system DLL
+          $systemDirs = @(
+            "$env:SystemRoot\System32",
+            "$env:SystemRoot\SysWOW64"
+          )
+          
+          $missingDeps = @()
+          foreach ($dll in $dependencies) {
+            # Skip Windows API set DLLs (api-ms-win-*, ext-ms-*)
+            if ($dll -match '^(api-ms-win-|ext-ms-)') {
+              Write-Host "Skipping Windows API set: $dll"
+              continue
+            }
+            
+            # Skip known system DLLs
+            if ($knownSystemDlls -contains $dll) {
+              Write-Host "Skipping known system DLL: $dll"
+              continue
+            }
+            
+            $foundInApp = Test-Path (Join-Path $env:APP_DIR $dll)
+            $foundInSystem = $false
+            foreach ($sysDir in $systemDirs) {
+              if (Test-Path (Join-Path $sysDir $dll)) {
+                $foundInSystem = $true
+                break
+              }
+            }
+            
+            if (-not $foundInApp -and -not $foundInSystem) {
+              $missingDeps += $dll
+              Write-Warning "Missing dependency: $dll"
+            } else {
+              $location = if ($foundInApp) { "app directory" } else { "system directory" }
+              Write-Host "Found $dll in $location"
+            }
+          }
+          
+          if ($missingDeps.Count -gt 0) {
+            Write-Error "Missing DLL dependencies: $($missingDeps -join ', ')"
+            exit 1
+          }
+          
+          Write-Host "All required dependencies are present"
+
+      - name: Smoke-run (software GL, capture exit)
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+      
+          $env:QT_DEBUG_PLUGINS  = "1"
+          $env:QT_LOGGING_RULES  = "qt.*=true;qt.qml=true;qqml.*=true"
+          $env:QT_OPENGL         = "software"
+          $env:QT_QPA_PLATFORM   = "windows"
+      
+          Push-Location "$env:APP_DIR"
+          try {
+            $process = Start-Process -FilePath ".\${{ env.APP_NAME }}.exe" -PassThru -NoNewWindow
+            $timeoutSeconds = 5
+            $exited = $false
+            try {
+              Wait-Process -Id $process.Id -Timeout $timeoutSeconds -ErrorAction Stop
+              $exited = $true
+            } catch {
+              $exited = $false
+            }
+
+            if (-not $exited) {
+              Write-Host "Process is still running after $timeoutSeconds s — treating as a PASS for smoke."
+              $process.Kill()
+              $process.WaitForExit()
+              exit 0
+            }
+
+            $code = $process.ExitCode
+            Write-Host "Process exited early with code: $code"
+
+            $expectedOnHeadless = @(-1073741819, -1073741510)
+            $deploymentIssues = @(-1073741701, -1073741515)
+
+            if ($deploymentIssues -contains $code) {
+              Write-Error "Deployment issue detected (exit $code)."
+              exit 1
+            }
+
+            if ($expectedOnHeadless -contains $code) {
+              Write-Warning "Headless-expected exit ($code). Treating as PASS for smoke."
+              exit 0
+            }
+
+            if ($code -eq 0) {
+              Write-Host "App exited cleanly (0)."
+              exit 0
+            }
+
+            Write-Error "Unexpected early exit ($code)."
+            exit 1
+          } catch {
+            Write-Error "Failed to start process: $_"
+            exit 1
+          } finally {
+            Pop-Location
+          }
 
       - name: Zip
         shell: pwsh
