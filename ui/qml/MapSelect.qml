@@ -11,9 +11,30 @@ Item {
     property int selectedMapIndex: -1
     property var selectedMapData: null
     property string selectedMapPath: ""
+    property string validationError: ""
 
     signal mapChosen(string mapPath, var playerConfigs)
     signal cancelled()
+
+    function hasMinimumDistinctTeams() {
+        if (playersModel.count < 2)
+            return false;
+        let teams = new Set();
+        for (let i = 0; i < playersModel.count; i++) {
+            teams.add(playersModel.get(i).teamId);
+        }
+        return teams.size >= 2;
+    }
+
+    function updateValidationError() {
+        if (playersModel.count < 2) {
+            validationError = "Need at least 2 players to start";
+        } else if (!hasMinimumDistinctTeams()) {
+            validationError = "At least two teams must be selected to start a match";
+        } else {
+            validationError = "";
+        }
+    }
 
     function field(obj, key) {
         return (obj && obj[key] !== undefined) ? String(obj[key]) : "";
@@ -53,7 +74,8 @@ Item {
         });
         if (cpuId !== undefined)
             addCPU();
-
+        
+        updateValidationError();
     }
 
     function addCPU() {
@@ -84,18 +106,24 @@ Item {
                 break;
             }
         }
+        
+        // Set CPU to a different team (team 1) by default to ensure valid match setup
+        let defaultTeamId = playersModel.count > 0 ? 1 : 0;
+        
         playersModel.append({
             "playerId": nextId,
             "playerName": "CPU " + nextId,
             "colorIndex": colorIdx,
             "colorHex": Theme.playerColors[colorIdx].hex,
             "colorName": Theme.playerColors[colorIdx].name,
-            "teamId": 0,
-            "teamIcon": Theme.teamIcons[0],
+            "teamId": defaultTeamId,
+            "teamIcon": Theme.teamIcons[defaultTeamId],
             "factionId": 0,
             "factionName": Theme.factions[0].name,
             "isHuman": false
         });
+        
+        updateValidationError();
     }
 
     function removePlayer(index) {
@@ -107,6 +135,7 @@ Item {
             return ;
 
         playersModel.remove(index);
+        updateValidationError();
     }
 
     function cyclePlayerColor(index) {
@@ -144,6 +173,7 @@ Item {
         let newTeamId = (p.teamId + 1) % (maxTeam + 1);
         playersModel.setProperty(index, "teamId", newTeamId);
         playersModel.setProperty(index, "teamIcon", Theme.teamIcons[newTeamId]);
+        updateValidationError();
     }
 
     function getPlayerConfigs() {
@@ -169,8 +199,18 @@ Item {
 
         if (playersModel.count < 2) {
             console.log("MapSelect: Need at least 2 players to start");
+            updateValidationError();
             return ;
         }
+        
+        // Check for at least 2 distinct teams
+        if (!hasMinimumDistinctTeams()) {
+            console.log("MapSelect: Need at least 2 different teams to start");
+            updateValidationError();
+            return ;
+        }
+        
+        validationError = "";
         let configs = getPlayerConfigs();
         console.log("MapSelect: Starting game with", playersModel.count, "players");
         root.mapChosen(selectedMapPath, configs);
@@ -1320,6 +1360,26 @@ Item {
 
             }
 
+            Text {
+                id: validationErrorText
+                
+                text: validationError
+                visible: validationError !== ""
+                color: Theme.removeColor
+                font.pixelSize: 13
+                font.bold: true
+                wrapMode: Text.WordWrap
+                horizontalAlignment: Text.AlignHCenter
+                
+                anchors {
+                    left: parent.left
+                    right: parent.right
+                    verticalCenter: parent.verticalCenter
+                    leftMargin: 140
+                    rightMargin: 140
+                }
+            }
+
             Button {
                 text: qsTr("Back")
                 onClicked: root.cancelled()
@@ -1402,13 +1462,17 @@ Item {
 
             Button {
                 text: qsTr("Play")
-                enabled: list.currentIndex >= 0 && list.count > 0 && playersModel.count >= 2
+                enabled: list.currentIndex >= 0 && list.count > 0 && playersModel.count >= 2 && hasMinimumDistinctTeams()
                 onClicked: acceptSelection()
                 hoverEnabled: true
                 implicitHeight: 42
                 implicitWidth: 130
-                ToolTip.visible: playHover.containsMouse && parent.enabled
-                ToolTip.text: qsTr("Start game (Enter)")
+                ToolTip.visible: playHover.containsMouse
+                ToolTip.text: {
+                    if (validationError !== "")
+                        return validationError;
+                    return qsTr("Start game (Enter)");
+                }
 
                 anchors {
                     right: parent.right
