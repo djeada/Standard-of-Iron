@@ -96,9 +96,6 @@ void FireCampRenderer::submit(Renderer &renderer, ResourceManager *resources) {
     return;
   }
 
-  qDebug() << "FireCampRenderer: Submitting" << m_fireCampInstanceCount
-           << "fire camps";
-
   auto &visibility = Game::Map::VisibilityService::instance();
   const bool useVisibility = visibility.isInitialized();
 
