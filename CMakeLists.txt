@@ -187,7 +187,7 @@ install(TARGETS standard_of_iron RUNTIME DESTINATION .)
 install(DIRECTORY assets/ DESTINATION assets)
 
 # Copy assets next to the binary for dev runs
-file(COPY assets/ DESTINATION ${CMAKE_BINARY_DIR}/assets/)
+file(COPY assets/ DESTINATION ${CMAKE_BINARY_DIR}/bin/assets/)
 
 
 # ---- clang-format helpers (optional but convenient) ----
