@@ -1,0 +1,41 @@
+{
+    "classes": [
+        {
+            "className": "GLView",
+            "object": true,
+            "properties": [
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 0,
+                    "name": "engine",
+                    "notify": "engineChanged",
+                    "read": "engine",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "QObject*",
+                    "user": false,
+                    "write": "setEngine"
+                }
+            ],
+            "qualifiedClassName": "GLView",
+            "signals": [
+                {
+                    "access": "public",
+                    "name": "engineChanged",
+                    "returnType": "void"
+                }
+            ],
+            "superClasses": [
+                {
+                    "access": "public",
+                    "name": "QQuickFramebufferObject"
+                }
+            ]
+        }
+    ],
+    "inputFile": "gl_view.h",
+    "outputRevision": 68
+}

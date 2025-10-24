@@ -1,0 +1,1776 @@
+[
+    {
+        "classes": [
+            {
+                "className": "CommandController",
+                "methods": [
+                    {
+                        "access": "public",
+                        "name": "anySelectedInHoldMode",
+                        "returnType": "bool"
+                    }
+                ],
+                "object": true,
+                "qualifiedClassName": "App::Controllers::CommandController",
+                "signals": [
+                    {
+                        "access": "public",
+                        "name": "attackTargetSelected",
+                        "returnType": "void"
+                    },
+                    {
+                        "access": "public",
+                        "name": "troopLimitReached",
+                        "returnType": "void"
+                    },
+                    {
+                        "access": "public",
+                        "arguments": [
+                            {
+                                "name": "active",
+                                "type": "bool"
+                            }
+                        ],
+                        "name": "holdModeChanged",
+                        "returnType": "void"
+                    }
+                ],
+                "superClasses": [
+                    {
+                        "access": "public",
+                        "name": "QObject"
+                    }
+                ]
+            }
+        ],
+        "inputFile": "command_controller.h",
+        "outputRevision": 68
+    },
+    {
+        "classes": [
+            {
+                "className": "AudioSystemProxy",
+                "methods": [
+                    {
+                        "access": "public",
+                        "arguments": [
+                            {
+                                "name": "volume",
+                                "type": "float"
+                            }
+                        ],
+                        "name": "setMasterVolume",
+                        "returnType": "void"
+                    },
+                    {
+                        "access": "public",
+                        "arguments": [
+                            {
+                                "name": "volume",
+                                "type": "float"
+                            }
+                        ],
+                        "name": "setMusicVolume",
+                        "returnType": "void"
+                    },
+                    {
+                        "access": "public",
+                        "arguments": [
+                            {
+                                "name": "volume",
+                                "type": "float"
+                            }
+                        ],
+                        "name": "setSoundVolume",
+                        "returnType": "void"
+                    },
+                    {
+                        "access": "public",
+                        "arguments": [
+                            {
+                                "name": "volume",
+                                "type": "float"
+                            }
+                        ],
+                        "name": "setVoiceVolume",
+                        "returnType": "void"
+                    },
+                    {
+                        "access": "public",
+                        "name": "getMasterVolume",
+                        "returnType": "float"
+                    },
+                    {
+                        "access": "public",
+                        "name": "getMusicVolume",
+                        "returnType": "float"
+                    },
+                    {
+                        "access": "public",
+                        "name": "getSoundVolume",
+                        "returnType": "float"
+                    },
+                    {
+                        "access": "public",
+                        "name": "getVoiceVolume",
+                        "returnType": "float"
+                    }
+                ],
+                "object": true,
+                "qualifiedClassName": "App::Models::AudioSystemProxy",
+                "superClasses": [
+                    {
+                        "access": "public",
+                        "name": "QObject"
+                    }
+                ]
+            }
+        ],
+        "inputFile": "audio_system_proxy.h",
+        "outputRevision": 68
+    },
+    {
+        "classes": [
+            {
+                "className": "CursorManager",
+                "object": true,
+                "qualifiedClassName": "CursorManager",
+                "signals": [
+                    {
+                        "access": "public",
+                        "name": "modeChanged",
+                        "returnType": "void"
+                    },
+                    {
+                        "access": "public",
+                        "name": "globalCursorChanged",
+                        "returnType": "void"
+                    }
+                ],
+                "superClasses": [
+                    {
+                        "access": "public",
+                        "name": "QObject"
+                    }
+                ]
+            }
+        ],
+        "inputFile": "cursor_manager.h",
+        "outputRevision": 68
+    },
+    {
+        "classes": [
+            {
+                "className": "SelectedUnitsModel",
+                "object": true,
+                "qualifiedClassName": "SelectedUnitsModel",
+                "slots": [
+                    {
+                        "access": "public",
+                        "name": "refresh",
+                        "returnType": "void"
+                    }
+                ],
+                "superClasses": [
+                    {
+                        "access": "public",
+                        "name": "QAbstractListModel"
+                    }
+                ]
+            }
+        ],
+        "inputFile": "selected_units_model.h",
+        "outputRevision": 68
+    },
+    {
+        "classes": [
+            {
+                "className": "GLView",
+                "object": true,
+                "properties": [
+                    {
+                        "constant": false,
+                        "designable": true,
+                        "final": false,
+                        "index": 0,
+                        "name": "engine",
+                        "notify": "engineChanged",
+                        "read": "engine",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "QObject*",
+                        "user": false,
+                        "write": "setEngine"
+                    }
+                ],
+                "qualifiedClassName": "GLView",
+                "signals": [
+                    {
+                        "access": "public",
+                        "name": "engineChanged",
+                        "returnType": "void"
+                    }
+                ],
+                "superClasses": [
+                    {
+                        "access": "public",
+                        "name": "QQuickFramebufferObject"
+                    }
+                ]
+            }
+        ],
+        "inputFile": "gl_view.h",
+        "outputRevision": 68
+    },
+    {
+        "classes": [
+            {
+                "className": "Theme",
+                "object": true,
+                "properties": [
+                    {
+                        "constant": true,
+                        "designable": true,
+                        "final": false,
+                        "index": 0,
+                        "name": "bg",
+                        "read": "bg",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "QColor",
+                        "user": false
+                    },
+                    {
+                        "constant": true,
+                        "designable": true,
+                        "final": false,
+                        "index": 1,
+                        "name": "bgShade",
+                        "read": "bgShade",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "QColor",
+                        "user": false
+                    },
+                    {
+                        "constant": true,
+                        "designable": true,
+                        "final": false,
+                        "index": 2,
+                        "name": "dim",
+                        "read": "dim",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "QColor",
+                        "user": false
+                    },
+                    {
+                        "constant": true,
+                        "designable": true,
+                        "final": false,
+                        "index": 3,
+                        "name": "panelBase",
+                        "read": "panelBase",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "QColor",
+                        "user": false
+                    },
+                    {
+                        "constant": true,
+                        "designable": true,
+                        "final": false,
+                        "index": 4,
+                        "name": "panelBr",
+                        "read": "panelBr",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "QColor",
+                        "user": false
+                    },
+                    {
+                        "constant": true,
+                        "designable": true,
+                        "final": false,
+                        "index": 5,
+                        "name": "panelBorder",
+                        "read": "panelBorder",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "QColor",
+                        "user": false
+                    },
+                    {
+                        "constant": true,
+                        "designable": true,
+                        "final": false,
+                        "index": 6,
+                        "name": "cardBase",
+                        "read": "cardBase",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "QColor",
+                        "user": false
+                    },
+                    {
+                        "constant": true,
+                        "designable": true,
+                        "final": false,
+                        "index": 7,
+                        "name": "cardBaseA",
+                        "read": "cardBaseA",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "QColor",
+                        "user": false
+                    },
+                    {
+                        "constant": true,
+                        "designable": true,
+                        "final": false,
+                        "index": 8,
+                        "name": "cardBaseB",
+                        "read": "cardBaseB",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "QColor",
+                        "user": false
+                    },
+                    {
+                        "constant": true,
+                        "designable": true,
+                        "final": false,
+                        "index": 9,
+                        "name": "cardBorder",
+                        "read": "cardBorder",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "QColor",
+                        "user": false
+                    },
+                    {
+                        "constant": true,
+                        "designable": true,
+                        "final": false,
+                        "index": 10,
+                        "name": "hover",
+                        "read": "hover",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "QColor",
+                        "user": false
+                    },
+                    {
+                        "constant": true,
+                        "designable": true,
+                        "final": false,
+                        "index": 11,
+                        "name": "hoverBg",
+                        "read": "hoverBg",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "QColor",
+                        "user": false
+                    },
+                    {
+                        "constant": true,
+                        "designable": true,
+                        "final": false,
+                        "index": 12,
+                        "name": "selected",
+                        "read": "selected",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "QColor",
+                        "user": false
+                    },
+                    {
+                        "constant": true,
+                        "designable": true,
+                        "final": false,
+                        "index": 13,
+                        "name": "selectedBg",
+                        "read": "selectedBg",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "QColor",
+                        "user": false
+                    },
+                    {
+                        "constant": true,
+                        "designable": true,
+                        "final": false,
+                        "index": 14,
+                        "name": "selectedBr",
+                        "read": "selectedBr",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "QColor",
+                        "user": false
+                    },
+                    {
+                        "constant": true,
+                        "designable": true,
+                        "final": false,
+                        "index": 15,
+                        "name": "thumbBr",
+                        "read": "thumbBr",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "QColor",
+                        "user": false
+                    },
+                    {
+                        "constant": true,
+                        "designable": true,
+                        "final": false,
+                        "index": 16,
+                        "name": "border",
+                        "read": "border",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "QColor",
+                        "user": false
+                    },
+                    {
+                        "constant": true,
+                        "designable": true,
+                        "final": false,
+                        "index": 17,
+                        "name": "textMain",
+                        "read": "textMain",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "QColor",
+                        "user": false
+                    },
+                    {
+                        "constant": true,
+                        "designable": true,
+                        "final": false,
+                        "index": 18,
+                        "name": "textBright",
+                        "read": "textBright",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "QColor",
+                        "user": false
+                    },
+                    {
+                        "constant": true,
+                        "designable": true,
+                        "final": false,
+                        "index": 19,
+                        "name": "textSub",
+                        "read": "textSub",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "QColor",
+                        "user": false
+                    },
+                    {
+                        "constant": true,
+                        "designable": true,
+                        "final": false,
+                        "index": 20,
+                        "name": "textSubLite",
+                        "read": "textSubLite",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "QColor",
+                        "user": false
+                    },
+                    {
+                        "constant": true,
+                        "designable": true,
+                        "final": false,
+                        "index": 21,
+                        "name": "textDim",
+                        "read": "textDim",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "QColor",
+                        "user": false
+                    },
+                    {
+                        "constant": true,
+                        "designable": true,
+                        "final": false,
+                        "index": 22,
+                        "name": "textHint",
+                        "read": "textHint",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "QColor",
+                        "user": false
+                    },
+                    {
+                        "constant": true,
+                        "designable": true,
+                        "final": false,
+                        "index": 23,
+                        "name": "accent",
+                        "read": "accent",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "QColor",
+                        "user": false
+                    },
+                    {
+                        "constant": true,
+                        "designable": true,
+                        "final": false,
+                        "index": 24,
+                        "name": "accentBright",
+                        "read": "accentBright",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "QColor",
+                        "user": false
+                    },
+                    {
+                        "constant": true,
+                        "designable": true,
+                        "final": false,
+                        "index": 25,
+                        "name": "addColor",
+                        "read": "addColor",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "QColor",
+                        "user": false
+                    },
+                    {
+                        "constant": true,
+                        "designable": true,
+                        "final": false,
+                        "index": 26,
+                        "name": "removeColor",
+                        "read": "removeColor",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "QColor",
+                        "user": false
+                    },
+                    {
+                        "constant": true,
+                        "designable": true,
+                        "final": false,
+                        "index": 27,
+                        "name": "spacingTiny",
+                        "read": "spacingTiny",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "int",
+                        "user": false
+                    },
+                    {
+                        "constant": true,
+                        "designable": true,
+                        "final": false,
+                        "index": 28,
+                        "name": "spacingSmall",
+                        "read": "spacingSmall",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "int",
+                        "user": false
+                    },
+                    {
+                        "constant": true,
+                        "designable": true,
+                        "final": false,
+                        "index": 29,
+                        "name": "spacingMedium",
+                        "read": "spacingMedium",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "int",
+                        "user": false
+                    },
+                    {
+                        "constant": true,
+                        "designable": true,
+                        "final": false,
+                        "index": 30,
+                        "name": "spacingLarge",
+                        "read": "spacingLarge",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "int",
+                        "user": false
+                    },
+                    {
+                        "constant": true,
+                        "designable": true,
+                        "final": false,
+                        "index": 31,
+                        "name": "spacingXLarge",
+                        "read": "spacingXLarge",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "int",
+                        "user": false
+                    },
+                    {
+                        "constant": true,
+                        "designable": true,
+                        "final": false,
+                        "index": 32,
+                        "name": "radiusSmall",
+                        "read": "radiusSmall",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "int",
+                        "user": false
+                    },
+                    {
+                        "constant": true,
+                        "designable": true,
+                        "final": false,
+                        "index": 33,
+                        "name": "radiusMedium",
+                        "read": "radiusMedium",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "int",
+                        "user": false
+                    },
+                    {
+                        "constant": true,
+                        "designable": true,
+                        "final": false,
+                        "index": 34,
+                        "name": "radiusLarge",
+                        "read": "radiusLarge",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "int",
+                        "user": false
+                    },
+                    {
+                        "constant": true,
+                        "designable": true,
+                        "final": false,
+                        "index": 35,
+                        "name": "radiusPanel",
+                        "read": "radiusPanel",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "int",
+                        "user": false
+                    },
+                    {
+                        "constant": true,
+                        "designable": true,
+                        "final": false,
+                        "index": 36,
+                        "name": "animFast",
+                        "read": "animFast",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "int",
+                        "user": false
+                    },
+                    {
+                        "constant": true,
+                        "designable": true,
+                        "final": false,
+                        "index": 37,
+                        "name": "animNormal",
+                        "read": "animNormal",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "int",
+                        "user": false
+                    },
+                    {
+                        "constant": true,
+                        "designable": true,
+                        "final": false,
+                        "index": 38,
+                        "name": "animSlow",
+                        "read": "animSlow",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "int",
+                        "user": false
+                    },
+                    {
+                        "constant": true,
+                        "designable": true,
+                        "final": false,
+                        "index": 39,
+                        "name": "fontSizeTiny",
+                        "read": "fontSizeTiny",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "int",
+                        "user": false
+                    },
+                    {
+                        "constant": true,
+                        "designable": true,
+                        "final": false,
+                        "index": 40,
+                        "name": "fontSizeSmall",
+                        "read": "fontSizeSmall",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "int",
+                        "user": false
+                    },
+                    {
+                        "constant": true,
+                        "designable": true,
+                        "final": false,
+                        "index": 41,
+                        "name": "fontSizeMedium",
+                        "read": "fontSizeMedium",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "int",
+                        "user": false
+                    },
+                    {
+                        "constant": true,
+                        "designable": true,
+                        "final": false,
+                        "index": 42,
+                        "name": "fontSizeLarge",
+                        "read": "fontSizeLarge",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "int",
+                        "user": false
+                    },
+                    {
+                        "constant": true,
+                        "designable": true,
+                        "final": false,
+                        "index": 43,
+                        "name": "fontSizeTitle",
+                        "read": "fontSizeTitle",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "int",
+                        "user": false
+                    },
+                    {
+                        "constant": true,
+                        "designable": true,
+                        "final": false,
+                        "index": 44,
+                        "name": "fontSizeHero",
+                        "read": "fontSizeHero",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "int",
+                        "user": false
+                    },
+                    {
+                        "constant": true,
+                        "designable": true,
+                        "final": false,
+                        "index": 45,
+                        "name": "playerColors",
+                        "read": "playerColors",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "QVariantList",
+                        "user": false
+                    },
+                    {
+                        "constant": true,
+                        "designable": true,
+                        "final": false,
+                        "index": 46,
+                        "name": "teamIcons",
+                        "read": "teamIcons",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "QVariantList",
+                        "user": false
+                    },
+                    {
+                        "constant": true,
+                        "designable": true,
+                        "final": false,
+                        "index": 47,
+                        "name": "factions",
+                        "read": "factions",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "QVariantList",
+                        "user": false
+                    },
+                    {
+                        "constant": true,
+                        "designable": true,
+                        "final": false,
+                        "index": 48,
+                        "name": "unitIcons",
+                        "read": "unitIcons",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "QVariantMap",
+                        "user": false
+                    }
+                ],
+                "qualifiedClassName": "Theme",
+                "superClasses": [
+                    {
+                        "access": "public",
+                        "name": "QObject"
+                    }
+                ]
+            }
+        ],
+        "inputFile": "theme.h",
+        "outputRevision": 68
+    },
+    {
+        "classes": [
+            {
+                "className": "GameEngine",
+                "methods": [
+                    {
+                        "access": "public",
+                        "arguments": [
+                            {
+                                "name": "sx",
+                                "type": "qreal"
+                            },
+                            {
+                                "name": "sy",
+                                "type": "qreal"
+                            }
+                        ],
+                        "name": "onMapClicked",
+                        "returnType": "void"
+                    },
+                    {
+                        "access": "public",
+                        "arguments": [
+                            {
+                                "name": "sx",
+                                "type": "qreal"
+                            },
+                            {
+                                "name": "sy",
+                                "type": "qreal"
+                            }
+                        ],
+                        "name": "onRightClick",
+                        "returnType": "void"
+                    },
+                    {
+                        "access": "public",
+                        "arguments": [
+                            {
+                                "name": "sx",
+                                "type": "qreal"
+                            },
+                            {
+                                "name": "sy",
+                                "type": "qreal"
+                            },
+                            {
+                                "name": "additive",
+                                "type": "bool"
+                            }
+                        ],
+                        "name": "onClickSelect",
+                        "returnType": "void"
+                    },
+                    {
+                        "access": "public",
+                        "arguments": [
+                            {
+                                "name": "sx",
+                                "type": "qreal"
+                            },
+                            {
+                                "name": "sy",
+                                "type": "qreal"
+                            }
+                        ],
+                        "name": "onClickSelect",
+                        "returnType": "void"
+                    },
+                    {
+                        "access": "public",
+                        "arguments": [
+                            {
+                                "name": "x1",
+                                "type": "qreal"
+                            },
+                            {
+                                "name": "y1",
+                                "type": "qreal"
+                            },
+                            {
+                                "name": "x2",
+                                "type": "qreal"
+                            },
+                            {
+                                "name": "y2",
+                                "type": "qreal"
+                            },
+                            {
+                                "name": "additive",
+                                "type": "bool"
+                            }
+                        ],
+                        "name": "onAreaSelected",
+                        "returnType": "void"
+                    },
+                    {
+                        "access": "public",
+                        "arguments": [
+                            {
+                                "name": "x1",
+                                "type": "qreal"
+                            },
+                            {
+                                "name": "y1",
+                                "type": "qreal"
+                            },
+                            {
+                                "name": "x2",
+                                "type": "qreal"
+                            },
+                            {
+                                "name": "y2",
+                                "type": "qreal"
+                            }
+                        ],
+                        "name": "onAreaSelected",
+                        "returnType": "void"
+                    },
+                    {
+                        "access": "public",
+                        "name": "selectAllTroops",
+                        "returnType": "void"
+                    },
+                    {
+                        "access": "public",
+                        "arguments": [
+                            {
+                                "name": "sx",
+                                "type": "qreal"
+                            },
+                            {
+                                "name": "sy",
+                                "type": "qreal"
+                            }
+                        ],
+                        "name": "setHoverAtScreen",
+                        "returnType": "void"
+                    },
+                    {
+                        "access": "public",
+                        "arguments": [
+                            {
+                                "name": "sx",
+                                "type": "qreal"
+                            },
+                            {
+                                "name": "sy",
+                                "type": "qreal"
+                            }
+                        ],
+                        "name": "onAttackClick",
+                        "returnType": "void"
+                    },
+                    {
+                        "access": "public",
+                        "name": "onStopCommand",
+                        "returnType": "void"
+                    },
+                    {
+                        "access": "public",
+                        "name": "onHoldCommand",
+                        "returnType": "void"
+                    },
+                    {
+                        "access": "public",
+                        "name": "anySelectedInHoldMode",
+                        "returnType": "bool"
+                    },
+                    {
+                        "access": "public",
+                        "arguments": [
+                            {
+                                "name": "sx",
+                                "type": "qreal"
+                            },
+                            {
+                                "name": "sy",
+                                "type": "qreal"
+                            }
+                        ],
+                        "name": "onPatrolClick",
+                        "returnType": "void"
+                    },
+                    {
+                        "access": "public",
+                        "arguments": [
+                            {
+                                "name": "dx",
+                                "type": "float"
+                            },
+                            {
+                                "name": "dz",
+                                "type": "float"
+                            }
+                        ],
+                        "name": "cameraMove",
+                        "returnType": "void"
+                    },
+                    {
+                        "access": "public",
+                        "arguments": [
+                            {
+                                "name": "dy",
+                                "type": "float"
+                            }
+                        ],
+                        "name": "cameraElevate",
+                        "returnType": "void"
+                    },
+                    {
+                        "access": "public",
+                        "name": "resetCamera",
+                        "returnType": "void"
+                    },
+                    {
+                        "access": "public",
+                        "arguments": [
+                            {
+                                "name": "delta",
+                                "type": "float"
+                            }
+                        ],
+                        "name": "cameraZoom",
+                        "returnType": "void"
+                    },
+                    {
+                        "access": "public",
+                        "name": "cameraDistance",
+                        "returnType": "float"
+                    },
+                    {
+                        "access": "public",
+                        "arguments": [
+                            {
+                                "name": "degrees",
+                                "type": "float"
+                            }
+                        ],
+                        "name": "cameraYaw",
+                        "returnType": "void"
+                    },
+                    {
+                        "access": "public",
+                        "arguments": [
+                            {
+                                "name": "yawDeg",
+                                "type": "float"
+                            },
+                            {
+                                "name": "pitchDeg",
+                                "type": "float"
+                            }
+                        ],
+                        "name": "cameraOrbit",
+                        "returnType": "void"
+                    },
+                    {
+                        "access": "public",
+                        "arguments": [
+                            {
+                                "name": "direction",
+                                "type": "int"
+                            },
+                            {
+                                "name": "shift",
+                                "type": "bool"
+                            }
+                        ],
+                        "name": "cameraOrbitDirection",
+                        "returnType": "void"
+                    },
+                    {
+                        "access": "public",
+                        "arguments": [
+                            {
+                                "name": "enable",
+                                "type": "bool"
+                            }
+                        ],
+                        "name": "cameraFollowSelection",
+                        "returnType": "void"
+                    },
+                    {
+                        "access": "public",
+                        "arguments": [
+                            {
+                                "name": "alpha",
+                                "type": "float"
+                            }
+                        ],
+                        "name": "cameraSetFollowLerp",
+                        "returnType": "void"
+                    },
+                    {
+                        "access": "public",
+                        "name": "startLoadingMaps",
+                        "returnType": "void"
+                    },
+                    {
+                        "access": "public",
+                        "arguments": [
+                            {
+                                "name": "paused",
+                                "type": "bool"
+                            }
+                        ],
+                        "name": "setPaused",
+                        "returnType": "void"
+                    },
+                    {
+                        "access": "public",
+                        "arguments": [
+                            {
+                                "name": "speed",
+                                "type": "float"
+                            }
+                        ],
+                        "name": "setGameSpeed",
+                        "returnType": "void"
+                    },
+                    {
+                        "access": "public",
+                        "arguments": [
+                            {
+                                "name": "ownerId",
+                                "type": "int"
+                            }
+                        ],
+                        "name": "getPlayerStats",
+                        "returnType": "QVariantMap"
+                    },
+                    {
+                        "access": "public",
+                        "name": "clearError",
+                        "returnType": "void"
+                    },
+                    {
+                        "access": "public",
+                        "arguments": [
+                            {
+                                "name": "type",
+                                "type": "QString"
+                            }
+                        ],
+                        "name": "hasSelectedType",
+                        "returnType": "bool"
+                    },
+                    {
+                        "access": "public",
+                        "arguments": [
+                            {
+                                "name": "unitType",
+                                "type": "QString"
+                            }
+                        ],
+                        "name": "recruitNearSelected",
+                        "returnType": "void"
+                    },
+                    {
+                        "access": "public",
+                        "name": "getSelectedProductionState",
+                        "returnType": "QVariantMap"
+                    },
+                    {
+                        "access": "public",
+                        "name": "getSelectedUnitsCommandMode",
+                        "returnType": "QString"
+                    },
+                    {
+                        "access": "public",
+                        "arguments": [
+                            {
+                                "name": "sx",
+                                "type": "qreal"
+                            },
+                            {
+                                "name": "sy",
+                                "type": "qreal"
+                            }
+                        ],
+                        "name": "setRallyAtScreen",
+                        "returnType": "void"
+                    },
+                    {
+                        "access": "public",
+                        "name": "availableMaps",
+                        "returnType": "QVariantList"
+                    },
+                    {
+                        "access": "public",
+                        "arguments": [
+                            {
+                                "name": "mapPath",
+                                "type": "QString"
+                            },
+                            {
+                                "name": "playerConfigs",
+                                "type": "QVariantList"
+                            }
+                        ],
+                        "name": "startSkirmish",
+                        "returnType": "void"
+                    },
+                    {
+                        "access": "public",
+                        "arguments": [
+                            {
+                                "name": "mapPath",
+                                "type": "QString"
+                            }
+                        ],
+                        "name": "startSkirmish",
+                        "returnType": "void"
+                    },
+                    {
+                        "access": "public",
+                        "name": "openSettings",
+                        "returnType": "void"
+                    },
+                    {
+                        "access": "public",
+                        "name": "loadSave",
+                        "returnType": "void"
+                    },
+                    {
+                        "access": "public",
+                        "arguments": [
+                            {
+                                "name": "filename",
+                                "type": "QString"
+                            }
+                        ],
+                        "name": "saveGame",
+                        "returnType": "void"
+                    },
+                    {
+                        "access": "public",
+                        "name": "saveGame",
+                        "returnType": "void"
+                    },
+                    {
+                        "access": "public",
+                        "arguments": [
+                            {
+                                "name": "slotName",
+                                "type": "QString"
+                            }
+                        ],
+                        "name": "saveGameToSlot",
+                        "returnType": "void"
+                    },
+                    {
+                        "access": "public",
+                        "arguments": [
+                            {
+                                "name": "slotName",
+                                "type": "QString"
+                            }
+                        ],
+                        "name": "loadGameFromSlot",
+                        "returnType": "void"
+                    },
+                    {
+                        "access": "public",
+                        "name": "getSaveSlots",
+                        "returnType": "QVariantList"
+                    },
+                    {
+                        "access": "public",
+                        "name": "refreshSaveSlots",
+                        "returnType": "void"
+                    },
+                    {
+                        "access": "public",
+                        "arguments": [
+                            {
+                                "name": "slotName",
+                                "type": "QString"
+                            }
+                        ],
+                        "name": "deleteSaveSlot",
+                        "returnType": "bool"
+                    },
+                    {
+                        "access": "public",
+                        "name": "exitGame",
+                        "returnType": "void"
+                    },
+                    {
+                        "access": "public",
+                        "name": "getOwnerInfo",
+                        "returnType": "QVariantList"
+                    }
+                ],
+                "object": true,
+                "properties": [
+                    {
+                        "constant": false,
+                        "designable": true,
+                        "final": false,
+                        "index": 0,
+                        "name": "selectedUnitsModel",
+                        "notify": "selectedUnitsChanged",
+                        "read": "selectedUnitsModel",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "QObject*",
+                        "user": false
+                    },
+                    {
+                        "constant": false,
+                        "designable": true,
+                        "final": false,
+                        "index": 1,
+                        "name": "paused",
+                        "read": "paused",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "bool",
+                        "user": false,
+                        "write": "setPaused"
+                    },
+                    {
+                        "constant": false,
+                        "designable": true,
+                        "final": false,
+                        "index": 2,
+                        "name": "timeScale",
+                        "read": "timeScale",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "float",
+                        "user": false,
+                        "write": "setGameSpeed"
+                    },
+                    {
+                        "constant": false,
+                        "designable": true,
+                        "final": false,
+                        "index": 3,
+                        "name": "victoryState",
+                        "notify": "victoryStateChanged",
+                        "read": "victoryState",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "QString",
+                        "user": false
+                    },
+                    {
+                        "constant": false,
+                        "designable": true,
+                        "final": false,
+                        "index": 4,
+                        "name": "cursorMode",
+                        "notify": "cursorModeChanged",
+                        "read": "cursorMode",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "QString",
+                        "user": false,
+                        "write": "setCursorMode"
+                    },
+                    {
+                        "constant": false,
+                        "designable": true,
+                        "final": false,
+                        "index": 5,
+                        "name": "globalCursorX",
+                        "notify": "globalCursorChanged",
+                        "read": "globalCursorX",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "qreal",
+                        "user": false
+                    },
+                    {
+                        "constant": false,
+                        "designable": true,
+                        "final": false,
+                        "index": 6,
+                        "name": "globalCursorY",
+                        "notify": "globalCursorChanged",
+                        "read": "globalCursorY",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "qreal",
+                        "user": false
+                    },
+                    {
+                        "constant": false,
+                        "designable": true,
+                        "final": false,
+                        "index": 7,
+                        "name": "hasUnitsSelected",
+                        "notify": "selectedUnitsChanged",
+                        "read": "hasUnitsSelected",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "bool",
+                        "user": false
+                    },
+                    {
+                        "constant": false,
+                        "designable": true,
+                        "final": false,
+                        "index": 8,
+                        "name": "playerTroopCount",
+                        "notify": "troopCountChanged",
+                        "read": "playerTroopCount",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "int",
+                        "user": false
+                    },
+                    {
+                        "constant": false,
+                        "designable": true,
+                        "final": false,
+                        "index": 9,
+                        "name": "maxTroopsPerPlayer",
+                        "notify": "troopCountChanged",
+                        "read": "maxTroopsPerPlayer",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "int",
+                        "user": false
+                    },
+                    {
+                        "constant": false,
+                        "designable": true,
+                        "final": false,
+                        "index": 10,
+                        "name": "availableMaps",
+                        "notify": "availableMapsChanged",
+                        "read": "availableMaps",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "QVariantList",
+                        "user": false
+                    },
+                    {
+                        "constant": false,
+                        "designable": true,
+                        "final": false,
+                        "index": 11,
+                        "name": "mapsLoading",
+                        "notify": "mapsLoadingChanged",
+                        "read": "mapsLoading",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "bool",
+                        "user": false
+                    },
+                    {
+                        "constant": false,
+                        "designable": true,
+                        "final": false,
+                        "index": 12,
+                        "name": "enemyTroopsDefeated",
+                        "notify": "enemyTroopsDefeatedChanged",
+                        "read": "enemyTroopsDefeated",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "int",
+                        "user": false
+                    },
+                    {
+                        "constant": false,
+                        "designable": true,
+                        "final": false,
+                        "index": 13,
+                        "name": "ownerInfo",
+                        "notify": "ownerInfoChanged",
+                        "read": "getOwnerInfo",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "QVariantList",
+                        "user": false
+                    },
+                    {
+                        "constant": false,
+                        "designable": true,
+                        "final": false,
+                        "index": 14,
+                        "name": "selectedPlayerId",
+                        "notify": "selectedPlayerIdChanged",
+                        "read": "selectedPlayerId",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "int",
+                        "user": false,
+                        "write": "setSelectedPlayerId"
+                    },
+                    {
+                        "constant": false,
+                        "designable": true,
+                        "final": false,
+                        "index": 15,
+                        "name": "lastError",
+                        "notify": "lastErrorChanged",
+                        "read": "lastError",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "QString",
+                        "user": false
+                    },
+                    {
+                        "constant": true,
+                        "designable": true,
+                        "final": false,
+                        "index": 16,
+                        "name": "audioSystem",
+                        "read": "audioSystem",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "QObject*",
+                        "user": false
+                    }
+                ],
+                "qualifiedClassName": "GameEngine",
+                "signals": [
+                    {
+                        "access": "public",
+                        "name": "selectedUnitsChanged",
+                        "returnType": "void"
+                    },
+                    {
+                        "access": "public",
+                        "name": "selectedUnitsDataChanged",
+                        "returnType": "void"
+                    },
+                    {
+                        "access": "public",
+                        "name": "enemyTroopsDefeatedChanged",
+                        "returnType": "void"
+                    },
+                    {
+                        "access": "public",
+                        "name": "victoryStateChanged",
+                        "returnType": "void"
+                    },
+                    {
+                        "access": "public",
+                        "name": "cursorModeChanged",
+                        "returnType": "void"
+                    },
+                    {
+                        "access": "public",
+                        "name": "globalCursorChanged",
+                        "returnType": "void"
+                    },
+                    {
+                        "access": "public",
+                        "name": "troopCountChanged",
+                        "returnType": "void"
+                    },
+                    {
+                        "access": "public",
+                        "name": "availableMapsChanged",
+                        "returnType": "void"
+                    },
+                    {
+                        "access": "public",
+                        "name": "ownerInfoChanged",
+                        "returnType": "void"
+                    },
+                    {
+                        "access": "public",
+                        "name": "selectedPlayerIdChanged",
+                        "returnType": "void"
+                    },
+                    {
+                        "access": "public",
+                        "name": "lastErrorChanged",
+                        "returnType": "void"
+                    },
+                    {
+                        "access": "public",
+                        "name": "mapsLoadingChanged",
+                        "returnType": "void"
+                    },
+                    {
+                        "access": "public",
+                        "name": "saveSlotsChanged",
+                        "returnType": "void"
+                    }
+                ],
+                "superClasses": [
+                    {
+                        "access": "public",
+                        "name": "QObject"
+                    }
+                ]
+            }
+        ],
+        "inputFile": "game_engine.h",
+        "outputRevision": 68
+    },
+    {
+        "classes": [
+            {
+                "className": "LanguageManager",
+                "methods": [
+                    {
+                        "access": "public",
+                        "arguments": [
+                            {
+                                "name": "language",
+                                "type": "QString"
+                            }
+                        ],
+                        "name": "setLanguage",
+                        "returnType": "void"
+                    },
+                    {
+                        "access": "public",
+                        "arguments": [
+                            {
+                                "name": "language",
+                                "type": "QString"
+                            }
+                        ],
+                        "name": "languageDisplayName",
+                        "returnType": "QString"
+                    }
+                ],
+                "object": true,
+                "properties": [
+                    {
+                        "constant": false,
+                        "designable": true,
+                        "final": false,
+                        "index": 0,
+                        "name": "currentLanguage",
+                        "notify": "languageChanged",
+                        "read": "currentLanguage",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "QString",
+                        "user": false,
+                        "write": "setLanguage"
+                    },
+                    {
+                        "constant": true,
+                        "designable": true,
+                        "final": false,
+                        "index": 1,
+                        "name": "availableLanguages",
+                        "read": "availableLanguages",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "QStringList",
+                        "user": false
+                    }
+                ],
+                "qualifiedClassName": "LanguageManager",
+                "signals": [
+                    {
+                        "access": "public",
+                        "name": "languageChanged",
+                        "returnType": "void"
+                    }
+                ],
+                "superClasses": [
+                    {
+                        "access": "public",
+                        "name": "QObject"
+                    }
+                ]
+            }
+        ],
+        "inputFile": "language_manager.h",
+        "outputRevision": 68
+    }
+]

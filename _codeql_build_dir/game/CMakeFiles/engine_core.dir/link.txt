@@ -1,0 +1,2 @@
+"/usr/bin/gcc-ar-13" qc libengine_core.a CMakeFiles/engine_core.dir/engine_core_autogen/mocs_compilation.cpp.o CMakeFiles/engine_core.dir/core/entity.cpp.o CMakeFiles/engine_core.dir/core/component.cpp.o CMakeFiles/engine_core.dir/core/system.cpp.o CMakeFiles/engine_core.dir/core/world.cpp.o CMakeFiles/engine_core.dir/core/event_manager.cpp.o CMakeFiles/engine_core.dir/core/serialization.cpp.o
+"/usr/bin/gcc-ranlib-13" libengine_core.a

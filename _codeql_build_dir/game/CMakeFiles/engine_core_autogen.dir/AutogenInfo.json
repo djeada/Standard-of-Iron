@@ -1,0 +1,150 @@
+{
+	"BUILD_DIR" : "/home/runner/work/Standard-of-Iron/Standard-of-Iron/_codeql_build_dir/game/engine_core_autogen",
+	"CMAKE_BINARY_DIR" : "/home/runner/work/Standard-of-Iron/Standard-of-Iron/_codeql_build_dir",
+	"CMAKE_CURRENT_BINARY_DIR" : "/home/runner/work/Standard-of-Iron/Standard-of-Iron/_codeql_build_dir/game",
+	"CMAKE_CURRENT_SOURCE_DIR" : "/home/runner/work/Standard-of-Iron/Standard-of-Iron/game",
+	"CMAKE_EXECUTABLE" : "/usr/local/bin/cmake",
+	"CMAKE_LIST_FILES" : 
+	[
+		"/home/runner/work/Standard-of-Iron/Standard-of-Iron/game/CMakeLists.txt"
+	],
+	"CMAKE_SOURCE_DIR" : "/home/runner/work/Standard-of-Iron/Standard-of-Iron",
+	"CROSS_CONFIG" : false,
+	"DEP_FILE" : "/home/runner/work/Standard-of-Iron/Standard-of-Iron/_codeql_build_dir/game/engine_core_autogen/deps",
+	"DEP_FILE_RULE_NAME" : "engine_core_autogen/timestamp",
+	"HEADERS" : 
+	[
+		[
+			"/home/runner/work/Standard-of-Iron/Standard-of-Iron/game/core/component.h",
+			"MU",
+			"TAC5DWH4SE/moc_component.cpp",
+			null
+		],
+		[
+			"/home/runner/work/Standard-of-Iron/Standard-of-Iron/game/core/entity.h",
+			"MU",
+			"TAC5DWH4SE/moc_entity.cpp",
+			null
+		],
+		[
+			"/home/runner/work/Standard-of-Iron/Standard-of-Iron/game/core/event_manager.h",
+			"MU",
+			"TAC5DWH4SE/moc_event_manager.cpp",
+			null
+		],
+		[
+			"/home/runner/work/Standard-of-Iron/Standard-of-Iron/game/core/serialization.h",
+			"MU",
+			"TAC5DWH4SE/moc_serialization.cpp",
+			null
+		],
+		[
+			"/home/runner/work/Standard-of-Iron/Standard-of-Iron/game/core/system.h",
+			"MU",
+			"TAC5DWH4SE/moc_system.cpp",
+			null
+		],
+		[
+			"/home/runner/work/Standard-of-Iron/Standard-of-Iron/game/core/world.h",
+			"MU",
+			"TAC5DWH4SE/moc_world.cpp",
+			null
+		]
+	],
+	"HEADER_EXTENSIONS" : [ "h", "hh", "h++", "hm", "hpp", "hxx", "in", "txx" ],
+	"INCLUDE_DIR" : "/home/runner/work/Standard-of-Iron/Standard-of-Iron/_codeql_build_dir/game/engine_core_autogen/include",
+	"MOC_COMPILATION_FILE" : "/home/runner/work/Standard-of-Iron/Standard-of-Iron/_codeql_build_dir/game/engine_core_autogen/mocs_compilation.cpp",
+	"MOC_DEFINITIONS" : [ "QT_CORE_LIB", "QT_GUI_LIB", "QT_NO_DEBUG" ],
+	"MOC_DEPEND_FILTERS" : 
+	[
+		[
+			"Q_PLUGIN_METADATA",
+			"[\n][ \t]*Q_PLUGIN_METADATA[ \t]*\\([^\\)]*FILE[ \t]*\"([^\"]+)\""
+		]
+	],
+	"MOC_INCLUDES" : 
+	[
+		"/home/runner/work/Standard-of-Iron/Standard-of-Iron",
+		"/home/runner/work/Standard-of-Iron/Standard-of-Iron/game",
+		"/usr/include/x86_64-linux-gnu/qt6/QtCore",
+		"/usr/include/x86_64-linux-gnu/qt6",
+		"/usr/lib/x86_64-linux-gnu/qt6/mkspecs/linux-g++",
+		"/usr/include/x86_64-linux-gnu/qt6/QtGui",
+		"/usr/include",
+		"/usr/include/c++/13",
+		"/usr/include/x86_64-linux-gnu/c++/13",
+		"/usr/include/c++/13/backward",
+		"/usr/lib/gcc/x86_64-linux-gnu/13/include",
+		"/usr/local/include",
+		"/usr/include/x86_64-linux-gnu"
+	],
+	"MOC_MACRO_NAMES" : 
+	[
+		"Q_OBJECT",
+		"Q_GADGET",
+		"Q_GADGET_EXPORT",
+		"Q_NAMESPACE",
+		"Q_NAMESPACE_EXPORT"
+	],
+	"MOC_OPTIONS" : [],
+	"MOC_PATH_PREFIX" : false,
+	"MOC_PREDEFS_CMD" : 
+	[
+		"/home/runner/work/Standard-of-Iron/.codeql-scratch/dbs/cpp/working/autobuild/bin/c++",
+		"-std=c++20",
+		"-dM",
+		"-E",
+		"-c",
+		"/usr/local/share/cmake-3.31/Modules/CMakeCXXCompilerABI.cpp"
+	],
+	"MOC_PREDEFS_FILE" : "/home/runner/work/Standard-of-Iron/Standard-of-Iron/_codeql_build_dir/game/engine_core_autogen/moc_predefs.h",
+	"MOC_RELAXED_MODE" : false,
+	"MOC_SKIP" : [],
+	"MULTI_CONFIG" : false,
+	"PARALLEL" : 2,
+	"PARSE_CACHE_FILE" : "/home/runner/work/Standard-of-Iron/Standard-of-Iron/_codeql_build_dir/game/CMakeFiles/engine_core_autogen.dir/ParseCache.txt",
+	"QT_MOC_EXECUTABLE" : "/usr/lib/qt6/libexec/moc",
+	"QT_UIC_EXECUTABLE" : "/usr/lib/qt6/libexec/uic",
+	"QT_VERSION_MAJOR" : 6,
+	"QT_VERSION_MINOR" : 4,
+	"SETTINGS_FILE" : "/home/runner/work/Standard-of-Iron/Standard-of-Iron/_codeql_build_dir/game/CMakeFiles/engine_core_autogen.dir/AutogenUsed.txt",
+	"SOURCES" : 
+	[
+		[
+			"/home/runner/work/Standard-of-Iron/Standard-of-Iron/game/core/component.cpp",
+			"MU",
+			null
+		],
+		[
+			"/home/runner/work/Standard-of-Iron/Standard-of-Iron/game/core/entity.cpp",
+			"MU",
+			null
+		],
+		[
+			"/home/runner/work/Standard-of-Iron/Standard-of-Iron/game/core/event_manager.cpp",
+			"MU",
+			null
+		],
+		[
+			"/home/runner/work/Standard-of-Iron/Standard-of-Iron/game/core/serialization.cpp",
+			"MU",
+			null
+		],
+		[
+			"/home/runner/work/Standard-of-Iron/Standard-of-Iron/game/core/system.cpp",
+			"MU",
+			null
+		],
+		[
+			"/home/runner/work/Standard-of-Iron/Standard-of-Iron/game/core/world.cpp",
+			"MU",
+			null
+		]
+	],
+	"UIC_OPTIONS" : [],
+	"UIC_SEARCH_PATHS" : [],
+	"UIC_SKIP" : [],
+	"UIC_UI_FILES" : [],
+	"USE_BETTER_GRAPH" : false,
+	"VERBOSITY" : 0
+}

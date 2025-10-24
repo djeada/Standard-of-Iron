@@ -1,0 +1,27 @@
+<RCC>
+  <qresource prefix="/StandardOfIron/">
+    <file alias="ui/qml/Main.qml">/home/runner/work/Standard-of-Iron/Standard-of-Iron/ui/qml/Main.qml</file>
+    <file alias="ui/qml/MainMenu.qml">/home/runner/work/Standard-of-Iron/Standard-of-Iron/ui/qml/MainMenu.qml</file>
+    <file alias="ui/qml/MapSelect.qml">/home/runner/work/Standard-of-Iron/Standard-of-Iron/ui/qml/MapSelect.qml</file>
+    <file alias="ui/qml/HUD.qml">/home/runner/work/Standard-of-Iron/Standard-of-Iron/ui/qml/HUD.qml</file>
+    <file alias="ui/qml/HUDTop.qml">/home/runner/work/Standard-of-Iron/Standard-of-Iron/ui/qml/HUDTop.qml</file>
+    <file alias="ui/qml/HUDBottom.qml">/home/runner/work/Standard-of-Iron/Standard-of-Iron/ui/qml/HUDBottom.qml</file>
+    <file alias="ui/qml/ProductionPanel.qml">/home/runner/work/Standard-of-Iron/Standard-of-Iron/ui/qml/ProductionPanel.qml</file>
+    <file alias="ui/qml/SaveGamePanel.qml">/home/runner/work/Standard-of-Iron/Standard-of-Iron/ui/qml/SaveGamePanel.qml</file>
+    <file alias="ui/qml/LoadGamePanel.qml">/home/runner/work/Standard-of-Iron/Standard-of-Iron/ui/qml/LoadGamePanel.qml</file>
+    <file alias="ui/qml/SettingsPanel.qml">/home/runner/work/Standard-of-Iron/Standard-of-Iron/ui/qml/SettingsPanel.qml</file>
+    <file alias="ui/qml/HUDVictory.qml">/home/runner/work/Standard-of-Iron/Standard-of-Iron/ui/qml/HUDVictory.qml</file>
+    <file alias="ui/qml/BattleSummary.qml">/home/runner/work/Standard-of-Iron/Standard-of-Iron/ui/qml/BattleSummary.qml</file>
+    <file alias="ui/qml/GameView.qml">/home/runner/work/Standard-of-Iron/Standard-of-Iron/ui/qml/GameView.qml</file>
+    <file alias="assets/shaders/basic.vert">/home/runner/work/Standard-of-Iron/Standard-of-Iron/assets/shaders/basic.vert</file>
+    <file alias="assets/shaders/basic.frag">/home/runner/work/Standard-of-Iron/Standard-of-Iron/assets/shaders/basic.frag</file>
+    <file alias="assets/shaders/grid.frag">/home/runner/work/Standard-of-Iron/Standard-of-Iron/assets/shaders/grid.frag</file>
+    <file alias="assets/maps/map_forest.json">/home/runner/work/Standard-of-Iron/Standard-of-Iron/assets/maps/map_forest.json</file>
+    <file alias="assets/maps/map_rivers.json">/home/runner/work/Standard-of-Iron/Standard-of-Iron/assets/maps/map_rivers.json</file>
+    <file alias="assets/maps/map_mountain.json">/home/runner/work/Standard-of-Iron/Standard-of-Iron/assets/maps/map_mountain.json</file>
+    <file alias="assets/visuals/unit_visuals.json">/home/runner/work/Standard-of-Iron/Standard-of-Iron/assets/visuals/unit_visuals.json</file>
+    <file alias="translations/app_en.qm">/home/runner/work/Standard-of-Iron/Standard-of-Iron/translations/app_en.qm</file>
+    <file alias="translations/app_de.qm">/home/runner/work/Standard-of-Iron/Standard-of-Iron/translations/app_de.qm</file>
+  </qresource>
+</RCC>
+

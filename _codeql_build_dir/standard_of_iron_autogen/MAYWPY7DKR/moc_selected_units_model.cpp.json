@@ -1,0 +1,24 @@
+{
+    "classes": [
+        {
+            "className": "SelectedUnitsModel",
+            "object": true,
+            "qualifiedClassName": "SelectedUnitsModel",
+            "slots": [
+                {
+                    "access": "public",
+                    "name": "refresh",
+                    "returnType": "void"
+                }
+            ],
+            "superClasses": [
+                {
+                    "access": "public",
+                    "name": "QAbstractListModel"
+                }
+            ]
+        }
+    ],
+    "inputFile": "selected_units_model.h",
+    "outputRevision": 68
+}

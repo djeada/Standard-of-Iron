@@ -1,0 +1,47 @@
+{
+    "classes": [
+        {
+            "className": "CommandController",
+            "methods": [
+                {
+                    "access": "public",
+                    "name": "anySelectedInHoldMode",
+                    "returnType": "bool"
+                }
+            ],
+            "object": true,
+            "qualifiedClassName": "App::Controllers::CommandController",
+            "signals": [
+                {
+                    "access": "public",
+                    "name": "attackTargetSelected",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "name": "troopLimitReached",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "active",
+                            "type": "bool"
+                        }
+                    ],
+                    "name": "holdModeChanged",
+                    "returnType": "void"
+                }
+            ],
+            "superClasses": [
+                {
+                    "access": "public",
+                    "name": "QObject"
+                }
+            ]
+        }
+    ],
+    "inputFile": "command_controller.h",
+    "outputRevision": 68
+}
