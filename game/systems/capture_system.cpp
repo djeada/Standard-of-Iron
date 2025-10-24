@@ -111,7 +111,8 @@ void CaptureSystem::processBarrackCapture(Engine::Core::World *world,
     if (!unit || !transform)
       continue;
 
-    if (unit->unitType != "barracks")
+    if (!unit->spawnTypeEnum || 
+        *unit->spawnTypeEnum != Game::Units::SpawnType::Barracks)
       continue;
 
     auto *capture = barrack->getComponent<Engine::Core::CaptureComponent>();
