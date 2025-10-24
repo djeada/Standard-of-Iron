@@ -7,8 +7,8 @@
 namespace Render::GL {
 
 struct FireCampInstanceGpu {
-  QVector4D posIntensity;  // x, y, z, intensity
-  QVector4D radiusPhase;   // radius, phase, duration (or 1.0 for persistent), unused
+  QVector4D posIntensity;
+  QVector4D radiusPhase;
 };
 
 struct FireCampBatchParams {

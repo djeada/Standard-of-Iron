@@ -88,16 +88,16 @@ void FireCampRenderer::configure(
 void FireCampRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   (void)resources;
 
-  m_fireCampInstanceCount =
-      static_cast<uint32_t>(m_fireCampInstances.size());
+  m_fireCampInstanceCount = static_cast<uint32_t>(m_fireCampInstances.size());
 
   if (m_fireCampInstanceCount == 0) {
     m_fireCampInstanceBuffer.reset();
     qWarning() << "FireCampRenderer: No instances to render";
     return;
   }
-  
-  qDebug() << "FireCampRenderer: Submitting" << m_fireCampInstanceCount << "fire camps";
+
+  qDebug() << "FireCampRenderer: Submitting" << m_fireCampInstanceCount
+           << "fire camps";
 
   auto &visibility = Game::Map::VisibilityService::instance();
   const bool useVisibility = visibility.isInitialized();
@@ -116,8 +116,7 @@ void FireCampRenderer::submit(Renderer &renderer, ResourceManager *resources) {
     visibleInstances = m_fireCampInstances;
   }
 
-  const uint32_t visibleCount =
-      static_cast<uint32_t>(visibleInstances.size());
+  const uint32_t visibleCount = static_cast<uint32_t>(visibleInstances.size());
   if (visibleCount == 0) {
     m_fireCampInstanceBuffer.reset();
     return;
@@ -131,15 +130,12 @@ void FireCampRenderer::submit(Renderer &renderer, ResourceManager *resources) {
 
   FireCampBatchParams params = m_fireCampParams;
   params.time = renderer.getAnimationTime();
-  params.flickerAmount =
-      m_fireCampParams.flickerAmount *
-      (0.9f + 0.25f * std::sin(params.time * 1.3f));
-  params.glowStrength =
-      m_fireCampParams.glowStrength *
-      (0.85f + 0.2f * std::sin(params.time * 1.7f + 1.2f));
+  params.flickerAmount = m_fireCampParams.flickerAmount *
+                         (0.9f + 0.25f * std::sin(params.time * 1.3f));
+  params.glowStrength = m_fireCampParams.glowStrength *
+                        (0.85f + 0.2f * std::sin(params.time * 1.7f + 1.2f));
   renderer.firecampBatch(m_fireCampInstanceBuffer.get(), visibleCount, params);
 
-  // Add compact log arrangement directly beneath the fire
   const QVector3D logColor(0.26f, 0.15f, 0.08f);
   const QVector3D charColor(0.08f, 0.05f, 0.03f);
 
@@ -156,11 +152,11 @@ void FireCampRenderer::submit(Renderer &renderer, ResourceManager *resources) {
                                 static_cast<uint32_t>(radiusPhase.y() * 37.0f));
 
     const float time = params.time;
-    const float charAmount = std::clamp(time * 0.015f + rand01(state) * 0.05f,
-                                        0.0f, 1.0f);
+    const float charAmount =
+        std::clamp(time * 0.015f + rand01(state) * 0.05f, 0.0f, 1.0f);
 
-    const QVector3D blendedLogColor = logColor * (1.0f - charAmount) +
-                                      charColor * (charAmount + 0.15f);
+    const QVector3D blendedLogColor =
+        logColor * (1.0f - charAmount) + charColor * (charAmount + 0.15f);
 
     const float logLength = std::clamp(baseRadius * 0.85f, 0.45f, 1.1f);
     const float logRadius = std::clamp(baseRadius * 0.08f, 0.03f, 0.08f);
@@ -204,8 +200,7 @@ void FireCampRenderer::clear() {
 
 void FireCampRenderer::setExplicitFireCamps(
     const std::vector<QVector3D> &positions,
-    const std::vector<float> &intensities,
-    const std::vector<float> &radii) {
+    const std::vector<float> &intensities, const std::vector<float> &radii) {
   m_explicitPositions = positions;
   m_explicitIntensities = intensities;
   m_explicitRadii = radii;
@@ -222,23 +217,22 @@ void FireCampRenderer::addExplicitFireCamps() {
 
   for (size_t i = 0; i < m_explicitPositions.size(); ++i) {
     const QVector3D &pos = m_explicitPositions[i];
-    
+
     float intensity = 1.0f;
     if (i < m_explicitIntensities.size()) {
       intensity = m_explicitIntensities[i];
     }
-    
+
     float radius = 3.0f;
     if (i < m_explicitRadii.size()) {
       radius = m_explicitRadii[i];
     }
-    
-    // Random phase for animation variation
+
     float phase = static_cast<float>(i) * 1.234567f;
-    
+
     FireCampInstanceGpu instance;
     instance.posIntensity = QVector4D(pos.x(), pos.y(), pos.z(), intensity);
-    instance.radiusPhase = QVector4D(radius, phase, 1.0f, 0.0f); // 1.0 = persistent
+    instance.radiusPhase = QVector4D(radius, phase, 1.0f, 0.0f);
     m_fireCampInstances.push_back(instance);
   }
 }
@@ -259,7 +253,6 @@ void FireCampRenderer::generateFireCampInstances() {
   const float edgeMarginX = static_cast<float>(m_width) * edgePadding;
   const float edgeMarginZ = static_cast<float>(m_height) * edgePadding;
 
-  // Lower density for fire camps - they're decorative
   float fireCampDensity = 0.02f;
 
   std::vector<QVector3D> normals(m_width * m_height, QVector3D(0, 1, 0));
@@ -297,7 +290,6 @@ void FireCampRenderer::generateFireCampInstances() {
     QVector3D normal = normals[normalIdx];
     float slope = 1.0f - std::clamp(normal.y(), 0.0f, 1.0f);
 
-    // Fire camps should be on flat ground
     if (slope > 0.3f)
       return false;
 
@@ -311,15 +303,12 @@ void FireCampRenderer::generateFireCampInstances() {
       return false;
     }
 
-    // Intensity and radius for lighting (if added later)
     float intensity = remap(rand01(state), 0.8f, 1.2f);
     float radius = remap(rand01(state), 2.0f, 4.0f) * tileSafe;
 
-    // Phase for animation variation
     float phase = rand01(state) * 6.2831853f;
 
-    // Persistent flag
-    float duration = 1.0f; // 1.0 means persistent
+    float duration = 1.0f;
 
     FireCampInstanceGpu instance;
     instance.posIntensity = QVector4D(worldX, worldY, worldZ, intensity);
@@ -328,7 +317,6 @@ void FireCampRenderer::generateFireCampInstances() {
     return true;
   };
 
-  // Place fire camps near settlements (procedural generation)
   for (int z = 0; z < m_height; z += 20) {
     for (int x = 0; x < m_width; x += 20) {
       int idx = z * m_width + x;
@@ -339,17 +327,14 @@ void FireCampRenderer::generateFireCampInstances() {
         continue;
 
       uint32_t state = hashCoords(
-          x, z,
-          m_noiseSeed ^ 0xF12ECA3Fu ^ static_cast<uint32_t>(idx));
+          x, z, m_noiseSeed ^ 0xF12ECA3Fu ^ static_cast<uint32_t>(idx));
 
       float worldX = (x - halfWidth) * m_tileSize;
       float worldZ = (z - halfHeight) * m_tileSize;
 
       float clusterNoise =
-          valueNoise(worldX * 0.02f, worldZ * 0.02f,
-                     m_noiseSeed ^ 0xCA3F12E0u);
+          valueNoise(worldX * 0.02f, worldZ * 0.02f, m_noiseSeed ^ 0xCA3F12E0u);
 
-      // Only place in specific areas
       if (clusterNoise < 0.4f)
         continue;
 
@@ -357,7 +342,7 @@ void FireCampRenderer::generateFireCampInstances() {
       if (m_terrainTypes[idx] == Game::Map::TerrainType::Hill) {
         densityMult = 0.5f;
       } else if (m_terrainTypes[idx] == Game::Map::TerrainType::Mountain) {
-        densityMult = 0.0f; // No fire camps on mountains
+        densityMult = 0.0f;
       }
 
       float effectiveDensity = fireCampDensity * densityMult;
@@ -369,13 +354,13 @@ void FireCampRenderer::generateFireCampInstances() {
     }
   }
 
-  // Add explicit firecamps from map definition
   addExplicitFireCamps();
 
   m_fireCampInstanceCount = m_fireCampInstances.size();
   m_fireCampInstancesDirty = m_fireCampInstanceCount > 0;
-  
-  qDebug() << "FireCampRenderer: Generated" << m_fireCampInstanceCount << "total instances";
+
+  qDebug() << "FireCampRenderer: Generated" << m_fireCampInstanceCount
+           << "total instances";
 }
 
 } // namespace Render::GL
