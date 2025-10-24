@@ -1,6 +1,9 @@
 name: Windows Build (tags only)
 
-on: [push]
+on:
+  push:
+    tags:
+      - 'v*'   # run only on tags like v1.2.3
 
 jobs:
   build-windows:
