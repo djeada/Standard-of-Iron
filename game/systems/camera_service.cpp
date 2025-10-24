@@ -90,8 +90,7 @@ void CameraService::resetCamera(Render::GL::Camera &camera,
     auto *u = e->getComponent<Engine::Core::UnitComponent>();
     if (!u)
       continue;
-    if (u->spawnTypeEnum && 
-        *u->spawnTypeEnum == Game::Units::SpawnType::Barracks && 
+    if (u->spawnType == Game::Units::SpawnType::Barracks && 
         u->ownerId == localOwnerId &&
         u->health > 0) {
       focusEntity = e;

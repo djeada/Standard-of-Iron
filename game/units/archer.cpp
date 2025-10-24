@@ -45,8 +45,7 @@ void Archer::init(const SpawnParams &params) {
   m_r->visible = true;
 
   m_u = e->addComponent<Engine::Core::UnitComponent>();
-  m_u->unitType = m_typeString;
-  m_u->spawnTypeEnum = params.spawnType;
+  m_u->spawnType = params.spawnType;
   m_u->health = 80;
   m_u->maxHealth = 80;
   m_u->speed = 3.0f;
@@ -88,7 +87,7 @@ void Archer::init(const SpawnParams &params) {
   m_atk->maxHeightDifference = 2.0f;
 
   Engine::Core::EventManager::instance().publish(
-      Engine::Core::UnitSpawnedEvent(m_id, m_u->ownerId, m_u->unitType));
+      Engine::Core::UnitSpawnedEvent(m_id, m_u->ownerId, m_u->spawnType));
 }
 
 } // namespace Units

@@ -53,13 +53,12 @@ public:
   UnitComponent(int health = 100, int maxHealth = 100, float speed = 1.0f,
                 float vision = 12.0f)
       : health(health), maxHealth(maxHealth), speed(speed), ownerId(0),
-        visionRange(vision) {}
+        visionRange(vision), spawnType(Game::Units::SpawnType::Archer) {}
 
   int health;
   int maxHealth;
   float speed;
-  std::string unitType;
-  std::optional<Game::Units::SpawnType> spawnTypeEnum;
+  Game::Units::SpawnType spawnType;
   int ownerId;
   float visionRange;
 };

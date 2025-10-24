@@ -147,7 +147,6 @@ MapTransformer::applyToWorld(const MapDefinition &def,
       sp.position = QVector3D(worldX, 0.0f, worldZ);
       sp.playerId = s.playerId;
       sp.spawnType = s.type;
-      sp.unitType = Game::Units::spawnTypeToString(s.type);
       sp.aiControlled = !ownerRegistry.isPlayer(s.playerId);
       sp.maxPopulation = s.maxPopulation;
       auto obj = s_registry->create(s.type, world, sp);
