@@ -1,0 +1,816 @@
+{
+    "classes": [
+        {
+            "className": "GameEngine",
+            "methods": [
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "sx",
+                            "type": "qreal"
+                        },
+                        {
+                            "name": "sy",
+                            "type": "qreal"
+                        }
+                    ],
+                    "name": "onMapClicked",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "sx",
+                            "type": "qreal"
+                        },
+                        {
+                            "name": "sy",
+                            "type": "qreal"
+                        }
+                    ],
+                    "name": "onRightClick",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "sx",
+                            "type": "qreal"
+                        },
+                        {
+                            "name": "sy",
+                            "type": "qreal"
+                        },
+                        {
+                            "name": "additive",
+                            "type": "bool"
+                        }
+                    ],
+                    "name": "onClickSelect",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "sx",
+                            "type": "qreal"
+                        },
+                        {
+                            "name": "sy",
+                            "type": "qreal"
+                        }
+                    ],
+                    "name": "onClickSelect",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "x1",
+                            "type": "qreal"
+                        },
+                        {
+                            "name": "y1",
+                            "type": "qreal"
+                        },
+                        {
+                            "name": "x2",
+                            "type": "qreal"
+                        },
+                        {
+                            "name": "y2",
+                            "type": "qreal"
+                        },
+                        {
+                            "name": "additive",
+                            "type": "bool"
+                        }
+                    ],
+                    "name": "onAreaSelected",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "x1",
+                            "type": "qreal"
+                        },
+                        {
+                            "name": "y1",
+                            "type": "qreal"
+                        },
+                        {
+                            "name": "x2",
+                            "type": "qreal"
+                        },
+                        {
+                            "name": "y2",
+                            "type": "qreal"
+                        }
+                    ],
+                    "name": "onAreaSelected",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "name": "selectAllTroops",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "sx",
+                            "type": "qreal"
+                        },
+                        {
+                            "name": "sy",
+                            "type": "qreal"
+                        }
+                    ],
+                    "name": "setHoverAtScreen",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "sx",
+                            "type": "qreal"
+                        },
+                        {
+                            "name": "sy",
+                            "type": "qreal"
+                        }
+                    ],
+                    "name": "onAttackClick",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "name": "onStopCommand",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "name": "onHoldCommand",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "name": "anySelectedInHoldMode",
+                    "returnType": "bool"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "sx",
+                            "type": "qreal"
+                        },
+                        {
+                            "name": "sy",
+                            "type": "qreal"
+                        }
+                    ],
+                    "name": "onPatrolClick",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "dx",
+                            "type": "float"
+                        },
+                        {
+                            "name": "dz",
+                            "type": "float"
+                        }
+                    ],
+                    "name": "cameraMove",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "dy",
+                            "type": "float"
+                        }
+                    ],
+                    "name": "cameraElevate",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "name": "resetCamera",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "delta",
+                            "type": "float"
+                        }
+                    ],
+                    "name": "cameraZoom",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "name": "cameraDistance",
+                    "returnType": "float"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "degrees",
+                            "type": "float"
+                        }
+                    ],
+                    "name": "cameraYaw",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "yawDeg",
+                            "type": "float"
+                        },
+                        {
+                            "name": "pitchDeg",
+                            "type": "float"
+                        }
+                    ],
+                    "name": "cameraOrbit",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "direction",
+                            "type": "int"
+                        },
+                        {
+                            "name": "shift",
+                            "type": "bool"
+                        }
+                    ],
+                    "name": "cameraOrbitDirection",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "enable",
+                            "type": "bool"
+                        }
+                    ],
+                    "name": "cameraFollowSelection",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "alpha",
+                            "type": "float"
+                        }
+                    ],
+                    "name": "cameraSetFollowLerp",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "name": "startLoadingMaps",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "paused",
+                            "type": "bool"
+                        }
+                    ],
+                    "name": "setPaused",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "speed",
+                            "type": "float"
+                        }
+                    ],
+                    "name": "setGameSpeed",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "ownerId",
+                            "type": "int"
+                        }
+                    ],
+                    "name": "getPlayerStats",
+                    "returnType": "QVariantMap"
+                },
+                {
+                    "access": "public",
+                    "name": "clearError",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "type",
+                            "type": "QString"
+                        }
+                    ],
+                    "name": "hasSelectedType",
+                    "returnType": "bool"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "unitType",
+                            "type": "QString"
+                        }
+                    ],
+                    "name": "recruitNearSelected",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "name": "getSelectedProductionState",
+                    "returnType": "QVariantMap"
+                },
+                {
+                    "access": "public",
+                    "name": "getSelectedUnitsCommandMode",
+                    "returnType": "QString"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "sx",
+                            "type": "qreal"
+                        },
+                        {
+                            "name": "sy",
+                            "type": "qreal"
+                        }
+                    ],
+                    "name": "setRallyAtScreen",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "name": "availableMaps",
+                    "returnType": "QVariantList"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "mapPath",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "playerConfigs",
+                            "type": "QVariantList"
+                        }
+                    ],
+                    "name": "startSkirmish",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "mapPath",
+                            "type": "QString"
+                        }
+                    ],
+                    "name": "startSkirmish",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "name": "openSettings",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "name": "loadSave",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "filename",
+                            "type": "QString"
+                        }
+                    ],
+                    "name": "saveGame",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "name": "saveGame",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "slotName",
+                            "type": "QString"
+                        }
+                    ],
+                    "name": "saveGameToSlot",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "slotName",
+                            "type": "QString"
+                        }
+                    ],
+                    "name": "loadGameFromSlot",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "name": "getSaveSlots",
+                    "returnType": "QVariantList"
+                },
+                {
+                    "access": "public",
+                    "name": "refreshSaveSlots",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "slotName",
+                            "type": "QString"
+                        }
+                    ],
+                    "name": "deleteSaveSlot",
+                    "returnType": "bool"
+                },
+                {
+                    "access": "public",
+                    "name": "exitGame",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "name": "getOwnerInfo",
+                    "returnType": "QVariantList"
+                }
+            ],
+            "object": true,
+            "properties": [
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 0,
+                    "name": "selectedUnitsModel",
+                    "notify": "selectedUnitsChanged",
+                    "read": "selectedUnitsModel",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "QObject*",
+                    "user": false
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 1,
+                    "name": "paused",
+                    "read": "paused",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "bool",
+                    "user": false,
+                    "write": "setPaused"
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 2,
+                    "name": "timeScale",
+                    "read": "timeScale",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "float",
+                    "user": false,
+                    "write": "setGameSpeed"
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 3,
+                    "name": "victoryState",
+                    "notify": "victoryStateChanged",
+                    "read": "victoryState",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "QString",
+                    "user": false
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 4,
+                    "name": "cursorMode",
+                    "notify": "cursorModeChanged",
+                    "read": "cursorMode",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "QString",
+                    "user": false,
+                    "write": "setCursorMode"
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 5,
+                    "name": "globalCursorX",
+                    "notify": "globalCursorChanged",
+                    "read": "globalCursorX",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "qreal",
+                    "user": false
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 6,
+                    "name": "globalCursorY",
+                    "notify": "globalCursorChanged",
+                    "read": "globalCursorY",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "qreal",
+                    "user": false
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 7,
+                    "name": "hasUnitsSelected",
+                    "notify": "selectedUnitsChanged",
+                    "read": "hasUnitsSelected",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "bool",
+                    "user": false
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 8,
+                    "name": "playerTroopCount",
+                    "notify": "troopCountChanged",
+                    "read": "playerTroopCount",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "int",
+                    "user": false
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 9,
+                    "name": "maxTroopsPerPlayer",
+                    "notify": "troopCountChanged",
+                    "read": "maxTroopsPerPlayer",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "int",
+                    "user": false
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 10,
+                    "name": "availableMaps",
+                    "notify": "availableMapsChanged",
+                    "read": "availableMaps",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "QVariantList",
+                    "user": false
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 11,
+                    "name": "mapsLoading",
+                    "notify": "mapsLoadingChanged",
+                    "read": "mapsLoading",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "bool",
+                    "user": false
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 12,
+                    "name": "enemyTroopsDefeated",
+                    "notify": "enemyTroopsDefeatedChanged",
+                    "read": "enemyTroopsDefeated",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "int",
+                    "user": false
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 13,
+                    "name": "ownerInfo",
+                    "notify": "ownerInfoChanged",
+                    "read": "getOwnerInfo",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "QVariantList",
+                    "user": false
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 14,
+                    "name": "selectedPlayerId",
+                    "notify": "selectedPlayerIdChanged",
+                    "read": "selectedPlayerId",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "int",
+                    "user": false,
+                    "write": "setSelectedPlayerId"
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 15,
+                    "name": "lastError",
+                    "notify": "lastErrorChanged",
+                    "read": "lastError",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "QString",
+                    "user": false
+                },
+                {
+                    "constant": true,
+                    "designable": true,
+                    "final": false,
+                    "index": 16,
+                    "name": "audioSystem",
+                    "read": "audioSystem",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "QObject*",
+                    "user": false
+                }
+            ],
+            "qualifiedClassName": "GameEngine",
+            "signals": [
+                {
+                    "access": "public",
+                    "name": "selectedUnitsChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "name": "selectedUnitsDataChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "name": "enemyTroopsDefeatedChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "name": "victoryStateChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "name": "cursorModeChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "name": "globalCursorChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "name": "troopCountChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "name": "availableMapsChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "name": "ownerInfoChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "name": "selectedPlayerIdChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "name": "lastErrorChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "name": "mapsLoadingChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "name": "saveSlotsChanged",
+                    "returnType": "void"
+                }
+            ],
+            "superClasses": [
+                {
+                    "access": "public",
+                    "name": "QObject"
+                }
+            ]
+        }
+    ],
+    "inputFile": "game_engine.h",
+    "outputRevision": 68
+}

@@ -1,0 +1,8 @@
+/home/runner/work/Standard-of-Iron/Standard-of-Iron/_codeql_build_dir/standard_of_iron_autogen/include/../A6UJ6RRHCV/moc_command_controller.cpp.json
+/home/runner/work/Standard-of-Iron/Standard-of-Iron/_codeql_build_dir/standard_of_iron_autogen/include/../MAYWPY7DKR/moc_audio_system_proxy.cpp.json
+/home/runner/work/Standard-of-Iron/Standard-of-Iron/_codeql_build_dir/standard_of_iron_autogen/include/../MAYWPY7DKR/moc_cursor_manager.cpp.json
+/home/runner/work/Standard-of-Iron/Standard-of-Iron/_codeql_build_dir/standard_of_iron_autogen/include/../MAYWPY7DKR/moc_selected_units_model.cpp.json
+/home/runner/work/Standard-of-Iron/Standard-of-Iron/_codeql_build_dir/standard_of_iron_autogen/include/../UYX5XTB5RZ/moc_gl_view.cpp.json
+/home/runner/work/Standard-of-Iron/Standard-of-Iron/_codeql_build_dir/standard_of_iron_autogen/include/../UYX5XTB5RZ/moc_theme.cpp.json
+/home/runner/work/Standard-of-Iron/Standard-of-Iron/_codeql_build_dir/standard_of_iron_autogen/include/../XWQA2IWZC5/moc_game_engine.cpp.json
+/home/runner/work/Standard-of-Iron/Standard-of-Iron/_codeql_build_dir/standard_of_iron_autogen/include/../XWQA2IWZC5/moc_language_manager.cpp.json

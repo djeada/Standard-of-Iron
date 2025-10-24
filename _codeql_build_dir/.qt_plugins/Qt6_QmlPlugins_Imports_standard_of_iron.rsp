@@ -1,0 +1,14 @@
+-rootPath
+/home/runner/work/Standard-of-Iron/Standard-of-Iron
+-cmake-output
+-output-file
+/home/runner/work/Standard-of-Iron/Standard-of-Iron/_codeql_build_dir/.qt_plugins/Qt6_QmlPlugins_Imports_standard_of_iron.cmake
+-importPath
+/home/runner/work/Standard-of-Iron/Standard-of-Iron/_codeql_build_dir/StandardOfIron
+-importPath
+/home/runner/work/Standard-of-Iron/Standard-of-Iron/_codeql_build_dir
+-importPath
+/usr/lib/x86_64-linux-gnu/qt6/qml
+-qrcFiles
+/home/runner/work/Standard-of-Iron/Standard-of-Iron/_codeql_build_dir/.rcc/qmake_StandardOfIron.qrc
+/home/runner/work/Standard-of-Iron/Standard-of-Iron/_codeql_build_dir/.rcc/standard_of_iron_raw_qml_0.qrc

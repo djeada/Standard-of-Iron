@@ -1,0 +1,18 @@
+module StandardOfIron
+typeinfo standard_of_iron.qmltypes
+depends Qt6::QuickControls2
+prefer :/StandardOfIron/
+Main 1.0 ui/qml/Main.qml
+MainMenu 1.0 ui/qml/MainMenu.qml
+MapSelect 1.0 ui/qml/MapSelect.qml
+HUD 1.0 ui/qml/HUD.qml
+HUDTop 1.0 ui/qml/HUDTop.qml
+HUDBottom 1.0 ui/qml/HUDBottom.qml
+ProductionPanel 1.0 ui/qml/ProductionPanel.qml
+SaveGamePanel 1.0 ui/qml/SaveGamePanel.qml
+LoadGamePanel 1.0 ui/qml/LoadGamePanel.qml
+SettingsPanel 1.0 ui/qml/SettingsPanel.qml
+HUDVictory 1.0 ui/qml/HUDVictory.qml
+BattleSummary 1.0 ui/qml/BattleSummary.qml
+GameView 1.0 ui/qml/GameView.qml
+
