@@ -97,7 +97,8 @@ QJsonObject Serialization::serializeEntity(const Entity *entity) {
     unitObj["maxHealth"] = unit->maxHealth;
     unitObj["speed"] = unit->speed;
     unitObj["visionRange"] = unit->visionRange;
-    unitObj["unitType"] = QString::fromStdString(unit->unitType);
+    unitObj["unitType"] = 
+        QString::fromStdString(Game::Units::spawnTypeToString(unit->spawnType));
     unitObj["ownerId"] = unit->ownerId;
     entityObj["unit"] = unitObj;
   }
@@ -260,17 +261,18 @@ void Serialization::deserializeEntity(Entity *entity, const QJsonObject &json) {
     unit->speed = static_cast<float>(unitObj["speed"].toDouble());
     unit->visionRange =
         static_cast<float>(unitObj["visionRange"].toDouble(12.0));
-    unit->unitType = unitObj["unitType"].toString().toStdString();
-    unit->ownerId = unitObj["ownerId"].toInt(0);
     
+    QString unitTypeStr = unitObj["unitType"].toString();
     Game::Units::SpawnType spawnType;
-    if (Game::Units::tryParseSpawnType(
-            QString::fromStdString(unit->unitType), spawnType)) {
-      unit->spawnTypeEnum = spawnType;
+    if (Game::Units::tryParseSpawnType(unitTypeStr, spawnType)) {
+      unit->spawnType = spawnType;
     } else {
-      qWarning() << "Unknown spawn type in save file:" 
-                 << QString::fromStdString(unit->unitType);
+      qWarning() << "Unknown spawn type in save file:" << unitTypeStr
+                 << "- defaulting to Archer";
+      unit->spawnType = Game::Units::SpawnType::Archer;
     }
+    
+    unit->ownerId = unitObj["ownerId"].toInt(0);
   }
 
   if (json.contains("movement")) {

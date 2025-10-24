@@ -71,10 +71,10 @@ void GlobalStatsRegistry::onUnitSpawned(
 
   auto &stats = m_playerStats[event.ownerId];
 
-  if (event.unitType != "barracks") {
+  if (event.spawnType != Game::Units::SpawnType::Barracks) {
     int individualsPerUnit =
         Game::Units::TroopConfig::instance().getIndividualsPerUnit(
-            event.unitType);
+            event.spawnType);
     stats.troopsRecruited += individualsPerUnit;
   } else {
 
@@ -84,7 +84,7 @@ void GlobalStatsRegistry::onUnitSpawned(
 
 void GlobalStatsRegistry::onUnitDied(const Engine::Core::UnitDiedEvent &event) {
 
-  if (event.unitType == "barracks") {
+  if (event.spawnType == Game::Units::SpawnType::Barracks) {
     auto it = m_playerStats.find(event.ownerId);
     if (it != m_playerStats.end()) {
       it->second.barracksOwned--;
@@ -101,10 +101,10 @@ void GlobalStatsRegistry::onUnitDied(const Engine::Core::UnitDiedEvent &event) {
     if (ownerRegistry.areEnemies(event.killerOwnerId, event.ownerId)) {
       auto &stats = m_playerStats[event.killerOwnerId];
 
-      if (event.unitType != "barracks") {
+      if (event.spawnType != Game::Units::SpawnType::Barracks) {
         int individualsPerUnit =
             Game::Units::TroopConfig::instance().getIndividualsPerUnit(
-                event.unitType);
+                event.spawnType);
         stats.enemiesKilled += individualsPerUnit;
       }
     }
@@ -147,13 +147,12 @@ void GlobalStatsRegistry::rebuildFromWorld(Engine::Core::World &world) {
 
     auto &stats = m_playerStats[unit->ownerId];
 
-    if (unit->spawnTypeEnum && 
-        *unit->spawnTypeEnum == Game::Units::SpawnType::Barracks) {
+    if (unit->spawnType == Game::Units::SpawnType::Barracks) {
       stats.barracksOwned++;
     } else {
       int individualsPerUnit =
           Game::Units::TroopConfig::instance().getIndividualsPerUnit(
-              unit->unitType);
+              unit->spawnType);
       stats.troopsRecruited += individualsPerUnit;
     }
   }
