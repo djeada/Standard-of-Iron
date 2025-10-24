@@ -52,7 +52,8 @@ void ProductionBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   }
 
   for (const auto &entity : snapshot.friendlies) {
-    if (!entity.isBuilding || entity.unitType != "barracks")
+    if (!entity.isBuilding || 
+        entity.spawnType != Game::Units::SpawnType::Barracks)
       continue;
 
     if (Game::Core::isNeutralOwner(entity.ownerId))

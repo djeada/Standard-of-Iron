@@ -1,5 +1,6 @@
 #pragma once
 
+#include "spawn_type.h"
 #include "troop_type.h"
 #include <string>
 #include <unordered_map>
@@ -50,16 +51,48 @@ public:
     return getIndividualsPerUnit(troopTypeFromString(unitType));
   }
 
+  int getIndividualsPerUnit(SpawnType spawnType) const {
+    auto troopTypeOpt = spawnTypeToTroopType(spawnType);
+    if (troopTypeOpt) {
+      return getIndividualsPerUnit(*troopTypeOpt);
+    }
+    return 1;
+  }
+
   int getMaxUnitsPerRow(const std::string &unitType) const {
     return getMaxUnitsPerRow(troopTypeFromString(unitType));
+  }
+
+  int getMaxUnitsPerRow(SpawnType spawnType) const {
+    auto troopTypeOpt = spawnTypeToTroopType(spawnType);
+    if (troopTypeOpt) {
+      return getMaxUnitsPerRow(*troopTypeOpt);
+    }
+    return 10;
   }
 
   float getSelectionRingSize(const std::string &unitType) const {
     return getSelectionRingSize(troopTypeFromString(unitType));
   }
 
+  float getSelectionRingSize(SpawnType spawnType) const {
+    auto troopTypeOpt = spawnTypeToTroopType(spawnType);
+    if (troopTypeOpt) {
+      return getSelectionRingSize(*troopTypeOpt);
+    }
+    return 0.5f;
+  }
+
   float getSelectionRingYOffset(const std::string &unitType) const {
     return getSelectionRingYOffset(troopTypeFromString(unitType));
+  }
+
+  float getSelectionRingYOffset(SpawnType spawnType) const {
+    auto troopTypeOpt = spawnTypeToTroopType(spawnType);
+    if (troopTypeOpt) {
+      return getSelectionRingYOffset(*troopTypeOpt);
+    }
+    return 0.0f;
   }
 
   float getSelectionRingGroundOffset(TroopType unitType) const {
@@ -72,6 +105,14 @@ public:
 
   float getSelectionRingGroundOffset(const std::string &unitType) const {
     return getSelectionRingGroundOffset(troopTypeFromString(unitType));
+  }
+
+  float getSelectionRingGroundOffset(SpawnType spawnType) const {
+    auto troopTypeOpt = spawnTypeToTroopType(spawnType);
+    if (troopTypeOpt) {
+      return getSelectionRingGroundOffset(*troopTypeOpt);
+    }
+    return 0.0f;
   }
 
   void registerTroopType(TroopType unitType, int individualsPerUnit) {
