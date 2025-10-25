@@ -11,6 +11,7 @@
 #include "map_loader.h"
 #include "map_transformer.h"
 #include "terrain_service.h"
+#include "utils/resource_utils.h"
 #include <QDebug>
 
 namespace Game {
@@ -26,8 +27,9 @@ LevelLoadResult LevelLoader::loadFromAssets(const QString &mapPath,
 
   Game::Visuals::VisualCatalog visualCatalog;
   QString visualsErr;
-  if (!visualCatalog.loadFromJsonFile("assets/visuals/unit_visuals.json",
-                                      &visualsErr)) {
+  const QString visualsPath = Utils::Resources::resolveResourcePath(
+      QStringLiteral(":/assets/visuals/unit_visuals.json"));
+  if (!visualCatalog.loadFromJsonFile(visualsPath, &visualsErr)) {
     res.ok = false;
     res.errorMessage =
         QString("Failed to load visual catalog: %1").arg(visualsErr);
@@ -39,9 +41,12 @@ LevelLoadResult LevelLoader::loadFromAssets(const QString &mapPath,
   Game::Units::registerBuiltInUnits(*unitReg);
   Game::Map::MapTransformer::setFactoryRegistry(unitReg);
 
+  const QString resolvedMapPath =
+      Utils::Resources::resolveResourcePath(mapPath);
+
   Game::Map::MapDefinition def;
   QString err;
-  if (Game::Map::MapLoader::loadFromJsonFile(mapPath, def, &err)) {
+  if (Game::Map::MapLoader::loadFromJsonFile(resolvedMapPath, def, &err)) {
     res.ok = true;
     res.mapName = def.name;
 
@@ -104,7 +109,8 @@ LevelLoadResult LevelLoader::loadFromAssets(const QString &mapPath,
     res.ok = false;
     res.errorMessage = QString("Map load failed: %1").arg(err);
     qWarning() << "LevelLoader: Map load failed:" << err
-               << " - applying default environment";
+               << "(path:" << resolvedMapPath << ')'
+               << "- applying default environment";
     Game::Map::Environment::applyDefault(renderer, camera);
     res.ok = false;
     res.camFov = camera.getFOV();

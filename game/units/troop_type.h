@@ -29,7 +29,6 @@ inline std::string troopTypeToString(TroopType type) {
   return troopTypeToQString(type).toStdString();
 }
 
-// Case-insensitive parsing with validation (preferred)
 inline bool tryParseTroopType(const QString &value, TroopType &out) {
   const QString lowered = value.trimmed().toLower();
   if (lowered == QStringLiteral("archer")) {
@@ -44,23 +43,22 @@ inline bool tryParseTroopType(const QString &value, TroopType &out) {
     out = TroopType::Spearman;
     return true;
   }
-  if (lowered == QStringLiteral("mounted_knight") || lowered == QStringLiteral("mountedknight")) {
+  if (lowered == QStringLiteral("mounted_knight") ||
+      lowered == QStringLiteral("mountedknight")) {
     out = TroopType::MountedKnight;
     return true;
   }
   return false;
 }
 
-// Deprecated: use tryParseTroopType(QString, TroopType&) instead
 inline TroopType troopTypeFromString(const std::string &str) {
   TroopType result;
   if (tryParseTroopType(QString::fromStdString(str), result)) {
     return result;
   }
-  return TroopType::Archer; // fallback for backward compatibility
+  return TroopType::Archer;
 }
 
-// For std::string compatibility
 inline std::optional<TroopType> tryParseTroopType(const std::string &str) {
   TroopType result;
   if (tryParseTroopType(QString::fromStdString(str), result)) {
