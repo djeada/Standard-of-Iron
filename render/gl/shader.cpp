@@ -1,4 +1,5 @@
 #include "shader.h"
+#include "utils/resource_utils.h"
 #include <QByteArray>
 #include <QDebug>
 #include <QFile>
@@ -16,12 +17,26 @@ Shader::~Shader() {
 
 bool Shader::loadFromFiles(const QString &vertexPath,
                            const QString &fragmentPath) {
-  QFile vertexFile(vertexPath);
-  QFile fragmentFile(fragmentPath);
+  const QString resolvedVert =
+      Utils::Resources::resolveResourcePath(vertexPath);
+  const QString resolvedFrag =
+      Utils::Resources::resolveResourcePath(fragmentPath);
 
-  if (!vertexFile.open(QIODevice::ReadOnly) ||
-      !fragmentFile.open(QIODevice::ReadOnly)) {
-    qWarning() << "Failed to open shader files";
+  QFile vertexFile(resolvedVert);
+  QFile fragmentFile(resolvedFrag);
+
+  if (!vertexFile.open(QIODevice::ReadOnly)) {
+    qWarning() << "Failed to open vertex shader file:" << resolvedVert;
+    if (resolvedVert != vertexPath)
+      qWarning() << "  Requested path:" << vertexPath;
+    return false;
+  }
+
+  if (!fragmentFile.open(QIODevice::ReadOnly)) {
+    qWarning() << "Failed to open fragment shader file:" << resolvedFrag;
+    if (resolvedFrag != fragmentPath)
+      qWarning() << "  Requested path:" << fragmentPath;
+    vertexFile.close();
     return false;
   }
 

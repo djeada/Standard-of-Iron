@@ -1,7 +1,7 @@
 #pragma once
 
-#include <QVector3D>
 #include <QString>
+#include <QVector3D>
 #include <cstdint>
 #include <memory>
 #include <optional>
@@ -12,7 +12,6 @@ namespace Game::Map {
 
 enum class TerrainType { Flat, Hill, Mountain, River };
 
-// String conversion utilities for TerrainType
 inline QString terrainTypeToQString(TerrainType type) {
   switch (type) {
   case TerrainType::Flat:
@@ -31,7 +30,6 @@ inline std::string terrainTypeToString(TerrainType type) {
   return terrainTypeToQString(type).toStdString();
 }
 
-// Case-insensitive parsing with validation
 inline bool tryParseTerrainType(const QString &value, TerrainType &out) {
   const QString lowered = value.trimmed().toLower();
   if (lowered == QStringLiteral("flat")) {
@@ -53,8 +51,8 @@ inline bool tryParseTerrainType(const QString &value, TerrainType &out) {
   return false;
 }
 
-// For std::string compatibility
-inline std::optional<TerrainType> terrainTypeFromString(const std::string &str) {
+inline std::optional<TerrainType>
+terrainTypeFromString(const std::string &str) {
   TerrainType result;
   if (tryParseTerrainType(QString::fromStdString(str), result)) {
     return result;

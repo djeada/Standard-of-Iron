@@ -1,4 +1,5 @@
 #include "map_catalog.h"
+#include "utils/resource_utils.h"
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
@@ -18,14 +19,16 @@ MapCatalog::MapCatalog(QObject *parent) : QObject(parent) {}
 
 QVariantList MapCatalog::availableMaps() {
   QVariantList list;
-  QDir mapsDir(QStringLiteral("assets/maps"));
+  const QString mapsRoot =
+      Utils::Resources::resolveResourcePath(QStringLiteral(":/assets/maps"));
+  QDir mapsDir(mapsRoot);
   if (!mapsDir.exists())
     return list;
 
   QStringList files =
       mapsDir.entryList(QStringList() << "*.json", QDir::Files, QDir::Name);
   for (const QString &f : files) {
-    QString path = mapsDir.filePath(f);
+    QString path = Utils::Resources::resolveResourcePath(mapsDir.filePath(f));
     QFile file(path);
     QString name = f;
     QString desc;
@@ -87,9 +90,12 @@ QVariantList MapCatalog::availableMaps() {
 
     if (thumbnail.isEmpty()) {
       QString baseName = QFileInfo(f).baseName();
-      thumbnail = QString("assets/maps/%1_thumb.png").arg(baseName);
+      QString thumbCandidate = Utils::Resources::resolveResourcePath(
+          QString(":/assets/maps/%1_thumb.png").arg(baseName));
 
-      if (!QFileInfo::exists(thumbnail)) {
+      if (QFileInfo::exists(thumbCandidate)) {
+        thumbnail = thumbCandidate;
+      } else {
         thumbnail = "";
       }
     }
@@ -109,7 +115,9 @@ void MapCatalog::loadMapsAsync() {
   m_loading = true;
   emit loadingChanged(true);
 
-  QDir mapsDir(QStringLiteral("assets/maps"));
+  const QString mapsRoot =
+      Utils::Resources::resolveResourcePath(QStringLiteral(":/assets/maps"));
+  QDir mapsDir(mapsRoot);
   if (!mapsDir.exists()) {
     m_loading = false;
     emit loadingChanged(false);
@@ -139,8 +147,11 @@ void MapCatalog::loadNextMap() {
   }
 
   QString fileName = m_pendingFiles.takeFirst();
-  QDir mapsDir(QStringLiteral("assets/maps"));
-  QString path = mapsDir.filePath(fileName);
+  const QString mapsRoot =
+      Utils::Resources::resolveResourcePath(QStringLiteral(":/assets/maps"));
+  QDir mapsDir(mapsRoot);
+  QString path =
+      Utils::Resources::resolveResourcePath(mapsDir.filePath(fileName));
 
   QVariantMap entry = loadSingleMap(path);
   if (!entry.isEmpty()) {
@@ -158,8 +169,9 @@ void MapCatalog::loadNextMap() {
 }
 
 QVariantMap MapCatalog::loadSingleMap(const QString &path) {
-  QFile file(path);
-  QString name = QFileInfo(path).fileName();
+  const QString resolvedPath = Utils::Resources::resolveResourcePath(path);
+  QFile file(resolvedPath);
+  QString name = QFileInfo(resolvedPath).fileName();
   QString desc;
   QSet<int> playerIds;
 
@@ -195,7 +207,7 @@ QVariantMap MapCatalog::loadSingleMap(const QString &path) {
   QVariantMap entry;
   entry["name"] = name;
   entry["description"] = desc;
-  entry["path"] = path;
+  entry["path"] = resolvedPath;
   entry["playerCount"] = playerIds.size();
 
   QVariantList playerIdList;
@@ -221,12 +233,14 @@ QVariantMap MapCatalog::loadSingleMap(const QString &path) {
   }
 
   if (thumbnail.isEmpty()) {
-    QString baseName = QFileInfo(path).baseName();
-    thumbnail = QString("assets/maps/%1_thumb.png").arg(baseName);
+    QString baseName = QFileInfo(resolvedPath).baseName();
+    QString thumbCandidate = Utils::Resources::resolveResourcePath(
+        QString(":/assets/maps/%1_thumb.png").arg(baseName));
 
-    if (!QFileInfo::exists(thumbnail)) {
+    if (QFileInfo::exists(thumbCandidate))
+      thumbnail = thumbCandidate;
+    else
       thumbnail = "";
-    }
   }
   entry["thumbnail"] = thumbnail;
 
