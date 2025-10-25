@@ -52,7 +52,7 @@ void ProductionBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   }
 
   for (const auto &entity : snapshot.friendlies) {
-    if (!entity.isBuilding || 
+    if (!entity.isBuilding ||
         entity.spawnType != Game::Units::SpawnType::Barracks)
       continue;
 
