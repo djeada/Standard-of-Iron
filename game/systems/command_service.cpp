@@ -431,15 +431,18 @@ void CommandService::moveGroup(Engine::Core::World &world,
     QVector3D currentPos(member.transform->position.x, 0.0f,
                          member.transform->position.z);
     float distToTargetSq = (member.target - currentPos).lengthSquared();
-    float distFromCentroidSq =
-        (currentPos - positionCentroid).lengthSquared();
 
-    if (distToTargetSq <= DIRECT_MOVE_THRESHOLD_SQ ||
-        (distToTargetSq < distFromCentroidSq &&
-         distFromCentroidSq > CENTROID_DISTANCE_THRESHOLD_SQ)) {
+    if (distToTargetSq <= DIRECT_MOVE_THRESHOLD_SQ) {
       directMovers.push_back(&member);
     } else {
-      groupMovers.push_back(&member);
+      float distFromCentroidSq =
+          (currentPos - positionCentroid).lengthSquared();
+      if (distToTargetSq < distFromCentroidSq &&
+          distFromCentroidSq > CENTROID_DISTANCE_THRESHOLD_SQ) {
+        directMovers.push_back(&member);
+      } else {
+        groupMovers.push_back(&member);
+      }
     }
   }
 
