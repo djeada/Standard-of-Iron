@@ -1,13 +1,66 @@
 #pragma once
 
 #include <QVector3D>
+#include <QString>
 #include <cstdint>
 #include <memory>
+#include <optional>
+#include <string>
 #include <vector>
 
 namespace Game::Map {
 
 enum class TerrainType { Flat, Hill, Mountain, River };
+
+// String conversion utilities for TerrainType
+inline QString terrainTypeToQString(TerrainType type) {
+  switch (type) {
+  case TerrainType::Flat:
+    return QStringLiteral("flat");
+  case TerrainType::Hill:
+    return QStringLiteral("hill");
+  case TerrainType::Mountain:
+    return QStringLiteral("mountain");
+  case TerrainType::River:
+    return QStringLiteral("river");
+  }
+  return QStringLiteral("flat");
+}
+
+inline std::string terrainTypeToString(TerrainType type) {
+  return terrainTypeToQString(type).toStdString();
+}
+
+// Case-insensitive parsing with validation
+inline bool tryParseTerrainType(const QString &value, TerrainType &out) {
+  const QString lowered = value.trimmed().toLower();
+  if (lowered == QStringLiteral("flat")) {
+    out = TerrainType::Flat;
+    return true;
+  }
+  if (lowered == QStringLiteral("hill")) {
+    out = TerrainType::Hill;
+    return true;
+  }
+  if (lowered == QStringLiteral("mountain")) {
+    out = TerrainType::Mountain;
+    return true;
+  }
+  if (lowered == QStringLiteral("river")) {
+    out = TerrainType::River;
+    return true;
+  }
+  return false;
+}
+
+// For std::string compatibility
+inline std::optional<TerrainType> terrainTypeFromString(const std::string &str) {
+  TerrainType result;
+  if (tryParseTerrainType(QString::fromStdString(str), result)) {
+    return result;
+  }
+  return std::nullopt;
+}
 
 struct BiomeSettings {
   QVector3D grassPrimary{0.30f, 0.60f, 0.28f};
