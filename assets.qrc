@@ -1,13 +1,48 @@
 <RCC>
     <qresource prefix="/">
-        <file>assets/shaders/basic.vert</file>
+        <!-- Shader files -->
+        <file>assets/shaders/archer.frag</file>
+        <file>assets/shaders/archer.vert</file>
         <file>assets/shaders/basic.frag</file>
-        <file>assets/shaders/bridge.vert</file>
+        <file>assets/shaders/basic.vert</file>
         <file>assets/shaders/bridge.frag</file>
+        <file>assets/shaders/bridge.vert</file>
+        <file>assets/shaders/cylinder_instanced.frag</file>
+        <file>assets/shaders/cylinder_instanced.vert</file>
+        <file>assets/shaders/firecamp.frag</file>
+        <file>assets/shaders/firecamp.vert</file>
+        <file>assets/shaders/fog_instanced.frag</file>
+        <file>assets/shaders/fog_instanced.vert</file>
+        <file>assets/shaders/grass_instanced.frag</file>
+        <file>assets/shaders/grass_instanced.vert</file>
         <file>assets/shaders/grid.frag</file>
+        <file>assets/shaders/ground_plane.frag</file>
+        <file>assets/shaders/ground_plane.vert</file>
+        <file>assets/shaders/knight.frag</file>
+        <file>assets/shaders/knight.vert</file>
+        <file>assets/shaders/mounted_knight.frag</file>
+        <file>assets/shaders/mounted_knight.vert</file>
+        <file>assets/shaders/pine_instanced.frag</file>
+        <file>assets/shaders/pine_instanced.vert</file>
+        <file>assets/shaders/plant_instanced.frag</file>
+        <file>assets/shaders/plant_instanced.vert</file>
+        <file>assets/shaders/river.frag</file>
+        <file>assets/shaders/river.vert</file>
+        <file>assets/shaders/riverbank.frag</file>
+        <file>assets/shaders/riverbank.vert</file>
+        <file>assets/shaders/spearman.frag</file>
+        <file>assets/shaders/spearman.vert</file>
+        <file>assets/shaders/stone_instanced.frag</file>
+        <file>assets/shaders/stone_instanced.vert</file>
+        <file>assets/shaders/terrain_chunk.frag</file>
+        <file>assets/shaders/terrain_chunk.vert</file>
+        
+        <!-- Map files -->
         <file>assets/maps/map_forest.json</file>
         <file>assets/maps/map_rivers.json</file>
         <file>assets/maps/map_mountain.json</file>
+        
+        <!-- Visual config -->
         <file>assets/visuals/unit_visuals.json</file>
     </qresource>
 </RCC>

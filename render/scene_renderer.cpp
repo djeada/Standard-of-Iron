@@ -311,7 +311,7 @@ void Renderer::renderWorld(Engine::Core::World *world) {
     if (m_camera && unitComp) {
 
       float cullRadius = 3.0f;
-      
+
       if (unitComp->spawnType == Game::Units::SpawnType::MountedKnight) {
         cullRadius = 4.0f;
       } else if (unitComp->spawnType == Game::Units::SpawnType::Spearman ||
@@ -350,7 +350,8 @@ void Renderer::renderWorld(Engine::Core::World *world) {
 
     bool drawnByRegistry = false;
     if (unitComp && m_entityRegistry) {
-      std::string unitTypeStr = Game::Units::spawnTypeToString(unitComp->spawnType);
+      std::string unitTypeStr =
+          Game::Units::spawnTypeToString(unitComp->spawnType);
       auto fn = m_entityRegistry->get(unitTypeStr);
       if (fn) {
         DrawContext ctx{resources(), entity, world, modelMatrix};
