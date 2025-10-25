@@ -1,5 +1,8 @@
 #pragma once
 
+#include <QString>
+#include <algorithm>
+#include <cctype>
 #include <optional>
 #include <string>
 
@@ -8,41 +11,61 @@ namespace Units {
 
 enum class TroopType { Archer, Knight, Spearman, MountedKnight };
 
-inline std::string troopTypeToString(TroopType type) {
+inline QString troopTypeToQString(TroopType type) {
   switch (type) {
   case TroopType::Archer:
-    return "archer";
+    return QStringLiteral("archer");
   case TroopType::Knight:
-    return "knight";
+    return QStringLiteral("knight");
   case TroopType::Spearman:
-    return "spearman";
+    return QStringLiteral("spearman");
   case TroopType::MountedKnight:
-    return "mounted_knight";
+    return QStringLiteral("mounted_knight");
   }
-  return "";
+  return QStringLiteral("archer");
 }
 
+inline std::string troopTypeToString(TroopType type) {
+  return troopTypeToQString(type).toStdString();
+}
+
+// Case-insensitive parsing with validation (preferred)
+inline bool tryParseTroopType(const QString &value, TroopType &out) {
+  const QString lowered = value.trimmed().toLower();
+  if (lowered == QStringLiteral("archer")) {
+    out = TroopType::Archer;
+    return true;
+  }
+  if (lowered == QStringLiteral("knight")) {
+    out = TroopType::Knight;
+    return true;
+  }
+  if (lowered == QStringLiteral("spearman")) {
+    out = TroopType::Spearman;
+    return true;
+  }
+  if (lowered == QStringLiteral("mounted_knight") || lowered == QStringLiteral("mountedknight")) {
+    out = TroopType::MountedKnight;
+    return true;
+  }
+  return false;
+}
+
+// Deprecated: use tryParseTroopType(QString, TroopType&) instead
 inline TroopType troopTypeFromString(const std::string &str) {
-  if (str == "archer")
-    return TroopType::Archer;
-  if (str == "knight")
-    return TroopType::Knight;
-  if (str == "spearman")
-    return TroopType::Spearman;
-  if (str == "mounted_knight")
-    return TroopType::MountedKnight;
-  return TroopType::Archer;
+  TroopType result;
+  if (tryParseTroopType(QString::fromStdString(str), result)) {
+    return result;
+  }
+  return TroopType::Archer; // fallback for backward compatibility
 }
 
+// For std::string compatibility
 inline std::optional<TroopType> tryParseTroopType(const std::string &str) {
-  if (str == "archer")
-    return TroopType::Archer;
-  if (str == "knight")
-    return TroopType::Knight;
-  if (str == "spearman")
-    return TroopType::Spearman;
-  if (str == "mounted_knight")
-    return TroopType::MountedKnight;
+  TroopType result;
+  if (tryParseTroopType(QString::fromStdString(str), result)) {
+    return result;
+  }
   return std::nullopt;
 }
 
