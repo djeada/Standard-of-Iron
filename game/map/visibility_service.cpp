@@ -1,6 +1,7 @@
 #include "visibility_service.h"
 
 #include "../core/component.h"
+#include "../core/ownership_constants.h"
 #include "../core/world.h"
 #include "../systems/owner_registry.h"
 #include <algorithm>
@@ -95,6 +96,10 @@ VisibilityService::gatherVisionSources(Engine::Core::World &world,
     auto *transform = entity->getComponent<Engine::Core::TransformComponent>();
     auto *unit = entity->getComponent<Engine::Core::UnitComponent>();
     if (!transform || !unit)
+      continue;
+
+    // Skip neutral entities - they should not contribute to fog of war
+    if (Game::Core::isNeutralOwner(unit->ownerId))
       continue;
 
     if (unit->ownerId != playerId &&
