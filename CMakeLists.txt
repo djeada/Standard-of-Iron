@@ -135,9 +135,41 @@ if(QT_VERSION_MAJOR EQUAL 6)
             ui/qml/BattleSummary.qml
             ui/qml/GameView.qml
         RESOURCES
-            assets/shaders/basic.vert
+            assets/shaders/archer.frag
+            assets/shaders/archer.vert
             assets/shaders/basic.frag
+            assets/shaders/basic.vert
+            assets/shaders/bridge.frag
+            assets/shaders/bridge.vert
+            assets/shaders/cylinder_instanced.frag
+            assets/shaders/cylinder_instanced.vert
+            assets/shaders/firecamp.frag
+            assets/shaders/firecamp.vert
+            assets/shaders/fog_instanced.frag
+            assets/shaders/fog_instanced.vert
+            assets/shaders/grass_instanced.frag
+            assets/shaders/grass_instanced.vert
             assets/shaders/grid.frag
+            assets/shaders/ground_plane.frag
+            assets/shaders/ground_plane.vert
+            assets/shaders/knight.frag
+            assets/shaders/knight.vert
+            assets/shaders/mounted_knight.frag
+            assets/shaders/mounted_knight.vert
+            assets/shaders/pine_instanced.frag
+            assets/shaders/pine_instanced.vert
+            assets/shaders/plant_instanced.frag
+            assets/shaders/plant_instanced.vert
+            assets/shaders/river.frag
+            assets/shaders/river.vert
+            assets/shaders/riverbank.frag
+            assets/shaders/riverbank.vert
+            assets/shaders/spearman.frag
+            assets/shaders/spearman.vert
+            assets/shaders/stone_instanced.frag
+            assets/shaders/stone_instanced.vert
+            assets/shaders/terrain_chunk.frag
+            assets/shaders/terrain_chunk.vert
             assets/maps/map_forest.json
             assets/maps/map_rivers.json
             assets/maps/map_mountain.json
@@ -222,4 +254,3 @@ if (CLANG_FORMAT_EXE)
       COMMAND "${CMAKE_COMMAND}" -E echo "No C/C++ files found to check.")
   endif()
 endif()
-

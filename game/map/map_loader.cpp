@@ -234,7 +234,7 @@ static void readTerrain(const QJsonArray &arr, std::vector<TerrainFeature> &out,
 
     const QString typeStr = o.value("type").toString("flat");
     if (!tryParseTerrainType(typeStr, feature.type)) {
-      qWarning() << "MapLoader: unknown terrain type" << typeStr 
+      qWarning() << "MapLoader: unknown terrain type" << typeStr
                  << "- defaulting to flat";
       feature.type = TerrainType::Flat;
     }

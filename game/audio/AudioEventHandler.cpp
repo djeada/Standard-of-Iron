@@ -91,7 +91,8 @@ void AudioEventHandler::onUnitSelected(
     return;
   }
 
-  std::string unitTypeStr = Game::Units::spawnTypeToString(unitComponent->spawnType);
+  std::string unitTypeStr =
+      Game::Units::spawnTypeToString(unitComponent->spawnType);
   auto it = m_unitVoiceMap.find(unitTypeStr);
   if (it != m_unitVoiceMap.end()) {
     auto now = std::chrono::steady_clock::now();
