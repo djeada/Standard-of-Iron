@@ -409,43 +409,84 @@ void CommandService::moveGroup(Engine::Core::World &world,
 
   members = movingMembers;
 
-  QVector3D average(0.0f, 0.0f, 0.0f);
+  constexpr float DIRECT_MOVE_THRESHOLD_SQ = 64.0f;
+  constexpr float CENTROID_DISTANCE_THRESHOLD_SQ = 100.0f;
+
+  QVector3D positionCentroid(0.0f, 0.0f, 0.0f);
+  for (const auto &member : members) {
+    positionCentroid.setX(positionCentroid.x() + member.transform->position.x);
+    positionCentroid.setZ(positionCentroid.z() + member.transform->position.z);
+  }
+  positionCentroid /= static_cast<float>(members.size());
+
+  QVector3D targetCentroid(0.0f, 0.0f, 0.0f);
   for (const auto &member : members)
-    average += member.target;
-  average /= static_cast<float>(members.size());
+    targetCentroid += member.target;
+  targetCentroid /= static_cast<float>(members.size());
+
+  std::vector<MemberInfo *> directMovers;
+  std::vector<MemberInfo *> groupMovers;
+
+  for (auto &member : members) {
+    QVector3D currentPos(member.transform->position.x, 0.0f,
+                         member.transform->position.z);
+    float distToTargetSq = (member.target - currentPos).lengthSquared();
+    float distFromCentroidSq =
+        (currentPos - positionCentroid).lengthSquared();
+
+    if (distToTargetSq <= DIRECT_MOVE_THRESHOLD_SQ ||
+        (distToTargetSq < distFromCentroidSq &&
+         distFromCentroidSq > CENTROID_DISTANCE_THRESHOLD_SQ)) {
+      directMovers.push_back(&member);
+    } else {
+      groupMovers.push_back(&member);
+    }
+  }
+
+  for (auto *member : directMovers) {
+    std::vector<Engine::Core::EntityID> singleUnit = {member->id};
+    std::vector<QVector3D> singleTarget = {member->target};
+    MoveOptions directOptions = options;
+    directOptions.groupMove = false;
+    moveUnits(world, singleUnit, singleTarget, directOptions);
+  }
+
+  if (groupMovers.empty()) {
+    return;
+  }
 
   std::size_t leaderIndex = 0;
   float bestDistSq = std::numeric_limits<float>::infinity();
-  for (std::size_t i = 0; i < members.size(); ++i) {
-    float distSq = (members[i].target - average).lengthSquared();
+  for (std::size_t i = 0; i < groupMovers.size(); ++i) {
+    float distSq =
+        (groupMovers[i]->target - targetCentroid).lengthSquared();
     if (distSq < bestDistSq) {
       bestDistSq = distSq;
       leaderIndex = i;
     }
   }
 
-  auto &leader = members[leaderIndex];
+  auto &leader = *groupMovers[leaderIndex];
   QVector3D leaderTarget = leader.target;
 
   std::vector<MemberInfo *> unitsNeedingNewPath;
-  constexpr float SAME_GOAL_THRESHOLD_SQ = 4.0f;
 
-  for (auto &member : members) {
-    auto *mv = member.movement;
+  for (auto *member : groupMovers) {
+    auto *mv = member->movement;
 
-    mv->goalX = member.target.x();
-    mv->goalY = member.target.z();
+    mv->goalX = member->target.x();
+    mv->goalY = member->target.z();
 
-    clearPendingRequest(member.id);
-    mv->targetX = member.transform->position.x;
-    mv->targetY = member.transform->position.z;
+    clearPendingRequest(member->id);
+    mv->targetX = member->transform->position.x;
+    mv->targetY = member->transform->position.z;
     mv->hasTarget = false;
     mv->vx = 0.0f;
     mv->vz = 0.0f;
     mv->path.clear();
     mv->pathPending = false;
     mv->pendingRequestId = 0;
-    unitsNeedingNewPath.push_back(&member);
+    unitsNeedingNewPath.push_back(member);
   }
 
   if (unitsNeedingNewPath.empty()) {
@@ -461,8 +502,8 @@ void CommandService::moveGroup(Engine::Core::World &world,
     return;
   }
 
-  Point start =
-      worldToGrid(leader.transform->position.x, leader.transform->position.z);
+  Point start = worldToGrid(leader.transform->position.x,
+                            leader.transform->position.z);
   Point end = worldToGrid(leaderTarget.x(), leaderTarget.z());
 
   if (start == end) {
