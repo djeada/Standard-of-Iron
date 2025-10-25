@@ -14,10 +14,15 @@ public:
   World();
   ~World();
 
+  World(const World &) = delete;
+  World(World &&) = delete;
+  World &operator=(const World &) = delete;
+  World &operator=(World &&) = delete;
+
   Entity *createEntity();
-  Entity *createEntityWithId(EntityID id);
-  void destroyEntity(EntityID id);
-  Entity *getEntity(EntityID id);
+  Entity *createEntityWithId(EntityID entityId);
+  void destroyEntity(EntityID entityId);
+  Entity *getEntity(EntityID entityId);
   void clear();
 
   void addSystem(std::unique_ptr<System> system);
@@ -35,9 +40,9 @@ public:
   }
 
   template <typename T> std::vector<Entity *> getEntitiesWith() {
-    std::lock_guard<std::recursive_mutex> lock(m_entityMutex);
+    const std::lock_guard<std::recursive_mutex> lock(m_entityMutex);
     std::vector<Entity *> result;
-    for (auto &[id, entity] : m_entities) {
+    for (auto &[entityId, entity] : m_entities) {
       if (entity->template hasComponent<T>()) {
         result.push_back(entity.get());
       }

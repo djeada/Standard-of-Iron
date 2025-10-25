@@ -3,11 +3,11 @@
 #include <QString>
 #include <algorithm>
 #include <cctype>
+#include <functional>
 #include <optional>
 #include <string>
 
-namespace Game {
-namespace Units {
+namespace Game::Units {
 
 enum class TroopType { Archer, Knight, Spearman, MountedKnight };
 
@@ -67,8 +67,7 @@ inline std::optional<TroopType> tryParseTroopType(const std::string &str) {
   return std::nullopt;
 }
 
-} // namespace Units
-} // namespace Game
+} // namespace Game::Units
 
 namespace std {
 template <> struct hash<Game::Units::TroopType> {

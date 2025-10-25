@@ -6,6 +6,7 @@
 #include "component.h"
 #include "entity.h"
 #include "world.h"
+#include <QByteArray>
 #include <QDebug>
 #include <QFile>
 #include <QJsonArray>
@@ -748,9 +749,9 @@ QJsonDocument Serialization::loadFromFile(const QString &filename) {
   QFile file(filename);
   if (!file.open(QIODevice::ReadOnly)) {
     qWarning() << "Could not open file for reading:" << filename;
-    return QJsonDocument();
+    return {};
   }
-  QByteArray data = file.readAll();
+  const QByteArray data = file.readAll();
   return QJsonDocument::fromJson(data);
 }
 
