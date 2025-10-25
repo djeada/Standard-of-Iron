@@ -10,6 +10,17 @@ BINARY_NAME := standard_of_iron
 MAP_EDITOR_BINARY := map_editor
 DEFAULT_LANG ?= en
 
+# Clang-tidy auto-fixer (git-only by default; --all scans whole project)
+CLANG_TIDY_FIXER := scripts/run-clang-tidy-fixes.sh
+
+# Optional knobs (override on the command line)
+# e.g. make tidy CLANG_TIDY_JOBS=2 CLANG_TIDY_AUTO_FIX_CHECKS="-*,bugprone-*"
+CLANG_TIDY_JOBS ?=
+CLANG_TIDY_AUTO_FIX_CHECKS ?=
+CLANG_TIDY_FIX_PATHS ?=
+# Base for git diff (fallback is origin/main inside the script if unset)
+CLANG_TIDY_GIT_BASE ?=
+
 # Formatting config
 CLANG_FORMAT ?= clang-format
 # Try to find qmlformat in common Qt installation paths if not in PATH
@@ -44,8 +55,8 @@ help:
 	@echo "  $(GREEN)test$(RESET)          - Run tests (if any)"
 	@echo "  $(GREEN)format$(RESET)        - Format all code (C++, QML, shaders)"
 	@echo "  $(GREEN)format-check$(RESET)  - Verify formatting (CI-friendly, no changes)"
-	@echo "  $(GREEN)tidy$(RESET)          - Run clang-tidy on changed files"
-	@echo "  $(GREEN)tidy-all$(RESET)      - Run clang-tidy on all source files"
+	@echo "  $(GREEN)tidy$(RESET)          - Run clang-tidy fixes on changed files (git diff vs origin/main)"
+	@echo "  $(GREEN)tidy-all$(RESET)      - Run clang-tidy fixes on the whole project"
 	@echo "  $(GREEN)check-deps$(RESET)    - Check if dependencies are installed"
 	@echo "  $(GREEN)dev$(RESET)           - Set up development environment (install + configure + build)"
 	@echo "  $(GREEN)all$(RESET)           - Full build (configure + build)"
@@ -176,6 +187,9 @@ format:
 		echo "$(RED)scripts/remove-comments.sh not found$(RESET)"; exit 1; \
 	fi
 
+	@echo "$(BOLD)$(BLUE)Applying clang-tidy auto fixes (git-only, nice)...$(RESET)"
+	@bash $(CLANG_TIDY_FIXER) --nice --build-dir="$(BUILD_DIR)" --default-lang="$(DEFAULT_LANG)" $(if $(CLANG_TIDY_AUTO_FIX_CHECKS),--checks="$(CLANG_TIDY_AUTO_FIX_CHECKS)")
+
 	@echo "$(BOLD)$(BLUE)Formatting C/C++ files with clang-format...$(RESET)"
 	@if command -v $(CLANG_FORMAT) >/dev/null 2>&1; then \
 		find . -type f \( $(FMT_GLOBS) \) $(EXCLUDE_FIND) -print0 \
@@ -234,39 +248,29 @@ format-check:
 		exit 1; \
 	fi
 
-# ---- Static analysis: clang-tidy ----
+# ---- Static analysis: clang-tidy (driven by fixer script) ----
 .PHONY: tidy tidy-all
 
-TIDY_EXE := $(shell command -v clang-tidy 2>/dev/null)
-TIDY_FILES := $(shell find . -type f \( -name "*.cpp" -o -name "*.hpp" -o -name "*.h" -o -name "*.cc" \) \
-              -not -path "./$(BUILD_DIR)/*" -not -path "./third_party/*")
-
 tidy:
-	@if [ -z "$(TIDY_EXE)" ]; then \
-		echo "$(RED)clang-tidy not found. Please install it.$(RESET)"; \
-		exit 1; \
-	fi
-	@echo "$(BOLD)$(BLUE)Running clang-tidy on modified files...$(RESET)"
-	@if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then \
-		FILES=$$(git diff --name-only --diff-filter=ACMRTUXB HEAD | grep -E '\.cpp$$|\.hpp$$|\.h$$' || true); \
-		if [ -z "$$FILES" ]; then \
-			echo "$(YELLOW)No modified C++ files to analyze.$(RESET)"; \
-		else \
-			echo "$(BLUE)Analyzing changed files:$(RESET) $$FILES"; \
-			$(TIDY_EXE) $$FILES -- -p=$(BUILD_DIR); \
-		fi \
-	else \
-		echo "$(YELLOW)Not a git repo, skipping incremental tidy.$(RESET)"; \
-	fi
+	@echo "$(BOLD)$(BLUE)Running clang-tidy fixes on changed files (vs $${CLANG_TIDY_GIT_BASE:-origin/main})...$(RESET)"
+	@bash $(CLANG_TIDY_FIXER) \
+		--nice \
+		--build-dir="$(BUILD_DIR)" \
+		--default-lang="$(DEFAULT_LANG)" \
+		$(if $(CLANG_TIDY_JOBS),--jobs="$(CLANG_TIDY_JOBS)") \
+		$(if $(CLANG_TIDY_FIX_PATHS),--paths="$(CLANG_TIDY_FIX_PATHS)") \
+		$(if $(CLANG_TIDY_AUTO_FIX_CHECKS),--checks="$(CLANG_TIDY_AUTO_FIX_CHECKS)")
 
 tidy-all:
-	@if [ -z "$(TIDY_EXE)" ]; then \
-		echo "$(RED)clang-tidy not found. Please install it.$(RESET)"; \
-		exit 1; \
-	fi
-	@echo "$(BOLD)$(BLUE)Running clang-tidy on all source files...$(RESET)"
-	@$(TIDY_EXE) $(TIDY_FILES) -- -p=$(BUILD_DIR)
-	@echo "$(GREEN)✓ clang-tidy analysis complete$(RESET)"
+	@echo "$(BOLD)$(BLUE)Running clang-tidy fixes on ALL source files...$(RESET)"
+	@bash $(CLANG_TIDY_FIXER) \
+		--all \
+		--nice \
+		--build-dir="$(BUILD_DIR)" \
+		--default-lang="$(DEFAULT_LANG)" \
+		$(if $(CLANG_TIDY_JOBS),--jobs="$(CLANG_TIDY_JOBS)") \
+		$(if $(CLANG_TIDY_FIX_PATHS),--paths="$(CLANG_TIDY_FIX_PATHS)") \
+		$(if $(CLANG_TIDY_AUTO_FIX_CHECKS),--checks="$(CLANG_TIDY_AUTO_FIX_CHECKS)")
 
 # Debug build
 .PHONY: debug
@@ -318,3 +322,4 @@ quickstart:
 	@echo "3. Run the game: $(BLUE)make run$(RESET)"
 	@echo ""
 	@echo "Or use the shortcut: $(BLUE)make dev$(RESET)"
+

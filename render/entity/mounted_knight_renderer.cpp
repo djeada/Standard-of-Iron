@@ -391,8 +391,9 @@ public:
     auto drawArmPlate = [&](const QVector3D &shoulder, const QVector3D &elbow) {
       QVector3D dir = (elbow - shoulder);
       float len = dir.length();
-      if (len < 1e-5f)
+      if (len < 1e-5f) {
         return;
+      }
       dir /= len;
 
       for (int i = 0; i < 3; ++i) {
@@ -500,8 +501,9 @@ private:
 
     QVector3D worldUp(0.0f, 1.0f, 0.0f);
     QVector3D rightAxis = QVector3D::crossProduct(worldUp, swordDir);
-    if (rightAxis.lengthSquared() < 1e-6f)
+    if (rightAxis.lengthSquared() < 1e-6f) {
       rightAxis = QVector3D(1.0f, 0.0f, 0.0f);
+    }
     rightAxis.normalize();
     QVector3D upAxis = QVector3D::crossProduct(swordDir, rightAxis);
     upAxis.normalize();

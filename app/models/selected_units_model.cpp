@@ -9,35 +9,44 @@ SelectedUnitsModel::SelectedUnitsModel(GameEngine *engine, QObject *parent)
     : QAbstractListModel(parent), m_engine(engine) {}
 
 int SelectedUnitsModel::rowCount(const QModelIndex &parent) const {
-  if (parent.isValid())
+  if (parent.isValid()) {
     return 0;
+  }
   return static_cast<int>(m_ids.size());
 }
 
 QVariant SelectedUnitsModel::data(const QModelIndex &index, int role) const {
   if (!index.isValid() || index.row() < 0 ||
-      index.row() >= static_cast<int>(m_ids.size()))
+      index.row() >= static_cast<int>(m_ids.size())) {
     return {};
+  }
   auto id = m_ids[index.row()];
-  if (!m_engine)
+  if (!m_engine) {
     return {};
+  }
   QString name;
   int hp = 0, maxHp = 0;
   bool isB = false, alive = false;
-  if (role == UnitIdRole)
+  if (role == UnitIdRole) {
     return QVariant::fromValue<int>(static_cast<int>(id));
-  if (!m_engine->getUnitInfo(id, name, hp, maxHp, isB, alive))
+  }
+  if (!m_engine->getUnitInfo(id, name, hp, maxHp, isB, alive)) {
     return {};
-  if (role == NameRole)
+  }
+  if (role == NameRole) {
     return name;
-  if (role == HealthRole)
+  }
+  if (role == HealthRole) {
     return hp;
-  if (role == MaxHealthRole)
+  }
+  if (role == MaxHealthRole) {
     return maxHp;
-  if (role == HealthRatioRole)
+  }
+  if (role == HealthRatioRole) {
     return (maxHp > 0 ? static_cast<double>(std::clamp(hp, 0, maxHp)) /
                             static_cast<double>(maxHp)
                       : 0.0);
+  }
   return {};
 }
 
@@ -50,8 +59,9 @@ QHash<int, QByteArray> SelectedUnitsModel::roleNames() const {
 }
 
 void SelectedUnitsModel::refresh() {
-  if (!m_engine)
+  if (!m_engine) {
     return;
+  }
   std::vector<Engine::Core::EntityID> ids;
   m_engine->getSelectedUnitIds(ids);
 
@@ -73,12 +83,15 @@ void SelectedUnitsModel::refresh() {
     QString nm;
     int hp = 0, maxHp = 0;
     bool isB = false, alive = false;
-    if (!m_engine->getUnitInfo(id, nm, hp, maxHp, isB, alive))
+    if (!m_engine->getUnitInfo(id, nm, hp, maxHp, isB, alive)) {
       continue;
-    if (isB)
+    }
+    if (isB) {
       continue;
-    if (!alive)
+    }
+    if (!alive) {
       continue;
+    }
     m_ids.push_back(id);
   }
   endResetModel();

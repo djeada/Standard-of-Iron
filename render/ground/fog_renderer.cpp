@@ -22,12 +22,15 @@ void FogRenderer::updateMask(int width, int height, float tileSize,
 }
 
 void FogRenderer::submit(Renderer &renderer, ResourceManager *resources) {
-  if (!m_enabled)
+  if (!m_enabled) {
     return;
-  if (m_width <= 0 || m_height <= 0)
+  }
+  if (m_width <= 0 || m_height <= 0) {
     return;
-  if (static_cast<int>(m_cells.size()) != m_width * m_height)
+  }
+  if (static_cast<int>(m_cells.size()) != m_width * m_height) {
     return;
+  }
 
   (void)resources;
 
@@ -39,10 +42,12 @@ void FogRenderer::submit(Renderer &renderer, ResourceManager *resources) {
 void FogRenderer::buildChunks() {
   m_instances.clear();
 
-  if (m_width <= 0 || m_height <= 0)
+  if (m_width <= 0 || m_height <= 0) {
     return;
-  if (static_cast<int>(m_cells.size()) != m_width * m_height)
+  }
+  if (static_cast<int>(m_cells.size()) != m_width * m_height) {
     return;
+  }
 
   QElapsedTimer timer;
   timer.start();
@@ -55,8 +60,9 @@ void FogRenderer::buildChunks() {
   for (int z = 0; z < m_height; ++z) {
     for (int x = 0; x < m_width; ++x) {
       const std::uint8_t state = m_cells[z * m_width + x];
-      if (state >= 2)
+      if (state >= 2) {
         continue;
+      }
 
       FogInstance instance;
       const float worldX = (x - m_halfWidth) * m_tileSize;

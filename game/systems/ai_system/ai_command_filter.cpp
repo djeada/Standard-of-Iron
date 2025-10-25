@@ -152,14 +152,17 @@ bool AICommandFilter::CommandHistory::isSimilarTo(const AICommandType &cmdType,
                                                   float currentTime,
                                                   float cooldown) const {
 
-  if (unitId != unit)
+  if (unitId != unit) {
     return false;
+  }
 
-  if (type != cmdType)
+  if (type != cmdType) {
     return false;
+  }
 
-  if ((currentTime - issuedTime) > cooldown)
+  if ((currentTime - issuedTime) > cooldown) {
     return false;
+  }
 
   switch (cmdType) {
   case AICommandType::AttackTarget:

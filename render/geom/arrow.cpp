@@ -88,16 +88,19 @@ namespace GL {
 
 void renderArrows(Renderer *renderer, ResourceManager *resources,
                   const Game::Systems::ArrowSystem &arrowSystem) {
-  if (!renderer || !resources)
+  if (!renderer || !resources) {
     return;
+  }
   auto *arrowMesh = resources->arrow();
-  if (!arrowMesh)
+  if (!arrowMesh) {
     return;
+  }
 
   const auto &arrows = arrowSystem.arrows();
   for (const auto &arrow : arrows) {
-    if (!arrow.active)
+    if (!arrow.active) {
       continue;
+    }
 
     const QVector3D delta = arrow.end - arrow.start;
     const float dist = std::max(0.001f, delta.length());

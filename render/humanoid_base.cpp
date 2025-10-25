@@ -92,11 +92,13 @@ AnimationInputs HumanoidRendererBase::sampleAnimState(const DrawContext &ctx) {
   anim.isExitingHold = false;
   anim.holdExitProgress = 0.0f;
 
-  if (!ctx.entity)
+  if (!ctx.entity) {
     return anim;
+  }
 
-  if (ctx.entity->hasComponent<Engine::Core::PendingRemovalComponent>())
+  if (ctx.entity->hasComponent<Engine::Core::PendingRemovalComponent>()) {
     return anim;
+  }
 
   auto *movement = ctx.entity->getComponent<Engine::Core::MovementComponent>();
   auto *attack = ctx.entity->getComponent<Engine::Core::AttackComponent>();
@@ -246,8 +248,9 @@ void HumanoidRendererBase::computeLocomotionPose(
 
   QVector3D rightAxis = pose.shoulderR - pose.shoulderL;
   rightAxis.setY(0.0f);
-  if (rightAxis.lengthSquared() < 1e-8f)
+  if (rightAxis.lengthSquared() < 1e-8f) {
     rightAxis = QVector3D(1, 0, 0);
+  }
   rightAxis.normalize();
   QVector3D outwardL = -rightAxis;
   QVector3D outwardR = rightAxis;
@@ -270,8 +273,9 @@ void HumanoidRendererBase::drawCommonBody(const DrawContext &ctx,
   float headScale = scaling.z();
 
   QVector3D rightAxis = pose.shoulderR - pose.shoulderL;
-  if (rightAxis.lengthSquared() < 1e-8f)
+  if (rightAxis.lengthSquared() < 1e-8f) {
     rightAxis = QVector3D(1, 0, 0);
+  }
   rightAxis.normalize();
 
   const float yShoulder = 0.5f * (pose.shoulderL.y() + pose.shoulderR.y());

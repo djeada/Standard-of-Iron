@@ -248,12 +248,14 @@ void TerrainHeightMap::buildFromFeatures(
 
           for (int oz = -1; oz <= 1; ++oz) {
             for (int ox = -1; ox <= 1; ++ox) {
-              if (ox == 0 && oz == 0)
+              if (ox == 0 && oz == 0) {
                 continue;
+              }
               int nx = ix + ox;
               int nz = iz + oz;
-              if (!inBounds(nx, nz))
+              if (!inBounds(nx, nz)) {
                 continue;
+              }
 
               const float nDx = float(nx) - gridCenterX;
               const float nDz = float(nz) - gridCenterZ;
@@ -307,13 +309,15 @@ void TerrainHeightMap::buildFromFeatures(
         const float dx = float(x) - gridCenterX;
         const float dz = float(z) - gridCenterZ;
         const float dist = std::sqrt(dx * dx + dz * dz);
-        if (dist > flatRadius)
+        if (dist > flatRadius) {
           continue;
+        }
 
         float t = dist / std::max(flatRadius, 0.0001f);
         float height = feature.height * (1.0f - t);
-        if (height <= 0.0f)
+        if (height <= 0.0f) {
           continue;
+        }
 
         int idx = indexAt(x, z);
         if (height > m_heights[idx]) {
@@ -338,8 +342,9 @@ float TerrainHeightMap::getHeightAt(float worldX, float worldZ) const {
   int x1 = x0 + 1;
   int z1 = z0 + 1;
 
-  if (!inBounds(x0, z0))
+  if (!inBounds(x0, z0)) {
     return 0.0f;
+  }
 
   float tx = gx - x0;
   float tz = gz - z0;
@@ -356,22 +361,26 @@ float TerrainHeightMap::getHeightAt(float worldX, float worldZ) const {
 }
 
 float TerrainHeightMap::getHeightAtGrid(int gridX, int gridZ) const {
-  if (!inBounds(gridX, gridZ))
+  if (!inBounds(gridX, gridZ)) {
     return 0.0f;
+  }
   return m_heights[indexAt(gridX, gridZ)];
 }
 
 bool TerrainHeightMap::isWalkable(int gridX, int gridZ) const {
-  if (!inBounds(gridX, gridZ))
+  if (!inBounds(gridX, gridZ)) {
     return false;
+  }
 
   TerrainType type = m_terrainTypes[indexAt(gridX, gridZ)];
 
-  if (type == TerrainType::Mountain)
+  if (type == TerrainType::Mountain) {
     return false;
+  }
 
-  if (type == TerrainType::River)
+  if (type == TerrainType::River) {
     return false;
+  }
 
   if (type == TerrainType::Hill) {
     return m_hillWalkable[indexAt(gridX, gridZ)];
@@ -381,28 +390,33 @@ bool TerrainHeightMap::isWalkable(int gridX, int gridZ) const {
 }
 
 bool TerrainHeightMap::isHillEntrance(int gridX, int gridZ) const {
-  if (!inBounds(gridX, gridZ))
+  if (!inBounds(gridX, gridZ)) {
     return false;
+  }
   return m_hillEntrances[indexAt(gridX, gridZ)];
 }
 
 TerrainType TerrainHeightMap::getTerrainType(int gridX, int gridZ) const {
-  if (!inBounds(gridX, gridZ))
+  if (!inBounds(gridX, gridZ)) {
     return TerrainType::Flat;
+  }
   return m_terrainTypes[indexAt(gridX, gridZ)];
 }
 
 bool TerrainHeightMap::isRiverOrNearby(int gridX, int gridZ, int margin) const {
-  if (!inBounds(gridX, gridZ))
+  if (!inBounds(gridX, gridZ)) {
     return false;
+  }
 
-  if (m_terrainTypes[indexAt(gridX, gridZ)] == TerrainType::River)
+  if (m_terrainTypes[indexAt(gridX, gridZ)] == TerrainType::River) {
     return true;
+  }
 
   for (int dz = -margin; dz <= margin; ++dz) {
     for (int dx = -margin; dx <= margin; ++dx) {
-      if (dx == 0 && dz == 0)
+      if (dx == 0 && dz == 0) {
         continue;
+      }
       int nx = gridX + dx;
       int nz = gridZ + dz;
       if (inBounds(nx, nz) &&
@@ -428,8 +442,9 @@ float TerrainHeightMap::calculateFeatureHeight(const TerrainFeature &feature,
   float dz = worldZ - feature.centerZ;
   float dist = std::sqrt(dx * dx + dz * dz);
 
-  if (dist > feature.radius)
+  if (dist > feature.radius) {
     return 0.0f;
+  }
 
   float t = dist / feature.radius;
   float heightFactor = (std::cos(t * M_PI) + 1.0f) * 0.5f;
@@ -438,12 +453,14 @@ float TerrainHeightMap::calculateFeatureHeight(const TerrainFeature &feature,
 }
 
 void TerrainHeightMap::applyBiomeVariation(const BiomeSettings &settings) {
-  if (m_heights.empty())
+  if (m_heights.empty()) {
     return;
+  }
 
   const float amplitude = std::max(0.0f, settings.heightNoiseAmplitude);
-  if (amplitude <= 0.0001f)
+  if (amplitude <= 0.0001f) {
     return;
+  }
 
   const float frequency = std::max(0.0001f, settings.heightNoiseFrequency);
   const float halfWidth = m_width * 0.5f - 0.5f;
@@ -453,8 +470,9 @@ void TerrainHeightMap::applyBiomeVariation(const BiomeSettings &settings) {
     for (int x = 0; x < m_width; ++x) {
       int idx = indexAt(x, z);
       TerrainType type = m_terrainTypes[idx];
-      if (type == TerrainType::Mountain)
+      if (type == TerrainType::Mountain) {
         continue;
+      }
 
       float worldX = (static_cast<float>(x) - halfWidth) * m_tileSize;
       float worldZ = (static_cast<float>(z) - halfHeight) * m_tileSize;
@@ -468,8 +486,9 @@ void TerrainHeightMap::applyBiomeVariation(const BiomeSettings &settings) {
       float blended = 0.65f * baseNoise + 0.35f * detailNoise;
       float perturb = (blended - 0.5f) * 2.0f * amplitude;
 
-      if (type == TerrainType::Hill)
+      if (type == TerrainType::Hill) {
         perturb *= 0.6f;
+      }
 
       m_heights[idx] = std::max(0.0f, m_heights[idx] + perturb);
     }
@@ -486,8 +505,9 @@ void TerrainHeightMap::addRiverSegments(
   for (const auto &river : riverSegments) {
     QVector3D dir = river.end - river.start;
     float length = dir.length();
-    if (length < 0.01f)
+    if (length < 0.01f) {
       continue;
+    }
 
     dir.normalize();
     QVector3D perpendicular(-dir.z(), 0.0f, dir.x());
@@ -545,8 +565,9 @@ void TerrainHeightMap::addBridges(const std::vector<Bridge> &bridges) {
   for (const auto &bridge : bridges) {
     QVector3D dir = bridge.end - bridge.start;
     float length = dir.length();
-    if (length < 0.01f)
+    if (length < 0.01f) {
       continue;
+    }
 
     dir.normalize();
     QVector3D perpendicular(-dir.z(), 0.0f, dir.x());

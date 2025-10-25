@@ -191,14 +191,17 @@ bool VictoryService::checkElimination(Engine::Core::World &world) {
   auto entities = world.getEntitiesWith<Engine::Core::UnitComponent>();
   for (auto *e : entities) {
     auto *unit = e->getComponent<Engine::Core::UnitComponent>();
-    if (!unit || unit->health <= 0)
+    if (!unit || unit->health <= 0) {
       continue;
+    }
 
-    if (unit->ownerId == m_localOwnerId)
+    if (unit->ownerId == m_localOwnerId) {
       continue;
+    }
 
-    if (m_ownerRegistry.areAllies(m_localOwnerId, unit->ownerId))
+    if (m_ownerRegistry.areAllies(m_localOwnerId, unit->ownerId)) {
       continue;
+    }
 
     QString unitTypeStr =
         QString::fromStdString(Game::Units::spawnTypeToString(unit->spawnType));
@@ -221,8 +224,9 @@ bool VictoryService::checkNoUnits(Engine::Core::World &world) {
   auto entities = world.getEntitiesWith<Engine::Core::UnitComponent>();
   for (auto *e : entities) {
     auto *unit = e->getComponent<Engine::Core::UnitComponent>();
-    if (!unit || unit->health <= 0)
+    if (!unit || unit->health <= 0) {
       continue;
+    }
 
     if (unit->ownerId == m_localOwnerId) {
       return false;
@@ -237,8 +241,9 @@ bool VictoryService::checkNoKeyStructures(Engine::Core::World &world) {
   auto entities = world.getEntitiesWith<Engine::Core::UnitComponent>();
   for (auto *e : entities) {
     auto *unit = e->getComponent<Engine::Core::UnitComponent>();
-    if (!unit || unit->health <= 0)
+    if (!unit || unit->health <= 0) {
       continue;
+    }
 
     if (unit->ownerId == m_localOwnerId) {
       QString unitTypeStr = QString::fromStdString(

@@ -16,8 +16,9 @@ bool PickingService::worldToScreen(const Render::GL::Camera &cam, int viewW,
 bool PickingService::screenToGround(const Render::GL::Camera &cam, int viewW,
                                     int viewH, const QPointF &screenPt,
                                     QVector3D &outWorld) const {
-  if (viewW <= 0 || viewH <= 0)
+  if (viewW <= 0 || viewH <= 0) {
     return false;
+  }
   return cam.screenToGround(screenPt.x(), screenPt.y(), qreal(viewW),
                             qreal(viewH), outWorld);
 }
@@ -32,8 +33,9 @@ bool PickingService::projectBounds(const Render::GL::Camera &cam,
       QVector3D(center.x() - hx, center.y(), center.z() + hz)};
   QPointF screenPts[4];
   for (int i = 0; i < 4; ++i) {
-    if (!worldToScreen(cam, viewW, viewH, corners[i], screenPts[i]))
+    if (!worldToScreen(cam, viewW, viewH, corners[i], screenPts[i])) {
       return false;
+    }
   }
   qreal minX = screenPts[0].x(), maxX = screenPts[0].x();
   qreal minY = screenPts[0].y(), maxY = screenPts[0].y();
@@ -70,8 +72,9 @@ PickingService::updateHover(float sx, float sy, Engine::Core::World &world,
     currentHover = prevHover;
   }
 
-  if (m_hoverGraceTicks > 0)
+  if (m_hoverGraceTicks > 0) {
     --m_hoverGraceTicks;
+  }
   m_prevHoverId = currentHover;
   return currentHover;
 }
@@ -90,19 +93,22 @@ PickingService::pickSingle(float sx, float sy, Engine::Core::World &world,
   Engine::Core::EntityID bestBuildingId = 0;
   auto ents = world.getEntitiesWith<Engine::Core::TransformComponent>();
   for (auto *e : ents) {
-    if (!e->hasComponent<Engine::Core::UnitComponent>())
+    if (!e->hasComponent<Engine::Core::UnitComponent>()) {
       continue;
+    }
     auto *t = e->getComponent<Engine::Core::TransformComponent>();
     auto *u = e->getComponent<Engine::Core::UnitComponent>();
 
-    if (ownerFilter != 0 && u->ownerId != ownerFilter)
+    if (ownerFilter != 0 && u->ownerId != ownerFilter) {
       continue;
+    }
 
     QPointF sp;
     if (!camera.worldToScreen(
             QVector3D(t->position.x, t->position.y, t->position.z), viewW,
-            viewH, sp))
+            viewH, sp)) {
       continue;
+    }
     float dx = float(sx - sp.x());
     float dy = float(sy - sp.y());
     float d2 = dx * dx + dy * dy;
@@ -161,8 +167,9 @@ PickingService::pickSingle(float sx, float sy, Engine::Core::World &world,
         float scaleXZ = std::max(std::max(t->scale.x, t->scale.z), 1.0f);
         float rp = baseBuildingPickRadius * scaleXZ;
         float r2 = rp * rp;
-        if (d2 <= r2)
+        if (d2 <= r2) {
           hit = true;
+        }
       }
       if (hit && pickDist2 < bestBuildingDist2) {
         bestBuildingDist2 = pickDist2;
@@ -177,15 +184,19 @@ PickingService::pickSingle(float sx, float sy, Engine::Core::World &world,
     }
   }
   if (preferBuildingsFirst) {
-    if (bestBuildingId && (!bestUnitId || bestBuildingDist2 <= bestUnitDist2))
+    if (bestBuildingId && (!bestUnitId || bestBuildingDist2 <= bestUnitDist2)) {
       return bestBuildingId;
-    if (bestUnitId)
+    }
+    if (bestUnitId) {
       return bestUnitId;
+    }
   } else {
-    if (bestUnitId)
+    if (bestUnitId) {
       return bestUnitId;
-    if (bestBuildingId)
+    }
+    if (bestBuildingId) {
       return bestBuildingId;
+    }
   }
   return 0;
 }
@@ -196,8 +207,9 @@ PickingService::pickUnitFirst(float sx, float sy, Engine::Core::World &world,
                               int viewH, int ownerFilter) const {
 
   auto id = pickSingle(sx, sy, world, camera, viewW, viewH, ownerFilter, false);
-  if (id != 0)
+  if (id != 0) {
     return id;
+  }
 
   return pickSingle(sx, sy, world, camera, viewW, viewH, ownerFilter, true);
 }
@@ -214,19 +226,23 @@ PickingService::pickInRect(float x1, float y1, float x2, float y2,
   std::vector<Engine::Core::EntityID> picked;
   auto ents = world.getEntitiesWith<Engine::Core::TransformComponent>();
   for (auto *e : ents) {
-    if (!e->hasComponent<Engine::Core::UnitComponent>())
+    if (!e->hasComponent<Engine::Core::UnitComponent>()) {
       continue;
-    if (e->hasComponent<Engine::Core::BuildingComponent>())
+    }
+    if (e->hasComponent<Engine::Core::BuildingComponent>()) {
       continue;
+    }
     auto *u = e->getComponent<Engine::Core::UnitComponent>();
-    if (!u || u->ownerId != ownerFilter)
+    if (!u || u->ownerId != ownerFilter) {
       continue;
+    }
     auto *t = e->getComponent<Engine::Core::TransformComponent>();
     QPointF sp;
     if (!camera.worldToScreen(
             QVector3D(t->position.x, t->position.y, t->position.z), viewW,
-            viewH, sp))
+            viewH, sp)) {
       continue;
+    }
     if (sp.x() >= minX && sp.x() <= maxX && sp.y() >= minY && sp.y() <= maxY) {
       picked.push_back(e->getId());
     }

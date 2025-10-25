@@ -191,8 +191,9 @@ void PineRenderer::generatePineInstances() {
     QVector3D normal = normals[normalIdx];
     float slope = 1.0f - std::clamp(normal.y(), 0.0f, 1.0f);
 
-    if (slope > 0.75f)
+    if (slope > 0.75f) {
       return false;
+    }
 
     float worldX = (gx - halfWidth) * m_tileSize;
     float worldZ = (gz - halfHeight) * m_tileSize;
@@ -240,8 +241,9 @@ void PineRenderer::generatePineInstances() {
 
       QVector3D normal = normals[idx];
       float slope = 1.0f - std::clamp(normal.y(), 0.0f, 1.0f);
-      if (slope > 0.75f)
+      if (slope > 0.75f) {
         continue;
+      }
 
       uint32_t state = hashCoords(
           x, z, m_noiseSeed ^ 0xAB12CD34u ^ static_cast<uint32_t>(idx));
@@ -252,8 +254,9 @@ void PineRenderer::generatePineInstances() {
       float clusterNoise =
           valueNoise(worldX * 0.03f, worldZ * 0.03f, m_noiseSeed ^ 0x7F8E9D0Au);
 
-      if (clusterNoise < 0.35f)
+      if (clusterNoise < 0.35f) {
         continue;
+      }
 
       float densityMult = 1.0f;
       if (m_terrainTypes[idx] == Game::Map::TerrainType::Hill) {
@@ -265,8 +268,9 @@ void PineRenderer::generatePineInstances() {
       float effectiveDensity = pineDensity * densityMult * 0.8f;
       int pineCount = static_cast<int>(std::floor(effectiveDensity));
       float frac = effectiveDensity - float(pineCount);
-      if (rand01(state) < frac)
+      if (rand01(state) < frac) {
         pineCount += 1;
+      }
 
       for (int i = 0; i < pineCount; ++i) {
         float gx = float(x) + rand01(state) * 6.0f;

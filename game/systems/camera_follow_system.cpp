@@ -11,8 +11,9 @@ void CameraFollowSystem::update(Engine::Core::World &world,
                                 SelectionSystem &selection,
                                 Render::GL::Camera &camera) {
   const auto &sel = selection.getSelectedUnits();
-  if (sel.empty())
+  if (sel.empty()) {
     return;
+  }
   QVector3D sum(0, 0, 0);
   int count = 0;
   for (auto id : sel) {
@@ -34,8 +35,9 @@ void CameraFollowSystem::snapToSelection(Engine::Core::World &world,
                                          SelectionSystem &selection,
                                          Render::GL::Camera &camera) {
   const auto &sel = selection.getSelectedUnits();
-  if (sel.empty())
+  if (sel.empty()) {
     return;
+  }
   QVector3D sum(0, 0, 0);
   int count = 0;
   for (auto id : sel) {

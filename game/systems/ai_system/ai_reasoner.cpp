@@ -180,8 +180,9 @@ void AIReasoner::updateStateMachine(AIContext &ctx, float deltaTime) {
   }
 
   if (ctx.decisionTimer < 2.0f) {
-    if (ctx.state != previousState)
+    if (ctx.state != previousState) {
       ctx.stateTimer = 0.0f;
+    }
     return;
   }
 

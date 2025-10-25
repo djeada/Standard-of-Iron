@@ -305,8 +305,9 @@ public:
     auto drawArmPlate = [&](const QVector3D &shoulder, const QVector3D &elbow) {
       QVector3D dir = (elbow - shoulder);
       float len = dir.length();
-      if (len < 1e-5f)
+      if (len < 1e-5f) {
         return;
+      }
       dir /= len;
 
       for (int i = 0; i < 2; ++i) {
@@ -362,30 +363,35 @@ private:
     QVector3D gripPos = pose.handR;
 
     QVector3D spearDir = QVector3D(0.05f, 0.55f, 0.85f);
-    if (spearDir.lengthSquared() > 1e-6f)
+    if (spearDir.lengthSquared() > 1e-6f) {
       spearDir.normalize();
+    }
 
     if (anim.isInHoldMode || anim.isExitingHold) {
       float t = anim.isInHoldMode ? 1.0f : (1.0f - anim.holdExitProgress);
 
       QVector3D bracedDir = QVector3D(0.05f, 0.40f, 0.91f);
-      if (bracedDir.lengthSquared() > 1e-6f)
+      if (bracedDir.lengthSquared() > 1e-6f) {
         bracedDir.normalize();
+      }
 
       spearDir = spearDir * (1.0f - t) + bracedDir * t;
-      if (spearDir.lengthSquared() > 1e-6f)
+      if (spearDir.lengthSquared() > 1e-6f) {
         spearDir.normalize();
+      }
     } else if (isAttacking) {
       if (attackPhase >= 0.30f && attackPhase < 0.50f) {
         float t = (attackPhase - 0.30f) / 0.20f;
 
         QVector3D attackDir = QVector3D(0.03f, -0.15f, 1.0f);
-        if (attackDir.lengthSquared() > 1e-6f)
+        if (attackDir.lengthSquared() > 1e-6f) {
           attackDir.normalize();
+        }
 
         spearDir = spearDir * (1.0f - t) + attackDir * t;
-        if (spearDir.lengthSquared() > 1e-6f)
+        if (spearDir.lengthSquared() > 1e-6f) {
           spearDir.normalize();
+        }
       }
     }
 
