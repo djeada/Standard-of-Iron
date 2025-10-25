@@ -703,16 +703,18 @@ void HorseRenderer::render(const DrawContext &ctx, const AnimationInputs &anim,
             : 0.0f;
 
     shoulder.setZ(shoulder.z() + hipSwing * (isRear ? -0.12f : 0.10f));
-    if (tightenLegs)
+    if (tightenLegs) {
       shoulder.setX(shoulder.x() - lateralSign * liftFactor * 0.05f);
+    }
 
     float thighLength = d.legLength * (isRear ? 0.62f : 0.56f);
     float hipPitch = hipSwing * (isRear ? 0.62f : 0.50f);
     float inwardLean = tightenLegs ? (-0.06f - liftFactor * 0.045f) : -0.012f;
     QVector3D thighDir(lateralSign * inwardLean, -std::cos(hipPitch) * 0.90f,
                        (isRear ? -1.0f : 1.0f) * std::sin(hipPitch) * 0.65f);
-    if (thighDir.lengthSquared() > 1e-6f)
+    if (thighDir.lengthSquared() > 1e-6f) {
       thighDir.normalize();
+    }
 
     QVector3D knee = shoulder + thighDir * thighLength;
     knee.setY(knee.y() + liftFactor * thighLength * 0.28f);
@@ -758,10 +760,11 @@ void HorseRenderer::render(const DrawContext &ctx, const AnimationInputs &anim,
     float bendSin = std::sin(kneeFlex * kPi * 0.5f);
     QVector3D forearmDir(0.0f, -bendCos,
                          (isRear ? -1.0f : 1.0f) * bendSin * 0.85f);
-    if (forearmDir.lengthSquared() < 1e-6f)
+    if (forearmDir.lengthSquared() < 1e-6f) {
       forearmDir = QVector3D(0.0f, -1.0f, 0.0f);
-    else
+    } else {
       forearmDir.normalize();
+    }
     QVector3D cannon = knee + forearmDir * forearmLength;
 
     float pasternLength = d.legLength * 0.12f;

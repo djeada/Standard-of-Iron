@@ -29,8 +29,9 @@ Sound::Sound(const std::string &filePath, MiniaudioBackend *backend)
 Sound::~Sound() {}
 
 void Sound::setBackend(MiniaudioBackend *backend) {
-  if (m_backend == backend)
+  if (m_backend == backend) {
     return;
+  }
 
   m_backend = backend;
 

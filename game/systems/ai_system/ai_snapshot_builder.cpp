@@ -80,12 +80,14 @@ AISnapshot AISnapshotBuilder::build(const Engine::Core::World &world,
 
   for (auto *entity : enemies) {
     auto *unit = entity->getComponent<Engine::Core::UnitComponent>();
-    if (!unit || unit->health <= 0)
+    if (!unit || unit->health <= 0) {
       continue;
+    }
 
     auto *transform = entity->getComponent<Engine::Core::TransformComponent>();
-    if (!transform)
+    if (!transform) {
       continue;
+    }
 
     ContactSnapshot contact;
     contact.id = entity->getId();

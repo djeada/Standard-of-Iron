@@ -185,8 +185,9 @@ bool TacticalUtils::isTargetIsolated(
 
   for (const auto *enemy : allEnemies) {
 
-    if (enemy->id == target.id)
+    if (enemy->id == target.id) {
       continue;
+    }
 
     float distSq = distanceSquared(target.posX, target.posY, target.posZ,
                                    enemy->posX, enemy->posY, enemy->posZ);

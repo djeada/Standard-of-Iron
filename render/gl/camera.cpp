@@ -26,11 +26,13 @@ inline bool finite(float v) { return qIsFinite(v); }
 
 inline QVector3D safeNormalize(const QVector3D &v, const QVector3D &fallback,
                                float eps = kEps) {
-  if (!finite(v))
+  if (!finite(v)) {
     return fallback;
+  }
   float len2 = v.lengthSquared();
-  if (len2 < eps)
+  if (len2 < eps) {
     return fallback;
+  }
   return v / std::sqrt(len2);
 }
 
@@ -43,8 +45,9 @@ inline void orthonormalize(const QVector3D &frontIn, QVector3D &frontOut,
                     ? QVector3D(0, 0, 1)
                     : worldUp;
   QVector3D r = QVector3D::crossProduct(f, u);
-  if (r.lengthSquared() < kEps)
+  if (r.lengthSquared() < kEps) {
     r = QVector3D(1, 0, 0);
+  }
   r = r.normalized();
   u = QVector3D::crossProduct(r, f).normalized();
 
@@ -80,8 +83,9 @@ inline float calculateDynamicMargin(float baseMargin, float cameraHeight,
 }
 
 inline float smoothApproach(float current, float target, float smoothness) {
-  if (std::abs(current - target) < kTiny)
+  if (std::abs(current - target) < kTiny) {
     return target;
+  }
 
   return current +
          (target - current) * std::clamp(1.0f - smoothness, 0.01f, 0.99f);
@@ -92,8 +96,9 @@ inline float smoothApproach(float current, float target, float smoothness) {
 Camera::Camera() { updateVectors(); }
 
 void Camera::setPosition(const QVector3D &position) {
-  if (!finite(position))
+  if (!finite(position)) {
     return;
+  }
   m_position = position;
   applySoftBoundaries();
 
@@ -102,8 +107,9 @@ void Camera::setPosition(const QVector3D &position) {
 }
 
 void Camera::setTarget(const QVector3D &target) {
-  if (!finite(target))
+  if (!finite(target)) {
     return;
+  }
   m_target = target;
   applySoftBoundaries();
 
@@ -117,19 +123,22 @@ void Camera::setTarget(const QVector3D &target) {
 }
 
 void Camera::setUp(const QVector3D &up) {
-  if (!finite(up))
+  if (!finite(up)) {
     return;
+  }
   QVector3D upN = up;
-  if (upN.lengthSquared() < kEps)
+  if (upN.lengthSquared() < kEps) {
     upN = QVector3D(0, 1, 0);
+  }
 
   orthonormalize(m_target - m_position, m_front, m_right, m_up);
 }
 
 void Camera::lookAt(const QVector3D &position, const QVector3D &target,
                     const QVector3D &up) {
-  if (!finite(position) || !finite(target) || !finite(up))
+  if (!finite(position) || !finite(target) || !finite(up)) {
     return;
+  }
   m_position = position;
   m_target = (position == target) ? position + QVector3D(0, 0, -1) : target;
 
@@ -143,8 +152,9 @@ void Camera::lookAt(const QVector3D &position, const QVector3D &target,
 void Camera::setPerspective(float fov, float aspect, float nearPlane,
                             float farPlane) {
   if (!finite(fov) || !finite(aspect) || !finite(nearPlane) ||
-      !finite(farPlane))
+      !finite(farPlane)) {
     return;
+  }
 
   m_isPerspective = true;
 
@@ -157,8 +167,9 @@ void Camera::setPerspective(float fov, float aspect, float nearPlane,
 void Camera::setOrthographic(float left, float right, float bottom, float top,
                              float nearPlane, float farPlane) {
   if (!finite(left) || !finite(right) || !finite(bottom) || !finite(top) ||
-      !finite(nearPlane) || !finite(farPlane))
+      !finite(nearPlane) || !finite(farPlane)) {
     return;
+  }
 
   m_isPerspective = false;
   clampOrthoBox(left, right, bottom, top);
@@ -171,40 +182,46 @@ void Camera::setOrthographic(float left, float right, float bottom, float top,
 }
 
 void Camera::moveForward(float distance) {
-  if (!finite(distance))
+  if (!finite(distance)) {
     return;
+  }
   m_position += m_front * distance;
   m_target = m_position + m_front;
   applySoftBoundaries();
 }
 
 void Camera::moveRight(float distance) {
-  if (!finite(distance))
+  if (!finite(distance)) {
     return;
+  }
   m_position += m_right * distance;
   m_target = m_position + m_front;
   applySoftBoundaries();
 }
 
 void Camera::moveUp(float distance) {
-  if (!finite(distance))
+  if (!finite(distance)) {
     return;
+  }
   m_position += QVector3D(0, 1, 0) * distance;
   m_target = m_position + m_front;
   applySoftBoundaries();
 }
 
 void Camera::zoom(float delta) {
-  if (!finite(delta))
+  if (!finite(delta)) {
     return;
+  }
   if (m_isPerspective) {
     m_fov = qBound(kMinFov, m_fov - delta, kMaxFov);
   } else {
     float scale = 1.0f + delta * 0.1f;
-    if (!finite(scale) || scale <= 0.05f)
+    if (!finite(scale) || scale <= 0.05f) {
       scale = 0.05f;
-    if (scale > 20.0f)
+    }
+    if (scale > 20.0f) {
       scale = 20.0f;
+    }
     m_orthoLeft *= scale;
     m_orthoRight *= scale;
     m_orthoBottom *= scale;
@@ -214,17 +231,20 @@ void Camera::zoom(float delta) {
 }
 
 void Camera::zoomDistance(float delta) {
-  if (!finite(delta))
+  if (!finite(delta)) {
     return;
+  }
 
   QVector3D offset = m_position - m_target;
   float r = offset.length();
-  if (r < kTiny)
+  if (r < kTiny) {
     r = kTiny;
+  }
 
   float factor = 1.0f - delta * 0.15f;
-  if (!finite(factor))
+  if (!finite(factor)) {
     factor = 1.0f;
+  }
   factor = std::clamp(factor, 0.1f, 10.0f);
 
   float newR = std::clamp(r * factor, kMinDist, kMaxDist);
@@ -242,18 +262,21 @@ void Camera::zoomDistance(float delta) {
 void Camera::rotate(float yaw, float pitch) { orbit(yaw, pitch); }
 
 void Camera::pan(float rightDist, float forwardDist) {
-  if (!finite(rightDist) || !finite(forwardDist))
+  if (!finite(rightDist) || !finite(forwardDist)) {
     return;
+  }
 
   QVector3D right = m_right;
   QVector3D front = m_front;
   front.setY(0.0f);
-  if (front.lengthSquared() > 0)
+  if (front.lengthSquared() > 0) {
     front.normalize();
+  }
 
   QVector3D delta = right * rightDist + front * forwardDist;
-  if (!finite(delta))
+  if (!finite(delta)) {
     return;
+  }
 
   m_position += delta;
   m_target += delta;
@@ -262,22 +285,25 @@ void Camera::pan(float rightDist, float forwardDist) {
 }
 
 void Camera::elevate(float dy) {
-  if (!finite(dy))
+  if (!finite(dy)) {
     return;
+  }
   m_position.setY(m_position.y() + dy);
   applySoftBoundaries();
 }
 
 void Camera::yaw(float degrees) {
-  if (!finite(degrees))
+  if (!finite(degrees)) {
     return;
+  }
 
   orbit(degrees, 0.0f);
 }
 
 void Camera::orbit(float yawDeg, float pitchDeg) {
-  if (!finite(yawDeg) || !finite(pitchDeg))
+  if (!finite(yawDeg) || !finite(pitchDeg)) {
     return;
+  }
 
   QVector3D offset = m_position - m_target;
   float curYaw = 0.f, curPitch = 0.f;
@@ -293,10 +319,12 @@ void Camera::orbit(float yawDeg, float pitchDeg) {
 }
 
 void Camera::update(float dt) {
-  if (!m_orbitPending)
+  if (!m_orbitPending) {
     return;
-  if (!finite(dt))
+  }
+  if (!finite(dt)) {
     return;
+  }
 
   m_orbitTime += std::max(0.0f, dt);
   float t = (m_orbitDuration <= 0.0f)
@@ -311,8 +339,9 @@ void Camera::update(float dt) {
 
   QVector3D offset = m_position - m_target;
   float r = offset.length();
-  if (r < kTiny)
+  if (r < kTiny) {
     r = kTiny;
+  }
 
   float yawRad = qDegreesToRadians(newYaw);
   float pitchRad = qDegreesToRadians(newPitch);
@@ -333,39 +362,46 @@ void Camera::update(float dt) {
 
 bool Camera::screenToGround(qreal sx, qreal sy, qreal screenW, qreal screenH,
                             QVector3D &outWorld) const {
-  if (screenW <= 0 || screenH <= 0)
+  if (screenW <= 0 || screenH <= 0) {
     return false;
-  if (!qIsFinite(sx) || !qIsFinite(sy))
+  }
+  if (!qIsFinite(sx) || !qIsFinite(sy)) {
     return false;
+  }
 
   double x = (2.0 * sx / screenW) - 1.0;
   double y = 1.0 - (2.0 * sy / screenH);
 
   bool ok = false;
   QMatrix4x4 invVP = (getProjectionMatrix() * getViewMatrix()).inverted(&ok);
-  if (!ok)
+  if (!ok) {
     return false;
+  }
 
   QVector4D nearClip(float(x), float(y), 0.0f, 1.0f);
   QVector4D farClip(float(x), float(y), 1.0f, 1.0f);
   QVector4D nearWorld4 = invVP * nearClip;
   QVector4D farWorld4 = invVP * farClip;
 
-  if (std::abs(nearWorld4.w()) < kEps || std::abs(farWorld4.w()) < kEps)
+  if (std::abs(nearWorld4.w()) < kEps || std::abs(farWorld4.w()) < kEps) {
     return false;
+  }
 
   QVector3D rayOrigin = (nearWorld4 / nearWorld4.w()).toVector3D();
   QVector3D rayEnd = (farWorld4 / farWorld4.w()).toVector3D();
-  if (!finite(rayOrigin) || !finite(rayEnd))
+  if (!finite(rayOrigin) || !finite(rayEnd)) {
     return false;
+  }
 
   QVector3D rayDir = safeNormalize(rayEnd - rayOrigin, QVector3D(0, -1, 0));
-  if (std::abs(rayDir.y()) < kEps)
+  if (std::abs(rayDir.y()) < kEps) {
     return false;
+  }
 
   float t = (m_groundY - rayOrigin.y()) / rayDir.y();
-  if (!finite(t) || t < 0.0f)
+  if (!finite(t) || t < 0.0f) {
     return false;
+  }
 
   outWorld = rayOrigin + rayDir * t;
   return finite(outWorld);
@@ -373,21 +409,26 @@ bool Camera::screenToGround(qreal sx, qreal sy, qreal screenW, qreal screenH,
 
 bool Camera::worldToScreen(const QVector3D &world, qreal screenW, qreal screenH,
                            QPointF &outScreen) const {
-  if (screenW <= 0 || screenH <= 0)
+  if (screenW <= 0 || screenH <= 0) {
     return false;
-  if (!finite(world))
+  }
+  if (!finite(world)) {
     return false;
+  }
 
   QVector4D clip =
       getProjectionMatrix() * getViewMatrix() * QVector4D(world, 1.0f);
-  if (std::abs(clip.w()) < kEps)
+  if (std::abs(clip.w()) < kEps) {
     return false;
+  }
 
   QVector3D ndc = (clip / clip.w()).toVector3D();
-  if (!qIsFinite(ndc.x()) || !qIsFinite(ndc.y()) || !qIsFinite(ndc.z()))
+  if (!qIsFinite(ndc.x()) || !qIsFinite(ndc.y()) || !qIsFinite(ndc.z())) {
     return false;
-  if (ndc.z() < -1.0f || ndc.z() > 1.0f)
+  }
+  if (ndc.z() < -1.0f || ndc.z() > 1.0f) {
     return false;
+  }
 
   qreal sx = (ndc.x() * 0.5 + 0.5) * screenW;
   qreal sy = (1.0 - (ndc.y() * 0.5 + 0.5)) * screenH;
@@ -396,10 +437,12 @@ bool Camera::worldToScreen(const QVector3D &world, qreal screenW, qreal screenH,
 }
 
 void Camera::updateFollow(const QVector3D &targetCenter) {
-  if (!m_followEnabled)
+  if (!m_followEnabled) {
     return;
-  if (!finite(targetCenter))
+  }
+  if (!finite(targetCenter)) {
     return;
+  }
 
   if (m_followOffset.lengthSquared() < 1e-5f) {
     m_followOffset = m_position - m_target;
@@ -411,8 +454,9 @@ void Camera::updateFollow(const QVector3D &targetCenter) {
           : (m_position +
              (desiredPos - m_position) * std::clamp(m_followLerp, 0.0f, 1.0f));
 
-  if (!finite(newPos))
+  if (!finite(newPos)) {
     return;
+  }
 
   m_target = targetCenter;
   m_position = newPos;
@@ -424,8 +468,10 @@ void Camera::updateFollow(const QVector3D &targetCenter) {
 
 void Camera::setRTSView(const QVector3D &center, float distance, float angle,
                         float yawDeg) {
-  if (!finite(center) || !finite(distance) || !finite(angle) || !finite(yawDeg))
+  if (!finite(center) || !finite(distance) || !finite(angle) ||
+      !finite(yawDeg)) {
     return;
+  }
 
   m_target = center;
 
@@ -448,8 +494,9 @@ void Camera::setRTSView(const QVector3D &center, float distance, float angle,
 }
 
 void Camera::setTopDownView(const QVector3D &center, float distance) {
-  if (!finite(center) || !finite(distance))
+  if (!finite(center) || !finite(distance)) {
     return;
+  }
 
   m_target = center;
   m_position = center + QVector3D(0, std::max(distance, 0.01f), 0);
@@ -490,8 +537,9 @@ float Camera::getDistance() const { return (m_position - m_target).length(); }
 float Camera::getPitchDeg() const {
   QVector3D off = m_position - m_target;
   QVector3D dir = -off;
-  if (dir.lengthSquared() < 1e-6f)
+  if (dir.lengthSquared() < 1e-6f) {
     return 0.0f;
+  }
   float lenXZ = std::sqrt(dir.x() * dir.x() + dir.z() * dir.z());
   float pitchRad = std::atan2(dir.y(), lenXZ);
   return qRadiansToDegrees(pitchRad);
@@ -555,25 +603,29 @@ void Camera::applySoftBoundaries(bool isPanning) {
   QVector3D positionAdjustment(0, 0, 0);
   QVector3D targetAdjustment(0, 0, 0);
 
-  if (m_position.x() < extMinX)
+  if (m_position.x() < extMinX) {
     positionAdjustment.setX(extMinX - m_position.x());
-  else if (m_position.x() > extMaxX)
+  } else if (m_position.x() > extMaxX) {
     positionAdjustment.setX(extMaxX - m_position.x());
+  }
 
-  if (m_position.z() < extMinZ)
+  if (m_position.z() < extMinZ) {
     positionAdjustment.setZ(extMinZ - m_position.z());
-  else if (m_position.z() > extMaxZ)
+  } else if (m_position.z() > extMaxZ) {
     positionAdjustment.setZ(extMaxZ - m_position.z());
+  }
 
-  if (m_target.x() < mapMinX)
+  if (m_target.x() < mapMinX) {
     targetAdjustment.setX(mapMinX - m_target.x());
-  else if (m_target.x() > mapMaxX)
+  } else if (m_target.x() > mapMaxX) {
     targetAdjustment.setX(mapMaxX - m_target.x());
+  }
 
-  if (m_target.z() < mapMinZ)
+  if (m_target.z() < mapMinZ) {
     targetAdjustment.setZ(mapMinZ - m_target.z());
-  else if (m_target.z() > mapMaxZ)
+  } else if (m_target.z() > mapMaxZ) {
     targetAdjustment.setZ(mapMaxZ - m_target.z());
+  }
 
   if (isPanning) {
 
@@ -635,8 +687,9 @@ bool Camera::isInFrustum(const QVector3D &center, float radius) const {
 
   float m[16];
   const float *data = vp.constData();
-  for (int i = 0; i < 16; ++i)
+  for (int i = 0; i < 16; ++i) {
     m[i] = data[i];
+  }
 
   QVector3D leftN(m[3] + m[0], m[7] + m[4], m[11] + m[8]);
   float leftD = m[15] + m[12];
@@ -658,8 +711,9 @@ bool Camera::isInFrustum(const QVector3D &center, float radius) const {
 
   auto testPlane = [&center, radius](const QVector3D &n, float d) -> bool {
     float len = n.length();
-    if (len < 1e-6f)
+    if (len < 1e-6f) {
       return true;
+    }
     float dist = QVector3D::dotProduct(center, n) + d;
     return dist >= -radius * len;
   };

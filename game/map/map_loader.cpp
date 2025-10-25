@@ -12,12 +12,15 @@
 namespace Game::Map {
 
 static bool readGrid(const QJsonObject &obj, GridDefinition &grid) {
-  if (obj.contains("width"))
+  if (obj.contains("width")) {
     grid.width = obj.value("width").toInt(grid.width);
-  if (obj.contains("height"))
+  }
+  if (obj.contains("height")) {
     grid.height = obj.value("height").toInt(grid.height);
-  if (obj.contains("tileSize"))
+  }
+  if (obj.contains("tileSize")) {
     grid.tileSize = float(obj.value("tileSize").toDouble(grid.tileSize));
+  }
   return grid.width > 0 && grid.height > 0 && grid.tileSize > 0.0f;
 }
 
@@ -29,16 +32,21 @@ static bool readCamera(const QJsonObject &obj, CameraDefinition &cam) {
                     float(arr[2].toDouble(0.0))};
     }
   }
-  if (obj.contains("distance"))
+  if (obj.contains("distance")) {
     cam.distance = float(obj.value("distance").toDouble(cam.distance));
-  if (obj.contains("tiltDeg"))
+  }
+  if (obj.contains("tiltDeg")) {
     cam.tiltDeg = float(obj.value("tiltDeg").toDouble(cam.tiltDeg));
-  if (obj.contains("fovY"))
+  }
+  if (obj.contains("fovY")) {
     cam.fovY = float(obj.value("fovY").toDouble(cam.fovY));
-  if (obj.contains("near"))
+  }
+  if (obj.contains("near")) {
     cam.nearPlane = float(obj.value("near").toDouble(cam.nearPlane));
-  if (obj.contains("far"))
+  }
+  if (obj.contains("far")) {
     cam.farPlane = float(obj.value("far").toDouble(cam.farPlane));
+  }
   if (obj.contains("yaw") || obj.contains("yawDeg")) {
 
     const QString k = obj.contains("yaw") ? "yaw" : "yawDeg";
@@ -49,25 +57,30 @@ static bool readCamera(const QJsonObject &obj, CameraDefinition &cam) {
 
 static QVector3D readVector3(const QJsonValue &value,
                              const QVector3D &fallback) {
-  if (!value.isArray())
+  if (!value.isArray()) {
     return fallback;
+  }
   auto arr = value.toArray();
-  if (arr.size() != 3)
+  if (arr.size() != 3) {
     return fallback;
+  }
   return QVector3D(float(arr[0].toDouble(fallback.x())),
                    float(arr[1].toDouble(fallback.y())),
                    float(arr[2].toDouble(fallback.z())));
 }
 
 static void readBiome(const QJsonObject &obj, BiomeSettings &out) {
-  if (obj.contains("seed"))
+  if (obj.contains("seed")) {
     out.seed = static_cast<std::uint32_t>(
         std::max(0.0, obj.value("seed").toDouble(out.seed)));
-  if (obj.contains("patchDensity"))
+  }
+  if (obj.contains("patchDensity")) {
     out.patchDensity =
         float(obj.value("patchDensity").toDouble(out.patchDensity));
-  if (obj.contains("patchJitter"))
+  }
+  if (obj.contains("patchJitter")) {
     out.patchJitter = float(obj.value("patchJitter").toDouble(out.patchJitter));
+  }
   if (obj.contains("bladeHeight")) {
     auto arr = obj.value("bladeHeight").toArray();
     if (arr.size() == 2) {
@@ -82,15 +95,18 @@ static void readBiome(const QJsonObject &obj, BiomeSettings &out) {
       out.bladeWidthMax = float(arr[1].toDouble(out.bladeWidthMax));
     }
   }
-  if (obj.contains("backgroundBladeDensity"))
+  if (obj.contains("backgroundBladeDensity")) {
     out.backgroundBladeDensity =
         float(obj.value("backgroundBladeDensity")
                   .toDouble(out.backgroundBladeDensity));
-  if (obj.contains("swayStrength"))
+  }
+  if (obj.contains("swayStrength")) {
     out.swayStrength =
         float(obj.value("swayStrength").toDouble(out.swayStrength));
-  if (obj.contains("swaySpeed"))
+  }
+  if (obj.contains("swaySpeed")) {
     out.swaySpeed = float(obj.value("swaySpeed").toDouble(out.swaySpeed));
+  }
   if (obj.contains("heightNoise")) {
     auto arr = obj.value("heightNoise").toArray();
     if (arr.size() == 2) {
@@ -101,57 +117,74 @@ static void readBiome(const QJsonObject &obj, BiomeSettings &out) {
     }
   }
 
-  if (obj.contains("grassPrimary"))
+  if (obj.contains("grassPrimary")) {
     out.grassPrimary = readVector3(obj.value("grassPrimary"), out.grassPrimary);
-  if (obj.contains("grassSecondary"))
+  }
+  if (obj.contains("grassSecondary")) {
     out.grassSecondary =
         readVector3(obj.value("grassSecondary"), out.grassSecondary);
-  if (obj.contains("grassDry"))
+  }
+  if (obj.contains("grassDry")) {
     out.grassDry = readVector3(obj.value("grassDry"), out.grassDry);
-  if (obj.contains("soilColor"))
+  }
+  if (obj.contains("soilColor")) {
     out.soilColor = readVector3(obj.value("soilColor"), out.soilColor);
-  if (obj.contains("rockLow"))
+  }
+  if (obj.contains("rockLow")) {
     out.rockLow = readVector3(obj.value("rockLow"), out.rockLow);
-  if (obj.contains("rockHigh"))
+  }
+  if (obj.contains("rockHigh")) {
     out.rockHigh = readVector3(obj.value("rockHigh"), out.rockHigh);
-  if (obj.contains("terrainMacroNoiseScale"))
+  }
+  if (obj.contains("terrainMacroNoiseScale")) {
     out.terrainMacroNoiseScale =
         float(obj.value("terrainMacroNoiseScale")
                   .toDouble(out.terrainMacroNoiseScale));
-  if (obj.contains("terrainDetailNoiseScale"))
+  }
+  if (obj.contains("terrainDetailNoiseScale")) {
     out.terrainDetailNoiseScale =
         float(obj.value("terrainDetailNoiseScale")
                   .toDouble(out.terrainDetailNoiseScale));
-  if (obj.contains("terrainSoilHeight"))
+  }
+  if (obj.contains("terrainSoilHeight")) {
     out.terrainSoilHeight =
         float(obj.value("terrainSoilHeight").toDouble(out.terrainSoilHeight));
-  if (obj.contains("terrainSoilSharpness"))
+  }
+  if (obj.contains("terrainSoilSharpness")) {
     out.terrainSoilSharpness = float(
         obj.value("terrainSoilSharpness").toDouble(out.terrainSoilSharpness));
-  if (obj.contains("terrainRockThreshold"))
+  }
+  if (obj.contains("terrainRockThreshold")) {
     out.terrainRockThreshold = float(
         obj.value("terrainRockThreshold").toDouble(out.terrainRockThreshold));
-  if (obj.contains("terrainRockSharpness"))
+  }
+  if (obj.contains("terrainRockSharpness")) {
     out.terrainRockSharpness = float(
         obj.value("terrainRockSharpness").toDouble(out.terrainRockSharpness));
-  if (obj.contains("terrainAmbientBoost"))
+  }
+  if (obj.contains("terrainAmbientBoost")) {
     out.terrainAmbientBoost = float(
         obj.value("terrainAmbientBoost").toDouble(out.terrainAmbientBoost));
-  if (obj.contains("terrainRockDetailStrength"))
+  }
+  if (obj.contains("terrainRockDetailStrength")) {
     out.terrainRockDetailStrength =
         float(obj.value("terrainRockDetailStrength")
                   .toDouble(out.terrainRockDetailStrength));
-  if (obj.contains("backgroundSwayVariance"))
+  }
+  if (obj.contains("backgroundSwayVariance")) {
     out.backgroundSwayVariance =
         float(obj.value("backgroundSwayVariance")
                   .toDouble(out.backgroundSwayVariance));
-  if (obj.contains("backgroundScatterRadius"))
+  }
+  if (obj.contains("backgroundScatterRadius")) {
     out.backgroundScatterRadius =
         float(obj.value("backgroundScatterRadius")
                   .toDouble(out.backgroundScatterRadius));
-  if (obj.contains("plantDensity"))
+  }
+  if (obj.contains("plantDensity")) {
     out.plantDensity =
         float(obj.value("plantDensity").toDouble(out.plantDensity));
+  }
 }
 
 static void readVictoryConfig(const QJsonObject &obj, VictoryConfig &out) {
@@ -388,8 +421,9 @@ bool MapLoader::loadFromJsonFile(const QString &path, MapDefinition &outMap,
                                  QString *outError) {
   QFile f(path);
   if (!f.open(QIODevice::ReadOnly)) {
-    if (outError)
+    if (outError) {
       *outError = QString("Failed to open map file: %1").arg(path);
+    }
     return false;
   }
   auto data = f.readAll();
@@ -398,15 +432,17 @@ bool MapLoader::loadFromJsonFile(const QString &path, MapDefinition &outMap,
   QJsonParseError perr;
   auto doc = QJsonDocument::fromJson(data, &perr);
   if (perr.error != QJsonParseError::NoError) {
-    if (outError)
+    if (outError) {
       *outError = QString("JSON parse error at %1: %2")
                       .arg(perr.offset)
                       .arg(perr.errorString());
+    }
     return false;
   }
   if (!doc.isObject()) {
-    if (outError)
+    if (outError) {
       *outError = "Map JSON root must be an object";
+    }
     return false;
   }
   auto root = doc.object();
@@ -415,10 +451,11 @@ bool MapLoader::loadFromJsonFile(const QString &path, MapDefinition &outMap,
 
   if (root.contains("coordSystem")) {
     const QString cs = root.value("coordSystem").toString().trimmed().toLower();
-    if (cs == "world")
+    if (cs == "world") {
       outMap.coordSystem = CoordSystem::World;
-    else
+    } else {
       outMap.coordSystem = CoordSystem::Grid;
+    }
   }
 
   if (root.contains("maxTroopsPerPlayer")) {
@@ -427,8 +464,9 @@ bool MapLoader::loadFromJsonFile(const QString &path, MapDefinition &outMap,
 
   if (root.contains("grid") && root.value("grid").isObject()) {
     if (!readGrid(root.value("grid").toObject(), outMap.grid)) {
-      if (outError)
+      if (outError) {
         *outError = "Invalid grid definition";
+      }
       return false;
     }
   }

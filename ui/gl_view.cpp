@@ -14,8 +14,9 @@ QQuickFramebufferObject::Renderer *GLView::createRenderer() const {
 QObject *GLView::engine() const { return m_engine; }
 
 void GLView::setEngine(QObject *eng) {
-  if (m_engine == eng)
+  if (m_engine == eng) {
     return;
+  }
   m_engine = qobject_cast<GameEngine *>(eng);
   emit engineChanged();
   update();
@@ -25,8 +26,9 @@ GLView::GLRenderer::GLRenderer(QPointer<GameEngine> engine)
     : m_engine(engine) {}
 
 void GLView::GLRenderer::render() {
-  if (!m_engine)
+  if (!m_engine) {
     return;
+  }
   m_engine->ensureInitialized();
   m_engine->update(1.0f / 60.0f);
   m_engine->render(m_size.width(), m_size.height());

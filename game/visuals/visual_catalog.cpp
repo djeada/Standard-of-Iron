@@ -9,16 +9,21 @@ namespace Game::Visuals {
 
 VisualDef::MeshKind meshKindFromString(const QString &s) {
   const QString t = s.trimmed().toLower();
-  if (t == "quad")
+  if (t == "quad") {
     return VisualDef::MeshKind::Quad;
-  if (t == "plane")
+  }
+  if (t == "plane") {
     return VisualDef::MeshKind::Plane;
-  if (t == "cube")
+  }
+  if (t == "cube") {
     return VisualDef::MeshKind::Cube;
-  if (t == "capsule")
+  }
+  if (t == "capsule") {
     return VisualDef::MeshKind::Capsule;
-  if (t == "ring")
+  }
+  if (t == "ring") {
     return VisualDef::MeshKind::Ring;
+  }
   return VisualDef::MeshKind::None;
 }
 
@@ -44,8 +49,9 @@ toRenderableMesh(VisualDef::MeshKind k) {
 bool VisualCatalog::loadFromJsonFile(const QString &path, QString *outError) {
   QFile f(path);
   if (!f.open(QIODevice::ReadOnly)) {
-    if (outError)
+    if (outError) {
       *outError = QString("Failed to open visuals file: %1").arg(path);
+    }
     return false;
   }
   const QByteArray data = f.readAll();
@@ -53,10 +59,11 @@ bool VisualCatalog::loadFromJsonFile(const QString &path, QString *outError) {
   QJsonParseError perr{};
   const QJsonDocument doc = QJsonDocument::fromJson(data, &perr);
   if (doc.isNull()) {
-    if (outError)
+    if (outError) {
       *outError = QString("JSON parse error at %1: %2")
                       .arg(perr.offset)
                       .arg(perr.errorString());
+    }
     return false;
   }
   QJsonObject root = doc.object();
@@ -66,10 +73,11 @@ bool VisualCatalog::loadFromJsonFile(const QString &path, QString *outError) {
     QJsonObject o = it.value().toObject();
     def.mesh = meshKindFromString(o.value("mesh").toString("cube"));
     QJsonArray col = o.value("color").toArray();
-    if (col.size() == 3)
+    if (col.size() == 3) {
       def.color =
           QVector3D(float(col[0].toDouble(1.0)), float(col[1].toDouble(1.0)),
                     float(col[2].toDouble(1.0)));
+    }
     def.texture = o.value("texture").toString("");
     m_units.emplace(it.key().toStdString(), def);
   }
@@ -78,8 +86,9 @@ bool VisualCatalog::loadFromJsonFile(const QString &path, QString *outError) {
 
 bool VisualCatalog::lookup(const std::string &unitType, VisualDef &out) const {
   auto it = m_units.find(unitType);
-  if (it == m_units.end())
+  if (it == m_units.end()) {
     return false;
+  }
   out = it->second;
   return true;
 }

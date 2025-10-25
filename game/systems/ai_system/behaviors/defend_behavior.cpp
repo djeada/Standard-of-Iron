@@ -19,12 +19,14 @@ void DefendBehavior::execute(const AISnapshot &snapshot, AIContext &context,
 
   float updateInterval = context.barracksUnderThreat ? 0.5f : 1.5f;
 
-  if (m_defendTimer < updateInterval)
+  if (m_defendTimer < updateInterval) {
     return;
+  }
   m_defendTimer = 0.0f;
 
-  if (context.primaryBarracks == 0)
+  if (context.primaryBarracks == 0) {
     return;
+  }
 
   float defendPosX = 0.0f;
   float defendPosY = 0.0f;
@@ -41,8 +43,9 @@ void DefendBehavior::execute(const AISnapshot &snapshot, AIContext &context,
     }
   }
 
-  if (!foundBarracks)
+  if (!foundBarracks) {
     return;
+  }
 
   std::vector<const EntitySnapshot *> readyDefenders;
   std::vector<const EntitySnapshot *> engagedDefenders;
@@ -50,8 +53,9 @@ void DefendBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   engagedDefenders.reserve(snapshot.friendlies.size());
 
   for (const auto &entity : snapshot.friendlies) {
-    if (entity.isBuilding)
+    if (entity.isBuilding) {
       continue;
+    }
 
     if (isEntityEngaged(entity, snapshot.visibleEnemies)) {
       engagedDefenders.push_back(&entity);
@@ -60,8 +64,9 @@ void DefendBehavior::execute(const AISnapshot &snapshot, AIContext &context,
     }
   }
 
-  if (readyDefenders.empty() && engagedDefenders.empty())
+  if (readyDefenders.empty() && engagedDefenders.empty()) {
     return;
+  }
 
   auto sortByDistance = [&](std::vector<const EntitySnapshot *> &list) {
     std::sort(list.begin(), list.end(),
@@ -93,8 +98,9 @@ void DefendBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   std::size_t readyCount = std::min(desiredCount, readyDefenders.size());
   readyDefenders.resize(readyCount);
 
-  if (readyDefenders.empty())
+  if (readyDefenders.empty()) {
     return;
+  }
 
   if (context.barracksUnderThreat || !context.buildingsUnderAttack.empty()) {
 
@@ -204,8 +210,9 @@ void DefendBehavior::execute(const AISnapshot &snapshot, AIContext &context,
     }
   }
 
-  if (unclaimedDefenders.empty())
+  if (unclaimedDefenders.empty()) {
     return;
+  }
 
   const Nation *nation =
       NationRegistry::instance().getNationForPlayer(context.playerId);
@@ -234,8 +241,9 @@ void DefendBehavior::execute(const AISnapshot &snapshot, AIContext &context,
     float dz = entity->posZ - target.z();
     float distanceSq = dx * dx + dz * dz;
 
-    if (distanceSq < 1.0f * 1.0f)
+    if (distanceSq < 1.0f * 1.0f) {
       continue;
+    }
 
     unitsToMove.push_back(entity->id);
     targetX.push_back(target.x());
@@ -243,15 +251,17 @@ void DefendBehavior::execute(const AISnapshot &snapshot, AIContext &context,
     targetZ.push_back(target.z());
   }
 
-  if (unitsToMove.empty())
+  if (unitsToMove.empty()) {
     return;
+  }
 
   auto claimedForMove =
       claimUnits(unitsToMove, BehaviorPriority::Low, "positioning", context,
                  m_defendTimer + deltaTime, 1.5f);
 
-  if (claimedForMove.empty())
+  if (claimedForMove.empty()) {
     return;
+  }
 
   std::vector<float> filteredX, filteredY, filteredZ;
   for (size_t i = 0; i < unitsToMove.size(); ++i) {
@@ -276,17 +286,21 @@ bool DefendBehavior::shouldExecute(const AISnapshot &snapshot,
                                    const AIContext &context) const {
   (void)snapshot;
 
-  if (context.primaryBarracks == 0)
+  if (context.primaryBarracks == 0) {
     return false;
+  }
 
-  if (context.barracksUnderThreat || !context.buildingsUnderAttack.empty())
+  if (context.barracksUnderThreat || !context.buildingsUnderAttack.empty()) {
     return true;
+  }
 
-  if (context.state == AIState::Defending && context.idleUnits > 0)
+  if (context.state == AIState::Defending && context.idleUnits > 0) {
     return true;
+  }
 
-  if (context.averageHealth < 0.6f && context.totalUnits > 0)
+  if (context.averageHealth < 0.6f && context.totalUnits > 0) {
     return true;
+  }
 
   return false;
 }

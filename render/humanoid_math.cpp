@@ -13,8 +13,9 @@ QVector3D elbowBendTorso(const QVector3D &shoulder, const QVector3D &hand,
   if (lateral.lengthSquared() < 1e-8f) {
     lateral = QVector3D::crossProduct(dir, QVector3D(0, 1, 0));
   }
-  if (QVector3D::dotProduct(lateral, outwardDir) < 0.0f)
+  if (QVector3D::dotProduct(lateral, outwardDir) < 0.0f) {
     lateral = -lateral;
+  }
   lateral.normalize();
 
   return shoulder + dir * (dist * alongFrac) +

@@ -319,8 +319,9 @@ public:
     auto drawArmPlate = [&](const QVector3D &shoulder, const QVector3D &elbow) {
       QVector3D dir = (elbow - shoulder);
       float len = dir.length();
-      if (len < 1e-5f)
+      if (len < 1e-5f) {
         return;
+      }
       dir /= len;
 
       for (int i = 0; i < 3; ++i) {
@@ -514,12 +515,15 @@ private:
     QVector3D upish = yawM.map(QVector3D(0.05f, 1.0f, 0.15f));
     QVector3D midish = yawM.map(QVector3D(0.08f, 0.20f, 1.0f));
     QVector3D downish = yawM.map(QVector3D(0.10f, -1.0f, 0.25f));
-    if (upish.lengthSquared() > 1e-6f)
+    if (upish.lengthSquared() > 1e-6f) {
       upish.normalize();
-    if (midish.lengthSquared() > 1e-6f)
+    }
+    if (midish.lengthSquared() > 1e-6f) {
       midish.normalize();
-    if (downish.lengthSquared() > 1e-6f)
+    }
+    if (downish.lengthSquared() > 1e-6f) {
       downish.normalize();
+    }
 
     QVector3D swordDir = upish;
 
@@ -563,8 +567,9 @@ private:
 
     QVector3D guardRight =
         QVector3D::crossProduct(QVector3D(0, 1, 0), swordDir);
-    if (guardRight.lengthSquared() < 1e-6f)
+    if (guardRight.lengthSquared() < 1e-6f) {
       guardRight = QVector3D::crossProduct(QVector3D(1, 0, 0), swordDir);
+    }
     guardRight.normalize();
 
     QVector3D guardL = guardCenter - guardRight * gw;

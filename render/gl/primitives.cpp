@@ -294,8 +294,9 @@ Mesh *createUnitTorsoMesh(int radialSegments, int heightSegments) {
   auto sampleAxes = [&](float t) -> Axes {
     t = clampf(t, 0.0f, 1.0f);
     int i = 0;
-    while (i + 1 < KEY_COUNT && t > keys[i + 1].t)
+    while (i + 1 < KEY_COUNT && t > keys[i + 1].t) {
       ++i;
+    }
     int i0 = i > 0 ? i - 1 : 0;
     int i1 = i;
     int i2 = (i + 1 < KEY_COUNT) ? i + 1 : KEY_COUNT - 1;
@@ -396,8 +397,9 @@ Mesh *createUnitTorsoMesh(int radialSegments, int heightSegments) {
       QVector3D dv = pv - p;
 
       QVector3D n = QVector3D::crossProduct(du, dv);
-      if (n.lengthSquared() > 0.0f)
+      if (n.lengthSquared() > 0.0f) {
         n.normalize();
+      }
 
       v.push_back({{p.x(), p.y(), p.z()}, {n.x(), n.y(), n.z()}, {u, vCoord}});
     }

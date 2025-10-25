@@ -24,8 +24,9 @@ void TerrainAlignmentSystem::update(Engine::Core::World *world,
 void TerrainAlignmentSystem::alignEntityToTerrain(
     Engine::Core::Entity *entity) {
   auto *transform = entity->getComponent<Engine::Core::TransformComponent>();
-  if (!transform)
+  if (!transform) {
     return;
+  }
 
   auto &terrainService = Game::Map::TerrainService::instance();
 

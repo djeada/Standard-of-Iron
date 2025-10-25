@@ -211,8 +211,9 @@ public:
 
     QVector3D rightAxis = pose.shoulderR - pose.shoulderL;
     rightAxis.setY(0.0f);
-    if (rightAxis.lengthSquared() < 1e-8f)
+    if (rightAxis.lengthSquared() < 1e-8f) {
       rightAxis = QVector3D(1, 0, 0);
+    }
     rightAxis.normalize();
     QVector3D outwardL = -rightAxis;
     QVector3D outwardR = rightAxis;
@@ -232,8 +233,9 @@ public:
     uint32_t seed = 0u;
     if (ctx.entity) {
       auto *unit = ctx.entity->getComponent<Engine::Core::UnitComponent>();
-      if (unit)
+      if (unit) {
         seed ^= uint32_t(unit->ownerId * 2654435761u);
+      }
       seed ^= uint32_t(reinterpret_cast<uintptr_t>(ctx.entity) & 0xFFFFFFFFu);
     }
 
@@ -409,8 +411,9 @@ public:
     auto drawManica = [&](const QVector3D &shoulder, const QVector3D &elbow) {
       QVector3D dir = (elbow - shoulder);
       float len = dir.length();
-      if (len < 1e-5f)
+      if (len < 1e-5f) {
         return;
+      }
       dir /= len;
 
       for (int i = 0; i < 4; ++i) {

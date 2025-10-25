@@ -68,15 +68,17 @@ QVector3D CommandService::gridToWorld(const Point &gridPos) {
 void CommandService::clearPendingRequest(Engine::Core::EntityID entityId) {
   std::lock_guard<std::mutex> lock(s_pendingMutex);
   auto it = s_entityToRequest.find(entityId);
-  if (it == s_entityToRequest.end())
+  if (it == s_entityToRequest.end()) {
     return;
+  }
 
   std::uint64_t requestId = it->second;
   s_entityToRequest.erase(it);
 
   auto pendingIt = s_pendingRequests.find(requestId);
-  if (pendingIt == s_pendingRequests.end())
+  if (pendingIt == s_pendingRequests.end()) {
     return;
+  }
 
   auto members = pendingIt->second.groupMembers;
   s_pendingRequests.erase(pendingIt);
@@ -100,8 +102,9 @@ void CommandService::moveUnits(Engine::Core::World &world,
                                const std::vector<Engine::Core::EntityID> &units,
                                const std::vector<QVector3D> &targets,
                                const MoveOptions &options) {
-  if (units.size() != targets.size())
+  if (units.size() != targets.size()) {
     return;
+  }
 
   if (options.groupMove && units.size() > 1) {
     moveGroup(world, units, targets, options);
@@ -110,8 +113,9 @@ void CommandService::moveUnits(Engine::Core::World &world,
 
   for (size_t i = 0; i < units.size(); ++i) {
     auto *e = world.getEntity(units[i]);
-    if (!e)
+    if (!e) {
       continue;
+    }
 
     auto *holdMode = e->getComponent<Engine::Core::HoldModeComponent>();
     if (holdMode && holdMode->active) {
@@ -127,14 +131,17 @@ void CommandService::moveUnits(Engine::Core::World &world,
     }
 
     auto *transform = e->getComponent<Engine::Core::TransformComponent>();
-    if (!transform)
+    if (!transform) {
       continue;
+    }
 
     auto *mv = e->getComponent<Engine::Core::MovementComponent>();
-    if (!mv)
+    if (!mv) {
       mv = e->addComponent<Engine::Core::MovementComponent>();
-    if (!mv)
+    }
+    if (!mv) {
       continue;
+    }
 
     if (options.clearAttackIntent) {
       e->removeComponent<Engine::Core::AttackTargetComponent>();
@@ -331,8 +338,9 @@ void CommandService::moveGroup(Engine::Core::World &world,
 
   for (size_t i = 0; i < units.size(); ++i) {
     auto *entity = world.getEntity(units[i]);
-    if (!entity)
+    if (!entity) {
       continue;
+    }
 
     auto *holdMode = entity->getComponent<Engine::Core::HoldModeComponent>();
     if (holdMode && holdMode->active) {
@@ -341,14 +349,17 @@ void CommandService::moveGroup(Engine::Core::World &world,
     }
 
     auto *transform = entity->getComponent<Engine::Core::TransformComponent>();
-    if (!transform)
+    if (!transform) {
       continue;
+    }
 
     auto *movement = entity->getComponent<Engine::Core::MovementComponent>();
-    if (!movement)
+    if (!movement) {
       movement = entity->addComponent<Engine::Core::MovementComponent>();
-    if (!movement)
+    }
+    if (!movement) {
       continue;
+    }
 
     bool engaged =
         entity->getComponent<Engine::Core::AttackTargetComponent>() != nullptr;
@@ -361,23 +372,17 @@ void CommandService::moveGroup(Engine::Core::World &world,
     auto *unitComponent = entity->getComponent<Engine::Core::UnitComponent>();
     float memberSpeed =
         unitComponent ? std::max(0.1f, unitComponent->speed) : 1.0f;
-    Game::Units::SpawnType spawnType =
-        unitComponent ? unitComponent->spawnType
-                      : Game::Units::SpawnType::Archer;
+    Game::Units::SpawnType spawnType = unitComponent
+                                           ? unitComponent->spawnType
+                                           : Game::Units::SpawnType::Archer;
 
-    members.push_back({units[i],
-                       entity,
-                       transform,
-                       movement,
-                       targets[i],
-                       engaged,
-                       memberSpeed,
-                       spawnType,
-                       0.0f});
+    members.push_back({units[i], entity, transform, movement, targets[i],
+                       engaged, memberSpeed, spawnType, 0.0f});
   }
 
-  if (members.empty())
+  if (members.empty()) {
     return;
+  }
 
   if (members.size() == 1) {
     std::vector<Engine::Core::EntityID> singleUnit = {members[0].id};
@@ -426,16 +431,17 @@ void CommandService::moveGroup(Engine::Core::World &world,
 
   members = movingMembers;
 
-  if (members.empty())
+  if (members.empty()) {
     return;
+  }
 
   QVector3D targetCentroid(0.0f, 0.0f, 0.0f);
   QVector3D positionCentroid(0.0f, 0.0f, 0.0f);
   float speedSum = 0.0f;
   for (auto &member : members) {
     targetCentroid += member.target;
-    positionCentroid +=
-        QVector3D(member.transform->position.x, 0.0f, member.transform->position.z);
+    positionCentroid += QVector3D(member.transform->position.x, 0.0f,
+                                  member.transform->position.z);
     speedSum += member.speed;
   }
 
@@ -458,18 +464,15 @@ void CommandService::moveGroup(Engine::Core::World &world,
   }
 
   float avgTargetDistance =
-      members.empty()
-          ? 0.0f
-          : targetDistanceSum / static_cast<float>(members.size());
-  float avgScatter =
-      members.empty()
-          ? 0.0f
-          : centroidDistanceSum / static_cast<float>(members.size());
+      members.empty() ? 0.0f
+                      : targetDistanceSum / static_cast<float>(members.size());
+  float avgScatter = members.empty() ? 0.0f
+                                     : centroidDistanceSum /
+                                           static_cast<float>(members.size());
   float avgSpeed =
       members.empty() ? 0.0f : speedSum / static_cast<float>(members.size());
 
-  float nearThreshold =
-      std::clamp(avgTargetDistance * 0.5f, 4.0f, 12.0f);
+  float nearThreshold = std::clamp(avgTargetDistance * 0.5f, 4.0f, 12.0f);
   if (maxTargetDistance <= nearThreshold) {
     MoveOptions directOptions = options;
     directOptions.groupMove = false;
@@ -543,8 +546,7 @@ void CommandService::moveGroup(Engine::Core::World &world,
       directOptions.groupMove = false;
       std::vector<Engine::Core::EntityID> singleIds = {
           regroupMembers.front().id};
-      std::vector<QVector3D> singleTargets = {
-          regroupMembers.front().target};
+      std::vector<QVector3D> singleTargets = {regroupMembers.front().target};
       moveUnits(world, singleIds, singleTargets, directOptions);
     }
     return;
@@ -553,8 +555,9 @@ void CommandService::moveGroup(Engine::Core::World &world,
   members = std::move(regroupMembers);
 
   QVector3D average(0.0f, 0.0f, 0.0f);
-  for (const auto &member : members)
+  for (const auto &member : members) {
     average += member.target;
+  }
   average /= static_cast<float>(members.size());
 
   std::size_t leaderIndex = 0;
@@ -672,12 +675,14 @@ void CommandService::moveGroup(Engine::Core::World &world,
 }
 
 void CommandService::processPathResults(Engine::Core::World &world) {
-  if (!s_pathfinder)
+  if (!s_pathfinder) {
     return;
+  }
 
   auto results = s_pathfinder->fetchCompletedPaths();
-  if (results.empty())
+  if (results.empty()) {
     return;
+  }
 
   for (auto &result : results) {
     PendingPathRequest requestInfo;
@@ -706,18 +711,21 @@ void CommandService::processPathResults(Engine::Core::World &world) {
     auto applyToMember = [&](Engine::Core::EntityID memberId,
                              const QVector3D &target, const QVector3D &offset) {
       auto *memberEntity = world.getEntity(memberId);
-      if (!memberEntity)
+      if (!memberEntity) {
         return;
+      }
 
       auto *movementComponent =
           memberEntity->getComponent<Engine::Core::MovementComponent>();
-      if (!movementComponent)
+      if (!movementComponent) {
         return;
+      }
 
       auto *memberTransform =
           memberEntity->getComponent<Engine::Core::TransformComponent>();
-      if (!memberTransform)
+      if (!memberTransform) {
         return;
+      }
 
       if (!movementComponent->pathPending ||
           movementComponent->pendingRequestId != result.requestId) {
@@ -792,8 +800,10 @@ void CommandService::processPathResults(Engine::Core::World &world) {
     processed.reserve(requestInfo.groupMembers.size() + 1);
 
     auto addMember = [&](Engine::Core::EntityID id, const QVector3D &target) {
-      if (std::find(processed.begin(), processed.end(), id) != processed.end())
+      if (std::find(processed.begin(), processed.end(), id) !=
+          processed.end()) {
         return;
+      }
       QVector3D offset = target - leaderTarget;
       applyToMember(id, target, offset);
       processed.push_back(id);
@@ -818,12 +828,14 @@ void CommandService::attackTarget(
     Engine::Core::World &world,
     const std::vector<Engine::Core::EntityID> &units,
     Engine::Core::EntityID targetId, bool shouldChase) {
-  if (targetId == 0)
+  if (targetId == 0) {
     return;
+  }
   for (auto unitId : units) {
     auto *e = world.getEntity(unitId);
-    if (!e)
+    if (!e) {
       continue;
+    }
 
     auto *holdMode = e->getComponent<Engine::Core::HoldModeComponent>();
     if (holdMode && holdMode->active) {
@@ -836,23 +848,27 @@ void CommandService::attackTarget(
     if (!attackTarget) {
       attackTarget = e->addComponent<Engine::Core::AttackTargetComponent>();
     }
-    if (!attackTarget)
+    if (!attackTarget) {
       continue;
+    }
 
     attackTarget->targetId = targetId;
     attackTarget->shouldChase = shouldChase;
 
-    if (!shouldChase)
+    if (!shouldChase) {
       continue;
+    }
 
     auto *targetEnt = world.getEntity(targetId);
-    if (!targetEnt)
+    if (!targetEnt) {
       continue;
+    }
 
     auto *tTrans = targetEnt->getComponent<Engine::Core::TransformComponent>();
     auto *attTrans = e->getComponent<Engine::Core::TransformComponent>();
-    if (!tTrans || !attTrans)
+    if (!tTrans || !attTrans) {
       continue;
+    }
 
     QVector3D targetPos(tTrans->position.x, 0.0f, tTrans->position.z);
     QVector3D attackerPos(attTrans->position.x, 0.0f, attTrans->position.z);

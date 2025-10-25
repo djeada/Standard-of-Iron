@@ -12,21 +12,24 @@ namespace Game {
 namespace Systems {
 
 void ProductionSystem::update(Engine::Core::World *world, float deltaTime) {
-  if (!world)
+  if (!world) {
     return;
+  }
   auto entities = world->getEntitiesWith<Engine::Core::ProductionComponent>();
   for (auto *e : entities) {
     auto *prod = e->getComponent<Engine::Core::ProductionComponent>();
-    if (!prod)
+    if (!prod) {
       continue;
+    }
 
     auto *unitComp = e->getComponent<Engine::Core::UnitComponent>();
     if (unitComp && Game::Core::isNeutralOwner(unitComp->ownerId)) {
       continue;
     }
 
-    if (!prod->inProgress)
+    if (!prod->inProgress) {
       continue;
+    }
 
     int individualsPerUnit =
         Game::Units::TroopConfig::instance().getIndividualsPerUnit(

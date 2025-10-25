@@ -7,8 +7,9 @@
 namespace Game::Systems {
 
 void PatrolSystem::update(Engine::Core::World *world, float deltaTime) {
-  if (!world)
+  if (!world) {
     return;
+  }
 
   auto entities = world->getEntitiesWith<Engine::Core::PatrolComponent>();
 
@@ -18,10 +19,12 @@ void PatrolSystem::update(Engine::Core::World *world, float deltaTime) {
     auto *transform = entity->getComponent<Engine::Core::TransformComponent>();
     auto *unit = entity->getComponent<Engine::Core::UnitComponent>();
 
-    if (!patrol || !movement || !transform || !unit)
+    if (!patrol || !movement || !transform || !unit) {
       continue;
-    if (!patrol->patrolling || patrol->waypoints.size() < 2)
+    }
+    if (!patrol->patrolling || patrol->waypoints.size() < 2) {
       continue;
+    }
 
     if (unit->health <= 0) {
       patrol->patrolling = false;
@@ -42,10 +45,12 @@ void PatrolSystem::update(Engine::Core::World *world, float deltaTime) {
       auto *otherTransform =
           other->getComponent<Engine::Core::TransformComponent>();
 
-      if (!otherUnit || !otherTransform || otherUnit->health <= 0)
+      if (!otherUnit || !otherTransform || otherUnit->health <= 0) {
         continue;
-      if (otherUnit->ownerId == unit->ownerId)
+      }
+      if (otherUnit->ownerId == unit->ownerId) {
         continue;
+      }
 
       float dx = otherTransform->position.x - transform->position.x;
       float dz = otherTransform->position.z - transform->position.z;

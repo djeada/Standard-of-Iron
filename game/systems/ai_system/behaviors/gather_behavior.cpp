@@ -13,12 +13,14 @@ void GatherBehavior::execute(const AISnapshot &snapshot, AIContext &context,
                              std::vector<AICommand> &outCommands) {
   m_gatherTimer += deltaTime;
 
-  if (m_gatherTimer < 1.0f)
+  if (m_gatherTimer < 1.0f) {
     return;
+  }
   m_gatherTimer = 0.0f;
 
-  if (context.primaryBarracks == 0)
+  if (context.primaryBarracks == 0) {
     return;
+  }
 
   QVector3D rallyPoint(context.rallyX, 0.0f, context.rallyZ);
 
@@ -26,11 +28,13 @@ void GatherBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   unitsToGather.reserve(snapshot.friendlies.size());
 
   for (const auto &entity : snapshot.friendlies) {
-    if (entity.isBuilding)
+    if (entity.isBuilding) {
       continue;
+    }
 
-    if (isEntityEngaged(entity, snapshot.visibleEnemies))
+    if (isEntityEngaged(entity, snapshot.visibleEnemies)) {
       continue;
+    }
 
     const float dx = entity.posX - rallyPoint.x();
     const float dz = entity.posZ - rallyPoint.z();
@@ -41,8 +45,9 @@ void GatherBehavior::execute(const AISnapshot &snapshot, AIContext &context,
     }
   }
 
-  if (unitsToGather.empty())
+  if (unitsToGather.empty()) {
     return;
+  }
 
   const Nation *nation =
       NationRegistry::instance().getNationForPlayer(context.playerId);
@@ -71,14 +76,16 @@ void GatherBehavior::execute(const AISnapshot &snapshot, AIContext &context,
     targetZ.push_back(target.z());
   }
 
-  if (unitsToMove.empty())
+  if (unitsToMove.empty()) {
     return;
+  }
 
   auto claimedUnits = claimUnits(unitsToMove, getPriority(), "gathering",
                                  context, m_gatherTimer + deltaTime, 2.0f);
 
-  if (claimedUnits.empty())
+  if (claimedUnits.empty()) {
     return;
+  }
 
   std::vector<float> filteredX, filteredY, filteredZ;
   for (size_t i = 0; i < unitsToMove.size(); ++i) {
@@ -102,21 +109,25 @@ void GatherBehavior::execute(const AISnapshot &snapshot, AIContext &context,
 
 bool GatherBehavior::shouldExecute(const AISnapshot &snapshot,
                                    const AIContext &context) const {
-  if (context.primaryBarracks == 0)
+  if (context.primaryBarracks == 0) {
     return false;
+  }
 
-  if (context.state == AIState::Retreating)
+  if (context.state == AIState::Retreating) {
     return false;
+  }
 
-  if (context.state == AIState::Attacking)
+  if (context.state == AIState::Attacking) {
     return false;
+  }
 
   if (context.state == AIState::Defending) {
 
     QVector3D rallyPoint(context.rallyX, 0.0f, context.rallyZ);
     for (const auto &entity : snapshot.friendlies) {
-      if (entity.isBuilding)
+      if (entity.isBuilding) {
         continue;
+      }
 
       const float dx = entity.posX - rallyPoint.x();
       const float dz = entity.posZ - rallyPoint.z();
@@ -129,8 +140,9 @@ bool GatherBehavior::shouldExecute(const AISnapshot &snapshot,
     return false;
   }
 
-  if (context.state == AIState::Gathering || context.state == AIState::Idle)
+  if (context.state == AIState::Gathering || context.state == AIState::Idle) {
     return true;
+  }
 
   return false;
 }

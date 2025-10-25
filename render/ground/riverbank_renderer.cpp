@@ -56,8 +56,9 @@ void RiverbankRenderer::buildMeshes() {
   };
 
   auto sampleHeight = [&](float worldX, float worldZ) -> float {
-    if (m_heights.empty() || m_gridWidth == 0 || m_gridHeight == 0)
+    if (m_heights.empty() || m_gridWidth == 0 || m_gridHeight == 0) {
       return 0.0f;
+    }
 
     float halfWidth = m_gridWidth * 0.5f - 0.5f;
     float halfHeight = m_gridHeight * 0.5f - 0.5f;
@@ -250,8 +251,9 @@ void RiverbankRenderer::submit(Renderer &renderer, ResourceManager *resources) {
 
   size_t meshIndex = 0;
   for (const auto &segment : m_riverSegments) {
-    if (meshIndex >= m_meshes.size())
+    if (meshIndex >= m_meshes.size()) {
       break;
+    }
 
     auto *mesh = m_meshes[meshIndex].get();
     ++meshIndex;

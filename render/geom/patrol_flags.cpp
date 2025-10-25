@@ -11,8 +11,9 @@ namespace Render::GL {
 void renderPatrolFlags(Renderer *renderer, ResourceManager *resources,
                        Engine::Core::World &world,
                        const std::optional<QVector3D> &previewWaypoint) {
-  if (!renderer || !resources)
+  if (!renderer || !resources) {
     return;
+  }
 
   std::unordered_set<uint64_t> renderedPositions;
 
@@ -39,12 +40,14 @@ void renderPatrolFlags(Renderer *renderer, ResourceManager *resources,
 
   for (auto *entity : patrolEntities) {
     auto *patrol = entity->getComponent<Engine::Core::PatrolComponent>();
-    if (!patrol || !patrol->patrolling || patrol->waypoints.empty())
+    if (!patrol || !patrol->patrolling || patrol->waypoints.empty()) {
       continue;
+    }
 
     auto *unit = entity->getComponent<Engine::Core::UnitComponent>();
-    if (!unit || unit->health <= 0)
+    if (!unit || unit->health <= 0) {
       continue;
+    }
 
     for (const auto &waypoint : patrol->waypoints) {
 
