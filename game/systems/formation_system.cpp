@@ -12,8 +12,9 @@ RomanFormation::calculatePositions(int unitCount, const QVector3D &center,
   std::vector<QVector3D> positions;
   positions.reserve(unitCount);
 
-  if (unitCount <= 0)
+  if (unitCount <= 0) {
     return positions;
+  }
 
   float spacing = baseSpacing * 1.2f;
 
@@ -46,8 +47,9 @@ BarbarianFormation::calculatePositions(int unitCount, const QVector3D &center,
   std::vector<QVector3D> positions;
   positions.reserve(unitCount);
 
-  if (unitCount <= 0)
+  if (unitCount <= 0) {
     return positions;
+  }
 
   float spacing = baseSpacing * 1.8f;
 

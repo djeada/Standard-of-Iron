@@ -68,8 +68,9 @@ std::vector<Entity *> World::getUnitsOwnedBy(int ownerId) const {
   result.reserve(m_entities.size());
   for (auto &[entityId, entity] : m_entities) {
     auto *unit = entity->getComponent<UnitComponent>();
-    if (!unit)
+    if (!unit) {
       continue;
+    }
     if (unit->ownerId == ownerId) {
       result.push_back(entity.get());
     }
@@ -83,8 +84,9 @@ std::vector<Entity *> World::getUnitsNotOwnedBy(int ownerId) const {
   result.reserve(m_entities.size());
   for (auto &[entityId, entity] : m_entities) {
     auto *unit = entity->getComponent<UnitComponent>();
-    if (!unit)
+    if (!unit) {
       continue;
+    }
     if (unit->ownerId != ownerId) {
       result.push_back(entity.get());
     }
@@ -100,8 +102,9 @@ std::vector<Entity *> World::getAlliedUnits(int ownerId) const {
 
   for (auto &[entityId, entity] : m_entities) {
     auto *unit = entity->getComponent<UnitComponent>();
-    if (!unit)
+    if (!unit) {
       continue;
+    }
 
     if (unit->ownerId == ownerId ||
         ownerRegistry.areAllies(ownerId, unit->ownerId)) {
@@ -119,8 +122,9 @@ std::vector<Entity *> World::getEnemyUnits(int ownerId) const {
 
   for (auto &[entityId, entity] : m_entities) {
     auto *unit = entity->getComponent<UnitComponent>();
-    if (!unit)
+    if (!unit) {
       continue;
+    }
 
     if (ownerRegistry.areEnemies(ownerId, unit->ownerId)) {
       result.push_back(entity.get());

@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.21)
 project(StandardOfIron VERSION 1.0.0 LANGUAGES CXX)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 # ---- Clang-Tidy integration ----
 find_program(CLANG_TIDY_EXE NAMES clang-tidy)
 option(ENABLE_CLANG_TIDY "Enable clang-tidy analysis" ON)

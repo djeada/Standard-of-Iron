@@ -28,8 +28,9 @@ void ArrowSystem::spawnArrow(const QVector3D &start, const QVector3D &end,
 
 void ArrowSystem::update(Engine::Core::World *world, float deltaTime) {
   for (auto &arrow : m_arrows) {
-    if (!arrow.active)
+    if (!arrow.active) {
       continue;
+    }
 
     arrow.t += deltaTime * arrow.speed * arrow.invDist;
     if (arrow.t >= 1.0f) {

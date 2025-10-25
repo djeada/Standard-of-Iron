@@ -167,8 +167,9 @@ void RiverRenderer::submit(Renderer &renderer, ResourceManager *resources) {
 
   size_t meshIndex = 0;
   for (const auto &segment : m_riverSegments) {
-    if (meshIndex >= m_meshes.size())
+    if (meshIndex >= m_meshes.size()) {
       break;
+    }
 
     auto *mesh = m_meshes[meshIndex].get();
     ++meshIndex;

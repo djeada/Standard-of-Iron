@@ -60,8 +60,9 @@ void AISystem::initializeAIPlayers() {
 AISystem::~AISystem() {}
 
 void AISystem::update(Engine::Core::World *world, float deltaTime) {
-  if (!world)
+  if (!world) {
     return;
+  }
 
   m_totalGameTime += deltaTime;
 
@@ -73,11 +74,13 @@ void AISystem::update(Engine::Core::World *world, float deltaTime) {
 
     ai.updateTimer += deltaTime;
 
-    if (ai.updateTimer < 0.3f)
+    if (ai.updateTimer < 0.3f) {
       continue;
+    }
 
-    if (ai.worker->busy())
+    if (ai.worker->busy()) {
       continue;
+    }
 
     AI::AISnapshot snapshot =
         m_snapshotBuilder.build(*world, ai.context.playerId);

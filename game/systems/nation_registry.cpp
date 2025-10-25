@@ -35,8 +35,9 @@ const TroopType *Nation::getTroop(Game::Units::TroopType unitType) const {
 
 const TroopType *Nation::getBestMeleeTroop() const {
   auto melee = getMeleeTroops();
-  if (melee.empty())
+  if (melee.empty()) {
     return nullptr;
+  }
 
   auto it = std::max_element(melee.begin(), melee.end(),
                              [](const TroopType *a, const TroopType *b) {
@@ -48,8 +49,9 @@ const TroopType *Nation::getBestMeleeTroop() const {
 
 const TroopType *Nation::getBestRangedTroop() const {
   auto ranged = getRangedTroops();
-  if (ranged.empty())
+  if (ranged.empty()) {
     return nullptr;
+  }
 
   auto it = std::max_element(ranged.begin(), ranged.end(),
                              [](const TroopType *a, const TroopType *b) {

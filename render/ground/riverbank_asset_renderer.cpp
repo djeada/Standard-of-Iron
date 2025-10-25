@@ -166,8 +166,9 @@ void RiverbankAssetRenderer::generateAssetInstances() {
 
     QVector3D dir = segment.end - segment.start;
     float length = dir.length();
-    if (length < 0.01f)
+    if (length < 0.01f) {
       continue;
+    }
 
     dir.normalize();
     QVector3D perpendicular(-dir.z(), 0.0f, dir.x());
@@ -186,8 +187,9 @@ void RiverbankAssetRenderer::generateAssetInstances() {
       for (int side = 0; side < 2; ++side) {
         float sideSign = (side == 0) ? -1.0f : 1.0f;
 
-        if (rand01(rng) > 0.3f)
+        if (rand01(rng) > 0.3f) {
           continue;
+        }
 
         float distFromWater = halfRiverWidth + rand01(rng) * bankZoneWidth;
         float alongRiver = (rand01(rng) - 0.5f) * 0.6f;
@@ -199,15 +201,17 @@ void RiverbankAssetRenderer::generateAssetInstances() {
         float gx = (assetPos.x() / m_tileSize) + halfWidth;
         float gz = (assetPos.z() / m_tileSize) + halfHeight;
 
-        if (gx < 0 || gx >= m_width - 1 || gz < 0 || gz >= m_height - 1)
+        if (gx < 0 || gx >= m_width - 1 || gz < 0 || gz >= m_height - 1) {
           continue;
+        }
 
         int ix = static_cast<int>(gx);
         int iz = static_cast<int>(gz);
         int idx = iz * m_width + ix;
 
-        if (m_terrainTypes[idx] != Game::Map::TerrainType::Flat)
+        if (m_terrainTypes[idx] != Game::Map::TerrainType::Flat) {
           continue;
+        }
 
         float worldY = sampleHeightAt(gx, gz);
 
@@ -243,8 +247,9 @@ void RiverbankAssetRenderer::generateAssetInstances() {
           instance.color[2] = colorVar * 0.9f;
         } else {
 
-          if (distFromWater > halfRiverWidth + 0.5f)
+          if (distFromWater > halfRiverWidth + 0.5f) {
             continue;
+          }
 
           instance.assetType = 2.0f;
           float size = 0.3f + rand01(rng) * 0.4f;

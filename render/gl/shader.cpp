@@ -27,15 +27,17 @@ bool Shader::loadFromFiles(const QString &vertexPath,
 
   if (!vertexFile.open(QIODevice::ReadOnly)) {
     qWarning() << "Failed to open vertex shader file:" << resolvedVert;
-    if (resolvedVert != vertexPath)
+    if (resolvedVert != vertexPath) {
       qWarning() << "  Requested path:" << vertexPath;
+    }
     return false;
   }
 
   if (!fragmentFile.open(QIODevice::ReadOnly)) {
     qWarning() << "Failed to open fragment shader file:" << resolvedFrag;
-    if (resolvedFrag != fragmentPath)
+    if (resolvedFrag != fragmentPath) {
       qWarning() << "  Requested path:" << fragmentPath;
+    }
     vertexFile.close();
     return false;
   }

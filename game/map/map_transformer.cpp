@@ -122,8 +122,9 @@ MapTransformer::applyToWorld(const MapDefinition &def,
         for (int ox = -r; ox <= r && !found; ++ox) {
           for (int oz = -r; oz <= r && !found; ++oz) {
 
-            if (std::abs(ox) != r && std::abs(oz) != r)
+            if (std::abs(ox) != r && std::abs(oz) != r) {
               continue;
+            }
             float candX = worldX + float(ox) * tile;
             float candZ = worldZ + float(oz) * tile;
             if (!terrain.isForbiddenWorld(candX, candZ)) {
@@ -164,8 +165,9 @@ MapTransformer::applyToWorld(const MapDefinition &def,
       continue;
     }
 
-    if (!e)
+    if (!e) {
       continue;
+    }
 
     if (auto *r = e->getComponent<Engine::Core::RenderableComponent>()) {
       if (visuals) {

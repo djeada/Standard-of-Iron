@@ -61,8 +61,9 @@ SelectionController::SelectionController(Engine::Core::World *world,
 void SelectionController::onClickSelect(qreal sx, qreal sy, bool additive,
                                         int viewportWidth, int viewportHeight,
                                         void *camera, int localOwnerId) {
-  if (!m_selectionSystem || !m_pickingService || !camera || !m_world)
+  if (!m_selectionSystem || !m_pickingService || !camera || !m_world) {
     return;
+  }
 
   auto *cam = static_cast<Render::GL::Camera *>(camera);
   Engine::Core::EntityID picked = m_pickingService->pickSingle(
@@ -70,8 +71,9 @@ void SelectionController::onClickSelect(qreal sx, qreal sy, bool additive,
       localOwnerId, true);
 
   if (picked) {
-    if (!additive)
+    if (!additive) {
       m_selectionSystem->clearSelection();
+    }
     m_selectionSystem->selectUnit(picked);
     syncSelectionFlags();
     emit selectionChanged();
@@ -101,47 +103,55 @@ void SelectionController::onAreaSelected(qreal x1, qreal y1, qreal x2, qreal y2,
                                          bool additive, int viewportWidth,
                                          int viewportHeight, void *camera,
                                          int localOwnerId) {
-  if (!m_selectionSystem || !m_pickingService || !camera || !m_world)
+  if (!m_selectionSystem || !m_pickingService || !camera || !m_world) {
     return;
+  }
 
-  if (!additive)
+  if (!additive) {
     m_selectionSystem->clearSelection();
+  }
 
   auto *cam = static_cast<Render::GL::Camera *>(camera);
   auto picked = m_pickingService->pickInRect(
       float(x1), float(y1), float(x2), float(y2), *m_world, *cam, viewportWidth,
       viewportHeight, localOwnerId);
-  for (auto id : picked)
+  for (auto id : picked) {
     m_selectionSystem->selectUnit(id);
+  }
   syncSelectionFlags();
   emit selectionChanged();
 }
 
 void SelectionController::onRightClickClearSelection() {
-  if (!m_selectionSystem)
+  if (!m_selectionSystem) {
     return;
+  }
   m_selectionSystem->clearSelection();
   syncSelectionFlags();
   emit selectionChanged();
 }
 
 void SelectionController::selectAllPlayerTroops(int localOwnerId) {
-  if (!m_selectionSystem || !m_world)
+  if (!m_selectionSystem || !m_world) {
     return;
+  }
 
   m_selectionSystem->clearSelection();
 
   auto entities = m_world->getEntitiesWith<Engine::Core::UnitComponent>();
   for (auto *e : entities) {
     auto *unit = e->getComponent<Engine::Core::UnitComponent>();
-    if (!unit || unit->ownerId != localOwnerId)
+    if (!unit || unit->ownerId != localOwnerId) {
       continue;
+    }
 
-    if (e->hasComponent<Engine::Core::BuildingComponent>())
+    if (e->hasComponent<Engine::Core::BuildingComponent>()) {
       continue;
+    }
 
-    if (unit->health <= 0)
+    if (unit->health <= 0) {
       continue;
+    }
 
     m_selectionSystem->selectUnit(e->getId());
   }
@@ -151,8 +161,9 @@ void SelectionController::selectAllPlayerTroops(int localOwnerId) {
 }
 
 bool SelectionController::hasUnitsSelected() const {
-  if (!m_selectionSystem)
+  if (!m_selectionSystem) {
     return false;
+  }
   const auto &sel = m_selectionSystem->getSelectedUnits();
   return !sel.empty();
 }
@@ -160,22 +171,25 @@ bool SelectionController::hasUnitsSelected() const {
 void SelectionController::getSelectedUnitIds(
     std::vector<Engine::Core::EntityID> &out) const {
   out.clear();
-  if (!m_selectionSystem)
+  if (!m_selectionSystem) {
     return;
+  }
   const auto &ids = m_selectionSystem->getSelectedUnits();
   out.assign(ids.begin(), ids.end());
 }
 
 bool SelectionController::hasSelectedType(const QString &type) const {
-  if (!m_world || !m_selectionSystem)
+  if (!m_world || !m_selectionSystem) {
     return false;
+  }
   const auto &sel = m_selectionSystem->getSelectedUnits();
   for (auto id : sel) {
     if (auto *e = m_world->getEntity(id)) {
       if (auto *u = e->getComponent<Engine::Core::UnitComponent>()) {
         if (QString::fromStdString(
-                Game::Units::spawnTypeToString(u->spawnType)) == type)
+                Game::Units::spawnTypeToString(u->spawnType)) == type) {
           return true;
+        }
       }
     }
   }
@@ -183,8 +197,9 @@ bool SelectionController::hasSelectedType(const QString &type) const {
 }
 
 void SelectionController::syncSelectionFlags() {
-  if (!m_world || !m_selectionSystem)
+  if (!m_world || !m_selectionSystem) {
     return;
+  }
   App::Utils::sanitizeSelection(m_world, m_selectionSystem);
 }
 

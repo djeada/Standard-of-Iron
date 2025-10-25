@@ -274,8 +274,9 @@ GameEngine::~GameEngine() {
 }
 
 void GameEngine::onMapClicked(qreal sx, qreal sy) {
-  if (!m_window)
+  if (!m_window) {
     return;
+  }
   ensureInitialized();
   if (m_selectionController && m_camera) {
     m_selectionController->onClickSelect(sx, sy, false, m_viewport.width,
@@ -285,12 +286,14 @@ void GameEngine::onMapClicked(qreal sx, qreal sy) {
 }
 
 void GameEngine::onRightClick(qreal sx, qreal sy) {
-  if (!m_window)
+  if (!m_window) {
     return;
+  }
   ensureInitialized();
   auto *selectionSystem = m_world->getSystem<Game::Systems::SelectionSystem>();
-  if (!selectionSystem)
+  if (!selectionSystem) {
     return;
+  }
 
   if (m_cursorManager->mode() == CursorMode::Patrol ||
       m_cursorManager->mode() == CursorMode::Attack) {
@@ -309,18 +312,21 @@ void GameEngine::onRightClick(qreal sx, qreal sy) {
 }
 
 void GameEngine::onAttackClick(qreal sx, qreal sy) {
-  if (!m_window)
+  if (!m_window) {
     return;
+  }
   ensureInitialized();
-  if (!m_commandController || !m_camera)
+  if (!m_commandController || !m_camera) {
     return;
+  }
 
   auto result = m_commandController->onAttackClick(
       sx, sy, m_viewport.width, m_viewport.height, m_camera.get());
 
   auto *selectionSystem = m_world->getSystem<Game::Systems::SelectionSystem>();
-  if (!selectionSystem || !m_pickingService || !m_camera || !m_world)
+  if (!selectionSystem || !m_pickingService || !m_camera || !m_world) {
     return;
+  }
 
   const auto &selected = selectionSystem->getSelectedUnits();
   if (!selected.empty()) {
@@ -351,8 +357,9 @@ void GameEngine::resetMovement(Engine::Core::Entity *entity) {
 }
 
 void GameEngine::onStopCommand() {
-  if (!m_commandController)
+  if (!m_commandController) {
     return;
+  }
   ensureInitialized();
 
   auto result = m_commandController->onStopCommand();
@@ -362,8 +369,9 @@ void GameEngine::onStopCommand() {
 }
 
 void GameEngine::onHoldCommand() {
-  if (!m_commandController)
+  if (!m_commandController) {
     return;
+  }
   ensureInitialized();
 
   auto result = m_commandController->onHoldCommand();
@@ -373,14 +381,16 @@ void GameEngine::onHoldCommand() {
 }
 
 bool GameEngine::anySelectedInHoldMode() const {
-  if (!m_commandController)
+  if (!m_commandController) {
     return false;
+  }
   return m_commandController->anySelectedInHoldMode();
 }
 
 void GameEngine::onPatrolClick(qreal sx, qreal sy) {
-  if (!m_commandController || !m_camera)
+  if (!m_commandController || !m_camera) {
     return;
+  }
   ensureInitialized();
 
   auto result = m_commandController->onPatrolClick(
@@ -391,8 +401,9 @@ void GameEngine::onPatrolClick(qreal sx, qreal sy) {
 }
 
 void GameEngine::updateCursor(Qt::CursorShape newCursor) {
-  if (!m_window)
+  if (!m_window) {
     return;
+  }
   if (m_runtime.currentCursor != newCursor) {
     m_runtime.currentCursor = newCursor;
     m_window->setCursor(newCursor);
@@ -408,8 +419,9 @@ void GameEngine::setError(const QString &errorMessage) {
 }
 
 void GameEngine::setCursorMode(CursorMode mode) {
-  if (!m_cursorManager)
+  if (!m_cursorManager) {
     return;
+  }
   m_cursorManager->setMode(mode);
   m_cursorManager->updateCursorShape(m_window);
 }
@@ -419,29 +431,34 @@ void GameEngine::setCursorMode(const QString &mode) {
 }
 
 QString GameEngine::cursorMode() const {
-  if (!m_cursorManager)
+  if (!m_cursorManager) {
     return "normal";
+  }
   return m_cursorManager->modeString();
 }
 
 qreal GameEngine::globalCursorX() const {
-  if (!m_cursorManager)
+  if (!m_cursorManager) {
     return 0;
+  }
   return m_cursorManager->globalCursorX(m_window);
 }
 
 qreal GameEngine::globalCursorY() const {
-  if (!m_cursorManager)
+  if (!m_cursorManager) {
     return 0;
+  }
   return m_cursorManager->globalCursorY(m_window);
 }
 
 void GameEngine::setHoverAtScreen(qreal sx, qreal sy) {
-  if (!m_window)
+  if (!m_window) {
     return;
+  }
   ensureInitialized();
-  if (!m_hoverTracker || !m_camera || !m_world)
+  if (!m_hoverTracker || !m_camera || !m_world) {
     return;
+  }
 
   m_cursorManager->updateCursorShape(m_window);
 
@@ -450,8 +467,9 @@ void GameEngine::setHoverAtScreen(qreal sx, qreal sy) {
 }
 
 void GameEngine::onClickSelect(qreal sx, qreal sy, bool additive) {
-  if (!m_window)
+  if (!m_window) {
     return;
+  }
   ensureInitialized();
   if (m_selectionController && m_camera) {
     m_selectionController->onClickSelect(sx, sy, additive, m_viewport.width,
@@ -462,8 +480,9 @@ void GameEngine::onClickSelect(qreal sx, qreal sy, bool additive) {
 
 void GameEngine::onAreaSelected(qreal x1, qreal y1, qreal x2, qreal y2,
                                 bool additive) {
-  if (!m_window)
+  if (!m_window) {
     return;
+  }
   ensureInitialized();
   if (m_selectionController && m_camera) {
     m_selectionController->onAreaSelected(
@@ -588,8 +607,9 @@ void GameEngine::update(float dt) {
 
 void GameEngine::render(int pixelWidth, int pixelHeight) {
 
-  if (!m_renderer || !m_world || !m_runtime.initialized || m_runtime.loading)
+  if (!m_renderer || !m_world || !m_runtime.initialized || m_runtime.loading) {
     return;
+  }
   if (pixelWidth > 0 && pixelHeight > 0) {
     m_viewport.width = pixelWidth;
     m_viewport.height = pixelHeight;
@@ -604,18 +624,22 @@ void GameEngine::render(int pixelWidth, int pixelHeight) {
   m_renderer->beginFrame();
   if (auto *res = m_renderer->resources()) {
     for (auto *pass : m_passes) {
-      if (pass)
+      if (pass) {
         pass->submit(*m_renderer, res);
+      }
     }
   }
-  if (m_renderer && m_hoverTracker)
+  if (m_renderer && m_hoverTracker) {
     m_renderer->setHoveredEntityId(m_hoverTracker->getLastHoveredEntity());
-  if (m_renderer)
+  }
+  if (m_renderer) {
     m_renderer->setLocalOwnerId(m_runtime.localOwnerId);
+  }
   m_renderer->renderWorld(m_world.get());
   if (auto *arrowSystem = m_world->getSystem<Game::Systems::ArrowSystem>()) {
-    if (auto *res = m_renderer->resources())
+    if (auto *res = m_renderer->resources()) {
       Render::GL::renderArrows(m_renderer.get(), res, *arrowSystem);
+    }
   }
 
   if (auto *res = m_renderer->resources()) {
@@ -652,8 +676,9 @@ bool GameEngine::worldToScreen(const QVector3D &world,
 
 void GameEngine::syncSelectionFlags() {
   auto *selectionSystem = m_world->getSystem<Game::Systems::SelectionSystem>();
-  if (!m_world || !selectionSystem)
+  if (!m_world || !selectionSystem) {
     return;
+  }
 
   App::Utils::sanitizeSelection(m_world.get(), selectionSystem);
 
@@ -666,24 +691,27 @@ void GameEngine::syncSelectionFlags() {
 
 void GameEngine::cameraMove(float dx, float dz) {
   ensureInitialized();
-  if (!m_camera || !m_cameraService)
+  if (!m_camera || !m_cameraService) {
     return;
+  }
 
   m_cameraService->move(*m_camera, dx, dz);
 }
 
 void GameEngine::cameraElevate(float dy) {
   ensureInitialized();
-  if (!m_camera || !m_cameraService)
+  if (!m_camera || !m_cameraService) {
     return;
+  }
 
   m_cameraService->elevate(*m_camera, dy);
 }
 
 void GameEngine::resetCamera() {
   ensureInitialized();
-  if (!m_camera || !m_world || !m_cameraService)
+  if (!m_camera || !m_world || !m_cameraService) {
     return;
+  }
 
   m_cameraService->resetCamera(*m_camera, *m_world, m_runtime.localOwnerId,
                                m_level.playerUnitId);
@@ -691,30 +719,34 @@ void GameEngine::resetCamera() {
 
 void GameEngine::cameraZoom(float delta) {
   ensureInitialized();
-  if (!m_camera || !m_cameraService)
+  if (!m_camera || !m_cameraService) {
     return;
+  }
 
   m_cameraService->zoom(*m_camera, delta);
 }
 
 float GameEngine::cameraDistance() const {
-  if (!m_camera || !m_cameraService)
+  if (!m_camera || !m_cameraService) {
     return 0.0f;
+  }
   return m_cameraService->getDistance(*m_camera);
 }
 
 void GameEngine::cameraYaw(float degrees) {
   ensureInitialized();
-  if (!m_camera || !m_cameraService)
+  if (!m_camera || !m_cameraService) {
     return;
+  }
 
   m_cameraService->yaw(*m_camera, degrees);
 }
 
 void GameEngine::cameraOrbit(float yawDeg, float pitchDeg) {
   ensureInitialized();
-  if (!m_camera || !m_cameraService)
+  if (!m_camera || !m_cameraService) {
     return;
+  }
 
   if (!std::isfinite(yawDeg) || !std::isfinite(pitchDeg)) {
     qWarning() << "GameEngine::cameraOrbit received invalid input, ignoring:"
@@ -726,8 +758,9 @@ void GameEngine::cameraOrbit(float yawDeg, float pitchDeg) {
 }
 
 void GameEngine::cameraOrbitDirection(int direction, bool shift) {
-  if (!m_camera || !m_cameraService)
+  if (!m_camera || !m_cameraService) {
     return;
+  }
 
   m_cameraService->orbitDirection(*m_camera, direction, shift);
 }
@@ -735,16 +768,18 @@ void GameEngine::cameraOrbitDirection(int direction, bool shift) {
 void GameEngine::cameraFollowSelection(bool enable) {
   ensureInitialized();
   m_followSelectionEnabled = enable;
-  if (!m_camera || !m_world || !m_cameraService)
+  if (!m_camera || !m_world || !m_cameraService) {
     return;
+  }
 
   m_cameraService->followSelection(*m_camera, *m_world, enable);
 }
 
 void GameEngine::cameraSetFollowLerp(float alpha) {
   ensureInitialized();
-  if (!m_camera || !m_cameraService)
+  if (!m_camera || !m_cameraService) {
     return;
+  }
 
   m_cameraService->setFollowLerp(*m_camera, alpha);
 }
@@ -754,8 +789,9 @@ QObject *GameEngine::selectedUnitsModel() { return m_selectedUnitsModel; }
 QObject *GameEngine::audioSystem() { return m_audioSystemProxy.get(); }
 
 bool GameEngine::hasUnitsSelected() const {
-  if (!m_selectionController)
+  if (!m_selectionController) {
     return false;
+  }
   return m_selectionController->hasUnitsSelected();
 }
 
@@ -764,15 +800,17 @@ int GameEngine::playerTroopCount() const {
 }
 
 bool GameEngine::hasSelectedType(const QString &type) const {
-  if (!m_selectionController)
+  if (!m_selectionController) {
     return false;
+  }
   return m_selectionController->hasSelectedType(type);
 }
 
 void GameEngine::recruitNearSelected(const QString &unitType) {
   ensureInitialized();
-  if (!m_commandController)
+  if (!m_commandController) {
     return;
+  }
   m_commandController->recruitNearSelected(unitType, m_runtime.localOwnerId);
 }
 
@@ -785,11 +823,13 @@ QVariantMap GameEngine::getSelectedProductionState() const {
   m["producedCount"] = 0;
   m["maxUnits"] = 0;
   m["villagerCost"] = 1;
-  if (!m_world)
+  if (!m_world) {
     return m;
+  }
   auto *selectionSystem = m_world->getSystem<Game::Systems::SelectionSystem>();
-  if (!selectionSystem)
+  if (!selectionSystem) {
     return m;
+  }
   Game::Systems::ProductionState st;
   Game::Systems::ProductionService::getSelectedBarracksState(
       *m_world, selectionSystem->getSelectedUnits(), m_runtime.localOwnerId,
@@ -816,15 +856,18 @@ QVariantMap GameEngine::getSelectedProductionState() const {
 }
 
 QString GameEngine::getSelectedUnitsCommandMode() const {
-  if (!m_world)
+  if (!m_world) {
     return "normal";
+  }
   auto *selectionSystem = m_world->getSystem<Game::Systems::SelectionSystem>();
-  if (!selectionSystem)
+  if (!selectionSystem) {
     return "normal";
+  }
 
   const auto &sel = selectionSystem->getSelectedUnits();
-  if (sel.empty())
+  if (sel.empty()) {
     return "normal";
+  }
 
   int attackingCount = 0;
   int patrollingCount = 0;
@@ -832,40 +875,49 @@ QString GameEngine::getSelectedUnitsCommandMode() const {
 
   for (auto id : sel) {
     auto *e = m_world->getEntity(id);
-    if (!e)
+    if (!e) {
       continue;
+    }
 
     auto *u = e->getComponent<Engine::Core::UnitComponent>();
-    if (!u)
+    if (!u) {
       continue;
-    if (u->spawnType == Game::Units::SpawnType::Barracks)
+    }
+    if (u->spawnType == Game::Units::SpawnType::Barracks) {
       continue;
+    }
 
     totalUnits++;
 
-    if (e->getComponent<Engine::Core::AttackTargetComponent>())
+    if (e->getComponent<Engine::Core::AttackTargetComponent>()) {
       attackingCount++;
+    }
 
     auto *patrol = e->getComponent<Engine::Core::PatrolComponent>();
-    if (patrol && patrol->patrolling)
+    if (patrol && patrol->patrolling) {
       patrollingCount++;
+    }
   }
 
-  if (totalUnits == 0)
+  if (totalUnits == 0) {
     return "normal";
+  }
 
-  if (patrollingCount == totalUnits)
+  if (patrollingCount == totalUnits) {
     return "patrol";
-  if (attackingCount == totalUnits)
+  }
+  if (attackingCount == totalUnits) {
     return "attack";
+  }
 
   return "normal";
 }
 
 void GameEngine::setRallyAtScreen(qreal sx, qreal sy) {
   ensureInitialized();
-  if (!m_commandController || !m_camera)
+  if (!m_commandController || !m_camera) {
     return;
+  }
   m_commandController->setRallyAtScreen(sx, sy, m_viewport.width,
                                         m_viewport.height, m_camera.get(),
                                         m_runtime.localOwnerId);
@@ -1167,19 +1219,22 @@ QVariantList GameEngine::getOwnerInfo() const {
 void GameEngine::getSelectedUnitIds(
     std::vector<Engine::Core::EntityID> &out) const {
   out.clear();
-  if (!m_selectionController)
+  if (!m_selectionController) {
     return;
+  }
   m_selectionController->getSelectedUnitIds(out);
 }
 
 bool GameEngine::getUnitInfo(Engine::Core::EntityID id, QString &name,
                              int &health, int &maxHealth, bool &isBuilding,
                              bool &alive) const {
-  if (!m_world)
+  if (!m_world) {
     return false;
+  }
   auto *e = m_world->getEntity(id);
-  if (!e)
+  if (!e) {
     return false;
+  }
   isBuilding = e->hasComponent<Engine::Core::BuildingComponent>();
   if (auto *u = e->getComponent<Engine::Core::UnitComponent>()) {
     name = QString::fromStdString(Game::Units::spawnTypeToString(u->spawnType));
@@ -1268,8 +1323,9 @@ void GameEngine::rebuildEntityCache() {
   auto entities = m_world->getEntitiesWith<Engine::Core::UnitComponent>();
   for (auto *e : entities) {
     auto *unit = e->getComponent<Engine::Core::UnitComponent>();
-    if (!unit || unit->health <= 0)
+    if (!unit || unit->health <= 0) {
       continue;
+    }
 
     if (unit->ownerId == m_runtime.localOwnerId) {
       if (unit->spawnType == Game::Units::SpawnType::Barracks) {
@@ -1298,8 +1354,9 @@ void GameEngine::rebuildEntityCache() {
 }
 
 void GameEngine::rebuildRegistriesAfterLoad() {
-  if (!m_world)
+  if (!m_world) {
     return;
+  }
 
   auto &ownerRegistry = Game::Systems::OwnerRegistry::instance();
   m_runtime.localOwnerId = ownerRegistry.getLocalPlayerId();
@@ -1324,8 +1381,9 @@ void GameEngine::rebuildRegistriesAfterLoad() {
   auto units = m_world->getEntitiesWith<Engine::Core::UnitComponent>();
   for (auto *entity : units) {
     auto *unit = entity->getComponent<Engine::Core::UnitComponent>();
-    if (!unit)
+    if (!unit) {
       continue;
+    }
     if (unit->ownerId == m_runtime.localOwnerId) {
       m_level.playerUnitId = entity->getId();
       break;
@@ -1341,15 +1399,17 @@ void GameEngine::rebuildRegistriesAfterLoad() {
 void GameEngine::rebuildBuildingCollisions() {
   auto &registry = Game::Systems::BuildingCollisionRegistry::instance();
   registry.clear();
-  if (!m_world)
+  if (!m_world) {
     return;
+  }
 
   auto buildings = m_world->getEntitiesWith<Engine::Core::BuildingComponent>();
   for (auto *entity : buildings) {
     auto *transform = entity->getComponent<Engine::Core::TransformComponent>();
     auto *unit = entity->getComponent<Engine::Core::UnitComponent>();
-    if (!transform || !unit)
+    if (!transform || !unit) {
       continue;
+    }
 
     registry.registerBuilding(
         entity->getId(), Game::Units::spawnTypeToString(unit->spawnType),
@@ -1424,8 +1484,9 @@ QByteArray GameEngine::captureScreenshot() const {
 }
 
 void GameEngine::restoreEnvironmentFromMetadata(const QJsonObject &metadata) {
-  if (!m_world)
+  if (!m_world) {
     return;
+  }
 
   const auto fallbackGridWidth = metadata.value("gridWidth").toInt(50);
   const auto fallbackGridHeight = metadata.value("gridHeight").toInt(50);
@@ -1568,8 +1629,9 @@ bool GameEngine::hasPatrolPreviewWaypoint() const {
 }
 
 QVector3D GameEngine::getPatrolPreviewWaypoint() const {
-  if (!m_commandController)
+  if (!m_commandController) {
     return QVector3D();
+  }
   return m_commandController->getPatrolFirstWaypoint();
 }
 

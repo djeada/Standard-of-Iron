@@ -70,13 +70,15 @@ CommandResult CommandController::onStopCommand() {
   }
 
   const auto &selected = m_selectionSystem->getSelectedUnits();
-  if (selected.empty())
+  if (selected.empty()) {
     return result;
+  }
 
   for (auto id : selected) {
     auto *entity = m_world->getEntity(id);
-    if (!entity)
+    if (!entity) {
       continue;
+    }
 
     resetMovement(entity);
     entity->removeComponent<Engine::Core::AttackTargetComponent>();
@@ -106,19 +108,22 @@ CommandResult CommandController::onHoldCommand() {
   }
 
   const auto &selected = m_selectionSystem->getSelectedUnits();
-  if (selected.empty())
+  if (selected.empty()) {
     return result;
+  }
 
   for (auto id : selected) {
     auto *entity = m_world->getEntity(id);
-    if (!entity)
+    if (!entity) {
       continue;
+    }
 
     auto *unit = entity->getComponent<Engine::Core::UnitComponent>();
 
     if (!unit || (unit->spawnType != Game::Units::SpawnType::Archer &&
-                  unit->spawnType != Game::Units::SpawnType::Spearman))
+                  unit->spawnType != Game::Units::SpawnType::Spearman)) {
       continue;
+    }
 
     auto *holdMode = entity->getComponent<Engine::Core::HoldModeComponent>();
 
@@ -203,12 +208,14 @@ CommandResult CommandController::onPatrolClick(qreal sx, qreal sy,
 
   for (auto id : selected) {
     auto *entity = m_world->getEntity(id);
-    if (!entity)
+    if (!entity) {
       continue;
+    }
 
     auto *building = entity->getComponent<Engine::Core::BuildingComponent>();
-    if (building)
+    if (building) {
       continue;
+    }
 
     auto *patrol = entity->getComponent<Engine::Core::PatrolComponent>();
     if (!patrol) {
@@ -240,14 +247,16 @@ CommandResult CommandController::setRallyAtScreen(qreal sx, qreal sy,
                                                   void *camera,
                                                   int localOwnerId) {
   CommandResult result;
-  if (!m_world || !m_selectionSystem || !m_pickingService || !camera)
+  if (!m_world || !m_selectionSystem || !m_pickingService || !camera) {
     return result;
+  }
 
   auto *cam = static_cast<Render::GL::Camera *>(camera);
   QVector3D hit;
   if (!m_pickingService->screenToGround(QPointF(sx, sy), *cam, viewportWidth,
-                                        viewportHeight, hit))
+                                        viewportHeight, hit)) {
     return result;
+  }
 
   Game::Systems::ProductionService::setRallyForFirstSelectedBarracks(
       *m_world, m_selectionSystem->getSelectedUnits(), localOwnerId, hit.x(),
@@ -259,12 +268,14 @@ CommandResult CommandController::setRallyAtScreen(qreal sx, qreal sy,
 
 void CommandController::recruitNearSelected(const QString &unitType,
                                             int localOwnerId) {
-  if (!m_world || !m_selectionSystem)
+  if (!m_world || !m_selectionSystem) {
     return;
+  }
 
   const auto &sel = m_selectionSystem->getSelectedUnits();
-  if (sel.empty())
+  if (sel.empty()) {
     return;
+  }
 
   auto result =
       Game::Systems::ProductionService::startProductionForFirstSelectedBarracks(
@@ -287,8 +298,9 @@ bool CommandController::anySelectedInHoldMode() const {
   const auto &selected = m_selectionSystem->getSelectedUnits();
   for (Engine::Core::EntityID entityId : selected) {
     Engine::Core::Entity *entity = m_world->getEntity(entityId);
-    if (!entity)
+    if (!entity) {
       continue;
+    }
 
     auto *holdMode = entity->getComponent<Engine::Core::HoldModeComponent>();
     if (holdMode && holdMode->active) {

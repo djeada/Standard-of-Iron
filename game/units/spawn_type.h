@@ -3,9 +3,9 @@
 #include "troop_type.h"
 #include <QString>
 #include <cstdint>
+#include <functional>
 #include <optional>
 #include <string>
-#include <functional>
 
 namespace Game::Units {
 

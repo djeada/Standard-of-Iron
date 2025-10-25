@@ -25,14 +25,17 @@ int CaptureSystem::countNearbyTroops(Engine::Core::World *world, float barrackX,
     auto *unit = e->getComponent<Engine::Core::UnitComponent>();
     auto *transform = e->getComponent<Engine::Core::TransformComponent>();
 
-    if (!unit || !transform || unit->health <= 0)
+    if (!unit || !transform || unit->health <= 0) {
       continue;
+    }
 
-    if (unit->ownerId != ownerId)
+    if (unit->ownerId != ownerId) {
       continue;
+    }
 
-    if (unit->spawnType == Game::Units::SpawnType::Barracks)
+    if (unit->spawnType == Game::Units::SpawnType::Barracks) {
       continue;
+    }
 
     float dx = transform->position.x - barrackX;
     float dz = transform->position.z - barrackZ;
@@ -57,8 +60,9 @@ void CaptureSystem::transferBarrackOwnership(Engine::Core::World *world,
   auto *transform = barrack->getComponent<Engine::Core::TransformComponent>();
   auto *prod = barrack->getComponent<Engine::Core::ProductionComponent>();
 
-  if (!unit || !renderable || !transform)
+  if (!unit || !renderable || !transform) {
     return;
+  }
 
   int previousOwnerId = unit->ownerId;
   unit->ownerId = newOwnerId;
@@ -107,11 +111,13 @@ void CaptureSystem::processBarrackCapture(Engine::Core::World *world,
     auto *unit = barrack->getComponent<Engine::Core::UnitComponent>();
     auto *transform = barrack->getComponent<Engine::Core::TransformComponent>();
 
-    if (!unit || !transform)
+    if (!unit || !transform) {
       continue;
+    }
 
-    if (unit->spawnType != Game::Units::SpawnType::Barracks)
+    if (unit->spawnType != Game::Units::SpawnType::Barracks) {
       continue;
+    }
 
     auto *capture = barrack->getComponent<Engine::Core::CaptureComponent>();
     if (!capture) {

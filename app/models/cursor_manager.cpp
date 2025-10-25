@@ -6,8 +6,9 @@
 CursorManager::CursorManager(QObject *parent) : QObject(parent) {}
 
 void CursorManager::setMode(CursorMode mode) {
-  if (m_cursorMode == mode)
+  if (m_cursorMode == mode) {
     return;
+  }
 
   if (m_cursorMode == CursorMode::Patrol && mode != CursorMode::Patrol) {
     m_hasFirstWaypoint = false;
@@ -24,8 +25,9 @@ void CursorManager::setMode(const QString &mode) {
 }
 
 void CursorManager::updateCursorShape(QQuickWindow *window) {
-  if (!window)
+  if (!window) {
     return;
+  }
 
   Qt::CursorShape desiredCursor =
       (m_cursorMode == CursorMode::Normal) ? Qt::ArrowCursor : Qt::BlankCursor;
@@ -37,16 +39,18 @@ void CursorManager::updateCursorShape(QQuickWindow *window) {
 }
 
 qreal CursorManager::globalCursorX(QQuickWindow *window) const {
-  if (!window)
+  if (!window) {
     return 0;
+  }
   QPoint globalPos = QCursor::pos();
   QPoint localPos = window->mapFromGlobal(globalPos);
   return localPos.x();
 }
 
 qreal CursorManager::globalCursorY(QQuickWindow *window) const {
-  if (!window)
+  if (!window) {
     return 0;
+  }
   QPoint globalPos = QCursor::pos();
   QPoint localPos = window->mapFromGlobal(globalPos);
   return localPos.y();

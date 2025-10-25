@@ -14,12 +14,14 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   m_attackTimer += deltaTime;
   m_targetLockDuration += deltaTime;
 
-  if (m_attackTimer < 1.5f)
+  if (m_attackTimer < 1.5f) {
     return;
+  }
   m_attackTimer = 0.0f;
 
-  if (snapshot.visibleEnemies.empty())
+  if (snapshot.visibleEnemies.empty()) {
     return;
+  }
 
   std::vector<const EntitySnapshot *> engagedUnits;
   std::vector<const EntitySnapshot *> readyUnits;
@@ -31,8 +33,9 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   float groupCenterZ = 0.0f;
 
   for (const auto &entity : snapshot.friendlies) {
-    if (entity.isBuilding)
+    if (entity.isBuilding) {
       continue;
+    }
 
     if (isEntityEngaged(entity, snapshot.visibleEnemies)) {
       engagedUnits.push_back(&entity);
@@ -209,8 +212,9 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
       readyUnits, nearbyEnemies, groupCenterX, groupCenterY, groupCenterZ,
       context, m_lastTarget);
 
-  if (targetInfo.targetId == 0)
+  if (targetInfo.targetId == 0) {
     return;
+  }
 
   if (targetInfo.targetId != m_lastTarget) {
     m_lastTarget = targetInfo.targetId;
@@ -226,8 +230,9 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   auto claimedUnits = claimUnits(unitIds, getPriority(), "attacking", context,
                                  m_attackTimer + deltaTime, 2.5f);
 
-  if (claimedUnits.empty())
+  if (claimedUnits.empty()) {
     return;
+  }
 
   AICommand command;
   command.type = AICommandType::AttackTarget;
@@ -245,28 +250,34 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
 bool AttackBehavior::shouldExecute(const AISnapshot &snapshot,
                                    const AIContext &context) const {
 
-  if (context.state == AIState::Retreating)
+  if (context.state == AIState::Retreating) {
     return false;
+  }
 
   int readyUnits = 0;
   for (const auto &entity : snapshot.friendlies) {
-    if (entity.isBuilding)
+    if (entity.isBuilding) {
       continue;
+    }
 
-    if (isEntityEngaged(entity, snapshot.visibleEnemies))
+    if (isEntityEngaged(entity, snapshot.visibleEnemies)) {
       continue;
+    }
 
     ++readyUnits;
   }
 
-  if (readyUnits == 0)
+  if (readyUnits == 0) {
     return false;
+  }
 
-  if (snapshot.visibleEnemies.empty())
+  if (snapshot.visibleEnemies.empty()) {
     return false;
+  }
 
-  if (context.state == AIState::Attacking)
+  if (context.state == AIState::Attacking) {
     return true;
+  }
 
   if (context.state == AIState::Defending) {
     return context.barracksUnderThreat && readyUnits >= 2;
