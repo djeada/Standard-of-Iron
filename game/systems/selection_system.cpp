@@ -173,7 +173,8 @@ bool SelectionController::hasSelectedType(const QString &type) const {
   for (auto id : sel) {
     if (auto *e = m_world->getEntity(id)) {
       if (auto *u = e->getComponent<Engine::Core::UnitComponent>()) {
-        if (QString::fromStdString(Game::Units::spawnTypeToString(u->spawnType)) == type)
+        if (QString::fromStdString(
+                Game::Units::spawnTypeToString(u->spawnType)) == type)
           return true;
       }
     }

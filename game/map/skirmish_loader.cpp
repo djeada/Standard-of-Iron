@@ -167,15 +167,14 @@ SkirmishLoadResult SkirmishLoader::start(const QString &mapPath,
     }
   }
 
-  // Validate that we have at least 2 distinct teams for multiplayer matches (2+ players).
-  // Single-player practice mode is exempt from team validation.
   std::set<int> uniqueTeams;
   for (const auto &[playerId, teamId] : teamOverrides) {
     uniqueTeams.insert(teamId);
   }
-  
+
   if (teamOverrides.size() >= 2 && uniqueTeams.size() < 2) {
-    result.errorMessage = "Invalid team configuration: At least two teams must be selected to start a match.";
+    result.errorMessage = "Invalid team configuration: At least two teams must "
+                          "be selected to start a match.";
     m_renderer.unlockWorldForModification();
     m_renderer.resume();
     qWarning() << "SkirmishLoader: " << result.errorMessage;
@@ -366,9 +365,8 @@ SkirmishLoadResult SkirmishLoader::start(const QString &mapPath,
     auto *u = e->getComponent<Engine::Core::UnitComponent>();
     if (!u)
       continue;
-    if (u->spawnType == Game::Units::SpawnType::Barracks && 
-        u->ownerId == playerOwnerId &&
-        u->health > 0) {
+    if (u->spawnType == Game::Units::SpawnType::Barracks &&
+        u->ownerId == playerOwnerId && u->health > 0) {
       focusEntity = e;
       break;
     }
