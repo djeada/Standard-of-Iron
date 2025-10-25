@@ -38,7 +38,7 @@ public:
     std::lock_guard<std::recursive_mutex> lock(m_entityMutex);
     std::vector<Entity *> result;
     for (auto &[id, entity] : m_entities) {
-      if (entity->hasComponent<T>()) {
+      if (entity->template hasComponent<T>()) {
         result.push_back(entity.get());
       }
     }
