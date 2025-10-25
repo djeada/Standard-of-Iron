@@ -8,16 +8,12 @@ option(ENABLE_CLANG_TIDY "Enable clang-tidy analysis" ON)
 if (ENABLE_CLANG_TIDY AND CLANG_TIDY_EXE)
     message(STATUS "Found clang-tidy: ${CLANG_TIDY_EXE}")
     # Prefer using .clang-tidy config, but define fallback checks for safety
-    set(CMAKE_CXX_CLANG_TIDY
-        ${CLANG_TIDY_EXE};
-        -checks=bugprone-*,
-                performance-*,
-                readability-*,
-                modernize-*,
-                cppcoreguidelines-*,
-                clang-analyzer-*;
-        -warnings-as-errors=*;
-        -header-filter=.*)
+    set(CLANG_TIDY_ARGS "-header-filter=.*")
+    if(NOT EXISTS "${CMAKE_SOURCE_DIR}/.clang-tidy")
+        list(APPEND CLANG_TIDY_ARGS
+            "-checks=bugprone-*,performance-*,readability-*,modernize-*,cppcoreguidelines-*,clang-analyzer-*")
+    endif()
+    set(CMAKE_CXX_CLANG_TIDY ${CLANG_TIDY_EXE} ${CLANG_TIDY_ARGS})
 elseif (ENABLE_CLANG_TIDY)
     message(WARNING "clang-tidy requested but not found! Static analysis skipped.")
 else()

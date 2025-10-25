@@ -321,6 +321,9 @@ void CommandService::moveGroup(Engine::Core::World &world,
     Engine::Core::MovementComponent *movement;
     QVector3D target;
     bool isEngaged;
+    float speed;
+    Game::Units::SpawnType spawnType;
+    float distanceToTarget;
   };
 
   std::vector<MemberInfo> members;
@@ -355,8 +358,22 @@ void CommandService::moveGroup(Engine::Core::World &world,
       engaged = false;
     }
 
-    members.push_back(
-        {units[i], entity, transform, movement, targets[i], engaged});
+    auto *unitComponent = entity->getComponent<Engine::Core::UnitComponent>();
+    float memberSpeed =
+        unitComponent ? std::max(0.1f, unitComponent->speed) : 1.0f;
+    Game::Units::SpawnType spawnType =
+        unitComponent ? unitComponent->spawnType
+                      : Game::Units::SpawnType::Archer;
+
+    members.push_back({units[i],
+                       entity,
+                       transform,
+                       movement,
+                       targets[i],
+                       engaged,
+                       memberSpeed,
+                       spawnType,
+                       0.0f});
   }
 
   if (members.empty())
@@ -408,6 +425,132 @@ void CommandService::moveGroup(Engine::Core::World &world,
   }
 
   members = movingMembers;
+
+  if (members.empty())
+    return;
+
+  QVector3D targetCentroid(0.0f, 0.0f, 0.0f);
+  QVector3D positionCentroid(0.0f, 0.0f, 0.0f);
+  float speedSum = 0.0f;
+  for (auto &member : members) {
+    targetCentroid += member.target;
+    positionCentroid +=
+        QVector3D(member.transform->position.x, 0.0f, member.transform->position.z);
+    speedSum += member.speed;
+  }
+
+  targetCentroid /= static_cast<float>(members.size());
+  positionCentroid /= static_cast<float>(members.size());
+
+  float targetDistanceSum = 0.0f;
+  float maxTargetDistance = 0.0f;
+  float centroidDistanceSum = 0.0f;
+  for (auto &member : members) {
+    QVector3D currentPos(member.transform->position.x, 0.0f,
+                         member.transform->position.z);
+    float toTarget = (currentPos - member.target).length();
+    float toCentroid = (currentPos - positionCentroid).length();
+
+    member.distanceToTarget = toTarget;
+    targetDistanceSum += toTarget;
+    centroidDistanceSum += toCentroid;
+    maxTargetDistance = std::max(maxTargetDistance, toTarget);
+  }
+
+  float avgTargetDistance =
+      members.empty()
+          ? 0.0f
+          : targetDistanceSum / static_cast<float>(members.size());
+  float avgScatter =
+      members.empty()
+          ? 0.0f
+          : centroidDistanceSum / static_cast<float>(members.size());
+  float avgSpeed =
+      members.empty() ? 0.0f : speedSum / static_cast<float>(members.size());
+
+  float nearThreshold =
+      std::clamp(avgTargetDistance * 0.5f, 4.0f, 12.0f);
+  if (maxTargetDistance <= nearThreshold) {
+    MoveOptions directOptions = options;
+    directOptions.groupMove = false;
+
+    std::vector<Engine::Core::EntityID> directIds;
+    std::vector<QVector3D> directTargets;
+    directIds.reserve(members.size());
+    directTargets.reserve(members.size());
+
+    for (const auto &member : members) {
+      directIds.push_back(member.id);
+      directTargets.push_back(member.target);
+    }
+
+    moveUnits(world, directIds, directTargets, directOptions);
+    return;
+  }
+
+  float scatterThreshold = std::max(avgScatter, 2.5f);
+
+  std::vector<MemberInfo> regroupMembers;
+  std::vector<MemberInfo> directMembers;
+  regroupMembers.reserve(members.size());
+  directMembers.reserve(members.size());
+
+  for (const auto &member : members) {
+    QVector3D currentPos(member.transform->position.x, 0.0f,
+                         member.transform->position.z);
+    float toTarget = member.distanceToTarget;
+    float toCentroid = (currentPos - positionCentroid).length();
+    bool nearDestination = toTarget <= nearThreshold;
+    bool farFromGroup = toCentroid > scatterThreshold * 1.5f;
+    bool fastUnit = member.speed >= avgSpeed + 0.5f ||
+                    member.spawnType == Game::Units::SpawnType::MountedKnight;
+
+    bool shouldAdvance = nearDestination;
+    if (!shouldAdvance && fastUnit && toTarget <= nearThreshold * 1.5f) {
+      shouldAdvance = true;
+    }
+    if (!shouldAdvance && farFromGroup && toTarget <= nearThreshold * 2.0f) {
+      shouldAdvance = true;
+    }
+
+    if (shouldAdvance) {
+      directMembers.push_back(member);
+    } else {
+      regroupMembers.push_back(member);
+    }
+  }
+
+  if (!directMembers.empty()) {
+    MoveOptions directOptions = options;
+    directOptions.groupMove = false;
+
+    std::vector<Engine::Core::EntityID> directIds;
+    std::vector<QVector3D> directTargets;
+    directIds.reserve(directMembers.size());
+    directTargets.reserve(directMembers.size());
+
+    for (const auto &member : directMembers) {
+      directIds.push_back(member.id);
+      directTargets.push_back(member.target);
+    }
+
+    moveUnits(world, directIds, directTargets, directOptions);
+  }
+
+  if (regroupMembers.size() <= 1) {
+    if (!regroupMembers.empty()) {
+      MoveOptions directOptions = options;
+      directOptions.groupMove = false;
+      std::vector<Engine::Core::EntityID> singleIds = {
+          regroupMembers.front().id};
+      std::vector<QVector3D> singleTargets = {
+          regroupMembers.front().target};
+      moveUnits(world, singleIds, singleTargets, directOptions);
+    }
+    return;
+  }
+
+  members = std::move(regroupMembers);
 
   QVector3D average(0.0f, 0.0f, 0.0f);
   for (const auto &member : members)
