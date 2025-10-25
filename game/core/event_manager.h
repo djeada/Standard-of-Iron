@@ -191,7 +191,8 @@ public:
 
 class UnitSpawnedEvent : public Event {
 public:
-  UnitSpawnedEvent(EntityID unitId, int ownerId, Game::Units::SpawnType spawnType)
+  UnitSpawnedEvent(EntityID unitId, int ownerId,
+                   Game::Units::SpawnType spawnType)
       : unitId(unitId), ownerId(ownerId), spawnType(spawnType) {}
   EntityID unitId;
   int ownerId;

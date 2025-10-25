@@ -97,7 +97,7 @@ QJsonObject Serialization::serializeEntity(const Entity *entity) {
     unitObj["maxHealth"] = unit->maxHealth;
     unitObj["speed"] = unit->speed;
     unitObj["visionRange"] = unit->visionRange;
-    unitObj["unitType"] = 
+    unitObj["unitType"] =
         QString::fromStdString(Game::Units::spawnTypeToString(unit->spawnType));
     unitObj["ownerId"] = unit->ownerId;
     entityObj["unit"] = unitObj;
@@ -261,7 +261,7 @@ void Serialization::deserializeEntity(Entity *entity, const QJsonObject &json) {
     unit->speed = static_cast<float>(unitObj["speed"].toDouble());
     unit->visionRange =
         static_cast<float>(unitObj["visionRange"].toDouble(12.0));
-    
+
     QString unitTypeStr = unitObj["unitType"].toString();
     Game::Units::SpawnType spawnType;
     if (Game::Units::tryParseSpawnType(unitTypeStr, spawnType)) {
@@ -271,7 +271,7 @@ void Serialization::deserializeEntity(Entity *entity, const QJsonObject &json) {
                  << "- defaulting to Archer";
       unit->spawnType = Game::Units::SpawnType::Archer;
     }
-    
+
     unit->ownerId = unitObj["ownerId"].toInt(0);
   }
 
