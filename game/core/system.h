@@ -8,6 +8,11 @@ class World;
 
 class System {
 public:
+  System() = default;
+  System(const System &) = default;
+  System(System &&) noexcept = default;
+  System &operator=(const System &) = default;
+  System &operator=(System &&) noexcept = default;
   virtual ~System() = default;
   virtual void update(World *world, float deltaTime) = 0;
 };
