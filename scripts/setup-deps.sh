@@ -143,6 +143,7 @@ APT_PKGS=(
   git
   pkg-config
   clang-format
+  clang-tidy
   libgl1-mesa-dev
   mesa-utils
   libglx-mesa0
@@ -473,6 +474,13 @@ check_tool_versions() {
     ok "pkgconf $(pkgconf --version)"
   else
     warn "Neither pkg-config nor pkgconf found"
+  fi
+
+  # clang-tidy
+  if command -v clang-tidy >/dev/null 2>&1; then
+    ok "clang-tidy $(clang-tidy --version | head -n1)"
+  else
+    warn "clang-tidy not found — recommended for static analysis"
   fi
 }
 
