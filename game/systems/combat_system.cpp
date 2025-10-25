@@ -125,7 +125,8 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
 
           range *= 1.5f;
           damage = static_cast<int>(damage * 1.3f);
-        } else if (attackerUnit->spawnType == Game::Units::SpawnType::Spearman) {
+        } else if (attackerUnit->spawnType ==
+                   Game::Units::SpawnType::Spearman) {
 
           damage = static_cast<int>(damage * 1.4f);
         }
