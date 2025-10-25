@@ -22,8 +22,9 @@ QVariantList MapCatalog::availableMaps() {
   const QString mapsRoot =
       Utils::Resources::resolveResourcePath(QStringLiteral(":/assets/maps"));
   QDir mapsDir(mapsRoot);
-  if (!mapsDir.exists())
+  if (!mapsDir.exists()) {
     return list;
+  }
 
   QStringList files =
       mapsDir.entryList(QStringList() << "*.json", QDir::Files, QDir::Name);
@@ -40,10 +41,12 @@ QVariantList MapCatalog::availableMaps() {
       QJsonDocument doc = QJsonDocument::fromJson(data, &err);
       if (err.error == QJsonParseError::NoError && doc.isObject()) {
         QJsonObject obj = doc.object();
-        if (obj.contains("name") && obj["name"].isString())
+        if (obj.contains("name") && obj["name"].isString()) {
           name = obj["name"].toString();
-        if (obj.contains("description") && obj["description"].isString())
+        }
+        if (obj.contains("description") && obj["description"].isString()) {
           desc = obj["description"].toString();
+        }
 
         if (obj.contains("spawns") && obj["spawns"].isArray()) {
           QJsonArray spawns = obj["spawns"].toArray();
@@ -107,8 +110,9 @@ QVariantList MapCatalog::availableMaps() {
 }
 
 void MapCatalog::loadMapsAsync() {
-  if (m_loading)
+  if (m_loading) {
     return;
+  }
 
   m_maps.clear();
   m_pendingFiles.clear();
@@ -182,10 +186,12 @@ QVariantMap MapCatalog::loadSingleMap(const QString &path) {
     QJsonDocument doc = QJsonDocument::fromJson(data, &err);
     if (err.error == QJsonParseError::NoError && doc.isObject()) {
       QJsonObject obj = doc.object();
-      if (obj.contains("name") && obj["name"].isString())
+      if (obj.contains("name") && obj["name"].isString()) {
         name = obj["name"].toString();
-      if (obj.contains("description") && obj["description"].isString())
+      }
+      if (obj.contains("description") && obj["description"].isString()) {
         desc = obj["description"].toString();
+      }
 
       if (obj.contains("spawns") && obj["spawns"].isArray()) {
         QJsonArray spawns = obj["spawns"].toArray();
@@ -237,10 +243,11 @@ QVariantMap MapCatalog::loadSingleMap(const QString &path) {
     QString thumbCandidate = Utils::Resources::resolveResourcePath(
         QString(":/assets/maps/%1_thumb.png").arg(baseName));
 
-    if (QFileInfo::exists(thumbCandidate))
+    if (QFileInfo::exists(thumbCandidate)) {
       thumbnail = thumbCandidate;
-    else
+    } else {
       thumbnail = "";
+    }
   }
   entry["thumbnail"] = thumbnail;
 

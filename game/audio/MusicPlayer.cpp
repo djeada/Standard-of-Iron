@@ -24,8 +24,9 @@ MusicPlayer::MusicPlayer() : QObject(nullptr) {}
 MusicPlayer::~MusicPlayer() { shutdown(); }
 
 bool MusicPlayer::initialize(int musicChannels) {
-  if (m_initialized)
+  if (m_initialized) {
     return true;
+  }
   if (!QCoreApplication::instance()) {
     qWarning() << "MusicPlayer: no Q(Gui)Application instance";
     return false;
@@ -48,8 +49,9 @@ bool MusicPlayer::initialize(int musicChannels) {
 }
 
 void MusicPlayer::shutdown() {
-  if (!m_initialized)
+  if (!m_initialized) {
     return;
+  }
 
   if (QCoreApplication::instance() &&
       QThread::currentThread() != QCoreApplication::instance()->thread()) {
@@ -135,8 +137,9 @@ int MusicPlayer::play(const std::string &id, float vol, bool loop, int channel,
 }
 
 void MusicPlayer::stop(int ch, int ms) {
-  if (!m_initialized || !m_backend)
+  if (!m_initialized || !m_backend) {
     return;
+  }
   if (QThread::currentThread() != QCoreApplication::instance()->thread()) {
     QMetaObject::invokeMethod(
         this, [this, ch, ms]() { stop_gui(ch, ms); }, Qt::QueuedConnection);
@@ -145,8 +148,9 @@ void MusicPlayer::stop(int ch, int ms) {
   stop_gui(ch, ms);
 }
 void MusicPlayer::pause(int ch) {
-  if (!m_initialized || !m_backend)
+  if (!m_initialized || !m_backend) {
     return;
+  }
   if (QThread::currentThread() != QCoreApplication::instance()->thread()) {
     QMetaObject::invokeMethod(
         this, [this, ch]() { pause_gui(ch); }, Qt::QueuedConnection);
@@ -155,8 +159,9 @@ void MusicPlayer::pause(int ch) {
   pause_gui(ch);
 }
 void MusicPlayer::resume(int ch) {
-  if (!m_initialized || !m_backend)
+  if (!m_initialized || !m_backend) {
     return;
+  }
   if (QThread::currentThread() != QCoreApplication::instance()->thread()) {
     QMetaObject::invokeMethod(
         this, [this, ch]() { resume_gui(ch); }, Qt::QueuedConnection);
@@ -165,8 +170,9 @@ void MusicPlayer::resume(int ch) {
   resume_gui(ch);
 }
 void MusicPlayer::setVolume(int ch, float v, int ms) {
-  if (!m_initialized || !m_backend)
+  if (!m_initialized || !m_backend) {
     return;
+  }
   if (QThread::currentThread() != QCoreApplication::instance()->thread()) {
     QMetaObject::invokeMethod(
         this, [this, ch, v, ms]() { setVolume_gui(ch, v, ms); },
@@ -176,8 +182,9 @@ void MusicPlayer::setVolume(int ch, float v, int ms) {
   setVolume_gui(ch, v, ms);
 }
 void MusicPlayer::stopAll(int ms) {
-  if (!m_initialized || !m_backend)
+  if (!m_initialized || !m_backend) {
     return;
+  }
   if (QThread::currentThread() != QCoreApplication::instance()->thread()) {
     QMetaObject::invokeMethod(
         this, [this, ms]() { stopAll_gui(ms); }, Qt::QueuedConnection);
@@ -186,8 +193,9 @@ void MusicPlayer::stopAll(int ms) {
   stopAll_gui(ms);
 }
 void MusicPlayer::setMasterVolume(float v, int ms) {
-  if (!m_initialized || !m_backend)
+  if (!m_initialized || !m_backend) {
     return;
+  }
   if (QThread::currentThread() != QCoreApplication::instance()->thread()) {
     QMetaObject::invokeMethod(
         this, [this, v, ms]() { setMasterVolume_gui(v, ms); },
@@ -208,18 +216,22 @@ void MusicPlayer::ensureOnGuiThread(const char *where) const {
   requireGuiThread(where);
 }
 int MusicPlayer::findFreeChannel() const {
-  if (!m_backend)
+  if (!m_backend) {
     return 0;
-  for (int i = 0; i < m_channelCount; ++i)
-    if (!m_backend->channelPlaying(i))
+  }
+  for (int i = 0; i < m_channelCount; ++i) {
+    if (!m_backend->channelPlaying(i)) {
       return i;
+    }
+  }
   return 0;
 }
 
 void MusicPlayer::play_gui(const std::string &id, float vol, bool loop, int ch,
                            int fadeMs) {
-  if (!m_backend)
+  if (!m_backend) {
     return;
+  }
   auto it = m_tracks.find(id);
   if (it == m_tracks.end()) {
     qWarning() << "Unknown trackId:" << QString::fromStdString(id);

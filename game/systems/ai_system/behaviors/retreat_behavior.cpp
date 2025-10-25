@@ -12,12 +12,14 @@ void RetreatBehavior::execute(const AISnapshot &snapshot, AIContext &context,
                               float deltaTime,
                               std::vector<AICommand> &outCommands) {
   m_retreatTimer += deltaTime;
-  if (m_retreatTimer < 1.0f)
+  if (m_retreatTimer < 1.0f) {
     return;
+  }
   m_retreatTimer = 0.0f;
 
-  if (context.primaryBarracks == 0)
+  if (context.primaryBarracks == 0) {
     return;
+  }
 
   std::vector<const EntitySnapshot *> retreatingUnits;
   retreatingUnits.reserve(snapshot.friendlies.size());
@@ -26,11 +28,13 @@ void RetreatBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   constexpr float LOW_HEALTH = 0.50f;
 
   for (const auto &entity : snapshot.friendlies) {
-    if (entity.isBuilding)
+    if (entity.isBuilding) {
       continue;
+    }
 
-    if (entity.maxHealth <= 0)
+    if (entity.maxHealth <= 0) {
       continue;
+    }
 
     float healthRatio = static_cast<float>(entity.health) /
                         static_cast<float>(entity.maxHealth);
@@ -45,8 +49,9 @@ void RetreatBehavior::execute(const AISnapshot &snapshot, AIContext &context,
     }
   }
 
-  if (retreatingUnits.empty())
+  if (retreatingUnits.empty()) {
     return;
+  }
 
   QVector3D retreatPos(context.basePosX, context.basePosY, context.basePosZ);
 
@@ -72,8 +77,9 @@ void RetreatBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   auto claimedUnits = claimUnits(unitIds, getPriority(), "retreating", context,
                                  m_retreatTimer + deltaTime, 1.0f);
 
-  if (claimedUnits.empty())
+  if (claimedUnits.empty()) {
     return;
+  }
 
   std::vector<float> filteredX, filteredY, filteredZ;
   for (size_t i = 0; i < unitIds.size(); ++i) {
@@ -96,17 +102,20 @@ void RetreatBehavior::execute(const AISnapshot &snapshot, AIContext &context,
 
 bool RetreatBehavior::shouldExecute(const AISnapshot &snapshot,
                                     const AIContext &context) const {
-  if (context.primaryBarracks == 0)
+  if (context.primaryBarracks == 0) {
     return false;
+  }
 
-  if (context.state == AIState::Retreating)
+  if (context.state == AIState::Retreating) {
     return true;
+  }
 
   constexpr float CRITICAL_HEALTH = 0.35f;
 
   for (const auto &entity : snapshot.friendlies) {
-    if (entity.isBuilding)
+    if (entity.isBuilding) {
       continue;
+    }
 
     if (entity.maxHealth > 0) {
       float healthRatio = static_cast<float>(entity.health) /

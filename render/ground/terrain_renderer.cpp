@@ -109,8 +109,9 @@ void TerrainRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   const bool useVisibility = visibility.isInitialized();
 
   for (const auto &chunk : m_chunks) {
-    if (!chunk.mesh)
+    if (!chunk.mesh) {
       continue;
+    }
 
     if (useVisibility) {
       bool anyVisible = false;
@@ -123,8 +124,9 @@ void TerrainRenderer::submit(Renderer &renderer, ResourceManager *resources) {
           }
         }
       }
-      if (!anyVisible)
+      if (!anyVisible) {
         continue;
+      }
     }
 
     renderer.terrainChunk(chunk.mesh.get(), kIdentityMatrix, chunk.params,
@@ -219,8 +221,9 @@ void TerrainRenderer::buildMeshes() {
     QVector3D dx(2.0f * m_tileSize, hR - hL, 0.0f);
     QVector3D dz(0.0f, hU - hD, 2.0f * m_tileSize);
     QVector3D n = QVector3D::crossProduct(dz, dx);
-    if (n.lengthSquared() > 0.0f)
+    if (n.lengthSquared() > 0.0f) {
       n.normalize();
+    }
     return n.isNull() ? QVector3D(0, 1, 0) : n;
   };
 
@@ -237,8 +240,9 @@ void TerrainRenderer::buildMeshes() {
 
   for (int i = 0; i < vertexCount; ++i) {
     normals[i].normalize();
-    if (normals[i].isNull())
+    if (normals[i].isNull()) {
       normals[i] = QVector3D(0.0f, 1.0f, 0.0f);
+    }
     faceAccum[i] = normals[i];
   }
 
@@ -383,8 +387,9 @@ void TerrainRenderer::buildMeshes() {
         float uu = pos.x() * texScale;
         float vv = pos.z() * texScale;
 
-        if (section.flipU)
+        if (section.flipU) {
           uu = -uu;
+        }
         float ru = uu, rv = vv;
         switch (static_cast<int>(section.rotationDeg)) {
         case 90: {
@@ -481,12 +486,14 @@ void TerrainRenderer::buildMeshes() {
 
       for (int i = 0; i < 3; ++i) {
         SectionData &section = sections[i];
-        if (section.indices.empty())
+        if (section.indices.empty()) {
           continue;
+        }
 
         auto mesh = std::make_unique<Mesh>(section.vertices, section.indices);
-        if (!mesh)
+        if (!mesh) {
           continue;
+        }
 
         ChunkMesh chunk;
         chunk.mesh = std::move(mesh);
@@ -561,8 +568,9 @@ void TerrainRenderer::buildMeshes() {
         float aoShade = 1.0f - 0.35f * aoAvg;
 
         QVector3D avgN = section.normalSum;
-        if (avgN.lengthSquared() > 0.0f)
+        if (avgN.lengthSquared() > 0.0f) {
           avgN.normalize();
+        }
         QVector3D north(0, 0, 1);
         float northness = std::clamp(
             QVector3D::dotProduct(avgN, north) * 0.5f + 0.5f, 0.0f, 1.0f);
@@ -625,10 +633,11 @@ void TerrainRenderer::buildMeshes() {
             std::max(1.0f, m_biomeSettings.terrainRockSharpness * sharpnessMul);
 
         float soilHeight = m_biomeSettings.terrainSoilHeight;
-        if (chunk.type == Game::Map::TerrainType::Hill)
+        if (chunk.type == Game::Map::TerrainType::Hill) {
           soilHeight -= 0.06f;
-        else if (chunk.type == Game::Map::TerrainType::Mountain)
+        } else if (chunk.type == Game::Map::TerrainType::Mountain) {
           soilHeight -= 0.12f;
+        }
         soilHeight += 0.05f * entranceFactor - 0.03f * plateauFactor;
         params.soilBlendHeight = soilHeight;
 
@@ -648,8 +657,9 @@ void TerrainRenderer::buildMeshes() {
         float baseAmp =
             m_biomeSettings.heightNoiseAmplitude *
             (0.7f + 0.3f * std::clamp(roughness * 0.6f, 0.0f, 1.0f));
-        if (chunk.type == Game::Map::TerrainType::Mountain)
+        if (chunk.type == Game::Map::TerrainType::Mountain) {
           baseAmp *= 1.25f;
+        }
         baseAmp *= (1.0f + 0.10f * edgeFactor - 0.08f * plateauFactor -
                     0.06f * entranceFactor);
         params.heightNoiseStrength = baseAmp;

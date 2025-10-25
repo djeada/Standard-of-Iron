@@ -604,16 +604,19 @@ static inline void drawRallyFlagIfAny(const DrawContext &p, ISubmitter &out,
 
 static inline void drawHealthBar(const DrawContext &p, ISubmitter &out,
                                  Mesh *unit, Texture *white) {
-  if (!p.entity)
+  if (!p.entity) {
     return;
+  }
   auto *u = p.entity->getComponent<Engine::Core::UnitComponent>();
-  if (!u)
+  if (!u) {
     return;
+  }
 
   int mh = std::max(1, u->maxHealth);
   float ratio = std::clamp(u->health / float(mh), 0.0f, 1.0f);
-  if (ratio <= 0.0f)
+  if (ratio <= 0.0f) {
     return;
+  }
 
   constexpr float baseHeight = BuildingProportions::baseHeight;
   constexpr float roofPitch = BuildingProportions::roofPitch;
@@ -647,20 +650,23 @@ static inline void drawSelectionFX(const DrawContext &p, ISubmitter &out) {
   QVector3D pos = p.model.column(3).toVector3D();
   M.translate(pos.x(), 0.0f, pos.z());
   M.scale(2.2f, 1.0f, 2.0f);
-  if (p.selected)
+  if (p.selected) {
     out.selectionSmoke(M, QVector3D(0.2f, 0.85f, 0.2f), 0.35f);
-  else if (p.hovered)
+  } else if (p.hovered) {
     out.selectionSmoke(M, QVector3D(0.95f, 0.92f, 0.25f), 0.22f);
+  }
 }
 
 static void drawBarracks(const DrawContext &p, ISubmitter &out) {
-  if (!p.resources || !p.entity)
+  if (!p.resources || !p.entity) {
     return;
+  }
 
   auto *t = p.entity->getComponent<Engine::Core::TransformComponent>();
   auto *r = p.entity->getComponent<Engine::Core::RenderableComponent>();
-  if (!t || !r)
+  if (!t || !r) {
     return;
+  }
 
   Mesh *unit = p.resources->unit();
   Texture *white = p.resources->white();

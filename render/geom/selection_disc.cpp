@@ -30,8 +30,9 @@ static Render::GL::Mesh *createDiscMesh() {
 }
 
 Render::GL::Mesh *SelectionDisc::get() {
-  if (!s_mesh)
+  if (!s_mesh) {
     s_mesh.reset(createDiscMesh());
+  }
   return s_mesh.get();
 }
 

@@ -188,8 +188,9 @@ void StoneRenderer::generateStoneInstances() {
     int iz = std::clamp(int(std::floor(sgz + 0.5f)), 0, m_height - 1);
     int normalIdx = iz * m_width + ix;
 
-    if (m_terrainTypes[normalIdx] != Game::Map::TerrainType::Flat)
+    if (m_terrainTypes[normalIdx] != Game::Map::TerrainType::Flat) {
       return false;
+    }
 
     constexpr int kRiverMargin = 1;
     for (int dz = -kRiverMargin; dz <= kRiverMargin; ++dz) {
@@ -198,8 +199,9 @@ void StoneRenderer::generateStoneInstances() {
         int nz = iz + dz;
         if (nx >= 0 && nx < m_width && nz >= 0 && nz < m_height) {
           int nIdx = nz * m_width + nx;
-          if (m_terrainTypes[nIdx] == Game::Map::TerrainType::River)
+          if (m_terrainTypes[nIdx] == Game::Map::TerrainType::River) {
             return false;
+          }
         }
       }
     }
@@ -207,8 +209,9 @@ void StoneRenderer::generateStoneInstances() {
     QVector3D normal = normals[normalIdx];
     float slope = 1.0f - std::clamp(normal.y(), 0.0f, 1.0f);
 
-    if (slope > 0.15f)
+    if (slope > 0.15f) {
       return false;
+    }
 
     float worldX = (gx - halfWidth) * m_tileSize;
     float worldZ = (gz - halfHeight) * m_tileSize;
@@ -246,13 +249,15 @@ void StoneRenderer::generateStoneInstances() {
     for (int x = 0; x < m_width; x += 2) {
       int idx = z * m_width + x;
 
-      if (m_terrainTypes[idx] != Game::Map::TerrainType::Flat)
+      if (m_terrainTypes[idx] != Game::Map::TerrainType::Flat) {
         continue;
+      }
 
       QVector3D normal = normals[idx];
       float slope = 1.0f - std::clamp(normal.y(), 0.0f, 1.0f);
-      if (slope > 0.15f)
+      if (slope > 0.15f) {
         continue;
+      }
 
       uint32_t state = hashCoords(
           x, z, m_noiseSeed ^ 0xABCDEF12u ^ static_cast<uint32_t>(idx));
@@ -262,13 +267,15 @@ void StoneRenderer::generateStoneInstances() {
       float clusterNoise =
           valueNoise(worldX * 0.03f, worldZ * 0.03f, m_noiseSeed ^ 0x7F3A9B2Cu);
 
-      if (clusterNoise < 0.6f)
+      if (clusterNoise < 0.6f) {
         continue;
+      }
 
       int stoneCount = static_cast<int>(std::floor(stoneDensity));
       float frac = stoneDensity - float(stoneCount);
-      if (rand01(state) < frac)
+      if (rand01(state) < frac) {
         stoneCount += 1;
+      }
 
       for (int i = 0; i < stoneCount; ++i) {
         float gx = float(x) + rand01(state) * 2.0f;

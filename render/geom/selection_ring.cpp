@@ -37,8 +37,9 @@ static Render::GL::Mesh *createRingMesh() {
 }
 
 Render::GL::Mesh *SelectionRing::get() {
-  if (!s_mesh)
+  if (!s_mesh) {
     s_mesh.reset(createRingMesh());
+  }
   return s_mesh.get();
 }
 

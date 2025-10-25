@@ -216,24 +216,28 @@ void BiomeRenderer::generateGrassInstances() {
     int normalIdx = iz * m_width + ix;
 
     if (m_terrainTypes[normalIdx] == Game::Map::TerrainType::Mountain ||
-        m_terrainTypes[normalIdx] == Game::Map::TerrainType::Hill)
+        m_terrainTypes[normalIdx] == Game::Map::TerrainType::Hill) {
       return false;
+    }
 
-    if (m_terrainTypes[normalIdx] == Game::Map::TerrainType::River)
+    if (m_terrainTypes[normalIdx] == Game::Map::TerrainType::River) {
       return false;
+    }
 
     constexpr int kRiverMargin = 1;
     int nearRiverCount = 0;
     for (int dz = -kRiverMargin; dz <= kRiverMargin; ++dz) {
       for (int dx = -kRiverMargin; dx <= kRiverMargin; ++dx) {
-        if (dx == 0 && dz == 0)
+        if (dx == 0 && dz == 0) {
           continue;
+        }
         int nx = ix + dx;
         int nz = iz + dz;
         if (nx >= 0 && nx < m_width && nz >= 0 && nz < m_height) {
           int nIdx = nz * m_width + nx;
-          if (m_terrainTypes[nIdx] == Game::Map::TerrainType::River)
+          if (m_terrainTypes[nIdx] == Game::Map::TerrainType::River) {
             nearRiverCount++;
+          }
         }
       }
     }
@@ -241,14 +245,16 @@ void BiomeRenderer::generateGrassInstances() {
     if (nearRiverCount > 0) {
 
       float riverbankDensity = 0.15f;
-      if (rand01(state) > riverbankDensity)
+      if (rand01(state) > riverbankDensity) {
         return false;
+      }
     }
 
     QVector3D normal = normals[normalIdx];
     float slope = 1.0f - std::clamp(normal.y(), 0.0f, 1.0f);
-    if (slope > 0.92f)
+    if (slope > 0.92f) {
       return false;
+    }
 
     float worldX = (gx - halfWidth) * m_tileSize;
     float worldZ = (gz - halfHeight) * m_tileSize;
@@ -356,14 +362,16 @@ void BiomeRenderer::generateGrassInstances() {
         }
       }
 
-      if (sampleCount == 0)
+      if (sampleCount == 0) {
         continue;
+      }
 
       const float usableCoverage =
           sampleCount > 0 ? float(flatCount + hillCount) / float(sampleCount)
                           : 0.0f;
-      if (usableCoverage < 0.05f)
+      if (usableCoverage < 0.05f) {
         continue;
+      }
 
       bool isPrimarilyFlat = flatCount >= hillCount;
 
@@ -379,8 +387,9 @@ void BiomeRenderer::generateGrassInstances() {
                              slopePenalty * typeBias * usableCoverage);
       int clusterCount = static_cast<int>(std::floor(expectedClusters));
       float frac = expectedClusters - float(clusterCount);
-      if (rand01(state) < frac)
+      if (rand01(state) < frac) {
         clusterCount += 1;
+      }
 
       if (clusterCount > 0) {
         float chunkSpanX = float(chunkMaxX - chunkX + 1);
@@ -398,13 +407,15 @@ void BiomeRenderer::generateGrassInstances() {
             int cz = std::clamp(int(std::round(candidateGZ)), 0, m_height - 1);
             int centerIdx = cz * m_width + cx;
             if (m_terrainTypes[centerIdx] == Game::Map::TerrainType::Mountain ||
-                m_terrainTypes[centerIdx] == Game::Map::TerrainType::River)
+                m_terrainTypes[centerIdx] == Game::Map::TerrainType::River) {
               continue;
+            }
 
             QVector3D centerNormal = normals[centerIdx];
             float centerSlope = 1.0f - std::clamp(centerNormal.y(), 0.0f, 1.0f);
-            if (centerSlope > 0.92f)
+            if (centerSlope > 0.92f) {
               continue;
+            }
 
             return QVector2D(candidateGX, candidateGZ);
           }
@@ -413,8 +424,9 @@ void BiomeRenderer::generateGrassInstances() {
 
         for (int cluster = 0; cluster < clusterCount; ++cluster) {
           auto center = pickClusterCenter(state);
-          if (!center)
+          if (!center) {
             continue;
+          }
 
           float centerGX = center->x();
           float centerGZ = center->y();
@@ -446,20 +458,23 @@ void BiomeRenderer::generateGrassInstances() {
 
         if (m_terrainTypes[idx] == Game::Map::TerrainType::Mountain ||
             m_terrainTypes[idx] == Game::Map::TerrainType::Hill ||
-            m_terrainTypes[idx] == Game::Map::TerrainType::River)
+            m_terrainTypes[idx] == Game::Map::TerrainType::River) {
           continue;
+        }
 
         QVector3D normal = normals[idx];
         float slope = 1.0f - std::clamp(normal.y(), 0.0f, 1.0f);
-        if (slope > 0.95f)
+        if (slope > 0.95f) {
           continue;
+        }
 
         uint32_t state = hashCoords(
             x, z, m_noiseSeed ^ 0x51bda7u ^ static_cast<uint32_t>(idx));
         int baseCount = static_cast<int>(std::floor(backgroundDensity));
         float frac = backgroundDensity - float(baseCount);
-        if (rand01(state) < frac)
+        if (rand01(state) < frac) {
           baseCount += 1;
+        }
 
         for (int i = 0; i < baseCount; ++i) {
           float gx = float(x) + rand01(state);
@@ -477,12 +492,13 @@ void BiomeRenderer::generateGrassInstances() {
   int debugHillCount = 0;
   int debugMountainCount = 0;
   for (const auto &type : m_terrainTypes) {
-    if (type == Game::Map::TerrainType::Flat)
+    if (type == Game::Map::TerrainType::Flat) {
       debugFlatCount++;
-    else if (type == Game::Map::TerrainType::Hill)
+    } else if (type == Game::Map::TerrainType::Hill) {
       debugHillCount++;
-    else if (type == Game::Map::TerrainType::Mountain)
+    } else if (type == Game::Map::TerrainType::Mountain) {
       debugMountainCount++;
+    }
   }
 }
 

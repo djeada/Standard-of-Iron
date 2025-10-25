@@ -9,21 +9,25 @@ namespace App::Controllers {
 
 void ActionVFX::spawnAttackArrow(Engine::Core::World *world,
                                  Engine::Core::EntityID targetId) {
-  if (!world)
+  if (!world) {
     return;
+  }
 
   auto *arrowSystem = world->getSystem<Game::Systems::ArrowSystem>();
-  if (!arrowSystem)
+  if (!arrowSystem) {
     return;
+  }
 
   auto *targetEntity = world->getEntity(targetId);
-  if (!targetEntity)
+  if (!targetEntity) {
     return;
+  }
 
   auto *targetTrans =
       targetEntity->getComponent<Engine::Core::TransformComponent>();
-  if (!targetTrans)
+  if (!targetTrans) {
     return;
+  }
 
   QVector3D targetPos(targetTrans->position.x, targetTrans->position.y + 1.0f,
                       targetTrans->position.z);
