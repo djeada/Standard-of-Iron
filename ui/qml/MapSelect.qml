@@ -19,6 +19,7 @@ Item {
     function hasMinimumDistinctTeams() {
         if (playersModel.count < 2)
             return false;
+
         let teams = new Set();
         for (let i = 0; i < playersModel.count; i++) {
             teams.add(playersModel.get(i).teamId);
@@ -27,13 +28,12 @@ Item {
     }
 
     function updateValidationError() {
-        if (playersModel.count < 2) {
+        if (playersModel.count < 2)
             validationError = "Need at least 2 players to start";
-        } else if (!hasMinimumDistinctTeams()) {
+        else if (!hasMinimumDistinctTeams())
             validationError = "At least two teams must be selected to start a match";
-        } else {
+        else
             validationError = "";
-        }
     }
 
     function field(obj, key) {
@@ -74,7 +74,7 @@ Item {
         });
         if (cpuId !== undefined)
             addCPU();
-        
+
         updateValidationError();
     }
 
@@ -106,10 +106,7 @@ Item {
                 break;
             }
         }
-        
-        // Set CPU to a different team (team 1) by default to ensure valid match setup
         let defaultTeamId = playersModel.count > 0 ? 1 : 0;
-        
         playersModel.append({
             "playerId": nextId,
             "playerName": "CPU " + nextId,
@@ -122,7 +119,6 @@ Item {
             "factionName": Theme.factions[0].name,
             "isHuman": false
         });
-        
         updateValidationError();
     }
 
@@ -202,14 +198,11 @@ Item {
             updateValidationError();
             return ;
         }
-        
-        // Check for at least 2 distinct teams
         if (!hasMinimumDistinctTeams()) {
             console.log("MapSelect: Need at least 2 different teams to start");
             updateValidationError();
             return ;
         }
-        
         validationError = "";
         let configs = getPlayerConfigs();
         console.log("MapSelect: Starting game with", playersModel.count, "players");
@@ -1362,7 +1355,7 @@ Item {
 
             Text {
                 id: validationErrorText
-                
+
                 text: validationError
                 visible: validationError !== ""
                 color: Theme.removeColor
@@ -1370,7 +1363,7 @@ Item {
                 font.bold: true
                 wrapMode: Text.WordWrap
                 horizontalAlignment: Text.AlignHCenter
-                
+
                 anchors {
                     left: parent.left
                     right: parent.right
@@ -1378,6 +1371,7 @@ Item {
                     leftMargin: 140
                     rightMargin: 140
                 }
+
             }
 
             Button {
@@ -1471,6 +1465,7 @@ Item {
                 ToolTip.text: {
                     if (validationError !== "")
                         return validationError;
+
                     return qsTr("Start game (Enter)");
                 }
 

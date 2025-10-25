@@ -1351,10 +1351,9 @@ void GameEngine::rebuildBuildingCollisions() {
     if (!transform || !unit)
       continue;
 
-    registry.registerBuilding(entity->getId(), 
-                              Game::Units::spawnTypeToString(unit->spawnType),
-                              transform->position.x, transform->position.z,
-                              unit->ownerId);
+    registry.registerBuilding(
+        entity->getId(), Game::Units::spawnTypeToString(unit->spawnType),
+        transform->position.x, transform->position.z, unit->ownerId);
   }
 }
 
@@ -1672,7 +1671,8 @@ void GameEngine::loadAudioResources() {
   QDir audioDir(basePath);
   if (!audioDir.exists()) {
     qWarning() << "Audio assets directory does not exist:" << basePath;
-    qWarning() << "Application directory:" << QCoreApplication::applicationDirPath();
+    qWarning() << "Application directory:"
+               << QCoreApplication::applicationDirPath();
     return;
   }
 
@@ -1681,7 +1681,8 @@ void GameEngine::loadAudioResources() {
                          AudioCategory::VOICE)) {
     qInfo() << "Loaded archer voice";
   } else {
-    qWarning() << "Failed to load archer voice from:" << (basePath + "voices/archer_voice.wav");
+    qWarning() << "Failed to load archer voice from:"
+               << (basePath + "voices/archer_voice.wav");
   }
 
   if (audioSys.loadSound("knight_voice",
@@ -1689,7 +1690,8 @@ void GameEngine::loadAudioResources() {
                          AudioCategory::VOICE)) {
     qInfo() << "Loaded knight voice";
   } else {
-    qWarning() << "Failed to load knight voice from:" << (basePath + "voices/knight_voice.wav");
+    qWarning() << "Failed to load knight voice from:"
+               << (basePath + "voices/knight_voice.wav");
   }
 
   if (audioSys.loadSound("spearman_voice",
@@ -1697,42 +1699,48 @@ void GameEngine::loadAudioResources() {
                          AudioCategory::VOICE)) {
     qInfo() << "Loaded spearman voice";
   } else {
-    qWarning() << "Failed to load spearman voice from:" << (basePath + "voices/spearman_voice.wav");
+    qWarning() << "Failed to load spearman voice from:"
+               << (basePath + "voices/spearman_voice.wav");
   }
 
   if (audioSys.loadMusic("music_peaceful",
                          (basePath + "music/peaceful.wav").toStdString())) {
     qInfo() << "Loaded peaceful music";
   } else {
-    qWarning() << "Failed to load peaceful music from:" << (basePath + "music/peaceful.wav");
+    qWarning() << "Failed to load peaceful music from:"
+               << (basePath + "music/peaceful.wav");
   }
 
   if (audioSys.loadMusic("music_tense",
                          (basePath + "music/tense.wav").toStdString())) {
     qInfo() << "Loaded tense music";
   } else {
-    qWarning() << "Failed to load tense music from:" << (basePath + "music/tense.wav");
+    qWarning() << "Failed to load tense music from:"
+               << (basePath + "music/tense.wav");
   }
 
   if (audioSys.loadMusic("music_combat",
                          (basePath + "music/combat.wav").toStdString())) {
     qInfo() << "Loaded combat music";
   } else {
-    qWarning() << "Failed to load combat music from:" << (basePath + "music/combat.wav");
+    qWarning() << "Failed to load combat music from:"
+               << (basePath + "music/combat.wav");
   }
 
   if (audioSys.loadMusic("music_victory",
                          (basePath + "music/victory.wav").toStdString())) {
     qInfo() << "Loaded victory music";
   } else {
-    qWarning() << "Failed to load victory music from:" << (basePath + "music/victory.wav");
+    qWarning() << "Failed to load victory music from:"
+               << (basePath + "music/victory.wav");
   }
 
   if (audioSys.loadMusic("music_defeat",
                          (basePath + "music/defeat.wav").toStdString())) {
     qInfo() << "Loaded defeat music";
   } else {
-    qWarning() << "Failed to load defeat music from:" << (basePath + "music/defeat.wav");
+    qWarning() << "Failed to load defeat music from:"
+               << (basePath + "music/defeat.wav");
   }
 
   qInfo() << "Audio resources loading complete";

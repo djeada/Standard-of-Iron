@@ -66,7 +66,7 @@ void AIReasoner::updateContext(const AISnapshot &snapshot, AIContext &ctx) {
     if (entity.isBuilding) {
       ctx.buildings.push_back(entity.id);
 
-      if (entity.spawnType == Game::Units::SpawnType::Barracks && 
+      if (entity.spawnType == Game::Units::SpawnType::Barracks &&
           ctx.primaryBarracks == 0) {
         ctx.primaryBarracks = entity.id;
         ctx.rallyX = entity.posX - 5.0f;
