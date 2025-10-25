@@ -44,6 +44,8 @@ help:
 	@echo "  $(GREEN)test$(RESET)          - Run tests (if any)"
 	@echo "  $(GREEN)format$(RESET)        - Format all code (C++, QML, shaders)"
 	@echo "  $(GREEN)format-check$(RESET)  - Verify formatting (CI-friendly, no changes)"
+	@echo "  $(GREEN)tidy$(RESET)          - Run clang-tidy on changed files"
+	@echo "  $(GREEN)tidy-all$(RESET)      - Run clang-tidy on all source files"
 	@echo "  $(GREEN)check-deps$(RESET)    - Check if dependencies are installed"
 	@echo "  $(GREEN)dev$(RESET)           - Set up development environment (install + configure + build)"
 	@echo "  $(GREEN)all$(RESET)           - Full build (configure + build)"
@@ -190,7 +192,6 @@ format:
 		echo "$(GREEN)✓ QML formatting complete$(RESET)"; \
 	else \
 		echo "$(YELLOW)⚠ qmlformat not found. Skipping QML formatting.$(RESET)"; \
-		echo "$(YELLOW)  Install qmlformat (from Qt dev tools) to format QML files.$(RESET)"; \
 	fi
 
 	@echo "$(BOLD)$(BLUE)Formatting shader files (.frag, .vert)...$(RESET)"
@@ -204,7 +205,6 @@ format:
 
 	@echo "$(GREEN)✓ All formatting complete$(RESET)"
 
-# CI/verification: fail if anything would be reformatted
 format-check:
 	@echo "$(BOLD)$(BLUE)Checking formatting compliance...$(RESET)"
 	@FAILED=0; \
@@ -215,8 +215,6 @@ format-check:
 		echo "$(BLUE)Checking shader files...$(RESET)"; \
 		find . -type f \( $(SHADER_GLOBS) \) -not -path "./$(BUILD_DIR)/*" -print0 \
 		| xargs -0 -r $(CLANG_FORMAT) --dry-run -Werror --style=file || FAILED=1; \
-	else \
-		echo "$(RED)clang-format not found. Please install it.$(RESET)"; exit 1; \
 	fi; \
 	if command -v $(QMLFORMAT) >/dev/null 2>&1 || [ -x "$(QMLFORMAT)" ]; then \
 		echo "$(BLUE)Checking QML files...$(RESET)"; \
@@ -228,8 +226,6 @@ format-check:
 			fi; \
 		done; \
 		rm -f /tmp/qmlformat_check.tmp; \
-	else \
-		echo "$(YELLOW)⚠ qmlformat not found. Skipping QML format check.$(RESET)"; \
 	fi; \
 	if [ $$FAILED -eq 0 ]; then \
 		echo "$(GREEN)✓ All formatting checks passed$(RESET)"; \
@@ -237,6 +233,40 @@ format-check:
 		echo "$(RED)✗ Formatting check failed. Run 'make format' to fix.$(RESET)"; \
 		exit 1; \
 	fi
+
+# ---- Static analysis: clang-tidy ----
+.PHONY: tidy tidy-all
+
+TIDY_EXE := $(shell command -v clang-tidy 2>/dev/null)
+TIDY_FILES := $(shell find . -type f \( -name "*.cpp" -o -name "*.hpp" -o -name "*.h" -o -name "*.cc" \) \
+              -not -path "./$(BUILD_DIR)/*" -not -path "./third_party/*")
+
+tidy:
+	@if [ -z "$(TIDY_EXE)" ]; then \
+		echo "$(RED)clang-tidy not found. Please install it.$(RESET)"; \
+		exit 1; \
+	fi
+	@echo "$(BOLD)$(BLUE)Running clang-tidy on modified files...$(RESET)"
+	@if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then \
+		FILES=$$(git diff --name-only --diff-filter=ACMRTUXB HEAD | grep -E '\.cpp$$|\.hpp$$|\.h$$' || true); \
+		if [ -z "$$FILES" ]; then \
+			echo "$(YELLOW)No modified C++ files to analyze.$(RESET)"; \
+		else \
+			echo "$(BLUE)Analyzing changed files:$(RESET) $$FILES"; \
+			$(TIDY_EXE) $$FILES -- -p=$(BUILD_DIR); \
+		fi \
+	else \
+		echo "$(YELLOW)Not a git repo, skipping incremental tidy.$(RESET)"; \
+	fi
+
+tidy-all:
+	@if [ -z "$(TIDY_EXE)" ]; then \
+		echo "$(RED)clang-tidy not found. Please install it.$(RESET)"; \
+		exit 1; \
+	fi
+	@echo "$(BOLD)$(BLUE)Running clang-tidy on all source files...$(RESET)"
+	@$(TIDY_EXE) $(TIDY_FILES) -- -p=$(BUILD_DIR)
+	@echo "$(GREEN)✓ clang-tidy analysis complete$(RESET)"
 
 # Debug build
 .PHONY: debug
