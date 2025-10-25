@@ -2,12 +2,20 @@
 
 #include "troop_type.h"
 #include <QString>
+#include <cstdint>
 #include <optional>
 #include <string>
+#include <functional>
 
 namespace Game::Units {
 
-enum class SpawnType { Archer, Knight, Spearman, MountedKnight, Barracks };
+enum class SpawnType : std::uint8_t {
+  Archer,
+  Knight,
+  Spearman,
+  MountedKnight,
+  Barracks
+};
 
 inline QString spawnTypeToQString(SpawnType type) {
   switch (type) {
@@ -55,16 +63,21 @@ inline bool tryParseSpawnType(const QString &value, SpawnType &out) {
 }
 
 inline std::optional<SpawnType> spawnTypeFromString(const std::string &str) {
-  if (str == "archer")
+  if (str == "archer") {
     return SpawnType::Archer;
-  if (str == "knight")
+  }
+  if (str == "knight") {
     return SpawnType::Knight;
-  if (str == "spearman")
+  }
+  if (str == "spearman") {
     return SpawnType::Spearman;
-  if (str == "mounted_knight")
+  }
+  if (str == "mounted_knight") {
     return SpawnType::MountedKnight;
-  if (str == "barracks")
+  }
+  if (str == "barracks") {
     return SpawnType::Barracks;
+  }
   return std::nullopt;
 }
 
@@ -109,7 +122,7 @@ inline SpawnType spawnTypeFromTroopType(TroopType type) {
 namespace std {
 template <> struct hash<Game::Units::SpawnType> {
   size_t operator()(Game::Units::SpawnType type) const noexcept {
-    return hash<int>()(static_cast<int>(type));
+    return hash<std::uint8_t>()(static_cast<std::uint8_t>(type));
   }
 };
 } // namespace std

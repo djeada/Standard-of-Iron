@@ -4,12 +4,10 @@
 #include <QJsonObject>
 #include <QString>
 
-namespace Game {
-namespace Map {
+namespace Game::Map {
 class TerrainHeightMap;
 struct BiomeSettings;
-} // namespace Map
-} // namespace Game
+} // namespace Game::Map
 
 namespace Engine::Core {
 
