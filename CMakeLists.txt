@@ -1,6 +1,29 @@
 cmake_minimum_required(VERSION 3.21)
 project(StandardOfIron VERSION 1.0.0 LANGUAGES CXX)
 
+# ---- Clang-Tidy integration ----
+find_program(CLANG_TIDY_EXE NAMES clang-tidy)
+option(ENABLE_CLANG_TIDY "Enable clang-tidy analysis" ON)
+
+if (ENABLE_CLANG_TIDY AND CLANG_TIDY_EXE)
+    message(STATUS "Found clang-tidy: ${CLANG_TIDY_EXE}")
+    # Prefer using .clang-tidy config, but define fallback checks for safety
+    set(CMAKE_CXX_CLANG_TIDY
+        ${CLANG_TIDY_EXE};
+        -checks=bugprone-*,
+                performance-*,
+                readability-*,
+                modernize-*,
+                cppcoreguidelines-*,
+                clang-analyzer-*;
+        -warnings-as-errors=*;
+        -header-filter=.*)
+elseif (ENABLE_CLANG_TIDY)
+    message(WARNING "clang-tidy requested but not found! Static analysis skipped.")
+else()
+    message(STATUS "clang-tidy disabled (ENABLE_CLANG_TIDY=OFF)")
+endif()
+
 # Prefer Qt6 if both Qt5/Qt6 are installed
 set(QT_DEFAULT_MAJOR_VERSION 6)
 
