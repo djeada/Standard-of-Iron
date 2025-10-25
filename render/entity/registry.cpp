@@ -17,8 +17,9 @@ void EntityRendererRegistry::registerRenderer(const std::string &type,
 
 RenderFunc EntityRendererRegistry::get(const std::string &type) const {
   auto it = m_map.find(type);
-  if (it != m_map.end())
+  if (it != m_map.end()) {
     return it->second;
+  }
   return {};
 }
 

@@ -140,29 +140,33 @@ int OwnerRegistry::getLocalPlayerId() const { return m_localPlayerId; }
 
 bool OwnerRegistry::isPlayer(int ownerId) const {
   auto it = m_ownerIdToIndex.find(ownerId);
-  if (it == m_ownerIdToIndex.end())
+  if (it == m_ownerIdToIndex.end()) {
     return false;
+  }
   return m_owners[it->second].type == OwnerType::Player;
 }
 
 bool OwnerRegistry::isAI(int ownerId) const {
   auto it = m_ownerIdToIndex.find(ownerId);
-  if (it == m_ownerIdToIndex.end())
+  if (it == m_ownerIdToIndex.end()) {
     return false;
+  }
   return m_owners[it->second].type == OwnerType::AI;
 }
 
 OwnerType OwnerRegistry::getOwnerType(int ownerId) const {
   auto it = m_ownerIdToIndex.find(ownerId);
-  if (it == m_ownerIdToIndex.end())
+  if (it == m_ownerIdToIndex.end()) {
     return OwnerType::Neutral;
+  }
   return m_owners[it->second].type;
 }
 
 std::string OwnerRegistry::getOwnerName(int ownerId) const {
   auto it = m_ownerIdToIndex.find(ownerId);
-  if (it == m_ownerIdToIndex.end())
+  if (it == m_ownerIdToIndex.end()) {
     return "Unknown";
+  }
   return m_owners[it->second].name;
 }
 
@@ -199,15 +203,17 @@ void OwnerRegistry::setOwnerTeam(int ownerId, int teamId) {
 
 int OwnerRegistry::getOwnerTeam(int ownerId) const {
   auto it = m_ownerIdToIndex.find(ownerId);
-  if (it == m_ownerIdToIndex.end())
+  if (it == m_ownerIdToIndex.end()) {
     return 0;
+  }
   return m_owners[it->second].teamId;
 }
 
 bool OwnerRegistry::areAllies(int ownerId1, int ownerId2) const {
 
-  if (ownerId1 == ownerId2)
+  if (ownerId1 == ownerId2) {
     return true;
+  }
 
   int team1 = getOwnerTeam(ownerId1);
   int team2 = getOwnerTeam(ownerId2);
@@ -219,11 +225,13 @@ bool OwnerRegistry::areAllies(int ownerId1, int ownerId2) const {
 
 bool OwnerRegistry::areEnemies(int ownerId1, int ownerId2) const {
 
-  if (ownerId1 == ownerId2)
+  if (ownerId1 == ownerId2) {
     return false;
+  }
 
-  if (areAllies(ownerId1, ownerId2))
+  if (areAllies(ownerId1, ownerId2)) {
     return false;
+  }
 
   return true;
 }
@@ -232,8 +240,9 @@ std::vector<int> OwnerRegistry::getAlliesOf(int ownerId) const {
   std::vector<int> result;
   int myTeam = getOwnerTeam(ownerId);
 
-  if (myTeam == 0)
+  if (myTeam == 0) {
     return result;
+  }
 
   for (const auto &owner : m_owners) {
     if (owner.ownerId != ownerId && owner.teamId == myTeam) {

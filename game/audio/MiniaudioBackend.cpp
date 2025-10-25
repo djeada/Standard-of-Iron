@@ -61,12 +61,14 @@ bool MiniaudioBackend::initialize(int deviceRate, int outChannels,
   }
 
   m_channels.resize(std::max(1, musicChannels));
-  for (auto &ch : m_channels)
+  for (auto &ch : m_channels) {
     ch = Channel{};
+  }
 
   m_soundEffects.resize(32);
-  for (auto &sfx : m_soundEffects)
+  for (auto &sfx : m_soundEffects) {
     sfx = SoundEffect{};
+  }
 
   if (ma_device_start(m_device) != MA_SUCCESS) {
     qWarning() << "MiniaudioBackend: Failed to start audio device";
@@ -92,8 +94,9 @@ void MiniaudioBackend::shutdown() {
 }
 
 void MiniaudioBackend::stopDevice() {
-  if (!m_device)
+  if (!m_device) {
     return;
+  }
   auto *wrap = reinterpret_cast<DeviceWrapper *>(m_device->pUserData);
   ma_device_stop(m_device);
   ma_device_uninit(m_device);
@@ -123,8 +126,9 @@ bool MiniaudioBackend::predecode(const QString &id, const QString &path) {
       pcm.resize(old + samples);
       std::memcpy(pcm.data() + old, buffer, samples * sizeof(float));
     }
-    if (r == MA_AT_END)
+    if (r == MA_AT_END) {
       break;
+    }
     if (r != MA_SUCCESS) {
       ma_decoder_uninit(&dec);
       return false;
@@ -143,8 +147,9 @@ bool MiniaudioBackend::predecode(const QString &id, const QString &path) {
 void MiniaudioBackend::play(int channel, const QString &id, float volume,
                             bool loop, int fadeMs) {
   QMutexLocker lk(&m_mutex);
-  if (channel < 0 || channel >= m_channels.size())
+  if (channel < 0 || channel >= m_channels.size()) {
     return;
+  }
   auto it = m_tracks.find(id);
   if (it == m_tracks.end()) {
     lk.unlock();
@@ -174,11 +179,13 @@ void MiniaudioBackend::play(int channel, const QString &id, float volume,
 
 void MiniaudioBackend::stop(int channel, int fadeMs) {
   QMutexLocker lk(&m_mutex);
-  if (channel < 0 || channel >= m_channels.size())
+  if (channel < 0 || channel >= m_channels.size()) {
     return;
+  }
   auto &ch = m_channels[channel];
-  if (!ch.active)
+  if (!ch.active) {
     return;
+  }
   const unsigned fadeSamples = std::max(1u, unsigned((fadeMs * m_rate) / 1000));
   ch.tgtVol = 0.0f;
   ch.fadeSamples = fadeSamples;
@@ -188,22 +195,26 @@ void MiniaudioBackend::stop(int channel, int fadeMs) {
 
 void MiniaudioBackend::pause(int channel) {
   QMutexLocker lk(&m_mutex);
-  if (channel >= 0 && channel < m_channels.size())
+  if (channel >= 0 && channel < m_channels.size()) {
     m_channels[channel].paused = true;
+  }
 }
 void MiniaudioBackend::resume(int channel) {
   QMutexLocker lk(&m_mutex);
-  if (channel >= 0 && channel < m_channels.size())
+  if (channel >= 0 && channel < m_channels.size()) {
     m_channels[channel].paused = false;
+  }
 }
 
 void MiniaudioBackend::setVolume(int channel, float volume, int fadeMs) {
   QMutexLocker lk(&m_mutex);
-  if (channel < 0 || channel >= m_channels.size())
+  if (channel < 0 || channel >= m_channels.size()) {
     return;
+  }
   auto &ch = m_channels[channel];
-  if (!ch.active)
+  if (!ch.active) {
     return;
+  }
   ch.tgtVol = std::clamp(volume, 0.0f, 1.0f);
   const unsigned fadeSamples = std::max(1u, unsigned((fadeMs * m_rate) / 1000));
   ch.fadeSamples = fadeSamples;
@@ -214,8 +225,9 @@ void MiniaudioBackend::stopAll(int fadeMs) {
   QMutexLocker lk(&m_mutex);
   const unsigned fadeSamples = std::max(1u, unsigned((fadeMs * m_rate) / 1000));
   for (auto &ch : m_channels) {
-    if (!ch.active)
+    if (!ch.active) {
       continue;
+    }
     ch.tgtVol = 0.0f;
     ch.fadeSamples = fadeSamples;
     ch.volStep = (ch.tgtVol - ch.curVol) / float(fadeSamples);
@@ -230,15 +242,18 @@ void MiniaudioBackend::setMasterVolume(float volume, int) {
 
 bool MiniaudioBackend::anyChannelPlaying() const {
   QMutexLocker lk(&m_mutex);
-  for (const auto &ch : m_channels)
-    if (ch.active && !ch.paused)
+  for (const auto &ch : m_channels) {
+    if (ch.active && !ch.paused) {
       return true;
+    }
+  }
   return false;
 }
 bool MiniaudioBackend::channelPlaying(int channel) const {
   QMutexLocker lk(&m_mutex);
-  if (channel < 0 || channel >= m_channels.size())
+  if (channel < 0 || channel >= m_channels.size()) {
     return false;
+  }
   const auto &ch = m_channels[channel];
   return ch.active && !ch.paused;
 }
@@ -268,8 +283,9 @@ void MiniaudioBackend::playSound(const QString &id, float volume, bool loop) {
 
 int MiniaudioBackend::findFreeSoundSlot() const {
   for (int i = 0; i < m_soundEffects.size(); ++i) {
-    if (!m_soundEffects[i].active)
+    if (!m_soundEffects[i].active) {
       return i;
+    }
   }
   return -1;
 }
@@ -282,8 +298,9 @@ void MiniaudioBackend::onAudio(float *out, unsigned frames) {
   QMutexLocker lk(&m_mutex);
 
   for (auto &ch : m_channels) {
-    if (!ch.active || ch.paused || ch.track == nullptr)
+    if (!ch.active || ch.paused || ch.track == nullptr) {
       continue;
+    }
 
     const auto *pcm = ch.track->pcm.constData();
     unsigned framesLeft = frames;
@@ -293,10 +310,11 @@ void MiniaudioBackend::onAudio(float *out, unsigned frames) {
 
     while (framesLeft > 0) {
       if (pos >= ch.track->frames) {
-        if (ch.looping)
+        if (ch.looping) {
           pos = 0;
-        else
+        } else {
           break;
+        }
       }
       const unsigned canCopy = std::min(framesLeft, ch.track->frames - pos);
       const float *src = pcm + pos * 2;
@@ -311,8 +329,9 @@ void MiniaudioBackend::onAudio(float *out, unsigned frames) {
         if (ch.fadeSamples > 0) {
           ch.curVol += ch.volStep;
           --ch.fadeSamples;
-          if (ch.fadeSamples == 0)
+          if (ch.fadeSamples == 0) {
             ch.curVol = ch.tgtVol;
+          }
         }
       }
       pos += canCopy;
@@ -333,8 +352,9 @@ void MiniaudioBackend::onAudio(float *out, unsigned frames) {
   }
 
   for (auto &sfx : m_soundEffects) {
-    if (!sfx.active || sfx.track == nullptr)
+    if (!sfx.active || sfx.track == nullptr) {
       continue;
+    }
 
     const auto *pcm = sfx.track->pcm.constData();
     unsigned framesLeft = frames;
@@ -370,9 +390,10 @@ void MiniaudioBackend::onAudio(float *out, unsigned frames) {
   }
 
   for (unsigned i = 0; i < samples; ++i) {
-    if (out[i] > 1.0f)
+    if (out[i] > 1.0f) {
       out[i] = 1.0f;
-    else if (out[i] < -1.0f)
+    } else if (out[i] < -1.0f) {
       out[i] = -1.0f;
+    }
   }
 }

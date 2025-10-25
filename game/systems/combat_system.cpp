@@ -27,8 +27,9 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
 
   for (auto attacker : units) {
 
-    if (attacker->hasComponent<Engine::Core::PendingRemovalComponent>())
+    if (attacker->hasComponent<Engine::Core::PendingRemovalComponent>()) {
       continue;
+    }
 
     auto attackerUnit = attacker->getComponent<Engine::Core::UnitComponent>();
     auto attackerTransform =
@@ -39,8 +40,9 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
       continue;
     }
 
-    if (attackerUnit->health <= 0)
+    if (attackerUnit->health <= 0) {
       continue;
+    }
 
     if (attackerAtk && attackerAtk->inMeleeLock) {
       auto *lockTarget = world->getEntity(attackerAtk->meleeLockTargetId);

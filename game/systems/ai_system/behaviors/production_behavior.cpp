@@ -9,8 +9,9 @@ void ProductionBehavior::execute(const AISnapshot &snapshot, AIContext &context,
                                  float deltaTime,
                                  std::vector<AICommand> &outCommands) {
   m_productionTimer += deltaTime;
-  if (m_productionTimer < 1.5f)
+  if (m_productionTimer < 1.5f) {
     return;
+  }
   m_productionTimer = 0.0f;
 
   static int execCounter = 0;
@@ -53,26 +54,31 @@ void ProductionBehavior::execute(const AISnapshot &snapshot, AIContext &context,
 
   for (const auto &entity : snapshot.friendlies) {
     if (!entity.isBuilding ||
-        entity.spawnType != Game::Units::SpawnType::Barracks)
+        entity.spawnType != Game::Units::SpawnType::Barracks) {
       continue;
+    }
 
-    if (Game::Core::isNeutralOwner(entity.ownerId))
+    if (Game::Core::isNeutralOwner(entity.ownerId)) {
       continue;
+    }
 
     static int logCounter = 0;
 
-    if (!entity.production.hasComponent)
+    if (!entity.production.hasComponent) {
       continue;
+    }
 
     const auto &prod = entity.production;
 
-    if (prod.producedCount >= prod.maxUnits)
+    if (prod.producedCount >= prod.maxUnits) {
       continue;
+    }
 
     const int maxQueueSize = 5;
     int totalInQueue = (prod.inProgress ? 1 : 0) + prod.queueSize;
-    if (totalInQueue >= maxQueueSize)
+    if (totalInQueue >= maxQueueSize) {
       continue;
+    }
 
     AICommand command;
     command.type = AICommandType::StartProduction;
@@ -88,8 +94,9 @@ bool ProductionBehavior::shouldExecute(const AISnapshot &snapshot,
                                        const AIContext &context) const {
   (void)snapshot;
 
-  if (context.totalUnits >= context.maxTroopsPerPlayer)
+  if (context.totalUnits >= context.maxTroopsPerPlayer) {
     return false;
+  }
 
   return true;
 }

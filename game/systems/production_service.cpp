@@ -14,10 +14,12 @@ findFirstSelectedBarracks(Engine::Core::World &world,
   for (auto id : selected) {
     if (auto *e = world.getEntity(id)) {
       auto *u = e->getComponent<Engine::Core::UnitComponent>();
-      if (!u || u->ownerId != ownerId)
+      if (!u || u->ownerId != ownerId) {
         continue;
-      if (u->spawnType == Game::Units::SpawnType::Barracks)
+      }
+      if (u->spawnType == Game::Units::SpawnType::Barracks) {
         return e;
+      }
     }
   }
   return nullptr;
@@ -28,31 +30,37 @@ ProductionResult ProductionService::startProductionForFirstSelectedBarracks(
     const std::vector<Engine::Core::EntityID> &selected, int ownerId,
     Game::Units::TroopType unitType) {
   auto *e = findFirstSelectedBarracks(world, selected, ownerId);
-  if (!e)
+  if (!e) {
     return ProductionResult::NoBarracks;
+  }
   auto *p = e->getComponent<Engine::Core::ProductionComponent>();
-  if (!p)
+  if (!p) {
     p = e->addComponent<Engine::Core::ProductionComponent>();
-  if (!p)
+  }
+  if (!p) {
     return ProductionResult::NoBarracks;
+  }
 
   int individualsPerUnit =
       Game::Units::TroopConfig::instance().getIndividualsPerUnit(unitType);
 
-  if (p->producedCount + individualsPerUnit > p->maxUnits)
+  if (p->producedCount + individualsPerUnit > p->maxUnits) {
     return ProductionResult::PerBarracksLimitReached;
+  }
 
   int currentTroops = world.countTroopsForPlayer(ownerId);
   int maxTroops = Game::GameConfig::instance().getMaxTroopsPerPlayer();
-  if (currentTroops + individualsPerUnit > maxTroops)
+  if (currentTroops + individualsPerUnit > maxTroops) {
     return ProductionResult::GlobalTroopLimitReached;
+  }
 
   const int maxQueueSize = 5;
   int totalInQueue = p->inProgress ? 1 : 0;
   totalInQueue += static_cast<int>(p->productionQueue.size());
 
-  if (totalInQueue >= maxQueueSize)
+  if (totalInQueue >= maxQueueSize) {
     return ProductionResult::QueueFull;
+  }
 
   if (p->inProgress) {
     p->productionQueue.push_back(unitType);
@@ -70,13 +78,16 @@ bool ProductionService::setRallyForFirstSelectedBarracks(
     const std::vector<Engine::Core::EntityID> &selected, int ownerId, float x,
     float z) {
   auto *e = findFirstSelectedBarracks(world, selected, ownerId);
-  if (!e)
+  if (!e) {
     return false;
+  }
   auto *p = e->getComponent<Engine::Core::ProductionComponent>();
-  if (!p)
+  if (!p) {
     p = e->addComponent<Engine::Core::ProductionComponent>();
-  if (!p)
+  }
+  if (!p) {
     return false;
+  }
   p->rallyX = x;
   p->rallyZ = z;
   p->rallySet = true;

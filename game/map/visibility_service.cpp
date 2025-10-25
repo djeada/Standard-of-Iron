@@ -44,8 +44,9 @@ void VisibilityService::initialize(int width, int height, float tileSize) {
 }
 
 void VisibilityService::reset() {
-  if (!m_initialized)
+  if (!m_initialized) {
     return;
+  }
   std::unique_lock lock(m_cellsMutex);
   std::fill(m_cells.begin(), m_cells.end(),
             static_cast<std::uint8_t>(VisibilityState::Unseen));
@@ -53,8 +54,9 @@ void VisibilityService::reset() {
 }
 
 bool VisibilityService::update(Engine::Core::World &world, int playerId) {
-  if (!m_initialized)
+  if (!m_initialized) {
     return false;
+  }
 
   bool integrated = integrateCompletedJob();
 
@@ -69,8 +71,9 @@ bool VisibilityService::update(Engine::Core::World &world, int playerId) {
 
 void VisibilityService::computeImmediate(Engine::Core::World &world,
                                          int playerId) {
-  if (!m_initialized)
+  if (!m_initialized) {
     return;
+  }
 
   auto sources = gatherVisionSources(world, playerId);
   auto payload = composeJobPayload(sources);
@@ -95,25 +98,29 @@ VisibilityService::gatherVisionSources(Engine::Core::World &world,
   for (auto *entity : entities) {
     auto *transform = entity->getComponent<Engine::Core::TransformComponent>();
     auto *unit = entity->getComponent<Engine::Core::UnitComponent>();
-    if (!transform || !unit)
+    if (!transform || !unit) {
       continue;
+    }
 
-    // Skip neutral entities - they should not contribute to fog of war
-    if (Game::Core::isNeutralOwner(unit->ownerId))
+    if (Game::Core::isNeutralOwner(unit->ownerId)) {
       continue;
+    }
 
     if (unit->ownerId != playerId &&
-        !ownerRegistry.areAllies(playerId, unit->ownerId))
+        !ownerRegistry.areAllies(playerId, unit->ownerId)) {
       continue;
+    }
 
-    if (unit->health <= 0)
+    if (unit->health <= 0) {
       continue;
+    }
 
     const float visionRange = std::max(unit->visionRange, kDefaultVisionRange);
     const int centerX = worldToGrid(transform->position.x, m_halfWidth);
     const int centerZ = worldToGrid(transform->position.z, m_halfHeight);
-    if (!inBounds(centerX, centerZ))
+    if (!inBounds(centerX, centerZ)) {
       continue;
+    }
 
     const int cellRadius =
         std::max(1, static_cast<int>(std::ceil(visionRange / m_tileSize)));
@@ -140,12 +147,14 @@ void VisibilityService::startAsyncJob(JobPayload &&payload) {
 }
 
 bool VisibilityService::integrateCompletedJob() {
-  if (!m_jobActive.load(std::memory_order_acquire))
+  if (!m_jobActive.load(std::memory_order_acquire)) {
     return false;
+  }
 
   if (m_pendingJob.wait_for(std::chrono::seconds(0)) !=
-      std::future_status::ready)
+      std::future_status::ready) {
     return false;
+  }
 
   auto result = m_pendingJob.get();
   m_jobActive.store(false, std::memory_order_release);
@@ -170,13 +179,15 @@ VisibilityService::JobResult VisibilityService::executeJob(JobPayload payload) {
   for (const auto &src : payload.sources) {
     for (int dz = -src.cellRadius; dz <= src.cellRadius; ++dz) {
       const int gz = src.centerZ + dz;
-      if (!inBoundsStatic(src.centerX, gz, payload.width, payload.height))
+      if (!inBoundsStatic(src.centerX, gz, payload.width, payload.height)) {
         continue;
+      }
       const float worldDz = dz * payload.tileSize;
       for (int dx = -src.cellRadius; dx <= src.cellRadius; ++dx) {
         const int gx = src.centerX + dx;
-        if (!inBoundsStatic(gx, gz, payload.width, payload.height))
+        if (!inBoundsStatic(gx, gz, payload.width, payload.height)) {
           continue;
+        }
         const float worldDx = dx * payload.tileSize;
         const float distSq = worldDx * worldDx + worldDz * worldDz;
         if (distSq <= src.expandedRangeSq) {
@@ -212,31 +223,36 @@ VisibilityService::JobResult VisibilityService::executeJob(JobPayload payload) {
 }
 
 VisibilityState VisibilityService::stateAt(int gridX, int gridZ) const {
-  if (!m_initialized || !inBounds(gridX, gridZ))
+  if (!m_initialized || !inBounds(gridX, gridZ)) {
     return VisibilityState::Visible;
+  }
   std::shared_lock lock(m_cellsMutex);
   return static_cast<VisibilityState>(m_cells[index(gridX, gridZ)]);
 }
 
 bool VisibilityService::isVisibleWorld(float worldX, float worldZ) const {
-  if (!m_initialized)
+  if (!m_initialized) {
     return true;
+  }
   const int gx = worldToGrid(worldX, m_halfWidth);
   const int gz = worldToGrid(worldZ, m_halfHeight);
-  if (!inBounds(gx, gz))
+  if (!inBounds(gx, gz)) {
     return false;
+  }
   std::shared_lock lock(m_cellsMutex);
   return m_cells[index(gx, gz)] ==
          static_cast<std::uint8_t>(VisibilityState::Visible);
 }
 
 bool VisibilityService::isExploredWorld(float worldX, float worldZ) const {
-  if (!m_initialized)
+  if (!m_initialized) {
     return true;
+  }
   const int gx = worldToGrid(worldX, m_halfWidth);
   const int gz = worldToGrid(worldZ, m_halfHeight);
-  if (!inBounds(gx, gz))
+  if (!inBounds(gx, gz)) {
     return false;
+  }
   std::shared_lock lock(m_cellsMutex);
   const auto state = m_cells[index(gx, gz)];
   return state == static_cast<std::uint8_t>(VisibilityState::Visible) ||

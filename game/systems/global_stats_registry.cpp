@@ -142,8 +142,9 @@ void GlobalStatsRegistry::rebuildFromWorld(Engine::Core::World &world) {
   auto entities = world.getEntitiesWith<Engine::Core::UnitComponent>();
   for (auto *e : entities) {
     auto *unit = e->getComponent<Engine::Core::UnitComponent>();
-    if (!unit || unit->health <= 0)
+    if (!unit || unit->health <= 0) {
       continue;
+    }
 
     auto &stats = m_playerStats[unit->ownerId];
 

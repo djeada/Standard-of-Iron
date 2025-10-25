@@ -233,12 +233,14 @@ SkirmishLoadResult SkirmishLoader::start(const QString &mapPath,
   auto &terrainService = Game::Map::TerrainService::instance();
 
   if (m_ground) {
-    if (lr.ok)
+    if (lr.ok) {
       m_ground->configure(lr.tileSize, lr.gridWidth, lr.gridHeight);
-    else
+    } else {
       m_ground->configureExtent(50.0f);
-    if (terrainService.isInitialized())
+    }
+    if (terrainService.isInitialized()) {
       m_ground->setBiome(terrainService.biomeSettings());
+    }
   }
 
   if (m_terrain) {
@@ -360,11 +362,13 @@ SkirmishLoadResult SkirmishLoader::start(const QString &mapPath,
 
   auto candidates = m_world.getEntitiesWith<Engine::Core::UnitComponent>();
   for (auto *e : candidates) {
-    if (!e)
+    if (!e) {
       continue;
+    }
     auto *u = e->getComponent<Engine::Core::UnitComponent>();
-    if (!u)
+    if (!u) {
       continue;
+    }
     if (u->spawnType == Game::Units::SpawnType::Barracks &&
         u->ownerId == playerOwnerId && u->health > 0) {
       focusEntity = e;

@@ -17,8 +17,9 @@ void AICommandApplier::apply(Engine::Core::World &world, int aiOwnerId,
     switch (command.type) {
 
     case AICommandType::MoveUnits: {
-      if (command.units.empty())
+      if (command.units.empty()) {
         break;
+      }
 
       std::vector<float> expandedX, expandedY, expandedZ;
 
@@ -32,8 +33,9 @@ void AICommandApplier::apply(Engine::Core::World &world, int aiOwnerId,
         expandedZ = command.moveTargetZ;
       }
 
-      if (expandedX.empty())
+      if (expandedX.empty()) {
         break;
+      }
 
       std::vector<Engine::Core::EntityID> ownedUnits;
       std::vector<QVector3D> ownedTargets;
@@ -43,20 +45,23 @@ void AICommandApplier::apply(Engine::Core::World &world, int aiOwnerId,
       for (std::size_t idx = 0; idx < command.units.size(); ++idx) {
         auto entityId = command.units[idx];
         auto *entity = world.getEntity(entityId);
-        if (!entity)
+        if (!entity) {
           continue;
+        }
 
         auto *unit = entity->getComponent<Engine::Core::UnitComponent>();
-        if (!unit || unit->ownerId != aiOwnerId)
+        if (!unit || unit->ownerId != aiOwnerId) {
           continue;
+        }
 
         ownedUnits.push_back(entityId);
         ownedTargets.emplace_back(expandedX[idx], expandedY[idx],
                                   expandedZ[idx]);
       }
 
-      if (ownedUnits.empty())
+      if (ownedUnits.empty()) {
         break;
+      }
 
       CommandService::MoveOptions opts;
       opts.allowDirectFallback = true;
@@ -67,26 +72,30 @@ void AICommandApplier::apply(Engine::Core::World &world, int aiOwnerId,
     }
 
     case AICommandType::AttackTarget: {
-      if (command.units.empty() || command.targetId == 0)
+      if (command.units.empty() || command.targetId == 0) {
         break;
+      }
 
       std::vector<Engine::Core::EntityID> ownedUnits;
       ownedUnits.reserve(command.units.size());
 
       for (auto entityId : command.units) {
         auto *entity = world.getEntity(entityId);
-        if (!entity)
+        if (!entity) {
           continue;
+        }
 
         auto *unit = entity->getComponent<Engine::Core::UnitComponent>();
-        if (!unit || unit->ownerId != aiOwnerId)
+        if (!unit || unit->ownerId != aiOwnerId) {
           continue;
+        }
 
         ownedUnits.push_back(entityId);
       }
 
-      if (ownedUnits.empty())
+      if (ownedUnits.empty()) {
         break;
+      }
 
       CommandService::attackTarget(world, ownedUnits, command.targetId,
                                    command.shouldChase);

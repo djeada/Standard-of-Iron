@@ -236,23 +236,27 @@ void PlantRenderer::generatePlantInstances() {
     int iz = std::clamp(int(std::floor(sgz + 0.5f)), 0, m_height - 1);
     int normalIdx = iz * m_width + ix;
 
-    if (m_terrainTypes[normalIdx] == Game::Map::TerrainType::Mountain)
+    if (m_terrainTypes[normalIdx] == Game::Map::TerrainType::Mountain) {
       return false;
+    }
 
-    if (m_terrainTypes[normalIdx] == Game::Map::TerrainType::River)
+    if (m_terrainTypes[normalIdx] == Game::Map::TerrainType::River) {
       return false;
+    }
 
     constexpr int kRiverMargin = 1;
     for (int dz = -kRiverMargin; dz <= kRiverMargin; ++dz) {
       for (int dx = -kRiverMargin; dx <= kRiverMargin; ++dx) {
-        if (dx == 0 && dz == 0)
+        if (dx == 0 && dz == 0) {
           continue;
+        }
         int nx = ix + dx;
         int nz = iz + dz;
         if (nx >= 0 && nx < m_width && nz >= 0 && nz < m_height) {
           int nIdx = nz * m_width + nx;
-          if (m_terrainTypes[nIdx] == Game::Map::TerrainType::River)
+          if (m_terrainTypes[nIdx] == Game::Map::TerrainType::River) {
             return false;
+          }
         }
       }
     }
@@ -260,8 +264,9 @@ void PlantRenderer::generatePlantInstances() {
     QVector3D normal = normals[normalIdx];
     float slope = 1.0f - std::clamp(normal.y(), 0.0f, 1.0f);
 
-    if (slope > 0.65f)
+    if (slope > 0.65f) {
       return false;
+    }
 
     float worldX = (gx - halfWidth) * m_tileSize;
     float worldZ = (gz - halfHeight) * m_tileSize;
@@ -313,13 +318,15 @@ void PlantRenderer::generatePlantInstances() {
       int idx = z * m_width + x;
 
       if (m_terrainTypes[idx] == Game::Map::TerrainType::Mountain ||
-          m_terrainTypes[idx] == Game::Map::TerrainType::River)
+          m_terrainTypes[idx] == Game::Map::TerrainType::River) {
         continue;
+      }
 
       QVector3D normal = normals[idx];
       float slope = 1.0f - std::clamp(normal.y(), 0.0f, 1.0f);
-      if (slope > 0.65f)
+      if (slope > 0.65f) {
         continue;
+      }
 
       uint32_t state = hashCoords(
           x, z, m_noiseSeed ^ 0x8F3C5A7Eu ^ static_cast<uint32_t>(idx));
@@ -330,8 +337,9 @@ void PlantRenderer::generatePlantInstances() {
       float clusterNoise =
           valueNoise(worldX * 0.05f, worldZ * 0.05f, m_noiseSeed ^ 0x4B9D2F1Au);
 
-      if (clusterNoise < 0.45f)
+      if (clusterNoise < 0.45f) {
         continue;
+      }
 
       cellsPassed++;
 
@@ -343,8 +351,9 @@ void PlantRenderer::generatePlantInstances() {
       float effectiveDensity = plantDensity * densityMult * 2.0f;
       int plantCount = static_cast<int>(std::floor(effectiveDensity));
       float frac = effectiveDensity - float(plantCount);
-      if (rand01(state) < frac)
+      if (rand01(state) < frac) {
         plantCount += 1;
+      }
 
       for (int i = 0; i < plantCount; ++i) {
         float gx = float(x) + rand01(state) * 3.0f;

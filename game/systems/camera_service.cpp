@@ -85,19 +85,22 @@ void CameraService::resetCamera(Render::GL::Camera &camera,
                                 unsigned int playerUnitId) {
   Engine::Core::Entity *focusEntity = nullptr;
   for (auto *e : world.getEntitiesWith<Engine::Core::UnitComponent>()) {
-    if (!e)
+    if (!e) {
       continue;
+    }
     auto *u = e->getComponent<Engine::Core::UnitComponent>();
-    if (!u)
+    if (!u) {
       continue;
+    }
     if (u->spawnType == Game::Units::SpawnType::Barracks &&
         u->ownerId == localOwnerId && u->health > 0) {
       focusEntity = e;
       break;
     }
   }
-  if (!focusEntity && playerUnitId != 0)
+  if (!focusEntity && playerUnitId != 0) {
     focusEntity = world.getEntity(playerUnitId);
+  }
 
   if (focusEntity) {
     snapToEntity(camera, *focusEntity);

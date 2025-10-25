@@ -64,42 +64,59 @@ void Backend::initialize() {
   m_archerShader = m_shaderCache->get(QStringLiteral("archer"));
   m_knightShader = m_shaderCache->get(QStringLiteral("knight"));
   m_spearmanShader = m_shaderCache->get(QStringLiteral("spearman"));
-  if (!m_basicShader)
+  if (!m_basicShader) {
     qWarning() << "Backend: basic shader missing";
-  if (!m_gridShader)
+  }
+  if (!m_gridShader) {
     qWarning() << "Backend: grid shader missing";
-  if (!m_cylinderShader)
+  }
+  if (!m_cylinderShader) {
     qWarning() << "Backend: cylinder shader missing";
-  if (!m_fogShader)
+  }
+  if (!m_fogShader) {
     qWarning() << "Backend: fog shader missing";
-  if (!m_grassShader)
+  }
+  if (!m_grassShader) {
     qWarning() << "Backend: grass shader missing";
-  if (!m_stoneShader)
+  }
+  if (!m_stoneShader) {
     qWarning() << "Backend: stone shader missing";
-  if (!m_plantShader)
+  }
+  if (!m_plantShader) {
     qWarning()
         << "Backend: plant shader missing - check plant_instanced.vert/frag";
-  if (!m_pineShader)
+  }
+  if (!m_pineShader) {
     qWarning()
         << "Backend: pine shader missing - check pine_instanced.vert/frag";
-  if (!m_firecampShader)
+  }
+  if (!m_firecampShader) {
     qWarning() << "Backend: firecamp shader missing - check firecamp.vert/frag";
-  if (!m_groundShader)
+  }
+  if (!m_groundShader) {
     qWarning() << "Backend: ground_plane shader missing";
-  if (!m_terrainShader)
+  }
+  if (!m_terrainShader) {
     qWarning() << "Backend: terrain shader missing";
-  if (!m_riverShader)
+  }
+  if (!m_riverShader) {
     qWarning() << "Backend: river shader missing";
-  if (!m_riverbankShader)
+  }
+  if (!m_riverbankShader) {
     qWarning() << "Backend: riverbank shader missing";
-  if (!m_bridgeShader)
+  }
+  if (!m_bridgeShader) {
     qWarning() << "Backend: bridge shader missing";
-  if (!m_archerShader)
+  }
+  if (!m_archerShader) {
     qWarning() << "Backend: archer shader missing";
-  if (!m_knightShader)
+  }
+  if (!m_knightShader) {
     qWarning() << "Backend: knight shader missing";
-  if (!m_spearmanShader)
+  }
+  if (!m_spearmanShader) {
     qWarning() << "Backend: spearman shader missing";
+  }
 
   cacheBasicUniforms();
   cacheArcherUniforms();
@@ -164,8 +181,9 @@ void Backend::setClearColor(float r, float g, float b, float a) {
 }
 
 void Backend::execute(const DrawQueue &queue, const Camera &cam) {
-  if (!m_basicShader)
+  if (!m_basicShader) {
     return;
+  }
 
   const QMatrix4x4 viewProj = cam.getProjectionMatrix() * cam.getViewMatrix();
 
@@ -194,8 +212,9 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       const std::size_t instanceCount = m_cylinderScratch.size();
       if (instanceCount > 0 && m_cylinderShader && m_cylinderVao) {
         glDepthMask(GL_TRUE);
-        if (glIsEnabled(GL_POLYGON_OFFSET_FILL))
+        if (glIsEnabled(GL_POLYGON_OFFSET_FILL)) {
           glDisable(GL_POLYGON_OFFSET_FILL);
+        }
         if (m_lastBoundShader != m_cylinderShader) {
           m_cylinderShader->use();
           m_lastBoundShader = m_cylinderShader;
@@ -224,8 +243,9 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
           m_fogScratch[idx] = gpu;
         }
         glDepthMask(GL_TRUE);
-        if (glIsEnabled(GL_POLYGON_OFFSET_FILL))
+        if (glIsEnabled(GL_POLYGON_OFFSET_FILL)) {
           glDisable(GL_POLYGON_OFFSET_FILL);
+        }
         if (m_lastBoundShader != m_fogShader) {
           m_fogShader->use();
           m_lastBoundShader = m_fogShader;
@@ -243,15 +263,17 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
     case GrassBatchCmdIndex: {
       const auto &grass = std::get<GrassBatchCmdIndex>(cmd);
       if (!grass.instanceBuffer || grass.instanceCount == 0 || !m_grassShader ||
-          !m_grassVao || m_grassVertexCount == 0)
+          !m_grassVao || m_grassVertexCount == 0) {
         break;
+      }
 
       DepthMaskScope depthMask(false);
       BlendScope blend(true);
       glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
       GLboolean prevCull = glIsEnabled(GL_CULL_FACE);
-      if (prevCull)
+      if (prevCull) {
         glDisable(GL_CULL_FACE);
+      }
 
       if (m_lastBoundShader != m_grassShader) {
         m_grassShader->use();
@@ -279,8 +301,9 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       }
       if (m_grassUniforms.lightDir != Shader::InvalidUniform) {
         QVector3D lightDir = grass.params.lightDirection;
-        if (!lightDir.isNull())
+        if (!lightDir.isNull()) {
           lightDir.normalize();
+        }
         m_grassShader->setUniform(m_grassUniforms.lightDir, lightDir);
       }
 
@@ -302,16 +325,18 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
                             static_cast<GLsizei>(grass.instanceCount));
       glBindVertexArray(0);
 
-      if (prevCull)
+      if (prevCull) {
         glEnable(GL_CULL_FACE);
+      }
 
       break;
     }
     case StoneBatchCmdIndex: {
       const auto &stone = std::get<StoneBatchCmdIndex>(cmd);
       if (!stone.instanceBuffer || stone.instanceCount == 0 || !m_stoneShader ||
-          !m_stoneVao || m_stoneIndexCount == 0)
+          !m_stoneVao || m_stoneIndexCount == 0) {
         break;
+      }
 
       DepthMaskScope depthMask(true);
       BlendScope blend(false);
@@ -327,8 +352,9 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       }
       if (m_stoneUniforms.lightDirection != Shader::InvalidUniform) {
         QVector3D lightDir = stone.params.lightDirection;
-        if (!lightDir.isNull())
+        if (!lightDir.isNull()) {
           lightDir.normalize();
+        }
         m_stoneShader->setUniform(m_stoneUniforms.lightDirection, lightDir);
       }
 
@@ -364,8 +390,9 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       BlendScope blend(true);
       glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
       GLboolean prevCull = glIsEnabled(GL_CULL_FACE);
-      if (prevCull)
+      if (prevCull) {
         glDisable(GL_CULL_FACE);
+      }
 
       if (m_lastBoundShader != m_plantShader) {
         m_plantShader->use();
@@ -389,8 +416,9 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       }
       if (m_plantUniforms.lightDirection != Shader::InvalidUniform) {
         QVector3D lightDir = plant.params.lightDirection;
-        if (!lightDir.isNull())
+        if (!lightDir.isNull()) {
           lightDir.normalize();
+        }
         m_plantShader->setUniform(m_plantUniforms.lightDirection, lightDir);
       }
 
@@ -413,8 +441,9 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
                               static_cast<GLsizei>(plant.instanceCount));
       glBindVertexArray(0);
 
-      if (prevCull)
+      if (prevCull) {
         glEnable(GL_CULL_FACE);
+      }
 
       break;
     }
@@ -431,8 +460,9 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       BlendScope blend(true);
       glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
       GLboolean prevCull = glIsEnabled(GL_CULL_FACE);
-      if (prevCull)
+      if (prevCull) {
         glDisable(GL_CULL_FACE);
+      }
 
       if (m_lastBoundShader != m_pineShader) {
         m_pineShader->use();
@@ -456,8 +486,9 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       }
       if (m_pineUniforms.lightDirection != Shader::InvalidUniform) {
         QVector3D lightDir = pine.params.lightDirection;
-        if (!lightDir.isNull())
+        if (!lightDir.isNull()) {
           lightDir.normalize();
+        }
         m_pineShader->setUniform(m_pineUniforms.lightDirection, lightDir);
       }
 
@@ -480,8 +511,9 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
                               static_cast<GLsizei>(pine.instanceCount));
       glBindVertexArray(0);
 
-      if (prevCull)
+      if (prevCull) {
         glEnable(GL_CULL_FACE);
+      }
 
       break;
     }
@@ -498,8 +530,9 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       BlendScope blend(true);
       glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
       GLboolean prevCull = glIsEnabled(GL_CULL_FACE);
-      if (prevCull)
+      if (prevCull) {
         glDisable(GL_CULL_FACE);
+      }
 
       if (m_lastBoundShader != m_firecampShader) {
         m_firecampShader->use();
@@ -570,8 +603,9 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
                               static_cast<GLsizei>(firecamp.instanceCount));
       glBindVertexArray(0);
 
-      if (prevCull)
+      if (prevCull) {
         glEnable(GL_CULL_FACE);
+      }
 
       break;
     }
@@ -581,8 +615,9 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       Shader *activeShader =
           terrain.params.isGroundPlane ? m_groundShader : m_terrainShader;
 
-      if (!terrain.mesh || !activeShader)
+      if (!terrain.mesh || !activeShader) {
         break;
+      }
 
       if (m_lastBoundShader != activeShader) {
         activeShader->use();
@@ -594,142 +629,183 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
 
       if (terrain.params.isGroundPlane) {
 
-        if (m_groundUniforms.mvp != Shader::InvalidUniform)
+        if (m_groundUniforms.mvp != Shader::InvalidUniform) {
           activeShader->setUniform(m_groundUniforms.mvp, mvp);
-        if (m_groundUniforms.model != Shader::InvalidUniform)
+        }
+        if (m_groundUniforms.model != Shader::InvalidUniform) {
           activeShader->setUniform(m_groundUniforms.model, terrain.model);
-        if (m_groundUniforms.grassPrimary != Shader::InvalidUniform)
+        }
+        if (m_groundUniforms.grassPrimary != Shader::InvalidUniform) {
           activeShader->setUniform(m_groundUniforms.grassPrimary,
                                    terrain.params.grassPrimary);
-        if (m_groundUniforms.grassSecondary != Shader::InvalidUniform)
+        }
+        if (m_groundUniforms.grassSecondary != Shader::InvalidUniform) {
           activeShader->setUniform(m_groundUniforms.grassSecondary,
                                    terrain.params.grassSecondary);
-        if (m_groundUniforms.grassDry != Shader::InvalidUniform)
+        }
+        if (m_groundUniforms.grassDry != Shader::InvalidUniform) {
           activeShader->setUniform(m_groundUniforms.grassDry,
                                    terrain.params.grassDry);
-        if (m_groundUniforms.soilColor != Shader::InvalidUniform)
+        }
+        if (m_groundUniforms.soilColor != Shader::InvalidUniform) {
           activeShader->setUniform(m_groundUniforms.soilColor,
                                    terrain.params.soilColor);
-        if (m_groundUniforms.tint != Shader::InvalidUniform)
+        }
+        if (m_groundUniforms.tint != Shader::InvalidUniform) {
           activeShader->setUniform(m_groundUniforms.tint, terrain.params.tint);
-        if (m_groundUniforms.noiseOffset != Shader::InvalidUniform)
+        }
+        if (m_groundUniforms.noiseOffset != Shader::InvalidUniform) {
           activeShader->setUniform(m_groundUniforms.noiseOffset,
                                    terrain.params.noiseOffset);
-        if (m_groundUniforms.tileSize != Shader::InvalidUniform)
+        }
+        if (m_groundUniforms.tileSize != Shader::InvalidUniform) {
           activeShader->setUniform(m_groundUniforms.tileSize,
                                    terrain.params.tileSize);
-        if (m_groundUniforms.macroNoiseScale != Shader::InvalidUniform)
+        }
+        if (m_groundUniforms.macroNoiseScale != Shader::InvalidUniform) {
           activeShader->setUniform(m_groundUniforms.macroNoiseScale,
                                    terrain.params.macroNoiseScale);
-        if (m_groundUniforms.detailNoiseScale != Shader::InvalidUniform)
+        }
+        if (m_groundUniforms.detailNoiseScale != Shader::InvalidUniform) {
           activeShader->setUniform(m_groundUniforms.detailNoiseScale,
                                    terrain.params.detailNoiseScale);
-        if (m_groundUniforms.soilBlendHeight != Shader::InvalidUniform)
+        }
+        if (m_groundUniforms.soilBlendHeight != Shader::InvalidUniform) {
           activeShader->setUniform(m_groundUniforms.soilBlendHeight,
                                    terrain.params.soilBlendHeight);
-        if (m_groundUniforms.soilBlendSharpness != Shader::InvalidUniform)
+        }
+        if (m_groundUniforms.soilBlendSharpness != Shader::InvalidUniform) {
           activeShader->setUniform(m_groundUniforms.soilBlendSharpness,
                                    terrain.params.soilBlendSharpness);
-        if (m_groundUniforms.ambientBoost != Shader::InvalidUniform)
+        }
+        if (m_groundUniforms.ambientBoost != Shader::InvalidUniform) {
           activeShader->setUniform(m_groundUniforms.ambientBoost,
                                    terrain.params.ambientBoost);
+        }
         if (m_groundUniforms.lightDir != Shader::InvalidUniform) {
           QVector3D lightDir = terrain.params.lightDirection;
-          if (!lightDir.isNull())
+          if (!lightDir.isNull()) {
             lightDir.normalize();
+          }
           activeShader->setUniform(m_groundUniforms.lightDir, lightDir);
         }
       } else {
 
-        if (m_terrainUniforms.mvp != Shader::InvalidUniform)
+        if (m_terrainUniforms.mvp != Shader::InvalidUniform) {
           activeShader->setUniform(m_terrainUniforms.mvp, mvp);
-        if (m_terrainUniforms.model != Shader::InvalidUniform)
+        }
+        if (m_terrainUniforms.model != Shader::InvalidUniform) {
           activeShader->setUniform(m_terrainUniforms.model, terrain.model);
-        if (m_terrainUniforms.grassPrimary != Shader::InvalidUniform)
+        }
+        if (m_terrainUniforms.grassPrimary != Shader::InvalidUniform) {
           activeShader->setUniform(m_terrainUniforms.grassPrimary,
                                    terrain.params.grassPrimary);
-        if (m_terrainUniforms.grassSecondary != Shader::InvalidUniform)
+        }
+        if (m_terrainUniforms.grassSecondary != Shader::InvalidUniform) {
           activeShader->setUniform(m_terrainUniforms.grassSecondary,
                                    terrain.params.grassSecondary);
-        if (m_terrainUniforms.grassDry != Shader::InvalidUniform)
+        }
+        if (m_terrainUniforms.grassDry != Shader::InvalidUniform) {
           activeShader->setUniform(m_terrainUniforms.grassDry,
                                    terrain.params.grassDry);
-        if (m_terrainUniforms.soilColor != Shader::InvalidUniform)
+        }
+        if (m_terrainUniforms.soilColor != Shader::InvalidUniform) {
           activeShader->setUniform(m_terrainUniforms.soilColor,
                                    terrain.params.soilColor);
-        if (m_terrainUniforms.rockLow != Shader::InvalidUniform)
+        }
+        if (m_terrainUniforms.rockLow != Shader::InvalidUniform) {
           activeShader->setUniform(m_terrainUniforms.rockLow,
                                    terrain.params.rockLow);
-        if (m_terrainUniforms.rockHigh != Shader::InvalidUniform)
+        }
+        if (m_terrainUniforms.rockHigh != Shader::InvalidUniform) {
           activeShader->setUniform(m_terrainUniforms.rockHigh,
                                    terrain.params.rockHigh);
-        if (m_terrainUniforms.tint != Shader::InvalidUniform)
+        }
+        if (m_terrainUniforms.tint != Shader::InvalidUniform) {
           activeShader->setUniform(m_terrainUniforms.tint, terrain.params.tint);
-        if (m_terrainUniforms.noiseOffset != Shader::InvalidUniform)
+        }
+        if (m_terrainUniforms.noiseOffset != Shader::InvalidUniform) {
           activeShader->setUniform(m_terrainUniforms.noiseOffset,
                                    terrain.params.noiseOffset);
-        if (m_terrainUniforms.tileSize != Shader::InvalidUniform)
+        }
+        if (m_terrainUniforms.tileSize != Shader::InvalidUniform) {
           activeShader->setUniform(m_terrainUniforms.tileSize,
                                    terrain.params.tileSize);
-        if (m_terrainUniforms.macroNoiseScale != Shader::InvalidUniform)
+        }
+        if (m_terrainUniforms.macroNoiseScale != Shader::InvalidUniform) {
           activeShader->setUniform(m_terrainUniforms.macroNoiseScale,
                                    terrain.params.macroNoiseScale);
-        if (m_terrainUniforms.detailNoiseScale != Shader::InvalidUniform)
+        }
+        if (m_terrainUniforms.detailNoiseScale != Shader::InvalidUniform) {
           activeShader->setUniform(m_terrainUniforms.detailNoiseScale,
                                    terrain.params.detailNoiseScale);
-        if (m_terrainUniforms.slopeRockThreshold != Shader::InvalidUniform)
+        }
+        if (m_terrainUniforms.slopeRockThreshold != Shader::InvalidUniform) {
           activeShader->setUniform(m_terrainUniforms.slopeRockThreshold,
                                    terrain.params.slopeRockThreshold);
-        if (m_terrainUniforms.slopeRockSharpness != Shader::InvalidUniform)
+        }
+        if (m_terrainUniforms.slopeRockSharpness != Shader::InvalidUniform) {
           activeShader->setUniform(m_terrainUniforms.slopeRockSharpness,
                                    terrain.params.slopeRockSharpness);
-        if (m_terrainUniforms.soilBlendHeight != Shader::InvalidUniform)
+        }
+        if (m_terrainUniforms.soilBlendHeight != Shader::InvalidUniform) {
           activeShader->setUniform(m_terrainUniforms.soilBlendHeight,
                                    terrain.params.soilBlendHeight);
-        if (m_terrainUniforms.soilBlendSharpness != Shader::InvalidUniform)
+        }
+        if (m_terrainUniforms.soilBlendSharpness != Shader::InvalidUniform) {
           activeShader->setUniform(m_terrainUniforms.soilBlendSharpness,
                                    terrain.params.soilBlendSharpness);
-        if (m_terrainUniforms.heightNoiseStrength != Shader::InvalidUniform)
+        }
+        if (m_terrainUniforms.heightNoiseStrength != Shader::InvalidUniform) {
           activeShader->setUniform(m_terrainUniforms.heightNoiseStrength,
                                    terrain.params.heightNoiseStrength);
-        if (m_terrainUniforms.heightNoiseFrequency != Shader::InvalidUniform)
+        }
+        if (m_terrainUniforms.heightNoiseFrequency != Shader::InvalidUniform) {
           activeShader->setUniform(m_terrainUniforms.heightNoiseFrequency,
                                    terrain.params.heightNoiseFrequency);
-        if (m_terrainUniforms.ambientBoost != Shader::InvalidUniform)
+        }
+        if (m_terrainUniforms.ambientBoost != Shader::InvalidUniform) {
           activeShader->setUniform(m_terrainUniforms.ambientBoost,
                                    terrain.params.ambientBoost);
-        if (m_terrainUniforms.rockDetailStrength != Shader::InvalidUniform)
+        }
+        if (m_terrainUniforms.rockDetailStrength != Shader::InvalidUniform) {
           activeShader->setUniform(m_terrainUniforms.rockDetailStrength,
                                    terrain.params.rockDetailStrength);
+        }
         if (m_terrainUniforms.lightDir != Shader::InvalidUniform) {
           QVector3D lightDir = terrain.params.lightDirection;
-          if (!lightDir.isNull())
+          if (!lightDir.isNull()) {
             lightDir.normalize();
+          }
           activeShader->setUniform(m_terrainUniforms.lightDir, lightDir);
         }
       }
 
       DepthMaskScope depthMask(terrain.depthWrite);
       std::unique_ptr<PolygonOffsetScope> polyScope;
-      if (terrain.depthBias != 0.0f)
+      if (terrain.depthBias != 0.0f) {
         polyScope = std::make_unique<PolygonOffsetScope>(terrain.depthBias,
                                                          terrain.depthBias);
+      }
 
       terrain.mesh->draw();
       break;
     }
     case MeshCmdIndex: {
       const auto &it = std::get<MeshCmdIndex>(cmd);
-      if (!it.mesh)
+      if (!it.mesh) {
         break;
+      }
 
       glDepthMask(GL_TRUE);
-      if (glIsEnabled(GL_POLYGON_OFFSET_FILL))
+      if (glIsEnabled(GL_POLYGON_OFFSET_FILL)) {
         glDisable(GL_POLYGON_OFFSET_FILL);
+      }
 
       Shader *activeShader = it.shader ? it.shader : m_basicShader;
-      if (!activeShader)
+      if (!activeShader) {
         break;
+      }
 
       if (activeShader == m_riverShader) {
         if (m_lastBoundShader != activeShader) {
@@ -781,12 +857,13 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       }
 
       BasicUniforms *uniforms = &m_basicUniforms;
-      if (activeShader == m_archerShader)
+      if (activeShader == m_archerShader) {
         uniforms = &m_archerUniforms;
-      else if (activeShader == m_knightShader)
+      } else if (activeShader == m_knightShader) {
         uniforms = &m_knightUniforms;
-      else if (activeShader == m_spearmanShader)
+      } else if (activeShader == m_spearmanShader) {
         uniforms = &m_spearmanUniforms;
+      }
 
       if (m_lastBoundShader != activeShader) {
         activeShader->use();
@@ -812,8 +889,9 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       break;
     }
     case GridCmdIndex: {
-      if (!m_gridShader)
+      if (!m_gridShader) {
         break;
+      }
       const auto &gc = std::get<GridCmdIndex>(cmd);
 
       if (m_lastBoundShader != m_gridShader) {
@@ -829,16 +907,18 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       m_gridShader->setUniform(m_gridUniforms.thickness, gc.thickness);
 
       if (m_resources) {
-        if (auto *plane = m_resources->ground())
+        if (auto *plane = m_resources->ground()) {
           plane->draw();
+        }
       }
       break;
     }
     case SelectionRingCmdIndex: {
       const auto &sc = std::get<SelectionRingCmdIndex>(cmd);
       Mesh *ring = Render::Geom::SelectionRing::get();
-      if (!ring)
+      if (!ring) {
         break;
+      }
 
       if (m_lastBoundShader != m_basicShader) {
         m_basicShader->use();
@@ -875,8 +955,9 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
     case SelectionSmokeCmdIndex: {
       const auto &sm = std::get<SelectionSmokeCmdIndex>(cmd);
       Mesh *disc = Render::Geom::SelectionDisc::get();
-      if (!disc)
+      if (!disc) {
         break;
+      }
 
       if (m_lastBoundShader != m_basicShader) {
         m_basicShader->use();
@@ -915,8 +996,9 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
 }
 
 void Backend::cacheBasicUniforms() {
-  if (!m_basicShader)
+  if (!m_basicShader) {
     return;
+  }
 
   m_basicUniforms.mvp = m_basicShader->uniformHandle("u_mvp");
   m_basicUniforms.model = m_basicShader->uniformHandle("u_model");
@@ -927,8 +1009,9 @@ void Backend::cacheBasicUniforms() {
 }
 
 void Backend::cacheArcherUniforms() {
-  if (!m_archerShader)
+  if (!m_archerShader) {
     return;
+  }
 
   m_archerUniforms.mvp = m_archerShader->uniformHandle("u_mvp");
   m_archerUniforms.model = m_archerShader->uniformHandle("u_model");
@@ -939,8 +1022,9 @@ void Backend::cacheArcherUniforms() {
 }
 
 void Backend::cacheKnightUniforms() {
-  if (!m_knightShader)
+  if (!m_knightShader) {
     return;
+  }
 
   m_knightUniforms.mvp = m_knightShader->uniformHandle("u_mvp");
   m_knightUniforms.model = m_knightShader->uniformHandle("u_model");
@@ -951,8 +1035,9 @@ void Backend::cacheKnightUniforms() {
 }
 
 void Backend::cacheSpearmanUniforms() {
-  if (!m_spearmanShader)
+  if (!m_spearmanShader) {
     return;
+  }
 
   m_spearmanUniforms.mvp = m_spearmanShader->uniformHandle("u_mvp");
   m_spearmanUniforms.model = m_spearmanShader->uniformHandle("u_model");
@@ -964,8 +1049,9 @@ void Backend::cacheSpearmanUniforms() {
 }
 
 void Backend::cacheGridUniforms() {
-  if (!m_gridShader)
+  if (!m_gridShader) {
     return;
+  }
 
   m_gridUniforms.mvp = m_gridShader->uniformHandle("u_mvp");
   m_gridUniforms.model = m_gridShader->uniformHandle("u_model");
@@ -976,15 +1062,17 @@ void Backend::cacheGridUniforms() {
 }
 
 void Backend::cacheCylinderUniforms() {
-  if (!m_cylinderShader)
+  if (!m_cylinderShader) {
     return;
+  }
 
   m_cylinderUniforms.viewProj = m_cylinderShader->uniformHandle("u_viewProj");
 }
 
 void Backend::cacheFogUniforms() {
-  if (!m_fogShader)
+  if (!m_fogShader) {
     return;
+  }
 
   m_fogUniforms.viewProj = m_fogShader->uniformHandle("u_viewProj");
 }
@@ -994,13 +1082,15 @@ void Backend::initializeCylinderPipeline() {
   shutdownCylinderPipeline();
 
   Mesh *unit = getUnitCylinder();
-  if (!unit)
+  if (!unit) {
     return;
+  }
 
   const auto &vertices = unit->getVertices();
   const auto &indices = unit->getIndices();
-  if (vertices.empty() || indices.empty())
+  if (vertices.empty() || indices.empty()) {
     return;
+  }
 
   glGenVertexArrays(1, &m_cylinderVao);
   glBindVertexArray(m_cylinderVao);
@@ -1108,8 +1198,9 @@ void Backend::shutdownCylinderPipeline() {
 }
 
 void Backend::uploadCylinderInstances(std::size_t count) {
-  if (count == 0)
+  if (count == 0) {
     return;
+  }
 
   initializeOpenGLFunctions();
 
@@ -1126,8 +1217,9 @@ void Backend::uploadCylinderInstances(std::size_t count) {
     return;
   }
 
-  if (!m_cylinderInstanceBuffer)
+  if (!m_cylinderInstanceBuffer) {
     return;
+  }
 
   glBindBuffer(GL_ARRAY_BUFFER, m_cylinderInstanceBuffer);
   if (count > m_cylinderInstanceCapacity) {
@@ -1145,8 +1237,9 @@ void Backend::uploadCylinderInstances(std::size_t count) {
 }
 
 void Backend::drawCylinders(std::size_t count) {
-  if (!m_cylinderVao || m_cylinderIndexCount == 0 || count == 0)
+  if (!m_cylinderVao || m_cylinderIndexCount == 0 || count == 0) {
     return;
+  }
 
   initializeOpenGLFunctions();
   glBindVertexArray(m_cylinderVao);
@@ -1253,8 +1346,9 @@ void Backend::shutdownFogPipeline() {
 }
 
 void Backend::uploadFogInstances(std::size_t count) {
-  if (!m_fogInstanceBuffer || count == 0)
+  if (!m_fogInstanceBuffer || count == 0) {
     return;
+  }
 
   initializeOpenGLFunctions();
   glBindBuffer(GL_ARRAY_BUFFER, m_fogInstanceBuffer);
@@ -1272,8 +1366,9 @@ void Backend::uploadFogInstances(std::size_t count) {
 }
 
 void Backend::drawFog(std::size_t count) {
-  if (!m_fogVao || m_fogIndexCount == 0 || count == 0)
+  if (!m_fogVao || m_fogIndexCount == 0 || count == 0) {
     return;
+  }
 
   initializeOpenGLFunctions();
   glBindVertexArray(m_fogVao);
@@ -1283,8 +1378,9 @@ void Backend::drawFog(std::size_t count) {
 }
 
 void Backend::cacheGrassUniforms() {
-  if (!m_grassShader)
+  if (!m_grassShader) {
     return;
+  }
 
   m_grassUniforms.viewProj = m_grassShader->uniformHandle("u_viewProj");
   m_grassUniforms.time = m_grassShader->uniformHandle("u_time");
@@ -1295,8 +1391,9 @@ void Backend::cacheGrassUniforms() {
 }
 
 void Backend::cacheGroundUniforms() {
-  if (!m_groundShader)
+  if (!m_groundShader) {
     return;
+  }
 
   m_groundUniforms.mvp = m_groundShader->uniformHandle("u_mvp");
   m_groundUniforms.model = m_groundShader->uniformHandle("u_model");
@@ -1323,8 +1420,9 @@ void Backend::cacheGroundUniforms() {
 }
 
 void Backend::cacheTerrainUniforms() {
-  if (!m_terrainShader)
+  if (!m_terrainShader) {
     return;
+  }
 
   m_terrainUniforms.mvp = m_terrainShader->uniformHandle("u_mvp");
   m_terrainUniforms.model = m_terrainShader->uniformHandle("u_model");
@@ -1364,8 +1462,9 @@ void Backend::cacheTerrainUniforms() {
 }
 
 void Backend::cacheRiverUniforms() {
-  if (!m_riverShader)
+  if (!m_riverShader) {
     return;
+  }
 
   m_riverUniforms.model = m_riverShader->uniformHandle("model");
   m_riverUniforms.view = m_riverShader->uniformHandle("view");
@@ -1374,8 +1473,9 @@ void Backend::cacheRiverUniforms() {
 }
 
 void Backend::cacheRiverbankUniforms() {
-  if (!m_riverbankShader)
+  if (!m_riverbankShader) {
     return;
+  }
 
   m_riverbankUniforms.model = m_riverbankShader->uniformHandle("model");
   m_riverbankUniforms.view = m_riverbankShader->uniformHandle("view");
@@ -1385,8 +1485,9 @@ void Backend::cacheRiverbankUniforms() {
 }
 
 void Backend::cacheBridgeUniforms() {
-  if (!m_bridgeShader)
+  if (!m_bridgeShader) {
     return;
+  }
 
   m_bridgeUniforms.mvp = m_bridgeShader->uniformHandle("u_mvp");
   m_bridgeUniforms.model = m_bridgeShader->uniformHandle("u_model");

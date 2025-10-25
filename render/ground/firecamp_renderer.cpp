@@ -290,8 +290,9 @@ void FireCampRenderer::generateFireCampInstances() {
     QVector3D normal = normals[normalIdx];
     float slope = 1.0f - std::clamp(normal.y(), 0.0f, 1.0f);
 
-    if (slope > 0.3f)
+    if (slope > 0.3f) {
       return false;
+    }
 
     float worldX = (gx - halfWidth) * m_tileSize;
     float worldZ = (gz - halfHeight) * m_tileSize;
@@ -323,8 +324,9 @@ void FireCampRenderer::generateFireCampInstances() {
 
       QVector3D normal = normals[idx];
       float slope = 1.0f - std::clamp(normal.y(), 0.0f, 1.0f);
-      if (slope > 0.3f)
+      if (slope > 0.3f) {
         continue;
+      }
 
       uint32_t state = hashCoords(
           x, z, m_noiseSeed ^ 0xF12ECA3Fu ^ static_cast<uint32_t>(idx));
@@ -335,8 +337,9 @@ void FireCampRenderer::generateFireCampInstances() {
       float clusterNoise =
           valueNoise(worldX * 0.02f, worldZ * 0.02f, m_noiseSeed ^ 0xCA3F12E0u);
 
-      if (clusterNoise < 0.4f)
+      if (clusterNoise < 0.4f) {
         continue;
+      }
 
       float densityMult = 1.0f;
       if (m_terrainTypes[idx] == Game::Map::TerrainType::Hill) {

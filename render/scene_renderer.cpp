@@ -27,8 +27,9 @@ Renderer::Renderer() { m_activeQueue = &m_queues[m_fillQueueIndex]; }
 Renderer::~Renderer() { shutdown(); }
 
 bool Renderer::initialize() {
-  if (!m_backend)
+  if (!m_backend) {
     m_backend = std::make_shared<Backend>();
+  }
   m_backend->initialize();
   m_entityRegistry = std::make_unique<EntityRendererRegistry>();
   registerBuiltInEntityRenderers(*m_entityRegistry);
@@ -45,13 +46,15 @@ void Renderer::beginFrame() {
     m_viewProj = m_camera->getProjectionMatrix() * m_camera->getViewMatrix();
   }
 
-  if (m_backend)
+  if (m_backend) {
     m_backend->beginFrame();
+  }
 }
 
 void Renderer::endFrame() {
-  if (m_paused.load())
+  if (m_paused.load()) {
     return;
+  }
   if (m_backend && m_camera) {
     std::swap(m_fillQueueIndex, m_renderQueueIndex);
     DrawQueue &renderQueue = m_queues[m_renderQueueIndex];
@@ -64,15 +67,17 @@ void Renderer::endFrame() {
 void Renderer::setCamera(Camera *camera) { m_camera = camera; }
 
 void Renderer::setClearColor(float r, float g, float b, float a) {
-  if (m_backend)
+  if (m_backend) {
     m_backend->setClearColor(r, g, b, a);
+  }
 }
 
 void Renderer::setViewport(int width, int height) {
   m_viewportWidth = width;
   m_viewportHeight = height;
-  if (m_backend)
+  if (m_backend) {
     m_backend->setViewport(width, height);
+  }
   if (m_camera && height > 0) {
     float aspect = float(width) / float(height);
     m_camera->setPerspective(m_camera->getFOV(), aspect, m_camera->getNear(),
@@ -81,8 +86,9 @@ void Renderer::setViewport(int width, int height) {
 }
 void Renderer::mesh(Mesh *mesh, const QMatrix4x4 &model, const QVector3D &color,
                     Texture *texture, float alpha) {
-  if (!mesh)
+  if (!mesh) {
     return;
+  }
 
   if (mesh == getUnitCylinder() && (!texture) && (!m_currentShader)) {
     QVector3D start, end;
@@ -100,8 +106,9 @@ void Renderer::mesh(Mesh *mesh, const QMatrix4x4 &model, const QVector3D &color,
   cmd.color = color;
   cmd.alpha = alpha;
   cmd.shader = m_currentShader;
-  if (m_activeQueue)
+  if (m_activeQueue) {
     m_activeQueue->submit(cmd);
+  }
 }
 
 void Renderer::cylinder(const QVector3D &start, const QVector3D &end,
@@ -112,13 +119,15 @@ void Renderer::cylinder(const QVector3D &start, const QVector3D &end,
   cmd.radius = radius;
   cmd.color = color;
   cmd.alpha = alpha;
-  if (m_activeQueue)
+  if (m_activeQueue) {
     m_activeQueue->submit(cmd);
+  }
 }
 
 void Renderer::fogBatch(const FogInstanceData *instances, std::size_t count) {
-  if (!instances || count == 0 || !m_activeQueue)
+  if (!instances || count == 0 || !m_activeQueue) {
     return;
+  }
   FogBatchCmd cmd;
   cmd.instances = instances;
   cmd.count = count;
@@ -127,8 +136,9 @@ void Renderer::fogBatch(const FogInstanceData *instances, std::size_t count) {
 
 void Renderer::grassBatch(Buffer *instanceBuffer, std::size_t instanceCount,
                           const GrassBatchParams &params) {
-  if (!instanceBuffer || instanceCount == 0 || !m_activeQueue)
+  if (!instanceBuffer || instanceCount == 0 || !m_activeQueue) {
     return;
+  }
   GrassBatchCmd cmd;
   cmd.instanceBuffer = instanceBuffer;
   cmd.instanceCount = instanceCount;
@@ -139,8 +149,9 @@ void Renderer::grassBatch(Buffer *instanceBuffer, std::size_t instanceCount,
 
 void Renderer::stoneBatch(Buffer *instanceBuffer, std::size_t instanceCount,
                           const StoneBatchParams &params) {
-  if (!instanceBuffer || instanceCount == 0 || !m_activeQueue)
+  if (!instanceBuffer || instanceCount == 0 || !m_activeQueue) {
     return;
+  }
   StoneBatchCmd cmd;
   cmd.instanceBuffer = instanceBuffer;
   cmd.instanceCount = instanceCount;
@@ -150,8 +161,9 @@ void Renderer::stoneBatch(Buffer *instanceBuffer, std::size_t instanceCount,
 
 void Renderer::plantBatch(Buffer *instanceBuffer, std::size_t instanceCount,
                           const PlantBatchParams &params) {
-  if (!instanceBuffer || instanceCount == 0 || !m_activeQueue)
+  if (!instanceBuffer || instanceCount == 0 || !m_activeQueue) {
     return;
+  }
   PlantBatchCmd cmd;
   cmd.instanceBuffer = instanceBuffer;
   cmd.instanceCount = instanceCount;
@@ -162,8 +174,9 @@ void Renderer::plantBatch(Buffer *instanceBuffer, std::size_t instanceCount,
 
 void Renderer::pineBatch(Buffer *instanceBuffer, std::size_t instanceCount,
                          const PineBatchParams &params) {
-  if (!instanceBuffer || instanceCount == 0 || !m_activeQueue)
+  if (!instanceBuffer || instanceCount == 0 || !m_activeQueue) {
     return;
+  }
   PineBatchCmd cmd;
   cmd.instanceBuffer = instanceBuffer;
   cmd.instanceCount = instanceCount;
@@ -174,8 +187,9 @@ void Renderer::pineBatch(Buffer *instanceBuffer, std::size_t instanceCount,
 
 void Renderer::firecampBatch(Buffer *instanceBuffer, std::size_t instanceCount,
                              const FireCampBatchParams &params) {
-  if (!instanceBuffer || instanceCount == 0 || !m_activeQueue)
+  if (!instanceBuffer || instanceCount == 0 || !m_activeQueue) {
     return;
+  }
   FireCampBatchCmd cmd;
   cmd.instanceBuffer = instanceBuffer;
   cmd.instanceCount = instanceCount;
@@ -188,8 +202,9 @@ void Renderer::terrainChunk(Mesh *mesh, const QMatrix4x4 &model,
                             const TerrainChunkParams &params,
                             std::uint16_t sortKey, bool depthWrite,
                             float depthBias) {
-  if (!mesh || !m_activeQueue)
+  if (!mesh || !m_activeQueue) {
     return;
+  }
   TerrainChunkCmd cmd;
   cmd.mesh = mesh;
   cmd.model = model;
@@ -208,8 +223,9 @@ void Renderer::selectionRing(const QMatrix4x4 &model, float alphaInner,
   cmd.alphaInner = alphaInner;
   cmd.alphaOuter = alphaOuter;
   cmd.color = color;
-  if (m_activeQueue)
+  if (m_activeQueue) {
     m_activeQueue->submit(cmd);
+  }
 }
 
 void Renderer::grid(const QMatrix4x4 &model, const QVector3D &color,
@@ -221,8 +237,9 @@ void Renderer::grid(const QMatrix4x4 &model, const QVector3D &color,
   cmd.cellSize = cellSize;
   cmd.thickness = thickness;
   cmd.extent = extent;
-  if (m_activeQueue)
+  if (m_activeQueue) {
     m_activeQueue->submit(cmd);
+  }
 }
 
 void Renderer::selectionSmoke(const QMatrix4x4 &model, const QVector3D &color,
@@ -232,16 +249,18 @@ void Renderer::selectionSmoke(const QMatrix4x4 &model, const QVector3D &color,
   cmd.mvp = m_viewProj * model;
   cmd.color = color;
   cmd.baseAlpha = baseAlpha;
-  if (m_activeQueue)
+  if (m_activeQueue) {
     m_activeQueue->submit(cmd);
+  }
 }
 
 void Renderer::enqueueSelectionRing(Engine::Core::Entity *,
                                     Engine::Core::TransformComponent *transform,
                                     Engine::Core::UnitComponent *unitComp,
                                     bool selected, bool hovered) {
-  if ((!selected && !hovered) || !transform)
+  if ((!selected && !hovered) || !transform) {
     return;
+  }
 
   float ringSize = 0.5f;
   float ringOffset = 0.05f;
@@ -277,10 +296,12 @@ void Renderer::enqueueSelectionRing(Engine::Core::Entity *,
 }
 
 void Renderer::renderWorld(Engine::Core::World *world) {
-  if (m_paused.load())
+  if (m_paused.load()) {
     return;
-  if (!world)
+  }
+  if (!world) {
     return;
+  }
 
   std::lock_guard<std::recursive_mutex> guard(world->getEntityMutex());
 
@@ -366,8 +387,9 @@ void Renderer::renderWorld(Engine::Core::World *world) {
         drawnByRegistry = true;
       }
     }
-    if (drawnByRegistry)
+    if (drawnByRegistry) {
       continue;
+    }
 
     Mesh *meshToDraw = nullptr;
     ResourceManager *res = resources();
@@ -391,10 +413,12 @@ void Renderer::renderWorld(Engine::Core::World *world) {
     default:
       break;
     }
-    if (!meshToDraw && res)
+    if (!meshToDraw && res) {
       meshToDraw = res->unit();
-    if (!meshToDraw && res)
+    }
+    if (!meshToDraw && res) {
       meshToDraw = res->quad();
+    }
     QVector3D color = QVector3D(renderable->color[0], renderable->color[1],
                                 renderable->color[2]);
 
