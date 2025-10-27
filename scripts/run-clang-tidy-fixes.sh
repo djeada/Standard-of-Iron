@@ -185,7 +185,7 @@ if [[ "$ALLOW_UNCOVERED" -eq 1 ]]; then
   SOURCES=("${FS_SOURCES[@]}")
 else
   # intersection: only files present in compile DB
-  while IFS= read -r F; do
+  while IFS= read -r f; do
     if grep -Fxq "$f" "$DB_REL_TXT"; then
       SOURCES+=("$f")
     fi
