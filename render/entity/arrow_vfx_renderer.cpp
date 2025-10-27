@@ -298,7 +298,7 @@ static inline void drawQuiver(const DrawContext &p, ISubmitter &out,
            C.leather, nullptr, 1.0F);
 
   float j = (hash_01(seed) - 0.5F) * 0.04F;
-  float k = (hash_01(seed ^ hash_xor_shift::k_golden_ratio) - 0.5F) * 0.04F;
+  float k = (hash_01(seed ^ HashXorShift::k_golden_ratio) - 0.5F) * 0.04F;
 
   QVector3D a1 = qTop + QVector3D(0.00F + j, 0.08F, 0.00F + k);
   out.mesh(getUnitCylinder(), cylinderBetween(p.model, qTop, a1, 0.010F),

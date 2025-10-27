@@ -140,7 +140,7 @@ void FireCampRenderer::submit(Renderer &renderer, ResourceManager *resources) {
         hash_coords(static_cast<int>(std::floor(camp_pos.x())),
                    static_cast<int>(std::floor(camp_pos.z())),
                    static_cast<uint32_t>(radius_phase.y() *
-                                         hash_constants::k_temporal_variation_frequency));
+                                         HashConstants::k_temporal_variation_frequency));
 
     const float time = params.time;
     const float char_amount =
@@ -299,7 +299,7 @@ void FireCampRenderer::generateFireCampInstances() {
     float const intensity = remap(rand_01(state), 0.8F, 1.2F);
     float const radius = remap(rand_01(state), 2.0F, 4.0F) * tile_safe;
 
-    float const phase = rand_01(state) * math_constants::k_two_pi;
+    float const phase = rand_01(state) * MathConstants::k_two_pi;
 
     float const duration = 1.0F;
 
