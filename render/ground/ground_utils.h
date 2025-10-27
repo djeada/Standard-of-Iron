@@ -8,6 +8,10 @@ namespace Render::Ground {
 
 using std::uint32_t;
 
+namespace MathConstants {
+inline constexpr float TwoPi = ::Render::GL::MathConstants::TwoPi;
+} // namespace MathConstants
+
 namespace HashConstants {
 inline constexpr uint32_t HashPrime1 = 73856093U;
 inline constexpr uint32_t HashPrime2 = 19349663U;

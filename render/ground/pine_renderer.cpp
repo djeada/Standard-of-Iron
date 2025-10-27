@@ -199,9 +199,9 @@ void PineRenderer::generatePineInstances() {
     QVector3D const brown_tint(0.35F, 0.30F, 0.20F);
     tint_color = tint_color * (1.0F - brown_mix) + brown_tint * brown_mix;
 
-    float const sway_phase = rand01(state) * 6.2831853F;
+    float const sway_phase = rand01(state) * MathConstants::TwoPi;
 
-    float const rotation = rand01(state) * 6.2831853F;
+    float const rotation = rand01(state) * MathConstants::TwoPi;
 
     float const silhouette_seed = rand01(state);
     float const needle_seed = rand01(state);
