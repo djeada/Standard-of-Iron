@@ -8,9 +8,9 @@
 namespace Render::GL {
 
 inline auto hash01(uint32_t x) -> float {
-  x ^= x << HashXorShift::Shift13;
-  x ^= x >> HashXorShift::Shift17;
-  x ^= x << HashXorShift::Shift5;
+  x ^= x << Hash::XorShiftAmount13;
+  x ^= x >> Hash::XorShiftAmount17;
+  x ^= x << Hash::XorShiftAmount5;
   return (x & BitShift::Mask24Bit) / float(BitShift::Mask24BitHex);
 }
 
