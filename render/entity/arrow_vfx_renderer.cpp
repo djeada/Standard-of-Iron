@@ -8,6 +8,7 @@
 #include "../gl/mesh.h"
 #include "../gl/primitives.h"
 #include "../gl/texture.h"
+#include "../humanoid_math.h"
 #include "archer_renderer.h"
 #include "registry.h"
 
@@ -288,13 +289,6 @@ static inline void drawQuiver(const DrawContext &p, ISubmitter &out,
                               const ArcherColors &C, const ArcherPose &P,
                               uint32_t seed) {
   using HP = HumanProportions;
-
-  auto hash01 = [](uint32_t x) {
-    x ^= x << 13;
-    x ^= x >> 17;
-    x ^= x << 5;
-    return (x & 0x00FFFFFF) / float(0x01000000);
-  };
 
   QVector3D qTop(-0.08F, HP::SHOULDER_Y + 0.10F, -0.25F);
   QVector3D q_base(-0.10F, HP::CHEST_Y, -0.22F);
