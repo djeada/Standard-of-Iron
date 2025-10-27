@@ -83,6 +83,9 @@ auto MapTransformer::applyToWorld(
         (s_player_team_overrides.find(player_id) !=
          s_player_team_overrides.end());
 
+    // Skip players not in the configuration (only when overrides are provided)
+    // This ensures only selected players spawn, while maintaining backward
+    // compatibility when no overrides are set.
     if (!s_player_team_overrides.empty() && !has_team_override) {
       continue;
     }
