@@ -1,0 +1,35 @@
+name: PR Build and Validation
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: make install
+
+      - name: Build project
+        run: make build
+
+      - name: Check code formatting
+        run: make format-check
+
+      - name: Validate shader uniforms
+        run: python3 scripts/validate_shader_uniforms.py
