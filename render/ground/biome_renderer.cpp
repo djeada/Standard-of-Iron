@@ -275,8 +275,8 @@ void BiomeRenderer::generateGrassInstances() {
 
     float const sway_strength = remap(rand_01(state), 0.75F, 1.25F);
     float const sway_speed = remap(rand_01(state), 0.85F, 1.15F);
-    float const sway_phase = rand_01(state) * math_constants::k_two_pi;
-    float const orientation = rand_01(state) * math_constants::k_two_pi;
+    float const sway_phase = rand_01(state) * MathConstants::k_two_pi;
+    float const orientation = rand_01(state) * MathConstants::k_two_pi;
 
     GrassInstanceGpu instance;
     instance.posHeight = QVector4D(world_x, world_y, world_z, height);
@@ -436,7 +436,7 @@ void BiomeRenderer::generateGrassInstances() {
               (0.45F + 0.55F * rand_01(state)) * scatter_base * tile_safe;
 
           for (int blade = 0; blade < blades; ++blade) {
-            float const angle = rand_01(state) * math_constants::k_two_pi;
+            float const angle = rand_01(state) * MathConstants::k_two_pi;
             float const radius = scatter_radius * std::sqrt(rand_01(state));
             float const gx = center_gx + std::cos(angle) * radius / tile_safe;
             float const gz = center_gz + std::sin(angle) * radius / tile_safe;
