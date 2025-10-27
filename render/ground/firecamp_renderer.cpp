@@ -140,7 +140,7 @@ void FireCampRenderer::submit(Renderer &renderer, ResourceManager *resources) {
         hashCoords(static_cast<int>(std::floor(camp_pos.x())),
                    static_cast<int>(std::floor(camp_pos.z())),
                    static_cast<uint32_t>(radius_phase.y() *
-                                         HashConstants::TemporalHashFrequency));
+                                         HashConstants::TemporalVariationFrequency));
 
     const float time = params.time;
     const float char_amount =
