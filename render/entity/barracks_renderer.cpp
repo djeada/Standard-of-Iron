@@ -7,9 +7,13 @@
 #include "../gl/primitives.h"
 #include "../gl/resources.h"
 #include "registry.h"
+#include "submitter.h"
 
 #include <QMatrix4x4>
 #include <QVector3D>
+#include <algorithm>
+#include <qmatrix4x4.h>
+#include <qvectornd.h>
 
 namespace Render::GL {
 namespace {
@@ -21,130 +25,130 @@ using Render::Geom::lerp;
 using Render::Geom::sphereAt;
 
 struct BuildingProportions {
-  static constexpr float baseWidth = 2.4f;
-  static constexpr float baseDepth = 2.0f;
-  static constexpr float baseHeight = 1.8f;
-  static constexpr float foundationHeight = 0.2f;
-  static constexpr float wallThickness = 0.08f;
-  static constexpr float beamThickness = 0.12f;
-  static constexpr float cornerPostRadius = 0.08f;
-  static constexpr float roofPitch = 0.8f;
-  static constexpr float roofOverhang = 0.15f;
-  static constexpr float thatchLayerHeight = 0.12f;
-  static constexpr float annexWidth = 1.0f;
-  static constexpr float annexDepth = 1.0f;
-  static constexpr float annexHeight = 1.2f;
-  static constexpr float annexRoofHeight = 0.5f;
-  static constexpr float doorWidth = 0.5f;
-  static constexpr float doorHeight = 0.8f;
-  static constexpr float windowWidth = 0.4f;
-  static constexpr float windowHeight = 0.5f;
-  static constexpr float chimneyWidth = 0.25f;
-  static constexpr float chimneyHeight = 1.0f;
-  static constexpr float chimneyCapSize = 0.35f;
-  static constexpr float bannerPoleHeight = 2.0f;
-  static constexpr float bannerPoleRadius = 0.05f;
-  static constexpr float bannerWidth = 0.5f;
-  static constexpr float bannerHeight = 0.6f;
+  static constexpr float base_width = 2.4F;
+  static constexpr float base_depth = 2.0F;
+  static constexpr float base_height = 1.8F;
+  static constexpr float foundation_height = 0.2F;
+  static constexpr float wall_thickness = 0.08F;
+  static constexpr float beam_thickness = 0.12F;
+  static constexpr float corner_post_radius = 0.08F;
+  static constexpr float roof_pitch = 0.8F;
+  static constexpr float roof_overhang = 0.15F;
+  static constexpr float thatch_layer_height = 0.12F;
+  static constexpr float annex_width = 1.0F;
+  static constexpr float annex_depth = 1.0F;
+  static constexpr float annex_height = 1.2F;
+  static constexpr float annex_roof_height = 0.5F;
+  static constexpr float door_width = 0.5F;
+  static constexpr float door_height = 0.8F;
+  static constexpr float window_width = 0.4F;
+  static constexpr float window_height = 0.5F;
+  static constexpr float chimney_width = 0.25F;
+  static constexpr float chimney_height = 1.0F;
+  static constexpr float chimney_cap_size = 0.35F;
+  static constexpr float banner_pole_height = 2.0F;
+  static constexpr float banner_pole_radius = 0.05F;
+  static constexpr float banner_width = 0.5F;
+  static constexpr float banner_height = 0.6F;
 };
 
 struct BarracksPalette {
-  QVector3D plaster{0.92f, 0.88f, 0.78f};
-  QVector3D plasterShade{0.78f, 0.74f, 0.64f};
-  QVector3D timber{0.35f, 0.25f, 0.15f};
-  QVector3D timberLight{0.50f, 0.38f, 0.22f};
-  QVector3D woodDark{0.30f, 0.20f, 0.12f};
-  QVector3D thatch{0.82f, 0.70f, 0.28f};
-  QVector3D thatchDark{0.68f, 0.58f, 0.22f};
-  QVector3D stone{0.55f, 0.54f, 0.52f};
-  QVector3D stoneDark{0.42f, 0.41f, 0.39f};
-  QVector3D door{0.28f, 0.20f, 0.12f};
-  QVector3D window{0.35f, 0.42f, 0.48f};
-  QVector3D path{0.62f, 0.60f, 0.54f};
-  QVector3D crate{0.48f, 0.34f, 0.18f};
-  QVector3D team{0.8f, 0.9f, 1.0f};
-  QVector3D teamTrim{0.48f, 0.54f, 0.60f};
+  QVector3D plaster{0.92F, 0.88F, 0.78F};
+  QVector3D plasterShade{0.78F, 0.74F, 0.64F};
+  QVector3D timber{0.35F, 0.25F, 0.15F};
+  QVector3D timberLight{0.50F, 0.38F, 0.22F};
+  QVector3D woodDark{0.30F, 0.20F, 0.12F};
+  QVector3D thatch{0.82F, 0.70F, 0.28F};
+  QVector3D thatchDark{0.68F, 0.58F, 0.22F};
+  QVector3D stone{0.55F, 0.54F, 0.52F};
+  QVector3D stoneDark{0.42F, 0.41F, 0.39F};
+  QVector3D door{0.28F, 0.20F, 0.12F};
+  QVector3D window{0.35F, 0.42F, 0.48F};
+  QVector3D path{0.62F, 0.60F, 0.54F};
+  QVector3D crate{0.48F, 0.34F, 0.18F};
+  QVector3D team{0.8F, 0.9F, 1.0F};
+  QVector3D teamTrim{0.48F, 0.54F, 0.60F};
 };
 
-static inline BarracksPalette makePalette(const QVector3D &team) {
+inline auto makePalette(const QVector3D &team) -> BarracksPalette {
   BarracksPalette p;
   p.team = clampVec01(team);
   p.teamTrim =
-      clampVec01(QVector3D(team.x() * 0.6f, team.y() * 0.6f, team.z() * 0.6f));
+      clampVec01(QVector3D(team.x() * 0.6F, team.y() * 0.6F, team.z() * 0.6F));
   return p;
 }
 
-static inline void drawCylinder(ISubmitter &out, const QMatrix4x4 &model,
-                                const QVector3D &a, const QVector3D &b,
-                                float radius, const QVector3D &color,
-                                Texture *white) {
+inline void drawCylinder(ISubmitter &out, const QMatrix4x4 &model,
+                         const QVector3D &a, const QVector3D &b, float radius,
+                         const QVector3D &color, Texture *white) {
   out.mesh(getUnitCylinder(), model * cylinderBetween(a, b, radius), color,
-           white, 1.0f);
+           white, 1.0F);
 }
 
-static inline void unitBox(ISubmitter &out, Mesh *unitMesh, Texture *white,
-                           const QMatrix4x4 &model, const QVector3D &t,
-                           const QVector3D &s, const QVector3D &color) {
+inline void unitBox(ISubmitter &out, Mesh *unitMesh, Texture *white,
+                    const QMatrix4x4 &model, const QVector3D &t,
+                    const QVector3D &s, const QVector3D &color) {
   QMatrix4x4 M = model;
   M.translate(t);
   M.scale(s);
-  out.mesh(unitMesh, M, color, white, 1.0f);
+  out.mesh(unitMesh, M, color, white, 1.0F);
 }
 
-static inline void unitBox(ISubmitter &out, Mesh *unitMesh, Texture *white,
-                           const QMatrix4x4 &model, const QVector3D &s,
-                           const QVector3D &color) {
+inline void unitBox(ISubmitter &out, Mesh *unitMesh, Texture *white,
+                    const QMatrix4x4 &model, const QVector3D &s,
+                    const QVector3D &color) {
   QMatrix4x4 M = model;
   M.scale(s);
-  out.mesh(unitMesh, M, color, white, 1.0f);
+  out.mesh(unitMesh, M, color, white, 1.0F);
 }
 
-static inline void drawFoundation(const DrawContext &p, ISubmitter &out,
-                                  Mesh *unit, Texture *white,
-                                  const BarracksPalette &C) {
-  constexpr float baseWidth = BuildingProportions::baseWidth;
-  constexpr float baseDepth = BuildingProportions::baseDepth;
-  constexpr float foundationHeight = BuildingProportions::foundationHeight;
+inline void drawFoundation(const DrawContext &p, ISubmitter &out, Mesh *unit,
+                           Texture *white, const BarracksPalette &C) {
+  constexpr float base_width = BuildingProportions::base_width;
+  constexpr float base_depth = BuildingProportions::base_depth;
+  constexpr float foundation_height = BuildingProportions::foundation_height;
 
   unitBox(out, unit, white, p.model,
-          QVector3D(0.0f, -foundationHeight / 2, 0.0f),
-          QVector3D(baseWidth / 2 + 0.1f, foundationHeight / 2,
-                    baseDepth / 2 + 0.1f),
+          QVector3D(0.0F, -foundation_height / 2, 0.0F),
+          QVector3D(base_width / 2 + 0.1F, foundation_height / 2,
+                    base_depth / 2 + 0.1F),
           C.stoneDark);
 
-  const float stepH = 0.015f;
-  const float stepW = 0.16f;
-  const float stepD = 0.10f;
-  const float frontZ = baseDepth * 0.5f + 0.12f;
+  const float step_h = 0.015F;
+  const float step_w = 0.16F;
+  const float step_d = 0.10F;
+  const float front_z = base_depth * 0.5F + 0.12F;
   for (int i = 0; i < 5; ++i) {
-    float t = i / 4.0f;
-    float x = (i % 2 == 0) ? -0.18f : 0.18f;
-    QVector3D c = lerp(C.path, C.stone, 0.25f * (i % 2));
+    float const t = i / 4.0F;
+    float const x = (i % 2 == 0) ? -0.18F : 0.18F;
+    QVector3D const c = lerp(C.path, C.stone, 0.25F * (i % 2));
     unitBox(out, unit, white, p.model,
-            QVector3D(x, -foundationHeight + stepH, frontZ + t * 0.55f),
-            QVector3D(stepW * (0.95f + 0.1f * (i % 2)), stepH, stepD), c);
+            QVector3D(x, -foundation_height + step_h, front_z + t * 0.55F),
+            QVector3D(step_w * (0.95F + 0.1F * (i % 2)), step_h, step_d), c);
   }
 
-  QVector3D skirtColor = lerp(C.stoneDark, QVector3D(0.0f, 0.0f, 0.0f), 0.25f);
-  unitBox(out, unit, white, p.model, QVector3D(0.0f, 0.02f, 0.0f),
-          QVector3D(baseWidth * 0.50f, 0.01f, baseDepth * 0.50f), skirtColor);
+  QVector3D const skirt_color =
+      lerp(C.stoneDark, QVector3D(0.0F, 0.0F, 0.0F), 0.25F);
+  unitBox(out, unit, white, p.model, QVector3D(0.0F, 0.02F, 0.0F),
+          QVector3D(base_width * 0.50F, 0.01F, base_depth * 0.50F),
+          skirt_color);
 }
 
-static inline void drawWalls(const DrawContext &p, ISubmitter &out, Mesh *,
-                             Texture *white, const BarracksPalette &C) {
-  constexpr float W = BuildingProportions::baseWidth;
-  constexpr float D = BuildingProportions::baseDepth;
-  constexpr float H = BuildingProportions::baseHeight;
+inline void drawWalls(const DrawContext &p, ISubmitter &out, Mesh *,
+                      Texture *white, const BarracksPalette &C) {
+  constexpr float W = BuildingProportions::base_width;
+  constexpr float D = BuildingProportions::base_depth;
+  constexpr float H = BuildingProportions::base_height;
 
-  const float r = 0.09f;
-  const float notch = 0.07f;
+  const float r = 0.09F;
+  const float notch = 0.07F;
 
-  const float leftX = -W * 0.5f;
-  const float rightX = W * 0.5f;
-  const float backZ = -D * 0.5f;
-  const float frontZ = D * 0.5f;
+  const float left_x = -W * 0.5F;
+  const float right_x = W * 0.5F;
+  const float back_z = -D * 0.5F;
+  const float front_z = D * 0.5F;
 
-  const int courses = std::max(4, int(H / (2.0f * r)));
+  const int courses = std::max(4, int(H / (2.0F * r)));
   const float y0 = r;
 
   auto logX = [&](float y, float z, float x0, float x1, const QVector3D &col) {
@@ -156,528 +160,535 @@ static inline void drawWalls(const DrawContext &p, ISubmitter &out, Mesh *,
                  QVector3D(x, y, z1 + notch), r, col, white);
   };
 
-  const float doorW = BuildingProportions::doorWidth;
-  const float doorH = BuildingProportions::doorHeight;
-  const float gapHalf = doorW * 0.5f;
+  const float door_w = BuildingProportions::door_width;
+  const float door_h = BuildingProportions::door_height;
+  const float gap_half = door_w * 0.5F;
 
   for (int i = 0; i < courses; ++i) {
-    float y = y0 + i * (2.0f * r);
-    QVector3D logCol = lerp(C.timber, C.timberLight, (i % 2) * 0.25f);
+    float const y = y0 + i * (2.0F * r);
+    QVector3D const log_col = lerp(C.timber, C.timberLight, (i % 2) * 0.25F);
 
-    if (y <= (doorH - 0.5f * r)) {
-      logX(y, frontZ, leftX, -gapHalf, logCol);
-      logX(y, frontZ, +gapHalf, rightX, logCol);
+    if (y <= (door_h - 0.5F * r)) {
+      logX(y, front_z, left_x, -gap_half, log_col);
+      logX(y, front_z, +gap_half, right_x, log_col);
     } else {
-      logX(y, frontZ, leftX, rightX, logCol);
+      logX(y, front_z, left_x, right_x, log_col);
     }
 
-    logX(y, backZ, leftX, rightX, logCol);
-    logZ(y, leftX, backZ, frontZ, logCol);
-    logZ(y, rightX, backZ, frontZ, logCol);
+    logX(y, back_z, left_x, right_x, log_col);
+    logZ(y, left_x, back_z, front_z, log_col);
+    logZ(y, right_x, back_z, front_z, log_col);
   }
 
-  QVector3D postCol = C.woodDark;
-  drawCylinder(out, p.model, QVector3D(-gapHalf, y0, frontZ),
-               QVector3D(-gapHalf, y0 + doorH, frontZ), r * 0.95f, postCol,
+  QVector3D const post_col = C.woodDark;
+  drawCylinder(out, p.model, QVector3D(-gap_half, y0, front_z),
+               QVector3D(-gap_half, y0 + door_h, front_z), r * 0.95F, post_col,
                white);
-  drawCylinder(out, p.model, QVector3D(+gapHalf, y0, frontZ),
-               QVector3D(+gapHalf, y0 + doorH, frontZ), r * 0.95f, postCol,
+  drawCylinder(out, p.model, QVector3D(+gap_half, y0, front_z),
+               QVector3D(+gap_half, y0 + door_h, front_z), r * 0.95F, post_col,
                white);
-  drawCylinder(out, p.model, QVector3D(-gapHalf, y0 + doorH, frontZ),
-               QVector3D(+gapHalf, y0 + doorH, frontZ), r, C.timberLight,
+  drawCylinder(out, p.model, QVector3D(-gap_half, y0 + door_h, front_z),
+               QVector3D(+gap_half, y0 + door_h, front_z), r, C.timberLight,
                white);
 
-  float braceY0 = H * 0.35f;
-  float braceY1 = H * 0.95f;
-  drawCylinder(out, p.model, QVector3D(leftX + 0.08f, braceY0, backZ + 0.10f),
-               QVector3D(leftX + 0.38f, braceY1, backZ + 0.10f), r * 0.6f,
+  float const brace_y0 = H * 0.35F;
+  float const brace_y1 = H * 0.95F;
+  drawCylinder(out, p.model,
+               QVector3D(left_x + 0.08F, brace_y0, back_z + 0.10F),
+               QVector3D(left_x + 0.38F, brace_y1, back_z + 0.10F), r * 0.6F,
                C.woodDark, white);
-  drawCylinder(out, p.model, QVector3D(rightX - 0.08f, braceY0, backZ + 0.10f),
-               QVector3D(rightX - 0.38f, braceY1, backZ + 0.10f), r * 0.6f,
+  drawCylinder(out, p.model,
+               QVector3D(right_x - 0.08F, brace_y0, back_z + 0.10F),
+               QVector3D(right_x - 0.38F, brace_y1, back_z + 0.10F), r * 0.6F,
                C.woodDark, white);
-  drawCylinder(out, p.model, QVector3D(leftX + 0.08f, braceY0, frontZ - 0.10f),
-               QVector3D(leftX + 0.38f, braceY1, frontZ - 0.10f), r * 0.6f,
+  drawCylinder(out, p.model,
+               QVector3D(left_x + 0.08F, brace_y0, front_z - 0.10F),
+               QVector3D(left_x + 0.38F, brace_y1, front_z - 0.10F), r * 0.6F,
                C.woodDark, white);
-  drawCylinder(out, p.model, QVector3D(rightX - 0.08f, braceY0, frontZ - 0.10f),
-               QVector3D(rightX - 0.38f, braceY1, frontZ - 0.10f), r * 0.6f,
+  drawCylinder(out, p.model,
+               QVector3D(right_x - 0.08F, brace_y0, front_z - 0.10F),
+               QVector3D(right_x - 0.38F, brace_y1, front_z - 0.10F), r * 0.6F,
                C.woodDark, white);
 }
 
 struct ChimneyInfo {
   float x;
   float z;
-  float baseY;
+  float base_y;
   float topY;
   float gapRadius;
 };
 
-static inline ChimneyInfo drawChimney(const DrawContext &p, ISubmitter &out,
-                                      Mesh *unit, Texture *white,
-                                      const BarracksPalette &C) {
-  constexpr float W = BuildingProportions::baseWidth;
-  constexpr float D = BuildingProportions::baseDepth;
-  constexpr float H = BuildingProportions::baseHeight;
-  constexpr float rise = BuildingProportions::roofPitch;
+inline auto drawChimney(const DrawContext &p, ISubmitter &out, Mesh *unit,
+                        Texture *white,
+                        const BarracksPalette &C) -> ChimneyInfo {
+  constexpr float W = BuildingProportions::base_width;
+  constexpr float D = BuildingProportions::base_depth;
+  constexpr float H = BuildingProportions::base_height;
+  constexpr float rise = BuildingProportions::roof_pitch;
 
-  float x = -W * 0.32f;
-  float z = -D * 0.5f - 0.06f;
+  float const x = -W * 0.32F;
+  float const z = -D * 0.5F - 0.06F;
 
-  float baseY = 0.18f;
-  float ridgeY = H + rise;
-  float topY = ridgeY + 0.35f;
+  float const base_y = 0.18F;
+  float const ridge_y = H + rise;
+  float const topY = ridge_y + 0.35F;
 
-  QVector3D baseSz(BuildingProportions::chimneyWidth * 0.65f, 0.16f,
-                   BuildingProportions::chimneyWidth * 0.55f);
-  unitBox(out, unit, white, p.model, QVector3D(x, baseY + baseSz.y(), z),
-          baseSz, C.stoneDark);
+  QVector3D const base_sz(BuildingProportions::chimney_width * 0.65F, 0.16F,
+                          BuildingProportions::chimney_width * 0.55F);
+  unitBox(out, unit, white, p.model, QVector3D(x, base_y + base_sz.y(), z),
+          base_sz, C.stoneDark);
 
-  int segments = 4;
-  float segH = (topY - (baseY + baseSz.y() * 2.0f)) / float(segments);
-  float w0 = BuildingProportions::chimneyWidth * 0.55f;
-  float w1 = BuildingProportions::chimneyWidth * 0.34f;
+  int const segments = 4;
+  float const segH = (topY - (base_y + base_sz.y() * 2.0F)) / float(segments);
+  float const w0 = BuildingProportions::chimney_width * 0.55F;
+  float const w1 = BuildingProportions::chimney_width * 0.34F;
 
   for (int i = 0; i < segments; ++i) {
-    float t = float(i) / float(segments - 1);
-    float wy = w0 * (1.0f - t) + w1 * t;
-    float hz = wy * 0.85f;
-    QVector3D col = (i % 2 == 0) ? C.stone : lerp(C.stone, C.stoneDark, 0.35f);
-    float yMid = baseY + baseSz.y() * 2.0f + segH * (i + 0.5f);
+    float const t = float(i) / float(segments - 1);
+    float const wy = w0 * (1.0F - t) + w1 * t;
+    float const hz = wy * 0.85F;
+    QVector3D const col =
+        (i % 2 == 0) ? C.stone : lerp(C.stone, C.stoneDark, 0.35F);
+    float const yMid = base_y + base_sz.y() * 2.0F + segH * (i + 0.5F);
     unitBox(out, unit, white, p.model, QVector3D(x, yMid, z),
-            QVector3D(wy, segH * 0.5f, hz), col);
+            QVector3D(wy, segH * 0.5F, hz), col);
   }
 
-  float corbelY = topY - 0.14f;
-  unitBox(out, unit, white, p.model, QVector3D(x, corbelY, z),
-          QVector3D(w1 * 1.22f, 0.025f, w1 * 1.22f), C.stoneDark);
-  unitBox(out, unit, white, p.model, QVector3D(x, corbelY + 0.05f, z),
-          QVector3D(w1 * 1.05f, 0.02f, w1 * 1.05f),
-          lerp(C.stone, C.stoneDark, 0.2f));
+  float const corbel_y = topY - 0.14F;
+  unitBox(out, unit, white, p.model, QVector3D(x, corbel_y, z),
+          QVector3D(w1 * 1.22F, 0.025F, w1 * 1.22F), C.stoneDark);
+  unitBox(out, unit, white, p.model, QVector3D(x, corbel_y + 0.05F, z),
+          QVector3D(w1 * 1.05F, 0.02F, w1 * 1.05F),
+          lerp(C.stone, C.stoneDark, 0.2F));
 
-  float potH = 0.10f;
-  unitBox(out, unit, white, p.model, QVector3D(x, topY + potH * 0.5f, z),
-          QVector3D(w1 * 0.45f, potH * 0.5f, w1 * 0.45f),
-          lerp(C.stoneDark, QVector3D(0.08f, 0.08f, 0.08f), 0.35f));
+  float const potH = 0.10F;
+  unitBox(out, unit, white, p.model, QVector3D(x, topY + potH * 0.5F, z),
+          QVector3D(w1 * 0.45F, potH * 0.5F, w1 * 0.45F),
+          lerp(C.stoneDark, QVector3D(0.08F, 0.08F, 0.08F), 0.35F));
 
-  unitBox(out, unit, white, p.model, QVector3D(x, H + rise * 0.55f, z + 0.06f),
-          QVector3D(w1 * 1.35f, 0.01f, 0.04f),
-          lerp(C.stoneDark, QVector3D(0.05f, 0.05f, 0.05f), 0.3f));
+  unitBox(out, unit, white, p.model, QVector3D(x, H + rise * 0.55F, z + 0.06F),
+          QVector3D(w1 * 1.35F, 0.01F, 0.04F),
+          lerp(C.stoneDark, QVector3D(0.05F, 0.05F, 0.05F), 0.3F));
 
-  return ChimneyInfo{x, z, baseY, topY + potH, 0.28f};
+  return ChimneyInfo{x, z, base_y, topY + potH, 0.28F};
 }
 
-static inline void drawRoofs(const DrawContext &p, ISubmitter &out, Mesh *,
-                             Texture *white, const BarracksPalette &C,
-                             const ChimneyInfo &ch) {
-  constexpr float W = BuildingProportions::baseWidth;
-  constexpr float D = BuildingProportions::baseDepth;
-  constexpr float H = BuildingProportions::baseHeight;
-  constexpr float rise = BuildingProportions::roofPitch;
-  constexpr float over = BuildingProportions::roofOverhang;
+inline void drawRoofs(const DrawContext &p, ISubmitter &out, Mesh *,
+                      Texture *white, const BarracksPalette &C,
+                      const ChimneyInfo &ch) {
+  constexpr float W = BuildingProportions::base_width;
+  constexpr float D = BuildingProportions::base_depth;
+  constexpr float H = BuildingProportions::base_height;
+  constexpr float rise = BuildingProportions::roof_pitch;
+  constexpr float over = BuildingProportions::roof_overhang;
 
-  const float r = 0.085f;
+  const float r = 0.085F;
 
-  const float leftX = -W * 0.5f;
-  const float rightX = W * 0.5f;
-  const float backZ = -D * 0.5f;
-  const float frontZ = D * 0.5f;
+  const float left_x = -W * 0.5F;
+  const float right_x = W * 0.5F;
+  const float back_z = -D * 0.5F;
+  const float front_z = D * 0.5F;
 
-  const float plateY = H;
-  const float ridgeY = H + rise;
+  const float plate_y = H;
+  const float ridge_y = H + rise;
 
-  drawCylinder(out, p.model, QVector3D(leftX - over, plateY, frontZ + over),
-               QVector3D(rightX + over, plateY, frontZ + over), r, C.woodDark,
+  drawCylinder(out, p.model, QVector3D(left_x - over, plate_y, front_z + over),
+               QVector3D(right_x + over, plate_y, front_z + over), r,
+               C.woodDark, white);
+  drawCylinder(out, p.model, QVector3D(left_x - over, plate_y, back_z - over),
+               QVector3D(right_x + over, plate_y, back_z - over), r, C.woodDark,
                white);
-  drawCylinder(out, p.model, QVector3D(leftX - over, plateY, backZ - over),
-               QVector3D(rightX + over, plateY, backZ - over), r, C.woodDark,
-               white);
 
-  drawCylinder(out, p.model, QVector3D(leftX - over * 0.5f, ridgeY, 0.0f),
-               QVector3D(rightX + over * 0.5f, ridgeY, 0.0f), r, C.timberLight,
-               white);
+  drawCylinder(out, p.model, QVector3D(left_x - over * 0.5F, ridge_y, 0.0F),
+               QVector3D(right_x + over * 0.5F, ridge_y, 0.0F), r,
+               C.timberLight, white);
 
   const int pairs = 7;
   for (int i = 0; i < pairs; ++i) {
-    float t = (pairs == 1) ? 0.0f : (float(i) / float(pairs - 1));
-    float x = (leftX - over * 0.5f) * (1.0f - t) + (rightX + over * 0.5f) * t;
+    float const t = (pairs == 1) ? 0.0F : (float(i) / float(pairs - 1));
+    float const x =
+        (left_x - over * 0.5F) * (1.0F - t) + (right_x + over * 0.5F) * t;
 
-    drawCylinder(out, p.model, QVector3D(x, plateY, backZ - over),
-                 QVector3D(x, ridgeY, 0.0f), r * 0.85f, C.woodDark, white);
+    drawCylinder(out, p.model, QVector3D(x, plate_y, back_z - over),
+                 QVector3D(x, ridge_y, 0.0F), r * 0.85F, C.woodDark, white);
 
-    drawCylinder(out, p.model, QVector3D(x, plateY, frontZ + over),
-                 QVector3D(x, ridgeY, 0.0f), r * 0.85f, C.woodDark, white);
+    drawCylinder(out, p.model, QVector3D(x, plate_y, front_z + over),
+                 QVector3D(x, ridge_y, 0.0F), r * 0.85F, C.woodDark, white);
   }
 
   auto purlin = [&](float tz, bool front) {
-    float z = front ? (frontZ + over - tz * (frontZ + over))
-                    : (backZ - over - tz * (backZ - over));
-    float y = plateY + tz * (ridgeY - plateY);
-    drawCylinder(out, p.model, QVector3D(leftX - over * 0.4f, y, z),
-                 QVector3D(rightX + over * 0.4f, y, z), r * 0.6f, C.timber,
+    float const z = front ? (front_z + over - tz * (front_z + over))
+                          : (back_z - over - tz * (back_z - over));
+    float const y = plate_y + tz * (ridge_y - plate_y);
+    drawCylinder(out, p.model, QVector3D(left_x - over * 0.4F, y, z),
+                 QVector3D(right_x + over * 0.4F, y, z), r * 0.6F, C.timber,
                  white);
   };
-  purlin(0.35f, true);
-  purlin(0.70f, true);
-  purlin(0.35f, false);
-  purlin(0.70f, false);
+  purlin(0.35F, true);
+  purlin(0.70F, true);
+  purlin(0.35F, false);
+  purlin(0.70F, false);
 
-  auto splitThatch = [&](float y, float z, float rad, const QVector3D &col) {
-    float gapL = ch.x - ch.gapRadius;
-    float gapR = ch.x + ch.gapRadius;
-    drawCylinder(out, p.model, QVector3D(leftX - over * 0.35f, y, z),
+  auto split_thatch = [&](float y, float z, float rad, const QVector3D &col) {
+    float const gapL = ch.x - ch.gapRadius;
+    float const gapR = ch.x + ch.gapRadius;
+    drawCylinder(out, p.model, QVector3D(left_x - over * 0.35F, y, z),
                  QVector3D(gapL, y, z), rad, col, white);
     drawCylinder(out, p.model, QVector3D(gapR, y, z),
-                 QVector3D(rightX + over * 0.35f, y, z), rad, col, white);
+                 QVector3D(right_x + over * 0.35F, y, z), rad, col, white);
   };
 
-  auto thatchRow = [&](float tz, bool front, float radScale, float tint) {
-    float z = front ? (frontZ + over - tz * (frontZ + over))
-                    : (backZ - over - tz * (backZ - over));
-    float y = plateY + tz * (ridgeY - plateY);
-    QVector3D col = lerp(C.thatchDark, C.thatch, clamp01(tint));
-    splitThatch(y, z, r * radScale, col);
+  auto thatch_row = [&](float tz, bool front, float radScale, float tint) {
+    float const z = front ? (front_z + over - tz * (front_z + over))
+                          : (back_z - over - tz * (back_z - over));
+    float const y = plate_y + tz * (ridge_y - plate_y);
+    QVector3D const col = lerp(C.thatchDark, C.thatch, clamp01(tint));
+    split_thatch(y, z, r * radScale, col);
   };
 
   const int rows = 9;
   for (int i = 0; i < rows; ++i) {
-    float tz = float(i) / float(rows - 1);
-    float s = 1.30f - 0.6f * tz;
-    float tint = 0.2f + 0.6f * (1.0f - tz);
-    thatchRow(tz, true, s, tint);
-    thatchRow(tz * 0.98f, false, s, tint * 0.95f);
+    float const tz = float(i) / float(rows - 1);
+    float const s = 1.30F - 0.6F * tz;
+    float const tint = 0.2F + 0.6F * (1.0F - tz);
+    thatch_row(tz, true, s, tint);
+    thatch_row(tz * 0.98F, false, s, tint * 0.95F);
   }
 
-  float eaveY = plateY + 0.06f;
-  splitThatch(eaveY, frontZ + over * 1.02f, r * 0.55f, C.thatchDark);
-  splitThatch(eaveY, backZ - over * 1.02f, r * 0.55f, C.thatchDark);
+  float const eave_y = plate_y + 0.06F;
+  split_thatch(eave_y, front_z + over * 1.02F, r * 0.55F, C.thatchDark);
+  split_thatch(eave_y, back_z - over * 1.02F, r * 0.55F, C.thatchDark);
 
-  float flashY = plateY + (ridgeY - plateY) * 0.55f;
-  float flashZBack = backZ - over * 0.20f;
-  float ring = ch.gapRadius + 0.04f;
-  unitBox(out, nullptr, white, p.model, QVector3D(ch.x, flashY, flashZBack),
-          QVector3D(ring, 0.008f, 0.02f), C.stoneDark);
+  float const flash_y = plate_y + (ridge_y - plate_y) * 0.55F;
+  float const flash_zback = back_z - over * 0.20F;
+  float const ring = ch.gapRadius + 0.04F;
+  unitBox(out, nullptr, white, p.model, QVector3D(ch.x, flash_y, flash_zback),
+          QVector3D(ring, 0.008F, 0.02F), C.stoneDark);
 }
 
-static inline void drawDoor(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                            Texture *white, const BarracksPalette &C) {
-  constexpr float D = BuildingProportions::baseDepth;
-  constexpr float dW = BuildingProportions::doorWidth;
-  constexpr float dH = BuildingProportions::doorHeight;
+inline void drawDoor(const DrawContext &p, ISubmitter &out, Mesh *unit,
+                     Texture *white, const BarracksPalette &C) {
+  constexpr float D = BuildingProportions::base_depth;
+  constexpr float dW = BuildingProportions::door_width;
+  constexpr float dH = BuildingProportions::door_height;
 
-  const float y0 = 0.09f;
-  const float zf = D * 0.5f;
+  const float y0 = 0.09F;
+  const float zf = D * 0.5F;
 
-  QVector3D frameCol = C.woodDark;
+  QVector3D const frame_col = C.woodDark;
   unitBox(out, unit, white, p.model,
-          QVector3D(0.0f, y0 + dH * 0.5f, zf + 0.015f),
-          QVector3D(dW * 0.5f, dH * 0.5f, 0.02f), C.door);
+          QVector3D(0.0F, y0 + dH * 0.5F, zf + 0.015F),
+          QVector3D(dW * 0.5F, dH * 0.5F, 0.02F), C.door);
 
-  float plankW = dW / 6.0f;
+  float const plank_w = dW / 6.0F;
   for (int i = 0; i < 6; ++i) {
-    float cx = -dW * 0.5f + plankW * (i + 0.5f);
-    QVector3D plankCol = lerp(C.door, C.woodDark, 0.15f * (i % 2));
+    float const cx = -dW * 0.5F + plank_w * (i + 0.5F);
+    QVector3D const plank_col = lerp(C.door, C.woodDark, 0.15F * (i % 2));
     unitBox(out, unit, white, p.model,
-            QVector3D(cx, y0 + dH * 0.5f, zf + 0.022f),
-            QVector3D(plankW * 0.48f, dH * 0.48f, 0.006f), plankCol);
+            QVector3D(cx, y0 + dH * 0.5F, zf + 0.022F),
+            QVector3D(plank_w * 0.48F, dH * 0.48F, 0.006F), plank_col);
   }
 
   drawCylinder(out, p.model,
-               QVector3D(-dW * 0.45f, y0 + dH * 0.35f, zf + 0.03f),
-               QVector3D(+dW * 0.45f, y0 + dH * 0.35f, zf + 0.03f), 0.02f,
-               frameCol, white);
+               QVector3D(-dW * 0.45F, y0 + dH * 0.35F, zf + 0.03F),
+               QVector3D(+dW * 0.45F, y0 + dH * 0.35F, zf + 0.03F), 0.02F,
+               frame_col, white);
 
-  drawCylinder(out, p.model, QVector3D(dW * 0.32f, y0 + dH * 0.45f, zf + 0.04f),
-               QVector3D(dW * 0.42f, y0 + dH * 0.45f, zf + 0.04f), 0.012f,
+  drawCylinder(out, p.model, QVector3D(dW * 0.32F, y0 + dH * 0.45F, zf + 0.04F),
+               QVector3D(dW * 0.42F, y0 + dH * 0.45F, zf + 0.04F), 0.012F,
                C.timberLight, white);
 
   unitBox(out, unit, white, p.model,
-          QVector3D(0.0f, y0 + dH + 0.10f, zf + 0.02f),
-          QVector3D(0.22f, 0.06f, 0.01f), C.woodDark);
+          QVector3D(0.0F, y0 + dH + 0.10F, zf + 0.02F),
+          QVector3D(0.22F, 0.06F, 0.01F), C.woodDark);
   unitBox(out, unit, white, p.model,
-          QVector3D(0.0f, y0 + dH + 0.10f, zf + 0.025f),
-          QVector3D(0.18f, 0.05f, 0.008f), C.team);
+          QVector3D(0.0F, y0 + dH + 0.10F, zf + 0.025F),
+          QVector3D(0.18F, 0.05F, 0.008F), C.team);
   unitBox(out, unit, white, p.model,
-          QVector3D(0.0f, y0 + dH + 0.10f, zf + 0.03f),
-          QVector3D(0.08f, 0.02f, 0.007f), C.teamTrim);
+          QVector3D(0.0F, y0 + dH + 0.10F, zf + 0.03F),
+          QVector3D(0.08F, 0.02F, 0.007F), C.teamTrim);
 }
 
-static inline void drawWindows(const DrawContext &p, ISubmitter &out,
-                               Mesh *unit, Texture *white,
-                               const BarracksPalette &C) {
-  constexpr float W = BuildingProportions::baseWidth;
-  constexpr float D = BuildingProportions::baseDepth;
-  constexpr float H = BuildingProportions::baseHeight;
+inline void drawWindows(const DrawContext &p, ISubmitter &out, Mesh *unit,
+                        Texture *white, const BarracksPalette &C) {
+  constexpr float W = BuildingProportions::base_width;
+  constexpr float D = BuildingProportions::base_depth;
+  constexpr float H = BuildingProportions::base_height;
 
-  const float leftX = -W * 0.5f;
-  const float rightX = W * 0.5f;
-  const float backZ = -D * 0.5f;
-  const float frontZ = D * 0.5f;
+  const float left_x = -W * 0.5F;
+  const float right_x = W * 0.5F;
+  const float back_z = -D * 0.5F;
+  const float front_z = D * 0.5F;
 
-  float w = BuildingProportions::windowWidth * 0.55f;
-  float h = BuildingProportions::windowHeight * 0.55f;
-  float frameT = 0.03f;
+  float w = BuildingProportions::window_width * 0.55F;
+  float h = BuildingProportions::window_height * 0.55F;
+  float frame_t = 0.03F;
 
-  auto framedWindow = [&](QVector3D center, bool shutters) {
-    unitBox(out, unit, white, p.model, center + QVector3D(0, 0, 0.012f),
-            QVector3D(w * 0.5f, h * 0.5f, 0.008f), C.window);
-    unitBox(out, unit, white, p.model, center + QVector3D(0, 0, 0.016f),
-            QVector3D(w * 0.5f, frameT, 0.006f), C.timber);
-    unitBox(out, unit, white, p.model, center + QVector3D(0, 0, 0.016f),
-            QVector3D(frameT, h * 0.5f, 0.006f), C.timber);
-    unitBox(out, unit, white, p.model, center + QVector3D(0, 0, 0.016f),
-            QVector3D(w * 0.5f, frameT, 0.006f), C.timber);
-    unitBox(out, unit, white, p.model, center + QVector3D(0, 0, 0.016f),
-            QVector3D(frameT, h * 0.5f, 0.006f), C.timber);
+  auto framed_window = [&](QVector3D center, bool shutters) {
+    unitBox(out, unit, white, p.model, center + QVector3D(0, 0, 0.012F),
+            QVector3D(w * 0.5F, h * 0.5F, 0.008F), C.window);
+    unitBox(out, unit, white, p.model, center + QVector3D(0, 0, 0.016F),
+            QVector3D(w * 0.5F, frame_t, 0.006F), C.timber);
+    unitBox(out, unit, white, p.model, center + QVector3D(0, 0, 0.016F),
+            QVector3D(frame_t, h * 0.5F, 0.006F), C.timber);
+    unitBox(out, unit, white, p.model, center + QVector3D(0, 0, 0.016F),
+            QVector3D(w * 0.5F, frame_t, 0.006F), C.timber);
+    unitBox(out, unit, white, p.model, center + QVector3D(0, 0, 0.016F),
+            QVector3D(frame_t, h * 0.5F, 0.006F), C.timber);
 
-    unitBox(out, unit, white, p.model, center + QVector3D(0, 0, 0.02f),
-            QVector3D(w * 0.02f, h * 0.48f, 0.004f), C.timberLight);
-    unitBox(out, unit, white, p.model, center + QVector3D(0, 0, 0.02f),
-            QVector3D(w * 0.48f, h * 0.02f, 0.004f), C.timberLight);
+    unitBox(out, unit, white, p.model, center + QVector3D(0, 0, 0.02F),
+            QVector3D(w * 0.02F, h * 0.48F, 0.004F), C.timberLight);
+    unitBox(out, unit, white, p.model, center + QVector3D(0, 0, 0.02F),
+            QVector3D(w * 0.48F, h * 0.02F, 0.004F), C.timberLight);
 
     if (shutters) {
       unitBox(out, unit, white, p.model,
-              center + QVector3D(-w * 0.65f, 0, 0.018f),
-              QVector3D(w * 0.30f, h * 0.55f, 0.004f), C.woodDark);
+              center + QVector3D(-w * 0.65F, 0, 0.018F),
+              QVector3D(w * 0.30F, h * 0.55F, 0.004F), C.woodDark);
       unitBox(out, unit, white, p.model,
-              center + QVector3D(+w * 0.65f, 0, 0.018f),
-              QVector3D(w * 0.30f, h * 0.55f, 0.004f), C.woodDark);
+              center + QVector3D(+w * 0.65F, 0, 0.018F),
+              QVector3D(w * 0.30F, h * 0.55F, 0.004F), C.woodDark);
     }
   };
 
-  framedWindow(QVector3D(-0.65f, 0.95f, frontZ + 0.01f), true);
-  framedWindow(QVector3D(+0.65f, 0.95f, frontZ + 0.01f), true);
-  framedWindow(QVector3D(leftX + 0.06f, 0.85f, 0.0f), false);
-  framedWindow(QVector3D(rightX - 0.06f, 0.85f, 0.0f), false);
-  framedWindow(QVector3D(0.0f, 1.00f, backZ - 0.01f), true);
+  framed_window(QVector3D(-0.65F, 0.95F, front_z + 0.01F), true);
+  framed_window(QVector3D(+0.65F, 0.95F, front_z + 0.01F), true);
+  framed_window(QVector3D(left_x + 0.06F, 0.85F, 0.0F), false);
+  framed_window(QVector3D(right_x - 0.06F, 0.85F, 0.0F), false);
+  framed_window(QVector3D(0.0F, 1.00F, back_z - 0.01F), true);
 }
 
-static inline void drawAnnex(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                             Texture *white, const BarracksPalette &C) {
-  constexpr float W = BuildingProportions::baseWidth;
-  constexpr float D = BuildingProportions::baseDepth;
-  constexpr float h = BuildingProportions::annexHeight;
-  constexpr float w = BuildingProportions::annexWidth;
-  constexpr float d = BuildingProportions::annexDepth;
+inline void drawAnnex(const DrawContext &p, ISubmitter &out, Mesh *unit,
+                      Texture *white, const BarracksPalette &C) {
+  constexpr float W = BuildingProportions::base_width;
+  constexpr float D = BuildingProportions::base_depth;
+  constexpr float h = BuildingProportions::annex_height;
+  constexpr float w = BuildingProportions::annex_width;
+  constexpr float d = BuildingProportions::annex_depth;
 
-  float x = W * 0.5f + w * 0.5f - 0.05f;
-  float z = 0.05f;
+  float const x = W * 0.5F + w * 0.5F - 0.05F;
+  float const z = 0.05F;
 
-  unitBox(out, unit, white, p.model, QVector3D(x, h * 0.5f, z),
-          QVector3D(w * 0.5f, h * 0.5f, d * 0.5f), C.plasterShade);
+  unitBox(out, unit, white, p.model, QVector3D(x, h * 0.5F, z),
+          QVector3D(w * 0.5F, h * 0.5F, d * 0.5F), C.plasterShade);
 
-  unitBox(out, unit, white, p.model, QVector3D(x, h + 0.02f, z),
-          QVector3D(w * 0.55f, 0.02f, d * 0.55f), C.woodDark);
+  unitBox(out, unit, white, p.model, QVector3D(x, h + 0.02F, z),
+          QVector3D(w * 0.55F, 0.02F, d * 0.55F), C.woodDark);
 
-  float plateY = h;
-  float frontZ = z + d * 0.5f;
-  float backZ = z - d * 0.5f;
-  drawCylinder(out, p.model, QVector3D(x - w * 0.52f, plateY, backZ - 0.12f),
-               QVector3D(x + w * 0.52f, plateY, backZ - 0.12f), 0.05f,
+  float const plate_y = h;
+  float const front_z = z + d * 0.5F;
+  float const back_z = z - d * 0.5F;
+  drawCylinder(out, p.model, QVector3D(x - w * 0.52F, plate_y, back_z - 0.12F),
+               QVector3D(x + w * 0.52F, plate_y, back_z - 0.12F), 0.05F,
                C.woodDark, white);
 
-  float ridgeY = h + BuildingProportions::annexRoofHeight;
-  drawCylinder(out, p.model, QVector3D(x - w * 0.50f, ridgeY, backZ - 0.02f),
-               QVector3D(x + w * 0.50f, ridgeY, backZ - 0.02f), 0.05f,
+  float const ridge_y = h + BuildingProportions::annex_roof_height;
+  drawCylinder(out, p.model, QVector3D(x - w * 0.50F, ridge_y, back_z - 0.02F),
+               QVector3D(x + w * 0.50F, ridge_y, back_z - 0.02F), 0.05F,
                C.timberLight, white);
 
-  int rows = 6;
+  int const rows = 6;
   for (int i = 0; i < rows; ++i) {
-    float t = float(i) / float(rows - 1);
-    float y = plateY + t * (ridgeY - plateY);
-    float zrow = backZ - 0.02f - 0.10f * (1.0f - t);
-    QVector3D col = lerp(C.thatchDark, C.thatch, 0.5f + 0.4f * (1.0f - t));
-    drawCylinder(out, p.model, QVector3D(x - w * 0.55f, y, zrow),
-                 QVector3D(x + w * 0.55f, y, zrow), 0.06f * (1.15f - 0.6f * t),
+    float const t = float(i) / float(rows - 1);
+    float const y = plate_y + t * (ridge_y - plate_y);
+    float const zrow = back_z - 0.02F - 0.10F * (1.0F - t);
+    QVector3D const col =
+        lerp(C.thatchDark, C.thatch, 0.5F + 0.4F * (1.0F - t));
+    drawCylinder(out, p.model, QVector3D(x - w * 0.55F, y, zrow),
+                 QVector3D(x + w * 0.55F, y, zrow), 0.06F * (1.15F - 0.6F * t),
                  col, white);
   }
 
   unitBox(out, unit, white, p.model,
-          QVector3D(x + w * 0.01f, 0.55f, frontZ + 0.01f),
-          QVector3D(0.20f, 0.18f, 0.01f), C.door);
+          QVector3D(x + w * 0.01F, 0.55F, front_z + 0.01F),
+          QVector3D(0.20F, 0.18F, 0.01F), C.door);
 }
 
-static inline void drawProps(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                             Texture *white, const BarracksPalette &C) {
-  unitBox(out, unit, white, p.model, QVector3D(0.85f, 0.10f, 0.90f),
-          QVector3D(0.16f, 0.10f, 0.16f), C.crate);
-  unitBox(out, unit, white, p.model, QVector3D(0.85f, 0.22f, 0.90f),
-          QVector3D(0.12f, 0.02f, 0.12f), C.woodDark);
+inline void drawProps(const DrawContext &p, ISubmitter &out, Mesh *unit,
+                      Texture *white, const BarracksPalette &C) {
+  unitBox(out, unit, white, p.model, QVector3D(0.85F, 0.10F, 0.90F),
+          QVector3D(0.16F, 0.10F, 0.16F), C.crate);
+  unitBox(out, unit, white, p.model, QVector3D(0.85F, 0.22F, 0.90F),
+          QVector3D(0.12F, 0.02F, 0.12F), C.woodDark);
 
-  unitBox(out, unit, white, p.model, QVector3D(-0.9f, 0.12f, -0.80f),
-          QVector3D(0.12f, 0.10f, 0.12f), C.crate);
-  unitBox(out, unit, white, p.model, QVector3D(-0.9f, 0.20f, -0.80f),
-          QVector3D(0.13f, 0.02f, 0.13f), C.woodDark);
+  unitBox(out, unit, white, p.model, QVector3D(-0.9F, 0.12F, -0.80F),
+          QVector3D(0.12F, 0.10F, 0.12F), C.crate);
+  unitBox(out, unit, white, p.model, QVector3D(-0.9F, 0.20F, -0.80F),
+          QVector3D(0.13F, 0.02F, 0.13F), C.woodDark);
 }
 
-static inline void drawBannerAndPole(const DrawContext &p, ISubmitter &out,
-                                     Mesh *unit, Texture *white,
-                                     const BarracksPalette &C) {
-  constexpr float baseWidth = BuildingProportions::baseWidth;
-  constexpr float baseDepth = BuildingProportions::baseDepth;
-  constexpr float bannerPoleHeight = BuildingProportions::bannerPoleHeight;
-  constexpr float bannerPoleRadius = BuildingProportions::bannerPoleRadius;
-  constexpr float bannerWidth = BuildingProportions::bannerWidth;
-  constexpr float bannerHeight = BuildingProportions::bannerHeight;
+inline void drawBannerAndPole(const DrawContext &p, ISubmitter &out, Mesh *unit,
+                              Texture *white, const BarracksPalette &C) {
+  constexpr float base_width = BuildingProportions::base_width;
+  constexpr float base_depth = BuildingProportions::base_depth;
+  constexpr float banner_pole_height = BuildingProportions::banner_pole_height;
+  constexpr float banner_pole_radius = BuildingProportions::banner_pole_radius;
+  constexpr float banner_width = BuildingProportions::banner_width;
+  constexpr float banner_height = BuildingProportions::banner_height;
 
-  float poleX = -baseWidth / 2 - 0.65f;
-  float poleZ = baseDepth / 2 - 0.2f;
+  float const pole_x = -base_width / 2 - 0.65F;
+  float const pole_z = base_depth / 2 - 0.2F;
 
-  float poleHeight = bannerPoleHeight * 1.9f;
-  float poleRadius = bannerPoleRadius * 1.3f;
-  float bw = bannerWidth * 1.8f;
-  float bh = bannerHeight * 1.8f;
+  float const pole_height = banner_pole_height * 1.9F;
+  float const pole_radius = banner_pole_radius * 1.3F;
+  float const bw = banner_width * 1.8F;
+  float const bh = banner_height * 1.8F;
 
-  QVector3D poleCenter(poleX, poleHeight / 2.0f, poleZ);
-  QVector3D poleSize(poleRadius * 1.6f, poleHeight / 2.0f, poleRadius * 1.6f);
-  unitBox(out, unit, white, p.model, poleCenter, poleSize, C.woodDark);
+  QVector3D const pole_center(pole_x, pole_height / 2.0F, pole_z);
+  QVector3D const pole_size(pole_radius * 1.6F, pole_height / 2.0F,
+                            pole_radius * 1.6F);
+  unitBox(out, unit, white, p.model, pole_center, pole_size, C.woodDark);
 
-  float targetWidth = bw * 1.25f;
-  float targetHeight = bh * 0.75f;
-  float panelDepth = 0.02f;
+  float const target_width = bw * 1.25F;
+  float const target_height = bh * 0.75F;
+  float const panel_depth = 0.02F;
 
-  float beamLength = targetWidth * 0.45f;
-  float beamY = poleHeight - targetHeight * 0.25f;
+  float const beam_length = target_width * 0.45F;
+  float beam_y = pole_height - target_height * 0.25F;
 
-  QVector3D teamColor = C.team;
-  QVector3D teamTrimColor = C.teamTrim;
-  float flagY = poleHeight - targetHeight / 2.0f;
+  QVector3D team_color = C.team;
+  QVector3D team_trim_color = C.teamTrim;
+  float flag_y = pole_height - target_height / 2.0F;
 
-  if (p.entity) {
+  if (p.entity != nullptr) {
     auto *capture = p.entity->getComponent<Engine::Core::CaptureComponent>();
-    if (capture && capture->isBeingCaptured) {
-      float progress = std::clamp(
-          capture->captureProgress / capture->requiredTime, 0.0f, 1.0f);
+    if ((capture != nullptr) && capture->isBeingCaptured) {
+      float const progress = std::clamp(
+          capture->captureProgress / capture->requiredTime, 0.0F, 1.0F);
 
-      QVector3D newTeamColor =
-          Game::Visuals::teamColorForOwner(capture->capturingPlayerId);
-      teamColor = lerp(C.team, clampVec01(newTeamColor), progress);
-      teamTrimColor = lerp(
-          C.teamTrim,
-          clampVec01(QVector3D(newTeamColor.x() * 0.6f, newTeamColor.y() * 0.6f,
-                               newTeamColor.z() * 0.6f)),
-          progress);
+      QVector3D const new_team_color =
+          Game::Visuals::team_colorForOwner(capture->capturing_player_id);
+      team_color = lerp(C.team, clampVec01(new_team_color), progress);
+      team_trim_color = lerp(C.teamTrim,
+                             clampVec01(QVector3D(new_team_color.x() * 0.6F,
+                                                  new_team_color.y() * 0.6F,
+                                                  new_team_color.z() * 0.6F)),
+                             progress);
 
-      float loweredAmount = progress * poleHeight * 0.85f;
-      flagY -= loweredAmount;
-      beamY -= loweredAmount;
+      float const lowered_amount = progress * pole_height * 0.85F;
+      flag_y -= lowered_amount;
+      beam_y -= lowered_amount;
     }
   }
 
-  QVector3D beamStart(poleX + 0.02f, beamY, poleZ);
-  QVector3D beamEnd(poleX + beamLength + 0.02f, beamY, poleZ);
-  drawCylinder(out, p.model, beamStart, beamEnd, poleRadius * 0.35f, C.timber,
-               white);
+  QVector3D const beam_start(pole_x + 0.02F, beam_y, pole_z);
+  QVector3D const beam_end(pole_x + beam_length + 0.02F, beam_y, pole_z);
+  drawCylinder(out, p.model, beam_start, beam_end, pole_radius * 0.35F,
+               C.timber, white);
 
-  QVector3D connectorTop(beamEnd.x(), beamEnd.y() - targetHeight * 0.35f,
-                         beamEnd.z());
-  drawCylinder(out, p.model, beamEnd, connectorTop, poleRadius * 0.18f,
+  QVector3D const connector_top(
+      beam_end.x(), beam_end.y() - target_height * 0.35F, beam_end.z());
+  drawCylinder(out, p.model, beam_end, connector_top, pole_radius * 0.18F,
                C.timberLight, white);
 
-  float panelX = beamEnd.x() + (targetWidth * 0.5f - beamLength);
-  unitBox(out, unit, white, p.model, QVector3D(panelX, flagY, poleZ + 0.01f),
-          QVector3D(targetWidth / 2.0f, targetHeight / 2.0f, panelDepth),
-          teamColor);
+  float const panel_x = beam_end.x() + (target_width * 0.5F - beam_length);
+  unitBox(out, unit, white, p.model, QVector3D(panel_x, flag_y, pole_z + 0.01F),
+          QVector3D(target_width / 2.0F, target_height / 2.0F, panel_depth),
+          team_color);
 
-  unitBox(out, unit, white, p.model,
-          QVector3D(panelX, flagY - targetHeight / 2.0f + 0.04f, poleZ + 0.01f),
-          QVector3D(targetWidth / 2.0f + 0.02f, 0.04f, 0.015f), teamTrimColor);
-  unitBox(out, unit, white, p.model,
-          QVector3D(panelX, flagY + targetHeight / 2.0f - 0.04f, poleZ + 0.01f),
-          QVector3D(targetWidth / 2.0f + 0.02f, 0.04f, 0.015f), teamTrimColor);
+  unitBox(
+      out, unit, white, p.model,
+      QVector3D(panel_x, flag_y - target_height / 2.0F + 0.04F, pole_z + 0.01F),
+      QVector3D(target_width / 2.0F + 0.02F, 0.04F, 0.015F), team_trim_color);
+  unitBox(
+      out, unit, white, p.model,
+      QVector3D(panel_x, flag_y + target_height / 2.0F - 0.04F, pole_z + 0.01F),
+      QVector3D(target_width / 2.0F + 0.02F, 0.04F, 0.015F), team_trim_color);
 }
 
-static inline void drawRallyFlagIfAny(const DrawContext &p, ISubmitter &out,
-                                      Texture *white,
-                                      const BarracksPalette &C) {
+inline void drawRallyFlagIfAny(const DrawContext &p, ISubmitter &out,
+                               Texture *white, const BarracksPalette &C) {
   if (auto *prod =
           p.entity->getComponent<Engine::Core::ProductionComponent>()) {
-    if (prod->rallySet && p.resources) {
+    if (prod->rallySet && (p.resources != nullptr)) {
       auto flag = Render::Geom::Flag::create(prod->rallyX, prod->rallyZ,
-                                             QVector3D(1.0f, 0.9f, 0.2f),
-                                             C.woodDark, 1.0f);
+                                             QVector3D(1.0F, 0.9F, 0.2F),
+                                             C.woodDark, 1.0F);
       Mesh *unit = p.resources->unit();
-      out.mesh(unit, flag.pole, flag.poleColor, white, 1.0f);
-      out.mesh(unit, flag.pennant, flag.pennantColor, white, 1.0f);
-      out.mesh(unit, flag.finial, flag.pennantColor, white, 1.0f);
+      out.mesh(unit, flag.pole, flag.poleColor, white, 1.0F);
+      out.mesh(unit, flag.pennant, flag.pennantColor, white, 1.0F);
+      out.mesh(unit, flag.finial, flag.pennantColor, white, 1.0F);
     }
   }
 }
 
-static inline void drawHealthBar(const DrawContext &p, ISubmitter &out,
-                                 Mesh *unit, Texture *white) {
-  if (!p.entity) {
+inline void drawHealthBar(const DrawContext &p, ISubmitter &out, Mesh *unit,
+                          Texture *white) {
+  if (p.entity == nullptr) {
     return;
   }
   auto *u = p.entity->getComponent<Engine::Core::UnitComponent>();
-  if (!u) {
+  if (u == nullptr) {
     return;
   }
 
-  int mh = std::max(1, u->maxHealth);
-  float ratio = std::clamp(u->health / float(mh), 0.0f, 1.0f);
-  if (ratio <= 0.0f) {
+  int const mh = std::max(1, u->max_health);
+  float const ratio = std::clamp(u->health / float(mh), 0.0F, 1.0F);
+  if (ratio <= 0.0F) {
     return;
   }
 
-  constexpr float baseHeight = BuildingProportions::baseHeight;
-  constexpr float roofPitch = BuildingProportions::roofPitch;
-  float roofPeak = baseHeight + roofPitch;
-  float barY = roofPeak + 0.12f;
+  constexpr float base_height = BuildingProportions::base_height;
+  constexpr float roof_pitch = BuildingProportions::roof_pitch;
+  float const roof_peak = base_height + roof_pitch;
+  float const barY = roof_peak + 0.12F;
 
-  constexpr float barWidth = BuildingProportions::baseWidth * 0.9f;
-  constexpr float barHeight = 0.08f;
-  constexpr float barDepth = 0.12f;
+  constexpr float bar_width = BuildingProportions::base_width * 0.9F;
+  constexpr float bar_height = 0.08F;
+  constexpr float bar_depth = 0.12F;
 
-  QVector3D bgColor(0.06f, 0.06f, 0.06f);
-  unitBox(out, unit, white, p.model, QVector3D(0.0f, barY, 0.0f),
-          QVector3D(barWidth / 2.0f, barHeight / 2.0f, barDepth / 2.0f),
-          bgColor);
+  QVector3D const bg_color(0.06F, 0.06F, 0.06F);
+  unitBox(out, unit, white, p.model, QVector3D(0.0F, barY, 0.0F),
+          QVector3D(bar_width / 2.0F, bar_height / 2.0F, bar_depth / 2.0F),
+          bg_color);
 
-  float fillWidth = barWidth * ratio;
-  float fillX = -(barWidth - fillWidth) * 0.5f;
+  float const fill_width = bar_width * ratio;
+  float const fill_x = -(bar_width - fill_width) * 0.5F;
 
-  QVector3D red(0.85f, 0.15f, 0.15f);
-  QVector3D green(0.22f, 0.78f, 0.22f);
-  QVector3D fgColor = green * ratio + red * (1.0f - ratio);
+  QVector3D const red(0.85F, 0.15F, 0.15F);
+  QVector3D const green(0.22F, 0.78F, 0.22F);
+  QVector3D const fg_color = green * ratio + red * (1.0F - ratio);
 
-  unitBox(out, unit, white, p.model, QVector3D(fillX, barY + 0.005f, 0.0f),
-          QVector3D(fillWidth / 2.0f, (barHeight / 2.0f) * 0.9f,
-                    (barDepth / 2.0f) * 0.95f),
-          fgColor);
+  unitBox(out, unit, white, p.model, QVector3D(fill_x, barY + 0.005F, 0.0F),
+          QVector3D(fill_width / 2.0F, (bar_height / 2.0F) * 0.9F,
+                    (bar_depth / 2.0F) * 0.95F),
+          fg_color);
 }
 
-static inline void drawSelectionFX(const DrawContext &p, ISubmitter &out) {
+inline void drawSelectionFX(const DrawContext &p, ISubmitter &out) {
   QMatrix4x4 M;
-  QVector3D pos = p.model.column(3).toVector3D();
-  M.translate(pos.x(), 0.0f, pos.z());
-  M.scale(2.2f, 1.0f, 2.0f);
+  QVector3D const pos = p.model.column(3).toVector3D();
+  M.translate(pos.x(), 0.0F, pos.z());
+  M.scale(2.2F, 1.0F, 2.0F);
   if (p.selected) {
-    out.selectionSmoke(M, QVector3D(0.2f, 0.85f, 0.2f), 0.35f);
+    out.selectionSmoke(M, QVector3D(0.2F, 0.85F, 0.2F), 0.35F);
   } else if (p.hovered) {
-    out.selectionSmoke(M, QVector3D(0.95f, 0.92f, 0.25f), 0.22f);
+    out.selectionSmoke(M, QVector3D(0.95F, 0.92F, 0.25F), 0.22F);
   }
 }
 
-static void drawBarracks(const DrawContext &p, ISubmitter &out) {
-  if (!p.resources || !p.entity) {
+void drawBarracks(const DrawContext &p, ISubmitter &out) {
+  if ((p.resources == nullptr) || (p.entity == nullptr)) {
     return;
   }
 
   auto *t = p.entity->getComponent<Engine::Core::TransformComponent>();
   auto *r = p.entity->getComponent<Engine::Core::RenderableComponent>();
-  if (!t || !r) {
+  if ((t == nullptr) || (r == nullptr)) {
     return;
   }
 
   Mesh *unit = p.resources->unit();
   Texture *white = p.resources->white();
 
-  QVector3D team(r->color[0], r->color[1], r->color[2]);
-  BarracksPalette C = makePalette(team);
+  QVector3D const team(r->color[0], r->color[1], r->color[2]);
+  BarracksPalette const C = makePalette(team);
 
   drawFoundation(p, out, unit, white, C);
   drawAnnex(p, out, unit, white, C);
   drawWalls(p, out, unit, white, C);
-  ChimneyInfo ch = drawChimney(p, out, unit, white, C);
+  ChimneyInfo const ch = drawChimney(p, out, unit, white, C);
   drawRoofs(p, out, unit, white, C, ch);
   drawDoor(p, out, unit, white, C);
   drawWindows(p, out, unit, white, C);

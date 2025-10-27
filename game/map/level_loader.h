@@ -4,44 +4,39 @@
 #include <QString>
 #include <memory>
 
-namespace Engine {
-namespace Core {
+namespace Engine::Core {
 class World;
 using EntityID = unsigned int;
-} // namespace Core
-} // namespace Engine
-namespace Render {
-namespace GL {
+} // namespace Engine::Core
+
+namespace Render::GL {
 class Renderer;
 class Camera;
-} // namespace GL
-} // namespace Render
+} // namespace Render::GL
 
-namespace Game {
-namespace Map {
+namespace Game::Map {
 
 struct LevelLoadResult {
   bool ok = false;
-  QString mapName;
+  QString map_name;
   QString errorMessage;
   Engine::Core::EntityID playerUnitId = 0;
-  float camFov = 45.0f;
-  float camNear = 0.1f;
-  float camFar = 1000.0f;
-  int gridWidth = 50;
-  int gridHeight = 50;
-  float tileSize = 1.0f;
-  int maxTroopsPerPlayer = 50;
+  float camFov = 45.0F;
+  float camNear = 0.1F;
+  float camFar = 1000.0F;
+  int grid_width = 50;
+  int grid_height = 50;
+  float tile_size = 1.0F;
+  int max_troops_per_player = 50;
   VictoryConfig victoryConfig;
 };
 
 class LevelLoader {
 public:
-  static LevelLoadResult loadFromAssets(const QString &mapPath,
-                                        Engine::Core::World &world,
-                                        Render::GL::Renderer &renderer,
-                                        Render::GL::Camera &camera);
+  static auto loadFromAssets(const QString &map_path,
+                             Engine::Core::World &world,
+                             Render::GL::Renderer &renderer,
+                             Render::GL::Camera &camera) -> LevelLoadResult;
 };
 
-} // namespace Map
-} // namespace Game
+} // namespace Game::Map

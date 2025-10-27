@@ -1,6 +1,7 @@
 #include "skirmish_loader.h"
 #include "game/core/component.h"
 #include "game/core/world.h"
+#include "game/map/json_keys.h"
 #include "game/map/level_loader.h"
 #include "game/map/map_transformer.h"
 #include "game/map/terrain_service.h"
@@ -24,18 +25,34 @@
 #include "render/ground/stone_renderer.h"
 #include "render/ground/terrain_renderer.h"
 #include "render/scene_renderer.h"
+#include "units/spawn_type.h"
+#include "units/troop_type.h"
 #include <QDebug>
 #include <QFile>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QJsonParseError>
 #include <QSet>
 #include <algorithm>
+#include <qdir.h>
+#include <qfiledevice.h>
+#include <qglobal.h>
+#include <qjsonarray.h>
+#include <qjsondocument.h>
+#include <qjsonobject.h>
+#include <qlist.h>
+#include <qset.h>
+#include <qstringview.h>
+#include <qvariant.h>
+#include <qvectornd.h>
 #include <set>
 #include <unordered_map>
+#include <vector>
 
-namespace Game {
-namespace Map {
+namespace Game::Map {
+
+using namespace JsonKeys;
 
 SkirmishLoader::SkirmishLoader(Engine::Core::World &world,
                                Render::GL::Renderer &renderer,
@@ -43,9 +60,9 @@ SkirmishLoader::SkirmishLoader(Engine::Core::World &world,
     : m_world(world), m_renderer(renderer), m_camera(camera) {}
 
 void SkirmishLoader::resetGameState() {
-  if (auto *selectionSystem =
+  if (auto *selection_system =
           m_world.getSystem<Game::Systems::SelectionSystem>()) {
-    selectionSystem->clearSelection();
+    selection_system->clearSelection();
   }
 
   m_renderer.pause();
@@ -57,52 +74,52 @@ void SkirmishLoader::resetGameState() {
 
   Game::Systems::BuildingCollisionRegistry::instance().clear();
 
-  auto &ownerRegistry = Game::Systems::OwnerRegistry::instance();
-  ownerRegistry.clear();
+  auto &owner_registry = Game::Systems::OwnerRegistry::instance();
+  owner_registry.clear();
 
-  auto &visibilityService = Game::Map::VisibilityService::instance();
-  visibilityService.reset();
+  auto &visibility_service = Game::Map::VisibilityService::instance();
+  visibility_service.reset();
 
-  auto &terrainService = Game::Map::TerrainService::instance();
-  terrainService.clear();
+  auto &terrain_service = Game::Map::TerrainService::instance();
+  terrain_service.clear();
 
-  auto &statsRegistry = Game::Systems::GlobalStatsRegistry::instance();
-  statsRegistry.clear();
+  auto &stats_registry = Game::Systems::GlobalStatsRegistry::instance();
+  stats_registry.clear();
 
-  auto &troopRegistry = Game::Systems::TroopCountRegistry::instance();
-  troopRegistry.clear();
+  auto &troop_registry = Game::Systems::TroopCountRegistry::instance();
+  troop_registry.clear();
 
-  if (m_fog) {
-    m_fog->updateMask(0, 0, 1.0f, {});
+  if (m_fog != nullptr) {
+    m_fog->updateMask(0, 0, 1.0F, {});
   }
 }
 
-SkirmishLoadResult SkirmishLoader::start(const QString &mapPath,
-                                         const QVariantList &playerConfigs,
-                                         int selectedPlayerId,
-                                         int &outSelectedPlayerId) {
+auto SkirmishLoader::start(const QString &map_path,
+                           const QVariantList &playerConfigs,
+                           int selectedPlayerId,
+                           int &outSelectedPlayerId) -> SkirmishLoadResult {
   SkirmishLoadResult result;
 
   resetGameState();
 
-  QSet<int> mapPlayerIds;
-  QFile mapFile(mapPath);
-  if (mapFile.open(QIODevice::ReadOnly)) {
-    QByteArray data = mapFile.readAll();
-    mapFile.close();
+  QSet<int> map_player_ids;
+  QFile map_file(map_path);
+  if (map_file.open(QIODevice::ReadOnly)) {
+    const QByteArray data = map_file.readAll();
+    map_file.close();
     QJsonParseError err;
-    QJsonDocument doc = QJsonDocument::fromJson(data, &err);
+    const QJsonDocument doc = QJsonDocument::fromJson(data, &err);
     if (err.error == QJsonParseError::NoError && doc.isObject()) {
       QJsonObject obj = doc.object();
-      if (obj.contains("spawns") && obj["spawns"].isArray()) {
-        QJsonArray spawns = obj["spawns"].toArray();
-        for (const QJsonValue &spawnVal : spawns) {
-          if (spawnVal.isObject()) {
-            QJsonObject spawn = spawnVal.toObject();
-            if (spawn.contains("playerId")) {
-              int playerId = spawn["playerId"].toInt();
-              if (playerId > 0) {
-                mapPlayerIds.insert(playerId);
+      if (obj.contains(SPAWNS) && obj[SPAWNS].isArray()) {
+        const QJsonArray spawns = obj[SPAWNS].toArray();
+        for (const auto &spawn_val : spawns) {
+          if (spawn_val.isObject()) {
+            QJsonObject spawn = spawn_val.toObject();
+            if (spawn.contains(PLAYER_ID)) {
+              const int player_id = spawn[PLAYER_ID].toInt();
+              if (player_id > 0) {
+                map_player_ids.insert(player_id);
               }
             }
           }
@@ -110,69 +127,69 @@ SkirmishLoadResult SkirmishLoader::start(const QString &mapPath,
       }
     }
   } else {
-    qWarning() << "Could not open map file for reading player IDs:" << mapPath;
+    qWarning() << "Could not open map file for reading player IDs:" << map_path;
   }
 
-  auto &ownerRegistry = Game::Systems::OwnerRegistry::instance();
+  auto &owner_registry = Game::Systems::OwnerRegistry::instance();
 
-  int playerOwnerId = selectedPlayerId;
+  int player_owner_id = selectedPlayerId;
 
-  if (!mapPlayerIds.contains(playerOwnerId)) {
-    if (!mapPlayerIds.isEmpty()) {
-      QList<int> sortedIds = mapPlayerIds.values();
-      std::sort(sortedIds.begin(), sortedIds.end());
-      playerOwnerId = sortedIds.first();
+  if (!map_player_ids.contains(player_owner_id)) {
+    if (!map_player_ids.isEmpty()) {
+      QList<int> sorted_ids = map_player_ids.values();
+      std::sort(sorted_ids.begin(), sorted_ids.end());
+      player_owner_id = sorted_ids.first();
       qWarning() << "Selected player ID" << selectedPlayerId
-                 << "not found in map spawns. Using" << playerOwnerId
+                 << "not found in map spawns. Using" << player_owner_id
                  << "instead.";
-      outSelectedPlayerId = playerOwnerId;
+      outSelectedPlayerId = player_owner_id;
     } else {
       qWarning() << "No valid player spawns found in map. Using default "
                     "player ID"
-                 << playerOwnerId;
+                 << player_owner_id;
     }
   }
 
-  ownerRegistry.setLocalPlayerId(playerOwnerId);
+  owner_registry.setLocalPlayerId(player_owner_id);
 
-  std::unordered_map<int, int> teamOverrides;
-  QVariantList savedPlayerConfigs;
-  std::set<int> processedPlayerIds;
+  std::unordered_map<int, int> team_overrides;
+  QVariantList saved_player_configs;
+  std::set<int> processed_player_ids;
 
   if (!playerConfigs.isEmpty()) {
 
-    for (const QVariant &configVar : playerConfigs) {
-      QVariantMap config = configVar.toMap();
-      int playerId = config.value("playerId", -1).toInt();
-      int teamId = config.value("teamId", 0).toInt();
-      QString colorHex = config.value("colorHex", "#FFFFFF").toString();
-      bool isHuman = config.value("isHuman", false).toBool();
+    for (const QVariant &config_var : playerConfigs) {
+      const QVariantMap config = config_var.toMap();
+      int player_id = config.value("player_id", -1).toInt();
+      const int team_id = config.value("team_id", 0).toInt();
+      const QString color_hex = config.value("colorHex", "#FFFFFF").toString();
+      const bool is_human = config.value("isHuman", false).toBool();
 
-      if (isHuman && playerId != playerOwnerId) {
-        playerId = playerOwnerId;
+      if (is_human && player_id != player_owner_id) {
+        player_id = player_owner_id;
       }
 
-      if (processedPlayerIds.count(playerId) > 0) {
+      if (processed_player_ids.contains(player_id)) {
         continue;
       }
 
-      if (playerId >= 0) {
-        processedPlayerIds.insert(playerId);
-        teamOverrides[playerId] = teamId;
+      if (player_id >= 0) {
+        processed_player_ids.insert(player_id);
+        team_overrides[player_id] = team_id;
 
-        QVariantMap updatedConfig = config;
-        updatedConfig["playerId"] = playerId;
-        savedPlayerConfigs.append(updatedConfig);
+        QVariantMap updated_config = config;
+        updated_config["player_id"] = player_id;
+        saved_player_configs.append(updated_config);
       }
     }
   }
 
-  std::set<int> uniqueTeams;
-  for (const auto &[playerId, teamId] : teamOverrides) {
-    uniqueTeams.insert(teamId);
+  std::set<int> unique_teams;
+  for (const auto &[player_id, team_id] : team_overrides) {
+    unique_teams.insert(team_id);
   }
 
-  if (teamOverrides.size() >= 2 && uniqueTeams.size() < 2) {
+  if (team_overrides.size() >= 2 && unique_teams.size() < 2) {
     result.errorMessage = "Invalid team configuration: At least two teams must "
                           "be selected to start a match.";
     m_renderer.unlockWorldForModification();
@@ -181,47 +198,53 @@ SkirmishLoadResult SkirmishLoader::start(const QString &mapPath,
     return result;
   }
 
-  Game::Map::MapTransformer::setLocalOwnerId(playerOwnerId);
-  Game::Map::MapTransformer::setPlayerTeamOverrides(teamOverrides);
+  Game::Map::MapTransformer::setLocalOwnerId(player_owner_id);
+  Game::Map::MapTransformer::setPlayerTeamOverrides(team_overrides);
 
-  auto lr = Game::Map::LevelLoader::loadFromAssets(mapPath, m_world, m_renderer,
-                                                   m_camera);
+  auto level_result = Game::Map::LevelLoader::loadFromAssets(
+      map_path, m_world, m_renderer, m_camera);
 
-  if (!lr.ok && !lr.errorMessage.isEmpty()) {
-    result.errorMessage = lr.errorMessage;
+  if (!level_result.ok && !level_result.errorMessage.isEmpty()) {
+    result.errorMessage = level_result.errorMessage;
     m_renderer.unlockWorldForModification();
     m_renderer.resume();
     return result;
   }
 
-  if (!savedPlayerConfigs.isEmpty()) {
-    for (const QVariant &configVar : savedPlayerConfigs) {
-      QVariantMap config = configVar.toMap();
-      int playerId = config.value("playerId", -1).toInt();
-      QString colorHex = config.value("colorHex", "#FFFFFF").toString();
+  constexpr float COLOR_SCALE = 255.0F;
+  constexpr int HEX_COLOR_LENGTH = 7;
+  constexpr int HEX_BASE = 16;
 
-      if (playerId >= 0 && colorHex.startsWith("#") && colorHex.length() == 7) {
-        bool ok;
-        int r = colorHex.mid(1, 2).toInt(&ok, 16);
-        int g = colorHex.mid(3, 2).toInt(&ok, 16);
-        int b = colorHex.mid(5, 2).toInt(&ok, 16);
-        ownerRegistry.setOwnerColor(playerId, r / 255.0f, g / 255.0f,
-                                    b / 255.0f);
+  if (!saved_player_configs.isEmpty()) {
+    for (const QVariant &config_var : saved_player_configs) {
+      const QVariantMap config = config_var.toMap();
+      const int player_id = config.value("player_id", -1).toInt();
+      const QString color_hex = config.value("colorHex", "#FFFFFF").toString();
+
+      if (player_id >= 0 && color_hex.startsWith("#") &&
+          color_hex.length() == HEX_COLOR_LENGTH) {
+        bool conversion_ok = false;
+        const int red = color_hex.mid(1, 2).toInt(&conversion_ok, HEX_BASE);
+        const int green = color_hex.mid(3, 2).toInt(&conversion_ok, HEX_BASE);
+        const int blue = color_hex.mid(5, 2).toInt(&conversion_ok, HEX_BASE);
+        owner_registry.setOwnerColor(player_id, red / COLOR_SCALE,
+                                     green / COLOR_SCALE, blue / COLOR_SCALE);
       }
     }
 
     auto entities = m_world.getEntitiesWith<Engine::Core::UnitComponent>();
-    std::unordered_map<int, int> ownerEntityCount;
+    std::unordered_map<int, int> owner_entity_count;
     for (auto *entity : entities) {
       auto *unit = entity->getComponent<Engine::Core::UnitComponent>();
       auto *renderable =
           entity->getComponent<Engine::Core::RenderableComponent>();
-      if (unit && renderable) {
-        QVector3D tc = Game::Visuals::teamColorForOwner(unit->ownerId);
-        renderable->color[0] = tc.x();
-        renderable->color[1] = tc.y();
-        renderable->color[2] = tc.z();
-        ownerEntityCount[unit->ownerId]++;
+      if ((unit != nullptr) && (renderable != nullptr)) {
+        const QVector3D team_color =
+            Game::Visuals::team_colorForOwner(unit->owner_id);
+        renderable->color[0] = team_color.x();
+        renderable->color[1] = team_color.y();
+        renderable->color[2] = team_color.z();
+        owner_entity_count[unit->owner_id]++;
       }
     }
   }
@@ -230,100 +253,111 @@ SkirmishLoadResult SkirmishLoader::start(const QString &mapPath,
     m_onOwnersUpdated();
   }
 
-  auto &terrainService = Game::Map::TerrainService::instance();
+  auto &terrain_service = Game::Map::TerrainService::instance();
 
-  if (m_ground) {
-    if (lr.ok) {
-      m_ground->configure(lr.tileSize, lr.gridWidth, lr.gridHeight);
+  if (m_ground != nullptr) {
+    if (level_result.ok) {
+      m_ground->configure(level_result.tile_size, level_result.grid_width,
+                          level_result.grid_height);
     } else {
-      m_ground->configureExtent(50.0f);
+      m_ground->configureExtent(50.0F);
     }
-    if (terrainService.isInitialized()) {
-      m_ground->setBiome(terrainService.biomeSettings());
-    }
-  }
-
-  if (m_terrain) {
-    if (terrainService.isInitialized() && terrainService.getHeightMap()) {
-      m_terrain->configure(*terrainService.getHeightMap(),
-                           terrainService.biomeSettings());
+    if (terrain_service.isInitialized()) {
+      m_ground->setBiome(terrain_service.biomeSettings());
     }
   }
 
-  if (m_biome) {
-    if (terrainService.isInitialized() && terrainService.getHeightMap()) {
-      m_biome->configure(*terrainService.getHeightMap(),
-                         terrainService.biomeSettings());
+  if (m_terrain != nullptr) {
+    if (terrain_service.isInitialized() &&
+        (terrain_service.getHeightMap() != nullptr)) {
+      m_terrain->configure(*terrain_service.getHeightMap(),
+                           terrain_service.biomeSettings());
     }
   }
 
-  if (m_river) {
-    if (terrainService.isInitialized() && terrainService.getHeightMap()) {
-      m_river->configure(terrainService.getHeightMap()->getRiverSegments(),
-                         terrainService.getHeightMap()->getTileSize());
+  if (m_biome != nullptr) {
+    if (terrain_service.isInitialized() &&
+        (terrain_service.getHeightMap() != nullptr)) {
+      m_biome->configure(*terrain_service.getHeightMap(),
+                         terrain_service.biomeSettings());
     }
   }
 
-  if (m_riverbank) {
-    if (terrainService.isInitialized() && terrainService.getHeightMap()) {
-      m_riverbank->configure(terrainService.getHeightMap()->getRiverSegments(),
-                             *terrainService.getHeightMap());
+  if (m_river != nullptr) {
+    if (terrain_service.isInitialized() &&
+        (terrain_service.getHeightMap() != nullptr)) {
+      m_river->configure(terrain_service.getHeightMap()->getRiverSegments(),
+                         terrain_service.getHeightMap()->getTileSize());
     }
   }
 
-  if (m_bridge) {
-    if (terrainService.isInitialized() && terrainService.getHeightMap()) {
-      m_bridge->configure(terrainService.getHeightMap()->getBridges(),
-                          terrainService.getHeightMap()->getTileSize());
+  if (m_riverbank != nullptr) {
+    if (terrain_service.isInitialized() &&
+        (terrain_service.getHeightMap() != nullptr)) {
+      m_riverbank->configure(terrain_service.getHeightMap()->getRiverSegments(),
+                             *terrain_service.getHeightMap());
     }
   }
 
-  if (m_stone) {
-    if (terrainService.isInitialized() && terrainService.getHeightMap()) {
-      m_stone->configure(*terrainService.getHeightMap(),
-                         terrainService.biomeSettings());
+  if (m_bridge != nullptr) {
+    if (terrain_service.isInitialized() &&
+        (terrain_service.getHeightMap() != nullptr)) {
+      m_bridge->configure(terrain_service.getHeightMap()->getBridges(),
+                          terrain_service.getHeightMap()->getTileSize());
     }
   }
 
-  if (m_plant) {
-    if (terrainService.isInitialized() && terrainService.getHeightMap()) {
-      m_plant->configure(*terrainService.getHeightMap(),
-                         terrainService.biomeSettings());
+  if (m_stone != nullptr) {
+    if (terrain_service.isInitialized() &&
+        (terrain_service.getHeightMap() != nullptr)) {
+      m_stone->configure(*terrain_service.getHeightMap(),
+                         terrain_service.biomeSettings());
     }
   }
 
-  if (m_pine) {
-    if (terrainService.isInitialized() && terrainService.getHeightMap()) {
-      m_pine->configure(*terrainService.getHeightMap(),
-                        terrainService.biomeSettings());
+  if (m_plant != nullptr) {
+    if (terrain_service.isInitialized() &&
+        (terrain_service.getHeightMap() != nullptr)) {
+      m_plant->configure(*terrain_service.getHeightMap(),
+                         terrain_service.biomeSettings());
     }
   }
 
-  if (m_firecamp) {
-    if (terrainService.isInitialized() && terrainService.getHeightMap()) {
-      m_firecamp->configure(*terrainService.getHeightMap(),
-                            terrainService.biomeSettings());
+  if (m_pine != nullptr) {
+    if (terrain_service.isInitialized() &&
+        (terrain_service.getHeightMap() != nullptr)) {
+      m_pine->configure(*terrain_service.getHeightMap(),
+                        terrain_service.biomeSettings());
+    }
+  }
 
-      const auto &fireCamps = terrainService.fireCamps();
-      if (!fireCamps.empty()) {
+  if (m_firecamp != nullptr) {
+    if (terrain_service.isInitialized() &&
+        (terrain_service.getHeightMap() != nullptr)) {
+      m_firecamp->configure(*terrain_service.getHeightMap(),
+                            terrain_service.biomeSettings());
+
+      const auto &fire_camps = terrain_service.fire_camps();
+      if (!fire_camps.empty()) {
         std::vector<QVector3D> positions;
         std::vector<float> intensities;
         std::vector<float> radii;
 
-        const auto *heightMap = terrainService.getHeightMap();
-        const float tileSize = heightMap->getTileSize();
+        const auto *heightMap = terrain_service.getHeightMap();
+        const float tile_size = heightMap->getTileSize();
         const int width = heightMap->getWidth();
         const int height = heightMap->getHeight();
-        const float halfWidth = width * 0.5f;
-        const float halfHeight = height * 0.5f;
+        const float half_width = width * 0.5F;
+        const float half_height = height * 0.5F;
 
-        for (const auto &fc : fireCamps) {
+        for (const auto &fc : fire_camps) {
 
-          float worldX = (fc.x - halfWidth) * tileSize;
-          float worldZ = (fc.z - halfHeight) * tileSize;
-          float worldY = terrainService.getTerrainHeight(worldX, worldZ);
+          float const world_x = (fc.x - half_width) * tile_size;
+          float const world_z = (fc.z - half_height) * tile_size;
+          float const world_y =
+              terrain_service.getTerrainHeight(world_x, world_z);
 
-          positions.push_back(QVector3D(worldX, worldY, worldZ));
+          positions.emplace_back(world_x, world_y, world_z);
           intensities.push_back(fc.intensity);
           radii.push_back(fc.radius);
         }
@@ -333,76 +367,78 @@ SkirmishLoadResult SkirmishLoader::start(const QString &mapPath,
     }
   }
 
-  int mapWidth = lr.ok ? lr.gridWidth : 100;
-  int mapHeight = lr.ok ? lr.gridHeight : 100;
-  Game::Systems::CommandService::initialize(mapWidth, mapHeight);
+  constexpr int default_map_size = 100;
+  const int map_width =
+      level_result.ok ? level_result.grid_width : default_map_size;
+  const int map_height =
+      level_result.ok ? level_result.grid_height : default_map_size;
+  Game::Systems::CommandService::initialize(map_width, map_height);
 
-  auto &visibilityService = Game::Map::VisibilityService::instance();
-  visibilityService.initialize(mapWidth, mapHeight, lr.tileSize);
-  visibilityService.computeImmediate(m_world, playerOwnerId);
+  auto &visibility_service = Game::Map::VisibilityService::instance();
+  visibility_service.initialize(map_width, map_height, level_result.tile_size);
+  visibility_service.computeImmediate(m_world, player_owner_id);
 
-  if (m_fog && visibilityService.isInitialized()) {
+  if ((m_fog != nullptr) && visibility_service.isInitialized()) {
     m_fog->updateMask(
-        visibilityService.getWidth(), visibilityService.getHeight(),
-        visibilityService.getTileSize(), visibilityService.snapshotCells());
+        visibility_service.getWidth(), visibility_service.getHeight(),
+        visibility_service.getTileSize(), visibility_service.snapshotCells());
 
     if (m_onVisibilityMaskReady) {
       m_onVisibilityMaskReady();
     }
   }
 
-  if (m_biome) {
+  if (m_biome != nullptr) {
     m_biome->refreshGrass();
   }
 
   m_renderer.unlockWorldForModification();
   m_renderer.resume();
 
-  Engine::Core::Entity *focusEntity = nullptr;
+  Engine::Core::Entity *focus_entity = nullptr;
 
   auto candidates = m_world.getEntitiesWith<Engine::Core::UnitComponent>();
-  for (auto *e : candidates) {
-    if (!e) {
+  for (auto *entity : candidates) {
+    if (entity == nullptr) {
       continue;
     }
-    auto *u = e->getComponent<Engine::Core::UnitComponent>();
-    if (!u) {
+    auto *unit = entity->getComponent<Engine::Core::UnitComponent>();
+    if (unit == nullptr) {
       continue;
     }
-    if (u->spawnType == Game::Units::SpawnType::Barracks &&
-        u->ownerId == playerOwnerId && u->health > 0) {
-      focusEntity = e;
+    if (unit->spawn_type == Game::Units::SpawnType::Barracks &&
+        unit->owner_id == player_owner_id && unit->health > 0) {
+      focus_entity = entity;
       break;
     }
   }
 
-  if (!focusEntity && lr.playerUnitId != 0) {
-    focusEntity = m_world.getEntity(lr.playerUnitId);
+  if ((focus_entity == nullptr) && level_result.playerUnitId != 0) {
+    focus_entity = m_world.getEntity(level_result.playerUnitId);
   }
 
-  if (focusEntity) {
-    if (auto *t =
-            focusEntity->getComponent<Engine::Core::TransformComponent>()) {
-      result.focusPosition =
-          QVector3D(t->position.x, t->position.y, t->position.z);
+  if (focus_entity != nullptr) {
+    if (auto *transform =
+            focus_entity->getComponent<Engine::Core::TransformComponent>()) {
+      result.focusPosition = QVector3D(
+          transform->position.x, transform->position.y, transform->position.z);
       result.hasFocusPosition = true;
     }
   }
 
   result.ok = true;
-  result.mapName = lr.mapName;
-  result.playerUnitId = lr.playerUnitId;
-  result.camFov = lr.camFov;
-  result.camNear = lr.camNear;
-  result.camFar = lr.camFar;
-  result.gridWidth = lr.gridWidth;
-  result.gridHeight = lr.gridHeight;
-  result.tileSize = lr.tileSize;
-  result.maxTroopsPerPlayer = lr.maxTroopsPerPlayer;
-  result.victoryConfig = lr.victoryConfig;
+  result.map_name = level_result.map_name;
+  result.playerUnitId = level_result.playerUnitId;
+  result.camFov = level_result.camFov;
+  result.camNear = level_result.camNear;
+  result.camFar = level_result.camFar;
+  result.grid_width = level_result.grid_width;
+  result.grid_height = level_result.grid_height;
+  result.tile_size = level_result.tile_size;
+  result.max_troops_per_player = level_result.max_troops_per_player;
+  result.victoryConfig = level_result.victoryConfig;
 
   return result;
 }
 
-} // namespace Map
-} // namespace Game
+} // namespace Game::Map

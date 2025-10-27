@@ -7,14 +7,11 @@
 
 #include <memory>
 
-namespace Engine {
-namespace Core {
+namespace Engine::Core {
 class World;
 }
-} // namespace Engine
 
-namespace Game {
-namespace Systems {
+namespace Game::Systems {
 
 class SaveStorage;
 
@@ -23,40 +20,40 @@ public:
   SaveLoadService();
   ~SaveLoadService();
 
-  bool saveGameToSlot(Engine::Core::World &world, const QString &slotName,
-                      const QString &title, const QString &mapName,
+  auto saveGameToSlot(Engine::Core::World &world, const QString &slotName,
+                      const QString &title, const QString &map_name,
                       const QJsonObject &metadata = {},
-                      const QByteArray &screenshot = QByteArray());
+                      const QByteArray &screenshot = QByteArray()) -> bool;
 
-  bool loadGameFromSlot(Engine::Core::World &world, const QString &slotName);
+  auto loadGameFromSlot(Engine::Core::World &world,
+                        const QString &slotName) -> bool;
 
-  QVariantList getSaveSlots() const;
+  auto getSaveSlots() const -> QVariantList;
 
-  bool deleteSaveSlot(const QString &slotName);
+  auto deleteSaveSlot(const QString &slotName) -> bool;
 
-  QString getLastError() const { return m_lastError; }
+  auto getLastError() const -> QString { return m_last_error; }
 
-  void clearError() { m_lastError.clear(); }
+  void clearError() { m_last_error.clear(); }
 
-  QJsonObject getLastMetadata() const { return m_lastMetadata; }
-  QString getLastTitle() const { return m_lastTitle; }
-  QByteArray getLastScreenshot() const { return m_lastScreenshot; }
+  auto getLastMetadata() const -> QJsonObject { return m_lastMetadata; }
+  auto getLastTitle() const -> QString { return m_lastTitle; }
+  auto getLastScreenshot() const -> QByteArray { return m_lastScreenshot; }
 
-  void openSettings();
+  static void openSettings();
 
-  void exitGame();
+  static void exitGame();
 
 private:
-  QString getSavesDirectory() const;
-  QString getDatabasePath() const;
+  static auto getSavesDirectory() -> QString;
+  auto get_database_path() const -> QString;
   void ensureSavesDirectoryExists() const;
 
-  mutable QString m_lastError;
+  mutable QString m_last_error;
   QJsonObject m_lastMetadata;
   QString m_lastTitle;
   QByteArray m_lastScreenshot;
   std::unique_ptr<SaveStorage> m_storage;
 };
 
-} // namespace Systems
-} // namespace Game
+} // namespace Game::Systems

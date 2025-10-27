@@ -12,7 +12,7 @@ namespace Game::Map {
 
 enum class TerrainType { Flat, Hill, Mountain, River };
 
-inline QString terrainTypeToQString(TerrainType type) {
+inline auto terrainTypeToQString(TerrainType type) -> QString {
   switch (type) {
   case TerrainType::Flat:
     return QStringLiteral("flat");
@@ -26,11 +26,12 @@ inline QString terrainTypeToQString(TerrainType type) {
   return QStringLiteral("flat");
 }
 
-inline std::string terrainTypeToString(TerrainType type) {
+inline auto terrainTypeToString(TerrainType type) -> std::string {
   return terrainTypeToQString(type).toStdString();
 }
 
-inline bool tryParseTerrainType(const QString &value, TerrainType &out) {
+inline auto tryParseTerrainType(const QString &value,
+                                TerrainType &out) -> bool {
   const QString lowered = value.trimmed().toLower();
   if (lowered == QStringLiteral("flat")) {
     out = TerrainType::Flat;
@@ -51,8 +52,8 @@ inline bool tryParseTerrainType(const QString &value, TerrainType &out) {
   return false;
 }
 
-inline std::optional<TerrainType>
-terrainTypeFromString(const std::string &str) {
+inline auto
+terrainTypeFromString(const std::string &str) -> std::optional<TerrainType> {
   TerrainType result;
   if (tryParseTerrainType(QString::fromStdString(str), result)) {
     return result;
@@ -61,124 +62,133 @@ terrainTypeFromString(const std::string &str) {
 }
 
 struct BiomeSettings {
-  QVector3D grassPrimary{0.30f, 0.60f, 0.28f};
-  QVector3D grassSecondary{0.44f, 0.70f, 0.32f};
-  QVector3D grassDry{0.72f, 0.66f, 0.48f};
-  QVector3D soilColor{0.28f, 0.24f, 0.18f};
-  QVector3D rockLow{0.48f, 0.46f, 0.44f};
-  QVector3D rockHigh{0.68f, 0.69f, 0.73f};
-  float patchDensity = 4.5f;
-  float patchJitter = 0.95f;
-  float backgroundBladeDensity = 0.65f;
-  float bladeHeightMin = 0.55f;
-  float bladeHeightMax = 1.35f;
-  float bladeWidthMin = 0.025f;
-  float bladeWidthMax = 0.055f;
-  float swayStrength = 0.25f;
-  float swaySpeed = 1.4f;
-  float heightNoiseAmplitude = 0.16f;
-  float heightNoiseFrequency = 0.05f;
-  float terrainMacroNoiseScale = 0.035f;
-  float terrainDetailNoiseScale = 0.14f;
-  float terrainSoilHeight = 0.6f;
-  float terrainSoilSharpness = 3.8f;
-  float terrainRockThreshold = 0.42f;
-  float terrainRockSharpness = 3.1f;
-  float terrainAmbientBoost = 1.08f;
-  float terrainRockDetailStrength = 0.35f;
-  float backgroundSwayVariance = 0.2f;
-  float backgroundScatterRadius = 0.35f;
-  float plantDensity = 0.5f;
-  float spawnEdgePadding = 0.08f;
-  std::uint32_t seed = 1337u;
+  QVector3D grassPrimary{0.30F, 0.60F, 0.28F};
+  QVector3D grassSecondary{0.44F, 0.70F, 0.32F};
+  QVector3D grassDry{0.72F, 0.66F, 0.48F};
+  QVector3D soilColor{0.28F, 0.24F, 0.18F};
+  QVector3D rockLow{0.48F, 0.46F, 0.44F};
+  QVector3D rockHigh{0.68F, 0.69F, 0.73F};
+  float patchDensity = 4.5F;
+  float patchJitter = 0.95F;
+  float backgroundBladeDensity = 0.65F;
+  float bladeHeightMin = 0.55F;
+  float bladeHeightMax = 1.35F;
+  float bladeWidthMin = 0.025F;
+  float bladeWidthMax = 0.055F;
+  float sway_strength = 0.25F;
+  float sway_speed = 1.4F;
+  float heightNoiseAmplitude = 0.16F;
+  float heightNoiseFrequency = 0.05F;
+  float terrainMacroNoiseScale = 0.035F;
+  float terrainDetailNoiseScale = 0.14F;
+  float terrainSoilHeight = 0.6F;
+  float terrainSoilSharpness = 3.8F;
+  float terrainRockThreshold = 0.42F;
+  float terrainRockSharpness = 3.1F;
+  float terrainAmbientBoost = 1.08F;
+  float terrainRockDetailStrength = 0.35F;
+  float backgroundSwayVariance = 0.2F;
+  float backgroundScatterRadius = 0.35F;
+  float plant_density = 0.5F;
+  float spawnEdgePadding = 0.08F;
+  std::uint32_t seed = 1337U;
 };
 
 struct TerrainFeature {
   TerrainType type;
-  float centerX;
-  float centerZ;
-  float radius;
-  float width;
-  float depth;
-  float height;
+  float center_x{};
+  float center_z{};
+  float radius{};
+  float width{};
+  float depth{};
+  float height{};
 
   std::vector<QVector3D> entrances;
 
-  float rotationDeg = 0.0f;
+  float rotationDeg = 0.0F;
 };
 
 struct RiverSegment {
   QVector3D start;
   QVector3D end;
-  float width = 2.0f;
+  float width = 2.0F;
 };
 
 struct Bridge {
   QVector3D start;
   QVector3D end;
-  float width = 3.0f;
-  float height = 0.5f;
+  float width = 3.0F;
+  float height = 0.5F;
 };
 
 class TerrainHeightMap {
 public:
-  TerrainHeightMap(int width, int height, float tileSize);
+  TerrainHeightMap(int width, int height, float tile_size);
 
   void buildFromFeatures(const std::vector<TerrainFeature> &features);
 
   void addRiverSegments(const std::vector<RiverSegment> &riverSegments);
 
-  float getHeightAt(float worldX, float worldZ) const;
+  [[nodiscard]] auto getHeightAt(float world_x, float world_z) const -> float;
 
-  float getHeightAtGrid(int gridX, int gridZ) const;
+  [[nodiscard]] auto getHeightAtGrid(int grid_x, int grid_z) const -> float;
 
-  bool isWalkable(int gridX, int gridZ) const;
+  [[nodiscard]] auto isWalkable(int grid_x, int grid_z) const -> bool;
 
-  bool isHillEntrance(int gridX, int gridZ) const;
+  [[nodiscard]] auto isHillEntrance(int grid_x, int grid_z) const -> bool;
 
-  TerrainType getTerrainType(int gridX, int gridZ) const;
+  [[nodiscard]] auto getTerrainType(int grid_x,
+                                    int grid_z) const -> TerrainType;
 
-  bool isRiverOrNearby(int gridX, int gridZ, int margin = 1) const;
+  [[nodiscard]] auto isRiverOrNearby(int grid_x, int grid_z,
+                                     int margin = 1) const -> bool;
 
-  int getWidth() const { return m_width; }
-  int getHeight() const { return m_height; }
-  float getTileSize() const { return m_tileSize; }
+  [[nodiscard]] auto getWidth() const -> int { return m_width; }
+  [[nodiscard]] auto getHeight() const -> int { return m_height; }
+  [[nodiscard]] auto getTileSize() const -> float { return m_tile_size; }
 
-  const std::vector<float> &getHeightData() const { return m_heights; }
-  const std::vector<TerrainType> &getTerrainTypes() const {
-    return m_terrainTypes;
+  [[nodiscard]] auto getHeightData() const -> const std::vector<float> & {
+    return m_heights;
   }
-  const std::vector<RiverSegment> &getRiverSegments() const {
+  [[nodiscard]] auto
+  getTerrainTypes() const -> const std::vector<TerrainType> & {
+    return m_terrain_types;
+  }
+  [[nodiscard]] auto
+  getRiverSegments() const -> const std::vector<RiverSegment> & {
     return m_riverSegments;
   }
 
   void addBridges(const std::vector<Bridge> &bridges);
-  const std::vector<Bridge> &getBridges() const { return m_bridges; }
+  [[nodiscard]] auto getBridges() const -> const std::vector<Bridge> & {
+    return m_bridges;
+  }
 
   void applyBiomeVariation(const BiomeSettings &settings);
 
   void restoreFromData(const std::vector<float> &heights,
-                       const std::vector<TerrainType> &terrainTypes,
+                       const std::vector<TerrainType> &terrain_types,
                        const std::vector<RiverSegment> &rivers,
                        const std::vector<Bridge> &bridges);
 
 private:
   int m_width;
   int m_height;
-  float m_tileSize;
+  float m_tile_size;
 
   std::vector<float> m_heights;
-  std::vector<TerrainType> m_terrainTypes;
+  std::vector<TerrainType> m_terrain_types;
   std::vector<bool> m_hillEntrances;
   std::vector<bool> m_hillWalkable;
   std::vector<RiverSegment> m_riverSegments;
   std::vector<Bridge> m_bridges;
 
-  int indexAt(int x, int z) const;
-  bool inBounds(int x, int z) const;
+  [[nodiscard]] auto indexAt(int x, int z) const -> int;
+  [[nodiscard]] auto inBounds(int x, int z) const -> bool;
 
-  float calculateFeatureHeight(const TerrainFeature &feature, float worldX,
-                               float worldZ) const;
+  [[nodiscard]] static auto
+  calculateFeatureHeight(const TerrainFeature &feature, float world_x,
+                         float world_z) -> float;
 };
 
 } // namespace Game::Map

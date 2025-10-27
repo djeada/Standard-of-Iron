@@ -100,6 +100,60 @@ Exports Qt `.ts` translation files to CSV format for easier editing.
 
 ## Development Scripts
 
+### `validate_shader_uniforms.py` - Shader Uniform Validation
+
+**⚠️ IMPORTANT**: Always run this after modifying shader code or backend uniform handling!
+
+Validates that uniform names in GLSL shaders match the names used in C++ backend code. 
+Prevents rendering bugs caused by naming convention mismatches (camelCase vs snake_case).
+
+**Features:**
+- ✓ Scans all `.frag` and `.vert` shader files in `assets/shaders/`
+- ✓ Extracts uniform declarations from shaders
+- ✓ Compares with `uniformHandle()` calls in `render/gl/backend.cpp`
+- ✓ Detects camelCase/snake_case mismatches
+- ✓ Reports exact line numbers of issues
+- ✓ Exit code 0 if valid, 1 if errors found (CI-friendly)
+
+**Usage:**
+```bash
+# Validate all shaders and backend code
+python3 scripts/validate_shader_uniforms.py
+
+# Alternative bash version
+./scripts/validate-shader-uniforms.sh
+```
+
+**Example Output:**
+```
+=== Shader Uniform Validation ===
+Found 35 shader files
+Total unique uniforms in shaders: 56
+Found 50 unique uniformHandle() calls in backend.cpp
+
+✓ All uniform names match between shaders and backend!
+```
+
+**When to Run:**
+- After renaming variables in backend.cpp
+- After modifying shader files
+- Before committing rendering changes
+- In CI/CD pipelines
+- When debugging rendering issues
+
+**Common Issues Found:**
+- `u_view_proj` (backend) vs `u_viewProj` (shader) ❌
+- `u_light_dir` (backend) vs `u_lightDir` (shader) ❌
+- `u_tile_size` (backend) vs `u_tileSize` (shader) ❌
+
+### `validate-shader-uniforms.sh` - Shader Validation (Bash)
+
+Alternative bash implementation of shader uniform validation. Use the Python version for more detailed output.
+
+### `run-clang-tidy-fixes.sh` - Clang-Tidy Auto-Fix
+
+Runs clang-tidy with automatic fixes enabled.
+
 ### `debug-audio.sh` - Audio Debugging
 
 Helper script for debugging audio issues.

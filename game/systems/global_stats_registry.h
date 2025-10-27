@@ -16,23 +16,23 @@ struct PlayerStats {
   int barracksOwned = 0;
   std::chrono::steady_clock::time_point gameStartTime;
   std::chrono::steady_clock::time_point gameEndTime;
-  float playTimeSec = 0.0f;
+  float playTimeSec = 0.0F;
   bool gameEnded = false;
 };
 
 class GlobalStatsRegistry {
 public:
-  static GlobalStatsRegistry &instance();
+  static auto instance() -> GlobalStatsRegistry &;
 
   void initialize();
   void clear();
 
-  const PlayerStats *getStats(int ownerId) const;
-  PlayerStats *getStats(int ownerId);
+  auto getStats(int owner_id) const -> const PlayerStats *;
+  auto getStats(int owner_id) -> PlayerStats *;
 
-  void markGameStart(int ownerId);
+  void markGameStart(int owner_id);
 
-  void markGameEnd(int ownerId);
+  void markGameEnd(int owner_id);
 
   void onUnitSpawned(const Engine::Core::UnitSpawnedEvent &event);
   void onUnitDied(const Engine::Core::UnitDiedEvent &event);
@@ -44,7 +44,7 @@ private:
   GlobalStatsRegistry() = default;
   ~GlobalStatsRegistry() = default;
   GlobalStatsRegistry(const GlobalStatsRegistry &) = delete;
-  GlobalStatsRegistry &operator=(const GlobalStatsRegistry &) = delete;
+  auto operator=(const GlobalStatsRegistry &) -> GlobalStatsRegistry & = delete;
 
   std::unordered_map<int, PlayerStats> m_playerStats;
 

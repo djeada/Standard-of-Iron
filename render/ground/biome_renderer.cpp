@@ -1,60 +1,48 @@
 #include "biome_renderer.h"
 #include "../../game/systems/building_collision_registry.h"
 #include "../gl/buffer.h"
+#include "../gl/render_constants.h"
 #include "../scene_renderer.h"
+#include "gl/resources.h"
+#include "ground/grass_gpu.h"
+#include "ground_utils.h"
+#include "map/terrain.h"
 #include <QDebug>
 #include <QElapsedTimer>
 #include <QVector2D>
 #include <algorithm>
-#include <array>
 #include <cmath>
+#include <cstdint>
+#include <memory>
 #include <optional>
+#include <qelapsedtimer.h>
+#include <qglobal.h>
+#include <qvectornd.h>
+#include <vector>
 
 namespace {
 
 using std::uint32_t;
+using namespace Render::Ground;
+using namespace Render::GL::Geometry;
 
-inline uint32_t hashCoords(int x, int z, uint32_t salt = 0u) {
-  uint32_t ux = static_cast<uint32_t>(x * 73856093);
-  uint32_t uz = static_cast<uint32_t>(z * 19349663);
-  return ux ^ uz ^ (salt * 83492791u);
-}
-
-inline float rand01(uint32_t &state) {
-  state = state * 1664525u + 1013904223u;
-  return static_cast<float>((state >> 8) & 0xFFFFFF) /
-         static_cast<float>(0xFFFFFF);
-}
-
-inline float remap(float value, float minOut, float maxOut) {
-  return minOut + (maxOut - minOut) * value;
-}
-
-inline float hashTo01(uint32_t h) {
-  h ^= h >> 17;
-  h *= 0xed5ad4bbu;
-  h ^= h >> 11;
-  h *= 0xac4c1b51u;
-  h ^= h >> 15;
-  h *= 0x31848babu;
-  h ^= h >> 14;
-  return (h & 0x00FFFFFFu) / float(0x01000000);
-}
-
-inline float valueNoise(float x, float z, uint32_t salt = 0u) {
-  int x0 = int(std::floor(x)), z0 = int(std::floor(z));
-  int x1 = x0 + 1, z1 = z0 + 1;
-  float tx = x - float(x0), tz = z - float(z0);
-  float n00 = hashTo01(hashCoords(x0, z0, salt));
-  float n10 = hashTo01(hashCoords(x1, z0, salt));
-  float n01 = hashTo01(hashCoords(x0, z1, salt));
-  float n11 = hashTo01(hashCoords(x1, z1, salt));
-  float nx0 = n00 * (1 - tx) + n10 * tx;
-  float nx1 = n01 * (1 - tx) + n11 * tx;
+inline auto valueNoise(float x, float z, uint32_t salt = 0U) -> float {
+  int x0 = int(std::floor(x));
+  int z0 = int(std::floor(z));
+  int x1 = x0 + 1;
+  int z1 = z0 + 1;
+  float tx = x - float(x0);
+  float tz = z - float(z0);
+  float const n00 = hashTo01(hashCoords(x0, z0, salt));
+  float const n10 = hashTo01(hashCoords(x1, z0, salt));
+  float const n01 = hashTo01(hashCoords(x0, z1, salt));
+  float const n11 = hashTo01(hashCoords(x1, z1, salt));
+  float const nx0 = n00 * (1 - tx) + n10 * tx;
+  float const nx1 = n01 * (1 - tx) + n11 * tx;
   return nx0 * (1 - tz) + nx1 * tz;
 }
 
-inline int sectionFor(Game::Map::TerrainType type) {
+inline auto sectionFor(Game::Map::TerrainType type) -> int {
   switch (type) {
   case Game::Map::TerrainType::Mountain:
     return 2;
@@ -73,13 +61,13 @@ namespace Render::GL {
 BiomeRenderer::BiomeRenderer() = default;
 BiomeRenderer::~BiomeRenderer() = default;
 
-void BiomeRenderer::configure(const Game::Map::TerrainHeightMap &heightMap,
+void BiomeRenderer::configure(const Game::Map::TerrainHeightMap &height_map,
                               const Game::Map::BiomeSettings &biomeSettings) {
-  m_width = heightMap.getWidth();
-  m_height = heightMap.getHeight();
-  m_tileSize = heightMap.getTileSize();
-  m_heightData = heightMap.getHeightData();
-  m_terrainTypes = heightMap.getTerrainTypes();
+  m_width = height_map.getWidth();
+  m_height = height_map.getHeight();
+  m_tile_size = height_map.getTileSize();
+  m_heightData = height_map.getHeightData();
+  m_terrain_types = height_map.getTerrainTypes();
   m_biomeSettings = biomeSettings;
   m_noiseSeed = biomeSettings.seed;
 
@@ -89,10 +77,10 @@ void BiomeRenderer::configure(const Game::Map::TerrainHeightMap &heightMap,
   m_grassInstancesDirty = false;
 
   m_grassParams.soilColor = m_biomeSettings.soilColor;
-  m_grassParams.windStrength = m_biomeSettings.swayStrength;
-  m_grassParams.windSpeed = m_biomeSettings.swaySpeed;
-  m_grassParams.lightDirection = QVector3D(0.35f, 0.8f, 0.45f);
-  m_grassParams.time = 0.0f;
+  m_grassParams.windStrength = m_biomeSettings.sway_strength;
+  m_grassParams.windSpeed = m_biomeSettings.sway_speed;
+  m_grassParams.light_direction = QVector3D(0.35F, 0.8F, 0.45F);
+  m_grassParams.time = 0.0F;
 
   generateGrassInstances();
 }
@@ -141,59 +129,59 @@ void BiomeRenderer::generateGrassInstances() {
     return;
   }
 
-  if (m_biomeSettings.patchDensity < 0.01f) {
+  if (m_biomeSettings.patchDensity < 0.01F) {
     m_grassInstanceCount = 0;
     m_grassInstancesDirty = false;
     return;
   }
 
-  const float halfWidth = m_width * 0.5f - 0.5f;
-  const float halfHeight = m_height * 0.5f - 0.5f;
-  const float tileSafe = std::max(0.001f, m_tileSize);
+  const float half_width = m_width * 0.5F - 0.5F;
+  const float half_height = m_height * 0.5F - 0.5F;
+  const float tile_safe = std::max(0.001F, m_tile_size);
 
-  const float edgePadding =
-      std::clamp(m_biomeSettings.spawnEdgePadding, 0.0f, 0.5f);
-  const float edgeMarginX = static_cast<float>(m_width) * edgePadding;
-  const float edgeMarginZ = static_cast<float>(m_height) * edgePadding;
+  const float edge_padding =
+      std::clamp(m_biomeSettings.spawnEdgePadding, 0.0F, 0.5F);
+  const float edge_margin_x = static_cast<float>(m_width) * edge_padding;
+  const float edge_margin_z = static_cast<float>(m_height) * edge_padding;
 
   std::vector<QVector3D> normals(m_width * m_height,
-                                 QVector3D(0.0f, 1.0f, 0.0f));
+                                 QVector3D(0.0F, 1.0F, 0.0F));
 
-  auto sampleHeightAt = [&](float gx, float gz) -> float {
-    gx = std::clamp(gx, 0.0f, float(m_width - 1));
-    gz = std::clamp(gz, 0.0f, float(m_height - 1));
-    int x0 = int(std::floor(gx));
-    int z0 = int(std::floor(gz));
-    int x1 = std::min(x0 + 1, m_width - 1);
-    int z1 = std::min(z0 + 1, m_height - 1);
-    float tx = gx - float(x0);
-    float tz = gz - float(z0);
-    float h00 = m_heightData[z0 * m_width + x0];
-    float h10 = m_heightData[z0 * m_width + x1];
-    float h01 = m_heightData[z1 * m_width + x0];
-    float h11 = m_heightData[z1 * m_width + x1];
-    float h0 = h00 * (1.0f - tx) + h10 * tx;
-    float h1 = h01 * (1.0f - tx) + h11 * tx;
-    return h0 * (1.0f - tz) + h1 * tz;
+  auto sample_height_at = [&](float gx, float gz) -> float {
+    gx = std::clamp(gx, 0.0F, float(m_width - 1));
+    gz = std::clamp(gz, 0.0F, float(m_height - 1));
+    int const x0 = int(std::floor(gx));
+    int const z0 = int(std::floor(gz));
+    int const x1 = std::min(x0 + 1, m_width - 1);
+    int const z1 = std::min(z0 + 1, m_height - 1);
+    float const tx = gx - float(x0);
+    float const tz = gz - float(z0);
+    float const h00 = m_heightData[z0 * m_width + x0];
+    float const h10 = m_heightData[z0 * m_width + x1];
+    float const h01 = m_heightData[z1 * m_width + x0];
+    float const h11 = m_heightData[z1 * m_width + x1];
+    float const h0 = h00 * (1.0F - tx) + h10 * tx;
+    float const h1 = h01 * (1.0F - tx) + h11 * tx;
+    return h0 * (1.0F - tz) + h1 * tz;
   };
 
   for (int z = 0; z < m_height; ++z) {
     for (int x = 0; x < m_width; ++x) {
-      int idx = z * m_width + x;
-      float gx0 = std::clamp(float(x) - 1.0f, 0.0f, float(m_width - 1));
-      float gx1 = std::clamp(float(x) + 1.0f, 0.0f, float(m_width - 1));
-      float gz0 = std::clamp(float(z) - 1.0f, 0.0f, float(m_height - 1));
-      float gz1 = std::clamp(float(z) + 1.0f, 0.0f, float(m_height - 1));
+      int const idx = z * m_width + x;
+      float const gx0 = std::clamp(float(x) - 1.0F, 0.0F, float(m_width - 1));
+      float const gx1 = std::clamp(float(x) + 1.0F, 0.0F, float(m_width - 1));
+      float const gz0 = std::clamp(float(z) - 1.0F, 0.0F, float(m_height - 1));
+      float const gz1 = std::clamp(float(z) + 1.0F, 0.0F, float(m_height - 1));
 
-      float hL = sampleHeightAt(gx0, float(z));
-      float hR = sampleHeightAt(gx1, float(z));
-      float hD = sampleHeightAt(float(x), gz0);
-      float hU = sampleHeightAt(float(x), gz1);
+      float const hL = sample_height_at(gx0, float(z));
+      float const hR = sample_height_at(gx1, float(z));
+      float const hD = sample_height_at(float(x), gz0);
+      float const hU = sample_height_at(float(x), gz1);
 
-      QVector3D dx(2.0f * m_tileSize, hR - hL, 0.0f);
-      QVector3D dz(0.0f, hU - hD, 2.0f * m_tileSize);
+      QVector3D const dx(2.0F * m_tile_size, hR - hL, 0.0F);
+      QVector3D const dz(0.0F, hU - hD, 2.0F * m_tile_size);
       QVector3D n = QVector3D::crossProduct(dz, dx);
-      if (n.lengthSquared() > 0.0f) {
+      if (n.lengthSquared() > 0.0F) {
         n.normalize();
       } else {
         n = QVector3D(0, 1, 0);
@@ -202,284 +190,294 @@ void BiomeRenderer::generateGrassInstances() {
     }
   }
 
-  auto addGrassBlade = [&](float gx, float gz, uint32_t &state) {
-    if (gx < edgeMarginX || gx > m_width - 1 - edgeMarginX ||
-        gz < edgeMarginZ || gz > m_height - 1 - edgeMarginZ) {
+  auto add_grass_blade = [&](float gx, float gz, uint32_t &state) {
+    if (gx < edge_margin_x || gx > m_width - 1 - edge_margin_x ||
+        gz < edge_margin_z || gz > m_height - 1 - edge_margin_z) {
       return false;
     }
 
-    float sgx = std::clamp(gx, 0.0f, float(m_width - 1));
-    float sgz = std::clamp(gz, 0.0f, float(m_height - 1));
+    float const sgx = std::clamp(gx, 0.0F, float(m_width - 1));
+    float const sgz = std::clamp(gz, 0.0F, float(m_height - 1));
 
-    int ix = std::clamp(int(std::floor(sgx + 0.5f)), 0, m_width - 1);
-    int iz = std::clamp(int(std::floor(sgz + 0.5f)), 0, m_height - 1);
-    int normalIdx = iz * m_width + ix;
+    int const ix = std::clamp(int(std::floor(sgx + 0.5F)), 0, m_width - 1);
+    int const iz = std::clamp(int(std::floor(sgz + 0.5F)), 0, m_height - 1);
+    int const normal_idx = iz * m_width + ix;
 
-    if (m_terrainTypes[normalIdx] == Game::Map::TerrainType::Mountain ||
-        m_terrainTypes[normalIdx] == Game::Map::TerrainType::Hill) {
+    if (m_terrain_types[normal_idx] == Game::Map::TerrainType::Mountain ||
+        m_terrain_types[normal_idx] == Game::Map::TerrainType::Hill) {
       return false;
     }
 
-    if (m_terrainTypes[normalIdx] == Game::Map::TerrainType::River) {
+    if (m_terrain_types[normal_idx] == Game::Map::TerrainType::River) {
       return false;
     }
 
-    constexpr int kRiverMargin = 1;
-    int nearRiverCount = 0;
-    for (int dz = -kRiverMargin; dz <= kRiverMargin; ++dz) {
-      for (int dx = -kRiverMargin; dx <= kRiverMargin; ++dx) {
+    constexpr int k_river_margin = 1;
+    int near_river_count = 0;
+    for (int dz = -k_river_margin; dz <= k_river_margin; ++dz) {
+      for (int dx = -k_river_margin; dx <= k_river_margin; ++dx) {
         if (dx == 0 && dz == 0) {
           continue;
         }
-        int nx = ix + dx;
-        int nz = iz + dz;
+        int const nx = ix + dx;
+        int const nz = iz + dz;
         if (nx >= 0 && nx < m_width && nz >= 0 && nz < m_height) {
-          int nIdx = nz * m_width + nx;
-          if (m_terrainTypes[nIdx] == Game::Map::TerrainType::River) {
-            nearRiverCount++;
+          int const nIdx = nz * m_width + nx;
+          if (m_terrain_types[nIdx] == Game::Map::TerrainType::River) {
+            near_river_count++;
           }
         }
       }
     }
 
-    if (nearRiverCount > 0) {
+    if (near_river_count > 0) {
 
-      float riverbankDensity = 0.15f;
-      if (rand01(state) > riverbankDensity) {
+      float const riverbank_density = 0.15F;
+      if (rand01(state) > riverbank_density) {
         return false;
       }
     }
 
-    QVector3D normal = normals[normalIdx];
-    float slope = 1.0f - std::clamp(normal.y(), 0.0f, 1.0f);
-    if (slope > 0.92f) {
+    QVector3D const normal = normals[normal_idx];
+    float const slope = 1.0F - std::clamp(normal.y(), 0.0F, 1.0F);
+    if (slope > 0.92F) {
       return false;
     }
 
-    float worldX = (gx - halfWidth) * m_tileSize;
-    float worldZ = (gz - halfHeight) * m_tileSize;
-    float worldY = sampleHeightAt(sgx, sgz);
+    float const world_x = (gx - half_width) * m_tile_size;
+    float const world_z = (gz - half_height) * m_tile_size;
+    float const world_y = sample_height_at(sgx, sgz);
 
-    auto &buildingRegistry =
+    auto &building_registry =
         Game::Systems::BuildingCollisionRegistry::instance();
-    if (buildingRegistry.isPointInBuilding(worldX, worldZ)) {
+    if (building_registry.isPointInBuilding(world_x, world_z)) {
       return false;
     }
 
-    float lushNoise =
-        valueNoise(worldX * 0.06f, worldZ * 0.06f, m_noiseSeed ^ 0x9235u);
-    float drynessNoise =
-        valueNoise(worldX * 0.12f, worldZ * 0.12f, m_noiseSeed ^ 0x47d2u);
-    float dryness = std::clamp(drynessNoise * 0.6f + slope * 0.4f, 0.0f, 1.0f);
-    QVector3D lushMix = m_biomeSettings.grassPrimary * (1.0f - lushNoise) +
-                        m_biomeSettings.grassSecondary * lushNoise;
-    QVector3D color =
-        lushMix * (1.0f - dryness) + m_biomeSettings.grassDry * dryness;
+    float const lush_noise =
+        valueNoise(world_x * 0.06F, world_z * 0.06F, m_noiseSeed ^ 0x9235U);
+    float const dryness_noise =
+        valueNoise(world_x * 0.12F, world_z * 0.12F, m_noiseSeed ^ 0x47d2U);
+    float const dryness =
+        std::clamp(dryness_noise * 0.6F + slope * 0.4F, 0.0F, 1.0F);
+    QVector3D const lush_mix =
+        m_biomeSettings.grassPrimary * (1.0F - lush_noise) +
+        m_biomeSettings.grassSecondary * lush_noise;
+    QVector3D const color =
+        lush_mix * (1.0F - dryness) + m_biomeSettings.grassDry * dryness;
 
-    float height = remap(rand01(state), m_biomeSettings.bladeHeightMin,
-                         m_biomeSettings.bladeHeightMax) *
-                   tileSafe * 0.5f;
-    float width = remap(rand01(state), m_biomeSettings.bladeWidthMin,
-                        m_biomeSettings.bladeWidthMax) *
-                  tileSafe;
+    float const height = remap(rand01(state), m_biomeSettings.bladeHeightMin,
+                               m_biomeSettings.bladeHeightMax) *
+                         tile_safe * 0.5F;
+    float const width = remap(rand01(state), m_biomeSettings.bladeWidthMin,
+                              m_biomeSettings.bladeWidthMax) *
+                        tile_safe;
 
-    float swayStrength = remap(rand01(state), 0.75f, 1.25f);
-    float swaySpeed = remap(rand01(state), 0.85f, 1.15f);
-    float swayPhase = rand01(state) * 6.2831853f;
-    float orientation = rand01(state) * 6.2831853f;
+    float const sway_strength = remap(rand01(state), 0.75F, 1.25F);
+    float const sway_speed = remap(rand01(state), 0.85F, 1.15F);
+    float const sway_phase = rand01(state) * 6.2831853F;
+    float const orientation = rand01(state) * 6.2831853F;
 
     GrassInstanceGpu instance;
-    instance.posHeight = QVector4D(worldX, worldY, worldZ, height);
+    instance.posHeight = QVector4D(world_x, world_y, world_z, height);
     instance.colorWidth = QVector4D(color.x(), color.y(), color.z(), width);
     instance.swayParams =
-        QVector4D(swayStrength, swaySpeed, swayPhase, orientation);
+        QVector4D(sway_strength, sway_speed, sway_phase, orientation);
     m_grassInstances.push_back(instance);
     return true;
   };
 
-  auto quadSection = [&](Game::Map::TerrainType a, Game::Map::TerrainType b,
-                         Game::Map::TerrainType c, Game::Map::TerrainType d) {
-    int priorityA = sectionFor(a);
-    int priorityB = sectionFor(b);
-    int priorityC = sectionFor(c);
-    int priorityD = sectionFor(d);
-    int result = priorityA;
-    result = std::max(result, priorityB);
-    result = std::max(result, priorityC);
-    result = std::max(result, priorityD);
+  auto quad_section = [&](Game::Map::TerrainType a, Game::Map::TerrainType b,
+                          Game::Map::TerrainType c, Game::Map::TerrainType d) {
+    int const priority_a = sectionFor(a);
+    int const priority_b = sectionFor(b);
+    int const priority_c = sectionFor(c);
+    int const priority_d = sectionFor(d);
+    int result = priority_a;
+    result = std::max(result, priority_b);
+    result = std::max(result, priority_c);
+    result = std::max(result, priority_d);
     return result;
   };
 
-  const int chunkSize = 16;
+  const int chunk_size = DefaultChunkSize;
 
-  for (int chunkZ = 0; chunkZ < m_height - 1; chunkZ += chunkSize) {
-    int chunkMaxZ = std::min(chunkZ + chunkSize, m_height - 1);
-    for (int chunkX = 0; chunkX < m_width - 1; chunkX += chunkSize) {
-      int chunkMaxX = std::min(chunkX + chunkSize, m_width - 1);
+  for (int chunk_z = 0; chunk_z < m_height - 1; chunk_z += chunk_size) {
+    int const chunk_max_z = std::min(chunk_z + chunk_size, m_height - 1);
+    for (int chunk_x = 0; chunk_x < m_width - 1; chunk_x += chunk_size) {
+      int const chunk_max_x = std::min(chunk_x + chunk_size, m_width - 1);
 
-      int flatCount = 0;
-      int hillCount = 0;
-      int mountainCount = 0;
-      float chunkHeightSum = 0.0f;
-      float chunkSlopeSum = 0.0f;
-      int sampleCount = 0;
+      int flat_count = 0;
+      int hill_count = 0;
+      int mountain_count = 0;
+      float chunk_height_sum = 0.0F;
+      float chunk_slope_sum = 0.0F;
+      int sample_count = 0;
 
-      for (int z = chunkZ; z < chunkMaxZ && z < m_height - 1; ++z) {
-        for (int x = chunkX; x < chunkMaxX && x < m_width - 1; ++x) {
-          int idx0 = z * m_width + x;
-          int idx1 = idx0 + 1;
-          int idx2 = (z + 1) * m_width + x;
-          int idx3 = idx2 + 1;
+      for (int z = chunk_z; z < chunk_max_z && z < m_height - 1; ++z) {
+        for (int x = chunk_x; x < chunk_max_x && x < m_width - 1; ++x) {
+          int const idx0 = z * m_width + x;
+          int const idx1 = idx0 + 1;
+          int const idx2 = (z + 1) * m_width + x;
+          int const idx3 = idx2 + 1;
 
-          if (m_terrainTypes[idx0] == Game::Map::TerrainType::Mountain ||
-              m_terrainTypes[idx1] == Game::Map::TerrainType::Mountain ||
-              m_terrainTypes[idx2] == Game::Map::TerrainType::Mountain ||
-              m_terrainTypes[idx3] == Game::Map::TerrainType::Mountain ||
-              m_terrainTypes[idx0] == Game::Map::TerrainType::River ||
-              m_terrainTypes[idx1] == Game::Map::TerrainType::River ||
-              m_terrainTypes[idx2] == Game::Map::TerrainType::River ||
-              m_terrainTypes[idx3] == Game::Map::TerrainType::River) {
-            mountainCount++;
-          } else if (m_terrainTypes[idx0] == Game::Map::TerrainType::Hill ||
-                     m_terrainTypes[idx1] == Game::Map::TerrainType::Hill ||
-                     m_terrainTypes[idx2] == Game::Map::TerrainType::Hill ||
-                     m_terrainTypes[idx3] == Game::Map::TerrainType::Hill) {
-            hillCount++;
+          if (m_terrain_types[idx0] == Game::Map::TerrainType::Mountain ||
+              m_terrain_types[idx1] == Game::Map::TerrainType::Mountain ||
+              m_terrain_types[idx2] == Game::Map::TerrainType::Mountain ||
+              m_terrain_types[idx3] == Game::Map::TerrainType::Mountain ||
+              m_terrain_types[idx0] == Game::Map::TerrainType::River ||
+              m_terrain_types[idx1] == Game::Map::TerrainType::River ||
+              m_terrain_types[idx2] == Game::Map::TerrainType::River ||
+              m_terrain_types[idx3] == Game::Map::TerrainType::River) {
+            mountain_count++;
+          } else if (m_terrain_types[idx0] == Game::Map::TerrainType::Hill ||
+                     m_terrain_types[idx1] == Game::Map::TerrainType::Hill ||
+                     m_terrain_types[idx2] == Game::Map::TerrainType::Hill ||
+                     m_terrain_types[idx3] == Game::Map::TerrainType::Hill) {
+            hill_count++;
           } else {
-            flatCount++;
+            flat_count++;
           }
 
-          float quadHeight = (m_heightData[idx0] + m_heightData[idx1] +
-                              m_heightData[idx2] + m_heightData[idx3]) *
-                             0.25f;
-          chunkHeightSum += quadHeight;
+          float const quad_height = (m_heightData[idx0] + m_heightData[idx1] +
+                                     m_heightData[idx2] + m_heightData[idx3]) *
+                                    0.25F;
+          chunk_height_sum += quad_height;
 
-          float nY = (normals[idx0].y() + normals[idx1].y() +
-                      normals[idx2].y() + normals[idx3].y()) *
-                     0.25f;
-          chunkSlopeSum += 1.0f - std::clamp(nY, 0.0f, 1.0f);
-          sampleCount++;
+          float const nY = (normals[idx0].y() + normals[idx1].y() +
+                            normals[idx2].y() + normals[idx3].y()) *
+                           0.25F;
+          chunk_slope_sum += 1.0F - std::clamp(nY, 0.0F, 1.0F);
+          sample_count++;
         }
       }
 
-      if (sampleCount == 0) {
+      if (sample_count == 0) {
         continue;
       }
 
-      const float usableCoverage =
-          sampleCount > 0 ? float(flatCount + hillCount) / float(sampleCount)
-                          : 0.0f;
-      if (usableCoverage < 0.05f) {
+      const float usable_coverage =
+          sample_count > 0
+              ? float(flat_count + hill_count) / float(sample_count)
+              : 0.0F;
+      if (usable_coverage < 0.05F) {
         continue;
       }
 
-      bool isPrimarilyFlat = flatCount >= hillCount;
+      bool const is_primarily_flat = flat_count >= hill_count;
 
-      float avgSlope = chunkSlopeSum / float(sampleCount);
+      float const avg_slope = chunk_slope_sum / float(sample_count);
 
-      uint32_t state = hashCoords(chunkX, chunkZ, m_noiseSeed ^ 0xC915872Bu);
-      float slopePenalty = 1.0f - std::clamp(avgSlope * 1.35f, 0.0f, 0.75f);
+      uint32_t state = hashCoords(chunk_x, chunk_z, m_noiseSeed ^ 0xC915872BU);
+      float const slope_penalty =
+          1.0F - std::clamp(avg_slope * 1.35F, 0.0F, 0.75F);
 
-      float typeBias = 1.0f;
-      constexpr float kClusterBoost = 1.35f;
-      float expectedClusters =
-          std::max(0.0f, m_biomeSettings.patchDensity * kClusterBoost *
-                             slopePenalty * typeBias * usableCoverage);
-      int clusterCount = static_cast<int>(std::floor(expectedClusters));
-      float frac = expectedClusters - float(clusterCount);
+      float const type_bias = 1.0F;
+      constexpr float k_cluster_boost = 1.35F;
+      float const expected_clusters =
+          std::max(0.0F, m_biomeSettings.patchDensity * k_cluster_boost *
+                             slope_penalty * type_bias * usable_coverage);
+      int cluster_count = static_cast<int>(std::floor(expected_clusters));
+      float const frac = expected_clusters - float(cluster_count);
       if (rand01(state) < frac) {
-        clusterCount += 1;
+        cluster_count += 1;
       }
 
-      if (clusterCount > 0) {
-        float chunkSpanX = float(chunkMaxX - chunkX + 1);
-        float chunkSpanZ = float(chunkMaxZ - chunkZ + 1);
-        float scatterBase = std::max(0.25f, m_biomeSettings.patchJitter);
+      if (cluster_count > 0) {
+        auto chunk_span_x = float(chunk_max_x - chunk_x + 1);
+        auto chunk_span_z = float(chunk_max_z - chunk_z + 1);
+        float const scatter_base = std::max(0.25F, m_biomeSettings.patchJitter);
 
-        auto pickClusterCenter =
+        auto pick_cluster_center =
             [&](uint32_t &rng) -> std::optional<QVector2D> {
-          constexpr int kMaxAttempts = 8;
-          for (int attempt = 0; attempt < kMaxAttempts; ++attempt) {
-            float candidateGX = float(chunkX) + rand01(rng) * chunkSpanX;
-            float candidateGZ = float(chunkZ) + rand01(rng) * chunkSpanZ;
+          constexpr int k_max_attempts = 8;
+          for (int attempt = 0; attempt < k_max_attempts; ++attempt) {
+            float const candidate_gx =
+                float(chunk_x) + rand01(rng) * chunk_span_x;
+            float const candidate_gz =
+                float(chunk_z) + rand01(rng) * chunk_span_z;
 
-            int cx = std::clamp(int(std::round(candidateGX)), 0, m_width - 1);
-            int cz = std::clamp(int(std::round(candidateGZ)), 0, m_height - 1);
-            int centerIdx = cz * m_width + cx;
-            if (m_terrainTypes[centerIdx] == Game::Map::TerrainType::Mountain ||
-                m_terrainTypes[centerIdx] == Game::Map::TerrainType::River) {
+            int const cx =
+                std::clamp(int(std::round(candidate_gx)), 0, m_width - 1);
+            int const cz =
+                std::clamp(int(std::round(candidate_gz)), 0, m_height - 1);
+            int const center_idx = cz * m_width + cx;
+            if (m_terrain_types[center_idx] ==
+                    Game::Map::TerrainType::Mountain ||
+                m_terrain_types[center_idx] == Game::Map::TerrainType::River) {
               continue;
             }
 
-            QVector3D centerNormal = normals[centerIdx];
-            float centerSlope = 1.0f - std::clamp(centerNormal.y(), 0.0f, 1.0f);
-            if (centerSlope > 0.92f) {
+            QVector3D const center_normal = normals[center_idx];
+            float const center_slope =
+                1.0F - std::clamp(center_normal.y(), 0.0F, 1.0F);
+            if (center_slope > 0.92F) {
               continue;
             }
 
-            return QVector2D(candidateGX, candidateGZ);
+            return QVector2D(candidate_gx, candidate_gz);
           }
           return std::nullopt;
         };
 
-        for (int cluster = 0; cluster < clusterCount; ++cluster) {
-          auto center = pickClusterCenter(state);
+        for (int cluster = 0; cluster < cluster_count; ++cluster) {
+          auto center = pick_cluster_center(state);
           if (!center) {
             continue;
           }
 
-          float centerGX = center->x();
-          float centerGZ = center->y();
+          float const center_gx = center->x();
+          float const center_gz = center->y();
 
-          int blades = 6 + static_cast<int>(rand01(state) * 6.0f);
+          int blades = 6 + static_cast<int>(rand01(state) * 6.0F);
           blades = std::max(
-              4, int(std::round(blades * (0.85f + 0.3f * rand01(state)))));
-          float scatterRadius =
-              (0.45f + 0.55f * rand01(state)) * scatterBase * tileSafe;
+              4, int(std::round(blades * (0.85F + 0.3F * rand01(state)))));
+          float const scatter_radius =
+              (0.45F + 0.55F * rand01(state)) * scatter_base * tile_safe;
 
           for (int blade = 0; blade < blades; ++blade) {
-            float angle = rand01(state) * 6.2831853f;
-            float radius = scatterRadius * std::sqrt(rand01(state));
-            float gx = centerGX + std::cos(angle) * radius / tileSafe;
-            float gz = centerGZ + std::sin(angle) * radius / tileSafe;
-            addGrassBlade(gx, gz, state);
+            float const angle = rand01(state) * 6.2831853F;
+            float const radius = scatter_radius * std::sqrt(rand01(state));
+            float const gx = center_gx + std::cos(angle) * radius / tile_safe;
+            float const gz = center_gz + std::sin(angle) * radius / tile_safe;
+            add_grass_blade(gx, gz, state);
           }
         }
       }
     }
   }
 
-  const float backgroundDensity =
-      std::max(0.0f, m_biomeSettings.backgroundBladeDensity);
-  if (backgroundDensity > 0.0f) {
+  const float background_density =
+      std::max(0.0F, m_biomeSettings.backgroundBladeDensity);
+  if (background_density > 0.0F) {
     for (int z = 0; z < m_height; ++z) {
       for (int x = 0; x < m_width; ++x) {
-        int idx = z * m_width + x;
+        int const idx = z * m_width + x;
 
-        if (m_terrainTypes[idx] == Game::Map::TerrainType::Mountain ||
-            m_terrainTypes[idx] == Game::Map::TerrainType::Hill ||
-            m_terrainTypes[idx] == Game::Map::TerrainType::River) {
+        if (m_terrain_types[idx] == Game::Map::TerrainType::Mountain ||
+            m_terrain_types[idx] == Game::Map::TerrainType::Hill ||
+            m_terrain_types[idx] == Game::Map::TerrainType::River) {
           continue;
         }
 
-        QVector3D normal = normals[idx];
-        float slope = 1.0f - std::clamp(normal.y(), 0.0f, 1.0f);
-        if (slope > 0.95f) {
+        QVector3D const normal = normals[idx];
+        float const slope = 1.0F - std::clamp(normal.y(), 0.0F, 1.0F);
+        if (slope > 0.95F) {
           continue;
         }
 
         uint32_t state = hashCoords(
-            x, z, m_noiseSeed ^ 0x51bda7u ^ static_cast<uint32_t>(idx));
-        int baseCount = static_cast<int>(std::floor(backgroundDensity));
-        float frac = backgroundDensity - float(baseCount);
+            x, z, m_noiseSeed ^ 0x51bda7U ^ static_cast<uint32_t>(idx));
+        int base_count = static_cast<int>(std::floor(background_density));
+        float const frac = background_density - float(base_count);
         if (rand01(state) < frac) {
-          baseCount += 1;
+          base_count += 1;
         }
 
-        for (int i = 0; i < baseCount; ++i) {
-          float gx = float(x) + rand01(state);
-          float gz = float(z) + rand01(state);
-          addGrassBlade(gx, gz, state);
+        for (int i = 0; i < base_count; ++i) {
+          float const gx = float(x) + rand01(state);
+          float const gz = float(z) + rand01(state);
+          add_grass_blade(gx, gz, state);
         }
       }
     }
@@ -488,16 +486,16 @@ void BiomeRenderer::generateGrassInstances() {
   m_grassInstanceCount = m_grassInstances.size();
   m_grassInstancesDirty = m_grassInstanceCount > 0;
 
-  int debugFlatCount = 0;
-  int debugHillCount = 0;
-  int debugMountainCount = 0;
-  for (const auto &type : m_terrainTypes) {
+  int debug_flat_count = 0;
+  int debug_hill_count = 0;
+  int debug_mountain_count = 0;
+  for (const auto &type : m_terrain_types) {
     if (type == Game::Map::TerrainType::Flat) {
-      debugFlatCount++;
+      debug_flat_count++;
     } else if (type == Game::Map::TerrainType::Hill) {
-      debugHillCount++;
+      debug_hill_count++;
     } else if (type == Game::Map::TerrainType::Mountain) {
-      debugMountainCount++;
+      debug_mountain_count++;
     }
   }
 }

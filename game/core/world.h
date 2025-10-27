@@ -16,21 +16,21 @@ public:
 
   World(const World &) = delete;
   World(World &&) = delete;
-  World &operator=(const World &) = delete;
-  World &operator=(World &&) = delete;
+  auto operator=(const World &) -> World & = delete;
+  auto operator=(World &&) -> World & = delete;
 
-  Entity *createEntity();
-  Entity *createEntityWithId(EntityID entityId);
-  void destroyEntity(EntityID entityId);
-  Entity *getEntity(EntityID entityId);
+  auto createEntity() -> Entity *;
+  auto createEntityWithId(EntityID entity_id) -> Entity *;
+  void destroyEntity(EntityID entity_id);
+  auto getEntity(EntityID entity_id) -> Entity *;
   void clear();
 
   void addSystem(std::unique_ptr<System> system);
   void update(float deltaTime);
 
-  std::vector<std::unique_ptr<System>> &systems() { return m_systems; }
+  auto systems() -> std::vector<std::unique_ptr<System>> & { return m_systems; }
 
-  template <typename T> T *getSystem() {
+  template <typename T> auto getSystem() -> T * {
     for (auto &system : m_systems) {
       if (auto *ptr = dynamic_cast<T *>(system.get())) {
         return ptr;
@@ -39,10 +39,10 @@ public:
     return nullptr;
   }
 
-  template <typename T> std::vector<Entity *> getEntitiesWith() {
+  template <typename T> auto getEntitiesWith() -> std::vector<Entity *> {
     const std::lock_guard<std::recursive_mutex> lock(m_entityMutex);
     std::vector<Entity *> result;
-    for (auto &[entityId, entity] : m_entities) {
+    for (auto &[entity_id, entity] : m_entities) {
       if (entity->template hasComponent<T>()) {
         result.push_back(entity.get());
       }
@@ -50,21 +50,21 @@ public:
     return result;
   }
 
-  std::vector<Entity *> getUnitsOwnedBy(int ownerId) const;
-  std::vector<Entity *> getUnitsNotOwnedBy(int ownerId) const;
-  std::vector<Entity *> getAlliedUnits(int ownerId) const;
-  std::vector<Entity *> getEnemyUnits(int ownerId) const;
-  int countTroopsForPlayer(int ownerId) const;
+  auto getUnitsOwnedBy(int owner_id) const -> std::vector<Entity *>;
+  auto getUnitsNotOwnedBy(int owner_id) const -> std::vector<Entity *>;
+  auto getAlliedUnits(int owner_id) const -> std::vector<Entity *>;
+  auto getEnemyUnits(int owner_id) const -> std::vector<Entity *>;
+  static auto countTroopsForPlayer(int owner_id) -> int;
 
-  const std::unordered_map<EntityID, std::unique_ptr<Entity>> &
-  getEntities() const {
+  auto getEntities() const
+      -> const std::unordered_map<EntityID, std::unique_ptr<Entity>> & {
     return m_entities;
   }
 
-  EntityID getNextEntityId() const;
-  void setNextEntityId(EntityID nextId);
+  auto getNextEntityId() const -> EntityID;
+  void setNextEntityId(EntityID next_id);
 
-  std::recursive_mutex &getEntityMutex() { return m_entityMutex; }
+  auto getEntityMutex() -> std::recursive_mutex & { return m_entityMutex; }
 
 private:
   EntityID m_nextEntityId = 1;

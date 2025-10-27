@@ -12,7 +12,7 @@ public:
   enum class Usage { Static, Dynamic, Stream };
 
   Buffer(Type type);
-  ~Buffer();
+  ~Buffer() override;
 
   void bind();
   void unbind();
@@ -27,19 +27,19 @@ public:
 private:
   GLuint m_buffer = 0;
   Type m_type;
-  GLenum getGLType() const;
-  GLenum getGLUsage(Usage usage) const;
+  [[nodiscard]] auto getGLType() const -> GLenum;
+  [[nodiscard]] static auto getGLUsage(Usage usage) -> GLenum;
 };
 
 class VertexArray : protected QOpenGLFunctions_3_3_Core {
 public:
   VertexArray();
-  ~VertexArray();
+  ~VertexArray() override;
 
   void bind();
   void unbind();
 
-  void addVertexBuffer(Buffer &buffer, const std::vector<int> &layout);
+  void add_vertexBuffer(Buffer &buffer, const std::vector<int> &layout);
   void setIndexBuffer(Buffer &buffer);
 
 private:

@@ -10,7 +10,7 @@ class EditorWindow : public QMainWindow {
 
 public:
   EditorWindow(QWidget *parent = nullptr);
-  ~EditorWindow();
+  ~EditorWindow() override;
 
 private slots:
   void newMap();
@@ -21,7 +21,7 @@ private:
   void setupUI();
   void setupMenus();
 
-  QWidget *m_renderWidget;
+  QWidget *m_renderWidget{};
 };
 
 } // namespace MapEditor

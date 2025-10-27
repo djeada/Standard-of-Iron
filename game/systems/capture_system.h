@@ -15,10 +15,12 @@ public:
 
 private:
   void processBarrackCapture(Engine::Core::World *world, float deltaTime);
-  int countNearbyTroops(Engine::Core::World *world, float barrackX,
-                        float barrackZ, int ownerId, float radius);
-  void transferBarrackOwnership(Engine::Core::World *world,
-                                Engine::Core::Entity *barrack, int newOwnerId);
+  static auto countNearbyTroops(Engine::Core::World *world, float barrack_x,
+                                float barrack_z, int owner_id,
+                                float radius) -> int;
+  static void transferBarrackOwnership(Engine::Core::World *world,
+                                       Engine::Core::Entity *barrack,
+                                       int newOwnerId);
 };
 
 } // namespace Game::Systems

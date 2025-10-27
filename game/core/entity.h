@@ -21,9 +21,10 @@ class Entity {
 public:
   Entity(EntityID id);
 
-  EntityID getId() const;
+  auto getId() const -> EntityID;
 
-  template <typename T, typename... Args> T *addComponent(Args &&...args) {
+  template <typename T, typename... Args>
+  auto addComponent(Args &&...args) -> T * {
     static_assert(std::is_base_of_v<Component, T>,
                   "T must inherit from Component");
     auto component = std::make_unique<T>(std::forward<Args>(args)...);
@@ -32,7 +33,7 @@ public:
     return ptr;
   }
 
-  template <typename T> T *getComponent() {
+  template <typename T> auto getComponent() -> T * {
     auto it = m_components.find(std::type_index(typeid(T)));
     if (it != m_components.end()) {
       return static_cast<T *>(it->second.get());
@@ -40,7 +41,7 @@ public:
     return nullptr;
   }
 
-  template <typename T> const T *getComponent() const {
+  template <typename T> auto getComponent() const -> const T * {
     auto it = m_components.find(std::type_index(typeid(T)));
     if (it != m_components.end()) {
       return static_cast<const T *>(it->second.get());
@@ -52,7 +53,7 @@ public:
     m_components.erase(std::type_index(typeid(T)));
   }
 
-  template <typename T> bool hasComponent() const {
+  template <typename T> auto hasComponent() const -> bool {
     return m_components.find(std::type_index(typeid(T))) != m_components.end();
   }
 

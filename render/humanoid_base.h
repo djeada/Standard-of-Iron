@@ -6,19 +6,17 @@
 #include <QVector3D>
 #include <cstdint>
 
-namespace Engine {
-namespace Core {
+namespace Engine::Core {
 class Entity;
 class World;
-} // namespace Core
-} // namespace Engine
+} // namespace Engine::Core
 
 namespace Render::GL {
 
 struct AnimationInputs {
   float time;
   bool isMoving;
-  bool isAttacking;
+  bool is_attacking;
   bool isMelee;
   bool isInHoldMode;
   bool isExitingHold;
@@ -26,29 +24,29 @@ struct AnimationInputs {
 };
 
 struct FormationParams {
-  int individualsPerUnit;
-  int maxPerRow;
+  int individuals_per_unit;
+  int max_per_row;
   float spacing;
 };
 
 struct HumanoidPose {
   QVector3D headPos;
-  float headR;
-  QVector3D neckBase;
+  float headR{};
+  QVector3D neck_base;
 
   QVector3D shoulderL, shoulderR;
   QVector3D elbowL, elbowR;
-  QVector3D handL, handR;
+  QVector3D handL, hand_r;
 
   QVector3D pelvisPos;
-  QVector3D kneeL, kneeR;
+  QVector3D knee_l, knee_r;
 
-  float footYOffset;
-  QVector3D footL, footR;
+  float footYOffset{};
+  QVector3D footL, foot_r;
 };
 
 struct VariationParams {
-  float heightScale;
+  float height_scale;
   float bulkScale;
   float stanceWidth;
   float armSwingAmp;
@@ -56,22 +54,22 @@ struct VariationParams {
   float postureSlump;
   float shoulderTilt;
 
-  static VariationParams fromSeed(uint32_t seed) {
-    VariationParams v;
+  static auto fromSeed(uint32_t seed) -> VariationParams {
+    VariationParams v{};
 
     auto nextRand = [](uint32_t &s) -> float {
-      s = s * 1664525u + 1013904223u;
-      return float(s & 0x7FFFFFu) / float(0x7FFFFFu);
+      s = s * 1664525U + 1013904223U;
+      return float(s & 0x7FFFFFU) / float(0x7FFFFFU);
     };
 
     uint32_t rng = seed;
-    v.heightScale = 0.95f + nextRand(rng) * 0.10f;
-    v.bulkScale = 0.92f + nextRand(rng) * 0.16f;
-    v.stanceWidth = 0.88f + nextRand(rng) * 0.24f;
-    v.armSwingAmp = 0.85f + nextRand(rng) * 0.30f;
-    v.walkSpeedMult = 0.90f + nextRand(rng) * 0.20f;
-    v.postureSlump = nextRand(rng) * 0.08f;
-    v.shoulderTilt = (nextRand(rng) - 0.5f) * 0.06f;
+    v.height_scale = 0.95F + nextRand(rng) * 0.10F;
+    v.bulkScale = 0.92F + nextRand(rng) * 0.16F;
+    v.stanceWidth = 0.88F + nextRand(rng) * 0.24F;
+    v.armSwingAmp = 0.85F + nextRand(rng) * 0.30F;
+    v.walkSpeedMult = 0.90F + nextRand(rng) * 0.20F;
+    v.postureSlump = nextRand(rng) * 0.08F;
+    v.shoulderTilt = (nextRand(rng) - 0.5F) * 0.06F;
 
     return v;
   }
@@ -85,8 +83,8 @@ class HumanoidRendererBase {
 public:
   virtual ~HumanoidRendererBase() = default;
 
-  virtual QVector3D getProportionScaling() const {
-    return QVector3D(1.0f, 1.0f, 1.0f);
+  virtual auto getProportionScaling() const -> QVector3D {
+    return {1.0F, 1.0F, 1.0F};
   }
 
   virtual void getVariant(const DrawContext &ctx, uint32_t seed,
@@ -104,18 +102,18 @@ public:
   virtual void drawHelmet(const DrawContext &ctx, const HumanoidVariant &v,
                           const HumanoidPose &pose, ISubmitter &out) const;
 
-  virtual void drawArmorOverlay(const DrawContext &ctx,
-                                const HumanoidVariant &v,
-                                const HumanoidPose &pose, float yTopCover,
-                                float torsoR, float shoulderHalfSpan,
-                                float upperArmR, const QVector3D &rightAxis,
-                                ISubmitter &out) const;
+  virtual void draw_armorOverlay(const DrawContext &ctx,
+                                 const HumanoidVariant &v,
+                                 const HumanoidPose &pose, float y_top_cover,
+                                 float torso_r, float shoulder_half_span,
+                                 float upper_arm_r, const QVector3D &right_axis,
+                                 ISubmitter &out) const;
 
   virtual void drawShoulderDecorations(const DrawContext &ctx,
                                        const HumanoidVariant &v,
                                        const HumanoidPose &pose,
-                                       float yTopCover, float yNeck,
-                                       const QVector3D &rightAxis,
+                                       float y_top_cover, float y_neck,
+                                       const QVector3D &right_axis,
                                        ISubmitter &out) const;
 
   void render(const DrawContext &ctx, ISubmitter &out) const;
@@ -124,15 +122,15 @@ protected:
   mutable QVector3D m_cachedProportionScale;
   mutable bool m_proportionScaleCached = false;
 
-  static FormationParams resolveFormation(const DrawContext &ctx);
+  static auto resolveFormation(const DrawContext &ctx) -> FormationParams;
 
   static void computeLocomotionPose(uint32_t seed, float time, bool isMoving,
                                     const VariationParams &variation,
                                     HumanoidPose &ioPose);
 
-  static AnimationInputs sampleAnimState(const DrawContext &ctx);
+  static auto sampleAnimState(const DrawContext &ctx) -> AnimationInputs;
 
-  static QVector3D resolveTeamTint(const DrawContext &ctx);
+  static auto resolveTeamTint(const DrawContext &ctx) -> QVector3D;
 
   void drawCommonBody(const DrawContext &ctx, const HumanoidVariant &v,
                       const HumanoidPose &pose, ISubmitter &out) const;

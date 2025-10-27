@@ -38,7 +38,7 @@ Rectangle {
         for (var i = 0; i < owners.length; i++) {
             if (owners[i].isLocal) {
                 localOwnerId = owners[i].id;
-                localTeamId = owners[i].teamId;
+                localTeamId = owners[i].team_id;
                 break;
             }
         }
@@ -46,8 +46,8 @@ Rectangle {
             winningTeamId = localTeamId;
         } else {
             for (var t = 0; t < owners.length; t++) {
-                if (owners[t].teamId !== localTeamId && (owners[t].type === "Player" || owners[t].type === "AI")) {
-                    winningTeamId = owners[t].teamId;
+                if (owners[t].team_id !== localTeamId && (owners[t].type === "Player" || owners[t].type === "AI")) {
+                    winningTeamId = owners[t].team_id;
                     break;
                 }
             }
@@ -59,7 +59,7 @@ Rectangle {
             if (owner.type === "Player" || owner.type === "AI") {
                 var stats = game.getPlayerStats(owner.id);
                 var isLocalPlayer = (owner.id === localOwnerId);
-                var isWinner = (owner.teamId === winningTeamId);
+                var isWinner = (owner.team_id === winningTeamId);
                 var bannerColor = getBannerColor(owner.id, isLocalPlayer, owner.type === "AI", aiColorIndex);
                 if (owner.type === "AI")
                     aiColorIndex++;
@@ -67,7 +67,7 @@ Rectangle {
                 var score = calculateScore(stats);
                 var playTimeFormatted = formatPlayTime(stats.playTimeSec);
                 playerBanners.push({
-                    "ownerId": owner.id,
+                    "owner_id": owner.id,
                     "name": owner.name,
                     "isLocalPlayer": isLocalPlayer,
                     "isAI": owner.type === "AI",
@@ -94,7 +94,7 @@ Rectangle {
         for (var k = 0; k < playerBanners.length; k++) playerBannersModel.append(playerBanners[k])
     }
 
-    function getBannerColor(ownerId, isLocal, isAI, aiIndex) {
+    function getBannerColor(owner_id, isLocal, isAI, aiIndex) {
         var colors = ["#DC143C", "#228B22", "#C9A200", "#4169E1", "#9370DB", "#32CD32"];
         if (isLocal)
             return colors[0];
