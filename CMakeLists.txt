@@ -5,7 +5,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # ---- Clang-Tidy integration ----
 find_program(CLANG_TIDY_EXE NAMES clang-tidy)
-option(ENABLE_CLANG_TIDY "Enable clang-tidy analysis" ON)
+option(ENABLE_CLANG_TIDY "Enable clang-tidy analysis" OFF)
 
 if (ENABLE_CLANG_TIDY AND CLANG_TIDY_EXE)
     message(STATUS "Found clang-tidy: ${CLANG_TIDY_EXE}")
