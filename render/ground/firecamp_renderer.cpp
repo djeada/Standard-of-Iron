@@ -299,7 +299,7 @@ void FireCampRenderer::generateFireCampInstances() {
     float const intensity = remap(rand01(state), 0.8F, 1.2F);
     float const radius = remap(rand01(state), 2.0F, 4.0F) * tile_safe;
 
-    float const phase = rand01(state) * 6.2831853F;
+    float const phase = rand01(state) * MathConstants::TwoPi;
 
     float const duration = 1.0F;
 

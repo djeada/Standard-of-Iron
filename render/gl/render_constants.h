@@ -1,5 +1,12 @@
 #pragma once
 
+#include <numbers>
+
+namespace Render::GL::MathConstants {
+inline constexpr float Pi = std::numbers::pi_v<float>;
+inline constexpr float TwoPi = 2.0F * Pi;
+} // namespace Render::GL::MathConstants
+
 namespace Render::GL::VertexAttrib {
 inline constexpr int Position = 0;
 inline constexpr int Normal = 1;
