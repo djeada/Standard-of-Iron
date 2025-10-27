@@ -31,7 +31,7 @@ namespace {
 using std::uint32_t;
 using namespace Render::GL::BitShift;
 using namespace Render::GL::Geometry;
-using namespace Render::GL::hash_xor_shift;
+using namespace Render::GL::HashXorShift;
 using namespace Render::Ground;
 
 const QMatrix4x4 k_identity_matrix;
