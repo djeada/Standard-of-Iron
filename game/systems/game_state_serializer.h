@@ -5,35 +5,30 @@
 #include <QString>
 #include <QVector3D>
 
-namespace Engine {
-namespace Core {
+namespace Engine::Core {
 class World;
 using EntityID = unsigned int;
-} // namespace Core
-} // namespace Engine
+} // namespace Engine::Core
 
-namespace Render {
-namespace GL {
+namespace Render::GL {
 class Camera;
 }
-} // namespace Render
 
-namespace Game {
-namespace Systems {
+namespace Game::Systems {
 
 struct LevelSnapshot {
-  QString mapPath;
-  QString mapName;
+  QString map_path;
+  QString map_name;
   Engine::Core::EntityID playerUnitId = 0;
-  float camFov = 45.0f;
-  float camNear = 0.1f;
-  float camFar = 1000.0f;
-  int maxTroopsPerPlayer = 50;
+  float camFov = 45.0F;
+  float camNear = 0.1F;
+  float camFar = 1000.0F;
+  int max_troops_per_player = 50;
 };
 
 struct RuntimeSnapshot {
   bool paused = false;
-  float timeScale = 1.0f;
+  float timeScale = 1.0F;
   int localOwnerId = 1;
   QString victoryState = "";
   int cursorMode = 0;
@@ -43,10 +38,10 @@ struct RuntimeSnapshot {
 
 class GameStateSerializer {
 public:
-  static QJsonObject buildMetadata(const Engine::Core::World &world,
-                                   const Render::GL::Camera *camera,
-                                   const LevelSnapshot &level,
-                                   const RuntimeSnapshot &runtime);
+  static auto buildMetadata(const Engine::Core::World &world,
+                            const Render::GL::Camera *camera,
+                            const LevelSnapshot &level,
+                            const RuntimeSnapshot &runtime) -> QJsonObject;
 
   static void restoreCameraFromMetadata(const QJsonObject &metadata,
                                         Render::GL::Camera *camera,
@@ -59,5 +54,4 @@ public:
                                        LevelSnapshot &level);
 };
 
-} // namespace Systems
-} // namespace Game
+} // namespace Game::Systems

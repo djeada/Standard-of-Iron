@@ -1,7 +1,14 @@
 #include "cursor_manager.h"
+#include "app/models/cursor_mode.h"
 #include <QCursor>
 #include <QPoint>
 #include <QQuickWindow>
+#include <qglobal.h>
+#include <qnamespace.h>
+#include <qobject.h>
+#include <qpoint.h>
+#include <qtmetamacros.h>
+#include <qvectornd.h>
 
 CursorManager::CursorManager(QObject *parent) : QObject(parent) {}
 
@@ -25,35 +32,35 @@ void CursorManager::setMode(const QString &mode) {
 }
 
 void CursorManager::updateCursorShape(QQuickWindow *window) {
-  if (!window) {
+  if (window == nullptr) {
     return;
   }
 
-  Qt::CursorShape desiredCursor =
+  Qt::CursorShape const desired_cursor =
       (m_cursorMode == CursorMode::Normal) ? Qt::ArrowCursor : Qt::BlankCursor;
 
-  if (m_currentCursor != desiredCursor) {
-    m_currentCursor = desiredCursor;
-    window->setCursor(desiredCursor);
+  if (m_currentCursor != desired_cursor) {
+    m_currentCursor = desired_cursor;
+    window->setCursor(desired_cursor);
   }
 }
 
-qreal CursorManager::globalCursorX(QQuickWindow *window) const {
-  if (!window) {
+qreal CursorManager::globalCursorX(QQuickWindow *window) {
+  if (window == nullptr) {
     return 0;
   }
-  QPoint globalPos = QCursor::pos();
-  QPoint localPos = window->mapFromGlobal(globalPos);
-  return localPos.x();
+  QPoint const global_pos = QCursor::pos();
+  QPoint const local_pos = window->mapFromGlobal(global_pos);
+  return local_pos.x();
 }
 
-qreal CursorManager::globalCursorY(QQuickWindow *window) const {
-  if (!window) {
+qreal CursorManager::globalCursorY(QQuickWindow *window) {
+  if (window == nullptr) {
     return 0;
   }
-  QPoint globalPos = QCursor::pos();
-  QPoint localPos = window->mapFromGlobal(globalPos);
-  return localPos.y();
+  QPoint const global_pos = QCursor::pos();
+  QPoint const local_pos = window->mapFromGlobal(global_pos);
+  return local_pos.y();
 }
 
 void CursorManager::setPatrolFirstWaypoint(const QVector3D &waypoint) {

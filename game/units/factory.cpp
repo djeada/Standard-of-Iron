@@ -4,9 +4,10 @@
 #include "knight.h"
 #include "mounted_knight.h"
 #include "spearman.h"
+#include "units/spawn_type.h"
+#include "units/unit.h"
 
-namespace Game {
-namespace Units {
+namespace Game::Units {
 
 void registerBuiltInUnits(UnitFactoryRegistry &reg) {
   reg.registerFactory(SpawnType::Archer, [](Engine::Core::World &world,
@@ -35,5 +36,4 @@ void registerBuiltInUnits(UnitFactoryRegistry &reg) {
   });
 }
 
-} // namespace Units
-} // namespace Game
+} // namespace Game::Units

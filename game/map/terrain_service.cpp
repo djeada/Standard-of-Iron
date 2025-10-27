@@ -1,114 +1,133 @@
 #include "terrain_service.h"
+
 #include "../systems/building_collision_registry.h"
 #include "map_definition.h"
+#include "terrain.h"
+
 #include <cmath>
+#include <memory>
+#include <vector>
 
 namespace Game::Map {
 
-TerrainService &TerrainService::instance() {
+auto TerrainService::instance() -> TerrainService & {
   static TerrainService s_instance;
   return s_instance;
 }
 
 void TerrainService::initialize(const MapDefinition &mapDef) {
-  m_heightMap = std::make_unique<TerrainHeightMap>(
-      mapDef.grid.width, mapDef.grid.height, mapDef.grid.tileSize);
+  m_height_map = std::make_unique<TerrainHeightMap>(
+      mapDef.grid.width, mapDef.grid.height, mapDef.grid.tile_size);
 
-  m_heightMap->buildFromFeatures(mapDef.terrain);
-  m_heightMap->addRiverSegments(mapDef.rivers);
-  m_heightMap->addBridges(mapDef.bridges);
+  m_height_map->buildFromFeatures(mapDef.terrain);
+  m_height_map->addRiverSegments(mapDef.rivers);
+  m_height_map->addBridges(mapDef.bridges);
   m_biomeSettings = mapDef.biome;
-  m_heightMap->applyBiomeVariation(m_biomeSettings);
-  m_fireCamps = mapDef.firecamps;
+  m_height_map->applyBiomeVariation(m_biomeSettings);
+  m_fire_camps = mapDef.firecamps;
 }
 
 void TerrainService::clear() {
-  m_heightMap.reset();
+  m_height_map.reset();
   m_biomeSettings = BiomeSettings();
-  m_fireCamps.clear();
+  m_fire_camps.clear();
 }
 
-float TerrainService::getTerrainHeight(float worldX, float worldZ) const {
-  if (!m_heightMap) {
-    return 0.0f;
+auto TerrainService::getTerrainHeight(float world_x,
+                                      float world_z) const -> float {
+  if (!m_height_map) {
+    return 0.0F;
   }
-  return m_heightMap->getHeightAt(worldX, worldZ);
+  return m_height_map->getHeightAt(world_x, world_z);
 }
 
-float TerrainService::getTerrainHeightGrid(int gridX, int gridZ) const {
-  if (!m_heightMap) {
-    return 0.0f;
+auto TerrainService::getTerrainHeightGrid(int grid_x,
+                                          int grid_z) const -> float {
+  if (!m_height_map) {
+    return 0.0F;
   }
-  return m_heightMap->getHeightAtGrid(gridX, gridZ);
+  return m_height_map->getHeightAtGrid(grid_x, grid_z);
 }
 
-bool TerrainService::isWalkable(int gridX, int gridZ) const {
-  if (!m_heightMap) {
+auto TerrainService::isWalkable(int grid_x, int grid_z) const -> bool {
+  if (!m_height_map) {
     return true;
   }
-  return m_heightMap->isWalkable(gridX, gridZ);
+  return m_height_map->isWalkable(grid_x, grid_z);
 }
 
-bool TerrainService::isForbidden(int gridX, int gridZ) const {
-  if (!m_heightMap) {
+auto TerrainService::isForbidden(int grid_x, int grid_z) const -> bool {
+  if (!m_height_map) {
     return false;
   }
 
-  if (!m_heightMap->isWalkable(gridX, gridZ)) {
+  if (!m_height_map->isWalkable(grid_x, grid_z)) {
     return true;
   }
 
-  float halfW = m_heightMap->getWidth() * 0.5f - 0.5f;
-  float halfH = m_heightMap->getHeight() * 0.5f - 0.5f;
-  const float tile = m_heightMap->getTileSize();
-  float worldX = (static_cast<float>(gridX) - halfW) * tile;
-  float worldZ = (static_cast<float>(gridZ) - halfH) * tile;
+  constexpr float k_half_cell_offset = 0.5F;
+
+  const float half_width =
+      static_cast<float>(m_height_map->getWidth()) * k_half_cell_offset -
+      k_half_cell_offset;
+  const float half_height =
+      static_cast<float>(m_height_map->getHeight()) * k_half_cell_offset -
+      k_half_cell_offset;
+  const float tile_size = m_height_map->getTileSize();
+
+  const float world_x = (static_cast<float>(grid_x) - half_width) * tile_size;
+  const float world_z = (static_cast<float>(grid_z) - half_height) * tile_size;
 
   auto &registry = Game::Systems::BuildingCollisionRegistry::instance();
-  if (registry.isPointInBuilding(worldX, worldZ)) {
-    return true;
-  }
-
-  return false;
+  return registry.isPointInBuilding(world_x, world_z);
 }
 
-bool TerrainService::isForbiddenWorld(float worldX, float worldZ) const {
-  if (!m_heightMap) {
+auto TerrainService::isForbiddenWorld(float world_x,
+                                      float world_z) const -> bool {
+  if (!m_height_map) {
     return false;
   }
 
-  const float gridHalfWidth = m_heightMap->getWidth() * 0.5f - 0.5f;
-  const float gridHalfHeight = m_heightMap->getHeight() * 0.5f - 0.5f;
+  constexpr float k_half_cell_offset = 0.5F;
 
-  float gx = worldX / m_heightMap->getTileSize() + gridHalfWidth;
-  float gz = worldZ / m_heightMap->getTileSize() + gridHalfHeight;
+  const float grid_half_width =
+      static_cast<float>(m_height_map->getWidth()) * k_half_cell_offset -
+      k_half_cell_offset;
+  const float grid_half_height =
+      static_cast<float>(m_height_map->getHeight()) * k_half_cell_offset -
+      k_half_cell_offset;
 
-  int ix = static_cast<int>(std::round(gx));
-  int iz = static_cast<int>(std::round(gz));
-  return isForbidden(ix, iz);
+  const float grid_x = world_x / m_height_map->getTileSize() + grid_half_width;
+  const float grid_z = world_z / m_height_map->getTileSize() + grid_half_height;
+
+  const int grid_x_int = static_cast<int>(std::round(grid_x));
+  const int grid_z_int = static_cast<int>(std::round(grid_z));
+
+  return isForbidden(grid_x_int, grid_z_int);
 }
 
-bool TerrainService::isHillEntrance(int gridX, int gridZ) const {
-  if (!m_heightMap) {
+auto TerrainService::isHillEntrance(int grid_x, int grid_z) const -> bool {
+  if (!m_height_map) {
     return false;
   }
-  return m_heightMap->isHillEntrance(gridX, gridZ);
+  return m_height_map->isHillEntrance(grid_x, grid_z);
 }
 
-TerrainType TerrainService::getTerrainType(int gridX, int gridZ) const {
-  if (!m_heightMap) {
+auto TerrainService::getTerrainType(int grid_x,
+                                    int grid_z) const -> TerrainType {
+  if (!m_height_map) {
     return TerrainType::Flat;
   }
-  return m_heightMap->getTerrainType(gridX, gridZ);
+  return m_height_map->getTerrainType(grid_x, grid_z);
 }
 
 void TerrainService::restoreFromSerialized(
-    int width, int height, float tileSize, const std::vector<float> &heights,
-    const std::vector<TerrainType> &terrainTypes,
+    int width, int height, float tile_size, const std::vector<float> &heights,
+    const std::vector<TerrainType> &terrain_types,
     const std::vector<RiverSegment> &rivers, const std::vector<Bridge> &bridges,
     const BiomeSettings &biome) {
-  m_heightMap = std::make_unique<TerrainHeightMap>(width, height, tileSize);
-  m_heightMap->restoreFromData(heights, terrainTypes, rivers, bridges);
+  m_height_map = std::make_unique<TerrainHeightMap>(width, height, tile_size);
+  m_height_map->restoreFromData(heights, terrain_types, rivers, bridges);
   m_biomeSettings = biome;
 }
 

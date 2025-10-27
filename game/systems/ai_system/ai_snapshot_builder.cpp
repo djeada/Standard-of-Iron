@@ -1,51 +1,53 @@
 #include "ai_snapshot_builder.h"
 #include "../../core/component.h"
 #include "../../core/world.h"
+#include "systems/ai_system/ai_types.h"
+#include <utility>
 
 namespace Game::Systems::AI {
 
 AISnapshot AISnapshotBuilder::build(const Engine::Core::World &world,
-                                    int aiOwnerId) const {
+                                    int aiOwnerId) {
   AISnapshot snapshot;
-  snapshot.playerId = aiOwnerId;
+  snapshot.player_id = aiOwnerId;
 
   auto friendlies = world.getUnitsOwnedBy(aiOwnerId);
   snapshot.friendlies.reserve(friendlies.size());
 
-  int skippedNoAI = 0;
-  int skippedNoUnit = 0;
-  int skippedDead = 0;
+  int skipped_no_ai = 0;
+  int skipped_no_unit = 0;
+  int skipped_dead = 0;
   int added = 0;
 
   for (auto *entity : friendlies) {
     if (!entity->hasComponent<Engine::Core::AIControlledComponent>()) {
-      skippedNoAI++;
+      skipped_no_ai++;
       continue;
     }
 
     auto *unit = entity->getComponent<Engine::Core::UnitComponent>();
-    if (!unit) {
-      skippedNoUnit++;
+    if (unit == nullptr) {
+      skipped_no_unit++;
       continue;
     }
 
     if (unit->health <= 0) {
-      skippedDead++;
+      skipped_dead++;
       continue;
     }
 
     EntitySnapshot data;
     data.id = entity->getId();
-    data.spawnType = unit->spawnType;
-    data.ownerId = unit->ownerId;
+    data.spawn_type = unit->spawn_type;
+    data.owner_id = unit->owner_id;
     data.health = unit->health;
-    data.maxHealth = unit->maxHealth;
+    data.max_health = unit->max_health;
     data.isBuilding = entity->hasComponent<Engine::Core::BuildingComponent>();
 
     if (auto *transform =
             entity->getComponent<Engine::Core::TransformComponent>()) {
       data.posX = transform->position.x;
-      data.posY = 0.0f;
+      data.posY = 0.0F;
       data.posZ = transform->position.z;
     }
 
@@ -63,7 +65,7 @@ AISnapshot AISnapshotBuilder::build(const Engine::Core::World &world,
       data.production.timeRemaining = production->timeRemaining;
       data.production.producedCount = production->producedCount;
       data.production.maxUnits = production->maxUnits;
-      data.production.productType = production->productType;
+      data.production.product_type = production->product_type;
       data.production.rallySet = production->rallySet;
       data.production.rallyX = production->rallyX;
       data.production.rallyZ = production->rallyZ;
@@ -80,12 +82,12 @@ AISnapshot AISnapshotBuilder::build(const Engine::Core::World &world,
 
   for (auto *entity : enemies) {
     auto *unit = entity->getComponent<Engine::Core::UnitComponent>();
-    if (!unit || unit->health <= 0) {
+    if ((unit == nullptr) || unit->health <= 0) {
       continue;
     }
 
     auto *transform = entity->getComponent<Engine::Core::TransformComponent>();
-    if (!transform) {
+    if (transform == nullptr) {
       continue;
     }
 
@@ -94,12 +96,12 @@ AISnapshot AISnapshotBuilder::build(const Engine::Core::World &world,
     contact.isBuilding =
         entity->hasComponent<Engine::Core::BuildingComponent>();
     contact.posX = transform->position.x;
-    contact.posY = 0.0f;
+    contact.posY = 0.0F;
     contact.posZ = transform->position.z;
 
     contact.health = unit->health;
-    contact.maxHealth = unit->maxHealth;
-    contact.spawnType = unit->spawnType;
+    contact.max_health = unit->max_health;
+    contact.spawn_type = unit->spawn_type;
 
     snapshot.visibleEnemies.push_back(std::move(contact));
   }

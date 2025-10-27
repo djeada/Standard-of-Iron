@@ -1,4 +1,5 @@
 #include "map_catalog.h"
+#include "json_keys.h"
 #include "utils/resource_utils.h"
 #include <QDir>
 #include <QFile>
@@ -6,57 +7,74 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QJsonParseError>
 #include <QSet>
 #include <QStringList>
 #include <QTimer>
 #include <QVariantMap>
 #include <algorithm>
+#include <qdir.h>
+#include <qfiledevice.h>
+#include <qglobal.h>
+#include <qjsonarray.h>
+#include <qjsondocument.h>
+#include <qjsonobject.h>
+#include <qjsonvalue.h>
+#include <qlist.h>
+#include <qobject.h>
+#include <qset.h>
+#include <qstringliteral.h>
+#include <qstringview.h>
+#include <qtimer.h>
+#include <qtmetamacros.h>
 
-namespace Game {
-namespace Map {
+namespace Game::Map {
+
+using namespace JsonKeys;
 
 MapCatalog::MapCatalog(QObject *parent) : QObject(parent) {}
 
-QVariantList MapCatalog::availableMaps() {
+auto MapCatalog::availableMaps() -> QVariantList {
   QVariantList list;
   const QString mapsRoot =
       Utils::Resources::resolveResourcePath(QStringLiteral(":/assets/maps"));
-  QDir mapsDir(mapsRoot);
+  QDir const mapsDir(mapsRoot);
   if (!mapsDir.exists()) {
     return list;
   }
 
-  QStringList files =
+  QStringList const files =
       mapsDir.entryList(QStringList() << "*.json", QDir::Files, QDir::Name);
   for (const QString &f : files) {
-    QString path = Utils::Resources::resolveResourcePath(mapsDir.filePath(f));
+    QString const path =
+        Utils::Resources::resolveResourcePath(mapsDir.filePath(f));
     QFile file(path);
     QString name = f;
     QString desc;
-    QSet<int> playerIds;
+    QSet<int> player_ids;
     if (file.open(QIODevice::ReadOnly)) {
-      QByteArray data = file.readAll();
+      QByteArray const data = file.readAll();
       file.close();
       QJsonParseError err;
-      QJsonDocument doc = QJsonDocument::fromJson(data, &err);
+      QJsonDocument const doc = QJsonDocument::fromJson(data, &err);
       if (err.error == QJsonParseError::NoError && doc.isObject()) {
         QJsonObject obj = doc.object();
-        if (obj.contains("name") && obj["name"].isString()) {
-          name = obj["name"].toString();
+        if (obj.contains(NAME) && obj[NAME].isString()) {
+          name = obj[NAME].toString();
         }
-        if (obj.contains("description") && obj["description"].isString()) {
-          desc = obj["description"].toString();
+        if (obj.contains(DESCRIPTION) && obj[DESCRIPTION].isString()) {
+          desc = obj[DESCRIPTION].toString();
         }
 
-        if (obj.contains("spawns") && obj["spawns"].isArray()) {
-          QJsonArray spawns = obj["spawns"].toArray();
+        if (obj.contains(SPAWNS) && obj[SPAWNS].isArray()) {
+          QJsonArray const spawns = obj[SPAWNS].toArray();
           for (const QJsonValue &spawnVal : spawns) {
             if (spawnVal.isObject()) {
               QJsonObject spawn = spawnVal.toObject();
-              if (spawn.contains("playerId")) {
-                int playerId = spawn["playerId"].toInt();
-                if (playerId > 0) {
-                  playerIds.insert(playerId);
+              if (spawn.contains(PLAYER_ID)) {
+                int const player_id = spawn[PLAYER_ID].toInt();
+                if (player_id > 0) {
+                  player_ids.insert(player_id);
                 }
               }
             }
@@ -65,35 +83,35 @@ QVariantList MapCatalog::availableMaps() {
       }
     }
     QVariantMap entry;
-    entry["name"] = name;
-    entry["description"] = desc;
+    entry[NAME] = name;
+    entry[DESCRIPTION] = desc;
     entry["path"] = path;
-    entry["playerCount"] = playerIds.size();
-    QVariantList playerIdList;
-    QList<int> sortedIds = playerIds.values();
+    entry["playerCount"] = player_ids.size();
+    QVariantList player_idList;
+    QList<int> sortedIds = player_ids.values();
     std::sort(sortedIds.begin(), sortedIds.end());
-    for (int id : sortedIds) {
-      playerIdList.append(id);
+    for (int const id : sortedIds) {
+      player_idList.append(id);
     }
-    entry["playerIds"] = playerIdList;
+    entry["player_ids"] = player_idList;
 
     QString thumbnail;
     if (file.open(QIODevice::ReadOnly)) {
-      QByteArray data = file.readAll();
+      QByteArray const data = file.readAll();
       file.close();
       QJsonParseError err;
-      QJsonDocument doc = QJsonDocument::fromJson(data, &err);
+      QJsonDocument const doc = QJsonDocument::fromJson(data, &err);
       if (err.error == QJsonParseError::NoError && doc.isObject()) {
         QJsonObject obj = doc.object();
-        if (obj.contains("thumbnail") && obj["thumbnail"].isString()) {
-          thumbnail = obj["thumbnail"].toString();
+        if (obj.contains(THUMBNAIL) && obj[THUMBNAIL].isString()) {
+          thumbnail = obj[THUMBNAIL].toString();
         }
       }
     }
 
     if (thumbnail.isEmpty()) {
-      QString baseName = QFileInfo(f).baseName();
-      QString thumbCandidate = Utils::Resources::resolveResourcePath(
+      QString const baseName = QFileInfo(f).baseName();
+      QString const thumbCandidate = Utils::Resources::resolveResourcePath(
           QString(":/assets/maps/%1_thumb.png").arg(baseName));
 
       if (QFileInfo::exists(thumbCandidate)) {
@@ -121,7 +139,7 @@ void MapCatalog::loadMapsAsync() {
 
   const QString mapsRoot =
       Utils::Resources::resolveResourcePath(QStringLiteral(":/assets/maps"));
-  QDir mapsDir(mapsRoot);
+  QDir const mapsDir(mapsRoot);
   if (!mapsDir.exists()) {
     m_loading = false;
     emit loadingChanged(false);
@@ -150,14 +168,14 @@ void MapCatalog::loadNextMap() {
     return;
   }
 
-  QString fileName = m_pendingFiles.takeFirst();
+  QString const fileName = m_pendingFiles.takeFirst();
   const QString mapsRoot =
       Utils::Resources::resolveResourcePath(QStringLiteral(":/assets/maps"));
-  QDir mapsDir(mapsRoot);
-  QString path =
+  QDir const mapsDir(mapsRoot);
+  QString const path =
       Utils::Resources::resolveResourcePath(mapsDir.filePath(fileName));
 
-  QVariantMap entry = loadSingleMap(path);
+  QVariantMap const entry = loadSingleMap(path);
   if (!entry.isEmpty()) {
     m_maps.append(entry);
     emit mapLoaded(entry);
@@ -172,36 +190,36 @@ void MapCatalog::loadNextMap() {
   }
 }
 
-QVariantMap MapCatalog::loadSingleMap(const QString &path) {
+auto MapCatalog::loadSingleMap(const QString &path) -> QVariantMap {
   const QString resolvedPath = Utils::Resources::resolveResourcePath(path);
   QFile file(resolvedPath);
   QString name = QFileInfo(resolvedPath).fileName();
   QString desc;
-  QSet<int> playerIds;
+  QSet<int> player_ids;
 
   if (file.open(QIODevice::ReadOnly)) {
-    QByteArray data = file.readAll();
+    QByteArray const data = file.readAll();
     file.close();
     QJsonParseError err;
-    QJsonDocument doc = QJsonDocument::fromJson(data, &err);
+    QJsonDocument const doc = QJsonDocument::fromJson(data, &err);
     if (err.error == QJsonParseError::NoError && doc.isObject()) {
       QJsonObject obj = doc.object();
-      if (obj.contains("name") && obj["name"].isString()) {
-        name = obj["name"].toString();
+      if (obj.contains(NAME) && obj[NAME].isString()) {
+        name = obj[NAME].toString();
       }
-      if (obj.contains("description") && obj["description"].isString()) {
-        desc = obj["description"].toString();
+      if (obj.contains(DESCRIPTION) && obj[DESCRIPTION].isString()) {
+        desc = obj[DESCRIPTION].toString();
       }
 
-      if (obj.contains("spawns") && obj["spawns"].isArray()) {
-        QJsonArray spawns = obj["spawns"].toArray();
+      if (obj.contains(SPAWNS) && obj[SPAWNS].isArray()) {
+        QJsonArray const spawns = obj[SPAWNS].toArray();
         for (const QJsonValue &spawnVal : spawns) {
           if (spawnVal.isObject()) {
             QJsonObject spawn = spawnVal.toObject();
-            if (spawn.contains("playerId")) {
-              int playerId = spawn["playerId"].toInt();
-              if (playerId > 0) {
-                playerIds.insert(playerId);
+            if (spawn.contains(PLAYER_ID)) {
+              int const player_id = spawn[PLAYER_ID].toInt();
+              if (player_id > 0) {
+                player_ids.insert(player_id);
               }
             }
           }
@@ -211,36 +229,35 @@ QVariantMap MapCatalog::loadSingleMap(const QString &path) {
   }
 
   QVariantMap entry;
-  entry["name"] = name;
-  entry["description"] = desc;
+  entry[NAME] = name;
+  entry[DESCRIPTION] = desc;
   entry["path"] = resolvedPath;
-  entry["playerCount"] = playerIds.size();
+  entry["playerCount"] = player_ids.size();
 
-  QVariantList playerIdList;
-  QList<int> sortedIds = playerIds.values();
+  QVariantList player_idList;
+  QList<int> sortedIds = player_ids.values();
   std::sort(sortedIds.begin(), sortedIds.end());
-  for (int id : sortedIds) {
-    playerIdList.append(id);
+  for (int const id : sortedIds) {
+    player_idList.append(id);
   }
-  entry["playerIds"] = playerIdList;
+  entry["player_ids"] = player_idList;
 
   QString thumbnail;
   if (file.open(QIODevice::ReadOnly)) {
-    QByteArray data = file.readAll();
+    QByteArray const data = file.readAll();
     file.close();
     QJsonParseError err;
-    QJsonDocument doc = QJsonDocument::fromJson(data, &err);
+    QJsonDocument const doc = QJsonDocument::fromJson(data, &err);
     if (err.error == QJsonParseError::NoError && doc.isObject()) {
       QJsonObject obj = doc.object();
-      if (obj.contains("thumbnail") && obj["thumbnail"].isString()) {
-        thumbnail = obj["thumbnail"].toString();
+      if (obj.contains(THUMBNAIL) && obj[THUMBNAIL].isString()) {
+        thumbnail = obj[THUMBNAIL].toString();
       }
     }
   }
-
   if (thumbnail.isEmpty()) {
-    QString baseName = QFileInfo(resolvedPath).baseName();
-    QString thumbCandidate = Utils::Resources::resolveResourcePath(
+    QString const baseName = QFileInfo(resolvedPath).baseName();
+    QString const thumbCandidate = Utils::Resources::resolveResourcePath(
         QString(":/assets/maps/%1_thumb.png").arg(baseName));
 
     if (QFileInfo::exists(thumbCandidate)) {
@@ -254,5 +271,4 @@ QVariantMap MapCatalog::loadSingleMap(const QString &path) {
   return entry;
 }
 
-} // namespace Map
-} // namespace Game
+} // namespace Game::Map

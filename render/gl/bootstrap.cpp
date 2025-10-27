@@ -1,16 +1,15 @@
 #include "bootstrap.h"
 #include "../scene_renderer.h"
 #include "camera.h"
-#include "resources.h"
 #include <QDebug>
 #include <QOpenGLContext>
+#include <qglobal.h>
 
-namespace Render {
-namespace GL {
+namespace Render::GL {
 
-bool RenderBootstrap::initialize(Renderer &renderer, Camera &camera) {
+auto RenderBootstrap::initialize(Renderer &renderer, Camera &camera) -> bool {
   QOpenGLContext *ctx = QOpenGLContext::currentContext();
-  if (!ctx || !ctx->isValid()) {
+  if ((ctx == nullptr) || !ctx->isValid()) {
     qWarning() << "RenderBootstrap: no current valid OpenGL context";
     return false;
   }
@@ -22,5 +21,4 @@ bool RenderBootstrap::initialize(Renderer &renderer, Camera &camera) {
   return true;
 }
 
-} // namespace GL
-} // namespace Render
+} // namespace Render::GL

@@ -14,10 +14,10 @@ public:
   enum class Wrap { Repeat, ClampToEdge, ClampToBorder };
 
   Texture();
-  ~Texture();
+  ~Texture() override;
 
-  bool loadFromFile(const QString &path);
-  bool createEmpty(int width, int height, Format format = Format::RGBA);
+  auto loadFromFile(const QString &path) -> bool;
+  auto createEmpty(int width, int height, Format format = Format::RGBA) -> bool;
 
   void bind(int unit = 0);
   void unbind();
@@ -25,8 +25,8 @@ public:
   void setFilter(Filter minFilter, Filter magFilter);
   void setWrap(Wrap sWrap, Wrap tWrap);
 
-  int getWidth() const { return m_width; }
-  int getHeight() const { return m_height; }
+  [[nodiscard]] auto getWidth() const -> int { return m_width; }
+  [[nodiscard]] auto getHeight() const -> int { return m_height; }
 
 private:
   GLuint m_texture = 0;
@@ -34,9 +34,9 @@ private:
   int m_height = 0;
   Format m_format = Format::RGBA;
 
-  GLenum getGLFormat(Format format) const;
-  GLenum getGLFilter(Filter filter) const;
-  GLenum getGLWrap(Wrap wrap) const;
+  [[nodiscard]] static auto getGLFormat(Format format) -> GLenum;
+  [[nodiscard]] static auto getGLFilter(Filter filter) -> GLenum;
+  [[nodiscard]] static auto getGLWrap(Wrap wrap) -> GLenum;
 };
 
 } // namespace Render::GL

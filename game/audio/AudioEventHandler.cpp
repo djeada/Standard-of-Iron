@@ -3,16 +3,19 @@
 #include "../core/entity.h"
 #include "../core/world.h"
 #include "AudioSystem.h"
+#include "core/event_manager.h"
+#include "units/spawn_type.h"
+#include <chrono>
+#include <string>
 
-namespace Game {
-namespace Audio {
+namespace Game::Audio {
 
 AudioEventHandler::AudioEventHandler(Engine::Core::World *world)
-    : m_world(world), m_initialized(false), m_useVoiceCategory(true) {}
+    : m_world(world) {}
 
 AudioEventHandler::~AudioEventHandler() { shutdown(); }
 
-bool AudioEventHandler::initialize() {
+auto AudioEventHandler::initialize() -> bool {
   if (m_initialized) {
     return true;
   }
@@ -61,9 +64,9 @@ void AudioEventHandler::shutdown() {
   m_initialized = false;
 }
 
-void AudioEventHandler::loadUnitVoiceMapping(const std::string &unitType,
+void AudioEventHandler::loadUnitVoiceMapping(const std::string &unit_type,
                                              const std::string &soundId) {
-  m_unitVoiceMap[unitType] = soundId;
+  m_unitVoiceMap[unit_type] = soundId;
 }
 
 void AudioEventHandler::loadAmbientMusic(Engine::Core::AmbientState state,
@@ -77,47 +80,48 @@ void AudioEventHandler::setVoiceSoundCategory(bool useVoiceCategory) {
 
 void AudioEventHandler::onUnitSelected(
     const Engine::Core::UnitSelectedEvent &event) {
-  if (!m_world) {
+  if (m_world == nullptr) {
     return;
   }
 
-  auto *entity = m_world->getEntity(event.unitId);
-  if (!entity) {
+  auto *entity = m_world->getEntity(event.unit_id);
+  if (entity == nullptr) {
     return;
   }
 
-  auto *unitComponent = entity->getComponent<Engine::Core::UnitComponent>();
-  if (!unitComponent) {
+  auto *unit_component = entity->getComponent<Engine::Core::UnitComponent>();
+  if (unit_component == nullptr) {
     return;
   }
 
-  std::string unitTypeStr =
-      Game::Units::spawnTypeToString(unitComponent->spawnType);
-  auto it = m_unitVoiceMap.find(unitTypeStr);
+  std::string const unit_type_str =
+      Game::Units::spawn_typeToString(unit_component->spawn_type);
+  auto it = m_unitVoiceMap.find(unit_type_str);
   if (it != m_unitVoiceMap.end()) {
     auto now = std::chrono::steady_clock::now();
-    auto timeSinceLastSound =
+    auto time_since_last_sound =
         std::chrono::duration_cast<std::chrono::milliseconds>(
             now - m_lastSelectionSoundTime)
             .count();
 
-    bool shouldPlay = (timeSinceLastSound >= SELECTION_SOUND_COOLDOWN_MS) ||
-                      (unitTypeStr != m_lastSelectionUnitType);
+    bool const should_play =
+        (time_since_last_sound >= SELECTION_SOUND_COOLDOWN_MS) ||
+        (unit_type_str != m_lastSelectionUnitType);
 
-    if (shouldPlay) {
-      AudioCategory category =
+    if (should_play) {
+      AudioCategory const category =
           m_useVoiceCategory ? AudioCategory::VOICE : AudioCategory::SFX;
-      AudioSystem::getInstance().playSound(it->second, 1.0f, false, 5,
+      AudioSystem::getInstance().playSound(it->second, 1.0F, false, 5,
                                            category);
       m_lastSelectionSoundTime = now;
-      m_lastSelectionUnitType = unitTypeStr;
+      m_lastSelectionUnitType = unit_type_str;
     }
   }
 }
 
 void AudioEventHandler::onAmbientStateChanged(
     const Engine::Core::AmbientStateChangedEvent &event) {
-  auto it = m_ambientMusicMap.find(event.newState);
+  auto it = m_ambientMusicMap.find(event.new_state);
   if (it != m_ambientMusicMap.end()) {
     AudioSystem::getInstance().playMusic(it->second);
   }
@@ -135,5 +139,4 @@ void AudioEventHandler::onMusicTrigger(
                                        event.crossfade);
 }
 
-} // namespace Audio
-} // namespace Game
+} // namespace Game::Audio

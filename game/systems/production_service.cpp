@@ -3,21 +3,24 @@
 #include "../core/world.h"
 #include "../game_config.h"
 #include "../units/troop_config.h"
+#include "core/entity.h"
+#include "units/spawn_type.h"
+#include "units/troop_type.h"
+#include <vector>
 
-namespace Game {
-namespace Systems {
+namespace Game::Systems {
 
-static Engine::Core::Entity *
+static auto
 findFirstSelectedBarracks(Engine::Core::World &world,
                           const std::vector<Engine::Core::EntityID> &selected,
-                          int ownerId) {
+                          int owner_id) -> Engine::Core::Entity * {
   for (auto id : selected) {
     if (auto *e = world.getEntity(id)) {
       auto *u = e->getComponent<Engine::Core::UnitComponent>();
-      if (!u || u->ownerId != ownerId) {
+      if ((u == nullptr) || u->owner_id != owner_id) {
         continue;
       }
-      if (u->spawnType == Game::Units::SpawnType::Barracks) {
+      if (u->spawn_type == Game::Units::SpawnType::Barracks) {
         return e;
       }
     }
@@ -25,47 +28,48 @@ findFirstSelectedBarracks(Engine::Core::World &world,
   return nullptr;
 }
 
-ProductionResult ProductionService::startProductionForFirstSelectedBarracks(
+auto ProductionService::startProductionForFirstSelectedBarracks(
     Engine::Core::World &world,
-    const std::vector<Engine::Core::EntityID> &selected, int ownerId,
-    Game::Units::TroopType unitType) {
-  auto *e = findFirstSelectedBarracks(world, selected, ownerId);
-  if (!e) {
+    const std::vector<Engine::Core::EntityID> &selected, int owner_id,
+    Game::Units::TroopType unit_type) -> ProductionResult {
+  auto *e = findFirstSelectedBarracks(world, selected, owner_id);
+  if (e == nullptr) {
     return ProductionResult::NoBarracks;
   }
   auto *p = e->getComponent<Engine::Core::ProductionComponent>();
-  if (!p) {
+  if (p == nullptr) {
     p = e->addComponent<Engine::Core::ProductionComponent>();
   }
-  if (!p) {
+  if (p == nullptr) {
     return ProductionResult::NoBarracks;
   }
 
-  int individualsPerUnit =
-      Game::Units::TroopConfig::instance().getIndividualsPerUnit(unitType);
+  int const individuals_per_unit =
+      Game::Units::TroopConfig::instance().getIndividualsPerUnit(unit_type);
 
-  if (p->producedCount + individualsPerUnit > p->maxUnits) {
+  if (p->producedCount + individuals_per_unit > p->maxUnits) {
     return ProductionResult::PerBarracksLimitReached;
   }
 
-  int currentTroops = world.countTroopsForPlayer(ownerId);
-  int maxTroops = Game::GameConfig::instance().getMaxTroopsPerPlayer();
-  if (currentTroops + individualsPerUnit > maxTroops) {
+  int const current_troops =
+      Engine::Core::World::countTroopsForPlayer(owner_id);
+  int const max_troops = Game::GameConfig::instance().getMaxTroopsPerPlayer();
+  if (current_troops + individuals_per_unit > max_troops) {
     return ProductionResult::GlobalTroopLimitReached;
   }
 
-  const int maxQueueSize = 5;
-  int totalInQueue = p->inProgress ? 1 : 0;
-  totalInQueue += static_cast<int>(p->productionQueue.size());
+  const int max_queue_size = 5;
+  int total_in_queue = p->inProgress ? 1 : 0;
+  total_in_queue += static_cast<int>(p->productionQueue.size());
 
-  if (totalInQueue >= maxQueueSize) {
+  if (total_in_queue >= max_queue_size) {
     return ProductionResult::QueueFull;
   }
 
   if (p->inProgress) {
-    p->productionQueue.push_back(unitType);
+    p->productionQueue.push_back(unit_type);
   } else {
-    p->productType = unitType;
+    p->product_type = unit_type;
     p->timeRemaining = p->buildTime;
     p->inProgress = true;
   }
@@ -73,19 +77,19 @@ ProductionResult ProductionService::startProductionForFirstSelectedBarracks(
   return ProductionResult::Success;
 }
 
-bool ProductionService::setRallyForFirstSelectedBarracks(
+auto ProductionService::setRallyForFirstSelectedBarracks(
     Engine::Core::World &world,
-    const std::vector<Engine::Core::EntityID> &selected, int ownerId, float x,
-    float z) {
-  auto *e = findFirstSelectedBarracks(world, selected, ownerId);
-  if (!e) {
+    const std::vector<Engine::Core::EntityID> &selected, int owner_id, float x,
+    float z) -> bool {
+  auto *e = findFirstSelectedBarracks(world, selected, owner_id);
+  if (e == nullptr) {
     return false;
   }
   auto *p = e->getComponent<Engine::Core::ProductionComponent>();
-  if (!p) {
+  if (p == nullptr) {
     p = e->addComponent<Engine::Core::ProductionComponent>();
   }
-  if (!p) {
+  if (p == nullptr) {
     return false;
   }
   p->rallyX = x;
@@ -94,19 +98,19 @@ bool ProductionService::setRallyForFirstSelectedBarracks(
   return true;
 }
 
-bool ProductionService::getSelectedBarracksState(
+auto ProductionService::getSelectedBarracksState(
     Engine::Core::World &world,
-    const std::vector<Engine::Core::EntityID> &selected, int ownerId,
-    ProductionState &outState) {
-  auto *e = findFirstSelectedBarracks(world, selected, ownerId);
-  if (!e) {
+    const std::vector<Engine::Core::EntityID> &selected, int owner_id,
+    ProductionState &outState) -> bool {
+  auto *e = findFirstSelectedBarracks(world, selected, owner_id);
+  if (e == nullptr) {
     outState = {};
     return false;
   }
-  outState.hasBarracks = true;
+  outState.has_barracks = true;
   if (auto *p = e->getComponent<Engine::Core::ProductionComponent>()) {
     outState.inProgress = p->inProgress;
-    outState.productType = p->productType;
+    outState.product_type = p->product_type;
     outState.timeRemaining = p->timeRemaining;
     outState.buildTime = p->buildTime;
     outState.producedCount = p->producedCount;
@@ -118,5 +122,4 @@ bool ProductionService::getSelectedBarracksState(
   return true;
 }
 
-} // namespace Systems
-} // namespace Game
+} // namespace Game::Systems

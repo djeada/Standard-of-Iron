@@ -10,10 +10,10 @@ class GLView : public QQuickFramebufferObject {
 public:
   GLView();
 
-  Renderer *createRenderer() const override;
+  [[nodiscard]] auto createRenderer() const -> Renderer * override;
 
   Q_PROPERTY(QObject *engine READ engine WRITE setEngine NOTIFY engineChanged)
-  QObject *engine() const;
+  [[nodiscard]] auto engine() const -> QObject *;
   void setEngine(QObject *eng);
 
 signals:
@@ -26,8 +26,8 @@ private:
   public:
     explicit GLRenderer(QPointer<GameEngine> engine);
     void render() override;
-    QOpenGLFramebufferObject *
-    createFramebufferObject(const QSize &size) override;
+    auto createFramebufferObject(const QSize &size)
+        -> QOpenGLFramebufferObject * override;
     void synchronize(QQuickFramebufferObject *item) override;
 
   private:

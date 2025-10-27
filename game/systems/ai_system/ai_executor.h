@@ -12,10 +12,11 @@ public:
   ~AIExecutor() = default;
 
   AIExecutor(const AIExecutor &) = delete;
-  AIExecutor &operator=(const AIExecutor &) = delete;
+  auto operator=(const AIExecutor &) -> AIExecutor & = delete;
 
-  void run(const AISnapshot &snapshot, AIContext &context, float deltaTime,
-           AIBehaviorRegistry &registry, std::vector<AICommand> &outCommands);
+  static void run(const AISnapshot &snapshot, AIContext &context,
+                  float deltaTime, AIBehaviorRegistry &registry,
+                  std::vector<AICommand> &outCommands);
 };
 
 } // namespace Game::Systems::AI

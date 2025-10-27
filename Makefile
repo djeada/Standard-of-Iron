@@ -113,11 +113,23 @@ run: build
 		echo "$(RED)$(BINARY_NAME) not found at $$BIN_PATH$(RESET)"; \
 		exit 127; \
 	fi; \
-	if [ -n "$$DISPLAY" ]; then \
-		"$${BIN_PATH}"; \
+	PLATFORM="$$(uname -s)"; \
+	DEFAULT_QPA="offscreen"; \
+	case "$$PLATFORM" in \
+		Darwin) DEFAULT_QPA="cocoa" ;; \
+		MINGW*|MSYS*|CYGWIN*) DEFAULT_QPA="windows" ;; \
+		*) \
+			if [ -n "$$WAYLAND_DISPLAY" ]; then \
+				DEFAULT_QPA="wayland"; \
+			elif [ -n "$$DISPLAY" ]; then \
+				DEFAULT_QPA="xcb"; \
+			fi ;; \
+	esac; \
+	if [ -z "$$QT_QPA_PLATFORM" ]; then \
+		echo "$(YELLOW)QT_QPA_PLATFORM not set; defaulting to $$DEFAULT_QPA$(RESET)"; \
+		QT_QPA_PLATFORM="$$DEFAULT_QPA" "$${BIN_PATH}"; \
 	else \
-		echo "$(YELLOW)No DISPLAY detected; running with QT_QPA_PLATFORM=offscreen$(RESET)"; \
-		QT_QPA_PLATFORM=offscreen "$${BIN_PATH}"; \
+		"$${BIN_PATH}"; \
 	fi
 
 # Run with xvfb for headless environments (software rasterization)
@@ -322,4 +334,3 @@ quickstart:
 	@echo "3. Run the game: $(BLUE)make run$(RESET)"
 	@echo ""
 	@echo "Or use the shortcut: $(BLUE)make dev$(RESET)"
-

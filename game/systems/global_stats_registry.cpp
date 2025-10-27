@@ -2,11 +2,15 @@
 #include "../core/component.h"
 #include "../core/world.h"
 #include "../units/troop_config.h"
+#include "core/event_manager.h"
 #include "owner_registry.h"
+#include "units/spawn_type.h"
+#include <chrono>
+#include <unordered_map>
 
 namespace Game::Systems {
 
-GlobalStatsRegistry &GlobalStatsRegistry::instance() {
+auto GlobalStatsRegistry::instance() -> GlobalStatsRegistry & {
   static GlobalStatsRegistry inst;
   return inst;
 }
@@ -31,51 +35,51 @@ void GlobalStatsRegistry::initialize() {
 
 void GlobalStatsRegistry::clear() { m_playerStats.clear(); }
 
-const PlayerStats *GlobalStatsRegistry::getStats(int ownerId) const {
-  auto it = m_playerStats.find(ownerId);
+auto GlobalStatsRegistry::getStats(int owner_id) const -> const PlayerStats * {
+  auto it = m_playerStats.find(owner_id);
   if (it != m_playerStats.end()) {
     return &it->second;
   }
   return nullptr;
 }
 
-PlayerStats *GlobalStatsRegistry::getStats(int ownerId) {
-  auto it = m_playerStats.find(ownerId);
+auto GlobalStatsRegistry::getStats(int owner_id) -> PlayerStats * {
+  auto it = m_playerStats.find(owner_id);
   if (it != m_playerStats.end()) {
     return &it->second;
   }
   return nullptr;
 }
 
-void GlobalStatsRegistry::markGameStart(int ownerId) {
-  auto &stats = m_playerStats[ownerId];
+void GlobalStatsRegistry::markGameStart(int owner_id) {
+  auto &stats = m_playerStats[owner_id];
   stats.gameStartTime = std::chrono::steady_clock::now();
   stats.gameEnded = false;
-  stats.playTimeSec = 0.0f;
+  stats.playTimeSec = 0.0F;
 }
 
-void GlobalStatsRegistry::markGameEnd(int ownerId) {
-  auto it = m_playerStats.find(ownerId);
+void GlobalStatsRegistry::markGameEnd(int owner_id) {
+  auto it = m_playerStats.find(owner_id);
   if (it != m_playerStats.end() && !it->second.gameEnded) {
     it->second.gameEndTime = std::chrono::steady_clock::now();
     it->second.gameEnded = true;
 
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
         it->second.gameEndTime - it->second.gameStartTime);
-    it->second.playTimeSec = duration.count() / 1000.0f;
+    it->second.playTimeSec = duration.count() / 1000.0F;
   }
 }
 
 void GlobalStatsRegistry::onUnitSpawned(
     const Engine::Core::UnitSpawnedEvent &event) {
 
-  auto &stats = m_playerStats[event.ownerId];
+  auto &stats = m_playerStats[event.owner_id];
 
-  if (event.spawnType != Game::Units::SpawnType::Barracks) {
-    int individualsPerUnit =
+  if (event.spawn_type != Game::Units::SpawnType::Barracks) {
+    int const individuals_per_unit =
         Game::Units::TroopConfig::instance().getIndividualsPerUnit(
-            event.spawnType);
-    stats.troopsRecruited += individualsPerUnit;
+            event.spawn_type);
+    stats.troopsRecruited += individuals_per_unit;
   } else {
 
     stats.barracksOwned++;
@@ -84,8 +88,8 @@ void GlobalStatsRegistry::onUnitSpawned(
 
 void GlobalStatsRegistry::onUnitDied(const Engine::Core::UnitDiedEvent &event) {
 
-  if (event.spawnType == Game::Units::SpawnType::Barracks) {
-    auto it = m_playerStats.find(event.ownerId);
+  if (event.spawn_type == Game::Units::SpawnType::Barracks) {
+    auto it = m_playerStats.find(event.owner_id);
     if (it != m_playerStats.end()) {
       it->second.barracksOwned--;
       if (it->second.barracksOwned < 0) {
@@ -94,18 +98,18 @@ void GlobalStatsRegistry::onUnitDied(const Engine::Core::UnitDiedEvent &event) {
     }
   }
 
-  if (event.killerOwnerId != 0 && event.killerOwnerId != event.ownerId) {
+  if (event.killer_owner_id != 0 && event.killer_owner_id != event.owner_id) {
 
-    auto &ownerRegistry = OwnerRegistry::instance();
+    auto &owner_registry = OwnerRegistry::instance();
 
-    if (ownerRegistry.areEnemies(event.killerOwnerId, event.ownerId)) {
-      auto &stats = m_playerStats[event.killerOwnerId];
+    if (owner_registry.areEnemies(event.killer_owner_id, event.owner_id)) {
+      auto &stats = m_playerStats[event.killer_owner_id];
 
-      if (event.spawnType != Game::Units::SpawnType::Barracks) {
-        int individualsPerUnit =
+      if (event.spawn_type != Game::Units::SpawnType::Barracks) {
+        int const individuals_per_unit =
             Game::Units::TroopConfig::instance().getIndividualsPerUnit(
-                event.spawnType);
-        stats.enemiesKilled += individualsPerUnit;
+                event.spawn_type);
+        stats.enemiesKilled += individuals_per_unit;
       }
     }
   }
@@ -114,47 +118,47 @@ void GlobalStatsRegistry::onUnitDied(const Engine::Core::UnitDiedEvent &event) {
 void GlobalStatsRegistry::onBarrackCaptured(
     const Engine::Core::BarrackCapturedEvent &event) {
 
-  auto prevIt = m_playerStats.find(event.previousOwnerId);
-  if (prevIt != m_playerStats.end() && event.previousOwnerId != -1) {
-    prevIt->second.barracksOwned--;
-    if (prevIt->second.barracksOwned < 0) {
-      prevIt->second.barracksOwned = 0;
+  auto prev_it = m_playerStats.find(event.previous_owner_id);
+  if (prev_it != m_playerStats.end() && event.previous_owner_id != -1) {
+    prev_it->second.barracksOwned--;
+    if (prev_it->second.barracksOwned < 0) {
+      prev_it->second.barracksOwned = 0;
     }
   }
 
-  auto &newStats = m_playerStats[event.newOwnerId];
-  newStats.barracksOwned++;
+  auto &new_stats = m_playerStats[event.newOwnerId];
+  new_stats.barracksOwned++;
 }
 
 void GlobalStatsRegistry::rebuildFromWorld(Engine::Core::World &world) {
 
-  std::unordered_map<int, std::chrono::steady_clock::time_point> startTimes;
-  for (auto &[ownerId, stats] : m_playerStats) {
-    startTimes[ownerId] = stats.gameStartTime;
+  std::unordered_map<int, std::chrono::steady_clock::time_point> start_times;
+  for (auto &[owner_id, stats] : m_playerStats) {
+    start_times[owner_id] = stats.gameStartTime;
   }
 
   m_playerStats.clear();
 
-  for (auto &[ownerId, startTime] : startTimes) {
-    m_playerStats[ownerId].gameStartTime = startTime;
+  for (auto &[owner_id, startTime] : start_times) {
+    m_playerStats[owner_id].gameStartTime = startTime;
   }
 
   auto entities = world.getEntitiesWith<Engine::Core::UnitComponent>();
   for (auto *e : entities) {
     auto *unit = e->getComponent<Engine::Core::UnitComponent>();
-    if (!unit || unit->health <= 0) {
+    if ((unit == nullptr) || unit->health <= 0) {
       continue;
     }
 
-    auto &stats = m_playerStats[unit->ownerId];
+    auto &stats = m_playerStats[unit->owner_id];
 
-    if (unit->spawnType == Game::Units::SpawnType::Barracks) {
+    if (unit->spawn_type == Game::Units::SpawnType::Barracks) {
       stats.barracksOwned++;
     } else {
-      int individualsPerUnit =
+      int const individuals_per_unit =
           Game::Units::TroopConfig::instance().getIndividualsPerUnit(
-              unit->spawnType);
-      stats.troopsRecruited += individualsPerUnit;
+              unit->spawn_type);
+      stats.troopsRecruited += individuals_per_unit;
     }
   }
 }
