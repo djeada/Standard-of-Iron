@@ -26,11 +26,9 @@ namespace Render::GL {
 class EntityRendererRegistry;
 }
 
-namespace Game {
-namespace Systems {
+namespace Game::Systems {
 class ArrowSystem;
 }
-} // namespace Game
 
 namespace Render::GL {
 
@@ -39,9 +37,9 @@ class Backend;
 class Renderer : public ISubmitter {
 public:
   Renderer();
-  ~Renderer();
+  ~Renderer() override;
 
-  bool initialize();
+  auto initialize() -> bool;
   void shutdown();
 
   void beginFrame();
@@ -49,70 +47,73 @@ public:
   void setViewport(int width, int height);
 
   void setCamera(Camera *camera);
-  void setClearColor(float r, float g, float b, float a = 1.0f);
+  void setClearColor(float r, float g, float b, float a = 1.0F);
 
   void updateAnimationTime(float deltaTime) { m_accumulatedTime += deltaTime; }
-  float getAnimationTime() const { return m_accumulatedTime; }
+  auto getAnimationTime() const -> float { return m_accumulatedTime; }
 
-  ResourceManager *resources() const {
+  auto resources() const -> ResourceManager * {
     return m_backend ? m_backend->resources() : nullptr;
   }
   void setHoveredEntityId(unsigned int id) { m_hoveredEntityId = id; }
-  void setLocalOwnerId(int ownerId) { m_localOwnerId = ownerId; }
+  void setLocalOwnerId(int owner_id) { m_localOwnerId = owner_id; }
 
   void setSelectedEntities(const std::vector<unsigned int> &ids) {
     m_selectedIds.clear();
     m_selectedIds.insert(ids.begin(), ids.end());
   }
 
-  Mesh *getMeshQuad() const {
-    return m_backend && m_backend->resources() ? m_backend->resources()->quad()
-                                               : nullptr;
+  auto getMeshQuad() const -> Mesh * {
+    return m_backend && (m_backend->resources() != nullptr)
+               ? m_backend->resources()->quad()
+               : nullptr;
   }
-  Mesh *getMeshPlane() const {
-    return m_backend && m_backend->resources()
+  auto getMeshPlane() const -> Mesh * {
+    return m_backend && (m_backend->resources() != nullptr)
                ? m_backend->resources()->ground()
                : nullptr;
   }
-  Mesh *getMeshCube() const {
-    return m_backend && m_backend->resources() ? m_backend->resources()->unit()
-                                               : nullptr;
+  auto getMeshCube() const -> Mesh * {
+    return m_backend && (m_backend->resources() != nullptr)
+               ? m_backend->resources()->unit()
+               : nullptr;
   }
 
-  Texture *getWhiteTexture() const {
-    return m_backend && m_backend->resources() ? m_backend->resources()->white()
-                                               : nullptr;
+  auto getWhiteTexture() const -> Texture * {
+    return m_backend && (m_backend->resources() != nullptr)
+               ? m_backend->resources()->white()
+               : nullptr;
   }
 
-  Shader *getShader(const QString &name) const {
+  auto getShader(const QString &name) const -> Shader * {
     return m_backend ? m_backend->shader(name) : nullptr;
   }
-  Shader *loadShader(const QString &name, const QString &vertPath,
-                     const QString &fragPath) {
+  auto loadShader(const QString &name, const QString &vertPath,
+                  const QString &fragPath) -> Shader * {
     return m_backend ? m_backend->getOrLoadShader(name, vertPath, fragPath)
                      : nullptr;
   }
 
   void setCurrentShader(Shader *shader) { m_currentShader = shader; }
-  Shader *getCurrentShader() const { return m_currentShader; }
+  auto getCurrentShader() const -> Shader * { return m_currentShader; }
 
   struct GridParams {
-    float cellSize = 1.0f;
-    float thickness = 0.06f;
-    QVector3D gridColor{0.15f, 0.18f, 0.15f};
-    float extent = 50.0f;
+    float cellSize = 1.0F;
+    float thickness = 0.06F;
+    QVector3D gridColor{0.15F, 0.18F, 0.15F};
+    float extent = 50.0F;
   };
   void setGridParams(const GridParams &gp) { m_gridParams = gp; }
-  const GridParams &gridParams() const { return m_gridParams; }
+  auto gridParams() const -> const GridParams & { return m_gridParams; }
 
   void pause() { m_paused = true; }
   void resume() { m_paused = false; }
-  bool isPaused() const { return m_paused; }
+  auto isPaused() const -> bool { return m_paused; }
 
   void mesh(Mesh *mesh, const QMatrix4x4 &model, const QVector3D &color,
-            Texture *texture = nullptr, float alpha = 1.0f) override;
+            Texture *texture = nullptr, float alpha = 1.0F) override;
   void cylinder(const QVector3D &start, const QVector3D &end, float radius,
-                const QVector3D &color, float alpha = 1.0f) override;
+                const QVector3D &color, float alpha = 1.0F) override;
   void selectionRing(const QMatrix4x4 &model, float alphaInner,
                      float alphaOuter, const QVector3D &color) override;
 
@@ -120,11 +121,11 @@ public:
             float thickness, float extent) override;
 
   void selectionSmoke(const QMatrix4x4 &model, const QVector3D &color,
-                      float baseAlpha = 0.15f) override;
+                      float baseAlpha = 0.15F) override;
   void terrainChunk(Mesh *mesh, const QMatrix4x4 &model,
                     const TerrainChunkParams &params,
-                    std::uint16_t sortKey = 0x8000u, bool depthWrite = true,
-                    float depthBias = 0.0f);
+                    std::uint16_t sortKey = 0x8000U, bool depthWrite = true,
+                    float depthBias = 0.0F);
 
   void renderWorld(Engine::Core::World *world);
 
@@ -132,21 +133,21 @@ public:
   void unlockWorldForModification() { m_worldMutex.unlock(); }
 
   void fogBatch(const FogInstanceData *instances, std::size_t count);
-  void grassBatch(Buffer *instanceBuffer, std::size_t instanceCount,
+  void grassBatch(Buffer *instanceBuffer, std::size_t instance_count,
                   const GrassBatchParams &params);
-  void stoneBatch(Buffer *instanceBuffer, std::size_t instanceCount,
+  void stoneBatch(Buffer *instanceBuffer, std::size_t instance_count,
                   const StoneBatchParams &params);
-  void plantBatch(Buffer *instanceBuffer, std::size_t instanceCount,
+  void plantBatch(Buffer *instanceBuffer, std::size_t instance_count,
                   const PlantBatchParams &params);
-  void pineBatch(Buffer *instanceBuffer, std::size_t instanceCount,
+  void pineBatch(Buffer *instanceBuffer, std::size_t instance_count,
                  const PineBatchParams &params);
-  void firecampBatch(Buffer *instanceBuffer, std::size_t instanceCount,
+  void firecampBatch(Buffer *instanceBuffer, std::size_t instance_count,
                      const FireCampBatchParams &params);
 
 private:
   void enqueueSelectionRing(Engine::Core::Entity *entity,
                             Engine::Core::TransformComponent *transform,
-                            Engine::Core::UnitComponent *unitComp,
+                            Engine::Core::UnitComponent *unit_comp,
                             bool selected, bool hovered);
 
   Camera *m_camera = nullptr;
@@ -154,7 +155,7 @@ private:
   DrawQueue m_queues[2];
   DrawQueue *m_activeQueue = nullptr;
   int m_fillQueueIndex = 0;
-  int m_renderQueueIndex = 1;
+  int m_render_queueIndex = 1;
 
   std::unique_ptr<EntityRendererRegistry> m_entityRegistry;
   unsigned int m_hoveredEntityId = 0;
@@ -163,13 +164,13 @@ private:
   int m_viewportWidth = 0;
   int m_viewportHeight = 0;
   GridParams m_gridParams;
-  float m_accumulatedTime = 0.0f;
+  float m_accumulatedTime = 0.0F;
   std::atomic<bool> m_paused{false};
 
   std::mutex m_worldMutex;
   int m_localOwnerId = 1;
 
-  QMatrix4x4 m_viewProj;
+  QMatrix4x4 m_view_proj;
   Shader *m_currentShader = nullptr;
 };
 

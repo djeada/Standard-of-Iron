@@ -1,7 +1,14 @@
 #include "mesh.h"
+#include "gl/buffer.h"
+#include "render_constants.h"
+#include <GL/gl.h>
 #include <QOpenGLFunctions_3_3_Core>
+#include <memory>
+#include <vector>
 
 namespace Render::GL {
+
+using namespace Render::GL::ComponentCount;
 
 Mesh::Mesh(const std::vector<Vertex> &vertices,
            const std::vector<unsigned int> &indices)
@@ -21,8 +28,8 @@ void Mesh::setupBuffers() {
 
   m_ebo->setData(m_indices);
 
-  std::vector<int> layout = {3, 3, 2};
-  m_vao->addVertexBuffer(*m_vbo, layout);
+  std::vector<int> const layout = {Vec3, Vec3, Vec2};
+  m_vao->add_vertexBuffer(*m_vbo, layout);
   m_vao->setIndexBuffer(*m_ebo);
 
   m_vao->unbind();
@@ -41,62 +48,63 @@ void Mesh::draw() {
   m_vao->unbind();
 }
 
-Mesh *createQuadMesh() {
-  std::vector<Vertex> vertices = {
+auto createQuadMesh() -> Mesh * {
+  std::vector<Vertex> const vertices = {
 
-      {{-1.0f, -1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 0.0f}},
-      {{1.0f, -1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 0.0f}},
-      {{1.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}},
-      {{-1.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}}};
+      {{-1.0F, -1.0F, 0.0F}, {0.0F, 0.0F, 1.0F}, {0.0F, 0.0F}},
+      {{1.0F, -1.0F, 0.0F}, {0.0F, 0.0F, 1.0F}, {1.0F, 0.0F}},
+      {{1.0F, 1.0F, 0.0F}, {0.0F, 0.0F, 1.0F}, {1.0F, 1.0F}},
+      {{-1.0F, 1.0F, 0.0F}, {0.0F, 0.0F, 1.0F}, {0.0F, 1.0F}}};
 
-  std::vector<unsigned int> indices = {0, 1, 2, 2, 3, 0};
+  std::vector<unsigned int> const indices = {0, 1, 2, 2, 3, 0};
 
   return new Mesh(vertices, indices);
 }
 
-Mesh *createCubeMesh() {
-  std::vector<Vertex> vertices = {
+auto createCubeMesh() -> Mesh * {
+  std::vector<Vertex> const vertices = {
 
-      {{-1.0f, -1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 0.0f}},
-      {{1.0f, -1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 0.0f}},
-      {{1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}},
-      {{-1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
+      {{-1.0F, -1.0F, 1.0F}, {0.0F, 0.0F, 1.0F}, {0.0F, 0.0F}},
+      {{1.0F, -1.0F, 1.0F}, {0.0F, 0.0F, 1.0F}, {1.0F, 0.0F}},
+      {{1.0F, 1.0F, 1.0F}, {0.0F, 0.0F, 1.0F}, {1.0F, 1.0F}},
+      {{-1.0F, 1.0F, 1.0F}, {0.0F, 0.0F, 1.0F}, {0.0F, 1.0F}},
 
-      {{-1.0f, -1.0f, -1.0f}, {0.0f, 0.0f, -1.0f}, {1.0f, 0.0f}},
-      {{-1.0f, 1.0f, -1.0f}, {0.0f, 0.0f, -1.0f}, {1.0f, 1.0f}},
-      {{1.0f, 1.0f, -1.0f}, {0.0f, 0.0f, -1.0f}, {0.0f, 1.0f}},
-      {{1.0f, -1.0f, -1.0f}, {0.0f, 0.0f, -1.0f}, {0.0f, 0.0f}},
+      {{-1.0F, -1.0F, -1.0F}, {0.0F, 0.0F, -1.0F}, {1.0F, 0.0F}},
+      {{-1.0F, 1.0F, -1.0F}, {0.0F, 0.0F, -1.0F}, {1.0F, 1.0F}},
+      {{1.0F, 1.0F, -1.0F}, {0.0F, 0.0F, -1.0F}, {0.0F, 1.0F}},
+      {{1.0F, -1.0F, -1.0F}, {0.0F, 0.0F, -1.0F}, {0.0F, 0.0F}},
   };
 
-  std::vector<unsigned int> indices = {0, 1, 2, 2, 3, 0,
+  std::vector<unsigned int> const indices = {0, 1, 2, 2, 3, 0,
 
-                                       4, 5, 6, 6, 7, 4,
+                                             4, 5, 6, 6, 7, 4,
 
-                                       4, 0, 3, 3, 5, 4,
+                                             4, 0, 3, 3, 5, 4,
 
-                                       1, 7, 6, 6, 2, 1,
+                                             1, 7, 6, 6, 2, 1,
 
-                                       3, 2, 6, 6, 5, 3,
+                                             3, 2, 6, 6, 5, 3,
 
-                                       4, 7, 1, 1, 0, 4};
+                                             4, 7, 1, 1, 0, 4};
 
   return new Mesh(vertices, indices);
 }
 
-Mesh *createPlaneMesh(float width, float height, int subdivisions) {
+auto createPlaneMesh(float width, float height, int subdivisions) -> Mesh * {
   std::vector<Vertex> vertices;
   std::vector<unsigned int> indices;
 
-  float halfWidth = width * 0.5f;
-  float halfHeight = height * 0.5f;
+  float const half_width = width * 0.5F;
+  float const half_height = height * 0.5F;
 
   for (int z = 0; z <= subdivisions; ++z) {
     for (int x = 0; x <= subdivisions; ++x) {
-      float xPos = (x / static_cast<float>(subdivisions)) * width - halfWidth;
-      float zPos = (z / static_cast<float>(subdivisions)) * height - halfHeight;
+      float xPos = (x / static_cast<float>(subdivisions)) * width - half_width;
+      float zPos =
+          (z / static_cast<float>(subdivisions)) * height - half_height;
 
-      vertices.push_back({{xPos, 0.0f, zPos},
-                          {0.0f, 1.0f, 0.0f},
+      vertices.push_back({{xPos, 0.0F, zPos},
+                          {0.0F, 1.0F, 0.0F},
                           {x / static_cast<float>(subdivisions),
                            z / static_cast<float>(subdivisions)}});
     }
@@ -104,18 +112,18 @@ Mesh *createPlaneMesh(float width, float height, int subdivisions) {
 
   for (int z = 0; z < subdivisions; ++z) {
     for (int x = 0; x < subdivisions; ++x) {
-      int topLeft = z * (subdivisions + 1) + x;
-      int topRight = topLeft + 1;
-      int bottomLeft = (z + 1) * (subdivisions + 1) + x;
-      int bottomRight = bottomLeft + 1;
+      int top_left = z * (subdivisions + 1) + x;
+      int top_right = top_left + 1;
+      int bottom_left = (z + 1) * (subdivisions + 1) + x;
+      int bottom_right = bottom_left + 1;
 
-      indices.push_back(topLeft);
-      indices.push_back(bottomLeft);
-      indices.push_back(topRight);
+      indices.push_back(top_left);
+      indices.push_back(bottom_left);
+      indices.push_back(top_right);
 
-      indices.push_back(topRight);
-      indices.push_back(bottomLeft);
-      indices.push_back(bottomRight);
+      indices.push_back(top_right);
+      indices.push_back(bottom_left);
+      indices.push_back(bottom_right);
     }
   }
 

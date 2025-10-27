@@ -4,72 +4,76 @@
 #include "../gl/resources.h"
 #include "../scene_renderer.h"
 #include "flag.h"
+#include <cstdint>
+#include <optional>
+#include <qvectornd.h>
 #include <unordered_set>
 
 namespace Render::GL {
 
 void renderPatrolFlags(Renderer *renderer, ResourceManager *resources,
                        Engine::Core::World &world,
-                       const std::optional<QVector3D> &previewWaypoint) {
-  if (!renderer || !resources) {
+                       const std::optional<QVector3D> &preview_waypoint) {
+  if ((renderer == nullptr) || (resources == nullptr)) {
     return;
   }
 
-  std::unordered_set<uint64_t> renderedPositions;
+  std::unordered_set<uint64_t> rendered_positions;
 
-  if (previewWaypoint.has_value()) {
-    auto flag = Geom::Flag::create(previewWaypoint->x(), previewWaypoint->z(),
-                                   QVector3D(0.3f, 1.0f, 0.4f),
-                                   QVector3D(0.3f, 0.2f, 0.1f), 0.9f);
+  if (preview_waypoint.has_value()) {
+    auto flag = Geom::Flag::create(preview_waypoint->x(), preview_waypoint->z(),
+                                   QVector3D(0.3F, 1.0F, 0.4F),
+                                   QVector3D(0.3F, 0.2F, 0.1F), 0.9F);
 
     renderer->mesh(resources->unit(), flag.pole, flag.poleColor,
-                   resources->white(), 0.8f);
+                   resources->white(), 0.8F);
     renderer->mesh(resources->unit(), flag.pennant, flag.pennantColor,
-                   resources->white(), 0.8f);
+                   resources->white(), 0.8F);
     renderer->mesh(resources->unit(), flag.finial, flag.pennantColor,
-                   resources->white(), 0.8f);
+                   resources->white(), 0.8F);
 
-    int32_t gridX = static_cast<int32_t>(previewWaypoint->x() * 10.0f);
-    int32_t gridZ = static_cast<int32_t>(previewWaypoint->z() * 10.0f);
-    uint64_t posHash =
-        (static_cast<uint64_t>(gridX) << 32) | static_cast<uint64_t>(gridZ);
-    renderedPositions.insert(posHash);
+    auto const grid_x = static_cast<int32_t>(preview_waypoint->x() * 10.0F);
+    auto const grid_z = static_cast<int32_t>(preview_waypoint->z() * 10.0F);
+    uint64_t const pos_hash =
+        (static_cast<uint64_t>(grid_x) << 32) | static_cast<uint64_t>(grid_z);
+    rendered_positions.insert(pos_hash);
   }
 
-  auto patrolEntities = world.getEntitiesWith<Engine::Core::PatrolComponent>();
+  auto patrol_entities = world.getEntitiesWith<Engine::Core::PatrolComponent>();
 
-  for (auto *entity : patrolEntities) {
+  for (auto *entity : patrol_entities) {
     auto *patrol = entity->getComponent<Engine::Core::PatrolComponent>();
-    if (!patrol || !patrol->patrolling || patrol->waypoints.empty()) {
+    if ((patrol == nullptr) || !patrol->patrolling ||
+        patrol->waypoints.empty()) {
       continue;
     }
 
     auto *unit = entity->getComponent<Engine::Core::UnitComponent>();
-    if (!unit || unit->health <= 0) {
+    if ((unit == nullptr) || unit->health <= 0) {
       continue;
     }
 
     for (const auto &waypoint : patrol->waypoints) {
 
-      int32_t gridX = static_cast<int32_t>(waypoint.first * 10.0f);
-      int32_t gridZ = static_cast<int32_t>(waypoint.second * 10.0f);
-      uint64_t posHash =
-          (static_cast<uint64_t>(gridX) << 32) | static_cast<uint64_t>(gridZ);
+      auto const grid_x = static_cast<int32_t>(waypoint.first * 10.0F);
+      auto const grid_z = static_cast<int32_t>(waypoint.second * 10.0F);
+      uint64_t const pos_hash =
+          (static_cast<uint64_t>(grid_x) << 32) | static_cast<uint64_t>(grid_z);
 
-      if (!renderedPositions.insert(posHash).second) {
+      if (!rendered_positions.insert(pos_hash).second) {
         continue;
       }
 
       auto flag = Geom::Flag::create(waypoint.first, waypoint.second,
-                                     QVector3D(0.2f, 0.9f, 0.3f),
-                                     QVector3D(0.3f, 0.2f, 0.1f), 0.8f);
+                                     QVector3D(0.2F, 0.9F, 0.3F),
+                                     QVector3D(0.3F, 0.2F, 0.1F), 0.8F);
 
       renderer->mesh(resources->unit(), flag.pole, flag.poleColor,
-                     resources->white(), 1.0f);
+                     resources->white(), 1.0F);
       renderer->mesh(resources->unit(), flag.pennant, flag.pennantColor,
-                     resources->white(), 1.0f);
+                     resources->white(), 1.0F);
       renderer->mesh(resources->unit(), flag.finial, flag.pennantColor,
-                     resources->white(), 1.0f);
+                     resources->white(), 1.0F);
     }
   }
 }

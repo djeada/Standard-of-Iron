@@ -14,10 +14,10 @@ public:
   explicit MiniaudioBackend(QObject *parent = nullptr);
   ~MiniaudioBackend() override;
 
-  bool initialize(int deviceRate, int outChannels, int musicChannels);
+  auto initialize(int deviceRate, int outChannels, int musicChannels) -> bool;
   void shutdown();
 
-  bool predecode(const QString &id, const QString &path);
+  auto predecode(const QString &id, const QString &path) -> bool;
 
   void play(int channel, const QString &id, float volume, bool loop,
             int fadeMs);
@@ -28,8 +28,8 @@ public:
   void stopAll(int fadeMs);
   void setMasterVolume(float volume, int fadeMs);
 
-  bool anyChannelPlaying() const;
-  bool channelPlaying(int channel) const;
+  auto anyChannelPlaying() const -> bool;
+  auto channelPlaying(int channel) const -> bool;
 
   void playSound(const QString &id, float volume, bool loop = false);
 
@@ -44,10 +44,10 @@ private:
   struct Channel {
     const DecodedTrack *track = nullptr;
     unsigned framePos = 0;
-    float curVol = 0.0f;
-    float tgtVol = 1.0f;
-    float volStep = 0.0f;
-    unsigned fadeSamples = 0;
+    float curVol = 0.0F;
+    float tgtVol = 1.0F;
+    float volStep = 0.0F;
+    unsigned fade_samples = 0;
     bool looping = false;
     bool paused = false;
     bool active = false;
@@ -56,17 +56,15 @@ private:
   struct SoundEffect {
     const DecodedTrack *track = nullptr;
     unsigned framePos = 0;
-    float volume = 1.0f;
+    float volume = 1.0F;
     bool looping = false;
     bool active = false;
   };
 
-private:
   void startDevice();
   void stopDevice();
-  int findFreeSoundSlot() const;
+  auto findFreeSoundSlot() const -> int;
 
-private:
   ma_device *m_device{nullptr};
   int m_rate{48000};
   int m_outCh{2};
@@ -75,5 +73,5 @@ private:
   QMap<QString, DecodedTrack> m_tracks;
   QVector<Channel> m_channels;
   QVector<SoundEffect> m_soundEffects;
-  float m_masterVol{1.0f};
+  float m_masterVol{1.0F};
 };

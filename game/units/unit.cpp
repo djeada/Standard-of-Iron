@@ -1,38 +1,42 @@
 #include "unit.h"
+
 #include "../core/component.h"
 #include "../core/world.h"
+#include "units/troop_type.h"
+#include <qvectornd.h>
+#include <string>
+#include <utility>
 
-namespace Game {
-namespace Units {
+namespace Game::Units {
 
 Unit::Unit(Engine::Core::World &world, TroopType type)
-    : m_world(&world), m_typeString(troopTypeToString(type)) {}
+    : m_world(&world), m_type_string(troop_typeToString(type)) {}
 
-Unit::Unit(Engine::Core::World &world, const std::string &type)
-    : m_world(&world), m_typeString(type) {}
+Unit::Unit(Engine::Core::World &world, std::string type)
+    : m_world(&world), m_type_string(std::move(type)) {}
 
-Engine::Core::Entity *Unit::entity() const {
-  return m_world ? m_world->getEntity(m_id) : nullptr;
+auto Unit::entity() const -> Engine::Core::Entity * {
+  return (m_world != nullptr) ? m_world->getEntity(m_id) : nullptr;
 }
 
 void Unit::ensureCoreComponents() {
-  if (!m_world) {
+  if (m_world == nullptr) {
     return;
   }
   if (auto *e = entity()) {
-    if (!m_t) {
+    if (m_t == nullptr) {
       m_t = e->getComponent<Engine::Core::TransformComponent>();
     }
-    if (!m_r) {
+    if (m_r == nullptr) {
       m_r = e->getComponent<Engine::Core::RenderableComponent>();
     }
-    if (!m_u) {
+    if (m_u == nullptr) {
       m_u = e->getComponent<Engine::Core::UnitComponent>();
     }
-    if (!m_mv) {
+    if (m_mv == nullptr) {
       m_mv = e->getComponent<Engine::Core::MovementComponent>();
     }
-    if (!m_atk) {
+    if (m_atk == nullptr) {
       m_atk = e->getComponent<Engine::Core::AttackComponent>();
     }
   }
@@ -40,14 +44,14 @@ void Unit::ensureCoreComponents() {
 
 void Unit::moveTo(float x, float z) {
   ensureCoreComponents();
-  if (!m_mv) {
+  if (m_mv == nullptr) {
     if (auto *e = entity()) {
       m_mv = e->addComponent<Engine::Core::MovementComponent>();
     }
   }
-  if (m_mv) {
-    m_mv->targetX = x;
-    m_mv->targetY = z;
+  if (m_mv != nullptr) {
+    m_mv->target_x = x;
+    m_mv->target_y = z;
     m_mv->hasTarget = true;
     m_mv->goalX = x;
     m_mv->goalY = z;
@@ -57,14 +61,14 @@ void Unit::moveTo(float x, float z) {
   }
 
   if (auto *e = entity()) {
-    auto *holdComp = e->getComponent<Engine::Core::HoldModeComponent>();
-    if (holdComp) {
-      holdComp->active = false;
+    auto *hold_comp = e->getComponent<Engine::Core::HoldModeComponent>();
+    if (hold_comp != nullptr) {
+      hold_comp->active = false;
     }
   }
 }
 
-bool Unit::isAlive() const {
+auto Unit::isAlive() const -> bool {
   if (auto *e = entity()) {
     if (auto *u = e->getComponent<Engine::Core::UnitComponent>()) {
       return u->health > 0;
@@ -73,53 +77,52 @@ bool Unit::isAlive() const {
   return false;
 }
 
-QVector3D Unit::position() const {
+auto Unit::position() const -> QVector3D {
   if (auto *e = entity()) {
     if (auto *t = e->getComponent<Engine::Core::TransformComponent>()) {
-      return QVector3D(t->position.x, t->position.y, t->position.z);
+      return {t->position.x, t->position.y, t->position.z};
     }
   }
-  return QVector3D();
+  return {};
 }
 
 void Unit::setHoldMode(bool enabled) {
   auto *e = entity();
-  if (!e) {
+  if (e == nullptr) {
     return;
   }
 
-  auto *holdComp = e->getComponent<Engine::Core::HoldModeComponent>();
+  auto *hold_comp = e->getComponent<Engine::Core::HoldModeComponent>();
 
   if (enabled) {
-    if (!holdComp) {
-      holdComp = e->addComponent<Engine::Core::HoldModeComponent>();
+    if (hold_comp == nullptr) {
+      hold_comp = e->addComponent<Engine::Core::HoldModeComponent>();
     }
-    holdComp->active = true;
-    holdComp->exitCooldown = 0.0f;
+    hold_comp->active = true;
+    hold_comp->exitCooldown = 0.0F;
 
     auto *mv = e->getComponent<Engine::Core::MovementComponent>();
-    if (mv) {
+    if (mv != nullptr) {
       mv->hasTarget = false;
       mv->path.clear();
       mv->pathPending = false;
     }
   } else {
-    if (holdComp) {
-      holdComp->active = false;
-      holdComp->exitCooldown = holdComp->standUpDuration;
+    if (hold_comp != nullptr) {
+      hold_comp->active = false;
+      hold_comp->exitCooldown = hold_comp->standUpDuration;
     }
   }
 }
 
-bool Unit::isInHoldMode() const {
+auto Unit::isInHoldMode() const -> bool {
   auto *e = entity();
-  if (!e) {
+  if (e == nullptr) {
     return false;
   }
 
-  auto *holdComp = e->getComponent<Engine::Core::HoldModeComponent>();
-  return holdComp && holdComp->active;
+  auto *hold_comp = e->getComponent<Engine::Core::HoldModeComponent>();
+  return (hold_comp != nullptr) && hold_comp->active;
 }
 
-} // namespace Units
-} // namespace Game
+} // namespace Game::Units

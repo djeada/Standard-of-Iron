@@ -12,12 +12,22 @@ struct PlantInstanceGpu {
 };
 
 struct PlantBatchParams {
-  QVector3D lightDirection{0.35f, 0.8f, 0.45f};
-  float time = 0.0f;
-  float windStrength = 0.25f;
-  float windSpeed = 1.4f;
-  float pad0 = 0.0f;
-  float pad1 = 0.0f;
+  static constexpr float kDefaultLightDirX = 0.35F;
+  static constexpr float kDefaultLightDirY = 0.8F;
+  static constexpr float kDefaultLightDirZ = 0.45F;
+  static constexpr float kDefaultWindStrength = 0.25F;
+  static constexpr float kDefaultWindSpeed = 1.4F;
+
+  static auto defaultLightDirection() -> QVector3D {
+    return {kDefaultLightDirX, kDefaultLightDirY, kDefaultLightDirZ};
+  }
+
+  QVector3D light_direction = defaultLightDirection();
+  float time = 0.0F;
+  float windStrength = kDefaultWindStrength;
+  float windSpeed = kDefaultWindSpeed;
+  float pad0 = 0.0F;
+  float pad1 = 0.0F;
 };
 
 } // namespace Render::GL

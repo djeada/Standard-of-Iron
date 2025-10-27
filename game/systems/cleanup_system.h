@@ -10,7 +10,7 @@ public:
   void update(Engine::Core::World *world, float deltaTime) override;
 
 private:
-  void removeDeadEntities(Engine::Core::World *world);
+  static void removeDeadEntities(Engine::Core::World *world);
 };
 
 } // namespace Game::Systems

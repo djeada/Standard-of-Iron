@@ -7,7 +7,7 @@
 namespace Game::Systems {
 
 void PatrolSystem::update(Engine::Core::World *world, float deltaTime) {
-  if (!world) {
+  if (world == nullptr) {
     return;
   }
 
@@ -19,7 +19,8 @@ void PatrolSystem::update(Engine::Core::World *world, float deltaTime) {
     auto *transform = entity->getComponent<Engine::Core::TransformComponent>();
     auto *unit = entity->getComponent<Engine::Core::UnitComponent>();
 
-    if (!patrol || !movement || !transform || !unit) {
+    if ((patrol == nullptr) || (movement == nullptr) ||
+        (transform == nullptr) || (unit == nullptr)) {
       continue;
     }
     if (!patrol->patrolling || patrol->waypoints.size() < 2) {
@@ -31,74 +32,75 @@ void PatrolSystem::update(Engine::Core::World *world, float deltaTime) {
       continue;
     }
 
-    auto *attackTarget =
+    auto *attack_target =
         entity->getComponent<Engine::Core::AttackTargetComponent>();
-    if (attackTarget && attackTarget->targetId != 0) {
+    if ((attack_target != nullptr) && attack_target->target_id != 0) {
 
       continue;
     }
 
-    bool enemyNearby = false;
-    auto allEntities = world->getEntitiesWith<Engine::Core::UnitComponent>();
-    for (auto *other : allEntities) {
-      auto *otherUnit = other->getComponent<Engine::Core::UnitComponent>();
-      auto *otherTransform =
+    bool enemy_nearby = false;
+    auto all_entities = world->getEntitiesWith<Engine::Core::UnitComponent>();
+    for (auto *other : all_entities) {
+      auto *other_unit = other->getComponent<Engine::Core::UnitComponent>();
+      auto *other_transform =
           other->getComponent<Engine::Core::TransformComponent>();
 
-      if (!otherUnit || !otherTransform || otherUnit->health <= 0) {
+      if ((other_unit == nullptr) || (other_transform == nullptr) ||
+          other_unit->health <= 0) {
         continue;
       }
-      if (otherUnit->ownerId == unit->ownerId) {
+      if (other_unit->owner_id == unit->owner_id) {
         continue;
       }
 
-      float dx = otherTransform->position.x - transform->position.x;
-      float dz = otherTransform->position.z - transform->position.z;
-      float distSq = dx * dx + dz * dz;
+      float const dx = other_transform->position.x - transform->position.x;
+      float const dz = other_transform->position.z - transform->position.z;
+      float const dist_sq = dx * dx + dz * dz;
 
-      if (distSq < 25.0f) {
-        enemyNearby = true;
+      if (dist_sq < 25.0F) {
+        enemy_nearby = true;
 
-        if (!attackTarget) {
+        if (attack_target == nullptr) {
           entity->addComponent<Engine::Core::AttackTargetComponent>();
-          attackTarget =
+          attack_target =
               entity->getComponent<Engine::Core::AttackTargetComponent>();
         }
-        if (attackTarget) {
-          attackTarget->targetId = other->getId();
-          attackTarget->shouldChase = false;
+        if (attack_target != nullptr) {
+          attack_target->target_id = other->getId();
+          attack_target->shouldChase = false;
         }
         break;
       }
     }
 
-    if (enemyNearby) {
+    if (enemy_nearby) {
 
       continue;
     }
 
     auto waypoint = patrol->waypoints[patrol->currentWaypoint];
-    float targetX = waypoint.first;
-    float targetZ = waypoint.second;
+    float target_x = waypoint.first;
+    float target_z = waypoint.second;
 
-    float dx = targetX - transform->position.x;
-    float dz = targetZ - transform->position.z;
-    float distSq = dx * dx + dz * dz;
+    float const dx = target_x - transform->position.x;
+    float const dz = target_z - transform->position.z;
+    float const dist_sq = dx * dx + dz * dz;
 
-    if (distSq < 1.0f) {
+    if (dist_sq < 1.0F) {
 
       patrol->currentWaypoint =
           (patrol->currentWaypoint + 1) % patrol->waypoints.size();
       waypoint = patrol->waypoints[patrol->currentWaypoint];
-      targetX = waypoint.first;
-      targetZ = waypoint.second;
+      target_x = waypoint.first;
+      target_z = waypoint.second;
     }
 
     movement->hasTarget = true;
-    movement->targetX = targetX;
-    movement->targetY = targetZ;
-    movement->goalX = targetX;
-    movement->goalY = targetZ;
+    movement->target_x = target_x;
+    movement->target_y = target_z;
+    movement->goalX = target_x;
+    movement->goalY = target_z;
   }
 }
 

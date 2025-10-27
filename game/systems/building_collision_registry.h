@@ -8,54 +8,56 @@
 namespace Game::Systems {
 
 struct BuildingFootprint {
-  float centerX;
-  float centerZ;
+  float center_x;
+  float center_z;
   float width;
   float depth;
-  int ownerId;
-  unsigned int entityId;
+  int owner_id;
+  unsigned int entity_id;
 
   BuildingFootprint(float x, float z, float w, float d, int owner,
                     unsigned int id)
-      : centerX(x), centerZ(z), width(w), depth(d), ownerId(owner),
-        entityId(id) {}
+      : center_x(x), center_z(z), width(w), depth(d), owner_id(owner),
+        entity_id(id) {}
 };
 
 class BuildingCollisionRegistry {
 public:
-  static BuildingCollisionRegistry &instance();
+  static auto instance() -> BuildingCollisionRegistry &;
 
   struct BuildingSize {
     float width;
     float depth;
   };
 
-  static BuildingSize getBuildingSize(const std::string &buildingType);
+  static auto getBuildingSize(const std::string &buildingType) -> BuildingSize;
 
-  void registerBuilding(unsigned int entityId, const std::string &buildingType,
-                        float centerX, float centerZ, int ownerId);
+  void registerBuilding(unsigned int entity_id, const std::string &buildingType,
+                        float center_x, float center_z, int owner_id);
 
-  void unregisterBuilding(unsigned int entityId);
+  void unregisterBuilding(unsigned int entity_id);
 
-  void updateBuildingPosition(unsigned int entityId, float centerX,
-                              float centerZ);
+  void updateBuildingPosition(unsigned int entity_id, float center_x,
+                              float center_z);
 
-  void updateBuildingOwner(unsigned int entityId, int ownerId);
+  void updateBuildingOwner(unsigned int entity_id, int owner_id);
 
-  const std::vector<BuildingFootprint> &getAllBuildings() const {
+  [[nodiscard]] auto
+  getAllBuildings() const -> const std::vector<BuildingFootprint> & {
     return m_buildings;
   }
 
-  bool isPointInBuilding(float x, float z,
-                         unsigned int ignoreEntityId = 0) const;
+  [[nodiscard]] auto
+  isPointInBuilding(float x, float z,
+                    unsigned int ignoreEntityId = 0) const -> bool;
 
-  std::vector<std::pair<int, int>>
-  getOccupiedGridCells(const BuildingFootprint &footprint,
-                       float gridCellSize = 1.0f) const;
+  [[nodiscard]] static auto getOccupiedGridCells(
+      const BuildingFootprint &footprint,
+      float gridCellSize = 1.0F) -> std::vector<std::pair<int, int>>;
 
-  static constexpr float kDefaultGridPadding = 0.1f;
+  static constexpr float kDefaultGridPadding = 0.1F;
   static void setGridPadding(float padding);
-  static float getGridPadding();
+  static auto getGridPadding() -> float;
 
   void clear();
 
@@ -63,8 +65,8 @@ private:
   BuildingCollisionRegistry() = default;
   ~BuildingCollisionRegistry() = default;
   BuildingCollisionRegistry(const BuildingCollisionRegistry &) = delete;
-  BuildingCollisionRegistry &
-  operator=(const BuildingCollisionRegistry &) = delete;
+  auto operator=(const BuildingCollisionRegistry &)
+      -> BuildingCollisionRegistry & = delete;
 
   std::vector<BuildingFootprint> m_buildings;
   std::map<unsigned int, size_t> m_entityToIndex;

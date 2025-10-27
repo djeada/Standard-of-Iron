@@ -11,9 +11,22 @@
 #include <QFile>
 #include <QJsonArray>
 #include <QJsonObject>
+#include <QString>
 #include <QVector3D>
 #include <algorithm>
+#include <array>
+#include <cstddef>
+#include <cstdint>
 #include <memory>
+#include <qfiledevice.h>
+#include <qglobal.h>
+#include <qjsonarray.h>
+#include <qjsondocument.h>
+#include <qjsonobject.h>
+#include <qjsonvalue.h>
+#include <qstringliteral.h>
+#include <qstringview.h>
+#include <vector>
 
 #include "../systems/owner_registry.h"
 
@@ -21,7 +34,7 @@ namespace Engine::Core {
 
 namespace {
 
-QString combatModeToString(AttackComponent::CombatMode mode) {
+auto combatModeToString(AttackComponent::CombatMode mode) -> QString {
   switch (mode) {
   case AttackComponent::CombatMode::Melee:
     return "melee";
@@ -33,7 +46,7 @@ QString combatModeToString(AttackComponent::CombatMode mode) {
   }
 }
 
-AttackComponent::CombatMode combatModeFromString(const QString &value) {
+auto combatModeFromString(const QString &value) -> AttackComponent::CombatMode {
   if (value == "melee") {
     return AttackComponent::CombatMode::Melee;
   }
@@ -43,7 +56,7 @@ AttackComponent::CombatMode combatModeFromString(const QString &value) {
   return AttackComponent::CombatMode::Auto;
 }
 
-QJsonArray serializeColor(const float color[3]) {
+auto serializeColor(const std::array<float, 3> &color) -> QJsonArray {
   QJsonArray array;
   array.append(color[0]);
   array.append(color[1]);
@@ -51,7 +64,7 @@ QJsonArray serializeColor(const float color[3]) {
   return array;
 }
 
-void deserializeColor(const QJsonArray &array, float color[3]) {
+void deserializeColor(const QJsonArray &array, std::array<float, 3> &color) {
   if (array.size() >= 3) {
     color[0] = static_cast<float>(array.at(0).toDouble());
     color[1] = static_cast<float>(array.at(1).toDouble());
@@ -61,303 +74,316 @@ void deserializeColor(const QJsonArray &array, float color[3]) {
 
 } // namespace
 
-QJsonObject Serialization::serializeEntity(const Entity *entity) {
-  QJsonObject entityObj;
-  entityObj["id"] = static_cast<qint64>(entity->getId());
+auto Serialization::serializeEntity(const Entity *entity) -> QJsonObject {
+  QJsonObject entity_obj;
+  entity_obj["id"] = static_cast<qint64>(entity->getId());
 
   if (const auto *transform = entity->getComponent<TransformComponent>()) {
-    QJsonObject transformObj;
-    transformObj["posX"] = transform->position.x;
-    transformObj["posY"] = transform->position.y;
-    transformObj["posZ"] = transform->position.z;
-    transformObj["rotX"] = transform->rotation.x;
-    transformObj["rotY"] = transform->rotation.y;
-    transformObj["rotZ"] = transform->rotation.z;
-    transformObj["scaleX"] = transform->scale.x;
-    transformObj["scaleY"] = transform->scale.y;
-    transformObj["scaleZ"] = transform->scale.z;
-    transformObj["hasDesiredYaw"] = transform->hasDesiredYaw;
-    transformObj["desiredYaw"] = transform->desiredYaw;
-    entityObj["transform"] = transformObj;
+    QJsonObject transform_obj;
+    transform_obj["posX"] = transform->position.x;
+    transform_obj["posY"] = transform->position.y;
+    transform_obj["posZ"] = transform->position.z;
+    transform_obj["rotX"] = transform->rotation.x;
+    transform_obj["rotY"] = transform->rotation.y;
+    transform_obj["rotZ"] = transform->rotation.z;
+    transform_obj["scale_x"] = transform->scale.x;
+    transform_obj["scaleY"] = transform->scale.y;
+    transform_obj["scale_z"] = transform->scale.z;
+    transform_obj["hasDesiredYaw"] = transform->hasDesiredYaw;
+    transform_obj["desiredYaw"] = transform->desiredYaw;
+    entity_obj["transform"] = transform_obj;
   }
 
   if (const auto *renderable = entity->getComponent<RenderableComponent>()) {
-    QJsonObject renderableObj;
-    renderableObj["meshPath"] = QString::fromStdString(renderable->meshPath);
-    renderableObj["texturePath"] =
+    QJsonObject renderable_obj;
+    renderable_obj["meshPath"] = QString::fromStdString(renderable->meshPath);
+    renderable_obj["texturePath"] =
         QString::fromStdString(renderable->texturePath);
-    renderableObj["visible"] = renderable->visible;
-    renderableObj["mesh"] = static_cast<int>(renderable->mesh);
-    renderableObj["color"] = serializeColor(renderable->color);
-    entityObj["renderable"] = renderableObj;
+    renderable_obj["visible"] = renderable->visible;
+    renderable_obj["mesh"] = static_cast<int>(renderable->mesh);
+    renderable_obj["color"] = serializeColor(renderable->color);
+    entity_obj["renderable"] = renderable_obj;
   }
 
   if (const auto *unit = entity->getComponent<UnitComponent>()) {
-    QJsonObject unitObj;
-    unitObj["health"] = unit->health;
-    unitObj["maxHealth"] = unit->maxHealth;
-    unitObj["speed"] = unit->speed;
-    unitObj["visionRange"] = unit->visionRange;
-    unitObj["unitType"] =
-        QString::fromStdString(Game::Units::spawnTypeToString(unit->spawnType));
-    unitObj["ownerId"] = unit->ownerId;
-    entityObj["unit"] = unitObj;
+    QJsonObject unit_obj;
+    unit_obj["health"] = unit->health;
+    unit_obj["max_health"] = unit->max_health;
+    unit_obj["speed"] = unit->speed;
+    unit_obj["vision_range"] = unit->vision_range;
+    unit_obj["unit_type"] = QString::fromStdString(
+        Game::Units::spawn_typeToString(unit->spawn_type));
+    unit_obj["owner_id"] = unit->owner_id;
+    entity_obj["unit"] = unit_obj;
   }
 
   if (const auto *movement = entity->getComponent<MovementComponent>()) {
-    QJsonObject movementObj;
-    movementObj["hasTarget"] = movement->hasTarget;
-    movementObj["targetX"] = movement->targetX;
-    movementObj["targetY"] = movement->targetY;
-    movementObj["goalX"] = movement->goalX;
-    movementObj["goalY"] = movement->goalY;
-    movementObj["vx"] = movement->vx;
-    movementObj["vz"] = movement->vz;
-    movementObj["pathPending"] = movement->pathPending;
-    movementObj["pendingRequestId"] =
+    QJsonObject movement_obj;
+    movement_obj["hasTarget"] = movement->hasTarget;
+    movement_obj["target_x"] = movement->target_x;
+    movement_obj["target_y"] = movement->target_y;
+    movement_obj["goalX"] = movement->goalX;
+    movement_obj["goalY"] = movement->goalY;
+    movement_obj["vx"] = movement->vx;
+    movement_obj["vz"] = movement->vz;
+    movement_obj["pathPending"] = movement->pathPending;
+    movement_obj["pendingRequestId"] =
         static_cast<qint64>(movement->pendingRequestId);
-    movementObj["repathCooldown"] = movement->repathCooldown;
-    movementObj["lastGoalX"] = movement->lastGoalX;
-    movementObj["lastGoalY"] = movement->lastGoalY;
-    movementObj["timeSinceLastPathRequest"] =
+    movement_obj["repathCooldown"] = movement->repathCooldown;
+    movement_obj["lastGoalX"] = movement->lastGoalX;
+    movement_obj["lastGoalY"] = movement->lastGoalY;
+    movement_obj["timeSinceLastPathRequest"] =
         movement->timeSinceLastPathRequest;
 
-    QJsonArray pathArray;
+    QJsonArray path_array;
     for (const auto &waypoint : movement->path) {
-      QJsonObject waypointObj;
-      waypointObj["x"] = waypoint.first;
-      waypointObj["y"] = waypoint.second;
-      pathArray.append(waypointObj);
+      QJsonObject waypoint_obj;
+      waypoint_obj["x"] = waypoint.first;
+      waypoint_obj["y"] = waypoint.second;
+      path_array.append(waypoint_obj);
     }
-    movementObj["path"] = pathArray;
-    entityObj["movement"] = movementObj;
+    movement_obj["path"] = path_array;
+    entity_obj["movement"] = movement_obj;
   }
 
   if (const auto *attack = entity->getComponent<AttackComponent>()) {
-    QJsonObject attackObj;
-    attackObj["range"] = attack->range;
-    attackObj["damage"] = attack->damage;
-    attackObj["cooldown"] = attack->cooldown;
-    attackObj["timeSinceLast"] = attack->timeSinceLast;
-    attackObj["meleeRange"] = attack->meleeRange;
-    attackObj["meleeDamage"] = attack->meleeDamage;
-    attackObj["meleeCooldown"] = attack->meleeCooldown;
-    attackObj["preferredMode"] = combatModeToString(attack->preferredMode);
-    attackObj["currentMode"] = combatModeToString(attack->currentMode);
-    attackObj["canMelee"] = attack->canMelee;
-    attackObj["canRanged"] = attack->canRanged;
-    attackObj["maxHeightDifference"] = attack->maxHeightDifference;
-    attackObj["inMeleeLock"] = attack->inMeleeLock;
-    attackObj["meleeLockTargetId"] =
+    QJsonObject attack_obj;
+    attack_obj["range"] = attack->range;
+    attack_obj["damage"] = attack->damage;
+    attack_obj["cooldown"] = attack->cooldown;
+    attack_obj["timeSinceLast"] = attack->timeSinceLast;
+    attack_obj["meleeRange"] = attack->meleeRange;
+    attack_obj["meleeDamage"] = attack->meleeDamage;
+    attack_obj["meleeCooldown"] = attack->meleeCooldown;
+    attack_obj["preferredMode"] = combatModeToString(attack->preferredMode);
+    attack_obj["currentMode"] = combatModeToString(attack->currentMode);
+    attack_obj["canMelee"] = attack->canMelee;
+    attack_obj["canRanged"] = attack->canRanged;
+    attack_obj["max_heightDifference"] = attack->max_heightDifference;
+    attack_obj["inMeleeLock"] = attack->inMeleeLock;
+    attack_obj["meleeLockTargetId"] =
         static_cast<qint64>(attack->meleeLockTargetId);
-    entityObj["attack"] = attackObj;
+    entity_obj["attack"] = attack_obj;
   }
 
-  if (const auto *attackTarget =
+  if (const auto *attack_target =
           entity->getComponent<AttackTargetComponent>()) {
-    QJsonObject attackTargetObj;
-    attackTargetObj["targetId"] = static_cast<qint64>(attackTarget->targetId);
-    attackTargetObj["shouldChase"] = attackTarget->shouldChase;
-    entityObj["attackTarget"] = attackTargetObj;
+    QJsonObject attack_targetObj;
+    attack_targetObj["target_id"] =
+        static_cast<qint64>(attack_target->target_id);
+    attack_targetObj["shouldChase"] = attack_target->shouldChase;
+    entity_obj["attack_target"] = attack_targetObj;
   }
 
   if (const auto *patrol = entity->getComponent<PatrolComponent>()) {
-    QJsonObject patrolObj;
-    patrolObj["currentWaypoint"] = static_cast<int>(patrol->currentWaypoint);
-    patrolObj["patrolling"] = patrol->patrolling;
+    QJsonObject patrol_obj;
+    patrol_obj["currentWaypoint"] = static_cast<int>(patrol->currentWaypoint);
+    patrol_obj["patrolling"] = patrol->patrolling;
 
-    QJsonArray waypointsArray;
+    QJsonArray waypoints_array;
     for (const auto &waypoint : patrol->waypoints) {
-      QJsonObject waypointObj;
-      waypointObj["x"] = waypoint.first;
-      waypointObj["y"] = waypoint.second;
-      waypointsArray.append(waypointObj);
+      QJsonObject waypoint_obj;
+      waypoint_obj["x"] = waypoint.first;
+      waypoint_obj["y"] = waypoint.second;
+      waypoints_array.append(waypoint_obj);
     }
-    patrolObj["waypoints"] = waypointsArray;
-    entityObj["patrol"] = patrolObj;
+    patrol_obj["waypoints"] = waypoints_array;
+    entity_obj["patrol"] = patrol_obj;
   }
 
-  if (entity->getComponent<BuildingComponent>()) {
-    entityObj["building"] = true;
+  if (entity->getComponent<BuildingComponent>() != nullptr) {
+    entity_obj["building"] = true;
   }
 
   if (const auto *production = entity->getComponent<ProductionComponent>()) {
-    QJsonObject productionObj;
-    productionObj["inProgress"] = production->inProgress;
-    productionObj["buildTime"] = production->buildTime;
-    productionObj["timeRemaining"] = production->timeRemaining;
-    productionObj["producedCount"] = production->producedCount;
-    productionObj["maxUnits"] = production->maxUnits;
-    productionObj["productType"] = QString::fromStdString(
-        Game::Units::troopTypeToString(production->productType));
-    productionObj["rallyX"] = production->rallyX;
-    productionObj["rallyZ"] = production->rallyZ;
-    productionObj["rallySet"] = production->rallySet;
-    productionObj["villagerCost"] = production->villagerCost;
+    QJsonObject production_obj;
+    production_obj["inProgress"] = production->inProgress;
+    production_obj["buildTime"] = production->buildTime;
+    production_obj["timeRemaining"] = production->timeRemaining;
+    production_obj["producedCount"] = production->producedCount;
+    production_obj["maxUnits"] = production->maxUnits;
+    production_obj["product_type"] = QString::fromStdString(
+        Game::Units::troop_typeToString(production->product_type));
+    production_obj["rallyX"] = production->rallyX;
+    production_obj["rallyZ"] = production->rallyZ;
+    production_obj["rallySet"] = production->rallySet;
+    production_obj["villagerCost"] = production->villagerCost;
 
-    QJsonArray queueArray;
+    QJsonArray queue_array;
     for (const auto &queued : production->productionQueue) {
-      queueArray.append(
-          QString::fromStdString(Game::Units::troopTypeToString(queued)));
+      queue_array.append(
+          QString::fromStdString(Game::Units::troop_typeToString(queued)));
     }
-    productionObj["queue"] = queueArray;
-    entityObj["production"] = productionObj;
+    production_obj["queue"] = queue_array;
+    entity_obj["production"] = production_obj;
   }
 
-  if (entity->getComponent<AIControlledComponent>()) {
-    entityObj["aiControlled"] = true;
+  if (entity->getComponent<AIControlledComponent>() != nullptr) {
+    entity_obj["aiControlled"] = true;
   }
 
   if (const auto *capture = entity->getComponent<CaptureComponent>()) {
-    QJsonObject captureObj;
-    captureObj["capturingPlayerId"] = capture->capturingPlayerId;
-    captureObj["captureProgress"] =
+    QJsonObject capture_obj;
+    capture_obj["capturing_player_id"] = capture->capturing_player_id;
+    capture_obj["captureProgress"] =
         static_cast<double>(capture->captureProgress);
-    captureObj["requiredTime"] = static_cast<double>(capture->requiredTime);
-    captureObj["isBeingCaptured"] = capture->isBeingCaptured;
-    entityObj["capture"] = captureObj;
+    capture_obj["requiredTime"] = static_cast<double>(capture->requiredTime);
+    capture_obj["isBeingCaptured"] = capture->isBeingCaptured;
+    entity_obj["capture"] = capture_obj;
   }
 
-  return entityObj;
+  return entity_obj;
 }
 
 void Serialization::deserializeEntity(Entity *entity, const QJsonObject &json) {
   if (json.contains("transform")) {
-    const auto transformObj = json["transform"].toObject();
-    auto transform = entity->addComponent<TransformComponent>();
-    transform->position.x = static_cast<float>(transformObj["posX"].toDouble());
-    transform->position.y = static_cast<float>(transformObj["posY"].toDouble());
-    transform->position.z = static_cast<float>(transformObj["posZ"].toDouble());
-    transform->rotation.x = static_cast<float>(transformObj["rotX"].toDouble());
-    transform->rotation.y = static_cast<float>(transformObj["rotY"].toDouble());
-    transform->rotation.z = static_cast<float>(transformObj["rotZ"].toDouble());
-    transform->scale.x = static_cast<float>(transformObj["scaleX"].toDouble());
-    transform->scale.y = static_cast<float>(transformObj["scaleY"].toDouble());
-    transform->scale.z = static_cast<float>(transformObj["scaleZ"].toDouble());
-    transform->hasDesiredYaw = transformObj["hasDesiredYaw"].toBool(false);
+    const auto transform_obj = json["transform"].toObject();
+    auto *transform = entity->addComponent<TransformComponent>();
+    transform->position.x =
+        static_cast<float>(transform_obj["posX"].toDouble());
+    transform->position.y =
+        static_cast<float>(transform_obj["posY"].toDouble());
+    transform->position.z =
+        static_cast<float>(transform_obj["posZ"].toDouble());
+    transform->rotation.x =
+        static_cast<float>(transform_obj["rotX"].toDouble());
+    transform->rotation.y =
+        static_cast<float>(transform_obj["rotY"].toDouble());
+    transform->rotation.z =
+        static_cast<float>(transform_obj["rotZ"].toDouble());
+    transform->scale.x =
+        static_cast<float>(transform_obj["scale_x"].toDouble());
+    transform->scale.y = static_cast<float>(transform_obj["scaleY"].toDouble());
+    transform->scale.z =
+        static_cast<float>(transform_obj["scale_z"].toDouble());
+    transform->hasDesiredYaw = transform_obj["hasDesiredYaw"].toBool(false);
     transform->desiredYaw =
-        static_cast<float>(transformObj["desiredYaw"].toDouble());
+        static_cast<float>(transform_obj["desiredYaw"].toDouble());
   }
 
   if (json.contains("renderable")) {
-    const auto renderableObj = json["renderable"].toObject();
-    auto renderable = entity->addComponent<RenderableComponent>("", "");
-    renderable->meshPath = renderableObj["meshPath"].toString().toStdString();
+    const auto renderable_obj = json["renderable"].toObject();
+    auto *renderable = entity->addComponent<RenderableComponent>("", "");
+    renderable->meshPath = renderable_obj["meshPath"].toString().toStdString();
     renderable->texturePath =
-        renderableObj["texturePath"].toString().toStdString();
-    renderable->visible = renderableObj["visible"].toBool(true);
+        renderable_obj["texturePath"].toString().toStdString();
+    renderable->visible = renderable_obj["visible"].toBool(true);
     renderable->mesh =
-        static_cast<RenderableComponent::MeshKind>(renderableObj["mesh"].toInt(
+        static_cast<RenderableComponent::MeshKind>(renderable_obj["mesh"].toInt(
             static_cast<int>(RenderableComponent::MeshKind::Cube)));
-    if (renderableObj.contains("color")) {
-      deserializeColor(renderableObj["color"].toArray(), renderable->color);
+    if (renderable_obj.contains("color")) {
+      deserializeColor(renderable_obj["color"].toArray(), renderable->color);
     }
   }
 
   if (json.contains("unit")) {
-    const auto unitObj = json["unit"].toObject();
-    auto unit = entity->addComponent<UnitComponent>();
-    unit->health = unitObj["health"].toInt(100);
-    unit->maxHealth = unitObj["maxHealth"].toInt(100);
-    unit->speed = static_cast<float>(unitObj["speed"].toDouble());
-    unit->visionRange =
-        static_cast<float>(unitObj["visionRange"].toDouble(12.0));
+    const auto unit_obj = json["unit"].toObject();
+    auto *unit = entity->addComponent<UnitComponent>();
+    unit->health = unit_obj["health"].toInt(Defaults::kUnitDefaultHealth);
+    unit->max_health =
+        unit_obj["max_health"].toInt(Defaults::kUnitDefaultHealth);
+    unit->speed = static_cast<float>(unit_obj["speed"].toDouble());
+    unit->vision_range = static_cast<float>(unit_obj["vision_range"].toDouble(
+        static_cast<double>(Defaults::kUnitDefaultVisionRange)));
 
-    QString unitTypeStr = unitObj["unitType"].toString();
-    Game::Units::SpawnType spawnType;
-    if (Game::Units::tryParseSpawnType(unitTypeStr, spawnType)) {
-      unit->spawnType = spawnType;
+    QString const unit_type_str = unit_obj["unit_type"].toString();
+    Game::Units::SpawnType spawn_type;
+    if (Game::Units::tryParseSpawnType(unit_type_str, spawn_type)) {
+      unit->spawn_type = spawn_type;
     } else {
-      qWarning() << "Unknown spawn type in save file:" << unitTypeStr
+      qWarning() << "Unknown spawn type in save file:" << unit_type_str
                  << "- defaulting to Archer";
-      unit->spawnType = Game::Units::SpawnType::Archer;
+      unit->spawn_type = Game::Units::SpawnType::Archer;
     }
 
-    unit->ownerId = unitObj["ownerId"].toInt(0);
+    unit->owner_id = unit_obj["owner_id"].toInt(0);
   }
 
   if (json.contains("movement")) {
-    const auto movementObj = json["movement"].toObject();
-    auto movement = entity->addComponent<MovementComponent>();
-    movement->hasTarget = movementObj["hasTarget"].toBool(false);
-    movement->targetX = static_cast<float>(movementObj["targetX"].toDouble());
-    movement->targetY = static_cast<float>(movementObj["targetY"].toDouble());
-    movement->goalX = static_cast<float>(movementObj["goalX"].toDouble());
-    movement->goalY = static_cast<float>(movementObj["goalY"].toDouble());
-    movement->vx = static_cast<float>(movementObj["vx"].toDouble());
-    movement->vz = static_cast<float>(movementObj["vz"].toDouble());
-    movement->pathPending = movementObj["pathPending"].toBool(false);
+    const auto movement_obj = json["movement"].toObject();
+    auto *movement = entity->addComponent<MovementComponent>();
+    movement->hasTarget = movement_obj["hasTarget"].toBool(false);
+    movement->target_x =
+        static_cast<float>(movement_obj["target_x"].toDouble());
+    movement->target_y =
+        static_cast<float>(movement_obj["target_y"].toDouble());
+    movement->goalX = static_cast<float>(movement_obj["goalX"].toDouble());
+    movement->goalY = static_cast<float>(movement_obj["goalY"].toDouble());
+    movement->vx = static_cast<float>(movement_obj["vx"].toDouble());
+    movement->vz = static_cast<float>(movement_obj["vz"].toDouble());
+    movement->pathPending = movement_obj["pathPending"].toBool(false);
     movement->pendingRequestId = static_cast<std::uint64_t>(
-        movementObj["pendingRequestId"].toVariant().toULongLong());
+        movement_obj["pendingRequestId"].toVariant().toULongLong());
     movement->repathCooldown =
-        static_cast<float>(movementObj["repathCooldown"].toDouble());
+        static_cast<float>(movement_obj["repathCooldown"].toDouble());
     movement->lastGoalX =
-        static_cast<float>(movementObj["lastGoalX"].toDouble());
+        static_cast<float>(movement_obj["lastGoalX"].toDouble());
     movement->lastGoalY =
-        static_cast<float>(movementObj["lastGoalY"].toDouble());
+        static_cast<float>(movement_obj["lastGoalY"].toDouble());
     movement->timeSinceLastPathRequest =
-        static_cast<float>(movementObj["timeSinceLastPathRequest"].toDouble());
+        static_cast<float>(movement_obj["timeSinceLastPathRequest"].toDouble());
 
     movement->path.clear();
-    const auto pathArray = movementObj["path"].toArray();
-    movement->path.reserve(pathArray.size());
-    for (const auto &value : pathArray) {
-      const auto waypointObj = value.toObject();
+    const auto path_array = movement_obj["path"].toArray();
+    movement->path.reserve(path_array.size());
+    for (const auto &value : path_array) {
+      const auto waypoint_obj = value.toObject();
       movement->path.emplace_back(
-          static_cast<float>(waypointObj["x"].toDouble()),
-          static_cast<float>(waypointObj["y"].toDouble()));
+          static_cast<float>(waypoint_obj["x"].toDouble()),
+          static_cast<float>(waypoint_obj["y"].toDouble()));
     }
   }
 
   if (json.contains("attack")) {
-    const auto attackObj = json["attack"].toObject();
-    auto attack = entity->addComponent<AttackComponent>();
-    attack->range = static_cast<float>(attackObj["range"].toDouble());
-    attack->damage = attackObj["damage"].toInt(0);
-    attack->cooldown = static_cast<float>(attackObj["cooldown"].toDouble());
+    const auto attack_obj = json["attack"].toObject();
+    auto *attack = entity->addComponent<AttackComponent>();
+    attack->range = static_cast<float>(attack_obj["range"].toDouble());
+    attack->damage = attack_obj["damage"].toInt(0);
+    attack->cooldown = static_cast<float>(attack_obj["cooldown"].toDouble());
     attack->timeSinceLast =
-        static_cast<float>(attackObj["timeSinceLast"].toDouble());
-    attack->meleeRange =
-        static_cast<float>(attackObj["meleeRange"].toDouble(1.5));
-    attack->meleeDamage = attackObj["meleeDamage"].toInt(0);
+        static_cast<float>(attack_obj["timeSinceLast"].toDouble());
+    attack->meleeRange = static_cast<float>(attack_obj["meleeRange"].toDouble(
+        static_cast<double>(Defaults::kAttackMeleeRange)));
+    attack->meleeDamage = attack_obj["meleeDamage"].toInt(0);
     attack->meleeCooldown =
-        static_cast<float>(attackObj["meleeCooldown"].toDouble());
+        static_cast<float>(attack_obj["meleeCooldown"].toDouble());
     attack->preferredMode =
-        combatModeFromString(attackObj["preferredMode"].toString());
+        combatModeFromString(attack_obj["preferredMode"].toString());
     attack->currentMode =
-        combatModeFromString(attackObj["currentMode"].toString());
-    attack->canMelee = attackObj["canMelee"].toBool(true);
-    attack->canRanged = attackObj["canRanged"].toBool(false);
-    attack->maxHeightDifference =
-        static_cast<float>(attackObj["maxHeightDifference"].toDouble(2.0));
-    attack->inMeleeLock = attackObj["inMeleeLock"].toBool(false);
+        combatModeFromString(attack_obj["currentMode"].toString());
+    attack->canMelee = attack_obj["canMelee"].toBool(true);
+    attack->canRanged = attack_obj["canRanged"].toBool(false);
+    attack->max_heightDifference =
+        static_cast<float>(attack_obj["max_heightDifference"].toDouble(
+            static_cast<double>(Defaults::kAttackHeightTolerance)));
+    attack->inMeleeLock = attack_obj["inMeleeLock"].toBool(false);
     attack->meleeLockTargetId = static_cast<EntityID>(
-        attackObj["meleeLockTargetId"].toVariant().toULongLong());
+        attack_obj["meleeLockTargetId"].toVariant().toULongLong());
   }
 
-  if (json.contains("attackTarget")) {
-    const auto attackTargetObj = json["attackTarget"].toObject();
-    auto attackTarget = entity->addComponent<AttackTargetComponent>();
-    attackTarget->targetId = static_cast<EntityID>(
-        attackTargetObj["targetId"].toVariant().toULongLong());
-    attackTarget->shouldChase = attackTargetObj["shouldChase"].toBool(false);
+  if (json.contains("attack_target")) {
+    const auto attack_targetObj = json["attack_target"].toObject();
+    auto *attack_target = entity->addComponent<AttackTargetComponent>();
+    attack_target->target_id = static_cast<EntityID>(
+        attack_targetObj["target_id"].toVariant().toULongLong());
+    attack_target->shouldChase = attack_targetObj["shouldChase"].toBool(false);
   }
 
   if (json.contains("patrol")) {
-    const auto patrolObj = json["patrol"].toObject();
-    auto patrol = entity->addComponent<PatrolComponent>();
+    const auto patrol_obj = json["patrol"].toObject();
+    auto *patrol = entity->addComponent<PatrolComponent>();
     patrol->currentWaypoint =
-        static_cast<size_t>(std::max(0, patrolObj["currentWaypoint"].toInt()));
-    patrol->patrolling = patrolObj["patrolling"].toBool(false);
+        static_cast<size_t>(std::max(0, patrol_obj["currentWaypoint"].toInt()));
+    patrol->patrolling = patrol_obj["patrolling"].toBool(false);
 
     patrol->waypoints.clear();
-    const auto waypointsArray = patrolObj["waypoints"].toArray();
-    patrol->waypoints.reserve(waypointsArray.size());
-    for (const auto &value : waypointsArray) {
-      const auto waypointObj = value.toObject();
+    const auto waypoints_array = patrol_obj["waypoints"].toArray();
+    patrol->waypoints.reserve(waypoints_array.size());
+    for (const auto &value : waypoints_array) {
+      const auto waypoint_obj = value.toObject();
       patrol->waypoints.emplace_back(
-          static_cast<float>(waypointObj["x"].toDouble()),
-          static_cast<float>(waypointObj["y"].toDouble()));
+          static_cast<float>(waypoint_obj["x"].toDouble()),
+          static_cast<float>(waypoint_obj["y"].toDouble()));
     }
   }
 
@@ -366,28 +392,30 @@ void Serialization::deserializeEntity(Entity *entity, const QJsonObject &json) {
   }
 
   if (json.contains("production")) {
-    const auto productionObj = json["production"].toObject();
-    auto production = entity->addComponent<ProductionComponent>();
-    production->inProgress = productionObj["inProgress"].toBool(false);
+    const auto production_obj = json["production"].toObject();
+    auto *production = entity->addComponent<ProductionComponent>();
+    production->inProgress = production_obj["inProgress"].toBool(false);
     production->buildTime =
-        static_cast<float>(productionObj["buildTime"].toDouble());
+        static_cast<float>(production_obj["buildTime"].toDouble());
     production->timeRemaining =
-        static_cast<float>(productionObj["timeRemaining"].toDouble());
-    production->producedCount = productionObj["producedCount"].toInt(0);
-    production->maxUnits = productionObj["maxUnits"].toInt(0);
-    production->productType = Game::Units::troopTypeFromString(
-        productionObj["productType"].toString().toStdString());
-    production->rallyX = static_cast<float>(productionObj["rallyX"].toDouble());
-    production->rallyZ = static_cast<float>(productionObj["rallyZ"].toDouble());
-    production->rallySet = productionObj["rallySet"].toBool(false);
-    production->villagerCost = productionObj["villagerCost"].toInt(1);
+        static_cast<float>(production_obj["timeRemaining"].toDouble());
+    production->producedCount = production_obj["producedCount"].toInt(0);
+    production->maxUnits = production_obj["maxUnits"].toInt(0);
+    production->product_type = Game::Units::troop_typeFromString(
+        production_obj["product_type"].toString().toStdString());
+    production->rallyX =
+        static_cast<float>(production_obj["rallyX"].toDouble());
+    production->rallyZ =
+        static_cast<float>(production_obj["rallyZ"].toDouble());
+    production->rallySet = production_obj["rallySet"].toBool(false);
+    production->villagerCost = production_obj["villagerCost"].toInt(1);
 
     production->productionQueue.clear();
-    const auto queueArray = productionObj["queue"].toArray();
-    production->productionQueue.reserve(queueArray.size());
-    for (const auto &value : queueArray) {
+    const auto queue_array = production_obj["queue"].toArray();
+    production->productionQueue.reserve(queue_array.size());
+    for (const auto &value : queue_array) {
       production->productionQueue.push_back(
-          Game::Units::troopTypeFromString(value.toString().toStdString()));
+          Game::Units::troop_typeFromString(value.toString().toStdString()));
     }
   }
 
@@ -396,346 +424,375 @@ void Serialization::deserializeEntity(Entity *entity, const QJsonObject &json) {
   }
 
   if (json.contains("capture")) {
-    const auto captureObj = json["capture"].toObject();
-    auto capture = entity->addComponent<CaptureComponent>();
-    capture->capturingPlayerId = captureObj["capturingPlayerId"].toInt(-1);
+    const auto capture_obj = json["capture"].toObject();
+    auto *capture = entity->addComponent<CaptureComponent>();
+    capture->capturing_player_id = capture_obj["capturing_player_id"].toInt(-1);
     capture->captureProgress =
-        static_cast<float>(captureObj["captureProgress"].toDouble(0.0));
+        static_cast<float>(capture_obj["captureProgress"].toDouble(0.0));
     capture->requiredTime =
-        static_cast<float>(captureObj["requiredTime"].toDouble(5.0));
-    capture->isBeingCaptured = captureObj["isBeingCaptured"].toBool(false);
+        static_cast<float>(capture_obj["requiredTime"].toDouble(
+            static_cast<double>(Defaults::kCaptureRequiredTime)));
+    capture->isBeingCaptured = capture_obj["isBeingCaptured"].toBool(false);
   }
 }
 
-QJsonObject
-Serialization::serializeTerrain(const Game::Map::TerrainHeightMap *heightMap,
-                                const Game::Map::BiomeSettings &biome) {
-  QJsonObject terrainObj;
+auto Serialization::serializeTerrain(
+    const Game::Map::TerrainHeightMap *height_map,
+    const Game::Map::BiomeSettings &biome) -> QJsonObject {
+  QJsonObject terrain_obj;
 
-  if (!heightMap) {
-    return terrainObj;
+  if (height_map == nullptr) {
+    return terrain_obj;
   }
 
-  terrainObj["width"] = heightMap->getWidth();
-  terrainObj["height"] = heightMap->getHeight();
-  terrainObj["tileSize"] = heightMap->getTileSize();
+  terrain_obj["width"] = height_map->getWidth();
+  terrain_obj["height"] = height_map->getHeight();
+  terrain_obj["tile_size"] = height_map->getTileSize();
 
-  QJsonArray heightsArray;
-  const auto &heights = heightMap->getHeightData();
-  for (float h : heights) {
-    heightsArray.append(h);
+  QJsonArray heights_array;
+  const auto &heights = height_map->getHeightData();
+  for (float const h : heights) {
+    heights_array.append(h);
   }
-  terrainObj["heights"] = heightsArray;
+  terrain_obj["heights"] = heights_array;
 
-  QJsonArray terrainTypesArray;
-  const auto &terrainTypes = heightMap->getTerrainTypes();
-  for (auto type : terrainTypes) {
-    terrainTypesArray.append(static_cast<int>(type));
+  QJsonArray terrain_types_array;
+  const auto &terrain_types = height_map->getTerrainTypes();
+  for (auto type : terrain_types) {
+    terrain_types_array.append(static_cast<int>(type));
   }
-  terrainObj["terrainTypes"] = terrainTypesArray;
+  terrain_obj["terrain_types"] = terrain_types_array;
 
-  QJsonArray riversArray;
-  const auto &rivers = heightMap->getRiverSegments();
+  QJsonArray rivers_array;
+  const auto &rivers = height_map->getRiverSegments();
   for (const auto &river : rivers) {
-    QJsonObject riverObj;
-    riverObj["startX"] = river.start.x();
-    riverObj["startY"] = river.start.y();
-    riverObj["startZ"] = river.start.z();
-    riverObj["endX"] = river.end.x();
-    riverObj["endY"] = river.end.y();
-    riverObj["endZ"] = river.end.z();
-    riverObj["width"] = river.width;
-    riversArray.append(riverObj);
+    QJsonObject river_obj;
+    river_obj["startX"] = river.start.x();
+    river_obj["startY"] = river.start.y();
+    river_obj["startZ"] = river.start.z();
+    river_obj["endX"] = river.end.x();
+    river_obj["endY"] = river.end.y();
+    river_obj["endZ"] = river.end.z();
+    river_obj["width"] = river.width;
+    rivers_array.append(river_obj);
   }
-  terrainObj["rivers"] = riversArray;
+  terrain_obj["rivers"] = rivers_array;
 
-  QJsonArray bridgesArray;
-  const auto &bridges = heightMap->getBridges();
+  QJsonArray bridges_array;
+  const auto &bridges = height_map->getBridges();
   for (const auto &bridge : bridges) {
-    QJsonObject bridgeObj;
-    bridgeObj["startX"] = bridge.start.x();
-    bridgeObj["startY"] = bridge.start.y();
-    bridgeObj["startZ"] = bridge.start.z();
-    bridgeObj["endX"] = bridge.end.x();
-    bridgeObj["endY"] = bridge.end.y();
-    bridgeObj["endZ"] = bridge.end.z();
-    bridgeObj["width"] = bridge.width;
-    bridgeObj["height"] = bridge.height;
-    bridgesArray.append(bridgeObj);
+    QJsonObject bridge_obj;
+    bridge_obj["startX"] = bridge.start.x();
+    bridge_obj["startY"] = bridge.start.y();
+    bridge_obj["startZ"] = bridge.start.z();
+    bridge_obj["endX"] = bridge.end.x();
+    bridge_obj["endY"] = bridge.end.y();
+    bridge_obj["endZ"] = bridge.end.z();
+    bridge_obj["width"] = bridge.width;
+    bridge_obj["height"] = bridge.height;
+    bridges_array.append(bridge_obj);
   }
-  terrainObj["bridges"] = bridgesArray;
+  terrain_obj["bridges"] = bridges_array;
 
-  QJsonObject biomeObj;
-  biomeObj["grassPrimaryR"] = biome.grassPrimary.x();
-  biomeObj["grassPrimaryG"] = biome.grassPrimary.y();
-  biomeObj["grassPrimaryB"] = biome.grassPrimary.z();
-  biomeObj["grassSecondaryR"] = biome.grassSecondary.x();
-  biomeObj["grassSecondaryG"] = biome.grassSecondary.y();
-  biomeObj["grassSecondaryB"] = biome.grassSecondary.z();
-  biomeObj["grassDryR"] = biome.grassDry.x();
-  biomeObj["grassDryG"] = biome.grassDry.y();
-  biomeObj["grassDryB"] = biome.grassDry.z();
-  biomeObj["soilColorR"] = biome.soilColor.x();
-  biomeObj["soilColorG"] = biome.soilColor.y();
-  biomeObj["soilColorB"] = biome.soilColor.z();
-  biomeObj["rockLowR"] = biome.rockLow.x();
-  biomeObj["rockLowG"] = biome.rockLow.y();
-  biomeObj["rockLowB"] = biome.rockLow.z();
-  biomeObj["rockHighR"] = biome.rockHigh.x();
-  biomeObj["rockHighG"] = biome.rockHigh.y();
-  biomeObj["rockHighB"] = biome.rockHigh.z();
-  biomeObj["patchDensity"] = biome.patchDensity;
-  biomeObj["patchJitter"] = biome.patchJitter;
-  biomeObj["backgroundBladeDensity"] = biome.backgroundBladeDensity;
-  biomeObj["bladeHeightMin"] = biome.bladeHeightMin;
-  biomeObj["bladeHeightMax"] = biome.bladeHeightMax;
-  biomeObj["bladeWidthMin"] = biome.bladeWidthMin;
-  biomeObj["bladeWidthMax"] = biome.bladeWidthMax;
-  biomeObj["swayStrength"] = biome.swayStrength;
-  biomeObj["swaySpeed"] = biome.swaySpeed;
-  biomeObj["heightNoiseAmplitude"] = biome.heightNoiseAmplitude;
-  biomeObj["heightNoiseFrequency"] = biome.heightNoiseFrequency;
-  biomeObj["terrainMacroNoiseScale"] = biome.terrainMacroNoiseScale;
-  biomeObj["terrainDetailNoiseScale"] = biome.terrainDetailNoiseScale;
-  biomeObj["terrainSoilHeight"] = biome.terrainSoilHeight;
-  biomeObj["terrainSoilSharpness"] = biome.terrainSoilSharpness;
-  biomeObj["terrainRockThreshold"] = biome.terrainRockThreshold;
-  biomeObj["terrainRockSharpness"] = biome.terrainRockSharpness;
-  biomeObj["terrainAmbientBoost"] = biome.terrainAmbientBoost;
-  biomeObj["terrainRockDetailStrength"] = biome.terrainRockDetailStrength;
-  biomeObj["backgroundSwayVariance"] = biome.backgroundSwayVariance;
-  biomeObj["backgroundScatterRadius"] = biome.backgroundScatterRadius;
-  biomeObj["plantDensity"] = biome.plantDensity;
-  biomeObj["spawnEdgePadding"] = biome.spawnEdgePadding;
-  biomeObj["seed"] = static_cast<qint64>(biome.seed);
-  terrainObj["biome"] = biomeObj;
+  QJsonObject biome_obj;
+  biome_obj["grassPrimaryR"] = biome.grassPrimary.x();
+  biome_obj["grassPrimaryG"] = biome.grassPrimary.y();
+  biome_obj["grassPrimaryB"] = biome.grassPrimary.z();
+  biome_obj["grassSecondaryR"] = biome.grassSecondary.x();
+  biome_obj["grassSecondaryG"] = biome.grassSecondary.y();
+  biome_obj["grassSecondaryB"] = biome.grassSecondary.z();
+  biome_obj["grassDryR"] = biome.grassDry.x();
+  biome_obj["grassDryG"] = biome.grassDry.y();
+  biome_obj["grassDryB"] = biome.grassDry.z();
+  biome_obj["soilColorR"] = biome.soilColor.x();
+  biome_obj["soilColorG"] = biome.soilColor.y();
+  biome_obj["soilColorB"] = biome.soilColor.z();
+  biome_obj["rockLowR"] = biome.rockLow.x();
+  biome_obj["rockLowG"] = biome.rockLow.y();
+  biome_obj["rockLowB"] = biome.rockLow.z();
+  biome_obj["rockHighR"] = biome.rockHigh.x();
+  biome_obj["rockHighG"] = biome.rockHigh.y();
+  biome_obj["rockHighB"] = biome.rockHigh.z();
+  biome_obj["patchDensity"] = biome.patchDensity;
+  biome_obj["patchJitter"] = biome.patchJitter;
+  biome_obj["backgroundBladeDensity"] = biome.backgroundBladeDensity;
+  biome_obj["bladeHeightMin"] = biome.bladeHeightMin;
+  biome_obj["bladeHeightMax"] = biome.bladeHeightMax;
+  biome_obj["bladeWidthMin"] = biome.bladeWidthMin;
+  biome_obj["bladeWidthMax"] = biome.bladeWidthMax;
+  biome_obj["sway_strength"] = biome.sway_strength;
+  biome_obj["sway_speed"] = biome.sway_speed;
+  biome_obj["heightNoiseAmplitude"] = biome.heightNoiseAmplitude;
+  biome_obj["heightNoiseFrequency"] = biome.heightNoiseFrequency;
+  biome_obj["terrainMacroNoiseScale"] = biome.terrainMacroNoiseScale;
+  biome_obj["terrainDetailNoiseScale"] = biome.terrainDetailNoiseScale;
+  biome_obj["terrainSoilHeight"] = biome.terrainSoilHeight;
+  biome_obj["terrainSoilSharpness"] = biome.terrainSoilSharpness;
+  biome_obj["terrainRockThreshold"] = biome.terrainRockThreshold;
+  biome_obj["terrainRockSharpness"] = biome.terrainRockSharpness;
+  biome_obj["terrainAmbientBoost"] = biome.terrainAmbientBoost;
+  biome_obj["terrainRockDetailStrength"] = biome.terrainRockDetailStrength;
+  biome_obj["backgroundSwayVariance"] = biome.backgroundSwayVariance;
+  biome_obj["backgroundScatterRadius"] = biome.backgroundScatterRadius;
+  biome_obj["plant_density"] = biome.plant_density;
+  biome_obj["spawnEdgePadding"] = biome.spawnEdgePadding;
+  biome_obj["seed"] = static_cast<qint64>(biome.seed);
+  terrain_obj["biome"] = biome_obj;
 
-  return terrainObj;
+  return terrain_obj;
 }
 
-void Serialization::deserializeTerrain(Game::Map::TerrainHeightMap *heightMap,
+void Serialization::deserializeTerrain(Game::Map::TerrainHeightMap *height_map,
                                        Game::Map::BiomeSettings &biome,
                                        const QJsonObject &json) {
-  if (!heightMap || json.isEmpty()) {
+  if ((height_map == nullptr) || json.isEmpty()) {
     return;
   }
 
   if (json.contains("biome")) {
-    const auto biomeObj = json["biome"].toObject();
+    const auto biome_obj = json["biome"].toObject();
+    const Game::Map::BiomeSettings default_biome{};
+    const auto read_color = [&](const QString &base,
+                                const QVector3D &fallback) -> QVector3D {
+      const auto rKey = base + QStringLiteral("R");
+      const auto gKey = base + QStringLiteral("G");
+      const auto bKey = base + QStringLiteral("B");
+      const float r = static_cast<float>(
+          biome_obj[rKey].toDouble(static_cast<double>(fallback.x())));
+      const float g = static_cast<float>(
+          biome_obj[gKey].toDouble(static_cast<double>(fallback.y())));
+      const float b = static_cast<float>(
+          biome_obj[bKey].toDouble(static_cast<double>(fallback.z())));
+      return {r, g, b};
+    };
+
     biome.grassPrimary =
-        QVector3D(static_cast<float>(biomeObj["grassPrimaryR"].toDouble(0.3)),
-                  static_cast<float>(biomeObj["grassPrimaryG"].toDouble(0.6)),
-                  static_cast<float>(biomeObj["grassPrimaryB"].toDouble(0.28)));
-    biome.grassSecondary = QVector3D(
-        static_cast<float>(biomeObj["grassSecondaryR"].toDouble(0.44)),
-        static_cast<float>(biomeObj["grassSecondaryG"].toDouble(0.7)),
-        static_cast<float>(biomeObj["grassSecondaryB"].toDouble(0.32)));
+        read_color(QStringLiteral("grassPrimary"), default_biome.grassPrimary);
+    biome.grassSecondary = read_color(QStringLiteral("grassSecondary"),
+                                      default_biome.grassSecondary);
     biome.grassDry =
-        QVector3D(static_cast<float>(biomeObj["grassDryR"].toDouble(0.72)),
-                  static_cast<float>(biomeObj["grassDryG"].toDouble(0.66)),
-                  static_cast<float>(biomeObj["grassDryB"].toDouble(0.48)));
+        read_color(QStringLiteral("grassDry"), default_biome.grassDry);
     biome.soilColor =
-        QVector3D(static_cast<float>(biomeObj["soilColorR"].toDouble(0.28)),
-                  static_cast<float>(biomeObj["soilColorG"].toDouble(0.24)),
-                  static_cast<float>(biomeObj["soilColorB"].toDouble(0.18)));
+        read_color(QStringLiteral("soilColor"), default_biome.soilColor);
     biome.rockLow =
-        QVector3D(static_cast<float>(biomeObj["rockLowR"].toDouble(0.48)),
-                  static_cast<float>(biomeObj["rockLowG"].toDouble(0.46)),
-                  static_cast<float>(biomeObj["rockLowB"].toDouble(0.44)));
+        read_color(QStringLiteral("rockLow"), default_biome.rockLow);
     biome.rockHigh =
-        QVector3D(static_cast<float>(biomeObj["rockHighR"].toDouble(0.68)),
-                  static_cast<float>(biomeObj["rockHighG"].toDouble(0.69)),
-                  static_cast<float>(biomeObj["rockHighB"].toDouble(0.73)));
-    biome.patchDensity =
-        static_cast<float>(biomeObj["patchDensity"].toDouble(4.5));
-    biome.patchJitter =
-        static_cast<float>(biomeObj["patchJitter"].toDouble(0.95));
+        read_color(QStringLiteral("rockHigh"), default_biome.rockHigh);
+
+    biome.patchDensity = static_cast<float>(
+        biome_obj["patchDensity"].toDouble(default_biome.patchDensity));
+    biome.patchJitter = static_cast<float>(
+        biome_obj["patchJitter"].toDouble(default_biome.patchJitter));
     biome.backgroundBladeDensity =
-        static_cast<float>(biomeObj["backgroundBladeDensity"].toDouble(0.65));
-    biome.bladeHeightMin =
-        static_cast<float>(biomeObj["bladeHeightMin"].toDouble(0.55));
-    biome.bladeHeightMax =
-        static_cast<float>(biomeObj["bladeHeightMax"].toDouble(1.35));
-    biome.bladeWidthMin =
-        static_cast<float>(biomeObj["bladeWidthMin"].toDouble(0.025));
-    biome.bladeWidthMax =
-        static_cast<float>(biomeObj["bladeWidthMax"].toDouble(0.055));
-    biome.swayStrength =
-        static_cast<float>(biomeObj["swayStrength"].toDouble(0.25));
-    biome.swaySpeed = static_cast<float>(biomeObj["swaySpeed"].toDouble(1.4));
+        static_cast<float>(biome_obj["backgroundBladeDensity"].toDouble(
+            default_biome.backgroundBladeDensity));
+    biome.bladeHeightMin = static_cast<float>(
+        biome_obj["bladeHeightMin"].toDouble(default_biome.bladeHeightMin));
+    biome.bladeHeightMax = static_cast<float>(
+        biome_obj["bladeHeightMax"].toDouble(default_biome.bladeHeightMax));
+    biome.bladeWidthMin = static_cast<float>(
+        biome_obj["bladeWidthMin"].toDouble(default_biome.bladeWidthMin));
+    biome.bladeWidthMax = static_cast<float>(
+        biome_obj["bladeWidthMax"].toDouble(default_biome.bladeWidthMax));
+    biome.sway_strength = static_cast<float>(
+        biome_obj["sway_strength"].toDouble(default_biome.sway_strength));
+    biome.sway_speed = static_cast<float>(
+        biome_obj["sway_speed"].toDouble(default_biome.sway_speed));
     biome.heightNoiseAmplitude =
-        static_cast<float>(biomeObj["heightNoiseAmplitude"].toDouble(0.16));
+        static_cast<float>(biome_obj["heightNoiseAmplitude"].toDouble(
+            default_biome.heightNoiseAmplitude));
     biome.heightNoiseFrequency =
-        static_cast<float>(biomeObj["heightNoiseFrequency"].toDouble(0.05));
+        static_cast<float>(biome_obj["heightNoiseFrequency"].toDouble(
+            default_biome.heightNoiseFrequency));
     biome.terrainMacroNoiseScale =
-        static_cast<float>(biomeObj["terrainMacroNoiseScale"].toDouble(0.035));
+        static_cast<float>(biome_obj["terrainMacroNoiseScale"].toDouble(
+            default_biome.terrainMacroNoiseScale));
     biome.terrainDetailNoiseScale =
-        static_cast<float>(biomeObj["terrainDetailNoiseScale"].toDouble(0.14));
+        static_cast<float>(biome_obj["terrainDetailNoiseScale"].toDouble(
+            default_biome.terrainDetailNoiseScale));
     biome.terrainSoilHeight =
-        static_cast<float>(biomeObj["terrainSoilHeight"].toDouble(0.6));
+        static_cast<float>(biome_obj["terrainSoilHeight"].toDouble(
+            default_biome.terrainSoilHeight));
     biome.terrainSoilSharpness =
-        static_cast<float>(biomeObj["terrainSoilSharpness"].toDouble(3.8));
+        static_cast<float>(biome_obj["terrainSoilSharpness"].toDouble(
+            default_biome.terrainSoilSharpness));
     biome.terrainRockThreshold =
-        static_cast<float>(biomeObj["terrainRockThreshold"].toDouble(0.42));
+        static_cast<float>(biome_obj["terrainRockThreshold"].toDouble(
+            default_biome.terrainRockThreshold));
     biome.terrainRockSharpness =
-        static_cast<float>(biomeObj["terrainRockSharpness"].toDouble(3.1));
+        static_cast<float>(biome_obj["terrainRockSharpness"].toDouble(
+            default_biome.terrainRockSharpness));
     biome.terrainAmbientBoost =
-        static_cast<float>(biomeObj["terrainAmbientBoost"].toDouble(1.08));
-    biome.terrainRockDetailStrength = static_cast<float>(
-        biomeObj["terrainRockDetailStrength"].toDouble(0.35));
+        static_cast<float>(biome_obj["terrainAmbientBoost"].toDouble(
+            default_biome.terrainAmbientBoost));
+    biome.terrainRockDetailStrength =
+        static_cast<float>(biome_obj["terrainRockDetailStrength"].toDouble(
+            default_biome.terrainRockDetailStrength));
     biome.backgroundSwayVariance =
-        static_cast<float>(biomeObj["backgroundSwayVariance"].toDouble(0.2));
+        static_cast<float>(biome_obj["backgroundSwayVariance"].toDouble(
+            default_biome.backgroundSwayVariance));
     biome.backgroundScatterRadius =
-        static_cast<float>(biomeObj["backgroundScatterRadius"].toDouble(0.35));
-    biome.plantDensity =
-        static_cast<float>(biomeObj["plantDensity"].toDouble(0.5));
-    biome.spawnEdgePadding =
-        static_cast<float>(biomeObj["spawnEdgePadding"].toDouble(0.08));
-    if (biomeObj.contains("seed")) {
+        static_cast<float>(biome_obj["backgroundScatterRadius"].toDouble(
+            default_biome.backgroundScatterRadius));
+    biome.plant_density = static_cast<float>(
+        biome_obj["plant_density"].toDouble(default_biome.plant_density));
+    biome.spawnEdgePadding = static_cast<float>(
+        biome_obj["spawnEdgePadding"].toDouble(default_biome.spawnEdgePadding));
+    if (biome_obj.contains("seed")) {
       biome.seed = static_cast<std::uint32_t>(
-          biomeObj["seed"].toVariant().toULongLong());
+          biome_obj["seed"].toVariant().toULongLong());
     } else {
-      biome.seed = 1337u;
+      biome.seed = default_biome.seed;
     }
   }
 
   std::vector<float> heights;
   if (json.contains("heights")) {
-    const auto heightsArray = json["heights"].toArray();
-    heights.reserve(heightsArray.size());
-    for (const auto &val : heightsArray) {
+    const auto heights_array = json["heights"].toArray();
+    heights.reserve(heights_array.size());
+    for (const auto &val : heights_array) {
       heights.push_back(static_cast<float>(val.toDouble(0.0)));
     }
   }
 
-  std::vector<Game::Map::TerrainType> terrainTypes;
-  if (json.contains("terrainTypes")) {
-    const auto typesArray = json["terrainTypes"].toArray();
-    terrainTypes.reserve(typesArray.size());
-    for (const auto &val : typesArray) {
-      terrainTypes.push_back(static_cast<Game::Map::TerrainType>(val.toInt(0)));
+  std::vector<Game::Map::TerrainType> terrain_types;
+  if (json.contains("terrain_types")) {
+    const auto types_array = json["terrain_types"].toArray();
+    terrain_types.reserve(types_array.size());
+    for (const auto &val : types_array) {
+      terrain_types.push_back(
+          static_cast<Game::Map::TerrainType>(val.toInt(0)));
     }
   }
 
   std::vector<Game::Map::RiverSegment> rivers;
   if (json.contains("rivers")) {
-    const auto riversArray = json["rivers"].toArray();
-    rivers.reserve(riversArray.size());
-    for (const auto &val : riversArray) {
-      const auto riverObj = val.toObject();
+    const auto rivers_array = json["rivers"].toArray();
+    rivers.reserve(rivers_array.size());
+    const Game::Map::RiverSegment default_river{};
+    for (const auto &val : rivers_array) {
+      const auto river_obj = val.toObject();
       Game::Map::RiverSegment river;
       river.start =
-          QVector3D(static_cast<float>(riverObj["startX"].toDouble(0.0)),
-                    static_cast<float>(riverObj["startY"].toDouble(0.0)),
-                    static_cast<float>(riverObj["startZ"].toDouble(0.0)));
-      river.end = QVector3D(static_cast<float>(riverObj["endX"].toDouble(0.0)),
-                            static_cast<float>(riverObj["endY"].toDouble(0.0)),
-                            static_cast<float>(riverObj["endZ"].toDouble(0.0)));
-      river.width = static_cast<float>(riverObj["width"].toDouble(2.0));
+          QVector3D(static_cast<float>(river_obj["startX"].toDouble(0.0)),
+                    static_cast<float>(river_obj["startY"].toDouble(0.0)),
+                    static_cast<float>(river_obj["startZ"].toDouble(0.0)));
+      river.end =
+          QVector3D(static_cast<float>(river_obj["endX"].toDouble(0.0)),
+                    static_cast<float>(river_obj["endY"].toDouble(0.0)),
+                    static_cast<float>(river_obj["endZ"].toDouble(0.0)));
+      river.width = static_cast<float>(river_obj["width"].toDouble(
+          static_cast<double>(default_river.width)));
       rivers.push_back(river);
     }
   }
 
   std::vector<Game::Map::Bridge> bridges;
   if (json.contains("bridges")) {
-    const auto bridgesArray = json["bridges"].toArray();
-    bridges.reserve(bridgesArray.size());
-    for (const auto &val : bridgesArray) {
-      const auto bridgeObj = val.toObject();
+    const auto bridges_array = json["bridges"].toArray();
+    bridges.reserve(bridges_array.size());
+    const Game::Map::Bridge default_bridge{};
+    for (const auto &val : bridges_array) {
+      const auto bridge_obj = val.toObject();
       Game::Map::Bridge bridge;
       bridge.start =
-          QVector3D(static_cast<float>(bridgeObj["startX"].toDouble(0.0)),
-                    static_cast<float>(bridgeObj["startY"].toDouble(0.0)),
-                    static_cast<float>(bridgeObj["startZ"].toDouble(0.0)));
+          QVector3D(static_cast<float>(bridge_obj["startX"].toDouble(0.0)),
+                    static_cast<float>(bridge_obj["startY"].toDouble(0.0)),
+                    static_cast<float>(bridge_obj["startZ"].toDouble(0.0)));
       bridge.end =
-          QVector3D(static_cast<float>(bridgeObj["endX"].toDouble(0.0)),
-                    static_cast<float>(bridgeObj["endY"].toDouble(0.0)),
-                    static_cast<float>(bridgeObj["endZ"].toDouble(0.0)));
-      bridge.width = static_cast<float>(bridgeObj["width"].toDouble(3.0));
-      bridge.height = static_cast<float>(bridgeObj["height"].toDouble(0.5));
+          QVector3D(static_cast<float>(bridge_obj["endX"].toDouble(0.0)),
+                    static_cast<float>(bridge_obj["endY"].toDouble(0.0)),
+                    static_cast<float>(bridge_obj["endZ"].toDouble(0.0)));
+      bridge.width = static_cast<float>(bridge_obj["width"].toDouble(
+          static_cast<double>(default_bridge.width)));
+      bridge.height = static_cast<float>(bridge_obj["height"].toDouble(
+          static_cast<double>(default_bridge.height)));
       bridges.push_back(bridge);
     }
   }
 
-  heightMap->restoreFromData(heights, terrainTypes, rivers, bridges);
+  height_map->restoreFromData(heights, terrain_types, rivers, bridges);
 }
 
-QJsonDocument Serialization::serializeWorld(const World *world) {
-  QJsonObject worldObj;
-  QJsonArray entitiesArray;
+auto Serialization::serializeWorld(const World *world) -> QJsonDocument {
+  QJsonObject world_obj;
+  QJsonArray entities_array;
 
   const auto &entities = world->getEntities();
   for (const auto &[id, entity] : entities) {
-    QJsonObject entityObj = serializeEntity(entity.get());
-    entitiesArray.append(entityObj);
+    QJsonObject const entity_obj = serializeEntity(entity.get());
+    entities_array.append(entity_obj);
   }
 
-  worldObj["entities"] = entitiesArray;
-  worldObj["nextEntityId"] = static_cast<qint64>(world->getNextEntityId());
-  worldObj["schemaVersion"] = 1;
-  worldObj["ownerRegistry"] = Game::Systems::OwnerRegistry::instance().toJson();
+  world_obj["entities"] = entities_array;
+  world_obj["nextEntityId"] = static_cast<qint64>(world->getNextEntityId());
+  world_obj["schemaVersion"] = 1;
+  world_obj["owner_registry"] =
+      Game::Systems::OwnerRegistry::instance().toJson();
 
-  const auto &terrainService = Game::Map::TerrainService::instance();
-  if (terrainService.isInitialized() && terrainService.getHeightMap()) {
-    worldObj["terrain"] = serializeTerrain(terrainService.getHeightMap(),
-                                           terrainService.biomeSettings());
+  const auto &terrain_service = Game::Map::TerrainService::instance();
+  if (terrain_service.isInitialized() &&
+      (terrain_service.getHeightMap() != nullptr)) {
+    world_obj["terrain"] = serializeTerrain(terrain_service.getHeightMap(),
+                                            terrain_service.biomeSettings());
   }
 
-  return QJsonDocument(worldObj);
+  return QJsonDocument(world_obj);
 }
 
 void Serialization::deserializeWorld(World *world, const QJsonDocument &doc) {
-  auto worldObj = doc.object();
-  auto entitiesArray = worldObj["entities"].toArray();
-  for (const auto &value : entitiesArray) {
-    auto entityObj = value.toObject();
-    const auto entityId =
-        static_cast<EntityID>(entityObj["id"].toVariant().toULongLong());
-    auto entity = entityId == NULL_ENTITY ? world->createEntity()
-                                          : world->createEntityWithId(entityId);
-    if (entity) {
-      deserializeEntity(entity, entityObj);
+  auto world_obj = doc.object();
+  auto entities_array = world_obj["entities"].toArray();
+  for (const auto &value : entities_array) {
+    auto entity_obj = value.toObject();
+    const auto entity_id =
+        static_cast<EntityID>(entity_obj["id"].toVariant().toULongLong());
+    auto *entity = entity_id == NULL_ENTITY
+                       ? world->createEntity()
+                       : world->createEntityWithId(entity_id);
+    if (entity != nullptr) {
+      deserializeEntity(entity, entity_obj);
     }
   }
 
-  if (worldObj.contains("nextEntityId")) {
-    const auto nextId = static_cast<EntityID>(
-        worldObj["nextEntityId"].toVariant().toULongLong());
-    world->setNextEntityId(nextId);
+  if (world_obj.contains("nextEntityId")) {
+    const auto next_id = static_cast<EntityID>(
+        world_obj["nextEntityId"].toVariant().toULongLong());
+    world->setNextEntityId(next_id);
   }
 
-  if (worldObj.contains("ownerRegistry")) {
+  if (world_obj.contains("owner_registry")) {
     Game::Systems::OwnerRegistry::instance().fromJson(
-        worldObj["ownerRegistry"].toObject());
+        world_obj["owner_registry"].toObject());
   }
 
-  if (worldObj.contains("terrain")) {
-    const auto terrainObj = worldObj["terrain"].toObject();
-    const int width = terrainObj["width"].toInt(50);
-    const int height = terrainObj["height"].toInt(50);
-    const float tileSize =
-        static_cast<float>(terrainObj["tileSize"].toDouble(1.0));
+  if (world_obj.contains("terrain")) {
+    const auto terrain_obj = world_obj["terrain"].toObject();
+    const int width = terrain_obj["width"].toInt(50);
+    const int height = terrain_obj["height"].toInt(50);
+    const float tile_size =
+        static_cast<float>(terrain_obj["tile_size"].toDouble(1.0));
 
     Game::Map::BiomeSettings biome;
-    std::vector<float> heights;
-    std::vector<Game::Map::TerrainType> terrainTypes;
-    std::vector<Game::Map::RiverSegment> rivers;
-    std::vector<Game::Map::Bridge> bridges;
+    std::vector<float> const heights;
+    std::vector<Game::Map::TerrainType> const terrain_types;
+    std::vector<Game::Map::RiverSegment> const rivers;
+    std::vector<Game::Map::Bridge> const bridges;
 
-    auto tempHeightMap =
-        std::make_unique<Game::Map::TerrainHeightMap>(width, height, tileSize);
-    deserializeTerrain(tempHeightMap.get(), biome, terrainObj);
+    auto temp_height_map =
+        std::make_unique<Game::Map::TerrainHeightMap>(width, height, tile_size);
+    deserializeTerrain(temp_height_map.get(), biome, terrain_obj);
 
-    auto &terrainService = Game::Map::TerrainService::instance();
-    terrainService.restoreFromSerialized(
-        width, height, tileSize, tempHeightMap->getHeightData(),
-        tempHeightMap->getTerrainTypes(), tempHeightMap->getRiverSegments(),
-        tempHeightMap->getBridges(), biome);
+    auto &terrain_service = Game::Map::TerrainService::instance();
+    terrain_service.restoreFromSerialized(
+        width, height, tile_size, temp_height_map->getHeightData(),
+        temp_height_map->getTerrainTypes(), temp_height_map->getRiverSegments(),
+        temp_height_map->getBridges(), biome);
   }
 }
 
-bool Serialization::saveToFile(const QString &filename,
-                               const QJsonDocument &doc) {
+auto Serialization::saveToFile(const QString &filename,
+                               const QJsonDocument &doc) -> bool {
   QFile file(filename);
   if (!file.open(QIODevice::WriteOnly)) {
     qWarning() << "Could not open file for writing:" << filename;
@@ -745,7 +802,7 @@ bool Serialization::saveToFile(const QString &filename,
   return true;
 }
 
-QJsonDocument Serialization::loadFromFile(const QString &filename) {
+auto Serialization::loadFromFile(const QString &filename) -> QJsonDocument {
   QFile file(filename);
   if (!file.open(QIODevice::ReadOnly)) {
     qWarning() << "Could not open file for reading:" << filename;

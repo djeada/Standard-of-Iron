@@ -4,22 +4,18 @@
 #include <QString>
 #include <functional>
 #include <memory>
+#include <utility>
 #include <vector>
 
-namespace Engine {
-namespace Core {
+namespace Engine::Core {
 class World;
 }
-} // namespace Engine
 
-namespace Game {
-namespace Map {
+namespace Game::Map {
 struct VictoryConfig;
 }
-} // namespace Game
 
-namespace Game {
-namespace Systems {
+namespace Game::Systems {
 
 class GlobalStatsRegistry;
 class OwnerRegistry;
@@ -39,13 +35,17 @@ public:
 
   void update(Engine::Core::World &world, float deltaTime);
 
-  QString getVictoryState() const { return m_victoryState; }
+  [[nodiscard]] auto getVictoryState() const -> QString {
+    return m_victoryState;
+  }
 
-  bool isGameOver() const { return !m_victoryState.isEmpty(); }
+  [[nodiscard]] auto isGameOver() const -> bool {
+    return !m_victoryState.isEmpty();
+  }
 
   using VictoryCallback = std::function<void(const QString &state)>;
   void setVictoryCallback(VictoryCallback callback) {
-    m_victoryCallback = callback;
+    m_victoryCallback = std::move(callback);
   }
 
 private:
@@ -54,17 +54,17 @@ private:
   void checkVictoryConditions(Engine::Core::World &world);
   void checkDefeatConditions(Engine::Core::World &world);
 
-  bool checkElimination(Engine::Core::World &world);
-  bool checkSurviveTime();
-  bool checkNoUnits(Engine::Core::World &world);
-  bool checkNoKeyStructures(Engine::Core::World &world);
+  auto checkElimination(Engine::Core::World &world) -> bool;
+  auto checkSurviveTime() const -> bool;
+  auto checkNoUnits(Engine::Core::World &world) const -> bool;
+  auto checkNoKeyStructures(Engine::Core::World &world) -> bool;
 
   VictoryType m_victoryType = VictoryType::Elimination;
   std::vector<QString> m_keyStructures;
   std::vector<DefeatCondition> m_defeatConditions;
 
-  float m_surviveTimeDuration = 0.0f;
-  float m_elapsedTime = 0.0f;
+  float m_surviveTimeDuration = 0.0F;
+  float m_elapsedTime = 0.0F;
 
   int m_localOwnerId = 1;
   QString m_victoryState;
@@ -78,9 +78,8 @@ private:
 
   Engine::Core::World *m_worldPtr = nullptr;
 
-  Game::Systems::GlobalStatsRegistry &m_statsRegistry;
-  Game::Systems::OwnerRegistry &m_ownerRegistry;
+  Game::Systems::GlobalStatsRegistry &m_stats_registry;
+  Game::Systems::OwnerRegistry &m_owner_registry;
 };
 
-} // namespace Systems
-} // namespace Game
+} // namespace Game::Systems

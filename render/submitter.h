@@ -16,27 +16,27 @@ class ISubmitter {
 public:
   virtual ~ISubmitter() = default;
   virtual void mesh(Mesh *mesh, const QMatrix4x4 &model, const QVector3D &color,
-                    Texture *tex = nullptr, float alpha = 1.0f) = 0;
+                    Texture *tex = nullptr, float alpha = 1.0F) = 0;
   virtual void cylinder(const QVector3D &start, const QVector3D &end,
                         float radius, const QVector3D &color,
-                        float alpha = 1.0f) = 0;
+                        float alpha = 1.0F) = 0;
   virtual void selectionRing(const QMatrix4x4 &model, float alphaInner,
                              float alphaOuter, const QVector3D &color) = 0;
   virtual void grid(const QMatrix4x4 &model, const QVector3D &color,
                     float cellSize, float thickness, float extent) = 0;
   virtual void selectionSmoke(const QMatrix4x4 &model, const QVector3D &color,
-                              float baseAlpha = 0.15f) = 0;
+                              float baseAlpha = 0.15F) = 0;
 };
 
 namespace detail {
-inline bool decomposeUnitCylinder(const QMatrix4x4 &model, QVector3D &start,
-                                  QVector3D &end, float &radius) {
-  start = model.map(QVector3D(0.0f, -0.5f, 0.0f));
-  end = model.map(QVector3D(0.0f, 0.5f, 0.0f));
-  QVector3D sx = model.mapVector(QVector3D(1.0f, 0.0f, 0.0f));
-  QVector3D sz = model.mapVector(QVector3D(0.0f, 0.0f, 1.0f));
-  radius = 0.5f * (sx.length() + sz.length());
-  return radius > 0.0f;
+inline auto decomposeUnitCylinder(const QMatrix4x4 &model, QVector3D &start,
+                                  QVector3D &end, float &radius) -> bool {
+  start = model.map(QVector3D(0.0F, -0.5F, 0.0F));
+  end = model.map(QVector3D(0.0F, 0.5F, 0.0F));
+  QVector3D const sx = model.mapVector(QVector3D(1.0F, 0.0F, 0.0F));
+  QVector3D const sz = model.mapVector(QVector3D(0.0F, 0.0F, 1.0F));
+  radius = 0.5F * (sx.length() + sz.length());
+  return radius > 0.0F;
 }
 } // namespace detail
 
@@ -47,13 +47,16 @@ public:
   void setShader(Shader *shader) { m_shader = shader; }
 
   void mesh(Mesh *mesh, const QMatrix4x4 &model, const QVector3D &color,
-            Texture *tex = nullptr, float alpha = 1.0f) override {
-    if (!m_queue || !mesh)
+            Texture *tex = nullptr, float alpha = 1.0F) override {
+    if ((m_queue == nullptr) || (mesh == nullptr)) {
       return;
+    }
 
-    if (mesh == getUnitCylinder() && (!tex) && (!m_shader)) {
-      QVector3D start, end;
-      float radius = 0.0f;
+    if (mesh == getUnitCylinder() && (tex == nullptr) &&
+        (m_shader == nullptr)) {
+      QVector3D start;
+      QVector3D end;
+      float radius = 0.0F;
       if (detail::decomposeUnitCylinder(model, start, end, radius)) {
         CylinderCmd cyl;
         cyl.start = start;
@@ -75,9 +78,10 @@ public:
     m_queue->submit(cmd);
   }
   void cylinder(const QVector3D &start, const QVector3D &end, float radius,
-                const QVector3D &color, float alpha = 1.0f) override {
-    if (!m_queue)
+                const QVector3D &color, float alpha = 1.0F) override {
+    if (m_queue == nullptr) {
       return;
+    }
     CylinderCmd cmd;
     cmd.start = start;
     cmd.end = end;
@@ -88,8 +92,9 @@ public:
   }
   void selectionRing(const QMatrix4x4 &model, float alphaInner,
                      float alphaOuter, const QVector3D &color) override {
-    if (!m_queue)
+    if (m_queue == nullptr) {
       return;
+    }
     SelectionRingCmd cmd;
     cmd.model = model;
     cmd.alphaInner = alphaInner;
@@ -99,8 +104,9 @@ public:
   }
   void grid(const QMatrix4x4 &model, const QVector3D &color, float cellSize,
             float thickness, float extent) override {
-    if (!m_queue)
+    if (m_queue == nullptr) {
       return;
+    }
     GridCmd cmd;
     cmd.model = model;
     cmd.color = color;
@@ -110,9 +116,10 @@ public:
     m_queue->submit(cmd);
   }
   void selectionSmoke(const QMatrix4x4 &model, const QVector3D &color,
-                      float baseAlpha = 0.15f) override {
-    if (!m_queue)
+                      float baseAlpha = 0.15F) override {
+    if (m_queue == nullptr) {
       return;
+    }
     SelectionSmokeCmd cmd;
     cmd.model = model;
     cmd.color = color;

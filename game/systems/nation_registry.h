@@ -10,11 +10,11 @@
 namespace Game::Systems {
 
 struct TroopType {
-  Game::Units::TroopType unitType;
+  Game::Units::TroopType unit_type;
   std::string displayName;
   bool isMelee = false;
   int cost = 100;
-  float buildTime = 5.0f;
+  float buildTime = 5.0F;
   int priority = 0;
 };
 
@@ -23,34 +23,39 @@ struct Nation {
   std::string displayName;
   std::vector<TroopType> availableTroops;
   std::string primaryBuilding = "barracks";
-  FormationType formationType = FormationType::Roman;
+  FormationType formation_type = FormationType::Roman;
 
-  std::vector<const TroopType *> getMeleeTroops() const;
+  [[nodiscard]] auto getMeleeTroops() const -> std::vector<const TroopType *>;
 
-  std::vector<const TroopType *> getRangedTroops() const;
+  [[nodiscard]] auto getRangedTroops() const -> std::vector<const TroopType *>;
 
-  const TroopType *getTroop(Game::Units::TroopType unitType) const;
+  [[nodiscard]] auto
+  getTroop(Game::Units::TroopType unit_type) const -> const TroopType *;
 
-  const TroopType *getBestMeleeTroop() const;
-  const TroopType *getBestRangedTroop() const;
+  [[nodiscard]] auto getBestMeleeTroop() const -> const TroopType *;
+  [[nodiscard]] auto getBestRangedTroop() const -> const TroopType *;
 
-  bool isMeleeUnit(Game::Units::TroopType unitType) const;
-  bool isRangedUnit(Game::Units::TroopType unitType) const;
+  [[nodiscard]] auto
+  isMeleeUnit(Game::Units::TroopType unit_type) const -> bool;
+  [[nodiscard]] auto
+  is_ranged_unit(Game::Units::TroopType unit_type) const -> bool;
 };
 
 class NationRegistry {
 public:
-  static NationRegistry &instance();
+  static auto instance() -> NationRegistry &;
 
   void registerNation(Nation nation);
 
-  const Nation *getNation(const std::string &nationId) const;
+  auto getNation(const std::string &nationId) const -> const Nation *;
 
-  const Nation *getNationForPlayer(int playerId) const;
+  auto getNationForPlayer(int player_id) const -> const Nation *;
 
-  void setPlayerNation(int playerId, const std::string &nationId);
+  void setPlayerNation(int player_id, const std::string &nationId);
 
-  const std::vector<Nation> &getAllNations() const { return m_nations; }
+  auto getAllNations() const -> const std::vector<Nation> & {
+    return m_nations;
+  }
 
   void initializeDefaults();
 

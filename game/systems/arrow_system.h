@@ -11,11 +11,11 @@ struct ArrowInstance {
   QVector3D start;
   QVector3D end;
   QVector3D color;
-  float t;
-  float speed;
-  bool active;
-  float arcHeight;
-  float invDist;
+  float t{};
+  float speed{};
+  bool active{};
+  float arcHeight{};
+  float invDist{};
 };
 
 class ArrowSystem : public Engine::Core::System {
@@ -23,8 +23,10 @@ public:
   ArrowSystem();
   void update(Engine::Core::World *world, float deltaTime) override;
   void spawnArrow(const QVector3D &start, const QVector3D &end,
-                  const QVector3D &color, float speed = 8.0f);
-  const std::vector<ArrowInstance> &arrows() const { return m_arrows; }
+                  const QVector3D &color, float speed = 8.0F);
+  [[nodiscard]] auto arrows() const -> const std::vector<ArrowInstance> & {
+    return m_arrows;
+  }
 
 private:
   std::vector<ArrowInstance> m_arrows;

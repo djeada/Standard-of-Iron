@@ -8,20 +8,17 @@
 #include <string>
 #include <unordered_map>
 
-namespace Engine {
-namespace Core {
+namespace Engine::Core {
 class Entity;
 class World;
-} // namespace Core
-} // namespace Engine
-namespace Render {
-namespace GL {
+} // namespace Engine::Core
+
+namespace Render::GL {
 class ResourceManager;
 class Mesh;
 class Texture;
 class Backend;
-} // namespace GL
-} // namespace Render
+} // namespace Render::GL
 
 namespace Render::GL {
 
@@ -32,7 +29,7 @@ struct DrawContext {
   QMatrix4x4 model;
   bool selected = false;
   bool hovered = false;
-  float animationTime = 0.0f;
+  float animationTime = 0.0F;
   class Backend *backend = nullptr;
 };
 
@@ -41,7 +38,7 @@ using RenderFunc = std::function<void(const DrawContext &, ISubmitter &out)>;
 class EntityRendererRegistry {
 public:
   void registerRenderer(const std::string &type, RenderFunc func);
-  RenderFunc get(const std::string &type) const;
+  auto get(const std::string &type) const -> RenderFunc;
 
 private:
   std::unordered_map<std::string, RenderFunc> m_map;
