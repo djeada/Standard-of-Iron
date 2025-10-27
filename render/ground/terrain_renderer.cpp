@@ -31,7 +31,7 @@ namespace {
 using std::uint32_t;
 using namespace Render::GL::BitShift;
 using namespace Render::GL::Geometry;
-using namespace Render::GL::Hash;
+using namespace Render::GL::hash_xor_shift;
 using namespace Render::Ground;
 
 const QMatrix4x4 k_identity_matrix;
@@ -62,10 +62,10 @@ inline auto valueNoise(float x, float z, uint32_t salt = 0U) -> float {
   int z1 = z0 + 1;
   float tx = x - float(x0);
   float tz = z - float(z0);
-  float const n00 = hashTo01(hashCoords(x0, z0, salt));
-  float const n10 = hashTo01(hashCoords(x1, z0, salt));
-  float const n01 = hashTo01(hashCoords(x0, z1, salt));
-  float const n11 = hashTo01(hashCoords(x1, z1, salt));
+  float const n00 = hash_to_01(hash_coords(x0, z0, salt));
+  float const n10 = hash_to_01(hash_coords(x1, z0, salt));
+  float const n01 = hash_to_01(hash_coords(x0, z1, salt));
+  float const n11 = hash_to_01(hash_coords(x1, z1, salt));
   float const nx0 = n00 * (1 - tx) + n10 * tx;
   float const nx1 = n01 * (1 - tx) + n11 * tx;
   return nx0 * (1 - tz) + nx1 * tz;
@@ -346,8 +346,8 @@ void TerrainRenderer::buildMeshes() {
 
       SectionData sections[3];
 
-      uint32_t const chunk_seed = hashCoords(chunk_x, chunk_z, m_noiseSeed);
-      uint32_t const variant_seed = chunk_seed ^ GoldenRatio;
+      uint32_t const chunk_seed = hash_coords(chunk_x, chunk_z, m_noiseSeed);
+      uint32_t const variant_seed = chunk_seed ^ k_golden_ratio;
       float const rotation_step =
           static_cast<float>((variant_seed >> 5) & 3) * 90.0F;
       bool const flip = ((variant_seed >> 7) & 1U) != 0U;
@@ -648,11 +648,11 @@ void TerrainRenderer::buildMeshes() {
                                      : 0.95F));
 
         const uint32_t noise_key_a =
-            hashCoords(chunk.minX, chunk.minZ, m_noiseSeed ^ 0xB5297A4DU);
+            hash_coords(chunk.minX, chunk.minZ, m_noiseSeed ^ 0xB5297A4DU);
         const uint32_t noise_key_b =
-            hashCoords(chunk.minX, chunk.minZ, m_noiseSeed ^ 0x68E31DA4U);
-        params.noiseOffset = QVector2D(hashTo01(noise_key_a) * 256.0F,
-                                       hashTo01(noise_key_b) * 256.0F);
+            hash_coords(chunk.minX, chunk.minZ, m_noiseSeed ^ 0x68E31DA4U);
+        params.noiseOffset = QVector2D(hash_to_01(noise_key_a) * 256.0F,
+                                       hash_to_01(noise_key_b) * 256.0F);
 
         float base_amp =
             m_biomeSettings.heightNoiseAmplitude *
