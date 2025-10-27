@@ -29,10 +29,10 @@ inline auto valueNoise(float x, float z, uint32_t salt = 0U) -> float {
   int z1 = z0 + 1;
   float tx = x - float(x0);
   float tz = z - float(z0);
-  float const n00 = hashTo01(hashCoords(x0, z0, salt));
-  float const n10 = hashTo01(hashCoords(x1, z0, salt));
-  float const n01 = hashTo01(hashCoords(x0, z1, salt));
-  float const n11 = hashTo01(hashCoords(x1, z1, salt));
+  float const n00 = hash_to_01(hash_coords(x0, z0, salt));
+  float const n10 = hash_to_01(hash_coords(x1, z0, salt));
+  float const n01 = hash_to_01(hash_coords(x0, z1, salt));
+  float const n11 = hash_to_01(hash_coords(x1, z1, salt));
   float const nx0 = n00 * (1 - tx) + n10 * tx;
   float const nx1 = n01 * (1 - tx) + n11 * tx;
   return nx0 * (1 - tz) + nx1 * tz;
@@ -207,18 +207,18 @@ void StoneRenderer::generateStoneInstances() {
       return false;
     }
 
-    float const scale = remap(rand01(state), 0.08F, 0.25F) * tile_safe;
+    float const scale = remap(rand_01(state), 0.08F, 0.25F) * tile_safe;
 
-    float const color_var = remap(rand01(state), 0.0F, 1.0F);
+    float const color_var = remap(rand_01(state), 0.0F, 1.0F);
     QVector3D const base_rock = m_biomeSettings.rockLow;
     QVector3D const high_rock = m_biomeSettings.rockHigh;
     QVector3D color = base_rock * (1.0F - color_var) + high_rock * color_var;
 
-    float const brown_mix = remap(rand01(state), 0.0F, 0.4F);
+    float const brown_mix = remap(rand_01(state), 0.0F, 0.4F);
     QVector3D const brown_tint(0.45F, 0.38F, 0.30F);
     color = color * (1.0F - brown_mix) + brown_tint * brown_mix;
 
-    float const rotation = rand01(state) * MathConstants::TwoPi;
+    float const rotation = rand_01(state) * math_constants::k_two_pi;
 
     StoneInstanceGpu instance;
     instance.posScale = QVector4D(world_x, world_y + 0.01F, world_z, scale);
@@ -243,7 +243,7 @@ void StoneRenderer::generateStoneInstances() {
         continue;
       }
 
-      uint32_t state = hashCoords(
+      uint32_t state = hash_coords(
           x, z, m_noiseSeed ^ 0xABCDEF12U ^ static_cast<uint32_t>(idx));
 
       float const world_x = (x - half_width) * m_tile_size;
@@ -257,13 +257,13 @@ void StoneRenderer::generateStoneInstances() {
 
       int stone_count = static_cast<int>(std::floor(stone_density));
       float const frac = stone_density - float(stone_count);
-      if (rand01(state) < frac) {
+      if (rand_01(state) < frac) {
         stone_count += 1;
       }
 
       for (int i = 0; i < stone_count; ++i) {
-        float const gx = float(x) + rand01(state) * 2.0F;
-        float const gz = float(z) + rand01(state) * 2.0F;
+        float const gx = float(x) + rand_01(state) * 2.0F;
+        float const gz = float(z) + rand_01(state) * 2.0F;
         add_stone(gx, gz, state);
       }
     }
