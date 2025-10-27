@@ -275,11 +275,11 @@ void PlantRenderer::generatePlantInstances() {
     QVector3D const brown_tint(0.55F, 0.50F, 0.35F);
     tint_color = tint_color * (1.0F - brown_mix) + brown_tint * brown_mix;
 
-    float const sway_phase = rand_01(state) * math_constants::k_two_pi;
+    float const sway_phase = rand_01(state) * MathConstants::k_two_pi;
     float const sway_strength = remap(rand_01(state), 0.6F, 1.2F);
     float const sway_speed = remap(rand_01(state), 0.8F, 1.3F);
 
-    float const rotation = rand_01(state) * math_constants::k_two_pi;
+    float const rotation = rand_01(state) * MathConstants::k_two_pi;
 
     PlantInstanceGpu instance;
 

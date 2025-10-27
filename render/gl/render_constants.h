@@ -2,10 +2,10 @@
 
 #include <numbers>
 
-namespace Render::GL::math_constants {
+namespace Render::GL::MathConstants {
 inline constexpr float k_pi = std::numbers::pi_v<float>;
 inline constexpr float k_two_pi = std::numbers::pi_v<float> * 2.0F;
-} // namespace Render::GL::math_constants
+} // namespace Render::GL::MathConstants
 
 namespace Render::GL::VertexAttrib {
 inline constexpr int Position = 0;
@@ -89,9 +89,9 @@ inline constexpr float Mask24BitFloat = 16777215.0F;
 inline constexpr unsigned int k_mask_24bit_hex = 0x01000000U;
 } // namespace Render::GL::BitShift
 
-namespace Render::GL::hash_xor_shift {
+namespace Render::GL::HashXorShift {
 inline constexpr int k_xor_shift_amount_5 = 5;
 inline constexpr int k_xor_shift_amount_13 = 13;
 inline constexpr int k_xor_shift_amount_17 = 17;
 inline constexpr uint32_t k_golden_ratio = 0x9E3779B9U;
-} // namespace Render::GL::hash_xor_shift
+} // namespace Render::GL::HashXorShift
