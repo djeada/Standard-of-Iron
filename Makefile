@@ -91,7 +91,7 @@ build-dir:
 .PHONY: configure
 configure: build-dir
 	@echo "$(BOLD)$(BLUE)Configuring build with CMake...$(RESET)"
-	@cd $(BUILD_DIR) && cmake -DDEFAULT_LANG=$(DEFAULT_LANG) ..
+	@cd $(BUILD_DIR) && cmake -DENABLE_CLANG_TIDY=OFF -DDEFAULT_LANG=$(DEFAULT_LANG) ..
 	@echo "$(GREEN)✓ Configuration complete$(RESET)"
 
 # Build the project
@@ -300,7 +300,7 @@ tidy-all:
 .PHONY: debug
 debug: build-dir
 	@echo "$(BOLD)$(BLUE)Configuring debug build with GDB support...$(RESET)"
-	@cd $(BUILD_DIR) && cmake -DCMAKE_BUILD_TYPE=Debug -DDEFAULT_LANG=$(DEFAULT_LANG) ..
+	@cd $(BUILD_DIR) && cmake -DCMAKE_BUILD_TYPE=Debug -DENABLE_CLANG_TIDY=OFF -DDEFAULT_LANG=$(DEFAULT_LANG) ..
 	@echo "$(BOLD)$(BLUE)Building debug version...$(RESET)"
 	@cd $(BUILD_DIR) && make -j$$(nproc)
 	@echo "$(GREEN)✓ Debug build complete$(RESET)"
@@ -318,7 +318,7 @@ debug: build-dir
 .PHONY: release
 release: build-dir
 	@echo "$(BOLD)$(BLUE)Configuring release build...$(RESET)"
-	@cd $(BUILD_DIR) && cmake -DCMAKE_BUILD_TYPE=Release ..
+	@cd $(BUILD_DIR) && cmake -DCMAKE_BUILD_TYPE=Release -DENABLE_CLANG_TIDY=OFF ..
 	@cd $(BUILD_DIR) && make -j$$(nproc)
 	@echo "$(GREEN)✓ Release build complete$(RESET)"
 
