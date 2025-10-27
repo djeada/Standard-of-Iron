@@ -5,8 +5,13 @@
 #include "../../units/troop_config.h"
 #include "../command_service.h"
 #include "ai_utils.h"
+#include "systems/ai_system/ai_types.h"
+#include "units/troop_type.h"
 
 #include <QVector3D>
+#include <cstddef>
+#include <qvectornd.h>
+#include <vector>
 
 namespace Game::Systems::AI {
 
@@ -21,96 +26,98 @@ void AICommandApplier::apply(Engine::Core::World &world, int aiOwnerId,
         break;
       }
 
-      std::vector<float> expandedX, expandedY, expandedZ;
+      std::vector<float> expanded_x;
+      std::vector<float> expanded_y;
+      std::vector<float> expanded_z;
 
       if (command.moveTargetX.size() != command.units.size()) {
         replicateLastTargetIfNeeded(command.moveTargetX, command.moveTargetY,
                                     command.moveTargetZ, command.units.size(),
-                                    expandedX, expandedY, expandedZ);
+                                    expanded_x, expanded_y, expanded_z);
       } else {
-        expandedX = command.moveTargetX;
-        expandedY = command.moveTargetY;
-        expandedZ = command.moveTargetZ;
+        expanded_x = command.moveTargetX;
+        expanded_y = command.moveTargetY;
+        expanded_z = command.moveTargetZ;
       }
 
-      if (expandedX.empty()) {
+      if (expanded_x.empty()) {
         break;
       }
 
-      std::vector<Engine::Core::EntityID> ownedUnits;
-      std::vector<QVector3D> ownedTargets;
-      ownedUnits.reserve(command.units.size());
-      ownedTargets.reserve(command.units.size());
+      std::vector<Engine::Core::EntityID> owned_units;
+      std::vector<QVector3D> owned_targets;
+      owned_units.reserve(command.units.size());
+      owned_targets.reserve(command.units.size());
 
       for (std::size_t idx = 0; idx < command.units.size(); ++idx) {
-        auto entityId = command.units[idx];
-        auto *entity = world.getEntity(entityId);
-        if (!entity) {
+        auto entity_id = command.units[idx];
+        auto *entity = world.getEntity(entity_id);
+        if (entity == nullptr) {
           continue;
         }
 
         auto *unit = entity->getComponent<Engine::Core::UnitComponent>();
-        if (!unit || unit->ownerId != aiOwnerId) {
+        if ((unit == nullptr) || unit->owner_id != aiOwnerId) {
           continue;
         }
 
-        ownedUnits.push_back(entityId);
-        ownedTargets.emplace_back(expandedX[idx], expandedY[idx],
-                                  expandedZ[idx]);
+        owned_units.push_back(entity_id);
+        owned_targets.emplace_back(expanded_x[idx], expanded_y[idx],
+                                   expanded_z[idx]);
       }
 
-      if (ownedUnits.empty()) {
+      if (owned_units.empty()) {
         break;
       }
 
       CommandService::MoveOptions opts;
       opts.allowDirectFallback = true;
       opts.clearAttackIntent = false;
-      opts.groupMove = ownedUnits.size() > 1;
-      CommandService::moveUnits(world, ownedUnits, ownedTargets, opts);
+      opts.groupMove = owned_units.size() > 1;
+      CommandService::moveUnits(world, owned_units, owned_targets, opts);
       break;
     }
 
     case AICommandType::AttackTarget: {
-      if (command.units.empty() || command.targetId == 0) {
+      if (command.units.empty() || command.target_id == 0) {
         break;
       }
 
-      std::vector<Engine::Core::EntityID> ownedUnits;
-      ownedUnits.reserve(command.units.size());
+      std::vector<Engine::Core::EntityID> owned_units;
+      owned_units.reserve(command.units.size());
 
-      for (auto entityId : command.units) {
-        auto *entity = world.getEntity(entityId);
-        if (!entity) {
+      for (auto entity_id : command.units) {
+        auto *entity = world.getEntity(entity_id);
+        if (entity == nullptr) {
           continue;
         }
 
         auto *unit = entity->getComponent<Engine::Core::UnitComponent>();
-        if (!unit || unit->ownerId != aiOwnerId) {
+        if ((unit == nullptr) || unit->owner_id != aiOwnerId) {
           continue;
         }
 
-        ownedUnits.push_back(entityId);
+        owned_units.push_back(entity_id);
       }
 
-      if (ownedUnits.empty()) {
+      if (owned_units.empty()) {
         break;
       }
 
-      CommandService::attackTarget(world, ownedUnits, command.targetId,
-                                   command.shouldChase);
+      CommandService::attack_target(world, owned_units, command.target_id,
+                                    command.shouldChase);
       break;
     }
 
     case AICommandType::StartProduction: {
       auto *entity = world.getEntity(command.buildingId);
-      if (!entity) {
+      if (entity == nullptr) {
         break;
       }
 
       auto *production =
           entity->getComponent<Engine::Core::ProductionComponent>();
-      if (!production) {
+      if (production == nullptr) {
         break;
       }
 
@@ -119,21 +126,23 @@ void AICommandApplier::apply(Engine::Core::World &world, int aiOwnerId,
       }
 
       auto *unit = entity->getComponent<Engine::Core::UnitComponent>();
-      if (unit && unit->ownerId != aiOwnerId) {
+      if ((unit != nullptr) && unit->owner_id != aiOwnerId) {
         break;
       }
 
-      int currentTroops = world.countTroopsForPlayer(aiOwnerId);
-      int maxTroops = Game::GameConfig::instance().getMaxTroopsPerPlayer();
-      Game::Units::TroopType productType = production->productType;
-      int individualsPerUnit =
+      int const current_troops =
+          Engine::Core::World::countTroopsForPlayer(aiOwnerId);
+      int const max_troops =
+          Game::GameConfig::instance().getMaxTroopsPerPlayer();
+      Game::Units::TroopType const product_type = production->product_type;
+      int const individuals_per_unit =
           Game::Units::TroopConfig::instance().getIndividualsPerUnit(
-              productType);
-      if (currentTroops + individualsPerUnit > maxTroops) {
+              product_type);
+      if (current_troops + individuals_per_unit > max_troops) {
         break;
       }
 
-      production->productType = command.productType;
+      production->product_type = command.product_type;
 
       production->timeRemaining = production->buildTime;
       production->inProgress = true;

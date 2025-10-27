@@ -11,66 +11,70 @@ namespace Game::Systems {
 
 enum class OwnerType { Player, AI, Neutral };
 
+namespace Defaults {
+inline constexpr std::array<float, 3> kDefaultOwnerColor{0.8F, 0.9F, 1.0F};
+}
+
 struct OwnerInfo {
-  int ownerId;
+  int owner_id{};
   OwnerType type;
   std::string name;
-  int teamId = 0;
-  std::array<float, 3> color = {0.8f, 0.9f, 1.0f};
+  int team_id = 0;
+  std::array<float, 3> color = Defaults::kDefaultOwnerColor;
 };
 
 class OwnerRegistry {
 public:
-  static OwnerRegistry &instance();
+  static auto instance() -> OwnerRegistry &;
 
   void clear();
 
-  int registerOwner(OwnerType type, const std::string &name = "");
+  auto registerOwner(OwnerType type, const std::string &name = "") -> int;
 
-  void registerOwnerWithId(int ownerId, OwnerType type,
+  void registerOwnerWithId(int owner_id, OwnerType type,
                            const std::string &name = "");
 
-  void setLocalPlayerId(int playerId);
+  void setLocalPlayerId(int player_id);
 
-  int getLocalPlayerId() const;
+  auto getLocalPlayerId() const -> int;
 
-  bool isPlayer(int ownerId) const;
+  auto isPlayer(int owner_id) const -> bool;
 
-  bool isAI(int ownerId) const;
+  auto isAI(int owner_id) const -> bool;
 
-  OwnerType getOwnerType(int ownerId) const;
+  auto getOwnerType(int owner_id) const -> OwnerType;
 
-  std::string getOwnerName(int ownerId) const;
+  auto getOwnerName(int owner_id) const -> std::string;
 
-  const std::vector<OwnerInfo> &getAllOwners() const;
+  auto getAllOwners() const -> const std::vector<OwnerInfo> &;
 
-  std::vector<int> getPlayerOwnerIds() const;
+  auto getPlayerOwnerIds() const -> std::vector<int>;
 
-  std::vector<int> getAIOwnerIds() const;
+  auto getAIOwnerIds() const -> std::vector<int>;
 
-  void setOwnerTeam(int ownerId, int teamId);
-  int getOwnerTeam(int ownerId) const;
-  bool areAllies(int ownerId1, int ownerId2) const;
-  bool areEnemies(int ownerId1, int ownerId2) const;
-  std::vector<int> getAlliesOf(int ownerId) const;
-  std::vector<int> getEnemiesOf(int ownerId) const;
+  void setOwnerTeam(int owner_id, int team_id);
+  auto getOwnerTeam(int owner_id) const -> int;
+  auto areAllies(int owner_id1, int owner_id2) const -> bool;
+  auto areEnemies(int owner_id1, int owner_id2) const -> bool;
+  auto getAlliesOf(int owner_id) const -> std::vector<int>;
+  auto getEnemiesOf(int owner_id) const -> std::vector<int>;
 
-  void setOwnerColor(int ownerId, float r, float g, float b);
-  std::array<float, 3> getOwnerColor(int ownerId) const;
+  void setOwnerColor(int owner_id, float r, float g, float b);
+  auto getOwnerColor(int owner_id) const -> std::array<float, 3>;
 
-  QJsonObject toJson() const;
+  auto toJson() const -> QJsonObject;
   void fromJson(const QJsonObject &json);
 
 private:
   OwnerRegistry() = default;
   ~OwnerRegistry() = default;
   OwnerRegistry(const OwnerRegistry &) = delete;
-  OwnerRegistry &operator=(const OwnerRegistry &) = delete;
+  auto operator=(const OwnerRegistry &) -> OwnerRegistry & = delete;
 
   int m_nextOwnerId = 1;
   int m_localPlayerId = 1;
   std::vector<OwnerInfo> m_owners;
-  std::unordered_map<int, size_t> m_ownerIdToIndex;
+  std::unordered_map<int, size_t> m_owner_idToIndex;
 };
 
 } // namespace Game::Systems

@@ -15,7 +15,7 @@ public:
   ~Music();
 
   bool isLoaded() const;
-  void play(float volume = 1.0f, bool loop = true);
+  void play(float volume = 1.0F, bool loop = true);
   void stop();
   void pause();
   void resume();

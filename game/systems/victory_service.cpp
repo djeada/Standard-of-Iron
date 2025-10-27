@@ -1,15 +1,17 @@
 #include "victory_service.h"
 
+#include "core/event_manager.h"
 #include "game/core/component.h"
 #include "game/core/world.h"
 #include "game/map/map_definition.h"
 #include "game/systems/global_stats_registry.h"
 #include "game/systems/owner_registry.h"
+#include "units/spawn_type.h"
 #include <QDebug>
 #include <algorithm>
+#include <qglobal.h>
 
-namespace Game {
-namespace Systems {
+namespace Game::Systems {
 
 VictoryService::VictoryService()
     : m_unitDiedSubscription(
@@ -18,14 +20,14 @@ VictoryService::VictoryService()
           [this](const Engine::Core::BarrackCapturedEvent &e) {
             onBarrackCaptured(e);
           }),
-      m_statsRegistry(Game::Systems::GlobalStatsRegistry::instance()),
-      m_ownerRegistry(Game::Systems::OwnerRegistry::instance()) {}
+      m_stats_registry(Game::Systems::GlobalStatsRegistry::instance()),
+      m_owner_registry(Game::Systems::OwnerRegistry::instance()) {}
 
 VictoryService::~VictoryService() = default;
 
 void VictoryService::reset() {
   m_victoryState = "";
-  m_elapsedTime = 0.0f;
+  m_elapsedTime = 0.0F;
   m_worldPtr = nullptr;
   m_victoryCallback = nullptr;
 }
@@ -85,7 +87,7 @@ void VictoryService::onUnitDied(const Engine::Core::UnitDiedEvent &event) {}
 void VictoryService::onBarrackCaptured(
     const Engine::Core::BarrackCapturedEvent &event) {
 
-  if (!m_worldPtr || !m_victoryState.isEmpty()) {
+  if ((m_worldPtr == nullptr) || !m_victoryState.isEmpty()) {
     return;
   }
 
@@ -116,16 +118,16 @@ void VictoryService::checkVictoryConditions(Engine::Core::World &world) {
     m_victoryState = "victory";
     qInfo() << "VICTORY! Conditions met.";
 
-    const auto &allOwners = m_ownerRegistry.getAllOwners();
-    for (const auto &owner : allOwners) {
+    const auto &all_owners = m_owner_registry.getAllOwners();
+    for (const auto &owner : all_owners) {
       if (owner.type == Game::Systems::OwnerType::Player ||
           owner.type == Game::Systems::OwnerType::AI) {
-        m_statsRegistry.markGameEnd(owner.ownerId);
+        m_stats_registry.markGameEnd(owner.owner_id);
       }
     }
 
-    const auto *stats = m_statsRegistry.getStats(m_localOwnerId);
-    if (stats) {
+    const auto *stats = m_stats_registry.getStats(m_localOwnerId);
+    if (stats != nullptr) {
       qInfo() << "Final Stats - Troops Recruited:" << stats->troopsRecruited
               << "Enemies Killed:" << stats->enemiesKilled
               << "Barracks Owned:" << stats->barracksOwned
@@ -158,16 +160,16 @@ void VictoryService::checkDefeatConditions(Engine::Core::World &world) {
       m_victoryState = "defeat";
       qInfo() << "DEFEAT! Condition met.";
 
-      const auto &allOwners = m_ownerRegistry.getAllOwners();
-      for (const auto &owner : allOwners) {
+      const auto &all_owners = m_owner_registry.getAllOwners();
+      for (const auto &owner : all_owners) {
         if (owner.type == Game::Systems::OwnerType::Player ||
             owner.type == Game::Systems::OwnerType::AI) {
-          m_statsRegistry.markGameEnd(owner.ownerId);
+          m_stats_registry.markGameEnd(owner.owner_id);
         }
       }
 
-      const auto *stats = m_statsRegistry.getStats(m_localOwnerId);
-      if (stats) {
+      const auto *stats = m_stats_registry.getStats(m_localOwnerId);
+      if (stats != nullptr) {
         qInfo() << "Final Stats - Troops Recruited:" << stats->troopsRecruited
                 << "Enemies Killed:" << stats->enemiesKilled
                 << "Barracks Owned:" << stats->barracksOwned
@@ -182,53 +184,53 @@ void VictoryService::checkDefeatConditions(Engine::Core::World &world) {
   }
 }
 
-bool VictoryService::checkElimination(Engine::Core::World &world) {
+auto VictoryService::checkElimination(Engine::Core::World &world) -> bool {
 
-  bool enemyKeyStructuresAlive = false;
+  bool enemy_key_structures_alive = false;
 
-  int localTeam = m_ownerRegistry.getOwnerTeam(m_localOwnerId);
+  int const local_team = m_owner_registry.getOwnerTeam(m_localOwnerId);
 
   auto entities = world.getEntitiesWith<Engine::Core::UnitComponent>();
   for (auto *e : entities) {
     auto *unit = e->getComponent<Engine::Core::UnitComponent>();
-    if (!unit || unit->health <= 0) {
+    if ((unit == nullptr) || unit->health <= 0) {
       continue;
     }
 
-    if (unit->ownerId == m_localOwnerId) {
+    if (unit->owner_id == m_localOwnerId) {
       continue;
     }
 
-    if (m_ownerRegistry.areAllies(m_localOwnerId, unit->ownerId)) {
+    if (m_owner_registry.areAllies(m_localOwnerId, unit->owner_id)) {
       continue;
     }
 
-    QString unitTypeStr =
-        QString::fromStdString(Game::Units::spawnTypeToString(unit->spawnType));
+    QString const unit_type_str = QString::fromStdString(
+        Game::Units::spawn_typeToString(unit->spawn_type));
     if (std::find(m_keyStructures.begin(), m_keyStructures.end(),
-                  unitTypeStr) != m_keyStructures.end()) {
-      enemyKeyStructuresAlive = true;
+                  unit_type_str) != m_keyStructures.end()) {
+      enemy_key_structures_alive = true;
       break;
     }
   }
 
-  return !enemyKeyStructuresAlive;
+  return !enemy_key_structures_alive;
 }
 
-bool VictoryService::checkSurviveTime() {
+auto VictoryService::checkSurviveTime() const -> bool {
   return m_elapsedTime >= m_surviveTimeDuration;
 }
 
-bool VictoryService::checkNoUnits(Engine::Core::World &world) {
+auto VictoryService::checkNoUnits(Engine::Core::World &world) const -> bool {
 
   auto entities = world.getEntitiesWith<Engine::Core::UnitComponent>();
   for (auto *e : entities) {
     auto *unit = e->getComponent<Engine::Core::UnitComponent>();
-    if (!unit || unit->health <= 0) {
+    if ((unit == nullptr) || unit->health <= 0) {
       continue;
     }
 
-    if (unit->ownerId == m_localOwnerId) {
+    if (unit->owner_id == m_localOwnerId) {
       return false;
     }
   }
@@ -236,20 +238,20 @@ bool VictoryService::checkNoUnits(Engine::Core::World &world) {
   return true;
 }
 
-bool VictoryService::checkNoKeyStructures(Engine::Core::World &world) {
+auto VictoryService::checkNoKeyStructures(Engine::Core::World &world) -> bool {
 
   auto entities = world.getEntitiesWith<Engine::Core::UnitComponent>();
   for (auto *e : entities) {
     auto *unit = e->getComponent<Engine::Core::UnitComponent>();
-    if (!unit || unit->health <= 0) {
+    if ((unit == nullptr) || unit->health <= 0) {
       continue;
     }
 
-    if (unit->ownerId == m_localOwnerId) {
-      QString unitTypeStr = QString::fromStdString(
-          Game::Units::spawnTypeToString(unit->spawnType));
+    if (unit->owner_id == m_localOwnerId) {
+      QString const unit_type_str = QString::fromStdString(
+          Game::Units::spawn_typeToString(unit->spawn_type));
       if (std::find(m_keyStructures.begin(), m_keyStructures.end(),
-                    unitTypeStr) != m_keyStructures.end()) {
+                    unit_type_str) != m_keyStructures.end()) {
         return false;
       }
     }
@@ -258,5 +260,4 @@ bool VictoryService::checkNoKeyStructures(Engine::Core::World &world) {
   return true;
 }
 
-} // namespace Systems
-} // namespace Game
+} // namespace Game::Systems

@@ -5,6 +5,12 @@
 #include <QToolBar>
 #include <QVBoxLayout>
 #include <QWidget>
+#include <qaction.h>
+#include <qboxlayout.h>
+#include <qlabel.h>
+#include <qmainwindow.h>
+#include <qnamespace.h>
+#include <qwidget.h>
 
 namespace MapEditor {
 
@@ -19,49 +25,49 @@ EditorWindow::EditorWindow(QWidget *parent) : QMainWindow(parent) {
 EditorWindow::~EditorWindow() = default;
 
 void EditorWindow::setupUI() {
-  auto centralWidget = new QWidget(this);
-  setCentralWidget(centralWidget);
+  auto *central_widget = new QWidget(this);
+  setCentralWidget(central_widget);
 
-  auto layout = new QVBoxLayout(centralWidget);
+  auto *layout = new QVBoxLayout(central_widget);
 
   m_renderWidget =
       new QLabel("Map Editor Render Area\n(OpenGL widget would go here)", this);
-  static_cast<QLabel *>(m_renderWidget)->setAlignment(Qt::AlignCenter);
-  static_cast<QLabel *>(m_renderWidget)
+  dynamic_cast<QLabel *>(m_renderWidget)->setAlignment(Qt::AlignCenter);
+  dynamic_cast<QLabel *>(m_renderWidget)
       ->setStyleSheet("QLabel { background-color: #2c3e50; color: white; "
                       "border: 1px solid #34495e; }");
   layout->addWidget(m_renderWidget);
 }
 
 void EditorWindow::setupMenus() {
-  auto fileMenu = menuBar()->addMenu("&File");
+  auto *file_menu = menuBar()->addMenu("&File");
 
-  auto newAction = new QAction("&New", this);
-  newAction->setShortcut(QKeySequence::New);
-  connect(newAction, &QAction::triggered, this, &EditorWindow::newMap);
-  fileMenu->addAction(newAction);
+  auto *new_action = new QAction("&New", this);
+  new_action->setShortcut(QKeySequence::New);
+  connect(new_action, &QAction::triggered, this, &EditorWindow::newMap);
+  file_menu->addAction(new_action);
 
-  auto openAction = new QAction("&Open", this);
-  openAction->setShortcut(QKeySequence::Open);
-  connect(openAction, &QAction::triggered, this, &EditorWindow::openMap);
-  fileMenu->addAction(openAction);
+  auto *open_action = new QAction("&Open", this);
+  open_action->setShortcut(QKeySequence::Open);
+  connect(open_action, &QAction::triggered, this, &EditorWindow::openMap);
+  file_menu->addAction(open_action);
 
-  auto saveAction = new QAction("&Save", this);
-  saveAction->setShortcut(QKeySequence::Save);
-  connect(saveAction, &QAction::triggered, this, &EditorWindow::saveMap);
-  fileMenu->addAction(saveAction);
+  auto *save_action = new QAction("&Save", this);
+  save_action->setShortcut(QKeySequence::Save);
+  connect(save_action, &QAction::triggered, this, &EditorWindow::saveMap);
+  file_menu->addAction(save_action);
 
-  fileMenu->addSeparator();
+  file_menu->addSeparator();
 
-  auto exitAction = new QAction("E&xit", this);
-  exitAction->setShortcut(QKeySequence::Quit);
-  connect(exitAction, &QAction::triggered, this, &QWidget::close);
-  fileMenu->addAction(exitAction);
+  auto *exit_action = new QAction("E&xit", this);
+  exit_action->setShortcut(QKeySequence::Quit);
+  connect(exit_action, &QAction::triggered, this, &QWidget::close);
+  file_menu->addAction(exit_action);
 
-  auto toolbar = addToolBar("Main");
-  toolbar->addAction(newAction);
-  toolbar->addAction(openAction);
-  toolbar->addAction(saveAction);
+  auto *toolbar = addToolBar("Main");
+  toolbar->addAction(new_action);
+  toolbar->addAction(open_action);
+  toolbar->addAction(save_action);
 }
 
 void EditorWindow::newMap() {}

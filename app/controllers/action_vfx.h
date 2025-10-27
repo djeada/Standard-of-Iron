@@ -2,19 +2,17 @@
 
 #include <QVector3D>
 
-namespace Engine {
-namespace Core {
+namespace Engine::Core {
 class World;
 using EntityID = unsigned int;
-} // namespace Core
-} // namespace Engine
+} // namespace Engine::Core
 
 namespace App::Controllers {
 
 class ActionVFX {
 public:
   static void spawnAttackArrow(Engine::Core::World *world,
-                               Engine::Core::EntityID targetId);
+                               Engine::Core::EntityID target_id);
 };
 
 } // namespace App::Controllers

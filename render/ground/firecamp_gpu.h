@@ -7,15 +7,19 @@
 namespace Render::GL {
 
 struct FireCampInstanceGpu {
-  QVector4D posIntensity;
-  QVector4D radiusPhase;
+  QVector4D pos_intensity;
+  QVector4D radius_phase;
 };
 
 struct FireCampBatchParams {
-  float time = 0.0f;
-  float flickerSpeed = 5.0f;
-  float flickerAmount = 0.02f;
-  float glowStrength = 1.25f;
+  static constexpr float kDefaultFlickerSpeed = 5.0F;
+  static constexpr float kDefaultFlickerAmount = 0.02F;
+  static constexpr float kDefaultGlowStrength = 1.25F;
+
+  float time = 0.0F;
+  float flickerSpeed = kDefaultFlickerSpeed;
+  float flickerAmount = kDefaultFlickerAmount;
+  float glowStrength = kDefaultGlowStrength;
 };
 
 } // namespace Render::GL

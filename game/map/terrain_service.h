@@ -11,37 +11,49 @@ struct FireCamp;
 
 class TerrainService {
 public:
-  static TerrainService &instance();
+  static auto instance() -> TerrainService &;
 
   void initialize(const MapDefinition &mapDef);
 
   void clear();
 
-  float getTerrainHeight(float worldX, float worldZ) const;
+  [[nodiscard]] auto getTerrainHeight(float world_x,
+                                      float world_z) const -> float;
 
-  float getTerrainHeightGrid(int gridX, int gridZ) const;
+  [[nodiscard]] auto getTerrainHeightGrid(int grid_x,
+                                          int grid_z) const -> float;
 
-  bool isWalkable(int gridX, int gridZ) const;
+  [[nodiscard]] auto isWalkable(int grid_x, int grid_z) const -> bool;
 
-  bool isHillEntrance(int gridX, int gridZ) const;
+  [[nodiscard]] auto isHillEntrance(int grid_x, int grid_z) const -> bool;
 
-  bool isForbidden(int gridX, int gridZ) const;
+  [[nodiscard]] auto isForbidden(int grid_x, int grid_z) const -> bool;
 
-  bool isForbiddenWorld(float worldX, float worldZ) const;
+  [[nodiscard]] auto isForbiddenWorld(float world_x,
+                                      float world_z) const -> bool;
 
-  TerrainType getTerrainType(int gridX, int gridZ) const;
+  [[nodiscard]] auto getTerrainType(int grid_x,
+                                    int grid_z) const -> TerrainType;
 
-  const TerrainHeightMap *getHeightMap() const { return m_heightMap.get(); }
+  [[nodiscard]] auto getHeightMap() const -> const TerrainHeightMap * {
+    return m_height_map.get();
+  }
 
-  const BiomeSettings &biomeSettings() const { return m_biomeSettings; }
+  [[nodiscard]] auto biomeSettings() const -> const BiomeSettings & {
+    return m_biomeSettings;
+  }
 
-  const std::vector<FireCamp> &fireCamps() const { return m_fireCamps; }
+  [[nodiscard]] auto fire_camps() const -> const std::vector<FireCamp> & {
+    return m_fire_camps;
+  }
 
-  bool isInitialized() const { return m_heightMap != nullptr; }
+  [[nodiscard]] auto isInitialized() const -> bool {
+    return m_height_map != nullptr;
+  }
 
-  void restoreFromSerialized(int width, int height, float tileSize,
+  void restoreFromSerialized(int width, int height, float tile_size,
                              const std::vector<float> &heights,
-                             const std::vector<TerrainType> &terrainTypes,
+                             const std::vector<TerrainType> &terrain_types,
                              const std::vector<RiverSegment> &rivers,
                              const std::vector<Bridge> &bridges,
                              const BiomeSettings &biome);
@@ -51,11 +63,11 @@ private:
   ~TerrainService() = default;
 
   TerrainService(const TerrainService &) = delete;
-  TerrainService &operator=(const TerrainService &) = delete;
+  auto operator=(const TerrainService &) -> TerrainService & = delete;
 
-  std::unique_ptr<TerrainHeightMap> m_heightMap;
+  std::unique_ptr<TerrainHeightMap> m_height_map;
   BiomeSettings m_biomeSettings;
-  std::vector<FireCamp> m_fireCamps;
+  std::vector<FireCamp> m_fire_camps;
 };
 
 } // namespace Game::Map

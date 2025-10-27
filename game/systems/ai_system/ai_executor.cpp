@@ -1,4 +1,8 @@
 #include "ai_executor.h"
+#include "systems/ai_system/ai_behavior.h"
+#include "systems/ai_system/ai_behavior_registry.h"
+#include "systems/ai_system/ai_types.h"
+#include <vector>
 
 namespace Game::Systems::AI {
 
@@ -6,20 +10,20 @@ void AIExecutor::run(const AISnapshot &snapshot, AIContext &context,
                      float deltaTime, AIBehaviorRegistry &registry,
                      std::vector<AICommand> &outCommands) {
 
-  bool exclusiveBehaviorExecuted = false;
+  bool exclusive_behavior_executed = false;
 
   registry.forEach([&](AIBehavior &behavior) {
-    if (exclusiveBehaviorExecuted && !behavior.canRunConcurrently()) {
+    if (exclusive_behavior_executed && !behavior.canRunConcurrently()) {
       return;
     }
 
-    bool shouldExec = behavior.shouldExecute(snapshot, context);
+    bool const should_exec = behavior.should_execute(snapshot, context);
 
-    if (shouldExec) {
+    if (should_exec) {
       behavior.execute(snapshot, context, deltaTime, outCommands);
 
       if (!behavior.canRunConcurrently()) {
-        exclusiveBehaviorExecuted = true;
+        exclusive_behavior_executed = true;
       }
     }
   });

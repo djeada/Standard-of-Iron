@@ -22,18 +22,15 @@
 #include <memory>
 #include <vector>
 
-namespace Engine {
-namespace Core {
+namespace Engine::Core {
 class World;
 using EntityID = unsigned int;
 struct MovementComponent;
 struct TransformComponent;
 struct RenderableComponent;
-} // namespace Core
-} // namespace Engine
+} // namespace Engine::Core
 
-namespace Render {
-namespace GL {
+namespace Render::GL {
 class Renderer;
 class Camera;
 class ResourceManager;
@@ -49,8 +46,7 @@ class PlantRenderer;
 class PineRenderer;
 class FireCampRenderer;
 struct IRenderPass;
-} // namespace GL
-} // namespace Render
+} // namespace Render::GL
 
 namespace Game {
 namespace Systems {
@@ -82,7 +78,7 @@ class GameEngine : public QObject {
   Q_OBJECT
 public:
   GameEngine();
-  ~GameEngine();
+  ~GameEngine() override;
 
   Q_PROPERTY(QObject *selectedUnitsModel READ selectedUnitsModel NOTIFY
                  selectedUnitsChanged)
@@ -96,9 +92,9 @@ public:
   Q_PROPERTY(
       bool hasUnitsSelected READ hasUnitsSelected NOTIFY selectedUnitsChanged)
   Q_PROPERTY(
-      int playerTroopCount READ playerTroopCount NOTIFY troopCountChanged)
-  Q_PROPERTY(
-      int maxTroopsPerPlayer READ maxTroopsPerPlayer NOTIFY troopCountChanged)
+      int playerTroopCount READ playerTroopCount NOTIFY troop_countChanged)
+  Q_PROPERTY(int max_troops_per_player READ max_troops_per_player NOTIFY
+                 troop_countChanged)
   Q_PROPERTY(
       QVariantList availableMaps READ availableMaps NOTIFY availableMapsChanged)
   Q_PROPERTY(bool mapsLoading READ mapsLoading NOTIFY mapsLoadingChanged)
@@ -108,7 +104,7 @@ public:
   Q_PROPERTY(int selectedPlayerId READ selectedPlayerId WRITE
                  setSelectedPlayerId NOTIFY selectedPlayerIdChanged)
   Q_PROPERTY(QString lastError READ lastError NOTIFY lastErrorChanged)
-  Q_PROPERTY(QObject *audioSystem READ audioSystem CONSTANT)
+  Q_PROPERTY(QObject *audio_system READ audio_system CONSTANT)
 
   Q_INVOKABLE void onMapClicked(qreal sx, qreal sy);
   Q_INVOKABLE void onRightClick(qreal sx, qreal sy);
@@ -120,16 +116,16 @@ public:
   Q_INVOKABLE void onAttackClick(qreal sx, qreal sy);
   Q_INVOKABLE void onStopCommand();
   Q_INVOKABLE void onHoldCommand();
-  Q_INVOKABLE bool anySelectedInHoldMode() const;
+  Q_INVOKABLE [[nodiscard]] bool anySelectedInHoldMode() const;
   Q_INVOKABLE void onPatrolClick(qreal sx, qreal sy);
 
   Q_INVOKABLE void cameraMove(float dx, float dz);
   Q_INVOKABLE void cameraElevate(float dy);
   Q_INVOKABLE void resetCamera();
   Q_INVOKABLE void cameraZoom(float delta);
-  Q_INVOKABLE float cameraDistance() const;
+  Q_INVOKABLE [[nodiscard]] float cameraDistance() const;
   Q_INVOKABLE void cameraYaw(float degrees);
-  Q_INVOKABLE void cameraOrbit(float yawDeg, float pitchDeg);
+  Q_INVOKABLE void cameraOrbit(float yaw_deg, float pitch_deg);
   Q_INVOKABLE void cameraOrbitDirection(int direction, bool shift);
   Q_INVOKABLE void cameraFollowSelection(bool enable);
   Q_INVOKABLE void cameraSetFollowLerp(float alpha);
@@ -137,31 +133,39 @@ public:
 
   Q_INVOKABLE void setPaused(bool paused) { m_runtime.paused = paused; }
   Q_INVOKABLE void setGameSpeed(float speed) {
-    m_runtime.timeScale = std::max(0.0f, speed);
+    m_runtime.timeScale = std::max(0.0F, speed);
   }
-  bool paused() const { return m_runtime.paused; }
-  float timeScale() const { return m_runtime.timeScale; }
-  QString victoryState() const { return m_runtime.victoryState; }
-  QString cursorMode() const;
+  [[nodiscard]] auto paused() const -> bool { return m_runtime.paused; }
+  [[nodiscard]] auto timeScale() const -> float { return m_runtime.timeScale; }
+  [[nodiscard]] auto victoryState() const -> QString {
+    return m_runtime.victoryState;
+  }
+  [[nodiscard]] auto cursorMode() const -> QString;
   void setCursorMode(CursorMode mode);
   void setCursorMode(const QString &mode);
-  qreal globalCursorX() const;
-  qreal globalCursorY() const;
-  bool hasUnitsSelected() const;
-  int playerTroopCount() const;
-  int maxTroopsPerPlayer() const { return m_level.maxTroopsPerPlayer; }
-  int enemyTroopsDefeated() const;
+  [[nodiscard]] auto globalCursorX() const -> qreal;
+  [[nodiscard]] auto globalCursorY() const -> qreal;
+  [[nodiscard]] auto hasUnitsSelected() const -> bool;
+  [[nodiscard]] auto playerTroopCount() const -> int;
+  [[nodiscard]] auto max_troops_per_player() const -> int {
+    return m_level.max_troops_per_player;
+  }
+  [[nodiscard]] auto enemyTroopsDefeated() const -> int;
 
-  Q_INVOKABLE QVariantMap getPlayerStats(int ownerId) const;
+  Q_INVOKABLE [[nodiscard]] static QVariantMap getPlayerStats(int owner_id);
 
-  int selectedPlayerId() const { return m_selectedPlayerId; }
+  [[nodiscard]] auto selectedPlayerId() const -> int {
+    return m_selectedPlayerId;
+  }
   void setSelectedPlayerId(int id) {
     if (m_selectedPlayerId != id) {
       m_selectedPlayerId = id;
       emit selectedPlayerIdChanged();
     }
   }
-  QString lastError() const { return m_runtime.lastError; }
+  [[nodiscard]] auto lastError() const -> QString {
+    return m_runtime.lastError;
+  }
   Q_INVOKABLE void clearError() {
     if (!m_runtime.lastError.isEmpty()) {
       m_runtime.lastError = "";
@@ -169,28 +173,28 @@ public:
     }
   }
 
-  Q_INVOKABLE bool hasSelectedType(const QString &type) const;
-  Q_INVOKABLE void recruitNearSelected(const QString &unitType);
-  Q_INVOKABLE QVariantMap getSelectedProductionState() const;
-  Q_INVOKABLE QString getSelectedUnitsCommandMode() const;
+  Q_INVOKABLE [[nodiscard]] bool hasSelectedType(const QString &type) const;
+  Q_INVOKABLE void recruitNearSelected(const QString &unit_type);
+  Q_INVOKABLE [[nodiscard]] QVariantMap getSelectedProductionState() const;
+  Q_INVOKABLE [[nodiscard]] QString getSelectedUnitsCommandMode() const;
   Q_INVOKABLE void setRallyAtScreen(qreal sx, qreal sy);
-  Q_INVOKABLE QVariantList availableMaps() const;
-  bool mapsLoading() const { return m_mapsLoading; }
+  Q_INVOKABLE [[nodiscard]] QVariantList availableMaps() const;
+  [[nodiscard]] auto mapsLoading() const -> bool { return m_mapsLoading; }
   Q_INVOKABLE void
-  startSkirmish(const QString &mapPath,
+  startSkirmish(const QString &map_path,
                 const QVariantList &playerConfigs = QVariantList());
   Q_INVOKABLE void openSettings();
   Q_INVOKABLE void loadSave();
   Q_INVOKABLE void saveGame(const QString &filename = "savegame.json");
   Q_INVOKABLE void saveGameToSlot(const QString &slotName);
   Q_INVOKABLE void loadGameFromSlot(const QString &slotName);
-  Q_INVOKABLE QVariantList getSaveSlots() const;
+  Q_INVOKABLE [[nodiscard]] QVariantList getSaveSlots() const;
   Q_INVOKABLE void refreshSaveSlots();
   Q_INVOKABLE bool deleteSaveSlot(const QString &slotName);
   Q_INVOKABLE void exitGame();
-  Q_INVOKABLE QVariantList getOwnerInfo() const;
+  Q_INVOKABLE [[nodiscard]] QVariantList getOwnerInfo() const;
 
-  QObject *audioSystem();
+  auto audio_system() -> QObject *;
 
   void setWindow(QQuickWindow *w) { m_window = w; }
 
@@ -199,18 +203,19 @@ public:
   void render(int pixelWidth, int pixelHeight);
 
   void getSelectedUnitIds(std::vector<Engine::Core::EntityID> &out) const;
-  bool getUnitInfo(Engine::Core::EntityID id, QString &name, int &health,
-                   int &maxHealth, bool &isBuilding, bool &alive) const;
+  auto getUnitInfo(Engine::Core::EntityID id, QString &name, int &health,
+                   int &max_health, bool &isBuilding,
+                   bool &alive) const -> bool;
 
-  bool hasPatrolPreviewWaypoint() const;
-  QVector3D getPatrolPreviewWaypoint() const;
+  [[nodiscard]] auto hasPatrolPreviewWaypoint() const -> bool;
+  [[nodiscard]] auto getPatrolPreviewWaypoint() const -> QVector3D;
 
 private:
   struct RuntimeState {
     bool initialized = false;
     bool paused = false;
     bool loading = false;
-    float timeScale = 1.0f;
+    float timeScale = 1.0F;
     int localOwnerId = 1;
     QString victoryState = "";
     CursorMode cursorMode{CursorMode::Normal};
@@ -218,7 +223,7 @@ private:
     Qt::CursorShape currentCursor = Qt::ArrowCursor;
     int lastTroopCount = 0;
     std::uint64_t visibilityVersion = 0;
-    float visibilityUpdateAccumulator = 0.0f;
+    float visibilityUpdateAccumulator = 0.0F;
     qreal lastCursorX = -1.0;
     qreal lastCursorY = -1.0;
     int selectionRefreshCounter = 0;
@@ -241,11 +246,11 @@ private:
     int height = 0;
   };
 
-  bool screenToGround(const QPointF &screenPt, QVector3D &outWorld);
-  bool worldToScreen(const QVector3D &world, QPointF &outScreen) const;
+  auto screenToGround(const QPointF &screenPt, QVector3D &outWorld) -> bool;
+  auto worldToScreen(const QVector3D &world, QPointF &outScreen) const -> bool;
   void syncSelectionFlags();
-  void resetMovement(Engine::Core::Entity *entity);
-  QObject *selectedUnitsModel();
+  static void resetMovement(Engine::Core::Entity *entity);
+  auto selectedUnitsModel() -> QObject *;
   void onUnitSpawned(const Engine::Core::UnitSpawnedEvent &event);
   void onUnitDied(const Engine::Core::UnitDiedEvent &event);
   void rebuildEntityCache();
@@ -254,11 +259,12 @@ private:
   void restoreEnvironmentFromMetadata(const QJsonObject &metadata);
   void updateCursor(Qt::CursorShape newCursor);
   void setError(const QString &errorMessage);
-  bool loadFromSlot(const QString &slot);
-  bool saveToSlot(const QString &slot, const QString &title);
-  Game::Systems::RuntimeSnapshot toRuntimeSnapshot() const;
+  auto loadFromSlot(const QString &slot) -> bool;
+  auto saveToSlot(const QString &slot, const QString &title) -> bool;
+  [[nodiscard]] auto
+  toRuntimeSnapshot() const -> Game::Systems::RuntimeSnapshot;
   void applyRuntimeSnapshot(const Game::Systems::RuntimeSnapshot &snapshot);
-  QByteArray captureScreenshot() const;
+  [[nodiscard]] auto captureScreenshot() const -> QByteArray;
 
   std::unique_ptr<Engine::Core::World> m_world;
   std::unique_ptr<Render::GL::Renderer> m_renderer;
@@ -286,7 +292,7 @@ private:
   std::unique_ptr<App::Controllers::CommandController> m_commandController;
   std::unique_ptr<Game::Map::MapCatalog> m_mapCatalog;
   std::unique_ptr<Game::Audio::AudioEventHandler> m_audioEventHandler;
-  std::unique_ptr<App::Models::AudioSystemProxy> m_audioSystemProxy;
+  std::unique_ptr<App::Models::AudioSystemProxy> m_audio_systemProxy;
   QQuickWindow *m_window = nullptr;
   RuntimeState m_runtime;
   ViewportState m_viewport;
@@ -304,11 +310,11 @@ private:
   EntityCache m_entityCache;
   Engine::Core::AmbientState m_currentAmbientState =
       Engine::Core::AmbientState::PEACEFUL;
-  float m_ambientCheckTimer = 0.0f;
+  float m_ambientCheckTimer = 0.0F;
 
   void updateAmbientState(float dt);
-  bool isPlayerInCombat() const;
-  void loadAudioResources();
+  [[nodiscard]] auto isPlayerInCombat() const -> bool;
+  static void loadAudioResources();
 signals:
   void selectedUnitsChanged();
   void selectedUnitsDataChanged();
@@ -316,7 +322,7 @@ signals:
   void victoryStateChanged();
   void cursorModeChanged();
   void globalCursorChanged();
-  void troopCountChanged();
+  void troop_countChanged();
   void availableMapsChanged();
   void ownerInfoChanged();
   void selectedPlayerIdChanged();

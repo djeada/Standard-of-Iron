@@ -6,8 +6,7 @@
 #include <memory>
 #include <vector>
 
-namespace Render {
-namespace GL {
+namespace Render::GL {
 class Mesh;
 class Renderer;
 class ResourceManager;
@@ -15,10 +14,10 @@ class ResourceManager;
 class RiverRenderer : public IRenderPass {
 public:
   RiverRenderer();
-  ~RiverRenderer();
+  ~RiverRenderer() override;
 
   void configure(const std::vector<Game::Map::RiverSegment> &riverSegments,
-                 float tileSize);
+                 float tile_size);
 
   void submit(Renderer &renderer, ResourceManager *resources) override;
 
@@ -26,9 +25,8 @@ private:
   void buildMeshes();
 
   std::vector<Game::Map::RiverSegment> m_riverSegments;
-  float m_tileSize = 1.0f;
+  float m_tile_size = 1.0F;
   std::vector<std::unique_ptr<Mesh>> m_meshes;
 };
 
-} // namespace GL
-} // namespace Render
+} // namespace Render::GL

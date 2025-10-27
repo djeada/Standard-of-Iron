@@ -1,7 +1,6 @@
 #pragma once
 
-namespace Render {
-namespace GL {
+namespace Render::GL {
 
 class Renderer;
 class ResourceManager;
@@ -11,5 +10,4 @@ struct IRenderPass {
   virtual void submit(Renderer &renderer, ResourceManager *resources) = 0;
 };
 
-} // namespace GL
-} // namespace Render
+} // namespace Render::GL

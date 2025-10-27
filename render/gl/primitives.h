@@ -5,14 +5,23 @@
 
 namespace Render::GL {
 
-Mesh *getUnitCylinder(int radialSegments = 32);
+inline constexpr int kDefaultRadialSegments = 32;
+inline constexpr int kDefaultLatitudeSegments = 16;
+inline constexpr int kDefaultCapsuleHeightSegments = 1;
+inline constexpr int kDefaultTorsoHeightSegments = 8;
 
-Mesh *getUnitSphere(int latSegments = 16, int lonSegments = 32);
+auto getUnitCylinder(int radialSegments = kDefaultRadialSegments) -> Mesh *;
 
-Mesh *getUnitCone(int radialSegments = 32);
+auto getUnitSphere(int latSegments = kDefaultLatitudeSegments,
+                   int lonSegments = kDefaultRadialSegments) -> Mesh *;
 
-Mesh *getUnitCapsule(int radialSegments = 32, int heightSegments = 1);
+auto getUnitCone(int radialSegments = kDefaultRadialSegments) -> Mesh *;
 
-Mesh *getUnitTorso(int radialSegments = 32, int heightSegments = 8);
+auto getUnitCapsule(int radialSegments = kDefaultRadialSegments,
+                    int heightSegments = kDefaultCapsuleHeightSegments)
+    -> Mesh *;
+
+auto getUnitTorso(int radialSegments = kDefaultRadialSegments,
+                  int heightSegments = kDefaultTorsoHeightSegments) -> Mesh *;
 
 } // namespace Render::GL

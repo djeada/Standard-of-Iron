@@ -2,30 +2,26 @@
 
 #include <QString>
 
-namespace Render {
-namespace GL {
+namespace Render::GL {
 class Renderer;
 class Camera;
 class GroundRenderer;
-} // namespace GL
-} // namespace Render
+} // namespace Render::GL
 
-namespace Game {
-namespace Map {
+namespace Game::Map {
 
 class WorldBootstrap {
 public:
-  static bool initialize(Render::GL::Renderer &renderer,
+  static auto initialize(Render::GL::Renderer &renderer,
                          Render::GL::Camera &camera,
                          Render::GL::GroundRenderer *ground = nullptr,
-                         QString *outError = nullptr);
+                         QString *out_error = nullptr) -> bool;
 
   static void ensureInitialized(bool &initialized,
                                 Render::GL::Renderer &renderer,
                                 Render::GL::Camera &camera,
                                 Render::GL::GroundRenderer *ground = nullptr,
-                                QString *outError = nullptr);
+                                QString *out_error = nullptr);
 };
 
-} // namespace Map
-} // namespace Game
+} // namespace Game::Map
