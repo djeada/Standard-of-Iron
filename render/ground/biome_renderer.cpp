@@ -33,10 +33,10 @@ inline auto valueNoise(float x, float z, uint32_t salt = 0U) -> float {
   int z1 = z0 + 1;
   float tx = x - float(x0);
   float tz = z - float(z0);
-  float const n00 = hashTo01(hashCoords(x0, z0, salt));
-  float const n10 = hashTo01(hashCoords(x1, z0, salt));
-  float const n01 = hashTo01(hashCoords(x0, z1, salt));
-  float const n11 = hashTo01(hashCoords(x1, z1, salt));
+  float const n00 = hash_to_01(hash_coords(x0, z0, salt));
+  float const n10 = hash_to_01(hash_coords(x1, z0, salt));
+  float const n01 = hash_to_01(hash_coords(x0, z1, salt));
+  float const n11 = hash_to_01(hash_coords(x1, z1, salt));
   float const nx0 = n00 * (1 - tx) + n10 * tx;
   float const nx1 = n01 * (1 - tx) + n11 * tx;
   return nx0 * (1 - tz) + nx1 * tz;
@@ -233,7 +233,7 @@ void BiomeRenderer::generateGrassInstances() {
     if (near_river_count > 0) {
 
       float const riverbank_density = 0.15F;
-      if (rand01(state) > riverbank_density) {
+      if (rand_01(state) > riverbank_density) {
         return false;
       }
     }
@@ -266,17 +266,17 @@ void BiomeRenderer::generateGrassInstances() {
     QVector3D const color =
         lush_mix * (1.0F - dryness) + m_biomeSettings.grassDry * dryness;
 
-    float const height = remap(rand01(state), m_biomeSettings.bladeHeightMin,
+    float const height = remap(rand_01(state), m_biomeSettings.bladeHeightMin,
                                m_biomeSettings.bladeHeightMax) *
                          tile_safe * 0.5F;
-    float const width = remap(rand01(state), m_biomeSettings.bladeWidthMin,
+    float const width = remap(rand_01(state), m_biomeSettings.bladeWidthMin,
                               m_biomeSettings.bladeWidthMax) *
                         tile_safe;
 
-    float const sway_strength = remap(rand01(state), 0.75F, 1.25F);
-    float const sway_speed = remap(rand01(state), 0.85F, 1.15F);
-    float const sway_phase = rand01(state) * 6.2831853F;
-    float const orientation = rand01(state) * 6.2831853F;
+    float const sway_strength = remap(rand_01(state), 0.75F, 1.25F);
+    float const sway_speed = remap(rand_01(state), 0.85F, 1.15F);
+    float const sway_phase = rand_01(state) * MathConstants::k_two_pi;
+    float const orientation = rand_01(state) * MathConstants::k_two_pi;
 
     GrassInstanceGpu instance;
     instance.posHeight = QVector4D(world_x, world_y, world_z, height);
@@ -368,7 +368,7 @@ void BiomeRenderer::generateGrassInstances() {
 
       float const avg_slope = chunk_slope_sum / float(sample_count);
 
-      uint32_t state = hashCoords(chunk_x, chunk_z, m_noiseSeed ^ 0xC915872BU);
+      uint32_t state = hash_coords(chunk_x, chunk_z, m_noiseSeed ^ 0xC915872BU);
       float const slope_penalty =
           1.0F - std::clamp(avg_slope * 1.35F, 0.0F, 0.75F);
 
@@ -379,7 +379,7 @@ void BiomeRenderer::generateGrassInstances() {
                              slope_penalty * type_bias * usable_coverage);
       int cluster_count = static_cast<int>(std::floor(expected_clusters));
       float const frac = expected_clusters - float(cluster_count);
-      if (rand01(state) < frac) {
+      if (rand_01(state) < frac) {
         cluster_count += 1;
       }
 
@@ -393,9 +393,9 @@ void BiomeRenderer::generateGrassInstances() {
           constexpr int k_max_attempts = 8;
           for (int attempt = 0; attempt < k_max_attempts; ++attempt) {
             float const candidate_gx =
-                float(chunk_x) + rand01(rng) * chunk_span_x;
+                float(chunk_x) + rand_01(rng) * chunk_span_x;
             float const candidate_gz =
-                float(chunk_z) + rand01(rng) * chunk_span_z;
+                float(chunk_z) + rand_01(rng) * chunk_span_z;
 
             int const cx =
                 std::clamp(int(std::round(candidate_gx)), 0, m_width - 1);
@@ -429,15 +429,15 @@ void BiomeRenderer::generateGrassInstances() {
           float const center_gx = center->x();
           float const center_gz = center->y();
 
-          int blades = 6 + static_cast<int>(rand01(state) * 6.0F);
+          int blades = 6 + static_cast<int>(rand_01(state) * 6.0F);
           blades = std::max(
-              4, int(std::round(blades * (0.85F + 0.3F * rand01(state)))));
+              4, int(std::round(blades * (0.85F + 0.3F * rand_01(state)))));
           float const scatter_radius =
-              (0.45F + 0.55F * rand01(state)) * scatter_base * tile_safe;
+              (0.45F + 0.55F * rand_01(state)) * scatter_base * tile_safe;
 
           for (int blade = 0; blade < blades; ++blade) {
-            float const angle = rand01(state) * 6.2831853F;
-            float const radius = scatter_radius * std::sqrt(rand01(state));
+            float const angle = rand_01(state) * MathConstants::k_two_pi;
+            float const radius = scatter_radius * std::sqrt(rand_01(state));
             float const gx = center_gx + std::cos(angle) * radius / tile_safe;
             float const gz = center_gz + std::sin(angle) * radius / tile_safe;
             add_grass_blade(gx, gz, state);
@@ -466,17 +466,17 @@ void BiomeRenderer::generateGrassInstances() {
           continue;
         }
 
-        uint32_t state = hashCoords(
+        uint32_t state = hash_coords(
             x, z, m_noiseSeed ^ 0x51bda7U ^ static_cast<uint32_t>(idx));
         int base_count = static_cast<int>(std::floor(background_density));
         float const frac = background_density - float(base_count);
-        if (rand01(state) < frac) {
+        if (rand_01(state) < frac) {
           base_count += 1;
         }
 
         for (int i = 0; i < base_count; ++i) {
-          float const gx = float(x) + rand01(state);
-          float const gz = float(z) + rand01(state);
+          float const gx = float(x) + rand_01(state);
+          float const gz = float(z) + rand_01(state);
           add_grass_blade(gx, gz, state);
         }
       }
