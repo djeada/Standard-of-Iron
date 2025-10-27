@@ -31,6 +31,7 @@ namespace {
 using std::uint32_t;
 using namespace Render::GL::BitShift;
 using namespace Render::GL::Geometry;
+using namespace Render::GL::HashXorShift;
 using namespace Render::Ground;
 
 const QMatrix4x4 k_identity_matrix;
@@ -346,7 +347,7 @@ void TerrainRenderer::buildMeshes() {
       SectionData sections[3];
 
       uint32_t const chunk_seed = hashCoords(chunk_x, chunk_z, m_noiseSeed);
-      uint32_t const variant_seed = chunk_seed ^ 0x9e3779b9U;
+      uint32_t const variant_seed = chunk_seed ^ GoldenRatioHash;
       float const rotation_step =
           static_cast<float>((variant_seed >> 5) & 3) * 90.0F;
       bool const flip = ((variant_seed >> 7) & 1U) != 0U;

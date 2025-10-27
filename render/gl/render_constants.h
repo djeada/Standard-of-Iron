@@ -86,4 +86,5 @@ namespace Render::GL::HashXorShift {
 inline constexpr int Shift5 = 5;
 inline constexpr int Shift13 = 13;
 inline constexpr int Shift17 = 17;
+inline constexpr uint32_t GoldenRatioHash = 0x9E3779B9U;
 } // namespace Render::GL::HashXorShift
