@@ -28,10 +28,10 @@ inline auto valueNoise(float x, float z, uint32_t salt = 0U) -> float {
   int z1 = z0 + 1;
   float tx = x - float(x0);
   float tz = z - float(z0);
-  float const n00 = hashTo01(hashCoords(x0, z0, salt));
-  float const n10 = hashTo01(hashCoords(x1, z0, salt));
-  float const n01 = hashTo01(hashCoords(x0, z1, salt));
-  float const n11 = hashTo01(hashCoords(x1, z1, salt));
+  float const n00 = hash_to_01(hash_coords(x0, z0, salt));
+  float const n10 = hash_to_01(hash_coords(x1, z0, salt));
+  float const n01 = hash_to_01(hash_coords(x0, z1, salt));
+  float const n11 = hash_to_01(hash_coords(x1, z1, salt));
   float const nx0 = n00 * (1 - tx) + n10 * tx;
   float const nx1 = n01 * (1 - tx) + n11 * tx;
   return nx0 * (1 - tz) + nx1 * tz;
@@ -177,13 +177,13 @@ void RiverbankAssetRenderer::generateAssetInstances() {
       for (int side = 0; side < 2; ++side) {
         float const side_sign = (side == 0) ? -1.0F : 1.0F;
 
-        if (rand01(rng) > 0.3F) {
+        if (rand_01(rng) > 0.3F) {
           continue;
         }
 
         float const dist_from_water =
-            half_river_width + rand01(rng) * bank_zone_width;
-        float const along_river = (rand01(rng) - 0.5F) * 0.6F;
+            half_river_width + rand_01(rng) * bank_zone_width;
+        float const along_river = (rand_01(rng) - 0.5F) * 0.6F;
 
         QVector3D const asset_pos =
             center_pos + perpendicular * (side_sign * dist_from_water) +
@@ -211,28 +211,28 @@ void RiverbankAssetRenderer::generateAssetInstances() {
         instance.position[1] = world_y;
         instance.position[2] = asset_pos.z();
 
-        float const type_rand = rand01(rng);
+        float const type_rand = rand_01(rng);
         if (type_rand < 0.7F) {
 
           instance.assetType = 0.0F;
-          float const size = 0.05F + rand01(rng) * 0.1F;
-          instance.scale[0] = size * (0.8F + rand01(rng) * 0.4F);
-          instance.scale[1] = size * (0.6F + rand01(rng) * 0.3F);
-          instance.scale[2] = size * (0.8F + rand01(rng) * 0.4F);
+          float const size = 0.05F + rand_01(rng) * 0.1F;
+          instance.scale[0] = size * (0.8F + rand_01(rng) * 0.4F);
+          instance.scale[1] = size * (0.6F + rand_01(rng) * 0.3F);
+          instance.scale[2] = size * (0.8F + rand_01(rng) * 0.4F);
 
-          float const color_var = 0.3F + rand01(rng) * 0.4F;
+          float const color_var = 0.3F + rand_01(rng) * 0.4F;
           instance.color[0] = color_var;
           instance.color[1] = color_var * 0.9F;
           instance.color[2] = color_var * 0.85F;
         } else if (type_rand < 0.9F) {
 
           instance.assetType = 1.0F;
-          float const size = 0.1F + rand01(rng) * 0.15F;
+          float const size = 0.1F + rand_01(rng) * 0.15F;
           instance.scale[0] = size;
-          instance.scale[1] = size * (0.7F + rand01(rng) * 0.4F);
+          instance.scale[1] = size * (0.7F + rand_01(rng) * 0.4F);
           instance.scale[2] = size;
 
-          float const color_var = 0.35F + rand01(rng) * 0.25F;
+          float const color_var = 0.35F + rand_01(rng) * 0.25F;
           instance.color[0] = color_var;
           instance.color[1] = color_var * 0.95F;
           instance.color[2] = color_var * 0.9F;
@@ -243,17 +243,17 @@ void RiverbankAssetRenderer::generateAssetInstances() {
           }
 
           instance.assetType = 2.0F;
-          float const size = 0.3F + rand01(rng) * 0.4F;
+          float const size = 0.3F + rand_01(rng) * 0.4F;
           instance.scale[0] = size * 0.3F;
           instance.scale[1] = size;
           instance.scale[2] = size * 0.3F;
 
-          instance.color[0] = 0.25F + rand01(rng) * 0.15F;
-          instance.color[1] = 0.35F + rand01(rng) * 0.25F;
-          instance.color[2] = 0.15F + rand01(rng) * 0.1F;
+          instance.color[0] = 0.25F + rand_01(rng) * 0.15F;
+          instance.color[1] = 0.35F + rand_01(rng) * 0.25F;
+          instance.color[2] = 0.15F + rand_01(rng) * 0.1F;
         }
 
-        float const angle = rand01(rng) * 6.28318F;
+        float const angle = rand_01(rng) * 6.28318F;
         instance.rotation[0] = 0.0F;
         instance.rotation[1] = std::sin(angle * 0.5F);
         instance.rotation[2] = 0.0F;
