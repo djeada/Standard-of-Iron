@@ -54,28 +54,49 @@ Item {
             }
             break;
         case Qt.Key_W:
+            // W - camera forward (unless units selected, then could be a command)
             game.cameraMove(0, inputStep);
             renderArea.keyPanCount += 1;
             mainWindow.edgeScrollDisabled = true;
             event.accepted = true;
             break;
         case Qt.Key_S:
-            game.cameraMove(0, -inputStep);
-            renderArea.keyPanCount += 1;
-            mainWindow.edgeScrollDisabled = true;
-            event.accepted = true;
+            // S - Stop command when units selected, otherwise camera backward
+            if (game.hasUnitsSelected && !(event.modifiers & Qt.ShiftModifier)) {
+                game.onStopCommand();
+                event.accepted = true;
+            } else {
+                game.cameraMove(0, -inputStep);
+                renderArea.keyPanCount += 1;
+                mainWindow.edgeScrollDisabled = true;
+                event.accepted = true;
+            }
             break;
         case Qt.Key_A:
-            game.cameraMove(-inputStep, 0);
-            renderArea.keyPanCount += 1;
-            mainWindow.edgeScrollDisabled = true;
-            event.accepted = true;
+            // A - Attack mode when units selected, otherwise camera left
+            if (game.hasUnitsSelected && !(event.modifiers & Qt.ShiftModifier)) {
+                game.cursorMode = "attack";
+                event.accepted = true;
+            } else {
+                game.cameraMove(-inputStep, 0);
+                renderArea.keyPanCount += 1;
+                mainWindow.edgeScrollDisabled = true;
+                event.accepted = true;
+            }
             break;
         case Qt.Key_D:
+            // D - camera right
             game.cameraMove(inputStep, 0);
             renderArea.keyPanCount += 1;
             mainWindow.edgeScrollDisabled = true;
             event.accepted = true;
+            break;
+        case Qt.Key_M:
+            // M - Move mode (normal cursor when units selected)
+            if (game.hasUnitsSelected) {
+                game.cursorMode = "normal";
+                event.accepted = true;
+            }
             break;
         case Qt.Key_Up:
             game.cameraMove(0, inputStep);
@@ -123,18 +144,35 @@ Item {
             game.selectAllTroops();
             event.accepted = true;
             break;
+        case Qt.Key_P:
+            // P - Patrol mode when units selected
+            if (game.hasUnitsSelected) {
+                game.cursorMode = "patrol";
+                event.accepted = true;
+            }
+            break;
+        case Qt.Key_H:
+            // H - Hold command when units selected
+            if (game.hasUnitsSelected) {
+                game.onHoldCommand();
+                event.accepted = true;
+            }
+            break;
         }
     }
     Keys.onReleased: function(event) {
         if (typeof game === 'undefined')
             return ;
 
-        var movementKeys = [Qt.Key_W, Qt.Key_A, Qt.Key_S, Qt.Key_D, Qt.Key_Up, Qt.Key_Down, Qt.Key_Left, Qt.Key_Right];
+        var movementKeys = [Qt.Key_W, Qt.Key_S, Qt.Key_A, Qt.Key_D, Qt.Key_Up, Qt.Key_Down, Qt.Key_Left, Qt.Key_Right];
         if (movementKeys.indexOf(event.key) !== -1) {
-            renderArea.keyPanCount = Math.max(0, renderArea.keyPanCount - 1);
-            if (renderArea.keyPanCount === 0 && !renderArea.mousePanActive)
-                mainWindow.edgeScrollDisabled = false;
-
+            // Only decrement if it was used for camera movement (Shift held)
+            if (event.modifiers & Qt.ShiftModifier || event.key === Qt.Key_W || event.key === Qt.Key_D || 
+                event.key === Qt.Key_Up || event.key === Qt.Key_Down || event.key === Qt.Key_Left || event.key === Qt.Key_Right) {
+                renderArea.keyPanCount = Math.max(0, renderArea.keyPanCount - 1);
+                if (renderArea.keyPanCount === 0 && !renderArea.mousePanActive)
+                    mainWindow.edgeScrollDisabled = false;
+            }
         }
         if (event.key === Qt.Key_Shift) {
             if (renderArea.keyPanCount === 0 && !renderArea.mousePanActive)
