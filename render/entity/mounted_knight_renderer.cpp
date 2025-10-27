@@ -68,8 +68,8 @@ public:
                      uint32_t seed, HumanoidPose &pose) const override {
     using HP = HumanProportions;
 
-    const float arm_height_jitter = (hash01(seed ^ 0xABCDU) - 0.5F) * 0.03F;
-    const float arm_asymmetry = (hash01(seed ^ 0xDEF0U) - 0.5F) * 0.04F;
+    const float arm_height_jitter = (hash_01(seed ^ 0xABCDU) - 0.5F) * 0.03F;
+    const float arm_asymmetry = (hash_01(seed ^ 0xDEF0U) - 0.5F) * 0.04F;
 
     uint32_t horse_seed = seed;
     if (ctx.entity != nullptr) {
@@ -488,11 +488,11 @@ private:
 
     e.horseProfile = makeHorseProfile(seed, v.palette.leather, v.palette.cloth);
 
-    e.swordLength = 0.82F + (hash01(seed ^ 0xABCDU) - 0.5F) * 0.12F;
-    e.swordWidth = 0.042F + (hash01(seed ^ 0x7777U) - 0.5F) * 0.008F;
+    e.swordLength = 0.82F + (hash_01(seed ^ 0xABCDU) - 0.5F) * 0.12F;
+    e.swordWidth = 0.042F + (hash_01(seed ^ 0x7777U) - 0.5F) * 0.008F;
 
-    e.hasSword = (hash01(seed ^ 0xFACEU) > 0.15F);
-    e.hasCavalryShield = (hash01(seed ^ 0xCAFEU) > 0.60F);
+    e.hasSword = (hash_01(seed ^ 0xFACEU) > 0.15F);
+    e.hasCavalryShield = (hash_01(seed ^ 0xCAFEU) > 0.60F);
 
     return e;
   }
