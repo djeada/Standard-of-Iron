@@ -165,10 +165,10 @@ ApplicationWindow {
                 gameViewItem.focus = false;
             }
         }
-        onMapChosen: function(mapPath, playerConfigs) {
-            console.log("Main: onMapChosen received", mapPath, "with", playerConfigs.length, "player configs");
+        onMapChosen: function(map_path, playerConfigs) {
+            console.log("Main: onMapChosen received", map_path, "with", playerConfigs.length, "player configs");
             if (typeof game !== 'undefined' && game.startSkirmish)
-                game.startSkirmish(mapPath, playerConfigs);
+                game.startSkirmish(map_path, playerConfigs);
 
             mapSelect.visible = false;
             mainWindow.menuVisible = false;

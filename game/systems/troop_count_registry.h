@@ -11,12 +11,12 @@ namespace Game::Systems {
 
 class TroopCountRegistry {
 public:
-  static TroopCountRegistry &instance();
+  static auto instance() -> TroopCountRegistry &;
 
   void initialize();
   void clear();
 
-  int getTroopCount(int ownerId) const;
+  auto getTroopCount(int owner_id) const -> int;
 
   void onUnitSpawned(const Engine::Core::UnitSpawnedEvent &event);
   void onUnitDied(const Engine::Core::UnitDiedEvent &event);
@@ -27,9 +27,9 @@ private:
   TroopCountRegistry() = default;
   ~TroopCountRegistry() = default;
   TroopCountRegistry(const TroopCountRegistry &) = delete;
-  TroopCountRegistry &operator=(const TroopCountRegistry &) = delete;
+  auto operator=(const TroopCountRegistry &) -> TroopCountRegistry & = delete;
 
-  std::unordered_map<int, int> m_troopCounts;
+  std::unordered_map<int, int> m_troop_counts;
 
   Engine::Core::ScopedEventSubscription<Engine::Core::UnitSpawnedEvent>
       m_unitSpawnedSubscription;

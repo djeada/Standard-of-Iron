@@ -15,10 +15,10 @@ public:
   ~AICommandApplier() = default;
 
   AICommandApplier(const AICommandApplier &) = delete;
-  AICommandApplier &operator=(const AICommandApplier &) = delete;
+  auto operator=(const AICommandApplier &) -> AICommandApplier & = delete;
 
-  void apply(Engine::Core::World &world, int aiOwnerId,
-             const std::vector<AICommand> &commands);
+  static void apply(Engine::Core::World &world, int aiOwnerId,
+                    const std::vector<AICommand> &commands);
 };
 
 } // namespace Game::Systems::AI

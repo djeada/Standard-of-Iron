@@ -8,11 +8,11 @@ namespace Game::Systems::AI {
 
 class AICommandFilter {
 public:
-  explicit AICommandFilter(float cooldownPeriod = 5.0f)
+  explicit AICommandFilter(float cooldownPeriod = 5.0F)
       : m_cooldownPeriod(cooldownPeriod) {}
 
-  std::vector<AICommand> filter(const std::vector<AICommand> &commands,
-                                float currentTime);
+  auto filter(const std::vector<AICommand> &commands,
+              float currentTime) -> std::vector<AICommand>;
 
   void update(float currentTime);
 
@@ -20,10 +20,10 @@ public:
 
 private:
   struct CommandHistory {
-    Engine::Core::EntityID unitId;
+    Engine::Core::EntityID unit_id;
     AICommandType type;
 
-    Engine::Core::EntityID targetId;
+    Engine::Core::EntityID target_id;
 
     float moveTargetX;
     float moveTargetY;
@@ -31,17 +31,21 @@ private:
 
     float issuedTime;
 
-    bool isSimilarTo(const AICommandType &cmdType, Engine::Core::EntityID unit,
-                     Engine::Core::EntityID target, float x, float y, float z,
-                     float currentTime, float cooldown) const;
+    [[nodiscard]] auto isSimilarTo(const AICommandType &cmdType,
+                                   Engine::Core::EntityID unit,
+                                   Engine::Core::EntityID target, float x,
+                                   float y, float z, float currentTime,
+                                   float cooldown) const -> bool;
   };
 
   std::vector<CommandHistory> m_history;
   float m_cooldownPeriod;
 
-  bool isDuplicate(Engine::Core::EntityID unitId, AICommandType type,
-                   Engine::Core::EntityID targetId, float moveX, float moveY,
-                   float moveZ, float currentTime) const;
+  [[nodiscard]] auto isDuplicate(Engine::Core::EntityID unit_id,
+                                 AICommandType type,
+                                 Engine::Core::EntityID target_id, float move_x,
+                                 float move_y, float move_z,
+                                 float currentTime) const -> bool;
 
   void recordCommand(const AICommand &cmd, float currentTime);
 

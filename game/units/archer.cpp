@@ -2,30 +2,32 @@
 #include "../core/component.h"
 #include "../core/event_manager.h"
 #include "../core/world.h"
-#include <iostream>
+#include "units/troop_type.h"
+#include "units/unit.h"
+#include <memory>
+#include <qvectornd.h>
 
-static inline QVector3D teamColor(int ownerId) {
-  switch (ownerId) {
+static inline auto team_color(int owner_id) -> QVector3D {
+  switch (owner_id) {
   case 1:
-    return QVector3D(0.20f, 0.55f, 1.00f);
+    return {0.20F, 0.55F, 1.00F};
   case 2:
-    return QVector3D(1.00f, 0.30f, 0.30f);
+    return {1.00F, 0.30F, 0.30F};
   case 3:
-    return QVector3D(0.20f, 0.80f, 0.40f);
+    return {0.20F, 0.80F, 0.40F};
   case 4:
-    return QVector3D(1.00f, 0.80f, 0.20f);
+    return {1.00F, 0.80F, 0.20F};
   default:
-    return QVector3D(0.8f, 0.9f, 1.0f);
+    return {0.8F, 0.9F, 1.0F};
   }
 }
 
-namespace Game {
-namespace Units {
+namespace Game::Units {
 
 Archer::Archer(Engine::Core::World &world) : Unit(world, TroopType::Archer) {}
 
-std::unique_ptr<Archer> Archer::Create(Engine::Core::World &world,
-                                       const SpawnParams &params) {
+auto Archer::Create(Engine::Core::World &world,
+                    const SpawnParams &params) -> std::unique_ptr<Archer> {
   auto unit = std::unique_ptr<Archer>(new Archer(world));
   unit->init(params);
   return unit;
@@ -39,56 +41,55 @@ void Archer::init(const SpawnParams &params) {
   m_t = e->addComponent<Engine::Core::TransformComponent>();
   m_t->position = {params.position.x(), params.position.y(),
                    params.position.z()};
-  m_t->scale = {0.5f, 0.5f, 0.5f};
+  m_t->scale = {0.5F, 0.5F, 0.5F};
 
   m_r = e->addComponent<Engine::Core::RenderableComponent>("", "");
   m_r->visible = true;
 
   m_u = e->addComponent<Engine::Core::UnitComponent>();
-  m_u->spawnType = params.spawnType;
+  m_u->spawn_type = params.spawn_type;
   m_u->health = 80;
-  m_u->maxHealth = 80;
-  m_u->speed = 3.0f;
-  m_u->ownerId = params.playerId;
-  m_u->visionRange = 16.0f;
+  m_u->max_health = 80;
+  m_u->speed = 3.0F;
+  m_u->owner_id = params.player_id;
+  m_u->vision_range = 16.0F;
 
   if (params.aiControlled) {
     e->addComponent<Engine::Core::AIControlledComponent>();
   } else {
   }
 
-  QVector3D tc = teamColor(m_u->ownerId);
+  QVector3D const tc = team_color(m_u->owner_id);
   m_r->color[0] = tc.x();
   m_r->color[1] = tc.y();
   m_r->color[2] = tc.z();
 
   m_mv = e->addComponent<Engine::Core::MovementComponent>();
-  if (m_mv) {
+  if (m_mv != nullptr) {
     m_mv->goalX = params.position.x();
     m_mv->goalY = params.position.z();
-    m_mv->targetX = params.position.x();
-    m_mv->targetY = params.position.z();
+    m_mv->target_x = params.position.x();
+    m_mv->target_y = params.position.z();
   }
 
   m_atk = e->addComponent<Engine::Core::AttackComponent>();
 
-  m_atk->range = 6.0f;
+  m_atk->range = 6.0F;
   m_atk->damage = 12;
-  m_atk->cooldown = 1.2f;
+  m_atk->cooldown = 1.2F;
 
-  m_atk->meleeRange = 1.5f;
+  m_atk->meleeRange = 1.5F;
   m_atk->meleeDamage = 5;
-  m_atk->meleeCooldown = 0.8f;
+  m_atk->meleeCooldown = 0.8F;
 
   m_atk->preferredMode = Engine::Core::AttackComponent::CombatMode::Auto;
   m_atk->currentMode = Engine::Core::AttackComponent::CombatMode::Ranged;
   m_atk->canRanged = true;
   m_atk->canMelee = true;
-  m_atk->maxHeightDifference = 2.0f;
+  m_atk->max_heightDifference = 2.0F;
 
   Engine::Core::EventManager::instance().publish(
-      Engine::Core::UnitSpawnedEvent(m_id, m_u->ownerId, m_u->spawnType));
+      Engine::Core::UnitSpawnedEvent(m_id, m_u->owner_id, m_u->spawn_type));
 }
 
-} // namespace Units
-} // namespace Game
+} // namespace Game::Units

@@ -14,12 +14,15 @@ public:
                        float deltaTime,
                        std::vector<AICommand> &outCommands) = 0;
 
-  virtual bool shouldExecute(const AISnapshot &snapshot,
-                             const AIContext &context) const = 0;
+  [[nodiscard]] virtual auto
+  should_execute(const AISnapshot &snapshot,
+                 const AIContext &context) const -> bool = 0;
 
-  virtual BehaviorPriority getPriority() const = 0;
+  [[nodiscard]] virtual auto getPriority() const -> BehaviorPriority = 0;
 
-  virtual bool canRunConcurrently() const { return false; }
+  [[nodiscard]] virtual auto canRunConcurrently() const -> bool {
+    return false;
+  }
 };
 
 } // namespace Game::Systems::AI

@@ -11,35 +11,35 @@ namespace Game::Map {
 struct GridDefinition {
   int width = 50;
   int height = 50;
-  float tileSize = 1.0f;
+  float tile_size = 1.0F;
 };
 
 struct CameraDefinition {
-  QVector3D center{0.0f, 0.0f, 0.0f};
-  float distance = 15.0f;
-  float tiltDeg = 45.0f;
-  float fovY = 45.0f;
+  QVector3D center{0.0F, 0.0F, 0.0F};
+  float distance = 15.0F;
+  float tiltDeg = 45.0F;
+  float fovY = 45.0F;
 
-  float nearPlane = 1.0f;
-  float farPlane = 200.0f;
+  float near_plane = 1.0F;
+  float far_plane = 200.0F;
 
-  float yawDeg = 225.0f;
+  float yaw_deg = 225.0F;
 };
 
 struct UnitSpawn {
   Game::Units::SpawnType type = Game::Units::SpawnType::Archer;
-  float x = 0.0f;
-  float z = 0.0f;
-  int playerId = 0;
-  int teamId = 0;
+  float x = 0.0F;
+  float z = 0.0F;
+  int player_id = 0;
+  int team_id = 0;
   int maxPopulation = 100;
 };
 
 struct FireCamp {
-  float x = 0.0f;
-  float z = 0.0f;
-  float intensity = 1.0f;
-  float radius = 3.0f;
+  float x = 0.0F;
+  float z = 0.0F;
+  float intensity = 1.0F;
+  float radius = 3.0F;
   bool persistent = true;
 };
 
@@ -48,7 +48,7 @@ enum class CoordSystem { Grid, World };
 struct VictoryConfig {
   QString victoryType = "elimination";
   std::vector<QString> keyStructures = {"barracks"};
-  float surviveTimeDuration = 0.0f;
+  float surviveTimeDuration = 0.0F;
   std::vector<QString> defeatConditions = {"no_key_structures"};
 };
 
@@ -63,7 +63,7 @@ struct MapDefinition {
   std::vector<FireCamp> firecamps;
   BiomeSettings biome;
   CoordSystem coordSystem = CoordSystem::Grid;
-  int maxTroopsPerPlayer = 50;
+  int max_troops_per_player = 50;
   VictoryConfig victory;
 };
 

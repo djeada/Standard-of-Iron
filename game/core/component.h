@@ -3,21 +3,40 @@
 #include "../units/spawn_type.h"
 #include "../units/troop_type.h"
 #include "entity.h"
+#include <array>
 #include <cstdint>
 #include <optional>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace Engine::Core {
 
+namespace Defaults {
+inline constexpr int kUnitDefaultHealth = 100;
+inline constexpr float kUnitDefaultVisionRange = 12.0F;
+
+inline constexpr float kAttackDefaultRange = 2.0F;
+inline constexpr int kAttackDefaultDamage = 10;
+inline constexpr float kAttackMeleeRange = 1.5F;
+inline constexpr float kAttackHeightTolerance = 2.0F;
+
+inline constexpr float kProductionDefaultBuildTime = 4.0F;
+inline constexpr int kProductionMaxUnits = 5;
+
+inline constexpr float kCaptureRequiredTime = 15.0F;
+
+inline constexpr float kHoldStandUpDuration = 2.0F;
+} // namespace Defaults
+
 class TransformComponent : public Component {
 public:
-  TransformComponent(float x = 0.0f, float y = 0.0f, float z = 0.0f,
-                     float rotX = 0.0f, float rotY = 0.0f, float rotZ = 0.0f,
-                     float scaleX = 1.0f, float scaleY = 1.0f,
-                     float scaleZ = 1.0f)
+  TransformComponent(float x = 0.0F, float y = 0.0F, float z = 0.0F,
+                     float rotX = 0.0F, float rotY = 0.0F, float rotZ = 0.0F,
+                     float scale_x = 1.0F, float scaleY = 1.0F,
+                     float scale_z = 1.0F)
       : position{x, y, z}, rotation{rotX, rotY, rotZ},
-        scale{scaleX, scaleY, scaleZ} {}
+        scale{scale_x, scaleY, scale_z} {}
 
   struct Vec3 {
     float x, y, z;
@@ -26,7 +45,7 @@ public:
   Vec3 rotation;
   Vec3 scale;
 
-  float desiredYaw = 0.0f;
+  float desiredYaw = 0.0F;
   bool hasDesiredYaw = false;
 };
 
@@ -34,123 +53,121 @@ class RenderableComponent : public Component {
 public:
   enum class MeshKind { None, Quad, Plane, Cube, Capsule, Ring };
 
-  RenderableComponent(const std::string &meshPath,
-                      const std::string &texturePath)
-      : meshPath(meshPath), texturePath(texturePath), visible(true),
-        mesh(MeshKind::Cube) {
-    color[0] = color[1] = color[2] = 1.0f;
+  RenderableComponent(std::string meshPath, std::string texturePath)
+      : meshPath(std::move(meshPath)), texturePath(std::move(texturePath)) {
+    color.fill(1.0F);
   }
 
   std::string meshPath;
   std::string texturePath;
-  bool visible;
-  MeshKind mesh;
-  float color[3];
+  bool visible{true};
+  MeshKind mesh{MeshKind::Cube};
+  std::array<float, 3> color{};
 };
 
 class UnitComponent : public Component {
 public:
-  UnitComponent(int health = 100, int maxHealth = 100, float speed = 1.0f,
-                float vision = 12.0f)
-      : health(health), maxHealth(maxHealth), speed(speed), ownerId(0),
-        visionRange(vision), spawnType(Game::Units::SpawnType::Archer) {}
+  UnitComponent(int health = Defaults::kUnitDefaultHealth,
+                int max_health = Defaults::kUnitDefaultHealth,
+                float speed = 1.0F,
+                float vision = Defaults::kUnitDefaultVisionRange)
+      : health(health), max_health(max_health), speed(speed),
+        vision_range(vision) {}
 
   int health;
-  int maxHealth;
+  int max_health;
   float speed;
-  Game::Units::SpawnType spawnType;
-  int ownerId;
-  float visionRange;
+  Game::Units::SpawnType spawn_type{Game::Units::SpawnType::Archer};
+  int owner_id{0};
+  float vision_range;
 };
 
 class MovementComponent : public Component {
 public:
-  MovementComponent()
-      : hasTarget(false), targetX(0.0f), targetY(0.0f), goalX(0.0f),
-        goalY(0.0f), vx(0.0f), vz(0.0f), pathPending(false),
-        pendingRequestId(0), repathCooldown(0.0f), lastGoalX(0.0f),
-        lastGoalY(0.0f), timeSinceLastPathRequest(0.0f) {}
+  MovementComponent() = default;
 
-  bool hasTarget;
-  float targetX, targetY;
-  float goalX, goalY;
-  float vx, vz;
+  bool hasTarget{false};
+  float target_x{0.0F}, target_y{0.0F};
+  float goalX{0.0F}, goalY{0.0F};
+  float vx{0.0F}, vz{0.0F};
   std::vector<std::pair<float, float>> path;
-  bool pathPending;
-  std::uint64_t pendingRequestId;
-  float repathCooldown;
+  bool pathPending{false};
+  std::uint64_t pendingRequestId{0};
+  float repathCooldown{0.0F};
 
-  float lastGoalX, lastGoalY;
-  float timeSinceLastPathRequest;
+  float lastGoalX{0.0F}, lastGoalY{0.0F};
+  float timeSinceLastPathRequest{0.0F};
 };
 
 class AttackComponent : public Component {
 public:
   enum class CombatMode { Ranged, Melee, Auto };
 
-  AttackComponent(float range = 2.0f, int damage = 10, float cooldown = 1.0f)
-      : range(range), damage(damage), cooldown(cooldown), timeSinceLast(0.0f),
-        meleeRange(1.5f), meleeDamage(damage), meleeCooldown(cooldown),
-        preferredMode(CombatMode::Auto), currentMode(CombatMode::Ranged),
-        canMelee(true), canRanged(false), maxHeightDifference(2.0f),
-        inMeleeLock(false), meleeLockTargetId(0) {}
+  AttackComponent(float range = Defaults::kAttackDefaultRange,
+                  int damage = Defaults::kAttackDefaultDamage,
+                  float cooldown = 1.0F)
+      : range(range), damage(damage), cooldown(cooldown),
+        meleeRange(Defaults::kAttackMeleeRange), meleeDamage(damage),
+        meleeCooldown(cooldown),
+        max_heightDifference(Defaults::kAttackHeightTolerance) {}
 
   float range;
   int damage;
   float cooldown;
-  float timeSinceLast;
+  float timeSinceLast{0.0F};
 
   float meleeRange;
   int meleeDamage;
   float meleeCooldown;
 
-  CombatMode preferredMode;
-  CombatMode currentMode;
+  CombatMode preferredMode{CombatMode::Auto};
+  CombatMode currentMode{CombatMode::Ranged};
 
-  bool canMelee;
-  bool canRanged;
+  bool canMelee{true};
+  bool canRanged{false};
 
-  float maxHeightDifference;
+  float max_heightDifference;
 
-  bool inMeleeLock;
-  EntityID meleeLockTargetId;
+  bool inMeleeLock{false};
+  EntityID meleeLockTargetId{0};
 
-  bool isInMeleeRange(float distance, float heightDiff) const {
-    return distance <= meleeRange && heightDiff <= maxHeightDifference;
+  [[nodiscard]] auto isInMeleeRange(float distance,
+                                    float height_diff) const -> bool {
+    return distance <= meleeRange && height_diff <= max_heightDifference;
   }
 
-  bool isInRangedRange(float distance) const {
+  [[nodiscard]] auto isInRangedRange(float distance) const -> bool {
     return distance <= range && distance > meleeRange;
   }
 
-  int getCurrentDamage() const {
+  [[nodiscard]] auto getCurrentDamage() const -> int {
     return (currentMode == CombatMode::Melee) ? meleeDamage : damage;
   }
 
-  float getCurrentCooldown() const {
+  [[nodiscard]] auto getCurrentCooldown() const -> float {
     return (currentMode == CombatMode::Melee) ? meleeCooldown : cooldown;
   }
 
-  float getCurrentRange() const {
+  [[nodiscard]] auto getCurrentRange() const -> float {
     return (currentMode == CombatMode::Melee) ? meleeRange : range;
   }
 };
 
 class AttackTargetComponent : public Component {
 public:
-  AttackTargetComponent() : targetId(0), shouldChase(false) {}
+  AttackTargetComponent() = default;
 
-  EntityID targetId;
-  bool shouldChase;
+  EntityID target_id{0};
+  bool shouldChase{false};
 };
 
 class PatrolComponent : public Component {
 public:
-  PatrolComponent() : currentWaypoint(0), patrolling(false) {}
+  PatrolComponent() = default;
 
   std::vector<std::pair<float, float>> waypoints;
-  size_t currentWaypoint;
-  bool patrolling;
+  size_t currentWaypoint{0};
+  bool patrolling{false};
 };
 
 } // namespace Engine::Core
@@ -165,20 +182,19 @@ public:
 class ProductionComponent : public Component {
 public:
   ProductionComponent()
-      : inProgress(false), buildTime(4.0f), timeRemaining(0.0f),
-        producedCount(0), maxUnits(5),
-        productType(Game::Units::TroopType::Archer), rallyX(0.0f), rallyZ(0.0f),
-        rallySet(false), villagerCost(1) {}
+      : buildTime(Defaults::kProductionDefaultBuildTime),
 
-  bool inProgress;
+        maxUnits(Defaults::kProductionMaxUnits) {}
+
+  bool inProgress{false};
   float buildTime;
-  float timeRemaining;
-  int producedCount;
+  float timeRemaining{0.0F};
+  int producedCount{0};
   int maxUnits;
-  Game::Units::TroopType productType;
-  float rallyX, rallyZ;
-  bool rallySet;
-  int villagerCost;
+  Game::Units::TroopType product_type{Game::Units::TroopType::Archer};
+  float rallyX{0.0F}, rallyZ{0.0F};
+  bool rallySet{false};
+  int villagerCost{1};
   std::vector<Game::Units::TroopType> productionQueue;
 };
 
@@ -189,14 +205,12 @@ public:
 
 class CaptureComponent : public Component {
 public:
-  CaptureComponent()
-      : capturingPlayerId(-1), captureProgress(0.0f), requiredTime(15.0f),
-        isBeingCaptured(false) {}
+  CaptureComponent() : requiredTime(Defaults::kCaptureRequiredTime) {}
 
-  int capturingPlayerId;
-  float captureProgress;
+  int capturing_player_id{-1};
+  float captureProgress{0.0F};
   float requiredTime;
-  bool isBeingCaptured;
+  bool isBeingCaptured{false};
 };
 
 class PendingRemovalComponent : public Component {
@@ -206,11 +220,10 @@ public:
 
 class HoldModeComponent : public Component {
 public:
-  HoldModeComponent()
-      : active(true), exitCooldown(0.0f), standUpDuration(2.0f) {}
+  HoldModeComponent() : standUpDuration(Defaults::kHoldStandUpDuration) {}
 
-  bool active;
-  float exitCooldown;
+  bool active{true};
+  float exitCooldown{0.0F};
   float standUpDuration;
 };
 

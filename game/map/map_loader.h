@@ -7,8 +7,8 @@ namespace Game::Map {
 
 class MapLoader {
 public:
-  static bool loadFromJsonFile(const QString &path, MapDefinition &outMap,
-                               QString *outError = nullptr);
+  static auto loadFromJsonFile(const QString &path, MapDefinition &outMap,
+                               QString *out_error = nullptr) -> bool;
 };
 
 } // namespace Game::Map

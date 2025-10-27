@@ -6,8 +6,7 @@
 #include <memory>
 #include <vector>
 
-namespace Render {
-namespace GL {
+namespace Render::GL {
 class Mesh;
 class Renderer;
 class ResourceManager;
@@ -15,10 +14,10 @@ class ResourceManager;
 class RiverbankRenderer : public IRenderPass {
 public:
   RiverbankRenderer();
-  ~RiverbankRenderer();
+  ~RiverbankRenderer() override;
 
   void configure(const std::vector<Game::Map::RiverSegment> &riverSegments,
-                 const Game::Map::TerrainHeightMap &heightMap);
+                 const Game::Map::TerrainHeightMap &height_map);
 
   void submit(Renderer &renderer, ResourceManager *resources) override;
 
@@ -26,13 +25,12 @@ private:
   void buildMeshes();
 
   std::vector<Game::Map::RiverSegment> m_riverSegments;
-  float m_tileSize = 1.0f;
-  int m_gridWidth = 0;
-  int m_gridHeight = 0;
+  float m_tile_size = 1.0F;
+  int m_grid_width = 0;
+  int m_grid_height = 0;
   std::vector<float> m_heights;
   std::vector<std::unique_ptr<Mesh>> m_meshes;
   std::vector<std::vector<QVector3D>> m_visibilitySamples;
 };
 
-} // namespace GL
-} // namespace Render
+} // namespace Render::GL

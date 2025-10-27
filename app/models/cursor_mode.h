@@ -6,7 +6,7 @@ enum class CursorMode { Normal, Patrol, Attack };
 
 namespace CursorModeUtils {
 
-inline QString toString(CursorMode mode) {
+inline auto toString(CursorMode mode) -> QString {
   switch (mode) {
   case CursorMode::Normal:
     return "normal";
@@ -18,17 +18,19 @@ inline QString toString(CursorMode mode) {
   return "normal";
 }
 
-inline CursorMode fromString(const QString &str) {
-  if (str == "patrol")
+inline auto fromString(const QString &str) -> CursorMode {
+  if (str == "patrol") {
     return CursorMode::Patrol;
-  if (str == "attack")
+  }
+  if (str == "attack") {
     return CursorMode::Attack;
+  }
   return CursorMode::Normal;
 }
 
-inline int toInt(CursorMode mode) { return static_cast<int>(mode); }
+inline auto toInt(CursorMode mode) -> int { return static_cast<int>(mode); }
 
-inline CursorMode fromInt(int value) {
+inline auto fromInt(int value) -> CursorMode {
   switch (value) {
   case 0:
     return CursorMode::Normal;
