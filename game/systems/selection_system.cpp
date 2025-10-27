@@ -78,6 +78,7 @@ void SelectionController::onClickSelect(qreal sx, qreal sy, bool additive,
       localOwnerId, true);
 
   if (picked != 0u) {
+    // Clicked on a unit or building - select it
     if (!additive) {
       m_selection_system->clearSelection();
     }
@@ -87,22 +88,11 @@ void SelectionController::onClickSelect(qreal sx, qreal sy, bool additive,
     return;
   }
 
-  const auto &selected = m_selection_system->getSelectedUnits();
-  if (!selected.empty()) {
-    QVector3D hit;
-    if ((m_pickingService == nullptr) ||
-        !m_pickingService->screenToGround(QPointF(sx, sy), *cam, viewportWidth,
-                                          viewportHeight, hit)) {
-      return;
-    }
-    auto targets = Game::Systems::FormationPlanner::spreadFormation(
-        int(selected.size()), hit,
-        Game::GameConfig::instance().gameplay().formationSpacingDefault);
-    Game::Systems::CommandService::MoveOptions opts;
-    opts.groupMove = selected.size() > 1;
-    Game::Systems::CommandService::moveUnits(*m_world, selected, targets, opts);
+  // Clicked on empty terrain - deselect all units
+  if (!additive && !m_selection_system->getSelectedUnits().empty()) {
+    m_selection_system->clearSelection();
     syncSelectionFlags();
-    return;
+    emit selectionChanged();
   }
 }
 
