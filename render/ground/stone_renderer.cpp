@@ -218,7 +218,7 @@ void StoneRenderer::generateStoneInstances() {
     QVector3D const brown_tint(0.45F, 0.38F, 0.30F);
     color = color * (1.0F - brown_mix) + brown_tint * brown_mix;
 
-    float const rotation = rand01(state) * 6.2831853F;
+    float const rotation = rand01(state) * MathConstants::TwoPi;
 
     StoneInstanceGpu instance;
     instance.posScale = QVector4D(world_x, world_y + 0.01F, world_z, scale);
