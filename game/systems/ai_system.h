@@ -33,7 +33,7 @@ private:
   struct AIInstance {
     AI::AIContext context;
     std::unique_ptr<AI::AIWorker> worker;
-    float updateTimer = 0.0f;
+    float updateTimer = 0.0F;
   };
 
   std::vector<AIInstance> m_aiInstances;
@@ -45,7 +45,7 @@ private:
   AI::AICommandApplier m_applier;
   AI::AICommandFilter m_commandFilter;
 
-  float m_totalGameTime = 0.0f;
+  float m_totalGameTime = 0.0F;
 
   Engine::Core::ScopedEventSubscription<Engine::Core::BuildingAttackedEvent>
       m_buildingAttackedSubscription;

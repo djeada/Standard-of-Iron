@@ -13,21 +13,22 @@ namespace Engine::Core {
 
 class Serialization {
 public:
-  static QJsonObject serializeEntity(const class Entity *entity);
+  static auto serializeEntity(const class Entity *entity) -> QJsonObject;
   static void deserializeEntity(class Entity *entity, const QJsonObject &json);
 
-  static QJsonDocument serializeWorld(const class World *world);
+  static auto serializeWorld(const class World *world) -> QJsonDocument;
   static void deserializeWorld(class World *world, const QJsonDocument &doc);
 
-  static QJsonObject
-  serializeTerrain(const Game::Map::TerrainHeightMap *heightMap,
-                   const Game::Map::BiomeSettings &biome);
-  static void deserializeTerrain(Game::Map::TerrainHeightMap *heightMap,
+  static auto
+  serializeTerrain(const Game::Map::TerrainHeightMap *height_map,
+                   const Game::Map::BiomeSettings &biome) -> QJsonObject;
+  static void deserializeTerrain(Game::Map::TerrainHeightMap *height_map,
                                  Game::Map::BiomeSettings &biome,
                                  const QJsonObject &json);
 
-  static bool saveToFile(const QString &filename, const QJsonDocument &doc);
-  static QJsonDocument loadFromFile(const QString &filename);
+  static auto saveToFile(const QString &filename,
+                         const QJsonDocument &doc) -> bool;
+  static auto loadFromFile(const QString &filename) -> QJsonDocument;
 };
 
 } // namespace Engine::Core

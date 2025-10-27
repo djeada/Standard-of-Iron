@@ -1,4 +1,8 @@
 #include "buffer.h"
+#include <GL/gl.h>
+#include <cstddef>
+#include <qopenglext.h>
+#include <vector>
 
 namespace Render::GL {
 
@@ -11,7 +15,7 @@ Buffer::~Buffer() {
 }
 
 void Buffer::bind() {
-  if (!m_buffer) {
+  if (m_buffer == 0u) {
     initializeOpenGLFunctions();
     glGenBuffers(1, &m_buffer);
   }
@@ -25,7 +29,7 @@ void Buffer::setData(const void *data, size_t size, Usage usage) {
   glBufferData(getGLType(), size, data, getGLUsage(usage));
 }
 
-GLenum Buffer::getGLType() const {
+auto Buffer::getGLType() const -> GLenum {
   switch (m_type) {
   case Type::Vertex:
     return GL_ARRAY_BUFFER;
@@ -37,7 +41,7 @@ GLenum Buffer::getGLType() const {
   return GL_ARRAY_BUFFER;
 }
 
-GLenum Buffer::getGLUsage(Usage usage) const {
+GLenum Buffer::getGLUsage(Usage usage) {
   switch (usage) {
   case Usage::Static:
     return GL_STATIC_DRAW;
@@ -49,7 +53,7 @@ GLenum Buffer::getGLUsage(Usage usage) const {
   return GL_STATIC_DRAW;
 }
 
-VertexArray::VertexArray() {}
+VertexArray::VertexArray() = default;
 
 VertexArray::~VertexArray() {
   if (m_vao != 0) {
@@ -58,7 +62,7 @@ VertexArray::~VertexArray() {
 }
 
 void VertexArray::bind() {
-  if (!m_vao) {
+  if (m_vao == 0u) {
     initializeOpenGLFunctions();
     glGenVertexArrays(1, &m_vao);
   }
@@ -67,18 +71,18 @@ void VertexArray::bind() {
 
 void VertexArray::unbind() { glBindVertexArray(0); }
 
-void VertexArray::addVertexBuffer(Buffer &buffer,
-                                  const std::vector<int> &layout) {
+void VertexArray::add_vertexBuffer(Buffer &buffer,
+                                   const std::vector<int> &layout) {
   bind();
   buffer.bind();
 
   int stride = 0;
-  for (int size : layout) {
+  for (int const size : layout) {
     stride += size * sizeof(float);
   }
 
   int offset = 0;
-  for (int size : layout) {
+  for (int const size : layout) {
     glEnableVertexAttribArray(m_currentAttribIndex);
     glVertexAttribPointer(m_currentAttribIndex, size, GL_FLOAT, GL_FALSE,
                           stride, reinterpret_cast<void *>(offset));

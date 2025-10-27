@@ -1,10 +1,12 @@
 #include "attack_behavior.h"
 #include "../ai_tactical.h"
 #include "../ai_utils.h"
+#include "systems/ai_system/ai_types.h"
 
-#include <algorithm>
 #include <cmath>
 #include <limits>
+#include <utility>
+#include <vector>
 
 namespace Game::Systems::AI {
 
@@ -14,23 +16,23 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   m_attackTimer += deltaTime;
   m_targetLockDuration += deltaTime;
 
-  if (m_attackTimer < 1.5f) {
+  if (m_attackTimer < 1.5F) {
     return;
   }
-  m_attackTimer = 0.0f;
+  m_attackTimer = 0.0F;
 
   if (snapshot.visibleEnemies.empty()) {
     return;
   }
 
-  std::vector<const EntitySnapshot *> engagedUnits;
-  std::vector<const EntitySnapshot *> readyUnits;
-  engagedUnits.reserve(snapshot.friendlies.size());
-  readyUnits.reserve(snapshot.friendlies.size());
+  std::vector<const EntitySnapshot *> engaged_units;
+  std::vector<const EntitySnapshot *> ready_units;
+  engaged_units.reserve(snapshot.friendlies.size());
+  ready_units.reserve(snapshot.friendlies.size());
 
-  float groupCenterX = 0.0f;
-  float groupCenterY = 0.0f;
-  float groupCenterZ = 0.0f;
+  float group_center_x = 0.0F;
+  float group_center_y = 0.0F;
+  float group_center_z = 0.0F;
 
   for (const auto &entity : snapshot.friendlies) {
     if (entity.isBuilding) {
@@ -38,223 +40,226 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
     }
 
     if (isEntityEngaged(entity, snapshot.visibleEnemies)) {
-      engagedUnits.push_back(&entity);
+      engaged_units.push_back(&entity);
       continue;
     }
 
-    readyUnits.push_back(&entity);
-    groupCenterX += entity.posX;
-    groupCenterY += entity.posY;
-    groupCenterZ += entity.posZ;
+    ready_units.push_back(&entity);
+    group_center_x += entity.posX;
+    group_center_y += entity.posY;
+    group_center_z += entity.posZ;
   }
 
-  if (readyUnits.empty()) {
+  if (ready_units.empty()) {
 
-    if (!engagedUnits.empty()) {
+    if (!engaged_units.empty()) {
     }
     return;
   }
 
-  float invCount = 1.0f / static_cast<float>(readyUnits.size());
-  groupCenterX *= invCount;
-  groupCenterY *= invCount;
-  groupCenterZ *= invCount;
+  float const inv_count = 1.0F / static_cast<float>(ready_units.size());
+  group_center_x *= inv_count;
+  group_center_y *= inv_count;
+  group_center_z *= inv_count;
 
-  std::vector<const ContactSnapshot *> nearbyEnemies;
-  nearbyEnemies.reserve(snapshot.visibleEnemies.size());
+  std::vector<const ContactSnapshot *> nearby_enemies;
+  nearby_enemies.reserve(snapshot.visibleEnemies.size());
 
-  const float ENGAGEMENT_RANGE =
-      (context.damagedUnitsCount > 0) ? 35.0f : 20.0f;
-  const float engageRangeSq = ENGAGEMENT_RANGE * ENGAGEMENT_RANGE;
+  const float engagement_range =
+      (context.damagedUnitsCount > 0) ? 35.0F : 20.0F;
+  const float engage_range_sq = engagement_range * engagement_range;
 
   for (const auto &enemy : snapshot.visibleEnemies) {
-    float distSq = distanceSquared(enemy.posX, enemy.posY, enemy.posZ,
-                                   groupCenterX, groupCenterY, groupCenterZ);
-    if (distSq <= engageRangeSq) {
-      nearbyEnemies.push_back(&enemy);
+    float const dist_sq =
+        distance_squared(enemy.posX, enemy.posY, enemy.posZ, group_center_x,
+                         group_center_y, group_center_z);
+    if (dist_sq <= engage_range_sq) {
+      nearby_enemies.push_back(&enemy);
     }
   }
 
-  if (nearbyEnemies.empty()) {
+  if (nearby_enemies.empty()) {
 
-    bool shouldAdvance =
+    bool const should_advance =
         (context.state == AIState::Attacking) ||
-        (context.state == AIState::Gathering && context.totalUnits >= 3);
+        (context.state == AIState::Gathering && context.total_units >= 3);
 
-    if (shouldAdvance && !snapshot.visibleEnemies.empty()) {
+    if (should_advance && !snapshot.visibleEnemies.empty()) {
 
-      const ContactSnapshot *targetBarracks = nullptr;
-      float closestBarracksDistSq = std::numeric_limits<float>::max();
+      const ContactSnapshot *target_barracks = nullptr;
+      float closest_barracks_dist_sq = std::numeric_limits<float>::max();
 
       for (const auto &enemy : snapshot.visibleEnemies) {
         if (enemy.isBuilding) {
-          float distSq =
-              distanceSquared(enemy.posX, enemy.posY, enemy.posZ, groupCenterX,
-                              groupCenterY, groupCenterZ);
-          if (distSq < closestBarracksDistSq) {
-            closestBarracksDistSq = distSq;
-            targetBarracks = &enemy;
+          float const dist_sq =
+              distance_squared(enemy.posX, enemy.posY, enemy.posZ,
+                               group_center_x, group_center_y, group_center_z);
+          if (dist_sq < closest_barracks_dist_sq) {
+            closest_barracks_dist_sq = dist_sq;
+            target_barracks = &enemy;
           }
         }
       }
 
-      const ContactSnapshot *closestEnemy = nullptr;
-      float closestDistSq = std::numeric_limits<float>::max();
+      const ContactSnapshot *closest_enemy = nullptr;
+      float closest_dist_sq = std::numeric_limits<float>::max();
 
-      if (!targetBarracks) {
+      if (target_barracks == nullptr) {
         for (const auto &enemy : snapshot.visibleEnemies) {
-          float distSq =
-              distanceSquared(enemy.posX, enemy.posY, enemy.posZ, groupCenterX,
-                              groupCenterY, groupCenterZ);
-          if (distSq < closestDistSq) {
-            closestDistSq = distSq;
-            closestEnemy = &enemy;
+          float const dist_sq =
+              distance_squared(enemy.posX, enemy.posY, enemy.posZ,
+                               group_center_x, group_center_y, group_center_z);
+          if (dist_sq < closest_dist_sq) {
+            closest_dist_sq = dist_sq;
+            closest_enemy = &enemy;
           }
         }
       }
 
       const ContactSnapshot *target =
-          targetBarracks ? targetBarracks : closestEnemy;
+          (target_barracks != nullptr) ? target_barracks : closest_enemy;
 
-      if (target && readyUnits.size() >= 1) {
+      if ((target != nullptr) && !ready_units.empty()) {
 
-        float attackPosX = target->posX;
-        float attackPosZ = target->posZ;
+        float attack_pos_x = target->posX;
+        float attack_pos_z = target->posZ;
 
-        if (targetBarracks) {
+        if (target_barracks != nullptr) {
 
-          float dx = groupCenterX - target->posX;
-          float dz = groupCenterZ - target->posZ;
-          float dist = std::sqrt(dx * dx + dz * dz);
-          if (dist > 0.1f) {
-            attackPosX += (dx / dist) * 3.0f;
-            attackPosZ += (dz / dist) * 3.0f;
+          float const dx = group_center_x - target->posX;
+          float const dz = group_center_z - target->posZ;
+          float const dist = std::sqrt(dx * dx + dz * dz);
+          if (dist > 0.1F) {
+            attack_pos_x += (dx / dist) * 3.0F;
+            attack_pos_z += (dz / dist) * 3.0F;
           } else {
-            attackPosX += 3.0f;
+            attack_pos_x += 3.0F;
           }
         }
 
-        bool needsNewCommand = false;
+        bool needs_new_command = false;
         if (m_lastTarget != target->id) {
-          needsNewCommand = true;
+          needs_new_command = true;
           m_lastTarget = target->id;
-          m_targetLockDuration = 0.0f;
+          m_targetLockDuration = 0.0F;
         } else {
 
-          for (const auto *unit : readyUnits) {
-            float dx = unit->posX - attackPosX;
-            float dz = unit->posZ - attackPosZ;
-            float distSq = dx * dx + dz * dz;
-            if (distSq > 15.0f * 15.0f) {
-              needsNewCommand = true;
+          for (const auto *unit : ready_units) {
+            float const dx = unit->posX - attack_pos_x;
+            float const dz = unit->posZ - attack_pos_z;
+            float const dist_sq = dx * dx + dz * dz;
+            if (dist_sq > 15.0F * 15.0F) {
+              needs_new_command = true;
               break;
             }
           }
         }
 
-        if (needsNewCommand) {
-          std::vector<Engine::Core::EntityID> unitIds;
-          std::vector<float> targetX, targetY, targetZ;
+        if (needs_new_command) {
+          std::vector<Engine::Core::EntityID> unit_ids;
+          std::vector<float> target_x;
+          std::vector<float> target_y;
+          std::vector<float> target_z;
 
-          for (const auto *unit : readyUnits) {
-            unitIds.push_back(unit->id);
-            targetX.push_back(attackPosX);
-            targetY.push_back(0.0f);
-            targetZ.push_back(attackPosZ);
+          for (const auto *unit : ready_units) {
+            unit_ids.push_back(unit->id);
+            target_x.push_back(attack_pos_x);
+            target_y.push_back(0.0F);
+            target_z.push_back(attack_pos_z);
           }
 
           AICommand cmd;
           cmd.type = AICommandType::MoveUnits;
-          cmd.units = std::move(unitIds);
-          cmd.moveTargetX = std::move(targetX);
-          cmd.moveTargetY = std::move(targetY);
-          cmd.moveTargetZ = std::move(targetZ);
+          cmd.units = std::move(unit_ids);
+          cmd.moveTargetX = std::move(target_x);
+          cmd.moveTargetY = std::move(target_y);
+          cmd.moveTargetZ = std::move(target_z);
           outCommands.push_back(cmd);
         }
       }
     }
 
     m_lastTarget = 0;
-    m_targetLockDuration = 0.0f;
+    m_targetLockDuration = 0.0F;
     return;
   }
 
   auto assessment = TacticalUtils::assessEngagement(
-      readyUnits, nearbyEnemies,
-      context.state == AIState::Attacking ? 0.7f : 0.9f);
+      ready_units, nearby_enemies,
+      context.state == AIState::Attacking ? 0.7F : 0.9F);
 
-  bool beingAttacked = context.damagedUnitsCount > 0;
+  bool const being_attacked = context.damagedUnitsCount > 0;
 
   if (!assessment.shouldEngage && !context.barracksUnderThreat &&
-      !beingAttacked) {
+      !being_attacked) {
 
     m_lastTarget = 0;
-    m_targetLockDuration = 0.0f;
+    m_targetLockDuration = 0.0F;
     return;
   }
 
-  bool lastTargetStillValid = false;
+  bool last_target_still_valid = false;
   if (m_lastTarget != 0) {
-    for (const auto *enemy : nearbyEnemies) {
+    for (const auto *enemy : nearby_enemies) {
       if (enemy->id == m_lastTarget) {
-        lastTargetStillValid = true;
+        last_target_still_valid = true;
         break;
       }
     }
   }
 
-  if (!lastTargetStillValid || m_targetLockDuration > 8.0f) {
+  if (!last_target_still_valid || m_targetLockDuration > 8.0F) {
     m_lastTarget = 0;
-    m_targetLockDuration = 0.0f;
+    m_targetLockDuration = 0.0F;
   }
 
-  auto targetInfo = TacticalUtils::selectFocusFireTarget(
-      readyUnits, nearbyEnemies, groupCenterX, groupCenterY, groupCenterZ,
-      context, m_lastTarget);
+  auto target_info = TacticalUtils::selectFocusFireTarget(
+      ready_units, nearby_enemies, group_center_x, group_center_y,
+      group_center_z, context, m_lastTarget);
 
-  if (targetInfo.targetId == 0) {
+  if (target_info.target_id == 0) {
     return;
   }
 
-  if (targetInfo.targetId != m_lastTarget) {
-    m_lastTarget = targetInfo.targetId;
-    m_targetLockDuration = 0.0f;
+  if (target_info.target_id != m_lastTarget) {
+    m_lastTarget = target_info.target_id;
+    m_targetLockDuration = 0.0F;
   }
 
-  std::vector<Engine::Core::EntityID> unitIds;
-  unitIds.reserve(readyUnits.size());
-  for (const auto *unit : readyUnits) {
-    unitIds.push_back(unit->id);
+  std::vector<Engine::Core::EntityID> unit_ids;
+  unit_ids.reserve(ready_units.size());
+  for (const auto *unit : ready_units) {
+    unit_ids.push_back(unit->id);
   }
 
-  auto claimedUnits = claimUnits(unitIds, getPriority(), "attacking", context,
-                                 m_attackTimer + deltaTime, 2.5f);
+  auto claimed_units = claimUnits(unit_ids, getPriority(), "attacking", context,
+                                  m_attackTimer + deltaTime, 2.5F);
 
-  if (claimedUnits.empty()) {
+  if (claimed_units.empty()) {
     return;
   }
 
   AICommand command;
   command.type = AICommandType::AttackTarget;
-  command.units = std::move(claimedUnits);
-  command.targetId = targetInfo.targetId;
+  command.units = std::move(claimed_units);
+  command.target_id = target_info.target_id;
 
-  bool shouldChaseAggressive =
+  bool const should_chase_aggressive =
       (context.state == AIState::Attacking || context.barracksUnderThreat) &&
-      assessment.forceRatio >= 0.8f;
+      assessment.forceRatio >= 0.8F;
 
-  command.shouldChase = shouldChaseAggressive;
+  command.shouldChase = should_chase_aggressive;
 
   outCommands.push_back(std::move(command));
 }
-bool AttackBehavior::shouldExecute(const AISnapshot &snapshot,
-                                   const AIContext &context) const {
+auto AttackBehavior::should_execute(const AISnapshot &snapshot,
+                                    const AIContext &context) const -> bool {
 
   if (context.state == AIState::Retreating) {
     return false;
   }
 
-  int readyUnits = 0;
+  int ready_units = 0;
   for (const auto &entity : snapshot.friendlies) {
     if (entity.isBuilding) {
       continue;
@@ -264,10 +269,10 @@ bool AttackBehavior::shouldExecute(const AISnapshot &snapshot,
       continue;
     }
 
-    ++readyUnits;
+    ++ready_units;
   }
 
-  if (readyUnits == 0) {
+  if (ready_units == 0) {
     return false;
   }
 
@@ -280,10 +285,10 @@ bool AttackBehavior::shouldExecute(const AISnapshot &snapshot,
   }
 
   if (context.state == AIState::Defending) {
-    return context.barracksUnderThreat && readyUnits >= 2;
+    return context.barracksUnderThreat && ready_units >= 2;
   }
 
-  return readyUnits >= 1;
+  return ready_units >= 1;
 }
 
 } // namespace Game::Systems::AI

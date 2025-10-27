@@ -1,13 +1,26 @@
 #include "shader.h"
+#include "render_constants.h"
 #include "utils/resource_utils.h"
+#include <GL/gl.h>
 #include <QByteArray>
 #include <QDebug>
 #include <QFile>
 #include <QTextStream>
+#include <qdebug.h>
+#include <qdir.h>
+#include <qfiledevice.h>
+#include <qglobal.h>
+#include <qhashfunctions.h>
+#include <qmatrix4x4.h>
+#include <qopenglext.h>
+#include <qstringview.h>
+#include <qvectornd.h>
 
 namespace Render::GL {
 
-Shader::Shader() {}
+using namespace Render::GL::BufferCapacity;
+
+Shader::Shader() = default;
 
 Shader::~Shader() {
   if (m_program != 0) {
@@ -15,57 +28,58 @@ Shader::~Shader() {
   }
 }
 
-bool Shader::loadFromFiles(const QString &vertexPath,
-                           const QString &fragmentPath) {
-  const QString resolvedVert =
+auto Shader::loadFromFiles(const QString &vertexPath,
+                           const QString &fragmentPath) -> bool {
+  const QString resolved_vert =
       Utils::Resources::resolveResourcePath(vertexPath);
-  const QString resolvedFrag =
+  const QString resolved_frag =
       Utils::Resources::resolveResourcePath(fragmentPath);
 
-  QFile vertexFile(resolvedVert);
-  QFile fragmentFile(resolvedFrag);
+  QFile vertex_file(resolved_vert);
+  QFile fragment_file(resolved_frag);
 
-  if (!vertexFile.open(QIODevice::ReadOnly)) {
-    qWarning() << "Failed to open vertex shader file:" << resolvedVert;
-    if (resolvedVert != vertexPath) {
+  if (!vertex_file.open(QIODevice::ReadOnly)) {
+    qWarning() << "Failed to open vertex shader file:" << resolved_vert;
+    if (resolved_vert != vertexPath) {
       qWarning() << "  Requested path:" << vertexPath;
     }
     return false;
   }
 
-  if (!fragmentFile.open(QIODevice::ReadOnly)) {
-    qWarning() << "Failed to open fragment shader file:" << resolvedFrag;
-    if (resolvedFrag != fragmentPath) {
+  if (!fragment_file.open(QIODevice::ReadOnly)) {
+    qWarning() << "Failed to open fragment shader file:" << resolved_frag;
+    if (resolved_frag != fragmentPath) {
       qWarning() << "  Requested path:" << fragmentPath;
     }
-    vertexFile.close();
+    vertex_file.close();
     return false;
   }
 
-  QTextStream vertexStream(&vertexFile);
-  QTextStream fragmentStream(&fragmentFile);
+  QTextStream vertex_stream(&vertex_file);
+  QTextStream fragment_stream(&fragment_file);
 
-  QString vertexSource = vertexStream.readAll();
-  QString fragmentSource = fragmentStream.readAll();
+  QString const vertex_source = vertex_stream.readAll();
+  QString const fragment_source = fragment_stream.readAll();
 
-  return loadFromSource(vertexSource, fragmentSource);
+  return loadFromSource(vertex_source, fragment_source);
 }
 
-bool Shader::loadFromSource(const QString &vertexSource,
-                            const QString &fragmentSource) {
+auto Shader::loadFromSource(const QString &vertex_source,
+                            const QString &fragment_source) -> bool {
   initializeOpenGLFunctions();
   m_uniformCache.clear();
-  GLuint vertexShader = compileShader(vertexSource, GL_VERTEX_SHADER);
-  GLuint fragmentShader = compileShader(fragmentSource, GL_FRAGMENT_SHADER);
+  GLuint const vertex_shader = compileShader(vertex_source, GL_VERTEX_SHADER);
+  GLuint const fragment_shader =
+      compileShader(fragment_source, GL_FRAGMENT_SHADER);
 
-  if (vertexShader == 0 || fragmentShader == 0) {
+  if (vertex_shader == 0 || fragment_shader == 0) {
     return false;
   }
 
-  bool success = linkProgram(vertexShader, fragmentShader);
+  bool const success = linkProgram(vertex_shader, fragment_shader);
 
-  glDeleteShader(vertexShader);
-  glDeleteShader(fragmentShader);
+  glDeleteShader(vertex_shader);
+  glDeleteShader(fragment_shader);
 
   return success;
 }
@@ -80,8 +94,8 @@ void Shader::release() {
   glUseProgram(0);
 }
 
-Shader::UniformHandle Shader::uniformHandle(const char *name) {
-  if (!name || *name == '\0' || m_program == 0) {
+auto Shader::uniformHandle(const char *name) -> Shader::UniformHandle {
+  if ((name == nullptr) || *name == '\0' || m_program == 0) {
     return InvalidUniform;
   }
 
@@ -91,7 +105,13 @@ Shader::UniformHandle Shader::uniformHandle(const char *name) {
   }
 
   initializeOpenGLFunctions();
-  UniformHandle location = glGetUniformLocation(m_program, name);
+  UniformHandle const location = glGetUniformLocation(m_program, name);
+
+  if (location == InvalidUniform) {
+    qWarning() << "Shader uniform not found:" << name
+               << "(program:" << m_program << ")";
+  }
+
   m_uniformCache.emplace(name, location);
   return location;
 }
@@ -188,21 +208,21 @@ void Shader::setUniform(const QString &name, bool value) {
   setUniform(name, static_cast<int>(value));
 }
 
-GLuint Shader::compileShader(const QString &source, GLenum type) {
+auto Shader::compileShader(const QString &source, GLenum type) -> GLuint {
   initializeOpenGLFunctions();
-  GLuint shader = glCreateShader(type);
+  GLuint const shader = glCreateShader(type);
 
-  QByteArray sourceBytes = source.toUtf8();
-  const char *sourcePtr = sourceBytes.constData();
-  glShaderSource(shader, 1, &sourcePtr, nullptr);
+  QByteArray const source_bytes = source.toUtf8();
+  const char *source_ptr = source_bytes.constData();
+  glShaderSource(shader, 1, &source_ptr, nullptr);
   glCompileShader(shader);
 
-  GLint success;
+  GLint success = 0;
   glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-  if (!success) {
-    GLchar infoLog[512];
-    glGetShaderInfoLog(shader, 512, nullptr, infoLog);
-    qWarning() << "Shader compilation failed:" << infoLog;
+  if (success == 0) {
+    GLchar info_log[ShaderInfoLogSize];
+    glGetShaderInfoLog(shader, ShaderInfoLogSize, nullptr, info_log);
+    qWarning() << "Shader compilation failed:" << info_log;
     glDeleteShader(shader);
     return 0;
   }
@@ -210,19 +230,19 @@ GLuint Shader::compileShader(const QString &source, GLenum type) {
   return shader;
 }
 
-bool Shader::linkProgram(GLuint vertexShader, GLuint fragmentShader) {
+auto Shader::linkProgram(GLuint vertex_shader, GLuint fragment_shader) -> bool {
   initializeOpenGLFunctions();
   m_program = glCreateProgram();
-  glAttachShader(m_program, vertexShader);
-  glAttachShader(m_program, fragmentShader);
+  glAttachShader(m_program, vertex_shader);
+  glAttachShader(m_program, fragment_shader);
   glLinkProgram(m_program);
 
-  GLint success;
+  GLint success = 0;
   glGetProgramiv(m_program, GL_LINK_STATUS, &success);
-  if (!success) {
-    GLchar infoLog[512];
-    glGetProgramInfoLog(m_program, 512, nullptr, infoLog);
-    qWarning() << "Shader linking failed:" << infoLog;
+  if (success == 0) {
+    GLchar info_log[ShaderInfoLogSize];
+    glGetProgramInfoLog(m_program, ShaderInfoLogSize, nullptr, info_log);
+    qWarning() << "Shader linking failed:" << info_log;
     glDeleteProgram(m_program);
     m_program = 0;
     return false;

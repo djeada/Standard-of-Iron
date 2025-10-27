@@ -1,11 +1,12 @@
 #include "editor_window.h"
 #include <QApplication>
+#include <qapplication.h>
 
-int main(int argc, char *argv[]) {
-  QApplication app(argc, argv);
+auto main(int argc, char *argv[]) -> int {
+  QApplication const app(argc, argv);
 
   MapEditor::EditorWindow window;
   window.show();
 
-  return app.exec();
+  return QApplication::exec();
 }

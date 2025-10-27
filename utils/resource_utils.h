@@ -8,23 +8,27 @@
 namespace Utils::Resources {
 
 // Resolve resources that may have been relocated under a Qt QML module prefix.
-inline QString resolveResourcePath(const QString &path) {
-  if (path.isEmpty())
+inline auto resolveResourcePath(const QString &path) -> QString {
+  if (path.isEmpty()) {
     return path;
+  }
 
   auto exists = [](const QString &candidate) {
-    QFileInfo info(candidate);
-    if (info.exists())
+    QFileInfo const info(candidate);
+    if (info.exists()) {
       return true;
-    QDir dir(candidate);
+    }
+    QDir const dir(candidate);
     return dir.exists();
   };
 
-  if (exists(path))
+  if (exists(path)) {
     return path;
+  }
 
-  if (!path.startsWith(QStringLiteral(":/")))
+  if (!path.startsWith(QStringLiteral(":/"))) {
     return path;
+  }
 
   static const QStringList kAlternateRoots = {
       QStringLiteral(":/StandardOfIron"),
@@ -34,11 +38,13 @@ inline QString resolveResourcePath(const QString &path) {
   const QString relative = path.mid(2); // strip ":/"
   for (const auto &root : kAlternateRoots) {
     QString candidate = root;
-    if (!candidate.endsWith('/'))
+    if (!candidate.endsWith('/')) {
       candidate.append('/');
+    }
     candidate.append(relative);
-    if (exists(candidate))
+    if (exists(candidate)) {
       return candidate;
+    }
   }
 
   return path;

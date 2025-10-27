@@ -1,13 +1,7 @@
 #include "spearman_renderer.h"
-#include "../../game/core/component.h"
-#include "../../game/core/entity.h"
-#include "../../game/core/world.h"
-#include "../../game/units/troop_config.h"
-#include "../../game/visuals/team_colors.h"
 #include "../geom/math_utils.h"
 #include "../geom/transforms.h"
 #include "../gl/backend.h"
-#include "../gl/mesh.h"
 #include "../gl/primitives.h"
 #include "../gl/shader.h"
 #include "../humanoid_base.h"
@@ -22,9 +16,10 @@
 #include <QMatrix4x4>
 #include <QString>
 #include <QVector3D>
-#include <algorithm>
 #include <cmath>
 #include <cstdint>
+#include <qstringliteral.h>
+#include <qvectornd.h>
 #include <unordered_map>
 
 namespace Render::GL {
@@ -41,15 +36,15 @@ using Render::Geom::sphereAt;
 struct SpearmanExtras {
   QVector3D spearShaftColor;
   QVector3D spearheadColor;
-  float spearLength = 1.20f;
-  float spearShaftRadius = 0.020f;
-  float spearheadLength = 0.18f;
+  float spearLength = 1.20F;
+  float spearShaftRadius = 0.020F;
+  float spearheadLength = 0.18F;
 };
 
 class SpearmanRenderer : public HumanoidRendererBase {
 public:
-  QVector3D getProportionScaling() const override {
-    return QVector3D(1.10f, 1.02f, 1.05f);
+  auto getProportionScaling() const -> QVector3D override {
+    return {1.10F, 1.02F, 1.05F};
   }
 
 private:
@@ -58,141 +53,143 @@ private:
 public:
   void getVariant(const DrawContext &ctx, uint32_t seed,
                   HumanoidVariant &v) const override {
-    QVector3D teamTint = resolveTeamTint(ctx);
-    v.palette = makeHumanoidPalette(teamTint, seed);
+    QVector3D const team_tint = resolveTeamTint(ctx);
+    v.palette = makeHumanoidPalette(team_tint, seed);
   }
 
   void customizePose(const DrawContext &ctx, const AnimationInputs &anim,
                      uint32_t seed, HumanoidPose &pose) const override {
     using HP = HumanProportions;
 
-    float armHeightJitter = (hash01(seed ^ 0xABCDu) - 0.5f) * 0.03f;
-    float armAsymmetry = (hash01(seed ^ 0xDEF0u) - 0.5f) * 0.04f;
+    float const arm_height_jitter = (hash01(seed ^ 0xABCDU) - 0.5F) * 0.03F;
+    float const arm_asymmetry = (hash01(seed ^ 0xDEF0U) - 0.5F) * 0.04F;
 
     if (anim.isInHoldMode || anim.isExitingHold) {
-      float t = anim.isInHoldMode ? 1.0f : (1.0f - anim.holdExitProgress);
+      float const t = anim.isInHoldMode ? 1.0F : (1.0F - anim.holdExitProgress);
 
-      float kneelDepth = 0.35f * t;
-      float pelvisY = HP::WAIST_Y - kneelDepth;
-      pose.pelvisPos.setY(pelvisY);
+      float const kneel_depth = 0.35F * t;
+      float const pelvis_y = HP::WAIST_Y - kneel_depth;
+      pose.pelvisPos.setY(pelvis_y);
 
-      float stanceNarrow = 0.10f;
+      float const stance_narrow = 0.10F;
 
-      float leftKneeY = HP::GROUND_Y + 0.06f * t;
-      float leftKneeZ = -0.08f * t;
-      pose.kneeL = QVector3D(-stanceNarrow, leftKneeY, leftKneeZ);
-      pose.footL = QVector3D(-stanceNarrow - 0.02f, HP::GROUND_Y,
-                             leftKneeZ - HP::LOWER_LEG_LEN * 0.90f * t);
+      float const left_knee_y = HP::GROUND_Y + 0.06F * t;
+      float const left_knee_z = -0.08F * t;
+      pose.knee_l = QVector3D(-stance_narrow, left_knee_y, left_knee_z);
+      pose.footL = QVector3D(-stance_narrow - 0.02F, HP::GROUND_Y,
+                             left_knee_z - HP::LOWER_LEG_LEN * 0.90F * t);
 
-      float rightKneeY =
-          HP::WAIST_Y * 0.45f * (1.0f - t) + HP::WAIST_Y * 0.30f * t;
-      pose.kneeR = QVector3D(stanceNarrow + 0.05f, rightKneeY, 0.15f * t);
-      pose.footR = QVector3D(stanceNarrow + 0.08f, HP::GROUND_Y, 0.25f * t);
+      float const right_knee_y =
+          HP::WAIST_Y * 0.45F * (1.0F - t) + HP::WAIST_Y * 0.30F * t;
+      pose.knee_r = QVector3D(stance_narrow + 0.05F, right_knee_y, 0.15F * t);
+      pose.foot_r = QVector3D(stance_narrow + 0.08F, HP::GROUND_Y, 0.25F * t);
 
-      float upperBodyDrop = kneelDepth;
-      pose.shoulderL.setY(HP::SHOULDER_Y - upperBodyDrop);
-      pose.shoulderR.setY(HP::SHOULDER_Y - upperBodyDrop);
-      pose.neckBase.setY(HP::NECK_BASE_Y - upperBodyDrop);
+      float const upper_body_drop = kneel_depth;
+      pose.shoulderL.setY(HP::SHOULDER_Y - upper_body_drop);
+      pose.shoulderR.setY(HP::SHOULDER_Y - upper_body_drop);
+      pose.neck_base.setY(HP::NECK_BASE_Y - upper_body_drop);
 
-      float loweredChinY = HP::CHIN_Y - upperBodyDrop;
+      float const lowered_chin_y = HP::CHIN_Y - upper_body_drop;
 
-      pose.headPos.setY(loweredChinY + pose.headR);
+      pose.headPos.setY(lowered_chin_y + pose.headR);
 
-      float forwardLean = 0.08f * t;
-      pose.shoulderL.setZ(pose.shoulderL.z() + forwardLean);
-      pose.shoulderR.setZ(pose.shoulderR.z() + forwardLean);
-      pose.neckBase.setZ(pose.neckBase.z() + forwardLean * 0.8f);
-      pose.headPos.setZ(pose.headPos.z() + forwardLean * 0.7f);
+      float const forward_lean = 0.08F * t;
+      pose.shoulderL.setZ(pose.shoulderL.z() + forward_lean);
+      pose.shoulderR.setZ(pose.shoulderR.z() + forward_lean);
+      pose.neck_base.setZ(pose.neck_base.z() + forward_lean * 0.8F);
+      pose.headPos.setZ(pose.headPos.z() + forward_lean * 0.7F);
 
-      float loweredShoulderY = HP::SHOULDER_Y - upperBodyDrop;
+      float const lowered_shoulder_y = HP::SHOULDER_Y - upper_body_drop;
 
-      pose.handR =
-          QVector3D(0.18f * (1.0f - t) + 0.22f * t,
-                    loweredShoulderY * (1.0f - t) + (pelvisY + 0.05f) * t,
-                    0.15f * (1.0f - t) + 0.20f * t);
+      pose.hand_r =
+          QVector3D(0.18F * (1.0F - t) + 0.22F * t,
+                    lowered_shoulder_y * (1.0F - t) + (pelvis_y + 0.05F) * t,
+                    0.15F * (1.0F - t) + 0.20F * t);
 
-      pose.handL = QVector3D(
-          0.0f, loweredShoulderY * (1.0f - t) + (loweredShoulderY - 0.10f) * t,
-          0.30f * (1.0f - t) + 0.55f * t);
+      pose.handL = QVector3D(0.0F,
+                             lowered_shoulder_y * (1.0F - t) +
+                                 (lowered_shoulder_y - 0.10F) * t,
+                             0.30F * (1.0F - t) + 0.55F * t);
 
-      QVector3D shoulderToHandR = pose.handR - pose.shoulderR;
-      float armLengthR = shoulderToHandR.length();
-      QVector3D armDirR = shoulderToHandR.normalized();
-      pose.elbowR = pose.shoulderR + armDirR * (armLengthR * 0.5f) +
-                    QVector3D(0.08f, -0.15f, -0.05f);
+      QVector3D const shoulder_to_hand_r = pose.hand_r - pose.shoulderR;
+      float const arm_length_r = shoulder_to_hand_r.length();
+      QVector3D const arm_dir_r = shoulder_to_hand_r.normalized();
+      pose.elbowR = pose.shoulderR + arm_dir_r * (arm_length_r * 0.5F) +
+                    QVector3D(0.08F, -0.15F, -0.05F);
 
-      QVector3D shoulderToHandL = pose.handL - pose.shoulderL;
-      float armLengthL = shoulderToHandL.length();
-      QVector3D armDirL = shoulderToHandL.normalized();
-      pose.elbowL = pose.shoulderL + armDirL * (armLengthL * 0.5f) +
-                    QVector3D(-0.08f, -0.12f, 0.05f);
+      QVector3D const shoulder_to_hand_l = pose.handL - pose.shoulderL;
+      float const arm_length_l = shoulder_to_hand_l.length();
+      QVector3D const arm_dir_l = shoulder_to_hand_l.normalized();
+      pose.elbowL = pose.shoulderL + arm_dir_l * (arm_length_l * 0.5F) +
+                    QVector3D(-0.08F, -0.12F, 0.05F);
 
-    } else if (anim.isAttacking && anim.isMelee && !anim.isInHoldMode) {
-      float attackPhase =
-          std::fmod(anim.time * SPEARMAN_INV_ATTACK_CYCLE_TIME, 1.0f);
+    } else if (anim.is_attacking && anim.isMelee && !anim.isInHoldMode) {
+      float const attack_phase =
+          std::fmod(anim.time * SPEARMAN_INV_ATTACK_CYCLE_TIME, 1.0F);
 
-      QVector3D guardPos(0.28f, HP::SHOULDER_Y + 0.05f, 0.25f);
-      QVector3D preparePos(0.35f, HP::SHOULDER_Y + 0.08f, 0.05f);
-      QVector3D thrustPos(0.32f, HP::SHOULDER_Y + 0.10f, 0.90f);
-      QVector3D recoverPos(0.28f, HP::SHOULDER_Y + 0.06f, 0.40f);
+      QVector3D const guard_pos(0.28F, HP::SHOULDER_Y + 0.05F, 0.25F);
+      QVector3D const prepare_pos(0.35F, HP::SHOULDER_Y + 0.08F, 0.05F);
+      QVector3D const thrust_pos(0.32F, HP::SHOULDER_Y + 0.10F, 0.90F);
+      QVector3D const recover_pos(0.28F, HP::SHOULDER_Y + 0.06F, 0.40F);
 
-      if (attackPhase < 0.20f) {
+      if (attack_phase < 0.20F) {
 
-        float t = easeInOutCubic(attackPhase / 0.20f);
-        pose.handR = guardPos * (1.0f - t) + preparePos * t;
+        float const t = easeInOutCubic(attack_phase / 0.20F);
+        pose.hand_r = guard_pos * (1.0F - t) + prepare_pos * t;
 
-        pose.handL = QVector3D(-0.10f, HP::SHOULDER_Y - 0.05f,
-                               0.20f * (1.0f - t) + 0.08f * t);
-      } else if (attackPhase < 0.30f) {
+        pose.handL = QVector3D(-0.10F, HP::SHOULDER_Y - 0.05F,
+                               0.20F * (1.0F - t) + 0.08F * t);
+      } else if (attack_phase < 0.30F) {
 
-        pose.handR = preparePos;
-        pose.handL = QVector3D(-0.10f, HP::SHOULDER_Y - 0.05f, 0.08f);
-      } else if (attackPhase < 0.50f) {
+        pose.hand_r = prepare_pos;
+        pose.handL = QVector3D(-0.10F, HP::SHOULDER_Y - 0.05F, 0.08F);
+      } else if (attack_phase < 0.50F) {
 
-        float t = (attackPhase - 0.30f) / 0.20f;
+        float t = (attack_phase - 0.30F) / 0.20F;
         t = t * t * t;
-        pose.handR = preparePos * (1.0f - t) + thrustPos * t;
+        pose.hand_r = prepare_pos * (1.0F - t) + thrust_pos * t;
 
         pose.handL =
-            QVector3D(-0.10f + 0.05f * t, HP::SHOULDER_Y - 0.05f + 0.03f * t,
-                      0.08f + 0.45f * t);
-      } else if (attackPhase < 0.70f) {
+            QVector3D(-0.10F + 0.05F * t, HP::SHOULDER_Y - 0.05F + 0.03F * t,
+                      0.08F + 0.45F * t);
+      } else if (attack_phase < 0.70F) {
 
-        float t = easeInOutCubic((attackPhase - 0.50f) / 0.20f);
-        pose.handR = thrustPos * (1.0f - t) + recoverPos * t;
-        pose.handL = QVector3D(-0.05f * (1.0f - t) - 0.10f * t,
-                               HP::SHOULDER_Y - 0.02f * (1.0f - t) - 0.06f * t,
-                               lerp(0.53f, 0.35f, t));
+        float const t = easeInOutCubic((attack_phase - 0.50F) / 0.20F);
+        pose.hand_r = thrust_pos * (1.0F - t) + recover_pos * t;
+        pose.handL = QVector3D(-0.05F * (1.0F - t) - 0.10F * t,
+                               HP::SHOULDER_Y - 0.02F * (1.0F - t) - 0.06F * t,
+                               lerp(0.53F, 0.35F, t));
       } else {
 
-        float t = smoothstep(0.70f, 1.0f, attackPhase);
-        pose.handR = recoverPos * (1.0f - t) + guardPos * t;
-        pose.handL = QVector3D(-0.10f - 0.02f * (1.0f - t),
-                               HP::SHOULDER_Y - 0.06f + 0.01f * t +
-                                   armHeightJitter * (1.0f - t),
-                               lerp(0.35f, 0.25f, t));
+        float const t = smoothstep(0.70F, 1.0F, attack_phase);
+        pose.hand_r = recover_pos * (1.0F - t) + guard_pos * t;
+        pose.handL = QVector3D(-0.10F - 0.02F * (1.0F - t),
+                               HP::SHOULDER_Y - 0.06F + 0.01F * t +
+                                   arm_height_jitter * (1.0F - t),
+                               lerp(0.35F, 0.25F, t));
       }
     } else {
-      pose.handR = QVector3D(0.28f + armAsymmetry,
-                             HP::SHOULDER_Y - 0.02f + armHeightJitter, 0.30f);
+      pose.hand_r =
+          QVector3D(0.28F + arm_asymmetry,
+                    HP::SHOULDER_Y - 0.02F + arm_height_jitter, 0.30F);
 
       pose.handL =
-          QVector3D(-0.08f - 0.5f * armAsymmetry,
-                    HP::SHOULDER_Y - 0.08f + 0.5f * armHeightJitter, 0.45f);
+          QVector3D(-0.08F - 0.5F * arm_asymmetry,
+                    HP::SHOULDER_Y - 0.08F + 0.5F * arm_height_jitter, 0.45F);
 
-      QVector3D shoulderToHand = pose.handR - pose.shoulderR;
-      float armLength = shoulderToHand.length();
-      QVector3D armDir = shoulderToHand.normalized();
+      QVector3D const shoulder_to_hand = pose.hand_r - pose.shoulderR;
+      float const arm_length = shoulder_to_hand.length();
+      QVector3D const arm_dir = shoulder_to_hand.normalized();
 
-      pose.elbowR = pose.shoulderR + armDir * (armLength * 0.5f) +
-                    QVector3D(0.06f, -0.12f, -0.04f);
+      pose.elbowR = pose.shoulderR + arm_dir * (arm_length * 0.5F) +
+                    QVector3D(0.06F, -0.12F, -0.04F);
     }
   }
 
   void addAttachments(const DrawContext &ctx, const HumanoidVariant &v,
                       const HumanoidPose &pose, const AnimationInputs &anim,
                       ISubmitter &out) const override {
-    uint32_t seed = reinterpret_cast<uintptr_t>(ctx.entity) & 0xFFFFFFFFu;
+    uint32_t const seed = reinterpret_cast<uintptr_t>(ctx.entity) & 0xFFFFFFFFU;
 
     SpearmanExtras extras;
     auto it = m_extrasCache.find(seed);
@@ -207,242 +204,248 @@ public:
       }
     }
 
-    bool isAttacking = anim.isAttacking && anim.isMelee;
-    float attackPhase = 0.0f;
-    if (isAttacking) {
-      attackPhase = std::fmod(anim.time * SPEARMAN_INV_ATTACK_CYCLE_TIME, 1.0f);
+    bool const is_attacking = anim.is_attacking && anim.isMelee;
+    float attack_phase = 0.0F;
+    if (is_attacking) {
+      attack_phase =
+          std::fmod(anim.time * SPEARMAN_INV_ATTACK_CYCLE_TIME, 1.0F);
     }
 
-    drawSpear(ctx, pose, v, extras, anim, isAttacking, attackPhase, out);
+    drawSpear(ctx, pose, v, extras, anim, is_attacking, attack_phase, out);
   }
 
   void drawHelmet(const DrawContext &ctx, const HumanoidVariant &v,
                   const HumanoidPose &pose, ISubmitter &out) const override {
     using HP = HumanProportions;
 
-    const QVector3D ironColor = v.palette.metal * IRON_TINT;
+    const QVector3D iron_color = v.palette.metal * IRON_TINT;
 
-    const float helmR = pose.headR * 1.12f;
+    const float helm_r = pose.headR * 1.12F;
 
-    QVector3D helmBot(pose.headPos.x(), pose.headPos.y() - pose.headR * 0.15f,
-                      pose.headPos.z());
-    QVector3D helmTop(pose.headPos.x(), pose.headPos.y() + pose.headR * 1.25f,
-                      pose.headPos.z());
+    QVector3D const helm_bot(pose.headPos.x(),
+                             pose.headPos.y() - pose.headR * 0.15F,
+                             pose.headPos.z());
+    QVector3D const helm_top(pose.headPos.x(),
+                             pose.headPos.y() + pose.headR * 1.25F,
+                             pose.headPos.z());
 
     out.mesh(getUnitCylinder(),
-             cylinderBetween(ctx.model, helmBot, helmTop, helmR), ironColor,
-             nullptr, 1.0f);
+             cylinderBetween(ctx.model, helm_bot, helm_top, helm_r), iron_color,
+             nullptr, 1.0F);
 
-    QVector3D capTop(pose.headPos.x(), pose.headPos.y() + pose.headR * 1.32f,
-                     pose.headPos.z());
+    QVector3D const cap_top(pose.headPos.x(),
+                            pose.headPos.y() + pose.headR * 1.32F,
+                            pose.headPos.z());
     out.mesh(getUnitCylinder(),
-             cylinderBetween(ctx.model, helmTop, capTop, helmR * 0.96f),
-             ironColor * 1.04f, nullptr, 1.0f);
+             cylinderBetween(ctx.model, helm_top, cap_top, helm_r * 0.96F),
+             iron_color * 1.04F, nullptr, 1.0F);
 
     auto ring = [&](const QVector3D &center, float r, float h,
                     const QVector3D &col) {
-      QVector3D a = center + QVector3D(0, h * 0.5f, 0);
-      QVector3D b = center - QVector3D(0, h * 0.5f, 0);
+      QVector3D const a = center + QVector3D(0, h * 0.5F, 0);
+      QVector3D const b = center - QVector3D(0, h * 0.5F, 0);
       out.mesh(getUnitCylinder(), cylinderBetween(ctx.model, a, b, r), col,
-               nullptr, 1.0f);
+               nullptr, 1.0F);
     };
 
-    ring(QVector3D(pose.headPos.x(), pose.headPos.y() + pose.headR * 0.95f,
+    ring(QVector3D(pose.headPos.x(), pose.headPos.y() + pose.headR * 0.95F,
                    pose.headPos.z()),
-         helmR * 1.01f, 0.012f, ironColor * 1.06f);
-    ring(QVector3D(pose.headPos.x(), pose.headPos.y() - pose.headR * 0.02f,
+         helm_r * 1.01F, 0.012F, iron_color * 1.06F);
+    ring(QVector3D(pose.headPos.x(), pose.headPos.y() - pose.headR * 0.02F,
                    pose.headPos.z()),
-         helmR * 1.01f, 0.012f, ironColor * 1.06f);
+         helm_r * 1.01F, 0.012F, iron_color * 1.06F);
 
-    float visorY = pose.headPos.y() + pose.headR * 0.10f;
-    float visorZ = pose.headPos.z() + helmR * 0.68f;
+    float const visor_y = pose.headPos.y() + pose.headR * 0.10F;
+    float const visor_z = pose.headPos.z() + helm_r * 0.68F;
 
     for (int i = 0; i < 3; ++i) {
-      float y = visorY + pose.headR * (0.18f - i * 0.12f);
-      QVector3D visorL(pose.headPos.x() - helmR * 0.30f, y, visorZ);
-      QVector3D visorR(pose.headPos.x() + helmR * 0.30f, y, visorZ);
+      float const y = visor_y + pose.headR * (0.18F - i * 0.12F);
+      QVector3D const visor_l(pose.headPos.x() - helm_r * 0.30F, y, visor_z);
+      QVector3D const visor_r(pose.headPos.x() + helm_r * 0.30F, y, visor_z);
       out.mesh(getUnitCylinder(),
-               cylinderBetween(ctx.model, visorL, visorR, 0.010f), DARK_METAL,
-               nullptr, 1.0f);
+               cylinderBetween(ctx.model, visor_l, visor_r, 0.010F), DARK_METAL,
+               nullptr, 1.0F);
     }
   }
 
-  void drawArmorOverlay(const DrawContext &ctx, const HumanoidVariant &v,
-                        const HumanoidPose &pose, float yTopCover, float torsoR,
-                        float shoulderHalfSpan, float upperArmR,
-                        const QVector3D &rightAxis,
-                        ISubmitter &out) const override {
+  void draw_armorOverlay(const DrawContext &ctx, const HumanoidVariant &v,
+                         const HumanoidPose &pose, float y_top_cover,
+                         float torso_r, float shoulder_half_span,
+                         float upper_arm_r, const QVector3D &right_axis,
+                         ISubmitter &out) const override {
     using HP = HumanProportions;
 
-    const QVector3D ironColor = v.palette.metal * IRON_TINT;
-    const QVector3D leatherColor = v.palette.leather * 0.95f;
+    const QVector3D iron_color = v.palette.metal * IRON_TINT;
+    const QVector3D leather_color = v.palette.leather * 0.95F;
 
-    QVector3D chestTop(0, yTopCover + 0.02f, 0);
-    QVector3D chestBot(0, HP::WAIST_Y + 0.08f, 0);
-    float rChest = torsoR * 1.14f;
+    QVector3D const chest_top(0, y_top_cover + 0.02F, 0);
+    QVector3D const chest_bot(0, HP::WAIST_Y + 0.08F, 0);
+    float const r_chest = torso_r * 1.14F;
 
     out.mesh(getUnitCylinder(),
-             cylinderBetween(ctx.model, chestTop, chestBot, rChest), ironColor,
-             nullptr, 1.0f);
+             cylinderBetween(ctx.model, chest_top, chest_bot, r_chest),
+             iron_color, nullptr, 1.0F);
 
-    auto drawPauldron = [&](const QVector3D &shoulder,
-                            const QVector3D &outward) {
+    auto draw_pauldron = [&](const QVector3D &shoulder,
+                             const QVector3D &outward) {
       for (int i = 0; i < 3; ++i) {
-        float segY = shoulder.y() + 0.03f - i * 0.040f;
-        float segR = upperArmR * (2.2f - i * 0.10f);
-        QVector3D segPos = shoulder + outward * (0.015f + i * 0.006f);
-        segPos.setY(segY);
+        float const segY = shoulder.y() + 0.03F - i * 0.040F;
+        float const segR = upper_arm_r * (2.2F - i * 0.10F);
+        QVector3D seg_pos = shoulder + outward * (0.015F + i * 0.006F);
+        seg_pos.setY(segY);
 
-        out.mesh(getUnitSphere(), sphereAt(ctx.model, segPos, segR),
-                 i == 0 ? ironColor * 1.04f : ironColor * (1.0f - i * 0.02f),
-                 nullptr, 1.0f);
+        out.mesh(getUnitSphere(), sphereAt(ctx.model, seg_pos, segR),
+                 i == 0 ? iron_color * 1.04F : iron_color * (1.0F - i * 0.02F),
+                 nullptr, 1.0F);
       }
     };
 
-    drawPauldron(pose.shoulderL, -rightAxis);
-    drawPauldron(pose.shoulderR, rightAxis);
+    draw_pauldron(pose.shoulderL, -right_axis);
+    draw_pauldron(pose.shoulderR, right_axis);
 
-    auto drawArmPlate = [&](const QVector3D &shoulder, const QVector3D &elbow) {
+    auto draw_arm_plate = [&](const QVector3D &shoulder,
+                              const QVector3D &elbow) {
       QVector3D dir = (elbow - shoulder);
-      float len = dir.length();
-      if (len < 1e-5f) {
+      float const len = dir.length();
+      if (len < 1e-5F) {
         return;
       }
       dir /= len;
 
       for (int i = 0; i < 2; ++i) {
-        float t0 = 0.12f + i * 0.28f;
-        float t1 = t0 + 0.24f;
-        QVector3D a = shoulder + dir * (t0 * len);
-        QVector3D b = shoulder + dir * (t1 * len);
-        float r = upperArmR * (1.26f - i * 0.03f);
+        float const t0 = 0.12F + i * 0.28F;
+        float const t1 = t0 + 0.24F;
+        QVector3D const a = shoulder + dir * (t0 * len);
+        QVector3D const b = shoulder + dir * (t1 * len);
+        float const r = upper_arm_r * (1.26F - i * 0.03F);
 
         out.mesh(getUnitCylinder(), cylinderBetween(ctx.model, a, b, r),
-                 ironColor * (0.96f - i * 0.02f), nullptr, 1.0f);
+                 iron_color * (0.96F - i * 0.02F), nullptr, 1.0F);
       }
     };
 
-    drawArmPlate(pose.shoulderL, pose.elbowL);
-    drawArmPlate(pose.shoulderR, pose.elbowR);
+    draw_arm_plate(pose.shoulderL, pose.elbowL);
+    draw_arm_plate(pose.shoulderR, pose.elbowR);
 
     for (int i = 0; i < 3; ++i) {
-      float y = HP::WAIST_Y + 0.06f - i * 0.035f;
-      float r = torsoR * (1.12f + i * 0.020f);
-      QVector3D stripTop(0, y, 0);
-      QVector3D stripBot(0, y - 0.030f, 0);
+      float const y = HP::WAIST_Y + 0.06F - i * 0.035F;
+      float const r = torso_r * (1.12F + i * 0.020F);
+      QVector3D const strip_top(0, y, 0);
+      QVector3D const strip_bot(0, y - 0.030F, 0);
 
-      out.mesh(getUnitCone(), coneFromTo(ctx.model, stripTop, stripBot, r),
-               leatherColor * (0.98f - i * 0.02f), nullptr, 1.0f);
+      out.mesh(getUnitCone(), coneFromTo(ctx.model, strip_top, strip_bot, r),
+               leather_color * (0.98F - i * 0.02F), nullptr, 1.0F);
     }
   }
 
   void drawShoulderDecorations(const DrawContext &ctx, const HumanoidVariant &v,
-                               const HumanoidPose &pose, float yTopCover,
-                               float yNeck, const QVector3D &rightAxis,
+                               const HumanoidPose &pose, float y_top_cover,
+                               float y_neck, const QVector3D &right_axis,
                                ISubmitter &out) const override {}
 
 private:
-  static SpearmanExtras computeSpearmanExtras(uint32_t seed,
-                                              const HumanoidVariant &v) {
+  static auto computeSpearmanExtras(uint32_t seed, const HumanoidVariant &v)
+      -> SpearmanExtras {
     SpearmanExtras e;
 
-    e.spearShaftColor = v.palette.leather * QVector3D(0.85f, 0.75f, 0.65f);
-    e.spearheadColor = QVector3D(0.75f, 0.76f, 0.80f);
+    e.spearShaftColor = v.palette.leather * QVector3D(0.85F, 0.75F, 0.65F);
+    e.spearheadColor = QVector3D(0.75F, 0.76F, 0.80F);
 
-    e.spearLength = 1.15f + (hash01(seed ^ 0xABCDu) - 0.5f) * 0.10f;
-    e.spearShaftRadius = 0.018f + (hash01(seed ^ 0x7777u) - 0.5f) * 0.003f;
-    e.spearheadLength = 0.16f + (hash01(seed ^ 0xBEEFu) - 0.5f) * 0.04f;
+    e.spearLength = 1.15F + (hash01(seed ^ 0xABCDU) - 0.5F) * 0.10F;
+    e.spearShaftRadius = 0.018F + (hash01(seed ^ 0x7777U) - 0.5F) * 0.003F;
+    e.spearheadLength = 0.16F + (hash01(seed ^ 0xBEEFU) - 0.5F) * 0.04F;
 
     return e;
   }
 
   static void drawSpear(const DrawContext &ctx, const HumanoidPose &pose,
                         const HumanoidVariant &v, const SpearmanExtras &extras,
-                        const AnimationInputs &anim, bool isAttacking,
-                        float attackPhase, ISubmitter &out) {
-    QVector3D gripPos = pose.handR;
+                        const AnimationInputs &anim, bool is_attacking,
+                        float attack_phase, ISubmitter &out) {
+    QVector3D const grip_pos = pose.hand_r;
 
-    QVector3D spearDir = QVector3D(0.05f, 0.55f, 0.85f);
-    if (spearDir.lengthSquared() > 1e-6f) {
-      spearDir.normalize();
+    QVector3D spear_dir = QVector3D(0.05F, 0.55F, 0.85F);
+    if (spear_dir.lengthSquared() > 1e-6F) {
+      spear_dir.normalize();
     }
 
     if (anim.isInHoldMode || anim.isExitingHold) {
-      float t = anim.isInHoldMode ? 1.0f : (1.0f - anim.holdExitProgress);
+      float const t = anim.isInHoldMode ? 1.0F : (1.0F - anim.holdExitProgress);
 
-      QVector3D bracedDir = QVector3D(0.05f, 0.40f, 0.91f);
-      if (bracedDir.lengthSquared() > 1e-6f) {
-        bracedDir.normalize();
+      QVector3D braced_dir = QVector3D(0.05F, 0.40F, 0.91F);
+      if (braced_dir.lengthSquared() > 1e-6F) {
+        braced_dir.normalize();
       }
 
-      spearDir = spearDir * (1.0f - t) + bracedDir * t;
-      if (spearDir.lengthSquared() > 1e-6f) {
-        spearDir.normalize();
+      spear_dir = spear_dir * (1.0F - t) + braced_dir * t;
+      if (spear_dir.lengthSquared() > 1e-6F) {
+        spear_dir.normalize();
       }
-    } else if (isAttacking) {
-      if (attackPhase >= 0.30f && attackPhase < 0.50f) {
-        float t = (attackPhase - 0.30f) / 0.20f;
+    } else if (is_attacking) {
+      if (attack_phase >= 0.30F && attack_phase < 0.50F) {
+        float const t = (attack_phase - 0.30F) / 0.20F;
 
-        QVector3D attackDir = QVector3D(0.03f, -0.15f, 1.0f);
-        if (attackDir.lengthSquared() > 1e-6f) {
-          attackDir.normalize();
+        QVector3D attack_dir = QVector3D(0.03F, -0.15F, 1.0F);
+        if (attack_dir.lengthSquared() > 1e-6F) {
+          attack_dir.normalize();
         }
 
-        spearDir = spearDir * (1.0f - t) + attackDir * t;
-        if (spearDir.lengthSquared() > 1e-6f) {
-          spearDir.normalize();
+        spear_dir = spear_dir * (1.0F - t) + attack_dir * t;
+        if (spear_dir.lengthSquared() > 1e-6F) {
+          spear_dir.normalize();
         }
       }
     }
 
-    QVector3D shaftBase = gripPos - spearDir * 0.28f;
-    QVector3D shaftMid = gripPos + spearDir * (extras.spearLength * 0.5f);
-    QVector3D shaftTip = gripPos + spearDir * extras.spearLength;
+    QVector3D const shaft_base = grip_pos - spear_dir * 0.28F;
+    QVector3D shaft_mid = grip_pos + spear_dir * (extras.spearLength * 0.5F);
+    QVector3D const shaft_tip = grip_pos + spear_dir * extras.spearLength;
 
-    shaftMid.setY(shaftMid.y() + 0.02f);
+    shaft_mid.setY(shaft_mid.y() + 0.02F);
 
     out.mesh(getUnitCylinder(),
-             cylinderBetween(ctx.model, shaftBase, shaftMid,
+             cylinderBetween(ctx.model, shaft_base, shaft_mid,
                              extras.spearShaftRadius),
-             extras.spearShaftColor, nullptr, 1.0f);
+             extras.spearShaftColor, nullptr, 1.0F);
 
     out.mesh(getUnitCylinder(),
-             cylinderBetween(ctx.model, shaftMid, shaftTip,
-                             extras.spearShaftRadius * 0.95f),
-             extras.spearShaftColor * 0.98f, nullptr, 1.0f);
+             cylinderBetween(ctx.model, shaft_mid, shaft_tip,
+                             extras.spearShaftRadius * 0.95F),
+             extras.spearShaftColor * 0.98F, nullptr, 1.0F);
 
-    QVector3D spearheadBase = shaftTip;
-    QVector3D spearheadTip = shaftTip + spearDir * extras.spearheadLength;
+    QVector3D const spearhead_base = shaft_tip;
+    QVector3D const spearhead_tip =
+        shaft_tip + spear_dir * extras.spearheadLength;
 
     out.mesh(getUnitCone(),
-             coneFromTo(ctx.model, spearheadBase, spearheadTip,
-                        extras.spearShaftRadius * 1.8f),
-             extras.spearheadColor, nullptr, 1.0f);
+             coneFromTo(ctx.model, spearhead_base, spearhead_tip,
+                        extras.spearShaftRadius * 1.8F),
+             extras.spearheadColor, nullptr, 1.0F);
 
-    QVector3D gripEnd = gripPos + spearDir * 0.10f;
+    QVector3D const grip_end = grip_pos + spear_dir * 0.10F;
     out.mesh(getUnitCylinder(),
-             cylinderBetween(ctx.model, gripPos, gripEnd,
-                             extras.spearShaftRadius * 1.5f),
-             v.palette.leather * 0.92f, nullptr, 1.0f);
+             cylinderBetween(ctx.model, grip_pos, grip_end,
+                             extras.spearShaftRadius * 1.5F),
+             v.palette.leather * 0.92F, nullptr, 1.0F);
   }
 };
 
 void registerSpearmanRenderer(Render::GL::EntityRendererRegistry &registry) {
-  static SpearmanRenderer renderer;
+  static SpearmanRenderer const renderer;
   registry.registerRenderer(
       "spearman", [](const DrawContext &ctx, ISubmitter &out) {
-        static SpearmanRenderer staticRenderer;
-        Shader *spearmanShader = nullptr;
-        if (ctx.backend) {
-          spearmanShader = ctx.backend->shader(QStringLiteral("spearman"));
+        static SpearmanRenderer const static_renderer;
+        Shader *spearman_shader = nullptr;
+        if (ctx.backend != nullptr) {
+          spearman_shader = ctx.backend->shader(QStringLiteral("spearman"));
         }
-        Renderer *sceneRenderer = dynamic_cast<Renderer *>(&out);
-        if (sceneRenderer && spearmanShader) {
-          sceneRenderer->setCurrentShader(spearmanShader);
+        auto *scene_renderer = dynamic_cast<Renderer *>(&out);
+        if ((scene_renderer != nullptr) && (spearman_shader != nullptr)) {
+          scene_renderer->setCurrentShader(spearman_shader);
         }
-        staticRenderer.render(ctx, out);
-        if (sceneRenderer) {
-          sceneRenderer->setCurrentShader(nullptr);
+        static_renderer.render(ctx, out);
+        if (scene_renderer != nullptr) {
+          scene_renderer->setCurrentShader(nullptr);
         }
       });
 }

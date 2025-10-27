@@ -3,10 +3,18 @@
 #include "../gl/mesh.h"
 #include "../gl/resources.h"
 #include "../scene_renderer.h"
+#include "map/terrain.h"
 #include <QVector2D>
 #include <QVector3D>
 #include <algorithm>
 #include <cmath>
+#include <cstddef>
+#include <memory>
+#include <qglobal.h>
+#include <qmatrix4x4.h>
+#include <qvectornd.h>
+#include <utility>
+#include <vector>
 
 namespace Render::GL {
 
@@ -15,12 +23,12 @@ RiverbankRenderer::~RiverbankRenderer() = default;
 
 void RiverbankRenderer::configure(
     const std::vector<Game::Map::RiverSegment> &riverSegments,
-    const Game::Map::TerrainHeightMap &heightMap) {
+    const Game::Map::TerrainHeightMap &height_map) {
   m_riverSegments = riverSegments;
-  m_tileSize = heightMap.getTileSize();
-  m_gridWidth = heightMap.getWidth();
-  m_gridHeight = heightMap.getHeight();
-  m_heights = heightMap.getHeightData();
+  m_tile_size = height_map.getTileSize();
+  m_grid_width = height_map.getWidth();
+  m_grid_height = height_map.getHeight();
+  m_heights = height_map.getHeightData();
   buildMeshes();
 }
 
@@ -32,174 +40,181 @@ void RiverbankRenderer::buildMeshes() {
     return;
   }
 
-  auto noiseHash = [](float x, float y) -> float {
-    float n = std::sin(x * 127.1f + y * 311.7f) * 43758.5453123f;
+  auto noise_hash = [](float x, float y) -> float {
+    float const n = std::sin(x * 127.1F + y * 311.7F) * 43758.5453123F;
     return n - std::floor(n);
   };
 
-  auto noise = [&noiseHash](float x, float y) -> float {
-    float ix = std::floor(x);
-    float iy = std::floor(y);
+  auto noise = [&noise_hash](float x, float y) -> float {
+    float const ix = std::floor(x);
+    float const iy = std::floor(y);
     float fx = x - ix;
     float fy = y - iy;
 
-    fx = fx * fx * (3.0f - 2.0f * fx);
-    fy = fy * fy * (3.0f - 2.0f * fy);
+    fx = fx * fx * (3.0F - 2.0F * fx);
+    fy = fy * fy * (3.0F - 2.0F * fy);
 
-    float a = noiseHash(ix, iy);
-    float b = noiseHash(ix + 1.0f, iy);
-    float c = noiseHash(ix, iy + 1.0f);
-    float d = noiseHash(ix + 1.0f, iy + 1.0f);
+    float const a = noise_hash(ix, iy);
+    float const b = noise_hash(ix + 1.0F, iy);
+    float const c = noise_hash(ix, iy + 1.0F);
+    float const d = noise_hash(ix + 1.0F, iy + 1.0F);
 
-    return a * (1.0f - fx) * (1.0f - fy) + b * fx * (1.0f - fy) +
-           c * (1.0f - fx) * fy + d * fx * fy;
+    return a * (1.0F - fx) * (1.0F - fy) + b * fx * (1.0F - fy) +
+           c * (1.0F - fx) * fy + d * fx * fy;
   };
 
-  auto sampleHeight = [&](float worldX, float worldZ) -> float {
-    if (m_heights.empty() || m_gridWidth == 0 || m_gridHeight == 0) {
-      return 0.0f;
+  auto sample_height = [&](float world_x, float world_z) -> float {
+    if (m_heights.empty() || m_grid_width == 0 || m_grid_height == 0) {
+      return 0.0F;
     }
 
-    float halfWidth = m_gridWidth * 0.5f - 0.5f;
-    float halfHeight = m_gridHeight * 0.5f - 0.5f;
-    float gx = (worldX / m_tileSize) + halfWidth;
-    float gz = (worldZ / m_tileSize) + halfHeight;
+    float const half_width = m_grid_width * 0.5F - 0.5F;
+    float const half_height = m_grid_height * 0.5F - 0.5F;
+    float gx = (world_x / m_tile_size) + half_width;
+    float gz = (world_z / m_tile_size) + half_height;
 
-    gx = std::clamp(gx, 0.0f, float(m_gridWidth - 1));
-    gz = std::clamp(gz, 0.0f, float(m_gridHeight - 1));
+    gx = std::clamp(gx, 0.0F, float(m_grid_width - 1));
+    gz = std::clamp(gz, 0.0F, float(m_grid_height - 1));
 
-    int x0 = int(std::floor(gx));
-    int z0 = int(std::floor(gz));
-    int x1 = std::min(x0 + 1, m_gridWidth - 1);
-    int z1 = std::min(z0 + 1, m_gridHeight - 1);
+    int const x0 = int(std::floor(gx));
+    int const z0 = int(std::floor(gz));
+    int const x1 = std::min(x0 + 1, m_grid_width - 1);
+    int const z1 = std::min(z0 + 1, m_grid_height - 1);
 
-    float tx = gx - float(x0);
-    float tz = gz - float(z0);
+    float const tx = gx - float(x0);
+    float const tz = gz - float(z0);
 
-    float h00 = m_heights[z0 * m_gridWidth + x0];
-    float h10 = m_heights[z0 * m_gridWidth + x1];
-    float h01 = m_heights[z1 * m_gridWidth + x0];
-    float h11 = m_heights[z1 * m_gridWidth + x1];
+    float const h00 = m_heights[z0 * m_grid_width + x0];
+    float const h10 = m_heights[z0 * m_grid_width + x1];
+    float const h01 = m_heights[z1 * m_grid_width + x0];
+    float const h11 = m_heights[z1 * m_grid_width + x1];
 
-    float h0 = h00 * (1.0f - tx) + h10 * tx;
-    float h1 = h01 * (1.0f - tx) + h11 * tx;
-    return h0 * (1.0f - tz) + h1 * tz;
+    float const h0 = h00 * (1.0F - tx) + h10 * tx;
+    float const h1 = h01 * (1.0F - tx) + h11 * tx;
+    return h0 * (1.0F - tz) + h1 * tz;
   };
 
   for (const auto &segment : m_riverSegments) {
     QVector3D dir = segment.end - segment.start;
-    float length = dir.length();
-    if (length < 0.01f) {
+    float const length = dir.length();
+    if (length < 0.01F) {
       m_meshes.push_back(nullptr);
       m_visibilitySamples.emplace_back();
       continue;
     }
 
     dir.normalize();
-    QVector3D perpendicular(-dir.z(), 0.0f, dir.x());
-    float halfWidth = segment.width * 0.5f;
+    QVector3D const perpendicular(-dir.z(), 0.0F, dir.x());
+    float const half_width = segment.width * 0.5F;
 
-    float bankWidth = 0.2f;
+    float const bank_width = 0.2F;
 
-    int lengthSteps =
-        static_cast<int>(std::ceil(length / (m_tileSize * 0.5f))) + 1;
-    lengthSteps = std::max(lengthSteps, 8);
+    int length_steps =
+        static_cast<int>(std::ceil(length / (m_tile_size * 0.5F))) + 1;
+    length_steps = std::max(length_steps, 8);
 
     std::vector<Vertex> vertices;
     std::vector<unsigned int> indices;
     std::vector<QVector3D> samples;
 
-    for (int i = 0; i < lengthSteps; ++i) {
-      float t = static_cast<float>(i) / static_cast<float>(lengthSteps - 1);
-      QVector3D centerPos = segment.start + dir * (length * t);
+    for (int i = 0; i < length_steps; ++i) {
+      float const t =
+          static_cast<float>(i) / static_cast<float>(length_steps - 1);
+      QVector3D center_pos = segment.start + dir * (length * t);
 
-      float noiseFreq1 = 2.0f;
-      float noiseFreq2 = 5.0f;
-      float noiseFreq3 = 10.0f;
+      float const noise_freq1 = 2.0F;
+      float const noise_freq2 = 5.0F;
+      float const noise_freq3 = 10.0F;
 
-      float edgeNoise1 =
-          noise(centerPos.x() * noiseFreq1, centerPos.z() * noiseFreq1);
-      float edgeNoise2 =
-          noise(centerPos.x() * noiseFreq2, centerPos.z() * noiseFreq2);
-      float edgeNoise3 =
-          noise(centerPos.x() * noiseFreq3, centerPos.z() * noiseFreq3);
+      float const edge_noise1 =
+          noise(center_pos.x() * noise_freq1, center_pos.z() * noise_freq1);
+      float const edge_noise2 =
+          noise(center_pos.x() * noise_freq2, center_pos.z() * noise_freq2);
+      float const edge_noise3 =
+          noise(center_pos.x() * noise_freq3, center_pos.z() * noise_freq3);
 
-      float combinedNoise =
-          edgeNoise1 * 0.5f + edgeNoise2 * 0.3f + edgeNoise3 * 0.2f;
-      combinedNoise = (combinedNoise - 0.5f) * 2.0f;
+      float combined_noise =
+          edge_noise1 * 0.5F + edge_noise2 * 0.3F + edge_noise3 * 0.2F;
+      combined_noise = (combined_noise - 0.5F) * 2.0F;
 
-      float widthVariation = combinedNoise * halfWidth * 0.35f;
+      float const width_variation = combined_noise * half_width * 0.35F;
 
-      float meander = noise(t * 3.0f, length * 0.1f) * 0.3f;
-      QVector3D centerOffset = perpendicular * meander;
-      centerPos += centerOffset;
+      float const meander = noise(t * 3.0F, length * 0.1F) * 0.3F;
+      QVector3D const center_offset = perpendicular * meander;
+      center_pos += center_offset;
 
-      QVector3D innerLeft =
-          centerPos - perpendicular * (halfWidth + widthVariation);
-      QVector3D innerRight =
-          centerPos + perpendicular * (halfWidth + widthVariation);
-      samples.push_back(innerLeft);
-      samples.push_back(innerRight);
+      QVector3D const inner_left =
+          center_pos - perpendicular * (half_width + width_variation);
+      QVector3D const inner_right =
+          center_pos + perpendicular * (half_width + width_variation);
+      samples.push_back(inner_left);
+      samples.push_back(inner_right);
 
-      float outerVariation =
-          noise(centerPos.x() * 8.0f, centerPos.z() * 8.0f) * 0.5f;
-      QVector3D outerLeft =
-          innerLeft - perpendicular * (bankWidth + outerVariation);
-      QVector3D outerRight =
-          innerRight + perpendicular * (bankWidth + outerVariation);
+      float const outer_variation =
+          noise(center_pos.x() * 8.0F, center_pos.z() * 8.0F) * 0.5F;
+      QVector3D const outer_left =
+          inner_left - perpendicular * (bank_width + outer_variation);
+      QVector3D const outer_right =
+          inner_right + perpendicular * (bank_width + outer_variation);
 
-      float normal[3] = {0.0f, 1.0f, 0.0f};
+      float const normal[3] = {0.0F, 1.0F, 0.0F};
 
-      Vertex leftInner, leftOuter;
-      float heightInnerLeft = sampleHeight(innerLeft.x(), innerLeft.z());
-      float heightOuterLeft = sampleHeight(outerLeft.x(), outerLeft.z());
+      Vertex left_inner;
+      Vertex left_outer;
+      float const height_inner_left =
+          sample_height(inner_left.x(), inner_left.z());
+      float const height_outer_left =
+          sample_height(outer_left.x(), outer_left.z());
 
-      leftInner.position[0] = innerLeft.x();
-      leftInner.position[1] = heightInnerLeft + 0.05f;
-      leftInner.position[2] = innerLeft.z();
-      leftInner.normal[0] = normal[0];
-      leftInner.normal[1] = normal[1];
-      leftInner.normal[2] = normal[2];
-      leftInner.texCoord[0] = 0.0f;
-      leftInner.texCoord[1] = t;
-      vertices.push_back(leftInner);
+      left_inner.position[0] = inner_left.x();
+      left_inner.position[1] = height_inner_left + 0.05F;
+      left_inner.position[2] = inner_left.z();
+      left_inner.normal[0] = normal[0];
+      left_inner.normal[1] = normal[1];
+      left_inner.normal[2] = normal[2];
+      left_inner.tex_coord[0] = 0.0F;
+      left_inner.tex_coord[1] = t;
+      vertices.push_back(left_inner);
 
-      leftOuter.position[0] = outerLeft.x();
-      leftOuter.position[1] = heightOuterLeft + 0.05f;
-      leftOuter.position[2] = outerLeft.z();
-      leftOuter.normal[0] = normal[0];
-      leftOuter.normal[1] = normal[1];
-      leftOuter.normal[2] = normal[2];
-      leftOuter.texCoord[0] = 1.0f;
-      leftOuter.texCoord[1] = t;
-      vertices.push_back(leftOuter);
+      left_outer.position[0] = outer_left.x();
+      left_outer.position[1] = height_outer_left + 0.05F;
+      left_outer.position[2] = outer_left.z();
+      left_outer.normal[0] = normal[0];
+      left_outer.normal[1] = normal[1];
+      left_outer.normal[2] = normal[2];
+      left_outer.tex_coord[0] = 1.0F;
+      left_outer.tex_coord[1] = t;
+      vertices.push_back(left_outer);
 
-      Vertex rightInner, rightOuter;
-      float heightInnerRight = sampleHeight(innerRight.x(), innerRight.z());
-      float heightOuterRight = sampleHeight(outerRight.x(), outerRight.z());
+      Vertex right_inner;
+      Vertex right_outer;
+      float const height_inner_right =
+          sample_height(inner_right.x(), inner_right.z());
+      float const height_outer_right =
+          sample_height(outer_right.x(), outer_right.z());
 
-      rightInner.position[0] = innerRight.x();
-      rightInner.position[1] = heightInnerRight + 0.05f;
-      rightInner.position[2] = innerRight.z();
-      rightInner.normal[0] = normal[0];
-      rightInner.normal[1] = normal[1];
-      rightInner.normal[2] = normal[2];
-      rightInner.texCoord[0] = 0.0f;
-      rightInner.texCoord[1] = t;
-      vertices.push_back(rightInner);
+      right_inner.position[0] = inner_right.x();
+      right_inner.position[1] = height_inner_right + 0.05F;
+      right_inner.position[2] = inner_right.z();
+      right_inner.normal[0] = normal[0];
+      right_inner.normal[1] = normal[1];
+      right_inner.normal[2] = normal[2];
+      right_inner.tex_coord[0] = 0.0F;
+      right_inner.tex_coord[1] = t;
+      vertices.push_back(right_inner);
 
-      rightOuter.position[0] = outerRight.x();
-      rightOuter.position[1] = heightOuterRight + 0.05f;
-      rightOuter.position[2] = outerRight.z();
-      rightOuter.normal[0] = normal[0];
-      rightOuter.normal[1] = normal[1];
-      rightOuter.normal[2] = normal[2];
-      rightOuter.texCoord[0] = 1.0f;
-      rightOuter.texCoord[1] = t;
-      vertices.push_back(rightOuter);
+      right_outer.position[0] = outer_right.x();
+      right_outer.position[1] = height_outer_right + 0.05F;
+      right_outer.position[2] = outer_right.z();
+      right_outer.normal[0] = normal[0];
+      right_outer.normal[1] = normal[1];
+      right_outer.normal[2] = normal[2];
+      right_outer.tex_coord[0] = 1.0F;
+      right_outer.tex_coord[1] = t;
+      vertices.push_back(right_outer);
 
-      if (i < lengthSteps - 1) {
-        unsigned int idx0 = i * 4;
+      if (i < length_steps - 1) {
+        unsigned int const idx0 = i * 4;
 
         indices.push_back(idx0 + 0);
         indices.push_back(idx0 + 4);
@@ -237,10 +252,10 @@ void RiverbankRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   Q_UNUSED(resources);
 
   auto &visibility = Game::Map::VisibilityService::instance();
-  const bool useVisibility = visibility.isInitialized();
+  const bool use_visibility = visibility.isInitialized();
 
-  auto shader = renderer.getShader("riverbank");
-  if (!shader) {
+  auto *shader = renderer.getShader("riverbank");
+  if (shader == nullptr) {
     return;
   }
 
@@ -249,42 +264,42 @@ void RiverbankRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   QMatrix4x4 model;
   model.setToIdentity();
 
-  size_t meshIndex = 0;
+  size_t mesh_index = 0;
   for (const auto &segment : m_riverSegments) {
-    if (meshIndex >= m_meshes.size()) {
+    if (mesh_index >= m_meshes.size()) {
       break;
     }
 
-    auto *mesh = m_meshes[meshIndex].get();
-    ++meshIndex;
+    auto *mesh = m_meshes[mesh_index].get();
+    ++mesh_index;
 
-    if (!mesh) {
+    if (mesh == nullptr) {
       continue;
     }
 
-    if (useVisibility) {
-      bool anyVisible = false;
-      if (meshIndex - 1 < m_visibilitySamples.size()) {
-        const auto &samples = m_visibilitySamples[meshIndex - 1];
-        const int minRequired =
-            std::max<int>(2, static_cast<int>(samples.size() * 0.3f));
-        int visibleCount = 0;
+    if (use_visibility) {
+      bool any_visible = false;
+      if (mesh_index - 1 < m_visibilitySamples.size()) {
+        const auto &samples = m_visibilitySamples[mesh_index - 1];
+        const int min_required =
+            std::max<int>(2, static_cast<int>(samples.size() * 0.3F));
+        int visible_count = 0;
         for (const auto &pos : samples) {
           if (visibility.isVisibleWorld(pos.x(), pos.z())) {
-            ++visibleCount;
-            if (visibleCount >= minRequired) {
-              anyVisible = true;
+            ++visible_count;
+            if (visible_count >= min_required) {
+              any_visible = true;
               break;
             }
           }
         }
       }
-      if (!anyVisible) {
+      if (!any_visible) {
         continue;
       }
     }
 
-    renderer.mesh(mesh, model, QVector3D(1.0f, 1.0f, 1.0f), nullptr, 1.0f);
+    renderer.mesh(mesh, model, QVector3D(1.0F, 1.0F, 1.0F), nullptr, 1.0F);
   }
 
   renderer.setCurrentShader(nullptr);

@@ -3,79 +3,83 @@
 namespace Game {
 
 struct CameraConfig {
-  float defaultDistance = 12.0f;
-  float defaultPitch = 45.0f;
-  float defaultYaw = 225.0f;
-  float orbitStepNormal = 4.0f;
-  float orbitStepShift = 8.0f;
+  float defaultDistance = 12.0F;
+  float defaultPitch = 45.0F;
+  float defaultYaw = 225.0F;
+  float orbitStepNormal = 4.0F;
+  float orbitStepShift = 8.0F;
 };
 
 struct ArrowConfig {
-  float arcHeightMultiplier = 0.15f;
-  float arcHeightMin = 0.2f;
-  float arcHeightMax = 1.2f;
-  float speedDefault = 8.0f;
-  float speedAttack = 6.0f;
+  float arcHeightMultiplier = 0.15F;
+  float arcHeightMin = 0.2F;
+  float arcHeightMax = 1.2F;
+  float speedDefault = 8.0F;
+  float speedAttack = 6.0F;
 };
 
 struct GameplayConfig {
-  float visibilityUpdateInterval = 0.075f;
-  float formationSpacingDefault = 1.0f;
-  int maxTroopsPerPlayer = 50;
+  float visibility_update_interval = 0.075F;
+  float formationSpacingDefault = 1.0F;
+  int max_troops_per_player = 50;
 };
 
 class GameConfig {
 public:
-  static GameConfig &instance() noexcept {
+  static auto instance() noexcept -> GameConfig & {
     static GameConfig inst;
     return inst;
   }
 
-  [[nodiscard]] const CameraConfig &camera() const noexcept { return m_camera; }
-  [[nodiscard]] const ArrowConfig &arrow() const noexcept { return m_arrow; }
-  [[nodiscard]] const GameplayConfig &gameplay() const noexcept {
+  [[nodiscard]] auto camera() const noexcept -> const CameraConfig & {
+    return m_camera;
+  }
+  [[nodiscard]] auto arrow() const noexcept -> const ArrowConfig & {
+    return m_arrow;
+  }
+  [[nodiscard]] auto gameplay() const noexcept -> const GameplayConfig & {
     return m_gameplay;
   }
 
-  [[nodiscard]] float getCameraDefaultDistance() const noexcept {
+  [[nodiscard]] auto getCameraDefaultDistance() const noexcept -> float {
     return m_camera.defaultDistance;
   }
-  [[nodiscard]] float getCameraDefaultPitch() const noexcept {
+  [[nodiscard]] auto getCameraDefaultPitch() const noexcept -> float {
     return m_camera.defaultPitch;
   }
-  [[nodiscard]] float getCameraDefaultYaw() const noexcept {
+  [[nodiscard]] auto getCameraDefaultYaw() const noexcept -> float {
     return m_camera.defaultYaw;
   }
 
-  [[nodiscard]] float getArrowArcHeightMultiplier() const noexcept {
+  [[nodiscard]] auto getArrowArcHeightMultiplier() const noexcept -> float {
     return m_arrow.arcHeightMultiplier;
   }
-  [[nodiscard]] float getArrowArcHeightMin() const noexcept {
+  [[nodiscard]] auto getArrowArcHeightMin() const noexcept -> float {
     return m_arrow.arcHeightMin;
   }
-  [[nodiscard]] float getArrowArcHeightMax() const noexcept {
+  [[nodiscard]] auto getArrowArcHeightMax() const noexcept -> float {
     return m_arrow.arcHeightMax;
   }
 
-  [[nodiscard]] float getArrowSpeedDefault() const noexcept {
+  [[nodiscard]] auto getArrowSpeedDefault() const noexcept -> float {
     return m_arrow.speedDefault;
   }
-  [[nodiscard]] float getArrowSpeedAttack() const noexcept {
+  [[nodiscard]] auto getArrowSpeedAttack() const noexcept -> float {
     return m_arrow.speedAttack;
   }
 
-  [[nodiscard]] float getVisibilityUpdateInterval() const noexcept {
-    return m_gameplay.visibilityUpdateInterval;
+  [[nodiscard]] auto getVisibilityUpdateInterval() const noexcept -> float {
+    return m_gameplay.visibility_update_interval;
   }
 
-  [[nodiscard]] float getFormationSpacingDefault() const noexcept {
+  [[nodiscard]] auto getFormationSpacingDefault() const noexcept -> float {
     return m_gameplay.formationSpacingDefault;
   }
 
-  [[nodiscard]] float getCameraOrbitStepNormal() const noexcept {
+  [[nodiscard]] auto getCameraOrbitStepNormal() const noexcept -> float {
     return m_camera.orbitStepNormal;
   }
-  [[nodiscard]] float getCameraOrbitStepShift() const noexcept {
+  [[nodiscard]] auto getCameraOrbitStepShift() const noexcept -> float {
     return m_camera.orbitStepShift;
   }
 
@@ -107,7 +111,7 @@ public:
   }
 
   void setVisibilityUpdateInterval(float value) noexcept {
-    m_gameplay.visibilityUpdateInterval = value;
+    m_gameplay.visibility_update_interval = value;
   }
 
   void setFormationSpacingDefault(float value) noexcept {
@@ -121,12 +125,12 @@ public:
     m_camera.orbitStepShift = value;
   }
 
-  [[nodiscard]] int getMaxTroopsPerPlayer() const noexcept {
-    return m_gameplay.maxTroopsPerPlayer;
+  [[nodiscard]] auto getMaxTroopsPerPlayer() const noexcept -> int {
+    return m_gameplay.max_troops_per_player;
   }
 
   void setMaxTroopsPerPlayer(int value) noexcept {
-    m_gameplay.maxTroopsPerPlayer = value;
+    m_gameplay.max_troops_per_player = value;
   }
 
 private:

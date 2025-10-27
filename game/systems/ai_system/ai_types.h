@@ -43,28 +43,28 @@ struct MovementSnapshot {
 struct ProductionSnapshot {
   bool hasComponent = false;
   bool inProgress = false;
-  float buildTime = 0.0f;
-  float timeRemaining = 0.0f;
+  float buildTime = 0.0F;
+  float timeRemaining = 0.0F;
   int producedCount = 0;
   int maxUnits = 0;
-  Game::Units::TroopType productType = Game::Units::TroopType::Archer;
+  Game::Units::TroopType product_type = Game::Units::TroopType::Archer;
   bool rallySet = false;
-  float rallyX = 0.0f;
-  float rallyZ = 0.0f;
+  float rallyX = 0.0F;
+  float rallyZ = 0.0F;
   int queueSize = 0;
 };
 
 struct EntitySnapshot {
   Engine::Core::EntityID id = 0;
-  Game::Units::SpawnType spawnType = Game::Units::SpawnType::Archer;
-  int ownerId = 0;
+  Game::Units::SpawnType spawn_type = Game::Units::SpawnType::Archer;
+  int owner_id = 0;
   int health = 0;
-  int maxHealth = 0;
+  int max_health = 0;
   bool isBuilding = false;
 
-  float posX = 0.0f;
-  float posY = 0.0f;
-  float posZ = 0.0f;
+  float posX = 0.0F;
+  float posY = 0.0F;
+  float posZ = 0.0F;
 
   MovementSnapshot movement;
   ProductionSnapshot production;
@@ -74,28 +74,28 @@ struct ContactSnapshot {
   Engine::Core::EntityID id = 0;
   bool isBuilding = false;
 
-  float posX = 0.0f;
-  float posY = 0.0f;
-  float posZ = 0.0f;
+  float posX = 0.0F;
+  float posY = 0.0F;
+  float posZ = 0.0F;
 
   int health = 0;
-  int maxHealth = 0;
-  Game::Units::SpawnType spawnType = Game::Units::SpawnType::Archer;
+  int max_health = 0;
+  Game::Units::SpawnType spawn_type = Game::Units::SpawnType::Archer;
 };
 
 struct AISnapshot {
-  int playerId = 0;
+  int player_id = 0;
   std::vector<EntitySnapshot> friendlies;
   std::vector<ContactSnapshot> visibleEnemies;
 
-  float gameTime = 0.0f;
+  float gameTime = 0.0F;
 };
 
 struct AIContext {
-  int playerId = 0;
+  int player_id = 0;
   AIState state = AIState::Idle;
-  float stateTimer = 0.0f;
-  float decisionTimer = 0.0f;
+  float stateTimer = 0.0F;
+  float decisionTimer = 0.0F;
 
   const Game::Systems::Nation *nation = nullptr;
 
@@ -103,25 +103,25 @@ struct AIContext {
   std::vector<Engine::Core::EntityID> buildings;
   Engine::Core::EntityID primaryBarracks = 0;
 
-  float rallyX = 0.0f;
-  float rallyZ = 0.0f;
+  float rallyX = 0.0F;
+  float rallyZ = 0.0F;
   int targetPriority = 0;
 
-  int totalUnits = 0;
+  int total_units = 0;
   int idleUnits = 0;
   int combatUnits = 0;
-  float averageHealth = 1.0f;
+  float averageHealth = 1.0F;
   bool barracksUnderThreat = false;
   int nearbyThreatCount = 0;
-  float closestThreatDistance = 0.0f;
+  float closest_threatDistance = 0.0F;
 
-  float basePosX = 0.0f;
-  float basePosY = 0.0f;
-  float basePosZ = 0.0f;
+  float basePosX = 0.0F;
+  float basePosY = 0.0F;
+  float basePosZ = 0.0F;
 
   struct UnitAssignment {
     BehaviorPriority ownerPriority = BehaviorPriority::Normal;
-    float assignmentTime = 0.0f;
+    float assignmentTime = 0.0F;
     std::string assignedTask;
   };
   std::unordered_map<Engine::Core::EntityID, UnitAssignment> assignedUnits;
@@ -132,9 +132,9 @@ struct AIContext {
 
   int visibleEnemyCount = 0;
   int enemyBuildingsCount = 0;
-  float averageEnemyDistance = 0.0f;
+  float averageEnemyDistance = 0.0F;
 
-  int maxTroopsPerPlayer = 50;
+  int max_troops_per_player = 50;
 
   std::unordered_map<Engine::Core::EntityID, float> buildingsUnderAttack;
 };
@@ -147,10 +147,10 @@ struct AICommand {
   std::vector<float> moveTargetY;
   std::vector<float> moveTargetZ;
 
-  Engine::Core::EntityID targetId = 0;
+  Engine::Core::EntityID target_id = 0;
   bool shouldChase = false;
   Engine::Core::EntityID buildingId = 0;
-  Game::Units::TroopType productType = Game::Units::TroopType::Archer;
+  Game::Units::TroopType product_type = Game::Units::TroopType::Archer;
 };
 
 struct AIResult {
@@ -161,7 +161,7 @@ struct AIResult {
 struct AIJob {
   AISnapshot snapshot;
   AIContext context;
-  float deltaTime = 0.0f;
+  float deltaTime = 0.0F;
 };
 
 } // namespace Game::Systems::AI

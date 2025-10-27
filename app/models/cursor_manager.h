@@ -13,20 +13,26 @@ class CursorManager : public QObject {
 public:
   explicit CursorManager(QObject *parent = nullptr);
 
-  CursorMode mode() const { return m_cursorMode; }
+  [[nodiscard]] auto mode() const -> CursorMode { return m_cursorMode; }
   void setMode(CursorMode mode);
   void setMode(const QString &mode);
-  QString modeString() const { return CursorModeUtils::toString(m_cursorMode); }
+  [[nodiscard]] auto modeString() const -> QString {
+    return CursorModeUtils::toString(m_cursorMode);
+  }
 
   void updateCursorShape(QQuickWindow *window);
 
-  qreal globalCursorX(QQuickWindow *window) const;
-  qreal globalCursorY(QQuickWindow *window) const;
+  static auto globalCursorX(QQuickWindow *window) -> qreal;
+  static auto globalCursorY(QQuickWindow *window) -> qreal;
 
-  bool hasPatrolFirstWaypoint() const { return m_hasFirstWaypoint; }
+  [[nodiscard]] auto hasPatrolFirstWaypoint() const -> bool {
+    return m_hasFirstWaypoint;
+  }
   void setPatrolFirstWaypoint(const QVector3D &waypoint);
   void clearPatrolFirstWaypoint();
-  QVector3D getPatrolFirstWaypoint() const { return m_firstWaypoint; }
+  [[nodiscard]] auto getPatrolFirstWaypoint() const -> QVector3D {
+    return m_firstWaypoint;
+  }
 
 signals:
   void modeChanged();

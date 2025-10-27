@@ -13,7 +13,7 @@ struct HorseDimensions {
   float bodyLength;
   float bodyWidth;
   float bodyHeight;
-  float barrelCenterY;
+  float barrel_centerY;
 
   float neckLength;
   float neckRise;
@@ -28,7 +28,7 @@ struct HorseDimensions {
 
   float tailLength;
 
-  float saddleHeight;
+  float saddle_height;
   float saddleThickness;
   float seatForwardOffset;
 
@@ -41,13 +41,13 @@ struct HorseDimensions {
 
 struct HorseVariant {
   QVector3D coatColor;
-  QVector3D maneColor;
-  QVector3D tailColor;
+  QVector3D mane_color;
+  QVector3D tail_color;
   QVector3D muzzleColor;
-  QVector3D hoofColor;
+  QVector3D hoof_color;
   QVector3D saddleColor;
   QVector3D blanketColor;
-  QVector3D tackColor;
+  QVector3D tack_color;
 };
 
 struct HorseGait {
@@ -59,21 +59,21 @@ struct HorseGait {
 };
 
 struct HorseProfile {
-  HorseDimensions dims;
+  HorseDimensions dims{};
   HorseVariant variant;
-  HorseGait gait;
+  HorseGait gait{};
 };
 
-HorseDimensions makeHorseDimensions(uint32_t seed);
-HorseVariant makeHorseVariant(uint32_t seed, const QVector3D &leatherBase,
-                              const QVector3D &clothBase);
-HorseProfile makeHorseProfile(uint32_t seed, const QVector3D &leatherBase,
-                              const QVector3D &clothBase);
+auto makeHorseDimensions(uint32_t seed) -> HorseDimensions;
+auto makeHorseVariant(uint32_t seed, const QVector3D &leatherBase,
+                      const QVector3D &clothBase) -> HorseVariant;
+auto makeHorseProfile(uint32_t seed, const QVector3D &leatherBase,
+                      const QVector3D &clothBase) -> HorseProfile;
 
 class HorseRenderer {
 public:
-  void render(const DrawContext &ctx, const AnimationInputs &anim,
-              const HorseProfile &profile, ISubmitter &out) const;
+  static void render(const DrawContext &ctx, const AnimationInputs &anim,
+                     const HorseProfile &profile, ISubmitter &out);
 };
 
 } // namespace Render::GL

@@ -3,30 +3,45 @@
 #include "../game/map/visibility_service.h"
 #include "../game/units/spawn_type.h"
 #include "../game/units/troop_config.h"
+#include "draw_queue.h"
 #include "entity/registry.h"
 #include "game/core/component.h"
 #include "game/core/world.h"
 #include "gl/backend.h"
+#include "gl/buffer.h"
 #include "gl/camera.h"
 #include "gl/primitives.h"
 #include "gl/resources.h"
+#include "ground/firecamp_gpu.h"
+#include "ground/grass_gpu.h"
+#include "ground/pine_gpu.h"
+#include "ground/plant_gpu.h"
+#include "ground/stone_gpu.h"
+#include "ground/terrain_gpu.h"
+#include "submitter.h"
 #include <QDebug>
 #include <algorithm>
 #include <cmath>
+#include <cstddef>
+#include <cstdint>
+#include <memory>
+#include <mutex>
+#include <qvectornd.h>
+#include <string>
 
 namespace Render::GL {
 
 namespace {
-const QVector3D kAxisX(1.0f, 0.0f, 0.0f);
-const QVector3D kAxisY(0.0f, 1.0f, 0.0f);
-const QVector3D kAxisZ(0.0f, 0.0f, 1.0f);
+const QVector3D k_axis_x(1.0F, 0.0F, 0.0F);
+const QVector3D k_axis_y(0.0F, 1.0F, 0.0F);
+const QVector3D k_axis_z(0.0F, 0.0F, 1.0F);
 } // namespace
 
 Renderer::Renderer() { m_activeQueue = &m_queues[m_fillQueueIndex]; }
 
 Renderer::~Renderer() { shutdown(); }
 
-bool Renderer::initialize() {
+auto Renderer::initialize() -> bool {
   if (!m_backend) {
     m_backend = std::make_shared<Backend>();
   }
@@ -42,8 +57,8 @@ void Renderer::beginFrame() {
   m_activeQueue = &m_queues[m_fillQueueIndex];
   m_activeQueue->clear();
 
-  if (m_camera) {
-    m_viewProj = m_camera->getProjectionMatrix() * m_camera->getViewMatrix();
+  if (m_camera != nullptr) {
+    m_view_proj = m_camera->getProjectionMatrix() * m_camera->getViewMatrix();
   }
 
   if (m_backend) {
@@ -55,12 +70,12 @@ void Renderer::endFrame() {
   if (m_paused.load()) {
     return;
   }
-  if (m_backend && m_camera) {
-    std::swap(m_fillQueueIndex, m_renderQueueIndex);
-    DrawQueue &renderQueue = m_queues[m_renderQueueIndex];
-    renderQueue.sortForBatching();
+  if (m_backend && (m_camera != nullptr)) {
+    std::swap(m_fillQueueIndex, m_render_queueIndex);
+    DrawQueue &render_queue = m_queues[m_render_queueIndex];
+    render_queue.sortForBatching();
     m_backend->setAnimationTime(m_accumulatedTime);
-    m_backend->execute(renderQueue, *m_camera);
+    m_backend->execute(render_queue, *m_camera);
   }
 }
 
@@ -78,21 +93,23 @@ void Renderer::setViewport(int width, int height) {
   if (m_backend) {
     m_backend->setViewport(width, height);
   }
-  if (m_camera && height > 0) {
-    float aspect = float(width) / float(height);
+  if ((m_camera != nullptr) && height > 0) {
+    float const aspect = float(width) / float(height);
     m_camera->setPerspective(m_camera->getFOV(), aspect, m_camera->getNear(),
                              m_camera->getFar());
   }
 }
 void Renderer::mesh(Mesh *mesh, const QMatrix4x4 &model, const QVector3D &color,
                     Texture *texture, float alpha) {
-  if (!mesh) {
+  if (mesh == nullptr) {
     return;
   }
 
-  if (mesh == getUnitCylinder() && (!texture) && (!m_currentShader)) {
-    QVector3D start, end;
-    float radius = 0.0f;
+  if (mesh == getUnitCylinder() && (texture == nullptr) &&
+      (m_currentShader == nullptr)) {
+    QVector3D start;
+    QVector3D end;
+    float radius = 0.0F;
     if (detail::decomposeUnitCylinder(model, start, end, radius)) {
       cylinder(start, end, radius, color, alpha);
       return;
@@ -102,11 +119,11 @@ void Renderer::mesh(Mesh *mesh, const QMatrix4x4 &model, const QVector3D &color,
   cmd.mesh = mesh;
   cmd.texture = texture;
   cmd.model = model;
-  cmd.mvp = m_viewProj * model;
+  cmd.mvp = m_view_proj * model;
   cmd.color = color;
   cmd.alpha = alpha;
   cmd.shader = m_currentShader;
-  if (m_activeQueue) {
+  if (m_activeQueue != nullptr) {
     m_activeQueue->submit(cmd);
   }
 }
@@ -119,13 +136,13 @@ void Renderer::cylinder(const QVector3D &start, const QVector3D &end,
   cmd.radius = radius;
   cmd.color = color;
   cmd.alpha = alpha;
-  if (m_activeQueue) {
+  if (m_activeQueue != nullptr) {
     m_activeQueue->submit(cmd);
   }
 }
 
 void Renderer::fogBatch(const FogInstanceData *instances, std::size_t count) {
-  if (!instances || count == 0 || !m_activeQueue) {
+  if ((instances == nullptr) || count == 0 || (m_activeQueue == nullptr)) {
     return;
   }
   FogBatchCmd cmd;
@@ -134,65 +151,70 @@ void Renderer::fogBatch(const FogInstanceData *instances, std::size_t count) {
   m_activeQueue->submit(cmd);
 }
 
-void Renderer::grassBatch(Buffer *instanceBuffer, std::size_t instanceCount,
+void Renderer::grassBatch(Buffer *instanceBuffer, std::size_t instance_count,
                           const GrassBatchParams &params) {
-  if (!instanceBuffer || instanceCount == 0 || !m_activeQueue) {
+  if ((instanceBuffer == nullptr) || instance_count == 0 ||
+      (m_activeQueue == nullptr)) {
     return;
   }
   GrassBatchCmd cmd;
   cmd.instanceBuffer = instanceBuffer;
-  cmd.instanceCount = instanceCount;
+  cmd.instance_count = instance_count;
   cmd.params = params;
   cmd.params.time = m_accumulatedTime;
   m_activeQueue->submit(cmd);
 }
 
-void Renderer::stoneBatch(Buffer *instanceBuffer, std::size_t instanceCount,
+void Renderer::stoneBatch(Buffer *instanceBuffer, std::size_t instance_count,
                           const StoneBatchParams &params) {
-  if (!instanceBuffer || instanceCount == 0 || !m_activeQueue) {
+  if ((instanceBuffer == nullptr) || instance_count == 0 ||
+      (m_activeQueue == nullptr)) {
     return;
   }
   StoneBatchCmd cmd;
   cmd.instanceBuffer = instanceBuffer;
-  cmd.instanceCount = instanceCount;
+  cmd.instance_count = instance_count;
   cmd.params = params;
   m_activeQueue->submit(cmd);
 }
 
-void Renderer::plantBatch(Buffer *instanceBuffer, std::size_t instanceCount,
+void Renderer::plantBatch(Buffer *instanceBuffer, std::size_t instance_count,
                           const PlantBatchParams &params) {
-  if (!instanceBuffer || instanceCount == 0 || !m_activeQueue) {
+  if ((instanceBuffer == nullptr) || instance_count == 0 ||
+      (m_activeQueue == nullptr)) {
     return;
   }
   PlantBatchCmd cmd;
   cmd.instanceBuffer = instanceBuffer;
-  cmd.instanceCount = instanceCount;
+  cmd.instance_count = instance_count;
   cmd.params = params;
   cmd.params.time = m_accumulatedTime;
   m_activeQueue->submit(cmd);
 }
 
-void Renderer::pineBatch(Buffer *instanceBuffer, std::size_t instanceCount,
+void Renderer::pineBatch(Buffer *instanceBuffer, std::size_t instance_count,
                          const PineBatchParams &params) {
-  if (!instanceBuffer || instanceCount == 0 || !m_activeQueue) {
+  if ((instanceBuffer == nullptr) || instance_count == 0 ||
+      (m_activeQueue == nullptr)) {
     return;
   }
   PineBatchCmd cmd;
   cmd.instanceBuffer = instanceBuffer;
-  cmd.instanceCount = instanceCount;
+  cmd.instance_count = instance_count;
   cmd.params = params;
   cmd.params.time = m_accumulatedTime;
   m_activeQueue->submit(cmd);
 }
 
-void Renderer::firecampBatch(Buffer *instanceBuffer, std::size_t instanceCount,
+void Renderer::firecampBatch(Buffer *instanceBuffer, std::size_t instance_count,
                              const FireCampBatchParams &params) {
-  if (!instanceBuffer || instanceCount == 0 || !m_activeQueue) {
+  if ((instanceBuffer == nullptr) || instance_count == 0 ||
+      (m_activeQueue == nullptr)) {
     return;
   }
   FireCampBatchCmd cmd;
   cmd.instanceBuffer = instanceBuffer;
-  cmd.instanceCount = instanceCount;
+  cmd.instance_count = instance_count;
   cmd.params = params;
   cmd.params.time = m_accumulatedTime;
   m_activeQueue->submit(cmd);
@@ -202,7 +224,7 @@ void Renderer::terrainChunk(Mesh *mesh, const QMatrix4x4 &model,
                             const TerrainChunkParams &params,
                             std::uint16_t sortKey, bool depthWrite,
                             float depthBias) {
-  if (!mesh || !m_activeQueue) {
+  if ((mesh == nullptr) || (m_activeQueue == nullptr)) {
     return;
   }
   TerrainChunkCmd cmd;
@@ -219,11 +241,11 @@ void Renderer::selectionRing(const QMatrix4x4 &model, float alphaInner,
                              float alphaOuter, const QVector3D &color) {
   SelectionRingCmd cmd;
   cmd.model = model;
-  cmd.mvp = m_viewProj * model;
+  cmd.mvp = m_view_proj * model;
   cmd.alphaInner = alphaInner;
   cmd.alphaOuter = alphaOuter;
   cmd.color = color;
-  if (m_activeQueue) {
+  if (m_activeQueue != nullptr) {
     m_activeQueue->submit(cmd);
   }
 }
@@ -232,12 +254,12 @@ void Renderer::grid(const QMatrix4x4 &model, const QVector3D &color,
                     float cellSize, float thickness, float extent) {
   GridCmd cmd;
   cmd.model = model;
-  cmd.mvp = m_viewProj * model;
+  cmd.mvp = m_view_proj * model;
   cmd.color = color;
   cmd.cellSize = cellSize;
   cmd.thickness = thickness;
   cmd.extent = extent;
-  if (m_activeQueue) {
+  if (m_activeQueue != nullptr) {
     m_activeQueue->submit(cmd);
   }
 }
@@ -246,52 +268,52 @@ void Renderer::selectionSmoke(const QMatrix4x4 &model, const QVector3D &color,
                               float baseAlpha) {
   SelectionSmokeCmd cmd;
   cmd.model = model;
-  cmd.mvp = m_viewProj * model;
+  cmd.mvp = m_view_proj * model;
   cmd.color = color;
   cmd.baseAlpha = baseAlpha;
-  if (m_activeQueue) {
+  if (m_activeQueue != nullptr) {
     m_activeQueue->submit(cmd);
   }
 }
 
 void Renderer::enqueueSelectionRing(Engine::Core::Entity *,
                                     Engine::Core::TransformComponent *transform,
-                                    Engine::Core::UnitComponent *unitComp,
+                                    Engine::Core::UnitComponent *unit_comp,
                                     bool selected, bool hovered) {
-  if ((!selected && !hovered) || !transform) {
+  if ((!selected && !hovered) || (transform == nullptr)) {
     return;
   }
 
-  float ringSize = 0.5f;
-  float ringOffset = 0.05f;
-  float groundOffset = 0.0f;
+  float ring_size = 0.5F;
+  float ring_offset = 0.05F;
+  float ground_offset = 0.0F;
 
-  if (unitComp) {
+  if (unit_comp != nullptr) {
     auto &config = Game::Units::TroopConfig::instance();
-    ringSize = config.getSelectionRingSize(unitComp->spawnType);
-    ringOffset += config.getSelectionRingYOffset(unitComp->spawnType);
-    groundOffset = config.getSelectionRingGroundOffset(unitComp->spawnType);
+    ring_size = config.getSelectionRingSize(unit_comp->spawn_type);
+    ring_offset += config.getSelectionRingYOffset(unit_comp->spawn_type);
+    ground_offset = config.getSelectionRingGroundOffset(unit_comp->spawn_type);
   }
 
   QVector3D pos(transform->position.x, transform->position.y,
                 transform->position.z);
-  auto &terrainService = Game::Map::TerrainService::instance();
-  float terrainY = transform->position.y;
-  if (terrainService.isInitialized()) {
-    terrainY = terrainService.getTerrainHeight(pos.x(), pos.z());
+  auto &terrain_service = Game::Map::TerrainService::instance();
+  float terrain_y = transform->position.y;
+  if (terrain_service.isInitialized()) {
+    terrain_y = terrain_service.getTerrainHeight(pos.x(), pos.z());
   } else {
-    terrainY -= groundOffset * transform->scale.y;
+    terrain_y -= ground_offset * transform->scale.y;
   }
-  pos.setY(terrainY);
+  pos.setY(terrain_y);
 
-  QMatrix4x4 ringModel;
-  ringModel.translate(pos.x(), pos.y() + ringOffset, pos.z());
-  ringModel.scale(ringSize, 1.0f, ringSize);
+  QMatrix4x4 ring_model;
+  ring_model.translate(pos.x(), pos.y() + ring_offset, pos.z());
+  ring_model.scale(ring_size, 1.0F, ring_size);
 
   if (selected) {
-    selectionRing(ringModel, 0.6f, 0.25f, QVector3D(0.2f, 0.4f, 1.0f));
+    selectionRing(ring_model, 0.6F, 0.25F, QVector3D(0.2F, 0.4F, 1.0F));
   } else if (hovered) {
-    selectionRing(ringModel, 0.35f, 0.15f, QVector3D(0.90f, 0.90f, 0.25f));
+    selectionRing(ring_model, 0.35F, 0.15F, QVector3D(0.90F, 0.90F, 0.25F));
   }
 }
 
@@ -299,171 +321,173 @@ void Renderer::renderWorld(Engine::Core::World *world) {
   if (m_paused.load()) {
     return;
   }
-  if (!world) {
+  if (world == nullptr) {
     return;
   }
 
-  std::lock_guard<std::recursive_mutex> guard(world->getEntityMutex());
+  std::lock_guard<std::recursive_mutex> const guard(world->getEntityMutex());
 
   auto &vis = Game::Map::VisibilityService::instance();
-  const bool visibilityEnabled = vis.isInitialized();
+  const bool visibility_enabled = vis.isInitialized();
 
-  auto renderableEntities =
+  auto renderable_entities =
       world->getEntitiesWith<Engine::Core::RenderableComponent>();
 
-  for (auto entity : renderableEntities) {
+  for (auto *entity : renderable_entities) {
 
     if (entity->hasComponent<Engine::Core::PendingRemovalComponent>()) {
       continue;
     }
 
-    auto renderable = entity->getComponent<Engine::Core::RenderableComponent>();
-    auto transform = entity->getComponent<Engine::Core::TransformComponent>();
+    auto *renderable =
+        entity->getComponent<Engine::Core::RenderableComponent>();
+    auto *transform = entity->getComponent<Engine::Core::TransformComponent>();
 
-    if (!renderable->visible || !transform) {
+    if (!renderable->visible || (transform == nullptr)) {
       continue;
     }
 
-    auto *unitComp = entity->getComponent<Engine::Core::UnitComponent>();
-    if (unitComp && unitComp->health <= 0) {
+    auto *unit_comp = entity->getComponent<Engine::Core::UnitComponent>();
+    if ((unit_comp != nullptr) && unit_comp->health <= 0) {
       continue;
     }
 
-    if (m_camera && unitComp) {
+    if ((m_camera != nullptr) && (unit_comp != nullptr)) {
 
-      float cullRadius = 3.0f;
+      float cull_radius = 3.0F;
 
-      if (unitComp->spawnType == Game::Units::SpawnType::MountedKnight) {
-        cullRadius = 4.0f;
-      } else if (unitComp->spawnType == Game::Units::SpawnType::Spearman ||
-                 unitComp->spawnType == Game::Units::SpawnType::Archer ||
-                 unitComp->spawnType == Game::Units::SpawnType::Knight) {
-        cullRadius = 2.5f;
+      if (unit_comp->spawn_type == Game::Units::SpawnType::MountedKnight) {
+        cull_radius = 4.0F;
+      } else if (unit_comp->spawn_type == Game::Units::SpawnType::Spearman ||
+                 unit_comp->spawn_type == Game::Units::SpawnType::Archer ||
+                 unit_comp->spawn_type == Game::Units::SpawnType::Knight) {
+        cull_radius = 2.5F;
       }
 
-      QVector3D unitPos(transform->position.x, transform->position.y,
-                        transform->position.z);
-      if (!m_camera->isInFrustum(unitPos, cullRadius)) {
+      QVector3D const unit_pos(transform->position.x, transform->position.y,
+                               transform->position.z);
+      if (!m_camera->isInFrustum(unit_pos, cull_radius)) {
         continue;
       }
     }
 
-    if (unitComp && unitComp->ownerId != m_localOwnerId) {
-      if (visibilityEnabled) {
+    if ((unit_comp != nullptr) && unit_comp->owner_id != m_localOwnerId) {
+      if (visibility_enabled) {
         if (!vis.isVisibleWorld(transform->position.x, transform->position.z)) {
           continue;
         }
       }
     }
 
-    bool isSelected =
+    bool const is_selected =
         (m_selectedIds.find(entity->getId()) != m_selectedIds.end());
-    bool isHovered = (entity->getId() == m_hoveredEntityId);
+    bool const is_hovered = (entity->getId() == m_hoveredEntityId);
 
-    QMatrix4x4 modelMatrix;
-    modelMatrix.translate(transform->position.x, transform->position.y,
-                          transform->position.z);
-    modelMatrix.rotate(transform->rotation.x, kAxisX);
-    modelMatrix.rotate(transform->rotation.y, kAxisY);
-    modelMatrix.rotate(transform->rotation.z, kAxisZ);
-    modelMatrix.scale(transform->scale.x, transform->scale.y,
-                      transform->scale.z);
+    QMatrix4x4 model_matrix;
+    model_matrix.translate(transform->position.x, transform->position.y,
+                           transform->position.z);
+    model_matrix.rotate(transform->rotation.x, k_axis_x);
+    model_matrix.rotate(transform->rotation.y, k_axis_y);
+    model_matrix.rotate(transform->rotation.z, k_axis_z);
+    model_matrix.scale(transform->scale.x, transform->scale.y,
+                       transform->scale.z);
 
-    bool drawnByRegistry = false;
-    if (unitComp && m_entityRegistry) {
-      std::string unitTypeStr =
-          Game::Units::spawnTypeToString(unitComp->spawnType);
-      auto fn = m_entityRegistry->get(unitTypeStr);
+    bool drawn_by_registry = false;
+    if ((unit_comp != nullptr) && m_entityRegistry) {
+      std::string const unit_type_str =
+          Game::Units::spawn_typeToString(unit_comp->spawn_type);
+      auto fn = m_entityRegistry->get(unit_type_str);
       if (fn) {
-        DrawContext ctx{resources(), entity, world, modelMatrix};
+        DrawContext ctx{resources(), entity, world, model_matrix};
 
-        ctx.selected = isSelected;
-        ctx.hovered = isHovered;
+        ctx.selected = is_selected;
+        ctx.hovered = is_hovered;
         ctx.animationTime = m_accumulatedTime;
         ctx.backend = m_backend.get();
         fn(ctx, *this);
-        enqueueSelectionRing(entity, transform, unitComp, isSelected,
-                             isHovered);
-        drawnByRegistry = true;
+        enqueueSelectionRing(entity, transform, unit_comp, is_selected,
+                             is_hovered);
+        drawn_by_registry = true;
       }
     }
-    if (drawnByRegistry) {
+    if (drawn_by_registry) {
       continue;
     }
 
-    Mesh *meshToDraw = nullptr;
+    Mesh *mesh_to_draw = nullptr;
     ResourceManager *res = resources();
     switch (renderable->mesh) {
     case Engine::Core::RenderableComponent::MeshKind::Quad:
-      meshToDraw = res ? res->quad() : nullptr;
+      mesh_to_draw = (res != nullptr) ? res->quad() : nullptr;
       break;
     case Engine::Core::RenderableComponent::MeshKind::Plane:
-      meshToDraw = res ? res->ground() : nullptr;
+      mesh_to_draw = (res != nullptr) ? res->ground() : nullptr;
       break;
     case Engine::Core::RenderableComponent::MeshKind::Cube:
-      meshToDraw = res ? res->unit() : nullptr;
+      mesh_to_draw = (res != nullptr) ? res->unit() : nullptr;
       break;
     case Engine::Core::RenderableComponent::MeshKind::Capsule:
-      meshToDraw = nullptr;
+      mesh_to_draw = nullptr;
       break;
     case Engine::Core::RenderableComponent::MeshKind::Ring:
-      meshToDraw = nullptr;
+      mesh_to_draw = nullptr;
       break;
     case Engine::Core::RenderableComponent::MeshKind::None:
     default:
       break;
     }
-    if (!meshToDraw && res) {
-      meshToDraw = res->unit();
+    if ((mesh_to_draw == nullptr) && (res != nullptr)) {
+      mesh_to_draw = res->unit();
     }
-    if (!meshToDraw && res) {
-      meshToDraw = res->quad();
+    if ((mesh_to_draw == nullptr) && (res != nullptr)) {
+      mesh_to_draw = res->quad();
     }
-    QVector3D color = QVector3D(renderable->color[0], renderable->color[1],
-                                renderable->color[2]);
+    QVector3D const color = QVector3D(
+        renderable->color[0], renderable->color[1], renderable->color[2]);
 
-    if (res) {
-      Mesh *contactQuad = res->quad();
+    if (res != nullptr) {
+      Mesh *contact_quad = res->quad();
       Texture *white = res->white();
-      if (contactQuad && white) {
-        QMatrix4x4 contactBase;
-        contactBase.translate(transform->position.x,
-                              transform->position.y + 0.03f,
-                              transform->position.z);
-        contactBase.rotate(-90.0f, 1.0f, 0.0f, 0.0f);
-        float footprint =
-            std::max({transform->scale.x, transform->scale.z, 0.6f});
+      if ((contact_quad != nullptr) && (white != nullptr)) {
+        QMatrix4x4 contact_base;
+        contact_base.translate(transform->position.x,
+                               transform->position.y + 0.03F,
+                               transform->position.z);
+        contact_base.rotate(-90.0F, 1.0F, 0.0F, 0.0F);
+        float const footprint =
+            std::max({transform->scale.x, transform->scale.z, 0.6F});
 
-        float sizeRatio = 1.0f;
+        float size_ratio = 1.0F;
         if (auto *unit = entity->getComponent<Engine::Core::UnitComponent>()) {
-          int mh = std::max(1, unit->maxHealth);
-          sizeRatio = std::clamp(unit->health / float(mh), 0.0f, 1.0f);
+          int const mh = std::max(1, unit->max_health);
+          size_ratio = std::clamp(unit->health / float(mh), 0.0F, 1.0F);
         }
-        float eased = 0.25f + 0.75f * sizeRatio;
+        float const eased = 0.25F + 0.75F * size_ratio;
 
-        float baseScaleX = footprint * 0.55f * eased;
-        float baseScaleY = footprint * 0.35f * eased;
+        float const base_scale_x = footprint * 0.55F * eased;
+        float const base_scale_y = footprint * 0.35F * eased;
 
-        QVector3D col(0.03f, 0.03f, 0.03f);
-        float centerAlpha = 0.32f * eased;
-        float midAlpha = 0.16f * eased;
-        float outerAlpha = 0.07f * eased;
+        QVector3D const col(0.03F, 0.03F, 0.03F);
+        float const center_alpha = 0.32F * eased;
+        float const mid_alpha = 0.16F * eased;
+        float const outer_alpha = 0.07F * eased;
 
-        QMatrix4x4 c0 = contactBase;
-        c0.scale(baseScaleX * 0.60f, baseScaleY * 0.60f, 1.0f);
-        mesh(contactQuad, c0, col, white, centerAlpha);
+        QMatrix4x4 c0 = contact_base;
+        c0.scale(base_scale_x * 0.60F, base_scale_y * 0.60F, 1.0F);
+        mesh(contact_quad, c0, col, white, center_alpha);
 
-        QMatrix4x4 c1 = contactBase;
-        c1.scale(baseScaleX * 0.95f, baseScaleY * 0.95f, 1.0f);
-        mesh(contactQuad, c1, col, white, midAlpha);
+        QMatrix4x4 c1 = contact_base;
+        c1.scale(base_scale_x * 0.95F, base_scale_y * 0.95F, 1.0F);
+        mesh(contact_quad, c1, col, white, mid_alpha);
 
-        QMatrix4x4 c2 = contactBase;
-        c2.scale(baseScaleX * 1.35f, baseScaleY * 1.35f, 1.0f);
-        mesh(contactQuad, c2, col, white, outerAlpha);
+        QMatrix4x4 c2 = contact_base;
+        c2.scale(base_scale_x * 1.35F, base_scale_y * 1.35F, 1.0F);
+        mesh(contact_quad, c2, col, white, outer_alpha);
       }
     }
-    enqueueSelectionRing(entity, transform, unitComp, isSelected, isHovered);
-    mesh(meshToDraw, modelMatrix, color, res ? res->white() : nullptr, 1.0f);
+    enqueueSelectionRing(entity, transform, unit_comp, is_selected, is_hovered);
+    mesh(mesh_to_draw, model_matrix, color,
+         (res != nullptr) ? res->white() : nullptr, 1.0F);
   }
 }
 

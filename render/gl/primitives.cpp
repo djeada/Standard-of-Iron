@@ -1,34 +1,48 @@
 #include "primitives.h"
+#include "gl/mesh.h"
 #include <QVector3D>
+#include <algorithm>
 #include <cmath>
 #include <memory>
+#include <numbers>
+#include <qvectornd.h>
 #include <vector>
 
 namespace Render::GL {
 
 namespace {
 
-Mesh *createUnitCylinderMesh(int radialSegments) {
-  const float radius = 1.0f;
-  const float halfH = 0.5f;
+constexpr float kPi = std::numbers::pi_v<float>;
+constexpr float k_two_pi = 6.28318530718F;
+constexpr float k_half_scalar = 0.5F;
+constexpr float k_unit_radius = 1.0F;
+constexpr float k_micro_noise_frequency = 12.9898F;
+constexpr float k_micro_noise_scale = 43758.5453F;
+constexpr float k_uv_center = 0.5F;
+constexpr float k_uv_scale = 0.5F;
+constexpr int k_indices_per_quad = 6;
+
+auto createUnitCylinderMesh(int radialSegments) -> Mesh * {
+  const float radius = k_unit_radius;
+  const float half_h = k_half_scalar;
 
   std::vector<Vertex> v;
   std::vector<unsigned int> idx;
 
   for (int y = 0; y <= 1; ++y) {
-    float py = y ? halfH : -halfH;
-    float vCoord = float(y);
+    float py = (y != 0) ? half_h : -half_h;
+    auto v_coord = float(y);
     for (int i = 0; i <= radialSegments; ++i) {
       float u = float(i) / float(radialSegments);
-      float ang = u * 6.28318530718f;
+      float const ang = u * k_two_pi;
       float px = radius * std::cos(ang);
       float pz = radius * std::sin(ang);
-      QVector3D n(px, 0.0f, pz);
+      QVector3D n(px, 0.0F, pz);
       n.normalize();
-      v.push_back({{px, py, pz}, {n.x(), n.y(), n.z()}, {u, vCoord}});
+      v.push_back({{px, py, pz}, {n.x(), n.y(), n.z()}, {u, v_coord}});
     }
   }
-  int row = radialSegments + 1;
+  int const row = radialSegments + 1;
   for (int i = 0; i < radialSegments; ++i) {
     int a = 0 * row + i;
     int b = 0 * row + i + 1;
@@ -42,57 +56,61 @@ Mesh *createUnitCylinderMesh(int radialSegments) {
     idx.push_back(a);
   }
 
-  int baseTop = (int)v.size();
-  v.push_back({{0.0f, halfH, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.5f, 0.5f}});
+  int base_top = (int)v.size();
+  v.push_back(
+      {{0.0F, half_h, 0.0F}, {0.0F, 1.0F, 0.0F}, {k_uv_center, k_uv_center}});
   for (int i = 0; i <= radialSegments; ++i) {
-    float u = float(i) / float(radialSegments);
-    float ang = u * 6.28318530718f;
+    float const u = float(i) / float(radialSegments);
+    float const ang = u * k_two_pi;
     float px = radius * std::cos(ang);
     float pz = radius * std::sin(ang);
-    v.push_back({{px, halfH, pz},
-                 {0.0f, 1.0f, 0.0f},
-                 {0.5f + 0.5f * std::cos(ang), 0.5f + 0.5f * std::sin(ang)}});
+    v.push_back({{px, half_h, pz},
+                 {0.0F, 1.0F, 0.0F},
+                 {k_uv_center + k_uv_scale * std::cos(ang),
+                  k_uv_center + k_uv_scale * std::sin(ang)}});
   }
   for (int i = 1; i <= radialSegments; ++i) {
-    idx.push_back(baseTop);
-    idx.push_back(baseTop + i);
-    idx.push_back(baseTop + i + 1);
+    idx.push_back(base_top);
+    idx.push_back(base_top + i);
+    idx.push_back(base_top + i + 1);
   }
 
-  int baseBot = (int)v.size();
-  v.push_back({{0.0f, -halfH, 0.0f}, {0.0f, -1.0f, 0.0f}, {0.5f, 0.5f}});
+  int base_bot = (int)v.size();
+  v.push_back(
+      {{0.0F, -half_h, 0.0F}, {0.0F, -1.0F, 0.0F}, {k_uv_center, k_uv_center}});
   for (int i = 0; i <= radialSegments; ++i) {
-    float u = float(i) / float(radialSegments);
-    float ang = u * 6.28318530718f;
+    float const u = float(i) / float(radialSegments);
+    float const ang = u * k_two_pi;
     float px = radius * std::cos(ang);
     float pz = radius * std::sin(ang);
-    v.push_back({{px, -halfH, pz},
-                 {0.0f, -1.0f, 0.0f},
-                 {0.5f + 0.5f * std::cos(ang), 0.5f + 0.5f * std::sin(ang)}});
+    v.push_back({{px, -half_h, pz},
+                 {0.0F, -1.0F, 0.0F},
+                 {k_uv_center + k_uv_scale * std::cos(ang),
+                  k_uv_center + k_uv_scale * std::sin(ang)}});
   }
   for (int i = 1; i <= radialSegments; ++i) {
-    idx.push_back(baseBot);
-    idx.push_back(baseBot + i + 1);
-    idx.push_back(baseBot + i);
+    idx.push_back(base_bot);
+    idx.push_back(base_bot + i + 1);
+    idx.push_back(base_bot + i);
   }
 
   return new Mesh(v, idx);
 }
 
-Mesh *createUnitSphereMesh(int latSegments, int lonSegments) {
-  const float r = 1.0f;
+auto createUnitSphereMesh(int latSegments, int lonSegments) -> Mesh * {
+  const float r = k_unit_radius;
   std::vector<Vertex> v;
   std::vector<unsigned int> idx;
 
   for (int y = 0; y <= latSegments; ++y) {
     float vy = float(y) / float(latSegments);
-    float phi = vy * 3.14159265358979323846f;
+    float const phi = vy * kPi;
     float py = r * std::cos(phi);
-    float pr = r * std::sin(phi);
+    float const pr = r * std::sin(phi);
 
     for (int x = 0; x <= lonSegments; ++x) {
       float vx = float(x) / float(lonSegments);
-      float theta = vx * 6.28318530717958647692f;
+      float const theta = vx * k_two_pi;
       float px = pr * std::cos(theta);
       float pz = pr * std::sin(theta);
 
@@ -102,7 +120,7 @@ Mesh *createUnitSphereMesh(int latSegments, int lonSegments) {
     }
   }
 
-  int row = lonSegments + 1;
+  int const row = lonSegments + 1;
   for (int y = 0; y < latSegments; ++y) {
     for (int x = 0; x < lonSegments; ++x) {
       int a = y * row + x;
@@ -121,75 +139,78 @@ Mesh *createUnitSphereMesh(int latSegments, int lonSegments) {
   return new Mesh(v, idx);
 }
 
-Mesh *createUnitConeMesh(int radialSegments) {
-  const float baseR = 1.0f;
-  const float halfH = 0.5f;
+auto createUnitConeMesh(int radialSegments) -> Mesh * {
+  const float base_r = k_unit_radius;
+  const float half_h = k_half_scalar;
 
   std::vector<Vertex> v;
   std::vector<unsigned int> idx;
 
-  int apexIdx = 0;
-  v.push_back({{0.0f, +halfH, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.5f, 1.0f}});
+  int apex_idx = 0;
+  v.push_back({{0.0F, +half_h, 0.0F}, {0.0F, 1.0F, 0.0F}, {k_uv_center, 1.0F}});
 
   for (int i = 0; i <= radialSegments; ++i) {
     float u = float(i) / float(radialSegments);
-    float ang = u * 6.28318530718f;
-    float px = baseR * std::cos(ang);
-    float pz = baseR * std::sin(ang);
-    QVector3D n(px, baseR, pz);
+    float const ang = u * k_two_pi;
+    float px = base_r * std::cos(ang);
+    float pz = base_r * std::sin(ang);
+    QVector3D n(px, base_r, pz);
     n.normalize();
-    v.push_back({{px, -halfH, pz}, {n.x(), n.y(), n.z()}, {u, 0.0f}});
+    v.push_back({{px, -half_h, pz}, {n.x(), n.y(), n.z()}, {u, 0.0F}});
   }
 
   for (int i = 1; i <= radialSegments; ++i) {
-    idx.push_back(apexIdx);
+    idx.push_back(apex_idx);
     idx.push_back(i);
     idx.push_back(i + 1);
   }
 
-  int baseCenter = (int)v.size();
-  v.push_back({{0.0f, -halfH, 0.0f}, {0.0f, -1.0f, 0.0f}, {0.5f, 0.5f}});
-  int baseStart = (int)v.size();
+  int base_center = (int)v.size();
+  v.push_back(
+      {{0.0F, -half_h, 0.0F}, {0.0F, -1.0F, 0.0F}, {k_uv_center, k_uv_center}});
+  int const base_start = (int)v.size();
   for (int i = 0; i <= radialSegments; ++i) {
-    float u = float(i) / float(radialSegments);
-    float ang = u * 6.28318530718f;
-    float px = baseR * std::cos(ang);
-    float pz = baseR * std::sin(ang);
-    v.push_back({{px, -halfH, pz},
-                 {0.0f, -1.0f, 0.0f},
-                 {0.5f + 0.5f * std::cos(ang), 0.5f + 0.5f * std::sin(ang)}});
+    float const u = float(i) / float(radialSegments);
+    float const ang = u * k_two_pi;
+    float px = base_r * std::cos(ang);
+    float pz = base_r * std::sin(ang);
+    v.push_back({{px, -half_h, pz},
+                 {0.0F, -1.0F, 0.0F},
+                 {k_uv_center + k_uv_scale * std::cos(ang),
+                  k_uv_center + k_uv_scale * std::sin(ang)}});
   }
   for (int i = 0; i < radialSegments; ++i) {
-    idx.push_back(baseCenter);
-    idx.push_back(baseStart + i + 1);
-    idx.push_back(baseStart + i);
+    idx.push_back(base_center);
+    idx.push_back(base_start + i + 1);
+    idx.push_back(base_start + i);
   }
 
   return new Mesh(v, idx);
 }
 
-Mesh *createCapsuleMesh(int radialSegments, int heightSegments) {
-  const float radius = 0.25f;
-  const float halfH = 0.5f;
+auto createCapsuleMesh(int radialSegments, int heightSegments) -> Mesh * {
+  constexpr float k_capsule_radius = 0.25F;
+  const float radius = k_capsule_radius;
+  const float half_h = k_half_scalar;
 
   std::vector<Vertex> verts;
   std::vector<unsigned int> idx;
 
   for (int y = 0; y <= heightSegments; ++y) {
     float v = float(y) / float(heightSegments);
-    float py = -halfH + v * (2.0f * halfH);
+    float py = -half_h + v * (2.0F * half_h);
     for (int i = 0; i <= radialSegments; ++i) {
       float u = float(i) / float(radialSegments);
-      float ang = u * 6.2831853f;
+      float const ang = u * k_two_pi;
       float px = radius * std::cos(ang);
       float pz = radius * std::sin(ang);
-      QVector3D n(px, 0.0f, pz);
+      QVector3D n(px, 0.0F, pz);
       n.normalize();
       verts.push_back({{px, py, pz}, {n.x(), n.y(), n.z()}, {u, v}});
     }
   }
 
-  int row = radialSegments + 1;
+  int const row = radialSegments + 1;
   for (int y = 0; y < heightSegments; ++y) {
     for (int i = 0; i < radialSegments; ++i) {
       int a = y * row + i;
@@ -205,68 +226,116 @@ Mesh *createCapsuleMesh(int radialSegments, int heightSegments) {
     }
   }
 
-  int baseTop = (int)verts.size();
-  verts.push_back({{0.0f, halfH, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.5f, 0.5f}});
+  int base_top = (int)verts.size();
+  verts.push_back(
+      {{0.0F, half_h, 0.0F}, {0.0F, 1.0F, 0.0F}, {k_uv_center, k_uv_center}});
   for (int i = 0; i <= radialSegments; ++i) {
-    float u = float(i) / float(radialSegments);
-    float ang = u * 6.2831853f;
+    float const u = float(i) / float(radialSegments);
+    float const ang = u * k_two_pi;
     float px = radius * std::cos(ang);
     float pz = radius * std::sin(ang);
-    verts.push_back(
-        {{px, halfH, pz},
-         {0.0f, 1.0f, 0.0f},
-         {0.5f + 0.5f * std::cos(ang), 0.5f + 0.5f * std::sin(ang)}});
+    verts.push_back({{px, half_h, pz},
+                     {0.0F, 1.0F, 0.0F},
+                     {k_uv_center + k_uv_scale * std::cos(ang),
+                      k_uv_center + k_uv_scale * std::sin(ang)}});
   }
   for (int i = 1; i <= radialSegments; ++i) {
-    idx.push_back(baseTop);
-    idx.push_back(baseTop + i);
-    idx.push_back(baseTop + i + 1);
+    idx.push_back(base_top);
+    idx.push_back(base_top + i);
+    idx.push_back(base_top + i + 1);
   }
 
-  int baseBot = (int)verts.size();
-  verts.push_back({{0.0f, -halfH, 0.0f}, {0.0f, -1.0f, 0.0f}, {0.5f, 0.5f}});
+  int base_bot = (int)verts.size();
+  verts.push_back(
+      {{0.0F, -half_h, 0.0F}, {0.0F, -1.0F, 0.0F}, {k_uv_center, k_uv_center}});
   for (int i = 0; i <= radialSegments; ++i) {
-    float u = float(i) / float(radialSegments);
-    float ang = u * 6.2831853f;
+    float const u = float(i) / float(radialSegments);
+    float const ang = u * k_two_pi;
     float px = radius * std::cos(ang);
     float pz = radius * std::sin(ang);
-    verts.push_back(
-        {{px, -halfH, pz},
-         {0.0f, -1.0f, 0.0f},
-         {0.5f + 0.5f * std::cos(ang), 0.5f + 0.5f * std::sin(ang)}});
+    verts.push_back({{px, -half_h, pz},
+                     {0.0F, -1.0F, 0.0F},
+                     {k_uv_center + k_uv_scale * std::cos(ang),
+                      k_uv_center + k_uv_scale * std::sin(ang)}});
   }
   for (int i = 1; i <= radialSegments; ++i) {
-    idx.push_back(baseBot);
-    idx.push_back(baseBot + i + 1);
-    idx.push_back(baseBot + i);
+    idx.push_back(base_bot);
+    idx.push_back(base_bot + i + 1);
+    idx.push_back(base_bot + i);
   }
 
   return new Mesh(verts, idx);
 }
 
-float simpleHash(float seed) {
-  float x = std::sin(seed * 12.9898f) * 43758.5453f;
+auto simpleHash(float seed) -> float {
+  float const x =
+      std::sin(seed * k_micro_noise_frequency) * k_micro_noise_scale;
   return x - std::floor(x);
 }
 
-Mesh *createUnitTorsoMesh(int radialSegments, int heightSegments) {
-  const float halfH = 0.5f;
-  const float TWO_PI = 6.28318530718f;
+auto createUnitTorsoMesh(int radialSegments, int heightSegments) -> Mesh * {
+  const float half_h = k_half_scalar;
 
-  const bool invertProfile = true;
+  const bool invert_profile = true;
+
+  constexpr float k_band_epsilon = 1e-6F;
+  constexpr float k_radius_epsilon = 1e-8F;
+
+  constexpr float k_xforward_amp = 0.02F;
+  constexpr float k_xforward_start = 0.6F;
+  constexpr float k_xforward_end = 0.95F;
+  constexpr float k_xbackward_amp = -0.01F;
+  constexpr float k_xbackward_start = 0.0F;
+  constexpr float k_xbackward_end = 0.2F;
+
+  constexpr float k_lordosis_amp = -0.03F;
+  constexpr float k_lordosis_start = 0.15F;
+  constexpr float k_lordosis_end = 0.40F;
+  constexpr float k_chest_forward_amp = 0.035F;
+  constexpr float k_chest_forward_start = 0.65F;
+  constexpr float k_chest_forward_end = 0.85F;
+  constexpr float k_neck_back_amp = -0.015F;
+  constexpr float k_neck_back_start = 0.90F;
+  constexpr float k_neck_back_end = 1.0F;
+
+  constexpr float k_twist_amplitude = 0.10F;
+  constexpr float k_twist_start = 0.55F;
+  constexpr float k_twist_end = 0.95F;
+
+  constexpr float k_theta_sin_pos_amp = 0.07F;
+  constexpr float k_theta_sin_pos_start = 0.68F;
+  constexpr float k_theta_sin_pos_end = 0.88F;
+  constexpr float k_theta_sin_neg_amp = -0.03F;
+  constexpr float k_theta_sin_neg_start = 0.65F;
+  constexpr float k_theta_sin_neg_end = 0.90F;
+  constexpr float k_theta_cos_sq_amp = 0.06F;
+  constexpr float k_theta_cos_sq_start = 0.55F;
+  constexpr float k_theta_cos_sq_end = 0.75F;
+  constexpr float k_theta_cos_sq_neg_amp = -0.02F;
+  constexpr float k_theta_cos_sq_neg_start = 0.40F;
+  constexpr float k_theta_cos_sq_neg_end = 0.55F;
+  constexpr float k_theta_cos_amp = 0.015F;
+  constexpr float k_theta_cos_start = 0.70F;
+  constexpr float k_theta_cos_end = 0.95F;
+
+  constexpr float k_micro_temporal_frequency = 37.0F;
+  constexpr float k_micro_angular_frequency = 3.0F;
+  constexpr float k_micro_phase_offset = 1.23F;
+  constexpr float k_micro_center = 0.5F;
+  constexpr float k_micro_jitter = 0.004F;
 
   auto clampf = [](float x, float a, float b) {
     return x < a ? a : (x > b ? b : x);
   };
   auto smoothstep01 = [&](float x) {
-    x = clampf(x, 0.0f, 1.0f);
-    return x * x * (3.0f - 2.0f * x);
+    x = clampf(x, 0.0F, 1.0F);
+    return x * x * (3.0F - 2.0F * x);
   };
-  auto smoothBand = [&](float t, float a, float b) {
-    float enter = smoothstep01((t - a) / (b - a + 1e-6f));
-    float exit = smoothstep01((t - b) / (a - b - 1e-6f));
-    float v = enter < exit ? enter : exit;
-    return clampf(v, 0.0f, 1.0f);
+  auto smooth_band = [&](float t, float a, float b) {
+    float const enter = smoothstep01((t - a) / (b - a + k_band_epsilon));
+    float const exit = smoothstep01((t - b) / (a - b - k_band_epsilon));
+    float const v = enter < exit ? enter : exit;
+    return clampf(v, 0.0F, 1.0F);
   };
 
   struct Axes {
@@ -279,133 +348,156 @@ Mesh *createUnitTorsoMesh(int radialSegments, int heightSegments) {
   };
 
   const Key keys[] = {
-      {0.10f, {0.98f, 0.92f}}, {0.20f, {1.02f, 0.96f}}, {0.45f, {0.82f, 0.78f}},
-      {0.65f, {1.20f, 1.04f}}, {0.85f, {1.42f, 1.18f}}, {1.02f, {1.60f, 1.06f}},
-      {1.10f, {1.20f, 0.96f}},
+      {0.10F, {0.98F, 0.92F}}, {0.20F, {1.02F, 0.96F}}, {0.45F, {0.82F, 0.78F}},
+      {0.65F, {1.20F, 1.04F}}, {0.85F, {1.42F, 1.18F}}, {1.02F, {1.60F, 1.06F}},
+      {1.10F, {1.20F, 0.96F}},
   };
-  constexpr int KEY_COUNT = sizeof(keys) / sizeof(keys[0]);
+  constexpr int key_count = sizeof(keys) / sizeof(keys[0]);
 
-  auto catRom = [](float p0, float p1, float p2, float p3, float u) {
-    return 0.5f * ((2.0f * p1) + (-p0 + p2) * u +
-                   (2.0f * p0 - 5.0f * p1 + 4.0f * p2 - p3) * u * u +
-                   (-p0 + 3.0f * p1 - 3.0f * p2 + p3) * u * u * u);
+  auto cat_rom = [](float p0, float p1, float p2, float p3, float u) {
+    return 0.5F * ((2.0F * p1) + (-p0 + p2) * u +
+                   (2.0F * p0 - 5.0F * p1 + 4.0F * p2 - p3) * u * u +
+                   (-p0 + 3.0F * p1 - 3.0F * p2 + p3) * u * u * u);
   };
 
-  auto sampleAxes = [&](float t) -> Axes {
-    t = clampf(t, 0.0f, 1.0f);
+  auto sample_axes = [&](float t) -> Axes {
+    t = clampf(t, 0.0F, 1.0F);
     int i = 0;
-    while (i + 1 < KEY_COUNT && t > keys[i + 1].t) {
+    while (i + 1 < key_count && t > keys[i + 1].t) {
       ++i;
     }
-    int i0 = i > 0 ? i - 1 : 0;
-    int i1 = i;
-    int i2 = (i + 1 < KEY_COUNT) ? i + 1 : KEY_COUNT - 1;
-    int i3 = (i + 2 < KEY_COUNT) ? i + 2 : KEY_COUNT - 1;
+    int const i0 = i > 0 ? i - 1 : 0;
+    int const i1 = i;
+    int const i2 = (i + 1 < key_count) ? i + 1 : key_count - 1;
+    int const i3 = (i + 2 < key_count) ? i + 2 : key_count - 1;
 
-    float denom = (keys[i2].t - keys[i1].t);
-    float u = denom > 1e-6f ? (t - keys[i1].t) / denom : 0.0f;
-    u = clampf(u, 0.0f, 1.0f);
+    float const denom = (keys[i2].t - keys[i1].t);
+    float u = denom > k_band_epsilon ? (t - keys[i1].t) / denom : 0.0F;
+    u = clampf(u, 0.0F, 1.0F);
 
-    float ax =
-        catRom(keys[i0].A.ax, keys[i1].A.ax, keys[i2].A.ax, keys[i3].A.ax, u);
-    float az =
-        catRom(keys[i0].A.az, keys[i1].A.az, keys[i2].A.az, keys[i3].A.az, u);
+    float const ax =
+        cat_rom(keys[i0].A.ax, keys[i1].A.ax, keys[i2].A.ax, keys[i3].A.ax, u);
+    float const az =
+        cat_rom(keys[i0].A.az, keys[i1].A.az, keys[i2].A.az, keys[i3].A.az, u);
     return {ax, az};
   };
 
-  auto ellipseRadius = [](float a, float b, float ang) {
-    float c = std::cos(ang), s = std::sin(ang);
-    float denom = std::sqrt((b * b * c * c) + (a * a * s * s));
-    return (a * b) / (denom + 1e-8f);
+  auto ellipse_radius = [&](float a, float b, float ang) {
+    float c = std::cos(ang);
+    float s = std::sin(ang);
+    float const denom = std::sqrt((b * b * c * c) + (a * a * s * s));
+    return (a * b) / (denom + k_radius_epsilon);
   };
 
-  auto xOffsetAt = [&](float t) {
-    return 0.02f * smoothBand(t, 0.6f, 0.95f) -
-           0.01f * smoothBand(t, 0.0f, 0.2f);
+  auto x_offset_at = [&](float t) {
+    float const forward =
+        k_xforward_amp * smooth_band(t, k_xforward_start, k_xforward_end);
+    float const backward =
+        k_xbackward_amp * smooth_band(t, k_xbackward_start, k_xbackward_end);
+    return forward + backward;
   };
-  auto zOffsetAt = [&](float t) {
-    float lordosis = -0.03f * smoothBand(t, 0.15f, 0.40f);
-    float chestFwd = 0.035f * smoothBand(t, 0.65f, 0.85f);
-    float neckBack = -0.015f * smoothBand(t, 0.90f, 1.00f);
-    return lordosis + chestFwd + neckBack;
+  auto z_offset_at = [&](float t) {
+    float const lordosis =
+        k_lordosis_amp * smooth_band(t, k_lordosis_start, k_lordosis_end);
+    float const chest_fwd =
+        k_chest_forward_amp *
+        smooth_band(t, k_chest_forward_start, k_chest_forward_end);
+    float const neck_back =
+        k_neck_back_amp * smooth_band(t, k_neck_back_start, k_neck_back_end);
+    return lordosis + chest_fwd + neck_back;
   };
-  auto twistAt = [&](float t) { return 0.10f * smoothBand(t, 0.55f, 0.95f); };
-
-  auto thetaScale = [&](float t, float ang) {
-    float s = 0.0f;
-    float sinA = std::sin(ang), cosA = std::cos(ang), cos2 = cosA * cosA;
-    s += 0.07f * smoothBand(t, 0.68f, 0.88f) * std::max(0.0f, sinA);
-    s += -0.03f * smoothBand(t, 0.65f, 0.90f) * std::max(0.0f, -sinA);
-    s += 0.06f * smoothBand(t, 0.55f, 0.75f) * cos2;
-    s += -0.02f * smoothBand(t, 0.40f, 0.55f) * cos2;
-    s += 0.015f * smoothBand(t, 0.70f, 0.95f) * cosA;
-    return 1.0f + s;
+  auto twist_at = [&](float t) {
+    return k_twist_amplitude * smooth_band(t, k_twist_start, k_twist_end);
   };
 
-  auto micro = [](float s) {
-    float f = std::sin(s * 12.9898f) * 43758.5453f;
+  auto theta_scale = [&](float t, float ang) {
+    float s = 0.0F;
+    float sinA = std::sin(ang);
+    float cosA = std::cos(ang);
+    float cos2 = cosA * cosA;
+    s += k_theta_sin_pos_amp *
+         smooth_band(t, k_theta_sin_pos_start, k_theta_sin_pos_end) *
+         std::max(0.0F, sinA);
+    s += k_theta_sin_neg_amp *
+         smooth_band(t, k_theta_sin_neg_start, k_theta_sin_neg_end) *
+         std::max(0.0F, -sinA);
+    s += k_theta_cos_sq_amp *
+         smooth_band(t, k_theta_cos_sq_start, k_theta_cos_sq_end) * cos2;
+    s += k_theta_cos_sq_neg_amp *
+         smooth_band(t, k_theta_cos_sq_neg_start, k_theta_cos_sq_neg_end) *
+         cos2;
+    s += k_theta_cos_amp * smooth_band(t, k_theta_cos_start, k_theta_cos_end) *
+         cosA;
+    return 1.0F + s;
+  };
+
+  auto micro = [&](float s) {
+    float const f = std::sin(s * k_micro_noise_frequency) * k_micro_noise_scale;
     return f - std::floor(f);
   };
 
-  auto samplePos = [&](float t, float ang) -> QVector3D {
-    float ts = invertProfile ? (1.0f - t) : t;
+  auto sample_pos = [&](float t, float ang) -> QVector3D {
+    float const ts = invert_profile ? (1.0F - t) : t;
 
-    Axes A = sampleAxes(ts);
-    float twist = twistAt(ts);
-    float th = ang + twist;
+    Axes const A = sample_axes(ts);
+    float const twist = twist_at(ts);
+    float const th = ang + twist;
 
-    float R = ellipseRadius(A.ax, A.az, th);
-    float S = thetaScale(ts, th);
-    float r = R * S;
+    float const R = ellipse_radius(A.ax, A.az, th);
+    float const S = theta_scale(ts, th);
+    float const r = R * S;
 
     float px = r * std::cos(th);
     float pz = r * std::sin(th);
 
-    px += xOffsetAt(ts);
-    pz += zOffsetAt(ts);
+    px += x_offset_at(ts);
+    pz += z_offset_at(ts);
 
-    float py = -halfH + t * (2.0f * halfH);
+    float const py = -half_h + t * (2.0F * half_h);
 
-    float s = (t * 37.0f) + (ang * 3.0f);
-    px += (micro(s) - 0.5f) * 0.004f;
-    pz += (micro(s + 1.23f) - 0.5f) * 0.004f;
+    float const s_value =
+        (t * k_micro_temporal_frequency) + (ang * k_micro_angular_frequency);
+    px += (micro(s_value) - k_micro_center) * k_micro_jitter;
+    pz += (micro(s_value + k_micro_phase_offset) - k_micro_center) *
+          k_micro_jitter;
 
-    return QVector3D(px, py, pz);
+    return {px, py, pz};
   };
 
   std::vector<Vertex> v;
   std::vector<unsigned int> idx;
   v.reserve((radialSegments + 1) * (heightSegments + 1) +
             (radialSegments + 1) * 2 + 2);
-  idx.reserve(radialSegments * heightSegments * 6 + radialSegments * 6);
+  idx.reserve(radialSegments * heightSegments * k_indices_per_quad +
+              radialSegments * k_indices_per_quad);
 
   for (int y = 0; y <= heightSegments; ++y) {
-    float t = float(y) / float(heightSegments);
-    float dt = 1.0f / float(heightSegments);
-    float vCoord = t;
+    float const t = float(y) / float(heightSegments);
+    float const dt = 1.0F / float(heightSegments);
+    float v_coord = t;
 
     for (int i = 0; i <= radialSegments; ++i) {
       float u = float(i) / float(radialSegments);
-      float ang = u * TWO_PI;
-      float da = TWO_PI / float(radialSegments);
+      float const ang = u * k_two_pi;
+      float const da = k_two_pi / float(radialSegments);
 
-      QVector3D p = samplePos(t, ang);
-      QVector3D pu = samplePos(t, ang + da);
-      QVector3D pv = samplePos(clampf(t + dt, 0.0f, 1.0f), ang);
+      QVector3D const p = sample_pos(t, ang);
+      QVector3D const pu = sample_pos(t, ang + da);
+      QVector3D const pv = sample_pos(clampf(t + dt, 0.0F, 1.0F), ang);
 
-      QVector3D du = pu - p;
-      QVector3D dv = pv - p;
+      QVector3D const du = pu - p;
+      QVector3D const dv = pv - p;
 
       QVector3D n = QVector3D::crossProduct(du, dv);
-      if (n.lengthSquared() > 0.0f) {
+      if (n.lengthSquared() > 0.0F) {
         n.normalize();
       }
 
-      v.push_back({{p.x(), p.y(), p.z()}, {n.x(), n.y(), n.z()}, {u, vCoord}});
+      v.push_back({{p.x(), p.y(), p.z()}, {n.x(), n.y(), n.z()}, {u, v_coord}});
     }
   }
 
-  int row = radialSegments + 1;
+  int const row = radialSegments + 1;
   for (int y = 0; y < heightSegments; ++y) {
     for (int i = 0; i < radialSegments; ++i) {
       int a = y * row + i;
@@ -424,44 +516,50 @@ Mesh *createUnitTorsoMesh(int radialSegments, int heightSegments) {
 
   {
 
-    int baseTop = (int)v.size();
-    float tTop = 1.0f;
-    float tTopS = invertProfile ? (1.0f - tTop) : tTop;
-    QVector3D cTop(xOffsetAt(tTopS), halfH, zOffsetAt(tTopS));
-    v.push_back({{cTop.x(), cTop.y(), cTop.z()}, {0, 1, 0}, {0.5f, 0.5f}});
+    int base_top = (int)v.size();
+    float const tTop = 1.0F;
+    float const t_top_s = invert_profile ? (1.0F - tTop) : tTop;
+    QVector3D const cTop(x_offset_at(t_top_s), half_h, z_offset_at(t_top_s));
+    v.push_back({{cTop.x(), cTop.y(), cTop.z()},
+                 {0, 1, 0},
+                 {k_uv_center, k_uv_center}});
     for (int i = 0; i <= radialSegments; ++i) {
-      float u = float(i) / float(radialSegments);
-      float ang = u * TWO_PI;
-      QVector3D p = samplePos(tTop, ang);
+      float const u = float(i) / float(radialSegments);
+      float const ang = u * k_two_pi;
+      QVector3D const p = sample_pos(tTop, ang);
       v.push_back({{p.x(), p.y(), p.z()},
                    {0, 1, 0},
-                   {0.5f + 0.5f * std::cos(ang), 0.5f + 0.5f * std::sin(ang)}});
+                   {k_uv_center + k_uv_scale * std::cos(ang),
+                    k_uv_center + k_uv_scale * std::sin(ang)}});
     }
     for (int i = 1; i <= radialSegments; ++i) {
-      idx.push_back(baseTop);
-      idx.push_back(baseTop + i);
-      idx.push_back(baseTop + i + 1);
+      idx.push_back(base_top);
+      idx.push_back(base_top + i);
+      idx.push_back(base_top + i + 1);
     }
   }
   {
 
-    int baseBot = (int)v.size();
-    float tBot = 0.0f;
-    float tBotS = invertProfile ? (1.0f - tBot) : tBot;
-    QVector3D cBot(xOffsetAt(tBotS), -halfH, zOffsetAt(tBotS));
-    v.push_back({{cBot.x(), cBot.y(), cBot.z()}, {0, -1, 0}, {0.5f, 0.5f}});
+    int base_bot = (int)v.size();
+    float const tBot = 0.0F;
+    float const t_bot_s = invert_profile ? (1.0F - tBot) : tBot;
+    QVector3D const cBot(x_offset_at(t_bot_s), -half_h, z_offset_at(t_bot_s));
+    v.push_back({{cBot.x(), cBot.y(), cBot.z()},
+                 {0, -1, 0},
+                 {k_uv_center, k_uv_center}});
     for (int i = 0; i <= radialSegments; ++i) {
-      float u = float(i) / float(radialSegments);
-      float ang = u * TWO_PI;
-      QVector3D p = samplePos(tBot, ang);
+      float const u = float(i) / float(radialSegments);
+      float const ang = u * k_two_pi;
+      QVector3D const p = sample_pos(tBot, ang);
       v.push_back({{p.x(), p.y(), p.z()},
                    {0, -1, 0},
-                   {0.5f + 0.5f * std::cos(ang), 0.5f + 0.5f * std::sin(ang)}});
+                   {k_uv_center + k_uv_scale * std::cos(ang),
+                    k_uv_center + k_uv_scale * std::sin(ang)}});
     }
     for (int i = 1; i <= radialSegments; ++i) {
-      idx.push_back(baseBot);
-      idx.push_back(baseBot + i + 1);
-      idx.push_back(baseBot + i);
+      idx.push_back(base_bot);
+      idx.push_back(base_bot + i + 1);
+      idx.push_back(base_bot + i);
     }
   }
 
@@ -470,30 +568,31 @@ Mesh *createUnitTorsoMesh(int radialSegments, int heightSegments) {
 
 } // namespace
 
-Mesh *getUnitCylinder(int radialSegments) {
-  static std::unique_ptr<Mesh> s_mesh(createUnitCylinderMesh(radialSegments));
+auto getUnitCylinder(int radialSegments) -> Mesh * {
+  static std::unique_ptr<Mesh> const s_mesh(
+      createUnitCylinderMesh(radialSegments));
   return s_mesh.get();
 }
 
-Mesh *getUnitSphere(int latSegments, int lonSegments) {
-  static std::unique_ptr<Mesh> s_mesh(
+auto getUnitSphere(int latSegments, int lonSegments) -> Mesh * {
+  static std::unique_ptr<Mesh> const s_mesh(
       createUnitSphereMesh(latSegments, lonSegments));
   return s_mesh.get();
 }
 
-Mesh *getUnitCone(int radialSegments) {
-  static std::unique_ptr<Mesh> s_mesh(createUnitConeMesh(radialSegments));
+auto getUnitCone(int radialSegments) -> Mesh * {
+  static std::unique_ptr<Mesh> const s_mesh(createUnitConeMesh(radialSegments));
   return s_mesh.get();
 }
 
-Mesh *getUnitCapsule(int radialSegments, int heightSegments) {
-  static std::unique_ptr<Mesh> s_mesh(
+auto getUnitCapsule(int radialSegments, int heightSegments) -> Mesh * {
+  static std::unique_ptr<Mesh> const s_mesh(
       createCapsuleMesh(radialSegments, heightSegments));
   return s_mesh.get();
 }
 
-Mesh *getUnitTorso(int radialSegments, int heightSegments) {
-  static std::unique_ptr<Mesh> s_mesh(
+auto getUnitTorso(int radialSegments, int heightSegments) -> Mesh * {
+  static std::unique_ptr<Mesh> const s_mesh(
       createUnitTorsoMesh(radialSegments, heightSegments));
   return s_mesh.get();
 }

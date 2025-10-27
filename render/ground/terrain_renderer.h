@@ -10,8 +10,7 @@
 #include <memory>
 #include <vector>
 
-namespace Render {
-namespace GL {
+namespace Render::GL {
 class Buffer;
 class Renderer;
 class ResourceManager;
@@ -21,9 +20,9 @@ class Texture;
 class TerrainRenderer : public IRenderPass {
 public:
   TerrainRenderer();
-  ~TerrainRenderer();
+  ~TerrainRenderer() override;
 
-  void configure(const Game::Map::TerrainHeightMap &heightMap,
+  void configure(const Game::Map::TerrainHeightMap &height_map,
                  const Game::Map::BiomeSettings &biomeSettings);
 
   void submit(Renderer &renderer, ResourceManager *resources) override;
@@ -32,9 +31,10 @@ public:
 
 private:
   void buildMeshes();
-  int sectionFor(Game::Map::TerrainType type) const;
+  [[nodiscard]] static auto sectionFor(Game::Map::TerrainType type) -> int;
 
-  QVector3D getTerrainColor(Game::Map::TerrainType type, float height) const;
+  [[nodiscard]] auto getTerrainColor(Game::Map::TerrainType type,
+                                     float height) const -> QVector3D;
   struct ChunkMesh {
     std::unique_ptr<Mesh> mesh;
     int minX = 0;
@@ -42,23 +42,30 @@ private:
     int minZ = 0;
     int maxZ = 0;
     Game::Map::TerrainType type = Game::Map::TerrainType::Flat;
-    QVector3D color{0.3f, 0.5f, 0.3f};
-    float averageHeight = 0.0f;
-    float tint = 1.0f;
+    static constexpr float kDefaultColorR = 0.3F;
+    static constexpr float kDefaultColorG = 0.5F;
+    static constexpr float kDefaultColorB = 0.3F;
+
+    static auto defaultColor() -> QVector3D {
+      return {kDefaultColorR, kDefaultColorG, kDefaultColorB};
+    }
+
+    QVector3D color = defaultColor();
+    float averageHeight = 0.0F;
+    float tint = 1.0F;
     TerrainChunkParams params;
   };
 
   int m_width = 0;
   int m_height = 0;
-  float m_tileSize = 1.0f;
+  float m_tile_size = 1.0F;
   bool m_wireframe = false;
 
   std::vector<float> m_heightData;
-  std::vector<Game::Map::TerrainType> m_terrainTypes;
+  std::vector<Game::Map::TerrainType> m_terrain_types;
   std::vector<ChunkMesh> m_chunks;
   Game::Map::BiomeSettings m_biomeSettings;
-  std::uint32_t m_noiseSeed = 0u;
+  std::uint32_t m_noiseSeed = 0U;
 };
 
-} // namespace GL
-} // namespace Render
+} // namespace Render::GL

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "render_constants.h"
 #include <QDebug>
 #include <QOpenGLContext>
 #include <QOpenGLExtraFunctions>
@@ -15,11 +16,15 @@ public:
   ~PersistentRingBuffer() { destroy(); }
 
   PersistentRingBuffer(const PersistentRingBuffer &) = delete;
-  PersistentRingBuffer &operator=(const PersistentRingBuffer &) = delete;
+  auto
+  operator=(const PersistentRingBuffer &) -> PersistentRingBuffer & = delete;
 
-  bool initialize(std::size_t capacity, int buffersInFlight = 3) {
-    if (m_buffer != 0)
+  auto
+  initialize(std::size_t capacity,
+             int buffersInFlight = BufferCapacity::BuffersInFlight) -> bool {
+    if (m_buffer != 0) {
       return false;
+    }
 
     initializeOpenGLFunctions();
 
@@ -40,7 +45,7 @@ public:
     const GLbitfield mapFlags = 0x0002 | 0x0040 | 0x0080;
 
     QOpenGLContext *ctx = QOpenGLContext::currentContext();
-    if (!ctx) {
+    if (ctx == nullptr) {
       qWarning() << "PersistentRingBuffer: No current OpenGL context";
       glBindBuffer(GL_ARRAY_BUFFER, 0);
       glDeleteBuffers(1, &m_buffer);
@@ -50,11 +55,10 @@ public:
 
     typedef void(QOPENGLF_APIENTRYP type_glBufferStorage)(
         GLenum target, GLsizeiptr size, const void *data, GLbitfield flags);
-    type_glBufferStorage glBufferStorage =
-        reinterpret_cast<type_glBufferStorage>(
-            ctx->getProcAddress("glBufferStorage"));
+    auto glBufferStorage = reinterpret_cast<type_glBufferStorage>(
+        ctx->getProcAddress("glBufferStorage"));
 
-    if (!glBufferStorage) {
+    if (glBufferStorage == nullptr) {
       glBindBuffer(GL_ARRAY_BUFFER, 0);
       glDeleteBuffers(1, &m_buffer);
       m_buffer = 0;
@@ -64,7 +68,7 @@ public:
     glBufferStorage(GL_ARRAY_BUFFER, m_totalSize, nullptr,
                     storageFlags | mapFlags);
 
-    GLenum err = glGetError();
+    GLenum const err = glGetError();
     if (err != GL_NO_ERROR) {
       qWarning() << "PersistentRingBuffer: glBufferStorage failed with error:"
                  << err;
@@ -78,7 +82,7 @@ public:
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-    if (!m_mappedPtr) {
+    if (m_mappedPtr == nullptr) {
       qWarning() << "PersistentRingBuffer: glMapBufferRange failed";
       destroy();
       return false;
@@ -88,12 +92,13 @@ public:
   }
 
   void destroy() {
-    if (m_buffer == 0)
+    if (m_buffer == 0) {
       return;
+    }
 
     initializeOpenGLFunctions();
 
-    if (m_mappedPtr) {
+    if (m_mappedPtr != nullptr) {
       glBindBuffer(GL_ARRAY_BUFFER, m_buffer);
       glUnmapBuffer(GL_ARRAY_BUFFER);
       glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -112,29 +117,34 @@ public:
     m_currentCount = 0;
   }
 
-  std::size_t write(const T *data, std::size_t count) {
-    if (!m_mappedPtr || count == 0 || count > m_capacity)
+  auto write(const T *data, std::size_t count) -> std::size_t {
+    if ((m_mappedPtr == nullptr) || count == 0 || count > m_capacity) {
       return 0;
+    }
 
-    std::size_t writeOffset = m_frameOffset + m_currentCount * sizeof(T);
+    std::size_t const writeOffset = m_frameOffset + m_currentCount * sizeof(T);
     void *dest = static_cast<char *>(m_mappedPtr) + writeOffset;
     std::memcpy(dest, data, count * sizeof(T));
 
-    std::size_t elementOffset = m_currentCount;
+    std::size_t const elementOffset = m_currentCount;
     m_currentCount += count;
 
     return elementOffset;
   }
 
-  GLuint buffer() const { return m_buffer; }
+  [[nodiscard]] auto buffer() const -> GLuint { return m_buffer; }
 
-  std::size_t currentOffset() const { return m_frameOffset; }
+  [[nodiscard]] auto currentOffset() const -> std::size_t {
+    return m_frameOffset;
+  }
 
-  std::size_t capacity() const { return m_capacity; }
+  [[nodiscard]] auto capacity() const -> std::size_t { return m_capacity; }
 
-  std::size_t count() const { return m_currentCount; }
+  [[nodiscard]] auto count() const -> std::size_t { return m_currentCount; }
 
-  bool isValid() const { return m_buffer != 0 && m_mappedPtr != nullptr; }
+  [[nodiscard]] auto isValid() const -> bool {
+    return m_buffer != 0 && m_mappedPtr != nullptr;
+  }
 
 private:
   GLuint m_buffer = 0;
@@ -143,7 +153,7 @@ private:
   std::size_t m_totalSize = 0;
   std::size_t m_frameOffset = 0;
   std::size_t m_currentCount = 0;
-  int m_buffersInFlight = 3;
+  int m_buffersInFlight = BufferCapacity::BuffersInFlight;
   int m_currentFrame = 0;
 };
 

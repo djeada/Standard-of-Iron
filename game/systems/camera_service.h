@@ -2,21 +2,16 @@
 
 #include <memory>
 
-namespace Engine {
-namespace Core {
+namespace Engine::Core {
 class World;
 class Entity;
-} // namespace Core
-} // namespace Engine
+} // namespace Engine::Core
 
-namespace Render {
-namespace GL {
+namespace Render::GL {
 class Camera;
 }
-} // namespace Render
 
-namespace Game {
-namespace Systems {
+namespace Game::Systems {
 
 class CameraController;
 class CameraFollowSystem;
@@ -31,15 +26,17 @@ public:
   void elevate(Render::GL::Camera &camera, float dy);
   void zoom(Render::GL::Camera &camera, float delta);
   void yaw(Render::GL::Camera &camera, float degrees);
-  void orbit(Render::GL::Camera &camera, float yawDeg, float pitchDeg);
+  void orbit(Render::GL::Camera &camera, float yaw_deg, float pitch_deg);
   void orbitDirection(Render::GL::Camera &camera, int direction, bool shift);
   void followSelection(Render::GL::Camera &camera, Engine::Core::World &world,
                        bool enable);
   void setFollowLerp(Render::GL::Camera &camera, float alpha);
-  float getDistance(const Render::GL::Camera &camera) const;
+  [[nodiscard]] static auto
+  getDistance(const Render::GL::Camera &camera) -> float;
   void resetCamera(Render::GL::Camera &camera, Engine::Core::World &world,
                    int localOwnerId, unsigned int playerUnitId);
-  void snapToEntity(Render::GL::Camera &camera, Engine::Core::Entity &entity);
+  static void snapToEntity(Render::GL::Camera &camera,
+                           Engine::Core::Entity &entity);
   void updateFollow(Render::GL::Camera &camera, Engine::Core::World &world,
                     bool followEnabled);
 
@@ -48,5 +45,4 @@ private:
   std::unique_ptr<CameraFollowSystem> m_followSystem;
 };
 
-} // namespace Systems
-} // namespace Game
+} // namespace Game::Systems

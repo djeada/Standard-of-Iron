@@ -1,12 +1,15 @@
 #include "ai_command_filter.h"
+#include "systems/ai_system/ai_types.h"
 #include <algorithm>
 #include <cmath>
+#include <cstddef>
+#include <utility>
+#include <vector>
 
 namespace Game::Systems::AI {
 
-std::vector<AICommand>
-AICommandFilter::filter(const std::vector<AICommand> &commands,
-                        float currentTime) {
+auto AICommandFilter::filter(const std::vector<AICommand> &commands,
+                             float currentTime) -> std::vector<AICommand> {
   std::vector<AICommand> filtered;
   filtered.reserve(commands.size());
 
@@ -17,67 +20,71 @@ AICommandFilter::filter(const std::vector<AICommand> &commands,
       continue;
     }
 
-    std::vector<Engine::Core::EntityID> validUnits;
-    validUnits.reserve(cmd.units.size());
-    int blockedCount = 0;
+    std::vector<Engine::Core::EntityID> valid_units;
+    valid_units.reserve(cmd.units.size());
+    int blocked_count = 0;
 
     for (size_t i = 0; i < cmd.units.size(); ++i) {
-      Engine::Core::EntityID unitId = cmd.units[i];
+      Engine::Core::EntityID const unit_id = cmd.units[i];
 
-      Engine::Core::EntityID targetId = 0;
-      float moveX = 0.0f, moveY = 0.0f, moveZ = 0.0f;
+      Engine::Core::EntityID target_id = 0;
+      float move_x = 0.0F;
+      float move_y = 0.0F;
+      float move_z = 0.0F;
 
       if (cmd.type == AICommandType::AttackTarget) {
-        targetId = cmd.targetId;
+        target_id = cmd.target_id;
       } else if (cmd.type == AICommandType::MoveUnits) {
 
         if (i < cmd.moveTargetX.size()) {
-          moveX = cmd.moveTargetX[i];
-          moveY = cmd.moveTargetY[i];
-          moveZ = cmd.moveTargetZ[i];
+          move_x = cmd.moveTargetX[i];
+          move_y = cmd.moveTargetY[i];
+          move_z = cmd.moveTargetZ[i];
         }
       }
 
-      if (!isDuplicate(unitId, cmd.type, targetId, moveX, moveY, moveZ,
+      if (!isDuplicate(unit_id, cmd.type, target_id, move_x, move_y, move_z,
                        currentTime)) {
-        validUnits.push_back(unitId);
+        valid_units.push_back(unit_id);
       } else {
-        blockedCount++;
+        blocked_count++;
       }
     }
 
-    if (blockedCount > 0) {
+    if (blocked_count > 0) {
       continue;
     }
 
-    if (!validUnits.empty()) {
-      AICommand filteredCmd = cmd;
-      filteredCmd.units = validUnits;
+    if (!valid_units.empty()) {
+      AICommand filtered_cmd = cmd;
+      filtered_cmd.units = valid_units;
 
       if (cmd.type == AICommandType::MoveUnits) {
-        std::vector<float> newTargetX, newTargetY, newTargetZ;
-        newTargetX.reserve(validUnits.size());
-        newTargetY.reserve(validUnits.size());
-        newTargetZ.reserve(validUnits.size());
+        std::vector<float> new_target_x;
+        std::vector<float> new_target_y;
+        std::vector<float> new_target_z;
+        new_target_x.reserve(valid_units.size());
+        new_target_y.reserve(valid_units.size());
+        new_target_z.reserve(valid_units.size());
 
         for (size_t i = 0; i < cmd.units.size(); ++i) {
 
-          if (std::find(validUnits.begin(), validUnits.end(), cmd.units[i]) !=
-              validUnits.end()) {
+          if (std::find(valid_units.begin(), valid_units.end(), cmd.units[i]) !=
+              valid_units.end()) {
             if (i < cmd.moveTargetX.size()) {
-              newTargetX.push_back(cmd.moveTargetX[i]);
-              newTargetY.push_back(cmd.moveTargetY[i]);
-              newTargetZ.push_back(cmd.moveTargetZ[i]);
+              new_target_x.push_back(cmd.moveTargetX[i]);
+              new_target_y.push_back(cmd.moveTargetY[i]);
+              new_target_z.push_back(cmd.moveTargetZ[i]);
             }
           }
         }
 
-        filteredCmd.moveTargetX = std::move(newTargetX);
-        filteredCmd.moveTargetY = std::move(newTargetY);
-        filteredCmd.moveTargetZ = std::move(newTargetZ);
+        filtered_cmd.moveTargetX = std::move(new_target_x);
+        filtered_cmd.moveTargetY = std::move(new_target_y);
+        filtered_cmd.moveTargetZ = std::move(new_target_z);
       }
 
-      filtered.push_back(std::move(filteredCmd));
+      filtered.push_back(std::move(filtered_cmd));
 
       recordCommand(filtered.back(), currentTime);
     }
@@ -90,13 +97,13 @@ void AICommandFilter::update(float currentTime) { cleanupHistory(currentTime); }
 
 void AICommandFilter::reset() { m_history.clear(); }
 
-bool AICommandFilter::isDuplicate(Engine::Core::EntityID unitId,
+auto AICommandFilter::isDuplicate(Engine::Core::EntityID unit_id,
                                   AICommandType type,
-                                  Engine::Core::EntityID targetId, float moveX,
-                                  float moveY, float moveZ,
-                                  float currentTime) const {
+                                  Engine::Core::EntityID target_id,
+                                  float move_x, float move_y, float move_z,
+                                  float currentTime) const -> bool {
   for (const auto &entry : m_history) {
-    if (entry.isSimilarTo(type, unitId, targetId, moveX, moveY, moveZ,
+    if (entry.isSimilarTo(type, unit_id, target_id, move_x, move_y, move_z,
                           currentTime, m_cooldownPeriod)) {
       return true;
     }
@@ -106,18 +113,18 @@ bool AICommandFilter::isDuplicate(Engine::Core::EntityID unitId,
 
 void AICommandFilter::recordCommand(const AICommand &cmd, float currentTime) {
   for (size_t i = 0; i < cmd.units.size(); ++i) {
-    CommandHistory entry;
-    entry.unitId = cmd.units[i];
+    CommandHistory entry{};
+    entry.unit_id = cmd.units[i];
     entry.type = cmd.type;
     entry.issuedTime = currentTime;
 
     if (cmd.type == AICommandType::AttackTarget) {
-      entry.targetId = cmd.targetId;
-      entry.moveTargetX = 0.0f;
-      entry.moveTargetY = 0.0f;
-      entry.moveTargetZ = 0.0f;
+      entry.target_id = cmd.target_id;
+      entry.moveTargetX = 0.0F;
+      entry.moveTargetY = 0.0F;
+      entry.moveTargetZ = 0.0F;
     } else if (cmd.type == AICommandType::MoveUnits) {
-      entry.targetId = 0;
+      entry.target_id = 0;
       if (i < cmd.moveTargetX.size()) {
         entry.moveTargetX = cmd.moveTargetX[i];
         entry.moveTargetY = cmd.moveTargetY[i];
@@ -125,10 +132,10 @@ void AICommandFilter::recordCommand(const AICommand &cmd, float currentTime) {
       }
     } else {
 
-      entry.targetId = 0;
-      entry.moveTargetX = 0.0f;
-      entry.moveTargetY = 0.0f;
-      entry.moveTargetZ = 0.0f;
+      entry.target_id = 0;
+      entry.moveTargetX = 0.0F;
+      entry.moveTargetY = 0.0F;
+      entry.moveTargetZ = 0.0F;
     }
 
     m_history.push_back(entry);
@@ -145,14 +152,12 @@ void AICommandFilter::cleanupHistory(float currentTime) {
                   m_history.end());
 }
 
-bool AICommandFilter::CommandHistory::isSimilarTo(const AICommandType &cmdType,
-                                                  Engine::Core::EntityID unit,
-                                                  Engine::Core::EntityID target,
-                                                  float x, float y, float z,
-                                                  float currentTime,
-                                                  float cooldown) const {
+auto AICommandFilter::CommandHistory::isSimilarTo(
+    const AICommandType &cmdType, Engine::Core::EntityID unit,
+    Engine::Core::EntityID target, float x, float y, float z, float currentTime,
+    float cooldown) const -> bool {
 
-  if (unitId != unit) {
+  if (unit_id != unit) {
     return false;
   }
 
@@ -167,16 +172,16 @@ bool AICommandFilter::CommandHistory::isSimilarTo(const AICommandType &cmdType,
   switch (cmdType) {
   case AICommandType::AttackTarget:
 
-    return (targetId == target);
+    return (target_id == target);
 
   case AICommandType::MoveUnits: {
 
     const float dx = moveTargetX - x;
     const float dy = moveTargetY - y;
     const float dz = moveTargetZ - z;
-    const float distSq = dx * dx + dy * dy + dz * dz;
-    const float threshold = 3.0f * 3.0f;
-    return distSq < threshold;
+    const float dist_sq = dx * dx + dy * dy + dz * dz;
+    const float threshold = 3.0F * 3.0F;
+    return dist_sq < threshold;
   }
 
   case AICommandType::StartProduction:
