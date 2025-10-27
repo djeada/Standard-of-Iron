@@ -12,33 +12,37 @@ namespace Game::Systems {
 
 class SaveStorage {
 public:
-  explicit SaveStorage(QString databasePath);
+  explicit SaveStorage(QString database_path);
   ~SaveStorage();
 
-  bool initialize(QString *outError = nullptr);
+  auto initialize(QString *out_error = nullptr) -> bool;
 
-  bool saveSlot(const QString &slotName, const QString &title,
+  auto saveSlot(const QString &slotName, const QString &title,
                 const QJsonObject &metadata, const QByteArray &worldState,
-                const QByteArray &screenshot, QString *outError = nullptr);
+                const QByteArray &screenshot,
+                QString *out_error = nullptr) -> bool;
 
-  bool loadSlot(const QString &slotName, QByteArray &worldState,
+  auto loadSlot(const QString &slotName, QByteArray &worldState,
                 QJsonObject &metadata, QByteArray &screenshot, QString &title,
-                QString *outError = nullptr);
+                QString *out_error = nullptr) -> bool;
 
-  QVariantList listSlots(QString *outError = nullptr) const;
+  auto listSlots(QString *out_error = nullptr) const -> QVariantList;
 
-  bool deleteSlot(const QString &slotName, QString *outError = nullptr);
+  auto deleteSlot(const QString &slotName,
+                  QString *out_error = nullptr) -> bool;
 
 private:
-  bool open(QString *outError = nullptr) const;
-  bool ensureSchema(QString *outError = nullptr) const;
-  bool createBaseSchema(QString *outError = nullptr) const;
-  bool migrateSchema(int fromVersion, QString *outError = nullptr) const;
-  int schemaVersion(QString *outError = nullptr) const;
-  bool setSchemaVersion(int version, QString *outError = nullptr) const;
+  auto open(QString *out_error = nullptr) const -> bool;
+  auto ensureSchema(QString *out_error = nullptr) const -> bool;
+  auto createBaseSchema(QString *out_error = nullptr) const -> bool;
+  auto migrateSchema(int fromVersion,
+                     QString *out_error = nullptr) const -> bool;
+  auto schemaVersion(QString *out_error = nullptr) const -> int;
+  auto setSchemaVersion(int version,
+                        QString *out_error = nullptr) const -> bool;
 
-  QString m_databasePath;
-  QString m_connectionName;
+  QString m_database_path;
+  QString m_connection_name;
   mutable bool m_initialized = false;
   mutable QSqlDatabase m_database;
 };

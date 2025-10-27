@@ -8,75 +8,82 @@
 #include "../../game/systems/selection_system.h"
 #include "../../render/gl/camera.h"
 #include "../utils/movement_utils.h"
+#include "units/spawn_type.h"
 #include <QPointF>
+#include <qglobal.h>
+#include <qobject.h>
+#include <qtmetamacros.h>
+#include <qvectornd.h>
 
 namespace App::Controllers {
 
 CommandController::CommandController(
-    Engine::Core::World *world, Game::Systems::SelectionSystem *selectionSystem,
+    Engine::Core::World *world,
+    Game::Systems::SelectionSystem *selection_system,
     Game::Systems::PickingService *pickingService, QObject *parent)
-    : QObject(parent), m_world(world), m_selectionSystem(selectionSystem),
+    : QObject(parent), m_world(world), m_selection_system(selection_system),
       m_pickingService(pickingService) {}
 
-CommandResult CommandController::onAttackClick(qreal sx, qreal sy,
-                                               int viewportWidth,
-                                               int viewportHeight,
-                                               void *camera) {
+auto CommandController::onAttackClick(qreal sx, qreal sy, int viewportWidth,
+                                      int viewportHeight,
+                                      void *camera) -> CommandResult {
   CommandResult result;
-  if (!m_selectionSystem || !m_pickingService || !camera || !m_world) {
+  if ((m_selection_system == nullptr) || (m_pickingService == nullptr) ||
+      (camera == nullptr) || (m_world == nullptr)) {
     result.resetCursorToNormal = true;
     return result;
   }
 
-  const auto &selected = m_selectionSystem->getSelectedUnits();
+  const auto &selected = m_selection_system->getSelectedUnits();
   if (selected.empty()) {
     result.resetCursorToNormal = true;
     return result;
   }
 
   auto *cam = static_cast<Render::GL::Camera *>(camera);
-  Engine::Core::EntityID targetId = m_pickingService->pickUnitFirst(
+  Engine::Core::EntityID const target_id = m_pickingService->pickUnitFirst(
       float(sx), float(sy), *m_world, *cam, viewportWidth, viewportHeight, 0);
 
-  if (targetId == 0) {
+  if (target_id == 0) {
     result.resetCursorToNormal = true;
     return result;
   }
 
-  auto *targetEntity = m_world->getEntity(targetId);
-  if (!targetEntity) {
+  auto *target_entity = m_world->getEntity(target_id);
+  if (target_entity == nullptr) {
     return result;
   }
 
-  auto *targetUnit = targetEntity->getComponent<Engine::Core::UnitComponent>();
-  if (!targetUnit) {
+  auto *target_unit =
+      target_entity->getComponent<Engine::Core::UnitComponent>();
+  if (target_unit == nullptr) {
     return result;
   }
 
-  Game::Systems::CommandService::attackTarget(*m_world, selected, targetId,
-                                              true);
+  Game::Systems::CommandService::attack_target(*m_world, selected, target_id,
+                                               true);
 
-  emit attackTargetSelected();
+  emit attack_targetSelected();
 
   result.inputConsumed = true;
   result.resetCursorToNormal = true;
   return result;
 }
 
-CommandResult CommandController::onStopCommand() {
+auto CommandController::onStopCommand() -> CommandResult {
   CommandResult result;
-  if (!m_selectionSystem || !m_world) {
+  if ((m_selection_system == nullptr) || (m_world == nullptr)) {
     return result;
   }
 
-  const auto &selected = m_selectionSystem->getSelectedUnits();
+  const auto &selected = m_selection_system->getSelectedUnits();
   if (selected.empty()) {
     return result;
   }
 
   for (auto id : selected) {
     auto *entity = m_world->getEntity(id);
-    if (!entity) {
+    if (entity == nullptr) {
       continue;
     }
 
@@ -88,11 +95,11 @@ CommandResult CommandController::onStopCommand() {
       patrol->waypoints.clear();
     }
 
-    auto *holdMode = entity->getComponent<Engine::Core::HoldModeComponent>();
-    if (holdMode && holdMode->active) {
-      holdMode->active = false;
-      holdMode->exitCooldown = holdMode->standUpDuration;
-      emit holdModeChanged(false);
+    auto *hold_mode = entity->getComponent<Engine::Core::HoldModeComponent>();
+    if ((hold_mode != nullptr) && hold_mode->active) {
+      hold_mode->active = false;
+      hold_mode->exitCooldown = hold_mode->standUpDuration;
+      emit hold_modeChanged(false);
     }
   }
 
@@ -101,36 +108,37 @@ CommandResult CommandController::onStopCommand() {
   return result;
 }
 
-CommandResult CommandController::onHoldCommand() {
+auto CommandController::onHoldCommand() -> CommandResult {
   CommandResult result;
-  if (!m_selectionSystem || !m_world) {
+  if ((m_selection_system == nullptr) || (m_world == nullptr)) {
     return result;
   }
 
-  const auto &selected = m_selectionSystem->getSelectedUnits();
+  const auto &selected = m_selection_system->getSelectedUnits();
   if (selected.empty()) {
     return result;
   }
 
   for (auto id : selected) {
     auto *entity = m_world->getEntity(id);
-    if (!entity) {
+    if (entity == nullptr) {
       continue;
     }
 
     auto *unit = entity->getComponent<Engine::Core::UnitComponent>();
 
-    if (!unit || (unit->spawnType != Game::Units::SpawnType::Archer &&
-                  unit->spawnType != Game::Units::SpawnType::Spearman)) {
+    if ((unit == nullptr) ||
+        (unit->spawn_type != Game::Units::SpawnType::Archer &&
+         unit->spawn_type != Game::Units::SpawnType::Spearman)) {
       continue;
     }
 
-    auto *holdMode = entity->getComponent<Engine::Core::HoldModeComponent>();
+    auto *hold_mode = entity->getComponent<Engine::Core::HoldModeComponent>();
 
-    if (holdMode && holdMode->active) {
-      holdMode->active = false;
-      holdMode->exitCooldown = holdMode->standUpDuration;
-      emit holdModeChanged(false);
+    if ((hold_mode != nullptr) && hold_mode->active) {
+      hold_mode->active = false;
+      hold_mode->exitCooldown = hold_mode->standUpDuration;
+      emit hold_modeChanged(false);
       continue;
     }
 
@@ -142,20 +150,20 @@ CommandResult CommandController::onHoldCommand() {
       patrol->waypoints.clear();
     }
 
-    if (!holdMode) {
-      holdMode = entity->addComponent<Engine::Core::HoldModeComponent>();
+    if (hold_mode == nullptr) {
+      hold_mode = entity->addComponent<Engine::Core::HoldModeComponent>();
     }
-    holdMode->active = true;
-    holdMode->exitCooldown = 0.0f;
-    emit holdModeChanged(true);
+    hold_mode->active = true;
+    hold_mode->exitCooldown = 0.0F;
+    emit hold_modeChanged(true);
 
     auto *movement = entity->getComponent<Engine::Core::MovementComponent>();
-    if (movement) {
+    if (movement != nullptr) {
       movement->hasTarget = false;
       movement->path.clear();
       movement->pathPending = false;
-      movement->vx = 0.0f;
-      movement->vz = 0.0f;
+      movement->vx = 0.0F;
+      movement->vz = 0.0F;
     }
   }
 
@@ -164,12 +172,12 @@ CommandResult CommandController::onHoldCommand() {
   return result;
 }
 
-CommandResult CommandController::onPatrolClick(qreal sx, qreal sy,
-                                               int viewportWidth,
-                                               int viewportHeight,
-                                               void *camera) {
+auto CommandController::onPatrolClick(qreal sx, qreal sy, int viewportWidth,
+                                      int viewportHeight,
+                                      void *camera) -> CommandResult {
   CommandResult result;
-  if (!m_selectionSystem || !m_world || !m_pickingService || !camera) {
+  if ((m_selection_system == nullptr) || (m_world == nullptr) ||
+      (m_pickingService == nullptr) || (camera == nullptr)) {
     if (m_hasPatrolFirstWaypoint) {
       clearPatrolFirstWaypoint();
       result.resetCursorToNormal = true;
@@ -177,7 +185,7 @@ CommandResult CommandController::onPatrolClick(qreal sx, qreal sy,
     return result;
   }
 
-  const auto &selected = m_selectionSystem->getSelectedUnits();
+  const auto &selected = m_selection_system->getSelectedUnits();
   if (selected.empty()) {
     if (m_hasPatrolFirstWaypoint) {
       clearPatrolFirstWaypoint();
@@ -204,29 +212,29 @@ CommandResult CommandController::onPatrolClick(qreal sx, qreal sy,
     return result;
   }
 
-  QVector3D secondWaypoint = hit;
+  QVector3D const second_waypoint = hit;
 
   for (auto id : selected) {
     auto *entity = m_world->getEntity(id);
-    if (!entity) {
+    if (entity == nullptr) {
       continue;
     }
 
     auto *building = entity->getComponent<Engine::Core::BuildingComponent>();
-    if (building) {
+    if (building != nullptr) {
       continue;
     }
 
     auto *patrol = entity->getComponent<Engine::Core::PatrolComponent>();
-    if (!patrol) {
+    if (patrol == nullptr) {
       patrol = entity->addComponent<Engine::Core::PatrolComponent>();
     }
 
-    if (patrol) {
+    if (patrol != nullptr) {
       patrol->waypoints.clear();
-      patrol->waypoints.push_back(
-          {m_patrolFirstWaypoint.x(), m_patrolFirstWaypoint.z()});
-      patrol->waypoints.push_back({secondWaypoint.x(), secondWaypoint.z()});
+      patrol->waypoints.emplace_back(m_patrolFirstWaypoint.x(),
+                                     m_patrolFirstWaypoint.z());
+      patrol->waypoints.emplace_back(second_waypoint.x(), second_waypoint.z());
       patrol->currentWaypoint = 0;
       patrol->patrolling = true;
     }
@@ -241,13 +249,12 @@ CommandResult CommandController::onPatrolClick(qreal sx, qreal sy,
   return result;
 }
 
-CommandResult CommandController::setRallyAtScreen(qreal sx, qreal sy,
-                                                  int viewportWidth,
-                                                  int viewportHeight,
-                                                  void *camera,
-                                                  int localOwnerId) {
+auto CommandController::setRallyAtScreen(qreal sx, qreal sy, int viewportWidth,
+                                         int viewportHeight, void *camera,
+                                         int localOwnerId) -> CommandResult {
   CommandResult result;
-  if (!m_world || !m_selectionSystem || !m_pickingService || !camera) {
+  if ((m_world == nullptr) || (m_selection_system == nullptr) ||
+      (m_pickingService == nullptr) || (camera == nullptr)) {
     return result;
   }
 
@@ -259,27 +266,27 @@ CommandResult CommandController::setRallyAtScreen(qreal sx, qreal sy,
   }
 
   Game::Systems::ProductionService::setRallyForFirstSelectedBarracks(
-      *m_world, m_selectionSystem->getSelectedUnits(), localOwnerId, hit.x(),
+      *m_world, m_selection_system->getSelectedUnits(), localOwnerId, hit.x(),
       hit.z());
 
   result.inputConsumed = true;
   return result;
 }
 
-void CommandController::recruitNearSelected(const QString &unitType,
+void CommandController::recruitNearSelected(const QString &unit_type,
                                             int localOwnerId) {
-  if (!m_world || !m_selectionSystem) {
+  if ((m_world == nullptr) || (m_selection_system == nullptr)) {
     return;
   }
 
-  const auto &sel = m_selectionSystem->getSelectedUnits();
+  const auto &sel = m_selection_system->getSelectedUnits();
   if (sel.empty()) {
     return;
   }
 
   auto result =
       Game::Systems::ProductionService::startProductionForFirstSelectedBarracks(
-          *m_world, sel, localOwnerId, unitType.toStdString());
+          *m_world, sel, localOwnerId, unit_type.toStdString());
 
   if (result == Game::Systems::ProductionResult::GlobalTroopLimitReached) {
     emit troopLimitReached();
@@ -290,20 +297,20 @@ void CommandController::resetMovement(Engine::Core::Entity *entity) {
   App::Utils::resetMovement(entity);
 }
 
-bool CommandController::anySelectedInHoldMode() const {
-  if (!m_selectionSystem || !m_world) {
+auto CommandController::anySelectedInHoldMode() const -> bool {
+  if ((m_selection_system == nullptr) || (m_world == nullptr)) {
     return false;
   }
 
-  const auto &selected = m_selectionSystem->getSelectedUnits();
-  for (Engine::Core::EntityID entityId : selected) {
-    Engine::Core::Entity *entity = m_world->getEntity(entityId);
-    if (!entity) {
+  const auto &selected = m_selection_system->getSelectedUnits();
+  for (Engine::Core::EntityID const entity_id : selected) {
+    Engine::Core::Entity *entity = m_world->getEntity(entity_id);
+    if (entity == nullptr) {
       continue;
     }
 
-    auto *holdMode = entity->getComponent<Engine::Core::HoldModeComponent>();
-    if (holdMode && holdMode->active) {
+    auto *hold_mode = entity->getComponent<Engine::Core::HoldModeComponent>();
+    if ((hold_mode != nullptr) && hold_mode->active) {
       return true;
     }
   }

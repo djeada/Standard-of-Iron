@@ -17,7 +17,7 @@ enum class SpawnType : std::uint8_t {
   Barracks
 };
 
-inline QString spawnTypeToQString(SpawnType type) {
+inline auto spawn_typeToQString(SpawnType type) -> QString {
   switch (type) {
   case SpawnType::Archer:
     return QStringLiteral("archer");
@@ -33,11 +33,11 @@ inline QString spawnTypeToQString(SpawnType type) {
   return QStringLiteral("archer");
 }
 
-inline std::string spawnTypeToString(SpawnType type) {
-  return spawnTypeToQString(type).toStdString();
+inline auto spawn_typeToString(SpawnType type) -> std::string {
+  return spawn_typeToQString(type).toStdString();
 }
 
-inline bool tryParseSpawnType(const QString &value, SpawnType &out) {
+inline auto tryParseSpawnType(const QString &value, SpawnType &out) -> bool {
   const QString lowered = value.trimmed().toLower();
   if (lowered == QStringLiteral("archer")) {
     out = SpawnType::Archer;
@@ -62,7 +62,8 @@ inline bool tryParseSpawnType(const QString &value, SpawnType &out) {
   return false;
 }
 
-inline std::optional<SpawnType> spawnTypeFromString(const std::string &str) {
+inline auto
+spawn_typeFromString(const std::string &str) -> std::optional<SpawnType> {
   if (str == "archer") {
     return SpawnType::Archer;
   }
@@ -81,13 +82,15 @@ inline std::optional<SpawnType> spawnTypeFromString(const std::string &str) {
   return std::nullopt;
 }
 
-inline bool isTroopSpawn(SpawnType type) { return type != SpawnType::Barracks; }
+inline auto isTroopSpawn(SpawnType type) -> bool {
+  return type != SpawnType::Barracks;
+}
 
-inline bool isBuildingSpawn(SpawnType type) {
+inline auto isBuildingSpawn(SpawnType type) -> bool {
   return type == SpawnType::Barracks;
 }
 
-inline std::optional<TroopType> spawnTypeToTroopType(SpawnType type) {
+inline auto spawn_typeToTroopType(SpawnType type) -> std::optional<TroopType> {
   switch (type) {
   case SpawnType::Archer:
     return TroopType::Archer;
@@ -103,7 +106,7 @@ inline std::optional<TroopType> spawnTypeToTroopType(SpawnType type) {
   return std::nullopt;
 }
 
-inline SpawnType spawnTypeFromTroopType(TroopType type) {
+inline auto spawn_typeFromTroopType(TroopType type) -> SpawnType {
   switch (type) {
   case TroopType::Archer:
     return SpawnType::Archer;
@@ -121,7 +124,7 @@ inline SpawnType spawnTypeFromTroopType(TroopType type) {
 
 namespace std {
 template <> struct hash<Game::Units::SpawnType> {
-  size_t operator()(Game::Units::SpawnType type) const noexcept {
+  auto operator()(Game::Units::SpawnType type) const noexcept -> size_t {
     return hash<std::uint8_t>()(static_cast<std::uint8_t>(type));
   }
 };

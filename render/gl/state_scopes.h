@@ -4,7 +4,7 @@
 namespace Render::GL {
 
 struct DepthMaskScope {
-  GLboolean prev;
+  GLboolean prev{};
   explicit DepthMaskScope(bool enableWrite) {
     glGetBooleanv(GL_DEPTH_WRITEMASK, &prev);
     glDepthMask(enableWrite ? GL_TRUE : GL_FALSE);
@@ -15,49 +15,56 @@ struct DepthMaskScope {
 struct PolygonOffsetScope {
   GLboolean prevEnable;
   float factor, units;
-  PolygonOffsetScope(float f, float u) : factor(f), units(u) {
-    prevEnable = glIsEnabled(GL_POLYGON_OFFSET_FILL);
+  PolygonOffsetScope(float f, float u)
+      : prevEnable(glIsEnabled(GL_POLYGON_OFFSET_FILL)), factor(f), units(u) {
+
     glEnable(GL_POLYGON_OFFSET_FILL);
     glPolygonOffset(factor, units);
   }
   ~PolygonOffsetScope() {
-    if (!prevEnable)
+    if (prevEnable == 0U) {
       glDisable(GL_POLYGON_OFFSET_FILL);
-    glPolygonOffset(0.0f, 0.0f);
+    }
+    glPolygonOffset(0.0F, 0.0F);
   }
 };
 
 struct BlendScope {
   GLboolean prevEnable;
-  BlendScope(bool enable = true) {
-    prevEnable = glIsEnabled(GL_BLEND);
-    if (enable)
+  BlendScope(bool enable = true) : prevEnable(glIsEnabled(GL_BLEND)) {
+
+    if (enable) {
       glEnable(GL_BLEND);
-    else
+    } else {
       glDisable(GL_BLEND);
+    }
   }
   ~BlendScope() {
-    if (prevEnable)
+    if (prevEnable != 0U) {
       glEnable(GL_BLEND);
-    else
+    } else {
       glDisable(GL_BLEND);
+    }
   }
 };
 
 struct DepthTestScope {
   GLboolean prevEnable;
-  explicit DepthTestScope(bool enable) {
-    prevEnable = glIsEnabled(GL_DEPTH_TEST);
-    if (enable)
+  explicit DepthTestScope(bool enable)
+      : prevEnable(glIsEnabled(GL_DEPTH_TEST)) {
+
+    if (enable) {
       glEnable(GL_DEPTH_TEST);
-    else
+    } else {
       glDisable(GL_DEPTH_TEST);
+    }
   }
   ~DepthTestScope() {
-    if (prevEnable)
+    if (prevEnable != 0U) {
       glEnable(GL_DEPTH_TEST);
-    else
+    } else {
       glDisable(GL_DEPTH_TEST);
+    }
   }
 };
 } // namespace Render::GL

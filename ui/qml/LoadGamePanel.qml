@@ -164,7 +164,7 @@ Item {
                                         "slotName": qsTr("No saves found"),
                                         "title": "",
                                         "timestamp": 0,
-                                        "mapName": "",
+                                        "map_name": "",
                                         "playTime": "",
                                         "thumbnail": "",
                                         "isEmpty": true
@@ -177,7 +177,7 @@ Item {
                                         "slotName": slots[i].slotName || slots[i].name,
                                         "title": slots[i].title || slots[i].name || slots[i].slotName || "Untitled Save",
                                         "timestamp": slots[i].timestamp,
-                                        "mapName": slots[i].mapName || "Unknown Map",
+                                        "map_name": slots[i].map_name || "Unknown Map",
                                         "playTime": slots[i].playTime || "",
                                         "thumbnail": slots[i].thumbnail || "",
                                         "isEmpty": false
@@ -188,7 +188,7 @@ Item {
                                     "slotName": qsTr("No saves found"),
                                     "title": "",
                                     "timestamp": 0,
-                                    "mapName": "",
+                                    "map_name": "",
                                     "playTime": "",
                                     "thumbnail": "",
                                     "isEmpty": true
@@ -270,7 +270,7 @@ Item {
                                     }
 
                                     Label {
-                                        text: model.mapName
+                                        text: model.map_name
                                         color: Theme.textSub
                                         font.pointSize: Theme.fontSizeMedium
                                         Layout.fillWidth: true
@@ -405,7 +405,7 @@ Item {
                         "slotName": qsTr("No saves found"),
                         "title": "",
                         "timestamp": 0,
-                        "mapName": "",
+                        "map_name": "",
                         "playTime": "",
                         "thumbnail": "",
                         "isEmpty": true

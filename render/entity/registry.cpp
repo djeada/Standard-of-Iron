@@ -1,12 +1,12 @@
 #include "registry.h"
-#include "../../game/core/component.h"
-#include "../../game/core/entity.h"
 #include "../scene_renderer.h"
 #include "archer_renderer.h"
 #include "barracks_renderer.h"
 #include "knight_renderer.h"
 #include "mounted_knight_renderer.h"
 #include "spearman_renderer.h"
+#include <string>
+#include <utility>
 
 namespace Render::GL {
 
@@ -15,7 +15,7 @@ void EntityRendererRegistry::registerRenderer(const std::string &type,
   m_map[type] = std::move(func);
 }
 
-RenderFunc EntityRendererRegistry::get(const std::string &type) const {
+auto EntityRendererRegistry::get(const std::string &type) const -> RenderFunc {
   auto it = m_map.find(type);
   if (it != m_map.end()) {
     return it->second;

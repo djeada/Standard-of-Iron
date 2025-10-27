@@ -6,16 +6,14 @@
 #include <QVector3D>
 #include <functional>
 #include <memory>
+#include <utility>
 
-namespace Engine {
-namespace Core {
+namespace Engine::Core {
 class World;
 using EntityID = unsigned int;
-} // namespace Core
-} // namespace Engine
+} // namespace Engine::Core
 
-namespace Render {
-namespace GL {
+namespace Render::GL {
 class Renderer;
 class Camera;
 class GroundRenderer;
@@ -29,24 +27,22 @@ class FireCampRenderer;
 class RiverRenderer;
 class RiverbankRenderer;
 class BridgeRenderer;
-} // namespace GL
-} // namespace Render
+} // namespace Render::GL
 
-namespace Game {
-namespace Map {
+namespace Game::Map {
 
 struct SkirmishLoadResult {
   bool ok = false;
-  QString mapName;
+  QString map_name;
   QString errorMessage;
   Engine::Core::EntityID playerUnitId = 0;
-  float camFov = 45.0f;
-  float camNear = 0.1f;
-  float camFar = 1000.0f;
-  int gridWidth = 50;
-  int gridHeight = 50;
-  float tileSize = 1.0f;
-  int maxTroopsPerPlayer = 50;
+  float camFov = 45.0F;
+  float camNear = 0.1F;
+  float camFar = 1000.0F;
+  int grid_width = 50;
+  int grid_height = 50;
+  float tile_size = 1.0F;
+  int max_troops_per_player = 50;
   VictoryConfig victoryConfig;
   QVector3D focusPosition;
   bool hasFocusPosition = false;
@@ -83,16 +79,16 @@ public:
   }
 
   void setOnOwnersUpdated(OwnersUpdatedCallback callback) {
-    m_onOwnersUpdated = callback;
+    m_onOwnersUpdated = std::move(callback);
   }
 
   void setOnVisibilityMaskReady(VisibilityMaskReadyCallback callback) {
-    m_onVisibilityMaskReady = callback;
+    m_onVisibilityMaskReady = std::move(callback);
   }
 
-  SkirmishLoadResult start(const QString &mapPath,
-                           const QVariantList &playerConfigs,
-                           int selectedPlayerId, int &outSelectedPlayerId);
+  auto start(const QString &map_path, const QVariantList &playerConfigs,
+             int selectedPlayerId,
+             int &outSelectedPlayerId) -> SkirmishLoadResult;
 
 private:
   void resetGameState();
@@ -114,5 +110,4 @@ private:
   VisibilityMaskReadyCallback m_onVisibilityMaskReady;
 };
 
-} // namespace Map
-} // namespace Game
+} // namespace Game::Map

@@ -2,69 +2,72 @@
 #include "../draw_queue.h"
 #include "../gl/resources.h"
 #include "../scene_renderer.h"
+#include "ground/terrain_gpu.h"
 #include <algorithm>
 #include <cmath>
+#include <qmatrix4x4.h>
+#include <qvectornd.h>
 
-namespace Render {
-namespace GL {
+namespace Render::GL {
 
 namespace {
-const QMatrix4x4 kIdentityMatrix;
+const QMatrix4x4 k_identity_matrix;
 
-inline QVector3D saturate(const QVector3D &c) {
-  return QVector3D(std::clamp(c.x(), 0.0f, 1.0f), std::clamp(c.y(), 0.0f, 1.0f),
-                   std::clamp(c.z(), 0.0f, 1.0f));
+inline auto saturate(const QVector3D &c) -> QVector3D {
+  return {std::clamp(c.x(), 0.0F, 1.0F), std::clamp(c.y(), 0.0F, 1.0F),
+          std::clamp(c.z(), 0.0F, 1.0F)};
 }
 } // namespace
 
-static QVector3D clamp01(const QVector3D &c) { return saturate(c); }
+static auto clamp01(const QVector3D &c) -> QVector3D { return saturate(c); }
 
 void GroundRenderer::recomputeModel() {
-  QMatrix4x4 newModel = kIdentityMatrix;
-  newModel.translate(0.0f, -0.5f, 0.0f);
+  QMatrix4x4 new_model = k_identity_matrix;
+  new_model.translate(0.0F, -0.5F, 0.0F);
 
   if (m_width > 0 && m_height > 0) {
-    const float scaleX = std::sqrt(float(m_width)) * m_tileSize;
-    const float scaleZ = std::sqrt(float(m_height)) * m_tileSize;
-    newModel.scale(scaleX, 1.0f, scaleZ);
+    const float scale_x = std::sqrt(float(m_width)) * m_tile_size;
+    const float scale_z = std::sqrt(float(m_height)) * m_tile_size;
+    new_model.scale(scale_x, 1.0F, scale_z);
   } else {
-    newModel.scale(m_extent, 1.0f, m_extent);
+    new_model.scale(m_extent, 1.0F, m_extent);
   }
 
-  if (newModel != m_model) {
-    m_model = newModel;
+  if (new_model != m_model) {
+    m_model = new_model;
     m_modelDirty = true;
   }
 }
 
 void GroundRenderer::updateNoiseOffset() {
-  const float spanX = (m_width > 0 ? float(m_width) * m_tileSize : m_extent);
-  const float spanZ = (m_height > 0 ? float(m_height) * m_tileSize : m_extent);
-  const float seed = static_cast<float>(m_biomeSettings.seed % 1024u);
+  const float span_x = (m_width > 0 ? float(m_width) * m_tile_size : m_extent);
+  const float span_z =
+      (m_height > 0 ? float(m_height) * m_tile_size : m_extent);
+  const auto seed = static_cast<float>(m_biomeSettings.seed % 1024U);
 
-  QVector2D newOffset;
-  newOffset.setX(spanX * 0.37f + seed * 0.21f);
-  newOffset.setY(spanZ * 0.43f + seed * 0.17f);
+  QVector2D new_offset;
+  new_offset.setX(span_x * 0.37F + seed * 0.21F);
+  new_offset.setY(span_z * 0.43F + seed * 0.17F);
 
-  m_noiseAngle = std::fmod(seed * 0.6180339887f, 1.0f) * 6.28318530718f;
+  m_noiseAngle = std::fmod(seed * 0.6180339887F, 1.0F) * 6.28318530718F;
 
-  if (newOffset != m_noiseOffset) {
-    m_noiseOffset = newOffset;
+  if (new_offset != m_noiseOffset) {
+    m_noiseOffset = new_offset;
     invalidateParamsCache();
   }
 }
 
-TerrainChunkParams GroundRenderer::buildParams() const {
+auto GroundRenderer::buildParams() const -> TerrainChunkParams {
   if (m_cachedParamsValid) {
     return m_cachedParams;
   }
 
   TerrainChunkParams params;
 
-  const QVector3D primary = m_biomeSettings.grassPrimary * 0.97f;
-  const QVector3D secondary = m_biomeSettings.grassSecondary * 0.93f;
-  const QVector3D dry = m_biomeSettings.grassDry * 0.90f;
-  const QVector3D soil = m_biomeSettings.soilColor * 0.68f;
+  const QVector3D primary = m_biomeSettings.grassPrimary * 0.97F;
+  const QVector3D secondary = m_biomeSettings.grassSecondary * 0.93F;
+  const QVector3D dry = m_biomeSettings.grassDry * 0.90F;
+  const QVector3D soil = m_biomeSettings.soilColor * 0.68F;
 
   params.grassPrimary = saturate(primary);
   params.grassSecondary = saturate(secondary);
@@ -73,43 +76,43 @@ TerrainChunkParams GroundRenderer::buildParams() const {
   params.rockLow = saturate(m_biomeSettings.rockLow);
   params.rockHigh = saturate(m_biomeSettings.rockHigh);
 
-  params.tint = QVector3D(0.96f, 0.98f, 0.96f);
+  params.tint = QVector3D(0.96F, 0.98F, 0.96F);
 
-  params.tileSize = std::max(0.25f, m_tileSize);
+  params.tile_size = std::max(0.25F, m_tile_size);
 
   params.macroNoiseScale =
-      std::max(0.012f, m_biomeSettings.terrainMacroNoiseScale * 0.60f);
-  params.detailNoiseScale =
-      std::max(0.045f, m_biomeSettings.terrainDetailNoiseScale * 0.75f);
+      std::max(0.012F, m_biomeSettings.terrainMacroNoiseScale * 0.60F);
+  params.detail_noiseScale =
+      std::max(0.045F, m_biomeSettings.terrainDetailNoiseScale * 0.75F);
 
-  params.slopeRockThreshold = 0.72f;
-  params.slopeRockSharpness = 4.5f;
+  params.slopeRockThreshold = 0.72F;
+  params.slopeRockSharpness = 4.5F;
 
-  params.soilBlendHeight = -0.65f;
-  params.soilBlendSharpness = 2.6f;
+  params.soilBlendHeight = -0.65F;
+  params.soilBlendSharpness = 2.6F;
 
   params.noiseOffset = m_noiseOffset;
   params.noiseAngle = m_noiseAngle;
 
-  const float targetAmp =
-      std::clamp(m_biomeSettings.heightNoiseAmplitude * 0.22f, 0.10f, 0.20f);
-  params.heightNoiseStrength = targetAmp;
+  const float target_amp =
+      std::clamp(m_biomeSettings.heightNoiseAmplitude * 0.22F, 0.10F, 0.20F);
+  params.heightNoiseStrength = target_amp;
 
   params.heightNoiseFrequency =
-      std::max(0.6f, m_biomeSettings.heightNoiseFrequency * 1.05f);
+      std::max(0.6F, m_biomeSettings.heightNoiseFrequency * 1.05F);
 
-  params.microBumpAmp = 0.07f;
-  params.microBumpFreq = 2.2f;
-  params.microNormalWeight = 0.65f;
+  params.microBumpAmp = 0.07F;
+  params.microBumpFreq = 2.2F;
+  params.microNormalWeight = 0.65F;
 
-  params.albedoJitter = 0.05f;
+  params.albedoJitter = 0.05F;
 
-  params.ambientBoost = m_biomeSettings.terrainAmbientBoost * 0.85f;
+  params.ambientBoost = m_biomeSettings.terrainAmbientBoost * 0.85F;
 
-  params.rockDetailStrength = m_biomeSettings.terrainRockDetailStrength * 0.18f;
+  params.rockDetailStrength = m_biomeSettings.terrainRockDetailStrength * 0.18F;
 
-  QVector3D L(0.35f, 0.85f, 0.42f);
-  params.lightDirection = L.normalized();
+  QVector3D const L(0.35F, 0.85F, 0.42F);
+  params.light_direction = L.normalized();
 
   params.isGroundPlane = true;
 
@@ -119,22 +122,23 @@ TerrainChunkParams GroundRenderer::buildParams() const {
 }
 
 void GroundRenderer::submit(Renderer &renderer, ResourceManager *resources) {
-  if (!resources) {
+  if (resources == nullptr) {
     return;
   }
 
   if (m_hasBiome) {
     Mesh *plane = resources->ground();
-    if (plane) {
+    if (plane != nullptr) {
       const TerrainChunkParams params = buildParams();
 
-      const bool modelChanged =
+      const bool model_changed =
           m_modelDirty || (m_lastSubmittedModel != m_model);
-      const bool stateChanged = (m_lastSubmittedStateVersion != m_stateVersion);
-      (void)modelChanged;
-      (void)stateChanged;
+      const bool state_changed =
+          (m_lastSubmittedStateVersion != m_stateVersion);
+      (void)model_changed;
+      (void)state_changed;
 
-      renderer.terrainChunk(plane, m_model, params, 0x0040u, true, +0.0008f);
+      renderer.terrainChunk(plane, m_model, params, 0x0040U, true, +0.0008F);
 
       m_lastSubmittedModel = m_model;
       m_modelDirty = false;
@@ -143,12 +147,11 @@ void GroundRenderer::submit(Renderer &renderer, ResourceManager *resources) {
     }
   }
 
-  const float cell = (m_tileSize > 0.0f ? m_tileSize : 1.0f);
+  const float cell = (m_tile_size > 0.0F ? m_tile_size : 1.0F);
   const float extent = (m_width > 0 && m_height > 0)
-                           ? std::max(m_width, m_height) * m_tileSize * 0.5f
+                           ? std::max(m_width, m_height) * m_tile_size * 0.5F
                            : m_extent;
-  renderer.grid(m_model, m_color, cell, 0.06f, extent);
+  renderer.grid(m_model, m_color, cell, 0.06F, extent);
 }
 
-} // namespace GL
-} // namespace Render
+} // namespace Render::GL

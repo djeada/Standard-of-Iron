@@ -8,18 +8,17 @@
 #include <memory>
 #include <vector>
 
-namespace Render {
-namespace GL {
+namespace Render::GL {
 class Buffer;
 class Renderer;
 
 class RiverbankAssetRenderer : public IRenderPass {
 public:
   RiverbankAssetRenderer();
-  ~RiverbankAssetRenderer();
+  ~RiverbankAssetRenderer() override;
 
   void configure(const std::vector<Game::Map::RiverSegment> &riverSegments,
-                 const Game::Map::TerrainHeightMap &heightMap,
+                 const Game::Map::TerrainHeightMap &height_map,
                  const Game::Map::BiomeSettings &biomeSettings);
 
   void submit(Renderer &renderer, ResourceManager *resources) override;
@@ -32,12 +31,12 @@ private:
   std::vector<Game::Map::RiverSegment> m_riverSegments;
   int m_width = 0;
   int m_height = 0;
-  float m_tileSize = 1.0f;
+  float m_tile_size = 1.0F;
 
   std::vector<float> m_heightData;
-  std::vector<Game::Map::TerrainType> m_terrainTypes;
+  std::vector<Game::Map::TerrainType> m_terrain_types;
   Game::Map::BiomeSettings m_biomeSettings;
-  std::uint32_t m_noiseSeed = 0u;
+  std::uint32_t m_noiseSeed = 0U;
 
   std::vector<RiverbankAssetInstanceGpu> m_assetInstances;
   std::unique_ptr<Buffer> m_assetInstanceBuffer;
@@ -46,5 +45,4 @@ private:
   bool m_assetInstancesDirty = false;
 };
 
-} // namespace GL
-} // namespace Render
+} // namespace Render::GL

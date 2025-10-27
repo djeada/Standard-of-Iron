@@ -3,22 +3,28 @@
 #include <QCryptographicHash>
 #include <QDebug>
 #include <QFileInfo>
+#include <qcryptographichash.h>
+#include <qfileinfo.h>
+#include <qglobal.h>
+#include <qobject.h>
+#include <qstringview.h>
+#include <string>
 
 Sound::Sound(const std::string &filePath, MiniaudioBackend *backend)
     : QObject(nullptr), m_filepath(filePath), m_backend(backend),
-      m_loaded(false), m_volume(1.0f) {
+      m_loaded(false), m_volume(1.0F) {
 
-  QByteArray hash = QCryptographicHash::hash(
+  QByteArray const hash = QCryptographicHash::hash(
       QByteArray::fromStdString(filePath), QCryptographicHash::Md5);
   m_trackId = "sound_" + QString(hash.toHex());
 
-  QFileInfo fi(QString::fromStdString(m_filepath));
+  QFileInfo const fi(QString::fromStdString(m_filepath));
   if (!fi.exists()) {
     qWarning() << "Sound: File does not exist:" << fi.absoluteFilePath();
     return;
   }
 
-  if (m_backend) {
+  if (m_backend != nullptr) {
     m_loaded = m_backend->predecode(m_trackId, fi.absoluteFilePath());
     if (m_loaded) {
       qDebug() << "Sound: Loaded" << fi.absoluteFilePath();
@@ -26,7 +32,7 @@ Sound::Sound(const std::string &filePath, MiniaudioBackend *backend)
   }
 }
 
-Sound::~Sound() {}
+Sound::~Sound() = default;
 
 void Sound::setBackend(MiniaudioBackend *backend) {
   if (m_backend == backend) {
@@ -35,18 +41,18 @@ void Sound::setBackend(MiniaudioBackend *backend) {
 
   m_backend = backend;
 
-  if (m_backend && !m_loaded) {
-    QFileInfo fi(QString::fromStdString(m_filepath));
+  if ((m_backend != nullptr) && !m_loaded) {
+    QFileInfo const fi(QString::fromStdString(m_filepath));
     if (fi.exists()) {
       m_loaded = m_backend->predecode(m_trackId, fi.absoluteFilePath());
     }
   }
 }
 
-bool Sound::isLoaded() const { return m_loaded.load(); }
+auto Sound::isLoaded() const -> bool { return m_loaded.load(); }
 
 void Sound::play(float volume, bool loop) {
-  if (!m_backend || !m_loaded) {
+  if ((m_backend == nullptr) || !m_loaded) {
     qWarning() << "Sound: Cannot play - backend not available or not loaded";
     return;
   }

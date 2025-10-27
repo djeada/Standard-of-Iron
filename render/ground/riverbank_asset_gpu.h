@@ -14,8 +14,8 @@ struct RiverbankAssetInstanceGpu {
 };
 
 struct RiverbankAssetBatchParams {
-  QVector3D lightDirection{0.35f, 0.8f, 0.45f};
-  float time{0.0f};
+  QVector3D light_direction{0.35F, 0.8F, 0.45F};
+  float time{0.0F};
 };
 
 } // namespace Render::GL

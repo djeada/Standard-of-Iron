@@ -1,8 +1,8 @@
 #include "arrow_system.h"
 #include "../../render/geom/arrow.h"
-#include "../../render/gl/resources.h"
 #include "../../render/scene_renderer.h"
 #include <algorithm>
+#include <qvectornd.h>
 
 namespace Game::Systems {
 
@@ -14,15 +14,15 @@ void ArrowSystem::spawnArrow(const QVector3D &start, const QVector3D &end,
   a.start = start;
   a.end = end;
   a.color = color;
-  a.t = 0.0f;
+  a.t = 0.0F;
   a.speed = speed;
   a.active = true;
-  QVector3D delta = end - start;
-  float dist = delta.length();
+  QVector3D const delta = end - start;
+  float const dist = delta.length();
   a.arcHeight = std::clamp(m_config.arcHeightMultiplier * dist,
                            m_config.arcHeightMin, m_config.arcHeightMax);
 
-  a.invDist = (dist > 0.001f) ? (1.0f / dist) : 1.0f;
+  a.invDist = (dist > 0.001F) ? (1.0F / dist) : 1.0F;
   m_arrows.push_back(a);
 }
 
@@ -33,8 +33,8 @@ void ArrowSystem::update(Engine::Core::World *world, float deltaTime) {
     }
 
     arrow.t += deltaTime * arrow.speed * arrow.invDist;
-    if (arrow.t >= 1.0f) {
-      arrow.t = 1.0f;
+    if (arrow.t >= 1.0F) {
+      arrow.t = 1.0F;
       arrow.active = false;
     }
   }

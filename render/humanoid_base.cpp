@@ -2,20 +2,29 @@
 #include "../game/core/component.h"
 #include "../game/core/entity.h"
 #include "../game/core/world.h"
-#include "../game/map/terrain_service.h"
 #include "../game/units/troop_config.h"
 #include "../game/visuals/team_colors.h"
+#include "entity/registry.h"
 #include "geom/math_utils.h"
 #include "geom/transforms.h"
-#include "gl/mesh.h"
 #include "gl/primitives.h"
+#include "gl/render_constants.h"
 #include "humanoid_math.h"
+#include "humanoid_specs.h"
+#include "palette.h"
+#include "submitter.h"
+#include "units/spawn_type.h"
 #include <QMatrix4x4>
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
+#include <numbers>
+#include <qmatrix4x4.h>
+#include <qvectornd.h>
 
 namespace Render::GL {
 
+using namespace Render::GL::Geometry;
 using Render::Geom::clamp01;
 using Render::Geom::clampf;
 using Render::Geom::clampVec01;
@@ -25,8 +34,8 @@ using Render::Geom::sphereAt;
 
 void HumanoidRendererBase::getVariant(const DrawContext &ctx, uint32_t seed,
                                       HumanoidVariant &v) const {
-  QVector3D teamTint = resolveTeamTint(ctx);
-  v.palette = makeHumanoidPalette(teamTint, seed);
+  QVector3D const team_tint = resolveTeamTint(ctx);
+  v.palette = makeHumanoidPalette(team_tint, seed);
 }
 
 void HumanoidRendererBase::customizePose(const DrawContext &ctx,
@@ -40,41 +49,44 @@ void HumanoidRendererBase::addAttachments(const DrawContext &ctx,
                                           const AnimationInputs &anim,
                                           ISubmitter &out) const {}
 
-QVector3D HumanoidRendererBase::resolveTeamTint(const DrawContext &ctx) {
-  QVector3D tunic(0.8f, 0.9f, 1.0f);
+auto HumanoidRendererBase::resolveTeamTint(const DrawContext &ctx)
+    -> QVector3D {
+  QVector3D tunic(0.8F, 0.9F, 1.0F);
   Engine::Core::UnitComponent *unit = nullptr;
   Engine::Core::RenderableComponent *rc = nullptr;
 
-  if (ctx.entity) {
+  if (ctx.entity != nullptr) {
     unit = ctx.entity->getComponent<Engine::Core::UnitComponent>();
     rc = ctx.entity->getComponent<Engine::Core::RenderableComponent>();
   }
 
-  if (unit && unit->ownerId > 0) {
-    tunic = Game::Visuals::teamColorForOwner(unit->ownerId);
-  } else if (rc) {
+  if ((unit != nullptr) && unit->owner_id > 0) {
+    tunic = Game::Visuals::team_colorForOwner(unit->owner_id);
+  } else if (rc != nullptr) {
     tunic = QVector3D(rc->color[0], rc->color[1], rc->color[2]);
   }
 
   return tunic;
 }
 
-FormationParams HumanoidRendererBase::resolveFormation(const DrawContext &ctx) {
-  FormationParams params;
-  params.individualsPerUnit = 1;
-  params.maxPerRow = 1;
-  params.spacing = 0.75f;
+auto HumanoidRendererBase::resolveFormation(const DrawContext &ctx)
+    -> FormationParams {
+  FormationParams params{};
+  params.individuals_per_unit = 1;
+  params.max_per_row = 1;
+  params.spacing = 0.75F;
 
-  if (ctx.entity) {
+  if (ctx.entity != nullptr) {
     auto *unit = ctx.entity->getComponent<Engine::Core::UnitComponent>();
-    if (unit) {
-      params.individualsPerUnit =
+    if (unit != nullptr) {
+      params.individuals_per_unit =
           Game::Units::TroopConfig::instance().getIndividualsPerUnit(
-              unit->spawnType);
-      params.maxPerRow = Game::Units::TroopConfig::instance().getMaxUnitsPerRow(
-          unit->spawnType);
-      if (unit->spawnType == Game::Units::SpawnType::MountedKnight) {
-        params.spacing = 1.35f;
+              unit->spawn_type);
+      params.max_per_row =
+          Game::Units::TroopConfig::instance().getMaxUnitsPerRow(
+              unit->spawn_type);
+      if (unit->spawn_type == Game::Units::SpawnType::MountedKnight) {
+        params.spacing = 1.35F;
       }
     }
   }
@@ -82,17 +94,18 @@ FormationParams HumanoidRendererBase::resolveFormation(const DrawContext &ctx) {
   return params;
 }
 
-AnimationInputs HumanoidRendererBase::sampleAnimState(const DrawContext &ctx) {
-  AnimationInputs anim;
+auto HumanoidRendererBase::sampleAnimState(const DrawContext &ctx)
+    -> AnimationInputs {
+  AnimationInputs anim{};
   anim.time = ctx.animationTime;
   anim.isMoving = false;
-  anim.isAttacking = false;
+  anim.is_attacking = false;
   anim.isMelee = false;
   anim.isInHoldMode = false;
   anim.isExitingHold = false;
-  anim.holdExitProgress = 0.0f;
+  anim.holdExitProgress = 0.0F;
 
-  if (!ctx.entity) {
+  if (ctx.entity == nullptr) {
     return anim;
   }
 
@@ -102,57 +115,59 @@ AnimationInputs HumanoidRendererBase::sampleAnimState(const DrawContext &ctx) {
 
   auto *movement = ctx.entity->getComponent<Engine::Core::MovementComponent>();
   auto *attack = ctx.entity->getComponent<Engine::Core::AttackComponent>();
-  auto *attackTarget =
+  auto *attack_target =
       ctx.entity->getComponent<Engine::Core::AttackTargetComponent>();
   auto *transform =
       ctx.entity->getComponent<Engine::Core::TransformComponent>();
-  auto *holdMode = ctx.entity->getComponent<Engine::Core::HoldModeComponent>();
+  auto *hold_mode = ctx.entity->getComponent<Engine::Core::HoldModeComponent>();
 
-  anim.isInHoldMode = (holdMode && holdMode->active);
-  if (holdMode && !holdMode->active && holdMode->exitCooldown > 0.0f) {
+  anim.isInHoldMode = ((hold_mode != nullptr) && hold_mode->active);
+  if ((hold_mode != nullptr) && !hold_mode->active &&
+      hold_mode->exitCooldown > 0.0F) {
     anim.isExitingHold = true;
     anim.holdExitProgress =
-        1.0f - (holdMode->exitCooldown / holdMode->standUpDuration);
+        1.0F - (hold_mode->exitCooldown / hold_mode->standUpDuration);
   }
-  anim.isMoving = (movement && movement->hasTarget);
+  anim.isMoving = ((movement != nullptr) && movement->hasTarget);
 
-  if (attack && attackTarget && attackTarget->targetId > 0 && transform) {
+  if ((attack != nullptr) && (attack_target != nullptr) &&
+      attack_target->target_id > 0 && (transform != nullptr)) {
     anim.isMelee = (attack->currentMode ==
                     Engine::Core::AttackComponent::CombatMode::Melee);
 
-    bool stationary = !anim.isMoving;
-    float currentCooldown =
+    bool const stationary = !anim.isMoving;
+    float const current_cooldown =
         anim.isMelee ? attack->meleeCooldown : attack->cooldown;
-    bool recentlyFired =
-        attack->timeSinceLast < std::min(currentCooldown, 0.45f);
-    bool targetInRange = false;
+    bool const recently_fired =
+        attack->timeSinceLast < std::min(current_cooldown, 0.45F);
+    bool target_in_range = false;
 
-    if (ctx.world) {
-      auto *target = ctx.world->getEntity(attackTarget->targetId);
-      if (target) {
-        auto *targetTransform =
+    if (ctx.world != nullptr) {
+      auto *target = ctx.world->getEntity(attack_target->target_id);
+      if (target != nullptr) {
+        auto *target_transform =
             target->getComponent<Engine::Core::TransformComponent>();
-        if (targetTransform) {
-          float dx = targetTransform->position.x - transform->position.x;
-          float dz = targetTransform->position.z - transform->position.z;
-          float distSquared = dx * dx + dz * dz;
-          float targetRadius = 0.0f;
+        if (target_transform != nullptr) {
+          float const dx = target_transform->position.x - transform->position.x;
+          float const dz = target_transform->position.z - transform->position.z;
+          float const dist_squared = dx * dx + dz * dz;
+          float target_radius = 0.0F;
           if (target->hasComponent<Engine::Core::BuildingComponent>()) {
-            targetRadius =
-                std::max(targetTransform->scale.x, targetTransform->scale.z) *
-                0.5f;
+            target_radius =
+                std::max(target_transform->scale.x, target_transform->scale.z) *
+                0.5F;
           } else {
-            targetRadius =
-                std::max(targetTransform->scale.x, targetTransform->scale.z) *
-                0.5f;
+            target_radius =
+                std::max(target_transform->scale.x, target_transform->scale.z) *
+                0.5F;
           }
-          float effectiveRange = attack->range + targetRadius + 0.25f;
-          targetInRange = (distSquared <= effectiveRange * effectiveRange);
+          float const effective_range = attack->range + target_radius + 0.25F;
+          target_in_range = (dist_squared <= effective_range * effective_range);
         }
       }
     }
 
-    anim.isAttacking = stationary && (targetInRange || recentlyFired);
+    anim.is_attacking = stationary && (target_in_range || recently_fired);
   }
 
   return anim;
@@ -163,102 +178,105 @@ void HumanoidRendererBase::computeLocomotionPose(
     HumanoidPose &pose) {
   using HP = HumanProportions;
 
-  float hScale = variation.heightScale;
+  float const h_scale = variation.height_scale;
 
   pose.headPos =
-      QVector3D(0.0f, (HP::HEAD_TOP_Y + HP::CHIN_Y) * 0.5f * hScale, 0.0f);
-  pose.headR = HP::HEAD_RADIUS * hScale;
-  pose.neckBase = QVector3D(0.0f, HP::NECK_BASE_Y * hScale, 0.0f);
+      QVector3D(0.0F, (HP::HEAD_TOP_Y + HP::CHIN_Y) * 0.5F * h_scale, 0.0F);
+  pose.headR = HP::HEAD_RADIUS * h_scale;
+  pose.neck_base = QVector3D(0.0F, HP::NECK_BASE_Y * h_scale, 0.0F);
 
-  float bScale = variation.bulkScale;
-  float sWidth = variation.stanceWidth;
+  float const b_scale = variation.bulkScale;
+  float const s_width = variation.stanceWidth;
 
-  pose.shoulderL = QVector3D(-HP::TORSO_TOP_R * 0.98f * bScale,
-                             HP::SHOULDER_Y * hScale, 0.0f);
-  pose.shoulderR = QVector3D(HP::TORSO_TOP_R * 0.98f * bScale,
-                             HP::SHOULDER_Y * hScale, 0.0f);
+  pose.shoulderL = QVector3D(-HP::TORSO_TOP_R * 0.98F * b_scale,
+                             HP::SHOULDER_Y * h_scale, 0.0F);
+  pose.shoulderR = QVector3D(HP::TORSO_TOP_R * 0.98F * b_scale,
+                             HP::SHOULDER_Y * h_scale, 0.0F);
 
-  pose.footYOffset = 0.02f;
-  pose.footL = QVector3D(-HP::SHOULDER_WIDTH * 0.58f * sWidth,
-                         HP::GROUND_Y + pose.footYOffset, 0.0f);
-  pose.footR = QVector3D(HP::SHOULDER_WIDTH * 0.58f * sWidth,
-                         HP::GROUND_Y + pose.footYOffset, 0.0f);
+  pose.footYOffset = 0.02F;
+  pose.footL = QVector3D(-HP::SHOULDER_WIDTH * 0.58F * s_width,
+                         HP::GROUND_Y + pose.footYOffset, 0.0F);
+  pose.foot_r = QVector3D(HP::SHOULDER_WIDTH * 0.58F * s_width,
+                          HP::GROUND_Y + pose.footYOffset, 0.0F);
 
-  pose.pelvisPos = QVector3D(0.0f, HP::WAIST_Y * hScale, 0.0f);
+  pose.pelvisPos = QVector3D(0.0F, HP::WAIST_Y * h_scale, 0.0F);
 
-  pose.kneeL = QVector3D(pose.footL.x(), HP::KNEE_Y * hScale, pose.footL.z());
-  pose.kneeR = QVector3D(pose.footR.x(), HP::KNEE_Y * hScale, pose.footR.z());
+  pose.knee_l = QVector3D(pose.footL.x(), HP::KNEE_Y * h_scale, pose.footL.z());
+  pose.knee_r =
+      QVector3D(pose.foot_r.x(), HP::KNEE_Y * h_scale, pose.foot_r.z());
 
   pose.shoulderL.setY(pose.shoulderL.y() + variation.shoulderTilt);
   pose.shoulderR.setY(pose.shoulderR.y() - variation.shoulderTilt);
 
-  float slouchOffset = variation.postureSlump * 0.15f;
-  pose.shoulderL.setZ(pose.shoulderL.z() + slouchOffset);
-  pose.shoulderR.setZ(pose.shoulderR.z() + slouchOffset);
+  float const slouch_offset = variation.postureSlump * 0.15F;
+  pose.shoulderL.setZ(pose.shoulderL.z() + slouch_offset);
+  pose.shoulderR.setZ(pose.shoulderR.z() + slouch_offset);
 
-  float footAngleJitter = (hash01(seed ^ 0x5678u) - 0.5f) * 0.12f;
-  float footDepthJitter = (hash01(seed ^ 0x9ABCu) - 0.5f) * 0.08f;
+  float const foot_angle_jitter = (hash01(seed ^ 0x5678U) - 0.5F) * 0.12F;
+  float const foot_depth_jitter = (hash01(seed ^ 0x9ABCU) - 0.5F) * 0.08F;
 
-  pose.footL.setX(pose.footL.x() + footAngleJitter);
-  pose.footR.setX(pose.footR.x() - footAngleJitter);
-  pose.footL.setZ(pose.footL.z() + footDepthJitter);
-  pose.footR.setZ(pose.footR.z() - footDepthJitter);
+  pose.footL.setX(pose.footL.x() + foot_angle_jitter);
+  pose.foot_r.setX(pose.foot_r.x() - foot_angle_jitter);
+  pose.footL.setZ(pose.footL.z() + foot_depth_jitter);
+  pose.foot_r.setZ(pose.foot_r.z() - foot_depth_jitter);
 
-  float armHeightJitter = (hash01(seed ^ 0xABCDu) - 0.5f) * 0.03f;
-  float armAsymmetry = (hash01(seed ^ 0xDEF0u) - 0.5f) * 0.04f;
+  float const arm_height_jitter = (hash01(seed ^ 0xABCDU) - 0.5F) * 0.03F;
+  float const arm_asymmetry = (hash01(seed ^ 0xDEF0U) - 0.5F) * 0.04F;
 
   pose.handL =
-      QVector3D(-0.05f + armAsymmetry,
-                HP::SHOULDER_Y * hScale + 0.05f + armHeightJitter, 0.55f);
-  pose.handR = QVector3D(
-      0.15f - armAsymmetry * 0.5f,
-      HP::SHOULDER_Y * hScale + 0.15f + armHeightJitter * 0.8f, 0.20f);
+      QVector3D(-0.05F + arm_asymmetry,
+                HP::SHOULDER_Y * h_scale + 0.05F + arm_height_jitter, 0.55F);
+  pose.hand_r = QVector3D(
+      0.15F - arm_asymmetry * 0.5F,
+      HP::SHOULDER_Y * h_scale + 0.15F + arm_height_jitter * 0.8F, 0.20F);
 
   if (isMoving) {
 
-    float walkCycleTime = 0.8f / variation.walkSpeedMult;
-    float walkPhase = fmod(time * (1.0f / walkCycleTime), 1.0f);
-    float leftPhase = walkPhase;
-    float rightPhase = fmod(walkPhase + 0.5f, 1.0f);
+    float const walk_cycle_time = 0.8F / variation.walkSpeedMult;
+    float const walk_phase = std::fmod(time * (1.0F / walk_cycle_time), 1.0F);
+    float const left_phase = walk_phase;
+    float const right_phase = std::fmod(walk_phase + 0.5F, 1.0F);
 
-    const float groundY = HP::GROUND_Y;
+    const float ground_y = HP::GROUND_Y;
 
-    const float strideLength = 0.35f * variation.armSwingAmp;
+    const float stride_length = 0.35F * variation.armSwingAmp;
 
-    auto animateFoot = [groundY, &pose, strideLength](QVector3D &foot,
-                                                      float phase) {
-      float lift = std::sin(phase * 2.0f * 3.14159f);
-      if (lift > 0.0f) {
-        foot.setY(groundY + pose.footYOffset + lift * 0.12f);
+    auto animate_foot = [ground_y, &pose, stride_length](QVector3D &foot,
+                                                         float phase) {
+      float const lift = std::sin(phase * 2.0F * std::numbers::pi_v<float>);
+      if (lift > 0.0F) {
+        foot.setY(ground_y + pose.footYOffset + lift * 0.12F);
       } else {
-        foot.setY(groundY + pose.footYOffset);
+        foot.setY(ground_y + pose.footYOffset);
       }
       foot.setZ(foot.z() +
-                std::sin((phase - 0.25f) * 2.0f * 3.14159f) * strideLength);
+                std::sin((phase - 0.25F) * 2.0F * std::numbers::pi_v<float>) *
+                    stride_length);
     };
 
-    animateFoot(pose.footL, leftPhase);
-    animateFoot(pose.footR, rightPhase);
+    animate_foot(pose.footL, left_phase);
+    animate_foot(pose.foot_r, right_phase);
 
-    float hipSway =
-        std::sin(walkPhase * 2.0f * 3.14159f) * 0.02f * variation.armSwingAmp;
-    pose.shoulderL.setX(pose.shoulderL.x() + hipSway);
-    pose.shoulderR.setX(pose.shoulderR.x() + hipSway);
+    float const hip_sway =
+        std::sin(walk_phase * 2.0F * std::numbers::pi_v<float>) * 0.02F *
+        variation.armSwingAmp;
+    pose.shoulderL.setX(pose.shoulderL.x() + hip_sway);
+    pose.shoulderR.setX(pose.shoulderR.x() + hip_sway);
   }
 
-  QVector3D rightAxis = pose.shoulderR - pose.shoulderL;
-  rightAxis.setY(0.0f);
-  if (rightAxis.lengthSquared() < 1e-8f) {
-    rightAxis = QVector3D(1, 0, 0);
+  QVector3D right_axis = pose.shoulderR - pose.shoulderL;
+  right_axis.setY(0.0F);
+  if (right_axis.lengthSquared() < 1e-8F) {
+    right_axis = QVector3D(1, 0, 0);
   }
-  rightAxis.normalize();
-  QVector3D outwardL = -rightAxis;
-  QVector3D outwardR = rightAxis;
+  right_axis.normalize();
+  QVector3D const outward_l = -right_axis;
+  QVector3D const outward_r = right_axis;
 
-  pose.elbowL = elbowBendTorso(pose.shoulderL, pose.handL, outwardL, 0.45f,
-                               0.15f, -0.08f, +1.0f);
-  pose.elbowR = elbowBendTorso(pose.shoulderR, pose.handR, outwardR, 0.48f,
-                               0.12f, 0.02f, +1.0f);
+  pose.elbowL = elbowBendTorso(pose.shoulderL, pose.handL, outward_l, 0.45F,
+                               0.15F, -0.08F, +1.0F);
+  pose.elbowR = elbowBendTorso(pose.shoulderR, pose.hand_r, outward_r, 0.48F,
+                               0.12F, 0.02F, +1.0F);
 }
 
 void HumanoidRendererBase::drawCommonBody(const DrawContext &ctx,
@@ -267,218 +285,221 @@ void HumanoidRendererBase::drawCommonBody(const DrawContext &ctx,
                                           ISubmitter &out) const {
   using HP = HumanProportions;
 
-  QVector3D scaling = getProportionScaling();
-  float widthScale = scaling.x();
-  float heightScale = scaling.y();
-  float headScale = scaling.z();
+  QVector3D const scaling = getProportionScaling();
+  float const width_scale = scaling.x();
+  float const height_scale = scaling.y();
+  float const head_scale = scaling.z();
 
-  QVector3D rightAxis = pose.shoulderR - pose.shoulderL;
-  if (rightAxis.lengthSquared() < 1e-8f) {
-    rightAxis = QVector3D(1, 0, 0);
+  QVector3D right_axis = pose.shoulderR - pose.shoulderL;
+  if (right_axis.lengthSquared() < 1e-8F) {
+    right_axis = QVector3D(1, 0, 0);
   }
-  rightAxis.normalize();
+  right_axis.normalize();
 
-  const float yShoulder = 0.5f * (pose.shoulderL.y() + pose.shoulderR.y());
-  const float yNeck = pose.neckBase.y();
-  const float shoulderHalfSpan =
-      0.5f * std::abs(pose.shoulderR.x() - pose.shoulderL.x());
-  const float torsoR =
-      std::max(HP::TORSO_TOP_R * widthScale, shoulderHalfSpan * 0.95f);
+  const float y_shoulder = 0.5F * (pose.shoulderL.y() + pose.shoulderR.y());
+  const float y_neck = pose.neck_base.y();
+  const float shoulder_half_span =
+      0.5F * std::abs(pose.shoulderR.x() - pose.shoulderL.x());
+  const float torso_r =
+      std::max(HP::TORSO_TOP_R * width_scale, shoulder_half_span * 0.95F);
 
-  const float yTopCover = std::max(yShoulder + 0.04f, yNeck + 0.00f);
+  const float y_top_cover = std::max(y_shoulder + 0.04F, y_neck + 0.00F);
 
-  QVector3D tunicTop{0.0f, yTopCover - 0.006f, 0.0f};
+  QVector3D const tunic_top{0.0F, y_top_cover - 0.006F, 0.0F};
 
-  QVector3D tunicBot{0.0f, pose.pelvisPos.y() + 0.03f, 0.0f};
+  QVector3D const tunic_bot{0.0F, pose.pelvisPos.y() + 0.03F, 0.0F};
   out.mesh(getUnitTorso(),
-           cylinderBetween(ctx.model, tunicTop, tunicBot, torsoR),
-           v.palette.cloth, nullptr, 1.0f);
+           cylinderBetween(ctx.model, tunic_top, tunic_bot, torso_r),
+           v.palette.cloth, nullptr, 1.0F);
 
-  QVector3D chinPos{0.0f, pose.headPos.y() - pose.headR, 0.0f};
+  QVector3D const chin_pos{0.0F, pose.headPos.y() - pose.headR, 0.0F};
   out.mesh(getUnitCylinder(),
-           cylinderBetween(ctx.model, pose.neckBase, chinPos,
-                           HP::NECK_RADIUS * widthScale),
-           v.palette.skin * 0.9f, nullptr, 1.0f);
+           cylinderBetween(ctx.model, pose.neck_base, chin_pos,
+                           HP::NECK_RADIUS * width_scale),
+           v.palette.skin * 0.9F, nullptr, 1.0F);
 
   out.mesh(getUnitSphere(),
-           sphereAt(ctx.model, pose.headPos, pose.headR * headScale),
-           v.palette.skin, nullptr, 1.0f);
+           sphereAt(ctx.model, pose.headPos, pose.headR * head_scale),
+           v.palette.skin, nullptr, 1.0F);
 
-  QVector3D iris(0.06f, 0.06f, 0.07f);
-  float eyeZ = pose.headR * headScale * 0.7f;
-  float eyeY = pose.headPos.y() + pose.headR * headScale * 0.1f;
-  float eyeSpacing = pose.headR * headScale * 0.35f;
+  QVector3D const iris(0.06F, 0.06F, 0.07F);
+  float const eyeZ = pose.headR * head_scale * 0.7F;
+  float const eyeY = pose.headPos.y() + pose.headR * head_scale * 0.1F;
+  float const eye_spacing = pose.headR * head_scale * 0.35F;
   out.mesh(getUnitSphere(),
-           ctx.model * sphereAt(QVector3D(-eyeSpacing, eyeY, eyeZ),
-                                pose.headR * headScale * 0.15f),
-           iris, nullptr, 1.0f);
+           ctx.model * sphereAt(QVector3D(-eye_spacing, eyeY, eyeZ),
+                                pose.headR * head_scale * 0.15F),
+           iris, nullptr, 1.0F);
   out.mesh(getUnitSphere(),
-           ctx.model * sphereAt(QVector3D(eyeSpacing, eyeY, eyeZ),
-                                pose.headR * headScale * 0.15f),
-           iris, nullptr, 1.0f);
+           ctx.model * sphereAt(QVector3D(eye_spacing, eyeY, eyeZ),
+                                pose.headR * head_scale * 0.15F),
+           iris, nullptr, 1.0F);
 
-  const float upperArmR = HP::UPPER_ARM_R * widthScale;
-  const float foreArmR = HP::FORE_ARM_R * widthScale;
-  const float jointR = HP::HAND_RADIUS * widthScale * 1.05f;
-  const float handR = HP::HAND_RADIUS * widthScale * 0.95f;
-
-  out.mesh(getUnitCylinder(),
-           cylinderBetween(ctx.model, pose.shoulderL, pose.elbowL, upperArmR),
-           v.palette.cloth, nullptr, 1.0f);
-  out.mesh(getUnitSphere(), sphereAt(ctx.model, pose.elbowL, jointR),
-           v.palette.cloth * 0.95f, nullptr, 1.0f);
-  out.mesh(getUnitCylinder(),
-           cylinderBetween(ctx.model, pose.elbowL, pose.handL, foreArmR),
-           v.palette.skin * 0.95f, nullptr, 1.0f);
-  out.mesh(getUnitSphere(), sphereAt(ctx.model, pose.handL, handR),
-           v.palette.leatherDark * 0.92f, nullptr, 1.0f);
+  const float upper_arm_r = HP::UPPER_ARM_R * width_scale;
+  const float fore_arm_r = HP::FORE_ARM_R * width_scale;
+  const float joint_r = HP::HAND_RADIUS * width_scale * 1.05F;
+  const float hand_r = HP::HAND_RADIUS * width_scale * 0.95F;
 
   out.mesh(getUnitCylinder(),
-           cylinderBetween(ctx.model, pose.shoulderR, pose.elbowR, upperArmR),
-           v.palette.cloth, nullptr, 1.0f);
-  out.mesh(getUnitSphere(), sphereAt(ctx.model, pose.elbowR, jointR),
-           v.palette.cloth * 0.95f, nullptr, 1.0f);
+           cylinderBetween(ctx.model, pose.shoulderL, pose.elbowL, upper_arm_r),
+           v.palette.cloth, nullptr, 1.0F);
+  out.mesh(getUnitSphere(), sphereAt(ctx.model, pose.elbowL, joint_r),
+           v.palette.cloth * 0.95F, nullptr, 1.0F);
   out.mesh(getUnitCylinder(),
-           cylinderBetween(ctx.model, pose.elbowR, pose.handR, foreArmR),
-           v.palette.skin * 0.95f, nullptr, 1.0f);
-  out.mesh(getUnitSphere(), sphereAt(ctx.model, pose.handR, handR),
-           v.palette.leatherDark * 0.92f, nullptr, 1.0f);
+           cylinderBetween(ctx.model, pose.elbowL, pose.handL, fore_arm_r),
+           v.palette.skin * 0.95F, nullptr, 1.0F);
+  out.mesh(getUnitSphere(), sphereAt(ctx.model, pose.handL, hand_r),
+           v.palette.leatherDark * 0.92F, nullptr, 1.0F);
 
-  const float hipHalf = HP::UPPER_LEG_R * widthScale * 1.7f;
-  const float maxStance = hipHalf * 2.2f;
+  out.mesh(getUnitCylinder(),
+           cylinderBetween(ctx.model, pose.shoulderR, pose.elbowR, upper_arm_r),
+           v.palette.cloth, nullptr, 1.0F);
+  out.mesh(getUnitSphere(), sphereAt(ctx.model, pose.elbowR, joint_r),
+           v.palette.cloth * 0.95F, nullptr, 1.0F);
+  out.mesh(getUnitCylinder(),
+           cylinderBetween(ctx.model, pose.elbowR, pose.hand_r, fore_arm_r),
+           v.palette.skin * 0.95F, nullptr, 1.0F);
+  out.mesh(getUnitSphere(), sphereAt(ctx.model, pose.hand_r, hand_r),
+           v.palette.leatherDark * 0.92F, nullptr, 1.0F);
 
-  const float upperScale = 1.40f * 3.0f * widthScale;
-  const float lowerScale = 1.35f * 3.0f * widthScale;
-  const float footLenMul = (5.5f * 0.1f);
-  const float footRadMul = 0.70f;
+  const float hip_half = HP::UPPER_LEG_R * width_scale * 1.7F;
+  const float max_stance = hip_half * 2.2F;
 
-  const float kneeForward = 0.15f;
-  const float kneeDrop = 0.02f * HP::LOWER_LEG_LEN;
+  const float upper_scale = 1.40F * 3.0F * width_scale;
+  const float lower_scale = 1.35F * 3.0F * width_scale;
+  const float foot_len_mul = (5.5F * 0.1F);
+  const float foot_rad_mul = 0.70F;
 
-  const QVector3D FWD(0.f, 0.f, 1.f);
+  const float knee_forward = 0.15F;
+  const float knee_drop = 0.02F * HP::LOWER_LEG_LEN;
 
-  const float upperR = HP::UPPER_LEG_R * upperScale;
-  const float lowerR = HP::LOWER_LEG_R * lowerScale;
-  const float footR = lowerR * footRadMul;
+  const QVector3D FWD(0.F, 0.F, 1.F);
 
-  constexpr float DEG = 3.1415926535f / 180.f;
+  const float upper_r = HP::UPPER_LEG_R * upper_scale;
+  const float lower_r = HP::LOWER_LEG_R * lower_scale;
+  const float foot_r = lower_r * foot_rad_mul;
 
-  const QVector3D hipL = pose.pelvisPos + QVector3D(-hipHalf, 0.f, 0.f);
-  const QVector3D hipR = pose.pelvisPos + QVector3D(+hipHalf, 0.f, 0.f);
-  const float midX = 0.5f * (hipL.x() + hipR.x());
+  constexpr float DEG = std::numbers::pi_v<float> / 180.F;
 
-  auto clampX = [&](const QVector3D &v, float mid) {
+  const QVector3D hipL = pose.pelvisPos + QVector3D(-hip_half, 0.F, 0.F);
+  const QVector3D hipR = pose.pelvisPos + QVector3D(+hip_half, 0.F, 0.F);
+  const float midX = 0.5F * (hipL.x() + hipR.x());
+
+  auto clamp_x = [&](const QVector3D &v, float mid) {
     const float dx = v.x() - mid;
-    const float mag = std::min(std::abs(dx), maxStance);
+    const float mag = std::min(std::abs(dx), max_stance);
     return QVector3D(mid + (dx < 0 ? -mag : mag), v.y(), v.z());
   };
-  const QVector3D plantL = clampX(pose.footL, midX);
-  const QVector3D plantR = clampX(pose.footR, midX);
+  const QVector3D plant_l = clamp_x(pose.footL, midX);
+  const QVector3D plant_r = clamp_x(pose.foot_r, midX);
 
-  const float footLen = footLenMul * lowerR;
-  const float heelBackFrac = 0.15f;
-  const float ballFrac = 0.72f;
-  const float toeUpFrac = 0.06f;
-  const float yawOutDeg = 12.0f;
-  const float ankleFwdFrac = 0.10f;
-  const float ankleUpFrac = 0.50f;
-  const float toeSplayFrac = 0.06f;
+  const float foot_len = foot_len_mul * lower_r;
+  const float heel_back_frac = 0.15F;
+  const float ball_frac = 0.72F;
+  const float toe_up_frac = 0.06F;
+  const float yaw_out_deg = 12.0F;
+  const float ankle_fwd_frac = 0.10F;
+  const float ankle_up_frac = 0.50F;
+  const float toe_splay_frac = 0.06F;
 
-  const QVector3D fwdL = rotY(FWD, -yawOutDeg * DEG);
-  const QVector3D fwdR = rotY(FWD, +yawOutDeg * DEG);
-  const QVector3D rightL = rightOf(fwdL);
-  const QVector3D rightR = rightOf(fwdR);
+  const QVector3D fwdL = rotY(FWD, -yaw_out_deg * DEG);
+  const QVector3D fwdR = rotY(FWD, +yaw_out_deg * DEG);
+  const QVector3D right_l = rightOf(fwdL);
+  const QVector3D right_r = rightOf(fwdR);
 
-  const float footCLyL = plantL.y() + footR;
-  const float footCLyR = plantR.y() + footR;
+  const float foot_cly_l = plant_l.y() + foot_r;
+  const float foot_cly_r = plant_r.y() + foot_r;
 
-  QVector3D heelCenL(plantL.x(), footCLyL, plantL.z());
-  QVector3D heelCenR(plantR.x(), footCLyR, plantR.z());
+  QVector3D heel_cen_l(plant_l.x(), foot_cly_l, plant_l.z());
+  QVector3D heel_cen_r(plant_r.x(), foot_cly_r, plant_r.z());
 
-  QVector3D ankleL = heelCenL + fwdL * (ankleFwdFrac * footLen);
-  QVector3D ankleR = heelCenR + fwdR * (ankleFwdFrac * footLen);
-  ankleL.setY(heelCenL.y() + ankleUpFrac * footR);
-  ankleR.setY(heelCenR.y() + ankleUpFrac * footR);
+  QVector3D ankle_l = heel_cen_l + fwdL * (ankle_fwd_frac * foot_len);
+  QVector3D ankle_r = heel_cen_r + fwdR * (ankle_fwd_frac * foot_len);
+  ankle_l.setY(heel_cen_l.y() + ankle_up_frac * foot_r);
+  ankle_r.setY(heel_cen_r.y() + ankle_up_frac * foot_r);
 
-  const float kneeForwardPush = HP::LOWER_LEG_LEN * kneeForward;
-  const float kneeDropAbs = kneeDrop;
+  const float knee_forwardPush = HP::LOWER_LEG_LEN * knee_forward;
+  const float knee_dropAbs = knee_drop;
 
-  QVector3D kneeL, kneeR;
-  bool useCustomKnees = (pose.kneeL.y() < HP::KNEE_Y * 0.9f ||
-                         pose.kneeR.y() < HP::KNEE_Y * 0.9f);
+  QVector3D knee_l;
+  QVector3D knee_r;
+  bool const use_custom_knees = (pose.knee_l.y() < HP::KNEE_Y * 0.9F ||
+                                 pose.knee_r.y() < HP::KNEE_Y * 0.9F);
 
-  if (useCustomKnees) {
-    kneeL = pose.kneeL;
-    kneeR = pose.kneeR;
+  if (use_custom_knees) {
+    knee_l = pose.knee_l;
+    knee_r = pose.knee_r;
   } else {
-    auto computeKnee = [&](const QVector3D &hip, const QVector3D &ankle) {
-      QVector3D dir = ankle - hip;
-      QVector3D knee = hip + 0.5f * dir;
-      knee += QVector3D(0, 0, 1) * kneeForwardPush;
-      knee.setY(knee.y() - kneeDropAbs);
-      knee.setX((hip.x() + ankle.x()) * 0.5f);
+    auto compute_knee = [&](const QVector3D &hip, const QVector3D &ankle) {
+      QVector3D const dir = ankle - hip;
+      QVector3D knee = hip + 0.5F * dir;
+      knee += QVector3D(0, 0, 1) * knee_forwardPush;
+      knee.setY(knee.y() - knee_dropAbs);
+      knee.setX((hip.x() + ankle.x()) * 0.5F);
       return knee;
     };
-    kneeL = computeKnee(hipL, ankleL);
-    kneeR = computeKnee(hipR, ankleR);
+    knee_l = compute_knee(hipL, ankle_l);
+    knee_r = compute_knee(hipR, ankle_r);
   }
 
-  const float heelBack = heelBackFrac * footLen;
-  const float ballLen = ballFrac * footLen;
-  const float toeLen = (1.0f - ballFrac) * footLen;
+  const float heel_back = heel_back_frac * foot_len;
+  const float ball_len = ball_frac * foot_len;
+  const float toe_len = (1.0F - ball_frac) * foot_len;
 
-  QVector3D ballL = heelCenL + fwdL * ballLen;
-  QVector3D ballR = heelCenR + fwdR * ballLen;
+  QVector3D const ball_l = heel_cen_l + fwdL * ball_len;
+  QVector3D const ball_r = heel_cen_r + fwdR * ball_len;
 
-  const float toeUpL = toeUpFrac * footLen;
-  const float toeUpR = toeUpFrac * footLen;
-  const float toeSplay = toeSplayFrac * footLen;
+  const float toe_up_l = toe_up_frac * foot_len;
+  const float toe_up_r = toe_up_frac * foot_len;
+  const float toe_splay = toe_splay_frac * foot_len;
 
-  QVector3D toeL = ballL + fwdL * toeLen - rightL * toeSplay;
-  QVector3D toeR = ballR + fwdR * toeLen + rightR * toeSplay;
-  toeL.setY(ballL.y() + toeUpL);
-  toeR.setY(ballR.y() + toeUpR);
+  QVector3D toeL = ball_l + fwdL * toe_len - right_l * toe_splay;
+  QVector3D toeR = ball_r + fwdR * toe_len + right_r * toe_splay;
+  toeL.setY(ball_l.y() + toe_up_l);
+  toeR.setY(ball_r.y() + toe_up_r);
 
-  heelCenL -= fwdL * heelBack;
-  heelCenR -= fwdR * heelBack;
+  heel_cen_l -= fwdL * heel_back;
+  heel_cen_r -= fwdR * heel_back;
 
-  const float heelRad = footR * 1.05f;
-  const float toeRad = footR * 0.85f;
+  const float heel_rad = foot_r * 1.05F;
+  const float toe_rad = foot_r * 0.85F;
 
-  out.mesh(getUnitCapsule(8, 1),
-           Render::Geom::capsuleBetween(ctx.model, hipL, kneeL, upperR),
-           v.palette.leather, nullptr, 1.0f);
-  out.mesh(getUnitCapsule(8, 1),
-           Render::Geom::capsuleBetween(ctx.model, hipR, kneeR, upperR),
-           v.palette.leather, nullptr, 1.0f);
+  out.mesh(getUnitCapsule(DefaultCapsuleSegments, 1),
+           Render::Geom::capsuleBetween(ctx.model, hipL, knee_l, upper_r),
+           v.palette.leather, nullptr, 1.0F);
+  out.mesh(getUnitCapsule(DefaultCapsuleSegments, 1),
+           Render::Geom::capsuleBetween(ctx.model, hipR, knee_r, upper_r),
+           v.palette.leather, nullptr, 1.0F);
 
-  out.mesh(getUnitCapsule(8, 1),
-           Render::Geom::capsuleBetween(ctx.model, kneeL, ankleL, lowerR),
-           v.palette.leatherDark, nullptr, 1.0f);
-  out.mesh(getUnitCapsule(8, 1),
-           Render::Geom::capsuleBetween(ctx.model, kneeR, ankleR, lowerR),
-           v.palette.leatherDark, nullptr, 1.0f);
+  out.mesh(getUnitCapsule(DefaultCapsuleSegments, 1),
+           Render::Geom::capsuleBetween(ctx.model, knee_l, ankle_l, lower_r),
+           v.palette.leatherDark, nullptr, 1.0F);
+  out.mesh(getUnitCapsule(DefaultCapsuleSegments, 1),
+           Render::Geom::capsuleBetween(ctx.model, knee_r, ankle_r, lower_r),
+           v.palette.leatherDark, nullptr, 1.0F);
 
-  out.mesh(getUnitCapsule(8, 1),
-           Render::Geom::capsuleBetween(ctx.model, heelCenL, ballL, heelRad),
-           v.palette.leatherDark, nullptr, 1.0f);
-  out.mesh(getUnitCapsule(8, 1),
-           Render::Geom::capsuleBetween(ctx.model, heelCenR, ballR, heelRad),
-           v.palette.leatherDark, nullptr, 1.0f);
+  out.mesh(
+      getUnitCapsule(DefaultCapsuleSegments, 1),
+      Render::Geom::capsuleBetween(ctx.model, heel_cen_l, ball_l, heel_rad),
+      v.palette.leatherDark, nullptr, 1.0F);
+  out.mesh(
+      getUnitCapsule(DefaultCapsuleSegments, 1),
+      Render::Geom::capsuleBetween(ctx.model, heel_cen_r, ball_r, heel_rad),
+      v.palette.leatherDark, nullptr, 1.0F);
 
-  out.mesh(getUnitCapsule(8, 1),
-           Render::Geom::capsuleBetween(ctx.model, ballL, toeL, toeRad),
-           v.palette.leatherDark, nullptr, 1.0f);
-  out.mesh(getUnitCapsule(8, 1),
-           Render::Geom::capsuleBetween(ctx.model, ballR, toeR, toeRad),
-           v.palette.leatherDark, nullptr, 1.0f);
+  out.mesh(getUnitCapsule(DefaultCapsuleSegments, 1),
+           Render::Geom::capsuleBetween(ctx.model, ball_l, toeL, toe_rad),
+           v.palette.leatherDark, nullptr, 1.0F);
+  out.mesh(getUnitCapsule(DefaultCapsuleSegments, 1),
+           Render::Geom::capsuleBetween(ctx.model, ball_r, toeR, toe_rad),
+           v.palette.leatherDark, nullptr, 1.0F);
 
   drawHelmet(ctx, v, pose, out);
 
-  drawArmorOverlay(ctx, v, pose, yTopCover, torsoR, shoulderHalfSpan, upperArmR,
-                   rightAxis, out);
+  draw_armorOverlay(ctx, v, pose, y_top_cover, torso_r, shoulder_half_span,
+                    upper_arm_r, right_axis, out);
 
-  drawShoulderDecorations(ctx, v, pose, yTopCover, yNeck, rightAxis, out);
+  drawShoulderDecorations(ctx, v, pose, y_top_cover, y_neck, right_axis, out);
 }
 
 void HumanoidRendererBase::drawHelmet(const DrawContext &ctx,
@@ -487,50 +508,49 @@ void HumanoidRendererBase::drawHelmet(const DrawContext &ctx,
                                       ISubmitter &out) const {
 
   using HP = HumanProportions;
-  QVector3D capC = pose.headPos + QVector3D(0, pose.headR * 0.8f, 0);
-  out.mesh(getUnitSphere(), sphereAt(ctx.model, capC, pose.headR * 0.85f),
-           v.palette.cloth * 0.9f, nullptr, 1.0f);
+  QVector3D const capC = pose.headPos + QVector3D(0, pose.headR * 0.8F, 0);
+  out.mesh(getUnitSphere(), sphereAt(ctx.model, capC, pose.headR * 0.85F),
+           v.palette.cloth * 0.9F, nullptr, 1.0F);
 }
 
-void HumanoidRendererBase::drawArmorOverlay(
+void HumanoidRendererBase::draw_armorOverlay(
     const DrawContext &ctx, const HumanoidVariant &v, const HumanoidPose &pose,
-    float yTopCover, float torsoR, float shoulderHalfSpan, float upperArmR,
-    const QVector3D &rightAxis, ISubmitter &out) const {}
+    float y_top_cover, float torso_r, float shoulder_half_span,
+    float upper_arm_r, const QVector3D &right_axis, ISubmitter &out) const {}
 
-void HumanoidRendererBase::drawShoulderDecorations(const DrawContext &ctx,
-                                                   const HumanoidVariant &v,
-                                                   const HumanoidPose &pose,
-                                                   float yTopCover, float yNeck,
-                                                   const QVector3D &rightAxis,
-                                                   ISubmitter &out) const {}
+void HumanoidRendererBase::drawShoulderDecorations(
+    const DrawContext &ctx, const HumanoidVariant &v, const HumanoidPose &pose,
+    float y_top_cover, float y_neck, const QVector3D &right_axis,
+    ISubmitter &out) const {}
 
 void HumanoidRendererBase::render(const DrawContext &ctx,
                                   ISubmitter &out) const {
-  FormationParams formation = resolveFormation(ctx);
-  AnimationInputs anim = sampleAnimState(ctx);
+  FormationParams const formation = resolveFormation(ctx);
+  AnimationInputs const anim = sampleAnimState(ctx);
 
-  Engine::Core::UnitComponent *unitComp = nullptr;
-  if (ctx.entity) {
-    unitComp = ctx.entity->getComponent<Engine::Core::UnitComponent>();
+  Engine::Core::UnitComponent *unit_comp = nullptr;
+  if (ctx.entity != nullptr) {
+    unit_comp = ctx.entity->getComponent<Engine::Core::UnitComponent>();
   }
 
-  uint32_t seed = 0u;
-  if (unitComp) {
-    seed ^= uint32_t(unitComp->ownerId * 2654435761u);
+  uint32_t seed = 0U;
+  if (unit_comp != nullptr) {
+    seed ^= uint32_t(unit_comp->owner_id * 2654435761U);
   }
-  if (ctx.entity) {
-    seed ^= uint32_t(reinterpret_cast<uintptr_t>(ctx.entity) & 0xFFFFFFFFu);
+  if (ctx.entity != nullptr) {
+    seed ^= uint32_t(reinterpret_cast<uintptr_t>(ctx.entity) & 0xFFFFFFFFU);
   }
 
-  const int rows = (formation.individualsPerUnit + formation.maxPerRow - 1) /
-                   formation.maxPerRow;
-  const int cols = formation.maxPerRow;
+  const int rows =
+      (formation.individuals_per_unit + formation.max_per_row - 1) /
+      formation.max_per_row;
+  const int cols = formation.max_per_row;
 
-  int visibleCount = rows * cols;
-  if (unitComp) {
-    int mh = std::max(1, unitComp->maxHealth);
-    float ratio = std::clamp(unitComp->health / float(mh), 0.0f, 1.0f);
-    visibleCount = std::max(1, (int)std::ceil(ratio * float(rows * cols)));
+  int visible_count = rows * cols;
+  if (unit_comp != nullptr) {
+    int const mh = std::max(1, unit_comp->max_health);
+    float const ratio = std::clamp(unit_comp->health / float(mh), 0.0F, 1.0F);
+    visible_count = std::max(1, (int)std::ceil(ratio * float(rows * cols)));
   }
 
   HumanoidVariant variant;
@@ -540,79 +560,80 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
     m_cachedProportionScale = getProportionScaling();
     m_proportionScaleCached = true;
   }
-  const QVector3D propScale = m_cachedProportionScale;
-  const float heightScale = propScale.y();
-  const bool needsHeightScaling = std::abs(heightScale - 1.0f) > 0.001f;
+  const QVector3D prop_scale = m_cachedProportionScale;
+  const float height_scale = prop_scale.y();
+  const bool needs_height_scaling = std::abs(height_scale - 1.0F) > 0.001F;
 
-  const QMatrix4x4 kIdentityMatrix;
+  const QMatrix4x4 k_identity_matrix;
 
-  auto fastRandom = [](uint32_t &state) -> float {
-    state = state * 1664525u + 1013904223u;
-    return float(state & 0x7FFFFFu) / float(0x7FFFFFu);
+  auto fast_random = [](uint32_t &state) -> float {
+    state = state * 1664525U + 1013904223U;
+    return float(state & 0x7FFFFFU) / float(0x7FFFFFU);
   };
 
-  for (int idx = 0; idx < visibleCount; ++idx) {
-    int r = idx / cols;
-    int c = idx % cols;
+  for (int idx = 0; idx < visible_count; ++idx) {
+    int const r = idx / cols;
+    int const c = idx % cols;
 
-    float offsetX = (c - (cols - 1) * 0.5f) * formation.spacing;
-    float offsetZ = (r - (rows - 1) * 0.5f) * formation.spacing;
+    float offset_x = (c - (cols - 1) * 0.5F) * formation.spacing;
+    float offset_z = (r - (rows - 1) * 0.5F) * formation.spacing;
 
-    uint32_t instSeed = seed ^ uint32_t(idx * 9176u);
+    uint32_t const inst_seed = seed ^ uint32_t(idx * 9176U);
 
-    uint32_t rngState = instSeed;
-    float posJitterX = (fastRandom(rngState) - 0.5f) * 0.05f;
-    float posJitterZ = (fastRandom(rngState) - 0.5f) * 0.05f;
-    float verticalJitter = (fastRandom(rngState) - 0.5f) * 0.03f;
-    float yawOffset = (fastRandom(rngState) - 0.5f) * 5.0f;
-    float phaseOffset = fastRandom(rngState) * 0.25f;
+    uint32_t rng_state = inst_seed;
+    float const pos_jitter_x = (fast_random(rng_state) - 0.5F) * 0.05F;
+    float const pos_jitter_z = (fast_random(rng_state) - 0.5F) * 0.05F;
+    float const vertical_jitter = (fast_random(rng_state) - 0.5F) * 0.03F;
+    float const yaw_offset = (fast_random(rng_state) - 0.5F) * 5.0F;
+    float const phase_offset = fast_random(rng_state) * 0.25F;
 
-    offsetX += posJitterX;
-    offsetZ += posJitterZ;
+    offset_x += pos_jitter_x;
+    offset_z += pos_jitter_z;
 
-    QMatrix4x4 instModel;
-    if (ctx.entity) {
+    QMatrix4x4 inst_model;
+    if (ctx.entity != nullptr) {
       if (auto *entT =
               ctx.entity->getComponent<Engine::Core::TransformComponent>()) {
-        QMatrix4x4 M = kIdentityMatrix;
+        QMatrix4x4 M = k_identity_matrix;
         M.translate(entT->position.x, entT->position.y, entT->position.z);
-        float baseYaw = entT->rotation.y;
-        float appliedYaw = baseYaw + yawOffset;
-        M.rotate(appliedYaw, 0.0f, 1.0f, 0.0f);
+        float const base_yaw = entT->rotation.y;
+        float const applied_yaw = base_yaw + yaw_offset;
+        M.rotate(applied_yaw, 0.0F, 1.0F, 0.0F);
         M.scale(entT->scale.x, entT->scale.y, entT->scale.z);
-        M.translate(offsetX, verticalJitter, offsetZ);
-        instModel = M;
+        M.translate(offset_x, vertical_jitter, offset_z);
+        inst_model = M;
       } else {
-        instModel = ctx.model;
-        instModel.rotate(yawOffset, 0.0f, 1.0f, 0.0f);
-        instModel.translate(offsetX, verticalJitter, offsetZ);
+        inst_model = ctx.model;
+        inst_model.rotate(yaw_offset, 0.0F, 1.0F, 0.0F);
+        inst_model.translate(offset_x, vertical_jitter, offset_z);
       }
     } else {
-      instModel = ctx.model;
-      instModel.rotate(yawOffset, 0.0f, 1.0f, 0.0f);
-      instModel.translate(offsetX, verticalJitter, offsetZ);
+      inst_model = ctx.model;
+      inst_model.rotate(yaw_offset, 0.0F, 1.0F, 0.0F);
+      inst_model.translate(offset_x, vertical_jitter, offset_z);
     }
 
-    DrawContext instCtx{ctx.resources, ctx.entity, ctx.world, instModel};
+    DrawContext inst_ctx{ctx.resources, ctx.entity, ctx.world, inst_model};
 
-    VariationParams variation = VariationParams::fromSeed(instSeed);
+    VariationParams const variation = VariationParams::fromSeed(inst_seed);
 
-    float combinedHeightScale = heightScale * variation.heightScale;
-    if (needsHeightScaling || std::abs(variation.heightScale - 1.0f) > 0.001f) {
-      QMatrix4x4 scaleMatrix;
-      scaleMatrix.scale(variation.bulkScale, combinedHeightScale, 1.0f);
-      instCtx.model = instCtx.model * scaleMatrix;
+    float const combined_height_scale = height_scale * variation.height_scale;
+    if (needs_height_scaling ||
+        std::abs(variation.height_scale - 1.0F) > 0.001F) {
+      QMatrix4x4 scale_matrix;
+      scale_matrix.scale(variation.bulkScale, combined_height_scale, 1.0F);
+      inst_ctx.model = inst_ctx.model * scale_matrix;
     }
 
     HumanoidPose pose;
-    computeLocomotionPose(instSeed, anim.time + phaseOffset, anim.isMoving,
+    computeLocomotionPose(inst_seed, anim.time + phase_offset, anim.isMoving,
                           variation, pose);
 
-    customizePose(instCtx, anim, instSeed, pose);
+    customizePose(inst_ctx, anim, inst_seed, pose);
 
-    drawCommonBody(instCtx, variant, pose, out);
+    drawCommonBody(inst_ctx, variant, pose, out);
 
-    addAttachments(instCtx, variant, pose, anim, out);
+    addAttachments(inst_ctx, variant, pose, anim, out);
   }
 }
 

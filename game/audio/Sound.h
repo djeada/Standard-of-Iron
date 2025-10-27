@@ -12,10 +12,10 @@ class Sound : public QObject {
 public:
   explicit Sound(const std::string &filePath,
                  MiniaudioBackend *backend = nullptr);
-  ~Sound();
+  ~Sound() override;
 
-  bool isLoaded() const;
-  void play(float volume = 1.0f, bool loop = false);
+  [[nodiscard]] auto isLoaded() const -> bool;
+  void play(float volume = 1.0F, bool loop = false);
   void stop();
   void setVolume(float volume);
 

@@ -2,15 +2,12 @@
 
 #include "map_definition.h"
 
-namespace Render {
-namespace GL {
+namespace Render::GL {
 class Renderer;
 class Camera;
-} // namespace GL
-} // namespace Render
+} // namespace Render::GL
 
-namespace Game {
-namespace Map {
+namespace Game::Map {
 
 struct Environment {
   static void apply(const MapDefinition &def, Render::GL::Renderer &renderer,
@@ -19,5 +16,4 @@ struct Environment {
                            Render::GL::Camera &camera);
 };
 
-} // namespace Map
-} // namespace Game
+} // namespace Game::Map
