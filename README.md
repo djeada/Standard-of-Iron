@@ -405,15 +405,11 @@ Quick start for contributors:
 - Multiplayer networking
 - More unit types (melee, siege)
 - Resource gathering system
-- Multiple maps
+- Multiple maps ✅ Implemented 
 - Campaign mode
 - Advanced AI behaviors
-- Save/load game state
-- ~~Sound effects and music~~ ✅ Implemented (see [Audio System Documentation](docs/AUDIO_SYSTEM.md))
-
-## Documentation
-
-- [Audio System Guide](docs/AUDIO_SYSTEM.md) - Comprehensive guide to the audio system architecture, troubleshooting, and development
+- Save/load game state ✅ Implemented 
+- ~~Sound effects and music~~ ✅ Implemented 
 
 ## License
 
