@@ -72,8 +72,8 @@ public:
                      uint32_t seed, HumanoidPose &pose) const override {
     using HP = HumanProportions;
 
-    float const arm_height_jitter = (hash01(seed ^ 0xABCDU) - 0.5F) * 0.03F;
-    float const arm_asymmetry = (hash01(seed ^ 0xDEF0U) - 0.5F) * 0.04F;
+    float const arm_height_jitter = (hash_01(seed ^ 0xABCDU) - 0.5F) * 0.03F;
+    float const arm_asymmetry = (hash_01(seed ^ 0xDEF0U) - 0.5F) * 0.04F;
 
     if (anim.is_attacking && anim.isMelee) {
       float const attack_phase =
@@ -479,7 +479,7 @@ private:
 
     e.metalColor = QVector3D(0.72F, 0.73F, 0.78F);
 
-    float const shield_hue = hash01(seed ^ 0x12345U);
+    float const shield_hue = hash_01(seed ^ 0x12345U);
     if (shield_hue < 0.45F) {
       e.shieldColor = v.palette.cloth * 1.10F;
     } else if (shield_hue < 0.90F) {
@@ -489,20 +489,20 @@ private:
       e.shieldColor = e.metalColor * 0.95F;
     }
 
-    e.swordLength = 0.80F + (hash01(seed ^ 0xABCDU) - 0.5F) * 0.16F;
-    e.swordWidth = 0.060F + (hash01(seed ^ 0x7777U) - 0.5F) * 0.010F;
-    e.shieldRadius = 0.16F + (hash01(seed ^ 0xDEF0U) - 0.5F) * 0.04F;
+    e.swordLength = 0.80F + (hash_01(seed ^ 0xABCDU) - 0.5F) * 0.16F;
+    e.swordWidth = 0.060F + (hash_01(seed ^ 0x7777U) - 0.5F) * 0.010F;
+    e.shieldRadius = 0.16F + (hash_01(seed ^ 0xDEF0U) - 0.5F) * 0.04F;
 
-    e.guard_half_width = 0.120F + (hash01(seed ^ 0x3456U) - 0.5F) * 0.020F;
-    e.handleRadius = 0.016F + (hash01(seed ^ 0x88AAU) - 0.5F) * 0.003F;
-    e.pommelRadius = 0.045F + (hash01(seed ^ 0x19C3U) - 0.5F) * 0.006F;
+    e.guard_half_width = 0.120F + (hash_01(seed ^ 0x3456U) - 0.5F) * 0.020F;
+    e.handleRadius = 0.016F + (hash_01(seed ^ 0x88AAU) - 0.5F) * 0.003F;
+    e.pommelRadius = 0.045F + (hash_01(seed ^ 0x19C3U) - 0.5F) * 0.006F;
 
     e.bladeRicasso =
-        clampf(0.14F + (hash01(seed ^ 0xBEEFU) - 0.5F) * 0.04F, 0.10F, 0.20F);
-    e.bladeTaperBias = clamp01(0.6F + (hash01(seed ^ 0xFACEU) - 0.5F) * 0.2F);
+        clampf(0.14F + (hash_01(seed ^ 0xBEEFU) - 0.5F) * 0.04F, 0.10F, 0.20F);
+    e.bladeTaperBias = clamp01(0.6F + (hash_01(seed ^ 0xFACEU) - 0.5F) * 0.2F);
 
-    e.shieldCrossDecal = (hash01(seed ^ 0xA11CU) > 0.55F);
-    e.hasScabbard = (hash01(seed ^ 0x5CABU) > 0.15F);
+    e.shieldCrossDecal = (hash_01(seed ^ 0xA11CU) > 0.55F);
+    e.hasScabbard = (hash_01(seed ^ 0x5CABU) > 0.15F);
     return e;
   }
 

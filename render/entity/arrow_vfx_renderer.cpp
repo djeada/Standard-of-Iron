@@ -8,6 +8,7 @@
 #include "../gl/mesh.h"
 #include "../gl/primitives.h"
 #include "../gl/texture.h"
+#include "../humanoid_math.h"
 #include "archer_renderer.h"
 #include "registry.h"
 
@@ -289,13 +290,6 @@ static inline void drawQuiver(const DrawContext &p, ISubmitter &out,
                               uint32_t seed) {
   using HP = HumanProportions;
 
-  auto hash01 = [](uint32_t x) {
-    x ^= x << 13;
-    x ^= x >> 17;
-    x ^= x << 5;
-    return (x & 0x00FFFFFF) / float(0x01000000);
-  };
-
   QVector3D qTop(-0.08F, HP::SHOULDER_Y + 0.10F, -0.25F);
   QVector3D q_base(-0.10F, HP::CHEST_Y, -0.22F);
 
@@ -303,8 +297,8 @@ static inline void drawQuiver(const DrawContext &p, ISubmitter &out,
   out.mesh(getUnitCylinder(), cylinderBetween(p.model, q_base, qTop, quiver_r),
            C.leather, nullptr, 1.0F);
 
-  float j = (hash01(seed) - 0.5F) * 0.04F;
-  float k = (hash01(seed ^ 0x9E3779B9u) - 0.5F) * 0.04F;
+  float j = (hash_01(seed) - 0.5F) * 0.04F;
+  float k = (hash_01(seed ^ HashXorShift::k_golden_ratio) - 0.5F) * 0.04F;
 
   QVector3D a1 = qTop + QVector3D(0.00F + j, 0.08F, 0.00F + k);
   out.mesh(getUnitCylinder(), cylinderBetween(p.model, qTop, a1, 0.010F),

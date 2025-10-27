@@ -61,8 +61,8 @@ public:
                      uint32_t seed, HumanoidPose &pose) const override {
     using HP = HumanProportions;
 
-    float const arm_height_jitter = (hash01(seed ^ 0xABCDU) - 0.5F) * 0.03F;
-    float const arm_asymmetry = (hash01(seed ^ 0xDEF0U) - 0.5F) * 0.04F;
+    float const arm_height_jitter = (hash_01(seed ^ 0xABCDU) - 0.5F) * 0.03F;
+    float const arm_asymmetry = (hash_01(seed ^ 0xDEF0U) - 0.5F) * 0.04F;
 
     if (anim.isInHoldMode || anim.isExitingHold) {
       float const t = anim.isInHoldMode ? 1.0F : (1.0F - anim.holdExitProgress);
@@ -351,9 +351,9 @@ private:
     e.spearShaftColor = v.palette.leather * QVector3D(0.85F, 0.75F, 0.65F);
     e.spearheadColor = QVector3D(0.75F, 0.76F, 0.80F);
 
-    e.spearLength = 1.15F + (hash01(seed ^ 0xABCDU) - 0.5F) * 0.10F;
-    e.spearShaftRadius = 0.018F + (hash01(seed ^ 0x7777U) - 0.5F) * 0.003F;
-    e.spearheadLength = 0.16F + (hash01(seed ^ 0xBEEFU) - 0.5F) * 0.04F;
+    e.spearLength = 1.15F + (hash_01(seed ^ 0xABCDU) - 0.5F) * 0.10F;
+    e.spearShaftRadius = 0.018F + (hash_01(seed ^ 0x7777U) - 0.5F) * 0.003F;
+    e.spearheadLength = 0.16F + (hash_01(seed ^ 0xBEEFU) - 0.5F) * 0.04F;
 
     return e;
   }
