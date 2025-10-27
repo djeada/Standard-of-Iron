@@ -1,8 +1,8 @@
 #include "audio_system_proxy.h"
 #include "game/audio/AudioSystem.h"
+#include <qobject.h>
 
-namespace App {
-namespace Models {
+namespace App::Models {
 
 AudioSystemProxy::AudioSystemProxy(QObject *parent) : QObject(parent) {}
 
@@ -22,21 +22,20 @@ void AudioSystemProxy::setVoiceVolume(float volume) {
   AudioSystem::getInstance().setVoiceVolume(volume);
 }
 
-float AudioSystemProxy::getMasterVolume() const {
+float AudioSystemProxy::getMasterVolume() {
   return AudioSystem::getInstance().getMasterVolume();
 }
 
-float AudioSystemProxy::getMusicVolume() const {
+float AudioSystemProxy::getMusicVolume() {
   return AudioSystem::getInstance().getMusicVolume();
 }
 
-float AudioSystemProxy::getSoundVolume() const {
+float AudioSystemProxy::getSoundVolume() {
   return AudioSystem::getInstance().getSoundVolume();
 }
 
-float AudioSystemProxy::getVoiceVolume() const {
+float AudioSystemProxy::getVoiceVolume() {
   return AudioSystem::getInstance().getVoiceVolume();
 }
 
-} // namespace Models
-} // namespace App
+} // namespace App::Models

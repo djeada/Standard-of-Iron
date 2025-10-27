@@ -9,6 +9,12 @@ add_library(render_gl STATIC
     gl/resources.cpp
     gl/bootstrap.cpp
     gl/backend.cpp
+    gl/backend/cylinder_pipeline.cpp
+    gl/backend/vegetation_pipeline.cpp
+    gl/backend/terrain_pipeline.cpp
+    gl/backend/character_pipeline.cpp
+    gl/backend/water_pipeline.cpp
+    gl/backend/effects_pipeline.cpp
     gl/shader_cache.cpp
     gl/state_scopes.cpp
     draw_queue.cpp

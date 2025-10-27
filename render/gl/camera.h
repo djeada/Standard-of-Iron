@@ -18,9 +18,10 @@ public:
   void lookAt(const QVector3D &position, const QVector3D &target,
               const QVector3D &up);
 
-  void setPerspective(float fov, float aspect, float nearPlane, float farPlane);
+  void setPerspective(float fov, float aspect, float near_plane,
+                      float far_plane);
   void setOrthographic(float left, float right, float bottom, float top,
-                       float nearPlane, float farPlane);
+                       float near_plane, float far_plane);
 
   void moveForward(float distance);
   void moveRight(float distance);
@@ -30,91 +31,98 @@ public:
   void zoomDistance(float delta);
   void rotate(float yaw, float pitch);
 
-  void pan(float rightDist, float forwardDist);
+  void pan(float right_dist, float forwardDist);
 
   void elevate(float dy);
   void yaw(float degrees);
-  void orbit(float yawDeg, float pitchDeg);
+  void orbit(float yaw_deg, float pitch_deg);
 
   void update(float dt);
-  bool screenToGround(qreal sx, qreal sy, qreal screenW, qreal screenH,
-                      QVector3D &outWorld) const;
-  bool worldToScreen(const QVector3D &world, qreal screenW, qreal screenH,
-                     QPointF &outScreen) const;
+  auto screenToGround(qreal sx, qreal sy, qreal screenW, qreal screenH,
+                      QVector3D &outWorld) const -> bool;
+  auto worldToScreen(const QVector3D &world, qreal screenW, qreal screenH,
+                     QPointF &outScreen) const -> bool;
 
   void setFollowEnabled(bool enable) { m_followEnabled = enable; }
-  bool isFollowEnabled() const { return m_followEnabled; }
+  [[nodiscard]] auto isFollowEnabled() const -> bool { return m_followEnabled; }
   void setFollowLerp(float alpha) { m_followLerp = alpha; }
   void setFollowOffset(const QVector3D &off) { m_followOffset = off; }
   void captureFollowOffset() { m_followOffset = m_position - m_target; }
   void updateFollow(const QVector3D &targetCenter);
 
-  void setRTSView(const QVector3D &center, float distance = 10.0f,
-                  float angle = 45.0f, float yawDeg = 45.0f);
-  void setTopDownView(const QVector3D &center, float distance = 10.0f);
+  void setRTSView(const QVector3D &center, float distance = 10.0F,
+                  float angle = 45.0F, float yaw_deg = 45.0F);
+  void setTopDownView(const QVector3D &center, float distance = 10.0F);
   void applySoftBoundaries(bool isPanning = false);
 
-  QMatrix4x4 getViewMatrix() const;
-  QMatrix4x4 getProjectionMatrix() const;
-  QMatrix4x4 getViewProjectionMatrix() const;
+  [[nodiscard]] auto getViewMatrix() const -> QMatrix4x4;
+  [[nodiscard]] auto getProjectionMatrix() const -> QMatrix4x4;
+  [[nodiscard]] auto getViewProjectionMatrix() const -> QMatrix4x4;
 
-  const QVector3D &getPosition() const { return m_position; }
-  const QVector3D &getTarget() const { return m_target; }
-  const QVector3D &getUpVector() const { return m_up; }
-  const QVector3D &getRightVector() const { return m_right; }
-  const QVector3D &getForwardVector() const { return m_front; }
-  float getDistance() const;
-  float getPitchDeg() const;
-  float getFOV() const { return m_fov; }
-  float getAspect() const { return m_aspect; }
-  float getNear() const { return m_nearPlane; }
-  float getFar() const { return m_farPlane; }
+  [[nodiscard]] auto getPosition() const -> const QVector3D & {
+    return m_position;
+  }
+  [[nodiscard]] auto getTarget() const -> const QVector3D & { return m_target; }
+  [[nodiscard]] auto getUpVector() const -> const QVector3D & { return m_up; }
+  [[nodiscard]] auto getRightVector() const -> const QVector3D & {
+    return m_right;
+  }
+  [[nodiscard]] auto getForwardVector() const -> const QVector3D & {
+    return m_front;
+  }
+  [[nodiscard]] auto getDistance() const -> float;
+  [[nodiscard]] auto getPitchDeg() const -> float;
+  [[nodiscard]] auto getFOV() const -> float { return m_fov; }
+  [[nodiscard]] auto getAspect() const -> float { return m_aspect; }
+  [[nodiscard]] auto getNear() const -> float { return m_near_plane; }
+  [[nodiscard]] auto getFar() const -> float { return m_far_plane; }
 
-  bool isInFrustum(const QVector3D &center, float radius) const;
+  [[nodiscard]] auto isInFrustum(const QVector3D &center,
+                                 float radius) const -> bool;
 
 private:
-  QVector3D m_position{0.0f, 0.0f, 0.0f};
-  QVector3D m_target{0.0f, 0.0f, -1.0f};
-  QVector3D m_up{0.0f, 1.0f, 0.0f};
-  QVector3D m_front{0.0f, 0.0f, -1.0f};
-  QVector3D m_right{1.0f, 0.0f, 0.0f};
+  QVector3D m_position{0.0F, 0.0F, 0.0F};
+  QVector3D m_target{0.0F, 0.0F, -1.0F};
+  QVector3D m_up{0.0F, 1.0F, 0.0F};
+  QVector3D m_front{0.0F, 0.0F, -1.0F};
+  QVector3D m_right{1.0F, 0.0F, 0.0F};
   QVector3D m_lastPosition;
 
   bool m_isPerspective = true;
-  float m_fov = 45.0f;
-  float m_aspect = 16.0f / 9.0f;
+  float m_fov = 45.0F;
+  float m_aspect = 16.0F / 9.0F;
 
-  float m_nearPlane = 1.0f;
-  float m_farPlane = 200.0f;
+  float m_near_plane = 1.0F;
+  float m_far_plane = 200.0F;
 
-  float m_orthoLeft = -10.0f;
-  float m_orthoRight = 10.0f;
-  float m_orthoBottom = -10.0f;
-  float m_orthoTop = 10.0f;
+  float m_orthoLeft = -10.0F;
+  float m_orthoRight = 10.0F;
+  float m_orthoBottom = -10.0F;
+  float m_orthoTop = 10.0F;
 
   bool m_followEnabled = false;
   QVector3D m_followOffset{0, 0, 0};
-  float m_followLerp = 0.15f;
+  float m_followLerp = 0.15F;
 
-  float m_groundY = 0.0f;
-  float m_minHeight = 0.5f;
+  float m_ground_y = 0.0F;
+  float m_min_height = 0.5F;
 
-  float m_pitchMinDeg = -85.0f;
-  float m_pitchMaxDeg = -5.0f;
+  float m_pitchMinDeg = -85.0F;
+  float m_pitchMaxDeg = -5.0F;
 
   bool m_orbitPending = false;
-  float m_orbitStartYaw = 0.0f;
-  float m_orbitStartPitch = 0.0f;
-  float m_orbitTargetYaw = 0.0f;
-  float m_orbitTargetPitch = 0.0f;
-  float m_orbitTime = 0.0f;
-  float m_orbitDuration = 0.12f;
+  float m_orbitStartYaw = 0.0F;
+  float m_orbitStartPitch = 0.0F;
+  float m_orbitTargetYaw = 0.0F;
+  float m_orbitTargetPitch = 0.0F;
+  float m_orbitTime = 0.0F;
+  float m_orbitDuration = 0.12F;
 
   void updateVectors();
 
   void clampAboveGround();
-  void computeYawPitchFromOffset(const QVector3D &off, float &yawDeg,
-                                 float &pitchDeg) const;
+  static void computeYawPitchFromOffset(const QVector3D &off, float &yaw_deg,
+                                        float &pitch_deg);
 };
 
 } // namespace Render::GL

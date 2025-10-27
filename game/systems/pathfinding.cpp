@@ -1,17 +1,23 @@
 #include "pathfinding.h"
 #include "../map/terrain_service.h"
 #include "building_collision_registry.h"
+#include "map/terrain.h"
 #include <algorithm>
 #include <array>
+#include <atomic>
 #include <cmath>
+#include <cstddef>
+#include <cstdint>
+#include <future>
 #include <limits>
+#include <mutex>
 #include <utility>
+#include <vector>
 
 namespace Game::Systems {
 
 Pathfinding::Pathfinding(int width, int height)
-    : m_width(width), m_height(height), m_gridCellSize(1.0f),
-      m_gridOffsetX(0.0f), m_gridOffsetZ(0.0f) {
+    : m_width(width), m_height(height) {
   m_obstacles.resize(height, std::vector<std::uint8_t>(width, 0));
   ensureWorkingBuffers();
   m_obstaclesDirty.store(true, std::memory_order_release);
@@ -26,9 +32,9 @@ Pathfinding::~Pathfinding() {
   }
 }
 
-void Pathfinding::setGridOffset(float offsetX, float offsetZ) {
-  m_gridOffsetX = offsetX;
-  m_gridOffsetZ = offsetZ;
+void Pathfinding::setGridOffset(float offset_x, float offset_z) {
+  m_gridOffsetX = offset_x;
+  m_gridOffsetZ = offset_z;
 }
 
 void Pathfinding::setObstacle(int x, int y, bool isObstacle) {
@@ -37,7 +43,7 @@ void Pathfinding::setObstacle(int x, int y, bool isObstacle) {
   }
 }
 
-bool Pathfinding::isWalkable(int x, int y) const {
+auto Pathfinding::isWalkable(int x, int y) const -> bool {
   if (x < 0 || x >= m_width || y < 0 || y >= m_height) {
     return false;
   }
@@ -54,7 +60,7 @@ void Pathfinding::updateBuildingObstacles() {
     return;
   }
 
-  std::lock_guard<std::mutex> lock(m_mutex);
+  std::lock_guard<std::mutex> const lock(m_mutex);
 
   if (!m_obstaclesDirty.load(std::memory_order_acquire)) {
     return;
@@ -64,18 +70,20 @@ void Pathfinding::updateBuildingObstacles() {
     std::fill(row.begin(), row.end(), static_cast<std::uint8_t>(0));
   }
 
-  auto &terrainService = Game::Map::TerrainService::instance();
-  if (terrainService.isInitialized()) {
-    const Game::Map::TerrainHeightMap *heightMap =
-        terrainService.getHeightMap();
-    const int terrainWidth = heightMap ? heightMap->getWidth() : 0;
-    const int terrainHeight = heightMap ? heightMap->getHeight() : 0;
+  auto &terrain_service = Game::Map::TerrainService::instance();
+  if (terrain_service.isInitialized()) {
+    const Game::Map::TerrainHeightMap *height_map =
+        terrain_service.getHeightMap();
+    const int terrain_width =
+        (height_map != nullptr) ? height_map->getWidth() : 0;
+    const int terrain_height =
+        (height_map != nullptr) ? height_map->getHeight() : 0;
 
     for (int z = 0; z < m_height; ++z) {
       for (int x = 0; x < m_width; ++x) {
         bool blocked = false;
-        if (x < terrainWidth && z < terrainHeight) {
-          blocked = !terrainService.isWalkable(x, z);
+        if (x < terrain_width && z < terrain_height) {
+          blocked = !terrain_service.isWalkable(x, z);
         } else {
           blocked = true;
         }
@@ -93,11 +101,13 @@ void Pathfinding::updateBuildingObstacles() {
   for (const auto &building : buildings) {
     auto cells = registry.getOccupiedGridCells(building, m_gridCellSize);
     for (const auto &cell : cells) {
-      int gridX = static_cast<int>(std::round(cell.first - m_gridOffsetX));
-      int gridZ = static_cast<int>(std::round(cell.second - m_gridOffsetZ));
+      int const grid_x =
+          static_cast<int>(std::round(cell.first - m_gridOffsetX));
+      int const grid_z =
+          static_cast<int>(std::round(cell.second - m_gridOffsetZ));
 
-      if (gridX >= 0 && gridX < m_width && gridZ >= 0 && gridZ < m_height) {
-        m_obstacles[gridZ][gridX] = static_cast<std::uint8_t>(1);
+      if (grid_x >= 0 && grid_x < m_width && grid_z >= 0 && grid_z < m_height) {
+        m_obstacles[grid_z][grid_x] = static_cast<std::uint8_t>(1);
       }
     }
   }
@@ -105,34 +115,36 @@ void Pathfinding::updateBuildingObstacles() {
   m_obstaclesDirty.store(false, std::memory_order_release);
 }
 
-std::vector<Point> Pathfinding::findPath(const Point &start, const Point &end) {
+auto Pathfinding::findPath(const Point &start,
+                           const Point &end) -> std::vector<Point> {
 
   if (m_obstaclesDirty.load(std::memory_order_acquire)) {
     updateBuildingObstacles();
   }
 
-  std::lock_guard<std::mutex> lock(m_mutex);
+  std::lock_guard<std::mutex> const lock(m_mutex);
   return findPathInternal(start, end);
 }
 
-std::future<std::vector<Point>> Pathfinding::findPathAsync(const Point &start,
-                                                           const Point &end) {
+auto Pathfinding::findPathAsync(const Point &start, const Point &end)
+    -> std::future<std::vector<Point>> {
   return std::async(std::launch::async,
                     [this, start, end]() { return findPath(start, end); });
 }
 
-void Pathfinding::submitPathRequest(std::uint64_t requestId, const Point &start,
-                                    const Point &end) {
+void Pathfinding::submitPathRequest(std::uint64_t request_id,
+                                    const Point &start, const Point &end) {
   {
-    std::lock_guard<std::mutex> lock(m_requestMutex);
-    m_requestQueue.push({requestId, start, end});
+    std::lock_guard<std::mutex> const lock(m_requestMutex);
+    m_requestQueue.push({request_id, start, end});
   }
   m_requestCondition.notify_one();
 }
 
-std::vector<Pathfinding::PathResult> Pathfinding::fetchCompletedPaths() {
+auto Pathfinding::fetchCompletedPaths()
+    -> std::vector<Pathfinding::PathResult> {
   std::vector<PathResult> results;
-  std::lock_guard<std::mutex> lock(m_resultMutex);
+  std::lock_guard<std::mutex> const lock(m_resultMutex);
   while (!m_resultQueue.empty()) {
     results.push_back(std::move(m_resultQueue.front()));
     m_resultQueue.pop();
@@ -140,18 +152,18 @@ std::vector<Pathfinding::PathResult> Pathfinding::fetchCompletedPaths() {
   return results;
 }
 
-std::vector<Point> Pathfinding::findPathInternal(const Point &start,
-                                                 const Point &end) {
+auto Pathfinding::findPathInternal(const Point &start,
+                                   const Point &end) -> std::vector<Point> {
   ensureWorkingBuffers();
 
   if (!isWalkable(start.x, start.y) || !isWalkable(end.x, end.y)) {
     return {};
   }
 
-  const int startIdx = toIndex(start);
-  const int endIdx = toIndex(end);
+  const int start_idx = toIndex(start);
+  const int end_idx = toIndex(end);
 
-  if (startIdx == endIdx) {
+  if (start_idx == end_idx) {
     return {start};
   }
 
@@ -159,20 +171,20 @@ std::vector<Point> Pathfinding::findPathInternal(const Point &start,
 
   m_openHeap.clear();
 
-  setGCost(startIdx, generation, 0);
-  setParent(startIdx, generation, startIdx);
+  setGCost(start_idx, generation, 0);
+  setParent(start_idx, generation, start_idx);
 
-  pushOpenNode({startIdx, calculateHeuristic(start, end), 0});
+  pushOpenNode({start_idx, calculateHeuristic(start, end), 0});
 
-  const int maxIterations = std::max(m_width * m_height, 1);
+  const int max_iterations = std::max(m_width * m_height, 1);
   int iterations = 0;
 
-  int finalCost = -1;
+  int final_cost = -1;
 
-  while (!m_openHeap.empty() && iterations < maxIterations) {
+  while (!m_openHeap.empty() && iterations < max_iterations) {
     ++iterations;
 
-    QueueNode current = popOpenNode();
+    QueueNode const current = popOpenNode();
 
     if (current.gCost > getGCost(current.index, generation)) {
       continue;
@@ -184,72 +196,74 @@ std::vector<Point> Pathfinding::findPathInternal(const Point &start,
 
     setClosed(current.index, generation);
 
-    if (current.index == endIdx) {
-      finalCost = current.gCost;
+    if (current.index == end_idx) {
+      final_cost = current.gCost;
       break;
     }
 
-    const Point currentPoint = toPoint(current.index);
+    const Point current_point = toPoint(current.index);
     std::array<Point, 8> neighbors{};
-    const std::size_t neighborCount = collectNeighbors(currentPoint, neighbors);
+    const std::size_t neighbor_count =
+        collectNeighbors(current_point, neighbors);
 
-    for (std::size_t i = 0; i < neighborCount; ++i) {
+    for (std::size_t i = 0; i < neighbor_count; ++i) {
       const Point &neighbor = neighbors[i];
       if (!isWalkable(neighbor.x, neighbor.y)) {
         continue;
       }
 
-      const int neighborIdx = toIndex(neighbor);
-      if (isClosed(neighborIdx, generation)) {
+      const int neighbor_idx = toIndex(neighbor);
+      if (isClosed(neighbor_idx, generation)) {
         continue;
       }
 
-      const int tentativeGCost = current.gCost + 1;
-      if (tentativeGCost >= getGCost(neighborIdx, generation)) {
+      const int tentative_gcost = current.gCost + 1;
+      if (tentative_gcost >= getGCost(neighbor_idx, generation)) {
         continue;
       }
 
-      setGCost(neighborIdx, generation, tentativeGCost);
-      setParent(neighborIdx, generation, current.index);
+      setGCost(neighbor_idx, generation, tentative_gcost);
+      setParent(neighbor_idx, generation, current.index);
 
-      const int hCost = calculateHeuristic(neighbor, end);
-      pushOpenNode({neighborIdx, tentativeGCost + hCost, tentativeGCost});
+      const int h_cost = calculateHeuristic(neighbor, end);
+      pushOpenNode({neighbor_idx, tentative_gcost + h_cost, tentative_gcost});
     }
   }
 
-  if (finalCost < 0) {
+  if (final_cost < 0) {
     return {};
   }
 
   std::vector<Point> path;
-  path.reserve(finalCost + 1);
-  buildPath(startIdx, endIdx, generation, finalCost + 1, path);
+  path.reserve(final_cost + 1);
+  buildPath(start_idx, end_idx, generation, final_cost + 1, path);
   return path;
 }
 
-int Pathfinding::calculateHeuristic(const Point &a, const Point &b) const {
+int Pathfinding::calculateHeuristic(const Point &a, const Point &b) {
   return std::abs(a.x - b.x) + std::abs(a.y - b.y);
 }
 
 void Pathfinding::ensureWorkingBuffers() {
-  const std::size_t totalCells =
+  const std::size_t total_cells =
       static_cast<std::size_t>(m_width) * static_cast<std::size_t>(m_height);
 
-  if (m_closedGeneration.size() != totalCells) {
-    m_closedGeneration.assign(totalCells, 0);
-    m_gCostGeneration.assign(totalCells, 0);
-    m_gCostValues.assign(totalCells, std::numeric_limits<int>::max());
-    m_parentGeneration.assign(totalCells, 0);
-    m_parentValues.assign(totalCells, -1);
+  if (m_closedGeneration.size() != total_cells) {
+    m_closedGeneration.assign(total_cells, 0);
+    m_gCostGeneration.assign(total_cells, 0);
+    m_gCostValues.assign(total_cells, std::numeric_limits<int>::max());
+    m_parentGeneration.assign(total_cells, 0);
+    m_parentValues.assign(total_cells, -1);
   }
 
-  const std::size_t minOpenCapacity = std::max<std::size_t>(totalCells / 8, 64);
-  if (m_openHeap.capacity() < minOpenCapacity) {
-    m_openHeap.reserve(minOpenCapacity);
+  const std::size_t min_open_capacity =
+      std::max<std::size_t>(total_cells / 8, 64);
+  if (m_openHeap.capacity() < min_open_capacity) {
+    m_openHeap.reserve(min_open_capacity);
   }
 }
 
-std::uint32_t Pathfinding::nextGeneration() {
+auto Pathfinding::nextGeneration() -> std::uint32_t {
   auto next = ++m_generationCounter;
   if (next == 0) {
     resetGenerations();
@@ -268,7 +282,7 @@ void Pathfinding::resetGenerations() {
   m_generationCounter = 0;
 }
 
-bool Pathfinding::isClosed(int index, std::uint32_t generation) const {
+auto Pathfinding::isClosed(int index, std::uint32_t generation) const -> bool {
   return index >= 0 &&
          static_cast<std::size_t>(index) < m_closedGeneration.size() &&
          m_closedGeneration[static_cast<std::size_t>(index)] == generation;
@@ -281,7 +295,7 @@ void Pathfinding::setClosed(int index, std::uint32_t generation) {
   }
 }
 
-int Pathfinding::getGCost(int index, std::uint32_t generation) const {
+auto Pathfinding::getGCost(int index, std::uint32_t generation) const -> int {
   if (index < 0 ||
       static_cast<std::size_t>(index) >= m_gCostGeneration.size()) {
     return std::numeric_limits<int>::max();
@@ -301,13 +315,13 @@ void Pathfinding::setGCost(int index, std::uint32_t generation, int cost) {
   }
 }
 
-bool Pathfinding::hasParent(int index, std::uint32_t generation) const {
+auto Pathfinding::hasParent(int index, std::uint32_t generation) const -> bool {
   return index >= 0 &&
          static_cast<std::size_t>(index) < m_parentGeneration.size() &&
          m_parentGeneration[static_cast<std::size_t>(index)] == generation;
 }
 
-int Pathfinding::getParent(int index, std::uint32_t generation) const {
+auto Pathfinding::getParent(int index, std::uint32_t generation) const -> int {
   if (hasParent(index, generation)) {
     return m_parentValues[static_cast<std::size_t>(index)];
   }
@@ -324,8 +338,8 @@ void Pathfinding::setParent(int index, std::uint32_t generation,
   }
 }
 
-std::size_t Pathfinding::collectNeighbors(const Point &point,
-                                          std::array<Point, 8> &buffer) const {
+auto Pathfinding::collectNeighbors(
+    const Point &point, std::array<Point, 8> &buffer) const -> std::size_t {
   std::size_t count = 0;
   for (int dx = -1; dx <= 1; ++dx) {
     for (int dy = -1; dy <= 1; ++dy) {
@@ -385,7 +399,7 @@ void Pathfinding::buildPath(int startIndex, int endIndex,
   outPath.clear();
 }
 
-bool Pathfinding::heapLess(const QueueNode &lhs, const QueueNode &rhs) const {
+bool Pathfinding::heapLess(const QueueNode &lhs, const QueueNode &rhs) {
   if (lhs.fCost != rhs.fCost) {
     return lhs.fCost < rhs.fCost;
   }
@@ -396,7 +410,7 @@ void Pathfinding::pushOpenNode(const QueueNode &node) {
   m_openHeap.push_back(node);
   std::size_t index = m_openHeap.size() - 1;
   while (index > 0) {
-    std::size_t parent = (index - 1) / 2;
+    std::size_t const parent = (index - 1) / 2;
     if (heapLess(m_openHeap[parent], m_openHeap[index])) {
       break;
     }
@@ -405,17 +419,17 @@ void Pathfinding::pushOpenNode(const QueueNode &node) {
   }
 }
 
-Pathfinding::QueueNode Pathfinding::popOpenNode() {
+auto Pathfinding::popOpenNode() -> Pathfinding::QueueNode {
   QueueNode top = m_openHeap.front();
-  QueueNode last = m_openHeap.back();
+  QueueNode const last = m_openHeap.back();
   m_openHeap.pop_back();
   if (!m_openHeap.empty()) {
     m_openHeap[0] = last;
     std::size_t index = 0;
     const std::size_t size = m_openHeap.size();
     while (true) {
-      std::size_t left = index * 2 + 1;
-      std::size_t right = left + 1;
+      std::size_t const left = index * 2 + 1;
+      std::size_t const right = left + 1;
       std::size_t smallest = index;
 
       if (left < size && !heapLess(m_openHeap[smallest], m_openHeap[left])) {
@@ -456,8 +470,8 @@ void Pathfinding::workerLoop() {
     auto path = findPath(request.start, request.end);
 
     {
-      std::lock_guard<std::mutex> lock(m_resultMutex);
-      m_resultQueue.push({request.requestId, std::move(path)});
+      std::lock_guard<std::mutex> const lock(m_resultMutex);
+      m_resultQueue.push({request.request_id, std::move(path)});
     }
   }
 }

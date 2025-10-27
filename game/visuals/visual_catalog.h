@@ -5,11 +5,9 @@
 #include <string>
 #include <unordered_map>
 
-namespace Engine {
-namespace Core {
+namespace Engine::Core {
 class RenderableComponent;
 }
-} // namespace Engine
 
 namespace Game::Visuals {
 
@@ -17,20 +15,21 @@ struct VisualDef {
 
   enum class MeshKind { None, Quad, Plane, Cube, Capsule, Ring };
   MeshKind mesh = MeshKind::Cube;
-  QVector3D color{1.0f, 1.0f, 1.0f};
+  QVector3D color{1.0F, 1.0F, 1.0F};
   QString texture;
 };
 
 class VisualCatalog {
 public:
-  bool loadFromJsonFile(const QString &path, QString *outError = nullptr);
-  bool lookup(const std::string &unitType, VisualDef &out) const;
+  auto loadFromJsonFile(const QString &path,
+                        QString *out_error = nullptr) -> bool;
+  auto lookup(const std::string &unit_type, VisualDef &out) const -> bool;
 
 private:
   std::unordered_map<std::string, VisualDef> m_units;
 };
 
-VisualDef::MeshKind meshKindFromString(const QString &s);
+auto meshKindFromString(const QString &s) -> VisualDef::MeshKind;
 
 void applyToRenderable(const VisualDef &def,
                        Engine::Core::RenderableComponent &r);

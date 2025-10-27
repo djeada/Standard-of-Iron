@@ -1,10 +1,14 @@
 #include "texture.h"
+#include <GL/gl.h>
 #include <QDebug>
 #include <QImage>
+#include <qglobal.h>
+#include <qhashfunctions.h>
+#include <qimage.h>
 
 namespace Render::GL {
 
-Texture::Texture() {}
+Texture::Texture() = default;
 
 Texture::~Texture() {
   if (m_texture != 0) {
@@ -12,7 +16,7 @@ Texture::~Texture() {
   }
 }
 
-bool Texture::loadFromFile(const QString &path) {
+auto Texture::loadFromFile(const QString &path) -> bool {
   initializeOpenGLFunctions();
   QImage image;
   if (!image.load(path)) {
@@ -41,7 +45,7 @@ bool Texture::loadFromFile(const QString &path) {
   return true;
 }
 
-bool Texture::createEmpty(int width, int height, Format format) {
+auto Texture::createEmpty(int width, int height, Format format) -> bool {
   initializeOpenGLFunctions();
   m_width = width;
   m_height = height;
@@ -49,16 +53,16 @@ bool Texture::createEmpty(int width, int height, Format format) {
 
   bind();
 
-  GLenum glFormat = getGLFormat(format);
-  GLenum internalFormat = glFormat;
+  GLenum const gl_format = getGLFormat(format);
+  GLenum internal_format = gl_format;
   GLenum type = GL_UNSIGNED_BYTE;
 
   if (format == Format::Depth) {
-    internalFormat = GL_DEPTH_COMPONENT;
+    internal_format = GL_DEPTH_COMPONENT;
     type = GL_FLOAT;
   }
 
-  glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, glFormat,
+  glTexImage2D(GL_TEXTURE_2D, 0, internal_format, width, height, 0, gl_format,
                type, nullptr);
 
   setFilter(Filter::Linear, Filter::Linear);
@@ -71,7 +75,7 @@ bool Texture::createEmpty(int width, int height, Format format) {
 
 void Texture::bind(int unit) {
   initializeOpenGLFunctions();
-  if (!m_texture) {
+  if (m_texture == 0u) {
     glGenTextures(1, &m_texture);
   }
   glActiveTexture(GL_TEXTURE0 + unit);
@@ -95,7 +99,7 @@ void Texture::setWrap(Wrap sWrap, Wrap tWrap) {
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, getGLWrap(tWrap));
 }
 
-GLenum Texture::getGLFormat(Format format) const {
+GLenum Texture::getGLFormat(Format format) {
   switch (format) {
   case Format::RGB:
     return GL_RGB;
@@ -107,7 +111,7 @@ GLenum Texture::getGLFormat(Format format) const {
   return GL_RGBA;
 }
 
-GLenum Texture::getGLFilter(Filter filter) const {
+GLenum Texture::getGLFilter(Filter filter) {
   switch (filter) {
   case Filter::Nearest:
     return GL_NEAREST;
@@ -117,7 +121,7 @@ GLenum Texture::getGLFilter(Filter filter) const {
   return GL_LINEAR;
 }
 
-GLenum Texture::getGLWrap(Wrap wrap) const {
+GLenum Texture::getGLWrap(Wrap wrap) {
   switch (wrap) {
   case Wrap::Repeat:
     return GL_REPEAT;

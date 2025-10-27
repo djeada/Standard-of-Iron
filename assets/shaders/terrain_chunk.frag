@@ -95,8 +95,8 @@ float sampleHeight(vec2 uv) {
 
 // --- world <-> UV helpers for height texture sampling (FIX ADD) ---
 vec2 uvToWorld(vec2 duv) {
-  // uv = worldXZ * u_heightUVScale + u_heightUVOffset
-  // => worldXZ delta per uv delta = duv / u_heightUVScale (component-wise)
+  // uv = world_xz * u_heightUVScale + u_heightUVOffset
+  // => world_xz delta per uv delta = duv / u_heightUVScale (component-wise)
   return duv / max(abs(u_heightUVScale), vec2(1e-6));
 }
 
@@ -146,15 +146,15 @@ void main() {
   float curvature = computeCurvature();
 
   float tileScale = max(u_tileSize, 0.0001);
-  vec2 worldCoord = (v_worldPos.xz / tileScale) + u_noiseOffset;
+  vec2 world_coord = (v_worldPos.xz / tileScale) + u_noiseOffset;
 
-  float macroNoise = fbm(worldCoord * u_macroNoiseScale);
+  float macroNoise = fbm(world_coord * u_macroNoiseScale);
   float detailNoise =
       triplanarNoise(v_worldPos, u_detailNoiseScale * 2.5 / tileScale);
   float erosionNoise =
       triplanarNoise(v_worldPos, u_detailNoiseScale * 4.0 / tileScale + 17.0);
 
-  float patchNoise = fbm(worldCoord * u_macroNoiseScale * 0.4);
+  float patchNoise = fbm(world_coord * u_macroNoiseScale * 0.4);
   float moistureVar = smoothstep(0.3, 0.7, patchNoise);
   float lushFactor = smoothstep(0.2, 0.8, macroNoise);
   lushFactor = mix(lushFactor, moistureVar, 0.3);
@@ -210,7 +210,7 @@ void main() {
                                    soilHeight + bandWidth, v_worldPos.y);
   soilMix = clamp(soilMix, 0.0, 1.0);
 
-  float mudPatch = fbm(worldCoord * 0.08 + vec2(7.3, 11.2));
+  float mudPatch = fbm(world_coord * 0.08 + vec2(7.3, 11.2));
   mudPatch = smoothstep(0.65, 0.75, mudPatch);
   soilMix = max(soilMix, mudPatch * 0.85 * (1.0 - slope * 0.6));
 
@@ -261,7 +261,7 @@ void main() {
   vec3 terrainColor = mix(soilBlend, rockColor, rockMask);
 
   // albedo jitter
-  float jitter = (hash21(worldCoord * 0.27 + vec2(17.0, 9.0)) - 0.5) * 0.06;
+  float jitter = (hash21(world_coord * 0.27 + vec2(17.0, 9.0)) - 0.5) * 0.06;
   float brightnessVar = (moistureVar - 0.5) * 0.08 * (1.0 - rockMask);
   terrainColor *= (1.0 + jitter + brightnessVar) * u_tint;
 

@@ -7,8 +7,7 @@
 #include <string>
 #include <utility>
 
-namespace Engine {
-namespace Core {
+namespace Engine::Core {
 class World;
 class Entity;
 using EntityID = unsigned int;
@@ -17,17 +16,15 @@ struct RenderableComponent;
 struct UnitComponent;
 struct MovementComponent;
 struct AttackComponent;
-} // namespace Core
-} // namespace Engine
+} // namespace Engine::Core
 
-namespace Game {
-namespace Units {
+namespace Game::Units {
 
 struct SpawnParams {
 
   QVector3D position{0, 0, 0};
-  int playerId = 0;
-  SpawnType spawnType = SpawnType::Archer;
+  int player_id = 0;
+  SpawnType spawn_type = SpawnType::Archer;
   bool aiControlled = false;
   int maxPopulation = 100;
 };
@@ -36,26 +33,28 @@ class Unit {
 public:
   virtual ~Unit() = default;
 
-  Engine::Core::EntityID id() const { return m_id; }
-  std::string typeString() const { return m_typeString; }
+  [[nodiscard]] auto id() const -> Engine::Core::EntityID { return m_id; }
+  [[nodiscard]] auto type_string() const -> std::string {
+    return m_type_string;
+  }
 
   void moveTo(float x, float z);
-  bool isAlive() const;
-  QVector3D position() const;
+  [[nodiscard]] auto isAlive() const -> bool;
+  [[nodiscard]] auto position() const -> QVector3D;
 
   void setHoldMode(bool enabled);
-  bool isInHoldMode() const;
+  [[nodiscard]] auto isInHoldMode() const -> bool;
 
 protected:
   Unit(Engine::Core::World &world, TroopType type);
-  Unit(Engine::Core::World &world, const std::string &type);
-  Engine::Core::Entity *entity() const;
+  Unit(Engine::Core::World &world, std::string type);
+  [[nodiscard]] auto entity() const -> Engine::Core::Entity *;
 
   void ensureCoreComponents();
 
   Engine::Core::World *m_world = nullptr;
   Engine::Core::EntityID m_id = 0;
-  std::string m_typeString;
+  std::string m_type_string;
 
   Engine::Core::TransformComponent *m_t = nullptr;
   Engine::Core::RenderableComponent *m_r = nullptr;
@@ -64,5 +63,4 @@ protected:
   Engine::Core::AttackComponent *m_atk = nullptr;
 };
 
-} // namespace Units
-} // namespace Game
+} // namespace Game::Units

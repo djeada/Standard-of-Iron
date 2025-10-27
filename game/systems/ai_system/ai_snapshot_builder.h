@@ -14,9 +14,10 @@ public:
   ~AISnapshotBuilder() = default;
 
   AISnapshotBuilder(const AISnapshotBuilder &) = delete;
-  AISnapshotBuilder &operator=(const AISnapshotBuilder &) = delete;
+  auto operator=(const AISnapshotBuilder &) -> AISnapshotBuilder & = delete;
 
-  AISnapshot build(const Engine::Core::World &world, int aiOwnerId) const;
+  [[nodiscard]] static auto build(const Engine::Core::World &world,
+                                  int aiOwnerId) -> AISnapshot;
 };
 
 } // namespace Game::Systems::AI

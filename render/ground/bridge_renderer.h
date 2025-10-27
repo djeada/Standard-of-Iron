@@ -6,8 +6,7 @@
 #include <memory>
 #include <vector>
 
-namespace Render {
-namespace GL {
+namespace Render::GL {
 class Mesh;
 class Renderer;
 class ResourceManager;
@@ -15,9 +14,10 @@ class ResourceManager;
 class BridgeRenderer : public IRenderPass {
 public:
   BridgeRenderer();
-  ~BridgeRenderer();
+  ~BridgeRenderer() override;
 
-  void configure(const std::vector<Game::Map::Bridge> &bridges, float tileSize);
+  void configure(const std::vector<Game::Map::Bridge> &bridges,
+                 float tile_size);
 
   void submit(Renderer &renderer, ResourceManager *resources) override;
 
@@ -25,9 +25,8 @@ private:
   void buildMeshes();
 
   std::vector<Game::Map::Bridge> m_bridges;
-  float m_tileSize = 1.0f;
+  float m_tile_size = 1.0F;
   std::vector<std::unique_ptr<Mesh>> m_meshes;
 };
 
-} // namespace GL
-} // namespace Render
+} // namespace Render::GL

@@ -2,27 +2,32 @@
 
 #include "buffer.h"
 #include <QOpenGLFunctions_3_3_Core>
+#include <array>
 #include <memory>
 #include <vector>
 
 namespace Render::GL {
 
 struct Vertex {
-  float position[3];
-  float normal[3];
-  float texCoord[2];
+  std::array<float, 3> position{};
+  std::array<float, 3> normal{};
+  std::array<float, 2> tex_coord{};
 };
 
 class Mesh : protected QOpenGLFunctions_3_3_Core {
 public:
   Mesh(const std::vector<Vertex> &vertices,
        const std::vector<unsigned int> &indices);
-  ~Mesh();
+  ~Mesh() override;
 
   void draw();
 
-  const std::vector<Vertex> &getVertices() const { return m_vertices; }
-  const std::vector<unsigned int> &getIndices() const { return m_indices; }
+  [[nodiscard]] auto getVertices() const -> const std::vector<Vertex> & {
+    return m_vertices;
+  }
+  [[nodiscard]] auto getIndices() const -> const std::vector<unsigned int> & {
+    return m_indices;
+  }
 
 private:
   std::vector<Vertex> m_vertices;
@@ -35,8 +40,8 @@ private:
   void setupBuffers();
 };
 
-Mesh *createQuadMesh();
-Mesh *createCubeMesh();
-Mesh *createPlaneMesh(float width, float height, int subdivisions = 1);
+auto createQuadMesh() -> Mesh *;
+auto createCubeMesh() -> Mesh *;
+auto createPlaneMesh(float width, float height, int subdivisions = 1) -> Mesh *;
 
 } // namespace Render::GL

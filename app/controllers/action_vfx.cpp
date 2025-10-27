@@ -4,37 +4,40 @@
 #include "../../game/core/world.h"
 #include "../../game/game_config.h"
 #include "../../game/systems/arrow_system.h"
+#include <qvectornd.h>
 
 namespace App::Controllers {
 
 void ActionVFX::spawnAttackArrow(Engine::Core::World *world,
-                                 Engine::Core::EntityID targetId) {
-  if (!world) {
+                                 Engine::Core::EntityID target_id) {
+  if (world == nullptr) {
     return;
   }
 
-  auto *arrowSystem = world->getSystem<Game::Systems::ArrowSystem>();
-  if (!arrowSystem) {
+  auto *arrow_system = world->getSystem<Game::Systems::ArrowSystem>();
+  if (arrow_system == nullptr) {
     return;
   }
 
-  auto *targetEntity = world->getEntity(targetId);
-  if (!targetEntity) {
+  auto *target_entity = world->getEntity(target_id);
+  if (target_entity == nullptr) {
     return;
   }
 
-  auto *targetTrans =
-      targetEntity->getComponent<Engine::Core::TransformComponent>();
-  if (!targetTrans) {
+  auto *target_trans =
+      target_entity->getComponent<Engine::Core::TransformComponent>();
+  if (target_trans == nullptr) {
     return;
   }
 
-  QVector3D targetPos(targetTrans->position.x, targetTrans->position.y + 1.0f,
-                      targetTrans->position.z);
-  QVector3D aboveTarget = targetPos + QVector3D(0, 2.0f, 0);
+  QVector3D const target_pos(target_trans->position.x,
+                             target_trans->position.y + 1.0F,
+                             target_trans->position.z);
+  QVector3D const above_target = target_pos + QVector3D(0, 2.0F, 0);
 
-  arrowSystem->spawnArrow(aboveTarget, targetPos, QVector3D(1.0f, 0.2f, 0.2f),
-                          Game::GameConfig::instance().arrow().speedAttack);
+  arrow_system->spawnArrow(above_target, target_pos,
+                           QVector3D(1.0F, 0.2F, 0.2F),
+                           Game::GameConfig::instance().arrow().speedAttack);
 }
 
 } // namespace App::Controllers

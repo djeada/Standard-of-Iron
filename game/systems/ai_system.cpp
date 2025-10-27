@@ -5,7 +5,14 @@
 #include "ai_system/behaviors/gather_behavior.h"
 #include "ai_system/behaviors/production_behavior.h"
 #include "ai_system/behaviors/retreat_behavior.h"
+#include "core/event_manager.h"
 #include "owner_registry.h"
+#include "systems/ai_system/ai_types.h"
+#include "systems/ai_system/ai_worker.h"
+#include <cstdint>
+#include <memory>
+#include <queue>
+#include <utility>
 
 namespace Game::Systems {
 
@@ -39,16 +46,16 @@ void AISystem::reinitialize() {
 
 void AISystem::initializeAIPlayers() {
   auto &registry = OwnerRegistry::instance();
-  const auto &aiOwnerIds = registry.getAIOwnerIds();
+  const auto &ai_owner_ids = registry.getAIOwnerIds();
 
-  if (aiOwnerIds.empty()) {
+  if (ai_owner_ids.empty()) {
     return;
   }
 
-  for (uint32_t playerId : aiOwnerIds) {
-    int teamId = registry.getOwnerTeam(playerId);
+  for (uint32_t const player_id : ai_owner_ids) {
+    int const team_id = registry.getOwnerTeam(player_id);
     AIInstance instance;
-    instance.context.playerId = playerId;
+    instance.context.player_id = player_id;
     instance.context.state = AI::AIState::Idle;
     instance.worker = std::make_unique<AI::AIWorker>(m_reasoner, m_executor,
                                                      m_behaviorRegistry);
@@ -57,10 +64,10 @@ void AISystem::initializeAIPlayers() {
   }
 }
 
-AISystem::~AISystem() {}
+AISystem::~AISystem() = default;
 
 void AISystem::update(Engine::Core::World *world, float deltaTime) {
-  if (!world) {
+  if (world == nullptr) {
     return;
   }
 
@@ -74,7 +81,7 @@ void AISystem::update(Engine::Core::World *world, float deltaTime) {
 
     ai.updateTimer += deltaTime;
 
-    if (ai.updateTimer < 0.3f) {
+    if (ai.updateTimer < 0.3F) {
       continue;
     }
 
@@ -83,7 +90,7 @@ void AISystem::update(Engine::Core::World *world, float deltaTime) {
     }
 
     AI::AISnapshot snapshot =
-        m_snapshotBuilder.build(*world, ai.context.playerId);
+        m_snapshotBuilder.build(*world, ai.context.player_id);
     snapshot.gameTime = m_totalGameTime;
 
     AI::AIJob job;
@@ -92,7 +99,7 @@ void AISystem::update(Engine::Core::World *world, float deltaTime) {
     job.deltaTime = ai.updateTimer;
 
     if (ai.worker->trySubmit(std::move(job))) {
-      ai.updateTimer = 0.0f;
+      ai.updateTimer = 0.0F;
     }
   }
 }
@@ -109,10 +116,10 @@ void AISystem::processResults(Engine::Core::World &world) {
 
       ai.context = result.context;
 
-      auto filteredCommands =
+      auto filtered_commands =
           m_commandFilter.filter(result.commands, m_totalGameTime);
 
-      m_applier.apply(world, ai.context.playerId, filteredCommands);
+      m_applier.apply(world, ai.context.player_id, filtered_commands);
 
       results.pop();
     }
@@ -122,7 +129,7 @@ void AISystem::processResults(Engine::Core::World &world) {
 void AISystem::onBuildingAttacked(
     const Engine::Core::BuildingAttackedEvent &event) {
   for (auto &ai : m_aiInstances) {
-    if (ai.context.playerId == event.ownerId) {
+    if (ai.context.player_id == event.owner_id) {
       ai.context.buildingsUnderAttack[event.buildingId] = m_totalGameTime;
 
       if (event.buildingId == ai.context.primaryBarracks) {

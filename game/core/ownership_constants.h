@@ -1,11 +1,11 @@
 #pragma once
 
-namespace Game {
-namespace Core {
+namespace Game::Core {
 
 constexpr int NEUTRAL_OWNER_ID = -1;
 
-inline bool isNeutralOwner(int ownerId) { return ownerId == NEUTRAL_OWNER_ID; }
+inline auto isNeutralOwner(int owner_id) -> bool {
+  return owner_id == NEUTRAL_OWNER_ID;
+}
 
-} // namespace Core
-} // namespace Game
+} // namespace Game::Core

@@ -10,11 +10,11 @@ public:
   ~AIReasoner() = default;
 
   AIReasoner(const AIReasoner &) = delete;
-  AIReasoner &operator=(const AIReasoner &) = delete;
+  auto operator=(const AIReasoner &) -> AIReasoner & = delete;
 
-  void updateContext(const AISnapshot &snapshot, AIContext &context);
+  static void updateContext(const AISnapshot &snapshot, AIContext &context);
 
-  void updateStateMachine(AIContext &context, float deltaTime);
+  static void updateStateMachine(AIContext &context, float deltaTime);
 };
 
 } // namespace Game::Systems::AI

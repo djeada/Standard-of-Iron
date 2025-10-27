@@ -13,10 +13,20 @@ struct PineInstanceGpu {
 };
 
 struct PineBatchParams {
-  QVector3D lightDirection{0.35f, 0.8f, 0.45f};
-  float time = 0.0f;
-  float windStrength = 0.3f;
-  float windSpeed = 0.5f;
+  static constexpr float kDefaultLightDirX = 0.35F;
+  static constexpr float kDefaultLightDirY = 0.8F;
+  static constexpr float kDefaultLightDirZ = 0.45F;
+  static constexpr float kDefaultWindStrength = 0.3F;
+  static constexpr float kDefaultWindSpeed = 0.5F;
+
+  static auto defaultLightDirection() -> QVector3D {
+    return {kDefaultLightDirX, kDefaultLightDirY, kDefaultLightDirZ};
+  }
+
+  QVector3D light_direction = defaultLightDirection();
+  float time = 0.0F;
+  float windStrength = kDefaultWindStrength;
+  float windSpeed = kDefaultWindSpeed;
 };
 
 } // namespace Render::GL

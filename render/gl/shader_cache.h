@@ -11,17 +11,18 @@ namespace Render::GL {
 
 class ShaderCache {
 public:
-  Shader *load(const QString &name, const QString &vertPath,
-               const QString &fragPath) {
+  auto load(const QString &name, const QString &vertPath,
+            const QString &fragPath) -> Shader * {
     auto it = m_named.find(name);
-    if (it != m_named.end())
+    if (it != m_named.end()) {
       return it->second.get();
-    const QString resolvedVert =
+    }
+    const QString resolved_vert =
         Utils::Resources::resolveResourcePath(vertPath);
-    const QString resolvedFrag =
+    const QString resolved_frag =
         Utils::Resources::resolveResourcePath(fragPath);
     auto sh = std::make_unique<Shader>();
-    if (!sh->loadFromFiles(resolvedVert, resolvedFrag)) {
+    if (!sh->loadFromFiles(resolved_vert, resolved_frag)) {
       qWarning() << "ShaderCache: Failed to load shader" << name;
       return nullptr;
     }
@@ -30,24 +31,25 @@ public:
     return raw;
   }
 
-  Shader *get(const QString &name) const {
+  auto get(const QString &name) const -> Shader * {
     auto it = m_named.find(name);
     return (it != m_named.end()) ? it->second.get() : nullptr;
   }
 
-  Shader *getOrLoad(const QString &vertPath, const QString &fragPath) {
-    const QString resolvedVert =
+  auto getOrLoad(const QString &vertPath, const QString &fragPath) -> Shader * {
+    const QString resolved_vert =
         Utils::Resources::resolveResourcePath(vertPath);
-    const QString resolvedFrag =
+    const QString resolved_frag =
         Utils::Resources::resolveResourcePath(fragPath);
-    auto key = resolvedVert + "|" + resolvedFrag;
+    auto key = resolved_vert + "|" + resolved_frag;
     auto it = m_byPath.find(key);
-    if (it != m_byPath.end())
+    if (it != m_byPath.end()) {
       return it->second.get();
+    }
     auto sh = std::make_unique<Shader>();
-    if (!sh->loadFromFiles(resolvedVert, resolvedFrag)) {
+    if (!sh->loadFromFiles(resolved_vert, resolved_frag)) {
       qWarning() << "ShaderCache: Failed to load shader from paths:"
-                 << resolvedVert << "," << resolvedFrag;
+                 << resolved_vert << "," << resolved_frag;
       return nullptr;
     }
     Shader *raw = sh.get();
@@ -150,12 +152,12 @@ public:
         resolve(kShaderBase + QStringLiteral("knight.frag"));
     load(QStringLiteral("knight"), knightVert, knightFrag);
 
-    const QString mountedKnightVert =
+    const QString mounted_knightVert =
         resolve(kShaderBase + QStringLiteral("mounted_knight.vert"));
-    const QString mountedKnightFrag =
+    const QString mounted_knightFrag =
         resolve(kShaderBase + QStringLiteral("mounted_knight.frag"));
-    load(QStringLiteral("mounted_knight"), mountedKnightVert,
-         mountedKnightFrag);
+    load(QStringLiteral("mounted_knight"), mounted_knightVert,
+         mounted_knightFrag);
 
     const QString spearmanVert =
         resolve(kShaderBase + QStringLiteral("spearman.vert"));

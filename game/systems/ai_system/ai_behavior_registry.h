@@ -14,7 +14,7 @@ public:
   ~AIBehaviorRegistry() = default;
 
   AIBehaviorRegistry(const AIBehaviorRegistry &) = delete;
-  AIBehaviorRegistry &operator=(const AIBehaviorRegistry &) = delete;
+  auto operator=(const AIBehaviorRegistry &) -> AIBehaviorRegistry & = delete;
 
   void registerBehavior(std::unique_ptr<AIBehavior> behavior) {
     m_behaviors.push_back(std::move(behavior));
@@ -26,21 +26,21 @@ public:
               });
   }
 
-  void forEach(std::function<void(AIBehavior &)> func) {
+  void forEach(const std::function<void(AIBehavior &)> &func) {
     for (auto &behavior : m_behaviors) {
       func(*behavior);
     }
   }
 
-  void forEach(std::function<void(const AIBehavior &)> func) const {
+  void forEach(const std::function<void(const AIBehavior &)> &func) const {
     for (const auto &behavior : m_behaviors) {
       func(*behavior);
     }
   }
 
-  size_t size() const { return m_behaviors.size(); }
+  [[nodiscard]] auto size() const -> size_t { return m_behaviors.size(); }
 
-  bool empty() const { return m_behaviors.empty(); }
+  [[nodiscard]] auto empty() const -> bool { return m_behaviors.empty(); }
 
   void clear() { m_behaviors.clear(); }
 

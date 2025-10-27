@@ -8,16 +8,13 @@
 #include <unordered_map>
 #include <vector>
 
-namespace Engine {
-namespace Core {
+namespace Engine::Core {
 class World;
 using EntityID = unsigned int;
 struct MovementComponent;
-} // namespace Core
-} // namespace Engine
+} // namespace Engine::Core
 
-namespace Game {
-namespace Systems {
+namespace Game::Systems {
 
 class Pathfinding;
 struct Point;
@@ -32,11 +29,11 @@ public:
 
   static constexpr int DIRECT_PATH_THRESHOLD = 8;
 
-  static constexpr float WAYPOINT_SKIP_THRESHOLD_SQ = 0.16f;
+  static constexpr float WAYPOINT_SKIP_THRESHOLD_SQ = 0.16F;
 
   static void initialize(int worldWidth, int worldHeight);
 
-  static Pathfinding *getPathfinder();
+  static auto getPathfinder() -> Pathfinding *;
 
   static void moveUnits(Engine::Core::World &world,
                         const std::vector<Engine::Core::EntityID> &units,
@@ -49,14 +46,14 @@ public:
 
   static void processPathResults(Engine::Core::World &world);
 
-  static void attackTarget(Engine::Core::World &world,
-                           const std::vector<Engine::Core::EntityID> &units,
-                           Engine::Core::EntityID targetId,
-                           bool shouldChase = true);
+  static void attack_target(Engine::Core::World &world,
+                            const std::vector<Engine::Core::EntityID> &units,
+                            Engine::Core::EntityID target_id,
+                            bool shouldChase = true);
 
 private:
   struct PendingPathRequest {
-    Engine::Core::EntityID entityId;
+    Engine::Core::EntityID entity_id{};
     QVector3D target;
     MoveOptions options;
     std::vector<Engine::Core::EntityID> groupMembers;
@@ -70,14 +67,13 @@ private:
       s_entityToRequest;
   static std::mutex s_pendingMutex;
   static std::atomic<std::uint64_t> s_nextRequestId;
-  static Point worldToGrid(float worldX, float worldZ);
-  static QVector3D gridToWorld(const Point &gridPos);
-  static void clearPendingRequest(Engine::Core::EntityID entityId);
+  static auto worldToGrid(float world_x, float world_z) -> Point;
+  static auto gridToWorld(const Point &gridPos) -> QVector3D;
+  static void clearPendingRequest(Engine::Core::EntityID entity_id);
   static void moveGroup(Engine::Core::World &world,
                         const std::vector<Engine::Core::EntityID> &units,
                         const std::vector<QVector3D> &targets,
                         const MoveOptions &options);
 };
 
-} // namespace Systems
-} // namespace Game
+} // namespace Game::Systems

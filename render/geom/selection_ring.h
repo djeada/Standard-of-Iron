@@ -7,7 +7,7 @@ namespace Render::Geom {
 
 class SelectionRing {
 public:
-  static Render::GL::Mesh *get();
+  static auto get() -> Render::GL::Mesh *;
 
 private:
   static std::unique_ptr<Render::GL::Mesh> s_mesh;

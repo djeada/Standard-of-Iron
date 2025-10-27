@@ -6,36 +6,101 @@
 namespace Render::GL {
 
 struct TerrainChunkParams {
+  static constexpr float kDefaultGrassPrimaryR = 0.30F;
+  static constexpr float kDefaultGrassPrimaryG = 0.60F;
+  static constexpr float kDefaultGrassPrimaryB = 0.28F;
+  static constexpr float kDefaultTileSize = 1.0F;
+  static constexpr float kDefaultGrassSecondaryR = 0.44F;
+  static constexpr float kDefaultGrassSecondaryG = 0.70F;
+  static constexpr float kDefaultGrassSecondaryB = 0.32F;
+  static constexpr float kDefaultMacroNoiseScale = 0.035F;
+  static constexpr float kDefaultGrassDryR = 0.72F;
+  static constexpr float kDefaultGrassDryG = 0.66F;
+  static constexpr float kDefaultGrassDryB = 0.48F;
+  static constexpr float kDefaultDetailNoiseScale = 0.16F;
+  static constexpr float kDefaultSoilColorR = 0.30F;
+  static constexpr float kDefaultSoilColorG = 0.26F;
+  static constexpr float kDefaultSoilColorB = 0.20F;
+  static constexpr float kDefaultSlopeRockThreshold = 0.45F;
+  static constexpr float kDefaultRockLowR = 0.48F;
+  static constexpr float kDefaultRockLowG = 0.46F;
+  static constexpr float kDefaultRockLowB = 0.44F;
+  static constexpr float kDefaultSlopeRockSharpness = 3.0F;
+  static constexpr float kDefaultRockHighR = 0.70F;
+  static constexpr float kDefaultRockHighG = 0.71F;
+  static constexpr float kDefaultRockHighB = 0.75F;
+  static constexpr float kDefaultSoilBlendHeight = 0.6F;
+  static constexpr float kDefaultTintComponent = 1.0F;
+  static constexpr float kDefaultSoilBlendSharpness = 3.5F;
+  static constexpr float kDefaultHeightNoiseStrength = 0.05F;
+  static constexpr float kDefaultHeightNoiseFrequency = 0.1F;
+  static constexpr float kDefaultAmbientBoost = 1.05F;
+  static constexpr float kDefaultRockDetailStrength = 0.35F;
+  static constexpr float kDefaultLightDirX = 0.35F;
+  static constexpr float kDefaultLightDirY = 0.8F;
+  static constexpr float kDefaultLightDirZ = 0.45F;
+  static constexpr float kDefaultMicroBumpAmp = 0.07F;
+  static constexpr float kDefaultMicroBumpFreq = 2.2F;
+  static constexpr float kDefaultMicroNormalWeight = 0.65F;
+  static constexpr float kDefaultAlbedoJitter = 0.05F;
 
-  QVector3D grassPrimary{0.30f, 0.60f, 0.28f};
-  float tileSize = 1.0f;
-  QVector3D grassSecondary{0.44f, 0.70f, 0.32f};
-  float macroNoiseScale = 0.035f;
-  QVector3D grassDry{0.72f, 0.66f, 0.48f};
-  float detailNoiseScale = 0.16f;
-  QVector3D soilColor{0.30f, 0.26f, 0.20f};
-  float slopeRockThreshold = 0.45f;
-  QVector3D rockLow{0.48f, 0.46f, 0.44f};
-  float slopeRockSharpness = 3.0f;
-  QVector3D rockHigh{0.70f, 0.71f, 0.75f};
-  float soilBlendHeight = 0.6f;
-  QVector3D tint{1.0f, 1.0f, 1.0f};
-  float soilBlendSharpness = 3.5f;
+  static auto defaultGrassPrimary() -> QVector3D {
+    return {kDefaultGrassPrimaryR, kDefaultGrassPrimaryG,
+            kDefaultGrassPrimaryB};
+  }
+  static auto defaultGrassSecondary() -> QVector3D {
+    return {kDefaultGrassSecondaryR, kDefaultGrassSecondaryG,
+            kDefaultGrassSecondaryB};
+  }
+  static auto defaultGrassDry() -> QVector3D {
+    return {kDefaultGrassDryR, kDefaultGrassDryG, kDefaultGrassDryB};
+  }
+  static auto defaultSoilColor() -> QVector3D {
+    return {kDefaultSoilColorR, kDefaultSoilColorG, kDefaultSoilColorB};
+  }
+  static auto defaultRockLow() -> QVector3D {
+    return {kDefaultRockLowR, kDefaultRockLowG, kDefaultRockLowB};
+  }
+  static auto defaultRockHigh() -> QVector3D {
+    return {kDefaultRockHighR, kDefaultRockHighG, kDefaultRockHighB};
+  }
+  static auto defaultTint() -> QVector3D {
+    return {kDefaultTintComponent, kDefaultTintComponent,
+            kDefaultTintComponent};
+  }
+  static auto defaultLightDirection() -> QVector3D {
+    return {kDefaultLightDirX, kDefaultLightDirY, kDefaultLightDirZ};
+  }
 
-  QVector2D noiseOffset{0.0f, 0.0f};
-  float heightNoiseStrength = 0.05f;
-  float heightNoiseFrequency = 0.1f;
-  float ambientBoost = 1.05f;
-  float rockDetailStrength = 0.35f;
-  QVector3D lightDirection{0.35f, 0.8f, 0.45f};
+  QVector3D grassPrimary = defaultGrassPrimary();
+  float tile_size = kDefaultTileSize;
+  QVector3D grassSecondary = defaultGrassSecondary();
+  float macroNoiseScale = kDefaultMacroNoiseScale;
+  QVector3D grassDry = defaultGrassDry();
+  float detail_noiseScale = kDefaultDetailNoiseScale;
+  QVector3D soilColor = defaultSoilColor();
+  float slopeRockThreshold = kDefaultSlopeRockThreshold;
+  QVector3D rockLow = defaultRockLow();
+  float slopeRockSharpness = kDefaultSlopeRockSharpness;
+  QVector3D rockHigh = defaultRockHigh();
+  float soilBlendHeight = kDefaultSoilBlendHeight;
+  QVector3D tint = defaultTint();
+  float soilBlendSharpness = kDefaultSoilBlendSharpness;
 
-  float noiseAngle = 0.0f;
+  QVector2D noiseOffset{0.0F, 0.0F};
+  float heightNoiseStrength = kDefaultHeightNoiseStrength;
+  float heightNoiseFrequency = kDefaultHeightNoiseFrequency;
+  float ambientBoost = kDefaultAmbientBoost;
+  float rockDetailStrength = kDefaultRockDetailStrength;
+  QVector3D light_direction = defaultLightDirection();
 
-  float microBumpAmp = 0.07f;
-  float microBumpFreq = 2.2f;
-  float microNormalWeight = 0.65f;
+  float noiseAngle = 0.0F;
 
-  float albedoJitter = 0.05f;
+  float microBumpAmp = kDefaultMicroBumpAmp;
+  float microBumpFreq = kDefaultMicroBumpFreq;
+  float microNormalWeight = kDefaultMicroNormalWeight;
+
+  float albedoJitter = kDefaultAlbedoJitter;
 
   bool isGroundPlane = false;
 };

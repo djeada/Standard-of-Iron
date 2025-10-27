@@ -7,7 +7,7 @@ Item {
 
     property bool gameIsPaused: false
     property real currentSpeed: 1
-    readonly property int barMinHeight: 72
+    readonly property int barmin_height: 72
     readonly property bool compact: width < 800
     readonly property bool ultraCompact: width < 560
 
@@ -20,7 +20,7 @@ Item {
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.top: parent.top
-        height: barMinHeight
+        height: barmin_height
         color: "#1a1a1a"
         opacity: 0.98
         clip: true
@@ -341,13 +341,13 @@ Item {
                     Label {
                         id: playerLbl
 
-                        text: "🗡️ " + (typeof game !== 'undefined' ? game.playerTroopCount : 0) + " / " + (typeof game !== 'undefined' ? game.maxTroopsPerPlayer : 0)
+                        text: "🗡️ " + (typeof game !== 'undefined' ? game.playerTroopCount : 0) + " / " + (typeof game !== 'undefined' ? game.max_troops_per_player : 0)
                         color: {
                             if (typeof game === 'undefined')
                                 return "#95a5a6";
 
                             var count = game.playerTroopCount;
-                            var max = game.maxTroopsPerPlayer;
+                            var max = game.max_troops_per_player;
                             if (count >= max)
                                 return "#e74c3c";
 

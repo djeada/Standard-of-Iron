@@ -20,15 +20,15 @@ public:
   ~AIWorker();
 
   AIWorker(const AIWorker &) = delete;
-  AIWorker &operator=(const AIWorker &) = delete;
+  auto operator=(const AIWorker &) -> AIWorker & = delete;
   AIWorker(AIWorker &&) = delete;
-  AIWorker &operator=(AIWorker &&) = delete;
+  auto operator=(AIWorker &&) -> AIWorker & = delete;
 
-  bool trySubmit(AIJob &&job);
+  auto trySubmit(AIJob &&job) -> bool;
 
   void drainResults(std::queue<AIResult> &out);
 
-  bool busy() const noexcept {
+  auto busy() const noexcept -> bool {
     return m_workerBusy.load(std::memory_order_acquire);
   }
 

@@ -4,10 +4,17 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QJsonParseError>
+#include <qfiledevice.h>
+#include <qjsonarray.h>
+#include <qjsondocument.h>
+#include <qjsonobject.h>
+#include <qstringview.h>
+#include <string>
 
 namespace Game::Visuals {
 
-VisualDef::MeshKind meshKindFromString(const QString &s) {
+auto meshKindFromString(const QString &s) -> VisualDef::MeshKind {
   const QString t = s.trimmed().toLower();
   if (t == "quad") {
     return VisualDef::MeshKind::Quad;
@@ -27,8 +34,8 @@ VisualDef::MeshKind meshKindFromString(const QString &s) {
   return VisualDef::MeshKind::None;
 }
 
-static Engine::Core::RenderableComponent::MeshKind
-toRenderableMesh(VisualDef::MeshKind k) {
+static auto toRenderableMesh(VisualDef::MeshKind k)
+    -> Engine::Core::RenderableComponent::MeshKind {
   using RM = Engine::Core::RenderableComponent::MeshKind;
   switch (k) {
   case VisualDef::MeshKind::Quad:
@@ -46,11 +53,12 @@ toRenderableMesh(VisualDef::MeshKind k) {
   }
 }
 
-bool VisualCatalog::loadFromJsonFile(const QString &path, QString *outError) {
+auto VisualCatalog::loadFromJsonFile(const QString &path,
+                                     QString *out_error) -> bool {
   QFile f(path);
   if (!f.open(QIODevice::ReadOnly)) {
-    if (outError) {
-      *outError = QString("Failed to open visuals file: %1").arg(path);
+    if (out_error != nullptr) {
+      *out_error = QString("Failed to open visuals file: %1").arg(path);
     }
     return false;
   }
@@ -59,18 +67,18 @@ bool VisualCatalog::loadFromJsonFile(const QString &path, QString *outError) {
   QJsonParseError perr{};
   const QJsonDocument doc = QJsonDocument::fromJson(data, &perr);
   if (doc.isNull()) {
-    if (outError) {
-      *outError = QString("JSON parse error at %1: %2")
-                      .arg(perr.offset)
-                      .arg(perr.errorString());
+    if (out_error != nullptr) {
+      *out_error = QString("JSON parse error at %1: %2")
+                       .arg(perr.offset)
+                       .arg(perr.errorString());
     }
     return false;
   }
-  QJsonObject root = doc.object();
+  QJsonObject const root = doc.object();
   QJsonObject units = root.value("units").toObject();
   for (auto it = units.begin(); it != units.end(); ++it) {
     VisualDef def;
-    QJsonObject o = it.value().toObject();
+    QJsonObject const o = it.value().toObject();
     def.mesh = meshKindFromString(o.value("mesh").toString("cube"));
     QJsonArray col = o.value("color").toArray();
     if (col.size() == 3) {
@@ -84,7 +92,8 @@ bool VisualCatalog::loadFromJsonFile(const QString &path, QString *outError) {
   return true;
 }
 
-bool VisualCatalog::lookup(const std::string &unitType, VisualDef &out) const {
+auto VisualCatalog::lookup(const std::string &unitType,
+                           VisualDef &out) const -> bool {
   auto it = m_units.find(unitType);
   if (it == m_units.end()) {
     return false;

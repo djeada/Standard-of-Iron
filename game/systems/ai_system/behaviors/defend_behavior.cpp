@@ -1,14 +1,18 @@
 #include "defend_behavior.h"
-#include "../../formation_planner.h"
 #include "../../formation_system.h"
 #include "../../nation_registry.h"
 #include "../ai_tactical.h"
 #include "../ai_utils.h"
+#include "systems/ai_system/ai_types.h"
 
 #include <QVector3D>
 #include <algorithm>
 #include <cmath>
+#include <cstddef>
 #include <limits>
+#include <qvectornd.h>
+#include <utility>
+#include <vector>
 
 namespace Game::Systems::AI {
 
@@ -17,40 +21,40 @@ void DefendBehavior::execute(const AISnapshot &snapshot, AIContext &context,
                              std::vector<AICommand> &outCommands) {
   m_defendTimer += deltaTime;
 
-  float updateInterval = context.barracksUnderThreat ? 0.5f : 1.5f;
+  float const update_interval = context.barracksUnderThreat ? 0.5F : 1.5F;
 
-  if (m_defendTimer < updateInterval) {
+  if (m_defendTimer < update_interval) {
     return;
   }
-  m_defendTimer = 0.0f;
+  m_defendTimer = 0.0F;
 
   if (context.primaryBarracks == 0) {
     return;
   }
 
-  float defendPosX = 0.0f;
-  float defendPosY = 0.0f;
-  float defendPosZ = 0.0f;
-  bool foundBarracks = false;
+  float defend_pos_x = 0.0F;
+  float defend_pos_y = 0.0F;
+  float defend_pos_z = 0.0F;
+  bool found_barracks = false;
 
   for (const auto &entity : snapshot.friendlies) {
     if (entity.id == context.primaryBarracks) {
-      defendPosX = entity.posX;
-      defendPosY = entity.posY;
-      defendPosZ = entity.posZ;
-      foundBarracks = true;
+      defend_pos_x = entity.posX;
+      defend_pos_y = entity.posY;
+      defend_pos_z = entity.posZ;
+      found_barracks = true;
       break;
     }
   }
 
-  if (!foundBarracks) {
+  if (!found_barracks) {
     return;
   }
 
-  std::vector<const EntitySnapshot *> readyDefenders;
-  std::vector<const EntitySnapshot *> engagedDefenders;
-  readyDefenders.reserve(snapshot.friendlies.size());
-  engagedDefenders.reserve(snapshot.friendlies.size());
+  std::vector<const EntitySnapshot *> ready_defenders;
+  std::vector<const EntitySnapshot *> engaged_defenders;
+  ready_defenders.reserve(snapshot.friendlies.size());
+  engaged_defenders.reserve(snapshot.friendlies.size());
 
   for (const auto &entity : snapshot.friendlies) {
     if (entity.isBuilding) {
@@ -58,89 +62,93 @@ void DefendBehavior::execute(const AISnapshot &snapshot, AIContext &context,
     }
 
     if (isEntityEngaged(entity, snapshot.visibleEnemies)) {
-      engagedDefenders.push_back(&entity);
+      engaged_defenders.push_back(&entity);
     } else {
-      readyDefenders.push_back(&entity);
+      ready_defenders.push_back(&entity);
     }
   }
 
-  if (readyDefenders.empty() && engagedDefenders.empty()) {
+  if (ready_defenders.empty() && engaged_defenders.empty()) {
     return;
   }
 
-  auto sortByDistance = [&](std::vector<const EntitySnapshot *> &list) {
+  auto sort_by_distance = [&](std::vector<const EntitySnapshot *> &list) {
     std::sort(list.begin(), list.end(),
               [&](const EntitySnapshot *a, const EntitySnapshot *b) {
-                float da = distanceSquared(a->posX, a->posY, a->posZ,
-                                           defendPosX, defendPosY, defendPosZ);
-                float db = distanceSquared(b->posX, b->posY, b->posZ,
-                                           defendPosX, defendPosY, defendPosZ);
+                float const da =
+                    distance_squared(a->posX, a->posY, a->posZ, defend_pos_x,
+                                     defend_pos_y, defend_pos_z);
+                float const db =
+                    distance_squared(b->posX, b->posY, b->posZ, defend_pos_x,
+                                     defend_pos_y, defend_pos_z);
                 return da < db;
               });
   };
 
-  sortByDistance(readyDefenders);
-  sortByDistance(engagedDefenders);
+  sort_by_distance(ready_defenders);
+  sort_by_distance(engaged_defenders);
 
-  const std::size_t totalAvailable =
-      readyDefenders.size() + engagedDefenders.size();
-  std::size_t desiredCount = totalAvailable;
+  const std::size_t total_available =
+      ready_defenders.size() + engaged_defenders.size();
+  std::size_t desired_count = total_available;
 
   if (context.barracksUnderThreat || !context.buildingsUnderAttack.empty()) {
 
-    desiredCount = totalAvailable;
+    desired_count = total_available;
   } else {
 
-    desiredCount =
-        std::min<std::size_t>(desiredCount, static_cast<std::size_t>(6));
+    desired_count =
+        std::min<std::size_t>(desired_count, static_cast<std::size_t>(6));
   }
 
-  std::size_t readyCount = std::min(desiredCount, readyDefenders.size());
-  readyDefenders.resize(readyCount);
+  std::size_t const ready_count =
+      std::min(desired_count, ready_defenders.size());
+  ready_defenders.resize(ready_count);
 
-  if (readyDefenders.empty()) {
+  if (ready_defenders.empty()) {
     return;
   }
 
   if (context.barracksUnderThreat || !context.buildingsUnderAttack.empty()) {
 
-    std::vector<const ContactSnapshot *> nearbyThreats;
-    nearbyThreats.reserve(snapshot.visibleEnemies.size());
+    std::vector<const ContactSnapshot *> nearby_threats;
+    nearby_threats.reserve(snapshot.visibleEnemies.size());
 
-    constexpr float DEFEND_RADIUS = 40.0f;
-    const float defendRadiusSq = DEFEND_RADIUS * DEFEND_RADIUS;
+    constexpr float defend_radius = 40.0F;
+    const float defend_radius_sq = defend_radius * defend_radius;
 
     for (const auto &enemy : snapshot.visibleEnemies) {
-      float distSq = distanceSquared(enemy.posX, enemy.posY, enemy.posZ,
-                                     defendPosX, defendPosY, defendPosZ);
-      if (distSq <= defendRadiusSq) {
-        nearbyThreats.push_back(&enemy);
+      float const dist_sq =
+          distance_squared(enemy.posX, enemy.posY, enemy.posZ, defend_pos_x,
+                           defend_pos_y, defend_pos_z);
+      if (dist_sq <= defend_radius_sq) {
+        nearby_threats.push_back(&enemy);
       }
     }
 
-    if (!nearbyThreats.empty()) {
+    if (!nearby_threats.empty()) {
 
-      auto targetInfo = TacticalUtils::selectFocusFireTarget(
-          readyDefenders, nearbyThreats, defendPosX, defendPosY, defendPosZ,
-          context, 0);
+      auto target_info = TacticalUtils::selectFocusFireTarget(
+          ready_defenders, nearby_threats, defend_pos_x, defend_pos_y,
+          defend_pos_z, context, 0);
 
-      if (targetInfo.targetId != 0) {
+      if (target_info.target_id != 0) {
 
-        std::vector<Engine::Core::EntityID> defenderIds;
-        defenderIds.reserve(readyDefenders.size());
-        for (const auto *unit : readyDefenders) {
-          defenderIds.push_back(unit->id);
+        std::vector<Engine::Core::EntityID> defender_ids;
+        defender_ids.reserve(ready_defenders.size());
+        for (const auto *unit : ready_defenders) {
+          defender_ids.push_back(unit->id);
         }
 
-        auto claimedUnits =
-            claimUnits(defenderIds, getPriority(), "defending", context,
-                       m_defendTimer + deltaTime, 3.0f);
+        auto claimed_units =
+            claimUnits(defender_ids, getPriority(), "defending", context,
+                       m_defendTimer + deltaTime, 3.0F);
 
-        if (!claimedUnits.empty()) {
+        if (!claimed_units.empty()) {
           AICommand attack;
           attack.type = AICommandType::AttackTarget;
-          attack.units = std::move(claimedUnits);
-          attack.targetId = targetInfo.targetId;
+          attack.units = std::move(claimed_units);
+          attack.target_id = target_info.target_id;
           attack.shouldChase = true;
           outCommands.push_back(std::move(attack));
           return;
@@ -149,52 +157,57 @@ void DefendBehavior::execute(const AISnapshot &snapshot, AIContext &context,
     } else if (context.barracksUnderThreat ||
                !context.buildingsUnderAttack.empty()) {
 
-      const ContactSnapshot *closestThreat = nullptr;
-      float closestDistSq = std::numeric_limits<float>::max();
+      const ContactSnapshot *closest_threat = nullptr;
+      float closest_dist_sq = std::numeric_limits<float>::max();
 
       for (const auto &enemy : snapshot.visibleEnemies) {
-        float distSq = distanceSquared(enemy.posX, enemy.posY, enemy.posZ,
-                                       defendPosX, defendPosY, defendPosZ);
-        if (distSq < closestDistSq) {
-          closestDistSq = distSq;
-          closestThreat = &enemy;
+        float const dist_sq =
+            distance_squared(enemy.posX, enemy.posY, enemy.posZ, defend_pos_x,
+                             defend_pos_y, defend_pos_z);
+        if (dist_sq < closest_dist_sq) {
+          closest_dist_sq = dist_sq;
+          closest_threat = &enemy;
         }
       }
 
-      if (closestThreat && !readyDefenders.empty()) {
+      if ((closest_threat != nullptr) && !ready_defenders.empty()) {
 
-        std::vector<Engine::Core::EntityID> defenderIds;
-        std::vector<float> targetX, targetY, targetZ;
+        std::vector<Engine::Core::EntityID> defender_ids;
+        std::vector<float> target_x;
+        std::vector<float> target_y;
+        std::vector<float> target_z;
 
-        for (const auto *unit : readyDefenders) {
-          defenderIds.push_back(unit->id);
-          targetX.push_back(closestThreat->posX);
-          targetY.push_back(closestThreat->posY);
-          targetZ.push_back(closestThreat->posZ);
+        for (const auto *unit : ready_defenders) {
+          defender_ids.push_back(unit->id);
+          target_x.push_back(closest_threat->posX);
+          target_y.push_back(closest_threat->posY);
+          target_z.push_back(closest_threat->posZ);
         }
 
-        auto claimedUnits =
-            claimUnits(defenderIds, getPriority(), "intercepting", context,
-                       m_defendTimer + deltaTime, 2.0f);
+        auto claimed_units =
+            claimUnits(defender_ids, getPriority(), "intercepting", context,
+                       m_defendTimer + deltaTime, 2.0F);
 
-        if (!claimedUnits.empty()) {
+        if (!claimed_units.empty()) {
 
-          std::vector<float> filteredX, filteredY, filteredZ;
-          for (size_t i = 0; i < defenderIds.size(); ++i) {
-            if (std::find(claimedUnits.begin(), claimedUnits.end(),
-                          defenderIds[i]) != claimedUnits.end()) {
-              filteredX.push_back(targetX[i]);
-              filteredY.push_back(targetY[i]);
-              filteredZ.push_back(targetZ[i]);
+          std::vector<float> filtered_x;
+          std::vector<float> filtered_y;
+          std::vector<float> filtered_z;
+          for (size_t i = 0; i < defender_ids.size(); ++i) {
+            if (std::find(claimed_units.begin(), claimed_units.end(),
+                          defender_ids[i]) != claimed_units.end()) {
+              filtered_x.push_back(target_x[i]);
+              filtered_y.push_back(target_y[i]);
+              filtered_z.push_back(target_z[i]);
             }
           }
 
           AICommand move;
           move.type = AICommandType::MoveUnits;
-          move.units = std::move(claimedUnits);
-          move.moveTargetX = std::move(filteredX);
-          move.moveTargetY = std::move(filteredY);
-          move.moveTargetZ = std::move(filteredZ);
+          move.units = std::move(claimed_units);
+          move.moveTargetX = std::move(filtered_x);
+          move.moveTargetY = std::move(filtered_y);
+          move.moveTargetZ = std::move(filtered_z);
           outCommands.push_back(std::move(move));
           return;
         }
@@ -202,88 +215,92 @@ void DefendBehavior::execute(const AISnapshot &snapshot, AIContext &context,
     }
   }
 
-  std::vector<const EntitySnapshot *> unclaimedDefenders;
-  for (const auto *unit : readyDefenders) {
+  std::vector<const EntitySnapshot *> unclaimed_defenders;
+  for (const auto *unit : ready_defenders) {
     auto it = context.assignedUnits.find(unit->id);
     if (it == context.assignedUnits.end()) {
-      unclaimedDefenders.push_back(unit);
+      unclaimed_defenders.push_back(unit);
     }
   }
 
-  if (unclaimedDefenders.empty()) {
+  if (unclaimed_defenders.empty()) {
     return;
   }
 
   const Nation *nation =
-      NationRegistry::instance().getNationForPlayer(context.playerId);
-  FormationType formationType = FormationType::Roman;
-  if (nation) {
-    formationType = nation->formationType;
+      NationRegistry::instance().getNationForPlayer(context.player_id);
+  FormationType formation_type = FormationType::Roman;
+  if (nation != nullptr) {
+    formation_type = nation->formation_type;
   }
 
-  QVector3D defendPos(defendPosX, defendPosY, defendPosZ);
+  QVector3D const defend_pos(defend_pos_x, defend_pos_y, defend_pos_z);
   auto targets = FormationSystem::instance().getFormationPositions(
-      formationType, static_cast<int>(unclaimedDefenders.size()), defendPos,
-      3.0f);
+      formation_type, static_cast<int>(unclaimed_defenders.size()), defend_pos,
+      3.0F);
 
-  std::vector<Engine::Core::EntityID> unitsToMove;
-  std::vector<float> targetX, targetY, targetZ;
-  unitsToMove.reserve(unclaimedDefenders.size());
-  targetX.reserve(unclaimedDefenders.size());
-  targetY.reserve(unclaimedDefenders.size());
-  targetZ.reserve(unclaimedDefenders.size());
+  std::vector<Engine::Core::EntityID> units_to_move;
+  std::vector<float> target_x;
+  std::vector<float> target_y;
+  std::vector<float> target_z;
+  units_to_move.reserve(unclaimed_defenders.size());
+  target_x.reserve(unclaimed_defenders.size());
+  target_y.reserve(unclaimed_defenders.size());
+  target_z.reserve(unclaimed_defenders.size());
 
-  for (size_t i = 0; i < unclaimedDefenders.size(); ++i) {
-    const auto *entity = unclaimedDefenders[i];
+  for (size_t i = 0; i < unclaimed_defenders.size(); ++i) {
+    const auto *entity = unclaimed_defenders[i];
     const auto &target = targets[i];
 
-    float dx = entity->posX - target.x();
-    float dz = entity->posZ - target.z();
-    float distanceSq = dx * dx + dz * dz;
+    float const dx = entity->posX - target.x();
+    float const dz = entity->posZ - target.z();
+    float const distance_sq = dx * dx + dz * dz;
 
-    if (distanceSq < 1.0f * 1.0f) {
+    if (distance_sq < 1.0F * 1.0F) {
       continue;
     }
 
-    unitsToMove.push_back(entity->id);
-    targetX.push_back(target.x());
-    targetY.push_back(target.y());
-    targetZ.push_back(target.z());
+    units_to_move.push_back(entity->id);
+    target_x.push_back(target.x());
+    target_y.push_back(target.y());
+    target_z.push_back(target.z());
   }
 
-  if (unitsToMove.empty()) {
+  if (units_to_move.empty()) {
     return;
   }
 
-  auto claimedForMove =
-      claimUnits(unitsToMove, BehaviorPriority::Low, "positioning", context,
-                 m_defendTimer + deltaTime, 1.5f);
+  auto claimed_for_move =
+      claimUnits(units_to_move, BehaviorPriority::Low, "positioning", context,
+                 m_defendTimer + deltaTime, 1.5F);
 
-  if (claimedForMove.empty()) {
+  if (claimed_for_move.empty()) {
     return;
   }
 
-  std::vector<float> filteredX, filteredY, filteredZ;
-  for (size_t i = 0; i < unitsToMove.size(); ++i) {
-    if (std::find(claimedForMove.begin(), claimedForMove.end(),
-                  unitsToMove[i]) != claimedForMove.end()) {
-      filteredX.push_back(targetX[i]);
-      filteredY.push_back(targetY[i]);
-      filteredZ.push_back(targetZ[i]);
+  std::vector<float> filtered_x;
+  std::vector<float> filtered_y;
+  std::vector<float> filtered_z;
+  for (size_t i = 0; i < units_to_move.size(); ++i) {
+    if (std::find(claimed_for_move.begin(), claimed_for_move.end(),
+                  units_to_move[i]) != claimed_for_move.end()) {
+      filtered_x.push_back(target_x[i]);
+      filtered_y.push_back(target_y[i]);
+      filtered_z.push_back(target_z[i]);
     }
   }
 
   AICommand command;
   command.type = AICommandType::MoveUnits;
-  command.units = std::move(claimedForMove);
-  command.moveTargetX = std::move(filteredX);
-  command.moveTargetY = std::move(filteredY);
-  command.moveTargetZ = std::move(filteredZ);
+  command.units = std::move(claimed_for_move);
+  command.moveTargetX = std::move(filtered_x);
+  command.moveTargetY = std::move(filtered_y);
+  command.moveTargetZ = std::move(filtered_z);
   outCommands.push_back(std::move(command));
 }
 
-bool DefendBehavior::shouldExecute(const AISnapshot &snapshot,
-                                   const AIContext &context) const {
+auto DefendBehavior::should_execute(const AISnapshot &snapshot,
+                                    const AIContext &context) const -> bool {
   (void)snapshot;
 
   if (context.primaryBarracks == 0) {
@@ -298,7 +315,7 @@ bool DefendBehavior::shouldExecute(const AISnapshot &snapshot,
     return true;
   }
 
-  if (context.averageHealth < 0.6f && context.totalUnits > 0) {
+  if (context.averageHealth < 0.6F && context.total_units > 0) {
     return true;
   }
 

@@ -1,9 +1,10 @@
 #include "json_vec_utils.h"
+#include <qjsonarray.h>
+#include <qvectornd.h>
 
-namespace App {
-namespace JsonUtils {
+namespace App::JsonUtils {
 
-QJsonArray vec3ToJsonArray(const QVector3D &vec) {
+auto vec3ToJsonArray(const QVector3D &vec) -> QJsonArray {
   QJsonArray arr;
   arr.append(vec.x());
   arr.append(vec.y());
@@ -11,7 +12,8 @@ QJsonArray vec3ToJsonArray(const QVector3D &vec) {
   return arr;
 }
 
-QVector3D jsonArrayToVec3(const QJsonValue &value, const QVector3D &fallback) {
+auto jsonArrayToVec3(const QJsonValue &value,
+                     const QVector3D &fallback) -> QVector3D {
   if (!value.isArray()) {
     return fallback;
   }
@@ -19,10 +21,9 @@ QVector3D jsonArrayToVec3(const QJsonValue &value, const QVector3D &fallback) {
   if (arr.size() < 3) {
     return fallback;
   }
-  return QVector3D(static_cast<float>(arr.at(0).toDouble(fallback.x())),
-                   static_cast<float>(arr.at(1).toDouble(fallback.y())),
-                   static_cast<float>(arr.at(2).toDouble(fallback.z())));
+  return {static_cast<float>(arr.at(0).toDouble(fallback.x())),
+          static_cast<float>(arr.at(1).toDouble(fallback.y())),
+          static_cast<float>(arr.at(2).toDouble(fallback.z()))};
 }
 
-} // namespace JsonUtils
-} // namespace App
+} // namespace App::JsonUtils

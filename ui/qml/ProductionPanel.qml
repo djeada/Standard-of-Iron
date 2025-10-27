@@ -12,6 +12,20 @@ Rectangle {
     signal recruitUnit(string unitType)
     signal rallyModeToggled()
 
+    function defaultProductionState() {
+        return {
+            "has_barracks": false,
+            "producedCount": 0,
+            "maxUnits": 0,
+            "queueSize": 0,
+            "inProgress": false,
+            "productionQueue": [],
+            "product_type": "",
+            "villagerCost": 1,
+            "buildTime": 0
+        };
+    }
+
     color: "#0f1419"
     border.color: "#3498db"
     border.width: 2
@@ -29,7 +43,7 @@ Rectangle {
             spacing: 8
 
             Rectangle {
-                property bool hasBarracks: (productionPanel.selectionTick, (productionPanel.gameInstance && productionPanel.gameInstance.hasSelectedType && productionPanel.gameInstance.hasSelectedType("barracks")))
+                property bool has_barracks: (productionPanel.selectionTick, (productionPanel.gameInstance && productionPanel.gameInstance.hasSelectedType && productionPanel.gameInstance.hasSelectedType("barracks")))
 
                 width: parent.width
                 height: productionContent.height + 16
@@ -37,13 +51,12 @@ Rectangle {
                 radius: 6
                 border.color: "#34495e"
                 border.width: 1
-                visible: hasBarracks
+                visible: has_barracks
 
                 Column {
                     id: productionContent
 
-                    property var prod: (productionPanel.selectionTick, (productionPanel.gameInstance && productionPanel.gameInstance.getSelectedProductionState) ? productionPanel.gameInstance.getSelectedProductionState() : ({
-                    }))
+                    property var prod: (productionPanel.selectionTick, (productionPanel.gameInstance && productionPanel.gameInstance.getSelectedProductionState) ? productionPanel.gameInstance.getSelectedProductionState() : productionPanel.defaultProductionState())
 
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.top: parent.top
@@ -86,7 +99,7 @@ Rectangle {
 
                                         var unitType;
                                         if (index === 0 && productionContent.prod.inProgress) {
-                                            unitType = productionContent.prod.productType || "archer";
+                                            unitType = productionContent.prod.product_type || "archer";
                                         } else {
                                             var queueIndex = productionContent.prod.inProgress ? index - 1 : index;
                                             if (productionContent.prod.productionQueue && productionContent.prod.productionQueue[queueIndex])
@@ -217,7 +230,7 @@ Rectangle {
             }
 
             Rectangle {
-                property bool hasBarracks: (productionPanel.selectionTick, (productionPanel.gameInstance && productionPanel.gameInstance.hasSelectedType && productionPanel.gameInstance.hasSelectedType("barracks")))
+                property bool has_barracks: (productionPanel.selectionTick, (productionPanel.gameInstance && productionPanel.gameInstance.hasSelectedType && productionPanel.gameInstance.hasSelectedType("barracks")))
 
                 width: parent.width
                 height: unitGridContent.height + 16
@@ -225,13 +238,12 @@ Rectangle {
                 radius: 6
                 border.color: "#34495e"
                 border.width: 1
-                visible: hasBarracks
+                visible: has_barracks
 
                 Column {
                     id: unitGridContent
 
-                    property var prod: (productionPanel.selectionTick, (productionPanel.gameInstance && productionPanel.gameInstance.getSelectedProductionState) ? productionPanel.gameInstance.getSelectedProductionState() : ({
-                    }))
+                    property var prod: (productionPanel.selectionTick, (productionPanel.gameInstance && productionPanel.gameInstance.getSelectedProductionState) ? productionPanel.gameInstance.getSelectedProductionState() : productionPanel.defaultProductionState())
 
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.top: parent.top
@@ -254,7 +266,7 @@ Rectangle {
 
                         Rectangle {
                             property int queueTotal: (unitGridContent.prod.inProgress ? 1 : 0) + (unitGridContent.prod.queueSize || 0)
-                            property bool isEnabled: unitGridContent.prod.hasBarracks && unitGridContent.prod.producedCount < unitGridContent.prod.maxUnits && queueTotal < 5
+                            property bool isEnabled: unitGridContent.prod.has_barracks && unitGridContent.prod.producedCount < unitGridContent.prod.maxUnits && queueTotal < 5
 
                             width: 110
                             height: 80
@@ -328,7 +340,7 @@ Rectangle {
 
                         Rectangle {
                             property int queueTotal: (unitGridContent.prod.inProgress ? 1 : 0) + (unitGridContent.prod.queueSize || 0)
-                            property bool isEnabled: unitGridContent.prod.hasBarracks && unitGridContent.prod.producedCount < unitGridContent.prod.maxUnits && queueTotal < 5
+                            property bool isEnabled: unitGridContent.prod.has_barracks && unitGridContent.prod.producedCount < unitGridContent.prod.maxUnits && queueTotal < 5
 
                             width: 110
                             height: 80
@@ -402,7 +414,7 @@ Rectangle {
 
                         Rectangle {
                             property int queueTotal: (unitGridContent.prod.inProgress ? 1 : 0) + (unitGridContent.prod.queueSize || 0)
-                            property bool isEnabled: unitGridContent.prod.hasBarracks && unitGridContent.prod.producedCount < unitGridContent.prod.maxUnits && queueTotal < 5
+                            property bool isEnabled: unitGridContent.prod.has_barracks && unitGridContent.prod.producedCount < unitGridContent.prod.maxUnits && queueTotal < 5
 
                             width: 110
                             height: 80
@@ -476,7 +488,7 @@ Rectangle {
 
                         Rectangle {
                             property int queueTotal: (unitGridContent.prod.inProgress ? 1 : 0) + (unitGridContent.prod.queueSize || 0)
-                            property bool isEnabled: unitGridContent.prod.hasBarracks && unitGridContent.prod.producedCount < unitGridContent.prod.maxUnits && queueTotal < 5
+                            property bool isEnabled: unitGridContent.prod.has_barracks && unitGridContent.prod.producedCount < unitGridContent.prod.maxUnits && queueTotal < 5
 
                             width: 110
                             height: 80
@@ -555,16 +567,16 @@ Rectangle {
             }
 
             Rectangle {
-                property bool hasBarracks: (productionPanel.selectionTick, (productionPanel.gameInstance && productionPanel.gameInstance.hasSelectedType && productionPanel.gameInstance.hasSelectedType("barracks")))
+                property bool has_barracks: (productionPanel.selectionTick, (productionPanel.gameInstance && productionPanel.gameInstance.hasSelectedType && productionPanel.gameInstance.hasSelectedType("barracks")))
 
                 width: parent.width
                 height: 1
                 color: "#34495e"
-                visible: hasBarracks
+                visible: has_barracks
             }
 
             Rectangle {
-                property bool hasBarracks: (productionPanel.selectionTick, (productionPanel.gameInstance && productionPanel.gameInstance.hasSelectedType && productionPanel.gameInstance.hasSelectedType("barracks")))
+                property bool has_barracks: (productionPanel.selectionTick, (productionPanel.gameInstance && productionPanel.gameInstance.hasSelectedType && productionPanel.gameInstance.hasSelectedType("barracks")))
 
                 width: parent.width
                 height: rallyContent.height + 12
@@ -572,13 +584,12 @@ Rectangle {
                 radius: 6
                 border.color: "#34495e"
                 border.width: 1
-                visible: hasBarracks
+                visible: has_barracks
 
                 Column {
                     id: rallyContent
 
-                    property var prod: (productionPanel.selectionTick, (productionPanel.gameInstance && productionPanel.gameInstance.getSelectedProductionState) ? productionPanel.gameInstance.getSelectedProductionState() : ({
-                    }))
+                    property var prod: (productionPanel.selectionTick, (productionPanel.gameInstance && productionPanel.gameInstance.getSelectedProductionState) ? productionPanel.gameInstance.getSelectedProductionState() : productionPanel.defaultProductionState())
 
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.top: parent.top
@@ -591,7 +602,7 @@ Rectangle {
                         height: 32
                         text: (typeof gameView !== 'undefined' && gameView.setRallyMode) ? qsTr("📍 Click Map to Set Rally") : qsTr("📍 Set Rally Point")
                         focusPolicy: Qt.NoFocus
-                        enabled: rallyContent.prod.hasBarracks
+                        enabled: rallyContent.prod.has_barracks
                         onClicked: productionPanel.rallyModeToggled()
                         ToolTip.visible: hovered
                         ToolTip.text: qsTr("Set where newly recruited units will gather.\nRight-click to cancel.")
@@ -628,16 +639,16 @@ Rectangle {
             }
 
             Item {
-                property bool hasBarracksSelected: (productionPanel.selectionTick, (productionPanel.gameInstance && productionPanel.gameInstance.hasSelectedType && productionPanel.gameInstance.hasSelectedType("barracks")))
+                property bool has_barracksSelected: (productionPanel.selectionTick, (productionPanel.gameInstance && productionPanel.gameInstance.hasSelectedType && productionPanel.gameInstance.hasSelectedType("barracks")))
 
                 height: 20
-                visible: !hasBarracksSelected
+                visible: !has_barracksSelected
             }
 
             Item {
-                property bool hasBarracks: (productionPanel.selectionTick, (productionPanel.gameInstance && productionPanel.gameInstance.hasSelectedType && productionPanel.gameInstance.hasSelectedType("barracks")))
+                property bool has_barracks: (productionPanel.selectionTick, (productionPanel.gameInstance && productionPanel.gameInstance.hasSelectedType && productionPanel.gameInstance.hasSelectedType("barracks")))
 
-                visible: !hasBarracks
+                visible: !has_barracks
                 width: parent.width
                 height: 200
 

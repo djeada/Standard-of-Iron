@@ -7,12 +7,13 @@
 #include "camera_controller.h"
 #include "camera_follow_system.h"
 #include "selection_system.h"
+#include "units/spawn_type.h"
 #include <QVector3D>
 #include <algorithm>
 #include <cmath>
+#include <memory>
 
-namespace Game {
-namespace Systems {
+namespace Game::Systems {
 
 CameraService::CameraService()
     : m_controller(std::make_unique<CameraController>()),
@@ -21,14 +22,14 @@ CameraService::CameraService()
 CameraService::~CameraService() = default;
 
 void CameraService::move(Render::GL::Camera &camera, float dx, float dz) {
-  float dist = camera.getDistance();
-  float scale = std::max(0.12f, dist * 0.05f);
+  float const dist = camera.getDistance();
+  float const scale = std::max(0.12F, dist * 0.05F);
   m_controller->move(camera, dx * scale, dz * scale);
 }
 
 void CameraService::elevate(Render::GL::Camera &camera, float dy) {
-  float distance = camera.getDistance();
-  float scale = std::clamp(distance * 0.05f, 0.1f, 5.0f);
+  float const distance = camera.getDistance();
+  float const scale = std::clamp(distance * 0.05F, 0.1F, 5.0F);
   m_controller->moveUp(camera, dy * scale);
 }
 
@@ -36,7 +37,7 @@ void CameraService::zoom(Render::GL::Camera &camera, float delta) {
   m_controller->zoomDistance(camera, delta);
 }
 
-float CameraService::getDistance(const Render::GL::Camera &camera) const {
+float CameraService::getDistance(const Render::GL::Camera &camera) {
   return camera.getDistance();
 }
 
@@ -44,20 +45,21 @@ void CameraService::yaw(Render::GL::Camera &camera, float degrees) {
   m_controller->yaw(camera, degrees);
 }
 
-void CameraService::orbit(Render::GL::Camera &camera, float yawDeg,
-                          float pitchDeg) {
-  if (!std::isfinite(yawDeg) || !std::isfinite(pitchDeg)) {
+void CameraService::orbit(Render::GL::Camera &camera, float yaw_deg,
+                          float pitch_deg) {
+  if (!std::isfinite(yaw_deg) || !std::isfinite(pitch_deg)) {
     return;
   }
-  m_controller->orbit(camera, yawDeg, pitchDeg);
+  m_controller->orbit(camera, yaw_deg, pitch_deg);
 }
 
 void CameraService::orbitDirection(Render::GL::Camera &camera, int direction,
                                    bool shift) {
-  const auto &camConfig = Game::GameConfig::instance().camera();
-  float step = shift ? camConfig.orbitStepShift : camConfig.orbitStepNormal;
-  float pitch = step * float(direction);
-  orbit(camera, 0.0f, pitch);
+  const auto &cam_config = Game::GameConfig::instance().camera();
+  float const step =
+      shift ? cam_config.orbitStepShift : cam_config.orbitStepNormal;
+  float const pitch = step * float(direction);
+  orbit(camera, 0.0F, pitch);
 }
 
 void CameraService::followSelection(Render::GL::Camera &camera,
@@ -65,8 +67,8 @@ void CameraService::followSelection(Render::GL::Camera &camera,
   m_controller->setFollowEnabled(camera, enable);
 
   if (enable) {
-    if (auto *selectionSystem = world.getSystem<SelectionSystem>()) {
-      m_followSystem->snapToSelection(world, *selectionSystem, camera);
+    if (auto *selection_system = world.getSystem<SelectionSystem>()) {
+      m_followSystem->snapToSelection(world, *selection_system, camera);
     }
   } else {
     auto pos = camera.getPosition();
@@ -76,44 +78,44 @@ void CameraService::followSelection(Render::GL::Camera &camera,
 }
 
 void CameraService::setFollowLerp(Render::GL::Camera &camera, float alpha) {
-  float a = std::clamp(alpha, 0.0f, 1.0f);
+  float const a = std::clamp(alpha, 0.0F, 1.0F);
   m_controller->setFollowLerp(camera, a);
 }
 
 void CameraService::resetCamera(Render::GL::Camera &camera,
                                 Engine::Core::World &world, int localOwnerId,
                                 unsigned int playerUnitId) {
-  Engine::Core::Entity *focusEntity = nullptr;
+  Engine::Core::Entity *focus_entity = nullptr;
   for (auto *e : world.getEntitiesWith<Engine::Core::UnitComponent>()) {
-    if (!e) {
+    if (e == nullptr) {
       continue;
     }
     auto *u = e->getComponent<Engine::Core::UnitComponent>();
-    if (!u) {
+    if (u == nullptr) {
       continue;
     }
-    if (u->spawnType == Game::Units::SpawnType::Barracks &&
-        u->ownerId == localOwnerId && u->health > 0) {
-      focusEntity = e;
+    if (u->spawn_type == Game::Units::SpawnType::Barracks &&
+        u->owner_id == localOwnerId && u->health > 0) {
+      focus_entity = e;
       break;
     }
   }
-  if (!focusEntity && playerUnitId != 0) {
-    focusEntity = world.getEntity(playerUnitId);
+  if ((focus_entity == nullptr) && playerUnitId != 0) {
+    focus_entity = world.getEntity(playerUnitId);
   }
 
-  if (focusEntity) {
-    snapToEntity(camera, *focusEntity);
+  if (focus_entity != nullptr) {
+    snapToEntity(camera, *focus_entity);
   }
 }
 
 void CameraService::snapToEntity(Render::GL::Camera &camera,
                                  Engine::Core::Entity &entity) {
   if (auto *t = entity.getComponent<Engine::Core::TransformComponent>()) {
-    QVector3D center(t->position.x, t->position.y, t->position.z);
-    const auto &camConfig = Game::GameConfig::instance().camera();
-    camera.setRTSView(center, camConfig.defaultDistance, camConfig.defaultPitch,
-                      camConfig.defaultYaw);
+    QVector3D const center(t->position.x, t->position.y, t->position.z);
+    const auto &cam_config = Game::GameConfig::instance().camera();
+    camera.setRTSView(center, cam_config.defaultDistance,
+                      cam_config.defaultPitch, cam_config.defaultYaw);
   }
 }
 
@@ -121,11 +123,10 @@ void CameraService::updateFollow(Render::GL::Camera &camera,
                                  Engine::Core::World &world,
                                  bool followEnabled) {
   if (followEnabled) {
-    if (auto *selectionSystem = world.getSystem<SelectionSystem>()) {
-      m_followSystem->update(world, *selectionSystem, camera);
+    if (auto *selection_system = world.getSystem<SelectionSystem>()) {
+      m_followSystem->update(world, *selection_system, camera);
     }
   }
 }
 
-} // namespace Systems
-} // namespace Game
+} // namespace Game::Systems
