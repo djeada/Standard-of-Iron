@@ -123,6 +123,17 @@ auto MapTransformer::applyToWorld(
   }
 
   for (const auto &s : def.spawns) {
+    // Skip spawns for players not in the current configuration
+    // (only when overrides are provided and player is not neutral)
+    if (!s_player_team_overrides.empty() &&
+        s.player_id != Game::Core::NEUTRAL_OWNER_ID) {
+      bool const player_in_config =
+          (s_player_team_overrides.find(s.player_id) !=
+           s_player_team_overrides.end());
+      if (!player_in_config) {
+        continue; // Skip this spawn
+      }
+    }
 
     float world_x = s.x;
     float world_z = s.z;
