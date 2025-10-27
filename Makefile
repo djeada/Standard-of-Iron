@@ -6,6 +6,7 @@
 
 # Configuration
 BUILD_DIR := build
+BUILD_TIDY_DIR := build-tidy
 BINARY_NAME := standard_of_iron
 MAP_EDITOR_BINARY := map_editor
 DEFAULT_LANG ?= en
@@ -46,6 +47,7 @@ help:
 	@echo "  $(GREEN)install$(RESET)       - Install all dependencies"
 	@echo "  $(GREEN)configure$(RESET)     - Configure build with CMake"
 	@echo "  $(GREEN)build$(RESET)         - Build the project"
+	@echo "  $(GREEN)build-tidy$(RESET)    - Build with clang-tidy static analysis enabled"
 	@echo "  $(GREEN)debug$(RESET)         - Build with debug symbols and GDB support (no optimizations)"
 	@echo "  $(GREEN)release$(RESET)       - Build optimized release version"
 	@echo "  $(GREEN)run$(RESET)           - Run the main application"
@@ -98,6 +100,16 @@ build: configure
 	@echo "$(BOLD)$(BLUE)Building project...$(RESET)"
 	@cd $(BUILD_DIR) && make -j$$(nproc)
 	@echo "$(GREEN)✓ Build complete$(RESET)"
+
+# Build with clang-tidy enabled
+.PHONY: build-tidy
+build-tidy:
+	@echo "$(BOLD)$(BLUE)Configuring build with clang-tidy enabled...$(RESET)"
+	@mkdir -p $(BUILD_TIDY_DIR)
+	@cd $(BUILD_TIDY_DIR) && cmake -DENABLE_CLANG_TIDY=ON -DDEFAULT_LANG=$(DEFAULT_LANG) ..
+	@echo "$(BOLD)$(BLUE)Building with clang-tidy analysis...$(RESET)"
+	@cd $(BUILD_TIDY_DIR) && make -j$$(nproc)
+	@echo "$(GREEN)✓ Build with clang-tidy complete$(RESET)"
 
 # Build everything (alias for build)
 .PHONY: all
@@ -158,7 +170,7 @@ editor: build
 .PHONY: clean
 clean:
 	@echo "$(BOLD)$(YELLOW)Cleaning build directory...$(RESET)"
-	@rm -rf $(BUILD_DIR)
+	@rm -rf $(BUILD_DIR) $(BUILD_TIDY_DIR)
 	@echo "$(GREEN)✓ Clean complete$(RESET)"
 
 # Rebuild (clean + build)
@@ -186,7 +198,7 @@ test: build
 # ---- Formatting: strip comments first, then format (strict) ----
 .PHONY: format format-check
 
-EXCLUDE_DIRS := ./$(BUILD_DIR) ./third_party
+EXCLUDE_DIRS := ./$(BUILD_DIR) ./$(BUILD_TIDY_DIR) ./third_party
 EXCLUDE_FIND := $(foreach d,$(EXCLUDE_DIRS),-not -path "$(d)/*")
 
 format:
