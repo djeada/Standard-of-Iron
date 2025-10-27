@@ -89,9 +89,9 @@ inline constexpr float Mask24BitFloat = 16777215.0F;
 inline constexpr unsigned int Mask24BitHex = 0x01000000U;
 } // namespace Render::GL::BitShift
 
-namespace Render::GL::HashXorShift {
-inline constexpr int Shift5 = 5;
-inline constexpr int Shift13 = 13;
-inline constexpr int Shift17 = 17;
-inline constexpr uint32_t GoldenRatioHash = 0x9E3779B9U;
-} // namespace Render::GL::HashXorShift
+namespace Render::GL::Hash {
+inline constexpr int XorShiftAmount5 = 5;
+inline constexpr int XorShiftAmount13 = 13;
+inline constexpr int XorShiftAmount17 = 17;
+inline constexpr uint32_t GoldenRatio = 0x9E3779B9U;
+} // namespace Render::GL::Hash
