@@ -44,7 +44,7 @@ float fbm(vec2 p) {
     p *= 2.03;
     a *= 0.5;
   }
-  return F;
+  return f;
 }
 
 // anti-aliased step
