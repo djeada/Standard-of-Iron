@@ -79,4 +79,11 @@ inline constexpr int Shift16 = 16;
 inline constexpr int Shift32 = 32;
 inline constexpr unsigned int Mask24Bit = 0xFFFFFF;
 inline constexpr float Mask24BitFloat = 16777215.0F;
+inline constexpr unsigned int Mask24BitHex = 0x01000000U;
 } // namespace Render::GL::BitShift
+
+namespace Render::GL::HashXorShift {
+inline constexpr int Shift5 = 5;
+inline constexpr int Shift13 = 13;
+inline constexpr int Shift17 = 17;
+} // namespace Render::GL::HashXorShift

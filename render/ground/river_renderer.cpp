@@ -3,6 +3,7 @@
 #include "../gl/mesh.h"
 #include "../gl/resources.h"
 #include "../scene_renderer.h"
+#include "ground_utils.h"
 #include "map/terrain.h"
 #include <QVector2D>
 #include <QVector3D>
@@ -35,12 +36,7 @@ void RiverRenderer::buildMeshes() {
     return;
   }
 
-  auto noise_hash = [](float x, float y) -> float {
-    float const n = std::sin(x * 127.1F + y * 311.7F) * 43758.5453123F;
-    return n - std::floor(n);
-  };
-
-  auto noise = [&noise_hash](float x, float y) -> float {
+  auto noise = [](float x, float y) -> float {
     float const ix = std::floor(x);
     float const iy = std::floor(y);
     float fx = x - ix;
@@ -49,10 +45,10 @@ void RiverRenderer::buildMeshes() {
     fx = fx * fx * (3.0F - 2.0F * fx);
     fy = fy * fy * (3.0F - 2.0F * fy);
 
-    float const a = noise_hash(ix, iy);
-    float const b = noise_hash(ix + 1.0F, iy);
-    float const c = noise_hash(ix, iy + 1.0F);
-    float const d = noise_hash(ix + 1.0F, iy + 1.0F);
+    float const a = Ground::noiseHash(ix, iy);
+    float const b = Ground::noiseHash(ix + 1.0F, iy);
+    float const c = Ground::noiseHash(ix, iy + 1.0F);
+    float const d = Ground::noiseHash(ix + 1.0F, iy + 1.0F);
 
     return a * (1.0F - fx) * (1.0F - fy) + b * fx * (1.0F - fy) +
            c * (1.0F - fx) * fy + d * fx * fy;

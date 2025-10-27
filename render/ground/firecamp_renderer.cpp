@@ -139,7 +139,8 @@ void FireCampRenderer::submit(Renderer &renderer, ResourceManager *resources) {
     uint32_t state =
         hashCoords(static_cast<int>(std::floor(camp_pos.x())),
                    static_cast<int>(std::floor(camp_pos.z())),
-                   static_cast<uint32_t>(radius_phase.y() * 37.0F));
+                   static_cast<uint32_t>(radius_phase.y() *
+                                         HashConstants::TemporalHashFrequency));
 
     const float time = params.time;
     const float char_amount =
@@ -309,8 +310,10 @@ void FireCampRenderer::generateFireCampInstances() {
     return true;
   };
 
-  for (int z = 0; z < m_height; z += 20) {
-    for (int x = 0; x < m_width; x += 20) {
+  constexpr int k_grid_spacing = 20;
+
+  for (int z = 0; z < m_height; z += k_grid_spacing) {
+    for (int x = 0; x < m_width; x += k_grid_spacing) {
       int const idx = z * m_width + x;
 
       QVector3D const normal = normals[idx];
@@ -341,8 +344,8 @@ void FireCampRenderer::generateFireCampInstances() {
 
       float const effective_density = fire_camp_density * density_mult;
       if (rand01(state) < effective_density) {
-        float const gx = float(x) + rand01(state) * 20.0F;
-        float const gz = float(z) + rand01(state) * 20.0F;
+        float const gx = float(x) + rand01(state) * float(k_grid_spacing);
+        float const gz = float(z) + rand01(state) * float(k_grid_spacing);
         add_fire_camp(gx, gz, state);
       }
     }
