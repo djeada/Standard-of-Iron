@@ -79,6 +79,16 @@ auto MapTransformer::applyToWorld(
   }
 
   for (int const player_id : unique_player_ids) {
+    bool const has_team_override =
+        (s_player_team_overrides.find(player_id) !=
+         s_player_team_overrides.end());
+
+    // Skip players not in the configuration (only when overrides are provided)
+    // This ensures only selected players spawn, while maintaining backward
+    // compatibility when no overrides are set.
+    if (!s_player_team_overrides.empty() && !has_team_override) {
+      continue;
+    }
 
     if (owner_registry.getOwnerType(player_id) ==
         Game::Systems::OwnerType::Neutral) {
@@ -113,6 +123,18 @@ auto MapTransformer::applyToWorld(
   }
 
   for (const auto &s : def.spawns) {
+    // Determine the effective player_id for this spawn
+    // If player is not in configuration, spawn as neutral
+    int effective_player_id = s.player_id;
+    if (!s_player_team_overrides.empty() &&
+        s.player_id != Game::Core::NEUTRAL_OWNER_ID) {
+      bool const player_in_config =
+          (s_player_team_overrides.find(s.player_id) !=
+           s_player_team_overrides.end());
+      if (!player_in_config) {
+        effective_player_id = Game::Core::NEUTRAL_OWNER_ID;
+      }
+    }
 
     float world_x = s.x;
     float world_z = s.z;
@@ -155,9 +177,9 @@ auto MapTransformer::applyToWorld(
     if (s_registry) {
       Game::Units::SpawnParams sp;
       sp.position = QVector3D(world_x, 0.0F, world_z);
-      sp.player_id = s.player_id;
+      sp.player_id = effective_player_id;
       sp.spawn_type = s.type;
-      sp.aiControlled = !owner_registry.isPlayer(s.player_id);
+      sp.aiControlled = !owner_registry.isPlayer(effective_player_id);
       sp.maxPopulation = s.maxPopulation;
       auto obj = s_registry->create(s.type, world, sp);
       if (obj) {
