@@ -32,15 +32,15 @@ inline auto valueNoise(float x, float z, uint32_t seed) -> float {
   fx = fx * fx * (3.0F - 2.0F * fx);
   fz = fz * fz * (3.0F - 2.0F * fz);
 
-  uint32_t s00 = hashCoords(ix, iz, seed);
-  uint32_t s10 = hashCoords(ix + 1, iz, seed);
-  uint32_t s01 = hashCoords(ix, iz + 1, seed);
-  uint32_t s11 = hashCoords(ix + 1, iz + 1, seed);
+  uint32_t s00 = hash_coords(ix, iz, seed);
+  uint32_t s10 = hash_coords(ix + 1, iz, seed);
+  uint32_t s01 = hash_coords(ix, iz + 1, seed);
+  uint32_t s11 = hash_coords(ix + 1, iz + 1, seed);
 
-  float const v00 = rand01(s00);
-  float const v10 = rand01(s10);
-  float const v01 = rand01(s01);
-  float const v11 = rand01(s11);
+  float const v00 = rand_01(s00);
+  float const v10 = rand_01(s10);
+  float const v01 = rand_01(s01);
+  float const v11 = rand_01(s11);
 
   float const v0 = v00 * (1.0F - fx) + v10 * fx;
   float const v1 = v01 * (1.0F - fx) + v11 * fx;
@@ -137,14 +137,14 @@ void FireCampRenderer::submit(Renderer &renderer, ResourceManager *resources) {
     const float base_radius = std::max(radius_phase.x(), 1.0F);
 
     uint32_t state =
-        hashCoords(static_cast<int>(std::floor(camp_pos.x())),
+        hash_coords(static_cast<int>(std::floor(camp_pos.x())),
                    static_cast<int>(std::floor(camp_pos.z())),
                    static_cast<uint32_t>(radius_phase.y() *
-                                         HashConstants::TemporalVariationFrequency));
+                                         hash_constants::k_temporal_variation_frequency));
 
     const float time = params.time;
     const float char_amount =
-        std::clamp(time * 0.015F + rand01(state) * 0.05F, 0.0F, 1.0F);
+        std::clamp(time * 0.015F + rand_01(state) * 0.05F, 0.0F, 1.0F);
 
     const QVector3D blended_log_color =
         log_color * (1.0F - char_amount) + char_color * (char_amount + 0.15F);
@@ -152,7 +152,7 @@ void FireCampRenderer::submit(Renderer &renderer, ResourceManager *resources) {
     const float log_length = std::clamp(base_radius * 0.85F, 0.45F, 1.1F);
     const float log_radius = std::clamp(base_radius * 0.08F, 0.03F, 0.08F);
 
-    const float base_yaw = (rand01(state) - 0.5F) * 0.35F;
+    const float base_yaw = (rand_01(state) - 0.5F) * 0.35F;
     const float cos_base = std::cos(base_yaw);
     const float sin_base = std::sin(base_yaw);
     const QVector3D axis_a(cos_base, 0.0F, sin_base);
@@ -167,8 +167,8 @@ void FireCampRenderer::submit(Renderer &renderer, ResourceManager *resources) {
     renderer.cylinder(base_center - base_half_b, base_center + base_half_b,
                       log_radius, blended_log_color, 1.0F);
 
-    if (rand01(state) > 0.25F) {
-      float const top_yaw = base_yaw + 0.6F + (rand01(state) - 0.5F) * 0.35F;
+    if (rand_01(state) > 0.25F) {
+      float const top_yaw = base_yaw + 0.6F + (rand_01(state) - 0.5F) * 0.35F;
       QVector3D const top_axis(std::cos(top_yaw), 0.0F, std::sin(top_yaw));
       QVector3D const top_half = top_axis * (log_length * 0.35F);
       QVector3D const top_center =
@@ -296,10 +296,10 @@ void FireCampRenderer::generateFireCampInstances() {
       return false;
     }
 
-    float const intensity = remap(rand01(state), 0.8F, 1.2F);
-    float const radius = remap(rand01(state), 2.0F, 4.0F) * tile_safe;
+    float const intensity = remap(rand_01(state), 0.8F, 1.2F);
+    float const radius = remap(rand_01(state), 2.0F, 4.0F) * tile_safe;
 
-    float const phase = rand01(state) * MathConstants::TwoPi;
+    float const phase = rand_01(state) * math_constants::k_two_pi;
 
     float const duration = 1.0F;
 
@@ -322,7 +322,7 @@ void FireCampRenderer::generateFireCampInstances() {
         continue;
       }
 
-      uint32_t state = hashCoords(
+      uint32_t state = hash_coords(
           x, z, m_noiseSeed ^ 0xF12ECA3FU ^ static_cast<uint32_t>(idx));
 
       float const world_x = (x - half_width) * m_tile_size;
@@ -343,9 +343,9 @@ void FireCampRenderer::generateFireCampInstances() {
       }
 
       float const effective_density = fire_camp_density * density_mult;
-      if (rand01(state) < effective_density) {
-        float const gx = float(x) + rand01(state) * float(k_grid_spacing);
-        float const gz = float(z) + rand01(state) * float(k_grid_spacing);
+      if (rand_01(state) < effective_density) {
+        float const gx = float(x) + rand_01(state) * float(k_grid_spacing);
+        float const gz = float(z) + rand_01(state) * float(k_grid_spacing);
         add_fire_camp(gx, gz, state);
       }
     }

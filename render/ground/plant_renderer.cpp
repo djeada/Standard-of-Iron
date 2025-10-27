@@ -26,10 +26,10 @@ inline auto valueNoise(float x, float z, uint32_t salt = 0U) -> float {
   int z1 = z0 + 1;
   float tx = x - float(x0);
   float tz = z - float(z0);
-  float const n00 = hashTo01(hashCoords(x0, z0, salt));
-  float const n10 = hashTo01(hashCoords(x1, z0, salt));
-  float const n01 = hashTo01(hashCoords(x0, z1, salt));
-  float const n11 = hashTo01(hashCoords(x1, z1, salt));
+  float const n00 = hash_to_01(hash_coords(x0, z0, salt));
+  float const n10 = hash_to_01(hash_coords(x1, z0, salt));
+  float const n01 = hash_to_01(hash_coords(x0, z1, salt));
+  float const n11 = hash_to_01(hash_coords(x1, z1, salt));
   float const nx0 = n00 * (1 - tx) + n10 * tx;
   float const nx1 = n01 * (1 - tx) + n11 * tx;
   return nx0 * (1 - tz) + nx1 * tz;
@@ -261,25 +261,25 @@ void PlantRenderer::generatePlantInstances() {
       return false;
     }
 
-    float const scale = remap(rand01(state), 0.30F, 0.80F) * tile_safe;
+    float const scale = remap(rand_01(state), 0.30F, 0.80F) * tile_safe;
 
-    float const plant_type = std::floor(rand01(state) * 4.0F);
+    float const plant_type = std::floor(rand_01(state) * 4.0F);
 
-    float const color_var = remap(rand01(state), 0.0F, 1.0F);
+    float const color_var = remap(rand_01(state), 0.0F, 1.0F);
     QVector3D const base_color = m_biomeSettings.grassPrimary * 0.7F;
     QVector3D const var_color = m_biomeSettings.grassSecondary * 0.8F;
     QVector3D tint_color =
         base_color * (1.0F - color_var) + var_color * color_var;
 
-    float const brown_mix = remap(rand01(state), 0.15F, 0.35F);
+    float const brown_mix = remap(rand_01(state), 0.15F, 0.35F);
     QVector3D const brown_tint(0.55F, 0.50F, 0.35F);
     tint_color = tint_color * (1.0F - brown_mix) + brown_tint * brown_mix;
 
-    float const sway_phase = rand01(state) * MathConstants::TwoPi;
-    float const sway_strength = remap(rand01(state), 0.6F, 1.2F);
-    float const sway_speed = remap(rand01(state), 0.8F, 1.3F);
+    float const sway_phase = rand_01(state) * math_constants::k_two_pi;
+    float const sway_strength = remap(rand_01(state), 0.6F, 1.2F);
+    float const sway_speed = remap(rand_01(state), 0.8F, 1.3F);
 
-    float const rotation = rand01(state) * MathConstants::TwoPi;
+    float const rotation = rand_01(state) * math_constants::k_two_pi;
 
     PlantInstanceGpu instance;
 
@@ -312,7 +312,7 @@ void PlantRenderer::generatePlantInstances() {
         continue;
       }
 
-      uint32_t state = hashCoords(
+      uint32_t state = hash_coords(
           x, z, m_noiseSeed ^ 0x8F3C5A7EU ^ static_cast<uint32_t>(idx));
 
       float const world_x = (x - half_width) * m_tile_size;
@@ -335,13 +335,13 @@ void PlantRenderer::generatePlantInstances() {
       float const effective_density = plant_density * density_mult * 2.0F;
       int plant_count = static_cast<int>(std::floor(effective_density));
       float const frac = effective_density - float(plant_count);
-      if (rand01(state) < frac) {
+      if (rand_01(state) < frac) {
         plant_count += 1;
       }
 
       for (int i = 0; i < plant_count; ++i) {
-        float const gx = float(x) + rand01(state) * 3.0F;
-        float const gz = float(z) + rand01(state) * 3.0F;
+        float const gx = float(x) + rand_01(state) * 3.0F;
+        float const gz = float(z) + rand_01(state) * 3.0F;
         if (add_plant(gx, gz, state)) {
           plants_added++;
         }

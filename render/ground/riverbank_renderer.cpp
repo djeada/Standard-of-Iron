@@ -50,10 +50,10 @@ void RiverbankRenderer::buildMeshes() {
     fx = fx * fx * (3.0F - 2.0F * fx);
     fy = fy * fy * (3.0F - 2.0F * fy);
 
-    float const a = Ground::noiseHash(ix, iy);
-    float const b = Ground::noiseHash(ix + 1.0F, iy);
-    float const c = Ground::noiseHash(ix, iy + 1.0F);
-    float const d = Ground::noiseHash(ix + 1.0F, iy + 1.0F);
+    float const a = Ground::noise_hash(ix, iy);
+    float const b = Ground::noise_hash(ix + 1.0F, iy);
+    float const c = Ground::noise_hash(ix, iy + 1.0F);
+    float const d = Ground::noise_hash(ix + 1.0F, iy + 1.0F);
 
     return a * (1.0F - fx) * (1.0F - fy) + b * fx * (1.0F - fy) +
            c * (1.0F - fx) * fy + d * fx * fy;
