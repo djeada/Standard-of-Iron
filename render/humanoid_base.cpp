@@ -212,16 +212,16 @@ void HumanoidRendererBase::computeLocomotionPose(
   pose.shoulderL.setZ(pose.shoulderL.z() + slouch_offset);
   pose.shoulderR.setZ(pose.shoulderR.z() + slouch_offset);
 
-  float const foot_angle_jitter = (hash01(seed ^ 0x5678U) - 0.5F) * 0.12F;
-  float const foot_depth_jitter = (hash01(seed ^ 0x9ABCU) - 0.5F) * 0.08F;
+  float const foot_angle_jitter = (hash_01(seed ^ 0x5678U) - 0.5F) * 0.12F;
+  float const foot_depth_jitter = (hash_01(seed ^ 0x9ABCU) - 0.5F) * 0.08F;
 
   pose.footL.setX(pose.footL.x() + foot_angle_jitter);
   pose.foot_r.setX(pose.foot_r.x() - foot_angle_jitter);
   pose.footL.setZ(pose.footL.z() + foot_depth_jitter);
   pose.foot_r.setZ(pose.foot_r.z() - foot_depth_jitter);
 
-  float const arm_height_jitter = (hash01(seed ^ 0xABCDU) - 0.5F) * 0.03F;
-  float const arm_asymmetry = (hash01(seed ^ 0xDEF0U) - 0.5F) * 0.04F;
+  float const arm_height_jitter = (hash_01(seed ^ 0xABCDU) - 0.5F) * 0.03F;
+  float const arm_asymmetry = (hash_01(seed ^ 0xDEF0U) - 0.5F) * 0.04F;
 
   pose.handL =
       QVector3D(-0.05F + arm_asymmetry,

@@ -67,8 +67,8 @@ public:
                      uint32_t seed, HumanoidPose &pose) const override {
     using HP = HumanProportions;
 
-    float const arm_height_jitter = (hash01(seed ^ 0xABCDU) - 0.5F) * 0.03F;
-    float const arm_asymmetry = (hash01(seed ^ 0xDEF0U) - 0.5F) * 0.04F;
+    float const arm_height_jitter = (hash_01(seed ^ 0xABCDU) - 0.5F) * 0.03F;
+    float const arm_asymmetry = (hash_01(seed ^ 0xDEF0U) - 0.5F) * 0.04F;
 
     float const bowX = 0.0F;
 
@@ -527,8 +527,8 @@ private:
              cylinderBetween(ctx.model, q_base, qTop, quiver_r),
              v.palette.leather, nullptr, 1.0F);
 
-    float const j = (hash01(seed) - 0.5F) * 0.04F;
-    float const k = (hash01(seed ^ 0x9E3779B9U) - 0.5F) * 0.04F;
+    float const j = (hash_01(seed) - 0.5F) * 0.04F;
+    float const k = (hash_01(seed ^ HashXorShift::k_golden_ratio) - 0.5F) * 0.04F;
 
     QVector3D const a1 = qTop + QVector3D(0.00F + j, 0.08F, 0.00F + k);
     out.mesh(getUnitCylinder(), cylinderBetween(ctx.model, qTop, a1, 0.010F),
