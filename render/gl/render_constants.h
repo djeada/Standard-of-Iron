@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <numbers>
 
 namespace Render::GL::MathConstants {
