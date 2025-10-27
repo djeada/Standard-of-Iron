@@ -5,6 +5,7 @@
 #include "../gl/resources.h"
 #include "../scene_renderer.h"
 #include "ground/terrain_gpu.h"
+#include "ground_utils.h"
 #include "map/terrain.h"
 #include <QDebug>
 #include <QElapsedTimer>
@@ -30,24 +31,9 @@ namespace {
 using std::uint32_t;
 using namespace Render::GL::BitShift;
 using namespace Render::GL::Geometry;
+using namespace Render::Ground;
 
 const QMatrix4x4 k_identity_matrix;
-
-inline auto hashCoords(int x, int z, uint32_t salt = 0U) -> uint32_t {
-  auto const ux = static_cast<uint32_t>(x * 73856093);
-  auto const uz = static_cast<uint32_t>(z * 19349663);
-  return ux ^ uz ^ (salt * 83492791U);
-}
-
-inline auto rand01(uint32_t &state) -> float {
-  state = state * 1664525U + 1013904223U;
-  return static_cast<float>((state >> Shift8) & Mask24Bit) / Mask24BitFloat;
-  static_cast<float>(0xFFFFFF);
-}
-
-inline auto remap(float value, float minOut, float maxOut) -> float {
-  return minOut + (maxOut - minOut) * value;
-}
 
 inline auto applyTint(const QVector3D &color, float tint) -> QVector3D {
   QVector3D const c = color * tint;
@@ -58,17 +44,6 @@ inline auto applyTint(const QVector3D &color, float tint) -> QVector3D {
 inline auto clamp01(const QVector3D &c) -> QVector3D {
   return {std::clamp(c.x(), 0.0F, 1.0F), std::clamp(c.y(), 0.0F, 1.0F),
           std::clamp(c.z(), 0.0F, 1.0F)};
-}
-
-inline auto hashTo01(uint32_t h) -> float {
-  h ^= h >> 17;
-  h *= 0xed5ad4bbU;
-  h ^= h >> 11;
-  h *= 0xac4c1b51U;
-  h ^= h >> 15;
-  h *= 0x31848babU;
-  h ^= h >> 14;
-  return (h & 0x00FFFFFFU) / float(0x01000000);
 }
 
 inline auto linstep(float a, float b, float x) -> float {

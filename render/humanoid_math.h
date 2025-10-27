@@ -1,5 +1,6 @@
 #pragma once
 
+#include "gl/render_constants.h"
 #include <QVector3D>
 #include <cmath>
 #include <cstdint>
@@ -7,10 +8,10 @@
 namespace Render::GL {
 
 inline auto hash01(uint32_t x) -> float {
-  x ^= x << 13;
-  x ^= x >> 17;
-  x ^= x << 5;
-  return (x & 0x00FFFFFF) / float(0x01000000);
+  x ^= x << HashXorShift::Shift13;
+  x ^= x >> HashXorShift::Shift17;
+  x ^= x << HashXorShift::Shift5;
+  return (x & BitShift::Mask24Bit) / float(BitShift::Mask24BitHex);
 }
 
 inline auto rotY(const QVector3D &v, float angle_rad) -> QVector3D {
