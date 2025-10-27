@@ -77,6 +77,8 @@ void SkirmishLoader::resetGameState() {
   auto &owner_registry = Game::Systems::OwnerRegistry::instance();
   owner_registry.clear();
 
+  Game::Map::MapTransformer::clearPlayerTeamOverrides();
+
   auto &visibility_service = Game::Map::VisibilityService::instance();
   visibility_service.reset();
 
