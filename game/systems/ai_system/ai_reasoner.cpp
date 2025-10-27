@@ -1,8 +1,9 @@
 #include "ai_reasoner.h"
 #include "../../game_config.h"
-#include "../../units/troop_type.h"
 #include "../nation_registry.h"
 #include "ai_utils.h"
+#include "systems/ai_system/ai_types.h"
+#include "units/spawn_type.h"
 #include <algorithm>
 #include <cmath>
 #include <limits>
@@ -11,9 +12,9 @@ namespace Game::Systems::AI {
 
 void AIReasoner::updateContext(const AISnapshot &snapshot, AIContext &ctx) {
 
-  if (!ctx.nation) {
+  if (ctx.nation == nullptr) {
     ctx.nation = Game::Systems::NationRegistry::instance().getNationForPlayer(
-        ctx.playerId);
+        ctx.player_id);
   }
 
   cleanupDeadUnits(snapshot, ctx);
@@ -21,55 +22,56 @@ void AIReasoner::updateContext(const AISnapshot &snapshot, AIContext &ctx) {
   ctx.militaryUnits.clear();
   ctx.buildings.clear();
   ctx.primaryBarracks = 0;
-  ctx.totalUnits = 0;
+  ctx.total_units = 0;
   ctx.idleUnits = 0;
   ctx.combatUnits = 0;
   ctx.meleeCount = 0;
   ctx.rangedCount = 0;
   ctx.damagedUnitsCount = 0;
-  ctx.averageHealth = 1.0f;
-  ctx.rallyX = 0.0f;
-  ctx.rallyZ = 0.0f;
+  ctx.averageHealth = 1.0F;
+  ctx.rallyX = 0.0F;
+  ctx.rallyZ = 0.0F;
   ctx.barracksUnderThreat = false;
   ctx.nearbyThreatCount = 0;
-  ctx.closestThreatDistance = std::numeric_limits<float>::infinity();
-  ctx.basePosX = 0.0f;
-  ctx.basePosY = 0.0f;
-  ctx.basePosZ = 0.0f;
+  ctx.closest_threatDistance = std::numeric_limits<float>::infinity();
+  ctx.basePosX = 0.0F;
+  ctx.basePosY = 0.0F;
+  ctx.basePosZ = 0.0F;
   ctx.visibleEnemyCount = 0;
   ctx.enemyBuildingsCount = 0;
-  ctx.averageEnemyDistance = 0.0f;
-  ctx.maxTroopsPerPlayer = Game::GameConfig::instance().getMaxTroopsPerPlayer();
+  ctx.averageEnemyDistance = 0.0F;
+  ctx.max_troops_per_player =
+      Game::GameConfig::instance().getMaxTroopsPerPlayer();
 
-  constexpr float ATTACK_RECORD_TIMEOUT = 10.0f;
+  constexpr float attack_record_timeout = 10.0F;
   auto it = ctx.buildingsUnderAttack.begin();
   while (it != ctx.buildingsUnderAttack.end()) {
-    bool stillExists = false;
+    bool still_exists = false;
     for (const auto &entity : snapshot.friendlies) {
       if (entity.id == it->first && entity.isBuilding) {
-        stillExists = true;
+        still_exists = true;
         break;
       }
     }
 
-    if (!stillExists ||
-        (snapshot.gameTime - it->second) > ATTACK_RECORD_TIMEOUT) {
+    if (!still_exists ||
+        (snapshot.gameTime - it->second) > attack_record_timeout) {
       it = ctx.buildingsUnderAttack.erase(it);
     } else {
       ++it;
     }
   }
 
-  float totalHealthRatio = 0.0f;
+  float total_health_ratio = 0.0F;
 
   for (const auto &entity : snapshot.friendlies) {
     if (entity.isBuilding) {
       ctx.buildings.push_back(entity.id);
 
-      if (entity.spawnType == Game::Units::SpawnType::Barracks &&
+      if (entity.spawn_type == Game::Units::SpawnType::Barracks &&
           ctx.primaryBarracks == 0) {
         ctx.primaryBarracks = entity.id;
-        ctx.rallyX = entity.posX - 5.0f;
+        ctx.rallyX = entity.posX - 5.0F;
         ctx.rallyZ = entity.posZ;
         ctx.basePosX = entity.posX;
         ctx.basePosY = entity.posY;
@@ -79,15 +81,16 @@ void AIReasoner::updateContext(const AISnapshot &snapshot, AIContext &ctx) {
     }
 
     ctx.militaryUnits.push_back(entity.id);
-    ctx.totalUnits++;
+    ctx.total_units++;
 
-    if (ctx.nation) {
-      auto troopTypeOpt = Game::Units::spawnTypeToTroopType(entity.spawnType);
-      if (troopTypeOpt) {
-        auto troopType = *troopTypeOpt;
-        if (ctx.nation->isRangedUnit(troopType)) {
+    if (ctx.nation != nullptr) {
+      auto troop_type_opt =
+          Game::Units::spawn_typeToTroopType(entity.spawn_type);
+      if (troop_type_opt) {
+        auto troop_type = *troop_type_opt;
+        if (ctx.nation->is_ranged_unit(troop_type)) {
           ctx.rangedCount++;
-        } else if (ctx.nation->isMeleeUnit(troopType)) {
+        } else if (ctx.nation->isMeleeUnit(troop_type)) {
           ctx.meleeCount++;
         }
       }
@@ -99,24 +102,24 @@ void AIReasoner::updateContext(const AISnapshot &snapshot, AIContext &ctx) {
       ctx.combatUnits++;
     }
 
-    if (entity.maxHealth > 0) {
-      float healthRatio = static_cast<float>(entity.health) /
-                          static_cast<float>(entity.maxHealth);
-      totalHealthRatio += healthRatio;
+    if (entity.max_health > 0) {
+      float const health_ratio = static_cast<float>(entity.health) /
+                                 static_cast<float>(entity.max_health);
+      total_health_ratio += health_ratio;
 
-      if (healthRatio < 0.5f) {
+      if (health_ratio < 0.5F) {
         ctx.damagedUnitsCount++;
       }
     }
   }
 
   ctx.averageHealth =
-      (ctx.totalUnits > 0)
-          ? (totalHealthRatio / static_cast<float>(ctx.totalUnits))
-          : 1.0f;
+      (ctx.total_units > 0)
+          ? (total_health_ratio / static_cast<float>(ctx.total_units))
+          : 1.0F;
 
   ctx.visibleEnemyCount = static_cast<int>(snapshot.visibleEnemies.size());
-  float totalEnemyDist = 0.0f;
+  float total_enemy_dist = 0.0F;
 
   for (const auto &enemy : snapshot.visibleEnemies) {
     if (enemy.isBuilding) {
@@ -124,39 +127,40 @@ void AIReasoner::updateContext(const AISnapshot &snapshot, AIContext &ctx) {
     }
 
     if (ctx.primaryBarracks != 0) {
-      float dist = distance(enemy.posX, enemy.posY, enemy.posZ, ctx.basePosX,
-                            ctx.basePosY, ctx.basePosZ);
-      totalEnemyDist += dist;
+      float const dist = distance(enemy.posX, enemy.posY, enemy.posZ,
+                                  ctx.basePosX, ctx.basePosY, ctx.basePosZ);
+      total_enemy_dist += dist;
     }
   }
 
   ctx.averageEnemyDistance =
       (ctx.visibleEnemyCount > 0)
-          ? (totalEnemyDist / static_cast<float>(ctx.visibleEnemyCount))
-          : 1000.0f;
+          ? (total_enemy_dist / static_cast<float>(ctx.visibleEnemyCount))
+          : 1000.0F;
 
   if (ctx.primaryBarracks != 0) {
 
-    constexpr float DEFEND_RADIUS = 40.0f;
-    constexpr float CRITICAL_RADIUS = 20.0f;
-    const float defendRadiusSq = DEFEND_RADIUS * DEFEND_RADIUS;
-    const float criticalRadiusSq = CRITICAL_RADIUS * CRITICAL_RADIUS;
+    constexpr float defend_radius = 40.0F;
+    constexpr float critical_radius = 20.0F;
+    const float defend_radius_sq = defend_radius * defend_radius;
+    const float critical_radius_sq = critical_radius * critical_radius;
 
     for (const auto &enemy : snapshot.visibleEnemies) {
-      float distSq = distanceSquared(enemy.posX, enemy.posY, enemy.posZ,
-                                     ctx.basePosX, ctx.basePosY, ctx.basePosZ);
+      float const dist_sq =
+          distance_squared(enemy.posX, enemy.posY, enemy.posZ, ctx.basePosX,
+                           ctx.basePosY, ctx.basePosZ);
 
-      if (distSq <= defendRadiusSq) {
+      if (dist_sq <= defend_radius_sq) {
         ctx.barracksUnderThreat = true;
         ctx.nearbyThreatCount++;
 
-        float dist = std::sqrt(std::max(distSq, 0.0f));
-        ctx.closestThreatDistance = std::min(ctx.closestThreatDistance, dist);
+        float const dist = std::sqrt(std::max(dist_sq, 0.0F));
+        ctx.closest_threatDistance = std::min(ctx.closest_threatDistance, dist);
       }
     }
 
     if (!ctx.barracksUnderThreat) {
-      ctx.closestThreatDistance = std::numeric_limits<float>::infinity();
+      ctx.closest_threatDistance = std::numeric_limits<float>::infinity();
     }
   }
 }
@@ -165,33 +169,33 @@ void AIReasoner::updateStateMachine(AIContext &ctx, float deltaTime) {
   ctx.stateTimer += deltaTime;
   ctx.decisionTimer += deltaTime;
 
-  constexpr float MIN_STATE_DURATION = 3.0f;
+  constexpr float min_state_duration = 3.0F;
 
-  AIState previousState = ctx.state;
+  AIState previous_state = ctx.state;
   if ((ctx.barracksUnderThreat || !ctx.buildingsUnderAttack.empty()) &&
       ctx.state != AIState::Defending) {
 
     ctx.state = AIState::Defending;
   }
 
-  else if (ctx.visibleEnemyCount > 0 && ctx.averageEnemyDistance < 50.0f &&
+  else if (ctx.visibleEnemyCount > 0 && ctx.averageEnemyDistance < 50.0F &&
            (ctx.state == AIState::Gathering || ctx.state == AIState::Idle)) {
     ctx.state = AIState::Defending;
   }
 
-  if (ctx.decisionTimer < 2.0f) {
-    if (ctx.state != previousState) {
-      ctx.stateTimer = 0.0f;
+  if (ctx.decisionTimer < 2.0F) {
+    if (ctx.state != previous_state) {
+      ctx.stateTimer = 0.0F;
     }
     return;
   }
 
-  ctx.decisionTimer = 0.0f;
-  previousState = ctx.state;
+  ctx.decisionTimer = 0.0F;
+  previous_state = ctx.state;
 
-  if (ctx.stateTimer < MIN_STATE_DURATION &&
-      !((ctx.barracksUnderThreat || !ctx.buildingsUnderAttack.empty()) &&
-        ctx.state != AIState::Defending)) {
+  if (ctx.stateTimer < min_state_duration &&
+      ((!ctx.barracksUnderThreat && ctx.buildingsUnderAttack.empty()) ||
+       ctx.state == AIState::Defending)) {
     return;
   }
 
@@ -199,35 +203,35 @@ void AIReasoner::updateStateMachine(AIContext &ctx, float deltaTime) {
   case AIState::Idle:
     if (ctx.idleUnits >= 2) {
       ctx.state = AIState::Gathering;
-    } else if (ctx.averageHealth < 0.40f && ctx.totalUnits > 0) {
+    } else if (ctx.averageHealth < 0.40F && ctx.total_units > 0) {
 
       ctx.state = AIState::Defending;
-    } else if (ctx.totalUnits >= 1 && ctx.visibleEnemyCount > 0) {
+    } else if (ctx.total_units >= 1 && ctx.visibleEnemyCount > 0) {
 
       ctx.state = AIState::Attacking;
     }
     break;
 
   case AIState::Gathering:
-    if (ctx.totalUnits >= 3) {
+    if (ctx.total_units >= 3) {
 
       ctx.state = AIState::Attacking;
-    } else if (ctx.totalUnits < 2) {
+    } else if (ctx.total_units < 2) {
       ctx.state = AIState::Idle;
-    } else if (ctx.averageHealth < 0.40f) {
+    } else if (ctx.averageHealth < 0.40F) {
 
       ctx.state = AIState::Defending;
-    } else if (ctx.visibleEnemyCount > 0 && ctx.totalUnits >= 2) {
+    } else if (ctx.visibleEnemyCount > 0 && ctx.total_units >= 2) {
 
       ctx.state = AIState::Attacking;
     }
     break;
 
   case AIState::Attacking:
-    if (ctx.averageHealth < 0.25f) {
+    if (ctx.averageHealth < 0.25F) {
 
       ctx.state = AIState::Retreating;
-    } else if (ctx.totalUnits == 0) {
+    } else if (ctx.total_units == 0) {
 
       ctx.state = AIState::Idle;
     }
@@ -238,10 +242,10 @@ void AIReasoner::updateStateMachine(AIContext &ctx, float deltaTime) {
 
     if (ctx.barracksUnderThreat || !ctx.buildingsUnderAttack.empty()) {
 
-    } else if (ctx.totalUnits >= 4 && ctx.averageHealth > 0.65f) {
+    } else if (ctx.total_units >= 4 && ctx.averageHealth > 0.65F) {
 
       ctx.state = AIState::Attacking;
-    } else if (ctx.averageHealth > 0.80f) {
+    } else if (ctx.averageHealth > 0.80F) {
 
       ctx.state = AIState::Idle;
     }
@@ -249,7 +253,7 @@ void AIReasoner::updateStateMachine(AIContext &ctx, float deltaTime) {
 
   case AIState::Retreating:
 
-    if (ctx.stateTimer > 6.0f && ctx.averageHealth > 0.55f) {
+    if (ctx.stateTimer > 6.0F && ctx.averageHealth > 0.55F) {
 
       ctx.state = AIState::Defending;
     }
@@ -261,8 +265,8 @@ void AIReasoner::updateStateMachine(AIContext &ctx, float deltaTime) {
     break;
   }
 
-  if (ctx.state != previousState) {
-    ctx.stateTimer = 0.0f;
+  if (ctx.state != previous_state) {
+    ctx.stateTimer = 0.0F;
   }
 }
 

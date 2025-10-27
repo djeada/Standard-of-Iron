@@ -4,14 +4,20 @@
 #include <QOpenGLFramebufferObject>
 #include <QOpenGLFramebufferObjectFormat>
 #include <QQuickWindow>
+#include <qobject.h>
+#include <qopenglframebufferobject.h>
+#include <qpointer.h>
+#include <qquickframebufferobject.h>
+#include <qtmetamacros.h>
+#include <utility>
 
 GLView::GLView() { setMirrorVertically(true); }
 
-QQuickFramebufferObject::Renderer *GLView::createRenderer() const {
+auto GLView::createRenderer() const -> QQuickFramebufferObject::Renderer * {
   return new GLRenderer(m_engine);
 }
 
-QObject *GLView::engine() const { return m_engine; }
+auto GLView::engine() const -> QObject * { return m_engine; }
 
 void GLView::setEngine(QObject *eng) {
   if (m_engine == eng) {
@@ -23,20 +29,20 @@ void GLView::setEngine(QObject *eng) {
 }
 
 GLView::GLRenderer::GLRenderer(QPointer<GameEngine> engine)
-    : m_engine(engine) {}
+    : m_engine(std::move(std::move(engine))) {}
 
 void GLView::GLRenderer::render() {
-  if (!m_engine) {
+  if (m_engine == nullptr) {
     return;
   }
   m_engine->ensureInitialized();
-  m_engine->update(1.0f / 60.0f);
+  m_engine->update(1.0F / 60.0F);
   m_engine->render(m_size.width(), m_size.height());
   update();
 }
 
-QOpenGLFramebufferObject *
-GLView::GLRenderer::createFramebufferObject(const QSize &size) {
+auto GLView::GLRenderer::createFramebufferObject(const QSize &size)
+    -> QOpenGLFramebufferObject * {
   m_size = size;
   QOpenGLFramebufferObjectFormat fmt;
   fmt.setAttachment(QOpenGLFramebufferObject::Depth);
@@ -45,6 +51,6 @@ GLView::GLRenderer::createFramebufferObject(const QSize &size) {
 }
 
 void GLView::GLRenderer::synchronize(QQuickFramebufferObject *item) {
-  auto *view = static_cast<GLView *>(item);
+  auto *view = dynamic_cast<GLView *>(item);
   m_engine = qobject_cast<GameEngine *>(view->engine());
 }

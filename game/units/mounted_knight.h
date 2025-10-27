@@ -2,18 +2,16 @@
 
 #include "unit.h"
 
-namespace Game {
-namespace Units {
+namespace Game::Units {
 
 class MountedKnight : public Unit {
 public:
-  static std::unique_ptr<MountedKnight> Create(Engine::Core::World &world,
-                                               const SpawnParams &params);
+  static auto Create(Engine::Core::World &world, const SpawnParams &params)
+      -> std::unique_ptr<MountedKnight>;
 
 private:
   MountedKnight(Engine::Core::World &world);
   void init(const SpawnParams &params);
 };
 
-} // namespace Units
-} // namespace Game
+} // namespace Game::Units

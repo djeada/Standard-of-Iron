@@ -241,7 +241,7 @@ void GameEngine::onMyCommand(qreal sx, qreal sy) {
     if (!screenToGround(QPointF(sx, sy), hit)) return;
     
     // Issue command to selected units
-    const auto& selected = m_selectionSystem->getSelectedUnits();
+    const auto& selected = m_selection_system->getSelectedUnits();
     for (auto id : selected) {
         // Process command...
     }
@@ -295,7 +295,7 @@ Maps can define custom victory and defeat conditions in their JSON files. Add a 
 ### Neutral (Unowned) Barracks
 Maps can include neutral barracks that start without an owner. These barracks are inactive until captured by a player.
 
-**To create a neutral barracks, omit the `playerId` field:**
+**To create a neutral barracks, omit the `player_id` field:**
 ```json
 {
   "type": "barracks",
@@ -346,7 +346,7 @@ For detailed technical documentation, see `game/systems/CAPTURE_SYSTEM.md`.
     "type": "barracks",
     "x": 30,
     "z": 50,
-    "playerId": 1,
+    "player_id": 1,
     "maxPopulation": 100
   },
   {
@@ -359,7 +359,7 @@ For detailed technical documentation, see `game/systems/CAPTURE_SYSTEM.md`.
     "type": "barracks",
     "x": 70,
     "z": 50,
-    "playerId": 2,
+    "player_id": 2,
     "maxPopulation": 100
   }
 ]

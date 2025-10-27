@@ -180,7 +180,7 @@ Item {
                                         "slotName": slots[i].slotName || slots[i].name,
                                         "title": slots[i].title || slots[i].name || slots[i].slotName || "Untitled Save",
                                         "timestamp": slots[i].timestamp,
-                                        "mapName": slots[i].mapName || "Unknown Map",
+                                        "map_name": slots[i].map_name || "Unknown Map",
                                         "thumbnail": slots[i].thumbnail || ""
                                     });
                                 }
@@ -257,7 +257,7 @@ Item {
                                     }
 
                                     Label {
-                                        text: model.mapName
+                                        text: model.map_name
                                         color: Theme.textSub
                                         font.pointSize: Theme.fontSizeSmall
                                         Layout.fillWidth: true

@@ -1,55 +1,59 @@
 #include "terrain.h"
 #include <algorithm>
 #include <cmath>
+#include <cstddef>
 #include <cstdint>
+#include <math.h>
+#include <numbers>
+#include <vector>
 
 namespace {
-constexpr float kDegToRad = static_cast<float>(M_PI) / 180.0f;
-inline std::uint32_t hashCoords(int x, int z, std::uint32_t seed) {
-  std::uint32_t ux = static_cast<std::uint32_t>(x) * 73856093u;
-  std::uint32_t uz = static_cast<std::uint32_t>(z) * 19349663u;
-  std::uint32_t s = seed * 83492791u + 0x9e3779b9u;
+constexpr float k_deg_to_rad = std::numbers::pi_v<float> / 180.0F;
+inline auto hashCoords(int x, int z, std::uint32_t seed) -> std::uint32_t {
+  std::uint32_t const ux = static_cast<std::uint32_t>(x) * 73856093U;
+  std::uint32_t const uz = static_cast<std::uint32_t>(z) * 19349663U;
+  std::uint32_t const s = seed * 83492791U + 0x9e3779b9U;
   return ux ^ uz ^ s;
 }
 
-inline float hashToFloat01(std::uint32_t h) {
+inline auto hashToFloat01(std::uint32_t h) -> float {
   h ^= h >> 17;
-  h *= 0xed5ad4bbu;
+  h *= 0xed5ad4bbU;
   h ^= h >> 11;
-  h *= 0xac4c1b51u;
+  h *= 0xac4c1b51U;
   h ^= h >> 15;
-  h *= 0x31848babu;
+  h *= 0x31848babU;
   h ^= h >> 14;
-  return (h & 0x00FFFFFFu) / float(0x01000000);
+  return (h & 0x00FFFFFFU) / float(0x01000000);
 }
 
-inline float valueNoise2D(float x, float z, std::uint32_t seed) {
-  int ix0 = static_cast<int>(std::floor(x));
-  int iz0 = static_cast<int>(std::floor(z));
-  int ix1 = ix0 + 1;
-  int iz1 = iz0 + 1;
+inline auto valueNoise2D(float x, float z, std::uint32_t seed) -> float {
+  int const ix0 = static_cast<int>(std::floor(x));
+  int const iz0 = static_cast<int>(std::floor(z));
+  int const ix1 = ix0 + 1;
+  int const iz1 = iz0 + 1;
 
-  float tx = x - static_cast<float>(ix0);
-  float tz = z - static_cast<float>(iz0);
+  float const tx = x - static_cast<float>(ix0);
+  float const tz = z - static_cast<float>(iz0);
 
-  float n00 = hashToFloat01(hashCoords(ix0, iz0, seed));
-  float n10 = hashToFloat01(hashCoords(ix1, iz0, seed));
-  float n01 = hashToFloat01(hashCoords(ix0, iz1, seed));
-  float n11 = hashToFloat01(hashCoords(ix1, iz1, seed));
+  float const n00 = hashToFloat01(hashCoords(ix0, iz0, seed));
+  float const n10 = hashToFloat01(hashCoords(ix1, iz0, seed));
+  float const n01 = hashToFloat01(hashCoords(ix0, iz1, seed));
+  float const n11 = hashToFloat01(hashCoords(ix1, iz1, seed));
 
-  float nx0 = n00 * (1.0f - tx) + n10 * tx;
-  float nx1 = n01 * (1.0f - tx) + n11 * tx;
-  return nx0 * (1.0f - tz) + nx1 * tz;
+  float const nx0 = n00 * (1.0F - tx) + n10 * tx;
+  float const nx1 = n01 * (1.0F - tx) + n11 * tx;
+  return nx0 * (1.0F - tz) + nx1 * tz;
 }
 } // namespace
 
 namespace Game::Map {
 
-TerrainHeightMap::TerrainHeightMap(int width, int height, float tileSize)
-    : m_width(width), m_height(height), m_tileSize(tileSize) {
+TerrainHeightMap::TerrainHeightMap(int width, int height, float tile_size)
+    : m_width(width), m_height(height), m_tile_size(tile_size) {
   const int count = width * height;
-  m_heights.resize(count, 0.0f);
-  m_terrainTypes.resize(count, TerrainType::Flat);
+  m_heights.resize(count, 0.0F);
+  m_terrain_types.resize(count, TerrainType::Flat);
   m_hillEntrances.resize(count, false);
   m_hillWalkable.resize(count, false);
 }
@@ -57,60 +61,63 @@ TerrainHeightMap::TerrainHeightMap(int width, int height, float tileSize)
 void TerrainHeightMap::buildFromFeatures(
     const std::vector<TerrainFeature> &features) {
 
-  std::fill(m_heights.begin(), m_heights.end(), 0.0f);
-  std::fill(m_terrainTypes.begin(), m_terrainTypes.end(), TerrainType::Flat);
+  std::fill(m_heights.begin(), m_heights.end(), 0.0F);
+  std::fill(m_terrain_types.begin(), m_terrain_types.end(), TerrainType::Flat);
   std::fill(m_hillEntrances.begin(), m_hillEntrances.end(), false);
   std::fill(m_hillWalkable.begin(), m_hillWalkable.end(), false);
 
-  const float gridHalfWidth = m_width * 0.5f - 0.5f;
-  const float gridHalfHeight = m_height * 0.5f - 0.5f;
+  const float grid_half_width = m_width * 0.5F - 0.5F;
+  const float grid_half_height = m_height * 0.5F - 0.5F;
 
   for (const auto &feature : features) {
 
-    const float gridCenterX = (feature.centerX / m_tileSize) + gridHalfWidth;
-    const float gridCenterZ = (feature.centerZ / m_tileSize) + gridHalfHeight;
-    const float gridRadius = std::max(feature.radius / m_tileSize, 1.0f);
+    const float grid_center_x =
+        (feature.center_x / m_tile_size) + grid_half_width;
+    const float grid_center_z =
+        (feature.center_z / m_tile_size) + grid_half_height;
+    const float grid_radius = std::max(feature.radius / m_tile_size, 1.0F);
 
     if (feature.type == TerrainType::Mountain) {
-      const float majorRadius = std::max(gridRadius * 1.8f, gridRadius + 3.0f);
-      const float minorRadius = std::max(gridRadius * 0.22f, 0.8f);
-      const float bound = std::max(majorRadius, minorRadius) + 2.0f;
-      const int minX = std::max(0, int(std::floor(gridCenterX - bound)));
+      const float major_radius =
+          std::max(grid_radius * 1.8F, grid_radius + 3.0F);
+      const float minor_radius = std::max(grid_radius * 0.22F, 0.8F);
+      const float bound = std::max(major_radius, minor_radius) + 2.0F;
+      const int minX = std::max(0, int(std::floor(grid_center_x - bound)));
       const int maxX =
-          std::min(m_width - 1, int(std::ceil(gridCenterX + bound)));
-      const int minZ = std::max(0, int(std::floor(gridCenterZ - bound)));
+          std::min(m_width - 1, int(std::ceil(grid_center_x + bound)));
+      const int minZ = std::max(0, int(std::floor(grid_center_z - bound)));
       const int maxZ =
-          std::min(m_height - 1, int(std::ceil(gridCenterZ + bound)));
+          std::min(m_height - 1, int(std::ceil(grid_center_z + bound)));
 
-      const float angleRad = feature.rotationDeg * kDegToRad;
-      const float cosA = std::cos(angleRad);
-      const float sinA = std::sin(angleRad);
+      const float angle_rad = feature.rotationDeg * k_deg_to_rad;
+      const float cosA = std::cos(angle_rad);
+      const float sinA = std::sin(angle_rad);
 
       for (int z = minZ; z <= maxZ; ++z) {
         for (int x = minX; x <= maxX; ++x) {
-          const float localX = float(x) - gridCenterX;
-          const float localZ = float(z) - gridCenterZ;
+          const float local_x = float(x) - grid_center_x;
+          const float local_z = float(z) - grid_center_z;
 
-          const float rotatedX = localX * cosA + localZ * sinA;
-          const float rotatedZ = -localX * sinA + localZ * cosA;
+          const float rotated_x = local_x * cosA + local_z * sinA;
+          const float rotated_z = -local_x * sinA + local_z * cosA;
 
-          const float norm =
-              std::sqrt((rotatedX * rotatedX) / (majorRadius * majorRadius) +
-                        (rotatedZ * rotatedZ) / (minorRadius * minorRadius));
+          const float norm = std::sqrt(
+              (rotated_x * rotated_x) / (major_radius * major_radius) +
+              (rotated_z * rotated_z) / (minor_radius * minor_radius));
 
-          if (norm <= 1.0f) {
-            float blend = std::clamp(1.0f - norm, 0.0f, 1.0f);
+          if (norm <= 1.0F) {
+            float const blend = std::clamp(1.0F - norm, 0.0F, 1.0F);
 
-            float height = feature.height * std::pow(blend, 3.5f);
-            if (blend > 0.92f) {
+            float height = feature.height * std::pow(blend, 3.5F);
+            if (blend > 0.92F) {
               height = feature.height;
             }
 
-            if (height > 0.01f) {
-              int idx = indexAt(x, z);
+            if (height > 0.01F) {
+              int const idx = indexAt(x, z);
               if (height > m_heights[idx]) {
                 m_heights[idx] = height;
-                m_terrainTypes[idx] = TerrainType::Mountain;
+                m_terrain_types[idx] = TerrainType::Mountain;
               }
             }
           }
@@ -120,130 +127,131 @@ void TerrainHeightMap::buildFromFeatures(
     }
 
     if (feature.type == TerrainType::Hill) {
-      const float gridWidth = std::max(feature.width / m_tileSize, 1.0f);
-      const float gridDepth = std::max(feature.depth / m_tileSize, 1.0f);
+      const float grid_width = std::max(feature.width / m_tile_size, 1.0F);
+      const float grid_depth = std::max(feature.depth / m_tile_size, 1.0F);
 
-      const float plateauWidth = std::max(1.5f, gridWidth * 0.45f);
-      const float plateauDepth = std::max(1.5f, gridDepth * 0.45f);
-      const float slopeWidth = std::max(plateauWidth + 1.5f, gridWidth);
-      const float slopeDepth = std::max(plateauDepth + 1.5f, gridDepth);
+      const float plateau_width = std::max(1.5F, grid_width * 0.45F);
+      const float plateau_depth = std::max(1.5F, grid_depth * 0.45F);
+      const float slope_width = std::max(plateau_width + 1.5F, grid_width);
+      const float slope_depth = std::max(plateau_depth + 1.5F, grid_depth);
 
-      const float maxExtent = std::max(slopeWidth, slopeDepth);
+      const float max_extent = std::max(slope_width, slope_depth);
       const int minX =
-          std::max(0, int(std::floor(gridCenterX - maxExtent - 1.0f)));
-      const int maxX =
-          std::min(m_width - 1, int(std::ceil(gridCenterX + maxExtent + 1.0f)));
+          std::max(0, int(std::floor(grid_center_x - max_extent - 1.0F)));
+      const int maxX = std::min(
+          m_width - 1, int(std::ceil(grid_center_x + max_extent + 1.0F)));
       const int minZ =
-          std::max(0, int(std::floor(gridCenterZ - maxExtent - 1.0f)));
-      const int maxZ = std::min(m_height - 1,
-                                int(std::ceil(gridCenterZ + maxExtent + 1.0f)));
+          std::max(0, int(std::floor(grid_center_z - max_extent - 1.0F)));
+      const int maxZ = std::min(
+          m_height - 1, int(std::ceil(grid_center_z + max_extent + 1.0F)));
 
-      std::vector<int> plateauCells;
-      plateauCells.reserve(int(M_PI * plateauWidth * plateauDepth));
+      std::vector<int> plateau_cells;
+      plateau_cells.reserve(int(M_PI * plateau_width * plateau_depth));
 
-      const float angleRad = feature.rotationDeg * kDegToRad;
-      const float cosA = std::cos(angleRad);
-      const float sinA = std::sin(angleRad);
+      const float angle_rad = feature.rotationDeg * k_deg_to_rad;
+      const float cosA = std::cos(angle_rad);
+      const float sinA = std::sin(angle_rad);
 
       for (int z = minZ; z <= maxZ; ++z) {
         for (int x = minX; x <= maxX; ++x) {
-          const float dx = float(x) - gridCenterX;
-          const float dz = float(z) - gridCenterZ;
+          const float dx = float(x) - grid_center_x;
+          const float dz = float(z) - grid_center_z;
 
-          const float rotatedX = dx * cosA + dz * sinA;
-          const float rotatedZ = -dx * sinA + dz * cosA;
+          const float rotated_x = dx * cosA + dz * sinA;
+          const float rotated_z = -dx * sinA + dz * cosA;
 
-          const float normPlateauDist =
-              std::sqrt((rotatedX * rotatedX) / (plateauWidth * plateauWidth) +
-                        (rotatedZ * rotatedZ) / (plateauDepth * plateauDepth));
-          const float normSlopeDist =
-              std::sqrt((rotatedX * rotatedX) / (slopeWidth * slopeWidth) +
-                        (rotatedZ * rotatedZ) / (slopeDepth * slopeDepth));
+          const float norm_plateau_dist = std::sqrt(
+              (rotated_x * rotated_x) / (plateau_width * plateau_width) +
+              (rotated_z * rotated_z) / (plateau_depth * plateau_depth));
+          const float norm_slope_dist =
+              std::sqrt((rotated_x * rotated_x) / (slope_width * slope_width) +
+                        (rotated_z * rotated_z) / (slope_depth * slope_depth));
 
-          if (normSlopeDist > 1.0f) {
+          if (norm_slope_dist > 1.0F) {
             continue;
           }
 
           const int idx = indexAt(x, z);
 
-          float height = 0.0f;
-          if (normPlateauDist <= 1.0f) {
+          float height = 0.0F;
+          if (norm_plateau_dist <= 1.0F) {
             height = feature.height;
-            plateauCells.push_back(idx);
+            plateau_cells.push_back(idx);
           } else {
-            float t = std::clamp((normSlopeDist - normPlateauDist) /
-                                     (1.0f - normPlateauDist),
-                                 0.0f, 1.0f);
-            float smooth = 0.5f * (1.0f + std::cos(t * float(M_PI)));
+            float const t = std::clamp((norm_slope_dist - norm_plateau_dist) /
+                                           (1.0F - norm_plateau_dist),
+                                       0.0F, 1.0F);
+            float const smooth =
+                0.5F * (1.0F + std::cos(t * std::numbers::pi_v<float>));
             height = feature.height * smooth;
           }
 
           if (height > m_heights[idx]) {
             m_heights[idx] = height;
-            m_terrainTypes[idx] = TerrainType::Hill;
+            m_terrain_types[idx] = TerrainType::Hill;
           }
         }
       }
 
-      for (int idx : plateauCells) {
+      for (int const idx : plateau_cells) {
         m_hillWalkable[idx] = true;
       }
 
       for (const auto &entrance : feature.entrances) {
-        int ex = int(std::round(entrance.x()));
-        int ez = int(std::round(entrance.z()));
+        int const ex = int(std::round(entrance.x()));
+        int const ez = int(std::round(entrance.z()));
         if (!inBounds(ex, ez)) {
           continue;
         }
 
-        const int entranceIdx = indexAt(ex, ez);
-        m_hillEntrances[entranceIdx] = true;
-        m_hillWalkable[entranceIdx] = true;
+        const int entrance_idx = indexAt(ex, ez);
+        m_hillEntrances[entrance_idx] = true;
+        m_hillWalkable[entrance_idx] = true;
 
-        float dirX = gridCenterX - float(ex);
-        float dirZ = gridCenterZ - float(ez);
-        float length = std::sqrt(dirX * dirX + dirZ * dirZ);
-        if (length < 0.001f) {
+        float dirX = grid_center_x - float(ex);
+        float dirZ = grid_center_z - float(ez);
+        float const length = std::sqrt(dirX * dirX + dirZ * dirZ);
+        if (length < 0.001F) {
           continue;
         }
 
         dirX /= length;
         dirZ /= length;
 
-        float curX = float(ex);
-        float curZ = float(ez);
+        auto curX = float(ex);
+        auto curZ = float(ez);
         const int steps = int(length) + 3;
 
         for (int step = 0; step < steps; ++step) {
-          int ix = int(std::round(curX));
-          int iz = int(std::round(curZ));
+          int const ix = int(std::round(curX));
+          int const iz = int(std::round(curZ));
           if (!inBounds(ix, iz)) {
             break;
           }
 
           const int idx = indexAt(ix, iz);
 
-          const float cellDx = float(ix) - gridCenterX;
-          const float cellDz = float(iz) - gridCenterZ;
-          const float cellRotX = cellDx * cosA + cellDz * sinA;
-          const float cellRotZ = -cellDx * sinA + cellDz * cosA;
-          const float cellNormDist =
-              std::sqrt((cellRotX * cellRotX) / (slopeWidth * slopeWidth) +
-                        (cellRotZ * cellRotZ) / (slopeDepth * slopeDepth));
+          const float cell_dx = float(ix) - grid_center_x;
+          const float cell_dz = float(iz) - grid_center_z;
+          const float cell_rot_x = cell_dx * cosA + cell_dz * sinA;
+          const float cell_rot_z = -cell_dx * sinA + cell_dz * cosA;
+          const float cell_norm_dist = std::sqrt(
+              (cell_rot_x * cell_rot_x) / (slope_width * slope_width) +
+              (cell_rot_z * cell_rot_z) / (slope_depth * slope_depth));
 
-          if (cellNormDist > 1.1f) {
+          if (cell_norm_dist > 1.1F) {
             break;
           }
 
           m_hillWalkable[idx] = true;
-          if (m_terrainTypes[idx] != TerrainType::Mountain) {
-            m_terrainTypes[idx] = TerrainType::Hill;
+          if (m_terrain_types[idx] != TerrainType::Mountain) {
+            m_terrain_types[idx] = TerrainType::Hill;
           }
 
-          if (m_heights[idx] < feature.height * 0.25f) {
-            float t = std::clamp(cellNormDist, 0.0f, 1.0f);
-            float rampHeight = feature.height * (1.0f - t * 0.85f);
-            m_heights[idx] = std::max(m_heights[idx], rampHeight);
+          if (m_heights[idx] < feature.height * 0.25F) {
+            float const t = std::clamp(cell_norm_dist, 0.0F, 1.0F);
+            float const ramp_height = feature.height * (1.0F - t * 0.85F);
+            m_heights[idx] = std::max(m_heights[idx], ramp_height);
           }
 
           for (int oz = -1; oz <= 1; ++oz) {
@@ -251,40 +259,40 @@ void TerrainHeightMap::buildFromFeatures(
               if (ox == 0 && oz == 0) {
                 continue;
               }
-              int nx = ix + ox;
-              int nz = iz + oz;
+              int const nx = ix + ox;
+              int const nz = iz + oz;
               if (!inBounds(nx, nz)) {
                 continue;
               }
 
-              const float nDx = float(nx) - gridCenterX;
-              const float nDz = float(nz) - gridCenterZ;
-              const float nRotX = nDx * cosA + nDz * sinA;
-              const float nRotZ = -nDx * sinA + nDz * cosA;
-              const float neighborNormDist =
-                  std::sqrt((nRotX * nRotX) / (slopeWidth * slopeWidth) +
-                            (nRotZ * nRotZ) / (slopeDepth * slopeDepth));
+              const float nDx = float(nx) - grid_center_x;
+              const float nDz = float(nz) - grid_center_z;
+              const float n_rot_x = nDx * cosA + nDz * sinA;
+              const float n_rot_z = -nDx * sinA + nDz * cosA;
+              const float neighbor_norm_dist =
+                  std::sqrt((n_rot_x * n_rot_x) / (slope_width * slope_width) +
+                            (n_rot_z * n_rot_z) / (slope_depth * slope_depth));
 
-              if (neighborNormDist <= 1.05f) {
-                int nIdx = indexAt(nx, nz);
-                if (m_terrainTypes[nIdx] != TerrainType::Mountain) {
+              if (neighbor_norm_dist <= 1.05F) {
+                int const nIdx = indexAt(nx, nz);
+                if (m_terrain_types[nIdx] != TerrainType::Mountain) {
                   m_hillWalkable[nIdx] = true;
-                  if (m_terrainTypes[nIdx] == TerrainType::Flat) {
-                    m_terrainTypes[nIdx] = TerrainType::Hill;
+                  if (m_terrain_types[nIdx] == TerrainType::Flat) {
+                    m_terrain_types[nIdx] = TerrainType::Hill;
                   }
-                  if (m_heights[nIdx] < m_heights[idx] * 0.8f) {
+                  if (m_heights[nIdx] < m_heights[idx] * 0.8F) {
                     m_heights[nIdx] =
-                        std::max(m_heights[nIdx], m_heights[idx] * 0.7f);
+                        std::max(m_heights[nIdx], m_heights[idx] * 0.7F);
                   }
                 }
               }
             }
           }
 
-          const float plateauNormDist =
-              std::sqrt((cellRotX * cellRotX) / (plateauWidth * plateauWidth) +
-                        (cellRotZ * cellRotZ) / (plateauDepth * plateauDepth));
-          if (plateauNormDist <= 1.05f) {
+          const float plateau_norm_dist = std::sqrt(
+              (cell_rot_x * cell_rot_x) / (plateau_width * plateau_width) +
+              (cell_rot_z * cell_rot_z) / (plateau_depth * plateau_depth));
+          if (plateau_norm_dist <= 1.05F) {
             break;
           }
 
@@ -296,83 +304,84 @@ void TerrainHeightMap::buildFromFeatures(
       continue;
     }
 
-    const float flatRadius = gridRadius;
-    const int minX = std::max(0, int(std::floor(gridCenterX - flatRadius)));
+    const float flat_radius = grid_radius;
+    const int minX = std::max(0, int(std::floor(grid_center_x - flat_radius)));
     const int maxX =
-        std::min(m_width - 1, int(std::ceil(gridCenterX + flatRadius)));
-    const int minZ = std::max(0, int(std::floor(gridCenterZ - flatRadius)));
+        std::min(m_width - 1, int(std::ceil(grid_center_x + flat_radius)));
+    const int minZ = std::max(0, int(std::floor(grid_center_z - flat_radius)));
     const int maxZ =
-        std::min(m_height - 1, int(std::ceil(gridCenterZ + flatRadius)));
+        std::min(m_height - 1, int(std::ceil(grid_center_z + flat_radius)));
 
     for (int z = minZ; z <= maxZ; ++z) {
       for (int x = minX; x <= maxX; ++x) {
-        const float dx = float(x) - gridCenterX;
-        const float dz = float(z) - gridCenterZ;
+        const float dx = float(x) - grid_center_x;
+        const float dz = float(z) - grid_center_z;
         const float dist = std::sqrt(dx * dx + dz * dz);
-        if (dist > flatRadius) {
+        if (dist > flat_radius) {
           continue;
         }
 
-        float t = dist / std::max(flatRadius, 0.0001f);
-        float height = feature.height * (1.0f - t);
-        if (height <= 0.0f) {
+        float const t = dist / std::max(flat_radius, 0.0001F);
+        float const height = feature.height * (1.0F - t);
+        if (height <= 0.0F) {
           continue;
         }
 
-        int idx = indexAt(x, z);
+        int const idx = indexAt(x, z);
         if (height > m_heights[idx]) {
           m_heights[idx] = height;
-          m_terrainTypes[idx] = TerrainType::Flat;
+          m_terrain_types[idx] = TerrainType::Flat;
         }
       }
     }
   }
 }
 
-float TerrainHeightMap::getHeightAt(float worldX, float worldZ) const {
+auto TerrainHeightMap::getHeightAt(float world_x,
+                                   float world_z) const -> float {
 
-  const float gridHalfWidth = m_width * 0.5f - 0.5f;
-  const float gridHalfHeight = m_height * 0.5f - 0.5f;
+  const float grid_half_width = m_width * 0.5F - 0.5F;
+  const float grid_half_height = m_height * 0.5F - 0.5F;
 
-  float gx = worldX / m_tileSize + gridHalfWidth;
-  float gz = worldZ / m_tileSize + gridHalfHeight;
+  float const gx = world_x / m_tile_size + grid_half_width;
+  float const gz = world_z / m_tile_size + grid_half_height;
 
-  int x0 = int(std::floor(gx));
-  int z0 = int(std::floor(gz));
-  int x1 = x0 + 1;
-  int z1 = z0 + 1;
+  int const x0 = int(std::floor(gx));
+  int const z0 = int(std::floor(gz));
+  int const x1 = x0 + 1;
+  int const z1 = z0 + 1;
 
   if (!inBounds(x0, z0)) {
-    return 0.0f;
+    return 0.0F;
   }
 
-  float tx = gx - x0;
-  float tz = gz - z0;
+  float const tx = gx - x0;
+  float const tz = gz - z0;
 
-  float h00 = inBounds(x0, z0) ? m_heights[indexAt(x0, z0)] : 0.0f;
-  float h10 = inBounds(x1, z0) ? m_heights[indexAt(x1, z0)] : 0.0f;
-  float h01 = inBounds(x0, z1) ? m_heights[indexAt(x0, z1)] : 0.0f;
-  float h11 = inBounds(x1, z1) ? m_heights[indexAt(x1, z1)] : 0.0f;
+  float const h00 = inBounds(x0, z0) ? m_heights[indexAt(x0, z0)] : 0.0F;
+  float const h10 = inBounds(x1, z0) ? m_heights[indexAt(x1, z0)] : 0.0F;
+  float const h01 = inBounds(x0, z1) ? m_heights[indexAt(x0, z1)] : 0.0F;
+  float const h11 = inBounds(x1, z1) ? m_heights[indexAt(x1, z1)] : 0.0F;
 
-  float h0 = h00 * (1.0f - tx) + h10 * tx;
-  float h1 = h01 * (1.0f - tx) + h11 * tx;
+  float const h0 = h00 * (1.0F - tx) + h10 * tx;
+  float const h1 = h01 * (1.0F - tx) + h11 * tx;
 
-  return h0 * (1.0f - tz) + h1 * tz;
+  return h0 * (1.0F - tz) + h1 * tz;
 }
 
-float TerrainHeightMap::getHeightAtGrid(int gridX, int gridZ) const {
-  if (!inBounds(gridX, gridZ)) {
-    return 0.0f;
+auto TerrainHeightMap::getHeightAtGrid(int grid_x, int grid_z) const -> float {
+  if (!inBounds(grid_x, grid_z)) {
+    return 0.0F;
   }
-  return m_heights[indexAt(gridX, gridZ)];
+  return m_heights[indexAt(grid_x, grid_z)];
 }
 
-bool TerrainHeightMap::isWalkable(int gridX, int gridZ) const {
-  if (!inBounds(gridX, gridZ)) {
+auto TerrainHeightMap::isWalkable(int grid_x, int grid_z) const -> bool {
+  if (!inBounds(grid_x, grid_z)) {
     return false;
   }
 
-  TerrainType type = m_terrainTypes[indexAt(gridX, gridZ)];
+  TerrainType const type = m_terrain_types[indexAt(grid_x, grid_z)];
 
   if (type == TerrainType::Mountain) {
     return false;
@@ -383,32 +392,34 @@ bool TerrainHeightMap::isWalkable(int gridX, int gridZ) const {
   }
 
   if (type == TerrainType::Hill) {
-    return m_hillWalkable[indexAt(gridX, gridZ)];
+    return m_hillWalkable[indexAt(grid_x, grid_z)];
   }
 
   return true;
 }
 
-bool TerrainHeightMap::isHillEntrance(int gridX, int gridZ) const {
-  if (!inBounds(gridX, gridZ)) {
+auto TerrainHeightMap::isHillEntrance(int grid_x, int grid_z) const -> bool {
+  if (!inBounds(grid_x, grid_z)) {
     return false;
   }
-  return m_hillEntrances[indexAt(gridX, gridZ)];
+  return m_hillEntrances[indexAt(grid_x, grid_z)];
 }
 
-TerrainType TerrainHeightMap::getTerrainType(int gridX, int gridZ) const {
-  if (!inBounds(gridX, gridZ)) {
+auto TerrainHeightMap::getTerrainType(int grid_x,
+                                      int grid_z) const -> TerrainType {
+  if (!inBounds(grid_x, grid_z)) {
     return TerrainType::Flat;
   }
-  return m_terrainTypes[indexAt(gridX, gridZ)];
+  return m_terrain_types[indexAt(grid_x, grid_z)];
 }
 
-bool TerrainHeightMap::isRiverOrNearby(int gridX, int gridZ, int margin) const {
-  if (!inBounds(gridX, gridZ)) {
+auto TerrainHeightMap::isRiverOrNearby(int grid_x, int grid_z,
+                                       int margin) const -> bool {
+  if (!inBounds(grid_x, grid_z)) {
     return false;
   }
 
-  if (m_terrainTypes[indexAt(gridX, gridZ)] == TerrainType::River) {
+  if (m_terrain_types[indexAt(grid_x, grid_z)] == TerrainType::River) {
     return true;
   }
 
@@ -417,10 +428,10 @@ bool TerrainHeightMap::isRiverOrNearby(int gridX, int gridZ, int margin) const {
       if (dx == 0 && dz == 0) {
         continue;
       }
-      int nx = gridX + dx;
-      int nz = gridZ + dz;
+      int const nx = grid_x + dx;
+      int const nz = grid_z + dz;
       if (inBounds(nx, nz) &&
-          m_terrainTypes[indexAt(nx, nz)] == TerrainType::River) {
+          m_terrain_types[indexAt(nx, nz)] == TerrainType::River) {
         return true;
       }
     }
@@ -429,27 +440,28 @@ bool TerrainHeightMap::isRiverOrNearby(int gridX, int gridZ, int margin) const {
   return false;
 }
 
-int TerrainHeightMap::indexAt(int x, int z) const { return z * m_width + x; }
+auto TerrainHeightMap::indexAt(int x, int z) const -> int {
+  return z * m_width + x;
+}
 
-bool TerrainHeightMap::inBounds(int x, int z) const {
+auto TerrainHeightMap::inBounds(int x, int z) const -> bool {
   return x >= 0 && x < m_width && z >= 0 && z < m_height;
 }
 
 float TerrainHeightMap::calculateFeatureHeight(const TerrainFeature &feature,
-                                               float worldX,
-                                               float worldZ) const {
-  float dx = worldX - feature.centerX;
-  float dz = worldZ - feature.centerZ;
-  float dist = std::sqrt(dx * dx + dz * dz);
+                                               float world_x, float world_z) {
+  float const dx = world_x - feature.center_x;
+  float const dz = world_z - feature.center_z;
+  float const dist = std::sqrt(dx * dx + dz * dz);
 
   if (dist > feature.radius) {
-    return 0.0f;
+    return 0.0F;
   }
 
-  float t = dist / feature.radius;
-  float heightFactor = (std::cos(t * M_PI) + 1.0f) * 0.5f;
+  float const t = dist / feature.radius;
+  float const height_factor = (std::cos(t * M_PI) + 1.0F) * 0.5F;
 
-  return feature.height * heightFactor;
+  return feature.height * height_factor;
 }
 
 void TerrainHeightMap::applyBiomeVariation(const BiomeSettings &settings) {
@@ -457,40 +469,40 @@ void TerrainHeightMap::applyBiomeVariation(const BiomeSettings &settings) {
     return;
   }
 
-  const float amplitude = std::max(0.0f, settings.heightNoiseAmplitude);
-  if (amplitude <= 0.0001f) {
+  const float amplitude = std::max(0.0F, settings.heightNoiseAmplitude);
+  if (amplitude <= 0.0001F) {
     return;
   }
 
-  const float frequency = std::max(0.0001f, settings.heightNoiseFrequency);
-  const float halfWidth = m_width * 0.5f - 0.5f;
-  const float halfHeight = m_height * 0.5f - 0.5f;
+  const float frequency = std::max(0.0001F, settings.heightNoiseFrequency);
+  const float half_width = m_width * 0.5F - 0.5F;
+  const float half_height = m_height * 0.5F - 0.5F;
 
   for (int z = 0; z < m_height; ++z) {
     for (int x = 0; x < m_width; ++x) {
-      int idx = indexAt(x, z);
-      TerrainType type = m_terrainTypes[idx];
+      int const idx = indexAt(x, z);
+      TerrainType const type = m_terrain_types[idx];
       if (type == TerrainType::Mountain) {
         continue;
       }
 
-      float worldX = (static_cast<float>(x) - halfWidth) * m_tileSize;
-      float worldZ = (static_cast<float>(z) - halfHeight) * m_tileSize;
-      float sampleX = worldX * frequency;
-      float sampleZ = worldZ * frequency;
+      float const world_x = (static_cast<float>(x) - half_width) * m_tile_size;
+      float const world_z = (static_cast<float>(z) - half_height) * m_tile_size;
+      float const sample_x = world_x * frequency;
+      float const sample_z = world_z * frequency;
 
-      float baseNoise = valueNoise2D(sampleX, sampleZ, settings.seed);
-      float detailNoise = valueNoise2D(sampleX * 2.0f, sampleZ * 2.0f,
-                                       settings.seed ^ 0xA21C9E37u);
+      float const base_noise = valueNoise2D(sample_x, sample_z, settings.seed);
+      float const detail_noise = valueNoise2D(sample_x * 2.0F, sample_z * 2.0F,
+                                              settings.seed ^ 0xA21C9E37U);
 
-      float blended = 0.65f * baseNoise + 0.35f * detailNoise;
-      float perturb = (blended - 0.5f) * 2.0f * amplitude;
+      float const blended = 0.65F * base_noise + 0.35F * detail_noise;
+      float perturb = (blended - 0.5F) * 2.0F * amplitude;
 
       if (type == TerrainType::Hill) {
-        perturb *= 0.6f;
+        perturb *= 0.6F;
       }
 
-      m_heights[idx] = std::max(0.0f, m_heights[idx] + perturb);
+      m_heights[idx] = std::max(0.0F, m_heights[idx] + perturb);
     }
   }
 }
@@ -499,55 +511,57 @@ void TerrainHeightMap::addRiverSegments(
     const std::vector<RiverSegment> &riverSegments) {
   m_riverSegments = riverSegments;
 
-  const float gridHalfWidth = m_width * 0.5f - 0.5f;
-  const float gridHalfHeight = m_height * 0.5f - 0.5f;
+  const float grid_half_width = m_width * 0.5F - 0.5F;
+  const float grid_half_height = m_height * 0.5F - 0.5F;
 
   for (const auto &river : riverSegments) {
     QVector3D dir = river.end - river.start;
-    float length = dir.length();
-    if (length < 0.01f) {
+    float const length = dir.length();
+    if (length < 0.01F) {
       continue;
     }
 
     dir.normalize();
-    QVector3D perpendicular(-dir.z(), 0.0f, dir.x());
+    QVector3D const perpendicular(-dir.z(), 0.0F, dir.x());
 
-    int steps = static_cast<int>(std::ceil(length / m_tileSize)) + 1;
+    int const steps = static_cast<int>(std::ceil(length / m_tile_size)) + 1;
 
     for (int i = 0; i < steps; ++i) {
-      float t =
-          static_cast<float>(i) / std::max(1.0f, static_cast<float>(steps - 1));
-      QVector3D centerPos = river.start + dir * (length * t);
+      float const t =
+          static_cast<float>(i) / std::max(1.0F, static_cast<float>(steps - 1));
+      QVector3D const center_pos = river.start + dir * (length * t);
 
-      float gridCenterX = (centerPos.x() / m_tileSize) + gridHalfWidth;
-      float gridCenterZ = (centerPos.z() / m_tileSize) + gridHalfHeight;
+      float const grid_center_x =
+          (center_pos.x() / m_tile_size) + grid_half_width;
+      float const grid_center_z =
+          (center_pos.z() / m_tile_size) + grid_half_height;
 
-      float halfWidth = river.width * 0.5f / m_tileSize;
+      float const half_width = river.width * 0.5F / m_tile_size;
 
-      int minX = std::max(
-          0, static_cast<int>(std::floor(gridCenterX - halfWidth - 1.0f)));
-      int maxX =
-          std::min(m_width - 1,
-                   static_cast<int>(std::ceil(gridCenterX + halfWidth + 1.0f)));
-      int minZ = std::max(
-          0, static_cast<int>(std::floor(gridCenterZ - halfWidth - 1.0f)));
-      int maxZ =
-          std::min(m_height - 1,
-                   static_cast<int>(std::ceil(gridCenterZ + halfWidth + 1.0f)));
+      int const minX = std::max(
+          0, static_cast<int>(std::floor(grid_center_x - half_width - 1.0F)));
+      int const maxX = std::min(
+          m_width - 1,
+          static_cast<int>(std::ceil(grid_center_x + half_width + 1.0F)));
+      int const minZ = std::max(
+          0, static_cast<int>(std::floor(grid_center_z - half_width - 1.0F)));
+      int const maxZ = std::min(
+          m_height - 1,
+          static_cast<int>(std::ceil(grid_center_z + half_width + 1.0F)));
 
       for (int z = minZ; z <= maxZ; ++z) {
         for (int x = minX; x <= maxX; ++x) {
-          float dx = static_cast<float>(x) - gridCenterX;
-          float dz = static_cast<float>(z) - gridCenterZ;
+          float const dx = static_cast<float>(x) - grid_center_x;
+          float const dz = static_cast<float>(z) - grid_center_z;
 
-          float distAlongPerp =
+          float const dist_along_perp =
               std::abs(dx * perpendicular.x() + dz * perpendicular.z());
 
-          if (distAlongPerp <= halfWidth) {
-            int idx = indexAt(x, z);
-            if (m_terrainTypes[idx] != TerrainType::Mountain) {
-              m_terrainTypes[idx] = TerrainType::River;
-              m_heights[idx] = 0.0f;
+          if (dist_along_perp <= half_width) {
+            int const idx = indexAt(x, z);
+            if (m_terrain_types[idx] != TerrainType::Mountain) {
+              m_terrain_types[idx] = TerrainType::River;
+              m_heights[idx] = 0.0F;
             }
           }
         }
@@ -559,59 +573,63 @@ void TerrainHeightMap::addRiverSegments(
 void TerrainHeightMap::addBridges(const std::vector<Bridge> &bridges) {
   m_bridges = bridges;
 
-  const float gridHalfWidth = m_width * 0.5f - 0.5f;
-  const float gridHalfHeight = m_height * 0.5f - 0.5f;
+  const float grid_half_width = m_width * 0.5F - 0.5F;
+  const float grid_half_height = m_height * 0.5F - 0.5F;
 
   for (const auto &bridge : bridges) {
     QVector3D dir = bridge.end - bridge.start;
-    float length = dir.length();
-    if (length < 0.01f) {
+    float const length = dir.length();
+    if (length < 0.01F) {
       continue;
     }
 
     dir.normalize();
-    QVector3D perpendicular(-dir.z(), 0.0f, dir.x());
+    QVector3D const perpendicular(-dir.z(), 0.0F, dir.x());
 
-    int steps = static_cast<int>(std::ceil(length / m_tileSize)) + 1;
+    int const steps = static_cast<int>(std::ceil(length / m_tile_size)) + 1;
 
     for (int i = 0; i < steps; ++i) {
-      float t =
-          static_cast<float>(i) / std::max(1.0f, static_cast<float>(steps - 1));
-      QVector3D centerPos = bridge.start + dir * (length * t);
+      float const t =
+          static_cast<float>(i) / std::max(1.0F, static_cast<float>(steps - 1));
+      QVector3D const center_pos = bridge.start + dir * (length * t);
 
-      float archCurve = 4.0f * t * (1.0f - t);
-      float archHeight = bridge.height * archCurve * 0.8f;
-      float deckHeight = bridge.start.y() + bridge.height + archHeight * 0.5f;
+      float const arch_curve = 4.0F * t * (1.0F - t);
+      float const arch_height = bridge.height * arch_curve * 0.8F;
+      float const deck_height =
+          bridge.start.y() + bridge.height + arch_height * 0.5F;
 
-      float gridCenterX = (centerPos.x() / m_tileSize) + gridHalfWidth;
-      float gridCenterZ = (centerPos.z() / m_tileSize) + gridHalfHeight;
+      float const grid_center_x =
+          (center_pos.x() / m_tile_size) + grid_half_width;
+      float const grid_center_z =
+          (center_pos.z() / m_tile_size) + grid_half_height;
 
-      float halfWidth = bridge.width * 0.5f / m_tileSize;
+      float const half_width = bridge.width * 0.5F / m_tile_size;
 
-      int minX =
-          std::max(0, static_cast<int>(std::floor(gridCenterX - halfWidth)));
-      int maxX = std::min(m_width - 1,
-                          static_cast<int>(std::ceil(gridCenterX + halfWidth)));
-      int minZ =
-          std::max(0, static_cast<int>(std::floor(gridCenterZ - halfWidth)));
-      int maxZ = std::min(m_height - 1,
-                          static_cast<int>(std::ceil(gridCenterZ + halfWidth)));
+      int const minX =
+          std::max(0, static_cast<int>(std::floor(grid_center_x - half_width)));
+      int const maxX = std::min(
+          m_width - 1, static_cast<int>(std::ceil(grid_center_x + half_width)));
+      int const minZ =
+          std::max(0, static_cast<int>(std::floor(grid_center_z - half_width)));
+      int const maxZ =
+          std::min(m_height - 1,
+                   static_cast<int>(std::ceil(grid_center_z + half_width)));
 
       for (int z = minZ; z <= maxZ; ++z) {
         for (int x = minX; x <= maxX; ++x) {
-          float dx = static_cast<float>(x) - gridCenterX;
-          float dz = static_cast<float>(z) - gridCenterZ;
+          float const dx = static_cast<float>(x) - grid_center_x;
+          float const dz = static_cast<float>(z) - grid_center_z;
 
-          float distAlongPerp =
+          float const dist_along_perp =
               std::abs(dx * perpendicular.x() + dz * perpendicular.z());
 
-          if (distAlongPerp <= halfWidth) {
-            int idx = indexAt(x, z);
+          if (dist_along_perp <= half_width) {
+            int const idx = indexAt(x, z);
 
-            if (m_terrainTypes[idx] == TerrainType::River) {
-              m_terrainTypes[idx] = TerrainType::Flat;
+            if (m_terrain_types[idx] == TerrainType::River) {
+              m_terrain_types[idx] = TerrainType::Flat;
 
-              m_heights[idx] = deckHeight;
+              m_heights[idx] = deck_height;
             }
           }
         }
@@ -622,27 +640,27 @@ void TerrainHeightMap::addBridges(const std::vector<Bridge> &bridges) {
 
 void TerrainHeightMap::restoreFromData(
     const std::vector<float> &heights,
-    const std::vector<TerrainType> &terrainTypes,
+    const std::vector<TerrainType> &terrain_types,
     const std::vector<RiverSegment> &rivers,
     const std::vector<Bridge> &bridges) {
 
-  const size_t expectedSize = static_cast<size_t>(m_width * m_height);
+  const auto expected_size = static_cast<size_t>(m_width * m_height);
 
-  if (heights.size() == expectedSize) {
+  if (heights.size() == expected_size) {
     m_heights = heights;
   }
 
-  if (terrainTypes.size() == expectedSize) {
-    m_terrainTypes = terrainTypes;
+  if (terrain_types.size() == expected_size) {
+    m_terrain_types = terrain_types;
   }
 
   m_hillEntrances.clear();
-  m_hillEntrances.resize(expectedSize, false);
+  m_hillEntrances.resize(expected_size, false);
   m_hillWalkable.clear();
-  m_hillWalkable.resize(expectedSize, true);
+  m_hillWalkable.resize(expected_size, true);
 
-  for (size_t i = 0; i < m_terrainTypes.size(); ++i) {
-    if (m_terrainTypes[i] == TerrainType::Hill) {
+  for (size_t i = 0; i < m_terrain_types.size(); ++i) {
+    if (m_terrain_types[i] == TerrainType::Hill) {
       m_hillWalkable[i] = false;
     }
   }

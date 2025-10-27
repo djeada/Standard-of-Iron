@@ -1,10 +1,15 @@
 #include "gather_behavior.h"
-#include "../../formation_planner.h"
 #include "../../formation_system.h"
 #include "../../nation_registry.h"
 #include "../ai_utils.h"
+#include "systems/ai_system/ai_types.h"
 
 #include <QVector3D>
+#include <algorithm>
+#include <cstddef>
+#include <qvectornd.h>
+#include <utility>
+#include <vector>
 
 namespace Game::Systems::AI {
 
@@ -13,19 +18,19 @@ void GatherBehavior::execute(const AISnapshot &snapshot, AIContext &context,
                              std::vector<AICommand> &outCommands) {
   m_gatherTimer += deltaTime;
 
-  if (m_gatherTimer < 1.0f) {
+  if (m_gatherTimer < 1.0F) {
     return;
   }
-  m_gatherTimer = 0.0f;
+  m_gatherTimer = 0.0F;
 
   if (context.primaryBarracks == 0) {
     return;
   }
 
-  QVector3D rallyPoint(context.rallyX, 0.0f, context.rallyZ);
+  QVector3D const rally_point(context.rallyX, 0.0F, context.rallyZ);
 
-  std::vector<const EntitySnapshot *> unitsToGather;
-  unitsToGather.reserve(snapshot.friendlies.size());
+  std::vector<const EntitySnapshot *> units_to_gather;
+  units_to_gather.reserve(snapshot.friendlies.size());
 
   for (const auto &entity : snapshot.friendlies) {
     if (entity.isBuilding) {
@@ -36,79 +41,84 @@ void GatherBehavior::execute(const AISnapshot &snapshot, AIContext &context,
       continue;
     }
 
-    const float dx = entity.posX - rallyPoint.x();
-    const float dz = entity.posZ - rallyPoint.z();
-    const float distSq = dx * dx + dz * dz;
+    const float dx = entity.posX - rally_point.x();
+    const float dz = entity.posZ - rally_point.z();
+    const float dist_sq = dx * dx + dz * dz;
 
-    if (distSq > 2.0f * 2.0f) {
-      unitsToGather.push_back(&entity);
+    if (dist_sq > 2.0F * 2.0F) {
+      units_to_gather.push_back(&entity);
     }
   }
 
-  if (unitsToGather.empty()) {
+  if (units_to_gather.empty()) {
     return;
   }
 
   const Nation *nation =
-      NationRegistry::instance().getNationForPlayer(context.playerId);
-  FormationType formationType = FormationType::Roman;
-  if (nation) {
-    formationType = nation->formationType;
+      NationRegistry::instance().getNationForPlayer(context.player_id);
+  FormationType formation_type = FormationType::Roman;
+  if (nation != nullptr) {
+    formation_type = nation->formation_type;
   }
 
-  auto formationTargets = FormationSystem::instance().getFormationPositions(
-      formationType, static_cast<int>(unitsToGather.size()), rallyPoint, 1.4f);
+  auto formation_targets = FormationSystem::instance().getFormationPositions(
+      formation_type, static_cast<int>(units_to_gather.size()), rally_point,
+      1.4F);
 
-  std::vector<Engine::Core::EntityID> unitsToMove;
-  std::vector<float> targetX, targetY, targetZ;
-  unitsToMove.reserve(unitsToGather.size());
-  targetX.reserve(unitsToGather.size());
-  targetY.reserve(unitsToGather.size());
-  targetZ.reserve(unitsToGather.size());
+  std::vector<Engine::Core::EntityID> units_to_move;
+  std::vector<float> target_x;
+  std::vector<float> target_y;
+  std::vector<float> target_z;
+  units_to_move.reserve(units_to_gather.size());
+  target_x.reserve(units_to_gather.size());
+  target_y.reserve(units_to_gather.size());
+  target_z.reserve(units_to_gather.size());
 
-  for (size_t i = 0; i < unitsToGather.size(); ++i) {
-    const auto *entity = unitsToGather[i];
-    const auto &target = formationTargets[i];
+  for (size_t i = 0; i < units_to_gather.size(); ++i) {
+    const auto *entity = units_to_gather[i];
+    const auto &target = formation_targets[i];
 
-    unitsToMove.push_back(entity->id);
-    targetX.push_back(target.x());
-    targetY.push_back(target.y());
-    targetZ.push_back(target.z());
+    units_to_move.push_back(entity->id);
+    target_x.push_back(target.x());
+    target_y.push_back(target.y());
+    target_z.push_back(target.z());
   }
 
-  if (unitsToMove.empty()) {
+  if (units_to_move.empty()) {
     return;
   }
 
-  auto claimedUnits = claimUnits(unitsToMove, getPriority(), "gathering",
-                                 context, m_gatherTimer + deltaTime, 2.0f);
+  auto claimed_units = claimUnits(units_to_move, getPriority(), "gathering",
+                                  context, m_gatherTimer + deltaTime, 2.0F);
 
-  if (claimedUnits.empty()) {
+  if (claimed_units.empty()) {
     return;
   }
 
-  std::vector<float> filteredX, filteredY, filteredZ;
-  for (size_t i = 0; i < unitsToMove.size(); ++i) {
-    if (std::find(claimedUnits.begin(), claimedUnits.end(), unitsToMove[i]) !=
-        claimedUnits.end()) {
-      filteredX.push_back(targetX[i]);
-      filteredY.push_back(targetY[i]);
-      filteredZ.push_back(targetZ[i]);
+  std::vector<float> filtered_x;
+  std::vector<float> filtered_y;
+  std::vector<float> filtered_z;
+  for (size_t i = 0; i < units_to_move.size(); ++i) {
+    if (std::find(claimed_units.begin(), claimed_units.end(),
+                  units_to_move[i]) != claimed_units.end()) {
+      filtered_x.push_back(target_x[i]);
+      filtered_y.push_back(target_y[i]);
+      filtered_z.push_back(target_z[i]);
     }
   }
 
   AICommand command;
   command.type = AICommandType::MoveUnits;
-  command.units = std::move(claimedUnits);
-  command.moveTargetX = std::move(filteredX);
-  command.moveTargetY = std::move(filteredY);
-  command.moveTargetZ = std::move(filteredZ);
+  command.units = std::move(claimed_units);
+  command.moveTargetX = std::move(filtered_x);
+  command.moveTargetY = std::move(filtered_y);
+  command.moveTargetZ = std::move(filtered_z);
 
   outCommands.push_back(std::move(command));
 }
 
-bool GatherBehavior::shouldExecute(const AISnapshot &snapshot,
-                                   const AIContext &context) const {
+auto GatherBehavior::should_execute(const AISnapshot &snapshot,
+                                    const AIContext &context) const -> bool {
   if (context.primaryBarracks == 0) {
     return false;
   }
@@ -123,17 +133,17 @@ bool GatherBehavior::shouldExecute(const AISnapshot &snapshot,
 
   if (context.state == AIState::Defending) {
 
-    QVector3D rallyPoint(context.rallyX, 0.0f, context.rallyZ);
+    QVector3D const rally_point(context.rallyX, 0.0F, context.rallyZ);
     for (const auto &entity : snapshot.friendlies) {
       if (entity.isBuilding) {
         continue;
       }
 
-      const float dx = entity.posX - rallyPoint.x();
-      const float dz = entity.posZ - rallyPoint.z();
-      const float distSq = dx * dx + dz * dz;
+      const float dx = entity.posX - rally_point.x();
+      const float dz = entity.posZ - rally_point.z();
+      const float dist_sq = dx * dx + dz * dz;
 
-      if (distSq > 10.0f * 10.0f) {
+      if (dist_sq > 10.0F * 10.0F) {
         return true;
       }
     }

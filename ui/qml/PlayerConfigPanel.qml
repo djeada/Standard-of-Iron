@@ -169,13 +169,13 @@ Item {
 
             text: "+ Add CPU"
             enabled: {
-                if (!currentMapData || !currentMapData.playerIds)
+                if (!currentMapData || !currentMapData.player_ids)
                     return false;
 
                 if (!playersModel)
                     return false;
 
-                return playersModel.count < currentMapData.playerIds.length;
+                return playersModel.count < currentMapData.player_ids.length;
             }
             hoverEnabled: true
             onClicked: root.addCPUClicked()
@@ -230,13 +230,13 @@ Item {
 
         Text {
             text: {
-                if (!currentMapData || !currentMapData.playerIds)
+                if (!currentMapData || !currentMapData.player_ids)
                     return "";
 
                 if (!playersModel)
                     return "";
 
-                var available = currentMapData.playerIds.length - playersModel.count;
+                var available = currentMapData.player_ids.length - playersModel.count;
                 if (available <= 0)
                     return "Max players reached";
 

@@ -29,23 +29,23 @@ struct MeshCmd {
   QMatrix4x4 model;
   QMatrix4x4 mvp;
   QVector3D color{1, 1, 1};
-  float alpha = 1.0f;
+  float alpha = 1.0F;
   class Shader *shader = nullptr;
 };
 
 struct CylinderCmd {
-  QVector3D start{0.0f, -0.5f, 0.0f};
-  QVector3D end{0.0f, 0.5f, 0.0f};
-  QVector3D color{1.0f, 1.0f, 1.0f};
-  float radius = 1.0f;
-  float alpha = 1.0f;
+  QVector3D start{0.0F, -0.5F, 0.0F};
+  QVector3D end{0.0F, 0.5F, 0.0F};
+  QVector3D color{1.0F, 1.0F, 1.0F};
+  float radius = 1.0F;
+  float alpha = 1.0F;
 };
 
 struct FogInstanceData {
-  QVector3D center{0.0f, 0.25f, 0.0f};
-  QVector3D color{0.05f, 0.05f, 0.05f};
-  float alpha = 1.0f;
-  float size = 1.0f;
+  QVector3D center{0.0F, 0.25F, 0.0F};
+  QVector3D color{0.05F, 0.05F, 0.05F};
+  float alpha = 1.0F;
+  float size = 1.0F;
 };
 
 struct FogBatchCmd {
@@ -55,31 +55,31 @@ struct FogBatchCmd {
 
 struct GrassBatchCmd {
   Buffer *instanceBuffer = nullptr;
-  std::size_t instanceCount = 0;
+  std::size_t instance_count = 0;
   GrassBatchParams params;
 };
 
 struct StoneBatchCmd {
   Buffer *instanceBuffer = nullptr;
-  std::size_t instanceCount = 0;
+  std::size_t instance_count = 0;
   StoneBatchParams params;
 };
 
 struct PlantBatchCmd {
   Buffer *instanceBuffer = nullptr;
-  std::size_t instanceCount = 0;
+  std::size_t instance_count = 0;
   PlantBatchParams params;
 };
 
 struct PineBatchCmd {
   Buffer *instanceBuffer = nullptr;
-  std::size_t instanceCount = 0;
+  std::size_t instance_count = 0;
   PineBatchParams params;
 };
 
 struct FireCampBatchCmd {
   Buffer *instanceBuffer = nullptr;
-  std::size_t instanceCount = 0;
+  std::size_t instance_count = 0;
   FireCampBatchParams params;
 };
 
@@ -87,34 +87,34 @@ struct TerrainChunkCmd {
   Mesh *mesh = nullptr;
   QMatrix4x4 model;
   TerrainChunkParams params;
-  std::uint16_t sortKey = 0x8000u;
+  std::uint16_t sortKey = 0x8000U;
   bool depthWrite = true;
-  float depthBias = 0.0f;
+  float depthBias = 0.0F;
 };
 
 struct GridCmd {
 
   QMatrix4x4 model;
   QMatrix4x4 mvp;
-  QVector3D color{0.2f, 0.25f, 0.2f};
-  float cellSize = 1.0f;
-  float thickness = 0.06f;
-  float extent = 50.0f;
+  QVector3D color{0.2F, 0.25F, 0.2F};
+  float cellSize = 1.0F;
+  float thickness = 0.06F;
+  float extent = 50.0F;
 };
 
 struct SelectionRingCmd {
   QMatrix4x4 model;
   QMatrix4x4 mvp;
   QVector3D color{0, 0, 0};
-  float alphaInner = 0.6f;
-  float alphaOuter = 0.25f;
+  float alphaInner = 0.6F;
+  float alphaOuter = 0.25F;
 };
 
 struct SelectionSmokeCmd {
   QMatrix4x4 model;
   QMatrix4x4 mvp;
   QVector3D color{1, 1, 1};
-  float baseAlpha = 0.15f;
+  float baseAlpha = 0.15F;
 };
 
 using DrawCmd = std::variant<GridCmd, SelectionRingCmd, SelectionSmokeCmd,
@@ -162,7 +162,7 @@ constexpr std::size_t FireCampBatchCmdIndex =
 constexpr std::size_t TerrainChunkCmdIndex =
     static_cast<std::size_t>(DrawCmdType::TerrainChunk);
 
-inline DrawCmdType drawCmdType(const DrawCmd &cmd) {
+inline auto drawCmdType(const DrawCmd &cmd) -> DrawCmdType {
   return static_cast<DrawCmdType>(cmd.index());
 }
 
@@ -183,14 +183,16 @@ public:
   void submit(const FireCampBatchCmd &c) { m_items.emplace_back(c); }
   void submit(const TerrainChunkCmd &c) { m_items.emplace_back(c); }
 
-  bool empty() const { return m_items.empty(); }
-  std::size_t size() const { return m_items.size(); }
+  [[nodiscard]] auto empty() const -> bool { return m_items.empty(); }
+  [[nodiscard]] auto size() const -> std::size_t { return m_items.size(); }
 
-  const DrawCmd &getSorted(std::size_t i) const {
+  [[nodiscard]] auto getSorted(std::size_t i) const -> const DrawCmd & {
     return m_items[m_sortIndices[i]];
   }
 
-  const std::vector<DrawCmd> &items() const { return m_items; }
+  [[nodiscard]] auto items() const -> const std::vector<DrawCmd> & {
+    return m_items;
+  }
 
   void sortForBatching() {
     const std::size_t count = m_items.size();
@@ -218,7 +220,7 @@ private:
       int histogram[BUCKETS] = {0};
 
       for (std::size_t i = 0; i < count; ++i) {
-        uint8_t bucket = static_cast<uint8_t>(m_sortKeys[i] >> 56);
+        auto const bucket = static_cast<uint8_t>(m_sortKeys[i] >> 56);
         ++histogram[bucket];
       }
 
@@ -229,7 +231,7 @@ private:
       }
 
       for (std::size_t i = 0; i < count; ++i) {
-        uint8_t bucket =
+        auto const bucket =
             static_cast<uint8_t>(m_sortKeys[m_sortIndices[i]] >> 56);
         m_tempIndices[offsets[bucket]++] = m_sortIndices[i];
       }
@@ -239,7 +241,7 @@ private:
       int histogram[BUCKETS] = {0};
 
       for (std::size_t i = 0; i < count; ++i) {
-        uint8_t bucket =
+        uint8_t const bucket =
             static_cast<uint8_t>(m_sortKeys[m_tempIndices[i]] >> 48) & 0xFF;
         ++histogram[bucket];
       }
@@ -251,14 +253,14 @@ private:
       }
 
       for (std::size_t i = 0; i < count; ++i) {
-        uint8_t bucket =
+        uint8_t const bucket =
             static_cast<uint8_t>(m_sortKeys[m_tempIndices[i]] >> 48) & 0xFF;
         m_sortIndices[offsets[bucket]++] = m_tempIndices[i];
       }
     }
   }
 
-  uint64_t computeSortKey(const DrawCmd &cmd) const {
+  [[nodiscard]] static auto computeSortKey(const DrawCmd &cmd) -> uint64_t {
 
     enum class RenderOrder : uint8_t {
       TerrainChunk = 0,
@@ -301,41 +303,45 @@ private:
     if (cmd.index() == MeshCmdIndex) {
       const auto &mesh = std::get<MeshCmdIndex>(cmd);
 
-      uint64_t texPtr =
+      uint64_t const texPtr =
           reinterpret_cast<uintptr_t>(mesh.texture) & 0x0000FFFFFFFFFFFF;
       key |= texPtr;
     } else if (cmd.index() == GrassBatchCmdIndex) {
       const auto &grass = std::get<GrassBatchCmdIndex>(cmd);
-      uint64_t bufferPtr = reinterpret_cast<uintptr_t>(grass.instanceBuffer) &
-                           0x0000FFFFFFFFFFFF;
+      uint64_t const bufferPtr =
+          reinterpret_cast<uintptr_t>(grass.instanceBuffer) &
+          0x0000FFFFFFFFFFFF;
       key |= bufferPtr;
     } else if (cmd.index() == StoneBatchCmdIndex) {
       const auto &stone = std::get<StoneBatchCmdIndex>(cmd);
-      uint64_t bufferPtr = reinterpret_cast<uintptr_t>(stone.instanceBuffer) &
-                           0x0000FFFFFFFFFFFF;
+      uint64_t const bufferPtr =
+          reinterpret_cast<uintptr_t>(stone.instanceBuffer) &
+          0x0000FFFFFFFFFFFF;
       key |= bufferPtr;
     } else if (cmd.index() == PlantBatchCmdIndex) {
       const auto &plant = std::get<PlantBatchCmdIndex>(cmd);
-      uint64_t bufferPtr = reinterpret_cast<uintptr_t>(plant.instanceBuffer) &
-                           0x0000FFFFFFFFFFFF;
+      uint64_t const bufferPtr =
+          reinterpret_cast<uintptr_t>(plant.instanceBuffer) &
+          0x0000FFFFFFFFFFFF;
       key |= bufferPtr;
     } else if (cmd.index() == PineBatchCmdIndex) {
       const auto &pine = std::get<PineBatchCmdIndex>(cmd);
-      uint64_t bufferPtr =
+      uint64_t const bufferPtr =
           reinterpret_cast<uintptr_t>(pine.instanceBuffer) & 0x0000FFFFFFFFFFFF;
       key |= bufferPtr;
     } else if (cmd.index() == FireCampBatchCmdIndex) {
       const auto &firecamp = std::get<FireCampBatchCmdIndex>(cmd);
-      uint64_t bufferPtr =
+      uint64_t const bufferPtr =
           reinterpret_cast<uintptr_t>(firecamp.instanceBuffer) &
           0x0000FFFFFFFFFFFF;
       key |= bufferPtr;
     } else if (cmd.index() == TerrainChunkCmdIndex) {
       const auto &terrain = std::get<TerrainChunkCmdIndex>(cmd);
-      uint64_t sortByte = static_cast<uint64_t>((terrain.sortKey >> 8) & 0xFFu);
+      auto const sortByte =
+          static_cast<uint64_t>((terrain.sortKey >> 8) & 0xFFU);
       key |= sortByte << 48;
-      uint64_t meshPtr =
-          reinterpret_cast<uintptr_t>(terrain.mesh) & 0x0000FFFFFFFFFFFFu;
+      uint64_t const meshPtr =
+          reinterpret_cast<uintptr_t>(terrain.mesh) & 0x0000FFFFFFFFFFFFU;
       key |= meshPtr;
     }
 

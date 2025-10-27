@@ -2,33 +2,28 @@
 
 #include <QVector3D>
 
-namespace Engine {
-namespace Core {
+namespace Engine::Core {
 class World;
 }
-} // namespace Engine
-namespace Render {
-namespace GL {
+
+namespace Render::GL {
 class Camera;
 }
-} // namespace Render
-namespace Game {
-namespace Systems {
+
+namespace Game::Systems {
 class SelectionSystem;
 }
-} // namespace Game
 
-namespace Game {
-namespace Systems {
+namespace Game::Systems {
 
 class CameraFollowSystem {
 public:
-  void update(Engine::Core::World &world, SelectionSystem &selection,
-              Render::GL::Camera &camera);
+  static void update(Engine::Core::World &world, SelectionSystem &selection,
+                     Render::GL::Camera &camera);
 
-  void snapToSelection(Engine::Core::World &world, SelectionSystem &selection,
-                       Render::GL::Camera &camera);
+  static void snapToSelection(Engine::Core::World &world,
+                              SelectionSystem &selection,
+                              Render::GL::Camera &camera);
 };
 
-} // namespace Systems
-} // namespace Game
+} // namespace Game::Systems
