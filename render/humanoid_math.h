@@ -7,11 +7,11 @@
 
 namespace Render::GL {
 
-inline auto hash01(uint32_t x) -> float {
-  x ^= x << Hash::XorShiftAmount13;
-  x ^= x >> Hash::XorShiftAmount17;
-  x ^= x << Hash::XorShiftAmount5;
-  return (x & BitShift::Mask24Bit) / float(BitShift::Mask24BitHex);
+inline auto hash_01(uint32_t x) -> float {
+  x ^= x << hash_xor_shift::k_xor_shift_amount_13;
+  x ^= x >> hash_xor_shift::k_xor_shift_amount_17;
+  x ^= x << hash_xor_shift::k_xor_shift_amount_5;
+  return (x & BitShift::Mask24Bit) / float(BitShift::k_mask_24bit_hex);
 }
 
 inline auto rotY(const QVector3D &v, float angle_rad) -> QVector3D {
