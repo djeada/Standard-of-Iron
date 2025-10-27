@@ -12,13 +12,14 @@ class LanguageManager : public QObject {
 
 public:
   explicit LanguageManager(QObject *parent = nullptr);
-  ~LanguageManager();
+  ~LanguageManager() override;
 
-  QString currentLanguage() const;
-  QStringList availableLanguages() const;
+  [[nodiscard]] auto currentLanguage() const -> QString;
+  [[nodiscard]] auto availableLanguages() const -> QStringList;
 
   Q_INVOKABLE void setLanguage(const QString &language);
-  Q_INVOKABLE QString languageDisplayName(const QString &language) const;
+  Q_INVOKABLE [[nodiscard]] static QString
+  languageDisplayName(const QString &language);
 
 signals:
   void languageChanged();

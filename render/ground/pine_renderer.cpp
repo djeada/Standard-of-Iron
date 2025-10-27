@@ -3,54 +3,36 @@
 #include "../../game/systems/building_collision_registry.h"
 #include "../gl/buffer.h"
 #include "../scene_renderer.h"
+#include "gl/resources.h"
+#include "ground/pine_gpu.h"
+#include "ground_utils.h"
+#include "map/terrain.h"
 #include <QVector2D>
 #include <algorithm>
-#include <array>
 #include <cmath>
-#include <optional>
+#include <cstdint>
+#include <memory>
+#include <vector>
 
 namespace {
 
 using std::uint32_t;
+using namespace Render::Ground;
 
-inline uint32_t hashCoords(int x, int z, uint32_t salt = 0u) {
-  uint32_t ux = static_cast<uint32_t>(x * 73856093);
-  uint32_t uz = static_cast<uint32_t>(z * 19349663);
-  return ux ^ uz ^ (salt * 83492791u);
-}
-
-inline float rand01(uint32_t &state) {
-  state = state * 1664525u + 1013904223u;
-  return static_cast<float>((state >> 8) & 0xFFFFFF) /
-         static_cast<float>(0xFFFFFF);
-}
-
-inline float remap(float value, float minOut, float maxOut) {
-  return minOut + (maxOut - minOut) * value;
-}
-
-inline float valueNoise(float x, float z, uint32_t seed) {
-  int ix = static_cast<int>(std::floor(x));
-  int iz = static_cast<int>(std::floor(z));
-  float fx = x - static_cast<float>(ix);
-  float fz = z - static_cast<float>(iz);
-
-  fx = fx * fx * (3.0f - 2.0f * fx);
-  fz = fz * fz * (3.0f - 2.0f * fz);
-
-  uint32_t s00 = hashCoords(ix, iz, seed);
-  uint32_t s10 = hashCoords(ix + 1, iz, seed);
-  uint32_t s01 = hashCoords(ix, iz + 1, seed);
-  uint32_t s11 = hashCoords(ix + 1, iz + 1, seed);
-
-  float v00 = rand01(s00);
-  float v10 = rand01(s10);
-  float v01 = rand01(s01);
-  float v11 = rand01(s11);
-
-  float v0 = v00 * (1.0f - fx) + v10 * fx;
-  float v1 = v01 * (1.0f - fx) + v11 * fx;
-  return v0 * (1.0f - fz) + v1 * fz;
+inline auto valueNoise(float x, float z, uint32_t salt = 0U) -> float {
+  int x0 = int(std::floor(x));
+  int z0 = int(std::floor(z));
+  int x1 = x0 + 1;
+  int z1 = z0 + 1;
+  float tx = x - float(x0);
+  float tz = z - float(z0);
+  float const n00 = hashTo01(hashCoords(x0, z0, salt));
+  float const n10 = hashTo01(hashCoords(x1, z0, salt));
+  float const n01 = hashTo01(hashCoords(x0, z1, salt));
+  float const n11 = hashTo01(hashCoords(x1, z1, salt));
+  float const nx0 = n00 * (1 - tx) + n10 * tx;
+  float const nx1 = n01 * (1 - tx) + n11 * tx;
+  return nx0 * (1 - tz) + nx1 * tz;
 }
 
 } // namespace
@@ -60,13 +42,13 @@ namespace Render::GL {
 PineRenderer::PineRenderer() = default;
 PineRenderer::~PineRenderer() = default;
 
-void PineRenderer::configure(const Game::Map::TerrainHeightMap &heightMap,
+void PineRenderer::configure(const Game::Map::TerrainHeightMap &height_map,
                              const Game::Map::BiomeSettings &biomeSettings) {
-  m_width = heightMap.getWidth();
-  m_height = heightMap.getHeight();
-  m_tileSize = heightMap.getTileSize();
-  m_heightData = heightMap.getHeightData();
-  m_terrainTypes = heightMap.getTerrainTypes();
+  m_width = height_map.getWidth();
+  m_height = height_map.getHeight();
+  m_tile_size = height_map.getTileSize();
+  m_heightData = height_map.getHeightData();
+  m_terrain_types = height_map.getTerrainTypes();
   m_biomeSettings = biomeSettings;
   m_noiseSeed = biomeSettings.seed;
 
@@ -75,10 +57,10 @@ void PineRenderer::configure(const Game::Map::TerrainHeightMap &heightMap,
   m_pineInstanceCount = 0;
   m_pineInstancesDirty = false;
 
-  m_pineParams.lightDirection = QVector3D(0.35f, 0.8f, 0.45f);
-  m_pineParams.time = 0.0f;
-  m_pineParams.windStrength = 0.3f;
-  m_pineParams.windSpeed = 0.5f;
+  m_pineParams.light_direction = QVector3D(0.35F, 0.8F, 0.45F);
+  m_pineParams.time = 0.0F;
+  m_pineParams.windStrength = 0.3F;
+  m_pineParams.windSpeed = 0.5F;
 
   generatePineInstances();
 }
@@ -94,24 +76,24 @@ void PineRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   }
 
   auto &visibility = Game::Map::VisibilityService::instance();
-  const bool useVisibility = visibility.isInitialized();
+  const bool use_visibility = visibility.isInitialized();
 
-  std::vector<PineInstanceGpu> visibleInstances;
-  if (useVisibility) {
-    visibleInstances.reserve(m_pineInstanceCount);
+  std::vector<PineInstanceGpu> visible_instances;
+  if (use_visibility) {
+    visible_instances.reserve(m_pineInstanceCount);
     for (const auto &instance : m_pineInstances) {
-      float worldX = instance.posScale.x();
-      float worldZ = instance.posScale.z();
-      if (visibility.isVisibleWorld(worldX, worldZ)) {
-        visibleInstances.push_back(instance);
+      float const world_x = instance.posScale.x();
+      float const world_z = instance.posScale.z();
+      if (visibility.isVisibleWorld(world_x, world_z)) {
+        visible_instances.push_back(instance);
       }
     }
   } else {
-    visibleInstances = m_pineInstances;
+    visible_instances = m_pineInstances;
   }
 
-  const uint32_t visibleCount = static_cast<uint32_t>(visibleInstances.size());
-  if (visibleCount == 0) {
+  const auto visible_count = static_cast<uint32_t>(visible_instances.size());
+  if (visible_count == 0) {
     m_pineInstanceBuffer.reset();
     return;
   }
@@ -120,11 +102,11 @@ void PineRenderer::submit(Renderer &renderer, ResourceManager *resources) {
     m_pineInstanceBuffer = std::make_unique<Buffer>(Buffer::Type::Vertex);
   }
 
-  m_pineInstanceBuffer->setData(visibleInstances, Buffer::Usage::Static);
+  m_pineInstanceBuffer->setData(visible_instances, Buffer::Usage::Static);
 
   PineBatchParams params = m_pineParams;
   params.time = renderer.getAnimationTime();
-  renderer.pineBatch(m_pineInstanceBuffer.get(), visibleCount, params);
+  renderer.pineBatch(m_pineInstanceBuffer.get(), visible_count, params);
 }
 
 void PineRenderer::clear() {
@@ -141,32 +123,32 @@ void PineRenderer::generatePineInstances() {
     return;
   }
 
-  const float halfWidth = static_cast<float>(m_width) * 0.5f;
-  const float halfHeight = static_cast<float>(m_height) * 0.5f;
-  const float tileSafe = std::max(0.1f, m_tileSize);
+  const float half_width = static_cast<float>(m_width) * 0.5F;
+  const float half_height = static_cast<float>(m_height) * 0.5F;
+  const float tile_safe = std::max(0.1F, m_tile_size);
 
-  const float edgePadding =
-      std::clamp(m_biomeSettings.spawnEdgePadding, 0.0f, 0.5f);
-  const float edgeMarginX = static_cast<float>(m_width) * edgePadding;
-  const float edgeMarginZ = static_cast<float>(m_height) * edgePadding;
+  const float edge_padding =
+      std::clamp(m_biomeSettings.spawnEdgePadding, 0.0F, 0.5F);
+  const float edge_margin_x = static_cast<float>(m_width) * edge_padding;
+  const float edge_margin_z = static_cast<float>(m_height) * edge_padding;
 
-  float pineDensity = 0.2f;
-  if (m_biomeSettings.plantDensity > 0.0f) {
+  float pine_density = 0.2F;
+  if (m_biomeSettings.plant_density > 0.0F) {
 
-    pineDensity = m_biomeSettings.plantDensity * 0.3f;
+    pine_density = m_biomeSettings.plant_density * 0.3F;
   }
 
   std::vector<QVector3D> normals(m_width * m_height, QVector3D(0, 1, 0));
   for (int z = 1; z < m_height - 1; ++z) {
     for (int x = 1; x < m_width - 1; ++x) {
-      int idx = z * m_width + x;
-      float hL = m_heightData[(z)*m_width + (x - 1)];
-      float hR = m_heightData[(z)*m_width + (x + 1)];
-      float hD = m_heightData[(z - 1) * m_width + (x)];
-      float hU = m_heightData[(z + 1) * m_width + (x)];
+      int const idx = z * m_width + x;
+      float const hL = m_heightData[(z)*m_width + (x - 1)];
+      float const hR = m_heightData[(z)*m_width + (x + 1)];
+      float const hD = m_heightData[(z - 1) * m_width + (x)];
+      float const hU = m_heightData[(z + 1) * m_width + (x)];
 
-      QVector3D n = QVector3D(hL - hR, 2.0f * tileSafe, hD - hU);
-      if (n.lengthSquared() > 0.0f) {
+      QVector3D n = QVector3D(hL - hR, 2.0F * tile_safe, hD - hU);
+      if (n.lengthSquared() > 0.0F) {
         n.normalize();
       } else {
         n = QVector3D(0, 1, 0);
@@ -175,107 +157,108 @@ void PineRenderer::generatePineInstances() {
     }
   }
 
-  auto addPine = [&](float gx, float gz, uint32_t &state) -> bool {
-    if (gx < edgeMarginX || gx > m_width - 1 - edgeMarginX ||
-        gz < edgeMarginZ || gz > m_height - 1 - edgeMarginZ) {
+  auto add_pine = [&](float gx, float gz, uint32_t &state) -> bool {
+    if (gx < edge_margin_x || gx > m_width - 1 - edge_margin_x ||
+        gz < edge_margin_z || gz > m_height - 1 - edge_margin_z) {
       return false;
     }
 
-    float sgx = std::clamp(gx, 0.0f, float(m_width - 1));
-    float sgz = std::clamp(gz, 0.0f, float(m_height - 1));
+    float const sgx = std::clamp(gx, 0.0F, float(m_width - 1));
+    float const sgz = std::clamp(gz, 0.0F, float(m_height - 1));
 
-    int ix = std::clamp(int(std::floor(sgx + 0.5f)), 0, m_width - 1);
-    int iz = std::clamp(int(std::floor(sgz + 0.5f)), 0, m_height - 1);
-    int normalIdx = iz * m_width + ix;
+    int const ix = std::clamp(int(std::floor(sgx + 0.5F)), 0, m_width - 1);
+    int const iz = std::clamp(int(std::floor(sgz + 0.5F)), 0, m_height - 1);
+    int const normal_idx = iz * m_width + ix;
 
-    QVector3D normal = normals[normalIdx];
-    float slope = 1.0f - std::clamp(normal.y(), 0.0f, 1.0f);
+    QVector3D const normal = normals[normal_idx];
+    float const slope = 1.0F - std::clamp(normal.y(), 0.0F, 1.0F);
 
-    if (slope > 0.75f) {
+    if (slope > 0.75F) {
       return false;
     }
 
-    float worldX = (gx - halfWidth) * m_tileSize;
-    float worldZ = (gz - halfHeight) * m_tileSize;
-    float worldY = m_heightData[normalIdx];
+    float const world_x = (gx - half_width) * m_tile_size;
+    float const world_z = (gz - half_height) * m_tile_size;
+    float const world_y = m_heightData[normal_idx];
 
-    auto &buildingRegistry =
+    auto &building_registry =
         Game::Systems::BuildingCollisionRegistry::instance();
-    if (buildingRegistry.isPointInBuilding(worldX, worldZ)) {
+    if (building_registry.isPointInBuilding(world_x, world_z)) {
       return false;
     }
 
-    float scale = remap(rand01(state), 3.0f, 6.0f) * tileSafe;
+    float const scale = remap(rand01(state), 3.0F, 6.0F) * tile_safe;
 
-    float colorVar = remap(rand01(state), 0.0f, 1.0f);
-    QVector3D baseColor(0.15f, 0.35f, 0.20f);
-    QVector3D varColor(0.20f, 0.40f, 0.25f);
-    QVector3D tintColor = baseColor * (1.0f - colorVar) + varColor * colorVar;
+    float const color_var = remap(rand01(state), 0.0F, 1.0F);
+    QVector3D const base_color(0.15F, 0.35F, 0.20F);
+    QVector3D const var_color(0.20F, 0.40F, 0.25F);
+    QVector3D tint_color =
+        base_color * (1.0F - color_var) + var_color * color_var;
 
-    float brownMix = remap(rand01(state), 0.10f, 0.25f);
-    QVector3D brownTint(0.35f, 0.30f, 0.20f);
-    tintColor = tintColor * (1.0f - brownMix) + brownTint * brownMix;
+    float const brown_mix = remap(rand01(state), 0.10F, 0.25F);
+    QVector3D const brown_tint(0.35F, 0.30F, 0.20F);
+    tint_color = tint_color * (1.0F - brown_mix) + brown_tint * brown_mix;
 
-    float swayPhase = rand01(state) * 6.2831853f;
+    float const sway_phase = rand01(state) * 6.2831853F;
 
-    float rotation = rand01(state) * 6.2831853f;
+    float const rotation = rand01(state) * 6.2831853F;
 
-    float silhouetteSeed = rand01(state);
-    float needleSeed = rand01(state);
-    float barkSeed = rand01(state);
+    float const silhouette_seed = rand01(state);
+    float const needle_seed = rand01(state);
+    float const bark_seed = rand01(state);
 
     PineInstanceGpu instance;
 
-    instance.posScale = QVector4D(worldX, worldY, worldZ, scale);
+    instance.posScale = QVector4D(world_x, world_y, world_z, scale);
     instance.colorSway =
-        QVector4D(tintColor.x(), tintColor.y(), tintColor.z(), swayPhase);
+        QVector4D(tint_color.x(), tint_color.y(), tint_color.z(), sway_phase);
     instance.rotation =
-        QVector4D(rotation, silhouetteSeed, needleSeed, barkSeed);
+        QVector4D(rotation, silhouette_seed, needle_seed, bark_seed);
     m_pineInstances.push_back(instance);
     return true;
   };
 
   for (int z = 0; z < m_height; z += 6) {
     for (int x = 0; x < m_width; x += 6) {
-      int idx = z * m_width + x;
+      int const idx = z * m_width + x;
 
-      QVector3D normal = normals[idx];
-      float slope = 1.0f - std::clamp(normal.y(), 0.0f, 1.0f);
-      if (slope > 0.75f) {
+      QVector3D const normal = normals[idx];
+      float const slope = 1.0F - std::clamp(normal.y(), 0.0F, 1.0F);
+      if (slope > 0.75F) {
         continue;
       }
 
       uint32_t state = hashCoords(
-          x, z, m_noiseSeed ^ 0xAB12CD34u ^ static_cast<uint32_t>(idx));
+          x, z, m_noiseSeed ^ 0xAB12CD34U ^ static_cast<uint32_t>(idx));
 
-      float worldX = (x - halfWidth) * m_tileSize;
-      float worldZ = (z - halfHeight) * m_tileSize;
+      float const world_x = (x - half_width) * m_tile_size;
+      float const world_z = (z - half_height) * m_tile_size;
 
-      float clusterNoise =
-          valueNoise(worldX * 0.03f, worldZ * 0.03f, m_noiseSeed ^ 0x7F8E9D0Au);
+      float const cluster_noise = valueNoise(world_x * 0.03F, world_z * 0.03F,
+                                             m_noiseSeed ^ 0x7F8E9D0AU);
 
-      if (clusterNoise < 0.35f) {
+      if (cluster_noise < 0.35F) {
         continue;
       }
 
-      float densityMult = 1.0f;
-      if (m_terrainTypes[idx] == Game::Map::TerrainType::Hill) {
-        densityMult = 1.2f;
-      } else if (m_terrainTypes[idx] == Game::Map::TerrainType::Mountain) {
-        densityMult = 0.4f;
+      float density_mult = 1.0F;
+      if (m_terrain_types[idx] == Game::Map::TerrainType::Hill) {
+        density_mult = 1.2F;
+      } else if (m_terrain_types[idx] == Game::Map::TerrainType::Mountain) {
+        density_mult = 0.4F;
       }
 
-      float effectiveDensity = pineDensity * densityMult * 0.8f;
-      int pineCount = static_cast<int>(std::floor(effectiveDensity));
-      float frac = effectiveDensity - float(pineCount);
+      float const effective_density = pine_density * density_mult * 0.8F;
+      int pine_count = static_cast<int>(std::floor(effective_density));
+      float const frac = effective_density - float(pine_count);
       if (rand01(state) < frac) {
-        pineCount += 1;
+        pine_count += 1;
       }
 
-      for (int i = 0; i < pineCount; ++i) {
-        float gx = float(x) + rand01(state) * 6.0f;
-        float gz = float(z) + rand01(state) * 6.0f;
-        addPine(gx, gz, state);
+      for (int i = 0; i < pine_count; ++i) {
+        float const gx = float(x) + rand01(state) * 6.0F;
+        float const gz = float(z) + rand01(state) * 6.0F;
+        add_pine(gx, gz, state);
       }
     }
   }

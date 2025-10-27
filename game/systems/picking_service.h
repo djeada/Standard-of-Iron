@@ -6,64 +6,56 @@
 #include <limits>
 #include <vector>
 
-namespace Engine {
-namespace Core {
+namespace Engine::Core {
 class World;
 using EntityID = unsigned int;
-} // namespace Core
-} // namespace Engine
+} // namespace Engine::Core
 
-namespace Render {
-namespace GL {
+namespace Render::GL {
 class Camera;
 }
-} // namespace Render
 
-namespace Game {
-namespace Systems {
+namespace Game::Systems {
 
 class PickingService {
 public:
   PickingService() = default;
 
-  Engine::Core::EntityID updateHover(float sx, float sy,
-                                     Engine::Core::World &world,
-                                     const Render::GL::Camera &camera,
-                                     int viewW, int viewH);
+  auto updateHover(float sx, float sy, Engine::Core::World &world,
+                   const Render::GL::Camera &camera, int viewW,
+                   int viewH) -> Engine::Core::EntityID;
 
-  bool screenToGround(const Render::GL::Camera &camera, int viewW, int viewH,
-                      const QPointF &screenPt, QVector3D &outWorld) const;
-  bool screenToGround(const QPointF &screenPt, const Render::GL::Camera &camera,
-                      int viewW, int viewH, QVector3D &outWorld) const {
+  static auto screenToGround(const Render::GL::Camera &camera, int viewW,
+                             int viewH, const QPointF &screenPt,
+                             QVector3D &outWorld) -> bool;
+  auto screenToGround(const QPointF &screenPt, const Render::GL::Camera &camera,
+                      int viewW, int viewH, QVector3D &outWorld) const -> bool {
     return screenToGround(camera, viewW, viewH, screenPt, outWorld);
   }
-  bool worldToScreen(const Render::GL::Camera &camera, int viewW, int viewH,
-                     const QVector3D &world, QPointF &outScreen) const;
+  static auto worldToScreen(const Render::GL::Camera &camera, int viewW,
+                            int viewH, const QVector3D &world,
+                            QPointF &outScreen) -> bool;
 
-  Engine::Core::EntityID pickSingle(float sx, float sy,
-                                    Engine::Core::World &world,
-                                    const Render::GL::Camera &camera, int viewW,
-                                    int viewH, int ownerFilter,
-                                    bool preferBuildingsFirst) const;
+  static auto pickSingle(float sx, float sy, Engine::Core::World &world,
+                         const Render::GL::Camera &camera, int viewW, int viewH,
+                         int ownerFilter,
+                         bool preferBuildingsFirst) -> Engine::Core::EntityID;
 
-  Engine::Core::EntityID pickUnitFirst(float sx, float sy,
-                                       Engine::Core::World &world,
-                                       const Render::GL::Camera &camera,
-                                       int viewW, int viewH,
-                                       int ownerFilter) const;
+  auto pickUnitFirst(float sx, float sy, Engine::Core::World &world,
+                     const Render::GL::Camera &camera, int viewW, int viewH,
+                     int ownerFilter) const -> Engine::Core::EntityID;
 
-  std::vector<Engine::Core::EntityID>
+  static auto
   pickInRect(float x1, float y1, float x2, float y2, Engine::Core::World &world,
              const Render::GL::Camera &camera, int viewW, int viewH,
-             int ownerFilter) const;
+             int ownerFilter) -> std::vector<Engine::Core::EntityID>;
 
 private:
-  Engine::Core::EntityID m_prevHoverId = 0;
+  Engine::Core::EntityID m_prev_hoverId = 0;
   int m_hoverGraceTicks = 0;
-  bool projectBounds(const Render::GL::Camera &cam, const QVector3D &center,
+  auto projectBounds(const Render::GL::Camera &cam, const QVector3D &center,
                      float hx, float hz, int viewW, int viewH,
-                     QRectF &out) const;
+                     QRectF &out) const -> bool;
 };
 
-} // namespace Systems
-} // namespace Game
+} // namespace Game::Systems

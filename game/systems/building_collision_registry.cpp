@@ -3,119 +3,124 @@
 #include "pathfinding.h"
 #include <algorithm>
 #include <cmath>
+#include <cstddef>
+#include <map>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace Game::Systems {
 
 const std::map<std::string, BuildingCollisionRegistry::BuildingSize>
     BuildingCollisionRegistry::s_buildingSizes = {
-        {"barracks", {4.f, 4.f}},
+        {"barracks", {4.F, 4.F}},
 
 };
 
 float BuildingCollisionRegistry::s_gridPadding =
     BuildingCollisionRegistry::kDefaultGridPadding;
 
-BuildingCollisionRegistry &BuildingCollisionRegistry::instance() {
+auto BuildingCollisionRegistry::instance() -> BuildingCollisionRegistry & {
   static BuildingCollisionRegistry instance;
   return instance;
 }
 
-BuildingCollisionRegistry::BuildingSize
-BuildingCollisionRegistry::getBuildingSize(const std::string &buildingType) {
+auto BuildingCollisionRegistry::getBuildingSize(const std::string &buildingType)
+    -> BuildingCollisionRegistry::BuildingSize {
   auto it = s_buildingSizes.find(buildingType);
   if (it != s_buildingSizes.end()) {
     return it->second;
   }
 
-  return {2.0f, 2.0f};
+  return {2.0F, 2.0F};
 }
 
 void BuildingCollisionRegistry::registerBuilding(
-    unsigned int entityId, const std::string &buildingType, float centerX,
-    float centerZ, int ownerId) {
+    unsigned int entity_id, const std::string &buildingType, float center_x,
+    float center_z, int owner_id) {
 
-  if (m_entityToIndex.find(entityId) != m_entityToIndex.end()) {
+  if (m_entityToIndex.find(entity_id) != m_entityToIndex.end()) {
 
-    updateBuildingPosition(entityId, centerX, centerZ);
+    updateBuildingPosition(entity_id, center_x, center_z);
     return;
   }
 
-  BuildingSize size = getBuildingSize(buildingType);
-  BuildingFootprint footprint(centerX, centerZ, size.width, size.depth, ownerId,
-                              entityId);
+  BuildingSize const size = getBuildingSize(buildingType);
+  BuildingFootprint const footprint(center_x, center_z, size.width, size.depth,
+                                    owner_id, entity_id);
 
   m_buildings.push_back(footprint);
-  m_entityToIndex[entityId] = m_buildings.size() - 1;
+  m_entityToIndex[entity_id] = m_buildings.size() - 1;
 
   if (auto *pf = CommandService::getPathfinder()) {
     pf->markObstaclesDirty();
   }
 }
 
-void BuildingCollisionRegistry::unregisterBuilding(unsigned int entityId) {
-  auto it = m_entityToIndex.find(entityId);
+void BuildingCollisionRegistry::unregisterBuilding(unsigned int entity_id) {
+  auto it = m_entityToIndex.find(entity_id);
   if (it == m_entityToIndex.end()) {
     return;
   }
 
-  size_t index = it->second;
+  size_t const index = it->second;
 
   if (index != m_buildings.size() - 1) {
     std::swap(m_buildings[index], m_buildings.back());
 
-    m_entityToIndex[m_buildings[index].entityId] = index;
+    m_entityToIndex[m_buildings[index].entity_id] = index;
   }
 
   m_buildings.pop_back();
-  m_entityToIndex.erase(entityId);
+  m_entityToIndex.erase(entity_id);
 
   if (auto *pf = CommandService::getPathfinder()) {
     pf->markObstaclesDirty();
   }
 }
 
-void BuildingCollisionRegistry::updateBuildingPosition(unsigned int entityId,
-                                                       float centerX,
-                                                       float centerZ) {
-  auto it = m_entityToIndex.find(entityId);
+void BuildingCollisionRegistry::updateBuildingPosition(unsigned int entity_id,
+                                                       float center_x,
+                                                       float center_z) {
+  auto it = m_entityToIndex.find(entity_id);
   if (it == m_entityToIndex.end()) {
     return;
   }
 
-  size_t index = it->second;
-  m_buildings[index].centerX = centerX;
-  m_buildings[index].centerZ = centerZ;
+  size_t const index = it->second;
+  m_buildings[index].center_x = center_x;
+  m_buildings[index].center_z = center_z;
 
   if (auto *pf = CommandService::getPathfinder()) {
     pf->markObstaclesDirty();
   }
 }
 
-void BuildingCollisionRegistry::updateBuildingOwner(unsigned int entityId,
-                                                    int ownerId) {
-  auto it = m_entityToIndex.find(entityId);
+void BuildingCollisionRegistry::updateBuildingOwner(unsigned int entity_id,
+                                                    int owner_id) {
+  auto it = m_entityToIndex.find(entity_id);
   if (it == m_entityToIndex.end()) {
     return;
   }
 
-  size_t index = it->second;
-  m_buildings[index].ownerId = ownerId;
+  size_t const index = it->second;
+  m_buildings[index].owner_id = owner_id;
 }
 
-bool BuildingCollisionRegistry::isPointInBuilding(
-    float x, float z, unsigned int ignoreEntityId) const {
+auto BuildingCollisionRegistry::isPointInBuilding(
+    float x, float z, unsigned int ignoreEntityId) const -> bool {
   for (const auto &building : m_buildings) {
-    if (ignoreEntityId != 0 && building.entityId == ignoreEntityId) {
+    if (ignoreEntityId != 0 && building.entity_id == ignoreEntityId) {
       continue;
     }
 
-    float halfWidth = building.width / 2.0f;
-    float halfDepth = building.depth / 2.0f;
+    float const half_width = building.width / 2.0F;
+    float const half_depth = building.depth / 2.0F;
 
-    float minX = building.centerX - halfWidth;
-    float maxX = building.centerX + halfWidth;
-    float minZ = building.centerZ - halfDepth;
-    float maxZ = building.centerZ + halfDepth;
+    float const minX = building.center_x - half_width;
+    float const maxX = building.center_x + half_width;
+    float const minZ = building.center_z - half_depth;
+    float const maxZ = building.center_z + half_depth;
 
     if (x >= minX && x <= maxX && z >= minZ && z <= maxZ) {
       return true;
@@ -126,24 +131,24 @@ bool BuildingCollisionRegistry::isPointInBuilding(
 
 std::vector<std::pair<int, int>>
 BuildingCollisionRegistry::getOccupiedGridCells(
-    const BuildingFootprint &footprint, float gridCellSize) const {
+    const BuildingFootprint &footprint, float gridCellSize) {
   std::vector<std::pair<int, int>> cells;
 
-  float halfWidth = footprint.width / 2.0f;
-  float halfDepth = footprint.depth / 2.0f;
+  float const half_width = footprint.width / 2.0F;
+  float const half_depth = footprint.depth / 2.0F;
 
-  float padding = s_gridPadding;
-  int minGridX = static_cast<int>(
-      std::floor((footprint.centerX - halfWidth - padding) / gridCellSize));
-  int maxGridX = static_cast<int>(
-      std::ceil((footprint.centerX + halfWidth + padding) / gridCellSize));
-  int minGridZ = static_cast<int>(
-      std::floor((footprint.centerZ - halfDepth - padding) / gridCellSize));
-  int maxGridZ = static_cast<int>(
-      std::ceil((footprint.centerZ + halfDepth + padding) / gridCellSize));
+  float const padding = s_gridPadding;
+  int const min_grid_x = static_cast<int>(
+      std::floor((footprint.center_x - half_width - padding) / gridCellSize));
+  int const max_grid_x = static_cast<int>(
+      std::ceil((footprint.center_x + half_width + padding) / gridCellSize));
+  int const min_grid_z = static_cast<int>(
+      std::floor((footprint.center_z - half_depth - padding) / gridCellSize));
+  int const max_grid_z = static_cast<int>(
+      std::ceil((footprint.center_z + half_depth + padding) / gridCellSize));
 
-  for (int gx = minGridX; gx < maxGridX; ++gx) {
-    for (int gz = minGridZ; gz < maxGridZ; ++gz) {
+  for (int gx = min_grid_x; gx < max_grid_x; ++gx) {
+    for (int gz = min_grid_z; gz < max_grid_z; ++gz) {
       cells.emplace_back(gx, gz);
     }
   }
@@ -164,6 +169,8 @@ void BuildingCollisionRegistry::setGridPadding(float padding) {
   }
 }
 
-float BuildingCollisionRegistry::getGridPadding() { return s_gridPadding; }
+auto BuildingCollisionRegistry::getGridPadding() -> float {
+  return s_gridPadding;
+}
 
 } // namespace Game::Systems

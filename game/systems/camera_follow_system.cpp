@@ -3,9 +3,9 @@
 #include "../core/component.h"
 #include "../core/world.h"
 #include "selection_system.h"
+#include <qvectornd.h>
 
-namespace Game {
-namespace Systems {
+namespace Game::Systems {
 
 void CameraFollowSystem::update(Engine::Core::World &world,
                                 SelectionSystem &selection,
@@ -25,7 +25,7 @@ void CameraFollowSystem::update(Engine::Core::World &world,
     }
   }
   if (count > 0) {
-    QVector3D center = sum / float(count);
+    QVector3D const center = sum / float(count);
     camera.setTarget(center);
     camera.updateFollow(center);
   }
@@ -49,11 +49,10 @@ void CameraFollowSystem::snapToSelection(Engine::Core::World &world,
     }
   }
   if (count > 0) {
-    QVector3D target = sum / float(count);
+    QVector3D const target = sum / float(count);
     camera.setTarget(target);
     camera.captureFollowOffset();
   }
 }
 
-} // namespace Systems
-} // namespace Game
+} // namespace Game::Systems

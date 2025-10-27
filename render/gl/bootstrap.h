@@ -4,16 +4,14 @@
 
 class QOpenGLContext;
 
-namespace Render {
-namespace GL {
+namespace Render::GL {
 class Renderer;
 class Camera;
 class ResourceManager;
 
 class RenderBootstrap {
 public:
-  static bool initialize(Renderer &renderer, Camera &camera);
+  static auto initialize(Renderer &renderer, Camera &camera) -> bool;
 };
 
-} // namespace GL
-} // namespace Render
+} // namespace Render::GL

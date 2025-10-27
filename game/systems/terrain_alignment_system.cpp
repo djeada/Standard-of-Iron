@@ -9,9 +9,9 @@ namespace Game::Systems {
 
 void TerrainAlignmentSystem::update(Engine::Core::World *world,
                                     float deltaTime) {
-  auto &terrainService = Game::Map::TerrainService::instance();
+  auto &terrain_service = Game::Map::TerrainService::instance();
 
-  if (!terrainService.isInitialized()) {
+  if (!terrain_service.isInitialized()) {
     return;
   }
 
@@ -24,23 +24,24 @@ void TerrainAlignmentSystem::update(Engine::Core::World *world,
 void TerrainAlignmentSystem::alignEntityToTerrain(
     Engine::Core::Entity *entity) {
   auto *transform = entity->getComponent<Engine::Core::TransformComponent>();
-  if (!transform) {
+  if (transform == nullptr) {
     return;
   }
 
-  auto &terrainService = Game::Map::TerrainService::instance();
+  auto &terrain_service = Game::Map::TerrainService::instance();
 
-  float terrainHeight = terrainService.getTerrainHeight(transform->position.x,
-                                                        transform->position.z);
+  float const terrain_height = terrain_service.getTerrainHeight(
+      transform->position.x, transform->position.z);
 
-  float entityBaseOffset = 0.0f;
+  float entity_base_offset = 0.0F;
   if (auto *unit = entity->getComponent<Engine::Core::UnitComponent>()) {
-    entityBaseOffset =
+    entity_base_offset =
         Game::Units::TroopConfig::instance().getSelectionRingGroundOffset(
-            unit->spawnType);
+            unit->spawn_type);
   }
 
-  transform->position.y = terrainHeight + entityBaseOffset * transform->scale.y;
+  transform->position.y =
+      terrain_height + entity_base_offset * transform->scale.y;
 }
 
 } // namespace Game::Systems

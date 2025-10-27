@@ -12,15 +12,17 @@ namespace Render::GL {
 class ResourceManager : protected QOpenGLFunctions_3_3_Core {
 public:
   ResourceManager() = default;
-  ~ResourceManager() = default;
+  ~ResourceManager() override = default;
 
-  bool initialize();
+  auto initialize() -> bool;
 
-  Mesh *quad() const { return m_quadMesh.get(); }
-  Mesh *ground() const { return m_groundMesh.get(); }
-  Mesh *unit() const { return m_unitMesh.get(); }
-  Mesh *arrow() const { return Render::Geom::Arrow::get(); }
-  Texture *white() const { return m_whiteTexture.get(); }
+  [[nodiscard]] auto quad() const -> Mesh * { return m_quadMesh.get(); }
+  [[nodiscard]] auto ground() const -> Mesh * { return m_groundMesh.get(); }
+  [[nodiscard]] auto unit() const -> Mesh * { return m_unitMesh.get(); }
+  [[nodiscard]] static auto arrow() -> Mesh * {
+    return Render::Geom::Arrow::get();
+  }
+  [[nodiscard]] auto white() const -> Texture * { return m_whiteTexture.get(); }
 
 private:
   std::unique_ptr<Mesh> m_quadMesh;

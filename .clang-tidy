@@ -10,7 +10,7 @@ Checks: >
   -cppcoreguidelines-pro-type-reinterpret-cast
 
 WarningsAsErrors: ''
-HeaderFilterRegex: '.*'
+HeaderFilterRegex: '^(?!.*third_party/).*/Standard-of-Iron/.*'
 FormatStyle: file
 CheckOptions:
   - key: readability-identifier-naming.VariableCase

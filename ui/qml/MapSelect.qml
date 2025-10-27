@@ -13,7 +13,7 @@ Item {
     property string selectedMapPath: ""
     property string validationError: ""
 
-    signal mapChosen(string mapPath, var playerConfigs)
+    signal mapChosen(string map_path, var playerConfigs)
     signal cancelled()
 
     function hasMinimumDistinctTeams() {
@@ -22,7 +22,7 @@ Item {
 
         let teams = new Set();
         for (let i = 0; i < playersModel.count; i++) {
-            teams.add(playersModel.get(i).teamId);
+            teams.add(playersModel.get(i).team_id);
         }
         return teams.size >= 2;
     }
@@ -53,23 +53,23 @@ Item {
 
     function initializePlayers(mapData) {
         playersModel.clear();
-        if (!mapData || !mapData.playerIds || mapData.playerIds.length === 0)
+        if (!mapData || !mapData.player_ids || mapData.player_ids.length === 0)
             return ;
 
-        let humanPlayerId = mapData.playerIds.length > 0 ? mapData.playerIds[0] : 1;
+        let humanPlayerId = mapData.player_ids.length > 0 ? mapData.player_ids[0] : 1;
         playersModel.append({
-            "playerId": humanPlayerId,
+            "player_id": humanPlayerId,
             "playerName": "Player " + (humanPlayerId + 1),
             "colorIndex": 0,
             "colorHex": Theme.playerColors[0].hex,
             "colorName": Theme.playerColors[0].name,
-            "teamId": 0,
+            "team_id": 0,
             "teamIcon": Theme.teamIcons[0],
             "factionId": 0,
             "factionName": Theme.factions[0].name,
             "isHuman": true
         });
-        let cpuId = mapData.playerIds.find(function(id) {
+        let cpuId = mapData.player_ids.find(function(id) {
             return id !== humanPlayerId;
         });
         if (cpuId !== undefined)
@@ -79,18 +79,18 @@ Item {
     }
 
     function addCPU() {
-        if (!selectedMapData || !selectedMapData.playerIds)
+        if (!selectedMapData || !selectedMapData.player_ids)
             return ;
 
-        if (playersModel.count >= selectedMapData.playerIds.length)
+        if (playersModel.count >= selectedMapData.player_ids.length)
             return ;
 
         let usedIds = [];
-        for (let i = 0; i < playersModel.count; i++) usedIds.push(playersModel.get(i).playerId)
+        for (let i = 0; i < playersModel.count; i++) usedIds.push(playersModel.get(i).player_id)
         let nextId = -1;
-        for (let j = 0; j < selectedMapData.playerIds.length; j++) {
-            if (usedIds.indexOf(selectedMapData.playerIds[j]) === -1) {
-                nextId = selectedMapData.playerIds[j];
+        for (let j = 0; j < selectedMapData.player_ids.length; j++) {
+            if (usedIds.indexOf(selectedMapData.player_ids[j]) === -1) {
+                nextId = selectedMapData.player_ids[j];
                 break;
             }
         }
@@ -108,12 +108,12 @@ Item {
         }
         let defaultTeamId = playersModel.count > 0 ? 1 : 0;
         playersModel.append({
-            "playerId": nextId,
+            "player_id": nextId,
             "playerName": "CPU " + nextId,
             "colorIndex": colorIdx,
             "colorHex": Theme.playerColors[colorIdx].hex,
             "colorName": Theme.playerColors[colorIdx].name,
-            "teamId": defaultTeamId,
+            "team_id": defaultTeamId,
             "teamIcon": Theme.teamIcons[defaultTeamId],
             "factionId": 0,
             "factionName": Theme.factions[0].name,
@@ -166,8 +166,8 @@ Item {
 
         let p = playersModel.get(index);
         let maxTeam = Math.min(8, playersModel.count);
-        let newTeamId = (p.teamId + 1) % (maxTeam + 1);
-        playersModel.setProperty(index, "teamId", newTeamId);
+        let newTeamId = (p.team_id + 1) % (maxTeam + 1);
+        playersModel.setProperty(index, "team_id", newTeamId);
         playersModel.setProperty(index, "teamIcon", Theme.teamIcons[newTeamId]);
         updateValidationError();
     }
@@ -177,13 +177,13 @@ Item {
         for (let i = 0; i < playersModel.count; i++) {
             let p = playersModel.get(i);
             let config = {
-                "playerId": p.playerId,
+                "player_id": p.player_id,
                 "colorHex": p.colorHex,
-                "teamId": p.teamId,
+                "team_id": p.team_id,
                 "factionId": p.factionId,
                 "isHuman": p.isHuman
             };
-            console.log("MapSelect: Player", p.playerId, "config - Team:", p.teamId, "Color:", p.colorHex, "Human:", p.isHuman);
+            console.log("MapSelect: Player", p.player_id, "config - Team:", p.team_id, "Color:", p.colorHex, "Human:", p.isHuman);
             configs.push(config);
         }
         return configs;
@@ -437,7 +437,7 @@ Item {
                                 }
 
                                 Text {
-                                    id: mapName
+                                    id: map_name
 
                                     text: (typeof name !== "undefined") ? String(name) : (typeof modelData === "string" ? modelData : (modelData && modelData.name ? String(modelData.name) : ""))
                                     color: (index === list.currentIndex) ? Theme.textMain : Theme.textBright
@@ -980,7 +980,7 @@ Item {
                                         border.color: teamMA.containsMouse ? Theme.selectedBr : Theme.thumbBr
                                         border.width: teamMA.containsMouse ? 2 : 1
                                         ToolTip.visible: teamMA.containsMouse
-                                        ToolTip.text: qsTr("Team %1 - Click to change").arg(model.teamId || 0)
+                                        ToolTip.text: qsTr("Team %1 - Click to change").arg(model.team_id || 0)
 
                                         Column {
                                             anchors.centerIn: parent
@@ -996,7 +996,7 @@ Item {
 
                                             Text {
                                                 anchors.horizontalCenter: parent.horizontalCenter
-                                                text: qsTr("Team %1").arg(model.teamId || 0)
+                                                text: qsTr("Team %1").arg(model.team_id || 0)
                                                 color: Theme.textBright
                                                 font.pixelSize: 10
                                                 font.bold: true
@@ -1118,7 +1118,7 @@ Item {
 
                     Button {
                         text: qsTr("+ Add CPU")
-                        enabled: playersModel.count < (selectedMapData && selectedMapData.playerIds ? selectedMapData.playerIds.length : 0)
+                        enabled: playersModel.count < (selectedMapData && selectedMapData.player_ids ? selectedMapData.player_ids.length : 0)
                         onClicked: addCPU()
                         hoverEnabled: true
                         implicitHeight: 38
@@ -1235,7 +1235,7 @@ Item {
                         Repeater {
                             model: {
                                 var it = selectedMapData;
-                                return (it && it.playerIds) ? it.playerIds : [];
+                                return (it && it.player_ids) ? it.player_ids : [];
                             }
 
                             delegate: Rectangle {
@@ -1300,13 +1300,13 @@ Item {
                                 return "";
 
                             var it = selectedMapData;
-                            if (!it || !it.playerIds)
+                            if (!it || !it.player_ids)
                                 return "";
 
                             var others = [];
-                            for (var i = 0; i < it.playerIds.length; i++) {
-                                if (it.playerIds[i] !== game.selectedPlayerId)
-                                    others.push(it.playerIds[i]);
+                            for (var i = 0; i < it.player_ids.length; i++) {
+                                if (it.player_ids[i] !== game.selectedPlayerId)
+                                    others.push(it.player_ids[i]);
 
                             }
                             if (others.length === 0)

@@ -9,17 +9,20 @@ public:
   void execute(const AISnapshot &snapshot, AIContext &context, float deltaTime,
                std::vector<AICommand> &outCommands) override;
 
-  bool shouldExecute(const AISnapshot &snapshot,
-                     const AIContext &context) const override;
+  [[nodiscard]] auto
+  should_execute(const AISnapshot &snapshot,
+                 const AIContext &context) const -> bool override;
 
-  BehaviorPriority getPriority() const override {
+  [[nodiscard]] auto getPriority() const -> BehaviorPriority override {
     return BehaviorPriority::Low;
   }
 
-  bool canRunConcurrently() const override { return false; }
+  [[nodiscard]] auto canRunConcurrently() const -> bool override {
+    return false;
+  }
 
 private:
-  float m_gatherTimer = 0.0f;
+  float m_gatherTimer = 0.0F;
 };
 
 } // namespace Game::Systems::AI

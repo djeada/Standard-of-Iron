@@ -5,13 +5,11 @@
 #include <QVector3D>
 #include <vector>
 
-namespace Engine {
-namespace Core {
+namespace Engine::Core {
 class World;
 class Entity;
 using EntityID = unsigned int;
-} // namespace Core
-} // namespace Engine
+} // namespace Engine::Core
 
 namespace Game::Systems {
 class SelectionSystem;
@@ -29,41 +27,45 @@ class CommandController : public QObject {
   Q_OBJECT
 public:
   CommandController(Engine::Core::World *world,
-                    Game::Systems::SelectionSystem *selectionSystem,
+                    Game::Systems::SelectionSystem *selection_system,
                     Game::Systems::PickingService *pickingService,
                     QObject *parent = nullptr);
 
-  CommandResult onAttackClick(qreal sx, qreal sy, int viewportWidth,
-                              int viewportHeight, void *camera);
-  CommandResult onStopCommand();
-  CommandResult onHoldCommand();
-  CommandResult onPatrolClick(qreal sx, qreal sy, int viewportWidth,
-                              int viewportHeight, void *camera);
-  CommandResult setRallyAtScreen(qreal sx, qreal sy, int viewportWidth,
-                                 int viewportHeight, void *camera,
-                                 int localOwnerId);
-  void recruitNearSelected(const QString &unitType, int localOwnerId);
+  auto onAttackClick(qreal sx, qreal sy, int viewportWidth, int viewportHeight,
+                     void *camera) -> CommandResult;
+  auto onStopCommand() -> CommandResult;
+  auto onHoldCommand() -> CommandResult;
+  auto onPatrolClick(qreal sx, qreal sy, int viewportWidth, int viewportHeight,
+                     void *camera) -> CommandResult;
+  auto setRallyAtScreen(qreal sx, qreal sy, int viewportWidth,
+                        int viewportHeight, void *camera,
+                        int localOwnerId) -> CommandResult;
+  void recruitNearSelected(const QString &unit_type, int localOwnerId);
 
-  bool hasPatrolFirstWaypoint() const { return m_hasPatrolFirstWaypoint; }
-  QVector3D getPatrolFirstWaypoint() const { return m_patrolFirstWaypoint; }
+  [[nodiscard]] auto hasPatrolFirstWaypoint() const -> bool {
+    return m_hasPatrolFirstWaypoint;
+  }
+  [[nodiscard]] auto getPatrolFirstWaypoint() const -> QVector3D {
+    return m_patrolFirstWaypoint;
+  }
   void clearPatrolFirstWaypoint() { m_hasPatrolFirstWaypoint = false; }
 
-  Q_INVOKABLE bool anySelectedInHoldMode() const;
+  Q_INVOKABLE [[nodiscard]] bool anySelectedInHoldMode() const;
 
 signals:
-  void attackTargetSelected();
+  void attack_targetSelected();
   void troopLimitReached();
-  void holdModeChanged(bool active);
+  void hold_modeChanged(bool active);
 
 private:
   Engine::Core::World *m_world;
-  Game::Systems::SelectionSystem *m_selectionSystem;
+  Game::Systems::SelectionSystem *m_selection_system;
   Game::Systems::PickingService *m_pickingService;
 
   bool m_hasPatrolFirstWaypoint = false;
   QVector3D m_patrolFirstWaypoint;
 
-  void resetMovement(Engine::Core::Entity *entity);
+  static void resetMovement(Engine::Core::Entity *entity);
 };
 
 } // namespace App::Controllers

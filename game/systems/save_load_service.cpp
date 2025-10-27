@@ -10,59 +10,69 @@
 #include <QDir>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QJsonParseError>
 #include <QStandardPaths>
 
-#include <utility>
+#include <exception>
+#include <memory>
+#include <qcoreapplication.h>
+#include <qdir.h>
+#include <qglobal.h>
+#include <qjsonarray.h>
+#include <qjsondocument.h>
+#include <qjsonobject.h>
+#include <qnamespace.h>
+#include <qstandardpaths.h>
+#include <qstringliteral.h>
 
-namespace Game {
-namespace Systems {
+namespace Game::Systems {
 
 SaveLoadService::SaveLoadService() {
   ensureSavesDirectoryExists();
-  m_storage = std::make_unique<SaveStorage>(getDatabasePath());
-  QString initError;
-  if (!m_storage->initialize(&initError)) {
-    m_lastError = initError;
-    qWarning() << "SaveLoadService: failed to initialize storage" << initError;
+  m_storage = std::make_unique<SaveStorage>(get_database_path());
+  QString init_error;
+  if (!m_storage->initialize(&init_error)) {
+    m_last_error = init_error;
+    qWarning() << "SaveLoadService: failed to initialize storage" << init_error;
   }
 }
 
 SaveLoadService::~SaveLoadService() = default;
 
-QString SaveLoadService::getSavesDirectory() const {
-  QString savesPath =
+QString SaveLoadService::getSavesDirectory() {
+  QString const savesPath =
       QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
   return savesPath + "/saves";
 }
 
-QString SaveLoadService::getDatabasePath() const {
+auto SaveLoadService::get_database_path() const -> QString {
   return getSavesDirectory() + QStringLiteral("/saves.sqlite");
 }
 
 void SaveLoadService::ensureSavesDirectoryExists() const {
-  QString savesDir = getSavesDirectory();
-  QDir dir;
+  QString const savesDir = getSavesDirectory();
+  QDir const dir;
   if (!dir.exists(savesDir)) {
     dir.mkpath(savesDir);
   }
 }
 
-bool SaveLoadService::saveGameToSlot(Engine::Core::World &world,
+auto SaveLoadService::saveGameToSlot(Engine::Core::World &world,
                                      const QString &slotName,
                                      const QString &title,
-                                     const QString &mapName,
+                                     const QString &map_name,
                                      const QJsonObject &metadata,
-                                     const QByteArray &screenshot) {
+                                     const QByteArray &screenshot) -> bool {
   qInfo() << "Saving game to slot:" << slotName;
 
   try {
     if (!m_storage) {
-      m_lastError = QStringLiteral("Save storage unavailable");
-      qWarning() << m_lastError;
+      m_last_error = QStringLiteral("Save storage unavailable");
+      qWarning() << m_last_error;
       return false;
     }
 
-    QJsonDocument worldDoc =
+    QJsonDocument const worldDoc =
         Engine::Core::Serialization::serializeWorld(&world);
     const QByteArray worldBytes = worldDoc.toJson(QJsonDocument::Compact);
 
@@ -71,41 +81,41 @@ bool SaveLoadService::saveGameToSlot(Engine::Core::World &world,
     combinedMetadata["title"] = title;
     combinedMetadata["timestamp"] =
         QDateTime::currentDateTimeUtc().toString(Qt::ISODateWithMs);
-    if (!combinedMetadata.contains("mapName")) {
-      combinedMetadata["mapName"] =
-          mapName.isEmpty() ? QStringLiteral("Unknown Map") : mapName;
+    if (!combinedMetadata.contains("map_name")) {
+      combinedMetadata["map_name"] =
+          map_name.isEmpty() ? QStringLiteral("Unknown Map") : map_name;
     }
     combinedMetadata["version"] = QStringLiteral("1.0");
 
-    QString storageError;
+    QString storage_error;
     if (!m_storage->saveSlot(slotName, title, combinedMetadata, worldBytes,
-                             screenshot, &storageError)) {
-      m_lastError = storageError;
-      qWarning() << "SaveLoadService: failed to persist slot" << storageError;
+                             screenshot, &storage_error)) {
+      m_last_error = storage_error;
+      qWarning() << "SaveLoadService: failed to persist slot" << storage_error;
       return false;
     }
 
     m_lastMetadata = combinedMetadata;
     m_lastTitle = title;
     m_lastScreenshot = screenshot;
-    m_lastError.clear();
+    m_last_error.clear();
     return true;
   } catch (const std::exception &e) {
-    m_lastError =
+    m_last_error =
         QString("Exception while saving game to slot: %1").arg(e.what());
-    qWarning() << m_lastError;
+    qWarning() << m_last_error;
     return false;
   }
 }
 
-bool SaveLoadService::loadGameFromSlot(Engine::Core::World &world,
-                                       const QString &slotName) {
+auto SaveLoadService::loadGameFromSlot(Engine::Core::World &world,
+                                       const QString &slotName) -> bool {
   qInfo() << "Loading game from slot:" << slotName;
 
   try {
     if (!m_storage) {
-      m_lastError = QStringLiteral("Save storage unavailable");
-      qWarning() << m_lastError;
+      m_last_error = QStringLiteral("Save storage unavailable");
+      qWarning() << m_last_error;
       return false;
     }
 
@@ -114,20 +124,20 @@ bool SaveLoadService::loadGameFromSlot(Engine::Core::World &world,
     QByteArray screenshot;
     QString title;
 
-    QString loadError;
+    QString load_error;
     if (!m_storage->loadSlot(slotName, worldBytes, metadata, screenshot, title,
-                             &loadError)) {
-      m_lastError = loadError;
-      qWarning() << "SaveLoadService: failed to load slot" << loadError;
+                             &load_error)) {
+      m_last_error = load_error;
+      qWarning() << "SaveLoadService: failed to load slot" << load_error;
       return false;
     }
 
-    QJsonParseError parseError{};
-    QJsonDocument doc = QJsonDocument::fromJson(worldBytes, &parseError);
-    if (parseError.error != QJsonParseError::NoError || doc.isNull()) {
-      m_lastError = QStringLiteral("Corrupted save data for slot '%1': %2")
-                        .arg(slotName, parseError.errorString());
-      qWarning() << m_lastError;
+    QJsonParseError parse_error{};
+    QJsonDocument const doc = QJsonDocument::fromJson(worldBytes, &parse_error);
+    if (parse_error.error != QJsonParseError::NoError || doc.isNull()) {
+      m_last_error = QStringLiteral("Corrupted save data for slot '%1': %2")
+                         .arg(slotName, parse_error.errorString());
+      qWarning() << m_last_error;
       return false;
     }
 
@@ -137,49 +147,49 @@ bool SaveLoadService::loadGameFromSlot(Engine::Core::World &world,
     m_lastMetadata = metadata;
     m_lastTitle = title;
     m_lastScreenshot = screenshot;
-    m_lastError.clear();
+    m_last_error.clear();
     return true;
   } catch (const std::exception &e) {
-    m_lastError =
+    m_last_error =
         QString("Exception while loading game from slot: %1").arg(e.what());
-    qWarning() << m_lastError;
+    qWarning() << m_last_error;
     return false;
   }
 }
 
-QVariantList SaveLoadService::getSaveSlots() const {
+auto SaveLoadService::getSaveSlots() const -> QVariantList {
   if (!m_storage) {
     return {};
   }
 
-  QString listError;
-  QVariantList slotList = m_storage->listSlots(&listError);
-  if (!listError.isEmpty()) {
-    m_lastError = listError;
-    qWarning() << "SaveLoadService: failed to enumerate slots" << listError;
+  QString list_error;
+  QVariantList slotList = m_storage->listSlots(&list_error);
+  if (!list_error.isEmpty()) {
+    m_last_error = list_error;
+    qWarning() << "SaveLoadService: failed to enumerate slots" << list_error;
   } else {
-    m_lastError.clear();
+    m_last_error.clear();
   }
   return slotList;
 }
 
-bool SaveLoadService::deleteSaveSlot(const QString &slotName) {
+auto SaveLoadService::deleteSaveSlot(const QString &slotName) -> bool {
   qInfo() << "Deleting save slot:" << slotName;
 
   if (!m_storage) {
-    m_lastError = QStringLiteral("Save storage unavailable");
-    qWarning() << m_lastError;
+    m_last_error = QStringLiteral("Save storage unavailable");
+    qWarning() << m_last_error;
     return false;
   }
 
-  QString deleteError;
-  if (!m_storage->deleteSlot(slotName, &deleteError)) {
-    m_lastError = deleteError;
-    qWarning() << "SaveLoadService: failed to delete slot" << deleteError;
+  QString delete_error;
+  if (!m_storage->deleteSlot(slotName, &delete_error)) {
+    m_last_error = delete_error;
+    qWarning() << "SaveLoadService: failed to delete slot" << delete_error;
     return false;
   }
 
-  m_lastError.clear();
+  m_last_error.clear();
   return true;
 }
 
@@ -191,5 +201,4 @@ void SaveLoadService::exitGame() {
   QCoreApplication::quit();
 }
 
-} // namespace Systems
-} // namespace Game
+} // namespace Game::Systems

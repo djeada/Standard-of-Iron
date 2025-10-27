@@ -3,29 +3,24 @@
 #include "game/systems/picking_service.h"
 #include <memory>
 
-namespace Engine {
-namespace Core {
+namespace Engine::Core {
 class World;
 using EntityID = unsigned int;
-} // namespace Core
-} // namespace Engine
+} // namespace Engine::Core
 
-namespace Render {
-namespace GL {
+namespace Render::GL {
 class Camera;
 }
-} // namespace Render
 
 class HoverTracker {
 public:
   HoverTracker(Game::Systems::PickingService *pickingService);
 
-  Engine::Core::EntityID updateHover(float sx, float sy,
-                                     Engine::Core::World &world,
-                                     const Render::GL::Camera &camera,
-                                     int viewportWidth, int viewportHeight);
+  auto updateHover(float sx, float sy, Engine::Core::World &world,
+                   const Render::GL::Camera &camera, int viewportWidth,
+                   int viewportHeight) -> Engine::Core::EntityID;
 
-  Engine::Core::EntityID getLastHoveredEntity() const {
+  [[nodiscard]] auto getLastHoveredEntity() const -> Engine::Core::EntityID {
     return m_hoveredEntityId;
   }
 

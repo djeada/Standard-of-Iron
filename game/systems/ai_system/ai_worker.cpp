@@ -1,4 +1,12 @@
 #include "ai_worker.h"
+#include "systems/ai_system/ai_behavior_registry.h"
+#include "systems/ai_system/ai_executor.h"
+#include "systems/ai_system/ai_reasoner.h"
+#include "systems/ai_system/ai_types.h"
+#include <atomic>
+#include <mutex>
+#include <queue>
+#include <utility>
 
 namespace Game::Systems::AI {
 
@@ -12,7 +20,7 @@ AIWorker::AIWorker(AIReasoner &reasoner, AIExecutor &executor,
 AIWorker::~AIWorker() {
   stop();
 
-  { std::lock_guard<std::mutex> lock(m_jobMutex); }
+  { std::lock_guard<std::mutex> const lock(m_jobMutex); }
   m_jobCondition.notify_all();
 
   if (m_thread.joinable()) {
@@ -20,14 +28,14 @@ AIWorker::~AIWorker() {
   }
 }
 
-bool AIWorker::trySubmit(AIJob &&job) {
+auto AIWorker::trySubmit(AIJob &&job) -> bool {
 
   if (m_workerBusy.load(std::memory_order_acquire)) {
     return false;
   }
 
   {
-    std::lock_guard<std::mutex> lock(m_jobMutex);
+    std::lock_guard<std::mutex> const lock(m_jobMutex);
     m_pendingJob = std::move(job);
     m_hasPendingJob = true;
   }
@@ -39,7 +47,7 @@ bool AIWorker::trySubmit(AIJob &&job) {
 }
 
 void AIWorker::drainResults(std::queue<AIResult> &out) {
-  std::lock_guard<std::mutex> lock(m_resultMutex);
+  std::lock_guard<std::mutex> const lock(m_resultMutex);
 
   while (!m_results.empty()) {
     out.push(std::move(m_results.front()));
@@ -71,13 +79,16 @@ void AIWorker::workerLoop() {
       AIResult result;
       result.context = job.context;
 
-      m_reasoner.updateContext(job.snapshot, result.context);
-      m_reasoner.updateStateMachine(result.context, job.deltaTime);
-      m_executor.run(job.snapshot, result.context, job.deltaTime, m_registry,
-                     result.commands);
+      Game::Systems::AI::AIReasoner::updateContext(job.snapshot,
+                                                   result.context);
+      Game::Systems::AI::AIReasoner::updateStateMachine(result.context,
+                                                        job.deltaTime);
+      Game::Systems::AI::AIExecutor::run(job.snapshot, result.context,
+                                         job.deltaTime, m_registry,
+                                         result.commands);
 
       {
-        std::lock_guard<std::mutex> lock(m_resultMutex);
+        std::lock_guard<std::mutex> const lock(m_resultMutex);
         m_results.push(std::move(result));
       }
     } catch (...) {

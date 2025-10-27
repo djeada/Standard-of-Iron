@@ -15,6 +15,6 @@ namespace Render::GL {
 
 void renderPatrolFlags(
     Renderer *renderer, ResourceManager *resources, Engine::Core::World &world,
-    const std::optional<QVector3D> &previewWaypoint = std::nullopt);
+    const std::optional<QVector3D> &preview_waypoint = std::nullopt);
 
 }

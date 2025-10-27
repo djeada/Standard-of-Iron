@@ -1,8 +1,8 @@
 #pragma once
 
 #include <algorithm>
+#include <array>
 #include <cmath>
-#include <cstring>
 
 namespace Render::Math {
 
@@ -12,82 +12,91 @@ struct alignas(16) Vec3 {
   Vec3() noexcept : x(0), y(0), z(0), w(0) {}
   Vec3(float x_, float y_, float z_) noexcept : x(x_), y(y_), z(z_), w(0) {}
 
-  inline Vec3 operator+(const Vec3 &o) const noexcept {
-    return Vec3(x + o.x, y + o.y, z + o.z);
+  auto operator+(const Vec3 &o) const noexcept -> Vec3 {
+    return {x + o.x, y + o.y, z + o.z};
   }
 
-  inline Vec3 operator-(const Vec3 &o) const noexcept {
-    return Vec3(x - o.x, y - o.y, z - o.z);
+  auto operator-(const Vec3 &o) const noexcept -> Vec3 {
+    return {x - o.x, y - o.y, z - o.z};
   }
 
-  inline Vec3 operator*(float s) const noexcept {
-    return Vec3(x * s, y * s, z * s);
+  auto operator*(float s) const noexcept -> Vec3 {
+    return {x * s, y * s, z * s};
   }
 
-  inline float dot(const Vec3 &o) const noexcept {
+  [[nodiscard]] auto dot(const Vec3 &o) const noexcept -> float {
     return x * o.x + y * o.y + z * o.z;
   }
 
-  inline Vec3 cross(const Vec3 &o) const noexcept {
-    return Vec3(y * o.z - z * o.y, z * o.x - x * o.z, x * o.y - y * o.x);
+  [[nodiscard]] auto cross(const Vec3 &o) const noexcept -> Vec3 {
+    return {y * o.z - z * o.y, z * o.x - x * o.z, x * o.y - y * o.x};
   }
 
-  inline float lengthSquared() const noexcept { return x * x + y * y + z * z; }
-
-  inline float length() const noexcept { return std::sqrt(lengthSquared()); }
-
-  inline Vec3 normalized() const noexcept {
-    float len = length();
-    if (len < 1e-6f)
-      return Vec3(0, 1, 0);
-    float invLen = 1.0f / len;
-    return Vec3(x * invLen, y * invLen, z * invLen);
+  [[nodiscard]] auto lengthSquared() const noexcept -> float {
+    return x * x + y * y + z * z;
   }
 
-  inline void normalize() noexcept {
-    float len = length();
-    if (len > 1e-6f) {
-      float invLen = 1.0f / len;
-      x *= invLen;
-      y *= invLen;
-      z *= invLen;
+  [[nodiscard]] auto length() const noexcept -> float {
+    return std::sqrt(lengthSquared());
+  }
+
+  [[nodiscard]] auto normalized() const noexcept -> Vec3 {
+    float const len = length();
+    if (len < 1e-6F) {
+      return {0, 1, 0};
+    }
+    float const inv_len = 1.0F / len;
+    return {x * inv_len, y * inv_len, z * inv_len};
+  }
+
+  void normalize() noexcept {
+    float const len = length();
+    if (len > 1e-6F) {
+      float const inv_len = 1.0F / len;
+      x *= inv_len;
+      y *= inv_len;
+      z *= inv_len;
     }
   }
 };
 
 struct alignas(16) Mat3x4 {
-  float m[3][4];
+  std::array<std::array<float, 4>, 3> m{};
 
   Mat3x4() noexcept {
-    std::memset(m, 0, sizeof(m));
-    m[0][0] = m[1][1] = m[2][2] = 1.0f;
+    for (auto &row : m) {
+      row.fill(0.0F);
+    }
+    m[0][0] = m[1][1] = m[2][2] = 1.0F;
   }
 
-  static inline Mat3x4 TRS(const Vec3 &translation, const float rotation[3][3],
-                           float scaleX, float scaleY, float scaleZ) noexcept {
+  static auto TRS(const Vec3 &translation,
+                  const std::array<std::array<float, 3>, 3> &rotation,
+                  float scale_x, float scaleY,
+                  float scale_z) noexcept -> Mat3x4 {
     Mat3x4 result;
     for (int row = 0; row < 3; ++row) {
-      result.m[row][0] = rotation[row][0] * scaleX;
+      result.m[row][0] = rotation[row][0] * scale_x;
       result.m[row][1] = rotation[row][1] * scaleY;
-      result.m[row][2] = rotation[row][2] * scaleZ;
+      result.m[row][2] = rotation[row][2] * scale_z;
       result.m[row][3] = (&translation.x)[row];
     }
     return result;
   }
 
-  inline Vec3 transformPoint(const Vec3 &p) const noexcept {
-    return Vec3(m[0][0] * p.x + m[0][1] * p.y + m[0][2] * p.z + m[0][3],
-                m[1][0] * p.x + m[1][1] * p.y + m[1][2] * p.z + m[1][3],
-                m[2][0] * p.x + m[2][1] * p.y + m[2][2] * p.z + m[2][3]);
+  [[nodiscard]] auto transformPoint(const Vec3 &p) const noexcept -> Vec3 {
+    return {m[0][0] * p.x + m[0][1] * p.y + m[0][2] * p.z + m[0][3],
+            m[1][0] * p.x + m[1][1] * p.y + m[1][2] * p.z + m[1][3],
+            m[2][0] * p.x + m[2][1] * p.y + m[2][2] * p.z + m[2][3]};
   }
 
-  inline Vec3 transformVector(const Vec3 &v) const noexcept {
-    return Vec3(m[0][0] * v.x + m[0][1] * v.y + m[0][2] * v.z,
-                m[1][0] * v.x + m[1][1] * v.y + m[1][2] * v.z,
-                m[2][0] * v.x + m[2][1] * v.y + m[2][2] * v.z);
+  [[nodiscard]] auto transformVector(const Vec3 &v) const noexcept -> Vec3 {
+    return {m[0][0] * v.x + m[0][1] * v.y + m[0][2] * v.z,
+            m[1][0] * v.x + m[1][1] * v.y + m[1][2] * v.z,
+            m[2][0] * v.x + m[2][1] * v.y + m[2][2] * v.z};
   }
 
-  inline Mat3x4 operator*(const Mat3x4 &o) const noexcept {
+  auto operator*(const Mat3x4 &o) const noexcept -> Mat3x4 {
     Mat3x4 result;
     for (int row = 0; row < 3; ++row) {
       for (int col = 0; col < 3; ++col) {
@@ -100,14 +109,14 @@ struct alignas(16) Mat3x4 {
     return result;
   }
 
-  inline void setTranslation(const Vec3 &t) noexcept {
+  void set_translation(const Vec3 &t) noexcept {
     m[0][3] = t.x;
     m[1][3] = t.y;
     m[2][3] = t.z;
   }
 
-  inline Vec3 getTranslation() const noexcept {
-    return Vec3(m[0][3], m[1][3], m[2][3]);
+  [[nodiscard]] auto get_translation() const noexcept -> Vec3 {
+    return {m[0][3], m[1][3], m[2][3]};
   }
 };
 
@@ -116,40 +125,41 @@ struct CylinderTransform {
   Vec3 axis;
   Vec3 tangent;
   Vec3 bitangent;
-  float length;
-  float radius;
+  float length{};
+  float radius{};
 
-  static inline CylinderTransform fromPoints(const Vec3 &start, const Vec3 &end,
-                                             float radius) noexcept {
+  static auto fromPoints(const Vec3 &start, const Vec3 &end,
+                         float radius) noexcept -> CylinderTransform {
     CylinderTransform ct;
     ct.radius = radius;
 
-    Vec3 diff = end - start;
-    float lenSq = diff.lengthSquared();
+    Vec3 const diff = end - start;
+    float const len_sq = diff.lengthSquared();
 
-    if (lenSq < 1e-10f) {
+    if (len_sq < 1e-10F) {
 
       ct.center = start;
       ct.axis = Vec3(0, 1, 0);
       ct.tangent = Vec3(1, 0, 0);
       ct.bitangent = Vec3(0, 0, 1);
-      ct.length = 0.0f;
+      ct.length = 0.0F;
       return ct;
     }
 
-    ct.length = std::sqrt(lenSq);
-    ct.center = Vec3((start.x + end.x) * 0.5f, (start.y + end.y) * 0.5f,
-                     (start.z + end.z) * 0.5f);
-    ct.axis = diff * (1.0f / ct.length);
+    ct.length = std::sqrt(len_sq);
+    ct.center = Vec3((start.x + end.x) * 0.5F, (start.y + end.y) * 0.5F,
+                     (start.z + end.z) * 0.5F);
+    ct.axis = diff * (1.0F / ct.length);
 
-    Vec3 up = (std::abs(ct.axis.y) < 0.999f) ? Vec3(0, 1, 0) : Vec3(1, 0, 0);
+    Vec3 const up =
+        (std::abs(ct.axis.y) < 0.999F) ? Vec3(0, 1, 0) : Vec3(1, 0, 0);
     ct.tangent = up.cross(ct.axis).normalized();
     ct.bitangent = ct.axis.cross(ct.tangent).normalized();
 
     return ct;
   }
 
-  inline Mat3x4 toMatrix() const noexcept {
+  [[nodiscard]] auto toMatrix() const noexcept -> Mat3x4 {
     Mat3x4 m;
 
     m.m[0][0] = tangent.x * radius;
@@ -172,50 +182,50 @@ struct CylinderTransform {
   }
 };
 
-inline Mat3x4 cylinderBetweenFast(const Vec3 &a, const Vec3 &b,
-                                  float radius) noexcept {
+inline auto cylinderBetweenFast(const Vec3 &a, const Vec3 &b,
+                                float radius) noexcept -> Mat3x4 {
   const float dx = b.x - a.x;
   const float dy = b.y - a.y;
   const float dz = b.z - a.z;
-  const float lenSq = dx * dx + dy * dy + dz * dz;
+  const float len_sq = dx * dx + dy * dy + dz * dz;
 
-  constexpr float kEpsilonSq = 1e-12f;
-  constexpr float kRadToDeg = 57.2957795131f;
+  constexpr float k_epsilonSq = 1e-12F;
+  constexpr float k_rad_to_deg = 57.2957795131F;
 
-  Vec3 center((a.x + b.x) * 0.5f, (a.y + b.y) * 0.5f, (a.z + b.z) * 0.5f);
+  Vec3 const center((a.x + b.x) * 0.5F, (a.y + b.y) * 0.5F, (a.z + b.z) * 0.5F);
 
-  if (lenSq < kEpsilonSq) {
+  if (len_sq < k_epsilonSq) {
 
     Mat3x4 m;
     m.m[0][0] = radius;
     m.m[0][1] = 0;
     m.m[0][2] = 0;
     m.m[1][0] = 0;
-    m.m[1][1] = 1.0f;
+    m.m[1][1] = 1.0F;
     m.m[1][2] = 0;
     m.m[2][0] = 0;
     m.m[2][1] = 0;
     m.m[2][2] = radius;
-    m.setTranslation(center);
+    m.set_translation(center);
     return m;
   }
 
-  const float len = std::sqrt(lenSq);
-  const float invLen = 1.0f / len;
+  const float len = std::sqrt(len_sq);
+  const float inv_len = 1.0F / len;
 
-  const float ndx = dx * invLen;
-  const float ndy = dy * invLen;
-  const float ndz = dz * invLen;
+  const float ndx = dx * inv_len;
+  const float ndy = dy * inv_len;
+  const float ndz = dz * inv_len;
 
-  const float axisX = ndz;
-  const float axisZ = -ndx;
-  const float axisLenSq = axisX * axisX + axisZ * axisZ;
+  const float axis_x = ndz;
+  const float axis_z = -ndx;
+  const float axis_len_sq = axis_x * axis_x + axis_z * axis_z;
 
-  float rot[3][3];
+  std::array<std::array<float, 3>, 3> rot{};
 
-  if (axisLenSq < kEpsilonSq) {
+  if (axis_len_sq < k_epsilonSq) {
 
-    if (ndy < 0.0f) {
+    if (ndy < 0.0F) {
 
       rot[0][0] = 1;
       rot[0][1] = 0;
@@ -240,15 +250,15 @@ inline Mat3x4 cylinderBetweenFast(const Vec3 &a, const Vec3 &b,
     }
   } else {
 
-    const float axisInvLen = 1.0f / std::sqrt(axisLenSq);
-    const float ax = axisX * axisInvLen;
-    const float az = axisZ * axisInvLen;
+    const float axis_inv_len = 1.0F / std::sqrt(axis_len_sq);
+    const float ax = axis_x * axis_inv_len;
+    const float az = axis_z * axis_inv_len;
 
-    const float dot = std::clamp(ndy, -1.0f, 1.0f);
+    const float dot = std::clamp(ndy, -1.0F, 1.0F);
     const float angle = std::acos(dot);
     const float c = std::cos(angle);
     const float s = std::sin(angle);
-    const float t = 1.0f - c;
+    const float t = 1.0F - c;
 
     rot[0][0] = t * ax * ax + c;
     rot[0][1] = t * ax * 0;
@@ -267,7 +277,7 @@ inline Mat3x4 cylinderBetweenFast(const Vec3 &a, const Vec3 &b,
   return result;
 }
 
-inline Mat3x4 sphereAtFast(const Vec3 &pos, float radius) noexcept {
+inline auto sphereAtFast(const Vec3 &pos, float radius) noexcept -> Mat3x4 {
   Mat3x4 m;
   m.m[0][0] = radius;
   m.m[0][1] = 0;
@@ -278,19 +288,20 @@ inline Mat3x4 sphereAtFast(const Vec3 &pos, float radius) noexcept {
   m.m[2][0] = 0;
   m.m[2][1] = 0;
   m.m[2][2] = radius;
-  m.setTranslation(pos);
+  m.set_translation(pos);
   return m;
 }
 
-inline Mat3x4 cylinderBetweenFast(const Mat3x4 &parent, const Vec3 &a,
-                                  const Vec3 &b, float radius) noexcept {
-  Mat3x4 local = cylinderBetweenFast(a, b, radius);
+inline auto cylinderBetweenFast(const Mat3x4 &parent, const Vec3 &a,
+                                const Vec3 &b,
+                                float radius) noexcept -> Mat3x4 {
+  Mat3x4 const local = cylinderBetweenFast(a, b, radius);
   return parent * local;
 }
 
-inline Mat3x4 sphereAtFast(const Mat3x4 &parent, const Vec3 &pos,
-                           float radius) noexcept {
-  Mat3x4 local = sphereAtFast(pos, radius);
+inline auto sphereAtFast(const Mat3x4 &parent, const Vec3 &pos,
+                         float radius) noexcept -> Mat3x4 {
+  Mat3x4 const local = sphereAtFast(pos, radius);
   return parent * local;
 }
 

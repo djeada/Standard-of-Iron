@@ -89,10 +89,10 @@ Rectangle {
                 Text {
                     anchors.horizontalCenter: parent.horizontalCenter
                     text: {
-                        if (!playerData.teamId || !teamIcons || teamIcons.length === 0)
+                        if (!playerData.team_id || !teamIcons || teamIcons.length === 0)
                             return "●";
 
-                        return teamIcons[(playerData.teamId - 1) % teamIcons.length];
+                        return teamIcons[(playerData.team_id - 1) % teamIcons.length];
                     }
                     color: colors.textMain
                     font.pixelSize: 18
@@ -100,7 +100,7 @@ Rectangle {
 
                 Text {
                     anchors.horizontalCenter: parent.horizontalCenter
-                    text: "T" + (playerData.teamId || 1)
+                    text: "T" + (playerData.team_id || 1)
                     color: colors.textSubLite
                     font.pixelSize: 9
                 }

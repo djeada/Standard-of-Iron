@@ -21,7 +21,7 @@ struct Point {
   constexpr Point() = default;
   constexpr Point(int x_, int y_) : x(x_), y(y_) {}
 
-  constexpr bool operator==(const Point &other) const {
+  constexpr auto operator==(const Point &other) const -> bool {
     return x == other.x && y == other.y;
   }
 };
@@ -31,59 +31,60 @@ public:
   Pathfinding(int width, int height);
   ~Pathfinding();
 
-  void setGridOffset(float offsetX, float offsetZ);
+  void setGridOffset(float offset_x, float offset_z);
 
-  float getGridOffsetX() const { return m_gridOffsetX; }
-  float getGridOffsetZ() const { return m_gridOffsetZ; }
+  auto getGridOffsetX() const -> float { return m_gridOffsetX; }
+  auto getGridOffsetZ() const -> float { return m_gridOffsetZ; }
 
   void setObstacle(int x, int y, bool isObstacle);
-  bool isWalkable(int x, int y) const;
+  auto isWalkable(int x, int y) const -> bool;
 
   void updateBuildingObstacles();
 
   void markObstaclesDirty();
 
-  std::vector<Point> findPath(const Point &start, const Point &end);
+  auto findPath(const Point &start, const Point &end) -> std::vector<Point>;
 
-  std::future<std::vector<Point>> findPathAsync(const Point &start,
-                                                const Point &end);
+  auto findPathAsync(const Point &start,
+                     const Point &end) -> std::future<std::vector<Point>>;
 
-  void submitPathRequest(std::uint64_t requestId, const Point &start,
+  void submitPathRequest(std::uint64_t request_id, const Point &start,
                          const Point &end);
 
   struct PathResult {
-    std::uint64_t requestId;
+    std::uint64_t request_id;
     std::vector<Point> path;
   };
-  std::vector<PathResult> fetchCompletedPaths();
+  auto fetchCompletedPaths() -> std::vector<PathResult>;
 
 private:
-  std::vector<Point> findPathInternal(const Point &start, const Point &end);
+  auto findPathInternal(const Point &start,
+                        const Point &end) -> std::vector<Point>;
 
-  int calculateHeuristic(const Point &a, const Point &b) const;
+  static auto calculateHeuristic(const Point &a, const Point &b) -> int;
 
   void ensureWorkingBuffers();
-  std::uint32_t nextGeneration();
+  auto nextGeneration() -> std::uint32_t;
   void resetGenerations();
 
-  inline int toIndex(int x, int y) const { return y * m_width + x; }
-  inline int toIndex(const Point &p) const { return toIndex(p.x, p.y); }
-  inline Point toPoint(int index) const {
-    return Point(index % m_width, index / m_width);
+  auto toIndex(int x, int y) const -> int { return y * m_width + x; }
+  auto toIndex(const Point &p) const -> int { return toIndex(p.x, p.y); }
+  auto toPoint(int index) const -> Point {
+    return {index % m_width, index / m_width};
   }
 
-  bool isClosed(int index, std::uint32_t generation) const;
+  auto isClosed(int index, std::uint32_t generation) const -> bool;
   void setClosed(int index, std::uint32_t generation);
 
-  int getGCost(int index, std::uint32_t generation) const;
+  auto getGCost(int index, std::uint32_t generation) const -> int;
   void setGCost(int index, std::uint32_t generation, int cost);
 
-  bool hasParent(int index, std::uint32_t generation) const;
-  int getParent(int index, std::uint32_t generation) const;
+  auto hasParent(int index, std::uint32_t generation) const -> bool;
+  auto getParent(int index, std::uint32_t generation) const -> int;
   void setParent(int index, std::uint32_t generation, int parentIndex);
 
-  std::size_t collectNeighbors(const Point &point,
-                               std::array<Point, 8> &buffer) const;
+  auto collectNeighbors(const Point &point,
+                        std::array<Point, 8> &buffer) const -> std::size_t;
   void buildPath(int startIndex, int endIndex, std::uint32_t generation,
                  int expectedLength, std::vector<Point> &outPath) const;
 
@@ -93,16 +94,16 @@ private:
     int gCost;
   };
 
-  bool heapLess(const QueueNode &lhs, const QueueNode &rhs) const;
+  static auto heapLess(const QueueNode &lhs, const QueueNode &rhs) -> bool;
   void pushOpenNode(const QueueNode &node);
-  QueueNode popOpenNode();
+  auto popOpenNode() -> QueueNode;
 
   void workerLoop();
 
   int m_width, m_height;
   std::vector<std::vector<std::uint8_t>> m_obstacles;
-  float m_gridCellSize;
-  float m_gridOffsetX, m_gridOffsetZ;
+  float m_gridCellSize{1.0F};
+  float m_gridOffsetX{0.0F}, m_gridOffsetZ{0.0F};
   std::atomic<bool> m_obstaclesDirty;
   mutable std::mutex m_mutex;
   std::atomic<bool> m_stopWorker{false};
@@ -110,7 +111,7 @@ private:
   std::mutex m_requestMutex;
   std::condition_variable m_requestCondition;
   struct PathRequest {
-    std::uint64_t requestId;
+    std::uint64_t request_id{};
     Point start;
     Point end;
   };

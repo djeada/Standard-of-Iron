@@ -1,10 +1,8 @@
 #pragma once
 
-namespace Render {
-namespace GL {
+namespace Render::GL {
 class EntityRendererRegistry;
 }
-} // namespace Render
 
 namespace Render::GL {
 

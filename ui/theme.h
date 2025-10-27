@@ -73,70 +73,70 @@ class Theme : public QObject {
   Q_PROPERTY(QVariantMap unitIcons READ unitIcons CONSTANT)
 
 public:
-  static Theme *instance();
-  static Theme *create(QQmlEngine *engine, QJSEngine *scriptEngine);
+  static auto instance() -> Theme *;
+  static auto create(QQmlEngine *engine, QJSEngine *scriptEngine) -> Theme *;
 
-  QColor bg() const { return QColor("#071018"); }
-  QColor bgShade() const { return QColor("#061214"); }
-  QColor dim() const { return QColor(0, 0, 0, 0.45 * 255); }
+  [[nodiscard]] static QColor bg() { return {"#071018"}; }
+  [[nodiscard]] static QColor bgShade() { return {"#061214"}; }
+  [[nodiscard]] static QColor dim() { return {0, 0, 0, 115}; }
 
-  QColor panelBase() const { return QColor("#071018"); }
-  QColor panelBr() const { return QColor("#0f2430"); }
-  QColor panelBorder() const { return QColor("#0f2430"); }
+  [[nodiscard]] static QColor panelBase() { return {"#071018"}; }
+  [[nodiscard]] static QColor panelBr() { return {"#0f2430"}; }
+  [[nodiscard]] static QColor panelBorder() { return {"#0f2430"}; }
 
-  QColor cardBase() const { return QColor("#061214"); }
-  QColor cardBaseA() const { return QColor("#061214AA"); }
-  QColor cardBaseB() const { return QColor("#061214"); }
-  QColor cardBorder() const { return QColor("#12323a"); }
+  [[nodiscard]] static QColor cardBase() { return {"#061214"}; }
+  [[nodiscard]] static QColor cardBaseA() { return {"#061214AA"}; }
+  [[nodiscard]] static QColor cardBaseB() { return {"#061214"}; }
+  [[nodiscard]] static QColor cardBorder() { return {"#12323a"}; }
 
-  QColor hover() const { return QColor("#184c7a"); }
-  QColor hoverBg() const { return QColor("#184c7a"); }
-  QColor selected() const { return QColor("#1f8bf5"); }
-  QColor selectedBg() const { return QColor("#1f8bf5"); }
-  QColor selectedBr() const { return QColor("#1b74d1"); }
+  [[nodiscard]] static QColor hover() { return {"#184c7a"}; }
+  [[nodiscard]] static QColor hoverBg() { return {"#184c7a"}; }
+  [[nodiscard]] static QColor selected() { return {"#1f8bf5"}; }
+  [[nodiscard]] static QColor selectedBg() { return {"#1f8bf5"}; }
+  [[nodiscard]] static QColor selectedBr() { return {"#1b74d1"}; }
 
-  QColor thumbBr() const { return QColor("#2A4E56"); }
-  QColor border() const { return QColor("#0f2b34"); }
+  [[nodiscard]] static QColor thumbBr() { return {"#2A4E56"}; }
+  [[nodiscard]] static QColor border() { return {"#0f2b34"}; }
 
-  QColor textMain() const { return QColor("#eaf6ff"); }
-  QColor textBright() const { return QColor("#dff0ff"); }
-  QColor textSub() const { return QColor("#86a7b6"); }
-  QColor textSubLite() const { return QColor("#79a6b7"); }
-  QColor textDim() const { return QColor("#4f6a75"); }
-  QColor textHint() const { return QColor("#2a5e6e"); }
+  [[nodiscard]] static QColor textMain() { return {"#eaf6ff"}; }
+  [[nodiscard]] static QColor textBright() { return {"#dff0ff"}; }
+  [[nodiscard]] static QColor textSub() { return {"#86a7b6"}; }
+  [[nodiscard]] static QColor textSubLite() { return {"#79a6b7"}; }
+  [[nodiscard]] static QColor textDim() { return {"#4f6a75"}; }
+  [[nodiscard]] static QColor textHint() { return {"#2a5e6e"}; }
 
-  QColor accent() const { return QColor("#9fd9ff"); }
-  QColor accentBright() const { return QColor("#d0e8ff"); }
+  [[nodiscard]] static QColor accent() { return {"#9fd9ff"}; }
+  [[nodiscard]] static QColor accentBright() { return {"#d0e8ff"}; }
 
-  QColor addColor() const { return QColor("#3A9CA8"); }
-  QColor removeColor() const { return QColor("#D04040"); }
+  [[nodiscard]] static QColor addColor() { return {"#3A9CA8"}; }
+  [[nodiscard]] static QColor removeColor() { return {"#D04040"}; }
 
-  int spacingTiny() const { return 4; }
-  int spacingSmall() const { return 8; }
-  int spacingMedium() const { return 12; }
-  int spacingLarge() const { return 16; }
-  int spacingXLarge() const { return 20; }
+  [[nodiscard]] static int spacingTiny() { return 4; }
+  [[nodiscard]] static int spacingSmall() { return 8; }
+  [[nodiscard]] static int spacingMedium() { return 12; }
+  [[nodiscard]] static int spacingLarge() { return 16; }
+  [[nodiscard]] static int spacingXLarge() { return 20; }
 
-  int radiusSmall() const { return 4; }
-  int radiusMedium() const { return 6; }
-  int radiusLarge() const { return 8; }
-  int radiusPanel() const { return 14; }
+  [[nodiscard]] static int radiusSmall() { return 4; }
+  [[nodiscard]] static int radiusMedium() { return 6; }
+  [[nodiscard]] static int radiusLarge() { return 8; }
+  [[nodiscard]] static int radiusPanel() { return 14; }
 
-  int animFast() const { return 120; }
-  int animNormal() const { return 160; }
-  int animSlow() const { return 200; }
+  [[nodiscard]] static int animFast() { return 120; }
+  [[nodiscard]] static int animNormal() { return 160; }
+  [[nodiscard]] static int animSlow() { return 200; }
 
-  int fontSizeTiny() const { return 11; }
-  int fontSizeSmall() const { return 12; }
-  int fontSizeMedium() const { return 14; }
-  int fontSizeLarge() const { return 16; }
-  int fontSizeTitle() const { return 18; }
-  int fontSizeHero() const { return 28; }
+  [[nodiscard]] static int fontSizeTiny() { return 11; }
+  [[nodiscard]] static int fontSizeSmall() { return 12; }
+  [[nodiscard]] static int fontSizeMedium() { return 14; }
+  [[nodiscard]] static int fontSizeLarge() { return 16; }
+  [[nodiscard]] static int fontSizeTitle() { return 18; }
+  [[nodiscard]] static int fontSizeHero() { return 28; }
 
-  QVariantList playerColors() const;
-  QVariantList teamIcons() const;
-  QVariantList factions() const;
-  QVariantMap unitIcons() const;
+  [[nodiscard]] auto playerColors() const -> QVariantList;
+  [[nodiscard]] auto teamIcons() const -> QVariantList;
+  [[nodiscard]] auto factions() const -> QVariantList;
+  [[nodiscard]] auto unitIcons() const -> QVariantMap;
 
 private:
   explicit Theme(QObject *parent = nullptr);

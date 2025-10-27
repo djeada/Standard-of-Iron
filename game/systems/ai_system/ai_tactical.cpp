@@ -2,14 +2,20 @@
 #include "../../units/troop_type.h"
 #include "../nation_registry.h"
 #include "ai_utils.h"
+#include "systems/ai_system/ai_types.h"
+#include "units/spawn_type.h"
 #include <algorithm>
 #include <cmath>
+#include <limits>
+#include <string>
+#include <vector>
 
 namespace Game::Systems::AI {
 
-TacticalUtils::EngagementAssessment TacticalUtils::assessEngagement(
+auto TacticalUtils::assessEngagement(
     const std::vector<const EntitySnapshot *> &friendlies,
-    const std::vector<const ContactSnapshot *> &enemies, float minForceRatio) {
+    const std::vector<const ContactSnapshot *> &enemies,
+    float minForceRatio) -> TacticalUtils::EngagementAssessment {
 
   EngagementAssessment result;
 
@@ -21,167 +27,167 @@ TacticalUtils::EngagementAssessment TacticalUtils::assessEngagement(
   result.friendlyCount = static_cast<int>(friendlies.size());
   result.enemyCount = static_cast<int>(enemies.size());
 
-  float totalFriendlyHealth = 0.0f;
-  float totalEnemyHealth = 0.0f;
-  int validFriendlies = 0;
-  int validEnemies = 0;
+  float total_friendly_health = 0.0F;
+  float total_enemy_health = 0.0F;
+  int valid_friendlies = 0;
+  int valid_enemies = 0;
 
   for (const auto *unit : friendlies) {
-    if (unit->maxHealth > 0) {
-      totalFriendlyHealth += static_cast<float>(unit->health) /
-                             static_cast<float>(unit->maxHealth);
-      ++validFriendlies;
+    if (unit->max_health > 0) {
+      total_friendly_health += static_cast<float>(unit->health) /
+                               static_cast<float>(unit->max_health);
+      ++valid_friendlies;
     }
   }
 
   for (const auto *enemy : enemies) {
-    if (enemy->maxHealth > 0) {
-      totalEnemyHealth += static_cast<float>(enemy->health) /
-                          static_cast<float>(enemy->maxHealth);
-      ++validEnemies;
+    if (enemy->max_health > 0) {
+      total_enemy_health += static_cast<float>(enemy->health) /
+                            static_cast<float>(enemy->max_health);
+      ++valid_enemies;
     }
   }
 
   result.avgFriendlyHealth =
-      validFriendlies > 0 ? (totalFriendlyHealth / validFriendlies) : 1.0f;
+      valid_friendlies > 0 ? (total_friendly_health / valid_friendlies) : 1.0F;
   result.avgEnemyHealth =
-      validEnemies > 0 ? (totalEnemyHealth / validEnemies) : 1.0f;
+      valid_enemies > 0 ? (total_enemy_health / valid_enemies) : 1.0F;
 
-  float friendlyStrength =
+  float const friendly_strength =
       static_cast<float>(result.friendlyCount) * result.avgFriendlyHealth;
-  float enemyStrength =
+  float const enemy_strength =
       static_cast<float>(result.enemyCount) * result.avgEnemyHealth;
 
-  if (enemyStrength < 0.01f) {
-    result.forceRatio = 10.0f;
+  if (enemy_strength < 0.01F) {
+    result.forceRatio = 10.0F;
   } else {
-    result.forceRatio = friendlyStrength / enemyStrength;
+    result.forceRatio = friendly_strength / enemy_strength;
   }
 
   result.confidenceLevel =
-      std::clamp((result.forceRatio - 0.5f) / 1.5f, 0.0f, 1.0f);
+      std::clamp((result.forceRatio - 0.5F) / 1.5F, 0.0F, 1.0F);
 
   result.shouldEngage = (result.forceRatio >= minForceRatio);
 
   return result;
 }
 
-TacticalUtils::TargetScore TacticalUtils::selectFocusFireTarget(
+auto TacticalUtils::selectFocusFireTarget(
     const std::vector<const EntitySnapshot *> &attackers,
-    const std::vector<const ContactSnapshot *> &enemies, float groupCenterX,
-    float groupCenterY, float groupCenterZ, const AIContext &context,
-    Engine::Core::EntityID currentTarget) {
+    const std::vector<const ContactSnapshot *> &enemies, float group_center_x,
+    float group_center_y, float group_center_z, const AIContext &context,
+    Engine::Core::EntityID currentTarget) -> TacticalUtils::TargetScore {
 
-  TargetScore bestTarget;
-  bestTarget.score = -std::numeric_limits<float>::infinity();
+  TargetScore best_target;
+  best_target.score = -std::numeric_limits<float>::infinity();
 
   if (enemies.empty()) {
-    return bestTarget;
+    return best_target;
   }
 
   for (const auto *enemy : enemies) {
-    float score = 0.0f;
+    float score = 0.0F;
 
-    float dist = distance(enemy->posX, enemy->posY, enemy->posZ, groupCenterX,
-                          groupCenterY, groupCenterZ);
-    score -= dist * 0.5f;
+    float const dist = distance(enemy->posX, enemy->posY, enemy->posZ,
+                                group_center_x, group_center_y, group_center_z);
+    score -= dist * 0.5F;
 
-    if (enemy->maxHealth > 0) {
-      float healthRatio = static_cast<float>(enemy->health) /
-                          static_cast<float>(enemy->maxHealth);
+    if (enemy->max_health > 0) {
+      float const health_ratio = static_cast<float>(enemy->health) /
+                                 static_cast<float>(enemy->max_health);
 
-      if (healthRatio < 0.5f) {
-        score += 8.0f * (1.0f - healthRatio);
+      if (health_ratio < 0.5F) {
+        score += 8.0F * (1.0F - health_ratio);
       }
 
-      if (healthRatio < 0.25f) {
-        score += 12.0f;
+      if (health_ratio < 0.25F) {
+        score += 12.0F;
       }
     }
 
-    float typePriority = getUnitTypePriority(
-        Game::Units::spawnTypeToString(enemy->spawnType), context.nation);
-    score += typePriority * 3.0f;
+    float const type_priority = getUnitTypePriority(
+        Game::Units::spawn_typeToString(enemy->spawn_type), context.nation);
+    score += type_priority * 3.0F;
 
     if (!enemy->isBuilding) {
-      score += 5.0f;
+      score += 5.0F;
     }
 
     if (currentTarget != 0 && enemy->id == currentTarget) {
-      score += 10.0f;
+      score += 10.0F;
     }
 
-    bool isolated = isTargetIsolated(*enemy, enemies, 8.0f);
+    bool const isolated = isTargetIsolated(*enemy, enemies, 8.0F);
     if (isolated) {
-      score += 6.0f;
+      score += 6.0F;
     }
 
     if (context.primaryBarracks != 0) {
-      float distToBase =
+      float const dist_to_base =
           distance(enemy->posX, enemy->posY, enemy->posZ, context.basePosX,
                    context.basePosY, context.basePosZ);
 
-      if (distToBase < 16.0f) {
-        score += (16.0f - distToBase) * 0.8f;
+      if (dist_to_base < 16.0F) {
+        score += (16.0F - dist_to_base) * 0.8F;
       }
     }
 
     if (context.state == AIState::Attacking && !enemy->isBuilding) {
-      score += 3.0f;
+      score += 3.0F;
     }
 
-    if (score > bestTarget.score) {
-      bestTarget.targetId = enemy->id;
-      bestTarget.score = score;
-      bestTarget.distanceToGroup = dist;
-      bestTarget.isLowHealth =
-          (enemy->maxHealth > 0 && enemy->health < enemy->maxHealth / 2);
-      bestTarget.isIsolated = isolated;
+    if (score > best_target.score) {
+      best_target.target_id = enemy->id;
+      best_target.score = score;
+      best_target.distanceToGroup = dist;
+      best_target.isLowHealth =
+          (enemy->max_health > 0 && enemy->health < enemy->max_health / 2);
+      best_target.isIsolated = isolated;
     }
   }
 
-  return bestTarget;
+  return best_target;
 }
 
-float TacticalUtils::calculateForceStrength(
-    const std::vector<const EntitySnapshot *> &units) {
+auto TacticalUtils::calculateForceStrength(
+    const std::vector<const EntitySnapshot *> &units) -> float {
 
-  float strength = 0.0f;
+  float strength = 0.0F;
   for (const auto *unit : units) {
-    if (unit->maxHealth > 0) {
-      float healthRatio = static_cast<float>(unit->health) /
-                          static_cast<float>(unit->maxHealth);
-      strength += healthRatio;
+    if (unit->max_health > 0) {
+      float const health_ratio = static_cast<float>(unit->health) /
+                                 static_cast<float>(unit->max_health);
+      strength += health_ratio;
     } else {
-      strength += 1.0f;
+      strength += 1.0F;
     }
   }
   return strength;
 }
 
-float TacticalUtils::calculateForceStrength(
-    const std::vector<const ContactSnapshot *> &units) {
+auto TacticalUtils::calculateForceStrength(
+    const std::vector<const ContactSnapshot *> &units) -> float {
 
-  float strength = 0.0f;
+  float strength = 0.0F;
   for (const auto *unit : units) {
-    if (unit->maxHealth > 0) {
-      float healthRatio = static_cast<float>(unit->health) /
-                          static_cast<float>(unit->maxHealth);
-      strength += healthRatio;
+    if (unit->max_health > 0) {
+      float const health_ratio = static_cast<float>(unit->health) /
+                                 static_cast<float>(unit->max_health);
+      strength += health_ratio;
     } else {
-      strength += 1.0f;
+      strength += 1.0F;
     }
   }
   return strength;
 }
 
-bool TacticalUtils::isTargetIsolated(
+auto TacticalUtils::isTargetIsolated(
     const ContactSnapshot &target,
     const std::vector<const ContactSnapshot *> &allEnemies,
-    float isolationRadius) {
+    float isolationRadius) -> bool {
 
-  const float isolationRadiusSq = isolationRadius * isolationRadius;
-  int nearbyAllies = 0;
+  const float isolation_radius_sq = isolationRadius * isolationRadius;
+  int nearby_allies = 0;
 
   for (const auto *enemy : allEnemies) {
 
@@ -189,39 +195,41 @@ bool TacticalUtils::isTargetIsolated(
       continue;
     }
 
-    float distSq = distanceSquared(target.posX, target.posY, target.posZ,
-                                   enemy->posX, enemy->posY, enemy->posZ);
+    float const dist_sq =
+        distance_squared(target.posX, target.posY, target.posZ, enemy->posX,
+                         enemy->posY, enemy->posZ);
 
-    if (distSq <= isolationRadiusSq) {
-      ++nearbyAllies;
+    if (dist_sq <= isolation_radius_sq) {
+      ++nearby_allies;
     }
   }
 
-  return (nearbyAllies <= 1);
+  return (nearby_allies <= 1);
 }
 
-float TacticalUtils::getUnitTypePriority(const std::string &unitType,
-                                         const Game::Systems::Nation *nation) {
+auto TacticalUtils::getUnitTypePriority(const std::string &unit_type,
+                                        const Game::Systems::Nation *nation)
+    -> float {
 
-  if (nation) {
-    auto troopType = Game::Units::troopTypeFromString(unitType);
-    if (nation->isRangedUnit(troopType)) {
-      return 3.0f;
+  if (nation != nullptr) {
+    auto troop_type = Game::Units::troop_typeFromString(unit_type);
+    if (nation->is_ranged_unit(troop_type)) {
+      return 3.0F;
     }
-    if (nation->isMeleeUnit(troopType)) {
-      return 2.0f;
+    if (nation->isMeleeUnit(troop_type)) {
+      return 2.0F;
     }
   }
 
-  if (unitType == "worker" || unitType == "villager") {
-    return 1.0f;
+  if (unit_type == "worker" || unit_type == "villager") {
+    return 1.0F;
   }
 
-  if (unitType == "barracks" || unitType == "base") {
-    return 0.5f;
+  if (unit_type == "barracks" || unit_type == "base") {
+    return 0.5F;
   }
 
-  return 1.5f;
+  return 1.5F;
 }
 
 } // namespace Game::Systems::AI

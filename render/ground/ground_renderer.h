@@ -8,8 +8,7 @@
 #include "../i_render_pass.h"
 #include "terrain_gpu.h"
 
-namespace Render {
-namespace GL {
+namespace Render::GL {
 class Renderer;
 class ResourceManager;
 class Mesh;
@@ -17,8 +16,8 @@ class Texture;
 
 class GroundRenderer : public IRenderPass {
 public:
-  void configure(float tileSize, int width, int height) {
-    m_tileSize = tileSize;
+  void configure(float tile_size, int width, int height) {
+    m_tile_size = tile_size;
     m_width = width;
     m_height = height;
     recomputeModel();
@@ -50,19 +49,19 @@ public:
 private:
   void recomputeModel();
   void updateNoiseOffset();
-  Render::GL::TerrainChunkParams buildParams() const;
+  auto buildParams() const -> Render::GL::TerrainChunkParams;
 
-  float m_tileSize = 1.0f;
+  float m_tile_size = 1.0F;
   int m_width = 50;
   int m_height = 50;
-  float m_extent = 50.0f;
+  float m_extent = 50.0F;
 
-  QVector3D m_color{0.15f, 0.18f, 0.15f};
+  QVector3D m_color{0.15F, 0.18F, 0.15F};
   QMatrix4x4 m_model;
   Game::Map::BiomeSettings m_biomeSettings;
   bool m_hasBiome = false;
-  QVector2D m_noiseOffset{0.0f, 0.0f};
-  float m_noiseAngle = 0.0f;
+  QVector2D m_noiseOffset{0.0F, 0.0F};
+  float m_noiseAngle = 0.0F;
 
   mutable Render::GL::TerrainChunkParams m_cachedParams{};
   mutable bool m_cachedParamsValid = false;
@@ -73,11 +72,10 @@ private:
   std::uint64_t m_stateVersion = 1;
   std::uint64_t m_lastSubmittedStateVersion = 0;
 
-  inline void invalidateParamsCache() {
+  void invalidateParamsCache() {
     m_cachedParamsValid = false;
     ++m_stateVersion;
   }
 };
 
-} // namespace GL
-} // namespace Render
+} // namespace Render::GL

@@ -11,7 +11,7 @@ namespace Game::Units {
 
 enum class TroopType { Archer, Knight, Spearman, MountedKnight };
 
-inline QString troopTypeToQString(TroopType type) {
+inline auto troop_typeToQString(TroopType type) -> QString {
   switch (type) {
   case TroopType::Archer:
     return QStringLiteral("archer");
@@ -25,11 +25,11 @@ inline QString troopTypeToQString(TroopType type) {
   return QStringLiteral("archer");
 }
 
-inline std::string troopTypeToString(TroopType type) {
-  return troopTypeToQString(type).toStdString();
+inline auto troop_typeToString(TroopType type) -> std::string {
+  return troop_typeToQString(type).toStdString();
 }
 
-inline bool tryParseTroopType(const QString &value, TroopType &out) {
+inline auto tryParseTroopType(const QString &value, TroopType &out) -> bool {
   const QString lowered = value.trimmed().toLower();
   if (lowered == QStringLiteral("archer")) {
     out = TroopType::Archer;
@@ -51,7 +51,7 @@ inline bool tryParseTroopType(const QString &value, TroopType &out) {
   return false;
 }
 
-inline TroopType troopTypeFromString(const std::string &str) {
+inline auto troop_typeFromString(const std::string &str) -> TroopType {
   TroopType result;
   if (tryParseTroopType(QString::fromStdString(str), result)) {
     return result;
@@ -59,7 +59,8 @@ inline TroopType troopTypeFromString(const std::string &str) {
   return TroopType::Archer;
 }
 
-inline std::optional<TroopType> tryParseTroopType(const std::string &str) {
+inline auto
+tryParseTroopType(const std::string &str) -> std::optional<TroopType> {
   TroopType result;
   if (tryParseTroopType(QString::fromStdString(str), result)) {
     return result;
@@ -71,7 +72,7 @@ inline std::optional<TroopType> tryParseTroopType(const std::string &str) {
 
 namespace std {
 template <> struct hash<Game::Units::TroopType> {
-  size_t operator()(Game::Units::TroopType type) const {
+  auto operator()(Game::Units::TroopType type) const -> size_t {
     return hash<int>()(static_cast<int>(type));
   }
 };

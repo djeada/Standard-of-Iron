@@ -7,14 +7,11 @@
 #include <shared_mutex>
 #include <vector>
 
-namespace Engine {
-namespace Core {
+namespace Engine::Core {
 class World;
 }
-} // namespace Engine
 
-namespace Game {
-namespace Map {
+namespace Game::Map {
 
 enum class VisibilityState : std::uint8_t {
   Unseen = 0,
@@ -24,44 +21,44 @@ enum class VisibilityState : std::uint8_t {
 
 class VisibilityService {
 public:
-  static VisibilityService &instance();
+  static auto instance() -> VisibilityService &;
 
-  void initialize(int width, int height, float tileSize);
+  void initialize(int width, int height, float tile_size);
   void reset();
-  bool update(Engine::Core::World &world, int playerId);
-  void computeImmediate(Engine::Core::World &world, int playerId);
+  auto update(Engine::Core::World &world, int player_id) -> bool;
+  void computeImmediate(Engine::Core::World &world, int player_id);
 
-  bool isInitialized() const { return m_initialized; }
+  auto isInitialized() const -> bool { return m_initialized; }
 
-  int getWidth() const { return m_width; }
-  int getHeight() const { return m_height; }
-  float getTileSize() const { return m_tileSize; }
+  auto getWidth() const -> int { return m_width; }
+  auto getHeight() const -> int { return m_height; }
+  auto getTileSize() const -> float { return m_tile_size; }
 
-  VisibilityState stateAt(int gridX, int gridZ) const;
-  bool isVisibleWorld(float worldX, float worldZ) const;
-  bool isExploredWorld(float worldX, float worldZ) const;
+  auto stateAt(int grid_x, int grid_z) const -> VisibilityState;
+  auto isVisibleWorld(float world_x, float world_z) const -> bool;
+  auto isExploredWorld(float world_x, float world_z) const -> bool;
 
-  std::vector<std::uint8_t> snapshotCells() const;
-  std::uint64_t version() const {
+  auto snapshotCells() const -> std::vector<std::uint8_t>;
+  auto version() const -> std::uint64_t {
     return m_version.load(std::memory_order_relaxed);
   }
 
 private:
-  bool inBounds(int x, int z) const;
-  int index(int x, int z) const;
-  int worldToGrid(float worldCoord, float half) const;
+  auto inBounds(int x, int z) const -> bool;
+  auto index(int x, int z) const -> int;
+  auto worldToGrid(float world_coord, float half) const -> int;
 
   struct VisionSource {
-    int centerX;
-    int centerZ;
-    int cellRadius;
-    float expandedRangeSq;
+    int center_x;
+    int center_z;
+    int cell_radius;
+    float expanded_range_sq;
   };
 
   struct JobPayload {
     int width;
     int height;
-    float tileSize;
+    float tile_size;
     std::vector<std::uint8_t> cells;
     std::vector<VisionSource> sources;
     std::uint64_t generation;
@@ -73,29 +70,29 @@ private:
     bool changed;
   };
 
-  std::vector<VisionSource> gatherVisionSources(Engine::Core::World &world,
-                                                int playerId) const;
-  JobPayload composeJobPayload(const std::vector<VisionSource> &sources) const;
+  auto gatherVisionSources(Engine::Core::World &world,
+                           int player_id) const -> std::vector<VisionSource>;
+  auto composeJobPayload(const std::vector<VisionSource> &sources) const
+      -> JobPayload;
   void startAsyncJob(JobPayload &&payload);
-  bool integrateCompletedJob();
-  static JobResult executeJob(JobPayload payload);
+  auto integrateCompletedJob() -> bool;
+  static auto executeJob(JobPayload payload) -> JobResult;
 
   VisibilityService() = default;
 
   bool m_initialized = false;
   int m_width = 0;
   int m_height = 0;
-  float m_tileSize = 1.0f;
-  float m_halfWidth = 0.0f;
-  float m_halfHeight = 0.0f;
+  float m_tile_size = 1.0F;
+  float m_half_width = 0.0F;
+  float m_half_height = 0.0F;
 
   mutable std::shared_mutex m_cellsMutex;
   std::vector<std::uint8_t> m_cells;
   std::atomic<std::uint64_t> m_version{0};
-  std::atomic<std::uint64_t> m_generation{0};
+  mutable std::atomic<std::uint64_t> m_generation{0};
   std::future<JobResult> m_pendingJob;
   std::atomic<bool> m_jobActive{false};
 };
 
-} // namespace Map
-} // namespace Game
+} // namespace Game::Map

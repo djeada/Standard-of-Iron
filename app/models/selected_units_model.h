@@ -13,18 +13,19 @@ public:
     UnitIdRole = Qt::UserRole + 1,
     NameRole,
     HealthRole,
-    MaxHealthRole,
+    max_healthRole,
     HealthRatioRole
   };
 
   explicit SelectedUnitsModel(GameEngine *engine, QObject *parent = nullptr);
 
-  int rowCount(const QModelIndex &parent = QModelIndex()) const override;
-  QVariant data(const QModelIndex &index,
-                int role = Qt::DisplayRole) const override;
-  QHash<int, QByteArray> roleNames() const override;
+  [[nodiscard]] auto
+  rowCount(const QModelIndex &parent = QModelIndex()) const -> int override;
+  [[nodiscard]] auto
+  data(const QModelIndex &index,
+       int role = Qt::DisplayRole) const -> QVariant override;
+  [[nodiscard]] auto roleNames() const -> QHash<int, QByteArray> override;
 
-public slots:
   void refresh();
 
 private:

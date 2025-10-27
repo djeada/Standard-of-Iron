@@ -4,12 +4,11 @@
 #include <QJsonValue>
 #include <QVector3D>
 
-namespace App {
-namespace JsonUtils {
+namespace App::JsonUtils {
 
-QJsonArray vec3ToJsonArray(const QVector3D &vec);
+auto vec3ToJsonArray(const QVector3D &vec) -> QJsonArray;
 
-QVector3D jsonArrayToVec3(const QJsonValue &value, const QVector3D &fallback);
+auto jsonArrayToVec3(const QJsonValue &value,
+                     const QVector3D &fallback) -> QVector3D;
 
-} // namespace JsonUtils
-} // namespace App
+} // namespace App::JsonUtils

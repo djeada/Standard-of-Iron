@@ -1,138 +1,140 @@
 #include "transforms.h"
 #include <algorithm>
 #include <cmath>
+#include <qmatrix4x4.h>
+#include <qvectornd.h>
 
 namespace Render::Geom {
 
 namespace {
-const QVector3D kYAxis(0, 1, 0);
-const float kRadToDeg = 57.2957795131f;
-const float kEpsilon = 1e-6f;
-const float kEpsilonSq = kEpsilon * kEpsilon;
+const QVector3D k_yaxis(0, 1, 0);
+const float k_rad_to_deg = 57.2957795131F;
+const float k_epsilon = 1e-6F;
+const float k_epsilonSq = k_epsilon * k_epsilon;
 } // namespace
 
-QMatrix4x4 cylinderBetween(const QVector3D &a, const QVector3D &b,
-                           float radius) {
+auto cylinderBetween(const QVector3D &a, const QVector3D &b,
+                     float radius) -> QMatrix4x4 {
 
   const float dx = b.x() - a.x();
   const float dy = b.y() - a.y();
   const float dz = b.z() - a.z();
-  const float lenSq = dx * dx + dy * dy + dz * dz;
+  const float len_sq = dx * dx + dy * dy + dz * dz;
 
   QMatrix4x4 M;
 
-  M.translate((a.x() + b.x()) * 0.5f, (a.y() + b.y()) * 0.5f,
-              (a.z() + b.z()) * 0.5f);
+  M.translate((a.x() + b.x()) * 0.5F, (a.y() + b.y()) * 0.5F,
+              (a.z() + b.z()) * 0.5F);
 
-  if (lenSq > kEpsilonSq) {
-    const float len = std::sqrt(lenSq);
+  if (len_sq > k_epsilonSq) {
+    const float len = std::sqrt(len_sq);
 
-    const float invLen = 1.0f / len;
-    const float ndx = dx * invLen;
-    const float ndy = dy * invLen;
-    const float ndz = dz * invLen;
+    const float inv_len = 1.0F / len;
+    const float ndx = dx * inv_len;
+    const float ndy = dy * inv_len;
+    const float ndz = dz * inv_len;
 
-    const float dot = std::clamp(ndy, -1.0f, 1.0f);
-    const float angleDeg = std::acos(dot) * kRadToDeg;
+    const float dot = std::clamp(ndy, -1.0F, 1.0F);
+    const float angle_deg = std::acos(dot) * k_rad_to_deg;
 
-    const float axisX = ndz;
-    const float axisZ = -ndx;
-    const float axisLenSq = axisX * axisX + axisZ * axisZ;
+    const float axis_x = ndz;
+    const float axis_z = -ndx;
+    const float axis_len_sq = axis_x * axis_x + axis_z * axis_z;
 
-    if (axisLenSq < kEpsilonSq) {
+    if (axis_len_sq < k_epsilonSq) {
 
-      if (dot < 0.0f) {
-        M.rotate(180.0f, 1.0f, 0.0f, 0.0f);
+      if (dot < 0.0F) {
+        M.rotate(180.0F, 1.0F, 0.0F, 0.0F);
       }
     } else {
 
-      const float axisInvLen = 1.0f / std::sqrt(axisLenSq);
-      M.rotate(angleDeg, axisX * axisInvLen, 0.0f, axisZ * axisInvLen);
+      const float axis_inv_len = 1.0F / std::sqrt(axis_len_sq);
+      M.rotate(angle_deg, axis_x * axis_inv_len, 0.0F, axis_z * axis_inv_len);
     }
     M.scale(radius, len, radius);
   } else {
-    M.scale(radius, 1.0f, radius);
+    M.scale(radius, 1.0F, radius);
   }
   return M;
 }
 
-QMatrix4x4 sphereAt(const QVector3D &pos, float radius) {
+auto sphereAt(const QVector3D &pos, float radius) -> QMatrix4x4 {
   QMatrix4x4 M;
   M.translate(pos);
   M.scale(radius, radius, radius);
   return M;
 }
 
-QMatrix4x4 sphereAt(const QMatrix4x4 &parent, const QVector3D &pos,
-                    float radius) {
+auto sphereAt(const QMatrix4x4 &parent, const QVector3D &pos,
+              float radius) -> QMatrix4x4 {
   QMatrix4x4 M = parent;
   M.translate(pos);
   M.scale(radius, radius, radius);
   return M;
 }
 
-QMatrix4x4 cylinderBetween(const QMatrix4x4 &parent, const QVector3D &a,
-                           const QVector3D &b, float radius) {
+auto cylinderBetween(const QMatrix4x4 &parent, const QVector3D &a,
+                     const QVector3D &b, float radius) -> QMatrix4x4 {
 
   const float dx = b.x() - a.x();
   const float dy = b.y() - a.y();
   const float dz = b.z() - a.z();
-  const float lenSq = dx * dx + dy * dy + dz * dz;
+  const float len_sq = dx * dx + dy * dy + dz * dz;
 
   QMatrix4x4 M = parent;
 
-  M.translate((a.x() + b.x()) * 0.5f, (a.y() + b.y()) * 0.5f,
-              (a.z() + b.z()) * 0.5f);
+  M.translate((a.x() + b.x()) * 0.5F, (a.y() + b.y()) * 0.5F,
+              (a.z() + b.z()) * 0.5F);
 
-  if (lenSq > kEpsilonSq) {
-    const float len = std::sqrt(lenSq);
+  if (len_sq > k_epsilonSq) {
+    const float len = std::sqrt(len_sq);
 
-    const float invLen = 1.0f / len;
-    const float ndx = dx * invLen;
-    const float ndy = dy * invLen;
-    const float ndz = dz * invLen;
+    const float inv_len = 1.0F / len;
+    const float ndx = dx * inv_len;
+    const float ndy = dy * inv_len;
+    const float ndz = dz * inv_len;
 
-    const float dot = std::clamp(ndy, -1.0f, 1.0f);
-    const float angleDeg = std::acos(dot) * kRadToDeg;
+    const float dot = std::clamp(ndy, -1.0F, 1.0F);
+    const float angle_deg = std::acos(dot) * k_rad_to_deg;
 
-    const float axisX = ndz;
-    const float axisZ = -ndx;
-    const float axisLenSq = axisX * axisX + axisZ * axisZ;
+    const float axis_x = ndz;
+    const float axis_z = -ndx;
+    const float axis_len_sq = axis_x * axis_x + axis_z * axis_z;
 
-    if (axisLenSq < kEpsilonSq) {
+    if (axis_len_sq < k_epsilonSq) {
 
-      if (dot < 0.0f) {
-        M.rotate(180.0f, 1.0f, 0.0f, 0.0f);
+      if (dot < 0.0F) {
+        M.rotate(180.0F, 1.0F, 0.0F, 0.0F);
       }
     } else {
 
-      const float axisInvLen = 1.0f / std::sqrt(axisLenSq);
-      M.rotate(angleDeg, axisX * axisInvLen, 0.0f, axisZ * axisInvLen);
+      const float axis_inv_len = 1.0F / std::sqrt(axis_len_sq);
+      M.rotate(angle_deg, axis_x * axis_inv_len, 0.0F, axis_z * axis_inv_len);
     }
     M.scale(radius, len, radius);
   } else {
-    M.scale(radius, 1.0f, radius);
+    M.scale(radius, 1.0F, radius);
   }
   return M;
 }
 
-QMatrix4x4 coneFromTo(const QVector3D &baseCenter, const QVector3D &apex,
-                      float baseRadius) {
-  return cylinderBetween(baseCenter, apex, baseRadius);
+auto coneFromTo(const QVector3D &base_center, const QVector3D &apex,
+                float base_radius) -> QMatrix4x4 {
+  return cylinderBetween(base_center, apex, base_radius);
 }
 
-QMatrix4x4 coneFromTo(const QMatrix4x4 &parent, const QVector3D &baseCenter,
-                      const QVector3D &apex, float baseRadius) {
-  return cylinderBetween(parent, baseCenter, apex, baseRadius);
+auto coneFromTo(const QMatrix4x4 &parent, const QVector3D &base_center,
+                const QVector3D &apex, float base_radius) -> QMatrix4x4 {
+  return cylinderBetween(parent, base_center, apex, base_radius);
 }
 
-QMatrix4x4 capsuleBetween(const QVector3D &a, const QVector3D &b,
-                          float radius) {
+auto capsuleBetween(const QVector3D &a, const QVector3D &b,
+                    float radius) -> QMatrix4x4 {
   return cylinderBetween(a, b, radius);
 }
 
-QMatrix4x4 capsuleBetween(const QMatrix4x4 &parent, const QVector3D &a,
-                          const QVector3D &b, float radius) {
+auto capsuleBetween(const QMatrix4x4 &parent, const QVector3D &a,
+                    const QVector3D &b, float radius) -> QMatrix4x4 {
   return cylinderBetween(parent, a, b, radius);
 }
 

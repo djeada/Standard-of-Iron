@@ -6,12 +6,10 @@
 #include <functional>
 #include <vector>
 
-namespace Engine {
-namespace Core {
+namespace Engine::Core {
 class Entity;
 class World;
-} // namespace Core
-} // namespace Engine
+} // namespace Engine::Core
 
 namespace Game::Systems {
 
@@ -21,26 +19,27 @@ class SelectionSystem : public Engine::Core::System {
 public:
   void update(Engine::Core::World *world, float deltaTime) override;
 
-  void selectUnit(Engine::Core::EntityID unitId);
-  void deselectUnit(Engine::Core::EntityID unitId);
+  void selectUnit(Engine::Core::EntityID unit_id);
+  void deselectUnit(Engine::Core::EntityID unit_id);
   void clearSelection();
   void selectUnitsInArea(float x1, float y1, float x2, float y2);
 
-  const std::vector<Engine::Core::EntityID> &getSelectedUnits() const {
+  [[nodiscard]] auto
+  getSelectedUnits() const -> const std::vector<Engine::Core::EntityID> & {
     return m_selectedUnits;
   }
 
 private:
   std::vector<Engine::Core::EntityID> m_selectedUnits;
-  bool isUnitInArea(Engine::Core::Entity *entity, float x1, float y1, float x2,
-                    float y2);
+  static auto isUnitInArea(Engine::Core::Entity *entity, float x1, float y1,
+                           float x2, float y2) -> bool;
 };
 
 class SelectionController : public QObject {
   Q_OBJECT
 public:
   SelectionController(Engine::Core::World *world,
-                      SelectionSystem *selectionSystem,
+                      SelectionSystem *selection_system,
                       PickingService *pickingService,
                       QObject *parent = nullptr);
 
@@ -52,9 +51,9 @@ public:
   void onRightClickClearSelection();
   void selectAllPlayerTroops(int localOwnerId);
 
-  bool hasUnitsSelected() const;
+  [[nodiscard]] auto hasUnitsSelected() const -> bool;
   void getSelectedUnitIds(std::vector<Engine::Core::EntityID> &out) const;
-  bool hasSelectedType(const QString &type) const;
+  [[nodiscard]] auto hasSelectedType(const QString &type) const -> bool;
 
 signals:
   void selectionChanged();
@@ -62,7 +61,7 @@ signals:
 
 private:
   Engine::Core::World *m_world;
-  SelectionSystem *m_selectionSystem;
+  SelectionSystem *m_selection_system;
   PickingService *m_pickingService;
 
   void syncSelectionFlags();

@@ -25261,15 +25261,15 @@ typedef struct
     DWORD dwMinSecondarySampleRate;
     DWORD dwMaxSecondarySampleRate;
     DWORD dwPrimaryBuffers;
-    DWORD dwMaxHwMixingAllBuffers;
-    DWORD dwMaxHwMixingStaticBuffers;
-    DWORD dwMaxHwMixingStreamingBuffers;
+    DWORD dwmax_hwMixingAllBuffers;
+    DWORD dwmax_hwMixingStaticBuffers;
+    DWORD dwmax_hwMixingStreamingBuffers;
     DWORD dwFreeHwMixingAllBuffers;
     DWORD dwFreeHwMixingStaticBuffers;
     DWORD dwFreeHwMixingStreamingBuffers;
-    DWORD dwMaxHw3DAllBuffers;
-    DWORD dwMaxHw3DStaticBuffers;
-    DWORD dwMaxHw3DStreamingBuffers;
+    DWORD dwmax_hw3DAllBuffers;
+    DWORD dwmax_hw3DStaticBuffers;
+    DWORD dwmax_hw3DStreamingBuffers;
     DWORD dwFreeHw3DAllBuffers;
     DWORD dwFreeHw3DStaticBuffers;
     DWORD dwFreeHw3DStreamingBuffers;
@@ -95647,3 +95647,4 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
+

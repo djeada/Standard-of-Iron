@@ -25,22 +25,22 @@ struct MeshCmd {
   QMatrix4x4 model;
   QMatrix4x4 mvp;
   QVector3D color{1, 1, 1};
-  float alpha = 1.0f;
+  float alpha = 1.0F;
 };
 
 struct CylinderCmd {
-  QVector3D start{0.0f, -0.5f, 0.0f};
-  QVector3D end{0.0f, 0.5f, 0.0f};
-  QVector3D color{1.0f, 1.0f, 1.0f};
-  float radius = 1.0f;
-  float alpha = 1.0f;
+  QVector3D start{0.0F, -0.5F, 0.0F};
+  QVector3D end{0.0F, 0.5F, 0.0F};
+  QVector3D color{1.0F, 1.0F, 1.0F};
+  float radius = 1.0F;
+  float alpha = 1.0F;
 };
 
 struct FogInstanceData {
-  QVector3D center{0.0f, 0.25f, 0.0f};
-  QVector3D color{0.05f, 0.05f, 0.05f};
-  float alpha = 1.0f;
-  float size = 1.0f;
+  QVector3D center{0.0F, 0.25F, 0.0F};
+  QVector3D color{0.05F, 0.05F, 0.05F};
+  float alpha = 1.0F;
+  float size = 1.0F;
 };
 
 struct FogBatchCmd {
@@ -50,19 +50,19 @@ struct FogBatchCmd {
 
 struct GrassBatchCmd {
   Buffer *instanceBuffer = nullptr;
-  std::size_t instanceCount = 0;
+  std::size_t instance_count = 0;
   GrassBatchParams params;
 };
 
 struct StoneBatchCmd {
   Buffer *instanceBuffer = nullptr;
-  std::size_t instanceCount = 0;
+  std::size_t instance_count = 0;
   StoneBatchParams params;
 };
 
 struct PlantBatchCmd {
   Buffer *instanceBuffer = nullptr;
-  std::size_t instanceCount = 0;
+  std::size_t instance_count = 0;
   PlantBatchParams params;
 };
 
@@ -72,31 +72,31 @@ struct TerrainChunkCmd {
   TerrainChunkParams params;
   std::uint16_t sortKey = 0x8000u;
   bool depthWrite = true;
-  float depthBias = 0.0f;
+  float depthBias = 0.0F;
 };
 
 struct GridCmd {
   QMatrix4x4 model;
   QMatrix4x4 mvp;
-  QVector3D color{0.2f, 0.25f, 0.2f};
-  float cellSize = 1.0f;
-  float thickness = 0.06f;
-  float extent = 50.0f;
+  QVector3D color{0.2F, 0.25F, 0.2F};
+  float cellSize = 1.0F;
+  float thickness = 0.06F;
+  float extent = 50.0F;
 };
 
 struct SelectionRingCmd {
   QMatrix4x4 model;
   QMatrix4x4 mvp;
   QVector3D color{0, 0, 0};
-  float alphaInner = 0.6f;
-  float alphaOuter = 0.25f;
+  float alphaInner = 0.6F;
+  float alphaOuter = 0.25F;
 };
 
 struct SelectionSmokeCmd {
   QMatrix4x4 model;
   QMatrix4x4 mvp;
   QVector3D color{1, 1, 1};
-  float baseAlpha = 0.15f;
+  float baseAlpha = 0.15F;
 };
 
 class DrawQueueSoA {

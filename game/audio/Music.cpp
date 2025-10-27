@@ -239,7 +239,7 @@ void Music::fadeOut() {
         }
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
         if (p->audioOutput()) {
-          p->audioOutput()->setVolume(0.0f);
+          p->audioOutput()->setVolume(0.0F);
         }
 
         QTimer::singleShot(50, [p, this]() {

@@ -6,67 +6,68 @@
 #include <unordered_map>
 #include <vector>
 
-namespace Game {
-namespace Systems {
+namespace Game::Systems {
 
 enum class FormationType { Roman, Barbarian };
 
 }
-} // namespace Game
 
 namespace std {
 template <> struct hash<Game::Systems::FormationType> {
-  std::size_t operator()(const Game::Systems::FormationType &ft) const {
+  auto operator()(const Game::Systems::FormationType &ft) const -> std::size_t {
     return std::hash<int>()(static_cast<int>(ft));
   }
 };
 } // namespace std
 
-namespace Game {
-namespace Systems {
+namespace Game::Systems {
 
 class IFormation {
 public:
   virtual ~IFormation() = default;
 
-  virtual std::vector<QVector3D>
-  calculatePositions(int unitCount, const QVector3D &center,
-                     float baseSpacing = 1.0f) const = 0;
+  [[nodiscard]] virtual auto calculatePositions(
+      int unitCount, const QVector3D &center,
+      float baseSpacing = 1.0F) const -> std::vector<QVector3D> = 0;
 
-  virtual FormationType getType() const = 0;
+  [[nodiscard]] virtual auto getType() const -> FormationType = 0;
 };
 
 class RomanFormation : public IFormation {
 public:
-  std::vector<QVector3D>
-  calculatePositions(int unitCount, const QVector3D &center,
-                     float baseSpacing = 1.0f) const override;
+  [[nodiscard]] auto calculatePositions(int unitCount, const QVector3D &center,
+                                        float baseSpacing = 1.0F) const
+      -> std::vector<QVector3D> override;
 
-  FormationType getType() const override { return FormationType::Roman; }
+  [[nodiscard]] auto getType() const -> FormationType override {
+    return FormationType::Roman;
+  }
 };
 
 class BarbarianFormation : public IFormation {
 public:
-  std::vector<QVector3D>
-  calculatePositions(int unitCount, const QVector3D &center,
-                     float baseSpacing = 1.0f) const override;
+  [[nodiscard]] auto calculatePositions(int unitCount, const QVector3D &center,
+                                        float baseSpacing = 1.0F) const
+      -> std::vector<QVector3D> override;
 
-  FormationType getType() const override { return FormationType::Barbarian; }
+  [[nodiscard]] auto getType() const -> FormationType override {
+    return FormationType::Barbarian;
+  }
 };
 
 class FormationSystem {
 public:
-  static FormationSystem &instance();
+  static auto instance() -> FormationSystem &;
 
-  std::vector<QVector3D> getFormationPositions(FormationType type,
-                                               int unitCount,
-                                               const QVector3D &center,
-                                               float baseSpacing = 1.0f);
+  auto
+  getFormationPositions(FormationType type, int unitCount,
+                        const QVector3D &center,
+                        float baseSpacing = 1.0F) -> std::vector<QVector3D>;
 
   void registerFormation(FormationType type,
                          std::unique_ptr<IFormation> formation);
 
-  const IFormation *getFormation(FormationType type) const;
+  auto getFormation(FormationType type) const -> const IFormation *;
 
 private:
   FormationSystem();
@@ -75,5 +76,4 @@ private:
   std::unordered_map<FormationType, std::unique_ptr<IFormation>> m_formations;
 };
 
-} // namespace Systems
-} // namespace Game
+} // namespace Game::Systems
