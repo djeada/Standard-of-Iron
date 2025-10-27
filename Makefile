@@ -248,15 +248,15 @@ format-check:
 	@FAILED=0; \
 	if command -v $(CLANG_FORMAT) >/dev/null 2>&1; then \
 		echo "$(BLUE)Checking C/C++ files...$(RESET)"; \
-		find . -type f \( $(FMT_GLOBS) \) -not -path "./$(BUILD_DIR)/*" -print0 \
+		find . -type f \( $(FMT_GLOBS) \) $(EXCLUDE_FIND) -print0 \
 		| xargs -0 -r $(CLANG_FORMAT) --dry-run -Werror --style=file || FAILED=1; \
 		echo "$(BLUE)Checking shader files...$(RESET)"; \
-		find . -type f \( $(SHADER_GLOBS) \) -not -path "./$(BUILD_DIR)/*" -print0 \
+		find . -type f \( $(SHADER_GLOBS) \) $(EXCLUDE_FIND) -print0 \
 		| xargs -0 -r $(CLANG_FORMAT) --dry-run -Werror --style=file || FAILED=1; \
 	fi; \
 	if command -v $(QMLFORMAT) >/dev/null 2>&1 || [ -x "$(QMLFORMAT)" ]; then \
 		echo "$(BLUE)Checking QML files...$(RESET)"; \
-		for file in $$(find . -type f \( $(QML_GLOBS) \) -not -path "./$(BUILD_DIR)/*"); do \
+		for file in $$(find . -type f \( $(QML_GLOBS) \) $(EXCLUDE_FIND)); do \
 			$(QMLFORMAT) "$$file" > /tmp/qmlformat_check.tmp 2>/dev/null; \
 			if ! diff -q "$$file" /tmp/qmlformat_check.tmp >/dev/null 2>&1; then \
 				echo "$(RED)QML file needs formatting: $$file$(RESET)"; \
