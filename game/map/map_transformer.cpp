@@ -79,6 +79,13 @@ auto MapTransformer::applyToWorld(
   }
 
   for (int const player_id : unique_player_ids) {
+    bool const has_team_override =
+        (s_player_team_overrides.find(player_id) !=
+         s_player_team_overrides.end());
+
+    if (!s_player_team_overrides.empty() && !has_team_override) {
+      continue;
+    }
 
     if (owner_registry.getOwnerType(player_id) ==
         Game::Systems::OwnerType::Neutral) {
