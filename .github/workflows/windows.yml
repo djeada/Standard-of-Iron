@@ -122,6 +122,7 @@ jobs:
       - name: Build
         run: cmake --build build
 
+      # Deploy Qt DLLs (dynamic linking ensures LGPL v3 compliance)
       - name: Deploy Qt
         shell: pwsh
         run: |

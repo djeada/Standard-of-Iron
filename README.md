@@ -434,6 +434,14 @@ Quick start for contributors:
 
 MIT License - see LICENSE file for details.
 
+### Third-Party Software Licenses
+
+This game uses the **Qt framework** (https://www.qt.io), which is licensed under the **GNU Lesser General Public License v3 (LGPL v3)**.
+
+- Qt is dynamically linked in this application, allowing you to replace the Qt libraries with your own versions.
+- You may obtain a copy of the LGPL v3 license at https://www.gnu.org/licenses/lgpl-3.0.html
+- Qt source code is available at https://www.qt.io/download-open-source
+
 ## Acknowledgments
 
 Built with modern C++20, Qt 6, and OpenGL 3.3 Core. Special thanks to the open-source community for excellent documentation and tools.
