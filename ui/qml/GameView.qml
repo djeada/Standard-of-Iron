@@ -164,16 +164,28 @@ Item {
         if (typeof game === 'undefined')
             return ;
 
-        var movementKeys = [Qt.Key_W, Qt.Key_S, Qt.Key_A, Qt.Key_D, Qt.Key_Up, Qt.Key_Down, Qt.Key_Left, Qt.Key_Right];
-        if (movementKeys.indexOf(event.key) !== -1) {
-            // Only decrement if it was used for camera movement (Shift held)
-            if (event.modifiers & Qt.ShiftModifier || event.key === Qt.Key_W || event.key === Qt.Key_D || 
-                event.key === Qt.Key_Up || event.key === Qt.Key_Down || event.key === Qt.Key_Left || event.key === Qt.Key_Right) {
+        // W and D always move camera
+        if (event.key === Qt.Key_W || event.key === Qt.Key_D) {
+            renderArea.keyPanCount = Math.max(0, renderArea.keyPanCount - 1);
+            if (renderArea.keyPanCount === 0 && !renderArea.mousePanActive)
+                mainWindow.edgeScrollDisabled = false;
+        }
+        // Arrow keys always move camera
+        else if (event.key === Qt.Key_Up || event.key === Qt.Key_Down || 
+                 event.key === Qt.Key_Left || event.key === Qt.Key_Right) {
+            renderArea.keyPanCount = Math.max(0, renderArea.keyPanCount - 1);
+            if (renderArea.keyPanCount === 0 && !renderArea.mousePanActive)
+                mainWindow.edgeScrollDisabled = false;
+        }
+        // S and A only move camera if Shift held or no units selected
+        else if (event.key === Qt.Key_S || event.key === Qt.Key_A) {
+            if ((event.modifiers & Qt.ShiftModifier) || !game.hasUnitsSelected) {
                 renderArea.keyPanCount = Math.max(0, renderArea.keyPanCount - 1);
                 if (renderArea.keyPanCount === 0 && !renderArea.mousePanActive)
                     mainWindow.edgeScrollDisabled = false;
             }
         }
+        
         if (event.key === Qt.Key_Shift) {
             if (renderArea.keyPanCount === 0 && !renderArea.mousePanActive)
                 mainWindow.edgeScrollDisabled = false;
