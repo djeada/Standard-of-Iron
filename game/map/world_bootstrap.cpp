@@ -10,7 +10,15 @@ auto WorldBootstrap::initialize(Render::GL::Renderer &renderer,
                                 QString *out_error) -> bool {
   if (!Render::GL::RenderBootstrap::initialize(renderer, camera)) {
     if (out_error != nullptr) {
-      *out_error = "Failed to initialize OpenGL renderer";
+      *out_error = "Failed to initialize OpenGL renderer.\n\n"
+                   "This usually means:\n"
+                   "1. Running in software rendering mode (QT_QUICK_BACKEND=software)\n"
+                   "2. Graphics drivers don't support required OpenGL version\n"
+                   "3. Running in a VM with incomplete OpenGL support\n\n"
+                   "To fix:\n"
+                   "- For full 3D functionality, run without QT_QUICK_BACKEND set\n"
+                   "- Update graphics drivers\n"
+                   "- On VMs: Enable 3D acceleration in VM settings";
     }
     return false;
   }
