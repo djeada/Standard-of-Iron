@@ -21,6 +21,8 @@ set -euo pipefail
 # Notes:
 # - Language is taken from TS/@language if present; otherwise guessed from filename (e.g. *_de.ts -> de).
 # - Plural forms (numerus) are joined with " | " unless --explode-plurals is used.
+# - Embedded newlines in fields are flattened to the literal two characters "\n" by default.
+# - All CSV fields are quoted (RFC 4180), so commas and quotes inside fields are safe.
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
@@ -70,18 +72,18 @@ if [[ ${#FILES[@]} -eq 0 ]]; then
 fi
 
 python3 - <<'PY' "$OUTDIR" "$MODE" "$INCLUDE_UNFINISHED" "$KEEP_OBSOLETE" "$WRITE_BOM" "$WRITE_HEADER" "$EXPLODE_PLURALS" "${FILES[@]}"
-import sys, os, re, csv, argparse, xml.etree.ElementTree as ET
+import sys, re, csv, xml.etree.ElementTree as ET
 from pathlib import Path
 
 # Pull configuration from argv (provided by the bash wrapper for simplicity)
-OUTDIR          = Path(sys.argv[1])
-MODE            = sys.argv[2]           # "2col" | "1col"
-INCL_UNFINISHED = sys.argv[3] == "1"
-KEEP_OBSOLETE   = sys.argv[4] == "1"
-WRITE_BOM       = sys.argv[5] == "1"
-WRITE_HEADER    = sys.argv[6] == "1"
-EXPLODE_PLURALS = sys.argv[7] == "1"
-FILES           = [Path(p) for p in sys.argv[8:]]
+OUTDIR           = Path(sys.argv[1])
+MODE             = sys.argv[2]           # "2col" | "1col"
+INCL_UNFINISHED  = sys.argv[3] == "1"
+KEEP_OBSOLETE    = sys.argv[4] == "1"
+WRITE_BOM        = sys.argv[5] == "1"
+WRITE_HEADER     = sys.argv[6] == "1"
+EXPLODE_PLURALS  = sys.argv[7] == "1"
+FILES            = [Path(p) for p in sys.argv[8:]]
 
 OUTDIR.mkdir(parents=True, exist_ok=True)
 
@@ -118,7 +120,7 @@ def plural_forms(trans_el: ET.Element):
     nufs = list(trans_el.findall("./numerusform"))
     if nufs:
         return [text_of(n).strip() for n in nufs]
-    return [ (text_of(trans_el) or "").strip() ]
+    return [(text_of(trans_el) or "").strip()]
 
 def src_text(msg_el: ET.Element) -> str:
     s = msg_el.find("source")
@@ -126,30 +128,37 @@ def src_text(msg_el: ET.Element) -> str:
 
 def is_obsolete_or_vanished(msg_el: ET.Element) -> bool:
     t = msg_el.find("translation")
-    if t is None: 
+    if t is None:
         return False
     typ = (t.get("type") or "").lower()
-    return typ in ("obsolete","vanished")
+    return typ in ("obsolete", "vanished")
 
 def each_message(root: ET.Element):
     for msg in root.findall(".//context/message"):
         yield msg
 
-def explode_plural_rows(source: str, forms: list[str]):
-    rows = []
-    for idx, val in enumerate(forms):
-        rows.append((f"{source} [plural {idx}]", val))
-    return rows
+def explode_plural_rows(source: str, forms):
+    return [(f"{source} [plural {idx}]", val) for idx, val in enumerate(forms)]
 
 def write_csv(rows, header, out_path: Path, bom=False):
     out_path.parent.mkdir(parents=True, exist_ok=True)
     encoding = "utf-8-sig" if bom else "utf-8"
+
+    def sanitize(s: str) -> str:
+        if s is None:
+            return ""
+        # normalize then flatten newlines to literal "\n"
+        s = s.replace("\r\n", "\n").replace("\r", "\n")
+        s = s.replace("\n", "\\n")
+        return s
+
     with out_path.open("w", newline="", encoding=encoding) as f:
-        w = csv.writer(f)  # default excels at quoting; keeps embedded newlines
+        # Quote EVERYTHING so commas/newlines/quotes are safe; CRLF for Excel
+        w = csv.writer(f, quoting=csv.QUOTE_ALL, lineterminator="\r\n")
         if header:
-            w.writerow(header)
+            w.writerow([sanitize(h) for h in header])
         for r in rows:
-            w.writerow(r)
+            w.writerow([sanitize(c) for c in r])
 
 for ts_path in FILES:
     try:
@@ -192,6 +201,8 @@ for ts_path in FILES:
             t_forms = [""]
             unfinished = True
         else:
+            if should_skip_translation(t_el):
+                continue
             t_forms = plural_forms(t_el)
             unfinished = is_unfinished(t_el)
 
