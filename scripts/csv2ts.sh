@@ -16,22 +16,13 @@ set -euo pipefail
 # CSV expectations (auto-detected):
 #   - 2-column with header: "source,<anything>"  (e.g., "translation_de" or "translation")
 #   - 2-column without header: column 1=source, column 2=translation
-#   - Plurals:
-#       - Joined in a single cell: plural forms separated by " | "   (default)
-#       - OR "exploded": create rows with source suffixed by " [plural N]" (0-based)
-#
-# Flags:
-#   -i, --input CSV            Input CSV file
-#   -t, --template TS          Template .ts file to update (existing locale or English)
-#   -o, --outdir DIR           Where to write updated .ts (default: <repo>/translations/updated)
-#   -l, --lang LANG            Override TS @language (e.g. de_DE, fr_FR)
-#       --plural-sep SEP       Separator for joined plural forms (default: " | ")
-#       --inplace              Write changes back to the template .ts path
-#       --backup               When --inplace, create a .bak next to the template
-#       --clear-when-empty     If translation cell empty, set type="unfinished" and clear text (default: on)
-#       --keep-text-when-empty Keep previous text if CSV cell empty (still marks unfinished)
+#   - Plurals in CSV may be:
+#       - Joined in a single cell, forms separated by " | "
+#       - OR "exploded": rows with source suffixed by " [plural N]" (0-based)
 #
 # Notes:
+# - Matches ts2csv defaults: embedded newlines were flattened to "\n" during export;
+#   this script unflattens those back to real newlines by default.
 # - Messages not present in CSV remain unchanged.
 # - If the template message is plural (numerus="yes"), CSV can be joined or exploded; both are supported.
 # - If CSV provides fewer plural forms than exist in template, only provided indices are updated; others kept.
@@ -89,7 +80,7 @@ if [[ $INPLACE -eq 1 && $BACKUP -eq 1 ]]; then
 fi
 
 python3 - <<'PY' "$INPUT_CSV" "$TEMPLATE_TS" "$OUTDIR" "$LANG_OVERRIDE" "$PLURAL_SEP" "$INPLACE" "$CLEAR_WHEN_EMPTY" "$KEEP_TEXT_WHEN_EMPTY"
-import sys, os, re, csv, xml.etree.ElementTree as ET
+import sys, re, csv, xml.etree.ElementTree as ET
 from pathlib import Path
 
 INPUT_CSV = Path(sys.argv[1])
@@ -101,43 +92,44 @@ INPLACE = sys.argv[6] == "1"
 CLEAR_WHEN_EMPTY = sys.argv[7] == "1"
 KEEP_TEXT_WHEN_EMPTY = sys.argv[8] == "1"
 
-def read_csv_map(csv_path: Path):
+def decode_flattened_newlines(s: str) -> str:
+    if s is None:
+        return ""
+    # normalize AND unflatten literal "\n" back to real newlines
+    s = s.replace("\r\n", "\n").replace("\r", "\n")
+    return s.replace("\\n", "\n")
+
+def read_csv_maps(csv_path: Path):
     """
-    Returns:
-      mapping: dict[source] -> list[str] (plural forms) OR single-element list for non-plural
-      exploded_indices: dict[source] -> {idx: text} (if exploded plural rows were found)
+    Returns two maps:
+      raw_map[src] = raw string value from CSV (unflattened newlines)
+      exploded[src] = {index: form_text} for any " [plural N]" rows
+    Joined plurals (value contains PLURAL_SEP) are kept as a single string in raw_map.
+    We only split by PLURAL_SEP later if the target message is actually plural.
     """
-    mapping = {}
-    exploded_indices = {}
-    def add_mapping(src, val):
-        if src not in mapping:
-            mapping[src] = []
-        mapping[src] = [val]  # non-plural default; may be replaced if joined contains multiple
-    def set_plural(src, idx, val):
-        d = exploded_indices.setdefault(src, {})
-        d[int(idx)] = val
+    raw_map: dict[str, str] = {}
+    exploded: dict[str, dict[int, str]] = {}
 
     with csv_path.open("r", newline="", encoding="utf-8-sig") as f:
-        rdr = csv.reader(f)
+        rdr = csv.reader(f)  # handles commas/quotes/multiline properly
         rows = list(rdr)
 
     if not rows:
-        return mapping, exploded_indices
+        return raw_map, exploded
 
     # Detect header
     header = None
-    if any(h.lower() == "source" for h in rows[0]):
+    if any(isinstance(h, str) and h.lower() == "source" for h in rows[0]):
         header = [h.strip() for h in rows[0]]
         rows = rows[1:]
 
     # Column indices
     if header:
         try:
-            source_idx = [i for i,h in enumerate(header) if h.lower()=="source"][0]
+            source_idx = [i for i, h in enumerate(header) if h.lower() == "source"][0]
         except IndexError:
             raise SystemExit("CSV header must contain a 'source' column")
-        # translation column = first non-source column
-        trans_idx_candidates = [i for i,h in enumerate(header) if i != source_idx]
+        trans_idx_candidates = [i for i, h in enumerate(header) if i != source_idx]
         if not trans_idx_candidates:
             raise SystemExit("CSV must have a translation column")
         trans_idx = trans_idx_candidates[0]
@@ -151,40 +143,24 @@ def read_csv_map(csv_path: Path):
     for r in rows:
         if not r:
             continue
-        # pad short rows
         if len(r) <= max(source_idx, trans_idx):
-            r = (r + [""]*(max(source_idx, trans_idx)+1 - len(r)))
+            r = (r + [""] * (max(source_idx, trans_idx) + 1 - len(r)))
         src = (r[source_idx] or "").strip()
         if not src:
             continue
-        val = (r[trans_idx] or "")
+        val = decode_flattened_newlines(r[trans_idx] or "")
 
         m = plural_tag_re.search(src)
         if m:
             base_src = plural_tag_re.sub("", src).rstrip()
-            set_plural(base_src, m.group(1), val)
+            d = exploded.setdefault(base_src, {})
+            d[int(m.group(1))] = val
             continue
 
-        # joined plural forms? split by PLURAL_SEP; keep raw if no sep
-        if PLURAL_SEP in val:
-            forms = [s for s in (p.strip() for p in val.split(PLURAL_SEP))]
-            mapping[src] = forms
-        else:
-            add_mapping(src, val)
+        # store raw (possibly joined) value; don't split here
+        raw_map[src] = val
 
-    # Merge exploded forms into mapping
-    for base_src, idx_map in exploded_indices.items():
-        max_index = max(idx_map.keys()) if idx_map else -1
-        forms = ["" for _ in range(max_index+1)]
-        for i, v in idx_map.items():
-            if i < 0:
-                continue
-            if i >= len(forms):
-                forms.extend([""] * (i+1-len(forms)))
-            forms[i] = v
-        mapping[base_src] = forms
-
-    return mapping, exploded_indices
+    return raw_map, exploded
 
 def text_of(elem: ET.Element) -> str:
     parts = []
@@ -202,90 +178,89 @@ def set_text(elem: ET.Element, value: str):
         elem.remove(child)
     elem.text = value
 
-def update_ts(template_ts: Path, mapping: dict, lang_override: str | None):
+def update_ts(template_ts: Path, raw_map: dict, exploded: dict, lang_override: str | None):
     tree = ET.parse(template_ts)
     root = tree.getroot()
 
     if lang_override:
         root.set("language", lang_override)
 
-    # namespace cleanup if present
-    for ctx in root.findall(".//context"):
-        for msg in ctx.findall("message"):
-            source_el = msg.find("source")
-            if source_el is None:
-                continue
-            src = (text_of(source_el) or "").strip()
-            if not src:
-                continue
+    for msg in root.findall(".//context/message"):
+        source_el = msg.find("source")
+        if source_el is None:
+            continue
+        src = (text_of(source_el) or "").strip()
+        if not src:
+            continue
 
-            numerus = (msg.get("numerus") or "").lower() == "yes"
-            trans_el = msg.find("translation")
-            if trans_el is None:
-                trans_el = ET.SubElement(msg, "translation")
+        numerus = (msg.get("numerus") or "").lower() == "yes"
+        trans_el = msg.find("translation")
+        if trans_el is None:
+            trans_el = ET.SubElement(msg, "translation")
 
-            if src not in mapping:
-                # Not provided in CSV — leave untouched
-                continue
+        if src not in raw_map and src not in exploded:
+            # Not provided in CSV — leave untouched
+            continue
 
-            values = mapping[src]  # list[str] even for non-plural
-            if numerus:
-                # ensure <numerusform> children
-                existing = trans_el.findall("numerusform")
-                if existing:
-                    # Update existing indices; if CSV gives fewer, update only provided
-                    for i, child in enumerate(existing):
-                        if i < len(values):
-                            set_text(child, values[i])
-                    # If CSV provides more, append more nodes
-                    for i in range(len(existing), len(values)):
-                        n = ET.SubElement(trans_el, "numerusform")
-                        set_text(n, values[i])
-                else:
-                    # No children yet; create from CSV
-                    for v in values:
-                        n = ET.SubElement(trans_el, "numerusform")
-                        set_text(n, v)
-
-                # Mark finished/unfinished
-                empty_all = all((v.strip() == "") for v in values)
-                if empty_all:
-                    if CLEAR_WHEN_EMPTY:
-                        # clear all forms
-                        for child in trans_el.findall("numerusform"):
-                            set_text(child, "")
-                    trans_el.set("type", "unfinished")
-                else:
-                    # remove 'type' attribute if present
-                    if "type" in trans_el.attrib:
-                        del trans_el.attrib["type"]
-
+        if numerus:
+            # prefer exploded rows if present
+            if src in exploded:
+                idx_map = exploded[src]
+                max_index = max(idx_map.keys()) if idx_map else -1
+                forms = ["" for _ in range(max_index + 1)]
+                for i, v in idx_map.items():
+                    if i >= 0:
+                        if i >= len(forms):
+                            forms.extend([""] * (i + 1 - len(forms)))
+                        forms[i] = v
             else:
-                val = values[0] if values else ""
-                if val.strip() == "":
-                    if CLEAR_WHEN_EMPTY:
-                        set_text(trans_el, "")
-                    # mark unfinished (or keep text if KEEP_TEXT_WHEN_EMPTY)
-                    trans_el.set("type", "unfinished")
-                else:
-                    set_text(trans_el, val)
-                    if "type" in trans_el.attrib:
-                        del trans_el.attrib["type"]
+                raw_val = raw_map.get(src, "")
+                # only split joined forms if the message is numerus
+                forms = [s.strip() for s in raw_val.split(PLURAL_SEP)] if PLURAL_SEP in raw_val else [raw_val]
 
-    return tree, root
+            existing = trans_el.findall("numerusform")
+            if existing:
+                for i, child in enumerate(existing):
+                    if i < len(forms):
+                        set_text(child, forms[i])
+                for i in range(len(existing), len(forms)):
+                    n = ET.SubElement(trans_el, "numerusform")
+                    set_text(n, forms[i])
+            else:
+                for v in forms:
+                    n = ET.SubElement(trans_el, "numerusform")
+                    set_text(n, v)
+
+            empty_all = all((v.strip() == "") for v in forms)
+            if empty_all:
+                if CLEAR_WHEN_EMPTY:
+                    for child in trans_el.findall("numerusform"):
+                        set_text(child, "")
+                trans_el.set("type", "unfinished")
+            else:
+                trans_el.attrib.pop("type", None)
+
+        else:
+            # non-plural: take the raw value as-is, even if it contains the plural separator
+            val = raw_map.get(src, "")
+            if val.strip() == "":
+                if CLEAR_WHEN_EMPTY:
+                    set_text(trans_el, "")
+                trans_el.set("type", "unfinished")
+            else:
+                set_text(trans_el, val)
+                trans_el.attrib.pop("type", None)
+
+    return tree
 
 def write_tree(tree: ET.ElementTree, out_path: Path):
     out_path.parent.mkdir(parents=True, exist_ok=True)
     tree.write(out_path, encoding="utf-8", xml_declaration=True)
 
-mapping, _ = read_csv_map(INPUT_CSV)
-tree, root = update_ts(TEMPLATE_TS, mapping, LANG_OVERRIDE or None)
+raw_map, exploded = read_csv_maps(INPUT_CSV)
+tree = update_ts(TEMPLATE_TS, raw_map, exploded, LANG_OVERRIDE or None)
 
-if INPLACE:
-    out_path = TEMPLATE_TS
-else:
-    out_path = OUTDIR / TEMPLATE_TS.name
-
+out_path = TEMPLATE_TS if INPLACE else (OUTDIR / TEMPLATE_TS.name)
 write_tree(tree, out_path)
 print(f"[OK] Applied {INPUT_CSV.name} -> {out_path}")
 
