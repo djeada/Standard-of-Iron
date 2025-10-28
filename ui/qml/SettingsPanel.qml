@@ -320,6 +320,100 @@ Item {
 
             }
 
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 1
+                color: Theme.border
+            }
+
+            ColumnLayout {
+                Layout.fillWidth: true
+                spacing: Theme.spacingMedium
+
+                Label {
+                    text: qsTr("About")
+                    color: Theme.textMain
+                    font.pointSize: Theme.fontSizeLarge
+                    font.bold: true
+                }
+
+                Rectangle {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 2
+                    color: Theme.border
+                    opacity: 0.5
+                }
+
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    spacing: Theme.spacingSmall
+
+                    Label {
+                        text: qsTr("Standard of Iron - RTS Game")
+                        color: Theme.textMain
+                        font.pointSize: Theme.fontSizeMedium
+                        font.bold: true
+                    }
+
+                    Label {
+                        text: qsTr("Version 1.0.0")
+                        color: Theme.textSub
+                        font.pointSize: Theme.fontSizeSmall
+                    }
+
+                    Rectangle {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 1
+                        color: Theme.border
+                        opacity: 0.3
+                        Layout.topMargin: Theme.spacingSmall
+                        Layout.bottomMargin: Theme.spacingSmall
+                    }
+
+                    Label {
+                        text: qsTr("Third-Party Software")
+                        color: Theme.textMain
+                        font.pointSize: Theme.fontSizeMedium
+                        font.bold: true
+                    }
+
+                    Label {
+                        text: qsTr("This game uses the Qt framework, licensed under the GNU Lesser General Public License v3 (LGPL v3).")
+                        color: Theme.textSub
+                        font.pointSize: Theme.fontSizeSmall
+                        wrapMode: Text.WordWrap
+                        Layout.fillWidth: true
+                    }
+
+                    Label {
+                        text: qsTr("Qt is dynamically linked, allowing you to replace Qt libraries with your own versions.")
+                        color: Theme.textSub
+                        font.pointSize: Theme.fontSizeSmall
+                        wrapMode: Text.WordWrap
+                        Layout.fillWidth: true
+                    }
+
+                    Label {
+                        text: "<a href='https://www.gnu.org/licenses/lgpl-3.0.html'>LGPL v3 License</a> | <a href='https://www.qt.io'>Qt Website</a>"
+                        color: Theme.textSub
+                        font.pointSize: Theme.fontSizeSmall
+                        textFormat: Text.RichText
+                        onLinkActivated: function(link) {
+                            Qt.openUrlExternally(link);
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            acceptedButtons: Qt.NoButton
+                            cursorShape: parent.hoveredLink ? Qt.PointingHandCursor : Qt.ArrowCursor
+                        }
+
+                    }
+
+                }
+
+            }
+
             Item {
                 Layout.fillHeight: true
             }
