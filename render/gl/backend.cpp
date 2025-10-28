@@ -55,47 +55,71 @@ Backend::~Backend() {
 }
 
 void Backend::initialize() {
+  qInfo() << "Backend::initialize() - Starting...";
+  
+  qInfo() << "Backend: Initializing OpenGL functions...";
   initializeOpenGLFunctions();
+  qInfo() << "Backend: OpenGL functions initialized";
 
+  qInfo() << "Backend: Setting up depth test...";
   glEnable(GL_DEPTH_TEST);
   glDepthFunc(GL_LESS);
   glDepthRange(0.0, 1.0);
   glDepthMask(GL_TRUE);
 
+  qInfo() << "Backend: Setting up blending...";
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+  qInfo() << "Backend: Creating ResourceManager...";
   m_resources = std::make_unique<ResourceManager>();
   if (!m_resources->initialize()) {
     qWarning() << "Backend: failed to initialize ResourceManager";
   }
+  qInfo() << "Backend: ResourceManager created";
+  
+  qInfo() << "Backend: Creating ShaderCache...";
   m_shaderCache = std::make_unique<ShaderCache>();
   m_shaderCache->initializeDefaults();
+  qInfo() << "Backend: ShaderCache created";
 
+  qInfo() << "Backend: Creating CylinderPipeline...";
   m_cylinderPipeline =
       std::make_unique<BackendPipelines::CylinderPipeline>(m_shaderCache.get());
   m_cylinderPipeline->initialize();
+  qInfo() << "Backend: CylinderPipeline initialized";
 
+  qInfo() << "Backend: Creating VegetationPipeline...";
   m_vegetationPipeline = std::make_unique<BackendPipelines::VegetationPipeline>(
       m_shaderCache.get());
   m_vegetationPipeline->initialize();
+  qInfo() << "Backend: VegetationPipeline initialized";
 
+  qInfo() << "Backend: Creating TerrainPipeline...";
   m_terrainPipeline = std::make_unique<BackendPipelines::TerrainPipeline>(
       this, m_shaderCache.get());
   m_terrainPipeline->initialize();
+  qInfo() << "Backend: TerrainPipeline initialized";
 
+  qInfo() << "Backend: Creating CharacterPipeline...";
   m_characterPipeline = std::make_unique<BackendPipelines::CharacterPipeline>(
       this, m_shaderCache.get());
   m_characterPipeline->initialize();
+  qInfo() << "Backend: CharacterPipeline initialized";
 
+  qInfo() << "Backend: Creating WaterPipeline...";
   m_waterPipeline = std::make_unique<BackendPipelines::WaterPipeline>(
       this, m_shaderCache.get());
   m_waterPipeline->initialize();
+  qInfo() << "Backend: WaterPipeline initialized";
 
+  qInfo() << "Backend: Creating EffectsPipeline...";
   m_effectsPipeline = std::make_unique<BackendPipelines::EffectsPipeline>(
       this, m_shaderCache.get());
   m_effectsPipeline->initialize();
+  qInfo() << "Backend: EffectsPipeline initialized";
 
+  qInfo() << "Backend: Loading basic shaders...";
   m_basicShader = m_shaderCache->get(QStringLiteral("basic"));
   m_gridShader = m_shaderCache->get(QStringLiteral("grid"));
   if (m_basicShader == nullptr) {
@@ -104,6 +128,7 @@ void Backend::initialize() {
   if (m_gridShader == nullptr) {
     qWarning() << "Backend: grid shader missing";
   }
+  qInfo() << "Backend::initialize() - Complete!";
 }
 
 void Backend::beginFrame() {

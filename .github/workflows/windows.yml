@@ -149,10 +149,14 @@ jobs:
             'setlocal'
             'cd /d "%~dp0"'
             'set QT_DEBUG_PLUGINS=1'
-            'set QT_LOGGING_RULES=qt.*=true;qt.qml=true;qqml.*=true'
+            'set QT_LOGGING_RULES=qt.*=true;qt.qml=true;qqml.*=true;qt.rhi.*=true'
+            'set QT_OPENGL=desktop'
             'set QT_QPA_PLATFORM=windows'
+            'echo Starting with Desktop OpenGL...'
+            'echo Logging to runlog.txt'
             '"%~dp0standard_of_iron.exe" 1> "%~dp0runlog.txt" 2>&1'
             'echo ExitCode: %ERRORLEVEL%>> "%~dp0runlog.txt"'
+            'type "%~dp0runlog.txt"'
             'pause'
           ) | Set-Content -Encoding ASCII "$env:APP_DIR\run_debug.cmd"
 
@@ -164,13 +168,36 @@ jobs:
             'setlocal'
             'cd /d "%~dp0"'
             'set QT_DEBUG_PLUGINS=1'
-            'set QT_LOGGING_RULES=qt.*=true;qt.qml=true;qqml.*=true;qt.quick.*=true'
+            'set QT_LOGGING_RULES=qt.*=true;qt.qml=true;qqml.*=true;qt.quick.*=true;qt.rhi.*=true'
             'set QT_OPENGL=software'
             'set QT_QPA_PLATFORM=windows'
-            '"%~dp0standard_of_iron.exe" 1> "%~dp0runlog.txt" 2>&1'
-            'echo ExitCode: %ERRORLEVEL%>> "%~dp0runlog.txt"'
+            'echo Starting with Software OpenGL...'
+            'echo Logging to runlog_software.txt'
+            '"%~dp0standard_of_iron.exe" 1> "%~dp0runlog_software.txt" 2>&1'
+            'echo ExitCode: %ERRORLEVEL%>> "%~dp0runlog_software.txt"'
+            'type "%~dp0runlog_software.txt"'
             'pause'
           ) | Set-Content -Encoding ASCII "$env:APP_DIR\run_debug_softwaregl.cmd"
+
+      - name: Add run_debug_angle.cmd
+        shell: pwsh
+        run: |
+          @(
+            '@echo off'
+            'setlocal'
+            'cd /d "%~dp0"'
+            'set QT_DEBUG_PLUGINS=1'
+            'set QT_LOGGING_RULES=qt.*=true;qt.qml=true;qqml.*=true;qt.rhi.*=true'
+            'set QT_OPENGL=angle'
+            'set QT_ANGLE_PLATFORM=d3d11'
+            'set QT_QPA_PLATFORM=windows'
+            'echo Starting with ANGLE (OpenGL ES via D3D11)...'
+            'echo Logging to runlog_angle.txt'
+            '"%~dp0standard_of_iron.exe" 1> "%~dp0runlog_angle.txt" 2>&1'
+            'echo ExitCode: %ERRORLEVEL%>> "%~dp0runlog_angle.txt"'
+            'type "%~dp0runlog_angle.txt"'
+            'pause'
+          ) | Set-Content -Encoding ASCII "$env:APP_DIR\run_debug_angle.cmd"
 
       - name: Add GL/ANGLE fallbacks
         shell: pwsh
@@ -318,13 +345,23 @@ jobs:
           $ErrorActionPreference = 'Stop'
       
           $env:QT_DEBUG_PLUGINS  = "1"
-          $env:QT_LOGGING_RULES  = "qt.*=true;qt.qml=true;qqml.*=true"
+          $env:QT_LOGGING_RULES  = "qt.*=true;qt.qml=true;qqml.*=true;qt.rhi.*=true"
           $env:QT_OPENGL         = "software"
           $env:QT_QPA_PLATFORM   = "windows"
       
+          Write-Host "=== Smoke Test Configuration ==="
+          Write-Host "QT_OPENGL: $env:QT_OPENGL"
+          Write-Host "QT_QPA_PLATFORM: $env:QT_QPA_PLATFORM"
+          Write-Host "================================"
+          
           Push-Location "$env:APP_DIR"
           try {
-            $process = Start-Process -FilePath ".\${{ env.APP_NAME }}.exe" -PassThru -NoNewWindow
+            $logFile = "smoke_test.log"
+            $process = Start-Process -FilePath ".\${{ env.APP_NAME }}.exe" `
+              -RedirectStandardOutput $logFile `
+              -RedirectStandardError "${logFile}.err" `
+              -PassThru -NoNewWindow
+            
             $timeoutSeconds = 5
             $exited = $false
             try {
@@ -338,11 +375,27 @@ jobs:
               Write-Host "Process is still running after $timeoutSeconds s — treating as a PASS for smoke."
               $process.Kill()
               $process.WaitForExit()
+              
+              # Capture logs for debugging
+              if (Test-Path $logFile) {
+                Write-Host "`n=== Application Output (first 50 lines) ==="
+                Get-Content $logFile -Head 50 | Write-Host
+              }
               exit 0
             }
 
             $code = $process.ExitCode
             Write-Host "Process exited early with code: $code"
+            
+            # Show logs to help diagnose
+            if (Test-Path $logFile) {
+              Write-Host "`n=== Application Output ==="
+              Get-Content $logFile | Write-Host
+            }
+            if (Test-Path "${logFile}.err") {
+              Write-Host "`n=== Error Output ==="
+              Get-Content "${logFile}.err" | Write-Host
+            }
 
             $expectedOnHeadless = @(-1073741819, -1073741510)
             $deploymentIssues = @(-1073741701, -1073741515)

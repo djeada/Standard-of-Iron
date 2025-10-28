@@ -5,27 +5,47 @@ Verifies dependencies, sets up MSVC environment, and builds the project.
 
 This script automates the Windows build process by:
 1. Checking for required tools (CMake, Ninja, MSVC, Qt)
-2. Guiding installation of missing dependencies
-3. Configuring and building the project with proper MSVC setup
-4. Deploying Qt dependencies with runtime libraries
-5. Writing qt.conf and diagnostic scripts (run_debug.cmd, run_debug_softwaregl.cmd)
-6. Copying GL/ANGLE fallback DLLs for graphics compatibility
-7. Copying assets and creating a distributable package
+2. Auto-installing missing dependencies (optional, uses winget)
+3. Guiding installation of missing dependencies
+4. Configuring and building the project with proper MSVC setup
+5. Deploying Qt dependencies with runtime libraries
+6. Writing qt.conf and diagnostic scripts (run_debug.cmd, etc.)
+7. Copying GL/ANGLE fallback DLLs for graphics compatibility
+8. Copying assets and creating a distributable package
 
 Usage:
-    python scripts/build-windows.py                    # Full build with checks
-    python scripts/build-windows.py --skip-checks      # Skip dependency checks
+    python scripts/build-windows.py                    # Auto-installs missing deps, then builds
+    python scripts/build-windows.py --no-auto-install  # Show manual install instructions instead
+    python scripts/build-windows.py --skip-checks      # Skip dependency checks entirely
     python scripts/build-windows.py --build-type Debug # Build in Debug mode
     python scripts/build-windows.py --clean            # Clean build directory first
     python scripts/build-windows.py --deploy-only      # Only deploy Qt (assumes built)
+    python scripts/build-windows.py --no-package       # Skip ZIP creation (faster for dev)
     python scripts/build-windows.py --help             # Show this help
+
+Behavior:
+    By default, the script will automatically install missing dependencies using winget.
+    Use --no-auto-install to disable this and see manual installation instructions instead.
+    
+Performance Tips for VMs:
+    set CMAKE_BUILD_PARALLEL_LEVEL=2    # Limit parallel jobs to avoid thrashing
+    set PYTHONUNBUFFERED=1              # Show output immediately (no buffering)
+    set NINJA_STATUS=[%%f/%%t] %%e sec  # Show Ninja build progress
+    
+    Use --no-package during development to skip slow ZIP creation
 
 Requirements:
     - Python 3.7+
-    - CMake 3.21+
-    - Ninja build system
-    - Visual Studio 2019/2022 with C++ tools
-    - Qt 6.6.3 or compatible (with msvc2019_64 or msvc2022_64)
+    - CMake 3.21+ (auto-installed if missing)
+    - Ninja build system (auto-installed if missing)
+    - Visual Studio 2019/2022 with C++ tools (auto-installed if missing)
+    - Qt 6.6.3 or compatible (must be installed manually from qt.io)
+    
+Note:
+    - Auto-install requires Windows 10/11 with winget
+    - Qt cannot be auto-installed (winget Qt packages lack required components)
+    - Run as Administrator if auto-install fails with permission errors
+    - Long operations (compile, windeployqt, ZIP) show warnings but no progress bars
 """
 
 import argparse
@@ -53,7 +73,7 @@ def info(msg: str) -> None:
 
 def success(msg: str) -> None:
     """Print success message."""
-    print(f"{Color.GREEN}[✓]{Color.RESET} {msg}")
+    print(f"{Color.GREEN}[+]{Color.RESET} {msg}")
 
 def warning(msg: str) -> None:
     """Print warning message."""
@@ -61,7 +81,7 @@ def warning(msg: str) -> None:
 
 def error(msg: str) -> None:
     """Print error message."""
-    print(f"{Color.RED}[✗]{Color.RESET} {msg}")
+    print(f"{Color.RED}[x]{Color.RESET} {msg}")
 
 def run_command(cmd: list, capture_output: bool = False, check: bool = True, 
                 env: Optional[dict] = None) -> subprocess.CompletedProcess:
@@ -92,6 +112,12 @@ def check_windows() -> None:
         error(f"Detected OS: {platform.system()}")
         sys.exit(1)
     success("Running on Windows")
+    
+    # Check for unbuffered output
+    if not os.environ.get('PYTHONUNBUFFERED'):
+        warning("Tip: Set PYTHONUNBUFFERED=1 for immediate output visibility")
+        warning("     Run: set PYTHONUNBUFFERED=1 (before running this script)")
+        print()
 
 def check_cmake() -> Tuple[bool, Optional[str]]:
     """Check if CMake is installed and get version."""
@@ -156,34 +182,137 @@ def find_qt() -> Optional[Path]:
     # Common Qt installation locations
     possible_paths = [
         Path(r"C:\Qt"),
+        Path(r"C:\Program Files\Qt"),
+        Path(r"C:\Program Files (x86)\Qt"),
         Path.home() / "Qt",
         Path(os.environ.get('QT_ROOT', '')) if os.environ.get('QT_ROOT') else None,
     ]
-    
+
+    # 1) Check PATH for qmake.exe first (useful if user added Qt to PATH)
+    qmake_in_path = shutil.which('qmake') or shutil.which('qmake.exe')
+    if qmake_in_path:
+        try:
+            qmake_path = Path(qmake_in_path)
+            # qmake lives in <qtdir>/bin/qmake.exe - return the arch dir
+            arch_dir = qmake_path.parent.parent
+            # Check if it's MSVC variant (required for this project)
+            if 'msvc' in arch_dir.name.lower():
+                return arch_dir
+            # If it's MinGW, we'll report it later but keep searching
+        except Exception:
+            pass
+
+    # 2) Search common installation roots for MSVC builds
     for base_path in possible_paths:
-        if base_path and base_path.exists():
+        if not base_path:
+            continue
+        if base_path.exists():
             # Look for Qt 6.x with msvc2019_64 or msvc2022_64
-            for qt_version_dir in base_path.glob("6.*"):
+            for qt_version_dir in sorted(base_path.glob("6.*"), reverse=True):
                 for arch_dir in qt_version_dir.glob("msvc*_64"):
                     qmake = arch_dir / "bin" / "qmake.exe"
                     if qmake.exists():
                         return arch_dir
+
+    # 3) Try to read QT_HOME from common environment variables
+    env_qt = os.environ.get('QT_HOME') or os.environ.get('QT_INSTALL_DIR')
+    if env_qt:
+        env_path = Path(env_qt)
+        if env_path.exists():
+            for qt_version_dir in sorted(env_path.glob("6.*"), reverse=True):
+                for arch_dir in qt_version_dir.glob("msvc*_64"):
+                    qmake = arch_dir / "bin" / "qmake.exe"
+                    if qmake.exists():
+                        return arch_dir
+
+    return None
+
+
+def find_qt_mingw() -> Optional[Path]:
+    """Check if MinGW Qt is installed (to warn user)."""
+    possible_paths = [
+        Path(r"C:\Qt"),
+        Path.home() / "Qt",
+    ]
     
+    for base_path in possible_paths:
+        if base_path.exists():
+            for qt_version_dir in sorted(base_path.glob("6.*"), reverse=True):
+                for arch_dir in qt_version_dir.glob("mingw*"):
+                    qmake = arch_dir / "bin" / "qmake.exe"
+                    if qmake.exists():
+                        return arch_dir
     return None
 
 def check_qt() -> Tuple[bool, Optional[Path], Optional[str]]:
     """Check if Qt is installed."""
     qt_path = find_qt()
+    # If we found a qmake path via PATH, verify by running it
     if qt_path:
         qmake = qt_path / "bin" / "qmake.exe"
+        if qmake.exists():
+            try:
+                result = run_command([str(qmake), '-query', 'QT_VERSION'], capture_output=True)
+                version = result.stdout.strip()
+                success(f"Qt {version} (MSVC) found at {qt_path}")
+                return True, qt_path, version
+            except (subprocess.CalledProcessError, FileNotFoundError):
+                pass
+
+    # Check if MinGW Qt is installed instead
+    mingw_qt = find_qt_mingw()
+    if mingw_qt:
+        qmake = mingw_qt / "bin" / "qmake.exe"
         try:
             result = run_command([str(qmake), '-query', 'QT_VERSION'], capture_output=True)
             version = result.stdout.strip()
-            success(f"Qt {version} found at {qt_path}")
-            return True, qt_path, version
-        except (subprocess.CalledProcessError, FileNotFoundError):
+            error(f"Qt {version} (MinGW) found at {mingw_qt}")
+            error("This project requires Qt with MSVC compiler, not MinGW")
+            print()
+            info(f"{Color.BOLD}Solution:{Color.RESET}")
+            info("Run the Qt Maintenance Tool to add MSVC component:")
+            print()
+            maintenance_tool = mingw_qt.parent.parent / "MaintenanceTool.exe"
+            if maintenance_tool.exists():
+                info(f"1. Run: {maintenance_tool}")
+            else:
+                info(f"1. Find Qt Maintenance Tool in: {mingw_qt.parent.parent}")
+            info("2. Click 'Add or remove components'")
+            info(f"3. Expand 'Qt {version.split('.')[0]}.{version.split('.')[1]}'")
+            info("4. CHECK: 'MSVC 2019 64-bit' or 'MSVC 2022 64-bit'")
+            info("5. CHECK: 'Qt 5 Compatibility Module'")
+            info("6. CHECK: 'Qt Multimedia'")
+            info("7. Click 'Update' and wait for installation")
+            info("8. Restart terminal and run this script again")
+            print()
+        except Exception:
             pass
-    
+
+    # Last resort: try running 'qmake -v' if on PATH
+    qmake_exec = shutil.which('qmake') or shutil.which('qmake.exe')
+    if qmake_exec and not mingw_qt:
+        try:
+            result = run_command([qmake_exec, '-v'], capture_output=True)
+            # Check if it's MinGW
+            if 'mingw' in result.stdout.lower():
+                error("Qt found but it's MinGW build - MSVC build required")
+                return False, None, None
+            
+            # Try to query QT_VERSION properly
+            try:
+                out = run_command([qmake_exec, '-query', 'QT_VERSION'], capture_output=True)
+                version = out.stdout.strip()
+            except Exception:
+                version = "unknown"
+            
+            success(f"Qt {version} found (qmake on PATH: {qmake_exec})")
+            # Try to compute arch dir
+            qmake_path = Path(qmake_exec)
+            arch_dir = qmake_path.parent.parent
+            return True, arch_dir, version
+        except Exception:
+            pass
+
     return False, None, None
 
 def setup_msvc_environment() -> dict:
@@ -260,6 +389,327 @@ def print_installation_guide() -> None:
     print("   Required modules: qt5compat, qtmultimedia")
     print("   Or set QT_ROOT environment variable to your Qt installation\n")
 
+def check_winget_available() -> bool:
+    """Check if winget is available."""
+    try:
+        result = run_command(['winget', '--version'], capture_output=True, check=False)
+        return result.returncode == 0
+    except FileNotFoundError:
+        return False
+
+def install_visual_studio_direct() -> bool:
+    """Download and install Visual Studio using the bootstrapper directly."""
+    import tempfile
+    import urllib.request
+    
+    info("Attempting direct Visual Studio installation...")
+    info("This will download ~3MB bootstrapper, then download the full installer")
+    print()
+    
+    # Download the bootstrapper
+    vs_url = "https://aka.ms/vs/17/release/vs_community.exe"
+    
+    try:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            installer_path = os.path.join(tmpdir, "vs_community.exe")
+            
+            info("Downloading Visual Studio installer...")
+            urllib.request.urlretrieve(vs_url, installer_path)
+            success("Installer downloaded")
+            
+            info("Running Visual Studio installer...")
+            info("This may take 10-30 minutes depending on your internet connection")
+            print()
+            
+            # Run the installer with the C++ workload
+            cmd = [
+                installer_path,
+                "--add", "Microsoft.VisualStudio.Workload.NativeDesktop",
+                "--includeRecommended",
+                "--passive",  # Show progress but don't require interaction
+                "--norestart",
+                "--wait"
+            ]
+            
+            result = subprocess.run(cmd, check=False)
+            
+            if result.returncode == 0 or result.returncode == 3010:  # 3010 = success but reboot required
+                success("Visual Studio installed successfully!")
+                if result.returncode == 3010:
+                    warning("A restart may be required to complete the installation")
+                return True
+            else:
+                error(f"Visual Studio installation failed (exit code: {result.returncode})")
+                return False
+                
+    except Exception as e:
+        error(f"Failed to download/install Visual Studio: {e}")
+        return False
+
+
+def install_qt_interactive() -> bool:
+    """Download and launch Qt online installer with instructions."""
+    import tempfile
+    import urllib.request
+    
+    print()
+    info(f"{Color.BOLD}Qt Installation Helper{Color.RESET}")
+    info("Qt requires an interactive installation (needs Qt account)")
+    print()
+    info("This will:")
+    info("  1. Download the Qt online installer (~2MB)")
+    info("  2. Launch it for you")
+    info("  3. Guide you through the installation")
+    print()
+    
+    # Qt online installer URL - try multiple mirrors
+    qt_urls = [
+        "https://d13lb3tujbc8s0.cloudfront.net/onlineinstallers/qt-unified-windows-x64-online.exe",
+        "https://download.qt.io/archive/online_installers/4.8/qt-unified-windows-x64-4.8.0-online.exe",
+        "https://download.qt.io/official_releases/online_installers/qt-unified-windows-x64-4.8-online.exe",
+    ]
+    qt_urls = [
+        "https://d13lb3tujbc8s0.cloudfront.net/onlineinstallers/qt-unified-windows-x64-online.exe",
+        "https://download.qt.io/archive/online_installers/4.8/qt-unified-windows-x64-4.8.0-online.exe",
+        "https://download.qt.io/official_releases/online_installers/qt-unified-windows-x64-4.8-online.exe",
+    ]
+    
+    try:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            installer_path = os.path.join(tmpdir, "qt-installer.exe")
+            
+            # Try each URL until one works
+            downloaded = False
+            for qt_url in qt_urls:
+                try:
+                    info(f"Downloading Qt online installer from {qt_url.split('/')[2]}...")
+                    urllib.request.urlretrieve(qt_url, installer_path)
+                    success("Qt installer downloaded")
+                    downloaded = True
+                    break
+                except Exception as e:
+                    warning(f"Failed to download from {qt_url.split('/')[2]}: {e}")
+                    continue
+            
+            if not downloaded:
+                error("Could not download Qt installer from any mirror")
+                print()
+                info("Please download manually from:")
+                info("https://www.qt.io/download-qt-installer")
+                print()
+                info("Then run the installer and follow the steps below:")
+                print()
+                print(f"{Color.BOLD}=== Installation Steps ==={Color.RESET}")
+                print()
+                print(f"{Color.BOLD}1. Qt Account:{Color.RESET}")
+                print("   - Login with your Qt account (or create one - it's free)")
+                print()
+                print(f"{Color.BOLD}2. Installation Path:{Color.RESET}")
+                print("   - Use default: C:\\Qt")
+                print("   - Or custom path and set QT_ROOT environment variable")
+                print()
+                print(f"{Color.BOLD}3. Select Components (CRITICAL):{Color.RESET}")
+                print("   - Expand 'Qt 6.6.3' (or latest 6.x)")
+                print("   - CHECK: 'MSVC 2019 64-bit' (or 'MSVC 2022 64-bit')")
+                print("   - CHECK: 'Qt 5 Compatibility Module'")
+                print("   - CHECK: 'Qt Multimedia'")
+                print("   - Uncheck everything else to save space")
+                print()
+                print(f"{Color.BOLD}4. After Installation:{Color.RESET}")
+                print("   - Restart this terminal")
+                print("   - Run this script again")
+                print()
+                
+                # Try to open browser to Qt download page
+                try:
+                    import webbrowser
+                    webbrowser.open("https://www.qt.io/download-qt-installer")
+                    success("Opened Qt download page in your browser")
+                except Exception:
+                    pass
+                
+                return False
+            
+            print()
+            
+            print(f"{Color.BOLD}=== IMPORTANT: Follow these steps in the installer ==={Color.RESET}")
+            print()
+            print(f"{Color.BOLD}1. Qt Account:{Color.RESET}")
+            print("   - Login with your Qt account (or create one - it's free)")
+            print()
+            print(f"{Color.BOLD}2. Installation Path:{Color.RESET}")
+            print("   - Use default: C:\\Qt")
+            print("   - Or custom path and set QT_ROOT environment variable")
+            print()
+            print(f"{Color.BOLD}3. Select Components (CRITICAL):{Color.RESET}")
+            print("   - Expand 'Qt 6.6.3' (or latest 6.x)")
+            print("   - CHECK: 'MSVC 2019 64-bit' (or 'MSVC 2022 64-bit')")
+            print("   - CHECK: 'Qt 5 Compatibility Module'")
+            print("   - CHECK: 'Qt Multimedia'")
+            print("   - Uncheck everything else to save space")
+            print()
+            print(f"{Color.BOLD}4. After Installation:{Color.RESET}")
+            print("   - Restart this terminal")
+            print("   - Run this script again")
+            print()
+            print(f"{Color.BOLD}Press Enter to launch the Qt installer...{Color.RESET}")
+            input()
+            
+            info("Launching Qt installer...")
+            # Launch installer (non-blocking so script can continue)
+            subprocess.Popen([installer_path], shell=True)
+            
+            print()
+            success("Qt installer launched!")
+            warning("Complete the installation, then restart your terminal and run this script again")
+            print()
+            return False  # Return False since Qt isn't installed yet
+                
+    except Exception as e:
+        error(f"Failed to download/launch Qt installer: {e}")
+        return False
+
+
+def auto_install_dependencies() -> bool:
+    """Attempt to auto-install missing dependencies using winget."""
+    if not check_winget_available():
+        warning("winget not available - cannot auto-install")
+        warning("Please install dependencies manually or update to Windows 10/11 with winget")
+        return False
+    
+    info("Attempting to auto-install missing dependencies using winget...")
+    print()
+    
+    # Check what's missing
+    cmake_ok, _ = check_cmake()
+    ninja_ok = check_ninja()
+    msvc_ok, _ = check_msvc()
+    qt_ok, _, _ = check_qt()
+    
+    installs_needed = []
+    if not cmake_ok:
+        installs_needed.append(('CMake', 'Kitware.CMake'))
+    if not ninja_ok:
+        installs_needed.append(('Ninja', 'Ninja-build.Ninja'))
+    if not msvc_ok:
+        installs_needed.append(('Visual Studio 2022', 'Microsoft.VisualStudio.2022.Community', 
+                               '--override "--add Microsoft.VisualStudio.Workload.NativeDesktop"'))
+    
+    if not installs_needed and not qt_ok:
+        warning("Qt installation requires manual download from qt.io")
+        warning("winget Qt packages may not include required MSVC toolchain")
+        print()
+        info("Would you like to download and run the Qt installer now?")
+        
+        # Try to launch Qt installer helper
+        if install_qt_interactive():
+            return True
+        else:
+            # Installer was launched or failed - either way, user needs to complete it
+            return False
+    
+    if not installs_needed:
+        return True
+    
+    print(f"{Color.BOLD}Installing the following packages:{Color.RESET}")
+    for item in installs_needed:
+        print(f"  - {item[0]}")
+    print()
+    
+    success_count = 0
+    needs_restart = False
+    vs_failed = False
+    vs_needed = False
+    
+    for item in installs_needed:
+        name = item[0]
+        package_id = item[1]
+        extra_args = item[2] if len(item) > 2 else None
+        
+        info(f"Installing {name}...")
+        print(f"  This may take several minutes, please wait...")
+        print()
+        
+        cmd = ['winget', 'install', '--id', package_id, '--accept-package-agreements', '--accept-source-agreements']
+        if extra_args:
+            cmd.extend(extra_args.split())
+        
+        # Show live output - don't capture
+        try:
+            result = subprocess.run(cmd, check=False)
+            print()  # Add spacing after output
+            
+            if result.returncode == 0:
+                success(f"{name} installed successfully")
+                success_count += 1
+                
+                # CMake and Ninja need PATH restart
+                if 'CMake' in name or 'Ninja' in name:
+                    needs_restart = True
+            else:
+                error(f"Failed to install {name} (exit code: {result.returncode})")
+                
+                # Visual Studio often needs admin rights or has winget issues
+                if 'Visual Studio' in name:
+                    vs_failed = True
+                    vs_needed = True
+                else:
+                    warning("You may need to run this script as Administrator")
+        except Exception as e:
+            error(f"Error installing {name}: {e}")
+        
+        print()  # Add spacing between installs
+    
+    print()
+    
+    # Try direct VS install if winget failed
+    if vs_failed:
+        print()
+        warning("winget failed to install Visual Studio (common issue)")
+        info("Attempting direct installation using VS bootstrapper...")
+        print()
+        
+        if install_visual_studio_direct():
+            success("Visual Studio installed via direct download!")
+            success_count += 1
+            vs_failed = False
+        else:
+            print()
+            info(f"{Color.BOLD}Visual Studio Installation Failed{Color.RESET}")
+            info("Please install manually:")
+            info("1. Download: https://visualstudio.microsoft.com/downloads/")
+            info("2. Run the installer")
+            info("3. Select 'Desktop development with C++'")
+            info("4. Install and restart this script")
+            print()
+    
+    # Final summary
+    print()
+    if success_count == len(installs_needed):
+        success("All dependencies installed successfully!")
+        if needs_restart:
+            warning("CMake/Ninja were installed - you must restart this terminal!")
+            warning("Close this terminal, open a new one, and run this script again.")
+        return True
+    elif success_count > 0:
+        warning(f"Installed {success_count}/{len(installs_needed)} dependencies")
+        
+        if needs_restart:
+            print()
+            info(f"{Color.BOLD}IMPORTANT: CMake/Ninja were just installed!{Color.RESET}")
+            info("You MUST restart your terminal for PATH changes to take effect.")
+            info("Then run this script again to continue.")
+            print()
+        
+        warning("Please install remaining dependencies manually")
+        print_installation_guide()
+        return False
+    else:
+        error("Auto-install failed")
+        warning("Please install dependencies manually")
+        print_installation_guide()
+        return False
+
 def check_dependencies() -> Tuple[bool, Optional[Path]]:
     """Check all required dependencies."""
     info("Checking dependencies...")
@@ -292,7 +742,6 @@ def check_dependencies() -> Tuple[bool, Optional[Path]]:
     
     if not all_ok:
         error("Some dependencies are missing!")
-        print_installation_guide()
         return False, None
     
     success("All dependencies found!")
@@ -302,6 +751,7 @@ def configure_project(build_dir: Path, build_type: str, qt_path: Optional[Path],
                      msvc_env: dict) -> None:
     """Configure the project with CMake."""
     info(f"Configuring project (Build type: {build_type})...")
+    print("  Running CMake configuration...")
     
     cmake_args = [
         'cmake',
@@ -315,12 +765,25 @@ def configure_project(build_dir: Path, build_type: str, qt_path: Optional[Path],
     if qt_path:
         cmake_args.append(f'-DCMAKE_PREFIX_PATH={qt_path}')
     
+    # Check for CMAKE_BUILD_PARALLEL_LEVEL env var
+    parallel = os.environ.get('CMAKE_BUILD_PARALLEL_LEVEL')
+    if parallel:
+        info(f"  Build parallelism limited to {parallel} jobs")
+    
     run_command(cmake_args, env=msvc_env)
     success("Project configured")
 
 def build_project(build_dir: Path, msvc_env: dict) -> None:
     """Build the project."""
     info("Building project...")
+    
+    parallel = os.environ.get('CMAKE_BUILD_PARALLEL_LEVEL')
+    if parallel:
+        info(f"  Using {parallel} parallel jobs (set via CMAKE_BUILD_PARALLEL_LEVEL)")
+    else:
+        warning("  Using all CPU cores - set CMAKE_BUILD_PARALLEL_LEVEL=2 to reduce load in VMs")
+    
+    print("  Compiling (this may take several minutes)...")
     
     run_command(['cmake', '--build', str(build_dir)], env=msvc_env)
     success("Project built successfully")
@@ -379,38 +842,112 @@ def write_debug_scripts(app_dir: Path, app_name: str) -> None:
     """Write diagnostic scripts for troubleshooting."""
     info("Writing diagnostic scripts...")
     
-    # run_debug.cmd
+    # run.cmd - Smart launcher with automatic fallback
+    run_smart_content = """@echo off
+setlocal
+cd /d "%~dp0"
+
+echo ============================================
+echo Standard of Iron - Smart Launcher
+echo ============================================
+echo.
+
+REM Try OpenGL first
+echo [1/2] Attempting OpenGL rendering...
+"%~dp0{app_name}.exe" 2>&1
+set EXIT_CODE=%ERRORLEVEL%
+
+REM Check for crash (access violation = -1073741819)
+if %EXIT_CODE% EQU -1073741819 (
+    echo.
+    echo [CRASH] OpenGL rendering failed!
+    echo [INFO] This is common on VMs or older hardware
+    echo.
+    echo [2/2] Retrying with software rendering...
+    echo.
+    set QT_QUICK_BACKEND=software
+    set QT_OPENGL=software
+    "%~dp0{app_name}.exe"
+    exit /b %ERRORLEVEL%
+)
+
+if %EXIT_CODE% NEQ 0 (
+    echo.
+    echo [ERROR] Application exited with code: %EXIT_CODE%
+    echo [HINT] Try running run_debug.cmd for detailed logs
+    pause
+    exit /b %EXIT_CODE%
+)
+
+exit /b 0
+""".format(app_name=app_name)
+    
+    run_smart_path = app_dir / "run.cmd"
+    run_smart_path.write_text(run_smart_content, encoding='ascii')
+    
+    # run_debug.cmd - Desktop OpenGL with verbose logging
     run_debug_content = """@echo off
 setlocal
 cd /d "%~dp0"
 set QT_DEBUG_PLUGINS=1
-set QT_LOGGING_RULES=qt.*=true;qt.qml=true;qqml.*=true
+set QT_LOGGING_RULES=qt.*=true;qt.qml=true;qqml.*=true;qt.rhi.*=true
+set QT_OPENGL=desktop
 set QT_QPA_PLATFORM=windows
+echo Starting with Desktop OpenGL...
+echo Logging to runlog.txt
 "%~dp0{app_name}.exe" 1> "%~dp0runlog.txt" 2>&1
 echo ExitCode: %ERRORLEVEL%>> "%~dp0runlog.txt"
+type "%~dp0runlog.txt"
 pause
 """.format(app_name=app_name)
     
     run_debug_path = app_dir / "run_debug.cmd"
     run_debug_path.write_text(run_debug_content, encoding='ascii')
     
-    # run_debug_softwaregl.cmd
+    # run_debug_softwaregl.cmd - Software OpenGL fallback
     run_debug_softwaregl_content = """@echo off
 setlocal
 cd /d "%~dp0"
 set QT_DEBUG_PLUGINS=1
-set QT_LOGGING_RULES=qt.*=true;qt.qml=true;qqml.*=true;qt.quick.*=true
+set QT_LOGGING_RULES=qt.*=true;qt.qml=true;qqml.*=true;qt.quick.*=true;qt.rhi.*=true
 set QT_OPENGL=software
+set QT_QUICK_BACKEND=software
 set QT_QPA_PLATFORM=windows
-"%~dp0{app_name}.exe" 1> "%~dp0runlog.txt" 2>&1
-echo ExitCode: %ERRORLEVEL%>> "%~dp0runlog.txt"
+set QMLSCENE_DEVICE=softwarecontext
+echo Starting with Qt Quick Software Renderer (no OpenGL)...
+echo This is the safest mode for VMs and old hardware
+echo Logging to runlog_software.txt
+"%~dp0{app_name}.exe" 1> "%~dp0runlog_software.txt" 2>&1
+echo ExitCode: %ERRORLEVEL%>> "%~dp0runlog_software.txt"
+type "%~dp0runlog_software.txt"
 pause
 """.format(app_name=app_name)
     
     run_debug_softwaregl_path = app_dir / "run_debug_softwaregl.cmd"
     run_debug_softwaregl_path.write_text(run_debug_softwaregl_content, encoding='ascii')
     
-    success(f"Diagnostic scripts written: run_debug.cmd, run_debug_softwaregl.cmd")
+    # run_debug_angle.cmd - ANGLE (OpenGL ES via D3D)
+    run_debug_angle_content = """@echo off
+setlocal
+cd /d "%~dp0"
+set QT_DEBUG_PLUGINS=1
+set QT_LOGGING_RULES=qt.*=true;qt.qml=true;qqml.*=true;qt.rhi.*=true
+set QT_OPENGL=angle
+set QT_ANGLE_PLATFORM=d3d11
+set QT_QPA_PLATFORM=windows
+echo Starting with ANGLE (OpenGL ES via D3D11)...
+echo Logging to runlog_angle.txt
+"%~dp0{app_name}.exe" 1> "%~dp0runlog_angle.txt" 2>&1
+echo ExitCode: %ERRORLEVEL%>> "%~dp0runlog_angle.txt"
+type "%~dp0runlog_angle.txt"
+pause
+""".format(app_name=app_name)
+    
+    run_debug_angle_path = app_dir / "run_debug_angle.cmd"
+    run_debug_angle_path.write_text(run_debug_angle_content, encoding='ascii')
+
+    success(f"Diagnostic scripts written: run.cmd (smart), run_debug.cmd, run_debug_softwaregl.cmd, run_debug_angle.cmd")
+
 
 def copy_gl_angle_fallbacks(app_dir: Path, qt_path: Path) -> None:
     """Copy GL/ANGLE fallback DLLs for graphics compatibility."""
@@ -457,6 +994,8 @@ def copy_assets(build_dir: Path) -> None:
 def create_package(build_dir: Path, build_type: str) -> Path:
     """Create distributable package."""
     info("Creating distributable package...")
+    warning("This may take several minutes with no progress indicator...")
+    print("  Compressing files (CPU-intensive, please wait)...")
     
     app_dir = build_dir / "bin"
     package_name = f"standard_of_iron-win-x64-{build_type}.zip"
@@ -465,17 +1004,24 @@ def create_package(build_dir: Path, build_type: str) -> Path:
     if package_path.exists():
         package_path.unlink()
     
+    import time
+    start_time = time.time()
+    
     shutil.make_archive(
         package_path.stem,
         'zip',
         app_dir
     )
     
-    success(f"Package created: {package_path}")
+    elapsed = time.time() - start_time
+    success(f"Package created: {package_path} (took {elapsed:.1f}s)")
     return package_path
 
 def main() -> int:
     """Main entry point."""
+    import time
+    start_time = time.time()
+    
     parser = argparse.ArgumentParser(
         description="Build Standard-of-Iron on Windows",
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -485,6 +1031,11 @@ def main() -> int:
         '--skip-checks',
         action='store_true',
         help='Skip dependency checks'
+    )
+    parser.add_argument(
+        '--no-auto-install',
+        action='store_true',
+        help='Do NOT auto-install missing dependencies (show manual instructions instead)'
     )
     parser.add_argument(
         '--build-type',
@@ -523,8 +1074,24 @@ def main() -> int:
     # Check dependencies unless skipped
     if not args.skip_checks and not args.deploy_only:
         deps_ok, qt_path = check_dependencies()
+        
         if not deps_ok:
-            return 1
+            # Auto-install by default unless --no-auto-install
+            if not args.no_auto_install:
+                info("Attempting auto-install of missing dependencies...")
+                print()
+                if auto_install_dependencies():
+                    warning("Dependencies installed - please restart your terminal and run this script again")
+                    return 1
+                else:
+                    print()
+                    print_installation_guide()
+                    return 1
+            else:
+                info("Auto-install disabled (--no-auto-install flag)")
+                print()
+                print_installation_guide()
+                return 1
     else:
         # Try to find Qt even if checks are skipped
         _, qt_path, _ = check_qt()
@@ -568,12 +1135,16 @@ def main() -> int:
     if not args.no_package:
         package_path = create_package(build_dir, args.build_type)
         print()
-        info(f"Build complete! Package available at: {package_path}")
-        info(f"Executable location: {build_dir / 'bin' / 'standard_of_iron.exe'}")
+        elapsed = time.time() - start_time
+        success(f"Build complete! (total time: {elapsed:.1f}s)")
+        info(f"Package: {package_path}")
+        info(f"Executable: {build_dir / 'bin' / 'standard_of_iron.exe'}")
     else:
         print()
-        info(f"Build complete!")
-        info(f"Executable location: {build_dir / 'bin' / 'standard_of_iron.exe'}")
+        elapsed = time.time() - start_time
+        success(f"Build complete! (total time: {elapsed:.1f}s)")
+        info(f"Executable: {build_dir / 'bin' / 'standard_of_iron.exe'}")
+        info("Run with debug scripts: run_debug.cmd, run_debug_softwaregl.cmd, run_debug_angle.cmd")
     
     return 0
 
