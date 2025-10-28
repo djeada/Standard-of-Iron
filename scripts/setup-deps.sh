@@ -49,19 +49,36 @@ err()  { echo -e "\033[1;31m[x]\033[0m $*"; }
 # -----------------------------------------------------------------------------
 semver_ge() {
   # Returns 0 if $1 >= $2, else 1 (supports X.Y[.Z])
+  # Handle empty or invalid inputs
+  if [ -z "${1:-}" ] || [ -z "${2:-}" ]; then
+    return 1
+  fi
+  
+  # Ensure inputs are valid version strings (only numbers and dots)
+  if ! echo "$1" | grep -qE '^[0-9]+(\.[0-9]+)*$' || ! echo "$2" | grep -qE '^[0-9]+(\.[0-9]+)*$'; then
+    return 1
+  fi
+  
   local IFS=.
   local a1 a2 a3 b1 b2 b3
   read -r a1 a2 a3 <<< "$1"
   read -r b1 b2 b3 <<< "$2"
+  
+  # Ensure all variables are numeric
   a1=${a1:-0}; a2=${a2:-0}; a3=${a3:-0}
   b1=${b1:-0}; b2=${b2:-0}; b3=${b3:-0}
+  
+  # Convert to integers, defaulting to 0 if not numeric
+  a1=$((a1 + 0)); a2=$((a2 + 0)); a3=$((a3 + 0))
+  b1=$((b1 + 0)); b2=$((b2 + 0)); b3=$((b3 + 0))
+  
   (( a1 > b1 )) && return 0
   (( a1 < b1 )) && return 1
   (( a2 > b2 )) && return 0
   (( a2 < b2 )) && return 1
   (( a3 >= b3 )) && return 0
   return 1
-}
+} 
 
 is_macos() { [ "$(uname -s)" = "Darwin" ]; }
 
@@ -401,7 +418,7 @@ post_brew_qt_note() {
   # Qt is keg-only; ensure users have it on PATH or CMake can find it
   local qp
   qp=$(brew --prefix qt 2>/dev/null || true)
-  if [ -n "$qp" ]; then
+  if [ -n "$qp" ] && ! command -v qmake >/dev/null 2>&1; then
     info "Qt is keg-only on Homebrew. Ensure CMake can find it. Options:"
     echo " - Add to PATH: export PATH=\"$qp/bin:\$PATH\""
     echo " - Or: brew link --overwrite --force qt   (not generally recommended)"
@@ -434,7 +451,7 @@ check_tool_versions() {
     warn "cmake not found"
   fi
 
-  # C++ compiler (prefer g++, accept clang++)
+  # C++ compiler (prefer g++, then clang++)
   local CXX_BIN=""
   if command -v g++ >/dev/null 2>&1; then
     CXX_BIN="g++"
