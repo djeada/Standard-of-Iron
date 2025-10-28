@@ -30,7 +30,7 @@ Item {
         id: container
 
         width: Math.min(parent.width * 0.6, 700)
-        height: Math.min(parent.height * 0.7, 500)
+        height: Math.min(parent.height * 0.8, 600)
         anchors.centerIn: parent
         radius: Theme.radiusPanel
         color: Theme.panelBase
@@ -68,260 +68,365 @@ Item {
                 color: Theme.border
             }
 
-            ColumnLayout {
+            ScrollView {
                 Layout.fillWidth: true
-                spacing: Theme.spacingMedium
+                Layout.fillHeight: true
+                clip: true
+                ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+                ScrollBar.vertical.policy: ScrollBar.AsNeeded
 
-                Label {
-                    text: qsTr("Audio Settings")
-                    color: Theme.textMain
-                    font.pointSize: Theme.fontSizeLarge
-                    font.bold: true
-                }
+                ColumnLayout {
+                    width: container.width - Theme.spacingXLarge * 2
+                    spacing: Theme.spacingLarge
 
-                Rectangle {
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: 2
-                    color: Theme.border
-                    opacity: 0.5
-                }
-
-                GridLayout {
-                    Layout.fillWidth: true
-                    columns: 2
-                    rowSpacing: Theme.spacingMedium
-                    columnSpacing: Theme.spacingMedium
-
-                    Label {
-                        text: qsTr("Master Volume:")
-                        color: Theme.textSub
-                        font.pointSize: Theme.fontSizeMedium
-                    }
-
-                    RowLayout {
+                    ColumnLayout {
                         Layout.fillWidth: true
-                        spacing: Theme.spacingSmall
-
-                        Slider {
-                            id: masterVolumeSlider
-
-                            Layout.fillWidth: true
-                            from: 0
-                            to: 100
-                            value: 100
-                            stepSize: 1
-                            onValueChanged: {
-                                if (typeof gameEngine !== 'undefined' && gameEngine.audioSystem)
-                                    gameEngine.audioSystem.setMasterVolume(value / 100);
-
-                            }
-                        }
+                        spacing: Theme.spacingMedium
 
                         Label {
-                            text: Math.round(masterVolumeSlider.value) + "%"
-                            color: Theme.textSub
-                            font.pointSize: Theme.fontSizeMedium
-                            Layout.minimumWidth: 45
+                            text: qsTr("Audio Settings")
+                            color: Theme.textMain
+                            font.pointSize: Theme.fontSizeLarge
+                            font.bold: true
                         }
 
-                    }
-
-                    Label {
-                        text: qsTr("Music Volume:")
-                        color: Theme.textSub
-                        font.pointSize: Theme.fontSizeMedium
-                    }
-
-                    RowLayout {
-                        Layout.fillWidth: true
-                        spacing: Theme.spacingSmall
-
-                        Slider {
-                            id: musicVolumeSlider
-
+                        Rectangle {
                             Layout.fillWidth: true
-                            from: 0
-                            to: 100
-                            value: 100
-                            stepSize: 1
-                            onValueChanged: {
-                                if (typeof gameEngine !== 'undefined' && gameEngine.audioSystem)
-                                    gameEngine.audioSystem.setMusicVolume(value / 100);
+                            Layout.preferredHeight: 2
+                            color: Theme.border
+                            opacity: 0.5
+                        }
+
+                        GridLayout {
+                            Layout.fillWidth: true
+                            columns: 2
+                            rowSpacing: Theme.spacingMedium
+                            columnSpacing: Theme.spacingMedium
+
+                            Label {
+                                text: qsTr("Master Volume:")
+                                color: Theme.textSub
+                                font.pointSize: Theme.fontSizeMedium
+                            }
+
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Theme.spacingSmall
+
+                                Slider {
+                                    id: masterVolumeSlider
+
+                                    Layout.fillWidth: true
+                                    from: 0
+                                    to: 100
+                                    value: 100
+                                    stepSize: 1
+                                    onValueChanged: {
+                                        if (typeof gameEngine !== 'undefined' && gameEngine.audioSystem)
+                                            gameEngine.audioSystem.setMasterVolume(value / 100);
+
+                                    }
+                                }
+
+                                Label {
+                                    text: Math.round(masterVolumeSlider.value) + "%"
+                                    color: Theme.textSub
+                                    font.pointSize: Theme.fontSizeMedium
+                                    Layout.minimumWidth: 45
+                                }
 
                             }
-                        }
 
-                        Label {
-                            text: Math.round(musicVolumeSlider.value) + "%"
-                            color: Theme.textSub
-                            font.pointSize: Theme.fontSizeMedium
-                            Layout.minimumWidth: 45
-                        }
+                            Label {
+                                text: qsTr("Music Volume:")
+                                color: Theme.textSub
+                                font.pointSize: Theme.fontSizeMedium
+                            }
 
-                    }
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Theme.spacingSmall
 
-                    Label {
-                        text: qsTr("SFX Volume:")
-                        color: Theme.textSub
-                        font.pointSize: Theme.fontSizeMedium
-                    }
+                                Slider {
+                                    id: musicVolumeSlider
 
-                    RowLayout {
-                        Layout.fillWidth: true
-                        spacing: Theme.spacingSmall
+                                    Layout.fillWidth: true
+                                    from: 0
+                                    to: 100
+                                    value: 100
+                                    stepSize: 1
+                                    onValueChanged: {
+                                        if (typeof gameEngine !== 'undefined' && gameEngine.audioSystem)
+                                            gameEngine.audioSystem.setMusicVolume(value / 100);
 
-                        Slider {
-                            id: sfxVolumeSlider
+                                    }
+                                }
 
-                            Layout.fillWidth: true
-                            from: 0
-                            to: 100
-                            value: 100
-                            stepSize: 1
-                            onValueChanged: {
-                                if (typeof gameEngine !== 'undefined' && gameEngine.audioSystem)
-                                    gameEngine.audioSystem.setSoundVolume(value / 100);
+                                Label {
+                                    text: Math.round(musicVolumeSlider.value) + "%"
+                                    color: Theme.textSub
+                                    font.pointSize: Theme.fontSizeMedium
+                                    Layout.minimumWidth: 45
+                                }
 
                             }
-                        }
 
-                        Label {
-                            text: Math.round(sfxVolumeSlider.value) + "%"
-                            color: Theme.textSub
-                            font.pointSize: Theme.fontSizeMedium
-                            Layout.minimumWidth: 45
-                        }
+                            Label {
+                                text: qsTr("SFX Volume:")
+                                color: Theme.textSub
+                                font.pointSize: Theme.fontSizeMedium
+                            }
 
-                    }
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Theme.spacingSmall
 
-                    Label {
-                        text: qsTr("Voice Volume:")
-                        color: Theme.textSub
-                        font.pointSize: Theme.fontSizeMedium
-                    }
+                                Slider {
+                                    id: sfxVolumeSlider
 
-                    RowLayout {
-                        Layout.fillWidth: true
-                        spacing: Theme.spacingSmall
+                                    Layout.fillWidth: true
+                                    from: 0
+                                    to: 100
+                                    value: 100
+                                    stepSize: 1
+                                    onValueChanged: {
+                                        if (typeof gameEngine !== 'undefined' && gameEngine.audioSystem)
+                                            gameEngine.audioSystem.setSoundVolume(value / 100);
 
-                        Slider {
-                            id: voiceVolumeSlider
+                                    }
+                                }
 
-                            Layout.fillWidth: true
-                            from: 0
-                            to: 100
-                            value: 100
-                            stepSize: 1
-                            onValueChanged: {
-                                if (typeof gameEngine !== 'undefined' && gameEngine.audioSystem)
-                                    gameEngine.audioSystem.setVoiceVolume(value / 100);
+                                Label {
+                                    text: Math.round(sfxVolumeSlider.value) + "%"
+                                    color: Theme.textSub
+                                    font.pointSize: Theme.fontSizeMedium
+                                    Layout.minimumWidth: 45
+                                }
 
                             }
+
+                            Label {
+                                text: qsTr("Voice Volume:")
+                                color: Theme.textSub
+                                font.pointSize: Theme.fontSizeMedium
+                            }
+
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Theme.spacingSmall
+
+                                Slider {
+                                    id: voiceVolumeSlider
+
+                                    Layout.fillWidth: true
+                                    from: 0
+                                    to: 100
+                                    value: 100
+                                    stepSize: 1
+                                    onValueChanged: {
+                                        if (typeof gameEngine !== 'undefined' && gameEngine.audioSystem)
+                                            gameEngine.audioSystem.setVoiceVolume(value / 100);
+
+                                    }
+                                }
+
+                                Label {
+                                    text: Math.round(voiceVolumeSlider.value) + "%"
+                                    color: Theme.textSub
+                                    font.pointSize: Theme.fontSizeMedium
+                                    Layout.minimumWidth: 45
+                                }
+
+                            }
+
                         }
+
+                    }
+
+                    Rectangle {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 1
+                        color: Theme.border
+                    }
+
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        spacing: Theme.spacingMedium
 
                         Label {
-                            text: Math.round(voiceVolumeSlider.value) + "%"
-                            color: Theme.textSub
-                            font.pointSize: Theme.fontSizeMedium
-                            Layout.minimumWidth: 45
+                            text: qsTr("Language")
+                            color: Theme.textMain
+                            font.pointSize: Theme.fontSizeLarge
+                            font.bold: true
+                        }
+
+                        Rectangle {
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: 2
+                            color: Theme.border
+                            opacity: 0.5
+                        }
+
+                        GridLayout {
+                            Layout.fillWidth: true
+                            columns: 2
+                            rowSpacing: Theme.spacingMedium
+                            columnSpacing: Theme.spacingMedium
+
+                            Label {
+                                text: qsTr("Select Language:")
+                                color: Theme.textSub
+                                font.pointSize: Theme.fontSizeMedium
+                            }
+
+                            ComboBox {
+                                id: languageComboBox
+
+                                Layout.fillWidth: true
+                                model: typeof languageManager !== 'undefined' ? languageManager.availableLanguages : []
+                                currentIndex: {
+                                    if (typeof languageManager === 'undefined')
+                                        return 0;
+
+                                    var idx = languageManager.availableLanguages.indexOf(languageManager.currentLanguage);
+                                    return idx >= 0 ? idx : 0;
+                                }
+                                displayText: {
+                                    if (typeof languageManager === 'undefined' || !currentText)
+                                        return "";
+
+                                    return languageManager.languageDisplayName(currentText);
+                                }
+                                onCurrentTextChanged: {
+                                    if (typeof languageManager !== 'undefined' && currentText)
+                                        languageManager.setLanguage(currentText);
+
+                                }
+
+                                delegate: ItemDelegate {
+                                    width: languageComboBox.width
+                                    highlighted: languageComboBox.highlightedIndex === index
+
+                                    contentItem: Text {
+                                        text: typeof languageManager !== 'undefined' ? languageManager.languageDisplayName(modelData) : modelData
+                                        color: Theme.textMain
+                                        font.pointSize: Theme.fontSizeMedium
+                                        elide: Text.ElideRight
+                                        verticalAlignment: Text.AlignVCenter
+                                    }
+
+                                }
+
+                            }
+
+                            Label {
+                                text: qsTr("Language changes apply immediately")
+                                color: Theme.textSub
+                                font.pointSize: Theme.fontSizeSmall
+                                opacity: 0.7
+                                Layout.columnSpan: 2
+                            }
+
                         }
 
                     }
 
-                }
-
-            }
-
-            Rectangle {
-                Layout.fillWidth: true
-                Layout.preferredHeight: 1
-                color: Theme.border
-            }
-
-            ColumnLayout {
-                Layout.fillWidth: true
-                spacing: Theme.spacingMedium
-
-                Label {
-                    text: qsTr("Language")
-                    color: Theme.textMain
-                    font.pointSize: Theme.fontSizeLarge
-                    font.bold: true
-                }
-
-                Rectangle {
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: 2
-                    color: Theme.border
-                    opacity: 0.5
-                }
-
-                GridLayout {
-                    Layout.fillWidth: true
-                    columns: 2
-                    rowSpacing: Theme.spacingMedium
-                    columnSpacing: Theme.spacingMedium
-
-                    Label {
-                        text: qsTr("Select Language:")
-                        color: Theme.textSub
-                        font.pointSize: Theme.fontSizeMedium
-                    }
-
-                    ComboBox {
-                        id: languageComboBox
-
+                    Rectangle {
                         Layout.fillWidth: true
-                        model: typeof languageManager !== 'undefined' ? languageManager.availableLanguages : []
-                        currentIndex: {
-                            if (typeof languageManager === 'undefined')
-                                return 0;
+                        Layout.preferredHeight: 1
+                        color: Theme.border
+                    }
 
-                            var idx = languageManager.availableLanguages.indexOf(languageManager.currentLanguage);
-                            return idx >= 0 ? idx : 0;
-                        }
-                        displayText: {
-                            if (typeof languageManager === 'undefined' || !currentText)
-                                return "";
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        spacing: Theme.spacingMedium
 
-                            return languageManager.languageDisplayName(currentText);
-                        }
-                        onCurrentTextChanged: {
-                            if (typeof languageManager !== 'undefined' && currentText)
-                                languageManager.setLanguage(currentText);
-
+                        Label {
+                            text: qsTr("About")
+                            color: Theme.textMain
+                            font.pointSize: Theme.fontSizeLarge
+                            font.bold: true
                         }
 
-                        delegate: ItemDelegate {
-                            width: languageComboBox.width
-                            highlighted: languageComboBox.highlightedIndex === index
+                        Rectangle {
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: 2
+                            color: Theme.border
+                            opacity: 0.5
+                        }
 
-                            contentItem: Text {
-                                text: typeof languageManager !== 'undefined' ? languageManager.languageDisplayName(modelData) : modelData
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: Theme.spacingSmall
+
+                            Label {
+                                text: qsTr("Standard of Iron - RTS Game")
                                 color: Theme.textMain
                                 font.pointSize: Theme.fontSizeMedium
-                                elide: Text.ElideRight
-                                verticalAlignment: Text.AlignVCenter
+                                font.bold: true
+                            }
+
+                            Label {
+                                text: qsTr("Version 1.0.0")
+                                color: Theme.textSub
+                                font.pointSize: Theme.fontSizeSmall
+                            }
+
+                            Rectangle {
+                                Layout.fillWidth: true
+                                Layout.preferredHeight: 1
+                                color: Theme.border
+                                opacity: 0.3
+                                Layout.topMargin: Theme.spacingSmall
+                                Layout.bottomMargin: Theme.spacingSmall
+                            }
+
+                            Label {
+                                text: qsTr("Third-Party Software")
+                                color: Theme.textMain
+                                font.pointSize: Theme.fontSizeMedium
+                                font.bold: true
+                            }
+
+                            Label {
+                                text: qsTr("This game uses the Qt framework, licensed under the GNU Lesser General Public License v3 (LGPL v3).")
+                                color: Theme.textSub
+                                font.pointSize: Theme.fontSizeSmall
+                                wrapMode: Text.WordWrap
+                                Layout.fillWidth: true
+                            }
+
+                            Label {
+                                text: qsTr("Qt is dynamically linked, allowing you to replace Qt libraries with your own versions.")
+                                color: Theme.textSub
+                                font.pointSize: Theme.fontSizeSmall
+                                wrapMode: Text.WordWrap
+                                Layout.fillWidth: true
+                            }
+
+                            Label {
+                                text: "<a href='https://www.gnu.org/licenses/lgpl-3.0.html'>LGPL v3 License</a> | <a href='https://www.qt.io'>Qt Website</a>"
+                                color: Theme.textSub
+                                font.pointSize: Theme.fontSizeSmall
+                                textFormat: Text.RichText
+                                onLinkActivated: function(link) {
+                                    Qt.openUrlExternally(link);
+                                }
+
+                                MouseArea {
+                                    anchors.fill: parent
+                                    acceptedButtons: Qt.NoButton
+                                    cursorShape: parent.hoveredLink ? Qt.PointingHandCursor : Qt.ArrowCursor
+                                }
+
                             }
 
                         }
 
                     }
 
-                    Label {
-                        text: qsTr("Language changes apply immediately")
-                        color: Theme.textSub
-                        font.pointSize: Theme.fontSizeSmall
-                        opacity: 0.7
-                        Layout.columnSpan: 2
-                    }
-
                 }
 
-            }
-
-            Item {
-                Layout.fillHeight: true
             }
 
         }
