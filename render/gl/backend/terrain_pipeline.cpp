@@ -2,7 +2,7 @@
 #include "../backend.h"
 #include "../render_constants.h"
 #include "../shader_cache.h"
-#include <GL/gl.h>
+#include "../opengl_headers.h"
 #include <QDebug>
 #include <QOpenGLExtraFunctions>
 #include <cstddef>

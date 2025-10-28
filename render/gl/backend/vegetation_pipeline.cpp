@@ -1,7 +1,7 @@
 #include "vegetation_pipeline.h"
 #include "../render_constants.h"
 #include "gl/shader_cache.h"
-#include <GL/gl.h>
+#include "../opengl_headers.h"
 #include <QDebug>
 #include <cmath>
 #include <cstddef>
