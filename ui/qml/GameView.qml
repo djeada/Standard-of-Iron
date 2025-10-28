@@ -9,6 +9,7 @@ Item {
     property real gameSpeed: 1
     property bool setRallyMode: false
     property string cursorMode: "normal"
+    property var pressedKeys: ({})
 
     signal mapClicked(real x, real y)
     signal unitSelected(int unitId)
@@ -54,51 +55,103 @@ Item {
             }
             break;
         case Qt.Key_W:
-            game.cameraMove(0, inputStep);
-            renderArea.keyPanCount += 1;
-            mainWindow.edgeScrollDisabled = true;
+            // Start smooth keyboard panning: mark key as pressed, increment
+            // pan counter only on first press (ignore auto-repeat), start
+            // the pan timer and perform an immediate step to avoid a pause
+            // before continuous movement begins.
+            if (!event.isAutoRepeat && !pressedKeys[event.key]) {
+                pressedKeys[event.key] = true;
+                renderArea.keyPanCount += 1;
+                mainWindow.edgeScrollDisabled = true;
+            }
+            if (typeof game !== 'undefined')
+                game.cameraMove(0, inputStep);
+            if (!keyPanTimer.running)
+                keyPanTimer.start();
             event.accepted = true;
             break;
         case Qt.Key_S:
-            game.cameraMove(0, -inputStep);
-            renderArea.keyPanCount += 1;
-            mainWindow.edgeScrollDisabled = true;
+            if (!event.isAutoRepeat && !pressedKeys[event.key]) {
+                pressedKeys[event.key] = true;
+                renderArea.keyPanCount += 1;
+                mainWindow.edgeScrollDisabled = true;
+            }
+            if (typeof game !== 'undefined')
+                game.cameraMove(0, -inputStep);
+            if (!keyPanTimer.running)
+                keyPanTimer.start();
             event.accepted = true;
             break;
         case Qt.Key_A:
-            game.cameraMove(-inputStep, 0);
-            renderArea.keyPanCount += 1;
-            mainWindow.edgeScrollDisabled = true;
+            if (!event.isAutoRepeat && !pressedKeys[event.key]) {
+                pressedKeys[event.key] = true;
+                renderArea.keyPanCount += 1;
+                mainWindow.edgeScrollDisabled = true;
+            }
+            if (typeof game !== 'undefined')
+                game.cameraMove(-inputStep, 0);
+            if (!keyPanTimer.running)
+                keyPanTimer.start();
             event.accepted = true;
             break;
         case Qt.Key_D:
-            game.cameraMove(inputStep, 0);
-            renderArea.keyPanCount += 1;
-            mainWindow.edgeScrollDisabled = true;
+            if (!event.isAutoRepeat && !pressedKeys[event.key]) {
+                pressedKeys[event.key] = true;
+                renderArea.keyPanCount += 1;
+                mainWindow.edgeScrollDisabled = true;
+            }
+            if (typeof game !== 'undefined')
+                game.cameraMove(inputStep, 0);
+            if (!keyPanTimer.running)
+                keyPanTimer.start();
             event.accepted = true;
             break;
         case Qt.Key_Up:
-            game.cameraMove(0, inputStep);
-            renderArea.keyPanCount += 1;
-            mainWindow.edgeScrollDisabled = true;
+            if (!event.isAutoRepeat && !pressedKeys[event.key]) {
+                pressedKeys[event.key] = true;
+                renderArea.keyPanCount += 1;
+                mainWindow.edgeScrollDisabled = true;
+            }
+            if (typeof game !== 'undefined')
+                game.cameraMove(0, inputStep);
+            if (!keyPanTimer.running)
+                keyPanTimer.start();
             event.accepted = true;
             break;
         case Qt.Key_Down:
-            game.cameraMove(0, -inputStep);
-            renderArea.keyPanCount += 1;
-            mainWindow.edgeScrollDisabled = true;
+            if (!event.isAutoRepeat && !pressedKeys[event.key]) {
+                pressedKeys[event.key] = true;
+                renderArea.keyPanCount += 1;
+                mainWindow.edgeScrollDisabled = true;
+            }
+            if (typeof game !== 'undefined')
+                game.cameraMove(0, -inputStep);
+            if (!keyPanTimer.running)
+                keyPanTimer.start();
             event.accepted = true;
             break;
         case Qt.Key_Left:
-            game.cameraMove(-inputStep, 0);
-            renderArea.keyPanCount += 1;
-            mainWindow.edgeScrollDisabled = true;
+            if (!event.isAutoRepeat && !pressedKeys[event.key]) {
+                pressedKeys[event.key] = true;
+                renderArea.keyPanCount += 1;
+                mainWindow.edgeScrollDisabled = true;
+            }
+            if (typeof game !== 'undefined')
+                game.cameraMove(-inputStep, 0);
+            if (!keyPanTimer.running)
+                keyPanTimer.start();
             event.accepted = true;
             break;
         case Qt.Key_Right:
-            game.cameraMove(inputStep, 0);
-            renderArea.keyPanCount += 1;
-            mainWindow.edgeScrollDisabled = true;
+            if (!event.isAutoRepeat && !pressedKeys[event.key]) {
+                pressedKeys[event.key] = true;
+                renderArea.keyPanCount += 1;
+                mainWindow.edgeScrollDisabled = true;
+            }
+            if (typeof game !== 'undefined')
+                game.cameraMove(inputStep, 0);
+            if (!keyPanTimer.running)
+                keyPanTimer.start();
             event.accepted = true;
             break;
         case Qt.Key_Q:
@@ -128,18 +181,57 @@ Item {
     Keys.onReleased: function(event) {
         if (typeof game === 'undefined')
             return ;
-
         var movementKeys = [Qt.Key_W, Qt.Key_A, Qt.Key_S, Qt.Key_D, Qt.Key_Up, Qt.Key_Down, Qt.Key_Left, Qt.Key_Right];
         if (movementKeys.indexOf(event.key) !== -1) {
-            renderArea.keyPanCount = Math.max(0, renderArea.keyPanCount - 1);
-            if (renderArea.keyPanCount === 0 && !renderArea.mousePanActive)
-                mainWindow.edgeScrollDisabled = false;
+            // Only decrement pan count if we previously registered this key as pressed
+            if (pressedKeys[event.key]) {
+                pressedKeys[event.key] = false;
+                renderArea.keyPanCount = Math.max(0, renderArea.keyPanCount - 1);
+            }
 
+            // If no movement keys are held, stop the pan timer and possibly
+            // re-enable edge scrolling.
+            var anyHeld = false;
+            for (var k in pressedKeys) {
+                if (pressedKeys[k]) { anyHeld = true; break; }
+            }
+            if (!anyHeld) {
+                if (keyPanTimer.running)
+                    keyPanTimer.stop();
+                if (renderArea.keyPanCount === 0 && !renderArea.mousePanActive)
+                    mainWindow.edgeScrollDisabled = false;
+            }
         }
         if (event.key === Qt.Key_Shift) {
             if (renderArea.keyPanCount === 0 && !renderArea.mousePanActive)
                 mainWindow.edgeScrollDisabled = false;
 
+        }
+    }
+    
+    Timer {
+        id: keyPanTimer
+        interval: 16
+        repeat: true
+        running: false
+        onTriggered: {
+            if (typeof game === 'undefined')
+                return;
+
+            var step = (Qt.inputModifiers & Qt.ShiftModifier) ? 2 : 1;
+            var dx = 0;
+            var dz = 0;
+            if (pressedKeys[Qt.Key_W] || pressedKeys[Qt.Key_Up])
+                dz += step;
+            if (pressedKeys[Qt.Key_S] || pressedKeys[Qt.Key_Down])
+                dz -= step;
+            if (pressedKeys[Qt.Key_A] || pressedKeys[Qt.Key_Left])
+                dx -= step;
+            if (pressedKeys[Qt.Key_D] || pressedKeys[Qt.Key_Right])
+                dx += step;
+
+            if (dx !== 0 || dz !== 0)
+                game.cameraMove(dx, dz);
         }
     }
     focus: true
