@@ -224,6 +224,13 @@ target_link_libraries(standard_of_iron
         audio_system
 )
 
+# Windows-specific OpenGL linking
+if(WIN32)
+    target_link_libraries(standard_of_iron PRIVATE opengl32)
+    # Ensure we have access to wglGetProcAddress and related functions
+    target_compile_definitions(standard_of_iron PRIVATE NOMINMAX)
+endif()
+
 if(QT_VERSION_MAJOR EQUAL 6)
     target_link_libraries(standard_of_iron PRIVATE Qt6::QuickControls2)
 else()
