@@ -19,14 +19,12 @@ Item {
         isPaused = paused;
         if (typeof game !== 'undefined' && game.setPaused)
             game.setPaused(paused);
-
     }
 
     function setGameSpeed(speed) {
         gameSpeed = speed;
         if (typeof game !== 'undefined' && game.setGameSpeed)
             game.setGameSpeed(speed);
-
     }
 
     function issueCommand(command) {
@@ -34,12 +32,27 @@ Item {
     }
 
     objectName: "GameView"
+
     Keys.onPressed: function(event) {
         if (typeof game === 'undefined')
-            return ;
+            return;
 
         var yawStep = (event.modifiers & Qt.ShiftModifier) ? 8 : 4;
-        var inputStep = event.modifiers & Qt.ShiftModifier ? 2 : 1;
+        var inputStep = (event.modifiers & Qt.ShiftModifier) ? 2 : 1;
+        var shiftHeld = (event.modifiers & Qt.ShiftModifier) !== 0;
+
+        function beginPanKey(e) {
+            if (!e.isAutoRepeat && !pressedKeys[e.key]) {
+                pressedKeys[e.key] = true;
+                renderArea.keyPanCount += 1;
+                mainWindow.edgeScrollDisabled = true;
+            }
+        }
+        function ensurePanTimerRunning() {
+            if (!keyPanTimer.running)
+                keyPanTimer.start();
+        }
+
         switch (event.key) {
         case Qt.Key_Escape:
             if (typeof mainWindow !== 'undefined' && !mainWindow.menuVisible) {
@@ -47,6 +60,7 @@ Item {
                 event.accepted = true;
             }
             break;
+
         case Qt.Key_Space:
             if (typeof mainWindow !== 'undefined') {
                 mainWindow.gamePaused = !mainWindow.gamePaused;
@@ -54,143 +68,144 @@ Item {
                 event.accepted = true;
             }
             break;
+
         case Qt.Key_W:
-            // Start smooth keyboard panning: mark key as pressed, increment
-            // pan counter only on first press (ignore auto-repeat), start
-            // the pan timer and perform an immediate step to avoid a pause
-            // before continuous movement begins.
-            if (!event.isAutoRepeat && !pressedKeys[event.key]) {
-                pressedKeys[event.key] = true;
-                renderArea.keyPanCount += 1;
-                mainWindow.edgeScrollDisabled = true;
-            }
-            if (typeof game !== 'undefined')
-                game.cameraMove(0, inputStep);
-            if (!keyPanTimer.running)
-                keyPanTimer.start();
+            beginPanKey(event);
+            game.cameraMove(0, inputStep);
+            ensurePanTimerRunning();
             event.accepted = true;
             break;
+
         case Qt.Key_S:
-            if (!event.isAutoRepeat && !pressedKeys[event.key]) {
-                pressedKeys[event.key] = true;
-                renderArea.keyPanCount += 1;
-                mainWindow.edgeScrollDisabled = true;
-            }
-            if (typeof game !== 'undefined')
+            // Stop command when units selected and Shift not held; otherwise pan backward
+            if (game.hasUnitsSelected && !shiftHeld) {
+                if (game.onStopCommand)
+                    game.onStopCommand();
+                event.accepted = true;
+            } else {
+                beginPanKey(event);
                 game.cameraMove(0, -inputStep);
-            if (!keyPanTimer.running)
-                keyPanTimer.start();
-            event.accepted = true;
+                ensurePanTimerRunning();
+                event.accepted = true;
+            }
             break;
+
         case Qt.Key_A:
-            if (!event.isAutoRepeat && !pressedKeys[event.key]) {
-                pressedKeys[event.key] = true;
-                renderArea.keyPanCount += 1;
-                mainWindow.edgeScrollDisabled = true;
-            }
-            if (typeof game !== 'undefined')
+            // Attack mode when units selected and Shift not held; otherwise pan left
+            if (game.hasUnitsSelected && !shiftHeld) {
+                game.cursorMode = "attack";
+                event.accepted = true;
+            } else {
+                beginPanKey(event);
                 game.cameraMove(-inputStep, 0);
-            if (!keyPanTimer.running)
-                keyPanTimer.start();
-            event.accepted = true;
+                ensurePanTimerRunning();
+                event.accepted = true;
+            }
             break;
+
         case Qt.Key_D:
-            if (!event.isAutoRepeat && !pressedKeys[event.key]) {
-                pressedKeys[event.key] = true;
-                renderArea.keyPanCount += 1;
-                mainWindow.edgeScrollDisabled = true;
-            }
-            if (typeof game !== 'undefined')
-                game.cameraMove(inputStep, 0);
-            if (!keyPanTimer.running)
-                keyPanTimer.start();
+            beginPanKey(event);
+            game.cameraMove(inputStep, 0);
+            ensurePanTimerRunning();
             event.accepted = true;
             break;
+
+        case Qt.Key_M:
+            // M - Move mode (normal cursor when units selected)
+            if (game.hasUnitsSelected) {
+                game.cursorMode = "normal";
+                event.accepted = true;
+            }
+            break;
+
         case Qt.Key_Up:
-            if (!event.isAutoRepeat && !pressedKeys[event.key]) {
-                pressedKeys[event.key] = true;
-                renderArea.keyPanCount += 1;
-                mainWindow.edgeScrollDisabled = true;
-            }
-            if (typeof game !== 'undefined')
-                game.cameraMove(0, inputStep);
-            if (!keyPanTimer.running)
-                keyPanTimer.start();
+            beginPanKey(event);
+            game.cameraMove(0, inputStep);
+            ensurePanTimerRunning();
             event.accepted = true;
             break;
+
         case Qt.Key_Down:
-            if (!event.isAutoRepeat && !pressedKeys[event.key]) {
-                pressedKeys[event.key] = true;
-                renderArea.keyPanCount += 1;
-                mainWindow.edgeScrollDisabled = true;
-            }
-            if (typeof game !== 'undefined')
-                game.cameraMove(0, -inputStep);
-            if (!keyPanTimer.running)
-                keyPanTimer.start();
+            beginPanKey(event);
+            game.cameraMove(0, -inputStep);
+            ensurePanTimerRunning();
             event.accepted = true;
             break;
+
         case Qt.Key_Left:
-            if (!event.isAutoRepeat && !pressedKeys[event.key]) {
-                pressedKeys[event.key] = true;
-                renderArea.keyPanCount += 1;
-                mainWindow.edgeScrollDisabled = true;
-            }
-            if (typeof game !== 'undefined')
-                game.cameraMove(-inputStep, 0);
-            if (!keyPanTimer.running)
-                keyPanTimer.start();
+            beginPanKey(event);
+            game.cameraMove(-inputStep, 0);
+            ensurePanTimerRunning();
             event.accepted = true;
             break;
+
         case Qt.Key_Right:
-            if (!event.isAutoRepeat && !pressedKeys[event.key]) {
-                pressedKeys[event.key] = true;
-                renderArea.keyPanCount += 1;
-                mainWindow.edgeScrollDisabled = true;
-            }
-            if (typeof game !== 'undefined')
-                game.cameraMove(inputStep, 0);
-            if (!keyPanTimer.running)
-                keyPanTimer.start();
+            beginPanKey(event);
+            game.cameraMove(inputStep, 0);
+            ensurePanTimerRunning();
             event.accepted = true;
             break;
+
         case Qt.Key_Q:
             game.cameraYaw(-yawStep);
             event.accepted = true;
             break;
+
         case Qt.Key_E:
             game.cameraYaw(yawStep);
             event.accepted = true;
             break;
-            var shiftHeld = (event.modifiers & Qt.ShiftModifier) !== 0;
-            var pitchStep = shiftHeld ? 8 : 4;
+
         case Qt.Key_R:
             game.cameraOrbitDirection(1, shiftHeld);
             event.accepted = true;
             break;
+
         case Qt.Key_F:
             game.cameraOrbitDirection(-1, shiftHeld);
             event.accepted = true;
             break;
+
         case Qt.Key_X:
-            game.selectAllTroops();
+            if (game.selectAllTroops)
+                game.selectAllTroops();
             event.accepted = true;
+            break;
+
+        case Qt.Key_P:
+            // P - Patrol mode when units selected
+            if (game.hasUnitsSelected) {
+                game.cursorMode = "patrol";
+                event.accepted = true;
+            }
+            break;
+
+        case Qt.Key_H:
+            // H - Hold command when units selected
+            if (game.hasUnitsSelected && game.onHoldCommand) {
+                game.onHoldCommand();
+                event.accepted = true;
+            }
             break;
         }
     }
+
     Keys.onReleased: function(event) {
         if (typeof game === 'undefined')
-            return ;
-        var movementKeys = [Qt.Key_W, Qt.Key_A, Qt.Key_S, Qt.Key_D, Qt.Key_Up, Qt.Key_Down, Qt.Key_Left, Qt.Key_Right];
+            return;
+
+        // Any keys that participate in camera panning
+        var movementKeys = [Qt.Key_W, Qt.Key_A, Qt.Key_S, Qt.Key_D,
+                            Qt.Key_Up, Qt.Key_Down, Qt.Key_Left, Qt.Key_Right];
+
         if (movementKeys.indexOf(event.key) !== -1) {
-            // Only decrement pan count if we previously registered this key as pressed
+            // Only decrement pan count if this key was registered as a pan key
             if (pressedKeys[event.key]) {
                 pressedKeys[event.key] = false;
                 renderArea.keyPanCount = Math.max(0, renderArea.keyPanCount - 1);
             }
 
-            // If no movement keys are held, stop the pan timer and possibly
-            // re-enable edge scrolling.
+            // If no movement keys are held, stop timer and maybe re-enable edge scroll
             var anyHeld = false;
             for (var k in pressedKeys) {
                 if (pressedKeys[k]) { anyHeld = true; break; }
@@ -202,13 +217,14 @@ Item {
                     mainWindow.edgeScrollDisabled = false;
             }
         }
+
+        // If Shift is released while not panning/mouse-dragging, re-enable edge scroll
         if (event.key === Qt.Key_Shift) {
             if (renderArea.keyPanCount === 0 && !renderArea.mousePanActive)
                 mainWindow.edgeScrollDisabled = false;
-
         }
     }
-    
+
     Timer {
         id: keyPanTimer
         interval: 16
@@ -234,6 +250,7 @@ Item {
                 game.cameraMove(dx, dz);
         }
     }
+
     focus: true
 
     GLView {
@@ -245,20 +262,18 @@ Item {
         anchors.fill: parent
         engine: game
         focus: false
+
         Component.onCompleted: {
             if (typeof game !== 'undefined' && game.cursorMode)
                 gameView.cursorMode = game.cursorMode;
-
         }
 
         Connections {
+            target: game
             function onCursorModeChanged() {
                 if (typeof game !== 'undefined' && game.cursorMode)
                     gameView.cursorMode = game.cursorMode;
-
             }
-
-            target: game
         }
 
         MouseArea {
@@ -275,15 +290,14 @@ Item {
             preventStealing: true
             cursorShape: (gameView.cursorMode === "normal") ? Qt.ArrowCursor : Qt.BlankCursor
             enabled: gameView.visible
+
             onEntered: {
                 if (typeof game !== 'undefined' && game.setHoverAtScreen)
                     game.setHoverAtScreen(0, 0);
-
             }
             onExited: {
                 if (typeof game !== 'undefined' && game.setHoverAtScreen)
                     game.setHoverAtScreen(-1, -1);
-
             }
             onPositionChanged: function(mouse) {
                 if (isSelecting) {
@@ -296,14 +310,12 @@ Item {
                 } else {
                     if (typeof game !== 'undefined' && game.setHoverAtScreen)
                         game.setHoverAtScreen(mouse.x, mouse.y);
-
                 }
             }
             onWheel: function(w) {
                 var dy = (w.angleDelta ? w.angleDelta.y / 120 : w.delta / 120);
                 if (dy !== 0 && typeof game !== 'undefined' && game.cameraZoom)
                     game.cameraZoom(dy * 0.8);
-
                 w.accepted = true;
             }
             onPressed: function(mouse) {
@@ -311,25 +323,23 @@ Item {
                     if (gameView.setRallyMode) {
                         if (typeof game !== 'undefined' && game.setRallyAtScreen)
                             game.setRallyAtScreen(mouse.x, mouse.y);
-
                         gameView.setRallyMode = false;
-                        return ;
+                        return;
                     }
                     if (gameView.cursorMode === "attack") {
                         if (typeof game !== 'undefined' && game.onAttackClick)
                             game.onAttackClick(mouse.x, mouse.y);
-
-                        return ;
+                        return;
                     }
                     if (gameView.cursorMode === "guard")
-                        return ;
+                        return;
 
                     if (gameView.cursorMode === "patrol") {
                         if (typeof game !== 'undefined' && game.onPatrolClick)
                             game.onPatrolClick(mouse.x, mouse.y);
-
-                        return ;
+                        return;
                     }
+
                     isSelecting = true;
                     startX = mouse.x;
                     startY = mouse.y;
@@ -343,10 +353,8 @@ Item {
                     mainWindow.edgeScrollDisabled = true;
                     if (gameView.setRallyMode)
                         gameView.setRallyMode = false;
-
                     if (typeof game !== 'undefined' && game.onRightClick)
                         game.onRightClick(mouse.x, mouse.y);
-
                 }
             }
             onReleased: function(mouse) {
@@ -354,15 +362,17 @@ Item {
                     isSelecting = false;
                     selectionBox.visible = false;
                     if (selectionBox.width > 5 && selectionBox.height > 5) {
-                        areaSelected(selectionBox.x, selectionBox.y, selectionBox.x + selectionBox.width, selectionBox.y + selectionBox.height);
+                        areaSelected(selectionBox.x, selectionBox.y,
+                                     selectionBox.x + selectionBox.width,
+                                     selectionBox.y + selectionBox.height);
                         if (typeof game !== 'undefined' && game.onAreaSelected)
-                            game.onAreaSelected(selectionBox.x, selectionBox.y, selectionBox.x + selectionBox.width, selectionBox.y + selectionBox.height, false);
-
+                            game.onAreaSelected(selectionBox.x, selectionBox.y,
+                                                selectionBox.x + selectionBox.width,
+                                                selectionBox.y + selectionBox.height, false);
                     } else {
                         mapClicked(mouse.x, mouse.y);
                         if (typeof game !== 'undefined' && game.onClickSelect)
                             game.onClickSelect(mouse.x, mouse.y, false);
-
                     }
                 }
                 if (mouse.button === Qt.RightButton) {
@@ -374,13 +384,11 @@ Item {
 
         Rectangle {
             id: selectionBox
-
             visible: false
             border.color: "white"
             border.width: 1
             color: "transparent"
         }
-
     }
 
     Item {
@@ -395,15 +403,12 @@ Item {
 
         Item {
             id: attackCursorContainer
-
             property real pulseScale: 1
-
             visible: gameView.cursorMode === "attack"
             anchors.fill: parent
 
             Canvas {
                 id: attackCursor
-
                 anchors.fill: parent
                 scale: attackCursorContainer.pulseScale
                 transformOrigin: Item.Center
@@ -458,28 +463,13 @@ Item {
             SequentialAnimation on pulseScale {
                 running: attackCursorContainer.visible
                 loops: Animation.Infinite
-
-                NumberAnimation {
-                    from: 1
-                    to: 1.2
-                    duration: 400
-                    easing.type: Easing.InOutQuad
-                }
-
-                NumberAnimation {
-                    from: 1.2
-                    to: 1
-                    duration: 400
-                    easing.type: Easing.InOutQuad
-                }
-
+                NumberAnimation { from: 1; to: 1.2; duration: 400; easing.type: Easing.InOutQuad }
+                NumberAnimation { from: 1.2; to: 1; duration: 400; easing.type: Easing.InOutQuad }
             }
-
         }
 
         Canvas {
             id: guardCursor
-
             visible: gameView.cursorMode === "guard"
             anchors.fill: parent
             onPaint: {
@@ -511,7 +501,6 @@ Item {
 
         Canvas {
             id: patrolCursor
-
             visible: gameView.cursorMode === "patrol"
             anchors.fill: parent
             onPaint: {
@@ -541,7 +530,5 @@ Item {
             }
             Component.onCompleted: requestPaint()
         }
-
     }
-
 }
