@@ -258,10 +258,9 @@ ApplicationWindow {
     Item {
         id: edgeScrollOverlay
 
-        property real horzThreshold: 120
+        property real horzThreshold: 12
         property real horzMaxSpeed: 0.15
-        property real vertThreshold: 100
-        property real verticalDeadZone: 45
+        property real vertThreshold: 10
         property real vertMaxSpeed: 0.01
         property real xPos: -1
         property real yPos: -1
@@ -335,7 +334,7 @@ ApplicationWindow {
                 if (x < 0 || y < 0)
                     return ;
 
-                if (edgeScrollOverlay.inHudZone(x, y) || mainWindow.edgeScrollDisabled) {
+                if (mainWindow.edgeScrollDisabled) {
                     if (game.setHoverAtScreen)
                         game.setHoverAtScreen(-1, -1);
 
@@ -346,18 +345,13 @@ ApplicationWindow {
 
                 const th = edgeScrollOverlay.horzThreshold;
                 const tv = edgeScrollOverlay.vertThreshold;
-                const vdz = edgeScrollOverlay.verticalDeadZone;
                 const clamp = function clamp(v, lo, hi) {
                     return Math.max(lo, Math.min(hi, v));
                 };
                 const dl = x;
                 const dr = w - x;
-                const topBar = (typeof hud !== 'undefined' && hud && hud.topPanelHeight) ? hud.topPanelHeight : 0;
-                const bottomBar = (typeof hud !== 'undefined' && hud && hud.bottomPanelHeight) ? hud.bottomPanelHeight : 0;
-                const topEdge = topBar + edgeScrollOverlay.verticalShift;
-                const bottomEdge = h - bottomBar - edgeScrollOverlay.verticalShift;
-                const dt = Math.max(0, (y - topEdge) - vdz);
-                const db = Math.max(0, (bottomEdge - y) - vdz);
+                const dt = y;
+                const db = h - y;
                 const il = clamp(1 - dl / th, 0, 1);
                 const ir = clamp(1 - dr / th, 0, 1);
                 const iu = clamp(1 - dt / tv, 0, 1);
