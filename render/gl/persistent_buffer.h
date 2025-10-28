@@ -1,5 +1,6 @@
 #pragma once
 
+#include "platform_gl.h"
 #include "render_constants.h"
 #include <QDebug>
 #include <QOpenGLContext>
@@ -41,9 +42,6 @@ public:
     glGenBuffers(1, &m_buffer);
     glBindBuffer(GL_ARRAY_BUFFER, m_buffer);
 
-    const GLbitfield storageFlags = 0x0100;
-    const GLbitfield mapFlags = 0x0002 | 0x0040 | 0x0080;
-
     QOpenGLContext *ctx = QOpenGLContext::currentContext();
     if (ctx == nullptr) {
       qWarning() << "PersistentRingBuffer: No current OpenGL context";
@@ -53,41 +51,36 @@ public:
       return false;
     }
 
-    typedef void(QOPENGLF_APIENTRYP type_glBufferStorage)(
-        GLenum target, GLsizeiptr size, const void *data, GLbitfield flags);
-    auto glBufferStorage = reinterpret_cast<type_glBufferStorage>(
-        ctx->getProcAddress("glBufferStorage"));
-
-    if (glBufferStorage == nullptr) {
+    // Try to create buffer using platform-aware helper with fallback
+    Platform::BufferStorageHelper::Mode mode;
+    if (!Platform::BufferStorageHelper::createBuffer(m_buffer, m_totalSize, &mode)) {
+      qWarning() << "PersistentRingBuffer: Failed to create buffer storage";
       glBindBuffer(GL_ARRAY_BUFFER, 0);
       glDeleteBuffers(1, &m_buffer);
       m_buffer = 0;
       return false;
     }
 
-    glBufferStorage(GL_ARRAY_BUFFER, m_totalSize, nullptr,
-                    storageFlags | mapFlags);
+    m_bufferMode = mode;
 
-    GLenum const err = glGetError();
-    if (err != GL_NO_ERROR) {
-      qWarning() << "PersistentRingBuffer: glBufferStorage failed with error:"
-                 << err;
-      glBindBuffer(GL_ARRAY_BUFFER, 0);
-      glDeleteBuffers(1, &m_buffer);
-      m_buffer = 0;
-      return false;
-    }
-
-    m_mappedPtr = glMapBufferRange(GL_ARRAY_BUFFER, 0, m_totalSize, mapFlags);
-
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    // Map the buffer with appropriate mode
+    m_mappedPtr = Platform::BufferStorageHelper::mapBuffer(m_totalSize, mode);
 
     if (m_mappedPtr == nullptr) {
-      qWarning() << "PersistentRingBuffer: glMapBufferRange failed";
+      qWarning() << "PersistentRingBuffer: Failed to map buffer";
+      glBindBuffer(GL_ARRAY_BUFFER, 0);
       destroy();
       return false;
     }
 
+    // For fallback mode, we need to unmap after each write
+    if (mode == Platform::BufferStorageHelper::Mode::Fallback) {
+      qInfo() << "PersistentRingBuffer: Running in fallback mode (non-persistent mapping)";
+      glUnmapBuffer(GL_ARRAY_BUFFER);
+      m_mappedPtr = nullptr;  // Will be remapped on each write
+    }
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
     return true;
   }
 
@@ -118,7 +111,35 @@ public:
   }
 
   auto write(const T *data, std::size_t count) -> std::size_t {
-    if ((m_mappedPtr == nullptr) || count == 0 || count > m_capacity) {
+    if (count == 0 || count > m_capacity || m_buffer == 0) {
+      return 0;
+    }
+
+    // For fallback mode, we need to map/unmap on each write
+    if (m_bufferMode == Platform::BufferStorageHelper::Mode::Fallback) {
+      glBindBuffer(GL_ARRAY_BUFFER, m_buffer);
+      
+      std::size_t const writeOffset = m_frameOffset + m_currentCount * sizeof(T);
+      void *ptr = glMapBufferRange(GL_ARRAY_BUFFER, writeOffset, count * sizeof(T), 
+                                    GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_RANGE_BIT);
+      
+      if (ptr == nullptr) {
+        qWarning() << "PersistentRingBuffer: Failed to map buffer for write";
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        return 0;
+      }
+      
+      std::memcpy(ptr, data, count * sizeof(T));
+      glUnmapBuffer(GL_ARRAY_BUFFER);
+      glBindBuffer(GL_ARRAY_BUFFER, 0);
+      
+      std::size_t const elementOffset = m_currentCount;
+      m_currentCount += count;
+      return elementOffset;
+    }
+
+    // Persistent mode: direct write to mapped memory
+    if (m_mappedPtr == nullptr) {
       return 0;
     }
 
@@ -143,7 +164,9 @@ public:
   [[nodiscard]] auto count() const -> std::size_t { return m_currentCount; }
 
   [[nodiscard]] auto isValid() const -> bool {
-    return m_buffer != 0 && m_mappedPtr != nullptr;
+    return m_buffer != 0 && 
+           (m_bufferMode == Platform::BufferStorageHelper::Mode::Fallback || 
+            m_mappedPtr != nullptr);
   }
 
 private:
@@ -155,6 +178,7 @@ private:
   std::size_t m_currentCount = 0;
   int m_buffersInFlight = BufferCapacity::BuffersInFlight;
   int m_currentFrame = 0;
+  Platform::BufferStorageHelper::Mode m_bufferMode = Platform::BufferStorageHelper::Mode::Persistent;
 };
 
 } // namespace Render::GL
