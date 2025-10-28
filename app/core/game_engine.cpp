@@ -64,6 +64,7 @@
 #include "game/systems/cleanup_system.h"
 #include "game/systems/combat_system.h"
 #include "game/systems/command_service.h"
+#include "game/systems/formation_planner.h"
 #include "game/systems/game_state_serializer.h"
 #include "game/systems/global_stats_registry.h"
 #include "game/systems/movement_system.h"
@@ -316,6 +317,7 @@ void GameEngine::onRightClick(qreal sx, qreal sy) {
     return;
   }
 
+  // Cancel special cursor modes
   if (m_cursorManager->mode() == CursorMode::Patrol ||
       m_cursorManager->mode() == CursorMode::Attack) {
     setCursorMode(CursorMode::Normal);
@@ -323,12 +325,54 @@ void GameEngine::onRightClick(qreal sx, qreal sy) {
   }
 
   const auto &sel = selection_system->getSelectedUnits();
-  if (!sel.empty()) {
-    if (m_selectionController) {
-      m_selectionController->onRightClickClearSelection();
-    }
-    setCursorMode(CursorMode::Normal);
+  if (sel.empty()) {
+    // No units selected, right-click does nothing
     return;
+  }
+
+  // Check if clicking on a unit (enemy or ally)
+  if (m_pickingService && m_camera) {
+    Engine::Core::EntityID const target_id = m_pickingService->pickUnitFirst(
+        float(sx), float(sy), *m_world, *m_camera, m_viewport.width,
+        m_viewport.height, 0);
+
+    if (target_id != 0u) {
+      auto *target_entity = m_world->getEntity(target_id);
+      if (target_entity != nullptr) {
+        auto *target_unit =
+            target_entity->getComponent<Engine::Core::UnitComponent>();
+        if (target_unit != nullptr) {
+          // Check if enemy or ally
+          bool is_enemy = (target_unit->owner_id != m_runtime.localOwnerId);
+          
+          if (is_enemy) {
+            // Right-click on enemy: Issue attack command
+            Game::Systems::CommandService::attack_target(*m_world, sel,
+                                                         target_id, true);
+            return;
+          } else {
+            // Right-click on ally: Could be interact/garrison/repair
+            // For now, just treat as empty terrain click (move nearby)
+            // Future: implement interact logic here
+          }
+        }
+      }
+    }
+  }
+
+  // Right-click on empty terrain or ally: Move units to location
+  if (m_pickingService && m_camera) {
+    QVector3D hit;
+    if (m_pickingService->screenToGround(QPointF(sx, sy), *m_camera,
+                                         m_viewport.width, m_viewport.height,
+                                         hit)) {
+      auto targets = Game::Systems::FormationPlanner::spreadFormation(
+          int(sel.size()), hit,
+          Game::GameConfig::instance().gameplay().formationSpacingDefault);
+      Game::Systems::CommandService::MoveOptions opts;
+      opts.groupMove = sel.size() > 1;
+      Game::Systems::CommandService::moveUnits(*m_world, sel, targets, opts);
+    }
   }
 }
 

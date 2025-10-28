@@ -141,32 +141,50 @@ make run
 - **Mouse to Screen Edge**: Edge scrolling (disabled over UI)
 
 ### Selection Controls
-- **Left Click**: Select unit or building
-- **Click + Drag**: Area selection (draw rectangle)
+- **Left Click**: Select unit or building (clears previous selection)
+- **Click + Drag**: Area selection (draw rectangle to select multiple units)
 - **Shift + Click**: Add to selection
-- **Right Click**: Deselect all
+- **Left Click on Empty Terrain**: Deselect all units
+- **X**: Select all controllable units
 
 ### Unit Commands
-- **Move**: Right-click on ground (selected units move there)
-- **Attack**: Click Attack button, then click enemy target
-- **Stop**: Press Stop button (halts movement, attack, and patrol)
-- **Patrol**: Click Patrol button, click first waypoint, then second waypoint
+- **Right-Click on Terrain**: Move selected units to target location
+- **Right-Click on Enemy**: Attack the target enemy unit/building
+- **Right-Click on Ally**: Interact with ally (future: repair, garrison, etc.)
+- **A**: Enter attack mode (then click target)
+- **M**: Enter move mode (normal cursor)
+- **S**: Stop all selected units (halts movement, attack, and patrol)
+- **P**: Enter patrol mode (click two waypoints to set patrol route)
+- **H**: Hold position (units won't chase enemies)
+
+### Building Commands
 - **Recruit**: Select barracks, click Recruit Archer button
+- **Set Rally Point**: Click rally button, then click location (or right-click with barracks selected)
 
 ### Game Controls
 - **Space**: Pause/Resume
-- **ESC**: Cancel current command mode (attack/patrol/guard)
+- **ESC**: Cancel current command mode (attack/patrol/guard) or open menu
 - **Speed Slider**: Adjust game speed (0.5x - 2x)
 
-### Keyboard Shortcuts (Camera)
-- **W**: Pan forward
-- **S**: Pan backward
-- **A**: Pan left
+### Keyboard Shortcuts Summary
+**Camera Movement:**
+- **W**: Pan forward (or **S** to stop when units selected)
+- **S**: Pan backward (or Stop command when units selected without Shift)
+- **A**: Pan left (or Attack mode when units selected without Shift)
 - **D**: Pan right
 - **Q**: Rotate left
 - **E**: Rotate right
 - **R**: Elevate camera
 - **F**: Lower camera
+- **Shift + WASD**: Force camera movement even with units selected
+
+**Unit Commands:**
+- **X**: Select all controllable units
+- **A**: Attack mode (when units selected)
+- **M**: Move mode / normal cursor
+- **S**: Stop command (when units selected)
+- **P**: Patrol mode
+- **H**: Hold position
 
 ## How to Play
 
@@ -177,15 +195,16 @@ Destroy the enemy barracks while protecting your own.
 1. **Build Archers**: Select your barracks and recruit archers
 2. **Set Rally Point**: Right-click with barracks selected to set spawn location
 3. **Gather Forces**: Let archers accumulate at rally point
-4. **Attack**: Select archers, click Attack, then click enemy barracks
+4. **Attack**: Select archers (click or drag-select), then right-click on enemy barracks to attack
 5. **Defend**: Keep producing units to defend against enemy attacks
 
 ### Advanced Tactics
-- **Patrol Routes**: Set up patrols to automatically defend areas
-- **Formation Attacks**: Select multiple units before attacking for better damage
+- **Patrol Routes**: Press P with units selected, then click two waypoints to set patrol route
+- **Formation Attacks**: Select multiple units (drag-select) before attacking for better damage
 - **Rally Management**: Position rally points strategically (safe but close to action)
 - **Production Timing**: Don't let your barracks sit idle
 - **Resource Management**: Each barracks can only have 10 units maximum
+- **Quick Commands**: Use hotkeys (A for attack, S for stop, P for patrol) for faster gameplay
 
 ## Architecture Overview
 
