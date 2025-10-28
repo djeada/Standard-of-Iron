@@ -1,7 +1,7 @@
 #include "shader.h"
 #include "render_constants.h"
 #include "utils/resource_utils.h"
-#include <GL/gl.h>
+#include "opengl_headers.h"
 #include <QByteArray>
 #include <QDebug>
 #include <QFile>
