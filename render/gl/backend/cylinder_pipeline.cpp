@@ -8,6 +8,7 @@
 #include <QOpenGLContext>
 #include <algorithm>
 #include <cstddef>
+#include <qopenglcontext.h>
 #include <qopenglext.h>
 #include <qstringliteral.h>
 

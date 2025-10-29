@@ -168,11 +168,11 @@ auto Serialization::serializeEntity(const Entity *entity) -> QJsonObject {
 
   if (const auto *attack_target =
           entity->getComponent<AttackTargetComponent>()) {
-    QJsonObject attack_targetObj;
-    attack_targetObj["target_id"] =
+    QJsonObject attack_target_obj;
+    attack_target_obj["target_id"] =
         static_cast<qint64>(attack_target->target_id);
-    attack_targetObj["shouldChase"] = attack_target->shouldChase;
-    entity_obj["attack_target"] = attack_targetObj;
+    attack_target_obj["shouldChase"] = attack_target->shouldChase;
+    entity_obj["attack_target"] = attack_target_obj;
   }
 
   if (const auto *patrol = entity->getComponent<PatrolComponent>()) {
@@ -362,11 +362,11 @@ void Serialization::deserializeEntity(Entity *entity, const QJsonObject &json) {
   }
 
   if (json.contains("attack_target")) {
-    const auto attack_targetObj = json["attack_target"].toObject();
+    const auto attack_target_obj = json["attack_target"].toObject();
     auto *attack_target = entity->addComponent<AttackTargetComponent>();
     attack_target->target_id = static_cast<EntityID>(
-        attack_targetObj["target_id"].toVariant().toULongLong());
-    attack_target->shouldChase = attack_targetObj["shouldChase"].toBool(false);
+        attack_target_obj["target_id"].toVariant().toULongLong());
+    attack_target->shouldChase = attack_target_obj["shouldChase"].toBool(false);
   }
 
   if (json.contains("patrol")) {
@@ -554,15 +554,15 @@ void Serialization::deserializeTerrain(Game::Map::TerrainHeightMap *height_map,
     const Game::Map::BiomeSettings default_biome{};
     const auto read_color = [&](const QString &base,
                                 const QVector3D &fallback) -> QVector3D {
-      const auto rKey = base + QStringLiteral("R");
-      const auto gKey = base + QStringLiteral("G");
-      const auto bKey = base + QStringLiteral("B");
+      const auto r_key = base + QStringLiteral("R");
+      const auto g_key = base + QStringLiteral("G");
+      const auto b_key = base + QStringLiteral("B");
       const float r = static_cast<float>(
-          biome_obj[rKey].toDouble(static_cast<double>(fallback.x())));
+          biome_obj[r_key].toDouble(static_cast<double>(fallback.x())));
       const float g = static_cast<float>(
-          biome_obj[gKey].toDouble(static_cast<double>(fallback.y())));
+          biome_obj[g_key].toDouble(static_cast<double>(fallback.y())));
       const float b = static_cast<float>(
-          biome_obj[bKey].toDouble(static_cast<double>(fallback.z())));
+          biome_obj[b_key].toDouble(static_cast<double>(fallback.z())));
       return {r, g, b};
     };
 
