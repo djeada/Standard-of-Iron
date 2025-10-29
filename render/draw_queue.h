@@ -23,6 +23,9 @@ class Shader;
 
 namespace Render::GL {
 
+// Sort key bit shift constants
+constexpr int k_sort_key_bucket_shift = 56;
+
 struct MeshCmd {
   Mesh *mesh = nullptr;
   Texture *texture = nullptr;
@@ -220,7 +223,7 @@ private:
       int histogram[BUCKETS] = {0};
 
       for (std::size_t i = 0; i < count; ++i) {
-        auto const bucket = static_cast<uint8_t>(m_sortKeys[i] >> 56);
+        auto const bucket = static_cast<uint8_t>(m_sortKeys[i] >> k_sort_key_bucket_shift);
         ++histogram[bucket];
       }
 
@@ -232,7 +235,7 @@ private:
 
       for (std::size_t i = 0; i < count; ++i) {
         auto const bucket =
-            static_cast<uint8_t>(m_sortKeys[m_sortIndices[i]] >> 56);
+            static_cast<uint8_t>(m_sortKeys[m_sortIndices[i]] >> k_sort_key_bucket_shift);
         m_tempIndices[offsets[bucket]++] = m_sortIndices[i];
       }
     }
