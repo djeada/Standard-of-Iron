@@ -3,6 +3,7 @@
 #include "gl/shader_cache.h"
 #include <GL/gl.h>
 #include <QDebug>
+#include <QOpenGLContext>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
@@ -187,6 +188,16 @@ void VegetationPipeline::initializeStonePipeline() {
 }
 
 void VegetationPipeline::shutdownStonePipeline() {
+  // Check if we have a valid OpenGL context before cleanup
+  if (QOpenGLContext::currentContext() == nullptr) {
+    m_stoneVao = 0;
+    m_stoneVertexBuffer = 0;
+    m_stoneIndexBuffer = 0;
+    m_stoneVertexCount = 0;
+    m_stoneIndexCount = 0;
+    return;
+  }
+
   initializeOpenGLFunctions();
   if (m_stoneIndexBuffer != 0U) {
     glDeleteBuffers(1, &m_stoneIndexBuffer);
@@ -281,6 +292,16 @@ void VegetationPipeline::initializePlantPipeline() {
 }
 
 void VegetationPipeline::shutdownPlantPipeline() {
+  // Check if we have a valid OpenGL context before cleanup
+  if (QOpenGLContext::currentContext() == nullptr) {
+    m_plantVao = 0;
+    m_plantVertexBuffer = 0;
+    m_plantIndexBuffer = 0;
+    m_plantVertexCount = 0;
+    m_plantIndexCount = 0;
+    return;
+  }
+
   initializeOpenGLFunctions();
   if (m_plantIndexBuffer != 0U) {
     glDeleteBuffers(1, &m_plantIndexBuffer);
@@ -430,6 +451,16 @@ void VegetationPipeline::initializePinePipeline() {
 }
 
 void VegetationPipeline::shutdownPinePipeline() {
+  // Check if we have a valid OpenGL context before cleanup
+  if (QOpenGLContext::currentContext() == nullptr) {
+    m_pineVao = 0;
+    m_pineVertexBuffer = 0;
+    m_pineIndexBuffer = 0;
+    m_pineVertexCount = 0;
+    m_pineIndexCount = 0;
+    return;
+  }
+
   initializeOpenGLFunctions();
   if (m_pineIndexBuffer != 0U) {
     glDeleteBuffers(1, &m_pineIndexBuffer);
@@ -525,6 +556,16 @@ void VegetationPipeline::initializeFireCampPipeline() {
 }
 
 void VegetationPipeline::shutdownFireCampPipeline() {
+  // Check if we have a valid OpenGL context before cleanup
+  if (QOpenGLContext::currentContext() == nullptr) {
+    m_firecampVao = 0;
+    m_firecampVertexBuffer = 0;
+    m_firecampIndexBuffer = 0;
+    m_firecampVertexCount = 0;
+    m_firecampIndexCount = 0;
+    return;
+  }
+
   initializeOpenGLFunctions();
   if (m_firecampIndexBuffer != 0U) {
     glDeleteBuffers(1, &m_firecampIndexBuffer);
