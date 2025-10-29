@@ -108,8 +108,8 @@
 #include <utility>
 #include <vector>
 
-GameEngine::GameEngine()
-    : m_selectedUnitsModel(new SelectedUnitsModel(this, this)) {
+GameEngine::GameEngine(QObject *parent)
+    : QObject(parent), m_selectedUnitsModel(new SelectedUnitsModel(this, this)) {
 
   Game::Systems::NationRegistry::instance().initializeDefaults();
   Game::Systems::TroopCountRegistry::instance().initialize();
