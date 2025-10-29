@@ -1,6 +1,9 @@
 name: macOS Build
 on: [push, pull_request]
 
+permissions:
+  contents: read
+
 jobs:
   build-macos:
     runs-on: macos-latest
