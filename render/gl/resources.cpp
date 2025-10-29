@@ -2,7 +2,7 @@
 #include "gl/mesh.h"
 #include "gl/texture.h"
 #include "render_constants.h"
-#include <GL/gl.h>
+#include "opengl_headers.h"
 #include <QVector3D>
 #include <cmath>
 #include <memory>
