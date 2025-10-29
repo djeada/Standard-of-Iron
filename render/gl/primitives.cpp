@@ -383,8 +383,8 @@ auto createUnitTorsoMesh(int radialSegments, int heightSegments) -> Mesh * {
   };
 
   auto ellipse_radius = [&](float a, float b, float ang) {
-    float c = std::cos(ang);
-    float s = std::sin(ang);
+    float const c = std::cos(ang);
+    float const s = std::sin(ang);
     float const denom = std::sqrt((b * b * c * c) + (a * a * s * s));
     return (a * b) / (denom + k_radius_epsilon);
   };
@@ -412,9 +412,9 @@ auto createUnitTorsoMesh(int radialSegments, int heightSegments) -> Mesh * {
 
   auto theta_scale = [&](float t, float ang) {
     float s = 0.0F;
-    float sinA = std::sin(ang);
-    float cosA = std::cos(ang);
-    float cos2 = cosA * cosA;
+    float const sinA = std::sin(ang);
+    float const cosA = std::cos(ang);
+    float const cos2 = cosA * cosA;
     s += k_theta_sin_pos_amp *
          smooth_band(t, k_theta_sin_pos_start, k_theta_sin_pos_end) *
          std::max(0.0F, sinA);

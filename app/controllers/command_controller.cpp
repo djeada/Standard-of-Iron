@@ -196,8 +196,8 @@ auto CommandController::onPatrolClick(qreal sx, qreal sy, int viewportWidth,
 
   auto *cam = static_cast<Render::GL::Camera *>(camera);
   QVector3D hit;
-  if (!m_pickingService->screenToGround(QPointF(sx, sy), *cam, viewportWidth,
-                                        viewportHeight, hit)) {
+  if (!Game::Systems::PickingService::screenToGround(
+          QPointF(sx, sy), *cam, viewportWidth, viewportHeight, hit)) {
     if (m_hasPatrolFirstWaypoint) {
       clearPatrolFirstWaypoint();
       result.resetCursorToNormal = true;
@@ -260,8 +260,8 @@ auto CommandController::setRallyAtScreen(qreal sx, qreal sy, int viewportWidth,
 
   auto *cam = static_cast<Render::GL::Camera *>(camera);
   QVector3D hit;
-  if (!m_pickingService->screenToGround(QPointF(sx, sy), *cam, viewportWidth,
-                                        viewportHeight, hit)) {
+  if (!Game::Systems::PickingService::screenToGround(
+          QPointF(sx, sy), *cam, viewportWidth, viewportHeight, hit)) {
     return result;
   }
 

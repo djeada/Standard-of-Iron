@@ -3,7 +3,6 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
-#include <math.h>
 #include <numbers>
 #include <vector>
 
@@ -448,8 +447,9 @@ auto TerrainHeightMap::inBounds(int x, int z) const -> bool {
   return x >= 0 && x < m_width && z >= 0 && z < m_height;
 }
 
-float TerrainHeightMap::calculateFeatureHeight(const TerrainFeature &feature,
-                                               float world_x, float world_z) {
+auto TerrainHeightMap::calculateFeatureHeight(const TerrainFeature &feature,
+                                              float world_x,
+                                              float world_z) -> float {
   float const dx = world_x - feature.center_x;
   float const dz = world_z - feature.center_z;
   float const dist = std::sqrt(dx * dx + dz * dz);
