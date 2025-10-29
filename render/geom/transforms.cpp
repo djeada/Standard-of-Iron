@@ -11,6 +11,7 @@ const QVector3D k_yaxis(0, 1, 0);
 const float k_rad_to_deg = 57.2957795131F;
 const float k_epsilon = 1e-6F;
 const float k_epsilonSq = k_epsilon * k_epsilon;
+constexpr float k_flip_rotation_degrees = 180.0F;
 } // namespace
 
 auto cylinderBetween(const QVector3D &a, const QVector3D &b,
@@ -44,7 +45,7 @@ auto cylinderBetween(const QVector3D &a, const QVector3D &b,
     if (axis_len_sq < k_epsilonSq) {
 
       if (dot < 0.0F) {
-        M.rotate(180.0F, 1.0F, 0.0F, 0.0F);
+        M.rotate(k_flip_rotation_degrees, 1.0F, 0.0F, 0.0F);
       }
     } else {
 
@@ -104,7 +105,7 @@ auto cylinderBetween(const QMatrix4x4 &parent, const QVector3D &a,
     if (axis_len_sq < k_epsilonSq) {
 
       if (dot < 0.0F) {
-        M.rotate(180.0F, 1.0F, 0.0F, 0.0F);
+        M.rotate(k_flip_rotation_degrees, 1.0F, 0.0F, 0.0F);
       }
     } else {
 
