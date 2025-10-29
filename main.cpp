@@ -282,7 +282,7 @@ auto main(int argc, char *argv[]) -> int {
   qInfo() << "Setting up QML engine...";
   engine = std::make_unique<QQmlApplicationEngine>();
   qInfo() << "Adding context properties...";
-  engine->rootContext()->setContextProperty("language_manager",
+  engine->rootContext()->setContextProperty("languageManager",
                                             language_manager.get());
   engine->rootContext()->setContextProperty("game", game_engine.get());
   qInfo() << "Adding import path...";
