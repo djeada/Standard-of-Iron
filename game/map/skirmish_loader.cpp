@@ -213,9 +213,9 @@ auto SkirmishLoader::start(const QString &map_path,
     return result;
   }
 
-  constexpr float COLOR_SCALE = 255.0F;
-  constexpr int HEX_COLOR_LENGTH = 7;
-  constexpr int HEX_BASE = 16;
+  constexpr float color_scale = 255.0F;
+  constexpr int hex_color_length = 7;
+  constexpr int hex_base = 16;
 
   if (!saved_player_configs.isEmpty()) {
     for (const QVariant &config_var : saved_player_configs) {
@@ -224,13 +224,13 @@ auto SkirmishLoader::start(const QString &map_path,
       const QString color_hex = config.value("colorHex", "#FFFFFF").toString();
 
       if (player_id >= 0 && color_hex.startsWith("#") &&
-          color_hex.length() == HEX_COLOR_LENGTH) {
+          color_hex.length() == hex_color_length) {
         bool conversion_ok = false;
-        const int red = color_hex.mid(1, 2).toInt(&conversion_ok, HEX_BASE);
-        const int green = color_hex.mid(3, 2).toInt(&conversion_ok, HEX_BASE);
-        const int blue = color_hex.mid(5, 2).toInt(&conversion_ok, HEX_BASE);
-        owner_registry.setOwnerColor(player_id, red / COLOR_SCALE,
-                                     green / COLOR_SCALE, blue / COLOR_SCALE);
+        const int red = color_hex.mid(1, 2).toInt(&conversion_ok, hex_base);
+        const int green = color_hex.mid(3, 2).toInt(&conversion_ok, hex_base);
+        const int blue = color_hex.mid(5, 2).toInt(&conversion_ok, hex_base);
+        owner_registry.setOwnerColor(player_id, red / color_scale,
+                                     green / color_scale, blue / color_scale);
       }
     }
 
@@ -345,10 +345,10 @@ auto SkirmishLoader::start(const QString &map_path,
         std::vector<float> intensities;
         std::vector<float> radii;
 
-        const auto *heightMap = terrain_service.getHeightMap();
-        const float tile_size = heightMap->getTileSize();
-        const int width = heightMap->getWidth();
-        const int height = heightMap->getHeight();
+        const auto *height_map = terrain_service.getHeightMap();
+        const float tile_size = height_map->getTileSize();
+        const int width = height_map->getWidth();
+        const int height = height_map->getHeight();
         const float half_width = width * 0.5F;
         const float half_height = height * 0.5F;
 

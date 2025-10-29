@@ -3,6 +3,7 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <math.h>
 #include <numbers>
 #include <vector>
 
@@ -81,24 +82,24 @@ void TerrainHeightMap::buildFromFeatures(
           std::max(grid_radius * 1.8F, grid_radius + 3.0F);
       const float minor_radius = std::max(grid_radius * 0.22F, 0.8F);
       const float bound = std::max(major_radius, minor_radius) + 2.0F;
-      const int minX = std::max(0, int(std::floor(grid_center_x - bound)));
-      const int maxX =
+      const int min_x = std::max(0, int(std::floor(grid_center_x - bound)));
+      const int max_x =
           std::min(m_width - 1, int(std::ceil(grid_center_x + bound)));
-      const int minZ = std::max(0, int(std::floor(grid_center_z - bound)));
-      const int maxZ =
+      const int min_z = std::max(0, int(std::floor(grid_center_z - bound)));
+      const int max_z =
           std::min(m_height - 1, int(std::ceil(grid_center_z + bound)));
 
       const float angle_rad = feature.rotationDeg * k_deg_to_rad;
-      const float cosA = std::cos(angle_rad);
-      const float sinA = std::sin(angle_rad);
+      const float cos_a = std::cos(angle_rad);
+      const float sin_a = std::sin(angle_rad);
 
-      for (int z = minZ; z <= maxZ; ++z) {
-        for (int x = minX; x <= maxX; ++x) {
+      for (int z = min_z; z <= max_z; ++z) {
+        for (int x = min_x; x <= max_x; ++x) {
           const float local_x = float(x) - grid_center_x;
           const float local_z = float(z) - grid_center_z;
 
-          const float rotated_x = local_x * cosA + local_z * sinA;
-          const float rotated_z = -local_x * sinA + local_z * cosA;
+          const float rotated_x = local_x * cos_a + local_z * sin_a;
+          const float rotated_z = -local_x * sin_a + local_z * cos_a;
 
           const float norm = std::sqrt(
               (rotated_x * rotated_x) / (major_radius * major_radius) +
@@ -135,29 +136,29 @@ void TerrainHeightMap::buildFromFeatures(
       const float slope_depth = std::max(plateau_depth + 1.5F, grid_depth);
 
       const float max_extent = std::max(slope_width, slope_depth);
-      const int minX =
+      const int min_x =
           std::max(0, int(std::floor(grid_center_x - max_extent - 1.0F)));
-      const int maxX = std::min(
+      const int max_x = std::min(
           m_width - 1, int(std::ceil(grid_center_x + max_extent + 1.0F)));
-      const int minZ =
+      const int min_z =
           std::max(0, int(std::floor(grid_center_z - max_extent - 1.0F)));
-      const int maxZ = std::min(
+      const int max_z = std::min(
           m_height - 1, int(std::ceil(grid_center_z + max_extent + 1.0F)));
 
       std::vector<int> plateau_cells;
       plateau_cells.reserve(int(M_PI * plateau_width * plateau_depth));
 
       const float angle_rad = feature.rotationDeg * k_deg_to_rad;
-      const float cosA = std::cos(angle_rad);
-      const float sinA = std::sin(angle_rad);
+      const float cos_a = std::cos(angle_rad);
+      const float sin_a = std::sin(angle_rad);
 
-      for (int z = minZ; z <= maxZ; ++z) {
-        for (int x = minX; x <= maxX; ++x) {
+      for (int z = min_z; z <= max_z; ++z) {
+        for (int x = min_x; x <= max_x; ++x) {
           const float dx = float(x) - grid_center_x;
           const float dz = float(z) - grid_center_z;
 
-          const float rotated_x = dx * cosA + dz * sinA;
-          const float rotated_z = -dx * sinA + dz * cosA;
+          const float rotated_x = dx * cos_a + dz * sin_a;
+          const float rotated_z = -dx * sin_a + dz * cos_a;
 
           const float norm_plateau_dist = std::sqrt(
               (rotated_x * rotated_x) / (plateau_width * plateau_width) +
@@ -207,23 +208,23 @@ void TerrainHeightMap::buildFromFeatures(
         m_hillEntrances[entrance_idx] = true;
         m_hillWalkable[entrance_idx] = true;
 
-        float dirX = grid_center_x - float(ex);
-        float dirZ = grid_center_z - float(ez);
-        float const length = std::sqrt(dirX * dirX + dirZ * dirZ);
+        float dir_x = grid_center_x - float(ex);
+        float dir_z = grid_center_z - float(ez);
+        float const length = std::sqrt(dir_x * dir_x + dir_z * dir_z);
         if (length < 0.001F) {
           continue;
         }
 
-        dirX /= length;
-        dirZ /= length;
+        dir_x /= length;
+        dir_z /= length;
 
-        auto curX = float(ex);
-        auto curZ = float(ez);
+        auto cur_x = float(ex);
+        auto cur_z = float(ez);
         const int steps = int(length) + 3;
 
         for (int step = 0; step < steps; ++step) {
-          int const ix = int(std::round(curX));
-          int const iz = int(std::round(curZ));
+          int const ix = int(std::round(cur_x));
+          int const iz = int(std::round(cur_z));
           if (!inBounds(ix, iz)) {
             break;
           }
@@ -232,8 +233,8 @@ void TerrainHeightMap::buildFromFeatures(
 
           const float cell_dx = float(ix) - grid_center_x;
           const float cell_dz = float(iz) - grid_center_z;
-          const float cell_rot_x = cell_dx * cosA + cell_dz * sinA;
-          const float cell_rot_z = -cell_dx * sinA + cell_dz * cosA;
+          const float cell_rot_x = cell_dx * cos_a + cell_dz * sin_a;
+          const float cell_rot_z = -cell_dx * sin_a + cell_dz * cos_a;
           const float cell_norm_dist = std::sqrt(
               (cell_rot_x * cell_rot_x) / (slope_width * slope_width) +
               (cell_rot_z * cell_rot_z) / (slope_depth * slope_depth));
@@ -264,24 +265,24 @@ void TerrainHeightMap::buildFromFeatures(
                 continue;
               }
 
-              const float nDx = float(nx) - grid_center_x;
-              const float nDz = float(nz) - grid_center_z;
-              const float n_rot_x = nDx * cosA + nDz * sinA;
-              const float n_rot_z = -nDx * sinA + nDz * cosA;
+              const float n_dx = float(nx) - grid_center_x;
+              const float n_dz = float(nz) - grid_center_z;
+              const float n_rot_x = n_dx * cos_a + n_dz * sin_a;
+              const float n_rot_z = -n_dx * sin_a + n_dz * cos_a;
               const float neighbor_norm_dist =
                   std::sqrt((n_rot_x * n_rot_x) / (slope_width * slope_width) +
                             (n_rot_z * n_rot_z) / (slope_depth * slope_depth));
 
               if (neighbor_norm_dist <= 1.05F) {
-                int const nIdx = indexAt(nx, nz);
-                if (m_terrain_types[nIdx] != TerrainType::Mountain) {
-                  m_hillWalkable[nIdx] = true;
-                  if (m_terrain_types[nIdx] == TerrainType::Flat) {
-                    m_terrain_types[nIdx] = TerrainType::Hill;
+                int const n_idx = indexAt(nx, nz);
+                if (m_terrain_types[n_idx] != TerrainType::Mountain) {
+                  m_hillWalkable[n_idx] = true;
+                  if (m_terrain_types[n_idx] == TerrainType::Flat) {
+                    m_terrain_types[n_idx] = TerrainType::Hill;
                   }
-                  if (m_heights[nIdx] < m_heights[idx] * 0.8F) {
-                    m_heights[nIdx] =
-                        std::max(m_heights[nIdx], m_heights[idx] * 0.7F);
+                  if (m_heights[n_idx] < m_heights[idx] * 0.8F) {
+                    m_heights[n_idx] =
+                        std::max(m_heights[n_idx], m_heights[idx] * 0.7F);
                   }
                 }
               }
@@ -295,8 +296,8 @@ void TerrainHeightMap::buildFromFeatures(
             break;
           }
 
-          curX += dirX;
-          curZ += dirZ;
+          cur_x += dir_x;
+          cur_z += dir_z;
         }
       }
 
@@ -304,15 +305,15 @@ void TerrainHeightMap::buildFromFeatures(
     }
 
     const float flat_radius = grid_radius;
-    const int minX = std::max(0, int(std::floor(grid_center_x - flat_radius)));
-    const int maxX =
+    const int min_x = std::max(0, int(std::floor(grid_center_x - flat_radius)));
+    const int max_x =
         std::min(m_width - 1, int(std::ceil(grid_center_x + flat_radius)));
-    const int minZ = std::max(0, int(std::floor(grid_center_z - flat_radius)));
-    const int maxZ =
+    const int min_z = std::max(0, int(std::floor(grid_center_z - flat_radius)));
+    const int max_z =
         std::min(m_height - 1, int(std::ceil(grid_center_z + flat_radius)));
 
-    for (int z = minZ; z <= maxZ; ++z) {
-      for (int x = minX; x <= maxX; ++x) {
+    for (int z = min_z; z <= max_z; ++z) {
+      for (int x = min_x; x <= max_x; ++x) {
         const float dx = float(x) - grid_center_x;
         const float dz = float(z) - grid_center_z;
         const float dist = std::sqrt(dx * dx + dz * dz);
@@ -538,19 +539,19 @@ void TerrainHeightMap::addRiverSegments(
 
       float const half_width = river.width * 0.5F / m_tile_size;
 
-      int const minX = std::max(
+      int const min_x = std::max(
           0, static_cast<int>(std::floor(grid_center_x - half_width - 1.0F)));
-      int const maxX = std::min(
+      int const max_x = std::min(
           m_width - 1,
           static_cast<int>(std::ceil(grid_center_x + half_width + 1.0F)));
-      int const minZ = std::max(
+      int const min_z = std::max(
           0, static_cast<int>(std::floor(grid_center_z - half_width - 1.0F)));
-      int const maxZ = std::min(
+      int const max_z = std::min(
           m_height - 1,
           static_cast<int>(std::ceil(grid_center_z + half_width + 1.0F)));
 
-      for (int z = minZ; z <= maxZ; ++z) {
-        for (int x = minX; x <= maxX; ++x) {
+      for (int z = min_z; z <= max_z; ++z) {
+        for (int x = min_x; x <= max_x; ++x) {
           float const dx = static_cast<float>(x) - grid_center_x;
           float const dz = static_cast<float>(z) - grid_center_z;
 
@@ -605,18 +606,18 @@ void TerrainHeightMap::addBridges(const std::vector<Bridge> &bridges) {
 
       float const half_width = bridge.width * 0.5F / m_tile_size;
 
-      int const minX =
+      int const min_x =
           std::max(0, static_cast<int>(std::floor(grid_center_x - half_width)));
-      int const maxX = std::min(
+      int const max_x = std::min(
           m_width - 1, static_cast<int>(std::ceil(grid_center_x + half_width)));
-      int const minZ =
+      int const min_z =
           std::max(0, static_cast<int>(std::floor(grid_center_z - half_width)));
-      int const maxZ =
+      int const max_z =
           std::min(m_height - 1,
                    static_cast<int>(std::ceil(grid_center_z + half_width)));
 
-      for (int z = minZ; z <= maxZ; ++z) {
-        for (int x = minX; x <= maxX; ++x) {
+      for (int z = min_z; z <= max_z; ++z) {
+        for (int x = min_x; x <= max_x; ++x) {
           float const dx = static_cast<float>(x) - grid_center_x;
           float const dz = static_cast<float>(z) - grid_center_z;
 

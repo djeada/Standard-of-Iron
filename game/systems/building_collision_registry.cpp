@@ -117,12 +117,12 @@ auto BuildingCollisionRegistry::isPointInBuilding(
     float const half_width = building.width / 2.0F;
     float const half_depth = building.depth / 2.0F;
 
-    float const minX = building.center_x - half_width;
-    float const maxX = building.center_x + half_width;
-    float const minZ = building.center_z - half_depth;
-    float const maxZ = building.center_z + half_depth;
+    float const min_x = building.center_x - half_width;
+    float const max_x = building.center_x + half_width;
+    float const min_z = building.center_z - half_depth;
+    float const max_z = building.center_z + half_depth;
 
-    if (x >= minX && x <= maxX && z >= minZ && z <= maxZ) {
+    if (x >= min_x && x <= max_x && z >= min_z && z <= max_z) {
       return true;
     }
   }

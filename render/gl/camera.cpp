@@ -16,7 +16,7 @@ namespace Render::GL {
 using namespace Render::GL::FrustumPlane;
 
 namespace {
-constexpr float kEps = 1e-6F;
+constexpr float k_eps = 1e-6F;
 constexpr float k_tiny = 1e-4F;
 constexpr float k_min_dist = 1.0F;
 constexpr float k_max_dist = 200.0F;
@@ -54,7 +54,7 @@ inline auto finite(const QVector3D &v) -> bool {
 inline auto finite(float v) -> bool { return qIsFinite(v); }
 
 inline auto safeNormalize(const QVector3D &v, const QVector3D &fallback,
-                          float eps = kEps) -> QVector3D {
+                          float eps = k_eps) -> QVector3D {
   if (!finite(v)) {
     return fallback;
   }
@@ -74,7 +74,7 @@ inline void orthonormalize(const QVector3D &frontIn, QVector3D &frontOut,
                     ? QVector3D(0, 0, 1)
                     : world_up;
   QVector3D r = QVector3D::crossProduct(f, u);
-  if (r.lengthSquared() < kEps) {
+  if (r.lengthSquared() < k_eps) {
     r = QVector3D(1, 0, 0);
   }
   r = r.normalized();
@@ -148,9 +148,10 @@ void Camera::setTarget(const QVector3D &target) {
   applySoftBoundaries();
 
   QVector3D dir = (m_target - m_position);
-  if (dir.lengthSquared() < kEps) {
-    m_target = m_position +
-               (m_front.lengthSquared() < kEps ? QVector3D(0, 0, -1) : m_front);
+  if (dir.lengthSquared() < k_eps) {
+    m_target =
+        m_position +
+        (m_front.lengthSquared() < k_eps ? QVector3D(0, 0, -1) : m_front);
     dir = (m_target - m_position);
   }
   orthonormalize(dir, m_front, m_right, m_up);
@@ -160,9 +161,9 @@ void Camera::setUp(const QVector3D &up) {
   if (!finite(up)) {
     return;
   }
-  QVector3D upN = up;
-  if (upN.lengthSquared() < kEps) {
-    upN = QVector3D(0, 1, 0);
+  QVector3D up_n = up;
+  if (up_n.lengthSquared() < k_eps) {
+    up_n = QVector3D(0, 1, 0);
   }
 
   orthonormalize(m_target - m_position, m_front, m_right, m_up);
@@ -179,7 +180,7 @@ void Camera::lookAt(const QVector3D &position, const QVector3D &target,
   applySoftBoundaries();
 
   QVector3D const f = (m_target - m_position);
-  m_up = up.lengthSquared() < kEps ? QVector3D(0, 1, 0) : up.normalized();
+  m_up = up.lengthSquared() < k_eps ? QVector3D(0, 1, 0) : up.normalized();
   orthonormalize(f, m_front, m_right, m_up);
 }
 
@@ -281,9 +282,9 @@ void Camera::zoomDistance(float delta) {
   }
   factor = std::clamp(factor, k_zoom_factor_min, k_zoom_factor_max);
 
-  float const newR = std::clamp(r * factor, k_min_dist, k_max_dist);
+  float const new_r = std::clamp(r * factor, k_min_dist, k_max_dist);
   QVector3D const dir = safeNormalize(offset, QVector3D(0, 0, 1));
-  QVector3D const new_pos = m_target + dir * newR;
+  QVector3D const new_pos = m_target + dir * new_r;
 
   m_position = new_pos;
 
@@ -421,7 +422,7 @@ auto Camera::screenToGround(qreal sx, qreal sy, qreal screenW, qreal screenH,
   QVector4D const near_world4 = inv_vp * near_clip;
   QVector4D const far_world4 = inv_vp * far_clip;
 
-  if (std::abs(near_world4.w()) < kEps || std::abs(far_world4.w()) < kEps) {
+  if (std::abs(near_world4.w()) < k_eps || std::abs(far_world4.w()) < k_eps) {
     return false;
   }
 
@@ -433,7 +434,7 @@ auto Camera::screenToGround(qreal sx, qreal sy, qreal screenW, qreal screenH,
 
   QVector3D const ray_dir =
       safeNormalize(ray_end - ray_origin, QVector3D(0, -1, 0));
-  if (std::abs(ray_dir.y()) < kEps) {
+  if (std::abs(ray_dir.y()) < k_eps) {
     return false;
   }
 
@@ -457,7 +458,7 @@ auto Camera::worldToScreen(const QVector3D &world, qreal screenW, qreal screenH,
 
   QVector4D const clip =
       getProjectionMatrix() * getViewMatrix() * QVector4D(world, 1.0F);
-  if (std::abs(clip.w()) < kEps) {
+  if (std::abs(clip.w()) < k_eps) {
     return false;
   }
 
@@ -642,7 +643,7 @@ void Camera::applySoftBoundaries(bool isPanning) {
   float const ext_max_z = map_max_z + margin_z;
 
   QVector3D const target_to_pos = m_position - m_target;
-  float const target_to_posDist = target_to_pos.length();
+  float const target_to_pos_dist = target_to_pos.length();
 
   QVector3D position_adjustment(0, 0, 0);
   QVector3D target_adjustment(0, 0, 0);
@@ -694,9 +695,9 @@ void Camera::applySoftBoundaries(bool isPanning) {
     m_target += target_adjustment * (isPanning ? k_boundary_panning_smoothness
                                                : k_boundary_smoothness);
 
-    if (target_to_posDist > k_tiny) {
+    if (target_to_pos_dist > k_tiny) {
       QVector3D const dir = target_to_pos.normalized();
-      m_position = m_target + dir * target_to_posDist;
+      m_position = m_target + dir * target_to_pos_dist;
     }
   }
 
@@ -750,17 +751,17 @@ auto Camera::isInFrustum(const QVector3D &center, float radius) const -> bool {
                            m[Index11] + m[Index9]);
   float const bottom_d = m[15] + m[13];
 
-  QVector3D const topN(m[Index3] - m[Index1], m[Index7] - m[Index5],
-                       m[Index11] - m[Index9]);
-  float const topD = m[15] - m[13];
+  QVector3D const top_n(m[Index3] - m[Index1], m[Index7] - m[Index5],
+                        m[Index11] - m[Index9]);
+  float const top_d = m[15] - m[13];
 
   QVector3D const near_n(m[Index3] + m[Index2], m[Index7] + m[Index6],
                          m[Index11] + m[Index10]);
   float const near_d = m[15] + m[14];
 
-  QVector3D const farN(m[Index3] - m[Index2], m[Index7] - m[Index6],
-                       m[Index11] - m[Index10]);
-  float const farD = m[15] - m[14];
+  QVector3D const far_n(m[Index3] - m[Index2], m[Index7] - m[Index6],
+                        m[Index11] - m[Index10]);
+  float const far_d = m[15] - m[14];
 
   auto test_plane = [&center, radius](const QVector3D &n, float d) -> bool {
     float const len = n.length();
@@ -772,8 +773,8 @@ auto Camera::isInFrustum(const QVector3D &center, float radius) const -> bool {
   };
 
   return test_plane(left_n, left_d) && test_plane(right_n, right_d) &&
-         test_plane(bottom_n, bottom_d) && test_plane(topN, topD) &&
-         test_plane(near_n, near_d) && test_plane(farN, farD);
+         test_plane(bottom_n, bottom_d) && test_plane(top_n, top_d) &&
+         test_plane(near_n, near_d) && test_plane(far_n, far_d);
 }
 
 } // namespace Render::GL
