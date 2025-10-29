@@ -36,18 +36,18 @@ MapCatalog::MapCatalog(QObject *parent) : QObject(parent) {}
 
 auto MapCatalog::availableMaps() -> QVariantList {
   QVariantList list;
-  const QString mapsRoot =
+  const QString maps_root =
       Utils::Resources::resolveResourcePath(QStringLiteral(":/assets/maps"));
-  QDir const mapsDir(mapsRoot);
-  if (!mapsDir.exists()) {
+  QDir const maps_dir(maps_root);
+  if (!maps_dir.exists()) {
     return list;
   }
 
   QStringList const files =
-      mapsDir.entryList(QStringList() << "*.json", QDir::Files, QDir::Name);
+      maps_dir.entryList(QStringList() << "*.json", QDir::Files, QDir::Name);
   for (const QString &f : files) {
     QString const path =
-        Utils::Resources::resolveResourcePath(mapsDir.filePath(f));
+        Utils::Resources::resolveResourcePath(maps_dir.filePath(f));
     QFile file(path);
     QString name = f;
     QString desc;
@@ -68,9 +68,9 @@ auto MapCatalog::availableMaps() -> QVariantList {
 
         if (obj.contains(SPAWNS) && obj[SPAWNS].isArray()) {
           QJsonArray const spawns = obj[SPAWNS].toArray();
-          for (const QJsonValue &spawnVal : spawns) {
-            if (spawnVal.isObject()) {
-              QJsonObject spawn = spawnVal.toObject();
+          for (const QJsonValue &spawn_val : spawns) {
+            if (spawn_val.isObject()) {
+              QJsonObject spawn = spawn_val.toObject();
               if (spawn.contains(PLAYER_ID)) {
                 int const player_id = spawn[PLAYER_ID].toInt();
                 if (player_id > 0) {
@@ -87,13 +87,13 @@ auto MapCatalog::availableMaps() -> QVariantList {
     entry[DESCRIPTION] = desc;
     entry["path"] = path;
     entry["playerCount"] = player_ids.size();
-    QVariantList player_idList;
-    QList<int> sortedIds = player_ids.values();
-    std::sort(sortedIds.begin(), sortedIds.end());
-    for (int const id : sortedIds) {
-      player_idList.append(id);
+    QVariantList player_id_list;
+    QList<int> sorted_ids = player_ids.values();
+    std::sort(sorted_ids.begin(), sorted_ids.end());
+    for (int const id : sorted_ids) {
+      player_id_list.append(id);
     }
-    entry["player_ids"] = player_idList;
+    entry["player_ids"] = player_id_list;
 
     QString thumbnail;
     if (file.open(QIODevice::ReadOnly)) {
@@ -110,12 +110,12 @@ auto MapCatalog::availableMaps() -> QVariantList {
     }
 
     if (thumbnail.isEmpty()) {
-      QString const baseName = QFileInfo(f).baseName();
-      QString const thumbCandidate = Utils::Resources::resolveResourcePath(
-          QString(":/assets/maps/%1_thumb.png").arg(baseName));
+      QString const base_name = QFileInfo(f).baseName();
+      QString const thumb_candidate = Utils::Resources::resolveResourcePath(
+          QString(":/assets/maps/%1_thumb.png").arg(base_name));
 
-      if (QFileInfo::exists(thumbCandidate)) {
-        thumbnail = thumbCandidate;
+      if (QFileInfo::exists(thumb_candidate)) {
+        thumbnail = thumb_candidate;
       } else {
         thumbnail = "";
       }
@@ -137,10 +137,10 @@ void MapCatalog::loadMapsAsync() {
   m_loading = true;
   emit loadingChanged(true);
 
-  const QString mapsRoot =
+  const QString maps_root =
       Utils::Resources::resolveResourcePath(QStringLiteral(":/assets/maps"));
-  QDir const mapsDir(mapsRoot);
-  if (!mapsDir.exists()) {
+  QDir const maps_dir(maps_root);
+  if (!maps_dir.exists()) {
     m_loading = false;
     emit loadingChanged(false);
     emit allMapsLoaded();
@@ -148,7 +148,7 @@ void MapCatalog::loadMapsAsync() {
   }
 
   m_pendingFiles =
-      mapsDir.entryList(QStringList() << "*.json", QDir::Files, QDir::Name);
+      maps_dir.entryList(QStringList() << "*.json", QDir::Files, QDir::Name);
 
   if (m_pendingFiles.isEmpty()) {
     m_loading = false;
@@ -168,12 +168,12 @@ void MapCatalog::loadNextMap() {
     return;
   }
 
-  QString const fileName = m_pendingFiles.takeFirst();
-  const QString mapsRoot =
+  QString const file_name = m_pendingFiles.takeFirst();
+  const QString maps_root =
       Utils::Resources::resolveResourcePath(QStringLiteral(":/assets/maps"));
-  QDir const mapsDir(mapsRoot);
+  QDir const maps_dir(maps_root);
   QString const path =
-      Utils::Resources::resolveResourcePath(mapsDir.filePath(fileName));
+      Utils::Resources::resolveResourcePath(maps_dir.filePath(file_name));
 
   QVariantMap const entry = loadSingleMap(path);
   if (!entry.isEmpty()) {
@@ -191,9 +191,9 @@ void MapCatalog::loadNextMap() {
 }
 
 auto MapCatalog::loadSingleMap(const QString &path) -> QVariantMap {
-  const QString resolvedPath = Utils::Resources::resolveResourcePath(path);
-  QFile file(resolvedPath);
-  QString name = QFileInfo(resolvedPath).fileName();
+  const QString resolved_path = Utils::Resources::resolveResourcePath(path);
+  QFile file(resolved_path);
+  QString name = QFileInfo(resolved_path).fileName();
   QString desc;
   QSet<int> player_ids;
 
@@ -213,9 +213,9 @@ auto MapCatalog::loadSingleMap(const QString &path) -> QVariantMap {
 
       if (obj.contains(SPAWNS) && obj[SPAWNS].isArray()) {
         QJsonArray const spawns = obj[SPAWNS].toArray();
-        for (const QJsonValue &spawnVal : spawns) {
-          if (spawnVal.isObject()) {
-            QJsonObject spawn = spawnVal.toObject();
+        for (const QJsonValue &spawn_val : spawns) {
+          if (spawn_val.isObject()) {
+            QJsonObject spawn = spawn_val.toObject();
             if (spawn.contains(PLAYER_ID)) {
               int const player_id = spawn[PLAYER_ID].toInt();
               if (player_id > 0) {
@@ -231,16 +231,16 @@ auto MapCatalog::loadSingleMap(const QString &path) -> QVariantMap {
   QVariantMap entry;
   entry[NAME] = name;
   entry[DESCRIPTION] = desc;
-  entry["path"] = resolvedPath;
+  entry["path"] = resolved_path;
   entry["playerCount"] = player_ids.size();
 
-  QVariantList player_idList;
-  QList<int> sortedIds = player_ids.values();
-  std::sort(sortedIds.begin(), sortedIds.end());
-  for (int const id : sortedIds) {
-    player_idList.append(id);
+  QVariantList player_id_list;
+  QList<int> sorted_ids = player_ids.values();
+  std::sort(sorted_ids.begin(), sorted_ids.end());
+  for (int const id : sorted_ids) {
+    player_id_list.append(id);
   }
-  entry["player_ids"] = player_idList;
+  entry["player_ids"] = player_id_list;
 
   QString thumbnail;
   if (file.open(QIODevice::ReadOnly)) {
@@ -256,12 +256,12 @@ auto MapCatalog::loadSingleMap(const QString &path) -> QVariantMap {
     }
   }
   if (thumbnail.isEmpty()) {
-    QString const baseName = QFileInfo(resolvedPath).baseName();
-    QString const thumbCandidate = Utils::Resources::resolveResourcePath(
-        QString(":/assets/maps/%1_thumb.png").arg(baseName));
+    QString const base_name = QFileInfo(resolved_path).baseName();
+    QString const thumb_candidate = Utils::Resources::resolveResourcePath(
+        QString(":/assets/maps/%1_thumb.png").arg(base_name));
 
-    if (QFileInfo::exists(thumbCandidate)) {
-      thumbnail = thumbCandidate;
+    if (QFileInfo::exists(thumb_candidate)) {
+      thumbnail = thumb_candidate;
     } else {
       thumbnail = "";
     }

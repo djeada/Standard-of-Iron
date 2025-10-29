@@ -64,14 +64,14 @@ public:
     v.palette = makeHumanoidPalette(team_tint, seed);
   }
 
-  void customizePose(const DrawContext &ctx, const AnimationInputs &anim,
+  void customizePose(const DrawContext &, const AnimationInputs &anim,
                      uint32_t seed, HumanoidPose &pose) const override {
     using HP = HumanProportions;
 
     float const arm_height_jitter = (hash_01(seed ^ 0xABCDU) - 0.5F) * 0.03F;
     float const arm_asymmetry = (hash_01(seed ^ 0xDEF0U) - 0.5F) * 0.04F;
 
-    float const bowX = 0.0F;
+    float const bow_x = 0.0F;
 
     if (anim.isInHoldMode || anim.isExitingHold) {
 
@@ -114,11 +114,11 @@ public:
       pose.neck_base.setZ(pose.neck_base.z() + forward_lean * 0.8F);
       pose.headPos.setZ(pose.headPos.z() + forward_lean * 0.7F);
 
-      QVector3D const hold_hand_l(bowX - 0.15F, pose.shoulderL.y() + 0.30F,
+      QVector3D const hold_hand_l(bow_x - 0.15F, pose.shoulderL.y() + 0.30F,
                                   0.55F);
-      QVector3D const hold_hand_r(bowX + 0.12F, pose.shoulderR.y() + 0.15F,
+      QVector3D const hold_hand_r(bow_x + 0.12F, pose.shoulderR.y() + 0.15F,
                                   0.10F);
-      QVector3D const normal_hand_l(bowX - 0.05F + arm_asymmetry,
+      QVector3D const normal_hand_l(bow_x - 0.05F + arm_asymmetry,
                                     HP::SHOULDER_Y + 0.05F + arm_height_jitter,
                                     0.55F);
       QVector3D const normal_hand_r(
@@ -128,7 +128,7 @@ public:
       pose.handL = normal_hand_l * (1.0F - t) + hold_hand_l * t;
       pose.hand_r = normal_hand_r * (1.0F - t) + hold_hand_r * t;
     } else {
-      pose.handL = QVector3D(bowX - 0.05F + arm_asymmetry,
+      pose.handL = QVector3D(bow_x - 0.05F + arm_asymmetry,
                              HP::SHOULDER_Y + 0.05F + arm_height_jitter, 0.55F);
       pose.hand_r =
           QVector3D(0.15F - arm_asymmetry * 0.5F,
@@ -175,14 +175,14 @@ public:
           float t = attack_phase / 0.20F;
           t = t * t;
           pose.hand_r = aim_pos * (1.0F - t) + draw_pos * t;
-          pose.handL = QVector3D(bowX - 0.05F, HP::SHOULDER_Y + 0.05F, 0.55F);
+          pose.handL = QVector3D(bow_x - 0.05F, HP::SHOULDER_Y + 0.05F, 0.55F);
 
           float const shoulder_twist = t * 0.08F;
           pose.shoulderR.setY(pose.shoulderR.y() + shoulder_twist);
           pose.shoulderL.setY(pose.shoulderL.y() - shoulder_twist * 0.5F);
         } else if (attack_phase < 0.50F) {
           pose.hand_r = draw_pos;
-          pose.handL = QVector3D(bowX - 0.05F, HP::SHOULDER_Y + 0.05F, 0.55F);
+          pose.handL = QVector3D(bow_x - 0.05F, HP::SHOULDER_Y + 0.05F, 0.55F);
 
           float const shoulder_twist = 0.08F;
           pose.shoulderR.setY(pose.shoulderR.y() + shoulder_twist);
@@ -191,7 +191,7 @@ public:
           float t = (attack_phase - 0.50F) / 0.08F;
           t = t * t * t;
           pose.hand_r = draw_pos * (1.0F - t) + release_pos * t;
-          pose.handL = QVector3D(bowX - 0.05F, HP::SHOULDER_Y + 0.05F, 0.55F);
+          pose.handL = QVector3D(bow_x - 0.05F, HP::SHOULDER_Y + 0.05F, 0.55F);
 
           float const shoulder_twist = 0.08F * (1.0F - t * 0.6F);
           pose.shoulderR.setY(pose.shoulderR.y() + shoulder_twist);
@@ -202,7 +202,7 @@ public:
           float t = (attack_phase - 0.58F) / 0.42F;
           t = 1.0F - (1.0F - t) * (1.0F - t);
           pose.hand_r = release_pos * (1.0F - t) + aim_pos * t;
-          pose.handL = QVector3D(bowX - 0.05F, HP::SHOULDER_Y + 0.05F, 0.55F);
+          pose.handL = QVector3D(bow_x - 0.05F, HP::SHOULDER_Y + 0.05F, 0.55F);
 
           float const shoulder_twist = 0.08F * 0.4F * (1.0F - t);
           pose.shoulderR.setY(pose.shoulderR.y() + shoulder_twist);
@@ -358,8 +358,8 @@ public:
 
   void draw_armorOverlay(const DrawContext &ctx, const HumanoidVariant &v,
                          const HumanoidPose &pose, float y_top_cover,
-                         float torso_r, float shoulder_half_span,
-                         float upper_arm_r, const QVector3D &right_axis,
+                         float torso_r, float, float upper_arm_r,
+                         const QVector3D &right_axis,
                          ISubmitter &out) const override {
     using HP = HumanProportions;
 
@@ -379,35 +379,35 @@ public:
     QVector3D const mail_top(0, y_top_cover + 0.01F, 0);
     QVector3D const mail_mid(0, (y_top_cover + waist_y) * 0.5F, 0);
     QVector3D const mail_bot(0, waist_y + 0.08F, 0);
-    float const rTop = torso_r * 1.10F;
-    float const rMid = torso_r * 1.08F;
+    float const r_top = torso_r * 1.10F;
+    float const r_mid = torso_r * 1.08F;
 
     out.mesh(getUnitCylinder(),
-             cylinderBetween(ctx.model, mail_top, mail_mid, rTop), mail_color,
+             cylinderBetween(ctx.model, mail_top, mail_mid, r_top), mail_color,
              nullptr, 1.0F);
 
     out.mesh(getUnitCylinder(),
-             cylinderBetween(ctx.model, mail_mid, mail_bot, rMid),
+             cylinderBetween(ctx.model, mail_mid, mail_bot, r_mid),
              mail_color * 0.95F, nullptr, 1.0F);
 
     for (int i = 0; i < 3; ++i) {
       float const y = mail_top.y() - (i * 0.12F);
-      ring(QVector3D(0, y, 0), rTop * (1.01F + i * 0.005F), 0.012F,
+      ring(QVector3D(0, y, 0), r_top * (1.01F + i * 0.005F), 0.012F,
            leather_trim);
     }
 
     auto draw_pauldron = [&](const QVector3D &shoulder,
                              const QVector3D &outward) {
       for (int i = 0; i < 3; ++i) {
-        float const segY = shoulder.y() + 0.02F - i * 0.035F;
-        float const segR = upper_arm_r * (2.2F - i * 0.15F);
-        QVector3D seg_top(shoulder.x(), segY + 0.025F, shoulder.z());
-        QVector3D seg_bot(shoulder.x(), segY - 0.010F, shoulder.z());
+        float const seg_y = shoulder.y() + 0.02F - i * 0.035F;
+        float const seg_r = upper_arm_r * (2.2F - i * 0.15F);
+        QVector3D seg_top(shoulder.x(), seg_y + 0.025F, shoulder.z());
+        QVector3D seg_bot(shoulder.x(), seg_y - 0.010F, shoulder.z());
 
         seg_top += outward * 0.02F;
         seg_bot += outward * 0.02F;
 
-        out.mesh(getUnitSphere(), sphereAt(ctx.model, seg_top, segR),
+        out.mesh(getUnitSphere(), sphereAt(ctx.model, seg_top, seg_r),
                  mail_color * (1.0F - i * 0.05F), nullptr, 1.0F);
       }
     };
@@ -485,8 +485,8 @@ public:
   }
 
   void drawShoulderDecorations(const DrawContext &ctx, const HumanoidVariant &v,
-                               const HumanoidPose &pose, float y_top_cover,
-                               float y_neck, const QVector3D &right_axis,
+                               const HumanoidPose &pose, float, float y_neck,
+                               const QVector3D &,
                                ISubmitter &out) const override {
     using HP = HumanProportions;
 
@@ -526,27 +526,27 @@ private:
 
     QVector3D const spine_mid = (pose.shoulderL + pose.shoulderR) * 0.5F;
     QVector3D const quiver_offset(-0.08F, 0.10F, -0.25F);
-    QVector3D const qTop = spine_mid + quiver_offset;
-    QVector3D const q_base = qTop + QVector3D(-0.02F, -0.30F, 0.03F);
+    QVector3D const q_top = spine_mid + quiver_offset;
+    QVector3D const q_base = q_top + QVector3D(-0.02F, -0.30F, 0.03F);
 
     float const quiver_r = HP::HEAD_RADIUS * 0.45F;
     out.mesh(getUnitCylinder(),
-             cylinderBetween(ctx.model, q_base, qTop, quiver_r),
+             cylinderBetween(ctx.model, q_base, q_top, quiver_r),
              v.palette.leather, nullptr, 1.0F);
 
     float const j = (hash_01(seed) - 0.5F) * 0.04F;
     float const k =
         (hash_01(seed ^ HashXorShift::k_golden_ratio) - 0.5F) * 0.04F;
 
-    QVector3D const a1 = qTop + QVector3D(0.00F + j, 0.08F, 0.00F + k);
-    out.mesh(getUnitCylinder(), cylinderBetween(ctx.model, qTop, a1, 0.010F),
+    QVector3D const a1 = q_top + QVector3D(0.00F + j, 0.08F, 0.00F + k);
+    out.mesh(getUnitCylinder(), cylinderBetween(ctx.model, q_top, a1, 0.010F),
              v.palette.wood, nullptr, 1.0F);
     out.mesh(getUnitCone(),
              coneFromTo(ctx.model, a1, a1 + QVector3D(0, 0.05F, 0), 0.025F),
              extras.fletch, nullptr, 1.0F);
 
-    QVector3D const a2 = qTop + QVector3D(0.02F - j, 0.07F, 0.02F - k);
-    out.mesh(getUnitCylinder(), cylinderBetween(ctx.model, qTop, a2, 0.010F),
+    QVector3D const a2 = q_top + QVector3D(0.02F - j, 0.07F, 0.02F - k);
+    out.mesh(getUnitCylinder(), cylinderBetween(ctx.model, q_top, a2, 0.010F),
              v.palette.wood, nullptr, 1.0F);
     out.mesh(getUnitCone(),
              coneFromTo(ctx.model, a2, a2 + QVector3D(0, 0.05F, 0), 0.025F),

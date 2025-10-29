@@ -12,7 +12,7 @@ namespace Render::GL {
 
 namespace {
 
-constexpr float kPi = std::numbers::pi_v<float>;
+constexpr float k_pi = std::numbers::pi_v<float>;
 constexpr float k_two_pi = 6.28318530718F;
 constexpr float k_half_scalar = 0.5F;
 constexpr float k_unit_radius = 1.0F;
@@ -104,7 +104,7 @@ auto createUnitSphereMesh(int latSegments, int lonSegments) -> Mesh * {
 
   for (int y = 0; y <= latSegments; ++y) {
     float vy = float(y) / float(latSegments);
-    float const phi = vy * kPi;
+    float const phi = vy * k_pi;
     float py = r * std::cos(phi);
     float const pr = r * std::sin(phi);
 
@@ -412,22 +412,22 @@ auto createUnitTorsoMesh(int radialSegments, int heightSegments) -> Mesh * {
 
   auto theta_scale = [&](float t, float ang) {
     float s = 0.0F;
-    float const sinA = std::sin(ang);
-    float const cosA = std::cos(ang);
-    float const cos2 = cosA * cosA;
+    float const sin_a = std::sin(ang);
+    float const cos_a = std::cos(ang);
+    float const cos2 = cos_a * cos_a;
     s += k_theta_sin_pos_amp *
          smooth_band(t, k_theta_sin_pos_start, k_theta_sin_pos_end) *
-         std::max(0.0F, sinA);
+         std::max(0.0F, sin_a);
     s += k_theta_sin_neg_amp *
          smooth_band(t, k_theta_sin_neg_start, k_theta_sin_neg_end) *
-         std::max(0.0F, -sinA);
+         std::max(0.0F, -sin_a);
     s += k_theta_cos_sq_amp *
          smooth_band(t, k_theta_cos_sq_start, k_theta_cos_sq_end) * cos2;
     s += k_theta_cos_sq_neg_amp *
          smooth_band(t, k_theta_cos_sq_neg_start, k_theta_cos_sq_neg_end) *
          cos2;
     s += k_theta_cos_amp * smooth_band(t, k_theta_cos_start, k_theta_cos_end) *
-         cosA;
+         cos_a;
     return 1.0F + s;
   };
 
@@ -439,13 +439,13 @@ auto createUnitTorsoMesh(int radialSegments, int heightSegments) -> Mesh * {
   auto sample_pos = [&](float t, float ang) -> QVector3D {
     float const ts = invert_profile ? (1.0F - t) : t;
 
-    Axes const A = sample_axes(ts);
+    Axes const a = sample_axes(ts);
     float const twist = twist_at(ts);
     float const th = ang + twist;
 
-    float const R = ellipse_radius(A.ax, A.az, th);
-    float const S = theta_scale(ts, th);
-    float const r = R * S;
+    float const radius = ellipse_radius(a.ax, a.az, th);
+    float const s = theta_scale(ts, th);
+    float const r = radius * s;
 
     float px = r * std::cos(th);
     float pz = r * std::sin(th);
@@ -517,16 +517,16 @@ auto createUnitTorsoMesh(int radialSegments, int heightSegments) -> Mesh * {
   {
 
     int base_top = (int)v.size();
-    float const tTop = 1.0F;
-    float const t_top_s = invert_profile ? (1.0F - tTop) : tTop;
-    QVector3D const cTop(x_offset_at(t_top_s), half_h, z_offset_at(t_top_s));
-    v.push_back({{cTop.x(), cTop.y(), cTop.z()},
+    float const t_top = 1.0F;
+    float const t_top_s = invert_profile ? (1.0F - t_top) : t_top;
+    QVector3D const c_top(x_offset_at(t_top_s), half_h, z_offset_at(t_top_s));
+    v.push_back({{c_top.x(), c_top.y(), c_top.z()},
                  {0, 1, 0},
                  {k_uv_center, k_uv_center}});
     for (int i = 0; i <= radialSegments; ++i) {
       float const u = float(i) / float(radialSegments);
       float const ang = u * k_two_pi;
-      QVector3D const p = sample_pos(tTop, ang);
+      QVector3D const p = sample_pos(t_top, ang);
       v.push_back({{p.x(), p.y(), p.z()},
                    {0, 1, 0},
                    {k_uv_center + k_uv_scale * std::cos(ang),
@@ -541,16 +541,16 @@ auto createUnitTorsoMesh(int radialSegments, int heightSegments) -> Mesh * {
   {
 
     int base_bot = (int)v.size();
-    float const tBot = 0.0F;
-    float const t_bot_s = invert_profile ? (1.0F - tBot) : tBot;
-    QVector3D const cBot(x_offset_at(t_bot_s), -half_h, z_offset_at(t_bot_s));
-    v.push_back({{cBot.x(), cBot.y(), cBot.z()},
+    float const t_bot = 0.0F;
+    float const t_bot_s = invert_profile ? (1.0F - t_bot) : t_bot;
+    QVector3D const c_bot(x_offset_at(t_bot_s), -half_h, z_offset_at(t_bot_s));
+    v.push_back({{c_bot.x(), c_bot.y(), c_bot.z()},
                  {0, -1, 0},
                  {k_uv_center, k_uv_center}});
     for (int i = 0; i <= radialSegments; ++i) {
       float const u = float(i) / float(radialSegments);
       float const ang = u * k_two_pi;
-      QVector3D const p = sample_pos(tBot, ang);
+      QVector3D const p = sample_pos(t_bot, ang);
       v.push_back({{p.x(), p.y(), p.z()},
                    {0, -1, 0},
                    {k_uv_center + k_uv_scale * std::cos(ang),

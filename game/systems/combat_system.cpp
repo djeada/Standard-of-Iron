@@ -65,12 +65,12 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
           attacker_atk->meleeLockTargetId = 0;
         } else {
 
-          auto *attT = attacker_transform;
-          auto *tgtT =
+          auto *att_t = attacker_transform;
+          auto *tgt_t =
               lock_target->getComponent<Engine::Core::TransformComponent>();
-          if ((attT != nullptr) && (tgtT != nullptr)) {
-            float const dx = tgtT->position.x - attT->position.x;
-            float const dz = tgtT->position.z - attT->position.z;
+          if ((att_t != nullptr) && (tgt_t != nullptr)) {
+            float const dx = tgt_t->position.x - att_t->position.x;
+            float const dz = tgt_t->position.z - att_t->position.z;
             float const dist = std::sqrt(dx * dx + dz * dz);
 
             const float ideal_melee_distance = 0.6F;
@@ -83,8 +83,8 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
               if (dist > 0.001F) {
                 QVector3D const direction(dx / dist, 0.0F, dz / dist);
 
-                attT->position.x += direction.x() * pull_amount;
-                attT->position.z += direction.z() * pull_amount;
+                att_t->position.x += direction.x() * pull_amount;
+                att_t->position.z += direction.z() * pull_amount;
               }
             }
           }
@@ -195,18 +195,18 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
               }
             }
 
-            if (auto *attT =
+            if (auto *att_t =
                     attacker
                         ->getComponent<Engine::Core::TransformComponent>()) {
-              if (auto *tgtT =
+              if (auto *tgt_t =
                       target
                           ->getComponent<Engine::Core::TransformComponent>()) {
-                float const dx = tgtT->position.x - attT->position.x;
-                float const dz = tgtT->position.z - attT->position.z;
+                float const dx = tgt_t->position.x - att_t->position.x;
+                float const dz = tgt_t->position.z - att_t->position.z;
                 float const yaw =
                     std::atan2(dx, dz) * 180.0F / std::numbers::pi_v<float>;
-                attT->desiredYaw = yaw;
-                attT->hasDesiredYaw = true;
+                att_t->desiredYaw = yaw;
+                att_t->hasDesiredYaw = true;
               }
             }
           } else if (attack_target->shouldChase) {
@@ -238,13 +238,13 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
                 movement->vx = 0.0F;
                 movement->vz = 0.0F;
                 movement->path.clear();
-                auto *attacker_transformComponent =
+                auto *attacker_transform_component =
                     attacker->getComponent<Engine::Core::TransformComponent>();
-                if (attacker_transformComponent != nullptr) {
-                  movement->target_x = attacker_transformComponent->position.x;
-                  movement->target_y = attacker_transformComponent->position.z;
-                  movement->goalX = attacker_transformComponent->position.x;
-                  movement->goalY = attacker_transformComponent->position.z;
+                if (attacker_transform_component != nullptr) {
+                  movement->target_x = attacker_transform_component->position.x;
+                  movement->target_y = attacker_transform_component->position.z;
+                  movement->goalX = attacker_transform_component->position.x;
+                  movement->goalY = attacker_transform_component->position.z;
                 }
               }
               best_target = target;
@@ -252,13 +252,13 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
 
               auto *target_transform =
                   target->getComponent<Engine::Core::TransformComponent>();
-              auto *attacker_transformComponent =
+              auto *attacker_transform_component =
                   attacker->getComponent<Engine::Core::TransformComponent>();
               if ((target_transform != nullptr) &&
-                  (attacker_transformComponent != nullptr)) {
+                  (attacker_transform_component != nullptr)) {
                 QVector3D const attacker_pos(
-                    attacker_transformComponent->position.x, 0.0F,
-                    attacker_transformComponent->position.z);
+                    attacker_transform_component->position.x, 0.0F,
+                    attacker_transform_component->position.z);
                 QVector3D const target_pos(target_transform->position.x, 0.0F,
                                            target_transform->position.z);
                 QVector3D desired_pos = target_pos;
@@ -311,13 +311,15 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
                     movement->vx = 0.0F;
                     movement->vz = 0.0F;
                     movement->path.clear();
-                    if (attacker_transformComponent != nullptr) {
+                    if (attacker_transform_component != nullptr) {
                       movement->target_x =
-                          attacker_transformComponent->position.x;
+                          attacker_transform_component->position.x;
                       movement->target_y =
-                          attacker_transformComponent->position.z;
-                      movement->goalX = attacker_transformComponent->position.x;
-                      movement->goalY = attacker_transformComponent->position.z;
+                          attacker_transform_component->position.z;
+                      movement->goalX =
+                          attacker_transform_component->position.x;
+                      movement->goalY =
+                          attacker_transform_component->position.z;
                     }
                   } else {
                     QVector3D planned_target(movement->target_x, 0.0F,
@@ -444,43 +446,44 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
         }
       }
 
-      if (auto *attT =
+      if (auto *att_t =
               attacker->getComponent<Engine::Core::TransformComponent>()) {
-        if (auto *tgtT =
+        if (auto *tgt_t =
                 best_target->getComponent<Engine::Core::TransformComponent>()) {
-          float const dx = tgtT->position.x - attT->position.x;
-          float const dz = tgtT->position.z - attT->position.z;
+          float const dx = tgt_t->position.x - att_t->position.x;
+          float const dz = tgt_t->position.z - att_t->position.z;
           float const yaw =
               std::atan2(dx, dz) * 180.0F / std::numbers::pi_v<float>;
-          attT->desiredYaw = yaw;
-          attT->hasDesiredYaw = true;
+          att_t->desiredYaw = yaw;
+          att_t->hasDesiredYaw = true;
         }
       }
 
       if (arrow_sys != nullptr) {
-        auto *attT = attacker->getComponent<Engine::Core::TransformComponent>();
-        auto *tgtT =
+        auto *att_t =
+            attacker->getComponent<Engine::Core::TransformComponent>();
+        auto *tgt_t =
             best_target->getComponent<Engine::Core::TransformComponent>();
-        auto *attU = attacker->getComponent<Engine::Core::UnitComponent>();
+        auto *att_u = attacker->getComponent<Engine::Core::UnitComponent>();
 
         if ((attacker_atk == nullptr) ||
             attacker_atk->currentMode !=
                 Engine::Core::AttackComponent::CombatMode::Melee) {
-          QVector3D const aPos(attT->position.x, attT->position.y,
-                               attT->position.z);
-          QVector3D const tPos(tgtT->position.x, tgtT->position.y,
-                               tgtT->position.z);
-          QVector3D const dir = (tPos - aPos).normalized();
+          QVector3D const a_pos(att_t->position.x, att_t->position.y,
+                                att_t->position.z);
+          QVector3D const t_pos(tgt_t->position.x, tgt_t->position.y,
+                                tgt_t->position.z);
+          QVector3D const dir = (t_pos - a_pos).normalized();
           QVector3D const color =
-              (attU != nullptr)
-                  ? Game::Visuals::team_colorForOwner(attU->owner_id)
+              (att_u != nullptr)
+                  ? Game::Visuals::team_colorForOwner(att_u->owner_id)
                   : QVector3D(0.8F, 0.9F, 1.0F);
 
           int arrow_count = 1;
-          if (attU != nullptr) {
+          if (att_u != nullptr) {
             int const troop_size =
                 Game::Units::TroopConfig::instance().getIndividualsPerUnit(
-                    attU->spawn_type);
+                    att_u->spawn_type);
             int const max_arrows = std::max(1, troop_size / 3);
 
             static thread_local std::mt19937 gen(std::random_device{}());
@@ -505,10 +508,10 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
                                          up_vector * vertical_offset +
                                          dir * depth_offset;
 
-            QVector3D const start =
-                aPos + QVector3D(0.0F, 0.6F, 0.0F) + dir * 0.35F + start_offset;
+            QVector3D const start = a_pos + QVector3D(0.0F, 0.6F, 0.0F) +
+                                    dir * 0.35F + start_offset;
             QVector3D const end =
-                tPos + QVector3D(0.5F, 0.5F, 0.0F) + end_offset;
+                t_pos + QVector3D(0.5F, 0.5F, 0.0F) + end_offset;
 
             arrow_sys->spawnArrow(start, end, color, 14.0F);
           }
@@ -529,12 +532,13 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
           target_atk->meleeLockTargetId = attacker->getId();
         }
 
-        auto *attT = attacker->getComponent<Engine::Core::TransformComponent>();
-        auto *tgtT =
+        auto *att_t =
+            attacker->getComponent<Engine::Core::TransformComponent>();
+        auto *tgt_t =
             best_target->getComponent<Engine::Core::TransformComponent>();
-        if ((attT != nullptr) && (tgtT != nullptr)) {
-          float const dx = tgtT->position.x - attT->position.x;
-          float const dz = tgtT->position.z - attT->position.z;
+        if ((att_t != nullptr) && (tgt_t != nullptr)) {
+          float const dx = tgt_t->position.x - att_t->position.x;
+          float const dz = tgt_t->position.z - att_t->position.z;
           float const dist = std::sqrt(dx * dx + dz * dz);
 
           const float ideal_melee_distance = 0.6F;
@@ -546,11 +550,11 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
             if (dist > 0.001F) {
               QVector3D const direction(dx / dist, 0.0F, dz / dist);
 
-              attT->position.x += direction.x() * move_amount;
-              attT->position.z += direction.z() * move_amount;
+              att_t->position.x += direction.x() * move_amount;
+              att_t->position.z += direction.z() * move_amount;
 
-              tgtT->position.x -= direction.x() * move_amount;
-              tgtT->position.z -= direction.z() * move_amount;
+              tgt_t->position.x -= direction.x() * move_amount;
+              tgt_t->position.z -= direction.z() * move_amount;
             }
           }
         }
@@ -888,7 +892,7 @@ auto CombatSystem::isUnitIdle(Engine::Core::Entity *unit) -> bool {
   }
 
   auto *patrol = unit->getComponent<Engine::Core::PatrolComponent>();
-  return !((patrol != nullptr) && patrol->patrolling);
+  return (patrol == nullptr) || !patrol->patrolling;
 }
 
 auto CombatSystem::findNearestEnemy(Engine::Core::Entity *unit,

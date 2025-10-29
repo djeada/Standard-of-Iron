@@ -242,9 +242,9 @@ GameEngine::GameEngine(QObject *parent)
                 auto *picking = m_pickingService.get();
                 if ((cam != nullptr) && (picking != nullptr)) {
                   Engine::Core::EntityID const target_id =
-                      picking->pickUnitFirst(0.0F, 0.0F, *m_world, *cam,
-                                             m_viewport.width,
-                                             m_viewport.height, 0);
+                      Game::Systems::PickingService::pickUnitFirst(
+                          0.0F, 0.0F, *m_world, *cam, m_viewport.width,
+                          m_viewport.height, 0);
                   if (target_id != 0) {
                     App::Controllers::ActionVFX::spawnAttackArrow(m_world.get(),
                                                                   target_id);
@@ -300,13 +300,13 @@ void GameEngine::cleanupOpenGLResources() {
   qInfo() << "Cleaning up OpenGL resources...";
 
   QOpenGLContext *context = QOpenGLContext::currentContext();
-  const bool hasValidContext = (context != nullptr);
+  const bool has_valid_context = (context != nullptr);
 
-  if (!hasValidContext) {
+  if (!has_valid_context) {
     qInfo() << "No valid OpenGL context, skipping OpenGL cleanup";
   }
 
-  if (m_renderer && hasValidContext) {
+  if (m_renderer && has_valid_context) {
     m_renderer->shutdown();
     qInfo() << "Renderer shut down";
   }

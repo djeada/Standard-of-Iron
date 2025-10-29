@@ -12,9 +12,9 @@ public:
   AIReasoner(const AIReasoner &) = delete;
   auto operator=(const AIReasoner &) -> AIReasoner & = delete;
 
-  static void updateContext(const AISnapshot &snapshot, AIContext &context);
+  static void updateContext(const AISnapshot &snapshot, AIContext &ctx);
 
-  static void updateStateMachine(AIContext &context, float deltaTime);
+  static void updateStateMachine(AIContext &ctx, float deltaTime);
 };
 
 } // namespace Game::Systems::AI
