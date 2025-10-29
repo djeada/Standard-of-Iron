@@ -295,6 +295,39 @@ GameEngine::~GameEngine() {
   qInfo() << "AudioSystem shut down";
 }
 
+void GameEngine::cleanupOpenGLResources() {
+  qInfo() << "Cleaning up OpenGL resources...";
+  
+  // Shutdown renderer and all OpenGL-dependent resources
+  // Must be called while OpenGL context is still valid
+  if (m_renderer) {
+    m_renderer->shutdown();
+    qInfo() << "Renderer shut down";
+  }
+  
+  // Clear render passes that reference renderer resources
+  m_passes.clear();
+  
+  // Reset all renderer-dependent unique_ptrs
+  m_ground.reset();
+  m_terrain.reset();
+  m_biome.reset();
+  m_river.reset();
+  m_riverbank.reset();
+  m_bridge.reset();
+  m_fog.reset();
+  m_stone.reset();
+  m_plant.reset();
+  m_pine.reset();
+  m_firecamp.reset();
+  
+  // Reset renderer and resources
+  m_renderer.reset();
+  m_resources.reset();
+  
+  qInfo() << "OpenGL resources cleaned up";
+}
+
 void GameEngine::onMapClicked(qreal sx, qreal sy) {
   if (m_window == nullptr) {
     return;
