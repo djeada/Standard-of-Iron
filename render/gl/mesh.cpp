@@ -1,7 +1,7 @@
 #include "mesh.h"
 #include "gl/buffer.h"
 #include "render_constants.h"
-#include "opengl_headers.h"
+#include <GL/gl.h>
 #include <QOpenGLFunctions_3_3_Core>
 #include <memory>
 #include <vector>

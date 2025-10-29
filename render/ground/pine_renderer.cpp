@@ -3,6 +3,7 @@
 #include "../../game/systems/building_collision_registry.h"
 #include "../gl/buffer.h"
 #include "../scene_renderer.h"
+#include "gl/render_constants.h"
 #include "gl/resources.h"
 #include "ground/pine_gpu.h"
 #include "ground_utils.h"
@@ -20,12 +21,12 @@ using std::uint32_t;
 using namespace Render::Ground;
 
 inline auto valueNoise(float x, float z, uint32_t salt = 0U) -> float {
-  int x0 = int(std::floor(x));
-  int z0 = int(std::floor(z));
-  int x1 = x0 + 1;
-  int z1 = z0 + 1;
-  float tx = x - float(x0);
-  float tz = z - float(z0);
+  int const x0 = int(std::floor(x));
+  int const z0 = int(std::floor(z));
+  int const x1 = x0 + 1;
+  int const z1 = z0 + 1;
+  float const tx = x - float(x0);
+  float const tz = z - float(z0);
   float const n00 = hash_to_01(hash_coords(x0, z0, salt));
   float const n10 = hash_to_01(hash_coords(x1, z0, salt));
   float const n01 = hash_to_01(hash_coords(x0, z1, salt));
