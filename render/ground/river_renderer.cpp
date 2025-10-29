@@ -82,12 +82,12 @@ void RiverRenderer::buildMeshes() {
       constexpr float k_edge_noise_freq_2 = 5.0F;
       constexpr float k_edge_noise_freq_3 = 10.0F;
 
-      float const edge_noise1 =
-          noise(center_pos.x() * k_edge_noise_freq_1, center_pos.z() * k_edge_noise_freq_1);
-      float const edge_noise2 =
-          noise(center_pos.x() * k_edge_noise_freq_2, center_pos.z() * k_edge_noise_freq_2);
-      float const edge_noise3 =
-          noise(center_pos.x() * k_edge_noise_freq_3, center_pos.z() * k_edge_noise_freq_3);
+      float const edge_noise1 = noise(center_pos.x() * k_edge_noise_freq_1,
+                                      center_pos.z() * k_edge_noise_freq_1);
+      float const edge_noise2 = noise(center_pos.x() * k_edge_noise_freq_2,
+                                      center_pos.z() * k_edge_noise_freq_2);
+      float const edge_noise3 = noise(center_pos.x() * k_edge_noise_freq_3,
+                                      center_pos.z() * k_edge_noise_freq_3);
 
       float combined_noise =
           edge_noise1 * 0.5F + edge_noise2 * 0.3F + edge_noise3 * 0.2F;

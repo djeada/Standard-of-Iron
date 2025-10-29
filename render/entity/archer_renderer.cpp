@@ -462,7 +462,8 @@ public:
     constexpr int k_shoulder_pteruge_count = 8;
     constexpr float k_shoulder_pteruge_divisor = 8.0F;
     for (int i = 0; i < k_shoulder_pteruge_count; ++i) {
-      float const angle = (i / k_shoulder_pteruge_divisor) * 2.0F * std::numbers::pi_v<float>;
+      float const angle =
+          (i / k_shoulder_pteruge_divisor) * 2.0F * std::numbers::pi_v<float>;
       draw_pteruge(angle, shoulder_pteruge_y, 0.14F);
     }
 
@@ -470,7 +471,8 @@ public:
     constexpr int k_waist_pteruge_count = 10;
     constexpr float k_waist_pteruge_divisor = 10.0F;
     for (int i = 0; i < k_waist_pteruge_count; ++i) {
-      float const angle = (i / k_waist_pteruge_divisor) * 2.0F * std::numbers::pi_v<float>;
+      float const angle =
+          (i / k_waist_pteruge_divisor) * 2.0F * std::numbers::pi_v<float>;
       draw_pteruge(angle, waist_pteruge_y, 0.18F);
     }
 

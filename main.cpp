@@ -283,7 +283,7 @@ auto main(int argc, char *argv[]) -> int {
   engine = std::make_unique<QQmlApplicationEngine>();
   qInfo() << "Adding context properties...";
   engine->rootContext()->setContextProperty("language_manager",
-                                           language_manager.get());
+                                            language_manager.get());
   engine->rootContext()->setContextProperty("game", game_engine.get());
   qInfo() << "Adding import path...";
   engine->addImportPath("qrc:/StandardOfIron/ui/qml");
@@ -370,16 +370,16 @@ auto main(int argc, char *argv[]) -> int {
 
   // Explicitly destroy in correct order to prevent segfault
   qInfo() << "Shutting down...";
-  
+
   // Destroy QML engine first (destroys OpenGL context)
   engine.reset();
   qInfo() << "QML engine destroyed";
-  
+
   // Then destroy game engine
   // OpenGL cleanup in destructors will be skipped if no valid context
   game_engine.reset();
   qInfo() << "GameEngine destroyed";
-  
+
   // Finally destroy language manager
   language_manager.reset();
   qInfo() << "LanguageManager destroyed";

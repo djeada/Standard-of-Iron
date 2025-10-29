@@ -18,12 +18,12 @@
 #include "ground/stone_gpu.h"
 #include "mesh.h"
 #include "render_constants.h"
-#include <QOpenGLContext>
 #include "shader.h"
 #include "state_scopes.h"
 #include "texture.h"
 #include <GL/gl.h>
 #include <QDebug>
+#include <QOpenGLContext>
 #include <cmath>
 #include <cstddef>
 #include <memory>
@@ -47,11 +47,9 @@ const QVector3D k_grid_line_color(0.22F, 0.25F, 0.22F);
 Backend::Backend() = default;
 
 Backend::~Backend() {
-  // Manually destroy pipelines before base class destructor runs
-  // This prevents access to base class OpenGL functions after context is destroyed
+
   if (QOpenGLContext::currentContext() == nullptr) {
-    // No valid context - manually release the unique_ptrs without calling their destructors
-    // This is safe because the OS will reclaim all OpenGL resources when process exits
+
     (void)m_cylinderPipeline.release();
     (void)m_vegetationPipeline.release();
     (void)m_terrainPipeline.release();
@@ -59,7 +57,7 @@ Backend::~Backend() {
     (void)m_waterPipeline.release();
     (void)m_effectsPipeline.release();
   } else {
-    // Valid context - normal cleanup
+
     m_cylinderPipeline.reset();
     m_vegetationPipeline.reset();
     m_terrainPipeline.reset();
