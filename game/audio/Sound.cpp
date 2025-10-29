@@ -10,31 +10,31 @@
 #include <qstringview.h>
 #include <string>
 
-Sound::Sound(const std::string &filePath, MiniaudioBackend *backend)
-    : QObject(nullptr), m_filepath(filePath), m_backend(backend),
-      m_loaded(false), m_volume(1.0F) {
+Sound::Sound(const std::string &file_path, MiniaudioBackend *backend)
+    : QObject(nullptr), m_file_path(file_path), m_backend(backend),
+      m_loaded(false), m_volume(Sound::DEFAULT_VOLUME) {
 
   QByteArray const hash = QCryptographicHash::hash(
-      QByteArray::fromStdString(filePath), QCryptographicHash::Md5);
-  m_trackId = "sound_" + QString(hash.toHex());
+      QByteArray::fromStdString(file_path), QCryptographicHash::Md5);
+  m_track_id = "sound_" + QString(hash.toHex());
 
-  QFileInfo const fi(QString::fromStdString(m_filepath));
-  if (!fi.exists()) {
-    qWarning() << "Sound: File does not exist:" << fi.absoluteFilePath();
+  QFileInfo const file_info(QString::fromStdString(m_file_path));
+  if (!file_info.exists()) {
+    qWarning() << "Sound: File does not exist:" << file_info.absoluteFilePath();
     return;
   }
 
   if (m_backend != nullptr) {
-    m_loaded = m_backend->predecode(m_trackId, fi.absoluteFilePath());
+    m_loaded = m_backend->predecode(m_track_id, file_info.absoluteFilePath());
     if (m_loaded) {
-      qDebug() << "Sound: Loaded" << fi.absoluteFilePath();
+      qDebug() << "Sound: Loaded" << file_info.absoluteFilePath();
     }
   }
 }
 
 Sound::~Sound() = default;
 
-void Sound::setBackend(MiniaudioBackend *backend) {
+void Sound::set_backend(MiniaudioBackend *backend) {
   if (m_backend == backend) {
     return;
   }
@@ -42,14 +42,14 @@ void Sound::setBackend(MiniaudioBackend *backend) {
   m_backend = backend;
 
   if ((m_backend != nullptr) && !m_loaded) {
-    QFileInfo const fi(QString::fromStdString(m_filepath));
-    if (fi.exists()) {
-      m_loaded = m_backend->predecode(m_trackId, fi.absoluteFilePath());
+    QFileInfo const file_info(QString::fromStdString(m_file_path));
+    if (file_info.exists()) {
+      m_loaded = m_backend->predecode(m_track_id, file_info.absoluteFilePath());
     }
   }
 }
 
-auto Sound::isLoaded() const -> bool { return m_loaded.load(); }
+auto Sound::is_loaded() const -> bool { return m_loaded.load(); }
 
 void Sound::play(float volume, bool loop) {
   if ((m_backend == nullptr) || !m_loaded) {
@@ -58,12 +58,12 @@ void Sound::play(float volume, bool loop) {
   }
 
   m_volume = volume;
-  m_backend->playSound(m_trackId, volume, loop);
+  m_backend->play_sound(m_track_id, volume, loop);
 
-  qDebug() << "Sound: Playing" << QString::fromStdString(m_filepath)
+  qDebug() << "Sound: Playing" << QString::fromStdString(m_file_path)
            << "volume:" << volume << "loop:" << loop;
 }
 
 void Sound::stop() {}
 
-void Sound::setVolume(float volume) { m_volume = volume; }
+void Sound::set_volume(float volume) { m_volume = volume; }
