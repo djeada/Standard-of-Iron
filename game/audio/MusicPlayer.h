@@ -13,14 +13,22 @@ namespace Game::Audio {
 class MusicPlayer final : public QObject {
   Q_OBJECT
 public:
+  static constexpr int DEFAULT_MUSIC_CHANNELS = 4;
+  static constexpr int DEFAULT_SAMPLE_RATE = 48000;
+  static constexpr int DEFAULT_OUTPUT_CHANNELS = 2;
+  static constexpr int DEFAULT_FADE_IN_MS = 250;
+  static constexpr int DEFAULT_FADE_OUT_MS = 150;
+  static constexpr int NO_FADE_MS = 0;
+  static constexpr float DEFAULT_VOLUME = 1.0F;
+  
   static auto getInstance() -> MusicPlayer &;
 
-  auto initialize(int musicChannels = 4) -> bool;
+  auto initialize(int musicChannels = DEFAULT_MUSIC_CHANNELS) -> bool;
   void shutdown();
 
   void registerTrack(const std::string &trackId, const std::string &filePath);
 
-  void play(const std::string &trackId, float volume = 1.0F, bool loop = true);
+  void play(const std::string &trackId, float volume = DEFAULT_VOLUME, bool loop = true);
   void stop();
   void pause();
   void resume();
@@ -28,13 +36,13 @@ public:
 
   auto play(const std::string &trackId, float volume, bool loop, int channel,
             int fadeMs) -> int;
-  void stop(int channel, int fadeMs = 150);
+  void stop(int channel, int fadeMs = DEFAULT_FADE_OUT_MS);
   void pause(int channel);
   void resume(int channel);
-  void setVolume(int channel, float volume, int fadeMs = 0);
+  void setVolume(int channel, float volume, int fadeMs = NO_FADE_MS);
 
-  void stopAll(int fadeMs = 150);
-  void setMasterVolume(float volume, int fadeMs = 0);
+  void stopAll(int fadeMs = DEFAULT_FADE_OUT_MS);
+  void setMasterVolume(float volume, int fadeMs = NO_FADE_MS);
 
   auto isPlaying() const -> bool;
   auto isPlaying(int channel) const -> bool;
