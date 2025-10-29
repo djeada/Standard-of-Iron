@@ -164,7 +164,8 @@ void VegetationPipeline::initializeStonePipeline() {
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_stoneIndexBuffer);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(stone_indices), stone_indices,
                GL_STATIC_DRAW);
-  m_stoneIndexCount = 36;
+  constexpr int k_stone_index_count = 36;
+  m_stoneIndexCount = k_stone_index_count;
 
   glEnableVertexAttribArray(Position);
   glVertexAttribPointer(
@@ -455,10 +456,12 @@ void VegetationPipeline::initializeFireCampPipeline() {
     QVector2D tex_coord;
   };
 
+  constexpr std::size_t k_firecamp_vertex_reserve = 12;
+  constexpr std::size_t k_firecamp_index_reserve = 18;
   std::vector<FireCampVertex> vertices;
-  vertices.reserve(12);
+  vertices.reserve(k_firecamp_vertex_reserve);
   std::vector<unsigned short> indices;
-  indices.reserve(18);
+  indices.reserve(k_firecamp_index_reserve);
 
   auto append_plane = [&](float planeIndex) {
     auto const base = static_cast<unsigned short>(vertices.size());

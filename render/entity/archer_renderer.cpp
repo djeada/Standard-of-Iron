@@ -459,14 +459,18 @@ public:
     };
 
     float const shoulder_pteruge_y = y_top_cover - 0.02F;
-    for (int i = 0; i < 8; ++i) {
-      float const angle = (i / 8.0F) * 2.0F * std::numbers::pi_v<float>;
+    constexpr int k_shoulder_pteruge_count = 8;
+    constexpr float k_shoulder_pteruge_divisor = 8.0F;
+    for (int i = 0; i < k_shoulder_pteruge_count; ++i) {
+      float const angle = (i / k_shoulder_pteruge_divisor) * 2.0F * std::numbers::pi_v<float>;
       draw_pteruge(angle, shoulder_pteruge_y, 0.14F);
     }
 
     float const waist_pteruge_y = waist_y - 0.04F;
-    for (int i = 0; i < 10; ++i) {
-      float const angle = (i / 10.0F) * 2.0F * std::numbers::pi_v<float>;
+    constexpr int k_waist_pteruge_count = 10;
+    constexpr float k_waist_pteruge_divisor = 10.0F;
+    for (int i = 0; i < k_waist_pteruge_count; ++i) {
+      float const angle = (i / k_waist_pteruge_divisor) * 2.0F * std::numbers::pi_v<float>;
       draw_pteruge(angle, waist_pteruge_y, 0.18F);
     }
 
@@ -565,7 +569,7 @@ private:
         clampf(pose.hand_r.y(), extras.bowBotY + 0.05F, extras.bowTopY - 0.05F),
         clampf(pose.hand_r.z(), bow_plane_z - 0.30F, bow_plane_z + 0.30F));
 
-    const int segs = 22;
+    constexpr int k_bowstring_segments = 22;
     auto q_bezier = [](const QVector3D &a, const QVector3D &c,
                        const QVector3D &b, float t) {
       float const u = 1.0F - t;
@@ -580,8 +584,8 @@ private:
                          bow_plane_z + extras.bowDepth * 0.6F);
 
     QVector3D prev = bot_end;
-    for (int i = 1; i <= segs; ++i) {
-      float const t = float(i) / float(segs);
+    for (int i = 1; i <= k_bowstring_segments; ++i) {
+      float const t = float(i) / float(k_bowstring_segments);
       QVector3D const cur = q_bezier(bot_end, ctrl, top_end, t);
       out.mesh(getUnitCylinder(),
                cylinderBetween(ctx.model, prev, cur, extras.bowRodR),
