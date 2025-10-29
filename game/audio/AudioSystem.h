@@ -1,5 +1,6 @@
 #pragma once
 
+#include "AudioConstants.h"
 #include <atomic>
 #include <chrono>
 #include <condition_variable>
@@ -37,13 +38,13 @@ enum class AudioCategory { SFX, VOICE, MUSIC };
 struct AudioEvent {
   AudioEventType type;
   std::string resourceId;
-  float volume = 1.0F;
+  float volume = AudioConstants::DEFAULT_VOLUME;
   bool loop = false;
-  int priority = 0;
+  int priority = AudioConstants::DEFAULT_PRIORITY;
   AudioCategory category = AudioCategory::SFX;
 
-  AudioEvent(AudioEventType t, std::string id = "", float vol = 1.0F,
-             bool l = false, int p = 0, AudioCategory cat = AudioCategory::SFX)
+  AudioEvent(AudioEventType t, std::string id = "", float vol = AudioConstants::DEFAULT_VOLUME,
+             bool l = false, int p = AudioConstants::DEFAULT_PRIORITY, AudioCategory cat = AudioCategory::SFX)
       : type(t), resourceId(std::move(id)), volume(vol), loop(l), priority(p),
         category(cat) {}
 };
@@ -55,10 +56,10 @@ public:
   auto initialize() -> bool;
   void shutdown();
 
-  void playSound(const std::string &soundId, float volume = 1.0F,
-                 bool loop = false, int priority = 0,
+  void playSound(const std::string &soundId, float volume = AudioConstants::DEFAULT_VOLUME,
+                 bool loop = false, int priority = AudioConstants::DEFAULT_PRIORITY,
                  AudioCategory category = AudioCategory::SFX);
-  void playMusic(const std::string &musicId, float volume = 1.0F,
+  void playMusic(const std::string &musicId, float volume = AudioConstants::DEFAULT_VOLUME,
                  bool crossfade = true);
   void stopSound(const std::string &soundId);
   void stopMusic();
@@ -120,7 +121,7 @@ private:
   std::atomic<float> musicVolume;
   std::atomic<float> voiceVolume;
 
-  size_t maxChannels{32};
+  size_t maxChannels{AudioConstants::DEFAULT_MAX_CHANNELS};
 
   struct ActiveSound {
     std::string id;
