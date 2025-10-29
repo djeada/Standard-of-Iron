@@ -48,13 +48,13 @@ inline auto saturate(float x) -> float {
 }
 
 inline auto rotateAroundY(const QVector3D &v, float angle) -> QVector3D {
-  float s = std::sin(angle);
-  float c = std::cos(angle);
+  float const s = std::sin(angle);
+  float const c = std::cos(angle);
   return {v.x() * c + v.z() * s, v.y(), -v.x() * s + v.z() * c};
 }
 inline auto rotateAroundZ(const QVector3D &v, float angle) -> QVector3D {
-  float s = std::sin(angle);
-  float c = std::cos(angle);
+  float const s = std::sin(angle);
+  float const c = std::cos(angle);
   return {v.x() * c - v.y() * s, v.x() * s + v.y() * c, v.z()};
 }
 

@@ -56,12 +56,12 @@ inline auto smooth(float a, float b, float x) -> float {
 }
 
 inline auto valueNoise(float x, float z, uint32_t salt = 0U) -> float {
-  int x0 = int(std::floor(x));
-  int z0 = int(std::floor(z));
-  int x1 = x0 + 1;
-  int z1 = z0 + 1;
-  float tx = x - float(x0);
-  float tz = z - float(z0);
+  int const x0 = int(std::floor(x));
+  int const z0 = int(std::floor(z));
+  int const x1 = x0 + 1;
+  int const z1 = z0 + 1;
+  float const tx = x - float(x0);
+  float const tz = z - float(z0);
   float const n00 = hash_to_01(hash_coords(x0, z0, salt));
   float const n10 = hash_to_01(hash_coords(x1, z0, salt));
   float const n01 = hash_to_01(hash_coords(x0, z1, salt));
@@ -127,7 +127,7 @@ void TerrainRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   }
 }
 
-int TerrainRenderer::sectionFor(Game::Map::TerrainType type) {
+auto TerrainRenderer::sectionFor(Game::Map::TerrainType type) -> int {
   switch (type) {
   case Game::Map::TerrainType::Mountain:
     return 2;
@@ -466,8 +466,8 @@ void TerrainRenderer::buildMeshes() {
               gz = std::clamp(gz, 0, m_height - 1);
               return m_heightData[gz * m_width + gx];
             };
-            int cx = x;
-            int cz = z;
+            int const cx = x;
+            int const cz = z;
             float const hC = quad_height;
             float ao = 0.0F;
             ao += std::max(0.0F, H(cx - 1, cz) - hC);

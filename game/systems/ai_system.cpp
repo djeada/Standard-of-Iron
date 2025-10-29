@@ -89,8 +89,8 @@ void AISystem::update(Engine::Core::World *world, float deltaTime) {
       continue;
     }
 
-    AI::AISnapshot snapshot =
-        m_snapshotBuilder.build(*world, ai.context.player_id);
+    AI::AISnapshot snapshot = Game::Systems::AI::AISnapshotBuilder::build(
+        *world, ai.context.player_id);
     snapshot.gameTime = m_totalGameTime;
 
     AI::AIJob job;
@@ -119,7 +119,8 @@ void AISystem::processResults(Engine::Core::World &world) {
       auto filtered_commands =
           m_commandFilter.filter(result.commands, m_totalGameTime);
 
-      m_applier.apply(world, ai.context.player_id, filtered_commands);
+      Game::Systems::AI::AICommandApplier::apply(world, ai.context.player_id,
+                                                 filtered_commands);
 
       results.pop();
     }

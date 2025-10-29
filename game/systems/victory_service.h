@@ -55,7 +55,7 @@ private:
   void checkDefeatConditions(Engine::Core::World &world);
 
   auto checkElimination(Engine::Core::World &world) -> bool;
-  auto checkSurviveTime() const -> bool;
+  [[nodiscard]] auto checkSurviveTime() const -> bool;
   auto checkNoUnits(Engine::Core::World &world) const -> bool;
   auto checkNoKeyStructures(Engine::Core::World &world) -> bool;
 

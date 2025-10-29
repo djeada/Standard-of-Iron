@@ -59,7 +59,7 @@ void LanguageManager::loadLanguage(const QString &language) {
   }
 }
 
-QString LanguageManager::languageDisplayName(const QString &language) {
+auto LanguageManager::languageDisplayName(const QString &language) -> QString {
   if (language == "en") {
     return "English";
   }
