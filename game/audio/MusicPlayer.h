@@ -1,4 +1,5 @@
 #pragma once
+#include "AudioConstants.h"
 #include "MiniaudioBackend.h"
 #include <QObject>
 #include <QPointer>
@@ -15,12 +16,12 @@ class MusicPlayer final : public QObject {
 public:
   static auto getInstance() -> MusicPlayer &;
 
-  auto initialize(int musicChannels = 4) -> bool;
+  auto initialize(int musicChannels = AudioConstants::DEFAULT_MUSIC_CHANNELS) -> bool;
   void shutdown();
 
   void registerTrack(const std::string &trackId, const std::string &filePath);
 
-  void play(const std::string &trackId, float volume = 1.0F, bool loop = true);
+  void play(const std::string &trackId, float volume = AudioConstants::DEFAULT_VOLUME, bool loop = true);
   void stop();
   void pause();
   void resume();
@@ -28,13 +29,13 @@ public:
 
   auto play(const std::string &trackId, float volume, bool loop, int channel,
             int fadeMs) -> int;
-  void stop(int channel, int fadeMs = 150);
+  void stop(int channel, int fadeMs = AudioConstants::DEFAULT_FADE_OUT_MS);
   void pause(int channel);
   void resume(int channel);
-  void setVolume(int channel, float volume, int fadeMs = 0);
+  void setVolume(int channel, float volume, int fadeMs = AudioConstants::NO_FADE_MS);
 
-  void stopAll(int fadeMs = 150);
-  void setMasterVolume(float volume, int fadeMs = 0);
+  void stopAll(int fadeMs = AudioConstants::DEFAULT_FADE_OUT_MS);
+  void setMasterVolume(float volume, int fadeMs = AudioConstants::NO_FADE_MS);
 
   auto isPlaying() const -> bool;
   auto isPlaying(int channel) const -> bool;
