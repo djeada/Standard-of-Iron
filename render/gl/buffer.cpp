@@ -1,5 +1,5 @@
 #include "buffer.h"
-#include "opengl_headers.h"
+#include <GL/gl.h>
 #include <cstddef>
 #include <qopenglext.h>
 #include <vector>
@@ -15,7 +15,7 @@ Buffer::~Buffer() {
 }
 
 void Buffer::bind() {
-  if (m_buffer == 0u) {
+  if (m_buffer == 0U) {
     initializeOpenGLFunctions();
     glGenBuffers(1, &m_buffer);
   }
@@ -41,7 +41,7 @@ auto Buffer::getGLType() const -> GLenum {
   return GL_ARRAY_BUFFER;
 }
 
-GLenum Buffer::getGLUsage(Usage usage) {
+auto Buffer::getGLUsage(Usage usage) -> GLenum {
   switch (usage) {
   case Usage::Static:
     return GL_STATIC_DRAW;
@@ -62,7 +62,7 @@ VertexArray::~VertexArray() {
 }
 
 void VertexArray::bind() {
-  if (m_vao == 0u) {
+  if (m_vao == 0U) {
     initializeOpenGLFunctions();
     glGenVertexArrays(1, &m_vao);
   }

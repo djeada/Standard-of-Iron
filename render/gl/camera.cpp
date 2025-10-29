@@ -316,7 +316,7 @@ void Camera::orbit(float yaw_deg, float pitch_deg) {
   }
 
   QVector3D const offset = m_position - m_target;
-  float cur_yaw = 0.f;
+  float cur_yaw = 0.F;
   float cur_pitch = 0.F;
   computeYawPitchFromOffset(offset, cur_yaw, cur_pitch);
 

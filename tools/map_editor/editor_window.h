@@ -17,10 +17,10 @@ private slots:
   void openMap();
   void saveMap();
 
-private:
   void setupUI();
   void setupMenus();
 
+private:
   QWidget *m_renderWidget{};
 };
 

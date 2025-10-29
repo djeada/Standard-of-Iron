@@ -39,17 +39,17 @@ SaveLoadService::SaveLoadService() {
 
 SaveLoadService::~SaveLoadService() = default;
 
-QString SaveLoadService::getSavesDirectory() {
+auto SaveLoadService::getSavesDirectory() -> QString {
   QString const savesPath =
       QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
   return savesPath + "/saves";
 }
 
-auto SaveLoadService::get_database_path() const -> QString {
+auto SaveLoadService::get_database_path() -> QString {
   return getSavesDirectory() + QStringLiteral("/saves.sqlite");
 }
 
-void SaveLoadService::ensureSavesDirectoryExists() const {
+void SaveLoadService::ensureSavesDirectoryExists() {
   QString const savesDir = getSavesDirectory();
   QDir const dir;
   if (!dir.exists(savesDir)) {

@@ -99,7 +99,8 @@ void Pathfinding::updateBuildingObstacles() {
   const auto &buildings = registry.getAllBuildings();
 
   for (const auto &building : buildings) {
-    auto cells = registry.getOccupiedGridCells(building, m_gridCellSize);
+    auto cells = Game::Systems::BuildingCollisionRegistry::getOccupiedGridCells(
+        building, m_gridCellSize);
     for (const auto &cell : cells) {
       int const grid_x =
           static_cast<int>(std::round(cell.first - m_gridOffsetX));
@@ -240,7 +241,7 @@ auto Pathfinding::findPathInternal(const Point &start,
   return path;
 }
 
-int Pathfinding::calculateHeuristic(const Point &a, const Point &b) {
+auto Pathfinding::calculateHeuristic(const Point &a, const Point &b) -> int {
   return std::abs(a.x - b.x) + std::abs(a.y - b.y);
 }
 
@@ -399,7 +400,7 @@ void Pathfinding::buildPath(int startIndex, int endIndex,
   outPath.clear();
 }
 
-bool Pathfinding::heapLess(const QueueNode &lhs, const QueueNode &rhs) {
+auto Pathfinding::heapLess(const QueueNode &lhs, const QueueNode &rhs) -> bool {
   if (lhs.fCost != rhs.fCost) {
     return lhs.fCost < rhs.fCost;
   }

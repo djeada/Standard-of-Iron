@@ -135,37 +135,31 @@ public:
   Q_INVOKABLE void setGameSpeed(float speed) {
     m_runtime.timeScale = std::max(0.0F, speed);
   }
-  [[nodiscard]] auto paused() const -> bool { return m_runtime.paused; }
-  [[nodiscard]] auto timeScale() const -> float { return m_runtime.timeScale; }
-  [[nodiscard]] auto victoryState() const -> QString {
-    return m_runtime.victoryState;
-  }
-  [[nodiscard]] auto cursorMode() const -> QString;
+  [[nodiscard]] bool paused() const { return m_runtime.paused; }
+  [[nodiscard]] float timeScale() const { return m_runtime.timeScale; }
+  [[nodiscard]] QString victoryState() const { return m_runtime.victoryState; }
+  [[nodiscard]] QString cursorMode() const;
   void setCursorMode(CursorMode mode);
   void setCursorMode(const QString &mode);
-  [[nodiscard]] auto globalCursorX() const -> qreal;
-  [[nodiscard]] auto globalCursorY() const -> qreal;
-  [[nodiscard]] auto hasUnitsSelected() const -> bool;
-  [[nodiscard]] auto playerTroopCount() const -> int;
-  [[nodiscard]] auto max_troops_per_player() const -> int {
+  [[nodiscard]] qreal globalCursorX() const;
+  [[nodiscard]] qreal globalCursorY() const;
+  [[nodiscard]] bool hasUnitsSelected() const;
+  [[nodiscard]] int playerTroopCount() const;
+  [[nodiscard]] int max_troops_per_player() const {
     return m_level.max_troops_per_player;
   }
-  [[nodiscard]] auto enemyTroopsDefeated() const -> int;
+  [[nodiscard]] int enemyTroopsDefeated() const;
 
   Q_INVOKABLE [[nodiscard]] static QVariantMap getPlayerStats(int owner_id);
 
-  [[nodiscard]] auto selectedPlayerId() const -> int {
-    return m_selectedPlayerId;
-  }
+  [[nodiscard]] int selectedPlayerId() const { return m_selectedPlayerId; }
   void setSelectedPlayerId(int id) {
     if (m_selectedPlayerId != id) {
       m_selectedPlayerId = id;
       emit selectedPlayerIdChanged();
     }
   }
-  [[nodiscard]] auto lastError() const -> QString {
-    return m_runtime.lastError;
-  }
+  [[nodiscard]] QString lastError() const { return m_runtime.lastError; }
   Q_INVOKABLE void clearError() {
     if (!m_runtime.lastError.isEmpty()) {
       m_runtime.lastError = "";
@@ -179,7 +173,7 @@ public:
   Q_INVOKABLE [[nodiscard]] QString getSelectedUnitsCommandMode() const;
   Q_INVOKABLE void setRallyAtScreen(qreal sx, qreal sy);
   Q_INVOKABLE [[nodiscard]] QVariantList availableMaps() const;
-  [[nodiscard]] auto mapsLoading() const -> bool { return m_mapsLoading; }
+  [[nodiscard]] bool mapsLoading() const { return m_mapsLoading; }
   Q_INVOKABLE void
   startSkirmish(const QString &map_path,
                 const QVariantList &playerConfigs = QVariantList());
@@ -194,7 +188,7 @@ public:
   Q_INVOKABLE void exitGame();
   Q_INVOKABLE [[nodiscard]] QVariantList getOwnerInfo() const;
 
-  auto audio_system() -> QObject *;
+  QObject *audio_system();
 
   void setWindow(QQuickWindow *w) { m_window = w; }
 
@@ -203,12 +197,11 @@ public:
   void render(int pixelWidth, int pixelHeight);
 
   void getSelectedUnitIds(std::vector<Engine::Core::EntityID> &out) const;
-  auto getUnitInfo(Engine::Core::EntityID id, QString &name, int &health,
-                   int &max_health, bool &isBuilding,
-                   bool &alive) const -> bool;
+  bool getUnitInfo(Engine::Core::EntityID id, QString &name, int &health,
+                   int &max_health, bool &isBuilding, bool &alive) const;
 
-  [[nodiscard]] auto hasPatrolPreviewWaypoint() const -> bool;
-  [[nodiscard]] auto getPatrolPreviewWaypoint() const -> QVector3D;
+  [[nodiscard]] bool hasPatrolPreviewWaypoint() const;
+  [[nodiscard]] QVector3D getPatrolPreviewWaypoint() const;
 
 private:
   struct RuntimeState {
@@ -246,11 +239,11 @@ private:
     int height = 0;
   };
 
-  auto screenToGround(const QPointF &screenPt, QVector3D &outWorld) -> bool;
-  auto worldToScreen(const QVector3D &world, QPointF &outScreen) const -> bool;
+  bool screenToGround(const QPointF &screenPt, QVector3D &outWorld);
+  bool worldToScreen(const QVector3D &world, QPointF &outScreen) const;
   void syncSelectionFlags();
   static void resetMovement(Engine::Core::Entity *entity);
-  auto selectedUnitsModel() -> QObject *;
+  QObject *selectedUnitsModel();
   void onUnitSpawned(const Engine::Core::UnitSpawnedEvent &event);
   void onUnitDied(const Engine::Core::UnitDiedEvent &event);
   void rebuildEntityCache();
@@ -259,12 +252,11 @@ private:
   void restoreEnvironmentFromMetadata(const QJsonObject &metadata);
   void updateCursor(Qt::CursorShape newCursor);
   void setError(const QString &errorMessage);
-  auto loadFromSlot(const QString &slot) -> bool;
-  auto saveToSlot(const QString &slot, const QString &title) -> bool;
-  [[nodiscard]] auto
-  toRuntimeSnapshot() const -> Game::Systems::RuntimeSnapshot;
+  bool loadFromSlot(const QString &slot);
+  bool saveToSlot(const QString &slot, const QString &title);
+  [[nodiscard]] Game::Systems::RuntimeSnapshot toRuntimeSnapshot() const;
   void applyRuntimeSnapshot(const Game::Systems::RuntimeSnapshot &snapshot);
-  [[nodiscard]] auto captureScreenshot() const -> QByteArray;
+  [[nodiscard]] QByteArray captureScreenshot() const;
 
   std::unique_ptr<Engine::Core::World> m_world;
   std::unique_ptr<Render::GL::Renderer> m_renderer;
@@ -313,7 +305,7 @@ private:
   float m_ambientCheckTimer = 0.0F;
 
   void updateAmbientState(float dt);
-  [[nodiscard]] auto isPlayerInCombat() const -> bool;
+  [[nodiscard]] bool isPlayerInCombat() const;
   static void loadAudioResources();
 signals:
   void selectedUnitsChanged();

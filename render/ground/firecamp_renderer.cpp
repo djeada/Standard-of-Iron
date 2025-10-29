@@ -3,6 +3,7 @@
 #include "../../game/systems/building_collision_registry.h"
 #include "../gl/buffer.h"
 #include "../scene_renderer.h"
+#include "gl/render_constants.h"
 #include "gl/resources.h"
 #include "ground/firecamp_gpu.h"
 #include "ground_utils.h"
@@ -136,11 +137,11 @@ void FireCampRenderer::submit(Renderer &renderer, ResourceManager *resources) {
     const float intensity = std::clamp(pos_intensity.w(), 0.6F, 1.6F);
     const float base_radius = std::max(radius_phase.x(), 1.0F);
 
-    uint32_t state =
-        hash_coords(static_cast<int>(std::floor(camp_pos.x())),
-                   static_cast<int>(std::floor(camp_pos.z())),
-                   static_cast<uint32_t>(radius_phase.y() *
-                                         HashConstants::k_temporal_variation_frequency));
+    uint32_t state = hash_coords(
+        static_cast<int>(std::floor(camp_pos.x())),
+        static_cast<int>(std::floor(camp_pos.z())),
+        static_cast<uint32_t>(radius_phase.y() *
+                              HashConstants::k_temporal_variation_frequency));
 
     const float time = params.time;
     const float char_amount =

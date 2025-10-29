@@ -42,10 +42,10 @@ public:
                         int localOwnerId) -> CommandResult;
   void recruitNearSelected(const QString &unit_type, int localOwnerId);
 
-  [[nodiscard]] auto hasPatrolFirstWaypoint() const -> bool {
+  [[nodiscard]] bool hasPatrolFirstWaypoint() const {
     return m_hasPatrolFirstWaypoint;
   }
-  [[nodiscard]] auto getPatrolFirstWaypoint() const -> QVector3D {
+  [[nodiscard]] QVector3D getPatrolFirstWaypoint() const {
     return m_patrolFirstWaypoint;
   }
   void clearPatrolFirstWaypoint() { m_hasPatrolFirstWaypoint = false; }
