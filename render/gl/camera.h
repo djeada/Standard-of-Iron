@@ -6,6 +6,18 @@
 
 namespace Render::GL {
 
+// Camera default values
+namespace CameraDefaults {
+inline constexpr float k_default_rts_distance = 10.0F;
+inline constexpr float k_default_rts_angle = 45.0F;
+inline constexpr float k_default_rts_yaw = 45.0F;
+inline constexpr float k_default_fov = 45.0F;
+inline constexpr float k_default_aspect_ratio = 16.0F / 9.0F;
+inline constexpr float k_default_far_plane = 200.0F;
+inline constexpr float k_default_ortho_size = 10.0F;
+inline constexpr float k_default_pitch_min = -85.0F;
+} // namespace CameraDefaults
+
 class Camera {
   friend void solveConstraints(Render::GL::Camera *self, bool allowTargetShift);
 
@@ -50,9 +62,12 @@ public:
   void captureFollowOffset() { m_followOffset = m_position - m_target; }
   void updateFollow(const QVector3D &targetCenter);
 
-  void setRTSView(const QVector3D &center, float distance = 10.0F,
-                  float angle = 45.0F, float yaw_deg = 45.0F);
-  void setTopDownView(const QVector3D &center, float distance = 10.0F);
+  void setRTSView(const QVector3D &center,
+                  float distance = CameraDefaults::k_default_rts_distance,
+                  float angle = CameraDefaults::k_default_rts_angle,
+                  float yaw_deg = CameraDefaults::k_default_rts_yaw);
+  void setTopDownView(const QVector3D &center,
+                      float distance = CameraDefaults::k_default_rts_distance);
   void applySoftBoundaries(bool isPanning = false);
 
   [[nodiscard]] auto getViewMatrix() const -> QMatrix4x4;
@@ -89,16 +104,16 @@ private:
   QVector3D m_lastPosition;
 
   bool m_isPerspective = true;
-  float m_fov = 45.0F;
-  float m_aspect = 16.0F / 9.0F;
+  float m_fov = CameraDefaults::k_default_fov;
+  float m_aspect = CameraDefaults::k_default_aspect_ratio;
 
   float m_near_plane = 1.0F;
-  float m_far_plane = 200.0F;
+  float m_far_plane = CameraDefaults::k_default_far_plane;
 
-  float m_orthoLeft = -10.0F;
-  float m_orthoRight = 10.0F;
-  float m_orthoBottom = -10.0F;
-  float m_orthoTop = 10.0F;
+  float m_orthoLeft = -CameraDefaults::k_default_ortho_size;
+  float m_orthoRight = CameraDefaults::k_default_ortho_size;
+  float m_orthoBottom = -CameraDefaults::k_default_ortho_size;
+  float m_orthoTop = CameraDefaults::k_default_ortho_size;
 
   bool m_followEnabled = false;
   QVector3D m_followOffset{0, 0, 0};
@@ -107,7 +122,7 @@ private:
   float m_ground_y = 0.0F;
   float m_min_height = 0.5F;
 
-  float m_pitchMinDeg = -85.0F;
+  float m_pitchMinDeg = CameraDefaults::k_default_pitch_min;
   float m_pitchMaxDeg = -5.0F;
 
   bool m_orbitPending = false;

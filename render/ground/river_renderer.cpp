@@ -78,16 +78,16 @@ void RiverRenderer::buildMeshes() {
           static_cast<float>(i) / static_cast<float>(length_steps - 1);
       QVector3D center_pos = segment.start + dir * (length * t);
 
-      float const noise_freq1 = 2.0F;
-      float const noise_freq2 = 5.0F;
-      float const noise_freq3 = 10.0F;
+      constexpr float k_edge_noise_freq_1 = 2.0F;
+      constexpr float k_edge_noise_freq_2 = 5.0F;
+      constexpr float k_edge_noise_freq_3 = 10.0F;
 
       float const edge_noise1 =
-          noise(center_pos.x() * noise_freq1, center_pos.z() * noise_freq1);
+          noise(center_pos.x() * k_edge_noise_freq_1, center_pos.z() * k_edge_noise_freq_1);
       float const edge_noise2 =
-          noise(center_pos.x() * noise_freq2, center_pos.z() * noise_freq2);
+          noise(center_pos.x() * k_edge_noise_freq_2, center_pos.z() * k_edge_noise_freq_2);
       float const edge_noise3 =
-          noise(center_pos.x() * noise_freq3, center_pos.z() * noise_freq3);
+          noise(center_pos.x() * k_edge_noise_freq_3, center_pos.z() * k_edge_noise_freq_3);
 
       float combined_noise =
           edge_noise1 * 0.5F + edge_noise2 * 0.3F + edge_noise3 * 0.2F;
