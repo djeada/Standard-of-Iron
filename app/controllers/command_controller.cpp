@@ -41,8 +41,10 @@ auto CommandController::onAttackClick(qreal sx, qreal sy, int viewportWidth,
   }
 
   auto *cam = static_cast<Render::GL::Camera *>(camera);
-  Engine::Core::EntityID const target_id = m_pickingService->pickUnitFirst(
-      float(sx), float(sy), *m_world, *cam, viewportWidth, viewportHeight, 0);
+  Engine::Core::EntityID const target_id =
+      Game::Systems::PickingService::pickUnitFirst(
+          float(sx), float(sy), *m_world, *cam, viewportWidth, viewportHeight,
+          0);
 
   if (target_id == 0) {
     result.resetCursorToNormal = true;

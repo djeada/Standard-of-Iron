@@ -178,7 +178,7 @@ auto main(int argc, char *argv[]) -> int {
   // Setup message handler for debugging
   qInstallMessageHandler([](QtMsgType type, const QMessageLogContext &context,
                             const QString &msg) {
-    QByteArray const localMsg = msg.toLocal8Bit();
+    QByteArray const local_msg = msg.toLocal8Bit();
     const char *file = (context.file != nullptr) ? context.file : "";
     const char *function =
         (context.function != nullptr) ? context.function : "";
@@ -186,14 +186,14 @@ auto main(int argc, char *argv[]) -> int {
     FILE *out = stderr;
     switch (type) {
     case QtDebugMsg:
-      fprintf(out, "[DEBUG] %s (%s:%u, %s)\n", localMsg.constData(), file,
+      fprintf(out, "[DEBUG] %s (%s:%u, %s)\n", local_msg.constData(), file,
               context.line, function);
       break;
     case QtInfoMsg:
-      fprintf(out, "[INFO] %s\n", localMsg.constData());
+      fprintf(out, "[INFO] %s\n", local_msg.constData());
       break;
     case QtWarningMsg:
-      fprintf(out, "[WARNING] %s (%s:%u, %s)\n", localMsg.constData(), file,
+      fprintf(out, "[WARNING] %s (%s:%u, %s)\n", local_msg.constData(), file,
               context.line, function);
       // Check for critical OpenGL warnings
       if (msg.contains("OpenGL", Qt::CaseInsensitive) ||
@@ -204,14 +204,14 @@ auto main(int argc, char *argv[]) -> int {
       }
       break;
     case QtCriticalMsg:
-      fprintf(out, "[CRITICAL] %s (%s:%u, %s)\n", localMsg.constData(), file,
+      fprintf(out, "[CRITICAL] %s (%s:%u, %s)\n", local_msg.constData(), file,
               context.line, function);
       fprintf(
           out,
           "[CRITICAL] Try running with software rendering if this persists\n");
       break;
     case QtFatalMsg:
-      fprintf(out, "[FATAL] %s (%s:%u, %s)\n", localMsg.constData(), file,
+      fprintf(out, "[FATAL] %s (%s:%u, %s)\n", local_msg.constData(), file,
               context.line, function);
       fprintf(out, "[FATAL] === RECOVERY SUGGESTION ===\n");
       fprintf(out, "[FATAL] Run: run_debug_softwaregl.cmd\n");

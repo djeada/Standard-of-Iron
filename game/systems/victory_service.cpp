@@ -85,7 +85,7 @@ void VictoryService::update(Engine::Core::World &world, float deltaTime) {
 void VictoryService::onUnitDied(const Engine::Core::UnitDiedEvent &event) {}
 
 void VictoryService::onBarrackCaptured(
-    const Engine::Core::BarrackCapturedEvent &event) {
+    const Engine::Core::BarrackCapturedEvent &) {
 
   if ((m_worldPtr == nullptr) || !m_victoryState.isEmpty()) {
     return;

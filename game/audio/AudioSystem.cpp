@@ -81,8 +81,7 @@ void AudioSystem::playSound(const std::string &soundId, float volume, bool loop,
   queueCondition.notify_one();
 }
 
-void AudioSystem::playMusic(const std::string &musicId, float volume,
-                            bool crossfade) {
+void AudioSystem::playMusic(const std::string &musicId, float volume, bool) {
   std::lock_guard<std::mutex> const lock(queueMutex);
   eventQueue.emplace(AudioEventType::PLAY_MUSIC, musicId, volume);
   queueCondition.notify_one();
@@ -366,7 +365,7 @@ void AudioSystem::processEvent(const AudioEvent &event) {
   }
 }
 
-auto AudioSystem::canPlaySound(int priority) -> bool {
+auto AudioSystem::canPlaySound(int) -> bool {
   std::lock_guard<std::mutex> const lock(activeSoundsMutex);
   return activeSounds.size() < maxChannels;
 }

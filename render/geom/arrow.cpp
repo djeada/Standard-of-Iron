@@ -26,7 +26,7 @@ static auto createArrowMesh() -> GL::Mesh * {
   const float shaft_radius = 0.05F;
   const float shaft_len = 0.85F;
   const float tip_len = 0.15F;
-  const float tip_startZ = shaft_len;
+  const float tip_start_z = shaft_len;
   const float tip_end_z = shaft_len + tip_len;
 
   int const base_index = 0;
@@ -65,7 +65,7 @@ static auto createArrowMesh() -> GL::Mesh * {
     float y = std::sin(a) * shaft_radius * 1.4F;
     QVector3D n(x, y, 0.2F);
     n.normalize();
-    verts.push_back({{x, y, tip_startZ},
+    verts.push_back({{x, y, tip_start_z},
                      {n.x(), n.y(), n.z()},
                      {float(i) / k_arrow_radial_segments, 0.0F}});
   }

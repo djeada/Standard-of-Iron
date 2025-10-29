@@ -56,7 +56,7 @@ auto CaptureSystem::countNearbyTroops(Engine::Core::World *world,
   return total_troops;
 }
 
-void CaptureSystem::transferBarrackOwnership(Engine::Core::World *world,
+void CaptureSystem::transferBarrackOwnership(Engine::Core::World *,
                                              Engine::Core::Entity *barrack,
                                              int newOwnerId) {
   auto *unit = barrack->getComponent<Engine::Core::UnitComponent>();

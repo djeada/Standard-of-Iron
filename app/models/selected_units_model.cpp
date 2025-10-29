@@ -33,12 +33,12 @@ auto SelectedUnitsModel::data(const QModelIndex &index,
   QString name;
   int hp = 0;
   int max_hp = 0;
-  bool isB = false;
+  bool is_b = false;
   bool alive = false;
   if (role == UnitIdRole) {
     return QVariant::fromValue<int>(static_cast<int>(id));
   }
-  if (!m_engine->getUnitInfo(id, name, hp, max_hp, isB, alive)) {
+  if (!m_engine->getUnitInfo(id, name, hp, max_hp, is_b, alive)) {
     return {};
   }
   if (role == NameRole) {
@@ -91,12 +91,12 @@ void SelectedUnitsModel::refresh() {
     QString nm;
     int hp = 0;
     int max_hp = 0;
-    bool isB = false;
+    bool is_b = false;
     bool alive = false;
-    if (!m_engine->getUnitInfo(id, nm, hp, max_hp, isB, alive)) {
+    if (!m_engine->getUnitInfo(id, nm, hp, max_hp, is_b, alive)) {
       continue;
     }
-    if (isB) {
+    if (is_b) {
       continue;
     }
     if (!alive) {
