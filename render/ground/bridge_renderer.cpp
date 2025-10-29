@@ -56,7 +56,7 @@ void BridgeRenderer::buildMeshes() {
     std::vector<Vertex> vertices;
     std::vector<unsigned int> indices;
 
-    const int verts_per_segment = 12;
+    constexpr int k_vertices_per_bridge_segment = 12;
     const float deck_thickness = std::clamp(bridge.width * 0.25F, 0.35F, 0.8F);
     const float parapet_height = std::clamp(bridge.width * 0.25F, 0.25F, 0.55F);
     const float parapet_offset = half_width * 1.05F;
@@ -153,8 +153,8 @@ void BridgeRenderer::buildMeshes() {
       add_vertex(parapet_right_bottom, right_normal, tex_u1, texV);
 
       if (i < length_segments) {
-        auto const base_idx = static_cast<unsigned int>(i * verts_per_segment);
-        unsigned int const next_idx = base_idx + verts_per_segment;
+        auto const base_idx = static_cast<unsigned int>(i * k_vertices_per_bridge_segment);
+        unsigned int const next_idx = base_idx + k_vertices_per_bridge_segment;
 
         push_quad(base_idx + 0, base_idx + 1, next_idx + 1, next_idx + 0);
 
@@ -173,7 +173,7 @@ void BridgeRenderer::buildMeshes() {
     if (!vertices.empty()) {
       unsigned int const start_idx = 0;
       auto const end_idx =
-          static_cast<unsigned int>(length_segments * verts_per_segment);
+          static_cast<unsigned int>(length_segments * k_vertices_per_bridge_segment);
 
       QVector3D const forward_normal = dir;
 

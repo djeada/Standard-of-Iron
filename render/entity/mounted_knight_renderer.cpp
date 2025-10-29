@@ -689,9 +689,9 @@ private:
     const float scale_factor = 2.0F;
     const float R = 0.15F * scale_factor;
 
-    const float yaw_deg = -70.0F;
+    constexpr float k_mounted_shield_yaw_degrees = -70.0F;
     QMatrix4x4 rot;
-    rot.rotate(yaw_deg, 0.0F, 1.0F, 0.0F);
+    rot.rotate(k_mounted_shield_yaw_degrees, 0.0F, 1.0F, 0.0F);
 
     const QVector3D n = rot.map(QVector3D(0.0F, 0.0F, 1.0F));
     const QVector3D axis_x = rot.map(QVector3D(1.0F, 0.0F, 0.0F));
