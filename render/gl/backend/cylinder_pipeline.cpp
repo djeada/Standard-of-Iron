@@ -171,10 +171,9 @@ void CylinderPipeline::initializeCylinderPipeline() {
 }
 
 void CylinderPipeline::shutdownCylinderPipeline() {
-  // Check if we have a valid OpenGL context before cleanup
-  // If not, skip OpenGL calls - resources will be freed by Qt/OS
+
   if (QOpenGLContext::currentContext() == nullptr) {
-    // No valid context, just reset state without OpenGL calls
+
     m_cylinderVao = 0;
     m_cylinderVertexBuffer = 0;
     m_cylinderIndexBuffer = 0;
@@ -338,10 +337,9 @@ void CylinderPipeline::initializeFogPipeline() {
 }
 
 void CylinderPipeline::shutdownFogPipeline() {
-  // Check if we have a valid OpenGL context before cleanup
-  // If not, skip OpenGL calls - resources will be freed by Qt/OS
+
   if (QOpenGLContext::currentContext() == nullptr) {
-    // No valid context, just reset state without OpenGL calls
+
     m_fogVao = 0;
     m_fogVertexBuffer = 0;
     m_fogIndexBuffer = 0;

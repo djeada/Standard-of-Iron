@@ -6,7 +6,6 @@
 
 namespace Render::GL {
 
-// Camera default values
 namespace CameraDefaults {
 inline constexpr float k_default_rts_distance = 10.0F;
 inline constexpr float k_default_rts_angle = 45.0F;

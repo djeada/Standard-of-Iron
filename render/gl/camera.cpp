@@ -27,17 +27,14 @@ constexpr float k_min_margin_percent = 0.03F;
 constexpr float k_max_margin_percent = 0.10F;
 constexpr float k_boundary_smoothness = 0.3F;
 
-// Camera height reference values
 constexpr float k_reference_height = 50.0F;
 constexpr float k_height_factor_min = 0.5F;
 constexpr float k_height_factor_max = 2.0F;
 
-// Pitch angle constants
 constexpr float k_max_pitch_angle = 90.0F;
 constexpr float k_pitch_factor_min = 0.5F;
 constexpr float k_pitch_factor_max = 1.5F;
 
-// Zoom and scale constants
 constexpr float k_max_ortho_scale = 20.0F;
 constexpr float k_min_ortho_scale = 0.05F;
 constexpr float k_zoom_delta_multiplier = 0.1F;
@@ -45,12 +42,10 @@ constexpr float k_zoom_distance_delta = 0.15F;
 constexpr float k_zoom_factor_min = 0.1F;
 constexpr float k_zoom_factor_max = 10.0F;
 
-// NDC and screen space constants
 constexpr double k_ndc_scale = 2.0;
 constexpr double k_ndc_offset = 1.0;
 constexpr double k_ndc_half = 0.5;
 
-// Boundary adjustment smoothness
 constexpr float k_boundary_panning_smoothness = 0.7F;
 
 inline auto finite(const QVector3D &v) -> bool {
@@ -109,8 +104,9 @@ inline void clampOrthoBox(float &left, float &right, float &bottom,
 inline auto calculateDynamicMargin(float baseMargin, float camera_height,
                                    float pitch_deg) -> float {
 
-  float const height_factor = std::clamp(camera_height / k_reference_height,
-                                         k_height_factor_min, k_height_factor_max);
+  float const height_factor =
+      std::clamp(camera_height / k_reference_height, k_height_factor_min,
+                 k_height_factor_max);
 
   float const pitch_factor =
       std::clamp(1.0F - std::abs(pitch_deg) / k_max_pitch_angle,
@@ -474,7 +470,8 @@ auto Camera::worldToScreen(const QVector3D &world, qreal screenW, qreal screenH,
   }
 
   qreal const sx = (ndc.x() * k_ndc_half + k_ndc_half) * screenW;
-  qreal const sy = (k_ndc_offset - (ndc.y() * k_ndc_half + k_ndc_half)) * screenH;
+  qreal const sy =
+      (k_ndc_offset - (ndc.y() * k_ndc_half + k_ndc_half)) * screenH;
   outScreen = QPointF(sx, sy);
   return qIsFinite(sx) && qIsFinite(sy);
 }
@@ -689,11 +686,13 @@ void Camera::applySoftBoundaries(bool isPanning) {
 
   if (!position_adjustment.isNull()) {
     m_position +=
-        position_adjustment * (isPanning ? k_boundary_panning_smoothness : k_boundary_smoothness);
+        position_adjustment *
+        (isPanning ? k_boundary_panning_smoothness : k_boundary_smoothness);
   }
 
   if (!target_adjustment.isNull()) {
-    m_target += target_adjustment * (isPanning ? k_boundary_panning_smoothness : k_boundary_smoothness);
+    m_target += target_adjustment * (isPanning ? k_boundary_panning_smoothness
+                                               : k_boundary_smoothness);
 
     if (target_to_posDist > k_tiny) {
       QVector3D const dir = target_to_pos.normalized();
