@@ -7,34 +7,34 @@
 #include <QTimer>
 #include <QUrl>
 
-Music::Music(const std::string &filePath)
-    : filepath(filePath), loaded(false), audioOutput(nullptr),
-      mainThread(nullptr), playing(false), markedForDeletion(false) {
+Music::Music(const std::string &file_path)
+    : file_path(file_path), loaded(false), audio_output(nullptr),
+      main_thread(nullptr), playing(false), marked_for_deletion(false) {
 
   if (!QCoreApplication::instance()) {
     return;
   }
 
-  mainThread = QCoreApplication::instance()->thread();
+  main_thread = QCoreApplication::instance()->thread();
   player = new QMediaPlayer();
 
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
-  audioOutput = new QAudioOutput(player);
-  player->setAudioOutput(audioOutput);
+  audio_output = new QAudioOutput(player);
+  player->setAudioOutput(audio_output);
 
   QObject::connect(player, &QMediaPlayer::errorOccurred,
-                   [filepath = this->filepath](QMediaPlayer::Error error,
+                   [file_path = this->file_path](QMediaPlayer::Error error,
                                                const QString &desc) {
                      qWarning() << "QMediaPlayer error for"
-                                << QString::fromStdString(filepath)
+                                << QString::fromStdString(file_path)
                                 << "- Error code:" << static_cast<int>(error)
                                 << "Message:" << desc;
                    });
 
   QObject::connect(
       player, &QMediaPlayer::mediaStatusChanged,
-      [filepath = this->filepath, this](QMediaPlayer::MediaStatus status) {
-        qDebug() << "Media status for" << QString::fromStdString(filepath)
+      [file_path = this->file_path, this](QMediaPlayer::MediaStatus status) {
+        qDebug() << "Media status for" << QString::fromStdString(file_path)
                  << ":" << static_cast<int>(status);
         if (status == QMediaPlayer::EndOfMedia) {
           playing = false;
@@ -43,216 +43,218 @@ Music::Music(const std::string &filePath)
 
   QObject::connect(
       player, &QMediaPlayer::playbackStateChanged,
-      [filepath = this->filepath](QMediaPlayer::PlaybackState state) {
-        qDebug() << "Playback state for" << QString::fromStdString(filepath)
+      [file_path = this->file_path](QMediaPlayer::PlaybackState state) {
+        qDebug() << "Playback state for" << QString::fromStdString(file_path)
                  << ":" << static_cast<int>(state);
       });
 
-  player->setSource(QUrl::fromLocalFile(QString::fromStdString(filePath)));
+  player->setSource(QUrl::fromLocalFile(QString::fromStdString(file_path)));
   loaded = (player->error() == QMediaPlayer::NoError);
 #else
-  player->setMedia(QUrl::fromLocalFile(QString::fromStdString(filePath)));
+  player->setMedia(QUrl::fromLocalFile(QString::fromStdString(file_path)));
   loaded = (player->mediaStatus() != QMediaPlayer::InvalidMedia &&
             player->mediaStatus() != QMediaPlayer::NoMedia);
 #endif
 }
 
-Music::~Music() { cleanupPlayer(); }
+Music::~Music() { cleanup_player(); }
 
-void Music::cleanupPlayer() {
-  if (!player || markedForDeletion) {
+void Music::cleanup_player() {
+  if (!player || marked_for_deletion) {
     return;
   }
 
-  markedForDeletion = true;
-  QMediaPlayer *rawPlayer = player.data();
+  marked_for_deletion = true;
+  QMediaPlayer *raw_player = player.data();
 
-  if (!rawPlayer) {
+  if (!raw_player) {
     return;
   }
 
-  if (QCoreApplication::instance() && mainThread) {
-    rawPlayer->deleteLater();
+  if (QCoreApplication::instance() && main_thread) {
+    raw_player->deleteLater();
   }
 }
 
-bool Music::isLoaded() const { return loaded && !markedForDeletion; }
+bool Music::is_loaded() const { return loaded && !marked_for_deletion; }
 
 void Music::play(float volume, bool loop) {
-  if (!player || !loaded || markedForDeletion) {
+  if (!player || !loaded || marked_for_deletion) {
     return;
   }
 
-  QPointer<QMediaPlayer> p = player;
-  QAudioOutput *output = audioOutput;
+  QPointer<QMediaPlayer> player_ptr = player;
+  QAudioOutput *output = audio_output;
 
-  if (!p || !QCoreApplication::instance()) {
+  if (!player_ptr || !QCoreApplication::instance()) {
     return;
   }
 
   QMetaObject::invokeMethod(
       QCoreApplication::instance(),
-      [p, output, volume, loop, this]() {
-        if (!p) {
+      [player_ptr, output, volume, loop, this]() {
+        if (!player_ptr) {
           return;
         }
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
 
-        bool isCurrentlyPlaying =
-            (p->playbackState() == QMediaPlayer::PlayingState);
+        bool is_currently_playing =
+            (player_ptr->playbackState() == QMediaPlayer::PlayingState);
 
         if (output) {
           output->setVolume(volume);
         }
-        p->setLoops(loop ? QMediaPlayer::Infinite : 1);
+        player_ptr->setLoops(loop ? QMediaPlayer::Infinite : 1);
 
-        if (!isCurrentlyPlaying) {
+        if (!is_currently_playing) {
           qDebug() << "Starting playback for"
-                   << QString::fromStdString(filepath);
+                   << QString::fromStdString(file_path);
           playing = true;
-          p->play();
+          player_ptr->play();
         } else {
-          qDebug() << "Already playing" << QString::fromStdString(filepath)
+          qDebug() << "Already playing" << QString::fromStdString(file_path)
                    << "- updating volume only";
         }
 #else
-        p->setVolume(static_cast<int>(volume * 100));
+        player_ptr->setVolume(static_cast<int>(volume * 100));
         playing = true;
-        p->play();
+        player_ptr->play();
 #endif
       },
       Qt::QueuedConnection);
 }
 
 void Music::stop() {
-  if (!player || markedForDeletion) {
+  if (!player || marked_for_deletion) {
     return;
   }
 
   playing = false;
-  QPointer<QMediaPlayer> p = player;
-  if (!p || !QCoreApplication::instance()) {
+  QPointer<QMediaPlayer> player_ptr = player;
+  if (!player_ptr || !QCoreApplication::instance()) {
     return;
   }
 
   QMetaObject::invokeMethod(
       QCoreApplication::instance(),
-      [p]() {
-        if (p) {
-          p->stop();
+      [player_ptr]() {
+        if (player_ptr) {
+          player_ptr->stop();
         }
       },
       Qt::QueuedConnection);
 }
 
 void Music::pause() {
-  if (!player || markedForDeletion) {
+  if (!player || marked_for_deletion) {
     return;
   }
 
-  QPointer<QMediaPlayer> p = player;
-  if (!p || !QCoreApplication::instance()) {
+  QPointer<QMediaPlayer> player_ptr = player;
+  if (!player_ptr || !QCoreApplication::instance()) {
     return;
   }
 
   QMetaObject::invokeMethod(
       QCoreApplication::instance(),
-      [p]() {
-        if (p) {
-          p->pause();
+      [player_ptr]() {
+        if (player_ptr) {
+          player_ptr->pause();
         }
       },
       Qt::QueuedConnection);
 }
 
 void Music::resume() {
-  if (!player || markedForDeletion) {
+  if (!player || marked_for_deletion) {
     return;
   }
 
-  QPointer<QMediaPlayer> p = player;
-  if (!p || !QCoreApplication::instance()) {
+  QPointer<QMediaPlayer> player_ptr = player;
+  if (!player_ptr || !QCoreApplication::instance()) {
     return;
   }
 
   QMetaObject::invokeMethod(
       QCoreApplication::instance(),
-      [p]() {
-        if (!p) {
+      [player_ptr]() {
+        if (!player_ptr) {
           return;
         }
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
-        if (p->playbackState() == QMediaPlayer::PausedState) {
-          p->play();
+        if (player_ptr->playbackState() == QMediaPlayer::PausedState) {
+          player_ptr->play();
         }
 #else
-        if (p->state() == QMediaPlayer::PausedState) {
-          p->play();
+        if (player_ptr->state() == QMediaPlayer::PausedState) {
+          player_ptr->play();
         }
 #endif
       },
       Qt::QueuedConnection);
 }
 
-void Music::setVolume(float volume) {
-  if (!player || markedForDeletion) {
+void Music::set_volume(float volume) {
+  if (!player || marked_for_deletion) {
     return;
   }
 
-  QPointer<QMediaPlayer> p = player;
-  if (!p || !QCoreApplication::instance()) {
+  QPointer<QMediaPlayer> player_ptr = player;
+  if (!player_ptr || !QCoreApplication::instance()) {
     return;
   }
 
   QMetaObject::invokeMethod(
       QCoreApplication::instance(),
-      [p, volume]() {
-        if (!p) {
+      [player_ptr, volume]() {
+        if (!player_ptr) {
           return;
         }
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
-        if (p->audioOutput()) {
-          p->audioOutput()->setVolume(volume);
+        if (player_ptr->audioOutput()) {
+          player_ptr->audioOutput()->setVolume(volume);
         }
 #else
-        p->setVolume(static_cast<int>(volume * 100));
+        player_ptr->setVolume(static_cast<int>(volume * 100));
 #endif
       },
       Qt::QueuedConnection);
 }
 
-void Music::fadeOut() {
-  if (!player || markedForDeletion) {
+void Music::fade_out() {
+  static constexpr int FADE_OUT_DELAY_MS = 50;
+  
+  if (!player || marked_for_deletion) {
     return;
   }
 
-  QPointer<QMediaPlayer> p = player;
-  if (!p || !QCoreApplication::instance()) {
+  QPointer<QMediaPlayer> player_ptr = player;
+  if (!player_ptr || !QCoreApplication::instance()) {
     return;
   }
 
   QMetaObject::invokeMethod(
       QCoreApplication::instance(),
-      [p, this]() {
-        if (!p) {
+      [player_ptr, this]() {
+        if (!player_ptr) {
           return;
         }
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
-        if (p->audioOutput()) {
-          p->audioOutput()->setVolume(0.0F);
+        if (player_ptr->audioOutput()) {
+          player_ptr->audioOutput()->setVolume(0.0F);
         }
 
-        QTimer::singleShot(50, [p, this]() {
-          if (p && p->playbackState() == QMediaPlayer::PlayingState) {
+        QTimer::singleShot(FADE_OUT_DELAY_MS, [player_ptr, this]() {
+          if (player_ptr && player_ptr->playbackState() == QMediaPlayer::PlayingState) {
             qDebug() << "Fading out and pausing"
-                     << QString::fromStdString(filepath);
-            p->pause();
+                     << QString::fromStdString(file_path);
+            player_ptr->pause();
             playing = false;
           }
         });
 #else
-        p->setVolume(0);
-        p->pause();
+        player_ptr->setVolume(0);
+        player_ptr->pause();
         playing = false;
 #endif
       },
