@@ -16,6 +16,9 @@ namespace Game::Audio {
 
 class AudioEventHandler {
 public:
+  static constexpr float UNIT_SELECTION_VOLUME = 1.0F;
+  static constexpr int UNIT_SELECTION_PRIORITY = 5;
+  
   AudioEventHandler(Engine::Core::World *world);
   ~AudioEventHandler();
 
