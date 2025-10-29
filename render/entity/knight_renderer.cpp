@@ -733,7 +733,7 @@ private:
     {
       QMatrix4x4 m = ctx.model;
       m.translate(shield_center + n * plate_half);
-      m.rotate(yaw_deg, 0.0F, 1.0F, 0.0F);
+      m.rotate(k_shield_yaw_degrees, 0.0F, 1.0F, 0.0F);
       m.scale(R, R, plate_full);
       out.mesh(getUnitCylinder(), m, extras.shieldColor, nullptr, 1.0F);
     }
@@ -741,7 +741,7 @@ private:
     {
       QMatrix4x4 m = ctx.model;
       m.translate(shield_center - n * plate_half);
-      m.rotate(yaw_deg, 0.0F, 1.0F, 0.0F);
+      m.rotate(k_shield_yaw_degrees, 0.0F, 1.0F, 0.0F);
       m.scale(R * 0.985F, R * 0.985F, plate_full);
       out.mesh(getUnitCylinder(), m, v.palette.leather * 0.8F, nullptr, 1.0F);
     }
