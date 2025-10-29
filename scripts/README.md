@@ -102,7 +102,7 @@ python scripts/update_contributors.py
 | Bob Writer | bob@studio.com | 9 commits | 2025-03-15 | 2025-10-20 |  |
 ```
 
-**Note:** The Reference column is left empty by default and can be manually edited to add links to GitHub profiles, websites, or other references. However, manual edits will be preserved only if the contributor's row remains unchanged in subsequent updates.
+**Note:** The Reference column is left empty by default and can be manually edited to add links to GitHub profiles, websites, or other references. The script automatically preserves any manually-added Reference values when it regenerates the file, so your edits will not be lost on subsequent runs.
 
 ---
 
