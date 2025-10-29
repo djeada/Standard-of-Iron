@@ -397,13 +397,13 @@ void HumanoidRendererBase::drawCommonBody(const DrawContext &ctx,
   const float heel_back_frac = 0.15F;
   const float ball_frac = 0.72F;
   const float toe_up_frac = 0.06F;
-  const float yaw_out_deg = 12.0F;
+  constexpr float k_foot_yaw_out_degrees = 12.0F;
   const float ankle_fwd_frac = 0.10F;
   const float ankle_up_frac = 0.50F;
   const float toe_splay_frac = 0.06F;
 
-  const QVector3D fwdL = rotY(FWD, -yaw_out_deg * DEG);
-  const QVector3D fwdR = rotY(FWD, +yaw_out_deg * DEG);
+  const QVector3D fwdL = rotY(FWD, -k_foot_yaw_out_degrees * DEG);
+  const QVector3D fwdR = rotY(FWD, +k_foot_yaw_out_degrees * DEG);
   const QVector3D right_l = rightOf(fwdL);
   const QVector3D right_r = rightOf(fwdR);
 
