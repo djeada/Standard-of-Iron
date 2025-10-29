@@ -7,8 +7,7 @@
 
 namespace Game::Systems {
 
-void TerrainAlignmentSystem::update(Engine::Core::World *world,
-                                    float deltaTime) {
+void TerrainAlignmentSystem::update(Engine::Core::World *world, float) {
   auto &terrain_service = Game::Map::TerrainService::instance();
 
   if (!terrain_service.isInitialized()) {

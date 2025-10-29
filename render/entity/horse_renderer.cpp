@@ -26,7 +26,7 @@ using Render::Geom::smoothstep;
 
 namespace {
 
-constexpr float kPi = std::numbers::pi_v<float>;
+constexpr float k_pi = std::numbers::pi_v<float>;
 
 constexpr int k_hash_shift_16 = 16;
 constexpr int k_hash_shift_15 = 15;
@@ -242,14 +242,14 @@ void HorseRenderer::render(const DrawContext &ctx, const AnimationInputs &anim,
   if (anim.isMoving) {
     float const cycle = std::max(0.20F, g.cycleTime);
     phase = std::fmod(anim.time / cycle, 1.0F);
-    bob = std::sin(phase * 2.0F * kPi) * d.moveBobAmplitude;
+    bob = std::sin(phase * 2.0F * k_pi) * d.moveBobAmplitude;
   } else {
     phase = std::fmod(anim.time * 0.25F, 1.0F);
-    bob = std::sin(phase * 2.0F * kPi) * d.idleBobAmplitude;
+    bob = std::sin(phase * 2.0F * k_pi) * d.idleBobAmplitude;
   }
 
   float const head_nod = anim.isMoving
-                             ? std::sin((phase + 0.25F) * 2.0F * kPi) * 0.04F
+                             ? std::sin((phase + 0.25F) * 2.0F * k_pi) * 0.04F
                              : std::sin(anim.time * 1.5F) * 0.01F;
 
   uint32_t const vhash = colorHash(v.coatColor);
@@ -611,7 +611,7 @@ void HorseRenderer::render(const DrawContext &ctx, const AnimationInputs &anim,
     QVector3D seg_start = lerp(mane_root, neck_base, t);
     seg_start.setY(seg_start.y() + (0.07F - t * 0.05F));
     float const sway =
-        (anim.isMoving ? std::sin((phase + t * 0.15F) * 2.0F * kPi) * 0.04F
+        (anim.isMoving ? std::sin((phase + t * 0.15F) * 2.0F * k_pi) * 0.04F
                        : std::sin((anim.time * 0.8F + t * 2.3F)) * 0.02F);
     QVector3D const seg_end =
         seg_start + QVector3D(sway, 0.07F - t * 0.05F, -0.05F - t * 0.03F);
@@ -650,8 +650,8 @@ void HorseRenderer::render(const DrawContext &ctx, const AnimationInputs &anim,
     float const t = static_cast<float>(i) / 8.0F;
     QVector3D p = bezier(tail_base, tail_ctrl, tail_end, t);
     float const swing =
-        (anim.isMoving ? std::sin((phase + t * 0.12F) * 2.0F * kPi)
-                       : std::sin((phase * 0.7F + t * 0.3F) * 2.0F * kPi)) *
+        (anim.isMoving ? std::sin((phase + t * 0.12F) * 2.0F * k_pi)
+                       : std::sin((phase * 0.7F + t * 0.3F) * 2.0F * k_pi)) *
         (0.04F + 0.015F * (1.0F - t));
     p.setX(p.x() + swing);
     float const radius = d.bodyWidth * (0.20F - 0.018F * i);
@@ -717,13 +717,13 @@ void HorseRenderer::render(const DrawContext &ctx, const AnimationInputs &anim,
     float lift = 0.0F;
 
     if (anim.isMoving) {
-      float const angle = leg_phase * 2.0F * kPi;
+      float const angle = leg_phase * 2.0F * k_pi;
       stride = std::sin(angle) * g.strideSwing * 0.75F + forwardBias;
       float const lift_raw = std::sin(angle);
       lift = lift_raw > 0.0F ? lift_raw * g.strideLift
                              : lift_raw * g.strideLift * 0.22F;
     } else {
-      float const idle = std::sin(leg_phase * 2.0F * kPi);
+      float const idle = std::sin(leg_phase * 2.0F * k_pi);
       stride = idle * g.strideSwing * 0.06F + forwardBias;
       lift = idle * d.idleBobAmplitude * 2.0F;
     }
@@ -734,7 +734,7 @@ void HorseRenderer::render(const DrawContext &ctx, const AnimationInputs &anim,
                                             0.05F + lift * 0.05F, stride);
     bool const is_rear = (forwardBias < 0.0F);
 
-    float const gallop_angle = leg_phase * 2.0F * kPi;
+    float const gallop_angle = leg_phase * 2.0F * k_pi;
     float const hip_swing = anim.isMoving ? std::sin(gallop_angle) : 0.0F;
     float const lift_factor =
         anim.isMoving
@@ -798,8 +798,8 @@ void HorseRenderer::render(const DrawContext &ctx, const AnimationInputs &anim,
             : 0.32F;
 
     float const forearm_length = d.legLength * 0.30F;
-    float const bend_cos = std::cos(knee_flex * kPi * 0.5F);
-    float const bend_sin = std::sin(knee_flex * kPi * 0.5F);
+    float const bend_cos = std::cos(knee_flex * k_pi * 0.5F);
+    float const bend_sin = std::sin(knee_flex * k_pi * 0.5F);
     QVector3D forearm_dir(0.0F, -bend_cos,
                           (is_rear ? -1.0F : 1.0F) * bend_sin * 0.85F);
     if (forearm_dir.lengthSquared() < 1e-6F) {
@@ -813,7 +813,7 @@ void HorseRenderer::render(const DrawContext &ctx, const AnimationInputs &anim,
     QVector3D const fetlock = cannon + QVector3D(0.0F, -pastern_length, 0.0F);
 
     float const hoof_pitch =
-        anim.isMoving ? (-0.20F + std::sin(leg_phase * 2.0F * kPi +
+        anim.isMoving ? (-0.20F + std::sin(leg_phase * 2.0F * k_pi +
                                            (is_rear ? 0.2F : -0.1F)) *
                                       0.10F)
                       : 0.0F;

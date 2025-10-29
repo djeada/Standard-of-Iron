@@ -40,9 +40,9 @@ SaveLoadService::SaveLoadService() {
 SaveLoadService::~SaveLoadService() = default;
 
 auto SaveLoadService::getSavesDirectory() -> QString {
-  QString const savesPath =
+  QString const saves_path =
       QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
-  return savesPath + "/saves";
+  return saves_path + "/saves";
 }
 
 auto SaveLoadService::get_database_path() -> QString {
@@ -50,10 +50,10 @@ auto SaveLoadService::get_database_path() -> QString {
 }
 
 void SaveLoadService::ensureSavesDirectoryExists() {
-  QString const savesDir = getSavesDirectory();
+  QString const saves_dir = getSavesDirectory();
   QDir const dir;
-  if (!dir.exists(savesDir)) {
-    dir.mkpath(savesDir);
+  if (!dir.exists(saves_dir)) {
+    dir.mkpath(saves_dir);
   }
 }
 
@@ -72,30 +72,30 @@ auto SaveLoadService::saveGameToSlot(Engine::Core::World &world,
       return false;
     }
 
-    QJsonDocument const worldDoc =
+    QJsonDocument const world_doc =
         Engine::Core::Serialization::serializeWorld(&world);
-    const QByteArray worldBytes = worldDoc.toJson(QJsonDocument::Compact);
+    const QByteArray world_bytes = world_doc.toJson(QJsonDocument::Compact);
 
-    QJsonObject combinedMetadata = metadata;
-    combinedMetadata["slotName"] = slotName;
-    combinedMetadata["title"] = title;
-    combinedMetadata["timestamp"] =
+    QJsonObject combined_metadata = metadata;
+    combined_metadata["slotName"] = slotName;
+    combined_metadata["title"] = title;
+    combined_metadata["timestamp"] =
         QDateTime::currentDateTimeUtc().toString(Qt::ISODateWithMs);
-    if (!combinedMetadata.contains("map_name")) {
-      combinedMetadata["map_name"] =
+    if (!combined_metadata.contains("map_name")) {
+      combined_metadata["map_name"] =
           map_name.isEmpty() ? QStringLiteral("Unknown Map") : map_name;
     }
-    combinedMetadata["version"] = QStringLiteral("1.0");
+    combined_metadata["version"] = QStringLiteral("1.0");
 
     QString storage_error;
-    if (!m_storage->saveSlot(slotName, title, combinedMetadata, worldBytes,
+    if (!m_storage->saveSlot(slotName, title, combined_metadata, world_bytes,
                              screenshot, &storage_error)) {
       m_last_error = storage_error;
       qWarning() << "SaveLoadService: failed to persist slot" << storage_error;
       return false;
     }
 
-    m_lastMetadata = combinedMetadata;
+    m_lastMetadata = combined_metadata;
     m_lastTitle = title;
     m_lastScreenshot = screenshot;
     m_last_error.clear();
@@ -119,13 +119,13 @@ auto SaveLoadService::loadGameFromSlot(Engine::Core::World &world,
       return false;
     }
 
-    QByteArray worldBytes;
+    QByteArray world_bytes;
     QJsonObject metadata;
     QByteArray screenshot;
     QString title;
 
     QString load_error;
-    if (!m_storage->loadSlot(slotName, worldBytes, metadata, screenshot, title,
+    if (!m_storage->loadSlot(slotName, world_bytes, metadata, screenshot, title,
                              &load_error)) {
       m_last_error = load_error;
       qWarning() << "SaveLoadService: failed to load slot" << load_error;
@@ -133,7 +133,8 @@ auto SaveLoadService::loadGameFromSlot(Engine::Core::World &world,
     }
 
     QJsonParseError parse_error{};
-    QJsonDocument const doc = QJsonDocument::fromJson(worldBytes, &parse_error);
+    QJsonDocument const doc =
+        QJsonDocument::fromJson(world_bytes, &parse_error);
     if (parse_error.error != QJsonParseError::NoError || doc.isNull()) {
       m_last_error = QStringLiteral("Corrupted save data for slot '%1': %2")
                          .arg(slotName, parse_error.errorString());
@@ -163,14 +164,14 @@ auto SaveLoadService::getSaveSlots() const -> QVariantList {
   }
 
   QString list_error;
-  QVariantList slotList = m_storage->listSlots(&list_error);
+  QVariantList slot_list = m_storage->listSlots(&list_error);
   if (!list_error.isEmpty()) {
     m_last_error = list_error;
     qWarning() << "SaveLoadService: failed to enumerate slots" << list_error;
   } else {
     m_last_error.clear();
   }
-  return slotList;
+  return slot_list;
 }
 
 auto SaveLoadService::deleteSaveSlot(const QString &slotName) -> bool {

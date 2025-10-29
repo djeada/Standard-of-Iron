@@ -29,12 +29,9 @@
 namespace Render::GL {
 
 using Render::Geom::clamp01;
-using Render::Geom::clampf;
 using Render::Geom::coneFromTo;
 using Render::Geom::cylinderBetween;
 using Render::Geom::easeInOutCubic;
-using Render::Geom::lerp;
-using Render::Geom::nlerp;
 using Render::Geom::smoothstep;
 using Render::Geom::sphereAt;
 
@@ -321,8 +318,8 @@ public:
 
   void draw_armorOverlay(const DrawContext &ctx, const HumanoidVariant &v,
                          const HumanoidPose &pose, float y_top_cover,
-                         float torso_r, float shoulder_half_span,
-                         float upper_arm_r, const QVector3D &right_axis,
+                         float torso_r, float, float upper_arm_r,
+                         const QVector3D &right_axis,
                          ISubmitter &out) const override {
     using HP = HumanProportions;
 
@@ -349,12 +346,12 @@ public:
              cylinderBetween(ctx.model, bp_top, bp_mid, r_chest), steel_color,
              nullptr, 1.0F);
 
-    QVector3D const bp_midLow(0, (bp_mid.y() + bp_bot.y()) * 0.5F, 0);
+    QVector3D const bp_mid_low(0, (bp_mid.y() + bp_bot.y()) * 0.5F, 0);
     out.mesh(getUnitCylinder(),
-             cylinderBetween(ctx.model, bp_mid, bp_midLow, r_chest * 0.98F),
+             cylinderBetween(ctx.model, bp_mid, bp_mid_low, r_chest * 0.98F),
              steel_color * 0.99F, nullptr, 1.0F);
 
-    out.mesh(getUnitCone(), coneFromTo(ctx.model, bp_bot, bp_midLow, r_waist),
+    out.mesh(getUnitCone(), coneFromTo(ctx.model, bp_bot, bp_mid_low, r_waist),
              steel_color * 0.98F, nullptr, 1.0F);
 
     auto draw_rivet = [&](const QVector3D &pos) {
@@ -374,12 +371,12 @@ public:
     auto draw_pauldron = [&](const QVector3D &shoulder,
                              const QVector3D &outward) {
       for (int i = 0; i < 4; ++i) {
-        float const segY = shoulder.y() + 0.04F - i * 0.045F;
-        float const segR = upper_arm_r * (2.5F - i * 0.12F);
+        float const seg_y = shoulder.y() + 0.04F - i * 0.045F;
+        float const seg_r = upper_arm_r * (2.5F - i * 0.12F);
         QVector3D seg_pos = shoulder + outward * (0.02F + i * 0.008F);
-        seg_pos.setY(segY);
+        seg_pos.setY(seg_y);
 
-        out.mesh(getUnitSphere(), sphereAt(ctx.model, seg_pos, segR),
+        out.mesh(getUnitSphere(), sphereAt(ctx.model, seg_pos, seg_r),
                  i == 0 ? steel_color * 1.05F
                         : steel_color * (1.0F - i * 0.03F),
                  nullptr, 1.0F);
@@ -432,8 +429,8 @@ public:
   }
 
   void drawShoulderDecorations(const DrawContext &ctx, const HumanoidVariant &v,
-                               const HumanoidPose &pose, float y_top_cover,
-                               float y_neck, const QVector3D &right_axis,
+                               const HumanoidPose &, float, float y_neck,
+                               const QVector3D &,
                                ISubmitter &out) const override {
     using HP = HumanProportions;
 
@@ -555,10 +552,10 @@ private:
       QVector3D const a = grip_a + sword_dir * (grip_len * t0);
       QVector3D const b = grip_a + sword_dir * (grip_len * t1);
 
-      float const rMid =
+      float const r_mid =
           grip_rad *
           (0.96F + 0.08F * std::sin((t0 + t1) * std::numbers::pi_v<float>));
-      out.mesh(getUnitCylinder(), cylinderBetween(ctx.model, a, b, rMid),
+      out.mesh(getUnitCylinder(), cylinderBetween(ctx.model, a, b, r_mid),
                leather * 0.98F, nullptr, 1.0F);
     }
 
@@ -577,16 +574,16 @@ private:
         prev = p;
       }
 
-      QVector3D const Lend =
+      QVector3D const lend =
           guard_center - right_axis * guard_half + (-up_axis * guard_curve);
-      QVector3D const Rend =
+      QVector3D const rend =
           guard_center + right_axis * guard_half + (-up_axis * guard_curve);
       out.mesh(getUnitCone(),
-               coneFromTo(ctx.model, Lend - right_axis * 0.030F, Lend,
+               coneFromTo(ctx.model, lend - right_axis * 0.030F, lend,
                           guard_rad * 1.12F),
                steel_hi, nullptr, 1.0F);
       out.mesh(getUnitCone(),
-               coneFromTo(ctx.model, Rend + right_axis * 0.030F, Rend,
+               coneFromTo(ctx.model, rend + right_axis * 0.030F, rend,
                           guard_rad * 1.12F),
                steel_hi, nullptr, 1.0F);
 
@@ -613,7 +610,7 @@ private:
              steel_lo, nullptr, 1.0F);
 
     const float base_r = extras.swordWidth * 0.26F;
-    const float midR = extras.swordWidth * 0.16F;
+    const float mid_r = extras.swordWidth * 0.16F;
     const float pre_tip_r = extras.swordWidth * 0.09F;
 
     QVector3D const s0 = ricasso_end;
@@ -622,17 +619,17 @@ private:
 
     out.mesh(getUnitCylinder(), cylinderBetween(ctx.model, s0, s1, base_r),
              steel_hi, nullptr, 1.0F);
-    out.mesh(getUnitCylinder(), cylinderBetween(ctx.model, s1, s2, midR),
+    out.mesh(getUnitCylinder(), cylinderBetween(ctx.model, s1, s2, mid_r),
              steel_hi, nullptr, 1.0F);
 
     {
       float const edge_r = extras.swordWidth * 0.03F;
-      QVector3D const eA = blade_root + sword_dir * (blade_len * 0.10F);
-      QVector3D const eB = blade_tip - sword_dir * (blade_len * 0.06F);
-      QVector3D const left_edge_a = eA + right_axis * (base_r * 0.95F);
-      QVector3D const left_edge_b = eB + right_axis * (pre_tip_r * 0.95F);
-      QVector3D const right_edge_a = eA - right_axis * (base_r * 0.95F);
-      QVector3D const right_edge_b = eB - right_axis * (pre_tip_r * 0.95F);
+      QVector3D const e_a = blade_root + sword_dir * (blade_len * 0.10F);
+      QVector3D const e_b = blade_tip - sword_dir * (blade_len * 0.06F);
+      QVector3D const left_edge_a = e_a + right_axis * (base_r * 0.95F);
+      QVector3D const left_edge_b = e_b + right_axis * (pre_tip_r * 0.95F);
+      QVector3D const right_edge_a = e_a - right_axis * (base_r * 0.95F);
+      QVector3D const right_edge_b = e_b - right_axis * (pre_tip_r * 0.95F);
       out.mesh(getUnitCylinder(),
                cylinderBetween(ctx.model, left_edge_a, left_edge_b, edge_r),
                steel * 1.08F, nullptr, 1.0F);
@@ -687,7 +684,7 @@ private:
                                 const MountedKnightExtras &extras,
                                 ISubmitter &out) {
     const float scale_factor = 2.0F;
-    const float R = 0.15F * scale_factor;
+    const float r = 0.15F * scale_factor;
 
     constexpr float k_mounted_shield_yaw_degrees = -70.0F;
     QMatrix4x4 rot;
@@ -698,7 +695,7 @@ private:
     const QVector3D axis_y = rot.map(QVector3D(0.0F, 1.0F, 0.0F));
 
     QVector3D const shield_center =
-        pose.handL + axis_x * (-R * 0.30F) + axis_y * (-0.05F) + n * (0.05F);
+        pose.handL + axis_x * (-r * 0.30F) + axis_y * (-0.05F) + n * (0.05F);
 
     const float plate_half = 0.0012F;
     const float plate_full = plate_half * 2.0F;
@@ -707,7 +704,7 @@ private:
       QMatrix4x4 m = ctx.model;
       m.translate(shield_center + n * plate_half);
       m.rotate(k_mounted_shield_yaw_degrees, 0.0F, 1.0F, 0.0F);
-      m.scale(R, R, plate_full);
+      m.scale(r, r, plate_full);
       out.mesh(getUnitCylinder(), m, v.palette.cloth * 1.15F, nullptr, 1.0F);
     }
 
@@ -715,7 +712,7 @@ private:
       QMatrix4x4 m = ctx.model;
       m.translate(shield_center - n * plate_half);
       m.rotate(k_mounted_shield_yaw_degrees, 0.0F, 1.0F, 0.0F);
-      m.scale(R * 0.985F, R * 0.985F, plate_full);
+      m.scale(r * 0.985F, r * 0.985F, plate_full);
       out.mesh(getUnitCylinder(), m, v.palette.leather * 0.8F, nullptr, 1.0F);
     }
 
