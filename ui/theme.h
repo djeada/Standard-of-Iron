@@ -76,67 +76,67 @@ public:
   static auto instance() -> Theme *;
   static auto create(QQmlEngine *engine, QJSEngine *scriptEngine) -> Theme *;
 
-  [[nodiscard]] static QColor bg() { return {"#071018"}; }
-  [[nodiscard]] static QColor bgShade() { return {"#061214"}; }
-  [[nodiscard]] static QColor dim() { return {0, 0, 0, 115}; }
+  [[nodiscard]] static auto bg() -> QColor { return {"#071018"}; }
+  [[nodiscard]] static auto bgShade() -> QColor { return {"#061214"}; }
+  [[nodiscard]] static auto dim() -> QColor { return {0, 0, 0, 115}; }
 
-  [[nodiscard]] static QColor panelBase() { return {"#071018"}; }
-  [[nodiscard]] static QColor panelBr() { return {"#0f2430"}; }
-  [[nodiscard]] static QColor panelBorder() { return {"#0f2430"}; }
+  [[nodiscard]] static auto panelBase() -> QColor { return {"#071018"}; }
+  [[nodiscard]] static auto panelBr() -> QColor { return {"#0f2430"}; }
+  [[nodiscard]] static auto panelBorder() -> QColor { return {"#0f2430"}; }
 
-  [[nodiscard]] static QColor cardBase() { return {"#061214"}; }
-  [[nodiscard]] static QColor cardBaseA() { return {"#061214AA"}; }
-  [[nodiscard]] static QColor cardBaseB() { return {"#061214"}; }
-  [[nodiscard]] static QColor cardBorder() { return {"#12323a"}; }
+  [[nodiscard]] static auto cardBase() -> QColor { return {"#061214"}; }
+  [[nodiscard]] static auto cardBaseA() -> QColor { return {"#061214AA"}; }
+  [[nodiscard]] static auto cardBaseB() -> QColor { return {"#061214"}; }
+  [[nodiscard]] static auto cardBorder() -> QColor { return {"#12323a"}; }
 
-  [[nodiscard]] static QColor hover() { return {"#184c7a"}; }
-  [[nodiscard]] static QColor hoverBg() { return {"#184c7a"}; }
-  [[nodiscard]] static QColor selected() { return {"#1f8bf5"}; }
-  [[nodiscard]] static QColor selectedBg() { return {"#1f8bf5"}; }
-  [[nodiscard]] static QColor selectedBr() { return {"#1b74d1"}; }
+  [[nodiscard]] static auto hover() -> QColor { return {"#184c7a"}; }
+  [[nodiscard]] static auto hoverBg() -> QColor { return {"#184c7a"}; }
+  [[nodiscard]] static auto selected() -> QColor { return {"#1f8bf5"}; }
+  [[nodiscard]] static auto selectedBg() -> QColor { return {"#1f8bf5"}; }
+  [[nodiscard]] static auto selectedBr() -> QColor { return {"#1b74d1"}; }
 
-  [[nodiscard]] static QColor thumbBr() { return {"#2A4E56"}; }
-  [[nodiscard]] static QColor border() { return {"#0f2b34"}; }
+  [[nodiscard]] static auto thumbBr() -> QColor { return {"#2A4E56"}; }
+  [[nodiscard]] static auto border() -> QColor { return {"#0f2b34"}; }
 
-  [[nodiscard]] static QColor textMain() { return {"#eaf6ff"}; }
-  [[nodiscard]] static QColor textBright() { return {"#dff0ff"}; }
-  [[nodiscard]] static QColor textSub() { return {"#86a7b6"}; }
-  [[nodiscard]] static QColor textSubLite() { return {"#79a6b7"}; }
-  [[nodiscard]] static QColor textDim() { return {"#4f6a75"}; }
-  [[nodiscard]] static QColor textHint() { return {"#2a5e6e"}; }
+  [[nodiscard]] static auto textMain() -> QColor { return {"#eaf6ff"}; }
+  [[nodiscard]] static auto textBright() -> QColor { return {"#dff0ff"}; }
+  [[nodiscard]] static auto textSub() -> QColor { return {"#86a7b6"}; }
+  [[nodiscard]] static auto textSubLite() -> QColor { return {"#79a6b7"}; }
+  [[nodiscard]] static auto textDim() -> QColor { return {"#4f6a75"}; }
+  [[nodiscard]] static auto textHint() -> QColor { return {"#2a5e6e"}; }
 
-  [[nodiscard]] static QColor accent() { return {"#9fd9ff"}; }
-  [[nodiscard]] static QColor accentBright() { return {"#d0e8ff"}; }
+  [[nodiscard]] static auto accent() -> QColor { return {"#9fd9ff"}; }
+  [[nodiscard]] static auto accentBright() -> QColor { return {"#d0e8ff"}; }
 
-  [[nodiscard]] static QColor addColor() { return {"#3A9CA8"}; }
-  [[nodiscard]] static QColor removeColor() { return {"#D04040"}; }
+  [[nodiscard]] static auto addColor() -> QColor { return {"#3A9CA8"}; }
+  [[nodiscard]] static auto removeColor() -> QColor { return {"#D04040"}; }
 
-  [[nodiscard]] static int spacingTiny() { return 4; }
-  [[nodiscard]] static int spacingSmall() { return 8; }
-  [[nodiscard]] static int spacingMedium() { return 12; }
-  [[nodiscard]] static int spacingLarge() { return 16; }
-  [[nodiscard]] static int spacingXLarge() { return 20; }
+  [[nodiscard]] static auto spacingTiny() -> int { return 4; }
+  [[nodiscard]] static auto spacingSmall() -> int { return 8; }
+  [[nodiscard]] static auto spacingMedium() -> int { return 12; }
+  [[nodiscard]] static auto spacingLarge() -> int { return 16; }
+  [[nodiscard]] static auto spacingXLarge() -> int { return 20; }
 
-  [[nodiscard]] static int radiusSmall() { return 4; }
-  [[nodiscard]] static int radiusMedium() { return 6; }
-  [[nodiscard]] static int radiusLarge() { return 8; }
-  [[nodiscard]] static int radiusPanel() { return 14; }
+  [[nodiscard]] static auto radiusSmall() -> int { return 4; }
+  [[nodiscard]] static auto radiusMedium() -> int { return 6; }
+  [[nodiscard]] static auto radiusLarge() -> int { return 8; }
+  [[nodiscard]] static auto radiusPanel() -> int { return 14; }
 
-  [[nodiscard]] static int animFast() { return 120; }
-  [[nodiscard]] static int animNormal() { return 160; }
-  [[nodiscard]] static int animSlow() { return 200; }
+  [[nodiscard]] static auto animFast() -> int { return 120; }
+  [[nodiscard]] static auto animNormal() -> int { return 160; }
+  [[nodiscard]] static auto animSlow() -> int { return 200; }
 
-  [[nodiscard]] static int fontSizeTiny() { return 11; }
-  [[nodiscard]] static int fontSizeSmall() { return 12; }
-  [[nodiscard]] static int fontSizeMedium() { return 14; }
-  [[nodiscard]] static int fontSizeLarge() { return 16; }
-  [[nodiscard]] static int fontSizeTitle() { return 18; }
-  [[nodiscard]] static int fontSizeHero() { return 28; }
+  [[nodiscard]] static auto fontSizeTiny() -> int { return 11; }
+  [[nodiscard]] static auto fontSizeSmall() -> int { return 12; }
+  [[nodiscard]] static auto fontSizeMedium() -> int { return 14; }
+  [[nodiscard]] static auto fontSizeLarge() -> int { return 16; }
+  [[nodiscard]] static auto fontSizeTitle() -> int { return 18; }
+  [[nodiscard]] static auto fontSizeHero() -> int { return 28; }
 
-  [[nodiscard]] auto playerColors() const -> QVariantList;
-  [[nodiscard]] auto teamIcons() const -> QVariantList;
-  [[nodiscard]] auto factions() const -> QVariantList;
-  [[nodiscard]] auto unitIcons() const -> QVariantMap;
+  [[nodiscard]] static auto playerColors() -> QVariantList;
+  [[nodiscard]] static auto teamIcons() -> QVariantList;
+  [[nodiscard]] static auto factions() -> QVariantList;
+  [[nodiscard]] static auto unitIcons() -> QVariantMap;
 
 private:
   explicit Theme(QObject *parent = nullptr);

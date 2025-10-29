@@ -139,7 +139,7 @@ auto World::getEnemyUnits(int owner_id) const -> std::vector<Entity *> {
   return result;
 }
 
-int World::countTroopsForPlayer(int owner_id) {
+auto World::countTroopsForPlayer(int owner_id) -> int {
   return Game::Systems::TroopCountRegistry::instance().getTroopCount(owner_id);
 }
 
