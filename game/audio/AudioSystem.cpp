@@ -16,8 +16,8 @@
 #include <vector>
 
 AudioSystem::AudioSystem()
-    : isRunning(false), masterVolume(DEFAULT_VOLUME), soundVolume(DEFAULT_VOLUME),
-      musicVolume(DEFAULT_VOLUME), voiceVolume(DEFAULT_VOLUME) {}
+    : isRunning(false), masterVolume(AudioConstants::DEFAULT_VOLUME), soundVolume(AudioConstants::DEFAULT_VOLUME),
+      musicVolume(AudioConstants::DEFAULT_VOLUME), voiceVolume(AudioConstants::DEFAULT_VOLUME) {}
 
 AudioSystem::~AudioSystem() { shutdown(); }
 
@@ -100,14 +100,14 @@ void AudioSystem::stopMusic() {
 }
 
 void AudioSystem::setMasterVolume(float volume) {
-  masterVolume = std::clamp(volume, MIN_VOLUME, MAX_VOLUME);
+  masterVolume = std::clamp(volume, AudioConstants::MIN_VOLUME, AudioConstants::MAX_VOLUME);
 
   std::lock_guard<std::mutex> const lock(resourceMutex);
   for (auto &sound : sounds) {
     auto it = soundCategories.find(sound.first);
     AudioCategory const category =
         (it != soundCategories.end()) ? it->second : AudioCategory::SFX;
-    sound.second->set_volume(getEffectiveVolume(category, DEFAULT_VOLUME));
+    sound.second->set_volume(getEffectiveVolume(category, AudioConstants::DEFAULT_VOLUME));
   }
 
   if (m_musicPlayer != nullptr) {
@@ -116,19 +116,19 @@ void AudioSystem::setMasterVolume(float volume) {
 }
 
 void AudioSystem::setSoundVolume(float volume) {
-  soundVolume = std::clamp(volume, MIN_VOLUME, MAX_VOLUME);
+  soundVolume = std::clamp(volume, AudioConstants::MIN_VOLUME, AudioConstants::MAX_VOLUME);
 
   std::lock_guard<std::mutex> const lock(resourceMutex);
   for (auto &sound : sounds) {
     auto it = soundCategories.find(sound.first);
     if (it != soundCategories.end() && it->second == AudioCategory::SFX) {
-      sound.second->set_volume(getEffectiveVolume(AudioCategory::SFX, DEFAULT_VOLUME));
+      sound.second->set_volume(getEffectiveVolume(AudioCategory::SFX, AudioConstants::DEFAULT_VOLUME));
     }
   }
 }
 
 void AudioSystem::setMusicVolume(float volume) {
-  musicVolume = std::clamp(volume, MIN_VOLUME, MAX_VOLUME);
+  musicVolume = std::clamp(volume, AudioConstants::MIN_VOLUME, AudioConstants::MAX_VOLUME);
 
   std::lock_guard<std::mutex> const lock(resourceMutex);
   if (m_musicPlayer != nullptr) {
@@ -137,13 +137,13 @@ void AudioSystem::setMusicVolume(float volume) {
 }
 
 void AudioSystem::setVoiceVolume(float volume) {
-  voiceVolume = std::clamp(volume, MIN_VOLUME, MAX_VOLUME);
+  voiceVolume = std::clamp(volume, AudioConstants::MIN_VOLUME, AudioConstants::MAX_VOLUME);
 
   std::lock_guard<std::mutex> const lock(resourceMutex);
   for (auto &sound : sounds) {
     auto it = soundCategories.find(sound.first);
     if (it != soundCategories.end() && it->second == AudioCategory::VOICE) {
-      sound.second->set_volume(getEffectiveVolume(AudioCategory::VOICE, DEFAULT_VOLUME));
+      sound.second->set_volume(getEffectiveVolume(AudioCategory::VOICE, AudioConstants::DEFAULT_VOLUME));
     }
   }
 }
@@ -235,7 +235,7 @@ void AudioSystem::unloadAllMusic() {
 }
 
 void AudioSystem::setMaxChannels(size_t channels) {
-  maxChannels = std::max(MIN_CHANNELS, channels);
+  maxChannels = std::max(AudioConstants::MIN_CHANNELS, channels);
 }
 
 auto AudioSystem::getActiveChannelCount() const -> size_t {
