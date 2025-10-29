@@ -22,7 +22,7 @@ static auto createArrowMesh() -> GL::Mesh * {
   std::vector<GL::Vertex> verts;
   std::vector<unsigned int> idx;
 
-  const int radial = 12;
+  constexpr int k_arrow_radial_segments = 12;
   const float shaft_radius = 0.05F;
   const float shaft_len = 0.85F;
   const float tip_len = 0.15F;
@@ -32,23 +32,23 @@ static auto createArrowMesh() -> GL::Mesh * {
   int const base_index = 0;
   for (int ring = 0; ring < 2; ++ring) {
     float z = (ring == 0) ? 0.0F : shaft_len;
-    for (int i = 0; i < radial; ++i) {
-      float const a = (float(i) / radial) * 6.2831853F;
+    for (int i = 0; i < k_arrow_radial_segments; ++i) {
+      float const a = (float(i) / k_arrow_radial_segments) * 6.2831853F;
       float x = std::cos(a) * shaft_radius;
       float y = std::sin(a) * shaft_radius;
       QVector3D n(x, y, 0.0F);
       n.normalize();
       verts.push_back(
-          {{x, y, z}, {n.x(), n.y(), n.z()}, {float(i) / radial, z}});
+          {{x, y, z}, {n.x(), n.y(), n.z()}, {float(i) / k_arrow_radial_segments, z}});
     }
   }
 
-  for (int i = 0; i < radial; ++i) {
-    int const next = (i + 1) % radial;
+  for (int i = 0; i < k_arrow_radial_segments; ++i) {
+    int const next = (i + 1) % k_arrow_radial_segments;
     int a = base_index + i;
     int b = base_index + next;
-    int c = base_index + radial + next;
-    int d = base_index + radial + i;
+    int c = base_index + k_arrow_radial_segments + next;
+    int d = base_index + k_arrow_radial_segments + i;
     idx.push_back(a);
     idx.push_back(b);
     idx.push_back(c);
@@ -58,20 +58,20 @@ static auto createArrowMesh() -> GL::Mesh * {
   }
 
   int const ring_start = verts.size();
-  for (int i = 0; i < radial; ++i) {
-    float const a = (float(i) / radial) * 6.2831853F;
+  for (int i = 0; i < k_arrow_radial_segments; ++i) {
+    float const a = (float(i) / k_arrow_radial_segments) * 6.2831853F;
     float x = std::cos(a) * shaft_radius * 1.4F;
     float y = std::sin(a) * shaft_radius * 1.4F;
     QVector3D n(x, y, 0.2F);
     n.normalize();
     verts.push_back(
-        {{x, y, tip_startZ}, {n.x(), n.y(), n.z()}, {float(i) / radial, 0.0F}});
+        {{x, y, tip_startZ}, {n.x(), n.y(), n.z()}, {float(i) / k_arrow_radial_segments, 0.0F}});
   }
 
   int apex_index = verts.size();
   verts.push_back({{0.0F, 0.0F, tip_end_z}, {0.0F, 0.0F, 1.0F}, {0.5F, 1.0F}});
-  for (int i = 0; i < radial; ++i) {
-    int const next = (i + 1) % radial;
+  for (int i = 0; i < k_arrow_radial_segments; ++i) {
+    int const next = (i + 1) % k_arrow_radial_segments;
     idx.push_back(ring_start + i);
     idx.push_back(apex_index);
     idx.push_back(ring_start + next);
@@ -114,16 +114,18 @@ void renderArrows(Renderer *renderer, ResourceManager *resources,
     QMatrix4x4 model;
     model.translate(pos.x(), pos.y(), pos.z());
 
+    constexpr float k_rad_to_deg = 180.0F / std::numbers::pi_v<float>;
     QVector3D const dir = delta.normalized();
-    float const yaw_deg =
-        std::atan2(dir.x(), dir.z()) * 180.0F / std::numbers::pi_v<float>;
+    float const yaw_deg = std::atan2(dir.x(), dir.z()) * k_rad_to_deg;
     model.rotate(yaw_deg, QVector3D(0, 1, 0));
 
+    constexpr float k_arc_height_multiplier = 8.0F;
+    constexpr float k_arc_center_offset = 0.5F;
     float const vy = (arrow.end.y() - arrow.start.y()) / dist;
     float const pitch_deg =
-        -std::atan2(vy - (8.0F * arrow.arcHeight * (arrow.t - 0.5F) / dist),
+        -std::atan2(vy - (k_arc_height_multiplier * arrow.arcHeight * (arrow.t - k_arc_center_offset) / dist),
                     1.0F) *
-        180.0F / std::numbers::pi_v<float>;
+        k_rad_to_deg;
     model.rotate(pitch_deg, QVector3D(1, 0, 0));
 
     constexpr float arrow_z_scale = 0.40F;

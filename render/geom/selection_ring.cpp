@@ -15,12 +15,12 @@ static auto createRingMesh() -> Render::GL::Mesh * {
   using namespace Render::GL;
   std::vector<Vertex> verts;
   std::vector<unsigned int> idx;
-  const int seg = 48;
+  constexpr int k_ring_segments = 48;
   const float inner = 0.94F;
   const float outer = 1.0F;
-  for (int i = 0; i < seg; ++i) {
-    float const a0 = (i / float(seg)) * 6.2831853F;
-    float const a1 = ((i + 1) / float(seg)) * 6.2831853F;
+  for (int i = 0; i < k_ring_segments; ++i) {
+    float const a0 = (i / float(k_ring_segments)) * 6.2831853F;
+    float const a1 = ((i + 1) / float(k_ring_segments)) * 6.2831853F;
     QVector3D const n(0, 1, 0);
     QVector3D const v0i(inner * std::cos(a0), 0.0F, inner * std::sin(a0));
     QVector3D const v0o(outer * std::cos(a0), 0.0F, outer * std::sin(a0));
