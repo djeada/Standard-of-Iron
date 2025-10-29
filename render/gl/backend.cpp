@@ -29,6 +29,7 @@
 #include <memory>
 #include <qglobal.h>
 #include <qmatrix4x4.h>
+#include <qopenglcontext.h>
 #include <qstringliteral.h>
 #include <qvectornd.h>
 #include <vector>
@@ -216,15 +217,15 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         if (glIsEnabled(GL_POLYGON_OFFSET_FILL) != 0U) {
           glDisable(GL_POLYGON_OFFSET_FILL);
         }
-        Shader *cylinderShader = m_cylinderPipeline->cylinderShader();
-        if (m_lastBoundShader != cylinderShader) {
-          cylinderShader->use();
-          m_lastBoundShader = cylinderShader;
+        Shader *cylinder_shader = m_cylinderPipeline->cylinderShader();
+        if (m_lastBoundShader != cylinder_shader) {
+          cylinder_shader->use();
+          m_lastBoundShader = cylinder_shader;
           m_lastBoundTexture = nullptr;
         }
         if (m_cylinderPipeline->m_cylinderUniforms.view_proj !=
             Shader::InvalidUniform) {
-          cylinderShader->setUniform(
+          cylinder_shader->setUniform(
               m_cylinderPipeline->m_cylinderUniforms.view_proj, view_proj);
         }
         m_cylinderPipeline->uploadCylinderInstances(instance_count);
@@ -255,16 +256,16 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         if (glIsEnabled(GL_POLYGON_OFFSET_FILL) != 0U) {
           glDisable(GL_POLYGON_OFFSET_FILL);
         }
-        Shader *fogShader = m_cylinderPipeline->fogShader();
-        if (m_lastBoundShader != fogShader) {
-          fogShader->use();
-          m_lastBoundShader = fogShader;
+        Shader *fog_shader = m_cylinderPipeline->fogShader();
+        if (m_lastBoundShader != fog_shader) {
+          fog_shader->use();
+          m_lastBoundShader = fog_shader;
           m_lastBoundTexture = nullptr;
         }
         if (m_cylinderPipeline->m_fogUniforms.view_proj !=
             Shader::InvalidUniform) {
-          fogShader->setUniform(m_cylinderPipeline->m_fogUniforms.view_proj,
-                                view_proj);
+          fog_shader->setUniform(m_cylinderPipeline->m_fogUniforms.view_proj,
+                                 view_proj);
         }
         m_cylinderPipeline->uploadFogInstances(instance_count);
         m_cylinderPipeline->drawFog(instance_count);
@@ -373,17 +374,17 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       DepthMaskScope const depth_mask(true);
       BlendScope const blend(false);
 
-      Shader *stoneShader = m_vegetationPipeline->stoneShader();
-      if (m_lastBoundShader != stoneShader) {
-        stoneShader->use();
-        m_lastBoundShader = stoneShader;
+      Shader *stone_shader = m_vegetationPipeline->stoneShader();
+      if (m_lastBoundShader != stone_shader) {
+        stone_shader->use();
+        m_lastBoundShader = stone_shader;
         m_lastBoundTexture = nullptr;
       }
 
       if (m_vegetationPipeline->m_stoneUniforms.view_proj !=
           Shader::InvalidUniform) {
-        stoneShader->setUniform(m_vegetationPipeline->m_stoneUniforms.view_proj,
-                                view_proj);
+        stone_shader->setUniform(
+            m_vegetationPipeline->m_stoneUniforms.view_proj, view_proj);
       }
       if (m_vegetationPipeline->m_stoneUniforms.light_direction !=
           Shader::InvalidUniform) {
@@ -391,7 +392,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         if (!light_dir.isNull()) {
           light_dir.normalize();
         }
-        stoneShader->setUniform(
+        stone_shader->setUniform(
             m_vegetationPipeline->m_stoneUniforms.light_direction, light_dir);
       }
 
@@ -438,33 +439,34 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         glDisable(GL_CULL_FACE);
       }
 
-      Shader *plantShader = m_vegetationPipeline->plantShader();
-      if (m_lastBoundShader != plantShader) {
-        plantShader->use();
-        m_lastBoundShader = plantShader;
+      Shader *plant_shader = m_vegetationPipeline->plantShader();
+      if (m_lastBoundShader != plant_shader) {
+        plant_shader->use();
+        m_lastBoundShader = plant_shader;
         m_lastBoundTexture = nullptr;
       }
 
       if (m_vegetationPipeline->m_plantUniforms.view_proj !=
           Shader::InvalidUniform) {
-        plantShader->setUniform(m_vegetationPipeline->m_plantUniforms.view_proj,
-                                view_proj);
+        plant_shader->setUniform(
+            m_vegetationPipeline->m_plantUniforms.view_proj, view_proj);
       }
       if (m_vegetationPipeline->m_plantUniforms.time !=
           Shader::InvalidUniform) {
-        plantShader->setUniform(m_vegetationPipeline->m_plantUniforms.time,
-                                plant.params.time);
+        plant_shader->setUniform(m_vegetationPipeline->m_plantUniforms.time,
+                                 plant.params.time);
       }
       if (m_vegetationPipeline->m_plantUniforms.windStrength !=
           Shader::InvalidUniform) {
-        plantShader->setUniform(
+        plant_shader->setUniform(
             m_vegetationPipeline->m_plantUniforms.windStrength,
             plant.params.windStrength);
       }
       if (m_vegetationPipeline->m_plantUniforms.windSpeed !=
           Shader::InvalidUniform) {
-        plantShader->setUniform(m_vegetationPipeline->m_plantUniforms.windSpeed,
-                                plant.params.windSpeed);
+        plant_shader->setUniform(
+            m_vegetationPipeline->m_plantUniforms.windSpeed,
+            plant.params.windSpeed);
       }
       if (m_vegetationPipeline->m_plantUniforms.light_direction !=
           Shader::InvalidUniform) {
@@ -472,7 +474,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         if (!light_dir.isNull()) {
           light_dir.normalize();
         }
-        plantShader->setUniform(
+        plant_shader->setUniform(
             m_vegetationPipeline->m_plantUniforms.light_direction, light_dir);
       }
 
@@ -525,32 +527,32 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         glDisable(GL_CULL_FACE);
       }
 
-      Shader *pineShader = m_vegetationPipeline->pineShader();
-      if (m_lastBoundShader != pineShader) {
-        pineShader->use();
-        m_lastBoundShader = pineShader;
+      Shader *pine_shader = m_vegetationPipeline->pineShader();
+      if (m_lastBoundShader != pine_shader) {
+        pine_shader->use();
+        m_lastBoundShader = pine_shader;
         m_lastBoundTexture = nullptr;
       }
 
       if (m_vegetationPipeline->m_pineUniforms.view_proj !=
           Shader::InvalidUniform) {
-        pineShader->setUniform(m_vegetationPipeline->m_pineUniforms.view_proj,
-                               view_proj);
+        pine_shader->setUniform(m_vegetationPipeline->m_pineUniforms.view_proj,
+                                view_proj);
       }
       if (m_vegetationPipeline->m_pineUniforms.time != Shader::InvalidUniform) {
-        pineShader->setUniform(m_vegetationPipeline->m_pineUniforms.time,
-                               pine.params.time);
+        pine_shader->setUniform(m_vegetationPipeline->m_pineUniforms.time,
+                                pine.params.time);
       }
       if (m_vegetationPipeline->m_pineUniforms.windStrength !=
           Shader::InvalidUniform) {
-        pineShader->setUniform(
+        pine_shader->setUniform(
             m_vegetationPipeline->m_pineUniforms.windStrength,
             pine.params.windStrength);
       }
       if (m_vegetationPipeline->m_pineUniforms.windSpeed !=
           Shader::InvalidUniform) {
-        pineShader->setUniform(m_vegetationPipeline->m_pineUniforms.windSpeed,
-                               pine.params.windSpeed);
+        pine_shader->setUniform(m_vegetationPipeline->m_pineUniforms.windSpeed,
+                                pine.params.windSpeed);
       }
       if (m_vegetationPipeline->m_pineUniforms.light_direction !=
           Shader::InvalidUniform) {
@@ -558,7 +560,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         if (!light_dir.isNull()) {
           light_dir.normalize();
         }
-        pineShader->setUniform(
+        pine_shader->setUniform(
             m_vegetationPipeline->m_pineUniforms.light_direction, light_dir);
       }
 
@@ -612,39 +614,39 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         glDisable(GL_CULL_FACE);
       }
 
-      Shader *firecampShader = m_vegetationPipeline->firecampShader();
-      if (m_lastBoundShader != firecampShader) {
-        firecampShader->use();
-        m_lastBoundShader = firecampShader;
+      Shader *firecamp_shader = m_vegetationPipeline->firecampShader();
+      if (m_lastBoundShader != firecamp_shader) {
+        firecamp_shader->use();
+        m_lastBoundShader = firecamp_shader;
         m_lastBoundTexture = nullptr;
       }
 
       if (m_vegetationPipeline->m_firecampUniforms.view_proj !=
           Shader::InvalidUniform) {
-        firecampShader->setUniform(
+        firecamp_shader->setUniform(
             m_vegetationPipeline->m_firecampUniforms.view_proj, view_proj);
       }
       if (m_vegetationPipeline->m_firecampUniforms.time !=
           Shader::InvalidUniform) {
-        firecampShader->setUniform(
+        firecamp_shader->setUniform(
             m_vegetationPipeline->m_firecampUniforms.time,
             firecamp.params.time);
       }
       if (m_vegetationPipeline->m_firecampUniforms.flickerSpeed !=
           Shader::InvalidUniform) {
-        firecampShader->setUniform(
+        firecamp_shader->setUniform(
             m_vegetationPipeline->m_firecampUniforms.flickerSpeed,
             firecamp.params.flickerSpeed);
       }
       if (m_vegetationPipeline->m_firecampUniforms.flickerAmount !=
           Shader::InvalidUniform) {
-        firecampShader->setUniform(
+        firecamp_shader->setUniform(
             m_vegetationPipeline->m_firecampUniforms.flickerAmount,
             firecamp.params.flickerAmount);
       }
       if (m_vegetationPipeline->m_firecampUniforms.glowStrength !=
           Shader::InvalidUniform) {
-        firecampShader->setUniform(
+        firecamp_shader->setUniform(
             m_vegetationPipeline->m_firecampUniforms.glowStrength,
             firecamp.params.glowStrength);
       }
@@ -656,7 +658,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         } else {
           camera_right.normalize();
         }
-        firecampShader->setUniform(
+        firecamp_shader->setUniform(
             m_vegetationPipeline->m_firecampUniforms.camera_right,
             camera_right);
       }
@@ -668,7 +670,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         } else {
           camera_forward.normalize();
         }
-        firecampShader->setUniform(
+        firecamp_shader->setUniform(
             m_vegetationPipeline->m_firecampUniforms.camera_forward,
             camera_forward);
       }
@@ -677,7 +679,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
           Shader::InvalidUniform) {
         if (m_resources && (m_resources->white() != nullptr)) {
           m_resources->white()->bind(0);
-          firecampShader->setUniform(
+          firecamp_shader->setUniform(
               m_vegetationPipeline->m_firecampUniforms.fireTexture, 0);
         }
       }

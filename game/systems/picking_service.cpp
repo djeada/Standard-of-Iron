@@ -41,17 +41,17 @@ auto PickingService::projectBounds(const Render::GL::Camera &cam,
       return false;
     }
   }
-  qreal minX = screen_pts[0].x();
-  qreal maxX = screen_pts[0].x();
-  qreal minY = screen_pts[0].y();
-  qreal maxY = screen_pts[0].y();
+  qreal min_x = screen_pts[0].x();
+  qreal max_x = screen_pts[0].x();
+  qreal min_y = screen_pts[0].y();
+  qreal max_y = screen_pts[0].y();
   for (int i = 1; i < 4; ++i) {
-    minX = std::min(minX, screen_pts[i].x());
-    maxX = std::max(maxX, screen_pts[i].x());
-    minY = std::min(minY, screen_pts[i].y());
-    maxY = std::max(maxY, screen_pts[i].y());
+    min_x = std::min(min_x, screen_pts[i].x());
+    max_x = std::max(max_x, screen_pts[i].x());
+    min_y = std::min(min_y, screen_pts[i].y());
+    max_y = std::max(max_y, screen_pts[i].y());
   }
-  out = QRectF(QPointF(minX, minY), QPointF(maxX, maxY));
+  out = QRectF(QPointF(min_x, min_y), QPointF(max_x, max_y));
   return true;
 }
 
@@ -119,10 +119,10 @@ auto PickingService::pickSingle(
     if (e->hasComponent<Engine::Core::BuildingComponent>()) {
       bool hit = false;
       float pick_dist2 = d2;
-      const float margin_xZ = 1.6F;
+      const float margin_x_z = 1.6F;
       const float margin_y = 1.2F;
-      float const hx = std::max(0.6F, t->scale.x * margin_xZ);
-      float const hz = std::max(0.6F, t->scale.z * margin_xZ);
+      float const hx = std::max(0.6F, t->scale.x * margin_x_z);
+      float const hz = std::max(0.6F, t->scale.z * margin_x_z);
       float const hy = std::max(0.5F, t->scale.y * margin_y);
       QPointF pts[8];
       int ok_count = 0;
@@ -158,24 +158,25 @@ auto PickingService::pickSingle(
           QVector3D(t->position.x - hx, t->position.y + hy, t->position.z + hz),
           pts[7]));
       if (ok_count == 8) {
-        qreal minX = pts[0].x();
-        qreal maxX = pts[0].x();
-        qreal minY = pts[0].y();
-        qreal maxY = pts[0].y();
+        qreal min_x = pts[0].x();
+        qreal max_x = pts[0].x();
+        qreal min_y = pts[0].y();
+        qreal max_y = pts[0].y();
         for (int i = 1; i < 8; ++i) {
-          minX = std::min(minX, pts[i].x());
-          maxX = std::max(maxX, pts[i].x());
-          minY = std::min(minY, pts[i].y());
-          maxY = std::max(maxY, pts[i].y());
+          min_x = std::min(min_x, pts[i].x());
+          max_x = std::max(max_x, pts[i].x());
+          min_y = std::min(min_y, pts[i].y());
+          max_y = std::max(max_y, pts[i].y());
         }
-        if (sx >= minX && sx <= maxX && sy >= minY && sy <= maxY) {
+        if (sx >= min_x && sx <= max_x && sy >= min_y && sy <= max_y) {
           hit = true;
           pick_dist2 = d2;
         }
       }
       if (!hit) {
-        float const scale_xZ = std::max(std::max(t->scale.x, t->scale.z), 1.0F);
-        float const rp = base_building_pick_radius * scale_xZ;
+        float const scale_x_z =
+            std::max(std::max(t->scale.x, t->scale.z), 1.0F);
+        float const rp = base_building_pick_radius * scale_x_z;
         float const r2 = rp * rp;
         if (d2 <= r2) {
           hit = true;
@@ -230,10 +231,10 @@ auto PickingService::pickInRect(
     float x1, float y1, float x2, float y2, Engine::Core::World &world,
     const Render::GL::Camera &camera, int viewW, int viewH,
     int ownerFilter) -> std::vector<Engine::Core::EntityID> {
-  float const minX = std::min(x1, x2);
-  float const maxX = std::max(x1, x2);
-  float const minY = std::min(y1, y2);
-  float const maxY = std::max(y1, y2);
+  float const min_x = std::min(x1, x2);
+  float const max_x = std::max(x1, x2);
+  float const min_y = std::min(y1, y2);
+  float const max_y = std::max(y1, y2);
   std::vector<Engine::Core::EntityID> picked;
   auto ents = world.getEntitiesWith<Engine::Core::TransformComponent>();
   for (auto *e : ents) {
@@ -254,7 +255,8 @@ auto PickingService::pickInRect(
             viewH, sp)) {
       continue;
     }
-    if (sp.x() >= minX && sp.x() <= maxX && sp.y() >= minY && sp.y() <= maxY) {
+    if (sp.x() >= min_x && sp.x() <= max_x && sp.y() >= min_y &&
+        sp.y() <= max_y) {
       picked.push_back(e->getId());
     }
   }

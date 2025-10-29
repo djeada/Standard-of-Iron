@@ -8,6 +8,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <qglobal.h>
+#include <qopenglcontext.h>
 #include <qopenglext.h>
 #include <qstringliteral.h>
 #include <qvectornd.h>

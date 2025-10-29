@@ -6,7 +6,7 @@
 
 namespace Game::Systems {
 
-void PatrolSystem::update(Engine::Core::World *world, float deltaTime) {
+void PatrolSystem::update(Engine::Core::World *world, float) {
   if (world == nullptr) {
     return;
   }

@@ -207,12 +207,12 @@ void TerrainRenderer::buildMeshes() {
     float const gx1 = std::clamp(gx + 1.0F, 0.0F, float(m_width - 1));
     float const gz0 = std::clamp(gz - 1.0F, 0.0F, float(m_height - 1));
     float const gz1 = std::clamp(gz + 1.0F, 0.0F, float(m_height - 1));
-    float const hL = sample_height_at(gx0, gz);
-    float const hR = sample_height_at(gx1, gz);
-    float const hD = sample_height_at(gx, gz0);
-    float const hU = sample_height_at(gx, gz1);
-    QVector3D const dx(2.0F * m_tile_size, hR - hL, 0.0F);
-    QVector3D const dz(0.0F, hU - hD, 2.0F * m_tile_size);
+    float const h_l = sample_height_at(gx0, gz);
+    float const h_r = sample_height_at(gx1, gz);
+    float const h_d = sample_height_at(gx, gz0);
+    float const h_u = sample_height_at(gx, gz1);
+    QVector3D const dx(2.0F * m_tile_size, h_r - h_l, 0.0F);
+    QVector3D const dz(0.0F, h_u - h_d, 2.0F * m_tile_size);
     QVector3D n = QVector3D::crossProduct(dz, dx);
     if (n.lengthSquared() > 0.0F) {
       n.normalize();
@@ -241,7 +241,7 @@ void TerrainRenderer::buildMeshes() {
 
   {
     std::vector<QVector3D> filtered = normals;
-    auto getN = [&](int x, int z) -> QVector3D & {
+    auto get_n = [&](int x, int z) -> QVector3D & {
       return normals[z * m_width + x];
     };
 
@@ -251,11 +251,11 @@ void TerrainRenderer::buildMeshes() {
         const float h0 = m_heightData[idx];
         const float nh = (h0 - min_h) / height_range;
 
-        const float hL = m_heightData[z * m_width + (x - 1)];
-        const float hR = m_heightData[z * m_width + (x + 1)];
-        const float hD = m_heightData[(z - 1) * m_width + x];
-        const float hU = m_heightData[(z + 1) * m_width + x];
-        const float avg_nbr = 0.25F * (hL + hR + hD + hU);
+        const float h_l = m_heightData[z * m_width + (x - 1)];
+        const float h_r = m_heightData[z * m_width + (x + 1)];
+        const float h_d = m_heightData[(z - 1) * m_width + x];
+        const float h_u = m_heightData[(z + 1) * m_width + x];
+        const float avg_nbr = 0.25F * (h_l + h_r + h_d + h_u);
         const float convexity = h0 - avg_nbr;
 
         const QVector3D n0 = normals[idx];
@@ -273,10 +273,10 @@ void TerrainRenderer::buildMeshes() {
           for (int dx = -1; dx <= 1; ++dx) {
             const int nx = x + dx;
             const int nz = z + dz;
-            const int nIdx = nz * m_width + nx;
+            const int n_idx = nz * m_width + nx;
 
-            const float dh = std::abs(m_heightData[nIdx] - h0);
-            const QVector3D nn = getN(nx, nz);
+            const float dh = std::abs(m_heightData[n_idx] - h0);
+            const QVector3D nn = get_n(nx, nz);
             const float ndot = std::max(0.0F, QVector3D::dotProduct(n0, nn));
 
             const float w_h = 1.0F / (1.0F + 2.0F * dh);
@@ -456,10 +456,10 @@ void TerrainRenderer::buildMeshes() {
             section.heightSum += quad_height;
             section.heightCount += 1;
 
-            float const nY = (normals[idx0].y() + normals[idx1].y() +
-                              normals[idx2].y() + normals[idx3].y()) *
-                             0.25F;
-            float const slope = 1.0F - std::clamp(nY, 0.0F, 1.0F);
+            float const n_y = (normals[idx0].y() + normals[idx1].y() +
+                               normals[idx2].y() + normals[idx3].y()) *
+                              0.25F;
+            float const slope = 1.0F - std::clamp(n_y, 0.0F, 1.0F);
             section.slopeSum += slope;
 
             float const hmin =
@@ -471,19 +471,19 @@ void TerrainRenderer::buildMeshes() {
             section.heightVarSum += (hmax - hmin);
             section.statCount += 1;
 
-            auto H = [&](int gx, int gz) {
+            auto h = [&](int gx, int gz) {
               gx = std::clamp(gx, 0, m_width - 1);
               gz = std::clamp(gz, 0, m_height - 1);
               return m_heightData[gz * m_width + gx];
             };
             int const cx = x;
             int const cz = z;
-            float const hC = quad_height;
+            float const h_c = quad_height;
             float ao = 0.0F;
-            ao += std::max(0.0F, H(cx - 1, cz) - hC);
-            ao += std::max(0.0F, H(cx + 1, cz) - hC);
-            ao += std::max(0.0F, H(cx, cz - 1) - hC);
-            ao += std::max(0.0F, H(cx, cz + 1) - hC);
+            ao += std::max(0.0F, h(cx - 1, cz) - h_c);
+            ao += std::max(0.0F, h(cx + 1, cz) - h_c);
+            ao += std::max(0.0F, h(cx, cz - 1) - h_c);
+            ao += std::max(0.0F, h(cx, cz + 1) - h_c);
             ao = std::clamp(ao * 0.15F, 0.0F, 1.0F);
             section.aoSum += ao;
             section.aoCount += 1;
@@ -535,12 +535,12 @@ void TerrainRenderer::buildMeshes() {
         };
         const int cxi = int(center_gx);
         const int czi = int(center_gz);
-        const float hC = hgrid(cxi, czi);
-        const float hL = hgrid(cxi - 1, czi);
-        const float hR = hgrid(cxi + 1, czi);
-        const float hD = hgrid(cxi, czi - 1);
-        const float hU = hgrid(cxi, czi + 1);
-        const float convexity = hC - 0.25F * (hL + hR + hD + hU);
+        const float h_c = hgrid(cxi, czi);
+        const float h_l = hgrid(cxi - 1, czi);
+        const float h_r = hgrid(cxi + 1, czi);
+        const float h_d = hgrid(cxi, czi - 1);
+        const float h_u = hgrid(cxi, czi + 1);
+        const float convexity = h_c - 0.25F * (h_l + h_r + h_d + h_u);
 
         const float edge_factor = smooth(0.25F, 0.55F, avg_slope);
         const float entrance_factor =
@@ -576,13 +576,13 @@ void TerrainRenderer::buildMeshes() {
                                  : 0.0F;
         float const ao_shade = 1.0F - 0.35F * ao_avg;
 
-        QVector3D avgN = section.normalSum;
-        if (avgN.lengthSquared() > 0.0F) {
-          avgN.normalize();
+        QVector3D avg_n = section.normalSum;
+        if (avg_n.lengthSquared() > 0.0F) {
+          avg_n.normalize();
         }
         QVector3D const north(0, 0, 1);
         float const northness = std::clamp(
-            QVector3D::dotProduct(avgN, north) * 0.5F + 0.5F, 0.0F, 1.0F);
+            QVector3D::dotProduct(avg_n, north) * 0.5F + 0.5F, 0.0F, 1.0F);
         QVector3D const cool_tint(0.96F, 1.02F, 1.04F);
         QVector3D const warm_tint(1.03F, 1.0F, 0.97F);
         QVector3D const aspect_tint =

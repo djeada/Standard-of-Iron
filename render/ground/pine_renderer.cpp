@@ -11,6 +11,7 @@
 #include <QVector2D>
 #include <algorithm>
 #include <cmath>
+#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <vector>
@@ -139,16 +140,17 @@ void PineRenderer::generatePineInstances() {
     pine_density = m_biomeSettings.plant_density * 0.3F;
   }
 
-  std::vector<QVector3D> normals(m_width * m_height, QVector3D(0, 1, 0));
+  std::vector<QVector3D> normals(static_cast<qsizetype>(m_width * m_height),
+                                 QVector3D(0, 1, 0));
   for (int z = 1; z < m_height - 1; ++z) {
     for (int x = 1; x < m_width - 1; ++x) {
       int const idx = z * m_width + x;
-      float const hL = m_heightData[(z)*m_width + (x - 1)];
-      float const hR = m_heightData[(z)*m_width + (x + 1)];
-      float const hD = m_heightData[(z - 1) * m_width + (x)];
-      float const hU = m_heightData[(z + 1) * m_width + (x)];
+      float const h_l = m_heightData[(z)*m_width + (x - 1)];
+      float const h_r = m_heightData[(z)*m_width + (x + 1)];
+      float const h_d = m_heightData[(z - 1) * m_width + (x)];
+      float const h_u = m_heightData[(z + 1) * m_width + (x)];
 
-      QVector3D n = QVector3D(hL - hR, 2.0F * tile_safe, hD - hU);
+      QVector3D n = QVector3D(h_l - h_r, 2.0F * tile_safe, h_d - h_u);
       if (n.lengthSquared() > 0.0F) {
         n.normalize();
       } else {

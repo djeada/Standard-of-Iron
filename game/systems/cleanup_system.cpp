@@ -6,7 +6,7 @@
 
 namespace Game::Systems {
 
-void CleanupSystem::update(Engine::Core::World *world, float deltaTime) {
+void CleanupSystem::update(Engine::Core::World *world, float) {
   removeDeadEntities(world);
 }
 

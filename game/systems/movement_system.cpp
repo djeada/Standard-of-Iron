@@ -292,14 +292,14 @@ void MovementSystem::moveUnit(Engine::Core::Entity *entity,
 
     float const arrive_radius =
         std::clamp(max_speed * deltaTime * 2.0F, 0.05F, 0.25F);
-    float const arrive_radiusSq = arrive_radius * arrive_radius;
+    float const arrive_radius_sq = arrive_radius * arrive_radius;
 
     float dx = movement->target_x - transform->position.x;
     float dz = movement->target_y - transform->position.z;
     float dist2 = dx * dx + dz * dz;
 
     int safety_counter = max_waypoint_skip_count;
-    while (movement->hasTarget && dist2 < arrive_radiusSq &&
+    while (movement->hasTarget && dist2 < arrive_radius_sq &&
            safety_counter-- > 0) {
       if (!movement->path.empty()) {
         movement->path.erase(movement->path.begin());
@@ -358,12 +358,12 @@ void MovementSystem::moveUnit(Engine::Core::Entity *entity,
       if (w > 0 && h > 0) {
         const float half_w = w * 0.5F - 0.5F;
         const float half_h = h * 0.5F - 0.5F;
-        const float minX = -half_w * tile;
-        const float maxX = half_w * tile;
-        const float minZ = -half_h * tile;
-        const float maxZ = half_h * tile;
-        transform->position.x = std::clamp(transform->position.x, minX, maxX);
-        transform->position.z = std::clamp(transform->position.z, minZ, maxZ);
+        const float min_x = -half_w * tile;
+        const float max_x = half_w * tile;
+        const float min_z = -half_h * tile;
+        const float max_z = half_h * tile;
+        transform->position.x = std::clamp(transform->position.x, min_x, max_x);
+        transform->position.z = std::clamp(transform->position.z, min_z, max_z);
       }
     }
   }

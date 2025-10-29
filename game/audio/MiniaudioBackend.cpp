@@ -2,6 +2,7 @@
 #include <QDebug>
 #include <algorithm>
 #include <cmath>
+#include <cstddef>
 #include <cstring>
 #include <qglobal.h>
 #include <qhashfunctions.h>
@@ -31,7 +32,8 @@ static void audioCallback(ma_device *device, void *pOutput, const void *,
                           ma_uint32 frameCount) {
   auto *w = reinterpret_cast<DeviceWrapper *>(device->pUserData);
   if ((w == nullptr) || (w->self == nullptr)) {
-    std::memset(pOutput, 0, frameCount * 2 * sizeof(float));
+    std::memset(pOutput, 0,
+                static_cast<unsigned long>(frameCount * 2) * sizeof(float));
     return;
   }
   w->self->onAudio(reinterpret_cast<float *>(pOutput), frameCount);
@@ -40,7 +42,7 @@ static void audioCallback(ma_device *device, void *pOutput, const void *,
 MiniaudioBackend::MiniaudioBackend(QObject *parent) : QObject(parent) {}
 MiniaudioBackend::~MiniaudioBackend() { shutdown(); }
 
-auto MiniaudioBackend::initialize(int deviceRate, int outChannels,
+auto MiniaudioBackend::initialize(int deviceRate, int,
                                   int musicChannels) -> bool {
   m_rate = std::max(22050, deviceRate);
   m_outCh = 2;
@@ -330,7 +332,7 @@ void MiniaudioBackend::onAudio(float *out, unsigned frames) {
         }
       }
       const unsigned can_copy = std::min(frames_left, ch.track->frames - pos);
-      const float *src = pcm + pos * 2;
+      const float *src = pcm + static_cast<size_t>(pos * 2);
 
       for (unsigned i = 0; i < can_copy; ++i) {
         const float vol = ch.curVol * m_masterVol;
@@ -385,7 +387,7 @@ void MiniaudioBackend::onAudio(float *out, unsigned frames) {
       }
 
       const unsigned can_copy = std::min(frames_left, sfx.track->frames - pos);
-      const float *src = pcm + pos * 2;
+      const float *src = pcm + static_cast<size_t>(pos * 2);
 
       for (unsigned i = 0; i < can_copy; ++i) {
         const float vol = sfx.volume * m_masterVol;
