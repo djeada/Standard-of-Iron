@@ -5,6 +5,7 @@
 #include "../render_constants.h"
 #include "gl/shader_cache.h"
 #include <GL/gl.h>
+#include <QOpenGLContext>
 #include <algorithm>
 #include <cstddef>
 #include <qopenglext.h>
@@ -170,6 +171,20 @@ void CylinderPipeline::initializeCylinderPipeline() {
 }
 
 void CylinderPipeline::shutdownCylinderPipeline() {
+  // Check if we have a valid OpenGL context before cleanup
+  // If not, skip OpenGL calls - resources will be freed by Qt/OS
+  if (QOpenGLContext::currentContext() == nullptr) {
+    // No valid context, just reset state without OpenGL calls
+    m_cylinderVao = 0;
+    m_cylinderVertexBuffer = 0;
+    m_cylinderIndexBuffer = 0;
+    m_cylinderInstanceBuffer = 0;
+    m_cylinderIndexCount = 0;
+    m_cylinderInstanceCapacity = 0;
+    m_cylinderScratch.clear();
+    return;
+  }
+
   initializeOpenGLFunctions();
 
   m_cylinderPersistentBuffer.destroy();
@@ -323,6 +338,20 @@ void CylinderPipeline::initializeFogPipeline() {
 }
 
 void CylinderPipeline::shutdownFogPipeline() {
+  // Check if we have a valid OpenGL context before cleanup
+  // If not, skip OpenGL calls - resources will be freed by Qt/OS
+  if (QOpenGLContext::currentContext() == nullptr) {
+    // No valid context, just reset state without OpenGL calls
+    m_fogVao = 0;
+    m_fogVertexBuffer = 0;
+    m_fogIndexBuffer = 0;
+    m_fogInstanceBuffer = 0;
+    m_fogIndexCount = 0;
+    m_fogInstanceCapacity = 0;
+    m_fogScratch.clear();
+    return;
+  }
+
   initializeOpenGLFunctions();
 
   if (m_fogInstanceBuffer != 0U) {
