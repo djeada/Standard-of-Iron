@@ -6,8 +6,8 @@
 #include <QDebug>
 #include <algorithm>
 #include <chrono>
+#include <cmath>
 #include <cstddef>
-#include <math.h>
 #include <memory>
 #include <mutex>
 #include <qglobal.h>

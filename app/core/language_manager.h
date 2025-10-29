@@ -14,8 +14,8 @@ public:
   explicit LanguageManager(QObject *parent = nullptr);
   ~LanguageManager() override;
 
-  [[nodiscard]] auto currentLanguage() const -> QString;
-  [[nodiscard]] auto availableLanguages() const -> QStringList;
+  [[nodiscard]] QString currentLanguage() const;
+  [[nodiscard]] QStringList availableLanguages() const;
 
   Q_INVOKABLE void setLanguage(const QString &language);
   Q_INVOKABLE [[nodiscard]] static QString

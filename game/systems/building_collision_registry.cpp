@@ -129,9 +129,9 @@ auto BuildingCollisionRegistry::isPointInBuilding(
   return false;
 }
 
-std::vector<std::pair<int, int>>
-BuildingCollisionRegistry::getOccupiedGridCells(
-    const BuildingFootprint &footprint, float gridCellSize) {
+auto BuildingCollisionRegistry::getOccupiedGridCells(
+    const BuildingFootprint &footprint,
+    float gridCellSize) -> std::vector<std::pair<int, int>> {
   std::vector<std::pair<int, int>> cells;
 
   float const half_width = footprint.width / 2.0F;

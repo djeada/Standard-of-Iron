@@ -33,8 +33,9 @@ public:
   void setFollowLerp(Render::GL::Camera &camera, float alpha);
   [[nodiscard]] static auto
   getDistance(const Render::GL::Camera &camera) -> float;
-  void resetCamera(Render::GL::Camera &camera, Engine::Core::World &world,
-                   int localOwnerId, unsigned int playerUnitId);
+  static void resetCamera(Render::GL::Camera &camera,
+                          Engine::Core::World &world, int localOwnerId,
+                          unsigned int playerUnitId);
   static void snapToEntity(Render::GL::Camera &camera,
                            Engine::Core::Entity &entity);
   void updateFollow(Render::GL::Camera &camera, Engine::Core::World &world,

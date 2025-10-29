@@ -1,23 +1,28 @@
 #include "theme.h"
+#include <qglobal.h>
+#include <qjsengine.h>
+#include <qjsonarray.h>
+#include <qobject.h>
+#include <qqmlengine.h>
 
 Theme *Theme::m_instance = nullptr;
 
 Theme::Theme(QObject *parent) : QObject(parent) {}
 
-Theme *Theme::instance() {
-  if (!m_instance) {
+auto Theme::instance() -> Theme * {
+  if (m_instance == nullptr) {
     m_instance = new Theme();
   }
   return m_instance;
 }
 
-Theme *Theme::create(QQmlEngine *engine, QJSEngine *scriptEngine) {
+auto Theme::create(QQmlEngine *engine, QJSEngine *scriptEngine) -> Theme * {
   Q_UNUSED(engine)
   Q_UNUSED(scriptEngine)
   return instance();
 }
 
-QVariantList Theme::playerColors() const {
+QVariantList Theme::playerColors() {
   QVariantList colors;
   colors.append(QVariantMap{{"name", "Red"}, {"hex", "#E74C3C"}});
   colors.append(QVariantMap{{"name", "Blue"}, {"hex", "#3498DB"}});
@@ -30,13 +35,13 @@ QVariantList Theme::playerColors() const {
   return colors;
 }
 
-QVariantList Theme::teamIcons() const {
+QVariantList Theme::teamIcons() {
   QVariantList icons;
   icons << "⚪" << "①" << "②" << "③" << "④" << "⑤" << "⑥" << "⑦" << "⑧";
   return icons;
 }
 
-QVariantList Theme::factions() const {
+QVariantList Theme::factions() {
   QVariantList factionsData;
   factionsData.append(QVariantMap{{"id", 0}, {"name", "Standard"}});
   factionsData.append(QVariantMap{{"id", 1}, {"name", "Romans"}});
@@ -45,7 +50,7 @@ QVariantList Theme::factions() const {
   return factionsData;
 }
 
-QVariantMap Theme::unitIcons() const {
+QVariantMap Theme::unitIcons() {
   QVariantMap icons;
   icons["archer"] = "🏹";
   icons["knight"] = "⚔️";
