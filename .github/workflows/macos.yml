@@ -1,5 +1,8 @@
 name: macOS Build
-on: [push, pull_request]
+on:
+  push:
+    tags:
+      - 'v*'   # run only on tags like v1.2.3
 
 permissions:
   contents: read
