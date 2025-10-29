@@ -240,6 +240,38 @@ QT5_QML_RUN_PAC=(
   qt5-multimedia
 )
 
+# DNF (Fedora/RHEL) toolchain + GL/Vulkan + formatting tools
+DNF_PKGS=(
+  gcc-c++
+  make
+  cmake
+  git
+  pkgconf
+  clang
+  clang-tools-extra
+  mesa-libGL-devel
+  mesa-vulkan-drivers
+  vulkan-loader
+  vulkan-tools
+)
+
+# DNF Qt6 dev/runtime
+QT6_DEV_DNF=(
+  qt6-qtbase-devel
+  qt6-qtdeclarative-devel
+  qt6-qttools-devel
+  qt6-qtmultimedia-devel
+  qt6-qtquickcontrols2-devel
+)
+
+# DNF Qt5 fallback (if Qt6 not available)
+QT5_QML_RUN_DNF=(
+  qt5-qtbase-devel
+  qt5-qtdeclarative-devel
+  qt5-qtquickcontrols2-devel
+  qt5-qtmultimedia-devel
+)
+
 # Homebrew (macOS)
 BREW_PKGS=(
   cmake
@@ -366,6 +398,65 @@ pacman_install() {
     fi
   fi
 }
+
+# -----------------------------------------------------------------------------
+# DNF helpers (Fedora/RHEL)
+# -----------------------------------------------------------------------------
+dnf_pkg_available() { dnf info "$1" >/dev/null 2>&1; }
+
+filter_available_pkgs_dnf() {
+  local out=() p
+  for p in "$@"; do
+    if dnf_pkg_available "$p"; then out+=("$p"); fi
+  done
+  printf '%s\n' "${out[@]}"
+}
+
+dnf_installed() { rpm -q "$1" >/dev/null 2>&1; }
+
+dnf_update_once() {
+  if [ "${_DNF_UPDATED:-0}" != 1 ]; then
+    info "Refreshing DNF package metadata"
+    if $DRY_RUN; then
+      echo "sudo dnf makecache"
+    else
+      sudo dnf makecache -y
+    fi
+    _DNF_UPDATED=1
+  fi
+}
+
+dnf_install() {
+  local to_install=() pkg
+  for pkg in "$@"; do
+    [ -n "${pkg:-}" ] || continue
+    if dnf_installed "$pkg"; then
+      ok "$pkg already installed"
+    else
+      to_install+=("$pkg")
+    fi
+  done
+  if [ ${#to_install[@]} -gt 0 ]; then
+    if $NO_INSTALL; then
+      warn "Missing packages: ${to_install[*]} (skipping install due to --no-install)"
+      return 0
+    fi
+    if ! $ASSUME_YES; then
+      echo
+      read -r -p "Install missing packages (dnf): ${to_install[*]} ? [Y/n] " ans
+      case "${ans:-Y}" in y|Y) ;; *) warn "User declined install"; return 0 ;; esac
+    fi
+    dnf_update_once
+    info "Installing: ${to_install[*]}"
+    local args=(-y install)
+    if $DRY_RUN; then
+      echo "sudo dnf ${args[*]} ${to_install[*]}"
+    else
+      sudo dnf "${args[@]}" "${to_install[@]}"
+    fi
+  fi
+}
+
 
 # -----------------------------------------------------------------------------
 # BREW helpers (macOS)
@@ -538,6 +629,19 @@ install_runtime_pacman() {
   pacman_install "${_qt5qml[@]}"
 }
 
+install_runtime_dnf() {
+  info "Installing base toolchain (dnf)"
+  dnf_install "${DNF_PKGS[@]}"
+
+  info "Installing Qt6 SDK/dev packages (dnf)"
+  mapfile -t _qt6dev < <(filter_available_pkgs_dnf "${QT6_DEV_DNF[@]}")
+  dnf_install "${_qt6dev[@]}"
+
+  info "Installing Qt5 fallback (if available; dnf)"
+  mapfile -t _qt5qml < <(filter_available_pkgs_dnf "${QT5_QML_RUN_DNF[@]}")
+  dnf_install "${_qt5qml[@]}"
+}
+
 install_runtime_brew() {
   if ! has_brew; then
     err "Homebrew is required on macOS. Install from https://brew.sh and re-run."
@@ -571,6 +675,8 @@ main() {
     pm="apt"; info "Exact Debian/Ubuntu family detected ($id)."
   elif is_arch_family_exact "$id"; then
     pm="pacman"; info "Exact Arch/Manjaro family detected ($id)."
+  elif [ "$id" = "fedora" ] || [[ "${like:-}" == *"rhel"* ]] || command -v dnf >/dev/null 2>&1; then
+    pm="dnf"; info "Fedora or RHEL-compatible system detected."
   elif is_deb_family_like "${like:-}" && has_apt; then
     pm="apt"
     warn "No exact match, but this system is *similar* to Debian/Ubuntu and has apt-get."
@@ -622,6 +728,7 @@ main() {
   case "$pm" in
     apt)    install_runtime_apt ;;
     pacman) install_runtime_pacman ;;
+    dnf)    install_runtime_dnf ;;
     brew)   install_runtime_brew ;;
     *)      err "Internal error: unknown package manager '$pm'"; exit 1 ;;
   esac
