@@ -1,4 +1,5 @@
 #include "MusicPlayer.h"
+#include "AudioConstants.h"
 #include "MiniaudioBackend.h"
 #include <QCoreApplication>
 #include <QFileInfo>
@@ -47,7 +48,7 @@ auto MusicPlayer::initialize(int musicChannels) -> bool {
 
   m_channelCount = std::max(MIN_CHANNELS, musicChannels);
   m_backend = new MiniaudioBackend(this);
-  if (!m_backend->initialize(DEFAULT_SAMPLE_RATE, DEFAULT_OUTPUT_CHANNELS, m_channelCount)) {
+  if (!m_backend->initialize(AudioConstants::DEFAULT_SAMPLE_RATE, AudioConstants::DEFAULT_OUTPUT_CHANNELS, m_channelCount)) {
     qWarning() << "MusicPlayer: backend init failed";
     m_backend->deleteLater();
     m_backend = nullptr;
@@ -116,12 +117,12 @@ void MusicPlayer::registerTrack(const std::string &trackId,
 }
 
 void MusicPlayer::play(const std::string &id, float v, bool loop) {
-  play(id, v, loop, m_defaultChannel, DEFAULT_FADE_IN_MS);
+  play(id, v, loop, m_defaultChannel, AudioConstants::DEFAULT_FADE_IN_MS);
 }
-void MusicPlayer::stop() { stop(m_defaultChannel, DEFAULT_FADE_OUT_MS); }
+void MusicPlayer::stop() { stop(m_defaultChannel, AudioConstants::DEFAULT_FADE_OUT_MS); }
 void MusicPlayer::pause() { pause(m_defaultChannel); }
 void MusicPlayer::resume() { resume(m_defaultChannel); }
-void MusicPlayer::setVolume(float v) { setVolume(m_defaultChannel, v, NO_FADE_MS); }
+void MusicPlayer::setVolume(float v) { setVolume(m_defaultChannel, v, AudioConstants::NO_FADE_MS); }
 
 auto MusicPlayer::play(const std::string &id, float vol, bool loop, int channel,
                        int fadeMs) -> int {
