@@ -11,15 +11,15 @@
 
 namespace Game::Systems {
 
-bool PickingService::worldToScreen(const Render::GL::Camera &cam, int viewW,
+auto PickingService::worldToScreen(const Render::GL::Camera &cam, int viewW,
                                    int viewH, const QVector3D &world,
-                                   QPointF &out) {
+                                   QPointF &out) -> bool {
   return cam.worldToScreen(world, qreal(viewW), qreal(viewH), out);
 }
 
-bool PickingService::screenToGround(const Render::GL::Camera &cam, int viewW,
+auto PickingService::screenToGround(const Render::GL::Camera &cam, int viewW,
                                     int viewH, const QPointF &screenPt,
-                                    QVector3D &outWorld) {
+                                    QVector3D &outWorld) -> bool {
   if (viewW <= 0 || viewH <= 0) {
     return false;
   }
@@ -29,8 +29,7 @@ bool PickingService::screenToGround(const Render::GL::Camera &cam, int viewW,
 
 auto PickingService::projectBounds(const Render::GL::Camera &cam,
                                    const QVector3D &center, float hx, float hz,
-                                   int viewW, int viewH,
-                                   QRectF &out) const -> bool {
+                                   int viewW, int viewH, QRectF &out) -> bool {
   QVector3D const corners[4] = {
       QVector3D(center.x() - hx, center.y(), center.z() - hz),
       QVector3D(center.x() + hx, center.y(), center.z() - hz),
@@ -85,11 +84,10 @@ auto PickingService::updateHover(float sx, float sy, Engine::Core::World &world,
   return current_hover;
 }
 
-Engine::Core::EntityID
-PickingService::pickSingle(float sx, float sy, Engine::Core::World &world,
-                           const Render::GL::Camera &camera, int viewW,
-                           int viewH, int ownerFilter,
-                           bool preferBuildingsFirst) {
+auto PickingService::pickSingle(
+    float sx, float sy, Engine::Core::World &world,
+    const Render::GL::Camera &camera, int viewW, int viewH, int ownerFilter,
+    bool preferBuildingsFirst) -> Engine::Core::EntityID {
 
   const float base_unit_pick_radius = 30.0F;
   const float base_building_pick_radius = 30.0F;
@@ -196,28 +194,29 @@ PickingService::pickSingle(float sx, float sy, Engine::Core::World &world,
     }
   }
   if (preferBuildingsFirst) {
-    if ((best_building_id != 0u) &&
-        ((best_unit_id == 0u) || best_building_dist2 <= best_unit_dist2)) {
+    if ((best_building_id != 0U) &&
+        ((best_unit_id == 0U) || best_building_dist2 <= best_unit_dist2)) {
       return best_building_id;
     }
-    if (best_unit_id != 0u) {
+    if (best_unit_id != 0U) {
       return best_unit_id;
     }
   } else {
-    if (best_unit_id != 0u) {
+    if (best_unit_id != 0U) {
       return best_unit_id;
     }
-    if (best_building_id != 0u) {
+    if (best_building_id != 0U) {
       return best_building_id;
     }
   }
   return 0;
 }
 
-auto PickingService::pickUnitFirst(
-    float sx, float sy, Engine::Core::World &world,
-    const Render::GL::Camera &camera, int viewW, int viewH,
-    int ownerFilter) const -> Engine::Core::EntityID {
+auto PickingService::pickUnitFirst(float sx, float sy,
+                                   Engine::Core::World &world,
+                                   const Render::GL::Camera &camera, int viewW,
+                                   int viewH,
+                                   int ownerFilter) -> Engine::Core::EntityID {
 
   auto id = pickSingle(sx, sy, world, camera, viewW, viewH, ownerFilter, false);
   if (id != 0) {
@@ -227,9 +226,10 @@ auto PickingService::pickUnitFirst(
   return pickSingle(sx, sy, world, camera, viewW, viewH, ownerFilter, true);
 }
 
-std::vector<Engine::Core::EntityID> PickingService::pickInRect(
+auto PickingService::pickInRect(
     float x1, float y1, float x2, float y2, Engine::Core::World &world,
-    const Render::GL::Camera &camera, int viewW, int viewH, int ownerFilter) {
+    const Render::GL::Camera &camera, int viewW, int viewH,
+    int ownerFilter) -> std::vector<Engine::Core::EntityID> {
   float const minX = std::min(x1, x2);
   float const maxX = std::max(x1, x2);
   float const minY = std::min(y1, y2);

@@ -79,13 +79,9 @@ auto MapTransformer::applyToWorld(
   }
 
   for (int const player_id : unique_player_ids) {
-    bool const has_team_override =
-        (s_player_team_overrides.find(player_id) !=
-         s_player_team_overrides.end());
+    bool const has_team_override = (s_player_team_overrides.find(player_id) !=
+                                    s_player_team_overrides.end());
 
-    // Skip players not in the configuration (only when overrides are provided)
-    // This ensures only selected players spawn, while maintaining backward
-    // compatibility when no overrides are set.
     if (!s_player_team_overrides.empty() && !has_team_override) {
       continue;
     }
@@ -123,8 +119,7 @@ auto MapTransformer::applyToWorld(
   }
 
   for (const auto &s : def.spawns) {
-    // Determine the effective player_id for this spawn
-    // If player is not in configuration, spawn as neutral
+
     int effective_player_id = s.player_id;
     if (!s_player_team_overrides.empty() &&
         s.player_id != Game::Core::NEUTRAL_OWNER_ID) {

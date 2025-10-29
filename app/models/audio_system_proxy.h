@@ -6,6 +6,7 @@ namespace App::Models {
 
 class AudioSystemProxy : public QObject {
   Q_OBJECT
+
 public:
   explicit AudioSystemProxy(QObject *parent = nullptr);
   ~AudioSystemProxy() override = default;
