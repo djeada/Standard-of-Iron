@@ -108,8 +108,8 @@
 #include <utility>
 #include <vector>
 
-GameEngine::GameEngine()
-    : m_selectedUnitsModel(new SelectedUnitsModel(this, this)) {
+GameEngine::GameEngine(QObject *parent)
+    : QObject(parent), m_selectedUnitsModel(new SelectedUnitsModel(this, this)) {
 
   Game::Systems::NationRegistry::instance().initializeDefaults();
   Game::Systems::TroopCountRegistry::instance().initialize();
@@ -293,6 +293,51 @@ GameEngine::~GameEngine() {
   }
   AudioSystem::getInstance().shutdown();
   qInfo() << "AudioSystem shut down";
+}
+
+void GameEngine::cleanupOpenGLResources() {
+  qInfo() << "Cleaning up OpenGL resources...";
+  
+  // Check if we have a valid OpenGL context
+  // If not, skip OpenGL cleanup and just reset the pointers
+  // Qt will handle OpenGL resource cleanup when the context is destroyed
+  QOpenGLContext *context = QOpenGLContext::currentContext();
+  const bool hasValidContext = (context != nullptr);
+  
+  if (!hasValidContext) {
+    qInfo() << "No valid OpenGL context, skipping OpenGL cleanup";
+  }
+  
+  // Shutdown renderer and all OpenGL-dependent resources
+  // Only call shutdown if we have a valid context
+  if (m_renderer && hasValidContext) {
+    m_renderer->shutdown();
+    qInfo() << "Renderer shut down";
+  }
+  
+  // Clear render passes that reference renderer resources
+  m_passes.clear();
+  
+  // Reset all renderer-dependent unique_ptrs
+  // These will call destructors which may try to access OpenGL
+  // If no valid context, the destructors should be defensive
+  m_ground.reset();
+  m_terrain.reset();
+  m_biome.reset();
+  m_river.reset();
+  m_riverbank.reset();
+  m_bridge.reset();
+  m_fog.reset();
+  m_stone.reset();
+  m_plant.reset();
+  m_pine.reset();
+  m_firecamp.reset();
+  
+  // Reset renderer and resources
+  m_renderer.reset();
+  m_resources.reset();
+  
+  qInfo() << "OpenGL resources cleaned up";
 }
 
 void GameEngine::onMapClicked(qreal sx, qreal sy) {
