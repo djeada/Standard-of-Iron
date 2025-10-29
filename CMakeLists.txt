@@ -198,6 +198,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
             assets/visuals/unit_visuals.json
             translations/app_en.qm
             translations/app_de.qm
+            translations/app_pt_br.qm
         DEPENDENCIES
             Qt6::QuickControls2
     )
