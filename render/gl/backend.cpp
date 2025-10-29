@@ -17,11 +17,11 @@
 #include "ground/plant_gpu.h"
 #include "ground/stone_gpu.h"
 #include "mesh.h"
+#include "opengl_headers.h"
 #include "render_constants.h"
 #include "shader.h"
 #include "state_scopes.h"
 #include "texture.h"
-#include <GL/gl.h>
 #include <QDebug>
 #include <cmath>
 #include <cstddef>

@@ -1,5 +1,5 @@
 #include "buffer.h"
-#include <GL/gl.h>
+#include "opengl_headers.h"
 #include <cstddef>
 #include <qopenglext.h>
 #include <vector>
