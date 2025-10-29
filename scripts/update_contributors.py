@@ -22,6 +22,36 @@ def run_git(command):
         print("❌ Error: Git is not installed or not found in PATH.")
         raise SystemExit(1)
 
+def parse_existing_references():
+    """Parse existing CONTRIBUTORS.md to extract manual Reference values."""
+    references = {}
+    if not contributors_file.exists():
+        return references
+    
+    try:
+        content = contributors_file.read_text(encoding="utf-8")
+        lines = content.split("\n")
+        
+        for line in lines:
+            # Skip header, separator, and empty lines
+            if not line.strip() or line.startswith("#") or "---" in line or line.startswith("This file"):
+                continue
+            # Check if it's a table row (starts with |)
+            if line.startswith("|") and line.count("|") >= 6:
+                parts = [p.strip() for p in line.split("|")]
+                # parts[0] is empty (before first |), parts[1] is Name, parts[6] is Reference
+                if len(parts) >= 7:
+                    name = parts[1]
+                    reference = parts[6]
+                    # Only store non-empty references
+                    if name and reference:
+                        references[name] = reference
+    except Exception:
+        # If parsing fails, just return empty dict
+        pass
+    
+    return references
+
 def get_contributors():
     """Extract contributors from git log."""
     log_lines = run_git(["log", "--format=%aN|%aE|%ad", "--date=short"])
@@ -43,8 +73,8 @@ def get_contributors():
 
     return contributors
 
-def generate_table(contributors):
-    """Generate markdown table."""
+def generate_table(contributors, existing_references):
+    """Generate markdown table, preserving manual Reference values."""
     header = [
         "# 🌍 Project Contributors",
         "",
@@ -57,16 +87,17 @@ def generate_table(contributors):
     rows = []
     for name, info in sorted(contributors.items(), key=lambda x: x[0].lower()):
         emails = ", ".join(sorted(info["emails"]))
-        # Default empty reference link
-        reference = ""
+        # Preserve existing reference if it exists, otherwise leave empty
+        reference = existing_references.get(name, "")
         # Use proper pluralization for commits
         commit_text = f"{info['count']} commit" if info['count'] == 1 else f"{info['count']} commits"
         rows.append(f"| {name} | {emails} | {commit_text} | {info['first']} | {info['last']} | {reference} |")
     return "\n".join(header + rows) + "\n"
 
 def main():
+    existing_references = parse_existing_references()
     contributors = get_contributors()
-    md = generate_table(contributors)
+    md = generate_table(contributors, existing_references)
     contributors_file.write_text(md, encoding="utf-8")
     print(f"✅ Updated {contributors_file} with {len(contributors)} contributors.")
 
