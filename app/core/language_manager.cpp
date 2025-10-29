@@ -10,7 +10,7 @@
 LanguageManager::LanguageManager(QObject *parent)
     : QObject(parent), m_currentLanguage("en"),
       m_translator(new QTranslator(this)) {
-  m_availableLanguages << "en" << "de";
+  m_availableLanguages << "en" << "de" << "pt_br";
 
 #ifndef DEFAULT_LANG
 #define DEFAULT_LANG "en"
@@ -65,6 +65,9 @@ auto LanguageManager::languageDisplayName(const QString &language) -> QString {
   }
   if (language == "de") {
     return "Deutsch (German)";
+  }
+  if (language == "pt_br") {
+    return "Português (Brasil)";
   }
   return language;
 }
