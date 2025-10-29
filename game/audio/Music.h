@@ -11,25 +11,27 @@ class QThread;
 
 class Music {
 public:
-  Music(const std::string &filePath);
+  static constexpr float DEFAULT_VOLUME = 1.0F;
+
+  Music(const std::string &file_path);
   ~Music();
 
-  bool isLoaded() const;
-  void play(float volume = 1.0F, bool loop = true);
+  bool is_loaded() const;
+  void play(float volume = DEFAULT_VOLUME, bool loop = true);
   void stop();
   void pause();
   void resume();
-  void setVolume(float volume);
-  void fadeOut();
+  void set_volume(float volume);
+  void fade_out();
 
 private:
-  void cleanupPlayer();
+  void cleanup_player();
 
   QPointer<QMediaPlayer> player;
-  QAudioOutput *audioOutput;
-  QThread *mainThread;
-  std::string filepath;
+  QAudioOutput *audio_output;
+  QThread *main_thread;
+  std::string file_path;
   bool loaded;
   bool playing;
-  std::atomic<bool> markedForDeletion;
+  std::atomic<bool> marked_for_deletion;
 };
