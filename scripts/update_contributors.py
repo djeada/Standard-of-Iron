@@ -3,8 +3,8 @@ import subprocess
 from collections import defaultdict
 from pathlib import Path
 
-# Path to CONTRIBUTORS.md
-contributors_file = Path(__file__).parent / "CONTRIBUTORS.md"
+# Path to CONTRIBUTORS.md (in repository root)
+contributors_file = Path(__file__).parent.parent / "CONTRIBUTORS.md"
 
 def run_git(command):
     """Run a git command and return the output as a list of lines."""
