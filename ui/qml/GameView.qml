@@ -34,6 +34,20 @@ Item {
         console.log("Command issued:", command);
     }
 
+    function beginPanKey(e) {
+        if (!e.isAutoRepeat && !pressedKeys[e.key]) {
+            pressedKeys[e.key] = true;
+            renderArea.keyPanCount += 1;
+            mainWindow.edgeScrollDisabled = true;
+        }
+    }
+
+    function ensurePanTimerRunning() {
+        if (!keyPanTimer.running)
+            keyPanTimer.start();
+
+    }
+
     objectName: "GameView"
     Keys.onPressed: function(event) {
         if (typeof game === 'undefined')
@@ -158,20 +172,6 @@ Item {
             break;
         }
     }
-    function beginPanKey(e) {
-        if (!e.isAutoRepeat && !pressedKeys[e.key]) {
-            pressedKeys[e.key] = true;
-            renderArea.keyPanCount += 1;
-            mainWindow.edgeScrollDisabled = true;
-        }
-    }
-
-    function ensurePanTimerRunning() {
-        if (!keyPanTimer.running)
-            keyPanTimer.start();
-
-    }
-
     Keys.onReleased: function(event) {
         if (typeof game === 'undefined')
             return ;
