@@ -137,20 +137,20 @@ void BridgeRenderer::buildMeshes() {
 
       float const tex_u0 = 0.0F;
       float const tex_u1 = 1.0F;
-      float const texV = t * length * 0.4F;
+      float const tex_v = t * length * 0.4F;
 
-      add_vertex(top_left, QVector3D(0.0F, 1.0F, 0.0F), tex_u0, texV);
-      add_vertex(top_right, QVector3D(0.0F, 1.0F, 0.0F), tex_u1, texV);
-      add_vertex(bottom_left, QVector3D(0.0F, -1.0F, 0.0F), tex_u0, texV);
-      add_vertex(bottom_right, QVector3D(0.0F, -1.0F, 0.0F), tex_u1, texV);
-      add_vertex(side_left_top, left_normal, tex_u0, texV);
-      add_vertex(side_left_bottom, left_normal, tex_u0, texV);
-      add_vertex(side_right_top, right_normal, tex_u1, texV);
-      add_vertex(side_right_bottom, right_normal, tex_u1, texV);
-      add_vertex(parapet_left_top, left_normal, tex_u0, texV);
-      add_vertex(parapet_left_bottom, left_normal, tex_u0, texV);
-      add_vertex(parapet_right_top, right_normal, tex_u1, texV);
-      add_vertex(parapet_right_bottom, right_normal, tex_u1, texV);
+      add_vertex(top_left, QVector3D(0.0F, 1.0F, 0.0F), tex_u0, tex_v);
+      add_vertex(top_right, QVector3D(0.0F, 1.0F, 0.0F), tex_u1, tex_v);
+      add_vertex(bottom_left, QVector3D(0.0F, -1.0F, 0.0F), tex_u0, tex_v);
+      add_vertex(bottom_right, QVector3D(0.0F, -1.0F, 0.0F), tex_u1, tex_v);
+      add_vertex(side_left_top, left_normal, tex_u0, tex_v);
+      add_vertex(side_left_bottom, left_normal, tex_u0, tex_v);
+      add_vertex(side_right_top, right_normal, tex_u1, tex_v);
+      add_vertex(side_right_bottom, right_normal, tex_u1, tex_v);
+      add_vertex(parapet_left_top, left_normal, tex_u0, tex_v);
+      add_vertex(parapet_left_bottom, left_normal, tex_u0, tex_v);
+      add_vertex(parapet_right_top, right_normal, tex_u1, tex_v);
+      add_vertex(parapet_right_bottom, right_normal, tex_u1, tex_v);
 
       if (i < length_segments) {
         auto const base_idx =

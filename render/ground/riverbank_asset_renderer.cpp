@@ -68,8 +68,7 @@ void RiverbankAssetRenderer::configure(
   generateAssetInstances();
 }
 
-void RiverbankAssetRenderer::submit(Renderer &renderer,
-                                    ResourceManager *resources) {
+void RiverbankAssetRenderer::submit(Renderer &, ResourceManager *resources) {
   Q_UNUSED(resources);
 
   if (m_assetInstanceCount == 0) {

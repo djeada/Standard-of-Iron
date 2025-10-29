@@ -111,8 +111,8 @@ auto GroundRenderer::buildParams() const -> TerrainChunkParams {
 
   params.rockDetailStrength = m_biomeSettings.terrainRockDetailStrength * 0.18F;
 
-  QVector3D const L(0.35F, 0.85F, 0.42F);
-  params.light_direction = L.normalized();
+  QVector3D const l(0.35F, 0.85F, 0.42F);
+  params.light_direction = l.normalized();
 
   params.isGroundPlane = true;
 

@@ -12,6 +12,7 @@
 #include <QVector2D>
 #include <algorithm>
 #include <cmath>
+#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <optional>
@@ -144,7 +145,7 @@ void BiomeRenderer::generateGrassInstances() {
   const float edge_margin_x = static_cast<float>(m_width) * edge_padding;
   const float edge_margin_z = static_cast<float>(m_height) * edge_padding;
 
-  std::vector<QVector3D> normals(m_width * m_height,
+  std::vector<QVector3D> normals(static_cast<qsizetype>(m_width * m_height),
                                  QVector3D(0.0F, 1.0F, 0.0F));
 
   auto sample_height_at = [&](float gx, float gz) -> float {
@@ -173,13 +174,13 @@ void BiomeRenderer::generateGrassInstances() {
       float const gz0 = std::clamp(float(z) - 1.0F, 0.0F, float(m_height - 1));
       float const gz1 = std::clamp(float(z) + 1.0F, 0.0F, float(m_height - 1));
 
-      float const hL = sample_height_at(gx0, float(z));
-      float const hR = sample_height_at(gx1, float(z));
-      float const hD = sample_height_at(float(x), gz0);
-      float const hU = sample_height_at(float(x), gz1);
+      float const h_l = sample_height_at(gx0, float(z));
+      float const h_r = sample_height_at(gx1, float(z));
+      float const h_d = sample_height_at(float(x), gz0);
+      float const h_u = sample_height_at(float(x), gz1);
 
-      QVector3D const dx(2.0F * m_tile_size, hR - hL, 0.0F);
-      QVector3D const dz(0.0F, hU - hD, 2.0F * m_tile_size);
+      QVector3D const dx(2.0F * m_tile_size, h_r - h_l, 0.0F);
+      QVector3D const dz(0.0F, h_u - h_d, 2.0F * m_tile_size);
       QVector3D n = QVector3D::crossProduct(dz, dx);
       if (n.lengthSquared() > 0.0F) {
         n.normalize();
@@ -222,8 +223,8 @@ void BiomeRenderer::generateGrassInstances() {
         int const nx = ix + dx;
         int const nz = iz + dz;
         if (nx >= 0 && nx < m_width && nz >= 0 && nz < m_height) {
-          int const nIdx = nz * m_width + nx;
-          if (m_terrain_types[nIdx] == Game::Map::TerrainType::River) {
+          int const n_idx = nz * m_width + nx;
+          if (m_terrain_types[n_idx] == Game::Map::TerrainType::River) {
             near_river_count++;
           }
         }
@@ -344,10 +345,10 @@ void BiomeRenderer::generateGrassInstances() {
                                     0.25F;
           chunk_height_sum += quad_height;
 
-          float const nY = (normals[idx0].y() + normals[idx1].y() +
-                            normals[idx2].y() + normals[idx3].y()) *
-                           0.25F;
-          chunk_slope_sum += 1.0F - std::clamp(nY, 0.0F, 1.0F);
+          float const n_y = (normals[idx0].y() + normals[idx1].y() +
+                             normals[idx2].y() + normals[idx3].y()) *
+                            0.25F;
+          chunk_slope_sum += 1.0F - std::clamp(n_y, 0.0F, 1.0F);
           sample_count++;
         }
       }
