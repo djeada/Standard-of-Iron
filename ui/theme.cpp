@@ -42,12 +42,12 @@ QVariantList Theme::teamIcons() {
 }
 
 QVariantList Theme::factions() {
-  QVariantList factionsData;
-  factionsData.append(QVariantMap{{"id", 0}, {"name", "Standard"}});
-  factionsData.append(QVariantMap{{"id", 1}, {"name", "Romans"}});
-  factionsData.append(QVariantMap{{"id", 2}, {"name", "Egyptians"}});
-  factionsData.append(QVariantMap{{"id", 3}, {"name", "Barbarians"}});
-  return factionsData;
+  QVariantList factions_data;
+  factions_data.append(QVariantMap{{"id", 0}, {"name", "Standard"}});
+  factions_data.append(QVariantMap{{"id", 1}, {"name", "Romans"}});
+  factions_data.append(QVariantMap{{"id", 2}, {"name", "Egyptians"}});
+  factions_data.append(QVariantMap{{"id", 3}, {"name", "Barbarians"}});
+  return factions_data;
 }
 
 QVariantMap Theme::unitIcons() {

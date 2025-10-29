@@ -99,11 +99,11 @@ auto createPlaneMesh(float width, float height, int subdivisions) -> Mesh * {
 
   for (int z = 0; z <= subdivisions; ++z) {
     for (int x = 0; x <= subdivisions; ++x) {
-      float xPos = (x / static_cast<float>(subdivisions)) * width - half_width;
-      float zPos =
+      float x_pos = (x / static_cast<float>(subdivisions)) * width - half_width;
+      float z_pos =
           (z / static_cast<float>(subdivisions)) * height - half_height;
 
-      vertices.push_back({{xPos, 0.0F, zPos},
+      vertices.push_back({{x_pos, 0.0F, z_pos},
                           {0.0F, 1.0F, 0.0F},
                           {x / static_cast<float>(subdivisions),
                            z / static_cast<float>(subdivisions)}});

@@ -26,7 +26,7 @@ void ArrowSystem::spawnArrow(const QVector3D &start, const QVector3D &end,
   m_arrows.push_back(a);
 }
 
-void ArrowSystem::update(Engine::Core::World *world, float deltaTime) {
+void ArrowSystem::update(Engine::Core::World *, float deltaTime) {
   for (auto &arrow : m_arrows) {
     if (!arrow.active) {
       continue;
