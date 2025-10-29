@@ -59,7 +59,9 @@ def generate_table(contributors):
         emails = ", ".join(sorted(info["emails"]))
         # Default empty reference link
         reference = ""
-        rows.append(f"| {name} | {emails} | {info['count']} commits | {info['first']} | {info['last']} | {reference} |")
+        # Use proper pluralization for commits
+        commit_text = f"{info['count']} commit" if info['count'] == 1 else f"{info['count']} commits"
+        rows.append(f"| {name} | {emails} | {commit_text} | {info['first']} | {info['last']} | {reference} |")
     return "\n".join(header + rows) + "\n"
 
 def main():
