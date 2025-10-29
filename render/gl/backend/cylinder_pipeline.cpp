@@ -165,7 +165,7 @@ void CylinderPipeline::initializeCylinderPipeline() {
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
   m_cylinderScratch.reserve(m_usePersistentBuffers
-                                ? persistent_capacity
+                                ? k_cylinder_persistent_capacity
                                 : m_cylinderInstanceCapacity);
 }
 
