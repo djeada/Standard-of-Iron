@@ -11,29 +11,39 @@ struct ma_device;
 class MiniaudioBackend : public QObject {
   Q_OBJECT
 public:
+  static constexpr int DEFAULT_SAMPLE_RATE = 48000;
+  static constexpr int DEFAULT_OUTPUT_CHANNELS = 2;
+  static constexpr int DEFAULT_MUSIC_CHANNELS = 4;
+  static constexpr int DEFAULT_SOUND_EFFECT_SLOTS = 32;
+  static constexpr int DECODE_BUFFER_FRAMES = 4096;
+  static constexpr int MIN_SAMPLE_RATE = 22050;
+  static constexpr float MIN_VOLUME = 0.0F;
+  static constexpr float MAX_VOLUME = 1.0F;
+  static constexpr float DEFAULT_VOLUME = 1.0F;
+
   explicit MiniaudioBackend(QObject *parent = nullptr);
   ~MiniaudioBackend() override;
 
-  auto initialize(int deviceRate, int outChannels, int musicChannels) -> bool;
+  auto initialize(int device_rate, int output_channels, int music_channels) -> bool;
   void shutdown();
 
   auto predecode(const QString &id, const QString &path) -> bool;
 
   void play(int channel, const QString &id, float volume, bool loop,
-            int fadeMs);
-  void stop(int channel, int fadeMs);
+            int fade_ms);
+  void stop(int channel, int fade_ms);
   void pause(int channel);
   void resume(int channel);
-  void setVolume(int channel, float volume, int fadeMs);
-  void stopAll(int fadeMs);
-  void setMasterVolume(float volume, int fadeMs);
+  void set_volume(int channel, float volume, int fade_ms);
+  void stop_all(int fade_ms);
+  void set_master_volume(float volume, int fade_ms);
 
-  auto anyChannelPlaying() const -> bool;
-  auto channelPlaying(int channel) const -> bool;
+  auto any_channel_playing() const -> bool;
+  auto channel_playing(int channel) const -> bool;
 
-  void playSound(const QString &id, float volume, bool loop = false);
+  void play_sound(const QString &id, float volume, bool loop = false);
 
-  void onAudio(float *out, unsigned frames);
+  void on_audio(float *output, unsigned frames);
 
 private:
   struct DecodedTrack {
@@ -43,10 +53,10 @@ private:
 
   struct Channel {
     const DecodedTrack *track = nullptr;
-    unsigned framePos = 0;
-    float curVol = 0.0F;
-    float tgtVol = 1.0F;
-    float volStep = 0.0F;
+    unsigned frame_pos = 0;
+    float current_volume = 0.0F;
+    float target_volume = DEFAULT_VOLUME;
+    float volume_step = 0.0F;
     unsigned fade_samples = 0;
     bool looping = false;
     bool paused = false;
@@ -55,23 +65,23 @@ private:
 
   struct SoundEffect {
     const DecodedTrack *track = nullptr;
-    unsigned framePos = 0;
-    float volume = 1.0F;
+    unsigned frame_pos = 0;
+    float volume = DEFAULT_VOLUME;
     bool looping = false;
     bool active = false;
   };
 
-  void startDevice();
-  void stopDevice();
-  auto findFreeSoundSlot() const -> int;
+  void start_device();
+  void stop_device();
+  auto find_free_sound_slot() const -> int;
 
   ma_device *m_device{nullptr};
-  int m_rate{48000};
-  int m_outCh{2};
+  int m_sample_rate{DEFAULT_SAMPLE_RATE};
+  int m_output_channels{DEFAULT_OUTPUT_CHANNELS};
 
   mutable QMutex m_mutex;
   QMap<QString, DecodedTrack> m_tracks;
   QVector<Channel> m_channels;
-  QVector<SoundEffect> m_soundEffects;
-  float m_masterVol{1.0F};
+  QVector<SoundEffect> m_sound_effects;
+  float m_master_volume{DEFAULT_VOLUME};
 };
