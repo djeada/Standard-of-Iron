@@ -15,6 +15,7 @@
 #include <QTextStream>
 #include <QUrl>
 #include <cstdio>
+#include <memory>
 #include <qglobal.h>
 #include <qguiapplication.h>
 #include <qnamespace.h>
@@ -264,22 +265,28 @@ auto main(int argc, char *argv[]) -> int {
   QGuiApplication app(argc, argv);
   qInfo() << "QGuiApplication created successfully";
 
+  // Use unique_ptr with custom deleter for Qt objects
+  // This ensures proper cleanup order and prevents segfaults
+  std::unique_ptr<LanguageManager> language_manager;
+  std::unique_ptr<GameEngine> game_engine;
+  std::unique_ptr<QQmlApplicationEngine> engine;
+
   qInfo() << "Creating LanguageManager...";
-  auto *language_manager = new LanguageManager();
+  language_manager = std::make_unique<LanguageManager>(&app);
   qInfo() << "LanguageManager created";
 
   qInfo() << "Creating GameEngine...";
-  auto *game_engine = new GameEngine();
+  game_engine = std::make_unique<GameEngine>(&app);
   qInfo() << "GameEngine created";
 
   qInfo() << "Setting up QML engine...";
-  QQmlApplicationEngine engine;
+  engine = std::make_unique<QQmlApplicationEngine>();
   qInfo() << "Adding context properties...";
-  engine.rootContext()->setContextProperty("language_manager",
-                                           language_manager);
-  engine.rootContext()->setContextProperty("game", game_engine);
+  engine->rootContext()->setContextProperty("language_manager",
+                                           language_manager.get());
+  engine->rootContext()->setContextProperty("game", game_engine.get());
   qInfo() << "Adding import path...";
-  engine.addImportPath("qrc:/StandardOfIron/ui/qml");
+  engine->addImportPath("qrc:/StandardOfIron/ui/qml");
   qInfo() << "Registering QML types...";
   qmlRegisterType<GLView>("StandardOfIron", 1, 0, "GLView");
 
@@ -289,18 +296,18 @@ auto main(int argc, char *argv[]) -> int {
 
   qInfo() << "Loading Main.qml...";
   qInfo() << "Loading Main.qml...";
-  engine.load(QUrl(QStringLiteral("qrc:/StandardOfIron/ui/qml/Main.qml")));
+  engine->load(QUrl(QStringLiteral("qrc:/StandardOfIron/ui/qml/Main.qml")));
 
   qInfo() << "Checking if QML loaded...";
-  if (engine.rootObjects().isEmpty()) {
+  if (engine->rootObjects().isEmpty()) {
     qWarning() << "Failed to load QML file";
     return -1;
   }
   qInfo() << "QML loaded successfully, root objects count:"
-          << engine.rootObjects().size();
+          << engine->rootObjects().size();
 
   qInfo() << "Finding QQuickWindow...";
-  auto *root_obj = engine.rootObjects().first();
+  auto *root_obj = engine->rootObjects().first();
   auto *window = qobject_cast<QQuickWindow *>(root_obj);
   if (window == nullptr) {
     qInfo() << "Root object is not a window, searching children...";
@@ -360,6 +367,22 @@ auto main(int argc, char *argv[]) -> int {
   qInfo() << "Starting event loop...";
 
   int const result = QGuiApplication::exec();
+
+  // Explicitly destroy in correct order to prevent segfault
+  qInfo() << "Shutting down...";
+  
+  // Destroy QML engine first (destroys OpenGL context)
+  engine.reset();
+  qInfo() << "QML engine destroyed";
+  
+  // Then destroy game engine
+  // OpenGL cleanup in destructors will be skipped if no valid context
+  game_engine.reset();
+  qInfo() << "GameEngine destroyed";
+  
+  // Finally destroy language manager
+  language_manager.reset();
+  qInfo() << "LanguageManager destroyed";
 
 #ifdef Q_OS_WIN
   // Check if we crashed during OpenGL initialization

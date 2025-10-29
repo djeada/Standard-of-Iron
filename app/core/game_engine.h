@@ -77,8 +77,10 @@ class QQuickWindow;
 class GameEngine : public QObject {
   Q_OBJECT
 public:
-  GameEngine();
+  explicit GameEngine(QObject *parent = nullptr);
   ~GameEngine() override;
+
+  void cleanupOpenGLResources();
 
   Q_PROPERTY(QObject *selectedUnitsModel READ selectedUnitsModel NOTIFY
                  selectedUnitsChanged)
