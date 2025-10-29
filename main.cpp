@@ -265,11 +265,11 @@ auto main(int argc, char *argv[]) -> int {
   qInfo() << "QGuiApplication created successfully";
 
   qInfo() << "Creating LanguageManager...";
-  auto *language_manager = new LanguageManager();
+  auto *language_manager = new LanguageManager(&app);
   qInfo() << "LanguageManager created";
 
   qInfo() << "Creating GameEngine...";
-  auto *game_engine = new GameEngine();
+  auto *game_engine = new GameEngine(&app);
   qInfo() << "GameEngine created";
 
   qInfo() << "Setting up QML engine...";
