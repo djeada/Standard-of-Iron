@@ -369,13 +369,24 @@ auto main(int argc, char *argv[]) -> int {
   int const result = QGuiApplication::exec();
 
   // Explicitly destroy in correct order to prevent segfault
-  // QML engine must be destroyed first, then game objects
+  // Must cleanup OpenGL resources before destroying QML engine/window
   qInfo() << "Shutting down...";
-  engine.reset();  // Destroy QML engine first
+  
+  // Clean up OpenGL resources while context is still valid
+  if (game_engine) {
+    game_engine->cleanupOpenGLResources();
+  }
+  
+  // Now safe to destroy QML engine (and OpenGL context)
+  engine.reset();
   qInfo() << "QML engine destroyed";
-  game_engine.reset();  // Then destroy game engine
+  
+  // Then destroy game engine (non-OpenGL cleanup in destructor)
+  game_engine.reset();
   qInfo() << "GameEngine destroyed";
-  language_manager.reset();  // Finally destroy language manager
+  
+  // Finally destroy language manager
+  language_manager.reset();
   qInfo() << "LanguageManager destroyed";
 
 #ifdef Q_OS_WIN

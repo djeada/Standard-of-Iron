@@ -80,6 +80,8 @@ public:
   explicit GameEngine(QObject *parent = nullptr);
   ~GameEngine() override;
 
+  void cleanupOpenGLResources();
+
   Q_PROPERTY(QObject *selectedUnitsModel READ selectedUnitsModel NOTIFY
                  selectedUnitsChanged)
   Q_PROPERTY(bool paused READ paused WRITE setPaused)
