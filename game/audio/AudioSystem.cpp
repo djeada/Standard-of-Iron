@@ -107,7 +107,7 @@ void AudioSystem::setMasterVolume(float volume) {
     auto it = soundCategories.find(sound.first);
     AudioCategory const category =
         (it != soundCategories.end()) ? it->second : AudioCategory::SFX;
-    sound.second->setVolume(getEffectiveVolume(category, 1.0F));
+    sound.second->set_volume(getEffectiveVolume(category, 1.0F));
   }
 
   if (m_musicPlayer != nullptr) {
@@ -122,7 +122,7 @@ void AudioSystem::setSoundVolume(float volume) {
   for (auto &sound : sounds) {
     auto it = soundCategories.find(sound.first);
     if (it != soundCategories.end() && it->second == AudioCategory::SFX) {
-      sound.second->setVolume(getEffectiveVolume(AudioCategory::SFX, 1.0F));
+      sound.second->set_volume(getEffectiveVolume(AudioCategory::SFX, 1.0F));
     }
   }
 }
@@ -143,7 +143,7 @@ void AudioSystem::setVoiceVolume(float volume) {
   for (auto &sound : sounds) {
     auto it = soundCategories.find(sound.first);
     if (it != soundCategories.end() && it->second == AudioCategory::VOICE) {
-      sound.second->setVolume(getEffectiveVolume(AudioCategory::VOICE, 1.0F));
+      sound.second->set_volume(getEffectiveVolume(AudioCategory::VOICE, 1.0F));
     }
   }
 }
@@ -171,7 +171,7 @@ auto AudioSystem::loadSound(const std::string &soundId,
   MiniaudioBackend *backend =
       (m_musicPlayer != nullptr) ? m_musicPlayer->getBackend() : nullptr;
   auto sound = std::make_unique<Sound>(filePath, backend);
-  if (!sound || !sound->isLoaded()) {
+  if (!sound || !sound->is_loaded()) {
     return false;
   }
 
