@@ -298,9 +298,19 @@ GameEngine::~GameEngine() {
 void GameEngine::cleanupOpenGLResources() {
   qInfo() << "Cleaning up OpenGL resources...";
   
+  // Check if we have a valid OpenGL context
+  // If not, skip OpenGL cleanup and just reset the pointers
+  // Qt will handle OpenGL resource cleanup when the context is destroyed
+  QOpenGLContext *context = QOpenGLContext::currentContext();
+  const bool hasValidContext = (context != nullptr);
+  
+  if (!hasValidContext) {
+    qInfo() << "No valid OpenGL context, skipping OpenGL cleanup";
+  }
+  
   // Shutdown renderer and all OpenGL-dependent resources
-  // Must be called while OpenGL context is still valid
-  if (m_renderer) {
+  // Only call shutdown if we have a valid context
+  if (m_renderer && hasValidContext) {
     m_renderer->shutdown();
     qInfo() << "Renderer shut down";
   }
@@ -309,6 +319,8 @@ void GameEngine::cleanupOpenGLResources() {
   m_passes.clear();
   
   // Reset all renderer-dependent unique_ptrs
+  // These will call destructors which may try to access OpenGL
+  // If no valid context, the destructors should be defensive
   m_ground.reset();
   m_terrain.reset();
   m_biome.reset();
