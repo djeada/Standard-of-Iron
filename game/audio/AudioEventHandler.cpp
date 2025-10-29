@@ -111,7 +111,7 @@ void AudioEventHandler::onUnitSelected(
     if (should_play) {
       AudioCategory const category =
           m_useVoiceCategory ? AudioCategory::VOICE : AudioCategory::SFX;
-      AudioSystem::getInstance().playSound(it->second, 1.0F, false, 5,
+      AudioSystem::getInstance().playSound(it->second, UNIT_SELECTION_VOLUME, false, UNIT_SELECTION_PRIORITY,
                                            category);
       m_lastSelectionSoundTime = now;
       m_lastSelectionUnitType = unit_type_str;
