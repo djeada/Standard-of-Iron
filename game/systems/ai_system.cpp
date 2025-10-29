@@ -7,6 +7,8 @@
 #include "ai_system/behaviors/retreat_behavior.h"
 #include "core/event_manager.h"
 #include "owner_registry.h"
+#include "systems/ai_system/ai_command_applier.h"
+#include "systems/ai_system/ai_snapshot_builder.h"
 #include "systems/ai_system/ai_types.h"
 #include "systems/ai_system/ai_worker.h"
 #include <cstdint>

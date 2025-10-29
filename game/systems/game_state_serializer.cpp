@@ -12,7 +12,7 @@
 namespace Game::Systems {
 
 auto GameStateSerializer::buildMetadata(
-    const Engine::Core::World &world, const Render::GL::Camera *camera,
+    const Engine::Core::World &, const Render::GL::Camera *camera,
     const LevelSnapshot &level, const RuntimeSnapshot &runtime) -> QJsonObject {
 
   QJsonObject metadata;

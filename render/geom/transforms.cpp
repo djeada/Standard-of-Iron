@@ -10,7 +10,7 @@ namespace {
 const QVector3D k_yaxis(0, 1, 0);
 const float k_rad_to_deg = 57.2957795131F;
 const float k_epsilon = 1e-6F;
-const float k_epsilonSq = k_epsilon * k_epsilon;
+const float k_epsilon_sq = k_epsilon * k_epsilon;
 constexpr float k_flip_rotation_degrees = 180.0F;
 } // namespace
 
@@ -22,12 +22,12 @@ auto cylinderBetween(const QVector3D &a, const QVector3D &b,
   const float dz = b.z() - a.z();
   const float len_sq = dx * dx + dy * dy + dz * dz;
 
-  QMatrix4x4 M;
+  QMatrix4x4 m;
 
-  M.translate((a.x() + b.x()) * 0.5F, (a.y() + b.y()) * 0.5F,
+  m.translate((a.x() + b.x()) * 0.5F, (a.y() + b.y()) * 0.5F,
               (a.z() + b.z()) * 0.5F);
 
-  if (len_sq > k_epsilonSq) {
+  if (len_sq > k_epsilon_sq) {
     const float len = std::sqrt(len_sq);
 
     const float inv_len = 1.0F / len;
@@ -42,36 +42,36 @@ auto cylinderBetween(const QVector3D &a, const QVector3D &b,
     const float axis_z = -ndx;
     const float axis_len_sq = axis_x * axis_x + axis_z * axis_z;
 
-    if (axis_len_sq < k_epsilonSq) {
+    if (axis_len_sq < k_epsilon_sq) {
 
       if (dot < 0.0F) {
-        M.rotate(k_flip_rotation_degrees, 1.0F, 0.0F, 0.0F);
+        m.rotate(k_flip_rotation_degrees, 1.0F, 0.0F, 0.0F);
       }
     } else {
 
       const float axis_inv_len = 1.0F / std::sqrt(axis_len_sq);
-      M.rotate(angle_deg, axis_x * axis_inv_len, 0.0F, axis_z * axis_inv_len);
+      m.rotate(angle_deg, axis_x * axis_inv_len, 0.0F, axis_z * axis_inv_len);
     }
-    M.scale(radius, len, radius);
+    m.scale(radius, len, radius);
   } else {
-    M.scale(radius, 1.0F, radius);
+    m.scale(radius, 1.0F, radius);
   }
-  return M;
+  return m;
 }
 
 auto sphereAt(const QVector3D &pos, float radius) -> QMatrix4x4 {
-  QMatrix4x4 M;
-  M.translate(pos);
-  M.scale(radius, radius, radius);
-  return M;
+  QMatrix4x4 m;
+  m.translate(pos);
+  m.scale(radius, radius, radius);
+  return m;
 }
 
 auto sphereAt(const QMatrix4x4 &parent, const QVector3D &pos,
               float radius) -> QMatrix4x4 {
-  QMatrix4x4 M = parent;
-  M.translate(pos);
-  M.scale(radius, radius, radius);
-  return M;
+  QMatrix4x4 m = parent;
+  m.translate(pos);
+  m.scale(radius, radius, radius);
+  return m;
 }
 
 auto cylinderBetween(const QMatrix4x4 &parent, const QVector3D &a,
@@ -82,12 +82,12 @@ auto cylinderBetween(const QMatrix4x4 &parent, const QVector3D &a,
   const float dz = b.z() - a.z();
   const float len_sq = dx * dx + dy * dy + dz * dz;
 
-  QMatrix4x4 M = parent;
+  QMatrix4x4 m = parent;
 
-  M.translate((a.x() + b.x()) * 0.5F, (a.y() + b.y()) * 0.5F,
+  m.translate((a.x() + b.x()) * 0.5F, (a.y() + b.y()) * 0.5F,
               (a.z() + b.z()) * 0.5F);
 
-  if (len_sq > k_epsilonSq) {
+  if (len_sq > k_epsilon_sq) {
     const float len = std::sqrt(len_sq);
 
     const float inv_len = 1.0F / len;
@@ -102,21 +102,21 @@ auto cylinderBetween(const QMatrix4x4 &parent, const QVector3D &a,
     const float axis_z = -ndx;
     const float axis_len_sq = axis_x * axis_x + axis_z * axis_z;
 
-    if (axis_len_sq < k_epsilonSq) {
+    if (axis_len_sq < k_epsilon_sq) {
 
       if (dot < 0.0F) {
-        M.rotate(k_flip_rotation_degrees, 1.0F, 0.0F, 0.0F);
+        m.rotate(k_flip_rotation_degrees, 1.0F, 0.0F, 0.0F);
       }
     } else {
 
       const float axis_inv_len = 1.0F / std::sqrt(axis_len_sq);
-      M.rotate(angle_deg, axis_x * axis_inv_len, 0.0F, axis_z * axis_inv_len);
+      m.rotate(angle_deg, axis_x * axis_inv_len, 0.0F, axis_z * axis_inv_len);
     }
-    M.scale(radius, len, radius);
+    m.scale(radius, len, radius);
   } else {
-    M.scale(radius, 1.0F, radius);
+    m.scale(radius, 1.0F, radius);
   }
-  return M;
+  return m;
 }
 
 auto coneFromTo(const QVector3D &base_center, const QVector3D &apex,

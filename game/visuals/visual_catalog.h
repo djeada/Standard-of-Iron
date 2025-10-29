@@ -23,7 +23,7 @@ class VisualCatalog {
 public:
   auto loadFromJsonFile(const QString &path,
                         QString *out_error = nullptr) -> bool;
-  auto lookup(const std::string &unit_type, VisualDef &out) const -> bool;
+  auto lookup(const std::string &unitType, VisualDef &out) const -> bool;
 
 private:
   std::unordered_map<std::string, VisualDef> m_units;

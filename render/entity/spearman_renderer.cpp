@@ -24,8 +24,6 @@
 
 namespace Render::GL {
 
-using Render::Geom::clamp01;
-using Render::Geom::clampf;
 using Render::Geom::coneFromTo;
 using Render::Geom::cylinderBetween;
 using Render::Geom::easeInOutCubic;
@@ -57,7 +55,7 @@ public:
     v.palette = makeHumanoidPalette(team_tint, seed);
   }
 
-  void customizePose(const DrawContext &ctx, const AnimationInputs &anim,
+  void customizePose(const DrawContext &, const AnimationInputs &anim,
                      uint32_t seed, HumanoidPose &pose) const override {
     using HP = HumanProportions;
 
@@ -270,8 +268,8 @@ public:
 
   void draw_armorOverlay(const DrawContext &ctx, const HumanoidVariant &v,
                          const HumanoidPose &pose, float y_top_cover,
-                         float torso_r, float shoulder_half_span,
-                         float upper_arm_r, const QVector3D &right_axis,
+                         float torso_r, float, float upper_arm_r,
+                         const QVector3D &right_axis,
                          ISubmitter &out) const override {
     using HP = HumanProportions;
 
@@ -289,12 +287,12 @@ public:
     auto draw_pauldron = [&](const QVector3D &shoulder,
                              const QVector3D &outward) {
       for (int i = 0; i < 3; ++i) {
-        float const segY = shoulder.y() + 0.03F - i * 0.040F;
-        float const segR = upper_arm_r * (2.2F - i * 0.10F);
+        float const seg_y = shoulder.y() + 0.03F - i * 0.040F;
+        float const seg_r = upper_arm_r * (2.2F - i * 0.10F);
         QVector3D seg_pos = shoulder + outward * (0.015F + i * 0.006F);
-        seg_pos.setY(segY);
+        seg_pos.setY(seg_y);
 
-        out.mesh(getUnitSphere(), sphereAt(ctx.model, seg_pos, segR),
+        out.mesh(getUnitSphere(), sphereAt(ctx.model, seg_pos, seg_r),
                  i == 0 ? iron_color * 1.04F : iron_color * (1.0F - i * 0.02F),
                  nullptr, 1.0F);
       }
