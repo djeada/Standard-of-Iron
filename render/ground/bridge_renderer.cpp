@@ -153,7 +153,8 @@ void BridgeRenderer::buildMeshes() {
       add_vertex(parapet_right_bottom, right_normal, tex_u1, texV);
 
       if (i < length_segments) {
-        auto const base_idx = static_cast<unsigned int>(i * k_vertices_per_bridge_segment);
+        auto const base_idx =
+            static_cast<unsigned int>(i * k_vertices_per_bridge_segment);
         unsigned int const next_idx = base_idx + k_vertices_per_bridge_segment;
 
         push_quad(base_idx + 0, base_idx + 1, next_idx + 1, next_idx + 0);
@@ -172,8 +173,8 @@ void BridgeRenderer::buildMeshes() {
 
     if (!vertices.empty()) {
       unsigned int const start_idx = 0;
-      auto const end_idx =
-          static_cast<unsigned int>(length_segments * k_vertices_per_bridge_segment);
+      auto const end_idx = static_cast<unsigned int>(
+          length_segments * k_vertices_per_bridge_segment);
 
       QVector3D const forward_normal = dir;
 

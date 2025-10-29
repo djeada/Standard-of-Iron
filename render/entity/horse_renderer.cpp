@@ -28,15 +28,13 @@ namespace {
 
 constexpr float kPi = std::numbers::pi_v<float>;
 
-// Hash function bit shift constants
 constexpr int k_hash_shift_16 = 16;
 constexpr int k_hash_shift_15 = 15;
 constexpr uint32_t k_hash_mult_1 = 0x7Feb352dU;
 constexpr uint32_t k_hash_mult_2 = 0x846ca68bU;
 constexpr uint32_t k_hash_mask_24bit = 0xFFFFFF;
-constexpr float k_hash_divisor = 16777216.0F; // 0x1000000
+constexpr float k_hash_divisor = 16777216.0F;
 
-// Color conversion constants
 constexpr float k_rgb_max = 255.0F;
 constexpr int k_rgb_shift_red = 16;
 constexpr int k_rgb_shift_green = 8;

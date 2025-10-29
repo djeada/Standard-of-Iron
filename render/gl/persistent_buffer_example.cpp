@@ -7,7 +7,8 @@ PersistentRingBuffer<CylinderInstanceGpu> m_cylinderPersistentBuffer;
 void Backend::initializeCylinderPipeline() {
   constexpr std::size_t k_initial_persistent_capacity = 10000;
   constexpr int k_buffers_in_flight = 3;
-  if (m_cylinderPersistentBuffer.initialize(k_initial_persistent_capacity, k_buffers_in_flight)) {
+  if (m_cylinderPersistentBuffer.initialize(k_initial_persistent_capacity,
+                                            k_buffers_in_flight)) {
   } else {
     qWarning()
         << "Failed to init persistent buffer, falling back to old method";

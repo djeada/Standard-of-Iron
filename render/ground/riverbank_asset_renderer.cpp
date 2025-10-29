@@ -168,7 +168,8 @@ void RiverbankAssetRenderer::generateAssetInstances() {
     int const num_steps = static_cast<int>(length / 0.8F) + 1;
 
     constexpr uint32_t k_rng_segment_multiplier = 1000;
-    uint32_t rng = m_noiseSeed + static_cast<uint32_t>(seg_idx * k_rng_segment_multiplier);
+    uint32_t rng =
+        m_noiseSeed + static_cast<uint32_t>(seg_idx * k_rng_segment_multiplier);
 
     for (int i = 0; i < num_steps; ++i) {
       float const t = static_cast<float>(i) /

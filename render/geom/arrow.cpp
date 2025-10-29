@@ -38,8 +38,9 @@ static auto createArrowMesh() -> GL::Mesh * {
       float y = std::sin(a) * shaft_radius;
       QVector3D n(x, y, 0.0F);
       n.normalize();
-      verts.push_back(
-          {{x, y, z}, {n.x(), n.y(), n.z()}, {float(i) / k_arrow_radial_segments, z}});
+      verts.push_back({{x, y, z},
+                       {n.x(), n.y(), n.z()},
+                       {float(i) / k_arrow_radial_segments, z}});
     }
   }
 
@@ -64,8 +65,9 @@ static auto createArrowMesh() -> GL::Mesh * {
     float y = std::sin(a) * shaft_radius * 1.4F;
     QVector3D n(x, y, 0.2F);
     n.normalize();
-    verts.push_back(
-        {{x, y, tip_startZ}, {n.x(), n.y(), n.z()}, {float(i) / k_arrow_radial_segments, 0.0F}});
+    verts.push_back({{x, y, tip_startZ},
+                     {n.x(), n.y(), n.z()},
+                     {float(i) / k_arrow_radial_segments, 0.0F}});
   }
 
   int apex_index = verts.size();
@@ -123,7 +125,8 @@ void renderArrows(Renderer *renderer, ResourceManager *resources,
     constexpr float k_arc_center_offset = 0.5F;
     float const vy = (arrow.end.y() - arrow.start.y()) / dist;
     float const pitch_deg =
-        -std::atan2(vy - (k_arc_height_multiplier * arrow.arcHeight * (arrow.t - k_arc_center_offset) / dist),
+        -std::atan2(vy - (k_arc_height_multiplier * arrow.arcHeight *
+                          (arrow.t - k_arc_center_offset) / dist),
                     1.0F) *
         k_rad_to_deg;
     model.rotate(pitch_deg, QVector3D(1, 0, 0));
