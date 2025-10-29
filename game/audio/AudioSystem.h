@@ -1,5 +1,6 @@
 #pragma once
 
+#include "AudioConstants.h"
 #include <atomic>
 #include <chrono>
 #include <condition_variable>
@@ -34,16 +35,6 @@ enum class AudioEventType {
 
 enum class AudioCategory { SFX, VOICE, MUSIC };
 
-// Audio system constants
-namespace AudioConstants {
-  constexpr float DEFAULT_VOLUME = 1.0F;
-  constexpr float MIN_VOLUME = 0.0F;
-  constexpr float MAX_VOLUME = 1.0F;
-  constexpr int DEFAULT_PRIORITY = 0;
-  constexpr size_t DEFAULT_MAX_CHANNELS = 32;
-  constexpr size_t MIN_CHANNELS = 1;
-}
-
 struct AudioEvent {
   AudioEventType type;
   std::string resourceId;
@@ -60,22 +51,15 @@ struct AudioEvent {
 
 class AudioSystem {
 public:
-  static constexpr float DEFAULT_VOLUME = AudioConstants::DEFAULT_VOLUME;
-  static constexpr float MIN_VOLUME = AudioConstants::MIN_VOLUME;
-  static constexpr float MAX_VOLUME = AudioConstants::MAX_VOLUME;
-  static constexpr int DEFAULT_PRIORITY = AudioConstants::DEFAULT_PRIORITY;
-  static constexpr size_t DEFAULT_MAX_CHANNELS = AudioConstants::DEFAULT_MAX_CHANNELS;
-  static constexpr size_t MIN_CHANNELS = AudioConstants::MIN_CHANNELS;
-
   static auto getInstance() -> AudioSystem &;
 
   auto initialize() -> bool;
   void shutdown();
 
-  void playSound(const std::string &soundId, float volume = DEFAULT_VOLUME,
-                 bool loop = false, int priority = DEFAULT_PRIORITY,
+  void playSound(const std::string &soundId, float volume = AudioConstants::DEFAULT_VOLUME,
+                 bool loop = false, int priority = AudioConstants::DEFAULT_PRIORITY,
                  AudioCategory category = AudioCategory::SFX);
-  void playMusic(const std::string &musicId, float volume = DEFAULT_VOLUME,
+  void playMusic(const std::string &musicId, float volume = AudioConstants::DEFAULT_VOLUME,
                  bool crossfade = true);
   void stopSound(const std::string &soundId);
   void stopMusic();
@@ -137,7 +121,7 @@ private:
   std::atomic<float> musicVolume;
   std::atomic<float> voiceVolume;
 
-  size_t maxChannels{DEFAULT_MAX_CHANNELS};
+  size_t maxChannels{AudioConstants::DEFAULT_MAX_CHANNELS};
 
   struct ActiveSound {
     std::string id;
