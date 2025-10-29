@@ -348,12 +348,19 @@ void TerrainRenderer::buildMeshes() {
 
       uint32_t const chunk_seed = hash_coords(chunk_x, chunk_z, m_noiseSeed);
       uint32_t const variant_seed = chunk_seed ^ k_golden_ratio;
+      constexpr int k_rotation_shift = 5;
+      constexpr int k_rotation_mask = 3;
+      constexpr float k_rotation_step_degrees = 90.0F;
+      constexpr int k_flip_shift = 7;
+      constexpr int k_tint_shift = 12;
+      constexpr int k_tint_variant_count = 7;
+      
       float const rotation_step =
-          static_cast<float>((variant_seed >> 5) & 3) * 90.0F;
-      bool const flip = ((variant_seed >> 7) & 1U) != 0U;
-      static const float tint_variants[7] = {0.9F,  0.94F, 0.97F, 1.0F,
+          static_cast<float>((variant_seed >> k_rotation_shift) & k_rotation_mask) * k_rotation_step_degrees;
+      bool const flip = ((variant_seed >> k_flip_shift) & 1U) != 0U;
+      static const float tint_variants[k_tint_variant_count] = {0.9F,  0.94F, 0.97F, 1.0F,
                                              1.03F, 1.06F, 1.1F};
-      float const tint = tint_variants[(variant_seed >> 12) % 7];
+      float const tint = tint_variants[(variant_seed >> k_tint_shift) % k_tint_variant_count];
 
       for (auto &section : sections) {
         section.rotationDeg = rotation_step;
@@ -651,8 +658,9 @@ void TerrainRenderer::buildMeshes() {
             hash_coords(chunk.minX, chunk.minZ, m_noiseSeed ^ 0xB5297A4DU);
         const uint32_t noise_key_b =
             hash_coords(chunk.minX, chunk.minZ, m_noiseSeed ^ 0x68E31DA4U);
-        params.noiseOffset = QVector2D(hash_to_01(noise_key_a) * 256.0F,
-                                       hash_to_01(noise_key_b) * 256.0F);
+        constexpr float k_noise_offset_scale = 256.0F;
+        params.noiseOffset = QVector2D(hash_to_01(noise_key_a) * k_noise_offset_scale,
+                                       hash_to_01(noise_key_b) * k_noise_offset_scale);
 
         float base_amp =
             m_biomeSettings.heightNoiseAmplitude *

@@ -114,8 +114,8 @@ void CylinderPipeline::initializeCylinderPipeline() {
                         GL_FALSE, sizeof(Vertex),
                         reinterpret_cast<void *>(offsetof(Vertex, tex_coord)));
 
-  const std::size_t persistent_capacity = 10000;
-  if (m_cylinderPersistentBuffer.initialize(persistent_capacity,
+  constexpr std::size_t k_cylinder_persistent_capacity = 10000;
+  if (m_cylinderPersistentBuffer.initialize(k_cylinder_persistent_capacity,
                                             BufferCapacity::BuffersInFlight)) {
     m_usePersistentBuffers = true;
     glBindBuffer(GL_ARRAY_BUFFER, m_cylinderPersistentBuffer.buffer());
@@ -165,7 +165,7 @@ void CylinderPipeline::initializeCylinderPipeline() {
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
   m_cylinderScratch.reserve(m_usePersistentBuffers
-                                ? persistent_capacity
+                                ? k_cylinder_persistent_capacity
                                 : m_cylinderInstanceCapacity);
 }
 
