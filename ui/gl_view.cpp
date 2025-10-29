@@ -1,38 +1,41 @@
 #include "gl_view.h"
 #include "../app/core/game_engine.h"
 
+#include <QOpenGLContext>
 #include <QOpenGLFramebufferObject>
 #include <QOpenGLFramebufferObjectFormat>
-#include <QOpenGLContext>
 #include <QQuickWindow>
+#include <exception>
+#include <qglobal.h>
 #include <qobject.h>
+#include <qopenglcontext.h>
 #include <qopenglframebufferobject.h>
 #include <qpointer.h>
 #include <qquickframebufferobject.h>
 #include <qtmetamacros.h>
 #include <utility>
 
-GLView::GLView() { 
+GLView::GLView() {
   setMirrorVertically(true);
-  
-  // Check if OpenGL is available
-  QOpenGLContext* ctx = QOpenGLContext::currentContext();
-  if (!ctx) {
+
+  QOpenGLContext *ctx = QOpenGLContext::currentContext();
+  if (ctx == nullptr) {
     qWarning() << "GLView: No OpenGL context available";
     qWarning() << "GLView: 3D rendering will not work in software mode";
-    qWarning() << "GLView: Try running without QT_QUICK_BACKEND=software for full functionality";
+    qWarning() << "GLView: Try running without QT_QUICK_BACKEND=software for "
+                  "full functionality";
   }
 }
 
 auto GLView::createRenderer() const -> QQuickFramebufferObject::Renderer * {
-  // Check if we have a valid OpenGL context
-  QOpenGLContext* ctx = QOpenGLContext::currentContext();
-  if (!ctx || !ctx->isValid()) {
+
+  QOpenGLContext *ctx = QOpenGLContext::currentContext();
+  if ((ctx == nullptr) || !ctx->isValid()) {
     qCritical() << "GLView::createRenderer() - No valid OpenGL context";
     qCritical() << "Running in software rendering mode - 3D view not available";
     return nullptr;
   }
-  
+
   return new GLRenderer(m_engine);
 }
 
@@ -55,14 +58,13 @@ void GLView::GLRenderer::render() {
     qWarning() << "GLRenderer::render() - engine is null";
     return;
   }
-  
-  // Double-check OpenGL context is still valid
-  QOpenGLContext* ctx = QOpenGLContext::currentContext();
-  if (!ctx || !ctx->isValid()) {
+
+  QOpenGLContext *ctx = QOpenGLContext::currentContext();
+  if ((ctx == nullptr) || !ctx->isValid()) {
     qCritical() << "GLRenderer::render() - OpenGL context lost";
     return;
   }
-  
+
   try {
     m_engine->ensureInitialized();
     m_engine->update(1.0F / 60.0F);
@@ -74,21 +76,21 @@ void GLView::GLRenderer::render() {
     qCritical() << "GLRenderer::render() unknown exception";
     return;
   }
-  
+
   update();
 }
 
 auto GLView::GLRenderer::createFramebufferObject(const QSize &size)
     -> QOpenGLFramebufferObject * {
   m_size = size;
-  
-  // Verify OpenGL context before creating FBO
-  QOpenGLContext* ctx = QOpenGLContext::currentContext();
-  if (!ctx || !ctx->isValid()) {
-    qCritical() << "GLRenderer::createFramebufferObject() - No valid OpenGL context";
+
+  QOpenGLContext *ctx = QOpenGLContext::currentContext();
+  if ((ctx == nullptr) || !ctx->isValid()) {
+    qCritical()
+        << "GLRenderer::createFramebufferObject() - No valid OpenGL context";
     return nullptr;
   }
-  
+
   QOpenGLFramebufferObjectFormat fmt;
   fmt.setAttachment(QOpenGLFramebufferObject::Depth);
   fmt.setSamples(0);

@@ -1,7 +1,7 @@
 #include "vegetation_pipeline.h"
 #include "../render_constants.h"
 #include "gl/shader_cache.h"
-#include "../opengl_headers.h"
+#include <GL/gl.h>
 #include <QDebug>
 #include <cmath>
 #include <cstddef>
@@ -187,15 +187,15 @@ void VegetationPipeline::initializeStonePipeline() {
 
 void VegetationPipeline::shutdownStonePipeline() {
   initializeOpenGLFunctions();
-  if (m_stoneIndexBuffer != 0u) {
+  if (m_stoneIndexBuffer != 0U) {
     glDeleteBuffers(1, &m_stoneIndexBuffer);
     m_stoneIndexBuffer = 0;
   }
-  if (m_stoneVertexBuffer != 0u) {
+  if (m_stoneVertexBuffer != 0U) {
     glDeleteBuffers(1, &m_stoneVertexBuffer);
     m_stoneVertexBuffer = 0;
   }
-  if (m_stoneVao != 0u) {
+  if (m_stoneVao != 0U) {
     glDeleteVertexArrays(1, &m_stoneVao);
     m_stoneVao = 0;
   }
@@ -281,15 +281,15 @@ void VegetationPipeline::initializePlantPipeline() {
 
 void VegetationPipeline::shutdownPlantPipeline() {
   initializeOpenGLFunctions();
-  if (m_plantIndexBuffer != 0u) {
+  if (m_plantIndexBuffer != 0U) {
     glDeleteBuffers(1, &m_plantIndexBuffer);
     m_plantIndexBuffer = 0;
   }
-  if (m_plantVertexBuffer != 0u) {
+  if (m_plantVertexBuffer != 0U) {
     glDeleteBuffers(1, &m_plantVertexBuffer);
     m_plantVertexBuffer = 0;
   }
-  if (m_plantVao != 0u) {
+  if (m_plantVao != 0U) {
     glDeleteVertexArrays(1, &m_plantVao);
     m_plantVao = 0;
   }
@@ -430,15 +430,15 @@ void VegetationPipeline::initializePinePipeline() {
 
 void VegetationPipeline::shutdownPinePipeline() {
   initializeOpenGLFunctions();
-  if (m_pineIndexBuffer != 0u) {
+  if (m_pineIndexBuffer != 0U) {
     glDeleteBuffers(1, &m_pineIndexBuffer);
     m_pineIndexBuffer = 0;
   }
-  if (m_pineVertexBuffer != 0u) {
+  if (m_pineVertexBuffer != 0U) {
     glDeleteBuffers(1, &m_pineVertexBuffer);
     m_pineVertexBuffer = 0;
   }
-  if (m_pineVao != 0u) {
+  if (m_pineVao != 0U) {
     glDeleteVertexArrays(1, &m_pineVao);
     m_pineVao = 0;
   }
@@ -523,15 +523,15 @@ void VegetationPipeline::initializeFireCampPipeline() {
 
 void VegetationPipeline::shutdownFireCampPipeline() {
   initializeOpenGLFunctions();
-  if (m_firecampIndexBuffer != 0u) {
+  if (m_firecampIndexBuffer != 0U) {
     glDeleteBuffers(1, &m_firecampIndexBuffer);
     m_firecampIndexBuffer = 0;
   }
-  if (m_firecampVertexBuffer != 0u) {
+  if (m_firecampVertexBuffer != 0U) {
     glDeleteBuffers(1, &m_firecampVertexBuffer);
     m_firecampVertexBuffer = 0;
   }
-  if (m_firecampVao != 0u) {
+  if (m_firecampVao != 0U) {
     glDeleteVertexArrays(1, &m_firecampVao);
     m_firecampVao = 0;
   }

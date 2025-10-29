@@ -12,6 +12,7 @@
 #include "../palette.h"
 #include "../scene_renderer.h"
 #include "../submitter.h"
+#include "gl/render_constants.h"
 #include "registry.h"
 #include "renderer_constants.h"
 
@@ -528,7 +529,8 @@ private:
              v.palette.leather, nullptr, 1.0F);
 
     float const j = (hash_01(seed) - 0.5F) * 0.04F;
-    float const k = (hash_01(seed ^ HashXorShift::k_golden_ratio) - 0.5F) * 0.04F;
+    float const k =
+        (hash_01(seed ^ HashXorShift::k_golden_ratio) - 0.5F) * 0.04F;
 
     QVector3D const a1 = qTop + QVector3D(0.00F + j, 0.08F, 0.00F + k);
     out.mesh(getUnitCylinder(), cylinderBetween(ctx.model, qTop, a1, 0.010F),
@@ -613,10 +615,10 @@ private:
       QVector3D const head_base = tip - forward * 0.10F;
       out.mesh(getUnitCone(), coneFromTo(ctx.model, head_base, tip, 0.05F),
                extras.metalHead, nullptr, 1.0F);
-      QVector3D f1b = tail - forward * 0.02F;
-      QVector3D f1a = f1b - forward * 0.06F;
-      QVector3D f2b = tail + forward * 0.02F;
-      QVector3D f2a = f2b + forward * 0.06F;
+      QVector3D const f1b = tail - forward * 0.02F;
+      QVector3D const f1a = f1b - forward * 0.06F;
+      QVector3D const f2b = tail + forward * 0.02F;
+      QVector3D const f2a = f2b + forward * 0.06F;
       out.mesh(getUnitCone(), coneFromTo(ctx.model, f1b, f1a, 0.04F),
                extras.fletch, nullptr, 1.0F);
       out.mesh(getUnitCone(), coneFromTo(ctx.model, f2a, f2b, 0.04F),

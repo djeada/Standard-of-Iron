@@ -10,7 +10,7 @@ using std::uint32_t;
 
 namespace MathConstants {
 inline constexpr float k_two_pi = ::Render::GL::MathConstants::k_two_pi;
-} // namespace MathConstants
+}
 
 namespace HashConstants {
 inline constexpr uint32_t k_spatial_hash_prime_1 = 73856093U;
@@ -32,8 +32,10 @@ inline constexpr float k_temporal_variation_frequency = 37.0F;
 } // namespace HashConstants
 
 inline auto hash_coords(int x, int z, uint32_t salt = 0U) -> uint32_t {
-  auto const ux = static_cast<uint32_t>(x * HashConstants::k_spatial_hash_prime_1);
-  auto const uz = static_cast<uint32_t>(z * HashConstants::k_spatial_hash_prime_2);
+  auto const ux =
+      static_cast<uint32_t>(x * HashConstants::k_spatial_hash_prime_1);
+  auto const uz =
+      static_cast<uint32_t>(z * HashConstants::k_spatial_hash_prime_2);
   return ux ^ uz ^ (salt * HashConstants::k_spatial_hash_prime_3);
 }
 

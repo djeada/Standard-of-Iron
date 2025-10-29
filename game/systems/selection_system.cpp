@@ -4,9 +4,7 @@
 #include "../core/component.h"
 #include "../core/event_manager.h"
 #include "../core/world.h"
-#include "../game_config.h"
 #include "command_service.h"
-#include "formation_planner.h"
 #include "picking_service.h"
 #include "units/spawn_type.h"
 #include <QPointF>
@@ -15,7 +13,6 @@
 #include <qglobal.h>
 #include <qobject.h>
 #include <qtmetamacros.h>
-#include <qvectornd.h>
 #include <vector>
 
 namespace Game::Systems {
@@ -73,12 +70,13 @@ void SelectionController::onClickSelect(qreal sx, qreal sy, bool additive,
   }
 
   auto *cam = static_cast<Render::GL::Camera *>(camera);
-  Engine::Core::EntityID const picked = m_pickingService->pickSingle(
-      float(sx), float(sy), *m_world, *cam, viewportWidth, viewportHeight,
-      localOwnerId, true);
+  Engine::Core::EntityID const picked =
+      Game::Systems::PickingService::pickSingle(
+          float(sx), float(sy), *m_world, *cam, viewportWidth, viewportHeight,
+          localOwnerId, true);
 
-  if (picked != 0u) {
-    // Clicked on a unit or building - select it
+  if (picked != 0U) {
+
     if (!additive) {
       m_selection_system->clearSelection();
     }
@@ -88,7 +86,6 @@ void SelectionController::onClickSelect(qreal sx, qreal sy, bool additive,
     return;
   }
 
-  // Clicked on empty terrain - deselect all units
   if (!additive && !m_selection_system->getSelectedUnits().empty()) {
     m_selection_system->clearSelection();
     syncSelectionFlags();
@@ -110,7 +107,7 @@ void SelectionController::onAreaSelected(qreal x1, qreal y1, qreal x2, qreal y2,
   }
 
   auto *cam = static_cast<Render::GL::Camera *>(camera);
-  auto picked = m_pickingService->pickInRect(
+  auto picked = Game::Systems::PickingService::pickInRect(
       float(x1), float(y1), float(x2), float(y2), *m_world, *cam, viewportWidth,
       viewportHeight, localOwnerId);
   for (auto id : picked) {

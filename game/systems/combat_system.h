@@ -15,7 +15,7 @@ public:
   void update(Engine::Core::World *world, float deltaTime) override;
 
 private:
-  void processAttacks(Engine::Core::World *world, float deltaTime);
+  static void processAttacks(Engine::Core::World *world, float deltaTime);
   static void updateCombatMode(Engine::Core::Entity *attacker,
                                Engine::Core::World *world,
                                Engine::Core::AttackComponent *attack_comp);

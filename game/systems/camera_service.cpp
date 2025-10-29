@@ -37,7 +37,7 @@ void CameraService::zoom(Render::GL::Camera &camera, float delta) {
   m_controller->zoomDistance(camera, delta);
 }
 
-float CameraService::getDistance(const Render::GL::Camera &camera) {
+auto CameraService::getDistance(const Render::GL::Camera &camera) -> float {
   return camera.getDistance();
 }
 
