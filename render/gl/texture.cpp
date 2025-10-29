@@ -1,5 +1,5 @@
 #include "texture.h"
-#include <GL/gl.h>
+#include "opengl_headers.h"
 #include <QDebug>
 #include <QImage>
 #include <qglobal.h>
