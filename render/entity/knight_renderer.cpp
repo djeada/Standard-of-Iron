@@ -697,7 +697,8 @@ private:
 
     constexpr int k_ring_segments = 12;
     for (int i = 0; i < k_ring_segments; ++i) {
-      float const a0 = (float)i / k_ring_segments * 2.0F * std::numbers::pi_v<float>;
+      float const a0 =
+          (float)i / k_ring_segments * 2.0F * std::numbers::pi_v<float>;
       float const a1 =
           (float)(i + 1) / k_ring_segments * 2.0F * std::numbers::pi_v<float>;
       QVector3D const p0(center.x() + radius * std::cos(a0),
@@ -750,9 +751,10 @@ private:
                                  const QVector3D &color) {
       constexpr int k_rotated_ring_segments = 16;
       for (int i = 0; i < k_rotated_ring_segments; ++i) {
-        float const a0 = (float)i / k_rotated_ring_segments * 2.0F * std::numbers::pi_v<float>;
-        float const a1 =
-            (float)(i + 1) / k_rotated_ring_segments * 2.0F * std::numbers::pi_v<float>;
+        float const a0 = (float)i / k_rotated_ring_segments * 2.0F *
+                         std::numbers::pi_v<float>;
+        float const a1 = (float)(i + 1) / k_rotated_ring_segments * 2.0F *
+                         std::numbers::pi_v<float>;
 
         QVector3D const v0 =
             QVector3D(radius * std::cos(a0), radius * std::sin(a0), 0.0F);

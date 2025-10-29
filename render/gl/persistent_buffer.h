@@ -88,9 +88,8 @@ public:
       return;
     }
 
-    // Check if we have a valid OpenGL context before cleanup
     if (QOpenGLContext::currentContext() == nullptr) {
-      // No valid context, just reset state without OpenGL calls
+
       m_buffer = 0;
       m_mappedPtr = nullptr;
       m_capacity = 0;
