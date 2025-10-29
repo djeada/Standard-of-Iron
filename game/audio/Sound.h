@@ -10,20 +10,22 @@ class MiniaudioBackend;
 class Sound : public QObject {
   Q_OBJECT
 public:
-  explicit Sound(const std::string &filePath,
+  static constexpr float DEFAULT_VOLUME = 1.0F;
+
+  explicit Sound(const std::string &file_path,
                  MiniaudioBackend *backend = nullptr);
   ~Sound() override;
 
-  [[nodiscard]] auto isLoaded() const -> bool;
-  void play(float volume = 1.0F, bool loop = false);
+  [[nodiscard]] auto is_loaded() const -> bool;
+  void play(float volume = DEFAULT_VOLUME, bool loop = false);
   void stop();
-  void setVolume(float volume);
+  void set_volume(float volume);
 
-  void setBackend(MiniaudioBackend *backend);
+  void set_backend(MiniaudioBackend *backend);
 
 private:
-  std::string m_filepath;
-  QString m_trackId;
+  std::string m_file_path;
+  QString m_track_id;
   MiniaudioBackend *m_backend;
   std::atomic<bool> m_loaded;
   std::atomic<float> m_volume;

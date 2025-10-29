@@ -216,10 +216,10 @@ void MusicPlayer::setMasterVolume(float v, int ms) {
 }
 
 auto MusicPlayer::isPlaying() const -> bool {
-  return (m_backend != nullptr) && m_backend->anyChannelPlaying();
+  return (m_backend != nullptr) && m_backend->any_channel_playing();
 }
 auto MusicPlayer::isPlaying(int ch) const -> bool {
-  return (m_backend != nullptr) && m_backend->channelPlaying(ch);
+  return (m_backend != nullptr) && m_backend->channel_playing(ch);
 }
 
 void MusicPlayer::ensureOnGuiThread(const char *where) {
@@ -230,7 +230,7 @@ auto MusicPlayer::findFreeChannel() const -> int {
     return 0;
   }
   for (int i = 0; i < m_channelCount; ++i) {
-    if (!m_backend->channelPlaying(i)) {
+    if (!m_backend->channel_playing(i)) {
       return i;
     }
   }
@@ -253,9 +253,9 @@ void MusicPlayer::stop_gui(int ch, int ms) { m_backend->stop(ch, ms); }
 void MusicPlayer::pause_gui(int ch) { m_backend->pause(ch); }
 void MusicPlayer::resume_gui(int ch) { m_backend->resume(ch); }
 void MusicPlayer::setVolume_gui(int ch, float v, int ms) {
-  m_backend->setVolume(ch, v, ms);
+  m_backend->set_volume(ch, v, ms);
 }
 void MusicPlayer::setMasterVolume_gui(float v, int ms) {
-  m_backend->setMasterVolume(v, ms);
+  m_backend->set_master_volume(v, ms);
 }
-void MusicPlayer::stopAll_gui(int ms) { m_backend->stopAll(ms); }
+void MusicPlayer::stopAll_gui(int ms) { m_backend->stop_all(ms); }
