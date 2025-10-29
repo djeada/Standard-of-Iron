@@ -89,7 +89,7 @@ python scripts/update_contributors.py
 ```
 
 **Output:**
-- File: `scripts/CONTRIBUTORS.md`
+- File: `CONTRIBUTORS.md` (repository root)
 - Contains a Markdown table with contributor information
 
 **Example Output:**
