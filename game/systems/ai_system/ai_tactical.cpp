@@ -73,7 +73,7 @@ auto TacticalUtils::assessEngagement(
 }
 
 auto TacticalUtils::selectFocusFireTarget(
-    const std::vector<const EntitySnapshot *> &attackers,
+    const std::vector<const EntitySnapshot *> &,
     const std::vector<const ContactSnapshot *> &enemies, float group_center_x,
     float group_center_y, float group_center_z, const AIContext &context,
     Engine::Core::EntityID currentTarget) -> TacticalUtils::TargetScore {

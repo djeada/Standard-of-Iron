@@ -65,7 +65,7 @@ auto MapTransformer::applyToWorld(
 
   auto &owner_registry = Game::Systems::OwnerRegistry::instance();
   std::set<int> unique_player_ids;
-  std::unordered_map<int, int> player_idToTeam;
+  std::unordered_map<int, int> player_id_to_team;
 
   for (const auto &spawn : def.spawns) {
     if (spawn.player_id == Game::Core::NEUTRAL_OWNER_ID) {
@@ -74,7 +74,7 @@ auto MapTransformer::applyToWorld(
     unique_player_ids.insert(spawn.player_id);
 
     if (spawn.team_id > 0) {
-      player_idToTeam[spawn.player_id] = spawn.team_id;
+      player_id_to_team[spawn.player_id] = spawn.team_id;
     }
   }
 
@@ -109,8 +109,8 @@ auto MapTransformer::applyToWorld(
       final_team_id = override_it->second;
     } else {
 
-      auto team_it = player_idToTeam.find(player_id);
-      if (team_it != player_idToTeam.end()) {
+      auto team_it = player_id_to_team.find(player_id);
+      if (team_it != player_id_to_team.end()) {
         final_team_id = team_it->second;
       } else {
       }
