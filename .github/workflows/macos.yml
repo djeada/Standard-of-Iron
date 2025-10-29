@@ -1,0 +1,38 @@
+name: macOS Build
+on: [push, pull_request]
+
+jobs:
+  build-macos:
+    runs-on: macos-latest
+    env:
+      BUILD_TYPE: Release
+      APP_NAME: standard_of_iron
+      APP_DIR: build/bin
+      QML_DIR: ui/qml
+    steps:
+      - uses: actions/checkout@v4
+      - uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.6.3'
+          host: 'mac'
+          arch: 'clang_64'
+          cache: true
+          modules: 'qt5compat qtmultimedia'
+      - name: Configure
+        run: cmake -S . -B build -G "Ninja" -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DDEFAULT_LANG=en
+      - name: Build
+        run: cmake --build build --config ${BUILD_TYPE}
+      - name: Deploy Qt (macdeployqt)
+        run: |
+          macdeployqt "${APP_DIR}/${APP_NAME}.app" -qmldir="${QML_DIR}" -verbose=1
+      - name: Copy assets into .app bundle
+        run: |
+          mkdir -p "${APP_DIR}/${APP_NAME}.app/Contents/Resources/assets"
+          rsync -a assets/ "${APP_DIR}/${APP_NAME}.app/Contents/Resources/assets/"
+      - name: Create DMG
+        run: |
+          hdiutil create -volname "Standard of Iron" -srcfolder "${APP_DIR}/${APP_NAME}.app" -ov -format UDZO "standard_of_iron-macos.dmg"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos-${{ env.BUILD_TYPE }}
+          path: standard_of_iron-macos.dmg
