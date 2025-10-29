@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import subprocess
-import datetime
 from collections import defaultdict
 from pathlib import Path
 
@@ -9,10 +8,19 @@ contributors_file = Path(__file__).parent / "CONTRIBUTORS.md"
 
 def run_git(command):
     """Run a git command and return the output as a list of lines."""
-    result = subprocess.run(
-        ["git"] + command, capture_output=True, text=True, check=True
-    )
-    return result.stdout.strip().split("\n")
+    try:
+        result = subprocess.run(
+            ["git"] + command, capture_output=True, text=True, check=True
+        )
+        return result.stdout.strip().split("\n")
+    except subprocess.CalledProcessError as e:
+        print(f"❌ Error: Git command failed. Make sure you're in a Git repository.")
+        print(f"   Command: git {' '.join(command)}")
+        print(f"   Error: {e.stderr}")
+        raise SystemExit(1)
+    except FileNotFoundError:
+        print("❌ Error: Git is not installed or not found in PATH.")
+        raise SystemExit(1)
 
 def get_contributors():
     """Extract contributors from git log."""
