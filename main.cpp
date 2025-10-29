@@ -306,6 +306,12 @@ auto main(int argc, char *argv[]) -> int {
   qInfo() << "QML loaded successfully, root objects count:"
           << engine->rootObjects().size();
 
+  // Connect language changed signal to retranslate QML
+  qInfo() << "Connecting language change handler...";
+  QObject::connect(language_manager.get(), &LanguageManager::languageChanged,
+                   engine.get(), &QQmlApplicationEngine::retranslate);
+  qInfo() << "Language change handler connected";
+
   qInfo() << "Finding QQuickWindow...";
   auto *root_obj = engine->rootObjects().first();
   auto *window = qobject_cast<QQuickWindow *>(root_obj);
