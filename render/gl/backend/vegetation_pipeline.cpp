@@ -188,7 +188,7 @@ void VegetationPipeline::initializeStonePipeline() {
 }
 
 void VegetationPipeline::shutdownStonePipeline() {
-  // Check if we have a valid OpenGL context before cleanup
+
   if (QOpenGLContext::currentContext() == nullptr) {
     m_stoneVao = 0;
     m_stoneVertexBuffer = 0;
@@ -292,7 +292,7 @@ void VegetationPipeline::initializePlantPipeline() {
 }
 
 void VegetationPipeline::shutdownPlantPipeline() {
-  // Check if we have a valid OpenGL context before cleanup
+
   if (QOpenGLContext::currentContext() == nullptr) {
     m_plantVao = 0;
     m_plantVertexBuffer = 0;
@@ -451,7 +451,7 @@ void VegetationPipeline::initializePinePipeline() {
 }
 
 void VegetationPipeline::shutdownPinePipeline() {
-  // Check if we have a valid OpenGL context before cleanup
+
   if (QOpenGLContext::currentContext() == nullptr) {
     m_pineVao = 0;
     m_pineVertexBuffer = 0;
@@ -556,7 +556,7 @@ void VegetationPipeline::initializeFireCampPipeline() {
 }
 
 void VegetationPipeline::shutdownFireCampPipeline() {
-  // Check if we have a valid OpenGL context before cleanup
+
   if (QOpenGLContext::currentContext() == nullptr) {
     m_firecampVao = 0;
     m_firecampVertexBuffer = 0;
