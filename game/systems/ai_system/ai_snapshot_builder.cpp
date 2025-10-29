@@ -6,8 +6,8 @@
 
 namespace Game::Systems::AI {
 
-AISnapshot AISnapshotBuilder::build(const Engine::Core::World &world,
-                                    int aiOwnerId) {
+auto AISnapshotBuilder::build(const Engine::Core::World &world,
+                              int aiOwnerId) -> AISnapshot {
   AISnapshot snapshot;
   snapshot.player_id = aiOwnerId;
 

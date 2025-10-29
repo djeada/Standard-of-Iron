@@ -2,7 +2,7 @@
 #include "../backend.h"
 #include "../render_constants.h"
 #include "../shader_cache.h"
-#include "../opengl_headers.h"
+#include <GL/gl.h>
 #include <QDebug>
 #include <QOpenGLExtraFunctions>
 #include <cstddef>
@@ -206,11 +206,11 @@ void TerrainPipeline::shutdownGrassGeometry() {
     return;
   }
 
-  if (m_grassVertexBuffer != 0u) {
+  if (m_grassVertexBuffer != 0U) {
     gl->glDeleteBuffers(1, &m_grassVertexBuffer);
     m_grassVertexBuffer = 0;
   }
-  if (m_grassVao != 0u) {
+  if (m_grassVao != 0U) {
     gl->glDeleteVertexArrays(1, &m_grassVao);
     m_grassVao = 0;
   }

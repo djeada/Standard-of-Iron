@@ -46,8 +46,8 @@ public:
 
 private:
   static auto getSavesDirectory() -> QString;
-  auto get_database_path() const -> QString;
-  void ensureSavesDirectoryExists() const;
+  static auto get_database_path() -> QString;
+  static void ensureSavesDirectoryExists();
 
   mutable QString m_last_error;
   QJsonObject m_lastMetadata;

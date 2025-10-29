@@ -22,19 +22,19 @@ void AudioSystemProxy::setVoiceVolume(float volume) {
   AudioSystem::getInstance().setVoiceVolume(volume);
 }
 
-float AudioSystemProxy::getMasterVolume() {
+auto AudioSystemProxy::getMasterVolume() -> float {
   return AudioSystem::getInstance().getMasterVolume();
 }
 
-float AudioSystemProxy::getMusicVolume() {
+auto AudioSystemProxy::getMusicVolume() -> float {
   return AudioSystem::getInstance().getMusicVolume();
 }
 
-float AudioSystemProxy::getSoundVolume() {
+auto AudioSystemProxy::getSoundVolume() -> float {
   return AudioSystem::getInstance().getSoundVolume();
 }
 
-float AudioSystemProxy::getVoiceVolume() {
+auto AudioSystemProxy::getVoiceVolume() -> float {
   return AudioSystem::getInstance().getVoiceVolume();
 }
 

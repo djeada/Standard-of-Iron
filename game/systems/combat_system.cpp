@@ -888,7 +888,7 @@ auto CombatSystem::isUnitIdle(Engine::Core::Entity *unit) -> bool {
   }
 
   auto *patrol = unit->getComponent<Engine::Core::PatrolComponent>();
-  return !(patrol && patrol->patrolling);
+  return !((patrol != nullptr) && patrol->patrolling);
 }
 
 auto CombatSystem::findNearestEnemy(Engine::Core::Entity *unit,

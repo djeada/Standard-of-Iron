@@ -4,7 +4,7 @@
 #include "../primitives.h"
 #include "../render_constants.h"
 #include "gl/shader_cache.h"
-#include "../opengl_headers.h"
+#include <GL/gl.h>
 #include <algorithm>
 #include <cstddef>
 #include <qopenglext.h>
@@ -174,19 +174,19 @@ void CylinderPipeline::shutdownCylinderPipeline() {
 
   m_cylinderPersistentBuffer.destroy();
 
-  if (m_cylinderInstanceBuffer != 0u) {
+  if (m_cylinderInstanceBuffer != 0U) {
     glDeleteBuffers(1, &m_cylinderInstanceBuffer);
     m_cylinderInstanceBuffer = 0;
   }
-  if (m_cylinderVertexBuffer != 0u) {
+  if (m_cylinderVertexBuffer != 0U) {
     glDeleteBuffers(1, &m_cylinderVertexBuffer);
     m_cylinderVertexBuffer = 0;
   }
-  if (m_cylinderIndexBuffer != 0u) {
+  if (m_cylinderIndexBuffer != 0U) {
     glDeleteBuffers(1, &m_cylinderIndexBuffer);
     m_cylinderIndexBuffer = 0;
   }
-  if (m_cylinderVao != 0u) {
+  if (m_cylinderVao != 0U) {
     glDeleteVertexArrays(1, &m_cylinderVao);
     m_cylinderVao = 0;
   }
@@ -213,14 +213,14 @@ void CylinderPipeline::uploadCylinderInstances(std::size_t count) {
     return;
   }
 
-  if (m_cylinderInstanceBuffer == 0u) {
+  if (m_cylinderInstanceBuffer == 0U) {
     return;
   }
 
   glBindBuffer(GL_ARRAY_BUFFER, m_cylinderInstanceBuffer);
   if (count > m_cylinderInstanceCapacity) {
     m_cylinderInstanceCapacity = std::max<std::size_t>(
-        count, (m_cylinderInstanceCapacity != 0u)
+        count, (m_cylinderInstanceCapacity != 0U)
                    ? m_cylinderInstanceCapacity * Growth::CapacityMultiplier
                    : count);
     glBufferData(GL_ARRAY_BUFFER,
@@ -234,7 +234,7 @@ void CylinderPipeline::uploadCylinderInstances(std::size_t count) {
 }
 
 void CylinderPipeline::drawCylinders(std::size_t count) {
-  if ((m_cylinderVao == 0u) || m_cylinderIndexCount == 0 || count == 0) {
+  if ((m_cylinderVao == 0U) || m_cylinderIndexCount == 0 || count == 0) {
     return;
   }
 
@@ -325,19 +325,19 @@ void CylinderPipeline::initializeFogPipeline() {
 void CylinderPipeline::shutdownFogPipeline() {
   initializeOpenGLFunctions();
 
-  if (m_fogInstanceBuffer != 0u) {
+  if (m_fogInstanceBuffer != 0U) {
     glDeleteBuffers(1, &m_fogInstanceBuffer);
     m_fogInstanceBuffer = 0;
   }
-  if (m_fogVertexBuffer != 0u) {
+  if (m_fogVertexBuffer != 0U) {
     glDeleteBuffers(1, &m_fogVertexBuffer);
     m_fogVertexBuffer = 0;
   }
-  if (m_fogIndexBuffer != 0u) {
+  if (m_fogIndexBuffer != 0U) {
     glDeleteBuffers(1, &m_fogIndexBuffer);
     m_fogIndexBuffer = 0;
   }
-  if (m_fogVao != 0u) {
+  if (m_fogVao != 0U) {
     glDeleteVertexArrays(1, &m_fogVao);
     m_fogVao = 0;
   }
@@ -347,7 +347,7 @@ void CylinderPipeline::shutdownFogPipeline() {
 }
 
 void CylinderPipeline::uploadFogInstances(std::size_t count) {
-  if ((m_fogInstanceBuffer == 0u) || count == 0) {
+  if ((m_fogInstanceBuffer == 0U) || count == 0) {
     return;
   }
 
@@ -355,7 +355,7 @@ void CylinderPipeline::uploadFogInstances(std::size_t count) {
   glBindBuffer(GL_ARRAY_BUFFER, m_fogInstanceBuffer);
   if (count > m_fogInstanceCapacity) {
     m_fogInstanceCapacity = std::max<std::size_t>(
-        count, (m_fogInstanceCapacity != 0u)
+        count, (m_fogInstanceCapacity != 0U)
                    ? m_fogInstanceCapacity * Growth::CapacityMultiplier
                    : count);
     glBufferData(GL_ARRAY_BUFFER,
@@ -369,7 +369,7 @@ void CylinderPipeline::uploadFogInstances(std::size_t count) {
 }
 
 void CylinderPipeline::drawFog(std::size_t count) {
-  if ((m_fogVao == 0u) || m_fogIndexCount == 0 || count == 0) {
+  if ((m_fogVao == 0U) || m_fogIndexCount == 0 || count == 0) {
     return;
   }
 
