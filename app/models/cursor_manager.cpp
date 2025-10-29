@@ -45,7 +45,7 @@ void CursorManager::updateCursorShape(QQuickWindow *window) {
   }
 }
 
-qreal CursorManager::globalCursorX(QQuickWindow *window) {
+auto CursorManager::globalCursorX(QQuickWindow *window) -> qreal {
   if (window == nullptr) {
     return 0;
   }
@@ -54,7 +54,7 @@ qreal CursorManager::globalCursorX(QQuickWindow *window) {
   return local_pos.x();
 }
 
-qreal CursorManager::globalCursorY(QQuickWindow *window) {
+auto CursorManager::globalCursorY(QQuickWindow *window) -> qreal {
   if (window == nullptr) {
     return 0;
   }

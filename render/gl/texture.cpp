@@ -1,5 +1,5 @@
 #include "texture.h"
-#include "opengl_headers.h"
+#include <GL/gl.h>
 #include <QDebug>
 #include <QImage>
 #include <qglobal.h>
@@ -75,7 +75,7 @@ auto Texture::createEmpty(int width, int height, Format format) -> bool {
 
 void Texture::bind(int unit) {
   initializeOpenGLFunctions();
-  if (m_texture == 0u) {
+  if (m_texture == 0U) {
     glGenTextures(1, &m_texture);
   }
   glActiveTexture(GL_TEXTURE0 + unit);
@@ -99,7 +99,7 @@ void Texture::setWrap(Wrap sWrap, Wrap tWrap) {
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, getGLWrap(tWrap));
 }
 
-GLenum Texture::getGLFormat(Format format) {
+auto Texture::getGLFormat(Format format) -> GLenum {
   switch (format) {
   case Format::RGB:
     return GL_RGB;
@@ -111,7 +111,7 @@ GLenum Texture::getGLFormat(Format format) {
   return GL_RGBA;
 }
 
-GLenum Texture::getGLFilter(Filter filter) {
+auto Texture::getGLFilter(Filter filter) -> GLenum {
   switch (filter) {
   case Filter::Nearest:
     return GL_NEAREST;
@@ -121,7 +121,7 @@ GLenum Texture::getGLFilter(Filter filter) {
   return GL_LINEAR;
 }
 
-GLenum Texture::getGLWrap(Wrap wrap) {
+auto Texture::getGLWrap(Wrap wrap) -> GLenum {
   switch (wrap) {
   case Wrap::Repeat:
     return GL_REPEAT;

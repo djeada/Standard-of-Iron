@@ -14,7 +14,8 @@ public:
   void update(Engine::Core::World *world, float deltaTime) override;
 
 private:
-  void processBarrackCapture(Engine::Core::World *world, float deltaTime);
+  static void processBarrackCapture(Engine::Core::World *world,
+                                    float deltaTime);
   static auto countNearbyTroops(Engine::Core::World *world, float barrack_x,
                                 float barrack_z, int owner_id,
                                 float radius) -> int;

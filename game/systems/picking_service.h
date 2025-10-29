@@ -28,8 +28,9 @@ public:
   static auto screenToGround(const Render::GL::Camera &camera, int viewW,
                              int viewH, const QPointF &screenPt,
                              QVector3D &outWorld) -> bool;
-  auto screenToGround(const QPointF &screenPt, const Render::GL::Camera &camera,
-                      int viewW, int viewH, QVector3D &outWorld) const -> bool {
+  static auto screenToGround(const QPointF &screenPt,
+                             const Render::GL::Camera &camera, int viewW,
+                             int viewH, QVector3D &outWorld) -> bool {
     return screenToGround(camera, viewW, viewH, screenPt, outWorld);
   }
   static auto worldToScreen(const Render::GL::Camera &camera, int viewW,
@@ -41,9 +42,10 @@ public:
                          int ownerFilter,
                          bool preferBuildingsFirst) -> Engine::Core::EntityID;
 
-  auto pickUnitFirst(float sx, float sy, Engine::Core::World &world,
-                     const Render::GL::Camera &camera, int viewW, int viewH,
-                     int ownerFilter) const -> Engine::Core::EntityID;
+  static auto pickUnitFirst(float sx, float sy, Engine::Core::World &world,
+                            const Render::GL::Camera &camera, int viewW,
+                            int viewH,
+                            int ownerFilter) -> Engine::Core::EntityID;
 
   static auto
   pickInRect(float x1, float y1, float x2, float y2, Engine::Core::World &world,
@@ -53,9 +55,9 @@ public:
 private:
   Engine::Core::EntityID m_prev_hoverId = 0;
   int m_hoverGraceTicks = 0;
-  auto projectBounds(const Render::GL::Camera &cam, const QVector3D &center,
-                     float hx, float hz, int viewW, int viewH,
-                     QRectF &out) const -> bool;
+  static auto projectBounds(const Render::GL::Camera &cam,
+                            const QVector3D &center, float hx, float hz,
+                            int viewW, int viewH, QRectF &out) -> bool;
 };
 
 } // namespace Game::Systems

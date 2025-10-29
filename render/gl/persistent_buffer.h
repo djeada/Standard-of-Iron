@@ -51,9 +51,9 @@ public:
       return false;
     }
 
-    // Try to create buffer using platform-aware helper with fallback
     Platform::BufferStorageHelper::Mode mode;
-    if (!Platform::BufferStorageHelper::createBuffer(m_buffer, m_totalSize, &mode)) {
+    if (!Platform::BufferStorageHelper::createBuffer(m_buffer, m_totalSize,
+                                                     &mode)) {
       qWarning() << "PersistentRingBuffer: Failed to create buffer storage";
       glBindBuffer(GL_ARRAY_BUFFER, 0);
       glDeleteBuffers(1, &m_buffer);
@@ -63,7 +63,6 @@ public:
 
     m_bufferMode = mode;
 
-    // Map the buffer with appropriate mode
     m_mappedPtr = Platform::BufferStorageHelper::mapBuffer(m_totalSize, mode);
 
     if (m_mappedPtr == nullptr) {
@@ -73,11 +72,11 @@ public:
       return false;
     }
 
-    // For fallback mode, we need to unmap after each write
     if (mode == Platform::BufferStorageHelper::Mode::Fallback) {
-      qInfo() << "PersistentRingBuffer: Running in fallback mode (non-persistent mapping)";
+      qInfo() << "PersistentRingBuffer: Running in fallback mode "
+                 "(non-persistent mapping)";
       glUnmapBuffer(GL_ARRAY_BUFFER);
-      m_mappedPtr = nullptr;  // Will be remapped on each write
+      m_mappedPtr = nullptr;
     }
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -115,30 +114,30 @@ public:
       return 0;
     }
 
-    // For fallback mode, we need to map/unmap on each write
     if (m_bufferMode == Platform::BufferStorageHelper::Mode::Fallback) {
       glBindBuffer(GL_ARRAY_BUFFER, m_buffer);
-      
-      std::size_t const writeOffset = m_frameOffset + m_currentCount * sizeof(T);
-      void *ptr = glMapBufferRange(GL_ARRAY_BUFFER, writeOffset, count * sizeof(T), 
-                                    GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_RANGE_BIT);
-      
+
+      std::size_t const writeOffset =
+          m_frameOffset + m_currentCount * sizeof(T);
+      void *ptr =
+          glMapBufferRange(GL_ARRAY_BUFFER, writeOffset, count * sizeof(T),
+                           GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_RANGE_BIT);
+
       if (ptr == nullptr) {
         qWarning() << "PersistentRingBuffer: Failed to map buffer for write";
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         return 0;
       }
-      
+
       std::memcpy(ptr, data, count * sizeof(T));
       glUnmapBuffer(GL_ARRAY_BUFFER);
       glBindBuffer(GL_ARRAY_BUFFER, 0);
-      
+
       std::size_t const elementOffset = m_currentCount;
       m_currentCount += count;
       return elementOffset;
     }
 
-    // Persistent mode: direct write to mapped memory
     if (m_mappedPtr == nullptr) {
       return 0;
     }
@@ -164,8 +163,8 @@ public:
   [[nodiscard]] auto count() const -> std::size_t { return m_currentCount; }
 
   [[nodiscard]] auto isValid() const -> bool {
-    return m_buffer != 0 && 
-           (m_bufferMode == Platform::BufferStorageHelper::Mode::Fallback || 
+    return m_buffer != 0 &&
+           (m_bufferMode == Platform::BufferStorageHelper::Mode::Fallback ||
             m_mappedPtr != nullptr);
   }
 
@@ -178,7 +177,8 @@ private:
   std::size_t m_currentCount = 0;
   int m_buffersInFlight = BufferCapacity::BuffersInFlight;
   int m_currentFrame = 0;
-  Platform::BufferStorageHelper::Mode m_bufferMode = Platform::BufferStorageHelper::Mode::Persistent;
+  Platform::BufferStorageHelper::Mode m_bufferMode =
+      Platform::BufferStorageHelper::Mode::Persistent;
 };
 
 } // namespace Render::GL

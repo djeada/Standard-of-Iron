@@ -17,11 +17,11 @@
 #include "ground/plant_gpu.h"
 #include "ground/stone_gpu.h"
 #include "mesh.h"
-#include "opengl_headers.h"
 #include "render_constants.h"
 #include "shader.h"
 #include "state_scopes.h"
 #include "texture.h"
+#include <GL/gl.h>
 #include <QDebug>
 #include <cmath>
 #include <cstddef>
@@ -56,7 +56,7 @@ Backend::~Backend() {
 
 void Backend::initialize() {
   qInfo() << "Backend::initialize() - Starting...";
-  
+
   qInfo() << "Backend: Initializing OpenGL functions...";
   initializeOpenGLFunctions();
   qInfo() << "Backend: OpenGL functions initialized";
@@ -77,7 +77,7 @@ void Backend::initialize() {
     qWarning() << "Backend: failed to initialize ResourceManager";
   }
   qInfo() << "Backend: ResourceManager created";
-  
+
   qInfo() << "Backend: Creating ShaderCache...";
   m_shaderCache = std::make_unique<ShaderCache>();
   m_shaderCache->initializeDefaults();
@@ -200,7 +200,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       if (instance_count > 0 &&
           (m_cylinderPipeline->cylinderShader() != nullptr)) {
         glDepthMask(GL_TRUE);
-        if (glIsEnabled(GL_POLYGON_OFFSET_FILL) != 0u) {
+        if (glIsEnabled(GL_POLYGON_OFFSET_FILL) != 0U) {
           glDisable(GL_POLYGON_OFFSET_FILL);
         }
         Shader *cylinderShader = m_cylinderPipeline->cylinderShader();
@@ -239,7 +239,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
           m_cylinderPipeline->m_fogScratch[idx] = gpu;
         }
         glDepthMask(GL_TRUE);
-        if (glIsEnabled(GL_POLYGON_OFFSET_FILL) != 0u) {
+        if (glIsEnabled(GL_POLYGON_OFFSET_FILL) != 0U) {
           glDisable(GL_POLYGON_OFFSET_FILL);
         }
         Shader *fogShader = m_cylinderPipeline->fogShader();
@@ -263,7 +263,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       const auto &grass = std::get<GrassBatchCmdIndex>(cmd);
       if ((grass.instanceBuffer == nullptr) || grass.instance_count == 0 ||
           (m_terrainPipeline->m_grassShader == nullptr) ||
-          (m_terrainPipeline->m_grassVao == 0u) ||
+          (m_terrainPipeline->m_grassVao == 0U) ||
           m_terrainPipeline->m_grassVertexCount == 0) {
         break;
       }
@@ -272,7 +272,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       BlendScope const blend(true);
       glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
       GLboolean const prev_cull = glIsEnabled(GL_CULL_FACE);
-      if (prev_cull != 0u) {
+      if (prev_cull != 0U) {
         glDisable(GL_CULL_FACE);
       }
 
@@ -338,7 +338,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
                             static_cast<GLsizei>(grass.instance_count));
       glBindVertexArray(0);
 
-      if (prev_cull != 0u) {
+      if (prev_cull != 0U) {
         glEnable(GL_CULL_FACE);
       }
 
@@ -352,7 +352,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       const auto &stone = std::get<StoneBatchCmdIndex>(cmd);
       if ((stone.instanceBuffer == nullptr) || stone.instance_count == 0 ||
           (m_vegetationPipeline->stoneShader() == nullptr) ||
-          (m_vegetationPipeline->m_stoneVao == 0u) ||
+          (m_vegetationPipeline->m_stoneVao == 0U) ||
           m_vegetationPipeline->m_stoneIndexCount == 0) {
         break;
       }
@@ -410,7 +410,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
 
       if ((plant.instanceBuffer == nullptr) || plant.instance_count == 0 ||
           (m_vegetationPipeline->plantShader() == nullptr) ||
-          (m_vegetationPipeline->m_plantVao == 0u) ||
+          (m_vegetationPipeline->m_plantVao == 0U) ||
           m_vegetationPipeline->m_plantIndexCount == 0) {
         break;
       }
@@ -421,7 +421,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       BlendScope const blend(true);
       glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
       GLboolean const prev_cull = glIsEnabled(GL_CULL_FACE);
-      if (prev_cull != 0u) {
+      if (prev_cull != 0U) {
         glDisable(GL_CULL_FACE);
       }
 
@@ -483,7 +483,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
                               static_cast<GLsizei>(plant.instance_count));
       glBindVertexArray(0);
 
-      if (prev_cull != 0u) {
+      if (prev_cull != 0U) {
         glEnable(GL_CULL_FACE);
       }
 
@@ -498,7 +498,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
 
       if ((pine.instanceBuffer == nullptr) || pine.instance_count == 0 ||
           (m_vegetationPipeline->pineShader() == nullptr) ||
-          (m_vegetationPipeline->m_pineVao == 0u) ||
+          (m_vegetationPipeline->m_pineVao == 0U) ||
           m_vegetationPipeline->m_pineIndexCount == 0) {
         break;
       }
@@ -508,7 +508,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       BlendScope const blend(true);
       glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
       GLboolean const prev_cull = glIsEnabled(GL_CULL_FACE);
-      if (prev_cull != 0u) {
+      if (prev_cull != 0U) {
         glDisable(GL_CULL_FACE);
       }
 
@@ -569,7 +569,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
                               static_cast<GLsizei>(pine.instance_count));
       glBindVertexArray(0);
 
-      if (prev_cull != 0u) {
+      if (prev_cull != 0U) {
         glEnable(GL_CULL_FACE);
       }
 
@@ -585,7 +585,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       if ((firecamp.instanceBuffer == nullptr) ||
           firecamp.instance_count == 0 ||
           (m_vegetationPipeline->firecampShader() == nullptr) ||
-          (m_vegetationPipeline->m_firecampVao == 0u) ||
+          (m_vegetationPipeline->m_firecampVao == 0U) ||
           m_vegetationPipeline->m_firecampIndexCount == 0) {
         break;
       }
@@ -595,7 +595,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       BlendScope const blend(true);
       glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
       GLboolean const prev_cull = glIsEnabled(GL_CULL_FACE);
-      if (prev_cull != 0u) {
+      if (prev_cull != 0U) {
         glDisable(GL_CULL_FACE);
       }
 
@@ -686,7 +686,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
                               static_cast<GLsizei>(firecamp.instance_count));
       glBindVertexArray(0);
 
-      if (prev_cull != 0u) {
+      if (prev_cull != 0U) {
         glEnable(GL_CULL_FACE);
       }
 
@@ -955,7 +955,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       }
 
       glDepthMask(GL_TRUE);
-      if (glIsEnabled(GL_POLYGON_OFFSET_FILL) != 0u) {
+      if (glIsEnabled(GL_POLYGON_OFFSET_FILL) != 0U) {
         glDisable(GL_POLYGON_OFFSET_FILL);
       }
 

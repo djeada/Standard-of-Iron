@@ -19,7 +19,8 @@ inline auto screenToGround(const Game::Systems::PickingService *pickingService,
   }
   int const w = (viewportWidth > 0 ? viewportWidth : window->width());
   int const h = (viewportHeight > 0 ? viewportHeight : window->height());
-  return pickingService->screenToGround(*camera, w, h, screenPt, outWorld);
+  return Game::Systems::PickingService::screenToGround(*camera, w, h, screenPt,
+                                                       outWorld);
 }
 
 inline auto worldToScreen(const Game::Systems::PickingService *pickingService,
@@ -33,7 +34,8 @@ inline auto worldToScreen(const Game::Systems::PickingService *pickingService,
   }
   int const w = (viewportWidth > 0 ? viewportWidth : window->width());
   int const h = (viewportHeight > 0 ? viewportHeight : window->height());
-  return pickingService->worldToScreen(*camera, w, h, world, outScreen);
+  return Game::Systems::PickingService::worldToScreen(*camera, w, h, world,
+                                                      outScreen);
 }
 
 } // namespace App::Utils
