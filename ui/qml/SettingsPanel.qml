@@ -297,10 +297,10 @@ Item {
 
                                     return languageManager.languageDisplayName(currentText);
                                 }
-                                onCurrentTextChanged: {
-                                    if (typeof languageManager !== 'undefined' && currentText)
+                                onActivated: function(index) {
+                                    if (typeof languageManager !== 'undefined' && currentText) {
                                         languageManager.setLanguage(currentText);
-
+                                    }
                                 }
 
                                 delegate: ItemDelegate {
