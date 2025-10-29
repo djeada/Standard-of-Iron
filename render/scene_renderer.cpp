@@ -453,7 +453,8 @@ void Renderer::renderWorld(Engine::Core::World *world) {
         contact_base.translate(transform->position.x,
                                transform->position.y + 0.03F,
                                transform->position.z);
-        contact_base.rotate(-90.0F, 1.0F, 0.0F, 0.0F);
+        constexpr float k_contact_shadow_rotation = -90.0F;
+        contact_base.rotate(k_contact_shadow_rotation, 1.0F, 0.0F, 0.0F);
         float const footprint =
             std::max({transform->scale.x, transform->scale.z, 0.6F});
 

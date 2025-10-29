@@ -328,7 +328,7 @@ static inline void drawBowAndArrow(const DrawContext &p, ISubmitter &out,
                  clampf(P.hand_r.y(), P.bowBotY + 0.05F, P.bowTopY - 0.05F),
                  clampf(P.hand_r.z(), grip.z() - 0.30F, grip.z() + 0.30F));
 
-  const int segs = 22;
+  constexpr int k_bow_curve_segments = 22;
   auto q_bezier = [](const QVector3D &a, const QVector3D &c, const QVector3D &b,
                      float t) {
     float u = 1.0F - t;
@@ -336,8 +336,8 @@ static inline void drawBowAndArrow(const DrawContext &p, ISubmitter &out,
   };
   QVector3D ctrl = nock + forward * P.bowDepth;
   QVector3D prev = bot_end;
-  for (int i = 1; i <= segs; ++i) {
-    float t = float(i) / float(segs);
+  for (int i = 1; i <= k_bow_curve_segments; ++i) {
+    float t = float(i) / float(k_bow_curve_segments);
     QVector3D cur = q_bezier(bot_end, ctrl, top_end, t);
     out.mesh(getUnitCylinder(), cylinderBetween(p.model, prev, cur, P.bowRodR),
              C.wood, nullptr, 1.0F);

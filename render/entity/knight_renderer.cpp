@@ -695,11 +695,11 @@ private:
                              float radius, float thickness,
                              const QVector3D &color, ISubmitter &out) {
 
-    const int segments = 12;
-    for (int i = 0; i < segments; ++i) {
-      float const a0 = (float)i / segments * 2.0F * std::numbers::pi_v<float>;
+    constexpr int k_ring_segments = 12;
+    for (int i = 0; i < k_ring_segments; ++i) {
+      float const a0 = (float)i / k_ring_segments * 2.0F * std::numbers::pi_v<float>;
       float const a1 =
-          (float)(i + 1) / segments * 2.0F * std::numbers::pi_v<float>;
+          (float)(i + 1) / k_ring_segments * 2.0F * std::numbers::pi_v<float>;
       QVector3D const p0(center.x() + radius * std::cos(a0),
                          center.y() + radius * std::sin(a0), center.z());
       QVector3D const p1(center.x() + radius * std::cos(a1),
@@ -716,9 +716,9 @@ private:
     const float scale_factor = 2.5F;
     const float R = extras.shieldRadius * scale_factor;
 
-    const float yaw_deg = -70.0F;
+    constexpr float k_shield_yaw_degrees = -70.0F;
     QMatrix4x4 rot;
-    rot.rotate(yaw_deg, 0.0F, 1.0F, 0.0F);
+    rot.rotate(k_shield_yaw_degrees, 0.0F, 1.0F, 0.0F);
 
     const QVector3D n = rot.map(QVector3D(0.0F, 0.0F, 1.0F));
     const QVector3D axis_x = rot.map(QVector3D(1.0F, 0.0F, 0.0F));
@@ -748,11 +748,11 @@ private:
 
     auto draw_ring_rotated = [&](float radius, float thickness,
                                  const QVector3D &color) {
-      const int segments = 16;
-      for (int i = 0; i < segments; ++i) {
-        float const a0 = (float)i / segments * 2.0F * std::numbers::pi_v<float>;
+      constexpr int k_rotated_ring_segments = 16;
+      for (int i = 0; i < k_rotated_ring_segments; ++i) {
+        float const a0 = (float)i / k_rotated_ring_segments * 2.0F * std::numbers::pi_v<float>;
         float const a1 =
-            (float)(i + 1) / segments * 2.0F * std::numbers::pi_v<float>;
+            (float)(i + 1) / k_rotated_ring_segments * 2.0F * std::numbers::pi_v<float>;
 
         QVector3D const v0 =
             QVector3D(radius * std::cos(a0), radius * std::sin(a0), 0.0F);

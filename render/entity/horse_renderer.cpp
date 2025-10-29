@@ -28,13 +28,26 @@ namespace {
 
 constexpr float kPi = std::numbers::pi_v<float>;
 
+// Hash function bit shift constants
+constexpr int k_hash_shift_16 = 16;
+constexpr int k_hash_shift_15 = 15;
+constexpr uint32_t k_hash_mult_1 = 0x7Feb352dU;
+constexpr uint32_t k_hash_mult_2 = 0x846ca68bU;
+constexpr uint32_t k_hash_mask_24bit = 0xFFFFFF;
+constexpr float k_hash_divisor = 16777216.0F; // 0x1000000
+
+// Color conversion constants
+constexpr float k_rgb_max = 255.0F;
+constexpr int k_rgb_shift_red = 16;
+constexpr int k_rgb_shift_green = 8;
+
 inline auto hash01(uint32_t x) -> float {
-  x ^= x >> 16;
-  x *= 0x7Feb352dU;
-  x ^= x >> 15;
-  x *= 0x846ca68bU;
-  x ^= x >> 16;
-  return (x & 0xFFFFFF) / float(0x1000000);
+  x ^= x >> k_hash_shift_16;
+  x *= k_hash_mult_1;
+  x ^= x >> k_hash_shift_15;
+  x *= k_hash_mult_2;
+  x ^= x >> k_hash_shift_16;
+  return (x & k_hash_mask_24bit) / k_hash_divisor;
 }
 
 inline auto randBetween(uint32_t seed, uint32_t salt, float minV,
@@ -107,16 +120,16 @@ inline auto bezier(const QVector3D &p0, const QVector3D &p1,
 }
 
 inline auto colorHash(const QVector3D &c) -> uint32_t {
-  auto const r = uint32_t(saturate(c.x()) * 255.0F);
-  auto const g = uint32_t(saturate(c.y()) * 255.0F);
-  auto const b = uint32_t(saturate(c.z()) * 255.0F);
-  uint32_t v = (r << 16) | (g << 8) | b;
+  auto const r = uint32_t(saturate(c.x()) * k_rgb_max);
+  auto const g = uint32_t(saturate(c.y()) * k_rgb_max);
+  auto const b = uint32_t(saturate(c.z()) * k_rgb_max);
+  uint32_t v = (r << k_rgb_shift_red) | (g << k_rgb_shift_green) | b;
 
-  v ^= v >> 16;
-  v *= 0x7Feb352dU;
-  v ^= v >> 15;
-  v *= 0x846ca68bU;
-  v ^= v >> 16;
+  v ^= v >> k_hash_shift_16;
+  v *= k_hash_mult_1;
+  v ^= v >> k_hash_shift_15;
+  v *= k_hash_mult_2;
+  v ^= v >> k_hash_shift_16;
   return v;
 }
 
@@ -593,8 +606,10 @@ void HorseRenderer::render(const DrawContext &ctx, const AnimationInputs &anim,
 
   QVector3D const mane_root =
       neck_top + QVector3D(0.0F, d.headHeight * 0.20F, -d.headLength * 0.20F);
-  for (int i = 0; i < 12; ++i) {
-    float const t = i / 11.0F;
+  constexpr int k_mane_segments = 12;
+  constexpr float k_mane_segment_divisor = 11.0F;
+  for (int i = 0; i < k_mane_segments; ++i) {
+    float const t = i / k_mane_segment_divisor;
     QVector3D seg_start = lerp(mane_root, neck_base, t);
     seg_start.setY(seg_start.y() + (0.07F - t * 0.05F));
     float const sway =

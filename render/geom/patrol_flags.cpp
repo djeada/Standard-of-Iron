@@ -11,6 +11,10 @@
 
 namespace Render::GL {
 
+// Grid precision for position hashing
+constexpr float k_position_grid_precision = 10.0F;
+constexpr int k_position_hash_shift = 32;
+
 void renderPatrolFlags(Renderer *renderer, ResourceManager *resources,
                        Engine::Core::World &world,
                        const std::optional<QVector3D> &preview_waypoint) {
@@ -32,10 +36,10 @@ void renderPatrolFlags(Renderer *renderer, ResourceManager *resources,
     renderer->mesh(resources->unit(), flag.finial, flag.pennantColor,
                    resources->white(), 0.8F);
 
-    auto const grid_x = static_cast<int32_t>(preview_waypoint->x() * 10.0F);
-    auto const grid_z = static_cast<int32_t>(preview_waypoint->z() * 10.0F);
+    auto const grid_x = static_cast<int32_t>(preview_waypoint->x() * k_position_grid_precision);
+    auto const grid_z = static_cast<int32_t>(preview_waypoint->z() * k_position_grid_precision);
     uint64_t const pos_hash =
-        (static_cast<uint64_t>(grid_x) << 32) | static_cast<uint64_t>(grid_z);
+        (static_cast<uint64_t>(grid_x) << k_position_hash_shift) | static_cast<uint64_t>(grid_z);
     rendered_positions.insert(pos_hash);
   }
 
@@ -55,10 +59,10 @@ void renderPatrolFlags(Renderer *renderer, ResourceManager *resources,
 
     for (const auto &waypoint : patrol->waypoints) {
 
-      auto const grid_x = static_cast<int32_t>(waypoint.first * 10.0F);
-      auto const grid_z = static_cast<int32_t>(waypoint.second * 10.0F);
+      auto const grid_x = static_cast<int32_t>(waypoint.first * k_position_grid_precision);
+      auto const grid_z = static_cast<int32_t>(waypoint.second * k_position_grid_precision);
       uint64_t const pos_hash =
-          (static_cast<uint64_t>(grid_x) << 32) | static_cast<uint64_t>(grid_z);
+          (static_cast<uint64_t>(grid_x) << k_position_hash_shift) | static_cast<uint64_t>(grid_z);
 
       if (!rendered_positions.insert(pos_hash).second) {
         continue;
