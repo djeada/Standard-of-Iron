@@ -64,6 +64,48 @@ If you encounter MSVC issues, ensure "Desktop development with C++" is installed
 
 ---
 
+## Contributor Tracking
+
+### `update_contributors.py` - Contributor Tracking Script
+
+Automatically generates and maintains a `CONTRIBUTORS.md` file based on Git commit history. This script uses Git as the single source of truth for contributor information.
+
+**Features:**
+- ✓ Extracts contributor names, emails, and commit dates from Git history
+- ✓ Counts total commits per contributor
+- ✓ Tracks first and last contribution dates
+- ✓ Generates formatted Markdown table
+- ✓ Includes optional reference link column (manual editing supported)
+- ✓ No external dependencies beyond Git and Python 3
+
+**Requirements:**
+- Python 3.7+
+- Git
+
+**Usage:**
+```bash
+# Update contributor list
+python scripts/update_contributors.py
+```
+
+**Output:**
+- File: `CONTRIBUTORS.md` (repository root)
+- Contains a Markdown table with contributor information
+
+**Example Output:**
+```markdown
+# 🌍 Project Contributors
+
+| Name | Email | Contributions | First Commit | Last Commit | Reference |
+|------|--------|----------------|---------------|--------------|-----------|
+| Alice Dev | alice@example.com | 42 commits | 2024-03-11 | 2025-10-28 |  |
+| Bob Writer | bob@studio.com | 9 commits | 2025-03-15 | 2025-10-20 |  |
+```
+
+**Note:** The Reference column is left empty by default and can be manually edited to add links to GitHub profiles, websites, or other references. The script automatically preserves any manually-added Reference values when it regenerates the file, so your edits will not be lost on subsequent runs.
+
+---
+
 ## Linux/macOS Scripts
 
 ### `setup-deps.sh` - Dependency Installer
