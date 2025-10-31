@@ -9,6 +9,7 @@
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/command_service.h"
 #include "game/systems/global_stats_registry.h"
+#include "game/systems/nation_id.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/selection_system.h"
@@ -158,7 +159,7 @@ auto SkirmishLoader::start(const QString &map_path,
   owner_registry.setLocalPlayerId(player_owner_id);
 
   std::unordered_map<int, int> team_overrides;
-  std::unordered_map<int, std::string> nation_overrides;
+  std::unordered_map<int, Game::Systems::NationID> nation_overrides;
   QVariantList saved_player_configs;
   std::set<int> processed_player_ids;
 
@@ -184,14 +185,16 @@ auto SkirmishLoader::start(const QString &map_path,
         processed_player_ids.insert(player_id);
         team_overrides[player_id] = team_id;
 
-        std::string chosen_nation;
+        Game::Systems::NationID chosen_nation;
         if (!nation_id_str.isEmpty()) {
-          chosen_nation = nation_id_str.toStdString();
+          auto parsed = Game::Systems::nationIDFromString(nation_id_str.toStdString());
+          chosen_nation = parsed.value_or(
+              Game::Systems::NationRegistry::instance().default_nation_id());
         } else {
           chosen_nation =
               Game::Systems::NationRegistry::instance().default_nation_id();
         }
-        nation_overrides[player_id] = std::move(chosen_nation);
+        nation_overrides[player_id] = chosen_nation;
 
         QVariantMap updated_config = config;
         updated_config["player_id"] = player_id;

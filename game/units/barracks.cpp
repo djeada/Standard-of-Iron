@@ -26,7 +26,7 @@ void Barracks::init(const SpawnParams &params) {
   auto *e = m_world->createEntity();
   m_id = e->getId();
 
-  const std::string nation_id = resolve_nation_id(params);
+  const auto nation_id = resolve_nation_id(params);
 
   m_t = e->addComponent<Engine::Core::TransformComponent>();
   m_t->position = {params.position.x(), params.position.y(),
