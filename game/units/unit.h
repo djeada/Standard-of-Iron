@@ -27,6 +27,7 @@ struct SpawnParams {
   SpawnType spawn_type = SpawnType::Archer;
   bool aiControlled = false;
   int maxPopulation = 100;
+  std::string nation_id;
 };
 
 class Unit {
@@ -51,6 +52,8 @@ protected:
   [[nodiscard]] auto entity() const -> Engine::Core::Entity *;
 
   void ensureCoreComponents();
+
+  static auto resolve_nation_id(const SpawnParams &params) -> std::string;
 
   Engine::Core::World *m_world = nullptr;
   Engine::Core::EntityID m_id = 0;

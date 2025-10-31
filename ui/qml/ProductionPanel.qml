@@ -356,14 +356,14 @@ Rectangle {
 
                                 Text {
                                     anchors.horizontalCenter: parent.horizontalCenter
-                                    text: (typeof StyleGuide !== 'undefined' && StyleGuide.unitIcons) ? StyleGuide.unitIcons["knight"] || "⚔️" : "⚔️"
+                                    text: (typeof StyleGuide !== 'undefined' && StyleGuide.unitIcons) ? (StyleGuide.unitIcons["swordsman"] || StyleGuide.unitIcons["knight"] || "⚔️") : "⚔️"
                                     color: parent.parent.parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
                                     font.pointSize: 24
                                 }
 
                                 Text {
                                     anchors.horizontalCenter: parent.horizontalCenter
-                                    text: qsTr("Knight")
+                                    text: qsTr("Swordsman")
                                     color: parent.parent.parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
                                     font.pointSize: 10
                                     font.bold: true
@@ -396,10 +396,10 @@ Rectangle {
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 enabled: parent.isEnabled
-                                onClicked: productionPanel.recruitUnit("knight")
+                                onClicked: productionPanel.recruitUnit("swordsman")
                                 cursorShape: parent.isEnabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
-                                ToolTip.text: parent.isEnabled ? qsTr("Recruit Knight\nCost: %1 villagers\nBuild time: %2s").arg(unitGridContent.prod.villagerCost || 1).arg((unitGridContent.prod.buildTime || 0).toFixed(0)) : (parent.queueTotal >= 5 ? qsTr("Queue is full (5/5)") : (unitGridContent.prod.producedCount >= unitGridContent.prod.maxUnits ? qsTr("Unit cap reached") : qsTr("Cannot recruit")))
+                                ToolTip.text: parent.isEnabled ? qsTr("Recruit Swordsman\nCost: %1 villagers\nBuild time: %2s").arg(unitGridContent.prod.villagerCost || 1).arg((unitGridContent.prod.buildTime || 0).toFixed(0)) : (parent.queueTotal >= 5 ? qsTr("Queue is full (5/5)") : (unitGridContent.prod.producedCount >= unitGridContent.prod.maxUnits ? qsTr("Unit cap reached") : qsTr("Cannot recruit")))
                                 ToolTip.delay: 300
                             }
 

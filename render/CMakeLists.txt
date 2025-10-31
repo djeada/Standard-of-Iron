@@ -31,11 +31,28 @@ add_library(render_gl STATIC
     ground/pine_renderer.cpp
     ground/firecamp_renderer.cpp
     entity/registry.cpp
-    entity/archer_renderer.cpp
-    entity/knight_renderer.cpp
-    entity/horse_renderer.cpp
-    entity/mounted_knight_renderer.cpp
-    entity/spearman_renderer.cpp
+    entity/nations/kingdom/archer_renderer.cpp
+    entity/nations/roman/archer_renderer.cpp
+    entity/nations/carthage/archer_renderer.cpp
+    entity/nations/kingdom/archer_style.cpp
+    entity/nations/roman/archer_style.cpp
+    entity/nations/carthage/archer_style.cpp
+    entity/nations/kingdom/spearman_style.cpp
+    entity/nations/roman/knight_renderer.cpp
+    entity/nations/kingdom/knight_renderer.cpp
+    entity/nations/carthage/knight_renderer.cpp
+    entity/nations/roman/knight_style.cpp
+    entity/nations/carthage/knight_style.cpp
+    entity/nations/kingdom/knight_style.cpp
+    entity/nations/roman/spearman_renderer.cpp
+    entity/nations/kingdom/spearman_renderer.cpp
+    entity/nations/carthage/spearman_renderer.cpp
+    entity/nations/roman/spearman_style.cpp
+    entity/nations/carthage/spearman_style.cpp
+    horse/rig.cpp
+    entity/nations/roman/mounted_knight_renderer.cpp
+    entity/nations/kingdom/mounted_knight_renderer.cpp
+    entity/nations/carthage/mounted_knight_renderer.cpp
     entity/barracks_renderer.cpp
     # entity/arrow.cpp removed; arrow VFX renderer code moved to geom/arrow.cpp
     geom/selection_ring.cpp
@@ -46,7 +63,8 @@ add_library(render_gl STATIC
     geom/transforms.cpp
     humanoid_math.cpp
     palette.cpp
-    humanoid_base.cpp
+    humanoid/rig.cpp
+    humanoid/style_palette.cpp
 )
 
 target_include_directories(render_gl PUBLIC .)

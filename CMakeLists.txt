@@ -195,7 +195,8 @@ if(QT_VERSION_MAJOR EQUAL 6)
             assets/maps/map_forest.json
             assets/maps/map_rivers.json
             assets/maps/map_mountain.json
-            assets/visuals/unit_visuals.json
+            assets/visuals/emblems/rome.png
+            assets/visuals/emblems/cartaghe.png
             translations/app_en.qm
             translations/app_de.qm
             translations/app_pt_br.qm

@@ -33,10 +33,13 @@ static void audioCallback(ma_device *device, void *output_buffer, const void *,
   auto *wrapper = reinterpret_cast<DeviceWrapper *>(device->pUserData);
   if ((wrapper == nullptr) || (wrapper->self == nullptr)) {
     std::memset(output_buffer, 0,
-                static_cast<unsigned long>(frame_count * MiniaudioBackend::DEFAULT_OUTPUT_CHANNELS) * sizeof(float));
+                static_cast<unsigned long>(
+                    frame_count * MiniaudioBackend::DEFAULT_OUTPUT_CHANNELS) *
+                    sizeof(float));
     return;
   }
-  wrapper->self->on_audio(reinterpret_cast<float *>(output_buffer), frame_count);
+  wrapper->self->on_audio(reinterpret_cast<float *>(output_buffer),
+                          frame_count);
 }
 
 MiniaudioBackend::MiniaudioBackend(QObject *parent) : QObject(parent) {}
@@ -119,8 +122,8 @@ auto MiniaudioBackend::predecode(const QString &id,
   ma_decoder_config const decoder_config =
       ma_decoder_config_init(ma_format_f32, m_output_channels, m_sample_rate);
   ma_decoder decoder;
-  if (ma_decoder_init_file(path.toUtf8().constData(), &decoder_config, &decoder) !=
-      MA_SUCCESS) {
+  if (ma_decoder_init_file(path.toUtf8().constData(), &decoder_config,
+                           &decoder) != MA_SUCCESS) {
     qWarning() << "miniaudio: cannot open" << path;
     return false;
   }
@@ -129,8 +132,8 @@ auto MiniaudioBackend::predecode(const QString &id,
   float buffer[DECODE_BUFFER_FRAMES * DEFAULT_OUTPUT_CHANNELS];
   for (;;) {
     ma_uint64 frames_read = 0;
-    ma_result const result =
-        ma_decoder_read_pcm_frames(&decoder, buffer, DECODE_BUFFER_FRAMES, &frames_read);
+    ma_result const result = ma_decoder_read_pcm_frames(
+        &decoder, buffer, DECODE_BUFFER_FRAMES, &frames_read);
     if (frames_read > 0) {
       const size_t samples = size_t(frames_read) * DEFAULT_OUTPUT_CHANNELS;
       const size_t old_size = pcm.size();
@@ -159,7 +162,7 @@ void MiniaudioBackend::play(int channel, const QString &id, float volume,
                             bool loop, int fade_ms) {
   static constexpr int MIN_FADE_MS = 1;
   static constexpr int MS_PER_SECOND = 1000;
-  
+
   QMutexLocker locker(&m_mutex);
   if (channel < 0 || channel >= m_channels.size()) {
     return;
@@ -187,7 +190,8 @@ void MiniaudioBackend::play(int channel, const QString &id, float volume,
   ch.current_volume = MIN_VOLUME;
 
   const unsigned fade_samples =
-      std::max(unsigned(MIN_FADE_MS), unsigned((fade_ms * m_sample_rate) / MS_PER_SECOND));
+      std::max(unsigned(MIN_FADE_MS),
+               unsigned((fade_ms * m_sample_rate) / MS_PER_SECOND));
   ch.fade_samples = fade_samples;
   ch.volume_step = (ch.target_volume - ch.current_volume) / float(fade_samples);
 }
@@ -195,7 +199,7 @@ void MiniaudioBackend::play(int channel, const QString &id, float volume,
 void MiniaudioBackend::stop(int channel, int fade_ms) {
   static constexpr int MIN_FADE_MS = 1;
   static constexpr int MS_PER_SECOND = 1000;
-  
+
   QMutexLocker const locker(&m_mutex);
   if (channel < 0 || channel >= m_channels.size()) {
     return;
@@ -205,7 +209,8 @@ void MiniaudioBackend::stop(int channel, int fade_ms) {
     return;
   }
   const unsigned fade_samples =
-      std::max(unsigned(MIN_FADE_MS), unsigned((fade_ms * m_sample_rate) / MS_PER_SECOND));
+      std::max(unsigned(MIN_FADE_MS),
+               unsigned((fade_ms * m_sample_rate) / MS_PER_SECOND));
   ch.target_volume = MIN_VOLUME;
   ch.fade_samples = fade_samples;
   ch.volume_step = (ch.target_volume - ch.current_volume) / float(fade_samples);
@@ -228,7 +233,7 @@ void MiniaudioBackend::resume(int channel) {
 void MiniaudioBackend::set_volume(int channel, float volume, int fade_ms) {
   static constexpr int MIN_FADE_MS = 1;
   static constexpr int MS_PER_SECOND = 1000;
-  
+
   QMutexLocker const locker(&m_mutex);
   if (channel < 0 || channel >= m_channels.size()) {
     return;
@@ -239,7 +244,8 @@ void MiniaudioBackend::set_volume(int channel, float volume, int fade_ms) {
   }
   ch.target_volume = std::clamp(volume, MIN_VOLUME, MAX_VOLUME);
   const unsigned fade_samples =
-      std::max(unsigned(MIN_FADE_MS), unsigned((fade_ms * m_sample_rate) / MS_PER_SECOND));
+      std::max(unsigned(MIN_FADE_MS),
+               unsigned((fade_ms * m_sample_rate) / MS_PER_SECOND));
   ch.fade_samples = fade_samples;
   ch.volume_step = (ch.target_volume - ch.current_volume) / float(fade_samples);
 }
@@ -247,17 +253,19 @@ void MiniaudioBackend::set_volume(int channel, float volume, int fade_ms) {
 void MiniaudioBackend::stop_all(int fade_ms) {
   static constexpr int MIN_FADE_MS = 1;
   static constexpr int MS_PER_SECOND = 1000;
-  
+
   QMutexLocker const locker(&m_mutex);
   const unsigned fade_samples =
-      std::max(unsigned(MIN_FADE_MS), unsigned((fade_ms * m_sample_rate) / MS_PER_SECOND));
+      std::max(unsigned(MIN_FADE_MS),
+               unsigned((fade_ms * m_sample_rate) / MS_PER_SECOND));
   for (auto &ch : m_channels) {
     if (!ch.active) {
       continue;
     }
     ch.target_volume = MIN_VOLUME;
     ch.fade_samples = fade_samples;
-    ch.volume_step = (ch.target_volume - ch.current_volume) / float(fade_samples);
+    ch.volume_step =
+        (ch.target_volume - ch.current_volume) / float(fade_samples);
     ch.looping = false;
   }
 }
@@ -373,8 +381,8 @@ void MiniaudioBackend::on_audio(float *output, unsigned frames) {
       ch.current_volume = ch.target_volume = MIN_VOLUME;
       ch.fade_samples = 0;
     }
-    if (ch.fade_samples == 0 && ch.current_volume == MIN_VOLUME && ch.target_volume == MIN_VOLUME &&
-        !ch.looping) {
+    if (ch.fade_samples == 0 && ch.current_volume == MIN_VOLUME &&
+        ch.target_volume == MIN_VOLUME && !ch.looping) {
       ch.active = false;
     }
   }

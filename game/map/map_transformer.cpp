@@ -3,6 +3,7 @@
 #include "../core/component.h"
 #include "../core/ownership_constants.h"
 #include "../core/world.h"
+#include "../systems/nation_registry.h"
 #include "../systems/owner_registry.h"
 #include "../units/factory.h"
 #include "../units/spawn_type.h"
@@ -176,6 +177,14 @@ auto MapTransformer::applyToWorld(
       sp.spawn_type = s.type;
       sp.aiControlled = !owner_registry.isPlayer(effective_player_id);
       sp.maxPopulation = s.maxPopulation;
+      if (const auto *nation =
+              Game::Systems::NationRegistry::instance().getNationForPlayer(
+                  effective_player_id)) {
+        sp.nation_id = nation->id;
+      } else {
+        sp.nation_id =
+            Game::Systems::NationRegistry::instance().default_nation_id();
+      }
       auto obj = s_registry->create(s.type, world, sp);
       if (obj) {
         e = world.getEntity(obj->id());
