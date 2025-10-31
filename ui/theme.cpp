@@ -66,7 +66,7 @@ QVariantMap Theme::nationEmblems() {
   QVariantMap emblems;
   constexpr auto k_resource_prefix =
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
-      "qrc:/qt/qml/StandardOfIron/assets/visuals/emblems/";
+      "qrc:/StandardOfIron/assets/visuals/emblems/";
 #else
       "qrc:/assets/visuals/emblems/";
 #endif
