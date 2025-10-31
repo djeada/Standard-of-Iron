@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../systems/nation_id.h"
 #include "../units/spawn_type.h"
 #include "../units/troop_type.h"
 #include "entity.h"
@@ -81,7 +82,7 @@ public:
   Game::Units::SpawnType spawn_type{Game::Units::SpawnType::Archer};
   int owner_id{0};
   float vision_range;
-  std::string nation_id;
+  Game::Systems::NationID nation_id{Game::Systems::NationID::KingdomOfIron};
 };
 
 class MovementComponent : public Component {

@@ -40,7 +40,7 @@ void Swordsman::init(const SpawnParams &params) {
   auto *e = m_world->createEntity();
   m_id = e->getId();
 
-  const std::string nation_id = resolve_nation_id(params);
+  const auto nation_id = resolve_nation_id(params);
   auto profile = Game::Systems::TroopProfileService::instance().get_profile(
       nation_id, TroopType::Swordsman);
 

@@ -1,7 +1,9 @@
 #include "nation_loader.h"
 
+#include "../units/building_type.h"
 #include "../units/troop_catalog.h"
 #include "../units/troop_type.h"
+#include "nation_id.h"
 #include "nation_registry.h"
 #include <QCoreApplication>
 #include <QDir>
@@ -116,14 +118,14 @@ static auto nation_loader_logger() -> QLoggingCategory & { return logger(); }
   const QString troop_id = obj.value("id").toString();
   if (troop_id.isEmpty()) {
     qCWarning(logger()) << "Encountered troop without id in nation"
-                        << QString::fromStdString(nation.id);
+                        << nationIDToQString(nation.id);
     return false;
   }
 
   const auto type_opt = Game::Units::tryParseTroopType(troop_id.toStdString());
   if (!type_opt.has_value()) {
     qCWarning(logger()) << "Unknown troop type" << troop_id << "for nation"
-                        << QString::fromStdString(nation.id);
+                        << nationIDToQString(nation.id);
     return false;
   }
 
@@ -327,18 +329,28 @@ auto NationLoader::load_from_file(const QString &path)
 
   const QJsonObject root = doc.object();
   Nation nation{};
-  nation.id = root.value("id").toString().toStdString();
-  if (nation.id.empty()) {
+  const QString id_str = root.value("id").toString();
+  if (id_str.isEmpty()) {
     qCWarning(nation_loader_logger())
         << "Nation file" << path << "is missing 'id'";
     return std::nullopt;
   }
-  nation.displayName = root.value("display_name")
-                           .toString(QString::fromStdString(nation.id))
-                           .toStdString();
-  nation.primaryBuilding = root.value("primary_building")
-                               .toString(QStringLiteral("barracks"))
-                               .toStdString();
+
+  auto parsed_id = Game::Systems::nationIDFromString(id_str.toStdString());
+  if (!parsed_id) {
+    qCWarning(nation_loader_logger())
+        << "Nation file" << path << "has unknown nation id:" << id_str;
+    return std::nullopt;
+  }
+  nation.id = *parsed_id;
+
+  nation.displayName = root.value("display_name").toString(id_str).toStdString();
+
+  const QString building_str =
+      root.value("primary_building").toString(QStringLiteral("barracks"));
+  auto parsed_building =
+      Game::Units::buildingTypeFromString(building_str.toStdString());
+  nation.primaryBuilding = parsed_building.value_or(Game::Units::BuildingType::Barracks);
   if (auto formation =
           parse_formation_type(root.value("formation_type").toString())) {
     nation.formation_type = *formation;
