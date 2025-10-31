@@ -12,8 +12,9 @@ auto TroopProfileService::instance() -> TroopProfileService & {
 
 void TroopProfileService::clear() { m_cache.clear(); }
 
-auto TroopProfileService::get_profile(
-    const std::string &nation_id, Game::Units::TroopType type) -> TroopProfile {
+auto TroopProfileService::get_profile(NationID nation_id,
+                                      Game::Units::TroopType type)
+    -> TroopProfile {
   auto &nationCache = m_cache[nation_id];
   auto cached = nationCache.find(type);
   if (cached != nationCache.end()) {
@@ -22,7 +23,7 @@ auto TroopProfileService::get_profile(
 
   const Nation *nation = NationRegistry::instance().getNation(nation_id);
   if (nation == nullptr) {
-    const auto &fallback_id = NationRegistry::instance().default_nation_id();
+    const auto fallback_id = NationRegistry::instance().default_nation_id();
     nation = NationRegistry::instance().getNation(fallback_id);
     if (nation == nullptr) {
       const auto &all = NationRegistry::instance().getAllNations();

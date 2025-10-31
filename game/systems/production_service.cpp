@@ -33,11 +33,7 @@ findFirstSelectedBarracks(Engine::Core::World &world,
 namespace {
 
 auto resolve_nation_id(const Engine::Core::UnitComponent *unit,
-                       int owner_id) -> std::string {
-  if ((unit != nullptr) && !unit->nation_id.empty()) {
-    return unit->nation_id;
-  }
-
+                       int owner_id) -> Game::Systems::NationID {
   auto &registry = NationRegistry::instance();
   if (const auto *nation = registry.getNationForPlayer(owner_id)) {
     return nation->id;
@@ -46,7 +42,7 @@ auto resolve_nation_id(const Engine::Core::UnitComponent *unit,
 }
 
 void apply_production_profile(Engine::Core::ProductionComponent *prod,
-                              const std::string &nation_id,
+                              Game::Systems::NationID nation_id,
                               Game::Units::TroopType unit_type) {
   if (prod == nullptr) {
     return;
@@ -68,7 +64,7 @@ auto ProductionService::startProductionForFirstSelectedBarracks(
     return ProductionResult::NoBarracks;
   }
   auto *unit = e->getComponent<Engine::Core::UnitComponent>();
-  const std::string nation_id = resolve_nation_id(unit, owner_id);
+  const auto nation_id = resolve_nation_id(unit, owner_id);
   const auto profile =
       TroopProfileService::instance().get_profile(nation_id, unit_type);
 
