@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../systems/nation_id.h"
 #include "../units/spawn_type.h"
 #include "../units/troop_type.h"
 #include "entity.h"
@@ -9,10 +10,6 @@
 #include <string>
 #include <utility>
 #include <vector>
-
-namespace Game::Systems {
-enum class NationID : std::uint8_t;
-}
 
 namespace Engine::Core {
 
