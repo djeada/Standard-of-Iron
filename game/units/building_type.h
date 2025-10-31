@@ -6,6 +6,9 @@
 
 namespace Game::Units {
 
+// Building types available in the game
+// Currently only Barracks is implemented, but this enum is designed
+// to be extensible for future building types (e.g., Tower, Wall, etc.)
 enum class BuildingType : std::uint8_t { Barracks };
 
 inline auto buildingTypeToQString(BuildingType type) -> QString {
@@ -13,6 +16,7 @@ inline auto buildingTypeToQString(BuildingType type) -> QString {
   case BuildingType::Barracks:
     return QStringLiteral("barracks");
   }
+  // Default fallback - should never reach here with valid enum
   return QStringLiteral("barracks");
 }
 
