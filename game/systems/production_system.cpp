@@ -6,12 +6,42 @@
 #include "../map/map_transformer.h"
 #include "../units/factory.h"
 #include "../units/troop_config.h"
+#include "nation_registry.h"
+#include "troop_profile_service.h"
 #include "units/spawn_type.h"
 #include "units/unit.h"
 #include <cmath>
 #include <qvectornd.h>
 
 namespace Game::Systems {
+
+namespace {
+
+void apply_production_profile(Engine::Core::ProductionComponent *prod,
+                              const std::string &nation_id,
+                              Game::Units::TroopType troop_type) {
+  if (prod == nullptr) {
+    return;
+  }
+  const auto profile =
+      TroopProfileService::instance().get_profile(nation_id, troop_type);
+  prod->buildTime = profile.production.build_time;
+  prod->villagerCost = profile.individuals_per_unit;
+}
+
+auto resolve_nation_id(const Engine::Core::UnitComponent *unit,
+                       int owner_id) -> std::string {
+  if ((unit != nullptr) && !unit->nation_id.empty()) {
+    return unit->nation_id;
+  }
+  auto &registry = NationRegistry::instance();
+  if (const auto *nation = registry.getNationForPlayer(owner_id)) {
+    return nation->id;
+  }
+  return registry.default_nation_id();
+}
+
+} // namespace
 
 void ProductionSystem::update(Engine::Core::World *world, float deltaTime) {
   if (world == nullptr) {
@@ -34,9 +64,11 @@ void ProductionSystem::update(Engine::Core::World *world, float deltaTime) {
       continue;
     }
 
-    int const individuals_per_unit =
-        Game::Units::TroopConfig::instance().getIndividualsPerUnit(
-            prod->product_type);
+    const int owner_id = (unit_comp != nullptr) ? unit_comp->owner_id : -1;
+    const std::string nation_id = resolve_nation_id(unit_comp, owner_id);
+    const auto current_profile = TroopProfileService::instance().get_profile(
+        nation_id, prod->product_type);
+    int const individuals_per_unit = current_profile.individuals_per_unit;
 
     if (prod->producedCount + individuals_per_unit > prod->maxUnits) {
       prod->inProgress = false;
@@ -74,6 +106,7 @@ void ProductionSystem::update(Engine::Core::World *world, float deltaTime) {
               Game::Units::spawn_typeFromTroopType(prod->product_type);
           sp.aiControlled =
               e->hasComponent<Engine::Core::AIControlledComponent>();
+          sp.nation_id = nation_id;
           auto unit = reg->create(sp.spawn_type, *world, sp);
 
           if (unit && prod->rallySet) {
@@ -90,6 +123,7 @@ void ProductionSystem::update(Engine::Core::World *world, float deltaTime) {
       if (!prod->productionQueue.empty()) {
         prod->product_type = prod->productionQueue.front();
         prod->productionQueue.erase(prod->productionQueue.begin());
+        apply_production_profile(prod, nation_id, prod->product_type);
         prod->timeRemaining = prod->buildTime;
         prod->inProgress = true;
       }

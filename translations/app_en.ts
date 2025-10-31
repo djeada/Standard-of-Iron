@@ -576,16 +576,16 @@ Build time: %2s</translation>
         <translation>Cannot recruit</translation>
     </message>
     <message>
-        <location filename="../ui/qml/ProductionPanel.qml" line="354" />
-        <source>Knight</source>
-        <translation>Knight</translation>
+        <location filename="../ui/qml/ProductionPanel.qml" line="366" />
+        <source>Swordsman</source>
+        <translation>Swordsman</translation>
     </message>
     <message>
-        <location filename="../ui/qml/ProductionPanel.qml" line="390" />
-        <source>Recruit Knight
+        <location filename="../ui/qml/ProductionPanel.qml" line="402" />
+        <source>Recruit Swordsman
 Cost: %1 villagers
 Build time: %2s</source>
-        <translation>Recruit Knight
+        <translation>Recruit Swordsman
 Cost: %1 villagers
 Build time: %2s</translation>
     </message>

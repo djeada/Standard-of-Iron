@@ -23,6 +23,7 @@
 #include <QQuickWindow>
 #include <QSize>
 #include <QVariant>
+#include <QVariantMap>
 #include <memory>
 #include <optional>
 #include <qbuffer.h>
@@ -199,6 +200,7 @@ GameEngine::GameEngine(QObject *parent)
 
     m_audioEventHandler->loadUnitVoiceMapping("archer", "archer_voice");
     m_audioEventHandler->loadUnitVoiceMapping("knight", "knight_voice");
+    m_audioEventHandler->loadUnitVoiceMapping("swordsman", "knight_voice");
     m_audioEventHandler->loadUnitVoiceMapping("spearman", "spearman_voice");
 
     m_audioEventHandler->loadAmbientMusic(Engine::Core::AmbientState::PEACEFUL,
@@ -1038,6 +1040,32 @@ void GameEngine::startLoadingMaps() {
 
 auto GameEngine::availableMaps() const -> QVariantList {
   return m_availableMaps;
+}
+
+auto GameEngine::availableNations() const -> QVariantList {
+  QVariantList nations;
+  const auto &registry = Game::Systems::NationRegistry::instance();
+  const auto &all = registry.getAllNations();
+  QList<QVariantMap> ordered;
+  ordered.reserve(static_cast<int>(all.size()));
+  for (const auto &nation : all) {
+    QVariantMap entry;
+    entry.insert(QStringLiteral("id"), QString::fromStdString(nation.id));
+    entry.insert(QStringLiteral("name"),
+                 QString::fromStdString(nation.displayName));
+    ordered.append(entry);
+  }
+  std::sort(ordered.begin(), ordered.end(),
+            [](const QVariantMap &a, const QVariantMap &b) {
+              return a.value(QStringLiteral("name"))
+                         .toString()
+                         .localeAwareCompare(
+                             b.value(QStringLiteral("name")).toString()) < 0;
+            });
+  for (const auto &entry : ordered) {
+    nations.append(entry);
+  }
+  return nations;
 }
 
 void GameEngine::startSkirmish(const QString &map_path,

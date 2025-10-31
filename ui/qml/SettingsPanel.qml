@@ -122,8 +122,8 @@ Item {
                                     value: 100
                                     stepSize: 1
                                     onValueChanged: {
-                                    if (typeof game !== 'undefined' && game.audioSystem)
-                                        game.audioSystem.setMasterVolume(value / 100);
+                                        if (typeof game !== 'undefined' && game.audioSystem)
+                                            game.audioSystem.setMasterVolume(value / 100);
 
                                     }
                                 }
@@ -156,8 +156,8 @@ Item {
                                     value: 100
                                     stepSize: 1
                                     onValueChanged: {
-                                    if (typeof game !== 'undefined' && game.audioSystem)
-                                        game.audioSystem.setMusicVolume(value / 100);
+                                        if (typeof game !== 'undefined' && game.audioSystem)
+                                            game.audioSystem.setMusicVolume(value / 100);
 
                                     }
                                 }
@@ -190,8 +190,8 @@ Item {
                                     value: 100
                                     stepSize: 1
                                     onValueChanged: {
-                                    if (typeof game !== 'undefined' && game.audioSystem)
-                                        game.audioSystem.setSoundVolume(value / 100);
+                                        if (typeof game !== 'undefined' && game.audioSystem)
+                                            game.audioSystem.setSoundVolume(value / 100);
 
                                     }
                                 }
@@ -224,8 +224,8 @@ Item {
                                     value: 100
                                     stepSize: 1
                                     onValueChanged: {
-                                    if (typeof game !== 'undefined' && game.audioSystem)
-                                        game.audioSystem.setVoiceVolume(value / 100);
+                                        if (typeof game !== 'undefined' && game.audioSystem)
+                                            game.audioSystem.setVoiceVolume(value / 100);
 
                                     }
                                 }
@@ -298,9 +298,9 @@ Item {
                                     return languageManager.languageDisplayName(currentText);
                                 }
                                 onActivated: function(index) {
-                                    if (typeof languageManager !== 'undefined' && currentText) {
+                                    if (typeof languageManager !== 'undefined' && currentText)
                                         languageManager.setLanguage(currentText);
-                                    }
+
                                 }
 
                                 delegate: ItemDelegate {

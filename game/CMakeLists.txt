@@ -50,7 +50,9 @@ add_library(game_systems STATIC
     systems/save_storage.cpp
     systems/game_state_serializer.cpp
     systems/nation_registry.cpp
+    systems/nation_loader.cpp
     systems/formation_system.cpp
+    systems/troop_profile_service.cpp
     map/map_loader.cpp
     map/level_loader.cpp
     map/map_transformer.cpp
@@ -64,9 +66,11 @@ add_library(game_systems STATIC
     visuals/visual_catalog.cpp
     units/unit.cpp
     units/archer.cpp
-    units/knight.cpp
+    units/swordsman.cpp
     units/mounted_knight.cpp
     units/spearman.cpp
+    units/troop_catalog.cpp
+    units/troop_catalog_loader.cpp
     units/factory.cpp
     units/barracks.cpp
 )

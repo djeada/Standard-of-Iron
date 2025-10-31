@@ -4,6 +4,7 @@
 #include "../core/ownership_constants.h"
 #include "../core/world.h"
 #include "../systems/building_collision_registry.h"
+#include "../systems/troop_profile_service.h"
 #include "../visuals/team_colors.h"
 #include "troop_config.h"
 #include "units/troop_type.h"
@@ -25,6 +26,8 @@ void Barracks::init(const SpawnParams &params) {
   auto *e = m_world->createEntity();
   m_id = e->getId();
 
+  const std::string nation_id = resolve_nation_id(params);
+
   m_t = e->addComponent<Engine::Core::TransformComponent>();
   m_t->position = {params.position.x(), params.position.y(),
                    params.position.z()};
@@ -41,6 +44,7 @@ void Barracks::init(const SpawnParams &params) {
   m_u->speed = 0.0F;
   m_u->owner_id = params.player_id;
   m_u->vision_range = 22.0F;
+  m_u->nation_id = nation_id;
 
   if (params.aiControlled) {
     e->addComponent<Engine::Core::AIControlledComponent>();
@@ -69,9 +73,11 @@ void Barracks::init(const SpawnParams &params) {
       prod->rallyZ = m_t->position.z + 2.0F;
       prod->rallySet = true;
 
-      prod->villagerCost =
-          Game::Units::TroopConfig::instance().getIndividualsPerUnit(
-              prod->product_type);
+      const auto profile =
+          Game::Systems::TroopProfileService::instance().get_profile(
+              nation_id, prod->product_type);
+      prod->buildTime = profile.production.build_time;
+      prod->villagerCost = profile.individuals_per_unit;
     }
   }
 

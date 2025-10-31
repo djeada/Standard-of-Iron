@@ -44,8 +44,8 @@
     },
     { "type": "archer", "x": 58, "z": 62, "playerId": 1 },
     { "type": "archer", "x": 62, "z": 58, "playerId": 1 },
-    { "type": "knight", "x": 55, "z": 60, "playerId": 1 },
-    { "type": "knight", "x": 60, "z": 55, "playerId": 1 },
+    { "type": "swordsman", "x": 55, "z": 60, "playerId": 1 },
+    { "type": "swordsman", "x": 60, "z": 55, "playerId": 1 },
     { "type": "spearman", "x": 58, "z": 58, "playerId": 1 },
     { "type": "spearman", "x": 62, "z": 62, "playerId": 1 },
     {
@@ -74,8 +74,8 @@
       "playerId": 3,
       "maxPopulation": 150
     },
-    { "type": "knight", "x": 58, "z": 192, "playerId": 3 },
-    { "type": "knight", "x": 62, "z": 188, "playerId": 3 },
+    { "type": "swordsman", "x": 58, "z": 192, "playerId": 3 },
+    { "type": "swordsman", "x": 62, "z": 188, "playerId": 3 },
     { "type": "archer", "x": 55, "z": 190, "playerId": 3 },
     {
       "type": "barracks",

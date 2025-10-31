@@ -1,6 +1,7 @@
 #pragma once
 
 #include "spawn_type.h"
+#include "troop_catalog.h"
 #include "troop_type.h"
 #include <string>
 #include <unordered_map>
@@ -135,31 +136,30 @@ public:
     m_selectionRingGroundOffset[unit_type] = offset;
   }
 
+  void refresh_from_catalog() { reload_from_catalog(); }
+
 private:
-  TroopConfig() {
-    m_individuals_per_unit[TroopType::Archer] = 20;
-    m_maxUnitsPerRow[TroopType::Archer] = 5;
-    m_selectionRingSize[TroopType::Archer] = 1.2F;
-    m_selectionRingYOffset[TroopType::Archer] = 0.0F;
-    m_selectionRingGroundOffset[TroopType::Archer] = 0.0F;
+  TroopConfig() { reload_from_catalog(); }
 
-    m_individuals_per_unit[TroopType::Knight] = 15;
-    m_maxUnitsPerRow[TroopType::Knight] = 5;
-    m_selectionRingSize[TroopType::Knight] = 1.1F;
-    m_selectionRingYOffset[TroopType::Knight] = 0.0F;
-    m_selectionRingGroundOffset[TroopType::Knight] = 0.0F;
+  void reload_from_catalog() {
+    m_individuals_per_unit.clear();
+    m_maxUnitsPerRow.clear();
+    m_selectionRingSize.clear();
+    m_selectionRingYOffset.clear();
+    m_selectionRingGroundOffset.clear();
 
-    m_individuals_per_unit[TroopType::Spearman] = 24;
-    m_maxUnitsPerRow[TroopType::Spearman] = 6;
-    m_selectionRingSize[TroopType::Spearman] = 1.4F;
-    m_selectionRingYOffset[TroopType::Spearman] = 0.0F;
-    m_selectionRingGroundOffset[TroopType::Spearman] = 0.0F;
-
-    m_individuals_per_unit[TroopType::MountedKnight] = 9;
-    m_maxUnitsPerRow[TroopType::MountedKnight] = 3;
-    m_selectionRingSize[TroopType::MountedKnight] = 2.0F;
-    m_selectionRingYOffset[TroopType::MountedKnight] = 0.0F;
-    m_selectionRingGroundOffset[TroopType::MountedKnight] = 1.35F;
+    const auto &classes = TroopCatalog::instance().get_all_classes();
+    for (const auto &entry : classes) {
+      const auto &troop_class = entry.second;
+      auto type = troop_class.unit_type;
+      m_individuals_per_unit[type] = troop_class.individuals_per_unit;
+      m_maxUnitsPerRow[type] = troop_class.max_units_per_row;
+      m_selectionRingSize[type] = troop_class.visuals.selection_ring_size;
+      m_selectionRingYOffset[type] =
+          troop_class.visuals.selection_ring_y_offset;
+      m_selectionRingGroundOffset[type] =
+          troop_class.visuals.selection_ring_ground_offset;
+    }
   }
 
   std::unordered_map<TroopType, int> m_individuals_per_unit;
