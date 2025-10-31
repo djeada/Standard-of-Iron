@@ -70,41 +70,19 @@ Item {
                 event.accepted = true;
             }
             break;
-        case Qt.Key_W:
-            beginPanKey(event);
-            game.cameraMove(0, inputStep);
-            ensurePanTimerRunning();
-            event.accepted = true;
-            break;
         case Qt.Key_S:
-            if (game.hasUnitsSelected && !shiftHeld) {
+            if (game.hasUnitsSelected) {
                 if (game.onStopCommand)
                     game.onStopCommand();
 
                 event.accepted = true;
-            } else {
-                beginPanKey(event);
-                game.cameraMove(0, -inputStep);
-                ensurePanTimerRunning();
-                event.accepted = true;
             }
             break;
         case Qt.Key_A:
-            if (game.hasUnitsSelected && !shiftHeld) {
+            if (game.hasUnitsSelected) {
                 game.cursorMode = "attack";
                 event.accepted = true;
-            } else {
-                beginPanKey(event);
-                game.cameraMove(-inputStep, 0);
-                ensurePanTimerRunning();
-                event.accepted = true;
             }
-            break;
-        case Qt.Key_D:
-            beginPanKey(event);
-            game.cameraMove(inputStep, 0);
-            ensurePanTimerRunning();
-            event.accepted = true;
             break;
         case Qt.Key_M:
             if (game.hasUnitsSelected) {
@@ -176,7 +154,7 @@ Item {
         if (typeof game === 'undefined')
             return ;
 
-        var movementKeys = [Qt.Key_W, Qt.Key_A, Qt.Key_S, Qt.Key_D, Qt.Key_Up, Qt.Key_Down, Qt.Key_Left, Qt.Key_Right];
+        var movementKeys = [Qt.Key_Up, Qt.Key_Down, Qt.Key_Left, Qt.Key_Right];
         if (movementKeys.indexOf(event.key) !== -1) {
             if (pressedKeys[event.key]) {
                 pressedKeys[event.key] = false;
@@ -219,16 +197,16 @@ Item {
             var step = (Qt.inputModifiers & Qt.ShiftModifier) ? 2 : 1;
             var dx = 0;
             var dz = 0;
-            if (pressedKeys[Qt.Key_W] || pressedKeys[Qt.Key_Up])
+            if (pressedKeys[Qt.Key_Up])
                 dz += step;
 
-            if (pressedKeys[Qt.Key_S] || pressedKeys[Qt.Key_Down])
+            if (pressedKeys[Qt.Key_Down])
                 dz -= step;
 
-            if (pressedKeys[Qt.Key_A] || pressedKeys[Qt.Key_Left])
+            if (pressedKeys[Qt.Key_Left])
                 dx -= step;
 
-            if (pressedKeys[Qt.Key_D] || pressedKeys[Qt.Key_Right])
+            if (pressedKeys[Qt.Key_Right])
                 dx += step;
 
             if (dx !== 0 || dz !== 0)
