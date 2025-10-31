@@ -101,8 +101,7 @@ void NationRegistry::registerNation(Nation nation) {
   m_nationIndex[m_nations.back().id] = index;
 }
 
-auto NationRegistry::getNation(const std::string &nationId) const
-    -> const Nation * {
+auto NationRegistry::getNation(NationID nationId) const -> const Nation * {
   auto it = m_nationIndex.find(nationId);
   if (it == m_nationIndex.end()) {
     return nullptr;
@@ -124,8 +123,7 @@ auto NationRegistry::getNationForPlayer(int player_id) const -> const Nation * {
   return nation;
 }
 
-void NationRegistry::setPlayerNation(int player_id,
-                                     const std::string &nationId) {
+void NationRegistry::setPlayerNation(int player_id, NationID nationId) {
   m_playerNations[player_id] = nationId;
 }
 
@@ -140,9 +138,9 @@ void NationRegistry::initializeDefaults() {
   auto nations = NationLoader::load_default_nations();
   if (nations.empty()) {
     Nation kingdom_of_iron;
-    kingdom_of_iron.id = "kingdom_of_iron";
+    kingdom_of_iron.id = NationID::KingdomOfIron;
     kingdom_of_iron.displayName = "Kingdom of Iron";
-    kingdom_of_iron.primaryBuilding = "barracks";
+    kingdom_of_iron.primaryBuilding = Game::Units::BuildingType::Barracks;
     kingdom_of_iron.formation_type = FormationType::Roman;
 
     auto appendTroop = [&kingdom_of_iron](Game::Units::TroopType type) {
@@ -166,12 +164,11 @@ void NationRegistry::initializeDefaults() {
     appendTroop(Game::Units::TroopType::MountedKnight);
 
     registerNation(std::move(kingdom_of_iron));
-    m_defaultNation = "kingdom_of_iron";
+    m_defaultNation = NationID::KingdomOfIron;
   } else {
-    const std::string desired_default = "kingdom_of_iron";
-    std::string fallback_default = nations.front().id;
+    NationID fallback_default = nations.front().id;
     for (auto &nation : nations) {
-      if (nation.id == desired_default) {
+      if (nation.id == NationID::KingdomOfIron) {
         fallback_default = nation.id;
       }
       registerNation(std::move(nation));
