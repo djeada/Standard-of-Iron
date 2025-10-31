@@ -70,7 +70,6 @@ Item {
                 event.accepted = true;
             }
             break;
-
         case Qt.Key_S:
             if (game.hasUnitsSelected && !shiftHeld) {
                 if (game.onStopCommand)
