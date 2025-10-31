@@ -1,15 +1,12 @@
 #pragma once
 
+#include "../systems/nation_id.h"
 #include "spawn_type.h"
 #include "troop_type.h"
 #include <QVector3D>
 #include <memory>
 #include <string>
 #include <utility>
-
-namespace Game::Systems {
-enum class NationID : std::uint8_t;
-}
 
 namespace Engine::Core {
 class World;
