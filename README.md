@@ -135,7 +135,7 @@ make run
 ## Controls
 
 ### Camera Controls
-- **WASD** or **Arrow Keys**: Pan camera
+- **Arrow Keys**: Pan camera
 - **Q/E**: Rotate camera left/right
 - **R/F**: Move camera up/down
 - **Mouse to Screen Edge**: Edge scrolling (disabled over UI)
@@ -168,15 +168,11 @@ make run
 
 ### Keyboard Shortcuts Summary
 **Camera Movement:**
-- **W**: Pan forward (or **S** to stop when units selected)
-- **S**: Pan backward (or Stop command when units selected without Shift)
-- **A**: Pan left (or Attack mode when units selected without Shift)
-- **D**: Pan right
+- **Up/Down/Left/Right**: Pan camera with arrow keys
 - **Q**: Rotate left
 - **E**: Rotate right
 - **R**: Elevate camera
 - **F**: Lower camera
-- **Shift + WASD**: Force camera movement even with units selected
 
 **Unit Commands:**
 - **X**: Select all controllable units
