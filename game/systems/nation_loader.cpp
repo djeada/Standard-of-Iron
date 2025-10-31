@@ -118,14 +118,14 @@ static auto nation_loader_logger() -> QLoggingCategory & { return logger(); }
   const QString troop_id = obj.value("id").toString();
   if (troop_id.isEmpty()) {
     qCWarning(logger()) << "Encountered troop without id in nation"
-                        << QString::fromStdString(nation.id);
+                        << nationIDToQString(nation.id);
     return false;
   }
 
   const auto type_opt = Game::Units::tryParseTroopType(troop_id.toStdString());
   if (!type_opt.has_value()) {
     qCWarning(logger()) << "Unknown troop type" << troop_id << "for nation"
-                        << QString::fromStdString(nation.id);
+                        << nationIDToQString(nation.id);
     return false;
   }
 
