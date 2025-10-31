@@ -69,6 +69,7 @@
 #include "game/systems/game_state_serializer.h"
 #include "game/systems/global_stats_registry.h"
 #include "game/systems/movement_system.h"
+#include "game/systems/nation_id.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/patrol_system.h"
@@ -1050,7 +1051,9 @@ auto GameEngine::availableNations() const -> QVariantList {
   ordered.reserve(static_cast<int>(all.size()));
   for (const auto &nation : all) {
     QVariantMap entry;
-    entry.insert(QStringLiteral("id"), QString::fromStdString(nation.id));
+    entry.insert(QStringLiteral("id"),
+                 QString::fromStdString(
+                     Game::Systems::nationIDToString(nation.id)));
     entry.insert(QStringLiteral("name"),
                  QString::fromStdString(nation.displayName));
     ordered.append(entry);
