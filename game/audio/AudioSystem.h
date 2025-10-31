@@ -43,8 +43,10 @@ struct AudioEvent {
   int priority = AudioConstants::DEFAULT_PRIORITY;
   AudioCategory category = AudioCategory::SFX;
 
-  AudioEvent(AudioEventType t, std::string id = "", float vol = AudioConstants::DEFAULT_VOLUME,
-             bool l = false, int p = AudioConstants::DEFAULT_PRIORITY, AudioCategory cat = AudioCategory::SFX)
+  AudioEvent(AudioEventType t, std::string id = "",
+             float vol = AudioConstants::DEFAULT_VOLUME, bool l = false,
+             int p = AudioConstants::DEFAULT_PRIORITY,
+             AudioCategory cat = AudioCategory::SFX)
       : type(t), resourceId(std::move(id)), volume(vol), loop(l), priority(p),
         category(cat) {}
 };
@@ -56,10 +58,13 @@ public:
   auto initialize() -> bool;
   void shutdown();
 
-  void playSound(const std::string &soundId, float volume = AudioConstants::DEFAULT_VOLUME,
-                 bool loop = false, int priority = AudioConstants::DEFAULT_PRIORITY,
+  void playSound(const std::string &soundId,
+                 float volume = AudioConstants::DEFAULT_VOLUME,
+                 bool loop = false,
+                 int priority = AudioConstants::DEFAULT_PRIORITY,
                  AudioCategory category = AudioCategory::SFX);
-  void playMusic(const std::string &musicId, float volume = AudioConstants::DEFAULT_VOLUME,
+  void playMusic(const std::string &musicId,
+                 float volume = AudioConstants::DEFAULT_VOLUME,
                  bool crossfade = true);
   void stopSound(const std::string &soundId);
   void stopMusic();

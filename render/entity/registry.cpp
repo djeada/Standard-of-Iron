@@ -1,10 +1,18 @@
 #include "registry.h"
 #include "../scene_renderer.h"
-#include "archer_renderer.h"
 #include "barracks_renderer.h"
-#include "knight_renderer.h"
-#include "mounted_knight_renderer.h"
-#include "spearman_renderer.h"
+#include "nations/carthage/archer_renderer.h"
+#include "nations/carthage/knight_renderer.h"
+#include "nations/carthage/mounted_knight_renderer.h"
+#include "nations/carthage/spearman_renderer.h"
+#include "nations/kingdom/archer_renderer.h"
+#include "nations/kingdom/knight_renderer.h"
+#include "nations/kingdom/mounted_knight_renderer.h"
+#include "nations/kingdom/spearman_renderer.h"
+#include "nations/roman/archer_renderer.h"
+#include "nations/roman/knight_renderer.h"
+#include "nations/roman/mounted_knight_renderer.h"
+#include "nations/roman/spearman_renderer.h"
 #include <string>
 #include <utility>
 
@@ -24,10 +32,21 @@ auto EntityRendererRegistry::get(const std::string &type) const -> RenderFunc {
 }
 
 void registerBuiltInEntityRenderers(EntityRendererRegistry &registry) {
-  registerArcherRenderer(registry);
-  registerKnightRenderer(registry);
-  registerMountedKnightRenderer(registry);
-  registerSpearmanRenderer(registry);
+  Kingdom::registerArcherRenderer(registry);
+  Roman::registerArcherRenderer(registry);
+  Carthage::registerArcherRenderer(registry);
+
+  Kingdom::registerSpearmanRenderer(registry);
+  Roman::registerSpearmanRenderer(registry);
+  Carthage::registerSpearmanRenderer(registry);
+
+  Kingdom::registerKnightRenderer(registry);
+  Roman::registerKnightRenderer(registry);
+  Carthage::registerKnightRenderer(registry);
+
+  Kingdom::registerMountedKnightRenderer(registry);
+  Roman::registerMountedKnightRenderer(registry);
+  Carthage::registerMountedKnightRenderer(registry);
   registerBarracksRenderer(registry);
 }
 

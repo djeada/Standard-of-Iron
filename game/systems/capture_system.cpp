@@ -3,6 +3,8 @@
 #include "../core/event_manager.h"
 #include "../core/ownership_constants.h"
 #include "../core/world.h"
+#include "../systems/nation_registry.h"
+#include "../systems/troop_profile_service.h"
 #include "../units/troop_config.h"
 #include "../visuals/team_colors.h"
 #include "building_collision_registry.h"
@@ -71,6 +73,17 @@ void CaptureSystem::transferBarrackOwnership(Engine::Core::World *,
   int const previous_owner_id = unit->owner_id;
   unit->owner_id = newOwnerId;
 
+  auto &nation_registry = NationRegistry::instance();
+  if (!Game::Core::isNeutralOwner(newOwnerId)) {
+    if (const auto *nation = nation_registry.getNationForPlayer(newOwnerId)) {
+      unit->nation_id = nation->id;
+    } else {
+      unit->nation_id = nation_registry.default_nation_id();
+    }
+  } else {
+    unit->nation_id.clear();
+  }
+
   QVector3D const tc = Game::Visuals::team_colorForOwner(newOwnerId);
   renderable->color[0] = tc.x();
   renderable->color[1] = tc.y();
@@ -83,7 +96,6 @@ void CaptureSystem::transferBarrackOwnership(Engine::Core::World *,
     prod = barrack->addComponent<Engine::Core::ProductionComponent>();
     if (prod != nullptr) {
       prod->product_type = Game::Units::TroopType::Archer;
-      prod->buildTime = 10.0F;
       prod->maxUnits = 150;
       prod->inProgress = false;
       prod->timeRemaining = 0.0F;
@@ -91,12 +103,18 @@ void CaptureSystem::transferBarrackOwnership(Engine::Core::World *,
       prod->rallyX = transform->position.x + 4.0F;
       prod->rallyZ = transform->position.z + 2.0F;
       prod->rallySet = true;
-      prod->villagerCost =
-          Game::Units::TroopConfig::instance().getIndividualsPerUnit(
-              prod->product_type);
+      const auto profile = TroopProfileService::instance().get_profile(
+          unit->nation_id, prod->product_type);
+      prod->buildTime = profile.production.build_time;
+      prod->villagerCost = profile.individuals_per_unit;
     }
   } else if (Game::Core::isNeutralOwner(newOwnerId) && (prod != nullptr)) {
     barrack->removeComponent<Engine::Core::ProductionComponent>();
+  } else if (prod != nullptr) {
+    const auto profile = TroopProfileService::instance().get_profile(
+        unit->nation_id, prod->product_type);
+    prod->buildTime = profile.production.build_time;
+    prod->villagerCost = profile.individuals_per_unit;
   }
 
   Engine::Core::EventManager::instance().publish(
