@@ -10,6 +10,10 @@
 #include <utility>
 #include <vector>
 
+namespace Game::Systems {
+enum class NationID : std::uint8_t;
+}
+
 namespace Engine::Core {
 
 namespace Defaults {
@@ -81,7 +85,7 @@ public:
   Game::Units::SpawnType spawn_type{Game::Units::SpawnType::Archer};
   int owner_id{0};
   float vision_range;
-  std::string nation_id;
+  Game::Systems::NationID nation_id{Game::Systems::NationID::KingdomOfIron};
 };
 
 class MovementComponent : public Component {

@@ -22,8 +22,8 @@ class TroopProfileService {
 public:
   static auto instance() -> TroopProfileService &;
 
-  auto get_profile(const std::string &nation_id,
-                   Game::Units::TroopType type) -> TroopProfile;
+  auto get_profile(NationID nation_id, Game::Units::TroopType type)
+      -> TroopProfile;
 
   void clear();
 
@@ -33,7 +33,7 @@ private:
   auto build_profile(const Nation &nation,
                      Game::Units::TroopType type) -> TroopProfile;
 
-  std::unordered_map<std::string,
+  std::unordered_map<NationID,
                      std::unordered_map<Game::Units::TroopType, TroopProfile>>
       m_cache;
 };
