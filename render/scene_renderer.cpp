@@ -393,16 +393,21 @@ void Renderer::renderWorld(Engine::Core::World *world) {
                        transform->scale.z);
 
     bool drawn_by_registry = false;
-    if ((unit_comp != nullptr) && m_entityRegistry) {
-      std::string const unit_type_str =
-          Game::Units::spawn_typeToString(unit_comp->spawn_type);
-      auto fn = m_entityRegistry->get(unit_type_str);
+    if (m_entityRegistry) {
+      std::string renderer_key;
+      if (!renderable->rendererId.empty()) {
+        renderer_key = renderable->rendererId;
+      } else if (unit_comp != nullptr) {
+        renderer_key = Game::Units::spawn_typeToString(unit_comp->spawn_type);
+      }
+      auto fn = m_entityRegistry->get(renderer_key);
       if (fn) {
         DrawContext ctx{resources(), entity, world, model_matrix};
 
         ctx.selected = is_selected;
         ctx.hovered = is_hovered;
         ctx.animationTime = m_accumulatedTime;
+        ctx.rendererId = renderer_key;
         ctx.backend = m_backend.get();
         fn(ctx, *this);
         enqueueSelectionRing(entity, transform, unit_comp, is_selected,

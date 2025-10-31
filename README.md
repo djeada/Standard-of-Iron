@@ -6,10 +6,12 @@ A modern real-time strategy (RTS) game built with C++20, Qt 6, and OpenGL 3.3 Co
 
 ### Core Gameplay
 - **Unit Production**: Build archers from barracks with production queues
+- **Distinct Nations**: Choose between the Kingdom of Iron, Roman Republic, and Carthaginian Empire
 - **Rally Points**: Set spawn locations for newly produced units (visual yellow flags)
 - **Combat System**: Ranged archer combat with health bars and visual arrow projectiles
 - **Barrack Capture**: Take control of neutral or enemy barracks with 3× troop advantage
 - **AI Opponents**: Computer-controlled enemy that produces units and attacks your base
+- **Skirmish Setup**: Pick teams, colors, and nations before launching into battle
 - **Victory/Defeat**: Win by destroying the enemy barracks, lose if yours is destroyed
 - **Team Colors**: Visual distinction between player (blue) and enemy (red) units
 
@@ -401,6 +403,33 @@ Quick start for contributors:
 3. Run `make format` before committing changes
 4. Open a Pull Request
 
+## Nation System Migration Plan
+
+This roadmap replaces the single “Kingdom of Iron” template with a scalable civilization layer that allows Romans, Carthage, and future nations to share troop classes but diverge on stats, formations, and visuals.
+
+### Phase 1 — Core Data Foundations
+- Introduce a `TroopClass` catalog describing baseline stats/metadata for each `Game::Units::TroopType` (health, speed, damage, default renderer, individuals per unit, etc.).
+- Refactor existing unit constructors (`game/units/*.cpp`) to hydrate components from the catalog instead of hard-coded literals; keep overrides minimal to validate the abstraction.
+- Extend `Nation` (`game/systems/nation_registry.h`) with a `NationTroopVariant` map that captures per-nation overrides (stat deltas, formation preference, renderer id).
+- Persist current “Kingdom of Iron” values into `assets/data/troops/base.json` plus `assets/data/nations/kingdom_of_iron.json` so runtime data mirrors today’s behavior.
+
+### Phase 2 — Loading & Profiles
+- Add a JSON loader (`game/systems/nation_loader.*`) that builds `Nation` objects from disk and registers them through `NationRegistry::initializeDefaults`.
+- Create `TroopProfileService` to merge `TroopClass` defaults with `NationTroopVariant` overrides and expose `get_profile(nationId, TroopType)`.
+- Thread the owning nation id through production: extend `SpawnParams` and update `ProductionSystem`, `UnitFactoryRegistry`, and AI spawners so units receive the correct profile at creation.
+- Update `TroopConfig` accessors to read formation spacing/individual counts from profiles, falling back to catalog defaults when overrides are absent.
+
+### Phase 3 — Multi-Nation Support
+- Author Roman and Carthaginian JSON definitions with differentiated stats, formations, and renderer ids; set the default nation in `NationRegistry` to one of them.
+- Rename the shared melee infantry profile to `Swordsman` so nations can share core assets while still tuning stats in their override files.
+- Audit gameplay systems (AI build orders, UI panels, tutorials) to resolve troop data via `NationRegistry::getNationForPlayer` instead of assuming Kingdom of Iron.
+- Register renderer variants (e.g., `render/entity/roman_archer_renderer.cpp`) keyed by the profile’s renderer id, with graceful fallbacks to baseline assets.
+- Add hooks for balance levers (passive modifiers, tech prerequisites) inside `NationTroopVariant` so future expansions require data changes rather than engine rewrites.
+
+### Validation & Rollout
+- Unit tests or integration checks should confirm: data loading succeeds, profiles are applied per player, production counts respect nation-specific `individualsPerUnit`, and renderers switch with the nation.
+- Ship the migration behind a feature flag or debug toggle if needed, then remove the legacy hard-coded nation data once parity tests pass.
+
 ## Development Status
 
 ### Completed Features ✅
@@ -445,4 +474,3 @@ This game uses the **Qt framework** (https://www.qt.io), which is licensed under
 ## Acknowledgments
 
 Built with modern C++20, Qt 6, and OpenGL 3.3 Core. Special thanks to the open-source community for excellent documentation and tools.
-

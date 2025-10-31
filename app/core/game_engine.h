@@ -100,6 +100,7 @@ public:
   Q_PROPERTY(
       QVariantList availableMaps READ availableMaps NOTIFY availableMapsChanged)
   Q_PROPERTY(bool mapsLoading READ mapsLoading NOTIFY mapsLoadingChanged)
+  Q_PROPERTY(QVariantList availableNations READ availableNations CONSTANT)
   Q_PROPERTY(int enemyTroopsDefeated READ enemyTroopsDefeated NOTIFY
                  enemyTroopsDefeatedChanged)
   Q_PROPERTY(QVariantList ownerInfo READ getOwnerInfo NOTIFY ownerInfoChanged)
@@ -175,6 +176,7 @@ public:
   Q_INVOKABLE [[nodiscard]] QString getSelectedUnitsCommandMode() const;
   Q_INVOKABLE void setRallyAtScreen(qreal sx, qreal sy);
   Q_INVOKABLE [[nodiscard]] QVariantList availableMaps() const;
+  [[nodiscard]] QVariantList availableNations() const;
   [[nodiscard]] bool mapsLoading() const { return m_mapsLoading; }
   Q_INVOKABLE void
   startSkirmish(const QString &map_path,
