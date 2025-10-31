@@ -18,7 +18,7 @@ namespace Game::Systems {
 namespace {
 
 void apply_production_profile(Engine::Core::ProductionComponent *prod,
-                              const std::string &nation_id,
+                              Game::Systems::NationID nation_id,
                               Game::Units::TroopType troop_type) {
   if (prod == nullptr) {
     return;
@@ -30,10 +30,7 @@ void apply_production_profile(Engine::Core::ProductionComponent *prod,
 }
 
 auto resolve_nation_id(const Engine::Core::UnitComponent *unit,
-                       int owner_id) -> std::string {
-  if ((unit != nullptr) && !unit->nation_id.empty()) {
-    return unit->nation_id;
-  }
+                       int owner_id) -> Game::Systems::NationID {
   auto &registry = NationRegistry::instance();
   if (const auto *nation = registry.getNationForPlayer(owner_id)) {
     return nation->id;
@@ -65,7 +62,7 @@ void ProductionSystem::update(Engine::Core::World *world, float deltaTime) {
     }
 
     const int owner_id = (unit_comp != nullptr) ? unit_comp->owner_id : -1;
-    const std::string nation_id = resolve_nation_id(unit_comp, owner_id);
+    const auto nation_id = resolve_nation_id(unit_comp, owner_id);
     const auto current_profile = TroopProfileService::instance().get_profile(
         nation_id, prod->product_type);
     int const individuals_per_unit = current_profile.individuals_per_unit;

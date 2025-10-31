@@ -1,6 +1,7 @@
 #include "mounted_knight_renderer.h"
 #include "../../../../game/core/component.h"
 #include "../../../../game/core/entity.h"
+#include "../../../../game/systems/nation_id.h"
 #include "../../../geom/math_utils.h"
 #include "../../../geom/transforms.h"
 #include "../../../gl/backend.h"
@@ -68,7 +69,7 @@ public:
     if (ctx.entity != nullptr) {
       if (auto *unit =
               ctx.entity->getComponent<Engine::Core::UnitComponent>()) {
-        nation = unit->nation_id;
+        nation = Game::Systems::nationIDToString(unit->nation_id);
       }
     }
     if (!nation.empty()) {

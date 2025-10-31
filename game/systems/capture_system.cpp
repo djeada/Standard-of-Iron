@@ -81,7 +81,7 @@ void CaptureSystem::transferBarrackOwnership(Engine::Core::World *,
       unit->nation_id = nation_registry.default_nation_id();
     }
   } else {
-    unit->nation_id.clear();
+    unit->nation_id = nation_registry.default_nation_id();
   }
 
   QVector3D const tc = Game::Visuals::team_colorForOwner(newOwnerId);
