@@ -99,6 +99,10 @@ auto Serialization::serializeEntity(const Entity *entity) -> QJsonObject {
     renderable_obj["meshPath"] = QString::fromStdString(renderable->meshPath);
     renderable_obj["texturePath"] =
         QString::fromStdString(renderable->texturePath);
+    if (!renderable->rendererId.empty()) {
+      renderable_obj["rendererId"] =
+          QString::fromStdString(renderable->rendererId);
+    }
     renderable_obj["visible"] = renderable->visible;
     renderable_obj["mesh"] = static_cast<int>(renderable->mesh);
     renderable_obj["color"] = serializeColor(renderable->color);
@@ -114,6 +118,7 @@ auto Serialization::serializeEntity(const Entity *entity) -> QJsonObject {
     unit_obj["unit_type"] = QString::fromStdString(
         Game::Units::spawn_typeToString(unit->spawn_type));
     unit_obj["owner_id"] = unit->owner_id;
+    unit_obj["nation_id"] = QString::fromStdString(unit->nation_id);
     entity_obj["unit"] = unit_obj;
   }
 
@@ -267,6 +272,8 @@ void Serialization::deserializeEntity(Entity *entity, const QJsonObject &json) {
     renderable->meshPath = renderable_obj["meshPath"].toString().toStdString();
     renderable->texturePath =
         renderable_obj["texturePath"].toString().toStdString();
+    renderable->rendererId =
+        renderable_obj["rendererId"].toString().toStdString();
     renderable->visible = renderable_obj["visible"].toBool(true);
     renderable->mesh =
         static_cast<RenderableComponent::MeshKind>(renderable_obj["mesh"].toInt(
@@ -297,6 +304,9 @@ void Serialization::deserializeEntity(Entity *entity, const QJsonObject &json) {
     }
 
     unit->owner_id = unit_obj["owner_id"].toInt(0);
+    if (unit_obj.contains("nation_id")) {
+      unit->nation_id = unit_obj["nation_id"].toString().toStdString();
+    }
   }
 
   if (json.contains("movement")) {

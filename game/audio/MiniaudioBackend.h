@@ -24,7 +24,8 @@ public:
   explicit MiniaudioBackend(QObject *parent = nullptr);
   ~MiniaudioBackend() override;
 
-  auto initialize(int device_rate, int output_channels, int music_channels) -> bool;
+  auto initialize(int device_rate, int output_channels,
+                  int music_channels) -> bool;
   void shutdown();
 
   auto predecode(const QString &id, const QString &path) -> bool;

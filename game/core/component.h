@@ -60,6 +60,7 @@ public:
 
   std::string meshPath;
   std::string texturePath;
+  std::string rendererId;
   bool visible{true};
   MeshKind mesh{MeshKind::Cube};
   std::array<float, 3> color{};
@@ -80,6 +81,7 @@ public:
   Game::Units::SpawnType spawn_type{Game::Units::SpawnType::Archer};
   int owner_id{0};
   float vision_range;
+  std::string nation_id;
 };
 
 class MovementComponent : public Component {

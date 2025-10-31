@@ -5,11 +5,23 @@
       "color": [0.8, 0.9, 1.0],
       "texture": ""
     },
-    "knight": {
+    "swordsman": {
       "mesh": "Capsule",
       "color": [0.7, 0.7, 0.8],
       "texture": "",
       "equipment": "sword_and_shield"
+    },
+    "spearman": {
+      "mesh": "Capsule",
+      "color": [0.7, 0.85, 0.75],
+      "texture": "",
+      "equipment": "spear_and_shield"
+    },
+    "mounted_knight": {
+      "mesh": "Capsule",
+      "color": [0.75, 0.75, 0.85],
+      "texture": "",
+      "equipment": "cavalry_lance"
     }
   }
 }

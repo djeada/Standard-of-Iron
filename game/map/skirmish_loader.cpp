@@ -9,6 +9,7 @@
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/command_service.h"
 #include "game/systems/global_stats_registry.h"
+#include "game/systems/nation_registry.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/selection_system.h"
 #include "game/systems/troop_count_registry.h"
@@ -91,6 +92,8 @@ void SkirmishLoader::resetGameState() {
   auto &troop_registry = Game::Systems::TroopCountRegistry::instance();
   troop_registry.clear();
 
+  Game::Systems::NationRegistry::instance().clearPlayerAssignments();
+
   if (m_fog != nullptr) {
     m_fog->updateMask(0, 0, 1.0F, {});
   }
@@ -155,6 +158,7 @@ auto SkirmishLoader::start(const QString &map_path,
   owner_registry.setLocalPlayerId(player_owner_id);
 
   std::unordered_map<int, int> team_overrides;
+  std::unordered_map<int, std::string> nation_overrides;
   QVariantList saved_player_configs;
   std::set<int> processed_player_ids;
 
@@ -166,6 +170,7 @@ auto SkirmishLoader::start(const QString &map_path,
       const int team_id = config.value("team_id", 0).toInt();
       const QString color_hex = config.value("colorHex", "#FFFFFF").toString();
       const bool is_human = config.value("isHuman", false).toBool();
+      const QString nation_id_str = config.value("nationId").toString();
 
       if (is_human && player_id != player_owner_id) {
         player_id = player_owner_id;
@@ -178,6 +183,15 @@ auto SkirmishLoader::start(const QString &map_path,
       if (player_id >= 0) {
         processed_player_ids.insert(player_id);
         team_overrides[player_id] = team_id;
+
+        std::string chosen_nation;
+        if (!nation_id_str.isEmpty()) {
+          chosen_nation = nation_id_str.toStdString();
+        } else {
+          chosen_nation =
+              Game::Systems::NationRegistry::instance().default_nation_id();
+        }
+        nation_overrides[player_id] = std::move(chosen_nation);
 
         QVariantMap updated_config = config;
         updated_config["player_id"] = player_id;
@@ -202,6 +216,29 @@ auto SkirmishLoader::start(const QString &map_path,
 
   Game::Map::MapTransformer::setLocalOwnerId(player_owner_id);
   Game::Map::MapTransformer::setPlayerTeamOverrides(team_overrides);
+
+  auto &nation_registry = Game::Systems::NationRegistry::instance();
+
+  for (auto it = map_player_ids.begin(); it != map_player_ids.end(); ++it) {
+    int player_id = *it;
+    auto nat_it = nation_overrides.find(player_id);
+    if (nat_it != nation_overrides.end()) {
+      nation_registry.setPlayerNation(player_id, nat_it->second);
+    } else {
+      nation_registry.setPlayerNation(player_id,
+                                      nation_registry.default_nation_id());
+    }
+  }
+
+  if (map_player_ids.isEmpty()) {
+    auto nat_it = nation_overrides.find(player_owner_id);
+    if (nat_it != nation_overrides.end()) {
+      nation_registry.setPlayerNation(player_owner_id, nat_it->second);
+    } else {
+      nation_registry.setPlayerNation(player_owner_id,
+                                      nation_registry.default_nation_id());
+    }
+  }
 
   auto level_result = Game::Map::LevelLoader::loadFromAssets(
       map_path, m_world, m_renderer, m_camera);
@@ -442,5 +479,4 @@ auto SkirmishLoader::start(const QString &map_path,
 
   return result;
 }
-
 } // namespace Game::Map
