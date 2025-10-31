@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../systems/nation_id.h"
 #include "spawn_type.h"
 #include "troop_type.h"
 #include <QVector3D>
@@ -27,7 +28,7 @@ struct SpawnParams {
   SpawnType spawn_type = SpawnType::Archer;
   bool aiControlled = false;
   int maxPopulation = 100;
-  std::string nation_id;
+  Game::Systems::NationID nation_id = Game::Systems::NationID::KingdomOfIron;
 };
 
 class Unit {
@@ -53,7 +54,7 @@ protected:
 
   void ensureCoreComponents();
 
-  static auto resolve_nation_id(const SpawnParams &params) -> std::string;
+  static auto resolve_nation_id(const SpawnParams &params) -> Game::Systems::NationID;
 
   Engine::Core::World *m_world = nullptr;
   Engine::Core::EntityID m_id = 0;
