@@ -2,6 +2,8 @@
 
 #include "../core/component.h"
 #include "../core/world.h"
+#include "../systems/nation_id.h"
+#include "../systems/nation_registry.h"
 #include "units/troop_type.h"
 #include <qvectornd.h>
 #include <string>
@@ -17,6 +19,16 @@ Unit::Unit(Engine::Core::World &world, std::string type)
 
 auto Unit::entity() const -> Engine::Core::Entity * {
   return (m_world != nullptr) ? m_world->getEntity(m_id) : nullptr;
+}
+
+auto Unit::resolve_nation_id(const SpawnParams &params)
+    -> Game::Systems::NationID {
+  auto &registry = Game::Systems::NationRegistry::instance();
+  if (const auto *nation = registry.getNationForPlayer(params.player_id)) {
+    return nation->id;
+  }
+
+  return registry.default_nation_id();
 }
 
 void Unit::ensureCoreComponents() {

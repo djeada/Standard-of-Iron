@@ -225,7 +225,12 @@ auto TacticalUtils::getUnitTypePriority(const std::string &unit_type,
     return 1.0F;
   }
 
-  if (unit_type == "barracks" || unit_type == "base") {
+  auto spawn_type = Game::Units::spawn_typeFromString(unit_type);
+  if (spawn_type && Game::Units::isBuildingSpawn(*spawn_type)) {
+    return 0.5F;
+  }
+
+  if (unit_type == "base") {
     return 0.5F;
   }
 

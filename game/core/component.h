@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../systems/nation_id.h"
 #include "../units/spawn_type.h"
 #include "../units/troop_type.h"
 #include "entity.h"
@@ -60,6 +61,7 @@ public:
 
   std::string meshPath;
   std::string texturePath;
+  std::string rendererId;
   bool visible{true};
   MeshKind mesh{MeshKind::Cube};
   std::array<float, 3> color{};
@@ -80,6 +82,7 @@ public:
   Game::Units::SpawnType spawn_type{Game::Units::SpawnType::Archer};
   int owner_id{0};
   float vision_range;
+  Game::Systems::NationID nation_id{Game::Systems::NationID::KingdomOfIron};
 };
 
 class MovementComponent : public Component {

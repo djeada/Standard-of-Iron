@@ -103,8 +103,8 @@
 "Queue is full (5/5)","Queue is full (5/5)"
 "Unit cap reached","Unit cap reached"
 "Cannot recruit","Cannot recruit"
-"Knight","Knight"
-"Recruit Knight\nCost: %1 villagers\nBuild time: %2s","Recruit Knight\nCost: %1 villagers\nBuild time: %2s"
+"Swordsman","Swordsman"
+"Recruit Swordsman\nCost: %1 villagers\nBuild time: %2s","Recruit Swordsman\nCost: %1 villagers\nBuild time: %2s"
 "Spearman","Spearman"
 "Recruit Spearman\nCost: %1 villagers\nBuild time: %2s","Recruit Spearman\nCost: %1 villagers\nBuild time: %2s"
 "📍 Click Map to Set Rally","📍 Click Map to Set Rally"
@@ -131,4 +131,3 @@
 "Select Language:","Select Language:"
 "Language changes apply immediately","Language changes apply immediately"
 "More settings coming soon...","More settings coming soon..."
-

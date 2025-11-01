@@ -30,6 +30,7 @@ struct DrawContext {
   bool selected = false;
   bool hovered = false;
   float animationTime = 0.0F;
+  std::string rendererId;
   class Backend *backend = nullptr;
 };
 

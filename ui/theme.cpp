@@ -1,4 +1,5 @@
 #include "theme.h"
+#include <QString>
 #include <qglobal.h>
 #include <qjsengine.h>
 #include <qjsonarray.h>
@@ -59,4 +60,18 @@ QVariantMap Theme::unitIcons() {
   icons["cavalry"] = "🐎";
   icons["default"] = "👤";
   return icons;
+}
+
+QVariantMap Theme::nationEmblems() {
+  QVariantMap emblems;
+  constexpr auto k_resource_prefix =
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+      "qrc:/StandardOfIron/assets/visuals/emblems/";
+#else
+      "qrc:/assets/visuals/emblems/";
+#endif
+  emblems["roman_republic"] =
+      QString::fromLatin1(k_resource_prefix) + "rome.png";
+  emblems["carthage"] = QString::fromLatin1(k_resource_prefix) + "cartaghe.png";
+  return emblems;
 }

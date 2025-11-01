@@ -24,7 +24,7 @@ Music::Music(const std::string &file_path)
 
   QObject::connect(player, &QMediaPlayer::errorOccurred,
                    [file_path = this->file_path](QMediaPlayer::Error error,
-                                               const QString &desc) {
+                                                 const QString &desc) {
                      qWarning() << "QMediaPlayer error for"
                                 << QString::fromStdString(file_path)
                                 << "- Error code:" << static_cast<int>(error)
@@ -223,7 +223,7 @@ void Music::set_volume(float volume) {
 
 void Music::fade_out() {
   static constexpr int FADE_OUT_DELAY_MS = 50;
-  
+
   if (!player || marked_for_deletion) {
     return;
   }
@@ -245,7 +245,8 @@ void Music::fade_out() {
         }
 
         QTimer::singleShot(FADE_OUT_DELAY_MS, [player_ptr, this]() {
-          if (player_ptr && player_ptr->playbackState() == QMediaPlayer::PlayingState) {
+          if (player_ptr &&
+              player_ptr->playbackState() == QMediaPlayer::PlayingState) {
             qDebug() << "Fading out and pausing"
                      << QString::fromStdString(file_path);
             player_ptr->pause();
