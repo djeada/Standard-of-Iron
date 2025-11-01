@@ -25,31 +25,32 @@ using Render::Geom::cylinderBetween;
 using Render::Geom::lerp;
 
 struct BuildingProportions {
-  static constexpr float base_width = 2.4F;
-  static constexpr float base_depth = 2.0F;
-  static constexpr float base_height = 1.8F;
-  static constexpr float foundation_height = 0.2F;
-  static constexpr float wall_thickness = 0.08F;
-  static constexpr float beam_thickness = 0.12F;
-  static constexpr float corner_post_radius = 0.08F;
-  static constexpr float roof_pitch = 0.8F;
-  static constexpr float roof_overhang = 0.15F;
-  static constexpr float thatch_layer_height = 0.12F;
-  static constexpr float annex_width = 1.0F;
-  static constexpr float annex_depth = 1.0F;
-  static constexpr float annex_height = 1.2F;
-  static constexpr float annex_roof_height = 0.5F;
-  static constexpr float door_width = 0.5F;
-  static constexpr float door_height = 0.8F;
-  static constexpr float window_width = 0.4F;
-  static constexpr float window_height = 0.5F;
-  static constexpr float chimney_width = 0.25F;
-  static constexpr float chimney_height = 1.0F;
-  static constexpr float chimney_cap_size = 0.35F;
-  static constexpr float banner_pole_height = 2.0F;
-  static constexpr float banner_pole_radius = 0.05F;
-  static constexpr float banner_width = 0.5F;
-  static constexpr float banner_height = 0.6F;
+  // Carthaginian: Square courtyard-style with flat roof and columns
+  static constexpr float base_width = 2.8F;   // Square proportions
+  static constexpr float base_depth = 2.8F;   // Square
+  static constexpr float base_height = 2.2F;  // Taller building
+  static constexpr float foundation_height = 0.15F;  // Lower foundation
+  static constexpr float wall_thickness = 0.06F;  // Thinner walls (plaster)
+  static constexpr float beam_thickness = 0.08F;
+  static constexpr float corner_post_radius = 0.06F;
+  static constexpr float roof_pitch = 0.1F;   // Nearly flat roof
+  static constexpr float roof_overhang = 0.25F;  // Large overhang
+  static constexpr float thatch_layer_height = 0.08F;
+  static constexpr float annex_width = 0.8F;  // Smaller courtyard entrance
+  static constexpr float annex_depth = 0.8F;
+  static constexpr float annex_height = 2.0F;  // Tall to match main building
+  static constexpr float annex_roof_height = 0.1F;  // Very flat
+  static constexpr float door_width = 0.8F;   // Wide arched entrance
+  static constexpr float door_height = 1.2F;  // Tall entrance
+  static constexpr float window_width = 0.5F; // Wide windows
+  static constexpr float window_height = 0.4F; // Horizontal windows
+  static constexpr float chimney_width = 0.20F;  // Smaller chimney
+  static constexpr float chimney_height = 0.6F;
+  static constexpr float chimney_cap_size = 0.25F;
+  static constexpr float banner_pole_height = 2.5F;  // Taller poles
+  static constexpr float banner_pole_radius = 0.04F;
+  static constexpr float banner_width = 0.4F;
+  static constexpr float banner_height = 0.5F;
 };
 
 struct BarracksPalette {
@@ -670,6 +671,53 @@ inline void drawSelectionFX(const DrawContext &p, ISubmitter &out) {
   }
 }
 
+// Carthaginian-specific: Columns for Mediterranean courtyard style
+inline void drawColumns(const DrawContext &p, ISubmitter &out, Mesh *,
+                        Texture *white, const BarracksPalette &C) {
+  constexpr float base_width = BuildingProportions::base_width;
+  constexpr float base_depth = BuildingProportions::base_depth;
+  constexpr float base_height = BuildingProportions::base_height;
+  
+  float const column_radius = 0.12F;
+  float const column_height = base_height + 0.4F;
+  
+  // Front colonnade - 5 columns
+  for (int i = 0; i < 5; ++i) {
+    float const t = float(i) / 4.0F;
+    float const x = -base_width * 0.4F + t * (base_width * 0.8F);
+    float const z = base_depth * 0.5F + 0.15F;
+    
+    // Column shaft
+    drawCylinder(out, p.model,
+                 QVector3D(x, 0.0F, z),
+                 QVector3D(x, column_height, z),
+                 column_radius, C.stone, white);
+    
+    // Capital (decorative top)
+    unitBox(out, getUnitCylinder(), white, p.model,
+            QVector3D(x, column_height + 0.05F, z),
+            QVector3D(column_radius * 1.4F, 0.05F, column_radius * 1.4F),
+            C.plaster);
+  }
+  
+  // Side columns - 2 per side
+  for (int i = 0; i < 2; ++i) {
+    float const z = -base_depth * 0.3F + float(i) * base_depth * 0.6F;
+    
+    // Left side
+    drawCylinder(out, p.model,
+                 QVector3D(-base_width * 0.5F - 0.15F, 0.0F, z),
+                 QVector3D(-base_width * 0.5F - 0.15F, column_height, z),
+                 column_radius, C.stone, white);
+    
+    // Right side
+    drawCylinder(out, p.model,
+                 QVector3D(base_width * 0.5F + 0.15F, 0.0F, z),
+                 QVector3D(base_width * 0.5F + 0.15F, column_height, z),
+                 column_radius, C.stone, white);
+  }
+}
+
 void drawBarracks(const DrawContext &p, ISubmitter &out) {
   if ((p.resources == nullptr) || (p.entity == nullptr)) {
     return;
@@ -688,6 +736,7 @@ void drawBarracks(const DrawContext &p, ISubmitter &out) {
   BarracksPalette const c = makePalette(team);
 
   drawFoundation(p, out, unit, white, c);
+  drawColumns(p, out, unit, white, c);  // Carthaginian-specific columns
   drawAnnex(p, out, unit, white, c);
   drawWalls(p, out, unit, white, c);
   ChimneyInfo const ch = drawChimney(p, out, unit, white, c);
