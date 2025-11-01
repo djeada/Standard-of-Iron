@@ -48,8 +48,20 @@ cd build
 ### Core Serialization Tests (`core/serialization_test.cpp`)
 Tests for JSON serialization and deserialization of game objects:
 - **Entity serialization**: Basic entity save/load
-- **Component serialization**: Individual component types (Transform, Unit, Movement, Attack, etc.)
-- **Round-trip testing**: Serialize→Deserialize→Verify data integrity
+- **Component serialization**: All component types fully tested
+  - TransformComponent (position, rotation, scale)
+  - RenderableComponent (mesh, texture, visibility, color)
+  - UnitComponent (health, speed, vision, nation)
+  - MovementComponent (targets, paths, velocity)
+  - AttackComponent (range, damage, combat modes)
+  - AttackTargetComponent (target tracking, chase behavior)
+  - PatrolComponent (waypoints, patrol state)
+  - ProductionComponent (build queues, rally points)
+  - BuildingComponent (building marker)
+  - AIControlledComponent (AI flag)
+  - CaptureComponent (capture progress, player state)
+- **Round-trip testing**: Serialize→Deserialize→Verify data integrity for all components
+- **Complete entity**: Test entity with all components attached
 - **Edge cases**: Missing fields, malformed JSON, default values
 - **File I/O**: Save to file and load from file
 
@@ -140,11 +152,16 @@ Tests are automatically run in CI when:
 ## Coverage
 
 Current test coverage focuses on:
-- ✅ Entity and component serialization
-- ✅ World serialization
-- ✅ SQLite save/load operations
-- ✅ Database CRUD operations
-- ✅ Error handling and edge cases
+- ✅ **Complete entity and component serialization** (all 11 serializable components)
+  - TransformComponent, RenderableComponent, UnitComponent
+  - MovementComponent, AttackComponent, AttackTargetComponent
+  - PatrolComponent, ProductionComponent, BuildingComponent
+  - AIControlledComponent, CaptureComponent
+- ✅ World serialization (multi-entity persistence)
+- ✅ SQLite save/load operations (in-memory testing)
+- ✅ Database CRUD operations (create, read, update, delete)
+- ✅ Error handling and edge cases (missing fields, malformed JSON)
+- ✅ Round-trip testing for data integrity (all components)
 
 Future coverage should include:
 - [ ] Terrain serialization
