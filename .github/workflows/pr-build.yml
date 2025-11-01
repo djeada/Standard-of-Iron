@@ -28,6 +28,9 @@ jobs:
       - name: Build project
         run: make build
 
+      - name: Run tests
+        run: make test
+
       - name: Check code formatting
         run: make format-check
 
