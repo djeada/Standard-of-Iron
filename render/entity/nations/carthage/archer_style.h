@@ -21,6 +21,8 @@ struct ArcherStyleConfig {
   bool show_shoulder_decor = true;
   bool show_cape = true;
 
+  bool force_beard = false;
+
   std::string attachment_profile;
   std::string shader_id;
 };

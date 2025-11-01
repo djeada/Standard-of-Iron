@@ -2,17 +2,17 @@
 #include "../scene_renderer.h"
 #include "barracks_renderer.h"
 #include "nations/carthage/archer_renderer.h"
-#include "nations/carthage/swordsman_renderer.h"
 #include "nations/carthage/horse_swordsman_renderer.h"
 #include "nations/carthage/spearman_renderer.h"
+#include "nations/carthage/swordsman_renderer.h"
 #include "nations/kingdom/archer_renderer.h"
-#include "nations/kingdom/swordsman_renderer.h"
 #include "nations/kingdom/horse_swordsman_renderer.h"
 #include "nations/kingdom/spearman_renderer.h"
+#include "nations/kingdom/swordsman_renderer.h"
 #include "nations/roman/archer_renderer.h"
-#include "nations/roman/swordsman_renderer.h"
 #include "nations/roman/horse_swordsman_renderer.h"
 #include "nations/roman/spearman_renderer.h"
+#include "nations/roman/swordsman_renderer.h"
 #include <string>
 #include <utility>
 
