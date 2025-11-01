@@ -1,4 +1,4 @@
-#include "knight_renderer.h"
+#include "swordsman_renderer.h"
 #include "../../../../game/core/component.h"
 #include "../../../../game/systems/nation_id.h"
 #include "../../../geom/math_utils.h"
@@ -8,14 +8,14 @@
 #include "../../../gl/shader.h"
 #include "../../../humanoid/rig.h"
 #include "../../../humanoid/style_palette.h"
-#include "../../../humanoid_math.h"
-#include "../../../humanoid_specs.h"
+#include "../../../humanoid/humanoid_math.h"
+#include "../../../humanoid/humanoid_specs.h"
 #include "../../../palette.h"
 #include "../../../scene_renderer.h"
 #include "../../../submitter.h"
 #include "../../registry.h"
 #include "../../renderer_constants.h"
-#include "knight_style.h"
+#include "swordsman_style.h"
 #include <numbers>
 #include <qmatrix4x4.h>
 #include <qstringliteral.h>
@@ -32,23 +32,23 @@
 #include <string>
 #include <string_view>
 
-namespace Render::GL::Kingdom {
+namespace Render::GL::Roman {
 
 namespace {
 
-constexpr std::string_view k_knight_default_style_key = "default";
-constexpr float k_knight_team_mix_weight = 0.6F;
-constexpr float k_knight_style_mix_weight = 0.4F;
+constexpr std::string_view k_swordsman_default_style_key = "default";
+constexpr float k_swordsman_team_mix_weight = 0.6F;
+constexpr float k_swordsman_style_mix_weight = 0.4F;
 
-auto knight_style_registry()
+auto swordsman_style_registry()
     -> std::unordered_map<std::string, KnightStyleConfig> & {
   static std::unordered_map<std::string, KnightStyleConfig> styles;
   return styles;
 }
 
-void ensure_knight_styles_registered() {
+void ensure_swordsman_styles_registered() {
   static const bool registered = []() {
-    register_kingdom_knight_style();
+    register_roman_swordsman_style();
     return true;
   }();
   (void)registered;
@@ -56,9 +56,9 @@ void ensure_knight_styles_registered() {
 
 } // namespace
 
-void register_knight_style(const std::string &nation_id,
+void register_swordsman_style(const std::string &nation_id,
                            const KnightStyleConfig &style) {
-  knight_style_registry()[nation_id] = style;
+  swordsman_style_registry()[nation_id] = style;
 }
 
 using Render::Geom::clamp01;
@@ -852,8 +852,8 @@ private:
 
   auto
   resolve_style(const DrawContext &ctx) const -> const KnightStyleConfig & {
-    ensure_knight_styles_registered();
-    auto &styles = knight_style_registry();
+    ensure_swordsman_styles_registered();
+    auto &styles = swordsman_style_registry();
     std::string nation_id;
     if (ctx.entity != nullptr) {
       if (auto *unit =
@@ -867,7 +867,7 @@ private:
         return it->second;
       }
     }
-    auto it_default = styles.find(std::string(k_knight_default_style_key));
+    auto it_default = styles.find(std::string(k_swordsman_default_style_key));
     if (it_default != styles.end()) {
       return it_default->second;
     }
@@ -881,7 +881,7 @@ public:
     if (!style.shader_id.empty()) {
       return QString::fromStdString(style.shader_id);
     }
-    return QStringLiteral("knight");
+    return QStringLiteral("swordsman");
   }
 
 private:
@@ -891,8 +891,8 @@ private:
     auto apply_color = [&](const std::optional<QVector3D> &override_color,
                            QVector3D &target) {
       target = mix_palette_color(target, override_color, team_tint,
-                                 k_knight_team_mix_weight,
-                                 k_knight_style_mix_weight);
+                                 k_swordsman_team_mix_weight,
+                                 k_swordsman_style_mix_weight);
     };
 
     apply_color(style.cloth_color, variant.palette.cloth);
@@ -912,8 +912,8 @@ private:
     auto apply_shield_color =
         [&](const std::optional<QVector3D> &override_color, QVector3D &target) {
           target = mix_palette_color(target, override_color, team_tint,
-                                     k_knight_team_mix_weight,
-                                     k_knight_style_mix_weight);
+                                     k_swordsman_team_mix_weight,
+                                     k_swordsman_style_mix_weight);
         };
 
     apply_shield_color(style.shield_color, extras.shieldColor);
@@ -936,22 +936,22 @@ private:
 };
 
 void registerKnightRenderer(Render::GL::EntityRendererRegistry &registry) {
-  ensure_knight_styles_registered();
+  ensure_swordsman_styles_registered();
   static KnightRenderer const renderer;
   registry.registerRenderer(
-      "troops/kingdom/swordsman", [](const DrawContext &ctx, ISubmitter &out) {
+      "troops/roman/swordsman", [](const DrawContext &ctx, ISubmitter &out) {
         static KnightRenderer const static_renderer;
-        Shader *knight_shader = nullptr;
+        Shader *swordsman_shader = nullptr;
         if (ctx.backend != nullptr) {
           QString shader_key = static_renderer.resolve_shader_key(ctx);
-          knight_shader = ctx.backend->shader(shader_key);
-          if (knight_shader == nullptr) {
-            knight_shader = ctx.backend->shader(QStringLiteral("knight"));
+          swordsman_shader = ctx.backend->shader(shader_key);
+          if (swordsman_shader == nullptr) {
+            swordsman_shader = ctx.backend->shader(QStringLiteral("swordsman"));
           }
         }
         auto *scene_renderer = dynamic_cast<Renderer *>(&out);
-        if ((scene_renderer != nullptr) && (knight_shader != nullptr)) {
-          scene_renderer->setCurrentShader(knight_shader);
+        if ((scene_renderer != nullptr) && (swordsman_shader != nullptr)) {
+          scene_renderer->setCurrentShader(swordsman_shader);
         }
         static_renderer.render(ctx, out);
         if (scene_renderer != nullptr) {
@@ -959,15 +959,15 @@ void registerKnightRenderer(Render::GL::EntityRendererRegistry &registry) {
         }
       });
   registry.registerRenderer(
-      "troops/kingdom/knight", [](const DrawContext &ctx, ISubmitter &out) {
+      "troops/roman/swordsman", [](const DrawContext &ctx, ISubmitter &out) {
         static KnightRenderer const static_renderer;
-        Shader *knight_shader = nullptr;
+        Shader *swordsman_shader = nullptr;
         if (ctx.backend != nullptr) {
-          knight_shader = ctx.backend->shader(QStringLiteral("knight"));
+          swordsman_shader = ctx.backend->shader(QStringLiteral("swordsman"));
         }
         auto *scene_renderer = dynamic_cast<Renderer *>(&out);
-        if ((scene_renderer != nullptr) && (knight_shader != nullptr)) {
-          scene_renderer->setCurrentShader(knight_shader);
+        if ((scene_renderer != nullptr) && (swordsman_shader != nullptr)) {
+          scene_renderer->setCurrentShader(swordsman_shader);
         }
         static_renderer.render(ctx, out);
         if (scene_renderer != nullptr) {
@@ -976,4 +976,4 @@ void registerKnightRenderer(Render::GL::EntityRendererRegistry &registry) {
       });
 }
 
-} // namespace Render::GL::Kingdom
+} // namespace Render::GL::Roman

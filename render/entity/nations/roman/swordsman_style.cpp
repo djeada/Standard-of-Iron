@@ -1,5 +1,5 @@
-#include "knight_style.h"
-#include "knight_renderer.h"
+#include "swordsman_style.h"
+#include "swordsman_renderer.h"
 
 #include <QVector3D>
 
@@ -14,7 +14,7 @@ constexpr QVector3D k_legionary_trim{0.88F, 0.66F, 0.32F};
 
 namespace Render::GL::Roman {
 
-void register_roman_knight_style() {
+void register_roman_swordsman_style() {
   KnightStyleConfig style;
   style.cloth_color = k_legionary_cloth;
   style.leather_color = k_legionary_leather;
@@ -26,9 +26,9 @@ void register_roman_knight_style() {
   style.shield_aspect_ratio = 0.65F;
   style.has_scabbard = true;
   style.shield_cross_decal = false;
-  style.shader_id = "knight_roman_republic";
+  style.shader_id = "swordsman_roman_republic";
 
-  register_knight_style("roman_republic", style);
+  register_swordsman_style("roman_republic", style);
 }
 
 } // namespace Render::GL::Roman

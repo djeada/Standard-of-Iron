@@ -8,7 +8,7 @@
 #include "../gl/mesh.h"
 #include "../gl/primitives.h"
 #include "../gl/texture.h"
-#include "../humanoid_math.h"
+#include "humanoid/humanoid_math.h"
 #include "registry.h"
 
 #include <QMatrix4x4>

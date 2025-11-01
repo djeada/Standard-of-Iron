@@ -345,7 +345,7 @@ Rectangle {
                             width: 110
                             height: 80
                             radius: 6
-                            color: isEnabled ? (knightMouseArea.containsMouse ? "#34495e" : "#2c3e50") : "#1a1a1a"
+                            color: isEnabled ? (swordsmanMouseArea.containsMouse ? "#34495e" : "#2c3e50") : "#1a1a1a"
                             border.color: isEnabled ? "#4a6572" : "#2a2a2a"
                             border.width: 2
                             opacity: isEnabled ? 1 : 0.5
@@ -356,7 +356,7 @@ Rectangle {
 
                                 Text {
                                     anchors.horizontalCenter: parent.horizontalCenter
-                                    text: (typeof StyleGuide !== 'undefined' && StyleGuide.unitIcons) ? (StyleGuide.unitIcons["swordsman"] || StyleGuide.unitIcons["knight"] || "⚔️") : "⚔️"
+                                    text: (typeof StyleGuide !== 'undefined' && StyleGuide.unitIcons) ? (StyleGuide.unitIcons["swordsman"] || StyleGuide.unitIcons["swordsman"] || "⚔️") : "⚔️"
                                     color: parent.parent.parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
                                     font.pointSize: 24
                                 }
@@ -391,7 +391,7 @@ Rectangle {
                             }
 
                             MouseArea {
-                                id: knightMouseArea
+                                id: swordsmanMouseArea
 
                                 anchors.fill: parent
                                 hoverEnabled: true
@@ -406,7 +406,7 @@ Rectangle {
                             Rectangle {
                                 anchors.fill: parent
                                 color: "#ffffff"
-                                opacity: knightMouseArea.pressed ? 0.2 : 0
+                                opacity: swordsmanMouseArea.pressed ? 0.2 : 0
                                 radius: parent.radius
                             }
 
@@ -493,7 +493,7 @@ Rectangle {
                             width: 110
                             height: 80
                             radius: 6
-                            color: isEnabled ? (mountedKnightMouseArea.containsMouse ? "#34495e" : "#2c3e50") : "#1a1a1a"
+                            color: isEnabled ? (horseKnightMouseArea.containsMouse ? "#34495e" : "#2c3e50") : "#1a1a1a"
                             border.color: isEnabled ? "#4a6572" : "#2a2a2a"
                             border.width: 2
                             opacity: isEnabled ? 1 : 0.5
@@ -504,7 +504,7 @@ Rectangle {
 
                                 Text {
                                     anchors.horizontalCenter: parent.horizontalCenter
-                                    text: (typeof StyleGuide !== 'undefined' && StyleGuide.unitIcons) ? StyleGuide.unitIcons["mounted_knight"] || "🐴" : "🐴"
+                                    text: (typeof StyleGuide !== 'undefined' && StyleGuide.unitIcons) ? StyleGuide.unitIcons["horse_swordsman"] || "🐴" : "🐴"
                                     color: parent.parent.parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
                                     font.pointSize: 24
                                 }
@@ -539,12 +539,12 @@ Rectangle {
                             }
 
                             MouseArea {
-                                id: mountedKnightMouseArea
+                                id: horseKnightMouseArea
 
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 enabled: parent.isEnabled
-                                onClicked: productionPanel.recruitUnit("mounted_knight")
+                                onClicked: productionPanel.recruitUnit("horse_swordsman")
                                 cursorShape: parent.isEnabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
                                 ToolTip.text: parent.isEnabled ? qsTr("Recruit Mounted Knight\nCost: %1 villagers\nBuild time: %2s").arg(unitGridContent.prod.villagerCost || 1).arg((unitGridContent.prod.buildTime || 0).toFixed(0)) : (parent.queueTotal >= 5 ? qsTr("Queue is full (5/5)") : (unitGridContent.prod.producedCount >= unitGridContent.prod.maxUnits ? qsTr("Unit cap reached") : qsTr("Cannot recruit")))
@@ -554,7 +554,7 @@ Rectangle {
                             Rectangle {
                                 anchors.fill: parent
                                 color: "#ffffff"
-                                opacity: mountedKnightMouseArea.pressed ? 0.2 : 0
+                                opacity: horseKnightMouseArea.pressed ? 0.2 : 0
                                 radius: parent.radius
                             }
 

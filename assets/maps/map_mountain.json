@@ -58,8 +58,8 @@
     },
     { "type": "archer", "x": 223, "z": 227, "playerId": 2 },
     { "type": "archer", "x": 227, "z": 223, "playerId": 2 },
-    { "type": "mounted_knight", "x": 221, "z": 225, "playerId": 2 },
-    { "type": "mounted_knight", "x": 225, "z": 221, "playerId": 2 },
+    { "type": "horse_swordsman", "x": 221, "z": 225, "playerId": 2 },
+    { "type": "horse_swordsman", "x": 225, "z": 221, "playerId": 2 },
     { "type": "spearman", "x": 223, "z": 223, "playerId": 2 },
     { "type": "spearman", "x": 227, "z": 227, "playerId": 2 },
     {
