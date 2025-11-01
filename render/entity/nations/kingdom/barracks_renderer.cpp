@@ -16,7 +16,7 @@
 #include <qmatrix4x4.h>
 #include <qvectornd.h>
 
-namespace Render::GL::Roman {
+namespace Render::GL::Kingdom {
 namespace {
 
 using Render::Geom::clamp01;
@@ -53,20 +53,19 @@ struct BuildingProportions {
 };
 
 struct BarracksPalette {
-  // Roman style: red brick/terracotta, grey stone, clay tiles
-  QVector3D plaster{0.85F, 0.70F, 0.60F};  // Reddish terracotta plaster
-  QVector3D plasterShade{0.72F, 0.58F, 0.48F};
-  QVector3D timber{0.45F, 0.30F, 0.18F};  // Sturdy Roman timber
-  QVector3D timberLight{0.58F, 0.42F, 0.26F};
-  QVector3D woodDark{0.35F, 0.22F, 0.12F};
-  QVector3D thatch{0.75F, 0.45F, 0.35F};  // Red clay tiles instead of thatch
-  QVector3D thatchDark{0.62F, 0.38F, 0.28F};
-  QVector3D stone{0.60F, 0.58F, 0.56F};  // Roman grey stone
-  QVector3D stoneDark{0.48F, 0.46F, 0.44F};
-  QVector3D door{0.32F, 0.22F, 0.14F};
-  QVector3D window{0.40F, 0.45F, 0.50F};
-  QVector3D path{0.65F, 0.62F, 0.58F};  // Stone paving
-  QVector3D crate{0.52F, 0.38F, 0.22F};
+  QVector3D plaster{0.92F, 0.88F, 0.78F};
+  QVector3D plasterShade{0.78F, 0.74F, 0.64F};
+  QVector3D timber{0.35F, 0.25F, 0.15F};
+  QVector3D timberLight{0.50F, 0.38F, 0.22F};
+  QVector3D woodDark{0.30F, 0.20F, 0.12F};
+  QVector3D thatch{0.82F, 0.70F, 0.28F};
+  QVector3D thatchDark{0.68F, 0.58F, 0.22F};
+  QVector3D stone{0.55F, 0.54F, 0.52F};
+  QVector3D stoneDark{0.42F, 0.41F, 0.39F};
+  QVector3D door{0.28F, 0.20F, 0.12F};
+  QVector3D window{0.35F, 0.42F, 0.48F};
+  QVector3D path{0.62F, 0.60F, 0.54F};
+  QVector3D crate{0.48F, 0.34F, 0.18F};
   QVector3D team{0.8F, 0.9F, 1.0F};
   QVector3D teamTrim{0.48F, 0.54F, 0.60F};
 };
@@ -705,7 +704,7 @@ void drawBarracks(const DrawContext &p, ISubmitter &out) {
 } // namespace
 
 void registerBarracksRenderer(Render::GL::EntityRendererRegistry &registry) {
-  registry.registerRenderer("barracks_roman", drawBarracks);
+  registry.registerRenderer("barracks_kingdom", drawBarracks);
 }
 
-} // namespace Render::GL::Roman
+} // namespace Render::GL::Kingdom
