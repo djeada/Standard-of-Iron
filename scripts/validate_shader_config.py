@@ -105,10 +105,12 @@ def main():
     
     # Summary
     total_issues = len(missing_shaders) + len(config_issues)
+    total_combinations = len(TROOPS) * len(NATIONS)
+    
     if total_issues == 0:
         print("✓ VALIDATION PASSED")
         print()
-        print(f"All {len(TROOPS) * len(NATIONS)} nation-troop combinations are properly configured.")
+        print(f"All {total_combinations} nation-troop combinations ({len(NATIONS)} nations × {len(TROOPS)} troop types) are properly configured.")
         return 0
     else:
         print("✗ VALIDATION FAILED")
