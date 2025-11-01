@@ -53,20 +53,20 @@ struct BuildingProportions {
 };
 
 struct BarracksPalette {
-  // Carthaginian style: brighter plaster, darker timber, lighter stone
-  QVector3D plaster{0.95F, 0.93F, 0.85F};  // Bright white plaster
-  QVector3D plasterShade{0.85F, 0.83F, 0.75F};
-  QVector3D timber{0.28F, 0.18F, 0.10F};  // Darker, richer timber
-  QVector3D timberLight{0.42F, 0.30F, 0.18F};
-  QVector3D woodDark{0.22F, 0.14F, 0.08F};
-  QVector3D thatch{0.75F, 0.62F, 0.30F};  // Slightly different thatch color
-  QVector3D thatchDark{0.62F, 0.50F, 0.24F};
-  QVector3D stone{0.65F, 0.62F, 0.58F};  // Lighter stone
-  QVector3D stoneDark{0.50F, 0.48F, 0.45F};
-  QVector3D door{0.32F, 0.24F, 0.16F};
-  QVector3D window{0.30F, 0.38F, 0.45F};
-  QVector3D path{0.68F, 0.65F, 0.58F};
-  QVector3D crate{0.52F, 0.38F, 0.22F};
+  // Carthaginian/Phoenician style: white limestone, blue accents, sandy/desert tones
+  QVector3D plaster{0.98F, 0.96F, 0.90F};  // Brilliant white limestone plaster
+  QVector3D plasterShade{0.88F, 0.85F, 0.78F};
+  QVector3D timber{0.25F, 0.18F, 0.12F};  // Cedar and exotic dark wood
+  QVector3D timberLight{0.38F, 0.28F, 0.20F};
+  QVector3D woodDark{0.20F, 0.14F, 0.09F};
+  QVector3D thatch{0.85F, 0.78F, 0.55F};  // Sandy/desert colored flat roof materials
+  QVector3D thatchDark{0.72F, 0.65F, 0.45F};
+  QVector3D stone{0.92F, 0.88F, 0.82F};  // White/cream limestone blocks
+  QVector3D stoneDark{0.78F, 0.74F, 0.68F};
+  QVector3D door{0.28F, 0.22F, 0.16F};
+  QVector3D window{0.25F, 0.42F, 0.58F};  // Mediterranean blue tint
+  QVector3D path{0.88F, 0.82F, 0.68F};  // Light stone/sand paths
+  QVector3D crate{0.48F, 0.38F, 0.26F};
   QVector3D team{0.8F, 0.9F, 1.0F};
   QVector3D teamTrim{0.48F, 0.54F, 0.60F};
 };
