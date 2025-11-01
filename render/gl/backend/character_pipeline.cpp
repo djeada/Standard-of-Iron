@@ -88,7 +88,8 @@ void CharacterPipeline::cacheKnightUniforms() {
   m_swordsmanUniforms.mvp = m_swordsmanShader->uniformHandle("u_mvp");
   m_swordsmanUniforms.model = m_swordsmanShader->uniformHandle("u_model");
   m_swordsmanUniforms.texture = m_swordsmanShader->uniformHandle("u_texture");
-  m_swordsmanUniforms.useTexture = m_swordsmanShader->uniformHandle("u_useTexture");
+  m_swordsmanUniforms.useTexture =
+      m_swordsmanShader->uniformHandle("u_useTexture");
   m_swordsmanUniforms.color = m_swordsmanShader->uniformHandle("u_color");
   m_swordsmanUniforms.alpha = m_swordsmanShader->uniformHandle("u_alpha");
 }

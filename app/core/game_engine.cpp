@@ -1892,9 +1892,10 @@ void GameEngine::loadAudioResources() {
                << (base_path + "voices/archer_voice.wav");
   }
 
-  if (audio_sys.loadSound("swordsman_voice",
-                          (base_path + "voices/swordsman_voice.wav").toStdString(),
-                          AudioCategory::VOICE)) {
+  if (audio_sys.loadSound(
+          "swordsman_voice",
+          (base_path + "voices/swordsman_voice.wav").toStdString(),
+          AudioCategory::VOICE)) {
     qInfo() << "Loaded swordsman voice";
   } else {
     qWarning() << "Failed to load swordsman voice from:"

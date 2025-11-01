@@ -8,10 +8,10 @@
 #include "../../../gl/primitives.h"
 #include "../../../gl/render_constants.h"
 #include "../../../gl/shader.h"
-#include "../../../humanoid/rig.h"
-#include "../../../humanoid/style_palette.h"
 #include "../../../humanoid/humanoid_math.h"
 #include "../../../humanoid/humanoid_specs.h"
+#include "../../../humanoid/rig.h"
+#include "../../../humanoid/style_palette.h"
 #include "../../../palette.h"
 #include "../../../scene_renderer.h"
 #include "../../../submitter.h"
@@ -425,29 +425,64 @@ public:
                nullptr, 1.0F);
     };
 
+    uint32_t seed = 0U;
+    if (ctx.entity != nullptr) {
+      seed = reinterpret_cast<uintptr_t>(ctx.entity) & 0xFFFFFFFFU;
+    }
+
+    bool const use_scale_armor = (hash_01(seed ^ 0x9876U) > 0.50F);
+
     QVector3D mail_color = v.palette.metal * QVector3D(0.85F, 0.87F, 0.92F);
+    QVector3D scale_color = v.palette.metal * QVector3D(0.95F, 0.80F, 0.55F);
     QVector3D leather_trim = v.palette.leatherDark * 0.90F;
+    QVector3D red_tunic = QVector3D(0.72F, 0.18F, 0.15F);
 
     float const waist_y = pose.pelvisPos.y();
 
-    QVector3D const mail_top(0, y_top_cover + 0.01F, 0);
-    QVector3D const mail_mid(0, (y_top_cover + waist_y) * 0.5F, 0);
-    QVector3D const mail_bot(0, waist_y + 0.08F, 0);
-    float const r_top = torso_r * 1.10F;
-    float const r_mid = torso_r * 1.08F;
+    QVector3D const armor_top(0, y_top_cover + 0.01F, 0);
+    QVector3D const armor_mid(0, (y_top_cover + waist_y) * 0.5F, 0);
+    QVector3D const armor_bot(0, waist_y + 0.08F, 0);
+    float const r_top = torso_r * 1.12F;
+    float const r_mid = torso_r * 1.10F;
 
-    out.mesh(getUnitCylinder(),
-             cylinderBetween(ctx.model, mail_top, mail_mid, r_top), mail_color,
-             nullptr, 1.0F);
+    QVector3D armor_color = use_scale_armor ? scale_color : mail_color;
 
-    out.mesh(getUnitCylinder(),
-             cylinderBetween(ctx.model, mail_mid, mail_bot, r_mid),
-             mail_color * 0.95F, nullptr, 1.0F);
+    if (use_scale_armor) {
 
-    for (int i = 0; i < 3; ++i) {
-      float const y = mail_top.y() - (i * 0.12F);
-      ring(QVector3D(0, y, 0), r_top * (1.01F + i * 0.005F), 0.012F,
+      out.mesh(getUnitCylinder(),
+               cylinderBetween(ctx.model, armor_top, armor_mid, r_top),
+               scale_color, nullptr, 1.0F);
+
+      out.mesh(getUnitCylinder(),
+               cylinderBetween(ctx.model, armor_mid, armor_bot, r_mid),
+               scale_color * 0.92F, nullptr, 1.0F);
+
+      for (int i = 0; i < 8; ++i) {
+        float const y = armor_top.y() - (i * 0.06F);
+        if (y > armor_bot.y()) {
+          ring(QVector3D(0, y, 0), r_top * (1.00F + i * 0.002F), 0.008F,
+               scale_color * (1.05F - i * 0.03F));
+        }
+      }
+
+      ring(QVector3D(0, armor_top.y() - 0.01F, 0), r_top * 1.02F, 0.012F,
            leather_trim);
+
+    } else {
+
+      out.mesh(getUnitCylinder(),
+               cylinderBetween(ctx.model, armor_top, armor_mid, r_top),
+               mail_color, nullptr, 1.0F);
+
+      out.mesh(getUnitCylinder(),
+               cylinderBetween(ctx.model, armor_mid, armor_bot, r_mid),
+               mail_color * 0.95F, nullptr, 1.0F);
+
+      for (int i = 0; i < 3; ++i) {
+        float const y = armor_top.y() - (i * 0.12F);
+        ring(QVector3D(0, y, 0), r_top * (1.01F + i * 0.005F), 0.012F,
+             leather_trim);
+      }
     }
 
     auto draw_pauldron = [&](const QVector3D &shoulder,
@@ -462,7 +497,7 @@ public:
         seg_bot += outward * 0.02F;
 
         out.mesh(getUnitSphere(), sphereAt(ctx.model, seg_top, seg_r),
-                 mail_color * (1.0F - i * 0.05F), nullptr, 1.0F);
+                 armor_color * (1.0F - i * 0.05F), nullptr, 1.0F);
       }
     };
 
@@ -484,7 +519,7 @@ public:
         QVector3D const b = shoulder + dir * (t1 * len);
         float const r = upper_arm_r * (1.25F - i * 0.03F);
         out.mesh(getUnitCylinder(), cylinderBetween(ctx.model, a, b, r),
-                 mail_color * (0.95F - i * 0.03F), nullptr, 1.0F);
+                 armor_color * (0.95F - i * 0.03F), nullptr, 1.0F);
       }
     };
 
@@ -493,7 +528,7 @@ public:
 
     QVector3D const belt_top(0, waist_y + 0.06F, 0);
     QVector3D const belt_bot(0, waist_y - 0.02F, 0);
-    float const belt_r = torso_r * 1.12F;
+    float const belt_r = torso_r * 1.14F;
     out.mesh(getUnitCylinder(),
              cylinderBetween(ctx.model, belt_top, belt_bot, belt_r),
              leather_trim, nullptr, 1.0F);
@@ -503,7 +538,7 @@ public:
     ring(QVector3D(0, waist_y + 0.02F, 0), belt_r * 1.02F, 0.010F, brass_color);
 
     auto draw_pteruge = [&](float angle, float yStart, float length) {
-      float const rad = torso_r * 1.15F;
+      float const rad = torso_r * 1.17F;
       float const x = rad * std::sin(angle);
       float const z = rad * std::cos(angle);
       QVector3D const top(x, yStart, z);
@@ -535,7 +570,12 @@ public:
     out.mesh(getUnitCylinder(),
              cylinderBetween(ctx.model, collar_top, collar_bot,
                              HP::NECK_RADIUS * 1.8F),
-             mail_color * 1.05F, nullptr, 1.0F);
+             armor_color * 1.05F, nullptr, 1.0F);
+
+    QVector3D const tunic_peek(0, armor_bot.y() - 0.01F, 0);
+    out.mesh(getUnitCylinder(),
+             cylinderBetween(ctx.model, tunic_peek, armor_bot, r_mid * 1.01F),
+             red_tunic, nullptr, 1.0F);
   }
 
   void drawShoulderDecorations(const DrawContext &ctx, const HumanoidVariant &v,
