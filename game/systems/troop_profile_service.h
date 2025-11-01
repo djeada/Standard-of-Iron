@@ -22,8 +22,8 @@ class TroopProfileService {
 public:
   static auto instance() -> TroopProfileService &;
 
-  auto get_profile(NationID nation_id, Game::Units::TroopType type)
-      -> TroopProfile;
+  auto get_profile(NationID nation_id,
+                   Game::Units::TroopType type) -> TroopProfile;
 
   void clear();
 

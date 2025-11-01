@@ -12,9 +12,8 @@ auto TroopProfileService::instance() -> TroopProfileService & {
 
 void TroopProfileService::clear() { m_cache.clear(); }
 
-auto TroopProfileService::get_profile(NationID nation_id,
-                                      Game::Units::TroopType type)
-    -> TroopProfile {
+auto TroopProfileService::get_profile(
+    NationID nation_id, Game::Units::TroopType type) -> TroopProfile {
   auto &nationCache = m_cache[nation_id];
   auto cached = nationCache.find(type);
   if (cached != nationCache.end()) {
