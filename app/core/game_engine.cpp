@@ -200,8 +200,8 @@ GameEngine::GameEngine(QObject *parent)
     qInfo() << "AudioEventHandler initialized successfully";
 
     m_audioEventHandler->loadUnitVoiceMapping("archer", "archer_voice");
-    m_audioEventHandler->loadUnitVoiceMapping("knight", "knight_voice");
-    m_audioEventHandler->loadUnitVoiceMapping("swordsman", "knight_voice");
+    m_audioEventHandler->loadUnitVoiceMapping("swordsman", "swordsman_voice");
+    m_audioEventHandler->loadUnitVoiceMapping("swordsman", "swordsman_voice");
     m_audioEventHandler->loadUnitVoiceMapping("spearman", "spearman_voice");
 
     m_audioEventHandler->loadAmbientMusic(Engine::Core::AmbientState::PEACEFUL,
@@ -1892,13 +1892,13 @@ void GameEngine::loadAudioResources() {
                << (base_path + "voices/archer_voice.wav");
   }
 
-  if (audio_sys.loadSound("knight_voice",
-                          (base_path + "voices/knight_voice.wav").toStdString(),
+  if (audio_sys.loadSound("swordsman_voice",
+                          (base_path + "voices/swordsman_voice.wav").toStdString(),
                           AudioCategory::VOICE)) {
-    qInfo() << "Loaded knight voice";
+    qInfo() << "Loaded swordsman voice";
   } else {
-    qWarning() << "Failed to load knight voice from:"
-               << (base_path + "voices/knight_voice.wav");
+    qWarning() << "Failed to load swordsman voice from:"
+               << (base_path + "voices/swordsman_voice.wav");
   }
 
   if (audio_sys.loadSound(

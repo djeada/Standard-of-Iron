@@ -1044,8 +1044,8 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
           &m_characterPipeline->m_basicUniforms;
       if (active_shader == m_characterPipeline->m_archerShader) {
         uniforms = &m_characterPipeline->m_archerUniforms;
-      } else if (active_shader == m_characterPipeline->m_knightShader) {
-        uniforms = &m_characterPipeline->m_knightUniforms;
+      } else if (active_shader == m_characterPipeline->m_swordsmanShader) {
+        uniforms = &m_characterPipeline->m_swordsmanUniforms;
       } else if (active_shader == m_characterPipeline->m_spearmanShader) {
         uniforms = &m_characterPipeline->m_spearmanUniforms;
       }

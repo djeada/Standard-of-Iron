@@ -18,7 +18,7 @@ The following pipeline modules reduce backend.cpp complexity (2055 → 973 lines
 - ✅ `cylinder_pipeline.h/.cpp` - Cylinder and fog-of-war instanced rendering (350 lines)
 - ✅ `terrain_pipeline.h/.cpp` - Ground plane, terrain chunks, and grass instanced rendering (220 lines)
 - ✅ `vegetation_pipeline.h/.cpp` - Trees (stone, plant, pine) and firecamp instanced rendering (533 lines)
-- ✅ `character_pipeline.h/.cpp` - Character rendering (archer, knight, spearman, basic) (115 lines)
+- ✅ `character_pipeline.h/.cpp` - Character rendering (archer, swordsman, spearman, basic) (115 lines)
 - ✅ `water_pipeline.h/.cpp` - River, riverbank, and bridge rendering (90 lines)
 - ✅ `effects_pipeline.h/.cpp` - Grid, selection rings, selection smoke (75 lines)
 
