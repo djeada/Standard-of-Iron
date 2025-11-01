@@ -3,6 +3,7 @@
 in vec3 v_normal;
 in vec2 v_texCoord;
 in vec3 v_worldPos;
+in float v_armorLayer; // NEW: Armor layer from vertex shader
 
 uniform sampler2D u_texture;
 uniform vec3 u_color;
@@ -73,11 +74,48 @@ void main() {
   bool isBronze =
       (color.r > color.g * 1.02 && color.r > color.b * 1.10 && avgColor > 0.48);
   bool isSeaCloak = (color.g > color.r * 1.2 && color.b > color.r * 1.3);
+  bool isLinothorax =
+      (v_armorLayer == 1.0 && avgColor > 0.55 && avgColor < 0.78);
+  bool isLeatherCap = (v_armorLayer == 0.0 && !isBronze);
 
-  // === CARTHAGINIAN MARINE ARCHER MATERIALS ===
+  // === CARTHAGINIAN LIGHT ARCHER MATERIALS (North African/Mercenary style) ===
 
-  // SUN-DULLED BRONZE WITH SEA SALT PATINA
-  if (isBronze) {
+  // LEATHER CAP/HEADBAND (instead of heavy bronze helmet)
+  if (isLeatherCap) {
+    // Thick tanned leather with Numidian/Libyan styling
+    float leatherGrain = noise(uv * 14.0) * 0.20;
+    float leatherPores = noise(uv * 28.0) * 0.10;
+    float tooledPattern =
+        sin(v_worldPos.x * 40.0) * sin(v_worldPos.y * 35.0) * 0.06;
+
+    float viewAngle = abs(dot(normal, normalize(vec3(0.0, 1.0, 0.3))));
+    float leatherSheen = pow(1.0 - viewAngle, 5.0) * 0.12;
+
+    color *= 1.0 + leatherGrain + leatherPores - 0.08;
+    color += vec3(tooledPattern + leatherSheen);
+  }
+  // LINOTHORAX (LAYERED LINEN ARMOR) - Carthaginian specialty
+  else if (isLinothorax) {
+    // Multiple layers of glued linen - very distinctive texture
+    float linenWeaveX = sin(v_worldPos.x * 65.0);
+    float linenWeaveZ = sin(v_worldPos.z * 68.0);
+    float weave = linenWeaveX * linenWeaveZ * 0.08;
+
+    // Visible layering from edge-on angles
+    float layers = abs(sin(v_worldPos.y * 22.0)) * 0.12;
+
+    // Glue/resin stiffening (darker patches)
+    float resinStains = noise(uv * 8.0) * 0.10;
+
+    // Soft matte finish (not shiny like metal)
+    float viewAngle = abs(dot(normal, normalize(vec3(0.0, 1.0, 0.2))));
+    float linenSheen = pow(1.0 - viewAngle, 12.0) * 0.05;
+
+    color *= 1.0 + weave + layers - resinStains * 0.5;
+    color += vec3(linenSheen);
+  }
+  // SUN-DULLED BRONZE (minimal use - only decorative pieces)
+  else if (isBronze) {
     float saltPatina = noise(uv * 9.0) * 0.16;
     float verdigris = noise(uv * 12.0) * 0.10;
     float viewAngle = abs(dot(normal, normalize(vec3(0.1, 1.0, 0.2))));
@@ -86,16 +124,16 @@ void main() {
     color += vec3(bronzeSheen + bronzeFresnel);
     color -= vec3(saltPatina * 0.4 + verdigris * 0.35);
   }
-  // DARKENED IRON MAIL
+  // LIGHT LEATHER ARMOR (not chainmail - mercenary style)
   else if (avgColor > 0.35 && avgColor <= 0.58 && !isSeaCloak) {
-    float rings = chainmailRings(v_worldPos.xz);
+    // Hardened leather cuirass instead of heavy mail
+    float hardenedGrain = noise(uv * 16.0) * 0.18;
+    float cracks = noise(uv * 32.0) * 0.08;
+    float oilSheen =
+        pow(abs(dot(normal, normalize(vec3(0.2, 1.0, 0.3)))), 8.0) * 0.14;
 
-    float viewAngle = abs(dot(normal, normalize(vec3(0.0, 1.0, 0.4))));
-    float chainSheen = pow(viewAngle, 5.5) * 0.18;
-    float brineWear = noise(uv * 11.0) * 0.07;
-
-    color += vec3(rings * 0.9 + chainSheen);
-    color -= vec3(brineWear * 0.3);
+    color += vec3(hardenedGrain + oilSheen);
+    color -= vec3(cracks * 0.4);
   }
   // TEAL SEA CLOAK
   else if (isSeaCloak) {

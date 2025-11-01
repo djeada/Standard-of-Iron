@@ -6,10 +6,10 @@
 #include "../../../gl/backend.h"
 #include "../../../gl/primitives.h"
 #include "../../../gl/shader.h"
-#include "../../../humanoid/rig.h"
-#include "../../../humanoid/style_palette.h"
 #include "../../../humanoid/humanoid_math.h"
 #include "../../../humanoid/humanoid_specs.h"
+#include "../../../humanoid/rig.h"
+#include "../../../humanoid/style_palette.h"
 #include "../../../palette.h"
 #include "../../../scene_renderer.h"
 #include "../../../submitter.h"
@@ -265,53 +265,56 @@ public:
                   const HumanoidPose &pose, ISubmitter &out) const override {
     using HP = HumanProportions;
 
-    const QVector3D iron_color = v.palette.metal * IRON_TINT;
+    const HeadFrame &head = pose.headFrame;
+    float const head_r = head.radius;
+    if (head_r <= 0.0F) {
+      return;
+    }
 
-    const float helm_r = pose.headR * 1.12F;
+    QVector3D const iron_color = v.palette.metal * IRON_TINT;
+    float const helm_r = head_r * 1.12F;
 
-    QVector3D const helm_bot(pose.headPos.x(),
-                             pose.headPos.y() - pose.headR * 0.15F,
-                             pose.headPos.z());
-    QVector3D const helm_top(pose.headPos.x(),
-                             pose.headPos.y() + pose.headR * 1.25F,
-                             pose.headPos.z());
+    auto headPoint = [&](const QVector3D &normalized) -> QVector3D {
+      return headLocalPosition(head, normalized);
+    };
+
+    QVector3D const helm_bot = headPoint(QVector3D(0.0F, -0.15F, 0.0F));
+    QVector3D const helm_top = headPoint(QVector3D(0.0F, 1.25F, 0.0F));
 
     out.mesh(getUnitCylinder(),
              cylinderBetween(ctx.model, helm_bot, helm_top, helm_r), iron_color,
              nullptr, 1.0F);
 
-    QVector3D const cap_top(pose.headPos.x(),
-                            pose.headPos.y() + pose.headR * 1.32F,
-                            pose.headPos.z());
+    QVector3D const cap_top = headPoint(QVector3D(0.0F, 1.32F, 0.0F));
     out.mesh(getUnitCylinder(),
              cylinderBetween(ctx.model, helm_top, cap_top, helm_r * 0.96F),
              iron_color * 1.04F, nullptr, 1.0F);
 
-    auto ring = [&](const QVector3D &center, float r, float h,
-                    const QVector3D &col) {
-      QVector3D const a = center + QVector3D(0, h * 0.5F, 0);
-      QVector3D const b = center - QVector3D(0, h * 0.5F, 0);
-      out.mesh(getUnitCylinder(), cylinderBetween(ctx.model, a, b, r), col,
+    auto ring = [&](float y_offset, const QVector3D &col) {
+      QVector3D const center = headPoint(QVector3D(0.0F, y_offset, 0.0F));
+      float const height = head_r * 0.012F;
+      QVector3D const a = center + head.up * (height * 0.5F);
+      QVector3D const b = center - head.up * (height * 0.5F);
+      out.mesh(getUnitCylinder(),
+               cylinderBetween(ctx.model, a, b, helm_r * 1.01F), col,
                nullptr, 1.0F);
     };
 
-    ring(QVector3D(pose.headPos.x(), pose.headPos.y() + pose.headR * 0.95F,
-                   pose.headPos.z()),
-         helm_r * 1.01F, 0.012F, iron_color * 1.06F);
-    ring(QVector3D(pose.headPos.x(), pose.headPos.y() - pose.headR * 0.02F,
-                   pose.headPos.z()),
-         helm_r * 1.01F, 0.012F, iron_color * 1.06F);
+    ring(0.95F, iron_color * 1.06F);
+    ring(-0.02F, iron_color * 1.06F);
 
-    float const visor_y = pose.headPos.y() + pose.headR * 0.10F;
-    float const visor_z = pose.headPos.z() + helm_r * 0.68F;
+    float const visor_forward = helm_r * 0.68F;
 
     for (int i = 0; i < 3; ++i) {
-      float const y = visor_y + pose.headR * (0.18F - i * 0.12F);
-      QVector3D const visor_l(pose.headPos.x() - helm_r * 0.30F, y, visor_z);
-      QVector3D const visor_r(pose.headPos.x() + helm_r * 0.30F, y, visor_z);
+      float const y_offset = 0.10F + (0.18F - i * 0.12F);
+      QVector3D const center = headPoint(
+          QVector3D(0.0F, y_offset, visor_forward / head_r));
+      QVector3D const lateral = head.right * (helm_r * 0.30F);
+      QVector3D const visor_l = center - lateral;
+      QVector3D const visor_r = center + lateral;
       out.mesh(getUnitCylinder(),
-               cylinderBetween(ctx.model, visor_l, visor_r, 0.010F), DARK_METAL,
-               nullptr, 1.0F);
+               cylinderBetween(ctx.model, visor_l, visor_r, head_r * 0.010F),
+               DARK_METAL, nullptr, 1.0F);
     }
   }
 
