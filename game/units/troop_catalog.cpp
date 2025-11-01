@@ -135,37 +135,37 @@ void TroopCatalog::register_defaults() {
 
   register_class(std::move(spearman));
 
-  TroopClass mounted_knight{};
-  mounted_knight.unit_type = Game::Units::TroopType::MountedKnight;
-  mounted_knight.display_name = "Mounted Knight";
-  mounted_knight.production.cost = 150;
-  mounted_knight.production.build_time = 10.0F;
-  mounted_knight.production.priority = 15;
-  mounted_knight.production.is_melee = true;
+  TroopClass horse_swordsman{};
+  horse_swordsman.unit_type = Game::Units::TroopType::MountedKnight;
+  horse_swordsman.display_name = "Mounted Knight";
+  horse_swordsman.production.cost = 150;
+  horse_swordsman.production.build_time = 10.0F;
+  horse_swordsman.production.priority = 15;
+  horse_swordsman.production.is_melee = true;
 
-  mounted_knight.combat.health = 200;
-  mounted_knight.combat.max_health = 200;
-  mounted_knight.combat.speed = 8.0F;
-  mounted_knight.combat.vision_range = 16.0F;
-  mounted_knight.combat.ranged_range = 1.5F;
-  mounted_knight.combat.ranged_damage = 5;
-  mounted_knight.combat.ranged_cooldown = 2.0F;
-  mounted_knight.combat.melee_range = 2.0F;
-  mounted_knight.combat.melee_damage = 25;
-  mounted_knight.combat.melee_cooldown = 0.8F;
-  mounted_knight.combat.can_ranged = false;
-  mounted_knight.combat.can_melee = true;
+  horse_swordsman.combat.health = 200;
+  horse_swordsman.combat.max_health = 200;
+  horse_swordsman.combat.speed = 8.0F;
+  horse_swordsman.combat.vision_range = 16.0F;
+  horse_swordsman.combat.ranged_range = 1.5F;
+  horse_swordsman.combat.ranged_damage = 5;
+  horse_swordsman.combat.ranged_cooldown = 2.0F;
+  horse_swordsman.combat.melee_range = 2.0F;
+  horse_swordsman.combat.melee_damage = 25;
+  horse_swordsman.combat.melee_cooldown = 0.8F;
+  horse_swordsman.combat.can_ranged = false;
+  horse_swordsman.combat.can_melee = true;
 
-  mounted_knight.visuals.render_scale = 0.8F;
-  mounted_knight.visuals.selection_ring_size = 2.0F;
-  mounted_knight.visuals.selection_ring_ground_offset = 1.35F;
-  mounted_knight.visuals.selection_ring_y_offset = 0.0F;
-  mounted_knight.visuals.renderer_id = "troops/kingdom/mounted_knight";
+  horse_swordsman.visuals.render_scale = 0.8F;
+  horse_swordsman.visuals.selection_ring_size = 2.0F;
+  horse_swordsman.visuals.selection_ring_ground_offset = 1.35F;
+  horse_swordsman.visuals.selection_ring_y_offset = 0.0F;
+  horse_swordsman.visuals.renderer_id = "troops/kingdom/horse_swordsman";
 
-  mounted_knight.individuals_per_unit = 9;
-  mounted_knight.max_units_per_row = 3;
+  horse_swordsman.individuals_per_unit = 9;
+  horse_swordsman.max_units_per_row = 3;
 
-  register_class(std::move(mounted_knight));
+  register_class(std::move(horse_swordsman));
 }
 
 } // namespace Game::Units

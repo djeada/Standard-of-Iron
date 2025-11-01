@@ -154,10 +154,10 @@ public:
 
     const auto [archerVert, archerFrag] =
         loadBaseShader(QStringLiteral("archer"));
-    const auto [knightVert, knightFrag] =
-        loadBaseShader(QStringLiteral("knight"));
-    const auto [mountedKnightVert, mountedKnightFrag] =
-        loadBaseShader(QStringLiteral("mounted_knight"));
+    const auto [swordsmanVert, swordsmanFrag] =
+        loadBaseShader(QStringLiteral("swordsman"));
+    const auto [horseKnightVert, horseKnightFrag] =
+        loadBaseShader(QStringLiteral("horse_swordsman"));
     const auto [spearmanVert, spearmanFrag] =
         loadBaseShader(QStringLiteral("spearman"));
 
@@ -192,9 +192,9 @@ public:
 
     loadVariant(QStringLiteral("archer"), archerVert, archerFrag);
     loadVariant(QStringLiteral("spearman"), spearmanVert, spearmanFrag);
-    loadVariant(QStringLiteral("knight"), knightVert, knightFrag);
-    loadVariant(QStringLiteral("mounted_knight"), mountedKnightVert,
-                mountedKnightFrag);
+    loadVariant(QStringLiteral("swordsman"), swordsmanVert, swordsmanFrag);
+    loadVariant(QStringLiteral("horse_swordsman"), horseKnightVert,
+                horseKnightFrag);
   }
 
   void clear() {

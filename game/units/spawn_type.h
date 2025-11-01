@@ -26,7 +26,7 @@ inline auto spawn_typeToQString(SpawnType type) -> QString {
   case SpawnType::Spearman:
     return QStringLiteral("spearman");
   case SpawnType::MountedKnight:
-    return QStringLiteral("mounted_knight");
+    return QStringLiteral("horse_swordsman");
   case SpawnType::Barracks:
     return QStringLiteral("barracks");
   }
@@ -44,7 +44,7 @@ inline auto tryParseSpawnType(const QString &value, SpawnType &out) -> bool {
     return true;
   }
   if (lowered == QStringLiteral("swordsman") ||
-      lowered == QStringLiteral("knight")) {
+      lowered == QStringLiteral("swordsman")) {
     out = SpawnType::Knight;
     return true;
   }
@@ -52,7 +52,7 @@ inline auto tryParseSpawnType(const QString &value, SpawnType &out) -> bool {
     out = SpawnType::Spearman;
     return true;
   }
-  if (lowered == QStringLiteral("mounted_knight")) {
+  if (lowered == QStringLiteral("horse_swordsman")) {
     out = SpawnType::MountedKnight;
     return true;
   }
@@ -68,13 +68,13 @@ spawn_typeFromString(const std::string &str) -> std::optional<SpawnType> {
   if (str == "archer") {
     return SpawnType::Archer;
   }
-  if (str == "swordsman" || str == "knight") {
+  if (str == "swordsman" || str == "swordsman") {
     return SpawnType::Knight;
   }
   if (str == "spearman") {
     return SpawnType::Spearman;
   }
-  if (str == "mounted_knight") {
+  if (str == "horse_swordsman") {
     return SpawnType::MountedKnight;
   }
   if (str == "barracks") {

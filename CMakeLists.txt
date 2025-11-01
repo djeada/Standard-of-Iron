@@ -174,10 +174,10 @@ if(QT_VERSION_MAJOR EQUAL 6)
             assets/shaders/grid.frag
             assets/shaders/ground_plane.frag
             assets/shaders/ground_plane.vert
-            assets/shaders/knight.frag
-            assets/shaders/knight.vert
-            assets/shaders/mounted_knight.frag
-            assets/shaders/mounted_knight.vert
+            assets/shaders/swordsman.frag
+            assets/shaders/swordsman.vert
+            assets/shaders/horse_swordsman.frag
+            assets/shaders/horse_swordsman.vert
             assets/shaders/pine_instanced.frag
             assets/shaders/pine_instanced.vert
             assets/shaders/plant_instanced.frag

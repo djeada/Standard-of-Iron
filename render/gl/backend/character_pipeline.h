@@ -31,12 +31,12 @@ public:
 
   GL::Shader *m_basicShader = nullptr;
   GL::Shader *m_archerShader = nullptr;
-  GL::Shader *m_knightShader = nullptr;
+  GL::Shader *m_swordsmanShader = nullptr;
   GL::Shader *m_spearmanShader = nullptr;
 
   BasicUniforms m_basicUniforms;
   BasicUniforms m_archerUniforms;
-  BasicUniforms m_knightUniforms;
+  BasicUniforms m_swordsmanUniforms;
   BasicUniforms m_spearmanUniforms;
 
 private:
