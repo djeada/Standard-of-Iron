@@ -21,16 +21,16 @@
         <file>assets/shaders/grid.frag</file>
         <file>assets/shaders/ground_plane.frag</file>
         <file>assets/shaders/ground_plane.vert</file>
-        <file>assets/shaders/knight.frag</file>
-        <file>assets/shaders/knight.vert</file>
-        <file>assets/shaders/knight_kingdom_of_iron.frag</file>
-        <file>assets/shaders/knight_roman_republic.frag</file>
-        <file>assets/shaders/knight_carthage.frag</file>
-        <file>assets/shaders/mounted_knight.frag</file>
-        <file>assets/shaders/mounted_knight.vert</file>
-        <file>assets/shaders/mounted_knight_kingdom_of_iron.frag</file>
-        <file>assets/shaders/mounted_knight_roman_republic.frag</file>
-        <file>assets/shaders/mounted_knight_carthage.frag</file>
+        <file>assets/shaders/swordsman.frag</file>
+        <file>assets/shaders/swordsman.vert</file>
+        <file>assets/shaders/swordsman_kingdom_of_iron.frag</file>
+        <file>assets/shaders/swordsman_roman_republic.frag</file>
+        <file>assets/shaders/swordsman_carthage.frag</file>
+        <file>assets/shaders/horse_swordsman.frag</file>
+        <file>assets/shaders/horse_swordsman.vert</file>
+        <file>assets/shaders/horse_swordsman_kingdom_of_iron.frag</file>
+        <file>assets/shaders/horse_swordsman_roman_republic.frag</file>
+        <file>assets/shaders/horse_swordsman_carthage.frag</file>
         <file>assets/shaders/pine_instanced.frag</file>
         <file>assets/shaders/pine_instanced.vert</file>
         <file>assets/shaders/plant_instanced.frag</file>
