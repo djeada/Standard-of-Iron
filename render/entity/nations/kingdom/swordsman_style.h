@@ -4,7 +4,7 @@
 #include <optional>
 #include <string>
 
-namespace Render::GL::Roman {
+namespace Render::GL::Kingdom {
 
 struct KnightStyleConfig {
   std::optional<QVector3D> cloth_color;
@@ -22,6 +22,6 @@ struct KnightStyleConfig {
   std::string shader_id;
 };
 
-void register_roman_knight_style();
+void register_kingdom_swordsman_style();
 
-} // namespace Render::GL::Roman
+} // namespace Render::GL::Kingdom

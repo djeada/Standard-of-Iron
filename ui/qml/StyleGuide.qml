@@ -126,9 +126,9 @@ QtObject {
     readonly property var unitIcons: ({
         "archer": "🏹",
         "swordsman": "⚔️",
-        "knight": "⚔️",
+        "swordsman": "⚔️",
         "spearman": "🛡️",
-        "mounted_knight": "🐴",
+        "horse_swordsman": "🐴",
         "default": "👤"
     })
 }

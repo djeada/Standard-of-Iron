@@ -44,7 +44,7 @@
     },
     { "type": "archer", "x": 28, "z": 32, "playerId": 1 },
     { "type": "archer", "x": 32, "z": 28, "playerId": 1 },
-    { "type": "mounted_knight", "x": 30, "z": 35, "playerId": 1 },
+    { "type": "horse_swordsman", "x": 30, "z": 35, "playerId": 1 },
     { "type": "spearman", "x": 35, "z": 30, "playerId": 1 },
     {
       "type": "barracks",
@@ -55,7 +55,7 @@
     },
     { "type": "archer", "x": 88, "z": 92, "playerId": 2 },
     { "type": "archer", "x": 92, "z": 88, "playerId": 2 },
-    { "type": "mounted_knight", "x": 90, "z": 85, "playerId": 2 },
+    { "type": "horse_swordsman", "x": 90, "z": 85, "playerId": 2 },
     { "type": "spearman", "x": 85, "z": 90, "playerId": 2 },
     {
       "type": "barracks",

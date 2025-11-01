@@ -1,5 +1,5 @@
-#include "knight_style.h"
-#include "knight_renderer.h"
+#include "swordsman_style.h"
+#include "swordsman_renderer.h"
 
 #include <QVector3D>
 
@@ -14,7 +14,7 @@ constexpr QVector3D k_carthage_trim{0.76F, 0.68F, 0.42F};
 
 namespace Render::GL::Carthage {
 
-void register_carthage_knight_style() {
+void register_carthage_swordsman_style() {
   KnightStyleConfig style;
   style.cloth_color = k_carthage_cloth;
   style.leather_color = k_carthage_leather;
@@ -26,9 +26,9 @@ void register_carthage_knight_style() {
   style.shield_aspect_ratio = 0.85F;
   style.has_scabbard = false;
   style.shield_cross_decal = false;
-  style.shader_id = "knight_carthage";
+  style.shader_id = "swordsman_carthage";
 
-  register_knight_style("carthage", style);
+  register_swordsman_style("carthage", style);
 }
 
 } // namespace Render::GL::Carthage

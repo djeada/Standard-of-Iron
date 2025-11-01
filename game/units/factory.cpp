@@ -1,7 +1,7 @@
 #include "factory.h"
 #include "archer.h"
 #include "barracks.h"
-#include "mounted_knight.h"
+#include "horse_swordsman.h"
 #include "spearman.h"
 #include "swordsman.h"
 #include "units/spawn_type.h"

@@ -110,7 +110,7 @@
       }
     },
     {
-      "id": "mounted_knight",
+      "id": "horse_swordsman",
       "display_name": "Equites",
       "production": {
         "cost": 165,
@@ -137,7 +137,7 @@
         "selection_ring_size": 2.05,
         "selection_ring_y_offset": 0.0,
         "selection_ring_ground_offset": 1.35,
-        "renderer_id": "troops/roman/mounted_knight"
+        "renderer_id": "troops/roman/horse_swordsman"
       },
       "formation": {
         "individuals_per_unit": 9,
