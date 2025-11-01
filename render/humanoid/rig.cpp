@@ -623,13 +623,13 @@ void HumanoidRendererBase::drawCommonBody(const DrawContext &ctx,
   QVector3D const iris = QVector3D(0.10F, 0.10F, 0.12F);
   auto eyePosition = [&](float lateral) {
     QVector3D const local(lateral, 0.12F, 0.92F);
-    QVector3D world = headLocalPosition(pose.headFrame, local);
-    world += pose.headFrame.forward * (pose.headFrame.radius * 0.02F);
+    QVector3D world = frameLocalPosition(pose.bodyFrames.head, local);
+    world += pose.bodyFrames.head.forward * (pose.bodyFrames.head.radius * 0.02F);
     return world;
   };
   QVector3D const left_eye_world = eyePosition(-0.32F);
   QVector3D const right_eye_world = eyePosition(0.32F);
-  float const eye_radius = pose.headFrame.radius * 0.17F;
+  float const eye_radius = pose.bodyFrames.head.radius * 0.17F;
 
   out.mesh(getUnitSphere(), sphereAt(ctx.model, left_eye_world, eye_radius),
            iris, nullptr, 1.0F);
@@ -743,7 +743,7 @@ void HumanoidRendererBase::drawFacialHair(const DrawContext &ctx,
     return;
   }
 
-  const HeadFrame &frame = pose.headFrame;
+  const AttachmentFrame &frame = pose.bodyFrames.head;
   float const head_r = frame.radius;
   if (head_r <= 0.0F) {
     return;
@@ -835,7 +835,7 @@ void HumanoidRendererBase::drawFacialHair(const DrawContext &ctx,
         surface_dir /= dir_len;
 
         float const shell = 1.02F + jitter(0.03F);
-        QVector3D const root = headLocalPosition(frame, surface_dir * shell);
+        QVector3D const root = frameLocalPosition(frame, surface_dir * shell);
 
         QVector3D local_dir(jitter(0.15F),
                             -(0.55F + row_t * 0.30F) + jitter(0.10F),
@@ -913,7 +913,7 @@ void HumanoidRendererBase::drawFacialHair(const DrawContext &ctx,
         }
         surface_dir /= dir_len;
         QVector3D const root =
-            headLocalPosition(frame, surface_dir * (1.01F + jitter(0.02F)));
+            frameLocalPosition(frame, surface_dir * (1.01F + jitter(0.02F)));
 
         QVector3D const dir_local(side * (0.55F + jitter(0.12F)), jitter(0.06F),
                                   0.34F + jitter(0.08F));
