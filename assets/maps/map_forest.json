@@ -122,7 +122,7 @@
       "z": 190,
       "playerId": 2,
       "maxPopulation": 200,
-      "nation": "carthage"
+      "nation": "roman_republic"
     },
     {
       "type": "archer",
@@ -165,7 +165,7 @@
       "x": 125,
       "z": 125,
       "maxPopulation": 150,
-      "nation": "kingdom_of_iron"
+      "nation": "roman_republic"
     },
     {
       "type": "barracks",
@@ -173,7 +173,7 @@
       "z": 190,
       "playerId": 3,
       "maxPopulation": 150,
-      "nation": "kingdom_of_iron"
+      "nation": "roman_republic"
     },
     {
       "type": "swordsman",

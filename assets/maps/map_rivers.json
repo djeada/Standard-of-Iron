@@ -110,7 +110,7 @@
       "z": 90,
       "playerId": 2,
       "maxPopulation": 150,
-      "nation": "roman_republic"
+      "nation": "carthage"
     },
     {
       "type": "archer",
@@ -141,21 +141,21 @@
       "x": 60,
       "z": 60,
       "maxPopulation": 180,
-      "nation": "kingdom_of_iron"
+      "nation": "carthage"
     },
     {
       "type": "barracks",
       "x": 30,
       "z": 90,
       "maxPopulation": 150,
-      "nation": "kingdom_of_iron"
+      "nation": "carthage"
     },
     {
       "type": "barracks",
       "x": 90,
       "z": 30,
       "maxPopulation": 150,
-      "nation": "kingdom_of_iron"
+      "nation": "carthage"
     }
   ],
   "firecamps": [
