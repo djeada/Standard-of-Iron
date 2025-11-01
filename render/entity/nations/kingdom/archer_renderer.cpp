@@ -344,10 +344,8 @@ public:
     };
 
     float const bowl_scale = 1.06F;
-    QVector3D const bowl_top =
-        headPoint(QVector3D(0.0F, 1.10F, 0.0F));
-    QVector3D const bowl_bot =
-        headPoint(QVector3D(0.0F, 0.15F, 0.0F));
+    QVector3D const bowl_top = headPoint(QVector3D(0.0F, 1.10F, 0.0F));
+    QVector3D const bowl_bot = headPoint(QVector3D(0.0F, 0.15F, 0.0F));
     float const bowl_r = head_r * bowl_scale;
 
     out.mesh(getUnitCylinder(),
@@ -359,18 +357,15 @@ public:
     cap_m.scale(bowl_r * 0.92F, head_r * 0.28F, bowl_r * 0.92F);
     out.mesh(getUnitSphere(), cap_m, steel_color * 1.05F, nullptr, 1.0F);
 
-    QVector3D const brim_top =
-        headPoint(QVector3D(0.0F, 0.18F, 0.0F));
-    QVector3D const brim_bot =
-        headPoint(QVector3D(0.0F, 0.08F, 0.0F));
+    QVector3D const brim_top = headPoint(QVector3D(0.0F, 0.18F, 0.0F));
+    QVector3D const brim_bot = headPoint(QVector3D(0.0F, 0.08F, 0.0F));
     float const brim_r = head_r * 1.42F;
 
     out.mesh(getUnitCylinder(),
-             cylinderBetween(ctx.model, brim_bot, brim_top, brim_r),
-             steel_dark, nullptr, 1.0F);
+             cylinderBetween(ctx.model, brim_bot, brim_top, brim_r), steel_dark,
+             nullptr, 1.0F);
 
-    auto ring = [&](float y_offset, float radius_scale,
-                    const QVector3D &col) {
+    auto ring = [&](float y_offset, float radius_scale, const QVector3D &col) {
       QVector3D const center = headPoint(QVector3D(0.0F, y_offset, 0.0F));
       float const height = head_r * 0.010F;
       QVector3D const a = center + head.up * (height * 0.5F);
@@ -625,8 +620,7 @@ private:
              cylinderBetween(ctx.model, band_bot, band_top, head_r * 1.08F),
              cloth_color, nullptr, 1.0F);
 
-    QVector3D const knot_center =
-        headPoint(QVector3D(0.10F, 0.60F, 0.72F));
+    QVector3D const knot_center = headPoint(QVector3D(0.10F, 0.60F, 0.72F));
     QMatrix4x4 knot_m = ctx.model;
     knot_m.translate(knot_center);
     knot_m.scale(head_r * 0.32F);
@@ -634,8 +628,8 @@ private:
 
     QVector3D const tail_top = knot_center + head.right * (-0.08F) +
                                head.up * (-0.05F) + head.forward * (-0.06F);
-    QVector3D const tail_bot =
-        tail_top + head.right * 0.02F + head.up * (-0.28F) + head.forward * (-0.08F);
+    QVector3D const tail_bot = tail_top + head.right * 0.02F +
+                               head.up * (-0.28F) + head.forward * (-0.08F);
     out.mesh(getUnitCylinder(),
              cylinderBetween(ctx.model, tail_top, tail_bot, head_r * 0.28F),
              cloth_color * QVector3D(0.92F, 0.98F, 1.05F), nullptr, 1.0F);

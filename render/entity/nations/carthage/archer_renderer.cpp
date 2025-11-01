@@ -57,7 +57,7 @@ void ensure_archer_styles_registered() {
 constexpr float k_team_mix_weight = 0.65F;
 constexpr float k_style_mix_weight = 0.35F;
 
-}
+} // namespace
 
 void register_archer_style(const std::string &nation_id,
                            const ArcherStyleConfig &style) {
@@ -87,9 +87,8 @@ struct ArcherExtras {
 class ArcherRenderer : public HumanoidRendererBase {
 public:
   auto getProportionScaling() const -> QVector3D override {
-    // X = width (shoulders/chest WIDE), Y = height, Z = depth (front-to-back NARROW)
-    // Human torso is much wider than it is deep!
-    return {1.15F, 1.02F, 0.75F};  // Wide shoulders, narrow chest depth
+
+    return {1.15F, 1.02F, 0.75F};
   }
 
   void getVariant(const DrawContext &ctx, uint32_t seed,
@@ -133,17 +132,17 @@ public:
 
       float const color_roll = nextRand(beard_seed);
       if (color_roll < 0.60F) {
-        // Dark brown/black (most common)
+
         v.facialHair.color = QVector3D(0.18F + nextRand(beard_seed) * 0.10F,
                                        0.14F + nextRand(beard_seed) * 0.08F,
                                        0.10F + nextRand(beard_seed) * 0.06F);
       } else if (color_roll < 0.85F) {
-        // Medium brown
+
         v.facialHair.color = QVector3D(0.30F + nextRand(beard_seed) * 0.12F,
                                        0.24F + nextRand(beard_seed) * 0.10F,
                                        0.16F + nextRand(beard_seed) * 0.08F);
       } else {
-        // Reddish-brown (Libyan/Berber influence)
+
         v.facialHair.color = QVector3D(0.35F + nextRand(beard_seed) * 0.10F,
                                        0.20F + nextRand(beard_seed) * 0.08F,
                                        0.12F + nextRand(beard_seed) * 0.06F);
@@ -398,99 +397,94 @@ public:
       return;
     }
 
-  auto draw_montefortino = [&](const QVector3D &base_metal) {
-    const HeadFrame &head = pose.headFrame;
-    float const head_r = head.radius;
-    if (head_r <= 0.0F) {
-    return;
-    }
+    auto draw_montefortino = [&](const QVector3D &base_metal) {
+      const HeadFrame &head = pose.headFrame;
+      float const head_r = head.radius;
+      if (head_r <= 0.0F) {
+        return;
+      }
 
-    auto headPoint = [&](const QVector3D &norm) -> QVector3D {
-    return headLocalPosition(head, norm);
+      auto headPoint = [&](const QVector3D &norm) -> QVector3D {
+        return headLocalPosition(head, norm);
+      };
+
+      auto headTransform = [&](const QVector3D &norm,
+                               float scale) -> QMatrix4x4 {
+        return makeHeadLocalTransform(ctx.model, head, norm, scale);
+      };
+
+      QVector3D bronze =
+          saturate_color(base_metal * QVector3D(1.22F, 1.04F, 0.70F));
+      QVector3D patina =
+          saturate_color(bronze * QVector3D(0.88F, 0.96F, 0.92F));
+      QVector3D tinned_highlight =
+          saturate_color(bronze * QVector3D(1.12F, 1.08F, 1.04F));
+      QVector3D leather_band = saturate_color(v.palette.leatherDark *
+                                              QVector3D(1.10F, 0.96F, 0.80F));
+
+      auto draw_leather_cap = [&]() {
+        QVector3D leather_brown = saturate_color(
+            v.palette.leatherDark * QVector3D(1.15F, 0.95F, 0.78F));
+        QVector3D leather_dark =
+            saturate_color(leather_brown * QVector3D(0.85F, 0.88F, 0.92F));
+        QVector3D bronze_stud =
+            saturate_color(v.palette.metal * QVector3D(1.20F, 1.02F, 0.70F));
+
+        QMatrix4x4 cap_transform =
+            headTransform(QVector3D(0.0F, 0.70F, 0.0F), 1.0F);
+        cap_transform.scale(0.92F, 0.55F, 0.88F);
+        out.mesh(getUnitSphere(), cap_transform, leather_brown, nullptr, 1.0F);
+
+        QVector3D const band_top = headPoint(QVector3D(0.0F, 0.20F, 0.0F));
+        QVector3D const band_bot = headPoint(QVector3D(0.0F, 0.15F, 0.0F));
+
+        out.mesh(getUnitCylinder(),
+                 cylinderBetween(ctx.model, band_bot, band_top, head_r * 1.02F),
+                 leather_dark, nullptr, 1.0F);
+
+        auto draw_stud = [&](float angle) {
+          QVector3D const stud_pos = headPoint(QVector3D(
+              std::sin(angle) * 1.03F, 0.175F, std::cos(angle) * 1.03F));
+          out.mesh(getUnitSphere(),
+                   sphereAt(ctx.model, stud_pos, head_r * 0.012F), bronze_stud,
+                   nullptr, 1.0F);
+        };
+
+        for (int i = 0; i < 4; ++i) {
+          float const angle = (i / 4.0F) * 2.0F * std::numbers::pi_v<float>;
+          draw_stud(angle);
+        }
+      };
+
+      draw_leather_cap();
+
+      QMatrix4x4 top_knob = headTransform(QVector3D(0.0F, 0.88F, 0.0F), 0.18F);
+      out.mesh(getUnitSphere(), top_knob, tinned_highlight, nullptr, 1.0F);
+
+      QVector3D const brow_top = headPoint(QVector3D(0.0F, 0.55F, 0.0F));
+      QVector3D const brow_bot = headPoint(QVector3D(0.0F, 0.42F, 0.0F));
+      QMatrix4x4 brow =
+          cylinderBetween(ctx.model, brow_bot, brow_top, head_r * 1.20F);
+      brow.scale(1.04F, 1.0F, 0.86F);
+      out.mesh(getUnitCylinder(), brow, leather_band, nullptr, 1.0F);
+
+      QVector3D const rim_upper = headPoint(QVector3D(0.0F, 0.40F, 0.0F));
+      QVector3D const rim_lower = headPoint(QVector3D(0.0F, 0.30F, 0.0F));
+      QMatrix4x4 rim =
+          cylinderBetween(ctx.model, rim_lower, rim_upper, head_r * 1.30F);
+      rim.scale(1.06F, 1.0F, 0.90F);
+      out.mesh(getUnitCylinder(), rim, bronze * QVector3D(0.94F, 0.92F, 0.88F),
+               nullptr, 1.0F);
+
+      QVector3D const crest_front = headPoint(QVector3D(0.0F, 0.92F, 0.82F));
+      QVector3D const crest_back = headPoint(QVector3D(0.0F, 0.92F, -0.90F));
+      QMatrix4x4 crest =
+          cylinderBetween(ctx.model, crest_back, crest_front, head_r * 0.14F);
+      crest.scale(0.54F, 1.0F, 1.0F);
+      out.mesh(getUnitCylinder(), crest,
+               tinned_highlight * QVector3D(0.94F, 0.96F, 1.02F), nullptr,
+               1.0F);
     };
-
-    auto headTransform = [&](const QVector3D &norm, float scale) -> QMatrix4x4 {
-    return makeHeadLocalTransform(ctx.model, head, norm, scale);
-    };
-
-    QVector3D bronze =
-      saturate_color(base_metal * QVector3D(1.22F, 1.04F, 0.70F));
-    QVector3D patina =
-      saturate_color(bronze * QVector3D(0.88F, 0.96F, 0.92F));
-    QVector3D tinned_highlight =
-      saturate_color(bronze * QVector3D(1.12F, 1.08F, 1.04F));
-    QVector3D leather_band =
-      saturate_color(v.palette.leatherDark * QVector3D(1.10F, 0.96F, 0.80F));
-
-    auto draw_leather_cap = [&]() {
-    QVector3D leather_brown = saturate_color(v.palette.leatherDark *
-                         QVector3D(1.15F, 0.95F, 0.78F));
-    QVector3D leather_dark =
-      saturate_color(leather_brown * QVector3D(0.85F, 0.88F, 0.92F));
-    QVector3D bronze_stud =
-      saturate_color(v.palette.metal * QVector3D(1.20F, 1.02F, 0.70F));
-
-    // Cap sits on crown in head-local coordinates (0,0,0) = head center
-    QMatrix4x4 cap_transform = headTransform(QVector3D(0.0F, 0.70F, 0.0F), 1.0F);
-    cap_transform.scale(0.92F, 0.55F, 0.88F); // Non-uniform scaling for cap shape
-    out.mesh(getUnitSphere(), cap_transform, leather_brown, nullptr, 1.0F);
-
-    // Band at forehead level in head-local coordinates
-    QVector3D const band_top = headPoint(QVector3D(0.0F, 0.20F, 0.0F));
-    QVector3D const band_bot = headPoint(QVector3D(0.0F, 0.15F, 0.0F));
-
-    out.mesh(getUnitCylinder(),
-         cylinderBetween(ctx.model, band_bot, band_top, head_r * 1.02F),
-         leather_dark, nullptr, 1.0F);
-
-    auto draw_stud = [&](float angle) {
-      QVector3D const stud_pos =
-        headPoint(QVector3D(std::sin(angle) * 1.03F, 0.175F,
-                  std::cos(angle) * 1.03F));
-      out.mesh(getUnitSphere(),
-           sphereAt(ctx.model, stud_pos, head_r * 0.012F),
-           bronze_stud, nullptr, 1.0F);
-    };
-
-    for (int i = 0; i < 4; ++i) {
-      float const angle = (i / 4.0F) * 2.0F * std::numbers::pi_v<float>;
-      draw_stud(angle);
-    }
-
-    };
-
-    draw_leather_cap();
-
-    // Top knob
-    QMatrix4x4 top_knob = headTransform(QVector3D(0.0F, 0.88F, 0.0F), 0.18F);
-    out.mesh(getUnitSphere(), top_knob, tinned_highlight, nullptr, 1.0F);
-
-    // Brow reinforcement
-    QVector3D const brow_top = headPoint(QVector3D(0.0F, 0.55F, 0.0F));
-    QVector3D const brow_bot = headPoint(QVector3D(0.0F, 0.42F, 0.0F));
-    QMatrix4x4 brow =
-      cylinderBetween(ctx.model, brow_bot, brow_top, head_r * 1.20F);
-    brow.scale(1.04F, 1.0F, 0.86F);
-    out.mesh(getUnitCylinder(), brow, leather_band, nullptr, 1.0F);
-
-    // Rim
-    QVector3D const rim_upper = headPoint(QVector3D(0.0F, 0.40F, 0.0F));
-    QVector3D const rim_lower = headPoint(QVector3D(0.0F, 0.30F, 0.0F));
-    QMatrix4x4 rim =
-      cylinderBetween(ctx.model, rim_lower, rim_upper, head_r * 1.30F);
-    rim.scale(1.06F, 1.0F, 0.90F);
-    out.mesh(getUnitCylinder(), rim, bronze * QVector3D(0.94F, 0.92F, 0.88F),
-         nullptr, 1.0F);
-
-    // Crest
-    QVector3D const crest_front = headPoint(QVector3D(0.0F, 0.92F, 0.82F));
-    QVector3D const crest_back = headPoint(QVector3D(0.0F, 0.92F, -0.90F));
-    QMatrix4x4 crest =
-      cylinderBetween(ctx.model, crest_back, crest_front, head_r * 0.14F);
-    crest.scale(0.54F, 1.0F, 1.0F);
-    out.mesh(getUnitCylinder(), crest,
-         tinned_highlight * QVector3D(0.94F, 0.96F, 1.02F), nullptr, 1.0F);
-  };
 
     draw_montefortino(v.palette.metal);
   }
@@ -506,12 +500,9 @@ public:
       return;
     }
 
-    // Carthaginian archers wore simple tunics, not heavy armor
-    // Light linen or wool tunic in natural/earthy colors
-    
     float const waist_y = pose.pelvisPos.y();
     float const tunic_top = y_top_cover;
-    float const tunic_bottom = waist_y - 0.08F; // Short tunic ending just below waist
+    float const tunic_bottom = waist_y - 0.08F;
 
     QVector3D tunic_color =
         saturate_color(v.palette.cloth * QVector3D(1.05F, 1.02F, 0.92F));
@@ -520,31 +511,27 @@ public:
     QVector3D leather_belt =
         saturate_color(v.palette.leatherDark * QVector3D(1.08F, 0.94F, 0.78F));
 
-    // Main tunic body - simple cylinder
     QVector3D const tunic_top_pos(0.0F, tunic_top, 0.0F);
     QVector3D const tunic_bot_pos(0.0F, tunic_bottom, 0.0F);
-    
-    QMatrix4x4 tunic_main =
-        cylinderBetween(ctx.model, tunic_bot_pos, tunic_top_pos, torso_r * 1.06F);
+
+    QMatrix4x4 tunic_main = cylinderBetween(ctx.model, tunic_bot_pos,
+                                            tunic_top_pos, torso_r * 1.06F);
     tunic_main.scale(1.0F, 1.0F, 0.98F);
     out.mesh(getUnitCylinder(), tunic_main, tunic_color, nullptr, 1.0F);
 
-    // Simple trim at neck
     QVector3D const neck_trim_top(0.0F, tunic_top + 0.005F, 0.0F);
     QVector3D const neck_trim_bot(0.0F, tunic_top - 0.015F, 0.0F);
-    QMatrix4x4 neck_trim =
-        cylinderBetween(ctx.model, neck_trim_bot, neck_trim_top, HP::NECK_RADIUS * 1.85F);
+    QMatrix4x4 neck_trim = cylinderBetween(
+        ctx.model, neck_trim_bot, neck_trim_top, HP::NECK_RADIUS * 1.85F);
     neck_trim.scale(1.03F, 1.0F, 0.92F);
     out.mesh(getUnitCylinder(), neck_trim, tunic_trim, nullptr, 1.0F);
 
-    // Simple trim at bottom hem
     QVector3D const hem_top(0.0F, tunic_bottom + 0.020F, 0.0F);
     QVector3D const hem_bot(0.0F, tunic_bottom - 0.010F, 0.0F);
     out.mesh(getUnitCylinder(),
              cylinderBetween(ctx.model, hem_bot, hem_top, torso_r * 1.05F),
              tunic_trim, nullptr, 1.0F);
 
-    // Leather belt at waist
     QVector3D const belt_top(0.0F, waist_y + 0.03F, 0.0F);
     QVector3D const belt_bot(0.0F, waist_y - 0.03F, 0.0F);
     QMatrix4x4 belt =
@@ -552,7 +539,6 @@ public:
     belt.scale(1.04F, 1.0F, 0.94F);
     out.mesh(getUnitCylinder(), belt, leather_belt, nullptr, 1.0F);
 
-    // Simple belt buckle
     QVector3D const buckle_pos(0.0F, waist_y, torso_r * 1.10F);
     QMatrix4x4 buckle = ctx.model;
     buckle.translate(buckle_pos);
@@ -610,214 +596,216 @@ public:
   }
 
 private:
-mutable std::unordered_map<uint32_t, ArcherExtras> m_extrasCache;
+  mutable std::unordered_map<uint32_t, ArcherExtras> m_extrasCache;
 
-auto resolve_style(const DrawContext &ctx) const -> const ArcherStyleConfig & {
-  ensure_archer_styles_registered();
-  auto &styles = style_registry();
-  std::string nation_id;
-  if (ctx.entity != nullptr) {
-    if (auto *unit = ctx.entity->getComponent<Engine::Core::UnitComponent>()) {
-      nation_id = Game::Systems::nationIDToString(unit->nation_id);
+  auto
+  resolve_style(const DrawContext &ctx) const -> const ArcherStyleConfig & {
+    ensure_archer_styles_registered();
+    auto &styles = style_registry();
+    std::string nation_id;
+    if (ctx.entity != nullptr) {
+      if (auto *unit =
+              ctx.entity->getComponent<Engine::Core::UnitComponent>()) {
+        nation_id = Game::Systems::nationIDToString(unit->nation_id);
+      }
     }
-  }
-  if (!nation_id.empty()) {
-    auto it = styles.find(nation_id);
-    if (it != styles.end()) {
-      return it->second;
+    if (!nation_id.empty()) {
+      auto it = styles.find(nation_id);
+      if (it != styles.end()) {
+        return it->second;
+      }
     }
+    auto fallback = styles.find(std::string(k_default_style_key));
+    if (fallback != styles.end()) {
+      return fallback->second;
+    }
+    static const ArcherStyleConfig default_style{};
+    return default_style;
   }
-  auto fallback = styles.find(std::string(k_default_style_key));
-  if (fallback != styles.end()) {
-    return fallback->second;
-  }
-  static const ArcherStyleConfig default_style{};
-  return default_style;
-}
 
 public:
-auto resolve_shader_key(const DrawContext &ctx) const -> QString {
-  const ArcherStyleConfig &style = resolve_style(ctx);
-  if (!style.shader_id.empty()) {
-    return QString::fromStdString(style.shader_id);
+  auto resolve_shader_key(const DrawContext &ctx) const -> QString {
+    const ArcherStyleConfig &style = resolve_style(ctx);
+    if (!style.shader_id.empty()) {
+      return QString::fromStdString(style.shader_id);
+    }
+    return QStringLiteral("archer");
   }
-  return QStringLiteral("archer");
-}
 
 private:
-void apply_palette_overrides(const ArcherStyleConfig &style,
-                             const QVector3D &team_tint,
-                             HumanoidVariant &variant) const {
-  auto apply_color = [&](const std::optional<QVector3D> &override_color,
-                         QVector3D &target) {
-    target = mix_palette_color(target, override_color, team_tint,
-                               k_team_mix_weight, k_style_mix_weight);
-  };
+  void apply_palette_overrides(const ArcherStyleConfig &style,
+                               const QVector3D &team_tint,
+                               HumanoidVariant &variant) const {
+    auto apply_color = [&](const std::optional<QVector3D> &override_color,
+                           QVector3D &target) {
+      target = mix_palette_color(target, override_color, team_tint,
+                                 k_team_mix_weight, k_style_mix_weight);
+    };
 
-  apply_color(style.cloth_color, variant.palette.cloth);
-  apply_color(style.leather_color, variant.palette.leather);
-  apply_color(style.leather_dark_color, variant.palette.leatherDark);
-  apply_color(style.metal_color, variant.palette.metal);
-  apply_color(style.wood_color, variant.palette.wood);
-}
-
-void apply_extras_overrides(const ArcherStyleConfig &style,
-                            ArcherExtras &extras) const {
-  if (style.fletching_color) {
-    extras.fletch = saturate_color(*style.fletching_color);
-  }
-  if (style.bow_string_color) {
-    extras.stringCol = saturate_color(*style.bow_string_color);
-  }
-}
-
-void draw_headwrap(const DrawContext &ctx, const HumanoidVariant &v,
-                   const HumanoidPose &pose, ISubmitter &out) const {
-  QVector3D const cloth_color =
-      saturate_color(v.palette.cloth * QVector3D(0.9F, 1.05F, 1.05F));
-  const HeadFrame &head = pose.headFrame;
-  float const head_r = head.radius;
-  if (head_r <= 0.0F) {
-    return;
+    apply_color(style.cloth_color, variant.palette.cloth);
+    apply_color(style.leather_color, variant.palette.leather);
+    apply_color(style.leather_dark_color, variant.palette.leatherDark);
+    apply_color(style.metal_color, variant.palette.metal);
+    apply_color(style.wood_color, variant.palette.wood);
   }
 
-  auto headPoint = [&](const QVector3D &normalized) -> QVector3D {
-    return headLocalPosition(head, normalized);
-  };
+  void apply_extras_overrides(const ArcherStyleConfig &style,
+                              ArcherExtras &extras) const {
+    if (style.fletching_color) {
+      extras.fletch = saturate_color(*style.fletching_color);
+    }
+    if (style.bow_string_color) {
+      extras.stringCol = saturate_color(*style.bow_string_color);
+    }
+  }
 
-  QVector3D const band_top = headPoint(QVector3D(0.0F, 0.70F, 0.0F));
-  QVector3D const band_bot = headPoint(QVector3D(0.0F, 0.30F, 0.0F));
-  out.mesh(getUnitCylinder(),
-           cylinderBetween(ctx.model, band_bot, band_top, head_r * 1.08F),
-           cloth_color, nullptr, 1.0F);
+  void draw_headwrap(const DrawContext &ctx, const HumanoidVariant &v,
+                     const HumanoidPose &pose, ISubmitter &out) const {
+    QVector3D const cloth_color =
+        saturate_color(v.palette.cloth * QVector3D(0.9F, 1.05F, 1.05F));
+    const HeadFrame &head = pose.headFrame;
+    float const head_r = head.radius;
+    if (head_r <= 0.0F) {
+      return;
+    }
 
-  QVector3D const knot_center =
-      headPoint(QVector3D(0.10F, 0.60F, 0.72F));
-  QMatrix4x4 knot_m = ctx.model;
-  knot_m.translate(knot_center);
-  knot_m.scale(head_r * 0.32F);
-  out.mesh(getUnitSphere(), knot_m, cloth_color * 1.05F, nullptr, 1.0F);
+    auto headPoint = [&](const QVector3D &normalized) -> QVector3D {
+      return headLocalPosition(head, normalized);
+    };
 
-  QVector3D const tail_top = knot_center + head.right * (-0.08F) +
-                             head.up * (-0.05F) + head.forward * (-0.06F);
-  QVector3D const tail_bot =
-      tail_top + head.right * 0.02F + head.up * (-0.28F) + head.forward * (-0.08F);
-  out.mesh(getUnitCylinder(),
-           cylinderBetween(ctx.model, tail_top, tail_bot, head_r * 0.28F),
-           cloth_color * QVector3D(0.92F, 0.98F, 1.05F), nullptr, 1.0F);
-}
-
-static void drawQuiver(const DrawContext &ctx, const HumanoidVariant &v,
-                       const HumanoidPose &pose, const ArcherExtras &extras,
-                       uint32_t seed, ISubmitter &out) {
-  using HP = HumanProportions;
-
-  QVector3D const spine_mid = (pose.shoulderL + pose.shoulderR) * 0.5F;
-  QVector3D const quiver_offset(-0.08F, 0.10F, -0.25F);
-  QVector3D const q_top = spine_mid + quiver_offset;
-  QVector3D const q_base = q_top + QVector3D(-0.02F, -0.30F, 0.03F);
-
-  float const quiver_r = HP::HEAD_RADIUS * 0.45F;
-  out.mesh(getUnitCylinder(),
-           cylinderBetween(ctx.model, q_base, q_top, quiver_r),
-           v.palette.leather, nullptr, 1.0F);
-
-  float const j = (hash_01(seed) - 0.5F) * 0.04F;
-  float const k = (hash_01(seed ^ HashXorShift::k_golden_ratio) - 0.5F) * 0.04F;
-
-  QVector3D const a1 = q_top + QVector3D(0.00F + j, 0.08F, 0.00F + k);
-  out.mesh(getUnitCylinder(), cylinderBetween(ctx.model, q_top, a1, 0.010F),
-           v.palette.wood, nullptr, 1.0F);
-  out.mesh(getUnitCone(),
-           coneFromTo(ctx.model, a1, a1 + QVector3D(0, 0.05F, 0), 0.025F),
-           extras.fletch, nullptr, 1.0F);
-
-  QVector3D const a2 = q_top + QVector3D(0.02F - j, 0.07F, 0.02F - k);
-  out.mesh(getUnitCylinder(), cylinderBetween(ctx.model, q_top, a2, 0.010F),
-           v.palette.wood, nullptr, 1.0F);
-  out.mesh(getUnitCone(),
-           coneFromTo(ctx.model, a2, a2 + QVector3D(0, 0.05F, 0), 0.025F),
-           extras.fletch, nullptr, 1.0F);
-}
-
-static void drawBowAndArrow(const DrawContext &ctx, const HumanoidPose &pose,
-                            const HumanoidVariant &v,
-                            const ArcherExtras &extras, bool is_attacking,
-                            float attack_phase, ISubmitter &out) {
-  const QVector3D up(0.0F, 1.0F, 0.0F);
-  const QVector3D forward(0.0F, 0.0F, 1.0F);
-
-  QVector3D const grip = pose.handL;
-
-  float const bow_plane_z = 0.45F;
-  QVector3D const top_end(extras.bowX, extras.bowTopY, bow_plane_z);
-  QVector3D const bot_end(extras.bowX, extras.bowBotY, bow_plane_z);
-
-  QVector3D const nock(
-      extras.bowX,
-      clampf(pose.hand_r.y(), extras.bowBotY + 0.05F, extras.bowTopY - 0.05F),
-      clampf(pose.hand_r.z(), bow_plane_z - 0.30F, bow_plane_z + 0.30F));
-
-  constexpr int k_bowstring_segments = 22;
-  auto q_bezier = [](const QVector3D &a, const QVector3D &c, const QVector3D &b,
-                     float t) {
-    float const u = 1.0F - t;
-    return u * u * a + 2.0F * u * t * c + t * t * b;
-  };
-
-  float const bow_mid_y = (top_end.y() + bot_end.y()) * 0.5F;
-
-  float const ctrl_y = bow_mid_y + 0.45F;
-
-  QVector3D const ctrl(extras.bowX, ctrl_y,
-                       bow_plane_z + extras.bowDepth * 0.6F);
-
-  QVector3D prev = bot_end;
-  for (int i = 1; i <= k_bowstring_segments; ++i) {
-    float const t = float(i) / float(k_bowstring_segments);
-    QVector3D const cur = q_bezier(bot_end, ctrl, top_end, t);
+    QVector3D const band_top = headPoint(QVector3D(0.0F, 0.70F, 0.0F));
+    QVector3D const band_bot = headPoint(QVector3D(0.0F, 0.30F, 0.0F));
     out.mesh(getUnitCylinder(),
-             cylinderBetween(ctx.model, prev, cur, extras.bowRodR),
-             v.palette.wood, nullptr, 1.0F);
-    prev = cur;
+             cylinderBetween(ctx.model, band_bot, band_top, head_r * 1.08F),
+             cloth_color, nullptr, 1.0F);
+
+    QVector3D const knot_center = headPoint(QVector3D(0.10F, 0.60F, 0.72F));
+    QMatrix4x4 knot_m = ctx.model;
+    knot_m.translate(knot_center);
+    knot_m.scale(head_r * 0.32F);
+    out.mesh(getUnitSphere(), knot_m, cloth_color * 1.05F, nullptr, 1.0F);
+
+    QVector3D const tail_top = knot_center + head.right * (-0.08F) +
+                               head.up * (-0.05F) + head.forward * (-0.06F);
+    QVector3D const tail_bot = tail_top + head.right * 0.02F +
+                               head.up * (-0.28F) + head.forward * (-0.08F);
+    out.mesh(getUnitCylinder(),
+             cylinderBetween(ctx.model, tail_top, tail_bot, head_r * 0.28F),
+             cloth_color * QVector3D(0.92F, 0.98F, 1.05F), nullptr, 1.0F);
   }
-  out.mesh(getUnitCylinder(),
-           cylinderBetween(ctx.model, grip - up * 0.05F, grip + up * 0.05F,
-                           extras.bowRodR * 1.45F),
-           v.palette.wood, nullptr, 1.0F);
 
-  out.mesh(getUnitCylinder(),
-           cylinderBetween(ctx.model, top_end, nock, extras.stringR),
-           extras.stringCol, nullptr, 1.0F);
-  out.mesh(getUnitCylinder(),
-           cylinderBetween(ctx.model, nock, bot_end, extras.stringR),
-           extras.stringCol, nullptr, 1.0F);
-  out.mesh(getUnitCylinder(),
-           cylinderBetween(ctx.model, pose.hand_r, nock, 0.0045F),
-           extras.stringCol * 0.9F, nullptr, 1.0F);
+  static void drawQuiver(const DrawContext &ctx, const HumanoidVariant &v,
+                         const HumanoidPose &pose, const ArcherExtras &extras,
+                         uint32_t seed, ISubmitter &out) {
+    using HP = HumanProportions;
 
-  bool const show_arrow =
-      !is_attacking ||
-      (is_attacking && attack_phase >= 0.0F && attack_phase < 0.52F);
+    QVector3D const spine_mid = (pose.shoulderL + pose.shoulderR) * 0.5F;
+    QVector3D const quiver_offset(-0.08F, 0.10F, -0.25F);
+    QVector3D const q_top = spine_mid + quiver_offset;
+    QVector3D const q_base = q_top + QVector3D(-0.02F, -0.30F, 0.03F);
 
-  if (show_arrow) {
-    QVector3D const tail = nock - forward * 0.06F;
-    QVector3D const tip = tail + forward * 0.90F;
-    out.mesh(getUnitCylinder(), cylinderBetween(ctx.model, tail, tip, 0.018F),
+    float const quiver_r = HP::HEAD_RADIUS * 0.45F;
+    out.mesh(getUnitCylinder(),
+             cylinderBetween(ctx.model, q_base, q_top, quiver_r),
+             v.palette.leather, nullptr, 1.0F);
+
+    float const j = (hash_01(seed) - 0.5F) * 0.04F;
+    float const k =
+        (hash_01(seed ^ HashXorShift::k_golden_ratio) - 0.5F) * 0.04F;
+
+    QVector3D const a1 = q_top + QVector3D(0.00F + j, 0.08F, 0.00F + k);
+    out.mesh(getUnitCylinder(), cylinderBetween(ctx.model, q_top, a1, 0.010F),
              v.palette.wood, nullptr, 1.0F);
-    QVector3D const head_base = tip - forward * 0.10F;
-    out.mesh(getUnitCone(), coneFromTo(ctx.model, head_base, tip, 0.05F),
-             extras.metalHead, nullptr, 1.0F);
-    QVector3D const f1b = tail - forward * 0.02F;
-    QVector3D const f1a = f1b - forward * 0.06F;
-    QVector3D const f2b = tail + forward * 0.02F;
-    QVector3D const f2a = f2b + forward * 0.06F;
-    out.mesh(getUnitCone(), coneFromTo(ctx.model, f1b, f1a, 0.04F),
+    out.mesh(getUnitCone(),
+             coneFromTo(ctx.model, a1, a1 + QVector3D(0, 0.05F, 0), 0.025F),
              extras.fletch, nullptr, 1.0F);
-    out.mesh(getUnitCone(), coneFromTo(ctx.model, f2a, f2b, 0.04F),
+
+    QVector3D const a2 = q_top + QVector3D(0.02F - j, 0.07F, 0.02F - k);
+    out.mesh(getUnitCylinder(), cylinderBetween(ctx.model, q_top, a2, 0.010F),
+             v.palette.wood, nullptr, 1.0F);
+    out.mesh(getUnitCone(),
+             coneFromTo(ctx.model, a2, a2 + QVector3D(0, 0.05F, 0), 0.025F),
              extras.fletch, nullptr, 1.0F);
   }
-}
+
+  static void drawBowAndArrow(const DrawContext &ctx, const HumanoidPose &pose,
+                              const HumanoidVariant &v,
+                              const ArcherExtras &extras, bool is_attacking,
+                              float attack_phase, ISubmitter &out) {
+    const QVector3D up(0.0F, 1.0F, 0.0F);
+    const QVector3D forward(0.0F, 0.0F, 1.0F);
+
+    QVector3D const grip = pose.handL;
+
+    float const bow_plane_z = 0.45F;
+    QVector3D const top_end(extras.bowX, extras.bowTopY, bow_plane_z);
+    QVector3D const bot_end(extras.bowX, extras.bowBotY, bow_plane_z);
+
+    QVector3D const nock(
+        extras.bowX,
+        clampf(pose.hand_r.y(), extras.bowBotY + 0.05F, extras.bowTopY - 0.05F),
+        clampf(pose.hand_r.z(), bow_plane_z - 0.30F, bow_plane_z + 0.30F));
+
+    constexpr int k_bowstring_segments = 22;
+    auto q_bezier = [](const QVector3D &a, const QVector3D &c,
+                       const QVector3D &b, float t) {
+      float const u = 1.0F - t;
+      return u * u * a + 2.0F * u * t * c + t * t * b;
+    };
+
+    float const bow_mid_y = (top_end.y() + bot_end.y()) * 0.5F;
+
+    float const ctrl_y = bow_mid_y + 0.45F;
+
+    QVector3D const ctrl(extras.bowX, ctrl_y,
+                         bow_plane_z + extras.bowDepth * 0.6F);
+
+    QVector3D prev = bot_end;
+    for (int i = 1; i <= k_bowstring_segments; ++i) {
+      float const t = float(i) / float(k_bowstring_segments);
+      QVector3D const cur = q_bezier(bot_end, ctrl, top_end, t);
+      out.mesh(getUnitCylinder(),
+               cylinderBetween(ctx.model, prev, cur, extras.bowRodR),
+               v.palette.wood, nullptr, 1.0F);
+      prev = cur;
+    }
+    out.mesh(getUnitCylinder(),
+             cylinderBetween(ctx.model, grip - up * 0.05F, grip + up * 0.05F,
+                             extras.bowRodR * 1.45F),
+             v.palette.wood, nullptr, 1.0F);
+
+    out.mesh(getUnitCylinder(),
+             cylinderBetween(ctx.model, top_end, nock, extras.stringR),
+             extras.stringCol, nullptr, 1.0F);
+    out.mesh(getUnitCylinder(),
+             cylinderBetween(ctx.model, nock, bot_end, extras.stringR),
+             extras.stringCol, nullptr, 1.0F);
+    out.mesh(getUnitCylinder(),
+             cylinderBetween(ctx.model, pose.hand_r, nock, 0.0045F),
+             extras.stringCol * 0.9F, nullptr, 1.0F);
+
+    bool const show_arrow =
+        !is_attacking ||
+        (is_attacking && attack_phase >= 0.0F && attack_phase < 0.52F);
+
+    if (show_arrow) {
+      QVector3D const tail = nock - forward * 0.06F;
+      QVector3D const tip = tail + forward * 0.90F;
+      out.mesh(getUnitCylinder(), cylinderBetween(ctx.model, tail, tip, 0.018F),
+               v.palette.wood, nullptr, 1.0F);
+      QVector3D const head_base = tip - forward * 0.10F;
+      out.mesh(getUnitCone(), coneFromTo(ctx.model, head_base, tip, 0.05F),
+               extras.metalHead, nullptr, 1.0F);
+      QVector3D const f1b = tail - forward * 0.02F;
+      QVector3D const f1a = f1b - forward * 0.06F;
+      QVector3D const f2b = tail + forward * 0.02F;
+      QVector3D const f2a = f2b + forward * 0.06F;
+      out.mesh(getUnitCone(), coneFromTo(ctx.model, f1b, f1a, 0.04F),
+               extras.fletch, nullptr, 1.0F);
+      out.mesh(getUnitCone(), coneFromTo(ctx.model, f2a, f2b, 0.04F),
+               extras.fletch, nullptr, 1.0F);
+    }
+  }
 };
 
 void registerArcherRenderer(Render::GL::EntityRendererRegistry &registry) {
@@ -844,4 +832,4 @@ void registerArcherRenderer(Render::GL::EntityRendererRegistry &registry) {
         }
       });
 }
-}
+} // namespace Render::GL::Carthage
