@@ -91,11 +91,26 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 set(CMAKE_AUTOMOC ON)
 
+# ---- Google Test Setup ----
+include(FetchContent)
+FetchContent_Declare(
+  googletest
+  GIT_REPOSITORY https://github.com/google/googletest.git
+  GIT_TAG v1.14.0
+)
+# For Windows: Prevent overriding the parent project's compiler/linker settings
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(googletest)
+
+# Enable testing
+enable_testing()
+
 # engine core moved under game; no separate engine subdir target
 add_subdirectory(render)
 add_subdirectory(game)
 add_subdirectory(ui)
 add_subdirectory(tools)
+add_subdirectory(tests)
 
 # ---- Translation support ----
 # Define default language (can be overridden with -DDEFAULT_LANG=de)
