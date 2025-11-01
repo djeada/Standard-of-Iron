@@ -13,8 +13,6 @@
 #include <QMatrix4x4>
 #include <QVector3D>
 #include <algorithm>
-#include <qmatrix4x4.h>
-#include <qvectornd.h>
 
 namespace Render::GL::Roman {
 namespace {
@@ -22,648 +20,219 @@ namespace {
 using Render::Geom::clamp01;
 using Render::Geom::clampVec01;
 using Render::Geom::cylinderBetween;
-using Render::Geom::lerp;
 
-struct BuildingProportions {
-  // Roman: Larger, rectangular fortress-style barracks
-  static constexpr float base_width = 3.2F;   // Wider than others
-  static constexpr float base_depth = 2.6F;   // Deeper rectangular shape
-  static constexpr float base_height = 1.4F;  // Lower, more fortress-like
-  static constexpr float foundation_height = 0.25F;
-  static constexpr float wall_thickness = 0.12F;  // Thicker stone walls
-  static constexpr float beam_thickness = 0.10F;
-  static constexpr float corner_post_radius = 0.10F;
-  static constexpr float roof_pitch = 0.3F;   // Very low pitch (almost flat)
-  static constexpr float roof_overhang = 0.08F;  // Minimal overhang
-  static constexpr float thatch_layer_height = 0.10F;
-  static constexpr float annex_width = 1.4F;  // Larger annex
-  static constexpr float annex_depth = 1.2F;
-  static constexpr float annex_height = 1.0F;
-  static constexpr float annex_roof_height = 0.2F;  // Very flat
-  static constexpr float door_width = 0.7F;   // Wider doors
-  static constexpr float door_height = 1.0F;  // Taller doors
-  static constexpr float window_width = 0.3F; // Narrow windows
-  static constexpr float window_height = 0.6F; // Tall, narrow windows
-  static constexpr float chimney_width = 0.30F;
-  static constexpr float chimney_height = 0.8F;
-  static constexpr float chimney_cap_size = 0.40F;
-  static constexpr float banner_pole_height = 2.2F;
-  static constexpr float banner_pole_radius = 0.06F;
-  static constexpr float banner_width = 0.6F;
-  static constexpr float banner_height = 0.7F;
-};
-
-struct BarracksPalette {
-  // Roman style: red brick/terracotta, grey stone, clay tiles
-  QVector3D plaster{0.85F, 0.70F, 0.60F};  // Reddish terracotta plaster
-  QVector3D plasterShade{0.72F, 0.58F, 0.48F};
-  QVector3D timber{0.45F, 0.30F, 0.18F};  // Sturdy Roman timber
-  QVector3D timberLight{0.58F, 0.42F, 0.26F};
-  QVector3D woodDark{0.35F, 0.22F, 0.12F};
-  QVector3D thatch{0.75F, 0.45F, 0.35F};  // Red clay tiles instead of thatch
-  QVector3D thatchDark{0.62F, 0.38F, 0.28F};
-  QVector3D stone{0.60F, 0.58F, 0.56F};  // Roman grey stone
-  QVector3D stoneDark{0.48F, 0.46F, 0.44F};
-  QVector3D door{0.32F, 0.22F, 0.14F};
-  QVector3D window{0.40F, 0.45F, 0.50F};
-  QVector3D path{0.65F, 0.62F, 0.58F};  // Stone paving
-  QVector3D crate{0.52F, 0.38F, 0.22F};
+// Roman fortress: thick stone walls, multiple levels, defensive architecture
+struct RomanPalette {
+  QVector3D stone_light{0.62F, 0.60F, 0.58F};
+  QVector3D stone_dark{0.50F, 0.48F, 0.46F};
+  QVector3D stone_base{0.55F, 0.53F, 0.51F};
+  QVector3D brick{0.75F, 0.52F, 0.42F};
+  QVector3D brick_dark{0.62F, 0.42F, 0.32F};
+  QVector3D tile_red{0.72F, 0.40F, 0.30F};
+  QVector3D tile_dark{0.58F, 0.30F, 0.22F};
+  QVector3D wood{0.42F, 0.28F, 0.16F};
+  QVector3D wood_dark{0.32F, 0.20F, 0.10F};
+  QVector3D iron{0.35F, 0.35F, 0.38F};
   QVector3D team{0.8F, 0.9F, 1.0F};
-  QVector3D teamTrim{0.48F, 0.54F, 0.60F};
+  QVector3D team_trim{0.48F, 0.54F, 0.60F};
 };
 
-inline auto makePalette(const QVector3D &team) -> BarracksPalette {
-  BarracksPalette p;
+inline auto makePalette(const QVector3D &team) -> RomanPalette {
+  RomanPalette p;
   p.team = clampVec01(team);
-  p.teamTrim =
-      clampVec01(QVector3D(team.x() * 0.6F, team.y() * 0.6F, team.z() * 0.6F));
+  p.team_trim = clampVec01(QVector3D(team.x() * 0.6F, team.y() * 0.6F, team.z() * 0.6F));
   return p;
 }
 
-inline void drawCylinder(ISubmitter &out, const QMatrix4x4 &model,
-                         const QVector3D &a, const QVector3D &b, float radius,
-                         const QVector3D &color, Texture *white) {
-  out.mesh(getUnitCylinder(), model * cylinderBetween(a, b, radius), color,
-           white, 1.0F);
-}
-
-inline void unitBox(ISubmitter &out, Mesh *unitMesh, Texture *white,
-                    const QMatrix4x4 &model, const QVector3D &t,
-                    const QVector3D &s, const QVector3D &color) {
+inline void drawBox(ISubmitter &out, Mesh *unit, Texture *white,
+                   const QMatrix4x4 &model, const QVector3D &pos,
+                   const QVector3D &size, const QVector3D &color) {
   QMatrix4x4 m = model;
-  m.translate(t);
-  m.scale(s);
-  out.mesh(unitMesh, m, color, white, 1.0F);
+  m.translate(pos);
+  m.scale(size);
+  out.mesh(unit, m, color, white, 1.0F);
 }
 
-inline void unitBox(ISubmitter &out, Mesh *unitMesh, Texture *white,
-                    const QMatrix4x4 &model, const QVector3D &s,
-                    const QVector3D &color) {
-  QMatrix4x4 m = model;
-  m.scale(s);
-  out.mesh(unitMesh, m, color, white, 1.0F);
+inline void drawCyl(ISubmitter &out, const QMatrix4x4 &model,
+                   const QVector3D &a, const QVector3D &b, float r,
+                   const QVector3D &color, Texture *white) {
+  out.mesh(getUnitCylinder(), model * cylinderBetween(a, b, r), color, white, 1.0F);
 }
 
-inline void drawFoundation(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                           Texture *white, const BarracksPalette &C) {
-  constexpr float base_width = BuildingProportions::base_width;
-  constexpr float base_depth = BuildingProportions::base_depth;
-  constexpr float foundation_height = BuildingProportions::foundation_height;
-
-  unitBox(out, unit, white, p.model,
-          QVector3D(0.0F, -foundation_height / 2, 0.0F),
-          QVector3D(base_width / 2 + 0.1F, foundation_height / 2,
-                    base_depth / 2 + 0.1F),
-          C.stoneDark);
-
-  const float step_h = 0.015F;
-  const float step_w = 0.16F;
-  const float step_d = 0.10F;
-  const float front_z = base_depth * 0.5F + 0.12F;
-  for (int i = 0; i < 5; ++i) {
-    float const t = i / 4.0F;
-    float const x = (i % 2 == 0) ? -0.18F : 0.18F;
-    QVector3D const c = lerp(C.path, C.stone, 0.25F * (i % 2));
-    unitBox(out, unit, white, p.model,
-            QVector3D(x, -foundation_height + step_h, front_z + t * 0.55F),
-            QVector3D(step_w * (0.95F + 0.1F * (i % 2)), step_h, step_d), c);
+// Roman fortress base - thick stone foundation
+void drawFortressBase(const DrawContext &p, ISubmitter &out, Mesh *unit,
+                      Texture *white, const RomanPalette &c) {
+  // Massive stone foundation
+  drawBox(out, unit, white, p.model, QVector3D(0.0F, 0.15F, 0.0F),
+          QVector3D(1.8F, 0.15F, 1.5F), c.stone_base);
+  
+  // Stone blocks around perimeter
+  for (float x = -1.6F; x <= 1.6F; x += 0.4F) {
+    drawBox(out, unit, white, p.model, QVector3D(x, 0.35F, -1.4F),
+            QVector3D(0.18F, 0.08F, 0.08F), c.stone_dark);
+    drawBox(out, unit, white, p.model, QVector3D(x, 0.35F, 1.4F),
+            QVector3D(0.18F, 0.08F, 0.08F), c.stone_dark);
   }
-
-  QVector3D const skirt_color =
-      lerp(C.stoneDark, QVector3D(0.0F, 0.0F, 0.0F), 0.25F);
-  unitBox(out, unit, white, p.model, QVector3D(0.0F, 0.02F, 0.0F),
-          QVector3D(base_width * 0.50F, 0.01F, base_depth * 0.50F),
-          skirt_color);
+  for (float z = -1.3F; z <= 1.3F; z += 0.4F) {
+    drawBox(out, unit, white, p.model, QVector3D(-1.7F, 0.35F, z),
+            QVector3D(0.08F, 0.08F, 0.18F), c.stone_dark);
+    drawBox(out, unit, white, p.model, QVector3D(1.7F, 0.35F, z),
+            QVector3D(0.08F, 0.08F, 0.18F), c.stone_dark);
+  }
 }
 
-inline void drawWalls(const DrawContext &p, ISubmitter &out, Mesh *,
-                      Texture *white, const BarracksPalette &C) {
-  constexpr float w = BuildingProportions::base_width;
-  constexpr float d = BuildingProportions::base_depth;
-  constexpr float h = BuildingProportions::base_height;
-
-  const float r = 0.09F;
-  const float notch = 0.07F;
-
-  const float left_x = -w * 0.5F;
-  const float right_x = w * 0.5F;
-  const float back_z = -d * 0.5F;
-  const float front_z = d * 0.5F;
-
-  const int courses = std::max(4, int(h / (2.0F * r)));
-  const float y0 = r;
-
-  auto log_x = [&](float y, float z, float x0, float x1, const QVector3D &col) {
-    drawCylinder(out, p.model, QVector3D(x0 - notch, y, z),
-                 QVector3D(x1 + notch, y, z), r, col, white);
-  };
-  auto log_z = [&](float y, float x, float z0, float z1, const QVector3D &col) {
-    drawCylinder(out, p.model, QVector3D(x, y, z0 - notch),
-                 QVector3D(x, y, z1 + notch), r, col, white);
-  };
-
-  const float door_w = BuildingProportions::door_width;
-  const float door_h = BuildingProportions::door_height;
-  const float gap_half = door_w * 0.5F;
-
-  for (int i = 0; i < courses; ++i) {
-    float const y = y0 + i * (2.0F * r);
-    QVector3D const log_col = lerp(C.timber, C.timberLight, (i % 2) * 0.25F);
-
-    if (y <= (door_h - 0.5F * r)) {
-      log_x(y, front_z, left_x, -gap_half, log_col);
-      log_x(y, front_z, +gap_half, right_x, log_col);
-    } else {
-      log_x(y, front_z, left_x, right_x, log_col);
-    }
-
-    log_x(y, back_z, left_x, right_x, log_col);
-    log_z(y, left_x, back_z, front_z, log_col);
-    log_z(y, right_x, back_z, front_z, log_col);
-  }
-
-  QVector3D const post_col = C.woodDark;
-  drawCylinder(out, p.model, QVector3D(-gap_half, y0, front_z),
-               QVector3D(-gap_half, y0 + door_h, front_z), r * 0.95F, post_col,
-               white);
-  drawCylinder(out, p.model, QVector3D(+gap_half, y0, front_z),
-               QVector3D(+gap_half, y0 + door_h, front_z), r * 0.95F, post_col,
-               white);
-  drawCylinder(out, p.model, QVector3D(-gap_half, y0 + door_h, front_z),
-               QVector3D(+gap_half, y0 + door_h, front_z), r, C.timberLight,
-               white);
-
-  float const brace_y0 = h * 0.35F;
-  float const brace_y1 = h * 0.95F;
-  drawCylinder(out, p.model,
-               QVector3D(left_x + 0.08F, brace_y0, back_z + 0.10F),
-               QVector3D(left_x + 0.38F, brace_y1, back_z + 0.10F), r * 0.6F,
-               C.woodDark, white);
-  drawCylinder(out, p.model,
-               QVector3D(right_x - 0.08F, brace_y0, back_z + 0.10F),
-               QVector3D(right_x - 0.38F, brace_y1, back_z + 0.10F), r * 0.6F,
-               C.woodDark, white);
-  drawCylinder(out, p.model,
-               QVector3D(left_x + 0.08F, brace_y0, front_z - 0.10F),
-               QVector3D(left_x + 0.38F, brace_y1, front_z - 0.10F), r * 0.6F,
-               C.woodDark, white);
-  drawCylinder(out, p.model,
-               QVector3D(right_x - 0.08F, brace_y0, front_z - 0.10F),
-               QVector3D(right_x - 0.38F, brace_y1, front_z - 0.10F), r * 0.6F,
-               C.woodDark, white);
-}
-
-struct ChimneyInfo {
-  float x;
-  float z;
-  float base_y;
-  float topY;
-  float gapRadius;
-};
-
-inline auto drawChimney(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                        Texture *white,
-                        const BarracksPalette &C) -> ChimneyInfo {
-  constexpr float w = BuildingProportions::base_width;
-  constexpr float d = BuildingProportions::base_depth;
-  constexpr float h = BuildingProportions::base_height;
-  constexpr float rise = BuildingProportions::roof_pitch;
-
-  float const x = -w * 0.32F;
-  float const z = -d * 0.5F - 0.06F;
-
-  float const base_y = 0.18F;
-  float const ridge_y = h + rise;
-  float const top_y = ridge_y + 0.35F;
-
-  QVector3D const base_sz(BuildingProportions::chimney_width * 0.65F, 0.16F,
-                          BuildingProportions::chimney_width * 0.55F);
-  unitBox(out, unit, white, p.model, QVector3D(x, base_y + base_sz.y(), z),
-          base_sz, C.stoneDark);
-
-  int const segments = 4;
-  float const seg_h = (top_y - (base_y + base_sz.y() * 2.0F)) / float(segments);
-  float const w0 = BuildingProportions::chimney_width * 0.55F;
-  float const w1 = BuildingProportions::chimney_width * 0.34F;
-
-  for (int i = 0; i < segments; ++i) {
-    float const t = float(i) / float(segments - 1);
-    float const wy = w0 * (1.0F - t) + w1 * t;
-    float const hz = wy * 0.85F;
-    QVector3D const col =
-        (i % 2 == 0) ? C.stone : lerp(C.stone, C.stoneDark, 0.35F);
-    float const y_mid = base_y + base_sz.y() * 2.0F + seg_h * (i + 0.5F);
-    unitBox(out, unit, white, p.model, QVector3D(x, y_mid, z),
-            QVector3D(wy, seg_h * 0.5F, hz), col);
-  }
-
-  float const corbel_y = top_y - 0.14F;
-  unitBox(out, unit, white, p.model, QVector3D(x, corbel_y, z),
-          QVector3D(w1 * 1.22F, 0.025F, w1 * 1.22F), C.stoneDark);
-  unitBox(out, unit, white, p.model, QVector3D(x, corbel_y + 0.05F, z),
-          QVector3D(w1 * 1.05F, 0.02F, w1 * 1.05F),
-          lerp(C.stone, C.stoneDark, 0.2F));
-
-  float const pot_h = 0.10F;
-  unitBox(out, unit, white, p.model, QVector3D(x, top_y + pot_h * 0.5F, z),
-          QVector3D(w1 * 0.45F, pot_h * 0.5F, w1 * 0.45F),
-          lerp(C.stoneDark, QVector3D(0.08F, 0.08F, 0.08F), 0.35F));
-
-  unitBox(out, unit, white, p.model, QVector3D(x, h + rise * 0.55F, z + 0.06F),
-          QVector3D(w1 * 1.35F, 0.01F, 0.04F),
-          lerp(C.stoneDark, QVector3D(0.05F, 0.05F, 0.05F), 0.3F));
-
-  return ChimneyInfo{x, z, base_y, top_y + pot_h, 0.28F};
-}
-
-inline void drawRoofs(const DrawContext &p, ISubmitter &out, Mesh *,
-                      Texture *white, const BarracksPalette &C,
-                      const ChimneyInfo &ch) {
-  constexpr float w = BuildingProportions::base_width;
-  constexpr float d = BuildingProportions::base_depth;
-  constexpr float h = BuildingProportions::base_height;
-  constexpr float rise = BuildingProportions::roof_pitch;
-  constexpr float over = BuildingProportions::roof_overhang;
-
-  const float r = 0.085F;
-
-  const float left_x = -w * 0.5F;
-  const float right_x = w * 0.5F;
-  const float back_z = -d * 0.5F;
-  const float front_z = d * 0.5F;
-
-  const float plate_y = h;
-  const float ridge_y = h + rise;
-
-  drawCylinder(out, p.model, QVector3D(left_x - over, plate_y, front_z + over),
-               QVector3D(right_x + over, plate_y, front_z + over), r,
-               C.woodDark, white);
-  drawCylinder(out, p.model, QVector3D(left_x - over, plate_y, back_z - over),
-               QVector3D(right_x + over, plate_y, back_z - over), r, C.woodDark,
-               white);
-
-  drawCylinder(out, p.model, QVector3D(left_x - over * 0.5F, ridge_y, 0.0F),
-               QVector3D(right_x + over * 0.5F, ridge_y, 0.0F), r,
-               C.timberLight, white);
-
-  const int pairs = 7;
-  for (int i = 0; i < pairs; ++i) {
-    float const t = (pairs == 1) ? 0.0F : (float(i) / float(pairs - 1));
-    float const x =
-        (left_x - over * 0.5F) * (1.0F - t) + (right_x + over * 0.5F) * t;
-
-    drawCylinder(out, p.model, QVector3D(x, plate_y, back_z - over),
-                 QVector3D(x, ridge_y, 0.0F), r * 0.85F, C.woodDark, white);
-
-    drawCylinder(out, p.model, QVector3D(x, plate_y, front_z + over),
-                 QVector3D(x, ridge_y, 0.0F), r * 0.85F, C.woodDark, white);
-  }
-
-  auto purlin = [&](float tz, bool front) {
-    float const z = front ? (front_z + over - tz * (front_z + over))
-                          : (back_z - over - tz * (back_z - over));
-    float const y = plate_y + tz * (ridge_y - plate_y);
-    drawCylinder(out, p.model, QVector3D(left_x - over * 0.4F, y, z),
-                 QVector3D(right_x + over * 0.4F, y, z), r * 0.6F, C.timber,
-                 white);
-  };
-  purlin(0.35F, true);
-  purlin(0.70F, true);
-  purlin(0.35F, false);
-  purlin(0.70F, false);
-
-  auto split_thatch = [&](float y, float z, float rad, const QVector3D &col) {
-    float const gap_l = ch.x - ch.gapRadius;
-    float const gap_r = ch.x + ch.gapRadius;
-    drawCylinder(out, p.model, QVector3D(left_x - over * 0.35F, y, z),
-                 QVector3D(gap_l, y, z), rad, col, white);
-    drawCylinder(out, p.model, QVector3D(gap_r, y, z),
-                 QVector3D(right_x + over * 0.35F, y, z), rad, col, white);
-  };
-
-  auto thatch_row = [&](float tz, bool front, float radScale, float tint) {
-    float const z = front ? (front_z + over - tz * (front_z + over))
-                          : (back_z - over - tz * (back_z - over));
-    float const y = plate_y + tz * (ridge_y - plate_y);
-    QVector3D const col = lerp(C.thatchDark, C.thatch, clamp01(tint));
-    split_thatch(y, z, r * radScale, col);
-  };
-
-  const int rows = 9;
-  for (int i = 0; i < rows; ++i) {
-    float const tz = float(i) / float(rows - 1);
-    float const s = 1.30F - 0.6F * tz;
-    float const tint = 0.2F + 0.6F * (1.0F - tz);
-    thatch_row(tz, true, s, tint);
-    thatch_row(tz * 0.98F, false, s, tint * 0.95F);
-  }
-
-  float const eave_y = plate_y + 0.06F;
-  split_thatch(eave_y, front_z + over * 1.02F, r * 0.55F, C.thatchDark);
-  split_thatch(eave_y, back_z - over * 1.02F, r * 0.55F, C.thatchDark);
-
-  float const flash_y = plate_y + (ridge_y - plate_y) * 0.55F;
-  float const flash_zback = back_z - over * 0.20F;
-  float const ring = ch.gapRadius + 0.04F;
-  unitBox(out, nullptr, white, p.model, QVector3D(ch.x, flash_y, flash_zback),
-          QVector3D(ring, 0.008F, 0.02F), C.stoneDark);
-}
-
-inline void drawDoor(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                     Texture *white, const BarracksPalette &C) {
-  constexpr float d = BuildingProportions::base_depth;
-  constexpr float d_w = BuildingProportions::door_width;
-  constexpr float d_h = BuildingProportions::door_height;
-
-  const float y0 = 0.09F;
-  const float zf = d * 0.5F;
-
-  QVector3D const frame_col = C.woodDark;
-  unitBox(out, unit, white, p.model,
-          QVector3D(0.0F, y0 + d_h * 0.5F, zf + 0.015F),
-          QVector3D(d_w * 0.5F, d_h * 0.5F, 0.02F), C.door);
-
-  float const plank_w = d_w / 6.0F;
+// Main fortress walls - thick stone construction
+void drawFortressWalls(const DrawContext &p, ISubmitter &out, Mesh *unit,
+                       Texture *white, const RomanPalette &c) {
+  float const wall_height = 1.2F;
+  
+  // Four main walls
+  drawBox(out, unit, white, p.model, QVector3D(0.0F, wall_height * 0.5F + 0.3F, -1.3F),
+          QVector3D(1.5F, wall_height * 0.5F, 0.12F), c.stone_light);
+  drawBox(out, unit, white, p.model, QVector3D(0.0F, wall_height * 0.5F + 0.3F, 1.3F),
+          QVector3D(1.5F, wall_height * 0.5F, 0.12F), c.stone_light);
+  drawBox(out, unit, white, p.model, QVector3D(-1.6F, wall_height * 0.5F + 0.3F, 0.0F),
+          QVector3D(0.12F, wall_height * 0.5F, 1.2F), c.stone_light);
+  drawBox(out, unit, white, p.model, QVector3D(1.6F, wall_height * 0.5F + 0.3F, 0.0F),
+          QVector3D(0.12F, wall_height * 0.5F, 1.2F), c.stone_light);
+  
+  // Brick accents
   for (int i = 0; i < 6; ++i) {
-    float const cx = -d_w * 0.5F + plank_w * (i + 0.5F);
-    QVector3D const plank_col = lerp(C.door, C.woodDark, 0.15F * (i % 2));
-    unitBox(out, unit, white, p.model,
-            QVector3D(cx, y0 + d_h * 0.5F, zf + 0.022F),
-            QVector3D(plank_w * 0.48F, d_h * 0.48F, 0.006F), plank_col);
+    float const x = -1.2F + float(i) * 0.5F;
+    drawBox(out, unit, white, p.model, QVector3D(x, wall_height + 0.35F, -1.25F),
+            QVector3D(0.2F, 0.05F, 0.05F), c.brick);
   }
-
-  drawCylinder(out, p.model,
-               QVector3D(-d_w * 0.45F, y0 + d_h * 0.35F, zf + 0.03F),
-               QVector3D(+d_w * 0.45F, y0 + d_h * 0.35F, zf + 0.03F), 0.02F,
-               frame_col, white);
-
-  drawCylinder(out, p.model,
-               QVector3D(d_w * 0.32F, y0 + d_h * 0.45F, zf + 0.04F),
-               QVector3D(d_w * 0.42F, y0 + d_h * 0.45F, zf + 0.04F), 0.012F,
-               C.timberLight, white);
-
-  unitBox(out, unit, white, p.model,
-          QVector3D(0.0F, y0 + d_h + 0.10F, zf + 0.02F),
-          QVector3D(0.22F, 0.06F, 0.01F), C.woodDark);
-  unitBox(out, unit, white, p.model,
-          QVector3D(0.0F, y0 + d_h + 0.10F, zf + 0.025F),
-          QVector3D(0.18F, 0.05F, 0.008F), C.team);
-  unitBox(out, unit, white, p.model,
-          QVector3D(0.0F, y0 + d_h + 0.10F, zf + 0.03F),
-          QVector3D(0.08F, 0.02F, 0.007F), C.teamTrim);
 }
 
-inline void drawWindows(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                        Texture *white, const BarracksPalette &C) {
-  constexpr float base_w = BuildingProportions::base_width;
-  constexpr float base_d = BuildingProportions::base_depth;
-  constexpr float base_h = BuildingProportions::base_height;
-
-  const float left_x = -base_w * 0.5F;
-  const float right_x = base_w * 0.5F;
-  const float back_z = -base_d * 0.5F;
-  const float front_z = base_d * 0.5F;
-
-  float const window_w = BuildingProportions::window_width * 0.55F;
-  float const window_h = BuildingProportions::window_height * 0.55F;
-  float const frame_t = 0.03F;
-
-  auto framed_window = [&](QVector3D center, bool shutters) {
-    unitBox(out, unit, white, p.model, center + QVector3D(0, 0, 0.012F),
-            QVector3D(window_w * 0.5F, window_h * 0.5F, 0.008F), C.window);
-
-    unitBox(out, unit, white, p.model, center + QVector3D(0, 0, 0.016F),
-            QVector3D(window_w * 0.5F, frame_t, 0.006F), C.timber);
-    unitBox(out, unit, white, p.model, center + QVector3D(0, 0, 0.016F),
-            QVector3D(frame_t, window_h * 0.5F, 0.006F), C.timber);
-
-    unitBox(out, unit, white, p.model, center + QVector3D(0, 0, 0.02F),
-            QVector3D(window_w * 0.02F, window_h * 0.48F, 0.004F),
-            C.timberLight);
-    unitBox(out, unit, white, p.model, center + QVector3D(0, 0, 0.02F),
-            QVector3D(window_w * 0.48F, window_h * 0.02F, 0.004F),
-            C.timberLight);
-
-    if (shutters) {
-      unitBox(out, unit, white, p.model,
-              center + QVector3D(-window_w * 0.65F, 0, 0.018F),
-              QVector3D(window_w * 0.30F, window_h * 0.55F, 0.004F),
-              C.woodDark);
-      unitBox(out, unit, white, p.model,
-              center + QVector3D(+window_w * 0.65F, 0, 0.018F),
-              QVector3D(window_w * 0.30F, window_h * 0.55F, 0.004F),
-              C.woodDark);
-    }
+// Corner towers - distinctive Roman feature
+void drawCornerTowers(const DrawContext &p, ISubmitter &out, Mesh *unit,
+                      Texture *white, const RomanPalette &c) {
+  QVector3D corners[4] = {
+    QVector3D(-1.5F, 0.0F, -1.2F),
+    QVector3D(1.5F, 0.0F, -1.2F),
+    QVector3D(-1.5F, 0.0F, 1.2F),
+    QVector3D(1.5F, 0.0F, 1.2F)
   };
-
-  framed_window(QVector3D(-0.65F, 0.95F, front_z + 0.01F), true);
-  framed_window(QVector3D(+0.65F, 0.95F, front_z + 0.01F), true);
-  framed_window(QVector3D(0.0F, 1.00F, back_z - 0.01F), true);
-
-  framed_window(QVector3D(left_x + 0.06F, 0.85F, 0.0F), false);
-  framed_window(QVector3D(right_x - 0.06F, 0.85F, 0.0F), false);
-}
-
-inline void drawAnnex(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                      Texture *white, const BarracksPalette &C) {
-  constexpr float base_w = BuildingProportions::base_width;
-  constexpr float base_d = BuildingProportions::base_depth;
-  constexpr float annex_h = BuildingProportions::annex_height;
-  constexpr float annex_w = BuildingProportions::annex_width;
-  constexpr float annex_d = BuildingProportions::annex_depth;
-
-  float const x = base_w * 0.5F + annex_w * 0.5F - 0.05F;
-  float const z = 0.05F;
-
-  unitBox(out, unit, white, p.model, QVector3D(x, annex_h * 0.5F, z),
-          QVector3D(annex_w * 0.5F, annex_h * 0.5F, annex_d * 0.5F),
-          C.plasterShade);
-
-  unitBox(out, unit, white, p.model, QVector3D(x, annex_h + 0.02F, z),
-          QVector3D(annex_w * 0.55F, 0.02F, annex_d * 0.55F), C.woodDark);
-
-  float const plate_y = annex_h;
-  float const front_z = z + annex_d * 0.5F;
-  float const back_z = z - annex_d * 0.5F;
-  drawCylinder(out, p.model,
-               QVector3D(x - annex_w * 0.52F, plate_y, back_z - 0.12F),
-               QVector3D(x + annex_w * 0.52F, plate_y, back_z - 0.12F), 0.05F,
-               C.woodDark, white);
-
-  float const ridge_y = annex_h + BuildingProportions::annex_roof_height;
-  drawCylinder(out, p.model,
-               QVector3D(x - annex_w * 0.50F, ridge_y, back_z - 0.02F),
-               QVector3D(x + annex_w * 0.50F, ridge_y, back_z - 0.02F), 0.05F,
-               C.timberLight, white);
-
-  int const rows = 6;
-  for (int i = 0; i < rows; ++i) {
-    float const t = float(i) / float(rows - 1);
-    float const y = plate_y + t * (ridge_y - plate_y);
-    float const zrow = back_z - 0.02F - 0.10F * (1.0F - t);
-    QVector3D const col =
-        lerp(C.thatchDark, C.thatch, 0.5F + 0.4F * (1.0F - t));
-    drawCylinder(out, p.model, QVector3D(x - annex_w * 0.55F, y, zrow),
-                 QVector3D(x + annex_w * 0.55F, y, zrow),
-                 0.06F * (1.15F - 0.6F * t), col, white);
-  }
-
-  unitBox(out, unit, white, p.model,
-          QVector3D(x + annex_w * 0.01F, 0.55F, front_z + 0.01F),
-          QVector3D(0.20F, 0.18F, 0.01F), C.door);
-}
-
-inline void drawProps(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                      Texture *white, const BarracksPalette &C) {
-  unitBox(out, unit, white, p.model, QVector3D(0.85F, 0.10F, 0.90F),
-          QVector3D(0.16F, 0.10F, 0.16F), C.crate);
-  unitBox(out, unit, white, p.model, QVector3D(0.85F, 0.22F, 0.90F),
-          QVector3D(0.12F, 0.02F, 0.12F), C.woodDark);
-
-  unitBox(out, unit, white, p.model, QVector3D(-0.9F, 0.12F, -0.80F),
-          QVector3D(0.12F, 0.10F, 0.12F), C.crate);
-  unitBox(out, unit, white, p.model, QVector3D(-0.9F, 0.20F, -0.80F),
-          QVector3D(0.13F, 0.02F, 0.13F), C.woodDark);
-}
-
-inline void drawBannerAndPole(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                              Texture *white, const BarracksPalette &C) {
-  constexpr float base_width = BuildingProportions::base_width;
-  constexpr float base_depth = BuildingProportions::base_depth;
-  constexpr float banner_pole_height = BuildingProportions::banner_pole_height;
-  constexpr float banner_pole_radius = BuildingProportions::banner_pole_radius;
-  constexpr float banner_width = BuildingProportions::banner_width;
-  constexpr float banner_height = BuildingProportions::banner_height;
-
-  float const pole_x = -base_width / 2 - 0.65F;
-  float const pole_z = base_depth / 2 - 0.2F;
-
-  float const pole_height = banner_pole_height * 1.9F;
-  float const pole_radius = banner_pole_radius * 1.3F;
-  float const bw = banner_width * 1.8F;
-  float const bh = banner_height * 1.8F;
-
-  QVector3D const pole_center(pole_x, pole_height / 2.0F, pole_z);
-  QVector3D const pole_size(pole_radius * 1.6F, pole_height / 2.0F,
-                            pole_radius * 1.6F);
-  unitBox(out, unit, white, p.model, pole_center, pole_size, C.woodDark);
-
-  float const target_width = bw * 1.25F;
-  float const target_height = bh * 0.75F;
-  float const panel_depth = 0.02F;
-
-  float const beam_length = target_width * 0.45F;
-  float beam_y = pole_height - target_height * 0.25F;
-
-  QVector3D team_color = C.team;
-  QVector3D team_trim_color = C.teamTrim;
-  float flag_y = pole_height - target_height / 2.0F;
-
-  if (p.entity != nullptr) {
-    auto *capture = p.entity->getComponent<Engine::Core::CaptureComponent>();
-    if ((capture != nullptr) && capture->isBeingCaptured) {
-      float const progress = std::clamp(
-          capture->captureProgress / capture->requiredTime, 0.0F, 1.0F);
-
-      QVector3D const new_team_color =
-          Game::Visuals::team_colorForOwner(capture->capturing_player_id);
-      team_color = lerp(C.team, clampVec01(new_team_color), progress);
-      team_trim_color = lerp(C.teamTrim,
-                             clampVec01(QVector3D(new_team_color.x() * 0.6F,
-                                                  new_team_color.y() * 0.6F,
-                                                  new_team_color.z() * 0.6F)),
-                             progress);
-
-      float const lowered_amount = progress * pole_height * 0.85F;
-      flag_y -= lowered_amount;
-      beam_y -= lowered_amount;
+  
+  for (int i = 0; i < 4; ++i) {
+    // Tower base
+    drawBox(out, unit, white, p.model, 
+            QVector3D(corners[i].x(), 0.65F, corners[i].z()),
+            QVector3D(0.25F, 0.65F, 0.25F), c.stone_dark);
+    
+    // Tower top
+    drawBox(out, unit, white, p.model,
+            QVector3D(corners[i].x(), 1.45F, corners[i].z()),
+            QVector3D(0.28F, 0.15F, 0.28F), c.brick_dark);
+    
+    // Crenellations (battlements)
+    for (int j = 0; j < 4; ++j) {
+      float angle = float(j) * 1.57F;
+      float ox = sinf(angle) * 0.18F;
+      float oz = cosf(angle) * 0.18F;
+      drawBox(out, unit, white, p.model,
+              QVector3D(corners[i].x() + ox, 1.68F, corners[i].z() + oz),
+              QVector3D(0.06F, 0.08F, 0.06F), c.stone_light);
     }
   }
-
-  QVector3D const beam_start(pole_x + 0.02F, beam_y, pole_z);
-  QVector3D const beam_end(pole_x + beam_length + 0.02F, beam_y, pole_z);
-  drawCylinder(out, p.model, beam_start, beam_end, pole_radius * 0.35F,
-               C.timber, white);
-
-  QVector3D const connector_top(
-      beam_end.x(), beam_end.y() - target_height * 0.35F, beam_end.z());
-  drawCylinder(out, p.model, beam_end, connector_top, pole_radius * 0.18F,
-               C.timberLight, white);
-
-  float const panel_x = beam_end.x() + (target_width * 0.5F - beam_length);
-  unitBox(out, unit, white, p.model, QVector3D(panel_x, flag_y, pole_z + 0.01F),
-          QVector3D(target_width / 2.0F, target_height / 2.0F, panel_depth),
-          team_color);
-
-  unitBox(
-      out, unit, white, p.model,
-      QVector3D(panel_x, flag_y - target_height / 2.0F + 0.04F, pole_z + 0.01F),
-      QVector3D(target_width / 2.0F + 0.02F, 0.04F, 0.015F), team_trim_color);
-  unitBox(
-      out, unit, white, p.model,
-      QVector3D(panel_x, flag_y + target_height / 2.0F - 0.04F, pole_z + 0.01F),
-      QVector3D(target_width / 2.0F + 0.02F, 0.04F, 0.015F), team_trim_color);
 }
 
-inline void drawRallyFlagIfAny(const DrawContext &p, ISubmitter &out,
-                               Texture *white, const BarracksPalette &C) {
+// Interior courtyard structure
+void drawCourtyard(const DrawContext &p, ISubmitter &out, Mesh *unit,
+                   Texture *white, const RomanPalette &c) {
+  // Courtyard floor
+  drawBox(out, unit, white, p.model, QVector3D(0.0F, 0.32F, 0.0F),
+          QVector3D(1.2F, 0.02F, 0.9F), c.stone_base);
+  
+  // Central pillar
+  drawCyl(out, p.model, QVector3D(0.0F, 0.3F, 0.0F),
+          QVector3D(0.0F, 0.95F, 0.0F), 0.08F, c.stone_light, white);
+  
+  // Archways
+  drawBox(out, unit, white, p.model, QVector3D(0.0F, 0.65F, -0.85F),
+          QVector3D(0.35F, 0.35F, 0.08F), c.brick);
+}
+
+// Flat Roman roof with tiles
+void drawRomanRoof(const DrawContext &p, ISubmitter &out, Mesh *unit,
+                   Texture *white, const RomanPalette &c) {
+  // Main roof
+  drawBox(out, unit, white, p.model, QVector3D(0.0F, 1.58F, 0.0F),
+          QVector3D(1.55F, 0.05F, 1.25F), c.tile_red);
+  
+  // Roof details - tile rows
+  for (float z = -1.0F; z <= 1.0F; z += 0.3F) {
+    drawBox(out, unit, white, p.model, QVector3D(0.0F, 1.62F, z),
+            QVector3D(1.5F, 0.02F, 0.08F), c.tile_dark);
+  }
+}
+
+// Gate entrance
+void drawGate(const DrawContext &p, ISubmitter &out, Mesh *unit,
+              Texture *white, const RomanPalette &c) {
+  // Gate frame
+  drawBox(out, unit, white, p.model, QVector3D(0.0F, 0.6F, 1.35F),
+          QVector3D(0.5F, 0.6F, 0.08F), c.wood_dark);
+  
+  // Iron reinforcements
+  for (int i = 0; i < 3; ++i) {
+    float y = 0.3F + float(i) * 0.3F;
+    drawBox(out, unit, white, p.model, QVector3D(0.0F, y, 1.37F),
+            QVector3D(0.45F, 0.03F, 0.02F), c.iron);
+  }
+}
+
+// Roman military standards/flags
+void drawStandards(const DrawContext &p, ISubmitter &out, Mesh *unit,
+                   Texture *white, const RomanPalette &c) {
+  // Eagle standard on tower
+  drawCyl(out, p.model, QVector3D(1.5F, 1.6F, -1.2F),
+          QVector3D(1.5F, 2.1F, -1.2F), 0.03F, c.wood, white);
+  
+  // Eagle top
+  drawBox(out, unit, white, p.model, QVector3D(1.5F, 2.15F, -1.2F),
+          QVector3D(0.08F, 0.06F, 0.08F), c.iron);
+  
+  // Banner
+  drawBox(out, unit, white, p.model, QVector3D(1.5F, 1.95F, -1.15F),
+          QVector3D(0.25F, 0.15F, 0.02F), c.team);
+}
+
+void drawRallyFlag(const DrawContext &p, ISubmitter &out,
+                   Texture *white, const RomanPalette &c) {
   BarracksFlagRenderer::FlagColors colors{
-      .team = C.team,
-      .teamTrim = C.teamTrim,
-      .timber = C.timber,
-      .timberLight = C.timberLight,
-      .woodDark = C.woodDark};
+      .team = c.team,
+      .teamTrim = c.team_trim,
+      .timber = c.wood,
+      .timberLight = c.stone_light,
+      .woodDark = c.wood_dark};
   BarracksFlagRenderer::drawRallyFlagIfAny(p, out, white, colors);
 }
 
-inline void drawHealthBar(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                          Texture *white) {
-  if (p.entity == nullptr) {
-    return;
-  }
+void drawHealthBar(const DrawContext &p, ISubmitter &out, Mesh *unit, Texture *white) {
+  if (p.entity == nullptr) return;
   auto *u = p.entity->getComponent<Engine::Core::UnitComponent>();
-  if (u == nullptr) {
-    return;
-  }
+  if (u == nullptr) return;
 
-  int const mh = std::max(1, u->max_health);
-  float const ratio = std::clamp(u->health / float(mh), 0.0F, 1.0F);
-  if (ratio <= 0.0F) {
-    return;
-  }
+  float const ratio = std::clamp(u->health / float(std::max(1, u->max_health)), 0.0F, 1.0F);
+  if (ratio <= 0.0F) return;
 
-  constexpr float base_height = BuildingProportions::base_height;
-  constexpr float roof_pitch = BuildingProportions::roof_pitch;
-  float const roof_peak = base_height + roof_pitch;
-  float const bar_y = roof_peak + 0.12F;
+  QVector3D const bg(0.06F, 0.06F, 0.06F);
+  drawBox(out, unit, white, p.model, QVector3D(0.0F, 2.35F, 0.0F),
+          QVector3D(0.9F, 0.04F, 0.06F), bg);
 
-  constexpr float bar_width = BuildingProportions::base_width * 0.9F;
-  constexpr float bar_height = 0.08F;
-  constexpr float bar_depth = 0.12F;
-
-  QVector3D const bg_color(0.06F, 0.06F, 0.06F);
-  unitBox(out, unit, white, p.model, QVector3D(0.0F, bar_y, 0.0F),
-          QVector3D(bar_width / 2.0F, bar_height / 2.0F, bar_depth / 2.0F),
-          bg_color);
-
-  float const fill_width = bar_width * ratio;
-  float const fill_x = -(bar_width - fill_width) * 0.5F;
-
-  QVector3D const red(0.85F, 0.15F, 0.15F);
-  QVector3D const green(0.22F, 0.78F, 0.22F);
-  QVector3D const fg_color = green * ratio + red * (1.0F - ratio);
-
-  unitBox(out, unit, white, p.model, QVector3D(fill_x, bar_y + 0.005F, 0.0F),
-          QVector3D(fill_width / 2.0F, (bar_height / 2.0F) * 0.9F,
-                    (bar_depth / 2.0F) * 0.95F),
-          fg_color);
+  QVector3D const fg = QVector3D(0.22F, 0.78F, 0.22F) * ratio +
+                       QVector3D(0.85F, 0.15F, 0.15F) * (1.0F - ratio);
+  drawBox(out, unit, white, p.model,
+          QVector3D(-(0.9F * (1.0F - ratio)) * 0.5F, 2.36F, 0.0F),
+          QVector3D(0.9F * ratio * 0.5F, 0.035F, 0.055F), fg);
 }
 
-inline void drawSelectionFX(const DrawContext &p, ISubmitter &out) {
+void drawSelection(const DrawContext &p, ISubmitter &out) {
   QMatrix4x4 m;
   QVector3D const pos = p.model.column(3).toVector3D();
   m.translate(pos.x(), 0.0F, pos.z());
-  m.scale(2.2F, 1.0F, 2.0F);
+  m.scale(2.4F, 1.0F, 2.0F);
   if (p.selected) {
     out.selectionSmoke(m, QVector3D(0.2F, 0.85F, 0.2F), 0.35F);
   } else if (p.hovered) {
@@ -671,70 +240,28 @@ inline void drawSelectionFX(const DrawContext &p, ISubmitter &out) {
   }
 }
 
-// Roman-specific: Corner towers for fortress appearance
-inline void drawCornerTowers(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                             Texture *white, const BarracksPalette &C) {
-  constexpr float base_width = BuildingProportions::base_width;
-  constexpr float base_depth = BuildingProportions::base_depth;
-  constexpr float base_height = BuildingProportions::base_height;
-  
-  float const tower_size = 0.4F;
-  float const tower_height = base_height + 0.6F;
-  
-  // Four corner towers
-  QVector3D corners[4] = {
-    QVector3D(-base_width * 0.5F - 0.1F, tower_height * 0.5F, -base_depth * 0.5F - 0.1F),
-    QVector3D(base_width * 0.5F + 0.1F, tower_height * 0.5F, -base_depth * 0.5F - 0.1F),
-    QVector3D(-base_width * 0.5F - 0.1F, tower_height * 0.5F, base_depth * 0.5F + 0.1F),
-    QVector3D(base_width * 0.5F + 0.1F, tower_height * 0.5F, base_depth * 0.5F + 0.1F)
-  };
-  
-  for (int i = 0; i < 4; ++i) {
-    // Stone tower base
-    unitBox(out, unit, white, p.model, corners[i],
-            QVector3D(tower_size * 0.5F, tower_height * 0.5F, tower_size * 0.5F),
-            C.stone);
-    
-    // Battlement top
-    float const batt_y = tower_height + 0.15F;
-    unitBox(out, unit, white, p.model,
-            QVector3D(corners[i].x(), batt_y, corners[i].z()),
-            QVector3D(tower_size * 0.6F, 0.1F, tower_size * 0.6F),
-            C.stoneDark);
-  }
-}
-
 void drawBarracks(const DrawContext &p, ISubmitter &out) {
-  if ((p.resources == nullptr) || (p.entity == nullptr)) {
-    return;
-  }
+  if (!p.resources || !p.entity) return;
 
   auto *t = p.entity->getComponent<Engine::Core::TransformComponent>();
   auto *r = p.entity->getComponent<Engine::Core::RenderableComponent>();
-  if ((t == nullptr) || (r == nullptr)) {
-    return;
-  }
+  if (!t || !r) return;
 
   Mesh *unit = p.resources->unit();
   Texture *white = p.resources->white();
-
   QVector3D const team(r->color[0], r->color[1], r->color[2]);
-  BarracksPalette const c = makePalette(team);
+  RomanPalette const c = makePalette(team);
 
-  drawFoundation(p, out, unit, white, c);
-  drawCornerTowers(p, out, unit, white, c);  // Roman-specific towers
-  drawAnnex(p, out, unit, white, c);
-  drawWalls(p, out, unit, white, c);
-  ChimneyInfo const ch = drawChimney(p, out, unit, white, c);
-  drawRoofs(p, out, unit, white, c, ch);
-  drawDoor(p, out, unit, white, c);
-  drawWindows(p, out, unit, white, c);
-  drawBannerAndPole(p, out, unit, white, c);
-  drawProps(p, out, unit, white, c);
-
-  drawRallyFlagIfAny(p, out, white, c);
+  drawFortressBase(p, out, unit, white, c);
+  drawFortressWalls(p, out, unit, white, c);
+  drawCornerTowers(p, out, unit, white, c);
+  drawCourtyard(p, out, unit, white, c);
+  drawRomanRoof(p, out, unit, white, c);
+  drawGate(p, out, unit, white, c);
+  drawStandards(p, out, unit, white, c);
+  drawRallyFlag(p, out, white, c);
   drawHealthBar(p, out, unit, white);
-  drawSelectionFX(p, out);
+  drawSelection(p, out);
 }
 
 } // namespace
