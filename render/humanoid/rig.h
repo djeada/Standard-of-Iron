@@ -3,6 +3,7 @@
 #include "../entity/registry.h"
 #include "../palette.h"
 #include "humanoid_specs.h"
+#include <QMatrix4x4>
 #include <QVector3D>
 #include <cstdint>
 
@@ -31,10 +32,20 @@ struct FormationParams {
   float spacing;
 };
 
+struct HeadFrame {
+  QVector3D origin{0.0F, 0.0F, 0.0F};
+  QVector3D right{1.0F, 0.0F, 0.0F};
+  QVector3D up{0.0F, 1.0F, 0.0F};
+  QVector3D forward{0.0F, 0.0F, 1.0F};
+  float radius{0.0F};
+};
+
 struct HumanoidPose {
   QVector3D headPos;
   float headR{};
   QVector3D neck_base;
+
+  HeadFrame headFrame{};
 
   QVector3D shoulderL, shoulderR;
   QVector3D elbowL, elbowR;
@@ -77,8 +88,32 @@ struct VariationParams {
   }
 };
 
+enum class FacialHairStyle {
+  None,
+  Stubble,
+  ShortBeard,
+  FullBeard,
+  LongBeard,
+  Goatee,
+  Mustache,
+  MustacheAndBeard
+};
+
+struct FacialHairParams {
+  FacialHairStyle style = FacialHairStyle::None;
+  QVector3D color{0.15F, 0.12F, 0.10F};
+  float length = 1.0F;
+  float thickness = 1.0F;
+  float coverage = 1.0F;
+  float greyness = 0.0F;
+};
+
 struct HumanoidVariant {
   HumanoidPalette palette;
+  FacialHairParams facialHair;
+  float muscularity = 1.0F;
+  float scarring = 0.0F;
+  float weathering = 0.0F;
 };
 
 enum class HumanoidMotionState {
@@ -185,6 +220,9 @@ public:
                                        const QVector3D &right_axis,
                                        ISubmitter &out) const;
 
+  virtual void drawFacialHair(const DrawContext &ctx, const HumanoidVariant &v,
+                              const HumanoidPose &pose, ISubmitter &out) const;
+
   void render(const DrawContext &ctx, ISubmitter &out) const;
 
 protected:
@@ -205,7 +243,15 @@ protected:
   static auto resolveTeamTint(const DrawContext &ctx) -> QVector3D;
 
   void drawCommonBody(const DrawContext &ctx, const HumanoidVariant &v,
-                      const HumanoidPose &pose, ISubmitter &out) const;
+                      HumanoidPose &pose, ISubmitter &out) const;
+
+  static auto headLocalPosition(const HeadFrame &frame,
+                                const QVector3D &local) -> QVector3D;
+
+  static auto makeHeadLocalTransform(const QMatrix4x4 &parent,
+                                     const HeadFrame &frame,
+                                     const QVector3D &local_offset,
+                                     float uniform_scale) -> QMatrix4x4;
 };
 
 } // namespace Render::GL

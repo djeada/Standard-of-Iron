@@ -3,6 +3,7 @@
 in vec3 v_normal;
 in vec2 v_texCoord;
 in vec3 v_worldPos;
+in float v_armorLayer; // NEW: Armor layer from vertex shader
 
 uniform sampler2D u_texture;
 uniform vec3 u_color;
@@ -59,6 +60,28 @@ float pterugesStrips(vec2 p, float y) {
   return strip * leatherTex * hang;
 }
 
+// Scale armor (lorica squamata) - overlapping metal scales
+float scaleArmor(vec2 p, float y) {
+  // Offset scale rows for overlap effect
+  vec2 scaleGrid = p * 18.0;
+  scaleGrid.y += sin(scaleGrid.x * 2.0) * 0.15; // Wave pattern
+
+  vec2 scaleFract = fract(scaleGrid) - 0.5;
+
+  // Individual scale shape (teardrop/fish scale)
+  float scaleDist = length(scaleFract * vec2(1.0, 1.4));
+  float scaleShape = smoothstep(0.48, 0.38, scaleDist);
+
+  // Overlap shadow
+  float overlap = sin(scaleGrid.y * 3.14159) * 0.08;
+
+  // Edge highlight on scales
+  float edge =
+      smoothstep(0.42, 0.38, scaleDist) - smoothstep(0.38, 0.34, scaleDist);
+
+  return scaleShape * 0.15 + overlap + edge * 0.12;
+}
+
 void main() {
   vec3 color = u_color;
   if (u_useTexture) {
@@ -69,15 +92,20 @@ void main() {
   vec2 uv = v_worldPos.xz * 4.5;
   float avgColor = (color.r + color.g + color.b) / 3.0;
 
-  // Detect bronze vs steel by color warmth
+  // Detect materials by color and armor layer
   bool isBronze =
       (color.r > color.g * 1.08 && color.r > color.b * 1.15 && avgColor > 0.50);
   bool isRedCape = (color.r > color.g * 1.3 && color.r > color.b * 1.4);
+  bool isHelmet = (v_armorLayer == 0.0);
+  bool isChainmail =
+      (v_armorLayer == 1.0 && avgColor > 0.40 && avgColor <= 0.60);
+  bool isScaleArmor =
+      (v_armorLayer == 1.0 && avgColor > 0.50 && avgColor <= 0.70);
 
-  // === ROMAN ARCHER (SAGITTARIUS) MATERIALS ===
+  // === ROMAN AUXILIARY ARCHER (SAGITTARII) MATERIALS ===
 
-  // BRONZE GALEA HELMET & PHALERAE (warm golden metal)
-  if (isBronze) {
+  // BRONZE AUXILIARY HELMET (simpler than legionary)
+  if (isBronze && isHelmet) {
     // Ancient bronze patina and wear
     float bronzePatina = noise(uv * 8.0) * 0.12;
     float verdigris = noise(uv * 15.0) * 0.08; // Green oxidation
@@ -94,8 +122,24 @@ void main() {
     color -= vec3(bronzePatina * 0.4 + verdigris * 0.3);
     color += vec3(hammerMarks * 0.5);
   }
-  // STEEL CHAINMAIL (lorica hamata - grey-blue tint)
-  else if (avgColor > 0.40 && avgColor <= 0.60 && !isRedCape) {
+  // LORICA SQUAMATA (SCALE ARMOR) - Auxiliary preference over chainmail
+  else if (isScaleArmor && !isRedCape) {
+    // Overlapping bronze/iron scales
+    float scales = scaleArmor(v_worldPos.xz, v_worldPos.y);
+
+    // Scale armor has moderate shine
+    float viewAngle = abs(dot(normal, normalize(vec3(0.0, 1.0, 0.5))));
+    float scaleSheen = pow(viewAngle, 6.0) * 0.20;
+
+    // Rust and wear between scales
+    float wearBetweenScales = noise(uv * 12.0) * 0.09;
+
+    color += vec3(scales + scaleSheen);
+    color -= vec3(wearBetweenScales * 0.35);
+    color *= 1.0 - noise(uv * 20.0) * 0.05; // Shadow between scales
+  }
+  // LORICA HAMATA (CHAINMAIL) - Some auxiliaries wore this
+  else if (isChainmail && !isRedCape) {
     // Interlocked iron rings
     float rings = chainmailRings(v_worldPos.xz);
 
