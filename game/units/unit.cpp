@@ -23,12 +23,9 @@ auto Unit::entity() const -> Engine::Core::Entity * {
 
 auto Unit::resolve_nation_id(const SpawnParams &params)
     -> Game::Systems::NationID {
-  auto &registry = Game::Systems::NationRegistry::instance();
-  if (const auto *nation = registry.getNationForPlayer(params.player_id)) {
-    return nation->id;
-  }
-
-  return registry.default_nation_id();
+  // The nation_id in params is already resolved by the map transformer
+  // (spawn nation → player nation → default), so just use it directly
+  return params.nation_id;
 }
 
 void Unit::ensureCoreComponents() {
