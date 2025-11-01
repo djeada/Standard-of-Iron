@@ -25,31 +25,32 @@ using Render::Geom::cylinderBetween;
 using Render::Geom::lerp;
 
 struct BuildingProportions {
-  static constexpr float base_width = 2.4F;
-  static constexpr float base_depth = 2.0F;
-  static constexpr float base_height = 1.8F;
-  static constexpr float foundation_height = 0.2F;
-  static constexpr float wall_thickness = 0.08F;
-  static constexpr float beam_thickness = 0.12F;
-  static constexpr float corner_post_radius = 0.08F;
-  static constexpr float roof_pitch = 0.8F;
-  static constexpr float roof_overhang = 0.15F;
-  static constexpr float thatch_layer_height = 0.12F;
-  static constexpr float annex_width = 1.0F;
-  static constexpr float annex_depth = 1.0F;
-  static constexpr float annex_height = 1.2F;
-  static constexpr float annex_roof_height = 0.5F;
-  static constexpr float door_width = 0.5F;
-  static constexpr float door_height = 0.8F;
-  static constexpr float window_width = 0.4F;
-  static constexpr float window_height = 0.5F;
-  static constexpr float chimney_width = 0.25F;
-  static constexpr float chimney_height = 1.0F;
-  static constexpr float chimney_cap_size = 0.35F;
-  static constexpr float banner_pole_height = 2.0F;
-  static constexpr float banner_pole_radius = 0.05F;
-  static constexpr float banner_width = 0.5F;
-  static constexpr float banner_height = 0.6F;
+  // Roman: Larger, rectangular fortress-style barracks
+  static constexpr float base_width = 3.2F;   // Wider than others
+  static constexpr float base_depth = 2.6F;   // Deeper rectangular shape
+  static constexpr float base_height = 1.4F;  // Lower, more fortress-like
+  static constexpr float foundation_height = 0.25F;
+  static constexpr float wall_thickness = 0.12F;  // Thicker stone walls
+  static constexpr float beam_thickness = 0.10F;
+  static constexpr float corner_post_radius = 0.10F;
+  static constexpr float roof_pitch = 0.3F;   // Very low pitch (almost flat)
+  static constexpr float roof_overhang = 0.08F;  // Minimal overhang
+  static constexpr float thatch_layer_height = 0.10F;
+  static constexpr float annex_width = 1.4F;  // Larger annex
+  static constexpr float annex_depth = 1.2F;
+  static constexpr float annex_height = 1.0F;
+  static constexpr float annex_roof_height = 0.2F;  // Very flat
+  static constexpr float door_width = 0.7F;   // Wider doors
+  static constexpr float door_height = 1.0F;  // Taller doors
+  static constexpr float window_width = 0.3F; // Narrow windows
+  static constexpr float window_height = 0.6F; // Tall, narrow windows
+  static constexpr float chimney_width = 0.30F;
+  static constexpr float chimney_height = 0.8F;
+  static constexpr float chimney_cap_size = 0.40F;
+  static constexpr float banner_pole_height = 2.2F;
+  static constexpr float banner_pole_radius = 0.06F;
+  static constexpr float banner_width = 0.6F;
+  static constexpr float banner_height = 0.7F;
 };
 
 struct BarracksPalette {
@@ -670,6 +671,39 @@ inline void drawSelectionFX(const DrawContext &p, ISubmitter &out) {
   }
 }
 
+// Roman-specific: Corner towers for fortress appearance
+inline void drawCornerTowers(const DrawContext &p, ISubmitter &out, Mesh *unit,
+                             Texture *white, const BarracksPalette &C) {
+  constexpr float base_width = BuildingProportions::base_width;
+  constexpr float base_depth = BuildingProportions::base_depth;
+  constexpr float base_height = BuildingProportions::base_height;
+  
+  float const tower_size = 0.4F;
+  float const tower_height = base_height + 0.6F;
+  
+  // Four corner towers
+  QVector3D corners[4] = {
+    QVector3D(-base_width * 0.5F - 0.1F, tower_height * 0.5F, -base_depth * 0.5F - 0.1F),
+    QVector3D(base_width * 0.5F + 0.1F, tower_height * 0.5F, -base_depth * 0.5F - 0.1F),
+    QVector3D(-base_width * 0.5F - 0.1F, tower_height * 0.5F, base_depth * 0.5F + 0.1F),
+    QVector3D(base_width * 0.5F + 0.1F, tower_height * 0.5F, base_depth * 0.5F + 0.1F)
+  };
+  
+  for (int i = 0; i < 4; ++i) {
+    // Stone tower base
+    unitBox(out, unit, white, p.model, corners[i],
+            QVector3D(tower_size * 0.5F, tower_height * 0.5F, tower_size * 0.5F),
+            C.stone);
+    
+    // Battlement top
+    float const batt_y = tower_height + 0.15F;
+    unitBox(out, unit, white, p.model,
+            QVector3D(corners[i].x(), batt_y, corners[i].z()),
+            QVector3D(tower_size * 0.6F, 0.1F, tower_size * 0.6F),
+            C.stoneDark);
+  }
+}
+
 void drawBarracks(const DrawContext &p, ISubmitter &out) {
   if ((p.resources == nullptr) || (p.entity == nullptr)) {
     return;
@@ -688,6 +722,7 @@ void drawBarracks(const DrawContext &p, ISubmitter &out) {
   BarracksPalette const c = makePalette(team);
 
   drawFoundation(p, out, unit, white, c);
+  drawCornerTowers(p, out, unit, white, c);  // Roman-specific towers
   drawAnnex(p, out, unit, white, c);
   drawWalls(p, out, unit, white, c);
   ChimneyInfo const ch = drawChimney(p, out, unit, white, c);
