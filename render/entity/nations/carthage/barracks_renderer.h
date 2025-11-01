@@ -6,4 +6,4 @@ namespace Render::GL::Carthage {
 
 void registerBarracksRenderer(EntityRendererRegistry &registry);
 
-} // namespace Render::GL::Carthage
+}

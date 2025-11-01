@@ -229,8 +229,7 @@ public:
       return headLocalPosition(head, normalized);
     };
 
-    auto ring = [&](float y_offset, float radius_scale,
-                    const QVector3D &col) {
+    auto ring = [&](float y_offset, float radius_scale, const QVector3D &col) {
       QVector3D const center = headPoint(QVector3D(0.0F, y_offset, 0.0F));
       float const height = head_r * 0.015F;
       QVector3D const a = center + head.up * (height * 0.5F);
@@ -278,8 +277,8 @@ public:
              QVector3D(0.1F, 0.1F, 0.1F), nullptr, 1.0F);
 
     auto draw_breathing_hole = [&](float x_norm, float y_norm) {
-      QVector3D const pos = headPoint(QVector3D(x_norm * helm_ratio, y_norm,
-                                                visor_forward_norm * 0.97F));
+      QVector3D const pos = headPoint(
+          QVector3D(x_norm * helm_ratio, y_norm, visor_forward_norm * 0.97F));
       QMatrix4x4 m = ctx.model;
       m.translate(pos);
       m.scale(0.010F);
