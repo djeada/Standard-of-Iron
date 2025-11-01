@@ -9,43 +9,41 @@
 namespace Render::GL {
 
 void registerBarracksRenderer(EntityRendererRegistry &registry) {
-  // Register nation-specific renderers first
+
   Kingdom::registerBarracksRenderer(registry);
   Roman::registerBarracksRenderer(registry);
   Carthage::registerBarracksRenderer(registry);
-  
-  // Register a dispatcher that routes based on nation_id
-  registry.registerRenderer("barracks", [&registry](const DrawContext &p, ISubmitter &out) {
-    if (p.entity == nullptr) {
-      return;
-    }
 
-    auto *unit = p.entity->getComponent<Engine::Core::UnitComponent>();
-    if (unit == nullptr) {
-      return;
-    }
+  registry.registerRenderer(
+      "barracks", [&registry](const DrawContext &p, ISubmitter &out) {
+        if (p.entity == nullptr) {
+          return;
+        }
 
-    // Route to nation-specific renderer based on nation_id
-    std::string renderer_key;
-    switch (unit->nation_id) {
-    case Game::Systems::NationID::Carthage:
-      renderer_key = "barracks_carthage";
-      break;
-    case Game::Systems::NationID::RomanRepublic:
-      renderer_key = "barracks_roman";
-      break;
-    case Game::Systems::NationID::KingdomOfIron:
-    default:
-      renderer_key = "barracks_kingdom";
-      break;
-    }
+        auto *unit = p.entity->getComponent<Engine::Core::UnitComponent>();
+        if (unit == nullptr) {
+          return;
+        }
 
-    // Delegate to the nation-specific renderer
-    auto renderer = registry.get(renderer_key);
-    if (renderer) {
-      renderer(p, out);
-    }
-  });
+        std::string renderer_key;
+        switch (unit->nation_id) {
+        case Game::Systems::NationID::Carthage:
+          renderer_key = "barracks_carthage";
+          break;
+        case Game::Systems::NationID::RomanRepublic:
+          renderer_key = "barracks_roman";
+          break;
+        case Game::Systems::NationID::KingdomOfIron:
+        default:
+          renderer_key = "barracks_kingdom";
+          break;
+        }
+
+        auto renderer = registry.get(renderer_key);
+        if (renderer) {
+          renderer(p, out);
+        }
+      });
 }
 
 } // namespace Render::GL
