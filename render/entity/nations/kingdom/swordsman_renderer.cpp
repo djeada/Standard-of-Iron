@@ -6,10 +6,10 @@
 #include "../../../gl/backend.h"
 #include "../../../gl/primitives.h"
 #include "../../../gl/shader.h"
-#include "../../../humanoid/rig.h"
-#include "../../../humanoid/style_palette.h"
 #include "../../../humanoid/humanoid_math.h"
 #include "../../../humanoid/humanoid_specs.h"
+#include "../../../humanoid/rig.h"
+#include "../../../humanoid/style_palette.h"
 #include "../../../palette.h"
 #include "../../../scene_renderer.h"
 #include "../../../submitter.h"
@@ -57,7 +57,7 @@ void ensure_swordsman_styles_registered() {
 } // namespace
 
 void register_swordsman_style(const std::string &nation_id,
-                           const KnightStyleConfig &style) {
+                              const KnightStyleConfig &style) {
   swordsman_style_registry()[nation_id] = style;
 }
 
@@ -212,56 +212,74 @@ public:
 
   void drawHelmet(const DrawContext &ctx, const HumanoidVariant &v,
                   const HumanoidPose &pose, ISubmitter &out) const override {
-    using HP = HumanProportions;
-
-    auto ring = [&](const QVector3D &center, float r, float h,
-                    const QVector3D &col) {
-      QVector3D const a = center + QVector3D(0, h * 0.5F, 0);
-      QVector3D const b = center - QVector3D(0, h * 0.5F, 0);
-      out.mesh(getUnitCylinder(), cylinderBetween(ctx.model, a, b, r), col,
-               nullptr, 1.0F);
-    };
+    const HeadFrame &head = pose.headFrame;
+    float const head_r = head.radius;
+    if (head_r <= 0.0F) {
+      return;
+    }
 
     QVector3D const steel_color =
         v.palette.metal * QVector3D(0.95F, 0.96F, 1.0F);
+    QVector3D const brass_color = v.palette.metal * QVector3D(1.3F, 1.1F, 0.7F);
 
-    float helm_r = pose.headR * 1.15F;
-    QVector3D const helm_bot(0, pose.headPos.y() - pose.headR * 0.20F, 0);
-    QVector3D const helm_top(0, pose.headPos.y() + pose.headR * 1.40F, 0);
+    float const helm_r = head_r * 1.15F;
+    float const helm_ratio = helm_r / head_r;
+
+    auto headPoint = [&](const QVector3D &normalized) -> QVector3D {
+      return headLocalPosition(head, normalized);
+    };
+
+    auto ring = [&](float y_offset, float radius_scale,
+                    const QVector3D &col) {
+      QVector3D const center = headPoint(QVector3D(0.0F, y_offset, 0.0F));
+      float const height = head_r * 0.015F;
+      QVector3D const a = center + head.up * (height * 0.5F);
+      QVector3D const b = center - head.up * (height * 0.5F);
+      out.mesh(getUnitCylinder(),
+               cylinderBetween(ctx.model, a, b, helm_r * radius_scale), col,
+               nullptr, 1.0F);
+    };
+
+    QVector3D const helm_bot = headPoint(QVector3D(0.0F, -0.20F, 0.0F));
+    QVector3D const helm_top = headPoint(QVector3D(0.0F, 1.40F, 0.0F));
 
     out.mesh(getUnitCylinder(),
              cylinderBetween(ctx.model, helm_bot, helm_top, helm_r),
              steel_color, nullptr, 1.0F);
 
-    QVector3D const cap_top(0, pose.headPos.y() + pose.headR * 1.48F, 0);
+    QVector3D const cap_top = headPoint(QVector3D(0.0F, 1.48F, 0.0F));
     out.mesh(getUnitCylinder(),
              cylinderBetween(ctx.model, helm_top, cap_top, helm_r * 0.98F),
              steel_color * 1.05F, nullptr, 1.0F);
 
-    ring(QVector3D(0, pose.headPos.y() + pose.headR * 1.25F, 0), helm_r * 1.02F,
-         0.015F, steel_color * 1.08F);
-    ring(QVector3D(0, pose.headPos.y() + pose.headR * 0.50F, 0), helm_r * 1.02F,
-         0.015F, steel_color * 1.08F);
-    ring(QVector3D(0, pose.headPos.y() - pose.headR * 0.05F, 0), helm_r * 1.02F,
-         0.015F, steel_color * 1.08F);
+    ring(1.25F, 1.02F, steel_color * 1.08F);
+    ring(0.50F, 1.02F, steel_color * 1.08F);
+    ring(-0.05F, 1.02F, steel_color * 1.08F);
 
-    float const visor_y = pose.headPos.y() + pose.headR * 0.15F;
-    float const visor_z = helm_r * 0.72F;
+    float const visor_y = 0.15F;
+    float const visor_forward = helm_r * 0.72F;
+    float const visor_forward_norm = visor_forward / head_r;
 
-    QVector3D const visor_hl(-helm_r * 0.35F, visor_y, visor_z);
-    QVector3D const visor_hr(helm_r * 0.35F, visor_y, visor_z);
+    QVector3D const visor_center =
+        headPoint(QVector3D(0.0F, visor_y, visor_forward_norm));
+    QVector3D const lateral = head.right * (helm_r * 0.35F);
+    QVector3D const vertical = head.up * (helm_r * 0.25F);
+
+    QVector3D const visor_hl = visor_center - lateral;
+    QVector3D const visor_hr = visor_center + lateral;
     out.mesh(getUnitCylinder(),
-             cylinderBetween(ctx.model, visor_hl, visor_hr, 0.012F),
+             cylinderBetween(ctx.model, visor_hl, visor_hr, head_r * 0.012F),
              QVector3D(0.1F, 0.1F, 0.1F), nullptr, 1.0F);
 
-    QVector3D const visor_vt(0, visor_y + helm_r * 0.25F, visor_z);
-    QVector3D const visor_vb(0, visor_y - helm_r * 0.25F, visor_z);
+    QVector3D const visor_vt = visor_center + vertical;
+    QVector3D const visor_vb = visor_center - vertical;
     out.mesh(getUnitCylinder(),
-             cylinderBetween(ctx.model, visor_vb, visor_vt, 0.012F),
+             cylinderBetween(ctx.model, visor_vb, visor_vt, head_r * 0.012F),
              QVector3D(0.1F, 0.1F, 0.1F), nullptr, 1.0F);
 
-    auto draw_breathing_hole = [&](float x, float y) {
-      QVector3D const pos(x, pose.headPos.y() + y, helm_r * 0.70F);
+    auto draw_breathing_hole = [&](float x_norm, float y_norm) {
+      QVector3D const pos = headPoint(QVector3D(x_norm * helm_ratio, y_norm,
+                                                visor_forward_norm * 0.97F));
       QMatrix4x4 m = ctx.model;
       m.translate(pos);
       m.scale(0.010F);
@@ -269,27 +287,24 @@ public:
     };
 
     for (int i = 0; i < 4; ++i) {
-      draw_breathing_hole(helm_r * 0.50F, pose.headR * (0.05F - i * 0.10F));
+      draw_breathing_hole(+0.50F, 0.05F - i * 0.10F);
     }
-
     for (int i = 0; i < 4; ++i) {
-      draw_breathing_hole(-helm_r * 0.50F, pose.headR * (0.05F - i * 0.10F));
+      draw_breathing_hole(-0.50F, 0.05F - i * 0.10F);
     }
 
-    QVector3D const cross_center(0, pose.headPos.y() + pose.headR * 0.60F,
-                                 helm_r * 0.75F);
-    QVector3D const brass_color = v.palette.metal * QVector3D(1.3F, 1.1F, 0.7F);
-
-    QVector3D const cross_h1 = cross_center + QVector3D(-0.04F, 0, 0);
-    QVector3D const cross_h2 = cross_center + QVector3D(0.04F, 0, 0);
+    QVector3D const cross_center =
+        headPoint(QVector3D(0.0F, 0.60F, helm_ratio * 0.75F));
+    QVector3D const cross_h1 = cross_center - head.right * 0.04F;
+    QVector3D const cross_h2 = cross_center + head.right * 0.04F;
     out.mesh(getUnitCylinder(),
-             cylinderBetween(ctx.model, cross_h1, cross_h2, 0.008F),
+             cylinderBetween(ctx.model, cross_h1, cross_h2, head_r * 0.008F),
              brass_color, nullptr, 1.0F);
 
-    QVector3D const cross_v1 = cross_center + QVector3D(0, -0.04F, 0);
-    QVector3D const cross_v2 = cross_center + QVector3D(0, 0.04F, 0);
+    QVector3D const cross_v1 = cross_center - head.up * 0.04F;
+    QVector3D const cross_v2 = cross_center + head.up * 0.04F;
     out.mesh(getUnitCylinder(),
-             cylinderBetween(ctx.model, cross_v1, cross_v2, 0.008F),
+             cylinderBetween(ctx.model, cross_v1, cross_v2, head_r * 0.008F),
              brass_color, nullptr, 1.0F);
   }
 

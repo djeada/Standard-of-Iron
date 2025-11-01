@@ -6,10 +6,10 @@
 #include "../../../gl/backend.h"
 #include "../../../gl/primitives.h"
 #include "../../../gl/shader.h"
-#include "../../../humanoid/rig.h"
-#include "../../../humanoid/style_palette.h"
 #include "../../../humanoid/humanoid_math.h"
 #include "../../../humanoid/humanoid_specs.h"
+#include "../../../humanoid/rig.h"
+#include "../../../humanoid/style_palette.h"
 #include "../../../palette.h"
 #include "../../../scene_renderer.h"
 #include "../../../submitter.h"
@@ -57,7 +57,7 @@ void ensure_swordsman_styles_registered() {
 } // namespace
 
 void register_swordsman_style(const std::string &nation_id,
-                           const KnightStyleConfig &style) {
+                              const KnightStyleConfig &style) {
   swordsman_style_registry()[nation_id] = style;
 }
 
