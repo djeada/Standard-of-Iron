@@ -12,21 +12,58 @@
     "seed": 42,
     "patchDensity": 3.5,
     "patchJitter": 0.9,
-    "bladeHeight": [0.6, 1.4],
-    "bladeWidth": [0.03, 0.06],
+    "bladeHeight": [
+      0.6,
+      1.4
+    ],
+    "bladeWidth": [
+      0.03,
+      0.06
+    ],
     "swayStrength": 0.3,
     "swaySpeed": 1.4,
-    "heightNoise": [0.2, 0.06],
-    "grassPrimary": [0.3, 0.6, 0.28],
-    "grassSecondary": [0.44, 0.7, 0.32],
-    "grassDry": [0.6, 0.52, 0.38],
-    "soilColor": [0.28, 0.24, 0.18],
-    "rockLow": [0.5, 0.48, 0.46],
-    "rockHigh": [0.68, 0.69, 0.73],
+    "heightNoise": [
+      0.2,
+      0.06
+    ],
+    "grassPrimary": [
+      0.3,
+      0.6,
+      0.28
+    ],
+    "grassSecondary": [
+      0.44,
+      0.7,
+      0.32
+    ],
+    "grassDry": [
+      0.6,
+      0.52,
+      0.38
+    ],
+    "soilColor": [
+      0.28,
+      0.24,
+      0.18
+    ],
+    "rockLow": [
+      0.5,
+      0.48,
+      0.46
+    ],
+    "rockHigh": [
+      0.68,
+      0.69,
+      0.73
+    ],
     "plantDensity": 0.5
   },
   "camera": {
-    "center": [60, 0, 60],
+    "center": [
+      60,
+      0,
+      60
+    ],
     "distance": 25.0,
     "tiltDeg": 45.0,
     "yaw": 225.0,
@@ -40,51 +77,136 @@
       "x": 30,
       "z": 30,
       "playerId": 1,
-      "maxPopulation": 150
+      "maxPopulation": 150,
+      "nation": "carthage"
     },
-    { "type": "archer", "x": 28, "z": 32, "playerId": 1 },
-    { "type": "archer", "x": 32, "z": 28, "playerId": 1 },
-    { "type": "horse_swordsman", "x": 30, "z": 35, "playerId": 1 },
-    { "type": "spearman", "x": 35, "z": 30, "playerId": 1 },
+    {
+      "type": "archer",
+      "x": 28,
+      "z": 32,
+      "playerId": 1
+    },
+    {
+      "type": "archer",
+      "x": 32,
+      "z": 28,
+      "playerId": 1
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 30,
+      "z": 35,
+      "playerId": 1
+    },
+    {
+      "type": "spearman",
+      "x": 35,
+      "z": 30,
+      "playerId": 1
+    },
     {
       "type": "barracks",
       "x": 90,
       "z": 90,
       "playerId": 2,
-      "maxPopulation": 150
+      "maxPopulation": 150,
+      "nation": "carthage"
     },
-    { "type": "archer", "x": 88, "z": 92, "playerId": 2 },
-    { "type": "archer", "x": 92, "z": 88, "playerId": 2 },
-    { "type": "horse_swordsman", "x": 90, "z": 85, "playerId": 2 },
-    { "type": "spearman", "x": 85, "z": 90, "playerId": 2 },
+    {
+      "type": "archer",
+      "x": 88,
+      "z": 92,
+      "playerId": 2
+    },
+    {
+      "type": "archer",
+      "x": 92,
+      "z": 88,
+      "playerId": 2
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 90,
+      "z": 85,
+      "playerId": 2
+    },
+    {
+      "type": "spearman",
+      "x": 85,
+      "z": 90,
+      "playerId": 2
+    },
     {
       "type": "barracks",
       "x": 60,
       "z": 60,
-      "maxPopulation": 180
+      "maxPopulation": 180,
+      "nation": "carthage"
     },
     {
       "type": "barracks",
       "x": 30,
       "z": 90,
-      "maxPopulation": 150
+      "maxPopulation": 150,
+      "nation": "carthage"
     },
     {
       "type": "barracks",
       "x": 90,
       "z": 30,
-      "maxPopulation": 150
+      "maxPopulation": 150,
+      "nation": "carthage"
     }
   ],
   "firecamps": [
-    { "x": 23, "z": 28, "intensity": 1.0, "radius": 3.0 },
-    { "x": 37, "z": 23, "intensity": 1.1, "radius": 3.2 },
-    { "x": 83, "z": 97, "intensity": 0.9, "radius": 2.8 },
-    { "x": 97, "z": 83, "intensity": 1.0, "radius": 3.0 },
-    { "x": 23, "z": 97, "intensity": 1.0, "radius": 3.0 },
-    { "x": 97, "z": 23, "intensity": 1.05, "radius": 3.2 },
-    { "x": 50, "z": 50, "intensity": 0.85, "radius": 2.5 },
-    { "x": 70, "z": 70, "intensity": 0.9, "radius": 2.7 }
+    {
+      "x": 23,
+      "z": 28,
+      "intensity": 1.0,
+      "radius": 3.0
+    },
+    {
+      "x": 37,
+      "z": 23,
+      "intensity": 1.1,
+      "radius": 3.2
+    },
+    {
+      "x": 83,
+      "z": 97,
+      "intensity": 0.9,
+      "radius": 2.8
+    },
+    {
+      "x": 97,
+      "z": 83,
+      "intensity": 1.0,
+      "radius": 3.0
+    },
+    {
+      "x": 23,
+      "z": 97,
+      "intensity": 1.0,
+      "radius": 3.0
+    },
+    {
+      "x": 97,
+      "z": 23,
+      "intensity": 1.05,
+      "radius": 3.2
+    },
+    {
+      "x": 50,
+      "z": 50,
+      "intensity": 0.85,
+      "radius": 2.5
+    },
+    {
+      "x": 70,
+      "z": 70,
+      "intensity": 0.9,
+      "radius": 2.7
+    }
   ],
   "terrain": [
     {
@@ -96,8 +218,14 @@
       "height": 3.0,
       "rotation": 0,
       "entrances": [
-        { "x": 30, "z": 52 },
-        { "x": 30, "z": 68 }
+        {
+          "x": 30,
+          "z": 52
+        },
+        {
+          "x": 30,
+          "z": 68
+        }
       ]
     },
     {
@@ -109,8 +237,14 @@
       "height": 3.0,
       "rotation": 180,
       "entrances": [
-        { "x": 90, "z": 52 },
-        { "x": 90, "z": 68 }
+        {
+          "x": 90,
+          "z": 52
+        },
+        {
+          "x": 90,
+          "z": 68
+        }
       ]
     },
     {
@@ -122,8 +256,14 @@
       "height": 2.8,
       "rotation": 90,
       "entrances": [
-        { "x": 52, "z": 30 },
-        { "x": 68, "z": 30 }
+        {
+          "x": 52,
+          "z": 30
+        },
+        {
+          "x": 68,
+          "z": 30
+        }
       ]
     },
     {
@@ -135,98 +275,192 @@
       "height": 2.8,
       "rotation": 270,
       "entrances": [
-        { "x": 52, "z": 90 },
-        { "x": 68, "z": 90 }
+        {
+          "x": 52,
+          "z": 90
+        },
+        {
+          "x": 68,
+          "z": 90
+        }
       ]
     }
   ],
   "rivers": [
     {
-      "start": [10, 10],
-      "end": [10, 110],
+      "start": [
+        10,
+        10
+      ],
+      "end": [
+        10,
+        110
+      ],
       "width": 3.5
     },
     {
-      "start": [110, 10],
-      "end": [110, 110],
+      "start": [
+        110,
+        10
+      ],
+      "end": [
+        110,
+        110
+      ],
       "width": 3.5
     },
     {
-      "start": [10, 60],
-      "end": [110, 60],
+      "start": [
+        10,
+        60
+      ],
+      "end": [
+        110,
+        60
+      ],
       "width": 3.0
     },
     {
-      "start": [60, 10],
-      "end": [60, 110],
+      "start": [
+        60,
+        10
+      ],
+      "end": [
+        60,
+        110
+      ],
       "width": 3.0
     }
   ],
   "bridges": [
     {
-      "start": [8, 30],
-      "end": [12, 30],
+      "start": [
+        8,
+        30
+      ],
+      "end": [
+        12,
+        30
+      ],
       "width": 4.0,
       "height": 0.5
     },
     {
-      "start": [8, 60],
-      "end": [12, 60],
+      "start": [
+        8,
+        60
+      ],
+      "end": [
+        12,
+        60
+      ],
       "width": 4.5,
       "height": 0.5
     },
     {
-      "start": [8, 90],
-      "end": [12, 90],
+      "start": [
+        8,
+        90
+      ],
+      "end": [
+        12,
+        90
+      ],
       "width": 4.0,
       "height": 0.5
     },
     {
-      "start": [58, 60],
-      "end": [62, 60],
+      "start": [
+        58,
+        60
+      ],
+      "end": [
+        62,
+        60
+      ],
       "width": 4.5,
       "height": 0.5
     },
     {
-      "start": [108, 30],
-      "end": [112, 30],
+      "start": [
+        108,
+        30
+      ],
+      "end": [
+        112,
+        30
+      ],
       "width": 4.0,
       "height": 0.5
     },
     {
-      "start": [108, 60],
-      "end": [112, 60],
+      "start": [
+        108,
+        60
+      ],
+      "end": [
+        112,
+        60
+      ],
       "width": 4.5,
       "height": 0.5
     },
     {
-      "start": [108, 90],
-      "end": [112, 90],
+      "start": [
+        108,
+        90
+      ],
+      "end": [
+        112,
+        90
+      ],
       "width": 4.0,
       "height": 0.5
     },
     {
-      "start": [30, 58],
-      "end": [30, 62],
+      "start": [
+        30,
+        58
+      ],
+      "end": [
+        30,
+        62
+      ],
       "width": 4.0,
       "height": 0.5
     },
     {
-      "start": [60, 58],
-      "end": [60, 62],
+      "start": [
+        60,
+        58
+      ],
+      "end": [
+        60,
+        62
+      ],
       "width": 4.5,
       "height": 0.5
     },
     {
-      "start": [90, 58],
-      "end": [90, 62],
+      "start": [
+        90,
+        58
+      ],
+      "end": [
+        90,
+        62
+      ],
       "width": 4.0,
       "height": 0.5
     }
   ],
   "victory": {
     "type": "elimination",
-    "key_structures": ["barracks"],
-    "defeat_conditions": ["no_key_structures"]
+    "key_structures": [
+      "barracks"
+    ],
+    "defeat_conditions": [
+      "no_key_structures"
+    ]
   }
 }
