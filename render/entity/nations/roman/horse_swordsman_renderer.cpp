@@ -7,9 +7,9 @@
 #include "../../../gl/backend.h"
 #include "../../../gl/primitives.h"
 #include "../../../gl/shader.h"
-#include "../../../humanoid/rig.h"
 #include "../../../humanoid/humanoid_math.h"
 #include "../../../humanoid/humanoid_specs.h"
+#include "../../../humanoid/rig.h"
 #include "../../../palette.h"
 #include "../../../scene_renderer.h"
 #include "../../../submitter.h"
@@ -795,7 +795,8 @@ void registerMountedKnightRenderer(
           }
         }
         auto *scene_renderer = dynamic_cast<Renderer *>(&out);
-        if ((scene_renderer != nullptr) && (horse_swordsman_shader != nullptr)) {
+        if ((scene_renderer != nullptr) &&
+            (horse_swordsman_shader != nullptr)) {
           scene_renderer->setCurrentShader(horse_swordsman_shader);
         }
         static_renderer.render(ctx, out);
