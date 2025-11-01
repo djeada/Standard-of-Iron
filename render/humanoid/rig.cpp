@@ -11,7 +11,7 @@
 #include "../geom/transforms.h"
 #include "../gl/primitives.h"
 #include "../gl/render_constants.h"
-#include "../humanoid_math.h"
+#include "humanoid_math.h"
 #include "../palette.h"
 #include "../submitter.h"
 #include <QMatrix4x4>

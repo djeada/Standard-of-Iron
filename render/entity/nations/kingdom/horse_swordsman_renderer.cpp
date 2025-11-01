@@ -1,4 +1,4 @@
-#include "mounted_knight_renderer.h"
+#include "horse_swordsman_renderer.h"
 #include "../../../../game/core/component.h"
 #include "../../../../game/core/entity.h"
 #include "../../../../game/systems/nation_id.h"
@@ -8,8 +8,8 @@
 #include "../../../gl/primitives.h"
 #include "../../../gl/shader.h"
 #include "../../../humanoid/rig.h"
-#include "../../../humanoid_math.h"
-#include "../../../humanoid_specs.h"
+#include "../../../humanoid/humanoid_math.h"
+#include "../../../humanoid/humanoid_specs.h"
 #include "../../../palette.h"
 #include "../../../scene_renderer.h"
 #include "../../../submitter.h"
@@ -29,7 +29,7 @@
 #include <cmath>
 #include <cstdint>
 
-namespace Render::GL::Carthage {
+namespace Render::GL::Kingdom {
 
 using Render::Geom::clamp01;
 using Render::Geom::coneFromTo;
@@ -73,9 +73,9 @@ public:
       }
     }
     if (!nation.empty()) {
-      return QString::fromStdString(std::string("mounted_knight_") + nation);
+      return QString::fromStdString(std::string("horse_swordsman_") + nation);
     }
-    return QStringLiteral("mounted_knight");
+    return QStringLiteral("horse_swordsman");
   }
 
   void customizePose(const DrawContext &ctx,
@@ -731,9 +731,9 @@ private:
     const float scale_factor = 2.0F;
     const float r = 0.15F * scale_factor;
 
-    constexpr float k_mounted_shield_yaw_degrees = -70.0F;
+    constexpr float k_horse_shield_yaw_degrees = -70.0F;
     QMatrix4x4 rot;
-    rot.rotate(k_mounted_shield_yaw_degrees, 0.0F, 1.0F, 0.0F);
+    rot.rotate(k_horse_shield_yaw_degrees, 0.0F, 1.0F, 0.0F);
 
     const QVector3D n = rot.map(QVector3D(0.0F, 0.0F, 1.0F));
     const QVector3D axis_x = rot.map(QVector3D(1.0F, 0.0F, 0.0F));
@@ -748,7 +748,7 @@ private:
     {
       QMatrix4x4 m = ctx.model;
       m.translate(shield_center + n * plate_half);
-      m.rotate(k_mounted_shield_yaw_degrees, 0.0F, 1.0F, 0.0F);
+      m.rotate(k_horse_shield_yaw_degrees, 0.0F, 1.0F, 0.0F);
       m.scale(r, r, plate_full);
       out.mesh(getUnitCylinder(), m, v.palette.cloth * 1.15F, nullptr, 1.0F);
     }
@@ -756,7 +756,7 @@ private:
     {
       QMatrix4x4 m = ctx.model;
       m.translate(shield_center - n * plate_half);
-      m.rotate(k_mounted_shield_yaw_degrees, 0.0F, 1.0F, 0.0F);
+      m.rotate(k_horse_shield_yaw_degrees, 0.0F, 1.0F, 0.0F);
       m.scale(r * 0.985F, r * 0.985F, plate_full);
       out.mesh(getUnitCylinder(), m, v.palette.leather * 0.8F, nullptr, 1.0F);
     }
@@ -782,21 +782,21 @@ void registerMountedKnightRenderer(
     Render::GL::EntityRendererRegistry &registry) {
   static MountedKnightRenderer const renderer;
   registry.registerRenderer(
-      "troops/carthage/mounted_knight",
+      "troops/kingdom/horse_swordsman",
       [](const DrawContext &ctx, ISubmitter &out) {
         static MountedKnightRenderer const static_renderer;
-        Shader *mounted_knight_shader = nullptr;
+        Shader *horse_swordsman_shader = nullptr;
         if (ctx.backend != nullptr) {
           QString shader_key = static_renderer.resolve_shader_key(ctx);
-          mounted_knight_shader = ctx.backend->shader(shader_key);
-          if (mounted_knight_shader == nullptr) {
-            mounted_knight_shader =
-                ctx.backend->shader(QStringLiteral("mounted_knight"));
+          horse_swordsman_shader = ctx.backend->shader(shader_key);
+          if (horse_swordsman_shader == nullptr) {
+            horse_swordsman_shader =
+                ctx.backend->shader(QStringLiteral("horse_swordsman"));
           }
         }
         auto *scene_renderer = dynamic_cast<Renderer *>(&out);
-        if ((scene_renderer != nullptr) && (mounted_knight_shader != nullptr)) {
-          scene_renderer->setCurrentShader(mounted_knight_shader);
+        if ((scene_renderer != nullptr) && (horse_swordsman_shader != nullptr)) {
+          scene_renderer->setCurrentShader(horse_swordsman_shader);
         }
         static_renderer.render(ctx, out);
         if (scene_renderer != nullptr) {
@@ -805,4 +805,4 @@ void registerMountedKnightRenderer(
       });
 }
 
-} // namespace Render::GL::Carthage
+} // namespace Render::GL::Kingdom

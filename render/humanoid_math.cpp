@@ -1,4 +1,4 @@
-#include "humanoid_math.h"
+#include "humanoid/humanoid_math.h"
 #include <algorithm>
 #include <qvectornd.h>
 

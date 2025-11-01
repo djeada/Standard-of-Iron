@@ -67,7 +67,7 @@ add_library(game_systems STATIC
     units/unit.cpp
     units/archer.cpp
     units/swordsman.cpp
-    units/mounted_knight.cpp
+    units/horse_swordsman.cpp
     units/spearman.cpp
     units/troop_catalog.cpp
     units/troop_catalog_loader.cpp

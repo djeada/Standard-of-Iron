@@ -3,13 +3,13 @@
 #include "../../registry.h"
 #include <string>
 
-namespace Render::GL::Carthage {
+namespace Render::GL::Roman {
 
 struct KnightStyleConfig;
 
-void register_knight_style(const std::string &nation_id,
+void register_swordsman_style(const std::string &nation_id,
                            const KnightStyleConfig &style);
 
 void registerKnightRenderer(EntityRendererRegistry &registry);
 
-} // namespace Render::GL::Carthage
+} // namespace Render::GL::Roman
