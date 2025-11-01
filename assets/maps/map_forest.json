@@ -12,21 +12,58 @@
     "seed": 12345,
     "patchDensity": 3.2,
     "patchJitter": 0.85,
-    "bladeHeight": [0.6, 1.45],
-    "bladeWidth": [0.028, 0.058],
+    "bladeHeight": [
+      0.6,
+      1.45
+    ],
+    "bladeWidth": [
+      0.028,
+      0.058
+    ],
     "swayStrength": 0.28,
     "swaySpeed": 1.35,
-    "heightNoise": [0.22, 0.07],
-    "grassPrimary": [0.28, 0.6, 0.32],
-    "grassSecondary": [0.42, 0.72, 0.34],
-    "grassDry": [0.58, 0.5, 0.36],
-    "soilColor": [0.28, 0.24, 0.18],
-    "rockLow": [0.5, 0.48, 0.46],
-    "rockHigh": [0.68, 0.69, 0.73],
+    "heightNoise": [
+      0.22,
+      0.07
+    ],
+    "grassPrimary": [
+      0.28,
+      0.6,
+      0.32
+    ],
+    "grassSecondary": [
+      0.42,
+      0.72,
+      0.34
+    ],
+    "grassDry": [
+      0.58,
+      0.5,
+      0.36
+    ],
+    "soilColor": [
+      0.28,
+      0.24,
+      0.18
+    ],
+    "rockLow": [
+      0.5,
+      0.48,
+      0.46
+    ],
+    "rockHigh": [
+      0.68,
+      0.69,
+      0.73
+    ],
     "plantDensity": 0.65
   },
   "camera": {
-    "center": [125, 0, 125],
+    "center": [
+      125,
+      0,
+      125
+    ],
     "distance": 35.0,
     "tiltDeg": 45.0,
     "yaw": 225.0,
@@ -40,68 +77,228 @@
       "x": 60,
       "z": 60,
       "playerId": 1,
-      "maxPopulation": 200
+      "maxPopulation": 200,
+      "nation": "roman_republic"
     },
-    { "type": "archer", "x": 58, "z": 62, "playerId": 1 },
-    { "type": "archer", "x": 62, "z": 58, "playerId": 1 },
-    { "type": "swordsman", "x": 55, "z": 60, "playerId": 1 },
-    { "type": "swordsman", "x": 60, "z": 55, "playerId": 1 },
-    { "type": "spearman", "x": 58, "z": 58, "playerId": 1 },
-    { "type": "spearman", "x": 62, "z": 62, "playerId": 1 },
+    {
+      "type": "archer",
+      "x": 58,
+      "z": 62,
+      "playerId": 1
+    },
+    {
+      "type": "archer",
+      "x": 62,
+      "z": 58,
+      "playerId": 1
+    },
+    {
+      "type": "swordsman",
+      "x": 55,
+      "z": 60,
+      "playerId": 1
+    },
+    {
+      "type": "swordsman",
+      "x": 60,
+      "z": 55,
+      "playerId": 1
+    },
+    {
+      "type": "spearman",
+      "x": 58,
+      "z": 58,
+      "playerId": 1
+    },
+    {
+      "type": "spearman",
+      "x": 62,
+      "z": 62,
+      "playerId": 1
+    },
     {
       "type": "barracks",
       "x": 190,
       "z": 190,
       "playerId": 2,
-      "maxPopulation": 200
+      "maxPopulation": 200,
+      "nation": "carthage"
     },
-    { "type": "archer", "x": 188, "z": 192, "playerId": 2 },
-    { "type": "archer", "x": 192, "z": 188, "playerId": 2 },
-    { "type": "horse_swordsman", "x": 185, "z": 190, "playerId": 2 },
-    { "type": "horse_swordsman", "x": 190, "z": 185, "playerId": 2 },
-    { "type": "spearman", "x": 188, "z": 188, "playerId": 2 },
-    { "type": "spearman", "x": 192, "z": 192, "playerId": 2 },
+    {
+      "type": "archer",
+      "x": 188,
+      "z": 192,
+      "playerId": 2
+    },
+    {
+      "type": "archer",
+      "x": 192,
+      "z": 188,
+      "playerId": 2
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 185,
+      "z": 190,
+      "playerId": 2
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 190,
+      "z": 185,
+      "playerId": 2
+    },
+    {
+      "type": "spearman",
+      "x": 188,
+      "z": 188,
+      "playerId": 2
+    },
+    {
+      "type": "spearman",
+      "x": 192,
+      "z": 192,
+      "playerId": 2
+    },
     {
       "type": "barracks",
       "x": 125,
       "z": 125,
-      "maxPopulation": 150
+      "maxPopulation": 150,
+      "nation": "kingdom_of_iron"
     },
     {
       "type": "barracks",
       "x": 60,
       "z": 190,
       "playerId": 3,
-      "maxPopulation": 150
+      "maxPopulation": 150,
+      "nation": "kingdom_of_iron"
     },
-    { "type": "swordsman", "x": 58, "z": 192, "playerId": 3 },
-    { "type": "swordsman", "x": 62, "z": 188, "playerId": 3 },
-    { "type": "archer", "x": 55, "z": 190, "playerId": 3 },
+    {
+      "type": "swordsman",
+      "x": 58,
+      "z": 192,
+      "playerId": 3
+    },
+    {
+      "type": "swordsman",
+      "x": 62,
+      "z": 188,
+      "playerId": 3
+    },
+    {
+      "type": "archer",
+      "x": 55,
+      "z": 190,
+      "playerId": 3
+    },
     {
       "type": "barracks",
       "x": 190,
       "z": 60,
       "playerId": 4,
-      "maxPopulation": 150
+      "maxPopulation": 150,
+      "nation": "roman_republic"
     },
-    { "type": "horse_swordsman", "x": 188, "z": 62, "playerId": 4 },
-    { "type": "horse_swordsman", "x": 192, "z": 58, "playerId": 4 },
-    { "type": "spearman", "x": 190, "z": 55, "playerId": 4 }
+    {
+      "type": "horse_swordsman",
+      "x": 188,
+      "z": 62,
+      "playerId": 4
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 192,
+      "z": 58,
+      "playerId": 4
+    },
+    {
+      "type": "spearman",
+      "x": 190,
+      "z": 55,
+      "playerId": 4
+    }
   ],
   "firecamps": [
-    { "x": 54, "z": 65, "intensity": 1.0, "radius": 3.0 },
-    { "x": 66, "z": 54, "intensity": 1.1, "radius": 3.2 },
-    { "x": 184, "z": 195, "intensity": 0.9, "radius": 2.8 },
-    { "x": 196, "z": 184, "intensity": 1.0, "radius": 3.0 },
-    { "x": 120, "z": 130, "intensity": 1.2, "radius": 3.5 },
-    { "x": 54, "z": 195, "intensity": 1.0, "radius": 3.0 },
-    { "x": 66, "z": 184, "intensity": 0.95, "radius": 3.1 },
-    { "x": 184, "z": 54, "intensity": 1.05, "radius": 3.2 },
-    { "x": 196, "z": 66, "intensity": 1.0, "radius": 3.0 },
-    { "x": 80, "z": 80, "intensity": 0.85, "radius": 2.5 },
-    { "x": 170, "z": 170, "intensity": 0.9, "radius": 2.7 },
-    { "x": 80, "z": 170, "intensity": 0.88, "radius": 2.6 },
-    { "x": 170, "z": 80, "intensity": 0.92, "radius": 2.8 }
+    {
+      "x": 54,
+      "z": 65,
+      "intensity": 1.0,
+      "radius": 3.0
+    },
+    {
+      "x": 66,
+      "z": 54,
+      "intensity": 1.1,
+      "radius": 3.2
+    },
+    {
+      "x": 184,
+      "z": 195,
+      "intensity": 0.9,
+      "radius": 2.8
+    },
+    {
+      "x": 196,
+      "z": 184,
+      "intensity": 1.0,
+      "radius": 3.0
+    },
+    {
+      "x": 120,
+      "z": 130,
+      "intensity": 1.2,
+      "radius": 3.5
+    },
+    {
+      "x": 54,
+      "z": 195,
+      "intensity": 1.0,
+      "radius": 3.0
+    },
+    {
+      "x": 66,
+      "z": 184,
+      "intensity": 0.95,
+      "radius": 3.1
+    },
+    {
+      "x": 184,
+      "z": 54,
+      "intensity": 1.05,
+      "radius": 3.2
+    },
+    {
+      "x": 196,
+      "z": 66,
+      "intensity": 1.0,
+      "radius": 3.0
+    },
+    {
+      "x": 80,
+      "z": 80,
+      "intensity": 0.85,
+      "radius": 2.5
+    },
+    {
+      "x": 170,
+      "z": 170,
+      "intensity": 0.9,
+      "radius": 2.7
+    },
+    {
+      "x": 80,
+      "z": 170,
+      "intensity": 0.88,
+      "radius": 2.6
+    },
+    {
+      "x": 170,
+      "z": 80,
+      "intensity": 0.92,
+      "radius": 2.8
+    }
   ],
   "terrain": [
     {
@@ -111,10 +308,22 @@
       "radius": 12,
       "height": 3.5,
       "entrances": [
-        { "x": 125, "z": 113 },
-        { "x": 125, "z": 137 },
-        { "x": 113, "z": 125 },
-        { "x": 137, "z": 125 }
+        {
+          "x": 125,
+          "z": 113
+        },
+        {
+          "x": 125,
+          "z": 137
+        },
+        {
+          "x": 113,
+          "z": 125
+        },
+        {
+          "x": 137,
+          "z": 125
+        }
       ]
     },
     {
@@ -126,8 +335,14 @@
       "height": 3.0,
       "rotation": 0,
       "entrances": [
-        { "x": 60, "z": 115 },
-        { "x": 60, "z": 135 }
+        {
+          "x": 60,
+          "z": 115
+        },
+        {
+          "x": 60,
+          "z": 135
+        }
       ]
     },
     {
@@ -139,8 +354,14 @@
       "height": 3.0,
       "rotation": 180,
       "entrances": [
-        { "x": 190, "z": 115 },
-        { "x": 190, "z": 135 }
+        {
+          "x": 190,
+          "z": 115
+        },
+        {
+          "x": 190,
+          "z": 135
+        }
       ]
     },
     {
@@ -152,8 +373,14 @@
       "height": 2.8,
       "rotation": 90,
       "entrances": [
-        { "x": 115, "z": 60 },
-        { "x": 135, "z": 60 }
+        {
+          "x": 115,
+          "z": 60
+        },
+        {
+          "x": 135,
+          "z": 60
+        }
       ]
     },
     {
@@ -165,14 +392,24 @@
       "height": 2.8,
       "rotation": 270,
       "entrances": [
-        { "x": 115, "z": 190 },
-        { "x": 135, "z": 190 }
+        {
+          "x": 115,
+          "z": 190
+        },
+        {
+          "x": 135,
+          "z": 190
+        }
       ]
     }
   ],
   "victory": {
     "type": "elimination",
-    "key_structures": ["barracks"],
-    "defeat_conditions": ["no_key_structures"]
+    "key_structures": [
+      "barracks"
+    ],
+    "defeat_conditions": [
+      "no_key_structures"
+    ]
   }
 }
