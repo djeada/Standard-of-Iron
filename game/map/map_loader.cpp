@@ -254,6 +254,19 @@ void readSpawns(const QJsonArray &arr, std::vector<UnitSpawn> &out) {
     constexpr int default_max_population = 100;
     spawn.maxPopulation =
         spawn_obj.value(MAX_POPULATION).toInt(default_max_population);
+    
+    // Parse nation field if present (for backward compatibility, it's optional)
+    if (spawn_obj.contains(NATION)) {
+      const QString nation_str = spawn_obj.value(NATION).toString();
+      Game::Systems::NationID nation_id;
+      if (Game::Systems::tryParseNationID(nation_str, nation_id)) {
+        spawn.nation = nation_id;
+      } else {
+        qWarning() << "MapLoader: unknown nation" << nation_str 
+                   << "- will use default";
+      }
+    }
+    
     out.push_back(spawn);
   }
 }
