@@ -22,7 +22,7 @@ inline auto spawn_typeToQString(SpawnType type) -> QString {
   case SpawnType::Archer:
     return QStringLiteral("archer");
   case SpawnType::Knight:
-    return QStringLiteral("knight");
+    return QStringLiteral("swordsman");
   case SpawnType::Spearman:
     return QStringLiteral("spearman");
   case SpawnType::MountedKnight:
@@ -43,7 +43,8 @@ inline auto tryParseSpawnType(const QString &value, SpawnType &out) -> bool {
     out = SpawnType::Archer;
     return true;
   }
-  if (lowered == QStringLiteral("knight")) {
+  if (lowered == QStringLiteral("swordsman") ||
+      lowered == QStringLiteral("knight")) {
     out = SpawnType::Knight;
     return true;
   }
@@ -67,7 +68,7 @@ spawn_typeFromString(const std::string &str) -> std::optional<SpawnType> {
   if (str == "archer") {
     return SpawnType::Archer;
   }
-  if (str == "knight") {
+  if (str == "swordsman" || str == "knight") {
     return SpawnType::Knight;
   }
   if (str == "spearman") {
@@ -95,7 +96,7 @@ inline auto spawn_typeToTroopType(SpawnType type) -> std::optional<TroopType> {
   case SpawnType::Archer:
     return TroopType::Archer;
   case SpawnType::Knight:
-    return TroopType::Knight;
+    return TroopType::Swordsman;
   case SpawnType::Spearman:
     return TroopType::Spearman;
   case SpawnType::MountedKnight:
@@ -110,7 +111,7 @@ inline auto spawn_typeFromTroopType(TroopType type) -> SpawnType {
   switch (type) {
   case TroopType::Archer:
     return SpawnType::Archer;
-  case TroopType::Knight:
+  case TroopType::Swordsman:
     return SpawnType::Knight;
   case TroopType::Spearman:
     return SpawnType::Spearman;

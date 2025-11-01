@@ -2,6 +2,8 @@
 #include "../core/component.h"
 #include "../core/world.h"
 #include "../game_config.h"
+#include "../systems/nation_registry.h"
+#include "../systems/troop_profile_service.h"
 #include "../units/troop_config.h"
 #include "core/entity.h"
 #include "units/spawn_type.h"
@@ -28,6 +30,31 @@ findFirstSelectedBarracks(Engine::Core::World &world,
   return nullptr;
 }
 
+namespace {
+
+auto resolve_nation_id(const Engine::Core::UnitComponent *unit,
+                       int owner_id) -> Game::Systems::NationID {
+  auto &registry = NationRegistry::instance();
+  if (const auto *nation = registry.getNationForPlayer(owner_id)) {
+    return nation->id;
+  }
+  return registry.default_nation_id();
+}
+
+void apply_production_profile(Engine::Core::ProductionComponent *prod,
+                              Game::Systems::NationID nation_id,
+                              Game::Units::TroopType unit_type) {
+  if (prod == nullptr) {
+    return;
+  }
+  const auto profile =
+      TroopProfileService::instance().get_profile(nation_id, unit_type);
+  prod->buildTime = profile.production.build_time;
+  prod->villagerCost = profile.individuals_per_unit;
+}
+
+} // namespace
+
 auto ProductionService::startProductionForFirstSelectedBarracks(
     Engine::Core::World &world,
     const std::vector<Engine::Core::EntityID> &selected, int owner_id,
@@ -36,6 +63,11 @@ auto ProductionService::startProductionForFirstSelectedBarracks(
   if (e == nullptr) {
     return ProductionResult::NoBarracks;
   }
+  auto *unit = e->getComponent<Engine::Core::UnitComponent>();
+  const auto nation_id = resolve_nation_id(unit, owner_id);
+  const auto profile =
+      TroopProfileService::instance().get_profile(nation_id, unit_type);
+
   auto *p = e->getComponent<Engine::Core::ProductionComponent>();
   if (p == nullptr) {
     p = e->addComponent<Engine::Core::ProductionComponent>();
@@ -44,8 +76,7 @@ auto ProductionService::startProductionForFirstSelectedBarracks(
     return ProductionResult::NoBarracks;
   }
 
-  int const individuals_per_unit =
-      Game::Units::TroopConfig::instance().getIndividualsPerUnit(unit_type);
+  int const individuals_per_unit = profile.individuals_per_unit;
 
   if (p->producedCount + individuals_per_unit > p->maxUnits) {
     return ProductionResult::PerBarracksLimitReached;
@@ -70,6 +101,7 @@ auto ProductionService::startProductionForFirstSelectedBarracks(
     p->productionQueue.push_back(unit_type);
   } else {
     p->product_type = unit_type;
+    apply_production_profile(p, nation_id, unit_type);
     p->timeRemaining = p->buildTime;
     p->inProgress = true;
   }

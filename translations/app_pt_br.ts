@@ -576,16 +576,16 @@ Tempo de construção: %2s</translation>
         <translation>Não é possível recrutar</translation>
     </message>
     <message>
-        <location filename="../ui/qml/ProductionPanel.qml" line="354" />
-        <source>Knight</source>
-        <translation>Cavaleiro</translation>
+        <location filename="../ui/qml/ProductionPanel.qml" line="366" />
+        <source>Swordsman</source>
+        <translation>Espadachim</translation>
     </message>
     <message>
-        <location filename="../ui/qml/ProductionPanel.qml" line="390" />
-        <source>Recruit Knight
+        <location filename="../ui/qml/ProductionPanel.qml" line="402" />
+        <source>Recruit Swordsman
 Cost: %1 villagers
 Build time: %2s</source>
-        <translation>Recrutar Cavaleiro
+        <translation>Recrutar Espadachim
 Custo: %1 Aldeões
 Tempo de contrução: %2s</translation>
     </message>

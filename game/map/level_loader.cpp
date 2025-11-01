@@ -3,6 +3,7 @@
 #include "../../render/scene_renderer.h"
 #include "../core/component.h"
 #include "../core/world.h"
+#include "../systems/nation_registry.h"
 #include "../systems/owner_registry.h"
 #include "../units/factory.h"
 #include "../visuals/visual_catalog.h"
@@ -16,6 +17,7 @@
 #include "units/unit.h"
 #include "utils/resource_utils.h"
 #include <QDebug>
+#include <QFile>
 #include <memory>
 #include <qglobal.h>
 #include <qstringliteral.h>
@@ -31,15 +33,19 @@ auto LevelLoader::loadFromAssets(
   auto &owners = Game::Systems::OwnerRegistry::instance();
 
   Game::Visuals::VisualCatalog visual_catalog;
-  QString visuals_err;
   const QString visuals_path = Utils::Resources::resolveResourcePath(
       QStringLiteral(":/assets/visuals/unit_visuals.json"));
-  if (!visual_catalog.loadFromJsonFile(visuals_path, &visuals_err)) {
-    res.ok = false;
-    res.errorMessage =
-        QString("Failed to load visual catalog: %1").arg(visuals_err);
-    qWarning() << res.errorMessage;
-    return res;
+  bool visuals_loaded = false;
+  if (QFile::exists(visuals_path)) {
+    QString visuals_err;
+    visuals_loaded =
+        visual_catalog.loadFromJsonFile(visuals_path, &visuals_err);
+    if (!visuals_loaded && !visuals_err.isEmpty()) {
+      qWarning() << "LevelLoader: Visual catalog parse failed:" << visuals_err;
+    }
+  } else {
+    qInfo() << "LevelLoader: unit visuals catalog not found at" << visuals_path
+            << "- continuing without overrides.";
   }
 
   auto unit_reg = std::make_shared<Game::Units::UnitFactoryRegistry>();
@@ -67,12 +73,14 @@ auto LevelLoader::loadFromAssets(
     res.max_troops_per_player = def.max_troops_per_player;
     res.victoryConfig = def.victory;
 
-    auto rt =
-        Game::Map::MapTransformer::applyToWorld(def, world, &visual_catalog);
+    const Game::Visuals::VisualCatalog *catalog_ptr =
+        visuals_loaded ? &visual_catalog : nullptr;
+    auto rt = Game::Map::MapTransformer::applyToWorld(def, world, catalog_ptr);
     if (!rt.unit_ids.empty()) {
       res.playerUnitId = rt.unit_ids.front();
     } else {
 
+      auto &nationRegistry = Game::Systems::NationRegistry::instance();
       auto reg = Game::Map::MapTransformer::getFactoryRegistry();
       if (reg) {
         Game::Units::SpawnParams sp;
@@ -80,6 +88,12 @@ auto LevelLoader::loadFromAssets(
         sp.player_id = 0;
         sp.spawn_type = Game::Units::SpawnType::Archer;
         sp.aiControlled = !owners.isPlayer(sp.player_id);
+        if (const auto *nation =
+                nationRegistry.getNationForPlayer(sp.player_id)) {
+          sp.nation_id = nation->id;
+        } else {
+          sp.nation_id = nationRegistry.default_nation_id();
+        }
         if (auto unit =
                 reg->create(Game::Units::SpawnType::Archer, world, sp)) {
           res.playerUnitId = unit->id();
@@ -100,6 +114,7 @@ auto LevelLoader::loadFromAssets(
       }
     }
     if (!has_barracks) {
+      auto &nationRegistry = Game::Systems::NationRegistry::instance();
       auto reg2 = Game::Map::MapTransformer::getFactoryRegistry();
       if (reg2) {
         Game::Units::SpawnParams sp;
@@ -107,6 +122,12 @@ auto LevelLoader::loadFromAssets(
         sp.player_id = owners.getLocalPlayerId();
         sp.spawn_type = Game::Units::SpawnType::Barracks;
         sp.aiControlled = !owners.isPlayer(sp.player_id);
+        if (const auto *nation =
+                nationRegistry.getNationForPlayer(sp.player_id)) {
+          sp.nation_id = nation->id;
+        } else {
+          sp.nation_id = nationRegistry.default_nation_id();
+        }
         reg2->create(Game::Units::SpawnType::Barracks, world, sp);
       }
     }
@@ -125,6 +146,7 @@ auto LevelLoader::loadFromAssets(
     res.grid_height = 50;
     res.tile_size = 1.0F;
 
+    auto &nationRegistry = Game::Systems::NationRegistry::instance();
     auto reg = Game::Map::MapTransformer::getFactoryRegistry();
     if (reg) {
       Game::Units::SpawnParams sp;
@@ -132,6 +154,12 @@ auto LevelLoader::loadFromAssets(
       sp.player_id = 0;
       sp.spawn_type = Game::Units::SpawnType::Archer;
       sp.aiControlled = !owners.isPlayer(sp.player_id);
+      if (const auto *nation =
+              nationRegistry.getNationForPlayer(sp.player_id)) {
+        sp.nation_id = nation->id;
+      } else {
+        sp.nation_id = nationRegistry.default_nation_id();
+      }
       if (auto unit = reg->create(Game::Units::SpawnType::Archer, world, sp)) {
         res.playerUnitId = unit->id();
       }

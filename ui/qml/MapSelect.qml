@@ -12,9 +12,27 @@ Item {
     property var selectedMapData: null
     property string selectedMapPath: ""
     property string validationError: ""
+    property var availableNations: []
 
     signal mapChosen(string map_path, var playerConfigs)
     signal cancelled()
+
+    function refreshAvailableNations() {
+        if (typeof game !== "undefined" && game.availableNations)
+            availableNations = game.availableNations;
+        else
+            availableNations = [];
+    }
+
+    function defaultNationEntry() {
+        if (availableNations && availableNations.length > 0)
+            return availableNations[0];
+
+        return {
+            "id": "kingdom_of_iron",
+            "name": qsTr("Kingdom of Iron")
+        };
+    }
 
     function hasMinimumDistinctTeams() {
         if (playersModel.count < 2)
@@ -40,6 +58,17 @@ Item {
         return (obj && obj[key] !== undefined) ? String(obj[key]) : "";
     }
 
+    function nationEmblemFor(nationId) {
+        if (!nationId || !Theme.nationEmblems)
+            return "";
+
+        let emblem = Theme.nationEmblems[nationId];
+        if (emblem === undefined || emblem === null)
+            return "";
+
+        return String(emblem);
+    }
+
     function getMapData(index) {
         if (!mapsModel || index < 0 || index >= (mapsModel.length || list.count))
             return null;
@@ -57,6 +86,7 @@ Item {
             return ;
 
         let humanPlayerId = mapData.player_ids.length > 0 ? mapData.player_ids[0] : 1;
+        let defaultNation = defaultNationEntry();
         playersModel.append({
             "player_id": humanPlayerId,
             "playerName": "Player " + (humanPlayerId + 1),
@@ -65,8 +95,8 @@ Item {
             "colorName": Theme.playerColors[0].name,
             "team_id": 0,
             "teamIcon": Theme.teamIcons[0],
-            "factionId": 0,
-            "factionName": Theme.factions[0].name,
+            "nationId": defaultNation.id,
+            "nationName": defaultNation.name,
             "isHuman": true
         });
         let cpuId = mapData.player_ids.find(function(id) {
@@ -107,6 +137,7 @@ Item {
             }
         }
         let defaultTeamId = playersModel.count > 0 ? 1 : 0;
+        let defaultNation = defaultNationEntry();
         playersModel.append({
             "player_id": nextId,
             "playerName": "CPU " + nextId,
@@ -115,8 +146,8 @@ Item {
             "colorName": Theme.playerColors[colorIdx].name,
             "team_id": defaultTeamId,
             "teamIcon": Theme.teamIcons[defaultTeamId],
-            "factionId": 0,
-            "factionName": Theme.factions[0].name,
+            "nationId": defaultNation.id,
+            "nationName": defaultNation.name,
             "isHuman": false
         });
         updateValidationError();
@@ -172,6 +203,27 @@ Item {
         updateValidationError();
     }
 
+    function cyclePlayerNation(index) {
+        if (index < 0 || index >= playersModel.count)
+            return ;
+
+        if (!availableNations || availableNations.length === 0)
+            return ;
+
+        let p = playersModel.get(index);
+        let currentId = p.nationId || availableNations[0].id;
+        let nextIndex = 0;
+        for (let i = 0; i < availableNations.length; i++) {
+            if (availableNations[i].id === currentId) {
+                nextIndex = (i + 1) % availableNations.length;
+                break;
+            }
+        }
+        let nextNation = availableNations[nextIndex];
+        playersModel.setProperty(index, "nationId", nextNation.id);
+        playersModel.setProperty(index, "nationName", nextNation.name);
+    }
+
     function getPlayerConfigs() {
         let configs = [];
         for (let i = 0; i < playersModel.count; i++) {
@@ -180,10 +232,10 @@ Item {
                 "player_id": p.player_id,
                 "colorHex": p.colorHex,
                 "team_id": p.team_id,
-                "factionId": p.factionId,
+                "nationId": p.nationId,
                 "isHuman": p.isHuman
             };
-            console.log("MapSelect: Player", p.player_id, "config - Team:", p.team_id, "Color:", p.colorHex, "Human:", p.isHuman);
+            console.log("MapSelect: Player", p.player_id, "config - Team:", p.team_id, "Color:", p.colorHex, "Nation:", p.nationId, "Human:", p.isHuman);
             configs.push(config);
         }
         return configs;
@@ -225,6 +277,7 @@ Item {
         removePlayer(index);
     }
 
+    Component.onCompleted: refreshAvailableNations()
     anchors.fill: parent
     focus: true
     onVisibleChanged: {
@@ -234,6 +287,7 @@ Item {
             selectedMapData = null;
             selectedMapPath = "";
             playersModel.clear();
+            refreshAvailableNations();
             if (typeof game !== "undefined" && game.startLoadingMaps)
                 game.startLoadingMaps();
 
@@ -847,6 +901,14 @@ Item {
                             anchors.verticalCenter: parent.verticalCenter
                         }
 
+                        Text {
+                            text: qsTr("• Click nation tag to change")
+                            color: Theme.textSubLite
+                            font.pixelSize: 11
+                            font.italic: true
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+
                     }
 
                     ListView {
@@ -958,6 +1020,72 @@ Item {
                                                     duration: Theme.animFast
                                                 }
 
+                                            }
+
+                                        }
+
+                                        Behavior on border.width {
+                                            NumberAnimation {
+                                                duration: Theme.animFast
+                                            }
+
+                                        }
+
+                                    }
+
+                                    Rectangle {
+                                        readonly property real emblemSize: Math.min(playerCard.height - Theme.spacingSmall * 2, 72)
+                                        property string emblemSource: root.nationEmblemFor(model.nationId)
+
+                                        width: emblemSize
+                                        height: emblemSize
+                                        radius: Theme.radiusSmall
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        color: nationMA.containsMouse ? Qt.lighter(Theme.cardBaseB, 1.1) : Theme.cardBaseB
+                                        border.color: nationMA.containsMouse ? Theme.selectedBr : Theme.thumbBr
+                                        border.width: nationMA.containsMouse ? 2 : 1
+                                        ToolTip.visible: nationMA.containsMouse
+                                        ToolTip.text: qsTr("Nation: %1 - Click to change").arg(model.nationName || qsTr("Nation"))
+
+                                        Image {
+                                            anchors.centerIn: parent
+                                            visible: parent.emblemSource !== ""
+                                            source: parent.emblemSource
+                                            width: parent.width * 0.8
+                                            height: width
+                                            fillMode: Image.PreserveAspectFit
+                                            smooth: true
+                                            mipmap: true
+                                        }
+
+                                        Text {
+                                            anchors.centerIn: parent
+                                            visible: parent.emblemSource === ""
+                                            text: model.nationName || qsTr("Nation")
+                                            color: Theme.textMain
+                                            font.pixelSize: 11
+                                            font.bold: true
+                                        }
+
+                                        MouseArea {
+                                            id: nationMA
+
+                                            anchors.fill: parent
+                                            hoverEnabled: true
+                                            cursorShape: Qt.PointingHandCursor
+                                            onClicked: cyclePlayerNation(index)
+                                        }
+
+                                        Behavior on color {
+                                            ColorAnimation {
+                                                duration: Theme.animFast
+                                            }
+
+                                        }
+
+                                        Behavior on border.color {
+                                            ColorAnimation {
+                                                duration: Theme.animFast
                                             }
 
                                         }

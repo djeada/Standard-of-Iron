@@ -2,6 +2,7 @@
 #include "../core/component.h"
 #include "../core/event_manager.h"
 #include "../core/world.h"
+#include "../systems/troop_profile_service.h"
 #include "units/troop_type.h"
 #include "units/unit.h"
 #include <memory>
@@ -38,21 +39,28 @@ void Archer::init(const SpawnParams &params) {
   auto *e = m_world->createEntity();
   m_id = e->getId();
 
+  const auto nation_id = resolve_nation_id(params);
+  auto profile = Game::Systems::TroopProfileService::instance().get_profile(
+      nation_id, TroopType::Archer);
+
   m_t = e->addComponent<Engine::Core::TransformComponent>();
   m_t->position = {params.position.x(), params.position.y(),
                    params.position.z()};
-  m_t->scale = {0.5F, 0.5F, 0.5F};
+  float const scale = profile.visuals.render_scale;
+  m_t->scale = {scale, scale, scale};
 
   m_r = e->addComponent<Engine::Core::RenderableComponent>("", "");
   m_r->visible = true;
+  m_r->rendererId = profile.visuals.renderer_id;
 
   m_u = e->addComponent<Engine::Core::UnitComponent>();
   m_u->spawn_type = params.spawn_type;
-  m_u->health = 80;
-  m_u->max_health = 80;
-  m_u->speed = 3.0F;
+  m_u->health = profile.combat.health;
+  m_u->max_health = profile.combat.max_health;
+  m_u->speed = profile.combat.speed;
   m_u->owner_id = params.player_id;
-  m_u->vision_range = 16.0F;
+  m_u->vision_range = profile.combat.vision_range;
+  m_u->nation_id = nation_id;
 
   if (params.aiControlled) {
     e->addComponent<Engine::Core::AIControlledComponent>();
@@ -74,18 +82,22 @@ void Archer::init(const SpawnParams &params) {
 
   m_atk = e->addComponent<Engine::Core::AttackComponent>();
 
-  m_atk->range = 6.0F;
-  m_atk->damage = 12;
-  m_atk->cooldown = 1.2F;
+  m_atk->range = profile.combat.ranged_range;
+  m_atk->damage = profile.combat.ranged_damage;
+  m_atk->cooldown = profile.combat.ranged_cooldown;
 
-  m_atk->meleeRange = 1.5F;
-  m_atk->meleeDamage = 5;
-  m_atk->meleeCooldown = 0.8F;
+  m_atk->meleeRange = profile.combat.melee_range;
+  m_atk->meleeDamage = profile.combat.melee_damage;
+  m_atk->meleeCooldown = profile.combat.melee_cooldown;
 
-  m_atk->preferredMode = Engine::Core::AttackComponent::CombatMode::Auto;
-  m_atk->currentMode = Engine::Core::AttackComponent::CombatMode::Ranged;
-  m_atk->canRanged = true;
-  m_atk->canMelee = true;
+  m_atk->preferredMode = profile.combat.can_ranged
+                             ? Engine::Core::AttackComponent::CombatMode::Auto
+                             : Engine::Core::AttackComponent::CombatMode::Melee;
+  m_atk->currentMode = profile.combat.can_ranged
+                           ? Engine::Core::AttackComponent::CombatMode::Ranged
+                           : Engine::Core::AttackComponent::CombatMode::Melee;
+  m_atk->canRanged = profile.combat.can_ranged;
+  m_atk->canMelee = profile.combat.can_melee;
   m_atk->max_heightDifference = 2.0F;
 
   Engine::Core::EventManager::instance().publish(

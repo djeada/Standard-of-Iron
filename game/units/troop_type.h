@@ -9,14 +9,14 @@
 
 namespace Game::Units {
 
-enum class TroopType { Archer, Knight, Spearman, MountedKnight };
+enum class TroopType { Archer, Swordsman, Spearman, MountedKnight };
 
 inline auto troop_typeToQString(TroopType type) -> QString {
   switch (type) {
   case TroopType::Archer:
     return QStringLiteral("archer");
-  case TroopType::Knight:
-    return QStringLiteral("knight");
+  case TroopType::Swordsman:
+    return QStringLiteral("swordsman");
   case TroopType::Spearman:
     return QStringLiteral("spearman");
   case TroopType::MountedKnight:
@@ -35,8 +35,9 @@ inline auto tryParseTroopType(const QString &value, TroopType &out) -> bool {
     out = TroopType::Archer;
     return true;
   }
-  if (lowered == QStringLiteral("knight")) {
-    out = TroopType::Knight;
+  if (lowered == QStringLiteral("swordsman") ||
+      lowered == QStringLiteral("knight")) {
+    out = TroopType::Swordsman;
     return true;
   }
   if (lowered == QStringLiteral("spearman")) {

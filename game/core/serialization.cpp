@@ -1,6 +1,7 @@
 #include "serialization.h"
 #include "../map/terrain.h"
 #include "../map/terrain_service.h"
+#include "../systems/nation_id.h"
 #include "../units/spawn_type.h"
 #include "../units/troop_type.h"
 #include "component.h"
@@ -99,6 +100,10 @@ auto Serialization::serializeEntity(const Entity *entity) -> QJsonObject {
     renderable_obj["meshPath"] = QString::fromStdString(renderable->meshPath);
     renderable_obj["texturePath"] =
         QString::fromStdString(renderable->texturePath);
+    if (!renderable->rendererId.empty()) {
+      renderable_obj["rendererId"] =
+          QString::fromStdString(renderable->rendererId);
+    }
     renderable_obj["visible"] = renderable->visible;
     renderable_obj["mesh"] = static_cast<int>(renderable->mesh);
     renderable_obj["color"] = serializeColor(renderable->color);
@@ -114,6 +119,7 @@ auto Serialization::serializeEntity(const Entity *entity) -> QJsonObject {
     unit_obj["unit_type"] = QString::fromStdString(
         Game::Units::spawn_typeToString(unit->spawn_type));
     unit_obj["owner_id"] = unit->owner_id;
+    unit_obj["nation_id"] = Game::Systems::nationIDToQString(unit->nation_id);
     entity_obj["unit"] = unit_obj;
   }
 
@@ -267,6 +273,8 @@ void Serialization::deserializeEntity(Entity *entity, const QJsonObject &json) {
     renderable->meshPath = renderable_obj["meshPath"].toString().toStdString();
     renderable->texturePath =
         renderable_obj["texturePath"].toString().toStdString();
+    renderable->rendererId =
+        renderable_obj["rendererId"].toString().toStdString();
     renderable->visible = renderable_obj["visible"].toBool(true);
     renderable->mesh =
         static_cast<RenderableComponent::MeshKind>(renderable_obj["mesh"].toInt(
@@ -297,6 +305,17 @@ void Serialization::deserializeEntity(Entity *entity, const QJsonObject &json) {
     }
 
     unit->owner_id = unit_obj["owner_id"].toInt(0);
+    if (unit_obj.contains("nation_id")) {
+      const QString nation_str = unit_obj["nation_id"].toString();
+      Game::Systems::NationID nation_id;
+      if (Game::Systems::tryParseNationID(nation_str, nation_id)) {
+        unit->nation_id = nation_id;
+      } else {
+        qWarning() << "Unknown nation ID in save file:" << nation_str
+                   << "- using default";
+        unit->nation_id = Game::Systems::NationID::KingdomOfIron;
+      }
+    }
   }
 
   if (json.contains("movement")) {
