@@ -106,7 +106,7 @@
       }
     },
     {
-      "id": "mounted_knight",
+      "id": "horse_swordsman",
       "display_name": "Mounted Knight",
       "production": {
         "cost": 150,
@@ -133,7 +133,7 @@
         "selection_ring_size": 2.0,
         "selection_ring_y_offset": 0.0,
         "selection_ring_ground_offset": 1.35,
-        "renderer_id": "troops/kingdom/mounted_knight"
+        "renderer_id": "troops/kingdom/horse_swordsman"
       },
       "formation": {
         "individuals_per_unit": 9,

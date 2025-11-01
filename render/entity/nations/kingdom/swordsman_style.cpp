@@ -1,5 +1,5 @@
-#include "knight_style.h"
-#include "knight_renderer.h"
+#include "swordsman_style.h"
+#include "swordsman_renderer.h"
 
 #include <QVector3D>
 
@@ -14,7 +14,7 @@ constexpr QVector3D k_kingdom_shield_trim{0.78F, 0.76F, 0.62F};
 
 namespace Render::GL::Kingdom {
 
-void register_kingdom_knight_style() {
+void register_kingdom_swordsman_style() {
   KnightStyleConfig style;
   style.cloth_color = k_kingdom_cloth;
   style.leather_color = k_kingdom_leather;
@@ -25,9 +25,9 @@ void register_kingdom_knight_style() {
   style.shield_radius_scale = 1.0F;
   style.shield_aspect_ratio = 1.0F;
   style.has_scabbard = true;
-  style.shader_id = "knight_kingdom_of_iron";
+  style.shader_id = "swordsman_kingdom_of_iron";
 
-  register_knight_style("kingdom_of_iron", style);
+  register_swordsman_style("kingdom_of_iron", style);
 }
 
 } // namespace Render::GL::Kingdom

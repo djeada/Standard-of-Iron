@@ -14,7 +14,7 @@ auto CharacterPipeline::initialize() -> bool {
 
   m_basicShader = m_shaderCache->get("basic");
   m_archerShader = m_shaderCache->get("archer");
-  m_knightShader = m_shaderCache->get("knight");
+  m_swordsmanShader = m_shaderCache->get("swordsman");
   m_spearmanShader = m_shaderCache->get("spearman");
 
   if (m_basicShader == nullptr) {
@@ -23,8 +23,8 @@ auto CharacterPipeline::initialize() -> bool {
   if (m_archerShader == nullptr) {
     qWarning() << "CharacterPipeline: Failed to load archer shader";
   }
-  if (m_knightShader == nullptr) {
-    qWarning() << "CharacterPipeline: Failed to load knight shader";
+  if (m_swordsmanShader == nullptr) {
+    qWarning() << "CharacterPipeline: Failed to load swordsman shader";
   }
   if (m_spearmanShader == nullptr) {
     qWarning() << "CharacterPipeline: Failed to load spearman shader";
@@ -38,7 +38,7 @@ auto CharacterPipeline::initialize() -> bool {
 void CharacterPipeline::shutdown() {
   m_basicShader = nullptr;
   m_archerShader = nullptr;
-  m_knightShader = nullptr;
+  m_swordsmanShader = nullptr;
   m_spearmanShader = nullptr;
 }
 
@@ -51,7 +51,7 @@ void CharacterPipeline::cacheUniforms() {
 
 auto CharacterPipeline::isInitialized() const -> bool {
   return m_basicShader != nullptr && m_archerShader != nullptr &&
-         m_knightShader != nullptr && m_spearmanShader != nullptr;
+         m_swordsmanShader != nullptr && m_spearmanShader != nullptr;
 }
 
 void CharacterPipeline::cacheBasicUniforms() {
@@ -81,16 +81,16 @@ void CharacterPipeline::cacheArcherUniforms() {
 }
 
 void CharacterPipeline::cacheKnightUniforms() {
-  if (m_knightShader == nullptr) {
+  if (m_swordsmanShader == nullptr) {
     return;
   }
 
-  m_knightUniforms.mvp = m_knightShader->uniformHandle("u_mvp");
-  m_knightUniforms.model = m_knightShader->uniformHandle("u_model");
-  m_knightUniforms.texture = m_knightShader->uniformHandle("u_texture");
-  m_knightUniforms.useTexture = m_knightShader->uniformHandle("u_useTexture");
-  m_knightUniforms.color = m_knightShader->uniformHandle("u_color");
-  m_knightUniforms.alpha = m_knightShader->uniformHandle("u_alpha");
+  m_swordsmanUniforms.mvp = m_swordsmanShader->uniformHandle("u_mvp");
+  m_swordsmanUniforms.model = m_swordsmanShader->uniformHandle("u_model");
+  m_swordsmanUniforms.texture = m_swordsmanShader->uniformHandle("u_texture");
+  m_swordsmanUniforms.useTexture = m_swordsmanShader->uniformHandle("u_useTexture");
+  m_swordsmanUniforms.color = m_swordsmanShader->uniformHandle("u_color");
+  m_swordsmanUniforms.alpha = m_swordsmanShader->uniformHandle("u_alpha");
 }
 
 void CharacterPipeline::cacheSpearmanUniforms() {

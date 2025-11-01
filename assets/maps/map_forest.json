@@ -57,8 +57,8 @@
     },
     { "type": "archer", "x": 188, "z": 192, "playerId": 2 },
     { "type": "archer", "x": 192, "z": 188, "playerId": 2 },
-    { "type": "mounted_knight", "x": 185, "z": 190, "playerId": 2 },
-    { "type": "mounted_knight", "x": 190, "z": 185, "playerId": 2 },
+    { "type": "horse_swordsman", "x": 185, "z": 190, "playerId": 2 },
+    { "type": "horse_swordsman", "x": 190, "z": 185, "playerId": 2 },
     { "type": "spearman", "x": 188, "z": 188, "playerId": 2 },
     { "type": "spearman", "x": 192, "z": 192, "playerId": 2 },
     {
@@ -84,8 +84,8 @@
       "playerId": 4,
       "maxPopulation": 150
     },
-    { "type": "mounted_knight", "x": 188, "z": 62, "playerId": 4 },
-    { "type": "mounted_knight", "x": 192, "z": 58, "playerId": 4 },
+    { "type": "horse_swordsman", "x": 188, "z": 62, "playerId": 4 },
+    { "type": "horse_swordsman", "x": 192, "z": 58, "playerId": 4 },
     { "type": "spearman", "x": 190, "z": 55, "playerId": 4 }
   ],
   "firecamps": [

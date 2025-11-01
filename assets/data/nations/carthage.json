@@ -110,7 +110,7 @@
       }
     },
     {
-      "id": "mounted_knight",
+      "id": "horse_swordsman",
       "display_name": "Numidian Cavalry",
       "production": {
         "cost": 150,
@@ -137,7 +137,7 @@
         "selection_ring_size": 2.1,
         "selection_ring_y_offset": 0.0,
         "selection_ring_ground_offset": 1.35,
-        "renderer_id": "troops/carthage/mounted_knight"
+        "renderer_id": "troops/carthage/horse_swordsman"
       },
       "formation": {
         "individuals_per_unit": 9,

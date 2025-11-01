@@ -1,6 +1,6 @@
 #include "palette.h"
 #include "geom/math_utils.h"
-#include "humanoid_math.h"
+#include "humanoid/humanoid_math.h"
 #include <cstdint>
 #include <qvectornd.h>
 
