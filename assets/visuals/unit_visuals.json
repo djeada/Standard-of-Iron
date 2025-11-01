@@ -17,7 +17,7 @@
       "texture": "",
       "equipment": "spear_and_shield"
     },
-    "mounted_knight": {
+    "horse_swordsman": {
       "mesh": "Capsule",
       "color": [0.75, 0.75, 0.85],
       "texture": "",

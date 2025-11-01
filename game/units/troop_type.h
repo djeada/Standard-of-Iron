@@ -20,7 +20,7 @@ inline auto troop_typeToQString(TroopType type) -> QString {
   case TroopType::Spearman:
     return QStringLiteral("spearman");
   case TroopType::MountedKnight:
-    return QStringLiteral("mounted_knight");
+    return QStringLiteral("horse_swordsman");
   }
   return QStringLiteral("archer");
 }
@@ -36,7 +36,7 @@ inline auto tryParseTroopType(const QString &value, TroopType &out) -> bool {
     return true;
   }
   if (lowered == QStringLiteral("swordsman") ||
-      lowered == QStringLiteral("knight")) {
+      lowered == QStringLiteral("swordsman")) {
     out = TroopType::Swordsman;
     return true;
   }
@@ -44,8 +44,8 @@ inline auto tryParseTroopType(const QString &value, TroopType &out) -> bool {
     out = TroopType::Spearman;
     return true;
   }
-  if (lowered == QStringLiteral("mounted_knight") ||
-      lowered == QStringLiteral("mountedknight")) {
+  if (lowered == QStringLiteral("horse_swordsman") ||
+      lowered == QStringLiteral("horseswordsman")) {
     out = TroopType::MountedKnight;
     return true;
   }
