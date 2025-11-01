@@ -3,6 +3,7 @@
 in vec3 v_normal;
 in vec2 v_texCoord;
 in vec3 v_worldPos;
+in float v_armorLayer; // Armor layer from vertex shader
 
 uniform sampler2D u_texture;
 uniform vec3 u_color;
