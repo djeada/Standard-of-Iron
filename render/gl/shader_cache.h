@@ -3,9 +3,12 @@
 #include "shader.h"
 #include "utils/resource_utils.h"
 #include <QDebug>
+#include <QFile>
 #include <QString>
+#include <QStringList>
 #include <memory>
 #include <unordered_map>
+#include <utility>
 
 namespace Render::GL {
 
@@ -140,30 +143,58 @@ public:
         resolve(kShaderBase + QStringLiteral("bridge.frag"));
     load(QStringLiteral("bridge"), bridgeVert, bridgeFrag);
 
-    const QString archerVert =
-        resolve(kShaderBase + QStringLiteral("archer.vert"));
-    const QString archerFrag =
-        resolve(kShaderBase + QStringLiteral("archer.frag"));
-    load(QStringLiteral("archer"), archerVert, archerFrag);
+    const auto loadBaseShader = [&](const QString &name) {
+      const QString vert =
+          resolve(kShaderBase + name + QStringLiteral(".vert"));
+      const QString frag =
+          resolve(kShaderBase + name + QStringLiteral(".frag"));
+      load(name, vert, frag);
+      return std::pair<QString, QString>{vert, frag};
+    };
 
-    const QString knightVert =
-        resolve(kShaderBase + QStringLiteral("knight.vert"));
-    const QString knightFrag =
-        resolve(kShaderBase + QStringLiteral("knight.frag"));
-    load(QStringLiteral("knight"), knightVert, knightFrag);
+    const auto [archerVert, archerFrag] =
+        loadBaseShader(QStringLiteral("archer"));
+    const auto [knightVert, knightFrag] =
+        loadBaseShader(QStringLiteral("knight"));
+    const auto [mountedKnightVert, mountedKnightFrag] =
+        loadBaseShader(QStringLiteral("mounted_knight"));
+    const auto [spearmanVert, spearmanFrag] =
+        loadBaseShader(QStringLiteral("spearman"));
 
-    const QString mounted_knightVert =
-        resolve(kShaderBase + QStringLiteral("mounted_knight.vert"));
-    const QString mounted_knightFrag =
-        resolve(kShaderBase + QStringLiteral("mounted_knight.frag"));
-    load(QStringLiteral("mounted_knight"), mounted_knightVert,
-         mounted_knightFrag);
+    const QStringList nationVariants = {QStringLiteral("kingdom_of_iron"),
+                                        QStringLiteral("roman_republic"),
+                                        QStringLiteral("carthage")};
 
-    const QString spearmanVert =
-        resolve(kShaderBase + QStringLiteral("spearman.vert"));
-    const QString spearmanFrag =
-        resolve(kShaderBase + QStringLiteral("spearman.frag"));
-    load(QStringLiteral("spearman"), spearmanVert, spearmanFrag);
+    auto loadVariant = [&](const QString &baseKey, const QString &baseVertPath,
+                           const QString &baseFragPath) {
+      for (const QString &nation : nationVariants) {
+        const QString shaderName = baseKey + QStringLiteral("_") + nation;
+        const QString variantVertRes = kShaderBase + baseKey +
+                                       QStringLiteral("_") + nation +
+                                       QStringLiteral(".vert");
+        const QString variantFragRes = kShaderBase + baseKey +
+                                       QStringLiteral("_") + nation +
+                                       QStringLiteral(".frag");
+
+        QString resolvedVert = resolve(variantVertRes);
+        if (!QFile::exists(resolvedVert)) {
+          resolvedVert = baseVertPath;
+        }
+
+        QString resolvedFrag = resolve(variantFragRes);
+        if (!QFile::exists(resolvedFrag)) {
+          resolvedFrag = baseFragPath;
+        }
+
+        load(shaderName, resolvedVert, resolvedFrag);
+      }
+    };
+
+    loadVariant(QStringLiteral("archer"), archerVert, archerFrag);
+    loadVariant(QStringLiteral("spearman"), spearmanVert, spearmanFrag);
+    loadVariant(QStringLiteral("knight"), knightVert, knightFrag);
+    loadVariant(QStringLiteral("mounted_knight"), mountedKnightVert,
+                mountedKnightFrag);
   }
 
   void clear() {

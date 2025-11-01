@@ -9,7 +9,6 @@
 #include "../gl/primitives.h"
 #include "../gl/texture.h"
 #include "../humanoid_math.h"
-#include "archer_renderer.h"
 #include "registry.h"
 
 #include <QMatrix4x4>
