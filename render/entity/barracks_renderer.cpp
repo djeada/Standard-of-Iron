@@ -100,6 +100,15 @@ inline auto makeCarthaginianPalette(const QVector3D &team) -> BarracksPalette {
   return p;
 }
 
+inline auto selectPaletteForNation(const QVector3D &team, 
+                                   Engine::Core::UnitComponent *unit) -> BarracksPalette {
+  if (unit != nullptr && unit->nation_id == Game::Systems::NationID::Carthage) {
+    return makeCarthaginianPalette(team);
+  }
+  // Roman (default)
+  return makePalette(team);
+}
+
 inline void drawCylinder(ISubmitter &out, const QMatrix4x4 &model,
                          const QVector3D &a, const QVector3D &b, float radius,
                          const QVector3D &color, Texture *white) {
@@ -712,16 +721,7 @@ void drawBarracks(const DrawContext &p, ISubmitter &out) {
   Texture *white = p.resources->white();
 
   QVector3D const team(r->color[0], r->color[1], r->color[2]);
-  
-  // Determine nation and select appropriate palette
-  // Default to Roman if nation is not specified
-  BarracksPalette c;
-  if (u != nullptr && u->nation_id == Game::Systems::NationID::Carthage) {
-    c = makeCarthaginianPalette(team);
-  } else {
-    // Roman (default)
-    c = makePalette(team);
-  }
+  BarracksPalette const c = selectPaletteForNation(team, u);
 
   drawFoundation(p, out, unit, white, c);
   drawAnnex(p, out, unit, white, c);
