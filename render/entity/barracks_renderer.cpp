@@ -1,5 +1,6 @@
 #include "barracks_renderer.h"
 #include "../../game/core/component.h"
+#include "../../game/systems/nation_id.h"
 #include "../../game/visuals/team_colors.h"
 #include "../geom/flag.h"
 #include "../geom/math_utils.h"
@@ -71,6 +72,28 @@ struct BarracksPalette {
 
 inline auto makePalette(const QVector3D &team) -> BarracksPalette {
   BarracksPalette p;
+  p.team = clampVec01(team);
+  p.teamTrim =
+      clampVec01(QVector3D(team.x() * 0.6F, team.y() * 0.6F, team.z() * 0.6F));
+  return p;
+}
+
+inline auto makeCarthaginianPalette(const QVector3D &team) -> BarracksPalette {
+  BarracksPalette p;
+  // Carthaginian style: warmer tones, white plaster, darker timber
+  p.plaster = QVector3D(0.95F, 0.93F, 0.85F);  // Bright white plaster
+  p.plasterShade = QVector3D(0.85F, 0.83F, 0.75F);
+  p.timber = QVector3D(0.28F, 0.18F, 0.10F);  // Darker, richer timber
+  p.timberLight = QVector3D(0.42F, 0.30F, 0.18F);
+  p.woodDark = QVector3D(0.22F, 0.14F, 0.08F);
+  p.thatch = QVector3D(0.75F, 0.62F, 0.30F);  // Slightly different thatch color
+  p.thatchDark = QVector3D(0.62F, 0.50F, 0.24F);
+  p.stone = QVector3D(0.65F, 0.62F, 0.58F);  // Lighter stone
+  p.stoneDark = QVector3D(0.50F, 0.48F, 0.45F);
+  p.door = QVector3D(0.32F, 0.24F, 0.16F);
+  p.window = QVector3D(0.30F, 0.38F, 0.45F);
+  p.path = QVector3D(0.68F, 0.65F, 0.58F);
+  p.crate = QVector3D(0.52F, 0.38F, 0.22F);
   p.team = clampVec01(team);
   p.teamTrim =
       clampVec01(QVector3D(team.x() * 0.6F, team.y() * 0.6F, team.z() * 0.6F));
@@ -680,6 +703,7 @@ void drawBarracks(const DrawContext &p, ISubmitter &out) {
 
   auto *t = p.entity->getComponent<Engine::Core::TransformComponent>();
   auto *r = p.entity->getComponent<Engine::Core::RenderableComponent>();
+  auto *u = p.entity->getComponent<Engine::Core::UnitComponent>();
   if ((t == nullptr) || (r == nullptr)) {
     return;
   }
@@ -688,7 +712,16 @@ void drawBarracks(const DrawContext &p, ISubmitter &out) {
   Texture *white = p.resources->white();
 
   QVector3D const team(r->color[0], r->color[1], r->color[2]);
-  BarracksPalette const c = makePalette(team);
+  
+  // Determine nation and select appropriate palette
+  // Default to Roman if nation is not specified
+  BarracksPalette c;
+  if (u != nullptr && u->nation_id == Game::Systems::NationID::Carthage) {
+    c = makeCarthaginianPalette(team);
+  } else {
+    // Roman (default)
+    c = makePalette(team);
+  }
 
   drawFoundation(p, out, unit, white, c);
   drawAnnex(p, out, unit, white, c);
