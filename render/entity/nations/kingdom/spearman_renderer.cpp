@@ -296,8 +296,8 @@ public:
       QVector3D const a = center + head.up * (height * 0.5F);
       QVector3D const b = center - head.up * (height * 0.5F);
       out.mesh(getUnitCylinder(),
-               cylinderBetween(ctx.model, a, b, helm_r * 1.01F), col,
-               nullptr, 1.0F);
+               cylinderBetween(ctx.model, a, b, helm_r * 1.01F), col, nullptr,
+               1.0F);
     };
 
     ring(0.95F, iron_color * 1.06F);
@@ -307,8 +307,8 @@ public:
 
     for (int i = 0; i < 3; ++i) {
       float const y_offset = 0.10F + (0.18F - i * 0.12F);
-      QVector3D const center = headPoint(
-          QVector3D(0.0F, y_offset, visor_forward / head_r));
+      QVector3D const center =
+          headPoint(QVector3D(0.0F, y_offset, visor_forward / head_r));
       QVector3D const lateral = head.right * (helm_r * 0.30F);
       QVector3D const visor_l = center - lateral;
       QVector3D const visor_r = center + lateral;

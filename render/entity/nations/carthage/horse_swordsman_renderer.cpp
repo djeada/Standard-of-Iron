@@ -293,8 +293,8 @@ public:
       QVector3D const a = center + head.up * (height * 0.5F);
       QVector3D const b = center - head.up * (height * 0.5F);
       out.mesh(getUnitCylinder(),
-               cylinderBetween(ctx.model, a, b, helm_r * 1.02F), col,
-               nullptr, 1.0F);
+               cylinderBetween(ctx.model, a, b, helm_r * 1.02F), col, nullptr,
+               1.0F);
     };
 
     QVector3D const helm_bot = headPoint(QVector3D(0.0F, -0.20F, 0.0F));
@@ -334,9 +334,9 @@ public:
              visor_color, nullptr, 1.0F);
 
     auto draw_breathing_hole = [&](float x_scale, float y_offset) {
-      QVector3D const pos = headPoint(
-          QVector3D(x_scale * (helm_r / head_r), y_offset / head_r,
-                    visor_forward / head_r * 0.97F));
+      QVector3D const pos =
+          headPoint(QVector3D(x_scale * (helm_r / head_r), y_offset / head_r,
+                              visor_forward / head_r * 0.97F));
       QMatrix4x4 m = ctx.model;
       m.translate(pos);
       m.scale(0.010F);
@@ -358,19 +358,21 @@ public:
     plume.scale(0.030F, 0.015F, 0.030F);
     out.mesh(getUnitSphere(), plume, brass_color * 1.2F, nullptr, 1.0F);
 
-  QVector3D const plume_forward = head.forward * -0.020F;
-  QVector3D const plume_up = head.up;
+    QVector3D const plume_forward = head.forward * -0.020F;
+    QVector3D const plume_up = head.up;
 
     for (int i = 0; i < 5; ++i) {
       float const offset = i * 0.025F;
-      QVector3D const base = plume_base + plume_forward + head.right * (offset * 0.5F);
+      QVector3D const base =
+          plume_base + plume_forward + head.right * (offset * 0.5F);
       QVector3D const feather_start = base + plume_up * 0.005F;
-      QVector3D const feather_end =
-          feather_start + plume_up * (0.15F - i * 0.015F) +
-          head.forward * (-0.08F + offset * 0.3F);
+      QVector3D const feather_end = feather_start +
+                                    plume_up * (0.15F - i * 0.015F) +
+                                    head.forward * (-0.08F + offset * 0.3F);
 
       out.mesh(getUnitCylinder(),
-               cylinderBetween(ctx.model, feather_start, feather_end, head_r * 0.008F),
+               cylinderBetween(ctx.model, feather_start, feather_end,
+                               head_r * 0.008F),
                v.palette.cloth * (1.1F - i * 0.05F), nullptr, 1.0F);
     }
   }
