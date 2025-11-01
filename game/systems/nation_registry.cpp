@@ -1,5 +1,9 @@
 #include "nation_registry.h"
 #include "systems/formation_system.h"
+#include "systems/nation_loader.h"
+#include "systems/troop_profile_service.h"
+#include "units/troop_catalog.h"
+#include "units/troop_catalog_loader.h"
 #include "units/troop_type.h"
 #include <QDebug>
 #include <algorithm>
@@ -97,8 +101,7 @@ void NationRegistry::registerNation(Nation nation) {
   m_nationIndex[m_nations.back().id] = index;
 }
 
-auto NationRegistry::getNation(const std::string &nationId) const
-    -> const Nation * {
+auto NationRegistry::getNation(NationID nationId) const -> const Nation * {
   auto it = m_nationIndex.find(nationId);
   if (it == m_nationIndex.end()) {
     return nullptr;
@@ -120,65 +123,70 @@ auto NationRegistry::getNationForPlayer(int player_id) const -> const Nation * {
   return nation;
 }
 
-void NationRegistry::setPlayerNation(int player_id,
-                                     const std::string &nationId) {
+void NationRegistry::setPlayerNation(int player_id, NationID nationId) {
   m_playerNations[player_id] = nationId;
 }
 
 void NationRegistry::initializeDefaults() {
+  if (m_initialized) {
+    return;
+  }
+
   clear();
+  Game::Units::TroopCatalogLoader::load_default_catalog();
 
-  Nation kingdom_of_iron;
-  kingdom_of_iron.id = "kingdom_of_iron";
-  kingdom_of_iron.displayName = "Kingdom of Iron";
-  kingdom_of_iron.primaryBuilding = "barracks";
-  kingdom_of_iron.formation_type = FormationType::Roman;
+  auto nations = NationLoader::load_default_nations();
+  if (nations.empty()) {
+    Nation kingdom_of_iron;
+    kingdom_of_iron.id = NationID::KingdomOfIron;
+    kingdom_of_iron.displayName = "Kingdom of Iron";
+    kingdom_of_iron.primaryBuilding = Game::Units::BuildingType::Barracks;
+    kingdom_of_iron.formation_type = FormationType::Roman;
 
-  TroopType archer;
-  archer.unit_type = Game::Units::TroopType::Archer;
-  archer.displayName = "Archer";
-  archer.isMelee = false;
-  archer.cost = 50;
-  archer.buildTime = 5.0F;
-  archer.priority = 10;
-  kingdom_of_iron.availableTroops.push_back(archer);
+    auto appendTroop = [&kingdom_of_iron](Game::Units::TroopType type) {
+      TroopType troop_entry;
+      troop_entry.unit_type = type;
 
-  TroopType knight;
-  knight.unit_type = Game::Units::TroopType::Knight;
-  knight.displayName = "Knight";
-  knight.isMelee = true;
-  knight.cost = 100;
-  knight.buildTime = 8.0F;
-  knight.priority = 10;
-  kingdom_of_iron.availableTroops.push_back(knight);
+      const auto &troop_class =
+          Game::Units::TroopCatalog::instance().get_class_or_fallback(type);
+      troop_entry.displayName = troop_class.display_name;
+      troop_entry.isMelee = troop_class.production.is_melee;
+      troop_entry.cost = troop_class.production.cost;
+      troop_entry.buildTime = troop_class.production.build_time;
+      troop_entry.priority = troop_class.production.priority;
 
-  TroopType spearman;
-  spearman.unit_type = Game::Units::TroopType::Spearman;
-  spearman.displayName = "Spearman";
-  spearman.isMelee = true;
-  spearman.cost = 75;
-  spearman.buildTime = 6.0F;
-  spearman.priority = 5;
-  kingdom_of_iron.availableTroops.push_back(spearman);
+      kingdom_of_iron.availableTroops.push_back(std::move(troop_entry));
+    };
 
-  TroopType mounted_knight;
-  mounted_knight.unit_type = Game::Units::TroopType::MountedKnight;
-  mounted_knight.displayName = "Mounted Knight";
-  mounted_knight.isMelee = true;
-  mounted_knight.cost = 150;
-  mounted_knight.buildTime = 10.0F;
-  mounted_knight.priority = 15;
-  kingdom_of_iron.availableTroops.push_back(mounted_knight);
+    appendTroop(Game::Units::TroopType::Archer);
+    appendTroop(Game::Units::TroopType::Swordsman);
+    appendTroop(Game::Units::TroopType::Spearman);
+    appendTroop(Game::Units::TroopType::MountedKnight);
 
-  registerNation(std::move(kingdom_of_iron));
+    registerNation(std::move(kingdom_of_iron));
+    m_defaultNation = NationID::KingdomOfIron;
+  } else {
+    NationID fallback_default = nations.front().id;
+    for (auto &nation : nations) {
+      if (nation.id == NationID::KingdomOfIron) {
+        fallback_default = nation.id;
+      }
+      registerNation(std::move(nation));
+    }
+    m_defaultNation = fallback_default;
+  }
 
-  m_defaultNation = "kingdom_of_iron";
+  TroopProfileService::instance().clear();
+  m_initialized = true;
 }
 
 void NationRegistry::clear() {
   m_nations.clear();
   m_nationIndex.clear();
   m_playerNations.clear();
+  m_initialized = false;
 }
+
+void NationRegistry::clearPlayerAssignments() { m_playerNations.clear(); }
 
 } // namespace Game::Systems

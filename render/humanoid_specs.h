@@ -17,8 +17,8 @@ struct HumanProportions {
   static constexpr float CHEST_Y = SHOULDER_Y - 0.31F;
   static constexpr float WAIST_Y = CHEST_Y - 0.25F;
 
-  static constexpr float UPPER_LEG_LEN = 0.35F;
-  static constexpr float LOWER_LEG_LEN = 0.35F;
+  static constexpr float UPPER_LEG_LEN = 0.46F;
+  static constexpr float LOWER_LEG_LEN = 0.44F;
   static constexpr float KNEE_Y = WAIST_Y - UPPER_LEG_LEN;
 
   static constexpr float SHOULDER_WIDTH = HEAD_HEIGHT * 1.85F;
