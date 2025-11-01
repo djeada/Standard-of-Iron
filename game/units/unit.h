@@ -54,7 +54,8 @@ protected:
 
   void ensureCoreComponents();
 
-  static auto resolve_nation_id(const SpawnParams &params) -> Game::Systems::NationID;
+  static auto
+  resolve_nation_id(const SpawnParams &params) -> Game::Systems::NationID;
 
   Engine::Core::World *m_world = nullptr;
   Engine::Core::EntityID m_id = 0;

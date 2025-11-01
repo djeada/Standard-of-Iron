@@ -187,7 +187,8 @@ auto SkirmishLoader::start(const QString &map_path,
 
         Game::Systems::NationID chosen_nation;
         if (!nation_id_str.isEmpty()) {
-          auto parsed = Game::Systems::nationIDFromString(nation_id_str.toStdString());
+          auto parsed =
+              Game::Systems::nationIDFromString(nation_id_str.toStdString());
           chosen_nation = parsed.value_or(
               Game::Systems::NationRegistry::instance().default_nation_id());
         } else {

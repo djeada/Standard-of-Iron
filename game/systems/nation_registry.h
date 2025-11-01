@@ -49,7 +49,8 @@ struct Nation {
   NationID id;
   std::string displayName;
   std::vector<TroopType> availableTroops;
-  Game::Units::BuildingType primaryBuilding = Game::Units::BuildingType::Barracks;
+  Game::Units::BuildingType primaryBuilding =
+      Game::Units::BuildingType::Barracks;
   FormationType formation_type = FormationType::Roman;
   std::unordered_map<Game::Units::TroopType, NationTroopVariant> troopVariants;
 

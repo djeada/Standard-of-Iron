@@ -344,13 +344,15 @@ auto NationLoader::load_from_file(const QString &path)
   }
   nation.id = *parsed_id;
 
-  nation.displayName = root.value("display_name").toString(id_str).toStdString();
+  nation.displayName =
+      root.value("display_name").toString(id_str).toStdString();
 
   const QString building_str =
       root.value("primary_building").toString(QStringLiteral("barracks"));
   auto parsed_building =
       Game::Units::buildingTypeFromString(building_str.toStdString());
-  nation.primaryBuilding = parsed_building.value_or(Game::Units::BuildingType::Barracks);
+  nation.primaryBuilding =
+      parsed_building.value_or(Game::Units::BuildingType::Barracks);
   if (auto formation =
           parse_formation_type(root.value("formation_type").toString())) {
     nation.formation_type = *formation;
