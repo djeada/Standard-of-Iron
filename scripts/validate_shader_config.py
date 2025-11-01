@@ -13,6 +13,8 @@ SHADER_DIR = "assets/shaders"
 STYLE_DIR = "render/entity/nations"
 
 NATIONS = {
+    # Maps directory name to nation ID used in shader naming
+    # Note: Carthage uses "carthage" for both (no expansion needed)
     "kingdom": "kingdom_of_iron",
     "roman": "roman_republic",
     "carthage": "carthage"
