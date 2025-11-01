@@ -398,19 +398,19 @@ public:
     }
 
     auto draw_montefortino = [&](const QVector3D &base_metal) {
-      const HeadFrame &head = pose.headFrame;
+      const AttachmentFrame &head = pose.bodyFrames.head;
       float const head_r = head.radius;
       if (head_r <= 0.0F) {
         return;
       }
 
       auto headPoint = [&](const QVector3D &norm) -> QVector3D {
-        return headLocalPosition(head, norm);
+        return frameLocalPosition(head, norm);
       };
 
       auto headTransform = [&](const QVector3D &norm,
                                float scale) -> QMatrix4x4 {
-        return makeHeadLocalTransform(ctx.model, head, norm, scale);
+        return makeFrameLocalTransform(ctx.model, head, norm, scale);
       };
 
       QVector3D bronze =
@@ -663,14 +663,14 @@ private:
                      const HumanoidPose &pose, ISubmitter &out) const {
     QVector3D const cloth_color =
         saturate_color(v.palette.cloth * QVector3D(0.9F, 1.05F, 1.05F));
-    const HeadFrame &head = pose.headFrame;
+    const AttachmentFrame &head = pose.bodyFrames.head;
     float const head_r = head.radius;
     if (head_r <= 0.0F) {
       return;
     }
 
     auto headPoint = [&](const QVector3D &normalized) -> QVector3D {
-      return headLocalPosition(head, normalized);
+      return frameLocalPosition(head, normalized);
     };
 
     QVector3D const band_top = headPoint(QVector3D(0.0F, 0.70F, 0.0F));
