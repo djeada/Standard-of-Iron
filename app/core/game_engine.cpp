@@ -1051,9 +1051,9 @@ auto GameEngine::availableNations() const -> QVariantList {
   ordered.reserve(static_cast<int>(all.size()));
   for (const auto &nation : all) {
     QVariantMap entry;
-    entry.insert(QStringLiteral("id"),
-                 QString::fromStdString(
-                     Game::Systems::nationIDToString(nation.id)));
+    entry.insert(
+        QStringLiteral("id"),
+        QString::fromStdString(Game::Systems::nationIDToString(nation.id)));
     entry.insert(QStringLiteral("name"),
                  QString::fromStdString(nation.displayName));
     ordered.append(entry);

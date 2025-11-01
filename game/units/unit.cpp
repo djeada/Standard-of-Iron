@@ -21,7 +21,8 @@ auto Unit::entity() const -> Engine::Core::Entity * {
   return (m_world != nullptr) ? m_world->getEntity(m_id) : nullptr;
 }
 
-auto Unit::resolve_nation_id(const SpawnParams &params) -> Game::Systems::NationID {
+auto Unit::resolve_nation_id(const SpawnParams &params)
+    -> Game::Systems::NationID {
   auto &registry = Game::Systems::NationRegistry::instance();
   if (const auto *nation = registry.getNationForPlayer(params.player_id)) {
     return nation->id;
