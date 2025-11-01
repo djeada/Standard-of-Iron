@@ -177,12 +177,12 @@ auto MapTransformer::applyToWorld(
       sp.spawn_type = s.type;
       sp.aiControlled = !owner_registry.isPlayer(effective_player_id);
       sp.maxPopulation = s.maxPopulation;
-      // Use nation from spawn definition if present, otherwise use player's nation
+
       if (s.nation.has_value()) {
         sp.nation_id = s.nation.value();
       } else if (const auto *nation =
-              Game::Systems::NationRegistry::instance().getNationForPlayer(
-                  effective_player_id)) {
+                     Game::Systems::NationRegistry::instance()
+                         .getNationForPlayer(effective_player_id)) {
         sp.nation_id = nation->id;
       } else {
         sp.nation_id =

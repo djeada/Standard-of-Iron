@@ -305,7 +305,8 @@ public:
 
     for (int i = 0; i < 3; ++i) {
       float const y_offset = 0.10F + (0.18F - i * 0.12F);
-      QVector3D const center = headPoint(QVector3D(0.0F, y_offset, visor_forward / head_r));
+      QVector3D const center =
+          headPoint(QVector3D(0.0F, y_offset, visor_forward / head_r));
       QVector3D const lateral = head.right * (helm_r * 0.30F);
       QVector3D const visor_l = center - lateral;
       QVector3D const visor_r = center + lateral;

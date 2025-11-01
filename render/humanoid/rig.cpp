@@ -15,6 +15,7 @@
 #include "../submitter.h"
 #include "humanoid_math.h"
 #include <QMatrix4x4>
+#include <QVector4D>
 #include <QtMath>
 #include <algorithm>
 #include <cmath>
@@ -22,14 +23,13 @@
 #include <numbers>
 #include <qmatrix4x4.h>
 #include <qvectornd.h>
-#include <QVector4D>
 
 namespace Render::GL {
 
 using namespace Render::GL::Geometry;
 using Render::Geom::capsuleBetween;
-using Render::Geom::cylinderBetween;
 using Render::Geom::coneFromTo;
+using Render::Geom::cylinderBetween;
 using Render::Geom::sphereAt;
 
 namespace {
@@ -40,20 +40,17 @@ constexpr float k_reference_run_speed = 5.10F;
 
 } // namespace
 
-auto HumanoidRendererBase::headLocalPosition(const HeadFrame &frame,
-                                             const QVector3D &local)
-    -> QVector3D {
+auto HumanoidRendererBase::headLocalPosition(
+    const HeadFrame &frame, const QVector3D &local) -> QVector3D {
   float const lx = local.x() * frame.radius;
   float const ly = local.y() * frame.radius;
   float const lz = local.z() * frame.radius;
   return frame.origin + frame.right * lx + frame.up * ly + frame.forward * lz;
 }
 
-auto HumanoidRendererBase::makeHeadLocalTransform(const QMatrix4x4 &parent,
-                                                  const HeadFrame &frame,
-                                                  const QVector3D &local_offset,
-                                                  float uniform_scale)
-    -> QMatrix4x4 {
+auto HumanoidRendererBase::makeHeadLocalTransform(
+    const QMatrix4x4 &parent, const HeadFrame &frame,
+    const QVector3D &local_offset, float uniform_scale) -> QMatrix4x4 {
   float scale = frame.radius * uniform_scale;
   if (scale == 0.0F) {
     scale = uniform_scale;
@@ -398,8 +395,8 @@ void HumanoidRendererBase::drawCommonBody(const DrawContext &ctx,
   QVector3D const scaling = getProportionScaling();
   float const width_scale = scaling.x();
   float const height_scale = scaling.y();
-  // Head should use uniform scaling, not depth scaling
-  float const head_scale = 1.0F;  // Don't scale head by proportions
+
+  float const head_scale = 1.0F;
 
   QVector3D right_axis = pose.shoulderR - pose.shoulderL;
   if (right_axis.lengthSquared() < 1e-8F) {
@@ -426,12 +423,11 @@ void HumanoidRendererBase::drawCommonBody(const DrawContext &ctx,
   QVector3D const tunic_top{0.0F, y_top_cover - 0.006F, 0.0F};
 
   QVector3D const tunic_bot{0.0F, pose.pelvisPos.y() + 0.03F, 0.0F};
-  
-  // Human torso is WIDE (shoulders) but NARROW (front-to-back)
-  // Scale the cylinder to be elliptical, not circular
-  QMatrix4x4 torso_transform = cylinderBetween(ctx.model, tunic_top, tunic_bot, torso_r);
-  torso_transform.scale(1.0F, 1.0F, 0.65F);  // Compress Z (depth) to 65% - makes it flat front-to-back
-  
+
+  QMatrix4x4 torso_transform =
+      cylinderBetween(ctx.model, tunic_top, tunic_bot, torso_r);
+  torso_transform.scale(1.0F, 1.0F, 0.65F);
+
   out.mesh(getUnitTorso(), torso_transform, v.palette.cloth, nullptr, 1.0F);
 
   QVector3D const chin_pos{0.0F, pose.headPos.y() - pose.headR, 0.0F};
@@ -440,7 +436,7 @@ void HumanoidRendererBase::drawCommonBody(const DrawContext &ctx,
                            HP::NECK_RADIUS * width_scale),
            v.palette.skin * 0.9F, nullptr, 1.0F);
 
-  float const head_r = pose.headR; // Head uses uniform scaling
+  float const head_r = pose.headR;
   out.mesh(getUnitSphere(), sphereAt(ctx.model, pose.headPos, head_r),
            v.palette.skin, nullptr, 1.0F);
 
@@ -677,14 +673,13 @@ void HumanoidRendererBase::drawFacialHair(const DrawContext &ctx,
       float const plane_radius =
           std::sqrt(std::max(0.02F, 1.0F - target_y_norm * target_y_norm));
       for (int seg = 0; seg < segments; ++seg) {
-        float const seg_t = (segments > 1) ? float(seg) / float(segments - 1)
-                                           : 0.5F;
+        float const seg_t =
+            (segments > 1) ? float(seg) / float(segments - 1) : 0.5F;
         float const base_phi = (seg_t - 0.5F) * jaw_span;
         float const phi = std::clamp(base_phi + jitter(0.25F), -phi_half_range,
                                      phi_half_range);
-        float const coverage_falloff = 1.0F -
-                                       std::abs(phi) /
-                                           std::max(0.001F, phi_half_range);
+        float const coverage_falloff =
+            1.0F - std::abs(phi) / std::max(0.001F, phi_half_range);
         float const keep_prob = std::clamp(
             fh.coverage * (0.75F + coverage_falloff * 0.35F), 0.05F, 1.0F);
         if (random01() > keep_prob) {
@@ -699,7 +694,8 @@ void HumanoidRendererBase::drawFacialHair(const DrawContext &ctx,
         float const y_norm = target_y_norm + jitter(0.05F);
 
         QVector3D surface_dir(lateral_norm, y_norm,
-                              forward_norm * (0.75F + forward_bias_norm * 0.45F) +
+                              forward_norm *
+                                      (0.75F + forward_bias_norm * 0.45F) +
                                   (forward_bias_norm - 0.05F));
         float const dir_len = surface_dir.length();
         if (dir_len < 1e-4F) {
@@ -711,11 +707,11 @@ void HumanoidRendererBase::drawFacialHair(const DrawContext &ctx,
         QVector3D const root = headLocalPosition(frame, surface_dir * shell);
 
         QVector3D local_dir(jitter(0.15F),
-                             - (0.55F + row_t * 0.30F) + jitter(0.10F),
-                             forward_bias_norm + row_t * 0.20F + jitter(0.12F));
-        QVector3D strand_dir = frame.right * local_dir.x() +
-                               frame.up * local_dir.y() +
-                               frame.forward * local_dir.z() - surface_dir * 0.25F;
+                            -(0.55F + row_t * 0.30F) + jitter(0.10F),
+                            forward_bias_norm + row_t * 0.20F + jitter(0.12F));
+        QVector3D strand_dir =
+            frame.right * local_dir.x() + frame.up * local_dir.y() +
+            frame.forward * local_dir.z() - surface_dir * 0.25F;
         if (strand_dir.lengthSquared() < 1e-6F) {
           continue;
         }
@@ -736,17 +732,17 @@ void HumanoidRendererBase::drawFacialHair(const DrawContext &ctx,
                      head_r * 0.010F);
         float const mid_radius = base_radius * 0.55F;
 
-    float const color_jitter = 0.85F + random01() * 0.30F;
-    QVector3D const root_color = saturate(hair_root * color_jitter);
-    QVector3D const tip_color = saturate(hair_tip * color_jitter);
+        float const color_jitter = 0.85F + random01() * 0.30F;
+        QVector3D const root_color = saturate(hair_root * color_jitter);
+        QVector3D const tip_color = saturate(hair_tip * color_jitter);
 
         QMatrix4x4 base_blob = sphereAt(ctx.model, root, base_radius * 0.95F);
         out.mesh(getUnitSphere(), base_blob, root_color, nullptr, 1.0F);
 
-  QVector3D const mid = root + (tip - root) * 0.40F;
+        QVector3D const mid = root + (tip - root) * 0.40F;
         out.mesh(getUnitCylinder(),
-                 cylinderBetween(ctx.model, root, mid, base_radius),
-                 root_color, nullptr, 1.0F);
+                 cylinderBetween(ctx.model, root, mid, base_radius), root_color,
+                 nullptr, 1.0F);
 
         out.mesh(getUnitCone(), coneFromTo(ctx.model, mid, tip, mid_radius),
                  tip_color, nullptr, 1.0F);
@@ -764,13 +760,13 @@ void HumanoidRendererBase::drawFacialHair(const DrawContext &ctx,
     float const phi_half_range = 0.55F;
     for (int side = -1; side <= 1; side += 2) {
       for (int seg = 0; seg < segments; ++seg) {
-        float const t = (segments > 1) ? float(seg) / float(segments - 1)
-                                      : 0.5F;
+        float const t =
+            (segments > 1) ? float(seg) / float(segments - 1) : 0.5F;
         float const base_phi = (t - 0.5F) * (phi_half_range * 2.0F);
         float const phi = std::clamp(base_phi + jitter(0.18F), -phi_half_range,
                                      phi_half_range);
-        float const plane_radius =
-            std::sqrt(std::max(0.02F, 1.0F - mustache_y_norm * mustache_y_norm));
+        float const plane_radius = std::sqrt(
+            std::max(0.02F, 1.0F - mustache_y_norm * mustache_y_norm));
         float lateral_norm = plane_radius * std::sin(phi);
         float forward_norm = plane_radius * std::cos(phi);
         lateral_norm += jitter(0.04F);
@@ -778,8 +774,7 @@ void HumanoidRendererBase::drawFacialHair(const DrawContext &ctx,
         if (random01() > fh.coverage) {
           continue;
         }
-        QVector3D surface_dir(lateral_norm,
-                              mustache_y_norm + jitter(0.03F),
+        QVector3D surface_dir(lateral_norm, mustache_y_norm + jitter(0.03F),
                               forward_norm * 0.85F + 0.20F);
         float const dir_len = surface_dir.length();
         if (dir_len < 1e-4F) {
@@ -789,13 +784,11 @@ void HumanoidRendererBase::drawFacialHair(const DrawContext &ctx,
         QVector3D const root =
             headLocalPosition(frame, surface_dir * (1.01F + jitter(0.02F)));
 
-        QVector3D const dir_local(side * (0.55F + jitter(0.12F)),
-                                  jitter(0.06F),
+        QVector3D const dir_local(side * (0.55F + jitter(0.12F)), jitter(0.06F),
                                   0.34F + jitter(0.08F));
-        QVector3D strand_dir = frame.right * dir_local.x() +
-                               frame.up * dir_local.y() +
-                               frame.forward * dir_local.z() -
-                               surface_dir * 0.20F;
+        QVector3D strand_dir =
+            frame.right * dir_local.x() + frame.up * dir_local.y() +
+            frame.forward * dir_local.z() - surface_dir * 0.20F;
         if (strand_dir.lengthSquared() < 1e-6F) {
           continue;
         }
@@ -805,15 +798,15 @@ void HumanoidRendererBase::drawFacialHair(const DrawContext &ctx,
             base_length_norm * fh.length * (1.0F + jitter(0.35F));
         QVector3D const tip = root + strand_dir * (head_r * strand_length);
 
-    float const base_radius =
-      std::max(head_r * 0.028F * fh.thickness, head_r * 0.0065F);
-    float const mid_radius = base_radius * 0.45F;
-    float const color_jitter = 0.92F + random01() * 0.18F;
-    QVector3D const root_color = saturate(hair_root * (color_jitter * 0.95F));
-    QVector3D const tip_color =
-      saturate(hair_tip * (color_jitter * 1.02F));
+        float const base_radius =
+            std::max(head_r * 0.028F * fh.thickness, head_r * 0.0065F);
+        float const mid_radius = base_radius * 0.45F;
+        float const color_jitter = 0.92F + random01() * 0.18F;
+        QVector3D const root_color =
+            saturate(hair_root * (color_jitter * 0.95F));
+        QVector3D const tip_color = saturate(hair_tip * (color_jitter * 1.02F));
 
-    out.mesh(getUnitSphere(), sphereAt(ctx.model, root, base_radius * 0.7F),
+        out.mesh(getUnitSphere(), sphereAt(ctx.model, root, base_radius * 0.7F),
                  root_color, nullptr, 1.0F);
 
         QVector3D const mid = root + (tip - root) * 0.5F;
@@ -1101,7 +1094,7 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
 
     drawCommonBody(inst_ctx, variant, pose, out);
     drawFacialHair(inst_ctx, variant, pose, out);
-    //drawHelmet(inst_ctx, variant, pose, out);
+
     addAttachments(inst_ctx, variant, pose, anim_ctx, out);
   }
 }

@@ -273,9 +273,9 @@ public:
              QVector3D(0.1F, 0.1F, 0.1F), nullptr, 1.0F);
 
     auto draw_breathing_hole = [&](float x_scale, float y_offset) {
-      QVector3D const pos = headPoint(
-          QVector3D(x_scale * (helm_r / head_r), y_offset / head_r,
-                    visor_forward / head_r * 0.97F));
+      QVector3D const pos =
+          headPoint(QVector3D(x_scale * (helm_r / head_r), y_offset / head_r,
+                              visor_forward / head_r * 0.97F));
       QMatrix4x4 m = ctx.model;
       m.translate(pos);
       m.scale(0.010F);

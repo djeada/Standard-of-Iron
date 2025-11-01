@@ -6,4 +6,4 @@ namespace Render::GL::Roman {
 
 void registerBarracksRenderer(EntityRendererRegistry &registry);
 
-} // namespace Render::GL::Roman
+}

@@ -11,7 +11,6 @@
 
 namespace Render::GL {
 
-// Shared flag rendering utilities for barracks entities
 namespace BarracksFlagRenderer {
 
 struct FlagColors {
@@ -22,7 +21,6 @@ struct FlagColors {
   QVector3D woodDark;
 };
 
-// Draw the rally point flag if set
 inline void drawRallyFlagIfAny(const DrawContext &p, ISubmitter &out,
                                Texture *white, const FlagColors &colors) {
   if (auto *prod =

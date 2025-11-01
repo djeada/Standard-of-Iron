@@ -6,9 +6,9 @@
 #include "../../../geom/transforms.h"
 #include "../../../gl/primitives.h"
 #include "../../../gl/resources.h"
+#include "../../../submitter.h"
 #include "../../barracks_flag_renderer.h"
 #include "../../registry.h"
-#include "../../../submitter.h"
 
 #include <QMatrix4x4>
 #include <QVector3D>
@@ -605,12 +605,11 @@ inline void drawBannerAndPole(const DrawContext &p, ISubmitter &out, Mesh *unit,
 
 inline void drawRallyFlagIfAny(const DrawContext &p, ISubmitter &out,
                                Texture *white, const BarracksPalette &C) {
-  BarracksFlagRenderer::FlagColors colors{
-      .team = C.team,
-      .teamTrim = C.teamTrim,
-      .timber = C.timber,
-      .timberLight = C.timberLight,
-      .woodDark = C.woodDark};
+  BarracksFlagRenderer::FlagColors colors{.team = C.team,
+                                          .teamTrim = C.teamTrim,
+                                          .timber = C.timber,
+                                          .timberLight = C.timberLight,
+                                          .woodDark = C.woodDark};
   BarracksFlagRenderer::drawRallyFlagIfAny(p, out, white, colors);
 }
 
