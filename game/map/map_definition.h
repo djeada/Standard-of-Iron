@@ -1,9 +1,11 @@
 #pragma once
 
+#include "../systems/nation_id.h"
 #include "../units/spawn_type.h"
 #include "terrain.h"
 #include <QString>
 #include <QVector3D>
+#include <optional>
 #include <vector>
 
 namespace Game::Map {
@@ -33,6 +35,7 @@ struct UnitSpawn {
   int player_id = 0;
   int team_id = 0;
   int maxPopulation = 100;
+  std::optional<Game::Systems::NationID> nation;
 };
 
 struct FireCamp {
