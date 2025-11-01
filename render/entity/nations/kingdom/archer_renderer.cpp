@@ -329,7 +329,7 @@ public:
       return;
     }
 
-    const HeadFrame &head = pose.headFrame;
+    const AttachmentFrame &head = pose.bodyFrames.head;
     float const head_r = head.radius;
     if (head_r <= 0.0F) {
       return;
@@ -340,7 +340,7 @@ public:
     QVector3D const steel_dark = steel_color * 0.82F;
 
     auto headPoint = [&](const QVector3D &normalized) -> QVector3D {
-      return headLocalPosition(head, normalized);
+      return frameLocalPosition(head, normalized);
     };
 
     float const bowl_scale = 1.06F;
@@ -604,14 +604,14 @@ private:
                      const HumanoidPose &pose, ISubmitter &out) const {
     QVector3D const cloth_color =
         saturate_color(v.palette.cloth * QVector3D(0.9F, 1.05F, 1.05F));
-    const HeadFrame &head = pose.headFrame;
+    const AttachmentFrame &head = pose.bodyFrames.head;
     float const head_r = head.radius;
     if (head_r <= 0.0F) {
       return;
     }
 
     auto headPoint = [&](const QVector3D &normalized) -> QVector3D {
-      return headLocalPosition(head, normalized);
+      return frameLocalPosition(head, normalized);
     };
 
     QVector3D const band_top = headPoint(QVector3D(0.0F, 0.70F, 0.0F));

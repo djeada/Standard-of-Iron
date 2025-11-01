@@ -212,7 +212,7 @@ public:
 
   void drawHelmet(const DrawContext &ctx, const HumanoidVariant &v,
                   const HumanoidPose &pose, ISubmitter &out) const override {
-    const HeadFrame &head = pose.headFrame;
+    const AttachmentFrame &head = pose.bodyFrames.head;
     float const head_r = head.radius;
     if (head_r <= 0.0F) {
       return;
@@ -226,7 +226,7 @@ public:
     float const helm_ratio = helm_r / head_r;
 
     auto headPoint = [&](const QVector3D &normalized) -> QVector3D {
-      return headLocalPosition(head, normalized);
+      return frameLocalPosition(head, normalized);
     };
 
     auto ring = [&](float y_offset, float radius_scale, const QVector3D &col) {

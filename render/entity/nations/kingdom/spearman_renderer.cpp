@@ -265,7 +265,7 @@ public:
                   const HumanoidPose &pose, ISubmitter &out) const override {
     using HP = HumanProportions;
 
-    const HeadFrame &head = pose.headFrame;
+    const AttachmentFrame &head = pose.bodyFrames.head;
     float const head_r = head.radius;
     if (head_r <= 0.0F) {
       return;
@@ -275,7 +275,7 @@ public:
     float const helm_r = head_r * 1.12F;
 
     auto headPoint = [&](const QVector3D &normalized) -> QVector3D {
-      return headLocalPosition(head, normalized);
+      return frameLocalPosition(head, normalized);
     };
 
     QVector3D const helm_bot = headPoint(QVector3D(0.0F, -0.15F, 0.0F));
