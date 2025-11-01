@@ -440,7 +440,7 @@ public:
         saturate_color(v.palette.leatherDark * QVector3D(1.06F, 0.98F, 0.84F));
 
     QVector3D const tunic_top(0.0F, cuirass_top + 0.04F, 0.0F);
-    QVector3D const tunic_bot(0.0F, cuirass_bottom - 0.26F, 0.0F);
+    QVector3D const tunic_bot(0.0F, waist_y + 0.05F, 0.0F);
     QMatrix4x4 tunic =
         cylinderBetween(ctx.model, tunic_bot, tunic_top, torso_r * 0.94F);
     tunic.scale(1.02F, 1.0F, 0.90F);
