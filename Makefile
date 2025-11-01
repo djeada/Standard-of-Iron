@@ -189,10 +189,11 @@ dev: install build
 .PHONY: test
 test: build
 	@echo "$(BOLD)$(BLUE)Running tests...$(RESET)"
-	@if [ -f "$(BUILD_DIR)/tests" ]; then \
-		cd $(BUILD_DIR) && ./tests; \
+	@if [ -f "$(BUILD_DIR)/bin/standard_of_iron_tests" ]; then \
+		cd $(BUILD_DIR) && ./bin/standard_of_iron_tests; \
 	else \
-		echo "$(YELLOW)No tests found. Test suite not yet implemented.$(RESET)"; \
+		echo "$(RED)Test executable not found. Build may have failed.$(RESET)"; \
+		exit 1; \
 	fi
 
 # ---- Formatting: strip comments first, then format (strict) ----
