@@ -54,6 +54,8 @@ add_library(render_gl STATIC
     entity/nations/kingdom/horse_swordsman_renderer.cpp
     entity/nations/carthage/horse_swordsman_renderer.cpp
     entity/barracks_renderer.cpp
+    entity/nations/roman/barracks_renderer.cpp
+    entity/nations/carthage/barracks_renderer.cpp
     # entity/arrow.cpp removed; arrow VFX renderer code moved to geom/arrow.cpp
     geom/selection_ring.cpp
     geom/selection_disc.cpp
