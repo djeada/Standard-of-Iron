@@ -68,6 +68,7 @@ inline constexpr const char *Z = "z";
 inline constexpr const char *PLAYER_ID = "playerId";
 inline constexpr const char *TEAM_ID = "teamId";
 inline constexpr const char *MAX_POPULATION = "maxPopulation";
+inline constexpr const char *NATION = "nation";
 
 inline constexpr const char *VICTORY_TYPE = "type";
 inline constexpr const char *KEY_STRUCTURES = "key_structures";
