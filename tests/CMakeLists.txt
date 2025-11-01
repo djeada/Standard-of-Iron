@@ -7,6 +7,7 @@ add_executable(standard_of_iron_tests
     db/save_storage_test.cpp
     render/pose_controller_test.cpp
     render/pose_controller_compatibility_test.cpp
+    render/body_frames_test.cpp
 )
 
 # Link against GTest, project libraries
