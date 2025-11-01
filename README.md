@@ -100,6 +100,21 @@ make build
 make run
 ```
 
+### Testing
+```bash
+# Run all tests
+make test
+
+# Build tests only
+cd build && make standard_of_iron_tests
+
+# Run specific test suites
+./build/bin/standard_of_iron_tests --gtest_filter=SerializationTest.*
+./build/bin/standard_of_iron_tests --gtest_filter=SaveStorageTest.*
+```
+
+For more details on testing, see [tests/README.md](tests/README.md).
+
 ## Project Structure
 
 ```
@@ -123,6 +138,10 @@ make run
 │   ├── entity/            # Entity-specific renderers
 │   ├── geom/              # Geometry utilities (flags, arrows, selection)
 │   └── ground/            # Terrain rendering
+├── tests/                 # Unit and integration tests
+│   ├── core/              # Core engine tests (serialization)
+│   ├── db/                # Database tests (save/load)
+│   └── README.md          # Testing guide
 ├── assets/
 │   ├── shaders/           # GLSL shaders
 │   ├── maps/              # Level data (JSON)
