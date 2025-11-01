@@ -55,7 +55,9 @@
       "type": "barracks",
       "x": 30,
       "z": 45,
-      "maxPopulation": 100
+      "playerId": null,
+      "maxPopulation": 100,
+      "nation": "kingdom_of_iron"
     }
   ],
   "firecamps": [
