@@ -1,4 +1,4 @@
-#include "mounted_knight.h"
+#include "horse_swordsman.h"
 #include "../core/component.h"
 #include "../core/event_manager.h"
 #include "../core/world.h"

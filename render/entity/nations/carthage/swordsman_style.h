@@ -4,7 +4,7 @@
 #include <optional>
 #include <string>
 
-namespace Render::GL::Kingdom {
+namespace Render::GL::Carthage {
 
 struct KnightStyleConfig {
   std::optional<QVector3D> cloth_color;
@@ -22,6 +22,6 @@ struct KnightStyleConfig {
   std::string shader_id;
 };
 
-void register_kingdom_knight_style();
+void register_carthage_swordsman_style();
 
-} // namespace Render::GL::Kingdom
+} // namespace Render::GL::Carthage
