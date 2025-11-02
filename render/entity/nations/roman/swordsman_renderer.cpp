@@ -285,18 +285,17 @@ public:
       draw_breathing_hole(-1.0F, 0.05F - i * 0.10F);
     }
 
-    QVector3D const cross_center(0, pose.headPos.y() + pose.headR * 0.60F,
-                                 helm_r * 0.75F);
+    QVector3D const cross_center = headPoint(QVector3D(0.0F, 0.60F, (helm_r * 0.75F) / head_r));
     QVector3D const brass_color = v.palette.metal * QVector3D(1.3F, 1.1F, 0.7F);
 
-    QVector3D const cross_h1 = cross_center + QVector3D(-0.04F, 0, 0);
-    QVector3D const cross_h2 = cross_center + QVector3D(0.04F, 0, 0);
+    QVector3D const cross_h1 = cross_center - head.right * 0.04F;
+    QVector3D const cross_h2 = cross_center + head.right * 0.04F;
     out.mesh(getUnitCylinder(),
              cylinderBetween(ctx.model, cross_h1, cross_h2, 0.008F),
              brass_color, nullptr, 1.0F);
 
-    QVector3D const cross_v1 = cross_center + QVector3D(0, -0.04F, 0);
-    QVector3D const cross_v2 = cross_center + QVector3D(0, 0.04F, 0);
+    QVector3D const cross_v1 = cross_center - head.up * 0.04F;
+    QVector3D const cross_v2 = cross_center + head.up * 0.04F;
     out.mesh(getUnitCylinder(),
              cylinderBetween(ctx.model, cross_v1, cross_v2, 0.008F),
              brass_color, nullptr, 1.0F);

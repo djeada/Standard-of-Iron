@@ -283,10 +283,10 @@ public:
     };
 
     for (int i = 0; i < 4; ++i) {
-      draw_breathing_hole(+0.50F, pose.headR * (0.05F - i * 0.10F));
+      draw_breathing_hole(+0.50F, 0.05F - i * 0.10F);
     }
     for (int i = 0; i < 4; ++i) {
-      draw_breathing_hole(-0.50F, pose.headR * (0.05F - i * 0.10F));
+      draw_breathing_hole(-0.50F, 0.05F - i * 0.10F);
     }
 
     QVector3D const brass_color = v.palette.metal * QVector3D(1.3F, 1.1F, 0.7F);

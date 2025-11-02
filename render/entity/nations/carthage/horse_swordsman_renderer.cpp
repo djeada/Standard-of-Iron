@@ -344,10 +344,10 @@ public:
     };
 
     for (int i = 0; i < 4; ++i) {
-      draw_breathing_hole(+0.50F, pose.headR * (0.05F - i * 0.10F));
+      draw_breathing_hole(+0.50F, 0.05F - i * 0.10F);
     }
     for (int i = 0; i < 4; ++i) {
-      draw_breathing_hole(-0.50F, pose.headR * (0.05F - i * 0.10F));
+      draw_breathing_hole(-0.50F, 0.05F - i * 0.10F);
     }
 
     QVector3D const plume_base = headPoint(QVector3D(0.0F, 1.50F, 0.0F));
