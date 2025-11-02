@@ -298,12 +298,9 @@ public:
       bow_config.string_color = QVector3D(0.30F, 0.30F, 0.32F);
       bow_config.metal_color = Render::Geom::clampVec01(v.palette.metal * 1.15F);
       bow_config.fletching_color = fletch;
-      bow_config.bow_top_y = HP::SHOULDER_Y + 0.55F;   // Standard height
+      bow_config.bow_top_y = HP::SHOULDER_Y + 0.55F;
       bow_config.bow_bot_y = HP::WAIST_Y - 0.25F;
       bow_config.bow_x = 0.0F;
-      bow_config.bow_depth = 0.22F;          // Moderate curve
-      bow_config.bow_curve_factor = 1.0F;    // Standard curve
-      bow_config.bow_height_scale = 1.0F;    // Standard size
       
       // Apply style overrides if available
       if (style.bow_string_color) {
