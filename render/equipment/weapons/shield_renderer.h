@@ -1,3 +1,5 @@
+// shield_renderer.h - Dedicated renderer for shields with configurable parameters
+// Handles shield geometry, decorative elements (cross decals, trim), and grip
 #pragma once
 
 #include "../../humanoid/rig.h"
