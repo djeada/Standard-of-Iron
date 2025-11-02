@@ -2,6 +2,7 @@
 #include "../../../../game/core/component.h"
 #include "../../../../game/core/entity.h"
 #include "../../../../game/systems/nation_id.h"
+#include "../../../equipment/equipment_registry.h"
 #include "../../../geom/math_utils.h"
 #include "../../../geom/transforms.h"
 #include "../../../gl/backend.h"
@@ -274,100 +275,12 @@ public:
 
   void drawHelmet(const DrawContext &ctx, const HumanoidVariant &v,
                   const HumanoidPose &pose, ISubmitter &out) const override {
-    using HP = HumanProportions;
-
-    const AttachmentFrame &head = pose.bodyFrames.head;
-    float const head_r = head.radius;
-    if (head_r <= 0.0F) {
-      return;
-    }
-
-    auto headPoint = [&](const QVector3D &normalized) -> QVector3D {
-      return frameLocalPosition(head, normalized);
-    };
-
-    const QVector3D steel_color = v.palette.metal * STEEL_TINT;
-
-    float helm_r = head_r * 1.15F;
-
-    auto ring = [&](float y_offset, const QVector3D &col) {
-      QVector3D const center = headPoint(QVector3D(0.0F, y_offset, 0.0F));
-      float const height = head_r * 0.015F;
-      QVector3D const a = center + head.up * (height * 0.5F);
-      QVector3D const b = center - head.up * (height * 0.5F);
-      out.mesh(getUnitCylinder(), cylinderBetween(ctx.model, a, b, helm_r * 1.02F), col,
-               nullptr, 1.0F);
-    };
-
-    QVector3D const helm_bot = headPoint(QVector3D(0.0F, -0.20F, 0.0F));
-    QVector3D const helm_top = headPoint(QVector3D(0.0F, 1.40F, 0.0F));
-
-    out.mesh(getUnitCylinder(),
-             cylinderBetween(ctx.model, helm_bot, helm_top, helm_r),
-             steel_color, nullptr, 1.0F);
-
-    QVector3D const cap_top = headPoint(QVector3D(0.0F, 1.48F, 0.0F));
-    out.mesh(getUnitCylinder(),
-             cylinderBetween(ctx.model, helm_top, cap_top, helm_r * 0.98F),
-             steel_color * 1.05F, nullptr, 1.0F);
-
-    const QVector3D ring_color = steel_color * 1.08F;
-    ring(1.25F, ring_color);
-    ring(0.50F, ring_color);
-    ring(-0.05F, ring_color);
-
-    const float visor_y_offset = 0.15F;
-    const float visor_z_norm = 0.72F * helm_r / head_r;
-    static const QVector3D visor_color(0.1F, 0.1F, 0.1F);
-
-    QVector3D const visor_center = headPoint(QVector3D(0.0F, visor_y_offset, visor_z_norm));
-    QVector3D const visor_hl = visor_center - head.right * (helm_r * 0.35F);
-    QVector3D const visor_hr = visor_center + head.right * (helm_r * 0.35F);
-    out.mesh(getUnitCylinder(),
-             cylinderBetween(ctx.model, visor_hl, visor_hr, 0.012F),
-             visor_color, nullptr, 1.0F);
-
-    QVector3D const visor_vt = visor_center + head.up * (helm_r * 0.25F);
-    QVector3D const visor_vb = visor_center - head.up * (helm_r * 0.25F);
-    out.mesh(getUnitCylinder(),
-             cylinderBetween(ctx.model, visor_vb, visor_vt, 0.012F),
-             visor_color, nullptr, 1.0F);
-
-    auto draw_breathing_hole = [&](float x_sign, float y_offset) {
-      QVector3D const pos = headPoint(QVector3D(x_sign * 0.50F * helm_r / head_r, y_offset, 0.70F * helm_r / head_r));
-      QMatrix4x4 m = ctx.model;
-      m.translate(pos);
-      m.scale(0.010F);
-      out.mesh(getUnitSphere(), m, QVector3D(0.1F, 0.1F, 0.1F), nullptr, 1.0F);
-    };
-
-    for (int i = 0; i < 4; ++i) {
-      draw_breathing_hole(1.0F, 0.05F - i * 0.10F);
-    }
-
-    for (int i = 0; i < 4; ++i) {
-      draw_breathing_hole(-1.0F, 0.05F - i * 0.10F);
-    }
-
-    const QVector3D plume_base = headPoint(QVector3D(0.0F, 1.50F, 0.0F));
-    const QVector3D brass_color = v.palette.metal * BRASS_TINT;
-
-    QMatrix4x4 plume = ctx.model;
-    plume.translate(plume_base);
-    plume.scale(0.030F, 0.015F, 0.030F);
-    out.mesh(getUnitSphere(), plume, brass_color * 1.2F, nullptr, 1.0F);
-
-    for (int i = 0; i < 5; ++i) {
-      float const offset = i * 0.025F;
-      QVector3D const feather_start =
-          plume_base + QVector3D(0, 0.005F, -0.020F + offset * 0.5F);
-      QVector3D const feather_end =
-          feather_start +
-          QVector3D(0, 0.15F - i * 0.015F, -0.08F + offset * 0.3F);
-
-      out.mesh(getUnitCylinder(),
-               cylinderBetween(ctx.model, feather_start, feather_end, 0.008F),
-               v.palette.cloth * (1.1F - i * 0.05F), nullptr, 1.0F);
+    // Use Roman heavy helmet from equipment registry
+    auto &registry = EquipmentRegistry::instance();
+    auto helmet = registry.get(EquipmentCategory::Helmet, "roman_heavy");
+    if (helmet) {
+      HumanoidAnimationContext anim_ctx{};
+      helmet->render(ctx, pose.bodyFrames, v.palette, anim_ctx, out);
     }
   }
 

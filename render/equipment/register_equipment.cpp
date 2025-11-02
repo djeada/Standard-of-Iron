@@ -1,6 +1,10 @@
 #include "equipment_registry.h"
 #include "helmets/headwrap.h"
+#include "helmets/kingdom_heavy_helmet.h"
+#include "helmets/kingdom_light_helmet.h"
 #include "helmets/montefortino_helmet.h"
+#include "helmets/roman_heavy_helmet.h"
+#include "helmets/roman_light_helmet.h"
 #include "weapons/bow_renderer.h"
 #include "weapons/quiver_renderer.h"
 #include <memory>
@@ -46,15 +50,44 @@ void registerBuiltInEquipment() {
   registry.registerEquipment(EquipmentCategory::Weapon, "quiver", quiver);
 
   // Register helmet renderers
+  // CARTHAGE HELMETS
   // Montefortino helmet - Carthaginian/Punic style helmet with bronze bowl
-  // and distinctive top knob, used by heavy infantry
+  // and distinctive top knob, used by heavy infantry (spearmen, swordsmen)
   auto montefortino_helmet = std::make_shared<MontefortinoHelmetRenderer>();
   registry.registerEquipment(EquipmentCategory::Helmet, "montefortino",
                             montefortino_helmet);
+  registry.registerEquipment(EquipmentCategory::Helmet, "carthage_heavy",
+                            montefortino_helmet);
 
-  // Headwrap - cloth head covering used by archers and light infantry
+  // Headwrap - cloth head covering used by Carthaginian archers and light infantry
   auto headwrap = std::make_shared<HeadwrapRenderer>();
   registry.registerEquipment(EquipmentCategory::Helmet, "headwrap", headwrap);
+  registry.registerEquipment(EquipmentCategory::Helmet, "carthage_light",
+                            headwrap);
+
+  // ROMAN HELMETS
+  // Roman heavy helmet - Imperial Gallic style for legionaries with
+  // visor cross, breathing holes, and brass decorations
+  auto roman_heavy = std::make_shared<RomanHeavyHelmetRenderer>();
+  registry.registerEquipment(EquipmentCategory::Helmet, "roman_heavy",
+                            roman_heavy);
+
+  // Roman light helmet - Simple cap helmet for archers and auxiliaries
+  auto roman_light = std::make_shared<RomanLightHelmetRenderer>();
+  registry.registerEquipment(EquipmentCategory::Helmet, "roman_light",
+                            roman_light);
+
+  // KINGDOM HELMETS
+  // Kingdom heavy helmet - Great helm style for knights and heavy infantry
+  // with enclosed design and heraldic cross
+  auto kingdom_heavy = std::make_shared<KingdomHeavyHelmetRenderer>();
+  registry.registerEquipment(EquipmentCategory::Helmet, "kingdom_heavy",
+                            kingdom_heavy);
+
+  // Kingdom light helmet - Kettle hat with wide brim for archers
+  auto kingdom_light = std::make_shared<KingdomLightHelmetRenderer>();
+  registry.registerEquipment(EquipmentCategory::Helmet, "kingdom_light",
+                            kingdom_light);
 }
 
 } // namespace Render::GL
