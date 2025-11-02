@@ -54,8 +54,9 @@ void BowRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
   };
 
   float const bow_mid_y = (top_end.y() + bot_end.y()) * 0.5F;
-  float const ctrl_y = bow_mid_y + 0.45F;
-  QVector3D const ctrl(m_config.bow_x, ctrl_y, bow_plane_z + m_config.bow_depth * 0.6F);
+  float const ctrl_y = bow_mid_y + (0.45F * m_config.bow_curve_factor);
+  QVector3D const ctrl(m_config.bow_x, ctrl_y, 
+                       bow_plane_z + m_config.bow_depth * 0.6F * m_config.bow_curve_factor);
 
   // Draw bow limbs as segments
   QVector3D prev = bot_end;
