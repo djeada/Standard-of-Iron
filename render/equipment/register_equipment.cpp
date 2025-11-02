@@ -10,6 +10,7 @@
 #include "helmets/roman_light_helmet.h"
 #include "weapons/bow_renderer.h"
 #include "weapons/quiver_renderer.h"
+#include "weapons/roman_scutum.h"
 #include <memory>
 
 namespace Render::GL {
@@ -45,6 +46,10 @@ void registerBuiltInEquipment() {
 
   auto quiver = std::make_shared<QuiverRenderer>();
   registry.registerEquipment(EquipmentCategory::Weapon, "quiver", quiver);
+
+  auto roman_scutum = std::make_shared<RomanScutumRenderer>();
+  registry.registerEquipment(EquipmentCategory::Weapon, "roman_scutum",
+                             roman_scutum);
 
   auto montefortino_helmet = std::make_shared<MontefortinoHelmetRenderer>();
   registry.registerEquipment(EquipmentCategory::Helmet, "montefortino",
