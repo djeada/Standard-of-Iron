@@ -17,9 +17,8 @@ void EquipmentRegistry::registerEquipment(
   m_renderers[category][id] = std::move(renderer);
 }
 
-auto EquipmentRegistry::get(EquipmentCategory category,
-                            const std::string &id) const
-    -> std::shared_ptr<IEquipmentRenderer> {
+auto EquipmentRegistry::get(EquipmentCategory category, const std::string &id)
+    const -> std::shared_ptr<IEquipmentRenderer> {
   auto category_it = m_renderers.find(category);
   if (category_it == m_renderers.end()) {
     return nullptr;

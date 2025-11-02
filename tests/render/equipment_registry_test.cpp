@@ -10,8 +10,7 @@ namespace {
 // Mock equipment renderer for testing
 class MockEquipmentRenderer : public IEquipmentRenderer {
 public:
-  explicit MockEquipmentRenderer(std::string name)
-      : m_name(std::move(name)) {}
+  explicit MockEquipmentRenderer(std::string name) : m_name(std::move(name)) {}
 
   void render(const DrawContext & /*ctx*/, const BodyFrames & /*frames*/,
               const HumanoidPalette & /*palette*/,
@@ -48,8 +47,7 @@ TEST_F(EquipmentRegistryTest, SingletonInstance) {
 
 TEST_F(EquipmentRegistryTest, RegisterAndGetHelmet) {
   auto helmet = std::make_shared<MockEquipmentRenderer>("test_helmet");
-  registry->registerEquipment(EquipmentCategory::Helmet, "iron_helmet",
-                              helmet);
+  registry->registerEquipment(EquipmentCategory::Helmet, "iron_helmet", helmet);
 
   auto retrieved = registry->get(EquipmentCategory::Helmet, "iron_helmet");
 
