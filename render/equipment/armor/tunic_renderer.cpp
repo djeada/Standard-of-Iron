@@ -24,6 +24,8 @@ void TunicRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
                            const HumanoidPalette &palette,
                            const HumanoidAnimationContext &anim,
                            ISubmitter &submitter) {
+  // Animation context currently unused - armor is rigid and follows torso frame
+  // Future enhancement: could add breathing effects or battle damage
   (void)anim;
 
   const AttachmentFrame &torso = frames.torso;
@@ -101,9 +103,17 @@ void TunicRenderer::renderTorsoArmor(const DrawContext &ctx,
         float const cos_a = std::cos(angle_rad);
         float const abs_cos = std::abs(cos_a);
 
+        // Select depth based on front (chest) vs back
         float depth = (cos_a > 0.0F) ? depth_front : depth_back;
 
-        float const shoulder_bias = 1.0F + 0.15F * std::abs(std::sin(angle_rad));
+        // Create broader shoulders: base scale (1.0) + variation (0.15) at shoulder points
+        constexpr float BASE_SHOULDER_SCALE = 1.0F;
+        constexpr float SHOULDER_VARIATION_FACTOR = 0.15F;
+        float const shoulder_bias =
+            BASE_SHOULDER_SCALE +
+            SHOULDER_VARIATION_FACTOR * std::abs(std::sin(angle_rad));
+
+        // Blend between circular (abs_cos * 0.3) and depth-based (0.7 * depth)
         return width_scale * shoulder_bias * (abs_cos * 0.3F + 0.7F * depth);
       };
 
@@ -158,6 +168,7 @@ void TunicRenderer::renderTorsoArmor(const DrawContext &ctx,
   connectSegments(y_mid_chest, y_bottom_chest, chest_width, chest_width * 0.98F);
   connectSegments(y_bottom_chest, y_waist, chest_width * 0.98F, waist_width);
 
+  // Add decorative rivets around the chest
   auto draw_rivet = [&](const QVector3D &pos) {
     QMatrix4x4 m = ctx.model;
     m.translate(pos);
@@ -165,10 +176,15 @@ void TunicRenderer::renderTorsoArmor(const DrawContext &ctx,
     submitter.mesh(getUnitSphere(), m, brass_color, nullptr, 1.0F);
   };
 
+  // Position rivets in a ring around the chest at mid-height
+  constexpr float RIVET_POSITION_SCALE =
+      0.92F; // Slightly inset from armor edge
   for (int i = 0; i < 8; ++i) {
     float const angle = (static_cast<float>(i) / 8.0F) * 2.0F * pi;
-    float const x = chest_width * std::sin(angle) * chest_depth_front * 0.92F;
-    float const z = chest_width * std::cos(angle) * chest_depth_front * 0.92F;
+    float const x =
+        chest_width * std::sin(angle) * chest_depth_front * RIVET_POSITION_SCALE;
+    float const z =
+        chest_width * std::cos(angle) * chest_depth_front * RIVET_POSITION_SCALE;
     draw_rivet(
         origin + right * x + forward * z + up * (y_mid_chest + 0.08F - origin.y()));
   }
