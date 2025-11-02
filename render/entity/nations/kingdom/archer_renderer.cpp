@@ -332,118 +332,11 @@ public:
                  ISubmitter &out) const override {
     if (resolve_style(ctx).show_armor) {
       auto &registry = EquipmentRegistry::instance();
-      auto armor = registry.get(EquipmentCategory::Armor, "light_tunic");
+      auto armor = registry.get(EquipmentCategory::Armor, "kingdom_light_armor");
       if (armor) {
         armor->render(ctx, pose.bodyFrames, v.palette, anim, out);
       }
     }
-  }
-
-  void draw_armorOverlay(const DrawContext &ctx, const HumanoidVariant &v,
-                         const HumanoidPose &pose, float y_top_cover,
-                         float torso_r, float, float upper_arm_r,
-                         const QVector3D &right_axis,
-                         ISubmitter &out) const override {
-    using HP = HumanProportions;
-
-    if (!resolve_style(ctx).show_armor) {
-      return;
-    }
-
-    QVector3D const gambeson_base =
-        v.palette.cloth * QVector3D(0.92F, 0.88F, 0.75F);
-    QVector3D const gambeson_dark = gambeson_base * 0.85F;
-    QVector3D const leather_trim = v.palette.leatherDark * 0.88F;
-    QVector3D const green_tunic =
-        v.palette.cloth * QVector3D(0.45F, 0.75F, 0.52F);
-
-    float const waist_y = pose.pelvisPos.y();
-
-    QVector3D const gambeson_top(0, y_top_cover, 0);
-    QVector3D const gambeson_mid(0, (y_top_cover + waist_y) * 0.55F, 0);
-    QVector3D const gambeson_bot(0, waist_y + 0.05F, 0);
-    float const r_top = torso_r * 1.14F;
-    float const r_mid = torso_r * 1.16F;
-
-    out.mesh(getUnitCylinder(),
-             cylinderBetween(ctx.model, gambeson_top, gambeson_mid, r_top),
-             gambeson_base, nullptr, 1.0F);
-
-    out.mesh(getUnitCylinder(),
-             cylinderBetween(ctx.model, gambeson_mid, gambeson_bot, r_mid),
-             gambeson_dark, nullptr, 1.0F);
-
-    auto stitch_ring = [&](float y, float r, const QVector3D &col) {
-      QVector3D const a = QVector3D(0, y + 0.005F, 0);
-      QVector3D const b = QVector3D(0, y - 0.005F, 0);
-      out.mesh(getUnitCylinder(), cylinderBetween(ctx.model, a, b, r), col,
-               nullptr, 1.0F);
-    };
-
-    for (int i = 0; i < 6; ++i) {
-      float const y = gambeson_top.y() - (i * 0.08F);
-      if (y > waist_y) {
-        stitch_ring(y, r_top * (1.005F + i * 0.002F), gambeson_base * 0.78F);
-      }
-    }
-
-    auto draw_padded_sleeve = [&](const QVector3D &shoulder,
-                                  const QVector3D &elbow,
-                                  const QVector3D &outward) {
-      for (int i = 0; i < 2; ++i) {
-        float const seg_y = shoulder.y() - i * 0.04F;
-        float const seg_r = upper_arm_r * (1.55F - i * 0.08F);
-        QVector3D seg_top(shoulder.x(), seg_y + 0.022F, shoulder.z());
-        QVector3D seg_bot(shoulder.x(), seg_y - 0.018F, shoulder.z());
-
-        seg_top += outward * 0.015F;
-        seg_bot += outward * 0.015F;
-
-        out.mesh(getUnitSphere(), sphereAt(ctx.model, seg_top, seg_r),
-                 gambeson_base * (1.0F - i * 0.06F), nullptr, 1.0F);
-      }
-
-      QVector3D dir = (elbow - shoulder);
-      float const len = dir.length();
-      if (len < 1e-5F) {
-        return;
-      }
-      dir /= len;
-
-      for (int i = 0; i < 3; ++i) {
-        float const t0 = 0.10F + i * 0.20F;
-        float const t1 = t0 + 0.18F;
-        QVector3D const a = shoulder + dir * (t0 * len);
-        QVector3D const b = shoulder + dir * (t1 * len);
-        float const r = upper_arm_r * (1.28F - i * 0.04F);
-        out.mesh(getUnitCylinder(), cylinderBetween(ctx.model, a, b, r),
-                 gambeson_base * (0.96F - i * 0.04F), nullptr, 1.0F);
-      }
-    };
-
-    draw_padded_sleeve(pose.shoulderL, pose.elbowL, -right_axis);
-    draw_padded_sleeve(pose.shoulderR, pose.elbowR, right_axis);
-
-    QVector3D const belt_top(0, waist_y + 0.04F, 0);
-    QVector3D const belt_bot(0, waist_y - 0.03F, 0);
-    float const belt_r = torso_r * 1.18F;
-
-    out.mesh(getUnitCylinder(),
-             cylinderBetween(ctx.model, belt_top, belt_bot, belt_r),
-             leather_trim, nullptr, 1.0F);
-
-    QVector3D const iron_color =
-        v.palette.metal * QVector3D(0.60F, 0.62F, 0.68F);
-    QMatrix4x4 buckle_m = ctx.model;
-    buckle_m.translate(QVector3D(0, waist_y, torso_r * 1.22F));
-    buckle_m.scale(0.032F, 0.020F, 0.010F);
-    out.mesh(getUnitCylinder(), buckle_m, iron_color, nullptr, 1.0F);
-
-    QVector3D const tunic_top = gambeson_bot;
-    QVector3D const tunic_bot(0, waist_y - 0.02F, 0);
-    out.mesh(getUnitCylinder(),
-             cylinderBetween(ctx.model, tunic_bot, tunic_top, r_mid * 1.02F),
-             green_tunic, nullptr, 1.0F);
   }
 
   void drawShoulderDecorations(const DrawContext &ctx, const HumanoidVariant &v,
