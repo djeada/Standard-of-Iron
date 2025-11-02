@@ -45,6 +45,9 @@ namespace {
 constexpr std::string_view k_default_style_key = "default";
 constexpr std::string_view k_attachment_headwrap = "carthage_headwrap";
 
+constexpr float k_kneel_depth_multiplier = 1.125F;
+constexpr float k_lean_amount_multiplier = 0.83F;
+
 auto style_registry() -> std::unordered_map<std::string, ArcherStyleConfig> & {
   static std::unordered_map<std::string, ArcherStyleConfig> styles;
   return styles;
@@ -174,8 +177,8 @@ public:
     if (anim.isInHoldMode || anim.isExitingHold) {
       float const t = anim.isInHoldMode ? 1.0F : (1.0F - anim.holdExitProgress);
 
-      controller.kneel(t * 1.125F);
-      controller.lean(QVector3D(0.0F, 0.0F, 1.0F), t * 0.83F);
+      controller.kneel(t * k_kneel_depth_multiplier);
+      controller.lean(QVector3D(0.0F, 0.0F, 1.0F), t * k_lean_amount_multiplier);
 
       QVector3D const hold_hand_l(bow_x - 0.15F, pose.shoulderL.y() + 0.30F,
                                   0.55F);
