@@ -2,6 +2,9 @@
 #include "../../../../game/core/component.h"
 #include "../../../../game/core/entity.h"
 #include "../../../../game/systems/nation_id.h"
+#include "../../../equipment/equipment_registry.h"
+#include "../../../equipment/weapons/bow_renderer.h"
+#include "../../../equipment/weapons/quiver_renderer.h"
 #include "../../../geom/math_utils.h"
 #include "../../../geom/transforms.h"
 #include "../../../gl/backend.h"
@@ -70,18 +73,6 @@ using Render::Geom::cylinderBetween;
 using Render::Geom::sphereAt;
 using Render::GL::Humanoid::mix_palette_color;
 using Render::GL::Humanoid::saturate_color;
-
-struct ArcherExtras {
-  QVector3D stringCol;
-  QVector3D fletch;
-  QVector3D metalHead;
-  float bowRodR = 0.035F;
-  float stringR = 0.008F;
-  float bowDepth = 0.25F;
-  float bowX = 0.0F;
-  float bowTopY{};
-  float bowBotY{};
-};
 
 class ArcherRenderer : public HumanoidRendererBase {
 public:
@@ -272,49 +263,61 @@ public:
     using HP = HumanProportions;
 
     auto const &style = resolve_style(ctx);
-    const AnimationInputs &anim = anim_ctx.inputs;
     QVector3D team_tint = resolveTeamTint(ctx);
-    uint32_t seed = 0U;
-    if (ctx.entity != nullptr) {
-      auto *unit = ctx.entity->getComponent<Engine::Core::UnitComponent>();
-      if (unit != nullptr) {
-        seed ^= uint32_t(unit->owner_id * 2654435761U);
+    
+    // Get fletching color for quiver renderer
+    auto tint = [&](float k) {
+      return QVector3D(clamp01(team_tint.x() * k), clamp01(team_tint.y() * k),
+                       clamp01(team_tint.z() * k));
+    };
+    QVector3D const fletch = tint(0.9F);
+
+    // Render quiver using equipment registry
+    auto &registry = EquipmentRegistry::instance();
+    auto quiver = registry.get(EquipmentCategory::Weapon, "quiver");
+    if (quiver) {
+      // Configure quiver with appropriate colors
+      QuiverRenderConfig quiver_config;
+      quiver_config.fletching_color = fletch;
+      quiver_config.quiver_radius = HP::HEAD_RADIUS * 0.45F;
+      
+      // Safe downcast - we know "quiver" is a QuiverRenderer
+      auto *quiver_renderer = dynamic_cast<QuiverRenderer*>(quiver.get());
+      if (quiver_renderer) {
+        quiver_renderer->setConfig(quiver_config);
       }
-      seed ^= uint32_t(reinterpret_cast<uintptr_t>(ctx.entity) & 0xFFFFFFFFU);
+      
+      quiver->render(ctx, pose.bodyFrames, v.palette, anim_ctx, out);
     }
 
-    ArcherExtras extras;
-    auto it = m_extrasCache.find(seed);
-    if (it != m_extrasCache.end()) {
-      extras = it->second;
-    } else {
-      extras.metalHead = Render::Geom::clampVec01(v.palette.metal * 1.15F);
-      extras.stringCol = QVector3D(0.30F, 0.30F, 0.32F);
-      auto tint = [&](float k) {
-        return QVector3D(clamp01(team_tint.x() * k), clamp01(team_tint.y() * k),
-                         clamp01(team_tint.z() * k));
-      };
-      extras.fletch = tint(0.9F);
-      extras.bowTopY = HP::SHOULDER_Y + 0.55F;
-      extras.bowBotY = HP::WAIST_Y - 0.25F;
-
-      apply_extras_overrides(style, extras);
-      m_extrasCache[seed] = extras;
-
-      if (m_extrasCache.size() > MAX_EXTRAS_CACHE_SIZE) {
-        m_extrasCache.clear();
+    // Render bow using equipment registry
+    auto bow = registry.get(EquipmentCategory::Weapon, "bow_kingdom");
+    if (bow) {
+      // Configure Kingdom/European longbow (taller, straighter)
+      BowRenderConfig bow_config;
+      bow_config.string_color = QVector3D(0.30F, 0.30F, 0.32F);
+      bow_config.metal_color = Render::Geom::clampVec01(v.palette.metal * 1.15F);
+      bow_config.fletching_color = fletch;
+      bow_config.bow_top_y = HP::SHOULDER_Y + 0.55F;   // Same as original
+      bow_config.bow_bot_y = HP::WAIST_Y - 0.25F;      // Same as original
+      bow_config.bow_x = 0.0F;
+      
+      // Apply style overrides if available
+      if (style.bow_string_color) {
+        bow_config.string_color = saturate_color(*style.bow_string_color);
       }
+      if (style.fletching_color) {
+        bow_config.fletching_color = saturate_color(*style.fletching_color);
+      }
+      
+      // Safe downcast - we know "bow" is a BowRenderer
+      auto *bow_renderer = dynamic_cast<BowRenderer*>(bow.get());
+      if (bow_renderer) {
+        bow_renderer->setConfig(bow_config);
+      }
+      
+      bow->render(ctx, pose.bodyFrames, v.palette, anim_ctx, out);
     }
-    apply_extras_overrides(style, extras);
-
-    drawQuiver(ctx, v, pose, extras, seed, out);
-
-    float attack_phase = 0.0F;
-    if (anim.is_attacking && !anim.isMelee) {
-      attack_phase = std::fmod(anim.time * ARCHER_INV_ATTACK_CYCLE_TIME, 1.0F);
-    }
-    drawBowAndArrow(ctx, pose, v, extras, anim.is_attacking && !anim.isMelee,
-                    attack_phase, out);
   }
 
   void drawHelmet(const DrawContext &ctx, const HumanoidVariant &v,
@@ -375,7 +378,7 @@ public:
                nullptr, 1.0F);
     };
 
-    ring(0.13F, 1.42F * 1.01F / head_r, steel_color);
+    ring(0.13F, 1.42F * 1.01F, steel_color);
 
     QMatrix4x4 rivet_m = ctx.model;
     rivet_m.translate(headPoint(QVector3D(0.0F, 1.15F, 0.0F)));
@@ -537,8 +540,6 @@ public:
   }
 
 private:
-  mutable std::unordered_map<uint32_t, ArcherExtras> m_extrasCache;
-
   auto
   resolve_style(const DrawContext &ctx) const -> const ArcherStyleConfig & {
     ensure_archer_styles_registered();
@@ -590,16 +591,6 @@ private:
     apply_color(style.wood_color, variant.palette.wood);
   }
 
-  void apply_extras_overrides(const ArcherStyleConfig &style,
-                              ArcherExtras &extras) const {
-    if (style.fletching_color) {
-      extras.fletch = saturate_color(*style.fletching_color);
-    }
-    if (style.bow_string_color) {
-      extras.stringCol = saturate_color(*style.bow_string_color);
-    }
-  }
-
   void draw_headwrap(const DrawContext &ctx, const HumanoidVariant &v,
                      const HumanoidPose &pose, ISubmitter &out) const {
     QVector3D const cloth_color =
@@ -633,119 +624,6 @@ private:
     out.mesh(getUnitCylinder(),
              cylinderBetween(ctx.model, tail_top, tail_bot, head_r * 0.28F),
              cloth_color * QVector3D(0.92F, 0.98F, 1.05F), nullptr, 1.0F);
-  }
-
-  static void drawQuiver(const DrawContext &ctx, const HumanoidVariant &v,
-                         const HumanoidPose &pose, const ArcherExtras &extras,
-                         uint32_t seed, ISubmitter &out) {
-    using HP = HumanProportions;
-
-    QVector3D const spine_mid = (pose.shoulderL + pose.shoulderR) * 0.5F;
-    QVector3D const quiver_offset(-0.08F, 0.10F, -0.25F);
-    QVector3D const q_top = spine_mid + quiver_offset;
-    QVector3D const q_base = q_top + QVector3D(-0.02F, -0.30F, 0.03F);
-
-    float const quiver_r = HP::HEAD_RADIUS * 0.45F;
-    out.mesh(getUnitCylinder(),
-             cylinderBetween(ctx.model, q_base, q_top, quiver_r),
-             v.palette.leather, nullptr, 1.0F);
-
-    float const j = (hash_01(seed) - 0.5F) * 0.04F;
-    float const k =
-        (hash_01(seed ^ HashXorShift::k_golden_ratio) - 0.5F) * 0.04F;
-
-    QVector3D const a1 = q_top + QVector3D(0.00F + j, 0.08F, 0.00F + k);
-    out.mesh(getUnitCylinder(), cylinderBetween(ctx.model, q_top, a1, 0.010F),
-             v.palette.wood, nullptr, 1.0F);
-    out.mesh(getUnitCone(),
-             coneFromTo(ctx.model, a1, a1 + QVector3D(0, 0.05F, 0), 0.025F),
-             extras.fletch, nullptr, 1.0F);
-
-    QVector3D const a2 = q_top + QVector3D(0.02F - j, 0.07F, 0.02F - k);
-    out.mesh(getUnitCylinder(), cylinderBetween(ctx.model, q_top, a2, 0.010F),
-             v.palette.wood, nullptr, 1.0F);
-    out.mesh(getUnitCone(),
-             coneFromTo(ctx.model, a2, a2 + QVector3D(0, 0.05F, 0), 0.025F),
-             extras.fletch, nullptr, 1.0F);
-  }
-
-  static void drawBowAndArrow(const DrawContext &ctx, const HumanoidPose &pose,
-                              const HumanoidVariant &v,
-                              const ArcherExtras &extras, bool is_attacking,
-                              float attack_phase, ISubmitter &out) {
-    const QVector3D up(0.0F, 1.0F, 0.0F);
-    const QVector3D forward(0.0F, 0.0F, 1.0F);
-
-    QVector3D const grip = pose.handL;
-
-    float const bow_plane_z = 0.45F;
-    QVector3D const top_end(extras.bowX, extras.bowTopY, bow_plane_z);
-    QVector3D const bot_end(extras.bowX, extras.bowBotY, bow_plane_z);
-
-    QVector3D const nock(
-        extras.bowX,
-        clampf(pose.hand_r.y(), extras.bowBotY + 0.05F, extras.bowTopY - 0.05F),
-        clampf(pose.hand_r.z(), bow_plane_z - 0.30F, bow_plane_z + 0.30F));
-
-    constexpr int k_bowstring_segments = 22;
-    auto q_bezier = [](const QVector3D &a, const QVector3D &c,
-                       const QVector3D &b, float t) {
-      float const u = 1.0F - t;
-      return u * u * a + 2.0F * u * t * c + t * t * b;
-    };
-
-    float const bow_mid_y = (top_end.y() + bot_end.y()) * 0.5F;
-
-    float const ctrl_y = bow_mid_y + 0.45F;
-
-    QVector3D const ctrl(extras.bowX, ctrl_y,
-                         bow_plane_z + extras.bowDepth * 0.6F);
-
-    QVector3D prev = bot_end;
-    for (int i = 1; i <= k_bowstring_segments; ++i) {
-      float const t = float(i) / float(k_bowstring_segments);
-      QVector3D const cur = q_bezier(bot_end, ctrl, top_end, t);
-      out.mesh(getUnitCylinder(),
-               cylinderBetween(ctx.model, prev, cur, extras.bowRodR),
-               v.palette.wood, nullptr, 1.0F);
-      prev = cur;
-    }
-    out.mesh(getUnitCylinder(),
-             cylinderBetween(ctx.model, grip - up * 0.05F, grip + up * 0.05F,
-                             extras.bowRodR * 1.45F),
-             v.palette.wood, nullptr, 1.0F);
-
-    out.mesh(getUnitCylinder(),
-             cylinderBetween(ctx.model, top_end, nock, extras.stringR),
-             extras.stringCol, nullptr, 1.0F);
-    out.mesh(getUnitCylinder(),
-             cylinderBetween(ctx.model, nock, bot_end, extras.stringR),
-             extras.stringCol, nullptr, 1.0F);
-    out.mesh(getUnitCylinder(),
-             cylinderBetween(ctx.model, pose.hand_r, nock, 0.0045F),
-             extras.stringCol * 0.9F, nullptr, 1.0F);
-
-    bool const show_arrow =
-        !is_attacking ||
-        (is_attacking && attack_phase >= 0.0F && attack_phase < 0.52F);
-
-    if (show_arrow) {
-      QVector3D const tail = nock - forward * 0.06F;
-      QVector3D const tip = tail + forward * 0.90F;
-      out.mesh(getUnitCylinder(), cylinderBetween(ctx.model, tail, tip, 0.018F),
-               v.palette.wood, nullptr, 1.0F);
-      QVector3D const head_base = tip - forward * 0.10F;
-      out.mesh(getUnitCone(), coneFromTo(ctx.model, head_base, tip, 0.05F),
-               extras.metalHead, nullptr, 1.0F);
-      QVector3D const f1b = tail - forward * 0.02F;
-      QVector3D const f1a = f1b - forward * 0.06F;
-      QVector3D const f2b = tail + forward * 0.02F;
-      QVector3D const f2a = f2b + forward * 0.06F;
-      out.mesh(getUnitCone(), coneFromTo(ctx.model, f1b, f1a, 0.04F),
-               extras.fletch, nullptr, 1.0F);
-      out.mesh(getUnitCone(), coneFromTo(ctx.model, f2a, f2b, 0.04F),
-               extras.fletch, nullptr, 1.0F);
-    }
   }
 };
 
