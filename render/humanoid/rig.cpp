@@ -713,6 +713,8 @@ void HumanoidRendererBase::drawCommonBody(const DrawContext &ctx,
   drawShoulderDecorations(ctx, v, pose, y_top_cover, pose.neck_base.y(),
                           right_axis, out);
 
+  drawHelmet(ctx, v, pose, out);
+
   QVector3D const belt_top = pose.pelvisPos + QVector3D(0.0F, 0.05F, 0.0F);
   QVector3D const belt_bottom = pose.pelvisPos + QVector3D(0.0F, 0.00F, 0.0F);
   out.mesh(getUnitCylinder(),
@@ -732,6 +734,11 @@ void HumanoidRendererBase::drawShoulderDecorations(const DrawContext &,
                                                    const HumanoidPose &, float,
                                                    float, const QVector3D &,
                                                    ISubmitter &) const {}
+
+void HumanoidRendererBase::drawHelmet(const DrawContext &,
+                                      const HumanoidVariant &,
+                                      const HumanoidPose &,
+                                      ISubmitter &) const {}
 
 void HumanoidRendererBase::drawFacialHair(const DrawContext &ctx,
                                           const HumanoidVariant &v,
