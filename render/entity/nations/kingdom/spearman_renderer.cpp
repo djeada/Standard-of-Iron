@@ -8,6 +8,7 @@
 #include "../../../gl/shader.h"
 #include "../../../humanoid/humanoid_math.h"
 #include "../../../humanoid/humanoid_specs.h"
+#include "../../../humanoid/pose_controller.h"
 #include "../../../humanoid/rig.h"
 #include "../../../humanoid/style_palette.h"
 #include "../../../palette.h"
@@ -38,6 +39,9 @@ namespace {
 constexpr std::string_view k_spearman_default_style_key = "default";
 constexpr float k_spearman_team_mix_weight = 0.6F;
 constexpr float k_spearman_style_mix_weight = 0.4F;
+
+constexpr float k_kneel_depth_multiplier = 0.875F;
+constexpr float k_lean_amount_multiplier = 0.67F;
 
 auto spearman_style_registry()
     -> std::unordered_map<std::string, SpearmanStyleConfig> & {
@@ -102,6 +106,7 @@ public:
     using HP = HumanProportions;
 
     const AnimationInputs &anim = anim_ctx.inputs;
+    HumanoidPoseController controller(pose, anim_ctx);
 
     float const arm_height_jitter = (hash_01(seed ^ 0xABCDU) - 0.5F) * 0.03F;
     float const arm_asymmetry = (hash_01(seed ^ 0xDEF0U) - 0.5F) * 0.04F;
@@ -109,61 +114,23 @@ public:
     if (anim.isInHoldMode || anim.isExitingHold) {
       float const t = anim.isInHoldMode ? 1.0F : (1.0F - anim.holdExitProgress);
 
-      float const kneel_depth = 0.35F * t;
-      float const pelvis_y = HP::WAIST_Y - kneel_depth;
-      pose.pelvisPos.setY(pelvis_y);
+      controller.kneel(t * k_kneel_depth_multiplier);
+      controller.lean(QVector3D(0.0F, 0.0F, 1.0F), t * k_lean_amount_multiplier);
 
-      float const stance_narrow = 0.10F;
+      float const lowered_shoulder_y = pose.shoulderL.y();
+      float const pelvis_y = pose.pelvisPos.y();
 
-      float const left_knee_y = HP::GROUND_Y + 0.06F * t;
-      float const left_knee_z = -0.08F * t;
-      pose.knee_l = QVector3D(-stance_narrow, left_knee_y, left_knee_z);
-      pose.footL = QVector3D(-stance_narrow - 0.02F, HP::GROUND_Y,
-                             left_knee_z - HP::LOWER_LEG_LEN * 0.90F * t);
+      QVector3D const hand_r_pos(
+          0.18F * (1.0F - t) + 0.22F * t,
+          lowered_shoulder_y * (1.0F - t) + (pelvis_y + 0.05F) * t,
+          0.15F * (1.0F - t) + 0.20F * t);
 
-      float const right_knee_y =
-          HP::WAIST_Y * 0.45F * (1.0F - t) + HP::WAIST_Y * 0.30F * t;
-      pose.knee_r = QVector3D(stance_narrow + 0.05F, right_knee_y, 0.15F * t);
-      pose.foot_r = QVector3D(stance_narrow + 0.08F, HP::GROUND_Y, 0.25F * t);
+      QVector3D const hand_l_pos(
+          0.0F, lowered_shoulder_y * (1.0F - t) + (lowered_shoulder_y - 0.10F) * t,
+          0.30F * (1.0F - t) + 0.55F * t);
 
-      float const upper_body_drop = kneel_depth;
-      pose.shoulderL.setY(HP::SHOULDER_Y - upper_body_drop);
-      pose.shoulderR.setY(HP::SHOULDER_Y - upper_body_drop);
-      pose.neck_base.setY(HP::NECK_BASE_Y - upper_body_drop);
-
-      float const lowered_chin_y = HP::CHIN_Y - upper_body_drop;
-
-      pose.headPos.setY(lowered_chin_y + pose.headR);
-
-      float const forward_lean = 0.08F * t;
-      pose.shoulderL.setZ(pose.shoulderL.z() + forward_lean);
-      pose.shoulderR.setZ(pose.shoulderR.z() + forward_lean);
-      pose.neck_base.setZ(pose.neck_base.z() + forward_lean * 0.8F);
-      pose.headPos.setZ(pose.headPos.z() + forward_lean * 0.7F);
-
-      float const lowered_shoulder_y = HP::SHOULDER_Y - upper_body_drop;
-
-      pose.hand_r =
-          QVector3D(0.18F * (1.0F - t) + 0.22F * t,
-                    lowered_shoulder_y * (1.0F - t) + (pelvis_y + 0.05F) * t,
-                    0.15F * (1.0F - t) + 0.20F * t);
-
-      pose.handL = QVector3D(0.0F,
-                             lowered_shoulder_y * (1.0F - t) +
-                                 (lowered_shoulder_y - 0.10F) * t,
-                             0.30F * (1.0F - t) + 0.55F * t);
-
-      QVector3D const shoulder_to_hand_r = pose.hand_r - pose.shoulderR;
-      float const arm_length_r = shoulder_to_hand_r.length();
-      QVector3D const arm_dir_r = shoulder_to_hand_r.normalized();
-      pose.elbowR = pose.shoulderR + arm_dir_r * (arm_length_r * 0.5F) +
-                    QVector3D(0.08F, -0.15F, -0.05F);
-
-      QVector3D const shoulder_to_hand_l = pose.handL - pose.shoulderL;
-      float const arm_length_l = shoulder_to_hand_l.length();
-      QVector3D const arm_dir_l = shoulder_to_hand_l.normalized();
-      pose.elbowL = pose.shoulderL + arm_dir_l * (arm_length_l * 0.5F) +
-                    QVector3D(-0.08F, -0.12F, 0.05F);
+      controller.placeHandAt(false, hand_r_pos);
+      controller.placeHandAt(true, hand_l_pos);
 
     } else if (anim.is_attacking && anim.isMelee && !anim.isInHoldMode) {
       float const attack_phase =
@@ -174,57 +141,51 @@ public:
       QVector3D const thrust_pos(0.32F, HP::SHOULDER_Y + 0.10F, 0.90F);
       QVector3D const recover_pos(0.28F, HP::SHOULDER_Y + 0.06F, 0.40F);
 
+      QVector3D hand_r_target;
+      QVector3D hand_l_target;
+
       if (attack_phase < 0.20F) {
-
         float const t = easeInOutCubic(attack_phase / 0.20F);
-        pose.hand_r = guard_pos * (1.0F - t) + prepare_pos * t;
-
-        pose.handL = QVector3D(-0.10F, HP::SHOULDER_Y - 0.05F,
-                               0.20F * (1.0F - t) + 0.08F * t);
+        hand_r_target = guard_pos * (1.0F - t) + prepare_pos * t;
+        hand_l_target = QVector3D(-0.10F, HP::SHOULDER_Y - 0.05F,
+                                  0.20F * (1.0F - t) + 0.08F * t);
       } else if (attack_phase < 0.30F) {
-
-        pose.hand_r = prepare_pos;
-        pose.handL = QVector3D(-0.10F, HP::SHOULDER_Y - 0.05F, 0.08F);
+        hand_r_target = prepare_pos;
+        hand_l_target = QVector3D(-0.10F, HP::SHOULDER_Y - 0.05F, 0.08F);
       } else if (attack_phase < 0.50F) {
-
         float t = (attack_phase - 0.30F) / 0.20F;
         t = t * t * t;
-        pose.hand_r = prepare_pos * (1.0F - t) + thrust_pos * t;
-
-        pose.handL =
+        hand_r_target = prepare_pos * (1.0F - t) + thrust_pos * t;
+        hand_l_target =
             QVector3D(-0.10F + 0.05F * t, HP::SHOULDER_Y - 0.05F + 0.03F * t,
                       0.08F + 0.45F * t);
       } else if (attack_phase < 0.70F) {
-
         float const t = easeInOutCubic((attack_phase - 0.50F) / 0.20F);
-        pose.hand_r = thrust_pos * (1.0F - t) + recover_pos * t;
-        pose.handL = QVector3D(-0.05F * (1.0F - t) - 0.10F * t,
-                               HP::SHOULDER_Y - 0.02F * (1.0F - t) - 0.06F * t,
-                               lerp(0.53F, 0.35F, t));
+        hand_r_target = thrust_pos * (1.0F - t) + recover_pos * t;
+        hand_l_target = QVector3D(-0.05F * (1.0F - t) - 0.10F * t,
+                                  HP::SHOULDER_Y - 0.02F * (1.0F - t) - 0.06F * t,
+                                  lerp(0.53F, 0.35F, t));
       } else {
-
         float const t = smoothstep(0.70F, 1.0F, attack_phase);
-        pose.hand_r = recover_pos * (1.0F - t) + guard_pos * t;
-        pose.handL = QVector3D(-0.10F - 0.02F * (1.0F - t),
-                               HP::SHOULDER_Y - 0.06F + 0.01F * t +
-                                   arm_height_jitter * (1.0F - t),
-                               lerp(0.35F, 0.25F, t));
+        hand_r_target = recover_pos * (1.0F - t) + guard_pos * t;
+        hand_l_target = QVector3D(-0.10F - 0.02F * (1.0F - t),
+                                  HP::SHOULDER_Y - 0.06F + 0.01F * t +
+                                      arm_height_jitter * (1.0F - t),
+                                  lerp(0.35F, 0.25F, t));
       }
+
+      controller.placeHandAt(false, hand_r_target);
+      controller.placeHandAt(true, hand_l_target);
     } else {
-      pose.hand_r =
-          QVector3D(0.28F + arm_asymmetry,
-                    HP::SHOULDER_Y - 0.02F + arm_height_jitter, 0.30F);
+      QVector3D const idle_hand_r(0.28F + arm_asymmetry,
+                                  HP::SHOULDER_Y - 0.02F + arm_height_jitter,
+                                  0.30F);
+      QVector3D const idle_hand_l(-0.08F - 0.5F * arm_asymmetry,
+                                  HP::SHOULDER_Y - 0.08F + 0.5F * arm_height_jitter,
+                                  0.45F);
 
-      pose.handL =
-          QVector3D(-0.08F - 0.5F * arm_asymmetry,
-                    HP::SHOULDER_Y - 0.08F + 0.5F * arm_height_jitter, 0.45F);
-
-      QVector3D const shoulder_to_hand = pose.hand_r - pose.shoulderR;
-      float const arm_length = shoulder_to_hand.length();
-      QVector3D const arm_dir = shoulder_to_hand.normalized();
-
-      pose.elbowR = pose.shoulderR + arm_dir * (arm_length * 0.5F) +
-                    QVector3D(0.06F, -0.12F, -0.04F);
+      controller.placeHandAt(false, idle_hand_r);
+      controller.placeHandAt(true, idle_hand_l);
     }
   }
 
