@@ -10,6 +10,7 @@
 #include "../../../gl/shader.h"
 #include "../../../humanoid/humanoid_math.h"
 #include "../../../humanoid/humanoid_specs.h"
+#include "../../../humanoid/pose_controller.h"
 #include "../../../humanoid/rig.h"
 #include "../../../palette.h"
 #include "../../../scene_renderer.h"
@@ -160,6 +161,13 @@ public:
 
     float const rein_forward = rest_hand_r.z();
 
+    HumanoidPoseController controller(pose, anim_ctx);
+
+    // Set hands first
+    controller.placeHandAt(false, rest_hand_r);
+    controller.placeHandAt(true, rest_hand_l);
+
+    // Override elbows with mounted-specific positioning
     pose.elbowL =
         QVector3D(pose.shoulderL.x() * 0.4F + rest_hand_l.x() * 0.6F,
                   (pose.shoulderL.y() + rest_hand_l.y()) * 0.5F - 0.08F,
@@ -186,37 +194,38 @@ public:
       QVector3D const recover_pos = QVector3D(
           rein_spread * 0.45F, shoulder_height - 0.05F, rein_forward + 0.25F);
 
+      QVector3D hand_r_target;
+
       if (attack_phase < 0.18F) {
-
         float const t = easeInOutCubic(attack_phase / 0.18F);
-        pose.hand_r = rest_pos * (1.0F - t) + windup_pos * t;
+        hand_r_target = rest_pos * (1.0F - t) + windup_pos * t;
       } else if (attack_phase < 0.30F) {
-
         float const t = easeInOutCubic((attack_phase - 0.18F) / 0.12F);
-        pose.hand_r = windup_pos * (1.0F - t) + raised_pos * t;
+        hand_r_target = windup_pos * (1.0F - t) + raised_pos * t;
       } else if (attack_phase < 0.48F) {
-
         float t = (attack_phase - 0.30F) / 0.18F;
         t = t * t * t;
-        pose.hand_r = raised_pos * (1.0F - t) + slash_pos * t;
+        hand_r_target = raised_pos * (1.0F - t) + slash_pos * t;
       } else if (attack_phase < 0.62F) {
-
         float const t = easeInOutCubic((attack_phase - 0.48F) / 0.14F);
-        pose.hand_r = slash_pos * (1.0F - t) + follow_through * t;
+        hand_r_target = slash_pos * (1.0F - t) + follow_through * t;
       } else if (attack_phase < 0.80F) {
-
         float const t = easeInOutCubic((attack_phase - 0.62F) / 0.18F);
-        pose.hand_r = follow_through * (1.0F - t) + recover_pos * t;
+        hand_r_target = follow_through * (1.0F - t) + recover_pos * t;
       } else {
-
         float const t = smoothstep(0.80F, 1.0F, attack_phase);
-        pose.hand_r = recover_pos * (1.0F - t) + rest_pos * t;
+        hand_r_target = recover_pos * (1.0F - t) + rest_pos * t;
       }
 
       float const rein_tension = clamp01((attack_phase - 0.10F) * 2.2F);
-      pose.handL = rest_hand_l + QVector3D(0.0F, -0.015F * rein_tension,
-                                           0.10F * rein_tension);
+      QVector3D const hand_l_target =
+          rest_hand_l + QVector3D(0.0F, -0.015F * rein_tension,
+                                  0.10F * rein_tension);
 
+      controller.placeHandAt(false, hand_r_target);
+      controller.placeHandAt(true, hand_l_target);
+
+      // Override elbows with mounted-specific positioning for attack
       pose.elbowR =
           QVector3D(pose.shoulderR.x() * 0.3F + pose.hand_r.x() * 0.7F,
                     (pose.shoulderR.y() + pose.hand_r.y()) * 0.5F - 0.12F,
@@ -225,9 +234,6 @@ public:
           QVector3D(pose.shoulderL.x() * 0.4F + pose.handL.x() * 0.6F,
                     (pose.shoulderL.y() + pose.handL.y()) * 0.5F - 0.08F,
                     (pose.shoulderL.z() + pose.handL.z()) * 0.5F);
-    } else {
-      pose.hand_r = rest_hand_r;
-      pose.handL = rest_hand_l;
     }
   }
 
