@@ -1,6 +1,7 @@
 #include "spearman_renderer.h"
 #include "../../../../game/core/component.h"
 #include "../../../../game/systems/nation_id.h"
+#include "../../../equipment/equipment_registry.h"
 #include "../../../geom/math_utils.h"
 #include "../../../geom/transforms.h"
 #include "../../../gl/backend.h"
@@ -263,54 +264,12 @@ public:
 
   void drawHelmet(const DrawContext &ctx, const HumanoidVariant &v,
                   const HumanoidPose &pose, ISubmitter &out) const override {
-    using HP = HumanProportions;
-
-    const AttachmentFrame &head = pose.bodyFrames.head;
-    float const head_r = head.radius;
-    if (head_r <= 0.0F) {
-      return;
-    }
-
-    const QVector3D iron_color = v.palette.metal * IRON_TINT;
-    const float helm_r = head_r * 1.12F;
-
-    auto headPoint = [&](const QVector3D &normalized) -> QVector3D {
-      return frameLocalPosition(head, normalized);
-    };
-
-    QVector3D const helm_bot = headPoint(QVector3D(0.0F, -0.15F, 0.0F));
-    QVector3D const helm_top = headPoint(QVector3D(0.0F, 1.25F, 0.0F));
-
-    out.mesh(getUnitCylinder(),
-             cylinderBetween(ctx.model, helm_bot, helm_top, helm_r), iron_color,
-             nullptr, 1.0F);
-
-    QVector3D const cap_top = headPoint(QVector3D(0.0F, 1.32F, 0.0F));
-    out.mesh(getUnitCylinder(),
-             cylinderBetween(ctx.model, helm_top, cap_top, helm_r * 0.96F),
-             iron_color * 1.04F, nullptr, 1.0F);
-
-    auto ring = [&](float y_offset, const QVector3D &col) {
-      QVector3D const center = headPoint(QVector3D(0.0F, y_offset, 0.0F));
-      float const height = head_r * 0.015F;
-      QVector3D const a = center + head.up * (height * 0.5F);
-      QVector3D const b = center - head.up * (height * 0.5F);
-      out.mesh(getUnitCylinder(), cylinderBetween(ctx.model, a, b, helm_r * 1.01F), col,
-               nullptr, 1.0F);
-    };
-
-    ring(0.95F, iron_color * 1.06F);
-    ring(-0.02F, iron_color * 1.06F);
-
-    float const visor_z_norm = 0.68F * helm_r / head_r;
-    for (int i = 0; i < 3; ++i) {
-      float const y_offset = 0.10F + (0.18F - i * 0.12F);
-      QVector3D const visor_center = headPoint(QVector3D(0.0F, y_offset, visor_z_norm));
-      QVector3D const visor_l = visor_center - head.right * (helm_r * 0.30F);
-      QVector3D const visor_r = visor_center + head.right * (helm_r * 0.30F);
-      out.mesh(getUnitCylinder(),
-               cylinderBetween(ctx.model, visor_l, visor_r, 0.010F), DARK_METAL,
-               nullptr, 1.0F);
+    // Use Roman heavy helmet from equipment registry
+    auto &registry = EquipmentRegistry::instance();
+    auto helmet = registry.get(EquipmentCategory::Helmet, "roman_heavy");
+    if (helmet) {
+      HumanoidAnimationContext anim_ctx{};
+      helmet->render(ctx, pose.bodyFrames, v.palette, anim_ctx, out);
     }
   }
 
