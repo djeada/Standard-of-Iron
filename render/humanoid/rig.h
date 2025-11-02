@@ -32,7 +32,7 @@ struct FormationParams {
   float spacing;
 };
 
-struct HeadFrame {
+struct AttachmentFrame {
   QVector3D origin{0.0F, 0.0F, 0.0F};
   QVector3D right{1.0F, 0.0F, 0.0F};
   QVector3D up{0.0F, 1.0F, 0.0F};
@@ -40,12 +40,32 @@ struct HeadFrame {
   float radius{0.0F};
 };
 
+// Legacy alias for backward compatibility
+using HeadFrame = AttachmentFrame;
+
+struct BodyFrames {
+  AttachmentFrame head{};
+  AttachmentFrame torso{};
+  AttachmentFrame back{};
+  AttachmentFrame waist{};
+  AttachmentFrame shoulderL{};
+  AttachmentFrame shoulderR{};
+  AttachmentFrame handL{};
+  AttachmentFrame handR{};
+  AttachmentFrame footL{};
+  AttachmentFrame footR{};
+};
+
 struct HumanoidPose {
   QVector3D headPos;
   float headR{};
   QVector3D neck_base;
 
+  // Legacy field for backward compatibility - points to bodyFrames.head
   HeadFrame headFrame{};
+
+  // Complete body attachment frame system
+  BodyFrames bodyFrames{};
 
   QVector3D shoulderL, shoulderR;
   QVector3D elbowL, elbowR;
@@ -225,6 +245,24 @@ public:
 
   void render(const DrawContext &ctx, ISubmitter &out) const;
 
+  // Frame coordinate transformation helpers (public for testing and external use)
+  static auto frameLocalPosition(const AttachmentFrame &frame,
+                                 const QVector3D &local) -> QVector3D;
+
+  static auto makeFrameLocalTransform(const QMatrix4x4 &parent,
+                                      const AttachmentFrame &frame,
+                                      const QVector3D &local_offset,
+                                      float uniform_scale) -> QMatrix4x4;
+
+  // Legacy helpers for backward compatibility
+  static auto headLocalPosition(const HeadFrame &frame,
+                                const QVector3D &local) -> QVector3D;
+
+  static auto makeHeadLocalTransform(const QMatrix4x4 &parent,
+                                     const HeadFrame &frame,
+                                     const QVector3D &local_offset,
+                                     float uniform_scale) -> QMatrix4x4;
+
 protected:
   mutable QVector3D m_cachedProportionScale;
   mutable bool m_proportionScaleCached = false;
@@ -244,14 +282,6 @@ protected:
 
   void drawCommonBody(const DrawContext &ctx, const HumanoidVariant &v,
                       HumanoidPose &pose, ISubmitter &out) const;
-
-  static auto headLocalPosition(const HeadFrame &frame,
-                                const QVector3D &local) -> QVector3D;
-
-  static auto makeHeadLocalTransform(const QMatrix4x4 &parent,
-                                     const HeadFrame &frame,
-                                     const QVector3D &local_offset,
-                                     float uniform_scale) -> QMatrix4x4;
 };
 
 } // namespace Render::GL
