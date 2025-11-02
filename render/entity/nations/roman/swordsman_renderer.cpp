@@ -2,6 +2,8 @@
 #include "../../../../game/core/component.h"
 #include "../../../../game/systems/nation_id.h"
 #include "../../../equipment/equipment_registry.h"
+#include "../../../equipment/weapons/shield_renderer.h"
+#include "../../../equipment/weapons/sword_renderer.h"
 #include "../../../geom/math_utils.h"
 #include "../../../geom/transforms.h"
 #include "../../../gl/backend.h"
@@ -204,13 +206,45 @@ public:
     apply_extras_overrides(style, team_tint, v, extras);
 
     bool const is_attacking = anim.is_attacking && anim.isMelee;
-    float attack_phase = 0.0F;
-    if (is_attacking) {
-      attack_phase = std::fmod(anim.time * KNIGHT_INV_ATTACK_CYCLE_TIME, 1.0F);
+
+    auto &registry = EquipmentRegistry::instance();
+
+    auto sword = registry.get(EquipmentCategory::Weapon, "sword");
+    if (sword) {
+      SwordRenderConfig sword_config;
+      sword_config.metal_color = extras.metalColor;
+      sword_config.sword_length = extras.swordLength;
+      sword_config.sword_width = extras.swordWidth;
+      sword_config.guard_half_width = extras.guard_half_width;
+      sword_config.handle_radius = extras.handleRadius;
+      sword_config.pommel_radius = extras.pommelRadius;
+      sword_config.blade_ricasso = extras.bladeRicasso;
+      sword_config.blade_taper_bias = extras.bladeTaperBias;
+      sword_config.has_scabbard = extras.hasScabbard;
+
+      auto *sword_renderer = dynamic_cast<SwordRenderer *>(sword.get());
+      if (sword_renderer) {
+        sword_renderer->setConfig(sword_config);
+      }
+      sword->render(ctx, pose.bodyFrames, v.palette, anim_ctx, out);
     }
 
-    drawSword(ctx, pose, v, extras, is_attacking, attack_phase, out);
-    drawShield(ctx, pose, v, extras, out);
+    auto shield = registry.get(EquipmentCategory::Weapon, "shield");
+    if (shield) {
+      ShieldRenderConfig shield_config;
+      shield_config.shield_color = extras.shieldColor;
+      shield_config.trim_color = extras.shieldTrimColor;
+      shield_config.metal_color = extras.metalColor;
+      shield_config.shield_radius = extras.shieldRadius;
+      shield_config.shield_aspect = extras.shieldAspect;
+      shield_config.has_cross_decal = extras.shieldCrossDecal;
+
+      auto *shield_renderer = dynamic_cast<ShieldRenderer *>(shield.get());
+      if (shield_renderer) {
+        shield_renderer->setConfig(shield_config);
+      }
+      shield->render(ctx, pose.bodyFrames, v.palette, anim_ctx, out);
+    }
 
     if (!is_attacking && extras.hasScabbard) {
       drawScabbard(ctx, pose, v, extras, out);
@@ -272,274 +306,6 @@ private:
     e.shieldTrimColor = e.metalColor * 0.95F;
     e.shieldAspect = 1.0F;
     return e;
-  }
-
-  static void drawSword(const DrawContext &ctx, const HumanoidPose &pose,
-                        const HumanoidVariant &v, const KnightExtras &extras,
-                        bool is_attacking, float attack_phase,
-                        ISubmitter &out) {
-    QVector3D const grip_pos = pose.hand_r;
-
-    constexpr float k_sword_yaw_deg = 25.0F;
-    QMatrix4x4 yaw_m;
-    yaw_m.rotate(k_sword_yaw_deg, 0.0F, 1.0F, 0.0F);
-
-    QVector3D upish = yaw_m.map(QVector3D(0.05F, 1.0F, 0.15F));
-    QVector3D midish = yaw_m.map(QVector3D(0.08F, 0.20F, 1.0F));
-    QVector3D downish = yaw_m.map(QVector3D(0.10F, -1.0F, 0.25F));
-    if (upish.lengthSquared() > 1e-6F) {
-      upish.normalize();
-    }
-    if (midish.lengthSquared() > 1e-6F) {
-      midish.normalize();
-    }
-    if (downish.lengthSquared() > 1e-6F) {
-      downish.normalize();
-    }
-
-    QVector3D sword_dir = upish;
-
-    if (is_attacking) {
-      if (attack_phase < 0.18F) {
-        float const t = easeInOutCubic(attack_phase / 0.18F);
-        sword_dir = nlerp(upish, upish, t);
-      } else if (attack_phase < 0.32F) {
-        float const t = easeInOutCubic((attack_phase - 0.18F) / 0.14F);
-        sword_dir = nlerp(upish, midish, t * 0.35F);
-      } else if (attack_phase < 0.52F) {
-        float t = (attack_phase - 0.32F) / 0.20F;
-        t = t * t * t;
-        if (t < 0.5F) {
-          float const u = t / 0.5F;
-          sword_dir = nlerp(upish, midish, u);
-        } else {
-          float const u = (t - 0.5F) / 0.5F;
-          sword_dir = nlerp(midish, downish, u);
-        }
-      } else if (attack_phase < 0.72F) {
-        float const t = easeInOutCubic((attack_phase - 0.52F) / 0.20F);
-        sword_dir = nlerp(downish, midish, t);
-      } else {
-        float const t = smoothstep(0.72F, 1.0F, attack_phase);
-        sword_dir = nlerp(midish, upish, t);
-      }
-    }
-
-    QVector3D const handle_end = grip_pos - sword_dir * 0.10F;
-    QVector3D const blade_base = grip_pos;
-    QVector3D const blade_tip = grip_pos + sword_dir * extras.swordLength;
-
-    out.mesh(
-        getUnitCylinder(),
-        cylinderBetween(ctx.model, handle_end, blade_base, extras.handleRadius),
-        v.palette.leather, nullptr, 1.0F);
-
-    QVector3D const guard_center = blade_base;
-    float const gw = extras.guard_half_width;
-
-    QVector3D guard_right =
-        QVector3D::crossProduct(QVector3D(0, 1, 0), sword_dir);
-    if (guard_right.lengthSquared() < 1e-6F) {
-      guard_right = QVector3D::crossProduct(QVector3D(1, 0, 0), sword_dir);
-    }
-    guard_right.normalize();
-
-    QVector3D const guard_l = guard_center - guard_right * gw;
-    QVector3D const guard_r = guard_center + guard_right * gw;
-
-    out.mesh(getUnitCylinder(),
-             cylinderBetween(ctx.model, guard_l, guard_r, 0.014F),
-             extras.metalColor, nullptr, 1.0F);
-
-    QMatrix4x4 gl = ctx.model;
-    gl.translate(guard_l);
-    gl.scale(0.018F);
-    out.mesh(getUnitSphere(), gl, extras.metalColor, nullptr, 1.0F);
-    QMatrix4x4 gr = ctx.model;
-    gr.translate(guard_r);
-    gr.scale(0.018F);
-    out.mesh(getUnitSphere(), gr, extras.metalColor, nullptr, 1.0F);
-
-    float const l = extras.swordLength;
-    float const base_w = extras.swordWidth;
-    float blade_thickness = base_w * 0.15F;
-
-    float const ricasso_len = clampf(extras.bladeRicasso, 0.10F, l * 0.30F);
-    QVector3D const ricasso_end = blade_base + sword_dir * ricasso_len;
-
-    float const mid_w = base_w * 0.95F;
-    float const tip_w = base_w * 0.28F;
-    float const tip_start_dist = lerp(ricasso_len, l, 0.70F);
-    QVector3D const tip_start = blade_base + sword_dir * tip_start_dist;
-
-    auto draw_flat_section = [&](const QVector3D &start, const QVector3D &end,
-                                 float width, const QVector3D &color) {
-      QVector3D right = QVector3D::crossProduct(sword_dir, QVector3D(0, 1, 0));
-      if (right.lengthSquared() < 0.001F) {
-        right = QVector3D::crossProduct(sword_dir, QVector3D(1, 0, 0));
-      }
-      right.normalize();
-
-      float const offset = width * 0.33F;
-
-      out.mesh(getUnitCylinder(),
-               cylinderBetween(ctx.model, start, end, blade_thickness), color,
-               nullptr, 1.0F);
-
-      out.mesh(getUnitCylinder(),
-               cylinderBetween(ctx.model, start + right * offset,
-                               end + right * offset, blade_thickness * 0.8F),
-               color * 0.92F, nullptr, 1.0F);
-
-      out.mesh(getUnitCylinder(),
-               cylinderBetween(ctx.model, start - right * offset,
-                               end - right * offset, blade_thickness * 0.8F),
-               color * 0.92F, nullptr, 1.0F);
-    };
-
-    draw_flat_section(blade_base, ricasso_end, base_w, extras.metalColor);
-
-    draw_flat_section(ricasso_end, tip_start, mid_w, extras.metalColor);
-
-    int const tip_segments = 3;
-    for (int i = 0; i < tip_segments; ++i) {
-      float const t0 = (float)i / tip_segments;
-      float const t1 = (float)(i + 1) / tip_segments;
-      QVector3D const seg_start =
-          tip_start + sword_dir * ((blade_tip - tip_start).length() * t0);
-      QVector3D const seg_end =
-          tip_start + sword_dir * ((blade_tip - tip_start).length() * t1);
-      float const w = lerp(mid_w, tip_w, t1);
-      out.mesh(getUnitCylinder(),
-               cylinderBetween(ctx.model, seg_start, seg_end, blade_thickness),
-               extras.metalColor * (1.0F - i * 0.03F), nullptr, 1.0F);
-    }
-
-    QVector3D const fuller_start =
-        blade_base + sword_dir * (ricasso_len + 0.02F);
-    QVector3D const fuller_end =
-        blade_base + sword_dir * (tip_start_dist - 0.06F);
-    out.mesh(getUnitCylinder(),
-             cylinderBetween(ctx.model, fuller_start, fuller_end,
-                             blade_thickness * 0.6F),
-             extras.metalColor * 0.65F, nullptr, 1.0F);
-
-    QVector3D const pommel = handle_end - sword_dir * 0.02F;
-    QMatrix4x4 pommel_mat = ctx.model;
-    pommel_mat.translate(pommel);
-    pommel_mat.scale(extras.pommelRadius);
-    out.mesh(getUnitSphere(), pommel_mat, extras.metalColor, nullptr, 1.0F);
-
-    if (is_attacking && attack_phase >= 0.32F && attack_phase < 0.56F) {
-      float const t = (attack_phase - 0.32F) / 0.24F;
-      float const alpha = clamp01(0.35F * (1.0F - t));
-      QVector3D const trail_start = blade_base - sword_dir * 0.05F;
-      QVector3D const trail_end = blade_base - sword_dir * (0.28F + 0.15F * t);
-      out.mesh(getUnitCone(),
-               coneFromTo(ctx.model, trail_end, trail_start, base_w * 0.9F),
-               extras.metalColor * 0.9F, nullptr, alpha);
-    }
-  }
-
-  static void drawShield(const DrawContext &ctx, const HumanoidPose &pose,
-                         const HumanoidVariant &v, const KnightExtras &extras,
-                         ISubmitter &out) {
-
-    constexpr float k_scale_factor = 2.5F;
-    constexpr float k_shield_yaw_degrees = -70.0F;
-
-    QMatrix4x4 rot;
-    rot.rotate(k_shield_yaw_degrees, 0.0F, 1.0F, 0.0F);
-
-    const QVector3D n = rot.map(QVector3D(0.0F, 0.0F, 1.0F));
-    const QVector3D axis_x = rot.map(QVector3D(1.0F, 0.0F, 0.0F));
-    const QVector3D axis_y = rot.map(QVector3D(0.0F, 1.0F, 0.0F));
-
-    float const base_extent = extras.shieldRadius * k_scale_factor;
-    float const shield_width = base_extent;
-    float const shield_height = base_extent * extras.shieldAspect;
-    float const min_extent = std::min(shield_width, shield_height);
-
-    QVector3D shield_center = pose.handL + axis_x * (-shield_width * 0.35F) +
-                              axis_y * (-0.05F) + n * (0.06F);
-
-    const float plate_half = 0.0015F;
-    const float plate_full = plate_half * 2.0F;
-
-    {
-      QMatrix4x4 m = ctx.model;
-      m.translate(shield_center + n * plate_half);
-      m.rotate(k_shield_yaw_degrees, 0.0F, 1.0F, 0.0F);
-      m.scale(shield_width, shield_height, plate_full);
-      out.mesh(getUnitCylinder(), m, extras.shieldColor, nullptr, 1.0F);
-    }
-
-    {
-      QMatrix4x4 m = ctx.model;
-      m.translate(shield_center - n * plate_half);
-      m.rotate(k_shield_yaw_degrees, 0.0F, 1.0F, 0.0F);
-      m.scale(shield_width * 0.985F, shield_height * 0.985F, plate_full);
-      out.mesh(getUnitCylinder(), m, v.palette.leather * 0.8F, nullptr, 1.0F);
-    }
-
-    auto draw_ring_rotated = [&](float width, float height, float thickness,
-                                 const QVector3D &color) {
-      constexpr int k_segments = 18;
-      for (int i = 0; i < k_segments; ++i) {
-        float const a0 =
-            (float)i / k_segments * 2.0F * std::numbers::pi_v<float>;
-        float const a1 =
-            (float)(i + 1) / k_segments * 2.0F * std::numbers::pi_v<float>;
-
-        QVector3D const v0(width * std::cos(a0), height * std::sin(a0), 0.0F);
-        QVector3D const v1(width * std::cos(a1), height * std::sin(a1), 0.0F);
-
-        QVector3D const p0 = shield_center + rot.map(v0);
-        QVector3D const p1 = shield_center + rot.map(v1);
-
-        out.mesh(getUnitCylinder(),
-                 cylinderBetween(ctx.model, p0, p1, thickness), color, nullptr,
-                 1.0F);
-      }
-    };
-
-    draw_ring_rotated(shield_width, shield_height, min_extent * 0.010F,
-                      extras.shieldTrimColor * 0.95F);
-    draw_ring_rotated(shield_width * 0.72F, shield_height * 0.72F,
-                      min_extent * 0.006F, v.palette.leather * 0.90F);
-
-    {
-      QMatrix4x4 m = ctx.model;
-      m.translate(shield_center + n * (0.02F * k_scale_factor));
-      m.scale(0.045F * k_scale_factor);
-      out.mesh(getUnitSphere(), m, extras.metalColor, nullptr, 1.0F);
-    }
-
-    {
-      QVector3D const grip_a = shield_center - axis_x * 0.035F - n * 0.030F;
-      QVector3D const grip_b = shield_center + axis_x * 0.035F - n * 0.030F;
-      out.mesh(getUnitCylinder(),
-               cylinderBetween(ctx.model, grip_a, grip_b, 0.010F),
-               v.palette.leather, nullptr, 1.0F);
-    }
-
-    if (extras.shieldCrossDecal) {
-      QVector3D const center_front =
-          shield_center + n * (plate_full * 0.5F + 0.0015F);
-      float const bar_radius = min_extent * 0.10F;
-
-      QVector3D const top = center_front + axis_y * (shield_height * 0.90F);
-      QVector3D const bot = center_front - axis_y * (shield_height * 0.90F);
-      out.mesh(getUnitCylinder(),
-               cylinderBetween(ctx.model, top, bot, bar_radius),
-               extras.shieldTrimColor, nullptr, 1.0F);
-
-      QVector3D const left = center_front - axis_x * (shield_width * 0.90F);
-      QVector3D const right = center_front + axis_x * (shield_width * 0.90F);
-      out.mesh(getUnitCylinder(),
-               cylinderBetween(ctx.model, left, right, bar_radius),
-               extras.shieldTrimColor, nullptr, 1.0F);
-    }
   }
 
   static void drawScabbard(const DrawContext &ctx, const HumanoidPose &,
