@@ -358,6 +358,7 @@ public:
       quiver_config.fletching_color = fletch;
       quiver_config.quiver_radius = HP::HEAD_RADIUS * 0.45F;
       
+      // Safe downcast - we know "quiver" is a QuiverRenderer
       auto *quiver_renderer = dynamic_cast<QuiverRenderer*>(quiver.get());
       if (quiver_renderer) {
         quiver_renderer->setConfig(quiver_config);
@@ -386,6 +387,7 @@ public:
         bow_config.fletching_color = saturate_color(*style.fletching_color);
       }
       
+      // Safe downcast - we know "bow" is a BowRenderer
       auto *bow_renderer = dynamic_cast<BowRenderer*>(bow.get());
       if (bow_renderer) {
         bow_renderer->setConfig(bow_config);
