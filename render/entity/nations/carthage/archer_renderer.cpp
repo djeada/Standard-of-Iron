@@ -188,8 +188,10 @@ public:
           0.15F - arm_asymmetry * 0.5F,
           HP::SHOULDER_Y + 0.15F + arm_height_jitter * 0.8F, 0.20F);
 
-      QVector3D const blended_hand_l = normal_hand_l * (1.0F - t) + hold_hand_l * t;
-      QVector3D const blended_hand_r = normal_hand_r * (1.0F - t) + hold_hand_r * t;
+      QVector3D const blended_hand_l =
+          normal_hand_l * (1.0F - t) + hold_hand_l * t;
+      QVector3D const blended_hand_r =
+          normal_hand_r * (1.0F - t) + hold_hand_r * t;
 
       controller.placeHandAt(true, blended_hand_l);
       controller.placeHandAt(false, blended_hand_r);
@@ -197,9 +199,9 @@ public:
       QVector3D const idle_hand_l(bow_x - 0.05F + arm_asymmetry,
                                   HP::SHOULDER_Y + 0.05F + arm_height_jitter,
                                   0.55F);
-      QVector3D const idle_hand_r(0.15F - arm_asymmetry * 0.5F,
-                                  HP::SHOULDER_Y + 0.15F + arm_height_jitter * 0.8F,
-                                  0.20F);
+      QVector3D const idle_hand_r(
+          0.15F - arm_asymmetry * 0.5F,
+          HP::SHOULDER_Y + 0.15F + arm_height_jitter * 0.8F, 0.20F);
 
       controller.placeHandAt(true, idle_hand_l);
       controller.placeHandAt(false, idle_hand_r);
@@ -273,7 +275,8 @@ public:
           head_recoil = 0.04F * (1.0F - t);
         }
 
-        QVector3D const hand_l_target(bow_x - 0.05F, HP::SHOULDER_Y + 0.05F, 0.55F);
+        QVector3D const hand_l_target(bow_x - 0.05F, HP::SHOULDER_Y + 0.05F,
+                                      0.55F);
 
         controller.placeHandAt(true, hand_l_target);
         controller.placeHandAt(false, hand_r_target);
@@ -379,12 +382,12 @@ public:
   }
 
   void drawArmor(const DrawContext &ctx, const HumanoidVariant &v,
-                 const HumanoidPose &pose,
-                 const HumanoidAnimationContext &anim,
+                 const HumanoidPose &pose, const HumanoidAnimationContext &anim,
                  ISubmitter &out) const override {
     if (resolve_style(ctx).show_armor) {
       auto &registry = EquipmentRegistry::instance();
-      auto armor = registry.get(EquipmentCategory::Armor, "carthage_light_armor");
+      auto armor =
+          registry.get(EquipmentCategory::Armor, "carthage_light_armor");
       if (armor) {
         armor->render(ctx, pose.bodyFrames, v.palette, anim, out);
       }
