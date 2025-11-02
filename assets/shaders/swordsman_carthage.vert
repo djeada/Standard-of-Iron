@@ -10,7 +10,8 @@ uniform mat4 u_model;
 out vec3 v_normal;
 out vec2 v_texCoord;
 out vec3 v_worldPos;
-out float v_armorLayer; // Distinguish armor pieces for Carthaginian sacred band swordsman
+out float v_armorLayer; // Distinguish armor pieces for Carthaginian sacred band
+                        // swordsman
 
 void main() {
   v_normal = mat3(transpose(inverse(u_model))) * a_normal;

@@ -264,7 +264,7 @@ public:
 
   void drawHelmet(const DrawContext &ctx, const HumanoidVariant &v,
                   const HumanoidPose &pose, ISubmitter &out) const override {
-    // Use Roman heavy helmet from equipment registry
+
     auto &registry = EquipmentRegistry::instance();
     auto helmet = registry.get(EquipmentCategory::Helmet, "roman_heavy");
     if (helmet) {
