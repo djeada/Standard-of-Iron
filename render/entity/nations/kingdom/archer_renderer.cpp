@@ -326,6 +326,19 @@ public:
     }
   }
 
+  void drawArmor(const DrawContext &ctx, const HumanoidVariant &v,
+                 const HumanoidPose &pose,
+                 const HumanoidAnimationContext &anim,
+                 ISubmitter &out) const override {
+    if (resolve_style(ctx).show_armor) {
+      auto &registry = EquipmentRegistry::instance();
+      auto armor = registry.get(EquipmentCategory::Armor, "light_tunic");
+      if (armor) {
+        armor->render(ctx, pose.bodyFrames, v.palette, anim, out);
+      }
+    }
+  }
+
   void draw_armorOverlay(const DrawContext &ctx, const HumanoidVariant &v,
                          const HumanoidPose &pose, float y_top_cover,
                          float torso_r, float, float upper_arm_r,
