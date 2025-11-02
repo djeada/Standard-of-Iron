@@ -368,9 +368,9 @@ public:
     }
 
     // Render bow using equipment registry
-    auto bow = registry.get(EquipmentCategory::Weapon, "bow");
+    auto bow = registry.get(EquipmentCategory::Weapon, "bow_carthage");
     if (bow) {
-      // Configure bow with appropriate colors and dimensions
+      // Configure Carthaginian composite recurve bow
       BowRenderConfig bow_config;
       bow_config.string_color = QVector3D(0.30F, 0.30F, 0.32F);
       bow_config.metal_color = Render::Geom::clampVec01(v.palette.metal * 1.15F);
@@ -378,6 +378,9 @@ public:
       bow_config.bow_top_y = HP::SHOULDER_Y + 0.55F;
       bow_config.bow_bot_y = HP::WAIST_Y - 0.25F;
       bow_config.bow_x = 0.0F;
+      bow_config.bow_depth = 0.28F;          // Composite bows have more curve
+      bow_config.bow_curve_factor = 1.2F;    // Pronounced recurve
+      bow_config.bow_height_scale = 0.95F;   // Slightly shorter than longbow
       
       // Apply style overrides if available
       if (style.bow_string_color) {
