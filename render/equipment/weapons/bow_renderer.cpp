@@ -38,19 +38,12 @@ void BowRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
   QVector3D const bot_end(m_config.bow_x, m_config.bow_bot_y, bow_plane_z);
 
   // Calculate nock position (where arrow attaches to string)
-  // During draw, it follows the right hand
-  QVector3D nock;
-  bool const is_bow_attacking = anim.inputs.is_attacking && !anim.inputs.isMelee;
-  
-  if (is_bow_attacking) {
-    QVector3D const right_hand = frames.handR.origin;
-    nock = QVector3D(
-        m_config.bow_x,
-        clampf(right_hand.y(), m_config.bow_bot_y + 0.05F, m_config.bow_top_y - 0.05F),
-        clampf(right_hand.z(), bow_plane_z - 0.30F, bow_plane_z + 0.30F));
-  } else {
-    nock = grip;
-  }
+  // The nock follows the right hand, clamped to bow bounds
+  QVector3D const right_hand = frames.handR.origin;
+  QVector3D const nock(
+      m_config.bow_x,
+      clampf(right_hand.y(), m_config.bow_bot_y + 0.05F, m_config.bow_top_y - 0.05F),
+      clampf(right_hand.z(), bow_plane_z - 0.30F, bow_plane_z + 0.30F));
 
   // Draw the bow arc using quadratic bezier
   constexpr int k_bowstring_segments = 22;
@@ -90,6 +83,7 @@ void BowRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
                  m_config.string_color, nullptr, 1.0F);
 
   // Draw string from right hand to nock (when drawn)
+  bool const is_bow_attacking = anim.inputs.is_attacking && !anim.inputs.isMelee;
   if (is_bow_attacking) {
     submitter.mesh(getUnitCylinder(),
                    cylinderBetween(ctx.model, frames.handR.origin, nock, 0.0045F),
