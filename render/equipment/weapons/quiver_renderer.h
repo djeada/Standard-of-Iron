@@ -25,6 +25,8 @@ public:
               const HumanoidAnimationContext &anim,
               ISubmitter &submitter) override;
 
+  void setConfig(const QuiverRenderConfig &config) { m_config = config; }
+
 private:
   QuiverRenderConfig m_config;
 };
