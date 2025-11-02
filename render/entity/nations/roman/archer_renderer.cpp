@@ -325,88 +325,25 @@ public:
     using HP = HumanProportions;
 
     auto const &style = resolve_style(ctx);
+    auto &registry = EquipmentRegistry::instance();
+    HumanoidAnimationContext anim_ctx{};
+
     if (!style.show_helmet) {
       if (style.attachment_profile == std::string(k_attachment_headwrap)) {
-        draw_headwrap(ctx, v, pose, out);
+        // Use headwrap helmet from equipment registry
+        auto headwrap = registry.get(EquipmentCategory::Helmet, "headwrap");
+        if (headwrap) {
+          headwrap->render(ctx, pose.bodyFrames, v.palette, anim_ctx, out);
+        }
       }
       return;
     }
 
-    const AttachmentFrame &head = pose.bodyFrames.head;
-    float const head_r = head.radius;
-    if (head_r <= 0.0F) {
-      return;
+    // Use Roman light helmet from equipment registry
+    auto helmet = registry.get(EquipmentCategory::Helmet, "roman_light");
+    if (helmet) {
+      helmet->render(ctx, pose.bodyFrames, v.palette, anim_ctx, out);
     }
-
-    auto headPoint = [&](const QVector3D &normalized) -> QVector3D {
-      return frameLocalPosition(head, normalized);
-    };
-
-    QVector3D const helmet_color =
-        v.palette.metal * QVector3D(1.08F, 0.98F, 0.78F);
-    QVector3D const helmet_accent = helmet_color * 1.12F;
-
-    QVector3D const helmet_top = headPoint(QVector3D(0.0F, 1.28F, 0.0F));
-    QVector3D const helmet_bot = headPoint(QVector3D(0.0F, 0.08F, 0.0F));
-    float const helmet_r = head_r * 1.10F;
-
-    out.mesh(getUnitCylinder(),
-             cylinderBetween(ctx.model, helmet_bot, helmet_top, helmet_r),
-             helmet_color, nullptr, 1.0F);
-
-    QVector3D const apex_pos = headPoint(QVector3D(0.0F, 1.48F, 0.0F));
-    out.mesh(getUnitCone(),
-             coneFromTo(ctx.model, helmet_top, apex_pos, helmet_r * 0.97F),
-             helmet_accent, nullptr, 1.0F);
-
-    auto ring = [&](float y_offset, float r_scale, float h, const QVector3D &col) {
-      QVector3D const center = headPoint(QVector3D(0.0F, y_offset, 0.0F));
-      QVector3D const a = center + head.up * (h * 0.5F);
-      QVector3D const b = center - head.up * (h * 0.5F);
-      out.mesh(getUnitCylinder(), cylinderBetween(ctx.model, a, b, helmet_r * r_scale), col,
-               nullptr, 1.0F);
-    };
-
-    ring(0.35F, 1.07F, 0.020F, helmet_accent);
-    ring(0.65F, 1.03F, 0.015F, helmet_color * 1.05F);
-    ring(0.95F, 1.01F, 0.012F, helmet_color * 1.03F);
-
-    float const cheek_w = head_r * 0.48F;
-    QVector3D const cheek_top = headPoint(QVector3D(0.0F, 0.22F, 0.0F));
-    QVector3D const cheek_bot = headPoint(QVector3D(0.0F, -0.42F, 0.0F));
-
-    QVector3D const cheek_ltop = cheek_top + head.right * (-cheek_w / head_r) + head.forward * 0.38F;
-    QVector3D const cheek_lbot = cheek_bot + head.right * (-cheek_w * 0.82F / head_r) + head.forward * 0.28F;
-    out.mesh(getUnitCylinder(),
-             cylinderBetween(ctx.model, cheek_lbot, cheek_ltop, 0.028F),
-             helmet_color * 0.96F, nullptr, 1.0F);
-
-    QVector3D const cheek_rtop = cheek_top + head.right * (cheek_w / head_r) + head.forward * 0.38F;
-    QVector3D const cheek_rbot = cheek_bot + head.right * (cheek_w * 0.82F / head_r) + head.forward * 0.28F;
-    out.mesh(getUnitCylinder(),
-             cylinderBetween(ctx.model, cheek_rbot, cheek_rtop, 0.028F),
-             helmet_color * 0.96F, nullptr, 1.0F);
-
-    QVector3D const neck_guard_top = headPoint(QVector3D(0.0F, 0.03F, -0.82F));
-    QVector3D const neck_guard_bot = headPoint(QVector3D(0.0F, -0.32F, -0.88F));
-    out.mesh(getUnitCylinder(),
-             cylinderBetween(ctx.model, neck_guard_bot, neck_guard_top,
-                             helmet_r * 0.88F),
-             helmet_color * 0.93F, nullptr, 1.0F);
-
-    QVector3D const crest_base = apex_pos;
-    QVector3D const crest_mid = crest_base + head.up * 0.09F;
-    QVector3D const crest_top = crest_mid + head.up * 0.12F;
-
-    out.mesh(getUnitCylinder(),
-             cylinderBetween(ctx.model, crest_base, crest_mid, 0.018F),
-             helmet_accent, nullptr, 1.0F);
-
-    out.mesh(getUnitCone(), coneFromTo(ctx.model, crest_mid, crest_top, 0.042F),
-             QVector3D(0.88F, 0.18F, 0.18F), nullptr, 1.0F);
-
-    out.mesh(getUnitSphere(), sphereAt(ctx.model, crest_top, 0.020F),
-             helmet_accent, nullptr, 1.0F);
   }
 
   void draw_armorOverlay(const DrawContext &ctx, const HumanoidVariant &v,
@@ -678,40 +615,6 @@ private:
     apply_color(style.leather_dark_color, variant.palette.leatherDark);
     apply_color(style.metal_color, variant.palette.metal);
     apply_color(style.wood_color, variant.palette.wood);
-  }
-
-  void draw_headwrap(const DrawContext &ctx, const HumanoidVariant &v,
-                     const HumanoidPose &pose, ISubmitter &out) const {
-    const AttachmentFrame &head = pose.bodyFrames.head;
-    float const head_r = head.radius;
-    if (head_r <= 0.0F) {
-      return;
-    }
-
-    auto headPoint = [&](const QVector3D &normalized) -> QVector3D {
-      return frameLocalPosition(head, normalized);
-    };
-
-    QVector3D const cloth_color =
-        saturate_color(v.palette.cloth * QVector3D(0.9F, 1.05F, 1.05F));
-
-    QVector3D const band_top = headPoint(QVector3D(0.0F, 0.70F, 0.0F));
-    QVector3D const band_bot = headPoint(QVector3D(0.0F, 0.30F, 0.0F));
-    out.mesh(getUnitCylinder(),
-             cylinderBetween(ctx.model, band_bot, band_top, head_r * 1.08F),
-             cloth_color, nullptr, 1.0F);
-
-    QVector3D const knot_center = headPoint(QVector3D(0.10F, 0.60F, 0.72F));
-    QMatrix4x4 knot_m = ctx.model;
-    knot_m.translate(knot_center);
-    knot_m.scale(head_r * 0.32F);
-    out.mesh(getUnitSphere(), knot_m, cloth_color * 1.05F, nullptr, 1.0F);
-
-    QVector3D const tail_top = knot_center + head.right * (-0.08F) + head.up * (-0.05F) + head.forward * (-0.06F);
-    QVector3D const tail_bot = tail_top + head.right * 0.02F + head.up * (-0.28F) + head.forward * (-0.08F);
-    out.mesh(getUnitCylinder(),
-             cylinderBetween(ctx.model, tail_top, tail_bot, head_r * 0.28F),
-             cloth_color * QVector3D(0.92F, 0.98F, 1.05F), nullptr, 1.0F);
   }
 };
 
