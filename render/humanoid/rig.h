@@ -223,6 +223,11 @@ public:
   virtual void drawHelmet(const DrawContext &ctx, const HumanoidVariant &v,
                           const HumanoidPose &pose, ISubmitter &out) const;
 
+  virtual void drawArmor(const DrawContext &ctx, const HumanoidVariant &v,
+                         const HumanoidPose &pose,
+                         const HumanoidAnimationContext &anim,
+                         ISubmitter &out) const;
+
   virtual void draw_armorOverlay(const DrawContext &ctx,
                                  const HumanoidVariant &v,
                                  const HumanoidPose &pose, float y_top_cover,
