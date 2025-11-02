@@ -71,6 +71,7 @@ add_library(render_gl STATIC
     humanoid/pose_controller.cpp
     equipment/equipment_registry.cpp
     equipment/register_equipment.cpp
+    equipment/armor/tunic_renderer.cpp
     equipment/weapons/bow_renderer.cpp
     equipment/weapons/quiver_renderer.cpp
     equipment/helmets/montefortino_helmet.cpp

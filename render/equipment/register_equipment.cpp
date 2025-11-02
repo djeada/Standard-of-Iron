@@ -1,4 +1,5 @@
 #include "equipment_registry.h"
+#include "armor/tunic_renderer.h"
 #include "helmets/headwrap.h"
 #include "helmets/kingdom_heavy_helmet.h"
 #include "helmets/kingdom_light_helmet.h"
@@ -69,6 +70,27 @@ void registerBuiltInEquipment() {
   auto kingdom_light = std::make_shared<KingdomLightHelmetRenderer>();
   registry.registerEquipment(EquipmentCategory::Helmet, "kingdom_light",
                              kingdom_light);
+
+  auto tunic = std::make_shared<TunicRenderer>();
+  registry.registerEquipment(EquipmentCategory::Armor, "tunic", tunic);
+
+  TunicConfig heavy_config;
+  heavy_config.torso_scale = 1.08F;
+  heavy_config.include_pauldrons = true;
+  heavy_config.include_gorget = true;
+  heavy_config.include_belt = true;
+  auto heavy_tunic = std::make_shared<TunicRenderer>(heavy_config);
+  registry.registerEquipment(EquipmentCategory::Armor, "heavy_tunic",
+                             heavy_tunic);
+
+  TunicConfig light_config;
+  light_config.torso_scale = 1.04F;
+  light_config.include_pauldrons = false;
+  light_config.include_gorget = false;
+  light_config.include_belt = true;
+  auto light_tunic = std::make_shared<TunicRenderer>(light_config);
+  registry.registerEquipment(EquipmentCategory::Armor, "light_tunic",
+                             light_tunic);
 }
 
 } // namespace Render::GL
