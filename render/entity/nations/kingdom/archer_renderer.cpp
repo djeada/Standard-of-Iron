@@ -378,7 +378,7 @@ public:
                nullptr, 1.0F);
     };
 
-    ring(0.13F, 1.42F * 1.01F / head_r, steel_color);
+    ring(0.13F, 1.42F * 1.01F, steel_color);
 
     QMatrix4x4 rivet_m = ctx.model;
     rivet_m.translate(headPoint(QVector3D(0.0F, 1.15F, 0.0F)));
