@@ -70,6 +70,9 @@ add_library(render_gl STATIC
     humanoid/style_palette.cpp
     humanoid/pose_controller.cpp
     equipment/equipment_registry.cpp
+    equipment/register_equipment.cpp
+    equipment/weapons/bow_renderer.cpp
+    equipment/weapons/quiver_renderer.cpp
 )
 
 target_include_directories(render_gl PUBLIC .)
