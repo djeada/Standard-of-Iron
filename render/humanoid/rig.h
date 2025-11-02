@@ -245,6 +245,24 @@ public:
 
   void render(const DrawContext &ctx, ISubmitter &out) const;
 
+  // Frame coordinate transformation helpers (public for testing and external use)
+  static auto frameLocalPosition(const AttachmentFrame &frame,
+                                 const QVector3D &local) -> QVector3D;
+
+  static auto makeFrameLocalTransform(const QMatrix4x4 &parent,
+                                      const AttachmentFrame &frame,
+                                      const QVector3D &local_offset,
+                                      float uniform_scale) -> QMatrix4x4;
+
+  // Legacy helpers for backward compatibility
+  static auto headLocalPosition(const HeadFrame &frame,
+                                const QVector3D &local) -> QVector3D;
+
+  static auto makeHeadLocalTransform(const QMatrix4x4 &parent,
+                                     const HeadFrame &frame,
+                                     const QVector3D &local_offset,
+                                     float uniform_scale) -> QMatrix4x4;
+
 protected:
   mutable QVector3D m_cachedProportionScale;
   mutable bool m_proportionScaleCached = false;
@@ -264,23 +282,6 @@ protected:
 
   void drawCommonBody(const DrawContext &ctx, const HumanoidVariant &v,
                       HumanoidPose &pose, ISubmitter &out) const;
-
-  static auto frameLocalPosition(const AttachmentFrame &frame,
-                                 const QVector3D &local) -> QVector3D;
-
-  static auto makeFrameLocalTransform(const QMatrix4x4 &parent,
-                                      const AttachmentFrame &frame,
-                                      const QVector3D &local_offset,
-                                      float uniform_scale) -> QMatrix4x4;
-
-  // Legacy helpers for backward compatibility
-  static auto headLocalPosition(const HeadFrame &frame,
-                                const QVector3D &local) -> QVector3D;
-
-  static auto makeHeadLocalTransform(const QMatrix4x4 &parent,
-                                     const HeadFrame &frame,
-                                     const QVector3D &local_offset,
-                                     float uniform_scale) -> QMatrix4x4;
 };
 
 } // namespace Render::GL
