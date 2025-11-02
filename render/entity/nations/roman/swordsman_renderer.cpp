@@ -9,6 +9,7 @@
 #include "../../../gl/shader.h"
 #include "../../../humanoid/humanoid_math.h"
 #include "../../../humanoid/humanoid_specs.h"
+#include "../../../humanoid/pose_controller.h"
 #include "../../../humanoid/rig.h"
 #include "../../../humanoid/style_palette.h"
 #include "../../../palette.h"
@@ -116,6 +117,7 @@ public:
     using HP = HumanProportions;
 
     const AnimationInputs &anim = anim_ctx.inputs;
+    HumanoidPoseController controller(pose, anim_ctx);
 
     float const arm_height_jitter = (hash_01(seed ^ 0xABCDU) - 0.5F) * 0.03F;
     float const arm_asymmetry = (hash_01(seed ^ 0xDEF0U) - 0.5F) * 0.04F;
@@ -130,46 +132,50 @@ public:
       QVector3D const strike_pos(0.30F, HP::WAIST_Y - 0.05F, 0.50F);
       QVector3D const recover_pos(0.22F, HP::SHOULDER_Y + 0.02F, 0.22F);
 
-      if (attack_phase < 0.18F) {
+      QVector3D hand_r_target;
+      QVector3D hand_l_target;
 
+      if (attack_phase < 0.18F) {
         float const t = easeInOutCubic(attack_phase / 0.18F);
-        pose.hand_r = rest_pos * (1.0F - t) + prepare_pos * t;
-        pose.handL =
+        hand_r_target = rest_pos * (1.0F - t) + prepare_pos * t;
+        hand_l_target =
             QVector3D(-0.21F, HP::SHOULDER_Y - 0.02F - 0.03F * t, 0.15F);
       } else if (attack_phase < 0.32F) {
-
         float const t = easeInOutCubic((attack_phase - 0.18F) / 0.14F);
-        pose.hand_r = prepare_pos * (1.0F - t) + raised_pos * t;
-        pose.handL = QVector3D(-0.21F, HP::SHOULDER_Y - 0.05F, 0.17F);
+        hand_r_target = prepare_pos * (1.0F - t) + raised_pos * t;
+        hand_l_target = QVector3D(-0.21F, HP::SHOULDER_Y - 0.05F, 0.17F);
       } else if (attack_phase < 0.52F) {
-
         float t = (attack_phase - 0.32F) / 0.20F;
         t = t * t * t;
-        pose.hand_r = raised_pos * (1.0F - t) + strike_pos * t;
-        pose.handL =
+        hand_r_target = raised_pos * (1.0F - t) + strike_pos * t;
+        hand_l_target =
             QVector3D(-0.21F, HP::SHOULDER_Y - 0.03F * (1.0F - 0.5F * t),
                       0.17F + 0.20F * t);
       } else if (attack_phase < 0.72F) {
-
         float const t = easeInOutCubic((attack_phase - 0.52F) / 0.20F);
-        pose.hand_r = strike_pos * (1.0F - t) + recover_pos * t;
-        pose.handL = QVector3D(-0.20F, HP::SHOULDER_Y - 0.015F * (1.0F - t),
-                               lerp(0.37F, 0.20F, t));
+        hand_r_target = strike_pos * (1.0F - t) + recover_pos * t;
+        hand_l_target = QVector3D(-0.20F, HP::SHOULDER_Y - 0.015F * (1.0F - t),
+                                  lerp(0.37F, 0.20F, t));
       } else {
-
         float const t = smoothstep(0.72F, 1.0F, attack_phase);
-        pose.hand_r = recover_pos * (1.0F - t) + rest_pos * t;
-        pose.handL = QVector3D(-0.20F - 0.02F * (1.0F - t),
-                               HP::SHOULDER_Y + arm_height_jitter * (1.0F - t),
-                               lerp(0.20F, 0.15F, t));
+        hand_r_target = recover_pos * (1.0F - t) + rest_pos * t;
+        hand_l_target = QVector3D(-0.20F - 0.02F * (1.0F - t),
+                                  HP::SHOULDER_Y + arm_height_jitter * (1.0F - t),
+                                  lerp(0.20F, 0.15F, t));
       }
-    } else {
 
-      pose.hand_r =
-          QVector3D(0.30F + arm_asymmetry,
-                    HP::SHOULDER_Y - 0.02F + arm_height_jitter, 0.35F);
-      pose.handL = QVector3D(-0.22F - 0.5F * arm_asymmetry,
-                             HP::SHOULDER_Y + 0.5F * arm_height_jitter, 0.18F);
+      controller.placeHandAt(false, hand_r_target);
+      controller.placeHandAt(true, hand_l_target);
+    } else {
+      QVector3D const idle_hand_r(0.30F + arm_asymmetry,
+                                  HP::SHOULDER_Y - 0.02F + arm_height_jitter,
+                                  0.35F);
+      QVector3D const idle_hand_l(-0.22F - 0.5F * arm_asymmetry,
+                                  HP::SHOULDER_Y + 0.5F * arm_height_jitter,
+                                  0.18F);
+
+      controller.placeHandAt(false, idle_hand_r);
+      controller.placeHandAt(true, idle_hand_l);
     }
   }
 
