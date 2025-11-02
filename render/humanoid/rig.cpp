@@ -40,23 +40,23 @@ constexpr float k_reference_run_speed = 5.10F;
 
 } // namespace
 
-auto HumanoidRendererBase::headLocalPosition(
-    const HeadFrame &frame, const QVector3D &local) -> QVector3D {
+auto HumanoidRendererBase::frameLocalPosition(
+    const AttachmentFrame &frame, const QVector3D &local) -> QVector3D {
   float const lx = local.x() * frame.radius;
   float const ly = local.y() * frame.radius;
   float const lz = local.z() * frame.radius;
   return frame.origin + frame.right * lx + frame.up * ly + frame.forward * lz;
 }
 
-auto HumanoidRendererBase::makeHeadLocalTransform(
-    const QMatrix4x4 &parent, const HeadFrame &frame,
+auto HumanoidRendererBase::makeFrameLocalTransform(
+    const QMatrix4x4 &parent, const AttachmentFrame &frame,
     const QVector3D &local_offset, float uniform_scale) -> QMatrix4x4 {
   float scale = frame.radius * uniform_scale;
   if (scale == 0.0F) {
     scale = uniform_scale;
   }
 
-  QVector3D const origin = headLocalPosition(frame, local_offset);
+  QVector3D const origin = frameLocalPosition(frame, local_offset);
 
   QMatrix4x4 local;
   local.setColumn(0, QVector4D(frame.right * scale, 0.0F));
@@ -64,6 +64,18 @@ auto HumanoidRendererBase::makeHeadLocalTransform(
   local.setColumn(2, QVector4D(frame.forward * scale, 0.0F));
   local.setColumn(3, QVector4D(origin, 1.0F));
   return parent * local;
+}
+
+// Legacy backward-compatible wrappers
+auto HumanoidRendererBase::headLocalPosition(
+    const HeadFrame &frame, const QVector3D &local) -> QVector3D {
+  return frameLocalPosition(frame, local);
+}
+
+auto HumanoidRendererBase::makeHeadLocalTransform(
+    const QMatrix4x4 &parent, const HeadFrame &frame,
+    const QVector3D &local_offset, float uniform_scale) -> QMatrix4x4 {
+  return makeFrameLocalTransform(parent, frame, local_offset, uniform_scale);
 }
 
 void HumanoidRendererBase::getVariant(const DrawContext &ctx, uint32_t seed,
@@ -420,6 +432,16 @@ void HumanoidRendererBase::drawCommonBody(const DrawContext &ctx,
 
   const float y_top_cover = std::max(y_shoulder + 0.04F, y_neck + 0.00F);
 
+  const float upper_arm_r = HP::UPPER_ARM_R * width_scale;
+  const float fore_arm_r = HP::FORE_ARM_R * width_scale;
+  const float joint_r = HP::HAND_RADIUS * width_scale * 1.05F;
+  const float hand_r = HP::HAND_RADIUS * width_scale * 0.95F;
+
+  const float leg_joint_r = HP::LOWER_LEG_R * width_scale * 0.95F;
+  const float thigh_r = HP::UPPER_LEG_R * width_scale;
+  const float shin_r = HP::LOWER_LEG_R * width_scale;
+  const float foot_radius = shin_r * 1.10F;
+
   QVector3D const tunic_top{0.0F, y_top_cover - 0.006F, 0.0F};
 
   QVector3D const tunic_bot{0.0F, pose.pelvisPos.y() + 0.03F, 0.0F};
@@ -479,26 +501,140 @@ void HumanoidRendererBase::drawCommonBody(const DrawContext &ctx,
   pose.headFrame.forward = head_forward;
   pose.headFrame.radius = head_r;
 
+  // Populate all body frames
+  pose.bodyFrames.head = pose.headFrame;
+
+  // Torso frame (centered at shoulder level)
+  pose.bodyFrames.torso.origin = QVector3D(0.0F, y_shoulder, 0.0F);
+  pose.bodyFrames.torso.right = right_axis;
+  pose.bodyFrames.torso.up = up_axis;
+  pose.bodyFrames.torso.forward = forward_axis;
+  pose.bodyFrames.torso.radius = torso_r;
+
+  // Back frame (behind torso)
+  pose.bodyFrames.back.origin = QVector3D(0.0F, y_shoulder, 0.0F) - forward_axis * (torso_r * 0.65F);
+  pose.bodyFrames.back.right = right_axis;
+  pose.bodyFrames.back.up = up_axis;
+  pose.bodyFrames.back.forward = -forward_axis;  // Facing backward
+  pose.bodyFrames.back.radius = torso_r * 0.8F;
+
+  // Waist frame
+  pose.bodyFrames.waist.origin = pose.pelvisPos;
+  pose.bodyFrames.waist.right = right_axis;
+  pose.bodyFrames.waist.up = up_axis;
+  pose.bodyFrames.waist.forward = forward_axis;
+  pose.bodyFrames.waist.radius = torso_r * 0.85F;
+
+  // Shoulder frames
+  QVector3D shoulder_up = (pose.shoulderL - pose.pelvisPos).normalized();
+  QVector3D shoulder_forward_l = QVector3D::crossProduct(-right_axis, shoulder_up);
+  if (shoulder_forward_l.lengthSquared() < 1e-8F) {
+    shoulder_forward_l = forward_axis;
+  } else {
+    shoulder_forward_l.normalize();
+  }
+  
+  pose.bodyFrames.shoulderL.origin = pose.shoulderL;
+  pose.bodyFrames.shoulderL.right = -right_axis;
+  pose.bodyFrames.shoulderL.up = shoulder_up;
+  pose.bodyFrames.shoulderL.forward = shoulder_forward_l;
+  pose.bodyFrames.shoulderL.radius = upper_arm_r;
+
+  QVector3D shoulder_forward_r = QVector3D::crossProduct(right_axis, shoulder_up);
+  if (shoulder_forward_r.lengthSquared() < 1e-8F) {
+    shoulder_forward_r = forward_axis;
+  } else {
+    shoulder_forward_r.normalize();
+  }
+
+  pose.bodyFrames.shoulderR.origin = pose.shoulderR;
+  pose.bodyFrames.shoulderR.right = right_axis;
+  pose.bodyFrames.shoulderR.up = shoulder_up;
+  pose.bodyFrames.shoulderR.forward = shoulder_forward_r;
+  pose.bodyFrames.shoulderR.radius = upper_arm_r;
+
+  // Hand frames
+  QVector3D hand_up_l = (pose.handL - pose.elbowL);
+  if (hand_up_l.lengthSquared() > 1e-8F) {
+    hand_up_l.normalize();
+  } else {
+    hand_up_l = up_axis;
+  }
+  QVector3D hand_forward_l = QVector3D::crossProduct(-right_axis, hand_up_l);
+  if (hand_forward_l.lengthSquared() < 1e-8F) {
+    hand_forward_l = forward_axis;
+  } else {
+    hand_forward_l.normalize();
+  }
+
+  pose.bodyFrames.handL.origin = pose.handL;
+  pose.bodyFrames.handL.right = -right_axis;
+  pose.bodyFrames.handL.up = hand_up_l;
+  pose.bodyFrames.handL.forward = hand_forward_l;
+  pose.bodyFrames.handL.radius = hand_r;
+
+  QVector3D hand_up_r = (pose.hand_r - pose.elbowR);
+  if (hand_up_r.lengthSquared() > 1e-8F) {
+    hand_up_r.normalize();
+  } else {
+    hand_up_r = up_axis;
+  }
+  QVector3D hand_forward_r = QVector3D::crossProduct(right_axis, hand_up_r);
+  if (hand_forward_r.lengthSquared() < 1e-8F) {
+    hand_forward_r = forward_axis;
+  } else {
+    hand_forward_r.normalize();
+  }
+
+  pose.bodyFrames.handR.origin = pose.hand_r;
+  pose.bodyFrames.handR.right = right_axis;
+  pose.bodyFrames.handR.up = hand_up_r;
+  pose.bodyFrames.handR.forward = hand_forward_r;
+  pose.bodyFrames.handR.radius = hand_r;
+
+  // Foot frames
+  QVector3D foot_up_l = up_axis;
+  QVector3D foot_forward_l = forward_axis - right_axis * 0.12F;
+  if (foot_forward_l.lengthSquared() > 1e-8F) {
+    foot_forward_l.normalize();
+  } else {
+    foot_forward_l = forward_axis;
+  }
+
+  pose.bodyFrames.footL.origin = pose.footL;
+  pose.bodyFrames.footL.right = -right_axis;
+  pose.bodyFrames.footL.up = foot_up_l;
+  pose.bodyFrames.footL.forward = foot_forward_l;
+  pose.bodyFrames.footL.radius = foot_radius;
+
+  QVector3D foot_forward_r = forward_axis + right_axis * 0.12F;
+  if (foot_forward_r.lengthSquared() > 1e-8F) {
+    foot_forward_r.normalize();
+  } else {
+    foot_forward_r = forward_axis;
+  }
+
+  pose.bodyFrames.footR.origin = pose.foot_r;
+  pose.bodyFrames.footR.right = right_axis;
+  pose.bodyFrames.footR.up = foot_up_l;
+  pose.bodyFrames.footR.forward = foot_forward_r;
+  pose.bodyFrames.footR.radius = foot_radius;
+
   QVector3D const iris = QVector3D(0.10F, 0.10F, 0.12F);
   auto eyePosition = [&](float lateral) {
     QVector3D const local(lateral, 0.12F, 0.92F);
-    QVector3D world = headLocalPosition(pose.headFrame, local);
-    world += pose.headFrame.forward * (pose.headFrame.radius * 0.02F);
+    QVector3D world = frameLocalPosition(pose.bodyFrames.head, local);
+    world += pose.bodyFrames.head.forward * (pose.bodyFrames.head.radius * 0.02F);
     return world;
   };
   QVector3D const left_eye_world = eyePosition(-0.32F);
   QVector3D const right_eye_world = eyePosition(0.32F);
-  float const eye_radius = pose.headFrame.radius * 0.17F;
+  float const eye_radius = pose.bodyFrames.head.radius * 0.17F;
 
   out.mesh(getUnitSphere(), sphereAt(ctx.model, left_eye_world, eye_radius),
            iris, nullptr, 1.0F);
   out.mesh(getUnitSphere(), sphereAt(ctx.model, right_eye_world, eye_radius),
            iris, nullptr, 1.0F);
-
-  const float upper_arm_r = HP::UPPER_ARM_R * width_scale;
-  const float fore_arm_r = HP::FORE_ARM_R * width_scale;
-  const float joint_r = HP::HAND_RADIUS * width_scale * 1.05F;
-  const float hand_r = HP::HAND_RADIUS * width_scale * 0.95F;
 
   out.mesh(getUnitCylinder(),
            cylinderBetween(ctx.model, pose.shoulderL, pose.elbowL, upper_arm_r),
@@ -521,11 +657,6 @@ void HumanoidRendererBase::drawCommonBody(const DrawContext &ctx,
            v.palette.skin * 0.95F, nullptr, 1.0F);
   out.mesh(getUnitSphere(), sphereAt(ctx.model, pose.hand_r, hand_r),
            v.palette.leatherDark * 0.92F, nullptr, 1.0F);
-
-  const float leg_joint_r = HP::LOWER_LEG_R * width_scale * 0.95F;
-  const float thigh_r = HP::UPPER_LEG_R * width_scale;
-  const float shin_r = HP::LOWER_LEG_R * width_scale;
-  const float foot_radius = shin_r * 1.10F;
 
   QVector3D const hip_l = pose.pelvisPos + QVector3D(-0.10F, -0.02F, 0.0F);
   QVector3D const hip_r = pose.pelvisPos + QVector3D(0.10F, -0.02F, 0.0F);
@@ -582,6 +713,8 @@ void HumanoidRendererBase::drawCommonBody(const DrawContext &ctx,
   drawShoulderDecorations(ctx, v, pose, y_top_cover, pose.neck_base.y(),
                           right_axis, out);
 
+  drawHelmet(ctx, v, pose, out);
+
   QVector3D const belt_top = pose.pelvisPos + QVector3D(0.0F, 0.05F, 0.0F);
   QVector3D const belt_bottom = pose.pelvisPos + QVector3D(0.0F, 0.00F, 0.0F);
   out.mesh(getUnitCylinder(),
@@ -602,6 +735,11 @@ void HumanoidRendererBase::drawShoulderDecorations(const DrawContext &,
                                                    float, const QVector3D &,
                                                    ISubmitter &) const {}
 
+void HumanoidRendererBase::drawHelmet(const DrawContext &,
+                                      const HumanoidVariant &,
+                                      const HumanoidPose &,
+                                      ISubmitter &) const {}
+
 void HumanoidRendererBase::drawFacialHair(const DrawContext &ctx,
                                           const HumanoidVariant &v,
                                           const HumanoidPose &pose,
@@ -612,7 +750,7 @@ void HumanoidRendererBase::drawFacialHair(const DrawContext &ctx,
     return;
   }
 
-  const HeadFrame &frame = pose.headFrame;
+  const AttachmentFrame &frame = pose.bodyFrames.head;
   float const head_r = frame.radius;
   if (head_r <= 0.0F) {
     return;
@@ -704,7 +842,7 @@ void HumanoidRendererBase::drawFacialHair(const DrawContext &ctx,
         surface_dir /= dir_len;
 
         float const shell = 1.02F + jitter(0.03F);
-        QVector3D const root = headLocalPosition(frame, surface_dir * shell);
+        QVector3D const root = frameLocalPosition(frame, surface_dir * shell);
 
         QVector3D local_dir(jitter(0.15F),
                             -(0.55F + row_t * 0.30F) + jitter(0.10F),
@@ -782,7 +920,7 @@ void HumanoidRendererBase::drawFacialHair(const DrawContext &ctx,
         }
         surface_dir /= dir_len;
         QVector3D const root =
-            headLocalPosition(frame, surface_dir * (1.01F + jitter(0.02F)));
+            frameLocalPosition(frame, surface_dir * (1.01F + jitter(0.02F)));
 
         QVector3D const dir_local(side * (0.55F + jitter(0.12F)), jitter(0.06F),
                                   0.34F + jitter(0.08F));
