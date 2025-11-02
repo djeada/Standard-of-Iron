@@ -224,6 +224,11 @@ public:
       return frameLocalPosition(head, normalized);
     };
 
+    QVector3D const steel_color =
+        v.palette.metal * QVector3D(0.95F, 0.96F, 1.0F);
+
+    float helm_r = head_r * 1.15F;
+
     auto ring = [&](float y_offset, const QVector3D &col) {
       QVector3D const center = headPoint(QVector3D(0.0F, y_offset, 0.0F));
       float const height = head_r * 0.015F;
@@ -233,10 +238,6 @@ public:
                nullptr, 1.0F);
     };
 
-    QVector3D const steel_color =
-        v.palette.metal * QVector3D(0.95F, 0.96F, 1.0F);
-
-    float helm_r = head_r * 1.15F;
     QVector3D const helm_bot = headPoint(QVector3D(0.0F, -0.20F, 0.0F));
     QVector3D const helm_top = headPoint(QVector3D(0.0F, 1.40F, 0.0F));
 
