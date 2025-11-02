@@ -73,6 +73,12 @@ add_library(render_gl STATIC
     equipment/register_equipment.cpp
     equipment/weapons/bow_renderer.cpp
     equipment/weapons/quiver_renderer.cpp
+    equipment/helmets/montefortino_helmet.cpp
+    equipment/helmets/headwrap.cpp
+    equipment/helmets/roman_heavy_helmet.cpp
+    equipment/helmets/roman_light_helmet.cpp
+    equipment/helmets/kingdom_heavy_helmet.cpp
+    equipment/helmets/kingdom_light_helmet.cpp
 )
 
 target_include_directories(render_gl PUBLIC .)
