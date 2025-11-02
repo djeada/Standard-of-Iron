@@ -1,4 +1,7 @@
 #include "equipment_registry.h"
+#include "armor/carthage_armor.h"
+#include "armor/kingdom_armor.h"
+#include "armor/roman_armor.h"
 #include "helmets/headwrap.h"
 #include "helmets/kingdom_heavy_helmet.h"
 #include "helmets/kingdom_light_helmet.h"
@@ -7,6 +10,7 @@
 #include "helmets/roman_light_helmet.h"
 #include "weapons/bow_renderer.h"
 #include "weapons/quiver_renderer.h"
+#include "weapons/roman_scutum.h"
 #include <memory>
 
 namespace Render::GL {
@@ -43,6 +47,10 @@ void registerBuiltInEquipment() {
   auto quiver = std::make_shared<QuiverRenderer>();
   registry.registerEquipment(EquipmentCategory::Weapon, "quiver", quiver);
 
+  auto roman_scutum = std::make_shared<RomanScutumRenderer>();
+  registry.registerEquipment(EquipmentCategory::Weapon, "roman_scutum",
+                             roman_scutum);
+
   auto montefortino_helmet = std::make_shared<MontefortinoHelmetRenderer>();
   registry.registerEquipment(EquipmentCategory::Helmet, "montefortino",
                              montefortino_helmet);
@@ -69,6 +77,31 @@ void registerBuiltInEquipment() {
   auto kingdom_light = std::make_shared<KingdomLightHelmetRenderer>();
   registry.registerEquipment(EquipmentCategory::Helmet, "kingdom_light",
                              kingdom_light);
+
+  // Nation-specific armor
+  auto kingdom_heavy_armor = std::make_shared<KingdomHeavyArmorRenderer>();
+  registry.registerEquipment(EquipmentCategory::Armor, "kingdom_heavy_armor",
+                             kingdom_heavy_armor);
+
+  auto kingdom_light_armor = std::make_shared<KingdomLightArmorRenderer>();
+  registry.registerEquipment(EquipmentCategory::Armor, "kingdom_light_armor",
+                             kingdom_light_armor);
+
+  auto roman_heavy_armor = std::make_shared<RomanHeavyArmorRenderer>();
+  registry.registerEquipment(EquipmentCategory::Armor, "roman_heavy_armor",
+                             roman_heavy_armor);
+
+  auto roman_light_armor = std::make_shared<RomanLightArmorRenderer>();
+  registry.registerEquipment(EquipmentCategory::Armor, "roman_light_armor",
+                             roman_light_armor);
+
+  auto carthage_heavy_armor = std::make_shared<CarthageHeavyArmorRenderer>();
+  registry.registerEquipment(EquipmentCategory::Armor, "carthage_heavy_armor",
+                             carthage_heavy_armor);
+
+  auto carthage_light_armor = std::make_shared<CarthageLightArmorRenderer>();
+  registry.registerEquipment(EquipmentCategory::Armor, "carthage_light_armor",
+                             carthage_light_armor);
 }
 
 } // namespace Render::GL

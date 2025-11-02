@@ -417,110 +417,17 @@ public:
     }
   }
 
-  void draw_armorOverlay(const DrawContext &ctx, const HumanoidVariant &v,
-                         const HumanoidPose &pose, float y_top_cover,
-                         float torso_r, float, float, const QVector3D &,
-                         ISubmitter &out) const override {
-    using HP = HumanProportions;
-
-    auto const &style = resolve_style(ctx);
-    if (!style.show_armor) {
-      return;
+  void drawArmor(const DrawContext &ctx, const HumanoidVariant &v,
+                 const HumanoidPose &pose,
+                 const HumanoidAnimationContext &anim,
+                 ISubmitter &out) const override {
+    if (resolve_style(ctx).show_armor) {
+      auto &registry = EquipmentRegistry::instance();
+      auto armor = registry.get(EquipmentCategory::Armor, "carthage_light_armor");
+      if (armor) {
+        armor->render(ctx, pose.bodyFrames, v.palette, anim, out);
+      }
     }
-
-    float const waist_y = pose.pelvisPos.y();
-    float const tunic_top = y_top_cover;
-    float const tunic_bottom = waist_y - 0.08F;
-
-    QVector3D tunic_color =
-        saturate_color(v.palette.cloth * QVector3D(1.05F, 1.02F, 0.92F));
-    QVector3D tunic_trim =
-        saturate_color(tunic_color * QVector3D(0.75F, 0.70F, 0.65F));
-    QVector3D leather_belt =
-        saturate_color(v.palette.leatherDark * QVector3D(1.08F, 0.94F, 0.78F));
-
-    QVector3D const tunic_top_pos(0.0F, tunic_top, 0.0F);
-    QVector3D const tunic_bot_pos(0.0F, tunic_bottom, 0.0F);
-
-    QMatrix4x4 tunic_main = cylinderBetween(ctx.model, tunic_bot_pos,
-                                            tunic_top_pos, torso_r * 1.06F);
-    tunic_main.scale(1.0F, 1.0F, 0.98F);
-    out.mesh(getUnitCylinder(), tunic_main, tunic_color, nullptr, 1.0F);
-
-    QVector3D const neck_trim_top(0.0F, tunic_top + 0.005F, 0.0F);
-    QVector3D const neck_trim_bot(0.0F, tunic_top - 0.015F, 0.0F);
-    QMatrix4x4 neck_trim = cylinderBetween(
-        ctx.model, neck_trim_bot, neck_trim_top, HP::NECK_RADIUS * 1.85F);
-    neck_trim.scale(1.03F, 1.0F, 0.92F);
-    out.mesh(getUnitCylinder(), neck_trim, tunic_trim, nullptr, 1.0F);
-
-    QVector3D const hem_top(0.0F, tunic_bottom + 0.020F, 0.0F);
-    QVector3D const hem_bot(0.0F, tunic_bottom - 0.010F, 0.0F);
-    out.mesh(getUnitCylinder(),
-             cylinderBetween(ctx.model, hem_bot, hem_top, torso_r * 1.05F),
-             tunic_trim, nullptr, 1.0F);
-
-    QVector3D const belt_top(0.0F, waist_y + 0.03F, 0.0F);
-    QVector3D const belt_bot(0.0F, waist_y - 0.03F, 0.0F);
-    QMatrix4x4 belt =
-        cylinderBetween(ctx.model, belt_bot, belt_top, torso_r * 1.08F);
-    belt.scale(1.04F, 1.0F, 0.94F);
-    out.mesh(getUnitCylinder(), belt, leather_belt, nullptr, 1.0F);
-
-    QVector3D const buckle_pos(0.0F, waist_y, torso_r * 1.10F);
-    QMatrix4x4 buckle = ctx.model;
-    buckle.translate(buckle_pos);
-    buckle.scale(0.025F, 0.035F, 0.012F);
-    QVector3D bronze_buckle =
-        saturate_color(v.palette.metal * QVector3D(1.15F, 1.00F, 0.68F));
-    out.mesh(getUnitSphere(), buckle, bronze_buckle, nullptr, 1.0F);
-  }
-
-  void drawShoulderDecorations(const DrawContext &ctx, const HumanoidVariant &v,
-                               const HumanoidPose &pose, float, float y_neck,
-                               const QVector3D &,
-                               ISubmitter &out) const override {
-    using HP = HumanProportions;
-
-    auto const &style = resolve_style(ctx);
-    if (!style.show_shoulder_decor && !style.show_cape) {
-      return;
-    }
-
-    QVector3D brass_color = v.palette.metal * QVector3D(1.2F, 1.0F, 0.65F);
-
-    auto draw_phalera = [&](const QVector3D &pos) {
-      QMatrix4x4 m = ctx.model;
-      m.translate(pos);
-      m.scale(0.025F);
-      out.mesh(getUnitSphere(), m, brass_color, nullptr, 1.0F);
-    };
-
-    if (style.show_shoulder_decor) {
-      draw_phalera(pose.shoulderL + QVector3D(0, 0.05F, 0.02F));
-      draw_phalera(pose.shoulderR + QVector3D(0, 0.05F, 0.02F));
-    }
-
-    if (!style.show_cape) {
-      return;
-    }
-
-    QVector3D const clasp_pos(0, y_neck + 0.02F, 0.08F);
-    QMatrix4x4 clasp_m = ctx.model;
-    clasp_m.translate(clasp_pos);
-    clasp_m.scale(0.020F);
-    out.mesh(getUnitSphere(), clasp_m, brass_color * 1.1F, nullptr, 1.0F);
-
-    QVector3D const cape_top = clasp_pos + QVector3D(0, -0.02F, -0.05F);
-    QVector3D const cape_bot = clasp_pos + QVector3D(0, -0.25F, -0.15F);
-    QVector3D cape_fabric = v.palette.cloth * QVector3D(1.2F, 0.3F, 0.3F);
-    if (style.cape_color) {
-      cape_fabric = saturate_color(*style.cape_color);
-    }
-
-    out.mesh(getUnitCylinder(),
-             cylinderBetween(ctx.model, cape_top, cape_bot, 0.025F),
-             cape_fabric * 0.85F, nullptr, 1.0F);
   }
 
 private:

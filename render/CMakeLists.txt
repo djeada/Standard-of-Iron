@@ -71,8 +71,13 @@ add_library(render_gl STATIC
     humanoid/pose_controller.cpp
     equipment/equipment_registry.cpp
     equipment/register_equipment.cpp
+    equipment/armor/tunic_renderer.cpp
+    equipment/armor/kingdom_armor.cpp
+    equipment/armor/roman_armor.cpp
+    equipment/armor/carthage_armor.cpp
     equipment/weapons/bow_renderer.cpp
     equipment/weapons/quiver_renderer.cpp
+    equipment/weapons/roman_scutum.cpp
     equipment/helmets/montefortino_helmet.cpp
     equipment/helmets/headwrap.cpp
     equipment/helmets/roman_heavy_helmet.cpp
