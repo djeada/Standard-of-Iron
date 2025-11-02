@@ -213,7 +213,7 @@ public:
 
   void drawHelmet(const DrawContext &ctx, const HumanoidVariant &v,
                   const HumanoidPose &pose, ISubmitter &out) const override {
-    // Use montefortino helmet from equipment registry
+
     auto &registry = EquipmentRegistry::instance();
     auto helmet = registry.get(EquipmentCategory::Helmet, "montefortino");
     if (helmet) {

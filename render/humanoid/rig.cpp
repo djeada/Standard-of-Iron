@@ -66,7 +66,6 @@ auto HumanoidRendererBase::makeFrameLocalTransform(
   return parent * local;
 }
 
-// Legacy backward-compatible wrappers
 auto HumanoidRendererBase::headLocalPosition(
     const HeadFrame &frame, const QVector3D &local) -> QVector3D {
   return frameLocalPosition(frame, local);
@@ -501,46 +500,44 @@ void HumanoidRendererBase::drawCommonBody(const DrawContext &ctx,
   pose.headFrame.forward = head_forward;
   pose.headFrame.radius = head_r;
 
-  // Populate all body frames
   pose.bodyFrames.head = pose.headFrame;
 
-  // Torso frame (centered at shoulder level)
   pose.bodyFrames.torso.origin = QVector3D(0.0F, y_shoulder, 0.0F);
   pose.bodyFrames.torso.right = right_axis;
   pose.bodyFrames.torso.up = up_axis;
   pose.bodyFrames.torso.forward = forward_axis;
   pose.bodyFrames.torso.radius = torso_r;
 
-  // Back frame (behind torso)
-  pose.bodyFrames.back.origin = QVector3D(0.0F, y_shoulder, 0.0F) - forward_axis * (torso_r * 0.65F);
+  pose.bodyFrames.back.origin =
+      QVector3D(0.0F, y_shoulder, 0.0F) - forward_axis * (torso_r * 0.65F);
   pose.bodyFrames.back.right = right_axis;
   pose.bodyFrames.back.up = up_axis;
-  pose.bodyFrames.back.forward = -forward_axis;  // Facing backward
+  pose.bodyFrames.back.forward = -forward_axis;
   pose.bodyFrames.back.radius = torso_r * 0.8F;
 
-  // Waist frame
   pose.bodyFrames.waist.origin = pose.pelvisPos;
   pose.bodyFrames.waist.right = right_axis;
   pose.bodyFrames.waist.up = up_axis;
   pose.bodyFrames.waist.forward = forward_axis;
   pose.bodyFrames.waist.radius = torso_r * 0.85F;
 
-  // Shoulder frames
   QVector3D shoulder_up = (pose.shoulderL - pose.pelvisPos).normalized();
-  QVector3D shoulder_forward_l = QVector3D::crossProduct(-right_axis, shoulder_up);
+  QVector3D shoulder_forward_l =
+      QVector3D::crossProduct(-right_axis, shoulder_up);
   if (shoulder_forward_l.lengthSquared() < 1e-8F) {
     shoulder_forward_l = forward_axis;
   } else {
     shoulder_forward_l.normalize();
   }
-  
+
   pose.bodyFrames.shoulderL.origin = pose.shoulderL;
   pose.bodyFrames.shoulderL.right = -right_axis;
   pose.bodyFrames.shoulderL.up = shoulder_up;
   pose.bodyFrames.shoulderL.forward = shoulder_forward_l;
   pose.bodyFrames.shoulderL.radius = upper_arm_r;
 
-  QVector3D shoulder_forward_r = QVector3D::crossProduct(right_axis, shoulder_up);
+  QVector3D shoulder_forward_r =
+      QVector3D::crossProduct(right_axis, shoulder_up);
   if (shoulder_forward_r.lengthSquared() < 1e-8F) {
     shoulder_forward_r = forward_axis;
   } else {
@@ -553,7 +550,6 @@ void HumanoidRendererBase::drawCommonBody(const DrawContext &ctx,
   pose.bodyFrames.shoulderR.forward = shoulder_forward_r;
   pose.bodyFrames.shoulderR.radius = upper_arm_r;
 
-  // Hand frames
   QVector3D hand_up_l = (pose.handL - pose.elbowL);
   if (hand_up_l.lengthSquared() > 1e-8F) {
     hand_up_l.normalize();
@@ -592,7 +588,6 @@ void HumanoidRendererBase::drawCommonBody(const DrawContext &ctx,
   pose.bodyFrames.handR.forward = hand_forward_r;
   pose.bodyFrames.handR.radius = hand_r;
 
-  // Foot frames
   QVector3D foot_up_l = up_axis;
   QVector3D foot_forward_l = forward_axis - right_axis * 0.12F;
   if (foot_forward_l.lengthSquared() > 1e-8F) {
@@ -624,7 +619,8 @@ void HumanoidRendererBase::drawCommonBody(const DrawContext &ctx,
   auto eyePosition = [&](float lateral) {
     QVector3D const local(lateral, 0.12F, 0.92F);
     QVector3D world = frameLocalPosition(pose.bodyFrames.head, local);
-    world += pose.bodyFrames.head.forward * (pose.bodyFrames.head.radius * 0.02F);
+    world +=
+        pose.bodyFrames.head.forward * (pose.bodyFrames.head.radius * 0.02F);
     return world;
   };
   QVector3D const left_eye_world = eyePosition(-0.32F);
