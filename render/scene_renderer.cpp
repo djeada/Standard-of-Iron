@@ -5,6 +5,7 @@
 #include "../game/units/troop_config.h"
 #include "draw_queue.h"
 #include "entity/registry.h"
+#include "equipment/equipment_registry.h"
 #include "game/core/component.h"
 #include "game/core/world.h"
 #include "gl/backend.h"
@@ -48,6 +49,7 @@ auto Renderer::initialize() -> bool {
   m_backend->initialize();
   m_entityRegistry = std::make_unique<EntityRendererRegistry>();
   registerBuiltInEntityRenderers(*m_entityRegistry);
+  registerBuiltInEquipment();
   return true;
 }
 
