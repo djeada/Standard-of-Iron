@@ -322,68 +322,13 @@ public:
 
   void drawHelmet(const DrawContext &ctx, const HumanoidVariant &v,
                   const HumanoidPose &pose, ISubmitter &out) const override {
-    using HP = HumanProportions;
-
-    auto const &style = resolve_style(ctx);
-    if (!style.show_helmet) {
-      if (style.attachment_profile == std::string(k_attachment_headwrap)) {
-        draw_headwrap(ctx, v, pose, out);
-      }
-      return;
+    // Use Kingdom Light helmet from equipment registry
+    auto &registry = EquipmentRegistry::instance();
+    auto helmet = registry.get(EquipmentCategory::Helmet, "kingdom_light");
+    if (helmet) {
+      HumanoidAnimationContext anim_ctx{};
+      helmet->render(ctx, pose.bodyFrames, v.palette, anim_ctx, out);
     }
-
-    const AttachmentFrame &head = pose.bodyFrames.head;
-    float const head_r = head.radius;
-    if (head_r <= 0.0F) {
-      return;
-    }
-
-    QVector3D const steel_color =
-        v.palette.metal * QVector3D(0.88F, 0.90F, 0.95F);
-    QVector3D const steel_dark = steel_color * 0.82F;
-
-    auto headPoint = [&](const QVector3D &normalized) -> QVector3D {
-      return frameLocalPosition(head, normalized);
-    };
-
-    float const bowl_scale = 1.06F;
-    QVector3D const bowl_top = headPoint(QVector3D(0.0F, 1.10F, 0.0F));
-    QVector3D const bowl_bot = headPoint(QVector3D(0.0F, 0.15F, 0.0F));
-    float const bowl_r = head_r * bowl_scale;
-
-    out.mesh(getUnitCylinder(),
-             cylinderBetween(ctx.model, bowl_bot, bowl_top, bowl_r),
-             steel_color, nullptr, 1.0F);
-
-    QMatrix4x4 cap_m = ctx.model;
-    cap_m.translate(bowl_top);
-    cap_m.scale(bowl_r * 0.92F, head_r * 0.28F, bowl_r * 0.92F);
-    out.mesh(getUnitSphere(), cap_m, steel_color * 1.05F, nullptr, 1.0F);
-
-    QVector3D const brim_top = headPoint(QVector3D(0.0F, 0.18F, 0.0F));
-    QVector3D const brim_bot = headPoint(QVector3D(0.0F, 0.08F, 0.0F));
-    float const brim_r = head_r * 1.42F;
-
-    out.mesh(getUnitCylinder(),
-             cylinderBetween(ctx.model, brim_bot, brim_top, brim_r), steel_dark,
-             nullptr, 1.0F);
-
-    auto ring = [&](float y_offset, float radius_scale, const QVector3D &col) {
-      QVector3D const center = headPoint(QVector3D(0.0F, y_offset, 0.0F));
-      float const height = head_r * 0.010F;
-      QVector3D const a = center + head.up * (height * 0.5F);
-      QVector3D const b = center - head.up * (height * 0.5F);
-      out.mesh(getUnitCylinder(),
-               cylinderBetween(ctx.model, a, b, head_r * radius_scale), col,
-               nullptr, 1.0F);
-    };
-
-    ring(0.13F, 1.42F * 1.01F, steel_color);
-
-    QMatrix4x4 rivet_m = ctx.model;
-    rivet_m.translate(headPoint(QVector3D(0.0F, 1.15F, 0.0F)));
-    rivet_m.scale(0.015F);
-    out.mesh(getUnitSphere(), rivet_m, steel_color * 1.15F, nullptr, 1.0F);
   }
 
   void draw_armorOverlay(const DrawContext &ctx, const HumanoidVariant &v,
@@ -589,41 +534,6 @@ private:
     apply_color(style.leather_dark_color, variant.palette.leatherDark);
     apply_color(style.metal_color, variant.palette.metal);
     apply_color(style.wood_color, variant.palette.wood);
-  }
-
-  void draw_headwrap(const DrawContext &ctx, const HumanoidVariant &v,
-                     const HumanoidPose &pose, ISubmitter &out) const {
-    QVector3D const cloth_color =
-        saturate_color(v.palette.cloth * QVector3D(0.9F, 1.05F, 1.05F));
-    const AttachmentFrame &head = pose.bodyFrames.head;
-    float const head_r = head.radius;
-    if (head_r <= 0.0F) {
-      return;
-    }
-
-    auto headPoint = [&](const QVector3D &normalized) -> QVector3D {
-      return frameLocalPosition(head, normalized);
-    };
-
-    QVector3D const band_top = headPoint(QVector3D(0.0F, 0.70F, 0.0F));
-    QVector3D const band_bot = headPoint(QVector3D(0.0F, 0.30F, 0.0F));
-    out.mesh(getUnitCylinder(),
-             cylinderBetween(ctx.model, band_bot, band_top, head_r * 1.08F),
-             cloth_color, nullptr, 1.0F);
-
-    QVector3D const knot_center = headPoint(QVector3D(0.10F, 0.60F, 0.72F));
-    QMatrix4x4 knot_m = ctx.model;
-    knot_m.translate(knot_center);
-    knot_m.scale(head_r * 0.32F);
-    out.mesh(getUnitSphere(), knot_m, cloth_color * 1.05F, nullptr, 1.0F);
-
-    QVector3D const tail_top = knot_center + head.right * (-0.08F) +
-                               head.up * (-0.05F) + head.forward * (-0.06F);
-    QVector3D const tail_bot = tail_top + head.right * 0.02F +
-                               head.up * (-0.28F) + head.forward * (-0.08F);
-    out.mesh(getUnitCylinder(),
-             cylinderBetween(ctx.model, tail_top, tail_bot, head_r * 0.28F),
-             cloth_color * QVector3D(0.92F, 0.98F, 1.05F), nullptr, 1.0F);
   }
 };
 
