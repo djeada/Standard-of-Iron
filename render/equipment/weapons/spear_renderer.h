@@ -1,3 +1,5 @@
+// spear_renderer.h - Dedicated renderer for spears with configurable parameters
+// Handles spear geometry, thrust animations, and hold/brace modes
 #pragma once
 
 #include "../../humanoid/rig.h"
