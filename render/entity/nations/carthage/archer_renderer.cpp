@@ -378,9 +378,6 @@ public:
       bow_config.bow_top_y = HP::SHOULDER_Y + 0.55F;
       bow_config.bow_bot_y = HP::WAIST_Y - 0.25F;
       bow_config.bow_x = 0.0F;
-      bow_config.bow_depth = 0.28F;          // Composite bows have more curve
-      bow_config.bow_curve_factor = 1.2F;    // Pronounced recurve
-      bow_config.bow_height_scale = 0.95F;   // Slightly shorter than longbow
       
       // Apply style overrides if available
       if (style.bow_string_color) {
