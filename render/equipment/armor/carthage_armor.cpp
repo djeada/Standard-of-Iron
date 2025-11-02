@@ -14,6 +14,9 @@
 
 namespace Render::GL {
 
+using Render::Geom::cylinderBetween;
+using Render::GL::Humanoid::saturate_color;
+
 void CarthageHeavyArmorRenderer::render(const DrawContext &ctx,
                                          const BodyFrames &frames,
                                          const HumanoidPalette &palette,
@@ -31,6 +34,36 @@ void CarthageHeavyArmorRenderer::render(const DrawContext &ctx,
 
   TunicRenderer renderer(config);
   renderer.render(ctx, frames, palette, anim, submitter);
+
+  // Carthaginian-style shoulder decorations
+  using HP = HumanProportions;
+  QVector3D const bronze_color =
+      saturate_color(palette.metal * QVector3D(1.2F, 1.0F, 0.65F));
+  QVector3D const chainmail_color =
+      saturate_color(palette.metal * QVector3D(0.82F, 0.85F, 0.90F));
+
+  // Lighter chainmail protection
+  float const y_neck = frames.head.origin.y() - HP::HEAD_RADIUS * 0.6F;
+  for (int i = 0; i < 3; ++i) {
+    float const y = y_neck - static_cast<float>(i) * 0.025F;
+    float const r = HP::NECK_RADIUS * (1.80F + static_cast<float>(i) * 0.10F);
+    QVector3D const ring_pos(frames.torso.origin.x(), y, frames.torso.origin.z());
+    QVector3D const a = ring_pos + QVector3D(0, 0.012F, 0);
+    QVector3D const b = ring_pos - QVector3D(0, 0.012F, 0);
+    submitter.mesh(getUnitCylinder(), cylinderBetween(ctx.model, a, b, r),
+                   chainmail_color * (1.0F - static_cast<float>(i) * 0.05F), nullptr, 1.0F);
+  }
+
+  // Decorative phalerae on shoulders
+  auto draw_phalera = [&](const QVector3D &pos) {
+    QMatrix4x4 m = ctx.model;
+    m.translate(pos);
+    m.scale(0.025F);
+    submitter.mesh(getUnitSphere(), m, bronze_color, nullptr, 1.0F);
+  };
+
+  draw_phalera(frames.shoulderL.origin + QVector3D(0, 0.05F, 0.02F));
+  draw_phalera(frames.shoulderR.origin + QVector3D(0, 0.05F, 0.02F));
 }
 
 void CarthageLightArmorRenderer::render(const DrawContext &ctx,
@@ -50,6 +83,21 @@ void CarthageLightArmorRenderer::render(const DrawContext &ctx,
 
   TunicRenderer renderer(config);
   renderer.render(ctx, frames, palette, anim, submitter);
+
+  // Minimal decorations for light armor - just simple ornaments
+  using HP = HumanProportions;
+  QVector3D const bronze_color =
+      saturate_color(palette.metal * QVector3D(1.1F, 0.9F, 0.6F));
+
+  auto draw_ornament = [&](const QVector3D &pos) {
+    QMatrix4x4 m = ctx.model;
+    m.translate(pos);
+    m.scale(0.015F);
+    submitter.mesh(getUnitSphere(), m, bronze_color, nullptr, 1.0F);
+  };
+
+  draw_ornament(frames.shoulderL.origin + QVector3D(0, 0.04F, 0.02F));
+  draw_ornament(frames.shoulderR.origin + QVector3D(0, 0.04F, 0.02F));
 }
 
 } // namespace Render::GL
