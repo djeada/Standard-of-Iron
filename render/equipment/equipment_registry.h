@@ -35,4 +35,6 @@ private:
       m_renderers;
 };
 
+void registerBuiltInEquipment();
+
 } // namespace Render::GL
