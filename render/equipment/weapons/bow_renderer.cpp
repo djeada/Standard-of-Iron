@@ -26,44 +26,29 @@ void BowRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
                          const HumanoidPalette &palette,
                          const HumanoidAnimationContext &anim,
                          ISubmitter &submitter) {
-  using HP = HumanProportions;
+  const QVector3D up(0.0F, 1.0F, 0.0F);
+  const QVector3D forward(0.0F, 0.0F, 1.0F);
 
-  // Get the left hand frame (where the bow is held)
-  const AttachmentFrame &hand = frames.handL;
-  const AttachmentFrame &right_hand = frames.handR;
+  // Get the left hand position (where bow is gripped)
+  QVector3D const grip = frames.handL.origin;
 
-  // Define bow dimensions in hand-local coordinates
-  // The bow is held vertically along the hand's up axis
-  float const half_bow_height = m_config.bow_height * 0.5F;
-  
-  // Bow top and bottom in hand-local normalized coordinates
-  QVector3D const bow_top_local(0.0F, half_bow_height, 0.0F);
-  QVector3D const bow_bot_local(0.0F, -half_bow_height, 0.0F);
-  
-  // Convert to world coordinates using the hand frame
-  QVector3D const top_end = HumanoidRendererBase::frameLocalPosition(hand, bow_top_local);
-  QVector3D const bot_end = HumanoidRendererBase::frameLocalPosition(hand, bow_bot_local);
-  QVector3D const grip = hand.origin;
+  // Bow ends in world coordinates
+  float const bow_plane_z = 0.45F;
+  QVector3D const top_end(m_config.bow_x, m_config.bow_top_y, bow_plane_z);
+  QVector3D const bot_end(m_config.bow_x, m_config.bow_bot_y, bow_plane_z);
 
-  // Calculate nock position (where the arrow attaches to the string)
-  // This is influenced by the right hand position during draw
+  // Calculate nock position (where arrow attaches to string)
+  // During draw, it follows the right hand
   QVector3D nock;
-  
-  // Check if attacking with bow (not melee)
   bool const is_bow_attacking = anim.inputs.is_attacking && !anim.inputs.isMelee;
   
   if (is_bow_attacking) {
-    // During attack, the nock follows the right hand
-    // Constrain nock to reasonable bow limits
-    float const nock_y = clampf(right_hand.origin.y(), 
-                                bot_end.y() + 0.05F, 
-                                top_end.y() - 0.05F);
-    float const nock_z = clampf(right_hand.origin.z(), 
-                                hand.origin.z() - 0.30F, 
-                                hand.origin.z() + 0.30F);
-    nock = QVector3D(hand.origin.x(), nock_y, nock_z);
+    QVector3D const right_hand = frames.handR.origin;
+    nock = QVector3D(
+        m_config.bow_x,
+        clampf(right_hand.y(), m_config.bow_bot_y + 0.05F, m_config.bow_top_y - 0.05F),
+        clampf(right_hand.z(), bow_plane_z - 0.30F, bow_plane_z + 0.30F));
   } else {
-    // At rest, nock is at the grip position
     nock = grip;
   }
 
@@ -77,11 +62,7 @@ void BowRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
 
   float const bow_mid_y = (top_end.y() + bot_end.y()) * 0.5F;
   float const ctrl_y = bow_mid_y + 0.45F;
-  
-  // Control point determines bow curve depth
-  // Use hand frame forward direction for bow curve
-  QVector3D const ctrl = QVector3D(hand.origin.x(), ctrl_y, 
-                                   hand.origin.z() + m_config.bow_depth * 0.6F);
+  QVector3D const ctrl(m_config.bow_x, ctrl_y, bow_plane_z + m_config.bow_depth * 0.6F);
 
   // Draw bow limbs as segments
   QVector3D prev = bot_end;
@@ -95,7 +76,6 @@ void BowRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
   }
 
   // Draw the grip (thicker section at hand)
-  QVector3D const up(0.0F, 1.0F, 0.0F);
   submitter.mesh(getUnitCylinder(),
                  cylinderBetween(ctx.model, grip - up * 0.05F, grip + up * 0.05F,
                                 m_config.bow_rod_radius * 1.45F),
@@ -112,7 +92,7 @@ void BowRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
   // Draw string from right hand to nock (when drawn)
   if (is_bow_attacking) {
     submitter.mesh(getUnitCylinder(),
-                   cylinderBetween(ctx.model, right_hand.origin, nock, 0.0045F),
+                   cylinderBetween(ctx.model, frames.handR.origin, nock, 0.0045F),
                    m_config.string_color * 0.9F, nullptr, 1.0F);
   }
 
@@ -126,7 +106,6 @@ void BowRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
                           (is_bow_attacking && attack_phase >= 0.0F && attack_phase < 0.52F);
 
   if (show_arrow) {
-    QVector3D const forward(0.0F, 0.0F, 1.0F);
     QVector3D const tail = nock - forward * 0.06F;
     QVector3D const tip = tail + forward * 0.90F;
     

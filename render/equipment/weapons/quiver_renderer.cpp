@@ -25,19 +25,13 @@ void QuiverRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
                            const HumanoidPalette &palette,
                            const HumanoidAnimationContext & /*anim*/,
                            ISubmitter &submitter) {
-  using HP = HumanProportions;
-
-  // Get the back frame (where the quiver is attached)
-  const AttachmentFrame &back = frames.back;
-
-  // Define quiver position in back-local coordinates
-  // Position it slightly offset to the left and lower on the back
-  QVector3D const quiver_top_local(-0.4F, 0.5F, -0.8F);
-  QVector3D const quiver_base_offset(-0.1F, -1.5F, 0.1F);
-  
-  // Convert to world coordinates using the back frame
-  QVector3D const q_top = HumanoidRendererBase::frameLocalPosition(back, quiver_top_local);
-  QVector3D const q_base = q_top + quiver_base_offset * back.radius;
+  // Use the shoulder positions to compute quiver location
+  // This matches the original implementation which used:
+  // spine_mid = (pose.shoulderL + pose.shoulderR) * 0.5F
+  QVector3D const spine_mid = (frames.shoulderL.origin + frames.shoulderR.origin) * 0.5F;
+  QVector3D const quiver_offset(-0.08F, 0.10F, -0.25F);
+  QVector3D const q_top = spine_mid + quiver_offset;
+  QVector3D const q_base = q_top + QVector3D(-0.02F, -0.30F, 0.03F);
 
   // Draw the quiver cylinder
   submitter.mesh(getUnitCylinder(),
