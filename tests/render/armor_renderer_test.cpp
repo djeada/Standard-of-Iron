@@ -1,3 +1,6 @@
+#include "render/equipment/armor/carthage_armor.h"
+#include "render/equipment/armor/kingdom_armor.h"
+#include "render/equipment/armor/roman_armor.h"
 #include "render/equipment/armor/tunic_renderer.h"
 #include "render/equipment/equipment_registry.h"
 #include "render/humanoid/rig.h"
@@ -16,19 +19,35 @@ protected:
   EquipmentRegistry *registry = nullptr;
 };
 
-TEST_F(ArmorRendererTest, TunicRegisteredInRegistry) {
-  auto tunic = registry->get(EquipmentCategory::Armor, "tunic");
-  ASSERT_NE(tunic, nullptr);
+// Test nation-specific heavy armor
+TEST_F(ArmorRendererTest, KingdomHeavyArmorRegistered) {
+  auto armor = registry->get(EquipmentCategory::Armor, "kingdom_heavy_armor");
+  ASSERT_NE(armor, nullptr);
 }
 
-TEST_F(ArmorRendererTest, HeavyTunicRegisteredInRegistry) {
-  auto heavy_tunic = registry->get(EquipmentCategory::Armor, "heavy_tunic");
-  ASSERT_NE(heavy_tunic, nullptr);
+TEST_F(ArmorRendererTest, KingdomLightArmorRegistered) {
+  auto armor = registry->get(EquipmentCategory::Armor, "kingdom_light_armor");
+  ASSERT_NE(armor, nullptr);
 }
 
-TEST_F(ArmorRendererTest, LightTunicRegisteredInRegistry) {
-  auto light_tunic = registry->get(EquipmentCategory::Armor, "light_tunic");
-  ASSERT_NE(light_tunic, nullptr);
+TEST_F(ArmorRendererTest, RomanHeavyArmorRegistered) {
+  auto armor = registry->get(EquipmentCategory::Armor, "roman_heavy_armor");
+  ASSERT_NE(armor, nullptr);
+}
+
+TEST_F(ArmorRendererTest, RomanLightArmorRegistered) {
+  auto armor = registry->get(EquipmentCategory::Armor, "roman_light_armor");
+  ASSERT_NE(armor, nullptr);
+}
+
+TEST_F(ArmorRendererTest, CarthageHeavyArmorRegistered) {
+  auto armor = registry->get(EquipmentCategory::Armor, "carthage_heavy_armor");
+  ASSERT_NE(armor, nullptr);
+}
+
+TEST_F(ArmorRendererTest, CarthageLightArmorRegistered) {
+  auto armor = registry->get(EquipmentCategory::Armor, "carthage_light_armor");
+  ASSERT_NE(armor, nullptr);
 }
 
 TEST_F(ArmorRendererTest, TunicRendererCreation) {
@@ -42,14 +61,9 @@ TEST_F(ArmorRendererTest, TunicRendererCreation) {
   ASSERT_NE(tunic, nullptr);
 }
 
-TEST_F(ArmorRendererTest, TunicRendererWithDefaultConfig) {
-  auto tunic = std::make_shared<TunicRenderer>();
-  ASSERT_NE(tunic, nullptr);
-}
-
 TEST_F(ArmorRendererTest, ArmorCategoryIsDistinct) {
   auto helmet = registry->get(EquipmentCategory::Helmet, "kingdom_heavy");
-  auto armor = registry->get(EquipmentCategory::Armor, "heavy_tunic");
+  auto armor = registry->get(EquipmentCategory::Armor, "kingdom_heavy_armor");
   auto weapon = registry->get(EquipmentCategory::Weapon, "bow");
 
   ASSERT_NE(helmet, nullptr);
@@ -57,5 +71,5 @@ TEST_F(ArmorRendererTest, ArmorCategoryIsDistinct) {
   ASSERT_NE(weapon, nullptr);
 
   EXPECT_FALSE(registry->has(EquipmentCategory::Armor, "kingdom_heavy"));
-  EXPECT_FALSE(registry->has(EquipmentCategory::Helmet, "heavy_tunic"));
+  EXPECT_FALSE(registry->has(EquipmentCategory::Helmet, "kingdom_heavy_armor"));
 }
