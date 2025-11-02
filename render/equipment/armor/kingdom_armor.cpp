@@ -14,6 +14,9 @@
 
 namespace Render::GL {
 
+using Render::Geom::cylinderBetween;
+using Render::GL::Humanoid::saturate_color;
+
 void KingdomHeavyArmorRenderer::render(const DrawContext &ctx,
                                         const BodyFrames &frames,
                                         const HumanoidPalette &palette,
@@ -31,6 +34,46 @@ void KingdomHeavyArmorRenderer::render(const DrawContext &ctx,
 
   TunicRenderer renderer(config);
   renderer.render(ctx, frames, palette, anim, submitter);
+
+  // Shoulder decorations - chainmail and ornaments
+  using HP = HumanProportions;
+  QVector3D const brass_color =
+      saturate_color(palette.metal * QVector3D(1.3F, 1.1F, 0.7F));
+  QVector3D const chainmail_color =
+      saturate_color(palette.metal * QVector3D(0.85F, 0.88F, 0.92F));
+  QVector3D const mantling_color = palette.cloth;
+
+  // Chainmail around neck/shoulders
+  float const y_neck = frames.head.origin.y() - HP::HEAD_RADIUS * 0.6F;
+  for (int i = 0; i < 5; ++i) {
+    float const y = y_neck - static_cast<float>(i) * 0.022F;
+    float const r = HP::NECK_RADIUS * (1.85F + static_cast<float>(i) * 0.08F);
+    QVector3D const ring_pos(frames.torso.origin.x(), y, frames.torso.origin.z());
+    QVector3D const a = ring_pos + QVector3D(0, 0.010F, 0);
+    QVector3D const b = ring_pos - QVector3D(0, 0.010F, 0);
+    submitter.mesh(getUnitCylinder(), cylinderBetween(ctx.model, a, b, r),
+                   chainmail_color * (1.0F - static_cast<float>(i) * 0.04F), nullptr, 1.0F);
+  }
+
+  // Helmet crest base
+  QVector3D const helm_top = frames.head.origin + QVector3D(0, HP::HEAD_RADIUS * 0.85F, 0);
+  QMatrix4x4 crest_base = ctx.model;
+  crest_base.translate(helm_top);
+  crest_base.scale(0.025F, 0.015F, 0.025F);
+  submitter.mesh(getUnitSphere(), crest_base, brass_color * 1.2F, nullptr, 1.0F);
+
+  // Decorative studs
+  auto draw_stud = [&](const QVector3D &pos) {
+    QMatrix4x4 m = ctx.model;
+    m.translate(pos);
+    m.scale(0.008F);
+    submitter.mesh(getUnitSphere(), m, brass_color * 1.3F, nullptr, 1.0F);
+  };
+
+  draw_stud(helm_top + QVector3D(0.020F, 0, 0.020F));
+  draw_stud(helm_top + QVector3D(-0.020F, 0, 0.020F));
+  draw_stud(helm_top + QVector3D(0.020F, 0, -0.020F));
+  draw_stud(helm_top + QVector3D(-0.020F, 0, -0.020F));
 }
 
 void KingdomLightArmorRenderer::render(const DrawContext &ctx,
@@ -50,6 +93,25 @@ void KingdomLightArmorRenderer::render(const DrawContext &ctx,
 
   TunicRenderer renderer(config);
   renderer.render(ctx, frames, palette, anim, submitter);
+
+  // Minimal shoulder decorations for light armor
+  using HP = HumanProportions;
+  QVector3D const brass_color =
+      saturate_color(palette.metal * QVector3D(1.3F, 1.1F, 0.7F));
+
+  // Simple decorative medals (phalerae)
+  QVector3D const shoulderL_pos = frames.shoulderL.origin;
+  QVector3D const shoulderR_pos = frames.shoulderR.origin;
+
+  auto draw_phalera = [&](const QVector3D &pos) {
+    QMatrix4x4 m = ctx.model;
+    m.translate(pos + QVector3D(0, 0.05F, 0.02F));
+    m.scale(0.020F);
+    submitter.mesh(getUnitSphere(), m, brass_color, nullptr, 1.0F);
+  };
+
+  draw_phalera(shoulderL_pos);
+  draw_phalera(shoulderR_pos);
 }
 
 } // namespace Render::GL
