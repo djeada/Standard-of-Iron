@@ -8,6 +8,7 @@ add_executable(standard_of_iron_tests
     render/pose_controller_test.cpp
     render/pose_controller_compatibility_test.cpp
     render/body_frames_test.cpp
+    render/equipment_registry_test.cpp
 )
 
 # Link against GTest, project libraries
