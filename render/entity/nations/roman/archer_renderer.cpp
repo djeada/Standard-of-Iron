@@ -353,53 +353,6 @@ public:
     }
   }
 
-  void drawShoulderDecorations(const DrawContext &ctx, const HumanoidVariant &v,
-                               const HumanoidPose &pose, float, float y_neck,
-                               const QVector3D &,
-                               ISubmitter &out) const override {
-    using HP = HumanProportions;
-
-    auto const &style = resolve_style(ctx);
-    if (!style.show_shoulder_decor && !style.show_cape) {
-      return;
-    }
-
-    QVector3D brass_color = v.palette.metal * QVector3D(1.2F, 1.0F, 0.65F);
-
-    auto draw_phalera = [&](const QVector3D &pos) {
-      QMatrix4x4 m = ctx.model;
-      m.translate(pos);
-      m.scale(0.025F);
-      out.mesh(getUnitSphere(), m, brass_color, nullptr, 1.0F);
-    };
-
-    if (style.show_shoulder_decor) {
-      draw_phalera(pose.shoulderL + QVector3D(0, 0.05F, 0.02F));
-      draw_phalera(pose.shoulderR + QVector3D(0, 0.05F, 0.02F));
-    }
-
-    if (!style.show_cape) {
-      return;
-    }
-
-    QVector3D const clasp_pos(0, y_neck + 0.02F, 0.08F);
-    QMatrix4x4 clasp_m = ctx.model;
-    clasp_m.translate(clasp_pos);
-    clasp_m.scale(0.020F);
-    out.mesh(getUnitSphere(), clasp_m, brass_color * 1.1F, nullptr, 1.0F);
-
-    QVector3D const cape_top = clasp_pos + QVector3D(0, -0.02F, -0.05F);
-    QVector3D const cape_bot = clasp_pos + QVector3D(0, -0.25F, -0.15F);
-    QVector3D cape_fabric = v.palette.cloth * QVector3D(1.2F, 0.3F, 0.3F);
-    if (style.cape_color) {
-      cape_fabric = saturate_color(*style.cape_color);
-    }
-
-    out.mesh(getUnitCylinder(),
-             cylinderBetween(ctx.model, cape_top, cape_bot, 0.025F),
-             cape_fabric * 0.85F, nullptr, 1.0F);
-  }
-
 private:
   auto
   resolve_style(const DrawContext &ctx) const -> const ArcherStyleConfig & {

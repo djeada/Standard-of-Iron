@@ -284,11 +284,6 @@ public:
     }
   }
 
-  void drawShoulderDecorations(const DrawContext &ctx, const HumanoidVariant &v,
-                               const HumanoidPose &pose, float y_top_cover,
-                               float y_neck, const QVector3D &right_axis,
-                               ISubmitter &out) const override {}
-
 private:
   static auto computeSpearmanExtras(uint32_t seed, const HumanoidVariant &v)
       -> SpearmanExtras {

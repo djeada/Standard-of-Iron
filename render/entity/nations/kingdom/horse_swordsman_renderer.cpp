@@ -295,53 +295,6 @@ public:
     }
   }
 
-  void drawShoulderDecorations(const DrawContext &ctx, const HumanoidVariant &v,
-                               const HumanoidPose &, float, float y_neck,
-                               const QVector3D &,
-                               ISubmitter &out) const override {
-    using HP = HumanProportions;
-
-    const QVector3D brass_color = v.palette.metal * BRASS_TINT;
-    const QVector3D chainmail_color = v.palette.metal * CHAINMAIL_TINT;
-    const QVector3D mantling_color = v.palette.cloth;
-
-    for (int i = 0; i < 5; ++i) {
-      float const y = y_neck - i * 0.022F;
-      float const r = HP::NECK_RADIUS * (1.85F + i * 0.08F);
-      QVector3D const ring_pos(0, y, 0);
-      QVector3D const a = ring_pos + QVector3D(0, 0.010F, 0);
-      QVector3D const b = ring_pos - QVector3D(0, 0.010F, 0);
-      out.mesh(getUnitCylinder(), cylinderBetween(ctx.model, a, b, r),
-               chainmail_color * (1.0F - i * 0.04F), nullptr, 1.0F);
-    }
-
-    auto draw_stud = [&](const QVector3D &pos) {
-      QMatrix4x4 m = ctx.model;
-      m.translate(pos);
-      m.scale(0.008F);
-      out.mesh(getUnitSphere(), m, brass_color * 1.3F, nullptr, 1.0F);
-    };
-
-    QVector3D const belt_center(0, HP::WAIST_Y + 0.03F,
-                                HP::TORSO_BOT_R * 1.15F);
-    QMatrix4x4 buckle = ctx.model;
-    buckle.translate(belt_center);
-    buckle.scale(0.035F, 0.025F, 0.012F);
-    out.mesh(getUnitSphere(), buckle, brass_color * 1.25F, nullptr, 1.0F);
-
-    QVector3D const buckle_h1 = belt_center + QVector3D(-0.025F, 0, 0.005F);
-    QVector3D const buckle_h2 = belt_center + QVector3D(0.025F, 0, 0.005F);
-    out.mesh(getUnitCylinder(),
-             cylinderBetween(ctx.model, buckle_h1, buckle_h2, 0.006F),
-             brass_color * 1.4F, nullptr, 1.0F);
-
-    QVector3D const buckle_v1 = belt_center + QVector3D(0, -0.018F, 0.005F);
-    QVector3D const buckle_v2 = belt_center + QVector3D(0, 0.018F, 0.005F);
-    out.mesh(getUnitCylinder(),
-             cylinderBetween(ctx.model, buckle_v1, buckle_v2, 0.006F),
-             brass_color * 1.4F, nullptr, 1.0F);
-  }
-
 private:
   static auto
   computeMountedKnightExtras(uint32_t seed,

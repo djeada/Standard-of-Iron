@@ -339,52 +339,6 @@ public:
     }
   }
 
-  void drawShoulderDecorations(const DrawContext &ctx, const HumanoidVariant &v,
-                               const HumanoidPose &pose, float, float y_neck,
-                               const QVector3D &,
-                               ISubmitter &out) const override {
-    using HP = HumanProportions;
-
-    auto const &style = resolve_style(ctx);
-
-    if (!style.show_shoulder_decor && !style.show_cape) {
-      return;
-    }
-
-    if (style.show_shoulder_decor) {
-      QVector3D const hood_color =
-          v.palette.cloth * QVector3D(0.75F, 0.68F, 0.58F);
-
-      QVector3D const collar_top(0, y_neck + 0.01F, 0);
-      QVector3D const collar_bot(0, y_neck - 0.03F, 0);
-      out.mesh(getUnitCylinder(),
-               cylinderBetween(ctx.model, collar_bot, collar_top,
-                               HP::NECK_RADIUS * 1.35F),
-               hood_color, nullptr, 1.0F);
-    }
-
-    if (style.show_cape) {
-      QVector3D cloak_color = v.palette.cloth * QVector3D(0.48F, 0.62F, 0.52F);
-      if (style.cape_color) {
-        cloak_color = saturate_color(*style.cape_color);
-      }
-
-      QVector3D const toggle_pos(0, y_neck, 0.06F);
-      QMatrix4x4 toggle_m = ctx.model;
-      toggle_m.translate(toggle_pos);
-      toggle_m.scale(0.012F, 0.025F, 0.012F);
-      out.mesh(getUnitCylinder(), toggle_m, v.palette.wood * 0.75F, nullptr,
-               1.0F);
-
-      QVector3D const cloak_top = toggle_pos + QVector3D(0, -0.01F, -0.04F);
-      QVector3D const cloak_bot = cloak_top + QVector3D(0, -0.22F, -0.12F);
-
-      out.mesh(getUnitCylinder(),
-               cylinderBetween(ctx.model, cloak_top, cloak_bot, 0.022F),
-               cloak_color * 0.88F, nullptr, 1.0F);
-    }
-  }
-
 private:
   auto
   resolve_style(const DrawContext &ctx) const -> const ArcherStyleConfig & {
