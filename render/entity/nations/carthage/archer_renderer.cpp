@@ -402,103 +402,25 @@ public:
     using HP = HumanProportions;
 
     auto const &style = resolve_style(ctx);
+    auto &registry = EquipmentRegistry::instance();
+    HumanoidAnimationContext anim_ctx{};
+
     if (!style.show_helmet) {
       if (style.attachment_profile == std::string(k_attachment_headwrap)) {
-        draw_headwrap(ctx, v, pose, out);
+        // Use headwrap helmet from equipment registry
+        auto headwrap = registry.get(EquipmentCategory::Helmet, "headwrap");
+        if (headwrap) {
+          headwrap->render(ctx, pose.bodyFrames, v.palette, anim_ctx, out);
+        }
       }
       return;
     }
 
-    auto draw_montefortino = [&](const QVector3D &base_metal) {
-      const AttachmentFrame &head = pose.bodyFrames.head;
-      float const head_r = head.radius;
-      if (head_r <= 0.0F) {
-        return;
-      }
-
-      auto headPoint = [&](const QVector3D &norm) -> QVector3D {
-        return frameLocalPosition(head, norm);
-      };
-
-      auto headTransform = [&](const QVector3D &norm,
-                               float scale) -> QMatrix4x4 {
-        return makeFrameLocalTransform(ctx.model, head, norm, scale);
-      };
-
-      QVector3D bronze =
-          saturate_color(base_metal * QVector3D(1.22F, 1.04F, 0.70F));
-      QVector3D patina =
-          saturate_color(bronze * QVector3D(0.88F, 0.96F, 0.92F));
-      QVector3D tinned_highlight =
-          saturate_color(bronze * QVector3D(1.12F, 1.08F, 1.04F));
-      QVector3D leather_band = saturate_color(v.palette.leatherDark *
-                                              QVector3D(1.10F, 0.96F, 0.80F));
-
-      auto draw_leather_cap = [&]() {
-        QVector3D leather_brown = saturate_color(
-            v.palette.leatherDark * QVector3D(1.15F, 0.95F, 0.78F));
-        QVector3D leather_dark =
-            saturate_color(leather_brown * QVector3D(0.85F, 0.88F, 0.92F));
-        QVector3D bronze_stud =
-            saturate_color(v.palette.metal * QVector3D(1.20F, 1.02F, 0.70F));
-
-        QMatrix4x4 cap_transform =
-            headTransform(QVector3D(0.0F, 0.70F, 0.0F), 1.0F);
-        cap_transform.scale(0.92F, 0.55F, 0.88F);
-        out.mesh(getUnitSphere(), cap_transform, leather_brown, nullptr, 1.0F);
-
-        QVector3D const band_top = headPoint(QVector3D(0.0F, 0.20F, 0.0F));
-        QVector3D const band_bot = headPoint(QVector3D(0.0F, 0.15F, 0.0F));
-
-        out.mesh(getUnitCylinder(),
-                 cylinderBetween(ctx.model, band_bot, band_top, head_r * 1.02F),
-                 leather_dark, nullptr, 1.0F);
-
-        auto draw_stud = [&](float angle) {
-          QVector3D const stud_pos = headPoint(QVector3D(
-              std::sin(angle) * 1.03F, 0.175F, std::cos(angle) * 1.03F));
-          out.mesh(getUnitSphere(),
-                   sphereAt(ctx.model, stud_pos, head_r * 0.012F), bronze_stud,
-                   nullptr, 1.0F);
-        };
-
-        for (int i = 0; i < 4; ++i) {
-          float const angle = (i / 4.0F) * 2.0F * std::numbers::pi_v<float>;
-          draw_stud(angle);
-        }
-      };
-
-      draw_leather_cap();
-
-      QMatrix4x4 top_knob = headTransform(QVector3D(0.0F, 0.88F, 0.0F), 0.18F);
-      out.mesh(getUnitSphere(), top_knob, tinned_highlight, nullptr, 1.0F);
-
-      QVector3D const brow_top = headPoint(QVector3D(0.0F, 0.55F, 0.0F));
-      QVector3D const brow_bot = headPoint(QVector3D(0.0F, 0.42F, 0.0F));
-      QMatrix4x4 brow =
-          cylinderBetween(ctx.model, brow_bot, brow_top, head_r * 1.20F);
-      brow.scale(1.04F, 1.0F, 0.86F);
-      out.mesh(getUnitCylinder(), brow, leather_band, nullptr, 1.0F);
-
-      QVector3D const rim_upper = headPoint(QVector3D(0.0F, 0.40F, 0.0F));
-      QVector3D const rim_lower = headPoint(QVector3D(0.0F, 0.30F, 0.0F));
-      QMatrix4x4 rim =
-          cylinderBetween(ctx.model, rim_lower, rim_upper, head_r * 1.30F);
-      rim.scale(1.06F, 1.0F, 0.90F);
-      out.mesh(getUnitCylinder(), rim, bronze * QVector3D(0.94F, 0.92F, 0.88F),
-               nullptr, 1.0F);
-
-      QVector3D const crest_front = headPoint(QVector3D(0.0F, 0.92F, 0.82F));
-      QVector3D const crest_back = headPoint(QVector3D(0.0F, 0.92F, -0.90F));
-      QMatrix4x4 crest =
-          cylinderBetween(ctx.model, crest_back, crest_front, head_r * 0.14F);
-      crest.scale(0.54F, 1.0F, 1.0F);
-      out.mesh(getUnitCylinder(), crest,
-               tinned_highlight * QVector3D(0.94F, 0.96F, 1.02F), nullptr,
-               1.0F);
-    };
-
-    draw_montefortino(v.palette.metal);
+    // Use montefortino helmet from equipment registry
+    auto helmet = registry.get(EquipmentCategory::Helmet, "montefortino");
+    if (helmet) {
+      helmet->render(ctx, pose.bodyFrames, v.palette, anim_ctx, out);
+    }
   }
 
   void draw_armorOverlay(const DrawContext &ctx, const HumanoidVariant &v,
@@ -657,41 +579,6 @@ private:
     apply_color(style.leather_dark_color, variant.palette.leatherDark);
     apply_color(style.metal_color, variant.palette.metal);
     apply_color(style.wood_color, variant.palette.wood);
-  }
-
-  void draw_headwrap(const DrawContext &ctx, const HumanoidVariant &v,
-                     const HumanoidPose &pose, ISubmitter &out) const {
-    QVector3D const cloth_color =
-        saturate_color(v.palette.cloth * QVector3D(0.9F, 1.05F, 1.05F));
-    const AttachmentFrame &head = pose.bodyFrames.head;
-    float const head_r = head.radius;
-    if (head_r <= 0.0F) {
-      return;
-    }
-
-    auto headPoint = [&](const QVector3D &normalized) -> QVector3D {
-      return frameLocalPosition(head, normalized);
-    };
-
-    QVector3D const band_top = headPoint(QVector3D(0.0F, 0.70F, 0.0F));
-    QVector3D const band_bot = headPoint(QVector3D(0.0F, 0.30F, 0.0F));
-    out.mesh(getUnitCylinder(),
-             cylinderBetween(ctx.model, band_bot, band_top, head_r * 1.08F),
-             cloth_color, nullptr, 1.0F);
-
-    QVector3D const knot_center = headPoint(QVector3D(0.10F, 0.60F, 0.72F));
-    QMatrix4x4 knot_m = ctx.model;
-    knot_m.translate(knot_center);
-    knot_m.scale(head_r * 0.32F);
-    out.mesh(getUnitSphere(), knot_m, cloth_color * 1.05F, nullptr, 1.0F);
-
-    QVector3D const tail_top = knot_center + head.right * (-0.08F) +
-                               head.up * (-0.05F) + head.forward * (-0.06F);
-    QVector3D const tail_bot = tail_top + head.right * 0.02F +
-                               head.up * (-0.28F) + head.forward * (-0.08F);
-    out.mesh(getUnitCylinder(),
-             cylinderBetween(ctx.model, tail_top, tail_bot, head_r * 0.28F),
-             cloth_color * QVector3D(0.92F, 0.98F, 1.05F), nullptr, 1.0F);
   }
 };
 
