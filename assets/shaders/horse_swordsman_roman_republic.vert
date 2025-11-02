@@ -18,7 +18,8 @@ void main() {
   v_worldPos = vec3(u_model * vec4(a_position, 1.0));
 
   // Detect armor layer based on Y position for Roman equestrian cavalry
-  // Upper body (attic helmet) = 0, Torso (muscle cuirass) = 1, Lower (pteruges/horse) = 2
+  // Upper body (attic helmet) = 0, Torso (muscle cuirass) = 1, Lower
+  // (pteruges/horse) = 2
   if (v_worldPos.y > 1.5) {
     v_armorLayer = 0.0; // Attic/phrygian helmet region
   } else if (v_worldPos.y > 0.8) {

@@ -264,65 +264,60 @@ public:
 
     auto const &style = resolve_style(ctx);
     QVector3D team_tint = resolveTeamTint(ctx);
-    
-    // Get fletching color for quiver renderer
+
     auto tint = [&](float k) {
       return QVector3D(clamp01(team_tint.x() * k), clamp01(team_tint.y() * k),
                        clamp01(team_tint.z() * k));
     };
     QVector3D const fletch = tint(0.9F);
 
-    // Render quiver using equipment registry
     auto &registry = EquipmentRegistry::instance();
     auto quiver = registry.get(EquipmentCategory::Weapon, "quiver");
     if (quiver) {
-      // Configure quiver with appropriate colors
+
       QuiverRenderConfig quiver_config;
       quiver_config.fletching_color = fletch;
       quiver_config.quiver_radius = HP::HEAD_RADIUS * 0.45F;
-      
-      // Safe downcast - we know "quiver" is a QuiverRenderer
-      auto *quiver_renderer = dynamic_cast<QuiverRenderer*>(quiver.get());
+
+      auto *quiver_renderer = dynamic_cast<QuiverRenderer *>(quiver.get());
       if (quiver_renderer) {
         quiver_renderer->setConfig(quiver_config);
       }
-      
+
       quiver->render(ctx, pose.bodyFrames, v.palette, anim_ctx, out);
     }
 
-    // Render bow using equipment registry
     auto bow = registry.get(EquipmentCategory::Weapon, "bow_kingdom");
     if (bow) {
-      // Configure Kingdom/European longbow (taller, straighter)
+
       BowRenderConfig bow_config;
       bow_config.string_color = QVector3D(0.30F, 0.30F, 0.32F);
-      bow_config.metal_color = Render::Geom::clampVec01(v.palette.metal * 1.15F);
+      bow_config.metal_color =
+          Render::Geom::clampVec01(v.palette.metal * 1.15F);
       bow_config.fletching_color = fletch;
-      bow_config.bow_top_y = HP::SHOULDER_Y + 0.55F;   // Same as original
-      bow_config.bow_bot_y = HP::WAIST_Y - 0.25F;      // Same as original
+      bow_config.bow_top_y = HP::SHOULDER_Y + 0.55F;
+      bow_config.bow_bot_y = HP::WAIST_Y - 0.25F;
       bow_config.bow_x = 0.0F;
-      
-      // Apply style overrides if available
+
       if (style.bow_string_color) {
         bow_config.string_color = saturate_color(*style.bow_string_color);
       }
       if (style.fletching_color) {
         bow_config.fletching_color = saturate_color(*style.fletching_color);
       }
-      
-      // Safe downcast - we know "bow" is a BowRenderer
-      auto *bow_renderer = dynamic_cast<BowRenderer*>(bow.get());
+
+      auto *bow_renderer = dynamic_cast<BowRenderer *>(bow.get());
       if (bow_renderer) {
         bow_renderer->setConfig(bow_config);
       }
-      
+
       bow->render(ctx, pose.bodyFrames, v.palette, anim_ctx, out);
     }
   }
 
   void drawHelmet(const DrawContext &ctx, const HumanoidVariant &v,
                   const HumanoidPose &pose, ISubmitter &out) const override {
-    // Use Kingdom Light helmet from equipment registry
+
     auto &registry = EquipmentRegistry::instance();
     auto helmet = registry.get(EquipmentCategory::Helmet, "kingdom_light");
     if (helmet) {

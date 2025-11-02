@@ -22,13 +22,13 @@
 #include <qvectornd.h>
 #include <unordered_map>
 
+#include "../../../equipment/equipment_registry.h"
 #include <QMatrix4x4>
 #include <QString>
 #include <QVector3D>
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
-#include "../../../equipment/equipment_registry.h"
 
 namespace Render::GL::Kingdom {
 
@@ -275,7 +275,7 @@ public:
 
   void drawHelmet(const DrawContext &ctx, const HumanoidVariant &v,
                   const HumanoidPose &pose, ISubmitter &out) const override {
-    // Use Kingdom Heavy helmet from equipment registry
+
     auto &registry = EquipmentRegistry::instance();
     auto helmet = registry.get(EquipmentCategory::Helmet, "kingdom_heavy");
     if (helmet) {

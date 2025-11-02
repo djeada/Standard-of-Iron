@@ -26,17 +26,18 @@ public:
   }
 
   void selectionRing(const QMatrix4x4 & /*model*/, float /*alphaInner*/,
-                     float /*alphaOuter*/, const QVector3D & /*color*/) override {
+                     float /*alphaOuter*/,
+                     const QVector3D & /*color*/) override {
     // Not used in helmet rendering
   }
 
   void grid(const QMatrix4x4 & /*model*/, const QVector3D & /*color*/,
-            float /*cellSize*/, float /*thickness*/, float /*extent*/) override {
+            float /*cellSize*/, float /*thickness*/,
+            float /*extent*/) override {
     // Not used in helmet rendering
   }
 
-  void selectionSmoke(const QMatrix4x4 & /*model*/,
-                      const QVector3D & /*color*/,
+  void selectionSmoke(const QMatrix4x4 & /*model*/, const QVector3D & /*color*/,
                       float /*baseAlpha*/) override {
     // Not used in helmet rendering
   }
@@ -84,7 +85,7 @@ protected:
   void SetUp() override {
     // Ensure built-in equipment is registered
     registerBuiltInEquipment();
-    
+
     ctx = createTestContext();
     frames = createTestFrames();
     palette = createTestPalette();
@@ -176,7 +177,7 @@ TEST_F(HelmetRenderersTest, HeadwrapFromRegistryRenders) {
 TEST_F(HelmetRenderersTest, HelmetsUseHeadFrameCoordinates) {
   // Test that helmets use head frame's coordinate system
   frames.head.origin = QVector3D(1.0F, 2.0F, 3.0F);
-  frames.head.right = QVector3D(0.0F, 1.0F, 0.0F);  // Rotated frame
+  frames.head.right = QVector3D(0.0F, 1.0F, 0.0F); // Rotated frame
   frames.head.up = QVector3D(-1.0F, 0.0F, 0.0F);
   frames.head.forward = QVector3D(0.0F, 0.0F, 1.0F);
   frames.head.radius = 0.12F;
