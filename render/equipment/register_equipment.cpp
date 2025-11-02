@@ -1,4 +1,6 @@
 #include "equipment_registry.h"
+#include "helmets/headwrap.h"
+#include "helmets/montefortino_helmet.h"
 #include "weapons/bow_renderer.h"
 #include "weapons/quiver_renderer.h"
 #include <memory>
@@ -42,6 +44,17 @@ void registerBuiltInEquipment() {
   // Register quiver renderer
   auto quiver = std::make_shared<QuiverRenderer>();
   registry.registerEquipment(EquipmentCategory::Weapon, "quiver", quiver);
+
+  // Register helmet renderers
+  // Montefortino helmet - Carthaginian/Punic style helmet with bronze bowl
+  // and distinctive top knob, used by heavy infantry
+  auto montefortino_helmet = std::make_shared<MontefortinoHelmetRenderer>();
+  registry.registerEquipment(EquipmentCategory::Helmet, "montefortino",
+                            montefortino_helmet);
+
+  // Headwrap - cloth head covering used by archers and light infantry
+  auto headwrap = std::make_shared<HeadwrapRenderer>();
+  registry.registerEquipment(EquipmentCategory::Helmet, "headwrap", headwrap);
 }
 
 } // namespace Render::GL
