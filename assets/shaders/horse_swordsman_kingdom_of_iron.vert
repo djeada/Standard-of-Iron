@@ -18,7 +18,8 @@ void main() {
   v_worldPos = vec3(u_model * vec4(a_position, 1.0));
 
   // Detect armor layer based on Y position for Kingdom mounted knight
-  // Upper body (great helm) = 0, Torso (full plate) = 1, Lower (horse barding) = 2
+  // Upper body (great helm) = 0, Torso (full plate) = 1, Lower (horse barding)
+  // = 2
   if (v_worldPos.y > 1.5) {
     v_armorLayer = 0.0; // Kingdom great helm/aventail region
   } else if (v_worldPos.y > 0.8) {
