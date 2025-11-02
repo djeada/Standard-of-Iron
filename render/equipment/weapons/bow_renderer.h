@@ -13,10 +13,12 @@ struct BowRenderConfig {
   QVector3D fletching_color{0.60F, 0.20F, 0.20F};
   float bow_rod_radius = 0.035F;
   float string_radius = 0.008F;
-  float bow_depth = 0.25F;
+  float bow_depth = 0.25F;      // Curve depth (composite bows have more)
   float bow_x = 0.0F;
-  float bow_top_y = 0.0F;  // Set based on HumanProportions
-  float bow_bot_y = 0.0F;  // Set based on HumanProportions
+  float bow_top_y = 0.0F;       // Set based on HumanProportions
+  float bow_bot_y = 0.0F;       // Set based on HumanProportions
+  float bow_height_scale = 1.0F; // Height multiplier (longbows are taller)
+  float bow_curve_factor = 1.0F; // Curve intensity (composite bows curve more)
 };
 
 class BowRenderer : public IEquipmentRenderer {
