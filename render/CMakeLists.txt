@@ -69,6 +69,7 @@ add_library(render_gl STATIC
     humanoid/rig.cpp
     humanoid/style_palette.cpp
     humanoid/pose_controller.cpp
+    equipment/equipment_registry.cpp
 )
 
 target_include_directories(render_gl PUBLIC .)
