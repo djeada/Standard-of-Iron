@@ -40,7 +40,6 @@ struct AttachmentFrame {
   float radius{0.0F};
 };
 
-// Legacy alias for backward compatibility
 using HeadFrame = AttachmentFrame;
 
 struct BodyFrames {
@@ -61,10 +60,8 @@ struct HumanoidPose {
   float headR{};
   QVector3D neck_base;
 
-  // Legacy field for backward compatibility - points to bodyFrames.head
   HeadFrame headFrame{};
 
-  // Complete body attachment frame system
   BodyFrames bodyFrames{};
 
   QVector3D shoulderL, shoulderR;
@@ -245,7 +242,6 @@ public:
 
   void render(const DrawContext &ctx, ISubmitter &out) const;
 
-  // Frame coordinate transformation helpers (public for testing and external use)
   static auto frameLocalPosition(const AttachmentFrame &frame,
                                  const QVector3D &local) -> QVector3D;
 
@@ -254,7 +250,6 @@ public:
                                       const QVector3D &local_offset,
                                       float uniform_scale) -> QMatrix4x4;
 
-  // Legacy helpers for backward compatibility
   static auto headLocalPosition(const HeadFrame &frame,
                                 const QVector3D &local) -> QVector3D;
 
