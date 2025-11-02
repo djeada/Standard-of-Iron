@@ -8,14 +8,15 @@
 namespace Render::GL {
 
 struct BowRenderConfig {
-  QVector3D wood_color{0.35F, 0.25F, 0.15F};
   QVector3D string_color{0.30F, 0.30F, 0.32F};
   QVector3D metal_color{0.50F, 0.50F, 0.55F};
   QVector3D fletching_color{0.60F, 0.20F, 0.20F};
   float bow_rod_radius = 0.035F;
   float string_radius = 0.008F;
   float bow_depth = 0.25F;
-  float bow_height = 0.80F;
+  float bow_x = 0.0F;
+  float bow_top_y = 0.0F;  // Set based on HumanProportions
+  float bow_bot_y = 0.0F;  // Set based on HumanProportions
 };
 
 class BowRenderer : public IEquipmentRenderer {
@@ -26,6 +27,8 @@ public:
               const HumanoidPalette &palette,
               const HumanoidAnimationContext &anim,
               ISubmitter &submitter) override;
+
+  void setConfig(const BowRenderConfig &config) { m_config = config; }
 
 private:
   BowRenderConfig m_config;
