@@ -19,6 +19,7 @@
 #include "spearman_style.h"
 
 #include "../../../equipment/equipment_registry.h"
+#include "../../../equipment/weapons/spear_renderer.h"
 #include <QMatrix4x4>
 #include <QString>
 #include <QVector3D>
@@ -214,13 +215,24 @@ public:
     apply_extras_overrides(style, team_tint, v, extras);
 
     bool const is_attacking = anim.is_attacking && anim.isMelee;
-    float attack_phase = 0.0F;
-    if (is_attacking) {
-      attack_phase =
-          std::fmod(anim.time * SPEARMAN_INV_ATTACK_CYCLE_TIME, 1.0F);
-    }
 
-    drawSpear(ctx, pose, v, extras, anim, is_attacking, attack_phase, out);
+    auto &registry = EquipmentRegistry::instance();
+
+    auto spear = registry.get(EquipmentCategory::Weapon, "spear");
+    if (spear) {
+      SpearRenderConfig spear_config;
+      spear_config.shaft_color = extras.spearShaftColor;
+      spear_config.spearhead_color = extras.spearheadColor;
+      spear_config.spear_length = extras.spearLength;
+      spear_config.shaft_radius = extras.spearShaftRadius;
+      spear_config.spearhead_length = extras.spearheadLength;
+
+      auto *spear_renderer = dynamic_cast<SpearRenderer *>(spear.get());
+      if (spear_renderer) {
+        spear_renderer->setConfig(spear_config);
+      }
+      spear->render(ctx, pose.bodyFrames, v.palette, anim_ctx, out);
+    }
   }
 
   void drawHelmet(const DrawContext &ctx, const HumanoidVariant &v,
@@ -258,77 +270,6 @@ private:
     e.spearheadLength = 0.16F + (hash_01(seed ^ 0xBEEFU) - 0.5F) * 0.04F;
 
     return e;
-  }
-
-  static void drawSpear(const DrawContext &ctx, const HumanoidPose &pose,
-                        const HumanoidVariant &v, const SpearmanExtras &extras,
-                        const AnimationInputs &anim, bool is_attacking,
-                        float attack_phase, ISubmitter &out) {
-    QVector3D const grip_pos = pose.hand_r;
-
-    QVector3D spear_dir = QVector3D(0.05F, 0.55F, 0.85F);
-    if (spear_dir.lengthSquared() > 1e-6F) {
-      spear_dir.normalize();
-    }
-
-    if (anim.isInHoldMode || anim.isExitingHold) {
-      float const t = anim.isInHoldMode ? 1.0F : (1.0F - anim.holdExitProgress);
-
-      QVector3D braced_dir = QVector3D(0.05F, 0.40F, 0.91F);
-      if (braced_dir.lengthSquared() > 1e-6F) {
-        braced_dir.normalize();
-      }
-
-      spear_dir = spear_dir * (1.0F - t) + braced_dir * t;
-      if (spear_dir.lengthSquared() > 1e-6F) {
-        spear_dir.normalize();
-      }
-    } else if (is_attacking) {
-      if (attack_phase >= 0.30F && attack_phase < 0.50F) {
-        float const t = (attack_phase - 0.30F) / 0.20F;
-
-        QVector3D attack_dir = QVector3D(0.03F, -0.15F, 1.0F);
-        if (attack_dir.lengthSquared() > 1e-6F) {
-          attack_dir.normalize();
-        }
-
-        spear_dir = spear_dir * (1.0F - t) + attack_dir * t;
-        if (spear_dir.lengthSquared() > 1e-6F) {
-          spear_dir.normalize();
-        }
-      }
-    }
-
-    QVector3D const shaft_base = grip_pos - spear_dir * 0.28F;
-    QVector3D shaft_mid = grip_pos + spear_dir * (extras.spearLength * 0.5F);
-    QVector3D const shaft_tip = grip_pos + spear_dir * extras.spearLength;
-
-    shaft_mid.setY(shaft_mid.y() + 0.02F);
-
-    out.mesh(getUnitCylinder(),
-             cylinderBetween(ctx.model, shaft_base, shaft_mid,
-                             extras.spearShaftRadius),
-             extras.spearShaftColor, nullptr, 1.0F);
-
-    out.mesh(getUnitCylinder(),
-             cylinderBetween(ctx.model, shaft_mid, shaft_tip,
-                             extras.spearShaftRadius * 0.95F),
-             extras.spearShaftColor * 0.98F, nullptr, 1.0F);
-
-    QVector3D const spearhead_base = shaft_tip;
-    QVector3D const spearhead_tip =
-        shaft_tip + spear_dir * extras.spearheadLength;
-
-    out.mesh(getUnitCone(),
-             coneFromTo(ctx.model, spearhead_base, spearhead_tip,
-                        extras.spearShaftRadius * 1.8F),
-             extras.spearheadColor, nullptr, 1.0F);
-
-    QVector3D const grip_end = grip_pos + spear_dir * 0.10F;
-    out.mesh(getUnitCylinder(),
-             cylinderBetween(ctx.model, grip_pos, grip_end,
-                             extras.spearShaftRadius * 1.5F),
-             v.palette.leather * 0.92F, nullptr, 1.0F);
   }
 
   auto
