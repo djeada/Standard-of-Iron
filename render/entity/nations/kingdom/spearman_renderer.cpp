@@ -273,80 +273,16 @@ public:
     }
   }
 
-  void draw_armorOverlay(const DrawContext &ctx, const HumanoidVariant &v,
-                         const HumanoidPose &pose, float y_top_cover,
-                         float torso_r, float, float upper_arm_r,
-                         const QVector3D &right_axis,
-                         ISubmitter &out) const override {
-    using HP = HumanProportions;
-
-    const QVector3D iron_color = v.palette.metal * IRON_TINT;
-    const QVector3D leather_color = v.palette.leather * 0.95F;
-
-    QVector3D const chest_top(0, y_top_cover + 0.02F, 0);
-    QVector3D const chest_bot(0, HP::WAIST_Y + 0.08F, 0);
-    float const r_chest = torso_r * 1.14F;
-
-    out.mesh(getUnitCylinder(),
-             cylinderBetween(ctx.model, chest_top, chest_bot, r_chest),
-             iron_color, nullptr, 1.0F);
-
-    auto draw_pauldron = [&](const QVector3D &shoulder,
-                             const QVector3D &outward) {
-      for (int i = 0; i < 3; ++i) {
-        float const seg_y = shoulder.y() + 0.03F - i * 0.040F;
-        float const seg_r = upper_arm_r * (2.2F - i * 0.10F);
-        QVector3D seg_pos = shoulder + outward * (0.015F + i * 0.006F);
-        seg_pos.setY(seg_y);
-
-        out.mesh(getUnitSphere(), sphereAt(ctx.model, seg_pos, seg_r),
-                 i == 0 ? iron_color * 1.04F : iron_color * (1.0F - i * 0.02F),
-                 nullptr, 1.0F);
-      }
-    };
-
-    draw_pauldron(pose.shoulderL, -right_axis);
-    draw_pauldron(pose.shoulderR, right_axis);
-
-    auto draw_arm_plate = [&](const QVector3D &shoulder,
-                              const QVector3D &elbow) {
-      QVector3D dir = (elbow - shoulder);
-      float const len = dir.length();
-      if (len < 1e-5F) {
-        return;
-      }
-      dir /= len;
-
-      for (int i = 0; i < 2; ++i) {
-        float const t0 = 0.12F + i * 0.28F;
-        float const t1 = t0 + 0.24F;
-        QVector3D const a = shoulder + dir * (t0 * len);
-        QVector3D const b = shoulder + dir * (t1 * len);
-        float const r = upper_arm_r * (1.26F - i * 0.03F);
-
-        out.mesh(getUnitCylinder(), cylinderBetween(ctx.model, a, b, r),
-                 iron_color * (0.96F - i * 0.02F), nullptr, 1.0F);
-      }
-    };
-
-    draw_arm_plate(pose.shoulderL, pose.elbowL);
-    draw_arm_plate(pose.shoulderR, pose.elbowR);
-
-    for (int i = 0; i < 3; ++i) {
-      float const y = HP::WAIST_Y + 0.06F - i * 0.035F;
-      float const r = torso_r * (1.12F + i * 0.020F);
-      QVector3D const strip_top(0, y, 0);
-      QVector3D const strip_bot(0, y - 0.030F, 0);
-
-      out.mesh(getUnitCone(), coneFromTo(ctx.model, strip_top, strip_bot, r),
-               leather_color * (0.98F - i * 0.02F), nullptr, 1.0F);
+  void drawArmor(const DrawContext &ctx, const HumanoidVariant &v,
+                 const HumanoidPose &pose,
+                 const HumanoidAnimationContext &anim,
+                 ISubmitter &out) const override {
+    auto &registry = EquipmentRegistry::instance();
+    auto armor = registry.get(EquipmentCategory::Armor, "kingdom_heavy_armor");
+    if (armor) {
+      armor->render(ctx, pose.bodyFrames, v.palette, anim, out);
     }
   }
-
-  void drawShoulderDecorations(const DrawContext &ctx, const HumanoidVariant &v,
-                               const HumanoidPose &pose, float y_top_cover,
-                               float y_neck, const QVector3D &right_axis,
-                               ISubmitter &out) const override {}
 
 private:
   static auto computeSpearmanExtras(uint32_t seed, const HumanoidVariant &v)
