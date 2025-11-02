@@ -725,6 +725,12 @@ void HumanoidRendererBase::draw_armorOverlay(const DrawContext &,
                                              float, float, const QVector3D &,
                                              ISubmitter &) const {}
 
+void HumanoidRendererBase::drawArmor(const DrawContext &,
+                                     const HumanoidVariant &,
+                                     const HumanoidPose &,
+                                     const HumanoidAnimationContext &,
+                                     ISubmitter &) const {}
+
 void HumanoidRendererBase::drawShoulderDecorations(const DrawContext &,
                                                    const HumanoidVariant &,
                                                    const HumanoidPose &, float,
@@ -1228,6 +1234,7 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
 
     drawCommonBody(inst_ctx, variant, pose, out);
     drawFacialHair(inst_ctx, variant, pose, out);
+    drawArmor(inst_ctx, variant, pose, anim_ctx, out);
 
     addAttachments(inst_ctx, variant, pose, anim_ctx, out);
   }
