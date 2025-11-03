@@ -110,7 +110,8 @@ public:
       float const t = anim.isInHoldMode ? 1.0F : (1.0F - anim.holdExitProgress);
 
       controller.kneel(t * k_kneel_depth_multiplier);
-      controller.lean(QVector3D(0.0F, 0.0F, 1.0F), t * k_lean_amount_multiplier);
+      controller.lean(QVector3D(0.0F, 0.0F, 1.0F),
+                      t * k_lean_amount_multiplier);
 
       QVector3D const hold_hand_l(bow_x - 0.15F, pose.shoulderL.y() + 0.30F,
                                   0.55F);
@@ -225,12 +226,12 @@ public:
   }
 
   void drawArmor(const DrawContext &ctx, const HumanoidVariant &v,
-                 const HumanoidPose &pose,
-                 const HumanoidAnimationContext &anim,
+                 const HumanoidPose &pose, const HumanoidAnimationContext &anim,
                  ISubmitter &out) const override {
     if (resolve_style(ctx).show_armor) {
       auto &registry = EquipmentRegistry::instance();
-      auto armor = registry.get(EquipmentCategory::Armor, "kingdom_light_armor");
+      auto armor =
+          registry.get(EquipmentCategory::Armor, "kingdom_light_armor");
       if (armor) {
         armor->render(ctx, pose.bodyFrames, v.palette, anim, out);
       }

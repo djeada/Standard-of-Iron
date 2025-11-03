@@ -36,9 +36,8 @@ void SpearRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
   }
 
   if (anim.inputs.isInHoldMode || anim.inputs.isExitingHold) {
-    float const t = anim.inputs.isInHoldMode
-                        ? 1.0F
-                        : (1.0F - anim.inputs.holdExitProgress);
+    float const t =
+        anim.inputs.isInHoldMode ? 1.0F : (1.0F - anim.inputs.holdExitProgress);
 
     QVector3D braced_dir = QVector3D(0.05F, 0.40F, 0.91F);
     if (braced_dir.lengthSquared() > 1e-6F) {
@@ -91,11 +90,10 @@ void SpearRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
                  m_config.spearhead_color, nullptr, 1.0F);
 
   QVector3D const grip_end = grip_pos + spear_dir * 0.10F;
-  submitter.mesh(
-      getUnitCylinder(),
-      cylinderBetween(ctx.model, grip_pos, grip_end,
-                      m_config.shaft_radius * 1.5F),
-      palette.leather * 0.92F, nullptr, 1.0F);
+  submitter.mesh(getUnitCylinder(),
+                 cylinderBetween(ctx.model, grip_pos, grip_end,
+                                 m_config.shaft_radius * 1.5F),
+                 palette.leather * 0.92F, nullptr, 1.0F);
 }
 
 } // namespace Render::GL

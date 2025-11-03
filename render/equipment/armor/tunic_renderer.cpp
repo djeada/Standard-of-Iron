@@ -24,8 +24,7 @@ void TunicRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
                            const HumanoidPalette &palette,
                            const HumanoidAnimationContext &anim,
                            ISubmitter &submitter) {
-  // Animation context currently unused - armor is rigid and follows torso frame
-  // Future enhancement: could add breathing effects or battle damage
+
   (void)anim;
 
   const AttachmentFrame &torso = frames.torso;
@@ -91,8 +90,7 @@ void TunicRenderer::renderTorsoArmor(const DrawContext &ctx,
                                 const QVector3D &color) {
     for (int i = 0; i < segments; ++i) {
       float const angle1 = (static_cast<float>(i) / segments) * 2.0F * pi;
-      float const angle2 =
-          (static_cast<float>(i + 1) / segments) * 2.0F * pi;
+      float const angle2 = (static_cast<float>(i + 1) / segments) * 2.0F * pi;
 
       float const sin1 = std::sin(angle1);
       float const cos1 = std::cos(angle1);
@@ -103,40 +101,39 @@ void TunicRenderer::renderTorsoArmor(const DrawContext &ctx,
         float const cos_a = std::cos(angle_rad);
         float const abs_cos = std::abs(cos_a);
 
-        // Select depth based on front (chest) vs back
         float depth = (cos_a > 0.0F) ? depth_front : depth_back;
 
-        // Create broader shoulders: base scale (1.0) + variation (0.15) at shoulder points
         constexpr float BASE_SHOULDER_SCALE = 1.0F;
         constexpr float SHOULDER_VARIATION_FACTOR = 0.15F;
         float const shoulder_bias =
             BASE_SHOULDER_SCALE +
             SHOULDER_VARIATION_FACTOR * std::abs(std::sin(angle_rad));
 
-        // Blend between circular (abs_cos * 0.3) and depth-based (0.7 * depth)
         return width_scale * shoulder_bias * (abs_cos * 0.3F + 0.7F * depth);
       };
 
       float const r1 = getRadiusAtAngle(angle1);
       float const r2 = getRadiusAtAngle(angle2);
 
-      QVector3D const p1 =
-          origin + right * (r1 * sin1) + forward * (r1 * cos1) + up * (y_pos - origin.y());
-      QVector3D const p2 =
-          origin + right * (r2 * sin2) + forward * (r2 * cos2) + up * (y_pos - origin.y());
+      QVector3D const p1 = origin + right * (r1 * sin1) +
+                           forward * (r1 * cos1) + up * (y_pos - origin.y());
+      QVector3D const p2 = origin + right * (r2 * sin2) +
+                           forward * (r2 * cos2) + up * (y_pos - origin.y());
 
       float const seg_r = (r1 + r2) * 0.5F * 0.08F;
-      submitter.mesh(getUnitCylinder(), cylinderBetween(ctx.model, p1, p2, seg_r),
-                     color, nullptr, 1.0F);
+      submitter.mesh(getUnitCylinder(),
+                     cylinderBetween(ctx.model, p1, p2, seg_r), color, nullptr,
+                     1.0F);
     }
   };
 
-  createTorsoSegment(y_top, shoulder_width, chest_depth_front,
-                     chest_depth_back, steel_color);
+  createTorsoSegment(y_top, shoulder_width, chest_depth_front, chest_depth_back,
+                     steel_color);
   createTorsoSegment(y_mid_chest, chest_width, chest_depth_front,
                      chest_depth_back, steel_color * 0.99F);
-  createTorsoSegment(y_bottom_chest, chest_width * 0.98F, chest_depth_front * 0.95F,
-                     chest_depth_back * 0.95F, steel_color * 0.98F);
+  createTorsoSegment(y_bottom_chest, chest_width * 0.98F,
+                     chest_depth_front * 0.95F, chest_depth_back * 0.95F,
+                     steel_color * 0.98F);
   createTorsoSegment(y_waist, waist_width, chest_depth_front * 0.90F,
                      chest_depth_back * 0.90F, steel_color * 0.97F);
 
@@ -146,17 +143,18 @@ void TunicRenderer::renderTorsoArmor(const DrawContext &ctx,
       float const sin_a = std::sin(angle);
       float const cos_a = std::cos(angle);
 
-      float const depth1 = (cos_a > 0.0F) ? chest_depth_front : chest_depth_back;
+      float const depth1 =
+          (cos_a > 0.0F) ? chest_depth_front : chest_depth_back;
       float const depth2 =
           (cos_a > 0.0F) ? chest_depth_front * 0.95F : chest_depth_back * 0.95F;
 
       float const r1 = width1 * depth1;
       float const r2 = width2 * depth2;
 
-      QVector3D const top =
-          origin + right * (r1 * sin_a) + forward * (r1 * cos_a) + up * (y1 - origin.y());
-      QVector3D const bot =
-          origin + right * (r2 * sin_a) + forward * (r2 * cos_a) + up * (y2 - origin.y());
+      QVector3D const top = origin + right * (r1 * sin_a) +
+                            forward * (r1 * cos_a) + up * (y1 - origin.y());
+      QVector3D const bot = origin + right * (r2 * sin_a) +
+                            forward * (r2 * cos_a) + up * (y2 - origin.y());
 
       submitter.mesh(getUnitCylinder(),
                      cylinderBetween(ctx.model, top, bot, torso_r * 0.06F),
@@ -165,10 +163,10 @@ void TunicRenderer::renderTorsoArmor(const DrawContext &ctx,
   };
 
   connectSegments(y_top, y_mid_chest, shoulder_width, chest_width);
-  connectSegments(y_mid_chest, y_bottom_chest, chest_width, chest_width * 0.98F);
+  connectSegments(y_mid_chest, y_bottom_chest, chest_width,
+                  chest_width * 0.98F);
   connectSegments(y_bottom_chest, y_waist, chest_width * 0.98F, waist_width);
 
-  // Add decorative rivets around the chest
   auto draw_rivet = [&](const QVector3D &pos) {
     QMatrix4x4 m = ctx.model;
     m.translate(pos);
@@ -176,17 +174,15 @@ void TunicRenderer::renderTorsoArmor(const DrawContext &ctx,
     submitter.mesh(getUnitSphere(), m, brass_color, nullptr, 1.0F);
   };
 
-  // Position rivets in a ring around the chest at mid-height
-  constexpr float RIVET_POSITION_SCALE =
-      0.92F; // Slightly inset from armor edge
+  constexpr float RIVET_POSITION_SCALE = 0.92F;
   for (int i = 0; i < 8; ++i) {
     float const angle = (static_cast<float>(i) / 8.0F) * 2.0F * pi;
-    float const x =
-        chest_width * std::sin(angle) * chest_depth_front * RIVET_POSITION_SCALE;
-    float const z =
-        chest_width * std::cos(angle) * chest_depth_front * RIVET_POSITION_SCALE;
-    draw_rivet(
-        origin + right * x + forward * z + up * (y_mid_chest + 0.08F - origin.y()));
+    float const x = chest_width * std::sin(angle) * chest_depth_front *
+                    RIVET_POSITION_SCALE;
+    float const z = chest_width * std::cos(angle) * chest_depth_front *
+                    RIVET_POSITION_SCALE;
+    draw_rivet(origin + right * x + forward * z +
+               up * (y_mid_chest + 0.08F - origin.y()));
   }
 }
 
@@ -208,8 +204,9 @@ void TunicRenderer::renderPauldrons(const DrawContext &ctx,
       seg_pos.setY(seg_y);
 
       submitter.mesh(getUnitSphere(), sphereAt(ctx.model, seg_pos, seg_r),
-                     i == 0 ? steel_color * 1.05F
-                            : steel_color * (1.0F - static_cast<float>(i) * 0.03F),
+                     i == 0
+                         ? steel_color * 1.05F
+                         : steel_color * (1.0F - static_cast<float>(i) * 0.03F),
                      nullptr, 1.0F);
 
       if (i < 3) {
@@ -236,8 +233,10 @@ void TunicRenderer::renderGorget(const DrawContext &ctx,
                                  ISubmitter &submitter) {
   using HP = HumanProportions;
 
-  QVector3D const gorget_top(torso.origin.x(), y_top + 0.025F, torso.origin.z());
-  QVector3D const gorget_bot(torso.origin.x(), y_top - 0.012F, torso.origin.z());
+  QVector3D const gorget_top(torso.origin.x(), y_top + 0.025F,
+                             torso.origin.z());
+  QVector3D const gorget_bot(torso.origin.x(), y_top - 0.012F,
+                             torso.origin.z());
 
   submitter.mesh(getUnitCylinder(),
                  cylinderBetween(ctx.model, gorget_bot, gorget_top,
@@ -265,11 +264,11 @@ void TunicRenderer::renderBelt(const DrawContext &ctx,
     float const y1 = y0 - 0.032F;
     float const r0 = waist_r * (1.06F + static_cast<float>(i) * 0.025F);
 
-    submitter.mesh(getUnitCone(),
-                   coneFromTo(ctx.model, QVector3D(waist.origin.x(), y0, waist.origin.z()),
-                              QVector3D(waist.origin.x(), y1, waist.origin.z()), r0),
-                   steel_color * (0.96F - static_cast<float>(i) * 0.02F), nullptr,
-                   1.0F);
+    submitter.mesh(
+        getUnitCone(),
+        coneFromTo(ctx.model, QVector3D(waist.origin.x(), y0, waist.origin.z()),
+                   QVector3D(waist.origin.x(), y1, waist.origin.z()), r0),
+        steel_color * (0.96F - static_cast<float>(i) * 0.02F), nullptr, 1.0F);
 
     if (i < 3) {
       QMatrix4x4 m = ctx.model;

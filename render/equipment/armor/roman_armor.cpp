@@ -19,11 +19,11 @@ using Render::Geom::sphereAt;
 using Render::GL::Humanoid::saturate_color;
 
 void RomanHeavyArmorRenderer::render(const DrawContext &ctx,
-                                      const BodyFrames &frames,
-                                      const HumanoidPalette &palette,
-                                      const HumanoidAnimationContext &anim,
-                                      ISubmitter &submitter) {
-  (void)anim; // Armor is rigid
+                                     const BodyFrames &frames,
+                                     const HumanoidPalette &palette,
+                                     const HumanoidAnimationContext &anim,
+                                     ISubmitter &submitter) {
+  (void)anim;
 
   const AttachmentFrame &torso = frames.torso;
   if (torso.radius <= 0.0F) {
@@ -44,41 +44,36 @@ void RomanHeavyArmorRenderer::render(const DrawContext &ctx,
   const QVector3D &up = torso.up;
   const QVector3D &forward = torso.forward;
 
-  // Lorica segmentata - horizontal overlapping bands
   float const torso_r = torso.radius * 1.08F;
   float const shoulder_width = torso_r * 1.18F;
   float const chest_depth_front = torso_r * 1.15F;
   float const chest_depth_back = torso_r * 0.82F;
 
-  // Define horizontal bands from shoulder to waist
   constexpr int num_bands = 8;
   float const y_top = HP::SHOULDER_Y;
   float const y_bottom = HP::WAIST_Y + 0.05F;
   float const band_height = (y_top - y_bottom) / static_cast<float>(num_bands);
 
-  constexpr int segments = 20; // More segments for smoother bands
+  constexpr int segments = 20;
   constexpr float pi = std::numbers::pi_v<float>;
 
-  // Render each horizontal band
   for (int band = 0; band < num_bands; ++band) {
     float const y_band_top = y_top - static_cast<float>(band) * band_height;
-    float const y_band_bottom = y_band_top - band_height * 0.92F; // Slight gap
+    float const y_band_bottom = y_band_top - band_height * 0.92F;
 
-    // Calculate band radius based on position (wider at chest, narrower at waist)
-    float const t = static_cast<float>(band) / static_cast<float>(num_bands - 1);
+    float const t =
+        static_cast<float>(band) / static_cast<float>(num_bands - 1);
     float const width_scale = shoulder_width * (1.0F - t * 0.18F);
 
-    // Shade alternating bands slightly for visual distinction
-    QVector3D band_color = steel_color * (1.0F - static_cast<float>(band % 2) * 0.05F);
+    QVector3D band_color =
+        steel_color * (1.0F - static_cast<float>(band % 2) * 0.05F);
 
-    // Asymmetric depth function - forward chest, compressed back
     auto getRadius = [&](float angle) -> float {
       float const cos_a = std::cos(angle);
       float depth = (cos_a > 0.0F) ? chest_depth_front : chest_depth_back;
       return width_scale * depth * (std::abs(cos_a) * 0.25F + 0.75F);
     };
 
-    // Create curved band segments
     for (int i = 0; i < segments; ++i) {
       float const angle1 = (static_cast<float>(i) / segments) * 2.0F * pi;
       float const angle2 = (static_cast<float>(i + 1) / segments) * 2.0F * pi;
@@ -91,21 +86,20 @@ void RomanHeavyArmorRenderer::render(const DrawContext &ctx,
       float const r1 = getRadius(angle1);
       float const r2 = getRadius(angle2);
 
-      // Top edge of band
-      QVector3D const p1_top =
-          origin + right * (r1 * sin1) + forward * (r1 * cos1) + up * (y_band_top - origin.y());
-      QVector3D const p2_top =
-          origin + right * (r2 * sin2) + forward * (r2 * cos2) + up * (y_band_top - origin.y());
+      QVector3D const p1_top = origin + right * (r1 * sin1) +
+                               forward * (r1 * cos1) +
+                               up * (y_band_top - origin.y());
+      QVector3D const p2_top = origin + right * (r2 * sin2) +
+                               forward * (r2 * cos2) +
+                               up * (y_band_top - origin.y());
 
-      // Bottom edge of band
-      QVector3D const p1_bot =
-          origin + right * (r1 * sin1) + forward * (r1 * cos1) +
-          up * (y_band_bottom - origin.y());
-      QVector3D const p2_bot =
-          origin + right * (r2 * sin2) + forward * (r2 * cos2) +
-          up * (y_band_bottom - origin.y());
+      QVector3D const p1_bot = origin + right * (r1 * sin1) +
+                               forward * (r1 * cos1) +
+                               up * (y_band_bottom - origin.y());
+      QVector3D const p2_bot = origin + right * (r2 * sin2) +
+                               forward * (r2 * cos2) +
+                               up * (y_band_bottom - origin.y());
 
-      // Render band segment as thin cylinder
       float const seg_r = (r1 + r2) * 0.5F * 0.04F;
       submitter.mesh(getUnitCylinder(),
                      cylinderBetween(ctx.model, p1_top, p1_bot, seg_r),
@@ -121,15 +115,14 @@ void RomanHeavyArmorRenderer::render(const DrawContext &ctx,
                      band_color, nullptr, 1.0F);
     }
 
-    // Add rivets/clasps to every other band
     if (band % 2 == 0) {
       for (int i = 0; i < 6; ++i) {
         float const angle = (static_cast<float>(i) / 6.0F) * 2.0F * pi;
         float const r = getRadius(angle) * 0.95F;
         float const y_rivet = (y_band_top + y_band_bottom) * 0.5F;
-        QVector3D rivet_pos =
-            origin + right * (r * std::sin(angle)) +
-            forward * (r * std::cos(angle)) + up * (y_rivet - origin.y());
+        QVector3D rivet_pos = origin + right * (r * std::sin(angle)) +
+                              forward * (r * std::cos(angle)) +
+                              up * (y_rivet - origin.y());
 
         QMatrix4x4 m = ctx.model;
         m.translate(rivet_pos);
@@ -139,9 +132,8 @@ void RomanHeavyArmorRenderer::render(const DrawContext &ctx,
     }
   }
 
-  // Shoulder guards - layered segments
   auto renderShoulderGuard = [&](const QVector3D &shoulder_pos,
-                                  const QVector3D &outward) {
+                                 const QVector3D &outward) {
     constexpr int shoulder_segments = 4;
     float const upper_arm_r = HP::UPPER_ARM_R;
 
@@ -156,7 +148,6 @@ void RomanHeavyArmorRenderer::render(const DrawContext &ctx,
                      steel_color * (1.0F - static_cast<float>(i) * 0.04F),
                      nullptr, 1.0F);
 
-      // Rivets on shoulder guards
       if (i < 3) {
         QMatrix4x4 m = ctx.model;
         m.translate(seg_pos + QVector3D(0, 0.02F, 0.04F));
@@ -169,27 +160,26 @@ void RomanHeavyArmorRenderer::render(const DrawContext &ctx,
   renderShoulderGuard(frames.shoulderL.origin, -right);
   renderShoulderGuard(frames.shoulderR.origin, right);
 
-  // Belt/waist protection
   QVector3D const waist_center(origin.x(), HP::WAIST_Y, origin.z());
   for (int i = 0; i < 3; ++i) {
     float const y0 = HP::WAIST_Y - static_cast<float>(i) * 0.035F;
     float const y1 = y0 - 0.03F;
     float const r = torso.radius * (1.05F + static_cast<float>(i) * 0.02F);
 
-    submitter.mesh(getUnitCone(),
-                   coneFromTo(ctx.model, QVector3D(waist_center.x(), y0, waist_center.z()),
-                              QVector3D(waist_center.x(), y1, waist_center.z()), r),
-                   leather_color * (0.95F - static_cast<float>(i) * 0.05F),
-                   nullptr, 1.0F);
+    submitter.mesh(
+        getUnitCone(),
+        coneFromTo(ctx.model, QVector3D(waist_center.x(), y0, waist_center.z()),
+                   QVector3D(waist_center.x(), y1, waist_center.z()), r),
+        leather_color * (0.95F - static_cast<float>(i) * 0.05F), nullptr, 1.0F);
   }
 }
 
 void RomanLightArmorRenderer::render(const DrawContext &ctx,
-                                      const BodyFrames &frames,
-                                      const HumanoidPalette &palette,
-                                      const HumanoidAnimationContext &anim,
-                                      ISubmitter &submitter) {
-  (void)anim; // Armor is rigid
+                                     const BodyFrames &frames,
+                                     const HumanoidPalette &palette,
+                                     const HumanoidAnimationContext &anim,
+                                     ISubmitter &submitter) {
+  (void)anim;
 
   const AttachmentFrame &torso = frames.torso;
   if (torso.radius <= 0.0F) {
@@ -208,13 +198,12 @@ void RomanLightArmorRenderer::render(const DrawContext &ctx,
   const QVector3D &up = torso.up;
   const QVector3D &forward = torso.forward;
 
-  // Light armor - fewer bands, simpler construction
   float const torso_r = torso.radius * 1.04F;
   float const shoulder_width = torso_r * 1.12F;
   float const chest_depth_front = torso_r * 1.10F;
   float const chest_depth_back = torso_r * 0.86F;
 
-  constexpr int num_bands = 4; // Fewer bands for light armor
+  constexpr int num_bands = 4;
   float const y_top = HP::SHOULDER_Y - 0.02F;
   float const y_bottom = HP::CHEST_Y;
   float const band_height = (y_top - y_bottom) / static_cast<float>(num_bands);
@@ -226,10 +215,12 @@ void RomanLightArmorRenderer::render(const DrawContext &ctx,
     float const y_band_top = y_top - static_cast<float>(band) * band_height;
     float const y_band_bottom = y_band_top - band_height * 0.90F;
 
-    float const t = static_cast<float>(band) / static_cast<float>(num_bands - 1);
+    float const t =
+        static_cast<float>(band) / static_cast<float>(num_bands - 1);
     float const width_scale = shoulder_width * (1.0F - t * 0.12F);
 
-    QVector3D band_color = steel_color * (1.0F - static_cast<float>(band % 2) * 0.04F);
+    QVector3D band_color =
+        steel_color * (1.0F - static_cast<float>(band % 2) * 0.04F);
 
     for (int i = 0; i < segments; ++i) {
       float const angle1 = (static_cast<float>(i) / segments) * 2.0F * pi;
@@ -244,12 +235,12 @@ void RomanLightArmorRenderer::render(const DrawContext &ctx,
       float const r1 = getRadius(angle1);
       float const r2 = getRadius(angle2);
 
-      QVector3D const p1_top =
-          origin + right * (r1 * std::sin(angle1)) +
-          forward * (r1 * std::cos(angle1)) + up * (y_band_top - origin.y());
-      QVector3D const p1_bot =
-          origin + right * (r1 * std::sin(angle1)) +
-          forward * (r1 * std::cos(angle1)) + up * (y_band_bottom - origin.y());
+      QVector3D const p1_top = origin + right * (r1 * std::sin(angle1)) +
+                               forward * (r1 * std::cos(angle1)) +
+                               up * (y_band_top - origin.y());
+      QVector3D const p1_bot = origin + right * (r1 * std::sin(angle1)) +
+                               forward * (r1 * std::cos(angle1)) +
+                               up * (y_band_bottom - origin.y());
 
       float const seg_r = r1 * 0.035F;
       submitter.mesh(getUnitCylinder(),
@@ -258,11 +249,12 @@ void RomanLightArmorRenderer::render(const DrawContext &ctx,
     }
   }
 
-  // Simple belt
   QVector3D const waist_center(origin.x(), HP::WAIST_Y + 0.02F, origin.z());
   float const belt_r = torso.radius * 1.02F;
-  QVector3D const belt_top(waist_center.x(), waist_center.y() + 0.02F, waist_center.z());
-  QVector3D const belt_bot(waist_center.x(), waist_center.y() - 0.02F, waist_center.z());
+  QVector3D const belt_top(waist_center.x(), waist_center.y() + 0.02F,
+                           waist_center.z());
+  QVector3D const belt_bot(waist_center.x(), waist_center.y() - 0.02F,
+                           waist_center.z());
 
   submitter.mesh(getUnitCylinder(),
                  cylinderBetween(ctx.model, belt_top, belt_bot, belt_r),

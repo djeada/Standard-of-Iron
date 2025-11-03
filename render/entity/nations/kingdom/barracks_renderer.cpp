@@ -556,8 +556,10 @@ inline void drawBannerAndPole(const DrawContext &p, ISubmitter &out, Mesh *unit,
   auto captureColors = BarracksFlagRenderer::getCaptureColors(
       p, C.team, C.teamTrim, max_lowering);
 
-  float beam_y = pole_height - target_height * 0.25F - captureColors.loweringOffset;
-  float flag_y = pole_height - target_height / 2.0F - captureColors.loweringOffset;
+  float beam_y =
+      pole_height - target_height * 0.25F - captureColors.loweringOffset;
+  float flag_y =
+      pole_height - target_height / 2.0F - captureColors.loweringOffset;
 
   QVector3D const beam_start(pole_x + 0.02F, beam_y, pole_z);
   QVector3D const beam_end(pole_x + beam_length + 0.02F, beam_y, pole_z);
@@ -577,11 +579,13 @@ inline void drawBannerAndPole(const DrawContext &p, ISubmitter &out, Mesh *unit,
   unitBox(
       out, unit, white, p.model,
       QVector3D(panel_x, flag_y - target_height / 2.0F + 0.04F, pole_z + 0.01F),
-      QVector3D(target_width / 2.0F + 0.02F, 0.04F, 0.015F), captureColors.teamTrimColor);
+      QVector3D(target_width / 2.0F + 0.02F, 0.04F, 0.015F),
+      captureColors.teamTrimColor);
   unitBox(
       out, unit, white, p.model,
       QVector3D(panel_x, flag_y + target_height / 2.0F - 0.04F, pole_z + 0.01F),
-      QVector3D(target_width / 2.0F + 0.02F, 0.04F, 0.015F), captureColors.teamTrimColor);
+      QVector3D(target_width / 2.0F + 0.02F, 0.04F, 0.015F),
+      captureColors.teamTrimColor);
 }
 
 inline void drawRallyFlagIfAny(const DrawContext &p, ISubmitter &out,
