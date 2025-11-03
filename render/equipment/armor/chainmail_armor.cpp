@@ -58,18 +58,16 @@ void ChainmailArmorRenderer::renderTorsoMail(const DrawContext &ctx,
     return;
   }
 
-  // Use the procedural torso mesh with chainmail shader
-  // The shader will create the ring pattern on GPU
+  // Simple torso mesh - shader creates chainmail detail
   float const torso_r = torso.radius;
   
   QVector3D top = torso.origin + torso.up * (torso_r * 0.20F);
   QVector3D bottom = waist.origin - waist.up * (torso_r * 0.35F);
   
-  // Create transform for torso mesh
   QMatrix4x4 mail_transform = ctx.model;
-  mail_transform.translate(torso.origin);
+  mail_transform.translate((top + bottom) * 0.5F);
   
-  // Align with torso orientation
+  // Align with torso
   QVector3D up_dir = torso.up.normalized();
   QVector3D right_dir = torso.right.normalized();
   QVector3D fwd_dir = torso.forward.normalized();
@@ -81,15 +79,13 @@ void ChainmailArmorRenderer::renderTorsoMail(const DrawContext &ctx,
   
   mail_transform = mail_transform * orientation;
   
-  // Scale to fit torso
   float height = (top - bottom).length();
-  mail_transform.scale(torso_r * 1.12F, height, torso_r * 1.08F);
+  mail_transform.scale(torso_r * 1.12F, height * 0.5F, torso_r * 1.08F);
   
-  // Submit with chainmail shader
-  Shader *chainmail_shader = ctx.backend->shader("chainmail_armor");
+  // Steel color in range that shader detects (avgColor > 0.55 && <= 0.72)
+  QVector3D steel_color = QVector3D(0.65F, 0.67F, 0.70F);
   
-  submitter.mesh(getUnitTorso(), mail_transform, m_config.metal_color, 
-                 chainmail_shader, 0.75F);
+  submitter.mesh(getUnitTorso(), mail_transform, steel_color, nullptr, 1.0F);
 }
 
 void ChainmailArmorRenderer::renderShoulderGuards(const DrawContext &ctx,

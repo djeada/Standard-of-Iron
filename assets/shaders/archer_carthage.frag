@@ -116,15 +116,76 @@ void main() {
   }
   // SUN-DULLED BRONZE (minimal use - only decorative pieces)
   else if (isBronze) {
+    // PROFESSIONAL BRONZE HELMET with hammered texture and verdigris
+    float hammerMarks = 0.0;
+    vec2 hammer_uv = v_worldPos.xy * 32.0;
+    vec2 hammer_id = floor(hammer_uv);
+    float hammer_noise = hash(hammer_id);
+    vec2 hammer_local = fract(hammer_uv) - 0.5;
+    float hammer_dist = length(hammer_local);
+    hammerMarks = smoothstep(0.4, 0.3, hammer_dist) * (0.5 + hammer_noise * 0.5) * 0.15;
+    
+    // Rivet details
+    vec2 rivet_grid = fract(v_worldPos.xz * 6.0) - 0.5;
+    float rivet_dist = length(rivet_grid);
+    float rivets = smoothstep(0.08, 0.05, rivet_dist) * smoothstep(0.12, 0.10, rivet_dist) * 0.25;
+    
+    // Verdigris patina in recesses
     float saltPatina = noise(uv * 9.0) * 0.16;
     float verdigris = noise(uv * 12.0) * 0.10;
+    vec3 patina_color = vec3(0.2, 0.55, 0.45);
+    float patina_amount = smoothstep(1.5, 1.7, v_worldPos.y) * 0.3 * verdigris;
+    
+    // PBR bronze highlights
     float viewAngle = abs(dot(normal, normalize(vec3(0.1, 1.0, 0.2))));
-    float bronzeSheen = pow(viewAngle, 6.5) * 0.22;
-    float bronzeFresnel = pow(1.0 - viewAngle, 2.0) * 0.20;
-    color += vec3(bronzeSheen + bronzeFresnel);
-    color -= vec3(saltPatina * 0.4 + verdigris * 0.35);
+    float bronzeSheen = pow(viewAngle, 6.5) * 0.35 * 1.3; // Brighter
+    float bronzeFresnel = pow(1.0 - viewAngle, 2.0) * 0.28 * 1.3; // Brighter
+    
+    color += vec3(bronzeSheen + bronzeFresnel + hammerMarks + rivets);
+    color = mix(color, patina_color, patina_amount);
+    color -= vec3(saltPatina * 0.3);
   }
-  // LIGHT LEATHER ARMOR (not chainmail - mercenary style)
+  // CHAINMAIL ARMOR (lorica hamata) - Professional steel rings
+  else if (avgColor > 0.55 && avgColor <= 0.72 && !isSeaCloak) {
+    // High-density chainmail ring pattern
+    vec2 ring_uv = v_worldPos.xz * 64.0; // Dense rings
+    float row_offset = mod(floor(ring_uv.y), 2.0) * 0.5;
+    ring_uv.x += row_offset;
+    
+    vec2 ring_grid = fract(ring_uv) - 0.5;
+    float ring_dist = length(ring_grid);
+    
+    // Outer ring
+    float outer_ring = smoothstep(0.45, 0.40, ring_dist) - smoothstep(0.35, 0.30, ring_dist);
+    // Inner ring (depth)
+    float inner_ring = smoothstep(0.32, 0.28, ring_dist) - smoothstep(0.25, 0.20, ring_dist);
+    // Interlocking highlights
+    vec2 overlap_grid = fract(ring_uv + vec2(0.5, 0.0)) - 0.5;
+    float overlap_dist = length(overlap_grid);
+    float overlap = smoothstep(0.25, 0.22, overlap_dist) * 0.3;
+    
+    float rings = (outer_ring + inner_ring * 0.5 + overlap) * 0.18;
+    
+    // Rust and weathering
+    float rust_noise1 = noise(v_worldPos.xz * 20.0);
+    float rust_noise2 = noise(v_worldPos.xy * 15.0);
+    float height_rust = clamp(1.0 - v_worldPos.y * 0.6, 0.0, 1.0);
+    float rust_amount = (rust_noise1 + rust_noise2) * 0.5 * height_rust * 0.15;
+    
+    vec3 rust_color = mix(vec3(0.35, 0.15, 0.10), vec3(0.65, 0.35, 0.20), rust_noise1);
+    rust_color = mix(rust_color, vec3(0.25, 0.40, 0.35), rust_noise2 * 0.3);
+    
+    // Ring ambient occlusion
+    float ring_ao = smoothstep(0.35, 0.20, ring_dist) * 0.25;
+    
+    // Metallic highlights on rings
+    float viewAngle = abs(dot(normal, normalize(vec3(0.2, 1.0, 0.3))));
+    float metal_spec = pow(viewAngle, 12.0) * (1.0 - ring_ao) * 0.45 * 1.4; // Brighter
+    
+    color = mix(color, rust_color, rust_amount);
+    color += vec3(rings + metal_spec - ring_ao);
+  }
+  // LIGHT LEATHER ARMOR (fallback for non-chainmail torso)
   else if (avgColor > 0.35 && avgColor <= 0.58 && !isSeaCloak) {
     // Hardened leather cuirass instead of heavy mail
     float hardenedGrain = noise(uv * 16.0) * 0.18;
