@@ -125,11 +125,11 @@ void ChainmailArmorRenderer::renderShoulderGuards(const DrawContext &ctx,
   QVector3D left_base = shoulder_l.origin;
   QVector3D left_tip = left_base + torso.up * 0.08F + torso.right * (-0.05F);
   
-  float const shoulder_r = 0.08F;
+  float const shoulder_radius = 0.08F;
   
   QVector3D left_color = calculateRingColor(left_base.x(), left_base.y(), left_base.z());
   submitter.mesh(getUnitCylinder(),
-                 cylinderBetween(ctx.model, left_base, left_tip, shoulder_r),
+                 cylinderBetween(ctx.model, left_base, left_tip, shoulder_radius),
                  left_color, nullptr, 0.8F);
   
   // Right shoulder pauldron
@@ -138,7 +138,7 @@ void ChainmailArmorRenderer::renderShoulderGuards(const DrawContext &ctx,
   
   QVector3D right_color = calculateRingColor(right_base.x(), right_base.y(), right_base.z());
   submitter.mesh(getUnitCylinder(),
-                 cylinderBetween(ctx.model, right_base, right_tip, shoulder_r),
+                 cylinderBetween(ctx.model, right_base, right_tip, shoulder_radius),
                  right_color, nullptr, 0.8F);
   
   // Layered shoulder protection (multiple overlapping ring rows)
@@ -151,13 +151,13 @@ void ChainmailArmorRenderer::renderShoulderGuards(const DrawContext &ctx,
       
       QMatrix4x4 left_m = ctx.model;
       left_m.translate(left_layer);
-      left_m.scale(shoulder_r * 1.3F);
+      left_m.scale(shoulder_radius * 1.3F);
       submitter.mesh(getUnitSphere(), left_m,
                      left_color * (1.0F - layer_offset), nullptr, 0.75F);
       
       QMatrix4x4 right_m = ctx.model;
       right_m.translate(right_layer);
-      right_m.scale(shoulder_r * 1.3F);
+      right_m.scale(shoulder_radius * 1.3F);
       submitter.mesh(getUnitSphere(), right_m,
                      right_color * (1.0F - layer_offset), nullptr, 0.75F);
     }
