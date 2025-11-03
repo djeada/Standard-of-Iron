@@ -248,7 +248,7 @@ void CylinderPipeline::uploadCylinderInstances(std::size_t count) {
   glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-void CylinderPipeline::drawCylinders(std::size_t count) {
+void CylinderPipeline::draw_cylinders(std::size_t count) {
   if ((m_cylinderVao == 0U) || m_cylinderIndexCount == 0 || count == 0) {
     return;
   }

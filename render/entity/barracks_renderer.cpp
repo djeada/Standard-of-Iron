@@ -8,13 +8,13 @@
 
 namespace Render::GL {
 
-void registerBarracksRenderer(EntityRendererRegistry &registry) {
+void register_barracks_renderer(EntityRendererRegistry &registry) {
 
-  Kingdom::registerBarracksRenderer(registry);
-  Roman::registerBarracksRenderer(registry);
-  Carthage::registerBarracksRenderer(registry);
+  Kingdom::register_barracks_renderer(registry);
+  Roman::register_barracks_renderer(registry);
+  Carthage::register_barracks_renderer(registry);
 
-  registry.registerRenderer(
+  registry.register_renderer(
       "barracks", [&registry](const DrawContext &p, ISubmitter &out) {
         if (p.entity == nullptr) {
           return;

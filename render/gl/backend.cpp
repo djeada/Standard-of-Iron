@@ -229,7 +229,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
               m_cylinderPipeline->m_cylinderUniforms.view_proj, view_proj);
         }
         m_cylinderPipeline->uploadCylinderInstances(instance_count);
-        m_cylinderPipeline->drawCylinders(instance_count);
+        m_cylinderPipeline->draw_cylinders(instance_count);
       }
       continue;
     }
