@@ -56,16 +56,19 @@ void registerBuiltInEquipment() {
   registry.registerEquipment(EquipmentCategory::Weapon, "roman_scutum",
                              roman_scutum);
 
-  auto montefortino_helmet = std::make_shared<CarthageLightHelmetRenderer>();
+  // CARTHAGE HELMETS: Heavy=bronze Montefortino, Light=leather cap
+  auto carthage_heavy_helmet = std::make_shared<MontefortinoHelmetRenderer>();
   registry.registerEquipment(EquipmentCategory::Helmet, "montefortino",
-                             montefortino_helmet);
+                             carthage_heavy_helmet);
   registry.registerEquipment(EquipmentCategory::Helmet, "carthage_heavy",
-                             montefortino_helmet);
+                             carthage_heavy_helmet);
+
+  auto carthage_light_helmet = std::make_shared<CarthageLightHelmetRenderer>();
+  registry.registerEquipment(EquipmentCategory::Helmet, "carthage_light",
+                             carthage_light_helmet);
 
   auto headwrap = std::make_shared<HeadwrapRenderer>();
   registry.registerEquipment(EquipmentCategory::Helmet, "headwrap", headwrap);
-  registry.registerEquipment(EquipmentCategory::Helmet, "carthage_light",
-                             montefortino_helmet);
 
   auto roman_heavy = std::make_shared<RomanHeavyHelmetRenderer>();
   registry.registerEquipment(EquipmentCategory::Helmet, "roman_heavy",
@@ -99,11 +102,12 @@ void registerBuiltInEquipment() {
   registry.registerEquipment(EquipmentCategory::Armor, "roman_light_armor",
                              roman_light_armor);
 
-  auto carthage_heavy_armor = std::make_shared<ChainmailArmorRenderer>();
+  // CARTHAGE ARMOR: Heavy=steel chainmail, Light=linen linothorax
+  auto carthage_heavy_armor = std::make_shared<CarthageHeavyArmorRenderer>();
   registry.registerEquipment(EquipmentCategory::Armor, "carthage_heavy_armor",
                              carthage_heavy_armor);
 
-  auto carthage_light_armor = std::make_shared<ChainmailArmorRenderer>();
+  auto carthage_light_armor = std::make_shared<CarthageLightArmorRenderer>();
   registry.registerEquipment(EquipmentCategory::Armor, "carthage_light_armor",
                              carthage_light_armor);
 

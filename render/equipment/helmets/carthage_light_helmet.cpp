@@ -78,21 +78,22 @@ void CarthageLightHelmetRenderer::render(
 }
 
 // -------------------------------------------------------------------------
-// BOWL: Simple bronze sphere - shader creates hammered detail, rivets, patina
+// BOWL: Simple leather cap/headband - shader creates leather grain detail
 void CarthageLightHelmetRenderer::render_bowl(const DrawContext &ctx,
                                               const AttachmentFrame &head,
                                               ISubmitter &submitter) {
   const float R = head.radius;
   auto headPoint = [&](const QVector3D &n) { return HumanoidRendererBase::frameLocalPosition(head, n); };
 
-  // Single helmet sphere - shader adds all detail
-  QVector3D c0 = headPoint(QVector3D(0.0f, 0.74f, 0.02f));
+  // Simple leather headband/cap for light infantry (archers, skirmishers)
+  // Leather color in range shader detects as leather (avgColor 0.30-0.50)
+  QVector3D c0 = headPoint(QVector3D(0.0f, 0.65f, 0.0f));
   QMatrix4x4 m0 = ctx.model; 
   m0.translate(c0); 
-  m0.scale(R * 1.18f, R * 1.22f, R * 1.14f);
+  m0.scale(R * 1.05f, R * 0.45f, R * 1.02f); // Flatter, smaller - just a cap
   
-  // Bronze color that shader detects (isBronze = true)
-  submitter.mesh(getUnitSphere(), m0, m_config.bronze_color, nullptr, 0.9f);
+  // Brown leather color - shader will add grain, tooling
+  submitter.mesh(getUnitSphere(), m0, m_config.leather_color, nullptr, 1.0f);
 }
 
 // -------------------------------------------------------------------------

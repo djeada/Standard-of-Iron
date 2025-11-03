@@ -132,10 +132,13 @@ void main() {
   float colorHue =
       max(max(color.r, color.g), color.b) - min(min(color.r, color.g), color.b);
 
-  // Material classification preserved
-  bool isMetal = (avgColor > 0.45 && avgColor <= 0.65 && colorHue < 0.15);
-  bool isLeather = (avgColor > 0.30 && avgColor <= 0.50 && colorHue < 0.20);
-  bool isFabric = (avgColor > 0.25 && !isMetal && !isLeather);
+  // Material classification - Carthaginian equipment
+  bool isBronze = (color.r > color.g * 1.02 && color.r > color.b * 1.10 && avgColor > 0.48 && avgColor < 0.80);
+  bool isChainmail = (avgColor > 0.55 && avgColor <= 0.72 && colorHue < 0.12 && !isBronze);
+  bool isLinothorax = (avgColor > 0.70 && avgColor < 0.88 && color.r > color.b * 1.05 && !isBronze);
+  bool isMetal = (avgColor > 0.45 && avgColor <= 0.65 && colorHue < 0.15 && !isChainmail && !isBronze && !isLinothorax);
+  bool isLeather = (avgColor > 0.30 && avgColor <= 0.50 && colorHue < 0.20 && !isBronze && !isLinothorax);
+  bool isFabric = (avgColor > 0.25 && !isMetal && !isLeather && !isChainmail && !isBronze && !isLinothorax);
 
   // Lighting basis (kept compatible with prior shader)
   vec3 L = normalize(vec3(1.0, 1.15, 1.0));
@@ -172,7 +175,102 @@ void main() {
   vec3 albedo = color;   // base diffuse/albedo
   vec3 specular = vec3(0.0);
 
-  if (isMetal) {
+  if (isBronze) {
+    // PROFESSIONAL BRONZE HELMET
+    vec2 hammer_uv = v_worldPos.xy * 32.0;
+    vec2 hammer_id = floor(hammer_uv);
+    float hammer_noise = hash(hammer_id);
+    vec2 hammer_local = fract(hammer_uv) - 0.5;
+    float hammer_dist = length(hammer_local);
+    float hammerMarks = smoothstep(0.4, 0.3, hammer_dist) * (0.5 + hammer_noise * 0.5) * 0.15;
+    
+    vec2 rivet_grid = fract(v_worldPos.xz * 6.0) - 0.5;
+    float rivet_dist = length(rivet_grid);
+    float rivets = smoothstep(0.08, 0.05, rivet_dist) * smoothstep(0.12, 0.10, rivet_dist) * 0.25;
+    
+    float verdigris = noise(uvW * 12.0) * 0.10;
+    vec3 patina_color = vec3(0.2, 0.55, 0.45);
+    float patina_amount = smoothstep(1.5, 1.7, v_worldPos.y) * 0.3 * verdigris;
+    
+    roughness = 0.35 + hammerMarks * 0.15;
+    F0 = vec3(0.95, 0.64, 0.54); // Bronze F0
+    
+    float viewAngle = saturate(dot(N, V));
+    float bronzeSheen = pow(viewAngle, 6.5) * 0.35 * 1.3;
+    float bronzeFresnel = pow(1.0 - viewAngle, 2.0) * 0.28 * 1.3;
+    
+    albedo += vec3(bronzeSheen + bronzeFresnel + hammerMarks + rivets);
+    albedo = mix(albedo, patina_color, patina_amount);
+    
+    float D = distributionGGX(NdotH, roughness * roughness);
+    float G = geometrySmith(NdotV, NdotL, roughness);
+    vec3 F = fresnelSchlick(VdotH, F0);
+    specular = (D * G * F) / max(4.0 * NdotV * NdotL, 1e-6) * 0.8;
+  }
+  else if (isChainmail) {
+    // CHAINMAIL RING PATTERN
+    vec2 ring_uv = v_worldPos.xz * 64.0;
+    float row_offset = mod(floor(ring_uv.y), 2.0) * 0.5;
+    ring_uv.x += row_offset;
+    
+    vec2 ring_grid = fract(ring_uv) - 0.5;
+    float ring_dist = length(ring_grid);
+    
+    float outer_ring = smoothstep(0.45, 0.40, ring_dist) - smoothstep(0.35, 0.30, ring_dist);
+    float inner_ring = smoothstep(0.32, 0.28, ring_dist) - smoothstep(0.25, 0.20, ring_dist);
+    vec2 overlap_grid = fract(ring_uv + vec2(0.5, 0.0)) - 0.5;
+    float overlap_dist = length(overlap_grid);
+    float overlap = smoothstep(0.25, 0.22, overlap_dist) * 0.3;
+    
+    float rings = (outer_ring + inner_ring * 0.5 + overlap) * 0.18;
+    
+    float rust_noise1 = noise(v_worldPos.xz * 20.0);
+    float rust_noise2 = noise(v_worldPos.xy * 15.0);
+    float height_rust = saturate(1.0 - v_worldPos.y * 0.6);
+    float rust_amount = (rust_noise1 + rust_noise2) * 0.5 * height_rust * 0.15;
+    
+    vec3 rust_color = mix(vec3(0.35, 0.15, 0.10), vec3(0.65, 0.35, 0.20), rust_noise1);
+    rust_color = mix(rust_color, vec3(0.25, 0.40, 0.35), rust_noise2 * 0.3);
+    
+    float ring_ao = smoothstep(0.35, 0.20, ring_dist) * 0.25;
+    cavityAO = 1.0 - ring_ao;
+    
+    roughness = 0.30 + rings * 0.25;
+    F0 = vec3(0.56, 0.57, 0.58); // Steel F0
+    
+    albedo = mix(albedo, rust_color, rust_amount);
+    albedo += vec3(rings - ring_ao);
+    
+    float D = distributionGGX(NdotH, roughness * roughness);
+    float G = geometrySmith(NdotV, NdotL, roughness);
+    vec3 F = fresnelSchlick(VdotH, F0);
+    specular = (D * G * F) / max(4.0 * NdotV * NdotL, 1e-6) * 1.4;
+  }
+  else if (isLinothorax) {
+    // LINOTHORAX - Layered glued linen armor (Carthaginian specialty)
+    float linenWeaveX = sin(v_worldPos.x * 65.0);
+    float linenWeaveZ = sin(v_worldPos.z * 68.0);
+    float weave = linenWeaveX * linenWeaveZ * 0.08;
+    
+    // Visible layering at edges
+    float layers = abs(sin(v_worldPos.y * 22.0)) * 0.12;
+    
+    // Glue/resin stiffening (darker patches)
+    float resinStains = noise(uvW * 8.0) * 0.10;
+    
+    roughness = 0.75; // Matte linen
+    F0 = vec3(0.04); // Non-metallic
+    cavityAO = 1.0 - layers * 0.15;
+    
+    albedo *= 1.0 + weave + layers - resinStains * 0.5;
+    
+    // Very soft specular for linen
+    float D = distributionGGX(NdotH, roughness * roughness);
+    float G = geometrySmith(NdotV, NdotL, roughness);
+    vec3 F = fresnelSchlick(VdotH, F0);
+    specular = (D * G * F) / max(4.0 * NdotV * NdotL, 1e-6) * 0.15;
+  }
+  else if (isMetal) {
     // Use texture UVs for stability (as in original)
     vec2 metalUV = v_texCoord * 4.5;
 

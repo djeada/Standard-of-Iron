@@ -72,14 +72,39 @@ void main() {
   // Detect material type by color tone
   float colorHue =
       max(max(color.r, color.g), color.b) - min(min(color.r, color.g), color.b);
-  bool isBrass =
-      (color.r > color.g * 1.10 && color.r > color.b * 1.10 && avgColor > 0.48);
+  bool isBronze = (color.r > color.g * 1.02 && color.r > color.b * 1.10 && avgColor > 0.48 && avgColor < 0.80);
+  bool isChainmail = (avgColor > 0.55 && avgColor <= 0.72 && colorHue < 0.12 && !isBronze);
+  bool isLinothorax = (avgColor > 0.70 && avgColor < 0.88 && color.r > color.b * 1.05 && !isBronze);
+  bool isBrass = (color.r > color.g * 1.10 && color.r > color.b * 1.10 && avgColor > 0.48 && !isBronze);
 
   // === MEDIEVAL KNIGHT MATERIALS ===
 
-  // POLISHED STEEL PLATE (Great Helm, cuirass, pauldrons, rerebraces) - bright
-  // silvery
-  if (avgColor > 0.60 && !isBrass) {
+  // BRONZE HELMET (Carthaginian style) - warm metallic with verdigris
+  if (isBronze) {
+    vec2 hammer_uv = v_worldPos.xy * 32.0;
+    vec2 hammer_id = floor(hammer_uv);
+    float hammer_noise = hash(hammer_id);
+    vec2 hammer_local = fract(hammer_uv) - 0.5;
+    float hammer_dist = length(hammer_local);
+    float hammerMarks = smoothstep(0.4, 0.3, hammer_dist) * (0.5 + hammer_noise * 0.5) * 0.15;
+    
+    vec2 rivet_grid = fract(v_worldPos.xz * 6.0) - 0.5;
+    float rivet_dist = length(rivet_grid);
+    float rivets = smoothstep(0.08, 0.05, rivet_dist) * smoothstep(0.12, 0.10, rivet_dist) * 0.25;
+    
+    float verdigris = noise(uv * 12.0) * 0.10;
+    vec3 patina_color = vec3(0.2, 0.55, 0.45);
+    float patina_amount = smoothstep(1.5, 1.7, v_worldPos.y) * 0.3 * verdigris;
+    
+    float viewAngle = abs(dot(normal, normalize(vec3(0.1, 1.0, 0.2))));
+    float bronzeSheen = pow(viewAngle, 6.5) * 0.35 * 1.3;
+    float bronzeFresnel = pow(1.0 - viewAngle, 2.0) * 0.28 * 1.3;
+    
+    color += vec3(bronzeSheen + bronzeFresnel + hammerMarks + rivets);
+    color = mix(color, patina_color, patina_amount);
+  }
+  // POLISHED STEEL PLATE (Great Helm, cuirass, pauldrons, rerebraces) - bright silvery
+  else if (avgColor > 0.60 && !isBrass) {
     // Mirror-polished steel finish
     float brushedMetal = abs(sin(v_worldPos.y * 88.0)) * 0.024;
 

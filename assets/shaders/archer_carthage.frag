@@ -70,18 +70,17 @@ void main() {
   vec2 uv = v_worldPos.xz * 4.5;
   float avgColor = (color.r + color.g + color.b) / 3.0;
 
-  // Detect bronze vs steel by color warmth
-  bool isBronze =
-      (color.r > color.g * 1.02 && color.r > color.b * 1.10 && avgColor > 0.48);
+  // Detect equipment by color ranges (historically accurate Carthaginian gear)
+  bool isBronze = (color.r > color.g * 1.02 && color.r > color.b * 1.10 && avgColor > 0.48 && avgColor < 0.80);
+  bool isChainmail = (avgColor > 0.55 && avgColor <= 0.72 && abs(color.r - color.g) < 0.05 && abs(color.g - color.b) < 0.05);
+  bool isLinothorax = (avgColor > 0.70 && avgColor < 0.88 && color.r > color.b * 1.05);
+  bool isLeather = (avgColor > 0.25 && avgColor <= 0.50 && color.r > color.g * 1.05);
   bool isSeaCloak = (color.g > color.r * 1.2 && color.b > color.r * 1.3);
-  bool isLinothorax =
-      (v_armorLayer == 1.0 && avgColor > 0.55 && avgColor < 0.78);
-  bool isLeatherCap = (v_armorLayer == 0.0 && !isBronze);
 
   // === CARTHAGINIAN LIGHT ARCHER MATERIALS (North African/Mercenary style) ===
 
   // LEATHER CAP/HEADBAND (instead of heavy bronze helmet)
-  if (isLeatherCap) {
+  if (isLeather && v_worldPos.y > 0.5) {
     // Thick tanned leather with Numidian/Libyan styling
     float leatherGrain = noise(uv * 14.0) * 0.20;
     float leatherPores = noise(uv * 28.0) * 0.10;
