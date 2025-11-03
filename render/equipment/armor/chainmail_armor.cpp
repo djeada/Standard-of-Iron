@@ -59,57 +59,111 @@ void ChainmailArmorRenderer::renderTorsoMail(const DrawContext &ctx,
 
   float const torso_r = torso.radius;
   
-  // High-quality mail hauberk with realistic draping
+  // Chainmail hauberk that follows torso contours
   QVector3D steel_color = m_config.metal_color;
   
-  // Main body - single smooth piece with subtle segmentation
-  QVector3D top = torso.origin + torso.up * (torso_r * 0.3F);
-  QVector3D bottom = waist.origin + waist.up * (-torso_r * 0.4F);
+  const QVector3D &origin = torso.origin;
+  const QVector3D &right = torso.right;
+  const QVector3D &up = torso.up;
+  const QVector3D &forward = torso.forward;
+
+  float const shoulder_width = torso_r * 1.15F;
+  float const chest_depth_front = torso_r * 1.18F;
+  float const chest_depth_back = torso_r * 0.85F;
+  float const waist_width = torso_r * 1.05F;
+
+  // Create mail segments from shoulders to hips
+  int const num_rows = m_config.detail_level >= 2 ? 16 : 10;
+  int const segments_per_row = m_config.detail_level >= 2 ? 24 : 16;
   
-  // Torso section
-  submitter.mesh(getUnitCylinder(),
-                 cylinderBetween(ctx.model, top, torso.origin, torso_r * 1.08F),
-                 steel_color, nullptr, 0.82F);
-  
-  // Mid section with slight flare
-  submitter.mesh(getUnitCylinder(),
-                 cylinderBetween(ctx.model, torso.origin, waist.origin, torso_r * 1.12F),
-                 calculateRingColor(waist.origin.x(), waist.origin.y(), waist.origin.z()),
-                 nullptr, 0.78F);
-  
-  // Lower skirt with hanging mail
-  submitter.mesh(getUnitCylinder(),
-                 cylinderBetween(ctx.model, waist.origin, bottom, torso_r * 1.15F),
-                 calculateRingColor(bottom.x(), bottom.y(), bottom.z()) * 0.92F,
-                 nullptr, 0.75F);
-  
-  // Add depth with inner shadow layer
-  if (m_config.detail_level >= 1) {
-    submitter.mesh(getUnitCylinder(),
-                   cylinderBetween(ctx.model, top, bottom, torso_r * 1.06F),
-                   steel_color * 0.65F, nullptr, 0.85F);
+  float const y_top = 0.15F; // Shoulder level
+  float const y_bottom = -0.25F; // Below waist
+  float const row_height = (y_top - y_bottom) / static_cast<float>(num_rows);
+
+  constexpr float pi = std::numbers::pi_v<float>;
+  float const ring_thickness = m_config.ring_size * 1.5F;
+
+  for (int row = 0; row < num_rows; ++row) {
+    float const y_row_top = y_top - static_cast<float>(row) * row_height;
+    float const y_row_bottom = y_row_top - row_height;
+    
+    // Interpolate between chest and waist dimensions
+    float const t = static_cast<float>(row) / static_cast<float>(num_rows - 1);
+    float const width_scale = shoulder_width * (1.0F - t * 0.12F) + waist_width * t * 0.12F;
+
+    auto getRadius = [&](float angle) -> float {
+      float const cos_a = std::cos(angle);
+      float depth_front = chest_depth_front * (1.0F - t * 0.15F);
+      float depth_back = chest_depth_back * (1.0F - t * 0.08F);
+      float depth = (cos_a > 0.0F) ? depth_front : depth_back;
+      return width_scale * depth * (std::abs(cos_a) * 0.3F + 0.7F);
+    };
+
+    for (int i = 0; i < segments_per_row; ++i) {
+      float const angle1 = (static_cast<float>(i) / segments_per_row) * 2.0F * pi;
+      float const angle2 = (static_cast<float>(i + 1) / segments_per_row) * 2.0F * pi;
+
+      float const cos1 = std::cos(angle1);
+      float const sin1 = std::sin(angle1);
+      float const cos2 = std::cos(angle2);
+      float const sin2 = std::sin(angle2);
+
+      float const r1 = getRadius(angle1);
+      float const r2 = getRadius(angle2);
+
+      QVector3D const p1_top = origin + right * (r1 * sin1) +
+                               forward * (r1 * cos1) + up * y_row_top;
+      QVector3D const p2_top = origin + right * (r2 * sin2) +
+                               forward * (r2 * cos2) + up * y_row_top;
+      QVector3D const p1_bot = origin + right * (r1 * sin1) +
+                               forward * (r1 * cos1) + up * y_row_bottom;
+      QVector3D const p2_bot = origin + right * (r2 * sin2) +
+                               forward * (r2 * cos2) + up * y_row_bottom;
+
+      // Vertical ring links
+      QVector3D color1 = calculateRingColor(p1_top.x(), p1_top.y(), p1_top.z());
+      submitter.mesh(getUnitCylinder(),
+                     cylinderBetween(ctx.model, p1_top, p1_bot, ring_thickness),
+                     color1, nullptr, 0.75F);
+
+      // Horizontal ring links
+      QVector3D color_top = calculateRingColor(p1_top.x(), p1_top.y(), p1_top.z());
+      submitter.mesh(getUnitCylinder(),
+                     cylinderBetween(ctx.model, p1_top, p2_top, ring_thickness * 0.9F),
+                     color_top, nullptr, 0.78F);
+    }
   }
   
-  // Detailed ring texture at high detail
+  // Add ring detail spheres at intersections for high detail
   if (m_config.detail_level >= 2) {
-    // Add small ring clusters for visual richness
-    int const ring_count = 32;
-    for (int i = 0; i < ring_count; ++i) {
-      float angle = (static_cast<float>(i) / static_cast<float>(ring_count)) *
-                    2.0F * std::numbers::pi_v<float>;
-      float height_t = static_cast<float>(i % 4) * 0.25F;
+    int const detail_rows = 8;
+    int const detail_segs = 16;
+    for (int row = 0; row < detail_rows; ++row) {
+      float const y_pos = y_top - (static_cast<float>(row) / detail_rows) * (y_top - y_bottom);
+      float const t = static_cast<float>(row) / static_cast<float>(detail_rows - 1);
+      float const width_scale = shoulder_width * (1.0F - t * 0.12F) + waist_width * t * 0.12F;
       
-      QVector3D ring_pos = torso.origin * (1.0F - height_t) + waist.origin * height_t;
-      ring_pos += torso.right * (std::cos(angle) * torso_r * 1.1F) +
-                  torso.forward * (std::sin(angle) * torso_r * 1.1F);
-      
-      QMatrix4x4 ring_m = ctx.model;
-      ring_m.translate(ring_pos);
-      ring_m.scale(m_config.ring_size * 2.5F);
-      
-      submitter.mesh(getUnitSphere(), ring_m,
-                     calculateRingColor(ring_pos.x(), ring_pos.y(), ring_pos.z()) * 1.15F,
-                     nullptr, 0.88F);
+      for (int i = 0; i < detail_segs; ++i) {
+        float const angle = (static_cast<float>(i) / detail_segs) * 2.0F * pi;
+        float const cos_a = std::cos(angle);
+        float const sin_a = std::sin(angle);
+        
+        float depth_front = chest_depth_front * (1.0F - t * 0.15F);
+        float depth_back = chest_depth_back * (1.0F - t * 0.08F);
+        float depth = (cos_a > 0.0F) ? depth_front : depth_back;
+        float r = width_scale * depth * (std::abs(cos_a) * 0.3F + 0.7F);
+        
+        QVector3D ring_pos = origin + right * (r * sin_a) +
+                            forward * (r * cos_a) + up * y_pos;
+        
+        QMatrix4x4 ring_m = ctx.model;
+        ring_m.translate(ring_pos);
+        ring_m.scale(ring_thickness * 1.3F);
+        
+        submitter.mesh(getUnitSphere(), ring_m,
+                       calculateRingColor(ring_pos.x(), ring_pos.y(), ring_pos.z()) * 1.1F,
+                       nullptr, 0.82F);
+      }
     }
   }
 }
