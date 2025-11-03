@@ -6,7 +6,6 @@
 
 namespace Render::GL {
 
-// Roman Scutum - large curved rectangular shield
 class RomanScutumRenderer : public IEquipmentRenderer {
 public:
   RomanScutumRenderer() = default;

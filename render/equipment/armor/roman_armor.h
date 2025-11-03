@@ -6,7 +6,6 @@
 
 namespace Render::GL {
 
-// Roman Heavy Armor - Lorica segmentata style with horizontal bands
 class RomanHeavyArmorRenderer : public IEquipmentRenderer {
 public:
   RomanHeavyArmorRenderer() = default;
@@ -17,7 +16,6 @@ public:
               ISubmitter &submitter) override;
 };
 
-// Roman Light Armor - Lighter version with fewer bands
 class RomanLightArmorRenderer : public IEquipmentRenderer {
 public:
   RomanLightArmorRenderer() = default;

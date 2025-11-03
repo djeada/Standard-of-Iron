@@ -223,8 +223,7 @@ public:
   }
 
   void drawArmor(const DrawContext &ctx, const HumanoidVariant &v,
-                 const HumanoidPose &pose,
-                 const HumanoidAnimationContext &anim,
+                 const HumanoidPose &pose, const HumanoidAnimationContext &anim,
                  ISubmitter &out) const override {
     auto &registry = EquipmentRegistry::instance();
     auto armor = registry.get(EquipmentCategory::Armor, "kingdom_heavy_armor");

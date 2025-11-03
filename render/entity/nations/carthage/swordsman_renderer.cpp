@@ -223,8 +223,7 @@ public:
   }
 
   void drawArmor(const DrawContext &ctx, const HumanoidVariant &v,
-                 const HumanoidPose &pose,
-                 const HumanoidAnimationContext &anim,
+                 const HumanoidPose &pose, const HumanoidAnimationContext &anim,
                  ISubmitter &out) const override {
     auto &registry = EquipmentRegistry::instance();
     auto armor = registry.get(EquipmentCategory::Armor, "carthage_heavy_armor");
@@ -232,6 +231,7 @@ public:
       armor->render(ctx, pose.bodyFrames, v.palette, anim, out);
     }
   }
+
 private:
   static auto computeKnightExtras(uint32_t seed,
                                   const HumanoidVariant &v) -> KnightExtras {

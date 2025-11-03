@@ -6,7 +6,6 @@
 
 namespace Render::GL {
 
-// Kingdom Heavy Armor - Full plate with prominent pauldrons and gorget
 class KingdomHeavyArmorRenderer : public IEquipmentRenderer {
 public:
   KingdomHeavyArmorRenderer() = default;
@@ -17,7 +16,6 @@ public:
               ISubmitter &submitter) override;
 };
 
-// Kingdom Light Armor - Lighter breastplate, no pauldrons
 class KingdomLightArmorRenderer : public IEquipmentRenderer {
 public:
   KingdomLightArmorRenderer() = default;
