@@ -18,6 +18,11 @@ void HumanoidPoseController::kneel(float depth) {
 
   depth = std::clamp(depth, 0.0F, 1.0F);
 
+  // No-op if depth is zero
+  if (depth < 1e-6F) {
+    return;
+  }
+
   float const kneel_offset = depth * 0.40F;
   float const pelvis_y = HP::WAIST_Y - kneel_offset;
   m_pose.pelvisPos.setY(pelvis_y);
@@ -131,14 +136,17 @@ auto HumanoidPoseController::solveKneeIK(
   }
   bend_axis.normalize();
 
-  QVector3D const knee =
+  QVector3D knee =
       hip + dir * (cos_theta * upper_len) + bend_axis * (sin_theta * upper_len);
 
   float const knee_floor = HP::GROUND_Y + m_pose.footYOffset * 0.5F;
   if (knee.y() < knee_floor) {
-    QVector3D adjusted = knee;
-    adjusted.setY(knee_floor);
-    return adjusted;
+    knee.setY(knee_floor);
+  }
+
+  // Ensure knee is not above hip
+  if (knee.y() > hip.y()) {
+    knee.setY(hip.y());
   }
 
   return knee;
