@@ -15,6 +15,24 @@ namespace Render::GL {
 using Render::Geom::cylinderBetween;
 using Render::Geom::sphereAt;
 
+// --- Helper ---------------------------------------------------------------
+static inline void submit_disk(ISubmitter &submitter,
+                               const DrawContext &ctx,
+                               const QVector3D &center,
+                               const QVector3D &normal_dir,
+                               float radius,
+                               float thickness,
+                               const QVector3D &color,
+                               float roughness) {
+  QVector3D n = normal_dir;
+  if (n.lengthSquared() < 1e-5f) n = QVector3D(0, 1, 0);
+  n.normalize();
+  QVector3D a = center - 0.5f * thickness * n;
+  QVector3D b = center + 0.5f * thickness * n;
+  submitter.mesh(getUnitCylinder(), cylinderBetween(ctx.model, a, b, radius),
+                 color, nullptr, roughness);
+}
+
 void CarthageLightHelmetRenderer::render(
     const DrawContext &ctx, const BodyFrames &frames,
     const HumanoidPalette &palette, const HumanoidAnimationContext &anim,
@@ -27,224 +45,227 @@ void CarthageLightHelmetRenderer::render(
     return;
   }
 
-  renderBowl(ctx, head, submitter);
-  renderBrim(ctx, head, submitter);
-  renderCheekGuards(ctx, head, submitter);
-  
+  render_shell(ctx, head, submitter);        // taller dome + knob
+  render_brow_band(ctx, head, submitter);    // reinforced brow
+  render_neck_guard(ctx, head, submitter);   // flared back skirt
+  render_cheek_plates(ctx, head, submitter); // contoured guards
+
   if (m_config.has_nasal_guard) {
-    renderNasalGuard(ctx, head, submitter);
+    render_nasal(ctx, head, submitter);
   }
-  
+
   if (m_config.has_crest) {
-    renderCrest(ctx, head, submitter);
+    render_crest_mount(ctx, head, submitter);
   }
-  
+
   if (m_config.detail_level >= 2) {
-    renderRivets(ctx, head, submitter);
+    render_rivets(ctx, head, submitter);
   }
 }
 
-void CarthageLightHelmetRenderer::renderBowl(const DrawContext &ctx,
-                                             const AttachmentFrame &head,
-                                             ISubmitter &submitter) {
-  float const head_r = head.radius;
-  
-  auto headPoint = [&](const QVector3D &normalized) -> QVector3D {
-    return HumanoidRendererBase::frameLocalPosition(head, normalized);
-  };
-
-  // Main helmet dome - smooth bronze sphere
-  QVector3D dome_center = headPoint(QVector3D(0.0F, 0.7F, 0.1F));
-  QMatrix4x4 dome_m = ctx.model;
-  dome_m.translate(dome_center);
-  
-  // Scale to create proper helmet shape - slightly elongated
-  dome_m.scale(head_r * 1.15F, head_r * 0.85F, head_r * 1.12F);
-  
-  // Rich polished bronze with subtle variation
-  QVector3D bronze_base = m_config.bronze_color;
-  submitter.mesh(getUnitSphere(), dome_m, bronze_base, nullptr, 0.92F);
-  
-  // Helmet rim/edge reinforcement band
-  QVector3D rim_pos = headPoint(QVector3D(0.0F, 0.3F, 0.0F));
-  submitter.mesh(getUnitCylinder(),
-                 cylinderBetween(ctx.model, rim_pos, rim_pos + head.up * 0.03F, head_r * 1.18F),
-                 bronze_base * 1.1F, nullptr, 0.95F);
-}
-
-void CarthageLightHelmetRenderer::renderBrim(const DrawContext &ctx,
-                                             const AttachmentFrame &head,
-                                             ISubmitter &submitter) {
-  float const head_r = head.radius;
-  float const brim_width = m_config.brim_width;
-  
-  auto headPoint = [&](const QVector3D &normalized) -> QVector3D {
-    return HumanoidRendererBase::frameLocalPosition(head, normalized);
-  };
-
-  // Front brim protection
-  QVector3D brim_base = headPoint(QVector3D(0.0F, 0.35F, 0.65F));
-  QVector3D brim_tip = brim_base + head.forward * brim_width;
-  
-  QMatrix4x4 brim_m = ctx.model;
-  brim_m.translate((brim_base + brim_tip) * 0.5F);
-  
-  // Orient brim forward
-  QVector3D brim_vec = brim_tip - brim_base;
-  float brim_len = brim_vec.length();
-  if (brim_len > 0.001F) {
-    brim_vec.normalize();
-    QVector3D right = QVector3D::crossProduct(brim_vec, head.up).normalized();
-    QVector3D up = QVector3D::crossProduct(right, brim_vec);
-    
-    QMatrix4x4 rotation;
-    rotation.setColumn(0, QVector4D(right, 0.0F));
-    rotation.setColumn(1, QVector4D(up, 0.0F));
-    rotation.setColumn(2, QVector4D(brim_vec, 0.0F));
-    rotation.setColumn(3, QVector4D(0.0F, 0.0F, 0.0F, 1.0F));
-    
-    brim_m = brim_m * rotation;
-  }
-  
-  brim_m.scale(head_r * 1.1F, head_r * 0.15F, brim_len * 0.5F);
-  submitter.mesh(getUnitSphere(), brim_m, 
-                 m_config.bronze_color * 0.92F, nullptr, 0.85F);
-}
-
-void CarthageLightHelmetRenderer::renderCheekGuards(
-    const DrawContext &ctx, const AttachmentFrame &head,
-    ISubmitter &submitter) {
-  float const head_r = head.radius;
-  float const guard_len = m_config.cheek_guard_length;
-  
-  auto headPoint = [&](const QVector3D &normalized) -> QVector3D {
-    return HumanoidRendererBase::frameLocalPosition(head, normalized);
-  };
-
-  // Left cheek guard
-  QVector3D left_top = headPoint(QVector3D(-0.75F, 0.45F, 0.35F));
-  QVector3D left_bot = left_top + head.up * (-guard_len) + 
-                       head.forward * 0.02F;
-  
-  submitter.mesh(getUnitCylinder(),
-                 cylinderBetween(ctx.model, left_top, left_bot, head_r * 0.42F),
-                 m_config.bronze_color * 0.88F, nullptr, 0.8F);
-  
-  // Right cheek guard
-  QVector3D right_top = headPoint(QVector3D(0.75F, 0.45F, 0.35F));
-  QVector3D right_bot = right_top + head.up * (-guard_len) + 
-                        head.forward * 0.02F;
-  
-  submitter.mesh(getUnitCylinder(),
-                 cylinderBetween(ctx.model, right_top, right_bot, head_r * 0.42F),
-                 m_config.bronze_color * 0.88F, nullptr, 0.8F);
-  
-  // Cheek guard attachment rivets
-  if (m_config.detail_level >= 1) {
-    for (auto pos : {left_top, right_top}) {
-      QMatrix4x4 rivet_m = ctx.model;
-      rivet_m.translate(pos);
-      rivet_m.scale(head_r * 0.08F);
-      submitter.mesh(getUnitSphere(), rivet_m,
-                     m_config.bronze_color * 1.3F, nullptr, 1.0F);
-    }
-  }
-}
-
-void CarthageLightHelmetRenderer::renderNasalGuard(
-    const DrawContext &ctx, const AttachmentFrame &head,
-    ISubmitter &submitter) {
-  float const head_r = head.radius;
-  
-  auto headPoint = [&](const QVector3D &normalized) -> QVector3D {
-    return HumanoidRendererBase::frameLocalPosition(head, normalized);
-  };
-
-  // Vertical nose guard strip
-  QVector3D nasal_top = headPoint(QVector3D(0.0F, 0.55F, 0.85F));
-  QVector3D nasal_bot = headPoint(QVector3D(0.0F, 0.0F, 0.92F));
-  
-  submitter.mesh(getUnitCylinder(),
-                 cylinderBetween(ctx.model, nasal_bot, nasal_top, head_r * 0.12F),
-                 m_config.bronze_color * 0.95F, nullptr, 0.9F);
-}
-
-void CarthageLightHelmetRenderer::renderCrest(const DrawContext &ctx,
-                                              const AttachmentFrame &head,
-                                              ISubmitter &submitter) {
-  float const head_r = head.radius;
-  
-  auto headPoint = [&](const QVector3D &normalized) -> QVector3D {
-    return HumanoidRendererBase::frameLocalPosition(head, normalized);
-  };
-
-  // Bronze crest holder - longitudinal ridge
-  QVector3D holder_front = headPoint(QVector3D(0.0F, 0.85F, 0.5F));
-  QVector3D holder_back = headPoint(QVector3D(0.0F, 0.88F, -0.5F));
-  
-  submitter.mesh(getUnitCylinder(),
-                 cylinderBetween(ctx.model, holder_front, holder_back, head_r * 0.08F),
-                 m_config.bronze_color * 1.15F, nullptr, 0.95F);
-  
-  // Vibrant red horsehair plume
-  QVector3D crest_color(0.82F, 0.12F, 0.15F); // Bright crimson
-  
-  // Dense hair strands flowing backward
-  int const strands = m_config.detail_level >= 2 ? 12 : 6;
-  
-  for (int i = 0; i < strands; ++i) {
-    float t = static_cast<float>(i) / static_cast<float>(strands - 1);
-    
-    // Position along crest holder
-    QVector3D base = holder_front * (1.0F - t) + holder_back * t;
-    base += head.up * (head_r * 0.05F); // Lift above holder
-    
-    // Flow backward and down with natural curve
-    float curve = std::sin(t * 3.14159F) * 0.3F;
-    QVector3D tip = base + 
-                    head.up * (head_r * (0.25F - t * 0.1F)) +
-                    head.forward * (head_r * (-0.4F - curve));
-    
-    // Slight lateral spread for volume
-    float spread = (static_cast<float>(i % 3) - 1.0F) * head_r * 0.08F;
-    tip += head.right * spread;
-    
-    // Color variation for natural look
-    QVector3D hair_color = crest_color * (0.9F + (i % 2) * 0.2F);
-    
-    submitter.mesh(getUnitCylinder(),
-                   cylinderBetween(ctx.model, base, tip, head_r * 0.035F),
-                   hair_color, nullptr, 0.65F);
-  }
-}
-
-void CarthageLightHelmetRenderer::renderRivets(const DrawContext &ctx,
+// -------------------------------------------------------------------------
+// SHELL: taller, more conical bowl with subtle ridge and top knob
+void CarthageLightHelmetRenderer::render_shell(const DrawContext &ctx,
                                                const AttachmentFrame &head,
                                                ISubmitter &submitter) {
-  float const head_r = head.radius;
-  
-  auto headPoint = [&](const QVector3D &normalized) -> QVector3D {
-    return HumanoidRendererBase::frameLocalPosition(head, normalized);
+  const float R = head.radius;
+  auto headPoint = [&](const QVector3D &n) { return HumanoidRendererBase::frameLocalPosition(head, n); };
+
+  // Primary bowl – pushed higher and slightly conical so it reads as a helmet, not a cap
+  QVector3D bowl_center = headPoint(QVector3D(0.0f, 0.68f, 0.02f));
+  QMatrix4x4 m_bowl = ctx.model;
+  m_bowl.translate(bowl_center);
+  // X,Z broader; Y taller for a conical/oval bowl
+  m_bowl.scale(R * 1.12f, R * 1.05f, R * 1.08f);
+  submitter.mesh(getUnitSphere(), m_bowl, m_config.bronze_color, nullptr, 0.92f);
+
+  // Subtle longitudinal ridge (front-to-back) to break the cap silhouette
+  QVector3D crest_front = headPoint(QVector3D(0.0f, 1.0f, 0.45f));
+  QVector3D crest_back  = headPoint(QVector3D(0.0f, 0.98f, -0.55f));
+  submitter.mesh(getUnitCylinder(),
+                 cylinderBetween(ctx.model, crest_front, crest_back, R * 0.07f),
+                 m_config.bronze_color * 1.08f, nullptr, 0.95f);
+
+  // Top knob (Montefortino-style)
+  QVector3D knob_pos = headPoint(QVector3D(0.0f, 1.1f, -0.02f));
+  QMatrix4x4 m_knob = ctx.model;
+  m_knob.translate(knob_pos);
+  m_knob.scale(R * 0.16f);
+  submitter.mesh(getUnitSphere(), m_knob, m_config.bronze_color * 1.15f, nullptr, 0.95f);
+}
+
+// -------------------------------------------------------------------------
+// BROW BAND: continuous reinforced band around the rim (no visor/brim)
+void CarthageLightHelmetRenderer::render_brow_band(const DrawContext &ctx,
+                                                   const AttachmentFrame &head,
+                                                   ISubmitter &submitter) {
+  const float R = head.radius;
+  auto headPoint = [&](const QVector3D &n) { return HumanoidRendererBase::frameLocalPosition(head, n); };
+
+  QVector3D ring_center = headPoint(QVector3D(0.0f, 0.42f, 0.0f));
+  // A very short, very wide "coin" that intersects the bowl – visually reads as a band
+  submit_disk(submitter, ctx, ring_center, head.up, R * 1.22f, R * 0.07f,
+              m_config.bronze_color * 1.05f, 0.95f);
+
+  if (m_config.detail_level >= 1) {
+    // Small front peak integrated into the band (not a separate cap-like brim)
+    QVector3D front_center = headPoint(QVector3D(0.0f, 0.48f, 0.73f));
+    QVector3D n = (head.forward * 0.9f + head.up * 0.15f).normalized();
+    submit_disk(submitter, ctx, front_center, n, R * 0.48f, R * 0.05f,
+                m_config.bronze_color * 1.0f, 0.9f);
+  }
+}
+
+// -------------------------------------------------------------------------
+// NECK GUARD: flared skirt made of overlapping plates along the back half
+void CarthageLightHelmetRenderer::render_neck_guard(const DrawContext &ctx,
+                                                    const AttachmentFrame &head,
+                                                    ISubmitter &submitter) {
+  const float R = head.radius;
+  auto headPoint = [&](const QVector3D &n) { return HumanoidRendererBase::frameLocalPosition(head, n); };
+
+  // Arc over the back ~160° span
+  const int plates = (m_config.detail_level >= 2) ? 14 : 9;
+  const float a0 = 140.0f * std::numbers::pi_v<float> / 180.0f;
+  const float a1 = 220.0f * std::numbers::pi_v<float> / 180.0f;
+  for (int i = 0; i < plates; ++i) {
+    float t = (plates == 1) ? 0.5f : (float)i / (plates - 1);
+    float a = a0 + (a1 - a0) * t;
+    float ca = std::cos(a), sa = std::sin(a);
+
+    // Center of each plate, slightly below the band, more drop near the very back
+    float drop = 0.10f + 0.10f * std::sin(t * std::numbers::pi_v<float>);
+    QVector3D c = headPoint(QVector3D(0.85f * ca, 0.32f - drop, 0.85f * sa - 0.02f));
+
+    // Plate normal: outward radial with downward tilt for flare
+    QVector3D radial = (head.right * ca + head.forward * sa).normalized();
+    QVector3D n = (radial * 0.7f + head.up * -0.6f).normalized();
+
+    // Plate size subtly larger near the middle back
+    float r_plate = R * (0.46f + 0.10f * std::sin(t * std::numbers::pi_v<float>));
+    float thick   = R * 0.06f;
+
+    submit_disk(submitter, ctx, c, n, r_plate, thick, m_config.bronze_color * 1.02f, 0.9f);
+  }
+}
+
+// -------------------------------------------------------------------------
+// CHEEK PLATES: articulated, curved plates following the jawline
+void CarthageLightHelmetRenderer::render_cheek_plates(const DrawContext &ctx,
+                                                      const AttachmentFrame &head,
+                                                      ISubmitter &submitter) {
+  const float R = head.radius;
+  auto headPoint = [&](const QVector3D &n) { return HumanoidRendererBase::frameLocalPosition(head, n); };
+
+  auto side = [&](float sx) {
+    // Three overlapping plates per side descending and slightly wrapping forward
+    int segments = 3;
+    for (int j = 0; j < segments; ++j) {
+      float v = (float)j / (segments - 1);
+      QVector3D center = headPoint(QVector3D(0.86f * sx, 0.50f - 0.22f * v, 0.28f + 0.12f * v));
+      QVector3D n = (head.right * sx * 0.9f + head.forward * 0.18f - head.up * 0.05f).normalized();
+      float r_plate = R * (0.34f - 0.03f * v);
+      float thick   = R * 0.05f;
+      submit_disk(submitter, ctx, center, n, r_plate, thick, m_config.bronze_color * 0.96f, 0.85f);
+
+      if (m_config.detail_level >= 1) {
+        // Hinge/rivet near the top of each plate
+        QMatrix4x4 riv_m = ctx.model;
+        riv_m.translate(center + n * (thick * 0.55f));
+        riv_m.scale(R * 0.055f);
+        submitter.mesh(getUnitSphere(), riv_m, m_config.bronze_color * 1.25f, nullptr, 1.0f);
+      }
+    }
   };
 
-  // Decorative bronze rivets around helmet bowl
-  QVector3D rivet_color = m_config.bronze_color * 1.25F;
-  
-  int const rivet_count = 12;
-  for (int i = 0; i < rivet_count; ++i) {
-    float angle = (static_cast<float>(i) / static_cast<float>(rivet_count)) 
-                  * 2.0F * std::numbers::pi_v<float>;
-    
-    float x = std::cos(angle) * 0.85F;
-    float z = std::sin(angle) * 0.85F;
-    
-    QVector3D rivet_pos = headPoint(QVector3D(x, 0.55F, z));
-    
-    QMatrix4x4 rivet_m = ctx.model;
-    rivet_m.translate(rivet_pos);
-    rivet_m.scale(head_r * 0.06F);
-    
-    submitter.mesh(getUnitSphere(), rivet_m, rivet_color, nullptr, 1.0F);
+  side(-1.0f);
+  side(+1.0f);
+}
+
+// -------------------------------------------------------------------------
+// NASAL GUARD: straight bar from brow to mid-nose
+void CarthageLightHelmetRenderer::render_nasal(const DrawContext &ctx,
+                                               const AttachmentFrame &head,
+                                               ISubmitter &submitter) {
+  const float R = head.radius;
+  auto headPoint = [&](const QVector3D &n) { return HumanoidRendererBase::frameLocalPosition(head, n); };
+
+  QVector3D top = headPoint(QVector3D(0.0f, 0.60f, 0.80f));
+  QVector3D bot = headPoint(QVector3D(0.0f, 0.05f, 0.92f));
+  submitter.mesh(getUnitCylinder(), cylinderBetween(ctx.model, bot, top, R * 0.11f),
+                 m_config.bronze_color * 0.98f, nullptr, 0.9f);
+
+  if (m_config.detail_level >= 2) {
+    // Small T-joint at the top
+    QVector3D left = top + head.right * (R * 0.18f);
+    QVector3D right = top - head.right * (R * 0.18f);
+    submitter.mesh(getUnitCylinder(), cylinderBetween(ctx.model, left, right, R * 0.055f),
+                   m_config.bronze_color * 1.05f, nullptr, 0.92f);
+  }
+}
+
+// -------------------------------------------------------------------------
+// CREST MOUNT: low bronze saddle + optional plume strands
+void CarthageLightHelmetRenderer::render_crest_mount(const DrawContext &ctx,
+                                                     const AttachmentFrame &head,
+                                                     ISubmitter &submitter) {
+  const float R = head.radius;
+  auto headPoint = [&](const QVector3D &n) { return HumanoidRendererBase::frameLocalPosition(head, n); };
+
+  QVector3D base_front = headPoint(QVector3D(0.0f, 0.95f, 0.48f));
+  QVector3D base_back  = headPoint(QVector3D(0.0f, 0.98f, -0.50f));
+  submitter.mesh(getUnitCylinder(),
+                 cylinderBetween(ctx.model, base_front, base_back, R * 0.09f),
+                 m_config.bronze_color * 1.12f, nullptr, 0.95f);
+
+  // Optional plume (kept subtle so it doesn't read as a cap)
+  QVector3D crest_color(0.7f, 0.12f, 0.16f);
+  int strands = (m_config.detail_level >= 2) ? 10 : 6;
+  for (int i = 0; i < strands; ++i) {
+    float t = (float)i / std::max(1, strands - 1);
+    QVector3D base = base_front * (1.0f - t) + base_back * t;
+    base += head.up * (R * 0.05f);
+    float curve = std::sin(t * std::numbers::pi_v<float>) * 0.28f;
+    QVector3D tip = base + head.up * (R * (0.22f - 0.10f * t)) + head.forward * (R * (-0.42f - curve));
+    float spread = (float((i % 3) - 1)) * R * 0.07f;
+    tip += head.right * spread;
+    QVector3D col = crest_color * (0.9f + (i % 2) * 0.18f);
+    submitter.mesh(getUnitCylinder(), cylinderBetween(ctx.model, base, tip, R * 0.032f),
+                   col, nullptr, 0.65f);
+  }
+}
+
+// -------------------------------------------------------------------------
+// RIVETS: around brow and along the ridge
+void CarthageLightHelmetRenderer::render_rivets(const DrawContext &ctx,
+                                                const AttachmentFrame &head,
+                                                ISubmitter &submitter) {
+  const float R = head.radius;
+  auto headPoint = [&](const QVector3D &n) { return HumanoidRendererBase::frameLocalPosition(head, n); };
+
+  QVector3D col = m_config.bronze_color * 1.25f;
+
+  // Around the brow band
+  int n = 14;
+  for (int i = 0; i < n; ++i) {
+    float a = (float)i / n * 2.0f * std::numbers::pi_v<float>;
+    float ca = std::cos(a), sa = std::sin(a);
+    QVector3D pos = headPoint(QVector3D(0.95f * ca, 0.49f, 0.95f * sa));
+    QMatrix4x4 m = ctx.model;
+    m.translate(pos);
+    m.scale(R * 0.055f);
+    submitter.mesh(getUnitSphere(), m, col, nullptr, 1.0f);
+  }
+
+  // Along the longitudinal ridge
+  int r = 6;
+  for (int i = 0; i < r; ++i) {
+    float t = (float)i / (r - 1);
+    QVector3D p = headPoint(QVector3D(0.0f, 1.02f - 0.02f * t, 0.46f - 1.0f * t));
+    QMatrix4x4 m = ctx.model;
+    m.translate(p);
+    m.scale(R * 0.045f);
+    submitter.mesh(getUnitSphere(), m, col, nullptr, 1.0f);
   }
 }
 

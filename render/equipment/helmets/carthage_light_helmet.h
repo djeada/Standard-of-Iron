@@ -32,17 +32,17 @@ public:
 private:
   CarthageLightHelmetConfig m_config;
 
-  void renderBowl(const DrawContext &ctx, const AttachmentFrame &head,
+  void render_bowl(const DrawContext &ctx, const AttachmentFrame &head,
                   ISubmitter &submitter);
-  void renderBrim(const DrawContext &ctx, const AttachmentFrame &head,
+  void render_brim(const DrawContext &ctx, const AttachmentFrame &head,
                   ISubmitter &submitter);
-  void renderCheekGuards(const DrawContext &ctx, const AttachmentFrame &head,
+  void render_cheek_guards(const DrawContext &ctx, const AttachmentFrame &head,
                          ISubmitter &submitter);
-  void renderNasalGuard(const DrawContext &ctx, const AttachmentFrame &head,
+  void render_nasal_guard(const DrawContext &ctx, const AttachmentFrame &head,
                         ISubmitter &submitter);
-  void renderCrest(const DrawContext &ctx, const AttachmentFrame &head,
+  void render_crest(const DrawContext &ctx, const AttachmentFrame &head,
                    ISubmitter &submitter);
-  void renderRivets(const DrawContext &ctx, const AttachmentFrame &head,
+  void render_rivets(const DrawContext &ctx, const AttachmentFrame &head,
                     ISubmitter &submitter);
 };
 
