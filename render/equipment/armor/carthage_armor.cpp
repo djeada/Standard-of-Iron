@@ -70,23 +70,23 @@ void CarthageHeavyArmorRenderer::render(const DrawContext &ctx,
 
   // 1. CHEST AND BACK HAUBERK
   {
-    float height = torso_r * 1.15F;
-    QVector3D center = torso.origin + up * (torso_r * 0.35F);
+    float height = torso_r * 0.95F;
+    QVector3D center = torso.origin + up * (torso_r * 0.28F);
     QMatrix4x4 chest = createArmorTransform(ctx, center, up, right, forward,
-                                            torso_r * 2.4F,
+                                            torso_r * 1.55F,
                                             height,
-                                            torso_r * 1.45F);
+                                            torso_r * 1.25F);
     submitter.mesh(getUnitTorso(), chest, steel_color, nullptr, 0.32F);
   }
 
   // 2. MIDSECTION
   {
-    float height = torso_r * 0.9F;
-    QVector3D center = torso.origin - up * (torso_r * 0.05F);
+    float height = torso_r * 0.75F;
+    QVector3D center = torso.origin - up * (torso_r * 0.2F);
     QMatrix4x4 mid = createArmorTransform(ctx, center, up, right, forward,
-                                          torso_r * 2.1F,
+                                          torso_r * 1.45F,
                                           height,
-                                          torso_r * 1.35F);
+                                          torso_r * 1.1F);
     submitter.mesh(getUnitTorso(), mid, steel_color * 0.98F, nullptr, 0.34F);
   }
 
@@ -96,14 +96,14 @@ void CarthageHeavyArmorRenderer::render(const DrawContext &ctx,
     QVector3D waist_right = waist.right.normalized();
     QVector3D waist_forward = waist.forward.normalized();
 
-    float height = waist.radius * 1.25F;
-    QVector3D center = waist.origin - waist_up * (height * 0.25F);
+    float height = waist.radius * 1.0F;
+    QVector3D center = waist.origin - waist_up * (height * 0.45F);
     QMatrix4x4 skirt = createArmorTransform(ctx, center, waist_up, waist_right,
                                             waist_forward,
-                                            waist.radius * 2.35F,
+                                            waist.radius * 1.65F,
                                             height,
-                                            waist.radius * 1.6F);
-    submitter.mesh(getUnitTorso(), skirt, steel_color * 0.95F, nullptr, 0.36F);
+                                            waist.radius * 1.25F);
+    submitter.mesh(getUnitTorso(), skirt, steel_color * 0.97F, nullptr, 0.36F);
   }
 
   // 4. MAIL COLLAR AROUND NECK BASE
@@ -123,9 +123,9 @@ void CarthageHeavyArmorRenderer::render(const DrawContext &ctx,
                                           shoulder.up.normalized(),
                                           shoulder.right.normalized(),
                                           shoulder.forward.normalized(),
-                                          shoulder.radius * 1.6F,
-                                          shoulder.radius * 1.05F,
-                                          shoulder.radius * 1.6F);
+                                          shoulder.radius * 1.1F,
+                                          shoulder.radius * 0.75F,
+                                          shoulder.radius * 1.1F);
     submitter.mesh(getUnitSphere(), mat, steel_color, nullptr, 0.33F);
   };
   submit_pauldron(shoulderL);
@@ -137,7 +137,7 @@ void CarthageHeavyArmorRenderer::render(const DrawContext &ctx,
     if (shoulder.radius <= 0.0F) return;
     QVector3D start = shoulder.origin - shoulder.up.normalized() * (shoulder.radius * 0.2F);
     QVector3D end = hand.origin + hand.up.normalized() * (hand.radius * 0.25F);
-    float radius = std::max(shoulder.radius, torso_r * 0.35F) * 0.55F;
+  float radius = std::max(shoulder.radius, torso_r * 0.3F) * 0.4F;
     submitter.mesh(getUnitCylinder(),
                    cylinderBetween(ctx.model, start, end, radius),
                    steel_color * 0.97F, nullptr, 0.35F);
@@ -150,7 +150,7 @@ void CarthageHeavyArmorRenderer::render(const DrawContext &ctx,
     QVector3D leg_dir = foot.origin - waist.origin;
     QVector3D start = waist.origin + leg_dir * 0.18F + right * (torso_r * 0.45F * side_sign);
     QVector3D end = waist.origin + leg_dir * 0.55F + right * (torso_r * 0.35F * side_sign);
-    float radius = torso_r * 0.45F;
+  float radius = torso_r * 0.32F;
     submitter.mesh(getUnitCylinder(),
                    cylinderBetween(ctx.model, start, end, radius),
                    steel_color * 0.94F, nullptr, 0.37F);
@@ -189,32 +189,32 @@ void CarthageLightArmorRenderer::render(const DrawContext &ctx,
 
   // 1. CHEST PIECE - Upper torso
   {
-    QVector3D center = torso.origin + torso_up * (torso.radius * 0.25F);
+    QVector3D center = torso.origin + torso_up * (torso.radius * 0.22F);
     QMatrix4x4 chest = createArmorTransform(ctx, center, torso_up, torso_right, torso_forward,
-                                            torso.radius * 2.25F,
-                                            torso.radius * 1.05F,
-                                            torso.radius * 1.25F);
+                                            torso.radius * 1.5F,
+                                            torso.radius * 0.95F,
+                                            torso.radius * 1.1F);
     submitter.mesh(getUnitTorso(), chest, linen_color, nullptr, roughness);
   }
 
   // 2. BELLY PIECE - Mid torso
   {
-    QVector3D center = torso.origin - torso_up * (torso.radius * 0.15F);
+    QVector3D center = torso.origin - torso_up * (torso.radius * 0.22F);
     QMatrix4x4 belly = createArmorTransform(ctx, center, torso_up, torso_right, torso_forward,
-                                            torso.radius * 2.05F,
-                                            torso.radius * 0.9F,
-                                            torso.radius * 1.2F);
+                                            torso.radius * 1.4F,
+                                            torso.radius * 0.8F,
+                                            torso.radius * 1.05F);
     submitter.mesh(getUnitTorso(), belly, linen_color * 0.97F, nullptr, roughness);
   }
 
   // 3. WAIST PIECE - Lower torso
   {
-    float height = waist.radius * 0.9F;
-    QVector3D center = waist.origin - waist_up * (height * 0.4F);
+    float height = waist.radius * 0.75F;
+    QVector3D center = waist.origin - waist_up * (height * 0.5F);
     QMatrix4x4 waist_mat = createArmorTransform(ctx, center, waist_up, waist_right, waist_forward,
-                                                waist.radius * 2.15F,
+                                                waist.radius * 1.55F,
                                                 height,
-                                                waist.radius * 1.15F);
+                                                waist.radius * 1.05F);
     submitter.mesh(getUnitTorso(), waist_mat, linen_color * 0.95F, nullptr, roughness);
   }
 
@@ -225,9 +225,9 @@ void CarthageLightArmorRenderer::render(const DrawContext &ctx,
     shoulderL.up.normalized(),
     shoulderL.right.normalized(),
     shoulderL.forward.normalized(),
-        shoulderL.radius * 1.45F,
-        shoulderL.radius * 0.95F,
-        shoulderL.radius * 1.35F);
+  shoulderL.radius * 1.05F,
+  shoulderL.radius * 0.7F,
+  shoulderL.radius * 1.0F);
     submitter.mesh(getUnitSphere(), mat, linen_color, nullptr, roughness);
   }
 
@@ -238,22 +238,22 @@ void CarthageLightArmorRenderer::render(const DrawContext &ctx,
     shoulderR.up.normalized(),
     shoulderR.right.normalized(),
     shoulderR.forward.normalized(),
-        shoulderR.radius * 1.45F,
-        shoulderR.radius * 0.95F,
-        shoulderR.radius * 1.35F);
+  shoulderR.radius * 1.05F,
+  shoulderR.radius * 0.7F,
+  shoulderR.radius * 1.0F);
     submitter.mesh(getUnitSphere(), mat, linen_color, nullptr, roughness);
   }
 
   // 6. LINEN PTERYGES (skirt strips)
   auto submit_pteruges = [&](float side_sign) {
-    for (int i = 0; i < 4; ++i) {
-      float span = (-0.45F + 0.3F * i) * side_sign;
-  QVector3D offset = waist_right * (waist.radius * 1.05F * side_sign)
-         + waist_forward * (waist.radius * 0.7F * span);
-  QVector3D top = waist.origin + offset - waist_up * (waist.radius * 0.15F);
-  QVector3D bottom = top - waist_up * (waist.radius * 1.35F)
-         + waist_forward * (waist.radius * 0.05F * span);
-      float strip_radius = waist.radius * 0.12F;
+    for (int i = 0; i < 3; ++i) {
+      float span = (-0.35F + 0.35F * i);
+      QVector3D offset = waist_right * (waist.radius * 0.85F * side_sign)
+                       + waist_forward * (waist.radius * 0.45F * span);
+      QVector3D top = waist.origin + offset - waist_up * (waist.radius * 0.1F);
+      QVector3D bottom = top - waist_up * (waist.radius * 0.95F)
+                         + waist_forward * (waist.radius * 0.08F * span);
+      float strip_radius = waist.radius * 0.08F;
       submitter.mesh(getUnitCylinder(),
                      cylinderBetween(ctx.model, top, bottom, strip_radius),
                      linen_color * 0.92F, nullptr, roughness);
@@ -264,13 +264,13 @@ void CarthageLightArmorRenderer::render(const DrawContext &ctx,
 
   // 7. FRONT/BACK LINEN TABS TO COVER UPPER LEGS
   auto submit_front_tab = [&](const AttachmentFrame &foot, float forward_sign) {
-  QVector3D leg_dir = (foot.origin - waist.origin);
-  QVector3D center = waist.origin + waist_forward * (waist.radius * 1.1F * forward_sign)
-                       + leg_dir * 0.32F;
-  QMatrix4x4 tab = createArmorTransform(ctx, center, waist_up, waist_right, waist_forward,
-                                          waist.radius * 1.5F,
-                                          waist.radius * 1.2F,
-                                          waist.radius * 0.6F);
+    QVector3D leg_dir = (foot.origin - waist.origin);
+    QVector3D center = waist.origin + waist_forward * (waist.radius * 0.85F * forward_sign)
+                       + leg_dir * 0.28F;
+    QMatrix4x4 tab = createArmorTransform(ctx, center, waist_up, waist_right, waist_forward,
+                                          waist.radius * 0.95F,
+                                          waist.radius * 0.95F,
+                                          waist.radius * 0.4F);
     submitter.mesh(getUnitTorso(), tab, linen_color * 0.9F, nullptr, roughness);
   };
   submit_front_tab(footL, 1.0F);
