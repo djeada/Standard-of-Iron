@@ -58,7 +58,7 @@ void Backend::uploadCylinderInstances(std::size_t count) {
   glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-void Backend::drawCylinders(std::size_t count) {
+void Backend::draw_cylinders(std::size_t count) {
   if (!m_cylinderVao || m_cylinderIndexCount == 0 || count == 0)
     return;
 
