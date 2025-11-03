@@ -1,7 +1,7 @@
-#include "equipment_registry.h"
 #include "armor/carthage_armor.h"
 #include "armor/kingdom_armor.h"
 #include "armor/roman_armor.h"
+#include "equipment_registry.h"
 #include "helmets/headwrap.h"
 #include "helmets/kingdom_heavy_helmet.h"
 #include "helmets/kingdom_light_helmet.h"
@@ -81,7 +81,6 @@ void registerBuiltInEquipment() {
   registry.registerEquipment(EquipmentCategory::Helmet, "kingdom_light",
                              kingdom_light);
 
-  // Nation-specific armor
   auto kingdom_heavy_armor = std::make_shared<KingdomHeavyArmorRenderer>();
   registry.registerEquipment(EquipmentCategory::Armor, "kingdom_heavy_armor",
                              kingdom_heavy_armor);

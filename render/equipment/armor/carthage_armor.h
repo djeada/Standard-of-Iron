@@ -6,7 +6,6 @@
 
 namespace Render::GL {
 
-// Carthage Heavy Armor - Mixed metal and leather with distinctive styling
 class CarthageHeavyArmorRenderer : public IEquipmentRenderer {
 public:
   CarthageHeavyArmorRenderer() = default;
@@ -17,7 +16,6 @@ public:
               ISubmitter &submitter) override;
 };
 
-// Carthage Light Armor - Minimal protection, mostly leather
 class CarthageLightArmorRenderer : public IEquipmentRenderer {
 public:
   CarthageLightArmorRenderer() = default;
