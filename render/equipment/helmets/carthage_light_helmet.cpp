@@ -80,8 +80,8 @@ void CarthageLightHelmetRenderer::render_bowl(const DrawContext &ctx,
   m0.translate(c0); 
   m0.scale(R * 1.05f, R * 0.45f, R * 1.02f); // Flatter, smaller - just a cap
   
-  // Brown leather color - shader will add grain, tooling
-  submitter.mesh(getUnitSphere(), m0, m_config.leather_color, nullptr, 1.0f);
+  // DARK brown leather color - very visible against bronze
+  submitter.mesh(getUnitSphere(), m0, QVector3D(0.25f, 0.15f, 0.10f), nullptr, 0.9f);
 }
 
 // -------------------------------------------------------------------------

@@ -54,9 +54,9 @@ void CarthageHeavyArmorRenderer::render(const DrawContext &ctx,
   float height = (top - bottom).length();
   mail_transform.scale(torso_r * 1.12F, height * 0.5F, torso_r * 1.08F);
   
-  // Steel chainmail color - shader will render ring pattern
-  QVector3D steel_color = QVector3D(0.65F, 0.67F, 0.70F);
-  submitter.mesh(getUnitTorso(), mail_transform, steel_color, nullptr, 1.0F);
+  // Steel chainmail color - DARK gray metallic for chainmail detection
+  QVector3D steel_color = QVector3D(0.50F, 0.52F, 0.55F);
+  submitter.mesh(getUnitTorso(), mail_transform, steel_color, nullptr, 0.4F);
 }
 
 void CarthageLightArmorRenderer::render(const DrawContext &ctx,

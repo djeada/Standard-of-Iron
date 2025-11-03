@@ -215,7 +215,7 @@ public:
                   const HumanoidPose &pose, ISubmitter &out) const override {
 
     auto &registry = EquipmentRegistry::instance();
-    auto helmet = registry.get(EquipmentCategory::Helmet, "montefortino");
+    auto helmet = registry.get(EquipmentCategory::Helmet, "carthage_heavy");
     if (helmet) {
       HumanoidAnimationContext anim_ctx{};
       helmet->render(ctx, pose.bodyFrames, v.palette, anim_ctx, out);

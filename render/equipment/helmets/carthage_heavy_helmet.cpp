@@ -41,8 +41,8 @@ void CarthageHeavyHelmetRenderer::render_bowl(const DrawContext &ctx,
   m0.translate(c0);
   m0.scale(R * 1.15f, R * 0.75f, R * 1.12f);
 
-  // Bronze color - shader will add hammered texture, patina
-  submitter.mesh(getUnitSphere(), m0, m_config.bronze_color, nullptr, 0.6f);
+  // BRIGHT bronze color - very visible, distinct from leather
+  submitter.mesh(getUnitSphere(), m0, QVector3D(0.85f, 0.55f, 0.25f), nullptr, 0.3f);
 }
 
 void CarthageHeavyHelmetRenderer::render_cheek_guards(
