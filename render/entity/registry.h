@@ -38,7 +38,7 @@ using RenderFunc = std::function<void(const DrawContext &, ISubmitter &out)>;
 
 class EntityRendererRegistry {
 public:
-  void registerRenderer(const std::string &type, RenderFunc func);
+  void register_renderer(const std::string &type, RenderFunc func);
   auto get(const std::string &type) const -> RenderFunc;
 
 private:

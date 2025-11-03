@@ -6,6 +6,6 @@ class EntityRendererRegistry;
 
 namespace Render::GL {
 
-void registerBarracksRenderer(EntityRendererRegistry &registry);
+void register_barracks_renderer(EntityRendererRegistry &registry);
 
 }

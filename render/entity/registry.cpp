@@ -18,7 +18,7 @@
 
 namespace Render::GL {
 
-void EntityRendererRegistry::registerRenderer(const std::string &type,
+void EntityRendererRegistry::register_renderer(const std::string &type,
                                               RenderFunc func) {
   m_map[type] = std::move(func);
 }
@@ -47,7 +47,7 @@ void registerBuiltInEntityRenderers(EntityRendererRegistry &registry) {
   Kingdom::registerMountedKnightRenderer(registry);
   Roman::registerMountedKnightRenderer(registry);
   Carthage::registerMountedKnightRenderer(registry);
-  registerBarracksRenderer(registry);
+  register_barracks_renderer(registry);
 }
 
 } // namespace Render::GL

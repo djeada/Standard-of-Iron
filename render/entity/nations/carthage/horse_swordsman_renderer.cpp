@@ -53,7 +53,7 @@ struct MountedKnightExtras {
 
 class MountedKnightRenderer : public HumanoidRendererBase {
 public:
-  auto getProportionScaling() const -> QVector3D override {
+  auto get_proportion_scaling() const -> QVector3D override {
     return {1.40F, 1.05F, 1.10F};
   }
 
@@ -62,7 +62,7 @@ private:
   HorseRenderer m_horseRenderer;
 
 public:
-  void getVariant(const DrawContext &ctx, uint32_t seed,
+  void get_variant(const DrawContext &ctx, uint32_t seed,
                   HumanoidVariant &v) const override {
     QVector3D const team_tint = resolveTeamTint(ctx);
     v.palette = makeHumanoidPalette(team_tint, seed);
@@ -82,7 +82,7 @@ public:
     return QStringLiteral("horse_swordsman");
   }
 
-  void customizePose(const DrawContext &ctx,
+  void customize_pose(const DrawContext &ctx,
                      const HumanoidAnimationContext &anim_ctx, uint32_t seed,
                      HumanoidPose &pose) const override {
     using HP = HumanProportions;
@@ -297,7 +297,7 @@ public:
     }
   }
 
-  void drawHelmet(const DrawContext &ctx, const HumanoidVariant &v,
+  void draw_helmet(const DrawContext &ctx, const HumanoidVariant &v,
                   const HumanoidPose &pose, ISubmitter &out) const override {
 
     auto &registry = EquipmentRegistry::instance();
@@ -308,7 +308,7 @@ public:
     }
   }
 
-  void drawArmor(const DrawContext &ctx, const HumanoidVariant &v,
+  void draw_armor(const DrawContext &ctx, const HumanoidVariant &v,
                  const HumanoidPose &pose, const HumanoidAnimationContext &anim,
                  ISubmitter &out) const override {
     auto &registry = EquipmentRegistry::instance();
@@ -340,7 +340,7 @@ private:
 void registerMountedKnightRenderer(
     Render::GL::EntityRendererRegistry &registry) {
   static MountedKnightRenderer const renderer;
-  registry.registerRenderer(
+  registry.register_renderer(
       "troops/carthage/horse_swordsman",
       [](const DrawContext &ctx, ISubmitter &out) {
         static MountedKnightRenderer const static_renderer;
