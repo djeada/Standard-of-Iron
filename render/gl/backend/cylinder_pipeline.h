@@ -24,7 +24,7 @@ public:
   void beginFrame();
 
   void uploadCylinderInstances(std::size_t count);
-  void drawCylinders(std::size_t count);
+  void draw_cylinders(std::size_t count);
 
   void uploadFogInstances(std::size_t count);
   void drawFog(std::size_t count);

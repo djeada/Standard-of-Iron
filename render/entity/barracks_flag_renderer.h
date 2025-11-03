@@ -24,7 +24,7 @@ struct FlagColors {
   QVector3D woodDark;
 };
 
-inline void drawRallyFlagIfAny(const DrawContext &p, ISubmitter &out,
+inline void draw_rally_flag_if_any(const DrawContext &p, ISubmitter &out,
                                Texture *white, const FlagColors &colors) {
   if (auto *prod =
           p.entity->getComponent<Engine::Core::ProductionComponent>()) {
@@ -80,7 +80,7 @@ struct CaptureColors {
   float loweringOffset;
 };
 
-inline CaptureColors getCaptureColors(const DrawContext &p,
+inline CaptureColors get_capture_colors(const DrawContext &p,
                                       const QVector3D &baseTeamColor,
                                       const QVector3D &baseTeamTrim,
                                       float maxLowering = 0.0F) {
