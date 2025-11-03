@@ -97,7 +97,7 @@ struct KnightExtras {
 
 class KnightRenderer : public HumanoidRendererBase {
 public:
-  auto getProportionScaling() const -> QVector3D override {
+  auto get_proportion_scaling() const -> QVector3D override {
     return {1.40F, 1.05F, 1.10F};
   }
 
@@ -105,7 +105,7 @@ private:
   mutable std::unordered_map<uint32_t, KnightExtras> m_extrasCache;
 
 public:
-  void getVariant(const DrawContext &ctx, uint32_t seed,
+  void get_variant(const DrawContext &ctx, uint32_t seed,
                   HumanoidVariant &v) const override {
     QVector3D const team_tint = resolveTeamTint(ctx);
     v.palette = makeHumanoidPalette(team_tint, seed);
@@ -113,7 +113,7 @@ public:
     apply_palette_overrides(style, team_tint, v);
   }
 
-  void customizePose(const DrawContext &,
+  void customize_pose(const DrawContext &,
                      const HumanoidAnimationContext &anim_ctx, uint32_t seed,
                      HumanoidPose &pose) const override {
     using HP = HumanProportions;
@@ -211,7 +211,7 @@ public:
     }
   }
 
-  void drawHelmet(const DrawContext &ctx, const HumanoidVariant &v,
+  void draw_helmet(const DrawContext &ctx, const HumanoidVariant &v,
                   const HumanoidPose &pose, ISubmitter &out) const override {
 
     auto &registry = EquipmentRegistry::instance();
@@ -222,7 +222,7 @@ public:
     }
   }
 
-  void drawArmor(const DrawContext &ctx, const HumanoidVariant &v,
+  void draw_armor(const DrawContext &ctx, const HumanoidVariant &v,
                  const HumanoidPose &pose, const HumanoidAnimationContext &anim,
                  ISubmitter &out) const override {
     auto &registry = EquipmentRegistry::instance();
@@ -380,7 +380,7 @@ private:
 void registerKnightRenderer(Render::GL::EntityRendererRegistry &registry) {
   ensure_swordsman_styles_registered();
   static KnightRenderer const renderer;
-  registry.registerRenderer(
+  registry.register_renderer(
       "troops/roman/swordsman", [](const DrawContext &ctx, ISubmitter &out) {
         static KnightRenderer const static_renderer;
         Shader *swordsman_shader = nullptr;
@@ -400,7 +400,7 @@ void registerKnightRenderer(Render::GL::EntityRendererRegistry &registry) {
           scene_renderer->setCurrentShader(nullptr);
         }
       });
-  registry.registerRenderer(
+  registry.register_renderer(
       "troops/roman/swordsman", [](const DrawContext &ctx, ISubmitter &out) {
         static KnightRenderer const static_renderer;
         Shader *swordsman_shader = nullptr;

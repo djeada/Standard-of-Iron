@@ -70,7 +70,7 @@ struct BarracksPalette {
   QVector3D teamTrim{0.48F, 0.54F, 0.60F};
 };
 
-inline auto makePalette(const QVector3D &team) -> BarracksPalette {
+inline auto make_palette(const QVector3D &team) -> BarracksPalette {
   BarracksPalette p;
   p.team = clampVec01(team);
   p.teamTrim =
@@ -78,7 +78,7 @@ inline auto makePalette(const QVector3D &team) -> BarracksPalette {
   return p;
 }
 
-inline void drawCylinder(ISubmitter &out, const QMatrix4x4 &model,
+inline void draw_cylinder(ISubmitter &out, const QMatrix4x4 &model,
                          const QVector3D &a, const QVector3D &b, float radius,
                          const QVector3D &color, Texture *white) {
   out.mesh(getUnitCylinder(), model * cylinderBetween(a, b, radius), color,
@@ -152,11 +152,11 @@ inline void drawWalls(const DrawContext &p, ISubmitter &out, Mesh *,
   const float y0 = r;
 
   auto log_x = [&](float y, float z, float x0, float x1, const QVector3D &col) {
-    drawCylinder(out, p.model, QVector3D(x0 - notch, y, z),
+    draw_cylinder(out, p.model, QVector3D(x0 - notch, y, z),
                  QVector3D(x1 + notch, y, z), r, col, white);
   };
   auto log_z = [&](float y, float x, float z0, float z1, const QVector3D &col) {
-    drawCylinder(out, p.model, QVector3D(x, y, z0 - notch),
+    draw_cylinder(out, p.model, QVector3D(x, y, z0 - notch),
                  QVector3D(x, y, z1 + notch), r, col, white);
   };
 
@@ -181,31 +181,31 @@ inline void drawWalls(const DrawContext &p, ISubmitter &out, Mesh *,
   }
 
   QVector3D const post_col = C.woodDark;
-  drawCylinder(out, p.model, QVector3D(-gap_half, y0, front_z),
+  draw_cylinder(out, p.model, QVector3D(-gap_half, y0, front_z),
                QVector3D(-gap_half, y0 + door_h, front_z), r * 0.95F, post_col,
                white);
-  drawCylinder(out, p.model, QVector3D(+gap_half, y0, front_z),
+  draw_cylinder(out, p.model, QVector3D(+gap_half, y0, front_z),
                QVector3D(+gap_half, y0 + door_h, front_z), r * 0.95F, post_col,
                white);
-  drawCylinder(out, p.model, QVector3D(-gap_half, y0 + door_h, front_z),
+  draw_cylinder(out, p.model, QVector3D(-gap_half, y0 + door_h, front_z),
                QVector3D(+gap_half, y0 + door_h, front_z), r, C.timberLight,
                white);
 
   float const brace_y0 = h * 0.35F;
   float const brace_y1 = h * 0.95F;
-  drawCylinder(out, p.model,
+  draw_cylinder(out, p.model,
                QVector3D(left_x + 0.08F, brace_y0, back_z + 0.10F),
                QVector3D(left_x + 0.38F, brace_y1, back_z + 0.10F), r * 0.6F,
                C.woodDark, white);
-  drawCylinder(out, p.model,
+  draw_cylinder(out, p.model,
                QVector3D(right_x - 0.08F, brace_y0, back_z + 0.10F),
                QVector3D(right_x - 0.38F, brace_y1, back_z + 0.10F), r * 0.6F,
                C.woodDark, white);
-  drawCylinder(out, p.model,
+  draw_cylinder(out, p.model,
                QVector3D(left_x + 0.08F, brace_y0, front_z - 0.10F),
                QVector3D(left_x + 0.38F, brace_y1, front_z - 0.10F), r * 0.6F,
                C.woodDark, white);
-  drawCylinder(out, p.model,
+  draw_cylinder(out, p.model,
                QVector3D(right_x - 0.08F, brace_y0, front_z - 0.10F),
                QVector3D(right_x - 0.38F, brace_y1, front_z - 0.10F), r * 0.6F,
                C.woodDark, white);
@@ -293,14 +293,14 @@ inline void drawRoofs(const DrawContext &p, ISubmitter &out, Mesh *,
   const float plate_y = h;
   const float ridge_y = h + rise;
 
-  drawCylinder(out, p.model, QVector3D(left_x - over, plate_y, front_z + over),
+  draw_cylinder(out, p.model, QVector3D(left_x - over, plate_y, front_z + over),
                QVector3D(right_x + over, plate_y, front_z + over), r,
                C.woodDark, white);
-  drawCylinder(out, p.model, QVector3D(left_x - over, plate_y, back_z - over),
+  draw_cylinder(out, p.model, QVector3D(left_x - over, plate_y, back_z - over),
                QVector3D(right_x + over, plate_y, back_z - over), r, C.woodDark,
                white);
 
-  drawCylinder(out, p.model, QVector3D(left_x - over * 0.5F, ridge_y, 0.0F),
+  draw_cylinder(out, p.model, QVector3D(left_x - over * 0.5F, ridge_y, 0.0F),
                QVector3D(right_x + over * 0.5F, ridge_y, 0.0F), r,
                C.timberLight, white);
 
@@ -310,10 +310,10 @@ inline void drawRoofs(const DrawContext &p, ISubmitter &out, Mesh *,
     float const x =
         (left_x - over * 0.5F) * (1.0F - t) + (right_x + over * 0.5F) * t;
 
-    drawCylinder(out, p.model, QVector3D(x, plate_y, back_z - over),
+    draw_cylinder(out, p.model, QVector3D(x, plate_y, back_z - over),
                  QVector3D(x, ridge_y, 0.0F), r * 0.85F, C.woodDark, white);
 
-    drawCylinder(out, p.model, QVector3D(x, plate_y, front_z + over),
+    draw_cylinder(out, p.model, QVector3D(x, plate_y, front_z + over),
                  QVector3D(x, ridge_y, 0.0F), r * 0.85F, C.woodDark, white);
   }
 
@@ -321,7 +321,7 @@ inline void drawRoofs(const DrawContext &p, ISubmitter &out, Mesh *,
     float const z = front ? (front_z + over - tz * (front_z + over))
                           : (back_z - over - tz * (back_z - over));
     float const y = plate_y + tz * (ridge_y - plate_y);
-    drawCylinder(out, p.model, QVector3D(left_x - over * 0.4F, y, z),
+    draw_cylinder(out, p.model, QVector3D(left_x - over * 0.4F, y, z),
                  QVector3D(right_x + over * 0.4F, y, z), r * 0.6F, C.timber,
                  white);
   };
@@ -333,9 +333,9 @@ inline void drawRoofs(const DrawContext &p, ISubmitter &out, Mesh *,
   auto split_thatch = [&](float y, float z, float rad, const QVector3D &col) {
     float const gap_l = ch.x - ch.gapRadius;
     float const gap_r = ch.x + ch.gapRadius;
-    drawCylinder(out, p.model, QVector3D(left_x - over * 0.35F, y, z),
+    draw_cylinder(out, p.model, QVector3D(left_x - over * 0.35F, y, z),
                  QVector3D(gap_l, y, z), rad, col, white);
-    drawCylinder(out, p.model, QVector3D(gap_r, y, z),
+    draw_cylinder(out, p.model, QVector3D(gap_r, y, z),
                  QVector3D(right_x + over * 0.35F, y, z), rad, col, white);
   };
 
@@ -390,12 +390,12 @@ inline void drawDoor(const DrawContext &p, ISubmitter &out, Mesh *unit,
             QVector3D(plank_w * 0.48F, d_h * 0.48F, 0.006F), plank_col);
   }
 
-  drawCylinder(out, p.model,
+  draw_cylinder(out, p.model,
                QVector3D(-d_w * 0.45F, y0 + d_h * 0.35F, zf + 0.03F),
                QVector3D(+d_w * 0.45F, y0 + d_h * 0.35F, zf + 0.03F), 0.02F,
                frame_col, white);
 
-  drawCylinder(out, p.model,
+  draw_cylinder(out, p.model,
                QVector3D(d_w * 0.32F, y0 + d_h * 0.45F, zf + 0.04F),
                QVector3D(d_w * 0.42F, y0 + d_h * 0.45F, zf + 0.04F), 0.012F,
                C.timberLight, white);
@@ -483,13 +483,13 @@ inline void drawAnnex(const DrawContext &p, ISubmitter &out, Mesh *unit,
   float const plate_y = annex_h;
   float const front_z = z + annex_d * 0.5F;
   float const back_z = z - annex_d * 0.5F;
-  drawCylinder(out, p.model,
+  draw_cylinder(out, p.model,
                QVector3D(x - annex_w * 0.52F, plate_y, back_z - 0.12F),
                QVector3D(x + annex_w * 0.52F, plate_y, back_z - 0.12F), 0.05F,
                C.woodDark, white);
 
   float const ridge_y = annex_h + BuildingProportions::annex_roof_height;
-  drawCylinder(out, p.model,
+  draw_cylinder(out, p.model,
                QVector3D(x - annex_w * 0.50F, ridge_y, back_z - 0.02F),
                QVector3D(x + annex_w * 0.50F, ridge_y, back_z - 0.02F), 0.05F,
                C.timberLight, white);
@@ -501,7 +501,7 @@ inline void drawAnnex(const DrawContext &p, ISubmitter &out, Mesh *unit,
     float const zrow = back_z - 0.02F - 0.10F * (1.0F - t);
     QVector3D const col =
         lerp(C.thatchDark, C.thatch, 0.5F + 0.4F * (1.0F - t));
-    drawCylinder(out, p.model, QVector3D(x - annex_w * 0.55F, y, zrow),
+    draw_cylinder(out, p.model, QVector3D(x - annex_w * 0.55F, y, zrow),
                  QVector3D(x + annex_w * 0.55F, y, zrow),
                  0.06F * (1.15F - 0.6F * t), col, white);
   }
@@ -553,7 +553,7 @@ inline void drawBannerAndPole(const DrawContext &p, ISubmitter &out, Mesh *unit,
   float const beam_length = target_width * 0.45F;
   float const max_lowering = pole_height * 0.85F;
 
-  auto captureColors = BarracksFlagRenderer::getCaptureColors(
+  auto captureColors = BarracksFlagRenderer::get_capture_colors(
       p, C.team, C.teamTrim, max_lowering);
 
   float beam_y =
@@ -563,12 +563,12 @@ inline void drawBannerAndPole(const DrawContext &p, ISubmitter &out, Mesh *unit,
 
   QVector3D const beam_start(pole_x + 0.02F, beam_y, pole_z);
   QVector3D const beam_end(pole_x + beam_length + 0.02F, beam_y, pole_z);
-  drawCylinder(out, p.model, beam_start, beam_end, pole_radius * 0.35F,
+  draw_cylinder(out, p.model, beam_start, beam_end, pole_radius * 0.35F,
                C.timber, white);
 
   QVector3D const connector_top(
       beam_end.x(), beam_end.y() - target_height * 0.35F, beam_end.z());
-  drawCylinder(out, p.model, beam_end, connector_top, pole_radius * 0.18F,
+  draw_cylinder(out, p.model, beam_end, connector_top, pole_radius * 0.18F,
                C.timberLight, white);
 
   float const panel_x = beam_end.x() + (target_width * 0.5F - beam_length);
@@ -588,17 +588,17 @@ inline void drawBannerAndPole(const DrawContext &p, ISubmitter &out, Mesh *unit,
       captureColors.teamTrimColor);
 }
 
-inline void drawRallyFlagIfAny(const DrawContext &p, ISubmitter &out,
+inline void draw_rally_flag_if_any(const DrawContext &p, ISubmitter &out,
                                Texture *white, const BarracksPalette &C) {
   BarracksFlagRenderer::FlagColors colors{.team = C.team,
                                           .teamTrim = C.teamTrim,
                                           .timber = C.timber,
                                           .timberLight = C.timberLight,
                                           .woodDark = C.woodDark};
-  BarracksFlagRenderer::drawRallyFlagIfAny(p, out, white, colors);
+  BarracksFlagRenderer::draw_rally_flag_if_any(p, out, white, colors);
 }
 
-inline void drawHealthBar(const DrawContext &p, ISubmitter &out, Mesh *unit,
+inline void draw_health_bar(const DrawContext &p, ISubmitter &out, Mesh *unit,
                           Texture *white) {
   if (p.entity == nullptr) {
     return;
@@ -641,7 +641,7 @@ inline void drawHealthBar(const DrawContext &p, ISubmitter &out, Mesh *unit,
           fg_color);
 }
 
-inline void drawSelectionFX(const DrawContext &p, ISubmitter &out) {
+inline void draw_selectionFX(const DrawContext &p, ISubmitter &out) {
   QMatrix4x4 m;
   QVector3D const pos = p.model.column(3).toVector3D();
   m.translate(pos.x(), 0.0F, pos.z());
@@ -653,7 +653,7 @@ inline void drawSelectionFX(const DrawContext &p, ISubmitter &out) {
   }
 }
 
-void drawBarracks(const DrawContext &p, ISubmitter &out) {
+void draw_barracks(const DrawContext &p, ISubmitter &out) {
   if ((p.resources == nullptr) || (p.entity == nullptr)) {
     return;
   }
@@ -668,7 +668,7 @@ void drawBarracks(const DrawContext &p, ISubmitter &out) {
   Texture *white = p.resources->white();
 
   QVector3D const team(r->color[0], r->color[1], r->color[2]);
-  BarracksPalette const c = makePalette(team);
+  BarracksPalette const c = make_palette(team);
 
   drawFoundation(p, out, unit, white, c);
   drawAnnex(p, out, unit, white, c);
@@ -680,15 +680,15 @@ void drawBarracks(const DrawContext &p, ISubmitter &out) {
   drawBannerAndPole(p, out, unit, white, c);
   drawProps(p, out, unit, white, c);
 
-  drawRallyFlagIfAny(p, out, white, c);
-  drawHealthBar(p, out, unit, white);
-  drawSelectionFX(p, out);
+  draw_rally_flag_if_any(p, out, white, c);
+  draw_health_bar(p, out, unit, white);
+  draw_selectionFX(p, out);
 }
 
 } // namespace
 
-void registerBarracksRenderer(Render::GL::EntityRendererRegistry &registry) {
-  registry.registerRenderer("barracks_kingdom", drawBarracks);
+void register_barracks_renderer(Render::GL::EntityRendererRegistry &registry) {
+  registry.register_renderer("barracks_kingdom", draw_barracks);
 }
 
 } // namespace Render::GL::Kingdom

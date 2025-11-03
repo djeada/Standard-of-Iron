@@ -98,7 +98,7 @@ inline auto scaledSphere(const QMatrix4x4 &model, const QVector3D &center,
   return m;
 }
 
-inline void drawCylinder(ISubmitter &out, const QMatrix4x4 &model,
+inline void draw_cylinder(ISubmitter &out, const QMatrix4x4 &model,
                          const QVector3D &a, const QVector3D &b, float radius,
                          const QVector3D &color, float alpha = 1.0F) {
   out.mesh(getUnitCylinder(), cylinderBetween(model, a, b, radius), color,
@@ -452,7 +452,7 @@ void HorseRendererBase::render(const DrawContext &ctx,
         chest_center + QVector3D(side * d.bodyWidth * 0.70F,
                                  -d.bodyHeight * 0.02F, d.bodyLength * 0.06F);
     QVector3D const scapula_mid = lerp(scapula_top, scapula_base, 0.55F);
-    drawCylinder(
+    draw_cylinder(
         out, ctx.model, scapula_top, scapula_mid, d.bodyWidth * 0.18F,
         coatGradient(v.coatColor, 0.82F, 0.16F, coat_seed_a + side * 0.05F));
 
@@ -505,7 +505,7 @@ void HorseRendererBase::render(const DrawContext &ctx,
     QVector3D const jugular_end =
         jugular_start +
         QVector3D(0.0F, -d.bodyHeight * 0.24F, d.bodyLength * 0.06F);
-    drawCylinder(out, ctx.model, jugular_start, jugular_end,
+    draw_cylinder(out, ctx.model, jugular_start, jugular_end,
                  neck_radius * 0.18F, lighten(neck_color_base, 1.08F), 0.85F);
   }
 
@@ -670,13 +670,13 @@ void HorseRendererBase::render(const DrawContext &ctx,
   QVector3D const brow = head_center + QVector3D(0.0F, d.headHeight * 0.38F,
                                                  -d.headLength * 0.28F);
   QVector3D const tack_color = lighten(v.tack_color, 0.9F);
-  drawCylinder(out, ctx.model, bridle_base, cheek_anchor_left,
+  draw_cylinder(out, ctx.model, bridle_base, cheek_anchor_left,
                d.headWidth * 0.07F, tack_color);
-  drawCylinder(out, ctx.model, bridle_base, cheek_anchor_right,
+  draw_cylinder(out, ctx.model, bridle_base, cheek_anchor_right,
                d.headWidth * 0.07F, tack_color);
-  drawCylinder(out, ctx.model, cheek_anchor_left, brow, d.headWidth * 0.05F,
+  draw_cylinder(out, ctx.model, cheek_anchor_left, brow, d.headWidth * 0.05F,
                tack_color);
-  drawCylinder(out, ctx.model, cheek_anchor_right, brow, d.headWidth * 0.05F,
+  draw_cylinder(out, ctx.model, cheek_anchor_right, brow, d.headWidth * 0.05F,
                tack_color);
 
   QVector3D const mane_root =
@@ -733,7 +733,7 @@ void HorseRendererBase::render(const DrawContext &ctx,
         (0.025F + rider_intensity * 0.020F + 0.015F * (1.0F - t));
     p.setX(p.x() + swing);
     float const radius = d.bodyWidth * (0.20F - 0.018F * i);
-    drawCylinder(out, ctx.model, prev_tail, p, radius, tail_color);
+    draw_cylinder(out, ctx.model, prev_tail, p, radius, tail_color);
     prev_tail = p;
   }
 
@@ -850,7 +850,7 @@ void HorseRendererBase::render(const DrawContext &ctx,
         shoulder +
         QVector3D(0.0F, d.bodyWidth * 0.12F,
                   is_rear ? -d.bodyLength * 0.03F : d.bodyLength * 0.02F);
-    drawCylinder(out, ctx.model, girdle_top, socket,
+    draw_cylinder(out, ctx.model, girdle_top, socket,
                  d.bodyWidth * (is_rear ? 0.20F : 0.18F),
                  coatGradient(v.coatColor, is_rear ? 0.70F : 0.80F,
                               is_rear ? -0.20F : 0.22F,

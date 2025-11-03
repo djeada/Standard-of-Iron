@@ -77,13 +77,13 @@ auto HumanoidRendererBase::makeHeadLocalTransform(
   return makeFrameLocalTransform(parent, frame, local_offset, uniform_scale);
 }
 
-void HumanoidRendererBase::getVariant(const DrawContext &ctx, uint32_t seed,
+void HumanoidRendererBase::get_variant(const DrawContext &ctx, uint32_t seed,
                                       HumanoidVariant &v) const {
   QVector3D const team_tint = resolveTeamTint(ctx);
   v.palette = makeHumanoidPalette(team_tint, seed);
 }
 
-void HumanoidRendererBase::customizePose(const DrawContext &,
+void HumanoidRendererBase::customize_pose(const DrawContext &,
                                          const HumanoidAnimationContext &,
                                          uint32_t, HumanoidPose &) const {}
 
@@ -403,7 +403,7 @@ void HumanoidRendererBase::drawCommonBody(const DrawContext &ctx,
                                           ISubmitter &out) const {
   using HP = HumanProportions;
 
-  QVector3D const scaling = getProportionScaling();
+  QVector3D const scaling = get_proportion_scaling();
   float const width_scale = scaling.x();
   float const height_scale = scaling.y();
 
@@ -709,7 +709,7 @@ void HumanoidRendererBase::drawCommonBody(const DrawContext &ctx,
   drawShoulderDecorations(ctx, v, pose, y_top_cover, pose.neck_base.y(),
                           right_axis, out);
 
-  drawHelmet(ctx, v, pose, out);
+  draw_helmet(ctx, v, pose, out);
 
   QVector3D const belt_top = pose.pelvisPos + QVector3D(0.0F, 0.05F, 0.0F);
   QVector3D const belt_bottom = pose.pelvisPos + QVector3D(0.0F, 0.00F, 0.0F);
@@ -725,7 +725,7 @@ void HumanoidRendererBase::draw_armorOverlay(const DrawContext &,
                                              float, float, const QVector3D &,
                                              ISubmitter &) const {}
 
-void HumanoidRendererBase::drawArmor(const DrawContext &,
+void HumanoidRendererBase::draw_armor(const DrawContext &,
                                      const HumanoidVariant &,
                                      const HumanoidPose &,
                                      const HumanoidAnimationContext &,
@@ -737,7 +737,7 @@ void HumanoidRendererBase::drawShoulderDecorations(const DrawContext &,
                                                    float, const QVector3D &,
                                                    ISubmitter &) const {}
 
-void HumanoidRendererBase::drawHelmet(const DrawContext &,
+void HumanoidRendererBase::draw_helmet(const DrawContext &,
                                       const HumanoidVariant &,
                                       const HumanoidPose &,
                                       ISubmitter &) const {}
@@ -1052,10 +1052,10 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
   }
 
   HumanoidVariant variant;
-  getVariant(ctx, seed, variant);
+  get_variant(ctx, seed, variant);
 
   if (!m_proportionScaleCached) {
-    m_cachedProportionScale = getProportionScaling();
+    m_cachedProportionScale = get_proportion_scaling();
     m_proportionScaleCached = true;
   }
   const QVector3D prop_scale = m_cachedProportionScale;
@@ -1220,7 +1220,7 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
       anim_ctx.attack_phase = std::fmod(anim.time, 1.0F);
     }
 
-    customizePose(inst_ctx, anim_ctx, inst_seed, pose);
+    customize_pose(inst_ctx, anim_ctx, inst_seed, pose);
 
     if (anim_ctx.motion_state == HumanoidMotionState::Run) {
       pose.pelvisPos.setZ(pose.pelvisPos.z() - 0.05F);
@@ -1234,7 +1234,7 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
 
     drawCommonBody(inst_ctx, variant, pose, out);
     drawFacialHair(inst_ctx, variant, pose, out);
-    drawArmor(inst_ctx, variant, pose, anim_ctx, out);
+    draw_armor(inst_ctx, variant, pose, anim_ctx, out);
 
     addAttachments(inst_ctx, variant, pose, anim_ctx, out);
   }

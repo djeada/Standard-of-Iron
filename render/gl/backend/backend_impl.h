@@ -21,7 +21,7 @@ void cacheCylinderUniforms(Backend *backend);
 
 void uploadCylinderInstances(Backend *backend, std::size_t count);
 
-void drawCylinders(Backend *backend, std::size_t count);
+void draw_cylinders(Backend *backend, std::size_t count);
 
 void initializeFogPipeline(Backend *backend);
 

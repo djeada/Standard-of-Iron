@@ -204,14 +204,14 @@ class HumanoidRendererBase {
 public:
   virtual ~HumanoidRendererBase() = default;
 
-  virtual auto getProportionScaling() const -> QVector3D {
+  virtual auto get_proportion_scaling() const -> QVector3D {
     return {1.0F, 1.0F, 1.0F};
   }
 
-  virtual void getVariant(const DrawContext &ctx, uint32_t seed,
+  virtual void get_variant(const DrawContext &ctx, uint32_t seed,
                           HumanoidVariant &v) const;
 
-  virtual void customizePose(const DrawContext &ctx,
+  virtual void customize_pose(const DrawContext &ctx,
                              const HumanoidAnimationContext &anim_ctx,
                              uint32_t seed, HumanoidPose &ioPose) const;
 
@@ -220,10 +220,10 @@ public:
                               const HumanoidAnimationContext &anim_ctx,
                               ISubmitter &out) const;
 
-  virtual void drawHelmet(const DrawContext &ctx, const HumanoidVariant &v,
+  virtual void draw_helmet(const DrawContext &ctx, const HumanoidVariant &v,
                           const HumanoidPose &pose, ISubmitter &out) const;
 
-  virtual void drawArmor(const DrawContext &ctx, const HumanoidVariant &v,
+  virtual void draw_armor(const DrawContext &ctx, const HumanoidVariant &v,
                          const HumanoidPose &pose,
                          const HumanoidAnimationContext &anim,
                          ISubmitter &out) const;
