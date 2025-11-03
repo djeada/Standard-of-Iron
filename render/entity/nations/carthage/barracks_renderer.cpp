@@ -211,14 +211,62 @@ void drawTradingGoods(const DrawContext &p, ISubmitter &out, Mesh *unit,
 
 void drawPhoenicianBanner(const DrawContext &p, ISubmitter &out, Mesh *unit,
                           Texture *white, const CarthagePalette &c) {
+  float const pole_x = 0.0F;
+  float const pole_z = -2.0F;
+  float const pole_height = 2.4F;
+  float const pole_radius = 0.03F;
+  float const banner_width = 0.5F;
+  float const banner_height = 0.4F;
+  float const panel_depth = 0.02F;
 
-  drawCyl(out, p.model, QVector3D(0.0F, 1.6F, -1.25F),
-          QVector3D(0.0F, 2.4F, -1.25F), 0.03F, c.cedar, white);
+  QVector3D const pole_center(pole_x, pole_height / 2.0F, pole_z);
+  QVector3D const pole_size(pole_radius * 1.6F, pole_height / 2.0F,
+                            pole_radius * 1.6F);
+  
+  QMatrix4x4 poleTransform = p.model;
+  poleTransform.translate(pole_center);
+  poleTransform.scale(pole_size);
+  out.mesh(unit, poleTransform, c.cedar, white, 1.0F);
 
-  drawBox(out, unit, white, p.model, QVector3D(0.2F, 2.2F, -1.23F),
-          QVector3D(0.25F, 0.2F, 0.02F), c.team);
+  float const beam_length = banner_width * 0.45F;
+  float const max_lowering = pole_height * 0.85F;
 
-  drawBox(out, unit, white, p.model, QVector3D(0.2F, 2.32F, -1.22F),
+  auto captureColors = BarracksFlagRenderer::getCaptureColors(
+      p, c.team, c.team_trim, max_lowering);
+
+  float beam_y = pole_height - banner_height * 0.25F - captureColors.loweringOffset;
+  float flag_y = pole_height - banner_height / 2.0F - captureColors.loweringOffset;
+
+  QVector3D const beam_start(pole_x + 0.02F, beam_y, pole_z);
+  QVector3D const beam_end(pole_x + beam_length + 0.02F, beam_y, pole_z);
+  out.mesh(getUnitCylinder(),
+           p.model * Render::Geom::cylinderBetween(beam_start, beam_end, pole_radius * 0.35F),
+           c.cedar, white, 1.0F);
+
+  QVector3D const connector_top(
+      beam_end.x(), beam_end.y() - banner_height * 0.35F, beam_end.z());
+  out.mesh(getUnitCylinder(),
+           p.model * Render::Geom::cylinderBetween(beam_end, connector_top, pole_radius * 0.18F),
+           c.limestone, white, 1.0F);
+
+  float const panel_x = beam_end.x() + (banner_width * 0.5F - beam_length);
+  
+  QMatrix4x4 panelTransform = p.model;
+  panelTransform.translate(QVector3D(panel_x, flag_y, pole_z + 0.01F));
+  panelTransform.scale(QVector3D(banner_width / 2.0F, banner_height / 2.0F, panel_depth));
+  out.mesh(unit, panelTransform, captureColors.teamColor, white, 1.0F);
+
+  QMatrix4x4 trimBottom = p.model;
+  trimBottom.translate(QVector3D(panel_x, flag_y - banner_height / 2.0F + 0.04F, pole_z + 0.01F));
+  trimBottom.scale(QVector3D(banner_width / 2.0F + 0.02F, 0.04F, 0.015F));
+  out.mesh(unit, trimBottom, captureColors.teamTrimColor, white, 1.0F);
+
+  QMatrix4x4 trimTop = p.model;
+  trimTop.translate(QVector3D(panel_x, flag_y + banner_height / 2.0F - 0.04F, pole_z + 0.01F));
+  trimTop.scale(QVector3D(banner_width / 2.0F + 0.02F, 0.04F, 0.015F));
+  out.mesh(unit, trimTop, captureColors.teamTrimColor, white, 1.0F);
+
+  drawBox(out, unit, white, p.model, QVector3D(pole_x + 0.2F, pole_height + 0.12F, pole_z + 0.03F),
           QVector3D(0.26F, 0.02F, 0.01F), c.gold);
 }
 
