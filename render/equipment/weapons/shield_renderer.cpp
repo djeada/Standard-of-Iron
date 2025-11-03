@@ -20,7 +20,7 @@ ShieldRenderer::ShieldRenderer(ShieldRenderConfig config)
 
 void ShieldRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
                             const HumanoidPalette &palette,
-                            const HumanoidAnimationContext & /*anim*/,
+                            const HumanoidAnimationContext &,
                             ISubmitter &submitter) {
   constexpr float k_scale_factor = 2.5F;
   constexpr float k_shield_yaw_degrees = -70.0F;
@@ -64,8 +64,7 @@ void ShieldRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
                                const QVector3D &color) {
     constexpr int k_segments = 18;
     for (int i = 0; i < k_segments; ++i) {
-      float const a0 =
-          (float)i / k_segments * 2.0F * std::numbers::pi_v<float>;
+      float const a0 = (float)i / k_segments * 2.0F * std::numbers::pi_v<float>;
       float const a1 =
           (float)(i + 1) / k_segments * 2.0F * std::numbers::pi_v<float>;
 

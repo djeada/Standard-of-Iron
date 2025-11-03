@@ -1,5 +1,4 @@
 #include "kingdom_armor.h"
-#include "tunic_renderer.h"
 #include "../../geom/transforms.h"
 #include "../../gl/primitives.h"
 #include "../../humanoid/humanoid_math.h"
@@ -7,6 +6,7 @@
 #include "../../humanoid/rig.h"
 #include "../../humanoid/style_palette.h"
 #include "../../submitter.h"
+#include "tunic_renderer.h"
 #include <QMatrix4x4>
 #include <QVector3D>
 #include <cmath>
@@ -18,14 +18,14 @@ using Render::Geom::cylinderBetween;
 using Render::GL::Humanoid::saturate_color;
 
 void KingdomHeavyArmorRenderer::render(const DrawContext &ctx,
-                                        const BodyFrames &frames,
-                                        const HumanoidPalette &palette,
-                                        const HumanoidAnimationContext &anim,
-                                        ISubmitter &submitter) {
-  // Kingdom heavy armor - full plate with all components
+                                       const BodyFrames &frames,
+                                       const HumanoidPalette &palette,
+                                       const HumanoidAnimationContext &anim,
+                                       ISubmitter &submitter) {
+
   TunicConfig config;
   config.torso_scale = 1.08F;
-  config.shoulder_width_scale = 1.25F; // Broader shoulders for Kingdom style
+  config.shoulder_width_scale = 1.25F;
   config.chest_depth_scale = 0.85F;
   config.waist_taper = 0.92F;
   config.include_pauldrons = true;
@@ -35,7 +35,6 @@ void KingdomHeavyArmorRenderer::render(const DrawContext &ctx,
   TunicRenderer renderer(config);
   renderer.render(ctx, frames, palette, anim, submitter);
 
-  // Shoulder decorations - chainmail and ornaments
   using HP = HumanProportions;
   QVector3D const brass_color =
       saturate_color(palette.metal * QVector3D(1.3F, 1.1F, 0.7F));
@@ -43,26 +42,27 @@ void KingdomHeavyArmorRenderer::render(const DrawContext &ctx,
       saturate_color(palette.metal * QVector3D(0.85F, 0.88F, 0.92F));
   QVector3D const mantling_color = palette.cloth;
 
-  // Chainmail around neck/shoulders
   float const y_neck = frames.head.origin.y() - HP::HEAD_RADIUS * 0.6F;
   for (int i = 0; i < 5; ++i) {
     float const y = y_neck - static_cast<float>(i) * 0.022F;
     float const r = HP::NECK_RADIUS * (1.85F + static_cast<float>(i) * 0.08F);
-    QVector3D const ring_pos(frames.torso.origin.x(), y, frames.torso.origin.z());
+    QVector3D const ring_pos(frames.torso.origin.x(), y,
+                             frames.torso.origin.z());
     QVector3D const a = ring_pos + QVector3D(0, 0.010F, 0);
     QVector3D const b = ring_pos - QVector3D(0, 0.010F, 0);
     submitter.mesh(getUnitCylinder(), cylinderBetween(ctx.model, a, b, r),
-                   chainmail_color * (1.0F - static_cast<float>(i) * 0.04F), nullptr, 1.0F);
+                   chainmail_color * (1.0F - static_cast<float>(i) * 0.04F),
+                   nullptr, 1.0F);
   }
 
-  // Helmet crest base
-  QVector3D const helm_top = frames.head.origin + QVector3D(0, HP::HEAD_RADIUS * 0.85F, 0);
+  QVector3D const helm_top =
+      frames.head.origin + QVector3D(0, HP::HEAD_RADIUS * 0.85F, 0);
   QMatrix4x4 crest_base = ctx.model;
   crest_base.translate(helm_top);
   crest_base.scale(0.025F, 0.015F, 0.025F);
-  submitter.mesh(getUnitSphere(), crest_base, brass_color * 1.2F, nullptr, 1.0F);
+  submitter.mesh(getUnitSphere(), crest_base, brass_color * 1.2F, nullptr,
+                 1.0F);
 
-  // Decorative studs
   auto draw_stud = [&](const QVector3D &pos) {
     QMatrix4x4 m = ctx.model;
     m.translate(pos);
@@ -77,29 +77,27 @@ void KingdomHeavyArmorRenderer::render(const DrawContext &ctx,
 }
 
 void KingdomLightArmorRenderer::render(const DrawContext &ctx,
-                                        const BodyFrames &frames,
-                                        const HumanoidPalette &palette,
-                                        const HumanoidAnimationContext &anim,
-                                        ISubmitter &submitter) {
-  // Kingdom light armor - lighter breastplate, no pauldrons
+                                       const BodyFrames &frames,
+                                       const HumanoidPalette &palette,
+                                       const HumanoidAnimationContext &anim,
+                                       ISubmitter &submitter) {
+
   TunicConfig config;
   config.torso_scale = 1.04F;
   config.shoulder_width_scale = 1.15F;
   config.chest_depth_scale = 0.88F;
   config.waist_taper = 0.94F;
-  config.include_pauldrons = false; // Light armor has no pauldrons
+  config.include_pauldrons = false;
   config.include_gorget = false;
   config.include_belt = true;
 
   TunicRenderer renderer(config);
   renderer.render(ctx, frames, palette, anim, submitter);
 
-  // Minimal shoulder decorations for light armor
   using HP = HumanProportions;
   QVector3D const brass_color =
       saturate_color(palette.metal * QVector3D(1.3F, 1.1F, 0.7F));
 
-  // Simple decorative medals (phalerae)
   QVector3D const shoulderL_pos = frames.shoulderL.origin;
   QVector3D const shoulderR_pos = frames.shoulderR.origin;
 
