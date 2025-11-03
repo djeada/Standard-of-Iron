@@ -3,6 +3,8 @@
 #include "../../../../game/core/entity.h"
 #include "../../../../game/systems/nation_id.h"
 #include "../../../equipment/equipment_registry.h"
+#include "../../../equipment/weapons/shield_renderer.h"
+#include "../../../equipment/weapons/sword_renderer.h"
 #include "../../../geom/math_utils.h"
 #include "../../../geom/transforms.h"
 #include "../../../gl/backend.h"
@@ -264,18 +266,37 @@ public:
     m_horseRenderer.render(ctx, anim, anim_ctx, extras.horseProfile, out);
 
     bool const is_attacking = anim.is_attacking && anim.isMelee;
-    float attack_phase = 0.0F;
-    if (is_attacking) {
-      attack_phase =
-          std::fmod(anim.time * MOUNTED_KNIGHT_INV_ATTACK_CYCLE_TIME, 1.0F);
-    }
+
+    auto &registry = EquipmentRegistry::instance();
 
     if (extras.hasSword) {
-      drawSword(ctx, pose, v, extras, is_attacking, attack_phase, out);
+      auto sword = registry.get(EquipmentCategory::Weapon, "sword");
+      if (sword) {
+        SwordRenderConfig sword_config;
+        sword_config.metal_color = extras.metalColor;
+        sword_config.sword_length = extras.swordLength;
+        sword_config.sword_width = extras.swordWidth;
+
+        auto *sword_renderer = dynamic_cast<SwordRenderer *>(sword.get());
+        if (sword_renderer) {
+          sword_renderer->setConfig(sword_config);
+        }
+        sword->render(ctx, pose.bodyFrames, v.palette, anim_ctx, out);
+      }
     }
 
     if (extras.hasCavalryShield) {
-      drawCavalryShield(ctx, pose, v, extras, out);
+      auto shield = registry.get(EquipmentCategory::Weapon, "shield");
+      if (shield) {
+        ShieldRenderConfig shield_config;
+        shield_config.metal_color = extras.metalColor;
+
+        auto *shield_renderer = dynamic_cast<ShieldRenderer *>(shield.get());
+        if (shield_renderer) {
+          shield_renderer->setConfig(shield_config);
+        }
+        shield->render(ctx, pose.bodyFrames, v.palette, anim_ctx, out);
+      }
     }
   }
 
@@ -319,245 +340,8 @@ private:
     return e;
   }
 
-  static void drawSword(const DrawContext &ctx, const HumanoidPose &pose,
-                        const HumanoidVariant &v,
-                        const MountedKnightExtras &extras, bool is_attacking,
-                        float attack_phase, ISubmitter &out) {
 
-    const QVector3D grip_pos = pose.hand_r;
-
-    QVector3D sword_dir(0.0F, 0.15F, 1.0F);
-    sword_dir.normalize();
-
-    QVector3D const world_up(0.0F, 1.0F, 0.0F);
-    QVector3D right_axis = QVector3D::crossProduct(world_up, sword_dir);
-    if (right_axis.lengthSquared() < 1e-6F) {
-      right_axis = QVector3D(1.0F, 0.0F, 0.0F);
-    }
-    right_axis.normalize();
-    QVector3D up_axis = QVector3D::crossProduct(sword_dir, right_axis);
-    up_axis.normalize();
-
-    const QVector3D steel = extras.metalColor;
-    const QVector3D steel_hi = steel * 1.18F;
-    const QVector3D steel_lo = steel * 0.92F;
-    const QVector3D leather = v.palette.leather;
-    const QVector3D pommel_col =
-        v.palette.metal * QVector3D(1.25F, 1.10F, 0.75F);
-
-    const float pommel_offset = 0.10F;
-    const float grip_len = 0.16F;
-    const float grip_rad = 0.017F;
-    const float guard_half = 0.11F;
-    const float guard_rad = 0.012F;
-    const float guard_curve = 0.03F;
-
-    const QVector3D pommel_pos = grip_pos - sword_dir * pommel_offset;
-    out.mesh(getUnitSphere(), sphereAt(ctx.model, pommel_pos, 0.028F),
-             pommel_col, nullptr, 1.0F);
-
-    {
-      QVector3D const neck_a = pommel_pos + sword_dir * 0.010F;
-      QVector3D const neck_b = grip_pos - sword_dir * 0.005F;
-      out.mesh(getUnitCylinder(),
-               cylinderBetween(ctx.model, neck_a, neck_b, 0.0125F), steel_lo,
-               nullptr, 1.0F);
-
-      QVector3D const peen = pommel_pos - sword_dir * 0.012F;
-      out.mesh(getUnitCone(), coneFromTo(ctx.model, peen, pommel_pos, 0.010F),
-               steel, nullptr, 1.0F);
-    }
-
-    const QVector3D grip_a = grip_pos - sword_dir * 0.005F;
-    const QVector3D grip_b = grip_pos + sword_dir * (grip_len - 0.005F);
-    const int wrap_rings = 5;
-    for (int i = 0; i < wrap_rings; ++i) {
-      float const t0 = (float)i / wrap_rings;
-      float const t1 = (float)(i + 1) / wrap_rings;
-      QVector3D const a = grip_a + sword_dir * (grip_len * t0);
-      QVector3D const b = grip_a + sword_dir * (grip_len * t1);
-
-      float const r_mid =
-          grip_rad *
-          (0.96F + 0.08F * std::sin((t0 + t1) * std::numbers::pi_v<float>));
-      out.mesh(getUnitCylinder(), cylinderBetween(ctx.model, a, b, r_mid),
-               leather * 0.98F, nullptr, 1.0F);
-    }
-
-    const QVector3D guard_center = grip_b + sword_dir * 0.010F;
-    {
-      const int segs = 4;
-      QVector3D prev =
-          guard_center - right_axis * guard_half + (-up_axis * guard_curve);
-      for (int s = 1; s <= segs; ++s) {
-        float const u = -1.0F + 2.0F * (float)s / segs;
-        QVector3D const p = guard_center + right_axis * (guard_half * u) +
-                            (-up_axis * guard_curve * (1.0F - u * u));
-        out.mesh(getUnitCylinder(),
-                 cylinderBetween(ctx.model, prev, p, guard_rad), steel_hi,
-                 nullptr, 1.0F);
-        prev = p;
-      }
-
-      QVector3D const lend =
-          guard_center - right_axis * guard_half + (-up_axis * guard_curve);
-      QVector3D const rend =
-          guard_center + right_axis * guard_half + (-up_axis * guard_curve);
-      out.mesh(getUnitCone(),
-               coneFromTo(ctx.model, lend - right_axis * 0.030F, lend,
-                          guard_rad * 1.12F),
-               steel_hi, nullptr, 1.0F);
-      out.mesh(getUnitCone(),
-               coneFromTo(ctx.model, rend + right_axis * 0.030F, rend,
-                          guard_rad * 1.12F),
-               steel_hi, nullptr, 1.0F);
-
-      out.mesh(getUnitSphere(),
-               sphereAt(ctx.model, guard_center, guard_rad * 0.9F), steel,
-               nullptr, 1.0F);
-    }
-
-    const float blade_len = std::max(0.0F, extras.swordLength - 0.14F);
-    const QVector3D blade_root = guard_center + sword_dir * 0.020F;
-    const QVector3D blade_tip = blade_root + sword_dir * blade_len;
-
-    const QVector3D ricasso_end = blade_root + sword_dir * (blade_len * 0.08F);
-    out.mesh(getUnitCylinder(),
-             cylinderBetween(ctx.model, blade_root, ricasso_end,
-                             extras.swordWidth * 0.32F),
-             steel_hi, nullptr, 1.0F);
-
-    const QVector3D fuller_a = blade_root + sword_dir * (blade_len * 0.10F);
-    const QVector3D fuller_b = blade_root + sword_dir * (blade_len * 0.80F);
-    out.mesh(getUnitCylinder(),
-             cylinderBetween(ctx.model, fuller_a, fuller_b,
-                             extras.swordWidth * 0.10F),
-             steel_lo, nullptr, 1.0F);
-
-    const float base_r = extras.swordWidth * 0.26F;
-    const float mid_r = extras.swordWidth * 0.16F;
-    const float pre_tip_r = extras.swordWidth * 0.09F;
-
-    QVector3D const s0 = ricasso_end;
-    QVector3D const s1 = blade_root + sword_dir * (blade_len * 0.55F);
-    QVector3D const s2 = blade_root + sword_dir * (blade_len * 0.88F);
-
-    out.mesh(getUnitCylinder(), cylinderBetween(ctx.model, s0, s1, base_r),
-             steel_hi, nullptr, 1.0F);
-    out.mesh(getUnitCylinder(), cylinderBetween(ctx.model, s1, s2, mid_r),
-             steel_hi, nullptr, 1.0F);
-
-    {
-      float const edge_r = extras.swordWidth * 0.03F;
-      QVector3D const e_a = blade_root + sword_dir * (blade_len * 0.10F);
-      QVector3D const e_b = blade_tip - sword_dir * (blade_len * 0.06F);
-      QVector3D const left_edge_a = e_a + right_axis * (base_r * 0.95F);
-      QVector3D const left_edge_b = e_b + right_axis * (pre_tip_r * 0.95F);
-      QVector3D const right_edge_a = e_a - right_axis * (base_r * 0.95F);
-      QVector3D const right_edge_b = e_b - right_axis * (pre_tip_r * 0.95F);
-      out.mesh(getUnitCylinder(),
-               cylinderBetween(ctx.model, left_edge_a, left_edge_b, edge_r),
-               steel * 1.08F, nullptr, 1.0F);
-      out.mesh(getUnitCylinder(),
-               cylinderBetween(ctx.model, right_edge_a, right_edge_b, edge_r),
-               steel * 1.08F, nullptr, 1.0F);
-    }
-
-    out.mesh(getUnitCylinder(),
-             cylinderBetween(ctx.model, s2, blade_tip - sword_dir * 0.020F,
-                             pre_tip_r),
-             steel_hi, nullptr, 1.0F);
-    out.mesh(getUnitCone(),
-             coneFromTo(ctx.model, blade_tip, blade_tip - sword_dir * 0.060F,
-                        pre_tip_r * 0.95F),
-             steel_hi * 1.04F, nullptr, 1.0F);
-
-    {
-      QVector3D const shoulder_l0 = blade_root + right_axis * (base_r * 1.05F);
-      QVector3D const shoulder_l1 = shoulder_l0 - right_axis * (base_r * 0.45F);
-      QVector3D const shoulder_r0 = blade_root - right_axis * (base_r * 1.05F);
-      QVector3D const shoulder_r1 = shoulder_r0 + right_axis * (base_r * 0.45F);
-      out.mesh(getUnitCone(),
-               coneFromTo(ctx.model, shoulder_l1, shoulder_l0, base_r * 0.22F),
-               steel, nullptr, 1.0F);
-      out.mesh(getUnitCone(),
-               coneFromTo(ctx.model, shoulder_r1, shoulder_r0, base_r * 0.22F),
-               steel, nullptr, 1.0F);
-    }
-
-    if (is_attacking && attack_phase >= 0.28F && attack_phase < 0.58F) {
-      float const t = (attack_phase - 0.28F) / 0.30F;
-      float const alpha = clamp01(0.40F * (1.0F - t * t));
-      QVector3D const sweep = (-right_axis * 0.18F - sword_dir * 0.10F) * t;
-
-      QVector3D const trail_tip = blade_tip + sweep;
-      QVector3D const trail_root = blade_root + sweep * 0.6F;
-
-      out.mesh(getUnitCone(),
-               coneFromTo(ctx.model, trail_root, trail_tip, base_r * 1.10F),
-               steel * 0.90F, nullptr, alpha);
-      out.mesh(getUnitCone(),
-               coneFromTo(ctx.model, trail_root + up_axis * 0.01F, trail_tip,
-                          base_r * 0.75F),
-               steel * 0.80F, nullptr, alpha * 0.7F);
-    }
-  }
-
-  static void drawCavalryShield(const DrawContext &ctx,
-                                const HumanoidPose &pose,
-                                const HumanoidVariant &v,
-                                const MountedKnightExtras &extras,
-                                ISubmitter &out) {
-    const float scale_factor = 2.0F;
-    const float r = 0.15F * scale_factor;
-
-    constexpr float k_horse_shield_yaw_degrees = -70.0F;
-    QMatrix4x4 rot;
-    rot.rotate(k_horse_shield_yaw_degrees, 0.0F, 1.0F, 0.0F);
-
-    const QVector3D n = rot.map(QVector3D(0.0F, 0.0F, 1.0F));
-    const QVector3D axis_x = rot.map(QVector3D(1.0F, 0.0F, 0.0F));
-    const QVector3D axis_y = rot.map(QVector3D(0.0F, 1.0F, 0.0F));
-
-    QVector3D const shield_center =
-        pose.handL + axis_x * (-r * 0.30F) + axis_y * (-0.05F) + n * (0.05F);
-
-    const float plate_half = 0.0012F;
-    const float plate_full = plate_half * 2.0F;
-
-    {
-      QMatrix4x4 m = ctx.model;
-      m.translate(shield_center + n * plate_half);
-      m.rotate(k_horse_shield_yaw_degrees, 0.0F, 1.0F, 0.0F);
-      m.scale(r, r, plate_full);
-      out.mesh(getUnitCylinder(), m, v.palette.cloth * 1.15F, nullptr, 1.0F);
-    }
-
-    {
-      QMatrix4x4 m = ctx.model;
-      m.translate(shield_center - n * plate_half);
-      m.rotate(k_horse_shield_yaw_degrees, 0.0F, 1.0F, 0.0F);
-      m.scale(r * 0.985F, r * 0.985F, plate_full);
-      out.mesh(getUnitCylinder(), m, v.palette.leather * 0.8F, nullptr, 1.0F);
-    }
-
-    {
-      QMatrix4x4 m = ctx.model;
-      m.translate(shield_center + n * (0.015F * scale_factor));
-      m.scale(0.035F * scale_factor);
-      out.mesh(getUnitSphere(), m, extras.metalColor, nullptr, 1.0F);
-    }
-
-    {
-      QVector3D const grip_a = shield_center - axis_x * 0.025F - n * 0.025F;
-      QVector3D const grip_b = shield_center + axis_x * 0.025F - n * 0.025F;
-      out.mesh(getUnitCylinder(),
-               cylinderBetween(ctx.model, grip_a, grip_b, 0.008F),
-               v.palette.leather, nullptr, 1.0F);
-    }
-  }
 };
-
 void registerMountedKnightRenderer(
     Render::GL::EntityRendererRegistry &registry) {
   static MountedKnightRenderer const renderer;
