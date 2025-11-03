@@ -11,6 +11,9 @@
 #include "weapons/bow_renderer.h"
 #include "weapons/quiver_renderer.h"
 #include "weapons/roman_scutum.h"
+#include "weapons/shield_renderer.h"
+#include "weapons/spear_renderer.h"
+#include "weapons/sword_renderer.h"
 #include <memory>
 
 namespace Render::GL {
@@ -102,6 +105,15 @@ void registerBuiltInEquipment() {
   auto carthage_light_armor = std::make_shared<CarthageLightArmorRenderer>();
   registry.registerEquipment(EquipmentCategory::Armor, "carthage_light_armor",
                              carthage_light_armor);
+
+  auto sword = std::make_shared<SwordRenderer>();
+  registry.registerEquipment(EquipmentCategory::Weapon, "sword", sword);
+
+  auto spear = std::make_shared<SpearRenderer>();
+  registry.registerEquipment(EquipmentCategory::Weapon, "spear", spear);
+
+  auto shield = std::make_shared<ShieldRenderer>();
+  registry.registerEquipment(EquipmentCategory::Weapon, "shield", shield);
 }
 
 } // namespace Render::GL
