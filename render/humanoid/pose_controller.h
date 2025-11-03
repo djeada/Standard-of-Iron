@@ -20,7 +20,6 @@ public:
 
   void placeHandAt(bool is_left, const QVector3D &target_position);
 
-  // High-level animation commands
   void aimBow(float draw_phase);
   void meleeStrike(float strike_phase);
   void graspTwoHanded(const QVector3D &grip_center, float hand_separation);

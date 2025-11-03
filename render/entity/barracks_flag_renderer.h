@@ -40,14 +40,13 @@ inline void drawRallyFlagIfAny(const DrawContext &p, ISubmitter &out,
   }
 }
 
-inline void drawPoleWithBanner(const DrawContext &p, ISubmitter &out,
-                               Mesh *unit, Texture *white, const QVector3D &poleStart,
-                               const QVector3D &poleEnd, float poleRadius,
-                               const QVector3D &poleColor,
-                               const QVector3D &bannerCenter,
-                               const QVector3D &bannerHalfSize,
-                               const QVector3D &bannerColor,
-                               bool enableCapture = false) {
+inline void
+drawPoleWithBanner(const DrawContext &p, ISubmitter &out, Mesh *unit,
+                   Texture *white, const QVector3D &poleStart,
+                   const QVector3D &poleEnd, float poleRadius,
+                   const QVector3D &poleColor, const QVector3D &bannerCenter,
+                   const QVector3D &bannerHalfSize,
+                   const QVector3D &bannerColor, bool enableCapture = false) {
   QVector3D actualBannerColor = bannerColor;
 
   if (enableCapture && p.entity != nullptr) {
@@ -65,7 +64,8 @@ inline void drawPoleWithBanner(const DrawContext &p, ISubmitter &out,
   }
 
   out.mesh(getUnitCylinder(),
-           p.model * Render::Geom::cylinderBetween(poleStart, poleEnd, poleRadius),
+           p.model *
+               Render::Geom::cylinderBetween(poleStart, poleEnd, poleRadius),
            poleColor, white, 1.0F);
 
   QMatrix4x4 bannerTransform = p.model;
@@ -81,9 +81,9 @@ struct CaptureColors {
 };
 
 inline CaptureColors getCaptureColors(const DrawContext &p,
-                                       const QVector3D &baseTeamColor,
-                                       const QVector3D &baseTeamTrim,
-                                       float maxLowering = 0.0F) {
+                                      const QVector3D &baseTeamColor,
+                                      const QVector3D &baseTeamTrim,
+                                      float maxLowering = 0.0F) {
   CaptureColors result{baseTeamColor, baseTeamTrim, 0.0F};
 
   if (p.entity != nullptr) {
@@ -97,14 +97,15 @@ inline CaptureColors getCaptureColors(const DrawContext &p,
       result.teamColor = QVector3D(
           baseTeamColor.x() * (1.0F - progress) + new_team_color.x() * progress,
           baseTeamColor.y() * (1.0F - progress) + new_team_color.y() * progress,
-          baseTeamColor.z() * (1.0F - progress) + new_team_color.z() * progress);
-      result.teamTrimColor = QVector3D(
-          baseTeamTrim.x() * (1.0F - progress) +
-              new_team_color.x() * 0.6F * progress,
-          baseTeamTrim.y() * (1.0F - progress) +
-              new_team_color.y() * 0.6F * progress,
-          baseTeamTrim.z() * (1.0F - progress) +
-              new_team_color.z() * 0.6F * progress);
+          baseTeamColor.z() * (1.0F - progress) +
+              new_team_color.z() * progress);
+      result.teamTrimColor =
+          QVector3D(baseTeamTrim.x() * (1.0F - progress) +
+                        new_team_color.x() * 0.6F * progress,
+                    baseTeamTrim.y() * (1.0F - progress) +
+                        new_team_color.y() * 0.6F * progress,
+                    baseTeamTrim.z() * (1.0F - progress) +
+                        new_team_color.z() * 0.6F * progress);
       result.loweringOffset = progress * maxLowering;
     }
   }

@@ -1,5 +1,5 @@
-// sword_renderer.h - Dedicated renderer for swords with configurable parameters
-// Handles sword geometry, attack animations, and visual effects
+
+
 #pragma once
 
 #include "../../humanoid/rig.h"

@@ -88,10 +88,10 @@ void SwordRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
   QVector3D const blade_base = grip_pos;
   QVector3D const blade_tip = grip_pos + sword_dir * m_config.sword_length;
 
-  submitter.mesh(
-      getUnitCylinder(),
-      cylinderBetween(ctx.model, handle_end, blade_base, m_config.handle_radius),
-      palette.leather, nullptr, 1.0F);
+  submitter.mesh(getUnitCylinder(),
+                 cylinderBetween(ctx.model, handle_end, blade_base,
+                                 m_config.handle_radius),
+                 palette.leather, nullptr, 1.0F);
 
   QVector3D const guard_center = blade_base;
   float const gw = m_config.guard_half_width;
@@ -147,12 +147,14 @@ void SwordRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
 
     submitter.mesh(getUnitCylinder(),
                    cylinderBetween(ctx.model, start + right * offset,
-                                   end + right * offset, blade_thickness * 0.8F),
+                                   end + right * offset,
+                                   blade_thickness * 0.8F),
                    color * 0.92F, nullptr, 1.0F);
 
     submitter.mesh(getUnitCylinder(),
                    cylinderBetween(ctx.model, start - right * offset,
-                                   end - right * offset, blade_thickness * 0.8F),
+                                   end - right * offset,
+                                   blade_thickness * 0.8F),
                    color * 0.92F, nullptr, 1.0F);
   };
 
@@ -169,14 +171,13 @@ void SwordRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
     QVector3D const seg_end =
         tip_start + sword_dir * ((blade_tip - tip_start).length() * t1);
     float const w = lerp(mid_w, tip_w, t1);
-    submitter.mesh(getUnitCylinder(),
-                   cylinderBetween(ctx.model, seg_start, seg_end,
-                                   blade_thickness),
-                   m_config.metal_color * (1.0F - i * 0.03F), nullptr, 1.0F);
+    submitter.mesh(
+        getUnitCylinder(),
+        cylinderBetween(ctx.model, seg_start, seg_end, blade_thickness),
+        m_config.metal_color * (1.0F - i * 0.03F), nullptr, 1.0F);
   }
 
-  QVector3D const fuller_start =
-      blade_base + sword_dir * (ricasso_len + 0.02F);
+  QVector3D const fuller_start = blade_base + sword_dir * (ricasso_len + 0.02F);
   QVector3D const fuller_end =
       blade_base + sword_dir * (tip_start_dist - 0.06F);
   submitter.mesh(getUnitCylinder(),

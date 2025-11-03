@@ -166,11 +166,9 @@ public:
 
     HumanoidPoseController controller(pose, anim_ctx);
 
-    // Set hands first
     controller.placeHandAt(false, rest_hand_r);
     controller.placeHandAt(true, rest_hand_l);
 
-    // Override elbows with mounted-specific positioning
     pose.elbowL =
         QVector3D(pose.shoulderL.x() * 0.4F + rest_hand_l.x() * 0.6F,
                   (pose.shoulderL.y() + rest_hand_l.y()) * 0.5F - 0.08F,
@@ -222,13 +220,12 @@ public:
 
       float const rein_tension = clamp01((attack_phase - 0.10F) * 2.2F);
       QVector3D const hand_l_target =
-          rest_hand_l + QVector3D(0.0F, -0.015F * rein_tension,
-                                  0.10F * rein_tension);
+          rest_hand_l +
+          QVector3D(0.0F, -0.015F * rein_tension, 0.10F * rein_tension);
 
       controller.placeHandAt(false, hand_r_target);
       controller.placeHandAt(true, hand_l_target);
 
-      // Override elbows with mounted-specific positioning for attack
       pose.elbowR =
           QVector3D(pose.shoulderR.x() * 0.3F + pose.hand_r.x() * 0.7F,
                     (pose.shoulderR.y() + pose.hand_r.y()) * 0.5F - 0.12F,
@@ -313,8 +310,7 @@ public:
   }
 
   void drawArmor(const DrawContext &ctx, const HumanoidVariant &v,
-                 const HumanoidPose &pose,
-                 const HumanoidAnimationContext &anim,
+                 const HumanoidPose &pose, const HumanoidAnimationContext &anim,
                  ISubmitter &out) const override {
     auto &registry = EquipmentRegistry::instance();
     auto armor = registry.get(EquipmentCategory::Armor, "kingdom_heavy_armor");
