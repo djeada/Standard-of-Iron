@@ -127,47 +127,7 @@ public:
     if (anim.is_attacking && anim.isMelee) {
       float const attack_phase =
           std::fmod(anim.time * KNIGHT_INV_ATTACK_CYCLE_TIME, 1.0F);
-
-      QVector3D const rest_pos(0.20F, HP::SHOULDER_Y + 0.05F, 0.15F);
-      QVector3D const prepare_pos(0.26F, HP::HEAD_TOP_Y + 0.18F, -0.06F);
-      QVector3D const raised_pos(0.25F, HP::HEAD_TOP_Y + 0.22F, 0.02F);
-      QVector3D const strike_pos(0.30F, HP::WAIST_Y - 0.05F, 0.50F);
-      QVector3D const recover_pos(0.22F, HP::SHOULDER_Y + 0.02F, 0.22F);
-
-      QVector3D hand_r_target;
-      QVector3D hand_l_target;
-
-      if (attack_phase < 0.18F) {
-        float const t = easeInOutCubic(attack_phase / 0.18F);
-        hand_r_target = rest_pos * (1.0F - t) + prepare_pos * t;
-        hand_l_target =
-            QVector3D(-0.21F, HP::SHOULDER_Y - 0.02F - 0.03F * t, 0.15F);
-      } else if (attack_phase < 0.32F) {
-        float const t = easeInOutCubic((attack_phase - 0.18F) / 0.14F);
-        hand_r_target = prepare_pos * (1.0F - t) + raised_pos * t;
-        hand_l_target = QVector3D(-0.21F, HP::SHOULDER_Y - 0.05F, 0.17F);
-      } else if (attack_phase < 0.52F) {
-        float t = (attack_phase - 0.32F) / 0.20F;
-        t = t * t * t;
-        hand_r_target = raised_pos * (1.0F - t) + strike_pos * t;
-        hand_l_target =
-            QVector3D(-0.21F, HP::SHOULDER_Y - 0.03F * (1.0F - 0.5F * t),
-                      0.17F + 0.20F * t);
-      } else if (attack_phase < 0.72F) {
-        float const t = easeInOutCubic((attack_phase - 0.52F) / 0.20F);
-        hand_r_target = strike_pos * (1.0F - t) + recover_pos * t;
-        hand_l_target = QVector3D(-0.20F, HP::SHOULDER_Y - 0.015F * (1.0F - t),
-                                  lerp(0.37F, 0.20F, t));
-      } else {
-        float const t = smoothstep(0.72F, 1.0F, attack_phase);
-        hand_r_target = recover_pos * (1.0F - t) + rest_pos * t;
-        hand_l_target = QVector3D(-0.20F - 0.02F * (1.0F - t),
-                                  HP::SHOULDER_Y + arm_height_jitter * (1.0F - t),
-                                  lerp(0.20F, 0.15F, t));
-      }
-
-      controller.placeHandAt(false, hand_r_target);
-      controller.placeHandAt(true, hand_l_target);
+      controller.swordSlash(attack_phase);
     } else {
       QVector3D const idle_hand_r(0.30F + arm_asymmetry,
                                   HP::SHOULDER_Y - 0.02F + arm_height_jitter,

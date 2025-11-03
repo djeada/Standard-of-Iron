@@ -20,6 +20,14 @@ public:
 
   void placeHandAt(bool is_left, const QVector3D &target_position);
 
+  // High-level animation commands
+  void aimBow(float draw_phase);
+  void meleeStrike(float strike_phase);
+  void graspTwoHanded(const QVector3D &grip_center, float hand_separation);
+  void spearThrust(float attack_phase);
+  void swordSlash(float attack_phase);
+  void mountOnHorse(float saddle_height);
+
   auto solveElbowIK(bool is_left, const QVector3D &shoulder,
                     const QVector3D &hand, const QVector3D &outward_dir,
                     float along_frac, float lateral_offset, float y_bias,
