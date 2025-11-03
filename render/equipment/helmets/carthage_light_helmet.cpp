@@ -1,6 +1,7 @@
 #include "carthage_light_helmet.h"
 #include "../../geom/transforms.h"
 #include "../../gl/primitives.h"
+#include "../../gl/backend.h"
 #include "../../humanoid/humanoid_math.h"
 #include "../../humanoid/rig.h"
 #include "../../submitter.h"
@@ -77,40 +78,21 @@ void CarthageLightHelmetRenderer::render(
 }
 
 // -------------------------------------------------------------------------
-// BOWL: tall conical bowl with ribs and a crown spike
+// BOWL: tall conical bowl - let shader create detail
 void CarthageLightHelmetRenderer::render_bowl(const DrawContext &ctx,
                                               const AttachmentFrame &head,
                                               ISubmitter &submitter) {
   const float R = head.radius;
   auto headPoint = [&](const QVector3D &n) { return HumanoidRendererBase::frameLocalPosition(head, n); };
 
-  // Primary bowl — clearly taller than a cap
+  // Single smooth helmet bowl - shader adds ribs and texture
   QVector3D c0 = headPoint(QVector3D(0.0f, 0.74f, 0.02f));
-  QMatrix4x4 m0 = ctx.model; m0.translate(c0); m0.scale(R * 1.18f, R * 1.22f, R * 1.14f);
-  submitter.mesh(getUnitSphere(), m0, m_config.bronze_color, nullptr, 0.9f);
-
-  // Step ring near the rim (adds faceted profile)
-  QVector3D ring_center = headPoint(QVector3D(0.0f, 0.44f, 0.0f));
-  submit_disk(submitter, ctx, ring_center, head.up, R * 1.28f, R * 0.08f,
-              m_config.bronze_color * 1.05f, 0.95f);
-
-  // Six meridian ribs (front/back/quarters) to break smoothness
-  const int ribs = 6;
-  QVector3D crown = headPoint(QVector3D(0.0f, 1.20f, 0.0f));
-  for (int i = 0; i < ribs; ++i) {
-    float a = (2.0f * std::numbers::pi_v<float> / ribs) * i;
-    float ca = std::cos(a), sa = std::sin(a);
-    QVector3D edge = headPoint(QVector3D(0.92f * ca, 0.90f, 0.92f * sa - 0.02f));
-    submitter.mesh(getUnitCylinder(),
-                   cylinderBetween(ctx.model, crown, edge, R * 0.065f),
-                   m_config.bronze_color * 1.08f, nullptr, 0.95f);
-  }
-
-  // Crown spike (dramatic)
-  submit_spike(submitter, ctx,
-               headPoint(QVector3D(0.0f, 1.18f, 0.0f)),
-               head.up, R * 0.55f, R * 0.09f,
-               m_config.bronze_color * 1.12f, 0.96f);
+  QMatrix4x4 m0 = ctx.model; 
+  m0.translate(c0); 
+  m0.scale(R * 1.18f, R * 1.22f, R * 1.14f);
+  
+  Shader *helmet_shader = ctx.backend->shader("carthage_light_helmet");
+  submitter.mesh(getUnitSphere(), m0, m_config.bronze_color, helmet_shader, 0.9f);
 }
 
 // -------------------------------------------------------------------------

@@ -1,6 +1,7 @@
 #include "chainmail_armor.h"
 #include "../../geom/transforms.h"
 #include "../../gl/primitives.h"
+#include "../../gl/backend.h"
 #include "../../humanoid/humanoid_math.h"
 #include "../../humanoid/rig.h"
 #include "../../submitter.h"
@@ -33,8 +34,8 @@ void ChainmailArmorRenderer::render(const DrawContext &ctx,
                                     const HumanoidPalette &palette,
                                     const HumanoidAnimationContext &anim,
                                     ISubmitter &submitter) {
-  (void)palette;
   (void)anim;
+  (void)palette;
 
   renderTorsoMail(ctx, frames, submitter);
   
@@ -42,7 +43,7 @@ void ChainmailArmorRenderer::render(const DrawContext &ctx,
     renderShoulderGuards(ctx, frames, submitter);
   }
   
-  if (m_config.has_arm_coverage && m_config.coverage > 0.5F) {
+  if (m_config.has_arm_coverage) {
     renderArmMail(ctx, frames, submitter);
   }
 }
@@ -57,64 +58,38 @@ void ChainmailArmorRenderer::renderTorsoMail(const DrawContext &ctx,
     return;
   }
 
+  // Use the procedural torso mesh with chainmail shader
+  // The shader will create the ring pattern on GPU
   float const torso_r = torso.radius;
   
-  // Chainmail hauberk that follows torso contours
-  QVector3D steel_color = m_config.metal_color;
+  QVector3D top = torso.origin + torso.up * (torso_r * 0.20F);
+  QVector3D bottom = waist.origin - waist.up * (torso_r * 0.35F);
   
-  const QVector3D &origin = torso.origin;
-  const QVector3D &right = torso.right;
-  const QVector3D &up = torso.up;
-  const QVector3D &forward = torso.forward;
-
-  float const shoulder_width = torso_r * 1.15F;
-  float const chest_depth_front = torso_r * 1.18F;
-  float const chest_depth_back = torso_r * 0.85F;
-  float const waist_width = torso_r * 1.05F;
-
-  // MUCH lower detail - chainmail texture via few segmented bands
-  int const num_bands = 6; // Just 6 horizontal bands
-  int const segments = 12;  // 12 segments around (not 24!)
+  // Create transform for torso mesh
+  QMatrix4x4 mail_transform = ctx.model;
+  mail_transform.translate(torso.origin);
   
-  float const y_top = 0.15F;
-  float const y_bottom = -0.25F;
-  float const band_height = (y_top - y_bottom) / static_cast<float>(num_bands);
-
-  constexpr float pi = std::numbers::pi_v<float>;
-  float const segment_thickness = torso_r * 0.025F; // Thicker segments
-
-  // Draw segmented armor bands (like Roman armor but with mail texture)
-  for (int band = 0; band < num_bands; ++band) {
-    float const y_band = y_top - static_cast<float>(band) * band_height;
-    float const y_next = y_band - band_height * 0.90F;
-    
-    float const t = static_cast<float>(band) / static_cast<float>(num_bands - 1);
-    float const width_scale = shoulder_width * (1.0F - t * 0.10F);
-
-    auto getRadius = [&](float angle) -> float {
-      float const cos_a = std::cos(angle);
-      float depth = (cos_a > 0.0F) ? chest_depth_front : chest_depth_back;
-      depth *= (1.0F - t * 0.12F);
-      return width_scale * depth * (std::abs(cos_a) * 0.3F + 0.7F);
-    };
-
-    QVector3D band_color = calculateRingColor(origin.x(), origin.y() + y_band, origin.z());
-    
-    // Draw vertical segments to create mail-like texture
-    for (int i = 0; i < segments; ++i) {
-      float const angle = (static_cast<float>(i) / segments) * 2.0F * pi;
-      float const cos_a = std::cos(angle);
-      float const sin_a = std::sin(angle);
-      float const r = getRadius(angle);
-
-      QVector3D p_top = origin + right * (r * sin_a) + forward * (r * cos_a) + up * y_band;
-      QVector3D p_bot = origin + right * (r * sin_a) + forward * (r * cos_a) + up * y_next;
-
-      submitter.mesh(getUnitCylinder(),
-                     cylinderBetween(ctx.model, p_top, p_bot, segment_thickness),
-                     band_color, nullptr, 0.70F);
-    }
-  }
+  // Align with torso orientation
+  QVector3D up_dir = torso.up.normalized();
+  QVector3D right_dir = torso.right.normalized();
+  QVector3D fwd_dir = torso.forward.normalized();
+  
+  QMatrix4x4 orientation;
+  orientation(0, 0) = right_dir.x(); orientation(0, 1) = up_dir.x(); orientation(0, 2) = fwd_dir.x();
+  orientation(1, 0) = right_dir.y(); orientation(1, 1) = up_dir.y(); orientation(1, 2) = fwd_dir.y();
+  orientation(2, 0) = right_dir.z(); orientation(2, 1) = up_dir.z(); orientation(2, 2) = fwd_dir.z();
+  
+  mail_transform = mail_transform * orientation;
+  
+  // Scale to fit torso
+  float height = (top - bottom).length();
+  mail_transform.scale(torso_r * 1.12F, height, torso_r * 1.08F);
+  
+  // Submit with chainmail shader
+  Shader *chainmail_shader = ctx.backend->shader("chainmail_armor");
+  
+  submitter.mesh(getUnitTorso(), mail_transform, m_config.metal_color, 
+                 chainmail_shader, 0.75F);
 }
 
 void ChainmailArmorRenderer::renderShoulderGuards(const DrawContext &ctx,
