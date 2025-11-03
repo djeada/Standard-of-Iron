@@ -1,7 +1,9 @@
 #include "armor/carthage_armor.h"
+#include "armor/chainmail_armor.h"
 #include "armor/kingdom_armor.h"
 #include "armor/roman_armor.h"
 #include "equipment_registry.h"
+#include "helmets/carthage_light_helmet.h"
 #include "helmets/headwrap.h"
 #include "helmets/kingdom_heavy_helmet.h"
 #include "helmets/kingdom_light_helmet.h"
@@ -54,7 +56,7 @@ void registerBuiltInEquipment() {
   registry.registerEquipment(EquipmentCategory::Weapon, "roman_scutum",
                              roman_scutum);
 
-  auto montefortino_helmet = std::make_shared<MontefortinoHelmetRenderer>();
+  auto montefortino_helmet = std::make_shared<CarthageLightHelmetRenderer>();
   registry.registerEquipment(EquipmentCategory::Helmet, "montefortino",
                              montefortino_helmet);
   registry.registerEquipment(EquipmentCategory::Helmet, "carthage_heavy",
@@ -63,7 +65,7 @@ void registerBuiltInEquipment() {
   auto headwrap = std::make_shared<HeadwrapRenderer>();
   registry.registerEquipment(EquipmentCategory::Helmet, "headwrap", headwrap);
   registry.registerEquipment(EquipmentCategory::Helmet, "carthage_light",
-                             headwrap);
+                             montefortino_helmet);
 
   auto roman_heavy = std::make_shared<RomanHeavyHelmetRenderer>();
   registry.registerEquipment(EquipmentCategory::Helmet, "roman_heavy",
@@ -97,11 +99,11 @@ void registerBuiltInEquipment() {
   registry.registerEquipment(EquipmentCategory::Armor, "roman_light_armor",
                              roman_light_armor);
 
-  auto carthage_heavy_armor = std::make_shared<CarthageHeavyArmorRenderer>();
+  auto carthage_heavy_armor = std::make_shared<ChainmailArmorRenderer>();
   registry.registerEquipment(EquipmentCategory::Armor, "carthage_heavy_armor",
                              carthage_heavy_armor);
 
-  auto carthage_light_armor = std::make_shared<CarthageLightArmorRenderer>();
+  auto carthage_light_armor = std::make_shared<ChainmailArmorRenderer>();
   registry.registerEquipment(EquipmentCategory::Armor, "carthage_light_armor",
                              carthage_light_armor);
 
