@@ -201,7 +201,7 @@ public:
                   const HumanoidPose &pose, ISubmitter &out) const override {
 
     auto &registry = EquipmentRegistry::instance();
-    auto helmet = registry.get(EquipmentCategory::Helmet, "montefortino");
+    auto helmet = registry.get(EquipmentCategory::Helmet, "carthage_heavy");
     if (helmet) {
       HumanoidAnimationContext anim_ctx{};
       helmet->render(ctx, pose.bodyFrames, v.palette, anim_ctx, out);
@@ -212,7 +212,7 @@ public:
                  const HumanoidPose &pose, const HumanoidAnimationContext &anim,
                  ISubmitter &out) const override {
     auto &registry = EquipmentRegistry::instance();
-    auto armor = registry.get(EquipmentCategory::Armor, "carthage_heavy_armor");
+    auto armor = registry.get(EquipmentCategory::Armor, "carthage_light_armor");
     if (armor) {
       armor->render(ctx, pose.bodyFrames, v.palette, anim, out);
     }

@@ -87,6 +87,7 @@ add_library(render_gl STATIC
     equipment/helmets/roman_light_helmet.cpp
     equipment/helmets/kingdom_heavy_helmet.cpp
     equipment/helmets/kingdom_light_helmet.cpp
+    equipment/helmets/carthage_heavy_helmet.cpp
     equipment/helmets/carthage_light_helmet.cpp
     equipment/armor/chainmail_armor.cpp
 )

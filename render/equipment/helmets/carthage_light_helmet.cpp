@@ -61,20 +61,8 @@ void CarthageLightHelmetRenderer::render(
   const AttachmentFrame &head = frames.head;
   if (head.radius <= 0.0F) return;
 
-  // EXTREME silhouette
-  render_bowl(ctx, head, submitter);         // taller, ribbed cone + spike
-  render_brim(ctx, head, submitter);         // two-piece visor blades
-  render_cheek_guards(ctx, head, submitter); // winged cheek fins + fangs
-
-  if (m_config.has_nasal_guard) {
-    render_nasal_guard(ctx, head, submitter); // heavy T-nasal + grille
-  }
-  if (m_config.has_crest) {
-    render_crest(ctx, head, submitter);       // massive transverse plume
-  }
-  if (m_config.detail_level >= 2) {
-    render_rivets(ctx, head, submitter);      // bands + dorsal spines
-  }
+  // Simple leather cap
+  render_bowl(ctx, head, submitter);
 }
 
 // -------------------------------------------------------------------------

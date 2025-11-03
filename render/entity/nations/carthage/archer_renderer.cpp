@@ -310,7 +310,7 @@ public:
       return;
     }
 
-    auto helmet = registry.get(EquipmentCategory::Helmet, "montefortino");
+    auto helmet = registry.get(EquipmentCategory::Helmet, "carthage_light");
     if (helmet) {
       helmet->render(ctx, pose.bodyFrames, v.palette, anim_ctx, out);
     }

@@ -3,11 +3,11 @@
 #include "armor/kingdom_armor.h"
 #include "armor/roman_armor.h"
 #include "equipment_registry.h"
+#include "helmets/carthage_heavy_helmet.h"
 #include "helmets/carthage_light_helmet.h"
 #include "helmets/headwrap.h"
 #include "helmets/kingdom_heavy_helmet.h"
 #include "helmets/kingdom_light_helmet.h"
-#include "helmets/montefortino_helmet.h"
 #include "helmets/roman_heavy_helmet.h"
 #include "helmets/roman_light_helmet.h"
 #include "weapons/bow_renderer.h"
@@ -56,10 +56,8 @@ void registerBuiltInEquipment() {
   registry.registerEquipment(EquipmentCategory::Weapon, "roman_scutum",
                              roman_scutum);
 
-  // CARTHAGE HELMETS: Heavy=bronze Montefortino, Light=leather cap
-  auto carthage_heavy_helmet = std::make_shared<MontefortinoHelmetRenderer>();
-  registry.registerEquipment(EquipmentCategory::Helmet, "montefortino",
-                             carthage_heavy_helmet);
+  // CARTHAGE HELMETS: Simple bronze bowl (heavy) or leather cap (light)
+  auto carthage_heavy_helmet = std::make_shared<CarthageHeavyHelmetRenderer>();
   registry.registerEquipment(EquipmentCategory::Helmet, "carthage_heavy",
                              carthage_heavy_helmet);
 
