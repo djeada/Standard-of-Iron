@@ -1,5 +1,7 @@
 #pragma once
-#include "../equipment_renderer.h"
+#include "../i_equipment_renderer.h"
+#include "../../humanoid/rig.h"
+#include <QVector3D>
 
 namespace Render::GL {
 
