@@ -551,32 +551,13 @@ inline void drawBannerAndPole(const DrawContext &p, ISubmitter &out, Mesh *unit,
   float const panel_depth = 0.02F;
 
   float const beam_length = target_width * 0.45F;
-  float beam_y = pole_height - target_height * 0.25F;
+  float const max_lowering = pole_height * 0.85F;
 
-  QVector3D team_color = C.team;
-  QVector3D team_trim_color = C.teamTrim;
-  float flag_y = pole_height - target_height / 2.0F;
+  auto captureColors = BarracksFlagRenderer::getCaptureColors(
+      p, C.team, C.teamTrim, max_lowering);
 
-  if (p.entity != nullptr) {
-    auto *capture = p.entity->getComponent<Engine::Core::CaptureComponent>();
-    if ((capture != nullptr) && capture->isBeingCaptured) {
-      float const progress = std::clamp(
-          capture->captureProgress / capture->requiredTime, 0.0F, 1.0F);
-
-      QVector3D const new_team_color =
-          Game::Visuals::team_colorForOwner(capture->capturing_player_id);
-      team_color = lerp(C.team, clampVec01(new_team_color), progress);
-      team_trim_color = lerp(C.teamTrim,
-                             clampVec01(QVector3D(new_team_color.x() * 0.6F,
-                                                  new_team_color.y() * 0.6F,
-                                                  new_team_color.z() * 0.6F)),
-                             progress);
-
-      float const lowered_amount = progress * pole_height * 0.85F;
-      flag_y -= lowered_amount;
-      beam_y -= lowered_amount;
-    }
-  }
+  float beam_y = pole_height - target_height * 0.25F - captureColors.loweringOffset;
+  float flag_y = pole_height - target_height / 2.0F - captureColors.loweringOffset;
 
   QVector3D const beam_start(pole_x + 0.02F, beam_y, pole_z);
   QVector3D const beam_end(pole_x + beam_length + 0.02F, beam_y, pole_z);
@@ -591,16 +572,16 @@ inline void drawBannerAndPole(const DrawContext &p, ISubmitter &out, Mesh *unit,
   float const panel_x = beam_end.x() + (target_width * 0.5F - beam_length);
   unitBox(out, unit, white, p.model, QVector3D(panel_x, flag_y, pole_z + 0.01F),
           QVector3D(target_width / 2.0F, target_height / 2.0F, panel_depth),
-          team_color);
+          captureColors.teamColor);
 
   unitBox(
       out, unit, white, p.model,
       QVector3D(panel_x, flag_y - target_height / 2.0F + 0.04F, pole_z + 0.01F),
-      QVector3D(target_width / 2.0F + 0.02F, 0.04F, 0.015F), team_trim_color);
+      QVector3D(target_width / 2.0F + 0.02F, 0.04F, 0.015F), captureColors.teamTrimColor);
   unitBox(
       out, unit, white, p.model,
       QVector3D(panel_x, flag_y + target_height / 2.0F - 0.04F, pole_z + 0.01F),
-      QVector3D(target_width / 2.0F + 0.02F, 0.04F, 0.015F), team_trim_color);
+      QVector3D(target_width / 2.0F + 0.02F, 0.04F, 0.015F), captureColors.teamTrimColor);
 }
 
 inline void drawRallyFlagIfAny(const DrawContext &p, ISubmitter &out,
