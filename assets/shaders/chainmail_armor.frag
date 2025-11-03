@@ -115,54 +115,49 @@ void main() {
   vec3 L = normalize(u_lightDir);
   vec3 H = normalize(V + L);
   
-  // Base steel/iron color
-  vec3 baseColor = u_color;
+  // Brighter steel base
+  vec3 baseColor = u_color * 1.2;
   
-  // Apply chainmail ring pattern
+  // Subtle chainmail pattern
   float ringPattern = chainmailRingPattern(v_texCoord, v_ringPhase);
-  vec3 ringColor = mix(baseColor * 0.6, baseColor * 1.2, ringPattern);
+  vec3 ringColor = mix(baseColor * 0.85, baseColor * 1.15, ringPattern * 0.6);
   
-  // Apply ambient occlusion from ring structure
-  float ao = ringAO(v_texCoord, v_ringPhase);
-  ringColor *= mix(0.7, 1.0, ao);
+  // Light rust only
+  ringColor = applyRust(ringColor, v_worldPos, u_rustAmount * 0.5);
   
-  // Apply rust/weathering
-  ringColor = applyRust(ringColor, v_worldPos, u_rustAmount);
-  
-  // Lighting calculation
+  // Strong metallic lighting
   float NdotL = max(dot(N, L), 0.0);
   float NdotH = max(dot(N, H), 0.0);
+  float NdotV = max(dot(N, V), 0.0);
   
-  // Diffuse
-  vec3 diffuse = ringColor * NdotL;
+  // Bright diffuse
+  vec3 diffuse = ringColor * NdotL * 1.5;
   
-  // Specular (metallic)
-  float roughness = mix(0.3, 0.8, u_rustAmount); // More rust = rougher
-  float specular_power = mix(128.0, 16.0, roughness);
-  float specular = pow(NdotH, specular_power) * (1.0 - u_rustAmount * 0.7);
+  // Strong specular
+  float spec_power = 64.0;
+  float specular = pow(NdotH, spec_power) * 1.8;
   
-  // Fresnel rim lighting
-  float rim = fresnel(V, N, 3.0) * 0.4;
+  // Bright ambient
+  vec3 ambient = u_ambientColor * ringColor * 0.6;
   
-  // Ambient
-  vec3 ambient = u_ambientColor * ringColor * 0.4;
+  // Fresnel rim
+  float rim = pow(1.0 - NdotV, 3.0) * 0.5;
   
-  // Combine
-  vec3 color = ambient + (diffuse + vec3(specular) * 0.8) * u_lightColor;
+  // Combine with boosted brightness
+  vec3 color = ambient + (diffuse + vec3(specular)) * u_lightColor;
   color += vec3(rim) * u_lightColor;
   
-  // Ring edge highlights
-  float edge_highlight = ringPattern * specular * 0.5;
-  color += vec3(edge_highlight);
+  // Add sparkle from rings
+  float sparkle = ringPattern * NdotH * 0.4;
+  color += vec3(sparkle);
   
-  // Subtle chainmail shimmer (from ring overlaps)
-  float shimmer = noise(v_texCoord * 80.0 + v_worldPos.xy) * ringPattern * 0.15;
-  color += vec3(shimmer);
+  // Brighten overall
+  color *= 1.4;
   
-  // Tone mapping
-  color = color / (color + vec3(1.0));
+  // Gentle tone mapping
+  color = color / (color + vec3(0.5));
   
-  // Gamma correction
+  // Gamma
   color = pow(color, vec3(1.0 / 2.2));
   
   FragColor = vec4(color, u_alpha);

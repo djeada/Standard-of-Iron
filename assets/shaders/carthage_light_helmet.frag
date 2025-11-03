@@ -73,45 +73,51 @@ void main() {
   vec3 L = normalize(u_lightDir);
   vec3 H = normalize(V + L);
   
-  // Base bronze color with procedural weathering
-  vec3 baseColor = bronzePatina(u_color, v_worldPos);
+  // High-quality bronze material
+  vec3 baseColor = u_color;
   
-  // Add hammered texture detail
-  float hammer = hammeredTexture(v_texCoord);
-  baseColor = mix(baseColor, baseColor * 0.85, hammer);
+  // Subtle patina only in deep recesses
+  float ambient_factor = max(dot(N, vec3(0.0, 1.0, 0.0)), 0.0);
+  vec3 patina_color = vec3(0.25, 0.45, 0.35);
+  baseColor = mix(baseColor, patina_color, (1.0 - ambient_factor) * 0.12);
   
-  // Add rivet highlights
-  float rivets = rivetDetail(v_texCoord);
-  baseColor = mix(baseColor, baseColor * 1.3, rivets);
-  
-  // PBR lighting calculation
-  vec3 F0 = mix(vec3(0.04), baseColor, v_metallic);
+  // Advanced PBR
+  vec3 F0 = vec3(0.95, 0.64, 0.54); // Bronze F0
   vec3 F = fresnelSchlick(max(dot(H, V), 0.0), F0);
   
-  // Specular component
   float NDF = distributionGGX(N, H, v_roughness);
   float NdotL = max(dot(N, L), 0.0);
   float NdotV = max(dot(N, V), 0.0);
   
-  vec3 specular = NDF * F / max(4.0 * NdotV * NdotL, 0.001);
+  // Cook-Torrance specular
+  float G = min(1.0, min(2.0 * NdotV * NdotL / max(dot(V, H), 0.001),
+                         2.0 * NdotV * NdotL / max(dot(V, H), 0.001)));
   
-  // Diffuse component
-  vec3 kD = (vec3(1.0) - F) * (1.0 - v_metallic);
+  vec3 specular = (NDF * F * G) / max(4.0 * NdotV * NdotL, 0.001);
+  specular = clamp(specular, 0.0, 10.0);
+  
+  // Metallic doesn't have diffuse
+  vec3 kD = vec3(0.0);
   vec3 diffuse = kD * baseColor / 3.14159265;
   
-  // Combine lighting
-  vec3 ambient = u_ambientColor * baseColor * 0.3;
-  vec3 radiance = u_lightColor * NdotL;
-  vec3 color = ambient + (diffuse + specular) * radiance;
+  // Strong ambient for visibility
+  vec3 ambient = u_ambientColor * baseColor * 0.5;
   
-  // Edge wear (brighter on edges from polishing)
-  float edge_factor = pow(1.0 - NdotV, 3.0);
-  color = mix(color, color * 1.4, edge_factor * 0.3);
+  // Main lighting
+  vec3 radiance = u_lightColor * NdotL * 1.8;
+  vec3 color = ambient + (diffuse + specular * 2.5) * radiance;
   
-  // Tone mapping
-  color = color / (color + vec3(1.0));
+  // Strong rim light for definition
+  float rim = pow(1.0 - NdotV, 2.5) * NdotL;
+  color += baseColor * rim * 0.6;
   
-  // Gamma correction
+  // Brighten overall
+  color *= 1.3;
+  
+  // Gentle tone mapping
+  color = color / (color + vec3(0.5));
+  
+  // Gamma
   color = pow(color, vec3(1.0 / 2.2));
   
   FragColor = vec4(color, u_alpha);

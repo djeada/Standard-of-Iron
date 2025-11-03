@@ -47,49 +47,29 @@ void CarthageLightHelmetRenderer::render(
 void CarthageLightHelmetRenderer::renderBowl(const DrawContext &ctx,
                                              const AttachmentFrame &head,
                                              ISubmitter &submitter) {
-  // Main helmet bowl - hemispherical bronze cap
   float const head_r = head.radius;
-  float const bowl_height = m_config.helmet_height;
   
   auto headPoint = [&](const QVector3D &normalized) -> QVector3D {
     return HumanoidRendererBase::frameLocalPosition(head, normalized);
   };
 
-  // Create graduated helmet bowl with multiple segments for realism
-  int const segments = m_config.detail_level >= 2 ? 16 : 8;
+  // Main helmet dome - smooth bronze sphere
+  QVector3D dome_center = headPoint(QVector3D(0.0F, 0.7F, 0.1F));
+  QMatrix4x4 dome_m = ctx.model;
+  dome_m.translate(dome_center);
   
-  for (int i = 0; i < segments; ++i) {
-    float t0 = static_cast<float>(i) / static_cast<float>(segments);
-    float t1 = static_cast<float>(i + 1) / static_cast<float>(segments);
-    
-    // Spherical cap profile
-    float angle0 = t0 * std::numbers::pi_v<float> * 0.5F;
-    float angle1 = t1 * std::numbers::pi_v<float> * 0.5F;
-    
-    float y0 = std::cos(angle0) * bowl_height;
-    float y1 = std::cos(angle1) * bowl_height;
-    float r0 = std::sin(angle0) * head_r * 1.08F;
-    float r1 = std::sin(angle1) * head_r * 1.08F;
-    
-    QVector3D bottom = headPoint(QVector3D(0.0F, 0.85F - t0 * 0.3F, 0.0F));
-    QVector3D top = headPoint(QVector3D(0.0F, 0.85F - t1 * 0.3F, 0.0F));
-    
-    // Vary bronze color slightly per segment for hammered metal look
-    float variation = 1.0F + (std::sin(static_cast<float>(i) * 1.7F) * 0.08F);
-    QVector3D segment_color = m_config.bronze_color * variation;
-    
-    submitter.mesh(getUnitCylinder(),
-                   cylinderBetween(ctx.model, bottom, top, (r0 + r1) * 0.5F),
-                   segment_color, nullptr, 0.85F);
-  }
+  // Scale to create proper helmet shape - slightly elongated
+  dome_m.scale(head_r * 1.15F, head_r * 0.85F, head_r * 1.12F);
   
-  // Top dome cap
-  QVector3D apex = headPoint(QVector3D(0.0F, 1.0F, 0.0F));
-  QMatrix4x4 apex_m = ctx.model;
-  apex_m.translate(apex);
-  apex_m.scale(head_r * 0.25F);
-  submitter.mesh(getUnitSphere(), apex_m, 
-                 m_config.bronze_color * 1.15F, nullptr, 0.9F);
+  // Rich polished bronze with subtle variation
+  QVector3D bronze_base = m_config.bronze_color;
+  submitter.mesh(getUnitSphere(), dome_m, bronze_base, nullptr, 0.92F);
+  
+  // Helmet rim/edge reinforcement band
+  QVector3D rim_pos = headPoint(QVector3D(0.0F, 0.3F, 0.0F));
+  submitter.mesh(getUnitCylinder(),
+                 cylinderBetween(ctx.model, rim_pos, rim_pos + head.up * 0.03F, head_r * 1.18F),
+                 bronze_base * 1.1F, nullptr, 0.95F);
 }
 
 void CarthageLightHelmetRenderer::renderBrim(const DrawContext &ctx,
@@ -198,36 +178,43 @@ void CarthageLightHelmetRenderer::renderCrest(const DrawContext &ctx,
     return HumanoidRendererBase::frameLocalPosition(head, normalized);
   };
 
-  // Horsehair crest plume (red/purple dyed)
-  QVector3D crest_color(0.65F, 0.15F, 0.18F); // Dark red
+  // Bronze crest holder - longitudinal ridge
+  QVector3D holder_front = headPoint(QVector3D(0.0F, 0.85F, 0.5F));
+  QVector3D holder_back = headPoint(QVector3D(0.0F, 0.88F, -0.5F));
   
-  // Crest base mount
-  QVector3D crest_base = headPoint(QVector3D(0.0F, 0.95F, -0.15F));
-  QMatrix4x4 base_m = ctx.model;
-  base_m.translate(crest_base);
-  base_m.scale(head_r * 0.18F, head_r * 0.08F, head_r * 0.3F);
-  submitter.mesh(getUnitSphere(), base_m,
-                 m_config.bronze_color * 1.1F, nullptr, 0.95F);
+  submitter.mesh(getUnitCylinder(),
+                 cylinderBetween(ctx.model, holder_front, holder_back, head_r * 0.08F),
+                 m_config.bronze_color * 1.15F, nullptr, 0.95F);
   
-  // Horsehair plume strands (multiple cylinders)
-  int const hair_strands = m_config.detail_level >= 2 ? 7 : 4;
+  // Vibrant red horsehair plume
+  QVector3D crest_color(0.82F, 0.12F, 0.15F); // Bright crimson
   
-  for (int i = 0; i < hair_strands; ++i) {
-    float offset = (static_cast<float>(i) - static_cast<float>(hair_strands) * 0.5F) 
-                   / static_cast<float>(hair_strands);
+  // Dense hair strands flowing backward
+  int const strands = m_config.detail_level >= 2 ? 12 : 6;
+  
+  for (int i = 0; i < strands; ++i) {
+    float t = static_cast<float>(i) / static_cast<float>(strands - 1);
     
-    QVector3D strand_base = crest_base + head.forward * (offset * head_r * 0.15F);
-    QVector3D strand_tip = strand_base + head.up * (head_r * 0.35F) + 
-                           head.forward * (head_r * -0.12F);
+    // Position along crest holder
+    QVector3D base = holder_front * (1.0F - t) + holder_back * t;
+    base += head.up * (head_r * 0.05F); // Lift above holder
     
-    float wave = std::sin(offset * 3.14159F) * 0.02F;
-    strand_tip += head.right * (wave * head_r);
+    // Flow backward and down with natural curve
+    float curve = std::sin(t * 3.14159F) * 0.3F;
+    QVector3D tip = base + 
+                    head.up * (head_r * (0.25F - t * 0.1F)) +
+                    head.forward * (head_r * (-0.4F - curve));
     
-    QVector3D strand_color = crest_color * (1.0F + offset * 0.15F);
+    // Slight lateral spread for volume
+    float spread = (static_cast<float>(i % 3) - 1.0F) * head_r * 0.08F;
+    tip += head.right * spread;
+    
+    // Color variation for natural look
+    QVector3D hair_color = crest_color * (0.9F + (i % 2) * 0.2F);
     
     submitter.mesh(getUnitCylinder(),
-                   cylinderBetween(ctx.model, strand_base, strand_tip, head_r * 0.045F),
-                   strand_color, nullptr, 0.7F);
+                   cylinderBetween(ctx.model, base, tip, head_r * 0.035F),
+                   hair_color, nullptr, 0.65F);
   }
 }
 

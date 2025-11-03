@@ -58,58 +58,58 @@ void ChainmailArmorRenderer::renderTorsoMail(const DrawContext &ctx,
   }
 
   float const torso_r = torso.radius;
-  float const coverage_height = m_config.coverage;
   
-  // Main chainmail hauberk body - layered construction
-  int const vertical_segments = m_config.detail_level >= 2 ? 16 : 8;
+  // High-quality mail hauberk with realistic draping
+  QVector3D steel_color = m_config.metal_color;
   
-  for (int seg = 0; seg < vertical_segments; ++seg) {
-    float t0 = static_cast<float>(seg) / static_cast<float>(vertical_segments);
-    float t1 = static_cast<float>(seg + 1) / static_cast<float>(vertical_segments);
-    
-    // Interpolate between torso and waist
-    QVector3D pos0 = torso.origin * (1.0F - t0) + waist.origin * t0;
-    QVector3D pos1 = torso.origin * (1.0F - t1) + waist.origin * t1;
-    
-    float r0 = torso_r * (1.0F + t0 * 0.15F); // Slight flare at waist
-    float r1 = torso_r * (1.0F + t1 * 0.15F);
-    
-    QVector3D ring_color = calculateRingColor(pos0.x(), pos0.y(), pos0.z());
-    
-    // If high detail, render actual ring structure
-    if (m_config.detail_level >= 2) {
-      renderRingDetails(ctx, pos0, r0, (pos1 - pos0).length(),
-                        torso.up, torso.right, submitter);
-    } else {
-      // Lower detail: solid segments with chainmail texture hint
-      submitter.mesh(getUnitCylinder(),
-                     cylinderBetween(ctx.model, pos0, pos1, (r0 + r1) * 0.5F * 1.02F),
-                     ring_color, nullptr, 0.75F);
-    }
+  // Main body - single smooth piece with subtle segmentation
+  QVector3D top = torso.origin + torso.up * (torso_r * 0.3F);
+  QVector3D bottom = waist.origin + waist.up * (-torso_r * 0.4F);
+  
+  // Torso section
+  submitter.mesh(getUnitCylinder(),
+                 cylinderBetween(ctx.model, top, torso.origin, torso_r * 1.08F),
+                 steel_color, nullptr, 0.82F);
+  
+  // Mid section with slight flare
+  submitter.mesh(getUnitCylinder(),
+                 cylinderBetween(ctx.model, torso.origin, waist.origin, torso_r * 1.12F),
+                 calculateRingColor(waist.origin.x(), waist.origin.y(), waist.origin.z()),
+                 nullptr, 0.78F);
+  
+  // Lower skirt with hanging mail
+  submitter.mesh(getUnitCylinder(),
+                 cylinderBetween(ctx.model, waist.origin, bottom, torso_r * 1.15F),
+                 calculateRingColor(bottom.x(), bottom.y(), bottom.z()) * 0.92F,
+                 nullptr, 0.75F);
+  
+  // Add depth with inner shadow layer
+  if (m_config.detail_level >= 1) {
+    submitter.mesh(getUnitCylinder(),
+                   cylinderBetween(ctx.model, top, bottom, torso_r * 1.06F),
+                   steel_color * 0.65F, nullptr, 0.85F);
   }
   
-  // Bottom edge rings (hanging mail at waist)
-  if (coverage_height > 0.7F) {
-    int const edge_rings = m_config.detail_level >= 1 ? 16 : 8;
-    
-    for (int i = 0; i < edge_rings; ++i) {
-      float angle = (static_cast<float>(i) / static_cast<float>(edge_rings)) *
+  // Detailed ring texture at high detail
+  if (m_config.detail_level >= 2) {
+    // Add small ring clusters for visual richness
+    int const ring_count = 32;
+    for (int i = 0; i < ring_count; ++i) {
+      float angle = (static_cast<float>(i) / static_cast<float>(ring_count)) *
                     2.0F * std::numbers::pi_v<float>;
+      float height_t = static_cast<float>(i % 4) * 0.25F;
       
-      float x = std::cos(angle);
-      float z = std::sin(angle);
-      
-      QVector3D ring_pos = waist.origin + 
-                           waist.right * (x * torso_r * 1.15F) +
-                           waist.forward * (z * torso_r * 1.15F) +
-                           waist.up * (-0.05F);
+      QVector3D ring_pos = torso.origin * (1.0F - height_t) + waist.origin * height_t;
+      ring_pos += torso.right * (std::cos(angle) * torso_r * 1.1F) +
+                  torso.forward * (std::sin(angle) * torso_r * 1.1F);
       
       QMatrix4x4 ring_m = ctx.model;
       ring_m.translate(ring_pos);
-      ring_m.scale(m_config.ring_size * 1.5F);
+      ring_m.scale(m_config.ring_size * 2.5F);
       
-      QVector3D edge_color = calculateRingColor(ring_pos.x(), ring_pos.y(), ring_pos.z());
-      submitter.mesh(getUnitSphere(), ring_m, edge_color, nullptr, 0.8F);
+      submitter.mesh(getUnitSphere(), ring_m,
+                     calculateRingColor(ring_pos.x(), ring_pos.y(), ring_pos.z()) * 1.15F,
+                     nullptr, 0.88F);
     }
   }
 }
