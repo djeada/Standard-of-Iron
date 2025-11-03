@@ -72,100 +72,47 @@ void ChainmailArmorRenderer::renderTorsoMail(const DrawContext &ctx,
   float const chest_depth_back = torso_r * 0.85F;
   float const waist_width = torso_r * 1.05F;
 
-  // Create mail segments from shoulders to hips
-  int const num_rows = m_config.detail_level >= 2 ? 16 : 10;
-  int const segments_per_row = m_config.detail_level >= 2 ? 24 : 16;
+  // MUCH lower detail - chainmail texture via few segmented bands
+  int const num_bands = 6; // Just 6 horizontal bands
+  int const segments = 12;  // 12 segments around (not 24!)
   
-  float const y_top = 0.15F; // Shoulder level
-  float const y_bottom = -0.25F; // Below waist
-  float const row_height = (y_top - y_bottom) / static_cast<float>(num_rows);
+  float const y_top = 0.15F;
+  float const y_bottom = -0.25F;
+  float const band_height = (y_top - y_bottom) / static_cast<float>(num_bands);
 
   constexpr float pi = std::numbers::pi_v<float>;
-  float const ring_thickness = torso_r * 0.015F; // Much thicker rings to be visible
+  float const segment_thickness = torso_r * 0.025F; // Thicker segments
 
-  for (int row = 0; row < num_rows; ++row) {
-    float const y_row_top = y_top - static_cast<float>(row) * row_height;
-    float const y_row_bottom = y_row_top - row_height;
+  // Draw segmented armor bands (like Roman armor but with mail texture)
+  for (int band = 0; band < num_bands; ++band) {
+    float const y_band = y_top - static_cast<float>(band) * band_height;
+    float const y_next = y_band - band_height * 0.90F;
     
-    // Interpolate between chest and waist dimensions
-    float const t = static_cast<float>(row) / static_cast<float>(num_rows - 1);
-    float const width_scale = shoulder_width * (1.0F - t * 0.12F) + waist_width * t * 0.12F;
+    float const t = static_cast<float>(band) / static_cast<float>(num_bands - 1);
+    float const width_scale = shoulder_width * (1.0F - t * 0.10F);
 
     auto getRadius = [&](float angle) -> float {
       float const cos_a = std::cos(angle);
-      float depth_front = chest_depth_front * (1.0F - t * 0.15F);
-      float depth_back = chest_depth_back * (1.0F - t * 0.08F);
-      float depth = (cos_a > 0.0F) ? depth_front : depth_back;
+      float depth = (cos_a > 0.0F) ? chest_depth_front : chest_depth_back;
+      depth *= (1.0F - t * 0.12F);
       return width_scale * depth * (std::abs(cos_a) * 0.3F + 0.7F);
     };
 
-    for (int i = 0; i < segments_per_row; ++i) {
-      float const angle1 = (static_cast<float>(i) / segments_per_row) * 2.0F * pi;
-      float const angle2 = (static_cast<float>(i + 1) / segments_per_row) * 2.0F * pi;
+    QVector3D band_color = calculateRingColor(origin.x(), origin.y() + y_band, origin.z());
+    
+    // Draw vertical segments to create mail-like texture
+    for (int i = 0; i < segments; ++i) {
+      float const angle = (static_cast<float>(i) / segments) * 2.0F * pi;
+      float const cos_a = std::cos(angle);
+      float const sin_a = std::sin(angle);
+      float const r = getRadius(angle);
 
-      float const cos1 = std::cos(angle1);
-      float const sin1 = std::sin(angle1);
-      float const cos2 = std::cos(angle2);
-      float const sin2 = std::sin(angle2);
+      QVector3D p_top = origin + right * (r * sin_a) + forward * (r * cos_a) + up * y_band;
+      QVector3D p_bot = origin + right * (r * sin_a) + forward * (r * cos_a) + up * y_next;
 
-      float const r1 = getRadius(angle1);
-      float const r2 = getRadius(angle2);
-
-      QVector3D const p1_top = origin + right * (r1 * sin1) +
-                               forward * (r1 * cos1) + up * y_row_top;
-      QVector3D const p2_top = origin + right * (r2 * sin2) +
-                               forward * (r2 * cos2) + up * y_row_top;
-      QVector3D const p1_bot = origin + right * (r1 * sin1) +
-                               forward * (r1 * cos1) + up * y_row_bottom;
-      QVector3D const p2_bot = origin + right * (r2 * sin2) +
-                               forward * (r2 * cos2) + up * y_row_bottom;
-
-      // Vertical ring links
-      QVector3D color1 = calculateRingColor(p1_top.x(), p1_top.y(), p1_top.z());
       submitter.mesh(getUnitCylinder(),
-                     cylinderBetween(ctx.model, p1_top, p1_bot, ring_thickness),
-                     color1, nullptr, 0.75F);
-
-      // Horizontal ring links (every other segment for interlocking pattern)
-      if (i % 2 == row % 2) {
-        QVector3D color_top = calculateRingColor(p1_top.x(), p1_top.y(), p1_top.z());
-        submitter.mesh(getUnitCylinder(),
-                       cylinderBetween(ctx.model, p1_top, p2_top, ring_thickness),
-                       color_top, nullptr, 0.78F);
-      }
-    }
-  }
-  
-  // Add ring intersection spheres for proper chainmail look
-  if (m_config.detail_level >= 1) {
-    int const detail_rows = m_config.detail_level >= 2 ? num_rows : num_rows / 2;
-    int const detail_segs = segments_per_row;
-    for (int row = 0; row < detail_rows; ++row) {
-      float const y_pos = y_top - (static_cast<float>(row) / num_rows) * (y_top - y_bottom);
-      float const t = static_cast<float>(row) / static_cast<float>(num_rows - 1);
-      float const width_scale = shoulder_width * (1.0F - t * 0.12F) + waist_width * t * 0.12F;
-      
-      for (int i = 0; i < detail_segs; ++i) {
-        float const angle = (static_cast<float>(i) / detail_segs) * 2.0F * pi;
-        float const cos_a = std::cos(angle);
-        float const sin_a = std::sin(angle);
-        
-        float depth_front = chest_depth_front * (1.0F - t * 0.15F);
-        float depth_back = chest_depth_back * (1.0F - t * 0.08F);
-        float depth = (cos_a > 0.0F) ? depth_front : depth_back;
-        float r = width_scale * depth * (std::abs(cos_a) * 0.3F + 0.7F);
-        
-        QVector3D ring_pos = origin + right * (r * sin_a) +
-                            forward * (r * cos_a) + up * y_pos;
-        
-        QMatrix4x4 ring_m = ctx.model;
-        ring_m.translate(ring_pos);
-        ring_m.scale(ring_thickness * 1.8F); // Visible ring nodes
-        
-        submitter.mesh(getUnitSphere(), ring_m,
-                       calculateRingColor(ring_pos.x(), ring_pos.y(), ring_pos.z()) * 1.15F,
-                       nullptr, 0.82F);
-      }
+                     cylinderBetween(ctx.model, p_top, p_bot, segment_thickness),
+                     band_color, nullptr, 0.70F);
     }
   }
 }
