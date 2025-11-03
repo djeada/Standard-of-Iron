@@ -47,140 +47,82 @@ void CarthageHeavyArmorRenderer::render(const DrawContext &ctx,
   (void)anim;
   (void)palette;
 
-  // HEAVY: Full steel chainmail hauberk covering torso, shoulders, upper arms, and upper thighs
-  const AttachmentFrame &neck = frames.neck;
+  // HEAVY: Full steel chainmail hauberk covering torso, shoulders, arms, thighs
+  const AttachmentFrame &head = frames.head;
   const AttachmentFrame &torso = frames.torso;
   const AttachmentFrame &waist = frames.waist;
-  const AttachmentFrame &left_shoulder = frames.left_shoulder;
-  const AttachmentFrame &right_shoulder = frames.right_shoulder;
-  const AttachmentFrame &left_upper_arm = frames.left_upper_arm;
-  const AttachmentFrame &right_upper_arm = frames.right_upper_arm;
-  const AttachmentFrame &left_hip = frames.left_hip;
-  const AttachmentFrame &right_hip = frames.right_hip;
+  const AttachmentFrame &shoulderL = frames.shoulderL;
+  const AttachmentFrame &shoulderR = frames.shoulderR;
+  const AttachmentFrame &handL = frames.handL;
+  const AttachmentFrame &handR = frames.handR;
   
   if (torso.radius <= 0.0F) return;
 
-  QVector3D steel_color = QVector3D(0.50F, 0.52F, 0.55F);
-  float roughness = 0.4F;
-
-  // 1. CHEST PIECE - Upper torso from neck to mid-torso
-  {
-    QVector3D top = neck.origin;
-    QVector3D bottom = torso.origin - torso.up * (torso.radius * 0.3F);
-    QVector3D center = (top + bottom) * 0.5F;
-    float height = (top - bottom).length();
-    
-    QMatrix4x4 chest_transform = createArmorTransform(
-        ctx, center, torso.up.normalized(), torso.right.normalized(), torso.forward.normalized(),
-        torso.radius * 2.5F,  // Wide shoulders
-        height * 0.55F,       // Vertical coverage
-        torso.radius * 1.4F   // Front-to-back depth
-    );
-    
-    submitter.mesh(getUnitTorso(), chest_transform, steel_color, nullptr, roughness);
-  }
-
-  // 2. WAIST/BELLY PIECE - Mid-torso to waist
-  {
-    QVector3D top = torso.origin - torso.up * (torso.radius * 0.2F);
-    QVector3D bottom = waist.origin + waist.up * (waist.radius * 0.2F);
-    QVector3D center = (top + bottom) * 0.5F;
-    float height = (top - bottom).length();
-    
-    QMatrix4x4 belly_transform = createArmorTransform(
-        ctx, center, torso.up.normalized(), torso.right.normalized(), torso.forward.normalized(),
-        torso.radius * 2.2F,  // Narrower at waist
-        height * 0.55F,
-        torso.radius * 1.3F
-    );
-    
-    submitter.mesh(getUnitTorso(), belly_transform, steel_color, nullptr, roughness);
-  }
-
-  // 3. LOWER TORSO - Waist to hip (mail skirt)
-  {
-    QVector3D top = waist.origin;
-    QVector3D bottom = waist.origin - waist.up * (waist.radius * 1.5F);
-    QVector3D center = (top + bottom) * 0.5F;
-    float height = (top - bottom).length();
-    
-    QMatrix4x4 skirt_transform = createArmorTransform(
-        ctx, center, waist.up.normalized(), waist.right.normalized(), waist.forward.normalized(),
-        waist.radius * 2.4F,  // Flared for movement
-        height * 0.55F,
-        waist.radius * 1.3F
-    );
-    
-    submitter.mesh(getUnitTorso(), skirt_transform, steel_color, nullptr, roughness);
-  }
-
-  // 4. LEFT SHOULDER GUARD
-  if (left_shoulder.radius > 0.0F) {
-    QMatrix4x4 l_shoulder_transform = createArmorTransform(
-        ctx, left_shoulder.origin, left_shoulder.up.normalized(), 
-        left_shoulder.right.normalized(), left_shoulder.forward.normalized(),
-        left_shoulder.radius * 1.8F,
-        left_shoulder.radius * 1.2F,
-        left_shoulder.radius * 1.6F
-    );
-    submitter.mesh(getUnitSphere(), l_shoulder_transform, steel_color, nullptr, roughness);
-  }
-
+  const float torso_r = torso.radius;
+  const QVector3D steel_color = QVector3D(0.50F, 0.52F, 0.55F);
+  
+  // 1. CHEST PIECE - Wide, covering upper torso
+  QVector3D chest_center = torso.origin + torso.up * (torso_r * 0.3F);
+  QMatrix4x4 chest_transform = ctx.model;
+  chest_transform.translate(chest_center);
+  chest_transform.scale(torso_r * 1.35F, torso_r * 0.65F, torso_r * 1.25F);
+  submitter.mesh(getUnitSphere(), chest_transform, steel_color, nullptr, 0.4F);
+  
+  // 2. BELLY PIECE - Tapered, narrower than chest
+  QVector3D belly_center = torso.origin - torso.up * (torso_r * 0.1F);
+  QMatrix4x4 belly_transform = ctx.model;
+  belly_transform.translate(belly_center);
+  belly_transform.scale(torso_r * 1.15F, torso_r * 0.55F, torso_r * 1.1F);
+  submitter.mesh(getUnitSphere(), belly_transform, steel_color, nullptr, 0.4F);
+  
+  // 3. MAIL SKIRT - Lower torso to upper thighs
+  QVector3D skirt_center = waist.origin - waist.up * (torso_r * 0.4F);
+  QMatrix4x4 skirt_transform = ctx.model;
+  skirt_transform.translate(skirt_center);
+  skirt_transform.scale(torso_r * 1.2F, torso_r * 0.7F, torso_r * 1.15F);
+  submitter.mesh(getUnitSphere(), skirt_transform, steel_color, nullptr, 0.4F);
+  
+  // 4. LEFT SHOULDER GUARD - Covering shoulder joint
+  QMatrix4x4 left_shoulder_transform = ctx.model;
+  left_shoulder_transform.translate(shoulderL.origin);
+  left_shoulder_transform.scale(shoulderL.radius * 1.4F);
+  submitter.mesh(getUnitSphere(), left_shoulder_transform, steel_color, nullptr, 0.4F);
+  
   // 5. RIGHT SHOULDER GUARD
-  if (right_shoulder.radius > 0.0F) {
-    QMatrix4x4 r_shoulder_transform = createArmorTransform(
-        ctx, right_shoulder.origin, right_shoulder.up.normalized(), 
-        right_shoulder.right.normalized(), right_shoulder.forward.normalized(),
-        right_shoulder.radius * 1.8F,
-        right_shoulder.radius * 1.2F,
-        right_shoulder.radius * 1.6F
-    );
-    submitter.mesh(getUnitSphere(), r_shoulder_transform, steel_color, nullptr, roughness);
-  }
-
-  // 6. LEFT UPPER ARM SLEEVE
-  if (left_upper_arm.radius > 0.0F) {
-    QVector3D arm_top = left_shoulder.origin - left_shoulder.up * (left_shoulder.radius * 0.5F);
-    QVector3D arm_bottom = left_upper_arm.origin - left_upper_arm.up * (left_upper_arm.radius * 1.5F);
-    float arm_radius = left_upper_arm.radius * 1.15F;
-    
-    submitter.mesh(getUnitCylinder(), 
-                  cylinderBetween(ctx.model, arm_top, arm_bottom, arm_radius),
-                  steel_color, nullptr, roughness);
-  }
-
-  // 7. RIGHT UPPER ARM SLEEVE
-  if (right_upper_arm.radius > 0.0F) {
-    QVector3D arm_top = right_shoulder.origin - right_shoulder.up * (right_shoulder.radius * 0.5F);
-    QVector3D arm_bottom = right_upper_arm.origin - right_upper_arm.up * (right_upper_arm.radius * 1.5F);
-    float arm_radius = right_upper_arm.radius * 1.15F;
-    
-    submitter.mesh(getUnitCylinder(), 
-                  cylinderBetween(ctx.model, arm_top, arm_bottom, arm_radius),
-                  steel_color, nullptr, roughness);
-  }
-
-  // 8. LEFT THIGH GUARD (mail extension)
-  if (left_hip.radius > 0.0F) {
-    QVector3D thigh_top = left_hip.origin;
-    QVector3D thigh_bottom = left_hip.origin - left_hip.up * (left_hip.radius * 1.2F);
-    float thigh_radius = left_hip.radius * 1.12F;
-    
-    submitter.mesh(getUnitCylinder(), 
-                  cylinderBetween(ctx.model, thigh_top, thigh_bottom, thigh_radius),
-                  steel_color, nullptr, roughness);
-  }
-
-  // 9. RIGHT THIGH GUARD (mail extension)
-  if (right_hip.radius > 0.0F) {
-    QVector3D thigh_top = right_hip.origin;
-    QVector3D thigh_bottom = right_hip.origin - right_hip.up * (right_hip.radius * 1.2F);
-    float thigh_radius = right_hip.radius * 1.12F;
-    
-    submitter.mesh(getUnitCylinder(), 
-                  cylinderBetween(ctx.model, thigh_top, thigh_bottom, thigh_radius),
-                  steel_color, nullptr, roughness);
-  }
+  QMatrix4x4 right_shoulder_transform = ctx.model;
+  right_shoulder_transform.translate(shoulderR.origin);
+  right_shoulder_transform.scale(shoulderR.radius * 1.4F);
+  submitter.mesh(getUnitSphere(), right_shoulder_transform, steel_color, nullptr, 0.4F);
+  
+  // 6. LEFT ARM SLEEVE - Upper arm coverage
+  QVector3D left_arm_mid = (shoulderL.origin + handL.origin) * 0.5F;
+  left_arm_mid += shoulderL.origin * 0.3F; // Bias toward shoulder
+  QMatrix4x4 left_arm_transform = ctx.model;
+  left_arm_transform.translate(left_arm_mid);
+  left_arm_transform.scale(torso_r * 0.5F, torso_r * 0.9F, torso_r * 0.5F);
+  submitter.mesh(getUnitSphere(), left_arm_transform, steel_color, nullptr, 0.4F);
+  
+  // 7. RIGHT ARM SLEEVE
+  QVector3D right_arm_mid = (shoulderR.origin + handR.origin) * 0.5F;
+  right_arm_mid += shoulderR.origin * 0.3F;
+  QMatrix4x4 right_arm_transform = ctx.model;
+  right_arm_transform.translate(right_arm_mid);
+  right_arm_transform.scale(torso_r * 0.5F, torso_r * 0.9F, torso_r * 0.5F);
+  submitter.mesh(getUnitSphere(), right_arm_transform, steel_color, nullptr, 0.4F);
+  
+  // 8. LEFT THIGH GUARD - Upper leg protection
+  QVector3D left_thigh = waist.origin + QVector3D(-torso_r * 0.4F, -torso_r * 1.2F, 0.0F);
+  QMatrix4x4 left_thigh_transform = ctx.model;
+  left_thigh_transform.translate(left_thigh);
+  left_thigh_transform.scale(torso_r * 0.45F, torso_r * 0.8F, torso_r * 0.45F);
+  submitter.mesh(getUnitSphere(), left_thigh_transform, steel_color, nullptr, 0.4F);
+  
+  // 9. RIGHT THIGH GUARD
+  QVector3D right_thigh = waist.origin + QVector3D(torso_r * 0.4F, -torso_r * 1.2F, 0.0F);
+  QMatrix4x4 right_thigh_transform = ctx.model;
+  right_thigh_transform.translate(right_thigh);
+  right_thigh_transform.scale(torso_r * 0.45F, torso_r * 0.8F, torso_r * 0.45F);
+  submitter.mesh(getUnitSphere(), right_thigh_transform, steel_color, nullptr, 0.4F);
 }
 
 void CarthageLightArmorRenderer::render(const DrawContext &ctx,
@@ -191,12 +133,12 @@ void CarthageLightArmorRenderer::render(const DrawContext &ctx,
   (void)anim;
   (void)palette;
 
-  // LIGHT: Linen linothorax - torso and shoulder protection only (lighter, more flexible)
-  const AttachmentFrame &neck = frames.neck;
+  // LIGHT: Linen linothorax - torso and shoulder protection
+  const AttachmentFrame &head = frames.head;
   const AttachmentFrame &torso = frames.torso;
   const AttachmentFrame &waist = frames.waist;
-  const AttachmentFrame &left_shoulder = frames.left_shoulder;
-  const AttachmentFrame &right_shoulder = frames.right_shoulder;
+  const AttachmentFrame &shoulderL = frames.shoulderL;
+  const AttachmentFrame &shoulderR = frames.shoulderR;
   
   if (torso.radius <= 0.0F) return;
 
@@ -205,7 +147,7 @@ void CarthageLightArmorRenderer::render(const DrawContext &ctx,
 
   // 1. CHEST PIECE - Upper torso
   {
-    QVector3D top = neck.origin;
+    QVector3D top = head.origin - head.up * (head.radius * 0.8F);
     QVector3D bottom = torso.origin - torso.up * (torso.radius * 0.4F);
     QVector3D center = (top + bottom) * 0.5F;
     float height = (top - bottom).length();
@@ -255,25 +197,25 @@ void CarthageLightArmorRenderer::render(const DrawContext &ctx,
   }
 
   // 4. LEFT SHOULDER PIECE (layered linen pteruges)
-  if (left_shoulder.radius > 0.0F) {
+  if (shoulderL.radius > 0.0F) {
     QMatrix4x4 l_shoulder_transform = createArmorTransform(
-        ctx, left_shoulder.origin, left_shoulder.up.normalized(), 
-        left_shoulder.right.normalized(), left_shoulder.forward.normalized(),
-        left_shoulder.radius * 1.7F,
-        left_shoulder.radius * 1.1F,
-        left_shoulder.radius * 1.5F
+        ctx, shoulderL.origin, shoulderL.up.normalized(), 
+        shoulderL.right.normalized(), shoulderL.forward.normalized(),
+        shoulderL.radius * 1.7F,
+        shoulderL.radius * 1.1F,
+        shoulderL.radius * 1.5F
     );
     submitter.mesh(getUnitSphere(), l_shoulder_transform, linen_color, nullptr, roughness);
   }
 
   // 5. RIGHT SHOULDER PIECE (layered linen pteruges)
-  if (right_shoulder.radius > 0.0F) {
+  if (shoulderR.radius > 0.0F) {
     QMatrix4x4 r_shoulder_transform = createArmorTransform(
-        ctx, right_shoulder.origin, right_shoulder.up.normalized(), 
-        right_shoulder.right.normalized(), right_shoulder.forward.normalized(),
-        right_shoulder.radius * 1.7F,
-        right_shoulder.radius * 1.1F,
-        right_shoulder.radius * 1.5F
+        ctx, shoulderR.origin, shoulderR.up.normalized(), 
+        shoulderR.right.normalized(), shoulderR.forward.normalized(),
+        shoulderR.radius * 1.7F,
+        shoulderR.radius * 1.1F,
+        shoulderR.radius * 1.5F
     );
     submitter.mesh(getUnitSphere(), r_shoulder_transform, linen_color, nullptr, roughness);
   }
