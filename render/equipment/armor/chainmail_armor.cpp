@@ -81,7 +81,7 @@ void ChainmailArmorRenderer::renderTorsoMail(const DrawContext &ctx,
   float const row_height = (y_top - y_bottom) / static_cast<float>(num_rows);
 
   constexpr float pi = std::numbers::pi_v<float>;
-  float const ring_thickness = m_config.ring_size * 1.5F;
+  float const ring_thickness = torso_r * 0.015F; // Much thicker rings to be visible
 
   for (int row = 0; row < num_rows; ++row) {
     float const y_row_top = y_top - static_cast<float>(row) * row_height;
@@ -126,21 +126,23 @@ void ChainmailArmorRenderer::renderTorsoMail(const DrawContext &ctx,
                      cylinderBetween(ctx.model, p1_top, p1_bot, ring_thickness),
                      color1, nullptr, 0.75F);
 
-      // Horizontal ring links
-      QVector3D color_top = calculateRingColor(p1_top.x(), p1_top.y(), p1_top.z());
-      submitter.mesh(getUnitCylinder(),
-                     cylinderBetween(ctx.model, p1_top, p2_top, ring_thickness * 0.9F),
-                     color_top, nullptr, 0.78F);
+      // Horizontal ring links (every other segment for interlocking pattern)
+      if (i % 2 == row % 2) {
+        QVector3D color_top = calculateRingColor(p1_top.x(), p1_top.y(), p1_top.z());
+        submitter.mesh(getUnitCylinder(),
+                       cylinderBetween(ctx.model, p1_top, p2_top, ring_thickness),
+                       color_top, nullptr, 0.78F);
+      }
     }
   }
   
-  // Add ring detail spheres at intersections for high detail
-  if (m_config.detail_level >= 2) {
-    int const detail_rows = 8;
-    int const detail_segs = 16;
+  // Add ring intersection spheres for proper chainmail look
+  if (m_config.detail_level >= 1) {
+    int const detail_rows = m_config.detail_level >= 2 ? num_rows : num_rows / 2;
+    int const detail_segs = segments_per_row;
     for (int row = 0; row < detail_rows; ++row) {
-      float const y_pos = y_top - (static_cast<float>(row) / detail_rows) * (y_top - y_bottom);
-      float const t = static_cast<float>(row) / static_cast<float>(detail_rows - 1);
+      float const y_pos = y_top - (static_cast<float>(row) / num_rows) * (y_top - y_bottom);
+      float const t = static_cast<float>(row) / static_cast<float>(num_rows - 1);
       float const width_scale = shoulder_width * (1.0F - t * 0.12F) + waist_width * t * 0.12F;
       
       for (int i = 0; i < detail_segs; ++i) {
@@ -158,10 +160,10 @@ void ChainmailArmorRenderer::renderTorsoMail(const DrawContext &ctx,
         
         QMatrix4x4 ring_m = ctx.model;
         ring_m.translate(ring_pos);
-        ring_m.scale(ring_thickness * 1.3F);
+        ring_m.scale(ring_thickness * 1.8F); // Visible ring nodes
         
         submitter.mesh(getUnitSphere(), ring_m,
-                       calculateRingColor(ring_pos.x(), ring_pos.y(), ring_pos.z()) * 1.1F,
+                       calculateRingColor(ring_pos.x(), ring_pos.y(), ring_pos.z()) * 1.15F,
                        nullptr, 0.82F);
       }
     }
