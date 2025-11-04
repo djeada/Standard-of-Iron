@@ -13,6 +13,23 @@ namespace Render::GL {
 using Render::Geom::cylinderBetween;
 using Render::Geom::sphereAt;
 
+namespace {
+QMatrix4x4 createOrientationMatrix(const QVector3D &right, const QVector3D &up,
+                                   const QVector3D &forward) {
+  QMatrix4x4 orientation;
+  orientation(0, 0) = right.x();
+  orientation(0, 1) = up.x();
+  orientation(0, 2) = forward.x();
+  orientation(1, 0) = right.y();
+  orientation(1, 1) = up.y();
+  orientation(1, 2) = forward.y();
+  orientation(2, 0) = right.z();
+  orientation(2, 1) = up.z();
+  orientation(2, 2) = forward.z();
+  return orientation;
+}
+} // namespace
+
 void CarthageArcherHeavyArmorRenderer::render(
     const DrawContext &ctx, const BodyFrames &frames,
     const HumanoidPalette &palette, const HumanoidAnimationContext &anim,
@@ -38,49 +55,26 @@ void CarthageArcherHeavyArmorRenderer::render(
   {
     float height = torso_r * 0.95F;
     QVector3D center = torso.origin + up * (torso_r * 0.28F);
-    
+
     QMatrix4x4 transform = ctx.model;
     transform.translate(center);
-    
-    QMatrix4x4 orientation;
-    orientation(0, 0) = right.x();
-    orientation(0, 1) = up.x();
-    orientation(0, 2) = forward.x();
-    orientation(1, 0) = right.y();
-    orientation(1, 1) = up.y();
-    orientation(1, 2) = forward.y();
-    orientation(2, 0) = right.z();
-    orientation(2, 1) = up.z();
-    orientation(2, 2) = forward.z();
-    
-    transform = transform * orientation;
+    transform = transform * createOrientationMatrix(right, up, forward);
     transform.scale(torso_r * 1.55F, height, torso_r * 1.25F);
-    
+
     submitter.mesh(getUnitTorso(), transform, leather_color, nullptr, 0.32F);
   }
 
   {
     float height = torso_r * 0.75F;
     QVector3D center = torso.origin - up * (torso_r * 0.2F);
-    
+
     QMatrix4x4 transform = ctx.model;
     transform.translate(center);
-    
-    QMatrix4x4 orientation;
-    orientation(0, 0) = right.x();
-    orientation(0, 1) = up.x();
-    orientation(0, 2) = forward.x();
-    orientation(1, 0) = right.y();
-    orientation(1, 1) = up.y();
-    orientation(1, 2) = forward.y();
-    orientation(2, 0) = right.z();
-    orientation(2, 1) = up.z();
-    orientation(2, 2) = forward.z();
-    
-    transform = transform * orientation;
+    transform = transform * createOrientationMatrix(right, up, forward);
     transform.scale(torso_r * 1.45F, height, torso_r * 1.1F);
-    
-    submitter.mesh(getUnitTorso(), transform, leather_color * 0.98F, nullptr, 0.34F);
+
+    submitter.mesh(getUnitTorso(), transform, leather_color * 0.98F, nullptr,
+                   0.34F);
   }
 
   {
@@ -90,25 +84,15 @@ void CarthageArcherHeavyArmorRenderer::render(
 
     float height = waist.radius * 1.0F;
     QVector3D center = waist.origin - waist_up * (height * 0.45F);
-    
+
     QMatrix4x4 transform = ctx.model;
     transform.translate(center);
-    
-    QMatrix4x4 orientation;
-    orientation(0, 0) = waist_right.x();
-    orientation(0, 1) = waist_up.x();
-    orientation(0, 2) = waist_forward.x();
-    orientation(1, 0) = waist_right.y();
-    orientation(1, 1) = waist_up.y();
-    orientation(1, 2) = waist_forward.y();
-    orientation(2, 0) = waist_right.z();
-    orientation(2, 1) = waist_up.z();
-    orientation(2, 2) = waist_forward.z();
-    
-    transform = transform * orientation;
+    transform =
+        transform * createOrientationMatrix(waist_right, waist_up, waist_forward);
     transform.scale(waist.radius * 1.65F, height, waist.radius * 1.25F);
-    
-    submitter.mesh(getUnitTorso(), transform, leather_color * 0.97F, nullptr, 0.36F);
+
+    submitter.mesh(getUnitTorso(), transform, leather_color * 0.97F, nullptr,
+                   0.36F);
   }
 }
 

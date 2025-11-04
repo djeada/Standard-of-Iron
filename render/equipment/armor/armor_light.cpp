@@ -12,6 +12,23 @@ namespace Render::GL {
 
 using Render::Geom::sphereAt;
 
+namespace {
+QMatrix4x4 createOrientationMatrix(const QVector3D &right, const QVector3D &up,
+                                   const QVector3D &forward) {
+  QMatrix4x4 orientation;
+  orientation(0, 0) = right.x();
+  orientation(0, 1) = up.x();
+  orientation(0, 2) = forward.x();
+  orientation(1, 0) = right.y();
+  orientation(1, 1) = up.y();
+  orientation(1, 2) = forward.y();
+  orientation(2, 0) = right.z();
+  orientation(2, 1) = up.z();
+  orientation(2, 2) = forward.z();
+  return orientation;
+}
+} // namespace
+
 void CarthageArcherLightArmorRenderer::render(
     const DrawContext &ctx, const BodyFrames &frames,
     const HumanoidPalette &palette, const HumanoidAnimationContext &anim,
@@ -22,7 +39,7 @@ void CarthageArcherLightArmorRenderer::render(
   const AttachmentFrame &torso = frames.torso;
   const AttachmentFrame &waist = frames.waist;
   const AttachmentFrame &head = frames.head;
-  
+
   if (torso.radius <= 0.0F) {
     return;
   }
@@ -52,19 +69,7 @@ void CarthageArcherLightArmorRenderer::render(
 
   QMatrix4x4 transform = ctx.model;
   transform.translate(center);
-  
-  QMatrix4x4 orientation;
-  orientation(0, 0) = right.x();
-  orientation(0, 1) = up.x();
-  orientation(0, 2) = forward.x();
-  orientation(1, 0) = right.y();
-  orientation(1, 1) = up.y();
-  orientation(1, 2) = forward.y();
-  orientation(2, 0) = right.z();
-  orientation(2, 1) = up.z();
-  orientation(2, 2) = forward.z();
-  
-  transform = transform * orientation;
+  transform = transform * createOrientationMatrix(right, up, forward);
   transform.scale(width, height * 0.48F, depth);
 
   submitter.mesh(getUnitTorso(), transform, linen_color, nullptr, 0.8F);
