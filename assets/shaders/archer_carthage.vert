@@ -36,7 +36,7 @@ void main() {
 
   vec4 modelPos = u_model * vec4(a_position, 1.0);
   vec3 worldPos = modelPos.xyz;
-  vec3 offsetPos = worldPos + worldNormal * 0.04;
+  vec3 offsetPos = worldPos + worldNormal * 0.02;
 
   gl_Position = u_mvp * vec4(offsetPos, 1.0);
 

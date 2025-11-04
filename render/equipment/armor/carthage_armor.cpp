@@ -168,6 +168,8 @@ void CarthageLightArmorRenderer::render(const DrawContext &ctx,
   (void)palette;
 
   const AttachmentFrame &torso = frames.torso;
+  const AttachmentFrame &waist = frames.waist;
+  const AttachmentFrame &head = frames.head;
   if (torso.radius <= 0.0F) {
     return;
   }
@@ -178,23 +180,25 @@ void CarthageLightArmorRenderer::render(const DrawContext &ctx,
   const QVector3D right = torso.right.normalized();
   const QVector3D forward = torso.forward.normalized();
 
-  QMatrix4x4 transform = ctx.model;
-  transform.translate(torso.origin);
+  QVector3D top = torso.origin + up * (torso.radius * 0.45F);
+  if (head.radius > 0.0F) {
+    top = head.origin - head.up.normalized() * (head.radius * 0.55F);
+  }
 
-  QMatrix4x4 orientation;
-  orientation(0, 0) = right.x();
-  orientation(0, 1) = up.x();
-  orientation(0, 2) = forward.x();
-  orientation(1, 0) = right.y();
-  orientation(1, 1) = up.y();
-  orientation(1, 2) = forward.y();
-  orientation(2, 0) = right.z();
-  orientation(2, 1) = up.z();
-  orientation(2, 2) = forward.z();
+  QVector3D bottom = torso.origin - up * (torso.radius * 0.35F);
+  if (waist.radius > 0.0F) {
+    bottom = waist.origin - waist.up.normalized() * (waist.radius * 0.35F);
+  }
 
-  transform = transform * orientation;
-  transform.scale(torso.radius * 1.04F, torso.radius * 1.12F,
-                  torso.radius * 0.98F);
+  QVector3D center = (top + bottom) * 0.5F;
+  float height = (top - bottom).length();
+
+  float torso_radius = torso.radius;
+  float width = torso_radius * 1.28F;
+  float depth = torso_radius * 1.06F;
+
+  QMatrix4x4 transform = createArmorTransform(ctx, center, up, right, forward,
+                                              width, height * 0.5F, depth);
 
   submitter.mesh(getUnitTorso(), transform, linen_color, nullptr, 0.8F);
 }
