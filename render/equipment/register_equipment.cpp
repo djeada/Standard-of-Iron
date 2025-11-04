@@ -3,7 +3,6 @@
 #include "armor/kingdom_armor.h"
 #include "armor/roman_armor.h"
 #include "armor/armor_light.h"
-#include "armor/armor_heavy.h"
 #include "equipment_registry.h"
 #include "helmets/carthage_heavy_helmet.h"
 #include "helmets/carthage_light_helmet.h"
@@ -116,12 +115,6 @@ void registerBuiltInEquipment() {
   registry.registerEquipment(EquipmentCategory::Armor,
                              "carthage_archer_light_armor",
                              carthage_archer_light_armor);
-
-  auto carthage_archer_heavy_armor =
-      std::make_shared<CarthageArcherHeavyArmorRenderer>();
-  registry.registerEquipment(EquipmentCategory::Armor,
-                             "carthage_archer_heavy_armor",
-                             carthage_archer_heavy_armor);
 
   auto sword = std::make_shared<SwordRenderer>();
   registry.registerEquipment(EquipmentCategory::Weapon, "sword", sword);

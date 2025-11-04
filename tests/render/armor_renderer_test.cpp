@@ -3,7 +3,6 @@
 #include "render/equipment/armor/roman_armor.h"
 #include "render/equipment/armor/tunic_renderer.h"
 #include "render/equipment/armor/armor_light.h"
-#include "render/equipment/armor/armor_heavy.h"
 #include "render/equipment/equipment_registry.h"
 #include "render/humanoid/rig.h"
 #include <gtest/gtest.h>
@@ -82,24 +81,14 @@ TEST_F(ArmorRendererTest, CarthageArcherLightArmorRegistered) {
   ASSERT_NE(armor, nullptr);
 }
 
-TEST_F(ArmorRendererTest, CarthageArcherHeavyArmorRegistered) {
-  auto armor =
-      registry->get(EquipmentCategory::Armor, "carthage_archer_heavy_armor");
-  ASSERT_NE(armor, nullptr);
-}
-
 TEST_F(ArmorRendererTest, CarthageArcherArmorDistinctFromStandardArmor) {
   auto standard_light =
       registry->get(EquipmentCategory::Armor, "carthage_light_armor");
   auto archer_light =
       registry->get(EquipmentCategory::Armor, "carthage_archer_light_armor");
-  auto archer_heavy =
-      registry->get(EquipmentCategory::Armor, "carthage_archer_heavy_armor");
 
   ASSERT_NE(standard_light, nullptr);
   ASSERT_NE(archer_light, nullptr);
-  ASSERT_NE(archer_heavy, nullptr);
 
   EXPECT_NE(standard_light, archer_light);
-  EXPECT_NE(archer_light, archer_heavy);
 }
