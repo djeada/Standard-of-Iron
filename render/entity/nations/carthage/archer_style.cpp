@@ -27,7 +27,7 @@ void register_carthage_archer_style() {
   style.fletching_color = k_carthage_fletch;
   style.bow_string_color = k_carthage_string;
   style.show_helmet = true;
-  style.show_armor = true;
+  style.show_armor = false;
   style.show_shoulder_decor = false;
   style.show_cape = false;
   style.force_beard = true;

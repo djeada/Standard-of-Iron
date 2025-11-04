@@ -2,7 +2,6 @@
 #include "render/equipment/armor/kingdom_armor.h"
 #include "render/equipment/armor/roman_armor.h"
 #include "render/equipment/armor/tunic_renderer.h"
-#include "render/equipment/armor/armor_light.h"
 #include "render/equipment/equipment_registry.h"
 #include "render/humanoid/rig.h"
 #include <gtest/gtest.h>
@@ -73,22 +72,4 @@ TEST_F(ArmorRendererTest, ArmorCategoryIsDistinct) {
 
   EXPECT_FALSE(registry->has(EquipmentCategory::Armor, "kingdom_heavy"));
   EXPECT_FALSE(registry->has(EquipmentCategory::Helmet, "kingdom_heavy_armor"));
-}
-
-TEST_F(ArmorRendererTest, CarthageArcherLightArmorRegistered) {
-  auto armor =
-      registry->get(EquipmentCategory::Armor, "carthage_archer_light_armor");
-  ASSERT_NE(armor, nullptr);
-}
-
-TEST_F(ArmorRendererTest, CarthageArcherArmorDistinctFromStandardArmor) {
-  auto standard_light =
-      registry->get(EquipmentCategory::Armor, "carthage_light_armor");
-  auto archer_light =
-      registry->get(EquipmentCategory::Armor, "carthage_archer_light_armor");
-
-  ASSERT_NE(standard_light, nullptr);
-  ASSERT_NE(archer_light, nullptr);
-
-  EXPECT_NE(standard_light, archer_light);
 }

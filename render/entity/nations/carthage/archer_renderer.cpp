@@ -322,7 +322,7 @@ public:
     if (resolve_style(ctx).show_armor) {
       auto &registry = EquipmentRegistry::instance();
       auto armor =
-          registry.get(EquipmentCategory::Armor, "carthage_archer_light_armor");
+          registry.get(EquipmentCategory::Armor, "carthage_light_armor");
       if (armor) {
         armor->render(ctx, pose.bodyFrames, v.palette, anim, out);
       }
