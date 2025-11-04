@@ -36,7 +36,7 @@ void main() {
 
   vec4 modelPos = u_model * vec4(a_position, 1.0);
   vec3 worldPos = modelPos.xyz;
-  vec3 offsetPos = worldPos + worldNormal * 0.012;
+  vec3 offsetPos = worldPos + worldNormal * 0.008;
 
   gl_Position = u_mvp * vec4(offsetPos, 1.0);
 
@@ -49,9 +49,9 @@ void main() {
 
   float height = offsetPos.y;
   float layer = 2.0;
-  if (height > 1.32) {
+  if (height > 1.28) {
     layer = 0.0;
-  } else if (height > 0.88) {
+  } else if (height > 0.86) {
     layer = 1.0;
   }
   v_armorLayer = layer;
