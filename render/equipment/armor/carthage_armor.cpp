@@ -180,9 +180,9 @@ void CarthageLightArmorRenderer::render(const DrawContext &ctx,
   const QVector3D right = torso.right.normalized();
   const QVector3D forward = torso.forward.normalized();
 
-  QVector3D top = torso.origin + up * (torso.radius * 0.45F);
+  QVector3D top = torso.origin + up * (torso.radius * 0.20F);
   if (head.radius > 0.0F) {
-    top = head.origin - head.up.normalized() * (head.radius * 0.55F);
+    top = head.origin - head.up.normalized() * (head.radius * 0.40F);
   }
 
   QVector3D bottom = torso.origin - up * (torso.radius * 0.35F);
@@ -194,8 +194,8 @@ void CarthageLightArmorRenderer::render(const DrawContext &ctx,
   float height = (top - bottom).length();
 
   float torso_radius = torso.radius;
-  float width = torso_radius * 1.28F;
-  float depth = torso_radius * 1.06F;
+  float width = torso_radius * 1.12F;
+  float depth = torso_radius * 1.04F;
 
   QMatrix4x4 transform = createArmorTransform(ctx, center, up, right, forward,
                                               width, height * 0.5F, depth);
