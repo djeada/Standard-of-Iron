@@ -8,25 +8,54 @@ uniform mat4 u_mvp;
 uniform mat4 u_model;
 
 out vec3 v_normal;
+out vec3 v_worldNormal;
+out vec3 v_tangent;
+out vec3 v_bitangent;
 out vec2 v_texCoord;
 out vec3 v_worldPos;
-out float
-    v_armorLayer; // NEW: Distinguish armor pieces for Carthaginian light armor
+out float v_armorLayer;
+out float v_leatherTension;
+
+float hash13(vec3 p) {
+  return fract(sin(dot(p, vec3(12.9898, 78.233, 37.719))) * 43758.5453);
+}
+
+vec3 fallbackUp(vec3 normal) {
+  return (abs(normal.y) > 0.92) ? vec3(0.0, 0.0, 1.0) : vec3(0.0, 1.0, 0.0);
+}
 
 void main() {
-  v_normal = mat3(transpose(inverse(u_model))) * a_normal;
-  v_texCoord = a_texCoord;
-  v_worldPos = vec3(u_model * vec4(a_position, 1.0));
+  mat3 normalMatrix = mat3(transpose(inverse(u_model)));
+  vec3 worldNormal = normalize(normalMatrix * a_normal);
 
-  // Detect armor layer based on Y position for lighter Carthaginian equipment
-  // Upper body (helmet/head) = 0, Torso = 1, Lower = 2
-  if (v_worldPos.y > 1.5) {
-    v_armorLayer = 0.0; // Leather cap/light helmet region
-  } else if (v_worldPos.y > 0.8) {
-    v_armorLayer = 1.0; // Linothorax (linen) torso region
-  } else {
-    v_armorLayer = 2.0; // Leather skirt/pteruges region
+  vec3 tangentAxis = normalize(cross(fallbackUp(worldNormal), worldNormal));
+  if (length(tangentAxis) < 1e-4) {
+    tangentAxis = vec3(1.0, 0.0, 0.0);
   }
+  vec3 bitangentAxis = normalize(cross(worldNormal, tangentAxis));
 
-  gl_Position = u_mvp * vec4(a_position, 1.0);
+  vec4 modelPos = u_model * vec4(a_position, 1.0);
+  vec3 worldPos = modelPos.xyz;
+  vec3 offsetPos = worldPos + worldNormal * 0.04;
+
+  gl_Position = u_mvp * vec4(offsetPos, 1.0);
+
+  v_worldPos = offsetPos;
+  v_texCoord = a_texCoord;
+  v_normal = worldNormal;
+  v_worldNormal = worldNormal;
+  v_tangent = tangentAxis;
+  v_bitangent = bitangentAxis;
+
+  float height = offsetPos.y;
+  float layer = 2.0;
+  if (height > 1.35) {
+    layer = 0.0;
+  } else if (height > 0.9) {
+    layer = 1.0;
+  }
+  v_armorLayer = layer;
+
+  float tensionSeed = hash13(offsetPos * 0.35 + worldNormal);
+  v_leatherTension = mix(tensionSeed, 1.0 - tensionSeed, layer * 0.33);
 }
