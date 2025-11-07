@@ -20,15 +20,15 @@ void main() {
   v_worldPos = worldPos.xyz;
   v_normal = normalize(u_normalMatrix * a_normal);
   v_texCoord = a_texCoord;
-  
+
   // Camera at approximate position for view direction
   vec3 cameraPos = vec3(0.0, 1.5, 5.0);
   v_viewDir = normalize(cameraPos - v_worldPos);
-  
+
   // Material properties based on position
   // Bronze helmet: high metallic, medium roughness
   if (v_worldPos.y > 1.6) {
-    v_metallic = 0.85; // Bronze
+    v_metallic = 0.85;  // Bronze
     v_roughness = 0.35; // Polished but weathered
   } else if (v_worldPos.y > 1.5) {
     v_metallic = 0.75; // Crest mount
@@ -37,6 +37,6 @@ void main() {
     v_metallic = 0.65; // Cheek guards
     v_roughness = 0.5;
   }
-  
+
   gl_Position = u_mvp * vec4(a_position, 1.0);
 }

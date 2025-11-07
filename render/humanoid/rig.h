@@ -208,12 +208,15 @@ public:
     return {1.0F, 1.0F, 1.0F};
   }
 
+  virtual void adjust_variation(const DrawContext &, uint32_t,
+                                VariationParams &) const {}
+
   virtual void get_variant(const DrawContext &ctx, uint32_t seed,
-                          HumanoidVariant &v) const;
+                           HumanoidVariant &v) const;
 
   virtual void customize_pose(const DrawContext &ctx,
-                             const HumanoidAnimationContext &anim_ctx,
-                             uint32_t seed, HumanoidPose &ioPose) const;
+                              const HumanoidAnimationContext &anim_ctx,
+                              uint32_t seed, HumanoidPose &ioPose) const;
 
   virtual void addAttachments(const DrawContext &ctx, const HumanoidVariant &v,
                               const HumanoidPose &pose,
@@ -221,12 +224,12 @@ public:
                               ISubmitter &out) const;
 
   virtual void draw_helmet(const DrawContext &ctx, const HumanoidVariant &v,
-                          const HumanoidPose &pose, ISubmitter &out) const;
+                           const HumanoidPose &pose, ISubmitter &out) const;
 
   virtual void draw_armor(const DrawContext &ctx, const HumanoidVariant &v,
-                         const HumanoidPose &pose,
-                         const HumanoidAnimationContext &anim,
-                         ISubmitter &out) const;
+                          const HumanoidPose &pose,
+                          const HumanoidAnimationContext &anim,
+                          ISubmitter &out) const;
 
   virtual void draw_armorOverlay(const DrawContext &ctx,
                                  const HumanoidVariant &v,

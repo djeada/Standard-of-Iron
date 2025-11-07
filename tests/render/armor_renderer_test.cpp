@@ -1,4 +1,5 @@
-#include "render/equipment/armor/carthage_armor.h"
+#include "render/equipment/armor/armor_heavy_carthage.h"
+#include "render/equipment/armor/armor_light_carthage.h"
 #include "render/equipment/armor/kingdom_armor.h"
 #include "render/equipment/armor/roman_armor.h"
 #include "render/equipment/armor/tunic_renderer.h"
@@ -40,14 +41,29 @@ TEST_F(ArmorRendererTest, RomanLightArmorRegistered) {
   ASSERT_NE(armor, nullptr);
 }
 
-TEST_F(ArmorRendererTest, CarthageHeavyArmorRegistered) {
-  auto armor = registry->get(EquipmentCategory::Armor, "carthage_heavy_armor");
+// Test new separate Carthaginian archer armor files
+TEST_F(ArmorRendererTest, ArmorLightCarthageRegistered) {
+  auto armor = registry->get(EquipmentCategory::Armor, "armor_light_carthage");
   ASSERT_NE(armor, nullptr);
 }
 
-TEST_F(ArmorRendererTest, CarthageLightArmorRegistered) {
-  auto armor = registry->get(EquipmentCategory::Armor, "carthage_light_armor");
+TEST_F(ArmorRendererTest, ArmorHeavyCarthageRegistered) {
+  auto armor = registry->get(EquipmentCategory::Armor, "armor_heavy_carthage");
   ASSERT_NE(armor, nullptr);
+}
+
+// Verify both new armor variants share the same helmet
+TEST_F(ArmorRendererTest, CarthageArcherArmorSharesHelmet) {
+  auto light_armor =
+      registry->get(EquipmentCategory::Armor, "armor_light_carthage");
+  auto heavy_armor =
+      registry->get(EquipmentCategory::Armor, "armor_heavy_carthage");
+  auto shared_helmet =
+      registry->get(EquipmentCategory::Helmet, "carthage_light");
+
+  ASSERT_NE(light_armor, nullptr);
+  ASSERT_NE(heavy_armor, nullptr);
+  ASSERT_NE(shared_helmet, nullptr);
 }
 
 TEST_F(ArmorRendererTest, TunicRendererCreation) {

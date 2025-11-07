@@ -40,7 +40,12 @@ void TunicRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
       saturate_color(palette.metal * QVector3D(1.3F, 1.1F, 0.7F));
 
   using HP = HumanProportions;
-  float const y_top = HP::SHOULDER_Y + 0.02F;
+  auto torsoY = [&](float spec_y) {
+    float const delta = spec_y - HP::SHOULDER_Y;
+    return torso.origin.y() + delta;
+  };
+
+  float const y_top = torsoY(HP::SHOULDER_Y + 0.02F);
 
   renderTorsoArmor(ctx, torso, steel_color, brass_color, submitter);
 
@@ -70,10 +75,15 @@ void TunicRenderer::renderTorsoArmor(const DrawContext &ctx,
   const QVector3D &forward = torso.forward;
   float const torso_r = torso.radius * m_config.torso_scale;
 
-  float const y_top = HP::SHOULDER_Y + 0.02F;
-  float const y_mid_chest = (HP::SHOULDER_Y + HP::CHEST_Y) * 0.5F;
-  float const y_bottom_chest = HP::CHEST_Y;
-  float const y_waist = HP::WAIST_Y + 0.06F;
+  auto mapTorsoY = [&](float spec_y) {
+    float const delta = spec_y - HP::SHOULDER_Y;
+    return origin.y() + delta;
+  };
+
+  float const y_top = mapTorsoY(HP::SHOULDER_Y + 0.02F);
+  float const y_mid_chest = mapTorsoY((HP::SHOULDER_Y + HP::CHEST_Y) * 0.5F);
+  float const y_bottom_chest = mapTorsoY(HP::CHEST_Y);
+  float const y_waist = mapTorsoY(HP::WAIST_Y + 0.06F);
 
   float const shoulder_width = torso_r * m_config.shoulder_width_scale;
   float const chest_width = torso_r * 1.15F;
@@ -258,25 +268,28 @@ void TunicRenderer::renderBelt(const DrawContext &ctx,
   using HP = HumanProportions;
 
   float const waist_r = waist.radius * m_config.waist_taper;
+  auto waistY = [&](float spec_y) {
+    float const delta = spec_y - HP::WAIST_Y;
+    return waist.origin.y() + delta;
+  };
 
-  for (int i = 0; i < 4; ++i) {
-    float const y0 = HP::WAIST_Y + 0.04F - static_cast<float>(i) * 0.038F;
-    float const y1 = y0 - 0.032F;
-    float const r0 = waist_r * (1.06F + static_cast<float>(i) * 0.025F);
+  float const y_center = waistY(HP::WAIST_Y + 0.02F);
+  QVector3D const belt_top(waist.origin.x(), y_center + 0.02F,
+                           waist.origin.z());
+  QVector3D const belt_bot(waist.origin.x(), y_center - 0.02F,
+                           waist.origin.z());
 
-    submitter.mesh(
-        getUnitCone(),
-        coneFromTo(ctx.model, QVector3D(waist.origin.x(), y0, waist.origin.z()),
-                   QVector3D(waist.origin.x(), y1, waist.origin.z()), r0),
-        steel_color * (0.96F - static_cast<float>(i) * 0.02F), nullptr, 1.0F);
+  submitter.mesh(
+      getUnitCylinder(),
+      cylinderBetween(ctx.model, belt_bot, belt_top, waist_r * 1.08F),
+      steel_color * 0.94F, nullptr, 1.0F);
 
-    if (i < 3) {
-      QMatrix4x4 m = ctx.model;
-      m.translate(QVector3D(r0 * 0.90F, y0 - 0.016F, 0));
-      m.scale(0.012F);
-      submitter.mesh(getUnitSphere(), m, brass_color, nullptr, 1.0F);
-    }
-  }
+  QVector3D const trim_top = belt_top + QVector3D(0, 0.005F, 0);
+  QVector3D const trim_bot = belt_bot - QVector3D(0, 0.005F, 0);
+  submitter.mesh(
+      getUnitCylinder(),
+      cylinderBetween(ctx.model, trim_bot, trim_top, waist_r * 1.12F),
+      brass_color * 0.95F, nullptr, 1.0F);
 }
 
 } // namespace Render::GL

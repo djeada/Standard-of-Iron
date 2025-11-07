@@ -106,7 +106,7 @@ private:
 
 public:
   void get_variant(const DrawContext &ctx, uint32_t seed,
-                  HumanoidVariant &v) const override {
+                   HumanoidVariant &v) const override {
     QVector3D const team_tint = resolveTeamTint(ctx);
     v.palette = makeHumanoidPalette(team_tint, seed);
     auto const &style = resolve_style(ctx);
@@ -114,8 +114,8 @@ public:
   }
 
   void customize_pose(const DrawContext &,
-                     const HumanoidAnimationContext &anim_ctx, uint32_t seed,
-                     HumanoidPose &pose) const override {
+                      const HumanoidAnimationContext &anim_ctx, uint32_t seed,
+                      HumanoidPose &pose) const override {
     using HP = HumanProportions;
 
     const AnimationInputs &anim = anim_ctx.inputs;
@@ -212,10 +212,10 @@ public:
   }
 
   void draw_helmet(const DrawContext &ctx, const HumanoidVariant &v,
-                  const HumanoidPose &pose, ISubmitter &out) const override {
+                   const HumanoidPose &pose, ISubmitter &out) const override {
 
     auto &registry = EquipmentRegistry::instance();
-    auto helmet = registry.get(EquipmentCategory::Helmet, "montefortino");
+    auto helmet = registry.get(EquipmentCategory::Helmet, "carthage_heavy");
     if (helmet) {
       HumanoidAnimationContext anim_ctx{};
       helmet->render(ctx, pose.bodyFrames, v.palette, anim_ctx, out);
@@ -223,10 +223,11 @@ public:
   }
 
   void draw_armor(const DrawContext &ctx, const HumanoidVariant &v,
-                 const HumanoidPose &pose, const HumanoidAnimationContext &anim,
-                 ISubmitter &out) const override {
+                  const HumanoidPose &pose,
+                  const HumanoidAnimationContext &anim,
+                  ISubmitter &out) const override {
     auto &registry = EquipmentRegistry::instance();
-    auto armor = registry.get(EquipmentCategory::Armor, "carthage_heavy_armor");
+    auto armor = registry.get(EquipmentCategory::Armor, "armor_heavy_carthage");
     if (armor) {
       armor->render(ctx, pose.bodyFrames, v.palette, anim, out);
     }
@@ -284,12 +285,6 @@ private:
              coneFromTo(ctx.model, tip, tip + QVector3D(-0.02F, -0.02F, -0.02F),
                         sheath_r),
              extras.metalColor, nullptr, 1.0F);
-
-    QVector3D const strap_a = hip + QVector3D(0.00F, 0.03F, 0.00F);
-    QVector3D const belt = QVector3D(0.12F, HP::WAIST_Y + 0.01F, 0.02F);
-    out.mesh(getUnitCylinder(),
-             cylinderBetween(ctx.model, strap_a, belt, 0.006F),
-             v.palette.leather, nullptr, 1.0F);
   }
 
   auto
