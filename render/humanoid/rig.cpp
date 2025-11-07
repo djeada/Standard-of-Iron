@@ -700,6 +700,11 @@ void HumanoidRendererBase::drawCommonBody(const DrawContext &ctx,
     foot_mat.scale(1.35F, 0.38F, 1.0F);
     out.mesh(getUnitCapsule(), foot_mat, v.palette.leatherDark * 0.92F, nullptr,
              1.0F);
+
+    QVector3D heel_back = heel - foot_forward * (sole_radius * 0.25F);
+    heel_back.setY(sole_y + heel_lift * 0.7F);
+    out.mesh(getUnitSphere(), sphereAt(ctx.model, heel_back, sole_radius * 0.85F),
+             v.palette.leatherDark * 0.88F, nullptr, 1.0F);
   };
 
   draw_foot(pose.footL, true);
