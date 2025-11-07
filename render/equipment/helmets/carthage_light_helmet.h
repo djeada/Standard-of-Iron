@@ -15,7 +15,7 @@ struct CarthageLightHelmetConfig {
   float cheek_guard_length = 0.12F;
   bool has_crest = true;
   bool has_nasal_guard = true;
-  int detail_level = 2; // 0=low, 1=medium, 2=high
+  int detail_level = 2;
 };
 
 class CarthageLightHelmetRenderer : public IEquipmentRenderer {
@@ -33,17 +33,17 @@ private:
   CarthageLightHelmetConfig m_config;
 
   void render_bowl(const DrawContext &ctx, const AttachmentFrame &head,
-                  ISubmitter &submitter);
-  void render_brim(const DrawContext &ctx, const AttachmentFrame &head,
-                  ISubmitter &submitter);
-  void render_cheek_guards(const DrawContext &ctx, const AttachmentFrame &head,
-                         ISubmitter &submitter);
-  void render_nasal_guard(const DrawContext &ctx, const AttachmentFrame &head,
-                        ISubmitter &submitter);
-  void render_crest(const DrawContext &ctx, const AttachmentFrame &head,
                    ISubmitter &submitter);
-  void render_rivets(const DrawContext &ctx, const AttachmentFrame &head,
+  void render_brim(const DrawContext &ctx, const AttachmentFrame &head,
+                   ISubmitter &submitter);
+  void render_cheek_guards(const DrawContext &ctx, const AttachmentFrame &head,
+                           ISubmitter &submitter);
+  void render_nasal_guard(const DrawContext &ctx, const AttachmentFrame &head,
+                          ISubmitter &submitter);
+  void render_crest(const DrawContext &ctx, const AttachmentFrame &head,
                     ISubmitter &submitter);
+  void render_rivets(const DrawContext &ctx, const AttachmentFrame &head,
+                     ISubmitter &submitter);
 };
 
 } // namespace Render::GL

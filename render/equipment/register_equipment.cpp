@@ -1,4 +1,5 @@
-#include "armor/carthage_armor.h"
+#include "armor/armor_heavy_carthage.h"
+#include "armor/armor_light_carthage.h"
 #include "armor/chainmail_armor.h"
 #include "armor/kingdom_armor.h"
 #include "armor/roman_armor.h"
@@ -8,6 +9,7 @@
 #include "helmets/headwrap.h"
 #include "helmets/kingdom_heavy_helmet.h"
 #include "helmets/kingdom_light_helmet.h"
+#include "helmets/montefortino_helmet.h"
 #include "helmets/roman_heavy_helmet.h"
 #include "helmets/roman_light_helmet.h"
 #include "weapons/bow_renderer.h"
@@ -56,7 +58,6 @@ void registerBuiltInEquipment() {
   registry.registerEquipment(EquipmentCategory::Weapon, "roman_scutum",
                              roman_scutum);
 
-  // CARTHAGE HELMETS: Simple bronze bowl (heavy) or leather cap (light)
   auto carthage_heavy_helmet = std::make_shared<CarthageHeavyHelmetRenderer>();
   registry.registerEquipment(EquipmentCategory::Helmet, "carthage_heavy",
                              carthage_heavy_helmet);
@@ -67,6 +68,10 @@ void registerBuiltInEquipment() {
 
   auto headwrap = std::make_shared<HeadwrapRenderer>();
   registry.registerEquipment(EquipmentCategory::Helmet, "headwrap", headwrap);
+
+  auto montefortino = std::make_shared<MontefortinoHelmetRenderer>();
+  registry.registerEquipment(EquipmentCategory::Helmet, "montefortino",
+                             montefortino);
 
   auto roman_heavy = std::make_shared<RomanHeavyHelmetRenderer>();
   registry.registerEquipment(EquipmentCategory::Helmet, "roman_heavy",
@@ -100,14 +105,13 @@ void registerBuiltInEquipment() {
   registry.registerEquipment(EquipmentCategory::Armor, "roman_light_armor",
                              roman_light_armor);
 
-  // CARTHAGE ARMOR: Heavy=steel chainmail, Light=linen linothorax
-  auto carthage_heavy_armor = std::make_shared<CarthageHeavyArmorRenderer>();
-  registry.registerEquipment(EquipmentCategory::Armor, "carthage_heavy_armor",
-                             carthage_heavy_armor);
+  auto armor_light_carthage = std::make_shared<ArmorLightCarthageRenderer>();
+  registry.registerEquipment(EquipmentCategory::Armor, "armor_light_carthage",
+                             armor_light_carthage);
 
-  auto carthage_light_armor = std::make_shared<CarthageLightArmorRenderer>();
-  registry.registerEquipment(EquipmentCategory::Armor, "carthage_light_armor",
-                             carthage_light_armor);
+  auto armor_heavy_carthage = std::make_shared<ArmorHeavyCarthageRenderer>();
+  registry.registerEquipment(EquipmentCategory::Armor, "armor_heavy_carthage",
+                             armor_heavy_carthage);
 
   auto sword = std::make_shared<SwordRenderer>();
   registry.registerEquipment(EquipmentCategory::Weapon, "sword", sword);

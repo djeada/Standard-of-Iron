@@ -83,11 +83,19 @@ class ArcherRenderer : public HumanoidRendererBase {
 public:
   auto get_proportion_scaling() const -> QVector3D override {
 
-    return {1.15F, 1.02F, 0.75F};
+    return {0.82F, 1.08F, 0.82F};
+  }
+
+  void adjust_variation(const DrawContext &, uint32_t,
+                        VariationParams &variation) const override {
+    variation.height_scale *= 1.06F;
+    variation.bulkScale *= 0.72F;
+    variation.stanceWidth *= 0.80F;
+    variation.armSwingAmp *= 0.92F;
   }
 
   void get_variant(const DrawContext &ctx, uint32_t seed,
-                  HumanoidVariant &v) const override {
+                   HumanoidVariant &v) const override {
     QVector3D const team_tint = resolveTeamTint(ctx);
     v.palette = makeHumanoidPalette(team_tint, seed);
     auto const &style = resolve_style(ctx);
@@ -162,8 +170,8 @@ public:
   }
 
   void customize_pose(const DrawContext &,
-                     const HumanoidAnimationContext &anim_ctx, uint32_t seed,
-                     HumanoidPose &pose) const override {
+                      const HumanoidAnimationContext &anim_ctx, uint32_t seed,
+                      HumanoidPose &pose) const override {
     using HP = HumanProportions;
 
     const AnimationInputs &anim = anim_ctx.inputs;
@@ -292,7 +300,7 @@ public:
   }
 
   void draw_helmet(const DrawContext &ctx, const HumanoidVariant &v,
-                  const HumanoidPose &pose, ISubmitter &out) const override {
+                   const HumanoidPose &pose, ISubmitter &out) const override {
     using HP = HumanProportions;
 
     auto const &style = resolve_style(ctx);
@@ -317,12 +325,17 @@ public:
   }
 
   void draw_armor(const DrawContext &ctx, const HumanoidVariant &v,
-                 const HumanoidPose &pose, const HumanoidAnimationContext &anim,
-                 ISubmitter &out) const override {
+                  const HumanoidPose &pose,
+                  const HumanoidAnimationContext &anim,
+                  ISubmitter &out) const override {
     if (resolve_style(ctx).show_armor) {
       auto &registry = EquipmentRegistry::instance();
-      auto armor =
-          registry.get(EquipmentCategory::Armor, "carthage_light_armor");
+      auto const &style = resolve_style(ctx);
+
+      std::string armor_key =
+          style.armor_id.empty() ? "armor_light_carthage" : style.armor_id;
+
+      auto armor = registry.get(EquipmentCategory::Armor, armor_key);
       if (armor) {
         armor->render(ctx, pose.bodyFrames, v.palette, anim, out);
       }
@@ -392,6 +405,13 @@ void registerArcherRenderer(Render::GL::EntityRendererRegistry &registry) {
         if (ctx.backend != nullptr) {
           QString shader_key = static_renderer.resolve_shader_key(ctx);
           archer_shader = ctx.backend->shader(shader_key);
+          if ((archer_shader == nullptr) &&
+              shader_key == QStringLiteral("archer_carthage")) {
+            archer_shader = ctx.backend->getOrLoadShader(
+                shader_key,
+                QStringLiteral(":/assets/shaders/archer_carthage.vert"),
+                QStringLiteral(":/assets/shaders/archer_carthage.frag"));
+          }
           if (archer_shader == nullptr) {
             archer_shader = ctx.backend->shader(QStringLiteral("archer"));
           }

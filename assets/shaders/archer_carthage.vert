@@ -15,6 +15,7 @@ out vec2 v_texCoord;
 out vec3 v_worldPos;
 out float v_armorLayer;
 out float v_leatherTension;
+out float v_bodyHeight;
 
 float hash13(vec3 p) {
   return fract(sin(dot(p, vec3(12.9898, 78.233, 37.719))) * 43758.5453);
@@ -28,34 +29,48 @@ void main() {
   mat3 normalMatrix = mat3(transpose(inverse(u_model)));
   vec3 worldNormal = normalize(normalMatrix * a_normal);
 
-  vec3 tangentAxis = normalize(cross(fallbackUp(worldNormal), worldNormal));
-  if (length(tangentAxis) < 1e-4) {
-    tangentAxis = vec3(1.0, 0.0, 0.0);
-  }
-  vec3 bitangentAxis = normalize(cross(worldNormal, tangentAxis));
+  // Build a stable TBN without needing extra attributes
+  vec3 t = normalize(cross(fallbackUp(worldNormal), worldNormal));
+  if (length(t) < 1e-4)
+    t = vec3(1.0, 0.0, 0.0);
+  // Gram–Schmidt to ensure orthonormality
+  t = normalize(t - worldNormal * dot(worldNormal, t));
+  vec3 b = normalize(cross(worldNormal, t));
 
   vec4 modelPos = u_model * vec4(a_position, 1.0);
   vec3 worldPos = modelPos.xyz;
+
+  // Small normal push to avoid self-shadow acne in forward pipelines
   vec3 offsetPos = worldPos + worldNormal * 0.008;
 
-  gl_Position = u_mvp * vec4(offsetPos, 1.0);
+  gl_Position = u_mvp * vec4(a_position, 1.0);
 
   v_worldPos = offsetPos;
   v_texCoord = a_texCoord;
   v_normal = worldNormal;
   v_worldNormal = worldNormal;
-  v_tangent = tangentAxis;
-  v_bitangent = bitangentAxis;
+  v_tangent = t;
+  v_bitangent = b;
 
+  // Layer bands (kept identical thresholds to preserve your gameplay logic)
   float height = offsetPos.y;
   float layer = 2.0;
-  if (height > 1.28) {
+  if (height > 1.28)
     layer = 0.0;
-  } else if (height > 0.86) {
+  else if (height > 0.86)
     layer = 1.0;
-  }
   v_armorLayer = layer;
 
+  // Leather tension: variation + curvature bias + height influence
   float tensionSeed = hash13(offsetPos * 0.35 + worldNormal);
-  v_leatherTension = mix(tensionSeed, 1.0 - tensionSeed, layer * 0.33);
+  float heightFactor = smoothstep(0.5, 1.5, height);
+  float curvatureFactor = length(vec2(worldNormal.x, worldNormal.z));
+  v_leatherTension = mix(tensionSeed, 1.0 - tensionSeed, layer * 0.33) *
+                     (0.7 + curvatureFactor * 0.3) * (0.8 + heightFactor * 0.2);
+
+  // Normalized torso height for gradient effects
+  float torsoMin = 0.58;
+  float torsoMax = 1.36;
+  v_bodyHeight =
+      clamp((offsetPos.y - torsoMin) / (torsoMax - torsoMin), 0.0, 1.0);
 }

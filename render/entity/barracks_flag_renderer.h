@@ -25,7 +25,7 @@ struct FlagColors {
 };
 
 inline void draw_rally_flag_if_any(const DrawContext &p, ISubmitter &out,
-                               Texture *white, const FlagColors &colors) {
+                                   Texture *white, const FlagColors &colors) {
   if (auto *prod =
           p.entity->getComponent<Engine::Core::ProductionComponent>()) {
     if (prod->rallySet && (p.resources != nullptr)) {
@@ -81,9 +81,9 @@ struct CaptureColors {
 };
 
 inline CaptureColors get_capture_colors(const DrawContext &p,
-                                      const QVector3D &baseTeamColor,
-                                      const QVector3D &baseTeamTrim,
-                                      float maxLowering = 0.0F) {
+                                        const QVector3D &baseTeamColor,
+                                        const QVector3D &baseTeamTrim,
+                                        float maxLowering = 0.0F) {
   CaptureColors result{baseTeamColor, baseTeamTrim, 0.0F};
 
   if (p.entity != nullptr) {

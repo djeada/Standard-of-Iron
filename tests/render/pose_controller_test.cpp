@@ -10,20 +10,24 @@ using namespace Render::GL;
 class HumanoidPoseControllerTest : public ::testing::Test {
 protected:
   void SetUp() override {
+    using HP = HumanProportions;
+
     // Initialize a default pose with basic standing configuration
     pose = HumanoidPose{};
-    pose.headPos = QVector3D(0.0F, 1.70F, 0.0F);
-    pose.headR = 0.10F;
-    pose.neck_base = QVector3D(0.0F, 1.49F, 0.0F);
-    pose.shoulderL = QVector3D(-0.21F, 1.45F, 0.0F);
-    pose.shoulderR = QVector3D(0.21F, 1.45F, 0.0F);
-    pose.pelvisPos = QVector3D(0.0F, 0.95F, 0.0F);
-    pose.handL = QVector3D(-0.05F, 1.50F, 0.55F);
-    pose.hand_r = QVector3D(0.15F, 1.60F, 0.20F);
-    pose.elbowL = QVector3D(-0.15F, 1.30F, 0.25F);
-    pose.elbowR = QVector3D(0.25F, 1.35F, 0.10F);
-    pose.knee_l = QVector3D(-0.10F, 0.44F, 0.05F);
-    pose.knee_r = QVector3D(0.10F, 0.44F, -0.05F);
+    float const head_center_y = 0.5F * (HP::HEAD_TOP_Y + HP::CHIN_Y);
+    float const half_shoulder = 0.5F * HP::SHOULDER_WIDTH;
+    pose.headPos = QVector3D(0.0F, head_center_y, 0.0F);
+    pose.headR = HP::HEAD_RADIUS;
+    pose.neck_base = QVector3D(0.0F, HP::NECK_BASE_Y, 0.0F);
+    pose.shoulderL = QVector3D(-half_shoulder, HP::SHOULDER_Y, 0.0F);
+    pose.shoulderR = QVector3D(half_shoulder, HP::SHOULDER_Y, 0.0F);
+    pose.pelvisPos = QVector3D(0.0F, HP::WAIST_Y, 0.0F);
+    pose.handL = QVector3D(-0.05F, HP::SHOULDER_Y + 0.05F, 0.55F);
+    pose.hand_r = QVector3D(0.15F, HP::SHOULDER_Y + 0.15F, 0.20F);
+    pose.elbowL = QVector3D(-0.15F, HP::SHOULDER_Y - 0.15F, 0.25F);
+    pose.elbowR = QVector3D(0.25F, HP::SHOULDER_Y - 0.10F, 0.10F);
+    pose.knee_l = QVector3D(-0.10F, HP::KNEE_Y, 0.05F);
+    pose.knee_r = QVector3D(0.10F, HP::KNEE_Y, -0.05F);
     pose.footL = QVector3D(-0.14F, 0.022F, 0.06F);
     pose.foot_r = QVector3D(0.14F, 0.022F, -0.06F);
     pose.footYOffset = 0.022F;
@@ -52,8 +56,9 @@ protected:
 TEST_F(HumanoidPoseControllerTest, ConstructorInitializesCorrectly) {
   HumanoidPoseController controller(pose, anim_ctx);
   // Constructor should not modify the pose
-  EXPECT_FLOAT_EQ(pose.headPos.y(), 1.70F);
-  EXPECT_FLOAT_EQ(pose.pelvisPos.y(), 0.95F);
+  EXPECT_FLOAT_EQ(pose.headPos.y(), 0.5F * (HumanProportions::HEAD_TOP_Y +
+                                            HumanProportions::CHIN_Y));
+  EXPECT_FLOAT_EQ(pose.pelvisPos.y(), HumanProportions::WAIST_Y);
 }
 
 TEST_F(HumanoidPoseControllerTest, StandIdleDoesNotModifyPose) {

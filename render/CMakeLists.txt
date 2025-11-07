@@ -74,7 +74,8 @@ add_library(render_gl STATIC
     equipment/armor/tunic_renderer.cpp
     equipment/armor/kingdom_armor.cpp
     equipment/armor/roman_armor.cpp
-    equipment/armor/carthage_armor.cpp
+    equipment/armor/armor_light_carthage.cpp
+    equipment/armor/armor_heavy_carthage.cpp
     equipment/weapons/bow_renderer.cpp
     equipment/weapons/quiver_renderer.cpp
     equipment/weapons/roman_scutum.cpp
