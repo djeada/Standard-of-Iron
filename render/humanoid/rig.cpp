@@ -679,24 +679,25 @@ void HumanoidRendererBase::drawCommonBody(const DrawContext &ctx,
   auto draw_foot = [&](const QVector3D &ankle, bool is_left) {
     QVector3D lateral = is_left ? -right_axis : right_axis;
     QVector3D foot_forward =
-        forward_axis + lateral * (is_left ? -0.12F : 0.12F);
+        forward_axis + lateral * (is_left ? -0.14F : 0.14F);
     if (foot_forward.lengthSquared() < 1e-6F) {
       foot_forward = forward_axis;
     }
     foot_forward.normalize();
 
-    float const heel_span = foot_radius * 1.35F;
-    float const toe_span = foot_radius * 3.30F;
-    float const sole_radius = foot_radius;
-    float const sole_y = HP::GROUND_Y + 0.004F;
+    float const heel_span = foot_radius * 1.20F;
+    float const toe_span = foot_radius * 3.50F;
+    float const sole_radius = foot_radius * 0.95F;
+    float const sole_y = HP::GROUND_Y + 0.003F;
+    float const heel_lift = 0.008F;
 
     QVector3D heel = ankle - foot_forward * heel_span;
     QVector3D toe = ankle + foot_forward * toe_span;
-    heel.setY(sole_y);
+    heel.setY(sole_y + heel_lift);
     toe.setY(sole_y);
 
     QMatrix4x4 foot_mat = capsuleBetween(ctx.model, heel, toe, sole_radius);
-    foot_mat.scale(1.30F, 0.42F, 0.95F);
+    foot_mat.scale(1.35F, 0.38F, 1.0F);
     out.mesh(getUnitCapsule(), foot_mat, v.palette.leatherDark * 0.92F, nullptr,
              1.0F);
   };
