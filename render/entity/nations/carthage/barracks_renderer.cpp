@@ -47,8 +47,8 @@ inline auto make_palette(const QVector3D &team) -> CarthagePalette {
 }
 
 inline void draw_box(ISubmitter &out, Mesh *unit, Texture *white,
-                    const QMatrix4x4 &model, const QVector3D &pos,
-                    const QVector3D &size, const QVector3D &color) {
+                     const QMatrix4x4 &model, const QVector3D &pos,
+                     const QVector3D &size, const QVector3D &color) {
   QMatrix4x4 m = model;
   m.translate(pos);
   m.scale(size);
@@ -56,33 +56,33 @@ inline void draw_box(ISubmitter &out, Mesh *unit, Texture *white,
 }
 
 inline void draw_cyl(ISubmitter &out, const QMatrix4x4 &model,
-                    const QVector3D &a, const QVector3D &b, float r,
-                    const QVector3D &color, Texture *white) {
+                     const QVector3D &a, const QVector3D &b, float r,
+                     const QVector3D &color, Texture *white) {
   out.mesh(getUnitCylinder(), model * cylinderBetween(a, b, r), color, white,
            1.0F);
 }
 
 void draw_platform(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                  Texture *white, const CarthagePalette &c) {
+                   Texture *white, const CarthagePalette &c) {
 
   draw_box(out, unit, white, p.model, QVector3D(0.0F, 0.08F, 0.0F),
-          QVector3D(2.0F, 0.08F, 1.8F), c.limestone_dark);
+           QVector3D(2.0F, 0.08F, 1.8F), c.limestone_dark);
 
   draw_box(out, unit, white, p.model, QVector3D(0.0F, 0.18F, 0.0F),
-          QVector3D(1.8F, 0.02F, 1.6F), c.limestone);
+           QVector3D(1.8F, 0.02F, 1.6F), c.limestone);
 
   for (float x = -1.5F; x <= 1.5F; x += 0.35F) {
     for (float z = -1.3F; z <= 1.3F; z += 0.35F) {
       if (fabsf(x) > 0.6F || fabsf(z) > 0.5F) {
         draw_box(out, unit, white, p.model, QVector3D(x, 0.21F, z),
-                QVector3D(0.15F, 0.01F, 0.15F), c.terracotta);
+                 QVector3D(0.15F, 0.01F, 0.15F), c.terracotta);
       }
     }
   }
 }
 
 void draw_colonnade(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                   Texture *white, const CarthagePalette &c) {
+                    Texture *white, const CarthagePalette &c) {
   float const col_height = 1.6F;
   float const col_radius = 0.10F;
 
@@ -91,18 +91,19 @@ void draw_colonnade(const DrawContext &p, ISubmitter &out, Mesh *unit,
     float const z = 1.4F;
 
     draw_box(out, unit, white, p.model, QVector3D(x, 0.25F, z),
-            QVector3D(col_radius * 1.2F, 0.05F, col_radius * 1.2F), c.marble);
+             QVector3D(col_radius * 1.2F, 0.05F, col_radius * 1.2F), c.marble);
 
     draw_cyl(out, p.model, QVector3D(x, 0.2F, z),
-            QVector3D(x, 0.2F + col_height, z), col_radius, c.limestone, white);
+             QVector3D(x, 0.2F + col_height, z), col_radius, c.limestone,
+             white);
 
     draw_box(out, unit, white, p.model,
-            QVector3D(x, 0.2F + col_height + 0.05F, z),
-            QVector3D(col_radius * 1.5F, 0.08F, col_radius * 1.5F), c.marble);
+             QVector3D(x, 0.2F + col_height + 0.05F, z),
+             QVector3D(col_radius * 1.5F, 0.08F, col_radius * 1.5F), c.marble);
 
     draw_box(out, unit, white, p.model,
-            QVector3D(x, 0.2F + col_height + 0.12F, z),
-            QVector3D(col_radius * 1.3F, 0.04F, col_radius * 1.3F), c.gold);
+             QVector3D(x, 0.2F + col_height + 0.12F, z),
+             QVector3D(col_radius * 1.3F, 0.04F, col_radius * 1.3F), c.gold);
   }
 
   for (int i = 0; i < 3; ++i) {
@@ -110,107 +111,107 @@ void draw_colonnade(const DrawContext &p, ISubmitter &out, Mesh *unit,
 
     float const x_left = -1.6F;
     draw_box(out, unit, white, p.model, QVector3D(x_left, 0.25F, z),
-            QVector3D(col_radius * 1.2F, 0.05F, col_radius * 1.2F), c.marble);
+             QVector3D(col_radius * 1.2F, 0.05F, col_radius * 1.2F), c.marble);
     draw_cyl(out, p.model, QVector3D(x_left, 0.2F, z),
-            QVector3D(x_left, 0.2F + col_height, z), col_radius, c.limestone,
-            white);
+             QVector3D(x_left, 0.2F + col_height, z), col_radius, c.limestone,
+             white);
     draw_box(out, unit, white, p.model,
-            QVector3D(x_left, 0.2F + col_height + 0.05F, z),
-            QVector3D(col_radius * 1.5F, 0.08F, col_radius * 1.5F), c.marble);
+             QVector3D(x_left, 0.2F + col_height + 0.05F, z),
+             QVector3D(col_radius * 1.5F, 0.08F, col_radius * 1.5F), c.marble);
 
     float const x_right = 1.6F;
     draw_box(out, unit, white, p.model, QVector3D(x_right, 0.25F, z),
-            QVector3D(col_radius * 1.2F, 0.05F, col_radius * 1.2F), c.marble);
+             QVector3D(col_radius * 1.2F, 0.05F, col_radius * 1.2F), c.marble);
     draw_cyl(out, p.model, QVector3D(x_right, 0.2F, z),
-            QVector3D(x_right, 0.2F + col_height, z), col_radius, c.limestone,
-            white);
+             QVector3D(x_right, 0.2F + col_height, z), col_radius, c.limestone,
+             white);
     draw_box(out, unit, white, p.model,
-            QVector3D(x_right, 0.2F + col_height + 0.05F, z),
-            QVector3D(col_radius * 1.5F, 0.08F, col_radius * 1.5F), c.marble);
+             QVector3D(x_right, 0.2F + col_height + 0.05F, z),
+             QVector3D(col_radius * 1.5F, 0.08F, col_radius * 1.5F), c.marble);
   }
 }
 
 void draw_central_courtyard(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                          Texture *white, const CarthagePalette &c) {
+                            Texture *white, const CarthagePalette &c) {
 
   draw_box(out, unit, white, p.model, QVector3D(0.0F, 0.22F, 0.0F),
-          QVector3D(1.3F, 0.01F, 1.1F), c.limestone_shade);
+           QVector3D(1.3F, 0.01F, 1.1F), c.limestone_shade);
 
   draw_box(out, unit, white, p.model, QVector3D(0.0F, 0.24F, 0.0F),
-          QVector3D(0.7F, 0.02F, 0.5F), c.blue_light);
+           QVector3D(0.7F, 0.02F, 0.5F), c.blue_light);
 
   draw_box(out, unit, white, p.model, QVector3D(0.0F, 0.25F, -0.52F),
-          QVector3D(0.72F, 0.02F, 0.02F), c.blue_accent);
+           QVector3D(0.72F, 0.02F, 0.02F), c.blue_accent);
   draw_box(out, unit, white, p.model, QVector3D(0.0F, 0.25F, 0.52F),
-          QVector3D(0.72F, 0.02F, 0.02F), c.blue_accent);
+           QVector3D(0.72F, 0.02F, 0.02F), c.blue_accent);
 
   draw_cyl(out, p.model, QVector3D(0.0F, 0.25F, 0.0F),
-          QVector3D(0.0F, 0.55F, 0.0F), 0.06F, c.marble, white);
+           QVector3D(0.0F, 0.55F, 0.0F), 0.06F, c.marble, white);
   draw_box(out, unit, white, p.model, QVector3D(0.0F, 0.58F, 0.0F),
-          QVector3D(0.08F, 0.03F, 0.08F), c.blue_accent);
+           QVector3D(0.08F, 0.03F, 0.08F), c.blue_accent);
 }
 
 void draw_chamber(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                 Texture *white, const CarthagePalette &c) {
+                  Texture *white, const CarthagePalette &c) {
   float const wall_h = 1.4F;
 
   draw_box(out, unit, white, p.model,
-          QVector3D(0.0F, wall_h * 0.5F + 0.2F, -1.2F),
-          QVector3D(1.4F, wall_h * 0.5F, 0.1F), c.limestone);
+           QVector3D(0.0F, wall_h * 0.5F + 0.2F, -1.2F),
+           QVector3D(1.4F, wall_h * 0.5F, 0.1F), c.limestone);
 
   draw_box(out, unit, white, p.model,
-          QVector3D(-1.5F, wall_h * 0.5F + 0.2F, -0.5F),
-          QVector3D(0.1F, wall_h * 0.5F, 0.6F), c.limestone);
+           QVector3D(-1.5F, wall_h * 0.5F + 0.2F, -0.5F),
+           QVector3D(0.1F, wall_h * 0.5F, 0.6F), c.limestone);
   draw_box(out, unit, white, p.model,
-          QVector3D(1.5F, wall_h * 0.5F + 0.2F, -0.5F),
-          QVector3D(0.1F, wall_h * 0.5F, 0.6F), c.limestone);
+           QVector3D(1.5F, wall_h * 0.5F + 0.2F, -0.5F),
+           QVector3D(0.1F, wall_h * 0.5F, 0.6F), c.limestone);
 
   draw_box(out, unit, white, p.model, QVector3D(-0.6F, 0.65F, -1.15F),
-          QVector3D(0.25F, 0.35F, 0.03F), c.cedar_dark);
+           QVector3D(0.25F, 0.35F, 0.03F), c.cedar_dark);
   draw_box(out, unit, white, p.model, QVector3D(-0.6F, 0.98F, -1.15F),
-          QVector3D(0.25F, 0.05F, 0.03F), c.blue_accent);
+           QVector3D(0.25F, 0.05F, 0.03F), c.blue_accent);
 
   draw_box(out, unit, white, p.model, QVector3D(0.6F, 0.65F, -1.15F),
-          QVector3D(0.25F, 0.35F, 0.03F), c.cedar_dark);
+           QVector3D(0.25F, 0.35F, 0.03F), c.cedar_dark);
   draw_box(out, unit, white, p.model, QVector3D(0.6F, 0.98F, -1.15F),
-          QVector3D(0.25F, 0.05F, 0.03F), c.blue_accent);
+           QVector3D(0.25F, 0.05F, 0.03F), c.blue_accent);
 }
 
 void draw_terrace(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                 Texture *white, const CarthagePalette &c) {
+                  Texture *white, const CarthagePalette &c) {
 
   draw_box(out, unit, white, p.model, QVector3D(0.0F, 2.05F, 0.0F),
-          QVector3D(1.7F, 0.08F, 1.5F), c.marble);
+           QVector3D(1.7F, 0.08F, 1.5F), c.marble);
 
   draw_box(out, unit, white, p.model, QVector3D(0.0F, 2.12F, 1.45F),
-          QVector3D(1.65F, 0.05F, 0.05F), c.gold);
+           QVector3D(1.65F, 0.05F, 0.05F), c.gold);
 
   draw_box(out, unit, white, p.model, QVector3D(0.0F, 2.18F, -0.2F),
-          QVector3D(1.5F, 0.04F, 1.0F), c.terracotta);
+           QVector3D(1.5F, 0.04F, 1.0F), c.terracotta);
 
   draw_box(out, unit, white, p.model, QVector3D(0.0F, 2.28F, -0.65F),
-          QVector3D(1.45F, 0.06F, 0.05F), c.limestone);
+           QVector3D(1.45F, 0.06F, 0.05F), c.limestone);
 
   for (float x : {-1.4F, 1.4F}) {
     draw_box(out, unit, white, p.model, QVector3D(x, 2.35F, -0.65F),
-            QVector3D(0.08F, 0.08F, 0.08F), c.gold);
+             QVector3D(0.08F, 0.08F, 0.08F), c.gold);
   }
 }
 
 void draw_trading_goods(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                      Texture *white, const CarthagePalette &c) {
+                        Texture *white, const CarthagePalette &c) {
 
   draw_cyl(out, p.model, QVector3D(-1.2F, 0.2F, 1.1F),
-          QVector3D(-1.2F, 0.5F, 1.1F), 0.08F, c.terracotta_dark, white);
+           QVector3D(-1.2F, 0.5F, 1.1F), 0.08F, c.terracotta_dark, white);
   draw_cyl(out, p.model, QVector3D(-0.9F, 0.2F, 1.15F),
-          QVector3D(-0.9F, 0.45F, 1.15F), 0.07F, c.terracotta, white);
+           QVector3D(-0.9F, 0.45F, 1.15F), 0.07F, c.terracotta, white);
 
   draw_cyl(out, p.model, QVector3D(1.1F, 0.2F, -0.9F),
-          QVector3D(1.1F, 0.42F, -0.9F), 0.06F, c.blue_accent, white);
+           QVector3D(1.1F, 0.42F, -0.9F), 0.06F, c.blue_accent, white);
 }
 
 void draw_phoenician_banner(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                          Texture *white, const CarthagePalette &c) {
+                            Texture *white, const CarthagePalette &c) {
   float const pole_x = 0.0F;
   float const pole_z = -2.0F;
   float const pole_height = 2.4F;
@@ -274,12 +275,12 @@ void draw_phoenician_banner(const DrawContext &p, ISubmitter &out, Mesh *unit,
   out.mesh(unit, trimTop, captureColors.teamTrimColor, white, 1.0F);
 
   draw_box(out, unit, white, p.model,
-          QVector3D(pole_x + 0.2F, pole_height + 0.12F, pole_z + 0.03F),
-          QVector3D(0.26F, 0.02F, 0.01F), c.gold);
+           QVector3D(pole_x + 0.2F, pole_height + 0.12F, pole_z + 0.03F),
+           QVector3D(0.26F, 0.02F, 0.01F), c.gold);
 }
 
 void draw_rally_flag(const DrawContext &p, ISubmitter &out, Texture *white,
-                   const CarthagePalette &c) {
+                     const CarthagePalette &c) {
   BarracksFlagRenderer::FlagColors colors{.team = c.team,
                                           .teamTrim = c.team_trim,
                                           .timber = c.cedar,
@@ -289,27 +290,30 @@ void draw_rally_flag(const DrawContext &p, ISubmitter &out, Texture *white,
 }
 
 void draw_health_bar(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                   Texture *white) {
-  if (p.entity == nullptr)
+                     Texture *white) {
+  if (p.entity == nullptr) {
     return;
+  }
   auto *u = p.entity->getComponent<Engine::Core::UnitComponent>();
-  if (u == nullptr)
+  if (u == nullptr) {
     return;
+  }
 
   float const ratio =
       std::clamp(u->health / float(std::max(1, u->max_health)), 0.0F, 1.0F);
-  if (ratio <= 0.0F)
+  if (ratio <= 0.0F) {
     return;
+  }
 
   QVector3D const bg(0.06F, 0.06F, 0.06F);
   draw_box(out, unit, white, p.model, QVector3D(0.0F, 2.65F, 0.0F),
-          QVector3D(0.9F, 0.04F, 0.06F), bg);
+           QVector3D(0.9F, 0.04F, 0.06F), bg);
 
   QVector3D const fg = QVector3D(0.22F, 0.78F, 0.22F) * ratio +
                        QVector3D(0.85F, 0.15F, 0.15F) * (1.0F - ratio);
   draw_box(out, unit, white, p.model,
-          QVector3D(-(0.9F * (1.0F - ratio)) * 0.5F, 2.66F, 0.0F),
-          QVector3D(0.9F * ratio * 0.5F, 0.035F, 0.055F), fg);
+           QVector3D(-(0.9F * (1.0F - ratio)) * 0.5F, 2.66F, 0.0F),
+           QVector3D(0.9F * ratio * 0.5F, 0.035F, 0.055F), fg);
 }
 
 void draw_selection(const DrawContext &p, ISubmitter &out) {
@@ -325,13 +329,15 @@ void draw_selection(const DrawContext &p, ISubmitter &out) {
 }
 
 void draw_barracks(const DrawContext &p, ISubmitter &out) {
-  if (!p.resources || !p.entity)
+  if (!p.resources || !p.entity) {
     return;
+  }
 
   auto *t = p.entity->getComponent<Engine::Core::TransformComponent>();
   auto *r = p.entity->getComponent<Engine::Core::RenderableComponent>();
-  if (!t || !r)
+  if (!t || !r) {
     return;
+  }
 
   Mesh *unit = p.resources->unit();
   Texture *white = p.resources->white();

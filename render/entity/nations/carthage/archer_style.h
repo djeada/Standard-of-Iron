@@ -25,6 +25,7 @@ struct ArcherStyleConfig {
 
   std::string attachment_profile;
   std::string shader_id;
+  std::string armor_id;
 };
 
 void register_carthage_archer_style();

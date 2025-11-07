@@ -160,18 +160,39 @@ void RomanHeavyArmorRenderer::render(const DrawContext &ctx,
   renderShoulderGuard(frames.shoulderL.origin, -right);
   renderShoulderGuard(frames.shoulderR.origin, right);
 
-  QVector3D const waist_center(origin.x(), HP::WAIST_Y, origin.z());
-  for (int i = 0; i < 3; ++i) {
-    float const y0 = HP::WAIST_Y - static_cast<float>(i) * 0.035F;
-    float const y1 = y0 - 0.03F;
-    float const r = torso.radius * (1.05F + static_cast<float>(i) * 0.02F);
+  const AttachmentFrame &waist = frames.waist;
+  auto safeDir = [](const QVector3D &axis, const QVector3D &fallback) {
+    if (axis.lengthSquared() > 1e-6F) {
+      return axis.normalized();
+    }
+    QVector3D fb = fallback;
+    if (fb.lengthSquared() < 1e-6F) {
+      fb = QVector3D(0.0F, 1.0F, 0.0F);
+    }
+    return fb.normalized();
+  };
 
-    submitter.mesh(
-        getUnitCone(),
-        coneFromTo(ctx.model, QVector3D(waist_center.x(), y0, waist_center.z()),
-                   QVector3D(waist_center.x(), y1, waist_center.z()), r),
-        leather_color * (0.95F - static_cast<float>(i) * 0.05F), nullptr, 1.0F);
-  }
+  QVector3D const waist_center =
+      (waist.radius > 0.0F) ? waist.origin
+                            : QVector3D(origin.x(), HP::WAIST_Y, origin.z());
+  QVector3D const waist_up = safeDir(waist.up, up);
+  float const belt_height =
+      (waist.radius > 0.0F ? waist.radius : torso.radius) * 0.24F;
+  QVector3D const belt_top = waist_center + waist_up * (0.5F * belt_height);
+  QVector3D const belt_bot = waist_center - waist_up * (0.5F * belt_height);
+  float const belt_radius =
+      (waist.radius > 0.0F ? waist.radius : torso.radius * 0.95F) * 1.12F;
+
+  submitter.mesh(getUnitCylinder(),
+                 cylinderBetween(ctx.model, belt_bot, belt_top, belt_radius),
+                 leather_color * 0.92F, nullptr, 1.0F);
+
+  QVector3D const trim_top = belt_top + waist_up * 0.012F;
+  QVector3D const trim_bot = belt_bot - waist_up * 0.012F;
+  submitter.mesh(
+      getUnitCylinder(),
+      cylinderBetween(ctx.model, trim_bot, trim_top, belt_radius * 1.03F),
+      brass_color * 0.95F, nullptr, 1.0F);
 }
 
 void RomanLightArmorRenderer::render(const DrawContext &ctx,
@@ -249,12 +270,29 @@ void RomanLightArmorRenderer::render(const DrawContext &ctx,
     }
   }
 
-  QVector3D const waist_center(origin.x(), HP::WAIST_Y + 0.02F, origin.z());
-  float const belt_r = torso.radius * 1.02F;
-  QVector3D const belt_top(waist_center.x(), waist_center.y() + 0.02F,
-                           waist_center.z());
-  QVector3D const belt_bot(waist_center.x(), waist_center.y() - 0.02F,
-                           waist_center.z());
+  const AttachmentFrame &waist = frames.waist;
+  auto safeDir = [](const QVector3D &axis, const QVector3D &fallback) {
+    if (axis.lengthSquared() > 1e-6F) {
+      return axis.normalized();
+    }
+    QVector3D fb = fallback;
+    if (fb.lengthSquared() < 1e-6F) {
+      fb = QVector3D(0.0F, 1.0F, 0.0F);
+    }
+    return fb.normalized();
+  };
+
+  QVector3D const waist_center =
+      (waist.radius > 0.0F)
+          ? waist.origin
+          : QVector3D(origin.x(), HP::WAIST_Y + 0.02F, origin.z());
+  QVector3D const waist_up = safeDir(waist.up, up);
+  float const belt_height =
+      (waist.radius > 0.0F ? waist.radius : torso.radius) * 0.18F;
+  QVector3D const belt_top = waist_center + waist_up * (0.5F * belt_height);
+  QVector3D const belt_bot = waist_center - waist_up * (0.5F * belt_height);
+  float const belt_r =
+      (waist.radius > 0.0F ? waist.radius : torso.radius) * 1.02F;
 
   submitter.mesh(getUnitCylinder(),
                  cylinderBetween(ctx.model, belt_top, belt_bot, belt_r),

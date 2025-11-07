@@ -4,8 +4,11 @@
         <file>assets/shaders/archer.frag</file>
         <file>assets/shaders/archer.vert</file>
         <file>assets/shaders/archer_kingdom_of_iron.frag</file>
+        <file>assets/shaders/archer_kingdom_of_iron.vert</file>
         <file>assets/shaders/archer_roman_republic.frag</file>
+        <file>assets/shaders/archer_roman_republic.vert</file>
         <file>assets/shaders/archer_carthage.frag</file>
+        <file>assets/shaders/archer_carthage.vert</file>
         <file>assets/shaders/basic.frag</file>
         <file>assets/shaders/basic.vert</file>
         <file>assets/shaders/bridge.frag</file>
@@ -42,8 +45,11 @@
         <file>assets/shaders/spearman.frag</file>
         <file>assets/shaders/spearman.vert</file>
         <file>assets/shaders/spearman_kingdom_of_iron.frag</file>
+        <file>assets/shaders/spearman_kingdom_of_iron.vert</file>
         <file>assets/shaders/spearman_roman_republic.frag</file>
+        <file>assets/shaders/spearman_roman_republic.vert</file>
         <file>assets/shaders/spearman_carthage.frag</file>
+        <file>assets/shaders/spearman_carthage.vert</file>
         <file>assets/shaders/stone_instanced.frag</file>
         <file>assets/shaders/stone_instanced.vert</file>
         <file>assets/shaders/terrain_chunk.frag</file>

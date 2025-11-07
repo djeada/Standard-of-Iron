@@ -174,6 +174,12 @@ if(QT_VERSION_MAJOR EQUAL 6)
         RESOURCES
             assets/shaders/archer.frag
             assets/shaders/archer.vert
+            assets/shaders/archer_kingdom_of_iron.frag
+            assets/shaders/archer_kingdom_of_iron.vert
+            assets/shaders/archer_roman_republic.frag
+            assets/shaders/archer_roman_republic.vert
+            assets/shaders/archer_carthage.frag
+            assets/shaders/archer_carthage.vert
             assets/shaders/basic.frag
             assets/shaders/basic.vert
             assets/shaders/bridge.frag
@@ -203,6 +209,12 @@ if(QT_VERSION_MAJOR EQUAL 6)
             assets/shaders/riverbank.vert
             assets/shaders/spearman.frag
             assets/shaders/spearman.vert
+            assets/shaders/spearman_kingdom_of_iron.frag
+            assets/shaders/spearman_kingdom_of_iron.vert
+            assets/shaders/spearman_roman_republic.frag
+            assets/shaders/spearman_roman_republic.vert
+            assets/shaders/spearman_carthage.frag
+            assets/shaders/spearman_carthage.vert
             assets/shaders/stone_instanced.frag
             assets/shaders/stone_instanced.vert
             assets/shaders/terrain_chunk.frag
