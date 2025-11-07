@@ -2,7 +2,9 @@
 #include "../backend.h"
 #include "../shader_cache.h"
 #include <QDebug>
+#include <QStringList>
 #include <qglobal.h>
+#include <utility>
 
 namespace Render::GL::BackendPipelines {
 
@@ -43,6 +45,7 @@ void CharacterPipeline::shutdown() {
 }
 
 void CharacterPipeline::cacheUniforms() {
+  m_uniformCache.clear();
   cacheBasicUniforms();
   cacheArcherUniforms();
   cacheKnightUniforms();
@@ -59,12 +62,8 @@ void CharacterPipeline::cacheBasicUniforms() {
     return;
   }
 
-  m_basicUniforms.mvp = m_basicShader->uniformHandle("u_mvp");
-  m_basicUniforms.model = m_basicShader->uniformHandle("u_model");
-  m_basicUniforms.texture = m_basicShader->uniformHandle("u_texture");
-  m_basicUniforms.useTexture = m_basicShader->uniformHandle("u_useTexture");
-  m_basicUniforms.color = m_basicShader->uniformHandle("u_color");
-  m_basicUniforms.alpha = m_basicShader->uniformHandle("u_alpha");
+  m_basicUniforms = buildUniformSet(m_basicShader);
+  m_uniformCache[m_basicShader] = m_basicUniforms;
 }
 
 void CharacterPipeline::cacheArcherUniforms() {
@@ -72,12 +71,9 @@ void CharacterPipeline::cacheArcherUniforms() {
     return;
   }
 
-  m_archerUniforms.mvp = m_archerShader->uniformHandle("u_mvp");
-  m_archerUniforms.model = m_archerShader->uniformHandle("u_model");
-  m_archerUniforms.texture = m_archerShader->uniformHandle("u_texture");
-  m_archerUniforms.useTexture = m_archerShader->uniformHandle("u_useTexture");
-  m_archerUniforms.color = m_archerShader->uniformHandle("u_color");
-  m_archerUniforms.alpha = m_archerShader->uniformHandle("u_alpha");
+  m_archerUniforms = buildUniformSet(m_archerShader);
+  m_uniformCache[m_archerShader] = m_archerUniforms;
+  cacheNationVariants(QStringLiteral("archer"));
 }
 
 void CharacterPipeline::cacheKnightUniforms() {
@@ -85,13 +81,9 @@ void CharacterPipeline::cacheKnightUniforms() {
     return;
   }
 
-  m_swordsmanUniforms.mvp = m_swordsmanShader->uniformHandle("u_mvp");
-  m_swordsmanUniforms.model = m_swordsmanShader->uniformHandle("u_model");
-  m_swordsmanUniforms.texture = m_swordsmanShader->uniformHandle("u_texture");
-  m_swordsmanUniforms.useTexture =
-      m_swordsmanShader->uniformHandle("u_useTexture");
-  m_swordsmanUniforms.color = m_swordsmanShader->uniformHandle("u_color");
-  m_swordsmanUniforms.alpha = m_swordsmanShader->uniformHandle("u_alpha");
+  m_swordsmanUniforms = buildUniformSet(m_swordsmanShader);
+  m_uniformCache[m_swordsmanShader] = m_swordsmanUniforms;
+  cacheNationVariants(QStringLiteral("swordsman"));
 }
 
 void CharacterPipeline::cacheSpearmanUniforms() {
@@ -99,13 +91,52 @@ void CharacterPipeline::cacheSpearmanUniforms() {
     return;
   }
 
-  m_spearmanUniforms.mvp = m_spearmanShader->uniformHandle("u_mvp");
-  m_spearmanUniforms.model = m_spearmanShader->uniformHandle("u_model");
-  m_spearmanUniforms.texture = m_spearmanShader->uniformHandle("u_texture");
-  m_spearmanUniforms.useTexture =
-      m_spearmanShader->uniformHandle("u_useTexture");
-  m_spearmanUniforms.color = m_spearmanShader->uniformHandle("u_color");
-  m_spearmanUniforms.alpha = m_spearmanShader->uniformHandle("u_alpha");
+  m_spearmanUniforms = buildUniformSet(m_spearmanShader);
+  m_uniformCache[m_spearmanShader] = m_spearmanUniforms;
+  cacheNationVariants(QStringLiteral("spearman"));
+}
+
+auto CharacterPipeline::buildUniformSet(GL::Shader *shader) const
+    -> BasicUniforms {
+  BasicUniforms uniforms;
+  if (shader == nullptr) {
+    return uniforms;
+  }
+  uniforms.mvp = shader->uniformHandle("u_mvp");
+  uniforms.model = shader->uniformHandle("u_model");
+  uniforms.texture = shader->uniformHandle("u_texture");
+  uniforms.useTexture = shader->uniformHandle("u_useTexture");
+  uniforms.color = shader->uniformHandle("u_color");
+  uniforms.alpha = shader->uniformHandle("u_alpha");
+  return uniforms;
+}
+
+void CharacterPipeline::cacheNationVariants(const QString &baseKey) {
+  if (m_shaderCache == nullptr) {
+    return;
+  }
+  static const QStringList nations{QStringLiteral("kingdom_of_iron"),
+                                   QStringLiteral("roman_republic"),
+                                   QStringLiteral("carthage")};
+  for (const QString &nation : nations) {
+    const QString shaderName = baseKey + QStringLiteral("_") + nation;
+    if (GL::Shader *variant = m_shaderCache->get(shaderName)) {
+      m_uniformCache.emplace(variant, buildUniformSet(variant));
+    }
+  }
+}
+
+auto CharacterPipeline::resolveUniforms(GL::Shader *shader) -> BasicUniforms * {
+  if (shader == nullptr) {
+    return nullptr;
+  }
+  auto it = m_uniformCache.find(shader);
+  if (it != m_uniformCache.end()) {
+    return &it->second;
+  }
+  BasicUniforms uniforms = buildUniformSet(shader);
+  auto [inserted, success] = m_uniformCache.emplace(shader, uniforms);
+  return &inserted->second;
 }
 
 } // namespace Render::GL::BackendPipelines

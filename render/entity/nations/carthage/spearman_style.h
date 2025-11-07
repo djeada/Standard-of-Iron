@@ -16,6 +16,7 @@ struct SpearmanStyleConfig {
   std::optional<float> spear_length_scale;
   std::optional<float> spear_shaft_radius_scale;
   std::string shader_id;
+  std::string armor_id;
 };
 
 void register_carthage_spearman_style();

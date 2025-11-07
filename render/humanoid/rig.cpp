@@ -78,14 +78,14 @@ auto HumanoidRendererBase::makeHeadLocalTransform(
 }
 
 void HumanoidRendererBase::get_variant(const DrawContext &ctx, uint32_t seed,
-                                      HumanoidVariant &v) const {
+                                       HumanoidVariant &v) const {
   QVector3D const team_tint = resolveTeamTint(ctx);
   v.palette = makeHumanoidPalette(team_tint, seed);
 }
 
 void HumanoidRendererBase::customize_pose(const DrawContext &,
-                                         const HumanoidAnimationContext &,
-                                         uint32_t, HumanoidPose &) const {}
+                                          const HumanoidAnimationContext &,
+                                          uint32_t, HumanoidPose &) const {}
 
 void HumanoidRendererBase::addAttachments(const DrawContext &,
                                           const HumanoidVariant &,
@@ -250,10 +250,11 @@ void HumanoidRendererBase::computeLocomotionPose(
   float const b_scale = variation.bulkScale;
   float const s_width = variation.stanceWidth;
 
-  pose.shoulderL = QVector3D(-HP::TORSO_TOP_R * 0.98F * b_scale,
-                             HP::SHOULDER_Y * h_scale, 0.0F);
-  pose.shoulderR = QVector3D(HP::TORSO_TOP_R * 0.98F * b_scale,
-                             HP::SHOULDER_Y * h_scale, 0.0F);
+  float const half_shoulder_span = 0.5F * HP::SHOULDER_WIDTH * b_scale;
+  pose.shoulderL =
+      QVector3D(-half_shoulder_span, HP::SHOULDER_Y * h_scale, 0.0F);
+  pose.shoulderR =
+      QVector3D(half_shoulder_span, HP::SHOULDER_Y * h_scale, 0.0F);
 
   pose.pelvisPos = QVector3D(0.0F, HP::WAIST_Y * h_scale, 0.0F);
 
@@ -710,13 +711,6 @@ void HumanoidRendererBase::drawCommonBody(const DrawContext &ctx,
                           right_axis, out);
 
   draw_helmet(ctx, v, pose, out);
-
-  QVector3D const belt_top = pose.pelvisPos + QVector3D(0.0F, 0.05F, 0.0F);
-  QVector3D const belt_bottom = pose.pelvisPos + QVector3D(0.0F, 0.00F, 0.0F);
-  out.mesh(getUnitCylinder(),
-           cylinderBetween(ctx.model, belt_top, belt_bottom,
-                           torso_r * 0.85F * width_scale),
-           v.palette.leather, nullptr, 1.0F);
 }
 
 void HumanoidRendererBase::draw_armorOverlay(const DrawContext &,
@@ -726,10 +720,10 @@ void HumanoidRendererBase::draw_armorOverlay(const DrawContext &,
                                              ISubmitter &) const {}
 
 void HumanoidRendererBase::draw_armor(const DrawContext &,
-                                     const HumanoidVariant &,
-                                     const HumanoidPose &,
-                                     const HumanoidAnimationContext &,
-                                     ISubmitter &) const {}
+                                      const HumanoidVariant &,
+                                      const HumanoidPose &,
+                                      const HumanoidAnimationContext &,
+                                      ISubmitter &) const {}
 
 void HumanoidRendererBase::drawShoulderDecorations(const DrawContext &,
                                                    const HumanoidVariant &,
@@ -738,9 +732,9 @@ void HumanoidRendererBase::drawShoulderDecorations(const DrawContext &,
                                                    ISubmitter &) const {}
 
 void HumanoidRendererBase::draw_helmet(const DrawContext &,
-                                      const HumanoidVariant &,
-                                      const HumanoidPose &,
-                                      ISubmitter &) const {}
+                                       const HumanoidVariant &,
+                                       const HumanoidPose &,
+                                       ISubmitter &) const {}
 
 void HumanoidRendererBase::drawFacialHair(const DrawContext &ctx,
                                           const HumanoidVariant &v,
@@ -1114,7 +1108,8 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
     inst_ctx.rendererId = ctx.rendererId;
     inst_ctx.backend = ctx.backend;
 
-    VariationParams const variation = VariationParams::fromSeed(inst_seed);
+    VariationParams variation = VariationParams::fromSeed(inst_seed);
+    adjust_variation(inst_ctx, inst_seed, variation);
 
     float const combined_height_scale = height_scale * variation.height_scale;
     if (needs_height_scaling ||

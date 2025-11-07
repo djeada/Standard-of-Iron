@@ -64,7 +64,7 @@ private:
 
 public:
   void get_variant(const DrawContext &ctx, uint32_t seed,
-                  HumanoidVariant &v) const override {
+                   HumanoidVariant &v) const override {
     QVector3D const team_tint = resolveTeamTint(ctx);
     v.palette = makeHumanoidPalette(team_tint, seed);
   }
@@ -84,8 +84,8 @@ public:
   }
 
   void customize_pose(const DrawContext &ctx,
-                     const HumanoidAnimationContext &anim_ctx, uint32_t seed,
-                     HumanoidPose &pose) const override {
+                      const HumanoidAnimationContext &anim_ctx, uint32_t seed,
+                      HumanoidPose &pose) const override {
     using HP = HumanProportions;
 
     const AnimationInputs &anim = anim_ctx.inputs;
@@ -299,7 +299,7 @@ public:
   }
 
   void draw_helmet(const DrawContext &ctx, const HumanoidVariant &v,
-                  const HumanoidPose &pose, ISubmitter &out) const override {
+                   const HumanoidPose &pose, ISubmitter &out) const override {
 
     auto &registry = EquipmentRegistry::instance();
     auto helmet = registry.get(EquipmentCategory::Helmet, "kingdom_heavy");
@@ -310,8 +310,9 @@ public:
   }
 
   void draw_armor(const DrawContext &ctx, const HumanoidVariant &v,
-                 const HumanoidPose &pose, const HumanoidAnimationContext &anim,
-                 ISubmitter &out) const override {
+                  const HumanoidPose &pose,
+                  const HumanoidAnimationContext &anim,
+                  ISubmitter &out) const override {
     auto &registry = EquipmentRegistry::instance();
     auto armor = registry.get(EquipmentCategory::Armor, "kingdom_heavy_armor");
     if (armor) {

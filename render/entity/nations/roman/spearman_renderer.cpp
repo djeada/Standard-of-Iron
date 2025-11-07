@@ -44,6 +44,31 @@ constexpr float k_spearman_style_mix_weight = 0.4F;
 constexpr float k_kneel_depth_multiplier = 0.875F;
 constexpr float k_lean_amount_multiplier = 0.67F;
 
+struct SpearmanShaderResourcePaths {
+  QString vertex;
+  QString fragment;
+};
+
+auto lookup_spearman_shader_resources(const QString &shader_key)
+    -> std::optional<SpearmanShaderResourcePaths> {
+  if (shader_key == QStringLiteral("spearman_carthage")) {
+    return SpearmanShaderResourcePaths{
+        QStringLiteral(":/assets/shaders/spearman_carthage.vert"),
+        QStringLiteral(":/assets/shaders/spearman_carthage.frag")};
+  }
+  if (shader_key == QStringLiteral("spearman_kingdom_of_iron")) {
+    return SpearmanShaderResourcePaths{
+        QStringLiteral(":/assets/shaders/spearman_kingdom_of_iron.vert"),
+        QStringLiteral(":/assets/shaders/spearman_kingdom_of_iron.frag")};
+  }
+  if (shader_key == QStringLiteral("spearman_roman_republic")) {
+    return SpearmanShaderResourcePaths{
+        QStringLiteral(":/assets/shaders/spearman_roman_republic.vert"),
+        QStringLiteral(":/assets/shaders/spearman_roman_republic.frag")};
+  }
+  return std::nullopt;
+}
+
 auto spearman_style_registry()
     -> std::unordered_map<std::string, SpearmanStyleConfig> & {
   static std::unordered_map<std::string, SpearmanStyleConfig> styles;
@@ -94,7 +119,7 @@ private:
 
 public:
   void get_variant(const DrawContext &ctx, uint32_t seed,
-                  HumanoidVariant &v) const override {
+                   HumanoidVariant &v) const override {
     QVector3D const team_tint = resolveTeamTint(ctx);
     v.palette = makeHumanoidPalette(team_tint, seed);
     auto const &style = resolve_style(ctx);
@@ -102,8 +127,8 @@ public:
   }
 
   void customize_pose(const DrawContext &,
-                     const HumanoidAnimationContext &anim_ctx, uint32_t seed,
-                     HumanoidPose &pose) const override {
+                      const HumanoidAnimationContext &anim_ctx, uint32_t seed,
+                      HumanoidPose &pose) const override {
     using HP = HumanProportions;
 
     const AnimationInputs &anim = anim_ctx.inputs;
@@ -198,7 +223,7 @@ public:
   }
 
   void draw_helmet(const DrawContext &ctx, const HumanoidVariant &v,
-                  const HumanoidPose &pose, ISubmitter &out) const override {
+                   const HumanoidPose &pose, ISubmitter &out) const override {
 
     auto &registry = EquipmentRegistry::instance();
     auto helmet = registry.get(EquipmentCategory::Helmet, "roman_heavy");
@@ -209,8 +234,9 @@ public:
   }
 
   void draw_armor(const DrawContext &ctx, const HumanoidVariant &v,
-                 const HumanoidPose &pose, const HumanoidAnimationContext &anim,
-                 ISubmitter &out) const override {
+                  const HumanoidPose &pose,
+                  const HumanoidAnimationContext &anim,
+                  ISubmitter &out) const override {
     auto &registry = EquipmentRegistry::instance();
     auto armor = registry.get(EquipmentCategory::Armor, "roman_heavy_armor");
     if (armor) {
@@ -315,11 +341,25 @@ void registerSpearmanRenderer(Render::GL::EntityRendererRegistry &registry) {
       "troops/roman/spearman", [](const DrawContext &ctx, ISubmitter &out) {
         static SpearmanRenderer const static_renderer;
         Shader *spearman_shader = nullptr;
+        auto acquireShader = [&](const QString &shader_key) -> Shader * {
+          if (ctx.backend == nullptr || shader_key.isEmpty()) {
+            return nullptr;
+          }
+          Shader *shader = ctx.backend->shader(shader_key);
+          if (shader != nullptr) {
+            return shader;
+          }
+          if (auto resources = lookup_spearman_shader_resources(shader_key)) {
+            shader = ctx.backend->getOrLoadShader(shader_key, resources->vertex,
+                                                  resources->fragment);
+          }
+          return shader;
+        };
         if (ctx.backend != nullptr) {
           QString shader_key = static_renderer.resolve_shader_key(ctx);
-          spearman_shader = ctx.backend->shader(shader_key);
+          spearman_shader = acquireShader(shader_key);
           if (spearman_shader == nullptr) {
-            spearman_shader = ctx.backend->shader(QStringLiteral("spearman"));
+            spearman_shader = acquireShader(QStringLiteral("spearman"));
           }
         }
         auto *scene_renderer = dynamic_cast<Renderer *>(&out);

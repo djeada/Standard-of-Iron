@@ -99,8 +99,8 @@ inline auto scaledSphere(const QMatrix4x4 &model, const QVector3D &center,
 }
 
 inline void draw_cylinder(ISubmitter &out, const QMatrix4x4 &model,
-                         const QVector3D &a, const QVector3D &b, float radius,
-                         const QVector3D &color, float alpha = 1.0F) {
+                          const QVector3D &a, const QVector3D &b, float radius,
+                          const QVector3D &color, float alpha = 1.0F) {
   out.mesh(getUnitCylinder(), cylinderBetween(model, a, b, radius), color,
            nullptr, alpha);
 }
@@ -506,7 +506,7 @@ void HorseRendererBase::render(const DrawContext &ctx,
         jugular_start +
         QVector3D(0.0F, -d.bodyHeight * 0.24F, d.bodyLength * 0.06F);
     draw_cylinder(out, ctx.model, jugular_start, jugular_end,
-                 neck_radius * 0.18F, lighten(neck_color_base, 1.08F), 0.85F);
+                  neck_radius * 0.18F, lighten(neck_color_base, 1.08F), 0.85F);
   }
 
   const int mane_sections = 8;
@@ -671,13 +671,13 @@ void HorseRendererBase::render(const DrawContext &ctx,
                                                  -d.headLength * 0.28F);
   QVector3D const tack_color = lighten(v.tack_color, 0.9F);
   draw_cylinder(out, ctx.model, bridle_base, cheek_anchor_left,
-               d.headWidth * 0.07F, tack_color);
+                d.headWidth * 0.07F, tack_color);
   draw_cylinder(out, ctx.model, bridle_base, cheek_anchor_right,
-               d.headWidth * 0.07F, tack_color);
+                d.headWidth * 0.07F, tack_color);
   draw_cylinder(out, ctx.model, cheek_anchor_left, brow, d.headWidth * 0.05F,
-               tack_color);
+                tack_color);
   draw_cylinder(out, ctx.model, cheek_anchor_right, brow, d.headWidth * 0.05F,
-               tack_color);
+                tack_color);
 
   QVector3D const mane_root =
       neck_top + QVector3D(0.0F, d.headHeight * 0.20F, -d.headLength * 0.20F);
@@ -851,10 +851,10 @@ void HorseRendererBase::render(const DrawContext &ctx,
         QVector3D(0.0F, d.bodyWidth * 0.12F,
                   is_rear ? -d.bodyLength * 0.03F : d.bodyLength * 0.02F);
     draw_cylinder(out, ctx.model, girdle_top, socket,
-                 d.bodyWidth * (is_rear ? 0.20F : 0.18F),
-                 coatGradient(v.coatColor, is_rear ? 0.70F : 0.80F,
-                              is_rear ? -0.20F : 0.22F,
-                              coat_seed_b + lateralSign * 0.03F));
+                  d.bodyWidth * (is_rear ? 0.20F : 0.18F),
+                  coatGradient(v.coatColor, is_rear ? 0.70F : 0.80F,
+                               is_rear ? -0.20F : 0.22F,
+                               coat_seed_b + lateralSign * 0.03F));
 
     QMatrix4x4 socket_cap = ctx.model;
     socket_cap.translate(socket + QVector3D(0.0F, -d.bodyWidth * 0.04F,

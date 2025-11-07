@@ -1040,14 +1040,11 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         break;
       }
 
-      BackendPipelines::CharacterPipeline::BasicUniforms *uniforms =
-          &m_characterPipeline->m_basicUniforms;
-      if (active_shader == m_characterPipeline->m_archerShader) {
-        uniforms = &m_characterPipeline->m_archerUniforms;
-      } else if (active_shader == m_characterPipeline->m_swordsmanShader) {
-        uniforms = &m_characterPipeline->m_swordsmanUniforms;
-      } else if (active_shader == m_characterPipeline->m_spearmanShader) {
-        uniforms = &m_characterPipeline->m_spearmanUniforms;
+      auto *uniforms = m_characterPipeline
+                           ? m_characterPipeline->resolveUniforms(active_shader)
+                           : nullptr;
+      if (uniforms == nullptr) {
+        break;
       }
 
       if (m_lastBoundShader != active_shader) {
