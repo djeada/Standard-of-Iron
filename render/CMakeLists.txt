@@ -50,6 +50,7 @@ add_library(render_gl STATIC
     entity/nations/roman/spearman_style.cpp
     entity/nations/carthage/spearman_style.cpp
     horse/rig.cpp
+    horse/horse_animation_controller.cpp
     entity/nations/roman/horse_swordsman_renderer.cpp
     entity/nations/kingdom/horse_swordsman_renderer.cpp
     entity/nations/carthage/horse_swordsman_renderer.cpp
