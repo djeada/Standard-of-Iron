@@ -4,12 +4,12 @@
 #include <QVector3D>
 
 namespace {
-constexpr QVector3D k_carthage_cloth{0.15F, 0.36F, 0.55F};
-constexpr QVector3D k_carthage_leather{0.30F, 0.20F, 0.12F};
-constexpr QVector3D k_carthage_leather_dark{0.18F, 0.12F, 0.08F};
-constexpr QVector3D k_carthage_metal{0.68F, 0.66F, 0.52F};
-constexpr QVector3D k_carthage_spear_shaft{0.40F, 0.26F, 0.14F};
-constexpr QVector3D k_carthage_spearhead{0.74F, 0.72F, 0.60F};
+constexpr QVector3D k_carthage_cloth{0.12F, 0.36F, 0.52F};
+constexpr QVector3D k_carthage_leather{0.36F, 0.24F, 0.12F};
+constexpr QVector3D k_carthage_leather_dark{0.22F, 0.16F, 0.10F};
+constexpr QVector3D k_carthage_metal{0.75F, 0.66F, 0.42F};
+constexpr QVector3D k_carthage_spear_shaft{0.38F, 0.28F, 0.18F};
+constexpr QVector3D k_carthage_spearhead{0.90F, 0.88F, 0.70F};
 } // namespace
 
 namespace Render::GL::Carthage {
@@ -24,6 +24,7 @@ void register_carthage_spearman_style() {
   style.spearhead_color = k_carthage_spearhead;
   style.spear_length_scale = 1.08F;
   style.shader_id = "spearman_carthage";
+  style.armor_id = "armor_light_carthage";
 
   register_spearman_style("carthage", style);
 }

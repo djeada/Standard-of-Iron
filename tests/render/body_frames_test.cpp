@@ -10,13 +10,16 @@ using namespace Render::GL;
 class BodyFramesTest : public ::testing::Test {
 protected:
   void SetUp() override {
+    using HP = HumanProportions;
     // Initialize a basic pose
-    pose.headPos = QVector3D(0.0F, 1.70F, 0.0F);
-    pose.headR = 0.10F;
-    pose.neck_base = QVector3D(0.0F, 1.49F, 0.0F);
-    pose.shoulderL = QVector3D(-0.21F, 1.45F, 0.0F);
-    pose.shoulderR = QVector3D(0.21F, 1.45F, 0.0F);
-    pose.pelvisPos = QVector3D(0.0F, 0.95F, 0.0F);
+    float const head_center_y = 0.5F * (HP::HEAD_TOP_Y + HP::CHIN_Y);
+    float const half_shoulder = 0.5F * HP::SHOULDER_WIDTH;
+    pose.headPos = QVector3D(0.0F, head_center_y, 0.0F);
+    pose.headR = HP::HEAD_RADIUS;
+    pose.neck_base = QVector3D(0.0F, HP::NECK_BASE_Y, 0.0F);
+    pose.shoulderL = QVector3D(-half_shoulder, HP::SHOULDER_Y, 0.0F);
+    pose.shoulderR = QVector3D(half_shoulder, HP::SHOULDER_Y, 0.0F);
+    pose.pelvisPos = QVector3D(0.0F, HP::WAIST_Y, 0.0F);
     pose.handL = QVector3D(-0.25F, 1.20F, 0.30F);
     pose.hand_r = QVector3D(0.25F, 1.20F, 0.30F);
     pose.elbowL = QVector3D(-0.23F, 1.30F, 0.15F);
@@ -132,17 +135,19 @@ TEST_F(BodyFramesTest, MakeFrameLocalTransformCreatesValidMatrix) {
 }
 
 TEST_F(BodyFramesTest, LegacyHeadFunctionsStillWork) {
+  using HP = HumanProportions;
   HeadFrame headFrame;
-  headFrame.origin = QVector3D(0.0F, 1.7F, 0.0F);
+  float const head_center_y = 0.5F * (HP::HEAD_TOP_Y + HP::CHIN_Y);
+  headFrame.origin = QVector3D(0.0F, head_center_y, 0.0F);
   headFrame.right = QVector3D(1.0F, 0.0F, 0.0F);
   headFrame.up = QVector3D(0.0F, 1.0F, 0.0F);
   headFrame.forward = QVector3D(0.0F, 0.0F, 1.0F);
-  headFrame.radius = 0.1F;
+  headFrame.radius = HP::HEAD_RADIUS;
 
   // Test legacy headLocalPosition function
   QVector3D local(1.0F, 0.0F, 0.0F);
   QVector3D world = HumanoidRendererBase::headLocalPosition(headFrame, local);
-  QVector3D expected = QVector3D(0.1F, 1.7F, 0.0F);
+  QVector3D expected = QVector3D(HP::HEAD_RADIUS, head_center_y, 0.0F);
   EXPECT_TRUE(approxEqual(world, expected));
 
   // Test legacy makeHeadLocalTransform function
@@ -158,18 +163,20 @@ TEST_F(BodyFramesTest, LegacyHeadFunctionsStillWork) {
 }
 
 TEST_F(BodyFramesTest, PoseHasBothHeadFrameAndBodyFrames) {
+  using HP = HumanProportions;
   // Verify that the pose has both the legacy headFrame and new bodyFrames
   EXPECT_TRUE(true); // Just verify it compiles
 
   // Set headFrame
-  pose.headFrame.origin = QVector3D(0.0F, 1.7F, 0.0F);
-  pose.headFrame.radius = 0.1F;
+  float const head_center_y = 0.5F * (HP::HEAD_TOP_Y + HP::CHIN_Y);
+  pose.headFrame.origin = QVector3D(0.0F, head_center_y, 0.0F);
+  pose.headFrame.radius = HP::HEAD_RADIUS;
 
   // Set bodyFrames.head
-  pose.bodyFrames.head.origin = QVector3D(0.0F, 1.7F, 0.0F);
-  pose.bodyFrames.head.radius = 0.1F;
+  pose.bodyFrames.head.origin = QVector3D(0.0F, head_center_y, 0.0F);
+  pose.bodyFrames.head.radius = HP::HEAD_RADIUS;
 
   // Verify both can be accessed
-  EXPECT_EQ(pose.headFrame.origin, QVector3D(0.0F, 1.7F, 0.0F));
-  EXPECT_EQ(pose.bodyFrames.head.origin, QVector3D(0.0F, 1.7F, 0.0F));
+  EXPECT_EQ(pose.headFrame.origin, QVector3D(0.0F, head_center_y, 0.0F));
+  EXPECT_EQ(pose.bodyFrames.head.origin, QVector3D(0.0F, head_center_y, 0.0F));
 }
