@@ -57,12 +57,14 @@ DrawContext createTestContext() {
 
 // Helper to create basic body frames
 BodyFrames createTestFrames() {
+  using HP = HumanProportions;
   BodyFrames frames;
-  frames.head.origin = QVector3D(0.0F, 1.7F, 0.0F);
+  float const head_center_y = 0.5F * (HP::HEAD_TOP_Y + HP::CHIN_Y);
+  frames.head.origin = QVector3D(0.0F, head_center_y, 0.0F);
   frames.head.right = QVector3D(1.0F, 0.0F, 0.0F);
   frames.head.up = QVector3D(0.0F, 1.0F, 0.0F);
   frames.head.forward = QVector3D(0.0F, 0.0F, 1.0F);
-  frames.head.radius = 0.12F;
+  frames.head.radius = HP::HEAD_RADIUS * 1.05F;
   return frames;
 }
 

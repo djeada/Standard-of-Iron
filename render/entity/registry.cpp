@@ -19,7 +19,7 @@
 namespace Render::GL {
 
 void EntityRendererRegistry::register_renderer(const std::string &type,
-                                              RenderFunc func) {
+                                               RenderFunc func) {
   m_map[type] = std::move(func);
 }
 

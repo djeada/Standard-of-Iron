@@ -2,6 +2,7 @@
 
 #include "../shader.h"
 #include "pipeline_interface.h"
+#include <unordered_map>
 
 namespace Render::GL {
 class ShaderCache;
@@ -39,14 +40,19 @@ public:
   BasicUniforms m_swordsmanUniforms;
   BasicUniforms m_spearmanUniforms;
 
+  BasicUniforms *resolveUniforms(GL::Shader *shader);
+
 private:
   GL::Backend *m_backend = nullptr;
   GL::ShaderCache *m_shaderCache = nullptr;
+  std::unordered_map<GL::Shader *, BasicUniforms> m_uniformCache;
 
   void cacheBasicUniforms();
   void cacheArcherUniforms();
   void cacheKnightUniforms();
   void cacheSpearmanUniforms();
+  BasicUniforms buildUniformSet(GL::Shader *shader) const;
+  void cacheNationVariants(const QString &baseKey);
 };
 
 } // namespace BackendPipelines
