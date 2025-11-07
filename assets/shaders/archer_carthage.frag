@@ -248,22 +248,25 @@ void main() {
     // Wetness darkens leather and adds clearcoat
     color = mix(color, color * 0.55, wetMask * 0.85);
 
-    // Specular: dielectric leather F0 ~ 0.035, roughness from grain/tension
+    // Specular: dielectric leather F0 ~ 0.04, roughness 0.7-0.9 for matte finish
+    // Higher roughness reduces plastic-like shine and creates diffuse appearance
     float roughness =
-        clamp(0.55 - v_leatherTension * 0.18 + grain * 0.12, 0.28, 0.75);
+        clamp(0.70 + grain * 0.15 - v_leatherTension * 0.10, 0.70, 0.90);
     float a = max(0.04, roughness * roughness);
     NdotL = max(dot(N, L), 0.0);
     NdotV = max(dot(N, V), 0.0);
     NdotH = max(dot(N, normalize(L + V)), 0.0);
     float D = D_GGX(NdotH, a);
     float G = G_Smith(NdotV, NdotL, a);
-    float F = fresnelSchlick(max(dot(normalize(L + V), V), 0.0), 0.035);
+    float F = fresnelSchlick(max(dot(normalize(L + V), V), 0.0), 0.04);
     float spec = (D * G * F) / max(4.0 * NdotV * NdotL + 1e-5, 1e-5);
 
     // Add water clearcoat when raining
     vec3 coat = clearcoatSpec(N, L, V, wetMask * 0.9, mix(0.10, 0.03, wetMask));
 
-    specularAccum += vec3(spec) * 0.55 + coat;
+    // Subtle, colored specular highlights for leather - reduce intensity
+    // Tint with base color to avoid white highlights
+    specularAccum += vec3(spec) * 0.20 * mix(vec3(1.0), color, 0.3) + coat;
 
     // ----------------------------- Linen -----------------------------
   } else if (likelyLinen) {
@@ -399,7 +402,21 @@ void main() {
   // Slight rain darkening in creases
   lit = mix(lit, lit * 0.85, wetMask * 0.2);
 
-  // Clamp and out
-  vec3 finalColor = clamp(lit * ao, 0.0, 1.0);
+  // Apply ambient occlusion
+  vec3 finalColor = lit * ao;
+
+  // ----------------------------- Tone Mapping & Gamma Correction
+  // -----------------------------
+  // Filmic tone mapping (Reinhard) to prevent over-bright highlights
+  // This prevents the plastic-like shine by compressing bright values
+  finalColor = finalColor / (finalColor + vec3(1.0));
+
+  // Gamma correction (sRGB, gamma 2.2)
+  // Convert from linear to sRGB color space for correct display
+  finalColor = pow(finalColor, vec3(1.0 / 2.2));
+
+  // Final clamp for safety
+  finalColor = clamp(finalColor, 0.0, 1.0);
+
   FragColor = vec4(finalColor, u_alpha);
 }
