@@ -1,4 +1,5 @@
 #include "horse_animation_controller.h"
+#include "../humanoid/rig.h"
 #include <algorithm>
 #include <cmath>
 #include <numbers>
