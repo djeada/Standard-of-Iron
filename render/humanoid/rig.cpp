@@ -685,9 +685,9 @@ void HumanoidRendererBase::drawCommonBody(const DrawContext &ctx,
     }
     foot_forward.normalize();
 
-    float const heel_span = foot_radius * 2.20F;
-    float const toe_span = foot_radius * 3.30F;
-    float const sole_y = HP::GROUND_Y + 0.003F;
+    float const heel_span = foot_radius * 3.50F;
+    float const toe_span = foot_radius * 5.50F;
+    float const sole_y = HP::GROUND_Y;
 
     QVector3D heel = ankle - foot_forward * heel_span;
     QVector3D toe = ankle + foot_forward * toe_span;
