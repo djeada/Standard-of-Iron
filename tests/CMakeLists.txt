@@ -11,6 +11,7 @@ add_executable(standard_of_iron_tests
     render/equipment_registry_test.cpp
     render/helmet_renderers_test.cpp
     render/armor_renderer_test.cpp
+    render/horse_animation_controller_test.cpp
 )
 
 # Link against GTest, project libraries

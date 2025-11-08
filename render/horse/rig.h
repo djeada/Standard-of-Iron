@@ -95,12 +95,12 @@ public:
 
   void render(const DrawContext &ctx, const AnimationInputs &anim,
               const HumanoidAnimationContext &rider_ctx,
-              const HorseProfile &profile, ISubmitter &out) const;
+              HorseProfile &profile, ISubmitter &out) const;
 
 protected:
   virtual void drawAttachments(const DrawContext &, const AnimationInputs &,
                                const HumanoidAnimationContext &,
-                               const HorseProfile &, const HorseMountFrame &,
+                               HorseProfile &, const HorseMountFrame &,
                                float, float, float, ISubmitter &) const {}
 };
 
