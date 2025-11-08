@@ -4,7 +4,31 @@
 
 The `HorseAnimationController` provides a high-level API for controlling horse animations, including gaits, movements, and special animations. It encapsulates the complexity of phase/bob/timing calculations and integrates with rider context for coordinated animations.
 
-## Usage Example
+**This controller is automatically used by the horse rendering system** - when you render a horse through `HorseRendererBase::render()`, the controller manages all animation state internally based on the rider's movement.
+
+## Integration in Rendering System
+
+The `HorseAnimationController` is integrated into `HorseRendererBase::render()` method in `render/horse/rig.cpp`. The rendering system:
+
+1. Creates a `HorseAnimationController` instance with the horse profile, animation inputs, and rider context
+2. Automatically selects appropriate gait based on rider speed:
+   - Speed < 0.5: IDLE
+   - Speed 0.5-3.0: WALK
+   - Speed 3.0-5.5: TROT
+   - Speed 5.5-8.0: CANTER
+   - Speed > 8.0: GALLOP
+3. Calls `updateGaitParameters()` to update the horse profile with correct gait parameters
+4. Uses `getCurrentPhase()` and `getCurrentBob()` for animation calculations
+
+This means **all horse renderers automatically benefit** from the controller, including:
+- Kingdom horse swordsman renderer
+- Roman horse swordsman renderer
+- Carthage horse swordsman renderer
+- Any future horse-mounted units
+
+## Direct Usage (Advanced)
+
+For custom animations or special cases, you can use the controller directly:
 
 ```cpp
 #include "render/horse/horse_animation_controller.h"
@@ -26,7 +50,7 @@ HumanoidAnimationContext riderCtx;
 // Create controller
 HorseAnimationController controller(profile, anim, riderCtx);
 
-// Control gaits
+// Control gaits manually
 controller.setGait(GaitType::TROT);
 controller.updateGaitParameters();
 
