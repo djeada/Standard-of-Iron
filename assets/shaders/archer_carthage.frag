@@ -248,10 +248,9 @@ void main() {
     // Wetness darkens leather and adds clearcoat
     color = mix(color, color * 0.55, wetMask * 0.85);
 
-    // Specular: dielectric leather F0 ~ 0.04, roughness 0.7-0.9 for matte finish
-    // Higher roughness reduces plastic-like shine and creates diffuse appearance
+    // Specular: dielectric leather F0 ~ 0.04, slightly higher roughness for matte finish
     float roughness =
-        clamp(0.70 + grain * 0.15 - v_leatherTension * 0.10, 0.70, 0.90);
+        clamp(0.58 - v_leatherTension * 0.15 + grain * 0.14, 0.35, 0.82);
     float a = max(0.04, roughness * roughness);
     NdotL = max(dot(N, L), 0.0);
     NdotV = max(dot(N, V), 0.0);
@@ -264,9 +263,8 @@ void main() {
     // Add water clearcoat when raining
     vec3 coat = clearcoatSpec(N, L, V, wetMask * 0.9, mix(0.10, 0.03, wetMask));
 
-    // Subtle, colored specular highlights for leather - reduce intensity
-    // Tint with base color to avoid white highlights
-    specularAccum += vec3(spec) * 0.20 * mix(vec3(1.0), color, 0.3) + coat;
+    // Slightly reduce specular intensity and add subtle color tinting
+    specularAccum += vec3(spec) * 0.42 * mix(vec3(1.0), color, 0.15) + coat;
 
     // ----------------------------- Linen -----------------------------
   } else if (likelyLinen) {
@@ -405,17 +403,10 @@ void main() {
   // Apply ambient occlusion
   vec3 finalColor = lit * ao;
 
-  // ----------------------------- Tone Mapping & Gamma Correction
-  // -----------------------------
-  // Filmic tone mapping (Reinhard) to prevent over-bright highlights
-  // This prevents the plastic-like shine by compressing bright values
-  finalColor = finalColor / (finalColor + vec3(1.0));
-
-  // Gamma correction (sRGB, gamma 2.2)
-  // Convert from linear to sRGB color space for correct display
+  // Gamma correction for sRGB display (subtle improvement, no tone mapping)
   finalColor = pow(finalColor, vec3(1.0 / 2.2));
 
-  // Final clamp for safety
+  // Final clamp
   finalColor = clamp(finalColor, 0.0, 1.0);
 
   FragColor = vec4(finalColor, u_alpha);
