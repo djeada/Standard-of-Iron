@@ -685,7 +685,7 @@ void HumanoidRendererBase::drawCommonBody(const DrawContext &ctx,
     }
     foot_forward.normalize();
 
-    float const heel_span = foot_radius * 1.35F;
+    float const heel_span = foot_radius * 2.20F;
     float const toe_span = foot_radius * 3.30F;
     float const sole_y = HP::GROUND_Y + 0.003F;
 
