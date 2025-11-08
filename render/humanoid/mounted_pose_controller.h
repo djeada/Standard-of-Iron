@@ -6,6 +6,7 @@
 namespace Render::GL {
 
 class HumanoidPoseController;
+struct HorseMountFrame;
 
 enum class SpearGrip {
   OVERHAND,    // Spear overhead for thrusting down

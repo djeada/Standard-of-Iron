@@ -1,4 +1,5 @@
 #include "mounted_pose_controller.h"
+#include "../horse/rig.h"
 #include "humanoid_math.h"
 #include "humanoid_specs.h"
 #include "pose_controller.h"
