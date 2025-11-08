@@ -6,6 +6,7 @@
 #include "../gl/primitives.h"
 #include "../humanoid/rig.h"
 #include "../submitter.h"
+#include "horse_animation_controller.h"
 
 #include <QMatrix4x4>
 #include <QVector3D>
@@ -283,38 +284,46 @@ auto compute_mount_frame(const HorseProfile &profile) -> HorseMountFrame {
 void HorseRendererBase::render(const DrawContext &ctx,
                                const AnimationInputs &anim,
                                const HumanoidAnimationContext &rider_ctx,
-                               const HorseProfile &profile,
+                               HorseProfile &profile,
                                ISubmitter &out) const {
   const HorseDimensions &d = profile.dims;
   const HorseVariant &v = profile.variant;
   const HorseGait &g = profile.gait;
   HorseMountFrame mount = compute_mount_frame(profile);
 
+  // Use HorseAnimationController to manage animation state
+  HorseAnimationController controller(profile, anim, rider_ctx);
+  
+  // Determine gait based on rider state
   const bool rider_has_motion =
       rider_ctx.is_walking() || rider_ctx.is_running();
   const bool is_moving = rider_has_motion || anim.isMoving;
   const float rider_intensity = rider_ctx.locomotion_normalized_speed();
-
-  float cycle = std::max(0.20F, (rider_ctx.gait.cycle_time > 0.0001F)
-                                    ? rider_ctx.gait.cycle_time
-                                    : g.cycleTime);
-  float phase = 0.0F;
-  float bob = 0.0F;
-
+  
   if (is_moving) {
-    if (rider_ctx.gait.cycle_time > 0.0001F) {
-      phase = rider_ctx.gait.cycle_phase;
+    // Auto-adjust gait based on rider speed
+    float const speed = rider_ctx.locomotion_speed();
+    if (speed < 0.5F) {
+      controller.idle(1.0F);
+    } else if (speed < 3.0F) {
+      controller.setGait(GaitType::WALK);
+    } else if (speed < 5.5F) {
+      controller.setGait(GaitType::TROT);
+    } else if (speed < 8.0F) {
+      controller.setGait(GaitType::CANTER);
     } else {
-      phase = std::fmod(anim.time / cycle, 1.0F);
+      controller.setGait(GaitType::GALLOP);
     }
-    float const bob_amp =
-        d.idleBobAmplitude +
-        rider_intensity * (d.moveBobAmplitude - d.idleBobAmplitude);
-    bob = std::sin(phase * 2.0F * k_pi) * bob_amp;
   } else {
-    phase = std::fmod(anim.time * 0.25F, 1.0F);
-    bob = std::sin(phase * 2.0F * k_pi) * d.idleBobAmplitude;
+    controller.idle(1.0F);
   }
+  
+  // Update gait parameters - this modifies the profile
+  controller.updateGaitParameters();
+  
+  // Get animation state from controller
+  float const phase = controller.getCurrentPhase();
+  float const bob = controller.getCurrentBob();
 
   float const head_nod = is_moving ? std::sin((phase + 0.25F) * 2.0F * k_pi) *
                                          (0.02F + rider_intensity * 0.03F)
@@ -326,6 +335,8 @@ void HorseRendererBase::render(const DrawContext &ctx,
   float const sock_chance_rl = hash01(vhash ^ 0x303U);
   float const sock_chance_rr = hash01(vhash ^ 0x404U);
   bool const has_blaze = hash01(vhash ^ 0x505U) > 0.82F;
+  
+  // Calculate rein slack using controller's logic
   float rein_slack = hash01(vhash ^ 0x707U) * 0.08F + 0.02F;
   float rein_tension = rider_intensity;
   if (rider_ctx.gait.has_target) {
