@@ -679,32 +679,40 @@ void HumanoidRendererBase::drawCommonBody(const DrawContext &ctx,
   auto draw_foot = [&](const QVector3D &ankle, bool is_left) {
     QVector3D lateral = is_left ? -right_axis : right_axis;
     QVector3D foot_forward =
-        forward_axis + lateral * (is_left ? -0.14F : 0.14F);
+        forward_axis + lateral * (is_left ? -0.12F : 0.12F);
     if (foot_forward.lengthSquared() < 1e-6F) {
       foot_forward = forward_axis;
     }
     foot_forward.normalize();
 
-    float const heel_span = foot_radius * 1.20F;
-    float const toe_span = foot_radius * 3.50F;
-    float const sole_radius = foot_radius * 0.95F;
+    float const heel_span = foot_radius * 1.35F;
+    float const toe_span = foot_radius * 3.30F;
     float const sole_y = HP::GROUND_Y + 0.003F;
-    float const heel_lift = 0.008F;
 
     QVector3D heel = ankle - foot_forward * heel_span;
     QVector3D toe = ankle + foot_forward * toe_span;
-    heel.setY(sole_y + heel_lift);
+    heel.setY(sole_y);
     toe.setY(sole_y);
 
-    QMatrix4x4 foot_mat = capsuleBetween(ctx.model, heel, toe, sole_radius);
-    foot_mat.scale(1.35F, 0.38F, 1.0F);
+    QMatrix4x4 foot_mat = capsuleBetween(ctx.model, heel, toe, foot_radius);
+    
+    float const width_at_heel = 0.85F;
+    float const width_at_toe = 1.45F;
+    float const height_scale = 0.26F;
+    float const depth_scale = 1.0F;
+    
+    QMatrix4x4 scale_mat;
+    scale_mat.setToIdentity();
+    scale_mat.scale((width_at_heel + width_at_toe) * 0.5F, height_scale, depth_scale);
+    
+    QMatrix4x4 shear_mat;
+    shear_mat.setToIdentity();
+    shear_mat(0, 2) = (width_at_toe - width_at_heel) * 0.5F;
+    
+    foot_mat = foot_mat * scale_mat * shear_mat;
+    
     out.mesh(getUnitCapsule(), foot_mat, v.palette.leatherDark * 0.92F, nullptr,
              1.0F);
-
-    QVector3D heel_back = heel - foot_forward * (sole_radius * 0.25F);
-    heel_back.setY(sole_y + heel_lift * 0.7F);
-    out.mesh(getUnitSphere(), sphereAt(ctx.model, heel_back, sole_radius * 0.85F),
-             v.palette.leatherDark * 0.88F, nullptr, 1.0F);
   };
 
   draw_foot(pose.footL, true);
