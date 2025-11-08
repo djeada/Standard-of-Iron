@@ -696,8 +696,8 @@ void HumanoidRendererBase::drawCommonBody(const DrawContext &ctx,
 
     QMatrix4x4 foot_mat = capsuleBetween(ctx.model, heel, toe, foot_radius);
     
-    float const width_at_heel = 8.5F;
-    float const width_at_toe = 14.5F;
+    float const width_at_heel = 1.2F;
+    float const width_at_toe = 2.5F;
     float const height_scale = 0.26F;
     float const depth_scale = 1.0F;
     
