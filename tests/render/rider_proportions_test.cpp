@@ -12,21 +12,21 @@ namespace TestMocks {
 class KingdomHorseSwordsmanRenderer : public HumanoidRendererBase {
 public:
   auto get_proportion_scaling() const -> QVector3D override {
-    return {0.95F, 0.92F, 0.98F};
+    return {0.88F, 0.75F, 0.90F};
   }
 };
 
 class RomanHorseSwordsmanRenderer : public HumanoidRendererBase {
 public:
   auto get_proportion_scaling() const -> QVector3D override {
-    return {0.95F, 0.92F, 0.98F};
+    return {0.88F, 0.75F, 0.90F};
   }
 };
 
 class CarthageHorseSwordsmanRenderer : public HumanoidRendererBase {
 public:
   auto get_proportion_scaling() const -> QVector3D override {
-    return {0.95F, 0.92F, 0.98F};
+    return {0.88F, 0.75F, 0.90F};
   }
 };
 
@@ -49,17 +49,17 @@ TEST_F(RiderProportionsTest, KingdomRiderHasRealisticProportions) {
   TestMocks::KingdomHorseSwordsmanRenderer renderer;
   QVector3D const proportions = renderer.get_proportion_scaling();
 
-  // Width scale should be close to normal (0.9-1.1)
-  EXPECT_TRUE(inRange(proportions.x(), 0.9F, 1.1F))
+  // Width scale should be reasonable for mounted rider (0.75-1.0)
+  EXPECT_TRUE(inRange(proportions.x(), 0.75F, 1.0F))
       << "Width scale " << proportions.x() << " is outside realistic range";
 
-  // Height scale should be slightly less than normal due to sitting posture
-  // (0.85-0.98)
-  EXPECT_TRUE(inRange(proportions.y(), 0.85F, 0.98F))
+  // Height scale should be reduced for mounted posture (shorter legs needed)
+  // (0.70-0.85)
+  EXPECT_TRUE(inRange(proportions.y(), 0.70F, 0.85F))
       << "Height scale " << proportions.y() << " is outside realistic range";
 
-  // Depth scale should be close to normal (0.9-1.1)
-  EXPECT_TRUE(inRange(proportions.z(), 0.9F, 1.1F))
+  // Depth scale should be reasonable (0.85-1.0)
+  EXPECT_TRUE(inRange(proportions.z(), 0.85F, 1.0F))
       << "Depth scale " << proportions.z() << " is outside realistic range";
 
   // Proportions should not be extremely thin (no dimension < 0.5)
@@ -76,11 +76,11 @@ TEST_F(RiderProportionsTest, RomanRiderHasRealisticProportions) {
   QVector3D const proportions = renderer.get_proportion_scaling();
 
   // Same expectations as Kingdom rider
-  EXPECT_TRUE(inRange(proportions.x(), 0.9F, 1.1F))
+  EXPECT_TRUE(inRange(proportions.x(), 0.75F, 1.0F))
       << "Width scale " << proportions.x() << " is outside realistic range";
-  EXPECT_TRUE(inRange(proportions.y(), 0.85F, 0.98F))
+  EXPECT_TRUE(inRange(proportions.y(), 0.70F, 0.85F))
       << "Height scale " << proportions.y() << " is outside realistic range";
-  EXPECT_TRUE(inRange(proportions.z(), 0.9F, 1.1F))
+  EXPECT_TRUE(inRange(proportions.z(), 0.85F, 1.0F))
       << "Depth scale " << proportions.z() << " is outside realistic range";
 }
 
@@ -89,11 +89,11 @@ TEST_F(RiderProportionsTest, CarthageRiderHasRealisticProportions) {
   QVector3D const proportions = renderer.get_proportion_scaling();
 
   // Same expectations as other nations
-  EXPECT_TRUE(inRange(proportions.x(), 0.9F, 1.1F))
+  EXPECT_TRUE(inRange(proportions.x(), 0.75F, 1.0F))
       << "Width scale " << proportions.x() << " is outside realistic range";
-  EXPECT_TRUE(inRange(proportions.y(), 0.85F, 0.98F))
+  EXPECT_TRUE(inRange(proportions.y(), 0.70F, 0.85F))
       << "Height scale " << proportions.y() << " is outside realistic range";
-  EXPECT_TRUE(inRange(proportions.z(), 0.9F, 1.1F))
+  EXPECT_TRUE(inRange(proportions.z(), 0.85F, 1.0F))
       << "Depth scale " << proportions.z() << " is outside realistic range";
 }
 
