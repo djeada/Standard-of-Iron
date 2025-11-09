@@ -12,6 +12,7 @@
 #include "../../../gl/shader.h"
 #include "../../../humanoid/humanoid_math.h"
 #include "../../../humanoid/humanoid_specs.h"
+#include "../../../humanoid/mounted_pose_controller.h"
 #include "../../../humanoid/pose_controller.h"
 #include "../../../humanoid/rig.h"
 #include "../../../palette.h"
@@ -54,12 +55,36 @@ struct MountedKnightExtras {
 class MountedKnightRenderer : public HumanoidRendererBase {
 public:
   auto get_proportion_scaling() const -> QVector3D override {
-    return {1.40F, 1.05F, 1.10F};
+
+    return {1.F, 1.7F, 1.F};
+  }
+
+  auto get_mount_scale() const -> float override { return 0.75F; }
+
+  void adjust_variation(const DrawContext &, uint32_t,
+                        VariationParams &variation) const override {
+    variation.height_scale = 0.92F;
+    variation.bulkScale = 0.80F;
+    variation.stanceWidth = 0.65F;
+    variation.armSwingAmp = 0.55F;
+    variation.walkSpeedMult = 1.0F;
+    variation.postureSlump = 0.0F;
+    variation.shoulderTilt = 0.0F;
   }
 
 private:
   mutable std::unordered_map<uint32_t, MountedKnightExtras> m_extrasCache;
   HorseRenderer m_horseRenderer;
+  mutable const HumanoidPose *m_lastPose = nullptr;
+  mutable MountedAttachmentFrame m_lastMount{};
+  mutable ReinState m_lastReinState{};
+  mutable bool m_hasLastReins = false;
+
+  auto getScaledHorseDimensions(uint32_t seed) const -> HorseDimensions {
+    HorseDimensions dims = makeHorseDimensions(seed);
+    scaleHorseDimensions(dims, get_mount_scale());
+    return dims;
+  }
 
 public:
   void get_variant(const DrawContext &ctx, uint32_t seed,
@@ -89,150 +114,45 @@ public:
 
     const AnimationInputs &anim = anim_ctx.inputs;
 
-    const float arm_height_jitter = (hash_01(seed ^ 0xABCDU) - 0.5F) * 0.03F;
-    const float arm_asymmetry = (hash_01(seed ^ 0xDEF0U) - 0.5F) * 0.04F;
-
     uint32_t horse_seed = seed;
     if (ctx.entity != nullptr) {
       horse_seed = static_cast<uint32_t>(
           reinterpret_cast<uintptr_t>(ctx.entity) & 0xFFFFFFFFU);
     }
 
-    const HorseDimensions dims = makeHorseDimensions(horse_seed);
+    HorseDimensions dims = getScaledHorseDimensions(horse_seed);
     HorseProfile mount_profile{};
     mount_profile.dims = dims;
-    const HorseMountFrame mount = compute_mount_frame(mount_profile);
+    MountedAttachmentFrame mount = compute_mount_frame(mount_profile);
+    HorseMotionSample const motion =
+        evaluate_horse_motion(mount_profile, anim, anim_ctx);
+    apply_mount_vertical_offset(mount, motion.bob);
 
-    const float saddle_height = mount.seat_position.y();
-    const float offset_y = saddle_height - pose.pelvisPos.y();
+    m_lastPose = &pose;
+    m_lastMount = mount;
 
-    pose.pelvisPos.setY(pose.pelvisPos.y() + offset_y);
-    pose.headPos.setY(pose.headPos.y() + offset_y);
-    pose.neck_base.setY(pose.neck_base.y() + offset_y);
-    pose.shoulderL.setY(pose.shoulderL.y() + offset_y);
-    pose.shoulderR.setY(pose.shoulderR.y() + offset_y);
+    ReinState const reins = compute_rein_state(horse_seed, anim_ctx);
+    m_lastReinState = reins;
+    m_hasLastReins = true;
+
+    MountedPoseController mounted_controller(pose, anim_ctx);
+    mounted_controller.mountOnHorse(mount);
 
     float const speed_norm = anim_ctx.locomotion_normalized_speed();
     float const speed_lean = std::clamp(
         anim_ctx.locomotion_speed() * 0.10F + speed_norm * 0.05F, 0.0F, 0.22F);
-    const float lean_forward = dims.seatForwardOffset * 0.08F + speed_lean;
-    pose.shoulderL.setZ(pose.shoulderL.z() + lean_forward);
-    pose.shoulderR.setZ(pose.shoulderR.z() + lean_forward);
-
-    pose.footYOffset = 0.0F;
-    pose.footL = mount.stirrup_bottom_left;
-    pose.foot_r = mount.stirrup_bottom_right;
-
-    const float knee_y =
-        mount.stirrup_bottom_left.y() +
-        (saddle_height - mount.stirrup_bottom_left.y()) * 0.62F;
-    const float knee_z = mount.stirrup_bottom_left.z() * 0.60F + 0.06F;
-
-    QVector3D knee_left = mount.stirrup_attach_left;
-    knee_left.setY(knee_y);
-    knee_left.setZ(knee_z);
-    pose.knee_l = knee_left;
-
-    QVector3D knee_right = mount.stirrup_attach_right;
-    knee_right.setY(knee_y);
-    knee_right.setZ(knee_z);
-    pose.knee_r = knee_right;
-
-    float const shoulder_height = pose.shoulderL.y();
-    float const rein_extension = std::clamp(
-        speed_norm * 0.14F + anim_ctx.locomotion_speed() * 0.015F, 0.0F, 0.12F);
-    float const rein_drop = std::clamp(
-        speed_norm * 0.06F + anim_ctx.locomotion_speed() * 0.008F, 0.0F, 0.04F);
-
-    QVector3D forward = anim_ctx.heading_forward();
-    QVector3D right = anim_ctx.heading_right();
-    QVector3D up = anim_ctx.heading_up();
-    float const rein_spread =
-        std::abs(mount.rein_attach_right.x() - mount.rein_attach_left.x()) *
-        0.5F;
-
-    QVector3D rest_hand_r = mount.rein_attach_right;
-    rest_hand_r += forward * (0.08F + rein_extension);
-    rest_hand_r -= right * (0.10F - arm_asymmetry * 0.05F);
-    rest_hand_r += up * (0.05F + arm_height_jitter * 0.6F - rein_drop);
-
-    QVector3D rest_hand_l = mount.rein_attach_left;
-    rest_hand_l += forward * (0.05F + rein_extension * 0.6F);
-    rest_hand_l += right * (0.08F + arm_asymmetry * 0.04F);
-    rest_hand_l += up * (0.04F - arm_height_jitter * 0.5F - rein_drop * 0.6F);
-
-    float const rein_forward = rest_hand_r.z();
-
-    HumanoidPoseController controller(pose, anim_ctx);
-
-    controller.placeHandAt(false, rest_hand_r);
-    controller.placeHandAt(true, rest_hand_l);
-
-    pose.elbowL =
-        QVector3D(pose.shoulderL.x() * 0.4F + rest_hand_l.x() * 0.6F,
-                  (pose.shoulderL.y() + rest_hand_l.y()) * 0.5F - 0.08F,
-                  (pose.shoulderL.z() + rest_hand_l.z()) * 0.5F);
-    pose.elbowR =
-        QVector3D(pose.shoulderR.x() * 0.4F + rest_hand_r.x() * 0.6F,
-                  (pose.shoulderR.y() + rest_hand_r.y()) * 0.5F - 0.08F,
-                  (pose.shoulderR.z() + rest_hand_r.z()) * 0.5F);
+    float const forward_lean =
+        (dims.seatForwardOffset * 0.08F + speed_lean) / 0.15F;
+    mounted_controller.ridingLeaning(mount, forward_lean, 0.0F);
 
     if (anim.is_attacking && anim.isMelee) {
+
       float const attack_phase =
           std::fmod(anim.time * MOUNTED_KNIGHT_INV_ATTACK_CYCLE_TIME, 1.0F);
-
-      QVector3D const rest_pos = rest_hand_r;
-      QVector3D const windup_pos =
-          QVector3D(rest_hand_r.x() + 0.32F, shoulder_height + 0.15F,
-                    rein_forward - 0.35F);
-      QVector3D const raised_pos = QVector3D(
-          rein_spread + 0.38F, shoulder_height + 0.28F, rein_forward - 0.25F);
-      QVector3D const slash_pos = QVector3D(
-          -rein_spread * 0.65F, shoulder_height - 0.08F, rein_forward + 0.85F);
-      QVector3D const follow_through = QVector3D(
-          -rein_spread * 0.85F, shoulder_height - 0.15F, rein_forward + 0.60F);
-      QVector3D const recover_pos = QVector3D(
-          rein_spread * 0.45F, shoulder_height - 0.05F, rein_forward + 0.25F);
-
-      QVector3D hand_r_target;
-
-      if (attack_phase < 0.18F) {
-        float const t = easeInOutCubic(attack_phase / 0.18F);
-        hand_r_target = rest_pos * (1.0F - t) + windup_pos * t;
-      } else if (attack_phase < 0.30F) {
-        float const t = easeInOutCubic((attack_phase - 0.18F) / 0.12F);
-        hand_r_target = windup_pos * (1.0F - t) + raised_pos * t;
-      } else if (attack_phase < 0.48F) {
-        float t = (attack_phase - 0.30F) / 0.18F;
-        t = t * t * t;
-        hand_r_target = raised_pos * (1.0F - t) + slash_pos * t;
-      } else if (attack_phase < 0.62F) {
-        float const t = easeInOutCubic((attack_phase - 0.48F) / 0.14F);
-        hand_r_target = slash_pos * (1.0F - t) + follow_through * t;
-      } else if (attack_phase < 0.80F) {
-        float const t = easeInOutCubic((attack_phase - 0.62F) / 0.18F);
-        hand_r_target = follow_through * (1.0F - t) + recover_pos * t;
-      } else {
-        float const t = smoothstep(0.80F, 1.0F, attack_phase);
-        hand_r_target = recover_pos * (1.0F - t) + rest_pos * t;
-      }
-
-      float const rein_tension = clamp01((attack_phase - 0.10F) * 2.2F);
-      QVector3D const hand_l_target =
-          rest_hand_l +
-          QVector3D(0.0F, -0.015F * rein_tension, 0.10F * rein_tension);
-
-      controller.placeHandAt(false, hand_r_target);
-      controller.placeHandAt(true, hand_l_target);
-
-      pose.elbowR =
-          QVector3D(pose.shoulderR.x() * 0.3F + pose.hand_r.x() * 0.7F,
-                    (pose.shoulderR.y() + pose.hand_r.y()) * 0.5F - 0.12F,
-                    (pose.shoulderR.z() + pose.hand_r.z()) * 0.5F);
-      pose.elbowL =
-          QVector3D(pose.shoulderL.x() * 0.4F + pose.handL.x() * 0.6F,
-                    (pose.shoulderL.y() + pose.handL.y()) * 0.5F - 0.08F,
-                    (pose.shoulderL.z() + pose.handL.z()) * 0.5F);
+      mounted_controller.ridingMeleeStrike(mount, attack_phase);
+    } else {
+      mounted_controller.holdReins(mount, reins.slack, reins.slack,
+                                   reins.tension, reins.tension);
     }
   }
 
@@ -252,7 +172,8 @@ public:
     if (it != m_extrasCache.end()) {
       extras = it->second;
     } else {
-      extras = computeMountedKnightExtras(horse_seed, v);
+      HorseDimensions dims = getScaledHorseDimensions(horse_seed);
+      extras = computeMountedKnightExtras(horse_seed, v, dims);
       m_extrasCache[horse_seed] = extras;
 
       if (m_extrasCache.size() > MAX_EXTRAS_CACHE_SIZE) {
@@ -260,7 +181,15 @@ public:
       }
     }
 
-    m_horseRenderer.render(ctx, anim, anim_ctx, extras.horseProfile, out);
+    const bool is_current_pose = (m_lastPose == &pose);
+    const MountedAttachmentFrame *mount_ptr =
+        (is_current_pose) ? &m_lastMount : nullptr;
+    const ReinState *rein_ptr =
+        (is_current_pose && m_hasLastReins) ? &m_lastReinState : nullptr;
+    m_horseRenderer.render(ctx, anim, anim_ctx, extras.horseProfile, mount_ptr,
+                           rein_ptr, out);
+    m_lastPose = nullptr;
+    m_hasLastReins = false;
 
     bool const is_attacking = anim.is_attacking && anim.isMelee;
 
@@ -320,14 +249,16 @@ public:
   }
 
 private:
-  static auto
-  computeMountedKnightExtras(uint32_t seed,
-                             const HumanoidVariant &v) -> MountedKnightExtras {
+  static auto computeMountedKnightExtras(
+      uint32_t seed, const HumanoidVariant &v,
+      const HorseDimensions &dims) -> MountedKnightExtras {
     MountedKnightExtras e;
 
     e.metalColor = QVector3D(0.72F, 0.73F, 0.78F);
 
     e.horseProfile = makeHorseProfile(seed, v.palette.leather, v.palette.cloth);
+
+    e.horseProfile.dims = dims;
 
     e.swordLength = 0.82F + (hash_01(seed ^ 0xABCDU) - 0.5F) * 0.12F;
     e.swordWidth = 0.042F + (hash_01(seed ^ 0x7777U) - 0.5F) * 0.008F;
@@ -340,7 +271,6 @@ private:
 };
 void registerMountedKnightRenderer(
     Render::GL::EntityRendererRegistry &registry) {
-  static MountedKnightRenderer const renderer;
   registry.register_renderer(
       "troops/carthage/horse_swordsman",
       [](const DrawContext &ctx, ISubmitter &out) {
