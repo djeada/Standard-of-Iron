@@ -70,6 +70,7 @@ add_library(render_gl STATIC
     humanoid/rig.cpp
     humanoid/style_palette.cpp
     humanoid/pose_controller.cpp
+    humanoid/mounted_pose_controller.cpp
     equipment/equipment_registry.cpp
     equipment/register_equipment.cpp
     equipment/armor/tunic_renderer.cpp

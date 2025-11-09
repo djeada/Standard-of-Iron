@@ -7,6 +7,7 @@ add_executable(standard_of_iron_tests
     db/save_storage_test.cpp
     render/pose_controller_test.cpp
     render/pose_controller_compatibility_test.cpp
+    render/mounted_pose_controller_test.cpp
     render/body_frames_test.cpp
     render/equipment_registry_test.cpp
     render/helmet_renderers_test.cpp
