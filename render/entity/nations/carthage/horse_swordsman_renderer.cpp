@@ -212,15 +212,8 @@ public:
     }
 
     if (extras.hasCavalryShield) {
-      auto shield = registry.get(EquipmentCategory::Weapon, "shield");
+      auto shield = registry.get(EquipmentCategory::Weapon, "shield_carthage");
       if (shield) {
-        ShieldRenderConfig shield_config;
-        shield_config.metal_color = extras.metalColor;
-
-        auto *shield_renderer = dynamic_cast<ShieldRenderer *>(shield.get());
-        if (shield_renderer) {
-          shield_renderer->setConfig(shield_config);
-        }
         shield->render(ctx, pose.bodyFrames, v.palette, anim_ctx, out);
       }
     }
