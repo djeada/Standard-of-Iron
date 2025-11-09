@@ -427,8 +427,11 @@ void HumanoidRendererBase::drawCommonBody(const DrawContext &ctx,
   const float y_neck = pose.neck_base.y();
   const float shoulder_half_span =
       0.5F * std::abs(pose.shoulderR.x() - pose.shoulderL.x());
-  const float torso_r =
-      std::max(HP::TORSO_TOP_R * width_scale, shoulder_half_span * 0.95F);
+
+  const float torso_r_base =
+      std::max(HP::TORSO_TOP_R, shoulder_half_span * 0.95F);
+
+  const float torso_r = torso_r_base * width_scale;
 
   const float y_top_cover = std::max(y_shoulder + 0.04F, y_neck + 0.00F);
 
@@ -447,8 +450,11 @@ void HumanoidRendererBase::drawCommonBody(const DrawContext &ctx,
   QVector3D const tunic_bot{0.0F, pose.pelvisPos.y() + 0.03F, 0.0F};
 
   QMatrix4x4 torso_transform =
-      cylinderBetween(ctx.model, tunic_top, tunic_bot, torso_r);
-  torso_transform.scale(1.0F, 1.0F, 0.65F);
+      cylinderBetween(ctx.model, tunic_top, tunic_bot, 1.0F);
+  float const depth_scale = scaling.z();
+
+  torso_transform.scale(torso_r_base * width_scale, 1.0F,
+                        torso_r_base * depth_scale * 0.65F);
 
   out.mesh(getUnitTorso(), torso_transform, v.palette.cloth, nullptr, 1.0F);
 
@@ -459,8 +465,10 @@ void HumanoidRendererBase::drawCommonBody(const DrawContext &ctx,
            v.palette.skin * 0.9F, nullptr, 1.0F);
 
   float const head_r = pose.headR;
-  out.mesh(getUnitSphere(), sphereAt(ctx.model, pose.headPos, head_r),
-           v.palette.skin, nullptr, 1.0F);
+
+  QMatrix4x4 head_transform = sphereAt(ctx.model, pose.headPos, head_r);
+  head_transform.scale(width_scale, 1.0F, depth_scale);
+  out.mesh(getUnitSphere(), head_transform, v.palette.skin, nullptr, 1.0F);
 
   QVector3D head_up = pose.headPos - pose.neck_base;
   if (head_up.lengthSquared() < 1e-8F) {
@@ -685,18 +693,36 @@ void HumanoidRendererBase::drawCommonBody(const DrawContext &ctx,
     }
     foot_forward.normalize();
 
-    float const heel_span = foot_radius * 1.35F;
-    float const toe_span = foot_radius * 3.30F;
-    float const sole_radius = foot_radius;
-    float const sole_y = HP::GROUND_Y + 0.004F;
+    float const heel_span = foot_radius * 3.50F;
+    float const toe_span = foot_radius * 5.50F;
+    float const sole_y = HP::GROUND_Y;
 
-    QVector3D heel = ankle - foot_forward * heel_span;
-    QVector3D toe = ankle + foot_forward * toe_span;
+    QVector3D ankle_ground = ankle;
+    ankle_ground.setY(sole_y);
+
+    QVector3D heel = ankle_ground - foot_forward * heel_span;
+    QVector3D toe = ankle_ground + foot_forward * toe_span;
     heel.setY(sole_y);
     toe.setY(sole_y);
 
-    QMatrix4x4 foot_mat = capsuleBetween(ctx.model, heel, toe, sole_radius);
-    foot_mat.scale(1.30F, 0.42F, 0.95F);
+    QMatrix4x4 foot_mat = capsuleBetween(ctx.model, heel, toe, foot_radius);
+
+    float const width_at_heel = 1.2F;
+    float const width_at_toe = 2.5F;
+    float const height_scale = 0.26F;
+    float const depth_scale = 1.0F;
+
+    QMatrix4x4 scale_mat;
+    scale_mat.setToIdentity();
+    scale_mat.scale((width_at_heel + width_at_toe) * 0.5F, height_scale,
+                    depth_scale);
+
+    QMatrix4x4 shear_mat;
+    shear_mat.setToIdentity();
+    shear_mat(0, 2) = (width_at_toe - width_at_heel) * 0.5F;
+
+    foot_mat = foot_mat * scale_mat * shear_mat;
+
     out.mesh(getUnitCapsule(), foot_mat, v.palette.leatherDark * 0.92F, nullptr,
              1.0F);
   };

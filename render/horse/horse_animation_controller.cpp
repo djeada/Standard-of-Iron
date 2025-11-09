@@ -9,7 +9,6 @@ namespace Render::GL {
 namespace {
 constexpr float k_pi = std::numbers::pi_v<float>;
 
-// Gait parameters based on real horse gaits
 struct GaitParameters {
   float cycleTime;
   float frontLegPhase;
@@ -41,7 +40,7 @@ HorseAnimationController::HorseAnimationController(
     HorseProfile &profile, const AnimationInputs &anim,
     const HumanoidAnimationContext &rider_ctx)
     : m_profile(profile), m_anim(anim), m_rider_ctx(rider_ctx) {
-  // Initialize from current profile
+
   m_phase = 0.0F;
   m_bob = 0.0F;
   m_rein_slack = 0.05F;
@@ -62,8 +61,7 @@ HorseAnimationController::HorseAnimationController(
 
 void HorseAnimationController::setGait(GaitType gait) {
   m_current_gait = gait;
-  
-  // Update speed based on gait
+
   switch (gait) {
   case GaitType::IDLE:
     m_speed = 0.0F;
@@ -81,28 +79,26 @@ void HorseAnimationController::setGait(GaitType gait) {
     m_speed = 10.0F;
     break;
   }
-  
+
   updateGaitParameters();
 }
 
 void HorseAnimationController::idle(float bob_intensity) {
   m_current_gait = GaitType::IDLE;
   m_speed = 0.0F;
-  
-  // Calculate idle bob
+
   float const phase = std::fmod(m_anim.time * 0.25F, 1.0F);
   m_phase = phase;
   m_bob = std::sin(phase * 2.0F * k_pi) * m_profile.dims.idleBobAmplitude *
           bob_intensity;
-  
+
   updateGaitParameters();
 }
 
 void HorseAnimationController::accelerate(float speed_delta) {
   m_speed += speed_delta;
   m_speed = std::max(0.0F, m_speed);
-  
-  // Auto-adjust gait based on speed
+
   if (m_speed < 0.5F) {
     m_current_gait = GaitType::IDLE;
   } else if (m_speed < 3.0F) {
@@ -114,7 +110,7 @@ void HorseAnimationController::accelerate(float speed_delta) {
   } else {
     m_current_gait = GaitType::GALLOP;
   }
-  
+
   updateGaitParameters();
 }
 
@@ -128,7 +124,7 @@ void HorseAnimationController::turn(float yaw_radians, float banking_amount) {
 }
 
 void HorseAnimationController::strafeStep(bool left, float distance) {
-  // Strafe step is a lateral movement - could adjust phase slightly
+
   float const direction = left ? -1.0F : 1.0F;
   m_phase = std::fmod(m_phase + direction * distance * 0.1F, 1.0F);
 }
@@ -168,39 +164,34 @@ auto HorseAnimationController::getStrideCycle() const -> float {
 
 void HorseAnimationController::updateGaitParameters() {
   GaitParameters const params = getGaitParams(m_current_gait);
-  
-  // Update profile gait parameters
+
   m_profile.gait.cycleTime = params.cycleTime;
   m_profile.gait.frontLegPhase = params.frontLegPhase;
   m_profile.gait.rearLegPhase = params.rearLegPhase;
   m_profile.gait.strideSwing = params.strideSwing;
   m_profile.gait.strideLift = params.strideLift;
-  
-  // Calculate phase and bob based on current gait
+
   bool const is_moving = m_current_gait != GaitType::IDLE;
-  
+
   if (is_moving) {
-    // Use rider context if available, otherwise compute from time
+
     if (m_rider_ctx.gait.cycle_time > 0.0001F) {
       m_phase = m_rider_ctx.gait.cycle_phase;
     } else {
       m_phase = std::fmod(m_anim.time / params.cycleTime, 1.0F);
     }
-    
-    // Calculate bob with intensity from rider
+
     float const rider_intensity = m_rider_ctx.locomotion_normalized_speed();
-    float const bob_amp =
-        m_profile.dims.idleBobAmplitude +
-        rider_intensity * (m_profile.dims.moveBobAmplitude -
-                          m_profile.dims.idleBobAmplitude);
+    float const bob_amp = m_profile.dims.idleBobAmplitude +
+                          rider_intensity * (m_profile.dims.moveBobAmplitude -
+                                             m_profile.dims.idleBobAmplitude);
     m_bob = std::sin(m_phase * 2.0F * k_pi) * bob_amp;
   } else {
-    // Idle animation
+
     m_phase = std::fmod(m_anim.time * 0.25F, 1.0F);
     m_bob = std::sin(m_phase * 2.0F * k_pi) * m_profile.dims.idleBobAmplitude;
   }
-  
-  // Calculate rein slack based on rider state
+
   float rein_tension = m_rider_ctx.locomotion_normalized_speed();
   if (m_rider_ctx.gait.has_target) {
     rein_tension += 0.25F;
