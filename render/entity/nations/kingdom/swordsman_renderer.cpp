@@ -189,20 +189,8 @@ public:
       sword->render(ctx, pose.bodyFrames, v.palette, anim_ctx, out);
     }
 
-    auto shield = registry.get(EquipmentCategory::Weapon, "shield");
+    auto shield = registry.get(EquipmentCategory::Weapon, "shield_kingdom");
     if (shield) {
-      ShieldRenderConfig shield_config;
-      shield_config.shield_color = extras.shieldColor;
-      shield_config.trim_color = extras.shieldTrimColor;
-      shield_config.metal_color = extras.metalColor;
-      shield_config.shield_radius = extras.shieldRadius;
-      shield_config.shield_aspect = extras.shieldAspect;
-      shield_config.has_cross_decal = extras.shieldCrossDecal;
-
-      auto *shield_renderer = dynamic_cast<ShieldRenderer *>(shield.get());
-      if (shield_renderer) {
-        shield_renderer->setConfig(shield_config);
-      }
       shield->render(ctx, pose.bodyFrames, v.palette, anim_ctx, out);
     }
 
