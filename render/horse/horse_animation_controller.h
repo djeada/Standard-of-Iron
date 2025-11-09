@@ -4,41 +4,30 @@
 
 namespace Render::GL {
 
-enum class GaitType {
-  IDLE,
-  WALK,
-  TROT,
-  CANTER,
-  GALLOP
-};
+enum class GaitType { IDLE, WALK, TROT, CANTER, GALLOP };
 
 class HorseAnimationController {
 public:
   HorseAnimationController(HorseProfile &profile, const AnimationInputs &anim,
-                          const HumanoidAnimationContext &rider_ctx);
+                           const HumanoidAnimationContext &rider_ctx);
 
-  // Gait control
-  void setGait(GaitType gait);  // WALK, TROT, CANTER, GALLOP
+  void setGait(GaitType gait);
   void idle(float bob_intensity = 1.0F);
   void accelerate(float speed_delta);
   void decelerate(float speed_delta);
 
-  // Movement
   void turn(float yaw_radians, float banking_amount);
   void strafeStep(bool left, float distance);
 
-  // Special animations
-  void rear(float height_factor);  // 0.0 = ground, 1.0 = full rear
+  void rear(float height_factor);
   void kick(bool rear_legs, float power);
   void buck(float intensity);
   void jumpObstacle(float height, float distance);
 
-  // State queries
   auto getCurrentPhase() const -> float;
   auto getCurrentBob() const -> float;
   auto getStrideCycle() const -> float;
 
-  // Apply to profile
   void updateGaitParameters();
 
 private:
@@ -49,7 +38,7 @@ private:
   float m_phase{};
   float m_bob{};
   float m_rein_slack{};
-  
+
   GaitType m_current_gait{GaitType::IDLE};
   float m_speed{};
   float m_turn_angle{};
