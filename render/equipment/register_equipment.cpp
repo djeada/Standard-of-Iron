@@ -15,7 +15,10 @@
 #include "weapons/bow_renderer.h"
 #include "weapons/quiver_renderer.h"
 #include "weapons/roman_scutum.h"
+#include "weapons/shield_carthage.h"
+#include "weapons/shield_kingdom.h"
 #include "weapons/shield_renderer.h"
+#include "weapons/shield_roman.h"
 #include "weapons/spear_renderer.h"
 #include "weapons/sword_renderer.h"
 #include <memory>
@@ -121,6 +124,19 @@ void registerBuiltInEquipment() {
 
   auto shield = std::make_shared<ShieldRenderer>();
   registry.registerEquipment(EquipmentCategory::Weapon, "shield", shield);
+
+  // Nation-specific shields
+  auto shield_carthage = std::make_shared<CarthageShieldRenderer>();
+  registry.registerEquipment(EquipmentCategory::Weapon, "shield_carthage",
+                             shield_carthage);
+
+  auto shield_roman = std::make_shared<RomanShieldRenderer>();
+  registry.registerEquipment(EquipmentCategory::Weapon, "shield_roman",
+                             shield_roman);
+
+  auto shield_kingdom = std::make_shared<KingdomShieldRenderer>();
+  registry.registerEquipment(EquipmentCategory::Weapon, "shield_kingdom",
+                             shield_kingdom);
 }
 
 } // namespace Render::GL
