@@ -4,6 +4,13 @@
 
 namespace Render::GL {
 
+struct LimbLengths {
+  float upper_leg = 0.50F;
+  float lower_leg = 0.47F;
+  float upper_arm = 0.32F;
+  float fore_arm = 0.27F;
+};
+
 struct HumanProportions {
 
   static constexpr float TOTAL_HEIGHT = 1.80F;
@@ -35,6 +42,14 @@ struct HumanProportions {
 
   static constexpr float UPPER_ARM_LEN = 0.32F;
   static constexpr float FORE_ARM_LEN = 0.27F;
+};
+
+// Proportions for mounted riders - shorter limbs for proper seated posture
+struct MountedRiderProportions {
+  static constexpr float UPPER_LEG_LEN = 0.35F;  // Reduced from 0.50F
+  static constexpr float LOWER_LEG_LEN = 0.32F;  // Reduced from 0.47F
+  static constexpr float UPPER_ARM_LEN = 0.28F;  // Reduced from 0.32F
+  static constexpr float FORE_ARM_LEN = 0.24F;   // Reduced from 0.27F
 };
 
 enum class MaterialType : uint8_t {

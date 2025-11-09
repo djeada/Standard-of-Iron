@@ -54,7 +54,7 @@ private:
                     float outward_sign) const -> QVector3D;
 
   auto solveKneeIK(bool is_left, const QVector3D &hip, const QVector3D &foot,
-                   float height_scale) const -> QVector3D;
+                   float height_scale, const LimbLengths &limbs) const -> QVector3D;
 
   auto getShoulder(bool is_left) const -> const QVector3D &;
   auto getHand(bool is_left) -> QVector3D &;

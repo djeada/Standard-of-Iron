@@ -12,21 +12,21 @@ namespace TestMocks {
 class KingdomHorseSwordsmanRenderer : public HumanoidRendererBase {
 public:
   auto get_proportion_scaling() const -> QVector3D override {
-    return {0.88F, 0.75F, 0.90F};
+    return {0.95F, 1.0F, 0.98F};
   }
 };
 
 class RomanHorseSwordsmanRenderer : public HumanoidRendererBase {
 public:
   auto get_proportion_scaling() const -> QVector3D override {
-    return {0.88F, 0.75F, 0.90F};
+    return {0.95F, 1.0F, 0.98F};
   }
 };
 
 class CarthageHorseSwordsmanRenderer : public HumanoidRendererBase {
 public:
   auto get_proportion_scaling() const -> QVector3D override {
-    return {0.88F, 0.75F, 0.90F};
+    return {0.95F, 1.0F, 0.98F};
   }
 };
 
@@ -49,17 +49,17 @@ TEST_F(RiderProportionsTest, KingdomRiderHasRealisticProportions) {
   TestMocks::KingdomHorseSwordsmanRenderer renderer;
   QVector3D const proportions = renderer.get_proportion_scaling();
 
-  // Width scale should be reasonable for mounted rider (0.75-1.0)
-  EXPECT_TRUE(inRange(proportions.x(), 0.75F, 1.0F))
+  // Width scale should be reasonable (0.90-1.0)
+  EXPECT_TRUE(inRange(proportions.x(), 0.90F, 1.0F))
       << "Width scale " << proportions.x() << " is outside realistic range";
 
-  // Height scale should be reduced for mounted posture (shorter legs needed)
-  // (0.70-0.85)
-  EXPECT_TRUE(inRange(proportions.y(), 0.70F, 0.85F))
+  // Height scale should be near normal since base limbs are now corrected
+  // (0.95-1.05)
+  EXPECT_TRUE(inRange(proportions.y(), 0.95F, 1.05F))
       << "Height scale " << proportions.y() << " is outside realistic range";
 
-  // Depth scale should be reasonable (0.85-1.0)
-  EXPECT_TRUE(inRange(proportions.z(), 0.85F, 1.0F))
+  // Depth scale should be reasonable (0.95-1.0)
+  EXPECT_TRUE(inRange(proportions.z(), 0.95F, 1.0F))
       << "Depth scale " << proportions.z() << " is outside realistic range";
 
   // Proportions should not be extremely thin (no dimension < 0.5)
@@ -76,11 +76,11 @@ TEST_F(RiderProportionsTest, RomanRiderHasRealisticProportions) {
   QVector3D const proportions = renderer.get_proportion_scaling();
 
   // Same expectations as Kingdom rider
-  EXPECT_TRUE(inRange(proportions.x(), 0.75F, 1.0F))
+  EXPECT_TRUE(inRange(proportions.x(), 0.90F, 1.0F))
       << "Width scale " << proportions.x() << " is outside realistic range";
-  EXPECT_TRUE(inRange(proportions.y(), 0.70F, 0.85F))
+  EXPECT_TRUE(inRange(proportions.y(), 0.95F, 1.05F))
       << "Height scale " << proportions.y() << " is outside realistic range";
-  EXPECT_TRUE(inRange(proportions.z(), 0.85F, 1.0F))
+  EXPECT_TRUE(inRange(proportions.z(), 0.95F, 1.0F))
       << "Depth scale " << proportions.z() << " is outside realistic range";
 }
 
@@ -89,11 +89,11 @@ TEST_F(RiderProportionsTest, CarthageRiderHasRealisticProportions) {
   QVector3D const proportions = renderer.get_proportion_scaling();
 
   // Same expectations as other nations
-  EXPECT_TRUE(inRange(proportions.x(), 0.75F, 1.0F))
+  EXPECT_TRUE(inRange(proportions.x(), 0.90F, 1.0F))
       << "Width scale " << proportions.x() << " is outside realistic range";
-  EXPECT_TRUE(inRange(proportions.y(), 0.70F, 0.85F))
+  EXPECT_TRUE(inRange(proportions.y(), 0.95F, 1.05F))
       << "Height scale " << proportions.y() << " is outside realistic range";
-  EXPECT_TRUE(inRange(proportions.z(), 0.85F, 1.0F))
+  EXPECT_TRUE(inRange(proportions.z(), 0.95F, 1.0F))
       << "Depth scale " << proportions.z() << " is outside realistic range";
 }
 
@@ -143,4 +143,29 @@ TEST_F(RiderProportionsTest, ProportionsPreventOverlyElongatedLimbs) {
   EXPECT_TRUE(inRange(height_vs_lateral, 0.7F, 1.3F))
       << "Height vs lateral proportion ratio " << height_vs_lateral
       << " is unbalanced";
+}
+
+TEST_F(RiderProportionsTest, MountedRiderLimbsAreShorterThanStanding) {
+  using HP = HumanProportions;
+  using MRP = MountedRiderProportions;
+
+  // Mounted rider legs should be significantly shorter than standing
+  EXPECT_LT(MRP::UPPER_LEG_LEN, HP::UPPER_LEG_LEN)
+      << "Mounted upper leg should be shorter than standing";
+  EXPECT_LT(MRP::LOWER_LEG_LEN, HP::LOWER_LEG_LEN)
+      << "Mounted lower leg should be shorter than standing";
+
+  // Mounted rider arms should also be slightly shorter
+  EXPECT_LT(MRP::UPPER_ARM_LEN, HP::UPPER_ARM_LEN)
+      << "Mounted upper arm should be shorter than standing";
+  EXPECT_LT(MRP::FORE_ARM_LEN, HP::FORE_ARM_LEN)
+      << "Mounted forearm should be shorter than standing";
+
+  // Total leg length reduction should be substantial (at least 20%)
+  float const standing_leg = HP::UPPER_LEG_LEN + HP::LOWER_LEG_LEN;
+  float const mounted_leg = MRP::UPPER_LEG_LEN + MRP::LOWER_LEG_LEN;
+  float const reduction = (standing_leg - mounted_leg) / standing_leg;
+  EXPECT_GT(reduction, 0.20F)
+      << "Mounted rider legs should be at least 20% shorter, got " 
+      << (reduction * 100.0F) << "%";
 }

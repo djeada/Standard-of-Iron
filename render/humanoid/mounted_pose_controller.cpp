@@ -422,6 +422,7 @@ void MountedPoseController::translateUpperBody(const QVector3D &delta) {
 
 void MountedPoseController::calculateRidingKnees(
     const MountedAttachmentFrame &mount) {
+  using MRP = MountedRiderProportions;
 
   QVector3D const hip_offset = mount.seat_up * -0.02F;
   QVector3D const hip_left =
@@ -431,8 +432,15 @@ void MountedPoseController::calculateRidingKnees(
 
   float const height_scale = m_anim_ctx.variation.height_scale;
 
-  m_pose.knee_l = solveKneeIK(true, hip_left, m_pose.footL, height_scale);
-  m_pose.knee_r = solveKneeIK(false, hip_right, m_pose.foot_r, height_scale);
+  // Use shortened limb lengths for mounted riders
+  LimbLengths mounted_limbs;
+  mounted_limbs.upper_leg = MRP::UPPER_LEG_LEN;
+  mounted_limbs.lower_leg = MRP::LOWER_LEG_LEN;
+  mounted_limbs.upper_arm = MRP::UPPER_ARM_LEN;
+  mounted_limbs.fore_arm = MRP::FORE_ARM_LEN;
+
+  m_pose.knee_l = solveKneeIK(true, hip_left, m_pose.footL, height_scale, mounted_limbs);
+  m_pose.knee_r = solveKneeIK(false, hip_right, m_pose.foot_r, height_scale, mounted_limbs);
 }
 
 auto MountedPoseController::solveElbowIK(
@@ -445,7 +453,7 @@ auto MountedPoseController::solveElbowIK(
 
 auto MountedPoseController::solveKneeIK(bool is_left, const QVector3D &hip,
                                         const QVector3D &foot,
-                                        float height_scale) const -> QVector3D {
+                                        float height_scale, const LimbLengths &limbs) const -> QVector3D {
   using HP = HumanProportions;
 
   QVector3D hip_to_foot = foot - hip;
@@ -454,8 +462,9 @@ auto MountedPoseController::solveKneeIK(bool is_left, const QVector3D &hip,
     return hip;
   }
 
-  float const upper_len = HP::UPPER_LEG_LEN * height_scale;
-  float const lower_len = HP::LOWER_LEG_LEN * height_scale;
+  // Use custom limb lengths for mounted riders
+  float const upper_len = limbs.upper_leg * height_scale;
+  float const lower_len = limbs.lower_leg * height_scale;
   float const reach = upper_len + lower_len;
   float const min_reach =
       std::max(std::abs(upper_len - lower_len) + 1e-4F, 1e-3F);

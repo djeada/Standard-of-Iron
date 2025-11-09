@@ -56,7 +56,7 @@ class MountedKnightRenderer : public HumanoidRendererBase {
 public:
   auto get_proportion_scaling() const -> QVector3D override {
 
-    return {0.88F, 0.75F, 0.90F};
+    return {0.95F, 1.0F, 0.98F};
   }
 
   auto get_mount_scale() const -> float override { return 0.75F; }
