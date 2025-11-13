@@ -21,11 +21,11 @@ protected:
     pose.shoulderR = QVector3D(half_shoulder, HP::SHOULDER_Y, 0.0F);
     pose.pelvisPos = QVector3D(0.0F, HP::WAIST_Y, 0.0F);
     pose.handL = QVector3D(-0.25F, 1.20F, 0.30F);
-    pose.hand_r = QVector3D(0.25F, 1.20F, 0.30F);
+    pose.handR = QVector3D(0.25F, 1.20F, 0.30F);
     pose.elbowL = QVector3D(-0.23F, 1.30F, 0.15F);
     pose.elbowR = QVector3D(0.23F, 1.30F, 0.15F);
     pose.footL = QVector3D(-0.14F, 0.022F, 0.06F);
-    pose.foot_r = QVector3D(0.14F, 0.022F, -0.06F);
+    pose.footR = QVector3D(0.14F, 0.022F, -0.06F);
   }
 
   HumanoidPose pose;

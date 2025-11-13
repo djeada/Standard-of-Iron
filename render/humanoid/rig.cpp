@@ -9,6 +9,9 @@
 #include "../entity/registry.h"
 #include "../geom/math_utils.h"
 #include "../geom/transforms.h"
+#include "../gl/humanoid/animation/animation_inputs.h"
+#include "../gl/humanoid/animation/gait.h"
+#include "../gl/humanoid/humanoid_constants.h"
 #include "../gl/primitives.h"
 #include "../gl/render_constants.h"
 #include "../palette.h"
@@ -21,8 +24,6 @@
 #include <cmath>
 #include <cstdint>
 #include <numbers>
-#include <qmatrix4x4.h>
-#include <qvectornd.h>
 
 namespace Render::GL {
 
@@ -31,14 +32,6 @@ using Render::Geom::capsuleBetween;
 using Render::Geom::coneFromTo;
 using Render::Geom::cylinderBetween;
 using Render::Geom::sphereAt;
-
-namespace {
-
-constexpr float k_run_speed_threshold = 3.2F;
-constexpr float k_reference_walk_speed = 2.35F;
-constexpr float k_reference_run_speed = 5.10F;
-
-} // namespace
 
 auto HumanoidRendererBase::frameLocalPosition(
     const AttachmentFrame &frame, const QVector3D &local) -> QVector3D {
@@ -138,103 +131,6 @@ auto HumanoidRendererBase::resolveFormation(const DrawContext &ctx)
   return params;
 }
 
-auto HumanoidRendererBase::classifyMotionState(
-    const AnimationInputs &anim, float move_speed) -> HumanoidMotionState {
-  if (anim.isInHoldMode) {
-    return HumanoidMotionState::Hold;
-  }
-  if (anim.isExitingHold) {
-    return HumanoidMotionState::ExitingHold;
-  }
-  if (anim.is_attacking) {
-    return HumanoidMotionState::Attacking;
-  }
-  if (anim.isMoving) {
-    return (move_speed > k_run_speed_threshold) ? HumanoidMotionState::Run
-                                                : HumanoidMotionState::Walk;
-  }
-  return HumanoidMotionState::Idle;
-}
-
-auto HumanoidRendererBase::sampleAnimState(const DrawContext &ctx)
-    -> AnimationInputs {
-  AnimationInputs anim{};
-  anim.time = ctx.animationTime;
-  anim.isMoving = false;
-  anim.is_attacking = false;
-  anim.isMelee = false;
-  anim.isInHoldMode = false;
-  anim.isExitingHold = false;
-  anim.holdExitProgress = 0.0F;
-
-  if (ctx.entity == nullptr) {
-    return anim;
-  }
-
-  if (ctx.entity->hasComponent<Engine::Core::PendingRemovalComponent>()) {
-    return anim;
-  }
-
-  auto *movement = ctx.entity->getComponent<Engine::Core::MovementComponent>();
-  auto *attack = ctx.entity->getComponent<Engine::Core::AttackComponent>();
-  auto *attack_target =
-      ctx.entity->getComponent<Engine::Core::AttackTargetComponent>();
-  auto *transform =
-      ctx.entity->getComponent<Engine::Core::TransformComponent>();
-  auto *hold_mode = ctx.entity->getComponent<Engine::Core::HoldModeComponent>();
-
-  anim.isInHoldMode = ((hold_mode != nullptr) && hold_mode->active);
-  if ((hold_mode != nullptr) && !hold_mode->active &&
-      hold_mode->exitCooldown > 0.0F) {
-    anim.isExitingHold = true;
-    anim.holdExitProgress =
-        1.0F - (hold_mode->exitCooldown / hold_mode->standUpDuration);
-  }
-  anim.isMoving = ((movement != nullptr) && movement->hasTarget);
-
-  if ((attack != nullptr) && (attack_target != nullptr) &&
-      attack_target->target_id > 0 && (transform != nullptr)) {
-    anim.isMelee = (attack->currentMode ==
-                    Engine::Core::AttackComponent::CombatMode::Melee);
-
-    bool const stationary = !anim.isMoving;
-    float const current_cooldown =
-        anim.isMelee ? attack->meleeCooldown : attack->cooldown;
-    bool const recently_fired =
-        attack->timeSinceLast < std::min(current_cooldown, 0.45F);
-    bool target_in_range = false;
-
-    if (ctx.world != nullptr) {
-      auto *target = ctx.world->getEntity(attack_target->target_id);
-      if (target != nullptr) {
-        auto *target_transform =
-            target->getComponent<Engine::Core::TransformComponent>();
-        if (target_transform != nullptr) {
-          float const dx = target_transform->position.x - transform->position.x;
-          float const dz = target_transform->position.z - transform->position.z;
-          float const dist_squared = dx * dx + dz * dz;
-          float target_radius = 0.0F;
-          if (target->hasComponent<Engine::Core::BuildingComponent>()) {
-            target_radius =
-                std::max(target_transform->scale.x, target_transform->scale.z) *
-                0.5F;
-          } else {
-            target_radius =
-                std::max(target_transform->scale.x, target_transform->scale.z) *
-                0.5F;
-          }
-          float const effective_range = attack->range + target_radius + 0.25F;
-          target_in_range = (dist_squared <= effective_range * effective_range);
-        }
-      }
-    }
-
-    anim.is_attacking = stationary && (target_in_range || recently_fired);
-  }
-
-  return anim;
-}
-
 void HumanoidRendererBase::computeLocomotionPose(
     uint32_t seed, float time, bool isMoving, const VariationParams &variation,
     HumanoidPose &pose) {
@@ -263,7 +159,7 @@ void HumanoidRendererBase::computeLocomotionPose(
   pose.footYOffset = 0.022F;
   pose.footL =
       QVector3D(-foot_x_span, HP::GROUND_Y + pose.footYOffset, rest_stride);
-  pose.foot_r =
+  pose.footR =
       QVector3D(foot_x_span, HP::GROUND_Y + pose.footYOffset, -rest_stride);
 
   pose.shoulderL.setY(pose.shoulderL.y() + variation.shoulderTilt);
@@ -277,9 +173,9 @@ void HumanoidRendererBase::computeLocomotionPose(
   float const foot_forward_jitter = (hash_01(seed ^ 0x9ABCU) - 0.5F) * 0.035F;
 
   pose.footL.setX(pose.footL.x() + foot_inward_jitter);
-  pose.foot_r.setX(pose.foot_r.x() - foot_inward_jitter);
+  pose.footR.setX(pose.footR.x() - foot_inward_jitter);
   pose.footL.setZ(pose.footL.z() + foot_forward_jitter);
-  pose.foot_r.setZ(pose.foot_r.z() - foot_forward_jitter);
+  pose.footR.setZ(pose.footR.z() - foot_forward_jitter);
 
   float const arm_height_jitter = (hash_01(seed ^ 0xABCDU) - 0.5F) * 0.03F;
   float const arm_asymmetry = (hash_01(seed ^ 0xDEF0U) - 0.5F) * 0.04F;
@@ -287,7 +183,7 @@ void HumanoidRendererBase::computeLocomotionPose(
   pose.handL =
       QVector3D(-0.05F + arm_asymmetry,
                 HP::SHOULDER_Y * h_scale + 0.05F + arm_height_jitter, 0.55F);
-  pose.hand_r = QVector3D(
+  pose.handR = QVector3D(
       0.15F - arm_asymmetry * 0.5F,
       HP::SHOULDER_Y * h_scale + 0.15F + arm_height_jitter * 0.8F, 0.20F);
 
@@ -316,7 +212,7 @@ void HumanoidRendererBase::computeLocomotionPose(
     };
 
     animate_foot(pose.footL, left_phase);
-    animate_foot(pose.foot_r, right_phase);
+    animate_foot(pose.footR, right_phase);
 
     float const hip_sway =
         std::sin(walk_phase * 2.0F * std::numbers::pi_v<float>) * 0.02F *
@@ -381,7 +277,7 @@ void HumanoidRendererBase::computeLocomotionPose(
   };
 
   pose.knee_l = solve_leg(hip_l, pose.footL, true);
-  pose.knee_r = solve_leg(hip_r, pose.foot_r, false);
+  pose.knee_r = solve_leg(hip_r, pose.footR, false);
 
   QVector3D right_axis = pose.shoulderR - pose.shoulderL;
   right_axis.setY(0.0F);
@@ -394,7 +290,7 @@ void HumanoidRendererBase::computeLocomotionPose(
 
   pose.elbowL = elbowBendTorso(pose.shoulderL, pose.handL, outward_l, 0.45F,
                                0.15F, -0.08F, +1.0F);
-  pose.elbowR = elbowBendTorso(pose.shoulderR, pose.hand_r, outward_r, 0.48F,
+  pose.elbowR = elbowBendTorso(pose.shoulderR, pose.handR, outward_r, 0.48F,
                                0.12F, 0.02F, +1.0F);
 }
 
@@ -589,7 +485,7 @@ void HumanoidRendererBase::drawCommonBody(const DrawContext &ctx,
   pose.bodyFrames.handL.forward = hand_forward_l;
   pose.bodyFrames.handL.radius = hand_r;
 
-  QVector3D hand_up_r = (pose.hand_r - pose.elbowR);
+  QVector3D hand_up_r = (pose.handR - pose.elbowR);
   if (hand_up_r.lengthSquared() > 1e-8F) {
     hand_up_r.normalize();
   } else {
@@ -602,7 +498,7 @@ void HumanoidRendererBase::drawCommonBody(const DrawContext &ctx,
     hand_forward_r.normalize();
   }
 
-  pose.bodyFrames.handR.origin = pose.hand_r;
+  pose.bodyFrames.handR.origin = pose.handR;
   pose.bodyFrames.handR.right = right_axis;
   pose.bodyFrames.handR.up = hand_up_r;
   pose.bodyFrames.handR.forward = hand_forward_r;
@@ -629,7 +525,7 @@ void HumanoidRendererBase::drawCommonBody(const DrawContext &ctx,
     foot_forward_r = forward_axis;
   }
 
-  pose.bodyFrames.footR.origin = pose.foot_r;
+  pose.bodyFrames.footR.origin = pose.footR;
   pose.bodyFrames.footR.right = right_axis;
   pose.bodyFrames.footR.up = foot_up_l;
   pose.bodyFrames.footR.forward = foot_forward_r;
@@ -669,9 +565,9 @@ void HumanoidRendererBase::drawCommonBody(const DrawContext &ctx,
   out.mesh(getUnitSphere(), sphereAt(ctx.model, pose.elbowR, joint_r),
            v.palette.cloth * 0.95F, nullptr, 1.0F);
   out.mesh(getUnitCylinder(),
-           cylinderBetween(ctx.model, pose.elbowR, pose.hand_r, fore_arm_r),
+           cylinderBetween(ctx.model, pose.elbowR, pose.handR, fore_arm_r),
            v.palette.skin * 0.95F, nullptr, 1.0F);
-  out.mesh(getUnitSphere(), sphereAt(ctx.model, pose.hand_r, hand_r),
+  out.mesh(getUnitSphere(), sphereAt(ctx.model, pose.handR, hand_r),
            v.palette.leatherDark * 0.92F, nullptr, 1.0F);
 
   QVector3D const hip_l = pose.pelvisPos + QVector3D(-0.10F, -0.02F, 0.0F);
@@ -692,7 +588,7 @@ void HumanoidRendererBase::drawCommonBody(const DrawContext &ctx,
   out.mesh(getUnitSphere(), sphereAt(ctx.model, pose.knee_r, leg_joint_r),
            v.palette.cloth * 0.90F, nullptr, 1.0F);
   out.mesh(getUnitCylinder(),
-           cylinderBetween(ctx.model, pose.knee_r, pose.foot_r, shin_r),
+           cylinderBetween(ctx.model, pose.knee_r, pose.footR, shin_r),
            v.palette.leather * 0.95F, nullptr, 1.0F);
 
   auto draw_foot = [&](const QVector3D &ankle, bool is_left) {
@@ -739,7 +635,7 @@ void HumanoidRendererBase::drawCommonBody(const DrawContext &ctx,
   };
 
   draw_foot(pose.footL, true);
-  draw_foot(pose.foot_r, false);
+  draw_foot(pose.footR, false);
 
   draw_armorOverlay(ctx, v, pose, y_top_cover, torso_r, shoulder_half_span,
                     upper_arm_r, right_axis, out);
