@@ -18,10 +18,10 @@ void main() {
   v_worldPos = vec3(u_model * vec4(a_position, 1.0));
 
   // Detect armor layer based on Y position for Roman republican hastati
-  // Upper body (montefortino) = 0, Torso (pectorale/mail) = 1, Lower
+  // Upper body (helmet) = 0, Torso (pectorale/mail) = 1, Lower
   // (belt/pteruges) = 2
   if (v_worldPos.y > 1.5) {
-    v_armorLayer = 0.0; // Montefortino helmet region
+    v_armorLayer = 0.0; // Helmet region
   } else if (v_worldPos.y > 0.8) {
     v_armorLayer = 1.0; // Pectorale (heart guard)/lorica hamata region
   } else {
