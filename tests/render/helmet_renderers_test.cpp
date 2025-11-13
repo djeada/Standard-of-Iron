@@ -1,6 +1,6 @@
 #include "render/equipment/equipment_registry.h"
+#include "render/equipment/helmets/carthage_heavy_helmet.h"
 #include "render/equipment/helmets/headwrap.h"
-#include "render/equipment/helmets/montefortino_helmet.h"
 #include "render/humanoid/rig.h"
 #include "render/palette.h"
 #include <gtest/gtest.h>
@@ -104,17 +104,17 @@ protected:
   MockSubmitter submitter;
 };
 
-TEST_F(HelmetRenderersTest, MontefortinoHelmetRendersWithValidFrames) {
-  MontefortinoHelmetRenderer helmet;
+TEST_F(HelmetRenderersTest, CarthageHeavyHelmetRendersWithValidFrames) {
+  CarthageHeavyHelmetRenderer helmet;
 
   helmet.render(ctx, frames, palette, anim, submitter);
 
-  // Montefortino helmet should render multiple mesh components
+  // Carthage heavy helmet should render multiple mesh components
   EXPECT_GT(submitter.mesh_count, 0);
 }
 
-TEST_F(HelmetRenderersTest, MontefortinoHelmetHandlesZeroHeadRadius) {
-  MontefortinoHelmetRenderer helmet;
+TEST_F(HelmetRenderersTest, CarthageHeavyHelmetHandlesZeroHeadRadius) {
+  CarthageHeavyHelmetRenderer helmet;
   frames.head.radius = 0.0F;
 
   helmet.render(ctx, frames, palette, anim, submitter);
@@ -145,10 +145,11 @@ TEST_F(HelmetRenderersTest, HeadwrapHandlesZeroHeadRadius) {
 TEST_F(HelmetRenderersTest, HelmetsRegisteredInEquipmentRegistry) {
   auto &registry = EquipmentRegistry::instance();
 
-  // Verify montefortino helmet is registered
-  EXPECT_TRUE(registry.has(EquipmentCategory::Helmet, "montefortino"));
-  auto montefortino = registry.get(EquipmentCategory::Helmet, "montefortino");
-  ASSERT_NE(montefortino, nullptr);
+  // Verify Carthage heavy helmet is registered
+  EXPECT_TRUE(registry.has(EquipmentCategory::Helmet, "carthage_heavy"));
+  auto carthage_heavy =
+      registry.get(EquipmentCategory::Helmet, "carthage_heavy");
+  ASSERT_NE(carthage_heavy, nullptr);
 
   // Verify headwrap is registered
   EXPECT_TRUE(registry.has(EquipmentCategory::Helmet, "headwrap"));
@@ -156,9 +157,9 @@ TEST_F(HelmetRenderersTest, HelmetsRegisteredInEquipmentRegistry) {
   ASSERT_NE(headwrap, nullptr);
 }
 
-TEST_F(HelmetRenderersTest, MontefortinoHelmetFromRegistryRenders) {
+TEST_F(HelmetRenderersTest, CarthageHeavyHelmetFromRegistryRenders) {
   auto &registry = EquipmentRegistry::instance();
-  auto helmet = registry.get(EquipmentCategory::Helmet, "montefortino");
+  auto helmet = registry.get(EquipmentCategory::Helmet, "carthage_heavy");
   ASSERT_NE(helmet, nullptr);
 
   helmet->render(ctx, frames, palette, anim, submitter);
@@ -184,7 +185,7 @@ TEST_F(HelmetRenderersTest, HelmetsUseHeadFrameCoordinates) {
   frames.head.forward = QVector3D(0.0F, 0.0F, 1.0F);
   frames.head.radius = 0.12F;
 
-  MontefortinoHelmetRenderer helmet;
+  CarthageHeavyHelmetRenderer helmet;
   MockSubmitter submitter1;
   helmet.render(ctx, frames, palette, anim, submitter1);
 

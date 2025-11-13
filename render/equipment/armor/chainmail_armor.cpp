@@ -7,6 +7,7 @@
 #include "../../submitter.h"
 #include <QMatrix4x4>
 #include <QVector3D>
+#include <algorithm>
 #include <cmath>
 #include <numbers>
 
@@ -59,6 +60,8 @@ void ChainmailArmorRenderer::renderTorsoMail(const DrawContext &ctx,
   }
 
   float const torso_r = torso.radius;
+  float const torso_depth =
+      (torso.depth > 0.0F) ? torso.depth : torso.radius * 0.75F;
 
   QVector3D top = torso.origin + torso.up * (torso_r * 0.20F);
   QVector3D bottom = waist.origin - waist.up * (torso_r * 0.35F);
@@ -84,7 +87,8 @@ void ChainmailArmorRenderer::renderTorsoMail(const DrawContext &ctx,
   mail_transform = mail_transform * orientation;
 
   float height = (top - bottom).length();
-  mail_transform.scale(torso_r * 1.12F, height * 0.5F, torso_r * 1.08F);
+  mail_transform.scale(torso_r * 1.12F, height * 0.5F,
+                       std::max(0.08F, torso_depth * 1.10F));
 
   QVector3D steel_color = QVector3D(0.65F, 0.67F, 0.70F);
 
