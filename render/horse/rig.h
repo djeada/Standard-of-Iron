@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QMatrix4x4>
 #include <QVector3D>
 #include <cstdint>
 
@@ -63,6 +64,42 @@ struct HorseProfile {
   HorseDimensions dims{};
   HorseVariant variant;
   HorseGait gait{};
+};
+
+struct HorseAttachmentFrame {
+  QVector3D origin{0.0F, 0.0F, 0.0F};
+  QVector3D right{1.0F, 0.0F, 0.0F};
+  QVector3D up{0.0F, 1.0F, 0.0F};
+  QVector3D forward{0.0F, 0.0F, 1.0F};
+
+  auto make_local_transform(const QMatrix4x4 &parent,
+                            const QVector3D &local_offset,
+                            float uniform_scale) const -> QMatrix4x4 {
+    QMatrix4x4 m = parent;
+    QVector3D const world_pos =
+        origin + right * local_offset.x() + up * local_offset.y() +
+        forward * local_offset.z();
+    m.translate(world_pos);
+    QMatrix4x4 basis;
+    basis.setColumn(0, QVector4D(right * uniform_scale, 0.0F));
+    basis.setColumn(1, QVector4D(up * uniform_scale, 0.0F));
+    basis.setColumn(2, QVector4D(forward * uniform_scale, 0.0F));
+    basis.setColumn(3, QVector4D(0.0F, 0.0F, 0.0F, 1.0F));
+    return m * basis;
+  }
+};
+
+struct HorseBodyFrames {
+  HorseAttachmentFrame head{};
+  HorseAttachmentFrame neck_base{};
+  HorseAttachmentFrame withers{};
+  HorseAttachmentFrame back_center{};
+  HorseAttachmentFrame croup{};
+  HorseAttachmentFrame chest{};
+  HorseAttachmentFrame barrel{};
+  HorseAttachmentFrame rump{};
+  HorseAttachmentFrame tail_base{};
+  HorseAttachmentFrame muzzle{};
 };
 
 struct MountedAttachmentFrame {
@@ -148,7 +185,7 @@ protected:
   virtual void drawAttachments(const DrawContext &, const AnimationInputs &,
                                const HumanoidAnimationContext &, HorseProfile &,
                                const MountedAttachmentFrame &, float, float,
-                               float, ISubmitter &) const {}
+                               float, const HorseBodyFrames &, ISubmitter &) const {}
 };
 
 } // namespace Render::GL
