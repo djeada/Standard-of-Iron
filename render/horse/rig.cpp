@@ -1126,19 +1126,22 @@ void HorseRendererBase::render(const DrawContext &ctx,
   body_frames.neck_base.up = up;
   body_frames.neck_base.forward = forward;
 
-  QVector3D const withers_pos = chest_center + QVector3D(0.0F, d.bodyHeight * 0.55F, -d.bodyLength * 0.06F);
+  QVector3D const withers_pos =
+      chest_center +
+      QVector3D(0.0F, d.bodyHeight * 0.55F, -d.bodyLength * 0.06F);
   body_frames.withers.origin = withers_pos;
   body_frames.withers.right = right;
   body_frames.withers.up = up;
   body_frames.withers.forward = forward;
 
-  // Use saddle_center from mount for proper positioning
   body_frames.back_center.origin = mount.saddle_center;
   body_frames.back_center.right = right;
   body_frames.back_center.up = up;
   body_frames.back_center.forward = forward;
 
-  QVector3D const croup_pos = rump_center + QVector3D(0.0F, d.bodyHeight * 0.46F, -d.bodyLength * 0.18F);
+  QVector3D const croup_pos =
+      rump_center +
+      QVector3D(0.0F, d.bodyHeight * 0.46F, -d.bodyLength * 0.18F);
   body_frames.croup.origin = croup_pos;
   body_frames.croup.right = right;
   body_frames.croup.up = up;
@@ -1159,7 +1162,9 @@ void HorseRendererBase::render(const DrawContext &ctx,
   body_frames.rump.up = up;
   body_frames.rump.forward = forward;
 
-  QVector3D const tail_base_pos = rump_center + QVector3D(0.0F, d.bodyHeight * 0.20F, -d.bodyLength * 0.40F);
+  QVector3D const tail_base_pos =
+      rump_center +
+      QVector3D(0.0F, d.bodyHeight * 0.20F, -d.bodyLength * 0.40F);
   body_frames.tail_base.origin = tail_base_pos;
   body_frames.tail_base.right = right;
   body_frames.tail_base.up = up;
@@ -1170,8 +1175,8 @@ void HorseRendererBase::render(const DrawContext &ctx,
   body_frames.muzzle.up = up;
   body_frames.muzzle.forward = forward;
 
-  drawAttachments(horse_ctx, anim, rider_ctx, profile, mount, phase, bob, rein_slack,
-                  body_frames, out);
+  drawAttachments(horse_ctx, anim, rider_ctx, profile, mount, phase, bob,
+                  rein_slack, body_frames, out);
 }
 
 } // namespace Render::GL

@@ -52,6 +52,7 @@ add_library(render_gl STATIC
     horse/rig.cpp
     horse/horse_animation_controller.cpp
     entity/horse_renderer.cpp
+    entity/mounted_knight_renderer_base.cpp
     entity/nations/roman/horse_swordsman_renderer.cpp
     entity/nations/carthage/horse_swordsman_renderer.cpp
     entity/nations/kingdom/horse_swordsman_renderer.cpp
