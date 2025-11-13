@@ -31,7 +31,7 @@ void HorseRenderer::drawAttachments(
   horse_anim.time = anim.time;
   horse_anim.phase = phase;
   horse_anim.bob = bob;
-  horse_anim.is_moving = anim.isMoving;
+  horse_anim.is_moving = anim.is_moving;
   horse_anim.rider_intensity = 0.0F;
 
   for (const auto &attachment : m_attachments) {
