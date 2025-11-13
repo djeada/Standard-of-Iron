@@ -71,7 +71,9 @@ void CarthageLightHelmetRenderer::render(const DrawContext &ctx,
 void CarthageLightHelmetRenderer::render_bowl(const DrawContext &ctx,
                                               const AttachmentFrame &head,
                                               ISubmitter &submitter) {
-  const float R = head.radius;
+  const float baseR = head.radius;
+  const float helmetScale = 1.2F;
+  const float R = baseR * helmetScale;
   auto headPoint = [&](const QVector3D &n) {
     return HumanoidRendererBase::frameLocalPosition(head, n);
   };
@@ -156,7 +158,9 @@ void CarthageLightHelmetRenderer::render_bowl(const DrawContext &ctx,
 void CarthageLightHelmetRenderer::render_brim(const DrawContext &ctx,
                                               const AttachmentFrame &head,
                                               ISubmitter &submitter) {
-  const float R = head.radius;
+  const float baseR = head.radius;
+  const float helmetScale = 1.2F;
+  const float R = baseR * helmetScale;
   auto headPoint = [&](const QVector3D &n) {
     return HumanoidRendererBase::frameLocalPosition(head, n);
   };
@@ -182,7 +186,9 @@ void CarthageLightHelmetRenderer::render_brim(const DrawContext &ctx,
 void CarthageLightHelmetRenderer::render_cheek_guards(
     const DrawContext &ctx, const AttachmentFrame &head,
     ISubmitter &submitter) {
-  const float R = head.radius;
+  const float baseR = head.radius;
+  const float helmetScale = 1.2F;
+  const float R = baseR * helmetScale;
   auto headPoint = [&](const QVector3D &n) {
     return HumanoidRendererBase::frameLocalPosition(head, n);
   };
