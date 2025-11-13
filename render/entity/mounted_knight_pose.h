@@ -70,7 +70,7 @@ inline void applyMountedKnightLowerBody(
 
   auto shape_leg = [&](QVector3D &knee, QVector3D &foot, bool is_left) {
     float const side = is_left ? -1.0F : 1.0F;
-    QVector3D pelvis = pose.pelvisPos + mount.seat_up * -0.01F;
+    QVector3D pelvis = pose.pelvis_pos + mount.seat_up * -0.01F;
     QVector3D stirrup =
         (is_left ? mount.stirrup_bottom_left : mount.stirrup_bottom_right) +
         mount.ground_offset;
@@ -112,7 +112,7 @@ inline void applyMountedKnightLowerBody(
     foot = foot * (1.0F - cfg.footBlend) + foot_target * cfg.footBlend;
   };
 
-  shape_leg(pose.knee_l, pose.footL, true);
+  shape_leg(pose.knee_l, pose.foot_l, true);
   shape_leg(pose.knee_r, pose.foot_r, false);
 }
 
