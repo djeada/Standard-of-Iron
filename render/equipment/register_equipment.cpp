@@ -9,7 +9,6 @@
 #include "helmets/headwrap.h"
 #include "helmets/kingdom_heavy_helmet.h"
 #include "helmets/kingdom_light_helmet.h"
-#include "helmets/montefortino_helmet.h"
 #include "helmets/roman_heavy_helmet.h"
 #include "helmets/roman_light_helmet.h"
 #include "weapons/bow_renderer.h"
@@ -72,10 +71,6 @@ void registerBuiltInEquipment() {
   auto headwrap = std::make_shared<HeadwrapRenderer>();
   registry.registerEquipment(EquipmentCategory::Helmet, "headwrap", headwrap);
 
-  auto montefortino = std::make_shared<MontefortinoHelmetRenderer>();
-  registry.registerEquipment(EquipmentCategory::Helmet, "montefortino",
-                             montefortino);
-
   auto roman_heavy = std::make_shared<RomanHeavyHelmetRenderer>();
   registry.registerEquipment(EquipmentCategory::Helmet, "roman_heavy",
                              roman_heavy);
@@ -125,7 +120,6 @@ void registerBuiltInEquipment() {
   auto shield = std::make_shared<ShieldRenderer>();
   registry.registerEquipment(EquipmentCategory::Weapon, "shield", shield);
 
-  // Nation-specific shields
   auto shield_carthage = std::make_shared<CarthageShieldRenderer>();
   registry.registerEquipment(EquipmentCategory::Weapon, "shield_carthage",
                              shield_carthage);
