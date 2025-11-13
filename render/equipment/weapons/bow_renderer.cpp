@@ -20,6 +20,10 @@ using Render::Geom::clampf;
 using Render::Geom::coneFromTo;
 using Render::Geom::cylinderBetween;
 
+namespace {
+constexpr QVector3D k_dark_bow_color(0.05F, 0.035F, 0.02F);
+}
+
 BowRenderer::BowRenderer(BowRenderConfig config)
     : m_config(std::move(config)) {}
 
@@ -63,7 +67,7 @@ void BowRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
     submitter.mesh(
         getUnitCylinder(),
         cylinderBetween(ctx.model, prev, cur, m_config.bow_rod_radius),
-        palette.wood, nullptr, 1.0F);
+        k_dark_bow_color, nullptr, 1.0F);
     prev = cur;
   }
 
@@ -71,7 +75,7 @@ void BowRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
                  cylinderBetween(ctx.model, grip - up * 0.05F,
                                  grip + up * 0.05F,
                                  m_config.bow_rod_radius * 1.45F),
-                 palette.wood, nullptr, 1.0F);
+                 k_dark_bow_color, nullptr, 1.0F);
 
   submitter.mesh(
       getUnitCylinder(),
