@@ -423,7 +423,8 @@ void HumanoidRendererBase::drawCommonBody(const DrawContext &ctx,
   }
   forward_axis.normalize();
 
-  const float y_shoulder = 0.5F * (pose.shoulderL.y() + pose.shoulderR.y());
+  QVector3D const shoulder_mid = (pose.shoulderL + pose.shoulderR) * 0.5F;
+  const float y_shoulder = shoulder_mid.y();
   const float y_neck = pose.neck_base.y();
   const float shoulder_half_span =
       0.5F * std::abs(pose.shoulderR.x() - pose.shoulderL.x());
@@ -432,6 +433,10 @@ void HumanoidRendererBase::drawCommonBody(const DrawContext &ctx,
       std::max(HP::TORSO_TOP_R, shoulder_half_span * 0.95F);
 
   const float torso_r = torso_r_base * width_scale;
+  float const depth_scale = scaling.z();
+  const float torso_depth_factor =
+      std::clamp(0.38F + (depth_scale - 1.0F) * 0.15F, 0.30F, 0.62F);
+  const float torso_depth = torso_r * torso_depth_factor;
 
   const float y_top_cover = std::max(y_shoulder + 0.04F, y_neck + 0.00F);
 
@@ -445,30 +450,20 @@ void HumanoidRendererBase::drawCommonBody(const DrawContext &ctx,
   const float shin_r = HP::LOWER_LEG_R * width_scale;
   const float foot_radius = shin_r * 1.10F;
 
-  QVector3D const tunic_top{0.0F, y_top_cover - 0.006F, 0.0F};
+  QVector3D const tunic_top{shoulder_mid.x(), y_top_cover - 0.006F,
+                            shoulder_mid.z()};
 
-  QVector3D const tunic_bot{0.0F, pose.pelvisPos.y() + 0.03F, 0.0F};
+  QVector3D const tunic_bot{pose.pelvisPos.x(), pose.pelvisPos.y() + 0.03F,
+                            pose.pelvisPos.z()};
 
   QMatrix4x4 torso_transform =
       cylinderBetween(ctx.model, tunic_top, tunic_bot, 1.0F);
-  float const depth_scale = scaling.z();
 
-  torso_transform.scale(torso_r_base * width_scale, 1.0F,
-                        torso_r_base * depth_scale * 0.65F);
+  torso_transform.scale(torso_r, 1.0F, torso_depth);
 
   out.mesh(getUnitTorso(), torso_transform, v.palette.cloth, nullptr, 1.0F);
 
-  QVector3D const chin_pos{0.0F, pose.headPos.y() - pose.headR, 0.0F};
-  out.mesh(getUnitCylinder(),
-           cylinderBetween(ctx.model, pose.neck_base, chin_pos,
-                           HP::NECK_RADIUS * width_scale),
-           v.palette.skin * 0.9F, nullptr, 1.0F);
-
   float const head_r = pose.headR;
-
-  QMatrix4x4 head_transform = sphereAt(ctx.model, pose.headPos, head_r);
-  head_transform.scale(width_scale, 1.0F, depth_scale);
-  out.mesh(getUnitSphere(), head_transform, v.palette.skin, nullptr, 1.0F);
 
   QVector3D head_up = pose.headPos - pose.neck_base;
   if (head_up.lengthSquared() < 1e-8F) {
@@ -476,6 +471,16 @@ void HumanoidRendererBase::drawCommonBody(const DrawContext &ctx,
   } else {
     head_up.normalize();
   }
+
+  QVector3D const chin_pos = pose.headPos - head_up * head_r;
+  out.mesh(getUnitCylinder(),
+           cylinderBetween(ctx.model, pose.neck_base, chin_pos,
+                           HP::NECK_RADIUS * width_scale),
+           v.palette.skin * 0.9F, nullptr, 1.0F);
+
+  QMatrix4x4 head_transform = sphereAt(ctx.model, pose.headPos, head_r);
+  head_transform.scale(width_scale, 1.0F, depth_scale);
+  out.mesh(getUnitSphere(), head_transform, v.palette.skin, nullptr, 1.0F);
 
   QVector3D head_right =
       right_axis - head_up * QVector3D::dotProduct(right_axis, head_up);
@@ -511,24 +516,30 @@ void HumanoidRendererBase::drawCommonBody(const DrawContext &ctx,
 
   pose.bodyFrames.head = pose.headFrame;
 
-  pose.bodyFrames.torso.origin = QVector3D(0.0F, y_shoulder, 0.0F);
+  QVector3D const torso_center =
+      QVector3D((shoulder_mid.x() + pose.pelvisPos.x()) * 0.5F, y_shoulder,
+                (shoulder_mid.z() + pose.pelvisPos.z()) * 0.5F);
+
+  pose.bodyFrames.torso.origin = torso_center;
   pose.bodyFrames.torso.right = right_axis;
   pose.bodyFrames.torso.up = up_axis;
   pose.bodyFrames.torso.forward = forward_axis;
   pose.bodyFrames.torso.radius = torso_r;
+  pose.bodyFrames.torso.depth = torso_depth;
 
-  pose.bodyFrames.back.origin =
-      QVector3D(0.0F, y_shoulder, 0.0F) - forward_axis * (torso_r * 0.65F);
+  pose.bodyFrames.back.origin = torso_center - forward_axis * torso_depth;
   pose.bodyFrames.back.right = right_axis;
   pose.bodyFrames.back.up = up_axis;
   pose.bodyFrames.back.forward = -forward_axis;
-  pose.bodyFrames.back.radius = torso_r * 0.8F;
+  pose.bodyFrames.back.radius = torso_r * 0.75F;
+  pose.bodyFrames.back.depth = torso_depth * 0.90F;
 
   pose.bodyFrames.waist.origin = pose.pelvisPos;
   pose.bodyFrames.waist.right = right_axis;
   pose.bodyFrames.waist.up = up_axis;
   pose.bodyFrames.waist.forward = forward_axis;
-  pose.bodyFrames.waist.radius = torso_r * 0.85F;
+  pose.bodyFrames.waist.radius = torso_r * 0.80F;
+  pose.bodyFrames.waist.depth = torso_depth * 0.72F;
 
   QVector3D shoulder_up = (pose.shoulderL - pose.pelvisPos).normalized();
   QVector3D shoulder_forward_l =

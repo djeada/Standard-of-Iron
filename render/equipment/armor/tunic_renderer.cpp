@@ -8,6 +8,7 @@
 #include "../../submitter.h"
 #include <QMatrix4x4>
 #include <QVector3D>
+#include <algorithm>
 #include <cmath>
 #include <numbers>
 
@@ -74,6 +75,9 @@ void TunicRenderer::renderTorsoArmor(const DrawContext &ctx,
   const QVector3D &up = torso.up;
   const QVector3D &forward = torso.forward;
   float const torso_r = torso.radius * m_config.torso_scale;
+  float const torso_depth = (torso.depth > 0.0F)
+                                ? torso.depth * m_config.chest_depth_scale
+                                : torso.radius * m_config.chest_depth_scale;
 
   auto mapTorsoY = [&](float spec_y) {
     float const delta = spec_y - HP::SHOULDER_Y;
@@ -89,8 +93,8 @@ void TunicRenderer::renderTorsoArmor(const DrawContext &ctx,
   float const chest_width = torso_r * 1.15F;
   float const waist_width = torso_r * m_config.waist_taper;
 
-  float const chest_depth_front = torso_r * 1.1F;
-  float const chest_depth_back = torso_r * m_config.chest_depth_scale;
+  float const chest_depth_front = std::max(0.04F, torso_depth * 1.05F);
+  float const chest_depth_back = std::max(0.03F, torso_depth * 0.75F);
 
   constexpr int segments = 16;
   constexpr float pi = std::numbers::pi_v<float>;
