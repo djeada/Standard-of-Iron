@@ -146,3 +146,34 @@ TEST_F(EquipmentRegistryTest, OverwriteExistingEquipment) {
   ASSERT_NE(retrieved, nullptr);
   EXPECT_EQ(retrieved, helmet2); // Should get the second one
 }
+
+TEST_F(EquipmentRegistryTest, NationSpecificWeapons) {
+  auto sword_carthage = std::make_shared<MockEquipmentRenderer>("sword_carthage");
+  auto sword_roman = std::make_shared<MockEquipmentRenderer>("sword_roman");
+  auto sword_kingdom = std::make_shared<MockEquipmentRenderer>("sword_kingdom");
+
+  registry->registerEquipment(EquipmentCategory::Weapon, "sword_carthage",
+                              sword_carthage);
+  registry->registerEquipment(EquipmentCategory::Weapon, "sword_roman",
+                              sword_roman);
+  registry->registerEquipment(EquipmentCategory::Weapon, "sword_kingdom",
+                              sword_kingdom);
+
+  EXPECT_TRUE(registry->has(EquipmentCategory::Weapon, "sword_carthage"));
+  EXPECT_TRUE(registry->has(EquipmentCategory::Weapon, "sword_roman"));
+  EXPECT_TRUE(registry->has(EquipmentCategory::Weapon, "sword_kingdom"));
+
+  auto retrieved_carthage =
+      registry->get(EquipmentCategory::Weapon, "sword_carthage");
+  auto retrieved_roman = registry->get(EquipmentCategory::Weapon, "sword_roman");
+  auto retrieved_kingdom =
+      registry->get(EquipmentCategory::Weapon, "sword_kingdom");
+
+  ASSERT_NE(retrieved_carthage, nullptr);
+  ASSERT_NE(retrieved_roman, nullptr);
+  ASSERT_NE(retrieved_kingdom, nullptr);
+
+  EXPECT_EQ(retrieved_carthage, sword_carthage);
+  EXPECT_EQ(retrieved_roman, sword_roman);
+  EXPECT_EQ(retrieved_kingdom, sword_kingdom);
+}
