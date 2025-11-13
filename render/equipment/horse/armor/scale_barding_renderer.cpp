@@ -9,14 +9,14 @@ namespace Render::GL {
 void ScaleBardingRenderer::render(const DrawContext &ctx,
                                   const HorseBodyFrames &frames,
                                   const HorseVariant &variant,
-                                  const HorseAnimationContext & /*anim*/,
+                                  const HorseAnimationContext &,
                                   ISubmitter &out) const {
 
   QVector3D const armor_color = variant.tack_color * 0.85F;
 
   const HorseAttachmentFrame &chest = frames.chest;
-  QMatrix4x4 chest_armor =
-      chest.make_local_transform(ctx.model, QVector3D(0.0F, -0.05F, 0.0F), 1.0F);
+  QMatrix4x4 chest_armor = chest.make_local_transform(
+      ctx.model, QVector3D(0.0F, -0.05F, 0.0F), 1.0F);
   chest_armor.scale(0.40F, 0.32F, 0.35F);
   out.mesh(getUnitSphere(), chest_armor, armor_color, nullptr, 1.0F);
 

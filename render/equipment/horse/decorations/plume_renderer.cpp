@@ -19,7 +19,8 @@ void PlumeRenderer::render(const DrawContext &ctx,
   QVector3D const plume_color = variant.blanketColor;
   float const sway = std::sin(anim.time * 2.5F) * 0.08F;
 
-  QVector3D const base_pos = head.origin + head.up * 0.28F + head.forward * 0.05F;
+  QVector3D const base_pos =
+      head.origin + head.up * 0.28F + head.forward * 0.05F;
 
   for (int i = 0; i < 3; ++i) {
     float const offset = (i - 1) * 0.04F;
