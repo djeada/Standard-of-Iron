@@ -18,10 +18,10 @@
 #include "../../../palette.h"
 #include "../../../scene_renderer.h"
 #include "../../../submitter.h"
-#include "../../horse_renderer.h"
 #include "../../mounted_knight_pose.h"
 #include "../../registry.h"
 #include "../../renderer_constants.h"
+#include "kingdom_horse_renderer.h"
 #include <numbers>
 #include <qmatrix4x4.h>
 #include <qstringliteral.h>
@@ -76,7 +76,7 @@ public:
 
 private:
   mutable std::unordered_map<uint32_t, MountedKnightExtras> m_extrasCache;
-  HorseRenderer m_horseRenderer;
+  KingdomHorseRenderer m_horseRenderer;
   mutable const HumanoidPose *m_lastPose = nullptr;
   mutable MountedAttachmentFrame m_lastMount{};
   mutable ReinState m_lastReinState{};
