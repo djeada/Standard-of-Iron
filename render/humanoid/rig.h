@@ -38,6 +38,7 @@ struct AttachmentFrame {
   QVector3D up{0.0F, 1.0F, 0.0F};
   QVector3D forward{0.0F, 0.0F, 1.0F};
   float radius{0.0F};
+  float depth{0.0F};
 };
 
 using HeadFrame = AttachmentFrame;
