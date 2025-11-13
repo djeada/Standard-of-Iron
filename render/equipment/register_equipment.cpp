@@ -19,7 +19,10 @@
 #include "weapons/shield_renderer.h"
 #include "weapons/shield_roman.h"
 #include "weapons/spear_renderer.h"
+#include "weapons/sword_carthage.h"
+#include "weapons/sword_kingdom.h"
 #include "weapons/sword_renderer.h"
+#include "weapons/sword_roman.h"
 #include <memory>
 
 namespace Render::GL {
@@ -113,6 +116,18 @@ void registerBuiltInEquipment() {
 
   auto sword = std::make_shared<SwordRenderer>();
   registry.registerEquipment(EquipmentCategory::Weapon, "sword", sword);
+
+  auto sword_carthage = std::make_shared<CarthageSwordRenderer>();
+  registry.registerEquipment(EquipmentCategory::Weapon, "sword_carthage",
+                             sword_carthage);
+
+  auto sword_roman = std::make_shared<RomanSwordRenderer>();
+  registry.registerEquipment(EquipmentCategory::Weapon, "sword_roman",
+                             sword_roman);
+
+  auto sword_kingdom = std::make_shared<KingdomSwordRenderer>();
+  registry.registerEquipment(EquipmentCategory::Weapon, "sword_kingdom",
+                             sword_kingdom);
 
   auto spear = std::make_shared<SpearRenderer>();
   registry.registerEquipment(EquipmentCategory::Weapon, "spear", spear);
