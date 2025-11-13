@@ -7,6 +7,7 @@
 #include "../../submitter.h"
 #include <QMatrix4x4>
 #include <QVector3D>
+#include <algorithm>
 
 namespace Render::GL {
 
@@ -39,6 +40,12 @@ void ArmorHeavyCarthageRenderer::render(const DrawContext &ctx,
   QVector3D head_up = safeNormal(head.up, up);
 
   float const torso_r = torso.radius;
+  float const torso_depth =
+      (torso.depth > 0.0F) ? torso.depth : torso.radius * 0.75F;
+  auto depth_scale_for = [&](float base) {
+    float const ratio = torso_depth / std::max(0.001F, torso_r);
+    return std::max(0.08F, base * ratio);
+  };
   float const waist_r =
       waist.radius > 0.0F ? waist.radius : torso.radius * 0.90F;
   float const head_r = head.radius > 0.0F ? head.radius : torso.radius * 0.60F;
@@ -59,9 +66,9 @@ void ArmorHeavyCarthageRenderer::render(const DrawContext &ctx,
   QVector3D chainmail_color = QVector3D(0.50F, 0.52F, 0.58F);
 
   auto drawTorso = [&](const QVector3D &a, const QVector3D &b, float radius,
-                       const QVector3D &color, float scaleX, float scaleZ) {
+                       const QVector3D &color, float scaleX, float baseZ) {
     QMatrix4x4 m = cylinderBetween(ctx.model, a, b, radius);
-    m.scale(scaleX, 1.0F, scaleZ);
+    m.scale(scaleX, 1.0F, depth_scale_for(baseZ));
     submitter.mesh(getUnitTorso(), m, color, nullptr, 1.0F);
   };
 

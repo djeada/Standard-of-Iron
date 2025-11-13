@@ -19,6 +19,7 @@
 #include "../../../scene_renderer.h"
 #include "../../../submitter.h"
 #include "../../horse_renderer.h"
+#include "../../mounted_knight_pose.h"
 #include "../../registry.h"
 #include "../../renderer_constants.h"
 #include <numbers>
@@ -56,17 +57,17 @@ class MountedKnightRenderer : public HumanoidRendererBase {
 public:
   auto get_proportion_scaling() const -> QVector3D override {
 
-    return {0.2F, 0.667F, 0.2F};
+    return {0.92F, 0.88F, 0.96F};
   }
 
   auto get_mount_scale() const -> float override { return 0.75F; }
 
   void adjust_variation(const DrawContext &, uint32_t,
                         VariationParams &variation) const override {
-    variation.height_scale = 0.92F;
-    variation.bulkScale = 0.80F;
-    variation.stanceWidth = 0.65F;
-    variation.armSwingAmp = 0.55F;
+    variation.height_scale = 0.88F;
+    variation.bulkScale = 0.82F;
+    variation.stanceWidth = 0.60F;
+    variation.armSwingAmp = 0.45F;
     variation.walkSpeedMult = 1.0F;
     variation.postureSlump = 0.0F;
     variation.shoulderTilt = 0.0F;
@@ -124,6 +125,7 @@ public:
     HorseProfile mount_profile{};
     mount_profile.dims = dims;
     MountedAttachmentFrame mount = compute_mount_frame(mount_profile);
+    tuneMountedKnightFrame(dims, mount);
     HorseMotionSample const motion =
         evaluate_horse_motion(mount_profile, anim, anim_ctx);
     apply_mount_vertical_offset(mount, motion.bob);
@@ -135,25 +137,69 @@ public:
     m_lastReinState = reins;
     m_hasLastReins = true;
 
+    MountedKnightExtras extras{};
+    auto cached = m_extrasCache.find(horse_seed);
+    if (cached != m_extrasCache.end()) {
+      extras = cached->second;
+    } else {
+      extras.hasSword = true;
+      extras.hasCavalryShield = true;
+    }
+
     MountedPoseController mounted_controller(pose, anim_ctx);
-    mounted_controller.mountOnHorse(mount);
 
     float const speed_norm = anim_ctx.locomotion_normalized_speed();
     float const speed_lean = std::clamp(
         anim_ctx.locomotion_speed() * 0.10F + speed_norm * 0.05F, 0.0F, 0.22F);
     float const forward_lean =
         (dims.seatForwardOffset * 0.08F + speed_lean) / 0.15F;
-    mounted_controller.ridingLeaning(mount, forward_lean, 0.0F);
+
+    MountedPoseController::MountedRiderPoseRequest pose_request;
+    pose_request.dims = dims;
+    pose_request.forwardBias = forward_lean;
+    pose_request.reinSlackLeft = reins.slack;
+    pose_request.reinSlackRight = reins.slack;
+    pose_request.reinTensionLeft = reins.tension;
+    pose_request.reinTensionRight = reins.tension;
+    pose_request.leftHandOnReins = !extras.hasCavalryShield;
+    pose_request.rightHandOnReins = true;
+    pose_request.clearanceForward = 1.15F;
+    pose_request.clearanceUp = 1.05F;
+    pose_request.seatPose =
+        (speed_norm > 0.55F) ? MountedPoseController::MountedSeatPose::Forward
+                             : MountedPoseController::MountedSeatPose::Neutral;
+    pose_request.torsoCompression = std::clamp(
+        0.18F + speed_norm * 0.28F + anim_ctx.variation.postureSlump * 0.9F,
+        0.0F, 0.55F);
+    pose_request.torsoTwist = anim_ctx.variation.shoulderTilt * 3.0F;
+    pose_request.shoulderDip =
+        std::clamp(anim_ctx.variation.shoulderTilt * 0.6F +
+                       (extras.hasCavalryShield ? 0.18F : 0.08F),
+                   -0.4F, 0.4F);
+
+    if (extras.hasCavalryShield) {
+      pose_request.shieldPose = MountedPoseController::MountedShieldPose::Guard;
+    }
 
     if (anim.is_attacking && anim.isMelee) {
-
-      float const attack_phase =
+      pose_request.weaponPose =
+          MountedPoseController::MountedWeaponPose::SwordStrike;
+      pose_request.shieldPose =
+          extras.hasCavalryShield
+              ? MountedPoseController::MountedShieldPose::Stowed
+              : pose_request.shieldPose;
+      pose_request.actionPhase =
           std::fmod(anim.time * MOUNTED_KNIGHT_INV_ATTACK_CYCLE_TIME, 1.0F);
-      mounted_controller.ridingMeleeStrike(mount, attack_phase);
+      pose_request.rightHandOnReins = false;
     } else {
-      mounted_controller.holdReins(mount, reins.slack, reins.slack,
-                                   reins.tension, reins.tension);
+      pose_request.weaponPose =
+          extras.hasSword ? MountedPoseController::MountedWeaponPose::SwordIdle
+                          : MountedPoseController::MountedWeaponPose::None;
+      pose_request.rightHandOnReins = !extras.hasSword;
     }
+
+    mounted_controller.applyPose(mount, pose_request);
+    applyMountedKnightLowerBody(dims, mount, anim_ctx, pose);
   }
 
   void addAttachments(const DrawContext &ctx, const HumanoidVariant &v,
@@ -256,8 +302,8 @@ private:
     e.swordLength = 0.82F + (hash_01(seed ^ 0xABCDU) - 0.5F) * 0.12F;
     e.swordWidth = 0.042F + (hash_01(seed ^ 0x7777U) - 0.5F) * 0.008F;
 
-    e.hasSword = (hash_01(seed ^ 0xFACEU) > 0.15F);
-    e.hasCavalryShield = (hash_01(seed ^ 0xCAFEU) > 0.60F);
+    e.hasSword = true;
+    e.hasCavalryShield = true;
 
     return e;
   }

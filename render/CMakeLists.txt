@@ -87,7 +87,6 @@ add_library(render_gl STATIC
     equipment/weapons/shield_carthage.cpp
     equipment/weapons/shield_roman.cpp
     equipment/weapons/shield_kingdom.cpp
-    equipment/helmets/montefortino_helmet.cpp
     equipment/helmets/headwrap.cpp
     equipment/helmets/roman_heavy_helmet.cpp
     equipment/helmets/roman_light_helmet.cpp
