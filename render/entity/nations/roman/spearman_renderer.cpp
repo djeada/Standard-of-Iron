@@ -144,8 +144,8 @@ public:
       controller.lean(QVector3D(0.0F, 0.0F, 1.0F),
                       t * k_lean_amount_multiplier);
 
-      float const lowered_shoulder_y = pose.shoulder_l.y();
-      float const pelvis_y = pose.pelvis_pos.y();
+      float const lowered_shoulder_y = controller.getShoulderY(true);
+      float const pelvis_y = controller.getPelvisY();
 
       QVector3D const hand_r_pos(0.18F * (1.0F - t) + 0.22F * t,
                                  lowered_shoulder_y * (1.0F - t) +

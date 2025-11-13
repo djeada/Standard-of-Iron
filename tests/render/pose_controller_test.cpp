@@ -270,3 +270,76 @@ TEST_F(HumanoidPoseControllerTest, LeanClampsBounds) {
   // Should be same as clamped 1.5F
   EXPECT_NEAR(pose.shoulder_l.z(), max_lean_z, 0.001F);
 }
+
+TEST_F(HumanoidPoseControllerTest, HoldSwordAndShieldPositionsHandsCorrectly) {
+  HumanoidPoseController controller(pose, anim_ctx);
+
+  controller.holdSwordAndShield();
+
+  // Right hand (sword hand) should be positioned for sword holding
+  EXPECT_GT(pose.hand_r.x(), 0.0F); // To the right
+  EXPECT_GT(pose.hand_r.z(), 0.0F); // In front
+
+  // Left hand (shield hand) should be positioned for shield holding
+  EXPECT_LT(pose.hand_l.x(), 0.0F); // To the left
+  EXPECT_GT(pose.hand_l.z(), 0.0F); // In front
+
+  // Both elbows should be computed
+  EXPECT_GT((pose.elbow_r - pose.shoulder_r).length(), 0.0F);
+  EXPECT_GT((pose.elbow_l - pose.shoulder_l).length(), 0.0F);
+}
+
+TEST_F(HumanoidPoseControllerTest, LookAtMovesHeadTowardTarget) {
+  HumanoidPoseController controller(pose, anim_ctx);
+
+  QVector3D const original_head_pos = pose.head_pos;
+  QVector3D const target(0.5F, pose.head_pos.y(), 2.0F); // Target in front and to the right
+
+  controller.lookAt(target);
+
+  // Head should move toward target (right and forward)
+  EXPECT_GT(pose.head_pos.x(), original_head_pos.x());
+  EXPECT_GT(pose.head_pos.z(), original_head_pos.z());
+}
+
+TEST_F(HumanoidPoseControllerTest, LookAtWithSamePositionDoesNothing) {
+  HumanoidPoseController controller(pose, anim_ctx);
+
+  QVector3D const original_head_pos = pose.head_pos;
+  
+  controller.lookAt(pose.head_pos); // Look at current position
+
+  // Head should remain unchanged
+  EXPECT_TRUE(approxEqual(pose.head_pos, original_head_pos));
+}
+
+TEST_F(HumanoidPoseControllerTest, GetShoulderYReturnsCorrectValues) {
+  HumanoidPoseController controller(pose, anim_ctx);
+
+  float const left_y = controller.getShoulderY(true);
+  float const right_y = controller.getShoulderY(false);
+
+  EXPECT_FLOAT_EQ(left_y, pose.shoulder_l.y());
+  EXPECT_FLOAT_EQ(right_y, pose.shoulder_r.y());
+}
+
+TEST_F(HumanoidPoseControllerTest, GetPelvisYReturnsCorrectValue) {
+  HumanoidPoseController controller(pose, anim_ctx);
+
+  float const pelvis_y = controller.getPelvisY();
+
+  EXPECT_FLOAT_EQ(pelvis_y, pose.pelvis_pos.y());
+}
+
+TEST_F(HumanoidPoseControllerTest, GetShoulderYReflectsKneeling) {
+  HumanoidPoseController controller(pose, anim_ctx);
+
+  float const original_shoulder_y = controller.getShoulderY(true);
+  
+  controller.kneel(0.5F);
+  
+  float const kneeling_shoulder_y = controller.getShoulderY(true);
+
+  // After kneeling, shoulder should be lower
+  EXPECT_LT(kneeling_shoulder_y, original_shoulder_y);
+}
