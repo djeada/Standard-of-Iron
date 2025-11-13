@@ -24,13 +24,13 @@ protected:
     pose.shoulderR = QVector3D(half_shoulder, HP::SHOULDER_Y, 0.0F);
     pose.pelvisPos = QVector3D(0.0F, HP::WAIST_Y, 0.0F);
     pose.handL = QVector3D(-0.05F, HP::SHOULDER_Y + 0.05F, 0.55F);
-    pose.hand_r = QVector3D(0.15F, HP::SHOULDER_Y + 0.15F, 0.20F);
+    pose.handR = QVector3D(0.15F, HP::SHOULDER_Y + 0.15F, 0.20F);
     pose.elbowL = QVector3D(-0.15F, HP::SHOULDER_Y - 0.15F, 0.25F);
     pose.elbowR = QVector3D(0.25F, HP::SHOULDER_Y - 0.10F, 0.10F);
     pose.knee_l = QVector3D(-0.10F, HP::KNEE_Y, 0.05F);
     pose.knee_r = QVector3D(0.10F, HP::KNEE_Y, -0.05F);
     pose.footL = QVector3D(-0.14F, 0.022F, 0.06F);
-    pose.foot_r = QVector3D(0.14F, 0.022F, -0.06F);
+    pose.footR = QVector3D(0.14F, 0.022F, -0.06F);
     pose.footYOffset = 0.022F;
 
     // Initialize animation context with default idle state
@@ -95,7 +95,7 @@ TEST_F(MountedPoseControllerTest, MountOnHorsePlacesFeetInStirrups) {
 
   // Feet should be in stirrups
   EXPECT_TRUE(approxEqual(pose.footL, mount.stirrup_bottom_left));
-  EXPECT_TRUE(approxEqual(pose.foot_r, mount.stirrup_bottom_right));
+  EXPECT_TRUE(approxEqual(pose.footR, mount.stirrup_bottom_right));
 }
 
 TEST_F(MountedPoseControllerTest, MountOnHorseLiftsUpperBody) {
@@ -127,7 +127,7 @@ TEST_F(MountedPoseControllerTest, RidingIdleSetsHandsToRestPosition) {
 
   // Hands should be in a resting position near pelvis
   EXPECT_LT(pose.handL.y(), mount.seat_position.y());
-  EXPECT_LT(pose.hand_r.y(), mount.seat_position.y());
+  EXPECT_LT(pose.handR.y(), mount.seat_position.y());
 }
 
 TEST_F(MountedPoseControllerTest, RidingLeaningForwardMovesTorso) {
@@ -180,13 +180,13 @@ TEST_F(MountedPoseControllerTest, RidingReiningPullsHandsBack) {
 
   controller.ridingIdle(mount);
   float const idle_left_z = pose.handL.z();
-  float const idle_right_z = pose.hand_r.z();
+  float const idle_right_z = pose.handR.z();
 
   controller.ridingReining(mount, 1.0F, 1.0F);
 
   // Hands should be pulled back when reining
   EXPECT_LT(pose.handL.z(), idle_left_z);
-  EXPECT_LT(pose.hand_r.z(), idle_right_z);
+  EXPECT_LT(pose.handR.z(), idle_right_z);
 }
 
 TEST_F(MountedPoseControllerTest, RidingReiningLeansTorsoBack) {
@@ -206,11 +206,11 @@ TEST_F(MountedPoseControllerTest, RidingMeleeStrikeAnimatesCorrectly) {
 
   // Test windup phase
   controller.ridingMeleeStrike(mount, 0.15F);
-  float const windup_y = pose.hand_r.y();
+  float const windup_y = pose.handR.y();
 
   // Test strike phase
   controller.ridingMeleeStrike(mount, 0.40F);
-  float const strike_y = pose.hand_r.y();
+  float const strike_y = pose.handR.y();
 
   // Hand should be lower during strike than windup
   EXPECT_LT(strike_y, windup_y);
@@ -221,11 +221,11 @@ TEST_F(MountedPoseControllerTest, RidingSpearThrustAnimatesCorrectly) {
 
   // Test guard phase
   controller.ridingSpearThrust(mount, 0.10F);
-  float const guard_z = pose.hand_r.z();
+  float const guard_z = pose.handR.z();
 
   // Test thrust phase
   controller.ridingSpearThrust(mount, 0.35F);
-  float const thrust_z = pose.hand_r.z();
+  float const thrust_z = pose.handR.z();
 
   // Hand should move forward during thrust
   EXPECT_GT(thrust_z, guard_z);
@@ -236,11 +236,11 @@ TEST_F(MountedPoseControllerTest, RidingBowShotAnimatesCorrectly) {
 
   // Test initial draw
   controller.ridingBowShot(mount, 0.10F);
-  QVector3D const draw_start = pose.hand_r;
+  QVector3D const draw_start = pose.handR;
 
   // Test full draw
   controller.ridingBowShot(mount, 0.40F);
-  QVector3D const draw_end = pose.hand_r;
+  QVector3D const draw_end = pose.handR;
 
   // Right hand should move back when drawing
   float const dist_moved = (draw_end - draw_start).length();
@@ -268,9 +268,9 @@ TEST_F(MountedPoseControllerTest, HoldReinsPositionsHandsCorrectly) {
 
   // Hands should stay near the saddle area with a slight forward bias
   EXPECT_LT(std::abs(pose.handL.x()), mount.seat_position.x() + 0.30F);
-  EXPECT_LT(std::abs(pose.hand_r.x()), mount.seat_position.x() + 0.30F);
+  EXPECT_LT(std::abs(pose.handR.x()), mount.seat_position.x() + 0.30F);
   EXPECT_LT(pose.handL.y(), mount.seat_position.y());
-  EXPECT_LT(pose.hand_r.y(), mount.seat_position.y());
+  EXPECT_LT(pose.handR.y(), mount.seat_position.y());
 }
 
 TEST_F(MountedPoseControllerTest, HoldReinsSlackAffectsHandPosition) {
@@ -293,7 +293,7 @@ TEST_F(MountedPoseControllerTest, HoldSpearOverhandRaisesHand) {
   controller.holdSpearMounted(mount, SpearGrip::OVERHAND);
 
   // Right hand should be high for overhead grip
-  EXPECT_GT(pose.hand_r.y(), mount.seat_position.y() + 0.40F);
+  EXPECT_GT(pose.handR.y(), mount.seat_position.y() + 0.40F);
 }
 
 TEST_F(MountedPoseControllerTest, HoldSpearCouchedLowersHand) {
@@ -302,7 +302,7 @@ TEST_F(MountedPoseControllerTest, HoldSpearCouchedLowersHand) {
   controller.holdSpearMounted(mount, SpearGrip::COUCHED);
 
   // Right hand should be low for couched grip
-  EXPECT_LT(pose.hand_r.y(), mount.seat_position.y() + 0.20F);
+  EXPECT_LT(pose.handR.y(), mount.seat_position.y() + 0.20F);
 }
 
 TEST_F(MountedPoseControllerTest, HoldSpearTwoHandedUsesBothHands) {
@@ -311,7 +311,7 @@ TEST_F(MountedPoseControllerTest, HoldSpearTwoHandedUsesBothHands) {
   controller.holdSpearMounted(mount, SpearGrip::TWO_HANDED);
 
   // Both hands should be on spear shaft
-  float const hand_separation = (pose.hand_r - pose.handL).length();
+  float const hand_separation = (pose.handR - pose.handL).length();
   EXPECT_GT(hand_separation, 0.15F);
   EXPECT_LT(hand_separation, 0.35F);
 }
@@ -325,7 +325,7 @@ TEST_F(MountedPoseControllerTest, HoldBowMountedPositionsHandsCorrectly) {
   EXPECT_GT(pose.handL.z(), mount.seat_position.z());
 
   // Right hand should be near bow for arrow nocking
-  float const hand_separation = (pose.hand_r - pose.handL).length();
+  float const hand_separation = (pose.handR - pose.handL).length();
   EXPECT_LT(hand_separation, 0.25F);
 }
 
@@ -339,7 +339,7 @@ TEST_F(MountedPoseControllerTest, KneePositionValidForMountedRiding) {
   EXPECT_GT(pose.knee_l.y(), pose.footL.y());
 
   EXPECT_LT(pose.knee_r.y(), pose.pelvisPos.y());
-  EXPECT_GT(pose.knee_r.y(), pose.foot_r.y());
+  EXPECT_GT(pose.knee_r.y(), pose.footR.y());
 }
 
 TEST_F(MountedPoseControllerTest, ElbowPositionValidForAllActions) {
@@ -415,7 +415,7 @@ TEST_F(MountedPoseControllerTest, FullRidingSequence) {
 
   controller.ridingSpearThrust(mount, 0.35F);
   // Verify animation in progress
-  EXPECT_GT(pose.hand_r.z(), mount.seat_position.z());
+  EXPECT_GT(pose.handR.z(), mount.seat_position.z());
 
   controller.ridingIdle(mount);
   controller.dismount();
