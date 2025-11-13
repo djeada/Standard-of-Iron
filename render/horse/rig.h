@@ -72,9 +72,9 @@ struct HorseAttachmentFrame {
   QVector3D up{0.0F, 1.0F, 0.0F};
   QVector3D forward{0.0F, 0.0F, 1.0F};
 
-  auto makeLocalTransform(const QMatrix4x4 &parent,
-                          const QVector3D &local_offset,
-                          float uniform_scale) const -> QMatrix4x4 {
+  auto make_local_transform(const QMatrix4x4 &parent,
+                            const QVector3D &local_offset,
+                            float uniform_scale) const -> QMatrix4x4 {
     QMatrix4x4 m = parent;
     QVector3D const world_pos =
         origin + right * local_offset.x() + up * local_offset.y() +
