@@ -82,6 +82,9 @@ add_library(render_gl STATIC
     equipment/weapons/quiver_renderer.cpp
     equipment/weapons/roman_scutum.cpp
     equipment/weapons/sword_renderer.cpp
+    equipment/weapons/sword_carthage.cpp
+    equipment/weapons/sword_roman.cpp
+    equipment/weapons/sword_kingdom.cpp
     equipment/weapons/spear_renderer.cpp
     equipment/weapons/shield_renderer.cpp
     equipment/weapons/shield_carthage.cpp
