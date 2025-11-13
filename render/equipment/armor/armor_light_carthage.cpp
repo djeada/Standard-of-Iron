@@ -7,6 +7,7 @@
 #include "../../submitter.h"
 #include <QMatrix4x4>
 #include <QVector3D>
+#include <algorithm>
 #include <cmath>
 #include <numbers>
 
@@ -39,6 +40,8 @@ void ArmorLightCarthageRenderer::render(const DrawContext &ctx,
   QVector3D forward = torso.forward.normalized();
 
   float const torso_r = torso.radius;
+  float const torso_depth =
+      (torso.depth > 0.0F) ? torso.depth : torso_r * 0.75F;
   float const waist_r =
       waist.radius > 0.0F ? waist.radius : torso.radius * 0.85F;
   float const head_r = head.radius > 0.0F ? head.radius : torso.radius * 0.6F;
@@ -60,9 +63,10 @@ void ArmorLightCarthageRenderer::render(const DrawContext &ctx,
       waist.origin + waist_up * (waist_r * 0.03F) - forward * (torso_r * 0.01F);
 
   float main_radius = torso_r * 0.96F;
+  float const main_depth = torso_depth * 0.92F;
 
   QMatrix4x4 cuirass = cylinderBetween(ctx.model, top, bottom, main_radius);
-  cuirass.scale(1.0F, 1.0F, 0.80F);
+  cuirass.scale(1.0F, 1.0F, std::max(0.15F, main_depth / main_radius));
   submitter.mesh(getUnitTorso(), cuirass, leather_highlight, nullptr, 1.0F);
 
   auto strap = [&](float side) {
@@ -79,21 +83,23 @@ void ArmorLightCarthageRenderer::render(const DrawContext &ctx,
   strap(-1.0F);
 
   QVector3D front_panel_top =
-      top + forward * (torso_r * 0.18F) - up * (torso_r * 0.06F);
+      top + forward * (torso_depth * 0.35F) - up * (torso_r * 0.06F);
   QVector3D front_panel_bottom =
-      bottom + forward * (torso_r * 0.20F) + up * (torso_r * 0.03F);
+      bottom + forward * (torso_depth * 0.38F) + up * (torso_r * 0.03F);
   QMatrix4x4 front_panel = cylinderBetween(ctx.model, front_panel_top,
                                            front_panel_bottom, torso_r * 0.48F);
-  front_panel.scale(0.95F, 1.0F, 0.32F);
+  front_panel.scale(0.95F, 1.0F,
+                    std::max(0.12F, (torso_depth * 0.5F) / (torso_r * 0.48F)));
   submitter.mesh(getUnitTorso(), front_panel, leather_highlight, nullptr, 1.0F);
 
   QVector3D back_panel_top =
-      top - forward * (torso_r * 0.24F) - up * (torso_r * 0.05F);
+      top - forward * (torso_depth * 0.32F) - up * (torso_r * 0.05F);
   QVector3D back_panel_bottom =
-      bottom - forward * (torso_r * 0.26F) + up * (torso_r * 0.02F);
+      bottom - forward * (torso_depth * 0.34F) + up * (torso_r * 0.02F);
   QMatrix4x4 back_panel = cylinderBetween(ctx.model, back_panel_top,
                                           back_panel_bottom, torso_r * 0.50F);
-  back_panel.scale(0.96F, 1.0F, 0.30F);
+  back_panel.scale(0.96F, 1.0F,
+                   std::max(0.12F, (torso_depth * 0.45F) / (torso_r * 0.50F)));
   submitter.mesh(getUnitTorso(), back_panel, leather_shadow, nullptr, 1.0F);
 }
 
