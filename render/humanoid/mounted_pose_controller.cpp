@@ -39,9 +39,9 @@ void MountedPoseController::mountOnHorse(const MountedAttachmentFrame &mount) {
 void MountedPoseController::dismount() {
 
   using HP = HumanProportions;
-  m_pose.pelvisPos = QVector3D(0.0F, HP::WAIST_Y, 0.0F);
-  m_pose.footL = QVector3D(-0.14F, HP::GROUND_Y + m_pose.footYOffset, 0.06F);
-  m_pose.foot_r = QVector3D(0.14F, HP::GROUND_Y + m_pose.footYOffset, -0.06F);
+  m_pose.pelvis_pos = QVector3D(0.0F, HP::WAIST_Y, 0.0F);
+  m_pose.foot_l = QVector3D(-0.14F, HP::GROUND_Y + m_pose.foot_y_offset, 0.06F);
+  m_pose.foot_r = QVector3D(0.14F, HP::GROUND_Y + m_pose.foot_y_offset, -0.06F);
 }
 
 void MountedPoseController::ridingIdle(const MountedAttachmentFrame &mount) {
@@ -74,16 +74,16 @@ void MountedPoseController::ridingCharging(const MountedAttachmentFrame &mount,
   mountOnHorse(mount);
 
   QVector3D const charge_lean = mount.seat_forward * (0.25F * intensity);
-  m_pose.shoulderL += charge_lean;
-  m_pose.shoulderR += charge_lean;
+  m_pose.shoulder_l += charge_lean;
+  m_pose.shoulder_r += charge_lean;
   m_pose.neck_base += charge_lean * 0.85F;
-  m_pose.headPos += charge_lean * 0.75F;
+  m_pose.head_pos += charge_lean * 0.75F;
 
   float const crouch = 0.08F * intensity;
-  m_pose.shoulderL.setY(m_pose.shoulderL.y() - crouch);
-  m_pose.shoulderR.setY(m_pose.shoulderR.y() - crouch);
+  m_pose.shoulder_l.setY(m_pose.shoulder_l.y() - crouch);
+  m_pose.shoulder_r.setY(m_pose.shoulder_r.y() - crouch);
   m_pose.neck_base.setY(m_pose.neck_base.y() - crouch * 0.8F);
-  m_pose.headPos.setY(m_pose.headPos.y() - crouch * 0.7F);
+  m_pose.head_pos.setY(m_pose.head_pos.y() - crouch * 0.7F);
 
   holdReins(mount, 0.2F, 0.2F, 0.85F, 0.85F);
 }
@@ -111,10 +111,10 @@ void MountedPoseController::ridingReining(const MountedAttachmentFrame &mount,
 
   float const avg_tension = (left_tension + right_tension) * 0.5F;
   QVector3D const lean_back = mount.seat_forward * (-0.08F * avg_tension);
-  m_pose.shoulderL += lean_back;
-  m_pose.shoulderR += lean_back;
+  m_pose.shoulder_l += lean_back;
+  m_pose.shoulder_r += lean_back;
   m_pose.neck_base += lean_back * 0.9F;
-  m_pose.headPos += lean_back * 0.85F;
+  m_pose.head_pos += lean_back * 0.85F;
 }
 
 void MountedPoseController::ridingMeleeStrike(
@@ -176,7 +176,7 @@ void MountedPoseController::applySaddleClearance(
 
   QVector3D const offset = -mount.seat_forward * forward_pull +
                            mount.seat_up * (up_lift + dims.bodyHeight * 0.01F);
-  m_pose.pelvisPos += offset;
+  m_pose.pelvis_pos += offset;
   translateUpperBody(offset);
   calculateRidingKnees(mount);
 }
@@ -193,26 +193,26 @@ void MountedPoseController::stabilizeUpperBody(
     right_flat.normalize();
   }
 
-  QVector3D const shoulder_mid = (m_pose.shoulderL + m_pose.shoulderR) * 0.5F;
+  QVector3D const shoulder_mid = (m_pose.shoulder_l + m_pose.shoulder_r) * 0.5F;
   QVector3D desired_mid = shoulder_mid;
-  desired_mid.setX(m_pose.pelvisPos.x());
-  desired_mid.setZ(m_pose.pelvisPos.z());
+  desired_mid.setX(m_pose.pelvis_pos.x());
+  desired_mid.setZ(m_pose.pelvis_pos.z());
 
   QVector3D const mid_offset = desired_mid - shoulder_mid;
-  m_pose.shoulderL += mid_offset;
-  m_pose.shoulderR += mid_offset;
+  m_pose.shoulder_l += mid_offset;
+  m_pose.shoulder_r += mid_offset;
 
   float const desired_half = std::clamp(dims.bodyWidth * 0.44F, 0.10F, 0.32F);
-  m_pose.shoulderL = desired_mid - right_flat * desired_half;
-  m_pose.shoulderR = desired_mid + right_flat * desired_half;
+  m_pose.shoulder_l = desired_mid - right_flat * desired_half;
+  m_pose.shoulder_r = desired_mid + right_flat * desired_half;
 
   float const target_neck_height =
       std::max(0.04F, m_pose.neck_base.y() - desired_mid.y());
   m_pose.neck_base = desired_mid + world_up * target_neck_height;
 
   float const head_height =
-      std::max(0.12F, m_pose.headPos.y() - m_pose.neck_base.y());
-  m_pose.headPos = m_pose.neck_base + world_up * head_height;
+      std::max(0.12F, m_pose.head_pos.y() - m_pose.neck_base.y());
+  m_pose.head_pos = m_pose.neck_base + world_up * head_height;
 }
 
 void MountedPoseController::applyPose(const MountedAttachmentFrame &mount,
@@ -303,10 +303,10 @@ void MountedPoseController::applyLean(const MountedAttachmentFrame &mount,
   QVector3D const lean_offset = mount.seat_forward * (clamped_forward * 0.15F) +
                                 mount.seat_right * (clamped_side * 0.10F);
 
-  m_pose.shoulderL += lean_offset;
-  m_pose.shoulderR += lean_offset;
+  m_pose.shoulder_l += lean_offset;
+  m_pose.shoulder_r += lean_offset;
   m_pose.neck_base += lean_offset * 0.9F;
-  m_pose.headPos += lean_offset * 0.85F;
+  m_pose.head_pos += lean_offset * 0.85F;
 }
 
 void MountedPoseController::applyShieldDefense(
@@ -374,10 +374,10 @@ void MountedPoseController::applySwordStrike(
     hand_r_target += mount.seat_up * (-0.25F - 0.12F * t);
 
     QVector3D const lean = mount.seat_forward * (0.12F * t);
-    m_pose.shoulderL += lean;
-    m_pose.shoulderR += lean;
+    m_pose.shoulder_l += lean;
+    m_pose.shoulder_r += lean;
     m_pose.neck_base += lean * 0.9F;
-    m_pose.headPos += lean * 0.85F;
+    m_pose.head_pos += lean * 0.85F;
   } else {
     float t = (attack_phase - 0.50F) / 0.50F;
     t = 1.0F - (1.0F - t) * (1.0F - t);
@@ -421,10 +421,10 @@ void MountedPoseController::applySpearThrust(
                     (thrust_pos - mount.seat_right * 0.30F) * t;
 
     QVector3D const lean = mount.seat_forward * (0.18F * t);
-    m_pose.shoulderL += lean;
-    m_pose.shoulderR += lean;
+    m_pose.shoulder_l += lean;
+    m_pose.shoulder_r += lean;
     m_pose.neck_base += lean * 0.9F;
-    m_pose.headPos += lean * 0.85F;
+    m_pose.head_pos += lean * 0.85F;
   } else {
     float t = (attack_phase - 0.45F) / 0.55F;
     t = 1.0F - (1.0F - t) * (1.0F - t);
@@ -528,27 +528,27 @@ void MountedPoseController::applyTorsoSculpt(
 
   QVector3D const squeeze = -forward * (0.035F + comp * 0.08F);
   QVector3D const inward = squeeze * comp;
-  m_pose.shoulderL += inward;
-  m_pose.shoulderR += inward;
+  m_pose.shoulder_l += inward;
+  m_pose.shoulder_r += inward;
   m_pose.neck_base += inward * 0.55F;
-  m_pose.headPos += inward * 0.35F;
+  m_pose.head_pos += inward * 0.35F;
 
   QVector3D const chest_lift = up * (0.012F * comp);
   m_pose.neck_base += chest_lift * 0.8F;
-  m_pose.headPos += chest_lift * 0.45F;
+  m_pose.head_pos += chest_lift * 0.45F;
 
   QVector3D const narrow = right * (0.022F * comp);
-  m_pose.shoulderL -= narrow;
-  m_pose.shoulderR += narrow;
+  m_pose.shoulder_l -= narrow;
+  m_pose.shoulder_r += narrow;
 
   QVector3D const twist_vec = right * (0.03F * twist_amt);
-  m_pose.shoulderL += twist_vec;
-  m_pose.shoulderR -= twist_vec;
+  m_pose.shoulder_l += twist_vec;
+  m_pose.shoulder_r -= twist_vec;
   m_pose.neck_base += twist_vec * 0.25F;
 
   QVector3D const dip_vec = up * (0.03F * dip_amt);
-  m_pose.shoulderL += dip_vec;
-  m_pose.shoulderR -= dip_vec;
+  m_pose.shoulder_l += dip_vec;
+  m_pose.shoulder_r -= dip_vec;
 }
 
 void MountedPoseController::holdReinsImpl(const MountedAttachmentFrame &mount,
@@ -583,26 +583,26 @@ void MountedPoseController::holdReinsImpl(const MountedAttachmentFrame &mount,
 void MountedPoseController::attachFeetToStirrups(
     const MountedAttachmentFrame &mount) {
 
-  m_pose.footL = mount.stirrup_bottom_left + mount.ground_offset;
+  m_pose.foot_l = mount.stirrup_bottom_left + mount.ground_offset;
   m_pose.foot_r = mount.stirrup_bottom_right + mount.ground_offset;
 }
 
 void MountedPoseController::positionPelvisOnSaddle(
     const MountedAttachmentFrame &mount) {
   QVector3D const seat_world = mount.seat_position + mount.ground_offset;
-  QVector3D const delta = seat_world - m_pose.pelvisPos;
-  m_pose.pelvisPos = seat_world;
+  QVector3D const delta = seat_world - m_pose.pelvis_pos;
+  m_pose.pelvis_pos = seat_world;
   translateUpperBody(delta);
 }
 
 void MountedPoseController::translateUpperBody(const QVector3D &delta) {
-  m_pose.shoulderL += delta;
-  m_pose.shoulderR += delta;
+  m_pose.shoulder_l += delta;
+  m_pose.shoulder_r += delta;
   m_pose.neck_base += delta;
-  m_pose.headPos += delta;
-  m_pose.elbowL += delta;
-  m_pose.elbowR += delta;
-  m_pose.handL += delta;
+  m_pose.head_pos += delta;
+  m_pose.elbow_l += delta;
+  m_pose.elbow_r += delta;
+  m_pose.hand_l += delta;
   m_pose.hand_r += delta;
 }
 
@@ -611,13 +611,13 @@ void MountedPoseController::calculateRidingKnees(
 
   QVector3D const hip_offset = mount.seat_up * -0.02F;
   QVector3D const hip_left =
-      m_pose.pelvisPos - mount.seat_right * 0.10F + hip_offset;
+      m_pose.pelvis_pos - mount.seat_right * 0.10F + hip_offset;
   QVector3D const hip_right =
-      m_pose.pelvisPos + mount.seat_right * 0.10F + hip_offset;
+      m_pose.pelvis_pos + mount.seat_right * 0.10F + hip_offset;
 
   float const height_scale = m_anim_ctx.variation.height_scale;
 
-  m_pose.knee_l = solveKneeIK(true, hip_left, m_pose.footL, height_scale);
+  m_pose.knee_l = solveKneeIK(true, hip_left, m_pose.foot_l, height_scale);
   m_pose.knee_r = solveKneeIK(false, hip_right, m_pose.foot_r, height_scale);
 }
 
@@ -673,7 +673,7 @@ auto MountedPoseController::solveKneeIK(bool is_left, const QVector3D &hip,
   QVector3D knee =
       hip + dir * (cos_theta * upper_len) + bend_axis * (sin_theta * upper_len);
 
-  float const knee_floor = HP::GROUND_Y + m_pose.footYOffset * 0.5F;
+  float const knee_floor = HP::GROUND_Y + m_pose.foot_y_offset * 0.5F;
   if (knee.y() < knee_floor) {
     knee.setY(knee_floor);
   }
@@ -687,23 +687,23 @@ auto MountedPoseController::solveKneeIK(bool is_left, const QVector3D &hip,
 
 auto MountedPoseController::getShoulder(bool is_left) const
     -> const QVector3D & {
-  return is_left ? m_pose.shoulderL : m_pose.shoulderR;
+  return is_left ? m_pose.shoulder_l : m_pose.shoulder_r;
 }
 
 auto MountedPoseController::getHand(bool is_left) -> QVector3D & {
-  return is_left ? m_pose.handL : m_pose.hand_r;
+  return is_left ? m_pose.hand_l : m_pose.hand_r;
 }
 
 auto MountedPoseController::getHand(bool is_left) const -> const QVector3D & {
-  return is_left ? m_pose.handL : m_pose.hand_r;
+  return is_left ? m_pose.hand_l : m_pose.hand_r;
 }
 
 auto MountedPoseController::getElbow(bool is_left) -> QVector3D & {
-  return is_left ? m_pose.elbowL : m_pose.elbowR;
+  return is_left ? m_pose.elbow_l : m_pose.elbow_r;
 }
 
 auto MountedPoseController::computeRightAxis() const -> QVector3D {
-  QVector3D right_axis = m_pose.shoulderR - m_pose.shoulderL;
+  QVector3D right_axis = m_pose.shoulder_r - m_pose.shoulder_l;
   right_axis.setY(0.0F);
   if (right_axis.lengthSquared() < 1e-8F) {
     right_axis = QVector3D(1.0F, 0.0F, 0.0F);

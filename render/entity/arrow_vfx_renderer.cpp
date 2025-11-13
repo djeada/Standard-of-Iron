@@ -96,26 +96,26 @@ static inline ArcherPose makePose(uint32_t seed) {
 
   using HP = HumanProportions;
 
-  P.handL = QVector3D(P.bowX - 0.05F, HP::SHOULDER_Y + 0.05F, 0.55F);
+  P.hand_l = QVector3D(P.bowX - 0.05F, HP::SHOULDER_Y + 0.05F, 0.55F);
 
   P.hand_r = QVector3D(0.15F, HP::SHOULDER_Y + 0.15F, 0.20F);
 
-  QVector3D shoulder_to_hand_l = P.handL - P.shoulderL;
+  QVector3D shoulder_to_hand_l = P.hand_l - P.shoulder_l;
   float distL = shoulder_to_hand_l.length();
   QVector3D dirL = shoulder_to_hand_l.normalized();
 
   QVector3D perpL(-dirL.z(), 0.0F, dirL.x());
   float elbowOffsetL = 0.15F;
-  P.elbowL = P.shoulderL + dirL * (distL * 0.45F) + perpL * elbowOffsetL +
+  P.elbow_l = P.shoulder_l + dirL * (distL * 0.45F) + perpL * elbowOffsetL +
              QVector3D(0, -0.08F, 0);
 
-  QVector3D shoulder_to_hand_r = P.hand_r - P.shoulderR;
+  QVector3D shoulder_to_hand_r = P.hand_r - P.shoulder_r;
   float distR = shoulder_to_hand_r.length();
   QVector3D dirR = shoulder_to_hand_r.normalized();
 
   QVector3D perpR(-dirR.z(), 0.0F, dirR.x());
   float elbowOffsetR = 0.12F;
-  P.elbowR = P.shoulderR + dirR * (distR * 0.48F) + perpR * elbowOffsetR +
+  P.elbow_r = P.shoulder_r + dirR * (distR * 0.48F) + perpR * elbowOffsetR +
              QVector3D(0, 0.02F, 0);
 
   return P;
@@ -169,42 +169,42 @@ static inline void drawHeadAndNeck(const DrawContext &p, ISubmitter &out,
            cylinderBetween(p.model, P.neck_base, chin_pos, HP::NECK_RADIUS),
            C.skin * 0.9F, nullptr, 1.0F);
 
-  out.mesh(getUnitSphere(), sphereAt(p.model, P.headPos, P.headR), C.skin,
+  out.mesh(getUnitSphere(), sphereAt(p.model, P.head_pos, P.head_r), C.skin,
            nullptr, 1.0F);
 
   QVector3D iris(0.06F, 0.06F, 0.07F);
-  float eyeZ = P.headR * 0.7F;
-  float eyeY = P.headPos.y() + P.headR * 0.1F;
-  float eye_spacing = P.headR * 0.35F;
+  float eyeZ = P.head_r * 0.7F;
+  float eyeY = P.head_pos.y() + P.head_r * 0.1F;
+  float eye_spacing = P.head_r * 0.35F;
   out.mesh(getUnitSphere(),
            p.model *
-               sphereAt(QVector3D(-eye_spacing, eyeY, eyeZ), P.headR * 0.15F),
+               sphereAt(QVector3D(-eye_spacing, eyeY, eyeZ), P.head_r * 0.15F),
            iris, nullptr, 1.0F);
   out.mesh(getUnitSphere(),
            p.model *
-               sphereAt(QVector3D(eye_spacing, eyeY, eyeZ), P.headR * 0.15F),
+               sphereAt(QVector3D(eye_spacing, eyeY, eyeZ), P.head_r * 0.15F),
            iris, nullptr, 1.0F);
 
-  QVector3D domeC = P.headPos + QVector3D(0.0F, P.headR * 0.25F, 0.0F);
-  float domeR = P.headR * 1.05F;
+  QVector3D domeC = P.head_pos + QVector3D(0.0F, P.head_r * 0.25F, 0.0F);
+  float domeR = P.head_r * 1.05F;
   out.mesh(getUnitSphere(), sphereAt(p.model, domeC, domeR), C.metal, nullptr,
            1.0F);
 
-  QVector3D visorBase(0.0F, P.headPos.y() + P.headR * 0.10F, P.headR * 0.80F);
+  QVector3D visorBase(0.0F, P.head_pos.y() + P.head_r * 0.10F, P.head_r * 0.80F);
   QVector3D visorTip = visorBase + QVector3D(0.0F, -0.015F, 0.06F);
   out.mesh(getUnitCone(),
-           coneFromTo(p.model, visorBase, visorTip, P.headR * 0.38F),
+           coneFromTo(p.model, visorBase, visorTip, P.head_r * 0.38F),
            C.metal * 0.92F, nullptr, 1.0F);
 
-  QVector3D cheekL0(-P.headR * 0.85F, P.headPos.y() + P.headR * 0.05F, 0.02F);
-  QVector3D cheekL1(-P.headR * 0.85F, P.headPos.y() - P.headR * 0.20F, 0.04F);
-  QVector3D cheekR0(P.headR * 0.85F, P.headPos.y() + P.headR * 0.05F, -0.02F);
-  QVector3D cheekR1(P.headR * 0.85F, P.headPos.y() - P.headR * 0.20F, -0.04F);
+  QVector3D cheekL0(-P.head_r * 0.85F, P.head_pos.y() + P.head_r * 0.05F, 0.02F);
+  QVector3D cheekL1(-P.head_r * 0.85F, P.head_pos.y() - P.head_r * 0.20F, 0.04F);
+  QVector3D cheekR0(P.head_r * 0.85F, P.head_pos.y() + P.head_r * 0.05F, -0.02F);
+  QVector3D cheekR1(P.head_r * 0.85F, P.head_pos.y() - P.head_r * 0.20F, -0.04F);
   out.mesh(getUnitCone(),
-           coneFromTo(p.model, cheekL0, cheekL1, P.headR * 0.24F),
+           coneFromTo(p.model, cheekL0, cheekL1, P.head_r * 0.24F),
            C.metal * 0.95F, nullptr, 1.0F);
   out.mesh(getUnitCone(),
-           coneFromTo(p.model, cheekR0, cheekR1, P.headR * 0.24F),
+           coneFromTo(p.model, cheekR0, cheekR1, P.head_r * 0.24F),
            C.metal * 0.95F, nullptr, 1.0F);
 }
 
@@ -217,25 +217,25 @@ static inline void draw_arms(const DrawContext &p, ISubmitter &out,
   const float joint_r = upper_arm_r * 1.2F;
 
   out.mesh(getUnitCylinder(),
-           cylinderBetween(p.model, P.shoulderL, P.elbowL, upper_arm_r),
+           cylinderBetween(p.model, P.shoulder_l, P.elbow_l, upper_arm_r),
            C.tunic, nullptr, 1.0F);
 
-  out.mesh(getUnitSphere(), sphereAt(p.model, P.elbowL, joint_r),
+  out.mesh(getUnitSphere(), sphereAt(p.model, P.elbow_l, joint_r),
            C.tunic * 0.95F, nullptr, 1.0F);
 
   out.mesh(getUnitCylinder(),
-           cylinderBetween(p.model, P.elbowL, P.handL, fore_arm_r),
+           cylinderBetween(p.model, P.elbow_l, P.hand_l, fore_arm_r),
            C.skin * 0.95F, nullptr, 1.0F);
 
   out.mesh(getUnitCylinder(),
-           cylinderBetween(p.model, P.shoulderR, P.elbowR, upper_arm_r),
+           cylinderBetween(p.model, P.shoulder_r, P.elbow_r, upper_arm_r),
            C.tunic, nullptr, 1.0F);
 
-  out.mesh(getUnitSphere(), sphereAt(p.model, P.elbowR, joint_r),
+  out.mesh(getUnitSphere(), sphereAt(p.model, P.elbow_r, joint_r),
            C.tunic * 0.95F, nullptr, 1.0F);
 
   out.mesh(getUnitCylinder(),
-           cylinderBetween(p.model, P.elbowR, P.hand_r, fore_arm_r),
+           cylinderBetween(p.model, P.elbow_r, P.hand_r, fore_arm_r),
            C.skin * 0.95F, nullptr, 1.0F);
 }
 
@@ -257,7 +257,7 @@ static inline void draw_legs(const DrawContext &p, ISubmitter &out,
     return knee;
   };
 
-  QVector3D knee_l = makeKnee(P.hipL, P.footL, -1.0F);
+  QVector3D knee_l = makeKnee(P.hipL, P.foot_l, -1.0F);
   QVector3D knee_r = makeKnee(P.hipR, P.foot_r, 1.0F);
 
   out.mesh(getUnitCone(), coneFromTo(p.model, P.hipL, knee_l, thighR),
@@ -270,14 +270,14 @@ static inline void draw_legs(const DrawContext &p, ISubmitter &out,
   out.mesh(getUnitSphere(), sphereAt(p.model, knee_r, kneeJointR),
            C.leather * 0.95F, nullptr, 1.0F);
 
-  out.mesh(getUnitCone(), coneFromTo(p.model, knee_l, P.footL, shinR),
+  out.mesh(getUnitCone(), coneFromTo(p.model, knee_l, P.foot_l, shinR),
            C.leatherDark, nullptr, 1.0F);
   out.mesh(getUnitCone(), coneFromTo(p.model, knee_r, P.foot_r, shinR),
            C.leatherDark, nullptr, 1.0F);
 
   QVector3D down(0.0F, -0.02F, 0.0F);
   out.mesh(getUnitCylinder(),
-           cylinderBetween(p.model, P.footL, P.footL + down, shinR * 1.1F),
+           cylinderBetween(p.model, P.foot_l, P.foot_l + down, shinR * 1.1F),
            C.leatherDark, nullptr, 1.0F);
   out.mesh(getUnitCylinder(),
            cylinderBetween(p.model, P.foot_r, P.foot_r + down, shinR * 1.1F),
@@ -319,7 +319,7 @@ static inline void drawBowAndArrow(const DrawContext &p, ISubmitter &out,
   const QVector3D up(0.0F, 1.0F, 0.0F);
   const QVector3D forward(0.0F, 0.0F, 1.0F);
 
-  QVector3D grip = P.handL;
+  QVector3D grip = P.hand_l;
   QVector3D top_end(P.bowX, P.bowTopY, grip.z());
   QVector3D bot_end(P.bowX, P.bowBotY, grip.z());
 
