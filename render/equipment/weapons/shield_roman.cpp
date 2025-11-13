@@ -17,12 +17,12 @@ using Render::Geom::sphereAt;
 
 RomanShieldRenderer::RomanShieldRenderer() {
   ShieldRenderConfig config;
-  config.shield_color = {0.65F, 0.15F, 0.15F};      // Roman red
-  config.trim_color = {0.78F, 0.70F, 0.45F};        // Gold trim
-  config.metal_color = {0.72F, 0.73F, 0.78F};       // Silver metal
-  config.shield_radius = 0.18F;                     // Standard size
-  config.shield_aspect = 1.3F;                      // Rectangular (taller)
-  config.has_cross_decal = false;                   // No cross for Romans
+  config.shield_color = {0.65F, 0.15F, 0.15F};
+  config.trim_color = {0.78F, 0.70F, 0.45F};
+  config.metal_color = {0.72F, 0.73F, 0.78F};
+  config.shield_radius = 0.18F;
+  config.shield_aspect = 1.3F;
+  config.has_cross_decal = false;
 
   setConfig(config);
 }
@@ -52,19 +52,21 @@ void RomanShieldRenderer::render(const DrawContext &ctx,
   QVector3D const trim_color{0.78F, 0.70F, 0.45F};
   QVector3D const metal_color{0.72F, 0.73F, 0.78F};
 
-  // Draw rectangular shield body using a grid of small spheres
   constexpr int width_segments = 8;
   constexpr int height_segments = 12;
 
   for (int h = 0; h < height_segments; ++h) {
     for (int w = 0; w < width_segments; ++w) {
-      float const h_t = static_cast<float>(h) / static_cast<float>(height_segments - 1);
-      float const w_t = static_cast<float>(w) / static_cast<float>(width_segments - 1);
+      float const h_t =
+          static_cast<float>(h) / static_cast<float>(height_segments - 1);
+      float const w_t =
+          static_cast<float>(w) / static_cast<float>(width_segments - 1);
 
       float const y_local = (h_t - 0.5F) * shield_height;
       float const x_local = (w_t - 0.5F) * shield_width;
 
-      QVector3D segment_pos = shield_center + axis_y * y_local + axis_x * x_local;
+      QVector3D segment_pos =
+          shield_center + axis_y * y_local + axis_x * x_local;
 
       QMatrix4x4 m = ctx.model;
       m.translate(segment_pos);
@@ -74,13 +76,14 @@ void RomanShieldRenderer::render(const DrawContext &ctx,
     }
   }
 
-  // Draw rectangular rim (gold trim) - top edge
   for (int i = 0; i < width_segments + 1; ++i) {
     float const t = static_cast<float>(i) / static_cast<float>(width_segments);
     float const x_local = (t - 0.5F) * shield_width;
 
-    QVector3D top_pos = shield_center + axis_y * (shield_height * 0.5F) + axis_x * x_local;
-    QVector3D bot_pos = shield_center + axis_y * (-shield_height * 0.5F) + axis_x * x_local;
+    QVector3D top_pos =
+        shield_center + axis_y * (shield_height * 0.5F) + axis_x * x_local;
+    QVector3D bot_pos =
+        shield_center + axis_y * (-shield_height * 0.5F) + axis_x * x_local;
 
     QMatrix4x4 m_top = ctx.model;
     m_top.translate(top_pos);
@@ -93,13 +96,14 @@ void RomanShieldRenderer::render(const DrawContext &ctx,
     submitter.mesh(getUnitSphere(), m_bot, trim_color, nullptr, 1.0F);
   }
 
-  // Draw rectangular rim - side edges
   for (int i = 0; i < height_segments + 1; ++i) {
     float const t = static_cast<float>(i) / static_cast<float>(height_segments);
     float const y_local = (t - 0.5F) * shield_height;
 
-    QVector3D left_pos = shield_center + axis_y * y_local + axis_x * (-shield_width * 0.5F);
-    QVector3D right_pos = shield_center + axis_y * y_local + axis_x * (shield_width * 0.5F);
+    QVector3D left_pos =
+        shield_center + axis_y * y_local + axis_x * (-shield_width * 0.5F);
+    QVector3D right_pos =
+        shield_center + axis_y * y_local + axis_x * (shield_width * 0.5F);
 
     QMatrix4x4 m_left = ctx.model;
     m_left.translate(left_pos);
@@ -112,13 +116,11 @@ void RomanShieldRenderer::render(const DrawContext &ctx,
     submitter.mesh(getUnitSphere(), m_right, trim_color, nullptr, 1.0F);
   }
 
-  // Draw boss (center metal piece)
   float const boss_radius = shield_width * 0.25F;
   submitter.mesh(getUnitSphere(),
                  sphereAt(ctx.model, shield_center + n * 0.05F, boss_radius),
                  metal_color, nullptr, 1.0F);
 
-  // Draw grip
   QVector3D const grip_a = shield_center - axis_x * 0.035F - n * 0.030F;
   QVector3D const grip_b = shield_center + axis_x * 0.035F - n * 0.030F;
   submitter.mesh(getUnitCylinder(),
