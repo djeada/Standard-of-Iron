@@ -98,7 +98,7 @@ static inline ArcherPose makePose(uint32_t seed) {
 
   P.handL = QVector3D(P.bowX - 0.05F, HP::SHOULDER_Y + 0.05F, 0.55F);
 
-  P.hand_r = QVector3D(0.15F, HP::SHOULDER_Y + 0.15F, 0.20F);
+  P.handR = QVector3D(0.15F, HP::SHOULDER_Y + 0.15F, 0.20F);
 
   QVector3D shoulder_to_hand_l = P.handL - P.shoulderL;
   float distL = shoulder_to_hand_l.length();
@@ -109,7 +109,7 @@ static inline ArcherPose makePose(uint32_t seed) {
   P.elbowL = P.shoulderL + dirL * (distL * 0.45F) + perpL * elbowOffsetL +
              QVector3D(0, -0.08F, 0);
 
-  QVector3D shoulder_to_hand_r = P.hand_r - P.shoulderR;
+  QVector3D shoulder_to_hand_r = P.handR - P.shoulderR;
   float distR = shoulder_to_hand_r.length();
   QVector3D dirR = shoulder_to_hand_r.normalized();
 
@@ -235,7 +235,7 @@ static inline void draw_arms(const DrawContext &p, ISubmitter &out,
            C.tunic * 0.95F, nullptr, 1.0F);
 
   out.mesh(getUnitCylinder(),
-           cylinderBetween(p.model, P.elbowR, P.hand_r, fore_arm_r),
+           cylinderBetween(p.model, P.elbowR, P.handR, fore_arm_r),
            C.skin * 0.95F, nullptr, 1.0F);
 }
 
@@ -258,7 +258,7 @@ static inline void draw_legs(const DrawContext &p, ISubmitter &out,
   };
 
   QVector3D knee_l = makeKnee(P.hipL, P.footL, -1.0F);
-  QVector3D knee_r = makeKnee(P.hipR, P.foot_r, 1.0F);
+  QVector3D knee_r = makeKnee(P.hipR, P.footR, 1.0F);
 
   out.mesh(getUnitCone(), coneFromTo(p.model, P.hipL, knee_l, thighR),
            C.leather, nullptr, 1.0F);
@@ -272,7 +272,7 @@ static inline void draw_legs(const DrawContext &p, ISubmitter &out,
 
   out.mesh(getUnitCone(), coneFromTo(p.model, knee_l, P.footL, shinR),
            C.leatherDark, nullptr, 1.0F);
-  out.mesh(getUnitCone(), coneFromTo(p.model, knee_r, P.foot_r, shinR),
+  out.mesh(getUnitCone(), coneFromTo(p.model, knee_r, P.footR, shinR),
            C.leatherDark, nullptr, 1.0F);
 
   QVector3D down(0.0F, -0.02F, 0.0F);
@@ -280,7 +280,7 @@ static inline void draw_legs(const DrawContext &p, ISubmitter &out,
            cylinderBetween(p.model, P.footL, P.footL + down, shinR * 1.1F),
            C.leatherDark, nullptr, 1.0F);
   out.mesh(getUnitCylinder(),
-           cylinderBetween(p.model, P.foot_r, P.foot_r + down, shinR * 1.1F),
+           cylinderBetween(p.model, P.footR, P.footR + down, shinR * 1.1F),
            C.leatherDark, nullptr, 1.0F);
 }
 
@@ -324,8 +324,8 @@ static inline void drawBowAndArrow(const DrawContext &p, ISubmitter &out,
   QVector3D bot_end(P.bowX, P.bowBotY, grip.z());
 
   QVector3D nock(P.bowX,
-                 clampf(P.hand_r.y(), P.bowBotY + 0.05F, P.bowTopY - 0.05F),
-                 clampf(P.hand_r.z(), grip.z() - 0.30F, grip.z() + 0.30F));
+                 clampf(P.handR.y(), P.bowBotY + 0.05F, P.bowTopY - 0.05F),
+                 clampf(P.handR.z(), grip.z() - 0.30F, grip.z() + 0.30F));
 
   constexpr int k_bow_curve_segments = 22;
   auto q_bezier = [](const QVector3D &a, const QVector3D &c, const QVector3D &b,
@@ -353,7 +353,7 @@ static inline void drawBowAndArrow(const DrawContext &p, ISubmitter &out,
   out.mesh(getUnitCylinder(),
            cylinderBetween(p.model, nock, bot_end, P.stringR), C.stringCol,
            nullptr, 1.0F);
-  out.mesh(getUnitCylinder(), cylinderBetween(p.model, P.hand_r, nock, 0.0045F),
+  out.mesh(getUnitCylinder(), cylinderBetween(p.model, P.handR, nock, 0.0045F),
            C.stringCol * 0.9F, nullptr, 1.0F);
 
   QVector3D tail = nock - forward * 0.06F;

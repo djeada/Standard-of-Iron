@@ -37,7 +37,7 @@ void HumanoidPoseController::kneel(float depth) {
   float const right_knee_y = pelvis_y - 0.12F;
   float const right_foot_z = 0.28F * depth;
   m_pose.knee_r = QVector3D(stance_narrow, right_knee_y, right_foot_z - 0.05F);
-  m_pose.foot_r =
+  m_pose.footR =
       QVector3D(stance_narrow, HP::GROUND_Y + m_pose.footYOffset, right_foot_z);
 
   float const upper_body_drop = kneel_offset;
@@ -156,11 +156,11 @@ auto HumanoidPoseController::getShoulder(bool is_left) const
 }
 
 auto HumanoidPoseController::getHand(bool is_left) -> QVector3D & {
-  return is_left ? m_pose.handL : m_pose.hand_r;
+  return is_left ? m_pose.handL : m_pose.handR;
 }
 
 auto HumanoidPoseController::getHand(bool is_left) const -> const QVector3D & {
-  return is_left ? m_pose.handL : m_pose.hand_r;
+  return is_left ? m_pose.handL : m_pose.handR;
 }
 
 auto HumanoidPoseController::getElbow(bool is_left) -> QVector3D & {

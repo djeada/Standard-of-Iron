@@ -41,7 +41,7 @@ void MountedPoseController::dismount() {
   using HP = HumanProportions;
   m_pose.pelvisPos = QVector3D(0.0F, HP::WAIST_Y, 0.0F);
   m_pose.footL = QVector3D(-0.14F, HP::GROUND_Y + m_pose.footYOffset, 0.06F);
-  m_pose.foot_r = QVector3D(0.14F, HP::GROUND_Y + m_pose.footYOffset, -0.06F);
+  m_pose.footR = QVector3D(0.14F, HP::GROUND_Y + m_pose.footYOffset, -0.06F);
 }
 
 void MountedPoseController::ridingIdle(const MountedAttachmentFrame &mount) {
@@ -584,7 +584,7 @@ void MountedPoseController::attachFeetToStirrups(
     const MountedAttachmentFrame &mount) {
 
   m_pose.footL = mount.stirrup_bottom_left + mount.ground_offset;
-  m_pose.foot_r = mount.stirrup_bottom_right + mount.ground_offset;
+  m_pose.footR = mount.stirrup_bottom_right + mount.ground_offset;
 }
 
 void MountedPoseController::positionPelvisOnSaddle(
@@ -603,7 +603,7 @@ void MountedPoseController::translateUpperBody(const QVector3D &delta) {
   m_pose.elbowL += delta;
   m_pose.elbowR += delta;
   m_pose.handL += delta;
-  m_pose.hand_r += delta;
+  m_pose.handR += delta;
 }
 
 void MountedPoseController::calculateRidingKnees(
@@ -618,7 +618,7 @@ void MountedPoseController::calculateRidingKnees(
   float const height_scale = m_anim_ctx.variation.height_scale;
 
   m_pose.knee_l = solveKneeIK(true, hip_left, m_pose.footL, height_scale);
-  m_pose.knee_r = solveKneeIK(false, hip_right, m_pose.foot_r, height_scale);
+  m_pose.knee_r = solveKneeIK(false, hip_right, m_pose.footR, height_scale);
 }
 
 auto MountedPoseController::solveElbowIK(
@@ -691,11 +691,11 @@ auto MountedPoseController::getShoulder(bool is_left) const
 }
 
 auto MountedPoseController::getHand(bool is_left) -> QVector3D & {
-  return is_left ? m_pose.handL : m_pose.hand_r;
+  return is_left ? m_pose.handL : m_pose.handR;
 }
 
 auto MountedPoseController::getHand(bool is_left) const -> const QVector3D & {
-  return is_left ? m_pose.handL : m_pose.hand_r;
+  return is_left ? m_pose.handL : m_pose.handR;
 }
 
 auto MountedPoseController::getElbow(bool is_left) -> QVector3D & {
