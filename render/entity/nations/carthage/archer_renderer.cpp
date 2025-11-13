@@ -189,9 +189,9 @@ public:
       controller.lean(QVector3D(0.0F, 0.0F, 1.0F),
                       t * k_lean_amount_multiplier);
 
-      QVector3D const hold_hand_l(bow_x - 0.15F, controller.getShoulderY(true) + 0.30F,
+      QVector3D const hold_hand_l(bow_x - 0.15F, controller.get_shoulder_y(true) + 0.30F,
                                   0.55F);
-      QVector3D const hold_hand_r(bow_x + 0.12F, controller.getShoulderY(false) + 0.15F,
+      QVector3D const hold_hand_r(bow_x + 0.12F, controller.get_shoulder_y(false) + 0.15F,
                                   0.10F);
       QVector3D const normal_hand_l(bow_x - 0.05F + arm_asymmetry,
                                     HP::SHOULDER_Y + 0.05F + arm_height_jitter,
