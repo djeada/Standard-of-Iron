@@ -24,7 +24,7 @@ void RomanScutumRenderer::render(const DrawContext &ctx,
                                  ISubmitter &submitter) {
   (void)anim;
 
-  const AttachmentFrame &handL = frames.handL;
+  const AttachmentFrame &handL = frames.hand_l;
   if (handL.radius <= 0.0F) {
     return;
   }

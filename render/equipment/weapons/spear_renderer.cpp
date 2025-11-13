@@ -21,9 +21,9 @@ void SpearRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
                            const HumanoidPalette &palette,
                            const HumanoidAnimationContext &anim,
                            ISubmitter &submitter) {
-  QVector3D const grip_pos = frames.handR.origin;
+  QVector3D const grip_pos = frames.hand_r.origin;
 
-  bool const is_attacking = anim.inputs.is_attacking && anim.inputs.isMelee;
+  bool const is_attacking = anim.inputs.is_attacking && anim.inputs.is_melee;
   float attack_phase = 0.0F;
   if (is_attacking) {
     attack_phase =
@@ -35,9 +35,9 @@ void SpearRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
     spear_dir.normalize();
   }
 
-  if (anim.inputs.isInHoldMode || anim.inputs.isExitingHold) {
+  if (anim.inputs.is_in_hold_mode || anim.inputs.is_exiting_hold) {
     float const t =
-        anim.inputs.isInHoldMode ? 1.0F : (1.0F - anim.inputs.holdExitProgress);
+        anim.inputs.is_in_hold_mode ? 1.0F : (1.0F - anim.inputs.hold_exit_progress);
 
     QVector3D braced_dir = QVector3D(0.05F, 0.40F, 0.91F);
     if (braced_dir.lengthSquared() > 1e-6F) {

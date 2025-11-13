@@ -106,16 +106,16 @@ public:
 
     float const bow_x = 0.0F;
 
-    if (anim.isInHoldMode || anim.isExitingHold) {
-      float const t = anim.isInHoldMode ? 1.0F : (1.0F - anim.holdExitProgress);
+    if (anim.is_in_hold_mode || anim.is_exiting_hold) {
+      float const t = anim.is_in_hold_mode ? 1.0F : (1.0F - anim.hold_exit_progress);
 
       controller.kneel(t * k_kneel_depth_multiplier);
       controller.lean(QVector3D(0.0F, 0.0F, 1.0F),
                       t * k_lean_amount_multiplier);
 
-      QVector3D const hold_hand_l(bow_x - 0.15F, pose.shoulderL.y() + 0.30F,
+      QVector3D const hold_hand_l(bow_x - 0.15F, pose.shoulder_l.y() + 0.30F,
                                   0.55F);
-      QVector3D const hold_hand_r(bow_x + 0.12F, pose.shoulderR.y() + 0.15F,
+      QVector3D const hold_hand_r(bow_x + 0.12F, pose.shoulder_r.y() + 0.15F,
                                   0.10F);
       QVector3D const normal_hand_l(bow_x - 0.05F + arm_asymmetry,
                                     HP::SHOULDER_Y + 0.05F + arm_height_jitter,
@@ -143,11 +143,11 @@ public:
       controller.placeHandAt(false, idle_hand_r);
     }
 
-    if (anim.is_attacking && !anim.isInHoldMode) {
+    if (anim.is_attacking && !anim.is_in_hold_mode) {
       float const attack_phase =
           std::fmod(anim.time * ARCHER_INV_ATTACK_CYCLE_TIME, 1.0F);
 
-      if (anim.isMelee) {
+      if (anim.is_melee) {
         controller.meleeStrike(attack_phase);
       } else {
         controller.aimBow(attack_phase);
@@ -183,7 +183,7 @@ public:
         quiver_renderer->setConfig(quiver_config);
       }
 
-      quiver->render(ctx, pose.bodyFrames, v.palette, anim_ctx, out);
+      quiver->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
     }
 
     auto bow = registry.get(EquipmentCategory::Weapon, "bow_roman");
@@ -210,7 +210,7 @@ public:
         bow_renderer->setConfig(bow_config);
       }
 
-      bow->render(ctx, pose.bodyFrames, v.palette, anim_ctx, out);
+      bow->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
     }
   }
 
@@ -227,7 +227,7 @@ public:
 
         auto headwrap = registry.get(EquipmentCategory::Helmet, "headwrap");
         if (headwrap) {
-          headwrap->render(ctx, pose.bodyFrames, v.palette, anim_ctx, out);
+          headwrap->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
         }
       }
       return;
@@ -235,7 +235,7 @@ public:
 
     auto helmet = registry.get(EquipmentCategory::Helmet, "roman_light");
     if (helmet) {
-      helmet->render(ctx, pose.bodyFrames, v.palette, anim_ctx, out);
+      helmet->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
     }
   }
 
@@ -247,7 +247,7 @@ public:
       auto &registry = EquipmentRegistry::instance();
       auto armor = registry.get(EquipmentCategory::Armor, "roman_light_armor");
       if (armor) {
-        armor->render(ctx, pose.bodyFrames, v.palette, anim, out);
+        armor->render(ctx, pose.body_frames, v.palette, anim, out);
       }
     }
   }
