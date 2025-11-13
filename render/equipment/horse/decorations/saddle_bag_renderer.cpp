@@ -19,13 +19,13 @@ void SaddleBagRenderer::render(const DrawContext &ctx,
   for (int i = 0; i < 2; ++i) {
     float const side = (i == 0) ? 1.0F : -1.0F;
 
-    QMatrix4x4 bag = back.makeLocalTransform(
+    QMatrix4x4 bag = back.make_local_transform(
         ctx.model, QVector3D(side * 0.28F, -0.12F, -0.15F), 1.0F);
     bag.scale(0.18F, 0.22F, 0.30F);
     out.mesh(getUnitSphere(), bag, bag_color, nullptr, 1.0F);
 
     QMatrix4x4 strap_attachment =
-        back.makeLocalTransform(ctx.model, QVector3D(side * 0.28F, 0.02F, -0.10F),
+        back.make_local_transform(ctx.model, QVector3D(side * 0.28F, 0.02F, -0.10F),
                                 1.0F);
 
     QVector3D const strap_top =
