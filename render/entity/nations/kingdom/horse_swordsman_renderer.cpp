@@ -243,7 +243,7 @@ public:
     auto &registry = EquipmentRegistry::instance();
 
     if (extras.hasSword) {
-      auto sword = registry.get(EquipmentCategory::Weapon, "sword");
+      auto sword = registry.get(EquipmentCategory::Weapon, "sword_kingdom");
       if (sword) {
         SwordRenderConfig sword_config;
         sword_config.metal_color = extras.metalColor;
