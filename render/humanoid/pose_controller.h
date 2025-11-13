@@ -26,8 +26,8 @@ public:
   void spearThrust(float attack_phase);
   void swordSlash(float attack_phase);
   void mountOnHorse(float saddle_height);
-  void holdSwordAndShield();
-  void lookAt(const QVector3D &target);
+  void hold_sword_and_shield();
+  void look_at(const QVector3D &target);
 
   auto solveElbowIK(bool is_left, const QVector3D &shoulder,
                     const QVector3D &hand, const QVector3D &outward_dir,
@@ -37,8 +37,8 @@ public:
   auto solveKneeIK(bool is_left, const QVector3D &hip, const QVector3D &foot,
                    float height_scale) const -> QVector3D;
 
-  auto getShoulderY(bool is_left) const -> float;
-  auto getPelvisY() const -> float;
+  auto get_shoulder_y(bool is_left) const -> float;
+  auto get_pelvis_y() const -> float;
 
 private:
   HumanoidPose &m_pose;
