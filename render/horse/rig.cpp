@@ -1162,8 +1162,67 @@ void HorseRendererBase::render(const DrawContext &ctx,
   mount.rein_bit_left = bit_left;
   mount.rein_bit_right = bit_right;
 
+  HorseBodyFrames body_frames;
+  QVector3D const forward(0.0F, 0.0F, 1.0F);
+  QVector3D const up(0.0F, 1.0F, 0.0F);
+  QVector3D const right(1.0F, 0.0F, 0.0F);
+
+  body_frames.head.origin = head_center;
+  body_frames.head.right = right;
+  body_frames.head.up = up;
+  body_frames.head.forward = forward;
+
+  body_frames.neck_base.origin = neck_base;
+  body_frames.neck_base.right = right;
+  body_frames.neck_base.up = up;
+  body_frames.neck_base.forward = forward;
+
+  QVector3D const withers_pos = chest_center + QVector3D(0.0F, d.bodyHeight * 0.55F, -d.bodyLength * 0.06F);
+  body_frames.withers.origin = withers_pos;
+  body_frames.withers.right = right;
+  body_frames.withers.up = up;
+  body_frames.withers.forward = forward;
+
+  QVector3D const back_center_pos = (chest_center + rump_center) * 0.5F + QVector3D(0.0F, d.bodyHeight * 0.50F, 0.0F);
+  body_frames.back_center.origin = back_center_pos;
+  body_frames.back_center.right = right;
+  body_frames.back_center.up = up;
+  body_frames.back_center.forward = forward;
+
+  QVector3D const croup_pos = rump_center + QVector3D(0.0F, d.bodyHeight * 0.46F, -d.bodyLength * 0.18F);
+  body_frames.croup.origin = croup_pos;
+  body_frames.croup.right = right;
+  body_frames.croup.up = up;
+  body_frames.croup.forward = forward;
+
+  body_frames.chest.origin = chest_center;
+  body_frames.chest.right = right;
+  body_frames.chest.up = up;
+  body_frames.chest.forward = forward;
+
+  body_frames.barrel.origin = barrel_center;
+  body_frames.barrel.right = right;
+  body_frames.barrel.up = up;
+  body_frames.barrel.forward = forward;
+
+  body_frames.rump.origin = rump_center;
+  body_frames.rump.right = right;
+  body_frames.rump.up = up;
+  body_frames.rump.forward = forward;
+
+  QVector3D const tail_base_pos = rump_center + QVector3D(0.0F, d.bodyHeight * 0.20F, -d.bodyLength * 0.40F);
+  body_frames.tail_base.origin = tail_base_pos;
+  body_frames.tail_base.right = right;
+  body_frames.tail_base.up = up;
+  body_frames.tail_base.forward = forward;
+
+  body_frames.muzzle.origin = muzzle_center;
+  body_frames.muzzle.right = right;
+  body_frames.muzzle.up = up;
+  body_frames.muzzle.forward = forward;
+
   drawAttachments(ctx, anim, rider_ctx, profile, mount, phase, bob, rein_slack,
-                  out);
+                  body_frames, out);
 }
 
 } // namespace Render::GL
