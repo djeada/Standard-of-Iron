@@ -10,7 +10,7 @@ namespace Render::GL {
 void ReinsRenderer::render(const DrawContext &ctx,
                            const HorseBodyFrames &frames,
                            const HorseVariant &variant,
-                           const HorseAnimationContext & /*anim*/,
+                           const HorseAnimationContext &,
                            ISubmitter &out) const {
 
   const HorseAttachmentFrame &muzzle = frames.muzzle;
@@ -37,14 +37,13 @@ void ReinsRenderer::render(const DrawContext &ctx,
   for (int i = 0; i < 2; ++i) {
     float const side = (i == 0) ? 1.0F : -1.0F;
 
-    QVector3D const bit_pos_local =
-        muzzle.origin + muzzle.right * side * k_bit_side_offset +
-        muzzle.forward * k_bit_forward_offset;
+    QVector3D const bit_pos_local = muzzle.origin +
+                                    muzzle.right * side * k_bit_side_offset +
+                                    muzzle.forward * k_bit_forward_offset;
 
     QVector3D const rein_handle_local =
         back.origin + back.right * side * k_handle_side_offset +
-        back.up * k_handle_up_offset +
-        back.forward * k_handle_forward_offset;
+        back.up * k_handle_up_offset + back.forward * k_handle_forward_offset;
 
     QVector3D const mid_point_local =
         (bit_pos_local + rein_handle_local) * 0.5F - back.up * k_mid_drop;
