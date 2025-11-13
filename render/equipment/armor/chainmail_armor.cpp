@@ -98,8 +98,8 @@ void ChainmailArmorRenderer::renderTorsoMail(const DrawContext &ctx,
 void ChainmailArmorRenderer::renderShoulderGuards(const DrawContext &ctx,
                                                   const BodyFrames &frames,
                                                   ISubmitter &submitter) {
-  const AttachmentFrame &shoulder_l = frames.shoulderL;
-  const AttachmentFrame &shoulder_r = frames.shoulderR;
+  const AttachmentFrame &shoulder_l = frames.shoulder_l;
+  const AttachmentFrame &shoulder_r = frames.shoulder_r;
   const AttachmentFrame &torso = frames.torso;
 
   QVector3D left_base = shoulder_l.origin;
@@ -150,10 +150,10 @@ void ChainmailArmorRenderer::renderArmMail(const DrawContext &ctx,
                                            const BodyFrames &frames,
                                            ISubmitter &submitter) {
 
-  const AttachmentFrame &shoulder_l = frames.shoulderL;
-  const AttachmentFrame &shoulder_r = frames.shoulderR;
-  const AttachmentFrame &hand_l = frames.handL;
-  const AttachmentFrame &hand_r = frames.handR;
+  const AttachmentFrame &shoulder_l = frames.shoulder_l;
+  const AttachmentFrame &shoulder_r = frames.shoulder_r;
+  const AttachmentFrame &hand_l = frames.hand_l;
+  const AttachmentFrame &hand_r = frames.hand_r;
 
   QVector3D left_shoulder = shoulder_l.origin;
   QVector3D left_elbow = (left_shoulder + hand_l.origin) * 0.5F;
