@@ -9,7 +9,7 @@ namespace Render::GL {
 void BridleRenderer::render(const DrawContext &ctx,
                             const HorseBodyFrames &frames,
                             const HorseVariant &variant,
-                            const HorseAnimationContext & /*anim*/,
+                            const HorseAnimationContext &,
                             ISubmitter &out) const {
 
   const HorseAttachmentFrame &head = frames.head;
