@@ -183,11 +183,11 @@ auto HumanoidPoseController::computeOutwardDir(bool is_left) const
   return is_left ? -right_axis : right_axis;
 }
 
-auto HumanoidPoseController::getShoulderY(bool is_left) const -> float {
+auto HumanoidPoseController::get_shoulder_y(bool is_left) const -> float {
   return is_left ? m_pose.shoulder_l.y() : m_pose.shoulder_r.y();
 }
 
-auto HumanoidPoseController::getPelvisY() const -> float {
+auto HumanoidPoseController::get_pelvis_y() const -> float {
   return m_pose.pelvis_pos.y();
 }
 
@@ -432,7 +432,7 @@ void HumanoidPoseController::mountOnHorse(float saddle_height) {
   m_pose.pelvis_pos.setY(saddle_height);
 }
 
-void HumanoidPoseController::holdSwordAndShield() {
+void HumanoidPoseController::hold_sword_and_shield() {
   using HP = HumanProportions;
 
   QVector3D const sword_hand_pos(0.30F, HP::SHOULDER_Y - 0.02F, 0.35F);
@@ -442,7 +442,7 @@ void HumanoidPoseController::holdSwordAndShield() {
   placeHandAt(true, shield_hand_pos);
 }
 
-void HumanoidPoseController::lookAt(const QVector3D &target) {
+void HumanoidPoseController::look_at(const QVector3D &target) {
   QVector3D const head_to_target = target - m_pose.head_pos;
   
   if (head_to_target.lengthSquared() < 1e-6F) {
