@@ -19,8 +19,7 @@ class IHorseEquipmentRenderer {
 public:
   virtual ~IHorseEquipmentRenderer() = default;
 
-  virtual void render(const DrawContext &ctx,
-                      const HorseBodyFrames &frames,
+  virtual void render(const DrawContext &ctx, const HorseBodyFrames &frames,
                       const HorseVariant &variant,
                       const HorseAnimationContext &anim,
                       ISubmitter &out) const = 0;

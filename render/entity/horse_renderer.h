@@ -1,12 +1,23 @@
 #pragma once
 
+#include "../equipment/horse/i_horse_equipment_renderer.h"
 #include "../horse/rig.h"
+
+#include <memory>
+#include <vector>
 
 namespace Render::GL {
 
 class HorseRenderer : public HorseRendererBase {
 public:
   using HorseRendererBase::render;
+
+  HorseRenderer();
+  explicit HorseRenderer(
+      std::vector<std::shared_ptr<IHorseEquipmentRenderer>> attachments);
+
+  void setAttachments(
+      const std::vector<std::shared_ptr<IHorseEquipmentRenderer>> &attachments);
 
 protected:
   void drawAttachments(const DrawContext &ctx, const AnimationInputs &anim,
@@ -16,6 +27,9 @@ protected:
                        float bob, float rein_slack,
                        const HorseBodyFrames &frames,
                        ISubmitter &out) const override;
+
+private:
+  std::vector<std::shared_ptr<IHorseEquipmentRenderer>> m_attachments;
 };
 
 } // namespace Render::GL

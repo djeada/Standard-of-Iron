@@ -76,9 +76,9 @@ struct HorseAttachmentFrame {
                             const QVector3D &local_offset,
                             float uniform_scale) const -> QMatrix4x4 {
     QMatrix4x4 m = parent;
-    QVector3D const world_pos =
-        origin + right * local_offset.x() + up * local_offset.y() +
-        forward * local_offset.z();
+    QVector3D const world_pos = origin + right * local_offset.x() +
+                                up * local_offset.y() +
+                                forward * local_offset.z();
     m.translate(world_pos);
     QMatrix4x4 basis;
     basis.setColumn(0, QVector4D(right * uniform_scale, 0.0F));
@@ -185,7 +185,8 @@ protected:
   virtual void drawAttachments(const DrawContext &, const AnimationInputs &,
                                const HumanoidAnimationContext &, HorseProfile &,
                                const MountedAttachmentFrame &, float, float,
-                               float, const HorseBodyFrames &, ISubmitter &) const {}
+                               float, const HorseBodyFrames &,
+                               ISubmitter &) const {}
 };
 
 } // namespace Render::GL
