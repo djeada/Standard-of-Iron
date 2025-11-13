@@ -9,7 +9,7 @@ namespace Render::GL {
 void StirrupRenderer::render(const DrawContext &ctx,
                              const HorseBodyFrames &frames,
                              const HorseVariant &variant,
-                             const HorseAnimationContext & /*anim*/,
+                             const HorseAnimationContext &,
                              ISubmitter &out) const {
 
   const HorseAttachmentFrame &back = frames.back_center;
