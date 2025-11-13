@@ -52,9 +52,12 @@ add_library(render_gl STATIC
     horse/rig.cpp
     horse/horse_animation_controller.cpp
     entity/horse_renderer.cpp
+    entity/nations/roman/roman_horse_renderer.cpp
     entity/nations/roman/horse_swordsman_renderer.cpp
-    entity/nations/kingdom/horse_swordsman_renderer.cpp
+    entity/nations/carthage/carthage_horse_renderer.cpp
     entity/nations/carthage/horse_swordsman_renderer.cpp
+    entity/nations/kingdom/kingdom_horse_renderer.cpp
+    entity/nations/kingdom/horse_swordsman_renderer.cpp
     entity/barracks_renderer.cpp
     entity/nations/kingdom/barracks_renderer.cpp
     entity/nations/roman/barracks_renderer.cpp
