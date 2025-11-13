@@ -15,20 +15,23 @@ void CarthageSaddleRenderer::render(const DrawContext &ctx,
   const HorseAttachmentFrame &back = frames.back_center;
 
   QMatrix4x4 saddle_transform =
-      back.make_local_transform(ctx.model, QVector3D(0.0F, 0.04F, 0.0F), 1.0F);
+      back.make_local_transform(ctx.model, QVector3D(0.0F, 0.008F, 0.0F), 0.25F);
 
+  // Saddle seat - width along horse (forward), length across horse (right)
   QMatrix4x4 seat = saddle_transform;
-  seat.scale(0.38F, 0.035F, 0.50F);
+  seat.scale(0.38F, 0.14F, 1.20F);
   out.mesh(getUnitSphere(), seat, variant.saddleColor, nullptr, 1.0F);
 
+  // Pommel at front
   QMatrix4x4 pommel =
-      back.make_local_transform(ctx.model, QVector3D(0.0F, 0.07F, 0.28F), 0.75F);
-  pommel.scale(0.30F, 0.10F, 0.07F);
+      back.make_local_transform(ctx.model, QVector3D(0.0F, 0.020F, 0.18F), 0.19F);
+  pommel.scale(0.12F, 0.42F, 0.38F);
   out.mesh(getUnitSphere(), pommel, variant.saddleColor, nullptr, 1.0F);
 
+  // Cantle at back
   QMatrix4x4 cantle =
-      back.make_local_transform(ctx.model, QVector3D(0.0F, 0.09F, -0.28F), 0.85F);
-  cantle.scale(0.34F, 0.14F, 0.09F);
+      back.make_local_transform(ctx.model, QVector3D(0.0F, 0.028F, -0.16F), 0.21F);
+  cantle.scale(0.16F, 0.58F, 0.48F);
   out.mesh(getUnitSphere(), cantle, variant.saddleColor, nullptr, 1.0F);
 }
 
