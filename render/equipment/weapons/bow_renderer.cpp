@@ -34,13 +34,13 @@ void BowRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
   const QVector3D up(0.0F, 1.0F, 0.0F);
   const QVector3D forward(0.0F, 0.0F, 1.0F);
 
-  QVector3D const grip = frames.handL.origin;
+  QVector3D const grip = frames.hand_l.origin;
 
   float const bow_plane_z = 0.45F;
   QVector3D const top_end(m_config.bow_x, m_config.bow_top_y, bow_plane_z);
   QVector3D const bot_end(m_config.bow_x, m_config.bow_bot_y, bow_plane_z);
 
-  QVector3D const right_hand = frames.handR.origin;
+  QVector3D const right_hand = frames.hand_r.origin;
   QVector3D const nock(
       m_config.bow_x,
       clampf(right_hand.y(), m_config.bow_bot_y + 0.05F,
@@ -87,11 +87,11 @@ void BowRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
       m_config.string_color, nullptr, 1.0F);
 
   bool const is_bow_attacking =
-      anim.inputs.is_attacking && !anim.inputs.isMelee;
+      anim.inputs.is_attacking && !anim.inputs.is_melee;
   if (is_bow_attacking) {
     submitter.mesh(
         getUnitCylinder(),
-        cylinderBetween(ctx.model, frames.handR.origin, nock, 0.0045F),
+        cylinderBetween(ctx.model, frames.hand_r.origin, nock, 0.0045F),
         m_config.string_color * 0.9F, nullptr, 1.0F);
   }
 

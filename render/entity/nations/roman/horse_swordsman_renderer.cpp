@@ -65,12 +65,12 @@ public:
   void adjust_variation(const DrawContext &, uint32_t,
                         VariationParams &variation) const override {
     variation.height_scale = 0.88F;
-    variation.bulkScale = 0.82F;
-    variation.stanceWidth = 0.60F;
-    variation.armSwingAmp = 0.45F;
-    variation.walkSpeedMult = 1.0F;
-    variation.postureSlump = 0.0F;
-    variation.shoulderTilt = 0.0F;
+    variation.bulk_scale = 0.82F;
+    variation.stance_width = 0.60F;
+    variation.arm_swing_amp = 0.45F;
+    variation.walk_speed_mult = 1.0F;
+    variation.posture_slump = 0.0F;
+    variation.shoulder_tilt = 0.0F;
   }
 
 private:
@@ -169,11 +169,11 @@ public:
         (speed_norm > 0.55F) ? MountedPoseController::MountedSeatPose::Forward
                              : MountedPoseController::MountedSeatPose::Neutral;
     pose_request.torsoCompression = std::clamp(
-        0.18F + speed_norm * 0.28F + anim_ctx.variation.postureSlump * 0.9F,
+        0.18F + speed_norm * 0.28F + anim_ctx.variation.posture_slump * 0.9F,
         0.0F, 0.55F);
-    pose_request.torsoTwist = anim_ctx.variation.shoulderTilt * 3.0F;
+    pose_request.torsoTwist = anim_ctx.variation.shoulder_tilt * 3.0F;
     pose_request.shoulderDip =
-        std::clamp(anim_ctx.variation.shoulderTilt * 0.6F +
+        std::clamp(anim_ctx.variation.shoulder_tilt * 0.6F +
                        (extras.hasCavalryShield ? 0.18F : 0.08F),
                    -0.4F, 0.4F);
 
@@ -181,7 +181,7 @@ public:
       pose_request.shieldPose = MountedPoseController::MountedShieldPose::Guard;
     }
 
-    if (anim.is_attacking && anim.isMelee) {
+    if (anim.is_attacking && anim.is_melee) {
       pose_request.weaponPose =
           MountedPoseController::MountedWeaponPose::SwordStrike;
       pose_request.shieldPose =
@@ -237,7 +237,7 @@ public:
     m_lastPose = nullptr;
     m_hasLastReins = false;
 
-    bool const is_attacking = anim.is_attacking && anim.isMelee;
+    bool const is_attacking = anim.is_attacking && anim.is_melee;
 
     auto &registry = EquipmentRegistry::instance();
 
@@ -253,14 +253,14 @@ public:
         if (sword_renderer) {
           sword_renderer->setConfig(sword_config);
         }
-        sword->render(ctx, pose.bodyFrames, v.palette, anim_ctx, out);
+        sword->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
       }
     }
 
     if (extras.hasCavalryShield) {
       auto shield = registry.get(EquipmentCategory::Weapon, "shield_roman");
       if (shield) {
-        shield->render(ctx, pose.bodyFrames, v.palette, anim_ctx, out);
+        shield->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
       }
     }
   }
@@ -272,7 +272,7 @@ public:
     auto helmet = registry.get(EquipmentCategory::Helmet, "roman_heavy");
     if (helmet) {
       HumanoidAnimationContext anim_ctx{};
-      helmet->render(ctx, pose.bodyFrames, v.palette, anim_ctx, out);
+      helmet->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
     }
   }
 
@@ -283,7 +283,7 @@ public:
     auto &registry = EquipmentRegistry::instance();
     auto armor = registry.get(EquipmentCategory::Armor, "roman_heavy_armor");
     if (armor) {
-      armor->render(ctx, pose.bodyFrames, v.palette, anim, out);
+      armor->render(ctx, pose.body_frames, v.palette, anim, out);
     }
   }
 
