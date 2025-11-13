@@ -183,6 +183,14 @@ auto HumanoidPoseController::computeOutwardDir(bool is_left) const
   return is_left ? -right_axis : right_axis;
 }
 
+auto HumanoidPoseController::get_shoulder_y(bool is_left) const -> float {
+  return is_left ? m_pose.shoulder_l.y() : m_pose.shoulder_r.y();
+}
+
+auto HumanoidPoseController::get_pelvis_y() const -> float {
+  return m_pose.pelvis_pos.y();
+}
+
 void HumanoidPoseController::aimBow(float draw_phase) {
   using HP = HumanProportions;
 
@@ -422,6 +430,35 @@ void HumanoidPoseController::mountOnHorse(float saddle_height) {
 
   float const offset_y = saddle_height - m_pose.pelvis_pos.y();
   m_pose.pelvis_pos.setY(saddle_height);
+}
+
+void HumanoidPoseController::hold_sword_and_shield() {
+  using HP = HumanProportions;
+
+  QVector3D const sword_hand_pos(0.30F, HP::SHOULDER_Y - 0.02F, 0.35F);
+  QVector3D const shield_hand_pos(-0.22F, HP::SHOULDER_Y, 0.18F);
+
+  placeHandAt(false, sword_hand_pos);
+  placeHandAt(true, shield_hand_pos);
+}
+
+void HumanoidPoseController::look_at(const QVector3D &target) {
+  QVector3D const head_to_target = target - m_pose.head_pos;
+  
+  if (head_to_target.lengthSquared() < 1e-6F) {
+    return;
+  }
+
+  QVector3D const direction = head_to_target.normalized();
+  
+  float const max_head_turn = 0.03F;
+  QVector3D const head_offset = direction * max_head_turn;
+  
+  m_pose.head_pos += QVector3D(head_offset.x(), 0.0F, head_offset.z());
+  
+  float const neck_follow = 0.5F;
+  m_pose.neck_base += QVector3D(head_offset.x() * neck_follow, 0.0F, 
+                                 head_offset.z() * neck_follow);
 }
 
 } // namespace Render::GL
