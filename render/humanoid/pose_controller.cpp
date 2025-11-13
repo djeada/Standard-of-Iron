@@ -24,27 +24,27 @@ void HumanoidPoseController::kneel(float depth) {
 
   float const kneel_offset = depth * 0.40F;
   float const pelvis_y = HP::WAIST_Y - kneel_offset;
-  m_pose.pelvisPos.setY(pelvis_y);
+  m_pose.pelvis_pos.setY(pelvis_y);
 
   float const stance_narrow = 0.11F;
 
   float const left_knee_y = HP::GROUND_Y + 0.07F * depth;
   float const left_knee_z = -0.06F * depth;
   m_pose.knee_l = QVector3D(-stance_narrow, left_knee_y, left_knee_z);
-  m_pose.footL = QVector3D(-stance_narrow - 0.025F, HP::GROUND_Y,
+  m_pose.foot_l = QVector3D(-stance_narrow - 0.025F, HP::GROUND_Y,
                            left_knee_z - HP::LOWER_LEG_LEN * 0.93F * depth);
 
   float const right_knee_y = pelvis_y - 0.12F;
   float const right_foot_z = 0.28F * depth;
   m_pose.knee_r = QVector3D(stance_narrow, right_knee_y, right_foot_z - 0.05F);
-  m_pose.footR =
-      QVector3D(stance_narrow, HP::GROUND_Y + m_pose.footYOffset, right_foot_z);
+  m_pose.foot_r =
+      QVector3D(stance_narrow, HP::GROUND_Y + m_pose.foot_y_offset, right_foot_z);
 
   float const upper_body_drop = kneel_offset;
-  m_pose.shoulderL.setY(m_pose.shoulderL.y() - upper_body_drop);
-  m_pose.shoulderR.setY(m_pose.shoulderR.y() - upper_body_drop);
+  m_pose.shoulder_l.setY(m_pose.shoulder_l.y() - upper_body_drop);
+  m_pose.shoulder_r.setY(m_pose.shoulder_r.y() - upper_body_drop);
   m_pose.neck_base.setY(m_pose.neck_base.y() - upper_body_drop);
-  m_pose.headPos.setY(m_pose.headPos.y() - upper_body_drop);
+  m_pose.head_pos.setY(m_pose.head_pos.y() - upper_body_drop);
 }
 
 void HumanoidPoseController::lean(const QVector3D &direction, float amount) {
@@ -61,10 +61,10 @@ void HumanoidPoseController::lean(const QVector3D &direction, float amount) {
   float const lean_magnitude = 0.12F * amount;
   QVector3D const lean_offset = dir * lean_magnitude;
 
-  m_pose.shoulderL += lean_offset;
-  m_pose.shoulderR += lean_offset;
+  m_pose.shoulder_l += lean_offset;
+  m_pose.shoulder_r += lean_offset;
   m_pose.neck_base += lean_offset * 0.85F;
-  m_pose.headPos += lean_offset * 0.75F;
+  m_pose.head_pos += lean_offset * 0.75F;
 }
 
 void HumanoidPoseController::placeHandAt(bool is_left,
@@ -138,7 +138,7 @@ auto HumanoidPoseController::solveKneeIK(
   QVector3D knee =
       hip + dir * (cos_theta * upper_len) + bend_axis * (sin_theta * upper_len);
 
-  float const knee_floor = HP::GROUND_Y + m_pose.footYOffset * 0.5F;
+  float const knee_floor = HP::GROUND_Y + m_pose.foot_y_offset * 0.5F;
   if (knee.y() < knee_floor) {
     knee.setY(knee_floor);
   }
@@ -152,23 +152,23 @@ auto HumanoidPoseController::solveKneeIK(
 
 auto HumanoidPoseController::getShoulder(bool is_left) const
     -> const QVector3D & {
-  return is_left ? m_pose.shoulderL : m_pose.shoulderR;
+  return is_left ? m_pose.shoulder_l : m_pose.shoulder_r;
 }
 
 auto HumanoidPoseController::getHand(bool is_left) -> QVector3D & {
-  return is_left ? m_pose.handL : m_pose.handR;
+  return is_left ? m_pose.hand_l : m_pose.hand_r;
 }
 
 auto HumanoidPoseController::getHand(bool is_left) const -> const QVector3D & {
-  return is_left ? m_pose.handL : m_pose.handR;
+  return is_left ? m_pose.hand_l : m_pose.hand_r;
 }
 
 auto HumanoidPoseController::getElbow(bool is_left) -> QVector3D & {
-  return is_left ? m_pose.elbowL : m_pose.elbowR;
+  return is_left ? m_pose.elbow_l : m_pose.elbow_r;
 }
 
 auto HumanoidPoseController::computeRightAxis() const -> QVector3D {
-  QVector3D right_axis = m_pose.shoulderR - m_pose.shoulderL;
+  QVector3D right_axis = m_pose.shoulder_r - m_pose.shoulder_l;
   right_axis.setY(0.0F);
   if (right_axis.lengthSquared() < 1e-8F) {
     right_axis = QVector3D(1.0F, 0.0F, 0.0F);
@@ -227,12 +227,12 @@ void HumanoidPoseController::aimBow(float draw_phase) {
   placeHandAt(false, hand_r_target);
 
   if (shoulder_twist > 0.01F) {
-    m_pose.shoulderR.setY(m_pose.shoulderR.y() + shoulder_twist);
-    m_pose.shoulderL.setY(m_pose.shoulderL.y() - shoulder_twist * 0.5F);
+    m_pose.shoulder_r.setY(m_pose.shoulder_r.y() + shoulder_twist);
+    m_pose.shoulder_l.setY(m_pose.shoulder_l.y() - shoulder_twist * 0.5F);
   }
 
   if (head_recoil > 0.01F) {
-    m_pose.headPos.setZ(m_pose.headPos.z() - head_recoil);
+    m_pose.head_pos.setZ(m_pose.head_pos.z() - head_recoil);
   }
 }
 
@@ -420,8 +420,8 @@ void HumanoidPoseController::swordSlash(float attack_phase) {
 
 void HumanoidPoseController::mountOnHorse(float saddle_height) {
 
-  float const offset_y = saddle_height - m_pose.pelvisPos.y();
-  m_pose.pelvisPos.setY(saddle_height);
+  float const offset_y = saddle_height - m_pose.pelvis_pos.y();
+  m_pose.pelvis_pos.setY(saddle_height);
 }
 
 } // namespace Render::GL
