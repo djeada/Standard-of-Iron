@@ -14,18 +14,18 @@ protected:
     // Initialize a basic pose
     float const head_center_y = 0.5F * (HP::HEAD_TOP_Y + HP::CHIN_Y);
     float const half_shoulder = 0.5F * HP::SHOULDER_WIDTH;
-    pose.headPos = QVector3D(0.0F, head_center_y, 0.0F);
-    pose.headR = HP::HEAD_RADIUS;
+    pose.head_pos = QVector3D(0.0F, head_center_y, 0.0F);
+    pose.head_r = HP::HEAD_RADIUS;
     pose.neck_base = QVector3D(0.0F, HP::NECK_BASE_Y, 0.0F);
-    pose.shoulderL = QVector3D(-half_shoulder, HP::SHOULDER_Y, 0.0F);
-    pose.shoulderR = QVector3D(half_shoulder, HP::SHOULDER_Y, 0.0F);
-    pose.pelvisPos = QVector3D(0.0F, HP::WAIST_Y, 0.0F);
-    pose.handL = QVector3D(-0.25F, 1.20F, 0.30F);
-    pose.handR = QVector3D(0.25F, 1.20F, 0.30F);
-    pose.elbowL = QVector3D(-0.23F, 1.30F, 0.15F);
-    pose.elbowR = QVector3D(0.23F, 1.30F, 0.15F);
-    pose.footL = QVector3D(-0.14F, 0.022F, 0.06F);
-    pose.footR = QVector3D(0.14F, 0.022F, -0.06F);
+    pose.shoulder_l = QVector3D(-half_shoulder, HP::SHOULDER_Y, 0.0F);
+    pose.shoulder_r = QVector3D(half_shoulder, HP::SHOULDER_Y, 0.0F);
+    pose.pelvis_pos = QVector3D(0.0F, HP::WAIST_Y, 0.0F);
+    pose.hand_l = QVector3D(-0.25F, 1.20F, 0.30F);
+    pose.hand_r = QVector3D(0.25F, 1.20F, 0.30F);
+    pose.elbow_l = QVector3D(-0.23F, 1.30F, 0.15F);
+    pose.elbow_r = QVector3D(0.23F, 1.30F, 0.15F);
+    pose.foot_l = QVector3D(-0.14F, 0.022F, 0.06F);
+    pose.foot_r = QVector3D(0.14F, 0.022F, -0.06F);
   }
 
   HumanoidPose pose;
@@ -72,12 +72,12 @@ TEST_F(BodyFramesTest, BodyFramesHasAllRequiredFrames) {
   EXPECT_EQ(frames.torso.origin, QVector3D(0.0F, 0.0F, 0.0F));
   EXPECT_EQ(frames.back.origin, QVector3D(0.0F, 0.0F, 0.0F));
   EXPECT_EQ(frames.waist.origin, QVector3D(0.0F, 0.0F, 0.0F));
-  EXPECT_EQ(frames.shoulderL.origin, QVector3D(0.0F, 0.0F, 0.0F));
-  EXPECT_EQ(frames.shoulderR.origin, QVector3D(0.0F, 0.0F, 0.0F));
-  EXPECT_EQ(frames.handL.origin, QVector3D(0.0F, 0.0F, 0.0F));
-  EXPECT_EQ(frames.handR.origin, QVector3D(0.0F, 0.0F, 0.0F));
-  EXPECT_EQ(frames.footL.origin, QVector3D(0.0F, 0.0F, 0.0F));
-  EXPECT_EQ(frames.footR.origin, QVector3D(0.0F, 0.0F, 0.0F));
+  EXPECT_EQ(frames.shoulder_l.origin, QVector3D(0.0F, 0.0F, 0.0F));
+  EXPECT_EQ(frames.shoulder_r.origin, QVector3D(0.0F, 0.0F, 0.0F));
+  EXPECT_EQ(frames.hand_l.origin, QVector3D(0.0F, 0.0F, 0.0F));
+  EXPECT_EQ(frames.hand_r.origin, QVector3D(0.0F, 0.0F, 0.0F));
+  EXPECT_EQ(frames.foot_l.origin, QVector3D(0.0F, 0.0F, 0.0F));
+  EXPECT_EQ(frames.foot_r.origin, QVector3D(0.0F, 0.0F, 0.0F));
 }
 
 TEST_F(BodyFramesTest, FrameLocalPositionComputesCorrectly) {
@@ -169,14 +169,14 @@ TEST_F(BodyFramesTest, PoseHasBothHeadFrameAndBodyFrames) {
 
   // Set headFrame
   float const head_center_y = 0.5F * (HP::HEAD_TOP_Y + HP::CHIN_Y);
-  pose.headFrame.origin = QVector3D(0.0F, head_center_y, 0.0F);
-  pose.headFrame.radius = HP::HEAD_RADIUS;
+  pose.head_frame.origin = QVector3D(0.0F, head_center_y, 0.0F);
+  pose.head_frame.radius = HP::HEAD_RADIUS;
 
   // Set bodyFrames.head
-  pose.bodyFrames.head.origin = QVector3D(0.0F, head_center_y, 0.0F);
-  pose.bodyFrames.head.radius = HP::HEAD_RADIUS;
+  pose.body_frames.head.origin = QVector3D(0.0F, head_center_y, 0.0F);
+  pose.body_frames.head.radius = HP::HEAD_RADIUS;
 
   // Verify both can be accessed
-  EXPECT_EQ(pose.headFrame.origin, QVector3D(0.0F, head_center_y, 0.0F));
-  EXPECT_EQ(pose.bodyFrames.head.origin, QVector3D(0.0F, head_center_y, 0.0F));
+  EXPECT_EQ(pose.head_frame.origin, QVector3D(0.0F, head_center_y, 0.0F));
+  EXPECT_EQ(pose.body_frames.head.origin, QVector3D(0.0F, head_center_y, 0.0F));
 }

@@ -124,7 +124,7 @@ public:
     float const arm_height_jitter = (hash_01(seed ^ 0xABCDU) - 0.5F) * 0.03F;
     float const arm_asymmetry = (hash_01(seed ^ 0xDEF0U) - 0.5F) * 0.04F;
 
-    if (anim.is_attacking && anim.isMelee) {
+    if (anim.is_attacking && anim.is_melee) {
       float const attack_phase =
           std::fmod(anim.time * KNIGHT_INV_ATTACK_CYCLE_TIME, 1.0F);
       controller.swordSlash(attack_phase);
@@ -165,7 +165,7 @@ public:
     }
     apply_extras_overrides(style, team_tint, v, extras);
 
-    bool const is_attacking = anim.is_attacking && anim.isMelee;
+    bool const is_attacking = anim.is_attacking && anim.is_melee;
 
     auto &registry = EquipmentRegistry::instance();
 
@@ -186,12 +186,12 @@ public:
       if (sword_renderer) {
         sword_renderer->setConfig(sword_config);
       }
-      sword->render(ctx, pose.bodyFrames, v.palette, anim_ctx, out);
+      sword->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
     }
 
     auto shield = registry.get(EquipmentCategory::Weapon, "shield_roman");
     if (shield) {
-      shield->render(ctx, pose.bodyFrames, v.palette, anim_ctx, out);
+      shield->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
     }
 
     if (!is_attacking && extras.hasScabbard) {
@@ -206,7 +206,7 @@ public:
     auto helmet = registry.get(EquipmentCategory::Helmet, "roman_heavy");
     if (helmet) {
       HumanoidAnimationContext anim_ctx{};
-      helmet->render(ctx, pose.bodyFrames, v.palette, anim_ctx, out);
+      helmet->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
     }
   }
 
@@ -217,7 +217,7 @@ public:
     auto &registry = EquipmentRegistry::instance();
     auto armor = registry.get(EquipmentCategory::Armor, "roman_heavy_armor");
     if (armor) {
-      armor->render(ctx, pose.bodyFrames, v.palette, anim, out);
+      armor->render(ctx, pose.body_frames, v.palette, anim, out);
     }
   }
 

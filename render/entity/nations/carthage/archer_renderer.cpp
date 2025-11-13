@@ -89,9 +89,9 @@ public:
   void adjust_variation(const DrawContext &, uint32_t,
                         VariationParams &variation) const override {
     variation.height_scale *= 1.06F;
-    variation.bulkScale *= 0.72F;
-    variation.stanceWidth *= 0.80F;
-    variation.armSwingAmp *= 0.92F;
+    variation.bulk_scale *= 0.72F;
+    variation.stance_width *= 0.80F;
+    variation.arm_swing_amp *= 0.92F;
   }
 
   void get_variant(const DrawContext &ctx, uint32_t seed,
@@ -117,51 +117,51 @@ public:
 
       if (style_roll < 0.50F) {
 
-        v.facialHair.style = FacialHairStyle::FullBeard;
-        v.facialHair.length = 0.9F + nextRand(beard_seed) * 0.6F;
+        v.facial_hair.style = FacialHairStyle::FullBeard;
+        v.facial_hair.length = 0.9F + nextRand(beard_seed) * 0.6F;
       } else if (style_roll < 0.75F) {
 
-        v.facialHair.style = FacialHairStyle::LongBeard;
-        v.facialHair.length = 1.2F + nextRand(beard_seed) * 0.8F;
+        v.facial_hair.style = FacialHairStyle::LongBeard;
+        v.facial_hair.length = 1.2F + nextRand(beard_seed) * 0.8F;
       } else if (style_roll < 0.90F) {
 
-        v.facialHair.style = FacialHairStyle::ShortBeard;
-        v.facialHair.length = 0.8F + nextRand(beard_seed) * 0.4F;
+        v.facial_hair.style = FacialHairStyle::ShortBeard;
+        v.facial_hair.length = 0.8F + nextRand(beard_seed) * 0.4F;
       } else {
 
-        v.facialHair.style = FacialHairStyle::Goatee;
-        v.facialHair.length = 0.9F + nextRand(beard_seed) * 0.5F;
+        v.facial_hair.style = FacialHairStyle::Goatee;
+        v.facial_hair.length = 0.9F + nextRand(beard_seed) * 0.5F;
       }
 
       float const color_roll = nextRand(beard_seed);
       if (color_roll < 0.60F) {
 
-        v.facialHair.color = QVector3D(0.18F + nextRand(beard_seed) * 0.10F,
+        v.facial_hair.color = QVector3D(0.18F + nextRand(beard_seed) * 0.10F,
                                        0.14F + nextRand(beard_seed) * 0.08F,
                                        0.10F + nextRand(beard_seed) * 0.06F);
       } else if (color_roll < 0.85F) {
 
-        v.facialHair.color = QVector3D(0.30F + nextRand(beard_seed) * 0.12F,
+        v.facial_hair.color = QVector3D(0.30F + nextRand(beard_seed) * 0.12F,
                                        0.24F + nextRand(beard_seed) * 0.10F,
                                        0.16F + nextRand(beard_seed) * 0.08F);
       } else {
 
-        v.facialHair.color = QVector3D(0.35F + nextRand(beard_seed) * 0.10F,
+        v.facial_hair.color = QVector3D(0.35F + nextRand(beard_seed) * 0.10F,
                                        0.20F + nextRand(beard_seed) * 0.08F,
                                        0.12F + nextRand(beard_seed) * 0.06F);
       }
 
-      v.facialHair.thickness = 0.85F + nextRand(beard_seed) * 0.35F;
-      v.facialHair.coverage = 0.75F + nextRand(beard_seed) * 0.25F;
+      v.facial_hair.thickness = 0.85F + nextRand(beard_seed) * 0.35F;
+      v.facial_hair.coverage = 0.75F + nextRand(beard_seed) * 0.25F;
 
       if (nextRand(beard_seed) < 0.10F) {
-        v.facialHair.greyness = 0.15F + nextRand(beard_seed) * 0.35F;
+        v.facial_hair.greyness = 0.15F + nextRand(beard_seed) * 0.35F;
       } else {
-        v.facialHair.greyness = 0.0F;
+        v.facial_hair.greyness = 0.0F;
       }
     } else {
 
-      v.facialHair.style = FacialHairStyle::None;
+      v.facial_hair.style = FacialHairStyle::None;
     }
 
     v.muscularity = 0.95F + nextRand(beard_seed) * 0.25F;
@@ -182,16 +182,16 @@ public:
 
     float const bow_x = 0.0F;
 
-    if (anim.isInHoldMode || anim.isExitingHold) {
-      float const t = anim.isInHoldMode ? 1.0F : (1.0F - anim.holdExitProgress);
+    if (anim.is_in_hold_mode || anim.is_exiting_hold) {
+      float const t = anim.is_in_hold_mode ? 1.0F : (1.0F - anim.hold_exit_progress);
 
       controller.kneel(t * k_kneel_depth_multiplier);
       controller.lean(QVector3D(0.0F, 0.0F, 1.0F),
                       t * k_lean_amount_multiplier);
 
-      QVector3D const hold_hand_l(bow_x - 0.15F, pose.shoulderL.y() + 0.30F,
+      QVector3D const hold_hand_l(bow_x - 0.15F, pose.shoulder_l.y() + 0.30F,
                                   0.55F);
-      QVector3D const hold_hand_r(bow_x + 0.12F, pose.shoulderR.y() + 0.15F,
+      QVector3D const hold_hand_r(bow_x + 0.12F, pose.shoulder_r.y() + 0.15F,
                                   0.10F);
       QVector3D const normal_hand_l(bow_x - 0.05F + arm_asymmetry,
                                     HP::SHOULDER_Y + 0.05F + arm_height_jitter,
@@ -219,11 +219,11 @@ public:
       controller.placeHandAt(false, idle_hand_r);
     }
 
-    if (anim.is_attacking && !anim.isInHoldMode) {
+    if (anim.is_attacking && !anim.is_in_hold_mode) {
       float const attack_phase =
           std::fmod(anim.time * ARCHER_INV_ATTACK_CYCLE_TIME, 1.0F);
 
-      if (anim.isMelee) {
+      if (anim.is_melee) {
         controller.meleeStrike(attack_phase);
       } else {
         controller.aimBow(attack_phase);
@@ -268,7 +268,7 @@ public:
         quiver_renderer->setConfig(quiver_config);
       }
 
-      quiver->render(ctx, pose.bodyFrames, v.palette, anim_ctx, out);
+      quiver->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
     }
 
     auto bow = registry.get(EquipmentCategory::Weapon, "bow_carthage");
@@ -295,7 +295,7 @@ public:
         bow_renderer->setConfig(bow_config);
       }
 
-      bow->render(ctx, pose.bodyFrames, v.palette, anim_ctx, out);
+      bow->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
     }
   }
 
@@ -312,7 +312,7 @@ public:
 
         auto headwrap = registry.get(EquipmentCategory::Helmet, "headwrap");
         if (headwrap) {
-          headwrap->render(ctx, pose.bodyFrames, v.palette, anim_ctx, out);
+          headwrap->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
         }
       }
       return;
@@ -320,7 +320,7 @@ public:
 
     auto helmet = registry.get(EquipmentCategory::Helmet, "carthage_light");
     if (helmet) {
-      helmet->render(ctx, pose.bodyFrames, v.palette, anim_ctx, out);
+      helmet->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
     }
   }
 
@@ -337,7 +337,7 @@ public:
 
       auto armor = registry.get(EquipmentCategory::Armor, armor_key);
       if (armor) {
-        armor->render(ctx, pose.bodyFrames, v.palette, anim, out);
+        armor->render(ctx, pose.body_frames, v.palette, anim, out);
       }
     }
   }

@@ -21,17 +21,17 @@ protected:
     pose = HumanoidPose{};
     float const head_center_y = 0.5F * (HP::HEAD_TOP_Y + HP::CHIN_Y);
     float const half_shoulder = 0.5F * HP::SHOULDER_WIDTH;
-    pose.headPos = QVector3D(0.0F, head_center_y, 0.0F);
-    pose.headR = HP::HEAD_RADIUS;
+    pose.head_pos = QVector3D(0.0F, head_center_y, 0.0F);
+    pose.head_r = HP::HEAD_RADIUS;
     pose.neck_base = QVector3D(0.0F, HP::NECK_BASE_Y, 0.0F);
-    pose.shoulderL = QVector3D(-half_shoulder, HP::SHOULDER_Y, 0.0F);
-    pose.shoulderR = QVector3D(half_shoulder, HP::SHOULDER_Y, 0.0F);
-    pose.pelvisPos = QVector3D(0.0F, HP::WAIST_Y, 0.0F);
-    pose.handL = QVector3D(-0.05F, HP::SHOULDER_Y + 0.05F, 0.55F);
-    pose.handR = QVector3D(0.15F, HP::SHOULDER_Y + 0.15F, 0.20F);
-    pose.footL = QVector3D(-0.14F, 0.022F, 0.06F);
-    pose.footR = QVector3D(0.14F, 0.022F, -0.06F);
-    pose.footYOffset = 0.022F;
+    pose.shoulder_l = QVector3D(-half_shoulder, HP::SHOULDER_Y, 0.0F);
+    pose.shoulder_r = QVector3D(half_shoulder, HP::SHOULDER_Y, 0.0F);
+    pose.pelvis_pos = QVector3D(0.0F, HP::WAIST_Y, 0.0F);
+    pose.hand_l = QVector3D(-0.05F, HP::SHOULDER_Y + 0.05F, 0.55F);
+    pose.hand_r = QVector3D(0.15F, HP::SHOULDER_Y + 0.15F, 0.20F);
+    pose.foot_l = QVector3D(-0.14F, 0.022F, 0.06F);
+    pose.foot_r = QVector3D(0.14F, 0.022F, -0.06F);
+    pose.foot_y_offset = 0.022F;
 
     anim_ctx = HumanoidAnimationContext{};
     anim_ctx.variation = VariationParams::fromSeed(12345);
@@ -87,12 +87,12 @@ TEST_F(PoseControllerCompatibilityTest, PlaceHandAtUsesCorrectElbowIK) {
   QVector3D const target_hand(0.30F, 1.20F, 0.80F);
 
   // Legacy approach: manual IK
-  legacy_pose.handR = target_hand;
-  QVector3D right_axis = legacy_pose.shoulderR - legacy_pose.shoulderL;
+  legacy_pose.hand_r = target_hand;
+  QVector3D right_axis = legacy_pose.shoulder_r - legacy_pose.shoulder_l;
   right_axis.setY(0.0F);
   right_axis.normalize();
   QVector3D const outward_r = right_axis;
-  legacy_pose.elbowR = elbowBendTorso(legacy_pose.shoulderR, target_hand,
+  legacy_pose.elbow_r = elbowBendTorso(legacy_pose.shoulder_r, target_hand,
                                       outward_r, 0.48F, 0.12F, 0.02F, 1.0F);
 
   // New controller approach
@@ -100,15 +100,15 @@ TEST_F(PoseControllerCompatibilityTest, PlaceHandAtUsesCorrectElbowIK) {
   controller.placeHandAt(false, target_hand);
 
   // Hand should be at target
-  EXPECT_TRUE(approxEqual(pose.handR, target_hand, 0.001F));
+  EXPECT_TRUE(approxEqual(pose.hand_r, target_hand, 0.001F));
 
   // Elbow should be very similar (minor differences due to internal
   // calculations)
-  EXPECT_TRUE(approxEqual(pose.elbowR, legacy_pose.elbowR, 0.05F))
-      << "Legacy elbow: " << legacy_pose.elbowR.x() << ", "
-      << legacy_pose.elbowR.y() << ", " << legacy_pose.elbowR.z() << "\n"
-      << "Controller elbow: " << pose.elbowR.x() << ", " << pose.elbowR.y()
-      << ", " << pose.elbowR.z();
+  EXPECT_TRUE(approxEqual(pose.elbow_r, legacy_pose.elbow_r, 0.05F))
+      << "Legacy elbow: " << legacy_pose.elbow_r.x() << ", "
+      << legacy_pose.elbow_r.y() << ", " << legacy_pose.elbow_r.z() << "\n"
+      << "Controller elbow: " << pose.elbow_r.x() << ", " << pose.elbow_r.y()
+      << ", " << pose.elbow_r.z();
 }
 
 TEST_F(PoseControllerCompatibilityTest, KneeIKHandlesExtremeCases) {
@@ -141,11 +141,11 @@ TEST_F(PoseControllerCompatibilityTest,
   HumanoidPose reference_pose = pose;
   float const kneel_depth = 0.45F;
   float const pelvis_y = HP::WAIST_Y - kneel_depth;
-  reference_pose.pelvisPos.setY(pelvis_y);
-  reference_pose.shoulderL.setY(HP::SHOULDER_Y - kneel_depth);
-  reference_pose.shoulderR.setY(HP::SHOULDER_Y - kneel_depth);
+  reference_pose.pelvis_pos.setY(pelvis_y);
+  reference_pose.shoulder_l.setY(HP::SHOULDER_Y - kneel_depth);
+  reference_pose.shoulder_r.setY(HP::SHOULDER_Y - kneel_depth);
   reference_pose.neck_base.setY(HP::NECK_BASE_Y - kneel_depth);
-  reference_pose.headPos.setY((HP::HEAD_TOP_Y + HP::CHIN_Y) * 0.5F -
+  reference_pose.head_pos.setY((HP::HEAD_TOP_Y + HP::CHIN_Y) * 0.5F -
                               kneel_depth);
 
   // Use controller to kneel
@@ -153,9 +153,9 @@ TEST_F(PoseControllerCompatibilityTest,
   controller.kneel(1.0F); // Full kneel
 
   // Should be similar (allowing for controller's specific implementation)
-  EXPECT_NEAR(pose.pelvisPos.y(), reference_pose.pelvisPos.y(), 0.10F);
-  EXPECT_LT(pose.shoulderL.y(), HP::SHOULDER_Y); // Shoulders lowered
-  EXPECT_LT(pose.shoulderR.y(), HP::SHOULDER_Y);
+  EXPECT_NEAR(pose.pelvis_pos.y(), reference_pose.pelvis_pos.y(), 0.10F);
+  EXPECT_LT(pose.shoulder_l.y(), HP::SHOULDER_Y); // Shoulders lowered
+  EXPECT_LT(pose.shoulder_r.y(), HP::SHOULDER_Y);
 }
 
 TEST_F(PoseControllerCompatibilityTest,
@@ -163,9 +163,9 @@ TEST_F(PoseControllerCompatibilityTest,
   // Test that lean produces sensible displacement
   using HP = HumanProportions;
 
-  QVector3D const original_shoulder_l = pose.shoulderL;
-  QVector3D const original_shoulder_r = pose.shoulderR;
-  QVector3D const original_head = pose.headPos;
+  QVector3D const original_shoulder_l = pose.shoulder_l;
+  QVector3D const original_shoulder_r = pose.shoulder_r;
+  QVector3D const original_head = pose.head_pos;
 
   QVector3D const lean_dir(0.0F, 0.0F, 1.0F); // Forward
   float const lean_amount = 0.8F;
@@ -174,14 +174,14 @@ TEST_F(PoseControllerCompatibilityTest,
   controller.lean(lean_dir, lean_amount);
 
   // Shoulders should move forward
-  EXPECT_GT(pose.shoulderL.z(), original_shoulder_l.z());
-  EXPECT_GT(pose.shoulderR.z(), original_shoulder_r.z());
+  EXPECT_GT(pose.shoulder_l.z(), original_shoulder_l.z());
+  EXPECT_GT(pose.shoulder_r.z(), original_shoulder_r.z());
 
   // Head should move forward but less than shoulders
-  EXPECT_GT(pose.headPos.z(), original_head.z());
+  EXPECT_GT(pose.head_pos.z(), original_head.z());
   float const shoulder_displacement =
-      pose.shoulderL.z() - original_shoulder_l.z();
-  float const head_displacement = pose.headPos.z() - original_head.z();
+      pose.shoulder_l.z() - original_shoulder_l.z();
+  float const head_displacement = pose.head_pos.z() - original_head.z();
   EXPECT_LT(head_displacement, shoulder_displacement);
 
   // Displacement should be proportional to lean amount
@@ -200,17 +200,17 @@ TEST_F(PoseControllerCompatibilityTest, CanRecreateBowAimingPose) {
   controller.lean(QVector3D(0.0F, 0.0F, 1.0F), 0.2F); // Slight forward lean
 
   // Position hands for bow
-  float const lowered_shoulder_y = pose.shoulderL.y();
+  float const lowered_shoulder_y = pose.shoulder_l.y();
   controller.placeHandAt(true,
                          QVector3D(-0.15F, lowered_shoulder_y + 0.30F, 0.55F));
   controller.placeHandAt(false,
-                         QVector3D(0.12F, pose.shoulderR.y() + 0.15F, 0.10F));
+                         QVector3D(0.12F, pose.shoulder_r.y() + 0.15F, 0.10F));
 
   // Verify pose is in a reasonable configuration
-  EXPECT_LT(pose.pelvisPos.y(), HP::WAIST_Y);    // Kneeling
-  EXPECT_GT(pose.handL.y(), pose.shoulderL.y()); // Left hand raised
-  EXPECT_GT(pose.handL.z(), 0.0F);               // Left hand forward
-  EXPECT_LT(pose.handR.z(), pose.handL.z()); // Right hand back (drawing bow)
+  EXPECT_LT(pose.pelvis_pos.y(), HP::WAIST_Y);    // Kneeling
+  EXPECT_GT(pose.hand_l.y(), pose.shoulder_l.y()); // Left hand raised
+  EXPECT_GT(pose.hand_l.z(), 0.0F);               // Left hand forward
+  EXPECT_LT(pose.hand_r.z(), pose.hand_l.z()); // Right hand back (drawing bow)
 }
 
 TEST_F(PoseControllerCompatibilityTest, CanRecreateMeleeAttackPose) {
@@ -231,7 +231,7 @@ TEST_F(PoseControllerCompatibilityTest, CanRecreateMeleeAttackPose) {
                          QVector3D(-0.05F, HP::SHOULDER_Y + 0.03F, 0.53F));
 
   // Verify thrust pose characteristics
-  EXPECT_GT(pose.handR.z(), 0.80F);              // Hand extended forward
-  EXPECT_GT(pose.shoulderL.z(), 0.0F);            // Body leaning forward
-  EXPECT_GT(pose.elbowR.z(), pose.shoulderR.z()); // Elbow extended
+  EXPECT_GT(pose.hand_r.z(), 0.80F);              // Hand extended forward
+  EXPECT_GT(pose.shoulder_l.z(), 0.0F);            // Body leaning forward
+  EXPECT_GT(pose.elbow_r.z(), pose.shoulder_r.z()); // Elbow extended
 }
