@@ -17,12 +17,12 @@ protected:
 
     // Initialize animation inputs
     anim.time = 0.0F;
-    anim.isMoving = false;
+    anim.is_moving = false;
     anim.is_attacking = false;
-    anim.isMelee = false;
-    anim.isInHoldMode = false;
-    anim.isExitingHold = false;
-    anim.holdExitProgress = 0.0F;
+    anim.is_melee = false;
+    anim.is_in_hold_mode = false;
+    anim.is_exiting_hold = false;
+    anim.hold_exit_progress = 0.0F;
 
     // Initialize rider context
     rider_ctx = HumanoidAnimationContext{};

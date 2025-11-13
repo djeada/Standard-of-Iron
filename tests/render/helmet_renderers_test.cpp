@@ -92,9 +92,9 @@ protected:
     frames = createTestFrames();
     palette = createTestPalette();
     anim.inputs.time = 0.0F;
-    anim.inputs.isMoving = false;
+    anim.inputs.is_moving = false;
     anim.inputs.is_attacking = false;
-    anim.inputs.isMelee = false;
+    anim.inputs.is_melee = false;
   }
 
   DrawContext ctx;
