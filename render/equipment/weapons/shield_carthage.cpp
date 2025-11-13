@@ -101,7 +101,7 @@ void CarthageShieldRenderer::render(const DrawContext &ctx,
 
   float const shield_radius = 0.18F * 0.9F * k_scale_factor;
 
-  QVector3D shield_center = frames.handL.origin +
+  QVector3D shield_center = frames.hand_l.origin +
                             axis_x * (-shield_radius * 0.35F) +
                             axis_y * (-0.05F) + n * (0.06F);
 

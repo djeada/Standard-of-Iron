@@ -12,12 +12,12 @@ namespace Render::GL {
 auto sampleAnimState(const DrawContext &ctx) -> AnimationInputs {
   AnimationInputs anim{};
   anim.time = ctx.animationTime;
-  anim.isMoving = false;
+  anim.is_moving = false;
   anim.is_attacking = false;
-  anim.isMelee = false;
-  anim.isInHoldMode = false;
-  anim.isExitingHold = false;
-  anim.holdExitProgress = 0.0F;
+  anim.is_melee = false;
+  anim.is_in_hold_mode = false;
+  anim.is_exiting_hold = false;
+  anim.hold_exit_progress = 0.0F;
 
   if (ctx.entity == nullptr) {
     return anim;
@@ -35,23 +35,23 @@ auto sampleAnimState(const DrawContext &ctx) -> AnimationInputs {
       ctx.entity->getComponent<Engine::Core::TransformComponent>();
   auto *hold_mode = ctx.entity->getComponent<Engine::Core::HoldModeComponent>();
 
-  anim.isInHoldMode = ((hold_mode != nullptr) && hold_mode->active);
+  anim.is_in_hold_mode = ((hold_mode != nullptr) && hold_mode->active);
   if ((hold_mode != nullptr) && !hold_mode->active &&
       hold_mode->exitCooldown > 0.0F) {
-    anim.isExitingHold = true;
-    anim.holdExitProgress =
+    anim.is_exiting_hold = true;
+    anim.hold_exit_progress =
         1.0F - (hold_mode->exitCooldown / hold_mode->standUpDuration);
   }
-  anim.isMoving = ((movement != nullptr) && movement->hasTarget);
+  anim.is_moving = ((movement != nullptr) && movement->hasTarget);
 
   if ((attack != nullptr) && (attack_target != nullptr) &&
       attack_target->target_id > 0 && (transform != nullptr)) {
-    anim.isMelee = (attack->currentMode ==
+    anim.is_melee = (attack->currentMode ==
                     Engine::Core::AttackComponent::CombatMode::Melee);
 
-    bool const stationary = !anim.isMoving;
+    bool const stationary = !anim.is_moving;
     float const current_cooldown =
-        anim.isMelee ? attack->meleeCooldown : attack->cooldown;
+        anim.is_melee ? attack->meleeCooldown : attack->cooldown;
     bool const recently_fired =
         attack->timeSinceLast < std::min(current_cooldown, 0.45F);
     bool target_in_range = false;
