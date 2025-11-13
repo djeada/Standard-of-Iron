@@ -148,7 +148,8 @@ TEST_F(EquipmentRegistryTest, OverwriteExistingEquipment) {
 }
 
 TEST_F(EquipmentRegistryTest, NationSpecificWeapons) {
-  auto sword_carthage = std::make_shared<MockEquipmentRenderer>("sword_carthage");
+  auto sword_carthage =
+      std::make_shared<MockEquipmentRenderer>("sword_carthage");
   auto sword_roman = std::make_shared<MockEquipmentRenderer>("sword_roman");
   auto sword_kingdom = std::make_shared<MockEquipmentRenderer>("sword_kingdom");
 
@@ -165,7 +166,8 @@ TEST_F(EquipmentRegistryTest, NationSpecificWeapons) {
 
   auto retrieved_carthage =
       registry->get(EquipmentCategory::Weapon, "sword_carthage");
-  auto retrieved_roman = registry->get(EquipmentCategory::Weapon, "sword_roman");
+  auto retrieved_roman =
+      registry->get(EquipmentCategory::Weapon, "sword_roman");
   auto retrieved_kingdom =
       registry->get(EquipmentCategory::Weapon, "sword_kingdom");
 
