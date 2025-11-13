@@ -185,7 +185,7 @@ protected:
   virtual void drawAttachments(const DrawContext &, const AnimationInputs &,
                                const HumanoidAnimationContext &, HorseProfile &,
                                const MountedAttachmentFrame &, float, float,
-                               float, ISubmitter &) const {}
+                               float, const HorseBodyFrames &, ISubmitter &) const {}
 };
 
 } // namespace Render::GL
