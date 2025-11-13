@@ -3,6 +3,8 @@
 #include "../../../../game/core/entity.h"
 #include "../../../../game/systems/nation_id.h"
 #include "../../../equipment/equipment_registry.h"
+#include "../../../equipment/horse/saddles/light_cavalry_saddle_renderer.h"
+#include "../../../equipment/horse/tack/reins_renderer.h"
 #include "../../../equipment/weapons/shield_renderer.h"
 #include "../../../equipment/weapons/sword_renderer.h"
 #include "../../../geom/math_utils.h"
@@ -18,10 +20,10 @@
 #include "../../../palette.h"
 #include "../../../scene_renderer.h"
 #include "../../../submitter.h"
+#include "../../horse_renderer.h"
 #include "../../mounted_knight_pose.h"
 #include "../../registry.h"
 #include "../../renderer_constants.h"
-#include "kingdom_horse_renderer.h"
 #include <numbers>
 #include <qmatrix4x4.h>
 #include <qstringliteral.h>
@@ -44,6 +46,30 @@ using Render::Geom::cylinderBetween;
 using Render::Geom::easeInOutCubic;
 using Render::Geom::smoothstep;
 using Render::Geom::sphereAt;
+
+// Kingdom-specific horse renderer with light cavalry equipment
+class KingdomHorseRenderer : public HorseRenderer {
+protected:
+  void drawAttachments(const DrawContext &ctx, const AnimationInputs &anim,
+                       const HumanoidAnimationContext &,
+                       HorseProfile &profile, const MountedAttachmentFrame &,
+                       float phase, float bob, float,
+                       const HorseBodyFrames &frames,
+                       ISubmitter &out) const override {
+    HorseAnimationContext horse_anim;
+    horse_anim.time = anim.time;
+    horse_anim.phase = phase;
+    horse_anim.bob = bob;
+    horse_anim.is_moving = anim.isMoving;
+    horse_anim.rider_intensity = 0.0F;
+
+    LightCavalrySaddleRenderer saddle_renderer;
+    saddle_renderer.render(ctx, frames, profile.variant, horse_anim, out);
+
+    ReinsRenderer reins_renderer;
+    reins_renderer.render(ctx, frames, profile.variant, horse_anim, out);
+  }
+};
 
 struct MountedKnightExtras {
   QVector3D metalColor;
