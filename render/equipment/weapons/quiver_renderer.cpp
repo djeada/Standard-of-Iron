@@ -27,7 +27,7 @@ void QuiverRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
                             ISubmitter &submitter) {
 
   QVector3D const spine_mid =
-      (frames.shoulderL.origin + frames.shoulderR.origin) * 0.5F;
+      (frames.shoulder_l.origin + frames.shoulder_r.origin) * 0.5F;
   QVector3D const quiver_offset(-0.08F, 0.10F, -0.25F);
   QVector3D const q_top = spine_mid + quiver_offset;
   QVector3D const q_base = q_top + QVector3D(-0.02F, -0.30F, 0.03F);

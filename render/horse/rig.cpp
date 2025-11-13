@@ -347,7 +347,7 @@ auto evaluate_horse_motion(HorseProfile &profile, const AnimationInputs &anim,
   sample.rider_intensity = rider_ctx.locomotion_normalized_speed();
   bool const rider_has_motion =
       rider_ctx.is_walking() || rider_ctx.is_running();
-  sample.is_moving = rider_has_motion || anim.isMoving;
+  sample.is_moving = rider_has_motion || anim.is_moving;
 
   if (sample.is_moving) {
     float const speed = rider_ctx.locomotion_speed();
