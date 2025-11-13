@@ -23,13 +23,13 @@ protected:
     pose.shoulderR = QVector3D(half_shoulder, HP::SHOULDER_Y, 0.0F);
     pose.pelvisPos = QVector3D(0.0F, HP::WAIST_Y, 0.0F);
     pose.handL = QVector3D(-0.05F, HP::SHOULDER_Y + 0.05F, 0.55F);
-    pose.hand_r = QVector3D(0.15F, HP::SHOULDER_Y + 0.15F, 0.20F);
+    pose.handR = QVector3D(0.15F, HP::SHOULDER_Y + 0.15F, 0.20F);
     pose.elbowL = QVector3D(-0.15F, HP::SHOULDER_Y - 0.15F, 0.25F);
     pose.elbowR = QVector3D(0.25F, HP::SHOULDER_Y - 0.10F, 0.10F);
     pose.knee_l = QVector3D(-0.10F, HP::KNEE_Y, 0.05F);
     pose.knee_r = QVector3D(0.10F, HP::KNEE_Y, -0.05F);
     pose.footL = QVector3D(-0.14F, 0.022F, 0.06F);
-    pose.foot_r = QVector3D(0.14F, 0.022F, -0.06F);
+    pose.footR = QVector3D(0.14F, 0.022F, -0.06F);
     pose.footYOffset = 0.022F;
 
     // Initialize animation context with default idle state
@@ -147,7 +147,7 @@ TEST_F(HumanoidPoseControllerTest, PlaceHandAtSetsHandPosition) {
   controller.placeHandAt(false, target_position); // Right hand
 
   // Hand should be at target position
-  EXPECT_TRUE(approxEqual(pose.hand_r, target_position));
+  EXPECT_TRUE(approxEqual(pose.handR, target_position));
 }
 
 TEST_F(HumanoidPoseControllerTest, PlaceHandAtComputesElbow) {
