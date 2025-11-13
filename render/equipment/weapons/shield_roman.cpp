@@ -44,7 +44,7 @@ void RomanShieldRenderer::render(const DrawContext &ctx,
   float const shield_width = 0.18F * 2.5F;
   float const shield_height = shield_width * 1.3F;
 
-  QVector3D shield_center = frames.handL.origin +
+  QVector3D shield_center = frames.hand_l.origin +
                             axis_x * (-shield_width * 0.35F) +
                             axis_y * (-0.05F) + n * (0.06F);
 

@@ -157,8 +157,8 @@ void RomanHeavyArmorRenderer::render(const DrawContext &ctx,
     }
   };
 
-  renderShoulderGuard(frames.shoulderL.origin, -right);
-  renderShoulderGuard(frames.shoulderR.origin, right);
+  renderShoulderGuard(frames.shoulder_l.origin, -right);
+  renderShoulderGuard(frames.shoulder_r.origin, right);
 
   const AttachmentFrame &waist = frames.waist;
   auto safeDir = [](const QVector3D &axis, const QVector3D &fallback) {

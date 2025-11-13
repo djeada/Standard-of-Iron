@@ -232,8 +232,8 @@ void TunicRenderer::renderPauldrons(const DrawContext &ctx,
     }
   };
 
-  QVector3D const shoulder_right = frames.shoulderR.origin;
-  QVector3D const shoulder_left = frames.shoulderL.origin;
+  QVector3D const shoulder_right = frames.shoulder_r.origin;
+  QVector3D const shoulder_left = frames.shoulder_l.origin;
   QVector3D const right_axis = frames.torso.right;
 
   draw_pauldron(shoulder_left, -right_axis);
