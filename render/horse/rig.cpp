@@ -1102,57 +1102,6 @@ void HorseRendererBase::render(const DrawContext &ctx,
   draw_leg(rear_anchor, -1.0F, -d.bodyLength * 0.28F, g.rearLegPhase + 0.5F,
            sock_chance_rr);
 
-  QVector3D const saddle_center = mount.saddle_center;
-  QVector3D const seat_position = mount.seat_position;
-  {
-    QMatrix4x4 saddle = horse_ctx.model;
-    saddle.translate(saddle_center);
-    saddle.scale(d.bodyWidth * 1.10F, d.saddleThickness * 1.05F,
-                 d.bodyLength * 0.34F);
-    out.mesh(getUnitSphere(), saddle, v.saddleColor, nullptr, 1.0F);
-  }
-
-  QVector3D const blanket_center =
-      saddle_center + QVector3D(0.0F, -d.saddleThickness, 0.0F);
-  {
-    QMatrix4x4 blanket = horse_ctx.model;
-    blanket.translate(blanket_center);
-    blanket.scale(d.bodyWidth * 1.26F, d.saddleThickness * 0.38F,
-                  d.bodyLength * 0.42F);
-    out.mesh(getUnitSphere(), blanket, v.blanketColor * 1.02F, nullptr, 1.0F);
-  }
-
-  {
-    QMatrix4x4 cantle = horse_ctx.model;
-    cantle.translate(saddle_center + QVector3D(0.0F, d.saddleThickness * 0.72F,
-                                               -d.bodyLength * 0.12F));
-    cantle.scale(QVector3D(d.bodyWidth * 0.52F, d.saddleThickness * 0.60F,
-                           d.bodyLength * 0.18F));
-    out.mesh(getUnitSphere(), cantle, lighten(v.saddleColor, 1.05F), nullptr,
-             1.0F);
-  }
-
-  {
-    QMatrix4x4 pommel = horse_ctx.model;
-    pommel.translate(saddle_center + QVector3D(0.0F, d.saddleThickness * 0.58F,
-                                               d.bodyLength * 0.16F));
-    pommel.scale(QVector3D(d.bodyWidth * 0.40F, d.saddleThickness * 0.48F,
-                           d.bodyLength * 0.14F));
-    out.mesh(getUnitSphere(), pommel, darken(v.saddleColor, 0.92F), nullptr,
-             1.0F);
-  }
-
-  for (int i = 0; i < 6; ++i) {
-    float const t = static_cast<float>(i) / 5.0F;
-    QMatrix4x4 stitch = horse_ctx.model;
-    stitch.translate(blanket_center + QVector3D(d.bodyWidth * (t - 0.5F) * 1.1F,
-                                                -d.saddleThickness * 0.35F,
-                                                d.bodyLength * 0.28F));
-    stitch.scale(QVector3D(d.bodyWidth * 0.05F, d.bodyWidth * 0.02F,
-                           d.bodyWidth * 0.12F));
-    out.mesh(getUnitSphere(), stitch, v.blanketColor * 0.75F, nullptr, 0.9F);
-  }
-
   QVector3D const bit_left =
       muzzle_center + QVector3D(d.headWidth * 0.55F, -d.headHeight * 0.08F,
                                 d.muzzleLength * 0.10F);
@@ -1183,8 +1132,8 @@ void HorseRendererBase::render(const DrawContext &ctx,
   body_frames.withers.up = up;
   body_frames.withers.forward = forward;
 
-  QVector3D const back_center_pos = (chest_center + rump_center) * 0.5F + QVector3D(0.0F, d.bodyHeight * 0.50F, 0.0F);
-  body_frames.back_center.origin = back_center_pos;
+  // Use saddle_center from mount for proper positioning
+  body_frames.back_center.origin = mount.saddle_center;
   body_frames.back_center.right = right;
   body_frames.back_center.up = up;
   body_frames.back_center.forward = forward;
@@ -1221,7 +1170,7 @@ void HorseRendererBase::render(const DrawContext &ctx,
   body_frames.muzzle.up = up;
   body_frames.muzzle.forward = forward;
 
-  drawAttachments(ctx, anim, rider_ctx, profile, mount, phase, bob, rein_slack,
+  drawAttachments(horse_ctx, anim, rider_ctx, profile, mount, phase, bob, rein_slack,
                   body_frames, out);
 }
 
