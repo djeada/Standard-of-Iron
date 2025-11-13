@@ -51,9 +51,10 @@ add_library(render_gl STATIC
     entity/nations/carthage/spearman_style.cpp
     horse/rig.cpp
     horse/horse_animation_controller.cpp
+    entity/horse_renderer.cpp
     entity/nations/roman/horse_swordsman_renderer.cpp
-    entity/nations/kingdom/horse_swordsman_renderer.cpp
     entity/nations/carthage/horse_swordsman_renderer.cpp
+    entity/nations/kingdom/horse_swordsman_renderer.cpp
     entity/barracks_renderer.cpp
     entity/nations/kingdom/barracks_renderer.cpp
     entity/nations/roman/barracks_renderer.cpp
@@ -100,6 +101,20 @@ add_library(render_gl STATIC
     equipment/helmets/carthage_heavy_helmet.cpp
     equipment/helmets/carthage_light_helmet.cpp
     equipment/armor/chainmail_armor.cpp
+    equipment/horse/saddles/roman_saddle_renderer.cpp
+    equipment/horse/saddles/carthage_saddle_renderer.cpp
+    equipment/horse/saddles/light_cavalry_saddle_renderer.cpp
+    equipment/horse/tack/bridle_renderer.cpp
+    equipment/horse/tack/stirrup_renderer.cpp
+    equipment/horse/tack/blanket_renderer.cpp
+    equipment/horse/tack/reins_renderer.cpp
+    equipment/horse/armor/scale_barding_renderer.cpp
+    equipment/horse/armor/leather_barding_renderer.cpp
+    equipment/horse/armor/champion_renderer.cpp
+    equipment/horse/armor/crupper_renderer.cpp
+    equipment/horse/decorations/plume_renderer.cpp
+    equipment/horse/decorations/tail_ribbon_renderer.cpp
+    equipment/horse/decorations/saddle_bag_renderer.cpp
 )
 
 target_include_directories(render_gl PUBLIC .)
