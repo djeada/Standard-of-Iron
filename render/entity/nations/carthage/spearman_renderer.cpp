@@ -117,8 +117,8 @@ public:
 
   void adjust_variation(const DrawContext &, uint32_t,
                         VariationParams &variation) const override {
-    variation.bulkScale *= 0.90F;
-    variation.stanceWidth *= 0.92F;
+    variation.bulk_scale *= 0.90F;
+    variation.stance_width *= 0.92F;
   }
 
 private:
@@ -144,15 +144,15 @@ public:
     float const arm_height_jitter = (hash_01(seed ^ 0xABCDU) - 0.5F) * 0.03F;
     float const arm_asymmetry = (hash_01(seed ^ 0xDEF0U) - 0.5F) * 0.04F;
 
-    if (anim.isInHoldMode || anim.isExitingHold) {
-      float const t = anim.isInHoldMode ? 1.0F : (1.0F - anim.holdExitProgress);
+    if (anim.is_in_hold_mode || anim.is_exiting_hold) {
+      float const t = anim.is_in_hold_mode ? 1.0F : (1.0F - anim.hold_exit_progress);
 
       controller.kneel(t * k_kneel_depth_multiplier);
       controller.lean(QVector3D(0.0F, 0.0F, 1.0F),
                       t * k_lean_amount_multiplier);
 
-      float const lowered_shoulder_y = pose.shoulderL.y();
-      float const pelvis_y = pose.pelvisPos.y();
+      float const lowered_shoulder_y = pose.shoulder_l.y();
+      float const pelvis_y = pose.pelvis_pos.y();
 
       QVector3D const hand_r_pos(0.18F * (1.0F - t) + 0.22F * t,
                                  lowered_shoulder_y * (1.0F - t) +
@@ -167,7 +167,7 @@ public:
       controller.placeHandAt(false, hand_r_pos);
       controller.placeHandAt(true, hand_l_pos);
 
-    } else if (anim.is_attacking && anim.isMelee && !anim.isInHoldMode) {
+    } else if (anim.is_attacking && anim.is_melee && !anim.is_in_hold_mode) {
       float const attack_phase =
           std::fmod(anim.time * SPEARMAN_INV_ATTACK_CYCLE_TIME, 1.0F);
       controller.spearThrust(attack_phase);
@@ -208,7 +208,7 @@ public:
     }
     apply_extras_overrides(style, team_tint, v, extras);
 
-    bool const is_attacking = anim.is_attacking && anim.isMelee;
+    bool const is_attacking = anim.is_attacking && anim.is_melee;
 
     auto &registry = EquipmentRegistry::instance();
 
@@ -225,7 +225,7 @@ public:
       if (spear_renderer) {
         spear_renderer->setConfig(spear_config);
       }
-      spear->render(ctx, pose.bodyFrames, v.palette, anim_ctx, out);
+      spear->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
     }
   }
 
@@ -236,7 +236,7 @@ public:
     auto helmet = registry.get(EquipmentCategory::Helmet, "carthage_heavy");
     if (helmet) {
       HumanoidAnimationContext anim_ctx{};
-      helmet->render(ctx, pose.bodyFrames, v.palette, anim_ctx, out);
+      helmet->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
     }
   }
 
@@ -250,7 +250,7 @@ public:
         style.armor_id.empty() ? "armor_light_carthage" : style.armor_id;
     auto armor = registry.get(EquipmentCategory::Armor, armor_key);
     if (armor) {
-      armor->render(ctx, pose.bodyFrames, v.palette, anim, out);
+      armor->render(ctx, pose.body_frames, v.palette, anim, out);
     }
   }
 

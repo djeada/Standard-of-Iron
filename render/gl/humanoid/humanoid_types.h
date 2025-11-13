@@ -8,12 +8,12 @@ namespace Render::GL {
 
 struct AnimationInputs {
   float time;
-  bool isMoving;
+  bool is_moving;
   bool is_attacking;
-  bool isMelee;
-  bool isInHoldMode;
-  bool isExitingHold;
-  float holdExitProgress;
+  bool is_melee;
+  bool is_in_hold_mode;
+  bool is_exiting_hold;
+  float hold_exit_progress;
 };
 
 struct FormationParams {
@@ -38,42 +38,42 @@ struct BodyFrames {
   AttachmentFrame torso{};
   AttachmentFrame back{};
   AttachmentFrame waist{};
-  AttachmentFrame shoulderL{};
-  AttachmentFrame shoulderR{};
-  AttachmentFrame handL{};
-  AttachmentFrame handR{};
-  AttachmentFrame footL{};
-  AttachmentFrame footR{};
+  AttachmentFrame shoulder_l{};
+  AttachmentFrame shoulder_r{};
+  AttachmentFrame hand_l{};
+  AttachmentFrame hand_r{};
+  AttachmentFrame foot_l{};
+  AttachmentFrame foot_r{};
 };
 
 struct HumanoidPose {
-  QVector3D headPos;
-  float headR{};
+  QVector3D head_pos;
+  float head_r{};
   QVector3D neck_base;
 
-  HeadFrame headFrame{};
+  HeadFrame head_frame{};
 
-  BodyFrames bodyFrames{};
+  BodyFrames body_frames{};
 
-  QVector3D shoulderL, shoulderR;
-  QVector3D elbowL, elbowR;
-  QVector3D handL, handR;
+  QVector3D shoulder_l, shoulder_r;
+  QVector3D elbow_l, elbow_r;
+  QVector3D hand_l, hand_r;
 
-  QVector3D pelvisPos;
+  QVector3D pelvis_pos;
   QVector3D knee_l, knee_r;
 
-  float footYOffset{};
-  QVector3D footL, footR;
+  float foot_y_offset{};
+  QVector3D foot_l, foot_r;
 };
 
 struct VariationParams {
   float height_scale;
-  float bulkScale;
-  float stanceWidth;
-  float armSwingAmp;
-  float walkSpeedMult;
-  float postureSlump;
-  float shoulderTilt;
+  float bulk_scale;
+  float stance_width;
+  float arm_swing_amp;
+  float walk_speed_mult;
+  float posture_slump;
+  float shoulder_tilt;
 
   static auto fromSeed(uint32_t seed) -> VariationParams {
     VariationParams v{};
@@ -85,12 +85,12 @@ struct VariationParams {
 
     uint32_t rng = seed;
     v.height_scale = 0.95F + nextRand(rng) * 0.10F;
-    v.bulkScale = 0.92F + nextRand(rng) * 0.16F;
-    v.stanceWidth = 0.88F + nextRand(rng) * 0.24F;
-    v.armSwingAmp = 0.85F + nextRand(rng) * 0.30F;
-    v.walkSpeedMult = 0.90F + nextRand(rng) * 0.20F;
-    v.postureSlump = nextRand(rng) * 0.08F;
-    v.shoulderTilt = (nextRand(rng) - 0.5F) * 0.06F;
+    v.bulk_scale = 0.92F + nextRand(rng) * 0.16F;
+    v.stance_width = 0.88F + nextRand(rng) * 0.24F;
+    v.arm_swing_amp = 0.85F + nextRand(rng) * 0.30F;
+    v.walk_speed_mult = 0.90F + nextRand(rng) * 0.20F;
+    v.posture_slump = nextRand(rng) * 0.08F;
+    v.shoulder_tilt = (nextRand(rng) - 0.5F) * 0.06F;
 
     return v;
   }
@@ -118,7 +118,7 @@ struct FacialHairParams {
 
 struct HumanoidVariant {
   HumanoidPalette palette;
-  FacialHairParams facialHair;
+  FacialHairParams facial_hair;
   float muscularity = 1.0F;
   float scarring = 0.0F;
   float weathering = 0.0F;
