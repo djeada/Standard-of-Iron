@@ -58,12 +58,12 @@ auto MountedKnightRendererBase::get_mount_scale() const -> float {
 void MountedKnightRendererBase::adjust_variation(
     const DrawContext &, uint32_t, VariationParams &variation) const {
   variation.height_scale = 0.88F;
-  variation.bulkScale = 0.82F;
-  variation.stanceWidth = 0.60F;
-  variation.armSwingAmp = 0.45F;
-  variation.walkSpeedMult = 1.0F;
-  variation.postureSlump = 0.0F;
-  variation.shoulderTilt = 0.0F;
+  variation.bulk_scale = 0.82F;
+  variation.stance_width = 0.60F;
+  variation.arm_swing_amp = 0.45F;
+  variation.walk_speed_mult = 1.0F;
+  variation.posture_slump = 0.0F;
+  variation.shoulder_tilt = 0.0F;
 }
 
 void MountedKnightRendererBase::get_variant(const DrawContext &ctx,
@@ -129,12 +129,13 @@ void MountedKnightRendererBase::customize_pose(
   pose_request.seatPose = (speed_norm > 0.55F)
                               ? MountedPoseController::MountedSeatPose::Forward
                               : MountedPoseController::MountedSeatPose::Neutral;
-  pose_request.torsoCompression = std::clamp(
-      0.18F + speed_norm * 0.28F + anim_ctx.variation.postureSlump * 0.9F, 0.0F,
-      0.55F);
-  pose_request.torsoTwist = anim_ctx.variation.shoulderTilt * 3.0F;
+  pose_request.torsoCompression =
+      std::clamp(0.18F + speed_norm * 0.28F +
+                     anim_ctx.variation.posture_slump * 0.9F,
+                 0.0F, 0.55F);
+  pose_request.torsoTwist = anim_ctx.variation.shoulder_tilt * 3.0F;
   pose_request.shoulderDip =
-      std::clamp(anim_ctx.variation.shoulderTilt * 0.6F +
+      std::clamp(anim_ctx.variation.shoulder_tilt * 0.6F +
                      (m_config.has_cavalry_shield ? 0.18F : 0.08F),
                  -0.4F, 0.4F);
 
@@ -142,7 +143,7 @@ void MountedKnightRendererBase::customize_pose(
     pose_request.shieldPose = MountedPoseController::MountedShieldPose::Guard;
   }
 
-  if (anim.is_attacking && anim.isMelee) {
+  if (anim.is_attacking && anim.is_melee) {
     pose_request.weaponPose =
         MountedPoseController::MountedWeaponPose::SwordStrike;
     pose_request.shieldPose =
@@ -225,7 +226,7 @@ void MountedKnightRendererBase::addAttachments(
       if (auto *sword_renderer = dynamic_cast<SwordRenderer *>(sword.get())) {
         sword_renderer->setConfig(sword_config);
       }
-      sword->render(ctx, pose.bodyFrames, v.palette, anim_ctx, out);
+      sword->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
     }
   }
 
@@ -233,7 +234,7 @@ void MountedKnightRendererBase::addAttachments(
     auto shield =
         registry.get(EquipmentCategory::Weapon, m_config.shield_equipment_id);
     if (shield) {
-      shield->render(ctx, pose.bodyFrames, v.palette, anim_ctx, out);
+      shield->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
     }
   }
 }
@@ -251,7 +252,7 @@ void MountedKnightRendererBase::draw_helmet(const DrawContext &ctx,
       registry.get(EquipmentCategory::Helmet, m_config.helmet_equipment_id);
   if (helmet) {
     HumanoidAnimationContext anim_ctx{};
-    helmet->render(ctx, pose.bodyFrames, v.palette, anim_ctx, out);
+    helmet->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
   }
 }
 
@@ -268,7 +269,7 @@ void MountedKnightRendererBase::draw_armor(const DrawContext &ctx,
   auto armor =
       registry.get(EquipmentCategory::Armor, m_config.armor_equipment_id);
   if (armor) {
-    armor->render(ctx, pose.bodyFrames, v.palette, anim, out);
+    armor->render(ctx, pose.body_frames, v.palette, anim, out);
   }
 }
 
