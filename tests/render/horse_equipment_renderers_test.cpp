@@ -14,8 +14,10 @@
 #include "render/equipment/horse/decorations/plume_renderer.h"
 #include "render/equipment/horse/decorations/saddle_bag_renderer.h"
 #include "render/equipment/horse/decorations/tail_ribbon_renderer.h"
+#include <algorithm>
 #include <gtest/gtest.h>
 #include <memory>
+#include <vector>
 
 using namespace Render::GL;
 
@@ -46,6 +48,23 @@ public:
 
   int mesh_count = 0;
   int cylinder_count = 0;
+};
+
+class CapturingSubmitter : public MockSubmitter {
+public:
+  struct CylinderCall {
+    QVector3D start;
+    QVector3D end;
+    float radius;
+  };
+
+  void cylinder(const QVector3D &start, const QVector3D &end, float radius,
+                const QVector3D &color, float alpha = 1.0F) override {
+    cylinders.push_back({start, end, radius});
+    MockSubmitter::cylinder(start, end, radius, color, alpha);
+  }
+
+  std::vector<CylinderCall> cylinders;
 };
 
 } // namespace
@@ -170,6 +189,45 @@ TEST_F(HorseEquipmentRenderersTest, ReinsRendererProducesCylinders) {
   renderer.render(ctx, frames, variant, anim, submitter);
 
   EXPECT_GT(submitter.cylinder_count, 0);
+}
+
+TEST_F(HorseEquipmentRenderersTest, ReinsRendererRespectsModelTransform) {
+  CapturingSubmitter submitter;
+
+  ctx.model.translate(2.0F, 1.0F, -3.0F);
+
+  ReinsRenderer renderer;
+  renderer.render(ctx, frames, variant, anim, submitter);
+
+  ASSERT_FALSE(submitter.cylinders.empty());
+
+  const HorseAttachmentFrame &muzzle = frames.muzzle;
+  QVector3D const expected_local =
+      muzzle.origin + muzzle.right * 0.10F + muzzle.forward * 0.10F;
+  QVector3D const expected_world = ctx.model.map(expected_local);
+
+  QVector3D const actual = submitter.cylinders.front().start;
+  EXPECT_NEAR(actual.x(), expected_world.x(), 1e-4F);
+  EXPECT_NEAR(actual.y(), expected_world.y(), 1e-4F);
+  EXPECT_NEAR(actual.z(), expected_world.z(), 1e-4F);
+}
+
+TEST_F(HorseEquipmentRenderersTest, ReinsRendererAddsCrossConnections) {
+  CapturingSubmitter submitter;
+  ReinsRenderer renderer;
+
+  renderer.render(ctx, frames, variant, anim, submitter);
+
+  ASSERT_GE(static_cast<int>(submitter.cylinders.size()), 6);
+
+  auto const connectors = std::count_if(
+      submitter.cylinders.begin(), submitter.cylinders.end(), [](const auto &c) {
+        return c.start.x() * c.end.x() < 0.0F;
+      });
+  EXPECT_GE(connectors, 2);
+
+  ASSERT_FALSE(submitter.cylinders.empty());
+  EXPECT_NEAR(submitter.cylinders.front().radius, 0.004F, 1e-4F);
 }
 
 TEST_F(HorseEquipmentRenderersTest, ScaleBardingRendererProducesMeshes) {
