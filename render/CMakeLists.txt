@@ -68,6 +68,8 @@ add_library(render_gl STATIC
     geom/patrol_flags.cpp
     geom/transforms.cpp
     humanoid/humanoid_math.cpp
+    gl/humanoid/animation/animation_inputs.cpp
+    gl/humanoid/animation/gait.cpp
     palette.cpp
     humanoid/rig.cpp
     humanoid/style_palette.cpp

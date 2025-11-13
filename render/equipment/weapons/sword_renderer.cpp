@@ -30,9 +30,9 @@ void SwordRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
                            const HumanoidPalette &palette,
                            const HumanoidAnimationContext &anim,
                            ISubmitter &submitter) {
-  QVector3D const grip_pos = frames.handR.origin;
+  QVector3D const grip_pos = frames.hand_r.origin;
 
-  bool const is_attacking = anim.inputs.is_attacking && anim.inputs.isMelee;
+  bool const is_attacking = anim.inputs.is_attacking && anim.inputs.is_melee;
   float attack_phase = 0.0F;
   if (is_attacking) {
     attack_phase =

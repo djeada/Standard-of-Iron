@@ -98,8 +98,8 @@ void KingdomLightArmorRenderer::render(const DrawContext &ctx,
   QVector3D const brass_color =
       saturate_color(palette.metal * QVector3D(1.3F, 1.1F, 0.7F));
 
-  QVector3D const shoulderL_pos = frames.shoulderL.origin;
-  QVector3D const shoulderR_pos = frames.shoulderR.origin;
+  QVector3D const shoulderL_pos = frames.shoulder_l.origin;
+  QVector3D const shoulderR_pos = frames.shoulder_r.origin;
 
   auto draw_phalera = [&](const QVector3D &pos) {
     QMatrix4x4 m = ctx.model;
