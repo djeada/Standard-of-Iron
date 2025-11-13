@@ -1,4 +1,11 @@
 #include "render/entity/registry.h"
+#include "render/equipment/horse/armor/champion_renderer.h"
+#include "render/equipment/horse/armor/crupper_renderer.h"
+#include "render/equipment/horse/armor/leather_barding_renderer.h"
+#include "render/equipment/horse/armor/scale_barding_renderer.h"
+#include "render/equipment/horse/decorations/plume_renderer.h"
+#include "render/equipment/horse/decorations/saddle_bag_renderer.h"
+#include "render/equipment/horse/decorations/tail_ribbon_renderer.h"
 #include "render/equipment/horse/i_horse_equipment_renderer.h"
 #include "render/equipment/horse/saddles/carthage_saddle_renderer.h"
 #include "render/equipment/horse/saddles/light_cavalry_saddle_renderer.h"
@@ -7,13 +14,6 @@
 #include "render/equipment/horse/tack/bridle_renderer.h"
 #include "render/equipment/horse/tack/reins_renderer.h"
 #include "render/equipment/horse/tack/stirrup_renderer.h"
-#include "render/equipment/horse/armor/champion_renderer.h"
-#include "render/equipment/horse/armor/crupper_renderer.h"
-#include "render/equipment/horse/armor/leather_barding_renderer.h"
-#include "render/equipment/horse/armor/scale_barding_renderer.h"
-#include "render/equipment/horse/decorations/plume_renderer.h"
-#include "render/equipment/horse/decorations/saddle_bag_renderer.h"
-#include "render/equipment/horse/decorations/tail_ribbon_renderer.h"
 #include <algorithm>
 #include <gtest/gtest.h>
 #include <memory>
@@ -38,10 +38,12 @@ public:
   }
 
   void selectionRing(const QMatrix4x4 & /*model*/, float /*alphaInner*/,
-                     float /*alphaOuter*/, const QVector3D & /*color*/) override {}
+                     float /*alphaOuter*/,
+                     const QVector3D & /*color*/) override {}
 
   void grid(const QMatrix4x4 & /*model*/, const QVector3D & /*color*/,
-            float /*cellSize*/, float /*thickness*/, float /*extent*/) override {}
+            float /*cellSize*/, float /*thickness*/,
+            float /*extent*/) override {}
 
   void selectionSmoke(const QMatrix4x4 & /*model*/, const QVector3D & /*color*/,
                       float /*baseAlpha*/ = 0.15F) override {}
@@ -221,9 +223,8 @@ TEST_F(HorseEquipmentRenderersTest, ReinsRendererAddsCrossConnections) {
   ASSERT_GE(static_cast<int>(submitter.cylinders.size()), 6);
 
   auto const connectors = std::count_if(
-      submitter.cylinders.begin(), submitter.cylinders.end(), [](const auto &c) {
-        return c.start.x() * c.end.x() < 0.0F;
-      });
+      submitter.cylinders.begin(), submitter.cylinders.end(),
+      [](const auto &c) { return c.start.x() * c.end.x() < 0.0F; });
   EXPECT_GE(connectors, 2);
 
   ASSERT_FALSE(submitter.cylinders.empty());
