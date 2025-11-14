@@ -261,6 +261,9 @@ GameEngine::GameEngine(QObject *parent)
           &App::Controllers::CommandController::troopLimitReached, [this]() {
             setError("Maximum troop limit reached. Cannot produce more units.");
           });
+  connect(m_commandController.get(),
+          &App::Controllers::CommandController::hold_modeChanged, this,
+          &GameEngine::holdModeChanged);
 
   connect(this, SIGNAL(selectedUnitsChanged()), m_selectedUnitsModel,
           SLOT(refresh()));
