@@ -1,7 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
-import StandardOfIron.UI 1.0
+import StandardOfIron 1.0
 
 RowLayout {
     id: bottomRoot
@@ -27,14 +27,14 @@ RowLayout {
         border.width: 2
         radius: 6
 
-        Column {
+        ColumnLayout {
             anchors.fill: parent
             anchors.margins: 6
             spacing: 6
 
             Rectangle {
-                width: parent.width
-                height: 25
+                Layout.fillWidth: true
+                Layout.preferredHeight: 25
                 color: "#1a252f"
                 radius: 4
 
@@ -49,11 +49,8 @@ RowLayout {
             }
 
             ScrollView {
-                anchors.left: parent.left
-                anchors.right: parent.right
-                anchors.top: undefined
-                anchors.bottom: parent.bottom
-                height: parent.height - 35
+                Layout.fillWidth: true
+                Layout.fillHeight: true
                 clip: true
                 ScrollBar.vertical.policy: ScrollBar.AsNeeded
 

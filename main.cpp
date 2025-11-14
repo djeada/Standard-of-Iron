@@ -287,12 +287,17 @@ auto main(int argc, char *argv[]) -> int {
   engine->rootContext()->setContextProperty("game", game_engine.get());
   qInfo() << "Adding import path...";
   engine->addImportPath("qrc:/StandardOfIron/ui/qml");
+  engine->addImportPath("qrc:/");
   qInfo() << "Registering QML types...";
   qmlRegisterType<GLView>("StandardOfIron", 1, 0, "GLView");
 
   // Register Theme singleton
-  qmlRegisterSingletonType<Theme>("StandardOfIron.UI", 1, 0, "Theme",
+  qmlRegisterSingletonType<Theme>("StandardOfIron", 1, 0, "Theme",
                                   &Theme::create);
+
+  // Register StyleGuide singleton from QML file
+  qmlRegisterSingletonType(QUrl("qrc:/StandardOfIron/ui/qml/StyleGuide.qml"),
+                           "StandardOfIron", 1, 0, "StyleGuide");
 
   qInfo() << "Loading Main.qml...";
   qInfo() << "Loading Main.qml...";
