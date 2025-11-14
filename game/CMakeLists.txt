@@ -42,6 +42,7 @@ add_library(game_systems STATIC
     systems/production_system.cpp
     systems/capture_system.cpp
     systems/terrain_alignment_system.cpp
+    systems/healing_system.cpp
     systems/owner_registry.cpp
     systems/troop_count_registry.cpp
     systems/global_stats_registry.cpp
@@ -71,6 +72,7 @@ add_library(game_systems STATIC
     units/horse_archer.cpp
     units/horse_spearman.cpp
     units/spearman.cpp
+    units/healer.cpp
     units/troop_catalog.cpp
     units/troop_catalog_loader.cpp
     units/factory.cpp

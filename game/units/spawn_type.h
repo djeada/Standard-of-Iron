@@ -16,6 +16,7 @@ enum class SpawnType : std::uint8_t {
   MountedKnight,
   HorseArcher,
   HorseSpearman,
+  Healer,
   Barracks
 };
 
@@ -33,6 +34,8 @@ inline auto spawn_typeToQString(SpawnType type) -> QString {
     return QStringLiteral("horse_archer");
   case SpawnType::HorseSpearman:
     return QStringLiteral("horse_spearman");
+  case SpawnType::Healer:
+    return QStringLiteral("healer");
   case SpawnType::Barracks:
     return QStringLiteral("barracks");
   }
@@ -70,6 +73,10 @@ inline auto tryParseSpawnType(const QString &value, SpawnType &out) -> bool {
     out = SpawnType::HorseSpearman;
     return true;
   }
+  if (lowered == QStringLiteral("healer")) {
+    out = SpawnType::Healer;
+    return true;
+  }
   if (lowered == QStringLiteral("barracks")) {
     out = SpawnType::Barracks;
     return true;
@@ -96,6 +103,9 @@ spawn_typeFromString(const std::string &str) -> std::optional<SpawnType> {
   }
   if (str == "horse_spearman") {
     return SpawnType::HorseSpearman;
+  }
+  if (str == "healer") {
+    return SpawnType::Healer;
   }
   if (str == "barracks") {
     return SpawnType::Barracks;
@@ -125,6 +135,8 @@ inline auto spawn_typeToTroopType(SpawnType type) -> std::optional<TroopType> {
     return TroopType::HorseArcher;
   case SpawnType::HorseSpearman:
     return TroopType::HorseSpearman;
+  case SpawnType::Healer:
+    return TroopType::Healer;
   case SpawnType::Barracks:
     return std::nullopt;
   }
@@ -145,6 +157,8 @@ inline auto spawn_typeFromTroopType(TroopType type) -> SpawnType {
     return SpawnType::HorseArcher;
   case TroopType::HorseSpearman:
     return SpawnType::HorseSpearman;
+  case TroopType::Healer:
+    return SpawnType::Healer;
   }
   return SpawnType::Archer;
 }
