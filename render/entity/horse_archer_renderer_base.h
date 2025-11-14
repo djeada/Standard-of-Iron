@@ -31,8 +31,7 @@ class HorseArcherRendererBase : public HumanoidRendererBase {
 public:
   explicit HorseArcherRendererBase(HorseArcherRendererConfig config);
   HorseArcherRendererBase(const HorseArcherRendererBase &) = delete;
-  HorseArcherRendererBase &
-  operator=(const HorseArcherRendererBase &) = delete;
+  HorseArcherRendererBase &operator=(const HorseArcherRendererBase &) = delete;
   HorseArcherRendererBase(HorseArcherRendererBase &&) = delete;
   HorseArcherRendererBase &operator=(HorseArcherRendererBase &&) = delete;
   ~HorseArcherRendererBase() override = default;
@@ -70,7 +69,7 @@ private:
 
   auto get_scaled_horse_dimensions(uint32_t seed) const -> HorseDimensions;
   auto compute_horse_archer_extras(uint32_t seed, const HumanoidVariant &v,
-                                    const HorseDimensions &dims) const
+                                   const HorseDimensions &dims) const
       -> HorseArcherExtras;
 
   HorseArcherRendererConfig m_config;

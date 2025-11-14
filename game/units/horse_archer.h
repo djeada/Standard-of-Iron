@@ -6,8 +6,8 @@ namespace Game::Units {
 
 class HorseArcher : public Unit {
 public:
-  static auto Create(Engine::Core::World &world, const SpawnParams &params)
-      -> std::unique_ptr<HorseArcher>;
+  static auto Create(Engine::Core::World &world,
+                     const SpawnParams &params) -> std::unique_ptr<HorseArcher>;
 
 private:
   HorseArcher(Engine::Core::World &world);

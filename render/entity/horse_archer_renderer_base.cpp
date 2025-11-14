@@ -65,8 +65,7 @@ void HorseArcherRendererBase::adjust_variation(
   variation.shoulder_tilt = 0.0F;
 }
 
-void HorseArcherRendererBase::get_variant(const DrawContext &ctx,
-                                          uint32_t seed,
+void HorseArcherRendererBase::get_variant(const DrawContext &ctx, uint32_t seed,
                                           HumanoidVariant &v) const {
   QVector3D const team_tint = resolveTeamTint(ctx);
   v.palette = makeHumanoidPalette(team_tint, seed);
@@ -197,7 +196,8 @@ void HorseArcherRendererBase::addAttachments(
       quiver_config.fletching_color = m_config.fletching_color;
       quiver_config.quiver_radius = HumanProportions::HEAD_RADIUS * 0.45F;
 
-      if (auto *quiver_renderer = dynamic_cast<QuiverRenderer *>(quiver.get())) {
+      if (auto *quiver_renderer =
+              dynamic_cast<QuiverRenderer *>(quiver.get())) {
         quiver_renderer->setConfig(quiver_config);
       }
       quiver->render(ctx, pose.body_frames, v.palette, anim_ctx, out);

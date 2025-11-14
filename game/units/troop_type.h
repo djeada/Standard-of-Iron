@@ -9,7 +9,14 @@
 
 namespace Game::Units {
 
-enum class TroopType { Archer, Swordsman, Spearman, MountedKnight, HorseArcher, HorseSpearman };
+enum class TroopType {
+  Archer,
+  Swordsman,
+  Spearman,
+  MountedKnight,
+  HorseArcher,
+  HorseSpearman
+};
 
 inline auto troop_typeToQString(TroopType type) -> QString {
   switch (type) {

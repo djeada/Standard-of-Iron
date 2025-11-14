@@ -138,7 +138,8 @@ auto HorseSpearmanRendererBase::compute_horse_spearman_extras(
       makeHorseProfile(seed, v.palette.leather, v.palette.cloth);
   extras.horse_profile.dims = dims;
   extras.spear_length = 1.15F + (hash_01(seed ^ 0xABCDU) - 0.5F) * 0.10F;
-  extras.spear_shaft_radius = 0.018F + (hash_01(seed ^ 0x7777U) - 0.5F) * 0.003F;
+  extras.spear_shaft_radius =
+      0.018F + (hash_01(seed ^ 0x7777U) - 0.5F) * 0.003F;
 
   return extras;
 }

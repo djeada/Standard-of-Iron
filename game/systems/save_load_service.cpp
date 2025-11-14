@@ -204,8 +204,8 @@ auto SaveLoadService::list_campaigns(QString *out_error) const -> QVariantList {
   return m_storage->list_campaigns(out_error);
 }
 
-auto SaveLoadService::get_campaign_progress(const QString &campaign_id,
-                                         QString *out_error) const -> QVariantMap {
+auto SaveLoadService::get_campaign_progress(
+    const QString &campaign_id, QString *out_error) const -> QVariantMap {
   if (!m_storage) {
     if (out_error != nullptr) {
       *out_error = "Storage not initialized";
@@ -216,7 +216,7 @@ auto SaveLoadService::get_campaign_progress(const QString &campaign_id,
 }
 
 auto SaveLoadService::mark_campaign_completed(const QString &campaign_id,
-                                           QString *out_error) -> bool {
+                                              QString *out_error) -> bool {
   if (!m_storage) {
     if (out_error != nullptr) {
       *out_error = "Storage not initialized";
