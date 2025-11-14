@@ -2,7 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.3
 import QtQuick.Window 2.15
-import StandardOfIron.UI 1.0
+import StandardOfIron 1.0
 
 Item {
     id: root
