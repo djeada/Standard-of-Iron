@@ -97,8 +97,8 @@ public:
       int playerTroopCount READ playerTroopCount NOTIFY troop_countChanged)
   Q_PROPERTY(int max_troops_per_player READ max_troops_per_player NOTIFY
                  troop_countChanged)
-  Q_PROPERTY(
-      QVariantList available_maps READ available_maps NOTIFY available_maps_changed)
+  Q_PROPERTY(QVariantList available_maps READ available_maps NOTIFY
+                 available_maps_changed)
   Q_PROPERTY(bool maps_loading READ maps_loading NOTIFY maps_loading_changed)
   Q_PROPERTY(QVariantList available_nations READ available_nations CONSTANT)
   Q_PROPERTY(QVariantList available_campaigns READ available_campaigns NOTIFY
@@ -183,7 +183,7 @@ public:
   [[nodiscard]] bool maps_loading() const { return m_maps_loading; }
   Q_INVOKABLE void
   start_skirmish(const QString &map_path,
-                const QVariantList &playerConfigs = QVariantList());
+                 const QVariantList &playerConfigs = QVariantList());
   Q_INVOKABLE void start_campaign_mission(const QString &campaign_id);
   Q_INVOKABLE void mark_current_mission_completed();
   Q_INVOKABLE void open_settings();

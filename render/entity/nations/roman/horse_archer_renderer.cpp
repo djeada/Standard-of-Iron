@@ -30,8 +30,7 @@ auto make_horse_archer_config() -> HorseArcherRendererConfig {
 
 void register_horse_archer_renderer(EntityRendererRegistry &registry) {
   registry.register_renderer(
-      "troops/roman/horse_archer",
-      [](const DrawContext &ctx, ISubmitter &out) {
+      "troops/roman/horse_archer", [](const DrawContext &ctx, ISubmitter &out) {
         static HorseArcherRendererBase const static_renderer(
             make_horse_archer_config());
         Shader *horse_archer_shader = nullptr;
@@ -44,8 +43,7 @@ void register_horse_archer_renderer(EntityRendererRegistry &registry) {
           }
         }
         auto *scene_renderer = dynamic_cast<Renderer *>(&out);
-        if ((scene_renderer != nullptr) &&
-            (horse_archer_shader != nullptr)) {
+        if ((scene_renderer != nullptr) && (horse_archer_shader != nullptr)) {
           scene_renderer->setCurrentShader(horse_archer_shader);
         }
         static_renderer.render(ctx, out);

@@ -70,7 +70,7 @@ private:
 
   auto get_scaled_horse_dimensions(uint32_t seed) const -> HorseDimensions;
   auto compute_horse_spearman_extras(uint32_t seed, const HumanoidVariant &v,
-                                      const HorseDimensions &dims) const
+                                     const HorseDimensions &dims) const
       -> HorseSpearmanExtras;
 
   HorseSpearmanRendererConfig m_config;

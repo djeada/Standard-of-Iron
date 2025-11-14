@@ -42,8 +42,7 @@ void register_horse_spearman_renderer(EntityRendererRegistry &registry) {
           }
         }
         auto *scene_renderer = dynamic_cast<Renderer *>(&out);
-        if ((scene_renderer != nullptr) &&
-            (horse_spearman_shader != nullptr)) {
+        if ((scene_renderer != nullptr) && (horse_spearman_shader != nullptr)) {
           scene_renderer->setCurrentShader(horse_spearman_shader);
         }
         static_renderer.render(ctx, out);

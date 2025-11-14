@@ -107,7 +107,7 @@ static inline ArcherPose makePose(uint32_t seed) {
   QVector3D perpL(-dirL.z(), 0.0F, dirL.x());
   float elbowOffsetL = 0.15F;
   P.elbow_l = P.shoulder_l + dirL * (distL * 0.45F) + perpL * elbowOffsetL +
-             QVector3D(0, -0.08F, 0);
+              QVector3D(0, -0.08F, 0);
 
   QVector3D shoulder_to_hand_r = P.hand_r - P.shoulder_r;
   float distR = shoulder_to_hand_r.length();
@@ -116,7 +116,7 @@ static inline ArcherPose makePose(uint32_t seed) {
   QVector3D perpR(-dirR.z(), 0.0F, dirR.x());
   float elbowOffsetR = 0.12F;
   P.elbow_r = P.shoulder_r + dirR * (distR * 0.48F) + perpR * elbowOffsetR +
-             QVector3D(0, 0.02F, 0);
+              QVector3D(0, 0.02F, 0);
 
   return P;
 }
@@ -190,16 +190,21 @@ static inline void drawHeadAndNeck(const DrawContext &p, ISubmitter &out,
   out.mesh(getUnitSphere(), sphereAt(p.model, domeC, domeR), C.metal, nullptr,
            1.0F);
 
-  QVector3D visorBase(0.0F, P.head_pos.y() + P.head_r * 0.10F, P.head_r * 0.80F);
+  QVector3D visorBase(0.0F, P.head_pos.y() + P.head_r * 0.10F,
+                      P.head_r * 0.80F);
   QVector3D visorTip = visorBase + QVector3D(0.0F, -0.015F, 0.06F);
   out.mesh(getUnitCone(),
            coneFromTo(p.model, visorBase, visorTip, P.head_r * 0.38F),
            C.metal * 0.92F, nullptr, 1.0F);
 
-  QVector3D cheekL0(-P.head_r * 0.85F, P.head_pos.y() + P.head_r * 0.05F, 0.02F);
-  QVector3D cheekL1(-P.head_r * 0.85F, P.head_pos.y() - P.head_r * 0.20F, 0.04F);
-  QVector3D cheekR0(P.head_r * 0.85F, P.head_pos.y() + P.head_r * 0.05F, -0.02F);
-  QVector3D cheekR1(P.head_r * 0.85F, P.head_pos.y() - P.head_r * 0.20F, -0.04F);
+  QVector3D cheekL0(-P.head_r * 0.85F, P.head_pos.y() + P.head_r * 0.05F,
+                    0.02F);
+  QVector3D cheekL1(-P.head_r * 0.85F, P.head_pos.y() - P.head_r * 0.20F,
+                    0.04F);
+  QVector3D cheekR0(P.head_r * 0.85F, P.head_pos.y() + P.head_r * 0.05F,
+                    -0.02F);
+  QVector3D cheekR1(P.head_r * 0.85F, P.head_pos.y() - P.head_r * 0.20F,
+                    -0.04F);
   out.mesh(getUnitCone(),
            coneFromTo(p.model, cheekL0, cheekL1, P.head_r * 0.24F),
            C.metal * 0.95F, nullptr, 1.0F);

@@ -285,7 +285,8 @@ auto SaveStorage::list_campaigns(QString *out_error) const -> QVariantList {
   QSqlQuery query(m_database);
   const QString sql = QStringLiteral(
       "SELECT c.id, c.title, c.description, c.map_path, c.order_index, "
-      "COALESCE(p.completed, 0) as completed, COALESCE(p.unlocked, 0) as unlocked, "
+      "COALESCE(p.completed, 0) as completed, COALESCE(p.unlocked, 0) as "
+      "unlocked, "
       "p.completed_at "
       "FROM campaigns c "
       "LEFT JOIN campaign_progress p ON c.id = p.campaign_id "
@@ -315,8 +316,8 @@ auto SaveStorage::list_campaigns(QString *out_error) const -> QVariantList {
   return result;
 }
 
-auto SaveStorage::get_campaign_progress(const QString &campaign_id,
-                                     QString *out_error) const -> QVariantMap {
+auto SaveStorage::get_campaign_progress(
+    const QString &campaign_id, QString *out_error) const -> QVariantMap {
   QVariantMap result;
   if (!const_cast<SaveStorage *>(this)->initialize(out_error)) {
     return result;
@@ -346,7 +347,7 @@ auto SaveStorage::get_campaign_progress(const QString &campaign_id,
 }
 
 auto SaveStorage::mark_campaign_completed(const QString &campaign_id,
-                                       QString *out_error) -> bool {
+                                          QString *out_error) -> bool {
   if (!initialize(out_error)) {
     return false;
   }
@@ -360,11 +361,12 @@ auto SaveStorage::mark_campaign_completed(const QString &campaign_id,
       QDateTime::currentDateTimeUtc().toString(Qt::ISODateWithMs);
 
   QSqlQuery query(m_database);
-  query.prepare(QStringLiteral(
-      "INSERT INTO campaign_progress (campaign_id, completed, unlocked, completed_at) "
-      "VALUES (:campaign_id, 1, 1, :completed_at) "
-      "ON CONFLICT(campaign_id) DO UPDATE SET "
-      "completed = 1, completed_at = excluded.completed_at"));
+  query.prepare(
+      QStringLiteral("INSERT INTO campaign_progress (campaign_id, completed, "
+                     "unlocked, completed_at) "
+                     "VALUES (:campaign_id, 1, 1, :completed_at) "
+                     "ON CONFLICT(campaign_id) DO UPDATE SET "
+                     "completed = 1, completed_at = excluded.completed_at"));
   query.bindValue(QStringLiteral(":campaign_id"), campaign_id);
   query.bindValue(QStringLiteral(":completed_at"), now_iso);
 
@@ -595,16 +597,16 @@ auto SaveStorage::migrateSchema(int fromVersion,
 }
 
 auto SaveStorage::migrate_to_2(QString *out_error) const -> bool {
-  // Create campaigns table
+
   QSqlQuery query(m_database);
-  const QString create_campaigns_sql = QStringLiteral(
-      "CREATE TABLE IF NOT EXISTS campaigns ("
-      "id TEXT PRIMARY KEY NOT NULL, "
-      "title TEXT NOT NULL, "
-      "description TEXT NOT NULL, "
-      "map_path TEXT NOT NULL, "
-      "order_index INTEGER NOT NULL DEFAULT 0"
-      ")");
+  const QString create_campaigns_sql =
+      QStringLiteral("CREATE TABLE IF NOT EXISTS campaigns ("
+                     "id TEXT PRIMARY KEY NOT NULL, "
+                     "title TEXT NOT NULL, "
+                     "description TEXT NOT NULL, "
+                     "map_path TEXT NOT NULL, "
+                     "order_index INTEGER NOT NULL DEFAULT 0"
+                     ")");
 
   if (!query.exec(create_campaigns_sql)) {
     if (out_error != nullptr) {
@@ -614,7 +616,6 @@ auto SaveStorage::migrate_to_2(QString *out_error) const -> bool {
     return false;
   }
 
-  // Create campaign_progress table
   QSqlQuery progress_query(m_database);
   const QString create_progress_sql = QStringLiteral(
       "CREATE TABLE IF NOT EXISTS campaign_progress ("
@@ -627,13 +628,13 @@ auto SaveStorage::migrate_to_2(QString *out_error) const -> bool {
 
   if (!progress_query.exec(create_progress_sql)) {
     if (out_error != nullptr) {
-      *out_error = QStringLiteral("Failed to create campaign_progress table: %1")
-                       .arg(lastErrorString(progress_query.lastError()));
+      *out_error =
+          QStringLiteral("Failed to create campaign_progress table: %1")
+              .arg(lastErrorString(progress_query.lastError()));
     }
     return false;
   }
 
-  // Insert initial mission: Carthage vs Rome
   QSqlQuery insert_query(m_database);
   const QString insert_campaign_sql = QStringLiteral(
       "INSERT INTO campaigns (id, title, description, map_path, order_index) "
@@ -650,7 +651,6 @@ auto SaveStorage::migrate_to_2(QString *out_error) const -> bool {
     return false;
   }
 
-  // Initialize progress for the mission (unlocked by default)
   QSqlQuery progress_insert_query(m_database);
   const QString insert_progress_sql = QStringLiteral(
       "INSERT INTO campaign_progress (campaign_id, completed, unlocked) "
