@@ -601,6 +601,15 @@ void GameEngine::selectAllTroops() {
   }
 }
 
+void GameEngine::selectUnitById(int unitId) {
+  ensureInitialized();
+  if (!m_selectionController || (unitId <= 0)) {
+    return;
+  }
+  m_selectionController->selectSingleUnit(
+      static_cast<Engine::Core::EntityID>(unitId), m_runtime.localOwnerId);
+}
+
 void GameEngine::ensureInitialized() {
   QString error;
   Game::Map::WorldBootstrap::ensureInitialized(
@@ -892,7 +901,7 @@ void GameEngine::cameraSetFollowLerp(float alpha) {
   m_cameraService->setFollowLerp(*m_camera, alpha);
 }
 
-auto GameEngine::selectedUnitsModel() -> QObject * {
+auto GameEngine::selectedUnitsModel() -> QAbstractItemModel * {
   return m_selectedUnitsModel;
 }
 
@@ -1475,7 +1484,7 @@ void GameEngine::getSelectedUnitIds(
 
 auto GameEngine::getUnitInfo(Engine::Core::EntityID id, QString &name,
                              int &health, int &max_health, bool &isBuilding,
-                             bool &alive) const -> bool {
+                             bool &alive, QString &nation) const -> bool {
   if (!m_world) {
     return false;
   }
@@ -1490,11 +1499,13 @@ auto GameEngine::getUnitInfo(Engine::Core::EntityID id, QString &name,
     health = u->health;
     max_health = u->max_health;
     alive = (u->health > 0);
+    nation = Game::Systems::nationIDToQString(u->nation_id);
     return true;
   }
   name = QStringLiteral("Entity");
   health = max_health = 0;
   alive = true;
+  nation = QStringLiteral("");
   return true;
 }
 
