@@ -313,63 +313,46 @@ Rectangle {
                             border.width: 2
                             opacity: isEnabled ? 1 : 0.5
 
-                            Column {
+                            Image {
+                                id: archerRecruitIcon
+
+                                anchors.fill: parent
+                                fillMode: Image.PreserveAspectCrop
+                                smooth: true
+                                source: productionPanel.unitIconSource("archer", unitGridContent.prod.nation_id)
+                                visible: source !== ""
+                                opacity: parent.isEnabled ? 1 : 0.35
+                            }
+
+                            Text {
                                 anchors.centerIn: parent
-                                spacing: 4
+                                visible: !archerRecruitIcon.visible
+                                text: productionPanel.unitIconEmoji("archer")
+                                color: parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
+                                font.pointSize: 42
+                                opacity: parent.isEnabled ? 0.9 : 0.4
+                            }
 
-                                Item {
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                    width: 48
-                                    height: 48
-
-                                    Image {
-                                        id: archerRecruitIcon
-
-                                        anchors.fill: parent
-                                        fillMode: Image.PreserveAspectFit
-                                        smooth: true
-                                        source: productionPanel.unitIconSource("archer", unitGridContent.prod.nation_id)
-                                        visible: source !== ""
-                                        opacity: parent.parent.parent.isEnabled ? 1 : 0.4
-                                    }
-
-                                    Text {
-                                        anchors.centerIn: parent
-                                        visible: !archerRecruitIcon.visible
-                                        text: productionPanel.unitIconEmoji("archer")
-                                        color: parent.parent.parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
-                                        font.pointSize: 24
-                                    }
-
-                                }
+                            Rectangle {
+                                id: archerCostBadge
+                                width: archerCostText.implicitWidth + 12
+                                height: archerCostText.implicitHeight + 6
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                anchors.bottom: parent.bottom
+                                anchors.bottomMargin: 6
+                                radius: 8
+                                color: parent.isEnabled ? "#000000b3" : "#00000066"
+                                border.color: parent.isEnabled ? "#f39c12" : "#555555"
+                                border.width: 1
 
                                 Text {
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                    text: qsTr("Archer")
-                                    color: parent.parent.parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
-                                    font.pointSize: 10
+                                    id: archerCostText
+                                    anchors.centerIn: parent
+                                    text: unitGridContent.prod.villagerCost || 1
+                                    color: archerCostBadge.parent.isEnabled ? "#fdf7e3" : "#8a8a8a"
+                                    font.pointSize: 16
                                     font.bold: true
                                 }
-
-                                Row {
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                    spacing: 4
-
-                                    Text {
-                                        text: "👥"
-                                        color: parent.parent.parent.parent.isEnabled ? "#f39c12" : "#5a5a5a"
-                                        font.pointSize: 9
-                                    }
-
-                                    Text {
-                                        text: unitGridContent.prod.villagerCost || 1
-                                        color: parent.parent.parent.parent.isEnabled ? "#f39c12" : "#5a5a5a"
-                                        font.pointSize: 9
-                                        font.bold: true
-                                    }
-
-                                }
-
                             }
 
                             MouseArea {
@@ -406,63 +389,46 @@ Rectangle {
                             border.width: 2
                             opacity: isEnabled ? 1 : 0.5
 
-                            Column {
+                            Image {
+                                id: swordsmanRecruitIcon
+
+                                anchors.fill: parent
+                                fillMode: Image.PreserveAspectCrop
+                                smooth: true
+                                source: productionPanel.unitIconSource("swordsman", unitGridContent.prod.nation_id)
+                                visible: source !== ""
+                                opacity: parent.isEnabled ? 1 : 0.35
+                            }
+
+                            Text {
                                 anchors.centerIn: parent
-                                spacing: 4
+                                visible: !swordsmanRecruitIcon.visible
+                                text: productionPanel.unitIconEmoji("swordsman")
+                                color: parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
+                                font.pointSize: 42
+                                opacity: parent.isEnabled ? 0.9 : 0.4
+                            }
 
-                                Item {
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                    width: 48
-                                    height: 48
-
-                                    Image {
-                                        id: swordsmanRecruitIcon
-
-                                        anchors.fill: parent
-                                        fillMode: Image.PreserveAspectFit
-                                        smooth: true
-                                        source: productionPanel.unitIconSource("swordsman", unitGridContent.prod.nation_id)
-                                        visible: source !== ""
-                                        opacity: parent.parent.parent.isEnabled ? 1 : 0.4
-                                    }
-
-                                    Text {
-                                        anchors.centerIn: parent
-                                        visible: !swordsmanRecruitIcon.visible
-                                        text: productionPanel.unitIconEmoji("swordsman")
-                                        color: parent.parent.parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
-                                        font.pointSize: 24
-                                    }
-
-                                }
+                            Rectangle {
+                                id: swordsmanCostBadge
+                                width: swordsmanCostText.implicitWidth + 12
+                                height: swordsmanCostText.implicitHeight + 6
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                anchors.bottom: parent.bottom
+                                anchors.bottomMargin: 6
+                                radius: 8
+                                color: parent.isEnabled ? "#000000b3" : "#00000066"
+                                border.color: parent.isEnabled ? "#f39c12" : "#555555"
+                                border.width: 1
 
                                 Text {
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                    text: qsTr("Swordsman")
-                                    color: parent.parent.parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
-                                    font.pointSize: 10
+                                    id: swordsmanCostText
+                                    anchors.centerIn: parent
+                                    text: unitGridContent.prod.villagerCost || 1
+                                    color: swordsmanCostBadge.parent.isEnabled ? "#fdf7e3" : "#8a8a8a"
+                                    font.pointSize: 16
                                     font.bold: true
                                 }
-
-                                Row {
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                    spacing: 4
-
-                                    Text {
-                                        text: "👥"
-                                        color: parent.parent.parent.parent.isEnabled ? "#f39c12" : "#5a5a5a"
-                                        font.pointSize: 9
-                                    }
-
-                                    Text {
-                                        text: unitGridContent.prod.villagerCost || 1
-                                        color: parent.parent.parent.parent.isEnabled ? "#f39c12" : "#5a5a5a"
-                                        font.pointSize: 9
-                                        font.bold: true
-                                    }
-
-                                }
-
                             }
 
                             MouseArea {
@@ -499,63 +465,46 @@ Rectangle {
                             border.width: 2
                             opacity: isEnabled ? 1 : 0.5
 
-                            Column {
+                            Image {
+                                id: spearmanRecruitIcon
+
+                                anchors.fill: parent
+                                fillMode: Image.PreserveAspectCrop
+                                smooth: true
+                                source: productionPanel.unitIconSource("spearman", unitGridContent.prod.nation_id)
+                                visible: source !== ""
+                                opacity: parent.isEnabled ? 1 : 0.35
+                            }
+
+                            Text {
                                 anchors.centerIn: parent
-                                spacing: 4
+                                visible: !spearmanRecruitIcon.visible
+                                text: productionPanel.unitIconEmoji("spearman")
+                                color: parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
+                                font.pointSize: 42
+                                opacity: parent.isEnabled ? 0.9 : 0.4
+                            }
 
-                                Item {
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                    width: 48
-                                    height: 48
-
-                                    Image {
-                                        id: spearmanRecruitIcon
-
-                                        anchors.fill: parent
-                                        fillMode: Image.PreserveAspectFit
-                                        smooth: true
-                                        source: productionPanel.unitIconSource("spearman", unitGridContent.prod.nation_id)
-                                        visible: source !== ""
-                                        opacity: parent.parent.parent.isEnabled ? 1 : 0.4
-                                    }
-
-                                    Text {
-                                        anchors.centerIn: parent
-                                        visible: !spearmanRecruitIcon.visible
-                                        text: productionPanel.unitIconEmoji("spearman")
-                                        color: parent.parent.parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
-                                        font.pointSize: 24
-                                    }
-
-                                }
+                            Rectangle {
+                                id: spearmanCostBadge
+                                width: spearmanCostText.implicitWidth + 12
+                                height: spearmanCostText.implicitHeight + 6
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                anchors.bottom: parent.bottom
+                                anchors.bottomMargin: 6
+                                radius: 8
+                                color: parent.isEnabled ? "#000000b3" : "#00000066"
+                                border.color: parent.isEnabled ? "#f39c12" : "#555555"
+                                border.width: 1
 
                                 Text {
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                    text: qsTr("Spearman")
-                                    color: parent.parent.parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
-                                    font.pointSize: 10
+                                    id: spearmanCostText
+                                    anchors.centerIn: parent
+                                    text: unitGridContent.prod.villagerCost || 1
+                                    color: spearmanCostBadge.parent.isEnabled ? "#fdf7e3" : "#8a8a8a"
+                                    font.pointSize: 16
                                     font.bold: true
                                 }
-
-                                Row {
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                    spacing: 4
-
-                                    Text {
-                                        text: "👥"
-                                        color: parent.parent.parent.parent.isEnabled ? "#f39c12" : "#5a5a5a"
-                                        font.pointSize: 9
-                                    }
-
-                                    Text {
-                                        text: unitGridContent.prod.villagerCost || 1
-                                        color: parent.parent.parent.parent.isEnabled ? "#f39c12" : "#5a5a5a"
-                                        font.pointSize: 9
-                                        font.bold: true
-                                    }
-
-                                }
-
                             }
 
                             MouseArea {
@@ -592,63 +541,46 @@ Rectangle {
                             border.width: 2
                             opacity: isEnabled ? 1 : 0.5
 
-                            Column {
+                            Image {
+                                id: horseKnightIcon
+
+                                anchors.fill: parent
+                                fillMode: Image.PreserveAspectCrop
+                                smooth: true
+                                source: productionPanel.unitIconSource("horse_swordsman", unitGridContent.prod.nation_id)
+                                visible: source !== ""
+                                opacity: parent.isEnabled ? 1 : 0.35
+                            }
+
+                            Text {
                                 anchors.centerIn: parent
-                                spacing: 4
+                                visible: !horseKnightIcon.visible
+                                text: productionPanel.unitIconEmoji("horse_swordsman")
+                                color: parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
+                                font.pointSize: 42
+                                opacity: parent.isEnabled ? 0.9 : 0.4
+                            }
 
-                                Item {
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                    width: 48
-                                    height: 48
-
-                                    Image {
-                                        id: horseKnightIcon
-
-                                        anchors.fill: parent
-                                        fillMode: Image.PreserveAspectFit
-                                        smooth: true
-                                        source: productionPanel.unitIconSource("horse_swordsman", unitGridContent.prod.nation_id)
-                                        visible: source !== ""
-                                        opacity: parent.parent.parent.isEnabled ? 1 : 0.4
-                                    }
-
-                                    Text {
-                                        anchors.centerIn: parent
-                                        visible: !horseKnightIcon.visible
-                                        text: productionPanel.unitIconEmoji("horse_swordsman")
-                                        color: parent.parent.parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
-                                        font.pointSize: 24
-                                    }
-
-                                }
+                            Rectangle {
+                                id: horseKnightCostBadge
+                                width: horseKnightCostText.implicitWidth + 12
+                                height: horseKnightCostText.implicitHeight + 6
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                anchors.bottom: parent.bottom
+                                anchors.bottomMargin: 6
+                                radius: 8
+                                color: parent.isEnabled ? "#000000b3" : "#00000066"
+                                border.color: parent.isEnabled ? "#f39c12" : "#555555"
+                                border.width: 1
 
                                 Text {
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                    text: qsTr("Mounted Knight")
-                                    color: parent.parent.parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
-                                    font.pointSize: 10
+                                    id: horseKnightCostText
+                                    anchors.centerIn: parent
+                                    text: unitGridContent.prod.villagerCost || 1
+                                    color: horseKnightCostBadge.parent.isEnabled ? "#fdf7e3" : "#8a8a8a"
+                                    font.pointSize: 16
                                     font.bold: true
                                 }
-
-                                Row {
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                    spacing: 4
-
-                                    Text {
-                                        text: "👥"
-                                        color: parent.parent.parent.parent.isEnabled ? "#f39c12" : "#5a5a5a"
-                                        font.pointSize: 9
-                                    }
-
-                                    Text {
-                                        text: unitGridContent.prod.villagerCost || 1
-                                        color: parent.parent.parent.parent.isEnabled ? "#f39c12" : "#5a5a5a"
-                                        font.pointSize: 9
-                                        font.bold: true
-                                    }
-
-                                }
-
                             }
 
                             MouseArea {
@@ -685,63 +617,46 @@ Rectangle {
                             border.width: 2
                             opacity: isEnabled ? 1 : 0.5
 
-                            Column {
+                            Image {
+                                id: horseArcherIcon
+
+                                anchors.fill: parent
+                                fillMode: Image.PreserveAspectCrop
+                                smooth: true
+                                source: productionPanel.unitIconSource("horse_archer", unitGridContent.prod.nation_id)
+                                visible: source !== ""
+                                opacity: parent.isEnabled ? 1 : 0.35
+                            }
+
+                            Text {
                                 anchors.centerIn: parent
-                                spacing: 4
+                                visible: !horseArcherIcon.visible
+                                text: productionPanel.unitIconEmoji("horse_archer")
+                                color: parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
+                                font.pointSize: 42
+                                opacity: parent.isEnabled ? 0.9 : 0.4
+                            }
 
-                                Item {
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                    width: 48
-                                    height: 48
-
-                                    Image {
-                                        id: horseArcherIcon
-
-                                        anchors.fill: parent
-                                        fillMode: Image.PreserveAspectFit
-                                        smooth: true
-                                        source: productionPanel.unitIconSource("horse_archer", unitGridContent.prod.nation_id)
-                                        visible: source !== ""
-                                        opacity: parent.parent.parent.isEnabled ? 1 : 0.4
-                                    }
-
-                                    Text {
-                                        anchors.centerIn: parent
-                                        visible: !horseArcherIcon.visible
-                                        text: productionPanel.unitIconEmoji("horse_archer")
-                                        color: parent.parent.parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
-                                        font.pointSize: 20
-                                    }
-
-                                }
+                            Rectangle {
+                                id: horseArcherCostBadge
+                                width: horseArcherCostText.implicitWidth + 12
+                                height: horseArcherCostText.implicitHeight + 6
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                anchors.bottom: parent.bottom
+                                anchors.bottomMargin: 6
+                                radius: 8
+                                color: parent.isEnabled ? "#000000b3" : "#00000066"
+                                border.color: parent.isEnabled ? "#f39c12" : "#555555"
+                                border.width: 1
 
                                 Text {
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                    text: qsTr("Horse Archer")
-                                    color: parent.parent.parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
-                                    font.pointSize: 9
+                                    id: horseArcherCostText
+                                    anchors.centerIn: parent
+                                    text: unitGridContent.prod.villagerCost || 1
+                                    color: horseArcherCostBadge.parent.isEnabled ? "#fdf7e3" : "#8a8a8a"
+                                    font.pointSize: 16
                                     font.bold: true
                                 }
-
-                                Row {
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                    spacing: 4
-
-                                    Text {
-                                        text: "👥"
-                                        color: parent.parent.parent.parent.isEnabled ? "#f39c12" : "#5a5a5a"
-                                        font.pointSize: 9
-                                    }
-
-                                    Text {
-                                        text: unitGridContent.prod.villagerCost || 1
-                                        color: parent.parent.parent.parent.isEnabled ? "#f39c12" : "#5a5a5a"
-                                        font.pointSize: 9
-                                        font.bold: true
-                                    }
-
-                                }
-
                             }
 
                             MouseArea {
@@ -778,63 +693,46 @@ Rectangle {
                             border.width: 2
                             opacity: isEnabled ? 1 : 0.5
 
-                            Column {
+                            Image {
+                                id: horseSpearmanIcon
+
+                                anchors.fill: parent
+                                fillMode: Image.PreserveAspectCrop
+                                smooth: true
+                                source: productionPanel.unitIconSource("horse_spearman", unitGridContent.prod.nation_id)
+                                visible: source !== ""
+                                opacity: parent.isEnabled ? 1 : 0.35
+                            }
+
+                            Text {
                                 anchors.centerIn: parent
-                                spacing: 4
+                                visible: !horseSpearmanIcon.visible
+                                text: productionPanel.unitIconEmoji("horse_spearman")
+                                color: parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
+                                font.pointSize: 42
+                                opacity: parent.isEnabled ? 0.9 : 0.4
+                            }
 
-                                Item {
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                    width: 48
-                                    height: 48
-
-                                    Image {
-                                        id: horseSpearmanIcon
-
-                                        anchors.fill: parent
-                                        fillMode: Image.PreserveAspectFit
-                                        smooth: true
-                                        source: productionPanel.unitIconSource("horse_spearman", unitGridContent.prod.nation_id)
-                                        visible: source !== ""
-                                        opacity: parent.parent.parent.isEnabled ? 1 : 0.4
-                                    }
-
-                                    Text {
-                                        anchors.centerIn: parent
-                                        visible: !horseSpearmanIcon.visible
-                                        text: productionPanel.unitIconEmoji("horse_spearman")
-                                        color: parent.parent.parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
-                                        font.pointSize: 20
-                                    }
-
-                                }
+                            Rectangle {
+                                id: horseSpearmanCostBadge
+                                width: horseSpearmanCostText.implicitWidth + 12
+                                height: horseSpearmanCostText.implicitHeight + 6
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                anchors.bottom: parent.bottom
+                                anchors.bottomMargin: 6
+                                radius: 8
+                                color: parent.isEnabled ? "#000000b3" : "#00000066"
+                                border.color: parent.isEnabled ? "#f39c12" : "#555555"
+                                border.width: 1
 
                                 Text {
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                    text: qsTr("Horse Spearman")
-                                    color: parent.parent.parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
-                                    font.pointSize: 9
+                                    id: horseSpearmanCostText
+                                    anchors.centerIn: parent
+                                    text: unitGridContent.prod.villagerCost || 1
+                                    color: horseSpearmanCostBadge.parent.isEnabled ? "#fdf7e3" : "#8a8a8a"
+                                    font.pointSize: 16
                                     font.bold: true
                                 }
-
-                                Row {
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                    spacing: 4
-
-                                    Text {
-                                        text: "👥"
-                                        color: parent.parent.parent.parent.isEnabled ? "#f39c12" : "#5a5a5a"
-                                        font.pointSize: 9
-                                    }
-
-                                    Text {
-                                        text: unitGridContent.prod.villagerCost || 1
-                                        color: parent.parent.parent.parent.isEnabled ? "#f39c12" : "#5a5a5a"
-                                        font.pointSize: 9
-                                        font.bold: true
-                                    }
-
-                                }
-
                             }
 
                             MouseArea {
