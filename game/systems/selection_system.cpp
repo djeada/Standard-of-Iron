@@ -155,6 +155,29 @@ void SelectionController::selectAllPlayerTroops(int localOwnerId) {
   emit selectionChanged();
 }
 
+void SelectionController::selectSingleUnit(Engine::Core::EntityID id,
+                                           int localOwnerId) {
+  if ((m_selection_system == nullptr) || (m_world == nullptr)) {
+    return;
+  }
+
+  auto *entity = m_world->getEntity(id);
+  if (entity == nullptr) {
+    return;
+  }
+
+  auto *unit = entity->getComponent<Engine::Core::UnitComponent>();
+  if ((unit == nullptr) || (unit->health <= 0) ||
+      (unit->owner_id != localOwnerId)) {
+    return;
+  }
+
+  m_selection_system->clearSelection();
+  m_selection_system->selectUnit(id);
+  syncSelectionFlags();
+  emit selectionChanged();
+}
+
 auto SelectionController::hasUnitsSelected() const -> bool {
   if (m_selection_system == nullptr) {
     return false;
