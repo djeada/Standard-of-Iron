@@ -45,6 +45,11 @@ class Theme : public QObject {
   Q_PROPERTY(QColor addColor READ addColor CONSTANT)
   Q_PROPERTY(QColor removeColor READ removeColor CONSTANT)
 
+  Q_PROPERTY(QColor successBg READ successBg CONSTANT)
+  Q_PROPERTY(QColor successBr READ successBr CONSTANT)
+  Q_PROPERTY(QColor successText READ successText CONSTANT)
+  Q_PROPERTY(QColor disabledBg READ disabledBg CONSTANT)
+
   Q_PROPERTY(int spacingTiny READ spacingTiny CONSTANT)
   Q_PROPERTY(int spacingSmall READ spacingSmall CONSTANT)
   Q_PROPERTY(int spacingMedium READ spacingMedium CONSTANT)
@@ -111,6 +116,11 @@ public:
 
   [[nodiscard]] static auto addColor() -> QColor { return {"#3A9CA8"}; }
   [[nodiscard]] static auto removeColor() -> QColor { return {"#D04040"}; }
+
+  [[nodiscard]] static auto successBg() -> QColor { return {"#1e4a2c"}; }
+  [[nodiscard]] static auto successBr() -> QColor { return {"#2d6b3f"}; }
+  [[nodiscard]] static auto successText() -> QColor { return {"#8fdc9f"}; }
+  [[nodiscard]] static auto disabledBg() -> QColor { return {"#1a2a32"}; }
 
   [[nodiscard]] static auto spacingTiny() -> int { return 4; }
   [[nodiscard]] static auto spacingSmall() -> int { return 8; }

@@ -174,16 +174,16 @@ GameEngine::GameEngine(QObject *parent)
   m_mapCatalog = std::make_unique<Game::Map::MapCatalog>(this);
   connect(m_mapCatalog.get(), &Game::Map::MapCatalog::mapLoaded, this,
           [this](const QVariantMap &mapData) {
-            m_availableMaps.append(mapData);
-            emit availableMapsChanged();
+            m_available_maps.append(mapData);
+            emit available_maps_changed();
           });
   connect(m_mapCatalog.get(), &Game::Map::MapCatalog::loadingChanged, this,
           [this](bool loading) {
-            m_mapsLoading = loading;
-            emit mapsLoadingChanged();
+            m_maps_loading = loading;
+            emit maps_loading_changed();
           });
   connect(m_mapCatalog.get(), &Game::Map::MapCatalog::allMapsLoaded, this,
-          [this]() { emit availableMapsChanged(); });
+          [this]() { emit available_maps_changed(); });
 
   if (AudioSystem::getInstance().initialize()) {
     qInfo() << "AudioSystem initialized successfully";
@@ -1034,18 +1034,19 @@ void GameEngine::setRallyAtScreen(qreal sx, qreal sy) {
                                         m_runtime.localOwnerId);
 }
 
-void GameEngine::startLoadingMaps() {
-  m_availableMaps.clear();
+void GameEngine::start_loading_maps() {
+  m_available_maps.clear();
   if (m_mapCatalog) {
     m_mapCatalog->loadMapsAsync();
   }
+  load_campaigns();
 }
 
-auto GameEngine::availableMaps() const -> QVariantList {
-  return m_availableMaps;
+auto GameEngine::available_maps() const -> QVariantList {
+  return m_available_maps;
 }
 
-auto GameEngine::availableNations() const -> QVariantList {
+auto GameEngine::available_nations() const -> QVariantList {
   QVariantList nations;
   const auto &registry = Game::Systems::NationRegistry::instance();
   const auto &all = registry.getAllNations();
@@ -1073,7 +1074,111 @@ auto GameEngine::availableNations() const -> QVariantList {
   return nations;
 }
 
-void GameEngine::startSkirmish(const QString &map_path,
+auto GameEngine::available_campaigns() const -> QVariantList {
+  return m_available_campaigns;
+}
+
+void GameEngine::load_campaigns() {
+  if (!m_saveLoadService) {
+    return;
+  }
+
+  QString error;
+  auto campaigns = m_saveLoadService->list_campaigns(&error);
+  if (!error.isEmpty()) {
+    qWarning() << "Failed to load campaigns:" << error;
+    return;
+  }
+
+  m_available_campaigns = campaigns;
+  emit available_campaigns_changed();
+}
+
+void GameEngine::start_campaign_mission(const QString &campaign_id) {
+  clearError();
+
+  if (!m_saveLoadService) {
+    setError("Save/Load service not initialized");
+    return;
+  }
+
+  // Get campaign details
+  QString error;
+  auto campaigns = m_saveLoadService->list_campaigns(&error);
+  if (!error.isEmpty()) {
+    setError("Failed to load campaign: " + error);
+    return;
+  }
+
+  // Find the campaign
+  QVariantMap selectedCampaign;
+  for (const auto &campaign : campaigns) {
+    auto campaignMap = campaign.toMap();
+    if (campaignMap.value("id").toString() == campaign_id) {
+      selectedCampaign = campaignMap;
+      break;
+    }
+  }
+
+  if (selectedCampaign.isEmpty()) {
+    setError("Campaign not found: " + campaign_id);
+    return;
+  }
+
+  m_current_campaign_id = campaign_id;
+
+  // Get map path
+  QString mapPath = selectedCampaign.value("mapPath").toString();
+
+  // For Carthage vs Rome mission, set up predefined players
+  QVariantList playerConfigs;
+
+  // Player 1: Human (Carthage)
+  QVariantMap player1;
+  player1.insert("player_id", 1);
+  player1.insert("playerName", "Carthage");
+  player1.insert("colorIndex", 0); // Blue
+  player1.insert("team_id", 0);
+  player1.insert("nationId", "carthage");
+  player1.insert("isHuman", true);
+  playerConfigs.append(player1);
+
+  // Player 2: AI (Rome)
+  QVariantMap player2;
+  player2.insert("player_id", 2);
+  player2.insert("playerName", "Rome");
+  player2.insert("colorIndex", 1); // Red
+  player2.insert("team_id", 1);
+  player2.insert("nationId", "roman_republic");
+  player2.insert("isHuman", false);
+  playerConfigs.append(player2);
+
+  // Start the mission like a skirmish
+  start_skirmish(mapPath, playerConfigs);
+}
+
+void GameEngine::mark_current_mission_completed() {
+  if (m_current_campaign_id.isEmpty()) {
+    qWarning() << "No active campaign mission to mark as completed";
+    return;
+  }
+
+  if (!m_saveLoadService) {
+    qWarning() << "Save/Load service not initialized";
+    return;
+  }
+
+  QString error;
+  bool success = m_saveLoadService->mark_campaign_completed(m_current_campaign_id, &error);
+  if (!success) {
+    qWarning() << "Failed to mark campaign as completed:" << error;
+  } else {
+    qInfo() << "Campaign mission" << m_current_campaign_id << "marked as completed";
+    load_campaigns(); // Refresh campaign list
+  }
+}
+
+void GameEngine::start_skirmish(const QString &map_path,
                                const QVariantList &playerConfigs) {
 
   clearError();
@@ -1153,6 +1258,11 @@ void GameEngine::startSkirmish(const QString &map_path,
         if (m_runtime.victoryState != state) {
           m_runtime.victoryState = state;
           emit victoryStateChanged();
+          
+          // Mark campaign mission as completed if victory
+          if (state == "victory" && !m_current_campaign_id.isEmpty()) {
+            mark_current_mission_completed();
+          }
         }
       });
     }
@@ -1197,23 +1307,23 @@ void GameEngine::startSkirmish(const QString &map_path,
   }
 }
 
-void GameEngine::openSettings() {
+void GameEngine::open_settings() {
   if (m_saveLoadService) {
     m_saveLoadService->openSettings();
   }
 }
 
-void GameEngine::loadSave() { loadFromSlot("savegame"); }
+void GameEngine::load_save() { loadFromSlot("savegame"); }
 
-void GameEngine::saveGame(const QString &filename) {
+void GameEngine::save_game(const QString &filename) {
   saveToSlot(filename, filename);
 }
 
-void GameEngine::saveGameToSlot(const QString &slotName) {
+void GameEngine::save_game_to_slot(const QString &slotName) {
   saveToSlot(slotName, slotName);
 }
 
-void GameEngine::loadGameFromSlot(const QString &slotName) {
+void GameEngine::load_game_from_slot(const QString &slotName) {
   loadFromSlot(slotName);
 }
 
@@ -1289,7 +1399,7 @@ auto GameEngine::saveToSlot(const QString &slot, const QString &title) -> bool {
   return true;
 }
 
-auto GameEngine::getSaveSlots() const -> QVariantList {
+auto GameEngine::get_save_slots() const -> QVariantList {
   if (!m_saveLoadService) {
     qWarning() << "Cannot get save slots: service not initialized";
     return {};
@@ -1298,9 +1408,9 @@ auto GameEngine::getSaveSlots() const -> QVariantList {
   return m_saveLoadService->getSaveSlots();
 }
 
-void GameEngine::refreshSaveSlots() { emit saveSlotsChanged(); }
+void GameEngine::refresh_save_slots() { emit saveSlotsChanged(); }
 
-auto GameEngine::deleteSaveSlot(const QString &slotName) -> bool {
+auto GameEngine::delete_save_slot(const QString &slotName) -> bool {
   if (!m_saveLoadService) {
     qWarning() << "Cannot delete save slot: service not initialized";
     return false;
@@ -1319,7 +1429,7 @@ auto GameEngine::deleteSaveSlot(const QString &slotName) -> bool {
   return success;
 }
 
-void GameEngine::exitGame() {
+void GameEngine::exit_game() {
   if (m_saveLoadService) {
     m_saveLoadService->exitGame();
   }
