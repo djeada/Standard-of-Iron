@@ -161,6 +161,12 @@ if(QT_VERSION_MAJOR EQUAL 6)
             ui/qml/Main.qml
             ui/qml/MainMenu.qml
             ui/qml/MapSelect.qml
+            ui/qml/MapListPanel.qml
+            ui/qml/PlayerListItem.qml
+            ui/qml/PlayerConfigPanel.qml
+            ui/qml/CampaignMenu.qml
+            ui/qml/StyleGuide.qml
+            ui/qml/StyledButton.qml
             ui/qml/HUD.qml
             ui/qml/HUDTop.qml
             ui/qml/HUDBottom.qml
@@ -171,6 +177,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
             ui/qml/HUDVictory.qml
             ui/qml/BattleSummary.qml
             ui/qml/GameView.qml
+            ui/qml/CursorManager.qml
         RESOURCES
             assets/shaders/archer.frag
             assets/shaders/archer.vert

@@ -8,6 +8,7 @@ Item {
     id: root
 
     signal openSkirmish()
+    signal openCampaign()
     signal openSettings()
     signal loadSave()
     signal saveGame()
@@ -27,6 +28,8 @@ Item {
             var m = menuModel.get(container.selectedIndex);
             if (m.idStr === "skirmish")
                 root.openSkirmish();
+            else if (m.idStr === "campaign")
+                root.openCampaign();
             else if (m.idStr === "save")
                 root.saveGame();
             else if (m.idStr === "load")
@@ -108,6 +111,12 @@ Item {
                         idStr: "skirmish"
                         title: QT_TR_NOOP("Play — Skirmish")
                         subtitle: QT_TR_NOOP("Select a map and start")
+                    }
+
+                    ListElement {
+                        idStr: "campaign"
+                        title: QT_TR_NOOP("Play — Campaign")
+                        subtitle: QT_TR_NOOP("Story missions and battles")
                     }
 
                     ListElement {
@@ -223,6 +232,8 @@ Item {
                             onClicked: {
                                 if (model.idStr === "skirmish")
                                     root.openSkirmish();
+                                else if (model.idStr === "campaign")
+                                    root.openCampaign();
                                 else if (model.idStr === "save")
                                     root.saveGame();
                                 else if (model.idStr === "load")
