@@ -50,6 +50,7 @@ public:
                       int localOwnerId);
   void onRightClickClearSelection();
   void selectAllPlayerTroops(int localOwnerId);
+  void selectSingleUnit(Engine::Core::EntityID id, int localOwnerId);
 
   [[nodiscard]] auto hasUnitsSelected() const -> bool;
   void getSelectedUnitIds(std::vector<Engine::Core::EntityID> &out) const;

@@ -13,6 +13,25 @@ RowLayout {
     signal commandModeChanged(string mode)
     signal recruit(string unitType)
 
+    function unitIconSource(unitType, nationKey) {
+        if (typeof StyleGuide === "undefined" || !StyleGuide.unitIconSources || !unitType)
+            return "";
+
+        var sources = StyleGuide.unitIconSources[unitType];
+        if (!sources)
+            sources = StyleGuide.unitIconSources["default"];
+
+        var key = (nationKey && sources[nationKey]) ? nationKey : "default";
+        return sources[key] || "";
+    }
+
+    function unitIconEmoji(unitType) {
+        if (typeof StyleGuide !== "undefined" && StyleGuide.unitIcons)
+            return StyleGuide.unitIcons[unitType] || StyleGuide.unitIcons["default"] || "👤";
+
+        return "👤";
+    }
+
     anchors.fill: parent
     anchors.margins: 10
     spacing: 12
@@ -63,12 +82,32 @@ RowLayout {
                     spacing: 3
 
                     delegate: Rectangle {
+                        id: selectedUnitItem
+
+                        property bool isHovered: false
+                        property string unitType: (typeof name !== "undefined") ? name : ""
+                        property string nationKey: (typeof nation !== "undefined" && nation !== "") ? nation : "default"
+
                         width: selectedUnitsList.width - 10
                         height: 28
-                        color: "#1a252f"
+                        color: isHovered ? "#243346" : "#1a252f"
                         radius: 4
-                        border.color: "#34495e"
-                        border.width: 1
+                        border.color: isHovered ? "#4aa3ff" : "#34495e"
+                        border.width: isHovered ? 2 : 1
+
+                        MouseArea {
+                            id: selectedUnitMouseArea
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            propagateComposedEvents: false
+                            cursorShape: Qt.PointingHandCursor
+                            onEntered: selectedUnitItem.isHovered = true
+                            onExited: selectedUnitItem.isHovered = false
+                            onClicked: {
+                                if (mouse.button === Qt.LeftButton && typeof game !== 'undefined' && game.selectUnitById && typeof unit_id !== 'undefined')
+                                    game.selectUnitById(unit_id);
+                            }
+                        }
 
                         Row {
                             anchors.left: parent.left
@@ -76,12 +115,27 @@ RowLayout {
                             anchors.margins: 6
                             spacing: 8
 
-                            Text {
-                                text: (typeof name !== 'undefined') ? name : "Unit"
-                                color: "#ecf0f1"
-                                font.pointSize: 9
-                                font.bold: true
-                                width: 80
+                            Item {
+                                width: 32
+                                height: 24
+
+                                Image {
+                                    id: selectedUnitIcon
+                                    anchors.centerIn: parent
+                                    width: 24
+                                    height: 24
+                                    fillMode: Image.PreserveAspectFit
+                                    source: bottomRoot.unitIconSource(selectedUnitItem.unitType, selectedUnitItem.nationKey)
+                                    visible: source !== ""
+                                }
+
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: bottomRoot.unitIconEmoji(selectedUnitItem.unitType)
+                                    color: "#ecf0f1"
+                                    font.pixelSize: 16
+                                    visible: selectedUnitIcon.source === ""
+                                }
                             }
 
                             Rectangle {
