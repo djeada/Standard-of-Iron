@@ -175,8 +175,8 @@
         "renderer_id": "troops/roman/healer"
       },
       "formation": {
-        "individuals_per_unit": 12,
-        "max_units_per_row": 4
+        "individuals_per_unit": 1,
+        "max_units_per_row": 1
       }
     }
   ]
