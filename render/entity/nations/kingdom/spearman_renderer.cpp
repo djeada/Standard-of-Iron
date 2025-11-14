@@ -138,7 +138,8 @@ public:
     float const arm_asymmetry = (hash_01(seed ^ 0xDEF0U) - 0.5F) * 0.04F;
 
     if (anim.is_in_hold_mode || anim.is_exiting_hold) {
-      float const t = anim.is_in_hold_mode ? 1.0F : (1.0F - anim.hold_exit_progress);
+      float const t =
+          anim.is_in_hold_mode ? 1.0F : (1.0F - anim.hold_exit_progress);
 
       controller.kneel(t * k_kneel_depth_multiplier);
       controller.lean(QVector3D(0.0F, 0.0F, 1.0F),

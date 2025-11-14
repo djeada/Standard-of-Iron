@@ -47,7 +47,7 @@ auto sampleAnimState(const DrawContext &ctx) -> AnimationInputs {
   if ((attack != nullptr) && (attack_target != nullptr) &&
       attack_target->target_id > 0 && (transform != nullptr)) {
     anim.is_melee = (attack->currentMode ==
-                    Engine::Core::AttackComponent::CombatMode::Melee);
+                     Engine::Core::AttackComponent::CombatMode::Melee);
 
     bool const stationary = !anim.is_moving;
     float const current_cooldown =

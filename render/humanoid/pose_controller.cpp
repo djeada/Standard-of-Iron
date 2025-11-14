@@ -32,13 +32,13 @@ void HumanoidPoseController::kneel(float depth) {
   float const left_knee_z = -0.06F * depth;
   m_pose.knee_l = QVector3D(-stance_narrow, left_knee_y, left_knee_z);
   m_pose.foot_l = QVector3D(-stance_narrow - 0.025F, HP::GROUND_Y,
-                           left_knee_z - HP::LOWER_LEG_LEN * 0.93F * depth);
+                            left_knee_z - HP::LOWER_LEG_LEN * 0.93F * depth);
 
   float const right_knee_y = pelvis_y - 0.12F;
   float const right_foot_z = 0.28F * depth;
   m_pose.knee_r = QVector3D(stance_narrow, right_knee_y, right_foot_z - 0.05F);
-  m_pose.foot_r =
-      QVector3D(stance_narrow, HP::GROUND_Y + m_pose.foot_y_offset, right_foot_z);
+  m_pose.foot_r = QVector3D(stance_narrow, HP::GROUND_Y + m_pose.foot_y_offset,
+                            right_foot_z);
 
   float const upper_body_drop = kneel_offset;
   m_pose.shoulder_l.setY(m_pose.shoulder_l.y() - upper_body_drop);
@@ -444,21 +444,21 @@ void HumanoidPoseController::hold_sword_and_shield() {
 
 void HumanoidPoseController::look_at(const QVector3D &target) {
   QVector3D const head_to_target = target - m_pose.head_pos;
-  
+
   if (head_to_target.lengthSquared() < 1e-6F) {
     return;
   }
 
   QVector3D const direction = head_to_target.normalized();
-  
+
   float const max_head_turn = 0.03F;
   QVector3D const head_offset = direction * max_head_turn;
-  
+
   m_pose.head_pos += QVector3D(head_offset.x(), 0.0F, head_offset.z());
-  
+
   float const neck_follow = 0.5F;
-  m_pose.neck_base += QVector3D(head_offset.x() * neck_follow, 0.0F, 
-                                 head_offset.z() * neck_follow);
+  m_pose.neck_base += QVector3D(head_offset.x() * neck_follow, 0.0F,
+                                head_offset.z() * neck_follow);
 }
 
 } // namespace Render::GL

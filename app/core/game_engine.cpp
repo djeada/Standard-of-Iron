@@ -1102,7 +1102,6 @@ void GameEngine::start_campaign_mission(const QString &campaign_id) {
     return;
   }
 
-  // Get campaign details
   QString error;
   auto campaigns = m_saveLoadService->list_campaigns(&error);
   if (!error.isEmpty()) {
@@ -1110,7 +1109,6 @@ void GameEngine::start_campaign_mission(const QString &campaign_id) {
     return;
   }
 
-  // Find the campaign
   QVariantMap selectedCampaign;
   for (const auto &campaign : campaigns) {
     auto campaignMap = campaign.toMap();
@@ -1127,33 +1125,28 @@ void GameEngine::start_campaign_mission(const QString &campaign_id) {
 
   m_current_campaign_id = campaign_id;
 
-  // Get map path
   QString mapPath = selectedCampaign.value("mapPath").toString();
 
-  // For Carthage vs Rome mission, set up predefined players
   QVariantList playerConfigs;
 
-  // Player 1: Human (Carthage)
   QVariantMap player1;
   player1.insert("player_id", 1);
   player1.insert("playerName", "Carthage");
-  player1.insert("colorIndex", 0); // Blue
+  player1.insert("colorIndex", 0);
   player1.insert("team_id", 0);
   player1.insert("nationId", "carthage");
   player1.insert("isHuman", true);
   playerConfigs.append(player1);
 
-  // Player 2: AI (Rome)
   QVariantMap player2;
   player2.insert("player_id", 2);
   player2.insert("playerName", "Rome");
-  player2.insert("colorIndex", 1); // Red
+  player2.insert("colorIndex", 1);
   player2.insert("team_id", 1);
   player2.insert("nationId", "roman_republic");
   player2.insert("isHuman", false);
   playerConfigs.append(player2);
 
-  // Start the mission like a skirmish
   start_skirmish(mapPath, playerConfigs);
 }
 
@@ -1169,17 +1162,19 @@ void GameEngine::mark_current_mission_completed() {
   }
 
   QString error;
-  bool success = m_saveLoadService->mark_campaign_completed(m_current_campaign_id, &error);
+  bool success =
+      m_saveLoadService->mark_campaign_completed(m_current_campaign_id, &error);
   if (!success) {
     qWarning() << "Failed to mark campaign as completed:" << error;
   } else {
-    qInfo() << "Campaign mission" << m_current_campaign_id << "marked as completed";
-    load_campaigns(); // Refresh campaign list
+    qInfo() << "Campaign mission" << m_current_campaign_id
+            << "marked as completed";
+    load_campaigns();
   }
 }
 
 void GameEngine::start_skirmish(const QString &map_path,
-                               const QVariantList &playerConfigs) {
+                                const QVariantList &playerConfigs) {
 
   clearError();
 
@@ -1258,8 +1253,7 @@ void GameEngine::start_skirmish(const QString &map_path,
         if (m_runtime.victoryState != state) {
           m_runtime.victoryState = state;
           emit victoryStateChanged();
-          
-          // Mark campaign mission as completed if victory
+
           if (state == "victory" && !m_current_campaign_id.isEmpty()) {
             mark_current_mission_completed();
           }

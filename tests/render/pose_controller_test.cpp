@@ -57,7 +57,7 @@ TEST_F(HumanoidPoseControllerTest, ConstructorInitializesCorrectly) {
   HumanoidPoseController controller(pose, anim_ctx);
   // Constructor should not modify the pose
   EXPECT_FLOAT_EQ(pose.head_pos.y(), 0.5F * (HumanProportions::HEAD_TOP_Y +
-                                            HumanProportions::CHIN_Y));
+                                             HumanProportions::CHIN_Y));
   EXPECT_FLOAT_EQ(pose.pelvis_pos.y(), HumanProportions::WAIST_Y);
 }
 
@@ -162,7 +162,8 @@ TEST_F(HumanoidPoseControllerTest, PlaceHandAtComputesElbow) {
   EXPECT_FALSE(approxEqual(pose.elbow_r, original_elbow));
 
   // Elbow should be between shoulder and hand
-  float const shoulder_to_elbow_dist = (pose.elbow_r - pose.shoulder_r).length();
+  float const shoulder_to_elbow_dist =
+      (pose.elbow_r - pose.shoulder_r).length();
   float const elbow_to_hand_dist = (target_position - pose.elbow_r).length();
   EXPECT_GT(shoulder_to_elbow_dist, 0.0F);
   EXPECT_GT(elbow_to_hand_dist, 0.0F);
@@ -215,7 +216,8 @@ TEST_F(HumanoidPoseControllerTest, SolveKneeIKPreventsGroundPenetration) {
   QVector3D const knee = controller.solveKneeIK(true, hip, foot, height_scale);
 
   // Knee should be at or above the floor threshold
-  float const min_knee_y = HumanProportions::GROUND_Y + pose.foot_y_offset * 0.5F;
+  float const min_knee_y =
+      HumanProportions::GROUND_Y + pose.foot_y_offset * 0.5F;
   EXPECT_GE(knee.y(), min_knee_y - 0.001F); // Small epsilon for floating point
 }
 
@@ -293,7 +295,8 @@ TEST_F(HumanoidPoseControllerTest, LookAtMovesHeadTowardTarget) {
   HumanoidPoseController controller(pose, anim_ctx);
 
   QVector3D const original_head_pos = pose.head_pos;
-  QVector3D const target(0.5F, pose.head_pos.y(), 2.0F); // Target in front and to the right
+  QVector3D const target(0.5F, pose.head_pos.y(),
+                         2.0F); // Target in front and to the right
 
   controller.look_at(target);
 
@@ -306,7 +309,7 @@ TEST_F(HumanoidPoseControllerTest, LookAtWithSamePositionDoesNothing) {
   HumanoidPoseController controller(pose, anim_ctx);
 
   QVector3D const original_head_pos = pose.head_pos;
-  
+
   controller.look_at(pose.head_pos); // Look at current position
 
   // Head should remain unchanged
@@ -335,9 +338,9 @@ TEST_F(HumanoidPoseControllerTest, GetShoulderYReflectsKneeling) {
   HumanoidPoseController controller(pose, anim_ctx);
 
   float const original_shoulder_y = controller.get_shoulder_y(true);
-  
+
   controller.kneel(0.5F);
-  
+
   float const kneeling_shoulder_y = controller.get_shoulder_y(true);
 
   // After kneeling, shoulder should be lower

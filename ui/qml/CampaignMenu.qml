@@ -6,14 +6,13 @@ import StandardOfIron.UI 1.0
 Item {
     id: root
 
+    property var campaigns: (typeof game !== "undefined" && game.available_campaigns) ? game.available_campaigns : []
+
     signal missionSelected(string campaignId)
     signal cancelled()
 
-    property var campaigns: (typeof game !== "undefined" && game.available_campaigns) ? game.available_campaigns : []
-
     anchors.fill: parent
     focus: true
-
     Keys.onPressed: function(event) {
         if (event.key === Qt.Key_Escape) {
             root.cancelled();
@@ -43,7 +42,6 @@ Item {
             anchors.margins: Theme.spacingXLarge
             spacing: Theme.spacingLarge
 
-            // Header
             RowLayout {
                 Layout.fillWidth: true
                 spacing: Theme.spacingMedium
@@ -60,6 +58,7 @@ Item {
                     text: qsTr("← Back")
                     onClicked: root.cancelled()
                 }
+
             }
 
             Rectangle {
@@ -68,7 +67,6 @@ Item {
                 color: Theme.border
             }
 
-            // Mission list
             ScrollView {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
@@ -137,6 +135,7 @@ Item {
                                             font.pointSize: Theme.fontSizeSmall
                                             font.bold: true
                                         }
+
                                     }
 
                                     Rectangle {
@@ -154,7 +153,9 @@ Item {
                                             color: Theme.textDim
                                             font.pointSize: Theme.fontSizeSmall
                                         }
+
                                     }
+
                                 }
 
                                 Label {
@@ -166,6 +167,7 @@ Item {
                                     Layout.fillWidth: true
                                     font.pointSize: Theme.fontSizeMedium
                                 }
+
                             }
 
                             Text {
@@ -173,24 +175,29 @@ Item {
                                 font.pointSize: Theme.fontSizeHero
                                 color: Theme.textHint
                             }
+
                         }
 
                         Behavior on color {
                             ColorAnimation {
                                 duration: Theme.animNormal
                             }
+
                         }
 
                         Behavior on border.color {
                             ColorAnimation {
                                 duration: Theme.animNormal
                             }
+
                         }
+
                     }
+
                 }
+
             }
 
-            // Empty state
             Label {
                 visible: root.campaigns.length === 0
                 text: qsTr("No campaign missions available")
@@ -200,10 +207,11 @@ Item {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
             }
+
         }
+
     }
 
-    // Mission detail panel
     Rectangle {
         id: missionDetailPanel
 
@@ -230,7 +238,8 @@ Item {
 
             MouseArea {
                 anchors.fill: parent
-                onClicked: {} // Prevent click-through
+                onClicked: {
+                }
             }
 
             ColumnLayout {
@@ -238,7 +247,6 @@ Item {
                 anchors.margins: Theme.spacingXLarge
                 spacing: Theme.spacingLarge
 
-                // Title
                 Label {
                     text: missionDetailPanel.campaignData ? (missionDetailPanel.campaignData.title || "") : ""
                     color: Theme.textMain
@@ -247,7 +255,6 @@ Item {
                     Layout.fillWidth: true
                 }
 
-                // Description
                 Label {
                     text: missionDetailPanel.campaignData ? (missionDetailPanel.campaignData.description || "") : ""
                     color: Theme.textSubLite
@@ -256,7 +263,6 @@ Item {
                     font.pointSize: Theme.fontSizeMedium
                 }
 
-                // Black placeholder scene
                 Rectangle {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
@@ -272,9 +278,9 @@ Item {
                         font.pointSize: Theme.fontSizeLarge
                         horizontalAlignment: Text.AlignHCenter
                     }
+
                 }
 
-                // Buttons
                 RowLayout {
                     Layout.fillWidth: true
                     spacing: Theme.spacingMedium
@@ -292,13 +298,18 @@ Item {
                         text: qsTr("Start Mission")
                         enabled: missionDetailPanel.campaignData ? (missionDetailPanel.campaignData.unlocked || false) : false
                         onClicked: {
-                            if (missionDetailPanel.campaignData) {
+                            if (missionDetailPanel.campaignData)
                                 root.missionSelected(missionDetailPanel.campaignData.id);
-                            }
+
                         }
                     }
+
                 }
+
             }
+
         }
+
     }
+
 }

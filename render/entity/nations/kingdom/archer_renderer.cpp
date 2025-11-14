@@ -107,16 +107,17 @@ public:
     float const bow_x = 0.0F;
 
     if (anim.is_in_hold_mode || anim.is_exiting_hold) {
-      float const t = anim.is_in_hold_mode ? 1.0F : (1.0F - anim.hold_exit_progress);
+      float const t =
+          anim.is_in_hold_mode ? 1.0F : (1.0F - anim.hold_exit_progress);
 
       controller.kneel(t * k_kneel_depth_multiplier);
       controller.lean(QVector3D(0.0F, 0.0F, 1.0F),
                       t * k_lean_amount_multiplier);
 
-      QVector3D const hold_hand_l(bow_x - 0.15F, controller.get_shoulder_y(true) + 0.30F,
-                                  0.55F);
-      QVector3D const hold_hand_r(bow_x + 0.12F, controller.get_shoulder_y(false) + 0.15F,
-                                  0.10F);
+      QVector3D const hold_hand_l(
+          bow_x - 0.15F, controller.get_shoulder_y(true) + 0.30F, 0.55F);
+      QVector3D const hold_hand_r(
+          bow_x + 0.12F, controller.get_shoulder_y(false) + 0.15F, 0.10F);
       QVector3D const normal_hand_l(bow_x - 0.05F + arm_asymmetry,
                                     HP::SHOULDER_Y + 0.05F + arm_height_jitter,
                                     0.55F);

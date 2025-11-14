@@ -137,18 +137,18 @@ public:
       if (color_roll < 0.60F) {
 
         v.facial_hair.color = QVector3D(0.18F + nextRand(beard_seed) * 0.10F,
-                                       0.14F + nextRand(beard_seed) * 0.08F,
-                                       0.10F + nextRand(beard_seed) * 0.06F);
+                                        0.14F + nextRand(beard_seed) * 0.08F,
+                                        0.10F + nextRand(beard_seed) * 0.06F);
       } else if (color_roll < 0.85F) {
 
         v.facial_hair.color = QVector3D(0.30F + nextRand(beard_seed) * 0.12F,
-                                       0.24F + nextRand(beard_seed) * 0.10F,
-                                       0.16F + nextRand(beard_seed) * 0.08F);
+                                        0.24F + nextRand(beard_seed) * 0.10F,
+                                        0.16F + nextRand(beard_seed) * 0.08F);
       } else {
 
         v.facial_hair.color = QVector3D(0.35F + nextRand(beard_seed) * 0.10F,
-                                       0.20F + nextRand(beard_seed) * 0.08F,
-                                       0.12F + nextRand(beard_seed) * 0.06F);
+                                        0.20F + nextRand(beard_seed) * 0.08F,
+                                        0.12F + nextRand(beard_seed) * 0.06F);
       }
 
       v.facial_hair.thickness = 0.85F + nextRand(beard_seed) * 0.35F;
@@ -183,16 +183,17 @@ public:
     float const bow_x = 0.0F;
 
     if (anim.is_in_hold_mode || anim.is_exiting_hold) {
-      float const t = anim.is_in_hold_mode ? 1.0F : (1.0F - anim.hold_exit_progress);
+      float const t =
+          anim.is_in_hold_mode ? 1.0F : (1.0F - anim.hold_exit_progress);
 
       controller.kneel(t * k_kneel_depth_multiplier);
       controller.lean(QVector3D(0.0F, 0.0F, 1.0F),
                       t * k_lean_amount_multiplier);
 
-      QVector3D const hold_hand_l(bow_x - 0.15F, controller.get_shoulder_y(true) + 0.30F,
-                                  0.55F);
-      QVector3D const hold_hand_r(bow_x + 0.12F, controller.get_shoulder_y(false) + 0.15F,
-                                  0.10F);
+      QVector3D const hold_hand_l(
+          bow_x - 0.15F, controller.get_shoulder_y(true) + 0.30F, 0.55F);
+      QVector3D const hold_hand_r(
+          bow_x + 0.12F, controller.get_shoulder_y(false) + 0.15F, 0.10F);
       QVector3D const normal_hand_l(bow_x - 0.05F + arm_asymmetry,
                                     HP::SHOULDER_Y + 0.05F + arm_height_jitter,
                                     0.55F);
