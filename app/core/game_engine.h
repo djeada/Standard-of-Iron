@@ -98,9 +98,11 @@ public:
   Q_PROPERTY(int max_troops_per_player READ max_troops_per_player NOTIFY
                  troop_countChanged)
   Q_PROPERTY(
-      QVariantList availableMaps READ availableMaps NOTIFY availableMapsChanged)
-  Q_PROPERTY(bool mapsLoading READ mapsLoading NOTIFY mapsLoadingChanged)
-  Q_PROPERTY(QVariantList availableNations READ availableNations CONSTANT)
+      QVariantList available_maps READ available_maps NOTIFY available_maps_changed)
+  Q_PROPERTY(bool maps_loading READ maps_loading NOTIFY maps_loading_changed)
+  Q_PROPERTY(QVariantList available_nations READ available_nations CONSTANT)
+  Q_PROPERTY(QVariantList available_campaigns READ available_campaigns NOTIFY
+                 available_campaigns_changed)
   Q_PROPERTY(int enemyTroopsDefeated READ enemyTroopsDefeated NOTIFY
                  enemyTroopsDefeatedChanged)
   Q_PROPERTY(QVariantList ownerInfo READ getOwnerInfo NOTIFY ownerInfoChanged)
@@ -132,7 +134,7 @@ public:
   Q_INVOKABLE void cameraOrbitDirection(int direction, bool shift);
   Q_INVOKABLE void cameraFollowSelection(bool enable);
   Q_INVOKABLE void cameraSetFollowLerp(float alpha);
-  Q_INVOKABLE void startLoadingMaps();
+  Q_INVOKABLE void start_loading_maps();
 
   Q_INVOKABLE void setPaused(bool paused) { m_runtime.paused = paused; }
   Q_INVOKABLE void setGameSpeed(float speed) {
@@ -175,21 +177,24 @@ public:
   Q_INVOKABLE [[nodiscard]] QVariantMap getSelectedProductionState() const;
   Q_INVOKABLE [[nodiscard]] QString getSelectedUnitsCommandMode() const;
   Q_INVOKABLE void setRallyAtScreen(qreal sx, qreal sy);
-  Q_INVOKABLE [[nodiscard]] QVariantList availableMaps() const;
-  [[nodiscard]] QVariantList availableNations() const;
-  [[nodiscard]] bool mapsLoading() const { return m_mapsLoading; }
+  Q_INVOKABLE [[nodiscard]] QVariantList available_maps() const;
+  [[nodiscard]] QVariantList available_nations() const;
+  [[nodiscard]] QVariantList available_campaigns() const;
+  [[nodiscard]] bool maps_loading() const { return m_maps_loading; }
   Q_INVOKABLE void
-  startSkirmish(const QString &map_path,
+  start_skirmish(const QString &map_path,
                 const QVariantList &playerConfigs = QVariantList());
-  Q_INVOKABLE void openSettings();
-  Q_INVOKABLE void loadSave();
-  Q_INVOKABLE void saveGame(const QString &filename = "savegame.json");
-  Q_INVOKABLE void saveGameToSlot(const QString &slotName);
-  Q_INVOKABLE void loadGameFromSlot(const QString &slotName);
-  Q_INVOKABLE [[nodiscard]] QVariantList getSaveSlots() const;
-  Q_INVOKABLE void refreshSaveSlots();
-  Q_INVOKABLE bool deleteSaveSlot(const QString &slotName);
-  Q_INVOKABLE void exitGame();
+  Q_INVOKABLE void start_campaign_mission(const QString &campaign_id);
+  Q_INVOKABLE void mark_current_mission_completed();
+  Q_INVOKABLE void open_settings();
+  Q_INVOKABLE void load_save();
+  Q_INVOKABLE void save_game(const QString &filename = "savegame.json");
+  Q_INVOKABLE void save_game_to_slot(const QString &slot_name);
+  Q_INVOKABLE void load_game_from_slot(const QString &slot_name);
+  Q_INVOKABLE [[nodiscard]] QVariantList get_save_slots() const;
+  Q_INVOKABLE void refresh_save_slots();
+  Q_INVOKABLE bool delete_save_slot(const QString &slot_name);
+  Q_INVOKABLE void exit_game();
   Q_INVOKABLE [[nodiscard]] QVariantList getOwnerInfo() const;
 
   QObject *audio_system();
@@ -297,8 +302,10 @@ private:
   QObject *m_selectedUnitsModel = nullptr;
   int m_enemyTroopsDefeated = 0;
   int m_selectedPlayerId = 1;
-  QVariantList m_availableMaps;
-  bool m_mapsLoading = false;
+  QVariantList m_available_maps;
+  QVariantList m_available_campaigns;
+  bool m_maps_loading = false;
+  QString m_current_campaign_id;
   Engine::Core::ScopedEventSubscription<Engine::Core::UnitDiedEvent>
       m_unitDiedSubscription;
   Engine::Core::ScopedEventSubscription<Engine::Core::UnitSpawnedEvent>
@@ -311,6 +318,7 @@ private:
   void updateAmbientState(float dt);
   [[nodiscard]] bool isPlayerInCombat() const;
   static void loadAudioResources();
+  void load_campaigns();
 signals:
   void selectedUnitsChanged();
   void selectedUnitsDataChanged();
@@ -319,7 +327,9 @@ signals:
   void cursorModeChanged();
   void globalCursorChanged();
   void troop_countChanged();
-  void availableMapsChanged();
+  void available_maps_changed();
+  void maps_loading_changed();
+  void available_campaigns_changed();
   void ownerInfoChanged();
   void selectedPlayerIdChanged();
   void lastErrorChanged();

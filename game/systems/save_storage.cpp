@@ -23,7 +23,7 @@ namespace Game::Systems {
 
 namespace {
 constexpr const char *k_driver_name = "QSQLITE";
-constexpr int k_current_schema_version = 1;
+constexpr int k_current_schema_version = 2;
 
 auto buildConnectionName(const SaveStorage *instance) -> QString {
   return QStringLiteral("SaveStorage_%1")
@@ -276,6 +276,114 @@ auto SaveStorage::listSlots(QString *out_error) const -> QVariantList {
   return result;
 }
 
+auto SaveStorage::list_campaigns(QString *out_error) const -> QVariantList {
+  QVariantList result;
+  if (!const_cast<SaveStorage *>(this)->initialize(out_error)) {
+    return result;
+  }
+
+  QSqlQuery query(m_database);
+  const QString sql = QStringLiteral(
+      "SELECT c.id, c.title, c.description, c.map_path, c.order_index, "
+      "COALESCE(p.completed, 0) as completed, COALESCE(p.unlocked, 0) as unlocked, "
+      "p.completed_at "
+      "FROM campaigns c "
+      "LEFT JOIN campaign_progress p ON c.id = p.campaign_id "
+      "ORDER BY c.order_index ASC");
+
+  if (!query.exec(sql)) {
+    if (out_error != nullptr) {
+      *out_error = QStringLiteral("Failed to list campaigns: %1")
+                       .arg(lastErrorString(query.lastError()));
+    }
+    return result;
+  }
+
+  while (query.next()) {
+    QVariantMap campaign;
+    campaign.insert(QStringLiteral("id"), query.value(0).toString());
+    campaign.insert(QStringLiteral("title"), query.value(1).toString());
+    campaign.insert(QStringLiteral("description"), query.value(2).toString());
+    campaign.insert(QStringLiteral("mapPath"), query.value(3).toString());
+    campaign.insert(QStringLiteral("orderIndex"), query.value(4).toInt());
+    campaign.insert(QStringLiteral("completed"), query.value(5).toInt() != 0);
+    campaign.insert(QStringLiteral("unlocked"), query.value(6).toInt() != 0);
+    campaign.insert(QStringLiteral("completedAt"), query.value(7).toString());
+    result.append(campaign);
+  }
+
+  return result;
+}
+
+auto SaveStorage::get_campaign_progress(const QString &campaign_id,
+                                     QString *out_error) const -> QVariantMap {
+  QVariantMap result;
+  if (!const_cast<SaveStorage *>(this)->initialize(out_error)) {
+    return result;
+  }
+
+  QSqlQuery query(m_database);
+  query.prepare(QStringLiteral(
+      "SELECT completed, unlocked, completed_at FROM campaign_progress "
+      "WHERE campaign_id = :campaign_id"));
+  query.bindValue(QStringLiteral(":campaign_id"), campaign_id);
+
+  if (!query.exec()) {
+    if (out_error != nullptr) {
+      *out_error = QStringLiteral("Failed to get campaign progress: %1")
+                       .arg(lastErrorString(query.lastError()));
+    }
+    return result;
+  }
+
+  if (query.next()) {
+    result.insert(QStringLiteral("completed"), query.value(0).toInt() != 0);
+    result.insert(QStringLiteral("unlocked"), query.value(1).toInt() != 0);
+    result.insert(QStringLiteral("completedAt"), query.value(2).toString());
+  }
+
+  return result;
+}
+
+auto SaveStorage::mark_campaign_completed(const QString &campaign_id,
+                                       QString *out_error) -> bool {
+  if (!initialize(out_error)) {
+    return false;
+  }
+
+  TransactionGuard transaction(m_database);
+  if (!transaction.begin(out_error)) {
+    return false;
+  }
+
+  const QString now_iso =
+      QDateTime::currentDateTimeUtc().toString(Qt::ISODateWithMs);
+
+  QSqlQuery query(m_database);
+  query.prepare(QStringLiteral(
+      "INSERT INTO campaign_progress (campaign_id, completed, unlocked, completed_at) "
+      "VALUES (:campaign_id, 1, 1, :completed_at) "
+      "ON CONFLICT(campaign_id) DO UPDATE SET "
+      "completed = 1, completed_at = excluded.completed_at"));
+  query.bindValue(QStringLiteral(":campaign_id"), campaign_id);
+  query.bindValue(QStringLiteral(":completed_at"), now_iso);
+
+  if (!query.exec()) {
+    if (out_error != nullptr) {
+      *out_error = QStringLiteral("Failed to mark campaign as completed: %1")
+                       .arg(lastErrorString(query.lastError()));
+    }
+    transaction.rollback();
+    return false;
+  }
+
+  if (!transaction.commit(out_error)) {
+    return false;
+  }
+
+  return true;
+}
+
 auto SaveStorage::deleteSlot(const QString &slotName,
                              QString *out_error) -> bool {
   if (!initialize(out_error)) {
@@ -468,6 +576,12 @@ auto SaveStorage::migrateSchema(int fromVersion,
       }
       version = 1;
       break;
+    case 1:
+      if (!migrate_to_2(out_error)) {
+        return false;
+      }
+      version = 2;
+      break;
     default:
       if (out_error != nullptr) {
         *out_error =
@@ -475,6 +589,79 @@ auto SaveStorage::migrateSchema(int fromVersion,
       }
       return false;
     }
+  }
+
+  return true;
+}
+
+auto SaveStorage::migrate_to_2(QString *out_error) const -> bool {
+  // Create campaigns table
+  QSqlQuery query(m_database);
+  const QString create_campaigns_sql = QStringLiteral(
+      "CREATE TABLE IF NOT EXISTS campaigns ("
+      "id TEXT PRIMARY KEY NOT NULL, "
+      "title TEXT NOT NULL, "
+      "description TEXT NOT NULL, "
+      "map_path TEXT NOT NULL, "
+      "order_index INTEGER NOT NULL DEFAULT 0"
+      ")");
+
+  if (!query.exec(create_campaigns_sql)) {
+    if (out_error != nullptr) {
+      *out_error = QStringLiteral("Failed to create campaigns table: %1")
+                       .arg(lastErrorString(query.lastError()));
+    }
+    return false;
+  }
+
+  // Create campaign_progress table
+  QSqlQuery progress_query(m_database);
+  const QString create_progress_sql = QStringLiteral(
+      "CREATE TABLE IF NOT EXISTS campaign_progress ("
+      "campaign_id TEXT PRIMARY KEY NOT NULL, "
+      "completed INTEGER NOT NULL DEFAULT 0, "
+      "unlocked INTEGER NOT NULL DEFAULT 0, "
+      "completed_at TEXT, "
+      "FOREIGN KEY(campaign_id) REFERENCES campaigns(id) ON DELETE CASCADE"
+      ")");
+
+  if (!progress_query.exec(create_progress_sql)) {
+    if (out_error != nullptr) {
+      *out_error = QStringLiteral("Failed to create campaign_progress table: %1")
+                       .arg(lastErrorString(progress_query.lastError()));
+    }
+    return false;
+  }
+
+  // Insert initial mission: Carthage vs Rome
+  QSqlQuery insert_query(m_database);
+  const QString insert_campaign_sql = QStringLiteral(
+      "INSERT INTO campaigns (id, title, description, map_path, order_index) "
+      "VALUES ('carthage_vs_rome', 'Carthage vs Rome', "
+      "'Historic battle between Carthage and the Roman Republic. "
+      "Command Carthaginian forces to defeat the Roman barracks.', "
+      "':/assets/maps/map_rivers.json', 0)");
+
+  if (!insert_query.exec(insert_campaign_sql)) {
+    if (out_error != nullptr) {
+      *out_error = QStringLiteral("Failed to insert initial campaign: %1")
+                       .arg(lastErrorString(insert_query.lastError()));
+    }
+    return false;
+  }
+
+  // Initialize progress for the mission (unlocked by default)
+  QSqlQuery progress_insert_query(m_database);
+  const QString insert_progress_sql = QStringLiteral(
+      "INSERT INTO campaign_progress (campaign_id, completed, unlocked) "
+      "VALUES ('carthage_vs_rome', 0, 1)");
+
+  if (!progress_insert_query.exec(insert_progress_sql)) {
+    if (out_error != nullptr) {
+      *out_error = QStringLiteral("Failed to initialize campaign progress: %1")
+                       .arg(lastErrorString(progress_insert_query.lastError()));
+    }
+    return false;
   }
 
   return true;

@@ -3,6 +3,7 @@
         <file>ui/qml/Main.qml</file>
         <file>ui/qml/MainMenu.qml</file>
         <file>ui/qml/MapSelect.qml</file>
+        <file>ui/qml/CampaignMenu.qml</file>
         <file>ui/qml/MapListPanel.qml</file>
         <file>ui/qml/PlayerListItem.qml</file>
         <file>ui/qml/PlayerConfigPanel.qml</file>

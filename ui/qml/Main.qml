@@ -132,6 +132,10 @@ ApplicationWindow {
             mapSelect.visible = true;
             mainWindow.menuVisible = false;
         }
+        onOpenCampaign: function() {
+            campaignMenu.visible = true;
+            mainWindow.menuVisible = false;
+        }
         onSaveGame: function() {
             if (mainWindow.gameStarted) {
                 saveGamePanel.visible = true;
@@ -147,8 +151,8 @@ ApplicationWindow {
             mainWindow.menuVisible = false;
         }
         onExitRequested: function() {
-            if (typeof game !== 'undefined' && game.exitGame)
-                game.exitGame();
+            if (typeof game !== 'undefined' && game.exit_game)
+                game.exit_game();
 
         }
     }
@@ -167,8 +171,8 @@ ApplicationWindow {
         }
         onMapChosen: function(map_path, playerConfigs) {
             console.log("Main: onMapChosen received", map_path, "with", playerConfigs.length, "player configs");
-            if (typeof game !== 'undefined' && game.startSkirmish)
-                game.startSkirmish(map_path, playerConfigs);
+            if (typeof game !== 'undefined' && game.start_skirmish)
+                game.start_skirmish(map_path, playerConfigs);
 
             mapSelect.visible = false;
             mainWindow.menuVisible = false;
@@ -178,6 +182,35 @@ ApplicationWindow {
         }
         onCancelled: function() {
             mapSelect.visible = false;
+            mainWindow.menuVisible = true;
+        }
+    }
+
+    CampaignMenu {
+        id: campaignMenu
+
+        anchors.fill: parent
+        z: 21
+        visible: false
+        onVisibleChanged: {
+            if (visible) {
+                campaignMenu.forceActiveFocus();
+                gameViewItem.focus = false;
+            }
+        }
+        onMissionSelected: function(campaignId) {
+            console.log("Main: Mission selected:", campaignId);
+            if (typeof game !== 'undefined' && game.start_campaign_mission) {
+                game.start_campaign_mission(campaignId);
+                campaignMenu.visible = false;
+                mainWindow.menuVisible = false;
+                mainWindow.gameStarted = true;
+                mainWindow.gamePaused = false;
+                gameViewItem.forceActiveFocus();
+            }
+        }
+        onCancelled: function() {
+            campaignMenu.visible = false;
             mainWindow.menuVisible = true;
         }
     }
@@ -196,8 +229,8 @@ ApplicationWindow {
         }
         onSaveRequested: function(slotName) {
             console.log("Main: Save requested for slot:", slotName);
-            if (typeof game !== 'undefined' && game.saveGameToSlot)
-                game.saveGameToSlot(slotName);
+            if (typeof game !== 'undefined' && game.save_gameToSlot)
+                game.save_gameToSlot(slotName);
 
             saveGamePanel.visible = false;
             mainWindow.menuVisible = true;
@@ -222,8 +255,8 @@ ApplicationWindow {
         }
         onLoadRequested: function(slotName) {
             console.log("Main: Load requested for slot:", slotName);
-            if (typeof game !== 'undefined' && game.loadGameFromSlot) {
-                game.loadGameFromSlot(slotName);
+            if (typeof game !== 'undefined' && game.load_game_from_slot) {
+                game.load_game_from_slot(slotName);
                 loadGamePanel.visible = false;
                 mainWindow.menuVisible = false;
                 mainWindow.gameStarted = true;

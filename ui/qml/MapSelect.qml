@@ -6,8 +6,8 @@ import StandardOfIron.UI 1.0
 Item {
     id: root
 
-    property var mapsModel: (typeof game !== "undefined" && game.availableMaps) ? game.availableMaps : []
-    property bool mapsLoading: (typeof game !== "undefined" && game.mapsLoading) ? game.mapsLoading : false
+    property var mapsModel: (typeof game !== "undefined" && game.available_maps) ? game.available_maps : []
+    property bool mapsLoading: (typeof game !== "undefined" && game.maps_loading) ? game.maps_loading : false
     property int selectedMapIndex: -1
     property var selectedMapData: null
     property string selectedMapPath: ""
@@ -18,8 +18,8 @@ Item {
     signal cancelled()
 
     function refreshAvailableNations() {
-        if (typeof game !== "undefined" && game.availableNations)
-            availableNations = game.availableNations;
+        if (typeof game !== "undefined" && game.available_nations)
+            availableNations = game.available_nations;
         else
             availableNations = [];
     }
@@ -288,8 +288,8 @@ Item {
             selectedMapPath = "";
             playersModel.clear();
             refreshAvailableNations();
-            if (typeof game !== "undefined" && game.startLoadingMaps)
-                game.startLoadingMaps();
+            if (typeof game !== "undefined" && game.start_loading_maps)
+                game.start_loading_maps();
 
         }
     }
