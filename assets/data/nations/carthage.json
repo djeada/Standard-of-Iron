@@ -143,6 +143,41 @@
         "individuals_per_unit": 9,
         "max_units_per_row": 3
       }
+    },
+    {
+      "id": "healer",
+      "display_name": "Sacred Band Healer",
+      "production": {
+        "cost": 70,
+        "build_time": 6.8,
+        "priority": 7,
+        "is_melee": false
+      },
+      "combat": {
+        "health": 95,
+        "max_health": 95,
+        "speed": 2.7,
+        "vision_range": 14.0,
+        "ranged_range": 7.5,
+        "ranged_damage": 4,
+        "ranged_cooldown": 2.2,
+        "melee_range": 1.5,
+        "melee_damage": 3,
+        "melee_cooldown": 1.5,
+        "can_ranged": false,
+        "can_melee": true
+      },
+      "visuals": {
+        "render_scale": 0.54,
+        "selection_ring_size": 1.2,
+        "selection_ring_y_offset": 0.0,
+        "selection_ring_ground_offset": 0.0,
+        "renderer_id": "troops/carthage/healer"
+      },
+      "formation": {
+        "individuals_per_unit": 1,
+        "max_units_per_row": 1
+      }
     }
   ]
 }
