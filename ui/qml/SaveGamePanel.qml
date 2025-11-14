@@ -171,10 +171,10 @@ Item {
 
                             function loadFromGame() {
                                 clear();
-                                if (typeof game === 'undefined' || !game.getSaveSlots)
+                                if (typeof game === 'undefined' || !game.get_save_slots)
                                     return ;
 
-                                var slots = game.getSaveSlots();
+                                var slots = game.get_save_slots();
                                 for (var i = 0; i < slots.length; i++) {
                                     append({
                                         "slotName": slots[i].slotName || slots[i].name,

@@ -194,6 +194,38 @@ auto SaveLoadService::deleteSaveSlot(const QString &slotName) -> bool {
   return true;
 }
 
+auto SaveLoadService::list_campaigns(QString *out_error) const -> QVariantList {
+  if (!m_storage) {
+    if (out_error != nullptr) {
+      *out_error = "Storage not initialized";
+    }
+    return {};
+  }
+  return m_storage->list_campaigns(out_error);
+}
+
+auto SaveLoadService::get_campaign_progress(const QString &campaign_id,
+                                         QString *out_error) const -> QVariantMap {
+  if (!m_storage) {
+    if (out_error != nullptr) {
+      *out_error = "Storage not initialized";
+    }
+    return {};
+  }
+  return m_storage->get_campaign_progress(campaign_id, out_error);
+}
+
+auto SaveLoadService::mark_campaign_completed(const QString &campaign_id,
+                                           QString *out_error) -> bool {
+  if (!m_storage) {
+    if (out_error != nullptr) {
+      *out_error = "Storage not initialized";
+    }
+    return false;
+  }
+  return m_storage->mark_campaign_completed(campaign_id, out_error);
+}
+
 void SaveLoadService::openSettings() { qInfo() << "Open settings requested"; }
 
 void SaveLoadService::exitGame() {
