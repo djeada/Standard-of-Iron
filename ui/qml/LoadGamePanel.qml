@@ -159,7 +159,7 @@ Item {
 
                             function loadFromGame() {
                                 clear();
-                                if (typeof game === 'undefined' || !game.getSaveSlots) {
+                                if (typeof game === 'undefined' || !game.get_save_slots) {
                                     append({
                                         "slotName": qsTr("No saves found"),
                                         "title": "",
@@ -171,7 +171,7 @@ Item {
                                     });
                                     return ;
                                 }
-                                var slots = game.getSaveSlots();
+                                var slots = game.get_save_slots();
                                 for (var i = 0; i < slots.length; i++) {
                                     append({
                                         "slotName": slots[i].slotName || slots[i].name,
@@ -397,8 +397,8 @@ Item {
         modal: true
         standardButtons: Dialog.Yes | Dialog.No
         onAccepted: {
-            if (typeof game !== 'undefined' && game.deleteSaveSlot) {
-                if (game.deleteSaveSlot(slotName)) {
+            if (typeof game !== 'undefined' && game.delete_save_slot) {
+                if (game.delete_save_slot(slotName)) {
                     loadListModel.remove(slotIndex);
                     if (loadListModel.count === 0)
                         loadListModel.append({
