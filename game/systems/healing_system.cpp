@@ -1,7 +1,9 @@
 #include "healing_system.h"
 #include "../core/component.h"
 #include "../core/world.h"
+#include "arrow_system.h"
 #include <cmath>
+#include <qvectornd.h>
 #include <vector>
 
 namespace Game::Systems {
@@ -13,6 +15,7 @@ void HealingSystem::update(Engine::Core::World *world, float deltaTime) {
 void HealingSystem::processHealing(Engine::Core::World *world,
                                    float deltaTime) {
   auto healers = world->getEntitiesWith<Engine::Core::HealerComponent>();
+  auto *arrow_system = world->getSystem<ArrowSystem>();
 
   for (auto *healer : healers) {
     if (healer->hasComponent<Engine::Core::PendingRemovalComponent>()) {
@@ -39,6 +42,7 @@ void HealingSystem::processHealing(Engine::Core::World *world,
       continue;
     }
 
+    bool healed_any = false;
     auto units = world->getEntitiesWith<Engine::Core::UnitComponent>();
     for (auto *target : units) {
       if (target->hasComponent<Engine::Core::PendingRemovalComponent>()) {
@@ -71,10 +75,25 @@ void HealingSystem::processHealing(Engine::Core::World *world,
         if (target_unit->health > target_unit->max_health) {
           target_unit->health = target_unit->max_health;
         }
+
+        if (arrow_system != nullptr) {
+          QVector3D const healer_pos(healer_transform->position.x,
+                                     healer_transform->position.y + 1.0F,
+                                     healer_transform->position.z);
+          QVector3D const target_pos(target_transform->position.x,
+                                     target_transform->position.y + 1.0F,
+                                     target_transform->position.z);
+          arrow_system->spawnArrow(healer_pos, target_pos,
+                                   QVector3D(0.2F, 1.0F, 0.4F), 6.0F);
+        }
+
+        healed_any = true;
       }
     }
 
-    healer_comp->timeSinceLastHeal = 0.0F;
+    if (healed_any) {
+      healer_comp->timeSinceLastHeal = 0.0F;
+    }
   }
 }
 
