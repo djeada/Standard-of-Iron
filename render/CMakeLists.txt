@@ -53,9 +53,17 @@ add_library(render_gl STATIC
     horse/horse_animation_controller.cpp
     entity/horse_renderer.cpp
     entity/mounted_knight_renderer_base.cpp
+    entity/horse_archer_renderer_base.cpp
+    entity/horse_spearman_renderer_base.cpp
     entity/nations/roman/horse_swordsman_renderer.cpp
     entity/nations/carthage/horse_swordsman_renderer.cpp
     entity/nations/kingdom/horse_swordsman_renderer.cpp
+    entity/nations/roman/horse_archer_renderer.cpp
+    entity/nations/carthage/horse_archer_renderer.cpp
+    entity/nations/kingdom/horse_archer_renderer.cpp
+    entity/nations/roman/horse_spearman_renderer.cpp
+    entity/nations/carthage/horse_spearman_renderer.cpp
+    entity/nations/kingdom/horse_spearman_renderer.cpp
     entity/barracks_renderer.cpp
     entity/nations/kingdom/barracks_renderer.cpp
     entity/nations/roman/barracks_renderer.cpp

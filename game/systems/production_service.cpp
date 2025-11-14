@@ -140,6 +140,11 @@ auto ProductionService::getSelectedBarracksState(
     return false;
   }
   outState.has_barracks = true;
+  if (auto *unit = e->getComponent<Engine::Core::UnitComponent>()) {
+    outState.nation_id = resolve_nation_id(unit, owner_id);
+  } else {
+    outState.nation_id = NationRegistry::instance().default_nation_id();
+  }
   if (auto *p = e->getComponent<Engine::Core::ProductionComponent>()) {
     outState.inProgress = p->inProgress;
     outState.product_type = p->product_type;

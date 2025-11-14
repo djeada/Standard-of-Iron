@@ -2,14 +2,20 @@
 #include "../scene_renderer.h"
 #include "barracks_renderer.h"
 #include "nations/carthage/archer_renderer.h"
+#include "nations/carthage/horse_archer_renderer.h"
+#include "nations/carthage/horse_spearman_renderer.h"
 #include "nations/carthage/horse_swordsman_renderer.h"
 #include "nations/carthage/spearman_renderer.h"
 #include "nations/carthage/swordsman_renderer.h"
 #include "nations/kingdom/archer_renderer.h"
+#include "nations/kingdom/horse_archer_renderer.h"
+#include "nations/kingdom/horse_spearman_renderer.h"
 #include "nations/kingdom/horse_swordsman_renderer.h"
 #include "nations/kingdom/spearman_renderer.h"
 #include "nations/kingdom/swordsman_renderer.h"
 #include "nations/roman/archer_renderer.h"
+#include "nations/roman/horse_archer_renderer.h"
+#include "nations/roman/horse_spearman_renderer.h"
 #include "nations/roman/horse_swordsman_renderer.h"
 #include "nations/roman/spearman_renderer.h"
 #include "nations/roman/swordsman_renderer.h"
@@ -47,6 +53,15 @@ void registerBuiltInEntityRenderers(EntityRendererRegistry &registry) {
   Kingdom::registerMountedKnightRenderer(registry);
   Roman::registerMountedKnightRenderer(registry);
   Carthage::registerMountedKnightRenderer(registry);
+
+  Kingdom::register_horse_archer_renderer(registry);
+  Roman::register_horse_archer_renderer(registry);
+  Carthage::register_horse_archer_renderer(registry);
+
+  Kingdom::register_horse_spearman_renderer(registry);
+  Roman::register_horse_spearman_renderer(registry);
+  Carthage::register_horse_spearman_renderer(registry);
+
   register_barracks_renderer(registry);
 }
 
