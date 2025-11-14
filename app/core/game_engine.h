@@ -335,4 +335,5 @@ signals:
   void lastErrorChanged();
   void mapsLoadingChanged();
   void saveSlotsChanged();
+  void holdModeChanged(bool active);
 };
