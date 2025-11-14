@@ -204,9 +204,9 @@ vec3 computeAmbient(vec3 normal) {
   return sky * (0.25 + 0.55 * up) + ground * (0.10 + 0.35 * down);
 }
 
-MaterialSample makeLeatherSample(
-    vec3 baseColor, vec3 Nw, vec3 Tw, vec3 Bw, vec3 worldPos, float tension,
-    float bodyHeight, float layer, float wetMask, float curvature) {
+MaterialSample makeLeatherSample(vec3 baseColor, vec3 Nw, vec3 Tw, vec3 Bw,
+                                 vec3 worldPos, float tension, float bodyHeight,
+                                 float layer, float wetMask, float curvature) {
   MaterialSample mat;
   mat.metallic = 0.0;
 
@@ -280,8 +280,7 @@ MaterialSample makeLinenSample(vec3 baseColor, vec3 Nw, vec3 Tw, vec3 Bw,
   color -= vec3(fray * 0.12);
 
   float dust = clamp(1.0 - Nw.y, 0.0, 1.0) * fbm(worldPos * 1.1, Nw, 2.0);
-  float sweat =
-      smoothstep(0.6, 1.0, bodyHeight) * fbm(worldPos * 2.4, Nw, 3.1);
+  float sweat = smoothstep(0.6, 1.0, bodyHeight) * fbm(worldPos * 2.4, Nw, 3.1);
   color = mix(color, color * (1.0 - dust * 0.35), 0.7);
   color = mix(color, color * vec3(0.96, 0.93, 0.88),
               1.0 - clamp(sweat * 0.5, 0.0, 1.0));
@@ -291,10 +290,9 @@ MaterialSample makeLinenSample(vec3 baseColor, vec3 Nw, vec3 Tw, vec3 Bw,
   mat.albedo = color;
   mat.normal = perturbNormalLinen(Nw, Tw, Bw, worldPos);
   float roughNoise = fbm(worldPos * 5.0, Nw, 7.5);
-  mat.roughness =
-      clamp(0.82 + roughNoise * 0.12 - wetMask * 0.22, 0.55, 0.96);
-  mat.ao = clamp(0.85 - dust * 0.20 - sweat * 0.15 + curvature * 0.05, 0.4,
-                 1.0);
+  mat.roughness = clamp(0.82 + roughNoise * 0.12 - wetMask * 0.22, 0.55, 0.96);
+  mat.ao =
+      clamp(0.85 - dust * 0.20 - sweat * 0.15 + curvature * 0.05, 0.4, 1.0);
   mat.F0 = vec3(0.028);
   return mat;
 }
@@ -314,11 +312,10 @@ MaterialSample makeBronzeSample(vec3 baseColor, vec3 Nw, vec3 Tw, vec3 Bw,
                  (1.0 - clamp(Nw.y, 0.0, 1.0));
 
   vec3 bronzeBase = mix(bronzeWarm, baseColor, 0.35) + vec3(hammer);
-  vec3 withCuprite =
-      mix(bronzeBase, cuprite,
-          smoothstep(0.70, 0.95, fbm(worldPos * 9.0, Nw, 12.0)));
-  vec3 color = mix(withCuprite, malachite,
-                   clamp(patina * 0.5 + runOff * 0.6, 0.0, 1.0));
+  vec3 withCuprite = mix(bronzeBase, cuprite,
+                         smoothstep(0.70, 0.95, fbm(worldPos * 9.0, Nw, 12.0)));
+  vec3 color =
+      mix(withCuprite, malachite, clamp(patina * 0.5 + runOff * 0.6, 0.0, 1.0));
 
   color = mix(color, color * 0.65, wetMask * 0.6);
 
@@ -360,9 +357,8 @@ MaterialSample makeWoodSample(vec3 baseColor, vec3 Nw, vec3 Tw, vec3 Bw,
   mat.albedo = color;
   vec3 macroNormal = applyMicroNormal(Nw, Tw, Bw, worldPos, 0.18);
   mat.normal = normalize(macroNormal + Tw * (grain * 0.05));
-  mat.roughness =
-      clamp(0.62 + fbm(worldPos * 6.0, Nw, 6.0) * 0.15 - wetMask * 0.18, 0.35,
-            0.92);
+  mat.roughness = clamp(
+      0.62 + fbm(worldPos * 6.0, Nw, 6.0) * 0.15 - wetMask * 0.18, 0.35, 0.92);
   mat.ao = clamp(0.9 - burn * 0.15 + curvature * 0.08, 0.4, 1.0);
   mat.metallic = 0.0;
   mat.F0 = vec3(0.035);
@@ -490,9 +486,8 @@ void main() {
   bool likelyLinen = (Y > 0.65 && S < 0.22);
   bool likelyBronze = (baseColor.r > baseColor.g * 1.03 &&
                        baseColor.r > baseColor.b * 1.10 && Y > 0.42);
-  float leatherDist =
-      min(colorDistance(baseColor, REF_LEATHER),
-          colorDistance(baseColor, REF_LEATHER_DARK));
+  float leatherDist = min(colorDistance(baseColor, REF_LEATHER),
+                          colorDistance(baseColor, REF_LEATHER_DARK));
   bool paletteLeather = leatherDist < 0.18;
   bool looksWood =
       (blueRatio > 0.42 && blueRatio < 0.8 && Y < 0.55 && S < 0.55) ||
@@ -500,16 +495,14 @@ void main() {
   bool looksCloth =
       colorDistance(baseColor, REF_CLOTH) < 0.22 ||
       (baseColor.b > baseColor.g * 1.25 && baseColor.b > baseColor.r * 1.35);
-  bool looksSkin =
-      colorDistance(baseColor, REF_SKIN) < 0.2 ||
-      (S < 0.35 && baseColor.r > 0.55 && baseColor.g > 0.35 &&
-       baseColor.b > 0.28);
+  bool looksSkin = colorDistance(baseColor, REF_SKIN) < 0.2 ||
+                   (S < 0.35 && baseColor.r > 0.55 && baseColor.g > 0.35 &&
+                    baseColor.b > 0.28);
   bool looksBeard =
       (!looksSkin &&
        (colorDistance(baseColor, REF_BEARD) < 0.16 || (Y < 0.32 && S < 0.4)));
-  bool looksMetal =
-      colorDistance(baseColor, REF_METAL) < 0.18 ||
-      (S < 0.15 && Y > 0.4 && baseColor.b > baseColor.r * 0.9);
+  bool looksMetal = colorDistance(baseColor, REF_METAL) < 0.18 ||
+                    (S < 0.15 && Y > 0.4 && baseColor.b > baseColor.r * 0.9);
 
   bool preferLeather = (paletteLeather && blueRatio < 0.42) ||
                        (likelyLeather && !looksWood && blueRatio < 0.4);
@@ -539,8 +532,8 @@ void main() {
     material = makeMetalSample(CANON_HELMET, Nw, Tw, Bw, v_worldPos, wetMask,
                                curvature);
   } else if (looksSkin && isFaceRegion) {
-    material = makeSkinSample(CANON_SKIN, Nw, Tw, Bw, v_worldPos, wetMask,
-                              curvature);
+    material =
+        makeSkinSample(CANON_SKIN, Nw, Tw, Bw, v_worldPos, wetMask, curvature);
   } else if (looksBeard && isFaceRegion) {
     material = makeHairSample(CANON_BEARD, Nw, Tw, Bw, v_worldPos, wetMask);
   } else if (looksWood) {
@@ -551,14 +544,13 @@ void main() {
     material =
         makeClothSample(baseColor, Nw, Tw, Bw, v_worldPos, wetMask, curvature);
   } else if (preferLeather) {
-    material = makeLeatherSample(baseColor, Nw, Tw, Bw, v_worldPos,
-                                 clamp(v_leatherTension, 0.0, 1.0),
-                                 clamp(v_bodyHeight, 0.0, 1.0), v_armorLayer,
-                                 wetMask, curvature);
+    material = makeLeatherSample(
+        baseColor, Nw, Tw, Bw, v_worldPos, clamp(v_leatherTension, 0.0, 1.0),
+        clamp(v_bodyHeight, 0.0, 1.0), v_armorLayer, wetMask, curvature);
   } else if (likelyLinen) {
-    material = makeLinenSample(baseColor, Nw, Tw, Bw, v_worldPos,
-                               clamp(v_bodyHeight, 0.0, 1.0), wetMask,
-                               curvature);
+    material =
+        makeLinenSample(baseColor, Nw, Tw, Bw, v_worldPos,
+                        clamp(v_bodyHeight, 0.0, 1.0), wetMask, curvature);
   } else if (likelyBronze) {
     material =
         makeBronzeSample(baseColor, Nw, Tw, Bw, v_worldPos, wetMask, curvature);
@@ -577,17 +569,16 @@ void main() {
     vec3 contribution = evaluateLight(material, lights[i], V);
     if (wetMask > 0.001) {
       contribution += clearcoatSpec(material.normal, lights[i].dir, V,
-                                    wetMask * 0.8,
-                                    mix(0.10, 0.03, wetMask)) *
+                                    wetMask * 0.8, mix(0.10, 0.03, wetMask)) *
                       lights[i].color * lights[i].intensity;
     }
     lightAccum += contribution;
   }
 
-  vec3 ambient = computeAmbient(material.normal) * material.albedo *
-                 material.ao * 0.35;
-  vec3 bounce =
-      vec3(0.45, 0.34, 0.25) * (0.15 + 0.45 * clamp(-material.normal.y, 0.0, 1.0));
+  vec3 ambient =
+      computeAmbient(material.normal) * material.albedo * material.ao * 0.35;
+  vec3 bounce = vec3(0.45, 0.34, 0.25) *
+                (0.15 + 0.45 * clamp(-material.normal.y, 0.0, 1.0));
   vec3 color = lightAccum + ambient + bounce * (1.0 - material.metallic) * 0.25;
 
   color = mix(color, color * 0.85, wetMask * 0.2);

@@ -129,10 +129,9 @@ void MountedKnightRendererBase::customize_pose(
   pose_request.seatPose = (speed_norm > 0.55F)
                               ? MountedPoseController::MountedSeatPose::Forward
                               : MountedPoseController::MountedSeatPose::Neutral;
-  pose_request.torsoCompression =
-      std::clamp(0.18F + speed_norm * 0.28F +
-                     anim_ctx.variation.posture_slump * 0.9F,
-                 0.0F, 0.55F);
+  pose_request.torsoCompression = std::clamp(
+      0.18F + speed_norm * 0.28F + anim_ctx.variation.posture_slump * 0.9F,
+      0.0F, 0.55F);
   pose_request.torsoTwist = anim_ctx.variation.shoulder_tilt * 3.0F;
   pose_request.shoulderDip =
       std::clamp(anim_ctx.variation.shoulder_tilt * 0.6F +

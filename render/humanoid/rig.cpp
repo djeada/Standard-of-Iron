@@ -289,9 +289,9 @@ void HumanoidRendererBase::computeLocomotionPose(
   QVector3D const outward_r = right_axis;
 
   pose.elbow_l = elbowBendTorso(pose.shoulder_l, pose.hand_l, outward_l, 0.45F,
-                               0.15F, -0.08F, +1.0F);
+                                0.15F, -0.08F, +1.0F);
   pose.elbow_r = elbowBendTorso(pose.shoulder_r, pose.hand_r, outward_r, 0.48F,
-                               0.12F, 0.02F, +1.0F);
+                                0.12F, 0.02F, +1.0F);
 }
 
 void HumanoidRendererBase::drawCommonBody(const DrawContext &ctx,
@@ -548,9 +548,10 @@ void HumanoidRendererBase::drawCommonBody(const DrawContext &ctx,
   out.mesh(getUnitSphere(), sphereAt(ctx.model, right_eye_world, eye_radius),
            iris, nullptr, 1.0F);
 
-  out.mesh(getUnitCylinder(),
-           cylinderBetween(ctx.model, pose.shoulder_l, pose.elbow_l, upper_arm_r),
-           v.palette.cloth, nullptr, 1.0F);
+  out.mesh(
+      getUnitCylinder(),
+      cylinderBetween(ctx.model, pose.shoulder_l, pose.elbow_l, upper_arm_r),
+      v.palette.cloth, nullptr, 1.0F);
   out.mesh(getUnitSphere(), sphereAt(ctx.model, pose.elbow_l, joint_r),
            v.palette.cloth * 0.95F, nullptr, 1.0F);
   out.mesh(getUnitCylinder(),
@@ -559,9 +560,10 @@ void HumanoidRendererBase::drawCommonBody(const DrawContext &ctx,
   out.mesh(getUnitSphere(), sphereAt(ctx.model, pose.hand_l, hand_r),
            v.palette.leatherDark * 0.92F, nullptr, 1.0F);
 
-  out.mesh(getUnitCylinder(),
-           cylinderBetween(ctx.model, pose.shoulder_r, pose.elbow_r, upper_arm_r),
-           v.palette.cloth, nullptr, 1.0F);
+  out.mesh(
+      getUnitCylinder(),
+      cylinderBetween(ctx.model, pose.shoulder_r, pose.elbow_r, upper_arm_r),
+      v.palette.cloth, nullptr, 1.0F);
   out.mesh(getUnitSphere(), sphereAt(ctx.model, pose.elbow_r, joint_r),
            v.palette.cloth * 0.95F, nullptr, 1.0F);
   out.mesh(getUnitCylinder(),

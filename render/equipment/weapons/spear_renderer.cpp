@@ -36,8 +36,9 @@ void SpearRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
   }
 
   if (anim.inputs.is_in_hold_mode || anim.inputs.is_exiting_hold) {
-    float const t =
-        anim.inputs.is_in_hold_mode ? 1.0F : (1.0F - anim.inputs.hold_exit_progress);
+    float const t = anim.inputs.is_in_hold_mode
+                        ? 1.0F
+                        : (1.0F - anim.inputs.hold_exit_progress);
 
     QVector3D braced_dir = QVector3D(0.05F, 0.40F, 0.91F);
     if (braced_dir.lengthSquared() > 1e-6F) {
