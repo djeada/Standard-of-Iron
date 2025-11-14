@@ -143,6 +143,41 @@
         "individuals_per_unit": 9,
         "max_units_per_row": 3
       }
+    },
+    {
+      "id": "healer",
+      "display_name": "Medicus",
+      "production": {
+        "cost": 80,
+        "build_time": 7.2,
+        "priority": 8,
+        "is_melee": false
+      },
+      "combat": {
+        "health": 105,
+        "max_health": 105,
+        "speed": 2.6,
+        "vision_range": 14.5,
+        "ranged_range": 8.5,
+        "ranged_damage": 6,
+        "ranged_cooldown": 1.8,
+        "melee_range": 1.5,
+        "melee_damage": 3,
+        "melee_cooldown": 1.5,
+        "can_ranged": false,
+        "can_melee": true
+      },
+      "visuals": {
+        "render_scale": 0.56,
+        "selection_ring_size": 1.25,
+        "selection_ring_y_offset": 0.0,
+        "selection_ring_ground_offset": 0.0,
+        "renderer_id": "troops/roman/healer"
+      },
+      "formation": {
+        "individuals_per_unit": 12,
+        "max_units_per_row": 4
+      }
     }
   ]
 }

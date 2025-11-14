@@ -68,6 +68,7 @@
 #include "game/systems/formation_planner.h"
 #include "game/systems/game_state_serializer.h"
 #include "game/systems/global_stats_registry.h"
+#include "game/systems/healing_system.h"
 #include "game/systems/movement_system.h"
 #include "game/systems/nation_id.h"
 #include "game/systems/nation_registry.h"
@@ -145,6 +146,7 @@ GameEngine::GameEngine(QObject *parent)
   m_world->addSystem(std::make_unique<Game::Systems::MovementSystem>());
   m_world->addSystem(std::make_unique<Game::Systems::PatrolSystem>());
   m_world->addSystem(std::make_unique<Game::Systems::CombatSystem>());
+  m_world->addSystem(std::make_unique<Game::Systems::HealingSystem>());
   m_world->addSystem(std::make_unique<Game::Systems::CaptureSystem>());
   m_world->addSystem(std::make_unique<Game::Systems::AISystem>());
   m_world->addSystem(std::make_unique<Game::Systems::ProductionSystem>());

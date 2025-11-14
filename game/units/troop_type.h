@@ -15,7 +15,8 @@ enum class TroopType {
   Spearman,
   MountedKnight,
   HorseArcher,
-  HorseSpearman
+  HorseSpearman,
+  Healer
 };
 
 inline auto troop_typeToQString(TroopType type) -> QString {
@@ -32,6 +33,8 @@ inline auto troop_typeToQString(TroopType type) -> QString {
     return QStringLiteral("horse_archer");
   case TroopType::HorseSpearman:
     return QStringLiteral("horse_spearman");
+  case TroopType::Healer:
+    return QStringLiteral("healer");
   }
   return QStringLiteral("archer");
 }
@@ -68,6 +71,10 @@ inline auto tryParseTroopType(const QString &value, TroopType &out) -> bool {
   if (lowered == QStringLiteral("horse_spearman") ||
       lowered == QStringLiteral("horsespearman")) {
     out = TroopType::HorseSpearman;
+    return true;
+  }
+  if (lowered == QStringLiteral("healer")) {
+    out = TroopType::Healer;
     return true;
   }
   return false;
