@@ -29,7 +29,7 @@ HorseSpearman::HorseSpearman(Engine::Core::World &world)
     : Unit(world, TroopType::HorseSpearman) {}
 
 auto HorseSpearman::Create(Engine::Core::World &world,
-                             const SpawnParams &params)
+                           const SpawnParams &params)
     -> std::unique_ptr<HorseSpearman> {
   auto unit = std::unique_ptr<HorseSpearman>(new HorseSpearman(world));
   unit->init(params);

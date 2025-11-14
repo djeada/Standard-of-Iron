@@ -42,9 +42,9 @@ public:
 
   auto list_campaigns(QString *out_error = nullptr) const -> QVariantList;
   auto get_campaign_progress(const QString &campaign_id,
-                          QString *out_error = nullptr) const -> QVariantMap;
+                             QString *out_error = nullptr) const -> QVariantMap;
   auto mark_campaign_completed(const QString &campaign_id,
-                            QString *out_error = nullptr) -> bool;
+                               QString *out_error = nullptr) -> bool;
 
   static void openSettings();
 

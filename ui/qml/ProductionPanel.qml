@@ -38,18 +38,20 @@ Rectangle {
         if (typeof sources === "object" && sources !== null) {
             if (nationKey && sources[nationKey])
                 return sources[nationKey];
+
             if (sources["default"])
                 return sources["default"];
+
         } else if (typeof sources === "string") {
             return sources;
         }
-
         return "";
     }
 
     function unitIconEmoji(unitType) {
         if (typeof StyleGuide !== "undefined" && StyleGuide.unitIcons)
             return StyleGuide.unitIcons[unitType] || StyleGuide.unitIcons["default"] || "👤";
+
         return "👤";
     }
 
@@ -133,6 +135,7 @@ Rectangle {
 
                                 Image {
                                     id: queueIconImage
+
                                     anchors.centerIn: parent
                                     width: 28
                                     height: 28
@@ -321,6 +324,7 @@ Rectangle {
 
                                     Image {
                                         id: archerRecruitIcon
+
                                         anchors.fill: parent
                                         fillMode: Image.PreserveAspectFit
                                         smooth: true
@@ -336,6 +340,7 @@ Rectangle {
                                         color: parent.parent.parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
                                         font.pointSize: 24
                                     }
+
                                 }
 
                                 Text {
@@ -412,6 +417,7 @@ Rectangle {
 
                                     Image {
                                         id: swordsmanRecruitIcon
+
                                         anchors.fill: parent
                                         fillMode: Image.PreserveAspectFit
                                         smooth: true
@@ -427,6 +433,7 @@ Rectangle {
                                         color: parent.parent.parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
                                         font.pointSize: 24
                                     }
+
                                 }
 
                                 Text {
@@ -503,6 +510,7 @@ Rectangle {
 
                                     Image {
                                         id: spearmanRecruitIcon
+
                                         anchors.fill: parent
                                         fillMode: Image.PreserveAspectFit
                                         smooth: true
@@ -518,6 +526,7 @@ Rectangle {
                                         color: parent.parent.parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
                                         font.pointSize: 24
                                     }
+
                                 }
 
                                 Text {
@@ -594,6 +603,7 @@ Rectangle {
 
                                     Image {
                                         id: horseKnightIcon
+
                                         anchors.fill: parent
                                         fillMode: Image.PreserveAspectFit
                                         smooth: true
@@ -609,6 +619,7 @@ Rectangle {
                                         color: parent.parent.parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
                                         font.pointSize: 24
                                     }
+
                                 }
 
                                 Text {
@@ -685,6 +696,7 @@ Rectangle {
 
                                     Image {
                                         id: horseArcherIcon
+
                                         anchors.fill: parent
                                         fillMode: Image.PreserveAspectFit
                                         smooth: true
@@ -700,6 +712,7 @@ Rectangle {
                                         color: parent.parent.parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
                                         font.pointSize: 20
                                     }
+
                                 }
 
                                 Text {
@@ -776,6 +789,7 @@ Rectangle {
 
                                     Image {
                                         id: horseSpearmanIcon
+
                                         anchors.fill: parent
                                         fillMode: Image.PreserveAspectFit
                                         smooth: true
@@ -791,6 +805,7 @@ Rectangle {
                                         color: parent.parent.parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
                                         font.pointSize: 20
                                     }
+
                                 }
 
                                 Text {

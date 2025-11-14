@@ -93,7 +93,7 @@ TEST_F(PoseControllerCompatibilityTest, PlaceHandAtUsesCorrectElbowIK) {
   right_axis.normalize();
   QVector3D const outward_r = right_axis;
   legacy_pose.elbow_r = elbowBendTorso(legacy_pose.shoulder_r, target_hand,
-                                      outward_r, 0.48F, 0.12F, 0.02F, 1.0F);
+                                       outward_r, 0.48F, 0.12F, 0.02F, 1.0F);
 
   // New controller approach
   HumanoidPoseController controller(pose, anim_ctx);
@@ -146,7 +146,7 @@ TEST_F(PoseControllerCompatibilityTest,
   reference_pose.shoulder_r.setY(HP::SHOULDER_Y - kneel_depth);
   reference_pose.neck_base.setY(HP::NECK_BASE_Y - kneel_depth);
   reference_pose.head_pos.setY((HP::HEAD_TOP_Y + HP::CHIN_Y) * 0.5F -
-                              kneel_depth);
+                               kneel_depth);
 
   // Use controller to kneel
   HumanoidPoseController controller(pose, anim_ctx);
@@ -207,9 +207,9 @@ TEST_F(PoseControllerCompatibilityTest, CanRecreateBowAimingPose) {
                          QVector3D(0.12F, pose.shoulder_r.y() + 0.15F, 0.10F));
 
   // Verify pose is in a reasonable configuration
-  EXPECT_LT(pose.pelvis_pos.y(), HP::WAIST_Y);    // Kneeling
+  EXPECT_LT(pose.pelvis_pos.y(), HP::WAIST_Y);     // Kneeling
   EXPECT_GT(pose.hand_l.y(), pose.shoulder_l.y()); // Left hand raised
-  EXPECT_GT(pose.hand_l.z(), 0.0F);               // Left hand forward
+  EXPECT_GT(pose.hand_l.z(), 0.0F);                // Left hand forward
   EXPECT_LT(pose.hand_r.z(), pose.hand_l.z()); // Right hand back (drawing bow)
 }
 
@@ -231,7 +231,7 @@ TEST_F(PoseControllerCompatibilityTest, CanRecreateMeleeAttackPose) {
                          QVector3D(-0.05F, HP::SHOULDER_Y + 0.03F, 0.53F));
 
   // Verify thrust pose characteristics
-  EXPECT_GT(pose.hand_r.z(), 0.80F);              // Hand extended forward
-  EXPECT_GT(pose.shoulder_l.z(), 0.0F);            // Body leaning forward
+  EXPECT_GT(pose.hand_r.z(), 0.80F);                // Hand extended forward
+  EXPECT_GT(pose.shoulder_l.z(), 0.0F);             // Body leaning forward
   EXPECT_GT(pose.elbow_r.z(), pose.shoulder_r.z()); // Elbow extended
 }

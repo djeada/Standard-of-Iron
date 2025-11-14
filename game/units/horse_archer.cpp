@@ -28,8 +28,7 @@ namespace Game::Units {
 HorseArcher::HorseArcher(Engine::Core::World &world)
     : Unit(world, TroopType::HorseArcher) {}
 
-auto HorseArcher::Create(Engine::Core::World &world,
-                           const SpawnParams &params)
+auto HorseArcher::Create(Engine::Core::World &world, const SpawnParams &params)
     -> std::unique_ptr<HorseArcher> {
   auto unit = std::unique_ptr<HorseArcher>(new HorseArcher(world));
   unit->init(params);
