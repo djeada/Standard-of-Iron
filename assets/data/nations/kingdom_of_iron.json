@@ -143,6 +143,41 @@
         "individuals_per_unit": 9,
         "max_units_per_row": 3
       }
+    },
+    {
+      "id": "healer",
+      "display_name": "Healer",
+      "production": {
+        "cost": 75,
+        "build_time": 7.0,
+        "priority": 8,
+        "is_melee": false
+      },
+      "combat": {
+        "health": 100,
+        "max_health": 100,
+        "speed": 2.5,
+        "vision_range": 14.0,
+        "ranged_range": 8.0,
+        "ranged_damage": 5,
+        "ranged_cooldown": 2.0,
+        "melee_range": 1.5,
+        "melee_damage": 3,
+        "melee_cooldown": 1.5,
+        "can_ranged": false,
+        "can_melee": true
+      },
+      "visuals": {
+        "render_scale": 0.55,
+        "selection_ring_size": 1.2,
+        "selection_ring_y_offset": 0.0,
+        "selection_ring_ground_offset": 0.0,
+        "renderer_id": "troops/kingdom/healer"
+      },
+      "formation": {
+        "individuals_per_unit": 1,
+        "max_units_per_row": 1
+      }
     }
   ]
 }
