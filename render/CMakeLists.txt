@@ -64,6 +64,12 @@ add_library(render_gl STATIC
     entity/nations/roman/horse_spearman_renderer.cpp
     entity/nations/carthage/horse_spearman_renderer.cpp
     entity/nations/kingdom/horse_spearman_renderer.cpp
+    entity/nations/kingdom/healer_renderer.cpp
+    entity/nations/kingdom/healer_style.cpp
+    entity/nations/roman/healer_renderer.cpp
+    entity/nations/roman/healer_style.cpp
+    entity/nations/carthage/healer_renderer.cpp
+    entity/nations/carthage/healer_style.cpp
     entity/barracks_renderer.cpp
     entity/nations/kingdom/barracks_renderer.cpp
     entity/nations/roman/barracks_renderer.cpp
