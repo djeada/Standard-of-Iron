@@ -1,6 +1,8 @@
 #include "factory.h"
 #include "archer.h"
 #include "barracks.h"
+#include "horse_archer.h"
+#include "horse_spearman.h"
 #include "horse_swordsman.h"
 #include "spearman.h"
 #include "swordsman.h"
@@ -28,6 +30,16 @@ void registerBuiltInUnits(UnitFactoryRegistry &reg) {
   reg.registerFactory(SpawnType::Spearman, [](Engine::Core::World &world,
                                               const SpawnParams &params) {
     return Spearman::Create(world, params);
+  });
+
+  reg.registerFactory(SpawnType::HorseArcher, [](Engine::Core::World &world,
+                                                 const SpawnParams &params) {
+    return HorseArcher::Create(world, params);
+  });
+
+  reg.registerFactory(SpawnType::HorseSpearman, [](Engine::Core::World &world,
+                                                   const SpawnParams &params) {
+    return HorseSpearman::Create(world, params);
   });
 
   reg.registerFactory(SpawnType::Barracks, [](Engine::Core::World &world,
