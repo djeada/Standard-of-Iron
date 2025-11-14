@@ -14,6 +14,8 @@ enum class SpawnType : std::uint8_t {
   Knight,
   Spearman,
   MountedKnight,
+  HorseArcher,
+  HorseSpearman,
   Barracks
 };
 
@@ -27,6 +29,10 @@ inline auto spawn_typeToQString(SpawnType type) -> QString {
     return QStringLiteral("spearman");
   case SpawnType::MountedKnight:
     return QStringLiteral("horse_swordsman");
+  case SpawnType::HorseArcher:
+    return QStringLiteral("horse_archer");
+  case SpawnType::HorseSpearman:
+    return QStringLiteral("horse_spearman");
   case SpawnType::Barracks:
     return QStringLiteral("barracks");
   }
@@ -56,6 +62,14 @@ inline auto tryParseSpawnType(const QString &value, SpawnType &out) -> bool {
     out = SpawnType::MountedKnight;
     return true;
   }
+  if (lowered == QStringLiteral("horse_archer")) {
+    out = SpawnType::HorseArcher;
+    return true;
+  }
+  if (lowered == QStringLiteral("horse_spearman")) {
+    out = SpawnType::HorseSpearman;
+    return true;
+  }
   if (lowered == QStringLiteral("barracks")) {
     out = SpawnType::Barracks;
     return true;
@@ -76,6 +90,12 @@ spawn_typeFromString(const std::string &str) -> std::optional<SpawnType> {
   }
   if (str == "horse_swordsman") {
     return SpawnType::MountedKnight;
+  }
+  if (str == "horse_archer") {
+    return SpawnType::HorseArcher;
+  }
+  if (str == "horse_spearman") {
+    return SpawnType::HorseSpearman;
   }
   if (str == "barracks") {
     return SpawnType::Barracks;
@@ -101,6 +121,10 @@ inline auto spawn_typeToTroopType(SpawnType type) -> std::optional<TroopType> {
     return TroopType::Spearman;
   case SpawnType::MountedKnight:
     return TroopType::MountedKnight;
+  case SpawnType::HorseArcher:
+    return TroopType::HorseArcher;
+  case SpawnType::HorseSpearman:
+    return TroopType::HorseSpearman;
   case SpawnType::Barracks:
     return std::nullopt;
   }
@@ -117,6 +141,10 @@ inline auto spawn_typeFromTroopType(TroopType type) -> SpawnType {
     return SpawnType::Spearman;
   case TroopType::MountedKnight:
     return SpawnType::MountedKnight;
+  case TroopType::HorseArcher:
+    return SpawnType::HorseArcher;
+  case TroopType::HorseSpearman:
+    return SpawnType::HorseSpearman;
   }
   return SpawnType::Archer;
 }
