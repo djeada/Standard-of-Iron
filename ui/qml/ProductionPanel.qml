@@ -22,8 +22,35 @@ Rectangle {
             "productionQueue": [],
             "product_type": "",
             "villagerCost": 1,
-            "buildTime": 0
+            "buildTime": 0,
+            "nation_id": ""
         };
+    }
+
+    function unitIconSource(unitType, nationKey) {
+        if (typeof StyleGuide === "undefined" || !StyleGuide.unitIconSources || !unitType)
+            return "";
+
+        var sources = StyleGuide.unitIconSources[unitType];
+        if (!sources)
+            sources = StyleGuide.unitIconSources["default"];
+
+        if (typeof sources === "object" && sources !== null) {
+            if (nationKey && sources[nationKey])
+                return sources[nationKey];
+            if (sources["default"])
+                return sources["default"];
+        } else if (typeof sources === "string") {
+            return sources;
+        }
+
+        return "";
+    }
+
+    function unitIconEmoji(unitType) {
+        if (typeof StyleGuide !== "undefined" && StyleGuide.unitIcons)
+            return StyleGuide.unitIcons[unitType] || StyleGuide.unitIcons["default"] || "👤";
+        return "👤";
     }
 
     color: "#0f1419"
@@ -83,6 +110,19 @@ Rectangle {
                                 property int queueTotal: (productionContent.prod.inProgress ? 1 : 0) + (productionContent.prod.queueSize || 0)
                                 property bool isOccupied: index < queueTotal
                                 property bool isProducing: index === 0 && productionContent.prod.inProgress
+                                property string queueUnitType: {
+                                    if (!isOccupied)
+                                        return "";
+
+                                    if (index === 0 && productionContent.prod.inProgress)
+                                        return productionContent.prod.product_type || "archer";
+
+                                    var queueIndex = productionContent.prod.inProgress ? index - 1 : index;
+                                    if (productionContent.prod.productionQueue && productionContent.prod.productionQueue[queueIndex])
+                                        return productionContent.prod.productionQueue[queueIndex];
+
+                                    return "archer";
+                                }
 
                                 width: 36
                                 height: 36
@@ -91,30 +131,24 @@ Rectangle {
                                 border.color: isProducing ? "#229954" : (isOccupied ? "#4a6572" : "#2a2a2a")
                                 border.width: 2
 
+                                Image {
+                                    id: queueIconImage
+                                    anchors.centerIn: parent
+                                    width: 28
+                                    height: 28
+                                    fillMode: Image.PreserveAspectFit
+                                    smooth: true
+                                    source: parent.isOccupied ? productionPanel.unitIconSource(parent.queueUnitType, productionContent.prod.nation_id) : ""
+                                    visible: parent.isOccupied && source !== ""
+                                }
+
                                 Text {
                                     anchors.centerIn: parent
-                                    text: {
-                                        if (!parent.isOccupied)
-                                            return "·";
-
-                                        var unitType;
-                                        if (index === 0 && productionContent.prod.inProgress) {
-                                            unitType = productionContent.prod.product_type || "archer";
-                                        } else {
-                                            var queueIndex = productionContent.prod.inProgress ? index - 1 : index;
-                                            if (productionContent.prod.productionQueue && productionContent.prod.productionQueue[queueIndex])
-                                                unitType = productionContent.prod.productionQueue[queueIndex];
-                                            else
-                                                unitType = "archer";
-                                        }
-                                        if (typeof StyleGuide !== 'undefined' && StyleGuide.unitIcons)
-                                            return StyleGuide.unitIcons[unitType] || StyleGuide.unitIcons["default"] || "👤";
-
-                                        return "🏹";
-                                    }
+                                    text: parent.isOccupied ? productionPanel.unitIconEmoji(parent.queueUnitType) : "·"
                                     color: parent.isProducing ? "#ffffff" : (parent.isOccupied ? "#bdc3c7" : "#3a3a3a")
                                     font.pointSize: parent.isOccupied ? 16 : 20
                                     font.bold: parent.isProducing
+                                    visible: !queueIconImage.visible
                                 }
 
                                 Text {
@@ -280,11 +314,28 @@ Rectangle {
                                 anchors.centerIn: parent
                                 spacing: 4
 
-                                Text {
+                                Item {
                                     anchors.horizontalCenter: parent.horizontalCenter
-                                    text: (typeof StyleGuide !== 'undefined' && StyleGuide.unitIcons) ? StyleGuide.unitIcons["archer"] || "🏹" : "🏹"
-                                    color: parent.parent.parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
-                                    font.pointSize: 24
+                                    width: 48
+                                    height: 48
+
+                                    Image {
+                                        id: archerRecruitIcon
+                                        anchors.fill: parent
+                                        fillMode: Image.PreserveAspectFit
+                                        smooth: true
+                                        source: productionPanel.unitIconSource("archer", unitGridContent.prod.nation_id)
+                                        visible: source !== ""
+                                        opacity: parent.parent.parent.isEnabled ? 1 : 0.4
+                                    }
+
+                                    Text {
+                                        anchors.centerIn: parent
+                                        visible: !archerRecruitIcon.visible
+                                        text: productionPanel.unitIconEmoji("archer")
+                                        color: parent.parent.parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
+                                        font.pointSize: 24
+                                    }
                                 }
 
                                 Text {
@@ -354,11 +405,28 @@ Rectangle {
                                 anchors.centerIn: parent
                                 spacing: 4
 
-                                Text {
+                                Item {
                                     anchors.horizontalCenter: parent.horizontalCenter
-                                    text: (typeof StyleGuide !== 'undefined' && StyleGuide.unitIcons) ? (StyleGuide.unitIcons["swordsman"] || StyleGuide.unitIcons["swordsman"] || "⚔️") : "⚔️"
-                                    color: parent.parent.parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
-                                    font.pointSize: 24
+                                    width: 48
+                                    height: 48
+
+                                    Image {
+                                        id: swordsmanRecruitIcon
+                                        anchors.fill: parent
+                                        fillMode: Image.PreserveAspectFit
+                                        smooth: true
+                                        source: productionPanel.unitIconSource("swordsman", unitGridContent.prod.nation_id)
+                                        visible: source !== ""
+                                        opacity: parent.parent.parent.isEnabled ? 1 : 0.4
+                                    }
+
+                                    Text {
+                                        anchors.centerIn: parent
+                                        visible: !swordsmanRecruitIcon.visible
+                                        text: productionPanel.unitIconEmoji("swordsman")
+                                        color: parent.parent.parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
+                                        font.pointSize: 24
+                                    }
                                 }
 
                                 Text {
@@ -428,11 +496,28 @@ Rectangle {
                                 anchors.centerIn: parent
                                 spacing: 4
 
-                                Text {
+                                Item {
                                     anchors.horizontalCenter: parent.horizontalCenter
-                                    text: (typeof StyleGuide !== 'undefined' && StyleGuide.unitIcons) ? StyleGuide.unitIcons["spearman"] || "🛡️" : "🛡️"
-                                    color: parent.parent.parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
-                                    font.pointSize: 24
+                                    width: 48
+                                    height: 48
+
+                                    Image {
+                                        id: spearmanRecruitIcon
+                                        anchors.fill: parent
+                                        fillMode: Image.PreserveAspectFit
+                                        smooth: true
+                                        source: productionPanel.unitIconSource("spearman", unitGridContent.prod.nation_id)
+                                        visible: source !== ""
+                                        opacity: parent.parent.parent.isEnabled ? 1 : 0.4
+                                    }
+
+                                    Text {
+                                        anchors.centerIn: parent
+                                        visible: !spearmanRecruitIcon.visible
+                                        text: productionPanel.unitIconEmoji("spearman")
+                                        color: parent.parent.parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
+                                        font.pointSize: 24
+                                    }
                                 }
 
                                 Text {
@@ -502,11 +587,28 @@ Rectangle {
                                 anchors.centerIn: parent
                                 spacing: 4
 
-                                Text {
+                                Item {
                                     anchors.horizontalCenter: parent.horizontalCenter
-                                    text: (typeof StyleGuide !== 'undefined' && StyleGuide.unitIcons) ? StyleGuide.unitIcons["horse_swordsman"] || "🐴" : "🐴"
-                                    color: parent.parent.parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
-                                    font.pointSize: 24
+                                    width: 48
+                                    height: 48
+
+                                    Image {
+                                        id: horseKnightIcon
+                                        anchors.fill: parent
+                                        fillMode: Image.PreserveAspectFit
+                                        smooth: true
+                                        source: productionPanel.unitIconSource("horse_swordsman", unitGridContent.prod.nation_id)
+                                        visible: source !== ""
+                                        opacity: parent.parent.parent.isEnabled ? 1 : 0.4
+                                    }
+
+                                    Text {
+                                        anchors.centerIn: parent
+                                        visible: !horseKnightIcon.visible
+                                        text: productionPanel.unitIconEmoji("horse_swordsman")
+                                        color: parent.parent.parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
+                                        font.pointSize: 24
+                                    }
                                 }
 
                                 Text {
@@ -555,6 +657,188 @@ Rectangle {
                                 anchors.fill: parent
                                 color: "#ffffff"
                                 opacity: horseKnightMouseArea.pressed ? 0.2 : 0
+                                radius: parent.radius
+                            }
+
+                        }
+
+                        Rectangle {
+                            property int queueTotal: (unitGridContent.prod.inProgress ? 1 : 0) + (unitGridContent.prod.queueSize || 0)
+                            property bool isEnabled: unitGridContent.prod.has_barracks && unitGridContent.prod.producedCount < unitGridContent.prod.maxUnits && queueTotal < 5
+
+                            width: 110
+                            height: 80
+                            radius: 6
+                            color: isEnabled ? (horseArcherMouseArea.containsMouse ? "#34495e" : "#2c3e50") : "#1a1a1a"
+                            border.color: isEnabled ? "#4a6572" : "#2a2a2a"
+                            border.width: 2
+                            opacity: isEnabled ? 1 : 0.5
+
+                            Column {
+                                anchors.centerIn: parent
+                                spacing: 4
+
+                                Item {
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    width: 48
+                                    height: 48
+
+                                    Image {
+                                        id: horseArcherIcon
+                                        anchors.fill: parent
+                                        fillMode: Image.PreserveAspectFit
+                                        smooth: true
+                                        source: productionPanel.unitIconSource("horse_archer", unitGridContent.prod.nation_id)
+                                        visible: source !== ""
+                                        opacity: parent.parent.parent.isEnabled ? 1 : 0.4
+                                    }
+
+                                    Text {
+                                        anchors.centerIn: parent
+                                        visible: !horseArcherIcon.visible
+                                        text: productionPanel.unitIconEmoji("horse_archer")
+                                        color: parent.parent.parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
+                                        font.pointSize: 20
+                                    }
+                                }
+
+                                Text {
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    text: qsTr("Horse Archer")
+                                    color: parent.parent.parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
+                                    font.pointSize: 9
+                                    font.bold: true
+                                }
+
+                                Row {
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    spacing: 4
+
+                                    Text {
+                                        text: "👥"
+                                        color: parent.parent.parent.parent.isEnabled ? "#f39c12" : "#5a5a5a"
+                                        font.pointSize: 9
+                                    }
+
+                                    Text {
+                                        text: unitGridContent.prod.villagerCost || 1
+                                        color: parent.parent.parent.parent.isEnabled ? "#f39c12" : "#5a5a5a"
+                                        font.pointSize: 9
+                                        font.bold: true
+                                    }
+
+                                }
+
+                            }
+
+                            MouseArea {
+                                id: horseArcherMouseArea
+
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                enabled: parent.isEnabled
+                                onClicked: productionPanel.recruitUnit("horse_archer")
+                                cursorShape: parent.isEnabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
+                                ToolTip.visible: containsMouse
+                                ToolTip.text: parent.isEnabled ? qsTr("Recruit Horse Archer\nCost: %1 villagers\nBuild time: %2s").arg(unitGridContent.prod.villagerCost || 1).arg((unitGridContent.prod.buildTime || 0).toFixed(0)) : (parent.queueTotal >= 5 ? qsTr("Queue is full (5/5)") : (unitGridContent.prod.producedCount >= unitGridContent.prod.maxUnits ? qsTr("Unit cap reached") : qsTr("Cannot recruit")))
+                                ToolTip.delay: 300
+                            }
+
+                            Rectangle {
+                                anchors.fill: parent
+                                color: "#ffffff"
+                                opacity: horseArcherMouseArea.pressed ? 0.2 : 0
+                                radius: parent.radius
+                            }
+
+                        }
+
+                        Rectangle {
+                            property int queueTotal: (unitGridContent.prod.inProgress ? 1 : 0) + (unitGridContent.prod.queueSize || 0)
+                            property bool isEnabled: unitGridContent.prod.has_barracks && unitGridContent.prod.producedCount < unitGridContent.prod.maxUnits && queueTotal < 5
+
+                            width: 110
+                            height: 80
+                            radius: 6
+                            color: isEnabled ? (horseSpearmanMouseArea.containsMouse ? "#34495e" : "#2c3e50") : "#1a1a1a"
+                            border.color: isEnabled ? "#4a6572" : "#2a2a2a"
+                            border.width: 2
+                            opacity: isEnabled ? 1 : 0.5
+
+                            Column {
+                                anchors.centerIn: parent
+                                spacing: 4
+
+                                Item {
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    width: 48
+                                    height: 48
+
+                                    Image {
+                                        id: horseSpearmanIcon
+                                        anchors.fill: parent
+                                        fillMode: Image.PreserveAspectFit
+                                        smooth: true
+                                        source: productionPanel.unitIconSource("horse_spearman", unitGridContent.prod.nation_id)
+                                        visible: source !== ""
+                                        opacity: parent.parent.parent.isEnabled ? 1 : 0.4
+                                    }
+
+                                    Text {
+                                        anchors.centerIn: parent
+                                        visible: !horseSpearmanIcon.visible
+                                        text: productionPanel.unitIconEmoji("horse_spearman")
+                                        color: parent.parent.parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
+                                        font.pointSize: 20
+                                    }
+                                }
+
+                                Text {
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    text: qsTr("Horse Spearman")
+                                    color: parent.parent.parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
+                                    font.pointSize: 9
+                                    font.bold: true
+                                }
+
+                                Row {
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    spacing: 4
+
+                                    Text {
+                                        text: "👥"
+                                        color: parent.parent.parent.parent.isEnabled ? "#f39c12" : "#5a5a5a"
+                                        font.pointSize: 9
+                                    }
+
+                                    Text {
+                                        text: unitGridContent.prod.villagerCost || 1
+                                        color: parent.parent.parent.parent.isEnabled ? "#f39c12" : "#5a5a5a"
+                                        font.pointSize: 9
+                                        font.bold: true
+                                    }
+
+                                }
+
+                            }
+
+                            MouseArea {
+                                id: horseSpearmanMouseArea
+
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                enabled: parent.isEnabled
+                                onClicked: productionPanel.recruitUnit("horse_spearman")
+                                cursorShape: parent.isEnabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
+                                ToolTip.visible: containsMouse
+                                ToolTip.text: parent.isEnabled ? qsTr("Recruit Horse Spearman\nCost: %1 villagers\nBuild time: %2s").arg(unitGridContent.prod.villagerCost || 1).arg((unitGridContent.prod.buildTime || 0).toFixed(0)) : (parent.queueTotal >= 5 ? qsTr("Queue is full (5/5)") : (unitGridContent.prod.producedCount >= unitGridContent.prod.maxUnits ? qsTr("Unit cap reached") : qsTr("Cannot recruit")))
+                                ToolTip.delay: 300
+                            }
+
+                            Rectangle {
+                                anchors.fill: parent
+                                color: "#ffffff"
+                                opacity: horseSpearmanMouseArea.pressed ? 0.2 : 0
                                 radius: parent.radius
                             }
 
