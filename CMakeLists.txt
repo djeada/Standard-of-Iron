@@ -199,6 +199,24 @@ if(QT_VERSION_MAJOR EQUAL 6)
             assets/shaders/swordsman.vert
             assets/shaders/horse_swordsman.frag
             assets/shaders/horse_swordsman.vert
+            assets/shaders/horse_swordsman_kingdom_of_iron.frag
+            assets/shaders/horse_swordsman_kingdom_of_iron.vert
+            assets/shaders/horse_swordsman_roman_republic.frag
+            assets/shaders/horse_swordsman_roman_republic.vert
+            assets/shaders/horse_swordsman_carthage.frag
+            assets/shaders/horse_swordsman_carthage.vert
+            assets/shaders/horse_archer_kingdom_of_iron.frag
+            assets/shaders/horse_archer_kingdom_of_iron.vert
+            assets/shaders/horse_archer_roman_republic.frag
+            assets/shaders/horse_archer_roman_republic.vert
+            assets/shaders/horse_archer_carthage.frag
+            assets/shaders/horse_archer_carthage.vert
+            assets/shaders/horse_spearman_kingdom_of_iron.frag
+            assets/shaders/horse_spearman_kingdom_of_iron.vert
+            assets/shaders/horse_spearman_roman_republic.frag
+            assets/shaders/horse_spearman_roman_republic.vert
+            assets/shaders/horse_spearman_carthage.frag
+            assets/shaders/horse_spearman_carthage.vert
             assets/shaders/pine_instanced.frag
             assets/shaders/pine_instanced.vert
             assets/shaders/plant_instanced.frag
@@ -222,8 +240,27 @@ if(QT_VERSION_MAJOR EQUAL 6)
             assets/maps/map_forest.json
             assets/maps/map_rivers.json
             assets/maps/map_mountain.json
+            assets/visuals/unit_visuals.json
             assets/visuals/emblems/rome.png
             assets/visuals/emblems/cartaghe.png
+            assets/visuals/icons/archer_rome.png
+            assets/visuals/icons/archer_cartaghe.png
+            assets/visuals/icons/swordsman_rome.png
+            assets/visuals/icons/swordsman_cartaghe.png
+            assets/visuals/icons/spearman_rome.png
+            assets/visuals/icons/spearman_cartaghe.png
+            assets/visuals/icons/horse_swordsman_rome.png
+            assets/visuals/icons/horse_swordsman_cartaghe.png
+            assets/visuals/icons/horse_archer_rome.png
+            assets/visuals/icons/horse_archer_cartaghe.png
+            assets/visuals/icons/horse_spearman_rome.png
+            assets/visuals/icons/horse_spearman_cartaghe.png
+            assets/visuals/icons/healer_rome.png
+            assets/visuals/icons/healer_cartaghe.png
+            assets/visuals/icons/catapult_rome.png
+            assets/visuals/icons/catapult_cartaghe.png
+            assets/visuals/icons/ballista_rome.png
+            assets/visuals/icons/ballista_cartaghe.png
             translations/app_en.qm
             translations/app_de.qm
             translations/app_pt_br.qm
