@@ -953,6 +953,8 @@ auto GameEngine::getSelectedProductionState() const -> QVariantMap {
   m["maxUnits"] = st.maxUnits;
   m["villagerCost"] = st.villagerCost;
   m["queueSize"] = st.queueSize;
+  m["nation_id"] =
+      QString::fromStdString(Game::Systems::nationIDToString(st.nation_id));
 
   QVariantList queue_list;
   for (const auto &unit_type : st.productionQueue) {
