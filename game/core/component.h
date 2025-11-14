@@ -230,4 +230,14 @@ public:
   float standUpDuration;
 };
 
+class HealerComponent : public Component {
+public:
+  HealerComponent() = default;
+
+  float healing_range{8.0F};
+  int healing_amount{5};
+  float healing_cooldown{2.0F};
+  float timeSinceLastHeal{0.0F};
+};
+
 } // namespace Engine::Core
