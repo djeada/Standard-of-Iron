@@ -14,7 +14,8 @@ public:
     NameRole,
     HealthRole,
     max_healthRole,
-    HealthRatioRole
+    HealthRatioRole,
+    NationRole
   };
 
   explicit SelectedUnitsModel(GameEngine *engine, QObject *parent = nullptr);

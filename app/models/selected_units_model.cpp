@@ -31,6 +31,7 @@ auto SelectedUnitsModel::data(const QModelIndex &index,
     return {};
   }
   QString name;
+  QString nation;
   int hp = 0;
   int max_hp = 0;
   bool is_b = false;
@@ -38,7 +39,7 @@ auto SelectedUnitsModel::data(const QModelIndex &index,
   if (role == UnitIdRole) {
     return QVariant::fromValue<int>(static_cast<int>(id));
   }
-  if (!m_engine->getUnitInfo(id, name, hp, max_hp, is_b, alive)) {
+  if (!m_engine->getUnitInfo(id, name, hp, max_hp, is_b, alive, nation)) {
     return {};
   }
   if (role == NameRole) {
@@ -55,6 +56,9 @@ auto SelectedUnitsModel::data(const QModelIndex &index,
                              static_cast<double>(max_hp)
                        : 0.0);
   }
+  if (role == NationRole) {
+    return nation;
+  }
   return {};
 }
 
@@ -63,7 +67,8 @@ auto SelectedUnitsModel::roleNames() const -> QHash<int, QByteArray> {
           {NameRole, "name"},
           {HealthRole, "health"},
           {max_healthRole, "max_health"},
-          {HealthRatioRole, "health_ratio"}};
+          {HealthRatioRole, "health_ratio"},
+          {NationRole, "nation"}};
 }
 
 void SelectedUnitsModel::refresh() {
@@ -89,11 +94,12 @@ void SelectedUnitsModel::refresh() {
   m_ids.clear();
   for (auto id : ids) {
     QString nm;
+    QString nation;
     int hp = 0;
     int max_hp = 0;
     bool is_b = false;
     bool alive = false;
-    if (!m_engine->getUnitInfo(id, nm, hp, max_hp, is_b, alive)) {
+    if (!m_engine->getUnitInfo(id, nm, hp, max_hp, is_b, alive, nation)) {
       continue;
     }
     if (is_b) {

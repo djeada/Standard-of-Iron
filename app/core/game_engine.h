@@ -3,6 +3,7 @@
 #include "../models/cursor_manager.h"
 #include "../models/cursor_mode.h"
 #include "../models/hover_tracker.h"
+#include "../models/selected_units_model.h"
 #include "../utils/engine_view_helpers.h"
 #include "../utils/movement_utils.h"
 #include "../utils/selection_utils.h"
@@ -82,8 +83,8 @@ public:
 
   void cleanupOpenGLResources();
 
-  Q_PROPERTY(QObject *selectedUnitsModel READ selectedUnitsModel NOTIFY
-                 selectedUnitsChanged)
+  Q_PROPERTY(QAbstractItemModel *selectedUnitsModel READ selectedUnitsModel
+                 NOTIFY selectedUnitsChanged)
   Q_PROPERTY(bool paused READ paused WRITE setPaused)
   Q_PROPERTY(float timeScale READ timeScale WRITE setGameSpeed)
   Q_PROPERTY(QString victoryState READ victoryState NOTIFY victoryStateChanged)
@@ -117,6 +118,7 @@ public:
   Q_INVOKABLE void onAreaSelected(qreal x1, qreal y1, qreal x2, qreal y2,
                                   bool additive = false);
   Q_INVOKABLE void selectAllTroops();
+  Q_INVOKABLE void selectUnitById(int unitId);
   Q_INVOKABLE void setHoverAtScreen(qreal sx, qreal sy);
   Q_INVOKABLE void onAttackClick(qreal sx, qreal sy);
   Q_INVOKABLE void onStopCommand();
@@ -207,7 +209,8 @@ public:
 
   void getSelectedUnitIds(std::vector<Engine::Core::EntityID> &out) const;
   bool getUnitInfo(Engine::Core::EntityID id, QString &name, int &health,
-                   int &max_health, bool &isBuilding, bool &alive) const;
+                   int &max_health, bool &isBuilding, bool &alive,
+                   QString &nation) const;
 
   [[nodiscard]] bool hasPatrolPreviewWaypoint() const;
   [[nodiscard]] QVector3D getPatrolPreviewWaypoint() const;
@@ -252,7 +255,7 @@ private:
   bool worldToScreen(const QVector3D &world, QPointF &outScreen) const;
   void syncSelectionFlags();
   static void resetMovement(Engine::Core::Entity *entity);
-  QObject *selectedUnitsModel();
+  QAbstractItemModel *selectedUnitsModel();
   void onUnitSpawned(const Engine::Core::UnitSpawnedEvent &event);
   void onUnitDied(const Engine::Core::UnitDiedEvent &event);
   void rebuildEntityCache();
@@ -299,7 +302,7 @@ private:
   ViewportState m_viewport;
   bool m_followSelectionEnabled = false;
   Game::Systems::LevelSnapshot m_level;
-  QObject *m_selectedUnitsModel = nullptr;
+  SelectedUnitsModel *m_selectedUnitsModel = nullptr;
   int m_enemyTroopsDefeated = 0;
   int m_selectedPlayerId = 1;
   QVariantList m_available_maps;
