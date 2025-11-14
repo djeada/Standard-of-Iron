@@ -26,6 +26,7 @@ public:
        int role = Qt::DisplayRole) const -> QVariant override;
   [[nodiscard]] auto roleNames() const -> QHash<int, QByteArray> override;
 
+public slots:
   void refresh();
 
 private:

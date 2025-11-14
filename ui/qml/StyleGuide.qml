@@ -137,61 +137,66 @@ QtObject {
     })
     readonly property var unitIconSources: ({
         "archer": ({
-            "default": "qrc:/assets/visuals/icons/archer_rome.png",
-            "kingdom_of_iron": "qrc:/assets/visuals/icons/archer_rome.png",
-            "roman_republic": "qrc:/assets/visuals/icons/archer_rome.png",
-            "carthage": "qrc:/assets/visuals/icons/archer_cartaghe.png"
+            "default": root.iconPath("archer_rome.png"),
+            "kingdom_of_iron": root.iconPath("archer_rome.png"),
+            "roman_republic": root.iconPath("archer_rome.png"),
+            "carthage": root.iconPath("archer_cartaghe.png")
         }),
         "swordsman": ({
-            "default": "qrc:/assets/visuals/icons/swordsman_rome.png",
-            "kingdom_of_iron": "qrc:/assets/visuals/icons/swordsman_rome.png",
-            "roman_republic": "qrc:/assets/visuals/icons/swordsman_rome.png",
-            "carthage": "qrc:/assets/visuals/icons/swordsman_cartaghe.png"
+            "default": root.iconPath("swordsman_rome.png"),
+            "kingdom_of_iron": root.iconPath("swordsman_rome.png"),
+            "roman_republic": root.iconPath("swordsman_rome.png"),
+            "carthage": root.iconPath("swordsman_cartaghe.png")
         }),
         "spearman": ({
-            "default": "qrc:/assets/visuals/icons/spearman_rome.png",
-            "kingdom_of_iron": "qrc:/assets/visuals/icons/spearman_rome.png",
-            "roman_republic": "qrc:/assets/visuals/icons/spearman_rome.png",
-            "carthage": "qrc:/assets/visuals/icons/spearman_cartaghe.png"
+            "default": root.iconPath("spearman_rome.png"),
+            "kingdom_of_iron": root.iconPath("spearman_rome.png"),
+            "roman_republic": root.iconPath("spearman_rome.png"),
+            "carthage": root.iconPath("spearman_cartaghe.png")
         }),
         "horse_swordsman": ({
-            "default": "qrc:/assets/visuals/icons/horse_swordsman_rome.png",
-            "kingdom_of_iron": "qrc:/assets/visuals/icons/horse_swordsman_rome.png",
-            "roman_republic": "qrc:/assets/visuals/icons/horse_swordsman_rome.png",
-            "carthage": "qrc:/assets/visuals/icons/horse_swordsman_cartaghe.png"
+            "default": root.iconPath("horse_swordsman_rome.png"),
+            "kingdom_of_iron": root.iconPath("horse_swordsman_rome.png"),
+            "roman_republic": root.iconPath("horse_swordsman_rome.png"),
+            "carthage": root.iconPath("horse_swordsman_cartaghe.png")
         }),
         "horse_archer": ({
-            "default": "qrc:/assets/visuals/icons/horse_archer_rome.png",
-            "kingdom_of_iron": "qrc:/assets/visuals/icons/horse_archer_rome.png",
-            "roman_republic": "qrc:/assets/visuals/icons/horse_archer_rome.png",
-            "carthage": "qrc:/assets/visuals/icons/horse_archer_cartaghe.png"
+            "default": root.iconPath("horse_archer_rome.png"),
+            "kingdom_of_iron": root.iconPath("horse_archer_rome.png"),
+            "roman_republic": root.iconPath("horse_archer_rome.png"),
+            "carthage": root.iconPath("horse_archer_cartaghe.png")
         }),
         "horse_spearman": ({
-            "default": "qrc:/assets/visuals/icons/horse_spearman_rome.png",
-            "kingdom_of_iron": "qrc:/assets/visuals/icons/horse_spearman_rome.png",
-            "roman_republic": "qrc:/assets/visuals/icons/horse_spearman_rome.png",
-            "carthage": "qrc:/assets/visuals/icons/horse_spearman_cartaghe.png"
+            "default": root.iconPath("horse_spearman_rome.png"),
+            "kingdom_of_iron": root.iconPath("horse_spearman_rome.png"),
+            "roman_republic": root.iconPath("horse_spearman_rome.png"),
+            "carthage": root.iconPath("horse_spearman_cartaghe.png")
         }),
         "healer": ({
-            "default": "qrc:/assets/visuals/icons/healer_rome.png",
-            "kingdom_of_iron": "qrc:/assets/visuals/icons/healer_rome.png",
-            "roman_republic": "qrc:/assets/visuals/icons/healer_rome.png",
-            "carthage": "qrc:/assets/visuals/icons/healer_cartaghe.png"
+            "default": root.iconPath("healer_rome.png"),
+            "kingdom_of_iron": root.iconPath("healer_rome.png"),
+            "roman_republic": root.iconPath("healer_rome.png"),
+            "carthage": root.iconPath("healer_cartaghe.png")
         }),
         "catapult": ({
-            "default": "qrc:/assets/visuals/icons/catapult_rome.png",
-            "kingdom_of_iron": "qrc:/assets/visuals/icons/catapult_rome.png",
-            "roman_republic": "qrc:/assets/visuals/icons/catapult_rome.png",
-            "carthage": "qrc:/assets/visuals/icons/catapult_cartaghe.png"
+            "default": root.iconPath("catapult_rome.png"),
+            "kingdom_of_iron": root.iconPath("catapult_rome.png"),
+            "roman_republic": root.iconPath("catapult_rome.png"),
+            "carthage": root.iconPath("catapult_cartaghe.png")
         }),
         "ballista": ({
-            "default": "qrc:/assets/visuals/icons/ballista_rome.png",
-            "kingdom_of_iron": "qrc:/assets/visuals/icons/ballista_rome.png",
-            "roman_republic": "qrc:/assets/visuals/icons/ballista_rome.png",
-            "carthage": "qrc:/assets/visuals/icons/ballista_cartaghe.png"
+            "default": root.iconPath("ballista_rome.png"),
+            "kingdom_of_iron": root.iconPath("ballista_rome.png"),
+            "roman_republic": root.iconPath("ballista_rome.png"),
+            "carthage": root.iconPath("ballista_cartaghe.png")
         }),
         "default": ({
             "default": ""
         })
     })
+
+    function iconPath(filename) {
+        return "qrc:/StandardOfIron/assets/visuals/icons/" + filename;
+    }
+
 }
