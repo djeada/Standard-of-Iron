@@ -324,7 +324,7 @@ void HumanoidRendererBase::drawCommonBody(const DrawContext &ctx,
 
   const float torso_r = torso_r_base * width_scale;
   float const depth_scale = scaling.z();
-  // Encourage a fuller chest profile by default while still respecting scaling.
+
   const float torso_depth_factor =
       std::clamp(0.55F + (depth_scale - 1.0F) * 0.20F, 0.40F, 0.85F);
   const float torso_depth = torso_r * torso_depth_factor;
