@@ -93,47 +93,57 @@ void main() {
   }
   // LIGHT CHAINMAIL ARMOR (lorica hamata - pectorale reinforcement optional)
   else if (isArmor) {
-    // Spearman chainmail with optional chest plate overlay
-    vec2 chainUV = v_worldPos.xz * 28.0;
+    // FORCE grey metal base - chainmail is CLEARLY not skin
+    color = color * vec3(0.42, 0.46, 0.50);  // Darker grey base
     
-    // 4-in-1 European ring pattern
-    float rings = chainmailRings(chainUV) * (0.72 + v_chainmailPhase * 0.56);
+    vec2 chainUV = v_worldPos.xz * 22.0;  // Larger rings
     
-    // Ring structure detail
-    float ringDepth = noise(chainUV * 1.9) * 0.095;
-    float gapShadow = step(0.89, fract(chainUV.x * 32.0)) * 
-                      step(0.89, fract(chainUV.y * 32.0)) * 0.11;
+    // PECTORALE CHEST PLATE - highly visible steel plate overlay
+    float chestPlate = smoothstep(1.15, 1.25, v_bodyHeight) * 
+                       smoothstep(1.55, 1.45, v_bodyHeight) *
+                       smoothstep(0.25, 0.15, abs(v_worldPos.x));  // Center chest
     
-    // Iron oxidation (more wear on spearmen from front-line combat)
-    float oxidation = noise(chainUV * 8.8) * 0.16 * v_steelWear;
-    float rustSpots = step(0.85, noise(chainUV * 5.5)) * 0.12 * v_steelWear;
+    // STRONG distinction between plate and chainmail
+    if (chestPlate > 0.3) {
+      // PECTORALE - polished steel plate
+      color = vec3(0.72, 0.76, 0.82);  // Bright steel
+      
+      // Plate edges and rivets
+      float plateEdge = smoothstep(0.88, 0.92, chestPlate) * 0.25;
+      float rivets = step(0.92, fract(v_worldPos.x * 18.0)) * 
+                     step(0.92, fract(v_worldPos.y * 12.0)) * 0.30;
+      
+      vec3 V = normalize(vec3(0.0, 1.0, 0.5));
+      float viewAngle = max(dot(normalize(v_worldNormal), V), 0.0);
+      float plateSheen = pow(viewAngle, 8.0) * 0.75;  // Strong reflection
+      
+      color += vec3(plateSheen + rivets);
+      color -= vec3(plateEdge);
+    } else {
+      // CHAINMAIL - much more visible rings
+      float rings = chainmailRings(chainUV) * 2.2;
+      float ringGaps = (1.0 - chainmailRings(chainUV)) * 0.50;
+      
+      // Iron oxidation and rust
+      float oxidation = noise(chainUV * 7.5) * 0.28 * v_steelWear;
+      vec3 rustColor = vec3(0.38, 0.28, 0.22);
+      
+      // Battle damage
+      float damage = step(0.86, noise(chainUV * 0.8)) * 0.40;
+      
+      vec3 V = normalize(vec3(0.0, 1.0, 0.5));
+      float viewAngle = max(dot(normalize(v_worldNormal), V), 0.0);
+      float chainSheen = pow(viewAngle, 4.5) * 0.55;
+      
+      float shimmer = abs(sin(chainUV.x * 32.0) * sin(chainUV.y * 32.0)) * 0.22;
+      
+      color += vec3(rings + chainSheen + shimmer);
+      color -= vec3(ringGaps + damage);
+      color = mix(color, rustColor, oxidation * 0.40);
+    }
     
-    // Battle damage from weapons impact
-    float damageSeed = noise(chainUV * 0.75);
-    float damage = step(0.91, damageSeed) * 0.24;
-    float impact = noise(chainUV * 1.2) * v_steelWear * 0.08;
-    
-    // Pectorale (chest plate) overlay - only on upper torso
-    float chestPlate = smoothstep(1.2, 1.3, v_bodyHeight) * 
-                       smoothstep(1.5, 1.4, v_bodyHeight);
-    float plateSheen = chestPlate * 0.18;
-    
-    // Maintenance varies by position (chest better maintained)
-    float oilPattern = noise(chainUV * 3.3) * (0.08 + chestPlate * 0.06);
-    
-    vec3 V = normalize(vec3(0.0, 1.0, 0.5));
-    float viewAngle = max(dot(normalize(v_worldNormal), V), 0.0);
-    float chainSheen = pow(viewAngle, 6.2) * (0.18 + chestPlate * 0.10);
-    
-    // AO in ring interstices
-    float ao = (1.0 - rings * 0.62) * 0.17;
-    
-    // Ring-on-ring scratching
-    float scratches = noise(chainUV * 46.0) * 0.075;
-
-    color += vec3(rings + chainSheen + oilPattern + plateSheen);
-    color -= vec3(oxidation * 0.48 + rustSpots + gapShadow + ao + damage + impact);
-    color *= 1.0 - scratches;
+    // Ensure armor is ALWAYS clearly visible
+    color = clamp(color, vec3(0.32), vec3(0.88));
   }
   // LEATHER PTERUGES & BELT
   else if (isLegs) {

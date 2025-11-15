@@ -111,45 +111,47 @@ void main() {
   }
   // LIGHT CHAINMAIL ARMOR (lorica hamata - historically accurate 4-in-1 pattern)
   else if (isArmor) {
+    // DRAMATICALLY VISIBLE chainmail - base color much darker than body
+    // Start with strong grey base that's clearly NOT skin
+    color = color * vec3(0.45, 0.48, 0.52);  // Force grey metal base
+    
     // Roman chainmail: butted iron rings, 8-10mm diameter, 1.2mm wire
-    // Each ring passes through 4 neighbors (European 4-in-1 pattern)
-    vec2 chainUV = v_worldPos.xz * 28.0;
+    vec2 chainUV = v_worldPos.xz * 22.0;  // Larger, more visible rings
     
-    // Primary ring pattern with vertex-computed phase alignment
-    float rings = chainmailRings(chainUV) * (0.75 + v_chainmailPhase * 0.50);
+    // MUCH STRONGER ring pattern - these need to be OBVIOUS
+    float rings = chainmailRings(chainUV) * 2.5;  // 3x stronger
     
-    // Ring depth - butted rings have visible gaps
-    float ringDepth = noise(chainUV * 1.8) * 0.10;
-    float gaps = step(0.88, fract(chainUV.x * 32.0)) * 
-                 step(0.88, fract(chainUV.y * 32.0)) * 0.12;
+    // Deep shadows in ring gaps - CRITICAL for visibility
+    float ringGaps = (1.0 - chainmailRings(chainUV)) * 0.45;
     
-    // Oxidation in ring joints (iron rusts easily)
-    float oxidation = noise(chainUV * 9.0) * 0.14;
-    float jointDark = (rings + gaps) * 0.18;
+    // Ring structure with STRONG contrast
+    float ringHighlight = rings * 0.85;
+    float ringShadow = ringGaps * 0.60;
     
-    // Battle damage - stretched/broken rings
-    float damageSeed = noise(chainUV * 0.7);
-    float damage = step(0.94, damageSeed) * 0.20;
-    float stretching = noise(chainUV * 2.5) * 0.06;
+    // Oxidation creates rust color variance
+    float oxidation = noise(chainUV * 7.0) * 0.25;
+    vec3 rustTint = vec3(0.35, 0.25, 0.20);  // Brown rust color
     
-    // Maintenance oil sheen (Romans used oil/animal fat against rust)
-    float oilPattern = noise(chainUV * 3.5) * 0.10;
+    // Battle damage - visible broken rings
+    float damageSeed = noise(chainUV * 0.8);
+    float damage = step(0.88, damageSeed) * 0.35;
     
-    // Specular highlights on ring curves
+    // STRONG specular highlights on ring surfaces
     vec3 N = normalize(v_worldNormal);
     vec3 V = normalize(vec3(0.0, 1.0, 0.5));
     float viewAngle = max(dot(N, V), 0.0);
-    float chainSheen = pow(viewAngle, 6.5) * 0.22;
+    float chainSheen = pow(viewAngle, 4.0) * 0.65;  // Much stronger
     
-    // Ambient occlusion between overlapping rings
-    float ao = (1.0 - rings * 0.65) * 0.16;
-    
-    // Micro-scratches from ring friction
-    float scratches = noise(chainUV * 48.0) * 0.07;
+    // Metallic shimmer as rings catch light
+    float shimmer = abs(sin(chainUV.x * 32.0) * sin(chainUV.y * 32.0)) * 0.25;
 
-    color += vec3(rings + chainSheen + oilPattern * 0.6);
-    color -= vec3(oxidation * 0.45 + jointDark + ao + damage + stretching);
-    color *= 1.0 - scratches;
+    // Apply all chainmail effects with STRONG visibility
+    color += vec3(ringHighlight + chainSheen + shimmer);
+    color -= vec3(ringShadow + damage);
+    color = mix(color, rustTint, oxidation * 0.35);
+    
+    // Ensure chainmail is CLEARLY visible - never blend into skin
+    color = clamp(color, vec3(0.35), vec3(0.85));
   }
   // LEATHER PTERUGES & BELT (tan/brown leather strips)
   else if (isLegs) {

@@ -94,77 +94,72 @@ void main() {
   }
   // HEAVY SEGMENTED ARMOR (lorica segmentata - iconic Roman plate armor)
   else if (isArmor) {
-    // Historical lorica segmentata construction:
-    // - 30-40 curved iron/steel plates in horizontal bands
-    // - Girth hoops wrap torso, connected by internal leather straps
-    // - Hinged on sides, buckled front/back
-    // - ~9kg, superior protection, 1st-2nd century AD peak usage
+    // FORCE polished steel base - segmentata is BRIGHT, REFLECTIVE armor
+    color = vec3(0.72, 0.78, 0.88);  // Bright steel base - NOT skin tone!
     
-    vec2 armorUV = v_worldPos.xz * 4.8;
+    vec2 armorUV = v_worldPos.xz * 5.5;
     
-    // === PLATE BANDS (6-7 horizontal segments) ===
-    // Vertex shader computed plate phase for band positioning
-    float bandEdge = smoothstep(0.88, 0.96, v_platePhase) + 
-                     smoothstep(0.12, 0.04, v_platePhase);
-    float plateLine = bandEdge * 0.14;
+    // === HORIZONTAL PLATE BANDS - MUST BE OBVIOUS ===
+    // 6-7 clearly visible bands wrapping torso
+    float bandPattern = fract(v_platePhase);
     
-    // Overlap shadows (upper plates overlap lower by ~1cm)
-    float overlapShadow = smoothstep(0.92, 0.98, v_platePhase) * 0.16;
+    // STRONG band edges (plate separations)
+    float bandEdge = step(0.92, bandPattern) + step(bandPattern, 0.08);
+    float plateLine = bandEdge * 0.55;  // Much stronger
     
-    // Plate curvature fitted to torso
-    float curvature = abs(fract(armorUV.x * 2.5) - 0.5) * 0.08;
+    // DEEP shadows between overlapping plates
+    float overlapShadow = smoothstep(0.90, 0.98, bandPattern) * 0.65;
     
-    // === RIVETS & FASTENERS ===
-    // Brass/bronze rivets along edges (~4cm spacing)
-    float rivetSpacing = fract(v_worldPos.x * 22.0);
-    float rivet = smoothstep(0.47, 0.50, rivetSpacing) * 
-                  smoothstep(0.53, 0.50, rivetSpacing);
-    float brassRivets = rivet * v_rivetPattern * 0.22;
+    // Alternating plate brightness (polishing variation)
+    float plateBrightness = step(0.5, fract(v_platePhase * 0.5)) * 0.15;
     
-    // Side hinges (vertical connection system)
-    float sideHinge = step(0.75, abs(armorUV.x)) * 0.10;
+    // === RIVETS - CLEARLY VISIBLE ===
+    // Large brass rivets along each band edge
+    float rivetX = fract(v_worldPos.x * 16.0);
+    float rivetY = fract(v_platePhase * 6.5);  // Align with bands
+    float rivet = smoothstep(0.45, 0.50, rivetX) * 
+                  smoothstep(0.55, 0.50, rivetX) *
+                  (step(0.92, rivetY) + step(rivetY, 0.08));
+    float brassRivets = rivet * 0.45;  // Much more visible
+    vec3 brassColor = vec3(0.95, 0.82, 0.45);  // Bright brass
     
-    // === SURFACE FINISH ===
-    // Brushed/polished steel (well-maintained by legionaries)
-    float brushedFinish = abs(sin(v_worldPos.y * 88.0 + v_worldPos.x * 15.0)) * 0.025;
+    // === METALLIC FINISH ===
+    // Polished steel with strong reflections
+    float brushedMetal = abs(sin(v_worldPos.y * 75.0)) * 0.12;
     
-    // Scratches (fewer on well-polished armor)
-    float scratches = noise(armorUV * 38.0) * 0.022 * (1.0 - v_polishLevel * 0.6);
-    float deepScratches = step(0.94, noise(armorUV * 8.5)) * 0.015;
-    
-    // === BATTLE WEAR ===
-    // Articulation wear at segment joints (vertex computed stress)
-    float jointWear = v_segmentStress * 0.18;
-    
-    // Impact dents from frontal combat
-    float frontFacing = smoothstep(-0.3, 0.6, v_worldNormal.z);
-    float dents = noise(armorUV * 7.5) * 0.028 * frontFacing;
-    float majorDent = step(0.92, noise(armorUV * 2.2)) * 0.045 * frontFacing;
-    
-    // Minimal rust (only in joint crevices if neglected)
-    float rustInJoints = (1.0 - v_polishLevel) * 0.12 * 
-                         smoothstep(0.95, 1.0, v_platePhase);
-    
-    // === LIGHTING ===
     vec3 V = normalize(vec3(0.0, 1.0, 0.5));
     float viewAngle = max(dot(normalize(v_worldNormal), V), 0.0);
     
-    // Strong specular on polished plates
-    float plateSpecular = pow(viewAngle, 11.0) * 0.52 * v_polishLevel;
+    // VERY STRONG specular - legionary armor was highly polished
+    float plateSpecular = pow(viewAngle, 9.0) * 0.85 * v_polishLevel;
     
     // Metallic fresnel
-    float plateFresnel = pow(1.0 - viewAngle, 1.9) * 0.32;
+    float plateFresnel = pow(1.0 - viewAngle, 2.2) * 0.45;
     
     // Sky reflection
-    float skyReflect = (v_worldNormal.y * 0.5 + 0.5) * 0.14 * v_polishLevel;
+    float skyReflect = (v_worldNormal.y * 0.5 + 0.5) * 0.35 * v_polishLevel;
     
-    // AO in overlaps
-    float ao = overlapShadow * 0.20;
+    // === WEAR & DAMAGE ===
+    // Battle scratches
+    float scratches = noise(armorUV * 42.0) * 0.08 * (1.0 - v_polishLevel * 0.7);
+    
+    // Impact dents (front armor takes hits)
+    float frontFacing = smoothstep(-0.2, 0.7, v_worldNormal.z);
+    float dents = noise(armorUV * 6.0) * 0.12 * frontFacing;
+    
+    // Joint wear between plates
+    float jointWear = v_segmentStress * 0.25;
 
-    color += vec3(plateLine + brassRivets + sideHinge + plateSpecular + 
-                  plateFresnel + skyReflect + brushedFinish + curvature);
-    color -= vec3(scratches + deepScratches + jointWear + dents + majorDent + 
-                  rustInJoints + ao);
+    // Apply all plate effects - STRONG VISIBILITY
+    color += vec3(plateBrightness + plateSpecular + plateFresnel + 
+                  skyReflect + brushedMetal);
+    color -= vec3(plateLine * 0.4 + overlapShadow + scratches + dents * 0.5 + jointWear);
+    
+    // Add brass rivets with color
+    color = mix(color, brassColor, brassRivets);
+    
+    // Ensure segmentata is ALWAYS bright and visible
+    color = clamp(color, vec3(0.45), vec3(0.95));
   }
   // LEATHER PTERUGES & BELT
   else if (isLegs) {
