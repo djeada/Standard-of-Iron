@@ -22,15 +22,15 @@ struct HumanProportions {
   static constexpr float LOWER_LEG_LEN = 0.47F;
   static constexpr float KNEE_Y = WAIST_Y - UPPER_LEG_LEN;
 
-  static constexpr float SHOULDER_WIDTH = HEAD_HEIGHT * 2.05F;
+  static constexpr float SHOULDER_WIDTH = HEAD_HEIGHT * 1.82F;
   static constexpr float HEAD_RADIUS = HEAD_HEIGHT * 0.41F;
   static constexpr float NECK_RADIUS = HEAD_RADIUS * 0.39F;
-  static constexpr float TORSO_TOP_R = HEAD_RADIUS * 1.20F;
-  static constexpr float TORSO_BOT_R = HEAD_RADIUS * 1.08F;
-  static constexpr float UPPER_ARM_R = HEAD_RADIUS * 0.38F;
+  static constexpr float TORSO_TOP_R = HEAD_RADIUS * 1.25F;
+  static constexpr float TORSO_BOT_R = HEAD_RADIUS * 1.12F;
+  static constexpr float UPPER_ARM_R = HEAD_RADIUS * 0.45F;
   static constexpr float FORE_ARM_R = HEAD_RADIUS * 0.32F;
   static constexpr float HAND_RADIUS = HEAD_RADIUS * 0.28F;
-  static constexpr float UPPER_LEG_R = HEAD_RADIUS * 0.54F;
+  static constexpr float UPPER_LEG_R = HEAD_RADIUS * 0.64F;
   static constexpr float LOWER_LEG_R = HEAD_RADIUS * 0.44F;
 
   static constexpr float UPPER_ARM_LEN = 0.32F;
