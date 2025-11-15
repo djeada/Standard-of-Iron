@@ -213,12 +213,6 @@ void HumanoidRendererBase::computeLocomotionPose(
 
     animate_foot(pose.foot_l, left_phase);
     animate_foot(pose.foot_r, right_phase);
-
-    float const hip_sway =
-        std::sin(walk_phase * 2.0F * std::numbers::pi_v<float>) * 0.02F *
-        variation.arm_swing_amp;
-    pose.shoulder_l.setX(pose.shoulder_l.x() + hip_sway);
-    pose.shoulder_r.setX(pose.shoulder_r.x() + hip_sway);
   }
 
   QVector3D const hip_l = pose.pelvis_pos + QVector3D(-0.10F, -0.02F, 0.0F);
