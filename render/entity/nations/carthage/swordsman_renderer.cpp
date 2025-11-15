@@ -98,7 +98,7 @@ struct KnightExtras {
 class KnightRenderer : public HumanoidRendererBase {
 public:
   auto get_proportion_scaling() const -> QVector3D override {
-    return {1.20F, 1.05F, 1.10F};
+    return {0.95F, 1.05F, 0.95F};
   }
 
 private:
