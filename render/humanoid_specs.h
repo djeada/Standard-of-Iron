@@ -12,8 +12,8 @@ struct HumanProportions {
   static constexpr float GROUND_Y = 0.0F;
   static constexpr float HEAD_TOP_Y = GROUND_Y + TOTAL_HEIGHT;
   static constexpr float CHIN_Y = HEAD_TOP_Y - HEAD_HEIGHT;
-  static constexpr float NECK_BASE_Y = CHIN_Y - 0.08F;
-  static constexpr float SHOULDER_Y = NECK_BASE_Y - 0.04F;
+  static constexpr float NECK_BASE_Y = CHIN_Y - 0.04F;
+  static constexpr float SHOULDER_Y = NECK_BASE_Y - 0.08F;
   static constexpr float CHEST_Y = SHOULDER_Y - 0.31F;
   static constexpr float WAIST_Y = CHEST_Y - 0.25F;
 
