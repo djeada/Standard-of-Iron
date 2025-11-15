@@ -48,7 +48,7 @@ void main() {
   if (avgColor > 0.65) {
     float weave = clothWeave(v_worldPos.xz);
     float folds = noise(uv * 8.0) * 0.13;
-    
+
     float viewAngle = abs(dot(normal, normalize(vec3(0.0, 1.0, 0.2))));
     float clothSheen = pow(1.0 - viewAngle, 9.0) * 0.12;
 
@@ -63,8 +63,7 @@ void main() {
 
     color *= 1.0 + leatherGrain - 0.04;
     color += vec3(leatherSheen);
-  }
-  else {
+  } else {
     float detail = noise(uv * 10.0) * 0.10;
     color *= 1.0 + detail - 0.06;
   }

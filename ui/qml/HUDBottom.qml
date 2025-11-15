@@ -97,6 +97,7 @@ RowLayout {
 
                         MouseArea {
                             id: selectedUnitMouseArea
+
                             anchors.fill: parent
                             hoverEnabled: true
                             propagateComposedEvents: false
@@ -106,6 +107,7 @@ RowLayout {
                             onClicked: {
                                 if (mouse.button === Qt.LeftButton && typeof game !== 'undefined' && game.selectUnitById && typeof unit_id !== 'undefined')
                                     game.selectUnitById(unit_id);
+
                             }
                         }
 
@@ -121,6 +123,7 @@ RowLayout {
 
                                 Image {
                                     id: selectedUnitIcon
+
                                     anchors.centerIn: parent
                                     width: 24
                                     height: 24
@@ -136,6 +139,7 @@ RowLayout {
                                     font.pixelSize: 16
                                     visible: selectedUnitIcon.source === ""
                                 }
+
                             }
 
                             Rectangle {

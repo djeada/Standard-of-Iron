@@ -275,6 +275,10 @@ auto simpleHash(float seed) -> float {
 
 auto createUnitTorsoMesh(int radialSegments, int heightSegments) -> Mesh * {
   const float half_h = k_half_scalar;
+  constexpr float k_lower_extension = 0.14F;
+  const float torso_bottom_y = -half_h;
+  const float torso_top_y = half_h + k_lower_extension;
+  const float torso_height = torso_top_y - torso_bottom_y;
 
   const bool invert_profile = true;
 
@@ -348,9 +352,9 @@ auto createUnitTorsoMesh(int radialSegments, int heightSegments) -> Mesh * {
   };
 
   const Key keys[] = {
-      {0.10F, {0.98F, 0.92F}}, {0.20F, {1.02F, 0.96F}}, {0.45F, {0.82F, 0.78F}},
-      {0.65F, {1.20F, 1.04F}}, {0.85F, {1.42F, 1.18F}}, {1.02F, {1.60F, 1.06F}},
-      {1.10F, {1.20F, 0.96F}},
+      {0.10F, {0.94F, 0.88F}}, {0.20F, {0.98F, 0.92F}}, {0.45F, {0.76F, 0.70F}},
+      {0.65F, {1.12F, 1.06F}}, {0.85F, {1.30F, 1.25F}}, {1.02F, {1.48F, 1.20F}},
+      {1.10F, {1.12F, 0.92F}},
   };
   constexpr int key_count = sizeof(keys) / sizeof(keys[0]);
 
@@ -453,7 +457,7 @@ auto createUnitTorsoMesh(int radialSegments, int heightSegments) -> Mesh * {
     px += x_offset_at(ts);
     pz += z_offset_at(ts);
 
-    float const py = -half_h + t * (2.0F * half_h);
+    float const py = torso_bottom_y + t * torso_height;
 
     float const s_value =
         (t * k_micro_temporal_frequency) + (ang * k_micro_angular_frequency);
@@ -519,7 +523,8 @@ auto createUnitTorsoMesh(int radialSegments, int heightSegments) -> Mesh * {
     int base_top = (int)v.size();
     float const t_top = 1.0F;
     float const t_top_s = invert_profile ? (1.0F - t_top) : t_top;
-    QVector3D const c_top(x_offset_at(t_top_s), half_h, z_offset_at(t_top_s));
+    QVector3D const c_top(x_offset_at(t_top_s), torso_top_y,
+                          z_offset_at(t_top_s));
     v.push_back({{c_top.x(), c_top.y(), c_top.z()},
                  {0, 1, 0},
                  {k_uv_center, k_uv_center}});
@@ -543,7 +548,8 @@ auto createUnitTorsoMesh(int radialSegments, int heightSegments) -> Mesh * {
     int base_bot = (int)v.size();
     float const t_bot = 0.0F;
     float const t_bot_s = invert_profile ? (1.0F - t_bot) : t_bot;
-    QVector3D const c_bot(x_offset_at(t_bot_s), -half_h, z_offset_at(t_bot_s));
+    QVector3D const c_bot(x_offset_at(t_bot_s), torso_bottom_y,
+                          z_offset_at(t_bot_s));
     v.push_back({{c_bot.x(), c_bot.y(), c_bot.z()},
                  {0, -1, 0},
                  {k_uv_center, k_uv_center}});
