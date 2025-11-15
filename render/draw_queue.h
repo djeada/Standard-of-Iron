@@ -32,6 +32,7 @@ struct MeshCmd {
   QMatrix4x4 mvp;
   QVector3D color{1, 1, 1};
   float alpha = 1.0F;
+  int materialId = 0;  // 0=body/skin, 1=armor, 2=helmet, 3=weapon, 4=shield
   class Shader *shader = nullptr;
 };
 

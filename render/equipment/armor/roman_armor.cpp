@@ -77,7 +77,7 @@ void RomanHeavyArmorRenderer::render(const DrawContext &ctx,
   // MAIN SEGMENTED PLATE ARMOR - follows torso contours
   QMatrix4x4 plates = cylinderBetween(ctx.model, top, bottom, torso_r * 1.02F);
   plates.scale(1.05F, 1.0F, depth_scale_for(0.86F));
-  submitter.mesh(getUnitTorso(), plates, steel_color, nullptr, 1.0F);
+  submitter.mesh(getUnitTorso(), plates, steel_color, nullptr, 1.0F, 1);  // materialId=1 (armor)
 
   // Shoulder guards (pteruges) - 2 overlapping plates per side
   auto renderShoulderGuard = [&](const QVector3D &shoulder_pos,
@@ -88,7 +88,7 @@ void RomanHeavyArmorRenderer::render(const DrawContext &ctx,
     upper.translate(upper_pos);
     upper.scale(HP::UPPER_ARM_R * 1.90F, HP::UPPER_ARM_R * 0.42F,
                 HP::UPPER_ARM_R * 1.65F);
-    submitter.mesh(getUnitSphere(), upper, steel_color * 0.98F, nullptr, 1.0F);
+    submitter.mesh(getUnitSphere(), upper, steel_color * 0.98F, nullptr, 1.0F, 1);  // materialId=1
 
     // Lower shoulder plate with brass trim
     QVector3D lower_pos = upper_pos - up * 0.06F + outward * 0.02F;
@@ -96,7 +96,7 @@ void RomanHeavyArmorRenderer::render(const DrawContext &ctx,
     lower.translate(lower_pos);
     lower.scale(HP::UPPER_ARM_R * 1.68F, HP::UPPER_ARM_R * 0.38F,
                 HP::UPPER_ARM_R * 1.48F);
-    submitter.mesh(getUnitSphere(), lower, steel_color * 0.94F, nullptr, 1.0F);
+    submitter.mesh(getUnitSphere(), lower, steel_color * 0.94F, nullptr, 1.0F, 1);  // materialId=1
 
     // Brass rivet on shoulder
     QMatrix4x4 rivet = ctx.model;
@@ -117,7 +117,7 @@ void RomanHeavyArmorRenderer::render(const DrawContext &ctx,
 
   submitter.mesh(getUnitCylinder(),
                  cylinderBetween(ctx.model, belt_bot, belt_top, belt_radius),
-                 leather_color, nullptr, 1.0F);
+                 leather_color, nullptr, 1.0F, 0);  // materialId=0 (leather)
 
   // Brass belt fittings (decorative and functional)
   for (int i = 0; i < 6; ++i) {
@@ -128,7 +128,7 @@ void RomanHeavyArmorRenderer::render(const DrawContext &ctx,
     fitting.translate(fitting_pos);
     fitting.scale(0.015F);
     submitter.mesh(getUnitSphere(), fitting, brass_color * 0.92F, nullptr,
-                   1.0F);
+                   1.0F, 0);  // materialId=0 (decoration)
   }
 }
 
@@ -192,7 +192,7 @@ void RomanLightArmorRenderer::render(const DrawContext &ctx,
   QMatrix4x4 chainmail =
       cylinderBetween(ctx.model, top, bottom, torso_r * 0.98F);
   chainmail.scale(1.02F, 1.0F, depth_scale_for(0.82F));
-  submitter.mesh(getUnitTorso(), chainmail, chainmail_color, nullptr, 1.0F);
+  submitter.mesh(getUnitTorso(), chainmail, chainmail_color, nullptr, 1.0F, 1);  // materialId=1 (armor)
 
   // PECTORALE (chest reinforcement plate) - distinguishing feature
   // Rectangular steel/bronze plate worn over chainmail on chest
@@ -207,7 +207,7 @@ void RomanLightArmorRenderer::render(const DrawContext &ctx,
   QQuaternion chest_rot = QQuaternion::fromDirection(forward, up);
   pectorale.rotate(chest_rot.conjugated());
   pectorale.scale(plate_width, plate_height, plate_depth);
-  submitter.mesh(getUnitSphere(), pectorale, steel_color, nullptr, 1.0F);
+  submitter.mesh(getUnitSphere(), pectorale, steel_color, nullptr, 1.0F, 1);  // materialId=1 (armor plate)
 
   // Pectorale leather straps (visible attachment to chainmail)
   auto strap = [&](float side) {
@@ -218,7 +218,7 @@ void RomanLightArmorRenderer::render(const DrawContext &ctx,
     submitter.mesh(getUnitCylinder(),
                    cylinderBetween(ctx.model, shoulder_point, chest_point,
                                    torso_r * 0.055F),
-                   leather_color * 0.88F, nullptr, 1.0F);
+                   leather_color * 0.88F, nullptr, 1.0F, 0);  // materialId=0 (leather)
   };
   strap(1.0F);
   strap(-1.0F);
@@ -232,7 +232,7 @@ void RomanLightArmorRenderer::render(const DrawContext &ctx,
 
   submitter.mesh(getUnitCylinder(),
                  cylinderBetween(ctx.model, belt_top, belt_bot, belt_radius),
-                 leather_color, nullptr, 1.0F);
+                 leather_color, nullptr, 1.0F, 0);  // materialId=0 (leather)
 }
 
 } // namespace Render::GL
