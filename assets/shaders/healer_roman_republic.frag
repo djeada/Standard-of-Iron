@@ -59,7 +59,7 @@ void main() {
   if (isWhite || avgColor > 0.72) {
     float linen = romanLinen(v_worldPos.xz);
     float romanFolds = noise(uv * 9.0) * 0.13;
-    
+
     float viewAngle = abs(dot(normal, normalize(vec3(0.0, 1.0, 0.2))));
     float linenSheen = pow(1.0 - viewAngle, 10.0) * 0.12;
 
@@ -70,7 +70,7 @@ void main() {
   else if (isRed) {
     float weave = clothWeave(v_worldPos.xz);
     float dyeRichness = noise(uv * 5.0) * 0.14;
-    
+
     float viewAngle = abs(dot(normal, normalize(vec3(0.0, 1.0, 0.3))));
     float woolSheen = pow(1.0 - viewAngle, 7.0) * 0.11;
 
@@ -81,14 +81,13 @@ void main() {
   else if (avgColor > 0.32 && avgColor <= 0.58) {
     float leatherGrain = noise(uv * 15.0) * 0.15;
     float romanTooling = noise(uv * 22.0) * 0.05;
-    
+
     float viewAngle = abs(dot(normal, normalize(vec3(0.0, 1.0, 0.4))));
     float leatherSheen = pow(1.0 - viewAngle, 5.5) * 0.11;
 
     color *= 1.0 + leatherGrain + romanTooling - 0.05;
     color += vec3(leatherSheen);
-  }
-  else {
+  } else {
     float detail = noise(uv * 10.0) * 0.11;
     color *= 1.0 + detail - 0.06;
   }

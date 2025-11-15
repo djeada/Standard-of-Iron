@@ -82,9 +82,8 @@ void Healer::init(const SpawnParams &params) {
   auto *healer_comp = e->addComponent<Engine::Core::HealerComponent>();
   if (healer_comp != nullptr) {
     healer_comp->healing_range = profile.combat.vision_range * 0.6F;
-    healer_comp->healing_amount = profile.combat.ranged_damage > 0 
-                                    ? profile.combat.ranged_damage 
-                                    : 5;
+    healer_comp->healing_amount =
+        profile.combat.ranged_damage > 0 ? profile.combat.ranged_damage : 5;
     healer_comp->healing_cooldown = profile.combat.ranged_cooldown;
   }
 

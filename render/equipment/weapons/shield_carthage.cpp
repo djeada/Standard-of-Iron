@@ -72,7 +72,8 @@ auto getUnitHemisphereMesh() -> Mesh * {
 
 } // namespace
 
-CarthageShieldRenderer::CarthageShieldRenderer() {
+CarthageShieldRenderer::CarthageShieldRenderer(float scale_multiplier)
+    : m_scale_multiplier(scale_multiplier) {
   ShieldRenderConfig config;
   config.shield_color = {0.20F, 0.46F, 0.62F};
   config.trim_color = {0.76F, 0.68F, 0.42F};
@@ -99,7 +100,8 @@ void CarthageShieldRenderer::render(const DrawContext &ctx,
   const QVector3D axis_x = rot.map(QVector3D(1.0F, 0.0F, 0.0F));
   const QVector3D axis_y = rot.map(QVector3D(0.0F, 1.0F, 0.0F));
 
-  float const shield_radius = 0.18F * 0.9F * k_scale_factor;
+  float const shield_radius =
+      0.18F * 0.9F * k_scale_factor * m_scale_multiplier;
 
   QVector3D shield_center = frames.hand_l.origin +
                             axis_x * (-shield_radius * 0.35F) +

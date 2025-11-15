@@ -16,7 +16,7 @@ namespace {
 auto makeMountedKnightConfig() -> MountedKnightRendererConfig {
   MountedKnightRendererConfig config;
   config.sword_equipment_id = "sword_carthage";
-  config.shield_equipment_id = "shield_carthage";
+  config.shield_equipment_id = "shield_carthage_cavalry";
   config.helmet_equipment_id = "carthage_heavy";
   config.armor_equipment_id = "armor_heavy_carthage";
   config.horse_attachments.emplace_back(

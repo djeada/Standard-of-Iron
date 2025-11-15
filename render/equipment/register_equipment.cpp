@@ -139,6 +139,12 @@ void registerBuiltInEquipment() {
   registry.registerEquipment(EquipmentCategory::Weapon, "shield_carthage",
                              shield_carthage);
 
+  auto shield_carthage_cavalry =
+      std::make_shared<CarthageShieldRenderer>(0.84F);
+  registry.registerEquipment(EquipmentCategory::Weapon,
+                             "shield_carthage_cavalry",
+                             shield_carthage_cavalry);
+
   auto shield_roman = std::make_shared<RomanShieldRenderer>();
   registry.registerEquipment(EquipmentCategory::Weapon, "shield_roman",
                              shield_roman);
