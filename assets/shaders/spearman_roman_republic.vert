@@ -66,11 +66,11 @@ void main() {
 
   float height = offsetPos.y;
   
-  // Armor layer detection
-  if (height > 1.5) {
+  // Armor layer detection - STRICT torso range only
+  if (height > 1.50) {
     v_armorLayer = 0.0; // Heavy steel helmet
-  } else if (height > 0.8) {
-    v_armorLayer = 1.0; // Light chainmail (pectorale)
+  } else if (height > 0.85 && height <= 1.50) {
+    v_armorLayer = 1.0; // Light chainmail (pectorale) - TORSO ONLY
   } else {
     v_armorLayer = 2.0; // Leather pteruges
   }

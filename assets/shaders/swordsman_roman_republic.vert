@@ -67,11 +67,11 @@ void main() {
 
   float height = offsetPos.y;
   
-  // Armor layer detection
-  if (height > 1.5) {
+  // Armor layer detection - segmentata ONLY on torso
+  if (height > 1.50) {
     v_armorLayer = 0.0; // Heavy steel galea helmet
-  } else if (height > 0.8) {
-    v_armorLayer = 1.0; // Heavy lorica segmentata (segmented plate)
+  } else if (height > 0.90 && height <= 1.50) {
+    v_armorLayer = 1.0; // Heavy lorica segmentata - TORSO ONLY
   } else {
     v_armorLayer = 2.0; // Leather pteruges
   }

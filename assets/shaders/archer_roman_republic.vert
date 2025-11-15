@@ -65,13 +65,13 @@ void main() {
 
   float height = offsetPos.y;
   
-  // Armor layer detection
-  if (height > 1.5) {
-    v_armorLayer = 0.0; // Light bronze helmet
-  } else if (height > 0.8) {
-    v_armorLayer = 1.0; // Light chainmail
+  // Armor layer detection - STRICT ranges to avoid applying to wrong body parts
+  if (height > 1.45) {
+    v_armorLayer = 0.0; // Helmet region (helmet mesh only)
+  } else if (height > 0.85 && height <= 1.45) {
+    v_armorLayer = 1.0; // Chainmail torso (armor mesh only)
   } else {
-    v_armorLayer = 2.0; // Leather pteruges
+    v_armorLayer = 2.0; // Legs, pteruges, belt (non-armor)
   }
 
   // Body height normalization
