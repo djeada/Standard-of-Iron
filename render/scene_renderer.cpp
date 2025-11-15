@@ -102,7 +102,7 @@ void Renderer::setViewport(int width, int height) {
   }
 }
 void Renderer::mesh(Mesh *mesh, const QMatrix4x4 &model, const QVector3D &color,
-                    Texture *texture, float alpha) {
+                    Texture *texture, float alpha, int materialId) {
   if (mesh == nullptr) {
     return;
   }
@@ -124,6 +124,7 @@ void Renderer::mesh(Mesh *mesh, const QMatrix4x4 &model, const QVector3D &color,
   cmd.mvp = m_view_proj * model;
   cmd.color = color;
   cmd.alpha = alpha;
+  cmd.materialId = materialId;
   cmd.shader = m_currentShader;
   if (m_activeQueue != nullptr) {
     m_activeQueue->submit(cmd);
