@@ -335,6 +335,7 @@ Rectangle {
 
                             Rectangle {
                                 id: archerCostBadge
+
                                 width: archerCostText.implicitWidth + 12
                                 height: archerCostText.implicitHeight + 6
                                 anchors.horizontalCenter: parent.horizontalCenter
@@ -347,12 +348,14 @@ Rectangle {
 
                                 Text {
                                     id: archerCostText
+
                                     anchors.centerIn: parent
                                     text: unitGridContent.prod.villagerCost || 1
                                     color: archerCostBadge.parent.isEnabled ? "#fdf7e3" : "#8a8a8a"
                                     font.pointSize: 16
                                     font.bold: true
                                 }
+
                             }
 
                             MouseArea {
@@ -411,6 +414,7 @@ Rectangle {
 
                             Rectangle {
                                 id: swordsmanCostBadge
+
                                 width: swordsmanCostText.implicitWidth + 12
                                 height: swordsmanCostText.implicitHeight + 6
                                 anchors.horizontalCenter: parent.horizontalCenter
@@ -423,12 +427,14 @@ Rectangle {
 
                                 Text {
                                     id: swordsmanCostText
+
                                     anchors.centerIn: parent
                                     text: unitGridContent.prod.villagerCost || 1
                                     color: swordsmanCostBadge.parent.isEnabled ? "#fdf7e3" : "#8a8a8a"
                                     font.pointSize: 16
                                     font.bold: true
                                 }
+
                             }
 
                             MouseArea {
@@ -487,6 +493,7 @@ Rectangle {
 
                             Rectangle {
                                 id: spearmanCostBadge
+
                                 width: spearmanCostText.implicitWidth + 12
                                 height: spearmanCostText.implicitHeight + 6
                                 anchors.horizontalCenter: parent.horizontalCenter
@@ -499,12 +506,14 @@ Rectangle {
 
                                 Text {
                                     id: spearmanCostText
+
                                     anchors.centerIn: parent
                                     text: unitGridContent.prod.villagerCost || 1
                                     color: spearmanCostBadge.parent.isEnabled ? "#fdf7e3" : "#8a8a8a"
                                     font.pointSize: 16
                                     font.bold: true
                                 }
+
                             }
 
                             MouseArea {
@@ -563,6 +572,7 @@ Rectangle {
 
                             Rectangle {
                                 id: horseKnightCostBadge
+
                                 width: horseKnightCostText.implicitWidth + 12
                                 height: horseKnightCostText.implicitHeight + 6
                                 anchors.horizontalCenter: parent.horizontalCenter
@@ -575,12 +585,14 @@ Rectangle {
 
                                 Text {
                                     id: horseKnightCostText
+
                                     anchors.centerIn: parent
                                     text: unitGridContent.prod.villagerCost || 1
                                     color: horseKnightCostBadge.parent.isEnabled ? "#fdf7e3" : "#8a8a8a"
                                     font.pointSize: 16
                                     font.bold: true
                                 }
+
                             }
 
                             MouseArea {
@@ -639,6 +651,7 @@ Rectangle {
 
                             Rectangle {
                                 id: horseArcherCostBadge
+
                                 width: horseArcherCostText.implicitWidth + 12
                                 height: horseArcherCostText.implicitHeight + 6
                                 anchors.horizontalCenter: parent.horizontalCenter
@@ -651,12 +664,14 @@ Rectangle {
 
                                 Text {
                                     id: horseArcherCostText
+
                                     anchors.centerIn: parent
                                     text: unitGridContent.prod.villagerCost || 1
                                     color: horseArcherCostBadge.parent.isEnabled ? "#fdf7e3" : "#8a8a8a"
                                     font.pointSize: 16
                                     font.bold: true
                                 }
+
                             }
 
                             MouseArea {
@@ -715,6 +730,7 @@ Rectangle {
 
                             Rectangle {
                                 id: horseSpearmanCostBadge
+
                                 width: horseSpearmanCostText.implicitWidth + 12
                                 height: horseSpearmanCostText.implicitHeight + 6
                                 anchors.horizontalCenter: parent.horizontalCenter
@@ -727,12 +743,14 @@ Rectangle {
 
                                 Text {
                                     id: horseSpearmanCostText
+
                                     anchors.centerIn: parent
                                     text: unitGridContent.prod.villagerCost || 1
                                     color: horseSpearmanCostBadge.parent.isEnabled ? "#fdf7e3" : "#8a8a8a"
                                     font.pointSize: 16
                                     font.bold: true
                                 }
+
                             }
 
                             MouseArea {

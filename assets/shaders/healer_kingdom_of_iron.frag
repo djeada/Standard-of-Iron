@@ -60,7 +60,7 @@ void main() {
   if (isWhite || avgColor > 0.70) {
     float linen = linenTexture(v_worldPos.xz);
     float folds = noise(uv * 8.0) * 0.14;
-    
+
     float viewAngle = abs(dot(normal, normalize(vec3(0.0, 1.0, 0.2))));
     float silkSheen = pow(1.0 - viewAngle, 8.0) * 0.15;
 
@@ -71,7 +71,7 @@ void main() {
   else if (isGreen) {
     float weave = clothWeave(v_worldPos.xz);
     float healingPattern = noise(uv * 6.0) * 0.12;
-    
+
     float viewAngle = abs(dot(normal, normalize(vec3(0.0, 1.0, 0.3))));
     float clothSheen = pow(1.0 - viewAngle, 9.0) * 0.10;
 
@@ -86,8 +86,7 @@ void main() {
 
     color *= 1.0 + leatherGrain - 0.04;
     color += vec3(leatherSheen);
-  }
-  else {
+  } else {
     float detail = noise(uv * 10.0) * 0.10;
     color *= 1.0 + detail - 0.06;
   }
