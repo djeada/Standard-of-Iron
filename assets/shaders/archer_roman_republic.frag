@@ -109,23 +109,47 @@ void main() {
     color -= vec3(bronzePatina * 0.4 + verdigris * 0.3);
     color += vec3(hammerMarks * 0.5);
   }
-  // LIGHT CHAINMAIL ARMOR (lorica hamata - grey steel)
+  // LIGHT CHAINMAIL ARMOR (lorica hamata - historically accurate 4-in-1 pattern)
   else if (isArmor) {
-    // Use vertex-computed chainmail phase for perfect ring alignment
-    float rings = chainmailRings(v_worldPos.xz) * (0.8 + v_chainmailPhase * 0.4);
-
-    // Chainmail has dull metallic sheen
+    // Roman chainmail: butted iron rings, 8-10mm diameter, 1.2mm wire
+    // Each ring passes through 4 neighbors (European 4-in-1 pattern)
+    vec2 chainUV = v_worldPos.xz * 28.0;
+    
+    // Primary ring pattern with vertex-computed phase alignment
+    float rings = chainmailRings(chainUV) * (0.75 + v_chainmailPhase * 0.50);
+    
+    // Ring depth - butted rings have visible gaps
+    float ringDepth = noise(chainUV * 1.8) * 0.10;
+    float gaps = step(0.88, fract(chainUV.x * 32.0)) * 
+                 step(0.88, fract(chainUV.y * 32.0)) * 0.12;
+    
+    // Oxidation in ring joints (iron rusts easily)
+    float oxidation = noise(chainUV * 9.0) * 0.14;
+    float jointDark = (rings + gaps) * 0.18;
+    
+    // Battle damage - stretched/broken rings
+    float damageSeed = noise(chainUV * 0.7);
+    float damage = step(0.94, damageSeed) * 0.20;
+    float stretching = noise(chainUV * 2.5) * 0.06;
+    
+    // Maintenance oil sheen (Romans used oil/animal fat against rust)
+    float oilPattern = noise(chainUV * 3.5) * 0.10;
+    
+    // Specular highlights on ring curves
     vec3 N = normalize(v_worldNormal);
     vec3 V = normalize(vec3(0.0, 1.0, 0.5));
     float viewAngle = max(dot(N, V), 0.0);
-    float chainSheen = pow(viewAngle, 5.0) * 0.16;
+    float chainSheen = pow(viewAngle, 6.5) * 0.22;
+    
+    // Ambient occlusion between overlapping rings
+    float ao = (1.0 - rings * 0.65) * 0.16;
+    
+    // Micro-scratches from ring friction
+    float scratches = noise(chainUV * 48.0) * 0.07;
 
-    // Iron rust spots (more in curves)
-    float rust = noise(uv * 10.0) * 0.08 * (0.5 + v_curvature * 0.5);
-
-    color += vec3(rings + chainSheen);
-    color -= vec3(rust * 0.4);
-    color *= 1.0 - noise(uv * 18.0) * 0.06;
+    color += vec3(rings + chainSheen + oilPattern * 0.6);
+    color -= vec3(oxidation * 0.45 + jointDark + ao + damage + stretching);
+    color *= 1.0 - scratches;
   }
   // LEATHER PTERUGES & BELT (tan/brown leather strips)
   else if (isLegs) {

@@ -91,20 +91,49 @@ void main() {
     color -= vec3(rustTex * 0.3);
     color += vec3(brushed * 0.6);
   }
-  // LIGHT CHAINMAIL ARMOR (pectorale/lorica hamata)
+  // LIGHT CHAINMAIL ARMOR (lorica hamata - pectorale reinforcement optional)
   else if (isArmor) {
-    // Use vertex chainmail phase for ring alignment
-    float rings = chainmailRings(v_worldPos.xz) * (0.7 + v_chainmailPhase * 0.6);
+    // Spearman chainmail with optional chest plate overlay
+    vec2 chainUV = v_worldPos.xz * 28.0;
+    
+    // 4-in-1 European ring pattern
+    float rings = chainmailRings(chainUV) * (0.72 + v_chainmailPhase * 0.56);
+    
+    // Ring structure detail
+    float ringDepth = noise(chainUV * 1.9) * 0.095;
+    float gapShadow = step(0.89, fract(chainUV.x * 32.0)) * 
+                      step(0.89, fract(chainUV.y * 32.0)) * 0.11;
+    
+    // Iron oxidation (more wear on spearmen from front-line combat)
+    float oxidation = noise(chainUV * 8.8) * 0.16 * v_steelWear;
+    float rustSpots = step(0.85, noise(chainUV * 5.5)) * 0.12 * v_steelWear;
+    
+    // Battle damage from weapons impact
+    float damageSeed = noise(chainUV * 0.75);
+    float damage = step(0.91, damageSeed) * 0.24;
+    float impact = noise(chainUV * 1.2) * v_steelWear * 0.08;
+    
+    // Pectorale (chest plate) overlay - only on upper torso
+    float chestPlate = smoothstep(1.2, 1.3, v_bodyHeight) * 
+                       smoothstep(1.5, 1.4, v_bodyHeight);
+    float plateSheen = chestPlate * 0.18;
+    
+    // Maintenance varies by position (chest better maintained)
+    float oilPattern = noise(chainUV * 3.3) * (0.08 + chestPlate * 0.06);
     
     vec3 V = normalize(vec3(0.0, 1.0, 0.5));
     float viewAngle = max(dot(normalize(v_worldNormal), V), 0.0);
-    float chainSheen = pow(viewAngle, 5.0) * 0.16;
+    float chainSheen = pow(viewAngle, 6.2) * (0.18 + chestPlate * 0.10);
     
-    float rust = noise(uv * 10.0) * 0.08 * v_steelWear;
+    // AO in ring interstices
+    float ao = (1.0 - rings * 0.62) * 0.17;
+    
+    // Ring-on-ring scratching
+    float scratches = noise(chainUV * 46.0) * 0.075;
 
-    color += vec3(rings + chainSheen);
-    color -= vec3(rust * 0.4);
-    color *= 1.0 - noise(uv * 18.0) * 0.06;
+    color += vec3(rings + chainSheen + oilPattern + plateSheen);
+    color -= vec3(oxidation * 0.48 + rustSpots + gapShadow + ao + damage + impact);
+    color *= 1.0 - scratches;
   }
   // LEATHER PTERUGES & BELT
   else if (isLegs) {

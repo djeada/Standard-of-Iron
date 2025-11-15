@@ -92,28 +92,79 @@ void main() {
     color += vec3(brushedMetal);
     color -= vec3(scratches + dents * 0.4);
   }
-  // HEAVY SEGMENTED ARMOR (lorica segmentata - banded plate)
+  // HEAVY SEGMENTED ARMOR (lorica segmentata - iconic Roman plate armor)
   else if (isArmor) {
-    // Use vertex-computed plate phase for articulation
-    float plateLine = smoothstep(0.90, 0.98, v_platePhase) * 0.12;
+    // Historical lorica segmentata construction:
+    // - 30-40 curved iron/steel plates in horizontal bands
+    // - Girth hoops wrap torso, connected by internal leather straps
+    // - Hinged on sides, buckled front/back
+    // - ~9kg, superior protection, 1st-2nd century AD peak usage
     
-    // Rivets with vertex rivet pattern
-    float rivetX = fract(v_worldPos.x * 18.0);
-    float rivet = smoothstep(0.48, 0.50, rivetX) * smoothstep(0.52, 0.50, rivetX);
-    float rivetPattern = rivet * v_rivetPattern * 0.25;
+    vec2 armorUV = v_worldPos.xz * 4.8;
     
-    // Battle wear concentrated at segment joints
-    float battleWear = noise(uv * 35.0) * 0.020 * v_segmentStress;
-    float brushed = abs(sin(v_worldPos.y * 85.0)) * 0.022;
+    // === PLATE BANDS (6-7 horizontal segments) ===
+    // Vertex shader computed plate phase for band positioning
+    float bandEdge = smoothstep(0.88, 0.96, v_platePhase) + 
+                     smoothstep(0.12, 0.04, v_platePhase);
+    float plateLine = bandEdge * 0.14;
     
+    // Overlap shadows (upper plates overlap lower by ~1cm)
+    float overlapShadow = smoothstep(0.92, 0.98, v_platePhase) * 0.16;
+    
+    // Plate curvature fitted to torso
+    float curvature = abs(fract(armorUV.x * 2.5) - 0.5) * 0.08;
+    
+    // === RIVETS & FASTENERS ===
+    // Brass/bronze rivets along edges (~4cm spacing)
+    float rivetSpacing = fract(v_worldPos.x * 22.0);
+    float rivet = smoothstep(0.47, 0.50, rivetSpacing) * 
+                  smoothstep(0.53, 0.50, rivetSpacing);
+    float brassRivets = rivet * v_rivetPattern * 0.22;
+    
+    // Side hinges (vertical connection system)
+    float sideHinge = step(0.75, abs(armorUV.x)) * 0.10;
+    
+    // === SURFACE FINISH ===
+    // Brushed/polished steel (well-maintained by legionaries)
+    float brushedFinish = abs(sin(v_worldPos.y * 88.0 + v_worldPos.x * 15.0)) * 0.025;
+    
+    // Scratches (fewer on well-polished armor)
+    float scratches = noise(armorUV * 38.0) * 0.022 * (1.0 - v_polishLevel * 0.6);
+    float deepScratches = step(0.94, noise(armorUV * 8.5)) * 0.015;
+    
+    // === BATTLE WEAR ===
+    // Articulation wear at segment joints (vertex computed stress)
+    float jointWear = v_segmentStress * 0.18;
+    
+    // Impact dents from frontal combat
+    float frontFacing = smoothstep(-0.3, 0.6, v_worldNormal.z);
+    float dents = noise(armorUV * 7.5) * 0.028 * frontFacing;
+    float majorDent = step(0.92, noise(armorUV * 2.2)) * 0.045 * frontFacing;
+    
+    // Minimal rust (only in joint crevices if neglected)
+    float rustInJoints = (1.0 - v_polishLevel) * 0.12 * 
+                         smoothstep(0.95, 1.0, v_platePhase);
+    
+    // === LIGHTING ===
     vec3 V = normalize(vec3(0.0, 1.0, 0.5));
     float viewAngle = max(dot(normalize(v_worldNormal), V), 0.0);
-    float plateFresnel = pow(1.0 - viewAngle, 2.0) * 0.28;
-    float plateSpecular = pow(viewAngle, 10.0) * 0.45 * v_polishLevel;
+    
+    // Strong specular on polished plates
+    float plateSpecular = pow(viewAngle, 11.0) * 0.52 * v_polishLevel;
+    
+    // Metallic fresnel
+    float plateFresnel = pow(1.0 - viewAngle, 1.9) * 0.32;
+    
+    // Sky reflection
+    float skyReflect = (v_worldNormal.y * 0.5 + 0.5) * 0.14 * v_polishLevel;
+    
+    // AO in overlaps
+    float ao = overlapShadow * 0.20;
 
-    color += vec3(plateLine + rivetPattern + plateFresnel + plateSpecular);
-    color += vec3(brushed);
-    color -= vec3(battleWear);
+    color += vec3(plateLine + brassRivets + sideHinge + plateSpecular + 
+                  plateFresnel + skyReflect + brushedFinish + curvature);
+    color -= vec3(scratches + deepScratches + jointWear + dents + majorDent + 
+                  rustInJoints + ao);
   }
   // LEATHER PTERUGES & BELT
   else if (isLegs) {
