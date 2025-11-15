@@ -97,9 +97,9 @@ public:
     QVector3D const idle_hand_l(-0.10F + arm_asymmetry,
                                 HP::SHOULDER_Y + 0.10F + arm_height_jitter,
                                 0.45F);
-    QVector3D const idle_hand_r(0.10F - arm_asymmetry * 0.5F,
-                                HP::SHOULDER_Y + 0.10F + arm_height_jitter * 0.8F,
-                                0.45F);
+    QVector3D const idle_hand_r(
+        0.10F - arm_asymmetry * 0.5F,
+        HP::SHOULDER_Y + 0.10F + arm_height_jitter * 0.8F, 0.45F);
 
     controller.placeHandAt(true, idle_hand_l);
     controller.placeHandAt(false, idle_hand_r);
@@ -108,8 +108,7 @@ public:
   void addAttachments(const DrawContext &ctx, const HumanoidVariant &v,
                       const HumanoidPose &pose,
                       const HumanoidAnimationContext &anim_ctx,
-                      ISubmitter &out) const override {
-  }
+                      ISubmitter &out) const override {}
 
   void draw_helmet(const DrawContext &ctx, const HumanoidVariant &v,
                    const HumanoidPose &pose, ISubmitter &out) const override {
@@ -127,8 +126,7 @@ public:
                   ISubmitter &out) const override {
     if (resolve_style(ctx).show_armor) {
       auto &registry = EquipmentRegistry::instance();
-      auto armor =
-          registry.get(EquipmentCategory::Armor, "roman_light_armor");
+      auto armor = registry.get(EquipmentCategory::Armor, "roman_light_armor");
       if (armor) {
         armor->render(ctx, pose.body_frames, v.palette, anim, out);
       }

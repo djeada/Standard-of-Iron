@@ -66,8 +66,10 @@ void HealingSystem::processHealing(Engine::Core::World *world,
         continue;
       }
 
-      float const dx = target_transform->position.x - healer_transform->position.x;
-      float const dz = target_transform->position.z - healer_transform->position.z;
+      float const dx =
+          target_transform->position.x - healer_transform->position.x;
+      float const dz =
+          target_transform->position.z - healer_transform->position.z;
       float const dist = std::sqrt(dx * dx + dz * dz);
 
       if (dist <= healer_comp->healing_range) {
