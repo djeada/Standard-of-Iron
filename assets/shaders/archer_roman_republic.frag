@@ -1,8 +1,17 @@
 #version 330 core
 
 in vec3 v_normal;
+in vec3 v_worldNormal;
+in vec3 v_tangent;
+in vec3 v_bitangent;
 in vec2 v_texCoord;
 in vec3 v_worldPos;
+in float v_armorLayer;
+in float v_bodyHeight;
+in float v_helmetDetail;
+in float v_chainmailPhase;
+in float v_leatherWear;
+in float v_curvature;
 
 uniform sampler2D u_texture;
 uniform vec3 u_color;
@@ -67,109 +76,89 @@ void main() {
 
   vec3 normal = normalize(v_normal);
   vec2 uv = v_worldPos.xz * 4.5;
-  float avgColor = (color.r + color.g + color.b) / 3.0;
-
-  // Detect bronze vs steel by color warmth
-  bool isBronze =
-      (color.r > color.g * 1.08 && color.r > color.b * 1.15 && avgColor > 0.50);
-  bool isRedCape = (color.r > color.g * 1.3 && color.r > color.b * 1.4);
+  
+  bool isHelmet = (v_armorLayer < 0.5);
+  bool isArmor = (v_armorLayer >= 0.5 && v_armorLayer < 1.5);
+  bool isLegs = (v_armorLayer >= 1.5);
 
   // === ROMAN ARCHER (SAGITTARIUS) MATERIALS ===
 
-  // BRONZE GALEA HELMET & PHALERAE (warm golden metal)
-  if (isBronze) {
-    // Ancient bronze patina and wear
+  // LIGHT BRONZE HELMET (warm golden auxiliary helmet)
+  if (isHelmet) {
+    // Use vertex-computed helmet detail
+    float bands = v_helmetDetail * 0.15;
+    
+    // Warm bronze patina and wear
     float bronzePatina = noise(uv * 8.0) * 0.12;
-    float verdigris = noise(uv * 15.0) * 0.08; // Green oxidation
-
-    // Bronze is less reflective than polished steel
-    float viewAngle = abs(dot(normal, normalize(vec3(0.0, 1.0, 0.5))));
+    float verdigris = noise(uv * 15.0) * 0.08;
+    
+    // Hammer marks from forging (using vertex curvature)
+    float hammerMarks = noise(uv * 25.0) * 0.035 * (1.0 - v_curvature * 0.3);
+    
+    // Conical shape highlight
+    float apex = smoothstep(0.85, 1.0, v_bodyHeight) * 0.12;
+    
+    // Bronze sheen using tangent space
+    vec3 N = normalize(v_worldNormal);
+    vec3 V = normalize(vec3(0.0, 1.0, 0.5));
+    float viewAngle = max(dot(N, V), 0.0);
     float bronzeSheen = pow(viewAngle, 7.0) * 0.25;
     float bronzeFresnel = pow(1.0 - viewAngle, 2.2) * 0.18;
 
-    // Hammer marks from forging
-    float hammerMarks = noise(uv * 25.0) * 0.035;
-
-    color += vec3(bronzeSheen + bronzeFresnel);
+    color += vec3(bronzeSheen + bronzeFresnel + bands + apex);
     color -= vec3(bronzePatina * 0.4 + verdigris * 0.3);
     color += vec3(hammerMarks * 0.5);
   }
-  // STEEL CHAINMAIL (lorica hamata - grey-blue tint)
-  else if (avgColor > 0.40 && avgColor <= 0.60 && !isRedCape) {
-    // Interlocked iron rings
-    float rings = chainmailRings(v_worldPos.xz);
+  // LIGHT CHAINMAIL ARMOR (lorica hamata - grey steel)
+  else if (isArmor) {
+    // Use vertex-computed chainmail phase for perfect ring alignment
+    float rings = chainmailRings(v_worldPos.xz) * (0.8 + v_chainmailPhase * 0.4);
 
     // Chainmail has dull metallic sheen
-    float viewAngle = abs(dot(normal, normalize(vec3(0.0, 1.0, 0.5))));
+    vec3 N = normalize(v_worldNormal);
+    vec3 V = normalize(vec3(0.0, 1.0, 0.5));
+    float viewAngle = max(dot(N, V), 0.0);
     float chainSheen = pow(viewAngle, 5.0) * 0.16;
 
-    // Iron rust spots
-    float rust = noise(uv * 10.0) * 0.08;
+    // Iron rust spots (more in curves)
+    float rust = noise(uv * 10.0) * 0.08 * (0.5 + v_curvature * 0.5);
 
     color += vec3(rings + chainSheen);
-    color -= vec3(rust * 0.4);              // Darken with age
-    color *= 1.0 - noise(uv * 18.0) * 0.06; // Shadow between rings
+    color -= vec3(rust * 0.4);
+    color *= 1.0 - noise(uv * 18.0) * 0.06;
   }
-  // RED SAGUM CAPE (bright red woolen cloak)
-  else if (isRedCape) {
-    // Thick woolen weave
-    float weaveX = sin(v_worldPos.x * 55.0);
-    float weaveZ = sin(v_worldPos.z * 55.0);
-    float weave = weaveX * weaveZ * 0.045;
-
-    // Wool texture (fuzzy)
-    float woolFuzz = noise(uv * 20.0) * 0.10;
-
-    // Fabric folds and draping
-    float folds = noise(uv * 6.0) * 0.12 - 0.06;
-
-    // Soft fabric sheen
-    float viewAngle = abs(dot(normal, normalize(vec3(0.0, 1.0, 0.5))));
-    float capeSheen = pow(1.0 - viewAngle, 8.0) * 0.08;
-
-    color *= 1.0 + woolFuzz - 0.05 + folds;
-    color += vec3(weave + capeSheen);
-  }
-  // LEATHER PTERUGES & ARMOR STRIPS (tan/brown leather strips)
-  else if (avgColor > 0.35) {
-    // Thick leather with visible grain
-    float leatherGrain = noise(uv * 10.0) * 0.16;
+  // LEATHER PTERUGES & BELT (tan/brown leather strips)
+  else if (isLegs) {
+    // Thick leather with visible grain (using vertex wear data)
+    float leatherGrain = noise(uv * 10.0) * 0.16 * (0.5 + v_leatherWear * 0.5);
     float leatherPores = noise(uv * 22.0) * 0.08;
 
     // Pteruges strip pattern
-    float strips = pterugesStrips(v_worldPos.xz, v_worldPos.y);
+    float strips = pterugesStrips(v_worldPos.xz, v_bodyHeight);
 
     // Worn leather edges
-    float wear = noise(uv * 4.0) * 0.10 - 0.05;
+    float wear = noise(uv * 4.0) * v_leatherWear * 0.10 - 0.05;
 
     // Leather has subtle sheen
-    float viewAngle = abs(dot(normal, normalize(vec3(0.0, 1.0, 0.5))));
+    vec3 N = normalize(v_worldNormal);
+    vec3 V = normalize(vec3(0.0, 1.0, 0.5));
+    float viewAngle = max(dot(N, V), 0.0);
     float leatherSheen = pow(1.0 - viewAngle, 4.5) * 0.10;
 
     color *= 1.0 + leatherGrain + leatherPores - 0.08 + wear;
     color += vec3(strips * 0.15 + leatherSheen);
   }
-  // DARK ELEMENTS (cingulum belt, straps, manicae)
-  else {
-    float leatherDetail = noise(uv * 8.0) * 0.14;
-    float tooling = noise(uv * 16.0) * 0.06; // Decorative tooling
-    float darkening = noise(uv * 2.5) * 0.08;
-
-    color *= 1.0 + leatherDetail - 0.07 + tooling - darkening;
-  }
 
   color = clamp(color, 0.0, 1.0);
 
-  // Lighting model - soft wrap for leather/fabric, harder for metal
+  // Lighting model per material
   vec3 lightDir = normalize(vec3(1.0, 1.15, 1.0));
   float nDotL = dot(normal, lightDir);
 
-  // Metal = harder shadows, Fabric/leather = soft wrap
-  float wrapAmount = isBronze ? 0.15 : 0.38;
+  float wrapAmount = isHelmet ? 0.15 : (isArmor ? 0.22 : 0.38);
   float diff = max(nDotL * (1.0 - wrapAmount) + wrapAmount, 0.22);
 
-  // Enhance contrast for bronze
-  if (isBronze) {
+  if (isHelmet) {
     diff = pow(diff, 0.90);
   }
 

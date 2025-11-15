@@ -1,9 +1,18 @@
 #version 330 core
 
 in vec3 v_normal;
+in vec3 v_worldNormal;
+in vec3 v_tangent;
+in vec3 v_bitangent;
 in vec2 v_texCoord;
 in vec3 v_worldPos;
-in float v_armorLayer; // Armor layer from vertex shader
+in float v_armorLayer;
+in float v_bodyHeight;
+in float v_helmetDetail;
+in float v_platePhase;
+in float v_segmentStress;
+in float v_rivetPattern;
+in float v_polishLevel;
 
 uniform sampler2D u_texture;
 uniform vec3 u_color;
@@ -29,34 +38,22 @@ float noise(vec2 p) {
   return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
 }
 
-// Medieval plate armor articulation lines
+// Segmented armor plates (lorica segmentata)
 float armorPlates(vec2 p, float y) {
-  // Horizontal articulation lines (overlapping plates)
   float plateY = fract(y * 6.5);
   float plateLine = smoothstep(0.90, 0.98, plateY) * 0.12;
-
-  // Brass rivet decorations
   float rivetX = fract(p.x * 18.0);
   float rivet = smoothstep(0.48, 0.50, rivetX) * smoothstep(0.52, 0.50, rivetX);
-  float rivetPattern = rivet * step(0.92, plateY) * 0.25; // Brass is brighter
-
+  float rivetPattern = rivet * step(0.92, plateY) * 0.25;
   return plateLine + rivetPattern;
 }
 
-// Chainmail texture pattern
-float chainmailRings(vec2 p) {
-  vec2 grid = fract(p * 35.0) - 0.5;
-  float ring = length(grid);
-  float ringPattern =
-      smoothstep(0.35, 0.30, ring) - smoothstep(0.25, 0.20, ring);
-
-  // Offset every other row for interlinked appearance
-  vec2 offsetGrid = fract(p * 35.0 + vec2(0.5, 0.0)) - 0.5;
-  float offsetRing = length(offsetGrid);
-  float offsetPattern =
-      smoothstep(0.35, 0.30, offsetRing) - smoothstep(0.25, 0.20, offsetRing);
-
-  return (ringPattern + offsetPattern) * 0.15;
+float pterugesStrips(vec2 p, float y) {
+  float stripX = fract(p.x * 9.0);
+  float strip = smoothstep(0.15, 0.20, stripX) - smoothstep(0.80, 0.85, stripX);
+  float leatherTex = noise(p * 18.0) * 0.35;
+  float hang = smoothstep(0.65, 0.45, y);
+  return strip * leatherTex * hang;
 }
 
 void main() {
@@ -67,110 +64,83 @@ void main() {
 
   vec3 normal = normalize(v_normal);
   vec2 uv = v_worldPos.xz * 5.0;
-  float avgColor = (color.r + color.g + color.b) / 3.0;
+  
+  bool isHelmet = (v_armorLayer < 0.5);
+  bool isArmor = (v_armorLayer >= 0.5 && v_armorLayer < 1.5);
+  bool isLegs = (v_armorLayer >= 1.5);
 
-  // Detect material type by color tone
-  float colorHue =
-      max(max(color.r, color.g), color.b) - min(min(color.r, color.g), color.b);
-  bool isBrass =
-      (color.r > color.g * 1.15 && color.r > color.b * 1.2 && avgColor > 0.55);
+  // === ROMAN SWORDSMAN (LEGIONARY) MATERIALS ===
 
-  // === MEDIEVAL KNIGHT MATERIALS ===
-
-  // POLISHED STEEL PLATE (Great Helm, cuirass, pauldrons, rerebraces) - bright
-  // silvery
-  if (avgColor > 0.60 && !isBrass) {
-    // Mirror-polished steel finish
+  // HEAVY STEEL HELMET (galea - cool blue-grey steel)
+  if (isHelmet) {
+    // Polished steel finish with vertex polish level
     float brushedMetal = abs(sin(v_worldPos.y * 95.0)) * 0.02;
-
-    // Battle wear: scratches and dents
-    float scratches = noise(uv * 35.0) * 0.018;
+    float scratches = noise(uv * 35.0) * 0.018 * (1.0 - v_polishLevel * 0.5);
     float dents = noise(uv * 8.0) * 0.025;
+    
+    // Use vertex-computed helmet detail
+    float bands = v_helmetDetail * 0.12;
+    float rivets = v_rivetPattern * 0.12;
+    
+    vec3 V = normalize(vec3(0.0, 1.0, 0.5));
+    float viewAngle = max(dot(normalize(v_worldNormal), V), 0.0);
+    float fresnel = pow(1.0 - viewAngle, 1.8) * 0.35;
+    float specular = pow(viewAngle, 12.0) * 0.55 * v_polishLevel;
+    float skyReflection = (v_worldNormal.y * 0.5 + 0.5) * 0.12;
 
-    // Plate articulation lines and rivets
-    float plates = armorPlates(v_worldPos.xz, v_worldPos.y);
-
-    // Strong specular reflections (polished metal)
-    float viewAngle = abs(dot(normal, normalize(vec3(0.0, 1.0, 0.5))));
-    float fresnel = pow(1.0 - viewAngle, 1.8) * 0.35; // Bright rim lighting
-    float specular = pow(viewAngle, 12.0) * 0.55;     // Sharp mirror highlights
-
-    // Environmental reflections (sky dome)
-    float skyReflection = (normal.y * 0.5 + 0.5) * 0.12;
-
-    color += vec3(fresnel + skyReflection + specular * 1.8);
-    color += vec3(plates);
+    color += vec3(fresnel + skyReflection + specular * 1.8 + bands + rivets);
     color += vec3(brushedMetal);
     color -= vec3(scratches + dents * 0.4);
   }
-  // BRASS ACCENTS (rivets, buckles, crosses, decorations) - golden
-  else if (isBrass) {
-    // Warm metallic brass
-    float brassNoise = noise(uv * 22.0) * 0.025;
-    float patina = noise(uv * 6.0) * 0.08; // Age darkening
+  // HEAVY SEGMENTED ARMOR (lorica segmentata - banded plate)
+  else if (isArmor) {
+    // Use vertex-computed plate phase for articulation
+    float plateLine = smoothstep(0.90, 0.98, v_platePhase) * 0.12;
+    
+    // Rivets with vertex rivet pattern
+    float rivetX = fract(v_worldPos.x * 18.0);
+    float rivet = smoothstep(0.48, 0.50, rivetX) * smoothstep(0.52, 0.50, rivetX);
+    float rivetPattern = rivet * v_rivetPattern * 0.25;
+    
+    // Battle wear concentrated at segment joints
+    float battleWear = noise(uv * 35.0) * 0.020 * v_segmentStress;
+    float brushed = abs(sin(v_worldPos.y * 85.0)) * 0.022;
+    
+    vec3 V = normalize(vec3(0.0, 1.0, 0.5));
+    float viewAngle = max(dot(normalize(v_worldNormal), V), 0.0);
+    float plateFresnel = pow(1.0 - viewAngle, 2.0) * 0.28;
+    float plateSpecular = pow(viewAngle, 10.0) * 0.45 * v_polishLevel;
 
-    float viewAngle = abs(dot(normal, normalize(vec3(0.0, 1.0, 0.5))));
-    float brassSheen = pow(viewAngle, 8.0) * 0.35;
-    float brassFresnel = pow(1.0 - viewAngle, 2.5) * 0.20;
-
-    color += vec3(brassSheen + brassFresnel);
-    color += vec3(brassNoise);
-    color -= vec3(patina * 0.5); // Darker in recesses
+    color += vec3(plateLine + rivetPattern + plateFresnel + plateSpecular);
+    color += vec3(brushed);
+    color -= vec3(battleWear);
   }
-  // CHAINMAIL AVENTAIL (hanging neck protection) - grey steel rings
-  else if (avgColor > 0.40 && avgColor <= 0.60) {
-    // Interlocked ring texture
-    float rings = chainmailRings(v_worldPos.xz);
-
-    // Chainmail has less shine than plate
-    float viewAngle = abs(dot(normal, normalize(vec3(0.0, 1.0, 0.5))));
-    float chainSheen = pow(viewAngle, 6.0) * 0.18;
-
-    // Individual ring highlights
-    float ringHighlights = noise(uv * 30.0) * 0.12;
-
-    color += vec3(rings + chainSheen + ringHighlights);
-    color *= 1.0 - noise(uv * 12.0) * 0.08; // Slight darkening between rings
-  }
-  // HERALDIC SURCOAT (team-colored tabard over armor) - bright cloth
-  else if (avgColor > 0.25) {
-    // Rich fabric weave texture
-    float weaveX = sin(v_worldPos.x * 70.0);
-    float weaveZ = sin(v_worldPos.z * 70.0);
-    float weave = weaveX * weaveZ * 0.04;
-
-    // Embroidered cross emblem texture
-    float embroidery = noise(uv * 12.0) * 0.06;
-
-    // Fabric has soft sheen
-    float viewAngle = abs(dot(normal, normalize(vec3(0.0, 1.0, 0.5))));
-    float fabricSheen = pow(1.0 - viewAngle, 6.0) * 0.08;
-
-    // Heraldic colors are vibrant
-    color *= 1.0 + noise(uv * 5.0) * 0.10 - 0.05;
-    color += vec3(weave + embroidery + fabricSheen);
-  }
-  // LEATHER/DARK ELEMENTS (straps, gloves, scabbard) - dark brown
-  else {
+  // LEATHER PTERUGES & BELT
+  else if (isLegs) {
     float leatherGrain = noise(uv * 10.0) * 0.15;
+    float strips = pterugesStrips(v_worldPos.xz, v_bodyHeight);
     float wearMarks = noise(uv * 3.0) * 0.10;
+    
+    vec3 V = normalize(vec3(0.0, 1.0, 0.5));
+    float viewAngle = max(dot(normalize(v_worldNormal), V), 0.0);
+    float leatherSheen = pow(1.0 - viewAngle, 4.5) * 0.10;
 
     color *= 1.0 + leatherGrain - 0.08 + wearMarks - 0.05;
+    color += vec3(strips * 0.15 + leatherSheen);
   }
 
   color = clamp(color, 0.0, 1.0);
 
-  // Lighting model - hard shadows for metal, soft for fabric
+  // Lighting per material
   vec3 lightDir = normalize(vec3(1.0, 1.2, 1.0));
-  float nDotL = dot(normal, lightDir);
+  float nDotL = dot(normalize(v_worldNormal), lightDir);
 
-  // Metal = hard shadows, Fabric = soft wrap
-  float wrapAmount = (avgColor > 0.50) ? 0.08 : 0.30;
+  float wrapAmount = isHelmet ? 0.08 : (isArmor ? 0.10 : 0.30);
   float diff = max(nDotL * (1.0 - wrapAmount) + wrapAmount, 0.18);
 
   // Extra contrast for polished steel
-  if (avgColor > 0.60 && !isBrass) {
-    diff = pow(diff, 0.85); // Sharper lighting falloff
+  if (isHelmet || isArmor) {
+    diff = pow(diff, 0.85);
   }
 
   color *= diff;

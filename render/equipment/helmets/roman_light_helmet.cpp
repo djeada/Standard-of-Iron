@@ -32,13 +32,14 @@ void RomanLightHelmetRenderer::render(const DrawContext &ctx,
     return HumanoidRendererBase::frameLocalPosition(head, normalized);
   };
 
+  // Bronze with warm golden tint for light helmet (distinguished from heavy steel)
   QVector3D const helmet_color =
-      saturate_color(palette.metal * QVector3D(1.08F, 0.98F, 0.78F));
-  QVector3D const helmet_accent = helmet_color * 1.12F;
+      saturate_color(palette.metal * QVector3D(1.15F, 0.92F, 0.68F));
+  QVector3D const helmet_accent = helmet_color * 1.14F;
 
   QVector3D const helmet_top = headPoint(QVector3D(0.0F, 1.28F, 0.0F));
   QVector3D const helmet_bot = headPoint(QVector3D(0.0F, 0.08F, 0.0F));
-  float const helmet_r = head_r * 1.10F;
+  float const helmet_r = head_r * 1.08F;  // Slightly smaller than heavy helmet
 
   submitter.mesh(getUnitCylinder(),
                  cylinderBetween(ctx.model, helmet_bot, helmet_top, helmet_r),
@@ -49,9 +50,10 @@ void RomanLightHelmetRenderer::render(const DrawContext &ctx,
                  coneFromTo(ctx.model, helmet_top, apex_pos, helmet_r * 0.97F),
                  helmet_accent, nullptr, 1.0F);
 
-  auto ring = [&](float y_offset, float r_scale, float h,
-                  const QVector3D &col) {
+  // Simplified decoration bands - shader will add fine detail
+  auto ring = [&](float y_offset, float r_scale, const QVector3D &col) {
     QVector3D const center = headPoint(QVector3D(0.0F, y_offset, 0.0F));
+    float const h = head_r * 0.018F;
     QVector3D const a = center + head.up * (h * 0.5F);
     QVector3D const b = center - head.up * (h * 0.5F);
     submitter.mesh(getUnitCylinder(),
@@ -59,9 +61,8 @@ void RomanLightHelmetRenderer::render(const DrawContext &ctx,
                    nullptr, 1.0F);
   };
 
-  ring(0.35F, 1.07F, 0.020F, helmet_accent);
-  ring(0.65F, 1.03F, 0.015F, helmet_color * 1.05F);
-  ring(0.95F, 1.01F, 0.012F, helmet_color * 1.03F);
+  ring(0.35F, 1.06F, helmet_accent);
+  ring(0.95F, 1.02F, helmet_color * 1.04F);
 
   float const cheek_w = head_r * 0.48F;
   QVector3D const cheek_top = headPoint(QVector3D(0.0F, 0.22F, 0.0F));
@@ -85,13 +86,15 @@ void RomanLightHelmetRenderer::render(const DrawContext &ctx,
                  cylinderBetween(ctx.model, cheek_rbot, cheek_rtop, 0.028F),
                  helmet_color * 0.96F, nullptr, 1.0F);
 
-  QVector3D const neck_guard_top = headPoint(QVector3D(0.0F, 0.03F, -0.82F));
-  QVector3D const neck_guard_bot = headPoint(QVector3D(0.0F, -0.32F, -0.88F));
+  // Neck guard - shader will add scale/lamellae texture
+  QVector3D const neck_guard_top = headPoint(QVector3D(0.0F, 0.03F, -0.85F));
+  QVector3D const neck_guard_bot = headPoint(QVector3D(0.0F, -0.32F, -0.92F));
   submitter.mesh(getUnitCylinder(),
                  cylinderBetween(ctx.model, neck_guard_bot, neck_guard_top,
-                                 helmet_r * 0.88F),
-                 helmet_color * 0.93F, nullptr, 1.0F);
+                                 helmet_r * 0.86F),
+                 helmet_color * 0.90F, nullptr, 1.0F);
 
+  // Simple crest - shader adds horsehair texture
   QVector3D const crest_base = apex_pos;
   QVector3D const crest_mid = crest_base + head.up * 0.09F;
   QVector3D const crest_top = crest_mid + head.up * 0.12F;
