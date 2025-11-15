@@ -312,7 +312,7 @@ void MountedPoseController::applyLean(const MountedAttachmentFrame &mount,
 void MountedPoseController::applyShieldDefense(
     const MountedAttachmentFrame &mount, bool raised) {
   QVector3D shield_pos = raised ? seatRelative(mount, 0.15F, -0.18F, 0.40F)
-                                : seatRelative(mount, 0.0F, -0.15F, 0.08F);
+                                : seatRelative(mount, 0.05F, -0.16F, 0.22F);
   float const rein_slack = raised ? 0.15F : 0.30F;
   float const rein_tension = raised ? 0.45F : 0.25F;
   QVector3D const rein_pos = reinAnchor(mount, false, rein_slack, rein_tension);
