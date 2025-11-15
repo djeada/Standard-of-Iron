@@ -191,7 +191,6 @@ void CarthageLightHelmetRenderer::render_brim(const DrawContext &ctx,
   blade(-1.0f);
   blade(+1.0f);
 
-  // Rebuild the brow arch so it sits above the eyes instead of blocking them.
   auto connect_brow = [&](const QVector3D &a, const QVector3D &b,
                           float radius_scale) {
     submitter.mesh(getUnitCylinder(),
