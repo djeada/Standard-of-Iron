@@ -26,6 +26,9 @@ void RomanHeavyArmorRenderer::render(const DrawContext &ctx,
   (void)anim;
 
   const AttachmentFrame &torso = frames.torso;
+  const AttachmentFrame &waist = frames.waist;
+  const AttachmentFrame &head = frames.head;
+
   if (torso.radius <= 0.0F) {
     return;
   }
@@ -35,68 +38,98 @@ void RomanHeavyArmorRenderer::render(const DrawContext &ctx,
   // Lorica Segmentata - polished steel with cool blue-grey tint
   QVector3D const steel_color =
       saturate_color(palette.metal * QVector3D(0.88F, 0.92F, 1.08F));
+  QVector3D const brass_color =
+      saturate_color(palette.metal * QVector3D(1.25F, 1.05F, 0.62F));
+  QVector3D const leather_color =
+      saturate_color(palette.leather * QVector3D(0.58F, 0.38F, 0.26F));
 
-  // Main torso armor - single mesh, all detail in shaders
-  QMatrix4x4 torso_transform = ctx.model;
-  torso_transform.translate(torso.origin);
-  torso_transform.rotate(
-      QQuaternion::fromDirection(torso.forward, torso.up).conjugated());
-  torso_transform.scale(torso.radius * 1.12F, torso.radius * 1.08F,
-                        torso.radius * 1.08F);
+  auto safeNormal = [](const QVector3D &v, const QVector3D &fallback) {
+    return (v.lengthSquared() > 1e-6F) ? v.normalized() : fallback;
+  };
 
-  submitter.mesh(getUnitTorso(), torso_transform, steel_color, nullptr, 1.0F);
+  QVector3D up = safeNormal(torso.up, QVector3D(0.0F, 1.0F, 0.0F));
+  QVector3D right = safeNormal(torso.right, QVector3D(1.0F, 0.0F, 0.0F));
+  QVector3D forward = safeNormal(torso.forward, QVector3D(0.0F, 0.0F, 1.0F));
+  QVector3D waist_up = safeNormal(waist.up, up);
+  QVector3D head_up = safeNormal(head.up, up);
 
-  // Shoulder guards (pteruges) - minimal geometry, 2 per side
+  float const torso_r = torso.radius;
+  float const torso_depth =
+      (torso.depth > 0.0F) ? torso.depth : torso_r * 0.75F;
+  auto depth_scale_for = [&](float base) {
+    float const ratio = torso_depth / std::max(0.001F, torso_r);
+    return std::max(0.08F, base * ratio);
+  };
+  float const waist_r =
+      waist.radius > 0.0F ? waist.radius : torso.radius * 0.88F;
+  float const head_r = head.radius > 0.0F ? head.radius : torso.radius * 0.58F;
+
+  // Lorica segmentata extends from shoulders to waist
+  QVector3D top = torso.origin + up * (torso_r * 0.48F);
+  QVector3D head_guard = head.origin - head_up * (head_r * 1.30F);
+  if (QVector3D::dotProduct(top - head_guard, up) > 0.0F) {
+    top = head_guard - up * (torso_r * 0.05F);
+  }
+
+  QVector3D bottom =
+      waist.origin + waist_up * (waist_r * 0.08F) - forward * (torso_r * 0.01F);
+
+  // MAIN SEGMENTED PLATE ARMOR - follows torso contours
+  QMatrix4x4 plates = cylinderBetween(ctx.model, top, bottom, torso_r * 1.02F);
+  plates.scale(1.05F, 1.0F, depth_scale_for(0.86F));
+  submitter.mesh(getUnitTorso(), plates, steel_color, nullptr, 1.0F);
+
+  // Shoulder guards (pteruges) - 2 overlapping plates per side
   auto renderShoulderGuard = [&](const QVector3D &shoulder_pos,
                                  const QVector3D &outward) {
-    QVector3D const shoulder_color = steel_color * 0.96F;
-    
     // Upper shoulder plate
-    QVector3D upper_pos = shoulder_pos + outward * 0.04F;
-    submitter.mesh(getUnitSphere(),
-                   sphereAt(ctx.model, upper_pos, HP::UPPER_ARM_R * 1.85F),
-                   shoulder_color, nullptr, 1.0F);
-    
-    // Lower shoulder plate
-    QVector3D lower_pos = upper_pos - torso.up * 0.05F + outward * 0.02F;
-    submitter.mesh(getUnitSphere(),
-                   sphereAt(ctx.model, lower_pos, HP::UPPER_ARM_R * 1.65F),
-                   shoulder_color * 0.94F, nullptr, 1.0F);
+    QVector3D upper_pos = shoulder_pos + outward * 0.03F + forward * 0.01F;
+    QMatrix4x4 upper = ctx.model;
+    upper.translate(upper_pos);
+    upper.scale(HP::UPPER_ARM_R * 1.90F, HP::UPPER_ARM_R * 0.42F,
+                HP::UPPER_ARM_R * 1.65F);
+    submitter.mesh(getUnitSphere(), upper, steel_color * 0.98F, nullptr, 1.0F);
+
+    // Lower shoulder plate with brass trim
+    QVector3D lower_pos = upper_pos - up * 0.06F + outward * 0.02F;
+    QMatrix4x4 lower = ctx.model;
+    lower.translate(lower_pos);
+    lower.scale(HP::UPPER_ARM_R * 1.68F, HP::UPPER_ARM_R * 0.38F,
+                HP::UPPER_ARM_R * 1.48F);
+    submitter.mesh(getUnitSphere(), lower, steel_color * 0.94F, nullptr, 1.0F);
+
+    // Brass rivet on shoulder
+    QMatrix4x4 rivet = ctx.model;
+    rivet.translate(upper_pos + forward * 0.04F);
+    rivet.scale(0.012F);
+    submitter.mesh(getUnitSphere(), rivet, brass_color, nullptr, 1.0F);
   };
 
-  renderShoulderGuard(frames.shoulder_l.origin, -torso.right);
-  renderShoulderGuard(frames.shoulder_r.origin, torso.right);
+  renderShoulderGuard(frames.shoulder_l.origin, -right);
+  renderShoulderGuard(frames.shoulder_r.origin, right);
 
-  // Belt - single cylinder with leather color
-  const AttachmentFrame &waist = frames.waist;
-  auto safeDir = [](const QVector3D &axis, const QVector3D &fallback) {
-    if (axis.lengthSquared() > 1e-6F) {
-      return axis.normalized();
-    }
-    QVector3D fb = fallback;
-    if (fb.lengthSquared() < 1e-6F) {
-      fb = QVector3D(0.0F, 1.0F, 0.0F);
-    }
-    return fb.normalized();
-  };
-
-  QVector3D const leather_color =
-      saturate_color(palette.leather * QVector3D(0.6F, 0.4F, 0.3F));
-  QVector3D const waist_center =
-      (waist.radius > 0.0F) ? waist.origin
-                            : QVector3D(torso.origin.x(), HP::WAIST_Y,
-                                        torso.origin.z());
-  QVector3D const waist_up = safeDir(waist.up, torso.up);
-  float const belt_height =
-      (waist.radius > 0.0F ? waist.radius : torso.radius) * 0.22F;
-  QVector3D const belt_top = waist_center + waist_up * (0.5F * belt_height);
-  QVector3D const belt_bot = waist_center - waist_up * (0.5F * belt_height);
-  float const belt_radius =
-      (waist.radius > 0.0F ? waist.radius : torso.radius * 0.95F) * 1.08F;
+  // Cingulum (military belt) - wider and more substantial than light armor
+  QVector3D belt_center = waist.origin + waist_up * (waist_r * 0.02F);
+  float const belt_height = waist_r * 0.28F;
+  QVector3D const belt_top = belt_center + waist_up * (0.5F * belt_height);
+  QVector3D const belt_bot = belt_center - waist_up * (0.5F * belt_height);
+  float const belt_radius = waist_r * 1.10F;
 
   submitter.mesh(getUnitCylinder(),
                  cylinderBetween(ctx.model, belt_bot, belt_top, belt_radius),
                  leather_color, nullptr, 1.0F);
+
+  // Brass belt fittings (decorative and functional)
+  for (int i = 0; i < 6; ++i) {
+    float angle = (static_cast<float>(i) / 6.0F) * 2.0F * std::numbers::pi_v<float>;
+    QVector3D fitting_pos = belt_center + right * (belt_radius * std::sin(angle)) +
+                           forward * (belt_radius * std::cos(angle));
+    QMatrix4x4 fitting = ctx.model;
+    fitting.translate(fitting_pos);
+    fitting.scale(0.015F);
+    submitter.mesh(getUnitSphere(), fitting, brass_color * 0.92F, nullptr,
+                   1.0F);
+  }
 }
 
 void RomanLightArmorRenderer::render(const DrawContext &ctx,
@@ -107,71 +140,98 @@ void RomanLightArmorRenderer::render(const DrawContext &ctx,
   (void)anim;
 
   const AttachmentFrame &torso = frames.torso;
+  const AttachmentFrame &waist = frames.waist;
+  const AttachmentFrame &head = frames.head;
+
   if (torso.radius <= 0.0F) {
     return;
   }
 
   using HP = HumanProportions;
 
-  // Chainmail (lorica hamata) - steel with slight silver tint
+  // Chainmail (lorica hamata) - dull steel/iron color
+  QVector3D const chainmail_color =
+      saturate_color(palette.metal * QVector3D(0.68F, 0.72F, 0.78F));
+  QVector3D const leather_color =
+      saturate_color(palette.leather * QVector3D(0.52F, 0.36F, 0.24F));
   QVector3D const steel_color =
-      saturate_color(palette.metal * QVector3D(0.90F, 0.95F, 1.05F));
+      saturate_color(palette.metal * QVector3D(0.82F, 0.86F, 0.94F));
 
-  // Main torso armor - single mesh, chainmail detail in shaders
-  QMatrix4x4 torso_transform = ctx.model;
-  torso_transform.translate(torso.origin);
-  torso_transform.rotate(
-      QQuaternion::fromDirection(torso.forward, torso.up).conjugated());
-  torso_transform.scale(torso.radius * 1.06F, torso.radius * 1.04F,
-                        torso.radius * 1.04F);
-
-  submitter.mesh(getUnitTorso(), torso_transform, steel_color, nullptr, 1.0F);
-
-  // Pectorale (chest plate) - optional reinforcement over chainmail
-  QVector3D const chest_center =
-      torso.origin + torso.forward * (torso.radius * 0.92F) +
-      torso.up * (HP::CHEST_Y + 0.08F - torso.origin.y());
-  QMatrix4x4 pectorale_transform = ctx.model;
-  pectorale_transform.translate(chest_center);
-  pectorale_transform.rotate(
-      QQuaternion::fromDirection(torso.forward, torso.up).conjugated());
-  pectorale_transform.scale(torso.radius * 0.45F, torso.radius * 0.35F,
-                            torso.radius * 0.12F);
-
-  QVector3D const plate_color = steel_color * 1.10F; // Brighter for contrast
-  submitter.mesh(getUnitSphere(), pectorale_transform, plate_color, nullptr,
-                 1.0F);
-
-  // Belt - leather cingulum
-  const AttachmentFrame &waist = frames.waist;
-  auto safeDir = [](const QVector3D &axis, const QVector3D &fallback) {
-    if (axis.lengthSquared() > 1e-6F) {
-      return axis.normalized();
-    }
-    QVector3D fb = fallback;
-    if (fb.lengthSquared() < 1e-6F) {
-      fb = QVector3D(0.0F, 1.0F, 0.0F);
-    }
-    return fb.normalized();
+  auto safeNormal = [](const QVector3D &v, const QVector3D &fallback) {
+    return (v.lengthSquared() > 1e-6F) ? v.normalized() : fallback;
   };
 
-  QVector3D const leather_color =
-      saturate_color(palette.leather * QVector3D(0.55F, 0.38F, 0.28F));
-  QVector3D const waist_center =
-      (waist.radius > 0.0F)
-          ? waist.origin
-          : QVector3D(torso.origin.x(), HP::WAIST_Y + 0.02F,
-                      torso.origin.z());
-  QVector3D const waist_up = safeDir(waist.up, torso.up);
-  float const belt_height =
-      (waist.radius > 0.0F ? waist.radius : torso.radius) * 0.16F;
-  QVector3D const belt_top = waist_center + waist_up * (0.5F * belt_height);
-  QVector3D const belt_bot = waist_center - waist_up * (0.5F * belt_height);
-  float const belt_r =
-      (waist.radius > 0.0F ? waist.radius : torso.radius) * 1.00F;
+  QVector3D up = safeNormal(torso.up, QVector3D(0.0F, 1.0F, 0.0F));
+  QVector3D right = safeNormal(torso.right, QVector3D(1.0F, 0.0F, 0.0F));
+  QVector3D forward = safeNormal(torso.forward, QVector3D(0.0F, 0.0F, 1.0F));
+  QVector3D waist_up = safeNormal(waist.up, up);
+  QVector3D head_up = safeNormal(head.up, up);
+
+  float const torso_r = torso.radius;
+  float const torso_depth =
+      (torso.depth > 0.0F) ? torso.depth : torso_r * 0.75F;
+  auto depth_scale_for = [&](float base) {
+    float const ratio = torso_depth / std::max(0.001F, torso_r);
+    return std::max(0.08F, base * ratio);
+  };
+  float const waist_r =
+      waist.radius > 0.0F ? waist.radius : torso.radius * 0.86F;
+  float const head_r = head.radius > 0.0F ? head.radius : torso.radius * 0.58F;
+
+  // Chainmail extends from shoulders to mid-thigh
+  QVector3D top = torso.origin + up * (torso_r * 0.42F);
+  QVector3D head_guard = head.origin - head_up * (head_r * 1.35F);
+  if (QVector3D::dotProduct(top - head_guard, up) > 0.0F) {
+    top = head_guard - up * (torso_r * 0.06F);
+  }
+
+  // Chainmail hangs lower than segmentata
+  QVector3D bottom = waist.origin - waist_up * (waist_r * 0.15F);
+
+  // MAIN CHAINMAIL LAYER - loose-fitting, follows body contours
+  QMatrix4x4 chainmail =
+      cylinderBetween(ctx.model, top, bottom, torso_r * 0.98F);
+  chainmail.scale(1.02F, 1.0F, depth_scale_for(0.82F));
+  submitter.mesh(getUnitTorso(), chainmail, chainmail_color, nullptr, 1.0F);
+
+  // PECTORALE (chest reinforcement plate) - distinguishing feature
+  // Rectangular steel/bronze plate worn over chainmail on chest
+  QVector3D chest_center = torso.origin + up * (torso_r * 0.12F) +
+                          forward * (torso_depth * 0.48F);
+  float const plate_width = torso_r * 0.85F;
+  float const plate_height = torso_r * 0.65F;
+  float const plate_depth = torso_r * 0.18F;
+
+  QMatrix4x4 pectorale = ctx.model;
+  pectorale.translate(chest_center);
+  QQuaternion chest_rot = QQuaternion::fromDirection(forward, up);
+  pectorale.rotate(chest_rot.conjugated());
+  pectorale.scale(plate_width, plate_height, plate_depth);
+  submitter.mesh(getUnitSphere(), pectorale, steel_color, nullptr, 1.0F);
+
+  // Pectorale leather straps (visible attachment to chainmail)
+  auto strap = [&](float side) {
+    QVector3D shoulder_point =
+        top + right * (torso_r * 0.48F * side) + forward * (torso_r * 0.12F);
+    QVector3D chest_point =
+        chest_center + right * (plate_width * 0.42F * side) + up * (plate_height * 0.35F);
+    submitter.mesh(getUnitCylinder(),
+                   cylinderBetween(ctx.model, shoulder_point, chest_point,
+                                   torso_r * 0.055F),
+                   leather_color * 0.88F, nullptr, 1.0F);
+  };
+  strap(1.0F);
+  strap(-1.0F);
+
+  // Cingulum (belt) - narrower than heavy armor
+  QVector3D belt_center = waist.origin + waist_up * (waist_r * 0.01F);
+  float const belt_height = waist_r * 0.18F;
+  QVector3D const belt_top = belt_center + waist_up * (0.5F * belt_height);
+  QVector3D const belt_bot = belt_center - waist_up * (0.5F * belt_height);
+  float const belt_radius = waist_r * 1.02F;
 
   submitter.mesh(getUnitCylinder(),
-                 cylinderBetween(ctx.model, belt_top, belt_bot, belt_r),
+                 cylinderBetween(ctx.model, belt_top, belt_bot, belt_radius),
                  leather_color, nullptr, 1.0F);
 }
 
