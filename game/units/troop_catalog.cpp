@@ -166,6 +166,38 @@ void TroopCatalog::register_defaults() {
   horse_swordsman.max_units_per_row = 3;
 
   register_class(std::move(horse_swordsman));
+
+  TroopClass healer{};
+  healer.unit_type = Game::Units::TroopType::Healer;
+  healer.display_name = "Healer";
+  healer.production.cost = 75;
+  healer.production.build_time = 7.0F;
+  healer.production.priority = 8;
+  healer.production.is_melee = false;
+
+  healer.combat.health = 100;
+  healer.combat.max_health = 100;
+  healer.combat.speed = 2.5F;
+  healer.combat.vision_range = 14.0F;
+  healer.combat.ranged_range = 8.0F;
+  healer.combat.ranged_damage = 5;
+  healer.combat.ranged_cooldown = 2.0F;
+  healer.combat.melee_range = 1.5F;
+  healer.combat.melee_damage = 3;
+  healer.combat.melee_cooldown = 1.5F;
+  healer.combat.can_ranged = false;
+  healer.combat.can_melee = true;
+
+  healer.visuals.render_scale = 0.55F;
+  healer.visuals.selection_ring_size = 1.2F;
+  healer.visuals.selection_ring_ground_offset = 0.0F;
+  healer.visuals.selection_ring_y_offset = 0.0F;
+  healer.visuals.renderer_id = "troops/kingdom/healer";
+
+  healer.individuals_per_unit = 1;
+  healer.max_units_per_row = 1;
+
+  register_class(std::move(healer));
 }
 
 } // namespace Game::Units

@@ -60,7 +60,7 @@ void main() {
   if (isLight || avgColor > 0.70) {
     float linen = phoenicianLinen(v_worldPos.xz);
     float mediterraneanFolds = noise(uv * 8.5) * 0.13;
-    
+
     float viewAngle = abs(dot(normal, normalize(vec3(0.0, 1.0, 0.2))));
     float linenSheen = pow(1.0 - viewAngle, 9.0) * 0.13;
 
@@ -72,7 +72,7 @@ void main() {
     float weave = clothWeave(v_worldPos.xz);
     float tyrianRichness = noise(uv * 6.0) * 0.15;
     float luxuryShimmer = noise(uv * 35.0) * 0.04;
-    
+
     float viewAngle = abs(dot(normal, normalize(vec3(0.0, 1.0, 0.3))));
     float silkSheen = pow(1.0 - viewAngle, 6.0) * 0.14;
 
@@ -83,14 +83,13 @@ void main() {
   else if (avgColor > 0.30 && avgColor <= 0.56) {
     float leatherGrain = noise(uv * 14.0) * 0.14;
     float phoenicianCraft = noise(uv * 24.0) * 0.06;
-    
+
     float viewAngle = abs(dot(normal, normalize(vec3(0.0, 1.0, 0.4))));
     float leatherSheen = pow(1.0 - viewAngle, 6.0) * 0.10;
 
     color *= 1.0 + leatherGrain + phoenicianCraft - 0.04;
     color += vec3(leatherSheen);
-  }
-  else {
+  } else {
     float detail = noise(uv * 10.0) * 0.10;
     color *= 1.0 + detail - 0.06;
   }
