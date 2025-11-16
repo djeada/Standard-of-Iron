@@ -41,7 +41,7 @@ void RomanHeavyHelmetRenderer::render(const DrawContext &ctx,
   float const helm_r = head_r * 1.18F;  // Slightly larger than light helmet
 
   // Main helmet bowl - shader will add detail
-  QVector3D const helm_bot = headPoint(QVector3D(0.0F, -0.25F, 0.0F));
+  QVector3D const helm_bot = headPoint(QVector3D(0.0F, -0.05F, 0.0F));
   QVector3D const helm_top = headPoint(QVector3D(0.0F, 1.42F, 0.0F));
   submitter.mesh(getUnitCylinder(),
                  cylinderBetween(ctx.model, helm_bot, helm_top, helm_r),
