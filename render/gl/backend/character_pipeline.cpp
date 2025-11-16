@@ -108,6 +108,7 @@ auto CharacterPipeline::buildUniformSet(GL::Shader *shader) const
   uniforms.useTexture = shader->uniformHandle("u_useTexture");
   uniforms.color = shader->uniformHandle("u_color");
   uniforms.alpha = shader->uniformHandle("u_alpha");
+  uniforms.materialId = shader->uniformHandle("u_materialId");
   return uniforms;
 }
 

@@ -97,8 +97,14 @@ struct KnightExtras {
 
 class KnightRenderer : public HumanoidRendererBase {
 public:
+  // Swordsman-specific proportions
+  static constexpr float kShoulderWidth = 1.15F; // Lower than default
+  static constexpr float kTorsoScale = 0.98F;    // Slimmer torso
+  static constexpr float kArmScale = 0.92F;      // Slimmer arms
+
   auto get_proportion_scaling() const -> QVector3D override {
-    return {1.40F, 1.05F, 1.10F};
+    // Use swordsman-specific parameters
+    return {kShoulderWidth, kTorsoScale, kArmScale};
   }
 
 private:
@@ -373,22 +379,6 @@ void registerKnightRenderer(Render::GL::EntityRendererRegistry &registry) {
           if (swordsman_shader == nullptr) {
             swordsman_shader = ctx.backend->shader(QStringLiteral("swordsman"));
           }
-        }
-        auto *scene_renderer = dynamic_cast<Renderer *>(&out);
-        if ((scene_renderer != nullptr) && (swordsman_shader != nullptr)) {
-          scene_renderer->setCurrentShader(swordsman_shader);
-        }
-        static_renderer.render(ctx, out);
-        if (scene_renderer != nullptr) {
-          scene_renderer->setCurrentShader(nullptr);
-        }
-      });
-  registry.register_renderer(
-      "troops/roman/swordsman", [](const DrawContext &ctx, ISubmitter &out) {
-        static KnightRenderer const static_renderer;
-        Shader *swordsman_shader = nullptr;
-        if (ctx.backend != nullptr) {
-          swordsman_shader = ctx.backend->shader(QStringLiteral("swordsman"));
         }
         auto *scene_renderer = dynamic_cast<Renderer *>(&out);
         if ((scene_renderer != nullptr) && (swordsman_shader != nullptr)) {

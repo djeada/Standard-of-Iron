@@ -145,7 +145,7 @@ void TroopCatalog::register_defaults() {
 
   horse_swordsman.combat.health = 200;
   horse_swordsman.combat.max_health = 200;
-  horse_swordsman.combat.speed = 8.0F;
+  horse_swordsman.combat.speed = 4.F;
   horse_swordsman.combat.vision_range = 16.0F;
   horse_swordsman.combat.ranged_range = 1.5F;
   horse_swordsman.combat.ranged_damage = 5;
@@ -164,6 +164,39 @@ void TroopCatalog::register_defaults() {
 
   horse_swordsman.individuals_per_unit = 9;
   horse_swordsman.max_units_per_row = 3;
+
+
+  TroopClass horse_archer{};
+  horse_archer.unit_type = Game::Units::TroopType::HorseArcher;
+  horse_archer.display_name = "Horse Archer";
+  horse_archer.production.cost = 120;
+  horse_archer.production.build_time = 9.0F;
+  horse_archer.production.priority = 12;
+  horse_archer.production.is_melee = false;
+
+  horse_archer.combat.health = 160;
+  horse_archer.combat.max_health = 160;
+  horse_archer.combat.speed = 3.0F;
+  horse_archer.combat.vision_range = 15.0F;
+  horse_archer.combat.ranged_range = 7.0F;
+  horse_archer.combat.ranged_damage = 12;
+  horse_archer.combat.ranged_cooldown = 2.2F;
+  horse_archer.combat.melee_range = 1.5F;
+  horse_archer.combat.melee_damage = 10;
+  horse_archer.combat.melee_cooldown = 1.0F;
+  horse_archer.combat.can_ranged = true;
+  horse_archer.combat.can_melee = true;
+
+  horse_archer.visuals.render_scale = 0.8F;
+  horse_archer.visuals.selection_ring_size = 2.0F;
+  horse_archer.visuals.selection_ring_ground_offset = 1.35F;
+  horse_archer.visuals.selection_ring_y_offset = 0.0F;
+  horse_archer.visuals.renderer_id = "troops/kingdom/horse_archer";
+
+  horse_archer.individuals_per_unit = 8;
+  horse_archer.max_units_per_row = 3;
+
+  register_class(std::move(horse_archer));
 
   register_class(std::move(horse_swordsman));
 
@@ -198,6 +231,38 @@ void TroopCatalog::register_defaults() {
   healer.max_units_per_row = 1;
 
   register_class(std::move(healer));
+
+  TroopClass horse_spearman{};
+  horse_spearman.unit_type = Game::Units::TroopType::HorseSpearman;
+  horse_spearman.display_name = "Horse Spearman";
+  horse_spearman.production.cost = 130;
+  horse_spearman.production.build_time = 9.5F;
+  horse_spearman.production.priority = 13;
+  horse_spearman.production.is_melee = true;
+
+  horse_spearman.combat.health = 180;
+  horse_spearman.combat.max_health = 180;
+  horse_spearman.combat.speed = 3.0F;
+  horse_spearman.combat.vision_range = 15.0F;
+  horse_spearman.combat.ranged_range = 2.5F;
+  horse_spearman.combat.ranged_damage = 9;
+  horse_spearman.combat.ranged_cooldown = 1.8F;
+  horse_spearman.combat.melee_range = 2.2F;
+  horse_spearman.combat.melee_damage = 20;
+  horse_spearman.combat.melee_cooldown = 0.9F;
+  horse_spearman.combat.can_ranged = false;
+  horse_spearman.combat.can_melee = true;
+
+  horse_spearman.visuals.render_scale = 0.8F;
+  horse_spearman.visuals.selection_ring_size = 2.0F;
+  horse_spearman.visuals.selection_ring_ground_offset = 1.35F;
+  horse_spearman.visuals.selection_ring_y_offset = 0.0F;
+  horse_spearman.visuals.renderer_id = "troops/kingdom/horse_spearman";
+
+  horse_spearman.individuals_per_unit = 8;
+  horse_spearman.max_units_per_row = 3;
+
+  register_class(std::move(horse_spearman));
 }
 
 } // namespace Game::Units
