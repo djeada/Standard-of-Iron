@@ -30,7 +30,7 @@ vec3 fallbackUp(vec3 n) {
 void main() {
   vec3 position = a_position;
   vec3 normal = a_normal;
-  
+
   mat3 normalMatrix = mat3(transpose(inverse(u_model)));
   vec3 worldNormal = normalize(normalMatrix * normal);
 
@@ -47,22 +47,22 @@ void main() {
   v_bitangent = b;
   v_texCoord = a_texCoord;
   v_worldPos = vec3(u_model * vec4(position, 1.0));
-  
+
   // Body height for cloth flow and detail placement (0.0 = feet, 1.0 = head)
   v_bodyHeight = clamp((v_worldPos.y + 0.2) / 1.8, 0.0, 1.0);
-  
+
   // Cloth fold intensity based on joint areas (elbows, waist, knees)
-  float elbowFolds = smoothstep(1.15, 1.25, v_worldPos.y) * 
+  float elbowFolds = smoothstep(1.15, 1.25, v_worldPos.y) *
                      smoothstep(1.35, 1.25, v_worldPos.y);
-  float waistFolds = smoothstep(0.85, 0.95, v_worldPos.y) * 
+  float waistFolds = smoothstep(0.85, 0.95, v_worldPos.y) *
                      smoothstep(1.05, 0.95, v_worldPos.y);
-  float kneeFolds = smoothstep(0.45, 0.55, v_worldPos.y) * 
+  float kneeFolds = smoothstep(0.45, 0.55, v_worldPos.y) *
                     smoothstep(0.65, 0.55, v_worldPos.y);
   v_clothFolds = (elbowFolds + waistFolds + kneeFolds) * 0.5;
-  
+
   // Fabric wear pattern (procedural based on world position)
   v_fabricWear = hash13(v_worldPos * 0.5) * 0.3 + 0.2; // 0.2-0.5 range
-  
+
   // Legacy armor layer for fallback compatibility
   if (v_worldPos.y > 1.5) {
     v_armorLayer = 0.0;
