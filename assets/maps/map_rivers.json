@@ -99,6 +99,18 @@
       "playerId": 1
     },
     {
+      "type": "horse_archer",
+      "x": 30,
+      "z": 35,
+      "playerId": 1
+    },
+    {
+      "type": "horse_spearman",
+      "x": 30,
+      "z": 35,
+      "playerId": 1
+    },
+    {
       "type": "spearman",
       "x": 35,
       "z": 30,

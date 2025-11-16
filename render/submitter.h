@@ -16,7 +16,7 @@ class ISubmitter {
 public:
   virtual ~ISubmitter() = default;
   virtual void mesh(Mesh *mesh, const QMatrix4x4 &model, const QVector3D &color,
-                    Texture *tex = nullptr, float alpha = 1.0F) = 0;
+                    Texture *tex = nullptr, float alpha = 1.0F, int materialId = 0) = 0;
   virtual void cylinder(const QVector3D &start, const QVector3D &end,
                         float radius, const QVector3D &color,
                         float alpha = 1.0F) = 0;
@@ -47,7 +47,7 @@ public:
   void setShader(Shader *shader) { m_shader = shader; }
 
   void mesh(Mesh *mesh, const QMatrix4x4 &model, const QVector3D &color,
-            Texture *tex = nullptr, float alpha = 1.0F) override {
+            Texture *tex = nullptr, float alpha = 1.0F, int materialId = 0) override {
     if ((m_queue == nullptr) || (mesh == nullptr)) {
       return;
     }
@@ -74,6 +74,7 @@ public:
     cmd.model = model;
     cmd.color = color;
     cmd.alpha = alpha;
+    cmd.materialId = materialId;
     cmd.shader = m_shader;
     m_queue->submit(cmd);
   }

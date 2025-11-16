@@ -117,7 +117,7 @@
       "combat": {
         "health": 200,
         "max_health": 200,
-        "speed": 8.0,
+        "speed": 3.0,
         "vision_range": 16.0,
         "ranged_range": 1.5,
         "ranged_damage": 5,
@@ -152,7 +152,7 @@
       "combat": {
         "health": 140,
         "max_health": 140,
-        "speed": 7.5,
+        "speed": 3.0,
         "vision_range": 18.0,
         "ranged_range": 7.0,
         "ranged_damage": 14,
@@ -187,7 +187,7 @@
       "combat": {
         "health": 180,
         "max_health": 180,
-        "speed": 7.8,
+        "speed": 3.0,
         "vision_range": 16.0,
         "ranged_range": 1.5,
         "ranged_damage": 5,
