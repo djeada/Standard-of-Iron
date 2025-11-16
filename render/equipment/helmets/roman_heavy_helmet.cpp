@@ -59,7 +59,6 @@ void RomanHeavyHelmetRenderer::render(const DrawContext &ctx,
   float head_r = head.radius;
   if (head_r <= 0.0f) {
     return;
-  }
 
   auto head_point = [&](const QVector3D &n) {
     QVector3D p = HumanoidRendererBase::frameLocalPosition(head, n);
