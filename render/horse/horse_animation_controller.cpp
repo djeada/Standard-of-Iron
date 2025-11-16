@@ -24,20 +24,24 @@ constexpr GaitParameters getGaitParams(GaitType gait) {
     return {1.0F, 0.0F, 0.0F, 0.02F, 0.01F, 0.005F};
   case GaitType::WALK:
     // Walk: 4-beat gait, ~1.5 m/s, each leg moves independently
-    // Cycle time based on typical 4-5 km/h walking speed
-    return {1.0F, 0.25F, 0.75F, 0.30F, 0.15F, 0.020F};
+    // Increased stride swing for more ground coverage per cycle
+    // Wider range of leg bending for more natural articulation
+    return {1.0F, 0.25F, 0.75F, 0.55F, 0.22F, 0.020F};
   case GaitType::TROT:
     // Trot: 2-beat diagonal gait, ~4 m/s, with suspension phase
-    // More vertical movement (bob) due to suspension
-    return {0.60F, 0.0F, 0.5F, 0.35F, 0.20F, 0.030F};
+    // Significantly increased stride to match faster cycle and cover more distance
+    // Higher lift for pronounced suspension and leg extension
+    return {0.60F, 0.0F, 0.5F, 0.70F, 0.35F, 0.030F};
   case GaitType::CANTER:
     // Canter: 3-beat gait, ~6.5 m/s, asymmetric lead leg
-    // Better phase separation for the 3-beat rhythm
-    return {0.50F, 0.33F, 0.66F, 0.42F, 0.28F, 0.040F};
+    // Large stride swing for galloping motion with lead leg extension
+    // Multi-stage leg articulation with wider range of bending
+    return {0.50F, 0.33F, 0.66F, 0.85F, 0.45F, 0.040F};
   case GaitType::GALLOP:
     // Gallop: 4-beat gait, ~10 m/s, maximum extension and suspension
-    // Increased stride length and vertical movement
-    return {0.38F, 0.15F, 0.65F, 0.50F, 0.38F, 0.055F};
+    // Maximum stride length to cover significant distance
+    // Full leg extension and compression for dynamic movement
+    return {0.38F, 0.15F, 0.65F, 1.05F, 0.58F, 0.055F};
   }
   return {1.0F, 0.0F, 0.0F, 0.02F, 0.01F, 0.005F};
 }
