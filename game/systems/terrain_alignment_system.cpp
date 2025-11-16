@@ -32,15 +32,7 @@ void TerrainAlignmentSystem::alignEntityToTerrain(
   float const terrain_height = terrain_service.getTerrainHeight(
       transform->position.x, transform->position.z);
 
-  float entity_base_offset = 0.0F;
-  if (auto *unit = entity->getComponent<Engine::Core::UnitComponent>()) {
-    entity_base_offset =
-        Game::Units::TroopConfig::instance().getSelectionRingGroundOffset(
-            unit->spawn_type);
-  }
-
-  transform->position.y =
-      terrain_height + entity_base_offset * transform->scale.y;
+  transform->position.y = terrain_height;
 }
 
 } // namespace Game::Systems
