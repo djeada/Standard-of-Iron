@@ -383,22 +383,6 @@ void registerKnightRenderer(Render::GL::EntityRendererRegistry &registry) {
           scene_renderer->setCurrentShader(nullptr);
         }
       });
-  registry.register_renderer(
-      "troops/kingdom/swordsman", [](const DrawContext &ctx, ISubmitter &out) {
-        static KnightRenderer const static_renderer;
-        Shader *swordsman_shader = nullptr;
-        if (ctx.backend != nullptr) {
-          swordsman_shader = ctx.backend->shader(QStringLiteral("swordsman"));
-        }
-        auto *scene_renderer = dynamic_cast<Renderer *>(&out);
-        if ((scene_renderer != nullptr) && (swordsman_shader != nullptr)) {
-          scene_renderer->setCurrentShader(swordsman_shader);
-        }
-        static_renderer.render(ctx, out);
-        if (scene_renderer != nullptr) {
-          scene_renderer->setCurrentShader(nullptr);
-        }
-      });
 }
 
 } // namespace Render::GL::Kingdom

@@ -1068,6 +1068,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       active_shader->setUniform(uniforms->useTexture, it.texture != nullptr);
       active_shader->setUniform(uniforms->color, it.color);
       active_shader->setUniform(uniforms->alpha, it.alpha);
+      active_shader->setUniform(uniforms->materialId, it.materialId);
       it.mesh->draw();
       break;
     }

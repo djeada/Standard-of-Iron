@@ -27,13 +27,31 @@
         <file>assets/shaders/swordsman.frag</file>
         <file>assets/shaders/swordsman.vert</file>
         <file>assets/shaders/swordsman_kingdom_of_iron.frag</file>
+        <file>assets/shaders/swordsman_kingdom_of_iron.vert</file>
         <file>assets/shaders/swordsman_roman_republic.frag</file>
+        <file>assets/shaders/swordsman_roman_republic.vert</file>
         <file>assets/shaders/swordsman_carthage.frag</file>
+        <file>assets/shaders/swordsman_carthage.vert</file>
         <file>assets/shaders/horse_swordsman.frag</file>
         <file>assets/shaders/horse_swordsman.vert</file>
         <file>assets/shaders/horse_swordsman_kingdom_of_iron.frag</file>
+        <file>assets/shaders/horse_swordsman_kingdom_of_iron.vert</file>
         <file>assets/shaders/horse_swordsman_roman_republic.frag</file>
+        <file>assets/shaders/horse_swordsman_roman_republic.vert</file>
         <file>assets/shaders/horse_swordsman_carthage.frag</file>
+        <file>assets/shaders/horse_swordsman_carthage.vert</file>
+        <file>assets/shaders/horse_archer_kingdom_of_iron.frag</file>
+        <file>assets/shaders/horse_archer_kingdom_of_iron.vert</file>
+        <file>assets/shaders/horse_archer_roman_republic.frag</file>
+        <file>assets/shaders/horse_archer_roman_republic.vert</file>
+        <file>assets/shaders/horse_archer_carthage.frag</file>
+        <file>assets/shaders/horse_archer_carthage.vert</file>
+        <file>assets/shaders/horse_spearman_kingdom_of_iron.frag</file>
+        <file>assets/shaders/horse_spearman_kingdom_of_iron.vert</file>
+        <file>assets/shaders/horse_spearman_roman_republic.frag</file>
+        <file>assets/shaders/horse_spearman_roman_republic.vert</file>
+        <file>assets/shaders/horse_spearman_carthage.frag</file>
+        <file>assets/shaders/horse_spearman_carthage.vert</file>
         <file>assets/shaders/pine_instanced.frag</file>
         <file>assets/shaders/pine_instanced.vert</file>
         <file>assets/shaders/plant_instanced.frag</file>
