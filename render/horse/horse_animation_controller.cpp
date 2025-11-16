@@ -23,13 +23,21 @@ constexpr GaitParameters getGaitParams(GaitType gait) {
   case GaitType::IDLE:
     return {1.0F, 0.0F, 0.0F, 0.02F, 0.01F, 0.005F};
   case GaitType::WALK:
-    return {0.80F, 0.25F, 0.75F, 0.28F, 0.12F, 0.015F};
+    // Walk: 4-beat gait, ~1.5 m/s, each leg moves independently
+    // Cycle time based on typical 4-5 km/h walking speed
+    return {1.0F, 0.25F, 0.75F, 0.30F, 0.15F, 0.020F};
   case GaitType::TROT:
-    return {0.55F, 0.0F, 0.5F, 0.32F, 0.18F, 0.025F};
+    // Trot: 2-beat diagonal gait, ~4 m/s, with suspension phase
+    // More vertical movement (bob) due to suspension
+    return {0.60F, 0.0F, 0.5F, 0.35F, 0.20F, 0.030F};
   case GaitType::CANTER:
-    return {0.45F, 0.15F, 0.60F, 0.38F, 0.24F, 0.035F};
+    // Canter: 3-beat gait, ~6.5 m/s, asymmetric lead leg
+    // Better phase separation for the 3-beat rhythm
+    return {0.50F, 0.33F, 0.66F, 0.42F, 0.28F, 0.040F};
   case GaitType::GALLOP:
-    return {0.35F, 0.10F, 0.55F, 0.45F, 0.32F, 0.045F};
+    // Gallop: 4-beat gait, ~10 m/s, maximum extension and suspension
+    // Increased stride length and vertical movement
+    return {0.38F, 0.15F, 0.65F, 0.50F, 0.38F, 0.055F};
   }
   return {1.0F, 0.0F, 0.0F, 0.02F, 0.01F, 0.005F};
 }
@@ -57,10 +65,16 @@ HorseAnimationController::HorseAnimationController(
   m_is_jumping = false;
   m_jump_height = 0.0F;
   m_jump_distance = 0.0F;
+  m_target_gait = GaitType::IDLE;
+  m_gait_transition_progress = 1.0F;
+  m_transition_start_time = 0.0F;
 }
 
 void HorseAnimationController::setGait(GaitType gait) {
+  // Directly set the gait without transition for explicit gait setting
   m_current_gait = gait;
+  m_target_gait = gait;
+  m_gait_transition_progress = 1.0F;
 
   switch (gait) {
   case GaitType::IDLE:
@@ -99,16 +113,23 @@ void HorseAnimationController::accelerate(float speed_delta) {
   m_speed += speed_delta;
   m_speed = std::max(0.0F, m_speed);
 
+  GaitType new_gait;
   if (m_speed < 0.5F) {
-    m_current_gait = GaitType::IDLE;
+    new_gait = GaitType::IDLE;
   } else if (m_speed < 3.0F) {
-    m_current_gait = GaitType::WALK;
+    new_gait = GaitType::WALK;
   } else if (m_speed < 5.5F) {
-    m_current_gait = GaitType::TROT;
+    new_gait = GaitType::TROT;
   } else if (m_speed < 8.0F) {
-    m_current_gait = GaitType::CANTER;
+    new_gait = GaitType::CANTER;
   } else {
-    m_current_gait = GaitType::GALLOP;
+    new_gait = GaitType::GALLOP;
+  }
+
+  if (m_current_gait != new_gait) {
+    m_target_gait = new_gait;
+    m_gait_transition_progress = 0.0F;
+    m_transition_start_time = m_anim.time;
   }
 
   updateGaitParameters();
@@ -163,13 +184,46 @@ auto HorseAnimationController::getStrideCycle() const -> float {
 }
 
 void HorseAnimationController::updateGaitParameters() {
-  GaitParameters const params = getGaitParams(m_current_gait);
+  // Smoothly transition between gaits for more realistic movement
+  constexpr float transition_duration = 0.3F; // seconds for full transition
+  if (m_gait_transition_progress < 1.0F) {
+    float const elapsed = m_anim.time - m_transition_start_time;
+    m_gait_transition_progress = std::min(1.0F, elapsed / transition_duration);
+    if (m_gait_transition_progress >= 1.0F) {
+      m_current_gait = m_target_gait;
+    }
+  }
 
-  m_profile.gait.cycleTime = params.cycleTime;
-  m_profile.gait.frontLegPhase = params.frontLegPhase;
-  m_profile.gait.rearLegPhase = params.rearLegPhase;
-  m_profile.gait.strideSwing = params.strideSwing;
-  m_profile.gait.strideLift = params.strideLift;
+  // Get parameters for current and target gaits
+  GaitParameters const current_params = getGaitParams(m_current_gait);
+  GaitParameters target_params = current_params;
+  
+  // If transitioning, interpolate between current and target gait parameters
+  if (m_gait_transition_progress < 1.0F) {
+    target_params = getGaitParams(m_target_gait);
+    float const t = m_gait_transition_progress;
+    
+    // Smooth interpolation using cubic easing for more natural transitions
+    float const ease_t = t * t * (3.0F - 2.0F * t);
+    
+    m_profile.gait.cycleTime = current_params.cycleTime +
+                                ease_t * (target_params.cycleTime - current_params.cycleTime);
+    m_profile.gait.frontLegPhase = current_params.frontLegPhase +
+                                    ease_t * (target_params.frontLegPhase - current_params.frontLegPhase);
+    m_profile.gait.rearLegPhase = current_params.rearLegPhase +
+                                   ease_t * (target_params.rearLegPhase - current_params.rearLegPhase);
+    m_profile.gait.strideSwing = current_params.strideSwing +
+                                  ease_t * (target_params.strideSwing - current_params.strideSwing);
+    m_profile.gait.strideLift = current_params.strideLift +
+                                 ease_t * (target_params.strideLift - current_params.strideLift);
+  } else {
+    // Not transitioning, use current gait parameters directly
+    m_profile.gait.cycleTime = current_params.cycleTime;
+    m_profile.gait.frontLegPhase = current_params.frontLegPhase;
+    m_profile.gait.rearLegPhase = current_params.rearLegPhase;
+    m_profile.gait.strideSwing = current_params.strideSwing;
+    m_profile.gait.strideLift = current_params.strideLift;
+  }
 
   bool const is_moving = m_current_gait != GaitType::IDLE;
 
@@ -178,14 +232,17 @@ void HorseAnimationController::updateGaitParameters() {
     if (m_rider_ctx.gait.cycle_time > 0.0001F) {
       m_phase = m_rider_ctx.gait.cycle_phase;
     } else {
-      m_phase = std::fmod(m_anim.time / params.cycleTime, 1.0F);
+      m_phase = std::fmod(m_anim.time / m_profile.gait.cycleTime, 1.0F);
     }
 
     float const rider_intensity = m_rider_ctx.locomotion_normalized_speed();
     float const bob_amp = m_profile.dims.idleBobAmplitude +
                           rider_intensity * (m_profile.dims.moveBobAmplitude -
                                              m_profile.dims.idleBobAmplitude);
-    m_bob = std::sin(m_phase * 2.0F * k_pi) * bob_amp;
+    
+    // Add subtle variation to bob for more natural movement
+    float const variation = std::sin(m_anim.time * 0.7F) * 0.05F + 1.0F;
+    m_bob = std::sin(m_phase * 2.0F * k_pi) * bob_amp * variation;
   } else {
 
     m_phase = std::fmod(m_anim.time * 0.25F, 1.0F);

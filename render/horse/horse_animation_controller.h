@@ -40,6 +40,9 @@ private:
   float m_rein_slack{};
 
   GaitType m_current_gait{GaitType::IDLE};
+  GaitType m_target_gait{GaitType::IDLE};
+  float m_gait_transition_progress{1.0F};
+  float m_transition_start_time{0.0F};
   float m_speed{};
   float m_turn_angle{};
   float m_banking{};
