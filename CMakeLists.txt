@@ -204,6 +204,12 @@ if(QT_VERSION_MAJOR EQUAL 6)
             assets/shaders/ground_plane.vert
             assets/shaders/swordsman.frag
             assets/shaders/swordsman.vert
+            assets/shaders/swordsman_kingdom_of_iron.frag
+            assets/shaders/swordsman_kingdom_of_iron.vert
+            assets/shaders/swordsman_roman_republic.frag
+            assets/shaders/swordsman_roman_republic.vert
+            assets/shaders/swordsman_carthage.frag
+            assets/shaders/swordsman_carthage.vert
             assets/shaders/horse_swordsman.frag
             assets/shaders/horse_swordsman.vert
             assets/shaders/horse_swordsman_kingdom_of_iron.frag

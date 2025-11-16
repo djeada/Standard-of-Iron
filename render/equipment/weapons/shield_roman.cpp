@@ -32,6 +32,7 @@ void RomanShieldRenderer::render(const DrawContext &ctx,
                                  const HumanoidPalette &palette,
                                  const HumanoidAnimationContext &,
                                  ISubmitter &submitter) {
+  // Roman scutum - large curved rectangular shield
   constexpr float k_shield_yaw_degrees = -70.0F;
 
   QMatrix4x4 rot;
@@ -41,91 +42,55 @@ void RomanShieldRenderer::render(const DrawContext &ctx,
   const QVector3D axis_x = rot.map(QVector3D(1.0F, 0.0F, 0.0F));
   const QVector3D axis_y = rot.map(QVector3D(0.0F, 1.0F, 0.0F));
 
-  float const shield_width = 0.18F * 2.5F;
-  float const shield_height = shield_width * 1.3F;
+  // Scutum dimensions - LARGE rectangular shield
+  float const shield_width = 0.45F;
+  float const shield_height = 1.0F;
 
+  // Position on left hand - same pattern as Carthage shield
   QVector3D shield_center = frames.hand_l.origin +
                             axis_x * (-shield_width * 0.35F) +
-                            axis_y * (-0.05F) + n * (0.06F);
+                            axis_y * 0.15F + n * 0.06F;
 
-  QVector3D const shield_color{0.65F, 0.15F, 0.15F};
-  QVector3D const trim_color{0.78F, 0.70F, 0.45F};
-  QVector3D const metal_color{0.72F, 0.73F, 0.78F};
+  QVector3D const shield_color{0.68F, 0.14F, 0.12F};  // Deep red
+  QVector3D const trim_color{0.88F, 0.75F, 0.42F};     // Brass trim
+  QVector3D const metal_color{0.82F, 0.84F, 0.88F};    // Steel boss
 
-  constexpr int width_segments = 8;
-  constexpr int height_segments = 12;
+  // Main scutum body - flat rectangular surface (shader will curve it)
+  QMatrix4x4 shield_body = ctx.model;
+  shield_body.translate(shield_center);
+  shield_body.rotate(90.0F, 0.0F, 1.0F, 0.0F); // Flip shield by 90 degrees along Y axis
+  shield_body.rotate(k_shield_yaw_degrees, 0.0F, 1.0F, 0.0F);
+  shield_body.scale(shield_width * 0.005F, shield_height * 0.5F, 0.24F); // Broader and thinner
+  
+  submitter.mesh(getUnitCube(), shield_body, shield_color, nullptr, 1.0F, 4);  // materialId=4 (shield)
 
-  for (int h = 0; h < height_segments; ++h) {
-    for (int w = 0; w < width_segments; ++w) {
-      float const h_t =
-          static_cast<float>(h) / static_cast<float>(height_segments - 1);
-      float const w_t =
-          static_cast<float>(w) / static_cast<float>(width_segments - 1);
+  // Brass rim trim - top and bottom edges
+  float const rim_thickness = 0.020F;
+  
+  QVector3D top_left = shield_center + axis_y * (shield_height * 0.5F) - axis_x * (shield_width * 0.5F);
+  QVector3D top_right = shield_center + axis_y * (shield_height * 0.5F) + axis_x * (shield_width * 0.5F);
+  submitter.mesh(getUnitCylinder(),
+                 cylinderBetween(ctx.model, top_left, top_right, rim_thickness),
+                 trim_color, nullptr, 1.0F, 4);
+  
+  QVector3D bot_left = shield_center - axis_y * (shield_height * 0.5F) - axis_x * (shield_width * 0.5F);
+  QVector3D bot_right = shield_center - axis_y * (shield_height * 0.5F) + axis_x * (shield_width * 0.5F);
+  submitter.mesh(getUnitCylinder(),
+                 cylinderBetween(ctx.model, bot_left, bot_right, rim_thickness),
+                 trim_color, nullptr, 1.0F, 4);
 
-      float const y_local = (h_t - 0.5F) * shield_height;
-      float const x_local = (w_t - 0.5F) * shield_width;
-
-      QVector3D segment_pos =
-          shield_center + axis_y * y_local + axis_x * x_local;
-
-      QMatrix4x4 m = ctx.model;
-      m.translate(segment_pos);
-      m.scale(0.028F, 0.032F, 0.008F);
-
-      submitter.mesh(getUnitSphere(), m, shield_color, nullptr, 1.0F);
-    }
-  }
-
-  for (int i = 0; i < width_segments + 1; ++i) {
-    float const t = static_cast<float>(i) / static_cast<float>(width_segments);
-    float const x_local = (t - 0.5F) * shield_width;
-
-    QVector3D top_pos =
-        shield_center + axis_y * (shield_height * 0.5F) + axis_x * x_local;
-    QVector3D bot_pos =
-        shield_center + axis_y * (-shield_height * 0.5F) + axis_x * x_local;
-
-    QMatrix4x4 m_top = ctx.model;
-    m_top.translate(top_pos);
-    m_top.scale(0.015F);
-    submitter.mesh(getUnitSphere(), m_top, trim_color, nullptr, 1.0F);
-
-    QMatrix4x4 m_bot = ctx.model;
-    m_bot.translate(bot_pos);
-    m_bot.scale(0.015F);
-    submitter.mesh(getUnitSphere(), m_bot, trim_color, nullptr, 1.0F);
-  }
-
-  for (int i = 0; i < height_segments + 1; ++i) {
-    float const t = static_cast<float>(i) / static_cast<float>(height_segments);
-    float const y_local = (t - 0.5F) * shield_height;
-
-    QVector3D left_pos =
-        shield_center + axis_y * y_local + axis_x * (-shield_width * 0.5F);
-    QVector3D right_pos =
-        shield_center + axis_y * y_local + axis_x * (shield_width * 0.5F);
-
-    QMatrix4x4 m_left = ctx.model;
-    m_left.translate(left_pos);
-    m_left.scale(0.015F);
-    submitter.mesh(getUnitSphere(), m_left, trim_color, nullptr, 1.0F);
-
-    QMatrix4x4 m_right = ctx.model;
-    m_right.translate(right_pos);
-    m_right.scale(0.015F);
-    submitter.mesh(getUnitSphere(), m_right, trim_color, nullptr, 1.0F);
-  }
-
-  float const boss_radius = shield_width * 0.25F;
+  // Steel umbo (boss) - large central dome
+  float const boss_radius = 0.08F;
   submitter.mesh(getUnitSphere(),
                  sphereAt(ctx.model, shield_center + n * 0.05F, boss_radius),
-                 metal_color, nullptr, 1.0F);
+                 metal_color, nullptr, 1.0F, 4);
 
-  QVector3D const grip_a = shield_center - axis_x * 0.035F - n * 0.030F;
-  QVector3D const grip_b = shield_center + axis_x * 0.035F - n * 0.030F;
+  // Horizontal grip bar behind boss
+  QVector3D const grip_a = shield_center - axis_x * 0.06F - n * 0.03F;
+  QVector3D const grip_b = shield_center + axis_x * 0.06F - n * 0.03F;
   submitter.mesh(getUnitCylinder(),
-                 cylinderBetween(ctx.model, grip_a, grip_b, 0.010F),
-                 palette.leather, nullptr, 1.0F);
+                 cylinderBetween(ctx.model, grip_a, grip_b, 0.012F),
+                 palette.leather, nullptr, 1.0F, 0);
 }
 
 } // namespace Render::GL

@@ -955,6 +955,16 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
         ctx.entity->getComponent<Engine::Core::TransformComponent>();
   }
 
+  float entity_ground_offset = 0.0F;
+  if (unit_comp != nullptr) {
+    entity_ground_offset =
+        Game::Units::TroopConfig::instance().getSelectionRingGroundOffset(
+            unit_comp->spawn_type);
+    if (transform_comp != nullptr) {
+      entity_ground_offset *= transform_comp->scale.y;
+    }
+  }
+
   uint32_t seed = 0U;
   if (unit_comp != nullptr) {
     seed ^= uint32_t(unit_comp->owner_id * 2654435761U);
@@ -1024,11 +1034,17 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
       m.scale(transform_comp->scale.x, transform_comp->scale.y,
               transform_comp->scale.z);
       m.translate(offset_x, vertical_jitter, offset_z);
+      if (entity_ground_offset != 0.0F) {
+        m.translate(0.0F, -entity_ground_offset, 0.0F);
+      }
       inst_model = m;
     } else {
       inst_model = ctx.model;
       inst_model.rotate(applied_yaw, 0.0F, 1.0F, 0.0F);
       inst_model.translate(offset_x, vertical_jitter, offset_z);
+      if (entity_ground_offset != 0.0F) {
+        inst_model.translate(0.0F, -entity_ground_offset, 0.0F);
+      }
     }
 
     DrawContext inst_ctx{ctx.resources, ctx.entity, ctx.world, inst_model};
