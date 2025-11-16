@@ -97,13 +97,12 @@ struct KnightExtras {
 
 class KnightRenderer : public HumanoidRendererBase {
 public:
-  // Swordsman-specific proportions
-  static constexpr float kShoulderWidth = 1.15F; // Lower than default
-  static constexpr float kTorsoScale = 0.98F;    // Slimmer torso
-  static constexpr float kArmScale = 0.92F;      // Slimmer arms
+  static constexpr float kShoulderWidth = 1.15F;
+  static constexpr float kTorsoScale = 0.98F;
+  static constexpr float kArmScale = 0.92F;
 
   auto get_proportion_scaling() const -> QVector3D override {
-    // Use swordsman-specific parameters
+
     return {kShoulderWidth, kTorsoScale, kArmScale};
   }
 

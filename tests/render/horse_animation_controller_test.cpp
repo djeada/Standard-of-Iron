@@ -300,12 +300,12 @@ TEST_F(HorseAnimationControllerTest, GaitTransitionsAreSmoothAndGradual) {
 
   // Accelerate to gallop
   controller.accelerate(10.0F);
-  
+
   // After short time, should be transitioning (not at final value)
   anim.time += 0.1F;
   controller.updateGaitParameters();
   float const transition_cycle1 = profile.gait.cycleTime;
-  EXPECT_GT(transition_cycle1, 0.38F); // Not yet at gallop cycle time
+  EXPECT_GT(transition_cycle1, 0.38F);      // Not yet at gallop cycle time
   EXPECT_LT(transition_cycle1, walk_cycle); // But moving toward it
 
   // After enough time, should reach final value
