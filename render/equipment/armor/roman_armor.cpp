@@ -35,7 +35,6 @@ void RomanHeavyArmorRenderer::render(const DrawContext &ctx,
 
   using HP = HumanProportions;
 
-  // Lorica Segmentata - polished steel with cool blue-grey tint
   QVector3D const steel_color =
       saturate_color(palette.metal * QVector3D(0.88F, 0.92F, 1.08F));
   QVector3D const brass_color =
@@ -64,7 +63,6 @@ void RomanHeavyArmorRenderer::render(const DrawContext &ctx,
       waist.radius > 0.0F ? waist.radius : torso.radius * 0.88F;
   float const head_r = head.radius > 0.0F ? head.radius : torso.radius * 0.58F;
 
-  // Lorica segmentata extends from shoulders to waist
   QVector3D top = torso.origin + up * (torso_r * 0.48F);
   QVector3D head_guard = head.origin - head_up * (head_r * 1.30F);
   if (QVector3D::dotProduct(top - head_guard, up) > 0.0F) {
@@ -74,31 +72,28 @@ void RomanHeavyArmorRenderer::render(const DrawContext &ctx,
   QVector3D bottom =
       waist.origin + waist_up * (waist_r * 0.08F) - forward * (torso_r * 0.01F);
 
-  // MAIN SEGMENTED PLATE ARMOR - follows torso contours
   QMatrix4x4 plates = cylinderBetween(ctx.model, top, bottom, torso_r * 1.02F);
   plates.scale(1.05F, 1.0F, depth_scale_for(0.86F));
-  submitter.mesh(getUnitTorso(), plates, steel_color, nullptr, 1.0F, 1);  // materialId=1 (armor)
+  submitter.mesh(getUnitTorso(), plates, steel_color, nullptr, 1.0F, 1);
 
-  // Shoulder guards (pteruges) - 2 overlapping plates per side
   auto renderShoulderGuard = [&](const QVector3D &shoulder_pos,
                                  const QVector3D &outward) {
-    // Upper shoulder plate
     QVector3D upper_pos = shoulder_pos + outward * 0.03F + forward * 0.01F;
     QMatrix4x4 upper = ctx.model;
     upper.translate(upper_pos);
     upper.scale(HP::UPPER_ARM_R * 1.90F, HP::UPPER_ARM_R * 0.42F,
                 HP::UPPER_ARM_R * 1.65F);
-    submitter.mesh(getUnitSphere(), upper, steel_color * 0.98F, nullptr, 1.0F, 1);  // materialId=1
+    submitter.mesh(getUnitSphere(), upper, steel_color * 0.98F, nullptr, 1.0F,
+                   1);
 
-    // Lower shoulder plate with brass trim
     QVector3D lower_pos = upper_pos - up * 0.06F + outward * 0.02F;
     QMatrix4x4 lower = ctx.model;
     lower.translate(lower_pos);
     lower.scale(HP::UPPER_ARM_R * 1.68F, HP::UPPER_ARM_R * 0.38F,
                 HP::UPPER_ARM_R * 1.48F);
-    submitter.mesh(getUnitSphere(), lower, steel_color * 0.94F, nullptr, 1.0F, 1);  // materialId=1
+    submitter.mesh(getUnitSphere(), lower, steel_color * 0.94F, nullptr, 1.0F,
+                   1);
 
-    // Brass rivet on shoulder
     QMatrix4x4 rivet = ctx.model;
     rivet.translate(upper_pos + forward * 0.04F);
     rivet.scale(0.012F);
@@ -107,7 +102,6 @@ void RomanHeavyArmorRenderer::render(const DrawContext &ctx,
 
   renderShoulderGuard(frames.shoulder_l.origin, -right);
   renderShoulderGuard(frames.shoulder_r.origin, right);
-
 }
 
 void RomanLightArmorRenderer::render(const DrawContext &ctx,
@@ -127,7 +121,6 @@ void RomanLightArmorRenderer::render(const DrawContext &ctx,
 
   using HP = HumanProportions;
 
-  // Chainmail (lorica hamata) - dull steel/iron color
   QVector3D const chainmail_color =
       saturate_color(palette.metal * QVector3D(0.68F, 0.72F, 0.78F));
   QVector3D const leather_color =
@@ -156,26 +149,21 @@ void RomanLightArmorRenderer::render(const DrawContext &ctx,
       waist.radius > 0.0F ? waist.radius : torso.radius * 0.86F;
   float const head_r = head.radius > 0.0F ? head.radius : torso.radius * 0.58F;
 
-  // Chainmail extends from shoulders to mid-thigh
   QVector3D top = torso.origin + up * (torso_r * 0.42F);
   QVector3D head_guard = head.origin - head_up * (head_r * 1.35F);
   if (QVector3D::dotProduct(top - head_guard, up) > 0.0F) {
     top = head_guard - up * (torso_r * 0.06F);
   }
 
-  // Chainmail hangs lower than segmentata
   QVector3D bottom = waist.origin - waist_up * (waist_r * 0.15F);
 
-  // MAIN CHAINMAIL LAYER - loose-fitting, follows body contours
   QMatrix4x4 chainmail =
       cylinderBetween(ctx.model, top, bottom, torso_r * 0.98F);
   chainmail.scale(1.02F, 1.0F, depth_scale_for(0.82F));
-  submitter.mesh(getUnitTorso(), chainmail, chainmail_color, nullptr, 1.0F, 1);  // materialId=1 (armor)
+  submitter.mesh(getUnitTorso(), chainmail, chainmail_color, nullptr, 1.0F, 1);
 
-  // PECTORALE (chest reinforcement plate) - distinguishing feature
-  // Rectangular steel/bronze plate worn over chainmail on chest
-  QVector3D chest_center = torso.origin + up * (torso_r * 0.12F) +
-                          forward * (torso_depth * 0.48F);
+  QVector3D chest_center =
+      torso.origin + up * (torso_r * 0.12F) + forward * (torso_depth * 0.48F);
   float const plate_width = torso_r * 0.85F;
   float const plate_height = torso_r * 0.65F;
   float const plate_depth = torso_r * 0.18F;
@@ -185,8 +173,7 @@ void RomanLightArmorRenderer::render(const DrawContext &ctx,
   QQuaternion chest_rot = QQuaternion::fromDirection(forward, up);
   pectorale.rotate(chest_rot.conjugated());
   pectorale.scale(plate_width, plate_height, plate_depth);
-  submitter.mesh(getUnitSphere(), pectorale, steel_color, nullptr, 1.0F, 1);  // materialId=1 (armor plate)
-
+  submitter.mesh(getUnitSphere(), pectorale, steel_color, nullptr, 1.0F, 1);
 }
 
 } // namespace Render::GL
