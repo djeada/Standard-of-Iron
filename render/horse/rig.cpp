@@ -1048,7 +1048,23 @@ void HorseRendererBase::render(const DrawContext &ctx,
     QVector3D fetlock = cannon + pastern_dir * pastern_length;
     fetlock.setY(fetlock.y() - lift_factor * pastern_length * 0.25F -
                  fetlock_compress * pastern_length * 0.15F);  // Lower during compression
+    
+    // Hoof must be raised during swing phase!
+    // Apply lift based on the leg phase - maximum lift during swing (phase 0.5-0.7)
     QVector3D hoof_top = fetlock;
+    if (is_moving) {
+      // Calculate how much to raise the hoof based on gait phase
+      // Hoof is on ground during stance (0.0-0.3) and landing (0.9-1.0)
+      // Hoof is raised during swing (0.3-0.7) with maximum at 0.5
+      float hoof_lift_amount = 0.0F;
+      if (leg_phase > 0.25F && leg_phase < 0.85F) {
+        // Use a smooth curve for hoof lift
+        float const lift_progress = (leg_phase - 0.25F) / 0.60F;  // 0 to 1 over swing phase
+        float const lift_curve = std::sin(lift_progress * k_pi);  // Smooth arc
+        hoof_lift_amount = lift_curve * lift;  // Use the full lift value
+      }
+      hoof_top.setY(hoof_top.y() + hoof_lift_amount);
+    }
 
     float const shoulder_r = d.bodyWidth * (is_rear ? 0.35F : 0.32F);
     float const upper_r = shoulder_r * (is_rear ? 0.88F : 0.84F);
