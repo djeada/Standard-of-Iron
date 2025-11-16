@@ -11,6 +11,7 @@ inline constexpr int kDefaultCapsuleHeightSegments = 1;
 inline constexpr int kDefaultTorsoHeightSegments = 8;
 
 auto getUnitCylinder(int radialSegments = kDefaultRadialSegments) -> Mesh *;
+auto getUnitCube() -> Mesh *;
 
 auto getUnitSphere(int latSegments = kDefaultLatitudeSegments,
                    int lonSegments = kDefaultRadialSegments) -> Mesh *;
