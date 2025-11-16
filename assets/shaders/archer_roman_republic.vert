@@ -32,22 +32,21 @@ vec3 fallbackUp(vec3 n) {
 void main() {
   vec3 position = a_position;
   vec3 normal = a_normal;
-  
+
   // Shield curving: bend flat rectangle into scutum curve (materialId=4)
   if (u_materialId == 4) {
     float curveRadius = 0.55;
     float curveAmount = 0.45;
     float angle = position.x * curveAmount;
-    
+
     float curved_x = sin(angle) * curveRadius;
     float curved_z = position.z + (1.0 - cos(angle)) * curveRadius;
     position = vec3(curved_x, position.y, curved_z);
-    
-    normal = vec3(sin(angle) * normal.z + cos(angle) * normal.x,
-                  normal.y,
+
+    normal = vec3(sin(angle) * normal.z + cos(angle) * normal.x, normal.y,
                   cos(angle) * normal.z - sin(angle) * normal.x);
   }
-  
+
   mat3 normalMatrix = mat3(transpose(inverse(u_model)));
   vec3 worldNormal = normalize(normalMatrix * normal);
 
@@ -83,7 +82,7 @@ void main() {
   v_bitangent = b;
 
   float height = offsetPos.y;
-  
+
   // Armor layer detection - STRICT ranges to avoid applying to wrong body parts
   if (height > 1.45) {
     v_armorLayer = 0.0; // Helmet region (helmet mesh only)
@@ -96,11 +95,13 @@ void main() {
   // Body height normalization
   float torsoMin = 0.55;
   float torsoMax = 1.65;
-  v_bodyHeight = clamp((offsetPos.y - torsoMin) / (torsoMax - torsoMin), 0.0, 1.0);
+  v_bodyHeight =
+      clamp((offsetPos.y - torsoMin) / (torsoMax - torsoMin), 0.0, 1.0);
 
   // Light helmet detail attributes
   float conicalHeight = smoothstep(1.55, 1.75, height);
-  float browBandRegion = smoothstep(1.48, 1.52, height) * smoothstep(1.56, 1.52, height);
+  float browBandRegion =
+      smoothstep(1.48, 1.52, height) * smoothstep(1.56, 1.52, height);
   v_helmetDetail = conicalHeight * 0.6 + browBandRegion * 0.4;
 
   // Chainmail ring phase

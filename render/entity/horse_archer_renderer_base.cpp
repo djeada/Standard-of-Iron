@@ -162,6 +162,8 @@ void HorseArcherRendererBase::addAttachments(
       (is_current_pose && m_has_last_reins) ? &m_last_rein_state : nullptr;
   const AnimationInputs &anim = anim_ctx.inputs;
 
+  evaluate_horse_motion(extras.horse_profile, anim, anim_ctx);
+
   m_horseRenderer.render(ctx, anim, anim_ctx, extras.horse_profile, mount_ptr,
                          rein_ptr, out);
   m_last_pose = nullptr;

@@ -165,7 +165,6 @@ void TroopCatalog::register_defaults() {
   horse_swordsman.individuals_per_unit = 9;
   horse_swordsman.max_units_per_row = 3;
 
-
   TroopClass horse_archer{};
   horse_archer.unit_type = Game::Units::TroopType::HorseArcher;
   horse_archer.display_name = "Horse Archer";
