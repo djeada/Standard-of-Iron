@@ -580,6 +580,11 @@ auto getUnitCylinder(int radialSegments) -> Mesh * {
   return s_mesh.get();
 }
 
+auto getUnitCube() -> Mesh * {
+  static std::unique_ptr<Mesh> const s_mesh(createCubeMesh());
+  return s_mesh.get();
+}
+
 auto getUnitSphere(int latSegments, int lonSegments) -> Mesh * {
   static std::unique_ptr<Mesh> const s_mesh(
       createUnitSphereMesh(latSegments, lonSegments));
