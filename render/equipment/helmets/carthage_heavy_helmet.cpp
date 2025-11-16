@@ -58,7 +58,7 @@ void CarthageHeavyHelmetRenderer::render_bowl(const DrawContext &ctx,
     return HumanoidRendererBase::frameLocalPosition(head, n);
   };
 
-  QVector3D c0 = headPoint(QVector3D(0.0f, 0.92f, 0.0f));
+  QVector3D c0 = headPoint(QVector3D(0.0f, 1.07f, 0.0f));
   QMatrix4x4 m0 = ctx.model;
   m0.translate(c0);
   m0.scale(R * 1.12f, R * 0.68f, R * 1.08f);
@@ -67,7 +67,7 @@ void CarthageHeavyHelmetRenderer::render_bowl(const DrawContext &ctx,
       mixColor(m_config.bronze_color, m_config.glow_color, 0.35F);
   submitter.mesh(getUnitSphere(), m0, luminousBronze, nullptr, 0.3f);
 
-  QVector3D rimCenter = headPoint(QVector3D(0.0f, 0.62f, 0.0f));
+  QVector3D rimCenter = headPoint(QVector3D(0.0f, 0.77f, 0.0f));
   QMatrix4x4 rim = ctx.model;
   rim.translate(rimCenter);
   rim.scale(R * 1.28f, R * 0.16f, R * 1.25f);
@@ -82,8 +82,8 @@ void CarthageHeavyHelmetRenderer::render_cheek_guards(
     return HumanoidRendererBase::frameLocalPosition(head, n);
   };
 
-  QVector3D left_cheek = headPoint(QVector3D(-0.58f, 0.18f, 0.42f));
-  QVector3D right_cheek = headPoint(QVector3D(0.58f, 0.18f, 0.42f));
+  QVector3D left_cheek = headPoint(QVector3D(-0.58f, 0.33f, 0.42f));
+  QVector3D right_cheek = headPoint(QVector3D(0.58f, 0.33f, 0.42f));
 
   QMatrix4x4 m_left = ctx.model;
   m_left.translate(left_cheek);
@@ -108,16 +108,16 @@ void CarthageHeavyHelmetRenderer::render_face_plate(const DrawContext &ctx,
     return HumanoidRendererBase::frameLocalPosition(head, n);
   };
 
-  QVector3D brow = headPoint(QVector3D(0.0f, 0.70f, 0.60f));
-  QVector3D chin = headPoint(QVector3D(0.0f, -0.08f, 0.34f));
+  QVector3D brow = headPoint(QVector3D(0.0f, 0.85f, 0.60f));
+  QVector3D chin = headPoint(QVector3D(0.0f, 0.07f, 0.34f));
   QMatrix4x4 mask =
       cylinderBetween(ctx.model, chin, brow, std::max(0.10f, R * 0.26f));
   QVector3D plateColor =
       mixColor(m_config.bronze_color, m_config.glow_color, 0.25F);
   submitter.mesh(getUnitCylinder(), mask, plateColor, nullptr, 0.45f);
 
-  QVector3D noseTop = headPoint(QVector3D(0.0f, 0.58f, 0.70f));
-  QVector3D noseBottom = headPoint(QVector3D(0.0f, -0.02f, 0.46f));
+  QVector3D noseTop = headPoint(QVector3D(0.0f, 0.73f, 0.70f));
+  QVector3D noseBottom = headPoint(QVector3D(0.0f, 0.13f, 0.46f));
   QMatrix4x4 nose = cylinderBetween(ctx.model, noseBottom, noseTop,
                                     std::max(0.05f, R * 0.12f));
   submitter.mesh(getUnitCylinder(), nose, m_config.glow_color, nullptr, 0.65f);
@@ -133,7 +133,7 @@ void CarthageHeavyHelmetRenderer::render_neck_guard(const DrawContext &ctx,
     return HumanoidRendererBase::frameLocalPosition(head, n);
   };
 
-  QVector3D guardCenter = headPoint(QVector3D(0.0f, 0.15f, -0.65f));
+  QVector3D guardCenter = headPoint(QVector3D(0.0f, 0.30f, -0.65f));
   QMatrix4x4 guard = ctx.model;
   guard.translate(guardCenter);
   guard.scale(R * 1.25f, R * 0.52f, R * 0.58f);
@@ -150,15 +150,15 @@ void CarthageHeavyHelmetRenderer::render_brow_arch(const DrawContext &ctx,
     return HumanoidRendererBase::frameLocalPosition(head, n);
   };
 
-  QVector3D left = headPoint(QVector3D(-0.62f, 0.66f, 0.60f));
-  QVector3D right = headPoint(QVector3D(0.62f, 0.66f, 0.60f));
+  QVector3D left = headPoint(QVector3D(-0.62f, 0.81f, 0.60f));
+  QVector3D right = headPoint(QVector3D(0.62f, 0.81f, 0.60f));
   float archRadius = std::max(0.04f, R * 0.10f);
   QMatrix4x4 arch = cylinderBetween(ctx.model, left, right, archRadius);
   QVector3D archColor =
       mixColor(m_config.glow_color, m_config.bronze_color, 0.5F);
   submitter.mesh(getUnitCylinder(), arch, archColor, nullptr, 0.52f);
 
-  QVector3D ridgeTop = headPoint(QVector3D(0.0f, 0.82f, 0.58f));
+  QVector3D ridgeTop = headPoint(QVector3D(0.0f, 0.97f, 0.58f));
   QMatrix4x4 ridge = ctx.model;
   ridge.translate(ridgeTop);
   ridge.scale(R * 0.22f, R * 0.10f, R * 0.26f);
@@ -173,16 +173,16 @@ void CarthageHeavyHelmetRenderer::render_crest(const DrawContext &ctx,
     return HumanoidRendererBase::frameLocalPosition(head, n);
   };
 
-  QVector3D crestBack = headPoint(QVector3D(0.0f, 1.18f, -0.28f));
-  QVector3D crestFront = headPoint(QVector3D(0.0f, 1.18f, 0.28f));
+  QVector3D crestBack = headPoint(QVector3D(0.0f, 1.33f, -0.28f));
+  QVector3D crestFront = headPoint(QVector3D(0.0f, 1.33f, 0.28f));
   float crestRadius = std::max(0.06f, R * 0.26f);
   QMatrix4x4 crestBridge =
       cylinderBetween(ctx.model, crestBack, crestFront, crestRadius);
   submitter.mesh(getUnitCylinder(), crestBridge, m_config.crest_color, nullptr,
                  0.52f);
 
-  QVector3D plumeTop = headPoint(QVector3D(0.0f, 1.70f, 0.0f));
-  QVector3D plumeBase = headPoint(QVector3D(0.0f, 1.08f, 0.0f));
+  QVector3D plumeTop = headPoint(QVector3D(0.0f, 1.85f, 0.0f));
+  QVector3D plumeBase = headPoint(QVector3D(0.0f, 1.23f, 0.0f));
   float plumeRadius = std::max(0.05f, R * 0.18f);
   QMatrix4x4 plume =
       cylinderBetween(ctx.model, plumeBase, plumeTop, plumeRadius);
