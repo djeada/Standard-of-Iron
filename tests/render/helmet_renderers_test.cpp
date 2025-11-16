@@ -15,7 +15,7 @@ class MockSubmitter : public ISubmitter {
 public:
   void mesh(Mesh * /*mesh*/, const QMatrix4x4 & /*transform*/,
             const QVector3D & /*color*/, Texture * /*texture*/,
-            float /*alpha*/) override {
+            float /*alpha*/, int /*materialId*/) override {
     mesh_count++;
   }
 
