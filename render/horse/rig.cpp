@@ -1004,6 +1004,14 @@ void HorseRendererBase::render(const DrawContext &ctx,
     float const knee_out = d.bodyWidth * (is_rear ? 0.08F : 0.06F);
     knee.setX(knee.x() + lateralSign * knee_out);
 
+    // Ensure minimum distance between shoulder and knee to prevent sphere overlap
+    QVector3D shoulder_to_knee = knee - shoulder;
+    float const min_upper_dist = upper_length * 0.65F;
+    if (shoulder_to_knee.length() < min_upper_dist) {
+      shoulder_to_knee.normalize();
+      knee = shoulder + shoulder_to_knee * min_upper_dist;
+    }
+
     float const joint_drive =
         is_moving
             ? clamp01(std::sin(gallop_angle + (is_rear ? 0.50F : -0.35F)) *
@@ -1026,6 +1034,14 @@ void HorseRendererBase::render(const DrawContext &ctx,
     QVector3D cannon = knee + lower_dir * lower_length;
     cannon.setY(cannon.y() - lift_factor * lower_length * 0.12F);
 
+    // Ensure minimum distance between knee and cannon to prevent sphere overlap
+    QVector3D knee_to_cannon = cannon - knee;
+    float const min_lower_dist = lower_length * 0.60F;
+    if (knee_to_cannon.length() < min_lower_dist) {
+      knee_to_cannon.normalize();
+      cannon = knee + knee_to_cannon * min_lower_dist;
+    }
+
     float const pastern_bias = is_rear ? -0.30F : 0.08F;
     float const pastern_dyn =
         (is_rear ? -0.10F : 0.05F) * (joint_drive - 0.5F) +
@@ -1039,6 +1055,14 @@ void HorseRendererBase::render(const DrawContext &ctx,
     QVector3D fetlock = cannon + pastern_dir * pastern_length;
     fetlock.setY(fetlock.y() - lift_factor * pastern_length * 0.25F -
                  fetlock_compress * pastern_length * 0.15F);
+
+    // Ensure minimum distance between cannon and fetlock to prevent sphere overlap
+    QVector3D cannon_to_fetlock = fetlock - cannon;
+    float const min_pastern_dist = pastern_length * 0.55F;
+    if (cannon_to_fetlock.length() < min_pastern_dist) {
+      cannon_to_fetlock.normalize();
+      fetlock = cannon + cannon_to_fetlock * min_pastern_dist;
+    }
 
     QVector3D hoof_top = fetlock;
     if (is_moving) {

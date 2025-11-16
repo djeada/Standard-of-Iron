@@ -77,7 +77,7 @@ void MountedPoseController::ridingCharging(const MountedAttachmentFrame &mount,
   m_pose.shoulder_l += charge_lean;
   m_pose.shoulder_r += charge_lean;
   m_pose.neck_base += charge_lean * 0.85F;
-  m_pose.head_pos += charge_lean * 0.75F;
+  m_pose.head_pos += charge_lean * 0.55F;
 
   float const crouch = 0.08F * intensity;
   m_pose.shoulder_l.setY(m_pose.shoulder_l.y() - crouch);
@@ -306,7 +306,7 @@ void MountedPoseController::applyLean(const MountedAttachmentFrame &mount,
   m_pose.shoulder_l += lean_offset;
   m_pose.shoulder_r += lean_offset;
   m_pose.neck_base += lean_offset * 0.9F;
-  m_pose.head_pos += lean_offset * 0.85F;
+  m_pose.head_pos += lean_offset * 0.70F;
 }
 
 void MountedPoseController::applyShieldDefense(
@@ -424,7 +424,7 @@ void MountedPoseController::applySpearThrust(
     m_pose.shoulder_l += lean;
     m_pose.shoulder_r += lean;
     m_pose.neck_base += lean * 0.9F;
-    m_pose.head_pos += lean * 0.85F;
+    m_pose.head_pos += lean * 0.65F;
   } else {
     float t = (attack_phase - 0.45F) / 0.55F;
     t = 1.0F - (1.0F - t) * (1.0F - t);
@@ -531,11 +531,11 @@ void MountedPoseController::applyTorsoSculpt(
   m_pose.shoulder_l += inward;
   m_pose.shoulder_r += inward;
   m_pose.neck_base += inward * 0.55F;
-  m_pose.head_pos += inward * 0.35F;
+  m_pose.head_pos += inward * 0.15F;
 
   QVector3D const chest_lift = up * (0.012F * comp);
   m_pose.neck_base += chest_lift * 0.8F;
-  m_pose.head_pos += chest_lift * 0.45F;
+  m_pose.head_pos += chest_lift * 0.35F;
 
   QVector3D const narrow = right * (0.022F * comp);
   m_pose.shoulder_l -= narrow;
