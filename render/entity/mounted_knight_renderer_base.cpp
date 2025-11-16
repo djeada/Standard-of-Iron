@@ -206,6 +206,9 @@ void MountedKnightRendererBase::addAttachments(
       (is_current_pose && m_hasLastReins) ? &m_lastReinState : nullptr;
   const AnimationInputs &anim = anim_ctx.inputs;
 
+  // CRITICAL FIX: Update gait parameters in extras.horseProfile before rendering!
+  evaluate_horse_motion(extras.horseProfile, anim, anim_ctx);
+
   m_horseRenderer.render(ctx, anim, anim_ctx, extras.horseProfile, mount_ptr,
                          rein_ptr, out);
   m_lastPose = nullptr;
