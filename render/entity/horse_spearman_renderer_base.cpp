@@ -118,6 +118,9 @@ void HorseSpearmanRendererBase::customize_pose(
     if (is_charging) {
       mounted_controller.ridingCharging(mount, 1.0F);
       mounted_controller.holdSpearMounted(mount, SpearGrip::COUCHED);
+
+      pose.head_pos -= mount.seat_forward * 0.04F;
+      pose.neck_base -= mount.seat_forward * 0.03F;
     } else {
       float const attack_phase =
           std::fmod(anim.time * SPEARMAN_INV_ATTACK_CYCLE_TIME, 1.0F);
