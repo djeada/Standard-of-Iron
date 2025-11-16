@@ -111,7 +111,8 @@ public:
   auto isPaused() const -> bool { return m_paused; }
 
   void mesh(Mesh *mesh, const QMatrix4x4 &model, const QVector3D &color,
-            Texture *texture = nullptr, float alpha = 1.0F, int materialId = 0) override;
+            Texture *texture = nullptr, float alpha = 1.0F,
+            int materialId = 0) override;
   void cylinder(const QVector3D &start, const QVector3D &end, float radius,
                 const QVector3D &color, float alpha = 1.0F) override;
   void selectionRing(const QMatrix4x4 &model, float alphaInner,
