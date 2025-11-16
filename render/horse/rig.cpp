@@ -800,7 +800,7 @@ void HorseRendererBase::render(const DrawContext &ctx,
 
   QVector3D const tail_base =
       rump_center +
-      QVector3D(0.0F, d.bodyHeight * 0.36F, -d.bodyLength * 0.48F);
+      QVector3D(0.0F, d.bodyHeight * 0.36F, -d.bodyLength * 0.34F);
   QVector3D const tail_ctrl =
       tail_base + QVector3D(0.0F, -d.tailLength * 0.20F, -d.tailLength * 0.28F);
   QVector3D const tail_end =
@@ -823,7 +823,7 @@ void HorseRendererBase::render(const DrawContext &ctx,
   {
     QMatrix4x4 tail_knot = horse_ctx.model;
     tail_knot.translate(tail_base + QVector3D(0.0F, -d.bodyHeight * 0.06F,
-                                              -d.bodyLength * 0.02F));
+                                              -d.bodyLength * 0.01F));
     tail_knot.scale(QVector3D(d.bodyWidth * 0.24F, d.bodyWidth * 0.18F,
                               d.bodyWidth * 0.20F));
     out.mesh(getUnitSphere(), tail_knot, lighten(tail_color, 0.92F), nullptr,
