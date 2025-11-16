@@ -546,8 +546,6 @@ void HorseRendererBase::render(const DrawContext &ctx,
     out.mesh(getUnitSphere(), spine, spine_color, nullptr, 1.0F);
   }
 
-  // Shoulder cap accent removed for cleaner silhouette.
-
   {
     QMatrix4x4 sternum = horse_ctx.model;
     sternum.translate(barrel_center + QVector3D(0.0F, -d.bodyHeight * 0.40F,
@@ -847,33 +845,30 @@ void HorseRendererBase::render(const DrawContext &ctx,
                          const QVector3D &hoof_color, bool is_rear) {
     QVector3D const hoof_center =
         hoof_top + QVector3D(0.0F, -hoof_height * 0.5F, 0.0F);
-    QVector3D const wall_tint =
-        lighten(hoof_color, is_rear ? 1.02F : 1.05F);
+    QVector3D const wall_tint = lighten(hoof_color, is_rear ? 1.02F : 1.05F);
     QMatrix4x4 hoof_block = horse_ctx.model;
     hoof_block.translate(hoof_center);
-    hoof_block.scale(
-        QVector3D(half_width, hoof_height * 0.5F, half_depth));
+    hoof_block.scale(QVector3D(half_width, hoof_height * 0.5F, half_depth));
     out.mesh(getUnitCylinder(), hoof_block, wall_tint, nullptr, 1.0F);
 
     QMatrix4x4 sole = horse_ctx.model;
     sole.translate(hoof_center + QVector3D(0.0F, -hoof_height * 0.45F, 0.0F));
-    sole.scale(QVector3D(half_width * 0.92F, hoof_height * 0.08F,
-                         half_depth * 0.95F));
-    out.mesh(getUnitCylinder(), sole, darken(hoof_color, 0.72F), nullptr,
-             1.0F);
+    sole.scale(
+        QVector3D(half_width * 0.92F, hoof_height * 0.08F, half_depth * 0.95F));
+    out.mesh(getUnitCylinder(), sole, darken(hoof_color, 0.72F), nullptr, 1.0F);
 
     QMatrix4x4 toe = horse_ctx.model;
     toe.translate(hoof_center + QVector3D(0.0F, -hoof_height * 0.10F,
                                           is_rear ? -half_depth * 0.35F
                                                   : half_depth * 0.30F));
-    toe.scale(QVector3D(half_width * 0.85F, hoof_height * 0.20F,
-                        half_depth * 0.70F));
+    toe.scale(
+        QVector3D(half_width * 0.85F, hoof_height * 0.20F, half_depth * 0.70F));
     out.mesh(getUnitSphere(), toe, lighten(hoof_color, 1.10F), nullptr, 1.0F);
 
     QMatrix4x4 coronet = horse_ctx.model;
     coronet.translate(hoof_top + QVector3D(0.0F, -hoof_height * 0.10F, 0.0F));
-    coronet.scale(QVector3D(half_width * 0.95F, half_width * 0.60F,
-                            half_depth * 1.05F));
+    coronet.scale(
+        QVector3D(half_width * 0.95F, half_width * 0.60F, half_depth * 1.05F));
     out.mesh(getUnitSphere(), coronet, lighten(hoof_color, 1.16F), nullptr,
              1.0F);
   };
@@ -898,20 +893,18 @@ void HorseRendererBase::render(const DrawContext &ctx,
 
     bool const is_rear = (forwardBias < 0.0F);
     if (!is_rear) {
-      stride = std::clamp(stride, -d.bodyLength * 0.02F,
-                          d.bodyLength * 0.18F);
+      stride = std::clamp(stride, -d.bodyLength * 0.02F, d.bodyLength * 0.18F);
     }
 
     bool const tighten_legs = is_moving;
     float const shoulder_out =
-        d.bodyWidth * (tighten_legs ? 0.42F : 0.56F) *
-        (is_rear ? 0.96F : 1.0F);
+        d.bodyWidth * (tighten_legs ? 0.42F : 0.56F) * (is_rear ? 0.96F : 1.0F);
     float const shoulder_height = (is_rear ? 0.02F : 0.05F);
     float const stance_pull =
         is_rear ? -d.bodyLength * 0.04F : d.bodyLength * 0.05F;
     float const stance_stagger =
-        lateralSign * (is_rear ? -d.bodyLength * 0.020F
-                               : d.bodyLength * 0.030F);
+        lateralSign *
+        (is_rear ? -d.bodyLength * 0.020F : d.bodyLength * 0.030F);
     QVector3D shoulder =
         anchor + QVector3D(lateralSign * shoulder_out,
                            shoulder_height + lift * 0.04F,
@@ -966,38 +959,32 @@ void HorseRendererBase::render(const DrawContext &ctx,
     float const lower_length = d.legLength * (is_rear ? 0.43F : 0.49F);
     float const pastern_length = d.legLength * (is_rear ? 0.12F : 0.14F);
 
-    // Multi-stage leg articulation with different phases for each joint
-    // Phase 0.0-0.3: Stance/push-off (leg extends, joints straighten)
-    // Phase 0.3-0.5: Breakover/lift (fetlock flexes, hoof leaves ground)
-    // Phase 0.5-0.7: Swing/fold (knee/hock flex maximally, leg tucks)
-    // Phase 0.7-1.0: Extension/reach (leg extends forward for landing)
-    
     float const stance_phase = smoothstep(0.0F, 0.3F, leg_phase);
     float const swing_phase = smoothstep(0.3F, 0.7F, leg_phase);
     float const extend_phase = smoothstep(0.7F, 1.0F, leg_phase);
-    
-    // Knee flexion: maximum during swing phase (leg tucks under body)
-    float const knee_flex = is_moving ? 
-        (swing_phase * (1.0F - extend_phase) * (is_rear ? 0.85F : 0.75F)) : 0.35F;
-    
-    // Hock/cannon flexion: follows knee but with slight delay
-    float const cannon_flex = is_moving ?
-        smoothstep(0.35F, 0.65F, leg_phase) * (1.0F - extend_phase) * 
-        (is_rear ? 0.70F : 0.60F) : 0.35F;
-    
-    // Fetlock compression: during stance and impact
-    float const fetlock_compress = is_moving ?
-        std::max(stance_phase * 0.4F, (1.0F - swing_phase) * extend_phase * 0.6F) : 0.2F;
+
+    float const knee_flex =
+        is_moving
+            ? (swing_phase * (1.0F - extend_phase) * (is_rear ? 0.85F : 0.75F))
+            : 0.35F;
+
+    float const cannon_flex = is_moving ? smoothstep(0.35F, 0.65F, leg_phase) *
+                                              (1.0F - extend_phase) *
+                                              (is_rear ? 0.70F : 0.60F)
+                                        : 0.35F;
+
+    float const fetlock_compress =
+        is_moving ? std::max(stance_phase * 0.4F,
+                             (1.0F - swing_phase) * extend_phase * 0.6F)
+                  : 0.2F;
 
     float const backward_bias = is_rear ? -0.42F : -0.18F;
-    float const hip_drive =
-        (is_rear ? -1.0F : 1.0F) * hip_swing * 0.20F;
-    
-    // Upper leg angle changes through gait cycle
-    float const upper_vertical = -0.90F - lift_factor * 0.08F - knee_flex * 0.25F;
+    float const hip_drive = (is_rear ? -1.0F : 1.0F) * hip_swing * 0.20F;
+
+    float const upper_vertical =
+        -0.90F - lift_factor * 0.08F - knee_flex * 0.25F;
     QVector3D upper_dir(lateralSign * (tighten_legs ? -0.05F : -0.02F),
-                        upper_vertical,
-                        backward_bias + hip_drive);
+                        upper_vertical, backward_bias + hip_drive);
     if (upper_dir.lengthSquared() < 1e-6F) {
       upper_dir = QVector3D(0.0F, -1.0F, backward_bias);
     }
@@ -1008,7 +995,6 @@ void HorseRendererBase::render(const DrawContext &ctx,
     float const knee_out = d.bodyWidth * (is_rear ? 0.08F : 0.06F);
     knee.setX(knee.x() + lateralSign * knee_out);
 
-    // Lower leg articulation with multi-stage flexion
     float const joint_drive =
         is_moving
             ? clamp01(std::sin(gallop_angle + (is_rear ? 0.50F : -0.35F)) *
@@ -1016,16 +1002,13 @@ void HorseRendererBase::render(const DrawContext &ctx,
                       0.45F)
             : 0.35F;
 
-    // Lower leg forward angle varies with cannon flexion
     float const lower_forward =
         (is_rear ? 0.44F : 0.20F) +
-        (is_rear ? 0.30F : 0.18F) * (joint_drive - 0.5F) -
-        cannon_flex * 0.35F;  // Pull back when flexed
-    
-    float const lower_vertical = -0.95F + cannon_flex * 0.15F;  // More vertical when flexed
-    QVector3D lower_dir(lateralSign * (tighten_legs ? -0.02F : -0.01F), 
-                        lower_vertical,
-                        lower_forward);
+        (is_rear ? 0.30F : 0.18F) * (joint_drive - 0.5F) - cannon_flex * 0.35F;
+
+    float const lower_vertical = -0.95F + cannon_flex * 0.15F;
+    QVector3D lower_dir(lateralSign * (tighten_legs ? -0.02F : -0.01F),
+                        lower_vertical, lower_forward);
     if (lower_dir.lengthSquared() < 1e-6F) {
       lower_dir = QVector3D(0.0F, -1.0F, lower_forward);
     }
@@ -1034,11 +1017,10 @@ void HorseRendererBase::render(const DrawContext &ctx,
     QVector3D cannon = knee + lower_dir * lower_length;
     cannon.setY(cannon.y() - lift_factor * lower_length * 0.12F);
 
-    // Pastern articulation with compression during stance and impact
     float const pastern_bias = is_rear ? -0.30F : 0.08F;
     float const pastern_dyn =
         (is_rear ? -0.10F : 0.05F) * (joint_drive - 0.5F) +
-        fetlock_compress * 0.25F;  // Flex forward during compression
+        fetlock_compress * 0.25F;
     QVector3D pastern_dir(0.0F, -1.0F, pastern_bias + pastern_dyn);
     if (pastern_dir.lengthSquared() < 1e-6F) {
       pastern_dir = QVector3D(0.0F, -1.0F, pastern_bias);
@@ -1047,21 +1029,17 @@ void HorseRendererBase::render(const DrawContext &ctx,
 
     QVector3D fetlock = cannon + pastern_dir * pastern_length;
     fetlock.setY(fetlock.y() - lift_factor * pastern_length * 0.25F -
-                 fetlock_compress * pastern_length * 0.15F);  // Lower during compression
-    
-    // Hoof must be raised during swing phase!
-    // Apply lift based on the leg phase - maximum lift during swing (phase 0.5-0.7)
+                 fetlock_compress * pastern_length * 0.15F);
+
     QVector3D hoof_top = fetlock;
     if (is_moving) {
-      // Calculate how much to raise the hoof based on gait phase
-      // Hoof is on ground during stance (0.0-0.3) and landing (0.9-1.0)
-      // Hoof is raised during swing (0.3-0.7) with maximum at 0.5
+
       float hoof_lift_amount = 0.0F;
       if (leg_phase > 0.25F && leg_phase < 0.85F) {
-        // Use a smooth curve for hoof lift
-        float const lift_progress = (leg_phase - 0.25F) / 0.60F;  // 0 to 1 over swing phase
-        float const lift_curve = std::sin(lift_progress * k_pi);  // Smooth arc
-        hoof_lift_amount = lift_curve * lift;  // Use the full lift value
+
+        float const lift_progress = (leg_phase - 0.25F) / 0.60F;
+        float const lift_curve = std::sin(lift_progress * k_pi);
+        hoof_lift_amount = lift_curve * lift;
       }
       hoof_top.setY(hoof_top.y() + hoof_lift_amount);
     }
@@ -1075,11 +1053,10 @@ void HorseRendererBase::render(const DrawContext &ctx,
     QVector3D const thigh_color = coatGradient(
         v.coatColor, is_rear ? 0.48F : 0.58F, is_rear ? -0.22F : 0.18F,
         coat_seed_a + lateralSign * 0.07F);
-    QVector3D const shin_color =
-        darken(thigh_color, is_rear ? 0.90F : 0.92F);
+    QVector3D const shin_color = darken(thigh_color, is_rear ? 0.90F : 0.92F);
 
-    drawRoundedSegment(out, horse_ctx.model, shoulder, knee, shoulder_r, upper_r,
-                       thigh_color, darken(thigh_color, 0.94F));
+    drawRoundedSegment(out, horse_ctx.model, shoulder, knee, shoulder_r,
+                       upper_r, thigh_color, darken(thigh_color, 0.94F));
 
     out.mesh(getUnitSphere(),
              Render::Geom::sphereAt(horse_ctx.model, knee, knee_r * 1.08F),
@@ -1112,12 +1089,11 @@ void HorseRendererBase::render(const DrawContext &ctx,
     drawRoundedSegment(out, horse_ctx.model, cannon, fetlock, cannon_r * 0.90F,
                        pastern_r, hoof_joint_color, pastern_color);
 
-    QVector3D const fetlock_color =
-        lerp(pastern_color, distal_color, 0.25F);
-    out.mesh(getUnitSphere(),
-             Render::Geom::sphereAt(horse_ctx.model, fetlock,
-                                    pastern_r * 1.15F),
-             fetlock_color, nullptr, 1.0F);
+    QVector3D const fetlock_color = lerp(pastern_color, distal_color, 0.25F);
+    out.mesh(
+        getUnitSphere(),
+        Render::Geom::sphereAt(horse_ctx.model, fetlock, pastern_r * 1.15F),
+        fetlock_color, nullptr, 1.0F);
 
     QVector3D const hoof_color = v.hoof_color;
     float const hoof_width = pastern_r * (is_rear ? 1.55F : 1.45F);
@@ -1213,9 +1189,8 @@ void HorseRendererBase::render(const DrawContext &ctx,
   body_frames.rump.up = up;
   body_frames.rump.forward = forward;
 
-    QVector3D const tail_base_pos =
-      rump_center +
-      QVector3D(0.0F, d.bodyHeight * 0.20F, -100.05F);
+  QVector3D const tail_base_pos =
+      rump_center + QVector3D(0.0F, d.bodyHeight * 0.20F, -100.05F);
   body_frames.tail_base.origin = tail_base_pos;
   body_frames.tail_base.right = right;
   body_frames.tail_base.up = up;

@@ -23,24 +23,16 @@ constexpr GaitParameters getGaitParams(GaitType gait) {
   case GaitType::IDLE:
     return {1.0F, 0.0F, 0.0F, 0.02F, 0.01F, 0.005F};
   case GaitType::WALK:
-    // Walk: 4-beat gait, ~1.5 m/s, each leg moves independently
-    // Increased stride swing for more ground coverage per cycle
-    // Wider range of leg bending for more natural articulation
+
     return {1.0F, 0.25F, 0.75F, 0.55F, 0.22F, 0.020F};
   case GaitType::TROT:
-    // Trot: 2-beat diagonal gait, ~4 m/s, with suspension phase
-    // Significantly increased stride to match faster cycle and cover more distance
-    // Higher lift for pronounced suspension and leg extension
+
     return {0.60F, 0.0F, 0.5F, 0.70F, 0.35F, 0.030F};
   case GaitType::CANTER:
-    // Canter: 3-beat gait, ~6.5 m/s, asymmetric lead leg
-    // Large stride swing for galloping motion with lead leg extension
-    // Multi-stage leg articulation with wider range of bending
+
     return {0.50F, 0.33F, 0.66F, 0.85F, 0.45F, 0.040F};
   case GaitType::GALLOP:
-    // Gallop: 4-beat gait, ~10 m/s, maximum extension and suspension
-    // Maximum stride length to cover significant distance
-    // Full leg extension and compression for dynamic movement
+
     return {0.38F, 0.15F, 0.65F, 1.05F, 0.58F, 0.055F};
   }
   return {1.0F, 0.0F, 0.0F, 0.02F, 0.01F, 0.005F};
@@ -75,7 +67,7 @@ HorseAnimationController::HorseAnimationController(
 }
 
 void HorseAnimationController::setGait(GaitType gait) {
-  // Directly set the gait without transition for explicit gait setting
+
   m_current_gait = gait;
   m_target_gait = gait;
   m_gait_transition_progress = 1.0F;
@@ -188,8 +180,8 @@ auto HorseAnimationController::getStrideCycle() const -> float {
 }
 
 void HorseAnimationController::updateGaitParameters() {
-  // Smoothly transition between gaits for more realistic movement
-  constexpr float transition_duration = 0.3F; // seconds for full transition
+
+  constexpr float transition_duration = 0.3F;
   if (m_gait_transition_progress < 1.0F) {
     float const elapsed = m_anim.time - m_transition_start_time;
     m_gait_transition_progress = std::min(1.0F, elapsed / transition_duration);
@@ -198,30 +190,32 @@ void HorseAnimationController::updateGaitParameters() {
     }
   }
 
-  // Get parameters for current and target gaits
   GaitParameters const current_params = getGaitParams(m_current_gait);
   GaitParameters target_params = current_params;
-  
-  // If transitioning, interpolate between current and target gait parameters
+
   if (m_gait_transition_progress < 1.0F) {
     target_params = getGaitParams(m_target_gait);
     float const t = m_gait_transition_progress;
-    
-    // Smooth interpolation using cubic easing for more natural transitions
+
     float const ease_t = t * t * (3.0F - 2.0F * t);
-    
-    m_profile.gait.cycleTime = current_params.cycleTime +
-                                ease_t * (target_params.cycleTime - current_params.cycleTime);
-    m_profile.gait.frontLegPhase = current_params.frontLegPhase +
-                                    ease_t * (target_params.frontLegPhase - current_params.frontLegPhase);
-    m_profile.gait.rearLegPhase = current_params.rearLegPhase +
-                                   ease_t * (target_params.rearLegPhase - current_params.rearLegPhase);
-    m_profile.gait.strideSwing = current_params.strideSwing +
-                                  ease_t * (target_params.strideSwing - current_params.strideSwing);
-    m_profile.gait.strideLift = current_params.strideLift +
-                                 ease_t * (target_params.strideLift - current_params.strideLift);
+
+    m_profile.gait.cycleTime =
+        current_params.cycleTime +
+        ease_t * (target_params.cycleTime - current_params.cycleTime);
+    m_profile.gait.frontLegPhase =
+        current_params.frontLegPhase +
+        ease_t * (target_params.frontLegPhase - current_params.frontLegPhase);
+    m_profile.gait.rearLegPhase =
+        current_params.rearLegPhase +
+        ease_t * (target_params.rearLegPhase - current_params.rearLegPhase);
+    m_profile.gait.strideSwing =
+        current_params.strideSwing +
+        ease_t * (target_params.strideSwing - current_params.strideSwing);
+    m_profile.gait.strideLift =
+        current_params.strideLift +
+        ease_t * (target_params.strideLift - current_params.strideLift);
   } else {
-    // Not transitioning, use current gait parameters directly
+
     m_profile.gait.cycleTime = current_params.cycleTime;
     m_profile.gait.frontLegPhase = current_params.frontLegPhase;
     m_profile.gait.rearLegPhase = current_params.rearLegPhase;
@@ -243,8 +237,7 @@ void HorseAnimationController::updateGaitParameters() {
     float const bob_amp = m_profile.dims.idleBobAmplitude +
                           rider_intensity * (m_profile.dims.moveBobAmplitude -
                                              m_profile.dims.idleBobAmplitude);
-    
-    // Add subtle variation to bob for more natural movement
+
     float const variation = std::sin(m_anim.time * 0.7F) * 0.05F + 1.0F;
     m_bob = std::sin(m_phase * 2.0F * k_pi) * bob_amp * variation;
   } else {
