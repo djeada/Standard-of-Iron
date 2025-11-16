@@ -59,22 +59,22 @@ TEST_F(HorseAnimationControllerTest, SetGaitUpdatesParameters) {
   // Test walk gait
   controller.setGait(GaitType::WALK);
   controller.updateGaitParameters();
-  EXPECT_TRUE(approxEqual(profile.gait.cycleTime, 0.80F, 0.01F));
+  EXPECT_TRUE(approxEqual(profile.gait.cycleTime, 1.0F, 0.01F));
 
   // Test trot gait
   controller.setGait(GaitType::TROT);
   controller.updateGaitParameters();
-  EXPECT_TRUE(approxEqual(profile.gait.cycleTime, 0.55F, 0.01F));
+  EXPECT_TRUE(approxEqual(profile.gait.cycleTime, 0.60F, 0.01F));
 
   // Test canter gait
   controller.setGait(GaitType::CANTER);
   controller.updateGaitParameters();
-  EXPECT_TRUE(approxEqual(profile.gait.cycleTime, 0.45F, 0.01F));
+  EXPECT_TRUE(approxEqual(profile.gait.cycleTime, 0.50F, 0.01F));
 
   // Test gallop gait
   controller.setGait(GaitType::GALLOP);
   controller.updateGaitParameters();
-  EXPECT_TRUE(approxEqual(profile.gait.cycleTime, 0.35F, 0.01F));
+  EXPECT_TRUE(approxEqual(profile.gait.cycleTime, 0.38F, 0.01F));
 }
 
 TEST_F(HorseAnimationControllerTest, IdleGeneratesBobbing) {
@@ -105,18 +105,22 @@ TEST_F(HorseAnimationControllerTest, AccelerateChangesGait) {
 
   // Accelerate to walk speed
   controller.accelerate(2.0F);
+  // Advance time to complete transition
+  anim.time += 0.5F;
   controller.updateGaitParameters();
-  EXPECT_TRUE(approxEqual(profile.gait.cycleTime, 0.80F, 0.01F));
+  EXPECT_TRUE(approxEqual(profile.gait.cycleTime, 1.0F, 0.01F));
 
   // Accelerate to trot speed
   controller.accelerate(3.0F);
+  anim.time += 0.5F;
   controller.updateGaitParameters();
-  EXPECT_TRUE(approxEqual(profile.gait.cycleTime, 0.55F, 0.01F));
+  EXPECT_TRUE(approxEqual(profile.gait.cycleTime, 0.60F, 0.01F));
 
   // Accelerate to gallop speed
   controller.accelerate(6.0F);
+  anim.time += 0.5F;
   controller.updateGaitParameters();
-  EXPECT_TRUE(approxEqual(profile.gait.cycleTime, 0.35F, 0.01F));
+  EXPECT_TRUE(approxEqual(profile.gait.cycleTime, 0.38F, 0.01F));
 }
 
 TEST_F(HorseAnimationControllerTest, DecelerateChangesGait) {
@@ -127,13 +131,16 @@ TEST_F(HorseAnimationControllerTest, DecelerateChangesGait) {
 
   // Decelerate to canter
   controller.decelerate(3.0F);
+  // Advance time to complete transition
+  anim.time += 0.5F;
   controller.updateGaitParameters();
-  EXPECT_TRUE(approxEqual(profile.gait.cycleTime, 0.45F, 0.01F));
+  EXPECT_TRUE(approxEqual(profile.gait.cycleTime, 0.50F, 0.01F));
 
-  // Decelerate to walk
-  controller.decelerate(4.0F);
+  // Decelerate to trot
+  controller.decelerate(2.0F);
+  anim.time += 0.5F;
   controller.updateGaitParameters();
-  EXPECT_TRUE(approxEqual(profile.gait.cycleTime, 0.80F, 0.01F));
+  EXPECT_TRUE(approxEqual(profile.gait.cycleTime, 0.60F, 0.01F));
 }
 
 TEST_F(HorseAnimationControllerTest, TurnSetsAngles) {
@@ -282,4 +289,27 @@ TEST_F(HorseAnimationControllerTest, ClampingBehaviorForSpecialAnimations) {
   // Test clamping for turn banking
   EXPECT_NO_THROW(controller.turn(3.14F, -2.0F));
   EXPECT_NO_THROW(controller.turn(-3.14F, 2.0F));
+}
+
+TEST_F(HorseAnimationControllerTest, GaitTransitionsAreSmoothAndGradual) {
+  HorseAnimationController controller(profile, anim, rider_ctx);
+
+  // Start at walk
+  controller.setGait(GaitType::WALK);
+  float const walk_cycle = profile.gait.cycleTime;
+
+  // Accelerate to gallop
+  controller.accelerate(10.0F);
+
+  // After short time, should be transitioning (not at final value)
+  anim.time += 0.1F;
+  controller.updateGaitParameters();
+  float const transition_cycle1 = profile.gait.cycleTime;
+  EXPECT_GT(transition_cycle1, 0.38F);      // Not yet at gallop cycle time
+  EXPECT_LT(transition_cycle1, walk_cycle); // But moving toward it
+
+  // After enough time, should reach final value
+  anim.time += 0.5F;
+  controller.updateGaitParameters();
+  EXPECT_TRUE(approxEqual(profile.gait.cycleTime, 0.38F, 0.01F));
 }
