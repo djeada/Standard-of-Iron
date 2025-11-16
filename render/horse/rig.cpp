@@ -966,11 +966,37 @@ void HorseRendererBase::render(const DrawContext &ctx,
     float const lower_length = d.legLength * (is_rear ? 0.43F : 0.49F);
     float const pastern_length = d.legLength * (is_rear ? 0.12F : 0.14F);
 
+    // Multi-stage leg articulation with different phases for each joint
+    // Phase 0.0-0.3: Stance/push-off (leg extends, joints straighten)
+    // Phase 0.3-0.5: Breakover/lift (fetlock flexes, hoof leaves ground)
+    // Phase 0.5-0.7: Swing/fold (knee/hock flex maximally, leg tucks)
+    // Phase 0.7-1.0: Extension/reach (leg extends forward for landing)
+    
+    float const stance_phase = smoothstep(0.0F, 0.3F, leg_phase);
+    float const swing_phase = smoothstep(0.3F, 0.7F, leg_phase);
+    float const extend_phase = smoothstep(0.7F, 1.0F, leg_phase);
+    
+    // Knee flexion: maximum during swing phase (leg tucks under body)
+    float const knee_flex = is_moving ? 
+        (swing_phase * (1.0F - extend_phase) * (is_rear ? 0.85F : 0.75F)) : 0.35F;
+    
+    // Hock/cannon flexion: follows knee but with slight delay
+    float const cannon_flex = is_moving ?
+        smoothstep(0.35F, 0.65F, leg_phase) * (1.0F - extend_phase) * 
+        (is_rear ? 0.70F : 0.60F) : 0.35F;
+    
+    // Fetlock compression: during stance and impact
+    float const fetlock_compress = is_moving ?
+        std::max(stance_phase * 0.4F, (1.0F - swing_phase) * extend_phase * 0.6F) : 0.2F;
+
     float const backward_bias = is_rear ? -0.42F : -0.18F;
     float const hip_drive =
         (is_rear ? -1.0F : 1.0F) * hip_swing * 0.20F;
+    
+    // Upper leg angle changes through gait cycle
+    float const upper_vertical = -0.90F - lift_factor * 0.08F - knee_flex * 0.25F;
     QVector3D upper_dir(lateralSign * (tighten_legs ? -0.05F : -0.02F),
-                        -0.90F - lift_factor * 0.08F,
+                        upper_vertical,
                         backward_bias + hip_drive);
     if (upper_dir.lengthSquared() < 1e-6F) {
       upper_dir = QVector3D(0.0F, -1.0F, backward_bias);
@@ -982,6 +1008,7 @@ void HorseRendererBase::render(const DrawContext &ctx,
     float const knee_out = d.bodyWidth * (is_rear ? 0.08F : 0.06F);
     knee.setX(knee.x() + lateralSign * knee_out);
 
+    // Lower leg articulation with multi-stage flexion
     float const joint_drive =
         is_moving
             ? clamp01(std::sin(gallop_angle + (is_rear ? 0.50F : -0.35F)) *
@@ -989,10 +1016,15 @@ void HorseRendererBase::render(const DrawContext &ctx,
                       0.45F)
             : 0.35F;
 
+    // Lower leg forward angle varies with cannon flexion
     float const lower_forward =
         (is_rear ? 0.44F : 0.20F) +
-        (is_rear ? 0.30F : 0.18F) * (joint_drive - 0.5F);
-    QVector3D lower_dir(lateralSign * (tighten_legs ? -0.02F : -0.01F), -0.95F,
+        (is_rear ? 0.30F : 0.18F) * (joint_drive - 0.5F) -
+        cannon_flex * 0.35F;  // Pull back when flexed
+    
+    float const lower_vertical = -0.95F + cannon_flex * 0.15F;  // More vertical when flexed
+    QVector3D lower_dir(lateralSign * (tighten_legs ? -0.02F : -0.01F), 
+                        lower_vertical,
                         lower_forward);
     if (lower_dir.lengthSquared() < 1e-6F) {
       lower_dir = QVector3D(0.0F, -1.0F, lower_forward);
@@ -1002,9 +1034,11 @@ void HorseRendererBase::render(const DrawContext &ctx,
     QVector3D cannon = knee + lower_dir * lower_length;
     cannon.setY(cannon.y() - lift_factor * lower_length * 0.12F);
 
+    // Pastern articulation with compression during stance and impact
     float const pastern_bias = is_rear ? -0.30F : 0.08F;
     float const pastern_dyn =
-        (is_rear ? -0.10F : 0.05F) * (joint_drive - 0.5F);
+        (is_rear ? -0.10F : 0.05F) * (joint_drive - 0.5F) +
+        fetlock_compress * 0.25F;  // Flex forward during compression
     QVector3D pastern_dir(0.0F, -1.0F, pastern_bias + pastern_dyn);
     if (pastern_dir.lengthSquared() < 1e-6F) {
       pastern_dir = QVector3D(0.0F, -1.0F, pastern_bias);
@@ -1012,7 +1046,8 @@ void HorseRendererBase::render(const DrawContext &ctx,
     pastern_dir.normalize();
 
     QVector3D fetlock = cannon + pastern_dir * pastern_length;
-    fetlock.setY(fetlock.y() - lift_factor * pastern_length * 0.25F);
+    fetlock.setY(fetlock.y() - lift_factor * pastern_length * 0.25F -
+                 fetlock_compress * pastern_length * 0.15F);  // Lower during compression
     QVector3D hoof_top = fetlock;
 
     float const shoulder_r = d.bodyWidth * (is_rear ? 0.35F : 0.32F);
