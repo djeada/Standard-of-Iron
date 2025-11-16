@@ -1,7 +1,9 @@
 #include "shield_roman.h"
 #include "../../geom/transforms.h"
 #include "../../gl/primitives.h"
+#include "../../humanoid/humanoid_math.h"
 #include "../../humanoid/rig.h"
+#include "../../humanoid/style_palette.h"
 #include "../../submitter.h"
 
 #include <QMatrix4x4>
@@ -14,6 +16,7 @@ namespace Render::GL {
 
 using Render::Geom::cylinderBetween;
 using Render::Geom::sphereAt;
+using Render::GL::Humanoid::saturate_color;
 
 RomanShieldRenderer::RomanShieldRenderer() {
   ShieldRenderConfig config;
@@ -33,62 +36,155 @@ void RomanShieldRenderer::render(const DrawContext &ctx,
                                  const HumanoidAnimationContext &,
                                  ISubmitter &submitter) {
 
-  constexpr float k_shield_yaw_degrees = -70.0F;
+  const AttachmentFrame &handL = frames.hand_l;
+  if (handL.radius <= 0.0F) {
+    return;
+  }
 
-  QMatrix4x4 rot;
-  rot.rotate(k_shield_yaw_degrees, 0.0F, 1.0F, 0.0F);
+  QVector3D const shield_red =
+      saturate_color(palette.cloth * QVector3D(1.5F, 0.3F, 0.3F));
+  QVector3D const bronze_color =
+      saturate_color(palette.metal * QVector3D(1.3F, 1.0F, 0.5F));
 
-  const QVector3D n = rot.map(QVector3D(0.0F, 0.0F, 1.0F));
-  const QVector3D axis_x = rot.map(QVector3D(1.0F, 0.0F, 0.0F));
-  const QVector3D axis_y = rot.map(QVector3D(0.0F, 1.0F, 0.0F));
+  constexpr float shield_height = 1.3F;
+  constexpr float shield_width = 0.70F;
+  constexpr float shield_curve = 0.30F;
+  constexpr float rim_thickness = 0.018F;
+  constexpr float boss_radius = 0.12F;
 
-  float const shield_width = 0.45F;
-  float const shield_height = 1.0F;
+  QVector3D const shield_center =
+      handL.origin + handL.forward * 0.20F - handL.up * 0.15F;
+  QVector3D const shield_up = handL.up;
+  QVector3D const shield_right = handL.right;
+  QVector3D const shield_forward = handL.forward;
 
-  QVector3D shield_center = frames.hand_l.origin +
-                            axis_x * (-shield_width * 0.35F) + axis_y * 0.15F +
-                            n * 0.06F;
+  constexpr int vertical_segments = 14;
+  constexpr int horizontal_segments = 18;
 
-  QVector3D const shield_color{0.68F, 0.14F, 0.12F};
-  QVector3D const trim_color{0.88F, 0.75F, 0.42F};
-  QVector3D const metal_color{0.82F, 0.84F, 0.88F};
+  for (int v = 0; v < vertical_segments; ++v) {
+    for (int h = 0; h < horizontal_segments; ++h) {
 
-  QMatrix4x4 shield_body = ctx.model;
-  shield_body.translate(shield_center);
-  shield_body.rotate(90.0F, 0.0F, 1.0F, 0.0F);
-  shield_body.rotate(k_shield_yaw_degrees, 0.0F, 1.0F, 0.0F);
-  shield_body.scale(shield_width * 0.005F, shield_height * 0.5F, 0.24F);
+      float const v_t =
+          static_cast<float>(v) / static_cast<float>(vertical_segments);
+      float const h_t =
+          static_cast<float>(h) / static_cast<float>(horizontal_segments);
 
-  submitter.mesh(getUnitCube(), shield_body, shield_color, nullptr, 1.0F, 4);
+      float const y_local = (v_t - 0.5F) * shield_height;
+      float const x_local = (h_t - 0.5F) * shield_width;
 
-  float const rim_thickness = 0.020F;
+      float const curve_offset =
+          shield_curve * (1.0F - std::abs(x_local / (shield_width * 0.5F)));
 
-  QVector3D top_left = shield_center + axis_y * (shield_height * 0.5F) -
-                       axis_x * (shield_width * 0.5F);
-  QVector3D top_right = shield_center + axis_y * (shield_height * 0.5F) +
-                        axis_x * (shield_width * 0.5F);
-  submitter.mesh(getUnitCylinder(),
-                 cylinderBetween(ctx.model, top_left, top_right, rim_thickness),
-                 trim_color, nullptr, 1.0F, 4);
+      QVector3D segment_pos = shield_center + shield_up * y_local +
+                              shield_right * x_local +
+                              shield_forward * curve_offset;
 
-  QVector3D bot_left = shield_center - axis_y * (shield_height * 0.5F) -
-                       axis_x * (shield_width * 0.5F);
-  QVector3D bot_right = shield_center - axis_y * (shield_height * 0.5F) +
-                        axis_x * (shield_width * 0.5F);
-  submitter.mesh(getUnitCylinder(),
-                 cylinderBetween(ctx.model, bot_left, bot_right, rim_thickness),
-                 trim_color, nullptr, 1.0F, 4);
+      QMatrix4x4 m = ctx.model;
+      m.translate(segment_pos);
+      m.scale(0.032F, 0.055F, 0.012F);
 
-  float const boss_radius = 0.08F;
+      QVector3D segment_color = shield_red * (1.0F + (v % 2) * 0.05F - 0.025F);
+      submitter.mesh(getUnitSphere(), m, segment_color, nullptr, 1.0F);
+    }
+  }
+
+  constexpr int ridge_segments = 12;
+  for (int i = 0; i < ridge_segments; ++i) {
+    float const t =
+        static_cast<float>(i) / static_cast<float>(ridge_segments - 1);
+    float const y_local = (t - 0.5F) * shield_height * 0.88F;
+
+    QVector3D ridge_pos = shield_center + shield_up * y_local +
+                          shield_forward * (shield_curve + 0.025F);
+
+    QMatrix4x4 m = ctx.model;
+    m.translate(ridge_pos);
+    m.scale(0.028F, 0.065F, 0.018F);
+    submitter.mesh(getUnitSphere(), m, bronze_color * 0.9F, nullptr, 1.0F);
+  }
+
+  QVector3D const boss_center =
+      shield_center + shield_forward * (shield_curve + 0.09F);
+
+  for (int i = 0; i < 12; ++i) {
+    float const angle =
+        (static_cast<float>(i) / 12.0F) * 2.0F * std::numbers::pi_v<float>;
+    QVector3D ring_pos = boss_center +
+                         shield_right * (boss_radius * std::cos(angle)) +
+                         shield_up * (boss_radius * std::sin(angle));
+
+    QMatrix4x4 m = ctx.model;
+    m.translate(ring_pos);
+    m.scale(0.020F);
+    submitter.mesh(getUnitSphere(), m, bronze_color, nullptr, 1.0F);
+  }
+
   submitter.mesh(getUnitSphere(),
-                 sphereAt(ctx.model, shield_center + n * 0.05F, boss_radius),
-                 metal_color, nullptr, 1.0F, 4);
+                 sphereAt(ctx.model, boss_center, boss_radius * 0.75F),
+                 bronze_color * 1.1F, nullptr, 1.0F);
 
-  QVector3D const grip_a = shield_center - axis_x * 0.06F - n * 0.03F;
-  QVector3D const grip_b = shield_center + axis_x * 0.06F - n * 0.03F;
-  submitter.mesh(getUnitCylinder(),
-                 cylinderBetween(ctx.model, grip_a, grip_b, 0.012F),
-                 palette.leather, nullptr, 1.0F, 0);
+  float const y_pos = shield_height * 0.47F;
+  for (int i = 0; i < 11; ++i) {
+    float const t = static_cast<float>(i) / 10.0F;
+    float const x_local = (t - 0.5F) * shield_width * 0.93F;
+    float const curve_off =
+        shield_curve * (1.0F - std::abs(x_local / (shield_width * 0.5F)));
+
+    QVector3D rim_pos = shield_center + shield_up * y_pos +
+                        shield_right * x_local + shield_forward * curve_off;
+    QMatrix4x4 m = ctx.model;
+    m.translate(rim_pos);
+    m.scale(rim_thickness);
+    submitter.mesh(getUnitSphere(), m, bronze_color * 0.95F, nullptr, 1.0F);
+  }
+
+  float const y_pos_bot = -shield_height * 0.47F;
+  for (int i = 0; i < 11; ++i) {
+    float const t = static_cast<float>(i) / 10.0F;
+    float const x_local = (t - 0.5F) * shield_width * 0.93F;
+    float const curve_off =
+        shield_curve * (1.0F - std::abs(x_local / (shield_width * 0.5F)));
+
+    QVector3D rim_pos = shield_center + shield_up * y_pos_bot +
+                        shield_right * x_local + shield_forward * curve_off;
+    QMatrix4x4 m = ctx.model;
+    m.translate(rim_pos);
+    m.scale(rim_thickness);
+    submitter.mesh(getUnitSphere(), m, bronze_color * 0.95F, nullptr, 1.0F);
+  }
+
+  for (int side = 0; side < 2; ++side) {
+    float const x_pos_side = (side == 0 ? -1.0F : 1.0F) * shield_width * 0.47F;
+    float const curve_off =
+        shield_curve * (1.0F - std::abs(x_pos_side / (shield_width * 0.5F)));
+
+    for (int i = 0; i < 13; ++i) {
+      float const t = static_cast<float>(i) / 12.0F;
+      float const y_local = (t - 0.5F) * shield_height * 0.93F;
+
+      QVector3D rim_pos = shield_center + shield_up * y_local +
+                          shield_right * x_pos_side +
+                          shield_forward * curve_off;
+      QMatrix4x4 m = ctx.model;
+      m.translate(rim_pos);
+      m.scale(rim_thickness);
+      submitter.mesh(getUnitSphere(), m, bronze_color * 0.95F, nullptr, 1.0F);
+    }
+  }
+
+  for (int i = 0; i < 8; ++i) {
+    float const angle =
+        (static_cast<float>(i) / 8.0F) * 2.0F * std::numbers::pi_v<float>;
+    float const rivet_dist = boss_radius * 1.25F;
+    QVector3D rivet_pos = boss_center +
+                          shield_right * (rivet_dist * std::cos(angle)) +
+                          shield_up * (rivet_dist * std::sin(angle));
+
+    QMatrix4x4 m = ctx.model;
+    m.translate(rivet_pos);
+    m.scale(0.014F);
+    submitter.mesh(getUnitSphere(), m, bronze_color * 1.15F, nullptr, 1.0F);
+  }
 }
 
 } // namespace Render::GL
