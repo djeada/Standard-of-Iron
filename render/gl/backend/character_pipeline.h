@@ -28,6 +28,7 @@ public:
     GL::Shader::UniformHandle useTexture{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle color{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle alpha{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle materialId{GL::Shader::InvalidUniform};
   };
 
   GL::Shader *m_basicShader = nullptr;

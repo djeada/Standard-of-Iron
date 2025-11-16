@@ -239,7 +239,7 @@ public:
                   const HumanoidAnimationContext &anim,
                   ISubmitter &out) const override {
     auto &registry = EquipmentRegistry::instance();
-    auto armor = registry.get(EquipmentCategory::Armor, "roman_heavy_armor");
+    auto armor = registry.get(EquipmentCategory::Armor, "roman_light_armor");
     if (armor) {
       armor->render(ctx, pose.body_frames, v.palette, anim, out);
     }
