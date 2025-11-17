@@ -306,7 +306,7 @@ void MountedPoseController::applyLean(const MountedAttachmentFrame &mount,
   m_pose.shoulder_l += lean_offset;
   m_pose.shoulder_r += lean_offset;
   m_pose.neck_base += lean_offset * 0.9F;
-  m_pose.head_pos += lean_offset * 0.85F;
+  m_pose.head_pos += lean_offset * 0.60F;
 }
 
 void MountedPoseController::applyShieldDefense(
@@ -531,11 +531,11 @@ void MountedPoseController::applyTorsoSculpt(
   m_pose.shoulder_l += inward;
   m_pose.shoulder_r += inward;
   m_pose.neck_base += inward * 0.55F;
-  m_pose.head_pos += inward * 0.35F;
+  m_pose.head_pos += inward * 0.10F;
 
   QVector3D const chest_lift = up * (0.012F * comp);
   m_pose.neck_base += chest_lift * 0.8F;
-  m_pose.head_pos += chest_lift * 0.45F;
+  m_pose.head_pos += chest_lift * 0.30F;
 
   QVector3D const narrow = right * (0.022F * comp);
   m_pose.shoulder_l -= narrow;
