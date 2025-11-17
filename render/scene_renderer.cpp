@@ -302,9 +302,6 @@ void Renderer::enqueueSelectionRing(Engine::Core::Entity *,
                 transform->position.z);
   auto &terrain_service = Game::Map::TerrainService::instance();
   float terrain_y = transform->position.y - ground_offset * transform->scale.y;
-  if (terrain_service.isInitialized()) {
-    terrain_y = terrain_service.getTerrainHeight(pos.x(), pos.z());
-  }
   pos.setY(terrain_y);
 
   QMatrix4x4 ring_model;
