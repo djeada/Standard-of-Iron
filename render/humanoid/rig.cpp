@@ -370,7 +370,7 @@ void HumanoidRendererBase::drawCommonBody(const DrawContext &ctx,
            v.palette.skin * 0.9F, nullptr, 1.0F);
 
   QMatrix4x4 head_transform = sphereAt(ctx.model, pose.head_pos, head_r);
-  head_transform.scale(width_scale, 1.0F, depth_scale);
+  head_transform.scale(width_scale, 1.0F, depth_scale * 0.92F);
   out.mesh(getUnitSphere(), head_transform, v.palette.skin, nullptr, 1.0F);
 
   QVector3D head_right =
