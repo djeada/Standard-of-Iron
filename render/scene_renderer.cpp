@@ -301,11 +301,9 @@ void Renderer::enqueueSelectionRing(Engine::Core::Entity *,
   QVector3D pos(transform->position.x, transform->position.y,
                 transform->position.z);
   auto &terrain_service = Game::Map::TerrainService::instance();
-  float terrain_y = transform->position.y;
+  float terrain_y = transform->position.y - ground_offset * transform->scale.y;
   if (terrain_service.isInitialized()) {
     terrain_y = terrain_service.getTerrainHeight(pos.x(), pos.z());
-  } else {
-    terrain_y -= ground_offset * transform->scale.y;
   }
   pos.setY(terrain_y);
 
