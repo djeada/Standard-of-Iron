@@ -77,13 +77,13 @@ void MountedPoseController::ridingCharging(const MountedAttachmentFrame &mount,
   m_pose.shoulder_l += charge_lean;
   m_pose.shoulder_r += charge_lean;
   m_pose.neck_base += charge_lean * 0.85F;
-  m_pose.head_pos += charge_lean * 0.75F;
+  m_pose.head_pos += charge_lean * 0.85F;
 
   float const crouch = 0.08F * intensity;
   m_pose.shoulder_l.setY(m_pose.shoulder_l.y() - crouch);
   m_pose.shoulder_r.setY(m_pose.shoulder_r.y() - crouch);
   m_pose.neck_base.setY(m_pose.neck_base.y() - crouch * 0.8F);
-  m_pose.head_pos.setY(m_pose.head_pos.y() - crouch * 0.7F);
+  m_pose.head_pos.setY(m_pose.head_pos.y() - crouch * 0.8F);
 
   holdReins(mount, 0.2F, 0.2F, 0.85F, 0.85F);
 }
@@ -114,7 +114,7 @@ void MountedPoseController::ridingReining(const MountedAttachmentFrame &mount,
   m_pose.shoulder_l += lean_back;
   m_pose.shoulder_r += lean_back;
   m_pose.neck_base += lean_back * 0.9F;
-  m_pose.head_pos += lean_back * 0.85F;
+  m_pose.head_pos += lean_back * 0.9F;
 }
 
 void MountedPoseController::ridingMeleeStrike(
@@ -306,7 +306,7 @@ void MountedPoseController::applyLean(const MountedAttachmentFrame &mount,
   m_pose.shoulder_l += lean_offset;
   m_pose.shoulder_r += lean_offset;
   m_pose.neck_base += lean_offset * 0.9F;
-  m_pose.head_pos += lean_offset * 0.85F;
+  m_pose.head_pos += lean_offset * 0.9F;
 }
 
 void MountedPoseController::applyShieldDefense(
@@ -377,7 +377,7 @@ void MountedPoseController::applySwordStrike(
     m_pose.shoulder_l += lean;
     m_pose.shoulder_r += lean;
     m_pose.neck_base += lean * 0.9F;
-    m_pose.head_pos += lean * 0.85F;
+    m_pose.head_pos += lean * 0.9F;
   } else {
     float t = (attack_phase - 0.50F) / 0.50F;
     t = 1.0F - (1.0F - t) * (1.0F - t);
@@ -424,7 +424,7 @@ void MountedPoseController::applySpearThrust(
     m_pose.shoulder_l += lean;
     m_pose.shoulder_r += lean;
     m_pose.neck_base += lean * 0.9F;
-    m_pose.head_pos += lean * 0.85F;
+    m_pose.head_pos += lean * 0.9F;
   } else {
     float t = (attack_phase - 0.45F) / 0.55F;
     t = 1.0F - (1.0F - t) * (1.0F - t);
@@ -531,11 +531,11 @@ void MountedPoseController::applyTorsoSculpt(
   m_pose.shoulder_l += inward;
   m_pose.shoulder_r += inward;
   m_pose.neck_base += inward * 0.55F;
-  m_pose.head_pos += inward * 0.35F;
+  m_pose.head_pos += inward * 0.55F;
 
   QVector3D const chest_lift = up * (0.012F * comp);
   m_pose.neck_base += chest_lift * 0.8F;
-  m_pose.head_pos += chest_lift * 0.45F;
+  m_pose.head_pos += chest_lift * 0.8F;
 
   QVector3D const narrow = right * (0.022F * comp);
   m_pose.shoulder_l -= narrow;

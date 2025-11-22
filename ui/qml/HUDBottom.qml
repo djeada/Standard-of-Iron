@@ -104,10 +104,10 @@ RowLayout {
                             cursorShape: Qt.PointingHandCursor
                             onEntered: selectedUnitItem.isHovered = true
                             onExited: selectedUnitItem.isHovered = false
-                            onClicked: {
-                                if (mouse.button === Qt.LeftButton && typeof game !== 'undefined' && game.selectUnitById && typeof unit_id !== 'undefined')
+                            onClicked: function(mouse) {
+                                if (mouse.button === Qt.LeftButton && typeof game !== 'undefined' && game.selectUnitById && typeof unit_id !== 'undefined') {
                                     game.selectUnitById(unit_id);
-
+                                }
                             }
                         }
 
