@@ -58,7 +58,7 @@ void RomanHeavyHelmetRenderer::render(const DrawContext &ctx,
   const AttachmentFrame &head = frames.head;
   float head_r = head.radius;
   if (head_r <= 0.0f) {
-      return;
+    return;
   }
 
   auto head_point = [&](const QVector3D &n) {
