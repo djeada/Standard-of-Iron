@@ -73,44 +73,13 @@ void HorseSpearmanRendererBase::get_variant(const DrawContext &ctx,
   v.palette = makeHumanoidPalette(team_tint, seed);
 }
 
-auto HorseSpearmanRendererBase::get_scaled_horse_dimensions(uint32_t seed) const
-    -> HorseDimensions {
-  HorseDimensions dims = makeHorseDimensions(seed);
-  scaleHorseDimensions(dims, get_mount_scale());
-  return dims;
-}
-
-void HorseSpearmanRendererBase::customize_pose(
-    const DrawContext &ctx, const HumanoidAnimationContext &anim_ctx,
-    uint32_t seed, HumanoidPose &pose) const {
+void HorseSpearmanRendererBase::apply_riding_animation(
+    MountedPoseController &mounted_controller, MountedAttachmentFrame &mount,
+    const HumanoidAnimationContext &anim_ctx, HumanoidPose &pose,
+    const HorseDimensions &dims, const ReinState &reins) const {
+  (void)dims;
+  (void)reins;
   const AnimationInputs &anim = anim_ctx.inputs;
-
-  uint32_t horse_seed = seed;
-  if (ctx.entity != nullptr) {
-    horse_seed = static_cast<uint32_t>(reinterpret_cast<uintptr_t>(ctx.entity) &
-                                       0xFFFFFFFFU);
-  }
-
-  HorseDimensions dims = get_scaled_horse_dimensions(horse_seed);
-  HorseProfile mount_profile{};
-  mount_profile.dims = dims;
-  MountedAttachmentFrame mount = compute_mount_frame(mount_profile);
-  tuneMountedKnightFrame(dims, mount);
-  HorseMotionSample const motion =
-      evaluate_horse_motion(mount_profile, anim, anim_ctx);
-  apply_mount_vertical_offset(mount, motion.bob);
-
-  m_last_pose = &pose;
-  m_last_mount = mount;
-
-  ReinState const reins = compute_rein_state(horse_seed, anim_ctx);
-  m_last_rein_state = reins;
-  m_has_last_reins = true;
-
-  MountedPoseController mounted_controller(pose, anim_ctx);
-
-  mounted_controller.mountOnHorse(mount);
-
   float const speed_norm = anim_ctx.locomotion_normalized_speed();
   bool const is_charging = speed_norm > 0.65F;
 
@@ -129,62 +98,22 @@ void HorseSpearmanRendererBase::customize_pose(
   } else {
     mounted_controller.ridingIdle(mount);
   }
-
-  applyMountedKnightLowerBody(dims, mount, anim_ctx, pose);
 }
 
-auto HorseSpearmanRendererBase::compute_horse_spearman_extras(
-    uint32_t seed, const HumanoidVariant &v,
-    const HorseDimensions &dims) const -> HorseSpearmanExtras {
-  HorseSpearmanExtras extras;
-  extras.horse_profile =
-      makeHorseProfile(seed, v.palette.leather, v.palette.cloth);
-  extras.horse_profile.dims = dims;
-  extras.spear_length = 1.15F + (hash_01(seed ^ 0xABCDU) - 0.5F) * 0.10F;
-  extras.spear_shaft_radius =
-      0.018F + (hash_01(seed ^ 0x7777U) - 0.5F) * 0.003F;
-
-  return extras;
-}
-
-void HorseSpearmanRendererBase::addAttachments(
+void HorseSpearmanRendererBase::draw_equipment(
     const DrawContext &ctx, const HumanoidVariant &v, const HumanoidPose &pose,
     const HumanoidAnimationContext &anim_ctx, ISubmitter &out) const {
+  auto &registry = EquipmentRegistry::instance();
+
   uint32_t horse_seed = 0U;
   if (ctx.entity != nullptr) {
     horse_seed = static_cast<uint32_t>(reinterpret_cast<uintptr_t>(ctx.entity) &
                                        0xFFFFFFFFU);
   }
 
-  HorseSpearmanExtras extras;
-  auto it = m_extras_cache.find(horse_seed);
-  if (it != m_extras_cache.end()) {
-    extras = it->second;
-  } else {
-    HorseDimensions dims = get_scaled_horse_dimensions(horse_seed);
-    extras = compute_horse_spearman_extras(horse_seed, v, dims);
-    m_extras_cache[horse_seed] = extras;
-
-    if (m_extras_cache.size() > MAX_EXTRAS_CACHE_SIZE) {
-      m_extras_cache.clear();
-    }
-  }
-
-  const bool is_current_pose = (m_last_pose == &pose);
-  const MountedAttachmentFrame *mount_ptr =
-      (is_current_pose) ? &m_last_mount : nullptr;
-  const ReinState *rein_ptr =
-      (is_current_pose && m_has_last_reins) ? &m_last_rein_state : nullptr;
-  const AnimationInputs &anim = anim_ctx.inputs;
-
-  evaluate_horse_motion(extras.horse_profile, anim, anim_ctx);
-
-  m_horseRenderer.render(ctx, anim, anim_ctx, extras.horse_profile, mount_ptr,
-                         rein_ptr, out);
-  m_last_pose = nullptr;
-  m_has_last_reins = false;
-
-  auto &registry = EquipmentRegistry::instance();
+  float spear_length = 1.15F + (hash_01(horse_seed ^ 0xABCDU) - 0.5F) * 0.10F;
+  float spear_shaft_radius =
+      0.018F + (hash_01(horse_seed ^ 0x7777U) - 0.5F) * 0.003F;
 
   if (m_config.has_spear && !m_config.spear_equipment_id.empty()) {
     auto spear =
@@ -194,8 +123,8 @@ void HorseSpearmanRendererBase::addAttachments(
       spear_config.shaft_color =
           v.palette.leather * QVector3D(0.85F, 0.75F, 0.65F);
       spear_config.spearhead_color = m_config.metal_color;
-      spear_config.spear_length = extras.spear_length;
-      spear_config.shaft_radius = extras.spear_shaft_radius;
+      spear_config.spear_length = spear_length;
+      spear_config.shaft_radius = spear_shaft_radius;
       spear_config.spearhead_length = 0.18F;
 
       if (auto *spear_renderer = dynamic_cast<SpearRenderer *>(spear.get())) {
