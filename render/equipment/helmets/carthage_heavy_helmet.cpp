@@ -54,8 +54,20 @@ void CarthageHeavyHelmetRenderer::render_bowl(const DrawContext &ctx,
                                               const AttachmentFrame &head,
                                               ISubmitter &submitter) {
   const float R = head.radius;
+  const float helm_scale = 1.2f;
+  const float helmet_y_offset = R * 0.1f;
   auto headPoint = [&](const QVector3D &n) {
-    return HumanoidRendererBase::frameLocalPosition(head, n);
+    // Scale coordinates to ensure helmet parts are outside the head
+    QVector3D scaled_n = n;
+    // Apply extra forward offset for face-covering parts
+    if (scaled_n.z() > 0.2f) {
+       scaled_n.setZ(std::max(scaled_n.z(), 1.05f / helm_scale));
+    }
+    // Apply general scale
+    scaled_n = scaled_n * helm_scale;
+
+    QVector3D p = HumanoidRendererBase::frameLocalPosition(head, scaled_n);
+    return p + head.up * helmet_y_offset;
   };
 
   QVector3D c0 = headPoint(QVector3D(0.0f, 1.47f, 0.0f));
@@ -78,8 +90,20 @@ void CarthageHeavyHelmetRenderer::render_cheek_guards(
     const DrawContext &ctx, const AttachmentFrame &head,
     ISubmitter &submitter) {
   const float R = head.radius;
+  const float helm_scale = 1.2f;
+  const float helmet_y_offset = R * 0.1f;
   auto headPoint = [&](const QVector3D &n) {
-    return HumanoidRendererBase::frameLocalPosition(head, n);
+    // Scale coordinates to ensure helmet parts are outside the head
+    QVector3D scaled_n = n;
+    // Apply extra forward offset for face-covering parts
+    if (scaled_n.z() > 0.2f) {
+       scaled_n.setZ(std::max(scaled_n.z(), 1.05f / helm_scale));
+    }
+    // Apply general scale
+    scaled_n = scaled_n * helm_scale;
+
+    QVector3D p = HumanoidRendererBase::frameLocalPosition(head, scaled_n);
+    return p + head.up * helmet_y_offset;
   };
 
   QVector3D left_cheek = headPoint(QVector3D(-0.58f, 0.73f, 0.42f));
@@ -104,8 +128,20 @@ void CarthageHeavyHelmetRenderer::render_face_plate(const DrawContext &ctx,
                                                     const AttachmentFrame &head,
                                                     ISubmitter &submitter) {
   const float R = head.radius;
+  const float helm_scale = 1.2f;
+  const float helmet_y_offset = R * 0.1f;
   auto headPoint = [&](const QVector3D &n) {
-    return HumanoidRendererBase::frameLocalPosition(head, n);
+    // Scale coordinates to ensure helmet parts are outside the head
+    QVector3D scaled_n = n;
+    // Apply extra forward offset for face-covering parts
+    if (scaled_n.z() > 0.2f) {
+       scaled_n.setZ(std::max(scaled_n.z(), 1.05f / helm_scale));
+    }
+    // Apply general scale
+    scaled_n = scaled_n * helm_scale;
+
+    QVector3D p = HumanoidRendererBase::frameLocalPosition(head, scaled_n);
+    return p + head.up * helmet_y_offset;
   };
 
   QVector3D brow = headPoint(QVector3D(0.0f, 1.25f, 0.60f));
@@ -129,8 +165,20 @@ void CarthageHeavyHelmetRenderer::render_neck_guard(const DrawContext &ctx,
                                                     const AttachmentFrame &head,
                                                     ISubmitter &submitter) {
   const float R = head.radius;
+  const float helm_scale = 1.2f;
+  const float helmet_y_offset = R * 0.1f;
   auto headPoint = [&](const QVector3D &n) {
-    return HumanoidRendererBase::frameLocalPosition(head, n);
+    // Scale coordinates to ensure helmet parts are outside the head
+    QVector3D scaled_n = n;
+    // Apply extra forward offset for face-covering parts
+    if (scaled_n.z() > 0.2f) {
+       scaled_n.setZ(std::max(scaled_n.z(), 1.05f / helm_scale));
+    }
+    // Apply general scale
+    scaled_n = scaled_n * helm_scale;
+
+    QVector3D p = HumanoidRendererBase::frameLocalPosition(head, scaled_n);
+    return p + head.up * helmet_y_offset;
   };
 
   QVector3D guardCenter = headPoint(QVector3D(0.0f, 0.70f, -0.65f));
@@ -146,8 +194,20 @@ void CarthageHeavyHelmetRenderer::render_brow_arch(const DrawContext &ctx,
                                                    const AttachmentFrame &head,
                                                    ISubmitter &submitter) {
   const float R = head.radius;
+  const float helm_scale = 1.2f;
+  const float helmet_y_offset = R * 0.1f;
   auto headPoint = [&](const QVector3D &n) {
-    return HumanoidRendererBase::frameLocalPosition(head, n);
+    // Scale coordinates to ensure helmet parts are outside the head
+    QVector3D scaled_n = n;
+    // Apply extra forward offset for face-covering parts
+    if (scaled_n.z() > 0.2f) {
+       scaled_n.setZ(std::max(scaled_n.z(), 1.05f / helm_scale));
+    }
+    // Apply general scale
+    scaled_n = scaled_n * helm_scale;
+
+    QVector3D p = HumanoidRendererBase::frameLocalPosition(head, scaled_n);
+    return p + head.up * helmet_y_offset;
   };
 
   QVector3D left = headPoint(QVector3D(-0.62f, 1.21f, 0.60f));
@@ -169,8 +229,20 @@ void CarthageHeavyHelmetRenderer::render_crest(const DrawContext &ctx,
                                                const AttachmentFrame &head,
                                                ISubmitter &submitter) {
   const float R = head.radius;
+  const float helm_scale = 1.2f;
+  const float helmet_y_offset = R * 0.1f;
   auto headPoint = [&](const QVector3D &n) {
-    return HumanoidRendererBase::frameLocalPosition(head, n);
+    // Scale coordinates to ensure helmet parts are outside the head
+    QVector3D scaled_n = n;
+    // Apply extra forward offset for face-covering parts
+    if (scaled_n.z() > 0.2f) {
+       scaled_n.setZ(std::max(scaled_n.z(), 1.05f / helm_scale));
+    }
+    // Apply general scale
+    scaled_n = scaled_n * helm_scale;
+
+    QVector3D p = HumanoidRendererBase::frameLocalPosition(head, scaled_n);
+    return p + head.up * helmet_y_offset;
   };
 
   QVector3D crestBack = headPoint(QVector3D(0.0f, 1.73f, -0.28f));
