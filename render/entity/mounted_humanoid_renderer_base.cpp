@@ -90,8 +90,6 @@ void MountedHumanoidRendererBase::addAttachments(
                                        0xFFFFFFFFU);
   }
 
-  // We need a non-const profile because render() might modify it if motion is not shared
-  // (though in our case motion IS shared if is_current_pose is true)
   const HorseProfile &profile_const = get_cached_horse_profile(horse_seed, v);
   HorseProfile &profile = const_cast<HorseProfile &>(profile_const);
 
@@ -107,7 +105,6 @@ void MountedHumanoidRendererBase::addAttachments(
   m_horseRenderer.render(ctx, anim, anim_ctx, profile, mount_ptr, rein_ptr,
                          motion_ptr, out);
 
-  // Reset state
   m_last_pose = nullptr;
   m_has_last_reins = false;
 
