@@ -57,13 +57,12 @@ void CarthageHeavyHelmetRenderer::render_bowl(const DrawContext &ctx,
   const float helm_scale = 1.2f;
   const float helmet_y_offset = R * 0.1f;
   auto headPoint = [&](const QVector3D &n) {
-    // Scale coordinates to ensure helmet parts are outside the head
     QVector3D scaled_n = n;
-    // Apply extra forward offset for face-covering parts
+
     if (scaled_n.z() > 0.2f) {
-       scaled_n.setZ(std::max(scaled_n.z(), 1.05f / helm_scale));
+      scaled_n.setZ(std::max(scaled_n.z(), 1.05f / helm_scale));
     }
-    // Apply general scale
+
     scaled_n = scaled_n * helm_scale;
 
     QVector3D p = HumanoidRendererBase::frameLocalPosition(head, scaled_n);
@@ -93,13 +92,12 @@ void CarthageHeavyHelmetRenderer::render_cheek_guards(
   const float helm_scale = 1.2f;
   const float helmet_y_offset = R * 0.1f;
   auto headPoint = [&](const QVector3D &n) {
-    // Scale coordinates to ensure helmet parts are outside the head
     QVector3D scaled_n = n;
-    // Apply extra forward offset for face-covering parts
+
     if (scaled_n.z() > 0.2f) {
-       scaled_n.setZ(std::max(scaled_n.z(), 1.05f / helm_scale));
+      scaled_n.setZ(std::max(scaled_n.z(), 1.05f / helm_scale));
     }
-    // Apply general scale
+
     scaled_n = scaled_n * helm_scale;
 
     QVector3D p = HumanoidRendererBase::frameLocalPosition(head, scaled_n);
@@ -131,13 +129,12 @@ void CarthageHeavyHelmetRenderer::render_face_plate(const DrawContext &ctx,
   const float helm_scale = 1.2f;
   const float helmet_y_offset = R * 0.1f;
   auto headPoint = [&](const QVector3D &n) {
-    // Scale coordinates to ensure helmet parts are outside the head
     QVector3D scaled_n = n;
-    // Apply extra forward offset for face-covering parts
+
     if (scaled_n.z() > 0.2f) {
-       scaled_n.setZ(std::max(scaled_n.z(), 1.05f / helm_scale));
+      scaled_n.setZ(std::max(scaled_n.z(), 1.05f / helm_scale));
     }
-    // Apply general scale
+
     scaled_n = scaled_n * helm_scale;
 
     QVector3D p = HumanoidRendererBase::frameLocalPosition(head, scaled_n);
@@ -168,13 +165,12 @@ void CarthageHeavyHelmetRenderer::render_neck_guard(const DrawContext &ctx,
   const float helm_scale = 1.2f;
   const float helmet_y_offset = R * 0.1f;
   auto headPoint = [&](const QVector3D &n) {
-    // Scale coordinates to ensure helmet parts are outside the head
     QVector3D scaled_n = n;
-    // Apply extra forward offset for face-covering parts
+
     if (scaled_n.z() > 0.2f) {
-       scaled_n.setZ(std::max(scaled_n.z(), 1.05f / helm_scale));
+      scaled_n.setZ(std::max(scaled_n.z(), 1.05f / helm_scale));
     }
-    // Apply general scale
+
     scaled_n = scaled_n * helm_scale;
 
     QVector3D p = HumanoidRendererBase::frameLocalPosition(head, scaled_n);
@@ -197,13 +193,12 @@ void CarthageHeavyHelmetRenderer::render_brow_arch(const DrawContext &ctx,
   const float helm_scale = 1.2f;
   const float helmet_y_offset = R * 0.1f;
   auto headPoint = [&](const QVector3D &n) {
-    // Scale coordinates to ensure helmet parts are outside the head
     QVector3D scaled_n = n;
-    // Apply extra forward offset for face-covering parts
+
     if (scaled_n.z() > 0.2f) {
-       scaled_n.setZ(std::max(scaled_n.z(), 1.05f / helm_scale));
+      scaled_n.setZ(std::max(scaled_n.z(), 1.05f / helm_scale));
     }
-    // Apply general scale
+
     scaled_n = scaled_n * helm_scale;
 
     QVector3D p = HumanoidRendererBase::frameLocalPosition(head, scaled_n);
@@ -232,13 +227,12 @@ void CarthageHeavyHelmetRenderer::render_crest(const DrawContext &ctx,
   const float helm_scale = 1.2f;
   const float helmet_y_offset = R * 0.1f;
   auto headPoint = [&](const QVector3D &n) {
-    // Scale coordinates to ensure helmet parts are outside the head
     QVector3D scaled_n = n;
-    // Apply extra forward offset for face-covering parts
+
     if (scaled_n.z() > 0.2f) {
-       scaled_n.setZ(std::max(scaled_n.z(), 1.05f / helm_scale));
+      scaled_n.setZ(std::max(scaled_n.z(), 1.05f / helm_scale));
     }
-    // Apply general scale
+
     scaled_n = scaled_n * helm_scale;
 
     QVector3D p = HumanoidRendererBase::frameLocalPosition(head, scaled_n);

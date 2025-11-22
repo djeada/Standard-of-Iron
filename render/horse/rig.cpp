@@ -403,14 +403,11 @@ void apply_mount_vertical_offset(MountedAttachmentFrame &frame, float bob) {
   frame.bridle_base += offset;
 }
 
-void HorseRendererBase::render(const DrawContext &ctx,
-                               const AnimationInputs &anim,
-                               const HumanoidAnimationContext &rider_ctx,
-                               HorseProfile &profile,
-                               const MountedAttachmentFrame *shared_mount,
-                               const ReinState *shared_reins,
-                               const HorseMotionSample *shared_motion,
-                               ISubmitter &out) const {
+void HorseRendererBase::render(
+    const DrawContext &ctx, const AnimationInputs &anim,
+    const HumanoidAnimationContext &rider_ctx, HorseProfile &profile,
+    const MountedAttachmentFrame *shared_mount, const ReinState *shared_reins,
+    const HorseMotionSample *shared_motion, ISubmitter &out) const {
   const HorseDimensions &d = profile.dims;
   const HorseVariant &v = profile.variant;
   const HorseGait &g = profile.gait;
@@ -1062,13 +1059,13 @@ void HorseRendererBase::render(const DrawContext &ctx,
         v.coatColor, is_rear ? 0.48F : 0.58F, is_rear ? -0.22F : 0.18F,
         coat_seed_a + lateralSign * 0.07F);
 
-    draw_cylinder(out, horse_ctx.model, shoulder, knee, (shoulder_r + upper_r) * 0.5F,
-                  thigh_color, 1.0F, 6);
+    draw_cylinder(out, horse_ctx.model, shoulder, knee,
+                  (shoulder_r + upper_r) * 0.5F, thigh_color, 1.0F, 6);
 
     QVector3D const shin_color = darken(thigh_color, is_rear ? 0.90F : 0.92F);
 
-    draw_cylinder(out, horse_ctx.model, knee, cannon, (knee_r + cannon_r) * 0.5F,
-                  shin_color, 1.0F, 6);
+    draw_cylinder(out, horse_ctx.model, knee, cannon,
+                  (knee_r + cannon_r) * 0.5F, shin_color, 1.0F, 6);
 
     QVector3D const hoof_joint_color =
         darken(shin_color, is_rear ? 0.92F : 0.94F);

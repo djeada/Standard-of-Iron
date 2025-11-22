@@ -53,10 +53,11 @@ public:
 protected:
   const HorseSpearmanRendererConfig &config() const { return m_config; }
 
-  void apply_riding_animation(
-      MountedPoseController &controller, MountedAttachmentFrame &mount,
-      const HumanoidAnimationContext &anim_ctx, HumanoidPose &pose,
-      const HorseDimensions &dims, const ReinState &reins) const override;
+  void apply_riding_animation(MountedPoseController &controller,
+                              MountedAttachmentFrame &mount,
+                              const HumanoidAnimationContext &anim_ctx,
+                              HumanoidPose &pose, const HorseDimensions &dims,
+                              const ReinState &reins) const override;
 
   void draw_equipment(const DrawContext &ctx, const HumanoidVariant &v,
                       const HumanoidPose &pose,
