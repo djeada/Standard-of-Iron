@@ -73,42 +73,12 @@ void MountedKnightRendererBase::get_variant(const DrawContext &ctx,
   v.palette = makeHumanoidPalette(team_tint, seed);
 }
 
-auto MountedKnightRendererBase::getScaledHorseDimensions(uint32_t seed) const
-    -> HorseDimensions {
-  HorseDimensions dims = makeHorseDimensions(seed);
-  scaleHorseDimensions(dims, get_mount_scale());
-  return dims;
-}
-
-void MountedKnightRendererBase::customize_pose(
-    const DrawContext &ctx, const HumanoidAnimationContext &anim_ctx,
-    uint32_t seed, HumanoidPose &pose) const {
+void MountedKnightRendererBase::apply_riding_animation(
+    MountedPoseController &mounted_controller, MountedAttachmentFrame &mount,
+    const HumanoidAnimationContext &anim_ctx, HumanoidPose &pose,
+    const HorseDimensions &dims, const ReinState &reins) const {
+  (void)pose;
   const AnimationInputs &anim = anim_ctx.inputs;
-
-  uint32_t horse_seed = seed;
-  if (ctx.entity != nullptr) {
-    horse_seed = static_cast<uint32_t>(reinterpret_cast<uintptr_t>(ctx.entity) &
-                                       0xFFFFFFFFU);
-  }
-
-  HorseDimensions dims = getScaledHorseDimensions(horse_seed);
-  HorseProfile mount_profile{};
-  mount_profile.dims = dims;
-  MountedAttachmentFrame mount = compute_mount_frame(mount_profile);
-  tuneMountedKnightFrame(dims, mount);
-  HorseMotionSample const motion =
-      evaluate_horse_motion(mount_profile, anim, anim_ctx);
-  apply_mount_vertical_offset(mount, motion.bob);
-
-  m_lastPose = &pose;
-  m_lastMount = mount;
-
-  ReinState const reins = compute_rein_state(horse_seed, anim_ctx);
-  m_lastReinState = reins;
-  m_hasLastReins = true;
-
-  MountedPoseController mounted_controller(pose, anim_ctx);
-
   float const speed_norm = anim_ctx.locomotion_normalized_speed();
   float const speed_lean = std::clamp(
       anim_ctx.locomotion_speed() * 0.10F + speed_norm * 0.05F, 0.0F, 0.22F);
@@ -145,13 +115,13 @@ void MountedKnightRendererBase::customize_pose(
   if (anim.is_attacking && anim.is_melee) {
     pose_request.weaponPose =
         MountedPoseController::MountedWeaponPose::SwordStrike;
-    pose_request.shieldPose =
-        m_config.has_cavalry_shield
-            ? MountedPoseController::MountedShieldPose::Stowed
-            : pose_request.shieldPose;
     pose_request.actionPhase =
         std::fmod(anim.time * MOUNTED_KNIGHT_INV_ATTACK_CYCLE_TIME, 1.0F);
     pose_request.rightHandOnReins = false;
+    if (m_config.has_cavalry_shield) {
+      pose_request.shieldPose =
+          MountedPoseController::MountedShieldPose::Stowed;
+    }
   } else {
     pose_request.weaponPose =
         m_config.has_sword ? MountedPoseController::MountedWeaponPose::SwordIdle
@@ -160,60 +130,23 @@ void MountedKnightRendererBase::customize_pose(
   }
 
   mounted_controller.applyPose(mount, pose_request);
-  applyMountedKnightLowerBody(dims, mount, anim_ctx, pose);
 }
 
-auto MountedKnightRendererBase::computeMountedKnightExtras(
-    uint32_t seed, const HumanoidVariant &v,
-    const HorseDimensions &dims) const -> MountedKnightExtras {
-  MountedKnightExtras extras;
-  extras.horseProfile =
-      makeHorseProfile(seed, v.palette.leather, v.palette.cloth);
-  extras.horseProfile.dims = dims;
-  extras.swordLength = 0.82F + (hash_01(seed ^ 0xABCDU) - 0.5F) * 0.12F;
-  extras.swordWidth = 0.042F + (hash_01(seed ^ 0x7777U) - 0.5F) * 0.008F;
-
-  return extras;
-}
-
-void MountedKnightRendererBase::addAttachments(
+void MountedKnightRendererBase::draw_equipment(
     const DrawContext &ctx, const HumanoidVariant &v, const HumanoidPose &pose,
     const HumanoidAnimationContext &anim_ctx, ISubmitter &out) const {
+  auto &registry = EquipmentRegistry::instance();
+
   uint32_t horse_seed = 0U;
   if (ctx.entity != nullptr) {
     horse_seed = static_cast<uint32_t>(reinterpret_cast<uintptr_t>(ctx.entity) &
                                        0xFFFFFFFFU);
   }
 
-  MountedKnightExtras extras;
-  auto it = m_extrasCache.find(horse_seed);
-  if (it != m_extrasCache.end()) {
-    extras = it->second;
-  } else {
-    HorseDimensions dims = getScaledHorseDimensions(horse_seed);
-    extras = computeMountedKnightExtras(horse_seed, v, dims);
-    m_extrasCache[horse_seed] = extras;
-
-    if (m_extrasCache.size() > MAX_EXTRAS_CACHE_SIZE) {
-      m_extrasCache.clear();
-    }
-  }
-
-  const bool is_current_pose = (m_lastPose == &pose);
-  const MountedAttachmentFrame *mount_ptr =
-      (is_current_pose) ? &m_lastMount : nullptr;
-  const ReinState *rein_ptr =
-      (is_current_pose && m_hasLastReins) ? &m_lastReinState : nullptr;
-  const AnimationInputs &anim = anim_ctx.inputs;
-
-  evaluate_horse_motion(extras.horseProfile, anim, anim_ctx);
-
-  m_horseRenderer.render(ctx, anim, anim_ctx, extras.horseProfile, mount_ptr,
-                         rein_ptr, out);
-  m_lastPose = nullptr;
-  m_hasLastReins = false;
-
-  auto &registry = EquipmentRegistry::instance();
+  float const sword_length =
+      0.82F + (hash_01(horse_seed ^ 0xABCDU) - 0.5F) * 0.12F;
+  float const sword_width =
+      0.042F + (hash_01(horse_seed ^ 0x7777U) - 0.5F) * 0.008F;
 
   if (m_config.has_sword && !m_config.sword_equipment_id.empty()) {
     auto sword =
@@ -221,8 +154,8 @@ void MountedKnightRendererBase::addAttachments(
     if (sword) {
       SwordRenderConfig sword_config;
       sword_config.metal_color = m_config.metal_color;
-      sword_config.sword_length = extras.swordLength;
-      sword_config.sword_width = extras.swordWidth;
+      sword_config.sword_length = sword_length;
+      sword_config.sword_width = sword_width;
 
       if (auto *sword_renderer = dynamic_cast<SwordRenderer *>(sword.get())) {
         sword_renderer->setConfig(sword_config);

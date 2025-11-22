@@ -1,14 +1,13 @@
 #include "transforms.h"
 #include <algorithm>
 #include <cmath>
-#include <qmatrix4x4.h>
-#include <qvectornd.h>
+#include <QMatrix4x4>
+#include <QVector3D>
+#include <QQuaternion>
 
 namespace Render::Geom {
 
 namespace {
-const QVector3D k_yaxis(0, 1, 0);
-const float k_rad_to_deg = 57.2957795131F;
 const float k_epsilon = 1e-6F;
 const float k_epsilon_sq = k_epsilon * k_epsilon;
 constexpr float k_flip_rotation_degrees = 180.0F;
@@ -17,40 +16,22 @@ constexpr float k_flip_rotation_degrees = 180.0F;
 auto cylinderBetween(const QVector3D &a, const QVector3D &b,
                      float radius) -> QMatrix4x4 {
 
-  const float dx = b.x() - a.x();
-  const float dy = b.y() - a.y();
-  const float dz = b.z() - a.z();
-  const float len_sq = dx * dx + dy * dy + dz * dz;
+  const QVector3D diff = b - a;
+  const float len_sq = diff.lengthSquared();
 
   QMatrix4x4 m;
-
-  m.translate((a.x() + b.x()) * 0.5F, (a.y() + b.y()) * 0.5F,
-              (a.z() + b.z()) * 0.5F);
+  m.translate((a + b) * 0.5F);
 
   if (len_sq > k_epsilon_sq) {
     const float len = std::sqrt(len_sq);
-
-    const float inv_len = 1.0F / len;
-    const float ndx = dx * inv_len;
-    const float ndy = dy * inv_len;
-    const float ndz = dz * inv_len;
-
-    const float dot = std::clamp(ndy, -1.0F, 1.0F);
-    const float angle_deg = std::acos(dot) * k_rad_to_deg;
-
-    const float axis_x = ndz;
-    const float axis_z = -ndx;
-    const float axis_len_sq = axis_x * axis_x + axis_z * axis_z;
-
-    if (axis_len_sq < k_epsilon_sq) {
-
-      if (dot < 0.0F) {
-        m.rotate(k_flip_rotation_degrees, 1.0F, 0.0F, 0.0F);
-      }
+    const QVector3D dir = diff / len;
+    
+    const QVector3D up(0.0F, 1.0F, 0.0F);
+    if (QVector3D::dotProduct(up, dir) < -0.99999F) {
+        m.rotate(180.0F, 1.0F, 0.0F, 0.0F);
     } else {
-
-      const float axis_inv_len = 1.0F / std::sqrt(axis_len_sq);
-      m.rotate(angle_deg, axis_x * axis_inv_len, 0.0F, axis_z * axis_inv_len);
+        QQuaternion rot = QQuaternion::rotationTo(up, dir);
+        m.rotate(rot);
     }
     m.scale(radius, len, radius);
   } else {
@@ -77,41 +58,18 @@ auto sphereAt(const QMatrix4x4 &parent, const QVector3D &pos,
 auto cylinderBetween(const QMatrix4x4 &parent, const QVector3D &a,
                      const QVector3D &b, float radius) -> QMatrix4x4 {
 
-  const float dx = b.x() - a.x();
-  const float dy = b.y() - a.y();
-  const float dz = b.z() - a.z();
-  const float len_sq = dx * dx + dy * dy + dz * dz;
+  const QVector3D diff = b - a;
+  const float len_sq = diff.lengthSquared();
 
   QMatrix4x4 m = parent;
-
-  m.translate((a.x() + b.x()) * 0.5F, (a.y() + b.y()) * 0.5F,
-              (a.z() + b.z()) * 0.5F);
+  m.translate((a + b) * 0.5F);
 
   if (len_sq > k_epsilon_sq) {
     const float len = std::sqrt(len_sq);
+    const QVector3D dir = diff / len;
 
-    const float inv_len = 1.0F / len;
-    const float ndx = dx * inv_len;
-    const float ndy = dy * inv_len;
-    const float ndz = dz * inv_len;
-
-    const float dot = std::clamp(ndy, -1.0F, 1.0F);
-    const float angle_deg = std::acos(dot) * k_rad_to_deg;
-
-    const float axis_x = ndz;
-    const float axis_z = -ndx;
-    const float axis_len_sq = axis_x * axis_x + axis_z * axis_z;
-
-    if (axis_len_sq < k_epsilon_sq) {
-
-      if (dot < 0.0F) {
-        m.rotate(k_flip_rotation_degrees, 1.0F, 0.0F, 0.0F);
-      }
-    } else {
-
-      const float axis_inv_len = 1.0F / std::sqrt(axis_len_sq);
-      m.rotate(angle_deg, axis_x * axis_inv_len, 0.0F, axis_z * axis_inv_len);
-    }
+    QQuaternion rot = QQuaternion::rotationTo(QVector3D(0.0F, 1.0F, 0.0F), dir);
+    m.rotate(rot);
     m.scale(radius, len, radius);
   } else {
     m.scale(radius, 1.0F, radius);

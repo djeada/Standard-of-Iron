@@ -363,16 +363,6 @@ void HumanoidRendererBase::drawCommonBody(const DrawContext &ctx,
     head_up.normalize();
   }
 
-  QVector3D const chin_pos = pose.head_pos - head_up * head_r;
-  out.mesh(getUnitCylinder(),
-           cylinderBetween(ctx.model, pose.neck_base, chin_pos,
-                           HP::NECK_RADIUS * width_scale),
-           v.palette.skin * 0.9F, nullptr, 1.0F);
-
-  QMatrix4x4 head_transform = sphereAt(ctx.model, pose.head_pos, head_r);
-  head_transform.scale(width_scale, 1.0F, depth_scale);
-  out.mesh(getUnitSphere(), head_transform, v.palette.skin, nullptr, 1.0F);
-
   QVector3D head_right =
       right_axis - head_up * QVector3D::dotProduct(right_axis, head_up);
   if (head_right.lengthSquared() < 1e-8F) {
@@ -398,6 +388,25 @@ void HumanoidRendererBase::drawCommonBody(const DrawContext &ctx,
     head_right = -head_right;
     head_forward = -head_forward;
   }
+
+  QVector3D const chin_pos = pose.head_pos - head_up * head_r;
+  out.mesh(getUnitCylinder(),
+           cylinderBetween(ctx.model, pose.neck_base, chin_pos,
+                           HP::NECK_RADIUS * width_scale),
+           v.palette.skin * 0.9F, nullptr, 1.0F);
+
+  QMatrix4x4 head_rot;
+  head_rot.setColumn(0, QVector4D(head_right, 0.0F));
+  head_rot.setColumn(1, QVector4D(head_up, 0.0F));
+  head_rot.setColumn(2, QVector4D(head_forward, 0.0F));
+  head_rot.setColumn(3, QVector4D(0.0F, 0.0F, 0.0F, 1.0F));
+
+  QMatrix4x4 head_transform = ctx.model;
+  head_transform.translate(pose.head_pos);
+  head_transform = head_transform * head_rot;
+  head_transform.scale(head_r);
+  head_transform.scale(width_scale, 1.0F, depth_scale);
+  out.mesh(getUnitSphere(), head_transform, v.palette.skin, nullptr, 1.0F);
 
   pose.head_frame.origin = pose.head_pos;
   pose.head_frame.right = head_right;
