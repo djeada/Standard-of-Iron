@@ -119,7 +119,7 @@ void main() {
     float cheekGuard = cheekGuardHeight * smoothstep(0.12, 0.09, cheekX) * 0.40;
     float hingePins =
         cheekGuard * step(0.94, fract(v_bodyHeight * 28.0)) * 0.20;
-    float guardRepoussé =
+    float guardRepousse =
         cheekGuard * noise(uv * 12.0) * 0.08; // Decorative embossing
 
     // ENHANCED: Neck guard (segmented rear protection)
@@ -147,7 +147,7 @@ void main() {
     float steelFresnel = pow(1.0 - viewAngle, 2.0) * 0.22;
 
     color += vec3(steelSheen + steelFresnel + bands + rivets);
-    color += vec3(cheekGuard + hingePins + guardRepoussé);
+    color += vec3(cheekGuard + hingePins + guardRepousse);
     color += vec3(neckGuard + neckSegments + browReinforce + plumeSocket);
     color -= vec3(rustTex * 0.3);
     color += vec3(brushed * 0.6);
