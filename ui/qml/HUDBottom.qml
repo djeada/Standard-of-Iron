@@ -105,9 +105,9 @@ RowLayout {
                             onEntered: selectedUnitItem.isHovered = true
                             onExited: selectedUnitItem.isHovered = false
                             onClicked: function(mouse) {
-                                if (mouse.button === Qt.LeftButton && typeof game !== 'undefined' && game.selectUnitById && typeof unit_id !== 'undefined') {
+                                if (mouse.button === Qt.LeftButton && typeof game !== 'undefined' && game.selectUnitById && typeof unit_id !== 'undefined')
                                     game.selectUnitById(unit_id);
-                                }
+
                             }
                         }
 
