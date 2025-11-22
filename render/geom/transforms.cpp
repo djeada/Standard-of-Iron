@@ -1,9 +1,9 @@
 #include "transforms.h"
+#include <QMatrix4x4>
+#include <QQuaternion>
+#include <QVector3D>
 #include <algorithm>
 #include <cmath>
-#include <QMatrix4x4>
-#include <QVector3D>
-#include <QQuaternion>
 
 namespace Render::Geom {
 
@@ -25,13 +25,13 @@ auto cylinderBetween(const QVector3D &a, const QVector3D &b,
   if (len_sq > k_epsilon_sq) {
     const float len = std::sqrt(len_sq);
     const QVector3D dir = diff / len;
-    
+
     const QVector3D up(0.0F, 1.0F, 0.0F);
     if (QVector3D::dotProduct(up, dir) < -0.99999F) {
-        m.rotate(180.0F, 1.0F, 0.0F, 0.0F);
+      m.rotate(180.0F, 1.0F, 0.0F, 0.0F);
     } else {
-        QQuaternion rot = QQuaternion::rotationTo(up, dir);
-        m.rotate(rot);
+      QQuaternion rot = QQuaternion::rotationTo(up, dir);
+      m.rotate(rot);
     }
     m.scale(radius, len, radius);
   } else {
