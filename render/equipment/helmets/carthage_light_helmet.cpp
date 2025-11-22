@@ -108,7 +108,9 @@ void CarthageLightHelmetRenderer::render_bowl(const DrawContext &ctx,
   QVector3D const helmet_offset = helmetLiftVector(head);
   QVector3D const helmet_origin = head.origin + helmet_offset;
   auto headPoint = [&](const QVector3D &n) {
-    return HumanoidRendererBase::frameLocalPosition(head, n) + helmet_offset;
+    // Use scaled radius for helmet parts to ensure they cover the head
+    QVector3D p = n * helmetScale;
+    return HumanoidRendererBase::frameLocalPosition(head, p) + helmet_offset;
   };
 
   QVector3D cap_center = helmet_origin + up * (R * 0.62F);

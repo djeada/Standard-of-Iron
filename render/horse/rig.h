@@ -179,7 +179,8 @@ public:
   void render(const DrawContext &ctx, const AnimationInputs &anim,
               const HumanoidAnimationContext &rider_ctx, HorseProfile &profile,
               const MountedAttachmentFrame *shared_mount,
-              const ReinState *shared_reins, ISubmitter &out) const;
+              const ReinState *shared_reins,
+              const HorseMotionSample *shared_motion, ISubmitter &out) const;
 
 protected:
   virtual void drawAttachments(const DrawContext &, const AnimationInputs &,
