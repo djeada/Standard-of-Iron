@@ -409,12 +409,14 @@ void HorseRendererBase::render(const DrawContext &ctx,
                                HorseProfile &profile,
                                const MountedAttachmentFrame *shared_mount,
                                const ReinState *shared_reins,
+                               const HorseMotionSample *shared_motion,
                                ISubmitter &out) const {
   const HorseDimensions &d = profile.dims;
   const HorseVariant &v = profile.variant;
   const HorseGait &g = profile.gait;
   HorseMotionSample const motion =
-      evaluate_horse_motion(profile, anim, rider_ctx);
+      shared_motion ? *shared_motion
+                    : evaluate_horse_motion(profile, anim, rider_ctx);
   float const phase = motion.phase;
   float const bob = motion.bob;
   const bool is_moving = motion.is_moving;
@@ -1000,7 +1002,6 @@ void HorseRendererBase::render(const DrawContext &ctx,
     upper_dir.normalize();
 
     QVector3D knee = shoulder + upper_dir * upper_length;
-    knee.setY(knee.y() + lift_factor * upper_length * 0.32F);
     float const knee_out = d.bodyWidth * (is_rear ? 0.08F : 0.06F);
     knee.setX(knee.x() + lateralSign * knee_out);
 
@@ -1024,7 +1025,6 @@ void HorseRendererBase::render(const DrawContext &ctx,
     lower_dir.normalize();
 
     QVector3D cannon = knee + lower_dir * lower_length;
-    cannon.setY(cannon.y() - lift_factor * lower_length * 0.12F);
 
     float const pastern_bias = is_rear ? -0.30F : 0.08F;
     float const pastern_dyn =
@@ -1037,8 +1037,6 @@ void HorseRendererBase::render(const DrawContext &ctx,
     pastern_dir.normalize();
 
     QVector3D fetlock = cannon + pastern_dir * pastern_length;
-    fetlock.setY(fetlock.y() - lift_factor * pastern_length * 0.25F -
-                 fetlock_compress * pastern_length * 0.15F);
 
     QVector3D hoof_top = fetlock;
     if (is_moving) {
@@ -1051,43 +1049,29 @@ void HorseRendererBase::render(const DrawContext &ctx,
         hoof_lift_amount = lift_curve * lift;
       }
       hoof_top.setY(hoof_top.y() + hoof_lift_amount);
+      fetlock = hoof_top;
     }
 
     float const shoulder_r = d.bodyWidth * (is_rear ? 0.35F : 0.32F);
-    float const upper_r = shoulder_r * (is_rear ? 0.88F : 0.84F);
-    float const knee_r = upper_r * 0.96F;
-    float const cannon_r = knee_r * 0.92F;
+    float const upper_r = shoulder_r * (is_rear ? 0.95F : 0.92F);
+    float const knee_r = upper_r * 0.98F;
+    float const cannon_r = knee_r * 0.96F;
     float const pastern_r = cannon_r * 0.84F;
 
     QVector3D const thigh_color = coatGradient(
         v.coatColor, is_rear ? 0.48F : 0.58F, is_rear ? -0.22F : 0.18F,
         coat_seed_a + lateralSign * 0.07F);
+
+    draw_cylinder(out, horse_ctx.model, shoulder, knee, (shoulder_r + upper_r) * 0.5F,
+                  thigh_color, 1.0F, 6);
+
     QVector3D const shin_color = darken(thigh_color, is_rear ? 0.90F : 0.92F);
 
-    drawRoundedSegment(out, horse_ctx.model, shoulder, knee, shoulder_r,
-                       upper_r, thigh_color, darken(thigh_color, 0.94F), 1.0F,
-                       6);
-
-    out.mesh(getUnitSphere(),
-             Render::Geom::sphereAt(horse_ctx.model, knee, knee_r * 1.08F),
-             darken(thigh_color, 0.90F), nullptr, 1.0F, 6);
-
-    QVector3D const calf_mid = lerp(knee, cannon, 0.40F);
-    float const calf_upper_r = knee_r * 0.98F;
-    float const calf_mid_r = calf_upper_r * (is_rear ? 0.95F : 0.92F);
-    drawRoundedSegment(out, horse_ctx.model, knee, calf_mid, calf_upper_r,
-                       calf_mid_r, shin_color, darken(shin_color, 0.90F), 1.0F,
-                       6);
-    drawRoundedSegment(out, horse_ctx.model, calf_mid, cannon, calf_mid_r,
-                       cannon_r, darken(shin_color, 0.90F),
-                       darken(shin_color, 0.96F), 1.0F, 6);
+    draw_cylinder(out, horse_ctx.model, knee, cannon, (knee_r + cannon_r) * 0.5F,
+                  shin_color, 1.0F, 6);
 
     QVector3D const hoof_joint_color =
         darken(shin_color, is_rear ? 0.92F : 0.94F);
-    out.mesh(getUnitSphere(),
-             Render::Geom::sphereAt(horse_ctx.model, cannon,
-                                    cannon_r * (is_rear ? 1.02F : 0.95F)),
-             hoof_joint_color, nullptr, 1.0F, 6);
 
     float const sock =
         sockChance > 0.78F ? 1.0F : (sockChance > 0.58F ? 0.55F : 0.0F);
@@ -1097,14 +1081,11 @@ void HorseRendererBase::render(const DrawContext &ctx,
     QVector3D const pastern_color =
         lerp(hoof_joint_color, distal_color, t_sock * 0.8F);
 
-    drawRoundedSegment(out, horse_ctx.model, cannon, fetlock, cannon_r * 0.90F,
-                       pastern_r, hoof_joint_color, pastern_color, 1.0F, 6);
+    draw_cylinder(out, horse_ctx.model, cannon, fetlock,
+                  (cannon_r * 0.90F + pastern_r) * 0.5F,
+                  lerp(hoof_joint_color, pastern_color, 0.5F), 1.0F, 6);
 
     QVector3D const fetlock_color = lerp(pastern_color, distal_color, 0.25F);
-    out.mesh(
-        getUnitSphere(),
-        Render::Geom::sphereAt(horse_ctx.model, fetlock, pastern_r * 1.15F),
-        fetlock_color, nullptr, 1.0F, 6);
 
     QVector3D const hoof_color = v.hoof_color;
     float const hoof_width = pastern_r * (is_rear ? 1.55F : 1.45F);

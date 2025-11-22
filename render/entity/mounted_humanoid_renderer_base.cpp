@@ -1,0 +1,117 @@
+#include "mounted_humanoid_renderer_base.h"
+
+#include "../humanoid/humanoid_math.h"
+#include "../humanoid/humanoid_specs.h"
+#include "../palette.h"
+
+#include "../../game/core/component.h"
+#include "../../game/core/entity.h"
+
+#include "mounted_knight_pose.h"
+
+#include <QVector3D>
+#include <algorithm>
+#include <cmath>
+
+namespace Render::GL {
+
+MountedHumanoidRendererBase::MountedHumanoidRendererBase() = default;
+
+auto MountedHumanoidRendererBase::get_scaled_horse_dimensions(
+    uint32_t seed) const -> HorseDimensions {
+  HorseDimensions dims = makeHorseDimensions(seed);
+  scaleHorseDimensions(dims, get_mount_scale());
+  return dims;
+}
+
+auto MountedHumanoidRendererBase::get_cached_horse_profile(
+    uint32_t seed, const HumanoidVariant &v) const -> const HorseProfile & {
+  auto it = m_profile_cache.find(seed);
+  if (it != m_profile_cache.end()) {
+    return it->second;
+  }
+
+  HorseDimensions dims = get_scaled_horse_dimensions(seed);
+  HorseProfile profile =
+      makeHorseProfile(seed, v.palette.leather, v.palette.cloth);
+  profile.dims = dims;
+
+  m_profile_cache[seed] = profile;
+  if (m_profile_cache.size() > MAX_PROFILE_CACHE_SIZE) {
+    m_profile_cache.clear();
+  }
+  return m_profile_cache[seed];
+}
+
+void MountedHumanoidRendererBase::customize_pose(
+    const DrawContext &ctx, const HumanoidAnimationContext &anim_ctx,
+    uint32_t seed, HumanoidPose &pose) const {
+  const AnimationInputs &anim = anim_ctx.inputs;
+
+  uint32_t horse_seed = seed;
+  if (ctx.entity != nullptr) {
+    horse_seed = static_cast<uint32_t>(reinterpret_cast<uintptr_t>(ctx.entity) &
+                                       0xFFFFFFFFU);
+  }
+
+  HorseDimensions dims = get_scaled_horse_dimensions(horse_seed);
+  HorseProfile mount_profile{};
+  mount_profile.dims = dims;
+  MountedAttachmentFrame mount = compute_mount_frame(mount_profile);
+  tuneMountedKnightFrame(dims, mount);
+  HorseMotionSample const motion =
+      evaluate_horse_motion(mount_profile, anim, anim_ctx);
+  apply_mount_vertical_offset(mount, motion.bob);
+
+  m_last_pose = &pose;
+  m_last_mount = mount;
+  m_last_motion = motion;
+
+  ReinState const reins = compute_rein_state(horse_seed, anim_ctx);
+  m_last_rein_state = reins;
+  m_has_last_reins = true;
+
+  MountedPoseController mounted_controller(pose, anim_ctx);
+
+  mounted_controller.mountOnHorse(mount);
+
+  apply_riding_animation(mounted_controller, mount, anim_ctx, pose, dims,
+                         reins);
+
+  applyMountedKnightLowerBody(dims, mount, anim_ctx, pose);
+}
+
+void MountedHumanoidRendererBase::addAttachments(
+    const DrawContext &ctx, const HumanoidVariant &v, const HumanoidPose &pose,
+    const HumanoidAnimationContext &anim_ctx, ISubmitter &out) const {
+  uint32_t horse_seed = 0U;
+  if (ctx.entity != nullptr) {
+    horse_seed = static_cast<uint32_t>(reinterpret_cast<uintptr_t>(ctx.entity) &
+                                       0xFFFFFFFFU);
+  }
+
+  // We need a non-const profile because render() might modify it if motion is not shared
+  // (though in our case motion IS shared if is_current_pose is true)
+  const HorseProfile &profile_const = get_cached_horse_profile(horse_seed, v);
+  HorseProfile &profile = const_cast<HorseProfile &>(profile_const);
+
+  const bool is_current_pose = (m_last_pose == &pose);
+  const MountedAttachmentFrame *mount_ptr =
+      (is_current_pose) ? &m_last_mount : nullptr;
+  const ReinState *rein_ptr =
+      (is_current_pose && m_has_last_reins) ? &m_last_rein_state : nullptr;
+  const HorseMotionSample *motion_ptr =
+      (is_current_pose) ? &m_last_motion : nullptr;
+  const AnimationInputs &anim = anim_ctx.inputs;
+
+  m_horseRenderer.render(ctx, anim, anim_ctx, profile, mount_ptr, rein_ptr,
+                         motion_ptr, out);
+
+  // Reset state
+  m_last_pose = nullptr;
+  m_has_last_reins = false;
+
+  draw_equipment(ctx, v, pose, anim_ctx, out);
+}
+
+} // namespace Render::GL
