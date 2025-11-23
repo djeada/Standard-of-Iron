@@ -20,20 +20,20 @@ using Render::Geom::sphereAt;
 
 namespace {
 
-auto createUnitHemisphereMesh(int latSegments = 12,
-                              int lonSegments = 32) -> Mesh * {
+auto create_unit_hemisphere_mesh(int lat_segments = 12,
+                              int lon_segments = 32) -> Mesh * {
   std::vector<Vertex> vertices;
   std::vector<unsigned int> indices;
-  vertices.reserve((latSegments + 1) * (lonSegments + 1));
+  vertices.reserve((lat_segments + 1) * (lon_segments + 1));
 
-  for (int lat = 0; lat <= latSegments; ++lat) {
-    float const v = static_cast<float>(lat) / static_cast<float>(latSegments);
+  for (int lat = 0; lat <= lat_segments; ++lat) {
+    float const v = static_cast<float>(lat) / static_cast<float>(lat_segments);
     float const phi = v * (std::numbers::pi_v<float> * 0.5F);
     float const z = std::cos(phi);
     float const ring_r = std::sin(phi);
 
-    for (int lon = 0; lon <= lonSegments; ++lon) {
-      float const u = static_cast<float>(lon) / static_cast<float>(lonSegments);
+    for (int lon = 0; lon <= lon_segments; ++lon) {
+      float const u = static_cast<float>(lon) / static_cast<float>(lon_segments);
       float const theta = u * 2.0F * std::numbers::pi_v<float>;
       float const x = ring_r * std::cos(theta);
       float const y = ring_r * std::sin(theta);
@@ -45,9 +45,9 @@ auto createUnitHemisphereMesh(int latSegments = 12,
     }
   }
 
-  int const row = lonSegments + 1;
-  for (int lat = 0; lat < latSegments; ++lat) {
-    for (int lon = 0; lon < lonSegments; ++lon) {
+  int const row = lon_segments + 1;
+  for (int lat = 0; lat < lat_segments; ++lat) {
+    for (int lon = 0; lon < lon_segments; ++lon) {
       int const a = lat * row + lon;
       int const b = a + 1;
       int const c = (lat + 1) * row + lon + 1;
@@ -65,8 +65,8 @@ auto createUnitHemisphereMesh(int latSegments = 12,
   return new Mesh(vertices, indices);
 }
 
-auto getUnitHemisphereMesh() -> Mesh * {
-  static std::unique_ptr<Mesh> mesh(createUnitHemisphereMesh());
+auto get_unit_hemisphere_mesh() -> Mesh * {
+  static std::unique_ptr<Mesh> mesh(create_unit_hemisphere_mesh());
   return mesh.get();
 }
 
@@ -117,7 +117,8 @@ void CarthageShieldRenderer::render(const DrawContext &ctx,
     m.translate(shield_center);
     m.rotate(k_shield_yaw_degrees, 0.0F, 1.0F, 0.0F);
     m.scale(shield_radius, shield_radius, dome_depth);
-    submitter.mesh(getUnitHemisphereMesh(), m, shield_color, nullptr, 1.0F);
+    // Material ID: 4 = shield
+    submitter.mesh(get_unit_hemisphere_mesh(), m, shield_color, nullptr, 1.0F, 4);
   }
 
   constexpr int rim_segments = 24;
@@ -138,7 +139,7 @@ void CarthageShieldRenderer::render(const DrawContext &ctx,
 
     submitter.mesh(getUnitCylinder(),
                    cylinderBetween(ctx.model, p0, p1, 0.012F), trim_color,
-                   nullptr, 1.0F);
+                   nullptr, 1.0F, 4);
   }
 
   QVector3D const emblem_plane = shield_center + n * (dome_depth * 0.92F);
@@ -149,7 +150,7 @@ void CarthageShieldRenderer::render(const DrawContext &ctx,
     medallion.scale(shield_radius * 0.34F, shield_radius * 0.34F,
                     shield_radius * 0.08F);
     submitter.mesh(getUnitCylinder(), medallion, trim_color * 0.95F, nullptr,
-                   1.0F);
+                   1.0F, 4);
   }
 
   QVector3D const emblem_body_top =
@@ -161,7 +162,7 @@ void CarthageShieldRenderer::render(const DrawContext &ctx,
   submitter.mesh(getUnitCylinder(),
                  cylinderBetween(ctx.model, emblem_body_bot, emblem_body_top,
                                  emblem_radius),
-                 metal_color, nullptr, 1.0F);
+                 metal_color, nullptr, 1.0F, 4);
 
   QVector3D const emblem_arm_height =
       emblem_plane + axis_y * (shield_radius * 0.02F);
@@ -173,26 +174,26 @@ void CarthageShieldRenderer::render(const DrawContext &ctx,
   submitter.mesh(getUnitCylinder(),
                  cylinderBetween(ctx.model, emblem_arm_left, emblem_arm_right,
                                  emblem_radius * 0.75F),
-                 metal_color, nullptr, 1.0F);
+                 metal_color, nullptr, 1.0F, 4);
 
   submitter.mesh(getUnitSphere(),
                  sphereAt(ctx.model,
                           emblem_body_top + axis_y * (shield_radius * 0.05F),
                           emblem_radius * 1.4F),
-                 metal_color, nullptr, 1.0F);
+                 metal_color, nullptr, 1.0F, 4);
 
   submitter.mesh(getUnitCone(),
                  coneFromTo(ctx.model,
                             emblem_body_bot - axis_y * (shield_radius * 0.04F),
                             emblem_plane - axis_y * (shield_radius * 0.22F),
                             emblem_radius * 1.6F),
-                 metal_color, nullptr, 1.0F);
+                 metal_color, nullptr, 1.0F, 4);
 
   QVector3D const grip_a = shield_center - axis_x * 0.035F - n * 0.030F;
   QVector3D const grip_b = shield_center + axis_x * 0.035F - n * 0.030F;
   submitter.mesh(getUnitCylinder(),
                  cylinderBetween(ctx.model, grip_a, grip_b, 0.010F),
-                 palette.leather, nullptr, 1.0F);
+                 palette.leather, nullptr, 1.0F, 4);
 }
 
 } // namespace Render::GL

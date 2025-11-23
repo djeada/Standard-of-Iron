@@ -20,6 +20,7 @@ uniform sampler2D u_texture;
 uniform vec3 u_color;
 uniform bool u_useTexture;
 uniform float u_alpha;
+uniform int u_materialId;
 
 out vec4 FragColor;
 
@@ -216,8 +217,20 @@ void main() {
     baseColor *= texture(u_texture, v_texCoord).rgb;
   }
 
-  bool helmetRegion = (v_armorLayer < 0.5);
-  bool torsoRegion = (v_armorLayer >= 0.5 && v_armorLayer < 1.5);
+  // Material ID: 0=body/skin, 1=armor, 2=helmet, 3=weapon, 4=shield
+  bool isArmor = (u_materialId == 1);
+  bool isHelmet = (u_materialId == 2);
+  bool isWeapon = (u_materialId == 3);
+  bool isShield = (u_materialId == 4);
+
+  // Fallback to old layer system for non-specific meshes
+  if (u_materialId == 0) {
+    isHelmet = (v_armorLayer < 0.5);
+    isArmor = (v_armorLayer >= 0.5 && v_armorLayer < 1.5);
+  }
+
+  bool helmetRegion = isHelmet;
+  bool torsoRegion = isArmor || (u_materialId == 0 && v_armorLayer >= 0.5 && v_armorLayer < 1.5);
 
   vec3 Nw = normalize(v_worldNormal);
   vec3 Tw = normalize(v_tangent);
