@@ -19,6 +19,7 @@ auto makeMountedKnightConfig() -> MountedKnightRendererConfig {
   config.shield_equipment_id = "shield_kingdom";
   config.helmet_equipment_id = "kingdom_heavy";
   config.armor_equipment_id = "kingdom_heavy_armor";
+  config.helmet_offset_moving = 0.03F;
   config.horse_attachments.emplace_back(
       std::make_shared<LightCavalrySaddleRenderer>());
   config.horse_attachments.emplace_back(std::make_shared<ReinsRenderer>());
