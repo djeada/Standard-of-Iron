@@ -19,6 +19,7 @@ auto make_horse_archer_config() -> HorseArcherRendererConfig {
   config.quiver_equipment_id = "quiver";
   config.helmet_equipment_id = "roman_light";
   config.armor_equipment_id = "roman_light_armor";
+  config.helmet_offset_moving = 0.04F;
   config.fletching_color = {0.85F, 0.40F, 0.40F};
   config.horse_attachments.emplace_back(
       std::make_shared<RomanSaddleRenderer>());
