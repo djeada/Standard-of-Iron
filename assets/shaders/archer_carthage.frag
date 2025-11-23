@@ -16,6 +16,7 @@ uniform bool u_useTexture;
 uniform float u_alpha;
 uniform float u_time;
 uniform float u_rainIntensity;
+uniform int u_materialId;
 
 out vec4 FragColor;
 
@@ -506,8 +507,16 @@ void main() {
 
   bool preferLeather = (paletteLeather && blueRatio < 0.42) ||
                        (likelyLeather && !looksWood && blueRatio < 0.4);
-  bool isHelmetRegion = v_bodyHeight > 0.92;
-  bool isFaceRegion = v_bodyHeight > 0.45 && v_bodyHeight < 0.92;
+  
+  // Material ID: 0=body/skin, 1=armor, 2=helmet, 3=weapon, 4=shield
+  bool isArmor = (u_materialId == 1);
+  bool isHelmet = (u_materialId == 2);
+  bool isWeapon = (u_materialId == 3);
+  bool isShield = (u_materialId == 4);
+  
+  // Use mask IDs when available, fallback to height-based detection
+  bool isHelmetRegion = isHelmet || (u_materialId == 0 && v_bodyHeight > 0.92);
+  bool isFaceRegion = (u_materialId == 0 && v_bodyHeight > 0.45 && v_bodyHeight < 0.92);
 
   vec3 Nw = normalize(v_worldNormal);
   vec3 Tw = normalize(v_tangent);
