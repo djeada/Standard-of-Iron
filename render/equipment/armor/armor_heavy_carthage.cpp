@@ -66,20 +66,22 @@ void ArmorHeavyCarthageRenderer::render(const DrawContext &ctx,
   QVector3D chainmail_color = QVector3D(0.50F, 0.52F, 0.58F);
 
   auto drawTorso = [&](const QVector3D &a, const QVector3D &b, float radius,
-                       const QVector3D &color, float scaleX, float baseZ) {
+                       const QVector3D &color, float scaleX, float baseZ,
+                       int materialId = 1) {
     QMatrix4x4 m = cylinderBetween(ctx.model, a, b, radius);
     m.scale(scaleX, 1.0F, depth_scale_for(baseZ));
-    submitter.mesh(getUnitTorso(), m, color, nullptr, 1.0F);
+    submitter.mesh(getUnitTorso(), m, color, nullptr, 1.0F, materialId);
   };
 
+  // Material ID: 1 = armor (chainmail and bronze plates)
   drawTorso(top, chainmail_bottom, torso_r * 0.90F, chainmail_color, 1.00F,
-            0.88F);
+            0.88F, 1);
 
   drawTorso(top + forward * (torso_r * 0.02F),
             bottom + forward * (torso_r * 0.02F), torso_r * 0.98F, bronze_color,
-            1.05F, 0.84F);
+            1.05F, 0.84F, 1);
 
-  drawTorso(top, bottom, torso_r * 0.90F, bronze_core, 0.98F, 0.80F);
+  drawTorso(top, bottom, torso_r * 0.90F, bronze_core, 0.98F, 0.80F, 1);
 }
 
 } // namespace Render::GL
