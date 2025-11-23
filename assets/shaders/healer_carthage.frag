@@ -53,7 +53,7 @@ void main() {
   vec2 uv = v_worldPos.xz * 4.5;
   float avgColor = (color.r + color.g + color.b) / 3.0;
 
-  // Material ID: 0=body/skin, 1=armor, 2=helmet, 3=weapon, 4=accessory
+  // Material ID: 0=body/skin, 1=armor, 2=helmet, 3=weapon, 4=shield
   bool isArmor = (u_materialId == 1);
   bool isHelmet = (u_materialId == 2);
   bool isWeapon = (u_materialId == 3);
