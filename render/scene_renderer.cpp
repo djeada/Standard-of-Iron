@@ -290,12 +290,16 @@ void Renderer::enqueueSelectionRing(Engine::Core::Entity *,
   float ring_size = 0.5F;
   float ring_offset = 0.05F;
   float ground_offset = 0.0F;
+  float scale_y = 1.0F;
 
   if (unit_comp != nullptr) {
     auto &config = Game::Units::TroopConfig::instance();
     ring_size = config.getSelectionRingSize(unit_comp->spawn_type);
     ring_offset += config.getSelectionRingYOffset(unit_comp->spawn_type);
     ground_offset = config.getSelectionRingGroundOffset(unit_comp->spawn_type);
+  }
+  if (transform != nullptr) {
+    scale_y = transform->scale.y;
   }
 
   QVector3D pos(transform->position.x, transform->position.y,
@@ -305,7 +309,7 @@ void Renderer::enqueueSelectionRing(Engine::Core::Entity *,
   if (terrain_service.isInitialized()) {
     terrain_y = terrain_service.getTerrainHeight(pos.x(), pos.z());
   } else {
-    terrain_y -= ground_offset * transform->scale.y;
+    terrain_y -= ground_offset * scale_y;
   }
   pos.setY(terrain_y);
 

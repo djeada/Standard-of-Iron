@@ -158,7 +158,7 @@ void TroopCatalog::register_defaults() {
 
   horse_swordsman.visuals.render_scale = 0.8F;
   horse_swordsman.visuals.selection_ring_size = 2.0F;
-  horse_swordsman.visuals.selection_ring_ground_offset = 1.35F;
+  horse_swordsman.visuals.selection_ring_ground_offset = 0.0F;
   horse_swordsman.visuals.selection_ring_y_offset = 0.0F;
   horse_swordsman.visuals.renderer_id = "troops/kingdom/horse_swordsman";
 
@@ -188,7 +188,7 @@ void TroopCatalog::register_defaults() {
 
   horse_archer.visuals.render_scale = 0.8F;
   horse_archer.visuals.selection_ring_size = 2.0F;
-  horse_archer.visuals.selection_ring_ground_offset = 1.35F;
+  horse_archer.visuals.selection_ring_ground_offset = 0.0F;
   horse_archer.visuals.selection_ring_y_offset = 0.0F;
   horse_archer.visuals.renderer_id = "troops/kingdom/horse_archer";
 
@@ -254,7 +254,7 @@ void TroopCatalog::register_defaults() {
 
   horse_spearman.visuals.render_scale = 0.8F;
   horse_spearman.visuals.selection_ring_size = 2.0F;
-  horse_spearman.visuals.selection_ring_ground_offset = 1.35F;
+  horse_spearman.visuals.selection_ring_ground_offset = 0.0F;
   horse_spearman.visuals.selection_ring_y_offset = 0.0F;
   horse_spearman.visuals.renderer_id = "troops/kingdom/horse_spearman";
 

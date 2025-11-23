@@ -136,7 +136,6 @@
         "render_scale": 0.8,
         "selection_ring_size": 2.0,
         "selection_ring_y_offset": 0.0,
-        "selection_ring_ground_offset": 1.35,
         "renderer_id": "troops/kingdom/horse_swordsman"
       },
       "formation": {
