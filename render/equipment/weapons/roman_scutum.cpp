@@ -24,8 +24,8 @@ void RomanScutumRenderer::render(const DrawContext &ctx,
                                  ISubmitter &submitter) {
   (void)anim;
 
-  const AttachmentFrame &handL = frames.hand_l;
-  if (handL.radius <= 0.0F) {
+  const AttachmentFrame &hand_l = frames.hand_l;
+  if (hand_l.radius <= 0.0F) {
     return;
   }
 
@@ -43,10 +43,10 @@ void RomanScutumRenderer::render(const DrawContext &ctx,
   constexpr float rim_thickness = 0.015F;
   constexpr float boss_radius = 0.12F;
 
-  QVector3D const shield_center = handL.origin + handL.forward * 0.15F;
-  QVector3D const shield_up = handL.up;
-  QVector3D const shield_right = handL.right;
-  QVector3D const shield_forward = handL.forward;
+  QVector3D const shield_center = hand_l.origin + hand_l.forward * 0.15F;
+  QVector3D const shield_up = hand_l.up;
+  QVector3D const shield_right = hand_l.right;
+  QVector3D const shield_forward = hand_l.forward;
 
   constexpr int vertical_segments = 12;
   constexpr int horizontal_segments = 16;
@@ -74,7 +74,7 @@ void RomanScutumRenderer::render(const DrawContext &ctx,
       m.scale(0.03F, 0.05F, 0.01F);
 
       QVector3D segment_color = shield_red * (1.0F + (v % 2) * 0.05F - 0.025F);
-      submitter.mesh(getUnitSphere(), m, segment_color, nullptr, 1.0F);
+      submitter.mesh(getUnitSphere(), m, segment_color, nullptr, 1.0F, 4);
     }
   }
 
@@ -90,7 +90,7 @@ void RomanScutumRenderer::render(const DrawContext &ctx,
     QMatrix4x4 m = ctx.model;
     m.translate(ridge_pos);
     m.scale(0.025F, 0.06F, 0.015F);
-    submitter.mesh(getUnitSphere(), m, bronze_color * 0.9F, nullptr, 1.0F);
+    submitter.mesh(getUnitSphere(), m, bronze_color * 0.9F, nullptr, 1.0F, 4);
   }
 
   QVector3D const boss_center =
@@ -106,12 +106,12 @@ void RomanScutumRenderer::render(const DrawContext &ctx,
     QMatrix4x4 m = ctx.model;
     m.translate(ring_pos);
     m.scale(0.018F);
-    submitter.mesh(getUnitSphere(), m, bronze_color, nullptr, 1.0F);
+    submitter.mesh(getUnitSphere(), m, bronze_color, nullptr, 1.0F, 4);
   }
 
   submitter.mesh(getUnitSphere(),
                  sphereAt(ctx.model, boss_center, boss_radius * 0.8F),
-                 bronze_color * 1.1F, nullptr, 1.0F);
+                 bronze_color * 1.1F, nullptr, 1.0F, 4);
 
   float const y_pos = shield_height * 0.48F;
   for (int i = 0; i < 10; ++i) {
@@ -125,7 +125,7 @@ void RomanScutumRenderer::render(const DrawContext &ctx,
     QMatrix4x4 m = ctx.model;
     m.translate(rim_pos);
     m.scale(rim_thickness);
-    submitter.mesh(getUnitSphere(), m, bronze_color * 0.95F, nullptr, 1.0F);
+    submitter.mesh(getUnitSphere(), m, bronze_color * 0.95F, nullptr, 1.0F, 4);
   }
 
   float const y_pos_bot = -shield_height * 0.48F;
@@ -140,7 +140,7 @@ void RomanScutumRenderer::render(const DrawContext &ctx,
     QMatrix4x4 m = ctx.model;
     m.translate(rim_pos);
     m.scale(rim_thickness);
-    submitter.mesh(getUnitSphere(), m, bronze_color * 0.95F, nullptr, 1.0F);
+    submitter.mesh(getUnitSphere(), m, bronze_color * 0.95F, nullptr, 1.0F, 4);
   }
 
   for (int side = 0; side < 2; ++side) {
@@ -158,7 +158,7 @@ void RomanScutumRenderer::render(const DrawContext &ctx,
       QMatrix4x4 m = ctx.model;
       m.translate(rim_pos);
       m.scale(rim_thickness);
-      submitter.mesh(getUnitSphere(), m, bronze_color * 0.95F, nullptr, 1.0F);
+      submitter.mesh(getUnitSphere(), m, bronze_color * 0.95F, nullptr, 1.0F, 4);
     }
   }
 
@@ -173,7 +173,7 @@ void RomanScutumRenderer::render(const DrawContext &ctx,
     QMatrix4x4 m = ctx.model;
     m.translate(rivet_pos);
     m.scale(0.012F);
-    submitter.mesh(getUnitSphere(), m, bronze_color * 1.15F, nullptr, 1.0F);
+    submitter.mesh(getUnitSphere(), m, bronze_color * 1.15F, nullptr, 1.0F, 4);
   }
 }
 
