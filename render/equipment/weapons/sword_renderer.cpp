@@ -190,7 +190,7 @@ void SwordRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
   pommel_mat.translate(pommel);
   pommel_mat.scale(m_config.pommel_radius);
   submitter.mesh(getUnitSphere(), pommel_mat, m_config.metal_color, nullptr,
-                 1.0F);
+                 1.0F, m_config.materialId);
 
   if (is_attacking && attack_phase >= 0.32F && attack_phase < 0.56F) {
     float const t = (attack_phase - 0.32F) / 0.24F;
@@ -199,7 +199,7 @@ void SwordRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
     QVector3D const trail_end = blade_base - sword_dir * (0.28F + 0.15F * t);
     submitter.mesh(getUnitCone(),
                    coneFromTo(ctx.model, trail_end, trail_start, base_w * 0.9F),
-                   m_config.metal_color * 0.9F, nullptr, alpha);
+                   m_config.metal_color * 0.9F, nullptr, alpha, m_config.materialId);
   }
 }
 
