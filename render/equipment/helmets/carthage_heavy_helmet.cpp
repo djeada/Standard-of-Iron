@@ -69,15 +69,15 @@ void CarthageHeavyHelmetRenderer::render_bowl(const DrawContext &ctx,
     return p + head.up * helmet_y_offset;
   };
 
-  QVector3D c0 = head_point(QVector3D(0.0f, 1.47f, 0.0f));
-  QMatrix4x4 m0 = ctx.model;
-  m0.translate(c0);
-  m0.scale(R * 1.12f, R * 0.68f, R * 1.08f);
+  QVector3D bowl_center = head_point(QVector3D(0.0f, 1.47f, 0.0f));
+  QMatrix4x4 bowl = ctx.model;
+  bowl.translate(bowl_center);
+  bowl.scale(R * 1.12f, R * 0.68f, R * 1.08f);
 
   QVector3D luminous_bronze =
       mixColor(m_config.bronze_color, m_config.glow_color, 0.35F);
   // Material ID: 2 = helmet
-  submitter.mesh(getUnitSphere(), m0, luminous_bronze, nullptr, 0.3f, 2);
+  submitter.mesh(getUnitSphere(), bowl, luminous_bronze, nullptr, 0.3f, 2);
 
   QVector3D rim_center = head_point(QVector3D(0.0f, 1.17f, 0.0f));
   QMatrix4x4 rim = ctx.model;
@@ -108,18 +108,18 @@ void CarthageHeavyHelmetRenderer::render_cheek_guards(
   QVector3D left_cheek = head_point(QVector3D(-0.58f, 0.73f, 0.42f));
   QVector3D right_cheek = head_point(QVector3D(0.58f, 0.73f, 0.42f));
 
-  QMatrix4x4 m_left = ctx.model;
-  m_left.translate(left_cheek);
-  m_left.scale(R * 0.32f, R * 0.48f, R * 0.18f);
-  m_left.rotate(-6.0f, QVector3D(0.0f, 0.0f, 1.0f));
+  QMatrix4x4 left_guard = ctx.model;
+  left_guard.translate(left_cheek);
+  left_guard.scale(R * 0.32f, R * 0.48f, R * 0.18f);
+  left_guard.rotate(-6.0f, QVector3D(0.0f, 0.0f, 1.0f));
 
-  QMatrix4x4 m_right = ctx.model;
-  m_right.translate(right_cheek);
-  m_right.scale(R * 0.32f, R * 0.48f, R * 0.18f);
-  m_right.rotate(6.0f, QVector3D(0.0f, 0.0f, 1.0f));
+  QMatrix4x4 right_guard = ctx.model;
+  right_guard.translate(right_cheek);
+  right_guard.scale(R * 0.32f, R * 0.48f, R * 0.18f);
+  right_guard.rotate(6.0f, QVector3D(0.0f, 0.0f, 1.0f));
 
-  submitter.mesh(getUnitSphere(), m_left, m_config.bronze_color, nullptr, 0.6f, 2);
-  submitter.mesh(getUnitSphere(), m_right, m_config.bronze_color, nullptr,
+  submitter.mesh(getUnitSphere(), left_guard, m_config.bronze_color, nullptr, 0.6f, 2);
+  submitter.mesh(getUnitSphere(), right_guard, m_config.bronze_color, nullptr,
                  0.6f, 2);
 }
 
