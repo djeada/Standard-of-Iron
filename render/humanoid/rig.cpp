@@ -86,6 +86,15 @@ void HumanoidRendererBase::addAttachments(const DrawContext &,
                                           const HumanoidAnimationContext &,
                                           ISubmitter &) const {}
 
+auto HumanoidRendererBase::resolve_entity_ground_offset(
+    const DrawContext &, Engine::Core::UnitComponent *unit_comp,
+    Engine::Core::TransformComponent *transform_comp) const -> float {
+  (void)unit_comp;
+  (void)transform_comp;
+
+  return 0.0F;
+}
+
 auto HumanoidRendererBase::resolveTeamTint(const DrawContext &ctx)
     -> QVector3D {
   QVector3D tunic(0.8F, 0.9F, 1.0F);
@@ -975,15 +984,8 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
         ctx.entity->getComponent<Engine::Core::TransformComponent>();
   }
 
-  float entity_ground_offset = 0.0F;
-  if (unit_comp != nullptr) {
-    entity_ground_offset =
-        Game::Units::TroopConfig::instance().getSelectionRingGroundOffset(
-            unit_comp->spawn_type);
-    if (transform_comp != nullptr) {
-      entity_ground_offset *= transform_comp->scale.y;
-    }
-  }
+  float entity_ground_offset =
+      resolve_entity_ground_offset(ctx, unit_comp, transform_comp);
 
   uint32_t seed = 0U;
   if (unit_comp != nullptr) {
