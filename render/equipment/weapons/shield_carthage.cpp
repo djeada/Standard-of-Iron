@@ -117,7 +117,8 @@ void CarthageShieldRenderer::render(const DrawContext &ctx,
     m.translate(shield_center);
     m.rotate(k_shield_yaw_degrees, 0.0F, 1.0F, 0.0F);
     m.scale(shield_radius, shield_radius, dome_depth);
-    submitter.mesh(getUnitHemisphereMesh(), m, shield_color, nullptr, 1.0F);
+    // Material ID: 4 = shield
+    submitter.mesh(getUnitHemisphereMesh(), m, shield_color, nullptr, 1.0F, 4);
   }
 
   constexpr int rim_segments = 24;
@@ -138,7 +139,7 @@ void CarthageShieldRenderer::render(const DrawContext &ctx,
 
     submitter.mesh(getUnitCylinder(),
                    cylinderBetween(ctx.model, p0, p1, 0.012F), trim_color,
-                   nullptr, 1.0F);
+                   nullptr, 1.0F, 4);
   }
 
   QVector3D const emblem_plane = shield_center + n * (dome_depth * 0.92F);
@@ -149,7 +150,7 @@ void CarthageShieldRenderer::render(const DrawContext &ctx,
     medallion.scale(shield_radius * 0.34F, shield_radius * 0.34F,
                     shield_radius * 0.08F);
     submitter.mesh(getUnitCylinder(), medallion, trim_color * 0.95F, nullptr,
-                   1.0F);
+                   1.0F, 4);
   }
 
   QVector3D const emblem_body_top =
@@ -161,7 +162,7 @@ void CarthageShieldRenderer::render(const DrawContext &ctx,
   submitter.mesh(getUnitCylinder(),
                  cylinderBetween(ctx.model, emblem_body_bot, emblem_body_top,
                                  emblem_radius),
-                 metal_color, nullptr, 1.0F);
+                 metal_color, nullptr, 1.0F, 4);
 
   QVector3D const emblem_arm_height =
       emblem_plane + axis_y * (shield_radius * 0.02F);
@@ -173,26 +174,26 @@ void CarthageShieldRenderer::render(const DrawContext &ctx,
   submitter.mesh(getUnitCylinder(),
                  cylinderBetween(ctx.model, emblem_arm_left, emblem_arm_right,
                                  emblem_radius * 0.75F),
-                 metal_color, nullptr, 1.0F);
+                 metal_color, nullptr, 1.0F, 4);
 
   submitter.mesh(getUnitSphere(),
                  sphereAt(ctx.model,
                           emblem_body_top + axis_y * (shield_radius * 0.05F),
                           emblem_radius * 1.4F),
-                 metal_color, nullptr, 1.0F);
+                 metal_color, nullptr, 1.0F, 4);
 
   submitter.mesh(getUnitCone(),
                  coneFromTo(ctx.model,
                             emblem_body_bot - axis_y * (shield_radius * 0.04F),
                             emblem_plane - axis_y * (shield_radius * 0.22F),
                             emblem_radius * 1.6F),
-                 metal_color, nullptr, 1.0F);
+                 metal_color, nullptr, 1.0F, 4);
 
   QVector3D const grip_a = shield_center - axis_x * 0.035F - n * 0.030F;
   QVector3D const grip_b = shield_center + axis_x * 0.035F - n * 0.030F;
   submitter.mesh(getUnitCylinder(),
                  cylinderBetween(ctx.model, grip_a, grip_b, 0.010F),
-                 palette.leather, nullptr, 1.0F);
+                 palette.leather, nullptr, 1.0F, 4);
 }
 
 } // namespace Render::GL
