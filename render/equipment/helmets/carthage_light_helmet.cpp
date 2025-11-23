@@ -32,7 +32,7 @@ static inline void submit_disk(ISubmitter &submitter, const DrawContext &ctx,
                                const QVector3D &center,
                                const QVector3D &normal_dir, float radius,
                                float thickness, const QVector3D &color,
-                               float roughness) {
+                               float roughness, int materialId = 2) {
   QVector3D n = normal_dir;
   if (n.lengthSquared() < 1e-5f) {
     n = QVector3D(0, 1, 0);
@@ -40,8 +40,9 @@ static inline void submit_disk(ISubmitter &submitter, const DrawContext &ctx,
   n.normalize();
   QVector3D a = center - 0.5f * thickness * n;
   QVector3D b = center + 0.5f * thickness * n;
+  // Material ID: 2 = helmet
   submitter.mesh(getUnitCylinder(), cylinderBetween(ctx.model, a, b, radius),
-                 color, nullptr, roughness);
+                 color, nullptr, roughness, materialId);
 }
 
 static inline void submit_spike(ISubmitter &submitter, const DrawContext &ctx,
@@ -296,7 +297,7 @@ void CarthageLightHelmetRenderer::render_crest(const DrawContext &ctx,
   QVector3D right = headPoint(QVector3D(0.95f, 1.02f, 0.02f));
   submitter.mesh(getUnitCylinder(),
                  cylinderBetween(ctx.model, left, right, R * 0.12f),
-                 m_config.bronze_color * 1.12f, nullptr, 0.96f);
+                 m_config.bronze_color * 1.12f, nullptr, 0.96f, 2);
 
   QVector3D crest_color(0.85f, 0.15f, 0.18f);
   int strands = (m_config.detail_level >= 2) ? 24 : 14;
@@ -313,7 +314,7 @@ void CarthageLightHelmetRenderer::render_crest(const DrawContext &ctx,
     QVector3D col = crest_color * (0.9f + 0.18f * ((i % 2) ? 1.0f : 0.0f));
     submitter.mesh(getUnitCylinder(),
                    cylinderBetween(ctx.model, base, tip, R * 0.04f), col,
-                   nullptr, 0.62f);
+                   nullptr, 0.62f, 2);
   }
 }
 
