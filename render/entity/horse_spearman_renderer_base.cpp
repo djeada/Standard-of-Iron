@@ -88,7 +88,6 @@ void HorseSpearmanRendererBase::apply_riding_animation(
       mounted_controller.ridingCharging(mount, 1.0F);
       mounted_controller.holdSpearMounted(mount, SpearGrip::COUCHED);
 
-      pose.head_pos -= mount.seat_forward * 0.04F;
       pose.neck_base -= mount.seat_forward * 0.03F;
     } else {
       float const attack_phase =
@@ -156,7 +155,18 @@ void HorseSpearmanRendererBase::draw_helmet(const DrawContext &ctx,
       registry.get(EquipmentCategory::Helmet, m_config.helmet_equipment_id);
   if (helmet) {
     HumanoidAnimationContext anim_ctx{};
-    helmet->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
+    BodyFrames frames = pose.body_frames;
+    if (ctx.entity != nullptr) {
+      auto *move = ctx.entity->getComponent<Engine::Core::MovementComponent>();
+      if (move != nullptr) {
+        float speed_sq = move->vx * move->vx + move->vz * move->vz;
+        if (speed_sq > 0.0001F && m_config.helmet_offset_moving > 0.0F) {
+          frames.head.origin +=
+              frames.head.forward * m_config.helmet_offset_moving;
+        }
+      }
+    }
+    helmet->render(ctx, frames, v.palette, anim_ctx, out);
   }
 }
 

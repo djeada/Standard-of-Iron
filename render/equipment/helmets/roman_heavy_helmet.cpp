@@ -7,6 +7,7 @@
 #include "../../submitter.h"
 #include <QMatrix4x4>
 #include <QVector3D>
+#include <cmath>
 
 namespace Render::GL {
 
@@ -55,7 +56,7 @@ void RomanHeavyHelmetRenderer::render(const DrawContext &ctx,
                                       ISubmitter &submitter) {
   (void)anim;
 
-  const AttachmentFrame &head = frames.head;
+  AttachmentFrame head = frames.head;
   float head_r = head.radius;
   if (head_r <= 0.0f) {
     return;
