@@ -12,6 +12,7 @@ uniform float u_alpha;
 uniform vec3 u_lightDir; // Sun direction
 uniform vec3 u_lightColor;
 uniform vec3 u_ambientColor;
+uniform int u_materialId;
 
 out vec4 FragColor;
 
