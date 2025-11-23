@@ -21,6 +21,7 @@ struct MountedKnightRendererConfig {
   float mount_scale = 0.75F;
   bool has_sword = true;
   bool has_cavalry_shield = true;
+  float helmet_offset_moving = 0.0F;
   std::vector<std::shared_ptr<IHorseEquipmentRenderer>> horse_attachments;
 };
 

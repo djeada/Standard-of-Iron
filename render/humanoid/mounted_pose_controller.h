@@ -3,6 +3,7 @@
 #include "../horse/rig.h"
 #include "rig.h"
 #include <QVector3D>
+#include <string_view>
 
 namespace Render::GL {
 
@@ -75,6 +76,9 @@ public:
   void applyPose(const MountedAttachmentFrame &mount,
                  const MountedRiderPoseRequest &request);
 
+  void finalizeHeadSync(const MountedAttachmentFrame &mount,
+                        std::string_view debug_label = "final_head_sync");
+
 private:
   HumanoidPose &m_pose;
   const HumanoidAnimationContext &m_anim_ctx;
@@ -119,9 +123,15 @@ private:
                           const HorseDimensions &dims);
   void applyTorsoSculpt(const MountedAttachmentFrame &mount, float compression,
                         float twist, float shoulderDip);
+  void updateHeadHierarchy(const MountedAttachmentFrame &mount,
+                           float extra_forward_tilt, float extra_side_tilt,
+                           std::string_view debug_label = "head_sync");
   void holdReinsImpl(const MountedAttachmentFrame &mount, float left_slack,
                      float right_slack, float left_tension, float right_tension,
                      bool apply_left, bool apply_right);
+
+  void applyFixedHeadFrame(const MountedAttachmentFrame &mount,
+                           std::string_view debug_label);
 };
 
 } // namespace Render::GL
