@@ -12,6 +12,7 @@ uniform vec3 u_lightDir;
 uniform vec3 u_lightColor;
 uniform vec3 u_ambientColor;
 uniform float u_rustAmount; // 0.0 = pristine, 1.0 = heavily rusted
+uniform int u_materialId;
 
 out vec4 FragColor;
 
