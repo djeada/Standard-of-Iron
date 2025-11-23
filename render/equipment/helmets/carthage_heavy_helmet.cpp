@@ -76,13 +76,14 @@ void CarthageHeavyHelmetRenderer::render_bowl(const DrawContext &ctx,
 
   QVector3D luminousBronze =
       mixColor(m_config.bronze_color, m_config.glow_color, 0.35F);
-  submitter.mesh(getUnitSphere(), m0, luminousBronze, nullptr, 0.3f);
+  // Material ID: 2 = helmet
+  submitter.mesh(getUnitSphere(), m0, luminousBronze, nullptr, 0.3f, 2);
 
   QVector3D rimCenter = headPoint(QVector3D(0.0f, 1.17f, 0.0f));
   QMatrix4x4 rim = ctx.model;
   rim.translate(rimCenter);
   rim.scale(R * 1.28f, R * 0.16f, R * 1.25f);
-  submitter.mesh(getUnitSphere(), rim, m_config.glow_color, nullptr, 0.16f);
+  submitter.mesh(getUnitSphere(), rim, m_config.glow_color, nullptr, 0.16f, 2);
 }
 
 void CarthageHeavyHelmetRenderer::render_cheek_guards(
@@ -117,9 +118,9 @@ void CarthageHeavyHelmetRenderer::render_cheek_guards(
   m_right.scale(R * 0.32f, R * 0.48f, R * 0.18f);
   m_right.rotate(6.0f, QVector3D(0.0f, 0.0f, 1.0f));
 
-  submitter.mesh(getUnitSphere(), m_left, m_config.bronze_color, nullptr, 0.6f);
+  submitter.mesh(getUnitSphere(), m_left, m_config.bronze_color, nullptr, 0.6f, 2);
   submitter.mesh(getUnitSphere(), m_right, m_config.bronze_color, nullptr,
-                 0.6f);
+                 0.6f, 2);
 }
 
 void CarthageHeavyHelmetRenderer::render_face_plate(const DrawContext &ctx,
@@ -147,13 +148,13 @@ void CarthageHeavyHelmetRenderer::render_face_plate(const DrawContext &ctx,
       cylinderBetween(ctx.model, chin, brow, std::max(0.10f, R * 0.26f));
   QVector3D plateColor =
       mixColor(m_config.bronze_color, m_config.glow_color, 0.25F);
-  submitter.mesh(getUnitCylinder(), mask, plateColor, nullptr, 0.45f);
+  submitter.mesh(getUnitCylinder(), mask, plateColor, nullptr, 0.45f, 2);
 
   QVector3D noseTop = headPoint(QVector3D(0.0f, 1.13f, 0.70f));
   QVector3D noseBottom = headPoint(QVector3D(0.0f, 0.53f, 0.46f));
   QMatrix4x4 nose = cylinderBetween(ctx.model, noseBottom, noseTop,
                                     std::max(0.05f, R * 0.12f));
-  submitter.mesh(getUnitCylinder(), nose, m_config.glow_color, nullptr, 0.65f);
+  submitter.mesh(getUnitCylinder(), nose, m_config.glow_color, nullptr, 0.65f, 2);
 
   render_brow_arch(ctx, head, submitter);
 }
@@ -183,7 +184,7 @@ void CarthageHeavyHelmetRenderer::render_neck_guard(const DrawContext &ctx,
   guard.scale(R * 1.25f, R * 0.52f, R * 0.58f);
   QVector3D guardColor =
       mixColor(m_config.bronze_color, m_config.glow_color, 0.15F);
-  submitter.mesh(getUnitSphere(), guard, guardColor, nullptr, 0.28f);
+  submitter.mesh(getUnitSphere(), guard, guardColor, nullptr, 0.28f, 2);
 }
 
 void CarthageHeavyHelmetRenderer::render_brow_arch(const DrawContext &ctx,
@@ -211,13 +212,13 @@ void CarthageHeavyHelmetRenderer::render_brow_arch(const DrawContext &ctx,
   QMatrix4x4 arch = cylinderBetween(ctx.model, left, right, archRadius);
   QVector3D archColor =
       mixColor(m_config.glow_color, m_config.bronze_color, 0.5F);
-  submitter.mesh(getUnitCylinder(), arch, archColor, nullptr, 0.52f);
+  submitter.mesh(getUnitCylinder(), arch, archColor, nullptr, 0.52f, 2);
 
   QVector3D ridgeTop = headPoint(QVector3D(0.0f, 1.37f, 0.58f));
   QMatrix4x4 ridge = ctx.model;
   ridge.translate(ridgeTop);
   ridge.scale(R * 0.22f, R * 0.10f, R * 0.26f);
-  submitter.mesh(getUnitSphere(), ridge, m_config.glow_color, nullptr, 0.58f);
+  submitter.mesh(getUnitSphere(), ridge, m_config.glow_color, nullptr, 0.58f, 2);
 }
 
 void CarthageHeavyHelmetRenderer::render_crest(const DrawContext &ctx,
@@ -245,7 +246,7 @@ void CarthageHeavyHelmetRenderer::render_crest(const DrawContext &ctx,
   QMatrix4x4 crestBridge =
       cylinderBetween(ctx.model, crestBack, crestFront, crestRadius);
   submitter.mesh(getUnitCylinder(), crestBridge, m_config.crest_color, nullptr,
-                 0.52f);
+                 0.52f, 2);
 
   QVector3D plumeTop = headPoint(QVector3D(0.0f, 2.25f, 0.0f));
   QVector3D plumeBase = headPoint(QVector3D(0.0f, 1.63f, 0.0f));
@@ -254,7 +255,7 @@ void CarthageHeavyHelmetRenderer::render_crest(const DrawContext &ctx,
       cylinderBetween(ctx.model, plumeBase, plumeTop, plumeRadius);
   QVector3D plumeColor =
       mixColor(m_config.crest_color, m_config.glow_color, 0.40F);
-  submitter.mesh(getUnitCylinder(), plume, plumeColor, nullptr, 0.70f);
+  submitter.mesh(getUnitCylinder(), plume, plumeColor, nullptr, 0.70f, 2);
 }
 
 } // namespace Render::GL
