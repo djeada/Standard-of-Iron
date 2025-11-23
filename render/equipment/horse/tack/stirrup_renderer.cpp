@@ -27,7 +27,7 @@ void StirrupRenderer::render(const DrawContext &ctx,
     QMatrix4x4 foot_plate = ctx.model;
     foot_plate.translate(stirrup_bottom);
     foot_plate.scale(0.10F, 0.015F, 0.12F);
-    out.mesh(getUnitSphere(), foot_plate, variant.tack_color, nullptr, 1.0F);
+    out.mesh(getUnitSphere(), foot_plate, variant.tack_color, nullptr, 1.0F, 4);
   }
 }
 
