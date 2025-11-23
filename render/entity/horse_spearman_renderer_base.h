@@ -21,6 +21,7 @@ struct HorseSpearmanRendererConfig {
   float mount_scale = 0.75F;
   bool has_spear = true;
   bool has_shield = false;
+  float helmet_offset_moving = 0.0F;
   std::vector<std::shared_ptr<IHorseEquipmentRenderer>> horse_attachments;
 };
 

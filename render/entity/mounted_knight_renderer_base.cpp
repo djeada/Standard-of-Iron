@@ -80,8 +80,7 @@ void MountedKnightRendererBase::apply_riding_animation(
   (void)pose;
   const AnimationInputs &anim = anim_ctx.inputs;
   float const speed_norm = anim_ctx.locomotion_normalized_speed();
-  float const speed_lean = std::clamp(
-      anim_ctx.locomotion_speed() * 0.10F + speed_norm * 0.05F, 0.0F, 0.22F);
+  float const speed_lean = 0.0F;
   float const forward_lean =
       (dims.seatForwardOffset * 0.08F + speed_lean) / 0.15F;
 
@@ -99,9 +98,8 @@ void MountedKnightRendererBase::apply_riding_animation(
   pose_request.seatPose = (speed_norm > 0.55F)
                               ? MountedPoseController::MountedSeatPose::Forward
                               : MountedPoseController::MountedSeatPose::Neutral;
-  pose_request.torsoCompression = std::clamp(
-      0.18F + speed_norm * 0.28F + anim_ctx.variation.posture_slump * 0.9F,
-      0.0F, 0.55F);
+  pose_request.torsoCompression =
+      std::clamp(0.18F + anim_ctx.variation.posture_slump * 0.9F, 0.0F, 0.55F);
   pose_request.torsoTwist = anim_ctx.variation.shoulder_tilt * 3.0F;
   pose_request.shoulderDip =
       std::clamp(anim_ctx.variation.shoulder_tilt * 0.6F +
@@ -186,7 +184,18 @@ void MountedKnightRendererBase::draw_helmet(const DrawContext &ctx,
       registry.get(EquipmentCategory::Helmet, m_config.helmet_equipment_id);
   if (helmet) {
     HumanoidAnimationContext anim_ctx{};
-    helmet->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
+    BodyFrames frames = pose.body_frames;
+    if (ctx.entity != nullptr) {
+      auto *move = ctx.entity->getComponent<Engine::Core::MovementComponent>();
+      if (move != nullptr) {
+        float speed_sq = move->vx * move->vx + move->vz * move->vz;
+        if (speed_sq > 0.0001F && m_config.helmet_offset_moving > 0.0F) {
+          frames.head.origin +=
+              frames.head.forward * m_config.helmet_offset_moving;
+        }
+      }
+    }
+    helmet->render(ctx, frames, v.palette, anim_ctx, out);
   }
 }
 
