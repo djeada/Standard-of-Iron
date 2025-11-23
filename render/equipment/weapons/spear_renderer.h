@@ -15,7 +15,7 @@ struct SpearRenderConfig {
   float spear_length = 1.20F;
   float shaft_radius = 0.020F;
   float spearhead_length = 0.18F;
-  int materialId = 3; // Material ID: 3 = weapon
+  int material_id = 3; // Material ID: 3 = weapon
 };
 
 class SpearRenderer : public IEquipmentRenderer {

@@ -14,7 +14,7 @@ struct QuiverRenderConfig {
   float quiver_radius = 0.08F;
   float quiver_height = 0.30F;
   int num_arrows = 2;
-  int materialId = 3; // Material ID: 3 = weapon
+  int material_id = 3; // Material ID: 3 = weapon
 };
 
 class QuiverRenderer : public IEquipmentRenderer {
