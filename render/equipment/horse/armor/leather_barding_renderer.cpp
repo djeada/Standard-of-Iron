@@ -18,7 +18,7 @@ void LeatherBardingRenderer::render(const DrawContext &ctx,
   QMatrix4x4 chest_armor = chest.make_local_transform(
       ctx.model, QVector3D(0.0F, -0.03F, 0.0F), 1.0F);
   chest_armor.scale(0.38F, 0.28F, 0.32F);
-  out.mesh(getUnitSphere(), chest_armor, armor_color, nullptr, 1.0F);
+  out.mesh(getUnitSphere(), chest_armor, armor_color, nullptr, 1.0F, 1);
 
   const HorseAttachmentFrame &barrel = frames.barrel;
   for (int i = 0; i < 2; ++i) {
@@ -26,7 +26,7 @@ void LeatherBardingRenderer::render(const DrawContext &ctx,
     QMatrix4x4 side_armor = barrel.make_local_transform(
         ctx.model, QVector3D(side * 0.32F, -0.08F, 0.0F), 1.0F);
     side_armor.scale(0.10F, 0.25F, 0.45F);
-    out.mesh(getUnitSphere(), side_armor, armor_color, nullptr, 1.0F);
+    out.mesh(getUnitSphere(), side_armor, armor_color, nullptr, 1.0F, 1);
   }
 }
 

@@ -26,7 +26,7 @@ void BlanketRenderer::render(const DrawContext &ctx,
     QMatrix4x4 drape = back.make_local_transform(
         ctx.model, QVector3D(side * 0.30F, -0.08F, 0.0F), 0.8F);
     drape.scale(0.22F, 0.15F, 0.55F);
-    out.mesh(getUnitSphere(), drape, variant.blanketColor, nullptr, 1.0F);
+    out.mesh(getUnitSphere(), drape, variant.blanketColor, nullptr, 1.0F, 4);
   }
 }
 
