@@ -12,6 +12,7 @@ class Entity;
 class World;
 class MovementComponent;
 class TransformComponent;
+class UnitComponent;
 } // namespace Engine::Core
 
 namespace Render::GL {
@@ -67,6 +68,10 @@ public:
                               const HumanoidPose &pose, ISubmitter &out) const;
 
   void render(const DrawContext &ctx, ISubmitter &out) const;
+
+  virtual auto resolve_entity_ground_offset(
+      const DrawContext &ctx, Engine::Core::UnitComponent *unit_comp,
+      Engine::Core::TransformComponent *transform_comp) const -> float;
 
   static auto frameLocalPosition(const AttachmentFrame &frame,
                                  const QVector3D &local) -> QVector3D;

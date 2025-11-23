@@ -43,6 +43,25 @@ auto MountedHumanoidRendererBase::get_cached_horse_profile(
   return m_profile_cache[seed];
 }
 
+auto MountedHumanoidRendererBase::resolve_entity_ground_offset(
+    const DrawContext &ctx, Engine::Core::UnitComponent *unit_comp,
+    Engine::Core::TransformComponent *transform_comp) const -> float {
+  (void)unit_comp;
+
+  uint32_t horse_seed = 0U;
+  if (ctx.entity != nullptr) {
+    horse_seed = static_cast<uint32_t>(reinterpret_cast<uintptr_t>(ctx.entity) &
+                                       0xFFFFFFFFU);
+  }
+
+  HorseDimensions dims = get_scaled_horse_dimensions(horse_seed);
+  float offset = -dims.barrel_centerY;
+  if (transform_comp != nullptr) {
+    offset *= transform_comp->scale.y;
+  }
+  return offset;
+}
+
 void MountedHumanoidRendererBase::customize_pose(
     const DrawContext &ctx, const HumanoidAnimationContext &anim_ctx,
     uint32_t seed, HumanoidPose &pose) const {
