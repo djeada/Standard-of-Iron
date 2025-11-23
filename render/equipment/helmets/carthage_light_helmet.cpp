@@ -32,7 +32,7 @@ static inline void submit_disk(ISubmitter &submitter, const DrawContext &ctx,
                                const QVector3D &center,
                                const QVector3D &normal_dir, float radius,
                                float thickness, const QVector3D &color,
-                               float roughness, int materialId = 2) {
+                               float roughness, int material_id = 2) {
   QVector3D n = normal_dir;
   if (n.lengthSquared() < 1e-5f) {
     n = QVector3D(0, 1, 0);
@@ -42,14 +42,14 @@ static inline void submit_disk(ISubmitter &submitter, const DrawContext &ctx,
   QVector3D b = center + 0.5f * thickness * n;
   // Material ID: 2 = helmet
   submitter.mesh(getUnitCylinder(), cylinderBetween(ctx.model, a, b, radius),
-                 color, nullptr, roughness, materialId);
+                 color, nullptr, roughness, material_id);
 }
 
 static inline void submit_spike(ISubmitter &submitter, const DrawContext &ctx,
                                 const QVector3D &base, const QVector3D &dir,
                                 float length, float base_radius,
                                 const QVector3D &color, float roughness,
-                                int materialId = 2) {
+                                int material_id = 2) {
   QVector3D d = dir;
   if (d.lengthSquared() < 1e-5f) {
     d = QVector3D(0, 1, 0);
@@ -59,12 +59,12 @@ static inline void submit_spike(ISubmitter &submitter, const DrawContext &ctx,
   // Material ID: 2 = helmet
   submitter.mesh(getUnitCylinder(),
                  cylinderBetween(ctx.model, base, tip, base_radius), color,
-                 nullptr, roughness, materialId);
+                 nullptr, roughness, material_id);
   QMatrix4x4 m;
   m = ctx.model;
   m.translate(tip);
   m.scale(base_radius * 1.1f);
-  submitter.mesh(getUnitSphere(), m, color * 1.05f, nullptr, roughness, materialId);
+  submitter.mesh(getUnitSphere(), m, color * 1.05f, nullptr, roughness, material_id);
 }
 
 void CarthageLightHelmetRenderer::render(const DrawContext &ctx,
