@@ -3,6 +3,8 @@
 #include "../humanoid/rig.h"
 #include "../palette.h"
 #include "../submitter.h"
+#include <atomic>
+#include <cstdint>
 
 namespace Render::GL {
 
@@ -16,6 +18,11 @@ public:
                       const HumanoidPalette &palette,
                       const HumanoidAnimationContext &anim,
                       ISubmitter &submitter) = 0;
+
+  static auto nextRenderId() -> uint64_t {
+    static std::atomic<uint64_t> counter{0};
+    return ++counter;
+  }
 };
 
 } // namespace Render::GL

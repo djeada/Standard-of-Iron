@@ -327,7 +327,7 @@ void HumanoidRendererBase::drawCommonBody(const DrawContext &ctx,
 
   const float torso_depth_factor =
       std::clamp(0.55F + (depth_scale - 1.0F) * 0.20F, 0.40F, 0.85F);
-  const float torso_depth = torso_r * torso_depth_factor;
+  float torso_depth = torso_r * torso_depth_factor;
 
   const float y_top_cover = std::max(y_shoulder + 0.04F, y_neck + 0.00F);
 
@@ -356,37 +356,47 @@ void HumanoidRendererBase::drawCommonBody(const DrawContext &ctx,
 
   float const head_r = pose.head_r;
 
-  QVector3D head_up = pose.head_pos - pose.neck_base;
-  if (head_up.lengthSquared() < 1e-8F) {
-    head_up = up_axis;
-  } else {
-    head_up.normalize();
-  }
+  QVector3D head_up;
+  QVector3D head_right;
+  QVector3D head_forward;
 
-  QVector3D head_right =
-      right_axis - head_up * QVector3D::dotProduct(right_axis, head_up);
-  if (head_right.lengthSquared() < 1e-8F) {
-    head_right = QVector3D::crossProduct(head_up, forward_axis);
-    if (head_right.lengthSquared() < 1e-8F) {
-      head_right = QVector3D(1.0F, 0.0F, 0.0F);
+  if (pose.head_frame.radius > 0.001F) {
+    head_up = pose.head_frame.up;
+    head_right = pose.head_frame.right;
+    head_forward = pose.head_frame.forward;
+  } else {
+    head_up = pose.head_pos - pose.neck_base;
+    if (head_up.lengthSquared() < 1e-8F) {
+      head_up = up_axis;
+    } else {
+      head_up.normalize();
     }
-  }
-  head_right.normalize();
 
-  if (QVector3D::dotProduct(head_right, right_axis) < 0.0F) {
-    head_right = -head_right;
-  }
+    head_right =
+        right_axis - head_up * QVector3D::dotProduct(right_axis, head_up);
+    if (head_right.lengthSquared() < 1e-8F) {
+      head_right = QVector3D::crossProduct(head_up, forward_axis);
+      if (head_right.lengthSquared() < 1e-8F) {
+        head_right = QVector3D(1.0F, 0.0F, 0.0F);
+      }
+    }
+    head_right.normalize();
 
-  QVector3D head_forward = QVector3D::crossProduct(head_right, head_up);
-  if (head_forward.lengthSquared() < 1e-8F) {
-    head_forward = forward_axis;
-  } else {
-    head_forward.normalize();
-  }
+    if (QVector3D::dotProduct(head_right, right_axis) < 0.0F) {
+      head_right = -head_right;
+    }
 
-  if (QVector3D::dotProduct(head_forward, forward_axis) < 0.0F) {
-    head_right = -head_right;
-    head_forward = -head_forward;
+    head_forward = QVector3D::crossProduct(head_right, head_up);
+    if (head_forward.lengthSquared() < 1e-8F) {
+      head_forward = forward_axis;
+    } else {
+      head_forward.normalize();
+    }
+
+    if (QVector3D::dotProduct(head_forward, forward_axis) < 0.0F) {
+      head_right = -head_right;
+      head_forward = -head_forward;
+    }
   }
 
   QVector3D const chin_pos = pose.head_pos - head_up * head_r;
@@ -406,6 +416,7 @@ void HumanoidRendererBase::drawCommonBody(const DrawContext &ctx,
   head_transform = head_transform * head_rot;
   head_transform.scale(head_r);
   head_transform.scale(width_scale, 1.0F, depth_scale);
+
   out.mesh(getUnitSphere(), head_transform, v.palette.skin, nullptr, 1.0F);
 
   pose.head_frame.origin = pose.head_pos;
@@ -987,6 +998,15 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
       formation.max_per_row;
   const int cols = formation.max_per_row;
 
+  bool is_mounted_spawn = false;
+  if (unit_comp != nullptr) {
+    using Game::Units::SpawnType;
+    auto const st = unit_comp->spawn_type;
+    is_mounted_spawn =
+        (st == SpawnType::MountedKnight || st == SpawnType::HorseArcher ||
+         st == SpawnType::HorseSpearman);
+  }
+
   int visible_count = rows * cols;
   if (unit_comp != nullptr) {
     int const mh = std::max(1, unit_comp->max_health);
@@ -1030,19 +1050,21 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
 
     offset_x += pos_jitter_x;
     offset_z += pos_jitter_z;
+    float applied_vertical_jitter = vertical_jitter;
+    float applied_yaw_offset = yaw_offset;
 
     QMatrix4x4 inst_model;
     float applied_yaw = yaw_offset;
 
     if (transform_comp != nullptr) {
-      applied_yaw = transform_comp->rotation.y + yaw_offset;
+      applied_yaw = transform_comp->rotation.y + applied_yaw_offset;
       QMatrix4x4 m = k_identity_matrix;
       m.translate(transform_comp->position.x, transform_comp->position.y,
                   transform_comp->position.z);
       m.rotate(applied_yaw, 0.0F, 1.0F, 0.0F);
       m.scale(transform_comp->scale.x, transform_comp->scale.y,
               transform_comp->scale.z);
-      m.translate(offset_x, vertical_jitter, offset_z);
+      m.translate(offset_x, applied_vertical_jitter, offset_z);
       if (entity_ground_offset != 0.0F) {
         m.translate(0.0F, -entity_ground_offset, 0.0F);
       }
@@ -1050,7 +1072,7 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
     } else {
       inst_model = ctx.model;
       inst_model.rotate(applied_yaw, 0.0F, 1.0F, 0.0F);
-      inst_model.translate(offset_x, vertical_jitter, offset_z);
+      inst_model.translate(offset_x, applied_vertical_jitter, offset_z);
       if (entity_ground_offset != 0.0F) {
         inst_model.translate(0.0F, -entity_ground_offset, 0.0F);
       }
@@ -1180,6 +1202,35 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
       pose.head_pos.setZ(pose.head_pos.z() + 0.04F);
       pose.shoulder_l.setY(pose.shoulder_l.y() - 0.02F);
       pose.shoulder_r.setY(pose.shoulder_r.y() - 0.02F);
+
+      if (pose.head_frame.radius > 0.001F) {
+        QVector3D head_up = pose.head_pos - pose.neck_base;
+        if (head_up.lengthSquared() < 1e-8F) {
+          head_up = pose.head_frame.up;
+        } else {
+          head_up.normalize();
+        }
+
+        QVector3D head_right =
+            pose.head_frame.right -
+            head_up * QVector3D::dotProduct(pose.head_frame.right, head_up);
+        if (head_right.lengthSquared() < 1e-8F) {
+          head_right =
+              QVector3D::crossProduct(head_up, anim_ctx.entity_forward);
+          if (head_right.lengthSquared() < 1e-8F) {
+            head_right = QVector3D(1.0F, 0.0F, 0.0F);
+          }
+        }
+        head_right.normalize();
+        QVector3D head_forward =
+            QVector3D::crossProduct(head_right, head_up).normalized();
+
+        pose.head_frame.origin = pose.head_pos;
+        pose.head_frame.up = head_up;
+        pose.head_frame.right = head_right;
+        pose.head_frame.forward = head_forward;
+        pose.body_frames.head = pose.head_frame;
+      }
     }
 
     drawCommonBody(inst_ctx, variant, pose, out);

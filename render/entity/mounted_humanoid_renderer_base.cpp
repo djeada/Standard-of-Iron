@@ -79,11 +79,17 @@ void MountedHumanoidRendererBase::customize_pose(
                          reins);
 
   applyMountedKnightLowerBody(dims, mount, anim_ctx, pose);
+
+  mounted_controller.finalizeHeadSync(mount, "customize_pose_final_sync");
 }
 
 void MountedHumanoidRendererBase::addAttachments(
     const DrawContext &ctx, const HumanoidVariant &v, const HumanoidPose &pose,
     const HumanoidAnimationContext &anim_ctx, ISubmitter &out) const {
+  static uint64_t s_mounted_frame_counter = 0;
+  ++s_mounted_frame_counter;
+  uint64_t frame_id = s_mounted_frame_counter;
+
   uint32_t horse_seed = 0U;
   if (ctx.entity != nullptr) {
     horse_seed = static_cast<uint32_t>(reinterpret_cast<uintptr_t>(ctx.entity) &
