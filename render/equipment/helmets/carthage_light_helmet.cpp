@@ -126,19 +126,19 @@ void CarthageLightHelmetRenderer::render_bowl(const DrawContext &ctx,
   QVector3D taper_bot = helmet_origin + up * (R * 0.26F);
   submitter.mesh(getUnitCylinder(),
                  cylinderBetween(ctx.model, taper_top, taper_bot, R * 0.78F),
-                 m_config.leather_color * 0.86F, nullptr, 0.92F);
+                 m_config.leather_color * 0.86F, nullptr, 0.92F, 2);
 
   QVector3D band_top = helmet_origin + up * (R * 0.24F);
   QVector3D band_bot = helmet_origin + up * (R * 0.10F);
   submitter.mesh(getUnitCylinder(),
                  cylinderBetween(ctx.model, band_top, band_bot, R * 0.92F),
-                 m_config.leather_color * 0.72F, nullptr, 0.95F);
+                 m_config.leather_color * 0.72F, nullptr, 0.95F, 2);
 
   QVector3D crest_base = helmet_origin + up * (R * 0.82F);
   QVector3D crest_tip = crest_base + up * (R * 0.55F);
   submitter.mesh(getUnitCylinder(),
                  cylinderBetween(ctx.model, crest_base, crest_tip, R * 0.35F),
-                 m_config.bronze_color * 0.78F, nullptr, 0.92F);
+                 m_config.bronze_color * 0.78F, nullptr, 0.92F, 2);
   QMatrix4x4 crest_cap = ctx.model;
   crest_cap.translate(crest_tip);
   crest_cap.scale(R * 0.42F, R * 0.32F, R * 0.42F);
@@ -152,7 +152,7 @@ void CarthageLightHelmetRenderer::render_bowl(const DrawContext &ctx,
   submitter.mesh(
       getUnitCylinder(),
       cylinderBetween(ctx.model, strap_front_top, strap_front_bot, R * 0.20F),
-      m_config.bronze_color * 0.85F, nullptr, 0.92F);
+      m_config.bronze_color * 0.85F, nullptr, 0.92F, 2);
 
   QVector3D strap_left_top =
       helmet_origin + up * (R * 0.38F) - right * (R * 0.66F);
@@ -161,7 +161,7 @@ void CarthageLightHelmetRenderer::render_bowl(const DrawContext &ctx,
   submitter.mesh(
       getUnitCylinder(),
       cylinderBetween(ctx.model, strap_left_top, strap_left_bot, R * 0.16F),
-      m_config.bronze_color * 0.90F, nullptr, 0.95F);
+      m_config.bronze_color * 0.90F, nullptr, 0.95F, 2);
 
   QVector3D strap_right_top =
       helmet_origin + up * (R * 0.38F) + right * (R * 0.66F);
@@ -170,7 +170,7 @@ void CarthageLightHelmetRenderer::render_bowl(const DrawContext &ctx,
   submitter.mesh(
       getUnitCylinder(),
       cylinderBetween(ctx.model, strap_right_top, strap_right_bot, R * 0.16F),
-      m_config.bronze_color * 0.90F, nullptr, 0.95F);
+      m_config.bronze_color * 0.90F, nullptr, 0.95F, 2);
 }
 
 void CarthageLightHelmetRenderer::render_brim(const DrawContext &ctx,
@@ -199,7 +199,7 @@ void CarthageLightHelmetRenderer::render_brim(const DrawContext &ctx,
                           float radius_scale) {
     submitter.mesh(getUnitCylinder(),
                    cylinderBetween(ctx.model, a, b, R * radius_scale),
-                   m_config.bronze_color * 1.08f, nullptr, 0.95f);
+                   m_config.bronze_color * 1.08f, nullptr, 0.95f, 2);
   };
 
   QVector3D brow_left = headPoint(QVector3D(-0.54f, 0.86f, 0.64f));
@@ -266,13 +266,13 @@ void CarthageLightHelmetRenderer::render_nasal_guard(
   QVector3D bot = headPoint(QVector3D(0.0f, -0.04f, 0.95f));
   submitter.mesh(getUnitCylinder(),
                  cylinderBetween(ctx.model, bot, top, R * 0.14f),
-                 m_config.bronze_color * 0.98f, nullptr, 0.9f);
+                 m_config.bronze_color * 0.98f, nullptr, 0.9f, 2);
 
   QVector3D left = top + head.right * (R * 0.30f);
   QVector3D right = top - head.right * (R * 0.30f);
   submitter.mesh(getUnitCylinder(),
                  cylinderBetween(ctx.model, left, right, R * 0.07f),
-                 m_config.bronze_color * 1.06f, nullptr, 0.93f);
+                 m_config.bronze_color * 1.06f, nullptr, 0.93f, 2);
 
   for (int i = 0; i < 3; ++i) {
     float yy = -0.02f - 0.08f * i;
@@ -280,7 +280,7 @@ void CarthageLightHelmetRenderer::render_nasal_guard(
     QVector3D gr = headPoint(QVector3D(0.32f, yy, 0.96f));
     submitter.mesh(getUnitCylinder(),
                    cylinderBetween(ctx.model, gl, gr, R * 0.045f),
-                   m_config.bronze_color * 1.02f, nullptr, 0.9f);
+                   m_config.bronze_color * 1.02f, nullptr, 0.9f, 2);
   }
 }
 
