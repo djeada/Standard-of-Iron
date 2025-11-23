@@ -163,12 +163,12 @@ void main() {
   bool isSaddle = (u_materialId == 4);
   
   // Fallback to color-based detection when u_materialId == 0
-  bool isBrass = (u_materialId == 2) || (u_materialId == 0 && baseColor.r > baseColor.g * 1.15 &&
+  bool isBrass = isHelmet || (u_materialId == 0 && baseColor.r > baseColor.g * 1.15 &&
                   baseColor.r > baseColor.b * 1.20 && avg > 0.50);
-  bool isSteel = (u_materialId == 1) || (u_materialId == 0 && avg > 0.60 && !isBrass);
-  bool isChain = (u_materialId == 1) || (u_materialId == 0 && !isSteel && !isBrass && avg > 0.40 && avg <= 0.60);
+  bool isSteel = isArmor || (u_materialId == 0 && avg > 0.60 && !isBrass);
+  bool isChain = isArmor || (u_materialId == 0 && !isSteel && !isBrass && avg > 0.40 && avg <= 0.60);
   bool isFabric = (u_materialId == 0 && !isSteel && !isBrass && !isChain && avg > 0.25);
-  bool isLeather = (u_materialId == 4) || (u_materialId == 0 && !isSteel && !isBrass && !isChain && !isFabric);
+  bool isLeather = isSaddle || (u_materialId == 0 && !isSteel && !isBrass && !isChain && !isFabric);
   bool isHorseHide = (u_materialId == 0 && avg < 0.40 && hueSpan < 0.12 && v_worldPos.y < 0.8);
 
   // lighting frame
