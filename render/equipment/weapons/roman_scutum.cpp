@@ -24,8 +24,8 @@ void RomanScutumRenderer::render(const DrawContext &ctx,
                                  ISubmitter &submitter) {
   (void)anim;
 
-  const AttachmentFrame &handL = frames.hand_l;
-  if (handL.radius <= 0.0F) {
+  const AttachmentFrame &hand_l = frames.hand_l;
+  if (hand_l.radius <= 0.0F) {
     return;
   }
 
@@ -43,10 +43,10 @@ void RomanScutumRenderer::render(const DrawContext &ctx,
   constexpr float rim_thickness = 0.015F;
   constexpr float boss_radius = 0.12F;
 
-  QVector3D const shield_center = handL.origin + handL.forward * 0.15F;
-  QVector3D const shield_up = handL.up;
-  QVector3D const shield_right = handL.right;
-  QVector3D const shield_forward = handL.forward;
+  QVector3D const shield_center = hand_l.origin + hand_l.forward * 0.15F;
+  QVector3D const shield_up = hand_l.up;
+  QVector3D const shield_right = hand_l.right;
+  QVector3D const shield_forward = hand_l.forward;
 
   constexpr int vertical_segments = 12;
   constexpr int horizontal_segments = 16;
