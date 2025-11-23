@@ -3,6 +3,8 @@
 #include "humanoid_math.h"
 #include "humanoid_specs.h"
 #include "pose_controller.h"
+#include <QDebug>
+#include <QString>
 #include <QVector3D>
 #include <algorithm>
 #include <cmath>
@@ -45,6 +47,10 @@ void MountedPoseController::dismount() {
 }
 
 void MountedPoseController::ridingIdle(const MountedAttachmentFrame &mount) {
+  static int idle_log_counter = 0;
+  if (idle_log_counter++ % 300 == 0) {
+    qDebug() << "MountedPoseController::ridingIdle called";
+  }
   mountOnHorse(mount);
 
   QVector3D const left_hand_rest = seatRelative(mount, 0.12F, -0.14F, -0.05F);
@@ -59,6 +65,8 @@ void MountedPoseController::ridingIdle(const MountedAttachmentFrame &mount) {
                                 left_outward, 0.45F, 0.12F, -0.05F, 1.0F);
   getElbow(false) = solveElbowIK(false, getShoulder(false), right_hand_rest,
                                  right_outward, 0.45F, 0.12F, -0.05F, 1.0F);
+
+  updateHeadHierarchy(mount, 0.0F, 0.0F, "ridingIdle");
 }
 
 void MountedPoseController::ridingLeaning(const MountedAttachmentFrame &mount,
@@ -77,13 +85,13 @@ void MountedPoseController::ridingCharging(const MountedAttachmentFrame &mount,
   m_pose.shoulder_l += charge_lean;
   m_pose.shoulder_r += charge_lean;
   m_pose.neck_base += charge_lean * 0.85F;
-  m_pose.head_pos += charge_lean * 0.85F;
 
   float const crouch = 0.08F * intensity;
   m_pose.shoulder_l.setY(m_pose.shoulder_l.y() - crouch);
   m_pose.shoulder_r.setY(m_pose.shoulder_r.y() - crouch);
   m_pose.neck_base.setY(m_pose.neck_base.y() - crouch * 0.8F);
-  m_pose.head_pos.setY(m_pose.head_pos.y() - crouch * 0.8F);
+
+  updateHeadHierarchy(mount, 0.0F, 0.0F, "ridingCharging");
 
   holdReins(mount, 0.2F, 0.2F, 0.85F, 0.85F);
 }
@@ -114,7 +122,8 @@ void MountedPoseController::ridingReining(const MountedAttachmentFrame &mount,
   m_pose.shoulder_l += lean_back;
   m_pose.shoulder_r += lean_back;
   m_pose.neck_base += lean_back * 0.9F;
-  m_pose.head_pos += lean_back * 0.9F;
+
+  updateHeadHierarchy(mount, 0.0F, 0.0F, "ridingReining");
 }
 
 void MountedPoseController::ridingMeleeStrike(
@@ -221,6 +230,8 @@ void MountedPoseController::applyPose(const MountedAttachmentFrame &mount,
   applySaddleClearance(mount, request.dims, request.clearanceForward,
                        request.clearanceUp);
 
+  stabilizeUpperBody(mount, request.dims);
+
   float forward = request.forwardBias;
   switch (request.seatPose) {
   case MountedSeatPose::Forward:
@@ -234,9 +245,41 @@ void MountedPoseController::applyPose(const MountedAttachmentFrame &mount,
     break;
   }
   applyLean(mount, forward, request.sideBias);
+
+  static int debug_log_count = 0;
+  static int frame_counter = 0;
+  frame_counter++;
+
+  bool should_log = (frame_counter % 60 == 0);
+
+  if (should_log) {
+    qDebug() << "Frame" << frame_counter
+             << "After Lean - HeadPos:" << m_pose.head_pos
+             << "FrameOrigin:" << m_pose.head_frame.origin << "Diff:"
+             << (m_pose.head_pos - m_pose.head_frame.origin).length();
+  }
+
   applyTorsoSculpt(mount, request.torsoCompression, request.torsoTwist,
                    request.shoulderDip);
-  stabilizeUpperBody(mount, request.dims);
+
+  if (should_log) {
+    qDebug() << "Frame" << frame_counter
+             << "After Sculpt - HeadPos:" << m_pose.head_pos
+             << "FrameOrigin:" << m_pose.head_frame.origin << "Diff:"
+             << (m_pose.head_pos - m_pose.head_frame.origin).length();
+  }
+
+  float const clamped_forward = std::clamp(forward, -1.0F, 1.0F);
+  float const clamped_side = std::clamp(request.sideBias, -1.0F, 1.0F);
+  updateHeadHierarchy(mount, clamped_forward * 0.4F, clamped_side * 0.4F,
+                      "applyPose_fixup");
+
+  if (should_log) {
+    qDebug() << "Frame" << frame_counter
+             << "After Fix - HeadPos:" << m_pose.head_pos
+             << "FrameOrigin:" << m_pose.head_frame.origin << "Diff:"
+             << (m_pose.head_pos - m_pose.head_frame.origin).length();
+  }
 
   const bool needs_weapon_right = request.weaponPose != MountedWeaponPose::None;
   const bool needs_weapon_left =
@@ -306,7 +349,9 @@ void MountedPoseController::applyLean(const MountedAttachmentFrame &mount,
   m_pose.shoulder_l += lean_offset;
   m_pose.shoulder_r += lean_offset;
   m_pose.neck_base += lean_offset * 0.9F;
-  m_pose.head_pos += lean_offset * 0.9F;
+
+  updateHeadHierarchy(mount, clamped_forward * 0.4F, clamped_side * 0.4F,
+                      "applyLean");
 }
 
 void MountedPoseController::applyShieldDefense(
@@ -326,6 +371,8 @@ void MountedPoseController::applyShieldDefense(
                                 left_outward, 0.45F, 0.15F, -0.10F, 1.0F);
   getElbow(false) = solveElbowIK(false, getShoulder(false), rein_pos,
                                  right_outward, 0.45F, 0.12F, -0.08F, 1.0F);
+
+  updateHeadHierarchy(mount, 0.0F, 0.0F, "shield_defense");
 }
 
 void MountedPoseController::applyShieldStowed(
@@ -337,6 +384,8 @@ void MountedPoseController::applyShieldStowed(
   const QVector3D left_outward = computeOutwardDir(true);
   getElbow(true) = solveElbowIK(true, getShoulder(true), rest, left_outward,
                                 0.42F, 0.12F, -0.05F, 1.0F);
+
+  updateHeadHierarchy(mount, 0.0F, 0.0F, "shield_stowed");
 }
 
 void MountedPoseController::applySwordIdlePose(
@@ -348,6 +397,8 @@ void MountedPoseController::applySwordIdlePose(
   const QVector3D right_outward = computeOutwardDir(false);
   getElbow(false) = solveElbowIK(false, getShoulder(false), sword_anchor,
                                  right_outward, 0.42F, 0.10F, -0.06F, 1.0F);
+
+  updateHeadHierarchy(mount, 0.0F, 0.0F, "sword_idle");
 }
 
 void MountedPoseController::applySwordStrike(
@@ -367,6 +418,7 @@ void MountedPoseController::applySwordStrike(
     float t = attack_phase / 0.30F;
     t = t * t;
     hand_r_target = rest_pos * (1.0F - t) + raised_pos * t;
+    updateHeadHierarchy(mount, 0.0F, 0.0F, "sword_raise");
   } else if (attack_phase < 0.50F) {
     float t = (attack_phase - 0.30F) / 0.20F;
     t = t * t * t;
@@ -377,11 +429,13 @@ void MountedPoseController::applySwordStrike(
     m_pose.shoulder_l += lean;
     m_pose.shoulder_r += lean;
     m_pose.neck_base += lean * 0.9F;
-    m_pose.head_pos += lean * 0.9F;
+
+    updateHeadHierarchy(mount, 0.3F * t, 0.0F, "sword_strike");
   } else {
     float t = (attack_phase - 0.50F) / 0.50F;
     t = 1.0F - (1.0F - t) * (1.0F - t);
     hand_r_target = strike_pos * (1.0F - t) + rest_pos * t;
+    updateHeadHierarchy(mount, 0.0F, 0.0F, "sword_recover");
   }
 
   getHand(false) = hand_r_target;
@@ -413,6 +467,7 @@ void MountedPoseController::applySpearThrust(
   if (attack_phase < 0.25F) {
     hand_r_target = guard_pos;
     hand_l_target = guard_pos - mount.seat_right * 0.25F;
+    updateHeadHierarchy(mount, 0.0F, 0.0F, "spear_guard_hold");
   } else if (attack_phase < 0.45F) {
     float t = (attack_phase - 0.25F) / 0.20F;
     t = t * t * t;
@@ -424,13 +479,15 @@ void MountedPoseController::applySpearThrust(
     m_pose.shoulder_l += lean;
     m_pose.shoulder_r += lean;
     m_pose.neck_base += lean * 0.9F;
-    m_pose.head_pos += lean * 0.9F;
+
+    updateHeadHierarchy(mount, 0.5F * t, 0.0F, "spear_thrust");
   } else {
     float t = (attack_phase - 0.45F) / 0.55F;
     t = 1.0F - (1.0F - t) * (1.0F - t);
     hand_r_target = thrust_pos * (1.0F - t) + guard_pos * t;
     hand_l_target = (thrust_pos - mount.seat_right * 0.30F) * (1.0F - t) +
                     (guard_pos - mount.seat_right * 0.25F) * t;
+    updateHeadHierarchy(mount, 0.0F, 0.0F, "spear_recover");
   }
 
   getHand(false) = hand_r_target;
@@ -473,6 +530,8 @@ void MountedPoseController::applySpearGuard(const MountedAttachmentFrame &mount,
                                 left_outward, 0.45F, 0.12F, -0.08F, 1.0F);
   getElbow(false) = solveElbowIK(false, getShoulder(false), hand_r_target,
                                  right_outward, 0.45F, 0.12F, -0.05F, 1.0F);
+
+  updateHeadHierarchy(mount, 0.0F, 0.0F, "spear_guard_pose");
 }
 
 void MountedPoseController::applyBowDraw(const MountedAttachmentFrame &mount,
@@ -508,6 +567,8 @@ void MountedPoseController::applyBowDraw(const MountedAttachmentFrame &mount,
                                 left_outward, 0.50F, 0.08F, -0.05F, 1.0F);
   getElbow(false) = solveElbowIK(false, getShoulder(false), hand_r_target,
                                  right_outward, 0.48F, 0.12F, -0.08F, 1.0F);
+
+  updateHeadHierarchy(mount, 0.0F, 0.0F, "bow_draw");
 }
 
 void MountedPoseController::applyTorsoSculpt(
@@ -715,6 +776,64 @@ auto MountedPoseController::computeRightAxis() const -> QVector3D {
 auto MountedPoseController::computeOutwardDir(bool is_left) const -> QVector3D {
   QVector3D const right_axis = computeRightAxis();
   return is_left ? -right_axis : right_axis;
+}
+
+void MountedPoseController::applyFixedHeadFrame(
+    const MountedAttachmentFrame &mount, std::string_view debug_label) {
+  using HP = HumanProportions;
+  float const h_scale = m_anim_ctx.variation.height_scale;
+  float const neck_len = (HP::HEAD_HEIGHT * 0.5F + 0.045F) * h_scale;
+
+  QVector3D up_dir = mount.seat_up;
+  if (up_dir.lengthSquared() < 1e-6F) {
+    up_dir = QVector3D(0.0F, 1.0F, 0.0F);
+  } else {
+    up_dir.normalize();
+  }
+
+  QVector3D fwd_dir = mount.seat_forward;
+  if (fwd_dir.lengthSquared() < 1e-6F) {
+    fwd_dir = QVector3D(0.0F, 0.0F, 1.0F);
+  } else {
+    fwd_dir.normalize();
+  }
+
+  QVector3D right_dir = QVector3D::crossProduct(fwd_dir, up_dir);
+  if (right_dir.lengthSquared() < 1e-6F) {
+    right_dir = QVector3D(1.0F, 0.0F, 0.0F);
+  } else {
+    right_dir.normalize();
+  }
+  fwd_dir = QVector3D::crossProduct(up_dir, right_dir).normalized();
+
+  m_pose.head_pos = m_pose.neck_base + up_dir * neck_len;
+
+  QVector3D prev_origin = m_pose.head_frame.origin;
+  QVector3D prev_up = m_pose.head_frame.up;
+  QVector3D prev_forward = m_pose.head_frame.forward;
+
+  m_pose.head_frame.origin = m_pose.head_pos;
+  m_pose.head_frame.up = up_dir;
+  m_pose.head_frame.right = right_dir;
+  m_pose.head_frame.forward = fwd_dir;
+  if (m_pose.head_r < 0.01F) {
+    m_pose.head_r = 0.12F;
+  }
+  m_pose.head_frame.radius = m_pose.head_r;
+  m_pose.body_frames.head = m_pose.head_frame;
+}
+
+void MountedPoseController::updateHeadHierarchy(
+    const MountedAttachmentFrame &mount, float extra_forward_tilt,
+    float extra_side_tilt, std::string_view debug_label) {
+  (void)extra_forward_tilt;
+  (void)extra_side_tilt;
+  applyFixedHeadFrame(mount, debug_label);
+}
+
+void MountedPoseController::finalizeHeadSync(
+    const MountedAttachmentFrame &mount, std::string_view debug_label) {
+  applyFixedHeadFrame(mount, debug_label);
 }
 
 } // namespace Render::GL
