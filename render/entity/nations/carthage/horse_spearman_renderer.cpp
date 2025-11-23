@@ -18,6 +18,7 @@ auto make_horse_spearman_config() -> HorseSpearmanRendererConfig {
   config.spear_equipment_id = "spear";
   config.helmet_equipment_id = "carthage_heavy";
   config.armor_equipment_id = "armor_heavy_carthage";
+  config.helmet_offset_moving = 0.04F;
   config.horse_attachments.emplace_back(
       std::make_shared<CarthageSaddleRenderer>());
   config.horse_attachments.emplace_back(std::make_shared<ReinsRenderer>());
