@@ -19,6 +19,7 @@ struct BowRenderConfig {
   float bow_bot_y = 0.0F;
   float bow_height_scale = 1.0F;
   float bow_curve_factor = 1.0F;
+  int materialId = 3; // Material ID: 3 = weapon
 };
 
 class BowRenderer : public IEquipmentRenderer {
