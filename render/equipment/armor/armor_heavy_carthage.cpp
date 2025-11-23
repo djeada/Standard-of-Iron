@@ -67,10 +67,10 @@ void ArmorHeavyCarthageRenderer::render(const DrawContext &ctx,
 
   auto drawTorso = [&](const QVector3D &a, const QVector3D &b, float radius,
                        const QVector3D &color, float scaleX, float baseZ,
-                       int materialId = 1) {
+                       int material_id = 1) {
     QMatrix4x4 m = cylinderBetween(ctx.model, a, b, radius);
     m.scale(scaleX, 1.0F, depth_scale_for(baseZ));
-    submitter.mesh(getUnitTorso(), m, color, nullptr, 1.0F, materialId);
+    submitter.mesh(getUnitTorso(), m, color, nullptr, 1.0F, material_id);
   };
 
   // Material ID: 1 = armor (chainmail and bronze plates)
