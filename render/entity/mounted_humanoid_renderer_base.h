@@ -37,6 +37,10 @@ protected:
                               const HumanoidAnimationContext &anim_ctx,
                               ISubmitter &out) const {}
 
+  auto resolve_entity_ground_offset(
+      const DrawContext &ctx, Engine::Core::UnitComponent *unit_comp,
+      Engine::Core::TransformComponent *transform_comp) const -> float override;
+
   auto get_scaled_horse_dimensions(uint32_t seed) const -> HorseDimensions;
   auto get_cached_horse_profile(uint32_t seed, const HumanoidVariant &v) const
       -> const HorseProfile &;
