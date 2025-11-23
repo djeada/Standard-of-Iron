@@ -17,19 +17,20 @@ void CarthageSaddleRenderer::render(const DrawContext &ctx,
   QMatrix4x4 saddle_transform = back.make_local_transform(
       ctx.model, QVector3D(0.0F, 0.008F, 0.0F), 0.25F);
 
+  // Material ID: 4 = saddle
   QMatrix4x4 seat = saddle_transform;
   seat.scale(0.38F, 0.14F, 1.20F);
-  out.mesh(getUnitSphere(), seat, variant.saddleColor, nullptr, 1.0F);
+  out.mesh(getUnitSphere(), seat, variant.saddleColor, nullptr, 1.0F, 4);
 
   QMatrix4x4 pommel = back.make_local_transform(
       ctx.model, QVector3D(0.0F, 0.020F, 0.18F), 0.19F);
   pommel.scale(0.12F, 0.42F, 0.38F);
-  out.mesh(getUnitSphere(), pommel, variant.saddleColor, nullptr, 1.0F);
+  out.mesh(getUnitSphere(), pommel, variant.saddleColor, nullptr, 1.0F, 4);
 
   QMatrix4x4 cantle = back.make_local_transform(
       ctx.model, QVector3D(0.0F, 0.028F, -0.16F), 0.21F);
   cantle.scale(0.16F, 0.58F, 0.48F);
-  out.mesh(getUnitSphere(), cantle, variant.saddleColor, nullptr, 1.0F);
+  out.mesh(getUnitSphere(), cantle, variant.saddleColor, nullptr, 1.0F, 4);
 }
 
 } // namespace Render::GL
