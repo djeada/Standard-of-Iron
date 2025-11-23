@@ -9,6 +9,7 @@ uniform sampler2D u_texture;
 uniform vec3 u_color;
 uniform bool u_useTexture;
 uniform float u_alpha;
+uniform int u_materialId;
 
 out vec4 FragColor;
 
@@ -52,9 +53,18 @@ void main() {
   vec2 uv = v_worldPos.xz * 4.5;
   float avgColor = (color.r + color.g + color.b) / 3.0;
 
+  // Material ID: 0=body/skin, 1=armor, 2=helmet, 3=weapon, 4=accessory
+  bool isArmor = (u_materialId == 1);
+  bool isHelmet = (u_materialId == 2);
+  bool isWeapon = (u_materialId == 3);
+  
+  // Fallback to color-based detection when u_materialId == 0
+  if (u_materialId == 0) {
+    isHelmet = (v_armorLayer == 0.0);
+  }
+  
   bool isLight = (avgColor > 0.74);
   bool isPurple = (color.b > color.g * 1.15 && color.b > color.r * 1.08);
-  bool isHelmet = (v_armorLayer == 0.0);
 
   // LIGHT LINEN ROBES (Phoenician healer)
   if (isLight || avgColor > 0.70) {
