@@ -65,9 +65,10 @@ void ArmorLightCarthageRenderer::render(const DrawContext &ctx,
   float main_radius = torso_r * 0.96F;
   float const main_depth = torso_depth * 0.92F;
 
+  // Material ID: 1 = armor (leather cuirass)
   QMatrix4x4 cuirass = cylinderBetween(ctx.model, top, bottom, main_radius);
   cuirass.scale(1.0F, 1.0F, std::max(0.15F, main_depth / main_radius));
-  submitter.mesh(getUnitTorso(), cuirass, leather_highlight, nullptr, 1.0F);
+  submitter.mesh(getUnitTorso(), cuirass, leather_highlight, nullptr, 1.0F, 1);
 
   auto strap = [&](float side) {
     QVector3D shoulder_anchor =
@@ -77,7 +78,7 @@ void ArmorLightCarthageRenderer::render(const DrawContext &ctx,
     submitter.mesh(getUnitCylinder(),
                    cylinderBetween(ctx.model, shoulder_anchor, chest_anchor,
                                    torso_r * 0.10F),
-                   leather_highlight * 0.95F, nullptr, 1.0F);
+                   leather_highlight * 0.95F, nullptr, 1.0F, 1);
   };
   strap(1.0F);
   strap(-1.0F);
@@ -90,7 +91,7 @@ void ArmorLightCarthageRenderer::render(const DrawContext &ctx,
                                            front_panel_bottom, torso_r * 0.48F);
   front_panel.scale(0.95F, 1.0F,
                     std::max(0.12F, (torso_depth * 0.5F) / (torso_r * 0.48F)));
-  submitter.mesh(getUnitTorso(), front_panel, leather_highlight, nullptr, 1.0F);
+  submitter.mesh(getUnitTorso(), front_panel, leather_highlight, nullptr, 1.0F, 1);
 
   QVector3D back_panel_top =
       top - forward * (torso_depth * 0.32F) - up * (torso_r * 0.05F);
@@ -100,7 +101,7 @@ void ArmorLightCarthageRenderer::render(const DrawContext &ctx,
                                           back_panel_bottom, torso_r * 0.50F);
   back_panel.scale(0.96F, 1.0F,
                    std::max(0.12F, (torso_depth * 0.45F) / (torso_r * 0.50F)));
-  submitter.mesh(getUnitTorso(), back_panel, leather_shadow, nullptr, 1.0F);
+  submitter.mesh(getUnitTorso(), back_panel, leather_shadow, nullptr, 1.0F, 1);
 }
 
 } // namespace Render::GL

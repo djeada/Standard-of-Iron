@@ -19,6 +19,7 @@ struct SwordRenderConfig {
   float blade_ricasso = 0.16F;
   float blade_taper_bias = 0.65F;
   bool has_scabbard = true;
+  int material_id = 3; // Material ID: 3 = weapon
 };
 
 class SwordRenderer : public IEquipmentRenderer {
