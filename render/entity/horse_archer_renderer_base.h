@@ -22,6 +22,7 @@ struct HorseArcherRendererConfig {
   float mount_scale = 0.75F;
   bool has_bow = true;
   bool has_quiver = true;
+  float helmet_offset_moving = 0.0F;
   std::vector<std::shared_ptr<IHorseEquipmentRenderer>> horse_attachments;
 };
 

@@ -142,7 +142,18 @@ void HorseArcherRendererBase::draw_helmet(const DrawContext &ctx,
       registry.get(EquipmentCategory::Helmet, m_config.helmet_equipment_id);
   if (helmet) {
     HumanoidAnimationContext anim_ctx{};
-    helmet->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
+    BodyFrames frames = pose.body_frames;
+    if (ctx.entity != nullptr) {
+      auto *move = ctx.entity->getComponent<Engine::Core::MovementComponent>();
+      if (move != nullptr) {
+        float speed_sq = move->vx * move->vx + move->vz * move->vz;
+        if (speed_sq > 0.0001F && m_config.helmet_offset_moving > 0.0F) {
+          frames.head.origin +=
+              frames.head.forward * m_config.helmet_offset_moving;
+        }
+      }
+    }
+    helmet->render(ctx, frames, v.palette, anim_ctx, out);
   }
 }
 
