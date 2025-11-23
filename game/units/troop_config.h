@@ -100,6 +100,12 @@ public:
     if (it != m_selectionRingGroundOffset.end()) {
       return it->second;
     }
+
+    if (unit_type == TroopType::MountedKnight ||
+        unit_type == TroopType::HorseArcher ||
+        unit_type == TroopType::HorseSpearman) {
+      return 1.14F;
+    }
     return 0.0F;
   }
 

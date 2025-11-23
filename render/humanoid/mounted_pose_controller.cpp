@@ -47,10 +47,6 @@ void MountedPoseController::dismount() {
 }
 
 void MountedPoseController::ridingIdle(const MountedAttachmentFrame &mount) {
-  static int idle_log_counter = 0;
-  if (idle_log_counter++ % 300 == 0) {
-    qDebug() << "MountedPoseController::ridingIdle called";
-  }
   mountOnHorse(mount);
 
   QVector3D const left_hand_rest = seatRelative(mount, 0.12F, -0.14F, -0.05F);
@@ -246,40 +242,13 @@ void MountedPoseController::applyPose(const MountedAttachmentFrame &mount,
   }
   applyLean(mount, forward, request.sideBias);
 
-  static int debug_log_count = 0;
-  static int frame_counter = 0;
-  frame_counter++;
-
-  bool should_log = (frame_counter % 60 == 0);
-
-  if (should_log) {
-    qDebug() << "Frame" << frame_counter
-             << "After Lean - HeadPos:" << m_pose.head_pos
-             << "FrameOrigin:" << m_pose.head_frame.origin << "Diff:"
-             << (m_pose.head_pos - m_pose.head_frame.origin).length();
-  }
-
   applyTorsoSculpt(mount, request.torsoCompression, request.torsoTwist,
                    request.shoulderDip);
-
-  if (should_log) {
-    qDebug() << "Frame" << frame_counter
-             << "After Sculpt - HeadPos:" << m_pose.head_pos
-             << "FrameOrigin:" << m_pose.head_frame.origin << "Diff:"
-             << (m_pose.head_pos - m_pose.head_frame.origin).length();
-  }
 
   float const clamped_forward = std::clamp(forward, -1.0F, 1.0F);
   float const clamped_side = std::clamp(request.sideBias, -1.0F, 1.0F);
   updateHeadHierarchy(mount, clamped_forward * 0.4F, clamped_side * 0.4F,
                       "applyPose_fixup");
-
-  if (should_log) {
-    qDebug() << "Frame" << frame_counter
-             << "After Fix - HeadPos:" << m_pose.head_pos
-             << "FrameOrigin:" << m_pose.head_frame.origin << "Diff:"
-             << (m_pose.head_pos - m_pose.head_frame.origin).length();
-  }
 
   const bool needs_weapon_right = request.weaponPose != MountedWeaponPose::None;
   const bool needs_weapon_left =
