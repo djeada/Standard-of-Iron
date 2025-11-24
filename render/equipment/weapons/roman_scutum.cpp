@@ -158,7 +158,8 @@ void RomanScutumRenderer::render(const DrawContext &ctx,
       QMatrix4x4 m = ctx.model;
       m.translate(rim_pos);
       m.scale(rim_thickness);
-      submitter.mesh(getUnitSphere(), m, bronze_color * 0.95F, nullptr, 1.0F, 4);
+      submitter.mesh(getUnitSphere(), m, bronze_color * 0.95F, nullptr, 1.0F,
+                     4);
     }
   }
 
