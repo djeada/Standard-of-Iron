@@ -30,17 +30,17 @@ float noise(vec2 p) {
   return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
 }
 
-float clothWeave(vec2 p) {
-  float warpThread = sin(p.x * 70.0);
-  float weftThread = sin(p.y * 68.0);
-  return warpThread * weftThread * 0.06;
+float cloth_weave(vec2 p) {
+  float warp_thread = sin(p.x * 70.0);
+  float weft_thread = sin(p.y * 68.0);
+  return warp_thread * weft_thread * 0.06;
 }
 
-float phoenicianLinen(vec2 p) {
-  float weave = clothWeave(p);
-  float fineThread = noise(p * 88.0) * 0.08;
+float phoenician_linen(vec2 p) {
+  float weave = cloth_weave(p);
+  float fine_thread = noise(p * 88.0) * 0.08;
   float tyrian = noise(p * 12.0) * 0.05;
-  return weave + fineThread + tyrian;
+  return weave + fine_thread + tyrian;
 }
 
 void main() {
@@ -51,54 +51,51 @@ void main() {
 
   vec3 normal = normalize(v_normal);
   vec2 uv = v_worldPos.xz * 4.5;
-  float avgColor = (color.r + color.g + color.b) / 3.0;
+  float avg_color = (color.r + color.g + color.b) / 3.0;
 
   // Material ID: 0=body/skin, 1=armor, 2=helmet, 3=weapon, 4=shield
-  bool isArmor = (u_materialId == 1);
-  bool isHelmet = (u_materialId == 2);
-  bool isWeapon = (u_materialId == 3);
-  
-  // Fallback to color-based detection when u_materialId == 0
-  if (u_materialId == 0) {
-    isHelmet = (v_armorLayer == 0.0);
-  }
-  
-  bool isLight = (avgColor > 0.74);
-  bool isPurple = (color.b > color.g * 1.15 && color.b > color.r * 1.08);
+  bool is_armor = (u_materialId == 1);
+  bool is_helmet = (u_materialId == 2);
+  bool is_weapon = (u_materialId == 3);
+
+  // Use material IDs exclusively (no fallbacks)
+
+  bool is_light = (avg_color > 0.74);
+  bool is_purple = (color.b > color.g * 1.15 && color.b > color.r * 1.08);
 
   // LIGHT LINEN ROBES (Phoenician healer)
-  if (isLight || avgColor > 0.70) {
-    float linen = phoenicianLinen(v_worldPos.xz);
-    float mediterraneanFolds = noise(uv * 8.5) * 0.13;
+  if (is_light || avg_color > 0.70) {
+    float linen = phoenician_linen(v_worldPos.xz);
+    float mediterranean_folds = noise(uv * 8.5) * 0.13;
 
-    float viewAngle = abs(dot(normal, normalize(vec3(0.0, 1.0, 0.2))));
-    float linenSheen = pow(1.0 - viewAngle, 9.0) * 0.13;
+    float view_angle = abs(dot(normal, normalize(vec3(0.0, 1.0, 0.2))));
+    float linen_sheen = pow(1.0 - view_angle, 9.0) * 0.13;
 
-    color *= 1.0 + linen + mediterraneanFolds - 0.02;
-    color += vec3(linenSheen);
+    color *= 1.0 + linen + mediterranean_folds - 0.02;
+    color += vec3(linen_sheen);
   }
   // PURPLE CAPE/TRIM (Tyrian purple - rare healer dye)
-  else if (isPurple) {
-    float weave = clothWeave(v_worldPos.xz);
-    float tyrianRichness = noise(uv * 6.0) * 0.15;
-    float luxuryShimmer = noise(uv * 35.0) * 0.04;
+  else if (is_purple) {
+    float weave = cloth_weave(v_worldPos.xz);
+    float tyrian_richness = noise(uv * 6.0) * 0.15;
+    float luxury_shimmer = noise(uv * 35.0) * 0.04;
 
-    float viewAngle = abs(dot(normal, normalize(vec3(0.0, 1.0, 0.3))));
-    float silkSheen = pow(1.0 - viewAngle, 6.0) * 0.14;
+    float view_angle = abs(dot(normal, normalize(vec3(0.0, 1.0, 0.3))));
+    float silk_sheen = pow(1.0 - view_angle, 6.0) * 0.14;
 
-    color *= 1.0 + weave + tyrianRichness + luxuryShimmer - 0.03;
-    color += vec3(silkSheen);
+    color *= 1.0 + weave + tyrian_richness + luxury_shimmer - 0.03;
+    color += vec3(silk_sheen);
   }
   // LEATHER ELEMENTS (sandals, belt)
-  else if (avgColor > 0.30 && avgColor <= 0.56) {
-    float leatherGrain = noise(uv * 14.0) * 0.14;
-    float phoenicianCraft = noise(uv * 24.0) * 0.06;
+  else if (avg_color > 0.30 && avg_color <= 0.56) {
+    float leather_grain = noise(uv * 14.0) * 0.14;
+    float phoenician_craft = noise(uv * 24.0) * 0.06;
 
-    float viewAngle = abs(dot(normal, normalize(vec3(0.0, 1.0, 0.4))));
-    float leatherSheen = pow(1.0 - viewAngle, 6.0) * 0.10;
+    float view_angle = abs(dot(normal, normalize(vec3(0.0, 1.0, 0.4))));
+    float leather_sheen = pow(1.0 - view_angle, 6.0) * 0.10;
 
-    color *= 1.0 + leatherGrain + phoenicianCraft - 0.04;
-    color += vec3(leatherSheen);
+    color *= 1.0 + leather_grain + phoenician_craft - 0.04;
+    color += vec3(leather_sheen);
   } else {
     float detail = noise(uv * 10.0) * 0.10;
     color *= 1.0 + detail - 0.06;
@@ -106,10 +103,10 @@ void main() {
 
   color = clamp(color, 0.0, 1.0);
 
-  vec3 lightDir = normalize(vec3(1.0, 1.2, 1.0));
-  float nDotL = dot(normal, lightDir);
-  float wrapAmount = 0.46;
-  float diff = max(nDotL * (1.0 - wrapAmount) + wrapAmount, 0.28);
+  vec3 light_dir = normalize(vec3(1.0, 1.2, 1.0));
+  float n_dot_l = dot(normal, light_dir);
+  float wrap_amount = 0.46;
+  float diff = max(n_dot_l * (1.0 - wrap_amount) + wrap_amount, 0.28);
 
   color *= diff;
   FragColor = vec4(color, u_alpha);

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QCoreApplication>
 #include <QDir>
 #include <QFileInfo>
 #include <QString>
@@ -45,6 +46,34 @@ inline auto resolveResourcePath(const QString &path) -> QString {
     if (exists(candidate)) {
       return candidate;
     }
+  }
+
+  // Fallbacks for development and packaging where resources live on disk
+  auto search_upwards = [&](const QString &startDir) -> QString {
+    if (startDir.isEmpty()) {
+      return {};
+    }
+    QDir dir(startDir);
+    for (int i = 0; i < 5; ++i) {
+      QString candidate = dir.filePath(relative);
+      if (exists(candidate)) {
+        return candidate;
+      }
+      if (!dir.cdUp()) {
+        break;
+      }
+    }
+    return {};
+  };
+
+  if (QString candidate =
+          search_upwards(QCoreApplication::applicationDirPath());
+      !candidate.isEmpty()) {
+    return candidate;
+  }
+  if (QString candidate = search_upwards(QDir::currentPath());
+      !candidate.isEmpty()) {
+    return candidate;
   }
 
   return path;
