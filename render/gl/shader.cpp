@@ -94,26 +94,39 @@ void Shader::release() {
   glUseProgram(0);
 }
 
-auto Shader::uniformHandle(const char *name) -> Shader::UniformHandle {
-  if ((name == nullptr) || *name == '\0' || m_program == 0) {
-    return InvalidUniform;
+namespace {
+auto uniformHandleImpl(
+    QOpenGLFunctions_3_3_Core &fn, GLuint program,
+    std::unordered_map<std::string, Shader::UniformHandle> &cache,
+    const char *name, bool warn) -> Shader::UniformHandle {
+  if ((name == nullptr) || *name == '\0' || program == 0) {
+    return Shader::InvalidUniform;
   }
 
-  auto it = m_uniformCache.find(name);
-  if (it != m_uniformCache.end()) {
+  auto it = cache.find(name);
+  if (it != cache.end()) {
     return it->second;
   }
 
-  initializeOpenGLFunctions();
-  UniformHandle const location = glGetUniformLocation(m_program, name);
+  fn.initializeOpenGLFunctions();
+  Shader::UniformHandle const location = fn.glGetUniformLocation(program, name);
 
-  if (location == InvalidUniform) {
-    qWarning() << "Shader uniform not found:" << name
-               << "(program:" << m_program << ")";
+  if (warn && (location == Shader::InvalidUniform)) {
+    qWarning() << "Shader uniform not found:" << name << "(program:" << program
+               << ")";
   }
 
-  m_uniformCache.emplace(name, location);
+  cache.emplace(name, location);
   return location;
+}
+} // namespace
+
+auto Shader::uniformHandle(const char *name) -> Shader::UniformHandle {
+  return uniformHandleImpl(*this, m_program, m_uniformCache, name, true);
+}
+
+auto Shader::optionalUniformHandle(const char *name) -> Shader::UniformHandle {
+  return uniformHandleImpl(*this, m_program, m_uniformCache, name, false);
 }
 
 void Shader::setUniform(UniformHandle handle, float value) {

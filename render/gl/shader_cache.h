@@ -143,6 +143,12 @@ public:
         resolve(kShaderBase + QStringLiteral("bridge.frag"));
     load(QStringLiteral("bridge"), bridgeVert, bridgeFrag);
 
+    const QString troopShadowVert =
+        resolve(kShaderBase + QStringLiteral("troop_shadow.vert"));
+    const QString troopShadowFrag =
+        resolve(kShaderBase + QStringLiteral("troop_shadow.frag"));
+    load(QStringLiteral("troop_shadow"), troopShadowVert, troopShadowFrag);
+
     const auto loadBaseShader = [&](const QString &name) {
       const QString vert =
           resolve(kShaderBase + name + QStringLiteral(".vert"));
