@@ -26,7 +26,8 @@ void CrupperRenderer::render(const DrawContext &ctx,
     QMatrix4x4 side_plate = rump.make_local_transform(
         ctx.model, QVector3D(side * 0.28F, -0.05F, -0.20F), 0.8F);
     side_plate.scale(0.20F, 0.25F, 0.22F);
-    out.mesh(getUnitSphere(), side_plate, armor_color * 0.95F, nullptr, 1.0F, 1);
+    out.mesh(getUnitSphere(), side_plate, armor_color * 0.95F, nullptr, 1.0F,
+             1);
   }
 }
 
