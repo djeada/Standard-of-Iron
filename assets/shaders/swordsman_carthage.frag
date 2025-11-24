@@ -230,7 +230,8 @@ void main() {
   }
 
   bool helmetRegion = isHelmet;
-  bool torsoRegion = isArmor || (u_materialId == 0 && v_armorLayer >= 0.5 && v_armorLayer < 1.5);
+  bool torsoRegion = isArmor || (u_materialId == 0 && v_armorLayer >= 0.5 &&
+                                 v_armorLayer < 1.5);
 
   vec3 Nw = normalize(v_worldNormal);
   vec3 Tw = normalize(v_tangent);

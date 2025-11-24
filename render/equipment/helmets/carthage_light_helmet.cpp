@@ -18,7 +18,8 @@ using Render::Geom::sphereAt;
 
 static constexpr float k_helmet_vertical_lift = 0.14F;
 
-static inline auto helmet_lift_vector(const AttachmentFrame &head) -> QVector3D {
+static inline auto
+helmet_lift_vector(const AttachmentFrame &head) -> QVector3D {
   QVector3D up = head.up;
   if (up.lengthSquared() < 1e-6F) {
     up = QVector3D(0.0F, 1.0F, 0.0F);
@@ -40,7 +41,7 @@ static inline void submit_disk(ISubmitter &submitter, const DrawContext &ctx,
   n.normalize();
   QVector3D a = center - 0.5f * thickness * n;
   QVector3D b = center + 0.5f * thickness * n;
-  // Material ID: 2 = helmet
+
   submitter.mesh(getUnitCylinder(), cylinderBetween(ctx.model, a, b, radius),
                  color, nullptr, roughness, material_id);
 }
@@ -56,7 +57,7 @@ static inline void submit_spike(ISubmitter &submitter, const DrawContext &ctx,
   }
   d.normalize();
   QVector3D tip = base + d * length;
-  // Material ID: 2 = helmet
+
   submitter.mesh(getUnitCylinder(),
                  cylinderBetween(ctx.model, base, tip, base_radius), color,
                  nullptr, roughness, material_id);
@@ -64,7 +65,8 @@ static inline void submit_spike(ISubmitter &submitter, const DrawContext &ctx,
   m = ctx.model;
   m.translate(tip);
   m.scale(base_radius * 1.1f);
-  submitter.mesh(getUnitSphere(), m, color * 1.05f, nullptr, roughness, material_id);
+  submitter.mesh(getUnitSphere(), m, color * 1.05f, nullptr, roughness,
+                 material_id);
 }
 
 void CarthageLightHelmetRenderer::render(const DrawContext &ctx,
