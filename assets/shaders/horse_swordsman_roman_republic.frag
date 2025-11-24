@@ -588,7 +588,7 @@ void main() {
     float leatherSheen = pow(1.0 - NdotV, 4.0) * contactWear * 0.08;
     col += leatherSheen * vec3(0.90, 0.85, 0.75);
 
-  } else if (isBridleLeather) {
+  } else if (isBridle) {
     // =====================================================================
     // BRIDLE & REINS RENDERING (Phase 3)
     // Leather straps with bronze/brass fittings
@@ -909,7 +909,7 @@ void main() {
     float armorRim = pow(1.0 - NdotV, 4.0) * 0.16; // Elite: brighter rim
     col += armorRim * vec3(0.95, 0.90, 0.82);
 
-  } else if (isHelmet) {
+  } else if (isRiderHelmet) {
     // =====================================================================
     // HELMET RENDERING (Phase 4)
     // Attic, Phrygian, and Thracian style variations
