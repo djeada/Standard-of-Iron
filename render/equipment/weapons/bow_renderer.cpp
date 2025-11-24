@@ -123,9 +123,11 @@ void BowRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
     QVector3D const f2a = f2b + forward * 0.06F;
 
     submitter.mesh(getUnitCone(), coneFromTo(ctx.model, f1b, f1a, 0.04F),
-                   m_config.fletching_color, nullptr, 1.0F, m_config.material_id);
+                   m_config.fletching_color, nullptr, 1.0F,
+                   m_config.material_id);
     submitter.mesh(getUnitCone(), coneFromTo(ctx.model, f2a, f2b, 0.04F),
-                   m_config.fletching_color, nullptr, 1.0F, m_config.material_id);
+                   m_config.fletching_color, nullptr, 1.0F,
+                   m_config.material_id);
   }
 }
 

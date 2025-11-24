@@ -21,7 +21,7 @@ using Render::Geom::sphereAt;
 namespace {
 
 auto create_unit_hemisphere_mesh(int lat_segments = 12,
-                              int lon_segments = 32) -> Mesh * {
+                                 int lon_segments = 32) -> Mesh * {
   std::vector<Vertex> vertices;
   std::vector<unsigned int> indices;
   vertices.reserve((lat_segments + 1) * (lon_segments + 1));
@@ -33,7 +33,8 @@ auto create_unit_hemisphere_mesh(int lat_segments = 12,
     float const ring_r = std::sin(phi);
 
     for (int lon = 0; lon <= lon_segments; ++lon) {
-      float const u = static_cast<float>(lon) / static_cast<float>(lon_segments);
+      float const u =
+          static_cast<float>(lon) / static_cast<float>(lon_segments);
       float const theta = u * 2.0F * std::numbers::pi_v<float>;
       float const x = ring_r * std::cos(theta);
       float const y = ring_r * std::sin(theta);
@@ -117,8 +118,9 @@ void CarthageShieldRenderer::render(const DrawContext &ctx,
     m.translate(shield_center);
     m.rotate(k_shield_yaw_degrees, 0.0F, 1.0F, 0.0F);
     m.scale(shield_radius, shield_radius, dome_depth);
-    // Material ID: 4 = shield
-    submitter.mesh(get_unit_hemisphere_mesh(), m, shield_color, nullptr, 1.0F, 4);
+
+    submitter.mesh(get_unit_hemisphere_mesh(), m, shield_color, nullptr, 1.0F,
+                   4);
   }
 
   constexpr int rim_segments = 24;
