@@ -3,21 +3,26 @@
 #include "../../game/core/component.h"
 #include "../../game/core/entity.h"
 #include "../../game/core/world.h"
+#include "../../game/map/terrain_service.h"
 #include "../../game/units/spawn_type.h"
 #include "../../game/units/troop_config.h"
 #include "../../game/visuals/team_colors.h"
 #include "../entity/registry.h"
 #include "../geom/math_utils.h"
 #include "../geom/transforms.h"
+#include "../gl/backend.h"
 #include "../gl/humanoid/animation/animation_inputs.h"
 #include "../gl/humanoid/animation/gait.h"
 #include "../gl/humanoid/humanoid_constants.h"
 #include "../gl/primitives.h"
 #include "../gl/render_constants.h"
+#include "../gl/resources.h"
 #include "../palette.h"
+#include "../scene_renderer.h"
 #include "../submitter.h"
 #include "humanoid_math.h"
 #include <QMatrix4x4>
+#include <QVector2D>
 #include <QVector4D>
 #include <QtMath>
 #include <algorithm>
@@ -32,6 +37,15 @@ using Render::Geom::capsuleBetween;
 using Render::Geom::coneFromTo;
 using Render::Geom::cylinderBetween;
 using Render::Geom::sphereAt;
+
+namespace {
+
+constexpr float k_shadow_size_infantry = 0.16F;
+constexpr float k_shadow_size_mounted = 0.35F;
+constexpr float k_shadow_ground_offset = 0.02F;
+constexpr float k_shadow_base_alpha = 0.24F;
+constexpr QVector3D k_shadow_light_dir(0.4F, 1.0F, 0.25F);
+} // namespace
 
 auto HumanoidRendererBase::frameLocalPosition(
     const AttachmentFrame &frame, const QVector3D &local) -> QVector3D {
@@ -1232,6 +1246,90 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
         pose.head_frame.right = head_right;
         pose.head_frame.forward = head_forward;
         pose.body_frames.head = pose.head_frame;
+      }
+    }
+
+    if (inst_ctx.backend != nullptr && inst_ctx.resources != nullptr) {
+      auto *shadowShader =
+          inst_ctx.backend->shader(QStringLiteral("troop_shadow"));
+      auto *quadMesh = inst_ctx.resources->quad();
+
+      if (shadowShader != nullptr && quadMesh != nullptr) {
+
+        float const shadowSize =
+            is_mounted_spawn ? k_shadow_size_mounted : k_shadow_size_infantry;
+        float depth_boost = 1.0F;
+        float width_boost = 1.0F;
+        if (unit_comp != nullptr) {
+          using Game::Units::SpawnType;
+          switch (unit_comp->spawn_type) {
+          case SpawnType::Spearman:
+            depth_boost = 1.8F;
+            width_boost = 0.95F;
+            break;
+          case SpawnType::HorseSpearman:
+            depth_boost = 2.1F;
+            width_boost = 1.05F;
+            break;
+          case SpawnType::Archer:
+          case SpawnType::HorseArcher:
+            depth_boost = 1.2F;
+            width_boost = 0.95F;
+            break;
+          default:
+            break;
+          }
+        }
+
+        float const shadowWidth =
+            shadowSize * (is_mounted_spawn ? 1.05F : 1.0F) * width_boost;
+        float const shadowDepth =
+            shadowSize * (is_mounted_spawn ? 1.30F : 1.10F) * depth_boost;
+
+        QVector3D const instPos =
+            inst_ctx.model.map(QVector3D(0.0F, 0.0F, 0.0F));
+
+        float shadowY = instPos.y();
+        auto &terrain_service = Game::Map::TerrainService::instance();
+        if (terrain_service.isInitialized()) {
+          shadowY = terrain_service.getTerrainHeight(instPos.x(), instPos.z());
+        }
+
+        QVector3D light_dir = k_shadow_light_dir.normalized();
+        QVector2D light_dir_xz(light_dir.x(), light_dir.z());
+        if (light_dir_xz.lengthSquared() < 1e-6F) {
+          light_dir_xz = QVector2D(0.0F, 1.0F);
+        } else {
+          light_dir_xz.normalize();
+        }
+        QVector2D const shadow_dir = -light_dir_xz;
+        QVector2D dir_for_use = shadow_dir;
+        if (dir_for_use.lengthSquared() < 1e-6F) {
+          dir_for_use = QVector2D(0.0F, 1.0F);
+        } else {
+          dir_for_use.normalize();
+        }
+        float const shadowOffset = shadowDepth * 1.25F;
+        QVector2D const offset2d = dir_for_use * shadowOffset;
+        float const lightYawDeg = qRadiansToDegrees(
+            std::atan2(double(dir_for_use.x()), double(dir_for_use.y())));
+
+        QMatrix4x4 shadowModel;
+        shadowModel.translate(instPos.x() + offset2d.x(),
+                              shadowY + k_shadow_ground_offset,
+                              instPos.z() + offset2d.y());
+        shadowModel.rotate(lightYawDeg, 0.0F, 1.0F, 0.0F);
+        shadowModel.rotate(-90.0F, 1.0F, 0.0F, 0.0F);
+        shadowModel.scale(shadowWidth, shadowDepth, 1.0F);
+
+        if (auto *renderer = dynamic_cast<Renderer *>(&out)) {
+          renderer->setCurrentShader(shadowShader);
+          shadowShader->setUniform(QStringLiteral("u_lightDir"), dir_for_use);
+
+          out.mesh(quadMesh, shadowModel, QVector3D(0.0F, 0.0F, 0.0F), nullptr,
+                   k_shadow_base_alpha, 0);
+          renderer->setCurrentShader(nullptr);
+        }
       }
     }
 
