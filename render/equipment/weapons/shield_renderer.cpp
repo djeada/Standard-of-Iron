@@ -49,7 +49,8 @@ void ShieldRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
     m.translate(shield_center + n * plate_half);
     m.rotate(k_shield_yaw_degrees, 0.0F, 1.0F, 0.0F);
     m.scale(shield_width, shield_height, plate_full);
-    submitter.mesh(getUnitCylinder(), m, m_config.shield_color, nullptr, 1.0F, m_config.material_id);
+    submitter.mesh(getUnitCylinder(), m, m_config.shield_color, nullptr, 1.0F,
+                   m_config.material_id);
   }
 
   {
@@ -57,7 +58,8 @@ void ShieldRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
     m.translate(shield_center - n * plate_half);
     m.rotate(k_shield_yaw_degrees, 0.0F, 1.0F, 0.0F);
     m.scale(shield_width * 0.985F, shield_height * 0.985F, plate_full);
-    submitter.mesh(getUnitCylinder(), m, palette.leather * 0.8F, nullptr, 1.0F, m_config.material_id);
+    submitter.mesh(getUnitCylinder(), m, palette.leather * 0.8F, nullptr, 1.0F,
+                   m_config.material_id);
   }
 
   auto draw_ring_rotated = [&](float width, float height, float thickness,
@@ -89,7 +91,8 @@ void ShieldRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
     QMatrix4x4 m = ctx.model;
     m.translate(shield_center + n * (0.02F * k_scale_factor));
     m.scale(0.045F * k_scale_factor);
-    submitter.mesh(getUnitSphere(), m, m_config.metal_color, nullptr, 1.0F, m_config.material_id);
+    submitter.mesh(getUnitSphere(), m, m_config.metal_color, nullptr, 1.0F,
+                   m_config.material_id);
   }
 
   {

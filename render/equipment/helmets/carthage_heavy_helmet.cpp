@@ -76,7 +76,7 @@ void CarthageHeavyHelmetRenderer::render_bowl(const DrawContext &ctx,
 
   QVector3D luminous_bronze =
       mixColor(m_config.bronze_color, m_config.glow_color, 0.35F);
-  // Material ID: 2 = helmet
+
   submitter.mesh(getUnitSphere(), bowl, luminous_bronze, nullptr, 0.3f, 2);
 
   QVector3D rim_center = head_point(QVector3D(0.0f, 1.17f, 0.0f));
@@ -118,7 +118,8 @@ void CarthageHeavyHelmetRenderer::render_cheek_guards(
   right_guard.scale(R * 0.32f, R * 0.48f, R * 0.18f);
   right_guard.rotate(6.0f, QVector3D(0.0f, 0.0f, 1.0f));
 
-  submitter.mesh(getUnitSphere(), left_guard, m_config.bronze_color, nullptr, 0.6f, 2);
+  submitter.mesh(getUnitSphere(), left_guard, m_config.bronze_color, nullptr,
+                 0.6f, 2);
   submitter.mesh(getUnitSphere(), right_guard, m_config.bronze_color, nullptr,
                  0.6f, 2);
 }
@@ -154,7 +155,8 @@ void CarthageHeavyHelmetRenderer::render_face_plate(const DrawContext &ctx,
   QVector3D nose_bottom = head_point(QVector3D(0.0f, 0.53f, 0.46f));
   QMatrix4x4 nose = cylinderBetween(ctx.model, nose_bottom, nose_top,
                                     std::max(0.05f, R * 0.12f));
-  submitter.mesh(getUnitCylinder(), nose, m_config.glow_color, nullptr, 0.65f, 2);
+  submitter.mesh(getUnitCylinder(), nose, m_config.glow_color, nullptr, 0.65f,
+                 2);
 
   render_brow_arch(ctx, head, submitter);
 }
@@ -218,7 +220,8 @@ void CarthageHeavyHelmetRenderer::render_brow_arch(const DrawContext &ctx,
   QMatrix4x4 ridge = ctx.model;
   ridge.translate(ridge_top);
   ridge.scale(R * 0.22f, R * 0.10f, R * 0.26f);
-  submitter.mesh(getUnitSphere(), ridge, m_config.glow_color, nullptr, 0.58f, 2);
+  submitter.mesh(getUnitSphere(), ridge, m_config.glow_color, nullptr, 0.58f,
+                 2);
 }
 
 void CarthageHeavyHelmetRenderer::render_crest(const DrawContext &ctx,

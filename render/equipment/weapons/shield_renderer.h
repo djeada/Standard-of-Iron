@@ -16,7 +16,7 @@ struct ShieldRenderConfig {
   float shield_radius = 0.18F;
   float shield_aspect = 1.0F;
   bool has_cross_decal = false;
-  int material_id = 4; // Material ID: 4 = shield
+  int material_id = 4;
 };
 
 class ShieldRenderer : public IEquipmentRenderer {

@@ -79,7 +79,8 @@ void SpearRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
   submitter.mesh(getUnitCylinder(),
                  cylinderBetween(ctx.model, shaft_mid, shaft_tip,
                                  m_config.shaft_radius * 0.95F),
-                 m_config.shaft_color * 0.98F, nullptr, 1.0F, m_config.material_id);
+                 m_config.shaft_color * 0.98F, nullptr, 1.0F,
+                 m_config.material_id);
 
   QVector3D const spearhead_base = shaft_tip;
   QVector3D const spearhead_tip =
