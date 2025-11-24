@@ -73,13 +73,12 @@ void ArmorHeavyCarthageRenderer::render(const DrawContext &ctx,
     submitter.mesh(getUnitTorso(), m, color, nullptr, 1.0F, material_id);
   };
 
-  // Material ID: 1 = armor (chainmail and bronze plates)
   draw_torso(top, chainmail_bottom, torso_r * 0.90F, chainmail_color, 1.00F,
              0.88F, 1);
 
   draw_torso(top + forward * (torso_r * 0.02F),
-             bottom + forward * (torso_r * 0.02F), torso_r * 0.98F, bronze_color,
-             1.05F, 0.84F, 1);
+             bottom + forward * (torso_r * 0.02F), torso_r * 0.98F,
+             bronze_color, 1.05F, 0.84F, 1);
 
   draw_torso(top, bottom, torso_r * 0.90F, bronze_core, 0.98F, 0.80F, 1);
 }

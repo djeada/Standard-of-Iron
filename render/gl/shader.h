@@ -26,6 +26,7 @@ public:
   void release();
 
   auto uniformHandle(const char *name) -> UniformHandle;
+  auto optionalUniformHandle(const char *name) -> UniformHandle;
 
   void setUniform(UniformHandle handle, float value);
   void setUniform(UniformHandle handle, const QVector3D &value);

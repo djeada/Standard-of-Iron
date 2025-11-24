@@ -57,12 +57,12 @@ void main() {
   bool isArmor = (u_materialId == 1);
   bool isHelmet = (u_materialId == 2);
   bool isWeapon = (u_materialId == 3);
-  
+
   // Fallback to color-based detection when u_materialId == 0
   if (u_materialId == 0) {
     isHelmet = (v_armorLayer == 0.0);
   }
-  
+
   bool isLight = (avgColor > 0.74);
   bool isPurple = (color.b > color.g * 1.15 && color.b > color.r * 1.08);
 
