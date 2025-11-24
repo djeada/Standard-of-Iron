@@ -48,16 +48,16 @@ float noise(vec2 p) {
 // MATERIAL PATTERN FUNCTIONS (Roman Medicus)
 // ============================================================================
 
-float clothWeave(vec2 p) {
-  float warpThread = sin(p.x * 70.0);
-  float weftThread = sin(p.y * 68.0);
-  return warpThread * weftThread * 0.06;
+float cloth_weave(vec2 p) {
+  float warp_thread = sin(p.x * 70.0);
+  float weft_thread = sin(p.y * 68.0);
+  return warp_thread * weft_thread * 0.06;
 }
 
-float romanLinen(vec2 p) {
-  float weave = clothWeave(p);
-  float fineThread = noise(p * 90.0) * 0.07;
-  return weave + fineThread;
+float roman_linen(vec2 p) {
+  float weave = cloth_weave(p);
+  float fine_thread = noise(p * 90.0) * 0.07;
+  return weave + fine_thread;
 }
 
 // ============================================================================
@@ -75,72 +75,65 @@ void main() {
 
   // Material ID: 0=body/skin, 1=tunica, 2=leather, 3=medical tools, 4=red
   // trim/cape
-  bool isBody = (u_materialId == 0);
-  bool isTunica = (u_materialId == 1);
-  bool isLeather = (u_materialId == 2);
-  bool isMedicalTools = (u_materialId == 3);
-  bool isRedTrim = (u_materialId == 4);
+  bool is_body = (u_materialId == 0);
+  bool is_tunica = (u_materialId == 1);
+  bool is_leather = (u_materialId == 2);
+  bool is_medical_tools = (u_materialId == 3);
+  bool is_red_trim = (u_materialId == 4);
 
-  // Fallback to old color-based detection if materialId not set
-  if (u_materialId == 0) {
-    float avgColor = (color.r + color.g + color.b) / 3.0;
-    isTunica = (avgColor > 0.72);
-    isRedTrim = (color.r > color.g * 1.18 && color.r > color.b * 1.15);
-    isLeather =
-        (!isTunica && !isRedTrim && avgColor > 0.32 && avgColor <= 0.58);
-  }
+  // Use material IDs exclusively (no fallbacks)
 
   // === ROMAN MEDICUS MATERIALS ===
 
   // WHITE LINEN TUNICA (main garment)
-  if (isTunica) {
+  if (is_tunica) {
     // Fine linen weave with natural texture
-    float linen = romanLinen(v_worldPos.xz);
-    float fineThread = noise(uv * 95.0) * 0.06;
+    float linen = roman_linen(v_worldPos.xz);
+    float fine_thread = noise(uv * 95.0) * 0.06;
 
     // Cloth folds from vertex shader (natural draping)
-    float foldDepth = v_clothFolds * noise(uv * 12.0) * 0.18;
+    float fold_depth = v_clothFolds * noise(uv * 12.0) * 0.18;
 
     // Wear patterns on high-stress areas (elbows, knees)
-    float wearPattern = v_fabricWear * noise(uv * 8.0) * 0.12;
+    float wear_pattern = v_fabricWear * noise(uv * 8.0) * 0.12;
 
     // Natural linen has subtle sheen (different from silk)
     vec3 V = normalize(vec3(0.0, 1.0, 0.2));
-    float viewAngle = max(dot(normalize(v_worldNormal), V), 0.0);
-    float linenSheen = pow(1.0 - viewAngle, 10.0) * 0.12;
+    float view_angle = max(dot(normalize(v_worldNormal), V), 0.0);
+    float linen_sheen = pow(1.0 - view_angle, 10.0) * 0.12;
 
     // Slight discoloration from use (natural aging)
     float aging = noise(uv * 3.0) * 0.08;
 
-    color *= 1.0 + linen + fineThread - 0.03;
-    color -= vec3(foldDepth + wearPattern + aging);
-    color += vec3(linenSheen);
+    color *= 1.0 + linen + fine_thread - 0.03;
+    color -= vec3(fold_depth + wear_pattern + aging);
+    color += vec3(linen_sheen);
   }
   // RED WOOL CAPE/TRIM (military medicus insignia)
-  else if (isRedTrim) {
+  else if (is_red_trim) {
     // Wool weave (coarser than linen)
-    float weave = clothWeave(v_worldPos.xz);
-    float woolTex = noise(uv * 55.0) * 0.10;
+    float weave = cloth_weave(v_worldPos.xz);
+    float wool_tex = noise(uv * 55.0) * 0.10;
 
     // Natural madder root dye richness variation
-    float dyeRichness = noise(uv * 5.0) * 0.14;
+    float dye_richness = noise(uv * 5.0) * 0.14;
 
     // Wool has different sheen than linen (more matte)
     vec3 V = normalize(vec3(0.0, 1.0, 0.3));
-    float viewAngle = max(dot(normalize(v_worldNormal), V), 0.0);
-    float woolSheen = pow(1.0 - viewAngle, 7.0) * 0.11;
+    float view_angle = max(dot(normalize(v_worldNormal), V), 0.0);
+    float wool_sheen = pow(1.0 - view_angle, 7.0) * 0.11;
 
     // Fading from sun exposure (outer garment)
-    float sunFading = smoothstep(0.8, 1.0, v_bodyHeight) * 0.08;
+    float sun_fading = smoothstep(0.8, 1.0, v_bodyHeight) * 0.08;
 
-    color *= 1.0 + weave + woolTex + dyeRichness - 0.04;
-    color += vec3(woolSheen);
-    color -= vec3(sunFading);
+    color *= 1.0 + weave + wool_tex + dye_richness - 0.04;
+    color += vec3(wool_sheen);
+    color -= vec3(sun_fading);
   }
   // LEATHER EQUIPMENT (bag, belt, sandals, straps)
-  else if (isLeather) {
+  else if (is_leather) {
     // Vegetable-tanned leather grain
-    float leatherGrain = noise(uv * 15.0) * 0.15 * (1.0 + v_fabricWear * 0.3);
+    float leather_grain = noise(uv * 15.0) * 0.15 * (1.0 + v_fabricWear * 0.3);
     float pores = noise(uv * 35.0) * 0.07;
 
     // Roman tooling and stitching marks
@@ -149,23 +142,24 @@ void main() {
                       step(0.95, fract(v_worldPos.y * 12.0)) * 0.08;
 
     // Leather darkens and stiffens with age/oil
-    float oilDarkening = v_fabricWear * 0.15;
+    float oil_darkening = v_fabricWear * 0.15;
 
     // Subtle leather sheen (not glossy, just slight reflection)
     vec3 V = normalize(vec3(0.0, 1.0, 0.4));
-    float viewAngle = max(dot(normalize(v_worldNormal), V), 0.0);
-    float leatherSheen = pow(1.0 - viewAngle, 5.5) * 0.11;
+    float view_angle = max(dot(normalize(v_worldNormal), V), 0.0);
+    float leather_sheen = pow(1.0 - view_angle, 5.5) * 0.11;
 
     // Edge wear (lighter color at stressed edges)
-    float edgeWear = smoothstep(0.88, 0.92, abs(dot(normal, v_tangent))) * 0.10;
+    float edge_wear =
+        smoothstep(0.88, 0.92, abs(dot(normal, v_tangent))) * 0.10;
 
-    color *= 1.0 + leatherGrain + pores + tooling - oilDarkening;
-    color += vec3(stitching + leatherSheen + edgeWear);
+    color *= 1.0 + leather_grain + pores + tooling - oil_darkening;
+    color += vec3(stitching + leather_sheen + edge_wear);
   }
   // MEDICAL IMPLEMENTS (bronze/iron tools)
-  else if (isMedicalTools) {
+  else if (is_medical_tools) {
     // Bronze medical instruments (Roman surgical tools were bronze)
-    vec3 bronzeBase = vec3(0.75, 0.55, 0.30);
+    vec3 bronze_base = vec3(0.75, 0.55, 0.30);
 
     // Tool patina from use and cleaning
     float patina = noise(uv * 12.0) * 0.18;
@@ -173,28 +167,28 @@ void main() {
 
     // Polished areas from frequent handling
     vec3 V = normalize(vec3(0.0, 1.0, 0.5));
-    float viewAngle = max(dot(normalize(v_worldNormal), V), 0.0);
-    float bronzeSheen = pow(viewAngle, 8.0) * 0.35;
+    float view_angle = max(dot(normalize(v_worldNormal), V), 0.0);
+    float bronze_sheen = pow(view_angle, 8.0) * 0.35;
 
-    color = mix(color, bronzeBase, 0.6);
+    color = mix(color, bronze_base, 0.6);
     color -= vec3(patina * 0.3 + verdigris * 0.2);
-    color += vec3(bronzeSheen);
+    color += vec3(bronze_sheen);
   }
   // BODY/SKIN (hands, face, neck)
-  else if (isBody) {
+  else if (is_body) {
     // Minimal processing for skin - let base color through
-    float skinDetail = noise(uv * 25.0) * 0.08;
-    color *= 1.0 + skinDetail;
+    float skin_detail = noise(uv * 25.0) * 0.08;
+    color *= 1.0 + skin_detail;
   }
 
   color = clamp(color, 0.0, 1.0);
 
   // Lighting model (softer for cloth-based unit)
-  vec3 lightDir = normalize(vec3(1.0, 1.2, 1.0));
-  float nDotL = dot(normal, lightDir);
+  vec3 light_dir = normalize(vec3(1.0, 1.2, 1.0));
+  float n_dot_l = dot(normal, light_dir);
 
-  float wrapAmount = isTunica ? 0.50 : (isRedTrim ? 0.48 : 0.42);
-  float diff = max(nDotL * (1.0 - wrapAmount) + wrapAmount, 0.25);
+  float wrap_amount = is_tunica ? 0.50 : (is_red_trim ? 0.48 : 0.42);
+  float diff = max(n_dot_l * (1.0 - wrap_amount) + wrap_amount, 0.25);
 
   color *= diff;
   FragColor = vec4(color, u_alpha);
