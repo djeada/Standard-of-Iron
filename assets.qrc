@@ -72,6 +72,8 @@
         <file>assets/shaders/stone_instanced.vert</file>
         <file>assets/shaders/terrain_chunk.frag</file>
         <file>assets/shaders/terrain_chunk.vert</file>
+        <file>assets/shaders/troop_shadow.frag</file>
+        <file>assets/shaders/troop_shadow.vert</file>
         
         <!-- Map files -->
         <file>assets/maps/map_forest.json</file>
