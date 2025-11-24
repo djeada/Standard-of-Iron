@@ -969,15 +969,27 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         break;
       }
 
-      glDepthMask(GL_TRUE);
-      if (glIsEnabled(GL_POLYGON_OFFSET_FILL) != 0U) {
-        glDisable(GL_POLYGON_OFFSET_FILL);
-      }
-
       Shader *active_shader =
           (it.shader != nullptr) ? it.shader : m_basicShader;
       if (active_shader == nullptr) {
         break;
+      }
+
+      if (glIsEnabled(GL_POLYGON_OFFSET_FILL) != 0U) {
+        glDisable(GL_POLYGON_OFFSET_FILL);
+      }
+
+      Shader *shadowShader =
+          m_shaderCache ? m_shaderCache->get(QStringLiteral("troop_shadow"))
+                        : nullptr;
+      bool const isShadowShader = (active_shader == shadowShader);
+      std::unique_ptr<DepthMaskScope> shadow_depth_scope;
+      std::unique_ptr<BlendScope> shadow_blend_scope;
+      if (isShadowShader) {
+        shadow_depth_scope = std::make_unique<DepthMaskScope>(false);
+        shadow_blend_scope = std::make_unique<BlendScope>(true);
+      } else {
+        glDepthMask(GL_TRUE);
       }
 
       if (active_shader == m_waterPipeline->m_riverShader) {
