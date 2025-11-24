@@ -17,7 +17,6 @@ void CarthageSaddleRenderer::render(const DrawContext &ctx,
   QMatrix4x4 saddle_transform = back.make_local_transform(
       ctx.model, QVector3D(0.0F, 0.008F, 0.0F), 0.25F);
 
-  // Material ID: 4 = saddle
   QMatrix4x4 seat = saddle_transform;
   seat.scale(0.38F, 0.14F, 1.20F);
   out.mesh(getUnitSphere(), seat, variant.saddleColor, nullptr, 1.0F, 4);
