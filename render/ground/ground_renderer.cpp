@@ -94,12 +94,21 @@ auto GroundRenderer::buildParams() const -> TerrainChunkParams {
   params.noiseOffset = m_noiseOffset;
   params.noiseAngle = m_noiseAngle;
 
-  const float target_amp =
-      std::clamp(m_biomeSettings.heightNoiseAmplitude * 0.22F, 0.10F, 0.20F);
-  params.heightNoiseStrength = target_amp;
+  float target_amp;
+  float target_freq;
+  if (m_biomeSettings.groundIrregularityEnabled) {
 
-  params.heightNoiseFrequency =
-      std::max(0.6F, m_biomeSettings.heightNoiseFrequency * 1.05F);
+    target_amp =
+        std::clamp(m_biomeSettings.irregularityAmplitude * 0.85F, 0.15F, 0.70F);
+    target_freq = std::max(0.45F, m_biomeSettings.irregularityScale * 2.5F);
+  } else {
+
+    target_amp =
+        std::clamp(m_biomeSettings.heightNoiseAmplitude * 0.22F, 0.10F, 0.20F);
+    target_freq = std::max(0.6F, m_biomeSettings.heightNoiseFrequency * 1.05F);
+  }
+  params.heightNoiseStrength = target_amp;
+  params.heightNoiseFrequency = target_freq;
 
   params.microBumpAmp = 0.07F;
   params.microBumpFreq = 2.2F;
@@ -122,6 +131,8 @@ auto GroundRenderer::buildParams() const -> TerrainChunkParams {
 }
 
 void GroundRenderer::submit(Renderer &renderer, ResourceManager *resources) {
+  syncBiomeFromService();
+
   if (resources == nullptr) {
     return;
   }
@@ -152,6 +163,41 @@ void GroundRenderer::submit(Renderer &renderer, ResourceManager *resources) {
                            ? std::max(m_width, m_height) * m_tile_size * 0.5F
                            : m_extent;
   renderer.grid(m_model, m_color, cell, 0.06F, extent);
+}
+
+void GroundRenderer::syncBiomeFromService() {
+  auto &service = Game::Map::TerrainService::instance();
+  if (!service.isInitialized()) {
+    return;
+  }
+  const auto &current = service.biomeSettings();
+  if (!m_hasBiome || !biomeEquals(current, m_biomeSettings)) {
+    m_biomeSettings = current;
+    m_hasBiome = true;
+    updateNoiseOffset();
+    invalidateParamsCache();
+  }
+}
+
+auto GroundRenderer::biomeEquals(const Game::Map::BiomeSettings &a,
+                                 const Game::Map::BiomeSettings &b) -> bool {
+  return a.grassPrimary == b.grassPrimary &&
+         a.grassSecondary == b.grassSecondary && a.grassDry == b.grassDry &&
+         a.soilColor == b.soilColor && a.rockLow == b.rockLow &&
+         a.rockHigh == b.rockHigh &&
+         a.terrainMacroNoiseScale == b.terrainMacroNoiseScale &&
+         a.terrainDetailNoiseScale == b.terrainDetailNoiseScale &&
+         a.terrainSoilHeight == b.terrainSoilHeight &&
+         a.terrainSoilSharpness == b.terrainSoilSharpness &&
+         a.terrainRockThreshold == b.terrainRockThreshold &&
+         a.terrainRockSharpness == b.terrainRockSharpness &&
+         a.terrainAmbientBoost == b.terrainAmbientBoost &&
+         a.terrainRockDetailStrength == b.terrainRockDetailStrength &&
+         a.heightNoiseAmplitude == b.heightNoiseAmplitude &&
+         a.heightNoiseFrequency == b.heightNoiseFrequency &&
+         a.groundIrregularityEnabled == b.groundIrregularityEnabled &&
+         a.irregularityScale == b.irregularityScale &&
+         a.irregularityAmplitude == b.irregularityAmplitude && a.seed == b.seed;
 }
 
 } // namespace Render::GL
