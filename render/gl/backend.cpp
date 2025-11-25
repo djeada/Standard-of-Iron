@@ -829,6 +829,49 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
           active_shader->setUniform(
               m_terrainPipeline->m_groundUniforms.light_dir, light_dir);
         }
+        // Ground-type-specific uniforms
+        if (m_terrainPipeline->m_groundUniforms.snowCoverage !=
+            Shader::InvalidUniform) {
+          active_shader->setUniform(
+              m_terrainPipeline->m_groundUniforms.snowCoverage,
+              terrain.params.snowCoverage);
+        }
+        if (m_terrainPipeline->m_groundUniforms.moistureLevel !=
+            Shader::InvalidUniform) {
+          active_shader->setUniform(
+              m_terrainPipeline->m_groundUniforms.moistureLevel,
+              terrain.params.moistureLevel);
+        }
+        if (m_terrainPipeline->m_groundUniforms.crackIntensity !=
+            Shader::InvalidUniform) {
+          active_shader->setUniform(
+              m_terrainPipeline->m_groundUniforms.crackIntensity,
+              terrain.params.crackIntensity);
+        }
+        if (m_terrainPipeline->m_groundUniforms.rockExposure !=
+            Shader::InvalidUniform) {
+          active_shader->setUniform(
+              m_terrainPipeline->m_groundUniforms.rockExposure,
+              terrain.params.rockExposure);
+        }
+        if (m_terrainPipeline->m_groundUniforms.grassSaturation !=
+            Shader::InvalidUniform) {
+          active_shader->setUniform(
+              m_terrainPipeline->m_groundUniforms.grassSaturation,
+              terrain.params.grassSaturation);
+        }
+        if (m_terrainPipeline->m_groundUniforms.soilRoughness !=
+            Shader::InvalidUniform) {
+          active_shader->setUniform(
+              m_terrainPipeline->m_groundUniforms.soilRoughness,
+              terrain.params.soilRoughness);
+        }
+        if (m_terrainPipeline->m_groundUniforms.snowColor !=
+            Shader::InvalidUniform) {
+          active_shader->setUniform(
+              m_terrainPipeline->m_groundUniforms.snowColor,
+              terrain.params.snowColor);
+        }
       } else {
 
         if (m_terrainPipeline->m_terrainUniforms.mvp !=
@@ -962,6 +1005,49 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
           }
           active_shader->setUniform(
               m_terrainPipeline->m_terrainUniforms.light_dir, light_dir);
+        }
+        // Ground-type-specific uniforms
+        if (m_terrainPipeline->m_terrainUniforms.snowCoverage !=
+            Shader::InvalidUniform) {
+          active_shader->setUniform(
+              m_terrainPipeline->m_terrainUniforms.snowCoverage,
+              terrain.params.snowCoverage);
+        }
+        if (m_terrainPipeline->m_terrainUniforms.moistureLevel !=
+            Shader::InvalidUniform) {
+          active_shader->setUniform(
+              m_terrainPipeline->m_terrainUniforms.moistureLevel,
+              terrain.params.moistureLevel);
+        }
+        if (m_terrainPipeline->m_terrainUniforms.crackIntensity !=
+            Shader::InvalidUniform) {
+          active_shader->setUniform(
+              m_terrainPipeline->m_terrainUniforms.crackIntensity,
+              terrain.params.crackIntensity);
+        }
+        if (m_terrainPipeline->m_terrainUniforms.rockExposure !=
+            Shader::InvalidUniform) {
+          active_shader->setUniform(
+              m_terrainPipeline->m_terrainUniforms.rockExposure,
+              terrain.params.rockExposure);
+        }
+        if (m_terrainPipeline->m_terrainUniforms.grassSaturation !=
+            Shader::InvalidUniform) {
+          active_shader->setUniform(
+              m_terrainPipeline->m_terrainUniforms.grassSaturation,
+              terrain.params.grassSaturation);
+        }
+        if (m_terrainPipeline->m_terrainUniforms.soilRoughness !=
+            Shader::InvalidUniform) {
+          active_shader->setUniform(
+              m_terrainPipeline->m_terrainUniforms.soilRoughness,
+              terrain.params.soilRoughness);
+        }
+        if (m_terrainPipeline->m_terrainUniforms.snowColor !=
+            Shader::InvalidUniform) {
+          active_shader->setUniform(
+              m_terrainPipeline->m_terrainUniforms.snowColor,
+              terrain.params.snowColor);
         }
       }
 
