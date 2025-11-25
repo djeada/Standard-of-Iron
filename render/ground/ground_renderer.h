@@ -5,6 +5,7 @@
 #include <cstdint>
 
 #include "../../game/map/terrain.h"
+#include "../../game/map/terrain_service.h"
 #include "../i_render_pass.h"
 #include "terrain_gpu.h"
 
@@ -50,6 +51,9 @@ private:
   void recomputeModel();
   void updateNoiseOffset();
   auto buildParams() const -> Render::GL::TerrainChunkParams;
+  void syncBiomeFromService();
+  static auto biomeEquals(const Game::Map::BiomeSettings &a,
+                          const Game::Map::BiomeSettings &b) -> bool;
 
   float m_tile_size = 1.0F;
   int m_width = 50;

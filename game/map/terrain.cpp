@@ -470,40 +470,85 @@ void TerrainHeightMap::applyBiomeVariation(const BiomeSettings &settings) {
     return;
   }
 
-  const float amplitude = std::max(0.0F, settings.heightNoiseAmplitude);
-  if (amplitude <= 0.0001F) {
-    return;
+  if (settings.groundIrregularityEnabled) {
+    const float amplitude = std::max(0.0F, settings.irregularityAmplitude);
+    if (amplitude > 0.0001F) {
+      const float frequency = std::max(0.0001F, settings.irregularityScale);
+      const float half_width = m_width * 0.5F - 0.5F;
+      const float half_height = m_height * 0.5F - 0.5F;
+
+      for (int z = 0; z < m_height; ++z) {
+        for (int x = 0; x < m_width; ++x) {
+          int const idx = indexAt(x, z);
+          TerrainType const type = m_terrain_types[idx];
+
+          if (type != TerrainType::Flat) {
+            continue;
+          }
+
+          if (isRiverOrNearby(x, z, 2)) {
+            continue;
+          }
+
+          float const world_x =
+              (static_cast<float>(x) - half_width) * m_tile_size;
+          float const world_z =
+              (static_cast<float>(z) - half_height) * m_tile_size;
+          float const sample_x = world_x * frequency;
+          float const sample_z = world_z * frequency;
+
+          float const base_noise =
+              valueNoise2D(sample_x, sample_z, settings.seed);
+          float const detail_noise = valueNoise2D(
+              sample_x * 2.5F, sample_z * 2.5F, settings.seed ^ 0xA21C9E37U);
+          float const fine_noise = valueNoise2D(
+              sample_x * 5.0F, sample_z * 5.0F, settings.seed ^ 0x7E4B92F1U);
+
+          float const blended =
+              0.5F * base_noise + 0.35F * detail_noise + 0.15F * fine_noise;
+          float const perturb = (blended - 0.5F) * 2.0F * amplitude;
+
+          m_heights[idx] = std::max(0.0F, m_heights[idx] + perturb);
+        }
+      }
+    }
   }
 
-  const float frequency = std::max(0.0001F, settings.heightNoiseFrequency);
-  const float half_width = m_width * 0.5F - 0.5F;
-  const float half_height = m_height * 0.5F - 0.5F;
+  const float legacy_amplitude = std::max(0.0F, settings.heightNoiseAmplitude);
+  if (legacy_amplitude > 0.0001F) {
+    const float frequency = std::max(0.0001F, settings.heightNoiseFrequency);
+    const float half_width = m_width * 0.5F - 0.5F;
+    const float half_height = m_height * 0.5F - 0.5F;
 
-  for (int z = 0; z < m_height; ++z) {
-    for (int x = 0; x < m_width; ++x) {
-      int const idx = indexAt(x, z);
-      TerrainType const type = m_terrain_types[idx];
-      if (type == TerrainType::Mountain) {
-        continue;
+    for (int z = 0; z < m_height; ++z) {
+      for (int x = 0; x < m_width; ++x) {
+        int const idx = indexAt(x, z);
+        TerrainType const type = m_terrain_types[idx];
+        if (type == TerrainType::Mountain) {
+          continue;
+        }
+
+        float const world_x =
+            (static_cast<float>(x) - half_width) * m_tile_size;
+        float const world_z =
+            (static_cast<float>(z) - half_height) * m_tile_size;
+        float const sample_x = world_x * frequency;
+        float const sample_z = world_z * frequency;
+
+        float const base_noise =
+            valueNoise2D(sample_x, sample_z, settings.seed);
+        float const detail_noise = valueNoise2D(
+            sample_x * 2.0F, sample_z * 2.0F, settings.seed ^ 0xA21C9E37U);
+
+        float const blended = 0.65F * base_noise + 0.35F * detail_noise;
+        float perturb = (blended - 0.5F) * 2.0F * legacy_amplitude;
+
+        if (type == TerrainType::Hill) {
+          perturb *= 0.6F;
+        }
+
+        m_heights[idx] = std::max(0.0F, m_heights[idx] + perturb);
       }
-
-      float const world_x = (static_cast<float>(x) - half_width) * m_tile_size;
-      float const world_z = (static_cast<float>(z) - half_height) * m_tile_size;
-      float const sample_x = world_x * frequency;
-      float const sample_z = world_z * frequency;
-
-      float const base_noise = valueNoise2D(sample_x, sample_z, settings.seed);
-      float const detail_noise = valueNoise2D(sample_x * 2.0F, sample_z * 2.0F,
-                                              settings.seed ^ 0xA21C9E37U);
-
-      float const blended = 0.65F * base_noise + 0.35F * detail_noise;
-      float perturb = (blended - 0.5F) * 2.0F * amplitude;
-
-      if (type == TerrainType::Hill) {
-        perturb *= 0.6F;
-      }
-
-      m_heights[idx] = std::max(0.0F, m_heights[idx] + perturb);
     }
   }
 }
