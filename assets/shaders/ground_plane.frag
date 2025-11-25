@@ -18,6 +18,15 @@ uniform float u_soilBlendSharpness;
 uniform float u_ambientBoost;
 uniform vec3 u_lightDir;
 
+// Ground-type-specific uniforms
+uniform float u_snowCoverage;      // 0-1: snow accumulation
+uniform float u_moistureLevel;     // 0-1: wetness/dryness
+uniform float u_crackIntensity;    // 0-1: ground cracking
+uniform float u_rockExposure;      // 0-1: rock visibility
+uniform float u_grassSaturation;   // 0-1.5: grass color intensity
+uniform float u_soilRoughness;     // 0-1: soil texture roughness
+uniform vec3 u_snowColor;          // Snow tint color
+
 float hash21(vec2 p) {
   return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
 }
@@ -62,6 +71,35 @@ void main() {
   mudPatch = smoothstep(0.65, 0.75, mudPatch);
   soilMix = max(soilMix, mudPatch * 0.85);
   vec3 baseCol = mix(grassCol, u_soilColor, soilMix);
+
+  // Ground cracking effect (for dry Mediterranean terrain)
+  if (u_crackIntensity > 0.01) {
+    float crackNoise1 = noise21(wuv * 8.0);
+    float crackNoise2 = noise21(wuv * 16.0 + vec2(42.0, 17.0));
+    float crackPattern = smoothstep(0.45, 0.50, crackNoise1) * 
+                         smoothstep(0.40, 0.55, crackNoise2);
+    float crackDarkening = 1.0 - crackPattern * u_crackIntensity * 0.35;
+    baseCol *= crackDarkening;
+  }
+
+  // Snow coverage effect (for alpine terrain)
+  if (u_snowCoverage > 0.01) {
+    float snowNoise = fbm(wuv * 0.5 + vec2(123.0, 456.0));
+    float snowAccumulation = smoothstep(0.3, 0.7, snowNoise);
+    float heightSnowBonus = smoothstep(-0.5, 1.5, v_worldPos.y) * 0.3;
+    float snowMask = clamp(snowAccumulation * (u_snowCoverage + heightSnowBonus), 0.0, 1.0);
+    vec3 snowTinted = u_snowColor * (1.0 + detail * 0.1);
+    baseCol = mix(baseCol, snowTinted, snowMask * 0.85);
+  }
+
+  // Apply grass saturation modifier
+  vec3 grayLevel = vec3(dot(baseCol, vec3(0.299, 0.587, 0.114)));
+  baseCol = mix(grayLevel, baseCol, u_grassSaturation);
+
+  // Moisture effect
+  float wetDarkening = 1.0 - u_moistureLevel * 0.15;
+  baseCol *= wetDarkening;
+
   vec3 dx = dFdx(v_worldPos), dy = dFdy(v_worldPos);
   float mScale = u_detailNoiseScale * 8.0 / ts;
   float h0 = noise21(wuv * mScale);
@@ -72,7 +110,8 @@ void main() {
   vec3 b = normalize(cross(n, t));
   float microAmp = 0.12;
   vec3 nMicro = normalize(n - (t * g.x + b * g.y) * microAmp);
-  float jitter = (hash21(wuv * 0.27 + vec2(17.0, 9.0)) - 0.5) * 0.06;
+  float jitterAmp = 0.06 * (0.5 + u_soilRoughness * 0.5);
+  float jitter = (hash21(wuv * 0.27 + vec2(17.0, 9.0)) - 0.5) * jitterAmp;
   float brightnessVar = (moistureVar - 0.5) * 0.08;
   vec3 col = baseCol * (1.0 + jitter + brightnessVar);
   col *= u_tint;
@@ -80,8 +119,11 @@ void main() {
   float ndl = max(dot(nMicro, L), 0.0);
   float ambient = 0.40;
   float fres = pow(1.0 - max(dot(nMicro, vec3(0, 1, 0)), 0.0), 2.0);
-  float roughnessVar = mix(0.65, 0.95, 1.0 - moistureVar);
-  float specContrib = fres * 0.08 * roughnessVar;
+  // Surface roughness affects specular - wet surfaces are shinier
+  float surfaceRoughness = mix(0.65, 0.95, u_soilRoughness);
+  surfaceRoughness = mix(surfaceRoughness, 0.45, u_moistureLevel * 0.5);
+  float specContrib = fres * 0.08 * (1.0 - surfaceRoughness);
+  specContrib += u_moistureLevel * 0.06 * fres;
   float shade = ambient + ndl * 0.65 + specContrib;
   vec3 lit = col * shade * (u_ambientBoost + heightTint);
 
