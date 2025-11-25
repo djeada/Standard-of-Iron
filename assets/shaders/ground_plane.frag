@@ -2,6 +2,7 @@
 in vec3 v_worldPos;
 in vec3 v_normal;
 in vec2 v_uv;
+in float v_disp;
 layout(location = 0) out vec4 FragColor;
 uniform vec3 u_grassPrimary;
 uniform vec3 u_grassSecondary;
@@ -39,6 +40,7 @@ float fbm(vec2 p) {
 
 void main() {
   vec3 n = normalize(v_normal);
+  float heightTint = clamp((v_worldPos.y + 0.6) * 0.6, -0.25, 0.35);
   float ts = max(u_tileSize, 1e-4);
   vec2 wuv = (v_worldPos.xz / ts) + u_noiseOffset;
   float macro = fbm(wuv * u_macroNoiseScale);
@@ -81,6 +83,13 @@ void main() {
   float roughnessVar = mix(0.65, 0.95, 1.0 - moistureVar);
   float specContrib = fres * 0.08 * roughnessVar;
   float shade = ambient + ndl * 0.65 + specContrib;
-  vec3 lit = col * shade * u_ambientBoost;
+  vec3 lit = col * shade * (u_ambientBoost + heightTint);
+
+  // Debug tint to make displacement obvious: blue for negative, red for
+  // positive
+  vec3 dispTint = mix(vec3(0.3, 0.5, 1.0), vec3(1.0, 0.4, 0.3),
+                      smoothstep(-1.0, 1.0, v_disp));
+  lit = mix(lit, lit * dispTint, 0.25);
+
   FragColor = vec4(clamp(lit, 0.0, 1.0), 1.0);
 }
