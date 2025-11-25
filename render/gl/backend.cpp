@@ -802,6 +802,18 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
               m_terrainPipeline->m_groundUniforms.soilBlendSharpness,
               terrain.params.soilBlendSharpness);
         }
+        if (m_terrainPipeline->m_groundUniforms.heightNoiseStrength !=
+            Shader::InvalidUniform) {
+          active_shader->setUniform(
+              m_terrainPipeline->m_groundUniforms.heightNoiseStrength,
+              terrain.params.heightNoiseStrength);
+        }
+        if (m_terrainPipeline->m_groundUniforms.heightNoiseFrequency !=
+            Shader::InvalidUniform) {
+          active_shader->setUniform(
+              m_terrainPipeline->m_groundUniforms.heightNoiseFrequency,
+              terrain.params.heightNoiseFrequency);
+        }
         if (m_terrainPipeline->m_groundUniforms.ambientBoost !=
             Shader::InvalidUniform) {
           active_shader->setUniform(

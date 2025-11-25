@@ -56,7 +56,10 @@
       0.69,
       0.73
     ],
-    "plantDensity": 0.65
+    "plantDensity": 0.65,
+    "groundIrregularityEnabled": true,
+    "irregularityScale": 0.12,
+    "irregularityAmplitude": 0.06
   },
   "camera": {
     "center": [

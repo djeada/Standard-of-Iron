@@ -61,6 +61,10 @@ inline constexpr const char *BACKGROUND_SWAY_VARIANCE =
     "backgroundSwayVariance";
 inline constexpr const char *BACKGROUND_SCATTER_RADIUS =
     "backgroundScatterRadius";
+inline constexpr const char *GROUND_IRREGULARITY_ENABLED =
+    "groundIrregularityEnabled";
+inline constexpr const char *IRREGULARITY_SCALE = "irregularityScale";
+inline constexpr const char *IRREGULARITY_AMPLITUDE = "irregularityAmplitude";
 
 inline constexpr const char *TYPE = "type";
 inline constexpr const char *X = "x";

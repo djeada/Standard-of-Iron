@@ -92,6 +92,9 @@ struct BiomeSettings {
   float plant_density = 0.5F;
   float spawnEdgePadding = 0.08F;
   std::uint32_t seed = 1337U;
+  bool groundIrregularityEnabled = true;
+  float irregularityScale = 0.15F;
+  float irregularityAmplitude = 0.08F;
 };
 
 struct TerrainFeature {
