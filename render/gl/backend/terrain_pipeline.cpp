@@ -107,6 +107,20 @@ void TerrainPipeline::cacheGroundUniforms() {
   m_groundUniforms.ambientBoost =
       m_groundShader->uniformHandle("u_ambientBoost");
   m_groundUniforms.light_dir = m_groundShader->uniformHandle("u_lightDir");
+  // Ground-type-specific uniforms
+  m_groundUniforms.snowCoverage =
+      m_groundShader->uniformHandle("u_snowCoverage");
+  m_groundUniforms.moistureLevel =
+      m_groundShader->uniformHandle("u_moistureLevel");
+  m_groundUniforms.crackIntensity =
+      m_groundShader->uniformHandle("u_crackIntensity");
+  m_groundUniforms.rockExposure =
+      m_groundShader->uniformHandle("u_rockExposure");
+  m_groundUniforms.grassSaturation =
+      m_groundShader->uniformHandle("u_grassSaturation");
+  m_groundUniforms.soilRoughness =
+      m_groundShader->uniformHandle("u_soilRoughness");
+  m_groundUniforms.snowColor = m_groundShader->uniformHandle("u_snowColor");
 }
 
 void TerrainPipeline::cacheTerrainUniforms() {
@@ -149,6 +163,20 @@ void TerrainPipeline::cacheTerrainUniforms() {
   m_terrainUniforms.rockDetailStrength =
       m_terrainShader->uniformHandle("u_rockDetailStrength");
   m_terrainUniforms.light_dir = m_terrainShader->uniformHandle("u_lightDir");
+  // Ground-type-specific uniforms
+  m_terrainUniforms.snowCoverage =
+      m_terrainShader->uniformHandle("u_snowCoverage");
+  m_terrainUniforms.moistureLevel =
+      m_terrainShader->uniformHandle("u_moistureLevel");
+  m_terrainUniforms.crackIntensity =
+      m_terrainShader->uniformHandle("u_crackIntensity");
+  m_terrainUniforms.rockExposure =
+      m_terrainShader->uniformHandle("u_rockExposure");
+  m_terrainUniforms.grassSaturation =
+      m_terrainShader->uniformHandle("u_grassSaturation");
+  m_terrainUniforms.soilRoughness =
+      m_terrainShader->uniformHandle("u_soilRoughness");
+  m_terrainUniforms.snowColor = m_terrainShader->uniformHandle("u_snowColor");
 }
 
 void TerrainPipeline::initializeGrassGeometry() {

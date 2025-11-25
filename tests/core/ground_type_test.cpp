@@ -84,10 +84,14 @@ TEST_F(GroundTypeTest, ApplyGroundTypeDefaultsGrassDry) {
   applyGroundTypeDefaults(settings, GroundType::GrassDry);
 
   EXPECT_EQ(settings.groundType, GroundType::GrassDry);
-  EXPECT_FLOAT_EQ(settings.grassPrimary.x(), 0.55F);
-  EXPECT_FLOAT_EQ(settings.grassPrimary.y(), 0.52F);
-  EXPECT_FLOAT_EQ(settings.grassPrimary.z(), 0.30F);
-  EXPECT_FLOAT_EQ(settings.terrainAmbientBoost, 1.15F);
+  EXPECT_FLOAT_EQ(settings.grassPrimary.x(), 0.58F);
+  EXPECT_FLOAT_EQ(settings.grassPrimary.y(), 0.54F);
+  EXPECT_FLOAT_EQ(settings.grassPrimary.z(), 0.32F);
+  EXPECT_FLOAT_EQ(settings.terrainAmbientBoost, 1.18F);
+  // Check ground-type-specific parameters
+  EXPECT_FLOAT_EQ(settings.crackIntensity, 0.65F);
+  EXPECT_FLOAT_EQ(settings.moistureLevel, 0.15F);
+  EXPECT_FLOAT_EQ(settings.grassSaturation, 0.75F);
 }
 
 TEST_F(GroundTypeTest, ApplyGroundTypeDefaultsSoilRocky) {
@@ -95,10 +99,13 @@ TEST_F(GroundTypeTest, ApplyGroundTypeDefaultsSoilRocky) {
   applyGroundTypeDefaults(settings, GroundType::SoilRocky);
 
   EXPECT_EQ(settings.groundType, GroundType::SoilRocky);
-  EXPECT_FLOAT_EQ(settings.soilColor.x(), 0.50F);
-  EXPECT_FLOAT_EQ(settings.soilColor.y(), 0.42F);
-  EXPECT_FLOAT_EQ(settings.soilColor.z(), 0.32F);
-  EXPECT_FLOAT_EQ(settings.terrainRockDetailStrength, 0.55F);
+  EXPECT_FLOAT_EQ(settings.soilColor.x(), 0.55F);
+  EXPECT_FLOAT_EQ(settings.soilColor.y(), 0.48F);
+  EXPECT_FLOAT_EQ(settings.soilColor.z(), 0.38F);
+  EXPECT_FLOAT_EQ(settings.terrainRockDetailStrength, 0.65F);
+  // Check ground-type-specific parameters
+  EXPECT_FLOAT_EQ(settings.rockExposure, 0.75F);
+  EXPECT_FLOAT_EQ(settings.soilRoughness, 0.85F);
 }
 
 TEST_F(GroundTypeTest, ApplyGroundTypeDefaultsAlpineMix) {
@@ -106,10 +113,15 @@ TEST_F(GroundTypeTest, ApplyGroundTypeDefaultsAlpineMix) {
   applyGroundTypeDefaults(settings, GroundType::AlpineMix);
 
   EXPECT_EQ(settings.groundType, GroundType::AlpineMix);
-  EXPECT_FLOAT_EQ(settings.rockHigh.x(), 0.85F);
-  EXPECT_FLOAT_EQ(settings.rockHigh.y(), 0.88F);
-  EXPECT_FLOAT_EQ(settings.rockHigh.z(), 0.92F);
-  EXPECT_FLOAT_EQ(settings.terrainAmbientBoost, 1.20F);
+  EXPECT_FLOAT_EQ(settings.rockHigh.x(), 0.88F);
+  EXPECT_FLOAT_EQ(settings.rockHigh.y(), 0.90F);
+  EXPECT_FLOAT_EQ(settings.rockHigh.z(), 0.94F);
+  EXPECT_FLOAT_EQ(settings.terrainAmbientBoost, 1.25F);
+  // Check ground-type-specific parameters
+  EXPECT_FLOAT_EQ(settings.snowCoverage, 0.55F);
+  EXPECT_FLOAT_EQ(settings.snowColor.x(), 0.94F);
+  EXPECT_FLOAT_EQ(settings.snowColor.y(), 0.96F);
+  EXPECT_FLOAT_EQ(settings.snowColor.z(), 1.0F);
 }
 
 TEST_F(GroundTypeTest, ApplyGroundTypeDefaultsSoilFertile) {
@@ -117,10 +129,14 @@ TEST_F(GroundTypeTest, ApplyGroundTypeDefaultsSoilFertile) {
   applyGroundTypeDefaults(settings, GroundType::SoilFertile);
 
   EXPECT_EQ(settings.groundType, GroundType::SoilFertile);
-  EXPECT_FLOAT_EQ(settings.soilColor.x(), 0.22F);
-  EXPECT_FLOAT_EQ(settings.soilColor.y(), 0.18F);
-  EXPECT_FLOAT_EQ(settings.soilColor.z(), 0.14F);
-  EXPECT_FLOAT_EQ(settings.terrainRockDetailStrength, 0.25F);
+  EXPECT_FLOAT_EQ(settings.soilColor.x(), 0.20F);
+  EXPECT_FLOAT_EQ(settings.soilColor.y(), 0.16F);
+  EXPECT_FLOAT_EQ(settings.soilColor.z(), 0.12F);
+  EXPECT_FLOAT_EQ(settings.terrainRockDetailStrength, 0.22F);
+  // Check ground-type-specific parameters
+  EXPECT_FLOAT_EQ(settings.moistureLevel, 0.80F);
+  EXPECT_FLOAT_EQ(settings.grassSaturation, 1.15F);
+  EXPECT_FLOAT_EQ(settings.rockExposure, 0.12F);
 }
 
 TEST_F(GroundTypeTest, MapLoaderWithGroundType) {

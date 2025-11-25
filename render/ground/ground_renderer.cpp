@@ -85,11 +85,14 @@ auto GroundRenderer::buildParams() const -> TerrainChunkParams {
   params.detail_noiseScale =
       std::max(0.045F, m_biomeSettings.terrainDetailNoiseScale * 0.75F);
 
-  params.slopeRockThreshold = 0.72F;
-  params.slopeRockSharpness = 4.5F;
+  params.slopeRockThreshold =
+      std::clamp(m_biomeSettings.terrainRockThreshold + 0.30F, 0.40F, 0.90F);
+  params.slopeRockSharpness =
+      std::clamp(m_biomeSettings.terrainRockSharpness + 1.5F, 2.0F, 6.0F);
 
-  params.soilBlendHeight = -0.65F;
-  params.soilBlendSharpness = 2.6F;
+  params.soilBlendHeight = m_biomeSettings.terrainSoilHeight - 1.25F;
+  params.soilBlendSharpness =
+      std::clamp(m_biomeSettings.terrainSoilSharpness * 0.75F, 1.5F, 5.0F);
 
   params.noiseOffset = m_noiseOffset;
   params.noiseAngle = m_noiseAngle;
@@ -124,6 +127,17 @@ auto GroundRenderer::buildParams() const -> TerrainChunkParams {
   params.light_direction = l.normalized();
 
   params.isGroundPlane = true;
+
+  // Ground-type-specific shader parameters
+  params.snowCoverage = std::clamp(m_biomeSettings.snowCoverage, 0.0F, 1.0F);
+  params.moistureLevel = std::clamp(m_biomeSettings.moistureLevel, 0.0F, 1.0F);
+  params.crackIntensity =
+      std::clamp(m_biomeSettings.crackIntensity, 0.0F, 1.0F);
+  params.rockExposure = std::clamp(m_biomeSettings.rockExposure, 0.0F, 1.0F);
+  params.grassSaturation =
+      std::clamp(m_biomeSettings.grassSaturation, 0.0F, 1.5F);
+  params.soilRoughness = std::clamp(m_biomeSettings.soilRoughness, 0.0F, 1.0F);
+  params.snowColor = saturate(m_biomeSettings.snowColor);
 
   m_cachedParams = params;
   m_cachedParamsValid = true;
@@ -197,7 +211,13 @@ auto GroundRenderer::biomeEquals(const Game::Map::BiomeSettings &a,
          a.heightNoiseFrequency == b.heightNoiseFrequency &&
          a.groundIrregularityEnabled == b.groundIrregularityEnabled &&
          a.irregularityScale == b.irregularityScale &&
-         a.irregularityAmplitude == b.irregularityAmplitude && a.seed == b.seed;
+         a.irregularityAmplitude == b.irregularityAmplitude &&
+         a.seed == b.seed && a.snowCoverage == b.snowCoverage &&
+         a.moistureLevel == b.moistureLevel &&
+         a.crackIntensity == b.crackIntensity &&
+         a.rockExposure == b.rockExposure &&
+         a.grassSaturation == b.grassSaturation &&
+         a.soilRoughness == b.soilRoughness && a.snowColor == b.snowColor;
 }
 
 } // namespace Render::GL
