@@ -200,6 +200,18 @@ void readBiome(const QJsonObject &obj, BiomeSettings &out) {
     out.plant_density =
         float(obj.value(PLANT_DENSITY).toDouble(out.plant_density));
   }
+  if (obj.contains(GROUND_IRREGULARITY_ENABLED)) {
+    out.groundIrregularityEnabled = obj.value(GROUND_IRREGULARITY_ENABLED)
+                                        .toBool(out.groundIrregularityEnabled);
+  }
+  if (obj.contains(IRREGULARITY_SCALE)) {
+    out.irregularityScale =
+        float(obj.value(IRREGULARITY_SCALE).toDouble(out.irregularityScale));
+  }
+  if (obj.contains(IRREGULARITY_AMPLITUDE)) {
+    out.irregularityAmplitude = float(
+        obj.value(IRREGULARITY_AMPLITUDE).toDouble(out.irregularityAmplitude));
+  }
 }
 
 void readVictoryConfig(const QJsonObject &obj, VictoryConfig &out) {
