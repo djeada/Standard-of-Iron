@@ -25,12 +25,14 @@ void TerrainService::initialize(const MapDefinition &mapDef) {
   m_biomeSettings = mapDef.biome;
   m_height_map->applyBiomeVariation(m_biomeSettings);
   m_fire_camps = mapDef.firecamps;
+  m_roadSegments = mapDef.roads;
 }
 
 void TerrainService::clear() {
   m_height_map.reset();
   m_biomeSettings = BiomeSettings();
   m_fire_camps.clear();
+  m_roadSegments.clear();
 }
 
 auto TerrainService::getTerrainHeight(float world_x,
@@ -124,11 +126,13 @@ auto TerrainService::getTerrainType(int grid_x,
 void TerrainService::restoreFromSerialized(
     int width, int height, float tile_size, const std::vector<float> &heights,
     const std::vector<TerrainType> &terrain_types,
-    const std::vector<RiverSegment> &rivers, const std::vector<Bridge> &bridges,
+    const std::vector<RiverSegment> &rivers,
+    const std::vector<RoadSegment> &roads, const std::vector<Bridge> &bridges,
     const BiomeSettings &biome) {
   m_height_map = std::make_unique<TerrainHeightMap>(width, height, tile_size);
   m_height_map->restoreFromData(heights, terrain_types, rivers, bridges);
   m_biomeSettings = biome;
+  m_roadSegments = roads;
 }
 
 } // namespace Game::Map

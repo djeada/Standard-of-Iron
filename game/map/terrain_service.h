@@ -47,6 +47,10 @@ public:
     return m_fire_camps;
   }
 
+  [[nodiscard]] auto roadSegments() const -> const std::vector<RoadSegment> & {
+    return m_roadSegments;
+  }
+
   [[nodiscard]] auto isInitialized() const -> bool {
     return m_height_map != nullptr;
   }
@@ -55,6 +59,7 @@ public:
                              const std::vector<float> &heights,
                              const std::vector<TerrainType> &terrain_types,
                              const std::vector<RiverSegment> &rivers,
+                             const std::vector<RoadSegment> &roads,
                              const std::vector<Bridge> &bridges,
                              const BiomeSettings &biome);
 
@@ -68,6 +73,7 @@ private:
   std::unique_ptr<TerrainHeightMap> m_height_map;
   BiomeSettings m_biomeSettings;
   std::vector<FireCamp> m_fire_camps;
+  std::vector<RoadSegment> m_roadSegments;
 };
 
 } // namespace Game::Map
