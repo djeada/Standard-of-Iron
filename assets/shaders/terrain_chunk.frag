@@ -16,6 +16,15 @@ uniform float u_soilBlendHeight, u_soilBlendSharpness;
 uniform float u_heightNoiseStrength, u_heightNoiseFrequency;
 uniform float u_ambientBoost, u_rockDetailStrength;
 
+// Ground-type-specific uniforms
+uniform float u_snowCoverage;      // 0-1: snow accumulation (alpine_mix)
+uniform float u_moistureLevel;     // 0-1: wetness/dryness
+uniform float u_crackIntensity;    // 0-1: ground cracking (grass_dry)
+uniform float u_rockExposure;      // 0-1: how much rock shows through
+uniform float u_grassSaturation;   // 0-1.5: grass color intensity
+uniform float u_soilRoughness;     // 0-1: soil texture roughness
+uniform vec3 u_snowColor;          // Snow tint color
+
 // lets soil “climb” up steep toes (world units)
 uniform float u_soilFootHeight; // try 0.6–1.2
 
@@ -258,10 +267,50 @@ void main() {
       clamp(rockMask + rimFactor * 0.10 - plateauFactor * 0.06 - isGully * 0.08,
             0.0, 1.0);
 
+  // Apply rock exposure modifier from ground type
+  rockMask = clamp(rockMask + (u_rockExposure - 0.3) * 0.4, 0.0, 1.0);
+
   vec3 terrainColor = mix(soilBlend, rockColor, rockMask);
 
-  // albedo jitter
-  float jitter = (hash21(world_coord * 0.27 + vec2(17.0, 9.0)) - 0.5) * 0.06;
+  // Ground cracking effect (for dry Mediterranean terrain)
+  if (u_crackIntensity > 0.01) {
+    float crackNoise1 = noise21(world_coord * 8.0);
+    float crackNoise2 = noise21(world_coord * 16.0 + vec2(42.0, 17.0));
+    float crackPattern = smoothstep(0.45, 0.50, crackNoise1) * 
+                         smoothstep(0.40, 0.55, crackNoise2);
+    crackPattern *= (1.0 - slope * 0.8); // Less cracking on slopes
+    float crackDarkening = 1.0 - crackPattern * u_crackIntensity * 0.35;
+    terrainColor *= crackDarkening;
+  }
+
+  // Snow coverage effect (for alpine terrain)
+  if (u_snowCoverage > 0.01) {
+    float snowNoise = fbm(world_coord * 0.5 + vec2(123.0, 456.0));
+    float snowAccumulation = smoothstep(0.3, 0.7, snowNoise);
+    // Snow accumulates more on flat areas and less on steep slopes
+    float slopeSnowReduction = 1.0 - smoothstep(0.15, 0.45, slope);
+    // Higher areas get more snow
+    float heightSnowBonus = smoothstep(-0.5, 1.5, v_worldPos.y) * 0.3;
+    float snowMask = clamp(snowAccumulation * slopeSnowReduction * 
+                          (u_snowCoverage + heightSnowBonus), 0.0, 1.0);
+    // Blend in snow color with brightness boost
+    vec3 snowTinted = u_snowColor * (1.0 + detailNoise * 0.1);
+    terrainColor = mix(terrainColor, snowTinted, snowMask * 0.85);
+  }
+
+  // Apply grass saturation modifier
+  vec3 grayLevel = vec3(dot(terrainColor, vec3(0.299, 0.587, 0.114)));
+  terrainColor = mix(grayLevel, terrainColor, u_grassSaturation);
+
+  // Moisture effect on surface appearance
+  float moistureEffect = u_moistureLevel;
+  // Wet surfaces are darker and more saturated
+  float wetDarkening = 1.0 - moistureEffect * 0.15 * (1.0 - rockMask);
+  terrainColor *= wetDarkening;
+
+  // albedo jitter - modulated by soil roughness
+  float jitterAmp = 0.06 * (0.5 + u_soilRoughness * 0.5);
+  float jitter = (hash21(world_coord * 0.27 + vec2(17.0, 9.0)) - 0.5) * jitterAmp;
   float brightnessVar = (moistureVar - 0.5) * 0.08 * (1.0 - rockMask);
   terrainColor *= (1.0 + jitter + brightnessVar) * u_tint;
 
@@ -271,8 +320,12 @@ void main() {
   float ambient = 0.35;
   float fresnel =
       pow(1.0 - max(dot(microNormal, vec3(0.0, 1.0, 0.0)), 0.0), 2.0);
-  float roughnessVar = mix(0.65, 0.95, 1.0 - moistureVar);
-  float specContrib = fresnel * 0.12 * roughnessVar * (1.0 - rockMask);
+  // Surface roughness affects specular - wet surfaces are shinier
+  float surfaceRoughness = mix(0.65, 0.95, u_soilRoughness);
+  surfaceRoughness = mix(surfaceRoughness, 0.45, u_moistureLevel * 0.5);
+  float specContrib = fresnel * 0.12 * (1.0 - surfaceRoughness) * (1.0 - rockMask);
+  // Add subtle moisture-based specular for wet surfaces
+  specContrib += u_moistureLevel * 0.08 * fresnel * (1.0 - rockMask);
   float shade = ambient + ndl * 0.75 + specContrib;
 
   float plateauBrightness = 1.0 + plateauFactor * 0.05;

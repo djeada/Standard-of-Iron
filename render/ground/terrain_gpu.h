@@ -43,6 +43,16 @@ struct TerrainChunkParams {
   static constexpr float kDefaultMicroBumpFreq = 2.2F;
   static constexpr float kDefaultMicroNormalWeight = 0.65F;
   static constexpr float kDefaultAlbedoJitter = 0.05F;
+  // Ground-type-specific defaults
+  static constexpr float kDefaultSnowCoverage = 0.0F;
+  static constexpr float kDefaultMoistureLevel = 0.5F;
+  static constexpr float kDefaultCrackIntensity = 0.0F;
+  static constexpr float kDefaultRockExposure = 0.3F;
+  static constexpr float kDefaultGrassSaturation = 1.0F;
+  static constexpr float kDefaultSoilRoughness = 0.5F;
+  static constexpr float kDefaultSnowColorR = 0.92F;
+  static constexpr float kDefaultSnowColorG = 0.94F;
+  static constexpr float kDefaultSnowColorB = 0.98F;
 
   static auto defaultGrassPrimary() -> QVector3D {
     return {kDefaultGrassPrimaryR, kDefaultGrassPrimaryG,
@@ -70,6 +80,9 @@ struct TerrainChunkParams {
   }
   static auto defaultLightDirection() -> QVector3D {
     return {kDefaultLightDirX, kDefaultLightDirY, kDefaultLightDirZ};
+  }
+  static auto defaultSnowColor() -> QVector3D {
+    return {kDefaultSnowColorR, kDefaultSnowColorG, kDefaultSnowColorB};
   }
 
   QVector3D grassPrimary = defaultGrassPrimary();
@@ -103,6 +116,15 @@ struct TerrainChunkParams {
   float albedoJitter = kDefaultAlbedoJitter;
 
   bool isGroundPlane = false;
+
+  // Ground-type-specific shader parameters
+  float snowCoverage = kDefaultSnowCoverage;
+  float moistureLevel = kDefaultMoistureLevel;
+  float crackIntensity = kDefaultCrackIntensity;
+  float rockExposure = kDefaultRockExposure;
+  float grassSaturation = kDefaultGrassSaturation;
+  float soilRoughness = kDefaultSoilRoughness;
+  QVector3D snowColor = defaultSnowColor();
 };
 
 } // namespace Render::GL

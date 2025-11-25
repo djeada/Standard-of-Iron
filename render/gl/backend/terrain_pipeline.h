@@ -50,6 +50,14 @@ public:
     GL::Shader::UniformHandle heightNoiseFrequency{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle ambientBoost{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle light_dir{GL::Shader::InvalidUniform};
+    // Ground-type-specific uniforms
+    GL::Shader::UniformHandle snowCoverage{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle moistureLevel{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle crackIntensity{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle rockExposure{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle grassSaturation{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle soilRoughness{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle snowColor{GL::Shader::InvalidUniform};
   };
 
   struct TerrainUniforms {
@@ -75,6 +83,14 @@ public:
     GL::Shader::UniformHandle ambientBoost{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle rockDetailStrength{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle light_dir{GL::Shader::InvalidUniform};
+    // Ground-type-specific uniforms
+    GL::Shader::UniformHandle snowCoverage{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle moistureLevel{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle crackIntensity{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle rockExposure{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle grassSaturation{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle soilRoughness{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle snowColor{GL::Shader::InvalidUniform};
   };
 
   GL::Shader *m_grassShader = nullptr;

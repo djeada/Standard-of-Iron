@@ -158,6 +158,15 @@ struct BiomeSettings {
   bool groundIrregularityEnabled = true;
   float irregularityScale = 0.15F;
   float irregularityAmplitude = 0.08F;
+
+  // Ground-type-specific shader parameters
+  float snowCoverage = 0.0F;      // 0-1: snow accumulation (alpine_mix)
+  float moistureLevel = 0.5F;     // 0-1: wetness/dryness (affects soil/grass)
+  float crackIntensity = 0.0F;    // 0-1: ground cracking (grass_dry)
+  float rockExposure = 0.3F;      // 0-1: how much rock shows through (soil_rocky)
+  float grassSaturation = 1.0F;   // 0-1.5: grass color intensity
+  float soilRoughness = 0.5F;     // 0-1: soil texture roughness
+  QVector3D snowColor{0.92F, 0.94F, 0.98F}; // Snow tint color (alpine_mix)
 };
 
 inline void applyGroundTypeDefaults(BiomeSettings &settings,
@@ -166,6 +175,7 @@ inline void applyGroundTypeDefaults(BiomeSettings &settings,
   switch (groundType) {
   case GroundType::ForestMud:
     // Default: Deep green + mud ground (current style)
+    // Lush vegetation with wet, muddy soil in shaded forest areas
     settings.grassPrimary = QVector3D(0.30F, 0.60F, 0.28F);
     settings.grassSecondary = QVector3D(0.44F, 0.70F, 0.32F);
     settings.grassDry = QVector3D(0.72F, 0.66F, 0.48F);
@@ -174,50 +184,208 @@ inline void applyGroundTypeDefaults(BiomeSettings &settings,
     settings.rockHigh = QVector3D(0.68F, 0.69F, 0.73F);
     settings.terrainAmbientBoost = 1.08F;
     settings.terrainRockDetailStrength = 0.35F;
+    // Grass/vegetation properties - tall lush grass
+    settings.patchDensity = 4.5F;
+    settings.patchJitter = 0.95F;
+    settings.backgroundBladeDensity = 0.70F;
+    settings.bladeHeightMin = 0.60F;
+    settings.bladeHeightMax = 1.40F;
+    settings.bladeWidthMin = 0.028F;
+    settings.bladeWidthMax = 0.058F;
+    settings.sway_strength = 0.28F;
+    settings.sway_speed = 1.3F;
+    // Terrain noise - moderate variation with mud patches
+    settings.terrainMacroNoiseScale = 0.035F;
+    settings.terrainDetailNoiseScale = 0.14F;
+    settings.terrainSoilHeight = 0.65F;
+    settings.terrainSoilSharpness = 3.5F;
+    settings.terrainRockThreshold = 0.48F;
+    settings.terrainRockSharpness = 3.2F;
+    // Ground irregularity - moderate for forest floor
+    settings.groundIrregularityEnabled = true;
+    settings.irregularityScale = 0.15F;
+    settings.irregularityAmplitude = 0.09F;
+    settings.plant_density = 0.60F;
+    // Ground-type-specific shader parameters - forest_mud
+    settings.snowCoverage = 0.0F;
+    settings.moistureLevel = 0.70F;
+    settings.crackIntensity = 0.0F;
+    settings.rockExposure = 0.25F;
+    settings.grassSaturation = 1.05F;
+    settings.soilRoughness = 0.55F;
+    settings.snowColor = QVector3D(0.92F, 0.94F, 0.98F);
     break;
+
   case GroundType::GrassDry:
     // Dry Mediterranean Grass
-    settings.grassPrimary = QVector3D(0.55F, 0.52F, 0.30F);
-    settings.grassSecondary = QVector3D(0.62F, 0.58F, 0.35F);
-    settings.grassDry = QVector3D(0.75F, 0.68F, 0.42F);
-    settings.soilColor = QVector3D(0.45F, 0.38F, 0.28F);
-    settings.rockLow = QVector3D(0.58F, 0.55F, 0.50F);
-    settings.rockHigh = QVector3D(0.72F, 0.70F, 0.65F);
-    settings.terrainAmbientBoost = 1.15F;
-    settings.terrainRockDetailStrength = 0.30F;
+    // Sparse, yellowed grass with dusty exposed soil and cracked earth
+    settings.grassPrimary = QVector3D(0.58F, 0.54F, 0.32F);
+    settings.grassSecondary = QVector3D(0.65F, 0.60F, 0.38F);
+    settings.grassDry = QVector3D(0.78F, 0.72F, 0.45F);
+    settings.soilColor = QVector3D(0.52F, 0.44F, 0.32F);
+    settings.rockLow = QVector3D(0.62F, 0.58F, 0.52F);
+    settings.rockHigh = QVector3D(0.78F, 0.75F, 0.70F);
+    settings.terrainAmbientBoost = 1.18F;
+    settings.terrainRockDetailStrength = 0.28F;
+    // Grass/vegetation properties - short sparse dry grass
+    settings.patchDensity = 2.8F;
+    settings.patchJitter = 0.75F;
+    settings.backgroundBladeDensity = 0.35F;
+    settings.bladeHeightMin = 0.35F;
+    settings.bladeHeightMax = 0.80F;
+    settings.bladeWidthMin = 0.018F;
+    settings.bladeWidthMax = 0.038F;
+    settings.sway_strength = 0.15F;
+    settings.sway_speed = 1.8F;
+    // Terrain noise - less variation, more cracked appearance
+    settings.terrainMacroNoiseScale = 0.028F;
+    settings.terrainDetailNoiseScale = 0.22F;
+    settings.terrainSoilHeight = 0.50F;
+    settings.terrainSoilSharpness = 4.5F;
+    settings.terrainRockThreshold = 0.38F;
+    settings.terrainRockSharpness = 2.8F;
+    // Ground irregularity - low for dry packed earth
+    settings.groundIrregularityEnabled = true;
+    settings.irregularityScale = 0.10F;
+    settings.irregularityAmplitude = 0.04F;
+    settings.plant_density = 0.25F;
+    // Ground-type-specific shader parameters - grass_dry
+    settings.snowCoverage = 0.0F;
+    settings.moistureLevel = 0.15F;
+    settings.crackIntensity = 0.65F;
+    settings.rockExposure = 0.35F;
+    settings.grassSaturation = 0.75F;
+    settings.soilRoughness = 0.72F;
+    settings.snowColor = QVector3D(0.92F, 0.94F, 0.98F);
     break;
+
   case GroundType::SoilRocky:
     // Light-Brown Rocky Soil
-    settings.grassPrimary = QVector3D(0.42F, 0.48F, 0.30F);
-    settings.grassSecondary = QVector3D(0.50F, 0.54F, 0.35F);
-    settings.grassDry = QVector3D(0.60F, 0.55F, 0.40F);
-    settings.soilColor = QVector3D(0.50F, 0.42F, 0.32F);
-    settings.rockLow = QVector3D(0.55F, 0.52F, 0.48F);
-    settings.rockHigh = QVector3D(0.70F, 0.68F, 0.65F);
+    // Exposed rocks with thin soil cover, mountain foothills aesthetic
+    settings.grassPrimary = QVector3D(0.40F, 0.45F, 0.28F);
+    settings.grassSecondary = QVector3D(0.48F, 0.52F, 0.32F);
+    settings.grassDry = QVector3D(0.58F, 0.52F, 0.38F);
+    settings.soilColor = QVector3D(0.55F, 0.48F, 0.38F);
+    settings.rockLow = QVector3D(0.52F, 0.50F, 0.46F);
+    settings.rockHigh = QVector3D(0.72F, 0.70F, 0.66F);
     settings.terrainAmbientBoost = 1.05F;
-    settings.terrainRockDetailStrength = 0.55F;
+    settings.terrainRockDetailStrength = 0.65F;
+    // Grass/vegetation properties - sparse clumps between rocks
+    settings.patchDensity = 2.2F;
+    settings.patchJitter = 0.60F;
+    settings.backgroundBladeDensity = 0.28F;
+    settings.bladeHeightMin = 0.30F;
+    settings.bladeHeightMax = 0.70F;
+    settings.bladeWidthMin = 0.020F;
+    settings.bladeWidthMax = 0.040F;
+    settings.sway_strength = 0.18F;
+    settings.sway_speed = 1.5F;
+    // Terrain noise - high detail for rocky texture
+    settings.terrainMacroNoiseScale = 0.055F;
+    settings.terrainDetailNoiseScale = 0.28F;
+    settings.terrainSoilHeight = 0.40F;
+    settings.terrainSoilSharpness = 5.0F;
+    settings.terrainRockThreshold = 0.28F;
+    settings.terrainRockSharpness = 4.0F;
+    // Ground irregularity - high for rocky terrain
+    settings.groundIrregularityEnabled = true;
+    settings.irregularityScale = 0.22F;
+    settings.irregularityAmplitude = 0.14F;
+    settings.plant_density = 0.18F;
+    // Ground-type-specific shader parameters - soil_rocky
+    settings.snowCoverage = 0.0F;
+    settings.moistureLevel = 0.35F;
+    settings.crackIntensity = 0.25F;
+    settings.rockExposure = 0.75F;
+    settings.grassSaturation = 0.85F;
+    settings.soilRoughness = 0.85F;
+    settings.snowColor = QVector3D(0.92F, 0.94F, 0.98F);
     break;
+
   case GroundType::AlpineMix:
     // Alpine Rock + Snow Mix
-    settings.grassPrimary = QVector3D(0.35F, 0.42F, 0.32F);
-    settings.grassSecondary = QVector3D(0.40F, 0.48F, 0.38F);
-    settings.grassDry = QVector3D(0.55F, 0.52F, 0.45F);
-    settings.soilColor = QVector3D(0.38F, 0.35F, 0.32F);
-    settings.rockLow = QVector3D(0.60F, 0.62F, 0.65F);
-    settings.rockHigh = QVector3D(0.85F, 0.88F, 0.92F);
-    settings.terrainAmbientBoost = 1.20F;
-    settings.terrainRockDetailStrength = 0.45F;
+    // High altitude with snow patches, lichen-covered rocks, hardy grass
+    settings.grassPrimary = QVector3D(0.32F, 0.40F, 0.30F);
+    settings.grassSecondary = QVector3D(0.38F, 0.46F, 0.36F);
+    settings.grassDry = QVector3D(0.50F, 0.48F, 0.42F);
+    settings.soilColor = QVector3D(0.42F, 0.40F, 0.38F);
+    settings.rockLow = QVector3D(0.58F, 0.60F, 0.64F);
+    settings.rockHigh = QVector3D(0.88F, 0.90F, 0.94F);
+    settings.terrainAmbientBoost = 1.25F;
+    settings.terrainRockDetailStrength = 0.52F;
+    // Grass/vegetation properties - short hardy alpine grass
+    settings.patchDensity = 1.8F;
+    settings.patchJitter = 0.50F;
+    settings.backgroundBladeDensity = 0.22F;
+    settings.bladeHeightMin = 0.20F;
+    settings.bladeHeightMax = 0.50F;
+    settings.bladeWidthMin = 0.015F;
+    settings.bladeWidthMax = 0.032F;
+    settings.sway_strength = 0.22F;
+    settings.sway_speed = 2.0F;
+    // Terrain noise - moderate with snow accumulation effect
+    settings.terrainMacroNoiseScale = 0.042F;
+    settings.terrainDetailNoiseScale = 0.18F;
+    settings.terrainSoilHeight = 0.55F;
+    settings.terrainSoilSharpness = 3.0F;
+    settings.terrainRockThreshold = 0.32F;
+    settings.terrainRockSharpness = 2.5F;
+    // Ground irregularity - moderate for alpine terrain
+    settings.groundIrregularityEnabled = true;
+    settings.irregularityScale = 0.18F;
+    settings.irregularityAmplitude = 0.12F;
+    settings.plant_density = 0.12F;
+    // Ground-type-specific shader parameters - alpine_mix
+    settings.snowCoverage = 0.55F;
+    settings.moistureLevel = 0.45F;
+    settings.crackIntensity = 0.10F;
+    settings.rockExposure = 0.60F;
+    settings.grassSaturation = 0.80F;
+    settings.soilRoughness = 0.62F;
+    settings.snowColor = QVector3D(0.94F, 0.96F, 1.0F);
     break;
+
   case GroundType::SoilFertile:
     // Dark Fertile Farmland Soil
-    settings.grassPrimary = QVector3D(0.28F, 0.52F, 0.25F);
-    settings.grassSecondary = QVector3D(0.38F, 0.62F, 0.32F);
-    settings.grassDry = QVector3D(0.55F, 0.50F, 0.35F);
-    settings.soilColor = QVector3D(0.22F, 0.18F, 0.14F);
-    settings.rockLow = QVector3D(0.42F, 0.40F, 0.38F);
-    settings.rockHigh = QVector3D(0.55F, 0.54F, 0.52F);
+    // Rich dark earth with lush green grass, ideal for agriculture
+    settings.grassPrimary = QVector3D(0.25F, 0.55F, 0.22F);
+    settings.grassSecondary = QVector3D(0.35F, 0.65F, 0.30F);
+    settings.grassDry = QVector3D(0.52F, 0.48F, 0.32F);
+    settings.soilColor = QVector3D(0.20F, 0.16F, 0.12F);
+    settings.rockLow = QVector3D(0.38F, 0.36F, 0.34F);
+    settings.rockHigh = QVector3D(0.52F, 0.50F, 0.48F);
     settings.terrainAmbientBoost = 1.02F;
-    settings.terrainRockDetailStrength = 0.25F;
+    settings.terrainRockDetailStrength = 0.22F;
+    // Grass/vegetation properties - thick healthy grass
+    settings.patchDensity = 5.2F;
+    settings.patchJitter = 0.90F;
+    settings.backgroundBladeDensity = 0.80F;
+    settings.bladeHeightMin = 0.55F;
+    settings.bladeHeightMax = 1.25F;
+    settings.bladeWidthMin = 0.030F;
+    settings.bladeWidthMax = 0.062F;
+    settings.sway_strength = 0.32F;
+    settings.sway_speed = 1.2F;
+    // Terrain noise - smooth fertile soil
+    settings.terrainMacroNoiseScale = 0.025F;
+    settings.terrainDetailNoiseScale = 0.10F;
+    settings.terrainSoilHeight = 0.75F;
+    settings.terrainSoilSharpness = 2.8F;
+    settings.terrainRockThreshold = 0.58F;
+    settings.terrainRockSharpness = 2.2F;
+    // Ground irregularity - low for flat farmland
+    settings.groundIrregularityEnabled = true;
+    settings.irregularityScale = 0.08F;
+    settings.irregularityAmplitude = 0.05F;
+    settings.plant_density = 0.45F;
+    // Ground-type-specific shader parameters - soil_fertile
+    settings.snowCoverage = 0.0F;
+    settings.moistureLevel = 0.80F;
+    settings.crackIntensity = 0.0F;
+    settings.rockExposure = 0.12F;
+    settings.grassSaturation = 1.15F;
+    settings.soilRoughness = 0.42F;
+    settings.snowColor = QVector3D(0.92F, 0.94F, 0.98F);
     break;
   }
 }
