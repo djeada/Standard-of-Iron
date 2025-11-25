@@ -10,6 +10,7 @@ uniform float u_heightNoiseFrequency;
 out vec3 v_worldPos;
 out vec3 v_normal;
 out vec2 v_uv;
+out float v_disp;
 
 float hash21(vec2 p) {
   return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
@@ -37,17 +38,56 @@ mat2 rot2(float a) {
 
 void main() {
   vec3 wp = (u_model * vec4(a_position, 1.0)).xyz;
-  vec3 wn = normalize(mat3(u_model) * a_normal);
+  vec3 worldNormal = normalize(mat3(u_model) * a_normal);
   float ang =
       fract(sin(dot(u_noiseOffset, vec2(12.9898, 78.233))) * 43758.5453) *
       6.2831853;
   vec2 uv = rot2(ang) * (wp.xz + u_noiseOffset);
-  float h = fbm2(uv * u_heightNoiseFrequency) * 2.0 - 1.0;
-  float amp = clamp(u_heightNoiseStrength, 0.0, 0.20);
+
+  // Gentle domain warp to break straight lines and angular patterns
+  float warpBase = fbm2(uv * 0.35);
+  float warpOff = fbm2((uv + vec2(11.3, -7.7)) * 0.35);
+  vec2 uvWarp = uv + (vec2(warpBase, warpOff) - 0.5) * 0.7;
+
+  // Tighten irregularities so bumps are closer together
+  float freq = max(u_heightNoiseFrequency * 3.0, 1.1);
+  float base = fbm2(uvWarp * freq * 0.65);
+  float detail = fbm2(uvWarp * freq * 1.6);
+  float fine = noise21(uvWarp * freq * 3.2);
+  float h = (base * 0.50 + detail * 0.35 + fine * 0.15) * 2.0 - 1.0;
+  // Soften extremes to avoid blocky plateaus
+  h = h - 0.2 * h * h * h;
+
+  // Ensure a clearly visible base amount of warping but keep it grounded
+  float strength = max(u_heightNoiseStrength, 0.35);
+  float amp = clamp(strength * 1.8, 0.10, 0.65);
   float disp = h * amp;
+
+  // Subtle sine warp just to guarantee non-flatness, but keep it small
+  disp += sin(uvWarp.x * 1.8) * 0.05 + sin(uvWarp.y * 2.1) * 0.05;
+
   wp.y += disp;
+
+  // Estimate slope to bend normals with the displaced surface
+  float gradStep = max(0.15, 0.35 / max(freq * 1.1, 0.05));
+  float h_base_x = fbm2((uvWarp + vec2(gradStep, 0.0)) * freq * 0.65);
+  float h_det_x = fbm2((uvWarp + vec2(gradStep, 0.0)) * freq * 1.6);
+  float h_fin_x = noise21((uvWarp + vec2(gradStep, 0.0)) * freq * 3.2);
+  float hx = (h_base_x * 0.50 + h_det_x * 0.35 + h_fin_x * 0.15) * 2.0 - 1.0;
+
+  float h_base_z = fbm2((uvWarp + vec2(0.0, gradStep)) * freq * 0.65);
+  float h_det_z = fbm2((uvWarp + vec2(0.0, gradStep)) * freq * 1.6);
+  float h_fin_z = noise21((uvWarp + vec2(0.0, gradStep)) * freq * 3.2);
+  float hz = (h_base_z * 0.50 + h_det_z * 0.35 + h_fin_z * 0.15) * 2.0 - 1.0;
+
+  vec3 dx = vec3(gradStep, (hx - h) * amp, 0.0);
+  vec3 dz = vec3(0.0, (hz - h) * amp, gradStep);
+  vec3 warpedNormal = normalize(cross(dz, dx));
+  vec3 wn = normalize(mix(worldNormal, warpedNormal, 0.85));
+
   v_worldPos = wp;
   v_normal = wn;
   v_uv = a_uv;
+  v_disp = disp;
   gl_Position = u_mvp * vec4(wp, 1.0);
 }
