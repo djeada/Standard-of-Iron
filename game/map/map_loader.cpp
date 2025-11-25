@@ -85,6 +85,19 @@ auto readVector3(const QJsonValue &value,
 }
 
 void readBiome(const QJsonObject &obj, BiomeSettings &out) {
+  // First, check for ground_type and apply defaults if specified
+  if (obj.contains(GROUND_TYPE)) {
+    const QString ground_type_str = obj.value(GROUND_TYPE).toString();
+    GroundType parsed_ground_type;
+    if (tryParseGroundType(ground_type_str, parsed_ground_type)) {
+      applyGroundTypeDefaults(out, parsed_ground_type);
+    } else {
+      qWarning() << "MapLoader: unknown ground type" << ground_type_str
+                 << "- using default (forest_mud)";
+      applyGroundTypeDefaults(out, GroundType::ForestMud);
+    }
+  }
+  // Then apply any explicit overrides from JSON
   if (obj.contains(SEED)) {
     out.seed = static_cast<std::uint32_t>(
         std::max(0.0, obj.value(SEED).toDouble(out.seed)));

@@ -181,7 +181,7 @@ void GroundRenderer::syncBiomeFromService() {
 
 auto GroundRenderer::biomeEquals(const Game::Map::BiomeSettings &a,
                                  const Game::Map::BiomeSettings &b) -> bool {
-  return a.grassPrimary == b.grassPrimary &&
+  return a.groundType == b.groundType && a.grassPrimary == b.grassPrimary &&
          a.grassSecondary == b.grassSecondary && a.grassDry == b.grassDry &&
          a.soilColor == b.soilColor && a.rockLow == b.rockLow &&
          a.rockHigh == b.rockHigh &&

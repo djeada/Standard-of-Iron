@@ -12,6 +12,68 @@ namespace Game::Map {
 
 enum class TerrainType { Flat, Hill, Mountain, River };
 
+enum class GroundType {
+  ForestMud,    // Default: Deep green + mud ground (current style)
+  GrassDry,     // Dry Mediterranean Grass
+  SoilRocky,    // Light-Brown Rocky Soil
+  AlpineMix,    // Alpine Rock + Snow Mix
+  SoilFertile   // Dark Fertile Farmland Soil
+};
+
+inline auto groundTypeToQString(GroundType type) -> QString {
+  switch (type) {
+  case GroundType::ForestMud:
+    return QStringLiteral("forest_mud");
+  case GroundType::GrassDry:
+    return QStringLiteral("grass_dry");
+  case GroundType::SoilRocky:
+    return QStringLiteral("soil_rocky");
+  case GroundType::AlpineMix:
+    return QStringLiteral("alpine_mix");
+  case GroundType::SoilFertile:
+    return QStringLiteral("soil_fertile");
+  }
+  return QStringLiteral("forest_mud");
+}
+
+inline auto groundTypeToString(GroundType type) -> std::string {
+  return groundTypeToQString(type).toStdString();
+}
+
+inline auto tryParseGroundType(const QString &value, GroundType &out) -> bool {
+  const QString lowered = value.trimmed().toLower();
+  if (lowered == QStringLiteral("forest_mud")) {
+    out = GroundType::ForestMud;
+    return true;
+  }
+  if (lowered == QStringLiteral("grass_dry")) {
+    out = GroundType::GrassDry;
+    return true;
+  }
+  if (lowered == QStringLiteral("soil_rocky")) {
+    out = GroundType::SoilRocky;
+    return true;
+  }
+  if (lowered == QStringLiteral("alpine_mix")) {
+    out = GroundType::AlpineMix;
+    return true;
+  }
+  if (lowered == QStringLiteral("soil_fertile")) {
+    out = GroundType::SoilFertile;
+    return true;
+  }
+  return false;
+}
+
+inline auto
+groundTypeFromString(const std::string &str) -> std::optional<GroundType> {
+  GroundType result;
+  if (tryParseGroundType(QString::fromStdString(str), result)) {
+    return result;
+  }
+  return std::nullopt;
+}
+
 inline auto terrainTypeToQString(TerrainType type) -> QString {
   switch (type) {
   case TerrainType::Flat:
@@ -62,6 +124,7 @@ terrainTypeFromString(const std::string &str) -> std::optional<TerrainType> {
 }
 
 struct BiomeSettings {
+  GroundType groundType = GroundType::ForestMud;
   QVector3D grassPrimary{0.30F, 0.60F, 0.28F};
   QVector3D grassSecondary{0.44F, 0.70F, 0.32F};
   QVector3D grassDry{0.72F, 0.66F, 0.48F};
@@ -96,6 +159,68 @@ struct BiomeSettings {
   float irregularityScale = 0.15F;
   float irregularityAmplitude = 0.08F;
 };
+
+inline void applyGroundTypeDefaults(BiomeSettings &settings,
+                                    GroundType groundType) {
+  settings.groundType = groundType;
+  switch (groundType) {
+  case GroundType::ForestMud:
+    // Default: Deep green + mud ground (current style)
+    settings.grassPrimary = QVector3D(0.30F, 0.60F, 0.28F);
+    settings.grassSecondary = QVector3D(0.44F, 0.70F, 0.32F);
+    settings.grassDry = QVector3D(0.72F, 0.66F, 0.48F);
+    settings.soilColor = QVector3D(0.28F, 0.24F, 0.18F);
+    settings.rockLow = QVector3D(0.48F, 0.46F, 0.44F);
+    settings.rockHigh = QVector3D(0.68F, 0.69F, 0.73F);
+    settings.terrainAmbientBoost = 1.08F;
+    settings.terrainRockDetailStrength = 0.35F;
+    break;
+  case GroundType::GrassDry:
+    // Dry Mediterranean Grass
+    settings.grassPrimary = QVector3D(0.55F, 0.52F, 0.30F);
+    settings.grassSecondary = QVector3D(0.62F, 0.58F, 0.35F);
+    settings.grassDry = QVector3D(0.75F, 0.68F, 0.42F);
+    settings.soilColor = QVector3D(0.45F, 0.38F, 0.28F);
+    settings.rockLow = QVector3D(0.58F, 0.55F, 0.50F);
+    settings.rockHigh = QVector3D(0.72F, 0.70F, 0.65F);
+    settings.terrainAmbientBoost = 1.15F;
+    settings.terrainRockDetailStrength = 0.30F;
+    break;
+  case GroundType::SoilRocky:
+    // Light-Brown Rocky Soil
+    settings.grassPrimary = QVector3D(0.42F, 0.48F, 0.30F);
+    settings.grassSecondary = QVector3D(0.50F, 0.54F, 0.35F);
+    settings.grassDry = QVector3D(0.60F, 0.55F, 0.40F);
+    settings.soilColor = QVector3D(0.50F, 0.42F, 0.32F);
+    settings.rockLow = QVector3D(0.55F, 0.52F, 0.48F);
+    settings.rockHigh = QVector3D(0.70F, 0.68F, 0.65F);
+    settings.terrainAmbientBoost = 1.05F;
+    settings.terrainRockDetailStrength = 0.55F;
+    break;
+  case GroundType::AlpineMix:
+    // Alpine Rock + Snow Mix
+    settings.grassPrimary = QVector3D(0.35F, 0.42F, 0.32F);
+    settings.grassSecondary = QVector3D(0.40F, 0.48F, 0.38F);
+    settings.grassDry = QVector3D(0.55F, 0.52F, 0.45F);
+    settings.soilColor = QVector3D(0.38F, 0.35F, 0.32F);
+    settings.rockLow = QVector3D(0.60F, 0.62F, 0.65F);
+    settings.rockHigh = QVector3D(0.85F, 0.88F, 0.92F);
+    settings.terrainAmbientBoost = 1.20F;
+    settings.terrainRockDetailStrength = 0.45F;
+    break;
+  case GroundType::SoilFertile:
+    // Dark Fertile Farmland Soil
+    settings.grassPrimary = QVector3D(0.28F, 0.52F, 0.25F);
+    settings.grassSecondary = QVector3D(0.38F, 0.62F, 0.32F);
+    settings.grassDry = QVector3D(0.55F, 0.50F, 0.35F);
+    settings.soilColor = QVector3D(0.22F, 0.18F, 0.14F);
+    settings.rockLow = QVector3D(0.42F, 0.40F, 0.38F);
+    settings.rockHigh = QVector3D(0.55F, 0.54F, 0.52F);
+    settings.terrainAmbientBoost = 1.02F;
+    settings.terrainRockDetailStrength = 0.25F;
+    break;
+  }
+}
 
 struct TerrainFeature {
   TerrainType type;
