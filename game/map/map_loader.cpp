@@ -430,6 +430,74 @@ void readRivers(const QJsonArray &arr, std::vector<RiverSegment> &out,
   }
 }
 
+void readRoads(const QJsonArray &arr, std::vector<RoadSegment> &out,
+               const GridDefinition &grid, CoordSystem coordSys) {
+  out.clear();
+  out.reserve(arr.size());
+
+  constexpr float grid_center_offset = 0.5F;
+  constexpr float min_tile_size = 0.0001F;
+  constexpr double default_road_width = 3.0;
+
+  for (const auto &road_val : arr) {
+    auto road_obj = road_val.toObject();
+    RoadSegment segment;
+
+    if (road_obj.contains("start") && road_obj.value("start").isArray()) {
+      auto start_arr = road_obj.value("start").toArray();
+      if (start_arr.size() >= 2) {
+        const float start_x = float(start_arr[0].toDouble(0.0));
+        const float start_z = float(start_arr[1].toDouble(0.0));
+
+        if (coordSys == CoordSystem::Grid) {
+          const float tile = std::max(min_tile_size, grid.tile_size);
+          segment.start.setX((start_x - (grid.width * grid_center_offset -
+                                         grid_center_offset)) *
+                             tile);
+          segment.start.setY(0.0F);
+          segment.start.setZ((start_z - (grid.height * grid_center_offset -
+                                         grid_center_offset)) *
+                             tile);
+        } else {
+          segment.start = QVector3D(start_x, 0.0F, start_z);
+        }
+      }
+    }
+
+    if (road_obj.contains("end") && road_obj.value("end").isArray()) {
+      auto end_arr = road_obj.value("end").toArray();
+      if (end_arr.size() >= 2) {
+        const float end_x = float(end_arr[0].toDouble(0.0));
+        const float end_z = float(end_arr[1].toDouble(0.0));
+
+        if (coordSys == CoordSystem::Grid) {
+          const float tile = std::max(min_tile_size, grid.tile_size);
+          segment.end.setX(
+              (end_x - (grid.width * grid_center_offset - grid_center_offset)) *
+              tile);
+          segment.end.setY(0.0F);
+          segment.end.setZ((end_z - (grid.height * grid_center_offset -
+                                     grid_center_offset)) *
+                           tile);
+        } else {
+          segment.end = QVector3D(end_x, 0.0F, end_z);
+        }
+      }
+    }
+
+    if (road_obj.contains("width")) {
+      segment.width =
+          float(road_obj.value("width").toDouble(default_road_width));
+    }
+
+    if (road_obj.contains("style")) {
+      segment.style = road_obj.value("style").toString("default");
+    }
+
+    out.push_back(segment);
+  }
+}
+
 void readBridges(const QJsonArray &arr, std::vector<Bridge> &out,
                  const GridDefinition &grid, CoordSystem coordSys) {
   out.clear();
@@ -580,6 +648,11 @@ auto MapLoader::loadFromJsonFile(const QString &path, MapDefinition &outMap,
   if (root.contains(RIVERS) && root.value(RIVERS).isArray()) {
     readRivers(root.value(RIVERS).toArray(), outMap.rivers, outMap.grid,
                outMap.coordSystem);
+  }
+
+  if (root.contains(ROADS) && root.value(ROADS).isArray()) {
+    readRoads(root.value(ROADS).toArray(), outMap.roads, outMap.grid,
+              outMap.coordSystem);
   }
 
   if (root.contains(BRIDGES) && root.value(BRIDGES).isArray()) {
