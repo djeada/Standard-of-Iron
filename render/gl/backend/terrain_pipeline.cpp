@@ -100,6 +100,10 @@ void TerrainPipeline::cacheGroundUniforms() {
       m_groundShader->uniformHandle("u_soilBlendHeight");
   m_groundUniforms.soilBlendSharpness =
       m_groundShader->uniformHandle("u_soilBlendSharpness");
+  m_groundUniforms.heightNoiseStrength =
+      m_groundShader->uniformHandle("u_heightNoiseStrength");
+  m_groundUniforms.heightNoiseFrequency =
+      m_groundShader->uniformHandle("u_heightNoiseFrequency");
   m_groundUniforms.ambientBoost =
       m_groundShader->uniformHandle("u_ambientBoost");
   m_groundUniforms.light_dir = m_groundShader->uniformHandle("u_lightDir");

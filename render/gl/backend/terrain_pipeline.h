@@ -46,6 +46,8 @@ public:
     GL::Shader::UniformHandle detail_noiseScale{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle soilBlendHeight{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle soilBlendSharpness{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle heightNoiseStrength{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle heightNoiseFrequency{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle ambientBoost{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle light_dir{GL::Shader::InvalidUniform};
   };
