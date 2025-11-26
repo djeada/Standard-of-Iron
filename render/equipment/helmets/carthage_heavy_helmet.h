@@ -29,19 +29,6 @@ public:
 
 private:
   CarthageHeavyHelmetConfig m_config;
-
-  void render_bowl(const DrawContext &ctx, const AttachmentFrame &head,
-                   ISubmitter &submitter);
-  void render_cheek_guards(const DrawContext &ctx, const AttachmentFrame &head,
-                           ISubmitter &submitter);
-  void render_face_plate(const DrawContext &ctx, const AttachmentFrame &head,
-                         ISubmitter &submitter);
-  void render_neck_guard(const DrawContext &ctx, const AttachmentFrame &head,
-                         ISubmitter &submitter);
-  void render_brow_arch(const DrawContext &ctx, const AttachmentFrame &head,
-                        ISubmitter &submitter);
-  void render_crest(const DrawContext &ctx, const AttachmentFrame &head,
-                    ISubmitter &submitter);
 };
 
 } // namespace Render::GL
