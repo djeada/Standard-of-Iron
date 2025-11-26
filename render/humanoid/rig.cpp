@@ -1323,12 +1323,16 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
         shadowModel.scale(shadowWidth, shadowDepth, 1.0F);
 
         if (auto *renderer = dynamic_cast<Renderer *>(&out)) {
+          Shader *previous_shader = renderer->getCurrentShader();
           renderer->setCurrentShader(shadowShader);
           shadowShader->setUniform(QStringLiteral("u_lightDir"), dir_for_use);
 
           out.mesh(quadMesh, shadowModel, QVector3D(0.0F, 0.0F, 0.0F), nullptr,
                    k_shadow_base_alpha, 0);
-          renderer->setCurrentShader(nullptr);
+
+          // Restore the character shader so subsequent meshes keep the correct
+          // material/uniform setup.
+          renderer->setCurrentShader(previous_shader);
         }
       }
     }

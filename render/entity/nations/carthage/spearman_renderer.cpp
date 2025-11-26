@@ -21,6 +21,7 @@
 #include "../../renderer_constants.h"
 #include "spearman_style.h"
 
+#include <QDebug>
 #include <QMatrix4x4>
 #include <QString>
 #include <QVector3D>
@@ -368,9 +369,16 @@ void registerSpearmanRenderer(Render::GL::EntityRendererRegistry &registry) {
           return shader;
         };
         if (ctx.backend != nullptr) {
-          QString shader_key = static_renderer.resolve_shader_key(ctx);
-          spearman_shader = acquireShader(shader_key);
+          // Always prefer the Carthage-specific shader; if it fails, log once
+          // and fall back to the base spearman shader.
+          spearman_shader = acquireShader(QStringLiteral("spearman_carthage"));
           if (spearman_shader == nullptr) {
+            static bool warned = false;
+            if (!warned) {
+              qWarning() << "Carthage spearman: missing spearman_carthage shader;"
+                         << "falling back to generic spearman shader.";
+              warned = true;
+            }
             spearman_shader = acquireShader(QStringLiteral("spearman"));
           }
         }
