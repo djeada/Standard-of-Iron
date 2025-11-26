@@ -405,6 +405,13 @@ struct RiverSegment {
   float width = 2.0F;
 };
 
+struct RoadSegment {
+  QVector3D start;
+  QVector3D end;
+  float width = 3.0F;
+  QString style = QStringLiteral("default");
+};
+
 struct Bridge {
   QVector3D start;
   QVector3D end;
