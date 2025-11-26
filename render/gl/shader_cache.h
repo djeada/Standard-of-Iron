@@ -170,6 +170,8 @@ public:
         loadBaseShader(QStringLiteral("horse_swordsman"));
     const auto [spearmanVert, spearmanFrag] =
         loadBaseShader(QStringLiteral("spearman"));
+    const auto [healerVert, healerFrag] =
+        loadBaseShader(QStringLiteral("healer"));
 
     const QStringList nationVariants = {QStringLiteral("kingdom_of_iron"),
                                         QStringLiteral("roman_republic"),
@@ -204,6 +206,11 @@ public:
     loadVariant(QStringLiteral("spearman"), spearmanVert, spearmanFrag);
     loadVariant(QStringLiteral("swordsman"), swordsmanVert, swordsmanFrag);
     loadVariant(QStringLiteral("horse_swordsman"), horseKnightVert,
+                horseKnightFrag);
+    loadVariant(QStringLiteral("healer"), healerVert, healerFrag);
+    loadVariant(QStringLiteral("horse_archer"), horseKnightVert,
+                horseKnightFrag);
+    loadVariant(QStringLiteral("horse_spearman"), horseKnightVert,
                 horseKnightFrag);
   }
 
