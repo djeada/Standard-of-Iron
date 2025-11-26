@@ -47,10 +47,21 @@ void main() {
   vec3 shearOffset = shearAxis * torsion * 0.004;
   vec3 batteredPos = worldPos + dentOffset + shearOffset;
 
-  vec3 offsetPos = batteredPos + worldNormal * 0.006;
+  // Extra shaping for helmet region (top of character).
+  float height = batteredPos.y;
+  float helmetMask = smoothstep(0.55, 0.90, height);
+  float rimMask =
+      smoothstep(0.60, 0.85, height) * (1.0 - smoothstep(0.88, 1.05, height));
+  float tipMask = smoothstep(1.00, 1.30, height);
+  vec3 radial =
+      normalize(vec3(batteredPos.x, 0.0, batteredPos.z) + vec3(0.0001));
+  vec3 rimFlare = radial * (0.12 * rimMask * helmetMask);
+  vec3 tipTaper = radial * (-0.10 * tipMask * helmetMask);
+
+  vec3 offsetPos = batteredPos + worldNormal * 0.006 + rimFlare + tipTaper;
   mat4 invModel = inverse(u_model);
-  vec4 localBattered = invModel * vec4(batteredPos, 1.0);
-  gl_Position = u_mvp * localBattered;
+  vec4 localOffset = invModel * vec4(offsetPos, 1.0);
+  gl_Position = u_mvp * localOffset;
 
   v_worldPos = offsetPos;
   v_texCoord = a_texCoord;
@@ -59,7 +70,7 @@ void main() {
   v_tangent = t;
   v_bitangent = b;
 
-  float height = offsetPos.y;
+  height = offsetPos.y;
   float layer = 2.0;
   if (height > 1.28)
     layer = 0.0;
