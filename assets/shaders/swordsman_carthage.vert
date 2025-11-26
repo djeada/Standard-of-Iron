@@ -90,10 +90,10 @@ void main() {
 
   v_frontMask = clamp(smoothstep(-0.18, 0.18, -localPos.z), 0.0, 1.0);
 
-  float height = offsetPos.y;
-  if (height > 1.5) {
+  float armorHeight = offsetPos.y;
+  if (armorHeight > 1.5) {
     v_armorLayer = 0.0;
-  } else if (height > 0.8) {
+  } else if (armorHeight > 0.8) {
     v_armorLayer = 1.0;
   } else {
     v_armorLayer = 2.0;
