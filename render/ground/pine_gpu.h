@@ -19,14 +19,14 @@ struct PineBatchParams {
   static constexpr float kDefaultWindStrength = 0.3F;
   static constexpr float kDefaultWindSpeed = 0.5F;
 
-  static auto defaultLightDirection() -> QVector3D {
+  static auto default_light_direction() -> QVector3D {
     return {kDefaultLightDirX, kDefaultLightDirY, kDefaultLightDirZ};
   }
 
-  QVector3D light_direction = defaultLightDirection();
+  QVector3D light_direction = default_light_direction();
   float time = 0.0F;
-  float windStrength = kDefaultWindStrength;
-  float windSpeed = kDefaultWindSpeed;
+  float wind_strength = kDefaultWindStrength;
+  float wind_speed = kDefaultWindSpeed;
 };
 
 } // namespace Render::GL

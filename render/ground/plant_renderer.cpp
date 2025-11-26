@@ -61,8 +61,8 @@ void PlantRenderer::configure(const Game::Map::TerrainHeightMap &height_map,
 
   m_plantParams.light_direction = QVector3D(0.35F, 0.8F, 0.45F);
   m_plantParams.time = 0.0F;
-  m_plantParams.windStrength = m_biomeSettings.sway_strength;
-  m_plantParams.windSpeed = m_biomeSettings.sway_speed;
+  m_plantParams.wind_strength = m_biomeSettings.sway_strength;
+  m_plantParams.wind_speed = m_biomeSettings.sway_speed;
 
   generatePlantInstances();
 }
@@ -158,7 +158,7 @@ void PlantRenderer::generatePlantInstances() {
   const float tile_safe = std::max(0.001F, m_tile_size);
 
   const float edge_padding =
-      std::clamp(m_biomeSettings.spawnEdgePadding, 0.0F, 0.5F);
+      std::clamp(m_biomeSettings.spawn_edge_padding, 0.0F, 0.5F);
   const float edge_margin_x = static_cast<float>(m_width) * edge_padding;
   const float edge_margin_z = static_cast<float>(m_height) * edge_padding;
 
@@ -268,8 +268,8 @@ void PlantRenderer::generatePlantInstances() {
     float const plant_type = std::floor(rand_01(state) * 4.0F);
 
     float const color_var = remap(rand_01(state), 0.0F, 1.0F);
-    QVector3D const base_color = m_biomeSettings.grassPrimary * 0.7F;
-    QVector3D const var_color = m_biomeSettings.grassSecondary * 0.8F;
+    QVector3D const base_color = m_biomeSettings.grass_primary * 0.7F;
+    QVector3D const var_color = m_biomeSettings.grass_secondary * 0.8F;
     QVector3D tint_color =
         base_color * (1.0F - color_var) + var_color * color_var;
 

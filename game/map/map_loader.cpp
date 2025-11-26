@@ -85,35 +85,49 @@ auto readVector3(const QJsonValue &value,
 }
 
 void readBiome(const QJsonObject &obj, BiomeSettings &out) {
+
+  if (obj.contains(GROUND_TYPE)) {
+    const QString ground_type_str = obj.value(GROUND_TYPE).toString();
+    GroundType parsed_ground_type;
+    if (try_parse_ground_type(ground_type_str, parsed_ground_type)) {
+      apply_ground_type_defaults(out, parsed_ground_type);
+    } else {
+      qWarning() << "MapLoader: unknown ground type" << ground_type_str
+                 << "- using default (forest_mud)";
+      apply_ground_type_defaults(out, GroundType::ForestMud);
+    }
+  }
+
   if (obj.contains(SEED)) {
     out.seed = static_cast<std::uint32_t>(
         std::max(0.0, obj.value(SEED).toDouble(out.seed)));
   }
   if (obj.contains(PATCH_DENSITY)) {
-    out.patchDensity =
-        float(obj.value(PATCH_DENSITY).toDouble(out.patchDensity));
+    out.patch_density =
+        float(obj.value(PATCH_DENSITY).toDouble(out.patch_density));
   }
   if (obj.contains(PATCH_JITTER)) {
-    out.patchJitter = float(obj.value(PATCH_JITTER).toDouble(out.patchJitter));
+    out.patch_jitter =
+        float(obj.value(PATCH_JITTER).toDouble(out.patch_jitter));
   }
   if (obj.contains(BLADE_HEIGHT)) {
     auto arr = obj.value(BLADE_HEIGHT).toArray();
     if (arr.size() == 2) {
-      out.bladeHeightMin = float(arr[0].toDouble(out.bladeHeightMin));
-      out.bladeHeightMax = float(arr[1].toDouble(out.bladeHeightMax));
+      out.blade_height_min = float(arr[0].toDouble(out.blade_height_min));
+      out.blade_height_max = float(arr[1].toDouble(out.blade_height_max));
     }
   }
   if (obj.contains(BLADE_WIDTH)) {
     auto arr = obj.value(BLADE_WIDTH).toArray();
     if (arr.size() == 2) {
-      out.bladeWidthMin = float(arr[0].toDouble(out.bladeWidthMin));
-      out.bladeWidthMax = float(arr[1].toDouble(out.bladeWidthMax));
+      out.blade_width_min = float(arr[0].toDouble(out.blade_width_min));
+      out.blade_width_max = float(arr[1].toDouble(out.blade_width_max));
     }
   }
   if (obj.contains(BACKGROUND_BLADE_DENSITY)) {
-    out.backgroundBladeDensity =
+    out.background_blade_density =
         float(obj.value(BACKGROUND_BLADE_DENSITY)
-                  .toDouble(out.backgroundBladeDensity));
+                  .toDouble(out.background_blade_density));
   }
   if (obj.contains(SWAY_STRENGTH)) {
     out.sway_strength =
@@ -125,92 +139,94 @@ void readBiome(const QJsonObject &obj, BiomeSettings &out) {
   if (obj.contains(HEIGHT_NOISE)) {
     auto arr = obj.value(HEIGHT_NOISE).toArray();
     if (arr.size() == 2) {
-      out.heightNoiseAmplitude =
-          float(arr[0].toDouble(out.heightNoiseAmplitude));
-      out.heightNoiseFrequency =
-          float(arr[1].toDouble(out.heightNoiseFrequency));
+      out.height_noise_amplitude =
+          float(arr[0].toDouble(out.height_noise_amplitude));
+      out.height_noise_frequency =
+          float(arr[1].toDouble(out.height_noise_frequency));
     }
   }
 
   if (obj.contains(GRASS_PRIMARY)) {
-    out.grassPrimary = readVector3(obj.value(GRASS_PRIMARY), out.grassPrimary);
+    out.grass_primary =
+        readVector3(obj.value(GRASS_PRIMARY), out.grass_primary);
   }
   if (obj.contains(GRASS_SECONDARY)) {
-    out.grassSecondary =
-        readVector3(obj.value(GRASS_SECONDARY), out.grassSecondary);
+    out.grass_secondary =
+        readVector3(obj.value(GRASS_SECONDARY), out.grass_secondary);
   }
   if (obj.contains(GRASS_DRY)) {
-    out.grassDry = readVector3(obj.value(GRASS_DRY), out.grassDry);
+    out.grass_dry = readVector3(obj.value(GRASS_DRY), out.grass_dry);
   }
   if (obj.contains(SOIL_COLOR)) {
-    out.soilColor = readVector3(obj.value(SOIL_COLOR), out.soilColor);
+    out.soil_color = readVector3(obj.value(SOIL_COLOR), out.soil_color);
   }
   if (obj.contains(ROCK_LOW)) {
-    out.rockLow = readVector3(obj.value(ROCK_LOW), out.rockLow);
+    out.rock_low = readVector3(obj.value(ROCK_LOW), out.rock_low);
   }
   if (obj.contains(ROCK_HIGH)) {
-    out.rockHigh = readVector3(obj.value(ROCK_HIGH), out.rockHigh);
+    out.rock_high = readVector3(obj.value(ROCK_HIGH), out.rock_high);
   }
   if (obj.contains(TERRAIN_MACRO_NOISE_SCALE)) {
-    out.terrainMacroNoiseScale =
+    out.terrain_macro_noise_scale =
         float(obj.value(TERRAIN_MACRO_NOISE_SCALE)
-                  .toDouble(out.terrainMacroNoiseScale));
+                  .toDouble(out.terrain_macro_noise_scale));
   }
   if (obj.contains(TERRAIN_DETAIL_NOISE_SCALE)) {
-    out.terrainDetailNoiseScale =
+    out.terrain_detail_noise_scale =
         float(obj.value(TERRAIN_DETAIL_NOISE_SCALE)
-                  .toDouble(out.terrainDetailNoiseScale));
+                  .toDouble(out.terrain_detail_noise_scale));
   }
   if (obj.contains(TERRAIN_SOIL_HEIGHT)) {
-    out.terrainSoilHeight =
-        float(obj.value(TERRAIN_SOIL_HEIGHT).toDouble(out.terrainSoilHeight));
+    out.terrain_soil_height =
+        float(obj.value(TERRAIN_SOIL_HEIGHT).toDouble(out.terrain_soil_height));
   }
   if (obj.contains(TERRAIN_SOIL_SHARPNESS)) {
-    out.terrainSoilSharpness = float(
-        obj.value(TERRAIN_SOIL_SHARPNESS).toDouble(out.terrainSoilSharpness));
+    out.terrain_soil_sharpness = float(
+        obj.value(TERRAIN_SOIL_SHARPNESS).toDouble(out.terrain_soil_sharpness));
   }
   if (obj.contains(TERRAIN_ROCK_THRESHOLD)) {
-    out.terrainRockThreshold = float(
-        obj.value(TERRAIN_ROCK_THRESHOLD).toDouble(out.terrainRockThreshold));
+    out.terrain_rock_threshold = float(
+        obj.value(TERRAIN_ROCK_THRESHOLD).toDouble(out.terrain_rock_threshold));
   }
   if (obj.contains(TERRAIN_ROCK_SHARPNESS)) {
-    out.terrainRockSharpness = float(
-        obj.value(TERRAIN_ROCK_SHARPNESS).toDouble(out.terrainRockSharpness));
+    out.terrain_rock_sharpness = float(
+        obj.value(TERRAIN_ROCK_SHARPNESS).toDouble(out.terrain_rock_sharpness));
   }
   if (obj.contains(TERRAIN_AMBIENT_BOOST)) {
-    out.terrainAmbientBoost = float(
-        obj.value(TERRAIN_AMBIENT_BOOST).toDouble(out.terrainAmbientBoost));
+    out.terrain_ambient_boost = float(
+        obj.value(TERRAIN_AMBIENT_BOOST).toDouble(out.terrain_ambient_boost));
   }
   if (obj.contains(TERRAIN_ROCK_DETAIL_STRENGTH)) {
-    out.terrainRockDetailStrength =
+    out.terrain_rock_detail_strength =
         float(obj.value(TERRAIN_ROCK_DETAIL_STRENGTH)
-                  .toDouble(out.terrainRockDetailStrength));
+                  .toDouble(out.terrain_rock_detail_strength));
   }
   if (obj.contains(BACKGROUND_SWAY_VARIANCE)) {
-    out.backgroundSwayVariance =
+    out.background_sway_variance =
         float(obj.value(BACKGROUND_SWAY_VARIANCE)
-                  .toDouble(out.backgroundSwayVariance));
+                  .toDouble(out.background_sway_variance));
   }
   if (obj.contains(BACKGROUND_SCATTER_RADIUS)) {
-    out.backgroundScatterRadius =
+    out.background_scatter_radius =
         float(obj.value(BACKGROUND_SCATTER_RADIUS)
-                  .toDouble(out.backgroundScatterRadius));
+                  .toDouble(out.background_scatter_radius));
   }
   if (obj.contains(PLANT_DENSITY)) {
     out.plant_density =
         float(obj.value(PLANT_DENSITY).toDouble(out.plant_density));
   }
   if (obj.contains(GROUND_IRREGULARITY_ENABLED)) {
-    out.groundIrregularityEnabled = obj.value(GROUND_IRREGULARITY_ENABLED)
-                                        .toBool(out.groundIrregularityEnabled);
+    out.ground_irregularity_enabled =
+        obj.value(GROUND_IRREGULARITY_ENABLED)
+            .toBool(out.ground_irregularity_enabled);
   }
   if (obj.contains(IRREGULARITY_SCALE)) {
-    out.irregularityScale =
-        float(obj.value(IRREGULARITY_SCALE).toDouble(out.irregularityScale));
+    out.irregularity_scale =
+        float(obj.value(IRREGULARITY_SCALE).toDouble(out.irregularity_scale));
   }
   if (obj.contains(IRREGULARITY_AMPLITUDE)) {
-    out.irregularityAmplitude = float(
-        obj.value(IRREGULARITY_AMPLITUDE).toDouble(out.irregularityAmplitude));
+    out.irregularity_amplitude = float(
+        obj.value(IRREGULARITY_AMPLITUDE).toDouble(out.irregularity_amplitude));
   }
 }
 
