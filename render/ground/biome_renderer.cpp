@@ -77,9 +77,9 @@ void BiomeRenderer::configure(const Game::Map::TerrainHeightMap &height_map,
   m_grassInstanceCount = 0;
   m_grassInstancesDirty = false;
 
-  m_grassParams.soilColor = m_biomeSettings.soilColor;
-  m_grassParams.windStrength = m_biomeSettings.sway_strength;
-  m_grassParams.windSpeed = m_biomeSettings.sway_speed;
+  m_grassParams.soil_color = m_biomeSettings.soil_color;
+  m_grassParams.wind_strength = m_biomeSettings.sway_strength;
+  m_grassParams.wind_speed = m_biomeSettings.sway_speed;
   m_grassParams.light_direction = QVector3D(0.35F, 0.8F, 0.45F);
   m_grassParams.time = 0.0F;
 
@@ -130,7 +130,7 @@ void BiomeRenderer::generateGrassInstances() {
     return;
   }
 
-  if (m_biomeSettings.patchDensity < 0.01F) {
+  if (m_biomeSettings.patch_density < 0.01F) {
     m_grassInstanceCount = 0;
     m_grassInstancesDirty = false;
     return;
@@ -141,7 +141,7 @@ void BiomeRenderer::generateGrassInstances() {
   const float tile_safe = std::max(0.001F, m_tile_size);
 
   const float edge_padding =
-      std::clamp(m_biomeSettings.spawnEdgePadding, 0.0F, 0.5F);
+      std::clamp(m_biomeSettings.spawn_edge_padding, 0.0F, 0.5F);
   const float edge_margin_x = static_cast<float>(m_width) * edge_padding;
   const float edge_margin_z = static_cast<float>(m_height) * edge_padding;
 
@@ -262,16 +262,16 @@ void BiomeRenderer::generateGrassInstances() {
     float const dryness =
         std::clamp(dryness_noise * 0.6F + slope * 0.4F, 0.0F, 1.0F);
     QVector3D const lush_mix =
-        m_biomeSettings.grassPrimary * (1.0F - lush_noise) +
-        m_biomeSettings.grassSecondary * lush_noise;
+        m_biomeSettings.grass_primary * (1.0F - lush_noise) +
+        m_biomeSettings.grass_secondary * lush_noise;
     QVector3D const color =
-        lush_mix * (1.0F - dryness) + m_biomeSettings.grassDry * dryness;
+        lush_mix * (1.0F - dryness) + m_biomeSettings.grass_dry * dryness;
 
-    float const height = remap(rand_01(state), m_biomeSettings.bladeHeightMin,
-                               m_biomeSettings.bladeHeightMax) *
+    float const height = remap(rand_01(state), m_biomeSettings.blade_height_min,
+                               m_biomeSettings.blade_height_max) *
                          tile_safe * 0.5F;
-    float const width = remap(rand_01(state), m_biomeSettings.bladeWidthMin,
-                              m_biomeSettings.bladeWidthMax) *
+    float const width = remap(rand_01(state), m_biomeSettings.blade_width_min,
+                              m_biomeSettings.blade_width_max) *
                         tile_safe;
 
     float const sway_strength = remap(rand_01(state), 0.75F, 1.25F);
@@ -376,7 +376,7 @@ void BiomeRenderer::generateGrassInstances() {
       float const type_bias = 1.0F;
       constexpr float k_cluster_boost = 1.35F;
       float const expected_clusters =
-          std::max(0.0F, m_biomeSettings.patchDensity * k_cluster_boost *
+          std::max(0.0F, m_biomeSettings.patch_density * k_cluster_boost *
                              slope_penalty * type_bias * usable_coverage);
       int cluster_count = static_cast<int>(std::floor(expected_clusters));
       float const frac = expected_clusters - float(cluster_count);
@@ -387,7 +387,8 @@ void BiomeRenderer::generateGrassInstances() {
       if (cluster_count > 0) {
         auto chunk_span_x = float(chunk_max_x - chunk_x + 1);
         auto chunk_span_z = float(chunk_max_z - chunk_z + 1);
-        float const scatter_base = std::max(0.25F, m_biomeSettings.patchJitter);
+        float const scatter_base =
+            std::max(0.25F, m_biomeSettings.patch_jitter);
 
         auto pick_cluster_center =
             [&](uint32_t &rng) -> std::optional<QVector2D> {
@@ -449,7 +450,7 @@ void BiomeRenderer::generateGrassInstances() {
   }
 
   const float background_density =
-      std::max(0.0F, m_biomeSettings.backgroundBladeDensity);
+      std::max(0.0F, m_biomeSettings.background_blade_density);
   if (background_density > 0.0F) {
     for (int z = 0; z < m_height; ++z) {
       for (int x = 0; x < m_width; ++x) {

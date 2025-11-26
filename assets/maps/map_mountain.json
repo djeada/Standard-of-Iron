@@ -9,6 +9,7 @@
     "tileSize": 1.0
   },
   "biome": {
+    "groundType": "alpine_mix",
     "seed": 24567,
     "patchDensity": 3.0,
     "patchJitter": 0.8,

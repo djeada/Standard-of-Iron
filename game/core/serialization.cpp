@@ -514,47 +514,47 @@ auto Serialization::serializeTerrain(
   terrain_obj["bridges"] = bridges_array;
 
   QJsonObject biome_obj;
-  biome_obj["grassPrimaryR"] = biome.grassPrimary.x();
-  biome_obj["grassPrimaryG"] = biome.grassPrimary.y();
-  biome_obj["grassPrimaryB"] = biome.grassPrimary.z();
-  biome_obj["grassSecondaryR"] = biome.grassSecondary.x();
-  biome_obj["grassSecondaryG"] = biome.grassSecondary.y();
-  biome_obj["grassSecondaryB"] = biome.grassSecondary.z();
-  biome_obj["grassDryR"] = biome.grassDry.x();
-  biome_obj["grassDryG"] = biome.grassDry.y();
-  biome_obj["grassDryB"] = biome.grassDry.z();
-  biome_obj["soilColorR"] = biome.soilColor.x();
-  biome_obj["soilColorG"] = biome.soilColor.y();
-  biome_obj["soilColorB"] = biome.soilColor.z();
-  biome_obj["rockLowR"] = biome.rockLow.x();
-  biome_obj["rockLowG"] = biome.rockLow.y();
-  biome_obj["rockLowB"] = biome.rockLow.z();
-  biome_obj["rockHighR"] = biome.rockHigh.x();
-  biome_obj["rockHighG"] = biome.rockHigh.y();
-  biome_obj["rockHighB"] = biome.rockHigh.z();
-  biome_obj["patchDensity"] = biome.patchDensity;
-  biome_obj["patchJitter"] = biome.patchJitter;
-  biome_obj["backgroundBladeDensity"] = biome.backgroundBladeDensity;
-  biome_obj["bladeHeightMin"] = biome.bladeHeightMin;
-  biome_obj["bladeHeightMax"] = biome.bladeHeightMax;
-  biome_obj["bladeWidthMin"] = biome.bladeWidthMin;
-  biome_obj["bladeWidthMax"] = biome.bladeWidthMax;
+  biome_obj["grassPrimaryR"] = biome.grass_primary.x();
+  biome_obj["grassPrimaryG"] = biome.grass_primary.y();
+  biome_obj["grassPrimaryB"] = biome.grass_primary.z();
+  biome_obj["grassSecondaryR"] = biome.grass_secondary.x();
+  biome_obj["grassSecondaryG"] = biome.grass_secondary.y();
+  biome_obj["grassSecondaryB"] = biome.grass_secondary.z();
+  biome_obj["grassDryR"] = biome.grass_dry.x();
+  biome_obj["grassDryG"] = biome.grass_dry.y();
+  biome_obj["grassDryB"] = biome.grass_dry.z();
+  biome_obj["soilColorR"] = biome.soil_color.x();
+  biome_obj["soilColorG"] = biome.soil_color.y();
+  biome_obj["soilColorB"] = biome.soil_color.z();
+  biome_obj["rockLowR"] = biome.rock_low.x();
+  biome_obj["rockLowG"] = biome.rock_low.y();
+  biome_obj["rockLowB"] = biome.rock_low.z();
+  biome_obj["rockHighR"] = biome.rock_high.x();
+  biome_obj["rockHighG"] = biome.rock_high.y();
+  biome_obj["rockHighB"] = biome.rock_high.z();
+  biome_obj["patchDensity"] = biome.patch_density;
+  biome_obj["patchJitter"] = biome.patch_jitter;
+  biome_obj["backgroundBladeDensity"] = biome.background_blade_density;
+  biome_obj["bladeHeightMin"] = biome.blade_height_min;
+  biome_obj["bladeHeightMax"] = biome.blade_height_max;
+  biome_obj["bladeWidthMin"] = biome.blade_width_min;
+  biome_obj["bladeWidthMax"] = biome.blade_width_max;
   biome_obj["sway_strength"] = biome.sway_strength;
   biome_obj["sway_speed"] = biome.sway_speed;
-  biome_obj["heightNoiseAmplitude"] = biome.heightNoiseAmplitude;
-  biome_obj["heightNoiseFrequency"] = biome.heightNoiseFrequency;
-  biome_obj["terrainMacroNoiseScale"] = biome.terrainMacroNoiseScale;
-  biome_obj["terrainDetailNoiseScale"] = biome.terrainDetailNoiseScale;
-  biome_obj["terrainSoilHeight"] = biome.terrainSoilHeight;
-  biome_obj["terrainSoilSharpness"] = biome.terrainSoilSharpness;
-  biome_obj["terrainRockThreshold"] = biome.terrainRockThreshold;
-  biome_obj["terrainRockSharpness"] = biome.terrainRockSharpness;
-  biome_obj["terrainAmbientBoost"] = biome.terrainAmbientBoost;
-  biome_obj["terrainRockDetailStrength"] = biome.terrainRockDetailStrength;
-  biome_obj["backgroundSwayVariance"] = biome.backgroundSwayVariance;
-  biome_obj["backgroundScatterRadius"] = biome.backgroundScatterRadius;
+  biome_obj["heightNoiseAmplitude"] = biome.height_noise_amplitude;
+  biome_obj["heightNoiseFrequency"] = biome.height_noise_frequency;
+  biome_obj["terrainMacroNoiseScale"] = biome.terrain_macro_noise_scale;
+  biome_obj["terrainDetailNoiseScale"] = biome.terrain_detail_noise_scale;
+  biome_obj["terrainSoilHeight"] = biome.terrain_soil_height;
+  biome_obj["terrainSoilSharpness"] = biome.terrain_soil_sharpness;
+  biome_obj["terrainRockThreshold"] = biome.terrain_rock_threshold;
+  biome_obj["terrainRockSharpness"] = biome.terrain_rock_sharpness;
+  biome_obj["terrainAmbientBoost"] = biome.terrain_ambient_boost;
+  biome_obj["terrainRockDetailStrength"] = biome.terrain_rock_detail_strength;
+  biome_obj["backgroundSwayVariance"] = biome.background_sway_variance;
+  biome_obj["backgroundScatterRadius"] = biome.background_scatter_radius;
   biome_obj["plant_density"] = biome.plant_density;
-  biome_obj["spawnEdgePadding"] = biome.spawnEdgePadding;
+  biome_obj["spawnEdgePadding"] = biome.spawn_edge_padding;
   biome_obj["seed"] = static_cast<qint64>(biome.seed);
   terrain_obj["biome"] = biome_obj;
 
@@ -585,78 +585,79 @@ void Serialization::deserializeTerrain(Game::Map::TerrainHeightMap *height_map,
       return {r, g, b};
     };
 
-    biome.grassPrimary =
-        read_color(QStringLiteral("grassPrimary"), default_biome.grassPrimary);
-    biome.grassSecondary = read_color(QStringLiteral("grassSecondary"),
-                                      default_biome.grassSecondary);
-    biome.grassDry =
-        read_color(QStringLiteral("grassDry"), default_biome.grassDry);
-    biome.soilColor =
-        read_color(QStringLiteral("soilColor"), default_biome.soilColor);
-    biome.rockLow =
-        read_color(QStringLiteral("rockLow"), default_biome.rockLow);
-    biome.rockHigh =
-        read_color(QStringLiteral("rockHigh"), default_biome.rockHigh);
+    biome.grass_primary =
+        read_color(QStringLiteral("grassPrimary"), default_biome.grass_primary);
+    biome.grass_secondary = read_color(QStringLiteral("grassSecondary"),
+                                       default_biome.grass_secondary);
+    biome.grass_dry =
+        read_color(QStringLiteral("grassDry"), default_biome.grass_dry);
+    biome.soil_color =
+        read_color(QStringLiteral("soilColor"), default_biome.soil_color);
+    biome.rock_low =
+        read_color(QStringLiteral("rockLow"), default_biome.rock_low);
+    biome.rock_high =
+        read_color(QStringLiteral("rockHigh"), default_biome.rock_high);
 
-    biome.patchDensity = static_cast<float>(
-        biome_obj["patchDensity"].toDouble(default_biome.patchDensity));
-    biome.patchJitter = static_cast<float>(
-        biome_obj["patchJitter"].toDouble(default_biome.patchJitter));
-    biome.backgroundBladeDensity =
+    biome.patch_density = static_cast<float>(
+        biome_obj["patchDensity"].toDouble(default_biome.patch_density));
+    biome.patch_jitter = static_cast<float>(
+        biome_obj["patchJitter"].toDouble(default_biome.patch_jitter));
+    biome.background_blade_density =
         static_cast<float>(biome_obj["backgroundBladeDensity"].toDouble(
-            default_biome.backgroundBladeDensity));
-    biome.bladeHeightMin = static_cast<float>(
-        biome_obj["bladeHeightMin"].toDouble(default_biome.bladeHeightMin));
-    biome.bladeHeightMax = static_cast<float>(
-        biome_obj["bladeHeightMax"].toDouble(default_biome.bladeHeightMax));
-    biome.bladeWidthMin = static_cast<float>(
-        biome_obj["bladeWidthMin"].toDouble(default_biome.bladeWidthMin));
-    biome.bladeWidthMax = static_cast<float>(
-        biome_obj["bladeWidthMax"].toDouble(default_biome.bladeWidthMax));
+            default_biome.background_blade_density));
+    biome.blade_height_min = static_cast<float>(
+        biome_obj["bladeHeightMin"].toDouble(default_biome.blade_height_min));
+    biome.blade_height_max = static_cast<float>(
+        biome_obj["bladeHeightMax"].toDouble(default_biome.blade_height_max));
+    biome.blade_width_min = static_cast<float>(
+        biome_obj["bladeWidthMin"].toDouble(default_biome.blade_width_min));
+    biome.blade_width_max = static_cast<float>(
+        biome_obj["bladeWidthMax"].toDouble(default_biome.blade_width_max));
     biome.sway_strength = static_cast<float>(
         biome_obj["sway_strength"].toDouble(default_biome.sway_strength));
     biome.sway_speed = static_cast<float>(
         biome_obj["sway_speed"].toDouble(default_biome.sway_speed));
-    biome.heightNoiseAmplitude =
+    biome.height_noise_amplitude =
         static_cast<float>(biome_obj["heightNoiseAmplitude"].toDouble(
-            default_biome.heightNoiseAmplitude));
-    biome.heightNoiseFrequency =
+            default_biome.height_noise_amplitude));
+    biome.height_noise_frequency =
         static_cast<float>(biome_obj["heightNoiseFrequency"].toDouble(
-            default_biome.heightNoiseFrequency));
-    biome.terrainMacroNoiseScale =
+            default_biome.height_noise_frequency));
+    biome.terrain_macro_noise_scale =
         static_cast<float>(biome_obj["terrainMacroNoiseScale"].toDouble(
-            default_biome.terrainMacroNoiseScale));
-    biome.terrainDetailNoiseScale =
+            default_biome.terrain_macro_noise_scale));
+    biome.terrain_detail_noise_scale =
         static_cast<float>(biome_obj["terrainDetailNoiseScale"].toDouble(
-            default_biome.terrainDetailNoiseScale));
-    biome.terrainSoilHeight =
+            default_biome.terrain_detail_noise_scale));
+    biome.terrain_soil_height =
         static_cast<float>(biome_obj["terrainSoilHeight"].toDouble(
-            default_biome.terrainSoilHeight));
-    biome.terrainSoilSharpness =
+            default_biome.terrain_soil_height));
+    biome.terrain_soil_sharpness =
         static_cast<float>(biome_obj["terrainSoilSharpness"].toDouble(
-            default_biome.terrainSoilSharpness));
-    biome.terrainRockThreshold =
+            default_biome.terrain_soil_sharpness));
+    biome.terrain_rock_threshold =
         static_cast<float>(biome_obj["terrainRockThreshold"].toDouble(
-            default_biome.terrainRockThreshold));
-    biome.terrainRockSharpness =
+            default_biome.terrain_rock_threshold));
+    biome.terrain_rock_sharpness =
         static_cast<float>(biome_obj["terrainRockSharpness"].toDouble(
-            default_biome.terrainRockSharpness));
-    biome.terrainAmbientBoost =
+            default_biome.terrain_rock_sharpness));
+    biome.terrain_ambient_boost =
         static_cast<float>(biome_obj["terrainAmbientBoost"].toDouble(
-            default_biome.terrainAmbientBoost));
-    biome.terrainRockDetailStrength =
+            default_biome.terrain_ambient_boost));
+    biome.terrain_rock_detail_strength =
         static_cast<float>(biome_obj["terrainRockDetailStrength"].toDouble(
-            default_biome.terrainRockDetailStrength));
-    biome.backgroundSwayVariance =
+            default_biome.terrain_rock_detail_strength));
+    biome.background_sway_variance =
         static_cast<float>(biome_obj["backgroundSwayVariance"].toDouble(
-            default_biome.backgroundSwayVariance));
-    biome.backgroundScatterRadius =
+            default_biome.background_sway_variance));
+    biome.background_scatter_radius =
         static_cast<float>(biome_obj["backgroundScatterRadius"].toDouble(
-            default_biome.backgroundScatterRadius));
+            default_biome.background_scatter_radius));
     biome.plant_density = static_cast<float>(
         biome_obj["plant_density"].toDouble(default_biome.plant_density));
-    biome.spawnEdgePadding = static_cast<float>(
-        biome_obj["spawnEdgePadding"].toDouble(default_biome.spawnEdgePadding));
+    biome.spawn_edge_padding =
+        static_cast<float>(biome_obj["spawnEdgePadding"].toDouble(
+            default_biome.spawn_edge_padding));
     if (biome_obj.contains("seed")) {
       biome.seed = static_cast<std::uint32_t>(
           biome_obj["seed"].toVariant().toULongLong());

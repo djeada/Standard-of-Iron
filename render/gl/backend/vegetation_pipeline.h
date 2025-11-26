@@ -39,16 +39,16 @@ public:
   struct PlantUniforms {
     GL::Shader::UniformHandle view_proj{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle time{GL::Shader::InvalidUniform};
-    GL::Shader::UniformHandle windStrength{GL::Shader::InvalidUniform};
-    GL::Shader::UniformHandle windSpeed{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle wind_strength{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle wind_speed{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle light_direction{GL::Shader::InvalidUniform};
   } m_plantUniforms;
 
   struct PineUniforms {
     GL::Shader::UniformHandle view_proj{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle time{GL::Shader::InvalidUniform};
-    GL::Shader::UniformHandle windStrength{GL::Shader::InvalidUniform};
-    GL::Shader::UniformHandle windSpeed{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle wind_strength{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle wind_speed{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle light_direction{GL::Shader::InvalidUniform};
   } m_pineUniforms;
 
