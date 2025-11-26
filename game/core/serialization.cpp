@@ -457,7 +457,8 @@ void Serialization::deserializeEntity(Entity *entity, const QJsonObject &json) {
 
 auto Serialization::serializeTerrain(
     const Game::Map::TerrainHeightMap *height_map,
-    const Game::Map::BiomeSettings &biome) -> QJsonObject {
+    const Game::Map::BiomeSettings &biome,
+    const std::vector<Game::Map::RoadSegment> &roads) -> QJsonObject {
   QJsonObject terrain_obj;
 
   if (height_map == nullptr) {
@@ -513,6 +514,21 @@ auto Serialization::serializeTerrain(
   }
   terrain_obj["bridges"] = bridges_array;
 
+  QJsonArray roads_array;
+  for (const auto &road : roads) {
+    QJsonObject road_obj;
+    road_obj["startX"] = road.start.x();
+    road_obj["startY"] = road.start.y();
+    road_obj["startZ"] = road.start.z();
+    road_obj["endX"] = road.end.x();
+    road_obj["endY"] = road.end.y();
+    road_obj["endZ"] = road.end.z();
+    road_obj["width"] = road.width;
+    road_obj["style"] = road.style;
+    roads_array.append(road_obj);
+  }
+  terrain_obj["roads"] = roads_array;
+
   QJsonObject biome_obj;
   biome_obj["grassPrimaryR"] = biome.grass_primary.x();
   biome_obj["grassPrimaryG"] = biome.grass_primary.y();
@@ -563,6 +579,7 @@ auto Serialization::serializeTerrain(
 
 void Serialization::deserializeTerrain(Game::Map::TerrainHeightMap *height_map,
                                        Game::Map::BiomeSettings &biome,
+                                       std::vector<Game::Map::RoadSegment> &roads,
                                        const QJsonObject &json) {
   if ((height_map == nullptr) || json.isEmpty()) {
     return;
@@ -731,6 +748,29 @@ void Serialization::deserializeTerrain(Game::Map::TerrainHeightMap *height_map,
     }
   }
 
+  roads.clear();
+  if (json.contains("roads")) {
+    const auto roads_array = json["roads"].toArray();
+    roads.reserve(roads_array.size());
+    const Game::Map::RoadSegment default_road{};
+    for (const auto &val : roads_array) {
+      const auto road_obj = val.toObject();
+      Game::Map::RoadSegment road;
+      road.start =
+          QVector3D(static_cast<float>(road_obj["startX"].toDouble(0.0)),
+                    static_cast<float>(road_obj["startY"].toDouble(0.0)),
+                    static_cast<float>(road_obj["startZ"].toDouble(0.0)));
+      road.end =
+          QVector3D(static_cast<float>(road_obj["endX"].toDouble(0.0)),
+                    static_cast<float>(road_obj["endY"].toDouble(0.0)),
+                    static_cast<float>(road_obj["endZ"].toDouble(0.0)));
+      road.width = static_cast<float>(road_obj["width"].toDouble(
+          static_cast<double>(default_road.width)));
+      road.style = road_obj["style"].toString(default_road.style);
+      roads.push_back(road);
+    }
+  }
+
   height_map->restoreFromData(heights, terrain_types, rivers, bridges);
 }
 
@@ -754,7 +794,8 @@ auto Serialization::serializeWorld(const World *world) -> QJsonDocument {
   if (terrain_service.isInitialized() &&
       (terrain_service.getHeightMap() != nullptr)) {
     world_obj["terrain"] = serializeTerrain(terrain_service.getHeightMap(),
-                                            terrain_service.biomeSettings());
+                                            terrain_service.biomeSettings(),
+                                            terrain_service.road_segments());
   }
 
   return QJsonDocument(world_obj);
@@ -794,6 +835,7 @@ void Serialization::deserializeWorld(World *world, const QJsonDocument &doc) {
         static_cast<float>(terrain_obj["tile_size"].toDouble(1.0));
 
     Game::Map::BiomeSettings biome;
+    std::vector<Game::Map::RoadSegment> roads;
     std::vector<float> const heights;
     std::vector<Game::Map::TerrainType> const terrain_types;
     std::vector<Game::Map::RiverSegment> const rivers;
@@ -801,13 +843,13 @@ void Serialization::deserializeWorld(World *world, const QJsonDocument &doc) {
 
     auto temp_height_map =
         std::make_unique<Game::Map::TerrainHeightMap>(width, height, tile_size);
-    deserializeTerrain(temp_height_map.get(), biome, terrain_obj);
+    deserializeTerrain(temp_height_map.get(), biome, roads, terrain_obj);
 
     auto &terrain_service = Game::Map::TerrainService::instance();
     terrain_service.restoreFromSerialized(
         width, height, tile_size, temp_height_map->getHeightData(),
         temp_height_map->getTerrainTypes(), temp_height_map->getRiverSegments(),
-        temp_height_map->getBridges(), biome);
+        roads, temp_height_map->getBridges(), biome);
   }
 }
 

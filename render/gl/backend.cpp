@@ -1150,6 +1150,32 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         break;
       }
 
+      if (active_shader == m_waterPipeline->m_road_shader) {
+        if (m_lastBoundShader != active_shader) {
+          active_shader->use();
+          m_lastBoundShader = active_shader;
+        }
+
+        active_shader->setUniform(m_waterPipeline->m_road_uniforms.mvp, it.mvp);
+        active_shader->setUniform(m_waterPipeline->m_road_uniforms.model,
+                                  it.model);
+        active_shader->setUniform(m_waterPipeline->m_road_uniforms.view,
+                                  cam.getViewMatrix());
+        active_shader->setUniform(m_waterPipeline->m_road_uniforms.projection,
+                                  cam.getProjectionMatrix());
+        active_shader->setUniform(m_waterPipeline->m_road_uniforms.color,
+                                  it.color);
+        active_shader->setUniform(m_waterPipeline->m_road_uniforms.alpha,
+                                  it.alpha);
+
+        QVector3D const road_light_dir(0.35F, 0.8F, 0.45F);
+        active_shader->setUniform(
+            m_waterPipeline->m_road_uniforms.light_direction, road_light_dir);
+
+        it.mesh->draw();
+        break;
+      }
+
       auto *uniforms = m_characterPipeline
                            ? m_characterPipeline->resolveUniforms(active_shader)
                            : nullptr;

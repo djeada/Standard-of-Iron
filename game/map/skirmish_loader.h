@@ -25,6 +25,7 @@ class PlantRenderer;
 class PineRenderer;
 class FireCampRenderer;
 class RiverRenderer;
+class RoadRenderer;
 class RiverbankRenderer;
 class BridgeRenderer;
 } // namespace Render::GL
@@ -64,6 +65,7 @@ public:
   }
   void setBiomeRenderer(Render::GL::BiomeRenderer *biome) { m_biome = biome; }
   void setRiverRenderer(Render::GL::RiverRenderer *river) { m_river = river; }
+  void setRoadRenderer(Render::GL::RoadRenderer *road) { m_road = road; }
   void setRiverbankRenderer(Render::GL::RiverbankRenderer *riverbank) {
     m_riverbank = riverbank;
   }
@@ -99,6 +101,7 @@ private:
   Render::GL::TerrainRenderer *m_terrain = nullptr;
   Render::GL::BiomeRenderer *m_biome = nullptr;
   Render::GL::RiverRenderer *m_river = nullptr;
+  Render::GL::RoadRenderer *m_road = nullptr;
   Render::GL::RiverbankRenderer *m_riverbank = nullptr;
   Render::GL::BridgeRenderer *m_bridge = nullptr;
   Render::GL::FogRenderer *m_fog = nullptr;

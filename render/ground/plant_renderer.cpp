@@ -1,4 +1,5 @@
 #include "plant_renderer.h"
+#include "../../game/map/terrain_service.h"
 #include "../../game/map/visibility_service.h"
 #include "../../game/systems/building_collision_registry.h"
 #include "../gl/buffer.h"
@@ -260,6 +261,12 @@ void PlantRenderer::generatePlantInstances() {
     auto &building_registry =
         Game::Systems::BuildingCollisionRegistry::instance();
     if (building_registry.isPointInBuilding(world_x, world_z)) {
+      return false;
+    }
+
+    // Avoid placing plants on roads
+    auto &terrain_service = Game::Map::TerrainService::instance();
+    if (terrain_service.is_point_on_road(world_x, world_z)) {
       return false;
     }
 
