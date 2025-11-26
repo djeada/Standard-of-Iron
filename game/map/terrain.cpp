@@ -470,10 +470,10 @@ void TerrainHeightMap::applyBiomeVariation(const BiomeSettings &settings) {
     return;
   }
 
-  if (settings.groundIrregularityEnabled) {
-    const float amplitude = std::max(0.0F, settings.irregularityAmplitude);
+  if (settings.ground_irregularity_enabled) {
+    const float amplitude = std::max(0.0F, settings.irregularity_amplitude);
     if (amplitude > 0.0001F) {
-      const float frequency = std::max(0.0001F, settings.irregularityScale);
+      const float frequency = std::max(0.0001F, settings.irregularity_scale);
       const float half_width = m_width * 0.5F - 0.5F;
       const float half_height = m_height * 0.5F - 0.5F;
 
@@ -514,9 +514,10 @@ void TerrainHeightMap::applyBiomeVariation(const BiomeSettings &settings) {
     }
   }
 
-  const float legacy_amplitude = std::max(0.0F, settings.heightNoiseAmplitude);
+  const float legacy_amplitude =
+      std::max(0.0F, settings.height_noise_amplitude);
   if (legacy_amplitude > 0.0001F) {
-    const float frequency = std::max(0.0001F, settings.heightNoiseFrequency);
+    const float frequency = std::max(0.0001F, settings.height_noise_frequency);
     const float half_width = m_width * 0.5F - 0.5F;
     const float half_height = m_height * 0.5F - 0.5F;
 
