@@ -31,22 +31,7 @@ inline auto resolveResourcePath(const QString &path) -> QString {
     return path;
   }
 
-  static const QStringList kAlternateRoots = {
-      QStringLiteral(":/StandardOfIron"),
-      QStringLiteral(":/qt/qml/StandardOfIron"),
-      QStringLiteral(":/qt/qml/default")};
-
   const QString relative = path.mid(2); // strip ":/"
-  for (const auto &root : kAlternateRoots) {
-    QString candidate = root;
-    if (!candidate.endsWith('/')) {
-      candidate.append('/');
-    }
-    candidate.append(relative);
-    if (exists(candidate)) {
-      return candidate;
-    }
-  }
 
   // Fallbacks for development and packaging where resources live on disk
   auto search_upwards = [&](const QString &startDir) -> QString {
@@ -74,6 +59,22 @@ inline auto resolveResourcePath(const QString &path) -> QString {
   if (QString candidate = search_upwards(QDir::currentPath());
       !candidate.isEmpty()) {
     return candidate;
+  }
+
+  static const QStringList kAlternateRoots = {
+      QStringLiteral(":/StandardOfIron"),
+      QStringLiteral(":/qt/qml/StandardOfIron"),
+      QStringLiteral(":/qt/qml/default")};
+
+  for (const auto &root : kAlternateRoots) {
+    QString candidate = root;
+    if (!candidate.endsWith('/')) {
+      candidate.append('/');
+    }
+    candidate.append(relative);
+    if (exists(candidate)) {
+      return candidate;
+    }
   }
 
   return path;
