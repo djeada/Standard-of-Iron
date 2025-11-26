@@ -191,7 +191,6 @@ void PineRenderer::generatePineInstances() {
       return false;
     }
 
-    // Avoid placing pine trees on roads
     auto &terrain_service = Game::Map::TerrainService::instance();
     if (terrain_service.is_point_on_road(world_x, world_z)) {
       return false;

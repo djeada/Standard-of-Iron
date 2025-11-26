@@ -96,8 +96,8 @@
 #include "render/ground/pine_renderer.h"
 #include "render/ground/plant_renderer.h"
 #include "render/ground/river_renderer.h"
-#include "render/ground/road_renderer.h"
 #include "render/ground/riverbank_renderer.h"
+#include "render/ground/road_renderer.h"
 #include "render/ground/stone_renderer.h"
 #include "render/ground/terrain_renderer.h"
 #include "render/scene_renderer.h"
@@ -136,10 +136,10 @@ GameEngine::GameEngine(QObject *parent)
   m_pine = std::make_unique<Render::GL::PineRenderer>();
   m_firecamp = std::make_unique<Render::GL::FireCampRenderer>();
 
-  m_passes = {m_ground.get(),    m_terrain.get(), m_river.get(),
-              m_road.get(),      m_riverbank.get(), m_bridge.get(),
-              m_biome.get(),     m_stone.get(),   m_plant.get(),
-              m_pine.get(),      m_firecamp.get(), m_fog.get()};
+  m_passes = {m_ground.get(), m_terrain.get(),   m_river.get(),
+              m_road.get(),   m_riverbank.get(), m_bridge.get(),
+              m_biome.get(),  m_stone.get(),     m_plant.get(),
+              m_pine.get(),   m_firecamp.get(),  m_fog.get()};
 
   std::unique_ptr<Engine::Core::System> arrow_sys =
       std::make_unique<Game::Systems::ArrowSystem>();

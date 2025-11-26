@@ -137,10 +137,8 @@ public:
         resolve(kShaderBase + QStringLiteral("riverbank.frag"));
     load(QStringLiteral("riverbank"), riverbankVert, riverbankFrag);
 
-    const QString roadVert =
-        resolve(kShaderBase + QStringLiteral("road.vert"));
-    const QString roadFrag =
-        resolve(kShaderBase + QStringLiteral("road.frag"));
+    const QString roadVert = resolve(kShaderBase + QStringLiteral("road.vert"));
+    const QString roadFrag = resolve(kShaderBase + QStringLiteral("road.frag"));
     load(QStringLiteral("road"), roadVert, roadFrag);
 
     const QString bridgeVert =
