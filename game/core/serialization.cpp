@@ -577,10 +577,9 @@ auto Serialization::serializeTerrain(
   return terrain_obj;
 }
 
-void Serialization::deserializeTerrain(Game::Map::TerrainHeightMap *height_map,
-                                       Game::Map::BiomeSettings &biome,
-                                       std::vector<Game::Map::RoadSegment> &roads,
-                                       const QJsonObject &json) {
+void Serialization::deserializeTerrain(
+    Game::Map::TerrainHeightMap *height_map, Game::Map::BiomeSettings &biome,
+    std::vector<Game::Map::RoadSegment> &roads, const QJsonObject &json) {
   if ((height_map == nullptr) || json.isEmpty()) {
     return;
   }
@@ -760,12 +759,11 @@ void Serialization::deserializeTerrain(Game::Map::TerrainHeightMap *height_map,
           QVector3D(static_cast<float>(road_obj["startX"].toDouble(0.0)),
                     static_cast<float>(road_obj["startY"].toDouble(0.0)),
                     static_cast<float>(road_obj["startZ"].toDouble(0.0)));
-      road.end =
-          QVector3D(static_cast<float>(road_obj["endX"].toDouble(0.0)),
-                    static_cast<float>(road_obj["endY"].toDouble(0.0)),
-                    static_cast<float>(road_obj["endZ"].toDouble(0.0)));
-      road.width = static_cast<float>(road_obj["width"].toDouble(
-          static_cast<double>(default_road.width)));
+      road.end = QVector3D(static_cast<float>(road_obj["endX"].toDouble(0.0)),
+                           static_cast<float>(road_obj["endY"].toDouble(0.0)),
+                           static_cast<float>(road_obj["endZ"].toDouble(0.0)));
+      road.width = static_cast<float>(
+          road_obj["width"].toDouble(static_cast<double>(default_road.width)));
       road.style = road_obj["style"].toString(default_road.style);
       roads.push_back(road);
     }

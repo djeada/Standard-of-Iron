@@ -124,7 +124,8 @@ void main() {
   vec2 cell = floor(uv * 1.5);
   float cell_rnd = hash_2d(cell);
   vec2 local = fract(uv);
-  vec2 uv_var = (rotate_2d(cell_rnd * 6.2831853) * (local - 0.5) + 0.5) + floor(uv);
+  vec2 uv_var =
+      (rotate_2d(cell_rnd * 6.2831853) * (local - 0.5) + 0.5) + floor(uv);
 
   // Albedo variation - Roman roads have weathered stone look
   float var_low = (fbm_2d(uv * 0.4) - 0.5) * 0.18;
