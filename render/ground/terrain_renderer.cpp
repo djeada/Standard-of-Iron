@@ -551,7 +551,7 @@ void TerrainRenderer::buildMeshes() {
 
         QVector3D const base_color =
             getTerrainColor(chunk.type, chunk.averageHeight);
-        QVector3D const rock_tint = m_biomeSettings.rockLow;
+        QVector3D const rock_tint = m_biomeSettings.rock_low;
 
         float slope_mix = std::clamp(
             avg_slope * ((chunk.type == Game::Map::TerrainType::Flat) ? 0.30F
@@ -612,18 +612,18 @@ void TerrainRenderer::buildMeshes() {
         auto tint_color = [&](const QVector3D &base) {
           return clamp01(applyTint(base, chunk.tint));
         };
-        params.grassPrimary = tint_color(m_biomeSettings.grassPrimary);
-        params.grassSecondary = tint_color(m_biomeSettings.grassSecondary);
-        params.grassDry = tint_color(m_biomeSettings.grassDry);
-        params.soilColor = tint_color(m_biomeSettings.soilColor);
-        params.rockLow = tint_color(m_biomeSettings.rockLow);
-        params.rockHigh = tint_color(m_biomeSettings.rockHigh);
+        params.grass_primary = tint_color(m_biomeSettings.grass_primary);
+        params.grass_secondary = tint_color(m_biomeSettings.grass_secondary);
+        params.grass_dry = tint_color(m_biomeSettings.grass_dry);
+        params.soil_color = tint_color(m_biomeSettings.soil_color);
+        params.rock_low = tint_color(m_biomeSettings.rock_low);
+        params.rock_high = tint_color(m_biomeSettings.rock_high);
 
         params.tile_size = std::max(0.001F, m_tile_size);
-        params.macroNoiseScale = m_biomeSettings.terrainMacroNoiseScale;
-        params.detail_noiseScale = m_biomeSettings.terrainDetailNoiseScale;
+        params.macro_noise_scale = m_biomeSettings.terrain_macro_noise_scale;
+        params.detail_noise_scale = m_biomeSettings.terrain_detail_noise_scale;
 
-        float slope_threshold = m_biomeSettings.terrainRockThreshold;
+        float slope_threshold = m_biomeSettings.terrain_rock_threshold;
         float sharpness_mul = 1.0F;
         if (chunk.type == Game::Map::TerrainType::Hill) {
           slope_threshold -= 0.08F;
@@ -638,21 +638,21 @@ void TerrainRenderer::buildMeshes() {
             slope_threshold - std::clamp(avg_slope * 0.20F, 0.0F, 0.12F), 0.05F,
             0.9F);
 
-        params.slopeRockThreshold = slope_threshold;
-        params.slopeRockSharpness = std::max(
-            1.0F, m_biomeSettings.terrainRockSharpness * sharpness_mul);
+        params.slope_rock_threshold = slope_threshold;
+        params.slope_rock_sharpness = std::max(
+            1.0F, m_biomeSettings.terrain_rock_sharpness * sharpness_mul);
 
-        float soil_height = m_biomeSettings.terrainSoilHeight;
+        float soil_height = m_biomeSettings.terrain_soil_height;
         if (chunk.type == Game::Map::TerrainType::Hill) {
           soil_height -= 0.06F;
         } else if (chunk.type == Game::Map::TerrainType::Mountain) {
           soil_height -= 0.12F;
         }
         soil_height += 0.05F * entrance_factor - 0.03F * plateau_factor;
-        params.soilBlendHeight = soil_height;
+        params.soil_blend_height = soil_height;
 
-        params.soilBlendSharpness =
-            std::max(0.75F, m_biomeSettings.terrainSoilSharpness *
+        params.soil_blend_sharpness =
+            std::max(0.75F, m_biomeSettings.terrain_soil_sharpness *
                                 (chunk.type == Game::Map::TerrainType::Mountain
                                      ? 0.80F
                                      : 0.95F));
@@ -662,26 +662,26 @@ void TerrainRenderer::buildMeshes() {
         const uint32_t noise_key_b =
             hash_coords(chunk.minX, chunk.minZ, m_noiseSeed ^ 0x68E31DA4U);
         constexpr float k_noise_offset_scale = 256.0F;
-        params.noiseOffset =
+        params.noise_offset =
             QVector2D(hash_to_01(noise_key_a) * k_noise_offset_scale,
                       hash_to_01(noise_key_b) * k_noise_offset_scale);
 
         float base_amp =
-            m_biomeSettings.heightNoiseAmplitude *
+            m_biomeSettings.height_noise_amplitude *
             (0.7F + 0.3F * std::clamp(roughness * 0.6F, 0.0F, 1.0F));
         if (chunk.type == Game::Map::TerrainType::Mountain) {
           base_amp *= 1.25F;
         }
         base_amp *= (1.0F + 0.10F * edge_factor - 0.08F * plateau_factor -
                      0.06F * entrance_factor);
-        params.heightNoiseStrength = base_amp;
-        params.heightNoiseFrequency = m_biomeSettings.heightNoiseFrequency;
+        params.height_noise_strength = base_amp;
+        params.height_noise_frequency = m_biomeSettings.height_noise_frequency;
 
-        params.ambientBoost =
-            m_biomeSettings.terrainAmbientBoost *
+        params.ambient_boost =
+            m_biomeSettings.terrain_ambient_boost *
             ((chunk.type == Game::Map::TerrainType::Mountain) ? 0.90F : 0.95F);
-        params.rockDetailStrength =
-            m_biomeSettings.terrainRockDetailStrength *
+        params.rock_detail_strength =
+            m_biomeSettings.terrain_rock_detail_strength *
             (0.75F + 0.35F * std::clamp(avg_slope * 1.2F, 0.0F, 1.0F) +
              0.15F * edge_factor - 0.10F * plateau_factor -
              0.08F * entrance_factor);
@@ -703,25 +703,25 @@ auto TerrainRenderer::getTerrainColor(Game::Map::TerrainType type,
   switch (type) {
   case Game::Map::TerrainType::Mountain:
     if (height > 4.0F) {
-      return m_biomeSettings.rockHigh;
+      return m_biomeSettings.rock_high;
     }
-    return m_biomeSettings.rockLow;
+    return m_biomeSettings.rock_low;
   case Game::Map::TerrainType::Hill: {
     float const t = std::clamp(height / 3.0F, 0.0F, 1.0F);
-    QVector3D const grass = m_biomeSettings.grassSecondary * (1.0F - t) +
-                            m_biomeSettings.grassDry * t;
+    QVector3D const grass = m_biomeSettings.grass_secondary * (1.0F - t) +
+                            m_biomeSettings.grass_dry * t;
     QVector3D const rock =
-        m_biomeSettings.rockLow * (1.0F - t) + m_biomeSettings.rockHigh * t;
+        m_biomeSettings.rock_low * (1.0F - t) + m_biomeSettings.rock_high * t;
     float const rock_blend = std::clamp(0.25F + 0.5F * t, 0.0F, 0.75F);
     return grass * (1.0F - rock_blend) + rock * rock_blend;
   }
   case Game::Map::TerrainType::Flat:
   default: {
     float const moisture = std::clamp((height - 0.5F) * 0.2F, 0.0F, 0.4F);
-    QVector3D const base = m_biomeSettings.grassPrimary * (1.0F - moisture) +
-                           m_biomeSettings.grassSecondary * moisture;
+    QVector3D const base = m_biomeSettings.grass_primary * (1.0F - moisture) +
+                           m_biomeSettings.grass_secondary * moisture;
     float const dry_blend = std::clamp((height - 2.0F) * 0.12F, 0.0F, 0.3F);
-    return base * (1.0F - dry_blend) + m_biomeSettings.grassDry * dry_blend;
+    return base * (1.0F - dry_blend) + m_biomeSettings.grass_dry * dry_blend;
   }
   }
 }
