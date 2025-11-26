@@ -8,6 +8,7 @@ inline constexpr const char *COORD_SYSTEM = "coordSystem";
 inline constexpr const char *MAX_TROOPS_PER_PLAYER = "maxTroopsPerPlayer";
 inline constexpr const char *GRID = "grid";
 inline constexpr const char *BIOME = "biome";
+inline constexpr const char *GROUND_TYPE = "groundType";
 inline constexpr const char *CAMERA = "camera";
 inline constexpr const char *SPAWNS = "spawns";
 inline constexpr const char *FIRECAMPS = "firecamps";

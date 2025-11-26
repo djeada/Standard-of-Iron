@@ -21,18 +21,18 @@ struct GrassBatchParams {
   static constexpr float kDefaultLightDirZ = 0.45F;
   static constexpr float kDefaultWindSpeed = 1.4F;
 
-  static auto defaultSoilColor() -> QVector3D {
+  static auto default_soil_color() -> QVector3D {
     return {kDefaultSoilColorR, kDefaultSoilColorG, kDefaultSoilColorB};
   }
 
-  static auto defaultLightDirection() -> QVector3D {
+  static auto default_light_direction() -> QVector3D {
     return {kDefaultLightDirX, kDefaultLightDirY, kDefaultLightDirZ};
   }
 
-  QVector3D soilColor = defaultSoilColor();
-  float windStrength{kDefaultWindStrength};
-  QVector3D light_direction = defaultLightDirection();
-  float windSpeed{kDefaultWindSpeed};
+  QVector3D soil_color = default_soil_color();
+  float wind_strength{kDefaultWindStrength};
+  QVector3D light_direction = default_light_direction();
+  float wind_speed{kDefaultWindSpeed};
   float time{0.0F};
   float pad0{0.0F};
   float pad1{0.0F};
