@@ -4,6 +4,7 @@
 #include "map_definition.h"
 #include "terrain.h"
 
+#include <algorithm>
 #include <cmath>
 #include <memory>
 #include <vector>
@@ -25,14 +26,14 @@ void TerrainService::initialize(const MapDefinition &mapDef) {
   m_biomeSettings = mapDef.biome;
   m_height_map->applyBiomeVariation(m_biomeSettings);
   m_fire_camps = mapDef.firecamps;
-  m_roadSegments = mapDef.roads;
+  m_road_segments = mapDef.roads;
 }
 
 void TerrainService::clear() {
   m_height_map.reset();
   m_biomeSettings = BiomeSettings();
   m_fire_camps.clear();
-  m_roadSegments.clear();
+  m_road_segments.clear();
 }
 
 auto TerrainService::getTerrainHeight(float world_x,
@@ -132,7 +133,50 @@ void TerrainService::restoreFromSerialized(
   m_height_map = std::make_unique<TerrainHeightMap>(width, height, tile_size);
   m_height_map->restoreFromData(heights, terrain_types, rivers, bridges);
   m_biomeSettings = biome;
-  m_roadSegments = roads;
+  m_road_segments = roads;
+}
+
+auto TerrainService::is_point_on_road(float world_x,
+                                      float world_z) const -> bool {
+  for (const auto &segment : m_road_segments) {
+    // Calculate distance from point to line segment
+    const float dx = segment.end.x() - segment.start.x();
+    const float dz = segment.end.z() - segment.start.z();
+    const float segment_length_sq = dx * dx + dz * dz;
+
+    if (segment_length_sq < 0.0001F) {
+      // Degenerate segment - check distance to start point
+      const float dist_x = world_x - segment.start.x();
+      const float dist_z = world_z - segment.start.z();
+      const float dist_sq = dist_x * dist_x + dist_z * dist_z;
+      const float half_width = segment.width * 0.5F;
+      if (dist_sq <= half_width * half_width) {
+        return true;
+      }
+      continue;
+    }
+
+    // Project point onto line segment
+    const float px = world_x - segment.start.x();
+    const float pz = world_z - segment.start.z();
+    float t = (px * dx + pz * dz) / segment_length_sq;
+    t = std::clamp(t, 0.0F, 1.0F);
+
+    // Find closest point on segment
+    const float closest_x = segment.start.x() + t * dx;
+    const float closest_z = segment.start.z() + t * dz;
+
+    // Check distance from point to closest point on segment
+    const float dist_x = world_x - closest_x;
+    const float dist_z = world_z - closest_z;
+    const float dist_sq = dist_x * dist_x + dist_z * dist_z;
+
+    const float half_width = segment.width * 0.5F;
+    if (dist_sq <= half_width * half_width) {
+      return true;
+    }
+  }
+  return false;
 }
 
 } // namespace Game::Map
