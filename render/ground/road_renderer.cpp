@@ -1,10 +1,10 @@
 #include "road_renderer.h"
+#include "../../game/map/terrain.h"
 #include "../../game/map/visibility_service.h"
 #include "../gl/mesh.h"
 #include "../gl/resources.h"
 #include "../scene_renderer.h"
 #include "ground_utils.h"
-#include "map/terrain.h"
 #include <QVector2D>
 #include <QVector3D>
 #include <algorithm>
@@ -22,16 +22,16 @@ RoadRenderer::RoadRenderer() = default;
 RoadRenderer::~RoadRenderer() = default;
 
 void RoadRenderer::configure(
-    const std::vector<Game::Map::RoadSegment> &roadSegments, float tile_size) {
-  m_roadSegments = roadSegments;
+    const std::vector<Game::Map::RoadSegment> &road_segments, float tile_size) {
+  m_road_segments = road_segments;
   m_tile_size = tile_size;
-  buildMeshes();
+  build_meshes();
 }
 
-void RoadRenderer::buildMeshes() {
+void RoadRenderer::build_meshes() {
   m_meshes.clear();
 
-  if (m_roadSegments.empty()) {
+  if (m_road_segments.empty()) {
     return;
   }
 
@@ -53,7 +53,7 @@ void RoadRenderer::buildMeshes() {
            c * (1.0F - fx) * fy + d * fx * fy;
   };
 
-  for (const auto &segment : m_roadSegments) {
+  for (const auto &segment : m_road_segments) {
     QVector3D dir = segment.end - segment.start;
     float const length = dir.length();
     if (length < 0.01F) {
@@ -149,7 +149,7 @@ void RoadRenderer::buildMeshes() {
 }
 
 void RoadRenderer::submit(Renderer &renderer, ResourceManager *resources) {
-  if (m_meshes.empty() || m_roadSegments.empty()) {
+  if (m_meshes.empty() || m_road_segments.empty()) {
     return;
   }
 
@@ -176,7 +176,7 @@ void RoadRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   QVector3D const road_base_color(0.45F, 0.42F, 0.38F);
 
   size_t mesh_index = 0;
-  for (const auto &segment : m_roadSegments) {
+  for (const auto &segment : m_road_segments) {
     if (mesh_index >= m_meshes.size()) {
       break;
     }

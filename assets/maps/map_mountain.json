@@ -577,6 +577,56 @@
       "rotation": 95
     }
   ],
+  "roads": [
+    {
+      "start": [75, 75],
+      "end": [150, 150],
+      "width": 3.5,
+      "style": "default"
+    },
+    {
+      "start": [150, 150],
+      "end": [225, 225],
+      "width": 3.5,
+      "style": "default"
+    },
+    {
+      "start": [75, 225],
+      "end": [150, 150],
+      "width": 3.0,
+      "style": "default"
+    },
+    {
+      "start": [225, 75],
+      "end": [150, 150],
+      "width": 3.0,
+      "style": "default"
+    },
+    {
+      "start": [75, 75],
+      "end": [75, 225],
+      "width": 2.5,
+      "style": "default"
+    },
+    {
+      "start": [225, 75],
+      "end": [225, 225],
+      "width": 2.5,
+      "style": "default"
+    },
+    {
+      "start": [75, 75],
+      "end": [225, 75],
+      "width": 2.5,
+      "style": "default"
+    },
+    {
+      "start": [75, 225],
+      "end": [225, 225],
+      "width": 2.5,
+      "style": "default"
+    }
+  ],
   "victory": {
     "type": "elimination",
     "key_structures": [
