@@ -25,6 +25,7 @@ out vec4 FragColor;
 const vec3 k_leather_base = vec3(0.42, 0.30, 0.20);
 const vec3 k_linen_base = vec3(0.88, 0.83, 0.74);
 const vec3 k_bronze_base = vec3(0.58, 0.44, 0.20);
+const float k_pi = 3.14159265;
 
 float hash21(vec2 p) {
   p = fract(p * vec2(234.34, 435.345));
@@ -160,6 +161,69 @@ MaterialSample sample_bronze(vec3 base_color, vec3 pos, vec3 N, vec3 T,
   return m;
 }
 
+vec3 crest_basis(vec3 n) {
+  float az = atan(n.z, n.x);
+  float el = acos(clamp(n.y, -1.0, 1.0));
+  return vec3(az / (2.0 * k_pi), el / k_pi, n.y);
+}
+
+MaterialSample sample_carthage_helmet(vec3 base_color, vec3 pos, vec3 N, vec3 T,
+                                      vec3 B) {
+  MaterialSample m;
+
+  // Base hammered bronze with wide-area patina streaks.
+  float hammer = fbm(pos * 14.0 + vec3(v_layerNoise));
+  float patina = fbm(pos * vec3(4.2, 6.0, 4.8) + vec3(1.3, 0.0, 2.1));
+  vec3 Np =
+      perturb(N, T, B, vec3((hammer - 0.5) * 0.10, (patina - 0.5) * 0.14, 0.0));
+
+  // Radial meridian ribs anchored to surface direction.
+  vec3 uv = crest_basis(N);
+  float meridian = smoothstep(0.23, 0.0, abs(sin(uv.x * k_pi * 5.5)));
+  float ridge = smoothstep(0.10, 0.0, abs(uv.x - 0.5));
+  float crest = smoothstep(0.34, 0.16, uv.y) * ridge;
+  float rim = smoothstep(0.80, 0.62, uv.y);
+  float tip = smoothstep(0.82, 0.98, uv.y);
+  vec3 rib_normal = vec3(0.0, crest * 0.42 + rim * 0.18, meridian * 0.26);
+
+  // Brushed scratches running around the helmet circumference.
+  float brush = sin(dot(T.xz, vec2(62.0, 54.0)) + uv.x * 18.0 + uv.y * 7.0);
+  float scratch = smoothstep(0.6, 1.0, abs(brush));
+  vec3 scratch_normal = T * (scratch * 0.10);
+
+  Np = normalize(Np + T * rib_normal.z + B * rib_normal.y + scratch_normal);
+
+  // Brow band mask based on height along the helmet (aligns to rim).
+  float brow = smoothstep(0.18, 0.0, abs(uv.y - 0.70));
+  float patina_mix = clamp(patina * 0.65 + brow * 0.3 + rim * 0.25, 0.0, 1.0);
+
+  vec3 tint = mix(vec3(0.0, 1.0, 0.0), base_color, 0.15); // debug extreme green
+  vec3 patina_color = vec3(0.26, 0.52, 0.40);
+  vec3 crest_highlight = vec3(1.0, 0.92, 0.75);
+
+  tint = mix(tint, patina_color, patina_mix * 0.7);
+  tint += crest_highlight * crest * 0.65;
+  tint = mix(tint, tint * vec3(1.06, 1.02, 0.96), rim * 0.35);
+  tint = mix(tint, tint * vec3(1.12, 1.06, 1.00), tip * 0.45);
+  tint += vec3(0.14) * brow;
+  // Edge wear on rim and tip
+  float edgeWear = clamp(rim * 0.6 + tip * 0.4, 0.0, 1.0);
+  tint = mix(tint, tint * vec3(1.25, 1.18, 1.05), edgeWear);
+  // Underside grime just below rim
+  float underside = smoothstep(0.55, 0.28, uv.y);
+  tint = mix(tint, tint * vec3(0.75, 0.70, 0.66), underside * 0.6);
+
+  m.color = tint;
+  m.normal = Np;
+  m.roughness = clamp(0.22 + hammer * 0.26 + patina * 0.18 - crest * 0.12 -
+                          rim * 0.06 - tip * 0.08,
+                      0.10, 0.60);
+  m.F0 = mix(vec3(0.08), vec3(0.96, 0.82, 0.56),
+             clamp(0.48 + crest * 0.4 + brow * 0.18 + rim * 0.12 + tip * 0.16,
+                   0.0, 1.0));
+  return m;
+}
+
 vec3 apply_wet_darkening(vec3 color, float wet_mask) {
   return mix(color, color * 0.6, wet_mask);
 }
@@ -186,7 +250,7 @@ void main() {
 
   MaterialSample mat;
   if (helmet_region) {
-    mat = sample_bronze(base_color, v_worldPos, Nw, Tw, Bw);
+    mat = sample_carthage_helmet(base_color, v_worldPos, Nw, Tw, Bw);
   } else if (upper_region) {
     // Torso mixes linen and leather patches
     MaterialSample linen = sample_linen(base_color, v_worldPos, Nw, Tw, Bw);
