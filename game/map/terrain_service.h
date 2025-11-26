@@ -51,7 +51,8 @@ public:
     return m_road_segments;
   }
 
-  [[nodiscard]] auto is_point_on_road(float world_x, float world_z) const -> bool;
+  [[nodiscard]] auto is_point_on_road(float world_x,
+                                      float world_z) const -> bool;
 
   [[nodiscard]] auto isInitialized() const -> bool {
     return m_height_map != nullptr;
