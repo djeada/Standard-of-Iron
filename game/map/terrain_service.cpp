@@ -139,13 +139,13 @@ void TerrainService::restoreFromSerialized(
 auto TerrainService::is_point_on_road(float world_x,
                                       float world_z) const -> bool {
   for (const auto &segment : m_road_segments) {
-    // Calculate distance from point to line segment
+
     const float dx = segment.end.x() - segment.start.x();
     const float dz = segment.end.z() - segment.start.z();
     const float segment_length_sq = dx * dx + dz * dz;
 
     if (segment_length_sq < 0.0001F) {
-      // Degenerate segment - check distance to start point
+
       const float dist_x = world_x - segment.start.x();
       const float dist_z = world_z - segment.start.z();
       const float dist_sq = dist_x * dist_x + dist_z * dist_z;
@@ -156,17 +156,14 @@ auto TerrainService::is_point_on_road(float world_x,
       continue;
     }
 
-    // Project point onto line segment
     const float px = world_x - segment.start.x();
     const float pz = world_z - segment.start.z();
     float t = (px * dx + pz * dz) / segment_length_sq;
     t = std::clamp(t, 0.0F, 1.0F);
 
-    // Find closest point on segment
     const float closest_x = segment.start.x() + t * dx;
     const float closest_z = segment.start.z() + t * dz;
 
-    // Check distance from point to closest point on segment
     const float dist_x = world_x - closest_x;
     const float dist_z = world_z - closest_z;
     const float dist_sq = dist_x * dist_x + dist_z * dist_z;

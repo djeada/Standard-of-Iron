@@ -77,7 +77,6 @@ void RoadRenderer::build_meshes() {
           static_cast<float>(i) / static_cast<float>(length_steps - 1);
       QVector3D center_pos = segment.start + dir * (length * t);
 
-      // Roads have subtle edge variation (less than rivers)
       constexpr float k_edge_noise_freq_1 = 1.5F;
       constexpr float k_edge_noise_freq_2 = 4.0F;
 
@@ -89,10 +88,8 @@ void RoadRenderer::build_meshes() {
       float combined_noise = edge_noise1 * 0.6F + edge_noise2 * 0.4F;
       combined_noise = (combined_noise - 0.5F) * 2.0F;
 
-      // Roads have less width variation than rivers
       float const width_variation = combined_noise * half_width * 0.15F;
 
-      // Slight Y offset for road surface above ground
       constexpr float road_y_offset = 0.02F;
 
       QVector3D const left =
@@ -160,7 +157,7 @@ void RoadRenderer::submit(Renderer &renderer, ResourceManager *resources) {
 
   auto *shader = renderer.getShader("road");
   if (shader == nullptr) {
-    // Fallback to a basic shader if road shader not found
+
     shader = renderer.getShader("terrain");
     if (shader == nullptr) {
       return;
@@ -172,7 +169,6 @@ void RoadRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   QMatrix4x4 model;
   model.setToIdentity();
 
-  // Road stone/gravel color (brownish-gray like Roman roads)
   QVector3D const road_base_color(0.45F, 0.42F, 0.38F);
 
   size_t mesh_index = 0;
