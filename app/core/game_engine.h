@@ -39,6 +39,7 @@ class GroundRenderer;
 class TerrainRenderer;
 class BiomeRenderer;
 class RiverRenderer;
+class RoadRenderer;
 class RiverbankRenderer;
 class BridgeRenderer;
 class FogRenderer;
@@ -278,6 +279,7 @@ private:
   std::unique_ptr<Render::GL::TerrainRenderer> m_terrain;
   std::unique_ptr<Render::GL::BiomeRenderer> m_biome;
   std::unique_ptr<Render::GL::RiverRenderer> m_river;
+  std::unique_ptr<Render::GL::RoadRenderer> m_road;
   std::unique_ptr<Render::GL::RiverbankRenderer> m_riverbank;
   std::unique_ptr<Render::GL::BridgeRenderer> m_bridge;
   std::unique_ptr<Render::GL::FogRenderer> m_fog;
