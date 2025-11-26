@@ -170,9 +170,9 @@ vec3 crest_basis(vec3 n) {
 MaterialSample sample_carthage_helmet(vec3 base_color, vec3 pos, vec3 N, vec3 T,
                                       vec3 B) {
   MaterialSample m;
-  // Carthage heavy helmet gets a distinct purple lacquer base; keep small
-  // influence from base_color for subtle variation.
-  vec3 carthage_purple = vec3(0.52, 0.25, 0.68);
+  // Deep plum lacquer over darkened bronze; keeps some bronze warmth.
+  vec3 carthage_purple = vec3(0.32, 0.22, 0.40);
+  vec3 bronze_base = vec3(0.46, 0.36, 0.22);
 
   // Base hammered bronze with wide-area patina streaks.
   float hammer = fbm(pos * 14.0 + vec3(v_layerNoise));
@@ -200,29 +200,29 @@ MaterialSample sample_carthage_helmet(vec3 base_color, vec3 pos, vec3 N, vec3 T,
   float brow = smoothstep(0.18, 0.0, abs(uv.y - 0.70));
   float patina_mix = clamp(patina * 0.65 + brow * 0.3 + rim * 0.25, 0.0, 1.0);
 
-  vec3 tint = mix(carthage_purple, base_color, 0.10);
-  vec3 patina_color = vec3(0.26, 0.38, 0.36);
+  vec3 tint = mix(bronze_base, carthage_purple, 0.70);
+  vec3 patina_color = vec3(0.22, 0.32, 0.30);
   vec3 crest_highlight = vec3(1.0, 0.92, 0.75);
 
-  tint = mix(tint, patina_color, patina_mix * 0.4);
-  tint += crest_highlight * crest * 0.65;
-  tint = mix(tint, tint * vec3(1.06, 1.02, 0.96), rim * 0.35);
-  tint = mix(tint, tint * vec3(1.12, 1.06, 1.00), tip * 0.45);
-  tint += vec3(0.14) * brow;
-  // Edge wear on rim and tip
-  float edgeWear = clamp(rim * 0.6 + tip * 0.4, 0.0, 1.0);
-  tint = mix(tint, tint * vec3(1.25, 1.18, 1.05), edgeWear);
-  // Underside grime just below rim
-  float underside = smoothstep(0.55, 0.28, uv.y);
-  tint = mix(tint, tint * vec3(0.75, 0.70, 0.66), underside * 0.6);
+  tint = mix(tint, patina_color, patina_mix * 0.18);
+  tint += crest_highlight * crest * 0.30;
+  tint = mix(tint, tint * vec3(1.03, 1.01, 0.98), rim * 0.18);
+  tint = mix(tint, tint * vec3(1.06, 1.03, 1.00), tip * 0.22);
+  tint += vec3(0.06) * brow;
+  // Softer edge wear and underside grime
+  float edgeWear = clamp(rim * 0.32 + tip * 0.28, 0.0, 1.0);
+  tint = mix(tint, tint * vec3(1.08, 1.05, 1.02), edgeWear);
+  float underside = smoothstep(0.55, 0.32, uv.y);
+  tint = mix(tint, tint * vec3(0.82, 0.78, 0.74), underside * 0.45);
 
   m.color = tint;
   m.normal = Np;
-  m.roughness = clamp(0.22 + hammer * 0.26 + patina * 0.18 - crest * 0.12 -
-                          rim * 0.06 - tip * 0.08,
-                      0.10, 0.60);
-  m.F0 = mix(vec3(0.08), vec3(0.96, 0.82, 0.56),
-             clamp(0.48 + crest * 0.4 + brow * 0.18 + rim * 0.12 + tip * 0.16,
+  m.roughness = clamp(0.44 + hammer * 0.18 + patina * 0.16 - crest * 0.06 -
+                          rim * 0.04 - tip * 0.05,
+                      0.28, 0.78);
+  m.F0 = mix(vec3(0.06), vec3(0.22, 0.16, 0.12),
+             clamp(0.18 + crest * 0.22 + brow * 0.08 + rim * 0.08 +
+                       tip * 0.10,
                    0.0, 1.0));
   return m;
 }
@@ -285,10 +285,12 @@ void main() {
   float G = geometry_smith(NdotV, NdotL, mat.roughness);
   vec3 F = fresnel_schlick(VdotH, mat.F0);
   vec3 spec = (D * G * F) / max(4.0 * NdotL * NdotV + 1e-5, 1e-5);
+  float spec_scale = helmet_region ? 0.55 : 0.90;
+  spec *= spec_scale;
 
   float kd = 1.0 - max(max(F.r, F.g), F.b);
   if (helmet_region) {
-    kd *= 0.2;
+    kd *= 0.35;
   }
 
   float rain = clamp(u_rainIntensity, 0.0, 1.0);
@@ -298,8 +300,11 @@ void main() {
   vec3 ambient = hemi_ambient(mat.normal);
   vec3 color = apply_wet_darkening(mat.color, wet_mask);
 
+  // Simple bent-normal occlusion to tuck lighting under rims/overhangs.
+  float ao = clamp(0.45 + 0.55 * clamp(mat.normal.y, 0.0, 1.0), 0.35, 1.0);
+
   vec3 lighting =
-      ambient * color * 0.55 + color * kd * diff + spec * max(NdotL, 0.0);
+      ambient * color * 0.55 * ao + color * kd * diff + spec * max(NdotL, 0.0);
 
   float grime = fbm(v_worldPos * 2.6 + vec3(v_layerNoise, v_bendAmount, 0.0));
   lighting = mix(lighting, lighting * vec3(0.78, 0.74, 0.70),

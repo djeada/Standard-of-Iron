@@ -49,14 +49,14 @@ void main() {
 
   // Extra shaping for helmet region (top of character).
   float height = batteredPos.y;
-  float helmetMask = smoothstep(0.55, 0.90, height);
+  float helmetMask = smoothstep(0.60, 0.95, height);
   float rimMask =
-      smoothstep(0.60, 0.85, height) * (1.0 - smoothstep(0.88, 1.05, height));
-  float tipMask = smoothstep(1.00, 1.30, height);
+      smoothstep(0.68, 0.92, height) * (1.0 - smoothstep(0.96, 1.12, height));
+  float tipMask = smoothstep(1.08, 1.28, height);
   vec3 radial =
       normalize(vec3(batteredPos.x, 0.0, batteredPos.z) + vec3(0.0001));
-  vec3 rimFlare = radial * (0.12 * rimMask * helmetMask);
-  vec3 tipTaper = radial * (-0.10 * tipMask * helmetMask);
+  vec3 rimFlare = radial * (0.08 * rimMask * helmetMask);
+  vec3 tipTaper = radial * (-0.07 * tipMask * helmetMask);
 
   vec3 offsetPos = batteredPos + worldNormal * 0.006 + rimFlare + tipTaper;
   mat4 invModel = inverse(u_model);
