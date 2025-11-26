@@ -44,65 +44,86 @@ struct TerrainChunkParams {
   static constexpr float kDefaultMicroNormalWeight = 0.65F;
   static constexpr float kDefaultAlbedoJitter = 0.05F;
 
-  static auto defaultGrassPrimary() -> QVector3D {
+  static constexpr float kDefaultSnowCoverage = 0.0F;
+  static constexpr float kDefaultMoistureLevel = 0.5F;
+  static constexpr float kDefaultCrackIntensity = 0.0F;
+  static constexpr float kDefaultRockExposure = 0.3F;
+  static constexpr float kDefaultGrassSaturation = 1.0F;
+  static constexpr float kDefaultSoilRoughness = 0.5F;
+  static constexpr float kDefaultSnowColorR = 0.92F;
+  static constexpr float kDefaultSnowColorG = 0.94F;
+  static constexpr float kDefaultSnowColorB = 0.98F;
+
+  static auto default_grass_primary() -> QVector3D {
     return {kDefaultGrassPrimaryR, kDefaultGrassPrimaryG,
             kDefaultGrassPrimaryB};
   }
-  static auto defaultGrassSecondary() -> QVector3D {
+  static auto default_grass_secondary() -> QVector3D {
     return {kDefaultGrassSecondaryR, kDefaultGrassSecondaryG,
             kDefaultGrassSecondaryB};
   }
-  static auto defaultGrassDry() -> QVector3D {
+  static auto default_grass_dry() -> QVector3D {
     return {kDefaultGrassDryR, kDefaultGrassDryG, kDefaultGrassDryB};
   }
-  static auto defaultSoilColor() -> QVector3D {
+  static auto default_soil_color() -> QVector3D {
     return {kDefaultSoilColorR, kDefaultSoilColorG, kDefaultSoilColorB};
   }
-  static auto defaultRockLow() -> QVector3D {
+  static auto default_rock_low() -> QVector3D {
     return {kDefaultRockLowR, kDefaultRockLowG, kDefaultRockLowB};
   }
-  static auto defaultRockHigh() -> QVector3D {
+  static auto default_rock_high() -> QVector3D {
     return {kDefaultRockHighR, kDefaultRockHighG, kDefaultRockHighB};
   }
-  static auto defaultTint() -> QVector3D {
+  static auto default_tint() -> QVector3D {
     return {kDefaultTintComponent, kDefaultTintComponent,
             kDefaultTintComponent};
   }
-  static auto defaultLightDirection() -> QVector3D {
+  static auto default_light_direction() -> QVector3D {
     return {kDefaultLightDirX, kDefaultLightDirY, kDefaultLightDirZ};
   }
+  static auto default_snow_color() -> QVector3D {
+    return {kDefaultSnowColorR, kDefaultSnowColorG, kDefaultSnowColorB};
+  }
 
-  QVector3D grassPrimary = defaultGrassPrimary();
+  QVector3D grass_primary = default_grass_primary();
   float tile_size = kDefaultTileSize;
-  QVector3D grassSecondary = defaultGrassSecondary();
-  float macroNoiseScale = kDefaultMacroNoiseScale;
-  QVector3D grassDry = defaultGrassDry();
-  float detail_noiseScale = kDefaultDetailNoiseScale;
-  QVector3D soilColor = defaultSoilColor();
-  float slopeRockThreshold = kDefaultSlopeRockThreshold;
-  QVector3D rockLow = defaultRockLow();
-  float slopeRockSharpness = kDefaultSlopeRockSharpness;
-  QVector3D rockHigh = defaultRockHigh();
-  float soilBlendHeight = kDefaultSoilBlendHeight;
-  QVector3D tint = defaultTint();
-  float soilBlendSharpness = kDefaultSoilBlendSharpness;
+  QVector3D grass_secondary = default_grass_secondary();
+  float macro_noise_scale = kDefaultMacroNoiseScale;
+  QVector3D grass_dry = default_grass_dry();
+  float detail_noise_scale = kDefaultDetailNoiseScale;
+  QVector3D soil_color = default_soil_color();
+  float slope_rock_threshold = kDefaultSlopeRockThreshold;
+  QVector3D rock_low = default_rock_low();
+  float slope_rock_sharpness = kDefaultSlopeRockSharpness;
+  QVector3D rock_high = default_rock_high();
+  float soil_blend_height = kDefaultSoilBlendHeight;
+  QVector3D tint = default_tint();
+  float soil_blend_sharpness = kDefaultSoilBlendSharpness;
 
-  QVector2D noiseOffset{0.0F, 0.0F};
-  float heightNoiseStrength = kDefaultHeightNoiseStrength;
-  float heightNoiseFrequency = kDefaultHeightNoiseFrequency;
-  float ambientBoost = kDefaultAmbientBoost;
-  float rockDetailStrength = kDefaultRockDetailStrength;
-  QVector3D light_direction = defaultLightDirection();
+  QVector2D noise_offset{0.0F, 0.0F};
+  float height_noise_strength = kDefaultHeightNoiseStrength;
+  float height_noise_frequency = kDefaultHeightNoiseFrequency;
+  float ambient_boost = kDefaultAmbientBoost;
+  float rock_detail_strength = kDefaultRockDetailStrength;
+  QVector3D light_direction = default_light_direction();
 
-  float noiseAngle = 0.0F;
+  float noise_angle = 0.0F;
 
-  float microBumpAmp = kDefaultMicroBumpAmp;
-  float microBumpFreq = kDefaultMicroBumpFreq;
-  float microNormalWeight = kDefaultMicroNormalWeight;
+  float micro_bump_amp = kDefaultMicroBumpAmp;
+  float micro_bump_freq = kDefaultMicroBumpFreq;
+  float micro_normal_weight = kDefaultMicroNormalWeight;
 
-  float albedoJitter = kDefaultAlbedoJitter;
+  float albedo_jitter = kDefaultAlbedoJitter;
 
-  bool isGroundPlane = false;
+  bool is_ground_plane = false;
+
+  float snow_coverage = kDefaultSnowCoverage;
+  float moisture_level = kDefaultMoistureLevel;
+  float crack_intensity = kDefaultCrackIntensity;
+  float rock_exposure = kDefaultRockExposure;
+  float grass_saturation = kDefaultGrassSaturation;
+  float soil_roughness = kDefaultSoilRoughness;
+  QVector3D snow_color = default_snow_color();
 };
 
 } // namespace Render::GL
