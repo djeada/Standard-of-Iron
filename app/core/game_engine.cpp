@@ -96,6 +96,7 @@
 #include "render/ground/pine_renderer.h"
 #include "render/ground/plant_renderer.h"
 #include "render/ground/river_renderer.h"
+#include "render/ground/road_renderer.h"
 #include "render/ground/riverbank_renderer.h"
 #include "render/ground/stone_renderer.h"
 #include "render/ground/terrain_renderer.h"
@@ -126,6 +127,7 @@ GameEngine::GameEngine(QObject *parent)
   m_terrain = std::make_unique<Render::GL::TerrainRenderer>();
   m_biome = std::make_unique<Render::GL::BiomeRenderer>();
   m_river = std::make_unique<Render::GL::RiverRenderer>();
+  m_road = std::make_unique<Render::GL::RoadRenderer>();
   m_riverbank = std::make_unique<Render::GL::RiverbankRenderer>();
   m_bridge = std::make_unique<Render::GL::BridgeRenderer>();
   m_fog = std::make_unique<Render::GL::FogRenderer>();
@@ -135,9 +137,9 @@ GameEngine::GameEngine(QObject *parent)
   m_firecamp = std::make_unique<Render::GL::FireCampRenderer>();
 
   m_passes = {m_ground.get(),    m_terrain.get(), m_river.get(),
-              m_riverbank.get(), m_bridge.get(),  m_biome.get(),
-              m_stone.get(),     m_plant.get(),   m_pine.get(),
-              m_firecamp.get(),  m_fog.get()};
+              m_road.get(),      m_riverbank.get(), m_bridge.get(),
+              m_biome.get(),     m_stone.get(),   m_plant.get(),
+              m_pine.get(),      m_firecamp.get(), m_fog.get()};
 
   std::unique_ptr<Engine::Core::System> arrow_sys =
       std::make_unique<Game::Systems::ArrowSystem>();
@@ -325,6 +327,7 @@ void GameEngine::cleanupOpenGLResources() {
   m_terrain.reset();
   m_biome.reset();
   m_river.reset();
+  m_road.reset();
   m_riverbank.reset();
   m_bridge.reset();
   m_fog.reset();
@@ -1221,6 +1224,7 @@ void GameEngine::start_skirmish(const QString &map_path,
     loader.setTerrainRenderer(m_terrain.get());
     loader.setBiomeRenderer(m_biome.get());
     loader.setRiverRenderer(m_river.get());
+    loader.setRoadRenderer(m_road.get());
     loader.setRiverbankRenderer(m_riverbank.get());
     loader.setBridgeRenderer(m_bridge.get());
     loader.setFogRenderer(m_fog.get());
@@ -1814,6 +1818,10 @@ void GameEngine::restoreEnvironmentFromMetadata(const QJsonObject &metadata) {
       if (m_river) {
         m_river->configure(height_map->getRiverSegments(),
                            height_map->getTileSize());
+      }
+      if (m_road) {
+        m_road->configure(terrain_service.road_segments(),
+                          height_map->getTileSize());
       }
       if (m_riverbank) {
         m_riverbank->configure(height_map->getRiverSegments(), *height_map);

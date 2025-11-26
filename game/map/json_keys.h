@@ -14,6 +14,7 @@ inline constexpr const char *SPAWNS = "spawns";
 inline constexpr const char *FIRECAMPS = "firecamps";
 inline constexpr const char *TERRAIN = "terrain";
 inline constexpr const char *RIVERS = "rivers";
+inline constexpr const char *ROADS = "roads";
 inline constexpr const char *BRIDGES = "bridges";
 inline constexpr const char *VICTORY = "victory";
 inline constexpr const char *THUMBNAIL = "thumbnail";
@@ -95,5 +96,7 @@ inline constexpr const char *FLOW_SPEED = "flowSpeed";
 inline constexpr const char *START = "start";
 inline constexpr const char *END = "end";
 inline constexpr const char *BRIDGE_WIDTH = "width";
+
+inline constexpr const char *ROAD_STYLE = "style";
 
 } // namespace Game::Map::JsonKeys

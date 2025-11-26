@@ -41,13 +41,25 @@ public:
     GL::Shader::UniformHandle light_direction{GL::Shader::InvalidUniform};
   };
 
+  struct RoadUniforms {
+    GL::Shader::UniformHandle mvp{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle model{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle view{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle projection{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle color{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle light_direction{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle alpha{GL::Shader::InvalidUniform};
+  };
+
   GL::Shader *m_riverShader = nullptr;
   GL::Shader *m_riverbankShader = nullptr;
   GL::Shader *m_bridgeShader = nullptr;
+  GL::Shader *m_road_shader = nullptr;
 
   RiverUniforms m_riverUniforms;
   RiverbankUniforms m_riverbankUniforms;
   BridgeUniforms m_bridgeUniforms;
+  RoadUniforms m_road_uniforms;
 
 private:
   GL::Backend *m_backend = nullptr;
@@ -56,6 +68,7 @@ private:
   void cacheRiverUniforms();
   void cacheRiverbankUniforms();
   void cacheBridgeUniforms();
+  void cache_road_uniforms();
 };
 
 } // namespace BackendPipelines
