@@ -70,9 +70,10 @@ void TerrainPipeline::cacheGrassUniforms() {
 
   m_grassUniforms.view_proj = m_grassShader->uniformHandle("u_viewProj");
   m_grassUniforms.time = m_grassShader->uniformHandle("u_time");
-  m_grassUniforms.windStrength = m_grassShader->uniformHandle("u_windStrength");
-  m_grassUniforms.windSpeed = m_grassShader->uniformHandle("u_windSpeed");
-  m_grassUniforms.soilColor = m_grassShader->uniformHandle("u_soilColor");
+  m_grassUniforms.wind_strength =
+      m_grassShader->uniformHandle("u_windStrength");
+  m_grassUniforms.wind_speed = m_grassShader->uniformHandle("u_windSpeed");
+  m_grassUniforms.soil_color = m_grassShader->uniformHandle("u_soilColor");
   m_grassUniforms.light_dir = m_grassShader->uniformHandle("u_lightDir");
 }
 
@@ -83,44 +84,45 @@ void TerrainPipeline::cacheGroundUniforms() {
 
   m_groundUniforms.mvp = m_groundShader->uniformHandle("u_mvp");
   m_groundUniforms.model = m_groundShader->uniformHandle("u_model");
-  m_groundUniforms.grassPrimary =
+  m_groundUniforms.grass_primary =
       m_groundShader->uniformHandle("u_grassPrimary");
-  m_groundUniforms.grassSecondary =
+  m_groundUniforms.grass_secondary =
       m_groundShader->uniformHandle("u_grassSecondary");
-  m_groundUniforms.grassDry = m_groundShader->uniformHandle("u_grassDry");
-  m_groundUniforms.soilColor = m_groundShader->uniformHandle("u_soilColor");
+  m_groundUniforms.grass_dry = m_groundShader->uniformHandle("u_grassDry");
+  m_groundUniforms.soil_color = m_groundShader->uniformHandle("u_soilColor");
   m_groundUniforms.tint = m_groundShader->uniformHandle("u_tint");
-  m_groundUniforms.noiseOffset = m_groundShader->uniformHandle("u_noiseOffset");
+  m_groundUniforms.noise_offset =
+      m_groundShader->uniformHandle("u_noiseOffset");
   m_groundUniforms.tile_size = m_groundShader->uniformHandle("u_tileSize");
-  m_groundUniforms.macroNoiseScale =
+  m_groundUniforms.macro_noise_scale =
       m_groundShader->uniformHandle("u_macroNoiseScale");
-  m_groundUniforms.detail_noiseScale =
+  m_groundUniforms.detail_noise_scale =
       m_groundShader->uniformHandle("u_detailNoiseScale");
-  m_groundUniforms.soilBlendHeight =
+  m_groundUniforms.soil_blend_height =
       m_groundShader->uniformHandle("u_soilBlendHeight");
-  m_groundUniforms.soilBlendSharpness =
+  m_groundUniforms.soil_blend_sharpness =
       m_groundShader->uniformHandle("u_soilBlendSharpness");
-  m_groundUniforms.heightNoiseStrength =
+  m_groundUniforms.height_noise_strength =
       m_groundShader->uniformHandle("u_heightNoiseStrength");
-  m_groundUniforms.heightNoiseFrequency =
+  m_groundUniforms.height_noise_frequency =
       m_groundShader->uniformHandle("u_heightNoiseFrequency");
-  m_groundUniforms.ambientBoost =
+  m_groundUniforms.ambient_boost =
       m_groundShader->uniformHandle("u_ambientBoost");
   m_groundUniforms.light_dir = m_groundShader->uniformHandle("u_lightDir");
-  // Ground-type-specific uniforms
-  m_groundUniforms.snowCoverage =
+
+  m_groundUniforms.snow_coverage =
       m_groundShader->uniformHandle("u_snowCoverage");
-  m_groundUniforms.moistureLevel =
+  m_groundUniforms.moisture_level =
       m_groundShader->uniformHandle("u_moistureLevel");
-  m_groundUniforms.crackIntensity =
+  m_groundUniforms.crack_intensity =
       m_groundShader->uniformHandle("u_crackIntensity");
-  m_groundUniforms.rockExposure =
+  m_groundUniforms.rock_exposure =
       m_groundShader->uniformHandle("u_rockExposure");
-  m_groundUniforms.grassSaturation =
+  m_groundUniforms.grass_saturation =
       m_groundShader->uniformHandle("u_grassSaturation");
-  m_groundUniforms.soilRoughness =
+  m_groundUniforms.soil_roughness =
       m_groundShader->uniformHandle("u_soilRoughness");
-  m_groundUniforms.snowColor = m_groundShader->uniformHandle("u_snowColor");
+  m_groundUniforms.snow_color = m_groundShader->uniformHandle("u_snowColor");
 }
 
 void TerrainPipeline::cacheTerrainUniforms() {
@@ -130,53 +132,53 @@ void TerrainPipeline::cacheTerrainUniforms() {
 
   m_terrainUniforms.mvp = m_terrainShader->uniformHandle("u_mvp");
   m_terrainUniforms.model = m_terrainShader->uniformHandle("u_model");
-  m_terrainUniforms.grassPrimary =
+  m_terrainUniforms.grass_primary =
       m_terrainShader->uniformHandle("u_grassPrimary");
-  m_terrainUniforms.grassSecondary =
+  m_terrainUniforms.grass_secondary =
       m_terrainShader->uniformHandle("u_grassSecondary");
-  m_terrainUniforms.grassDry = m_terrainShader->uniformHandle("u_grassDry");
-  m_terrainUniforms.soilColor = m_terrainShader->uniformHandle("u_soilColor");
-  m_terrainUniforms.rockLow = m_terrainShader->uniformHandle("u_rockLow");
-  m_terrainUniforms.rockHigh = m_terrainShader->uniformHandle("u_rockHigh");
+  m_terrainUniforms.grass_dry = m_terrainShader->uniformHandle("u_grassDry");
+  m_terrainUniforms.soil_color = m_terrainShader->uniformHandle("u_soilColor");
+  m_terrainUniforms.rock_low = m_terrainShader->uniformHandle("u_rockLow");
+  m_terrainUniforms.rock_high = m_terrainShader->uniformHandle("u_rockHigh");
   m_terrainUniforms.tint = m_terrainShader->uniformHandle("u_tint");
-  m_terrainUniforms.noiseOffset =
+  m_terrainUniforms.noise_offset =
       m_terrainShader->uniformHandle("u_noiseOffset");
   m_terrainUniforms.tile_size = m_terrainShader->uniformHandle("u_tileSize");
-  m_terrainUniforms.macroNoiseScale =
+  m_terrainUniforms.macro_noise_scale =
       m_terrainShader->uniformHandle("u_macroNoiseScale");
-  m_terrainUniforms.detail_noiseScale =
+  m_terrainUniforms.detail_noise_scale =
       m_terrainShader->uniformHandle("u_detailNoiseScale");
-  m_terrainUniforms.slopeRockThreshold =
+  m_terrainUniforms.slope_rock_threshold =
       m_terrainShader->uniformHandle("u_slopeRockThreshold");
-  m_terrainUniforms.slopeRockSharpness =
+  m_terrainUniforms.slope_rock_sharpness =
       m_terrainShader->uniformHandle("u_slopeRockSharpness");
-  m_terrainUniforms.soilBlendHeight =
+  m_terrainUniforms.soil_blend_height =
       m_terrainShader->uniformHandle("u_soilBlendHeight");
-  m_terrainUniforms.soilBlendSharpness =
+  m_terrainUniforms.soil_blend_sharpness =
       m_terrainShader->uniformHandle("u_soilBlendSharpness");
-  m_terrainUniforms.heightNoiseStrength =
+  m_terrainUniforms.height_noise_strength =
       m_terrainShader->uniformHandle("u_heightNoiseStrength");
-  m_terrainUniforms.heightNoiseFrequency =
+  m_terrainUniforms.height_noise_frequency =
       m_terrainShader->uniformHandle("u_heightNoiseFrequency");
-  m_terrainUniforms.ambientBoost =
+  m_terrainUniforms.ambient_boost =
       m_terrainShader->uniformHandle("u_ambientBoost");
-  m_terrainUniforms.rockDetailStrength =
+  m_terrainUniforms.rock_detail_strength =
       m_terrainShader->uniformHandle("u_rockDetailStrength");
   m_terrainUniforms.light_dir = m_terrainShader->uniformHandle("u_lightDir");
-  // Ground-type-specific uniforms
-  m_terrainUniforms.snowCoverage =
+
+  m_terrainUniforms.snow_coverage =
       m_terrainShader->uniformHandle("u_snowCoverage");
-  m_terrainUniforms.moistureLevel =
+  m_terrainUniforms.moisture_level =
       m_terrainShader->uniformHandle("u_moistureLevel");
-  m_terrainUniforms.crackIntensity =
+  m_terrainUniforms.crack_intensity =
       m_terrainShader->uniformHandle("u_crackIntensity");
-  m_terrainUniforms.rockExposure =
+  m_terrainUniforms.rock_exposure =
       m_terrainShader->uniformHandle("u_rockExposure");
-  m_terrainUniforms.grassSaturation =
+  m_terrainUniforms.grass_saturation =
       m_terrainShader->uniformHandle("u_grassSaturation");
-  m_terrainUniforms.soilRoughness =
+  m_terrainUniforms.soil_roughness =
       m_terrainShader->uniformHandle("u_soilRoughness");
-  m_terrainUniforms.snowColor = m_terrainShader->uniformHandle("u_snowColor");
+  m_terrainUniforms.snow_color = m_terrainShader->uniformHandle("u_snowColor");
 }
 
 void TerrainPipeline::initializeGrassGeometry() {

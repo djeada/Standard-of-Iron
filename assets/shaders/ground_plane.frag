@@ -19,13 +19,13 @@ uniform float u_ambientBoost;
 uniform vec3 u_lightDir;
 
 // Ground-type-specific uniforms
-uniform float u_snowCoverage;      // 0-1: snow accumulation
-uniform float u_moistureLevel;     // 0-1: wetness/dryness
-uniform float u_crackIntensity;    // 0-1: ground cracking
-uniform float u_rockExposure;      // 0-1: rock visibility
-uniform float u_grassSaturation;   // 0-1.5: grass color intensity
-uniform float u_soilRoughness;     // 0-1: soil texture roughness
-uniform vec3 u_snowColor;          // Snow tint color
+uniform float u_snowCoverage;    // 0-1: snow accumulation
+uniform float u_moistureLevel;   // 0-1: wetness/dryness
+uniform float u_crackIntensity;  // 0-1: ground cracking
+uniform float u_rockExposure;    // 0-1: rock visibility
+uniform float u_grassSaturation; // 0-1.5: grass color intensity
+uniform float u_soilRoughness;   // 0-1: soil texture roughness
+uniform vec3 u_snowColor;        // Snow tint color
 
 float hash21(vec2 p) {
   return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
@@ -76,7 +76,7 @@ void main() {
   if (u_crackIntensity > 0.01) {
     float crackNoise1 = noise21(wuv * 8.0);
     float crackNoise2 = noise21(wuv * 16.0 + vec2(42.0, 17.0));
-    float crackPattern = smoothstep(0.45, 0.50, crackNoise1) * 
+    float crackPattern = smoothstep(0.45, 0.50, crackNoise1) *
                          smoothstep(0.40, 0.55, crackNoise2);
     float crackDarkening = 1.0 - crackPattern * u_crackIntensity * 0.35;
     baseCol *= crackDarkening;
@@ -87,7 +87,8 @@ void main() {
     float snowNoise = fbm(wuv * 0.5 + vec2(123.0, 456.0));
     float snowAccumulation = smoothstep(0.3, 0.7, snowNoise);
     float heightSnowBonus = smoothstep(-0.5, 1.5, v_worldPos.y) * 0.3;
-    float snowMask = clamp(snowAccumulation * (u_snowCoverage + heightSnowBonus), 0.0, 1.0);
+    float snowMask =
+        clamp(snowAccumulation * (u_snowCoverage + heightSnowBonus), 0.0, 1.0);
     vec3 snowTinted = u_snowColor * (1.0 + detail * 0.1);
     baseCol = mix(baseCol, snowTinted, snowMask * 0.85);
   }
