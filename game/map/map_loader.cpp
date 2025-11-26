@@ -430,14 +430,14 @@ void readRivers(const QJsonArray &arr, std::vector<RiverSegment> &out,
   }
 }
 
-void readRoads(const QJsonArray &arr, std::vector<RoadSegment> &out,
-               const GridDefinition &grid, CoordSystem coordSys) {
+void read_roads(const QJsonArray &arr, std::vector<RoadSegment> &out,
+                const GridDefinition &grid, CoordSystem coord_sys) {
   out.clear();
   out.reserve(arr.size());
 
   constexpr float grid_center_offset = 0.5F;
   constexpr float min_tile_size = 0.0001F;
-  constexpr double default_road_width = 3.0;
+  constexpr float default_road_width = 3.0F;
 
   for (const auto &road_val : arr) {
     auto road_obj = road_val.toObject();
@@ -449,7 +449,7 @@ void readRoads(const QJsonArray &arr, std::vector<RoadSegment> &out,
         const float start_x = float(start_arr[0].toDouble(0.0));
         const float start_z = float(start_arr[1].toDouble(0.0));
 
-        if (coordSys == CoordSystem::Grid) {
+        if (coord_sys == CoordSystem::Grid) {
           const float tile = std::max(min_tile_size, grid.tile_size);
           segment.start.setX((start_x - (grid.width * grid_center_offset -
                                          grid_center_offset)) *
@@ -470,7 +470,7 @@ void readRoads(const QJsonArray &arr, std::vector<RoadSegment> &out,
         const float end_x = float(end_arr[0].toDouble(0.0));
         const float end_z = float(end_arr[1].toDouble(0.0));
 
-        if (coordSys == CoordSystem::Grid) {
+        if (coord_sys == CoordSystem::Grid) {
           const float tile = std::max(min_tile_size, grid.tile_size);
           segment.end.setX(
               (end_x - (grid.width * grid_center_offset - grid_center_offset)) *
@@ -651,8 +651,8 @@ auto MapLoader::loadFromJsonFile(const QString &path, MapDefinition &outMap,
   }
 
   if (root.contains(ROADS) && root.value(ROADS).isArray()) {
-    readRoads(root.value(ROADS).toArray(), outMap.roads, outMap.grid,
-              outMap.coordSystem);
+    read_roads(root.value(ROADS).toArray(), outMap.roads, outMap.grid,
+               outMap.coordSystem);
   }
 
   if (root.contains(BRIDGES) && root.value(BRIDGES).isArray()) {

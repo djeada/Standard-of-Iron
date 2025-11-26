@@ -15,6 +15,7 @@ auto WaterPipeline::initialize() -> bool {
   m_riverShader = m_shaderCache->get("river");
   m_riverbankShader = m_shaderCache->get("riverbank");
   m_bridgeShader = m_shaderCache->get("bridge");
+  m_road_shader = m_shaderCache->get("road");
 
   if (m_riverShader == nullptr) {
     qWarning() << "WaterPipeline: Failed to load river shader";
@@ -24,6 +25,9 @@ auto WaterPipeline::initialize() -> bool {
   }
   if (m_bridgeShader == nullptr) {
     qWarning() << "WaterPipeline: Failed to load bridge shader";
+  }
+  if (m_road_shader == nullptr) {
+    qWarning() << "WaterPipeline: Failed to load road shader";
   }
 
   cacheUniforms();
@@ -35,17 +39,19 @@ void WaterPipeline::shutdown() {
   m_riverShader = nullptr;
   m_riverbankShader = nullptr;
   m_bridgeShader = nullptr;
+  m_road_shader = nullptr;
 }
 
 void WaterPipeline::cacheUniforms() {
   cacheRiverUniforms();
   cacheRiverbankUniforms();
   cacheBridgeUniforms();
+  cache_road_uniforms();
 }
 
 auto WaterPipeline::isInitialized() const -> bool {
   return m_riverShader != nullptr && m_riverbankShader != nullptr &&
-         m_bridgeShader != nullptr;
+         m_bridgeShader != nullptr && m_road_shader != nullptr;
 }
 
 void WaterPipeline::cacheRiverUniforms() {
@@ -81,6 +87,21 @@ void WaterPipeline::cacheBridgeUniforms() {
   m_bridgeUniforms.color = m_bridgeShader->uniformHandle("u_color");
   m_bridgeUniforms.light_direction =
       m_bridgeShader->uniformHandle("u_lightDirection");
+}
+
+void WaterPipeline::cache_road_uniforms() {
+  if (m_road_shader == nullptr) {
+    return;
+  }
+
+  m_road_uniforms.mvp = m_road_shader->uniformHandle("u_mvp");
+  m_road_uniforms.model = m_road_shader->uniformHandle("u_model");
+  m_road_uniforms.view = m_road_shader->uniformHandle("u_view");
+  m_road_uniforms.projection = m_road_shader->uniformHandle("u_projection");
+  m_road_uniforms.color = m_road_shader->uniformHandle("u_color");
+  m_road_uniforms.light_direction =
+      m_road_shader->uniformHandle("u_light_direction");
+  m_road_uniforms.alpha = m_road_shader->uniformHandle("u_alpha");
 }
 
 } // namespace Render::GL::BackendPipelines
