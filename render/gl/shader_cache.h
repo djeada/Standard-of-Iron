@@ -4,6 +4,7 @@
 #include "utils/resource_utils.h"
 #include <QDebug>
 #include <QFile>
+#include <QFileInfo>
 #include <QString>
 #include <QStringList>
 #include <memory>
@@ -177,6 +178,11 @@ public:
                                         QStringLiteral("roman_republic"),
                                         QStringLiteral("carthage")};
 
+    auto resourceExists = [](const QString &path) -> bool {
+      QFileInfo const info(path);
+      return info.exists();
+    };
+
     auto loadVariant = [&](const QString &baseKey, const QString &baseVertPath,
                            const QString &baseFragPath) {
       for (const QString &nation : nationVariants) {
@@ -189,12 +195,12 @@ public:
                                        QStringLiteral(".frag");
 
         QString resolvedVert = resolve(variantVertRes);
-        if (!QFile::exists(resolvedVert)) {
+        if (!resourceExists(resolvedVert)) {
           resolvedVert = baseVertPath;
         }
 
         QString resolvedFrag = resolve(variantFragRes);
-        if (!QFile::exists(resolvedFrag)) {
+        if (!resourceExists(resolvedFrag)) {
           resolvedFrag = baseFragPath;
         }
 
