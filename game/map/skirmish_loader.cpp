@@ -338,7 +338,7 @@ auto SkirmishLoader::start(const QString &map_path,
   if (m_road != nullptr) {
     if (terrain_service.isInitialized() &&
         (terrain_service.getHeightMap() != nullptr)) {
-      m_road->configure(terrain_service.roadSegments(),
+      m_road->configure(terrain_service.road_segments(),
                         terrain_service.getHeightMap()->getTileSize());
     }
   }

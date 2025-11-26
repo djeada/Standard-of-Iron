@@ -16,15 +16,15 @@ public:
   RoadRenderer();
   ~RoadRenderer() override;
 
-  void configure(const std::vector<Game::Map::RoadSegment> &roadSegments,
+  void configure(const std::vector<Game::Map::RoadSegment> &road_segments,
                  float tile_size);
 
   void submit(Renderer &renderer, ResourceManager *resources) override;
 
 private:
-  void buildMeshes();
+  void build_meshes();
 
-  std::vector<Game::Map::RoadSegment> m_roadSegments;
+  std::vector<Game::Map::RoadSegment> m_road_segments;
   float m_tile_size = 1.0F;
   std::vector<std::unique_ptr<Mesh>> m_meshes;
 };

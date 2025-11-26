@@ -794,7 +794,7 @@ auto Serialization::serializeWorld(const World *world) -> QJsonDocument {
       (terrain_service.getHeightMap() != nullptr)) {
     world_obj["terrain"] = serializeTerrain(terrain_service.getHeightMap(),
                                             terrain_service.biomeSettings(),
-                                            terrain_service.roadSegments());
+                                            terrain_service.road_segments());
   }
 
   return QJsonDocument(world_obj);
