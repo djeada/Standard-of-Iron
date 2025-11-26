@@ -64,80 +64,83 @@ auto GroundRenderer::buildParams() const -> TerrainChunkParams {
 
   TerrainChunkParams params;
 
-  const QVector3D primary = m_biomeSettings.grassPrimary * 0.97F;
-  const QVector3D secondary = m_biomeSettings.grassSecondary * 0.93F;
-  const QVector3D dry = m_biomeSettings.grassDry * 0.90F;
-  const QVector3D soil = m_biomeSettings.soilColor * 0.68F;
+  const QVector3D primary = m_biomeSettings.grass_primary * 0.97F;
+  const QVector3D secondary = m_biomeSettings.grass_secondary * 0.93F;
+  const QVector3D dry = m_biomeSettings.grass_dry * 0.90F;
+  const QVector3D soil = m_biomeSettings.soil_color * 0.68F;
 
-  params.grassPrimary = saturate(primary);
-  params.grassSecondary = saturate(secondary);
-  params.grassDry = saturate(dry);
-  params.soilColor = saturate(soil);
-  params.rockLow = saturate(m_biomeSettings.rockLow);
-  params.rockHigh = saturate(m_biomeSettings.rockHigh);
+  params.grass_primary = saturate(primary);
+  params.grass_secondary = saturate(secondary);
+  params.grass_dry = saturate(dry);
+  params.soil_color = saturate(soil);
+  params.rock_low = saturate(m_biomeSettings.rock_low);
+  params.rock_high = saturate(m_biomeSettings.rock_high);
 
   params.tint = QVector3D(0.96F, 0.98F, 0.96F);
 
   params.tile_size = std::max(0.25F, m_tile_size);
 
-  params.macroNoiseScale =
-      std::max(0.012F, m_biomeSettings.terrainMacroNoiseScale * 0.60F);
-  params.detail_noiseScale =
-      std::max(0.045F, m_biomeSettings.terrainDetailNoiseScale * 0.75F);
+  params.macro_noise_scale =
+      std::max(0.012F, m_biomeSettings.terrain_macro_noise_scale * 0.60F);
+  params.detail_noise_scale =
+      std::max(0.045F, m_biomeSettings.terrain_detail_noise_scale * 0.75F);
 
-  params.slopeRockThreshold =
-      std::clamp(m_biomeSettings.terrainRockThreshold + 0.30F, 0.40F, 0.90F);
-  params.slopeRockSharpness =
-      std::clamp(m_biomeSettings.terrainRockSharpness + 1.5F, 2.0F, 6.0F);
+  params.slope_rock_threshold =
+      std::clamp(m_biomeSettings.terrain_rock_threshold + 0.30F, 0.40F, 0.90F);
+  params.slope_rock_sharpness =
+      std::clamp(m_biomeSettings.terrain_rock_sharpness + 1.5F, 2.0F, 6.0F);
 
-  params.soilBlendHeight = m_biomeSettings.terrainSoilHeight - 1.25F;
-  params.soilBlendSharpness =
-      std::clamp(m_biomeSettings.terrainSoilSharpness * 0.75F, 1.5F, 5.0F);
+  params.soil_blend_height = m_biomeSettings.terrain_soil_height - 1.25F;
+  params.soil_blend_sharpness =
+      std::clamp(m_biomeSettings.terrain_soil_sharpness * 0.75F, 1.5F, 5.0F);
 
-  params.noiseOffset = m_noiseOffset;
-  params.noiseAngle = m_noiseAngle;
+  params.noise_offset = m_noiseOffset;
+  params.noise_angle = m_noiseAngle;
 
   float target_amp;
   float target_freq;
-  if (m_biomeSettings.groundIrregularityEnabled) {
+  if (m_biomeSettings.ground_irregularity_enabled) {
 
-    target_amp =
-        std::clamp(m_biomeSettings.irregularityAmplitude * 0.85F, 0.15F, 0.70F);
-    target_freq = std::max(0.45F, m_biomeSettings.irregularityScale * 2.5F);
+    target_amp = std::clamp(m_biomeSettings.irregularity_amplitude * 0.85F,
+                            0.15F, 0.70F);
+    target_freq = std::max(0.45F, m_biomeSettings.irregularity_scale * 2.5F);
   } else {
 
-    target_amp =
-        std::clamp(m_biomeSettings.heightNoiseAmplitude * 0.22F, 0.10F, 0.20F);
-    target_freq = std::max(0.6F, m_biomeSettings.heightNoiseFrequency * 1.05F);
+    target_amp = std::clamp(m_biomeSettings.height_noise_amplitude * 0.22F,
+                            0.10F, 0.20F);
+    target_freq =
+        std::max(0.6F, m_biomeSettings.height_noise_frequency * 1.05F);
   }
-  params.heightNoiseStrength = target_amp;
-  params.heightNoiseFrequency = target_freq;
+  params.height_noise_strength = target_amp;
+  params.height_noise_frequency = target_freq;
 
-  params.microBumpAmp = 0.07F;
-  params.microBumpFreq = 2.2F;
-  params.microNormalWeight = 0.65F;
+  params.micro_bump_amp = 0.07F;
+  params.micro_bump_freq = 2.2F;
+  params.micro_normal_weight = 0.65F;
 
-  params.albedoJitter = 0.05F;
+  params.albedo_jitter = 0.05F;
 
-  params.ambientBoost = m_biomeSettings.terrainAmbientBoost * 0.85F;
+  params.ambient_boost = m_biomeSettings.terrain_ambient_boost * 0.85F;
 
-  params.rockDetailStrength = m_biomeSettings.terrainRockDetailStrength * 0.18F;
+  params.rock_detail_strength =
+      m_biomeSettings.terrain_rock_detail_strength * 0.18F;
 
   QVector3D const l(0.35F, 0.85F, 0.42F);
   params.light_direction = l.normalized();
 
-  params.isGroundPlane = true;
+  params.is_ground_plane = true;
 
-  // Ground-type-specific shader parameters
-  params.snowCoverage = std::clamp(m_biomeSettings.snowCoverage, 0.0F, 1.0F);
-  params.moistureLevel = std::clamp(m_biomeSettings.moistureLevel, 0.0F, 1.0F);
-  params.crackIntensity =
-      std::clamp(m_biomeSettings.crackIntensity, 0.0F, 1.0F);
-  params.rockExposure = std::clamp(m_biomeSettings.rockExposure, 0.0F, 1.0F);
-  params.grassSaturation =
-      std::clamp(m_biomeSettings.grassSaturation, 0.0F, 1.5F);
-  params.soilRoughness = std::clamp(m_biomeSettings.soilRoughness, 0.0F, 1.0F);
-  params.snowColor = saturate(m_biomeSettings.snowColor);
+  params.snow_coverage = std::clamp(m_biomeSettings.snow_coverage, 0.0F, 1.0F);
+  params.moisture_level =
+      std::clamp(m_biomeSettings.moisture_level, 0.0F, 1.0F);
+  params.crack_intensity =
+      std::clamp(m_biomeSettings.crack_intensity, 0.0F, 1.0F);
+  params.rock_exposure = std::clamp(m_biomeSettings.rock_exposure, 0.0F, 1.0F);
+  params.grass_saturation =
+      std::clamp(m_biomeSettings.grass_saturation, 0.0F, 1.5F);
+  params.soil_roughness =
+      std::clamp(m_biomeSettings.soil_roughness, 0.0F, 1.0F);
+  params.snow_color = saturate(m_biomeSettings.snow_color);
 
   m_cachedParams = params;
   m_cachedParamsValid = true;
@@ -195,29 +198,29 @@ void GroundRenderer::syncBiomeFromService() {
 
 auto GroundRenderer::biomeEquals(const Game::Map::BiomeSettings &a,
                                  const Game::Map::BiomeSettings &b) -> bool {
-  return a.groundType == b.groundType && a.grassPrimary == b.grassPrimary &&
-         a.grassSecondary == b.grassSecondary && a.grassDry == b.grassDry &&
-         a.soilColor == b.soilColor && a.rockLow == b.rockLow &&
-         a.rockHigh == b.rockHigh &&
-         a.terrainMacroNoiseScale == b.terrainMacroNoiseScale &&
-         a.terrainDetailNoiseScale == b.terrainDetailNoiseScale &&
-         a.terrainSoilHeight == b.terrainSoilHeight &&
-         a.terrainSoilSharpness == b.terrainSoilSharpness &&
-         a.terrainRockThreshold == b.terrainRockThreshold &&
-         a.terrainRockSharpness == b.terrainRockSharpness &&
-         a.terrainAmbientBoost == b.terrainAmbientBoost &&
-         a.terrainRockDetailStrength == b.terrainRockDetailStrength &&
-         a.heightNoiseAmplitude == b.heightNoiseAmplitude &&
-         a.heightNoiseFrequency == b.heightNoiseFrequency &&
-         a.groundIrregularityEnabled == b.groundIrregularityEnabled &&
-         a.irregularityScale == b.irregularityScale &&
-         a.irregularityAmplitude == b.irregularityAmplitude &&
-         a.seed == b.seed && a.snowCoverage == b.snowCoverage &&
-         a.moistureLevel == b.moistureLevel &&
-         a.crackIntensity == b.crackIntensity &&
-         a.rockExposure == b.rockExposure &&
-         a.grassSaturation == b.grassSaturation &&
-         a.soilRoughness == b.soilRoughness && a.snowColor == b.snowColor;
+  return a.ground_type == b.ground_type && a.grass_primary == b.grass_primary &&
+         a.grass_secondary == b.grass_secondary && a.grass_dry == b.grass_dry &&
+         a.soil_color == b.soil_color && a.rock_low == b.rock_low &&
+         a.rock_high == b.rock_high &&
+         a.terrain_macro_noise_scale == b.terrain_macro_noise_scale &&
+         a.terrain_detail_noise_scale == b.terrain_detail_noise_scale &&
+         a.terrain_soil_height == b.terrain_soil_height &&
+         a.terrain_soil_sharpness == b.terrain_soil_sharpness &&
+         a.terrain_rock_threshold == b.terrain_rock_threshold &&
+         a.terrain_rock_sharpness == b.terrain_rock_sharpness &&
+         a.terrain_ambient_boost == b.terrain_ambient_boost &&
+         a.terrain_rock_detail_strength == b.terrain_rock_detail_strength &&
+         a.height_noise_amplitude == b.height_noise_amplitude &&
+         a.height_noise_frequency == b.height_noise_frequency &&
+         a.ground_irregularity_enabled == b.ground_irregularity_enabled &&
+         a.irregularity_scale == b.irregularity_scale &&
+         a.irregularity_amplitude == b.irregularity_amplitude &&
+         a.seed == b.seed && a.snow_coverage == b.snow_coverage &&
+         a.moisture_level == b.moisture_level &&
+         a.crack_intensity == b.crack_intensity &&
+         a.rock_exposure == b.rock_exposure &&
+         a.grass_saturation == b.grass_saturation &&
+         a.soil_roughness == b.soil_roughness && a.snow_color == b.snow_color;
 }
 
 } // namespace Render::GL

@@ -1,5 +1,6 @@
 #include "map/map_loader.h"
 #include "map/terrain.h"
+#include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QTemporaryFile>
@@ -14,129 +15,129 @@ protected:
 };
 
 TEST_F(GroundTypeTest, GroundTypeEnumToString) {
-  EXPECT_EQ(groundTypeToQString(GroundType::ForestMud),
+  EXPECT_EQ(ground_type_to_qstring(GroundType::ForestMud),
             QStringLiteral("forest_mud"));
-  EXPECT_EQ(groundTypeToQString(GroundType::GrassDry),
+  EXPECT_EQ(ground_type_to_qstring(GroundType::GrassDry),
             QStringLiteral("grass_dry"));
-  EXPECT_EQ(groundTypeToQString(GroundType::SoilRocky),
+  EXPECT_EQ(ground_type_to_qstring(GroundType::SoilRocky),
             QStringLiteral("soil_rocky"));
-  EXPECT_EQ(groundTypeToQString(GroundType::AlpineMix),
+  EXPECT_EQ(ground_type_to_qstring(GroundType::AlpineMix),
             QStringLiteral("alpine_mix"));
-  EXPECT_EQ(groundTypeToQString(GroundType::SoilFertile),
+  EXPECT_EQ(ground_type_to_qstring(GroundType::SoilFertile),
             QStringLiteral("soil_fertile"));
 }
 
 TEST_F(GroundTypeTest, GroundTypeStringToEnum) {
   GroundType result;
 
-  EXPECT_TRUE(tryParseGroundType("forest_mud", result));
+  EXPECT_TRUE(try_parse_ground_type("forest_mud", result));
   EXPECT_EQ(result, GroundType::ForestMud);
 
-  EXPECT_TRUE(tryParseGroundType("grass_dry", result));
+  EXPECT_TRUE(try_parse_ground_type("grass_dry", result));
   EXPECT_EQ(result, GroundType::GrassDry);
 
-  EXPECT_TRUE(tryParseGroundType("soil_rocky", result));
+  EXPECT_TRUE(try_parse_ground_type("soil_rocky", result));
   EXPECT_EQ(result, GroundType::SoilRocky);
 
-  EXPECT_TRUE(tryParseGroundType("alpine_mix", result));
+  EXPECT_TRUE(try_parse_ground_type("alpine_mix", result));
   EXPECT_EQ(result, GroundType::AlpineMix);
 
-  EXPECT_TRUE(tryParseGroundType("soil_fertile", result));
+  EXPECT_TRUE(try_parse_ground_type("soil_fertile", result));
   EXPECT_EQ(result, GroundType::SoilFertile);
 }
 
 TEST_F(GroundTypeTest, GroundTypeParsingCaseInsensitive) {
   GroundType result;
 
-  EXPECT_TRUE(tryParseGroundType("FOREST_MUD", result));
+  EXPECT_TRUE(try_parse_ground_type("FOREST_MUD", result));
   EXPECT_EQ(result, GroundType::ForestMud);
 
-  EXPECT_TRUE(tryParseGroundType("Forest_Mud", result));
+  EXPECT_TRUE(try_parse_ground_type("Forest_Mud", result));
   EXPECT_EQ(result, GroundType::ForestMud);
 
-  EXPECT_TRUE(tryParseGroundType("  grass_dry  ", result));
+  EXPECT_TRUE(try_parse_ground_type("  grass_dry  ", result));
   EXPECT_EQ(result, GroundType::GrassDry);
 }
 
 TEST_F(GroundTypeTest, GroundTypeParsingInvalidReturnsDefault) {
   GroundType result = GroundType::ForestMud;
 
-  EXPECT_FALSE(tryParseGroundType("invalid_type", result));
-  EXPECT_FALSE(tryParseGroundType("", result));
-  EXPECT_FALSE(tryParseGroundType("unknown", result));
+  EXPECT_FALSE(try_parse_ground_type("invalid_type", result));
+  EXPECT_FALSE(try_parse_ground_type("", result));
+  EXPECT_FALSE(try_parse_ground_type("unknown", result));
 }
 
 TEST_F(GroundTypeTest, ApplyGroundTypeDefaultsForestMud) {
   BiomeSettings settings;
-  applyGroundTypeDefaults(settings, GroundType::ForestMud);
+  apply_ground_type_defaults(settings, GroundType::ForestMud);
 
-  EXPECT_EQ(settings.groundType, GroundType::ForestMud);
-  EXPECT_FLOAT_EQ(settings.grassPrimary.x(), 0.30F);
-  EXPECT_FLOAT_EQ(settings.grassPrimary.y(), 0.60F);
-  EXPECT_FLOAT_EQ(settings.grassPrimary.z(), 0.28F);
-  EXPECT_FLOAT_EQ(settings.soilColor.x(), 0.28F);
-  EXPECT_FLOAT_EQ(settings.soilColor.y(), 0.24F);
-  EXPECT_FLOAT_EQ(settings.soilColor.z(), 0.18F);
+  EXPECT_EQ(settings.ground_type, GroundType::ForestMud);
+  EXPECT_FLOAT_EQ(settings.grass_primary.x(), 0.30F);
+  EXPECT_FLOAT_EQ(settings.grass_primary.y(), 0.60F);
+  EXPECT_FLOAT_EQ(settings.grass_primary.z(), 0.28F);
+  EXPECT_FLOAT_EQ(settings.soil_color.x(), 0.28F);
+  EXPECT_FLOAT_EQ(settings.soil_color.y(), 0.24F);
+  EXPECT_FLOAT_EQ(settings.soil_color.z(), 0.18F);
 }
 
 TEST_F(GroundTypeTest, ApplyGroundTypeDefaultsGrassDry) {
   BiomeSettings settings;
-  applyGroundTypeDefaults(settings, GroundType::GrassDry);
+  apply_ground_type_defaults(settings, GroundType::GrassDry);
 
-  EXPECT_EQ(settings.groundType, GroundType::GrassDry);
-  EXPECT_FLOAT_EQ(settings.grassPrimary.x(), 0.58F);
-  EXPECT_FLOAT_EQ(settings.grassPrimary.y(), 0.54F);
-  EXPECT_FLOAT_EQ(settings.grassPrimary.z(), 0.32F);
-  EXPECT_FLOAT_EQ(settings.terrainAmbientBoost, 1.18F);
+  EXPECT_EQ(settings.ground_type, GroundType::GrassDry);
+  EXPECT_FLOAT_EQ(settings.grass_primary.x(), 0.58F);
+  EXPECT_FLOAT_EQ(settings.grass_primary.y(), 0.54F);
+  EXPECT_FLOAT_EQ(settings.grass_primary.z(), 0.32F);
+  EXPECT_FLOAT_EQ(settings.terrain_ambient_boost, 1.18F);
   // Check ground-type-specific parameters
-  EXPECT_FLOAT_EQ(settings.crackIntensity, 0.65F);
-  EXPECT_FLOAT_EQ(settings.moistureLevel, 0.15F);
-  EXPECT_FLOAT_EQ(settings.grassSaturation, 0.75F);
+  EXPECT_FLOAT_EQ(settings.crack_intensity, 0.65F);
+  EXPECT_FLOAT_EQ(settings.moisture_level, 0.15F);
+  EXPECT_FLOAT_EQ(settings.grass_saturation, 0.75F);
 }
 
 TEST_F(GroundTypeTest, ApplyGroundTypeDefaultsSoilRocky) {
   BiomeSettings settings;
-  applyGroundTypeDefaults(settings, GroundType::SoilRocky);
+  apply_ground_type_defaults(settings, GroundType::SoilRocky);
 
-  EXPECT_EQ(settings.groundType, GroundType::SoilRocky);
-  EXPECT_FLOAT_EQ(settings.soilColor.x(), 0.55F);
-  EXPECT_FLOAT_EQ(settings.soilColor.y(), 0.48F);
-  EXPECT_FLOAT_EQ(settings.soilColor.z(), 0.38F);
-  EXPECT_FLOAT_EQ(settings.terrainRockDetailStrength, 0.65F);
+  EXPECT_EQ(settings.ground_type, GroundType::SoilRocky);
+  EXPECT_FLOAT_EQ(settings.soil_color.x(), 0.55F);
+  EXPECT_FLOAT_EQ(settings.soil_color.y(), 0.48F);
+  EXPECT_FLOAT_EQ(settings.soil_color.z(), 0.38F);
+  EXPECT_FLOAT_EQ(settings.terrain_rock_detail_strength, 0.65F);
   // Check ground-type-specific parameters
-  EXPECT_FLOAT_EQ(settings.rockExposure, 0.75F);
-  EXPECT_FLOAT_EQ(settings.soilRoughness, 0.85F);
+  EXPECT_FLOAT_EQ(settings.rock_exposure, 0.75F);
+  EXPECT_FLOAT_EQ(settings.soil_roughness, 0.85F);
 }
 
 TEST_F(GroundTypeTest, ApplyGroundTypeDefaultsAlpineMix) {
   BiomeSettings settings;
-  applyGroundTypeDefaults(settings, GroundType::AlpineMix);
+  apply_ground_type_defaults(settings, GroundType::AlpineMix);
 
-  EXPECT_EQ(settings.groundType, GroundType::AlpineMix);
-  EXPECT_FLOAT_EQ(settings.rockHigh.x(), 0.88F);
-  EXPECT_FLOAT_EQ(settings.rockHigh.y(), 0.90F);
-  EXPECT_FLOAT_EQ(settings.rockHigh.z(), 0.94F);
-  EXPECT_FLOAT_EQ(settings.terrainAmbientBoost, 1.25F);
+  EXPECT_EQ(settings.ground_type, GroundType::AlpineMix);
+  EXPECT_FLOAT_EQ(settings.rock_high.x(), 0.88F);
+  EXPECT_FLOAT_EQ(settings.rock_high.y(), 0.90F);
+  EXPECT_FLOAT_EQ(settings.rock_high.z(), 0.94F);
+  EXPECT_FLOAT_EQ(settings.terrain_ambient_boost, 1.25F);
   // Check ground-type-specific parameters
-  EXPECT_FLOAT_EQ(settings.snowCoverage, 0.55F);
-  EXPECT_FLOAT_EQ(settings.snowColor.x(), 0.94F);
-  EXPECT_FLOAT_EQ(settings.snowColor.y(), 0.96F);
-  EXPECT_FLOAT_EQ(settings.snowColor.z(), 1.0F);
+  EXPECT_FLOAT_EQ(settings.snow_coverage, 0.55F);
+  EXPECT_FLOAT_EQ(settings.snow_color.x(), 0.94F);
+  EXPECT_FLOAT_EQ(settings.snow_color.y(), 0.96F);
+  EXPECT_FLOAT_EQ(settings.snow_color.z(), 1.0F);
 }
 
 TEST_F(GroundTypeTest, ApplyGroundTypeDefaultsSoilFertile) {
   BiomeSettings settings;
-  applyGroundTypeDefaults(settings, GroundType::SoilFertile);
+  apply_ground_type_defaults(settings, GroundType::SoilFertile);
 
-  EXPECT_EQ(settings.groundType, GroundType::SoilFertile);
-  EXPECT_FLOAT_EQ(settings.soilColor.x(), 0.20F);
-  EXPECT_FLOAT_EQ(settings.soilColor.y(), 0.16F);
-  EXPECT_FLOAT_EQ(settings.soilColor.z(), 0.12F);
-  EXPECT_FLOAT_EQ(settings.terrainRockDetailStrength, 0.22F);
+  EXPECT_EQ(settings.ground_type, GroundType::SoilFertile);
+  EXPECT_FLOAT_EQ(settings.soil_color.x(), 0.20F);
+  EXPECT_FLOAT_EQ(settings.soil_color.y(), 0.16F);
+  EXPECT_FLOAT_EQ(settings.soil_color.z(), 0.12F);
+  EXPECT_FLOAT_EQ(settings.terrain_rock_detail_strength, 0.22F);
   // Check ground-type-specific parameters
-  EXPECT_FLOAT_EQ(settings.moistureLevel, 0.80F);
-  EXPECT_FLOAT_EQ(settings.grassSaturation, 1.15F);
-  EXPECT_FLOAT_EQ(settings.rockExposure, 0.12F);
+  EXPECT_FLOAT_EQ(settings.moisture_level, 0.80F);
+  EXPECT_FLOAT_EQ(settings.grass_saturation, 1.15F);
+  EXPECT_FLOAT_EQ(settings.rock_exposure, 0.12F);
 }
 
 TEST_F(GroundTypeTest, MapLoaderWithGroundType) {
@@ -163,10 +164,11 @@ TEST_F(GroundTypeTest, MapLoaderWithGroundType) {
 
   MapDefinition map_def;
   QString error;
-  bool success = MapLoader::loadFromJsonFile(temp_file.fileName(), map_def, &error);
+  bool success =
+      MapLoader::loadFromJsonFile(temp_file.fileName(), map_def, &error);
 
   ASSERT_TRUE(success) << "Failed to load map: " << error.toStdString();
-  EXPECT_EQ(map_def.biome.groundType, GroundType::GrassDry);
+  EXPECT_EQ(map_def.biome.ground_type, GroundType::GrassDry);
   EXPECT_EQ(map_def.biome.seed, 12345U);
 }
 
@@ -193,10 +195,11 @@ TEST_F(GroundTypeTest, MapLoaderWithoutGroundTypeUsesDefault) {
 
   MapDefinition map_def;
   QString error;
-  bool success = MapLoader::loadFromJsonFile(temp_file.fileName(), map_def, &error);
+  bool success =
+      MapLoader::loadFromJsonFile(temp_file.fileName(), map_def, &error);
 
   ASSERT_TRUE(success) << "Failed to load map: " << error.toStdString();
-  EXPECT_EQ(map_def.biome.groundType, GroundType::ForestMud);
+  EXPECT_EQ(map_def.biome.ground_type, GroundType::ForestMud);
   EXPECT_EQ(map_def.biome.seed, 54321U);
 }
 
@@ -230,38 +233,39 @@ TEST_F(GroundTypeTest, MapLoaderGroundTypeOverriddenByExplicitValues) {
 
   MapDefinition map_def;
   QString error;
-  bool success = MapLoader::loadFromJsonFile(temp_file.fileName(), map_def, &error);
+  bool success =
+      MapLoader::loadFromJsonFile(temp_file.fileName(), map_def, &error);
 
   ASSERT_TRUE(success) << "Failed to load map: " << error.toStdString();
-  EXPECT_EQ(map_def.biome.groundType, GroundType::AlpineMix);
+  EXPECT_EQ(map_def.biome.ground_type, GroundType::AlpineMix);
   EXPECT_EQ(map_def.biome.seed, 99999U);
   // Grass primary should be the overridden values, not the alpine_mix defaults
-  EXPECT_NEAR(map_def.biome.grassPrimary.x(), 0.10F, 0.001F);
-  EXPECT_NEAR(map_def.biome.grassPrimary.y(), 0.20F, 0.001F);
-  EXPECT_NEAR(map_def.biome.grassPrimary.z(), 0.30F, 0.001F);
+  EXPECT_NEAR(map_def.biome.grass_primary.x(), 0.10F, 0.001F);
+  EXPECT_NEAR(map_def.biome.grass_primary.y(), 0.20F, 0.001F);
+  EXPECT_NEAR(map_def.biome.grass_primary.z(), 0.30F, 0.001F);
 }
 
 TEST_F(GroundTypeTest, AllGroundTypesFromString) {
-  auto forest_mud = groundTypeFromString("forest_mud");
+  auto forest_mud = ground_type_from_string("forest_mud");
   ASSERT_TRUE(forest_mud.has_value());
   EXPECT_EQ(forest_mud.value(), GroundType::ForestMud);
 
-  auto grass_dry = groundTypeFromString("grass_dry");
+  auto grass_dry = ground_type_from_string("grass_dry");
   ASSERT_TRUE(grass_dry.has_value());
   EXPECT_EQ(grass_dry.value(), GroundType::GrassDry);
 
-  auto soil_rocky = groundTypeFromString("soil_rocky");
+  auto soil_rocky = ground_type_from_string("soil_rocky");
   ASSERT_TRUE(soil_rocky.has_value());
   EXPECT_EQ(soil_rocky.value(), GroundType::SoilRocky);
 
-  auto alpine_mix = groundTypeFromString("alpine_mix");
+  auto alpine_mix = ground_type_from_string("alpine_mix");
   ASSERT_TRUE(alpine_mix.has_value());
   EXPECT_EQ(alpine_mix.value(), GroundType::AlpineMix);
 
-  auto soil_fertile = groundTypeFromString("soil_fertile");
+  auto soil_fertile = ground_type_from_string("soil_fertile");
   ASSERT_TRUE(soil_fertile.has_value());
   EXPECT_EQ(soil_fertile.value(), GroundType::SoilFertile);
 
-  auto invalid = groundTypeFromString("invalid");
+  auto invalid = ground_type_from_string("invalid");
   EXPECT_FALSE(invalid.has_value());
 }

@@ -9,6 +9,7 @@
     "tileSize": 1.0
   },
   "biome": {
+    "groundType": "forest_mud",
     "seed": 12345,
     "patchDensity": 3.2,
     "patchJitter": 0.85,
