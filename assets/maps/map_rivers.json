@@ -9,6 +9,7 @@
     "tileSize": 1.0
   },
   "biome": {
+    "groundType": "soil_fertile",
     "seed": 42,
     "patchDensity": 3.5,
     "patchJitter": 0.9,

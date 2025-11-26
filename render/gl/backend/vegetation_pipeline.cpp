@@ -78,9 +78,9 @@ void VegetationPipeline::cacheUniforms() {
   if (m_plantShader != nullptr) {
     m_plantUniforms.view_proj = m_plantShader->uniformHandle("uViewProj");
     m_plantUniforms.time = m_plantShader->uniformHandle("uTime");
-    m_plantUniforms.windStrength =
+    m_plantUniforms.wind_strength =
         m_plantShader->uniformHandle("uWindStrength");
-    m_plantUniforms.windSpeed = m_plantShader->uniformHandle("uWindSpeed");
+    m_plantUniforms.wind_speed = m_plantShader->uniformHandle("uWindSpeed");
     m_plantUniforms.light_direction =
         m_plantShader->uniformHandle("uLightDirection");
   }
@@ -88,8 +88,8 @@ void VegetationPipeline::cacheUniforms() {
   if (m_pineShader != nullptr) {
     m_pineUniforms.view_proj = m_pineShader->uniformHandle("uViewProj");
     m_pineUniforms.time = m_pineShader->uniformHandle("uTime");
-    m_pineUniforms.windStrength = m_pineShader->uniformHandle("uWindStrength");
-    m_pineUniforms.windSpeed = m_pineShader->uniformHandle("uWindSpeed");
+    m_pineUniforms.wind_strength = m_pineShader->uniformHandle("uWindStrength");
+    m_pineUniforms.wind_speed = m_pineShader->uniformHandle("uWindSpeed");
     m_pineUniforms.light_direction =
         m_pineShader->uniformHandle("uLightDirection");
   }
