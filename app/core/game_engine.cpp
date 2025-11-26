@@ -1820,7 +1820,7 @@ void GameEngine::restoreEnvironmentFromMetadata(const QJsonObject &metadata) {
                            height_map->getTileSize());
       }
       if (m_road) {
-        m_road->configure(terrain_service.roadSegments(),
+        m_road->configure(terrain_service.road_segments(),
                           height_map->getTileSize());
       }
       if (m_riverbank) {
