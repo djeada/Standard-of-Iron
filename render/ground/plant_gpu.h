@@ -18,14 +18,14 @@ struct PlantBatchParams {
   static constexpr float kDefaultWindStrength = 0.25F;
   static constexpr float kDefaultWindSpeed = 1.4F;
 
-  static auto defaultLightDirection() -> QVector3D {
+  static auto default_light_direction() -> QVector3D {
     return {kDefaultLightDirX, kDefaultLightDirY, kDefaultLightDirZ};
   }
 
-  QVector3D light_direction = defaultLightDirection();
+  QVector3D light_direction = default_light_direction();
   float time = 0.0F;
-  float windStrength = kDefaultWindStrength;
-  float windSpeed = kDefaultWindSpeed;
+  float wind_strength = kDefaultWindStrength;
+  float wind_speed = kDefaultWindSpeed;
   float pad0 = 0.0F;
   float pad1 = 0.0F;
 };

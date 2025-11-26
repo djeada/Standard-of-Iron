@@ -61,8 +61,8 @@ void PineRenderer::configure(const Game::Map::TerrainHeightMap &height_map,
 
   m_pineParams.light_direction = QVector3D(0.35F, 0.8F, 0.45F);
   m_pineParams.time = 0.0F;
-  m_pineParams.windStrength = 0.3F;
-  m_pineParams.windSpeed = 0.5F;
+  m_pineParams.wind_strength = 0.3F;
+  m_pineParams.wind_speed = 0.5F;
 
   generatePineInstances();
 }
@@ -130,7 +130,7 @@ void PineRenderer::generatePineInstances() {
   const float tile_safe = std::max(0.1F, m_tile_size);
 
   const float edge_padding =
-      std::clamp(m_biomeSettings.spawnEdgePadding, 0.0F, 0.5F);
+      std::clamp(m_biomeSettings.spawn_edge_padding, 0.0F, 0.5F);
   const float edge_margin_x = static_cast<float>(m_width) * edge_padding;
   const float edge_margin_z = static_cast<float>(m_height) * edge_padding;
 
