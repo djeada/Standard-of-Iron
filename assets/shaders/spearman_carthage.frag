@@ -170,6 +170,9 @@ vec3 crest_basis(vec3 n) {
 MaterialSample sample_carthage_helmet(vec3 base_color, vec3 pos, vec3 N, vec3 T,
                                       vec3 B) {
   MaterialSample m;
+  // Carthage heavy helmet gets a distinct purple lacquer base; still respects
+  // the incoming base_color for variation.
+  vec3 carthage_purple = vec3(0.45, 0.22, 0.60);
 
   // Base hammered bronze with wide-area patina streaks.
   float hammer = fbm(pos * 14.0 + vec3(v_layerNoise));
@@ -197,7 +200,7 @@ MaterialSample sample_carthage_helmet(vec3 base_color, vec3 pos, vec3 N, vec3 T,
   float brow = smoothstep(0.18, 0.0, abs(uv.y - 0.70));
   float patina_mix = clamp(patina * 0.65 + brow * 0.3 + rim * 0.25, 0.0, 1.0);
 
-  vec3 tint = mix(vec3(0.0, 1.0, 0.0), base_color, 0.15); // debug extreme green
+  vec3 tint = mix(carthage_purple, base_color, 0.25);
   vec3 patina_color = vec3(0.26, 0.52, 0.40);
   vec3 crest_highlight = vec3(1.0, 0.92, 0.75);
 
