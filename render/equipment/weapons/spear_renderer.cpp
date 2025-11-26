@@ -3,6 +3,7 @@
 #include "../../geom/transforms.h"
 #include "../../gl/primitives.h"
 #include "../../humanoid/rig.h"
+#include "../../humanoid/spear_pose_utils.h"
 #include "../../submitter.h"
 
 #include <QMatrix4x4>
@@ -23,47 +24,7 @@ void SpearRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
                            ISubmitter &submitter) {
   QVector3D const grip_pos = frames.hand_r.origin;
 
-  bool const is_attacking = anim.inputs.is_attacking && anim.inputs.is_melee;
-  float attack_phase = 0.0F;
-  if (is_attacking) {
-    attack_phase =
-        std::fmod(anim.inputs.time * SPEARMAN_INV_ATTACK_CYCLE_TIME, 1.0F);
-  }
-
-  QVector3D spear_dir = QVector3D(0.05F, 0.55F, 0.85F);
-  if (spear_dir.lengthSquared() > 1e-6F) {
-    spear_dir.normalize();
-  }
-
-  if (anim.inputs.is_in_hold_mode || anim.inputs.is_exiting_hold) {
-    float const t = anim.inputs.is_in_hold_mode
-                        ? 1.0F
-                        : (1.0F - anim.inputs.hold_exit_progress);
-
-    QVector3D braced_dir = QVector3D(0.05F, 0.40F, 0.91F);
-    if (braced_dir.lengthSquared() > 1e-6F) {
-      braced_dir.normalize();
-    }
-
-    spear_dir = spear_dir * (1.0F - t) + braced_dir * t;
-    if (spear_dir.lengthSquared() > 1e-6F) {
-      spear_dir.normalize();
-    }
-  } else if (is_attacking) {
-    if (attack_phase >= 0.30F && attack_phase < 0.50F) {
-      float const t = (attack_phase - 0.30F) / 0.20F;
-
-      QVector3D attack_dir = QVector3D(0.03F, -0.15F, 1.0F);
-      if (attack_dir.lengthSquared() > 1e-6F) {
-        attack_dir.normalize();
-      }
-
-      spear_dir = spear_dir * (1.0F - t) + attack_dir * t;
-      if (spear_dir.lengthSquared() > 1e-6F) {
-        spear_dir.normalize();
-      }
-    }
-  }
+  QVector3D const spear_dir = computeSpearDirection(anim.inputs);
 
   QVector3D const shaft_base = grip_pos - spear_dir * 0.28F;
   QVector3D shaft_mid = grip_pos + spear_dir * (m_config.spear_length * 0.5F);

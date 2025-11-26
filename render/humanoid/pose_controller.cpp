@@ -1,5 +1,6 @@
 #include "pose_controller.h"
 #include "humanoid_math.h"
+#include "spear_pose_utils.h"
 #include <QVector3D>
 #include <algorithm>
 #include <cmath>
@@ -359,6 +360,14 @@ void HumanoidPoseController::spearThrust(float attack_phase) {
         QVector3D(-0.10F - 0.02F * (1.0F - t),
                   HP::SHOULDER_Y - 0.06F + 0.01F * t, lerp(0.35F, 0.25F, t));
   }
+
+  float const thrust_extent =
+      std::clamp((attack_phase - 0.20F) / 0.60F, 0.0F, 1.0F);
+  float const along_offset = -0.06F + 0.02F * thrust_extent;
+  float const y_drop = 0.10F + 0.02F * thrust_extent;
+
+  hand_l_target = computeOffhandSpearGrip(m_pose, m_anim_ctx, hand_r_target,
+                                          false, along_offset, y_drop, -0.08F);
 
   placeHandAt(false, hand_r_target);
   placeHandAt(true, hand_l_target);
