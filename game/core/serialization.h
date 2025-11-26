@@ -21,16 +21,14 @@ public:
   static auto serializeWorld(const class World *world) -> QJsonDocument;
   static void deserializeWorld(class World *world, const QJsonDocument &doc);
 
-  static auto
-  serializeTerrain(const Game::Map::TerrainHeightMap *height_map,
-                   const Game::Map::BiomeSettings &biome,
-                   const std::vector<Game::Map::RoadSegment> &roads)
+  static auto serializeTerrain(const Game::Map::TerrainHeightMap *height_map,
+                               const Game::Map::BiomeSettings &biome,
+                               const std::vector<Game::Map::RoadSegment> &roads)
       -> QJsonObject;
-  static void
-  deserializeTerrain(Game::Map::TerrainHeightMap *height_map,
-                     Game::Map::BiomeSettings &biome,
-                     std::vector<Game::Map::RoadSegment> &roads,
-                     const QJsonObject &json);
+  static void deserializeTerrain(Game::Map::TerrainHeightMap *height_map,
+                                 Game::Map::BiomeSettings &biome,
+                                 std::vector<Game::Map::RoadSegment> &roads,
+                                 const QJsonObject &json);
 
   static auto saveToFile(const QString &filename,
                          const QJsonDocument &doc) -> bool;
