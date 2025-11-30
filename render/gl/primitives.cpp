@@ -275,7 +275,8 @@ auto simpleHash(float seed) -> float {
 
 auto createUnitTorsoMesh(int radialSegments, int heightSegments) -> Mesh * {
   const float half_h = k_half_scalar;
-  constexpr float k_lower_extension = 0.14F;
+
+  constexpr float k_lower_extension = 0.05F;
   const float torso_bottom_y = -half_h;
   const float torso_top_y = half_h + k_lower_extension;
   const float torso_height = torso_top_y - torso_bottom_y;

@@ -230,6 +230,14 @@ if(QT_VERSION_MAJOR EQUAL 6)
             assets/shaders/horse_spearman_roman_republic.vert
             assets/shaders/horse_spearman_carthage.frag
             assets/shaders/horse_spearman_carthage.vert
+            assets/shaders/healer.frag
+            assets/shaders/healer.vert
+            assets/shaders/healer_kingdom_of_iron.frag
+            assets/shaders/healer_kingdom_of_iron.vert
+            assets/shaders/healer_roman_republic.frag
+            assets/shaders/healer_roman_republic.vert
+            assets/shaders/healer_carthage.frag
+            assets/shaders/healer_carthage.vert
             assets/shaders/pine_instanced.frag
             assets/shaders/pine_instanced.vert
             assets/shaders/plant_instanced.frag

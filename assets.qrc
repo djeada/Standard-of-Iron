@@ -52,6 +52,14 @@
         <file>assets/shaders/horse_spearman_roman_republic.vert</file>
         <file>assets/shaders/horse_spearman_carthage.frag</file>
         <file>assets/shaders/horse_spearman_carthage.vert</file>
+        <file>assets/shaders/healer.frag</file>
+        <file>assets/shaders/healer.vert</file>
+        <file>assets/shaders/healer_kingdom_of_iron.frag</file>
+        <file>assets/shaders/healer_kingdom_of_iron.vert</file>
+        <file>assets/shaders/healer_roman_republic.frag</file>
+        <file>assets/shaders/healer_roman_republic.vert</file>
+        <file>assets/shaders/healer_carthage.frag</file>
+        <file>assets/shaders/healer_carthage.vert</file>
         <file>assets/shaders/pine_instanced.frag</file>
         <file>assets/shaders/pine_instanced.vert</file>
         <file>assets/shaders/plant_instanced.frag</file>

@@ -74,7 +74,9 @@ void RomanHeavyArmorRenderer::render(const DrawContext &ctx,
 
   QMatrix4x4 plates = cylinderBetween(ctx.model, top, bottom, torso_r * 1.02F);
   plates.scale(1.05F, 1.0F, depth_scale_for(0.86F));
-  submitter.mesh(getUnitTorso(), plates, steel_color, nullptr, 1.0F, 1);
+  Mesh *torso_mesh = torso_mesh_without_bottom_cap();
+  submitter.mesh(torso_mesh != nullptr ? torso_mesh : getUnitTorso(), plates,
+                 steel_color, nullptr, 1.0F, 1);
 
   auto renderShoulderGuard = [&](const QVector3D &shoulder_pos,
                                  const QVector3D &outward) {
@@ -160,7 +162,9 @@ void RomanLightArmorRenderer::render(const DrawContext &ctx,
   QMatrix4x4 chainmail =
       cylinderBetween(ctx.model, top, bottom, torso_r * 0.98F);
   chainmail.scale(1.02F, 1.0F, depth_scale_for(0.82F));
-  submitter.mesh(getUnitTorso(), chainmail, chainmail_color, nullptr, 1.0F, 1);
+  Mesh *torso_mesh = torso_mesh_without_bottom_cap();
+  submitter.mesh(torso_mesh != nullptr ? torso_mesh : getUnitTorso(), chainmail,
+                 chainmail_color, nullptr, 1.0F, 1);
 
   QVector3D chest_center =
       torso.origin + up * (torso_r * 0.12F) + forward * (torso_depth * 0.48F);

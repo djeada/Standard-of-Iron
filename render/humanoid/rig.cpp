@@ -28,7 +28,10 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
+#include <functional>
+#include <limits>
 #include <numbers>
+#include <vector>
 
 namespace Render::GL {
 
@@ -46,6 +49,52 @@ constexpr float k_shadow_ground_offset = 0.02F;
 constexpr float k_shadow_base_alpha = 0.24F;
 constexpr QVector3D k_shadow_light_dir(0.4F, 1.0F, 0.25F);
 } // namespace
+
+auto torso_mesh_without_bottom_cap() -> Mesh * {
+  static std::unique_ptr<Mesh> s_mesh;
+  if (s_mesh != nullptr) {
+    return s_mesh.get();
+  }
+
+  Mesh *base = getUnitTorso();
+  if (base == nullptr) {
+    return nullptr;
+  }
+
+  auto filtered = base->cloneWithFilteredIndices(
+      [](unsigned int a, unsigned int b, unsigned int c,
+         const std::vector<Vertex> &verts) -> bool {
+        float min_y = std::numeric_limits<float>::max();
+        float max_y = -std::numeric_limits<float>::max();
+        auto sample = [&](unsigned int idx) -> QVector3D {
+          return {verts[idx].position[0], verts[idx].position[1],
+                  verts[idx].position[2]};
+        };
+        QVector3D pa = sample(a);
+        QVector3D pb = sample(b);
+        QVector3D pc = sample(c);
+        min_y = std::min({pa.y(), pb.y(), pc.y()});
+        max_y = std::max({pa.y(), pb.y(), pc.y()});
+
+        QVector3D n(
+            verts[a].normal[0] + verts[b].normal[0] + verts[c].normal[0],
+            verts[a].normal[1] + verts[b].normal[1] + verts[c].normal[1],
+            verts[a].normal[2] + verts[b].normal[2] + verts[c].normal[2]);
+        if (n.lengthSquared() > 0.0F) {
+          n.normalize();
+        }
+
+        constexpr float k_band_height = 0.02F;
+        bool is_bottom_band = (max_y - min_y) < k_band_height &&
+                              (min_y < (pa.y() + pb.y() + pc.y()) / 3.0F);
+        bool facing_down = (n.y() < -0.35F);
+        return is_bottom_band && facing_down;
+      });
+
+  s_mesh =
+      (filtered != nullptr) ? std::move(filtered) : std::unique_ptr<Mesh>(base);
+  return s_mesh.get();
+}
 
 auto HumanoidRendererBase::frameLocalPosition(
     const AttachmentFrame &frame, const QVector3D &local) -> QVector3D {
@@ -161,8 +210,7 @@ void HumanoidRendererBase::computeLocomotionPose(
 
   float const h_scale = variation.height_scale;
 
-  pose.head_pos =
-      QVector3D(0.0F, (HP::HEAD_TOP_Y + HP::CHIN_Y) * 0.5F * h_scale, 0.0F);
+  pose.head_pos = QVector3D(0.0F, HP::HEAD_CENTER_Y * h_scale, 0.0F);
   pose.head_r = HP::HEAD_RADIUS * h_scale;
   pose.neck_base = QVector3D(0.0F, HP::NECK_BASE_Y * h_scale, 0.0F);
 
@@ -367,7 +415,7 @@ void HumanoidRendererBase::drawCommonBody(const DrawContext &ctx,
   QVector3D const tunic_top{shoulder_mid.x(), y_top_cover - 0.006F,
                             shoulder_mid.z()};
 
-  QVector3D const tunic_bot{pose.pelvis_pos.x(), pose.pelvis_pos.y() + 0.03F,
+  QVector3D const tunic_bot{pose.pelvis_pos.x(), pose.pelvis_pos.y() - 0.05F,
                             pose.pelvis_pos.z()};
 
   QMatrix4x4 torso_transform =
@@ -375,7 +423,10 @@ void HumanoidRendererBase::drawCommonBody(const DrawContext &ctx,
 
   torso_transform.scale(torso_r, 1.0F, torso_depth);
 
-  out.mesh(getUnitTorso(), torso_transform, v.palette.cloth, nullptr, 1.0F);
+  Mesh *torso_mesh = torso_mesh_without_bottom_cap();
+  if (torso_mesh != nullptr) {
+    out.mesh(torso_mesh, torso_transform, v.palette.cloth, nullptr, 1.0F);
+  }
 
   float const head_r = pose.head_r;
 
@@ -1286,49 +1337,52 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
         float const shadowDepth =
             shadowSize * (is_mounted_spawn ? 1.30F : 1.10F) * depth_boost;
 
-        QVector3D const instPos =
-            inst_ctx.model.map(QVector3D(0.0F, 0.0F, 0.0F));
-
-        float shadowY = instPos.y();
         auto &terrain_service = Game::Map::TerrainService::instance();
+
         if (terrain_service.isInitialized()) {
-          shadowY = terrain_service.getTerrainHeight(instPos.x(), instPos.z());
-        }
 
-        QVector3D light_dir = k_shadow_light_dir.normalized();
-        QVector2D light_dir_xz(light_dir.x(), light_dir.z());
-        if (light_dir_xz.lengthSquared() < 1e-6F) {
-          light_dir_xz = QVector2D(0.0F, 1.0F);
-        } else {
-          light_dir_xz.normalize();
-        }
-        QVector2D const shadow_dir = -light_dir_xz;
-        QVector2D dir_for_use = shadow_dir;
-        if (dir_for_use.lengthSquared() < 1e-6F) {
-          dir_for_use = QVector2D(0.0F, 1.0F);
-        } else {
-          dir_for_use.normalize();
-        }
-        float const shadowOffset = shadowDepth * 1.25F;
-        QVector2D const offset2d = dir_for_use * shadowOffset;
-        float const lightYawDeg = qRadiansToDegrees(
-            std::atan2(double(dir_for_use.x()), double(dir_for_use.y())));
+          QVector3D const instPos =
+              inst_ctx.model.map(QVector3D(0.0F, 0.0F, 0.0F));
+          float const shadowY =
+              terrain_service.getTerrainHeight(instPos.x(), instPos.z());
 
-        QMatrix4x4 shadowModel;
-        shadowModel.translate(instPos.x() + offset2d.x(),
-                              shadowY + k_shadow_ground_offset,
-                              instPos.z() + offset2d.y());
-        shadowModel.rotate(lightYawDeg, 0.0F, 1.0F, 0.0F);
-        shadowModel.rotate(-90.0F, 1.0F, 0.0F, 0.0F);
-        shadowModel.scale(shadowWidth, shadowDepth, 1.0F);
+          QVector3D light_dir = k_shadow_light_dir.normalized();
+          QVector2D light_dir_xz(light_dir.x(), light_dir.z());
+          if (light_dir_xz.lengthSquared() < 1e-6F) {
+            light_dir_xz = QVector2D(0.0F, 1.0F);
+          } else {
+            light_dir_xz.normalize();
+          }
+          QVector2D const shadow_dir = -light_dir_xz;
+          QVector2D dir_for_use = shadow_dir;
+          if (dir_for_use.lengthSquared() < 1e-6F) {
+            dir_for_use = QVector2D(0.0F, 1.0F);
+          } else {
+            dir_for_use.normalize();
+          }
+          float const shadowOffset = shadowDepth * 1.25F;
+          QVector2D const offset2d = dir_for_use * shadowOffset;
+          float const lightYawDeg = qRadiansToDegrees(
+              std::atan2(double(dir_for_use.x()), double(dir_for_use.y())));
 
-        if (auto *renderer = dynamic_cast<Renderer *>(&out)) {
-          renderer->setCurrentShader(shadowShader);
-          shadowShader->setUniform(QStringLiteral("u_lightDir"), dir_for_use);
+          QMatrix4x4 shadowModel;
+          shadowModel.translate(instPos.x() + offset2d.x(),
+                                shadowY + k_shadow_ground_offset,
+                                instPos.z() + offset2d.y());
+          shadowModel.rotate(lightYawDeg, 0.0F, 1.0F, 0.0F);
+          shadowModel.rotate(-90.0F, 1.0F, 0.0F, 0.0F);
+          shadowModel.scale(shadowWidth, shadowDepth, 1.0F);
 
-          out.mesh(quadMesh, shadowModel, QVector3D(0.0F, 0.0F, 0.0F), nullptr,
-                   k_shadow_base_alpha, 0);
-          renderer->setCurrentShader(nullptr);
+          if (auto *renderer = dynamic_cast<Renderer *>(&out)) {
+            Shader *previous_shader = renderer->getCurrentShader();
+            renderer->setCurrentShader(shadowShader);
+            shadowShader->setUniform(QStringLiteral("u_lightDir"), dir_for_use);
+
+            out.mesh(quadMesh, shadowModel, QVector3D(0.0F, 0.0F, 0.0F),
+                     nullptr, k_shadow_base_alpha, 0);
+
+            renderer->setCurrentShader(previous_shader);
+          }
         }
       }
     }

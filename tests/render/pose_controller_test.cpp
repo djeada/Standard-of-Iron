@@ -14,7 +14,7 @@ protected:
 
     // Initialize a default pose with basic standing configuration
     pose = HumanoidPose{};
-    float const head_center_y = 0.5F * (HP::HEAD_TOP_Y + HP::CHIN_Y);
+    float const head_center_y = HP::HEAD_CENTER_Y;
     float const half_shoulder = 0.5F * HP::SHOULDER_WIDTH;
     pose.head_pos = QVector3D(0.0F, head_center_y, 0.0F);
     pose.head_r = HP::HEAD_RADIUS;
@@ -56,8 +56,7 @@ protected:
 TEST_F(HumanoidPoseControllerTest, ConstructorInitializesCorrectly) {
   HumanoidPoseController controller(pose, anim_ctx);
   // Constructor should not modify the pose
-  EXPECT_FLOAT_EQ(pose.head_pos.y(), 0.5F * (HumanProportions::HEAD_TOP_Y +
-                                             HumanProportions::CHIN_Y));
+  EXPECT_FLOAT_EQ(pose.head_pos.y(), HumanProportions::HEAD_CENTER_Y);
   EXPECT_FLOAT_EQ(pose.pelvis_pos.y(), HumanProportions::WAIST_Y);
 }
 
