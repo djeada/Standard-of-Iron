@@ -72,8 +72,8 @@ void main() {
   vec3 offsetPos = batteredPos + worldNormal * 0.006;
 
   mat4 invModel = inverse(u_model);
-  vec4 localBattered = invModel * vec4(batteredPos, 1.0);
-  gl_Position = u_mvp * localBattered;
+  vec4 localOffset = invModel * vec4(offsetPos, 1.0);
+  gl_Position = u_mvp * localOffset;
 
   v_worldPos = offsetPos;
   v_texCoord = a_texCoord;
