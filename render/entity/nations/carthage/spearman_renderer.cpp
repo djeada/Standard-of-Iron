@@ -12,6 +12,7 @@
 #include "../../../humanoid/humanoid_specs.h"
 #include "../../../humanoid/pose_controller.h"
 #include "../../../humanoid/rig.h"
+#include "../../../humanoid/spear_pose_utils.h"
 #include "../../../humanoid/style_palette.h"
 #include "../../../palette.h"
 #include "../../../scene_renderer.h"
@@ -20,6 +21,7 @@
 #include "../../renderer_constants.h"
 #include "spearman_style.h"
 
+#include <QDebug>
 #include <QMatrix4x4>
 #include <QString>
 #include <QVector3D>
@@ -160,10 +162,11 @@ public:
                                      (pelvis_y + 0.05F) * t,
                                  0.15F * (1.0F - t) + 0.20F * t);
 
-      QVector3D const hand_l_pos(0.0F,
-                                 lowered_shoulder_y * (1.0F - t) +
-                                     (lowered_shoulder_y - 0.10F) * t,
-                                 0.30F * (1.0F - t) + 0.55F * t);
+      float const offhand_along = lerp(-0.06F, -0.02F, t);
+      float const offhand_drop = 0.10F + 0.02F * t;
+      QVector3D const hand_l_pos =
+          computeOffhandSpearGrip(pose, anim_ctx, hand_r_pos, false,
+                                  offhand_along, offhand_drop, -0.08F);
 
       controller.placeHandAt(false, hand_r_pos);
       controller.placeHandAt(true, hand_l_pos);
@@ -176,9 +179,8 @@ public:
       QVector3D const idle_hand_r(0.28F + arm_asymmetry,
                                   HP::SHOULDER_Y - 0.02F + arm_height_jitter,
                                   0.30F);
-      QVector3D const idle_hand_l(
-          -0.08F - 0.5F * arm_asymmetry,
-          HP::SHOULDER_Y - 0.08F + 0.5F * arm_height_jitter, 0.45F);
+      QVector3D const idle_hand_l = computeOffhandSpearGrip(
+          pose, anim_ctx, idle_hand_r, false, -0.04F, 0.10F, -0.08F);
 
       controller.placeHandAt(false, idle_hand_r);
       controller.placeHandAt(true, idle_hand_l);
@@ -367,9 +369,16 @@ void registerSpearmanRenderer(Render::GL::EntityRendererRegistry &registry) {
           return shader;
         };
         if (ctx.backend != nullptr) {
-          QString shader_key = static_renderer.resolve_shader_key(ctx);
-          spearman_shader = acquireShader(shader_key);
+
+          spearman_shader = acquireShader(QStringLiteral("spearman_carthage"));
           if (spearman_shader == nullptr) {
+            static bool warned = false;
+            if (!warned) {
+              qWarning()
+                  << "Carthage spearman: missing spearman_carthage shader;"
+                  << "falling back to generic spearman shader.";
+              warned = true;
+            }
             spearman_shader = acquireShader(QStringLiteral("spearman"));
           }
         }

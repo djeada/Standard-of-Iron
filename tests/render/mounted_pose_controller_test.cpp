@@ -15,7 +15,7 @@ protected:
 
     // Initialize a default pose with basic standing configuration
     pose = HumanoidPose{};
-    float const head_center_y = 0.5F * (HP::HEAD_TOP_Y + HP::CHIN_Y);
+    float const head_center_y = HP::HEAD_CENTER_Y;
     float const half_shoulder = 0.5F * HP::SHOULDER_WIDTH;
     pose.head_pos = QVector3D(0.0F, head_center_y, 0.0F);
     pose.head_r = HP::HEAD_RADIUS;

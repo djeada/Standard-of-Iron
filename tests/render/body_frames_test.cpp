@@ -12,7 +12,7 @@ protected:
   void SetUp() override {
     using HP = HumanProportions;
     // Initialize a basic pose
-    float const head_center_y = 0.5F * (HP::HEAD_TOP_Y + HP::CHIN_Y);
+    float const head_center_y = HP::HEAD_CENTER_Y;
     float const half_shoulder = 0.5F * HP::SHOULDER_WIDTH;
     pose.head_pos = QVector3D(0.0F, head_center_y, 0.0F);
     pose.head_r = HP::HEAD_RADIUS;
@@ -137,7 +137,7 @@ TEST_F(BodyFramesTest, MakeFrameLocalTransformCreatesValidMatrix) {
 TEST_F(BodyFramesTest, LegacyHeadFunctionsStillWork) {
   using HP = HumanProportions;
   HeadFrame headFrame;
-  float const head_center_y = 0.5F * (HP::HEAD_TOP_Y + HP::CHIN_Y);
+  float const head_center_y = HP::HEAD_CENTER_Y;
   headFrame.origin = QVector3D(0.0F, head_center_y, 0.0F);
   headFrame.right = QVector3D(1.0F, 0.0F, 0.0F);
   headFrame.up = QVector3D(0.0F, 1.0F, 0.0F);
@@ -168,7 +168,7 @@ TEST_F(BodyFramesTest, PoseHasBothHeadFrameAndBodyFrames) {
   EXPECT_TRUE(true); // Just verify it compiles
 
   // Set headFrame
-  float const head_center_y = 0.5F * (HP::HEAD_TOP_Y + HP::CHIN_Y);
+  float const head_center_y = HP::HEAD_CENTER_Y;
   pose.head_frame.origin = QVector3D(0.0F, head_center_y, 0.0F);
   pose.head_frame.radius = HP::HEAD_RADIUS;
 

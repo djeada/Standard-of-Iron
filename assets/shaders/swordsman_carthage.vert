@@ -6,6 +6,7 @@ layout(location = 2) in vec2 a_texCoord;
 
 uniform mat4 u_mvp;
 uniform mat4 u_model;
+uniform int u_materialId;
 
 out vec3 v_normal;
 out vec3 v_worldNormal;
@@ -32,8 +33,15 @@ vec3 fallbackUp(vec3 n) {
 }
 
 void main() {
+  vec3 position = a_position;
+  vec3 normal = a_normal;
+
+  // Only annotate helmet flag; shield bending removed to keep mesh intact.
+  bool is_shield = (u_materialId == 4);
+  bool is_helmet = (u_materialId == 2);
+
   mat3 normalMatrix = mat3(transpose(inverse(u_model)));
-  vec3 worldNormal = normalize(normalMatrix * a_normal);
+  vec3 worldNormal = normalize(normalMatrix * normal);
 
   vec3 t = normalize(cross(fallbackUp(worldNormal), worldNormal));
   if (length(t) < 1e-4)
@@ -41,20 +49,17 @@ void main() {
   t = normalize(t - worldNormal * dot(worldNormal, t));
   vec3 b = normalize(cross(worldNormal, t));
 
-  vec4 modelPos = u_model * vec4(a_position, 1.0);
+  vec4 modelPos = u_model * vec4(position, 1.0);
   vec3 worldPos = modelPos.xyz;
 
   float dentSeed = hash13(worldPos * 0.8 + worldNormal * 0.3);
-  float torsion = sin(worldPos.y * 9.5 + dentSeed * 15.0);
-  vec3 dentOffset = worldNormal * ((dentSeed - 0.5) * 0.01);
-  vec3 shearAxis = normalize(vec3(worldNormal.z, 0.2, -worldNormal.x));
-  vec3 shearOffset = shearAxis * torsion * 0.0035;
+  float torsion = 0.0; // removed bulk shear to avoid squashing
 
-  vec3 batteredPos = worldPos + dentOffset + shearOffset;
-  vec3 offsetPos = batteredPos + worldNormal * 0.005;
+  // Minimal acne offset; no sculpting except shield bend above.
+  vec3 offsetPos = worldPos + worldNormal * 0.003;
 
   mat4 invModel = inverse(u_model);
-  vec4 localPosition = invModel * vec4(batteredPos, 1.0);
+  vec4 localPosition = invModel * vec4(offsetPos, 1.0);
   gl_Position = u_mvp * localPosition;
 
   v_worldPos = offsetPos;
@@ -78,10 +83,10 @@ void main() {
 
   v_frontMask = clamp(smoothstep(-0.18, 0.18, -localPos.z), 0.0, 1.0);
 
-  float height = offsetPos.y;
-  if (height > 1.5) {
+  float armorHeight = offsetPos.y;
+  if (armorHeight > 1.5) {
     v_armorLayer = 0.0;
-  } else if (height > 0.8) {
+  } else if (armorHeight > 0.8) {
     v_armorLayer = 1.0;
   } else {
     v_armorLayer = 2.0;
