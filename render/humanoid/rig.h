@@ -2,6 +2,7 @@
 
 #include "../entity/registry.h"
 #include "../gl/humanoid/humanoid_types.h"
+#include "../gl/mesh.h"
 #include "humanoid_specs.h"
 #include <QMatrix4x4>
 #include <QVector3D>
@@ -16,6 +17,8 @@ class UnitComponent;
 } // namespace Engine::Core
 
 namespace Render::GL {
+
+auto torso_mesh_without_bottom_cap() -> Mesh *;
 
 class HumanoidRendererBase {
 public:
