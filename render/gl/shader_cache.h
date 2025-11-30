@@ -4,6 +4,7 @@
 #include "utils/resource_utils.h"
 #include <QDebug>
 #include <QFile>
+#include <QFileInfo>
 #include <QString>
 #include <QStringList>
 #include <memory>
@@ -170,10 +171,17 @@ public:
         loadBaseShader(QStringLiteral("horse_swordsman"));
     const auto [spearmanVert, spearmanFrag] =
         loadBaseShader(QStringLiteral("spearman"));
+    const auto [healerVert, healerFrag] =
+        loadBaseShader(QStringLiteral("healer"));
 
     const QStringList nationVariants = {QStringLiteral("kingdom_of_iron"),
                                         QStringLiteral("roman_republic"),
                                         QStringLiteral("carthage")};
+
+    auto resourceExists = [](const QString &path) -> bool {
+      QFileInfo const info(path);
+      return info.exists();
+    };
 
     auto loadVariant = [&](const QString &baseKey, const QString &baseVertPath,
                            const QString &baseFragPath) {
@@ -187,12 +195,12 @@ public:
                                        QStringLiteral(".frag");
 
         QString resolvedVert = resolve(variantVertRes);
-        if (!QFile::exists(resolvedVert)) {
+        if (!resourceExists(resolvedVert)) {
           resolvedVert = baseVertPath;
         }
 
         QString resolvedFrag = resolve(variantFragRes);
-        if (!QFile::exists(resolvedFrag)) {
+        if (!resourceExists(resolvedFrag)) {
           resolvedFrag = baseFragPath;
         }
 
@@ -204,6 +212,11 @@ public:
     loadVariant(QStringLiteral("spearman"), spearmanVert, spearmanFrag);
     loadVariant(QStringLiteral("swordsman"), swordsmanVert, swordsmanFrag);
     loadVariant(QStringLiteral("horse_swordsman"), horseKnightVert,
+                horseKnightFrag);
+    loadVariant(QStringLiteral("healer"), healerVert, healerFrag);
+    loadVariant(QStringLiteral("horse_archer"), horseKnightVert,
+                horseKnightFrag);
+    loadVariant(QStringLiteral("horse_spearman"), horseKnightVert,
                 horseKnightFrag);
   }
 
