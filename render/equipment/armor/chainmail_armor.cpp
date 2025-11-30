@@ -92,7 +92,9 @@ void ChainmailArmorRenderer::renderTorsoMail(const DrawContext &ctx,
 
   QVector3D steel_color = QVector3D(0.65F, 0.67F, 0.70F);
 
-  submitter.mesh(getUnitTorso(), mail_transform, steel_color, nullptr, 1.0F);
+  Mesh *torso_mesh = torso_mesh_without_bottom_cap();
+  submitter.mesh(torso_mesh != nullptr ? torso_mesh : getUnitTorso(),
+                 mail_transform, steel_color, nullptr, 1.0F);
 }
 
 void ChainmailArmorRenderer::renderShoulderGuards(const DrawContext &ctx,

@@ -50,16 +50,16 @@ void ArmorHeavyCarthageRenderer::render(const DrawContext &ctx,
       waist.radius > 0.0F ? waist.radius : torso.radius * 0.90F;
   float const head_r = head.radius > 0.0F ? head.radius : torso.radius * 0.60F;
 
-  QVector3D top = torso.origin + up * (torso_r * 0.45F);
+  QVector3D top = torso.origin + up * (torso_r * 0.60F);
   QVector3D head_guard = head.origin - head_up * (head_r * 1.35F);
   if (QVector3D::dotProduct(top - head_guard, up) > 0.0F) {
     top = head_guard - up * (torso_r * 0.06F);
   }
 
-  QVector3D bottom =
-      waist.origin + waist_up * (waist_r * 0.04F) - forward * (torso_r * 0.02F);
-  QVector3D chainmail_bottom =
-      waist.origin + waist_up * (waist_r * 0.02F) - forward * (torso_r * 0.04F);
+  QVector3D bottom = waist.origin - waist_up * (waist_r * 0.20F) -
+                     forward * (torso_r * 0.015F);
+  QVector3D chainmail_bottom = waist.origin - waist_up * (waist_r * 0.18F) -
+                               forward * (torso_r * 0.020F);
 
   QVector3D bronze_color = QVector3D(0.72F, 0.53F, 0.28F);
   QVector3D bronze_core = bronze_color * 0.92F;
@@ -70,17 +70,19 @@ void ArmorHeavyCarthageRenderer::render(const DrawContext &ctx,
                         int material_id = 1) {
     QMatrix4x4 m = cylinderBetween(ctx.model, a, b, radius);
     m.scale(scale_x, 1.0F, depth_scale_for(base_z));
-    submitter.mesh(getUnitTorso(), m, color, nullptr, 1.0F, material_id);
+    Mesh *torso_mesh = torso_mesh_without_bottom_cap();
+    submitter.mesh(torso_mesh != nullptr ? torso_mesh : getUnitTorso(), m,
+                   color, nullptr, 1.0F, material_id);
   };
 
-  draw_torso(top, chainmail_bottom, torso_r * 0.90F, chainmail_color, 1.00F,
-             0.88F, 1);
+  draw_torso(top, chainmail_bottom, torso_r * 1.06F, chainmail_color, 1.05F,
+             1.02F, 1);
 
   draw_torso(top + forward * (torso_r * 0.02F),
-             bottom + forward * (torso_r * 0.02F), torso_r * 0.98F,
-             bronze_color, 1.05F, 0.84F, 1);
+             bottom + forward * (torso_r * 0.02F), torso_r * 1.10F,
+             bronze_color, 1.08F, 1.00F, 1);
 
-  draw_torso(top, bottom, torso_r * 0.90F, bronze_core, 0.98F, 0.80F, 1);
+  draw_torso(top, bottom, torso_r * 1.04F, bronze_core, 1.03F, 0.95F, 1);
 }
 
 } // namespace Render::GL
