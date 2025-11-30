@@ -24,9 +24,13 @@ uniform int u_materialId;
 
 out vec4 FragColor;
 
-const vec3 k_bronze_base = vec3(0.60, 0.42, 0.18);
-const vec3 k_linen_base = vec3(0.88, 0.82, 0.72);
-const vec3 k_leather_base = vec3(0.38, 0.25, 0.15);
+// ---------------------------------------------------------------------------
+// Utilities
+// ---------------------------------------------------------------------------
+const float k_pi = 3.14159265;
+
+float saturate(float v) { return clamp(v, 0.0, 1.0); }
+vec3 saturate(vec3 v) { return clamp(v, 0.0, 1.0); }
 
 float hash21(vec2 p) {
   p = fract(p * vec2(234.34, 435.345));
@@ -65,8 +69,8 @@ float fbm(vec3 p) {
 }
 
 vec3 hemi_ambient(vec3 n) {
-  float up = clamp(n.y * 0.5 + 0.5, 0.0, 1.0);
-  vec3 sky = vec3(0.57, 0.66, 0.78);
+  float up = saturate(n.y * 0.5 + 0.5);
+  vec3 sky = vec3(0.54, 0.68, 0.82);
   vec3 ground = vec3(0.32, 0.26, 0.20);
   return mix(ground, sky, up);
 }
@@ -74,7 +78,7 @@ vec3 hemi_ambient(vec3 n) {
 float D_GGX(float NdotH, float a) {
   float a2 = a * a;
   float d = (NdotH * NdotH) * (a2 - 1.0) + 1.0;
-  return a2 / max(3.14159265 * d * d, 1e-6);
+  return a2 / max(k_pi * d * d, 1e-6);
 }
 
 float geometry_schlick_ggx(float NdotX, float k) {
@@ -95,6 +99,27 @@ vec3 perturb(vec3 N, vec3 T, vec3 B, vec3 amount) {
   return normalize(N + T * amount.x + B * amount.y);
 }
 
+float chainmail_rings(vec2 p) {
+  vec2 uv = p * 32.0;
+
+  vec2 g0 = fract(uv) - 0.5;
+  float r0 = length(g0);
+  float fw0 = fwidth(r0) * 1.2;
+  float ring0 = smoothstep(0.30 + fw0, 0.30 - fw0, r0) -
+                smoothstep(0.20 + fw0, 0.20 - fw0, r0);
+
+  vec2 g1 = fract(uv + vec2(0.5, 0.0)) - 0.5;
+  float r1 = length(g1);
+  float fw1 = fwidth(r1) * 1.2;
+  float ring1 = smoothstep(0.30 + fw1, 0.30 - fw1, r1) -
+                smoothstep(0.20 + fw1, 0.20 - fw1, r1);
+
+  return (ring0 + ring1) * 0.15;
+}
+
+// ---------------------------------------------------------------------------
+// Material sampling
+// ---------------------------------------------------------------------------
 struct MaterialSample {
   vec3 color;
   vec3 normal;
@@ -102,115 +127,210 @@ struct MaterialSample {
   vec3 F0;
 };
 
-MaterialSample sample_hammered_bronze(vec3 base_color, vec3 pos, vec3 N, vec3 T,
-                                      vec3 B) {
+MaterialSample sample_skin(vec3 base_color, vec3 pos, vec3 N, vec3 T, vec3 B) {
   MaterialSample m;
-  float hammer = fbm(pos * 12.0);
-  float patina = fbm(pos * 5.0 + vec3(2.7, 0.3, 5.5));
-  vec3 Np =
-      perturb(N, T, B, vec3((hammer - 0.5) * 0.12, (patina - 0.5) * 0.07, 0.0));
-
-  vec3 tint = mix(k_bronze_base, base_color, 0.35);
-  tint = mix(tint, vec3(0.20, 0.47, 0.40), clamp(patina * 0.55, 0.0, 0.6));
-  tint += vec3(0.05) * pow(max(dot(Np, vec3(0.0, 1.0, 0.1)), 0.0), 5.0);
-
-  m.color = tint;
-  m.normal = Np;
-  m.roughness = clamp(0.3 + hammer * 0.25 + patina * 0.18, 0.18, 0.72);
-  m.F0 = mix(vec3(0.06), vec3(0.92, 0.66, 0.46), 0.9);
-  return m;
-}
-
-MaterialSample sample_muscle_bronze(vec3 base_color, vec3 pos, vec3 N, vec3 T,
-                                    vec3 B, float sculpt, float front_mask) {
-  MaterialSample m;
-  float hammer = fbm(pos * 9.0);
-  float profile = sculpt * 2.0 - 1.0;
-  float chest_line = sin(pos.x * 6.0 + profile * 3.5);
-  float ab_divide = sin(pos.y * 11.0 - profile * 4.0);
+  float pores = fbm(pos * 12.0);
+  float freckles = smoothstep(0.55, 0.78, fbm(pos * 6.5 + vec3(1.7, 0.0, 0.3)));
   vec3 Np = perturb(N, T, B,
-                    vec3((chest_line + profile * 0.6) * 0.06,
-                         (ab_divide + front_mask * 0.4) * 0.05, 0.0));
+                    vec3((pores - 0.5) * 0.05, (freckles - 0.5) * 0.04, 0.0));
 
-  vec3 tint = mix(k_bronze_base, base_color, 0.65);
-  tint = mix(tint, tint * vec3(1.05, 0.98, 0.90),
-             smoothstep(-0.2, 0.8, profile) * 0.35);
-  tint += vec3(0.08) * front_mask * smoothstep(0.45, 0.95, sculpt);
-  tint -= vec3(0.04) * hammer;
+  vec3 tint = mix(base_color, vec3(0.93, 0.80, 0.68), 0.35);
+  tint += vec3(0.03) * freckles;
 
   m.color = tint;
   m.normal = Np;
-  m.roughness = clamp(0.28 + hammer * 0.25 - front_mask * 0.05, 0.16, 0.70);
-  m.F0 = mix(vec3(0.08), vec3(0.94, 0.68, 0.44), 0.85);
-  return m;
-}
-
-MaterialSample sample_chainmail(vec3 base_color, vec3 pos, vec3 N, vec3 T,
-                                vec3 B, float band_mix) {
-  MaterialSample m;
-  vec2 uv = pos.xz * 12.0 + pos.yx * 6.0;
-  float ring_a = sin(uv.x) * cos(uv.y);
-  float ring_b = sin((uv.x + uv.y) * 0.5);
-  float ring_pattern = mix(ring_a, ring_b, 0.5);
-  float weave = fbm(vec3(uv, 0.0) * 0.6 + v_layerNoise);
-  vec3 Np = perturb(
-      N, T, B, vec3((ring_pattern - 0.5) * 0.05, (band_mix - 0.5) * 0.04, 0.0));
-
-  vec3 tint = mix(vec3(0.46, 0.48, 0.53), base_color, 0.3);
-  tint *= 1.0 - weave * 0.12;
-  tint += vec3(0.05) * smoothstep(0.4, 0.9, band_mix);
-
-  m.color = tint;
-  m.normal = Np;
-  m.roughness = clamp(0.42 - ring_pattern * 0.08 + weave * 0.18, 0.2, 0.85);
-  m.F0 = vec3(0.14);
-  return m;
-}
-
-MaterialSample sample_lamellar_linen(vec3 base_color, vec3 pos, vec3 N, vec3 T,
-                                     vec3 B) {
-  MaterialSample m;
-  float slat = sin(pos.x * 32.0 + v_plateStress * 1.5);
-  float seam = v_lamellaPhase;
-  float edge = smoothstep(0.92, 1.0, seam) + smoothstep(0.0, 0.08, seam);
-  float weave = fbm(pos * 6.0 + vec3(v_layerNoise));
-  vec3 Np = perturb(N, T, B, vec3(slat * 0.04, weave * 0.03, 0.0));
-
-  vec3 tint = mix(k_linen_base, base_color, 0.4);
-  tint *= 1.0 - 0.12 * weave;
-  tint = mix(tint, tint * vec3(0.82, 0.76, 0.70),
-             smoothstep(0.55, 1.0, v_bodyHeight));
-
-  float plate_highlight = edge * 0.10;
-  float rivet_noise = smoothstep(0.85, 1.0, seam) *
-                      hash21(vec2(pos.x * 9.0, pos.y * 7.0)) * 0.04;
-
-  m.color = tint + vec3(plate_highlight + rivet_noise);
-  m.normal = Np;
-  m.roughness = clamp(0.62 + weave * 0.18 - edge * 0.1, 0.35, 0.9);
+  m.roughness = clamp(0.48 + pores * 0.10, 0.32, 0.72);
   m.F0 = vec3(0.028);
   return m;
 }
 
-MaterialSample sample_dyed_leather(vec3 base_color, vec3 pos, vec3 N, vec3 T,
-                                   vec3 B) {
+MaterialSample sample_bronze_helmet(vec3 base_color, vec3 pos, vec3 N, vec3 T,
+                                    vec3 B) {
   MaterialSample m;
-  float grain = fbm(pos * 4.0);
-  float crack = fbm(pos * 9.0 + vec3(0.0, 1.7, 2.3));
+  float hammer = fbm(pos * 14.0 + vec3(v_layerNoise));
+  float patina = fbm(pos * 5.5 + vec3(2.1, 0.0, 4.2));
+  float ridge = smoothstep(0.82, 1.02, v_bodyHeight);
+  float rim = smoothstep(0.64, 0.86, v_bodyHeight) *
+              (1.0 - smoothstep(0.94, 1.12, v_bodyHeight));
   vec3 Np =
-      perturb(N, T, B, vec3((grain - 0.5) * 0.08, (crack - 0.5) * 0.06, 0.0));
+      perturb(N, T, B, vec3((hammer - 0.5) * 0.10, (patina - 0.5) * 0.08, 0.0));
 
-  vec3 tint = mix(k_leather_base, base_color, 0.5);
-  tint *= 1.0 - 0.12 * grain;
-  tint += vec3(0.05) * smoothstep(0.4, 0.9, crack);
+  vec3 tint = mix(vec3(0.62, 0.44, 0.18), base_color, 0.35);
+  tint = mix(tint, vec3(0.26, 0.48, 0.38),
+             clamp(patina * 0.65 + v_layerNoise * 0.2, 0.0, 0.8));
+  tint += vec3(0.10) * ridge;
+  tint += vec3(0.06) * rim;
 
   m.color = tint;
   m.normal = Np;
-  m.roughness = clamp(0.55 + grain * 0.25 - crack * 0.18, 0.25, 0.95);
+  m.roughness =
+      clamp(0.24 + hammer * 0.22 + patina * 0.16 - rim * 0.08, 0.14, 0.70);
+  m.F0 = mix(vec3(0.08), vec3(0.94, 0.82, 0.58),
+             clamp(0.42 + patina * 0.25 + rim * 0.15, 0.0, 1.0));
+  return m;
+}
+
+MaterialSample sample_bronze_cuirass(vec3 base_color, vec3 pos, vec3 N, vec3 T,
+                                     vec3 B) {
+  MaterialSample m;
+  float hammer = fbm(pos * 11.0);
+  float profile = v_cuirassProfile * 2.0 - 1.0;
+  float front = v_frontMask;
+
+  // Add stronger anatomical emboss + seam bevels
+  float rib = sin(pos.x * 8.0 + profile * 3.2);
+  float ab = sin(pos.y * 13.0 - profile * 3.8);
+  float seam = smoothstep(0.42, 0.58, fract(pos.y * 4.5)) * 0.6;
+  float edge = smoothstep(0.82, 0.96, v_bodyHeight) +
+               smoothstep(0.18, 0.04, v_bodyHeight);
+
+  vec3 Np = perturb(N, T, B,
+                    vec3((rib + profile * 0.7) * 0.06 + seam * 0.05,
+                         (ab + front * 0.45) * 0.05 + edge * 0.04, 0.0));
+
+  // Force a stronger bronze anchor; palette only tints slightly.
+  vec3 tint = mix(vec3(0.62, 0.46, 0.20), base_color, 0.20);
+  vec3 patina_color = vec3(0.26, 0.48, 0.38);
+  float patina = fbm(pos * 4.5 + vec3(1.6, 0.0, 2.3));
+  tint = mix(tint, patina_color,
+             clamp(patina * 0.55 + v_layerNoise * 0.2, 0.0, 0.65));
+  tint += vec3(0.08) * front * smoothstep(0.45, 0.95, v_cuirassProfile);
+  tint += vec3(0.07) * edge;
+  tint -= vec3(0.05) * hammer;
+
+  // Grime and cavity darkening toward the waist; edge brightening on ridges.
+  float downward = smoothstep(0.35, 0.05, v_bodyHeight);
+  float curvature = length(dFdx(N)) + length(dFdy(N));
+  float edgeWear = smoothstep(0.12, 0.35, curvature);
+  tint = mix(tint, tint * vec3(0.78, 0.72, 0.66), downward * 0.4);
+  tint = mix(tint, tint * vec3(1.16, 1.10, 1.02), edgeWear * 0.6);
+
+  m.color = tint;
+  m.normal = Np;
+  m.roughness =
+      clamp(0.20 + hammer * 0.16 + patina * 0.08 - edgeWear * 0.12, 0.08, 0.60);
+  m.F0 = mix(vec3(0.08), vec3(0.94, 0.72, 0.50),
+             clamp(0.82 + edgeWear * 0.16, 0.0, 1.0));
+  return m;
+}
+
+MaterialSample sample_chainmail(vec3 base_color, vec3 pos, vec3 N, vec3 T,
+                                vec3 B) {
+  MaterialSample m;
+  vec2 uv = pos.xz * 14.0 + pos.yx * 5.5;
+  float rings = chainmail_rings(uv * 0.55 + v_chainmailMix * 0.25);
+  float weave = fbm(vec3(uv, 0.0) * 0.65 + v_layerNoise);
+  float gaps = smoothstep(0.25, 0.55, weave);
+  vec3 Np =
+      perturb(N, T, B, vec3((rings - 0.5) * 0.22, (weave - 0.5) * 0.14, 0.0));
+
+  vec3 tint = mix(vec3(0.52, 0.54, 0.60), base_color, 0.20);
+  tint = mix(tint, tint * vec3(0.32, 0.28, 0.24),
+             clamp(v_layerNoise * 0.45, 0.0, 0.8));
+  tint += vec3(0.10) * rings;
+  tint -= vec3(0.06) * gaps;
+
+  m.color = tint;
+  m.normal = Np;
+  m.roughness = clamp(0.34 + rings * 0.14 + weave * 0.18, 0.18, 0.85);
+  m.F0 = vec3(0.16, 0.16, 0.18);
+  return m;
+}
+
+MaterialSample sample_linen(vec3 base_color, vec3 pos, vec3 N, vec3 T, vec3 B) {
+  MaterialSample m;
+  float warp = sin(pos.x * 120.0) * 0.04;
+  float weft = sin(pos.z * 116.0) * 0.04;
+  float slub = fbm(pos * 7.0) * 0.05;
+  vec3 Np = normalize(N + T * (warp + slub) + B * (weft + slub * 0.5));
+
+  vec3 tint = mix(vec3(0.88, 0.82, 0.72), base_color, 0.45);
+  tint *= 1.0 - slub * 0.12;
+  tint = mix(tint, tint * vec3(0.82, 0.76, 0.70),
+             smoothstep(0.55, 1.0, v_bodyHeight));
+
+  m.color = tint;
+  m.normal = Np;
+  m.roughness = clamp(0.62 + slub * 0.12, 0.35, 0.90);
+  m.F0 = vec3(0.028);
+  return m;
+}
+
+MaterialSample sample_leather(vec3 base_color, vec3 pos, vec3 N, vec3 T,
+                              vec3 B) {
+  MaterialSample m;
+  float grain = fbm(pos * 6.0);
+  float crack = fbm(pos * 11.0 + vec3(0.0, 1.7, 2.3));
+  vec3 Np =
+      perturb(N, T, B, vec3((grain - 0.5) * 0.10, (crack - 0.5) * 0.08, 0.0));
+
+  vec3 tint = mix(vec3(0.38, 0.25, 0.15), base_color, 0.45);
+  tint *= 1.0 - 0.10 * grain;
+  tint += vec3(0.05) * smoothstep(0.4, 0.9, crack + v_layerNoise * 0.2);
+  tint = mix(tint, tint * vec3(0.85, 0.80, 0.72),
+             smoothstep(0.35, 0.15, v_bodyHeight)); // dustier toward ground
+
+  m.color = tint;
+  m.normal = Np;
+  m.roughness = clamp(0.55 + grain * 0.22 - crack * 0.12, 0.25, 0.95);
   m.F0 = vec3(0.035);
   return m;
 }
 
+MaterialSample sample_wood(vec3 base_color, vec3 pos, vec3 N, vec3 T, vec3 B) {
+  MaterialSample m;
+  float grain = fbm(pos * 10.0);
+  float rings = sin(pos.y * 24.0 + pos.x * 3.0);
+  vec3 Np = perturb(N, T, B, vec3(grain * 0.06, rings * 0.04, 0.0));
+
+  vec3 tint = mix(vec3(0.42, 0.32, 0.20), base_color, 0.45);
+  tint *= 1.0 + grain * 0.10 + rings * 0.04;
+
+  m.color = tint;
+  m.normal = Np;
+  m.roughness = clamp(0.52 + grain * 0.18, 0.28, 0.90);
+  m.F0 = vec3(0.028);
+  return m;
+}
+
+MaterialSample sample_steel(vec3 base_color, vec3 pos, vec3 N, vec3 T, vec3 B) {
+  MaterialSample m;
+  float brushed = abs(sin(pos.y * 90.0)) * 0.04;
+  float dent = fbm(pos * 12.0) * (0.4 + v_layerNoise * 0.3);
+  vec3 Np = perturb(N, T, B, vec3((brushed - 0.5) * 0.06, dent * 0.05, 0.0));
+
+  vec3 tint = mix(vec3(0.74, 0.76, 0.80), base_color, 0.45);
+  tint += vec3(0.06) * brushed;
+  tint -= vec3(0.08) * dent;
+
+  m.color = tint;
+  m.normal = Np;
+  m.roughness = clamp(0.20 + brushed * 0.20 + dent * 0.18 - v_layerNoise * 0.08,
+                      0.08, 0.80);
+  m.F0 = vec3(0.62, 0.64, 0.66);
+  return m;
+}
+
+MaterialSample sample_shield(vec3 base_color, vec3 pos, vec3 N, vec3 T,
+                             vec3 B) {
+  MaterialSample wood = sample_wood(base_color, pos * 0.9, N, T, B);
+  MaterialSample boss =
+      sample_steel(vec3(0.78, 0.74, 0.62), pos * 1.4, N, T, B);
+
+  float boss_mask = smoothstep(0.12, 0.04, length(pos.xz));
+  boss_mask = max(boss_mask, v_frontMask * 0.3);
+
+  MaterialSample m;
+  m.color = mix(wood.color, boss.color, boss_mask);
+  m.normal = normalize(mix(wood.normal, boss.normal, boss_mask));
+  m.roughness = mix(wood.roughness, boss.roughness, boss_mask);
+  m.F0 = mix(wood.F0, boss.F0, boss_mask);
+  return m;
+}
+
+// ---------------------------------------------------------------------------
+// Main
+// ---------------------------------------------------------------------------
 void main() {
   vec3 base_color = u_color;
   if (u_useTexture) {
@@ -218,58 +338,80 @@ void main() {
   }
 
   // Material ID: 0=body/skin, 1=armor, 2=helmet, 3=weapon, 4=shield
+  bool is_skin = (u_materialId == 0);
   bool is_armor = (u_materialId == 1);
   bool is_helmet = (u_materialId == 2);
   bool is_weapon = (u_materialId == 3);
   bool is_shield = (u_materialId == 4);
-
-  // Use material IDs exclusively (no fallbacks)
-  bool helmet_region = is_helmet;
-  bool torso_region = is_armor;
 
   vec3 Nw = normalize(v_worldNormal);
   vec3 Tw = normalize(v_tangent);
   vec3 Bw = normalize(v_bitangent);
 
   MaterialSample mat;
-  if (helmet_region) {
-    mat = sample_hammered_bronze(base_color, v_worldPos, Nw, Tw, Bw);
-  } else if (torso_region) {
-    MaterialSample bronze = sample_muscle_bronze(
-        base_color, v_worldPos, Nw, Tw, Bw, v_cuirassProfile, v_frontMask);
-    MaterialSample mail = sample_chainmail(
-        base_color, v_worldPos * 1.1, Nw, Tw, Bw,
-        clamp(v_chainmailMix + (1.0 - v_frontMask) * 0.25, 0.0, 1.0));
-    float mail_blend = smoothstep(0.3, 0.85, v_chainmailMix) *
-                       smoothstep(0.1, 0.85, 1.0 - v_frontMask);
-    float bronze_blend = 1.0 - mail_blend;
-    mat.color = bronze.color * bronze_blend + mail.color * mail_blend;
-    mat.normal =
-        normalize(bronze.normal * bronze_blend + mail.normal * mail_blend);
-    mat.roughness = mix(bronze.roughness, mail.roughness, mail_blend);
-    mat.F0 = mix(bronze.F0, mail.F0, mail_blend);
-  } else {
-    MaterialSample greave =
-        sample_hammered_bronze(base_color, v_worldPos * 1.2, Nw, Tw, Bw);
-    MaterialSample skirt_mail =
-        sample_chainmail(base_color, v_worldPos * 0.9, Nw, Tw, Bw,
-                         clamp(v_chainmailMix + 0.35, 0.0, 1.0));
-    MaterialSample skirt_leather =
-        sample_dyed_leather(base_color, v_worldPos * 0.8, Nw, Tw, Bw);
-    float mail_bias = smoothstep(0.25, 0.75, v_chainmailMix);
-    float bronze_mix = smoothstep(0.2, 0.6, v_layerNoise);
-    float skirt_blend = mix(mail_bias, bronze_mix, 0.4);
-    float mail_weight = clamp(skirt_blend, 0.0, 1.0);
-    mat.color = mix(skirt_leather.color, greave.color, bronze_mix);
-    mat.color = mix(mat.color, skirt_mail.color, mail_weight * 0.7);
-    mat.normal =
-        normalize(mix(skirt_leather.normal, greave.normal, bronze_mix));
-    mat.normal =
-        normalize(mix(mat.normal, skirt_mail.normal, mail_weight * 0.7));
-    mat.roughness = mix(skirt_leather.roughness, greave.roughness, bronze_mix);
-    mat.roughness = mix(mat.roughness, skirt_mail.roughness, mail_weight * 0.7);
-    mat.F0 = mix(skirt_leather.F0, greave.F0, bronze_mix);
-    mat.F0 = mix(mat.F0, skirt_mail.F0, mail_weight * 0.7);
+  if (is_helmet) {
+    mat = sample_bronze_helmet(base_color, v_worldPos, Nw, Tw, Bw);
+  } else if (is_armor) {
+    // Override palette to canonical materials so armor is visibly metal.
+    vec3 bronze_base = vec3(0.62, 0.46, 0.20);
+    vec3 steel_base = vec3(0.68, 0.70, 0.74);
+    vec3 linen_base = vec3(0.86, 0.80, 0.72);
+    vec3 leather_base = vec3(0.38, 0.25, 0.15);
+
+    MaterialSample cuirass =
+        sample_bronze_cuirass(bronze_base, v_worldPos, Nw, Tw, Bw);
+    MaterialSample mail =
+        sample_chainmail(steel_base, v_worldPos * 1.05, Nw, Tw, Bw);
+    MaterialSample linen =
+        sample_linen(linen_base, v_worldPos * 1.0, Nw, Tw, Bw);
+    MaterialSample leather =
+        sample_leather(leather_base, v_worldPos * 0.9, Nw, Tw, Bw);
+
+    float torsoBand = 1.0 - step(1.5, v_armorLayer);
+    float skirtBand = step(1.0, v_armorLayer);
+    float mailBlend =
+        clamp(smoothstep(0.15, 0.78, v_chainmailMix + v_layerNoise * 0.25),
+              0.15, 1.0) *
+        torsoBand;
+    float cuirassBlend = torsoBand;
+    float leatherBlend = skirtBand * 0.65;
+    float linenBlend = skirtBand * 0.45;
+
+    mat.color = cuirass.color;
+    mat.color = mix(mat.color, mail.color, mailBlend);
+    mat.color = mix(mat.color, linen.color, linenBlend);
+    mat.color = mix(mat.color, leather.color, leatherBlend);
+    // Make sure metal stays bright: bias toward bronze/steel luma.
+    float armor_luma = dot(mat.color, vec3(0.299, 0.587, 0.114));
+    mat.color =
+        mix(mat.color, mat.color * 1.25, smoothstep(0.35, 0.65, armor_luma));
+
+    mat.normal = cuirass.normal;
+    mat.normal = normalize(mix(mat.normal, mail.normal, mailBlend));
+    mat.normal = normalize(mix(mat.normal, linen.normal, linenBlend));
+    mat.normal = normalize(mix(mat.normal, leather.normal, leatherBlend));
+
+    mat.roughness = cuirass.roughness;
+    mat.roughness = mix(mat.roughness, mail.roughness, mailBlend);
+    mat.roughness = mix(mat.roughness, linen.roughness, linenBlend);
+    mat.roughness = mix(mat.roughness, leather.roughness, leatherBlend);
+
+    mat.F0 = cuirass.F0;
+    mat.F0 = mix(mat.F0, mail.F0, mailBlend);
+    mat.F0 = mix(mat.F0, linen.F0, linenBlend);
+    mat.F0 = mix(mat.F0, leather.F0, leatherBlend);
+  } else if (is_weapon) {
+    if (v_bodyHeight > 0.55) {
+      mat = sample_steel(base_color, v_worldPos * 1.4, Nw, Tw, Bw);
+    } else if (v_bodyHeight > 0.25) {
+      mat = sample_wood(base_color, v_worldPos * 0.9, Nw, Tw, Bw);
+    } else {
+      mat = sample_leather(base_color, v_worldPos * 1.0, Nw, Tw, Bw);
+    }
+  } else if (is_shield) {
+    mat = sample_shield(base_color, v_worldPos, Nw, Tw, Bw);
+  } else { // skin / cloth under layer
+    mat = sample_skin(base_color, v_worldPos, Nw, Tw, Bw);
   }
 
   vec3 L = normalize(vec3(0.45, 1.12, 0.35));
@@ -281,8 +423,8 @@ void main() {
   float NdotH = max(dot(mat.normal, H), 0.0);
   float VdotH = max(dot(V, H), 0.0);
 
-  float wrap = helmet_region ? 0.15 : (torso_region ? 0.28 : 0.32);
-  float diff = max(NdotL * (1.0 - wrap) + wrap, 0.18);
+  float wrap = is_helmet ? 0.15 : (is_armor ? 0.12 : 0.32);
+  float diff = max(NdotL * (1.0 - wrap) + wrap, 0.10);
 
   float a = max(0.01, mat.roughness * mat.roughness);
   float D = D_GGX(NdotH, a);
@@ -291,7 +433,7 @@ void main() {
   vec3 spec = (D * G * F) / max(4.0 * NdotL * NdotV + 1e-5, 1e-5);
 
   float kd = 1.0 - max(max(F.r, F.g), F.b);
-  if (helmet_region) {
+  if (is_helmet) {
     kd *= 0.25;
   }
 
@@ -305,5 +447,5 @@ void main() {
   vec3 lighting =
       ambient * color * 0.55 + color * kd * diff + spec * max(NdotL, 0.0);
 
-  FragColor = vec4(clamp(lighting, 0.0, 1.0), u_alpha);
+  FragColor = vec4(saturate(lighting), u_alpha);
 }
