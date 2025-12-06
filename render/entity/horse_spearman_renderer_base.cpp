@@ -48,7 +48,8 @@ HorseSpearmanRendererBase::HorseSpearmanRendererBase(
 }
 
 auto HorseSpearmanRendererBase::get_proportion_scaling() const -> QVector3D {
-  return k_default_proportion_scale;
+
+  return QVector3D{0.88F, 0.86F, 0.90F};
 }
 
 auto HorseSpearmanRendererBase::get_mount_scale() const -> float {
@@ -58,9 +59,9 @@ auto HorseSpearmanRendererBase::get_mount_scale() const -> float {
 void HorseSpearmanRendererBase::adjust_variation(
     const DrawContext &, uint32_t, VariationParams &variation) const {
   variation.height_scale = 0.90F;
-  variation.bulk_scale = 0.85F;
+  variation.bulk_scale = 0.78F;
   variation.stance_width = 0.60F;
-  variation.arm_swing_amp = 0.45F;
+  variation.arm_swing_amp = 0.40F;
   variation.walk_speed_mult = 1.0F;
   variation.posture_slump = 0.0F;
   variation.shoulder_tilt = 0.0F;
@@ -138,6 +139,14 @@ void HorseSpearmanRendererBase::draw_equipment(
         registry.get(EquipmentCategory::Weapon, m_config.shield_equipment_id);
     if (shield) {
       shield->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
+    }
+  }
+
+  if (m_config.has_shoulder && !m_config.shoulder_equipment_id.empty()) {
+    auto shoulder_cover =
+        registry.get(EquipmentCategory::Armor, m_config.shoulder_equipment_id);
+    if (shoulder_cover) {
+      shoulder_cover->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
     }
   }
 }
