@@ -112,7 +112,7 @@ struct SpearmanExtras {
 class SpearmanRenderer : public HumanoidRendererBase {
 public:
   auto get_proportion_scaling() const -> QVector3D override {
-    return {1.10F, 1.02F, 1.05F};
+    return {1.02F, 0.96F, 0.92F};
   }
 
 private:
@@ -243,6 +243,12 @@ public:
     auto armor = registry.get(EquipmentCategory::Armor, "roman_light_armor");
     if (armor) {
       armor->render(ctx, pose.body_frames, v.palette, anim, out);
+    }
+
+    auto shoulder_cover =
+        registry.get(EquipmentCategory::Armor, "roman_shoulder_cover");
+    if (shoulder_cover) {
+      shoulder_cover->render(ctx, pose.body_frames, v.palette, anim, out);
     }
   }
 
