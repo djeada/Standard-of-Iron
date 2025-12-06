@@ -96,8 +96,6 @@ void WaterPipeline::cache_road_uniforms() {
 
   m_road_uniforms.mvp = m_road_shader->uniformHandle("u_mvp");
   m_road_uniforms.model = m_road_shader->uniformHandle("u_model");
-  m_road_uniforms.view = m_road_shader->uniformHandle("u_view");
-  m_road_uniforms.projection = m_road_shader->uniformHandle("u_projection");
   m_road_uniforms.color = m_road_shader->uniformHandle("u_color");
   m_road_uniforms.light_direction =
       m_road_shader->uniformHandle("u_light_direction");
