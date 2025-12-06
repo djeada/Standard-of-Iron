@@ -112,7 +112,7 @@ struct SpearmanExtras {
 class SpearmanRenderer : public HumanoidRendererBase {
 public:
   auto get_proportion_scaling() const -> QVector3D override {
-    return {1.02F, 0.96F, 0.92F};
+    return {0.70F, 0.80F, 0.76F};
   }
 
 private:
