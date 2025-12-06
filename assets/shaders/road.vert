@@ -6,8 +6,6 @@ layout(location = 2) in vec2 a_tex_coord;
 
 uniform mat4 u_mvp;
 uniform mat4 u_model;
-uniform mat4 u_view;
-uniform mat4 u_projection;
 
 out vec3 v_normal;
 out vec2 v_tex_coord;

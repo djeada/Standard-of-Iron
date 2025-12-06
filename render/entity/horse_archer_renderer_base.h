@@ -17,11 +17,17 @@ struct HorseArcherRendererConfig {
   std::string quiver_equipment_id;
   std::string helmet_equipment_id;
   std::string armor_equipment_id;
+  std::string cloak_equipment_id;
   QVector3D metal_color{0.72F, 0.73F, 0.78F};
   QVector3D fletching_color{0.85F, 0.40F, 0.40F};
+  QVector3D cloak_color{0.14F, 0.38F, 0.54F};
+  QVector3D cloak_trim_color{0.75F, 0.66F, 0.42F};
+  int cloak_back_material_id = 5;
+  int cloak_shoulder_material_id = 6;
   float mount_scale = 0.75F;
   bool has_bow = true;
   bool has_quiver = true;
+  bool has_cloak = false;
   float helmet_offset_moving = 0.0F;
   std::vector<std::shared_ptr<IHorseEquipmentRenderer>> horse_attachments;
 };
