@@ -2,6 +2,7 @@
 #include "armor/armor_light_carthage.h"
 #include "armor/carthage_shoulder_cover.h"
 #include "armor/chainmail_armor.h"
+#include "armor/cloak_renderer.h"
 #include "armor/kingdom_armor.h"
 #include "armor/roman_armor.h"
 #include "armor/roman_shoulder_cover.h"
@@ -125,6 +126,12 @@ void registerBuiltInEquipment() {
   registry.registerEquipment(EquipmentCategory::Armor,
                              "carthage_shoulder_cover",
                              carthage_shoulder_cover);
+  CloakConfig carthage_cloak_config;
+  carthage_cloak_config.primary_color = QVector3D(0.14F, 0.38F, 0.54F);
+  carthage_cloak_config.trim_color = QVector3D(0.75F, 0.66F, 0.42F);
+  auto cloak_carthage = std::make_shared<CloakRenderer>(carthage_cloak_config);
+  registry.registerEquipment(EquipmentCategory::Armor, "cloak_carthage",
+                             cloak_carthage);
 
   auto sword = std::make_shared<SwordRenderer>();
   registry.registerEquipment(EquipmentCategory::Weapon, "sword", sword);

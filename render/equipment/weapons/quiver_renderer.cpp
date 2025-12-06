@@ -26,11 +26,16 @@ void QuiverRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
                             const HumanoidAnimationContext &,
                             ISubmitter &submitter) {
 
-  QVector3D const spine_mid =
-      (frames.shoulder_l.origin + frames.shoulder_r.origin) * 0.5F;
-  QVector3D const quiver_offset(-0.08F, 0.10F, -0.25F);
-  QVector3D const q_top = spine_mid + quiver_offset;
-  QVector3D const q_base = q_top + QVector3D(-0.02F, -0.30F, 0.03F);
+  QVector3D const hip_r =
+      frames.waist.origin + frames.waist.right * frames.waist.radius * 0.9F;
+
+  QVector3D const quiver_pos =
+      hip_r + frames.waist.right * 0.15F - frames.waist.up * 0.10F;
+
+  QVector3D const q_top =
+      quiver_pos + frames.waist.up * 0.15F - frames.waist.forward * 0.10F;
+  QVector3D const q_base =
+      quiver_pos - frames.waist.up * 0.25F + frames.waist.forward * 0.05F;
 
   submitter.mesh(
       getUnitCylinder(),

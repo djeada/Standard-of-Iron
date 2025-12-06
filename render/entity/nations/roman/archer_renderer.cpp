@@ -2,6 +2,7 @@
 #include "../../../../game/core/component.h"
 #include "../../../../game/core/entity.h"
 #include "../../../../game/systems/nation_id.h"
+#include "../../../equipment/armor/cloak_renderer.h"
 #include "../../../equipment/equipment_registry.h"
 #include "../../../equipment/weapons/bow_renderer.h"
 #include "../../../equipment/weapons/quiver_renderer.h"
@@ -172,6 +173,25 @@ public:
     QVector3D const fletch = tint(0.9F);
 
     auto &registry = EquipmentRegistry::instance();
+
+    if (style.show_cape) {
+      auto cloak = registry.get(EquipmentCategory::Armor, "cloak_carthage");
+      if (cloak) {
+        CloakConfig cloak_config;
+        if (style.cape_color) {
+          cloak_config.primary_color = *style.cape_color;
+        } else {
+          cloak_config.primary_color = QVector3D(0.70F, 0.15F, 0.18F);
+        }
+        cloak_config.trim_color = v.palette.metal;
+
+        if (auto *cloak_renderer = dynamic_cast<CloakRenderer *>(cloak.get())) {
+          cloak_renderer->setConfig(cloak_config);
+        }
+
+        cloak->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
+      }
+    }
     auto quiver = registry.get(EquipmentCategory::Weapon, "quiver");
     if (quiver) {
 
