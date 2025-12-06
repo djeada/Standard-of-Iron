@@ -95,11 +95,12 @@ void main() {
   vec3 normal = normalize(v_normal);
   vec2 uv = v_worldPos.xz * 4.5;
 
-  // Material ID: 0=body/skin, 1=armor, 2=helmet, 3=weapon, 4=shield
+  // Material ID: 0=body/skin, 1=armor, 2=helmet, 3=weapon, 4=shield, 5=cloak
   bool is_armor = (u_materialId == 1);
   bool is_helmet = (u_materialId == 2);
   bool is_weapon = (u_materialId == 3);
   bool is_shield = (u_materialId == 4);
+  bool is_cloak = (u_materialId == 5 || u_materialId == 6);
 
   // Use material IDs exclusively (no fallbacks)
   bool is_legs = (u_materialId == 0); // Body mesh includes legs
@@ -234,7 +235,18 @@ void main() {
     color = clamp(color, vec3(0.35), vec3(0.85));
   }
   // LEATHER PTERUGES & BELT (tan/brown leather strips)
-  else if (is_legs) {
+  else if (is_cloak) {
+    vec3 N = normalize(v_worldNormal);
+    vec3 V = normalize(vec3(0.0, 1.0, 0.35));
+
+    float weave = sin(v_worldPos.x * 70.0) * sin(v_worldPos.z * 70.0) * 0.04;
+    float wrinkle = noise(v_worldPos.xz * 12.0) * 0.12;
+    float shading = 0.65 + noise(v_worldPos.xz * 2.5) * 0.25;
+    float fresnel = pow(1.0 - max(dot(N, V), 0.0), 4.0) * 0.12;
+
+    color *= shading + weave * 0.2;
+    color += vec3(wrinkle * 0.12 + fresnel);
+  } else if (is_legs) {
     // Thick leather with visible grain (using vertex wear data)
     float leather_grain = noise(uv * 10.0) * 0.16 * (0.5 + v_leatherWear * 0.5);
     float leather_pores = noise(uv * 22.0) * 0.08;

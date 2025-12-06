@@ -22,7 +22,6 @@ uniform vec3 u_lightDir;
 uniform float u_snowCoverage;    // 0-1: snow accumulation
 uniform float u_moistureLevel;   // 0-1: wetness/dryness
 uniform float u_crackIntensity;  // 0-1: ground cracking
-uniform float u_rockExposure;    // 0-1: rock visibility
 uniform float u_grassSaturation; // 0-1.5: grass color intensity
 uniform float u_soilRoughness;   // 0-1: soil texture roughness
 uniform vec3 u_snowColor;        // Snow tint color

@@ -2,6 +2,7 @@
 #include "../../../../game/core/component.h"
 #include "../../../../game/core/entity.h"
 #include "../../../../game/systems/nation_id.h"
+#include "../../../equipment/armor/cloak_renderer.h"
 #include "../../../equipment/equipment_registry.h"
 #include "../../../equipment/weapons/bow_renderer.h"
 #include "../../../equipment/weapons/quiver_renderer.h"
@@ -108,61 +109,7 @@ public:
 
     uint32_t beard_seed = seed ^ 0xBEAD01U;
 
-    float const beard_chance = nextRand(beard_seed);
-    bool const wants_beard = style.force_beard || (beard_chance < 0.85F);
-
-    if (wants_beard) {
-
-      float const style_roll = nextRand(beard_seed);
-
-      if (style_roll < 0.50F) {
-
-        v.facial_hair.style = FacialHairStyle::FullBeard;
-        v.facial_hair.length = 0.9F + nextRand(beard_seed) * 0.6F;
-      } else if (style_roll < 0.75F) {
-
-        v.facial_hair.style = FacialHairStyle::LongBeard;
-        v.facial_hair.length = 1.2F + nextRand(beard_seed) * 0.8F;
-      } else if (style_roll < 0.90F) {
-
-        v.facial_hair.style = FacialHairStyle::ShortBeard;
-        v.facial_hair.length = 0.8F + nextRand(beard_seed) * 0.4F;
-      } else {
-
-        v.facial_hair.style = FacialHairStyle::Goatee;
-        v.facial_hair.length = 0.9F + nextRand(beard_seed) * 0.5F;
-      }
-
-      float const color_roll = nextRand(beard_seed);
-      if (color_roll < 0.60F) {
-
-        v.facial_hair.color = QVector3D(0.18F + nextRand(beard_seed) * 0.10F,
-                                        0.14F + nextRand(beard_seed) * 0.08F,
-                                        0.10F + nextRand(beard_seed) * 0.06F);
-      } else if (color_roll < 0.85F) {
-
-        v.facial_hair.color = QVector3D(0.30F + nextRand(beard_seed) * 0.12F,
-                                        0.24F + nextRand(beard_seed) * 0.10F,
-                                        0.16F + nextRand(beard_seed) * 0.08F);
-      } else {
-
-        v.facial_hair.color = QVector3D(0.35F + nextRand(beard_seed) * 0.10F,
-                                        0.20F + nextRand(beard_seed) * 0.08F,
-                                        0.12F + nextRand(beard_seed) * 0.06F);
-      }
-
-      v.facial_hair.thickness = 0.85F + nextRand(beard_seed) * 0.35F;
-      v.facial_hair.coverage = 0.75F + nextRand(beard_seed) * 0.25F;
-
-      if (nextRand(beard_seed) < 0.10F) {
-        v.facial_hair.greyness = 0.15F + nextRand(beard_seed) * 0.35F;
-      } else {
-        v.facial_hair.greyness = 0.0F;
-      }
-    } else {
-
-      v.facial_hair.style = FacialHairStyle::None;
-    }
+    v.facial_hair.style = FacialHairStyle::None;
 
     v.muscularity = 0.95F + nextRand(beard_seed) * 0.25F;
     v.scarring = nextRand(beard_seed) * 0.30F;
@@ -257,6 +204,27 @@ public:
     QVector3D const fletch = tint(0.9F);
 
     auto &registry = EquipmentRegistry::instance();
+
+    if (style.show_cape) {
+      auto cloak = registry.get(EquipmentCategory::Armor, "cloak_carthage");
+      if (cloak) {
+        CloakConfig cloak_config;
+        if (style.cape_color) {
+          cloak_config.primary_color = *style.cape_color;
+        } else {
+          cloak_config.primary_color = QVector3D(0.14F, 0.38F, 0.54F);
+        }
+        cloak_config.trim_color = v.palette.metal;
+
+        auto *cloak_renderer = dynamic_cast<CloakRenderer *>(cloak.get());
+        if (cloak_renderer) {
+          cloak_renderer->setConfig(cloak_config);
+        }
+
+        cloak->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
+      }
+    }
+
     auto quiver = registry.get(EquipmentCategory::Weapon, "quiver");
     if (quiver) {
 

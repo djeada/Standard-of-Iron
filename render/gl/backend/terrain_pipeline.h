@@ -55,7 +55,6 @@ public:
     GL::Shader::UniformHandle snow_coverage{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle moisture_level{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle crack_intensity{GL::Shader::InvalidUniform};
-    GL::Shader::UniformHandle rock_exposure{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle grass_saturation{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle soil_roughness{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle snow_color{GL::Shader::InvalidUniform};
