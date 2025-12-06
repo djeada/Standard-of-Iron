@@ -220,6 +220,12 @@ public:
     if (armor) {
       armor->render(ctx, pose.body_frames, v.palette, anim, out);
     }
+
+    auto shoulder_cover =
+        registry.get(EquipmentCategory::Armor, "carthage_shoulder_cover");
+    if (shoulder_cover) {
+      shoulder_cover->render(ctx, pose.body_frames, v.palette, anim, out);
+    }
   }
 
 private:
