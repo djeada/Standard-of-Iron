@@ -116,8 +116,6 @@ void TerrainPipeline::cacheGroundUniforms() {
       m_groundShader->uniformHandle("u_moistureLevel");
   m_groundUniforms.crack_intensity =
       m_groundShader->uniformHandle("u_crackIntensity");
-  m_groundUniforms.rock_exposure =
-      m_groundShader->uniformHandle("u_rockExposure");
   m_groundUniforms.grass_saturation =
       m_groundShader->uniformHandle("u_grassSaturation");
   m_groundUniforms.soil_roughness =
