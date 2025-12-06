@@ -63,17 +63,17 @@ void RomanHeavyArmorRenderer::render(const DrawContext &ctx,
       waist.radius > 0.0F ? waist.radius : torso.radius * 0.88F;
   float const head_r = head.radius > 0.0F ? head.radius : torso.radius * 0.58F;
 
-  QVector3D top = torso.origin + up * (torso_r * 0.48F);
+  QVector3D top = torso.origin + up * (torso_r * 0.60F);
   QVector3D head_guard = head.origin - head_up * (head_r * 1.30F);
   if (QVector3D::dotProduct(top - head_guard, up) > 0.0F) {
     top = head_guard - up * (torso_r * 0.05F);
   }
 
-  QVector3D bottom =
-      waist.origin + waist_up * (waist_r * 0.08F) - forward * (torso_r * 0.01F);
+  QVector3D bottom = waist.origin - waist_up * (waist_r * 0.45F) -
+                     forward * (torso_r * 0.016F);
 
-  QMatrix4x4 plates = cylinderBetween(ctx.model, top, bottom, torso_r * 1.02F);
-  plates.scale(1.05F, 1.0F, depth_scale_for(0.86F));
+  QMatrix4x4 plates = cylinderBetween(ctx.model, top, bottom, torso_r * 1.24F);
+  plates.scale(1.18F, 1.0F, depth_scale_for(1.10F));
   Mesh *torso_mesh = torso_mesh_without_bottom_cap();
   submitter.mesh(torso_mesh != nullptr ? torso_mesh : getUnitTorso(), plates,
                  steel_color, nullptr, 1.0F, 1);
@@ -151,26 +151,26 @@ void RomanLightArmorRenderer::render(const DrawContext &ctx,
       waist.radius > 0.0F ? waist.radius : torso.radius * 0.86F;
   float const head_r = head.radius > 0.0F ? head.radius : torso.radius * 0.58F;
 
-  QVector3D top = torso.origin + up * (torso_r * 0.42F);
+  QVector3D top = torso.origin + up * (torso_r * 0.54F);
   QVector3D head_guard = head.origin - head_up * (head_r * 1.35F);
   if (QVector3D::dotProduct(top - head_guard, up) > 0.0F) {
     top = head_guard - up * (torso_r * 0.06F);
   }
 
-  QVector3D bottom = waist.origin - waist_up * (waist_r * 0.15F);
+  QVector3D bottom = waist.origin - waist_up * (waist_r * 0.40F);
 
   QMatrix4x4 chainmail =
-      cylinderBetween(ctx.model, top, bottom, torso_r * 0.98F);
-  chainmail.scale(1.02F, 1.0F, depth_scale_for(0.82F));
+      cylinderBetween(ctx.model, top, bottom, torso_r * 1.16F);
+  chainmail.scale(1.12F, 1.0F, depth_scale_for(1.02F));
   Mesh *torso_mesh = torso_mesh_without_bottom_cap();
   submitter.mesh(torso_mesh != nullptr ? torso_mesh : getUnitTorso(), chainmail,
                  chainmail_color, nullptr, 1.0F, 1);
 
   QVector3D chest_center =
       torso.origin + up * (torso_r * 0.12F) + forward * (torso_depth * 0.48F);
-  float const plate_width = torso_r * 0.85F;
-  float const plate_height = torso_r * 0.65F;
-  float const plate_depth = torso_r * 0.18F;
+  float const plate_width = torso_r * 1.10F;
+  float const plate_height = torso_r * 0.96F;
+  float const plate_depth = torso_r * 0.30F;
 
   QMatrix4x4 pectorale = ctx.model;
   pectorale.translate(chest_center);

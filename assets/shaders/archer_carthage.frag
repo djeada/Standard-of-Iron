@@ -602,8 +602,9 @@ void main() {
     material = make_cloth_sample(base_color, Nw, Tw, Bw, v_worldPos, wet_mask,
                                  curvature);
   } else if (prefer_leather) {
+    vec3 leather_base = mix(base_color, vec3(0.44, 0.30, 0.19), 0.75);
     material = make_leather_sample(
-        base_color, Nw, Tw, Bw, v_worldPos, clamp(v_leatherTension, 0.0, 1.0),
+        leather_base, Nw, Tw, Bw, v_worldPos, clamp(v_leatherTension, 0.0, 1.0),
         clamp(v_bodyHeight, 0.0, 1.0), v_armorLayer, wet_mask, curvature);
   } else if (likely_linen) {
     material =
@@ -635,7 +636,7 @@ void main() {
   }
 
   vec3 ambient =
-      compute_ambient(material.normal) * material.albedo * material.ao * 0.35;
+      compute_ambient(material.normal) * material.albedo * material.ao * 0.42;
   vec3 bounce = vec3(0.45, 0.34, 0.25) *
                 (0.15 + 0.45 * clamp(-material.normal.y, 0.0, 1.0));
   vec3 color =

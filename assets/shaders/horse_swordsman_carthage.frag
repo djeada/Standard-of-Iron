@@ -161,7 +161,7 @@ void main() {
   // 5=rider clothing, 6=horse hide, 7=horse mane, 8=horse hoof,
   // 9=saddle leather, 10=bridle, 11=saddle blanket
   bool is_rider_skin = (u_materialId == 0);
-  bool is_armor = (u_materialId == 1);
+  bool is_body_armor = (u_materialId == 1);
   bool is_helmet = (u_materialId == 2);
   bool is_weapon = (u_materialId == 3);
   bool is_shield = (u_materialId == 4);
@@ -175,8 +175,8 @@ void main() {
 
   // Material-based detection only (no fallbacks)
   bool is_brass = is_helmet;
-  bool is_steel = is_armor;
-  bool is_chain = is_armor;
+  bool is_steel = false;
+  bool is_chain = false;
   bool is_fabric = is_rider_clothing || is_saddle_blanket;
   bool is_leather = is_saddle_leather || is_bridle;
 
@@ -212,7 +212,60 @@ void main() {
   vec3 col = vec3(0.0);
   vec3 ambient = hemilight(N) * (0.85 + 0.15 * cavity);
 
-  if (is_horse_hide) {
+  if (is_body_armor) {
+    // Bronze + chain + linen mix to match infantry look.
+    float brushed =
+        abs(sin(v_worldPos.y * 55.0)) * 0.02 + noise(uv * 28.0) * 0.015;
+    float plates = armor_plates(v_worldPos.xz, v_worldPos.y);
+    float rings = chainmail_rings(v_worldPos.xz);
+    float linen = fbm(uv * 5.0);
+
+    // bump from light hammering
+    float h = fbm(vec2(v_worldPos.y * 18.0, v_worldPos.z * 6.0));
+    N = perturb_normal_ws(N, v_worldPos, h, 0.32);
+
+    vec3 bronze_tint = vec3(0.62, 0.46, 0.20);
+    vec3 steel_tint = vec3(0.68, 0.70, 0.74);
+    vec3 linen_tint = vec3(0.86, 0.80, 0.72);
+    vec3 leather_tint = vec3(0.38, 0.25, 0.15);
+
+    float torsoBand = 1.0 - step(1.5, v_armorLayer);
+    float skirtBand = step(1.0, v_armorLayer);
+    float mailBlend =
+        clamp(smoothstep(0.15, 0.85, rings + cavity * 0.25), 0.15, 1.0) *
+        torsoBand;
+    float cuirassBlend = torsoBand;
+    float leatherBlend = skirtBand * 0.65;
+    float linenBlend = skirtBand * 0.45;
+
+    vec3 bronze = mix(bronze_tint, base_color, 0.40);
+    vec3 chain_col = mix(steel_tint, base_color, 0.25);
+    vec3 linen_col = mix(linen_tint, base_color, 0.20);
+    vec3 leather_col = mix(leather_tint, base_color, 0.30);
+
+    albedo = bronze;
+    albedo = mix(albedo, chain_col, mailBlend);
+    albedo = mix(albedo, linen_col, linenBlend);
+    albedo = mix(albedo, leather_col, leatherBlend);
+
+    // bias toward brighter metal luma
+    float armor_luma = dot(albedo, vec3(0.299, 0.587, 0.114));
+    albedo = mix(albedo, albedo * 1.20, smoothstep(0.30, 0.65, armor_luma));
+
+    roughness = 0.32 + brushed * 1.2;
+    roughness = clamp(roughness, 0.18, 0.55);
+    F0 = mix(vec3(0.74), albedo, 0.25);
+
+    float D = D_GGX(saturate(dot(N, H)), roughness);
+    float G = G_Smith(saturate(dot(N, V)), saturate(dot(N, L)), roughness);
+    vec3 F = fresnel_schlick(VdotH, F0);
+    vec3 spec = (D * G) * F / max(1e-5, 4.0 * NdotV * NdotL);
+
+    col += ambient * mix(vec3(1.0), albedo, 0.25);
+    col += NdotL_wrap * (spec * 1.35);
+    col += vec3(plates) * 0.35 + vec3(rings * 0.25) + vec3(linen * linenBlend);
+
+  } else if (is_horse_hide) {
     // subtle anisotropic sheen along body flow
     vec3 up = vec3(0.0, 1.0, 0.0);
     vec3 T = normalize(cross(up, N) + 1e-4); // hair tangent guess
