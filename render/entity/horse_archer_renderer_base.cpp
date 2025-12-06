@@ -1,5 +1,6 @@
 #include "horse_archer_renderer_base.h"
 
+#include "../equipment/armor/cloak_renderer.h"
 #include "../equipment/equipment_registry.h"
 #include "../equipment/weapons/bow_renderer.h"
 #include "../equipment/weapons/quiver_renderer.h"
@@ -171,6 +172,24 @@ void HorseArcherRendererBase::draw_armor(const DrawContext &ctx,
       registry.get(EquipmentCategory::Armor, m_config.armor_equipment_id);
   if (armor) {
     armor->render(ctx, pose.body_frames, v.palette, anim, out);
+  }
+
+  if (m_config.has_cloak && !m_config.cloak_equipment_id.empty()) {
+    auto cloak =
+        registry.get(EquipmentCategory::Armor, m_config.cloak_equipment_id);
+    if (cloak) {
+      CloakConfig cloak_config;
+      cloak_config.primary_color = m_config.cloak_color;
+      cloak_config.trim_color = m_config.cloak_trim_color;
+      cloak_config.back_material_id = m_config.cloak_back_material_id;
+      cloak_config.shoulder_material_id = m_config.cloak_shoulder_material_id;
+
+      if (auto *cloak_renderer = dynamic_cast<CloakRenderer *>(cloak.get())) {
+        cloak_renderer->setConfig(cloak_config);
+      }
+
+      cloak->render(ctx, pose.body_frames, v.palette, anim, out);
+    }
   }
 }
 
