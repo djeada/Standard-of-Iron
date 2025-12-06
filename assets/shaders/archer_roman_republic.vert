@@ -7,6 +7,7 @@ layout(location = 2) in vec2 a_texCoord;
 uniform mat4 u_mvp;
 uniform mat4 u_model;
 uniform int u_materialId;
+uniform float u_time;
 
 out vec3 v_normal;
 out vec3 v_worldNormal;
@@ -32,6 +33,50 @@ vec3 fallbackUp(vec3 n) {
 void main() {
   vec3 position = a_position;
   vec3 normal = a_normal;
+
+  // Cloak back drape (Material ID 5)
+  if (u_materialId == 5) {
+    float v = 1.0 - a_texCoord.y; // 1 = top, 0 = bottom
+    float u = a_texCoord.x;
+    float x_norm = (u - 0.5) * 2.0;
+
+    float pin = smoothstep(0.85, 1.0, v);
+    float move = 1.0 - pin;
+
+    float top_blend = smoothstep(0.90, 1.0, v);
+    float edge_emphasis = abs(x_norm);
+    float shoulder_wrap = top_blend * (0.42 + edge_emphasis * 0.55);
+    position.y -= shoulder_wrap * 0.08;
+    position.z += shoulder_wrap * 0.08;
+
+    float bottom_blend = smoothstep(0.0, 0.30, 1.0 - v);
+    position.y += bottom_blend * 0.08;
+    position.x += sign(position.x) * bottom_blend * 0.10;
+
+    float wave = sin(position.z * 5.0 + x_norm * 0.5 + u_time * 1.6) * 0.02;
+    position.y += wave * move;
+  }
+
+  // Cloak shoulder cape (Material ID 6)
+  if (u_materialId == 6) {
+    float u = a_texCoord.x;
+    float v = a_texCoord.y;
+    float x_norm = (u - 0.5) * 2.0;
+    float x_abs = abs(x_norm);
+    float z_norm = (v - 0.5) * 2.0;
+
+    float shoulder_droop = x_abs * x_abs * 0.10;
+    position.y -= shoulder_droop;
+
+    float back_droop = max(0.0, z_norm) * max(0.0, z_norm) * 0.06;
+    position.y -= back_droop;
+
+    float front_droop = max(0.0, -z_norm) * max(0.0, -z_norm) * 0.03;
+    position.y -= front_droop;
+
+    float flutter = sin(u_time * 2.0 + x_norm * 3.0 + z_norm * 2.0) * 0.005;
+    position.y += flutter;
+  }
 
   // Shield curving: bend flat rectangle into scutum curve (materialId=4)
   if (u_materialId == 4) {
