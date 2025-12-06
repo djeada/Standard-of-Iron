@@ -133,6 +133,59 @@ public:
     v.palette = makeHumanoidPalette(team_tint, seed);
     auto const &style = resolve_style(ctx);
     apply_palette_overrides(style, team_tint, v);
+
+    auto nextRand = [](uint32_t &s) -> float {
+      s = s * 1664525U + 1013904223U;
+      return float(s & 0x7FFFFFU) / float(0x7FFFFFU);
+    };
+
+    uint32_t beard_seed = seed ^ 0xBEEFFAU;
+    bool wants_beard = style.force_beard;
+    if (!wants_beard) {
+      float const beard_roll = nextRand(beard_seed);
+      wants_beard = (beard_roll < 0.90F);
+    }
+
+    if (wants_beard) {
+      float const style_roll = nextRand(beard_seed);
+
+      if (style_roll < 0.55F) {
+        v.facial_hair.style = FacialHairStyle::FullBeard;
+        v.facial_hair.length = 1.0F + nextRand(beard_seed) * 0.7F;
+      } else if (style_roll < 0.80F) {
+        v.facial_hair.style = FacialHairStyle::LongBeard;
+        v.facial_hair.length = 1.3F + nextRand(beard_seed) * 0.9F;
+      } else {
+        v.facial_hair.style = FacialHairStyle::ShortBeard;
+        v.facial_hair.length = 0.9F + nextRand(beard_seed) * 0.5F;
+      }
+
+      float const color_roll = nextRand(beard_seed);
+      if (color_roll < 0.60F) {
+        v.facial_hair.color = QVector3D(0.18F + nextRand(beard_seed) * 0.10F,
+                                        0.14F + nextRand(beard_seed) * 0.08F,
+                                        0.10F + nextRand(beard_seed) * 0.06F);
+      } else if (color_roll < 0.85F) {
+        v.facial_hair.color = QVector3D(0.30F + nextRand(beard_seed) * 0.12F,
+                                        0.24F + nextRand(beard_seed) * 0.10F,
+                                        0.16F + nextRand(beard_seed) * 0.08F);
+      } else {
+        v.facial_hair.color = QVector3D(0.35F + nextRand(beard_seed) * 0.10F,
+                                        0.20F + nextRand(beard_seed) * 0.08F,
+                                        0.12F + nextRand(beard_seed) * 0.06F);
+      }
+
+      v.facial_hair.thickness = 0.95F + nextRand(beard_seed) * 0.30F;
+      v.facial_hair.coverage = 0.80F + nextRand(beard_seed) * 0.20F;
+
+      if (nextRand(beard_seed) < 0.12F) {
+        v.facial_hair.greyness = 0.12F + nextRand(beard_seed) * 0.30F;
+      } else {
+        v.facial_hair.greyness = 0.0F;
+      }
+    } else {
+      v.facial_hair.style = FacialHairStyle::None;
+    }
   }
 
   void customize_pose(const DrawContext &,

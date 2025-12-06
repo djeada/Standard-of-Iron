@@ -185,6 +185,7 @@ void main() {
   bool is_rider_helmet = (u_materialId == 2);
   bool is_rider_weapon = (u_materialId == 3);
   bool is_rider_shield = (u_materialId == 4);
+  bool is_rider_cloak = (u_materialId == 12 || u_materialId == 13);
   bool is_rider_clothing = (u_materialId == 5);
 
   // Horse materials
@@ -201,7 +202,7 @@ void main() {
   bool is_brass = is_rider_helmet;
   bool is_steel = is_rider_armor;
   bool is_chain = is_rider_armor;
-  bool is_fabric = is_rider_clothing || is_saddle_blanket;
+  bool is_fabric = is_rider_clothing || is_saddle_blanket || is_rider_cloak;
   bool is_leather = is_saddle_leather || is_bridle;
 
   // lighting frame
