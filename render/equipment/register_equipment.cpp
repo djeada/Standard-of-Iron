@@ -120,12 +120,22 @@ void registerBuiltInEquipment() {
   auto roman_shoulder_cover = std::make_shared<RomanShoulderCoverRenderer>();
   registry.registerEquipment(EquipmentCategory::Armor, "roman_shoulder_cover",
                              roman_shoulder_cover);
+  auto roman_shoulder_cover_cavalry =
+      std::make_shared<RomanShoulderCoverRenderer>(1.8F);
+  registry.registerEquipment(EquipmentCategory::Armor,
+                             "roman_shoulder_cover_cavalry",
+                             roman_shoulder_cover_cavalry);
 
   auto carthage_shoulder_cover =
       std::make_shared<CarthageShoulderCoverRenderer>();
   registry.registerEquipment(EquipmentCategory::Armor,
                              "carthage_shoulder_cover",
                              carthage_shoulder_cover);
+  auto carthage_shoulder_cover_cavalry =
+      std::make_shared<CarthageShoulderCoverRenderer>(1.8F);
+  registry.registerEquipment(EquipmentCategory::Armor,
+                             "carthage_shoulder_cover_cavalry",
+                             carthage_shoulder_cover_cavalry);
   CloakConfig carthage_cloak_config;
   carthage_cloak_config.primary_color = QVector3D(0.14F, 0.38F, 0.54F);
   carthage_cloak_config.trim_color = QVector3D(0.75F, 0.66F, 0.42F);

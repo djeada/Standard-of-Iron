@@ -99,7 +99,7 @@ class KnightRenderer : public HumanoidRendererBase {
 public:
   auto get_proportion_scaling() const -> QVector3D override {
 
-    return {0.750F, 1.05F, 0.50F};
+    return {0.70F, 1.03F, 0.46F};
   }
 
 private:
