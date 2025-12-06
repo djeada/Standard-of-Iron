@@ -97,9 +97,9 @@ struct KnightExtras {
 
 class KnightRenderer : public HumanoidRendererBase {
 public:
-  static constexpr float kShoulderWidth = 1.15F;
-  static constexpr float kTorsoScale = 0.98F;
-  static constexpr float kArmScale = 0.92F;
+  static constexpr float kShoulderWidth = 1.02F;
+  static constexpr float kTorsoScale = 0.94F;
+  static constexpr float kArmScale = 0.88F;
 
   auto get_proportion_scaling() const -> QVector3D override {
 
@@ -223,6 +223,12 @@ public:
     auto armor = registry.get(EquipmentCategory::Armor, "roman_heavy_armor");
     if (armor) {
       armor->render(ctx, pose.body_frames, v.palette, anim, out);
+    }
+
+    auto shoulder_cover =
+        registry.get(EquipmentCategory::Armor, "roman_shoulder_cover");
+    if (shoulder_cover) {
+      shoulder_cover->render(ctx, pose.body_frames, v.palette, anim, out);
     }
   }
 

@@ -98,6 +98,8 @@ add_library(render_gl STATIC
     equipment/armor/roman_armor.cpp
     equipment/armor/armor_light_carthage.cpp
     equipment/armor/armor_heavy_carthage.cpp
+    equipment/armor/roman_shoulder_cover.cpp
+    equipment/armor/carthage_shoulder_cover.cpp
     equipment/armor/cloak_renderer.cpp
     equipment/weapons/bow_renderer.cpp
     equipment/weapons/quiver_renderer.cpp
