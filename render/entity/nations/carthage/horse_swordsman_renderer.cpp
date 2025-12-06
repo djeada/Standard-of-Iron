@@ -19,6 +19,8 @@ auto makeMountedKnightConfig() -> MountedKnightRendererConfig {
   config.shield_equipment_id = "shield_carthage_cavalry";
   config.helmet_equipment_id = "carthage_heavy";
   config.armor_equipment_id = "armor_heavy_carthage";
+  config.shoulder_equipment_id = "carthage_shoulder_cover";
+  config.has_shoulder = true;
   config.helmet_offset_moving = 0.03F;
   config.horse_attachments.emplace_back(
       std::make_shared<CarthageSaddleRenderer>());
