@@ -97,9 +97,9 @@ struct KnightExtras {
 
 class KnightRenderer : public HumanoidRendererBase {
 public:
-  static constexpr float kShoulderWidth = 1.02F;
-  static constexpr float kTorsoScale = 0.94F;
-  static constexpr float kArmScale = 0.88F;
+  static constexpr float kShoulderWidth = 0.70F;
+  static constexpr float kTorsoScale = 0.78F;
+  static constexpr float kArmScale = 0.76F;
 
   auto get_proportion_scaling() const -> QVector3D override {
 
