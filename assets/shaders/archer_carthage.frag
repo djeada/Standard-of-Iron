@@ -433,6 +433,39 @@ MaterialSample make_cloth_sample(vec3 base_color, vec3 Nw, vec3 Tw, vec3 Bw,
   return mat;
 }
 
+MaterialSample make_cloak_sample(vec3 base_color, vec3 Nw, vec3 Tw, vec3 Bw,
+                                 vec3 world_pos, float wet_mask,
+                                 float curvature) {
+  MaterialSample mat;
+  vec3 color = base_color;
+
+  // Fine fabric detail (high frequency weave)
+  float weave = sin(world_pos.x * 200.0) * sin(world_pos.y * 200.0) * 0.03;
+  float silk_sheen = fbm(world_pos * 4.0, Nw, 5.0) * 0.15;
+
+  color += weave * 0.1;
+  color += silk_sheen * 0.05;
+
+  // Wetness darkening
+  color = mix(color, color * 0.6, wet_mask * 0.5);
+
+  mat.albedo = color;
+
+  // Normal perturbation for fabric
+  vec3 macro_normal = apply_micro_normal(Nw, Tw, Bw, world_pos, 0.15);
+  mat.normal = macro_normal;
+
+  // Roughness - silk/fine cloth is smoother than wool
+  // Add some anisotropic feel via sheen noise
+  mat.roughness = clamp(0.55 - silk_sheen * 0.2 - wet_mask * 0.3, 0.25, 0.9);
+
+  mat.ao = clamp(0.9 - curvature * 0.1, 0.5, 1.0);
+  mat.metallic = 0.0;
+  mat.F0 = vec3(0.05); // Slightly higher F0 for silk/satin
+
+  return mat;
+}
+
 MaterialSample make_metal_sample(vec3 base_color, vec3 Nw, vec3 Tw, vec3 Bw,
                                  vec3 world_pos, float wet_mask,
                                  float curvature) {
@@ -520,11 +553,12 @@ void main() {
   bool prefer_leather = (palette_leather && blue_ratio < 0.42) ||
                         (likely_leather && !looks_wood && blue_ratio < 0.4);
 
-  // Material ID: 0=body/skin, 1=armor, 2=helmet, 3=weapon, 4=shield
+  // Material ID: 0=body/skin, 1=armor, 2=helmet, 3=weapon, 4=shield, 5=cloak
   bool is_armor = (u_materialId == 1);
   bool is_helmet = (u_materialId == 2);
   bool is_weapon = (u_materialId == 3);
   bool is_shield = (u_materialId == 4);
+  bool is_cloak = (u_materialId == 5);
 
   // Use material ID masks only (no fallback detection)
   bool is_helmet_region = is_helmet;
@@ -549,7 +583,10 @@ void main() {
 
   MaterialSample material = make_fallback_sample(
       base_color, Nw, Tw, Bw, v_worldPos, wet_mask, curvature);
-  if (looks_metal && is_helmet_region) {
+  if (is_cloak) {
+    material = make_cloak_sample(base_color, Nw, Tw, Bw, v_worldPos, wet_mask,
+                                 curvature);
+  } else if (looks_metal && is_helmet_region) {
     material = make_metal_sample(CANON_HELMET, Nw, Tw, Bw, v_worldPos, wet_mask,
                                  curvature);
   } else if (looks_skin && is_face_region) {

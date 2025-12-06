@@ -848,12 +848,6 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
               m_terrainPipeline->m_groundUniforms.crack_intensity,
               terrain.params.crack_intensity);
         }
-        if (m_terrainPipeline->m_groundUniforms.rock_exposure !=
-            Shader::InvalidUniform) {
-          active_shader->setUniform(
-              m_terrainPipeline->m_groundUniforms.rock_exposure,
-              terrain.params.rock_exposure);
-        }
         if (m_terrainPipeline->m_groundUniforms.grass_saturation !=
             Shader::InvalidUniform) {
           active_shader->setUniform(
@@ -1159,10 +1153,6 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         active_shader->setUniform(m_waterPipeline->m_road_uniforms.mvp, it.mvp);
         active_shader->setUniform(m_waterPipeline->m_road_uniforms.model,
                                   it.model);
-        active_shader->setUniform(m_waterPipeline->m_road_uniforms.view,
-                                  cam.getViewMatrix());
-        active_shader->setUniform(m_waterPipeline->m_road_uniforms.projection,
-                                  cam.getProjectionMatrix());
         active_shader->setUniform(m_waterPipeline->m_road_uniforms.color,
                                   it.color);
         active_shader->setUniform(m_waterPipeline->m_road_uniforms.alpha,

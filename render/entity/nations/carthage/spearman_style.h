@@ -15,6 +15,7 @@ struct SpearmanStyleConfig {
   std::optional<QVector3D> spearhead_color;
   std::optional<float> spear_length_scale;
   std::optional<float> spear_shaft_radius_scale;
+  bool force_beard = false;
   std::string shader_id;
   std::string armor_id;
 };
