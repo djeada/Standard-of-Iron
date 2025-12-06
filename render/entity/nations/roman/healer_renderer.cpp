@@ -112,6 +112,10 @@ public:
 
   void draw_helmet(const DrawContext &ctx, const HumanoidVariant &v,
                    const HumanoidPose &pose, ISubmitter &out) const override {
+    // Roman medicus wears no helmet - just bare head with short hair
+    if (!resolve_style(ctx).show_helmet) {
+      return; // No helmet for healers - they wear simple tunics
+    }
     auto &registry = EquipmentRegistry::instance();
     auto helmet = registry.get(EquipmentCategory::Helmet, "roman_light");
     if (helmet) {
@@ -124,12 +128,14 @@ public:
                   const HumanoidPose &pose,
                   const HumanoidAnimationContext &anim,
                   ISubmitter &out) const override {
-    if (resolve_style(ctx).show_armor) {
-      auto &registry = EquipmentRegistry::instance();
-      auto armor = registry.get(EquipmentCategory::Armor, "roman_light_armor");
-      if (armor) {
-        armor->render(ctx, pose.body_frames, v.palette, anim, out);
-      }
+    // Roman medicus wears simple tunic, no armor
+    if (!resolve_style(ctx).show_armor) {
+      return; // No armor for healers
+    }
+    auto &registry = EquipmentRegistry::instance();
+    auto armor = registry.get(EquipmentCategory::Armor, "roman_light_armor");
+    if (armor) {
+      armor->render(ctx, pose.body_frames, v.palette, anim, out);
     }
   }
 

@@ -81,6 +81,62 @@ public:
     v.palette = makeHumanoidPalette(team_tint, seed);
     auto const &style = resolve_style(ctx);
     apply_palette_overrides(style, team_tint, v);
+
+    // Carthaginian/Phoenician healers traditionally have beards
+    // (Eastern Mediterranean tradition - wise healer appearance)
+    auto nextRand = [](uint32_t &s) -> float {
+      s = s * 1664525U + 1013904223U;
+      return float(s & 0x7FFFFFU) / float(0x7FFFFFU);
+    };
+
+    uint32_t beard_seed = seed ^ 0xHEA101U;
+    bool wants_beard = style.force_beard;
+    if (!wants_beard) {
+      float const beard_roll = nextRand(beard_seed);
+      wants_beard = (beard_roll < 0.85F); // High chance of beard
+    }
+
+    if (wants_beard) {
+      float const style_roll = nextRand(beard_seed);
+
+      // Healers tend to have neat, well-kept beards (not wild warrior beards)
+      if (style_roll < 0.45F) {
+        v.facial_hair.style = FacialHairStyle::ShortBeard;
+        v.facial_hair.length = 0.8F + nextRand(beard_seed) * 0.4F;
+      } else if (style_roll < 0.75F) {
+        v.facial_hair.style = FacialHairStyle::FullBeard;
+        v.facial_hair.length = 0.9F + nextRand(beard_seed) * 0.5F;
+      } else if (style_roll < 0.90F) {
+        v.facial_hair.style = FacialHairStyle::Goatee;
+        v.facial_hair.length = 0.7F + nextRand(beard_seed) * 0.4F;
+      } else {
+        v.facial_hair.style = FacialHairStyle::MustacheAndBeard;
+        v.facial_hair.length = 1.0F + nextRand(beard_seed) * 0.4F;
+      }
+
+      // Dark beard colors typical of Phoenician/North African descent
+      float const color_roll = nextRand(beard_seed);
+      if (color_roll < 0.55F) {
+        // Dark brown/black beard
+        v.facial_hair.color = QVector3D(0.12F + nextRand(beard_seed) * 0.08F,
+                                        0.10F + nextRand(beard_seed) * 0.06F,
+                                        0.08F + nextRand(beard_seed) * 0.05F);
+      } else if (color_roll < 0.80F) {
+        // Medium brown beard
+        v.facial_hair.color = QVector3D(0.22F + nextRand(beard_seed) * 0.10F,
+                                        0.17F + nextRand(beard_seed) * 0.08F,
+                                        0.12F + nextRand(beard_seed) * 0.06F);
+      } else {
+        // Greying beard (older healer)
+        v.facial_hair.color = QVector3D(0.35F + nextRand(beard_seed) * 0.15F,
+                                        0.32F + nextRand(beard_seed) * 0.12F,
+                                        0.30F + nextRand(beard_seed) * 0.10F);
+        v.facial_hair.greyness = 0.3F + nextRand(beard_seed) * 0.4F;
+      }
+
+      v.facial_hair.thickness = 0.85F + nextRand(beard_seed) * 0.25F;
+      v.facial_hair.coverage = 0.80F + nextRand(beard_seed) * 0.20F;
+    }
   }
 
   void customize_pose(const DrawContext &,
@@ -112,6 +168,10 @@ public:
 
   void draw_helmet(const DrawContext &ctx, const HumanoidVariant &v,
                    const HumanoidPose &pose, ISubmitter &out) const override {
+    // Carthaginian healer wears no helmet - just bare head (often with beard)
+    if (!resolve_style(ctx).show_helmet) {
+      return; // No helmet for healers - simple Phoenician robes
+    }
     auto &registry = EquipmentRegistry::instance();
     auto helmet = registry.get(EquipmentCategory::Helmet, "carthage_light");
     if (helmet) {
@@ -124,13 +184,15 @@ public:
                   const HumanoidPose &pose,
                   const HumanoidAnimationContext &anim,
                   ISubmitter &out) const override {
-    if (resolve_style(ctx).show_armor) {
-      auto &registry = EquipmentRegistry::instance();
-      auto armor =
-          registry.get(EquipmentCategory::Armor, "carthage_light_armor");
-      if (armor) {
-        armor->render(ctx, pose.body_frames, v.palette, anim, out);
-      }
+    // Carthaginian healer wears simple robes, no armor
+    if (!resolve_style(ctx).show_armor) {
+      return; // No armor for healers
+    }
+    auto &registry = EquipmentRegistry::instance();
+    auto armor =
+        registry.get(EquipmentCategory::Armor, "carthage_light_armor");
+    if (armor) {
+      armor->render(ctx, pose.body_frames, v.palette, anim, out);
     }
   }
 
