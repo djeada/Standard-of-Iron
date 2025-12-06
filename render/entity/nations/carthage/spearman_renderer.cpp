@@ -114,7 +114,7 @@ class SpearmanRenderer : public HumanoidRendererBase {
 public:
   auto get_proportion_scaling() const -> QVector3D override {
 
-    return {0.94F, 1.04F, 0.92F};
+    return {0.82F, 0.94F, 0.84F};
   }
 
   void adjust_variation(const DrawContext &, uint32_t,

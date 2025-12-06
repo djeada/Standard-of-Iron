@@ -30,22 +30,22 @@ void RomanShoulderCoverRenderer::render(const DrawContext &ctx,
                                  const QVector3D &outward) {
     float const upper_arm_r = HP::UPPER_ARM_R;
 
-    QVector3D top_pos =
-        shoulder_pos + outward * 0.032F + QVector3D(0.0F, 0.110F, 0.0F);
+    QVector3D top_pos = shoulder_pos + outward * (0.032F * m_outward_scale) +
+                        QVector3D(0.0F, 0.110F, 0.0F);
     QMatrix4x4 top = ctx.model;
     top.translate(top_pos);
     top.scale(upper_arm_r * 1.70F, upper_arm_r * 0.42F, upper_arm_r * 1.50F);
     submitter.mesh(getUnitSphere(), top, metal_base, nullptr, 1.0F, 1);
 
-    QVector3D under_pos =
-        top_pos - QVector3D(0.0F, 0.040F, 0.0F) + outward * 0.020F;
+    QVector3D under_pos = top_pos - QVector3D(0.0F, 0.040F, 0.0F) +
+                          outward * (0.020F * m_outward_scale);
     QMatrix4x4 under = ctx.model;
     under.translate(under_pos);
     under.scale(upper_arm_r * 1.55F, upper_arm_r * 0.30F, upper_arm_r * 1.32F);
     submitter.mesh(getUnitSphere(), under, metal_dark, nullptr, 1.0F, 1);
 
-    QVector3D rim_pos =
-        under_pos - QVector3D(0.0F, 0.025F, 0.0F) + outward * 0.014F;
+    QVector3D rim_pos = under_pos - QVector3D(0.0F, 0.025F, 0.0F) +
+                        outward * (0.014F * m_outward_scale);
     QMatrix4x4 rim = ctx.model;
     rim.translate(rim_pos);
     rim.scale(upper_arm_r * 1.40F, upper_arm_r * 0.14F, upper_arm_r * 1.18F);

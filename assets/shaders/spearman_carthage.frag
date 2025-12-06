@@ -324,44 +324,61 @@ void main() {
   if (is_helmet) {
     mat = sample_bronze_helmet(base_color, v_worldPos, Nw, Tw, Bw);
   } else if (is_armor) {
-    MaterialSample linen =
-        sample_linen(base_color, v_worldPos * 1.1, Nw, Tw, Bw);
-    MaterialSample scales =
-        sample_bronze_scales(base_color, v_worldPos * 1.0, Nw, Tw, Bw);
-    MaterialSample mail =
-        sample_chainmail(base_color, v_worldPos * 0.9, Nw, Tw, Bw);
+    vec3 leather_base = vec3(0.44, 0.30, 0.19);
+    vec3 linen_base = vec3(0.86, 0.80, 0.72);
+    vec3 bronze_base = vec3(0.62, 0.46, 0.20);
+    vec3 chain_base = vec3(0.78, 0.80, 0.82);
+
     MaterialSample leather =
-        sample_leather(base_color, v_worldPos * 0.8, Nw, Tw, Bw);
+        sample_leather(leather_base, v_worldPos * 0.85, Nw, Tw, Bw);
+    MaterialSample linen =
+        sample_linen(linen_base, v_worldPos * 1.0, Nw, Tw, Bw);
+    MaterialSample scales =
+        sample_bronze_scales(bronze_base, v_worldPos * 0.95, Nw, Tw, Bw);
+    MaterialSample mail =
+        sample_chainmail(chain_base, v_worldPos * 0.9, Nw, Tw, Bw);
 
     float torsoBand = 1.0 - step(1.5, v_armorLayer);
     float skirtBand = step(1.0, v_armorLayer);
     float mailBlend =
         clamp(smoothstep(0.25, 0.85, v_chainmailPhase + v_steelWear * 0.35),
               0.0, 1.0) *
-        torsoBand;
-    float scaleBlend = clamp(0.35 + v_steelWear * 0.6, 0.0, 1.0) * torsoBand;
-    float leatherBlend = skirtBand * 0.75;
+        torsoBand * 0.30;
+    float scaleBlend =
+        clamp(0.28 + v_steelWear * 0.55, 0.0, 1.0) * torsoBand * 0.55;
+    float linenBlend = skirtBand * 0.40;
+    float leatherOverlay = skirtBand * 0.90 + torsoBand * 0.30;
 
-    // Blend linen base with bronze scales and chainmail overlays
-    mat.color = linen.color;
+    // subtle edge tint to lift highlights
+    float edge = 1.0 - clamp(dot(Nw, vec3(0.0, 1.0, 0.0)), 0.0, 1.0);
+    vec3 highlight = vec3(0.10, 0.08, 0.05) * smoothstep(0.3, 0.9, edge);
+
+    // Leather-first blend with lighter linen skirt and subtle bronze/chain
+    mat.color = leather.color;
+    mat.color = mix(mat.color, linen.color, linenBlend);
     mat.color = mix(mat.color, scales.color, scaleBlend);
     mat.color = mix(mat.color, mail.color, mailBlend);
-    mat.color = mix(mat.color, leather.color, leatherBlend);
+    mat.color = mix(mat.color, leather.color + highlight, leatherOverlay);
 
-    mat.normal = linen.normal;
+    float leather_depth = clamp(
+        leatherOverlay * 0.8 + linenBlend * 0.2 + scaleBlend * 0.15, 0.0, 1.0);
+    mat.color = mix(mat.color, mat.color * 0.88 + vec3(0.04, 0.03, 0.02),
+                    leather_depth * 0.35);
+
+    mat.normal = leather.normal;
+    mat.normal = normalize(mix(mat.normal, linen.normal, linenBlend));
     mat.normal = normalize(mix(mat.normal, scales.normal, scaleBlend));
     mat.normal = normalize(mix(mat.normal, mail.normal, mailBlend));
-    mat.normal = normalize(mix(mat.normal, leather.normal, leatherBlend));
 
-    mat.roughness = linen.roughness;
+    mat.roughness = leather.roughness;
+    mat.roughness = mix(mat.roughness, linen.roughness, linenBlend);
     mat.roughness = mix(mat.roughness, scales.roughness, scaleBlend);
     mat.roughness = mix(mat.roughness, mail.roughness, mailBlend);
-    mat.roughness = mix(mat.roughness, leather.roughness, leatherBlend);
 
-    mat.F0 = linen.F0;
+    mat.F0 = leather.F0;
+    mat.F0 = mix(mat.F0, linen.F0, linenBlend);
     mat.F0 = mix(mat.F0, scales.F0, scaleBlend);
     mat.F0 = mix(mat.F0, mail.F0, mailBlend);
-    mat.F0 = mix(mat.F0, leather.F0, leatherBlend);
   } else if (is_weapon) {
     if (v_bodyHeight > 0.55) {
       mat = sample_steel(base_color, v_worldPos * 1.4, Nw, Tw, Bw);
