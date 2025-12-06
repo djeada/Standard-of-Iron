@@ -19,6 +19,12 @@ auto make_horse_archer_config() -> HorseArcherRendererConfig {
   config.quiver_equipment_id = "quiver";
   config.helmet_equipment_id = "carthage_light";
   config.armor_equipment_id = "armor_light_carthage";
+  config.cloak_equipment_id = "cloak_carthage";
+  config.has_cloak = true;
+  config.cloak_color = {0.14F, 0.38F, 0.54F};
+  config.cloak_trim_color = {0.75F, 0.66F, 0.42F};
+  config.cloak_back_material_id = 12;
+  config.cloak_shoulder_material_id = 13;
   config.helmet_offset_moving = 0.035F;
   config.fletching_color = {0.85F, 0.40F, 0.40F};
   config.horse_attachments.emplace_back(

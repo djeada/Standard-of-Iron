@@ -25,6 +25,7 @@ void register_carthage_spearman_style() {
   style.spear_length_scale = 1.08F;
   style.shader_id = "spearman_carthage";
   style.armor_id = "armor_light_carthage";
+  style.force_beard = true;
 
   register_spearman_style("carthage", style);
 }
