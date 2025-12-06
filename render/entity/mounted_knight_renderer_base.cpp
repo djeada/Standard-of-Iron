@@ -169,6 +169,14 @@ void MountedKnightRendererBase::draw_equipment(
       shield->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
     }
   }
+
+  if (m_config.has_shoulder && !m_config.shoulder_equipment_id.empty()) {
+    auto shoulder_cover =
+        registry.get(EquipmentCategory::Armor, m_config.shoulder_equipment_id);
+    if (shoulder_cover) {
+      shoulder_cover->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
+    }
+  }
 }
 
 void MountedKnightRendererBase::draw_helmet(const DrawContext &ctx,

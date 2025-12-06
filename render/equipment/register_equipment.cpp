@@ -1,8 +1,10 @@
 #include "armor/armor_heavy_carthage.h"
 #include "armor/armor_light_carthage.h"
+#include "armor/carthage_shoulder_cover.h"
 #include "armor/chainmail_armor.h"
 #include "armor/kingdom_armor.h"
 #include "armor/roman_armor.h"
+#include "armor/roman_shoulder_cover.h"
 #include "equipment_registry.h"
 #include "helmets/carthage_heavy_helmet.h"
 #include "helmets/carthage_light_helmet.h"
@@ -113,6 +115,16 @@ void registerBuiltInEquipment() {
   auto armor_heavy_carthage = std::make_shared<ArmorHeavyCarthageRenderer>();
   registry.registerEquipment(EquipmentCategory::Armor, "armor_heavy_carthage",
                              armor_heavy_carthage);
+
+  auto roman_shoulder_cover = std::make_shared<RomanShoulderCoverRenderer>();
+  registry.registerEquipment(EquipmentCategory::Armor, "roman_shoulder_cover",
+                             roman_shoulder_cover);
+
+  auto carthage_shoulder_cover =
+      std::make_shared<CarthageShoulderCoverRenderer>();
+  registry.registerEquipment(EquipmentCategory::Armor,
+                             "carthage_shoulder_cover",
+                             carthage_shoulder_cover);
 
   auto sword = std::make_shared<SwordRenderer>();
   registry.registerEquipment(EquipmentCategory::Weapon, "sword", sword);
