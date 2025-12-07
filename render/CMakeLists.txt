@@ -23,6 +23,7 @@ add_library(render_gl STATIC
     ground/terrain_renderer.cpp
     ground/river_renderer.cpp
     ground/road_renderer.cpp
+    ground/olive_renderer.cpp
     ground/riverbank_renderer.cpp
     ground/riverbank_asset_renderer.cpp
     ground/bridge_renderer.cpp

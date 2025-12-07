@@ -93,6 +93,7 @@
 #include "render/ground/firecamp_renderer.h"
 #include "render/ground/fog_renderer.h"
 #include "render/ground/ground_renderer.h"
+#include "render/ground/olive_renderer.h"
 #include "render/ground/pine_renderer.h"
 #include "render/ground/plant_renderer.h"
 #include "render/ground/river_renderer.h"
@@ -134,12 +135,14 @@ GameEngine::GameEngine(QObject *parent)
   m_stone = std::make_unique<Render::GL::StoneRenderer>();
   m_plant = std::make_unique<Render::GL::PlantRenderer>();
   m_pine = std::make_unique<Render::GL::PineRenderer>();
+  m_olive = std::make_unique<Render::GL::OliveRenderer>();
   m_firecamp = std::make_unique<Render::GL::FireCampRenderer>();
 
   m_passes = {m_ground.get(), m_terrain.get(),   m_river.get(),
               m_road.get(),   m_riverbank.get(), m_bridge.get(),
               m_biome.get(),  m_stone.get(),     m_plant.get(),
-              m_pine.get(),   m_firecamp.get(),  m_fog.get()};
+              m_pine.get(),   m_olive.get(),     m_firecamp.get(),
+              m_fog.get()};
 
   std::unique_ptr<Engine::Core::System> arrow_sys =
       std::make_unique<Game::Systems::ArrowSystem>();
@@ -334,6 +337,7 @@ void GameEngine::cleanupOpenGLResources() {
   m_stone.reset();
   m_plant.reset();
   m_pine.reset();
+  m_olive.reset();
   m_firecamp.reset();
 
   m_renderer.reset();
@@ -1231,6 +1235,7 @@ void GameEngine::start_skirmish(const QString &map_path,
     loader.setStoneRenderer(m_stone.get());
     loader.setPlantRenderer(m_plant.get());
     loader.setPineRenderer(m_pine.get());
+    loader.setOliveRenderer(m_olive.get());
     loader.setFireCampRenderer(m_firecamp.get());
 
     loader.setOnOwnersUpdated([this]() { emit ownerInfoChanged(); });
@@ -1842,6 +1847,9 @@ void GameEngine::restoreEnvironmentFromMetadata(const QJsonObject &metadata) {
       }
       if (m_pine) {
         m_pine->configure(*height_map, terrain_service.biomeSettings());
+      }
+      if (m_olive) {
+        m_olive->configure(*height_map, terrain_service.biomeSettings());
       }
       if (m_firecamp) {
         m_firecamp->configure(*height_map, terrain_service.biomeSettings());

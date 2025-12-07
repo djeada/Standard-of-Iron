@@ -13,6 +13,7 @@
 #include "gl/resources.h"
 #include "ground/firecamp_gpu.h"
 #include "ground/grass_gpu.h"
+#include "ground/olive_gpu.h"
 #include "ground/pine_gpu.h"
 #include "ground/plant_gpu.h"
 #include "ground/stone_gpu.h"
@@ -582,6 +583,94 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
                               m_vegetationPipeline->m_pineIndexCount,
                               GL_UNSIGNED_SHORT, nullptr,
                               static_cast<GLsizei>(pine.instance_count));
+      glBindVertexArray(0);
+
+      if (prev_cull != 0U) {
+        glEnable(GL_CULL_FACE);
+      }
+
+      break;
+    }
+    case OliveBatchCmdIndex: {
+      if (!m_vegetationPipeline) {
+        ++i;
+        continue;
+      }
+      const auto &olive = std::get<OliveBatchCmdIndex>(cmd);
+
+      if ((olive.instanceBuffer == nullptr) || olive.instance_count == 0 ||
+          (m_vegetationPipeline->oliveShader() == nullptr) ||
+          (m_vegetationPipeline->m_oliveVao == 0U) ||
+          m_vegetationPipeline->m_oliveIndexCount == 0) {
+        break;
+      }
+
+      DepthMaskScope const depth_mask(true);
+      glEnable(GL_DEPTH_TEST);
+      BlendScope const blend(true);
+      glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+      GLboolean const prev_cull = glIsEnabled(GL_CULL_FACE);
+      if (prev_cull != 0U) {
+        glDisable(GL_CULL_FACE);
+      }
+
+      Shader *olive_shader = m_vegetationPipeline->oliveShader();
+      if (m_lastBoundShader != olive_shader) {
+        olive_shader->use();
+        m_lastBoundShader = olive_shader;
+        m_lastBoundTexture = nullptr;
+      }
+
+      if (m_vegetationPipeline->m_oliveUniforms.view_proj !=
+          Shader::InvalidUniform) {
+        olive_shader->setUniform(
+            m_vegetationPipeline->m_oliveUniforms.view_proj, view_proj);
+      }
+      if (m_vegetationPipeline->m_oliveUniforms.time !=
+          Shader::InvalidUniform) {
+        olive_shader->setUniform(m_vegetationPipeline->m_oliveUniforms.time,
+                                 olive.params.time);
+      }
+      if (m_vegetationPipeline->m_oliveUniforms.wind_strength !=
+          Shader::InvalidUniform) {
+        olive_shader->setUniform(
+            m_vegetationPipeline->m_oliveUniforms.wind_strength,
+            olive.params.wind_strength);
+      }
+      if (m_vegetationPipeline->m_oliveUniforms.wind_speed !=
+          Shader::InvalidUniform) {
+        olive_shader->setUniform(
+            m_vegetationPipeline->m_oliveUniforms.wind_speed,
+            olive.params.wind_speed);
+      }
+      if (m_vegetationPipeline->m_oliveUniforms.light_direction !=
+          Shader::InvalidUniform) {
+        QVector3D light_dir = olive.params.light_direction;
+        if (!light_dir.isNull()) {
+          light_dir.normalize();
+        }
+        olive_shader->setUniform(
+            m_vegetationPipeline->m_oliveUniforms.light_direction, light_dir);
+      }
+
+      glBindVertexArray(m_vegetationPipeline->m_oliveVao);
+      olive.instanceBuffer->bind();
+      const auto stride = static_cast<GLsizei>(sizeof(OliveInstanceGpu));
+      glVertexAttribPointer(
+          InstancePosition, Vec4, GL_FLOAT, GL_FALSE, stride,
+          reinterpret_cast<void *>(offsetof(OliveInstanceGpu, pos_scale)));
+      glVertexAttribPointer(
+          InstanceScale, Vec4, GL_FLOAT, GL_FALSE, stride,
+          reinterpret_cast<void *>(offsetof(OliveInstanceGpu, color_sway)));
+      glVertexAttribPointer(
+          InstanceColor, Vec4, GL_FLOAT, GL_FALSE, stride,
+          reinterpret_cast<void *>(offsetof(OliveInstanceGpu, rotation)));
+      olive.instanceBuffer->unbind();
+
+      glDrawElementsInstanced(GL_TRIANGLES,
+                              m_vegetationPipeline->m_oliveIndexCount,
+                              GL_UNSIGNED_SHORT, nullptr,
+                              static_cast<GLsizei>(olive.instance_count));
       glBindVertexArray(0);
 
       if (prev_cull != 0U) {
