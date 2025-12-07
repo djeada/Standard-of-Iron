@@ -75,40 +75,52 @@ void RiverbankAssetRenderer::submit(Renderer &, ResourceManager *resources) {
     return;
   }
 
-  if (!m_assetInstanceBuffer) {
-    m_assetInstanceBuffer = std::make_unique<Buffer>(Buffer::Type::Vertex);
-  }
-  if (m_assetInstancesDirty && m_assetInstanceBuffer) {
-    m_assetInstanceBuffer->setData(m_assetInstances, Buffer::Usage::Static);
-    m_assetInstancesDirty = false;
-  }
-
   auto &visibility = Game::Map::VisibilityService::instance();
   const bool use_visibility = visibility.isInitialized();
+  const std::uint64_t current_version =
+      use_visibility ? visibility.version() : 0;
 
-  std::vector<RiverbankAssetInstanceGpu> visible_instances;
+  const bool needs_visibility_update =
+      m_visibilityDirty || m_assetInstancesDirty ||
+      (use_visibility && current_version != m_cachedVisibilityVersion);
 
-  for (const auto &instance : m_assetInstances) {
-    bool should_render = true;
+  if (needs_visibility_update) {
+    m_visibleInstances.clear();
+    m_visibleInstances.reserve(m_assetInstances.size());
 
-    if (use_visibility) {
-      float const world_x = instance.position[0];
-      float const world_z = instance.position[2];
+    for (const auto &instance : m_assetInstances) {
+      bool should_render = true;
 
-      if (!visibility.isVisibleWorld(world_x, world_z)) {
-        should_render = false;
+      if (use_visibility) {
+        float const world_x = instance.position[0];
+        float const world_z = instance.position[2];
+
+        if (!visibility.isVisibleWorld(world_x, world_z)) {
+          should_render = false;
+        }
+      }
+
+      if (should_render) {
+        m_visibleInstances.push_back(instance);
       }
     }
 
-    if (should_render) {
-      visible_instances.push_back(instance);
+    if (!m_assetInstanceBuffer) {
+      m_assetInstanceBuffer = std::make_unique<Buffer>(Buffer::Type::Vertex);
     }
+    if (!m_visibleInstances.empty()) {
+      m_assetInstanceBuffer->setData(m_visibleInstances,
+                                     Buffer::Usage::Dynamic);
+    }
+
+    m_cachedVisibilityVersion = current_version;
+    m_visibilityDirty = false;
+    m_assetInstancesDirty = false;
   }
 
-  if (!visible_instances.empty()) {
-
+  if (!m_visibleInstances.empty()) {
     qDebug() << "RiverbankAssetRenderer: Would render"
-             << visible_instances.size() << "of" << m_assetInstanceCount
+             << m_visibleInstances.size() << "of" << m_assetInstanceCount
              << "riverbank assets (fog of war applied)";
   }
 }
@@ -118,6 +130,9 @@ void RiverbankAssetRenderer::clear() {
   m_assetInstanceBuffer.reset();
   m_assetInstanceCount = 0;
   m_assetInstancesDirty = false;
+  m_visibleInstances.clear();
+  m_cachedVisibilityVersion = 0;
+  m_visibilityDirty = true;
 }
 
 void RiverbankAssetRenderer::generateAssetInstances() {

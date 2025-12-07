@@ -41,6 +41,10 @@ private:
   std::size_t m_pineInstanceCount = 0;
   PineBatchParams m_pineParams;
   bool m_pineInstancesDirty = false;
+
+  std::vector<PineInstanceGpu> m_visibleInstances;
+  std::uint64_t m_cachedVisibilityVersion = 0;
+  bool m_visibilityDirty = true;
 };
 
 } // namespace Render::GL
