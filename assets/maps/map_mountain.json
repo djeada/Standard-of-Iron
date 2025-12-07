@@ -82,7 +82,7 @@
       "z": 75,
       "playerId": 1,
       "maxPopulation": 200,
-      "nation": "kingdom_of_iron"
+      "nation": "roman_republic"
     },
     {
       "type": "archer",
@@ -132,7 +132,7 @@
       "z": 225,
       "playerId": 2,
       "maxPopulation": 200,
-      "nation": "kingdom_of_iron"
+      "nation": "roman_republic"
     },
     {
       "type": "archer",
@@ -175,7 +175,7 @@
       "x": 150,
       "z": 150,
       "maxPopulation": 180,
-      "nation": "kingdom_of_iron"
+      "nation": "roman_republic"
     },
     {
       "type": "barracks",
@@ -183,7 +183,7 @@
       "z": 225,
       "playerId": 3,
       "maxPopulation": 150,
-      "nation": "kingdom_of_iron"
+      "nation": "roman_republic"
     },
     {
       "type": "swordsman",
@@ -214,7 +214,7 @@
       "x": 225,
       "z": 75,
       "maxPopulation": 150,
-      "nation": "kingdom_of_iron"
+      "nation": "roman_republic"
     }
   ],
   "firecamps": [

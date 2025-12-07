@@ -313,7 +313,7 @@ void Serialization::deserializeEntity(Entity *entity, const QJsonObject &json) {
       } else {
         qWarning() << "Unknown nation ID in save file:" << nation_str
                    << "- using default";
-        unit->nation_id = Game::Systems::NationID::KingdomOfIron;
+        unit->nation_id = Game::Systems::NationID::RomanRepublic;
       }
     }
   }

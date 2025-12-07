@@ -1,6 +1,12 @@
 #version 330 core
 
 // ============================================================================
+// ROMAN MEDICUS (HEALER) SHADER
+// Clean, practical Roman medical professional appearance with crisp textiles,
+// maintained leather, polished bronze tools, and soft wrap lighting.
+// ============================================================================
+
+// ============================================================================
 // INPUTS & OUTPUTS
 // ============================================================================
 
@@ -44,20 +50,142 @@ float noise(vec2 p) {
   return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
 }
 
+float fbm(vec2 p) {
+  float sum = 0.0;
+  float amp = 0.5;
+  float freq = 1.0;
+  for (int i = 0; i < 4; ++i) {
+    sum += amp * noise(p * freq);
+    freq *= 2.1;
+    amp *= 0.48;
+  }
+  return sum;
+}
+
+float triplanar_noise(vec3 pos, vec3 normal, float scale) {
+  vec3 w = abs(normal);
+  w = max(w, vec3(0.0001));
+  w /= (w.x + w.y + w.z);
+  float xy = noise(pos.xy * scale);
+  float yz = noise(pos.yz * scale);
+  float zx = noise(pos.zx * scale);
+  return xy * w.z + yz * w.x + zx * w.y;
+}
+
 // ============================================================================
-// MATERIAL PATTERN FUNCTIONS (Roman Medicus)
+// ROMAN TEXTILE PATTERNS
 // ============================================================================
 
 float cloth_weave(vec2 p) {
-  float warp_thread = sin(p.x * 70.0);
-  float weft_thread = sin(p.y * 68.0);
-  return warp_thread * weft_thread * 0.06;
+  // Tight Roman linen weave
+  float warp_thread = sin(p.x * 72.0);
+  float weft_thread = sin(p.y * 70.0);
+  return warp_thread * weft_thread * 0.055;
 }
 
 float roman_linen(vec2 p) {
+  // Fine bleached Roman linen - crisp and clean
   float weave = cloth_weave(p);
-  float fine_thread = noise(p * 90.0) * 0.07;
-  return weave + fine_thread;
+  float fine_thread = noise(p * 95.0) * 0.06;
+  float slub = fbm(p * 7.5) * 0.05;
+  return weave + fine_thread + slub;
+}
+
+float roman_wool(vec2 p) {
+  // Coarser wool for cape/sash - more texture
+  float coarse_weave = sin(p.x * 55.0) * sin(p.y * 52.0) * 0.08;
+  float fiber_variation = noise(p * 65.0) * 0.09;
+  float nap = fbm(p * 9.0) * 0.05;
+  return coarse_weave + fiber_variation + nap;
+}
+
+// ============================================================================
+// PERTURBED NORMALS
+// ============================================================================
+
+vec3 perturb_linen_normal(vec3 N, vec3 T, vec3 B, vec2 uv) {
+  float warp = sin(uv.x * 142.0) * 0.05;
+  float weft = sin(uv.y * 138.0) * 0.05;
+  float slub = fbm(uv * 7.0) * 0.04;
+  return normalize(N + T * (warp + slub) + B * (weft + slub * 0.6));
+}
+
+vec3 perturb_wool_normal(vec3 N, vec3 T, vec3 B, vec2 uv) {
+  float weave = sin(uv.x * 58.0) * 0.08 + sin(uv.y * 56.0) * 0.08;
+  float fuzz = fbm(uv * 12.0) * 0.06;
+  return normalize(N + T * (weave + fuzz * 0.6) + B * (weave * 0.6 + fuzz));
+}
+
+vec3 perturb_leather_normal(vec3 N, vec3 T, vec3 B, vec2 uv) {
+  float grain = fbm(uv * 8.5) * 0.16;
+  float pores = noise(uv * 34.0) * 0.10;
+  float scars = noise(uv * 16.0 + vec2(2.7, -1.9)) * 0.07;
+  return normalize(N + T * (grain + scars * 0.4) + B * (pores + scars * 0.3));
+}
+
+vec3 perturb_bronze_normal(vec3 N, vec3 T, vec3 B, vec2 uv) {
+  float hammer = fbm(uv * 15.0) * 0.14;
+  float ripple = noise(uv * 46.0) * 0.05;
+  return normalize(N + T * hammer + B * (hammer * 0.4 + ripple));
+}
+
+// ============================================================================
+// LIGHTING HELPERS
+// ============================================================================
+
+float D_GGX(float NdotH, float a) {
+  float a2 = a * a;
+  float d = NdotH * NdotH * (a2 - 1.0) + 1.0;
+  return a2 / max(3.14159 * d * d, 1e-5);
+}
+
+float G_Smith(float NdotV, float NdotL, float a) {
+  float k = (a + 1.0);
+  k = (k * k) / 8.0;
+  float g_v = NdotV / (NdotV * (1.0 - k) + k);
+  float g_l = NdotL / (NdotL * (1.0 - k) + k);
+  return g_v * g_l;
+}
+
+vec3 fresnel_schlick(vec3 F0, float cos_theta) {
+  return F0 + (vec3(1.0) - F0) * pow(1.0 - cos_theta, 5.0);
+}
+
+vec3 compute_ambient(vec3 normal) {
+  float up = clamp(normal.y, 0.0, 1.0);
+  float down = clamp(-normal.y, 0.0, 1.0);
+  vec3 sky = vec3(0.66, 0.76, 0.90);
+  vec3 ground = vec3(0.42, 0.36, 0.30);
+  return sky * (0.26 + 0.54 * up) + ground * (0.14 + 0.30 * down);
+}
+
+vec3 apply_lighting(vec3 albedo, vec3 N, vec3 V, vec3 L, float roughness,
+                    float metallic, float ao, float sheen, float wrap) {
+  float NdotL = max(dot(N, L), 0.0);
+  float NdotV = max(dot(N, V), 0.0);
+  float wrapped = clamp(NdotL * (1.0 - wrap) + wrap, 0.0, 1.0);
+  NdotL = wrapped;
+
+  vec3 H = normalize(L + V);
+  float NdotH = max(dot(N, H), 0.0);
+  float VdotH = max(dot(V, H), 0.0);
+
+  float a = max(roughness * roughness, 0.03);
+  float D = D_GGX(NdotH, a);
+  float G = G_Smith(NdotV, NdotL, a);
+
+  vec3 F0 = mix(vec3(0.04), albedo, metallic);
+  vec3 F = fresnel_schlick(F0, VdotH);
+
+  vec3 spec = (D * G * F) / max(4.0 * NdotV * NdotL + 1e-5, 1e-5);
+  vec3 kd = (vec3(1.0) - F) * (1.0 - metallic);
+  vec3 diffuse = kd * albedo / 3.14159;
+
+  vec3 ambient = compute_ambient(N) * albedo;
+  vec3 light = (diffuse + spec * (1.0 + sheen)) * NdotL;
+
+  float ao_strength = mix(0.35, 1.0, clamp(ao, 0.0, 1.0));
+  return ambient * (0.56 + 0.44 * ao_strength) + light * ao_strength;
 }
 
 // ============================================================================
@@ -65,131 +193,182 @@ float roman_linen(vec2 p) {
 // ============================================================================
 
 void main() {
-  vec3 color = u_color;
+  vec3 base_color = u_color;
   if (u_useTexture) {
-    color *= texture(u_texture, v_texCoord).rgb;
+    base_color *= texture(u_texture, v_texCoord).rgb;
   }
 
-  vec3 normal = normalize(v_normal);
+  vec3 N = normalize(v_worldNormal);
+  vec3 T = normalize(v_tangent);
+  vec3 B = normalize(v_bitangent);
   vec2 uv = v_worldPos.xz * 4.5;
+  float avg_color = (base_color.r + base_color.g + base_color.b) / 3.0;
 
   // Material ID: 0=body/skin, 1=tunica, 2=leather, 3=medical tools, 4=red
-  // trim/cape
+  // trim/sash
   bool is_body = (u_materialId == 0);
   bool is_tunica = (u_materialId == 1);
   bool is_leather = (u_materialId == 2);
   bool is_medical_tools = (u_materialId == 3);
   bool is_red_trim = (u_materialId == 4);
 
-  // Use material IDs exclusively (no fallbacks)
+  // Only fall back to color heuristics if material id is absent/invalid
+  bool has_material_id = (u_materialId >= 0);
+  bool looks_light = (!has_material_id) && (avg_color > 0.75);
+  bool looks_red = (!has_material_id) && (base_color.r > base_color.g * 1.8 &&
+                                          base_color.r > base_color.b * 2.0);
+  bool looks_brown =
+      (!has_material_id) &&
+      (avg_color > 0.25 && avg_color < 0.55 && base_color.r > base_color.b);
 
-  // === ROMAN MEDICUS MATERIALS ===
+  vec3 albedo = base_color;
+  vec3 N_used = N;
+  float roughness = 0.55;
+  float metallic = 0.0;
+  float sheen = 0.0;
+  float wrap = 0.44;
 
-  // WHITE LINEN TUNICA (main garment)
-  if (is_tunica) {
-    // Fine linen weave with natural texture
+  vec3 V = normalize(vec3(-0.25, 1.0, 0.4));
+  vec3 L = normalize(vec3(1.0, 1.25, 1.0));
+
+  float curvature = length(dFdx(N)) + length(dFdy(N));
+  float ao_folds =
+      clamp(1.0 - (v_clothFolds * 0.52 + curvature * 0.78), 0.28, 1.0);
+  float ao = ao_folds;
+
+  // WHITE/CREAM LINEN TUNICA (main garment - bleached Roman style)
+  if (is_tunica || looks_light) {
+    vec3 tunic_base = vec3(0.95, 0.93, 0.90);
+    albedo = tunic_base;
+
     float linen = roman_linen(v_worldPos.xz);
-    float fine_thread = noise(uv * 95.0) * 0.06;
+    float fine_thread = noise(uv * 98.0) * 0.05;
 
-    // Cloth folds from vertex shader (natural draping)
-    float fold_depth = v_clothFolds * noise(uv * 12.0) * 0.18;
+    float fold_depth = v_clothFolds * noise(uv * 14.0) * 0.16;
+    float wear_pattern = v_fabricWear * noise(uv * 9.0) * 0.11;
 
-    // Wear patterns on high-stress areas (elbows, knees)
-    float wear_pattern = v_fabricWear * noise(uv * 8.0) * 0.12;
+    float dust =
+        smoothstep(0.24, 0.0, v_bodyHeight) * (0.10 + noise(uv * 6.5) * 0.10);
 
-    // Natural linen has subtle sheen (different from silk)
-    vec3 V = normalize(vec3(0.0, 1.0, 0.2));
-    float view_angle = max(dot(normalize(v_worldNormal), V), 0.0);
-    float linen_sheen = pow(1.0 - view_angle, 10.0) * 0.12;
+    N_used = perturb_linen_normal(N, T, B, uv);
 
-    // Slight discoloration from use (natural aging)
-    float aging = noise(uv * 3.0) * 0.08;
+    float view_angle = max(dot(N_used, V), 0.0);
+    float linen_sheen = pow(1.0 - view_angle, 11.0) * 0.14;
 
-    color *= 1.0 + linen + fine_thread - 0.03;
-    color -= vec3(fold_depth + wear_pattern + aging);
-    color += vec3(linen_sheen);
+    float aging = noise(uv * 2.5) * 0.06;
+    vec3 age_tint = vec3(0.02, 0.01, -0.01) * aging;
+
+    albedo *= 1.0 + linen + fine_thread - 0.025;
+    albedo -= vec3(fold_depth + wear_pattern);
+    albedo += vec3(linen_sheen);
+    albedo += age_tint;
+    albedo -= vec3(dust * 0.18);
+
+    roughness = 0.70 - clamp(v_fabricWear * 0.08, 0.0, 0.12);
+    sheen = 0.08;
+    wrap = 0.54;
+    ao *= 1.0 - dust * 0.35;
   }
-  // RED WOOL CAPE/TRIM (military medicus insignia)
-  else if (is_red_trim) {
-    // Wool weave (coarser than linen)
-    float weave = cloth_weave(v_worldPos.xz);
-    float wool_tex = noise(uv * 55.0) * 0.10;
+  // RED WOOL SASH/TRIM (military medicus identification)
+  else if (is_red_trim || looks_red) {
+    float weave = roman_wool(v_worldPos.xz);
+    float wool_tex = noise(uv * 58.0) * 0.10;
 
-    // Natural madder root dye richness variation
-    float dye_richness = noise(uv * 5.0) * 0.14;
+    float dye_richness = noise(uv * 4.5) * 0.15;
+    float dye_depth = noise(uv * 8.0) * 0.08;
 
-    // Wool has different sheen than linen (more matte)
-    vec3 V = normalize(vec3(0.0, 1.0, 0.3));
-    float view_angle = max(dot(normalize(v_worldNormal), V), 0.0);
-    float wool_sheen = pow(1.0 - view_angle, 7.0) * 0.11;
+    float view_angle = max(dot(N, V), 0.0);
+    float wool_sheen = pow(1.0 - view_angle, 6.0) * 0.09;
 
-    // Fading from sun exposure (outer garment)
-    float sun_fading = smoothstep(0.8, 1.0, v_bodyHeight) * 0.08;
+    float sun_fading = smoothstep(0.75, 1.0, v_bodyHeight) * 0.07;
+    float wash_fade = noise(uv * 3.0) * 0.05;
 
-    color *= 1.0 + weave + wool_tex + dye_richness - 0.04;
-    color += vec3(wool_sheen);
-    color -= vec3(sun_fading);
+    N_used = perturb_wool_normal(N, T, B, uv);
+
+    albedo = mix(base_color, vec3(0.75, 0.12, 0.12), 0.35);
+    albedo *= 1.0 + weave + wool_tex + dye_richness + dye_depth - 0.04;
+    albedo += vec3(wool_sheen);
+    albedo -= vec3(sun_fading + wash_fade);
+
+    roughness = 0.50;
+    sheen = 0.10;
+    wrap = 0.48;
   }
-  // LEATHER EQUIPMENT (bag, belt, sandals, straps)
-  else if (is_leather) {
-    // Vegetable-tanned leather grain
-    float leather_grain = noise(uv * 15.0) * 0.15 * (1.0 + v_fabricWear * 0.3);
-    float pores = noise(uv * 35.0) * 0.07;
+  // LEATHER EQUIPMENT (medical bag, belt, sandals, straps)
+  else if (is_leather || looks_brown) {
+    float leather_grain = noise(uv * 16.0) * 0.16 * (1.0 + v_fabricWear * 0.25);
+    float pores = noise(uv * 38.0) * 0.06;
 
-    // Roman tooling and stitching marks
-    float tooling = noise(uv * 22.0) * 0.05;
-    float stitching = step(0.95, fract(v_worldPos.x * 15.0)) *
-                      step(0.95, fract(v_worldPos.y * 12.0)) * 0.08;
+    float tooling = noise(uv * 24.0) * 0.05;
+    float stitching = step(0.94, fract(v_worldPos.x * 16.0)) *
+                      step(0.94, fract(v_worldPos.y * 14.0)) * 0.07;
 
-    // Leather darkens and stiffens with age/oil
-    float oil_darkening = v_fabricWear * 0.15;
+    float oil_darkening = v_fabricWear * 0.12;
+    float conditioning = noise(uv * 6.0) * 0.04;
 
-    // Subtle leather sheen (not glossy, just slight reflection)
-    vec3 V = normalize(vec3(0.0, 1.0, 0.4));
-    float view_angle = max(dot(normalize(v_worldNormal), V), 0.0);
-    float leather_sheen = pow(1.0 - view_angle, 5.5) * 0.11;
+    float view_angle = max(dot(N, V), 0.0);
+    float leather_sheen = pow(1.0 - view_angle, 5.0) * 0.12;
 
-    // Edge wear (lighter color at stressed edges)
-    float edge_wear =
-        smoothstep(0.88, 0.92, abs(dot(normal, v_tangent))) * 0.10;
+    float edge_wear = smoothstep(0.86, 0.92, abs(dot(N, T))) * 0.09;
 
-    color *= 1.0 + leather_grain + pores + tooling - oil_darkening;
-    color += vec3(stitching + leather_sheen + edge_wear);
+    N_used = perturb_leather_normal(N, T, B, uv);
+
+    albedo *=
+        1.0 + leather_grain + pores + tooling + conditioning - oil_darkening;
+    albedo += vec3(stitching + leather_sheen + edge_wear);
+
+    roughness = 0.56 - clamp(v_fabricWear * 0.06, 0.0, 0.10);
+    sheen = 0.08;
+    wrap = 0.46;
   }
-  // MEDICAL IMPLEMENTS (bronze/iron tools)
+  // BRONZE MEDICAL IMPLEMENTS
   else if (is_medical_tools) {
-    // Bronze medical instruments (Roman surgical tools were bronze)
-    vec3 bronze_base = vec3(0.75, 0.55, 0.30);
+    vec3 bronze_base = vec3(0.76, 0.56, 0.32);
 
-    // Tool patina from use and cleaning
-    float patina = noise(uv * 12.0) * 0.18;
-    float verdigris = noise(uv * 18.0) * 0.10;
+    float patina = noise(uv * 13.0) * 0.16;
+    float verdigris = noise(uv * 20.0) * 0.08;
 
-    // Polished areas from frequent handling
-    vec3 V = normalize(vec3(0.0, 1.0, 0.5));
-    float view_angle = max(dot(normalize(v_worldNormal), V), 0.0);
-    float bronze_sheen = pow(view_angle, 8.0) * 0.35;
+    float view_angle = max(dot(N, V), 0.0);
+    float bronze_sheen = pow(view_angle, 9.0) * 0.38;
 
-    color = mix(color, bronze_base, 0.6);
-    color -= vec3(patina * 0.3 + verdigris * 0.2);
-    color += vec3(bronze_sheen);
+    float edge_polish = smoothstep(0.85, 0.95, abs(dot(N, T))) * 0.12;
+
+    N_used = perturb_bronze_normal(N, T, B, uv);
+
+    albedo = mix(base_color, bronze_base, 0.58);
+    albedo -= vec3(patina * 0.28 + verdigris * 0.18);
+    albedo += vec3(bronze_sheen + edge_polish);
+
+    roughness = 0.32 + patina * 0.12;
+    metallic = 0.92;
+    sheen = 0.12;
+    wrap = 0.42;
   }
-  // BODY/SKIN (hands, face, neck)
+  // BODY/SKIN (Roman - clean-shaven face, hands, arms)
   else if (is_body) {
-    // Minimal processing for skin - let base color through
-    float skin_detail = noise(uv * 25.0) * 0.08;
-    color *= 1.0 + skin_detail;
+    float skin_detail = noise(uv * 28.0) * 0.07;
+    float skin_subsurface = noise(uv * 8.0) * 0.04;
+
+    N_used = normalize(N + vec3(0.0, 0.01, 0.0) *
+                               triplanar_noise(v_worldPos * 3.0, N, 5.5));
+
+    albedo *= 1.0 + skin_detail;
+    albedo += vec3(0.02, 0.01, 0.0) * skin_subsurface;
+
+    float rim = pow(1.0 - clamp(dot(N_used, V), 0.0, 1.0), 4.0) * 0.04;
+    albedo += vec3(rim);
+
+    roughness = 0.54;
+    sheen = 0.05;
+    wrap = 0.46;
+  }
+  // DEFAULT (catch-all)
+  else {
+    float detail = noise(uv * 11.0) * 0.09;
+    albedo *= 1.0 + detail - 0.05;
   }
 
-  color = clamp(color, 0.0, 1.0);
-
-  // Lighting model (softer for cloth-based unit)
-  vec3 light_dir = normalize(vec3(1.0, 1.2, 1.0));
-  float n_dot_l = dot(normal, light_dir);
-
-  float wrap_amount = is_tunica ? 0.50 : (is_red_trim ? 0.48 : 0.42);
-  float diff = max(n_dot_l * (1.0 - wrap_amount) + wrap_amount, 0.25);
-
-  color *= diff;
-  FragColor = vec4(color, u_alpha);
+  vec3 color = apply_lighting(albedo, N_used, V, L, roughness, metallic, ao,
+                              sheen, wrap);
+  FragColor = vec4(clamp(color, 0.0, 1.0), u_alpha);
 }

@@ -28,7 +28,7 @@
         "selection_ring_size": 1.2,
         "selection_ring_y_offset": 0.0,
         "selection_ring_ground_offset": 0.0,
-        "renderer_id": "troops/kingdom/archer"
+        "renderer_id": "troops/roman/archer"
       },
       "formation": {
         "individuals_per_unit": 20,
@@ -63,7 +63,7 @@
         "selection_ring_size": 1.1,
         "selection_ring_y_offset": 0.0,
         "selection_ring_ground_offset": 0.0,
-        "renderer_id": "troops/kingdom/swordsman"
+        "renderer_id": "troops/roman/swordsman"
       },
       "formation": {
         "individuals_per_unit": 15,
@@ -98,7 +98,7 @@
         "selection_ring_size": 1.4,
         "selection_ring_y_offset": 0.0,
         "selection_ring_ground_offset": 0.0,
-        "renderer_id": "troops/kingdom/spearman"
+        "renderer_id": "troops/roman/spearman"
       },
       "formation": {
         "individuals_per_unit": 24,
@@ -132,7 +132,7 @@
         "render_scale": 0.8,
         "selection_ring_size": 2.0,
         "selection_ring_y_offset": 0.0,
-        "renderer_id": "troops/kingdom/horse_swordsman"
+        "renderer_id": "troops/roman/horse_swordsman"
       },
       "formation": {
         "individuals_per_unit": 9,
@@ -166,7 +166,7 @@
         "render_scale": 0.75,
         "selection_ring_size": 1.8,
         "selection_ring_y_offset": 0.0,
-        "renderer_id": "troops/kingdom/horse_archer"
+        "renderer_id": "troops/roman/horse_archer"
       },
       "formation": {
         "individuals_per_unit": 10,
@@ -200,7 +200,7 @@
         "render_scale": 0.78,
         "selection_ring_size": 1.9,
         "selection_ring_y_offset": 0.0,
-        "renderer_id": "troops/kingdom/horse_spearman"
+        "renderer_id": "troops/roman/horse_spearman"
       },
       "formation": {
         "individuals_per_unit": 9,
@@ -235,7 +235,77 @@
         "selection_ring_size": 1.2,
         "selection_ring_y_offset": 0.0,
         "selection_ring_ground_offset": 0.0,
-        "renderer_id": "troops/kingdom/healer"
+        "renderer_id": "troops/roman/healer"
+      },
+      "formation": {
+        "individuals_per_unit": 1,
+        "max_units_per_row": 1
+      }
+    },
+    {
+      "id": "catapult",
+      "display_name": "Catapult",
+      "production": {
+        "cost": 250,
+        "build_time": 15.0,
+        "priority": 5,
+        "is_melee": false
+      },
+      "combat": {
+        "health": 300,
+        "max_health": 300,
+        "speed": 1.0,
+        "vision_range": 20.0,
+        "ranged_range": 15.0,
+        "ranged_damage": 80,
+        "ranged_cooldown": 5.0,
+        "melee_range": 1.5,
+        "melee_damage": 5,
+        "melee_cooldown": 2.0,
+        "can_ranged": true,
+        "can_melee": false
+      },
+      "visuals": {
+        "render_scale": 1.2,
+        "selection_ring_size": 1.25,
+        "selection_ring_y_offset": 0.0,
+        "selection_ring_ground_offset": 0.0,
+        "renderer_id": "troops/roman/catapult"
+      },
+      "formation": {
+        "individuals_per_unit": 1,
+        "max_units_per_row": 1
+      }
+    },
+    {
+      "id": "ballista",
+      "display_name": "Ballista",
+      "production": {
+        "cost": 200,
+        "build_time": 12.0,
+        "priority": 6,
+        "is_melee": false
+      },
+      "combat": {
+        "health": 200,
+        "max_health": 200,
+        "speed": 1.5,
+        "vision_range": 22.0,
+        "ranged_range": 18.0,
+        "ranged_damage": 45,
+        "ranged_cooldown": 3.0,
+        "melee_range": 1.5,
+        "melee_damage": 5,
+        "melee_cooldown": 2.0,
+        "can_ranged": true,
+        "can_melee": false
+      },
+      "visuals": {
+        "render_scale": 1.0,
+        "selection_ring_size": 1.0,
+        "selection_ring_y_offset": 0.0,
+        "selection_ring_ground_offset": 0.0,
+        "renderer_id": "troops/roman/ballista"
       },
       "formation": {
         "individuals_per_unit": 1,

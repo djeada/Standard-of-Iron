@@ -228,8 +228,9 @@ void main() {
     vec3 bronze_tint = vec3(0.62, 0.46, 0.20);
     vec3 chain_tint = vec3(0.78, 0.80, 0.82);
 
-    float torsoBand = 1.0 - step(1.5, v_armorLayer);
-    float skirtBand = step(1.0, v_armorLayer);
+    // Treat the entire armor mesh as torso to avoid clipping by height bands.
+    float torsoBand = 1.0;
+    float skirtBand = 0.0;
     float linenBlend = skirtBand * 0.40;
     float bronzeBlend = torsoBand * 0.45;
     float chainBlend = torsoBand * 0.20;
