@@ -23,6 +23,7 @@ class FogRenderer;
 class StoneRenderer;
 class PlantRenderer;
 class PineRenderer;
+class OliveRenderer;
 class FireCampRenderer;
 class RiverRenderer;
 class RoadRenderer;
@@ -76,6 +77,7 @@ public:
   void setStoneRenderer(Render::GL::StoneRenderer *stone) { m_stone = stone; }
   void setPlantRenderer(Render::GL::PlantRenderer *plant) { m_plant = plant; }
   void setPineRenderer(Render::GL::PineRenderer *pine) { m_pine = pine; }
+  void setOliveRenderer(Render::GL::OliveRenderer *olive) { m_olive = olive; }
   void setFireCampRenderer(Render::GL::FireCampRenderer *firecamp) {
     m_firecamp = firecamp;
   }
@@ -108,6 +110,7 @@ private:
   Render::GL::StoneRenderer *m_stone = nullptr;
   Render::GL::PlantRenderer *m_plant = nullptr;
   Render::GL::PineRenderer *m_pine = nullptr;
+  Render::GL::OliveRenderer *m_olive = nullptr;
   Render::GL::FireCampRenderer *m_firecamp = nullptr;
   OwnersUpdatedCallback m_onOwnersUpdated;
   VisibilityMaskReadyCallback m_onVisibilityMaskReady;

@@ -20,6 +20,7 @@
 #include "render/ground/firecamp_renderer.h"
 #include "render/ground/fog_renderer.h"
 #include "render/ground/ground_renderer.h"
+#include "render/ground/olive_renderer.h"
 #include "render/ground/pine_renderer.h"
 #include "render/ground/plant_renderer.h"
 #include "render/ground/river_renderer.h"
@@ -380,6 +381,14 @@ auto SkirmishLoader::start(const QString &map_path,
         (terrain_service.getHeightMap() != nullptr)) {
       m_pine->configure(*terrain_service.getHeightMap(),
                         terrain_service.biomeSettings());
+    }
+  }
+
+  if (m_olive != nullptr) {
+    if (terrain_service.isInitialized() &&
+        (terrain_service.getHeightMap() != nullptr)) {
+      m_olive->configure(*terrain_service.getHeightMap(),
+                         terrain_service.biomeSettings());
     }
   }
 

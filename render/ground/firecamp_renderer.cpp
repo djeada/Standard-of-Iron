@@ -87,37 +87,51 @@ void FireCampRenderer::submit(Renderer &renderer, ResourceManager *resources) {
 
   if (m_fireCampInstanceCount == 0) {
     m_fireCampInstanceBuffer.reset();
+    m_visibleInstances.clear();
     return;
   }
 
   auto &visibility = Game::Map::VisibilityService::instance();
   const bool use_visibility = visibility.isInitialized();
+  const std::uint64_t current_version =
+      use_visibility ? visibility.version() : 0;
 
-  std::vector<FireCampInstanceGpu> visible_instances;
-  if (use_visibility) {
-    visible_instances.reserve(m_fireCampInstanceCount);
-    for (const auto &instance : m_fireCampInstances) {
-      float const world_x = instance.pos_intensity.x();
-      float const world_z = instance.pos_intensity.z();
-      if (visibility.isVisibleWorld(world_x, world_z)) {
-        visible_instances.push_back(instance);
+  const bool needs_visibility_update =
+      m_visibilityDirty || (current_version != m_cachedVisibilityVersion);
+
+  if (needs_visibility_update) {
+    m_visibleInstances.clear();
+
+    if (use_visibility) {
+      m_visibleInstances.reserve(m_fireCampInstanceCount);
+      for (const auto &instance : m_fireCampInstances) {
+        float const world_x = instance.pos_intensity.x();
+        float const world_z = instance.pos_intensity.z();
+        if (visibility.isVisibleWorld(world_x, world_z)) {
+          m_visibleInstances.push_back(instance);
+        }
       }
+    } else {
+      m_visibleInstances = m_fireCampInstances;
     }
-  } else {
-    visible_instances = m_fireCampInstances;
+
+    m_cachedVisibilityVersion = current_version;
+    m_visibilityDirty = false;
+
+    if (!m_visibleInstances.empty()) {
+      if (!m_fireCampInstanceBuffer) {
+        m_fireCampInstanceBuffer =
+            std::make_unique<Buffer>(Buffer::Type::Vertex);
+      }
+      m_fireCampInstanceBuffer->setData(m_visibleInstances,
+                                        Buffer::Usage::Static);
+    }
   }
 
-  const auto visible_count = static_cast<uint32_t>(visible_instances.size());
-  if (visible_count == 0) {
-    m_fireCampInstanceBuffer.reset();
+  const auto visible_count = static_cast<uint32_t>(m_visibleInstances.size());
+  if (visible_count == 0 || !m_fireCampInstanceBuffer) {
     return;
   }
-
-  if (!m_fireCampInstanceBuffer) {
-    m_fireCampInstanceBuffer = std::make_unique<Buffer>(Buffer::Type::Vertex);
-  }
-
-  m_fireCampInstanceBuffer->setData(visible_instances, Buffer::Usage::Static);
 
   FireCampBatchParams params = m_fireCampParams;
   params.time = renderer.getAnimationTime();
@@ -130,7 +144,7 @@ void FireCampRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   const QVector3D log_color(0.26F, 0.15F, 0.08F);
   const QVector3D char_color(0.08F, 0.05F, 0.03F);
 
-  for (const auto &instance : visible_instances) {
+  for (const auto &instance : m_visibleInstances) {
     const QVector4D pos_intensity = instance.pos_intensity;
     const QVector4D radius_phase = instance.radius_phase;
 
@@ -184,9 +198,12 @@ void FireCampRenderer::submit(Renderer &renderer, ResourceManager *resources) {
 
 void FireCampRenderer::clear() {
   m_fireCampInstances.clear();
+  m_visibleInstances.clear();
   m_fireCampInstanceBuffer.reset();
   m_fireCampInstanceCount = 0;
   m_fireCampInstancesDirty = false;
+  m_visibilityDirty = true;
+  m_cachedVisibilityVersion = 0;
   m_explicitPositions.clear();
   m_explicitIntensities.clear();
   m_explicitRadii.clear();

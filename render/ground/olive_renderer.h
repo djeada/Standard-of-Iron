@@ -2,7 +2,7 @@
 
 #include "../../game/map/terrain.h"
 #include "../i_render_pass.h"
-#include "riverbank_asset_gpu.h"
+#include "olive_gpu.h"
 #include <QVector3D>
 #include <cstdint>
 #include <memory>
@@ -12,13 +12,12 @@ namespace Render::GL {
 class Buffer;
 class Renderer;
 
-class RiverbankAssetRenderer : public IRenderPass {
+class OliveRenderer : public IRenderPass {
 public:
-  RiverbankAssetRenderer();
-  ~RiverbankAssetRenderer() override;
+  OliveRenderer();
+  ~OliveRenderer() override;
 
-  void configure(const std::vector<Game::Map::RiverSegment> &riverSegments,
-                 const Game::Map::TerrainHeightMap &height_map,
+  void configure(const Game::Map::TerrainHeightMap &height_map,
                  const Game::Map::BiomeSettings &biomeSettings);
 
   void submit(Renderer &renderer, ResourceManager *resources) override;
@@ -26,9 +25,8 @@ public:
   void clear();
 
 private:
-  void generateAssetInstances();
+  void generate_olive_instances();
 
-  std::vector<Game::Map::RiverSegment> m_riverSegments;
   int m_width = 0;
   int m_height = 0;
   float m_tile_size = 1.0F;
@@ -38,13 +36,13 @@ private:
   Game::Map::BiomeSettings m_biomeSettings;
   std::uint32_t m_noiseSeed = 0U;
 
-  std::vector<RiverbankAssetInstanceGpu> m_assetInstances;
-  std::unique_ptr<Buffer> m_assetInstanceBuffer;
-  std::size_t m_assetInstanceCount = 0;
-  RiverbankAssetBatchParams m_assetParams;
-  bool m_assetInstancesDirty = false;
+  std::vector<OliveInstanceGpu> m_oliveInstances;
+  std::unique_ptr<Buffer> m_oliveInstanceBuffer;
+  std::size_t m_oliveInstanceCount = 0;
+  OliveBatchParams m_oliveParams;
+  bool m_oliveInstancesDirty = false;
 
-  std::vector<RiverbankAssetInstanceGpu> m_visibleInstances;
+  std::vector<OliveInstanceGpu> m_visibleInstances;
   std::uint64_t m_cachedVisibilityVersion = 0;
   bool m_visibilityDirty = true;
 };
