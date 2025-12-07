@@ -14,9 +14,11 @@ struct HealerStyleConfig {
   std::optional<QVector3D> wood_color;
   std::optional<QVector3D> cape_color;
 
-  bool show_helmet = true;
-  bool show_armor = true;
+  bool show_helmet = false;
+  bool show_armor = false;
   bool show_cape = true;
+
+  bool force_beard = true;
 
   std::string attachment_profile;
   std::string shader_id;

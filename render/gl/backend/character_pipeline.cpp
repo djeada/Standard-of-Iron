@@ -116,8 +116,7 @@ void CharacterPipeline::cacheNationVariants(const QString &baseKey) {
   if (m_shaderCache == nullptr) {
     return;
   }
-  static const QStringList nations{QStringLiteral("kingdom_of_iron"),
-                                   QStringLiteral("roman_republic"),
+  static const QStringList nations{QStringLiteral("roman_republic"),
                                    QStringLiteral("carthage")};
   for (const QString &nation : nations) {
     const QString shaderName = baseKey + QStringLiteral("_") + nation;

@@ -24,7 +24,7 @@ enum class ProductionResult {
 struct ProductionState {
   bool has_barracks = false;
   bool inProgress = false;
-  NationID nation_id = NationID::KingdomOfIron;
+  NationID nation_id = NationID::RomanRepublic;
   Game::Units::TroopType product_type = Game::Units::TroopType::Archer;
   float timeRemaining = 0.0F;
   float buildTime = 0.0F;
