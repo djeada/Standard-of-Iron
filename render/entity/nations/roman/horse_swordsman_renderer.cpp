@@ -19,7 +19,7 @@ auto makeMountedKnightConfig() -> MountedKnightRendererConfig {
   config.shield_equipment_id = "shield_roman";
   config.helmet_equipment_id = "roman_heavy";
   config.armor_equipment_id = "roman_heavy_armor";
-  config.shoulder_equipment_id = "roman_shoulder_cover";
+  config.shoulder_equipment_id = "roman_shoulder_cover_cavalry";
   config.has_shoulder = true;
   config.helmet_offset_moving = 0.035F;
   config.horse_attachments.emplace_back(

@@ -1,6 +1,8 @@
 #include "factory.h"
 #include "archer.h"
+#include "ballista.h"
 #include "barracks.h"
+#include "catapult.h"
 #include "healer.h"
 #include "horse_archer.h"
 #include "horse_spearman.h"
@@ -46,6 +48,16 @@ void registerBuiltInUnits(UnitFactoryRegistry &reg) {
   reg.registerFactory(SpawnType::Healer, [](Engine::Core::World &world,
                                             const SpawnParams &params) {
     return Healer::Create(world, params);
+  });
+
+  reg.registerFactory(SpawnType::Catapult, [](Engine::Core::World &world,
+                                              const SpawnParams &params) {
+    return Catapult::Create(world, params);
+  });
+
+  reg.registerFactory(SpawnType::Ballista, [](Engine::Core::World &world,
+                                              const SpawnParams &params) {
+    return Ballista::Create(world, params);
   });
 
   reg.registerFactory(SpawnType::Barracks, [](Engine::Core::World &world,

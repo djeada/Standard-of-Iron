@@ -63,14 +63,8 @@ void main() {
   // Fabric wear pattern (procedural based on world position)
   v_fabricWear = hash13(v_worldPos * 0.5) * 0.3 + 0.2; // 0.2-0.5 range
 
-  // Legacy armor layer for fallback compatibility
-  if (v_worldPos.y > 1.5) {
-    v_armorLayer = 0.0;
-  } else if (v_worldPos.y > 0.8) {
-    v_armorLayer = 1.0;
-  } else {
-    v_armorLayer = 2.0;
-  }
+  // Armor selection based solely on material ID.
+  v_armorLayer = (u_materialId == 1) ? 1.0 : 0.0;
 
   gl_Position = u_mvp * vec4(position, 1.0);
 }

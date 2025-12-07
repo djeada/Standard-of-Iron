@@ -32,21 +32,15 @@ add_library(render_gl STATIC
     ground/pine_renderer.cpp
     ground/firecamp_renderer.cpp
     entity/registry.cpp
-    entity/nations/kingdom/archer_renderer.cpp
     entity/nations/roman/archer_renderer.cpp
     entity/nations/carthage/archer_renderer.cpp
-    entity/nations/kingdom/archer_style.cpp
     entity/nations/roman/archer_style.cpp
     entity/nations/carthage/archer_style.cpp
-    entity/nations/kingdom/spearman_style.cpp
     entity/nations/roman/swordsman_renderer.cpp
-    entity/nations/kingdom/swordsman_renderer.cpp
     entity/nations/carthage/swordsman_renderer.cpp
     entity/nations/roman/swordsman_style.cpp
     entity/nations/carthage/swordsman_style.cpp
-    entity/nations/kingdom/swordsman_style.cpp
     entity/nations/roman/spearman_renderer.cpp
-    entity/nations/kingdom/spearman_renderer.cpp
     entity/nations/carthage/spearman_renderer.cpp
     entity/nations/roman/spearman_style.cpp
     entity/nations/carthage/spearman_style.cpp
@@ -59,23 +53,23 @@ add_library(render_gl STATIC
     entity/horse_spearman_renderer_base.cpp
     entity/nations/roman/horse_swordsman_renderer.cpp
     entity/nations/carthage/horse_swordsman_renderer.cpp
-    entity/nations/kingdom/horse_swordsman_renderer.cpp
     entity/nations/roman/horse_archer_renderer.cpp
     entity/nations/carthage/horse_archer_renderer.cpp
-    entity/nations/kingdom/horse_archer_renderer.cpp
     entity/nations/roman/horse_spearman_renderer.cpp
     entity/nations/carthage/horse_spearman_renderer.cpp
-    entity/nations/kingdom/horse_spearman_renderer.cpp
-    entity/nations/kingdom/healer_renderer.cpp
-    entity/nations/kingdom/healer_style.cpp
     entity/nations/roman/healer_renderer.cpp
     entity/nations/roman/healer_style.cpp
     entity/nations/carthage/healer_renderer.cpp
     entity/nations/carthage/healer_style.cpp
     entity/barracks_renderer.cpp
-    entity/nations/kingdom/barracks_renderer.cpp
     entity/nations/roman/barracks_renderer.cpp
     entity/nations/carthage/barracks_renderer.cpp
+    entity/catapult_renderer.cpp
+    entity/nations/roman/catapult_renderer.cpp
+    entity/nations/carthage/catapult_renderer.cpp
+    entity/ballista_renderer.cpp
+    entity/nations/roman/ballista_renderer.cpp
+    entity/nations/carthage/ballista_renderer.cpp
     # entity/arrow.cpp removed; arrow VFX renderer code moved to geom/arrow.cpp
     geom/selection_ring.cpp
     geom/selection_disc.cpp
@@ -94,7 +88,6 @@ add_library(render_gl STATIC
     equipment/equipment_registry.cpp
     equipment/register_equipment.cpp
     equipment/armor/tunic_renderer.cpp
-    equipment/armor/kingdom_armor.cpp
     equipment/armor/roman_armor.cpp
     equipment/armor/armor_light_carthage.cpp
     equipment/armor/armor_heavy_carthage.cpp
@@ -107,17 +100,13 @@ add_library(render_gl STATIC
     equipment/weapons/sword_renderer.cpp
     equipment/weapons/sword_carthage.cpp
     equipment/weapons/sword_roman.cpp
-    equipment/weapons/sword_kingdom.cpp
     equipment/weapons/spear_renderer.cpp
     equipment/weapons/shield_renderer.cpp
     equipment/weapons/shield_carthage.cpp
     equipment/weapons/shield_roman.cpp
-    equipment/weapons/shield_kingdom.cpp
     equipment/helmets/headwrap.cpp
     equipment/helmets/roman_heavy_helmet.cpp
     equipment/helmets/roman_light_helmet.cpp
-    equipment/helmets/kingdom_heavy_helmet.cpp
-    equipment/helmets/kingdom_light_helmet.cpp
     equipment/helmets/carthage_heavy_helmet.cpp
     equipment/helmets/carthage_light_helmet.cpp
     equipment/armor/chainmail_armor.cpp

@@ -51,7 +51,7 @@ void ArmorLightCarthageRenderer::render(const DrawContext &ctx,
   QVector3D waist_up =
       (waist.up.lengthSquared() > 1e-6F) ? waist.up.normalized() : up;
 
-  QVector3D top = torso.origin + up * (torso_r * 0.35F);
+  QVector3D top = torso.origin + up * (torso_r * 0.50F);
   QVector3D head_guard =
       head.origin -
       head_up * ((head_r > 0.0F ? head_r : torso_r * 0.6F) * 1.45F);
@@ -59,11 +59,11 @@ void ArmorLightCarthageRenderer::render(const DrawContext &ctx,
     top = head_guard - up * (torso_r * 0.05F);
   }
 
-  QVector3D bottom =
-      waist.origin + waist_up * (waist_r * 0.03F) - forward * (torso_r * 0.01F);
+  QVector3D bottom = waist.origin - waist_up * (waist_r * 0.24F) -
+                     forward * (torso_r * 0.016F);
 
-  float main_radius = torso_r * 0.96F;
-  float const main_depth = torso_depth * 0.92F;
+  float main_radius = torso_r * 1.36F;
+  float const main_depth = torso_depth * 1.24F;
 
   QMatrix4x4 cuirass = cylinderBetween(ctx.model, top, bottom, main_radius);
   cuirass.scale(1.0F, 1.0F, std::max(0.15F, main_depth / main_radius));
@@ -78,7 +78,7 @@ void ArmorLightCarthageRenderer::render(const DrawContext &ctx,
         shoulder_anchor - up * (torso_r * 0.82F) + forward * (torso_r * 0.22F);
     submitter.mesh(getUnitCylinder(),
                    cylinderBetween(ctx.model, shoulder_anchor, chest_anchor,
-                                   torso_r * 0.10F),
+                                   torso_r * 0.12F),
                    leather_highlight * 0.95F, nullptr, 1.0F, 1);
   };
   strap(1.0F);
@@ -89,9 +89,9 @@ void ArmorLightCarthageRenderer::render(const DrawContext &ctx,
   QVector3D front_panel_bottom =
       bottom + forward * (torso_depth * 0.38F) + up * (torso_r * 0.03F);
   QMatrix4x4 front_panel = cylinderBetween(ctx.model, front_panel_top,
-                                           front_panel_bottom, torso_r * 0.48F);
-  front_panel.scale(0.95F, 1.0F,
-                    std::max(0.12F, (torso_depth * 0.5F) / (torso_r * 0.48F)));
+                                           front_panel_bottom, torso_r * 0.56F);
+  front_panel.scale(1.18F, 1.0F,
+                    std::max(0.22F, (torso_depth * 0.76F) / (torso_r * 0.76F)));
   submitter.mesh(torso_mesh != nullptr ? torso_mesh : getUnitTorso(),
                  front_panel, leather_highlight, nullptr, 1.0F, 1);
 
@@ -100,9 +100,9 @@ void ArmorLightCarthageRenderer::render(const DrawContext &ctx,
   QVector3D back_panel_bottom =
       bottom - forward * (torso_depth * 0.34F) + up * (torso_r * 0.02F);
   QMatrix4x4 back_panel = cylinderBetween(ctx.model, back_panel_top,
-                                          back_panel_bottom, torso_r * 0.50F);
-  back_panel.scale(0.96F, 1.0F,
-                   std::max(0.12F, (torso_depth * 0.45F) / (torso_r * 0.50F)));
+                                          back_panel_bottom, torso_r * 0.58F);
+  back_panel.scale(1.18F, 1.0F,
+                   std::max(0.22F, (torso_depth * 0.74F) / (torso_r * 0.80F)));
   submitter.mesh(torso_mesh != nullptr ? torso_mesh : getUnitTorso(),
                  back_panel, leather_shadow, nullptr, 1.0F, 1);
 }
