@@ -35,6 +35,7 @@ auto VegetationPipeline::initialize() -> bool {
   m_stoneShader = m_shaderCache->get(QStringLiteral("stone_instanced"));
   m_plantShader = m_shaderCache->get(QStringLiteral("plant_instanced"));
   m_pineShader = m_shaderCache->get(QStringLiteral("pine_instanced"));
+  m_oliveShader = m_shaderCache->get(QStringLiteral("olive_instanced"));
   m_firecampShader = m_shaderCache->get(QStringLiteral("firecamp"));
 
   if (m_stoneShader == nullptr) {
@@ -46,6 +47,9 @@ auto VegetationPipeline::initialize() -> bool {
   if (m_pineShader == nullptr) {
     qWarning() << "VegetationPipeline: pine shader missing";
   }
+  if (m_oliveShader == nullptr) {
+    qWarning() << "VegetationPipeline: olive shader missing";
+  }
   if (m_firecampShader == nullptr) {
     qWarning() << "VegetationPipeline: firecamp shader missing";
   }
@@ -53,6 +57,7 @@ auto VegetationPipeline::initialize() -> bool {
   initializeStonePipeline();
   initializePlantPipeline();
   initializePinePipeline();
+  initializeOlivePipeline();
   initializeFireCampPipeline();
   cacheUniforms();
 
@@ -64,6 +69,7 @@ void VegetationPipeline::shutdown() {
   shutdownStonePipeline();
   shutdownPlantPipeline();
   shutdownPinePipeline();
+  shutdownOlivePipeline();
   shutdownFireCampPipeline();
   m_initialized = false;
 }
@@ -92,6 +98,16 @@ void VegetationPipeline::cacheUniforms() {
     m_pineUniforms.wind_speed = m_pineShader->uniformHandle("uWindSpeed");
     m_pineUniforms.light_direction =
         m_pineShader->uniformHandle("uLightDirection");
+  }
+
+  if (m_oliveShader != nullptr) {
+    m_oliveUniforms.view_proj = m_oliveShader->uniformHandle("uViewProj");
+    m_oliveUniforms.time = m_oliveShader->uniformHandle("uTime");
+    m_oliveUniforms.wind_strength =
+        m_oliveShader->uniformHandle("uWindStrength");
+    m_oliveUniforms.wind_speed = m_oliveShader->uniformHandle("uWindSpeed");
+    m_oliveUniforms.light_direction =
+        m_oliveShader->uniformHandle("uLightDirection");
   }
 
   if (m_firecampShader != nullptr) {
@@ -339,8 +355,9 @@ void VegetationPipeline::initializePinePipeline() {
   std::vector<unsigned short> indices;
   indices.reserve(k_segments * 6 * 4 + k_segments * 3);
 
-  auto add_ring = [&](float radius, float y, float normalUp,
-                      float v_coord) -> int {
+  auto add_ring = [&](float radius, float y, float normalUp, float v_coord,
+                      const QVector2D &center_offset =
+                          QVector2D(0.0F, 0.0F)) -> int {
     const int start = static_cast<int>(vertices.size());
     for (int i = 0; i < k_segments; ++i) {
       const float t = static_cast<float>(i) / static_cast<float>(k_segments);
@@ -349,7 +366,8 @@ void VegetationPipeline::initializePinePipeline() {
       const float nz = std::sin(angle);
       QVector3D normal(nx, normalUp, nz);
       normal.normalize();
-      QVector3D const position(radius * nx, y, radius * nz);
+      QVector3D const position(radius * nx + center_offset.x(), y,
+                               radius * nz + center_offset.y());
       QVector2D const tex_coord(t, v_coord);
       vertices.push_back({position, tex_coord, normal});
     }
@@ -477,6 +495,191 @@ void VegetationPipeline::shutdownPinePipeline() {
   }
   m_pineVertexCount = 0;
   m_pineIndexCount = 0;
+}
+
+void VegetationPipeline::initializeOlivePipeline() {
+  initializeOpenGLFunctions();
+  shutdownOlivePipeline();
+
+  struct OliveVertex {
+    QVector3D position;
+    QVector2D tex_coord;
+    QVector3D normal;
+  };
+
+  constexpr int k_segments = OliveTreeSegments;
+  constexpr float k_two_pi = 6.28318530718F;
+
+  std::vector<OliveVertex> vertices;
+  vertices.reserve(k_segments * 40);
+  std::vector<unsigned short> indices;
+  indices.reserve(k_segments * 6 * 40);
+
+  auto add_ring = [&](float radius, float y, float normalUp, float v_coord,
+                      const QVector2D &offset = QVector2D(0.0F, 0.0F)) -> int {
+    const int start = static_cast<int>(vertices.size());
+    for (int i = 0; i < k_segments; ++i) {
+      const float t = static_cast<float>(i) / static_cast<float>(k_segments);
+      const float angle = t * k_two_pi;
+      const float nx = std::cos(angle);
+      const float nz = std::sin(angle);
+      QVector3D normal(nx, normalUp, nz);
+      normal.normalize();
+      QVector3D const position(radius * nx + offset.x(), y,
+                               radius * nz + offset.y());
+      vertices.push_back({position, QVector2D(t, v_coord), normal});
+    }
+    return start;
+  };
+
+  auto connect_rings = [&](int lower, int upper) {
+    for (int i = 0; i < k_segments; ++i) {
+      const int next = (i + 1) % k_segments;
+      indices.push_back(static_cast<unsigned short>(lower + i));
+      indices.push_back(static_cast<unsigned short>(lower + next));
+      indices.push_back(static_cast<unsigned short>(upper + next));
+      indices.push_back(static_cast<unsigned short>(lower + i));
+      indices.push_back(static_cast<unsigned short>(upper + next));
+      indices.push_back(static_cast<unsigned short>(upper + i));
+    }
+  };
+
+  auto add_cap = [&](int ring, float capY, const QVector2D &offset, float v) {
+    const int topIdx = static_cast<int>(vertices.size());
+    vertices.push_back({QVector3D(offset.x(), capY, offset.y()),
+                        QVector2D(0.5F, v), QVector3D(0.0F, 1.0F, 0.0F)});
+    for (int i = 0; i < k_segments; ++i) {
+      const int next = (i + 1) % k_segments;
+      indices.push_back(static_cast<unsigned short>(ring + i));
+      indices.push_back(static_cast<unsigned short>(ring + next));
+      indices.push_back(static_cast<unsigned short>(topIdx));
+    }
+  };
+
+  int t0 = add_ring(0.14F, 0.00F, -0.2F, 0.00F);
+  int t1 = add_ring(0.12F, 0.08F, 0.0F, 0.06F);
+  int t2 = add_ring(0.09F, 0.15F, 0.1F, 0.12F);
+  connect_rings(t0, t1);
+  connect_rings(t1, t2);
+
+  auto add_branch = [&](float dir_x, float dir_z, float base_y, float length,
+                        float branch_r, float leaf_r, float v_start) {
+    float len = std::sqrt(dir_x * dir_x + dir_z * dir_z);
+    dir_x /= len;
+    dir_z /= len;
+
+    float rise = 0.5F;
+    float dx = dir_x * std::cos(0.5F);
+    float dz = dir_z * std::cos(0.5F);
+    float dy = std::sin(0.4F);
+
+    int b0 = add_ring(branch_r, base_y, 0.0F, v_start);
+
+    float mid_dist = length * 0.5F;
+    QVector2D mid_offset(dx * mid_dist, dz * mid_dist);
+    int b1 = add_ring(branch_r * 0.6F, base_y + dy * mid_dist, 0.3F,
+                      v_start + 0.1F, mid_offset);
+
+    float tip_dist = length;
+    QVector2D tip_offset(dx * tip_dist, dz * tip_dist);
+    float tip_y = base_y + dy * tip_dist;
+    int b2 = add_ring(branch_r * 0.3F, tip_y, 0.5F, v_start + 0.2F, tip_offset);
+
+    connect_rings(b0, b1);
+    connect_rings(b1, b2);
+
+    float ly = tip_y - leaf_r * 0.2F;
+    int l0 = add_ring(leaf_r * 0.6F, ly, -0.4F, 0.50F, tip_offset);
+    int l1 =
+        add_ring(leaf_r * 0.9F, ly + leaf_r * 0.35F, 0.0F, 0.65F, tip_offset);
+    int l2 =
+        add_ring(leaf_r * 0.85F, ly + leaf_r * 0.65F, 0.2F, 0.80F, tip_offset);
+    int l3 =
+        add_ring(leaf_r * 0.5F, ly + leaf_r * 0.90F, 0.6F, 0.92F, tip_offset);
+
+    connect_rings(b2, l0);
+    connect_rings(l0, l1);
+    connect_rings(l1, l2);
+    connect_rings(l2, l3);
+    add_cap(l3, ly + leaf_r * 1.0F, tip_offset, 1.0F);
+  };
+
+  add_branch(0.8F, 0.3F, 0.14F, 0.30F, 0.025F, 0.18F, 0.18F);
+  add_branch(-0.7F, 0.5F, 0.15F, 0.32F, 0.022F, 0.20F, 0.20F);
+  add_branch(0.4F, -0.9F, 0.16F, 0.28F, 0.020F, 0.16F, 0.22F);
+  add_branch(-0.5F, -0.7F, 0.14F, 0.34F, 0.024F, 0.19F, 0.19F);
+
+  m_oliveVertexCount = static_cast<GLsizei>(vertices.size());
+  m_oliveIndexCount = static_cast<GLsizei>(indices.size());
+
+  glGenVertexArrays(1, &m_oliveVao);
+  glBindVertexArray(m_oliveVao);
+
+  glGenBuffers(1, &m_oliveVertexBuffer);
+  glBindBuffer(GL_ARRAY_BUFFER, m_oliveVertexBuffer);
+  glBufferData(GL_ARRAY_BUFFER,
+               static_cast<GLsizeiptr>(vertices.size() * sizeof(OliveVertex)),
+               vertices.data(), GL_STATIC_DRAW);
+
+  glGenBuffers(1, &m_oliveIndexBuffer);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_oliveIndexBuffer);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+               static_cast<GLsizeiptr>(indices.size() * sizeof(unsigned short)),
+               indices.data(), GL_STATIC_DRAW);
+
+  glEnableVertexAttribArray(0);
+  glVertexAttribPointer(
+      0, 3, GL_FLOAT, GL_FALSE, sizeof(OliveVertex),
+      reinterpret_cast<void *>(offsetof(OliveVertex, position)));
+
+  glEnableVertexAttribArray(1);
+  glVertexAttribPointer(
+      1, 2, GL_FLOAT, GL_FALSE, sizeof(OliveVertex),
+      reinterpret_cast<void *>(offsetof(OliveVertex, tex_coord)));
+
+  glEnableVertexAttribArray(2);
+  glVertexAttribPointer(
+      2, 3, GL_FLOAT, GL_FALSE, sizeof(OliveVertex),
+      reinterpret_cast<void *>(offsetof(OliveVertex, normal)));
+
+  glEnableVertexAttribArray(InstancePosition);
+  glVertexAttribDivisor(InstancePosition, 1);
+  glEnableVertexAttribArray(InstanceScale);
+  glVertexAttribDivisor(InstanceScale, 1);
+  glEnableVertexAttribArray(InstanceColor);
+  glVertexAttribDivisor(InstanceColor, 1);
+
+  glBindVertexArray(0);
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+}
+
+void VegetationPipeline::shutdownOlivePipeline() {
+
+  if (QOpenGLContext::currentContext() == nullptr) {
+    m_oliveVao = 0;
+    m_oliveVertexBuffer = 0;
+    m_oliveIndexBuffer = 0;
+    m_oliveVertexCount = 0;
+    m_oliveIndexCount = 0;
+    return;
+  }
+
+  initializeOpenGLFunctions();
+  if (m_oliveIndexBuffer != 0U) {
+    glDeleteBuffers(1, &m_oliveIndexBuffer);
+    m_oliveIndexBuffer = 0;
+  }
+  if (m_oliveVertexBuffer != 0U) {
+    glDeleteBuffers(1, &m_oliveVertexBuffer);
+    m_oliveVertexBuffer = 0;
+  }
+  if (m_oliveVao != 0U) {
+    glDeleteVertexArrays(1, &m_oliveVao);
+    m_oliveVao = 0;
+  }
+  m_oliveVertexCount = 0;
+  m_oliveIndexCount = 0;
 }
 
 void VegetationPipeline::initializeFireCampPipeline() {

@@ -62,6 +62,8 @@
         <file>assets/shaders/healer_carthage.vert</file>
         <file>assets/shaders/pine_instanced.frag</file>
         <file>assets/shaders/pine_instanced.vert</file>
+        <file>assets/shaders/olive_instanced.frag</file>
+        <file>assets/shaders/olive_instanced.vert</file>
         <file>assets/shaders/plant_instanced.frag</file>
         <file>assets/shaders/plant_instanced.vert</file>
         <file>assets/shaders/river.frag</file>
