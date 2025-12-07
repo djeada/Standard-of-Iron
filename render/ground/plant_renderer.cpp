@@ -73,67 +73,68 @@ void PlantRenderer::submit(Renderer &renderer, ResourceManager *resources) {
 
   m_plantInstanceCount = static_cast<uint32_t>(m_plantInstances.size());
 
-  if (m_plantInstanceCount > 0) {
-    if (!m_plantInstanceBuffer) {
-      m_plantInstanceBuffer = std::make_unique<Buffer>(Buffer::Type::Vertex);
-    }
-    if (m_plantInstancesDirty && m_plantInstanceBuffer) {
-      m_plantInstanceBuffer->setData(m_plantInstances, Buffer::Usage::Static);
-      m_plantInstancesDirty = false;
-    }
-  } else {
+  if (m_plantInstanceCount == 0) {
     m_plantInstanceBuffer.reset();
+    m_visibleInstances.clear();
     return;
   }
 
   auto &visibility = Game::Map::VisibilityService::instance();
   const bool use_visibility = visibility.isInitialized();
+  const std::uint64_t current_version =
+      use_visibility ? visibility.version() : 0;
 
-  if (use_visibility) {
+  const bool needs_visibility_update =
+      m_visibilityDirty || (current_version != m_cachedVisibilityVersion);
 
-    std::vector<PlantInstanceGpu> visible_instances;
-    visible_instances.reserve(m_plantInstances.size());
+  if (needs_visibility_update) {
+    m_visibleInstances.clear();
 
-    for (const auto &instance : m_plantInstances) {
-      float const world_x = instance.posScale.x();
-      float const world_z = instance.posScale.z();
-
-      if (visibility.isVisibleWorld(world_x, world_z)) {
-        visible_instances.push_back(instance);
+    if (use_visibility) {
+      m_visibleInstances.reserve(m_plantInstanceCount);
+      for (const auto &instance : m_plantInstances) {
+        float const world_x = instance.posScale.x();
+        float const world_z = instance.posScale.z();
+        if (visibility.isVisibleWorld(world_x, world_z)) {
+          m_visibleInstances.push_back(instance);
+        }
       }
+    } else {
+      m_visibleInstances = m_plantInstances;
     }
 
-    if (visible_instances.empty()) {
-      return;
-    }
+    m_cachedVisibilityVersion = current_version;
+    m_visibilityDirty = false;
 
-    if (!m_visibleInstanceBuffer) {
-      m_visibleInstanceBuffer = std::make_unique<Buffer>(Buffer::Type::Vertex);
-    }
-    m_visibleInstanceBuffer->setData(visible_instances, Buffer::Usage::Stream);
-
-    PlantBatchParams params = m_plantParams;
-    params.time = renderer.getAnimationTime();
-    renderer.plantBatch(m_visibleInstanceBuffer.get(),
-                        static_cast<uint32_t>(visible_instances.size()),
-                        params);
-  } else {
-
-    if (m_plantInstanceBuffer && m_plantInstanceCount > 0) {
-      PlantBatchParams params = m_plantParams;
-      params.time = renderer.getAnimationTime();
-      renderer.plantBatch(m_plantInstanceBuffer.get(), m_plantInstanceCount,
-                          params);
+    if (!m_visibleInstances.empty()) {
+      if (!m_visibleInstanceBuffer) {
+        m_visibleInstanceBuffer =
+            std::make_unique<Buffer>(Buffer::Type::Vertex);
+      }
+      m_visibleInstanceBuffer->setData(m_visibleInstances,
+                                       Buffer::Usage::Static);
     }
   }
+
+  const auto visible_count = static_cast<uint32_t>(m_visibleInstances.size());
+  if (visible_count == 0 || !m_visibleInstanceBuffer) {
+    return;
+  }
+
+  PlantBatchParams params = m_plantParams;
+  params.time = renderer.getAnimationTime();
+  renderer.plantBatch(m_visibleInstanceBuffer.get(), visible_count, params);
 }
 
 void PlantRenderer::clear() {
   m_plantInstances.clear();
+  m_visibleInstances.clear();
   m_plantInstanceBuffer.reset();
   m_visibleInstanceBuffer.reset();
   m_plantInstanceCount = 0;
   m_plantInstancesDirty = false;
+  m_visibilityDirty = true;
+  m_cachedVisibilityVersion = 0;
 }
 
 void PlantRenderer::generatePlantInstances() {
@@ -340,7 +341,7 @@ void PlantRenderer::generatePlantInstances() {
         density_mult = 0.6F;
       }
 
-      float const effective_density = plant_density * density_mult * 2.0F;
+      float const effective_density = plant_density * density_mult * 0.8F;
       int plant_count = static_cast<int>(std::floor(effective_density));
       float const frac = effective_density - float(plant_count);
       if (rand_01(state) < frac) {

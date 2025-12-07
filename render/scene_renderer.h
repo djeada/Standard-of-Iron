@@ -142,6 +142,8 @@ public:
                   const PlantBatchParams &params);
   void pineBatch(Buffer *instanceBuffer, std::size_t instance_count,
                  const PineBatchParams &params);
+  void oliveBatch(Buffer *instanceBuffer, std::size_t instance_count,
+                  const OliveBatchParams &params);
   void firecampBatch(Buffer *instanceBuffer, std::size_t instance_count,
                      const FireCampBatchParams &params);
 

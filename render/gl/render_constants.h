@@ -41,6 +41,7 @@ inline constexpr int CubeIndexCount = 36;
 inline constexpr int PlantCrossQuadVertexCount = 16;
 inline constexpr int PlantCrossQuadIndexCount = 24;
 inline constexpr int PineTreeSegments = 6;
+inline constexpr int OliveTreeSegments = 6;
 inline constexpr int GroundPlaneSubdivisions = 64;
 inline constexpr int DefaultCapsuleSegments = 8;
 inline constexpr int DefaultTorsoHeightSegments = 8;
