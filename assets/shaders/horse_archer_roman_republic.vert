@@ -112,14 +112,8 @@ void main() {
   v_hairFlow = hashVal * 0.5 + 0.5;
   v_hoofWear = hashVal * 0.3;
 
-  // Legacy armor layer for fallback
-  if (v_worldPos.y > 1.5) {
-    v_armorLayer = 0.0; // Helmet region
-  } else if (v_worldPos.y > 0.8) {
-    v_armorLayer = 1.0; // Torso armor region
-  } else {
-    v_armorLayer = 2.0; // Legs/horse region
-  }
+  // Armor selection based solely on material ID.
+  v_armorLayer = (u_materialId == 1) ? 1.0 : 0.0;
 
   gl_Position = u_mvp * vec4(position, 1.0);
 }

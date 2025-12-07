@@ -137,13 +137,13 @@ void NationRegistry::initializeDefaults() {
 
   auto nations = NationLoader::load_default_nations();
   if (nations.empty()) {
-    Nation kingdom_of_iron;
-    kingdom_of_iron.id = NationID::KingdomOfIron;
-    kingdom_of_iron.displayName = "Kingdom of Iron";
-    kingdom_of_iron.primaryBuilding = Game::Units::BuildingType::Barracks;
-    kingdom_of_iron.formation_type = FormationType::Roman;
+    Nation roman;
+    roman.id = NationID::RomanRepublic;
+    roman.displayName = "Roman Republic";
+    roman.primaryBuilding = Game::Units::BuildingType::Barracks;
+    roman.formation_type = FormationType::Roman;
 
-    auto appendTroop = [&kingdom_of_iron](Game::Units::TroopType type) {
+    auto appendTroop = [&roman](Game::Units::TroopType type) {
       TroopType troop_entry;
       troop_entry.unit_type = type;
 
@@ -155,7 +155,7 @@ void NationRegistry::initializeDefaults() {
       troop_entry.buildTime = troop_class.production.build_time;
       troop_entry.priority = troop_class.production.priority;
 
-      kingdom_of_iron.availableTroops.push_back(std::move(troop_entry));
+      roman.availableTroops.push_back(std::move(troop_entry));
     };
 
     appendTroop(Game::Units::TroopType::Archer);
@@ -163,14 +163,11 @@ void NationRegistry::initializeDefaults() {
     appendTroop(Game::Units::TroopType::Spearman);
     appendTroop(Game::Units::TroopType::MountedKnight);
 
-    registerNation(std::move(kingdom_of_iron));
-    m_defaultNation = NationID::KingdomOfIron;
+    registerNation(std::move(roman));
+    m_defaultNation = NationID::RomanRepublic;
   } else {
     NationID fallback_default = nations.front().id;
     for (auto &nation : nations) {
-      if (nation.id == NationID::KingdomOfIron) {
-        fallback_default = nation.id;
-      }
       registerNation(std::move(nation));
     }
     m_defaultNation = fallback_default;

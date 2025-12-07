@@ -128,25 +128,25 @@ void main() {
   v_tangent = t;
   v_bitangent = b;
 
-  // Layer bands (kept identical thresholds to preserve your gameplay logic)
-  float height = offsetPos.y;
-  float layer = 2.0;
-  if (height > 1.28)
-    layer = 0.0;
-  else if (height > 0.86)
-    layer = 1.0;
-  v_armorLayer = layer;
+  // Layer bands from mesh-space height so placement does not change masks.
+  vec3 axisY = vec3(u_model[1].xyz);
+  float axisLen = max(length(axisY), 1e-4);
+  vec3 axisDir = axisY / axisLen;
+  vec3 modelOrigin = vec3(u_model[3].xyz);
+  float height01 =
+      clamp(dot(worldPos - modelOrigin, axisDir) / axisLen + 0.5, 0.0, 1.0);
+
+  // Use a single armor band for the whole piece to avoid partial masks.
+  float layer_mask = (u_materialId == 1) ? 1.0 : 0.0;
+  v_armorLayer = layer_mask;
 
   // Leather tension: variation + curvature bias + height influence
   float tensionSeed = hash13(offsetPos * 0.35 + worldNormal);
-  float heightFactor = smoothstep(0.5, 1.5, height);
+  float heightFactor = height01;
   float curvatureFactor = length(vec2(worldNormal.x, worldNormal.z));
-  v_leatherTension = mix(tensionSeed, 1.0 - tensionSeed, layer * 0.33) *
+  v_leatherTension = mix(tensionSeed, 1.0 - tensionSeed, layer_mask * 0.33) *
                      (0.7 + curvatureFactor * 0.3) * (0.8 + heightFactor * 0.2);
 
   // Normalized torso height for gradient effects
-  float torsoMin = 0.58;
-  float torsoMax = 1.36;
-  v_bodyHeight =
-      clamp((offsetPos.y - torsoMin) / (torsoMax - torsoMin), 0.0, 1.0);
+  v_bodyHeight = height01;
 }

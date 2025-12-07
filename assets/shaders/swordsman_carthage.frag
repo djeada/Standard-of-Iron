@@ -367,8 +367,9 @@ void main() {
     MaterialSample leather =
         sample_leather(leather_base, v_worldPos * 0.9, Nw, Tw, Bw);
 
-    float torsoBand = 1.0 - step(1.5, v_armorLayer);
-    float skirtBand = step(1.0, v_armorLayer);
+    // Treat the entire armor piece as torso to avoid missing coverage.
+    float torsoBand = 1.0;
+    float skirtBand = 0.0;
     float mailBlend =
         clamp(smoothstep(0.15, 0.78, v_chainmailMix + v_layerNoise * 0.25),
               0.15, 1.0) *
