@@ -3,27 +3,22 @@
 #include "armor/carthage_shoulder_cover.h"
 #include "armor/chainmail_armor.h"
 #include "armor/cloak_renderer.h"
-#include "armor/kingdom_armor.h"
 #include "armor/roman_armor.h"
 #include "armor/roman_shoulder_cover.h"
 #include "equipment_registry.h"
 #include "helmets/carthage_heavy_helmet.h"
 #include "helmets/carthage_light_helmet.h"
 #include "helmets/headwrap.h"
-#include "helmets/kingdom_heavy_helmet.h"
-#include "helmets/kingdom_light_helmet.h"
 #include "helmets/roman_heavy_helmet.h"
 #include "helmets/roman_light_helmet.h"
 #include "weapons/bow_renderer.h"
 #include "weapons/quiver_renderer.h"
 #include "weapons/roman_scutum.h"
 #include "weapons/shield_carthage.h"
-#include "weapons/shield_kingdom.h"
 #include "weapons/shield_renderer.h"
 #include "weapons/shield_roman.h"
 #include "weapons/spear_renderer.h"
 #include "weapons/sword_carthage.h"
-#include "weapons/sword_kingdom.h"
 #include "weapons/sword_renderer.h"
 #include "weapons/sword_roman.h"
 #include <memory>
@@ -47,14 +42,6 @@ void registerBuiltInEquipment() {
   roman_config.bow_height_scale = 1.0F;
   auto roman_bow = std::make_shared<BowRenderer>(roman_config);
   registry.registerEquipment(EquipmentCategory::Weapon, "bow_roman", roman_bow);
-
-  BowRenderConfig kingdom_config;
-  kingdom_config.bow_depth = 0.20F;
-  kingdom_config.bow_curve_factor = 0.8F;
-  kingdom_config.bow_height_scale = 1.15F;
-  auto kingdom_bow = std::make_shared<BowRenderer>(kingdom_config);
-  registry.registerEquipment(EquipmentCategory::Weapon, "bow_kingdom",
-                             kingdom_bow);
 
   auto bow = std::make_shared<BowRenderer>();
   registry.registerEquipment(EquipmentCategory::Weapon, "bow", bow);
@@ -84,22 +71,6 @@ void registerBuiltInEquipment() {
   auto roman_light = std::make_shared<RomanLightHelmetRenderer>();
   registry.registerEquipment(EquipmentCategory::Helmet, "roman_light",
                              roman_light);
-
-  auto kingdom_heavy = std::make_shared<KingdomHeavyHelmetRenderer>();
-  registry.registerEquipment(EquipmentCategory::Helmet, "kingdom_heavy",
-                             kingdom_heavy);
-
-  auto kingdom_light = std::make_shared<KingdomLightHelmetRenderer>();
-  registry.registerEquipment(EquipmentCategory::Helmet, "kingdom_light",
-                             kingdom_light);
-
-  auto kingdom_heavy_armor = std::make_shared<KingdomHeavyArmorRenderer>();
-  registry.registerEquipment(EquipmentCategory::Armor, "kingdom_heavy_armor",
-                             kingdom_heavy_armor);
-
-  auto kingdom_light_armor = std::make_shared<KingdomLightArmorRenderer>();
-  registry.registerEquipment(EquipmentCategory::Armor, "kingdom_light_armor",
-                             kingdom_light_armor);
 
   auto roman_heavy_armor = std::make_shared<RomanHeavyArmorRenderer>();
   registry.registerEquipment(EquipmentCategory::Armor, "roman_heavy_armor",
@@ -154,10 +125,6 @@ void registerBuiltInEquipment() {
   registry.registerEquipment(EquipmentCategory::Weapon, "sword_roman",
                              sword_roman);
 
-  auto sword_kingdom = std::make_shared<KingdomSwordRenderer>();
-  registry.registerEquipment(EquipmentCategory::Weapon, "sword_kingdom",
-                             sword_kingdom);
-
   auto spear = std::make_shared<SpearRenderer>();
   registry.registerEquipment(EquipmentCategory::Weapon, "spear", spear);
 
@@ -177,10 +144,6 @@ void registerBuiltInEquipment() {
   auto shield_roman = std::make_shared<RomanShieldRenderer>();
   registry.registerEquipment(EquipmentCategory::Weapon, "shield_roman",
                              shield_roman);
-
-  auto shield_kingdom = std::make_shared<KingdomShieldRenderer>();
-  registry.registerEquipment(EquipmentCategory::Weapon, "shield_kingdom",
-                             shield_kingdom);
 }
 
 } // namespace Render::GL

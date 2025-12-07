@@ -1,21 +1,20 @@
 #include "registry.h"
 #include "../scene_renderer.h"
+#include "ballista_renderer.h"
 #include "barracks_renderer.h"
+#include "catapult_renderer.h"
 #include "nations/carthage/archer_renderer.h"
+#include "nations/carthage/ballista_renderer.h"
+#include "nations/carthage/catapult_renderer.h"
 #include "nations/carthage/healer_renderer.h"
 #include "nations/carthage/horse_archer_renderer.h"
 #include "nations/carthage/horse_spearman_renderer.h"
 #include "nations/carthage/horse_swordsman_renderer.h"
 #include "nations/carthage/spearman_renderer.h"
 #include "nations/carthage/swordsman_renderer.h"
-#include "nations/kingdom/archer_renderer.h"
-#include "nations/kingdom/healer_renderer.h"
-#include "nations/kingdom/horse_archer_renderer.h"
-#include "nations/kingdom/horse_spearman_renderer.h"
-#include "nations/kingdom/horse_swordsman_renderer.h"
-#include "nations/kingdom/spearman_renderer.h"
-#include "nations/kingdom/swordsman_renderer.h"
 #include "nations/roman/archer_renderer.h"
+#include "nations/roman/ballista_renderer.h"
+#include "nations/roman/catapult_renderer.h"
 #include "nations/roman/healer_renderer.h"
 #include "nations/roman/horse_archer_renderer.h"
 #include "nations/roman/horse_spearman_renderer.h"
@@ -41,33 +40,30 @@ auto EntityRendererRegistry::get(const std::string &type) const -> RenderFunc {
 }
 
 void registerBuiltInEntityRenderers(EntityRendererRegistry &registry) {
-  Kingdom::registerArcherRenderer(registry);
   Roman::registerArcherRenderer(registry);
   Carthage::registerArcherRenderer(registry);
 
-  Kingdom::registerSpearmanRenderer(registry);
   Roman::registerSpearmanRenderer(registry);
   Carthage::registerSpearmanRenderer(registry);
 
-  Kingdom::registerKnightRenderer(registry);
   Roman::registerKnightRenderer(registry);
   Carthage::registerKnightRenderer(registry);
 
-  Kingdom::registerMountedKnightRenderer(registry);
   Roman::registerMountedKnightRenderer(registry);
   Carthage::registerMountedKnightRenderer(registry);
 
-  Kingdom::register_horse_archer_renderer(registry);
   Roman::register_horse_archer_renderer(registry);
   Carthage::register_horse_archer_renderer(registry);
 
-  Kingdom::register_horse_spearman_renderer(registry);
   Roman::register_horse_spearman_renderer(registry);
   Carthage::register_horse_spearman_renderer(registry);
 
-  Kingdom::registerHealerRenderer(registry);
   Roman::registerHealerRenderer(registry);
   Carthage::registerHealerRenderer(registry);
+
+  register_catapult_renderer(registry);
+
+  register_ballista_renderer(registry);
 
   register_barracks_renderer(registry);
 }

@@ -28,6 +28,10 @@ public:
     return {1.0F, 1.0F, 1.0F};
   }
 
+  virtual auto get_torso_scale() const -> float {
+    return get_proportion_scaling().x();
+  }
+
   virtual auto get_mount_scale() const -> float { return 1.0F; }
 
   virtual void adjust_variation(const DrawContext &, uint32_t,

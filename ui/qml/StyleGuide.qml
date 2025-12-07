@@ -138,55 +138,46 @@ QtObject {
     readonly property var unitIconSources: ({
         "archer": ({
             "default": root.iconPath("archer_rome.png"),
-            "kingdom_of_iron": root.iconPath("archer_rome.png"),
             "roman_republic": root.iconPath("archer_rome.png"),
             "carthage": root.iconPath("archer_cartaghe.png")
         }),
         "swordsman": ({
             "default": root.iconPath("swordsman_rome.png"),
-            "kingdom_of_iron": root.iconPath("swordsman_rome.png"),
             "roman_republic": root.iconPath("swordsman_rome.png"),
             "carthage": root.iconPath("swordsman_cartaghe.png")
         }),
         "spearman": ({
             "default": root.iconPath("spearman_rome.png"),
-            "kingdom_of_iron": root.iconPath("spearman_rome.png"),
             "roman_republic": root.iconPath("spearman_rome.png"),
             "carthage": root.iconPath("spearman_cartaghe.png")
         }),
         "horse_swordsman": ({
             "default": root.iconPath("horse_swordsman_rome.png"),
-            "kingdom_of_iron": root.iconPath("horse_swordsman_rome.png"),
             "roman_republic": root.iconPath("horse_swordsman_rome.png"),
             "carthage": root.iconPath("horse_swordsman_cartaghe.png")
         }),
         "horse_archer": ({
             "default": root.iconPath("horse_archer_rome.png"),
-            "kingdom_of_iron": root.iconPath("horse_archer_rome.png"),
             "roman_republic": root.iconPath("horse_archer_rome.png"),
             "carthage": root.iconPath("horse_archer_cartaghe.png")
         }),
         "horse_spearman": ({
             "default": root.iconPath("horse_spearman_rome.png"),
-            "kingdom_of_iron": root.iconPath("horse_spearman_rome.png"),
             "roman_republic": root.iconPath("horse_spearman_rome.png"),
             "carthage": root.iconPath("horse_spearman_cartaghe.png")
         }),
         "healer": ({
             "default": root.iconPath("healer_rome.png"),
-            "kingdom_of_iron": root.iconPath("healer_rome.png"),
             "roman_republic": root.iconPath("healer_rome.png"),
             "carthage": root.iconPath("healer_cartaghe.png")
         }),
         "catapult": ({
             "default": root.iconPath("catapult_rome.png"),
-            "kingdom_of_iron": root.iconPath("catapult_rome.png"),
             "roman_republic": root.iconPath("catapult_rome.png"),
             "carthage": root.iconPath("catapult_cartaghe.png")
         }),
         "ballista": ({
             "default": root.iconPath("ballista_rome.png"),
-            "kingdom_of_iron": root.iconPath("ballista_rome.png"),
             "roman_republic": root.iconPath("ballista_rome.png"),
             "carthage": root.iconPath("ballista_cartaghe.png")
         }),

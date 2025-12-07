@@ -229,8 +229,9 @@ void main() {
     vec3 linen_tint = vec3(0.86, 0.80, 0.72);
     vec3 leather_tint = vec3(0.38, 0.25, 0.15);
 
-    float torsoBand = 1.0 - step(1.5, v_armorLayer);
-    float skirtBand = step(1.0, v_armorLayer);
+    // Treat entire armor mesh as torso to avoid height-based clipping.
+    float torsoBand = 1.0;
+    float skirtBand = 0.0;
     float mailBlend =
         clamp(smoothstep(0.15, 0.85, rings + cavity * 0.25), 0.15, 1.0) *
         torsoBand;

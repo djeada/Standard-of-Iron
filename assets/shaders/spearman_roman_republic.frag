@@ -119,14 +119,6 @@ void main() {
     float guard_repousse =
         cheek_guard * noise(uv * 12.0) * 0.08; // Decorative embossing
 
-    // ENHANCED: Neck guard (segmented rear protection)
-    float neck_guard_height = smoothstep(0.66, 0.72, v_bodyHeight) *
-                              smoothstep(0.82, 0.72, v_bodyHeight);
-    float behind_head = step(v_worldNormal.z, -0.25);
-    float neck_guard = neck_guard_height * behind_head * 0.32;
-    float neck_segments =
-        step(0.85, fract(v_bodyHeight * 42.0)) * neck_guard * 0.15;
-
     // ENHANCED: Brow reinforcement (frontal impact protection)
     float brow_height = smoothstep(0.84, 0.88, v_bodyHeight) *
                         smoothstep(0.92, 0.88, v_bodyHeight);
@@ -145,7 +137,7 @@ void main() {
 
     color += vec3(steel_sheen + steel_fresnel + bands + rivets);
     color += vec3(cheek_guard + hinge_pins + guard_repousse);
-    color += vec3(neck_guard + neck_segments + brow_reinforce + plume_socket);
+    color += vec3(brow_reinforce + plume_socket);
     color -= vec3(rust_tex * 0.3);
     color += vec3(brushed * 0.6);
   }
