@@ -46,6 +46,7 @@ class FogRenderer;
 class StoneRenderer;
 class PlantRenderer;
 class PineRenderer;
+class OliveRenderer;
 class FireCampRenderer;
 struct IRenderPass;
 } // namespace Render::GL
@@ -286,6 +287,7 @@ private:
   std::unique_ptr<Render::GL::StoneRenderer> m_stone;
   std::unique_ptr<Render::GL::PlantRenderer> m_plant;
   std::unique_ptr<Render::GL::PineRenderer> m_pine;
+  std::unique_ptr<Render::GL::OliveRenderer> m_olive;
   std::unique_ptr<Render::GL::FireCampRenderer> m_firecamp;
   std::vector<Render::GL::IRenderPass *> m_passes;
   std::unique_ptr<Game::Systems::PickingService> m_pickingService;

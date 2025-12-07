@@ -1,4 +1,4 @@
-#include "pine_renderer.h"
+#include "olive_renderer.h"
 #include "../../game/map/terrain_service.h"
 #include "../../game/map/visibility_service.h"
 #include "../../game/systems/building_collision_registry.h"
@@ -6,7 +6,7 @@
 #include "../scene_renderer.h"
 #include "gl/render_constants.h"
 #include "gl/resources.h"
-#include "ground/pine_gpu.h"
+#include "ground/olive_gpu.h"
 #include "ground_utils.h"
 #include "map/terrain.h"
 #include <QVector2D>
@@ -42,11 +42,11 @@ inline auto valueNoise(float x, float z, uint32_t salt = 0U) -> float {
 
 namespace Render::GL {
 
-PineRenderer::PineRenderer() = default;
-PineRenderer::~PineRenderer() = default;
+OliveRenderer::OliveRenderer() = default;
+OliveRenderer::~OliveRenderer() = default;
 
-void PineRenderer::configure(const Game::Map::TerrainHeightMap &height_map,
-                             const Game::Map::BiomeSettings &biomeSettings) {
+void OliveRenderer::configure(const Game::Map::TerrainHeightMap &height_map,
+                              const Game::Map::BiomeSettings &biomeSettings) {
   m_width = height_map.getWidth();
   m_height = height_map.getHeight();
   m_tile_size = height_map.getTileSize();
@@ -55,26 +55,26 @@ void PineRenderer::configure(const Game::Map::TerrainHeightMap &height_map,
   m_biomeSettings = biomeSettings;
   m_noiseSeed = biomeSettings.seed;
 
-  m_pineInstances.clear();
-  m_pineInstanceBuffer.reset();
-  m_pineInstanceCount = 0;
-  m_pineInstancesDirty = false;
+  m_oliveInstances.clear();
+  m_oliveInstanceBuffer.reset();
+  m_oliveInstanceCount = 0;
+  m_oliveInstancesDirty = false;
 
-  m_pineParams.light_direction = QVector3D(0.35F, 0.8F, 0.45F);
-  m_pineParams.time = 0.0F;
-  m_pineParams.wind_strength = 0.3F;
-  m_pineParams.wind_speed = 0.5F;
+  m_oliveParams.light_direction = QVector3D(0.35F, 0.8F, 0.45F);
+  m_oliveParams.time = 0.0F;
+  m_oliveParams.wind_strength = 0.3F;
+  m_oliveParams.wind_speed = 0.5F;
 
-  generatePineInstances();
+  generate_olive_instances();
 }
 
-void PineRenderer::submit(Renderer &renderer, ResourceManager *resources) {
+void OliveRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   (void)resources;
 
-  m_pineInstanceCount = static_cast<uint32_t>(m_pineInstances.size());
+  m_oliveInstanceCount = static_cast<uint32_t>(m_oliveInstances.size());
 
-  if (m_pineInstanceCount == 0) {
-    m_pineInstanceBuffer.reset();
+  if (m_oliveInstanceCount == 0) {
+    m_oliveInstanceBuffer.reset();
     m_visibleInstances.clear();
     return;
   }
@@ -91,58 +91,53 @@ void PineRenderer::submit(Renderer &renderer, ResourceManager *resources) {
     m_visibleInstances.clear();
 
     if (use_visibility) {
-      m_visibleInstances.reserve(m_pineInstanceCount);
-      for (const auto &instance : m_pineInstances) {
-        float const world_x = instance.posScale.x();
-        float const world_z = instance.posScale.z();
+      m_visibleInstances.reserve(m_oliveInstanceCount);
+      for (const auto &instance : m_oliveInstances) {
+        float const world_x = instance.pos_scale.x();
+        float const world_z = instance.pos_scale.z();
         if (visibility.isVisibleWorld(world_x, world_z)) {
           m_visibleInstances.push_back(instance);
         }
       }
     } else {
-      m_visibleInstances = m_pineInstances;
+      m_visibleInstances = m_oliveInstances;
     }
 
     m_cachedVisibilityVersion = current_version;
     m_visibilityDirty = false;
 
     if (!m_visibleInstances.empty()) {
-      if (!m_pineInstanceBuffer) {
-        m_pineInstanceBuffer = std::make_unique<Buffer>(Buffer::Type::Vertex);
+      if (!m_oliveInstanceBuffer) {
+        m_oliveInstanceBuffer = std::make_unique<Buffer>(Buffer::Type::Vertex);
       }
-      m_pineInstanceBuffer->setData(m_visibleInstances, Buffer::Usage::Static);
+      m_oliveInstanceBuffer->setData(m_visibleInstances, Buffer::Usage::Static);
     }
   }
 
   const auto visible_count = static_cast<uint32_t>(m_visibleInstances.size());
-  if (visible_count == 0 || !m_pineInstanceBuffer) {
+  if (visible_count == 0 || !m_oliveInstanceBuffer) {
     return;
   }
 
-  PineBatchParams params = m_pineParams;
+  OliveBatchParams params = m_oliveParams;
   params.time = renderer.getAnimationTime();
-  renderer.pineBatch(m_pineInstanceBuffer.get(), visible_count, params);
+  renderer.oliveBatch(m_oliveInstanceBuffer.get(), visible_count, params);
 }
 
-void PineRenderer::clear() {
-  m_pineInstances.clear();
+void OliveRenderer::clear() {
+  m_oliveInstances.clear();
   m_visibleInstances.clear();
-  m_pineInstanceBuffer.reset();
-  m_pineInstanceCount = 0;
-  m_pineInstancesDirty = false;
+  m_oliveInstanceBuffer.reset();
+  m_oliveInstanceCount = 0;
+  m_oliveInstancesDirty = false;
   m_visibilityDirty = true;
   m_cachedVisibilityVersion = 0;
 }
 
-void PineRenderer::generatePineInstances() {
-  m_pineInstances.clear();
+void OliveRenderer::generate_olive_instances() {
+  m_oliveInstances.clear();
 
   if (m_width < 2 || m_height < 2 || m_heightData.empty()) {
-    return;
-  }
-
-  if (m_biomeSettings.ground_type == Game::Map::GroundType::GrassDry) {
-    m_pineInstancesDirty = false;
     return;
   }
 
@@ -155,10 +150,15 @@ void PineRenderer::generatePineInstances() {
   const float edge_margin_x = static_cast<float>(m_width) * edge_padding;
   const float edge_margin_z = static_cast<float>(m_height) * edge_padding;
 
-  float pine_density = 0.2F;
+  float olive_density =
+      (m_biomeSettings.ground_type == Game::Map::GroundType::GrassDry) ? 0.12F
+                                                                       : 0.05F;
   if (m_biomeSettings.plant_density > 0.0F) {
-
-    pine_density = m_biomeSettings.plant_density * 0.3F;
+    float const density_mult =
+        (m_biomeSettings.ground_type == Game::Map::GroundType::GrassDry)
+            ? 0.15F
+            : 0.08F;
+    olive_density = m_biomeSettings.plant_density * density_mult;
   }
 
   std::vector<QVector3D> normals(static_cast<qsizetype>(m_width * m_height),
@@ -181,7 +181,7 @@ void PineRenderer::generatePineInstances() {
     }
   }
 
-  auto add_pine = [&](float gx, float gz, uint32_t &state) -> bool {
+  auto add_olive = [&](float gx, float gz, uint32_t &state) -> bool {
     if (gx < edge_margin_x || gx > m_width - 1 - edge_margin_x ||
         gz < edge_margin_z || gz > m_height - 1 - edge_margin_z) {
       return false;
@@ -196,10 +196,6 @@ void PineRenderer::generatePineInstances() {
 
     QVector3D const normal = normals[normal_idx];
     float const slope = 1.0F - std::clamp(normal.y(), 0.0F, 1.0F);
-
-    if (slope > 0.75F) {
-      return false;
-    }
 
     float const world_x = (gx - half_width) * m_tile_size;
     float const world_z = (gz - half_height) * m_tile_size;
@@ -216,34 +212,39 @@ void PineRenderer::generatePineInstances() {
       return false;
     }
 
-    float const scale = remap(rand_01(state), 3.0F, 6.0F) * tile_safe;
-
     float const color_var = remap(rand_01(state), 0.0F, 1.0F);
-    QVector3D const base_color(0.15F, 0.35F, 0.20F);
-    QVector3D const var_color(0.20F, 0.40F, 0.25F);
+    QVector3D const base_color(0.35F, 0.42F, 0.28F);
+    QVector3D const var_color(0.38F, 0.45F, 0.32F);
     QVector3D tint_color =
         base_color * (1.0F - color_var) + var_color * color_var;
 
-    float const brown_mix = remap(rand_01(state), 0.10F, 0.25F);
-    QVector3D const brown_tint(0.35F, 0.30F, 0.20F);
-    tint_color = tint_color * (1.0F - brown_mix) + brown_tint * brown_mix;
+    float const gray_mix = remap(rand_01(state), 0.08F, 0.18F);
+    QVector3D const gray_tint(0.45F, 0.48F, 0.42F);
+    tint_color = tint_color * (1.0F - gray_mix) + gray_tint * gray_mix;
 
     float const sway_phase = rand_01(state) * MathConstants::k_two_pi;
 
     float const rotation = rand_01(state) * MathConstants::k_two_pi;
 
     float const silhouette_seed = rand_01(state);
-    float const needle_seed = rand_01(state);
+    float const leaf_seed = rand_01(state);
     float const bark_seed = rand_01(state);
 
-    PineInstanceGpu instance;
+    OliveInstanceGpu instance;
 
-    instance.posScale = QVector4D(world_x, world_y, world_z, scale);
-    instance.colorSway =
+    float const base_scale = remap(rand_01(state), 2.8F, 5.5F) * tile_safe;
+    float const dry_scale = remap(rand_01(state), 3.2F, 6.5F) * tile_safe;
+    float const chosen_scale =
+        (m_biomeSettings.ground_type == Game::Map::GroundType::GrassDry)
+            ? dry_scale
+            : base_scale;
+
+    instance.pos_scale = QVector4D(world_x, world_y, world_z, chosen_scale);
+    instance.color_sway =
         QVector4D(tint_color.x(), tint_color.y(), tint_color.z(), sway_phase);
     instance.rotation =
-        QVector4D(rotation, silhouette_seed, needle_seed, bark_seed);
-    m_pineInstances.push_back(instance);
+        QVector4D(rotation, silhouette_seed, leaf_seed, bark_seed);
+    m_oliveInstances.push_back(instance);
     return true;
   };
 
@@ -253,47 +254,36 @@ void PineRenderer::generatePineInstances() {
 
       QVector3D const normal = normals[idx];
       float const slope = 1.0F - std::clamp(normal.y(), 0.0F, 1.0F);
-      if (slope > 0.75F) {
+      if (slope > 0.65F) {
         continue;
       }
 
       uint32_t state = hash_coords(
-          x, z, m_noiseSeed ^ 0xAB12CD34U ^ static_cast<uint32_t>(idx));
+          x, z, m_noiseSeed ^ 0xCD34EF56U ^ static_cast<uint32_t>(idx));
 
       float const world_x = (x - half_width) * m_tile_size;
       float const world_z = (z - half_height) * m_tile_size;
 
-      float const cluster_noise = valueNoise(world_x * 0.03F, world_z * 0.03F,
-                                             m_noiseSeed ^ 0x7F8E9D0AU);
-
-      if (cluster_noise < 0.35F) {
-        continue;
-      }
-
       float density_mult = 1.0F;
       if (m_terrain_types[idx] == Game::Map::TerrainType::Hill) {
-        density_mult = 1.2F;
+        density_mult = 1.15F;
       } else if (m_terrain_types[idx] == Game::Map::TerrainType::Mountain) {
-        density_mult = 0.4F;
+        density_mult = 0.5F;
       }
 
-      float const effective_density = pine_density * density_mult * 0.8F;
-      int pine_count = static_cast<int>(std::floor(effective_density));
-      float const frac = effective_density - float(pine_count);
-      if (rand_01(state) < frac) {
-        pine_count += 1;
-      }
+      float const effective_density = olive_density * density_mult;
+      int olive_count = static_cast<int>(std::ceil(effective_density));
 
-      for (int i = 0; i < pine_count; ++i) {
+      for (int i = 0; i < olive_count; ++i) {
         float const gx = float(x) + rand_01(state) * 6.0F;
         float const gz = float(z) + rand_01(state) * 6.0F;
-        add_pine(gx, gz, state);
+        add_olive(gx, gz, state);
       }
     }
   }
 
-  m_pineInstanceCount = m_pineInstances.size();
-  m_pineInstancesDirty = m_pineInstanceCount > 0;
+  m_oliveInstanceCount = m_oliveInstances.size();
+  m_oliveInstancesDirty = m_oliveInstanceCount > 0;
 }
 
 } // namespace Render::GL

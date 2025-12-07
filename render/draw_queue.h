@@ -2,6 +2,7 @@
 
 #include "ground/firecamp_gpu.h"
 #include "ground/grass_gpu.h"
+#include "ground/olive_gpu.h"
 #include "ground/pine_gpu.h"
 #include "ground/plant_gpu.h"
 #include "ground/stone_gpu.h"
@@ -80,6 +81,12 @@ struct PineBatchCmd {
   PineBatchParams params;
 };
 
+struct OliveBatchCmd {
+  Buffer *instanceBuffer = nullptr;
+  std::size_t instance_count = 0;
+  OliveBatchParams params;
+};
+
 struct FireCampBatchCmd {
   Buffer *instanceBuffer = nullptr;
   std::size_t instance_count = 0;
@@ -123,7 +130,7 @@ struct SelectionSmokeCmd {
 using DrawCmd = std::variant<GridCmd, SelectionRingCmd, SelectionSmokeCmd,
                              CylinderCmd, MeshCmd, FogBatchCmd, GrassBatchCmd,
                              StoneBatchCmd, PlantBatchCmd, PineBatchCmd,
-                             FireCampBatchCmd, TerrainChunkCmd>;
+                             OliveBatchCmd, FireCampBatchCmd, TerrainChunkCmd>;
 
 enum class DrawCmdType : std::uint8_t {
   Grid = 0,
@@ -136,8 +143,9 @@ enum class DrawCmdType : std::uint8_t {
   StoneBatch = 7,
   PlantBatch = 8,
   PineBatch = 9,
-  FireCampBatch = 10,
-  TerrainChunk = 11
+  OliveBatch = 10,
+  FireCampBatch = 11,
+  TerrainChunk = 12
 };
 
 constexpr std::size_t MeshCmdIndex =
@@ -160,6 +168,8 @@ constexpr std::size_t PlantBatchCmdIndex =
     static_cast<std::size_t>(DrawCmdType::PlantBatch);
 constexpr std::size_t PineBatchCmdIndex =
     static_cast<std::size_t>(DrawCmdType::PineBatch);
+constexpr std::size_t OliveBatchCmdIndex =
+    static_cast<std::size_t>(DrawCmdType::OliveBatch);
 constexpr std::size_t FireCampBatchCmdIndex =
     static_cast<std::size_t>(DrawCmdType::FireCampBatch);
 constexpr std::size_t TerrainChunkCmdIndex =
@@ -183,6 +193,7 @@ public:
   void submit(const StoneBatchCmd &c) { m_items.emplace_back(c); }
   void submit(const PlantBatchCmd &c) { m_items.emplace_back(c); }
   void submit(const PineBatchCmd &c) { m_items.emplace_back(c); }
+  void submit(const OliveBatchCmd &c) { m_items.emplace_back(c); }
   void submit(const FireCampBatchCmd &c) { m_items.emplace_back(c); }
   void submit(const TerrainChunkCmd &c) { m_items.emplace_back(c); }
 
@@ -272,12 +283,13 @@ private:
       StoneBatch = 2,
       PlantBatch = 3,
       PineBatch = 4,
-      FireCampBatch = 5,
-      Mesh = 6,
-      Cylinder = 7,
-      FogBatch = 8,
-      SelectionSmoke = 9,
-      Grid = 10,
+      OliveBatch = 5,
+      FireCampBatch = 6,
+      Mesh = 7,
+      Cylinder = 8,
+      FogBatch = 9,
+      SelectionSmoke = 10,
+      Grid = 11,
       SelectionRing = 15
     };
 
@@ -292,6 +304,7 @@ private:
         static_cast<uint8_t>(RenderOrder::StoneBatch),
         static_cast<uint8_t>(RenderOrder::PlantBatch),
         static_cast<uint8_t>(RenderOrder::PineBatch),
+        static_cast<uint8_t>(RenderOrder::OliveBatch),
         static_cast<uint8_t>(RenderOrder::FireCampBatch),
         static_cast<uint8_t>(RenderOrder::TerrainChunk)};
 
@@ -332,6 +345,12 @@ private:
       const auto &pine = std::get<PineBatchCmdIndex>(cmd);
       uint64_t const bufferPtr =
           reinterpret_cast<uintptr_t>(pine.instanceBuffer) & 0x0000FFFFFFFFFFFF;
+      key |= bufferPtr;
+    } else if (cmd.index() == OliveBatchCmdIndex) {
+      const auto &olive = std::get<OliveBatchCmdIndex>(cmd);
+      uint64_t const bufferPtr =
+          reinterpret_cast<uintptr_t>(olive.instanceBuffer) &
+          0x0000FFFFFFFFFFFF;
       key |= bufferPtr;
     } else if (cmd.index() == FireCampBatchCmdIndex) {
       const auto &firecamp = std::get<FireCampBatchCmdIndex>(cmd);
