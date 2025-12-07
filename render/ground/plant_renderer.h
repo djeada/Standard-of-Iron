@@ -42,6 +42,10 @@ private:
   std::size_t m_plantInstanceCount = 0;
   PlantBatchParams m_plantParams;
   bool m_plantInstancesDirty = false;
+
+  std::vector<PlantInstanceGpu> m_visibleInstances;
+  std::uint64_t m_cachedVisibilityVersion = 0;
+  bool m_visibilityDirty = true;
 };
 
 } // namespace Render::GL
