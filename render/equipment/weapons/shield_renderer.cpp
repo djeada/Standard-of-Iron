@@ -38,8 +38,8 @@ void ShieldRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
   float const min_extent = std::min(shield_width, shield_height);
 
   QVector3D shield_center = frames.hand_l.origin +
-                            axis_x * (-shield_width * 0.35F) +
-                            axis_y * (-0.05F) + n * (0.06F);
+                            axis_x * (-shield_width * 0.55F) +
+                            axis_y * (-0.20F) + n * (0.06F);
 
   const float plate_half = 0.0015F;
   const float plate_full = plate_half * 2.0F;

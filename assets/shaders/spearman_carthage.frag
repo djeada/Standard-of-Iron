@@ -338,8 +338,10 @@ void main() {
     MaterialSample mail =
         sample_chainmail(chain_base, v_worldPos * 0.9, Nw, Tw, Bw);
 
-    float torsoBand = 1.0 - step(1.5, v_armorLayer);
-    float skirtBand = step(1.0, v_armorLayer);
+    // Treat the entire armor piece as torso to avoid losing coverage to height
+    // band thresholds.
+    float torsoBand = 1.0;
+    float skirtBand = 0.0;
     float mailBlend =
         clamp(smoothstep(0.25, 0.85, v_chainmailPhase + v_steelWear * 0.35),
               0.0, 1.0) *

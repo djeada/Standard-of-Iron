@@ -8,19 +8,17 @@
 
 namespace Game::Systems {
 
-enum class NationID : std::uint8_t { KingdomOfIron, RomanRepublic, Carthage };
+enum class NationID : std::uint8_t { RomanRepublic, Carthage };
 
 inline auto nationIDToQString(NationID id) -> QString {
   switch (id) {
-  case NationID::KingdomOfIron:
-    return QStringLiteral("kingdom_of_iron");
   case NationID::RomanRepublic:
     return QStringLiteral("roman_republic");
   case NationID::Carthage:
     return QStringLiteral("carthage");
   }
 
-  return QStringLiteral("kingdom_of_iron");
+  return QStringLiteral("roman_republic");
 }
 
 inline auto nationIDToString(NationID id) -> std::string {
@@ -29,10 +27,6 @@ inline auto nationIDToString(NationID id) -> std::string {
 
 inline auto tryParseNationID(const QString &value, NationID &out) -> bool {
   const QString lowered = value.trimmed().toLower();
-  if (lowered == QStringLiteral("kingdom_of_iron")) {
-    out = NationID::KingdomOfIron;
-    return true;
-  }
   if (lowered == QStringLiteral("roman_republic")) {
     out = NationID::RomanRepublic;
     return true;
