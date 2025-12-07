@@ -100,7 +100,7 @@ private:
   std::vector<Nation> m_nations;
   std::unordered_map<NationID, size_t> m_nationIndex;
   std::unordered_map<int, NationID> m_playerNations;
-  NationID m_defaultNation = NationID::KingdomOfIron;
+  NationID m_defaultNation = NationID::RomanRepublic;
   bool m_initialized = false;
 };
 

@@ -6,7 +6,7 @@ A modern real-time strategy (RTS) game built with C++20, Qt 6, and OpenGL 3.3 Co
 
 ### Core Gameplay
 - **Unit Production**: Build archers from barracks with production queues
-- **Distinct Nations**: Choose between the Kingdom of Iron, Roman Republic, and Carthaginian Empire
+- **Distinct Nations**: Choose between the Roman Republic and Carthaginian Empire
 - **Rally Points**: Set spawn locations for newly produced units (visual yellow flags)
 - **Combat System**: Ranged archer combat with health bars and visual arrow projectiles
 - **Barrack Capture**: Take control of neutral or enemy barracks with 3× troop advantage
@@ -420,13 +420,13 @@ Quick start for contributors:
 
 ## Nation System Migration Plan
 
-This roadmap replaces the single “Kingdom of Iron” template with a scalable civilization layer that allows Romans, Carthage, and future nations to share troop classes but diverge on stats, formations, and visuals.
+This roadmap replaces the single nation template with a scalable civilization layer that allows Romans, Carthage, and future nations to share troop classes but diverge on stats, formations, and visuals.
 
 ### Phase 1 — Core Data Foundations
 - Introduce a `TroopClass` catalog describing baseline stats/metadata for each `Game::Units::TroopType` (health, speed, damage, default renderer, individuals per unit, etc.).
 - Refactor existing unit constructors (`game/units/*.cpp`) to hydrate components from the catalog instead of hard-coded literals; keep overrides minimal to validate the abstraction.
 - Extend `Nation` (`game/systems/nation_registry.h`) with a `NationTroopVariant` map that captures per-nation overrides (stat deltas, formation preference, renderer id).
-- Persist current “Kingdom of Iron” values into `assets/data/troops/base.json` plus `assets/data/nations/kingdom_of_iron.json` so runtime data mirrors today’s behavior.
+- Persist current values into `assets/data/troops/base.json` plus nation JSONs so runtime data mirrors today’s behavior.
 
 ### Phase 2 — Loading & Profiles
 - Add a JSON loader (`game/systems/nation_loader.*`) that builds `Nation` objects from disk and registers them through `NationRegistry::initializeDefaults`.

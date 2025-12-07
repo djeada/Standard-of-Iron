@@ -83,7 +83,7 @@ class ArcherRenderer : public HumanoidRendererBase {
 public:
   auto get_proportion_scaling() const -> QVector3D override {
 
-    return {0.94F, 1.01F, 0.96F};
+    return {0.78F, 1.01F, 0.96F};
   }
 
   void get_variant(const DrawContext &ctx, uint32_t seed,

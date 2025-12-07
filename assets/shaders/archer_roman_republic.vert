@@ -105,15 +105,24 @@ void main() {
   vec4 modelPos = u_model * vec4(position, 1.0);
   vec3 worldPos = modelPos.xyz;
 
-  // Procedural denting and battle damage
-  float dentSeed = hash13(worldPos * 0.75 + worldNormal * 0.22);
-  float hammerNoise = sin(worldPos.y * 14.3 + dentSeed * 12.56);
-  vec3 dentOffset = worldNormal * ((dentSeed - 0.5) * 0.0095);
-  vec3 shearAxis = normalize(vec3(worldNormal.z, 0.18, -worldNormal.x));
-  vec3 shearOffset = shearAxis * hammerNoise * 0.0032;
+  // Only add battle-wear deformation to armored pieces (not skin or cloth)
+  bool deformArmor = (u_materialId == 1 || u_materialId == 2 ||
+                      u_materialId == 4 || u_materialId == 3);
 
-  vec3 batteredPos = worldPos + dentOffset + shearOffset;
-  vec3 offsetPos = batteredPos + worldNormal * 0.0055;
+  vec3 batteredPos = worldPos;
+  vec3 offsetPos = worldPos;
+
+  if (deformArmor) {
+    // Procedural denting and battle damage for armor/helmet/shield/weapons
+    float dentSeed = hash13(worldPos * 0.75 + worldNormal * 0.22);
+    float hammerNoise = sin(worldPos.y * 14.3 + dentSeed * 12.56);
+    vec3 dentOffset = worldNormal * ((dentSeed - 0.5) * 0.0095);
+    vec3 shearAxis = normalize(vec3(worldNormal.z, 0.18, -worldNormal.x));
+    vec3 shearOffset = shearAxis * hammerNoise * 0.0032;
+
+    batteredPos = worldPos + dentOffset + shearOffset;
+    offsetPos = batteredPos + worldNormal * 0.0055;
+  }
 
   mat4 invModel = inverse(u_model);
   vec4 localBattered = invModel * vec4(batteredPos, 1.0);
@@ -127,15 +136,8 @@ void main() {
   v_bitangent = b;
 
   float height = offsetPos.y;
-
-  // Armor layer detection - STRICT ranges to avoid applying to wrong body parts
-  if (height > 1.45) {
-    v_armorLayer = 0.0; // Helmet region (helmet mesh only)
-  } else if (height > 0.85 && height <= 1.45) {
-    v_armorLayer = 1.0; // Chainmail torso (armor mesh only)
-  } else {
-    v_armorLayer = 2.0; // Legs, pteruges, belt (non-armor)
-  }
+  // Keep armor/material selection stable: 1.0 only for armor material.
+  v_armorLayer = (u_materialId == 1) ? 1.0 : 0.0;
 
   // Body height normalization
   float torsoMin = 0.55;

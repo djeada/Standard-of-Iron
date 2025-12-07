@@ -1,6 +1,5 @@
 #include "render/equipment/armor/armor_heavy_carthage.h"
 #include "render/equipment/armor/armor_light_carthage.h"
-#include "render/equipment/armor/kingdom_armor.h"
 #include "render/equipment/armor/roman_armor.h"
 #include "render/equipment/armor/tunic_renderer.h"
 #include "render/equipment/equipment_registry.h"
@@ -19,17 +18,6 @@ protected:
 
   EquipmentRegistry *registry = nullptr;
 };
-
-// Test nation-specific heavy armor
-TEST_F(ArmorRendererTest, KingdomHeavyArmorRegistered) {
-  auto armor = registry->get(EquipmentCategory::Armor, "kingdom_heavy_armor");
-  ASSERT_NE(armor, nullptr);
-}
-
-TEST_F(ArmorRendererTest, KingdomLightArmorRegistered) {
-  auto armor = registry->get(EquipmentCategory::Armor, "kingdom_light_armor");
-  ASSERT_NE(armor, nullptr);
-}
 
 TEST_F(ArmorRendererTest, RomanHeavyArmorRegistered) {
   auto armor = registry->get(EquipmentCategory::Armor, "roman_heavy_armor");
@@ -78,14 +66,14 @@ TEST_F(ArmorRendererTest, TunicRendererCreation) {
 }
 
 TEST_F(ArmorRendererTest, ArmorCategoryIsDistinct) {
-  auto helmet = registry->get(EquipmentCategory::Helmet, "kingdom_heavy");
-  auto armor = registry->get(EquipmentCategory::Armor, "kingdom_heavy_armor");
+  auto helmet = registry->get(EquipmentCategory::Helmet, "roman_heavy");
+  auto armor = registry->get(EquipmentCategory::Armor, "roman_heavy_armor");
   auto weapon = registry->get(EquipmentCategory::Weapon, "bow");
 
   ASSERT_NE(helmet, nullptr);
   ASSERT_NE(armor, nullptr);
   ASSERT_NE(weapon, nullptr);
 
-  EXPECT_FALSE(registry->has(EquipmentCategory::Armor, "kingdom_heavy"));
-  EXPECT_FALSE(registry->has(EquipmentCategory::Helmet, "kingdom_heavy_armor"));
+  EXPECT_FALSE(registry->has(EquipmentCategory::Armor, "roman_heavy"));
+  EXPECT_FALSE(registry->has(EquipmentCategory::Helmet, "roman_heavy_armor"));
 }

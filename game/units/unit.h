@@ -28,7 +28,7 @@ struct SpawnParams {
   SpawnType spawn_type = SpawnType::Archer;
   bool aiControlled = false;
   int maxPopulation = 100;
-  Game::Systems::NationID nation_id = Game::Systems::NationID::KingdomOfIron;
+  Game::Systems::NationID nation_id = Game::Systems::NationID::RomanRepublic;
 };
 
 class Unit {

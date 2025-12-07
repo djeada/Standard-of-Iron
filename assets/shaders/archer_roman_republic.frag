@@ -130,13 +130,6 @@ void main() {
         cheek_guard_height * smoothstep(0.10, 0.08, cheek_x) * 0.35;
     float guard_edge = cheek_guard * step(0.32, noise(uv * 18.0)) * 0.18;
 
-    // ENHANCED: Neck guard (rear projection)
-    float neck_guard_height = smoothstep(0.68, 0.74, v_bodyHeight) *
-                              smoothstep(0.80, 0.74, v_bodyHeight);
-    float behind_head = step(v_worldNormal.z, -0.3); // Rear-facing normals
-    float neck_guard = neck_guard_height * behind_head * 0.28;
-    float neck_segments = fract(v_bodyHeight * 35.0) * neck_guard * 0.12;
-
     // ENHANCED: Bronze composition variation (copper/tin ratio affects color)
     float bronze_variation = noise(uv * 5.0) * 0.10;
     vec3 rich_bronze = vec3(0.82, 0.68, 0.42); // Higher copper
@@ -157,8 +150,7 @@ void main() {
     color = mix(color, rich_bronze, 0.6);
     color = mix(color, pale_bronze, bronze_variation);
     color += vec3(bronze_sheen + bronze_fresnel + bands + apex);
-    color += vec3(cheek_guard + guard_edge + neck_guard + neck_segments +
-                  plume_socket);
+    color += vec3(cheek_guard + guard_edge + plume_socket);
     color -= vec3(bronze_patina * 0.4 + verdigris * 0.3);
     color += vec3(hammer_marks * 0.5);
   }

@@ -97,10 +97,17 @@ struct KnightExtras {
 
 class KnightRenderer : public HumanoidRendererBase {
 public:
+  static constexpr float kLimbWidthScale = 0.90F;
+  static constexpr float kTorsoWidthScale = 0.55F;
+  static constexpr float kHeightScale = 1.03F;
+  static constexpr float kDepthScale = 0.46F;
+
   auto get_proportion_scaling() const -> QVector3D override {
 
-    return {0.70F, 1.03F, 0.46F};
+    return {kLimbWidthScale, kHeightScale, kDepthScale};
   }
+
+  auto get_torso_scale() const -> float override { return kTorsoWidthScale; }
 
 private:
   mutable std::unordered_map<uint32_t, KnightExtras> m_extrasCache;

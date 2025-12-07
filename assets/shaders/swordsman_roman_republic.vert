@@ -64,15 +64,26 @@ void main() {
   vec4 modelPos = u_model * vec4(position, 1.0);
   vec3 worldPos = modelPos.xyz;
 
-  // Heavy battle damage for elite legionary equipment
-  float dentSeed = hash13(worldPos * 0.88 + worldNormal * 0.32);
-  float combatStress = sin(worldPos.y * 18.2 + dentSeed * 22.61);
-  vec3 dentOffset = worldNormal * ((dentSeed - 0.5) * 0.0105);
-  vec3 shearAxis = normalize(vec3(worldNormal.z, 0.25, -worldNormal.x));
-  vec3 shearOffset = shearAxis * combatStress * 0.0038;
+  // Deform only armored pieces (not face/skin/clothing)
+  bool deformArmor = (u_materialId == 1 || u_materialId == 2 ||
+                      u_materialId == 4 || u_materialId == 3);
 
-  vec3 batteredPos = worldPos + dentOffset + shearOffset;
-  vec3 offsetPos = batteredPos + worldNormal * 0.0062;
+  float dentSeed = 0.0;
+  float combatStress = 0.0;
+  vec3 batteredPos = worldPos;
+  vec3 offsetPos = worldPos;
+
+  if (deformArmor) {
+    // Heavy battle damage for elite legionary equipment
+    dentSeed = hash13(worldPos * 0.88 + worldNormal * 0.32);
+    combatStress = sin(worldPos.y * 18.2 + dentSeed * 22.61);
+    vec3 dentOffset = worldNormal * ((dentSeed - 0.5) * 0.0105);
+    vec3 shearAxis = normalize(vec3(worldNormal.z, 0.25, -worldNormal.x));
+    vec3 shearOffset = shearAxis * combatStress * 0.0038;
+
+    batteredPos = worldPos + dentOffset + shearOffset;
+    offsetPos = batteredPos + worldNormal * 0.0062;
+  }
 
   mat4 invModel = inverse(u_model);
   vec4 localBattered = invModel * vec4(batteredPos, 1.0);
@@ -85,16 +96,9 @@ void main() {
   v_tangent = t;
   v_bitangent = b;
 
+  // Keep armor/material selection stable: 1.0 only for armor material.
   float height = offsetPos.y;
-
-  // Armor layer detection - segmentata ONLY on torso
-  if (height > 1.50) {
-    v_armorLayer = 0.0; // Heavy steel galea helmet
-  } else if (height > 0.90 && height <= 1.50) {
-    v_armorLayer = 1.0; // Heavy lorica segmentata - TORSO ONLY
-  } else {
-    v_armorLayer = 2.0; // Leather pteruges
-  }
+  v_armorLayer = (u_materialId == 1) ? 1.0 : 0.0;
 
   // Body height normalization
   float torsoMin = 0.55;

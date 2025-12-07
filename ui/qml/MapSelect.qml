@@ -29,8 +29,8 @@ Item {
             return availableNations[0];
 
         return {
-            "id": "kingdom_of_iron",
-            "name": qsTr("Kingdom of Iron")
+            "id": "roman_republic",
+            "name": qsTr("Roman Republic")
         };
     }
 
