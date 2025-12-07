@@ -4,6 +4,7 @@
 #include "../../game/core/entity.h"
 #include "../../game/core/world.h"
 #include "../../game/map/terrain_service.h"
+#include "../../game/systems/nation_id.h"
 #include "../../game/units/spawn_type.h"
 #include "../../game/units/troop_config.h"
 #include "../../game/visuals/team_colors.h"
@@ -20,6 +21,7 @@
 #include "../palette.h"
 #include "../scene_renderer.h"
 #include "../submitter.h"
+#include "formation_calculator.h"
 #include "humanoid_math.h"
 #include <QMatrix4x4>
 #include <QVector2D>
@@ -195,7 +197,7 @@ auto HumanoidRendererBase::resolveFormation(const DrawContext &ctx)
           Game::Units::TroopConfig::instance().getMaxUnitsPerRow(
               unit->spawn_type);
       if (unit->spawn_type == Game::Units::SpawnType::MountedKnight) {
-        params.spacing = 1.35F;
+        params.spacing = 1.05F;
       }
     }
   }
@@ -1097,6 +1099,25 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
 
   const QMatrix4x4 k_identity_matrix;
 
+  const IFormationCalculator *formation_calculator = nullptr;
+  {
+    using Nation = FormationCalculatorFactory::Nation;
+    using UnitCategory = FormationCalculatorFactory::UnitCategory;
+
+    Nation nation = Nation::Roman;
+    if (unit_comp != nullptr) {
+      if (unit_comp->nation_id == Game::Systems::NationID::Carthage) {
+        nation = Nation::Carthage;
+      }
+    }
+
+    UnitCategory category =
+        is_mounted_spawn ? UnitCategory::Cavalry : UnitCategory::Infantry;
+
+    formation_calculator =
+        FormationCalculatorFactory::getCalculator(nation, category);
+  }
+
   auto fast_random = [](uint32_t &state) -> float {
     state = state * 1664525U + 1013904223U;
     return float(state & 0x7FFFFFU) / float(0x7FFFFFU);
@@ -1106,20 +1127,20 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
     int const r = idx / cols;
     int const c = idx % cols;
 
-    float offset_x = (c - (cols - 1) * 0.5F) * formation.spacing;
-    float offset_z = (r - (rows - 1) * 0.5F) * formation.spacing;
+    FormationOffset const formation_offset =
+        formation_calculator->calculateOffset(idx, r, c, rows, cols,
+                                              formation.spacing, seed);
+
+    float offset_x = formation_offset.offset_x;
+    float offset_z = formation_offset.offset_z;
 
     uint32_t const inst_seed = seed ^ uint32_t(idx * 9176U);
 
     uint32_t rng_state = inst_seed;
-    float const pos_jitter_x = (fast_random(rng_state) - 0.5F) * 0.05F;
-    float const pos_jitter_z = (fast_random(rng_state) - 0.5F) * 0.05F;
+
     float const vertical_jitter = (fast_random(rng_state) - 0.5F) * 0.03F;
     float const yaw_offset = (fast_random(rng_state) - 0.5F) * 5.0F;
     float const phase_offset = fast_random(rng_state) * 0.25F;
-
-    offset_x += pos_jitter_x;
-    offset_z += pos_jitter_z;
     float applied_vertical_jitter = vertical_jitter;
     float applied_yaw_offset = yaw_offset;
 
