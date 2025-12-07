@@ -18,16 +18,8 @@ void main() {
   v_texCoord = a_texCoord;
   v_worldPos = vec3(u_model * vec4(a_position, 1.0));
 
-  // Detect armor layer based on Y position for Carthaginian Numidian cavalry
-  // Upper body (helmet) = 0, Torso (light armor/cloak) = 1, Lower (bare
-  // legs/horse) = 2
-  if (v_worldPos.y > 1.5) {
-    v_armorLayer = 0.0; // Bronze cap/no helmet region
-  } else if (v_worldPos.y > 0.8) {
-    v_armorLayer = 1.0; // Light tunic/imported mail region
-  } else {
-    v_armorLayer = 2.0; // Bare legs/simple saddle blanket region
-  }
+  // Keep armor material consistent: 1.0 means armor in the fragment shader.
+  v_armorLayer = (u_materialId == 1) ? 1.0 : 0.0;
 
   gl_Position = u_mvp * vec4(a_position, 1.0);
 }

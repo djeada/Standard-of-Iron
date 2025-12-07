@@ -2,7 +2,6 @@
 #include "../../game/core/component.h"
 #include "../../game/systems/nation_id.h"
 #include "nations/carthage/barracks_renderer.h"
-#include "nations/kingdom/barracks_renderer.h"
 #include "nations/roman/barracks_renderer.h"
 #include "registry.h"
 
@@ -10,7 +9,6 @@ namespace Render::GL {
 
 void register_barracks_renderer(EntityRendererRegistry &registry) {
 
-  Kingdom::register_barracks_renderer(registry);
   Roman::register_barracks_renderer(registry);
   Carthage::register_barracks_renderer(registry);
 
@@ -33,9 +31,8 @@ void register_barracks_renderer(EntityRendererRegistry &registry) {
         case Game::Systems::NationID::RomanRepublic:
           renderer_key = "barracks_roman";
           break;
-        case Game::Systems::NationID::KingdomOfIron:
         default:
-          renderer_key = "barracks_kingdom";
+          renderer_key = "barracks_roman";
           break;
         }
 

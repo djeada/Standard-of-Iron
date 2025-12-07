@@ -388,12 +388,17 @@ void main() {
   color = mix(color, mud_color, mud_splatter);
   color = mix(color, blood_color, blood_stain);
 
+  // Subtle ambient occlusion to ground the metal and leather
+  float ao = 0.90 - noise(v_worldPos.xz * 4.0) * 0.10;
+  color *= ao;
+  color = mix(color, vec3(dot(color, vec3(0.333))), 0.08); // mild desaturation
+
   // Lighting per material
   vec3 light_dir = normalize(vec3(1.0, 1.2, 1.0));
   float n_dot_l = dot(normalize(v_worldNormal), light_dir);
 
-  float wrap_amount = is_helmet ? 0.08 : (is_armor ? 0.10 : 0.30);
-  float diff = max(n_dot_l * (1.0 - wrap_amount) + wrap_amount, 0.18);
+  float wrap_amount = is_helmet ? 0.08 : (is_armor ? 0.08 : 0.30);
+  float diff = max(n_dot_l * (1.0 - wrap_amount) + wrap_amount, 0.16);
 
   // Extra contrast for polished steel
   if (is_helmet || is_armor) {

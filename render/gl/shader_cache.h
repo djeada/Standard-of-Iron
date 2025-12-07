@@ -174,8 +174,7 @@ public:
     const auto [healerVert, healerFrag] =
         loadBaseShader(QStringLiteral("healer"));
 
-    const QStringList nationVariants = {QStringLiteral("kingdom_of_iron"),
-                                        QStringLiteral("roman_republic"),
+    const QStringList nationVariants = {QStringLiteral("roman_republic"),
                                         QStringLiteral("carthage")};
 
     auto resourceExists = [](const QString &path) -> bool {

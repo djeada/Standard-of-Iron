@@ -58,11 +58,6 @@ auto lookup_spearman_shader_resources(const QString &shader_key)
         QStringLiteral(":/assets/shaders/spearman_carthage.vert"),
         QStringLiteral(":/assets/shaders/spearman_carthage.frag")};
   }
-  if (shader_key == QStringLiteral("spearman_kingdom_of_iron")) {
-    return SpearmanShaderResourcePaths{
-        QStringLiteral(":/assets/shaders/spearman_kingdom_of_iron.vert"),
-        QStringLiteral(":/assets/shaders/spearman_kingdom_of_iron.frag")};
-  }
   if (shader_key == QStringLiteral("spearman_roman_republic")) {
     return SpearmanShaderResourcePaths{
         QStringLiteral(":/assets/shaders/spearman_roman_republic.vert"),
@@ -114,7 +109,7 @@ class SpearmanRenderer : public HumanoidRendererBase {
 public:
   auto get_proportion_scaling() const -> QVector3D override {
 
-    return {0.94F, 1.04F, 0.92F};
+    return {0.72F, 1.02F, 0.74F};
   }
 
   void adjust_variation(const DrawContext &, uint32_t,

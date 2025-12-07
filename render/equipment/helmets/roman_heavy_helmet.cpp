@@ -21,7 +21,6 @@ namespace {
 constexpr float helm_scale = 1.18f;
 constexpr float cap_scale = 0.96f;
 constexpr float brow_scale = 1.10f;
-constexpr float neck_scale = 0.98f;
 
 constexpr float helmet_bottom_y = -0.25f;
 constexpr float helmet_top_y = 1.42f;
@@ -30,7 +29,7 @@ constexpr float cap_top_y = 1.52f;
 constexpr float brow_center_y = 0.12f;
 constexpr float brow_top_offset = 0.035f;
 constexpr float brow_bottom_offset = 0.025f;
-
+constexpr float neck_scale = 0.98f;
 constexpr float neck_top_y = -0.12f;
 constexpr float neck_top_z = -1.08f;
 constexpr float neck_bottom_y = -0.35f;

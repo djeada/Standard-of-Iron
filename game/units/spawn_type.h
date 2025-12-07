@@ -17,6 +17,8 @@ enum class SpawnType : std::uint8_t {
   HorseArcher,
   HorseSpearman,
   Healer,
+  Catapult,
+  Ballista,
   Barracks
 };
 
@@ -36,6 +38,10 @@ inline auto spawn_typeToQString(SpawnType type) -> QString {
     return QStringLiteral("horse_spearman");
   case SpawnType::Healer:
     return QStringLiteral("healer");
+  case SpawnType::Catapult:
+    return QStringLiteral("catapult");
+  case SpawnType::Ballista:
+    return QStringLiteral("ballista");
   case SpawnType::Barracks:
     return QStringLiteral("barracks");
   }
@@ -77,6 +83,14 @@ inline auto tryParseSpawnType(const QString &value, SpawnType &out) -> bool {
     out = SpawnType::Healer;
     return true;
   }
+  if (lowered == QStringLiteral("catapult")) {
+    out = SpawnType::Catapult;
+    return true;
+  }
+  if (lowered == QStringLiteral("ballista")) {
+    out = SpawnType::Ballista;
+    return true;
+  }
   if (lowered == QStringLiteral("barracks")) {
     out = SpawnType::Barracks;
     return true;
@@ -106,6 +120,12 @@ spawn_typeFromString(const std::string &str) -> std::optional<SpawnType> {
   }
   if (str == "healer") {
     return SpawnType::Healer;
+  }
+  if (str == "catapult") {
+    return SpawnType::Catapult;
+  }
+  if (str == "ballista") {
+    return SpawnType::Ballista;
   }
   if (str == "barracks") {
     return SpawnType::Barracks;
@@ -137,6 +157,10 @@ inline auto spawn_typeToTroopType(SpawnType type) -> std::optional<TroopType> {
     return TroopType::HorseSpearman;
   case SpawnType::Healer:
     return TroopType::Healer;
+  case SpawnType::Catapult:
+    return TroopType::Catapult;
+  case SpawnType::Ballista:
+    return TroopType::Ballista;
   case SpawnType::Barracks:
     return std::nullopt;
   }
@@ -159,6 +183,10 @@ inline auto spawn_typeFromTroopType(TroopType type) -> SpawnType {
     return SpawnType::HorseSpearman;
   case TroopType::Healer:
     return SpawnType::Healer;
+  case TroopType::Catapult:
+    return SpawnType::Catapult;
+  case TroopType::Ballista:
+    return SpawnType::Ballista;
   }
   return SpawnType::Archer;
 }
