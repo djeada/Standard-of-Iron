@@ -83,6 +83,7 @@ add_library(render_gl STATIC
     gl/humanoid/animation/gait.cpp
     palette.cpp
     humanoid/rig.cpp
+    humanoid/formation_calculator.cpp
     humanoid/style_palette.cpp
     humanoid/pose_controller.cpp
     humanoid/mounted_pose_controller.cpp
