@@ -368,6 +368,7 @@ void HumanoidRendererBase::drawCommonBody(const DrawContext &ctx,
   QVector3D const scaling = get_proportion_scaling();
   float const width_scale = scaling.x();
   float const height_scale = scaling.y();
+  float const torso_scale = get_torso_scale();
 
   float const head_scale = 1.0F;
 
@@ -393,14 +394,14 @@ void HumanoidRendererBase::drawCommonBody(const DrawContext &ctx,
   const float torso_r_base =
       std::max(HP::TORSO_TOP_R, shoulder_half_span * 0.95F);
 
-  const float torso_r = torso_r_base * width_scale;
+  const float torso_r = torso_r_base * torso_scale;
   float const depth_scale = scaling.z();
 
   const float torso_depth_factor =
       std::clamp(0.55F + (depth_scale - 1.0F) * 0.20F, 0.40F, 0.85F);
   float torso_depth = torso_r * torso_depth_factor;
 
-  const float y_top_cover = std::max(y_shoulder + 0.04F, y_neck + 0.00F);
+  const float y_top_cover = std::max(y_shoulder + 0.00F, y_neck - 0.03F);
 
   const float upper_arm_r = HP::UPPER_ARM_R * width_scale;
   const float fore_arm_r = HP::FORE_ARM_R * width_scale;
@@ -489,7 +490,6 @@ void HumanoidRendererBase::drawCommonBody(const DrawContext &ctx,
   head_transform.translate(pose.head_pos);
   head_transform = head_transform * head_rot;
   head_transform.scale(head_r);
-  head_transform.scale(width_scale, 1.0F, depth_scale);
 
   out.mesh(getUnitSphere(), head_transform, v.palette.skin, nullptr, 1.0F);
 
@@ -814,6 +814,8 @@ void HumanoidRendererBase::drawFacialHair(const DrawContext &ctx,
     return (random01() - 0.5F) * 2.0F * amplitude;
   };
 
+  float const beard_forward_tilt_norm = 0.32F;
+
   auto place_strands = [&](int rows, int segments, float jaw_span,
                            float row_spacing_norm, float base_length_norm,
                            float length_variation, float forward_bias_norm,
@@ -866,7 +868,8 @@ void HumanoidRendererBase::drawFacialHair(const DrawContext &ctx,
 
         QVector3D local_dir(jitter(0.15F),
                             -(0.55F + row_t * 0.30F) + jitter(0.10F),
-                            forward_bias_norm + row_t * 0.20F + jitter(0.12F));
+                            forward_bias_norm + beard_forward_tilt_norm +
+                                row_t * 0.20F + jitter(0.12F));
         QVector3D strand_dir =
             frame.right * local_dir.x() + frame.up * local_dir.y() +
             frame.forward * local_dir.z() - surface_dir * 0.25F;

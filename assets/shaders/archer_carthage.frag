@@ -594,6 +594,81 @@ void main() {
                                 curvature);
   } else if (looks_beard && is_face_region) {
     material = make_hair_sample(CANON_BEARD, Nw, Tw, Bw, v_worldPos, wet_mask);
+  } else if (is_armor) {
+    // Reuse the spearman armor stack (leather + scales + mail) for consistent
+    // Carthage torso armor.
+    vec3 leather_base = vec3(0.44, 0.30, 0.19);
+    vec3 linen_base = vec3(0.86, 0.80, 0.72);
+    vec3 bronze_base = vec3(0.62, 0.46, 0.20);
+    vec3 chain_base = vec3(0.78, 0.80, 0.82);
+
+    MaterialSample leather = make_leather_sample(
+        leather_base, Nw, Tw, Bw, v_worldPos, clamp(v_leatherTension, 0.0, 1.0),
+        clamp(v_bodyHeight, 0.0, 1.0), v_armorLayer, wet_mask, curvature);
+    MaterialSample linen =
+        make_linen_sample(linen_base, Nw, Tw, Bw, v_worldPos,
+                          clamp(v_bodyHeight, 0.0, 1.0), wet_mask, curvature);
+    MaterialSample scales = make_bronze_sample(bronze_base, Nw, Tw, Bw,
+                                               v_worldPos, wet_mask, curvature);
+    MaterialSample mail = make_metal_sample(chain_base, Nw, Tw, Bw, v_worldPos,
+                                            wet_mask, curvature);
+
+    float torsoBand = 1.0;
+    float skirtBand = 0.0;
+    float mailBlend = clamp(smoothstep(0.25, 0.85,
+                                       fbm(v_worldPos * 1.2, Nw, 2.5) +
+                                           v_leatherTension * 0.2),
+                            0.0, 1.0) *
+                      torsoBand * 0.30;
+    float scaleBlend = torsoBand * 0.55;
+    float linenBlend = skirtBand * 0.40;
+    float leatherOverlay = skirtBand * 0.90 + torsoBand * 0.30;
+
+    float edge = 1.0 - clamp(dot(Nw, vec3(0.0, 1.0, 0.0)), 0.0, 1.0);
+    vec3 highlight = vec3(0.10, 0.08, 0.05) * smoothstep(0.3, 0.9, edge);
+
+    vec3 albedo = leather.albedo;
+    albedo = mix(albedo, linen.albedo, linenBlend);
+    albedo = mix(albedo, scales.albedo, scaleBlend);
+    albedo = mix(albedo, mail.albedo, mailBlend);
+    albedo = mix(albedo, leather.albedo + highlight, leatherOverlay);
+
+    float leather_depth = clamp(
+        leatherOverlay * 0.8 + linenBlend * 0.2 + scaleBlend * 0.15, 0.0, 1.0);
+    albedo = mix(albedo, albedo * 0.88 + vec3(0.04, 0.03, 0.02),
+                 leather_depth * 0.35);
+
+    vec3 normal = leather.normal;
+    normal = normalize(mix(normal, linen.normal, linenBlend));
+    normal = normalize(mix(normal, scales.normal, scaleBlend));
+    normal = normalize(mix(normal, mail.normal, mailBlend));
+
+    float roughness = leather.roughness;
+    roughness = mix(roughness, linen.roughness, linenBlend);
+    roughness = mix(roughness, scales.roughness, scaleBlend);
+    roughness = mix(roughness, mail.roughness, mailBlend);
+
+    float metallic = leather.metallic;
+    metallic = mix(metallic, linen.metallic, linenBlend);
+    metallic = mix(metallic, scales.metallic, scaleBlend);
+    metallic = mix(metallic, mail.metallic, mailBlend);
+
+    float ao = leather.ao;
+    ao = mix(ao, linen.ao, linenBlend);
+    ao = mix(ao, scales.ao, scaleBlend);
+    ao = mix(ao, mail.ao, mailBlend);
+
+    vec3 F0 = leather.F0;
+    F0 = mix(F0, linen.F0, linenBlend);
+    F0 = mix(F0, scales.F0, scaleBlend);
+    F0 = mix(F0, mail.F0, mailBlend);
+
+    material.albedo = albedo;
+    material.normal = normal;
+    material.roughness = roughness;
+    material.metallic = metallic;
+    material.ao = ao;
+    material.F0 = F0;
   } else if (looks_wood) {
     vec3 wood_color = mix(base_color, CANON_WOOD, 0.35);
     material = make_wood_sample(wood_color, Nw, Tw, Bw, v_worldPos, wet_mask,
@@ -602,8 +677,9 @@ void main() {
     material = make_cloth_sample(base_color, Nw, Tw, Bw, v_worldPos, wet_mask,
                                  curvature);
   } else if (prefer_leather) {
+    vec3 leather_base = mix(base_color, vec3(0.44, 0.30, 0.19), 0.75);
     material = make_leather_sample(
-        base_color, Nw, Tw, Bw, v_worldPos, clamp(v_leatherTension, 0.0, 1.0),
+        leather_base, Nw, Tw, Bw, v_worldPos, clamp(v_leatherTension, 0.0, 1.0),
         clamp(v_bodyHeight, 0.0, 1.0), v_armorLayer, wet_mask, curvature);
   } else if (likely_linen) {
     material =
@@ -635,7 +711,7 @@ void main() {
   }
 
   vec3 ambient =
-      compute_ambient(material.normal) * material.albedo * material.ao * 0.35;
+      compute_ambient(material.normal) * material.albedo * material.ao * 0.42;
   vec3 bounce = vec3(0.45, 0.34, 0.25) *
                 (0.15 + 0.45 * clamp(-material.normal.y, 0.0, 1.0));
   vec3 color =

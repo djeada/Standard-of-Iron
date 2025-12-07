@@ -181,8 +181,6 @@ if(QT_VERSION_MAJOR EQUAL 6)
         RESOURCES
             assets/shaders/archer.frag
             assets/shaders/archer.vert
-            assets/shaders/archer_kingdom_of_iron.frag
-            assets/shaders/archer_kingdom_of_iron.vert
             assets/shaders/archer_roman_republic.frag
             assets/shaders/archer_roman_republic.vert
             assets/shaders/archer_carthage.frag
@@ -204,36 +202,26 @@ if(QT_VERSION_MAJOR EQUAL 6)
             assets/shaders/ground_plane.vert
             assets/shaders/swordsman.frag
             assets/shaders/swordsman.vert
-            assets/shaders/swordsman_kingdom_of_iron.frag
-            assets/shaders/swordsman_kingdom_of_iron.vert
             assets/shaders/swordsman_roman_republic.frag
             assets/shaders/swordsman_roman_republic.vert
             assets/shaders/swordsman_carthage.frag
             assets/shaders/swordsman_carthage.vert
             assets/shaders/horse_swordsman.frag
             assets/shaders/horse_swordsman.vert
-            assets/shaders/horse_swordsman_kingdom_of_iron.frag
-            assets/shaders/horse_swordsman_kingdom_of_iron.vert
             assets/shaders/horse_swordsman_roman_republic.frag
             assets/shaders/horse_swordsman_roman_republic.vert
             assets/shaders/horse_swordsman_carthage.frag
             assets/shaders/horse_swordsman_carthage.vert
-            assets/shaders/horse_archer_kingdom_of_iron.frag
-            assets/shaders/horse_archer_kingdom_of_iron.vert
             assets/shaders/horse_archer_roman_republic.frag
             assets/shaders/horse_archer_roman_republic.vert
             assets/shaders/horse_archer_carthage.frag
             assets/shaders/horse_archer_carthage.vert
-            assets/shaders/horse_spearman_kingdom_of_iron.frag
-            assets/shaders/horse_spearman_kingdom_of_iron.vert
             assets/shaders/horse_spearman_roman_republic.frag
             assets/shaders/horse_spearman_roman_republic.vert
             assets/shaders/horse_spearman_carthage.frag
             assets/shaders/horse_spearman_carthage.vert
             assets/shaders/healer.frag
             assets/shaders/healer.vert
-            assets/shaders/healer_kingdom_of_iron.frag
-            assets/shaders/healer_kingdom_of_iron.vert
             assets/shaders/healer_roman_republic.frag
             assets/shaders/healer_roman_republic.vert
             assets/shaders/healer_carthage.frag
@@ -248,8 +236,6 @@ if(QT_VERSION_MAJOR EQUAL 6)
             assets/shaders/riverbank.vert
             assets/shaders/spearman.frag
             assets/shaders/spearman.vert
-            assets/shaders/spearman_kingdom_of_iron.frag
-            assets/shaders/spearman_kingdom_of_iron.vert
             assets/shaders/spearman_roman_republic.frag
             assets/shaders/spearman_roman_republic.vert
             assets/shaders/spearman_carthage.frag

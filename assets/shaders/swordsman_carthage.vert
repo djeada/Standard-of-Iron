@@ -52,6 +52,15 @@ void main() {
   vec4 modelPos = u_model * vec4(position, 1.0);
   vec3 worldPos = modelPos.xyz;
 
+  // Normalize height along the model's local Y so lighting gradients stay
+  // stable regardless of placement or per-piece transforms.
+  vec3 axisY = vec3(u_model[1].xyz);
+  float axisLen = max(length(axisY), 1e-4);
+  vec3 axisDir = axisY / axisLen;
+  vec3 modelOrigin = vec3(u_model[3].xyz);
+  float height01 =
+      clamp(dot(worldPos - modelOrigin, axisDir) / axisLen + 0.5, 0.0, 1.0);
+
   float dentSeed = hash13(worldPos * 0.8 + worldNormal * 0.3);
   float torsion = 0.0; // removed bulk shear to avoid squashing
 
@@ -83,19 +92,10 @@ void main() {
 
   v_frontMask = clamp(smoothstep(-0.18, 0.18, -localPos.z), 0.0, 1.0);
 
-  float armorHeight = offsetPos.y;
-  if (armorHeight > 1.5) {
-    v_armorLayer = 0.0;
-  } else if (armorHeight > 0.8) {
-    v_armorLayer = 1.0;
-  } else {
-    v_armorLayer = 2.0;
-  }
+  // Force the full armor piece to use the armor material; avoid partial masks.
+  v_armorLayer = (u_materialId == 1) ? 1.0 : 0.0;
 
-  float torsoMin = 0.58;
-  float torsoMax = 1.50;
-  v_bodyHeight =
-      clamp((offsetPos.y - torsoMin) / (torsoMax - torsoMin), 0.0, 1.0);
+  v_bodyHeight = clamp((height01 - 0.05) / 0.90, 0.0, 1.0);
   v_layerNoise = dentSeed;
   v_plateStress = torsion;
   v_lamellaPhase = fract(offsetPos.y * 4.25 + offsetPos.x * 0.12);

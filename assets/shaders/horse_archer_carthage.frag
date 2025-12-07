@@ -177,8 +177,8 @@ void main() {
 
   // Material-based detection only (no fallbacks)
   bool is_brass = is_helmet;
-  bool is_steel = is_armor;
-  bool is_chain = is_armor;
+  bool is_steel = false;
+  bool is_chain = false;
   bool is_fabric = is_rider_clothing || is_saddle_blanket || is_cloak;
   bool is_leather = is_saddle_leather || is_bridle;
 
@@ -214,7 +214,50 @@ void main() {
   vec3 col = vec3(0.0);
   vec3 ambient = hemilight(N) * (0.85 + 0.15 * cavity);
 
-  if (is_horse_hide) {
+  if (is_armor) {
+    // Leather-first mix, consistent with infantry light armor
+    float leather_grain = fbm(uv * 12.0) * 0.12;
+    float linen_weave = fbm(uv * 6.0) * 0.08;
+    float scale_hint = armor_plates(v_worldPos.xz, v_worldPos.y) * 0.35;
+
+    float h = fbm(vec2(v_worldPos.y * 22.0, v_worldPos.z * 7.0));
+    N = perturb_normal_ws(N, v_worldPos, h, 0.30);
+
+    vec3 leather_tint = vec3(0.44, 0.30, 0.19);
+    vec3 linen_tint = vec3(0.86, 0.80, 0.72);
+    vec3 bronze_tint = vec3(0.62, 0.46, 0.20);
+    vec3 chain_tint = vec3(0.78, 0.80, 0.82);
+
+    // Treat the entire armor mesh as torso to avoid clipping by height bands.
+    float torsoBand = 1.0;
+    float skirtBand = 0.0;
+    float linenBlend = skirtBand * 0.40;
+    float bronzeBlend = torsoBand * 0.45;
+    float chainBlend = torsoBand * 0.20;
+    float leatherOverlay = skirtBand * 0.90 + torsoBand * 0.30;
+    float edge = 1.0 - clamp(dot(N, vec3(0.0, 1.0, 0.0)), 0.0, 1.0);
+    vec3 highlight = vec3(0.10, 0.08, 0.05) * smoothstep(0.3, 0.9, edge);
+
+    albedo = leather_tint;
+    albedo = mix(albedo, linen_tint, linenBlend);
+    albedo = mix(albedo, bronze_tint, bronzeBlend);
+    albedo = mix(albedo, chain_tint, chainBlend);
+    albedo = mix(albedo, leather_tint + highlight, leatherOverlay);
+
+    roughness = 0.42 - leather_grain * 0.12 + linen_weave * 0.08;
+    roughness = clamp(roughness, 0.26, 0.62);
+    F0 = mix(vec3(0.06), bronze_tint, 0.22);
+
+    float D = D_GGX(saturate(dot(N, H)), roughness);
+    float G = G_Smith(saturate(dot(N, V)), saturate(dot(N, L)), roughness);
+    vec3 F = fresnel_schlick(VdotH, F0);
+    vec3 spec = (D * G) * F / max(1e-5, 4.0 * NdotV * NdotL);
+
+    col += ambient * albedo * 0.70;
+    col += NdotL_wrap * (albedo * (1.0 - F) + spec * 0.65);
+    col += vec3(scale_hint * 0.4 + leather_grain * 0.2 + linen_weave * 0.15);
+
+  } else if (is_horse_hide) {
     // subtle anisotropic sheen along body flow
     vec3 up = vec3(0.0, 1.0, 0.0);
     vec3 T = normalize(cross(up, N) + 1e-4); // hair tangent guess

@@ -82,7 +82,7 @@ public:
   Game::Units::SpawnType spawn_type{Game::Units::SpawnType::Archer};
   int owner_id{0};
   float vision_range;
-  Game::Systems::NationID nation_id{Game::Systems::NationID::KingdomOfIron};
+  Game::Systems::NationID nation_id{Game::Systems::NationID::RomanRepublic};
 };
 
 class MovementComponent : public Component {
