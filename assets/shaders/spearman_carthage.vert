@@ -60,16 +60,38 @@ void main() {
 
   vec4 modelPos = u_model * vec4(position, 1.0);
   vec3 worldPos = modelPos.xyz;
+  vec3 axisY = vec3(u_model[1].xyz);
+  float axisLen = max(length(axisY), 1e-4);
+  vec3 axisDir = axisY / axisLen;
+  vec3 modelOrigin = vec3(u_model[3].xyz);
+  float height01 =
+      clamp(dot(worldPos - modelOrigin, axisDir) / axisLen + 0.5, 0.0, 1.0);
 
-  // Subtle battered offset to avoid self-shadowing
-  float dentSeed = hash13(worldPos * 0.82 + worldNormal * 0.28);
-  float hammerImpact = sin(worldPos.y * 15.0 + dentSeed * 18.84);
-  vec3 dentOffset = worldNormal * ((dentSeed - 0.5) * 0.0095);
-  vec3 shearAxis = normalize(vec3(worldNormal.z, 0.22, -worldNormal.x));
-  vec3 shearOffset = shearAxis * hammerImpact * 0.0038;
+  // Only deform armored pieces (helmet/armor/shield/weapons) and only within
+  // their height bands to avoid touching skin/face
+  bool torsoZone = (height01 > 0.18 && height01 <= 0.98);
+  bool helmetZone = (height01 > 0.70); // allow small overlap for helmet rim
+  bool deformArmor =
+      (u_materialId == 4 || u_materialId == 3 || // shields, weapons
+       (u_materialId == 1 && torsoZone) ||       // chainmail
+       (u_materialId == 2 && helmetZone));       // helmet
 
-  vec3 batteredPos = worldPos + dentOffset + shearOffset;
-  vec3 offsetPos = batteredPos + worldNormal * 0.006;
+  float dentSeed = 0.0;
+  float hammerImpact = 0.0;
+  vec3 batteredPos = worldPos;
+  vec3 offsetPos = worldPos;
+
+  if (deformArmor) {
+    // Subtle battered offset to avoid self-shadowing
+    dentSeed = hash13(worldPos * 0.82 + worldNormal * 0.28);
+    hammerImpact = sin(worldPos.y * 15.0 + dentSeed * 18.84);
+    vec3 dentOffset = worldNormal * ((dentSeed - 0.5) * 0.0095);
+    vec3 shearAxis = normalize(vec3(worldNormal.z, 0.22, -worldNormal.x));
+    vec3 shearOffset = shearAxis * hammerImpact * 0.0038;
+
+    batteredPos = worldPos + dentOffset + shearOffset;
+    offsetPos = batteredPos + worldNormal * 0.006;
+  }
 
   mat4 invModel = inverse(u_model);
   vec4 localOffset = invModel * vec4(offsetPos, 1.0);
@@ -82,28 +104,19 @@ void main() {
   v_tangent = t;
   v_bitangent = b;
 
-  float height = offsetPos.y;
+  float height = height01;
 
-  // Armor segmentation (helmet / torso / lower)
-  if (height > 1.50) {
-    v_armorLayer = 0.0;
-  } else if (height > 0.85 && height <= 1.50) {
-    v_armorLayer = 1.0;
-  } else {
-    v_armorLayer = 2.0;
-  }
+  // Keep armor material active across the whole piece; avoid partial bands.
+  v_armorLayer = (u_materialId == 1) ? 1.0 : 0.0;
 
-  float torsoMin = 0.55;
-  float torsoMax = 1.68;
-  v_bodyHeight =
-      clamp((offsetPos.y - torsoMin) / (torsoMax - torsoMin), 0.0, 1.0);
+  v_bodyHeight = clamp((height - 0.05) / 0.90, 0.0, 1.0);
 
   // Helmet detail bands and rivets
-  float reinforcementBands = fract(height * 14.0);
+  float reinforcementBands = fract(height * 12.0);
   float browBandRegion =
-      smoothstep(1.48, 1.52, height) * smoothstep(1.56, 1.52, height);
+      smoothstep(0.78, 0.82, height) * smoothstep(0.90, 0.86, height);
   float cheekGuardArea =
-      smoothstep(1.45, 1.55, height) * smoothstep(1.65, 1.55, height);
+      smoothstep(0.70, 0.82, height) * smoothstep(0.90, 0.82, height);
   v_helmetDetail =
       reinforcementBands * 0.4 + browBandRegion * 0.4 + cheekGuardArea * 0.2;
 

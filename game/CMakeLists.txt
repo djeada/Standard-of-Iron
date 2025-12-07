@@ -73,6 +73,8 @@ add_library(game_systems STATIC
     units/horse_spearman.cpp
     units/spearman.cpp
     units/healer.cpp
+    units/catapult.cpp
+    units/ballista.cpp
     units/troop_catalog.cpp
     units/troop_catalog_loader.cpp
     units/factory.cpp

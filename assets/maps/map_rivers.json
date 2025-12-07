@@ -91,7 +91,7 @@
       "playerId": 1
     },
     {
-      "type": "archer",
+      "type": "swordsman",
       "x": 32,
       "z": 28,
       "playerId": 1
@@ -118,6 +118,24 @@
       "type": "spearman",
       "x": 35,
       "z": 30,
+      "playerId": 1
+    },
+    {
+      "type": "healer",
+      "x": 33,
+      "z": 27,
+      "playerId": 1
+    },
+    {
+      "type": "ballista",
+      "x": 27,
+      "z": 34,
+      "playerId": 1
+    },
+    {
+      "type": "catapult",
+      "x": 27,
+      "z": 34,
       "playerId": 1
     },
     {
@@ -150,6 +168,18 @@
       "type": "spearman",
       "x": 85,
       "z": 90,
+      "playerId": 2
+    },
+    {
+      "type": "healer",
+      "x": 87,
+      "z": 93,
+      "playerId": 2
+    },
+    {
+      "type": "catapult",
+      "x": 93,
+      "z": 86,
       "playerId": 2
     },
     {
