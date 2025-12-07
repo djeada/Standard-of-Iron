@@ -47,6 +47,10 @@ private:
   FireCampBatchParams m_fireCampParams;
   bool m_fireCampInstancesDirty = false;
 
+  std::vector<FireCampInstanceGpu> m_visibleInstances;
+  std::uint64_t m_cachedVisibilityVersion = 0;
+  bool m_visibilityDirty = true;
+
   std::vector<QVector3D> m_explicitPositions;
   std::vector<float> m_explicitIntensities;
   std::vector<float> m_explicitRadii;

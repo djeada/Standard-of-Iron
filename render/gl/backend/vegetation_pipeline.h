@@ -27,6 +27,9 @@ public:
     return m_plantShader;
   }
   [[nodiscard]] auto pineShader() const -> GL::Shader * { return m_pineShader; }
+  [[nodiscard]] auto oliveShader() const -> GL::Shader * {
+    return m_oliveShader;
+  }
   [[nodiscard]] auto firecampShader() const -> GL::Shader * {
     return m_firecampShader;
   }
@@ -51,6 +54,14 @@ public:
     GL::Shader::UniformHandle wind_speed{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle light_direction{GL::Shader::InvalidUniform};
   } m_pineUniforms;
+
+  struct OliveUniforms {
+    GL::Shader::UniformHandle view_proj{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle time{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle wind_strength{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle wind_speed{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle light_direction{GL::Shader::InvalidUniform};
+  } m_oliveUniforms;
 
   struct FireCampUniforms {
     GL::Shader::UniformHandle view_proj{GL::Shader::InvalidUniform};
@@ -81,6 +92,12 @@ public:
   GLsizei m_pineIndexCount{0};
   GLsizei m_pineVertexCount{0};
 
+  GLuint m_oliveVao{0};
+  GLuint m_oliveVertexBuffer{0};
+  GLuint m_oliveIndexBuffer{0};
+  GLsizei m_oliveIndexCount{0};
+  GLsizei m_oliveVertexCount{0};
+
   GLuint m_firecampVao{0};
   GLuint m_firecampVertexBuffer{0};
   GLuint m_firecampIndexBuffer{0};
@@ -94,6 +111,8 @@ private:
   void shutdownPlantPipeline();
   void initializePinePipeline();
   void shutdownPinePipeline();
+  void initializeOlivePipeline();
+  void shutdownOlivePipeline();
   void initializeFireCampPipeline();
   void shutdownFireCampPipeline();
 
@@ -103,6 +122,7 @@ private:
   GL::Shader *m_stoneShader{nullptr};
   GL::Shader *m_plantShader{nullptr};
   GL::Shader *m_pineShader{nullptr};
+  GL::Shader *m_oliveShader{nullptr};
   GL::Shader *m_firecampShader{nullptr};
 };
 

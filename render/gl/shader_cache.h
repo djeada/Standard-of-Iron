@@ -107,6 +107,11 @@ public:
     const QString pineFrag =
         resolve(kShaderBase + QStringLiteral("pine_instanced.frag"));
     load(QStringLiteral("pine_instanced"), pineVert, pineFrag);
+    const QString oliveVert =
+        resolve(kShaderBase + QStringLiteral("olive_instanced.vert"));
+    const QString oliveFrag =
+        resolve(kShaderBase + QStringLiteral("olive_instanced.frag"));
+    load(QStringLiteral("olive_instanced"), oliveVert, oliveFrag);
 
     const QString firecampVert =
         resolve(kShaderBase + QStringLiteral("firecamp.vert"));

@@ -209,6 +209,20 @@ void Renderer::pineBatch(Buffer *instanceBuffer, std::size_t instance_count,
   m_activeQueue->submit(cmd);
 }
 
+void Renderer::oliveBatch(Buffer *instanceBuffer, std::size_t instance_count,
+                          const OliveBatchParams &params) {
+  if ((instanceBuffer == nullptr) || instance_count == 0 ||
+      (m_activeQueue == nullptr)) {
+    return;
+  }
+  OliveBatchCmd cmd;
+  cmd.instanceBuffer = instanceBuffer;
+  cmd.instance_count = instance_count;
+  cmd.params = params;
+  cmd.params.time = m_accumulatedTime;
+  m_activeQueue->submit(cmd);
+}
+
 void Renderer::firecampBatch(Buffer *instanceBuffer, std::size_t instance_count,
                              const FireCampBatchParams &params) {
   if ((instanceBuffer == nullptr) || instance_count == 0 ||
