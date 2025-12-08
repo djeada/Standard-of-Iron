@@ -12,6 +12,7 @@
 #include "../geom/math_utils.h"
 #include "../geom/transforms.h"
 #include "../gl/backend.h"
+#include "../gl/camera.h"
 #include "../gl/humanoid/animation/animation_inputs.h"
 #include "../gl/humanoid/animation/gait.h"
 #include "../gl/humanoid/humanoid_constants.h"
@@ -33,6 +34,7 @@
 #include <functional>
 #include <limits>
 #include <numbers>
+#include <unordered_map>
 #include <vector>
 
 namespace Render::GL {
@@ -47,10 +49,46 @@ namespace {
 
 constexpr float k_shadow_size_infantry = 0.16F;
 constexpr float k_shadow_size_mounted = 0.35F;
+
+struct CachedPoseEntry {
+  HumanoidPose pose;
+  VariationParams variation;
+  uint32_t frameNumber{0};
+  bool wasMoving{false};
+};
+
+using PoseCacheKey = uint64_t;
+static std::unordered_map<PoseCacheKey, CachedPoseEntry> s_poseCache;
+static uint32_t s_currentFrame = 0;
+constexpr uint32_t kPoseCacheMaxAge = 300;
+
+inline auto makePoseCacheKey(uintptr_t entityPtr,
+                             int soldierIdx) -> PoseCacheKey {
+  return (static_cast<uint64_t>(entityPtr) << 16) |
+         static_cast<uint64_t>(soldierIdx & 0xFFFF);
+}
+
+static HumanoidRenderStats s_renderStats;
+
 constexpr float k_shadow_ground_offset = 0.02F;
 constexpr float k_shadow_base_alpha = 0.24F;
 constexpr QVector3D k_shadow_light_dir(0.4F, 1.0F, 0.25F);
 } // namespace
+
+void advancePoseCacheFrame() {
+  ++s_currentFrame;
+
+  if ((s_currentFrame & 0x1FF) == 0) {
+    auto it = s_poseCache.begin();
+    while (it != s_poseCache.end()) {
+      if (s_currentFrame - it->second.frameNumber > kPoseCacheMaxAge * 2) {
+        it = s_poseCache.erase(it);
+      } else {
+        ++it;
+      }
+    }
+  }
+}
 
 auto torso_mesh_without_bottom_cap() -> Mesh * {
   static std::unique_ptr<Mesh> s_mesh;
@@ -1036,6 +1074,107 @@ void HumanoidRendererBase::drawFacialHair(const DrawContext &ctx,
   }
 }
 
+void HumanoidRendererBase::drawSimplifiedBody(const DrawContext &ctx,
+                                              const HumanoidVariant &v,
+                                              HumanoidPose &pose,
+                                              ISubmitter &out) const {
+  using HP = HumanProportions;
+
+  QVector3D const scaling = get_proportion_scaling();
+  float const width_scale = scaling.x();
+  float const height_scale = scaling.y();
+  float const torso_scale = get_torso_scale();
+
+  QVector3D right_axis = pose.shoulder_r - pose.shoulder_l;
+  if (right_axis.lengthSquared() < 1e-8F) {
+    right_axis = QVector3D(1, 0, 0);
+  }
+  right_axis.normalize();
+
+  QVector3D const up_axis(0.0F, 1.0F, 0.0F);
+  QVector3D forward_axis = QVector3D::crossProduct(right_axis, up_axis);
+  if (forward_axis.lengthSquared() < 1e-8F) {
+    forward_axis = QVector3D(0.0F, 0.0F, 1.0F);
+  }
+  forward_axis.normalize();
+
+  QVector3D const shoulder_mid = (pose.shoulder_l + pose.shoulder_r) * 0.5F;
+  const float y_shoulder = shoulder_mid.y();
+  const float y_neck = pose.neck_base.y();
+  const float shoulder_half_span =
+      0.5F * std::abs(pose.shoulder_r.x() - pose.shoulder_l.x());
+
+  const float torso_r_base =
+      std::max(HP::TORSO_TOP_R, shoulder_half_span * 0.95F);
+  const float torso_r = torso_r_base * torso_scale;
+  float const depth_scale = scaling.z();
+  const float torso_depth_factor =
+      std::clamp(0.55F + (depth_scale - 1.0F) * 0.20F, 0.40F, 0.85F);
+  float torso_depth = torso_r * torso_depth_factor;
+
+  const float y_top_cover = std::max(y_shoulder + 0.00F, y_neck - 0.03F);
+
+  const float upper_arm_r = HP::UPPER_ARM_R * width_scale;
+  const float fore_arm_r = HP::FORE_ARM_R * width_scale;
+  const float thigh_r = HP::UPPER_LEG_R * width_scale;
+  const float shin_r = HP::LOWER_LEG_R * width_scale;
+
+  QVector3D const tunic_top{shoulder_mid.x(), y_top_cover - 0.006F,
+                            shoulder_mid.z()};
+  QVector3D const tunic_bot{pose.pelvis_pos.x(), pose.pelvis_pos.y() - 0.05F,
+                            pose.pelvis_pos.z()};
+  QMatrix4x4 torso_transform =
+      cylinderBetween(ctx.model, tunic_top, tunic_bot, 1.0F);
+  torso_transform.scale(torso_r, 1.0F, torso_depth);
+
+  Mesh *torso_mesh = torso_mesh_without_bottom_cap();
+  if (torso_mesh != nullptr) {
+    out.mesh(torso_mesh, torso_transform, v.palette.cloth, nullptr, 1.0F);
+  }
+
+  float const head_r = pose.head_r;
+  QMatrix4x4 head_transform = ctx.model;
+  head_transform.translate(pose.head_pos);
+  head_transform.scale(head_r);
+  out.mesh(getUnitSphere(), head_transform, v.palette.skin, nullptr, 1.0F);
+
+  out.mesh(getUnitCylinder(),
+           cylinderBetween(ctx.model, pose.shoulder_l, pose.hand_l,
+                           (upper_arm_r + fore_arm_r) * 0.5F),
+           v.palette.cloth, nullptr, 1.0F);
+  out.mesh(getUnitCylinder(),
+           cylinderBetween(ctx.model, pose.shoulder_r, pose.hand_r,
+                           (upper_arm_r + fore_arm_r) * 0.5F),
+           v.palette.cloth, nullptr, 1.0F);
+
+  QVector3D const hip_l = pose.pelvis_pos + QVector3D(-0.10F, -0.02F, 0.0F);
+  QVector3D const hip_r = pose.pelvis_pos + QVector3D(0.10F, -0.02F, 0.0F);
+
+  out.mesh(
+      getUnitCylinder(),
+      cylinderBetween(ctx.model, hip_l, pose.foot_l, (thigh_r + shin_r) * 0.5F),
+      v.palette.cloth * 0.92F, nullptr, 1.0F);
+  out.mesh(
+      getUnitCylinder(),
+      cylinderBetween(ctx.model, hip_r, pose.foot_r, (thigh_r + shin_r) * 0.5F),
+      v.palette.cloth * 0.92F, nullptr, 1.0F);
+}
+
+void HumanoidRendererBase::drawMinimalBody(const DrawContext &ctx,
+                                           const HumanoidVariant &v,
+                                           const HumanoidPose &pose,
+                                           ISubmitter &out) const {
+  using HP = HumanProportions;
+
+  QVector3D const top = pose.head_pos + QVector3D(0.0F, pose.head_r, 0.0F);
+  QVector3D const bot = (pose.foot_l + pose.foot_r) * 0.5F;
+
+  float const body_radius = HP::TORSO_TOP_R * get_torso_scale();
+
+  out.mesh(getUnitCapsule(), capsuleBetween(ctx.model, top, bot, body_radius),
+           v.palette.cloth, nullptr, 1.0F);
+}
+
 void HumanoidRendererBase::render(const DrawContext &ctx,
                                   ISubmitter &out) const {
   FormationParams const formation = resolveFormation(ctx);
@@ -1123,6 +1262,8 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
     return float(state & 0x7FFFFFU) / float(0x7FFFFFU);
   };
 
+  s_renderStats.soldiersTotal += visible_count;
+
   for (int idx = 0; idx < visible_count; ++idx) {
     int const r = idx / cols;
     int const c = idx % cols;
@@ -1169,12 +1310,38 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
       }
     }
 
+    QVector3D const soldier_world_pos =
+        inst_model.map(QVector3D(0.0F, 0.0F, 0.0F));
+
+    constexpr float kSoldierCullRadius = 0.6F;
+    if (ctx.camera != nullptr &&
+        !ctx.camera->isInFrustum(soldier_world_pos, kSoldierCullRadius)) {
+      ++s_renderStats.soldiersSkippedFrustum;
+      continue;
+    }
+
+    HumanoidLOD soldier_lod = HumanoidLOD::Full;
+    float soldier_distance = 0.0F;
+    if (ctx.camera != nullptr) {
+      soldier_distance =
+          (soldier_world_pos - ctx.camera->getPosition()).length();
+      soldier_lod = calculateHumanoidLOD(soldier_distance);
+
+      if (soldier_lod == HumanoidLOD::Billboard) {
+        ++s_renderStats.soldiersSkippedLOD;
+        continue;
+      }
+    }
+
+    ++s_renderStats.soldiersRendered;
+
     DrawContext inst_ctx{ctx.resources, ctx.entity, ctx.world, inst_model};
     inst_ctx.selected = ctx.selected;
     inst_ctx.hovered = ctx.hovered;
     inst_ctx.animationTime = ctx.animationTime;
     inst_ctx.rendererId = ctx.rendererId;
     inst_ctx.backend = ctx.backend;
+    inst_ctx.camera = ctx.camera;
 
     VariationParams variation = VariationParams::fromSeed(inst_seed);
     adjust_variation(inst_ctx, inst_seed, variation);
@@ -1188,8 +1355,36 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
     }
 
     HumanoidPose pose;
-    computeLocomotionPose(inst_seed, anim.time + phase_offset, anim.is_moving,
-                          variation, pose);
+    bool usedCachedPose = false;
+
+    PoseCacheKey cacheKey =
+        makePoseCacheKey(reinterpret_cast<uintptr_t>(ctx.entity), idx);
+
+    auto cacheIt = s_poseCache.find(cacheKey);
+    if (!anim.is_moving && cacheIt != s_poseCache.end()) {
+
+      const CachedPoseEntry &cached = cacheIt->second;
+      if (!cached.wasMoving &&
+          s_currentFrame - cached.frameNumber < kPoseCacheMaxAge) {
+
+        pose = cached.pose;
+        usedCachedPose = true;
+        ++s_renderStats.posesCached;
+      }
+    }
+
+    if (!usedCachedPose) {
+
+      computeLocomotionPose(inst_seed, anim.time + phase_offset, anim.is_moving,
+                            variation, pose);
+      ++s_renderStats.posesComputed;
+
+      CachedPoseEntry &entry = s_poseCache[cacheKey];
+      entry.pose = pose;
+      entry.variation = variation;
+      entry.frameNumber = s_currentFrame;
+      entry.wasMoving = anim.is_moving;
+    }
 
     HumanoidAnimationContext anim_ctx{};
     anim_ctx.inputs = anim;
@@ -1324,7 +1519,15 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
       }
     }
 
-    if (inst_ctx.backend != nullptr && inst_ctx.resources != nullptr) {
+    const auto &gfxSettings = Render::GraphicsSettings::instance();
+    const bool shouldRenderShadow =
+        gfxSettings.shadowsEnabled() &&
+        (soldier_lod == HumanoidLOD::Full ||
+         soldier_lod == HumanoidLOD::Reduced) &&
+        soldier_distance < gfxSettings.shadowMaxDistance();
+
+    if (shouldRenderShadow && inst_ctx.backend != nullptr &&
+        inst_ctx.resources != nullptr) {
       auto *shadowShader =
           inst_ctx.backend->shader(QStringLiteral("troop_shadow"));
       auto *quadMesh = inst_ctx.resources->quad();
@@ -1411,12 +1614,41 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
       }
     }
 
-    drawCommonBody(inst_ctx, variant, pose, out);
-    drawFacialHair(inst_ctx, variant, pose, out);
-    draw_armor(inst_ctx, variant, pose, anim_ctx, out);
+    switch (soldier_lod) {
+    case HumanoidLOD::Full:
 
-    addAttachments(inst_ctx, variant, pose, anim_ctx, out);
+      ++s_renderStats.lodFull;
+      drawCommonBody(inst_ctx, variant, pose, out);
+      drawFacialHair(inst_ctx, variant, pose, out);
+      draw_armor(inst_ctx, variant, pose, anim_ctx, out);
+      addAttachments(inst_ctx, variant, pose, anim_ctx, out);
+      break;
+
+    case HumanoidLOD::Reduced:
+
+      ++s_renderStats.lodReduced;
+      drawSimplifiedBody(inst_ctx, variant, pose, out);
+      draw_armor(inst_ctx, variant, pose, anim_ctx, out);
+      addAttachments(inst_ctx, variant, pose, anim_ctx, out);
+      break;
+
+    case HumanoidLOD::Minimal:
+
+      ++s_renderStats.lodMinimal;
+      drawMinimalBody(inst_ctx, variant, pose, out);
+      break;
+
+    case HumanoidLOD::Billboard:
+
+      break;
+    }
   }
 }
+
+auto getHumanoidRenderStats() -> const HumanoidRenderStats & {
+  return s_renderStats;
+}
+
+void resetHumanoidRenderStats() { s_renderStats.reset(); }
 
 } // namespace Render::GL

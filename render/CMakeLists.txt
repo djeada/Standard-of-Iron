@@ -15,9 +15,11 @@ add_library(render_gl STATIC
     gl/backend/character_pipeline.cpp
     gl/backend/water_pipeline.cpp
     gl/backend/effects_pipeline.cpp
+    gl/backend/primitive_batch_pipeline.cpp
     gl/shader_cache.cpp
     gl/state_scopes.cpp
     draw_queue.cpp
+    primitive_batch.cpp
     ground/ground_renderer.cpp
     ground/fog_renderer.cpp
     ground/terrain_renderer.cpp

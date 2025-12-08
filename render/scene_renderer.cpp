@@ -1,6 +1,8 @@
 #include "scene_renderer.h"
 #include "../game/map/terrain_service.h"
 #include "../game/map/visibility_service.h"
+#include "../game/systems/nation_registry.h"
+#include "../game/systems/troop_profile_service.h"
 #include "../game/units/spawn_type.h"
 #include "../game/units/troop_config.h"
 #include "draw_queue.h"
@@ -13,12 +15,16 @@
 #include "gl/camera.h"
 #include "gl/primitives.h"
 #include "gl/resources.h"
+#include "graphics_settings.h"
 #include "ground/firecamp_gpu.h"
 #include "ground/grass_gpu.h"
 #include "ground/pine_gpu.h"
 #include "ground/plant_gpu.h"
 #include "ground/stone_gpu.h"
 #include "ground/terrain_gpu.h"
+#include "horse/rig.h"
+#include "humanoid/rig.h"
+#include "primitive_batch.h"
 #include "submitter.h"
 #include <QDebug>
 #include <algorithm>
@@ -56,6 +62,12 @@ auto Renderer::initialize() -> bool {
 void Renderer::shutdown() { m_backend.reset(); }
 
 void Renderer::beginFrame() {
+
+  advancePoseCacheFrame();
+
+  resetHumanoidRenderStats();
+  resetHorseRenderStats();
+
   m_activeQueue = &m_queues[m_fillQueueIndex];
   m_activeQueue->clear();
 
@@ -307,10 +319,31 @@ void Renderer::enqueueSelectionRing(Engine::Core::Entity *,
   float scale_y = 1.0F;
 
   if (unit_comp != nullptr) {
-    auto &config = Game::Units::TroopConfig::instance();
-    ring_size = config.getSelectionRingSize(unit_comp->spawn_type);
-    ring_offset += config.getSelectionRingYOffset(unit_comp->spawn_type);
-    ground_offset = config.getSelectionRingGroundOffset(unit_comp->spawn_type);
+    auto troop_type_opt =
+        Game::Units::spawn_typeToTroopType(unit_comp->spawn_type);
+
+    if (troop_type_opt) {
+      const auto &nation_reg = Game::Systems::NationRegistry::instance();
+      const Game::Systems::Nation *nation =
+          nation_reg.getNationForPlayer(unit_comp->owner_id);
+      Game::Systems::NationID nation_id =
+          nation != nullptr ? nation->id : nation_reg.default_nation_id();
+
+      const auto profile =
+          Game::Systems::TroopProfileService::instance().get_profile(
+              nation_id, *troop_type_opt);
+
+      ring_size = profile.visuals.selection_ring_size;
+      ring_offset += profile.visuals.selection_ring_y_offset;
+      ground_offset = profile.visuals.selection_ring_ground_offset;
+    } else {
+
+      auto &config = Game::Units::TroopConfig::instance();
+      ring_size = config.getSelectionRingSize(unit_comp->spawn_type);
+      ring_offset += config.getSelectionRingYOffset(unit_comp->spawn_type);
+      ground_offset =
+          config.getSelectionRingGroundOffset(unit_comp->spawn_type);
+    }
   }
   if (transform != nullptr) {
     scale_y = transform->scale.y;
@@ -354,6 +387,48 @@ void Renderer::renderWorld(Engine::Core::World *world) {
   auto renderable_entities =
       world->getEntitiesWith<Engine::Core::RenderableComponent>();
 
+  const auto &gfxSettings = Render::GraphicsSettings::instance();
+  const auto &batchConfig = gfxSettings.batchingConfig();
+
+  float cameraHeight = 0.0F;
+  if (m_camera != nullptr) {
+    cameraHeight = m_camera->getPosition().y();
+  }
+
+  int visibleUnitCount = 0;
+  for (auto *entity : renderable_entities) {
+    if (entity->hasComponent<Engine::Core::PendingRemovalComponent>()) {
+      continue;
+    }
+    auto *unit_comp = entity->getComponent<Engine::Core::UnitComponent>();
+    if (unit_comp != nullptr && unit_comp->health > 0) {
+      auto *transform =
+          entity->getComponent<Engine::Core::TransformComponent>();
+      if (transform != nullptr && m_camera != nullptr) {
+        QVector3D const unit_pos(transform->position.x, transform->position.y,
+                                 transform->position.z);
+        if (m_camera->isInFrustum(unit_pos, 4.0F)) {
+          ++visibleUnitCount;
+        }
+      }
+    }
+  }
+
+  float batchingRatio =
+      gfxSettings.calculateBatchingRatio(visibleUnitCount, cameraHeight);
+
+  PrimitiveBatcher batcher;
+  if (batchingRatio > 0.0F) {
+    batcher.reserve(2000, 4000, 500);
+  }
+
+  float fullShaderMaxDistance = 30.0F * (1.0F - batchingRatio * 0.7F);
+  if (batchConfig.forceBatching) {
+    fullShaderMaxDistance = 0.0F;
+  }
+
+  BatchingSubmitter batchSubmitter(this, &batcher);
+
   for (auto *entity : renderable_entities) {
 
     if (entity->hasComponent<Engine::Core::PendingRemovalComponent>()) {
@@ -373,6 +448,7 @@ void Renderer::renderWorld(Engine::Core::World *world) {
       continue;
     }
 
+    float distanceToCamera = 0.0F;
     if ((m_camera != nullptr) && (unit_comp != nullptr)) {
 
       float cull_radius = 3.0F;
@@ -390,6 +466,11 @@ void Renderer::renderWorld(Engine::Core::World *world) {
       if (!m_camera->isInFrustum(unit_pos, cull_radius)) {
         continue;
       }
+
+      QVector3D camPos = m_camera->getPosition();
+      float dx = unit_pos.x() - camPos.x();
+      float dz = unit_pos.z() - camPos.z();
+      distanceToCamera = std::sqrt(dx * dx + dz * dz);
     }
 
     if ((unit_comp != nullptr) && unit_comp->owner_id != m_localOwnerId) {
@@ -430,7 +511,19 @@ void Renderer::renderWorld(Engine::Core::World *world) {
         ctx.animationTime = m_accumulatedTime;
         ctx.rendererId = renderer_key;
         ctx.backend = m_backend.get();
-        fn(ctx, *this);
+        ctx.camera = m_camera;
+
+        bool useBatching = (batchingRatio > 0.0F) &&
+                           (distanceToCamera > fullShaderMaxDistance) &&
+                           !is_selected && !is_hovered &&
+                           !batchConfig.neverBatch;
+
+        if (useBatching) {
+          fn(ctx, batchSubmitter);
+        } else {
+          fn(ctx, *this);
+        }
+
         enqueueSelectionRing(entity, transform, unit_comp, is_selected,
                              is_hovered);
         drawn_by_registry = true;
@@ -515,6 +608,35 @@ void Renderer::renderWorld(Engine::Core::World *world) {
     enqueueSelectionRing(entity, transform, unit_comp, is_selected, is_hovered);
     mesh(mesh_to_draw, model_matrix, color,
          (res != nullptr) ? res->white() : nullptr, 1.0F);
+  }
+
+  if ((m_activeQueue != nullptr) && batcher.totalCount() > 0) {
+    PrimitiveBatchParams params;
+    params.viewProj = m_view_proj;
+
+    if (batcher.sphereCount() > 0) {
+      PrimitiveBatchCmd cmd;
+      cmd.type = PrimitiveType::Sphere;
+      cmd.instances = batcher.sphereData();
+      cmd.params = params;
+      m_activeQueue->submit(cmd);
+    }
+
+    if (batcher.cylinderCount() > 0) {
+      PrimitiveBatchCmd cmd;
+      cmd.type = PrimitiveType::Cylinder;
+      cmd.instances = batcher.cylinderData();
+      cmd.params = params;
+      m_activeQueue->submit(cmd);
+    }
+
+    if (batcher.coneCount() > 0) {
+      PrimitiveBatchCmd cmd;
+      cmd.type = PrimitiveType::Cone;
+      cmd.instances = batcher.coneData();
+      cmd.params = params;
+      m_activeQueue->submit(cmd);
+    }
   }
 }
 

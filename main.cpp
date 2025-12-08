@@ -37,6 +37,7 @@
 
 #include "app/core/game_engine.h"
 #include "app/core/language_manager.h"
+#include "app/models/graphics_settings_proxy.h"
 #include "ui/gl_view.h"
 #include "ui/theme.h"
 
@@ -269,6 +270,7 @@ auto main(int argc, char *argv[]) -> int {
   // This ensures proper cleanup order and prevents segfaults
   std::unique_ptr<LanguageManager> language_manager;
   std::unique_ptr<GameEngine> game_engine;
+  std::unique_ptr<App::Models::GraphicsSettingsProxy> graphics_settings;
   std::unique_ptr<QQmlApplicationEngine> engine;
 
   qInfo() << "Creating LanguageManager...";
@@ -279,12 +281,19 @@ auto main(int argc, char *argv[]) -> int {
   game_engine = std::make_unique<GameEngine>(&app);
   qInfo() << "GameEngine created";
 
+  qInfo() << "Creating GraphicsSettingsProxy...";
+  graphics_settings =
+      std::make_unique<App::Models::GraphicsSettingsProxy>(&app);
+  qInfo() << "GraphicsSettingsProxy created";
+
   qInfo() << "Setting up QML engine...";
   engine = std::make_unique<QQmlApplicationEngine>();
   qInfo() << "Adding context properties...";
   engine->rootContext()->setContextProperty("languageManager",
                                             language_manager.get());
   engine->rootContext()->setContextProperty("game", game_engine.get());
+  engine->rootContext()->setContextProperty("graphicsSettings",
+                                            graphics_settings.get());
   qInfo() << "Adding import path...";
   engine->addImportPath("qrc:/StandardOfIron/ui/qml");
   engine->addImportPath("qrc:/");
