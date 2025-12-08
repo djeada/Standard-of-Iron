@@ -1,5 +1,6 @@
 #include "mounted_humanoid_renderer_base.h"
 
+#include "../gl/camera.h"
 #include "../humanoid/humanoid_math.h"
 #include "../humanoid/humanoid_specs.h"
 #include "../palette.h"
@@ -127,8 +128,17 @@ void MountedHumanoidRendererBase::addAttachments(
       (is_current_pose) ? &m_last_motion : nullptr;
   const AnimationInputs &anim = anim_ctx.inputs;
 
+  HorseLOD horse_lod = HorseLOD::Full;
+  if (ctx.camera != nullptr) {
+    QVector3D const horse_world_pos =
+        ctx.model.map(QVector3D(0.0F, 0.0F, 0.0F));
+    float const distance =
+        (horse_world_pos - ctx.camera->getPosition()).length();
+    horse_lod = calculateHorseLOD(distance);
+  }
+
   m_horseRenderer.render(ctx, anim, anim_ctx, profile, mount_ptr, rein_ptr,
-                         motion_ptr, out);
+                         motion_ptr, out, horse_lod);
 
   m_last_pose = nullptr;
   m_has_last_reins = false;
