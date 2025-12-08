@@ -73,9 +73,6 @@ public:
   [[nodiscard]] auto getProjectionMatrix() const -> QMatrix4x4;
   [[nodiscard]] auto getViewProjectionMatrix() const -> QMatrix4x4;
 
-  [[nodiscard]] auto getPosition() const -> const QVector3D & {
-    return m_position;
-  }
   [[nodiscard]] auto getTarget() const -> const QVector3D & { return m_target; }
   [[nodiscard]] auto getUpVector() const -> const QVector3D & { return m_up; }
   [[nodiscard]] auto getRightVector() const -> const QVector3D & {
@@ -83,6 +80,9 @@ public:
   }
   [[nodiscard]] auto getForwardVector() const -> const QVector3D & {
     return m_front;
+  }
+  [[nodiscard]] auto getPosition() const -> const QVector3D & {
+    return m_position;
   }
   [[nodiscard]] auto getDistance() const -> float;
   [[nodiscard]] auto getPitchDeg() const -> float;

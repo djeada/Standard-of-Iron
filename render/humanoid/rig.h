@@ -3,6 +3,7 @@
 #include "../entity/registry.h"
 #include "../gl/humanoid/humanoid_types.h"
 #include "../gl/mesh.h"
+#include "../graphics_settings.h"
 #include "humanoid_specs.h"
 #include <QMatrix4x4>
 #include <QVector3D>
@@ -19,6 +20,22 @@ class UnitComponent;
 namespace Render::GL {
 
 auto torso_mesh_without_bottom_cap() -> Mesh *;
+
+void advancePoseCacheFrame();
+
+inline auto calculateHumanoidLOD(float distance) -> HumanoidLOD {
+  const auto &settings = Render::GraphicsSettings::instance();
+  if (distance < settings.humanoidFullDetailDistance()) {
+    return HumanoidLOD::Full;
+  }
+  if (distance < settings.humanoidReducedDetailDistance()) {
+    return HumanoidLOD::Reduced;
+  }
+  if (distance < settings.humanoidMinimalDetailDistance()) {
+    return HumanoidLOD::Minimal;
+  }
+  return HumanoidLOD::Billboard;
+}
 
 class HumanoidRendererBase {
 public:
@@ -80,6 +97,12 @@ public:
       const DrawContext &ctx, Engine::Core::UnitComponent *unit_comp,
       Engine::Core::TransformComponent *transform_comp) const -> float;
 
+  void drawSimplifiedBody(const DrawContext &ctx, const HumanoidVariant &v,
+                          HumanoidPose &pose, ISubmitter &out) const;
+
+  void drawMinimalBody(const DrawContext &ctx, const HumanoidVariant &v,
+                       const HumanoidPose &pose, ISubmitter &out) const;
+
   static auto frameLocalPosition(const AttachmentFrame &frame,
                                  const QVector3D &local) -> QVector3D;
 
@@ -111,5 +134,35 @@ protected:
   void drawCommonBody(const DrawContext &ctx, const HumanoidVariant &v,
                       HumanoidPose &pose, ISubmitter &out) const;
 };
+
+struct HumanoidRenderStats {
+  uint32_t soldiersTotal{0};
+  uint32_t soldiersRendered{0};
+  uint32_t soldiersSkippedFrustum{0};
+  uint32_t soldiersSkippedLOD{0};
+  uint32_t posesComputed{0};
+  uint32_t posesCached{0};
+  uint32_t lodFull{0};
+  uint32_t lodReduced{0};
+  uint32_t lodMinimal{0};
+
+  void reset() {
+    soldiersTotal = 0;
+    soldiersRendered = 0;
+    soldiersSkippedFrustum = 0;
+    soldiersSkippedLOD = 0;
+    posesComputed = 0;
+    posesCached = 0;
+    lodFull = 0;
+    lodReduced = 0;
+    lodMinimal = 0;
+  }
+};
+
+void advancePoseCacheFrame();
+
+auto getHumanoidRenderStats() -> const HumanoidRenderStats &;
+
+void resetHumanoidRenderStats();
 
 } // namespace Render::GL
