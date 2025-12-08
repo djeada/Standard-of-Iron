@@ -2,9 +2,11 @@
 #include "../draw_queue.h"
 #include "../geom/selection_disc.h"
 #include "../geom/selection_ring.h"
+#include "../primitive_batch.h"
 #include "backend/character_pipeline.h"
 #include "backend/cylinder_pipeline.h"
 #include "backend/effects_pipeline.h"
+#include "backend/primitive_batch_pipeline.h"
 #include "backend/terrain_pipeline.h"
 #include "backend/vegetation_pipeline.h"
 #include "backend/water_pipeline.h"
@@ -133,6 +135,13 @@ void Backend::initialize() {
       this, m_shaderCache.get());
   m_effectsPipeline->initialize();
   qInfo() << "Backend: EffectsPipeline initialized";
+
+  qInfo() << "Backend: Creating PrimitiveBatchPipeline...";
+  m_primitiveBatchPipeline =
+      std::make_unique<BackendPipelines::PrimitiveBatchPipeline>(
+          m_shaderCache.get());
+  m_primitiveBatchPipeline->initialize();
+  qInfo() << "Backend: PrimitiveBatchPipeline initialized";
 
   qInfo() << "Backend: Loading basic shaders...";
   m_basicShader = m_shaderCache->get(QStringLiteral("basic"));
@@ -1400,6 +1409,37 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
             m_effectsPipeline->m_basicUniforms.alpha, a);
         disc->draw();
       }
+      break;
+    }
+    case PrimitiveBatchCmdIndex: {
+      const auto &batch = std::get<PrimitiveBatchCmdIndex>(cmd);
+      if (batch.instanceCount() == 0 || m_primitiveBatchPipeline == nullptr ||
+          !m_primitiveBatchPipeline->isInitialized()) {
+        break;
+      }
+
+      const auto *data = batch.instanceData();
+
+      switch (batch.type) {
+      case PrimitiveType::Sphere:
+        m_primitiveBatchPipeline->uploadSphereInstances(data,
+                                                        batch.instanceCount());
+        m_primitiveBatchPipeline->drawSpheres(batch.instanceCount(), view_proj);
+        break;
+      case PrimitiveType::Cylinder:
+        m_primitiveBatchPipeline->uploadCylinderInstances(
+            data, batch.instanceCount());
+        m_primitiveBatchPipeline->drawCylinders(batch.instanceCount(),
+                                                view_proj);
+        break;
+      case PrimitiveType::Cone:
+        m_primitiveBatchPipeline->uploadConeInstances(data,
+                                                      batch.instanceCount());
+        m_primitiveBatchPipeline->drawCones(batch.instanceCount(), view_proj);
+        break;
+      }
+
+      m_lastBoundShader = m_primitiveBatchPipeline->shader();
       break;
     }
     default:
