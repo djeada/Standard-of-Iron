@@ -79,6 +79,13 @@ public:
     const QString cylFrag =
         resolve(kShaderBase + QStringLiteral("cylinder_instanced.frag"));
     load(QStringLiteral("cylinder_instanced"), cylVert, cylFrag);
+
+    const QString primVert =
+        resolve(kShaderBase + QStringLiteral("primitive_instanced.vert"));
+    const QString primFrag =
+        resolve(kShaderBase + QStringLiteral("primitive_instanced.frag"));
+    load(QStringLiteral("primitive_instanced"), primVert, primFrag);
+
     const QString fogVert =
         resolve(kShaderBase + QStringLiteral("fog_instanced.vert"));
     const QString fogFrag =

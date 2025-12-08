@@ -99,7 +99,7 @@
       },
       "visuals": {
         "render_scale": 0.57,
-        "selection_ring_size": 1.8,
+        "selection_ring_size": 2.0,
         "selection_ring_y_offset": 0.0,
         "selection_ring_ground_offset": 0.0,
         "renderer_id": "troops/carthage/spearman"
