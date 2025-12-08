@@ -93,6 +93,11 @@ auto TroopCatalogLoader::resolve_data_path(const QString &relative) -> QString {
     }
   }
 
+  const QString resource_path = QStringLiteral(":/") + relative;
+  if (QFile::exists(resource_path)) {
+    return resource_path;
+  }
+
   return {};
 }
 

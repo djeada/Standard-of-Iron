@@ -1,15 +1,40 @@
 #pragma once
 
+#include "../entity/registry.h"
+#include "../graphics_settings.h"
 #include <QMatrix4x4>
 #include <QVector3D>
 #include <cstdint>
 
 namespace Render::GL {
 
-struct DrawContext;
 struct AnimationInputs;
 struct HumanoidAnimationContext;
 class ISubmitter;
+
+inline auto calculateHorseLOD(float distance) -> HorseLOD;
+
+struct HorseRenderStats {
+  uint32_t horsesTotal{0};
+  uint32_t horsesRendered{0};
+  uint32_t horsesSkippedLOD{0};
+  uint32_t lodFull{0};
+  uint32_t lodReduced{0};
+  uint32_t lodMinimal{0};
+
+  void reset() {
+    horsesTotal = 0;
+    horsesRendered = 0;
+    horsesSkippedLOD = 0;
+    lodFull = 0;
+    lodReduced = 0;
+    lodMinimal = 0;
+  }
+};
+
+auto getHorseRenderStats() -> const HorseRenderStats &;
+
+void resetHorseRenderStats();
 
 struct HorseDimensions {
   float bodyLength{};
@@ -180,7 +205,25 @@ public:
               const HumanoidAnimationContext &rider_ctx, HorseProfile &profile,
               const MountedAttachmentFrame *shared_mount,
               const ReinState *shared_reins,
+              const HorseMotionSample *shared_motion, ISubmitter &out,
+              HorseLOD lod) const;
+
+  void render(const DrawContext &ctx, const AnimationInputs &anim,
+              const HumanoidAnimationContext &rider_ctx, HorseProfile &profile,
+              const MountedAttachmentFrame *shared_mount,
+              const ReinState *shared_reins,
               const HorseMotionSample *shared_motion, ISubmitter &out) const;
+
+  void renderSimplified(const DrawContext &ctx, const AnimationInputs &anim,
+                        const HumanoidAnimationContext &rider_ctx,
+                        HorseProfile &profile,
+                        const MountedAttachmentFrame *shared_mount,
+                        const HorseMotionSample *shared_motion,
+                        ISubmitter &out) const;
+
+  void renderMinimal(const DrawContext &ctx, HorseProfile &profile,
+                     const HorseMotionSample *shared_motion,
+                     ISubmitter &out) const;
 
 protected:
   virtual void drawAttachments(const DrawContext &, const AnimationInputs &,
@@ -188,6 +231,29 @@ protected:
                                const MountedAttachmentFrame &, float, float,
                                float, const HorseBodyFrames &,
                                ISubmitter &) const {}
+
+private:
+  void renderFull(const DrawContext &ctx, const AnimationInputs &anim,
+                  const HumanoidAnimationContext &rider_ctx,
+                  HorseProfile &profile,
+                  const MountedAttachmentFrame *shared_mount,
+                  const ReinState *shared_reins,
+                  const HorseMotionSample *shared_motion,
+                  ISubmitter &out) const;
 };
+
+inline auto calculateHorseLOD(float distance) -> HorseLOD {
+  const auto &settings = Render::GraphicsSettings::instance();
+  if (distance < settings.horseFullDetailDistance()) {
+    return HorseLOD::Full;
+  }
+  if (distance < settings.horseReducedDetailDistance()) {
+    return HorseLOD::Reduced;
+  }
+  if (distance < settings.horseMinimalDetailDistance()) {
+    return HorseLOD::Minimal;
+  }
+  return HorseLOD::Billboard;
+}
 
 } // namespace Render::GL
