@@ -2,6 +2,7 @@
 
 #include "draw_queue.h"
 #include "gl/primitives.h"
+#include "primitive_batch.h"
 #include <QMatrix4x4>
 #include <QVector3D>
 
@@ -133,6 +134,74 @@ public:
 private:
   DrawQueue *m_queue = nullptr;
   Shader *m_shader = nullptr;
+};
+
+class BatchingSubmitter : public ISubmitter {
+public:
+  explicit BatchingSubmitter(ISubmitter *fallback,
+                             PrimitiveBatcher *batcher = nullptr)
+      : m_fallback(fallback), m_batcher(batcher) {}
+
+  void setBatcher(PrimitiveBatcher *batcher) { m_batcher = batcher; }
+  void setEnabled(bool enabled) { m_enabled = enabled; }
+
+  void mesh(Mesh *mesh, const QMatrix4x4 &model, const QVector3D &color,
+            Texture *tex = nullptr, float alpha = 1.0F,
+            int materialId = 0) override {
+
+    if (m_enabled && m_batcher != nullptr && tex == nullptr) {
+      if (mesh == getUnitSphere()) {
+        m_batcher->addSphere(model, color, alpha);
+        return;
+      }
+      if (mesh == getUnitCylinder()) {
+        m_batcher->addCylinder(model, color, alpha);
+        return;
+      }
+      if (mesh == getUnitCone()) {
+        m_batcher->addCone(model, color, alpha);
+        return;
+      }
+    }
+
+    if (m_fallback != nullptr) {
+      m_fallback->mesh(mesh, model, color, tex, alpha, materialId);
+    }
+  }
+
+  void cylinder(const QVector3D &start, const QVector3D &end, float radius,
+                const QVector3D &color, float alpha = 1.0F) override {
+
+    if (m_fallback != nullptr) {
+      m_fallback->cylinder(start, end, radius, color, alpha);
+    }
+  }
+
+  void selectionRing(const QMatrix4x4 &model, float alphaInner,
+                     float alphaOuter, const QVector3D &color) override {
+    if (m_fallback != nullptr) {
+      m_fallback->selectionRing(model, alphaInner, alphaOuter, color);
+    }
+  }
+
+  void grid(const QMatrix4x4 &model, const QVector3D &color, float cellSize,
+            float thickness, float extent) override {
+    if (m_fallback != nullptr) {
+      m_fallback->grid(model, color, cellSize, thickness, extent);
+    }
+  }
+
+  void selectionSmoke(const QMatrix4x4 &model, const QVector3D &color,
+                      float baseAlpha = 0.15F) override {
+    if (m_fallback != nullptr) {
+      m_fallback->selectionSmoke(model, color, baseAlpha);
+    }
+  }
+
+private:
+  ISubmitter *m_fallback = nullptr;
+  PrimitiveBatcher *m_batcher = nullptr;
+  bool m_enabled = true;
 };
 
 } // namespace Render::GL
