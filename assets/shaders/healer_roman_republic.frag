@@ -189,6 +189,35 @@ vec3 apply_lighting(vec3 albedo, vec3 N, vec3 V, vec3 L, float roughness,
 }
 
 // ============================================================================
+// BEARD/FACIAL HAIR RENDERING (parity with Carthage healer)
+// ============================================================================
+float beard_density(vec2 uv, vec3 worldPos) {
+  float strand_base = fbm(uv * 24.0) * 0.6;
+  float curl_pattern = sin(uv.x * 80.0 + noise(uv * 40.0) * 3.0) * 0.2;
+  float density_variation = noise(uv * 25.0) * 0.4;
+  float jaw_bias = smoothstep(1.36, 1.60, worldPos.y) * 0.25;
+  return strand_base + curl_pattern + density_variation + jaw_bias;
+}
+
+vec3 apply_beard_shading(vec3 base_skin, vec2 uv, vec3 normal, vec3 worldPos,
+                         vec3 V, vec3 L) {
+  vec3 beard_color = vec3(0.10, 0.07, 0.05);
+
+  float density = beard_density(uv, worldPos);
+
+  float chin_mask = smoothstep(1.55, 1.43, worldPos.y);
+  float jawline = smoothstep(1.48, 1.36, worldPos.y);
+  float beard_mask = clamp(chin_mask * 0.7 + jawline * 0.45, 0.0, 1.0);
+
+  float strand_highlight = pow(noise(uv * 220.0), 2.2) * 0.16;
+  float anisotropic =
+      pow(1.0 - abs(dot(normalize(normal + L * 0.28), V)), 7.0) * 0.10;
+  beard_color += vec3(strand_highlight + anisotropic);
+
+  return mix(base_skin, beard_color, density * beard_mask * 0.85);
+}
+
+// ============================================================================
 // MAIN FRAGMENT SHADER
 // ============================================================================
 
@@ -212,15 +241,6 @@ void main() {
   bool is_medical_tools = (u_materialId == 3);
   bool is_red_trim = (u_materialId == 4);
 
-  // Only fall back to color heuristics if material id is absent/invalid
-  bool has_material_id = (u_materialId >= 0);
-  bool looks_light = (!has_material_id) && (avg_color > 0.75);
-  bool looks_red = (!has_material_id) && (base_color.r > base_color.g * 1.8 &&
-                                          base_color.r > base_color.b * 2.0);
-  bool looks_brown =
-      (!has_material_id) &&
-      (avg_color > 0.25 && avg_color < 0.55 && base_color.r > base_color.b);
-
   vec3 albedo = base_color;
   vec3 N_used = N;
   float roughness = 0.55;
@@ -236,8 +256,29 @@ void main() {
       clamp(1.0 - (v_clothFolds * 0.52 + curvature * 0.78), 0.28, 1.0);
   float ao = ao_folds;
 
+  // BODY / SKIN
+  if (is_body) {
+    vec3 skin = base_color;
+    float skin_detail = noise(uv * 24.0) * 0.06;
+    float subdermal = noise(uv * 7.0) * 0.05;
+    skin *= 1.0 + skin_detail;
+    skin += vec3(0.03, 0.015, 0.0) * subdermal;
+
+    bool is_face_region = (v_worldPos.y > 1.40 && v_worldPos.y < 1.65);
+    if (is_face_region) {
+      skin = apply_beard_shading(skin, uv, N_used, v_worldPos, V, L);
+    }
+
+    float rim = pow(1.0 - clamp(dot(N_used, V), 0.0, 1.0), 4.0) * 0.05;
+    skin += vec3(rim);
+
+    albedo = skin;
+    roughness = 0.55;
+    sheen = 0.06 + subdermal * 0.2;
+    wrap = 0.46;
+  }
   // WHITE/CREAM LINEN TUNICA (main garment - bleached Roman style)
-  if (is_tunica || looks_light) {
+  else if (is_tunica) {
     vec3 tunic_base = vec3(0.95, 0.93, 0.90);
     albedo = tunic_base;
 
@@ -270,7 +311,7 @@ void main() {
     ao *= 1.0 - dust * 0.35;
   }
   // RED WOOL SASH/TRIM (military medicus identification)
-  else if (is_red_trim || looks_red) {
+  else if (is_red_trim) {
     float weave = roman_wool(v_worldPos.xz);
     float wool_tex = noise(uv * 58.0) * 0.10;
 
@@ -295,7 +336,7 @@ void main() {
     wrap = 0.48;
   }
   // LEATHER EQUIPMENT (medical bag, belt, sandals, straps)
-  else if (is_leather || looks_brown) {
+  else if (is_leather) {
     float leather_grain = noise(uv * 16.0) * 0.16 * (1.0 + v_fabricWear * 0.25);
     float pores = noise(uv * 38.0) * 0.06;
 
