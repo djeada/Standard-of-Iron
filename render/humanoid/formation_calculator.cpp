@@ -30,49 +30,42 @@ auto CarthageInfantryFormation::calculateOffset(
     int idx, int row, int col, int rows, int cols, float spacing,
     uint32_t seed) const -> FormationOffset {
 
-  float const base_spacing =
-      spacing *
-      (1.0F +
-       std::sin(float(row) * 0.55F + float(seed & 0xFFU) * 0.01F) * 0.10F);
+  float const row_normalized = float(row) / float(rows > 1 ? rows - 1 : 1);
+  float const col_normalized =
+      float(col - (cols - 1) * 0.5F) / float(cols > 1 ? (cols - 1) * 0.5F : 1);
 
-  float offset_x = (col - (cols - 1) * 0.5F) * base_spacing;
-  float offset_z = (row - (rows - 1) * 0.5F) * base_spacing;
+  float const spread_factor = 1.0F + row_normalized * 0.3F;
+  float const row_spacing = spacing * (1.0F + row_normalized * 0.15F);
 
-  uint32_t rng_state = seed ^ (uint32_t(idx) * 7919U);
-
-  auto fast_random = [](uint32_t &state) -> float {
-    state = state * 1664525U + 1013904223U;
-    return float(state & 0x7FFFFFU) / float(0x7FFFFFU);
-  };
-
-  auto rand_range = [&](uint32_t &state, float magnitude) -> float {
-    return (fast_random(state) - 0.5F) * magnitude;
-  };
-
-  float const jitter_x = rand_range(rng_state, spacing * 0.35F);
-  float const jitter_z = rand_range(rng_state, spacing * 0.35F);
-
-  int const cluster_c = (col >= 0) ? (col / 2) : ((col - 1) / 2);
-  int const cluster_r = (row >= 0) ? (row / 2) : ((row - 1) / 2);
-  uint32_t cluster_state =
-      seed ^ (uint32_t(cluster_r * 97 + cluster_c * 271) * 23U + 0xBADU);
-
-  float const cluster_shift_x = rand_range(cluster_state, spacing * 0.50F);
-  float const cluster_shift_z = rand_range(cluster_state, spacing * 0.50F);
-  float const cluster_arc =
-      std::sin(float(cluster_r) * 0.9F + float(cluster_c) * 0.7F) * spacing *
-      0.25F;
-
-  float const slant_x = (row - (rows - 1) * 0.5F) * spacing * 0.12F;
-  float const wave_z =
-      std::sin(float(col) * 0.8F + float(row) * 0.4F) * spacing * 0.15F;
-
-  offset_x += jitter_x + cluster_shift_x + cluster_arc + slant_x;
-  offset_z += jitter_z + cluster_shift_z + wave_z;
+  float offset_x = (col - (cols - 1) * 0.5F) * spacing * spread_factor;
+  float offset_z = (row - (rows - 1) * 0.5F) * row_spacing;
 
   if (row % 2 == 1) {
-    offset_x += spacing * 0.22F;
+    offset_x += spacing * 0.35F;
   }
+
+  float const rank_wave = std::sin(col_normalized * 3.14159F) * spacing *
+                          0.12F * (1.0F + row_normalized);
+  offset_z += rank_wave;
+
+  float const center_push = (1.0F - std::abs(col_normalized)) * spacing * 0.2F;
+  offset_z -= center_push;
+
+  uint32_t variation_seed = seed ^ (uint32_t(idx) * 2654435761U);
+  float const phase = float(variation_seed & 0xFFU) / 255.0F * 6.28318F;
+
+  float const jitter_scale = spacing * 0.08F * (1.0F + row_normalized * 0.5F);
+  float const jitter_x = std::sin(phase) * jitter_scale;
+  float const jitter_z = std::cos(phase * 1.3F) * jitter_scale * 0.7F;
+
+  offset_x += jitter_x;
+  offset_z += jitter_z;
+
+  int const cluster_id = idx / 4;
+  float const cluster_phase = float(cluster_id * 137 + (seed & 0xFFU)) * 0.1F;
+  float const cluster_pull = spacing * 0.06F;
+  offset_x += std::sin(cluster_phase) * cluster_pull;
+  offset_z += std::cos(cluster_phase * 0.7F) * cluster_pull;
 
   return {offset_x, offset_z};
 }

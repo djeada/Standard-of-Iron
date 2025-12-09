@@ -205,6 +205,11 @@ void main() {
   bool is_fabric = is_rider_clothing || is_saddle_blanket || is_rider_cloak;
   bool is_leather = is_saddle_leather || is_bridle;
 
+  // Team-tint cloaks while preserving base styling.
+  if (is_rider_cloak) {
+    base_color = mix(base_color, saturate(u_color), 0.75);
+  }
+
   // lighting frame
   vec3 L = normalize(vec3(1.0, 1.2, 1.0));
   vec3 V = normalize(

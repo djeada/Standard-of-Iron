@@ -7,6 +7,7 @@
 #include "ground/plant_gpu.h"
 #include "ground/stone_gpu.h"
 #include "ground/terrain_gpu.h"
+#include "primitive_batch.h"
 #include <QMatrix4x4>
 #include <QVector3D>
 #include <algorithm>
@@ -127,10 +128,11 @@ struct SelectionSmokeCmd {
   float baseAlpha = 0.15F;
 };
 
-using DrawCmd = std::variant<GridCmd, SelectionRingCmd, SelectionSmokeCmd,
-                             CylinderCmd, MeshCmd, FogBatchCmd, GrassBatchCmd,
-                             StoneBatchCmd, PlantBatchCmd, PineBatchCmd,
-                             OliveBatchCmd, FireCampBatchCmd, TerrainChunkCmd>;
+using DrawCmd =
+    std::variant<GridCmd, SelectionRingCmd, SelectionSmokeCmd, CylinderCmd,
+                 MeshCmd, FogBatchCmd, GrassBatchCmd, StoneBatchCmd,
+                 PlantBatchCmd, PineBatchCmd, OliveBatchCmd, FireCampBatchCmd,
+                 TerrainChunkCmd, PrimitiveBatchCmd>;
 
 enum class DrawCmdType : std::uint8_t {
   Grid = 0,
@@ -145,7 +147,8 @@ enum class DrawCmdType : std::uint8_t {
   PineBatch = 9,
   OliveBatch = 10,
   FireCampBatch = 11,
-  TerrainChunk = 12
+  TerrainChunk = 12,
+  PrimitiveBatch = 13
 };
 
 constexpr std::size_t MeshCmdIndex =
@@ -174,6 +177,8 @@ constexpr std::size_t FireCampBatchCmdIndex =
     static_cast<std::size_t>(DrawCmdType::FireCampBatch);
 constexpr std::size_t TerrainChunkCmdIndex =
     static_cast<std::size_t>(DrawCmdType::TerrainChunk);
+constexpr std::size_t PrimitiveBatchCmdIndex =
+    static_cast<std::size_t>(DrawCmdType::PrimitiveBatch);
 
 inline auto drawCmdType(const DrawCmd &cmd) -> DrawCmdType {
   return static_cast<DrawCmdType>(cmd.index());
@@ -196,6 +201,7 @@ public:
   void submit(const OliveBatchCmd &c) { m_items.emplace_back(c); }
   void submit(const FireCampBatchCmd &c) { m_items.emplace_back(c); }
   void submit(const TerrainChunkCmd &c) { m_items.emplace_back(c); }
+  void submit(const PrimitiveBatchCmd &c) { m_items.emplace_back(c); }
 
   [[nodiscard]] auto empty() const -> bool { return m_items.empty(); }
   [[nodiscard]] auto size() const -> std::size_t { return m_items.size(); }
@@ -285,11 +291,12 @@ private:
       PineBatch = 4,
       OliveBatch = 5,
       FireCampBatch = 6,
-      Mesh = 7,
-      Cylinder = 8,
-      FogBatch = 9,
-      SelectionSmoke = 10,
-      Grid = 11,
+      PrimitiveBatch = 7,
+      Mesh = 8,
+      Cylinder = 9,
+      FogBatch = 10,
+      SelectionSmoke = 11,
+      Grid = 12,
       SelectionRing = 15
     };
 
@@ -306,7 +313,8 @@ private:
         static_cast<uint8_t>(RenderOrder::PineBatch),
         static_cast<uint8_t>(RenderOrder::OliveBatch),
         static_cast<uint8_t>(RenderOrder::FireCampBatch),
-        static_cast<uint8_t>(RenderOrder::TerrainChunk)};
+        static_cast<uint8_t>(RenderOrder::TerrainChunk),
+        static_cast<uint8_t>(RenderOrder::PrimitiveBatch)};
 
     const std::size_t typeIndex = cmd.index();
     constexpr std::size_t typeCount =
@@ -366,6 +374,12 @@ private:
       uint64_t const meshPtr =
           reinterpret_cast<uintptr_t>(terrain.mesh) & 0x0000FFFFFFFFFFFFU;
       key |= meshPtr;
+    } else if (cmd.index() == PrimitiveBatchCmdIndex) {
+      const auto &prim = std::get<PrimitiveBatchCmdIndex>(cmd);
+
+      key |= static_cast<uint64_t>(prim.type) << 48;
+
+      key |= static_cast<uint64_t>(prim.instanceCount() & 0xFFFFFFFF);
     }
 
     return key;

@@ -65,6 +65,7 @@ private:
 
   float m_surviveTimeDuration = 0.0F;
   float m_elapsedTime = 0.0F;
+  float m_startupDelay = 0.0F;
 
   int m_localOwnerId = 1;
   QString m_victoryState;

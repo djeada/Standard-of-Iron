@@ -18,9 +18,24 @@ class ResourceManager;
 class Mesh;
 class Texture;
 class Backend;
+class Camera;
 } // namespace Render::GL
 
 namespace Render::GL {
+
+enum class HumanoidLOD : uint8_t {
+  Full = 0,
+  Reduced = 1,
+  Minimal = 2,
+  Billboard = 3
+};
+
+enum class HorseLOD : uint8_t {
+  Full = 0,
+  Reduced = 1,
+  Minimal = 2,
+  Billboard = 3
+};
 
 struct DrawContext {
   ResourceManager *resources = nullptr;
@@ -32,6 +47,7 @@ struct DrawContext {
   float animationTime = 0.0F;
   std::string rendererId;
   class Backend *backend = nullptr;
+  const Camera *camera = nullptr;
 };
 
 using RenderFunc = std::function<void(const DrawContext &, ISubmitter &out)>;

@@ -197,11 +197,12 @@ void HumanoidPoseController::aimBow(float draw_phase) {
 
   draw_phase = std::clamp(draw_phase, 0.0F, 1.0F);
 
-  QVector3D const aim_pos(0.18F, HP::SHOULDER_Y + 0.18F, 0.35F);
-  QVector3D const draw_pos(0.22F, HP::SHOULDER_Y + 0.10F, -0.30F);
-  QVector3D const release_pos(0.18F, HP::SHOULDER_Y + 0.20F, 0.10F);
+  // Keep string hand closer to bow plane so it actually reaches the chord.
+  QVector3D const aim_pos(-0.02F, HP::SHOULDER_Y + 0.18F, 0.42F);
+  QVector3D const draw_pos(-0.05F, HP::SHOULDER_Y + 0.12F, 0.22F);
+  QVector3D const release_pos(-0.02F, HP::SHOULDER_Y + 0.20F, 0.34F);
 
-  QVector3D hand_r_target;
+  QVector3D hand_l_target;
   float shoulder_twist = 0.0F;
   float head_recoil = 0.0F;
 
@@ -209,35 +210,35 @@ void HumanoidPoseController::aimBow(float draw_phase) {
 
     float t = draw_phase / 0.20F;
     t = t * t;
-    hand_r_target = aim_pos * (1.0F - t) + draw_pos * t;
+    hand_l_target = aim_pos * (1.0F - t) + draw_pos * t;
     shoulder_twist = t * 0.08F;
   } else if (draw_phase < 0.50F) {
 
-    hand_r_target = draw_pos;
+    hand_l_target = draw_pos;
     shoulder_twist = 0.08F;
   } else if (draw_phase < 0.58F) {
 
     float t = (draw_phase - 0.50F) / 0.08F;
     t = t * t * t;
-    hand_r_target = draw_pos * (1.0F - t) + release_pos * t;
+    hand_l_target = draw_pos * (1.0F - t) + release_pos * t;
     shoulder_twist = 0.08F * (1.0F - t * 0.6F);
     head_recoil = t * 0.04F;
   } else {
 
     float t = (draw_phase - 0.58F) / 0.42F;
     t = 1.0F - (1.0F - t) * (1.0F - t);
-    hand_r_target = release_pos * (1.0F - t) + aim_pos * t;
+    hand_l_target = release_pos * (1.0F - t) + aim_pos * t;
     shoulder_twist = 0.08F * 0.4F * (1.0F - t);
     head_recoil = 0.04F * (1.0F - t);
   }
 
-  QVector3D const hand_l_target(0.0F - 0.05F, HP::SHOULDER_Y + 0.05F, 0.55F);
-  placeHandAt(true, hand_l_target);
+  QVector3D const hand_r_target(0.03F, HP::SHOULDER_Y + 0.08F, 0.55F);
   placeHandAt(false, hand_r_target);
+  placeHandAt(true, hand_l_target);
 
   if (shoulder_twist > 0.01F) {
-    m_pose.shoulder_r.setY(m_pose.shoulder_r.y() + shoulder_twist);
-    m_pose.shoulder_l.setY(m_pose.shoulder_l.y() - shoulder_twist * 0.5F);
+    m_pose.shoulder_l.setY(m_pose.shoulder_l.y() + shoulder_twist);
+    m_pose.shoulder_r.setY(m_pose.shoulder_r.y() - shoulder_twist * 0.5F);
   }
 
   if (head_recoil > 0.01F) {

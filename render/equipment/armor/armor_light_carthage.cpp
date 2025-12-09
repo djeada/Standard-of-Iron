@@ -4,6 +4,7 @@
 #include "../../humanoid/humanoid_math.h"
 #include "../../humanoid/humanoid_specs.h"
 #include "../../humanoid/rig.h"
+#include "../../humanoid/style_palette.h"
 #include "../../submitter.h"
 #include <QMatrix4x4>
 #include <QVector3D>
@@ -14,6 +15,7 @@
 namespace Render::GL {
 
 using Render::Geom::cylinderBetween;
+using Render::GL::Humanoid::saturate_color;
 
 void ArmorLightCarthageRenderer::render(const DrawContext &ctx,
                                         const BodyFrames &frames,
@@ -31,9 +33,17 @@ void ArmorLightCarthageRenderer::render(const DrawContext &ctx,
     return;
   }
 
-  QVector3D leather_color = QVector3D(0.44F, 0.30F, 0.19F);
-  QVector3D leather_shadow = leather_color * 0.90F;
-  QVector3D leather_highlight = leather_color * 1.08F;
+  QVector3D leather_color = saturate_color(palette.leather);
+  QVector3D leather_shadow =
+      saturate_color(leather_color * QVector3D(0.90F, 0.90F, 0.90F));
+  QVector3D leather_highlight =
+      saturate_color(leather_color * QVector3D(1.08F, 1.05F, 1.02F));
+  QVector3D metal_color =
+      saturate_color(palette.metal * QVector3D(1.00F, 0.94F, 0.88F));
+  QVector3D metal_core =
+      saturate_color(metal_color * QVector3D(0.94F, 0.94F, 0.94F));
+  QVector3D cloth_accent =
+      saturate_color(palette.cloth * QVector3D(1.05F, 1.02F, 1.04F));
 
   QVector3D up = torso.up.normalized();
   QVector3D right = torso.right.normalized();
@@ -69,7 +79,7 @@ void ArmorLightCarthageRenderer::render(const DrawContext &ctx,
   cuirass.scale(1.0F, 1.0F, std::max(0.15F, main_depth / main_radius));
   Mesh *torso_mesh = torso_mesh_without_bottom_cap();
   submitter.mesh(torso_mesh != nullptr ? torso_mesh : getUnitTorso(), cuirass,
-                 leather_highlight, nullptr, 1.0F, 1);
+                 metal_color, nullptr, 1.0F, 1);
 
   auto strap = [&](float side) {
     QVector3D shoulder_anchor =
@@ -93,7 +103,7 @@ void ArmorLightCarthageRenderer::render(const DrawContext &ctx,
   front_panel.scale(1.18F, 1.0F,
                     std::max(0.22F, (torso_depth * 0.76F) / (torso_r * 0.76F)));
   submitter.mesh(torso_mesh != nullptr ? torso_mesh : getUnitTorso(),
-                 front_panel, leather_highlight, nullptr, 1.0F, 1);
+                 front_panel, cloth_accent, nullptr, 1.0F, 1);
 
   QVector3D back_panel_top =
       top - forward * (torso_depth * 0.32F) - up * (torso_r * 0.05F);
@@ -104,7 +114,7 @@ void ArmorLightCarthageRenderer::render(const DrawContext &ctx,
   back_panel.scale(1.18F, 1.0F,
                    std::max(0.22F, (torso_depth * 0.74F) / (torso_r * 0.80F)));
   submitter.mesh(torso_mesh != nullptr ? torso_mesh : getUnitTorso(),
-                 back_panel, leather_shadow, nullptr, 1.0F, 1);
+                 back_panel, metal_core, nullptr, 1.0F, 1);
 }
 
 } // namespace Render::GL
