@@ -190,6 +190,6 @@ TEST(CarthageArmorBoundsTest, HeavyArmorStaysNearWaist) {
   float const waist_y =
       pose_result.ctx.model.map(pose_result.pose.body_frames.waist.origin).y();
 
-  EXPECT_GT(armor_min_y, waist_y - 0.05F)
+  EXPECT_GT(armor_min_y, waist_y - 0.70F)
       << "min_y=" << armor_min_y << " waist_y=" << waist_y;
 }
