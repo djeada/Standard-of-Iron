@@ -1,9 +1,5 @@
 #version 330 core
 
-// ============================================================================
-// INPUTS & OUTPUTS
-// ============================================================================
-
 in vec3 v_normal;
 in vec3 v_worldNormal;
 in vec3 v_tangent;
@@ -26,10 +22,6 @@ uniform int u_materialId;
 
 out vec4 FragColor;
 
-// ============================================================================
-// UTILITY FUNCTIONS
-// ============================================================================
-
 float hash(vec2 p) {
   vec3 p3 = fract(vec3(p.xyx) * 0.1031);
   p3 += dot(p3, p3.yzx + 33.33);
@@ -46,10 +38,6 @@ float noise(vec2 p) {
   float d = hash(i + vec2(1.0, 1.0));
   return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
 }
-
-// ============================================================================
-// MATERIAL PATTERN FUNCTIONS (Roman Spearman - Hastatus)
-// ============================================================================
 
 float chainmail_rings(vec2 p) {
   vec2 grid = fract(p * 32.0) - 0.5;
@@ -72,10 +60,6 @@ float pteruges_strips(vec2 p, float y) {
   return strip * leather_tex * hang;
 }
 
-// ============================================================================
-// MAIN FRAGMENT SHADER
-// ============================================================================
-
 void main() {
   vec3 color = u_color;
   if (u_useTexture) {
@@ -85,7 +69,6 @@ void main() {
   vec3 normal = normalize(v_normal);
   vec2 uv = v_worldPos.xz * 4.5;
 
-  // Material ID: 0=body/skin, 1=armor, 2=helmet, 3=weapon, 4=shield, 5=greaves
   bool is_skin = (u_materialId == 0);
   bool is_armor = (u_materialId == 1);
   bool is_helmet = (u_materialId == 2);
@@ -93,9 +76,6 @@ void main() {
   bool is_shield = (u_materialId == 4);
   bool is_greaves = (u_materialId == 5);
 
-  // === ROMAN SPEARMAN (HASTATUS) MATERIALS ===
-
-  // HEAVY STEEL HELMET (cool blue-grey steel)
   if (is_skin) {
     float skin_detail = noise(uv * 18.0) * 0.06;
     float subdermal = noise(uv * 6.0) * 0.05;
@@ -106,17 +86,14 @@ void main() {
     color += vec3(0.025, 0.015, 0.010) * subdermal;
     color += vec3(rim);
   } else if (is_helmet) {
-    // Steel wear patterns from vertex shader
+
     float brushed = abs(sin(v_worldPos.y * 95.0)) * 0.020;
     float dents = noise(uv * 6.5) * 0.032 * v_steelWear;
     float rust_tex = noise(uv * 9.0) * 0.11 * v_steelWear;
 
-    // Use vertex-computed helmet detail (reinforcement bands, brow band, cheek
-    // guards)
     float bands = v_helmetDetail * 0.12;
     float rivets = v_rivetPattern * 0.10;
 
-    // ENHANCED: Cheek guards (hinged steel plates with hinge pins)
     float cheek_guard_height = smoothstep(0.70, 0.80, v_bodyHeight) *
                                smoothstep(0.90, 0.80, v_bodyHeight);
     float cheek_x = abs(v_worldPos.x);
@@ -124,16 +101,13 @@ void main() {
         cheek_guard_height * smoothstep(0.12, 0.09, cheek_x) * 0.40;
     float hinge_pins =
         cheek_guard * step(0.94, fract(v_bodyHeight * 28.0)) * 0.20;
-    float guard_repousse =
-        cheek_guard * noise(uv * 12.0) * 0.08; // Decorative embossing
+    float guard_repousse = cheek_guard * noise(uv * 12.0) * 0.08;
 
-    // ENHANCED: Brow reinforcement (frontal impact protection)
     float brow_height = smoothstep(0.84, 0.88, v_bodyHeight) *
                         smoothstep(0.92, 0.88, v_bodyHeight);
     float front_facing = step(0.3, v_worldNormal.z);
     float brow_reinforce = brow_height * front_facing * 0.22;
 
-    // ENHANCED: Plume socket (central crest mount)
     float plume_socket_height = smoothstep(0.90, 0.94, v_bodyHeight);
     float plume_socket =
         plume_socket_height * smoothstep(0.05, 0.03, abs(v_worldPos.x)) * 0.28;
@@ -149,60 +123,51 @@ void main() {
     color -= vec3(rust_tex * 0.3);
     color += vec3(brushed * 0.6);
   }
-  // LIGHT CHAINMAIL ARMOR (lorica hamata - pectorale reinforcement optional)
+
   else if (is_armor) {
-    // FORCE grey metal base - chainmail is CLEARLY not skin
-    color = color * vec3(0.42, 0.46, 0.50); // Darker grey base
 
-    vec2 chain_uv = v_worldPos.xz * 22.0; // Larger rings
+    color = color * vec3(0.42, 0.46, 0.50);
 
-    // PECTORALE CHEST PLATE - highly visible steel plate overlay
-    float chest_plate =
-        smoothstep(1.15, 1.25, v_bodyHeight) *
-        smoothstep(1.55, 1.45, v_bodyHeight) *
-        smoothstep(0.25, 0.15, abs(v_worldPos.x)); // Center chest
+    vec2 chain_uv = v_worldPos.xz * 22.0;
 
-    // STRONG distinction between plate and chainmail
+    float chest_plate = smoothstep(1.15, 1.25, v_bodyHeight) *
+                        smoothstep(1.55, 1.45, v_bodyHeight) *
+                        smoothstep(0.25, 0.15, abs(v_worldPos.x));
+
     if (chest_plate > 0.3) {
-      // PECTORALE - polished steel plate
-      color = vec3(0.72, 0.76, 0.82); // Bright steel
 
-      // Plate edges and rivets
+      color = vec3(0.72, 0.76, 0.82);
+
       float plate_edge = smoothstep(0.88, 0.92, chest_plate) * 0.25;
       float rivets = step(0.92, fract(v_worldPos.x * 18.0)) *
                      step(0.92, fract(v_worldPos.y * 12.0)) * 0.30;
 
       vec3 V = normalize(vec3(0.0, 1.0, 0.5));
       float view_angle = max(dot(normalize(v_worldNormal), V), 0.0);
-      float plate_sheen = pow(view_angle, 8.0) * 0.75; // Strong reflection
+      float plate_sheen = pow(view_angle, 8.0) * 0.75;
 
       color += vec3(plate_sheen + rivets);
       color -= vec3(plate_edge);
     } else {
-      // CHAINMAIL - much more visible rings with enhanced realism
+
       float rings = chainmail_rings(chain_uv) * 2.2;
       float ring_gaps = (1.0 - chainmail_rings(chain_uv)) * 0.50;
 
-      // ENHANCED: Ring quality variation and micro-gaps
       float ring_quality = noise(chain_uv * 3.5) * 0.18;
       float wire_thickness = noise(chain_uv * 28.0) * 0.12;
       float ring_joints = step(0.88, fract(chain_uv.x * 0.5)) *
                           step(0.88, fract(chain_uv.y * 0.5)) * 0.35;
       float gap_shadow = ring_joints * smoothstep(0.4, 0.6, rings);
 
-      // ENHANCED: Oxidation gradients spreading from contact points
       float rust_seed = noise(chain_uv * 4.2);
       float oxidation = smoothstep(0.45, 0.75, rust_seed) * v_steelWear * 0.28;
       vec3 rust_color = vec3(0.38, 0.28, 0.22);
       vec3 dark_rust = vec3(0.28, 0.20, 0.16);
 
-      // ENHANCED: Stress points at armor articulation zones
-      float joint_stress = smoothstep(1.20, 1.30, v_bodyHeight) * // Shoulders
-                           smoothstep(1.00, 1.10, v_bodyHeight) * // Elbows
-                           0.25;
+      float joint_stress = smoothstep(1.20, 1.30, v_bodyHeight) *
+                           smoothstep(1.00, 1.10, v_bodyHeight) * 0.25;
       float stress_wear = joint_stress * noise(chain_uv * 8.0) * 0.15;
 
-      // Battle damage
       float damage = step(0.86, noise(chain_uv * 0.8)) * 0.40;
 
       vec3 V = normalize(vec3(0.0, 1.0, 0.5));
@@ -216,40 +181,33 @@ void main() {
       color -= vec3(ring_gaps + damage + gap_shadow + stress_wear);
       color *= 1.0 + ring_quality - 0.05 + wire_thickness;
 
-      // Multi-stage oxidation with rust progression
       color = mix(color, rust_color, oxidation * 0.40);
       color = mix(color, dark_rust, oxidation * oxidation * 0.15);
     }
 
-    // Ensure armor is ALWAYS clearly visible
     color = clamp(color, vec3(0.32), vec3(0.88));
   }
-  // SCUTUM SHIELD (curved laminated wood with metal boss)
+
   else if (is_shield) {
-    // Shield boss (domed metal center)
+
     float boss_dist = length(v_worldPos.xy);
     float boss = smoothstep(0.12, 0.08, boss_dist) * 0.6;
     float boss_rim = smoothstep(0.14, 0.12, boss_dist) *
                      smoothstep(0.10, 0.12, boss_dist) * 0.3;
 
-    // Wood construction layers
     float edge_dist = max(abs(v_worldPos.x), abs(v_worldPos.y));
     float edge_wear = smoothstep(0.42, 0.48, edge_dist);
     float wood_layers = edge_wear * noise(uv * 40.0) * 0.25;
 
-    // Canvas facing
     float fabric_grain = noise(uv * 25.0) * 0.08;
     float canvas_weave = sin(uv.x * 60.0) * sin(uv.y * 58.0) * 0.04;
 
-    // Bronze edging
     float metal_edge = smoothstep(0.46, 0.48, edge_dist) * 0.45;
     vec3 bronze_edge = vec3(0.75, 0.55, 0.30);
 
-    // Battle wear
     float dents = noise(uv * 8.0) * v_steelWear * 0.18;
     float cuts = step(0.90, noise(uv * 12.0)) * 0.28;
 
-    // Boss reflection
     vec3 V = normalize(vec3(0.0, 1.0, 0.5));
     float view_angle = max(dot(normalize(v_worldNormal), V), 0.0);
     float boss_sheen = pow(view_angle, 10.0) * boss * 0.55;
@@ -260,25 +218,22 @@ void main() {
     color = mix(color, bronze_edge, metal_edge);
     color -= vec3(dents * 0.08 + cuts * 0.12);
   }
-  // PILUM & GLADIUS (iron spear and steel sword)
+
   else if (is_weapon) {
-    // Determine weapon part by height
-    bool is_blade = (v_bodyHeight > 0.5); // Upper half is blade/spearhead
-    bool is_shaft = (v_bodyHeight > 0.2 && v_bodyHeight <= 0.5); // Mid section
-    bool is_grip = (v_bodyHeight <= 0.2); // Lower section
+
+    bool is_blade = (v_bodyHeight > 0.5);
+    bool is_shaft = (v_bodyHeight > 0.2 && v_bodyHeight <= 0.5);
+    bool is_grip = (v_bodyHeight <= 0.2);
 
     if (is_blade) {
-      // Iron spearhead or steel blade
+
       vec3 steel_color = vec3(0.72, 0.75, 0.80);
 
-      // Fuller groove (blood channel)
       float fuller_x = abs(v_worldPos.x);
       float fuller = smoothstep(0.03, 0.01, fuller_x) * 0.20;
 
-      // Edge sharpness (bright along cutting edge)
       float edge = smoothstep(0.09, 0.10, fuller_x) * 0.45;
 
-      // Forging marks and tempering
       float forge_marks = noise(uv * 45.0) * 0.10;
       float tempering = abs(sin(v_bodyHeight * 35.0)) * 0.08;
 
@@ -291,106 +246,88 @@ void main() {
       color += vec3(edge + metal_sheen);
       color += vec3(forge_marks * 0.5 + tempering * 0.3);
     } else if (is_shaft) {
-      // Ash wood shaft
+
       float wood_grain = noise(uv * 32.0) * 0.16;
       float rings = abs(sin(v_worldPos.y * 40.0)) * 0.08;
-      color *= vec3(0.68, 0.58, 0.45); // Ash wood color
+      color *= vec3(0.68, 0.58, 0.45);
       color *= 1.0 + wood_grain + rings;
     } else if (is_grip) {
-      // Leather-wrapped grip
+
       float leather_wrap = noise(uv * 22.0) * 0.14;
       float binding = step(0.90, fract(v_worldPos.y * 25.0)) * 0.18;
-      color *= vec3(0.48, 0.38, 0.28); // Dark leather
+      color *= vec3(0.48, 0.38, 0.28);
       color *= 1.0 + leather_wrap;
       color += vec3(binding);
     }
   }
-  // BRONZE GREAVES (shin guards - polished bronze with high shine)
+
   else if (is_greaves) {
-    // Rich polished bronze base (warm golden metallic)
+
     vec3 bronze_base = vec3(0.88, 0.72, 0.45);
     vec3 bronze_highlight = vec3(1.0, 0.92, 0.75);
     vec3 bronze_shadow = vec3(0.55, 0.42, 0.25);
-    
-    // Apply bronze base
+
     color = mix(color, bronze_base, 0.90);
-    
-    // Micro brushed metal texture (fine polish lines)
+
     float brushed = abs(sin(v_worldPos.y * 120.0)) * 0.015;
-    
-    // View direction for specular
+
     vec3 V = normalize(vec3(0.15, 0.85, 0.5));
     vec3 N = normalize(v_worldNormal);
     float NdotV = max(dot(N, V), 0.0);
-    
-    // Primary specular (sharp highlight - polished metal)
+
     float spec_primary = pow(NdotV, 32.0) * 1.2;
-    
-    // Secondary specular (broader shine)
+
     float spec_secondary = pow(NdotV, 8.0) * 0.45;
-    
-    // Metallic fresnel (bright edges)
+
     float fresnel = pow(1.0 - NdotV, 3.0) * 0.65;
-    
-    // Anisotropic highlight (stretched along greave height)
+
     float aniso = pow(abs(sin(v_worldPos.y * 40.0 + NdotV * 3.14)), 4.0) * 0.25;
-    
-    // Environment reflection (sky above, ground below)
+
     float env_up = max(N.y, 0.0) * 0.35;
     float env_side = (1.0 - abs(N.y)) * 0.20;
-    
-    // Combine all shine effects
+
     vec3 shine = bronze_highlight * (spec_primary + spec_secondary + aniso);
     shine += vec3(fresnel * 0.8, fresnel * 0.7, fresnel * 0.5);
     shine += bronze_base * (env_up + env_side);
-    
+
     color += shine;
     color += vec3(brushed);
-    
-    // Ensure bright metallic finish
+
     color = clamp(color, bronze_shadow, vec3(1.0));
   }
 
   color = clamp(color, 0.0, 1.0);
 
-  // === PHASE 4: ADVANCED FEATURES ===
-  // Environmental interactions and enhanced battle wear
-
-  // Campaign wear (medium infantry shows moderate weathering)
   float campaign_wear = (1.0 - v_bodyHeight * 0.5) * 0.18;
   float dust_accumulation = noise(v_worldPos.xz * 8.0) * campaign_wear * 0.14;
 
-  // Rain streaks (vertical weathering on steel armor)
   float rain_streaks =
       smoothstep(0.85, 0.92,
                  noise(v_worldPos.xz * 2.5 + vec2(0.0, v_worldPos.y * 8.0))) *
-      v_bodyHeight * 0.10; // Visible on pectorale
+      v_bodyHeight * 0.10;
 
-  // Mud splatter (frontline combat conditions)
   float mud_height = smoothstep(0.55, 0.15, v_bodyHeight);
   float mud_pattern =
       step(0.72, noise(v_worldPos.xz * 12.0 + v_worldPos.y * 3.0));
   float mud_splatter = mud_height * mud_pattern * 0.22;
   vec3 mud_color = vec3(0.22, 0.18, 0.14);
 
-  // Blood stains (combat evidence on armor/shield)
-  float blood_height = smoothstep(0.85, 0.60, v_bodyHeight); // Torso/arms
+  float blood_height = smoothstep(0.85, 0.60, v_bodyHeight);
   float blood_pattern =
       step(0.88, noise(v_worldPos.xz * 15.0 + v_bodyHeight * 5.0));
   float blood_stain = blood_height * blood_pattern * v_steelWear * 0.12;
-  vec3 blood_color = vec3(0.18, 0.08, 0.06); // Dried blood (dark brown)
+  vec3 blood_color = vec3(0.18, 0.08, 0.06);
 
-  // Apply environmental effects
   color -= vec3(dust_accumulation);
   color -= vec3(rain_streaks * 0.6);
   color = mix(color, mud_color, mud_splatter);
   color = mix(color, blood_color, blood_stain);
 
-  // Lighting per material
   vec3 light_dir = normalize(vec3(1.0, 1.15, 1.0));
   float n_dot_l = dot(normalize(v_worldNormal), light_dir);
 
-  float wrap_amount = is_helmet ? 0.12 : (is_armor ? 0.22 : (is_greaves ? 0.12 : 0.35));
+  float wrap_amount =
+      is_helmet ? 0.12 : (is_armor ? 0.22 : (is_greaves ? 0.12 : 0.35));
   float diff = max(n_dot_l * (1.0 - wrap_amount) + wrap_amount, 0.20);
 
   if (is_helmet || is_greaves) {

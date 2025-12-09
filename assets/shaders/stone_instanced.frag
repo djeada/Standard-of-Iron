@@ -12,10 +12,8 @@ void main() {
   vec3 normal = normalize(vNormal);
   vec3 lightDir = normalize(uLightDirection);
 
-  // Diffuse lighting
   float diffuse = max(dot(normal, lightDir), 0.0);
 
-  // Ambient + diffuse
   float ambient = 0.4;
   float lighting = ambient + diffuse * 0.6;
 

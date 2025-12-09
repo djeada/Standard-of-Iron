@@ -1,10 +1,5 @@
 #version 330 core
 
-// ============================================================================
-// CARTHAGINIAN HEALER VERTEX SHADER
-// Flowing Mediterranean robes with natural draping
-// ============================================================================
-
 layout(location = 0) in vec3 a_position;
 layout(location = 1) in vec3 a_normal;
 layout(location = 2) in vec2 a_texCoord;
@@ -39,7 +34,6 @@ void main() {
   mat3 normalMatrix = mat3(transpose(inverse(u_model)));
   vec3 worldNormal = normalize(normalMatrix * normal);
 
-  // Build tangent space for detailed shading
   vec3 t = normalize(cross(fallbackUp(worldNormal), worldNormal));
   if (length(t) < 1e-4)
     t = vec3(1.0, 0.0, 0.0);
@@ -53,11 +47,8 @@ void main() {
   v_texCoord = a_texCoord;
   v_worldPos = vec3(u_model * vec4(position, 1.0));
 
-  // Body height for cloth flow (0.0 = feet, 1.0 = head)
   v_bodyHeight = clamp((v_worldPos.y + 0.2) / 1.8, 0.0, 1.0);
 
-  // Phoenician robes drape differently - looser, more flowing folds
-  // Emphasis on chest/waist gather and lower hem flow
   float chestGather = smoothstep(1.05, 1.20, v_worldPos.y) *
                       smoothstep(1.35, 1.20, v_worldPos.y);
   float waistSash = smoothstep(0.80, 0.92, v_worldPos.y) *
@@ -70,13 +61,11 @@ void main() {
                            fold_wave * 0.35,
                        0.0, 1.2);
 
-  // Fabric wear pattern - more at edges and stress points
   float shoulderStress = smoothstep(1.05, 1.45, v_worldPos.y) * 0.35;
   float hemWear = smoothstep(0.55, 0.15, v_worldPos.y) * 0.45;
   v_fabricWear =
       hash13(v_worldPos * 0.4) * 0.22 + 0.14 + shoulderStress + hemWear;
 
-  // Keep material selection stable; armor layer only toggles for armor.
   v_armorLayer = (u_materialId == 1) ? 1.0 : 0.0;
 
   gl_Position = u_mvp * vec4(position, 1.0);

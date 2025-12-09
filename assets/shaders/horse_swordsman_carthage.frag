@@ -1,9 +1,5 @@
 #version 330 core
 
-// ============================================================================
-// CARTHAGINIAN HORSE SWORDSMAN - Armor & Helmet changed to dark metallic
-// ============================================================================
-
 in vec3 v_normal;
 in vec2 v_texCoord;
 in vec3 v_worldPos;
@@ -17,18 +13,12 @@ uniform int u_materialId;
 
 out vec4 FragColor;
 
-// ============================================================================
-// CONSTANTS & HELPERS
-// ============================================================================
-
 const float PI = 3.14159265359;
 
-// ORIGINAL bronze kept for weapon/shield/etc
 const vec3 BRONZE_BASE_COLOR = vec3(0.86, 0.66, 0.36);
 
-// NEW dark metal for armor + helmet only
 const vec3 DARK_METAL_COLOR = vec3(0.14, 0.14, 0.16);
-// Dark brown base for the Carthaginian rider shield
+
 const vec3 SHIELD_BROWN_COLOR = vec3(0.18, 0.09, 0.035);
 
 float saturatef(float x) { return clamp(x, 0.0, 1.0); }
@@ -68,10 +58,6 @@ float fbm(vec2 p) {
   return v;
 }
 
-// ============================================================================
-// PBR
-// ============================================================================
-
 float D_GGX(float NdotH, float roughness) {
   float a = roughness * roughness;
   float a2 = a * a;
@@ -93,10 +79,6 @@ vec3 F_Schlick(float cosTheta, vec3 F0) {
   float t = 1.0 - cosTheta;
   return F0 + (1.0 - F0) * (t * t * t * t * t);
 }
-
-// ============================================================================
-// PATTERNS
-// ============================================================================
 
 float hammerPattern(vec3 pos) {
   float coarse = fbm(pos.xz * 14.0);
@@ -140,54 +122,56 @@ float leatherGrain(vec2 p) {
   return coarse + fine;
 }
 
-// ============================================================================
-// MAIN
-// ============================================================================
-
 void main() {
   vec3 baseColor = clamp(u_color, 0.0, 1.0);
-  if (u_useTexture) baseColor *= texture(u_texture, v_texCoord).rgb;
+  if (u_useTexture)
+    baseColor *= texture(u_texture, v_texCoord).rgb;
   baseColor = boostSaturation(baseColor, 0.25);
+  vec3 vibrantTeamColor =
+      clamp(boostSaturation(baseColor * vec3(1.08, 0.92, 0.94), 0.6), 0.0, 1.0);
 
   vec3 N = normalize(v_normal);
   vec3 V = normalize(vec3(0.0, 0.5, 1.0));
   vec3 L = normalize(vec3(0.5, 1.0, 0.4));
   vec3 H = normalize(L + V);
 
-  bool is_rider_skin     = (u_materialId == 0);
-  bool is_body_armor     = (u_materialId == 1);
-  bool is_helmet         = (u_materialId == 2);
-  bool is_weapon         = (u_materialId == 3);
-  bool is_shield         = (u_materialId == 4);
+  bool is_rider_skin = (u_materialId == 0);
+  bool is_body_armor = (u_materialId == 1);
+  bool is_helmet = (u_materialId == 2);
+  bool is_weapon = (u_materialId == 3);
+  bool is_shield = (u_materialId == 4);
   bool is_rider_clothing = (u_materialId == 5);
-  bool is_horse_hide     = (u_materialId == 6);
-  bool is_horse_mane     = (u_materialId == 7);
-  bool is_horse_hoof     = (u_materialId == 8);
+  bool is_horse_hide = (u_materialId == 6);
+  bool is_horse_mane = (u_materialId == 7);
+  bool is_horse_hoof = (u_materialId == 8);
   bool is_saddle_leather = (u_materialId == 9);
-  bool is_bridle         = (u_materialId == 10);
+  bool is_bridle = (u_materialId == 10);
   bool is_saddle_blanket = (u_materialId == 11);
 
   vec3 albedo = baseColor;
   float metallic = 0.0;
   float roughness = 0.5;
 
-  // =======================================================================
-  // MATERIALS
-  // =======================================================================
-
   if (is_rider_skin) {
     albedo = mix(baseColor, vec3(0.92, 0.76, 0.62), 0.25);
     albedo = boostSaturation(albedo, 0.15);
+    float armMask = smoothstep(0.3, 0.55, v_worldPos.y) *
+                    smoothstep(0.25, 0.45, abs(v_worldPos.x));
+    float legMask = smoothstep(0.0, 0.35, v_worldPos.y) *
+                    smoothstep(0.20, 0.48, abs(v_worldPos.x));
+    vec3 limbTint = mix(albedo * 0.9, vibrantTeamColor, 0.6);
+    float limbBlend = clamp(max(armMask, legMask), 0.0, 1.0);
+    albedo = mix(albedo, limbTint, limbBlend * 0.9);
     metallic = 0.0;
     roughness = 0.55;
   }
 
   else if (is_body_armor) {
-    // ========== DARK METAL BODY ARMOR ==========
+
     vec2 metalUV = v_texCoord * 6.0;
     float hammer = hammerPattern(vec3(metalUV, v_worldPos.y));
     float scales = scaleArmor(metalUV);
-    float chain  = chainmailRings(v_worldPos.xz);
+    float chain = chainmailRings(v_worldPos.xz);
 
     vec3 metal = DARK_METAL_COLOR;
     float patinaNoise = fbm(metalUV * 2.5);
@@ -206,7 +190,7 @@ void main() {
   }
 
   else if (is_helmet) {
-    // ========== DARK METAL HELMET ==========
+
     vec2 metalUV = v_texCoord * 8.0;
     float hammer = hammerPattern(vec3(metalUV, v_worldPos.y));
     float scales = scaleArmor(metalUV * 1.1);
@@ -272,12 +256,20 @@ void main() {
   else if (is_rider_clothing || is_saddle_blanket) {
     float weave = sin(v_worldPos.x * 55.0) * sin(v_worldPos.z * 55.0) * 0.04;
     float texture_var = fbm(v_worldPos.xz * 8.0);
+    float rimGlow = smoothstep(0.2, 0.65, abs(v_worldPos.z));
+    float foldDepth = smoothstep(0.15, 0.5, abs(v_worldPos.y));
 
-    albedo = boostSaturation(baseColor, 0.4);
-    albedo *= 1.0 + weave + texture_var * 0.12;
+    vec3 clothBase = mix(vibrantTeamColor, baseColor * 0.82, 0.12);
+    vec3 highlight = mix(clothBase * 0.9, clothBase * 1.28,
+                         clamp(weave + texture_var * 0.3, 0.0, 1.0));
+    vec3 shadow = mix(clothBase * vec3(0.8, 0.9, 0.95), clothBase, 0.35);
+    vec3 clothLayer = mix(shadow, highlight, foldDepth * 1.1);
+
+    albedo = clothLayer * (1.0 + weave * 0.38 + texture_var * 0.08);
+    albedo = mix(albedo, highlight, rimGlow * 0.45);
 
     metallic = 0.0;
-    roughness = 0.7;
+    roughness = 0.62 + texture_var * 0.06 + foldDepth * 0.03;
   }
 
   else if (is_horse_hide) {
@@ -334,10 +326,6 @@ void main() {
     roughness = 0.6;
   }
 
-  // =======================================================================
-  // PBR LIGHTING
-  // =======================================================================
-
   float NdotL = max(dot(N, L), 0.0);
   float NdotV = max(dot(N, V), 0.001);
   float NdotH = max(dot(N, H), 0.0);
@@ -355,7 +343,6 @@ void main() {
 
   vec3 color = (diffuse + specular * 2.2) * NdotL * 2.1;
 
-  // Enhanced metallic shine
   if (metallic > 0.5) {
     vec3 R = reflect(-V, N);
 
@@ -370,16 +357,16 @@ void main() {
     float softSpec = pow(max(dot(R, L), 0.0), 28.0);
     color += albedo * softSpec * 0.6;
 
-    vec3 skyCol    = vec3(0.55, 0.65, 0.85);
+    vec3 skyCol = vec3(0.55, 0.65, 0.85);
     vec3 groundCol = vec3(0.38, 0.32, 0.25);
-    float upFace   = R.y * 0.5 + 0.5;
+    float upFace = R.y * 0.5 + 0.5;
     vec3 envReflect = mix(groundCol, skyCol, upFace);
     color += envReflect * (1.0 - roughness) * 0.5;
   }
 
   vec3 ambient = albedo * 0.42;
 
-  vec3 skyAmbient    = vec3(0.45, 0.55, 0.70);
+  vec3 skyAmbient = vec3(0.45, 0.55, 0.70);
   vec3 groundAmbient = vec3(0.30, 0.25, 0.20);
   float hemi = N.y * 0.5 + 0.5;
 

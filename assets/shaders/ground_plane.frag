@@ -18,13 +18,12 @@ uniform float u_soilBlendSharpness;
 uniform float u_ambientBoost;
 uniform vec3 u_lightDir;
 
-// Ground-type-specific uniforms
-uniform float u_snowCoverage;    // 0-1: snow accumulation
-uniform float u_moistureLevel;   // 0-1: wetness/dryness
-uniform float u_crackIntensity;  // 0-1: ground cracking
-uniform float u_grassSaturation; // 0-1.5: grass color intensity
-uniform float u_soilRoughness;   // 0-1: soil texture roughness
-uniform vec3 u_snowColor;        // Snow tint color
+uniform float u_snowCoverage;
+uniform float u_moistureLevel;
+uniform float u_crackIntensity;
+uniform float u_grassSaturation;
+uniform float u_soilRoughness;
+uniform vec3 u_snowColor;
 
 float hash21(vec2 p) {
   return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
@@ -71,7 +70,6 @@ void main() {
   soilMix = max(soilMix, mudPatch * 0.85);
   vec3 baseCol = mix(grassCol, u_soilColor, soilMix);
 
-  // Ground cracking effect (for dry Mediterranean terrain)
   if (u_crackIntensity > 0.01) {
     float crackNoise1 = noise21(wuv * 8.0);
     float crackNoise2 = noise21(wuv * 16.0 + vec2(42.0, 17.0));
@@ -81,7 +79,6 @@ void main() {
     baseCol *= crackDarkening;
   }
 
-  // Snow coverage effect (for alpine terrain)
   if (u_snowCoverage > 0.01) {
     float snowNoise = fbm(wuv * 0.5 + vec2(123.0, 456.0));
     float snowAccumulation = smoothstep(0.3, 0.7, snowNoise);
@@ -92,11 +89,9 @@ void main() {
     baseCol = mix(baseCol, snowTinted, snowMask * 0.85);
   }
 
-  // Apply grass saturation modifier
   vec3 grayLevel = vec3(dot(baseCol, vec3(0.299, 0.587, 0.114)));
   baseCol = mix(grayLevel, baseCol, u_grassSaturation);
 
-  // Moisture effect
   float wetDarkening = 1.0 - u_moistureLevel * 0.15;
   baseCol *= wetDarkening;
 
@@ -119,7 +114,7 @@ void main() {
   float ndl = max(dot(nMicro, L), 0.0);
   float ambient = 0.40;
   float fres = pow(1.0 - max(dot(nMicro, vec3(0, 1, 0)), 0.0), 2.0);
-  // Surface roughness affects specular - wet surfaces are shinier
+
   float surfaceRoughness = mix(0.65, 0.95, u_soilRoughness);
   surfaceRoughness = mix(surfaceRoughness, 0.45, u_moistureLevel * 0.5);
   float specContrib = fres * 0.08 * (1.0 - surfaceRoughness);
@@ -127,8 +122,6 @@ void main() {
   float shade = ambient + ndl * 0.65 + specContrib;
   vec3 lit = col * shade * (u_ambientBoost + heightTint);
 
-  // Debug tint to make displacement obvious: blue for negative, red for
-  // positive
   vec3 dispTint = mix(vec3(0.3, 0.5, 1.0), vec3(1.0, 0.4, 0.3),
                       smoothstep(-1.0, 1.0, v_disp));
   lit = mix(lit, lit * dispTint, 0.25);
