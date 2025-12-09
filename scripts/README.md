@@ -202,11 +202,29 @@ Helper script for debugging audio issues.
 
 ### `remove-comments.sh` - Code Cleanup
 
-Removes comments from source files (use with caution).
+Removes comments from C/C++ source files and shader files (use with caution).
+
+**Features:**
+- ✓ Supports C/C++ files (`.c`, `.cpp`, `.h`, `.hpp`, etc.)
+- ✓ Supports shader files (`.vert`, `.frag`, `.glsl`)
+- ✓ Supports QML files (`.qml`)
+- ✓ Preserves string literals and raw strings
+- ✓ Dry-run mode available
+- ✓ Optional backup creation
 
 **Usage:**
 ```bash
+# Remove comments from all supported files in current directory
 ./scripts/remove-comments.sh
+
+# Dry-run to see what would be modified
+./scripts/remove-comments.sh --dry-run
+
+# Remove comments from shader files only
+./scripts/remove-comments.sh assets/shaders/
+
+# Create backups before modifying
+./scripts/remove-comments.sh --backup
 ```
 
 ---

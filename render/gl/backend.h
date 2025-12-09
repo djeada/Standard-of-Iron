@@ -24,6 +24,7 @@ class TerrainPipeline;
 class CharacterPipeline;
 class WaterPipeline;
 class EffectsPipeline;
+class PrimitiveBatchPipeline;
 } // namespace Render::GL::BackendPipelines
 
 namespace Render::GL {
@@ -105,6 +106,8 @@ private:
   std::unique_ptr<BackendPipelines::CharacterPipeline> m_characterPipeline;
   std::unique_ptr<BackendPipelines::WaterPipeline> m_waterPipeline;
   std::unique_ptr<BackendPipelines::EffectsPipeline> m_effectsPipeline;
+  std::unique_ptr<BackendPipelines::PrimitiveBatchPipeline>
+      m_primitiveBatchPipeline;
 
   Shader *m_basicShader = nullptr;
   Shader *m_gridShader = nullptr;

@@ -254,6 +254,84 @@ Item {
                         spacing: Theme.spacingMedium
 
                         Label {
+                            text: qsTr("Graphics Settings")
+                            color: Theme.textMain
+                            font.pointSize: Theme.fontSizeLarge
+                            font.bold: true
+                        }
+
+                        Rectangle {
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: 2
+                            color: Theme.border
+                            opacity: 0.5
+                        }
+
+                        GridLayout {
+                            Layout.fillWidth: true
+                            columns: 2
+                            rowSpacing: Theme.spacingMedium
+                            columnSpacing: Theme.spacingMedium
+
+                            Label {
+                                text: qsTr("Graphics Quality:")
+                                color: Theme.textSub
+                                font.pointSize: Theme.fontSizeMedium
+                            }
+
+                            ComboBox {
+                                id: graphicsQualityComboBox
+
+                                Layout.fillWidth: true
+                                model: typeof graphicsSettings !== 'undefined' ? graphicsSettings.qualityOptions : ["Low", "Medium", "High", "Ultra"]
+                                currentIndex: typeof graphicsSettings !== 'undefined' ? graphicsSettings.qualityLevel : 1
+                                onActivated: function(index) {
+                                    if (typeof graphicsSettings !== 'undefined')
+                                        graphicsSettings.qualityLevel = index;
+
+                                }
+
+                                delegate: ItemDelegate {
+                                    width: graphicsQualityComboBox.width
+                                    highlighted: graphicsQualityComboBox.highlightedIndex === index
+
+                                    contentItem: Text {
+                                        text: modelData
+                                        color: Theme.textMain
+                                        font.pointSize: Theme.fontSizeMedium
+                                        elide: Text.ElideRight
+                                        verticalAlignment: Text.AlignVCenter
+                                    }
+
+                                }
+
+                            }
+
+                            Label {
+                                text: typeof graphicsSettings !== 'undefined' ? graphicsSettings.getQualityDescription() : ""
+                                color: Theme.textSub
+                                font.pointSize: Theme.fontSizeSmall
+                                opacity: 0.7
+                                wrapMode: Text.WordWrap
+                                Layout.columnSpan: 2
+                                Layout.fillWidth: true
+                            }
+
+                        }
+
+                    }
+
+                    Rectangle {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 1
+                        color: Theme.border
+                    }
+
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        spacing: Theme.spacingMedium
+
+                        Label {
                             text: qsTr("Language")
                             color: Theme.textMain
                             font.pointSize: Theme.fontSizeLarge
