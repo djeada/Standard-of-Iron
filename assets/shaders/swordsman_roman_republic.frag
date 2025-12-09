@@ -84,12 +84,13 @@ void main() {
   vec3 normal = normalize(v_normal);
   vec2 uv = v_worldPos.xz * 5.0;
 
-  // Material ID: 0=body/skin, 1=armor, 2=helmet, 3=weapon, 4=shield
+  // Material ID: 0=body/skin, 1=armor, 2=helmet, 3=weapon, 4=shield, 5=greaves
   bool is_skin = (u_materialId == 0);
   bool is_armor = (u_materialId == 1);
   bool is_helmet = (u_materialId == 2);
   bool is_weapon = (u_materialId == 3);
   bool is_shield = (u_materialId == 4);
+  bool is_greaves = (u_materialId == 5);
 
   // === ROMAN SWORDSMAN (LEGIONARY) MATERIALS ===
 
@@ -344,6 +345,51 @@ void main() {
       color += vec3(brass_sheen + decoration * 0.4);
     }
   }
+  // BRONZE GREAVES (shin guards - highly polished mirror-like bronze)
+  else if (is_greaves) {
+    // Rich polished bronze base (warm golden metallic)
+    vec3 bronze_base = vec3(0.88, 0.72, 0.45);
+    vec3 bronze_highlight = vec3(1.0, 0.92, 0.75);
+    vec3 bronze_shadow = vec3(0.55, 0.42, 0.25);
+    
+    // Apply bronze base
+    color = mix(color, bronze_base, 0.90);
+    
+    // Micro brushed metal texture (fine polish lines)
+    float brushed = abs(sin(v_worldPos.y * 120.0)) * 0.015;
+    
+    // View direction for specular
+    vec3 V = normalize(vec3(0.15, 0.85, 0.5));
+    vec3 N = normalize(v_worldNormal);
+    float NdotV = max(dot(N, V), 0.0);
+    
+    // Primary specular (sharp highlight - polished metal)
+    float spec_primary = pow(NdotV, 32.0) * 1.2;
+    
+    // Secondary specular (broader shine)
+    float spec_secondary = pow(NdotV, 8.0) * 0.45;
+    
+    // Metallic fresnel (bright edges)
+    float fresnel = pow(1.0 - NdotV, 3.0) * 0.65;
+    
+    // Anisotropic highlight (stretched along greave height)
+    float aniso = pow(abs(sin(v_worldPos.y * 40.0 + NdotV * 3.14)), 4.0) * 0.25;
+    
+    // Environment reflection (sky above, ground below)
+    float env_up = max(N.y, 0.0) * 0.35;
+    float env_side = (1.0 - abs(N.y)) * 0.20;
+    
+    // Combine all shine effects
+    vec3 shine = bronze_highlight * (spec_primary + spec_secondary + aniso);
+    shine += vec3(fresnel * 0.8, fresnel * 0.7, fresnel * 0.5);
+    shine += bronze_base * (env_up + env_side);
+    
+    color += shine;
+    color += vec3(brushed);
+    
+    // Ensure bright metallic finish
+    color = clamp(color, bronze_shadow, vec3(1.0));
+  }
 
   color = clamp(color, 0.0, 1.0);
 
@@ -391,11 +437,11 @@ void main() {
   vec3 light_dir = normalize(vec3(1.0, 1.2, 1.0));
   float n_dot_l = dot(normalize(v_worldNormal), light_dir);
 
-  float wrap_amount = is_helmet ? 0.08 : (is_armor ? 0.08 : 0.30);
+  float wrap_amount = is_helmet ? 0.08 : (is_armor ? 0.08 : (is_greaves ? 0.08 : 0.30));
   float diff = max(n_dot_l * (1.0 - wrap_amount) + wrap_amount, 0.16);
 
-  // Extra contrast for polished steel
-  if (is_helmet || is_armor) {
+  // Extra contrast for polished steel and bronze
+  if (is_helmet || is_armor || is_greaves) {
     diff = pow(diff, 0.85);
   }
 
