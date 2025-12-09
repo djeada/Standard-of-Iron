@@ -15,13 +15,13 @@ out vec3 v_tangent;
 out vec3 v_bitangent;
 out vec2 v_texCoord;
 out vec3 v_worldPos;
-out float v_armorLayer;  // Distinguish armor pieces for Roman equites cavalry
-out float v_bodyHeight;  // 0.0-1.0 for both rider and horse
-out float v_armorSheen;  // Rider armor polish level
-out float v_leatherWear; // Tack aging
-out float v_horseMusculature; // Horse body definition
-out float v_hairFlow;         // Mane/tail direction
-out float v_hoofWear;         // Hoof chipping
+out float v_armorLayer;
+out float v_bodyHeight;
+out float v_armorSheen;
+out float v_leatherWear;
+out float v_horseMusculature;
+out float v_hairFlow;
+out float v_hoofWear;
 
 float hash13(vec3 p) {
   return fract(sin(dot(p, vec3(12.9898, 78.233, 37.719))) * 43758.5453);
@@ -35,9 +35,8 @@ void main() {
   vec3 position = a_position;
   vec3 normal = a_normal;
 
-  // Cloak back drape (Material ID 12)
   if (u_materialId == 12) {
-    float v = 1.0 - a_texCoord.y; // 1 = top, 0 = bottom
+    float v = 1.0 - a_texCoord.y;
     float u = a_texCoord.x;
     float x_norm = (u - 0.5) * 2.0;
 
@@ -58,7 +57,6 @@ void main() {
     position.y += wave * move;
   }
 
-  // Cloak shoulder cape (Material ID 13)
   if (u_materialId == 13) {
     float u = a_texCoord.x;
     float v = a_texCoord.y;
@@ -82,7 +80,6 @@ void main() {
   mat3 normalMatrix = mat3(transpose(inverse(u_model)));
   vec3 worldNormal = normalize(normalMatrix * normal);
 
-  // Build tangent space for normal mapping
   vec3 t = normalize(cross(fallbackUp(worldNormal), worldNormal));
   if (length(t) < 1e-4)
     t = vec3(1.0, 0.0, 0.0);
@@ -96,23 +93,18 @@ void main() {
   v_texCoord = a_texCoord;
   v_worldPos = vec3(u_model * vec4(position, 1.0));
 
-  // Body height for both rider and horse (0.0-1.0)
   v_bodyHeight = clamp((v_worldPos.y + 0.2) / 2.0, 0.0, 1.0);
 
-  // Procedural detail based on world position
   float hashVal = hash13(v_worldPos * 0.5);
 
-  // Rider equipment details
-  v_armorSheen = 0.6 + hashVal * 0.3;  // Polish variation
-  v_leatherWear = hashVal * 0.4 + 0.1; // Tack wear (0.1-0.5)
+  v_armorSheen = 0.6 + hashVal * 0.3;
+  v_leatherWear = hashVal * 0.4 + 0.1;
 
-  // Horse details
   v_horseMusculature =
       smoothstep(0.3, 0.6, v_bodyHeight) * smoothstep(1.0, 0.7, v_bodyHeight);
   v_hairFlow = hashVal * 0.5 + 0.5;
   v_hoofWear = hashVal * 0.3;
 
-  // Armor selection based solely on material ID.
   v_armorLayer = (u_materialId == 1) ? 1.0 : 0.0;
 
   gl_Position = u_mvp * vec4(position, 1.0);

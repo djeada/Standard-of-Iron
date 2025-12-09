@@ -2,8 +2,8 @@
 
 layout(location = 0) in vec3 aPos;
 layout(location = 1) in vec3 aNormal;
-layout(location = 2) in vec4 aPosScale; // instance: xyz=world pos, w=scale
-layout(location = 3) in vec4 aColorRot; // instance: rgb=color, a=rotation
+layout(location = 2) in vec4 aPosScale;
+layout(location = 3) in vec4 aColorRot;
 
 uniform mat4 uViewProj;
 
@@ -16,7 +16,6 @@ void main() {
   vec3 worldPos = aPosScale.xyz;
   float rotation = aColorRot.a;
 
-  // Rotate vertex around Y-axis
   float cosR = cos(rotation);
   float sinR = sin(rotation);
   mat2 rot = mat2(cosR, -sinR, sinR, cosR);
@@ -27,7 +26,6 @@ void main() {
 
   vWorldPos = localPos + worldPos;
 
-  // Rotate normal
   vec2 rotatedNormalXZ = rot * aNormal.xz;
   vNormal = normalize(vec3(rotatedNormalXZ.x, aNormal.y, rotatedNormalXZ.y));
 

@@ -36,7 +36,6 @@ void main() {
   vec3 position = a_position;
   vec3 normal = a_normal;
 
-  // Only annotate helmet flag; shield bending removed to keep mesh intact.
   bool is_shield = (u_materialId == 4);
   bool is_helmet = (u_materialId == 2);
 
@@ -52,8 +51,6 @@ void main() {
   vec4 modelPos = u_model * vec4(position, 1.0);
   vec3 worldPos = modelPos.xyz;
 
-  // Normalize height along the model's local Y so lighting gradients stay
-  // stable regardless of placement or per-piece transforms.
   vec3 axisY = vec3(u_model[1].xyz);
   float axisLen = max(length(axisY), 1e-4);
   vec3 axisDir = axisY / axisLen;
@@ -62,9 +59,8 @@ void main() {
       clamp(dot(worldPos - modelOrigin, axisDir) / axisLen + 0.5, 0.0, 1.0);
 
   float dentSeed = hash13(worldPos * 0.8 + worldNormal * 0.3);
-  float torsion = 0.0; // removed bulk shear to avoid squashing
+  float torsion = 0.0;
 
-  // Minimal acne offset; no sculpting except shield bend above.
   vec3 offsetPos = worldPos + worldNormal * 0.003;
 
   mat4 invModel = inverse(u_model);
@@ -92,7 +88,6 @@ void main() {
 
   v_frontMask = clamp(smoothstep(-0.18, 0.18, -localPos.z), 0.0, 1.0);
 
-  // Force the full armor piece to use the armor material; avoid partial masks.
   v_armorLayer = (u_materialId == 1) ? 1.0 : 0.0;
 
   v_bodyHeight = clamp((height01 - 0.05) / 0.90, 0.0, 1.0);

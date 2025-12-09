@@ -34,7 +34,6 @@ void main() {
   vec3 position = a_position;
   vec3 normal = a_normal;
 
-  // Slight curvature for large shields (materialId = 4)
   if (u_materialId == 4) {
     float curveRadius = 0.52;
     float curveAmount = 0.46;
@@ -51,7 +50,6 @@ void main() {
   mat3 normalMatrix = mat3(transpose(inverse(u_model)));
   vec3 worldNormal = normalize(normalMatrix * normal);
 
-  // Build tangent space
   vec3 t = normalize(cross(fallbackUp(worldNormal), worldNormal));
   if (length(t) < 1e-4)
     t = vec3(1.0, 0.0, 0.0);
@@ -67,14 +65,11 @@ void main() {
   float height01 =
       clamp(dot(worldPos - modelOrigin, axisDir) / axisLen + 0.5, 0.0, 1.0);
 
-  // Only deform armored pieces (helmet/armor/shield/weapons) and only within
-  // their height bands to avoid touching skin/face
   bool torsoZone = (height01 > 0.18 && height01 <= 0.98);
-  bool helmetZone = (height01 > 0.70); // allow small overlap for helmet rim
+  bool helmetZone = (height01 > 0.70);
   bool deformArmor =
-      (u_materialId == 4 || u_materialId == 3 || // shields, weapons
-       (u_materialId == 1 && torsoZone) ||       // chainmail
-       (u_materialId == 2 && helmetZone));       // helmet
+      (u_materialId == 4 || u_materialId == 3 ||
+       (u_materialId == 1 && torsoZone) || (u_materialId == 2 && helmetZone));
 
   float dentSeed = 0.0;
   float hammerImpact = 0.0;
@@ -82,7 +77,7 @@ void main() {
   vec3 offsetPos = worldPos;
 
   if (deformArmor) {
-    // Subtle battered offset to avoid self-shadowing
+
     dentSeed = hash13(worldPos * 0.82 + worldNormal * 0.28);
     hammerImpact = sin(worldPos.y * 15.0 + dentSeed * 18.84);
     vec3 dentOffset = worldNormal * ((dentSeed - 0.5) * 0.0095);
@@ -106,12 +101,10 @@ void main() {
 
   float height = height01;
 
-  // Keep armor material active across the whole piece; avoid partial bands.
   v_armorLayer = (u_materialId == 1) ? 1.0 : 0.0;
 
   v_bodyHeight = clamp((height - 0.05) / 0.90, 0.0, 1.0);
 
-  // Helmet detail bands and rivets
   float reinforcementBands = fract(height * 12.0);
   float browBandRegion =
       smoothstep(0.78, 0.82, height) * smoothstep(0.90, 0.86, height);
@@ -120,8 +113,7 @@ void main() {
   v_helmetDetail =
       reinforcementBands * 0.4 + browBandRegion * 0.4 + cheekGuardArea * 0.2;
 
-  // Wear masks
-  v_steelWear = dentSeed * (1.0 - v_bodyHeight * 0.3); // More wear lower down
+  v_steelWear = dentSeed * (1.0 - v_bodyHeight * 0.3);
   v_chainmailPhase =
       fract(offsetPos.x * 28.0 + offsetPos.z * 28.0 + offsetPos.y * 0.45);
   v_rivetPattern = step(0.96, fract(offsetPos.x * 22.0)) *

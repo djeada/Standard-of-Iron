@@ -11,9 +11,6 @@ uniform float u_alpha;
 
 out vec4 FragColor;
 
-// ---------------------
-// utilities & noise
-// ---------------------
 const float PI = 3.14159265359;
 
 float saturate(float x) { return clamp(x, 0.0, 1.0); }
@@ -47,31 +44,23 @@ float fbm(vec2 p) {
   return f;
 }
 
-// anti-aliased step
 float aaStep(float edge, float x) {
   float w = fwidth(x);
   return smoothstep(edge - w, edge + w, x);
 }
 
-// ---------------------
-// patterns
-// ---------------------
-
-// plate seams + rivets (AA)
 float armorPlates(vec2 p, float y) {
   float plateY = fract(y * 6.5);
   float line = smoothstep(0.92, 0.98, plateY) - smoothstep(0.98, 1.0, plateY);
-  // anti-aliased line thickness
+
   line = smoothstep(0.0, fwidth(plateY) * 2.0, line) * 0.12;
 
-  // rivets on top seams
   float rivetX = fract(p.x * 18.0);
   float rivet = smoothstep(0.48, 0.50, rivetX) * smoothstep(0.52, 0.50, rivetX);
   rivet *= step(0.92, plateY);
   return line + rivet * 0.25;
 }
 
-// linked ring suggestion (AA)
 float chainmailRings(vec2 p) {
   vec2 uv = p * 35.0;
 
@@ -97,9 +86,6 @@ float horseHidePattern(vec2 p) {
   return grain + ripple + mottling;
 }
 
-// ---------------------
-// microfacet shading
-// ---------------------
 vec3 fresnelSchlick(float cosTheta, vec3 F0) {
   return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
 }
@@ -119,7 +105,6 @@ float G_Smith(float NdotV, float NdotL, float rough) {
   return gV * gL;
 }
 
-// screen-space bump from a height field h(uv) in world XZ
 vec3 perturbNormalWS(vec3 N, vec3 worldPos, float h, float scale) {
   vec3 dpdx = dFdx(worldPos);
   vec3 dpdy = dFdy(worldPos);
@@ -131,7 +116,6 @@ vec3 perturbNormalWS(vec3 N, vec3 worldPos, float h, float scale) {
   return Np;
 }
 
-// hemisphere ambient (sky/ground)
 vec3 hemilight(vec3 N) {
   vec3 sky = vec3(0.55, 0.64, 0.80);
   vec3 ground = vec3(0.23, 0.20, 0.17);
@@ -139,9 +123,6 @@ vec3 hemilight(vec3 N) {
   return mix(ground, sky, t) * 0.28;
 }
 
-// ---------------------
-// main
-// ---------------------
 void main() {
   vec3 baseColor = u_color;
   if (u_useTexture)
@@ -162,10 +143,8 @@ void main() {
   bool isLeather = (!isSteel && !isBrass && !isChain && !isFabric);
   bool isHorseHide = (avg < 0.40 && hueSpan < 0.12 && v_worldPos.y < 0.8);
 
-  // lighting frame
   vec3 L = normalize(vec3(1.0, 1.2, 1.0));
-  vec3 V = normalize(
-      vec3(0.0, 1.0, 0.5)); // stable view proxy (keeps interface unchanged)
+  vec3 V = normalize(vec3(0.0, 1.0, 0.5));
   vec3 H = normalize(L + V);
 
   float NdotL = saturate(dot(N, L));
@@ -173,31 +152,25 @@ void main() {
   float NdotH = saturate(dot(N, H));
   float VdotH = saturate(dot(V, H));
 
-  // wrap diffuse like original (softens lambert)
   float wrapAmount = (avg > 0.50) ? 0.08 : 0.30;
   float NdotL_wrap = max(NdotL * (1.0 - wrapAmount) + wrapAmount, 0.12);
 
-  // base material params
   float roughness = 0.5;
-  vec3 F0 = vec3(0.04); // dielectric default
+  vec3 F0 = vec3(0.04);
   float metalness = 0.0;
   vec3 albedo = baseColor;
 
-  // micro details / masks (re-used)
   float nSmall = fbm(uv * 6.0);
   float nLarge = fbm(uv * 2.0);
   float cavity = 1.0 - (nLarge * 0.25 + nSmall * 0.15);
 
-  // ---------------------
-  // MATERIAL BRANCHES
-  // ---------------------
   vec3 col = vec3(0.0);
   vec3 ambient = hemilight(N) * (0.85 + 0.15 * cavity);
 
   if (isHorseHide) {
-    // subtle anisotropic sheen along body flow
+
     vec3 up = vec3(0.0, 1.0, 0.0);
-    vec3 T = normalize(cross(up, N) + 1e-4); // hair tangent guess
+    vec3 T = normalize(cross(up, N) + 1e-4);
     float flowNoise = fbm(uv * 10.0);
     float aniso = pow(saturate(dot(normalize(reflect(-L, N)), T)), 14.0) *
                   0.08 * (0.6 + 0.4 * flowNoise);
@@ -209,14 +182,12 @@ void main() {
     F0 = vec3(0.035);
     metalness = 0.0;
 
-    // slight bump from hair grain
     float h = fbm(v_worldPos.xz * 35.0);
     N = perturbNormalWS(N, v_worldPos, h, 0.35);
 
-    // composition
     albedo = albedo * (1.0 + hideTex * 0.20) * (0.98 + 0.02 * nSmall);
     col += ambient * albedo;
-    // microfacet spec
+
     float D = D_GGX(saturate(dot(N, H)), roughness);
     float G = G_Smith(saturate(dot(N, V)), saturate(dot(N, L)), roughness);
     vec3 F = fresnelSchlick(VdotH, F0);
@@ -230,35 +201,30 @@ void main() {
     float dents = noise(uv * 8.0) * 0.03;
     float plates = armorPlates(v_worldPos.xz, v_worldPos.y);
 
-    // bump from brushing
     float h = fbm(vec2(v_worldPos.y * 25.0, v_worldPos.z * 6.0));
     N = perturbNormalWS(N, v_worldPos, h, 0.35);
 
-    // steel-like params
     metalness = 1.0;
     F0 = vec3(0.92);
     roughness = 0.28 + brushed * 2.0 + dents * 0.6;
     roughness = clamp(roughness, 0.15, 0.55);
 
-    // base tint & sky reflection lift
     albedo = mix(vec3(0.60), baseColor, 0.25);
     float skyRefl = (N.y * 0.5 + 0.5) * 0.10;
 
-    // microfacet spec only for metals
     float D = D_GGX(saturate(dot(N, H)), roughness);
     float G = G_Smith(saturate(dot(N, V)), saturate(dot(N, L)), roughness);
-    vec3 F = fresnelSchlick(VdotH, F0 * albedo); // slight tint
+    vec3 F = fresnelSchlick(VdotH, F0 * albedo);
     vec3 spec = (D * G) * F / max(1e-5, 4.0 * NdotV * NdotL);
 
-    col += ambient * 0.3; // metals rely more on spec
+    col += ambient * 0.3;
     col += NdotL_wrap * spec * 1.5;
     col += vec3(plates) + vec3(skyRefl) - vec3(dents * 0.25) + vec3(brushed);
 
   } else if (isBrass) {
     float brassNoise = noise(uv * 22.0) * 0.02;
-    float patina = fbm(uv * 4.0) * 0.12; // larger-scale patina
+    float patina = fbm(uv * 4.0) * 0.12;
 
-    // bump from subtle hammering
     float h = fbm(uv * 18.0);
     N = perturbNormalWS(N, v_worldPos, h, 0.30);
 
@@ -280,7 +246,6 @@ void main() {
     float rings = chainmailRings(v_worldPos.xz);
     float ringHi = noise(uv * 30.0) * 0.10;
 
-    // small pitted bump
     float h = fbm(uv * 35.0);
     N = perturbNormalWS(N, v_worldPos, h, 0.25);
 
@@ -295,7 +260,7 @@ void main() {
 
     col += ambient * 0.25;
     col += NdotL_wrap * (spec * (1.2 + rings)) + vec3(ringHi);
-    // slight diffuse damping to keep chainmail darker in cavities
+
     col *= (0.95 - 0.10 * (1.0 - cavity));
 
   } else if (isFabric) {
@@ -323,7 +288,7 @@ void main() {
     col += NdotL_wrap * (albedo * (1.0 - F) + spec * 0.3) +
            vec3(weave + embroidery + sheen);
 
-  } else { // leather
+  } else {
     float grain = fbm(uv * 10.0) * 0.15;
     float wear = fbm(uv * 3.0) * 0.12;
 
@@ -346,7 +311,6 @@ void main() {
     col += NdotL_wrap * (albedo * (1.0 - F)) + spec * 0.4 + vec3(sheen);
   }
 
-  // final clamp and alpha
   col = saturate(col);
   FragColor = vec4(col, u_alpha);
 }

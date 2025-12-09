@@ -34,7 +34,6 @@ void BowRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
   const QVector3D up(0.0F, 1.0F, 0.0F);
   const QVector3D forward(0.0F, 0.0F, 1.0F);
 
-  // Right hand now holds the bow grip; use it as anchor for the bow plane.
   QVector3D const grip = frames.hand_r.origin;
 
   float const bow_half_height = (m_config.bow_top_y - m_config.bow_bot_y) *
@@ -53,7 +52,7 @@ void BowRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
   } else {
     outward.normalize();
   }
-  // Keep the bow plane close to the grip so the hand actually touches it.
+
   QVector3D const side = outward * 0.02F;
 
   float const bow_plane_x = grip.x() + m_config.bow_x + side.x();

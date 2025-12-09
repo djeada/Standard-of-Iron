@@ -16,32 +16,27 @@ uniform float u_soilBlendHeight, u_soilBlendSharpness;
 uniform float u_heightNoiseStrength, u_heightNoiseFrequency;
 uniform float u_ambientBoost, u_rockDetailStrength;
 
-// Ground-type-specific uniforms
-uniform float u_snowCoverage;    // 0-1: snow accumulation (alpine_mix)
-uniform float u_moistureLevel;   // 0-1: wetness/dryness
-uniform float u_crackIntensity;  // 0-1: ground cracking (grass_dry)
-uniform float u_rockExposure;    // 0-1: how much rock shows through
-uniform float u_grassSaturation; // 0-1.5: grass color intensity
-uniform float u_soilRoughness;   // 0-1: soil texture roughness
-uniform vec3 u_snowColor;        // Snow tint color
+uniform float u_snowCoverage;
+uniform float u_moistureLevel;
+uniform float u_crackIntensity;
+uniform float u_rockExposure;
+uniform float u_grassSaturation;
+uniform float u_soilRoughness;
+uniform vec3 u_snowColor;
 
-// lets soil “climb” up steep toes (world units)
-uniform float u_soilFootHeight; // try 0.6–1.2
+uniform float u_soilFootHeight;
 
-// -------- OPTIONAL (leave at defaults if you don’t have a heightmap) --------
-uniform int u_hasHeightTex; // 0 = off (default), 1 = on
+uniform int u_hasHeightTex;
 uniform sampler2D u_heightTex;
 uniform vec2 u_heightTexelSize;
 uniform vec2 u_heightUVScale, u_heightUVOffset;
-uniform float u_heightTexToWorld; // height normalization -> world units
-uniform int u_toeTexRadius;       // 3–6
-uniform float u_toeHeightDelta;   // ~0.5–2.0 world units
-uniform float u_toeStrength;      // 0..1
-// ----------------------------------------------------------------------------
+uniform float u_heightTexToWorld;
+uniform int u_toeTexRadius;
+uniform float u_toeHeightDelta;
+uniform float u_toeStrength;
 
-// NEW: view-consistent, data-free toe smoothing (works even without heightmap)
-uniform float u_screenToeMul;   // try 12.0–30.0
-uniform float u_screenToeClamp; // max extra width in world units (try 0.8)
+uniform float u_screenToeMul;
+uniform float u_screenToeClamp;
 
 float hash21(vec2 p) {
   return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
@@ -94,31 +89,20 @@ vec3 geomNormal() {
   return (dot(n, v_normal) < 0.0) ? -n : n;
 }
 
-// ---- Optional heightmap helpers --------------------------------------------
 float sampleHeight(vec2 uv) {
   return texture(u_heightTex, uv).r * u_heightTexToWorld;
 }
 
-// (kept for reference; no longer used by the fix)
-// float maxRiseNearby(vec2 uv, int r){ ... }  // removed to avoid confusion
-
-// --- world <-> UV helpers for height texture sampling (FIX ADD) ---
-vec2 uvToWorld(vec2 duv) {
-  // uv = world_xz * u_heightUVScale + u_heightUVOffset
-  // => world_xz delta per uv delta = duv / u_heightUVScale (component-wise)
-  return duv / max(abs(u_heightUVScale), vec2(1e-6));
-}
+vec2 uvToWorld(vec2 duv) { return duv / max(abs(u_heightUVScale), vec2(1e-6)); }
 
 float avgWorldPerTexel() {
   vec2 wpt = abs(uvToWorld(u_heightTexelSize));
   return 0.5 * (wpt.x + wpt.y);
 }
 
-// Radial min-distance (in WORLD units) to a higher “cliff” neighborhood (FIX
-// ADD)
 float minCliffDistanceRadial(vec2 uv, int r, float riseDelta) {
-  const int MAX_R = 12;   // max steps per ray (in texels)
-  const int NUM_DIR = 12; // number of ray directions
+  const int MAX_R = 12;
+  const int NUM_DIR = 12;
   r = clamp(r, 1, MAX_R);
 
   float h0 = sampleHeight(uv);
@@ -145,9 +129,8 @@ float minCliffDistanceRadial(vec2 uv, int r, float riseDelta) {
       }
     }
   }
-  return best; // 1e9 = not found
+  return best;
 }
-// ----------------------------------------------------------------------------
 
 void main() {
   vec3 normal = geomNormal();
@@ -172,28 +155,21 @@ void main() {
   dryness += moistureVar * 0.15;
   vec3 grassColor = mix(lushGrass, u_grassDry, dryness);
 
-  // ----- Soil band (height + toe expansion) -----
   float soilWidth = max(0.01, 1.0 / max(u_soilBlendSharpness, 0.001));
 
-  // gentle noise to avoid tiled edges
   float heightNoise =
       (triplanarNoise(v_worldPos, max(0.0001, u_heightNoiseFrequency)) - 0.5) *
       u_heightNoiseStrength;
 
-  // local toe from slope (small on flats)
   float toeLocal = smoothstep(0.25, 0.9, slope);
 
-  // world-consistent “screen-space” dilation (FIX REPLACE)
   vec2 dxxz = dFdx(v_worldPos.xz);
   vec2 dyxz = dFdy(v_worldPos.xz);
-  float pxWorld =
-      max(length(dxxz), length(dyxz)); // world meters per pixel (approx)
-  float dh = max(abs(dFdx(v_worldPos.y)),
-                 abs(dFdy(v_worldPos.y))); // height change per pixel
+  float pxWorld = max(length(dxxz), length(dyxz));
+  float dh = max(abs(dFdx(v_worldPos.y)), abs(dFdy(v_worldPos.y)));
   float toeSS =
       clamp((dh / max(pxWorld, 1e-6)) * u_screenToeMul, 0.0, u_screenToeClamp);
 
-  // heightmap-based toe: isotropic distance-to-cliff (FIX REPLACE)
   float toeHM = 0.0;
   if (u_hasHeightTex == 1) {
     vec2 huv = v_worldPos.xz * u_heightUVScale + u_heightUVOffset;
@@ -208,7 +184,6 @@ void main() {
   float toeProximity =
       max(toeLocal, max(toeHM, toeSS / max(1e-6, u_soilFootHeight)));
 
-  // concave bias
   float concavityLift =
       smoothstep(0.0, 0.02, -curvature) * (0.25 * u_soilFootHeight);
 
@@ -225,7 +200,6 @@ void main() {
 
   vec3 soilBlend = mix(grassColor, u_soilColor, soilMix);
 
-  // ----- Rocks -----
   float slopeCut =
       smoothstep(u_slopeRockThreshold, u_slopeRockThreshold + 0.02, slope);
   float rockMask = clamp(pow(slopeCut, max(1.0, u_slopeRockSharpness)) +
@@ -238,7 +212,6 @@ void main() {
   rockColor = mix(rockColor, rockColor * 1.15,
                   clamp(u_rockDetailStrength * 1.4, 0.0, 1.0));
 
-  // micro normal
   vec3 microNormal = normal;
   float microDetailScale = u_detailNoiseScale * 8.0 / tileScale;
   vec2 microOffset = vec2(0.01, 0.0);
@@ -252,7 +225,6 @@ void main() {
   float microAmp = 0.15 * u_rockDetailStrength * (0.2 + 0.8 * slope);
   microNormal = normalize(normal + microGrad * microAmp);
 
-  // feature signals
   float isFlat = 1.0 - smoothstep(0.10, 0.25, slope);
   float isHigh = smoothstep(u_soilBlendHeight + 0.5, u_soilBlendHeight + 1.5,
                             v_worldPos.y);
@@ -267,67 +239,60 @@ void main() {
       clamp(rockMask + rimFactor * 0.10 - plateauFactor * 0.06 - isGully * 0.08,
             0.0, 1.0);
 
-  // Apply rock exposure modifier from ground type
   rockMask = clamp(rockMask + (u_rockExposure - 0.3) * 0.4, 0.0, 1.0);
 
   vec3 terrainColor = mix(soilBlend, rockColor, rockMask);
 
-  // Ground cracking effect (for dry Mediterranean terrain)
   if (u_crackIntensity > 0.01) {
     float crackNoise1 = noise21(world_coord * 8.0);
     float crackNoise2 = noise21(world_coord * 16.0 + vec2(42.0, 17.0));
     float crackPattern = smoothstep(0.45, 0.50, crackNoise1) *
                          smoothstep(0.40, 0.55, crackNoise2);
-    crackPattern *= (1.0 - slope * 0.8); // Less cracking on slopes
+    crackPattern *= (1.0 - slope * 0.8);
     float crackDarkening = 1.0 - crackPattern * u_crackIntensity * 0.35;
     terrainColor *= crackDarkening;
   }
 
-  // Snow coverage effect (for alpine terrain)
   if (u_snowCoverage > 0.01) {
     float snowNoise = fbm(world_coord * 0.5 + vec2(123.0, 456.0));
     float snowAccumulation = smoothstep(0.3, 0.7, snowNoise);
-    // Snow accumulates more on flat areas and less on steep slopes
+
     float slopeSnowReduction = 1.0 - smoothstep(0.15, 0.45, slope);
-    // Higher areas get more snow
+
     float heightSnowBonus = smoothstep(-0.5, 1.5, v_worldPos.y) * 0.3;
     float snowMask = clamp(snowAccumulation * slopeSnowReduction *
                                (u_snowCoverage + heightSnowBonus),
                            0.0, 1.0);
-    // Blend in snow color with brightness boost
+
     vec3 snowTinted = u_snowColor * (1.0 + detailNoise * 0.1);
     terrainColor = mix(terrainColor, snowTinted, snowMask * 0.85);
   }
 
-  // Apply grass saturation modifier
   vec3 grayLevel = vec3(dot(terrainColor, vec3(0.299, 0.587, 0.114)));
   terrainColor = mix(grayLevel, terrainColor, u_grassSaturation);
 
-  // Moisture effect on surface appearance
   float moistureEffect = u_moistureLevel;
-  // Wet surfaces are darker and more saturated
+
   float wetDarkening = 1.0 - moistureEffect * 0.15 * (1.0 - rockMask);
   terrainColor *= wetDarkening;
 
-  // albedo jitter - modulated by soil roughness
   float jitterAmp = 0.06 * (0.5 + u_soilRoughness * 0.5);
   float jitter =
       (hash21(world_coord * 0.27 + vec2(17.0, 9.0)) - 0.5) * jitterAmp;
   float brightnessVar = (moistureVar - 0.5) * 0.08 * (1.0 - rockMask);
   terrainColor *= (1.0 + jitter + brightnessVar) * u_tint;
 
-  // lighting
   vec3 L = normalize(u_lightDir);
   float ndl = max(dot(microNormal, L), 0.0);
   float ambient = 0.35;
   float fresnel =
       pow(1.0 - max(dot(microNormal, vec3(0.0, 1.0, 0.0)), 0.0), 2.0);
-  // Surface roughness affects specular - wet surfaces are shinier
+
   float surfaceRoughness = mix(0.65, 0.95, u_soilRoughness);
   surfaceRoughness = mix(surfaceRoughness, 0.45, u_moistureLevel * 0.5);
   float specContrib =
       fresnel * 0.12 * (1.0 - surfaceRoughness) * (1.0 - rockMask);
-  // Add subtle moisture-based specular for wet surfaces
+
   specContrib += u_moistureLevel * 0.08 * fresnel * (1.0 - rockMask);
   float shade = ambient + ndl * 0.75 + specContrib;
 
