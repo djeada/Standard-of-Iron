@@ -36,15 +36,33 @@ void BowRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
 
   QVector3D const grip = frames.hand_l.origin;
 
-  float const bow_plane_z = 0.45F;
-  QVector3D const top_end(m_config.bow_x, m_config.bow_top_y, bow_plane_z);
-  QVector3D const bot_end(m_config.bow_x, m_config.bow_bot_y, bow_plane_z);
+  float const bow_half_height = (m_config.bow_top_y - m_config.bow_bot_y) *
+                                0.5F * m_config.bow_height_scale;
+  float const bow_mid_y = grip.y();
+  float const bow_top_y = bow_mid_y + bow_half_height;
+  float const bow_bot_y = bow_mid_y - bow_half_height;
+
+  QVector3D outward = frames.hand_l.right;
+  if (outward.lengthSquared() < 1e-6F) {
+    outward = QVector3D(-1.0F, 0.0F, 0.0F);
+  }
+  outward.setY(0.0F);
+  if (outward.lengthSquared() < 1e-6F) {
+    outward = QVector3D(-1.0F, 0.0F, 0.0F);
+  } else {
+    outward.normalize();
+  }
+  QVector3D const side = outward * 0.10F;
+
+  float const bow_plane_x = grip.x() + m_config.bow_x + side.x();
+  float const bow_plane_z = grip.z() + side.z();
+
+  QVector3D const top_end(bow_plane_x, bow_top_y, bow_plane_z);
+  QVector3D const bot_end(bow_plane_x, bow_bot_y, bow_plane_z);
 
   QVector3D const right_hand = frames.hand_r.origin;
   QVector3D const nock(
-      m_config.bow_x,
-      clampf(right_hand.y(), m_config.bow_bot_y + 0.05F,
-             m_config.bow_top_y - 0.05F),
+      bow_plane_x, clampf(right_hand.y(), bow_bot_y + 0.05F, bow_top_y - 0.05F),
       clampf(right_hand.z(), bow_plane_z - 0.30F, bow_plane_z + 0.30F));
 
   constexpr int k_bowstring_segments = 22;
@@ -54,9 +72,8 @@ void BowRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
     return u * u * a + 2.0F * u * t * c + t * t * b;
   };
 
-  float const bow_mid_y = (top_end.y() + bot_end.y()) * 0.5F;
   float const ctrl_y = bow_mid_y + (0.45F * m_config.bow_curve_factor);
-  QVector3D const ctrl(m_config.bow_x, ctrl_y,
+  QVector3D const ctrl(bow_plane_x, ctrl_y,
                        bow_plane_z + m_config.bow_depth * 0.6F *
                                          m_config.bow_curve_factor);
 
@@ -101,9 +118,28 @@ void BowRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
         std::fmod(anim.inputs.time * ARCHER_INV_ATTACK_CYCLE_TIME, 1.0F);
   }
 
-  bool const show_arrow =
-      !is_bow_attacking ||
-      (is_bow_attacking && attack_phase >= 0.0F && attack_phase < 0.52F);
+  constexpr float k_attack_arrow_window_end = 0.52F;
+  bool const attack_window_active =
+      is_bow_attacking &&
+      (attack_phase >= 0.0F && attack_phase < k_attack_arrow_window_end);
+
+  auto arrow_visible = [this, is_bow_attacking,
+                        attack_window_active]() -> bool {
+    switch (m_config.arrow_visibility) {
+    case ArrowVisibility::Hidden:
+      return false;
+    case ArrowVisibility::AttackCycleOnly:
+      return attack_window_active;
+    case ArrowVisibility::IdleAndAttackCycle:
+      if (!is_bow_attacking) {
+        return true;
+      }
+      return attack_window_active;
+    }
+    return attack_window_active;
+  };
+
+  bool const show_arrow = arrow_visible();
 
   if (show_arrow) {
     QVector3D const tail = nock - forward * 0.06F;
