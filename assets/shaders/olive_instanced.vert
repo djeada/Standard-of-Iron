@@ -1,27 +1,17 @@
 #version 330 core
 
-// ─────────────────────────────────────────────────────────────
-// Vertex Attributes
-// ─────────────────────────────────────────────────────────────
 layout(location = 0) in vec3 aPos;
 layout(location = 1) in vec2 aTexCoord;
 layout(location = 2) in vec3 aNormal;
-layout(location = 3) in vec4 aPosScale;  // instance: xyz = world pos, w = scale
-layout(location = 4) in vec4 aColorSway; // instance: rgb = tint, a = sway phase
-layout(location =
-           5) in vec4 aRotation; // instance: x = Y-axis rotation, yzw = seeds
+layout(location = 3) in vec4 aPosScale;
+layout(location = 4) in vec4 aColorSway;
+layout(location = 5) in vec4 aRotation;
 
-// ─────────────────────────────────────────────────────────────
-// Uniforms
-// ─────────────────────────────────────────────────────────────
 uniform mat4 uViewProj;
 uniform float uTime;
 uniform float uWindStrength;
 uniform float uWindSpeed;
 
-// ─────────────────────────────────────────────────────────────
-// Varyings
-// ─────────────────────────────────────────────────────────────
 out vec3 vWorldPos;
 out vec3 vNormal;
 out vec3 vColor;
@@ -32,13 +22,9 @@ out float vBarkSeed;
 out float vBranchId;
 out vec2 vLocalPosXZ;
 
-// ─────────────────────────────────────────────────────────────
-// Main Shader Logic
-// ─────────────────────────────────────────────────────────────
 void main() {
   const float TWO_PI = 6.2831853;
 
-  // Instance data unpacking
   float scale = aPosScale.w;
   vec3 worldPos = aPosScale.xyz;
   float swayPhase = aColorSway.a;
@@ -49,26 +35,20 @@ void main() {
 
   vec3 modelPos = aPos;
 
-  // ── Region masks based on texture V coordinate ──
-  // Trunk: v = 0.00-0.20, Branches: 0.18-0.50, Leaves: 0.50-1.00
   float trunkMask = 1.0 - smoothstep(0.12, 0.20, aTexCoord.y);
   float foliageMask = smoothstep(0.45, 0.55, aTexCoord.y);
 
-  // Branch ID from horizontal angle for variation
   float angle = aTexCoord.x * TWO_PI;
   float branchId = floor(angle / TWO_PI * 4.0 + silhouetteSeed * 4.0);
 
-  // ── Trunk gnarling ──
   if (trunkMask > 0.0) {
     float twist = sin(aTexCoord.y * 20.0 + barkSeed * TWO_PI) * 0.02;
     modelPos.x += twist * trunkMask;
     modelPos.z += twist * 0.7 * trunkMask;
   }
 
-  // Scale
   vec3 localPos = modelPos * scale;
 
-  // ── Wind sway ──
   float heightFactor = clamp(aPos.y * 2.0, 0.0, 1.0);
   float windTime = uTime * uWindSpeed * 0.4;
   float sway = sin(windTime + swayPhase) * uWindStrength * 0.3;
@@ -78,7 +58,6 @@ void main() {
   localPos.x += sway * swayAmount;
   localPos.z += sway2 * swayAmount * 0.6;
 
-  // ── Instance rotation ──
   float cosR = cos(rotation);
   float sinR = sin(rotation);
   mat2 rot = mat2(cosR, -sinR, sinR, cosR);
@@ -90,7 +69,6 @@ void main() {
   vec3 finalNormal =
       normalize(vec3(rotatedNormalXZ.x, aNormal.y, rotatedNormalXZ.y));
 
-  // ── Outputs ──
   vWorldPos = localPos + worldPos;
   vNormal = finalNormal;
   vColor = aColorSway.rgb;

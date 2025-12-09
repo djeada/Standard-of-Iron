@@ -12,15 +12,13 @@ uniform float u_time;
 out vec3 v_normal;
 out vec2 v_texCoord;
 out vec3 v_worldPos;
-out float
-    v_armorLayer; // Distinguish armor pieces for Carthaginian Numidian cavalry
+out float v_armorLayer;
 
 void main() {
   vec3 pos = a_position;
 
-  // Cloak back drape (Material ID 12)
   if (u_materialId == 12) {
-    float v = 1.0 - a_texCoord.y; // 1 = top, 0 = bottom
+    float v = 1.0 - a_texCoord.y;
     float u = a_texCoord.x;
     float x_norm = (u - 0.5) * 2.0;
 
@@ -41,7 +39,6 @@ void main() {
     pos.y += wave * move;
   }
 
-  // Cloak shoulder cape (Material ID 13)
   if (u_materialId == 13) {
     float u = a_texCoord.x;
     float v = a_texCoord.y;
@@ -67,7 +64,6 @@ void main() {
   vec4 model_pos = u_model * vec4(pos, 1.0);
   v_worldPos = model_pos.xyz;
 
-  // Keep armor material consistent: 1.0 means armor in the fragment shader.
   v_armorLayer = (u_materialId == 1) ? 1.0 : 0.0;
 
   gl_Position = u_mvp * vec4(pos, 1.0);

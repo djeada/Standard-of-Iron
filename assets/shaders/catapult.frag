@@ -1,10 +1,5 @@
 #version 330 core
 
-// ============================================================================
-// CATAPULT FRAGMENT SHADER
-// Wood and metal materials for siege equipment
-// ============================================================================
-
 in vec3 v_normal;
 in vec2 v_texCoord;
 in vec3 v_worldPos;
@@ -35,14 +30,12 @@ float noise(vec2 p) {
   return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
 }
 
-// Wood grain pattern
 float wood_grain(vec2 p) {
   float grain = sin(p.y * 30.0 + noise(p * 5.0) * 3.0) * 0.5 + 0.5;
   float fine_grain = noise(p * 50.0) * 0.2;
   return grain * 0.15 + fine_grain;
 }
 
-// Metal surface pattern
 float metal_surface(vec2 p) {
   float scratches = noise(p * 80.0) * 0.1;
   float polish = noise(p * 20.0) * 0.05;
@@ -59,7 +52,6 @@ void main() {
   vec2 uv = v_worldPos.xz * 4.0;
   float avg_color = (color.r + color.g + color.b) / 3.0;
 
-  // Detect material type from color
   bool is_wood =
       (color.r > color.b * 1.2 && avg_color > 0.25 && avg_color < 0.60);
   bool is_metal =
@@ -69,41 +61,37 @@ void main() {
   bool is_leather =
       (avg_color > 0.20 && avg_color < 0.45 && color.r > color.b * 1.3);
 
-  // === WOOD MATERIALS ===
   if (is_wood) {
     float grain = wood_grain(v_worldPos.xz);
     float knots = step(0.92, noise(uv * 3.0)) * 0.15;
 
-    // Wood has subtle sheen along grain
     float view_angle = abs(dot(normal, normalize(vec3(0.0, 1.0, 0.3))));
     float wood_sheen = pow(1.0 - view_angle, 6.0) * 0.08;
 
     color *= 1.0 + grain - knots;
     color += vec3(wood_sheen);
   }
-  // === METAL MATERIALS ===
+
   else if (is_metal) {
     float surface = metal_surface(v_worldPos.xz);
 
-    // Metal has stronger specular
     float view_angle = abs(dot(normal, normalize(vec3(0.0, 1.0, 0.4))));
     float metal_sheen = pow(1.0 - view_angle, 4.0) * 0.18;
 
-    // Slight rust/patina on exposed metal
     float patina = noise(uv * 8.0) * 0.08;
 
     color *= 1.0 + surface - patina;
     color += vec3(metal_sheen);
   }
-  // === ROPE MATERIALS ===
+
   else if (is_rope) {
-    // Twisted fiber pattern
+
     float twist = sin(v_worldPos.y * 40.0 + v_worldPos.x * 10.0) * 0.08;
     float fiber = noise(uv * 60.0) * 0.12;
 
     color *= 1.0 + twist + fiber - 0.05;
   }
-  // === LEATHER MATERIALS ===
+
   else if (is_leather) {
     float grain = noise(uv * 20.0) * 0.15;
     float crease = noise(uv * 8.0) * 0.10;
@@ -114,7 +102,7 @@ void main() {
     color *= 1.0 + grain - crease;
     color += vec3(leather_sheen);
   }
-  // === DEFAULT ===
+
   else {
     float detail = noise(uv * 15.0) * 0.08;
     color *= 1.0 + detail - 0.04;
@@ -122,7 +110,6 @@ void main() {
 
   color = clamp(color, 0.0, 1.0);
 
-  // Lighting
   vec3 light_dir = normalize(vec3(1.0, 1.2, 0.8));
   float n_dot_l = dot(normal, light_dir);
   float wrap = 0.35;

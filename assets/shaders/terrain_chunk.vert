@@ -15,12 +15,10 @@ out vec3 v_normal;
 out vec2 v_uv;
 out float v_vertexDisplacement;
 
-// Simple hash function for noise
 float hash21(vec2 p) {
   return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
 }
 
-// Value noise
 float noise21(vec2 p) {
   vec2 i = floor(p);
   vec2 f = fract(p);
@@ -34,7 +32,6 @@ float noise21(vec2 p) {
   return mix(mix(a, b, u.x), mix(c, d, u.x), u.y);
 }
 
-// Low-octave fBM (2 octaves for smooth, broad displacement)
 float fbm2(vec2 p) {
   float value = 0.0;
   float amplitude = 0.5;
@@ -46,7 +43,6 @@ float fbm2(vec2 p) {
   return value;
 }
 
-// 2D rotation matrix
 mat2 rot2(float angle) {
   float c = cos(angle);
   float s = sin(angle);
@@ -54,31 +50,24 @@ mat2 rot2(float angle) {
 }
 
 void main() {
-  // Transform to world space
+
   vec3 wp = (u_model * vec4(a_position, 1.0)).xyz;
   vec3 worldNormal = normalize(mat3(u_model) * a_normal);
 
-  // Generate stable rotation angle from noise offset
   float angle =
       fract(sin(dot(u_noiseOffset, vec2(12.9898, 78.233))) * 43758.5453) *
       6.2831853;
 
-  // Rotate noise coordinates for variation
   vec2 uv = rot2(angle) * (wp.xz + u_noiseOffset);
 
-  // Sample low-octave fBM for displacement (2 octaves)
   float h = fbm2(uv * u_heightNoiseFrequency) * 2.0 - 1.0;
 
-  // Flatness factor: high on plateaus/flat areas, low on steep faces
   float flatness = clamp(worldNormal.y, 0.0, 1.0);
 
-  // More displacement on flat areas (plateaus), less on steep slopes
   float displacementFactor = mix(0.4, 1.0, flatness);
 
-  // Clamp height noise strength to reasonable range (0.10-0.20 world units)
   float heightAmp = clamp(u_heightNoiseStrength, 0.0, 0.20);
 
-  // Apply displacement
   float displacement = h * heightAmp * displacementFactor;
   wp.y += displacement;
 
