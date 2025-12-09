@@ -137,34 +137,34 @@ public:
       controller.lean(QVector3D(0.0F, 0.0F, 1.0F),
                       t * k_lean_amount_multiplier);
 
-      QVector3D const hold_hand_l(
-          bow_x - 0.15F, controller.get_shoulder_y(true) + 0.30F, 0.55F);
       QVector3D const hold_hand_r(
-          bow_x + 0.12F, controller.get_shoulder_y(false) + 0.15F, 0.10F);
-      QVector3D const normal_hand_l(bow_x - 0.05F + arm_asymmetry,
+          bow_x + 0.03F, controller.get_shoulder_y(false) + 0.30F, 0.55F);
+      QVector3D const hold_hand_l(
+          bow_x - 0.02F, controller.get_shoulder_y(true) + 0.12F, 0.55F);
+      QVector3D const normal_hand_r(bow_x + 0.03F - arm_asymmetry,
                                     HP::SHOULDER_Y + 0.05F + arm_height_jitter,
                                     0.55F);
-      QVector3D const normal_hand_r(
-          0.15F - arm_asymmetry * 0.5F,
-          HP::SHOULDER_Y + 0.15F + arm_height_jitter * 0.8F, 0.20F);
+      QVector3D const normal_hand_l(
+          bow_x - 0.02F + arm_asymmetry * 0.5F,
+          HP::SHOULDER_Y + 0.12F + arm_height_jitter * 0.8F, 0.50F);
 
-      QVector3D const blended_hand_l =
-          normal_hand_l * (1.0F - t) + hold_hand_l * t;
       QVector3D const blended_hand_r =
           normal_hand_r * (1.0F - t) + hold_hand_r * t;
+      QVector3D const blended_hand_l =
+          normal_hand_l * (1.0F - t) + hold_hand_l * t;
 
-      controller.placeHandAt(true, blended_hand_l);
       controller.placeHandAt(false, blended_hand_r);
+      controller.placeHandAt(true, blended_hand_l);
     } else {
-      QVector3D const idle_hand_l(bow_x - 0.05F + arm_asymmetry,
+      QVector3D const idle_hand_r(bow_x + 0.03F - arm_asymmetry,
                                   HP::SHOULDER_Y + 0.05F + arm_height_jitter,
                                   0.55F);
-      QVector3D const idle_hand_r(
-          0.15F - arm_asymmetry * 0.5F,
-          HP::SHOULDER_Y + 0.15F + arm_height_jitter * 0.8F, 0.20F);
+      QVector3D const idle_hand_l(
+          bow_x - 0.05F + arm_asymmetry * 0.5F,
+          HP::SHOULDER_Y + 0.14F + arm_height_jitter * 0.8F, 0.48F);
 
-      controller.placeHandAt(true, idle_hand_l);
       controller.placeHandAt(false, idle_hand_r);
+      controller.placeHandAt(true, idle_hand_l);
     }
 
     if (anim.is_attacking && !anim.is_in_hold_mode) {
