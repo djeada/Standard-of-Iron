@@ -251,6 +251,7 @@ public:
       bow_config.bow_top_y = HP::SHOULDER_Y + 0.55F;
       bow_config.bow_bot_y = HP::WAIST_Y - 0.25F;
       bow_config.bow_x = 0.0F;
+      bow_config.arrow_visibility = ArrowVisibility::IdleAndAttackCycle;
 
       if (style.bow_string_color) {
         bow_config.string_color = saturate_color(*style.bow_string_color);

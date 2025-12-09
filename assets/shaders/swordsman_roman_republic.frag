@@ -85,18 +85,25 @@ void main() {
   vec2 uv = v_worldPos.xz * 5.0;
 
   // Material ID: 0=body/skin, 1=armor, 2=helmet, 3=weapon, 4=shield
+  bool is_skin = (u_materialId == 0);
   bool is_armor = (u_materialId == 1);
   bool is_helmet = (u_materialId == 2);
   bool is_weapon = (u_materialId == 3);
   bool is_shield = (u_materialId == 4);
 
-  // Use material IDs exclusively (no fallbacks)
-  bool is_legs = (u_materialId == 0); // Body mesh includes legs
-
   // === ROMAN SWORDSMAN (LEGIONARY) MATERIALS ===
 
   // HEAVY STEEL HELMET (galea - cool blue-grey steel)
-  if (is_helmet) {
+  if (is_skin) {
+    vec3 V = normalize(vec3(0.0, 1.0, 0.35));
+    float skin_detail = noise(uv * 18.0) * 0.06;
+    float subdermal = noise(uv * 6.0) * 0.05;
+    float rim =
+        pow(1.0 - max(dot(normalize(v_worldNormal), V), 0.0), 4.0) * 0.04;
+    color *= 1.0 + skin_detail;
+    color += vec3(0.025, 0.015, 0.010) * subdermal;
+    color += vec3(rim);
+  } else if (is_helmet) {
     // Polished steel finish with vertex polish level
     float brushed_metal = abs(sin(v_worldPos.y * 95.0)) * 0.02;
     float scratches = noise(uv * 35.0) * 0.018 * (1.0 - v_polishLevel * 0.5);
@@ -243,19 +250,6 @@ void main() {
 
     // Ensure segmentata is ALWAYS bright and visible
     color = clamp(color, vec3(0.45), vec3(0.95));
-  }
-  // LEATHER PTERUGES & BELT
-  else if (is_legs) {
-    float leather_grain = noise(uv * 10.0) * 0.15;
-    float strips = pteruges_strips(v_worldPos.xz, v_bodyHeight);
-    float wear_marks = noise(uv * 3.0) * 0.10;
-
-    vec3 V = normalize(vec3(0.0, 1.0, 0.5));
-    float view_angle = max(dot(normalize(v_worldNormal), V), 0.0);
-    float leather_sheen = pow(1.0 - view_angle, 4.5) * 0.10;
-
-    color *= 1.0 + leather_grain - 0.08 + wear_marks - 0.05;
-    color += vec3(strips * 0.15 + leather_sheen);
   }
   // SCUTUM SHIELD (curved laminated wood with metal boss)
   else if (is_shield) {

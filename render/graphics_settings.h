@@ -141,7 +141,7 @@ public:
   }
 
 private:
-  GraphicsSettings() { applyPreset(GraphicsQuality::Medium); }
+  GraphicsSettings() { setQuality(GraphicsQuality::Ultra); }
 
   void applyPreset(GraphicsQuality q) noexcept {
     switch (q) {
@@ -264,7 +264,7 @@ private:
   static constexpr float kBaseHorseMinimal = 70.0F;
   static constexpr float kBaseHorseBillboard = 100.0F;
 
-  GraphicsQuality m_quality{GraphicsQuality::Medium};
+  GraphicsQuality m_quality{GraphicsQuality::Ultra};
   LODMultipliers m_lodMultipliers{};
   GraphicsFeatures m_features{};
   BatchingConfig m_batchingConfig{};
