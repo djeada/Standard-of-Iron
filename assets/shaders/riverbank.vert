@@ -15,7 +15,6 @@ out vec3 Normal;
 void main() {
   vec3 pos = aPos;
 
-  // Subtle movement for organic feel
   float sway = sin(aPos.x * 0.3 + time * 0.5) * 0.005;
   pos.y += sway;
 

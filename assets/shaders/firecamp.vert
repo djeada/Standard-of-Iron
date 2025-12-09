@@ -2,9 +2,8 @@
 layout(location = 0) in vec3 aPos;
 layout(location = 1) in vec2 aTexCoord;
 
-// Instance attributes
-layout(location = 3) in vec4 i_posIntensity; // x, y, z, intensity
-layout(location = 4) in vec4 i_radiusPhase;  // radius, phase, duration, unused
+layout(location = 3) in vec4 i_posIntensity;
+layout(location = 4) in vec4 i_radiusPhase;
 
 uniform mat4 u_viewProj;
 uniform float u_time;
@@ -33,7 +32,7 @@ void main() {
   vec3 upVec = vec3(0.0, 1.0, 0.0);
 
   float planeId = floor(aPos.z + 0.5);
-  float angle = planeId * 2.0943951; // 120 degrees
+  float angle = planeId * 2.0943951;
   float c = cos(angle);
   float s = sin(angle);
   vec3 horizontalAxis = normalize(rightVec * c + forwardVec * s);

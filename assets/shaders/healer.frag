@@ -44,7 +44,6 @@ void main() {
   vec2 uv = v_worldPos.xz * 4.5;
   float avgColor = (color.r + color.g + color.b) / 3.0;
 
-  // Light cloth material (healer robes)
   if (avgColor > 0.65) {
     float weave = clothWeave(v_worldPos.xz);
     float folds = noise(uv * 8.0) * 0.13;
@@ -55,7 +54,7 @@ void main() {
     color *= 1.0 + weave + folds - 0.03;
     color += vec3(clothSheen);
   }
-  // Leather/darker elements
+
   else if (avgColor > 0.30) {
     float leatherGrain = noise(uv * 14.0) * 0.14;
     float viewAngle = abs(dot(normal, normalize(vec3(0.0, 1.0, 0.4))));

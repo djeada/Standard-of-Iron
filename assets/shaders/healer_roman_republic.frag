@@ -1,15 +1,5 @@
 #version 330 core
 
-// ============================================================================
-// ROMAN MEDICUS (HEALER) SHADER
-// Clean, practical Roman medical professional appearance with crisp textiles,
-// maintained leather, polished bronze tools, and soft wrap lighting.
-// ============================================================================
-
-// ============================================================================
-// INPUTS & OUTPUTS
-// ============================================================================
-
 in vec3 v_normal;
 in vec3 v_worldNormal;
 in vec3 v_tangent;
@@ -28,10 +18,6 @@ uniform float u_alpha;
 uniform int u_materialId;
 
 out vec4 FragColor;
-
-// ============================================================================
-// UTILITY FUNCTIONS
-// ============================================================================
 
 float hash(vec2 p) {
   vec3 p3 = fract(vec3(p.xyx) * 0.1031);
@@ -72,19 +58,15 @@ float triplanar_noise(vec3 pos, vec3 normal, float scale) {
   return xy * w.z + yz * w.x + zx * w.y;
 }
 
-// ============================================================================
-// ROMAN TEXTILE PATTERNS
-// ============================================================================
-
 float cloth_weave(vec2 p) {
-  // Tight Roman linen weave
+
   float warp_thread = sin(p.x * 72.0);
   float weft_thread = sin(p.y * 70.0);
   return warp_thread * weft_thread * 0.055;
 }
 
 float roman_linen(vec2 p) {
-  // Fine bleached Roman linen - crisp and clean
+
   float weave = cloth_weave(p);
   float fine_thread = noise(p * 95.0) * 0.06;
   float slub = fbm(p * 7.5) * 0.05;
@@ -92,16 +74,12 @@ float roman_linen(vec2 p) {
 }
 
 float roman_wool(vec2 p) {
-  // Coarser wool for cape/sash - more texture
+
   float coarse_weave = sin(p.x * 55.0) * sin(p.y * 52.0) * 0.08;
   float fiber_variation = noise(p * 65.0) * 0.09;
   float nap = fbm(p * 9.0) * 0.05;
   return coarse_weave + fiber_variation + nap;
 }
-
-// ============================================================================
-// PERTURBED NORMALS
-// ============================================================================
 
 vec3 perturb_linen_normal(vec3 N, vec3 T, vec3 B, vec2 uv) {
   float warp = sin(uv.x * 142.0) * 0.05;
@@ -128,10 +106,6 @@ vec3 perturb_bronze_normal(vec3 N, vec3 T, vec3 B, vec2 uv) {
   float ripple = noise(uv * 46.0) * 0.05;
   return normalize(N + T * hammer + B * (hammer * 0.4 + ripple));
 }
-
-// ============================================================================
-// LIGHTING HELPERS
-// ============================================================================
 
 float D_GGX(float NdotH, float a) {
   float a2 = a * a;
@@ -188,9 +162,6 @@ vec3 apply_lighting(vec3 albedo, vec3 N, vec3 V, vec3 L, float roughness,
   return ambient * (0.56 + 0.44 * ao_strength) + light * ao_strength;
 }
 
-// ============================================================================
-// BEARD/FACIAL HAIR RENDERING (parity with Carthage healer)
-// ============================================================================
 float beard_density(vec2 uv, vec3 worldPos) {
   float strand_base = fbm(uv * 24.0) * 0.6;
   float curl_pattern = sin(uv.x * 80.0 + noise(uv * 40.0) * 3.0) * 0.2;
@@ -217,10 +188,6 @@ vec3 apply_beard_shading(vec3 base_skin, vec2 uv, vec3 normal, vec3 worldPos,
   return mix(base_skin, beard_color, density * beard_mask * 0.85);
 }
 
-// ============================================================================
-// MAIN FRAGMENT SHADER
-// ============================================================================
-
 void main() {
   vec3 base_color = u_color;
   if (u_useTexture) {
@@ -233,8 +200,6 @@ void main() {
   vec2 uv = v_worldPos.xz * 4.5;
   float avg_color = (base_color.r + base_color.g + base_color.b) / 3.0;
 
-  // Material ID: 0=body/skin, 1=tunica, 2=leather, 3=medical tools, 4=red
-  // trim/sash
   bool is_body = (u_materialId == 0);
   bool is_tunica = (u_materialId == 1);
   bool is_leather = (u_materialId == 2);
@@ -256,7 +221,6 @@ void main() {
       clamp(1.0 - (v_clothFolds * 0.52 + curvature * 0.78), 0.28, 1.0);
   float ao = ao_folds;
 
-  // BODY / SKIN
   if (is_body) {
     vec3 skin = base_color;
     float skin_detail = noise(uv * 24.0) * 0.06;
@@ -277,7 +241,7 @@ void main() {
     sheen = 0.06 + subdermal * 0.2;
     wrap = 0.46;
   }
-  // WHITE/CREAM LINEN TUNICA (main garment - bleached Roman style)
+
   else if (is_tunica) {
     vec3 tunic_base = vec3(0.95, 0.93, 0.90);
     albedo = tunic_base;
@@ -310,7 +274,7 @@ void main() {
     wrap = 0.54;
     ao *= 1.0 - dust * 0.35;
   }
-  // RED WOOL SASH/TRIM (military medicus identification)
+
   else if (is_red_trim) {
     float weave = roman_wool(v_worldPos.xz);
     float wool_tex = noise(uv * 58.0) * 0.10;
@@ -335,7 +299,7 @@ void main() {
     sheen = 0.10;
     wrap = 0.48;
   }
-  // LEATHER EQUIPMENT (medical bag, belt, sandals, straps)
+
   else if (is_leather) {
     float leather_grain = noise(uv * 16.0) * 0.16 * (1.0 + v_fabricWear * 0.25);
     float pores = noise(uv * 38.0) * 0.06;
@@ -362,7 +326,7 @@ void main() {
     sheen = 0.08;
     wrap = 0.46;
   }
-  // BRONZE MEDICAL IMPLEMENTS
+
   else if (is_medical_tools) {
     vec3 bronze_base = vec3(0.76, 0.56, 0.32);
 
@@ -385,7 +349,7 @@ void main() {
     sheen = 0.12;
     wrap = 0.42;
   }
-  // BODY/SKIN (Roman - clean-shaven face, hands, arms)
+
   else if (is_body) {
     float skin_detail = noise(uv * 28.0) * 0.07;
     float skin_subsurface = noise(uv * 8.0) * 0.04;
@@ -403,7 +367,7 @@ void main() {
     sheen = 0.05;
     wrap = 0.46;
   }
-  // DEFAULT (catch-all)
+
   else {
     float detail = noise(uv * 11.0) * 0.09;
     albedo *= 1.0 + detail - 0.05;

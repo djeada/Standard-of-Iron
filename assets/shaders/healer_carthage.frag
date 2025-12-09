@@ -191,7 +191,7 @@ void main() {
     base_color *= texture(u_texture, v_texCoord).rgb;
   }
 
-  vec3 teamDefault = vec3(0.0); // remove purple bias to keep true team hue
+  vec3 teamDefault = vec3(0.0);
   vec3 teamColor = clamp(mix(teamDefault, u_color, 0.75), 0.0, 1.0);
 
   bool is_body = (u_materialId == 0);
@@ -218,10 +218,10 @@ void main() {
   float ao = ao_folds;
 
   if (is_body) {
-    vec3 skin_base = vec3(0.08, 0.07, 0.065); // deep brown/black skin tone
+    vec3 skin_base = vec3(0.08, 0.07, 0.065);
     float legs = smoothstep(0.05, 0.50, v_bodyHeight) *
                  (1.0 - smoothstep(0.52, 0.70, v_bodyHeight));
-    float limb_team = clamp(legs, 0.0, 1.0); // only legs get team tint
+    float limb_team = clamp(legs, 0.0, 1.0);
     skin_base = mix(skin_base, mix(skin_base, teamColor, 0.92), limb_team);
     float tone_noise = fbm(v_worldPos.xz * 3.1) - 0.5;
     albedo = clamp(skin_base + vec3(tone_noise) * 0.04, 0.0, 1.0);

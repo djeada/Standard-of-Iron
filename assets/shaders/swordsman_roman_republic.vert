@@ -35,18 +35,15 @@ void main() {
   vec3 position = a_position;
   vec3 normal = a_normal;
 
-  // Shield curving: bend flat rectangle into scutum curve (materialId=4)
   if (u_materialId == 4) {
-    float curveRadius = 0.55; // Curve radius relative to shield width
-    float curveAmount = 0.45; // How much to curve (±25 degrees)
-    float angle = position.x * curveAmount; // X position drives curve angle
+    float curveRadius = 0.55;
+    float curveAmount = 0.45;
+    float angle = position.x * curveAmount;
 
-    // Bend position around Y axis (vertical shield)
     float curved_x = sin(angle) * curveRadius;
     float curved_z = position.z + (1.0 - cos(angle)) * curveRadius;
     position = vec3(curved_x, position.y, curved_z);
 
-    // Rotate normal to follow curved surface
     normal = vec3(sin(angle) * normal.z + cos(angle) * normal.x, normal.y,
                   cos(angle) * normal.z - sin(angle) * normal.x);
   }
@@ -54,7 +51,6 @@ void main() {
   mat3 normalMatrix = mat3(transpose(inverse(u_model)));
   vec3 worldNormal = normalize(normalMatrix * normal);
 
-  // Build tangent space
   vec3 t = normalize(cross(fallbackUp(worldNormal), worldNormal));
   if (length(t) < 1e-4)
     t = vec3(1.0, 0.0, 0.0);
@@ -64,9 +60,9 @@ void main() {
   vec4 modelPos = u_model * vec4(position, 1.0);
   vec3 worldPos = modelPos.xyz;
 
-  // Deform only armored pieces (not face/skin/clothing)
-  bool deformArmor = (u_materialId == 1 || u_materialId == 2 ||
-                      u_materialId == 4 || u_materialId == 3 || u_materialId == 5);
+  bool deformArmor =
+      (u_materialId == 1 || u_materialId == 2 || u_materialId == 4 ||
+       u_materialId == 3 || u_materialId == 5);
 
   float dentSeed = 0.0;
   float combatStress = 0.0;
@@ -74,7 +70,7 @@ void main() {
   vec3 offsetPos = worldPos;
 
   if (deformArmor) {
-    // Heavy battle damage for elite legionary equipment
+
     dentSeed = hash13(worldPos * 0.88 + worldNormal * 0.32);
     combatStress = sin(worldPos.y * 18.2 + dentSeed * 22.61);
     vec3 dentOffset = worldNormal * ((dentSeed - 0.5) * 0.0105);
@@ -96,17 +92,14 @@ void main() {
   v_tangent = t;
   v_bitangent = b;
 
-  // Keep armor/material selection stable: 1.0 only for armor material.
   float height = offsetPos.y;
   v_armorLayer = (u_materialId == 1) ? 1.0 : 0.0;
 
-  // Body height normalization
   float torsoMin = 0.55;
   float torsoMax = 1.70;
   v_bodyHeight =
       clamp((offsetPos.y - torsoMin) / (torsoMax - torsoMin), 0.0, 1.0);
 
-  // Heavy helmet attributes (galea)
   float reinforcementBands = fract(height * 14.0);
   float browBandRegion =
       smoothstep(1.48, 1.52, height) * smoothstep(1.56, 1.52, height);
@@ -115,21 +108,16 @@ void main() {
   v_helmetDetail =
       reinforcementBands * 0.35 + browBandRegion * 0.45 + cheekGuardArea * 0.2;
 
-  // Segmented armor plate phase (lorica segmentata)
-  v_platePhase = fract(height * 6.5); // Horizontal bands
+  v_platePhase = fract(height * 6.5);
 
-  // Segment articulation stress
   float localX = (invModel * vec4(offsetPos, 1.0)).x;
   v_segmentStress = combatStress * (0.6 + 0.4 * sin(localX * 12.0));
 
-  // Rivet pattern (visible on both helmet and armor)
   v_rivetPattern = step(0.96, fract(offsetPos.x * 18.0)) *
                    step(0.94, fract(v_platePhase * 1.0));
 
-  // Leather wear for pteruges
   v_leatherWear = hash13(offsetPos * 0.48 + worldNormal * 2.1) *
                   (0.55 + v_bodyHeight * 0.45);
 
-  // Polish level (higher on helmet and exposed plates)
   v_polishLevel = 1.0 - dentSeed * 0.4 - v_bodyHeight * 0.2;
 }

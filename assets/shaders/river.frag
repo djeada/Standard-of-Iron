@@ -5,7 +5,6 @@ in vec3 WorldPos;
 
 uniform float time;
 
-// ------------------------------------------------------------
 const float PI = 3.14159265359;
 float saturate(float x) { return clamp(x, 0.0, 1.0); }
 vec3 saturate(vec3 v) { return clamp(v, vec3(0.0), vec3(1.0)); }
@@ -62,7 +61,6 @@ float ggxSpec(vec3 N, vec3 V, vec3 L, float rough, float F0) {
   return (D * Gv * Gl * F) / max(4.0 * NdotV * NdotL, 0.001);
 }
 
-// ---------------- water field (isotropic, world-space) ---------------
 float waterHeight(vec2 uv) {
   vec2 p = uv;
   vec2 w1 = vec2(fbm(p * 0.6 + time * 0.05), fbm(p * 0.6 - time * 0.04));
@@ -106,9 +104,8 @@ vec3 waterNormal(vec2 uv, vec2 grad) {
       mix(N, normalize(N + 0.22 * (microNormal(uv) - vec3(0, 1, 0))), 0.35));
 }
 
-// ---------------- main ----------------
 void main() {
-  // world-space UV so no seams
+
   vec2 uv = rot(0.35) * (WorldPos.xz * 0.38);
 
   float h, lap;
@@ -122,47 +119,40 @@ void main() {
   float NdotV = max(dot(N, V), 0.0);
   float F0 = 0.02;
 
-  // ---------- transmission (make it BLUER) ----------
-  vec3 deepWater = vec3(0.008, 0.035, 0.080); // deeper, bluer
+  vec3 deepWater = vec3(0.008, 0.035, 0.080);
   vec3 shallowWater = vec3(0.060, 0.180, 0.300);
 
   float calm = smoothstep(0.0, 0.45, abs(h));
   float shallow = saturate(0.35 + 0.35 * (fbm(uv * 0.6) * (1.0 - calm)));
 
-  // stronger red/green absorption so blue survives
   vec3 absorb = vec3(0.90, 0.45, 0.12);
   float thickness =
       mix(0.6, 3.5, 1.0 - shallow) * (0.35 + pow(1.0 - NdotV, 0.7));
   vec3 transBase = mix(deepWater, shallowWater, shallow);
   vec3 transmission = transBase * exp(-absorb * thickness);
 
-  // ---------- reflection (dim + blue-tinted) ----------
   vec3 R = reflect(-V, N);
   vec3 reflection = skyColor(R, sunDir);
-  reflection *= 0.70;                         // dim
-  reflection *= vec3(0.60, 0.75, 1.00);       // blue tint
-  float F = fresnelSchlick(NdotV, F0) * 0.40; // less mirror
+  reflection *= 0.70;
+  reflection *= vec3(0.60, 0.75, 1.00);
+  float F = fresnelSchlick(NdotV, F0) * 0.40;
 
-  // ---------- lighting (tamed) ----------
   float NdotL = max(dot(N, sunDir), 0.0);
   float rough = mix(0.12, 0.26, smoothstep(0.0, 0.6, length(grad)));
-  float spec = ggxSpec(N, V, sunDir, rough, F0) * 0.50; // half energy
-  vec3 specCol = vec3(0.75, 0.85, 1.10) * spec;         // watery tint
+  float spec = ggxSpec(N, V, sunDir, rough, F0) * 0.50;
+  vec3 specCol = vec3(0.75, 0.85, 1.10) * spec;
   vec3 sunDiffuse = transmission * NdotL * 0.20;
 
-  // shoreline foam only (softer & less white)
   float shore = 1.0 - (smoothstep(0.07, 0.28, TexCoord.y) *
                        smoothstep(0.07, 0.28, 1.0 - TexCoord.y));
   float foam = shore * (0.45 + 0.55 * fbm(uv * 3.0 + time * 0.6));
   vec3 foamCol = vec3(0.92, 0.96, 1.0);
-  foam = clamp(foam * 0.35, 0.0, 1.0); // much less foam
+  foam = clamp(foam * 0.35, 0.0, 1.0);
 
-  // ---------- combine (energy aware) ----------
-  vec3 color = transmission * (1.0 - F) + reflection * F; // avoid whitening
+  vec3 color = transmission * (1.0 - F) + reflection * F;
   color += specCol + sunDiffuse;
   color = mix(color, foamCol * mix(0.82, 1.0, NdotL), foam);
 
-  // gentle blue rim
   color += vec3(0.03, 0.06, 0.12) * pow(1.0 - NdotV, 3.0);
 
   FragColor = vec4(saturate(color), 0.85);

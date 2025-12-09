@@ -1,10 +1,5 @@
 #version 330 core
 
-// ============================================================================
-// CATAPULT VERTEX SHADER
-// Simple vertex transformation for siege equipment
-// ============================================================================
-
 layout(location = 0) in vec3 a_position;
 layout(location = 1) in vec3 a_normal;
 layout(location = 2) in vec2 a_texCoord;
@@ -22,7 +17,6 @@ void main() {
   v_texCoord = a_texCoord;
   v_worldPos = vec3(u_model * vec4(a_position, 1.0));
 
-  // Material region based on height (0=base/wheels, 1=frame, 2=arm/mechanism)
   if (v_worldPos.y < 0.25) {
     v_materialRegion = 0.0;
   } else if (v_worldPos.y < 0.55) {

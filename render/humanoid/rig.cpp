@@ -659,14 +659,11 @@ void HumanoidRendererBase::drawCommonBody(const DrawContext &ctx,
   pose.body_frames.foot_r.forward = foot_forward_r;
   pose.body_frames.foot_r.radius = foot_radius;
 
-  // Shin frames for leg equipment (greaves, etc.)
-  // Origin at ankle, up points toward knee (actual shin direction)
   auto computeShinFrame = [&](const QVector3D &ankle, const QVector3D &knee,
                               float right_sign) -> AttachmentFrame {
     AttachmentFrame shin{};
     shin.origin = ankle;
 
-    // Up vector points from ankle toward knee (shin direction)
     QVector3D shin_dir = knee - ankle;
     float shin_len = shin_dir.length();
     if (shin_len > 1e-6F) {
@@ -675,10 +672,9 @@ void HumanoidRendererBase::drawCommonBody(const DrawContext &ctx,
       shin.up = up_axis;
     }
 
-    // Forward is perpendicular to shin and points toward front of leg
-    // Use torso forward as reference, then orthogonalize against shin up
     QVector3D shin_forward = forward_axis;
-    shin_forward = shin_forward - shin.up * QVector3D::dotProduct(shin_forward, shin.up);
+    shin_forward =
+        shin_forward - shin.up * QVector3D::dotProduct(shin_forward, shin.up);
     if (shin_forward.lengthSquared() > 1e-6F) {
       shin_forward.normalize();
     } else {
@@ -686,7 +682,6 @@ void HumanoidRendererBase::drawCommonBody(const DrawContext &ctx,
     }
     shin.forward = shin_forward;
 
-    // Right is cross product of up and forward
     shin.right = QVector3D::crossProduct(shin.up, shin.forward) * right_sign;
     shin.radius = HP::LOWER_LEG_R;
 
