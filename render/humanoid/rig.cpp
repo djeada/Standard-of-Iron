@@ -104,8 +104,6 @@ auto torso_mesh_without_bottom_cap() -> Mesh * {
   auto filtered = base->cloneWithFilteredIndices(
       [](unsigned int a, unsigned int b, unsigned int c,
          const std::vector<Vertex> &verts) -> bool {
-        float min_y = std::numeric_limits<float>::max();
-        float max_y = -std::numeric_limits<float>::max();
         auto sample = [&](unsigned int idx) -> QVector3D {
           return {verts[idx].position[0], verts[idx].position[1],
                   verts[idx].position[2]};
@@ -113,8 +111,8 @@ auto torso_mesh_without_bottom_cap() -> Mesh * {
         QVector3D pa = sample(a);
         QVector3D pb = sample(b);
         QVector3D pc = sample(c);
-        min_y = std::min({pa.y(), pb.y(), pc.y()});
-        max_y = std::max({pa.y(), pb.y(), pc.y()});
+        float min_y = std::min({pa.y(), pb.y(), pc.y()});
+        float max_y = std::max({pa.y(), pb.y(), pc.y()});
 
         QVector3D n(
             verts[a].normal[0] + verts[b].normal[0] + verts[c].normal[0],
@@ -124,11 +122,14 @@ auto torso_mesh_without_bottom_cap() -> Mesh * {
           n.normalize();
         }
 
+        // Filter out bottom cap triangles: they are flat (small Y range),
+        // located near the bottom of the mesh (Y near -0.5), and face downward.
         constexpr float k_band_height = 0.02F;
-        bool is_bottom_band = (max_y - min_y) < k_band_height &&
-                              (min_y < (pa.y() + pb.y() + pc.y()) / 3.0F);
+        constexpr float k_bottom_threshold = -0.45F;
+        bool is_flat = (max_y - min_y) < k_band_height;
+        bool is_at_bottom = max_y < k_bottom_threshold;
         bool facing_down = (n.y() < -0.35F);
-        return is_bottom_band && facing_down;
+        return is_flat && is_at_bottom && facing_down;
       });
 
   s_mesh =
