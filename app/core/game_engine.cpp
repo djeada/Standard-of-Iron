@@ -1206,6 +1206,9 @@ void GameEngine::start_skirmish(const QString &map_path,
     m_runtime.victoryState = "";
     emit victoryStateChanged();
   }
+  if (m_victoryService) {
+    m_victoryService->reset();
+  }
   m_enemyTroopsDefeated = 0;
 
   if (!m_runtime.initialized) {

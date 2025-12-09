@@ -359,13 +359,16 @@ void MountedPoseController::applyShieldStowed(
 
 void MountedPoseController::applySwordIdlePose(
     const MountedAttachmentFrame &mount, const HorseDimensions &dims) {
+  QVector3D const shoulder_r = getShoulder(false);
   QVector3D const sword_anchor =
-      seatRelative(mount, -dims.bodyLength * 0.12F, dims.bodyWidth * 0.72F,
-                   -dims.saddleThickness * 0.60F);
+      shoulder_r + mount.seat_right * (dims.bodyWidth * 0.90F) +
+      mount.seat_forward * (dims.bodyLength * 0.22F) +
+      mount.seat_up * (dims.bodyHeight * 0.06F + dims.saddleThickness * 0.10F);
+
   getHand(false) = sword_anchor;
   const QVector3D right_outward = computeOutwardDir(false);
-  getElbow(false) = solveElbowIK(false, getShoulder(false), sword_anchor,
-                                 right_outward, 0.42F, 0.10F, -0.06F, 1.0F);
+  getElbow(false) = solveElbowIK(false, shoulder_r, sword_anchor, right_outward,
+                                 0.46F, 0.24F, -0.05F, 1.0F);
 
   updateHeadHierarchy(mount, 0.0F, 0.0F, "sword_idle");
 }
