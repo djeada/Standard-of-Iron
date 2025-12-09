@@ -36,7 +36,8 @@ void CloakRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
     return;
   }
 
-  QVector3D const cloak_color = m_config.primary_color;
+  QVector3D const cloak_color = palette.cloth;
+  QVector3D const trim_color = palette.metal;
 
   QVector3D up = torso.up.normalized();
   QVector3D right = torso.right.normalized();
@@ -108,7 +109,7 @@ void CloakRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
     submitter.mesh(
         getUnitSphere(),
         Render::Geom::sphereAt(ctx.model, clasp_pos, torso_r * 0.12F),
-        m_config.trim_color, nullptr, 1.0F, 1);
+        trim_color, nullptr, 1.0F, 1);
   }
 }
 

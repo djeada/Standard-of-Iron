@@ -56,9 +56,9 @@ void ArmorHeavyCarthageRenderer::render(const DrawContext &ctx,
     top = head_guard - up * (torso_r * 0.06F);
   }
 
-  QVector3D bottom = waist.origin - waist_up * (waist_r * 0.32F) -
+  QVector3D bottom = waist.origin - waist_up * (waist_r * 1.60F) -
                      forward * (torso_r * 0.018F);
-  QVector3D chainmail_bottom = waist.origin - waist_up * (waist_r * 0.28F) -
+  QVector3D chainmail_bottom = waist.origin - waist_up * (waist_r * 1.52F) -
                                forward * (torso_r * 0.024F);
 
   QVector3D bronze_color = QVector3D(0.72F, 0.53F, 0.28F);

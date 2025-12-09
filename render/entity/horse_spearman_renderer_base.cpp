@@ -25,7 +25,7 @@ namespace Render::GL {
 
 namespace {
 
-constexpr QVector3D k_default_proportion_scale{0.96F, 0.90F, 0.98F};
+constexpr QVector3D k_default_proportion_scale{0.80F, 0.88F, 0.88F};
 
 }
 
@@ -49,7 +49,7 @@ HorseSpearmanRendererBase::HorseSpearmanRendererBase(
 
 auto HorseSpearmanRendererBase::get_proportion_scaling() const -> QVector3D {
 
-  return QVector3D{0.84F, 0.84F, 0.86F};
+  return QVector3D{0.78F, 0.84F, 0.84F};
 }
 
 auto HorseSpearmanRendererBase::get_mount_scale() const -> float {
@@ -59,7 +59,7 @@ auto HorseSpearmanRendererBase::get_mount_scale() const -> float {
 void HorseSpearmanRendererBase::adjust_variation(
     const DrawContext &, uint32_t, VariationParams &variation) const {
   variation.height_scale = 0.90F;
-  variation.bulk_scale = 0.74F;
+  variation.bulk_scale = 0.70F;
   variation.stance_width = 0.60F;
   variation.arm_swing_amp = 0.40F;
   variation.walk_speed_mult = 1.0F;
