@@ -61,9 +61,9 @@ void main() {
   vec4 modelPos = u_model * vec4(position, 1.0);
   vec3 worldPos = modelPos.xyz;
 
-  // Restrict deformation to hard surfaces (armor, helmet, shield, weapons)
+  // Restrict deformation to hard surfaces (armor, helmet, shield, weapons, greaves)
   bool deformArmor = (u_materialId == 1 || u_materialId == 2 ||
-                      u_materialId == 4 || u_materialId == 3);
+                      u_materialId == 4 || u_materialId == 3 || u_materialId == 5);
 
   float dentSeed = 0.0;
   float hammerImpact = 0.0;
