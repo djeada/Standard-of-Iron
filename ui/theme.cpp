@@ -27,6 +27,7 @@ QVariantList Theme::playerColors() {
   QVariantList colors;
   colors.append(QVariantMap{{"name", "Red"}, {"hex", "#E74C3C"}});
   colors.append(QVariantMap{{"name", "Blue"}, {"hex", "#3498DB"}});
+  colors.append(QVariantMap{{"name", "Brown"}, {"hex", "#8B4513"}});
   colors.append(QVariantMap{{"name", "Green"}, {"hex", "#2ECC71"}});
   colors.append(QVariantMap{{"name", "Yellow"}, {"hex", "#F1C40F"}});
   colors.append(QVariantMap{{"name", "Orange"}, {"hex", "#E67E22"}});
