@@ -5,7 +5,7 @@
 set -Eeuo pipefail
 trap 'echo "error: line $LINENO: $BASH_COMMAND" >&2' ERR
 
-EXTS_DEFAULT="c,cc,cpp,cxx,h,hh,hpp,hxx,ipp,inl,tpp,qml"
+EXTS_DEFAULT="c,cc,cpp,cxx,h,hh,hpp,hxx,ipp,inl,tpp,qml,vert,frag,glsl"
 ROOTS=(".")
 DRY_RUN=0
 BACKUP=0          # OFF by default
@@ -14,13 +14,13 @@ EXTS="$EXTS_DEFAULT"
 
 usage() {
   cat <<'USAGE'
-remove-comments.sh - strip comments from C/C++ files.
+remove-comments.sh - strip comments from C/C++ and shader files.
 
 Usage:
   scripts/remove-comments.sh [options] [PATH ...]
 
 Options:
-  -x, --ext       Comma-separated extensions to scan (default: c,cc,cpp,cxx,h,hh,hpp,hxx,ipp,inl,tpp,qml)
+  -x, --ext       Comma-separated extensions to scan (default: c,cc,cpp,cxx,h,hh,hpp,hxx,ipp,inl,tpp,qml,vert,frag,glsl)
   -n, --dry-run   Show files that would be modified; don't write changes
   --backup        Create FILE.bak before writing (default: OFF)
   -q, --quiet     Less output
@@ -29,6 +29,7 @@ Examples:
   scripts/remove-comments.sh
   scripts/remove-comments.sh --backup src/ include/
   scripts/remove-comments.sh -x c,cpp,hpp
+  scripts/remove-comments.sh assets/shaders/
 USAGE
 }
 
