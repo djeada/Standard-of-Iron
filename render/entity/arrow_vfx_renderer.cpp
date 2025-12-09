@@ -96,9 +96,9 @@ static inline ArcherPose makePose(uint32_t seed) {
 
   using HP = HumanProportions;
 
-  P.hand_l = QVector3D(P.bowX - 0.05F, HP::SHOULDER_Y + 0.05F, 0.55F);
+  P.hand_r = QVector3D(P.bowX + 0.03F, HP::SHOULDER_Y + 0.08F, 0.55F);
 
-  P.hand_r = QVector3D(0.15F, HP::SHOULDER_Y + 0.15F, 0.20F);
+  P.hand_l = QVector3D(-0.02F, HP::SHOULDER_Y + 0.12F, 0.50F);
 
   QVector3D shoulder_to_hand_l = P.hand_l - P.shoulder_l;
   float distL = shoulder_to_hand_l.length();
@@ -324,13 +324,13 @@ static inline void drawBowAndArrow(const DrawContext &p, ISubmitter &out,
   const QVector3D up(0.0F, 1.0F, 0.0F);
   const QVector3D forward(0.0F, 0.0F, 1.0F);
 
-  QVector3D grip = P.hand_l;
+  QVector3D grip = P.hand_r;
   QVector3D top_end(P.bowX, P.bowTopY, grip.z());
   QVector3D bot_end(P.bowX, P.bowBotY, grip.z());
 
   QVector3D nock(P.bowX,
-                 clampf(P.hand_r.y(), P.bowBotY + 0.05F, P.bowTopY - 0.05F),
-                 clampf(P.hand_r.z(), grip.z() - 0.30F, grip.z() + 0.30F));
+                 clampf(P.hand_l.y(), P.bowBotY + 0.05F, P.bowTopY - 0.05F),
+                 clampf(P.hand_l.z(), grip.z() - 0.30F, grip.z() + 0.30F));
 
   constexpr int k_bow_curve_segments = 22;
   auto q_bezier = [](const QVector3D &a, const QVector3D &c, const QVector3D &b,
@@ -358,7 +358,7 @@ static inline void drawBowAndArrow(const DrawContext &p, ISubmitter &out,
   out.mesh(getUnitCylinder(),
            cylinderBetween(p.model, nock, bot_end, P.stringR), C.stringCol,
            nullptr, 1.0F);
-  out.mesh(getUnitCylinder(), cylinderBetween(p.model, P.hand_r, nock, 0.0045F),
+  out.mesh(getUnitCylinder(), cylinderBetween(p.model, P.hand_l, nock, 0.0045F),
            C.stringCol * 0.9F, nullptr, 1.0F);
 
   QVector3D tail = nock - forward * 0.06F;
