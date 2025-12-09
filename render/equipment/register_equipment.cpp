@@ -4,6 +4,7 @@
 #include "armor/chainmail_armor.h"
 #include "armor/cloak_renderer.h"
 #include "armor/roman_armor.h"
+#include "armor/roman_greaves.h"
 #include "armor/roman_shoulder_cover.h"
 #include "equipment_registry.h"
 #include "helmets/carthage_heavy_helmet.h"
@@ -96,6 +97,10 @@ void registerBuiltInEquipment() {
   registry.registerEquipment(EquipmentCategory::Armor,
                              "roman_shoulder_cover_cavalry",
                              roman_shoulder_cover_cavalry);
+
+  auto roman_greaves = std::make_shared<RomanGreavesRenderer>();
+  registry.registerEquipment(EquipmentCategory::Armor, "roman_greaves",
+                             roman_greaves);
 
   auto carthage_shoulder_cover =
       std::make_shared<CarthageShoulderCoverRenderer>();
