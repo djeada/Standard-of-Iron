@@ -1,11 +1,5 @@
 #version 330 core
 
-// ============================================================================
-// CARTHAGINIAN/PHOENICIAN HEALER SHADER
-// Mediterranean linen with Tyrian purple trim, leather craft, bronze tools,
-// and groomed beard shading focused on natural materials and soft cloth light
-// ============================================================================
-
 in vec3 v_normal;
 in vec3 v_worldNormal;
 in vec3 v_tangent;
@@ -24,10 +18,6 @@ uniform float u_alpha;
 uniform int u_materialId;
 
 out vec4 FragColor;
-
-// ============================================================================
-// UTILITY FUNCTIONS
-// ============================================================================
 
 float hash(vec2 p) {
   vec3 p3 = fract(vec3(p.xyx) * 0.1031);
@@ -67,10 +57,6 @@ float triplanar_noise(vec3 pos, vec3 normal, float scale) {
   float zx = noise(pos.zx * scale);
   return xy * w.z + yz * w.x + zx * w.y;
 }
-
-// ============================================================================
-// MATERIAL DETAIL
-// ============================================================================
 
 float cloth_weave(vec2 p) {
   float warp = sin(p.x * 68.0) * 0.55 + sin(p.x * 132.0) * 0.20;
@@ -115,10 +101,6 @@ vec3 perturb_bronze_normal(vec3 N, vec3 T, vec3 B, vec2 uv) {
   return normalize(N + T * hammer + B * (hammer * 0.4 + ripple));
 }
 
-// ============================================================================
-// LIGHTING HELPERS
-// ============================================================================
-
 float D_GGX(float NdotH, float a) {
   float a2 = a * a;
   float d = NdotH * NdotH * (a2 - 1.0) + 1.0;
@@ -140,9 +122,9 @@ vec3 fresnel_schlick(vec3 F0, float cos_theta) {
 vec3 compute_ambient(vec3 normal) {
   float up = clamp(normal.y, 0.0, 1.0);
   float down = clamp(-normal.y, 0.0, 1.0);
-  vec3 sky = vec3(0.62, 0.74, 0.88);
-  vec3 ground = vec3(0.38, 0.32, 0.26);
-  return sky * (0.28 + 0.50 * up) + ground * (0.12 + 0.32 * down);
+  vec3 sky = vec3(0.85, 0.92, 1.0);
+  vec3 ground = vec3(0.45, 0.38, 0.32);
+  return sky * (0.40 + 0.50 * up) + ground * (0.20 + 0.40 * down);
 }
 
 vec3 apply_lighting(vec3 albedo, vec3 N, vec3 V, vec3 L, float roughness,
@@ -170,13 +152,11 @@ vec3 apply_lighting(vec3 albedo, vec3 N, vec3 V, vec3 L, float roughness,
   vec3 ambient = compute_ambient(N) * albedo;
   vec3 light = (diffuse + spec * (1.0 + sheen)) * NdotL;
 
-  float ao_strength = mix(0.35, 1.0, clamp(ao, 0.0, 1.0));
-  return ambient * (0.55 + 0.45 * ao_strength) + light * ao_strength;
+  float ao_strength = mix(0.45, 1.0, clamp(ao, 0.0, 1.0));
+  vec3 result = ambient * (0.80 + 0.40 * ao_strength) +
+                light * (0.80 * ao_strength + 0.20);
+  return result;
 }
-
-// ============================================================================
-// BEARD/FACIAL HAIR RENDERING
-// ============================================================================
 
 float beard_density(vec2 uv, vec3 worldPos) {
   float strand_base = fbm(uv * 24.0) * 0.6;
@@ -188,64 +168,46 @@ float beard_density(vec2 uv, vec3 worldPos) {
 
 vec3 apply_beard_shading(vec3 base_skin, vec2 uv, vec3 normal, vec3 worldPos,
                          vec3 V, vec3 L) {
-  vec3 beard_color = vec3(0.10, 0.07, 0.05);
-
+  vec3 beard_color = vec3(0.20, 0.12, 0.06);
   float density = beard_density(uv, worldPos);
-
   float chin_mask = smoothstep(1.55, 1.43, worldPos.y);
   float jawline = smoothstep(1.48, 1.36, worldPos.y);
   float beard_mask = clamp(chin_mask * 0.7 + jawline * 0.45, 0.0, 1.0);
-
   float strand_highlight = pow(noise(uv * 220.0), 2.2) * 0.16;
   float anisotropic =
       pow(1.0 - abs(dot(normalize(normal + L * 0.28), V)), 7.0) * 0.10;
   beard_color += vec3(strand_highlight + anisotropic);
-
-  return mix(base_skin, beard_color, density * beard_mask * 0.85);
+  return mix(base_skin, beard_color, density * beard_mask * 0.98);
 }
 
-// ============================================================================
-// MAIN FRAGMENT SHADER
-// ============================================================================
-
 void main() {
-  vec3 base_color = u_color;
-  if (u_useTexture) {
-    base_color *= texture(u_texture, v_texCoord).rgb;
-  }
-
   vec3 N = normalize(v_worldNormal);
   vec3 T = normalize(v_tangent);
   vec3 B = normalize(v_bitangent);
   vec2 uv = v_worldPos.xz * 4.5;
-  float avg_color = (base_color.r + base_color.g + base_color.b) / 3.0;
 
-  // Material ID: 0=body/skin, 1=tunic/robe, 2=purple trim, 3=leather, 4=tools
+  vec3 base_color = clamp(u_color, 0.0, 1.0);
+  if (u_useTexture) {
+    base_color *= texture(u_texture, v_texCoord).rgb;
+  }
+
+  vec3 teamDefault = vec3(0.0); // remove purple bias to keep true team hue
+  vec3 teamColor = clamp(mix(teamDefault, u_color, 0.75), 0.0, 1.0);
+
   bool is_body = (u_materialId == 0);
   bool is_tunic = (u_materialId == 1);
   bool is_purple_trim = (u_materialId == 2);
   bool is_leather = (u_materialId == 3);
   bool is_tools = (u_materialId == 4);
 
-  // Fallback detection only if no material id provided
-  bool has_material_id = (u_materialId >= 0);
-  bool looks_light = (!has_material_id) && (avg_color > 0.72);
-  bool looks_purple =
-      (!has_material_id) && (base_color.b > base_color.g * 1.12 &&
-                             base_color.b > base_color.r * 1.05);
-  bool looks_skin =
-      (!has_material_id) && (avg_color > 0.45 && avg_color < 0.72 &&
-                             base_color.r > base_color.g * 0.95 &&
-                             base_color.r > base_color.b * 1.05);
-
-  vec3 V = normalize(vec3(-0.2, 1.0, 0.35));
-  vec3 L = normalize(vec3(1.0, 1.30, 0.8));
+  vec3 V = normalize(vec3(0.0, 1.4, 3.0) - v_worldPos);
+  vec3 L = normalize(vec3(2.0, 3.0, 1.5));
 
   float curvature = length(dFdx(N)) + length(dFdy(N));
   float ao_folds =
-      clamp(1.0 - (v_clothFolds * 0.55 + curvature * 0.80), 0.25, 1.0);
+      clamp(1.0 - (v_clothFolds * 0.55 + curvature * 0.80), 0.35, 1.0);
   float dust_mask = smoothstep(0.22, 0.0, v_bodyHeight);
-  float sun_bleach = smoothstep(0.55, 1.05, v_bodyHeight) * 0.07;
+  float sun_bleach = smoothstep(0.55, 1.05, v_bodyHeight) * 0.09;
 
   vec3 albedo = base_color;
   vec3 N_used = N;
@@ -255,98 +217,107 @@ void main() {
   float wrap = 0.44;
   float ao = ao_folds;
 
-  // === CARTHAGINIAN HEALER MATERIALS ===
-  if (is_tunic || looks_light) {
+  if (is_body) {
+    vec3 skin_base = vec3(0.08, 0.07, 0.065); // deep brown/black skin tone
+    float legs = smoothstep(0.05, 0.50, v_bodyHeight) *
+                 (1.0 - smoothstep(0.52, 0.70, v_bodyHeight));
+    float limb_team = clamp(legs, 0.0, 1.0); // only legs get team tint
+    skin_base = mix(skin_base, mix(skin_base, teamColor, 0.92), limb_team);
+    float tone_noise = fbm(v_worldPos.xz * 3.1) - 0.5;
+    albedo = clamp(skin_base + vec3(tone_noise) * 0.04, 0.0, 1.0);
+    float skin_detail = noise(uv * 24.0) * 0.06;
+    float subdermal = noise(uv * 7.0) * 0.05;
+    N_used = normalize(N + vec3(0.0, 0.01, 0.0) *
+                               triplanar_noise(v_worldPos * 3.0, N, 5.5));
+    albedo *= 1.0 + skin_detail;
+    albedo += vec3(0.03, 0.015, 0.0) * subdermal;
+    bool is_face_region = (v_worldPos.y > 1.40 && v_worldPos.y < 1.70);
+    if (is_face_region) {
+      albedo = apply_beard_shading(albedo, uv, N_used, v_worldPos, V, L);
+    }
+    albedo *= 1.18;
+    float rim = pow(1.0 - clamp(dot(N_used, V), 0.0, 1.0), 4.0) * 0.08;
+    albedo += vec3(rim);
+    sheen = 0.08 + subdermal * 0.2;
+    wrap = 0.46;
+  } else if (is_tunic) {
     float linen = phoenician_linen(uv);
     float weave = cloth_weave(uv);
     float drape_folds = v_clothFolds * noise(uv * 9.0) * 0.18;
     float dust = dust_mask * (0.12 + noise(uv * 7.0) * 0.12);
-
     N_used = perturb_cloth_normal(N, T, B, uv, 128.0, 116.0, 0.08);
-
-    albedo = mix(base_color, vec3(0.93, 0.89, 0.82), 0.55);
-    albedo *= 1.0 + linen + weave * 0.08 - drape_folds;
-    albedo += vec3(0.02, 0.015, 0.0) * sun_bleach;
-    albedo -= vec3(dust * 0.25);
-
-    roughness = 0.72 - clamp(v_fabricWear * 0.08, 0.0, 0.12);
-    sheen = 0.08 + clamp(v_bodyHeight * 0.04, 0.0, 0.06);
+    vec3 tunic_base = vec3(0.46, 0.46, 0.48);
+    float vertical_band = smoothstep(0.40, 0.43, v_bodyHeight) -
+                          smoothstep(0.52, 0.55, v_bodyHeight);
+    float hem_band = smoothstep(0.30, 0.34, v_bodyHeight) -
+                     smoothstep(0.38, 0.42, v_bodyHeight);
+    float band_pattern = clamp(vertical_band + hem_band, 0.0, 1.0);
+    albedo = tunic_base;
+    albedo *= 1.02 + linen + weave * 0.08 - drape_folds * 0.5;
+    albedo += vec3(0.04, 0.03, 0.0) * sun_bleach;
+    albedo -= vec3(dust * 0.20);
+    albedo = mix(albedo, mix(albedo, teamColor, 0.40), band_pattern);
+    roughness = 0.66 - clamp(v_fabricWear * 0.08, 0.0, 0.12);
+    sheen = 0.10 + clamp(v_bodyHeight * 0.04, 0.0, 0.06);
     ao *= 1.0 - dust * 0.30;
     wrap = 0.54;
-  } else if (is_purple_trim || looks_purple) {
+  } else if (is_purple_trim) {
     float dye = tyrian_dye_variation(uv);
     float silk = noise(uv * 52.0) * 0.06;
     float thread_ridge = cloth_weave(uv * 1.1);
-
     N_used = perturb_cloth_normal(N, T, B, uv, 150.0, 142.0, 0.05);
-
-    albedo = mix(base_color, vec3(0.32, 0.10, 0.44), 0.40);
-    albedo *= 1.0 + dye + silk + thread_ridge;
-    albedo += vec3(0.03, 0.0, 0.05) * clamp(dot(N, V), 0.0, 1.0);
-
-    roughness = 0.42;
-    sheen = 0.16;
-    metallic = 0.05;
-    wrap = 0.48;
-  } else if (is_leather || (avg_color > 0.28 && avg_color <= 0.52)) {
+    vec3 trim_base = vec3(0.05);
+    albedo = trim_base * (1.0 + dye * 0.25 + silk * 0.25 + thread_ridge * 0.2);
+    roughness = 0.55;
+    sheen = 0.02;
+    metallic = 0.0;
+    wrap = 0.46;
+  } else if (is_leather) {
     float leather_grain = fbm(uv * 8.0) * 0.16;
     float craft_detail = noise(uv * 28.0) * 0.07;
     float stitching = step(0.92, fract(v_worldPos.x * 14.0)) *
                       step(0.92, fract(v_worldPos.y * 12.0)) * 0.08;
     float edge_wear =
         smoothstep(0.86, 0.94, abs(dot(N, normalize(T + B)))) * 0.08;
-
     N_used = perturb_leather_normal(N, T, B, uv);
-
-    albedo = mix(base_color, vec3(0.44, 0.30, 0.18), 0.20);
-    albedo *= 1.0 + leather_grain + craft_detail - 0.04;
+    vec3 leather_base = vec3(0.44, 0.30, 0.18);
+    albedo = leather_base;
+    float belt_band = smoothstep(0.47, 0.49, v_bodyHeight) -
+                      smoothstep(0.53, 0.55, v_bodyHeight);
+    albedo *= 1.06 + leather_grain + craft_detail - 0.04;
     albedo += vec3(stitching + edge_wear);
-
-    roughness = 0.55 - clamp(v_fabricWear * 0.05, 0.0, 0.10);
-    sheen = 0.10;
-    wrap = 0.46;
-  } else if (is_body || looks_skin) {
-    float skin_detail = noise(uv * 24.0) * 0.06;
-    float subdermal = noise(uv * 7.0) * 0.05;
-
-    N_used = normalize(N + vec3(0.0, 0.01, 0.0) *
-                               triplanar_noise(v_worldPos * 3.0, N, 5.5));
-
-    albedo *= 1.0 + skin_detail;
-    albedo += vec3(0.03, 0.015, 0.0) * subdermal;
-
-    bool is_face_region = (v_worldPos.y > 1.40 && v_worldPos.y < 1.65);
-    if (is_face_region) {
-      albedo = apply_beard_shading(albedo, uv, N_used, v_worldPos, V, L);
-    }
-
-    float rim = pow(1.0 - clamp(dot(N_used, V), 0.0, 1.0), 4.0) * 0.05;
-    albedo += vec3(rim);
-
-    roughness = 0.55;
-    sheen = 0.06 + subdermal * 0.2;
+    albedo = mix(albedo, mix(albedo, teamColor, 0.80), belt_band);
+    roughness = 0.52 - clamp(v_fabricWear * 0.05, 0.0, 0.10);
+    sheen = 0.11;
     wrap = 0.46;
   } else if (is_tools) {
     float patina = noise(uv * 14.0) * 0.15 + fbm(uv * 22.0) * 0.10;
     float edge_polish =
         smoothstep(0.86, 0.95, abs(dot(N, normalize(T + B)))) * 0.14;
-
     N_used = perturb_bronze_normal(N, T, B, uv);
-
-    albedo = mix(base_color, vec3(0.72, 0.52, 0.28), 0.65);
-    albedo -= vec3(patina * 0.24);
+    vec3 bronze_default = vec3(0.78, 0.58, 0.32);
+    float custom_weight =
+        clamp(max(max(base_color.r, base_color.g), base_color.b), 0.0, 1.0);
+    vec3 bronze_base = mix(bronze_default, base_color, custom_weight);
+    bronze_base = max(bronze_base, vec3(0.02));
+    albedo = bronze_base;
+    albedo -= vec3(patina * 0.18);
     albedo += vec3(edge_polish);
-
-    roughness = 0.30 + patina * 0.12;
+    roughness = 0.30 + patina * 0.10;
     metallic = 0.92;
-    sheen = 0.12;
+    sheen = 0.16;
     wrap = 0.42;
   } else {
     float detail = noise(uv * 12.0) * 0.10;
-    albedo *= 1.0 + detail - 0.05;
+    albedo = mix(vec3(0.6, 0.6, 0.6), teamColor, 0.25);
+    if (u_useTexture) {
+      albedo *= max(texture(u_texture, v_texCoord).rgb, vec3(0.35));
+    }
+    albedo *= 1.0 + detail - 0.03;
   }
 
   vec3 color = apply_lighting(albedo, N_used, V, L, roughness, metallic, ao,
                               sheen, wrap);
+  color = pow(color * 1.25, vec3(0.9));
   FragColor = vec4(clamp(color, 0.0, 1.0), u_alpha);
 }
