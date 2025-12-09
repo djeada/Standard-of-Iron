@@ -7,6 +7,8 @@
 
 namespace Render::GL {
 
+enum class ArrowVisibility { Hidden, AttackCycleOnly, IdleAndAttackCycle };
+
 struct BowRenderConfig {
   QVector3D string_color{0.30F, 0.30F, 0.32F};
   QVector3D metal_color{0.50F, 0.50F, 0.55F};
@@ -20,6 +22,7 @@ struct BowRenderConfig {
   float bow_height_scale = 1.0F;
   float bow_curve_factor = 1.0F;
   int material_id = 3;
+  ArrowVisibility arrow_visibility = ArrowVisibility::AttackCycleOnly;
 };
 
 class BowRenderer : public IEquipmentRenderer {

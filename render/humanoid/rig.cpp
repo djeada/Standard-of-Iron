@@ -122,13 +122,11 @@ auto torso_mesh_without_bottom_cap() -> Mesh * {
           n.normalize();
         }
 
-        // Filter out bottom cap triangles: they are flat (small Y range),
-        // located near the bottom of the mesh (Y near -0.5), and face downward.
         constexpr float k_band_height = 0.02F;
-        constexpr float k_bottom_threshold = -0.45F;
+        constexpr float k_bottom_threshold = 0.45F;
         bool is_flat = (max_y - min_y) < k_band_height;
-        bool is_at_bottom = max_y < k_bottom_threshold;
-        bool facing_down = (n.y() < -0.35F);
+        bool is_at_bottom = min_y > k_bottom_threshold;
+        bool facing_down = (n.y() > 0.35F);
         return is_flat && is_at_bottom && facing_down;
       });
 
