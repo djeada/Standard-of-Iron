@@ -107,7 +107,7 @@ void main() {
 
   // Only add battle-wear deformation to armored pieces (not skin or cloth)
   bool deformArmor = (u_materialId == 1 || u_materialId == 2 ||
-                      u_materialId == 4 || u_materialId == 3);
+                      u_materialId == 4 || u_materialId == 3 || u_materialId == 5);
 
   vec3 batteredPos = worldPos;
   vec3 offsetPos = worldPos;
