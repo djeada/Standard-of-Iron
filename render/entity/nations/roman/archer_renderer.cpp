@@ -265,12 +265,18 @@ public:
                   const HumanoidPose &pose,
                   const HumanoidAnimationContext &anim,
                   ISubmitter &out) const override {
+    auto &registry = EquipmentRegistry::instance();
+
     if (resolve_style(ctx).show_armor) {
-      auto &registry = EquipmentRegistry::instance();
       auto armor = registry.get(EquipmentCategory::Armor, "roman_light_armor");
       if (armor) {
         armor->render(ctx, pose.body_frames, v.palette, anim, out);
       }
+    }
+
+    auto greaves = registry.get(EquipmentCategory::Armor, "roman_greaves");
+    if (greaves) {
+      greaves->render(ctx, pose.body_frames, v.palette, anim, out);
     }
   }
 
