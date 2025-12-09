@@ -248,6 +248,11 @@ public:
     if (shoulder_cover) {
       shoulder_cover->render(ctx, pose.body_frames, v.palette, anim, out);
     }
+
+    auto greaves = registry.get(EquipmentCategory::Armor, "roman_greaves");
+    if (greaves) {
+      greaves->render(ctx, pose.body_frames, v.palette, anim, out);
+    }
   }
 
 private:
