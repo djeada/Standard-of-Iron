@@ -141,6 +141,11 @@ void OliveRenderer::generate_olive_instances() {
     return;
   }
 
+  if (m_biomeSettings.ground_type != Game::Map::GroundType::GrassDry) {
+    m_oliveInstancesDirty = false;
+    return;
+  }
+
   const float half_width = static_cast<float>(m_width) * 0.5F;
   const float half_height = static_cast<float>(m_height) * 0.5F;
   const float tile_safe = std::max(0.1F, m_tile_size);

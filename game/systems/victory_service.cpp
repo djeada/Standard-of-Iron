@@ -13,6 +13,10 @@
 
 namespace Game::Systems {
 
+namespace {
+constexpr float k_startup_delay_seconds = 0.35F;
+}
+
 VictoryService::VictoryService()
     : m_unitDiedSubscription(
           [this](const Engine::Core::UnitDiedEvent &e) { onUnitDied(e); }),
@@ -28,8 +32,11 @@ VictoryService::~VictoryService() = default;
 void VictoryService::reset() {
   m_victoryState = "";
   m_elapsedTime = 0.0F;
+  m_startupDelay = 0.0F;
   m_worldPtr = nullptr;
   m_victoryCallback = nullptr;
+  m_keyStructures.clear();
+  m_defeatConditions.clear();
 }
 
 void VictoryService::configure(const Game::Map::VictoryConfig &config,
@@ -61,6 +68,8 @@ void VictoryService::configure(const Game::Map::VictoryConfig &config,
   if (m_defeatConditions.empty()) {
     m_defeatConditions.push_back(DefeatCondition::NoKeyStructures);
   }
+
+  m_startupDelay = k_startup_delay_seconds;
 }
 
 void VictoryService::update(Engine::Core::World &world, float deltaTime) {
@@ -69,6 +78,11 @@ void VictoryService::update(Engine::Core::World &world, float deltaTime) {
   }
 
   m_worldPtr = &world;
+
+  if (m_startupDelay > 0.0F) {
+    m_startupDelay = std::max(0.0F, m_startupDelay - deltaTime);
+    return;
+  }
 
   if (m_victoryType == VictoryType::SurviveTime) {
     m_elapsedTime += deltaTime;
