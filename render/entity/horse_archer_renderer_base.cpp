@@ -26,7 +26,7 @@ namespace Render::GL {
 
 namespace {
 
-constexpr QVector3D k_default_proportion_scale{0.92F, 0.88F, 0.96F};
+constexpr QVector3D k_default_proportion_scale{0.80F, 0.88F, 0.88F};
 
 }
 
@@ -58,7 +58,7 @@ auto HorseArcherRendererBase::get_mount_scale() const -> float {
 void HorseArcherRendererBase::adjust_variation(
     const DrawContext &, uint32_t, VariationParams &variation) const {
   variation.height_scale = 0.88F;
-  variation.bulk_scale = 0.78F;
+  variation.bulk_scale = 0.72F;
   variation.stance_width = 0.60F;
   variation.arm_swing_amp = 0.45F;
   variation.walk_speed_mult = 1.0F;
