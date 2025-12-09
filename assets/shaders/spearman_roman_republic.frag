@@ -86,18 +86,25 @@ void main() {
   vec2 uv = v_worldPos.xz * 4.5;
 
   // Material ID: 0=body/skin, 1=armor, 2=helmet, 3=weapon, 4=shield
+  bool is_skin = (u_materialId == 0);
   bool is_armor = (u_materialId == 1);
   bool is_helmet = (u_materialId == 2);
   bool is_weapon = (u_materialId == 3);
   bool is_shield = (u_materialId == 4);
 
-  // Use material IDs exclusively (no fallbacks)
-  bool is_legs = (u_materialId == 0); // Body mesh includes legs
-
   // === ROMAN SPEARMAN (HASTATUS) MATERIALS ===
 
   // HEAVY STEEL HELMET (cool blue-grey steel)
-  if (is_helmet) {
+  if (is_skin) {
+    float skin_detail = noise(uv * 18.0) * 0.06;
+    float subdermal = noise(uv * 6.0) * 0.05;
+    vec3 V = normalize(vec3(0.0, 1.0, 0.35));
+    float rim =
+        pow(1.0 - max(dot(normalize(v_worldNormal), V), 0.0), 4.0) * 0.04;
+    color *= 1.0 + skin_detail;
+    color += vec3(0.025, 0.015, 0.010) * subdermal;
+    color += vec3(rim);
+  } else if (is_helmet) {
     // Steel wear patterns from vertex shader
     float brushed = abs(sin(v_worldPos.y * 95.0)) * 0.020;
     float dents = noise(uv * 6.5) * 0.032 * v_steelWear;
@@ -215,20 +222,6 @@ void main() {
 
     // Ensure armor is ALWAYS clearly visible
     color = clamp(color, vec3(0.32), vec3(0.88));
-  }
-  // LEATHER PTERUGES & BELT
-  else if (is_legs) {
-    float leather_grain = noise(uv * 10.0) * 0.16 * (0.5 + v_leatherWear * 0.5);
-    float leather_pores = noise(uv * 22.0) * 0.08;
-    float strips = pteruges_strips(v_worldPos.xz, v_bodyHeight);
-    float wear = noise(uv * 4.0) * v_leatherWear * 0.10 - 0.05;
-
-    vec3 V = normalize(vec3(0.0, 1.0, 0.5));
-    float view_angle = max(dot(normalize(v_worldNormal), V), 0.0);
-    float leather_sheen = pow(1.0 - view_angle, 4.5) * 0.10;
-
-    color *= 1.0 + leather_grain + leather_pores - 0.08 + wear;
-    color += vec3(strips * 0.15 + leather_sheen);
   }
   // SCUTUM SHIELD (curved laminated wood with metal boss)
   else if (is_shield) {

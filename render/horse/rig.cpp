@@ -20,6 +20,14 @@
 
 namespace Render::GL {
 
+static HorseRenderStats s_horseRenderStats;
+
+auto getHorseRenderStats() -> const HorseRenderStats & {
+  return s_horseRenderStats;
+}
+
+void resetHorseRenderStats() { s_horseRenderStats.reset(); }
+
 using Render::Geom::clamp01;
 using Render::Geom::coneFromTo;
 using Render::Geom::cylinderBetween;
@@ -403,7 +411,7 @@ void apply_mount_vertical_offset(MountedAttachmentFrame &frame, float bob) {
   frame.bridle_base += offset;
 }
 
-void HorseRendererBase::render(
+void HorseRendererBase::renderFull(
     const DrawContext &ctx, const AnimationInputs &anim,
     const HumanoidAnimationContext &rider_ctx, HorseProfile &profile,
     const MountedAttachmentFrame *shared_mount, const ReinState *shared_reins,
@@ -1192,6 +1200,193 @@ void HorseRendererBase::render(
 
   drawAttachments(horse_ctx, anim, rider_ctx, profile, mount, phase, bob,
                   rein_slack, body_frames, out);
+}
+
+void HorseRendererBase::renderSimplified(
+    const DrawContext &ctx, const AnimationInputs &anim,
+    const HumanoidAnimationContext &rider_ctx, HorseProfile &profile,
+    const MountedAttachmentFrame *shared_mount,
+    const HorseMotionSample *shared_motion, ISubmitter &out) const {
+
+  const HorseDimensions &d = profile.dims;
+  const HorseVariant &v = profile.variant;
+  const HorseGait &g = profile.gait;
+
+  HorseMotionSample const motion =
+      shared_motion ? *shared_motion
+                    : evaluate_horse_motion(profile, anim, rider_ctx);
+  float const phase = motion.phase;
+  float const bob = motion.bob;
+  const bool is_moving = motion.is_moving;
+
+  MountedAttachmentFrame mount =
+      shared_mount ? *shared_mount : compute_mount_frame(profile);
+  if (!shared_mount) {
+    apply_mount_vertical_offset(mount, bob);
+  }
+
+  DrawContext horse_ctx = ctx;
+  horse_ctx.model = ctx.model;
+  horse_ctx.model.translate(mount.ground_offset);
+
+  QVector3D const barrel_center(0.0F, d.barrel_centerY + bob, 0.0F);
+
+  {
+    QMatrix4x4 body = horse_ctx.model;
+    body.translate(barrel_center);
+    body.scale(d.bodyWidth * 1.0F, d.bodyHeight * 0.85F, d.bodyLength * 0.80F);
+    out.mesh(getUnitSphere(), body, v.coatColor, nullptr, 1.0F, 6);
+  }
+
+  QVector3D const neck_base =
+      barrel_center +
+      QVector3D(0.0F, d.bodyHeight * 0.35F, d.bodyLength * 0.35F);
+  QVector3D const neck_top =
+      neck_base + QVector3D(0.0F, d.neckRise, d.neckLength);
+  draw_cylinder(out, horse_ctx.model, neck_base, neck_top, d.bodyWidth * 0.40F,
+                v.coatColor, 1.0F);
+
+  QVector3D const head_center =
+      neck_top + QVector3D(0.0F, d.headHeight * 0.10F, d.headLength * 0.40F);
+  {
+    QMatrix4x4 head = horse_ctx.model;
+    head.translate(head_center);
+    head.scale(d.headWidth * 0.90F, d.headHeight * 0.85F, d.headLength * 0.75F);
+    out.mesh(getUnitSphere(), head, v.coatColor, nullptr, 1.0F);
+  }
+
+  QVector3D const front_anchor =
+      barrel_center +
+      QVector3D(0.0F, d.bodyHeight * 0.05F, d.bodyLength * 0.30F);
+  QVector3D const rear_anchor =
+      barrel_center +
+      QVector3D(0.0F, d.bodyHeight * 0.02F, -d.bodyLength * 0.28F);
+
+  auto draw_simple_leg = [&](const QVector3D &anchor, float lateralSign,
+                             float forwardBias, float phase_offset) {
+    float const leg_phase = std::fmod(phase + phase_offset, 1.0F);
+    float stride = 0.0F;
+    float lift = 0.0F;
+
+    if (is_moving) {
+      float const angle = leg_phase * 2.0F * k_pi;
+      stride = std::sin(angle) * g.strideSwing * 0.6F + forwardBias;
+      float const lift_raw = std::sin(angle);
+      lift = lift_raw > 0.0F ? lift_raw * g.strideLift * 0.8F : 0.0F;
+    }
+
+    float const shoulder_out = d.bodyWidth * 0.45F;
+    QVector3D shoulder =
+        anchor + QVector3D(lateralSign * shoulder_out, lift * 0.05F, stride);
+
+    float const leg_length = d.legLength * 0.85F;
+    QVector3D const foot = shoulder + QVector3D(0.0F, -leg_length + lift, 0.0F);
+
+    draw_cylinder(out, horse_ctx.model, shoulder, foot, d.bodyWidth * 0.22F,
+                  v.coatColor * 0.85F, 1.0F, 6);
+
+    QMatrix4x4 hoof = horse_ctx.model;
+    hoof.translate(foot);
+    hoof.scale(d.bodyWidth * 0.28F, d.hoofHeight, d.bodyWidth * 0.30F);
+    out.mesh(getUnitCylinder(), hoof, v.hoof_color, nullptr, 1.0F, 8);
+  };
+
+  draw_simple_leg(front_anchor, 1.0F, d.bodyLength * 0.15F, g.frontLegPhase);
+  draw_simple_leg(front_anchor, -1.0F, d.bodyLength * 0.15F,
+                  g.frontLegPhase + 0.48F);
+  draw_simple_leg(rear_anchor, 1.0F, -d.bodyLength * 0.15F, g.rearLegPhase);
+  draw_simple_leg(rear_anchor, -1.0F, -d.bodyLength * 0.15F,
+                  g.rearLegPhase + 0.52F);
+}
+
+void HorseRendererBase::renderMinimal(const DrawContext &ctx,
+                                      HorseProfile &profile,
+                                      const HorseMotionSample *shared_motion,
+                                      ISubmitter &out) const {
+
+  const HorseDimensions &d = profile.dims;
+  const HorseVariant &v = profile.variant;
+
+  float const bob = shared_motion ? shared_motion->bob : 0.0F;
+
+  MountedAttachmentFrame mount = compute_mount_frame(profile);
+  apply_mount_vertical_offset(mount, bob);
+
+  DrawContext horse_ctx = ctx;
+  horse_ctx.model = ctx.model;
+  horse_ctx.model.translate(mount.ground_offset);
+
+  QVector3D const center(0.0F, d.barrel_centerY + bob, 0.0F);
+
+  QMatrix4x4 body = horse_ctx.model;
+  body.translate(center);
+  body.scale(d.bodyWidth * 1.2F, d.bodyHeight + d.neckRise * 0.5F,
+             d.bodyLength + d.headLength * 0.5F);
+  out.mesh(getUnitSphere(), body, v.coatColor, nullptr, 1.0F, 6);
+
+  for (int i = 0; i < 4; ++i) {
+    float const x_sign = (i % 2 == 0) ? 1.0F : -1.0F;
+    float const z_offset =
+        (i < 2) ? d.bodyLength * 0.25F : -d.bodyLength * 0.25F;
+
+    QVector3D const top = center + QVector3D(x_sign * d.bodyWidth * 0.40F,
+                                             -d.bodyHeight * 0.3F, z_offset);
+    QVector3D const bottom = top + QVector3D(0.0F, -d.legLength * 0.60F, 0.0F);
+
+    draw_cylinder(out, horse_ctx.model, top, bottom, d.bodyWidth * 0.15F,
+                  v.coatColor * 0.75F, 1.0F, 6);
+  }
+}
+
+void HorseRendererBase::render(const DrawContext &ctx,
+                               const AnimationInputs &anim,
+                               const HumanoidAnimationContext &rider_ctx,
+                               HorseProfile &profile,
+                               const MountedAttachmentFrame *shared_mount,
+                               const ReinState *shared_reins,
+                               const HorseMotionSample *shared_motion,
+                               ISubmitter &out, HorseLOD lod) const {
+
+  ++s_horseRenderStats.horsesTotal;
+
+  if (lod == HorseLOD::Billboard) {
+    ++s_horseRenderStats.horsesSkippedLOD;
+    return;
+  }
+
+  ++s_horseRenderStats.horsesRendered;
+
+  switch (lod) {
+  case HorseLOD::Full:
+    ++s_horseRenderStats.lodFull;
+    renderFull(ctx, anim, rider_ctx, profile, shared_mount, shared_reins,
+               shared_motion, out);
+    break;
+
+  case HorseLOD::Reduced:
+    ++s_horseRenderStats.lodReduced;
+    renderSimplified(ctx, anim, rider_ctx, profile, shared_mount, shared_motion,
+                     out);
+    break;
+
+  case HorseLOD::Minimal:
+    ++s_horseRenderStats.lodMinimal;
+    renderMinimal(ctx, profile, shared_motion, out);
+    break;
+
+  case HorseLOD::Billboard:
+
+    break;
+  }
+}
+
+void HorseRendererBase::render(
+    const DrawContext &ctx, const AnimationInputs &anim,
+    const HumanoidAnimationContext &rider_ctx, HorseProfile &profile,
+    const MountedAttachmentFrame *shared_mount, const ReinState *shared_reins,
+    const HorseMotionSample *shared_motion, ISubmitter &out) const {
+  render(ctx, anim, rider_ctx, profile, shared_mount, shared_reins,
+         shared_motion, out, HorseLOD::Full);
 }
 
 } // namespace Render::GL

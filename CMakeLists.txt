@@ -126,6 +126,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
         app/core/game_engine.cpp
         app/core/language_manager.cpp
         app/models/audio_system_proxy.cpp
+        app/models/graphics_settings_proxy.cpp
         app/models/cursor_manager.cpp
         app/models/hover_tracker.cpp
         app/models/selected_units_model.cpp
@@ -141,6 +142,7 @@ else()
         app/core/game_engine.cpp
         app/core/language_manager.cpp
         app/models/audio_system_proxy.cpp
+        app/models/graphics_settings_proxy.cpp
         app/models/cursor_manager.cpp
         app/models/hover_tracker.cpp
         app/models/selected_units_model.cpp
