@@ -6,6 +6,7 @@ layout(location = 2) in vec2 a_texCoord;
 
 uniform mat4 u_mvp;
 uniform mat4 u_model;
+uniform int u_materialId;
 
 out vec3 v_normal;
 out vec2 v_texCoord;

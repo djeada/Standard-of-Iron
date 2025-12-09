@@ -180,6 +180,18 @@ void main() {
   bool is_fabric = is_rider_clothing || is_saddle_blanket;
   bool is_leather = is_saddle_leather || is_bridle;
 
+  if (is_rider_skin) {
+    // Carthage horse spearman: dark complexion.
+    vec3 target = vec3(0.32, 0.24, 0.18);
+    float tone_noise = fbm(v_worldPos.xz * 3.1) - 0.5;
+    base_color = clamp(target + vec3(tone_noise) * 0.05, 0.0, 1.0);
+    if (u_useTexture) {
+      vec3 tex = texture(u_texture, v_texCoord).rgb;
+      float eye_mask = step(0.25, 1.0 - dot(tex, vec3(0.299, 0.587, 0.114)));
+      base_color = mix(base_color, vec3(0.02), eye_mask); // black eyes
+    }
+  }
+
   // lighting frame
   vec3 L = normalize(vec3(1.0, 1.2, 1.0));
   vec3 V = normalize(
@@ -261,34 +273,38 @@ void main() {
     col += vec3(scale_hint * 0.4 + leather_grain * 0.2 + linen_weave * 0.15);
 
   } else if (is_horse_hide) {
-    // subtle anisotropic sheen along body flow
-    vec3 up = vec3(0.0, 1.0, 0.0);
-    vec3 T = normalize(cross(up, N) + 1e-4); // hair tangent guess
-    float flow_noise = fbm(uv * 10.0);
-    float aniso = pow(saturate(dot(normalize(reflect(-L, N)), T)), 14.0) *
-                  0.08 * (0.6 + 0.4 * flow_noise);
-
+    vec3 coat = vec3(0.36, 0.32, 0.28);
     float hide_tex = horse_hide_pattern(v_worldPos.xz);
-    float sheen = pow(1.0 - NdotV, 4.0) * 0.07;
+    float grain = fbm(v_worldPos.xz * 18.0 + v_worldPos.y * 2.5);
+    albedo = coat * (1.0 + hide_tex * 0.06 - grain * 0.04);
 
-    roughness = 0.58 - hide_tex * 0.08;
-    F0 = vec3(0.035);
+    roughness = 0.75;
+    F0 = vec3(0.02);
     metalness = 0.0;
 
-    // slight bump from hair grain
-    float h = fbm(v_worldPos.xz * 35.0);
-    N = perturb_normal_ws(N, v_worldPos, h, 0.35);
+    float h = fbm(v_worldPos.xz * 22.0);
+    N = perturb_normal_ws(N, v_worldPos, h, 0.18);
 
-    // composition
-    albedo = albedo * (1.0 + hide_tex * 0.20) * (0.98 + 0.02 * n_small);
     col += ambient * albedo;
-    // microfacet spec
-    float D = D_GGX(saturate(dot(N, H)), roughness);
-    float G = G_Smith(saturate(dot(N, V)), saturate(dot(N, L)), roughness);
-    vec3 F = fresnel_schlick(VdotH, F0);
-    vec3 spec = (D * G) * F / max(1e-5, 4.0 * NdotV * NdotL);
-    col += NdotL_wrap * (albedo * (1.0 - F) * 0.95) + spec * 0.8;
-    col += aniso + sheen;
+    col += NdotL_wrap * albedo * 0.9;
+
+  } else if (is_horse_mane) {
+    float strand = sin(uv.x * 140.0) * 0.2 + noise(uv * 120.0) * 0.15;
+    float clump = noise(uv * 15.0) * 0.4;
+    float frizz = fbm(uv * 40.0) * 0.15;
+
+    float h = fbm(v_worldPos.xz * 25.0);
+    N = perturb_normal_ws(N, v_worldPos, h, 0.18);
+
+    albedo = vec3(0.08, 0.07, 0.07) *
+             (1.0 + strand * 0.02 + clump * 0.02 + frizz * 0.02);
+
+    roughness = 0.70;
+    F0 = vec3(0.02);
+    metalness = 0.0;
+
+    col += ambient * albedo;
+    col += NdotL_wrap * albedo * 0.85;
 
   } else if (is_steel) {
     float brushed =

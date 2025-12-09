@@ -96,19 +96,26 @@ void main() {
   vec2 uv = v_worldPos.xz * 4.5;
 
   // Material ID: 0=body/skin, 1=armor, 2=helmet, 3=weapon, 4=shield, 5=cloak
+  bool is_skin = (u_materialId == 0);
   bool is_armor = (u_materialId == 1);
   bool is_helmet = (u_materialId == 2);
   bool is_weapon = (u_materialId == 3);
   bool is_shield = (u_materialId == 4);
   bool is_cloak = (u_materialId == 5 || u_materialId == 6);
 
-  // Use material IDs exclusively (no fallbacks)
-  bool is_legs = (u_materialId == 0); // Body mesh includes legs
-
   // === ROMAN ARCHER (SAGITTARIUS) MATERIALS ===
 
   // LIGHT BRONZE HELMET (warm golden auxiliary helmet)
-  if (is_helmet) {
+  if (is_skin) {
+    vec3 N = normalize(v_worldNormal);
+    vec3 V = normalize(vec3(0.0, 1.0, 0.35));
+    float skin_detail = noise(v_worldPos.xz * 18.0) * 0.06;
+    float subdermal = noise(v_worldPos.xz * 6.0) * 0.05;
+    color *= 1.0 + skin_detail;
+    color += vec3(0.025, 0.015, 0.010) * subdermal;
+    float rim = pow(1.0 - max(dot(N, V), 0.0), 4.0) * 0.04;
+    color += vec3(rim);
+  } else if (is_helmet) {
     // Use vertex-computed helmet detail
     float bands = v_helmetDetail * 0.15;
 
@@ -231,6 +238,10 @@ void main() {
     vec3 N = normalize(v_worldNormal);
     vec3 V = normalize(vec3(0.0, 1.0, 0.35));
 
+    // Team-tinted cloak: blend input color with team color (u_color).
+    vec3 team_tint = clamp(u_color, 0.0, 1.0);
+    color = mix(color, team_tint, 0.75);
+
     float weave = sin(v_worldPos.x * 70.0) * sin(v_worldPos.z * 70.0) * 0.04;
     float wrinkle = noise(v_worldPos.xz * 12.0) * 0.12;
     float shading = 0.65 + noise(v_worldPos.xz * 2.5) * 0.25;
@@ -238,25 +249,6 @@ void main() {
 
     color *= shading + weave * 0.2;
     color += vec3(wrinkle * 0.12 + fresnel);
-  } else if (is_legs) {
-    // Thick leather with visible grain (using vertex wear data)
-    float leather_grain = noise(uv * 10.0) * 0.16 * (0.5 + v_leatherWear * 0.5);
-    float leather_pores = noise(uv * 22.0) * 0.08;
-
-    // Pteruges strip pattern
-    float strips = pteruges_strips(v_worldPos.xz, v_bodyHeight);
-
-    // Worn leather edges
-    float wear = noise(uv * 4.0) * v_leatherWear * 0.10 - 0.05;
-
-    // Leather has subtle sheen
-    vec3 N = normalize(v_worldNormal);
-    vec3 V = normalize(vec3(0.0, 1.0, 0.5));
-    float view_angle = max(dot(N, V), 0.0);
-    float leather_sheen = pow(1.0 - view_angle, 4.5) * 0.10;
-
-    color *= 1.0 + leather_grain + leather_pores - 0.08 + wear;
-    color += vec3(strips * 0.15 + leather_sheen);
   }
   // SCUTUM SHIELD (curved laminated wood with metal boss)
   else if (is_shield) {
