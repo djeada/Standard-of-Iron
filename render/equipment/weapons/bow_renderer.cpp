@@ -34,7 +34,8 @@ void BowRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
   const QVector3D up(0.0F, 1.0F, 0.0F);
   const QVector3D forward(0.0F, 0.0F, 1.0F);
 
-  QVector3D const grip = frames.hand_l.origin;
+  // Right hand now holds the bow grip; use it as anchor for the bow plane.
+  QVector3D const grip = frames.hand_r.origin;
 
   float const bow_half_height = (m_config.bow_top_y - m_config.bow_bot_y) *
                                 0.5F * m_config.bow_height_scale;
@@ -42,7 +43,7 @@ void BowRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
   float const bow_top_y = bow_mid_y + bow_half_height;
   float const bow_bot_y = bow_mid_y - bow_half_height;
 
-  QVector3D outward = frames.hand_l.right;
+  QVector3D outward = frames.hand_r.right;
   if (outward.lengthSquared() < 1e-6F) {
     outward = QVector3D(-1.0F, 0.0F, 0.0F);
   }
@@ -52,7 +53,8 @@ void BowRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
   } else {
     outward.normalize();
   }
-  QVector3D const side = outward * 0.10F;
+  // Keep the bow plane close to the grip so the hand actually touches it.
+  QVector3D const side = outward * 0.02F;
 
   float const bow_plane_x = grip.x() + m_config.bow_x + side.x();
   float const bow_plane_z = grip.z() + side.z();
@@ -60,10 +62,11 @@ void BowRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
   QVector3D const top_end(bow_plane_x, bow_top_y, bow_plane_z);
   QVector3D const bot_end(bow_plane_x, bow_bot_y, bow_plane_z);
 
-  QVector3D const right_hand = frames.hand_r.origin;
+  QVector3D const string_hand = frames.hand_l.origin;
   QVector3D const nock(
-      bow_plane_x, clampf(right_hand.y(), bow_bot_y + 0.05F, bow_top_y - 0.05F),
-      clampf(right_hand.z(), bow_plane_z - 0.30F, bow_plane_z + 0.30F));
+      bow_plane_x,
+      clampf(string_hand.y(), bow_bot_y + 0.05F, bow_top_y - 0.05F),
+      clampf(string_hand.z(), bow_plane_z - 0.30F, bow_plane_z + 0.30F));
 
   constexpr int k_bowstring_segments = 22;
   auto q_bezier = [](const QVector3D &a, const QVector3D &c, const QVector3D &b,
@@ -108,7 +111,7 @@ void BowRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
   if (is_bow_attacking) {
     submitter.mesh(
         getUnitCylinder(),
-        cylinderBetween(ctx.model, frames.hand_r.origin, nock, 0.0045F),
+        cylinderBetween(ctx.model, frames.hand_l.origin, nock, 0.0045F),
         m_config.string_color * 0.9F, nullptr, 1.0F, m_config.material_id);
   }
 
