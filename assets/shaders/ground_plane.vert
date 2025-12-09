@@ -44,31 +44,26 @@ void main() {
       6.2831853;
   vec2 uv = rot2(ang) * (wp.xz + u_noiseOffset);
 
-  // Gentle domain warp to break straight lines and angular patterns
   float warpBase = fbm2(uv * 0.35);
   float warpOff = fbm2((uv + vec2(11.3, -7.7)) * 0.35);
   vec2 uvWarp = uv + (vec2(warpBase, warpOff) - 0.5) * 0.7;
 
-  // Tighten irregularities so bumps are closer together
   float freq = max(u_heightNoiseFrequency * 3.0, 1.1);
   float base = fbm2(uvWarp * freq * 0.65);
   float detail = fbm2(uvWarp * freq * 1.6);
   float fine = noise21(uvWarp * freq * 3.2);
   float h = (base * 0.50 + detail * 0.35 + fine * 0.15) * 2.0 - 1.0;
-  // Soften extremes to avoid blocky plateaus
+
   h = h - 0.2 * h * h * h;
 
-  // Ensure a clearly visible base amount of warping but keep it grounded
   float strength = max(u_heightNoiseStrength, 0.35);
   float amp = clamp(strength * 1.8, 0.10, 0.65);
   float disp = h * amp;
 
-  // Subtle sine warp just to guarantee non-flatness, but keep it small
   disp += sin(uvWarp.x * 1.8) * 0.05 + sin(uvWarp.y * 2.1) * 0.05;
 
   wp.y += disp;
 
-  // Estimate slope to bend normals with the displaced surface
   float gradStep = max(0.15, 0.35 / max(freq * 1.1, 0.05));
   float h_base_x = fbm2((uvWarp + vec2(gradStep, 0.0)) * freq * 0.65);
   float h_det_x = fbm2((uvWarp + vec2(gradStep, 0.0)) * freq * 1.6);

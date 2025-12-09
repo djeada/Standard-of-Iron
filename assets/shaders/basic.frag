@@ -36,13 +36,13 @@ vec3 proceduralMaterialVariation(vec3 baseColor, vec3 worldPos, vec3 normal) {
   vec3 variation = baseColor;
 
   if (avgColor < 0.40) {
-    // Metal/dark materials
+
     float metalNoise = noise(uv * 9.0) * 0.018;
     float viewAngle = abs(dot(normal, normalize(vec3(0.0, 1.0, 0.5))));
     float fresnel = pow(1.0 - viewAngle, 2.0) * 0.10;
     variation = baseColor + vec3(metalNoise + fresnel);
   } else if (avgColor > 0.65) {
-    // Cloth/bright materials
+
     float weaveX = sin(worldPos.x * 55.0);
     float weaveZ = sin(worldPos.z * 55.0);
     float weavePattern = weaveX * weaveZ * 0.025;
@@ -53,7 +53,7 @@ vec3 proceduralMaterialVariation(vec3 baseColor, vec3 worldPos, vec3 normal) {
 
     variation = baseColor * (1.0 + clothNoise + weavePattern) + vec3(sheen);
   } else {
-    // Leather/medium materials
+
     float leatherNoise = noise(uv * 5.5);
     float blotches = noise(uv * 1.8) * 0.12 - 0.06;
     variation = baseColor * (1.0 + leatherNoise * 0.14 - 0.07 + blotches);

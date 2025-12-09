@@ -44,8 +44,7 @@ struct BodyFrames {
   AttachmentFrame hand_r{};
   AttachmentFrame foot_l{};
   AttachmentFrame foot_r{};
-  // Shin frames for leg equipment (greaves, etc.)
-  // Origin at ankle, up points toward knee (shin direction)
+
   AttachmentFrame shin_l{};
   AttachmentFrame shin_r{};
 };

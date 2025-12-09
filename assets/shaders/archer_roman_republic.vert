@@ -34,9 +34,8 @@ void main() {
   vec3 position = a_position;
   vec3 normal = a_normal;
 
-  // Cloak back drape (Material ID 5)
   if (u_materialId == 5) {
-    float v = 1.0 - a_texCoord.y; // 1 = top, 0 = bottom
+    float v = 1.0 - a_texCoord.y;
     float u = a_texCoord.x;
     float x_norm = (u - 0.5) * 2.0;
 
@@ -57,7 +56,6 @@ void main() {
     position.y += wave * move;
   }
 
-  // Cloak shoulder cape (Material ID 6)
   if (u_materialId == 6) {
     float u = a_texCoord.x;
     float v = a_texCoord.y;
@@ -78,7 +76,6 @@ void main() {
     position.y += flutter;
   }
 
-  // Shield curving: bend flat rectangle into scutum curve (materialId=4)
   if (u_materialId == 4) {
     float curveRadius = 0.55;
     float curveAmount = 0.45;
@@ -95,7 +92,6 @@ void main() {
   mat3 normalMatrix = mat3(transpose(inverse(u_model)));
   vec3 worldNormal = normalize(normalMatrix * normal);
 
-  // Build tangent space
   vec3 t = normalize(cross(fallbackUp(worldNormal), worldNormal));
   if (length(t) < 1e-4)
     t = vec3(1.0, 0.0, 0.0);
@@ -105,15 +101,15 @@ void main() {
   vec4 modelPos = u_model * vec4(position, 1.0);
   vec3 worldPos = modelPos.xyz;
 
-  // Only add battle-wear deformation to armored pieces (not skin or cloth)
-  bool deformArmor = (u_materialId == 1 || u_materialId == 2 ||
-                      u_materialId == 4 || u_materialId == 3 || u_materialId == 5);
+  bool deformArmor =
+      (u_materialId == 1 || u_materialId == 2 || u_materialId == 4 ||
+       u_materialId == 3 || u_materialId == 5);
 
   vec3 batteredPos = worldPos;
   vec3 offsetPos = worldPos;
 
   if (deformArmor) {
-    // Procedural denting and battle damage for armor/helmet/shield/weapons
+
     float dentSeed = hash13(worldPos * 0.75 + worldNormal * 0.22);
     float hammerNoise = sin(worldPos.y * 14.3 + dentSeed * 12.56);
     vec3 dentOffset = worldNormal * ((dentSeed - 0.5) * 0.0095);
@@ -136,28 +132,23 @@ void main() {
   v_bitangent = b;
 
   float height = offsetPos.y;
-  // Keep armor/material selection stable: 1.0 only for armor material.
+
   v_armorLayer = (u_materialId == 1) ? 1.0 : 0.0;
 
-  // Body height normalization
   float torsoMin = 0.55;
   float torsoMax = 1.65;
   v_bodyHeight =
       clamp((offsetPos.y - torsoMin) / (torsoMax - torsoMin), 0.0, 1.0);
 
-  // Light helmet detail attributes
   float conicalHeight = smoothstep(1.55, 1.75, height);
   float browBandRegion =
       smoothstep(1.48, 1.52, height) * smoothstep(1.56, 1.52, height);
   v_helmetDetail = conicalHeight * 0.6 + browBandRegion * 0.4;
 
-  // Chainmail ring phase
   v_chainmailPhase = fract(offsetPos.x * 32.0 + offsetPos.z * 32.0);
 
-  // Leather wear and tension
   float tensionSeed = hash13(offsetPos * 0.42 + worldNormal * 1.5);
   v_leatherWear = tensionSeed * (0.7 + v_bodyHeight * 0.3);
 
-  // Surface curvature indicator
   v_curvature = length(vec2(worldNormal.x, worldNormal.z));
 }

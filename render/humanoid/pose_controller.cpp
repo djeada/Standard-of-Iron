@@ -197,7 +197,6 @@ void HumanoidPoseController::aimBow(float draw_phase) {
 
   draw_phase = std::clamp(draw_phase, 0.0F, 1.0F);
 
-  // Keep string hand closer to bow plane so it actually reaches the chord.
   QVector3D const aim_pos(-0.02F, HP::SHOULDER_Y + 0.18F, 0.42F);
   QVector3D const draw_pos(-0.05F, HP::SHOULDER_Y + 0.12F, 0.22F);
   QVector3D const release_pos(-0.02F, HP::SHOULDER_Y + 0.20F, 0.34F);
