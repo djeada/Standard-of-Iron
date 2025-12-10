@@ -44,7 +44,7 @@ const QVector3D k_axis_y(0.0F, 1.0F, 0.0F);
 const QVector3D k_axis_z(0.0F, 0.0F, 1.0F);
 } // namespace
 
-Renderer::Renderer() { m_activeQueue = &m_queues[m_fillQueueIndex]; }
+Renderer::Renderer() { m_active_queue = &m_queues[m_fill_queue_index]; }
 
 Renderer::~Renderer() { shutdown(); }
 
@@ -53,23 +53,23 @@ auto Renderer::initialize() -> bool {
     m_backend = std::make_shared<Backend>();
   }
   m_backend->initialize();
-  m_entityRegistry = std::make_unique<EntityRendererRegistry>();
-  registerBuiltInEntityRenderers(*m_entityRegistry);
+  m_entity_registry = std::make_unique<EntityRendererRegistry>();
+  registerBuiltInEntityRenderers(*m_entity_registry);
   registerBuiltInEquipment();
   return true;
 }
 
 void Renderer::shutdown() { m_backend.reset(); }
 
-void Renderer::beginFrame() {
+void Renderer::begin_frame() {
 
   advancePoseCacheFrame();
 
   resetHumanoidRenderStats();
   resetHorseRenderStats();
 
-  m_activeQueue = &m_queues[m_fillQueueIndex];
-  m_activeQueue->clear();
+  m_active_queue = &m_queues[m_fill_queue_index];
+  m_active_queue->clear();
 
   if (m_camera != nullptr) {
     m_view_proj = m_camera->getProjectionMatrix() * m_camera->getViewMatrix();
@@ -80,30 +80,30 @@ void Renderer::beginFrame() {
   }
 }
 
-void Renderer::endFrame() {
+void Renderer::end_frame() {
   if (m_paused.load()) {
     return;
   }
   if (m_backend && (m_camera != nullptr)) {
-    std::swap(m_fillQueueIndex, m_render_queueIndex);
-    DrawQueue &render_queue = m_queues[m_render_queueIndex];
-    render_queue.sortForBatching();
-    m_backend->setAnimationTime(m_accumulatedTime);
+    std::swap(m_fill_queue_index, m_render_queue_index);
+    DrawQueue &render_queue = m_queues[m_render_queue_index];
+    render_queue.sort_for_batching();
+    m_backend->setAnimationTime(m_accumulated_time);
     m_backend->execute(render_queue, *m_camera);
   }
 }
 
-void Renderer::setCamera(Camera *camera) { m_camera = camera; }
+void Renderer::set_camera(Camera *camera) { m_camera = camera; }
 
-void Renderer::setClearColor(float r, float g, float b, float a) {
+void Renderer::set_clear_color(float r, float g, float b, float a) {
   if (m_backend) {
     m_backend->setClearColor(r, g, b, a);
   }
 }
 
-void Renderer::setViewport(int width, int height) {
-  m_viewportWidth = width;
-  m_viewportHeight = height;
+void Renderer::set_viewport(int width, int height) {
+  m_viewport_width = width;
+  m_viewport_height = height;
   if (m_backend) {
     m_backend->setViewport(width, height);
   }
@@ -114,13 +114,13 @@ void Renderer::setViewport(int width, int height) {
   }
 }
 void Renderer::mesh(Mesh *mesh, const QMatrix4x4 &model, const QVector3D &color,
-                    Texture *texture, float alpha, int materialId) {
+                    Texture *texture, float alpha, int material_id) {
   if (mesh == nullptr) {
     return;
   }
 
   if (mesh == getUnitCylinder() && (texture == nullptr) &&
-      (m_currentShader == nullptr)) {
+      (m_current_shader == nullptr)) {
     QVector3D start;
     QVector3D end;
     float radius = 0.0F;
@@ -136,10 +136,10 @@ void Renderer::mesh(Mesh *mesh, const QMatrix4x4 &model, const QVector3D &color,
   cmd.mvp = m_view_proj * model;
   cmd.color = color;
   cmd.alpha = alpha;
-  cmd.materialId = materialId;
-  cmd.shader = m_currentShader;
-  if (m_activeQueue != nullptr) {
-    m_activeQueue->submit(cmd);
+  cmd.material_id = material_id;
+  cmd.shader = m_current_shader;
+  if (m_active_queue != nullptr) {
+    m_active_queue->submit(cmd);
   }
 }
 
@@ -151,164 +151,164 @@ void Renderer::cylinder(const QVector3D &start, const QVector3D &end,
   cmd.radius = radius;
   cmd.color = color;
   cmd.alpha = alpha;
-  if (m_activeQueue != nullptr) {
-    m_activeQueue->submit(cmd);
+  if (m_active_queue != nullptr) {
+    m_active_queue->submit(cmd);
   }
 }
 
-void Renderer::fogBatch(const FogInstanceData *instances, std::size_t count) {
-  if ((instances == nullptr) || count == 0 || (m_activeQueue == nullptr)) {
+void Renderer::fog_batch(const FogInstanceData *instances, std::size_t count) {
+  if ((instances == nullptr) || count == 0 || (m_active_queue == nullptr)) {
     return;
   }
   FogBatchCmd cmd;
   cmd.instances = instances;
   cmd.count = count;
-  m_activeQueue->submit(cmd);
+  m_active_queue->submit(cmd);
 }
 
-void Renderer::grassBatch(Buffer *instanceBuffer, std::size_t instance_count,
-                          const GrassBatchParams &params) {
-  if ((instanceBuffer == nullptr) || instance_count == 0 ||
-      (m_activeQueue == nullptr)) {
+void Renderer::grass_batch(Buffer *instance_buffer, std::size_t instance_count,
+                           const GrassBatchParams &params) {
+  if ((instance_buffer == nullptr) || instance_count == 0 ||
+      (m_active_queue == nullptr)) {
     return;
   }
   GrassBatchCmd cmd;
-  cmd.instanceBuffer = instanceBuffer;
+  cmd.instance_buffer = instance_buffer;
   cmd.instance_count = instance_count;
   cmd.params = params;
-  cmd.params.time = m_accumulatedTime;
-  m_activeQueue->submit(cmd);
+  cmd.params.time = m_accumulated_time;
+  m_active_queue->submit(cmd);
 }
 
-void Renderer::stoneBatch(Buffer *instanceBuffer, std::size_t instance_count,
-                          const StoneBatchParams &params) {
-  if ((instanceBuffer == nullptr) || instance_count == 0 ||
-      (m_activeQueue == nullptr)) {
+void Renderer::stone_batch(Buffer *instance_buffer, std::size_t instance_count,
+                           const StoneBatchParams &params) {
+  if ((instance_buffer == nullptr) || instance_count == 0 ||
+      (m_active_queue == nullptr)) {
     return;
   }
   StoneBatchCmd cmd;
-  cmd.instanceBuffer = instanceBuffer;
+  cmd.instance_buffer = instance_buffer;
   cmd.instance_count = instance_count;
   cmd.params = params;
-  m_activeQueue->submit(cmd);
+  m_active_queue->submit(cmd);
 }
 
-void Renderer::plantBatch(Buffer *instanceBuffer, std::size_t instance_count,
-                          const PlantBatchParams &params) {
-  if ((instanceBuffer == nullptr) || instance_count == 0 ||
-      (m_activeQueue == nullptr)) {
+void Renderer::plant_batch(Buffer *instance_buffer, std::size_t instance_count,
+                           const PlantBatchParams &params) {
+  if ((instance_buffer == nullptr) || instance_count == 0 ||
+      (m_active_queue == nullptr)) {
     return;
   }
   PlantBatchCmd cmd;
-  cmd.instanceBuffer = instanceBuffer;
+  cmd.instance_buffer = instance_buffer;
   cmd.instance_count = instance_count;
   cmd.params = params;
-  cmd.params.time = m_accumulatedTime;
-  m_activeQueue->submit(cmd);
+  cmd.params.time = m_accumulated_time;
+  m_active_queue->submit(cmd);
 }
 
-void Renderer::pineBatch(Buffer *instanceBuffer, std::size_t instance_count,
-                         const PineBatchParams &params) {
-  if ((instanceBuffer == nullptr) || instance_count == 0 ||
-      (m_activeQueue == nullptr)) {
+void Renderer::pine_batch(Buffer *instance_buffer, std::size_t instance_count,
+                          const PineBatchParams &params) {
+  if ((instance_buffer == nullptr) || instance_count == 0 ||
+      (m_active_queue == nullptr)) {
     return;
   }
   PineBatchCmd cmd;
-  cmd.instanceBuffer = instanceBuffer;
+  cmd.instance_buffer = instance_buffer;
   cmd.instance_count = instance_count;
   cmd.params = params;
-  cmd.params.time = m_accumulatedTime;
-  m_activeQueue->submit(cmd);
+  cmd.params.time = m_accumulated_time;
+  m_active_queue->submit(cmd);
 }
 
-void Renderer::oliveBatch(Buffer *instanceBuffer, std::size_t instance_count,
-                          const OliveBatchParams &params) {
-  if ((instanceBuffer == nullptr) || instance_count == 0 ||
-      (m_activeQueue == nullptr)) {
+void Renderer::olive_batch(Buffer *instance_buffer, std::size_t instance_count,
+                           const OliveBatchParams &params) {
+  if ((instance_buffer == nullptr) || instance_count == 0 ||
+      (m_active_queue == nullptr)) {
     return;
   }
   OliveBatchCmd cmd;
-  cmd.instanceBuffer = instanceBuffer;
+  cmd.instance_buffer = instance_buffer;
   cmd.instance_count = instance_count;
   cmd.params = params;
-  cmd.params.time = m_accumulatedTime;
-  m_activeQueue->submit(cmd);
+  cmd.params.time = m_accumulated_time;
+  m_active_queue->submit(cmd);
 }
 
-void Renderer::firecampBatch(Buffer *instanceBuffer, std::size_t instance_count,
-                             const FireCampBatchParams &params) {
-  if ((instanceBuffer == nullptr) || instance_count == 0 ||
-      (m_activeQueue == nullptr)) {
+void Renderer::firecamp_batch(Buffer *instance_buffer, std::size_t instance_count,
+                              const FireCampBatchParams &params) {
+  if ((instance_buffer == nullptr) || instance_count == 0 ||
+      (m_active_queue == nullptr)) {
     return;
   }
   FireCampBatchCmd cmd;
-  cmd.instanceBuffer = instanceBuffer;
+  cmd.instance_buffer = instance_buffer;
   cmd.instance_count = instance_count;
   cmd.params = params;
-  cmd.params.time = m_accumulatedTime;
-  m_activeQueue->submit(cmd);
+  cmd.params.time = m_accumulated_time;
+  m_active_queue->submit(cmd);
 }
 
-void Renderer::terrainChunk(Mesh *mesh, const QMatrix4x4 &model,
-                            const TerrainChunkParams &params,
-                            std::uint16_t sortKey, bool depthWrite,
-                            float depthBias) {
-  if ((mesh == nullptr) || (m_activeQueue == nullptr)) {
+void Renderer::terrain_chunk(Mesh *mesh, const QMatrix4x4 &model,
+                             const TerrainChunkParams &params,
+                             std::uint16_t sort_key, bool depth_write,
+                             float depth_bias) {
+  if ((mesh == nullptr) || (m_active_queue == nullptr)) {
     return;
   }
   TerrainChunkCmd cmd;
   cmd.mesh = mesh;
   cmd.model = model;
   cmd.params = params;
-  cmd.sortKey = sortKey;
-  cmd.depthWrite = depthWrite;
-  cmd.depthBias = depthBias;
-  m_activeQueue->submit(cmd);
+  cmd.sort_key = sort_key;
+  cmd.depth_write = depth_write;
+  cmd.depth_bias = depth_bias;
+  m_active_queue->submit(cmd);
 }
 
-void Renderer::selectionRing(const QMatrix4x4 &model, float alphaInner,
-                             float alphaOuter, const QVector3D &color) {
+void Renderer::selection_ring(const QMatrix4x4 &model, float alpha_inner,
+                              float alpha_outer, const QVector3D &color) {
   SelectionRingCmd cmd;
   cmd.model = model;
   cmd.mvp = m_view_proj * model;
-  cmd.alphaInner = alphaInner;
-  cmd.alphaOuter = alphaOuter;
+  cmd.alpha_inner = alpha_inner;
+  cmd.alpha_outer = alpha_outer;
   cmd.color = color;
-  if (m_activeQueue != nullptr) {
-    m_activeQueue->submit(cmd);
+  if (m_active_queue != nullptr) {
+    m_active_queue->submit(cmd);
   }
 }
 
 void Renderer::grid(const QMatrix4x4 &model, const QVector3D &color,
-                    float cellSize, float thickness, float extent) {
+                    float cell_size, float thickness, float extent) {
   GridCmd cmd;
   cmd.model = model;
   cmd.mvp = m_view_proj * model;
   cmd.color = color;
-  cmd.cellSize = cellSize;
+  cmd.cell_size = cell_size;
   cmd.thickness = thickness;
   cmd.extent = extent;
-  if (m_activeQueue != nullptr) {
-    m_activeQueue->submit(cmd);
+  if (m_active_queue != nullptr) {
+    m_active_queue->submit(cmd);
   }
 }
 
-void Renderer::selectionSmoke(const QMatrix4x4 &model, const QVector3D &color,
-                              float baseAlpha) {
+void Renderer::selection_smoke(const QMatrix4x4 &model, const QVector3D &color,
+                               float base_alpha) {
   SelectionSmokeCmd cmd;
   cmd.model = model;
   cmd.mvp = m_view_proj * model;
   cmd.color = color;
-  cmd.baseAlpha = baseAlpha;
-  if (m_activeQueue != nullptr) {
-    m_activeQueue->submit(cmd);
+  cmd.base_alpha = base_alpha;
+  if (m_active_queue != nullptr) {
+    m_active_queue->submit(cmd);
   }
 }
 
-void Renderer::enqueueSelectionRing(Engine::Core::Entity *,
-                                    Engine::Core::TransformComponent *transform,
-                                    Engine::Core::UnitComponent *unit_comp,
-                                    bool selected, bool hovered) {
+void Renderer::enqueue_selection_ring(Engine::Core::Entity *,
+                                      Engine::Core::TransformComponent *transform,
+                                      Engine::Core::UnitComponent *unit_comp,
+                                      bool selected, bool hovered) {
   if ((!selected && !hovered) || (transform == nullptr)) {
     return;
   }
@@ -365,13 +365,13 @@ void Renderer::enqueueSelectionRing(Engine::Core::Entity *,
   ring_model.scale(ring_size, 1.0F, ring_size);
 
   if (selected) {
-    selectionRing(ring_model, 0.6F, 0.25F, QVector3D(0.2F, 0.4F, 1.0F));
+    selection_ring(ring_model, 0.6F, 0.25F, QVector3D(0.2F, 0.4F, 1.0F));
   } else if (hovered) {
-    selectionRing(ring_model, 0.35F, 0.15F, QVector3D(0.90F, 0.90F, 0.25F));
+    selection_ring(ring_model, 0.35F, 0.15F, QVector3D(0.90F, 0.90F, 0.25F));
   }
 }
 
-void Renderer::renderWorld(Engine::Core::World *world) {
+void Renderer::render_world(Engine::Core::World *world) {
   if (m_paused.load()) {
     return;
   }
@@ -495,20 +495,20 @@ void Renderer::renderWorld(Engine::Core::World *world) {
                        transform->scale.z);
 
     bool drawn_by_registry = false;
-    if (m_entityRegistry) {
+    if (m_entity_registry) {
       std::string renderer_key;
       if (!renderable->rendererId.empty()) {
         renderer_key = renderable->rendererId;
       } else if (unit_comp != nullptr) {
         renderer_key = Game::Units::spawn_typeToString(unit_comp->spawn_type);
       }
-      auto fn = m_entityRegistry->get(renderer_key);
+      auto fn = m_entity_registry->get(renderer_key);
       if (fn) {
         DrawContext ctx{resources(), entity, world, model_matrix};
 
         ctx.selected = is_selected;
         ctx.hovered = is_hovered;
-        ctx.animationTime = m_accumulatedTime;
+        ctx.animationTime = m_accumulated_time;
         ctx.rendererId = renderer_key;
         ctx.backend = m_backend.get();
         ctx.camera = m_camera;
@@ -524,8 +524,8 @@ void Renderer::renderWorld(Engine::Core::World *world) {
           fn(ctx, *this);
         }
 
-        enqueueSelectionRing(entity, transform, unit_comp, is_selected,
-                             is_hovered);
+        enqueue_selection_ring(entity, transform, unit_comp, is_selected,
+                              is_hovered);
         drawn_by_registry = true;
       }
     }
@@ -605,37 +605,37 @@ void Renderer::renderWorld(Engine::Core::World *world) {
         mesh(contact_quad, c2, col, white, outer_alpha);
       }
     }
-    enqueueSelectionRing(entity, transform, unit_comp, is_selected, is_hovered);
+    enqueue_selection_ring(entity, transform, unit_comp, is_selected, is_hovered);
     mesh(mesh_to_draw, model_matrix, color,
          (res != nullptr) ? res->white() : nullptr, 1.0F);
   }
 
-  if ((m_activeQueue != nullptr) && batcher.totalCount() > 0) {
+  if ((m_active_queue != nullptr) && batcher.total_count() > 0) {
     PrimitiveBatchParams params;
     params.viewProj = m_view_proj;
 
-    if (batcher.sphereCount() > 0) {
+    if (batcher.sphere_count() > 0) {
       PrimitiveBatchCmd cmd;
       cmd.type = PrimitiveType::Sphere;
-      cmd.instances = batcher.sphereData();
+      cmd.instances = batcher.sphere_data();
       cmd.params = params;
-      m_activeQueue->submit(cmd);
+      m_active_queue->submit(cmd);
     }
 
-    if (batcher.cylinderCount() > 0) {
+    if (batcher.cylinder_count() > 0) {
       PrimitiveBatchCmd cmd;
       cmd.type = PrimitiveType::Cylinder;
-      cmd.instances = batcher.cylinderData();
+      cmd.instances = batcher.cylinder_data();
       cmd.params = params;
-      m_activeQueue->submit(cmd);
+      m_active_queue->submit(cmd);
     }
 
-    if (batcher.coneCount() > 0) {
+    if (batcher.cone_count() > 0) {
       PrimitiveBatchCmd cmd;
       cmd.type = PrimitiveType::Cone;
-      cmd.instances = batcher.coneData();
+      cmd.instances = batcher.cone_data();
       cmd.params = params;
-      m_activeQueue->submit(cmd);
+      m_active_queue->submit(cmd);
     }
   }
 }
