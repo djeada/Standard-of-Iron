@@ -30,18 +30,18 @@ Item {
         function onSelectedUnitsChanged() {
             selectionTick += 1;
             var hasTroops = false;
-            if (typeof game !== 'undefined' && game.hasUnitsSelected && game.hasSelectedType) {
+            if (typeof game !== 'undefined' && game.has_units_selected && game.has_selected_type) {
                 var troopTypes = ["warrior", "archer", "swordsman", "spearman"];
                 for (var i = 0; i < troopTypes.length; i++) {
-                    if (game.hasSelectedType(troopTypes[i])) {
+                    if (game.has_selected_type(troopTypes[i])) {
                         hasTroops = true;
                         break;
                     }
                 }
             }
             var actualMode = "normal";
-            if (hasTroops && typeof game !== 'undefined' && game.getSelectedUnitsCommandMode)
-                actualMode = game.getSelectedUnitsCommandMode();
+            if (hasTroops && typeof game !== 'undefined' && game.get_selected_units_command_mode)
+                actualMode = game.get_selected_units_command_mode();
 
             if (currentCommandMode !== actualMode) {
                 currentCommandMode = actualMode;
@@ -61,8 +61,8 @@ Item {
         running: true
         onTriggered: {
             selectionTick += 1;
-            if (hasMovableUnits && typeof game !== 'undefined' && game.getSelectedUnitsCommandMode) {
-                var actualMode = game.getSelectedUnitsCommandMode();
+            if (hasMovableUnits && typeof game !== 'undefined' && game.get_selected_units_command_mode) {
+                var actualMode = game.get_selected_units_command_mode();
                 if (currentCommandMode !== actualMode)
                     currentCommandMode = actualMode;
 
@@ -132,7 +132,7 @@ Item {
 
         Connections {
             function onHudBecameVisible() {
-                if (typeof game !== 'undefined' && game.victoryState === "")
+                if (typeof game !== 'undefined' && game.victory_state === "")
                     hudVictory.forceHide();
 
             }
