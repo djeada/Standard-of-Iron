@@ -248,7 +248,7 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
       (context.state == AIState::Attacking || context.barracksUnderThreat) &&
       assessment.forceRatio >= 0.8F;
 
-  command.shouldChase = should_chase_aggressive;
+  command.should_chase = should_chase_aggressive;
 
   outCommands.push_back(std::move(command));
 }

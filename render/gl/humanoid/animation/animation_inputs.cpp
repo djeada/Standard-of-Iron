@@ -42,18 +42,18 @@ auto sampleAnimState(const DrawContext &ctx) -> AnimationInputs {
     anim.hold_exit_progress =
         1.0F - (hold_mode->exitCooldown / hold_mode->standUpDuration);
   }
-  anim.is_moving = ((movement != nullptr) && movement->hasTarget);
+  anim.is_moving = ((movement != nullptr) && movement->has_target);
 
   if ((attack != nullptr) && (attack_target != nullptr) &&
       attack_target->target_id > 0 && (transform != nullptr)) {
-    anim.is_melee = (attack->currentMode ==
+    anim.is_melee = (attack->current_mode ==
                      Engine::Core::AttackComponent::CombatMode::Melee);
 
     bool const stationary = !anim.is_moving;
     float const current_cooldown =
-        anim.is_melee ? attack->meleeCooldown : attack->cooldown;
+        anim.is_melee ? attack->melee_cooldown : attack->cooldown;
     bool const recently_fired =
-        attack->timeSinceLast < std::min(current_cooldown, 0.45F);
+        attack->time_since_last < std::min(current_cooldown, 0.45F);
     bool target_in_range = false;
 
     if (ctx.world != nullptr) {

@@ -119,11 +119,11 @@ void MovementSystem::moveUnit(Engine::Core::Entity *entity,
     }
 
     if (hold_mode->active) {
-      movement->hasTarget = false;
+      movement->has_target = false;
       movement->vx = 0.0F;
       movement->vz = 0.0F;
       movement->path.clear();
-      movement->pathPending = false;
+      movement->path_pending = false;
       in_hold_mode = true;
     }
 
@@ -137,9 +137,9 @@ void MovementSystem::moveUnit(Engine::Core::Entity *entity,
 
   if (in_hold_mode) {
     if (!entity->hasComponent<Engine::Core::BuildingComponent>()) {
-      if (transform->hasDesiredYaw) {
+      if (transform->has_desired_yaw) {
         float const current = transform->rotation.y;
-        float const target_yaw = transform->desiredYaw;
+        float const target_yaw = transform->desired_yaw;
         float const diff =
             std::fmod((target_yaw - current + 540.0F), 360.0F) - 180.0F;
         float const turn_speed = 180.0F;
@@ -148,7 +148,7 @@ void MovementSystem::moveUnit(Engine::Core::Entity *entity,
         transform->rotation.y = current + step;
 
         if (std::fabs(diff) < 0.5F) {
-          transform->hasDesiredYaw = false;
+          transform->has_desired_yaw = false;
         }
       }
     }
@@ -156,50 +156,50 @@ void MovementSystem::moveUnit(Engine::Core::Entity *entity,
   }
 
   auto *atk = entity->getComponent<Engine::Core::AttackComponent>();
-  if ((atk != nullptr) && atk->inMeleeLock) {
+  if ((atk != nullptr) && atk->in_melee_lock) {
 
-    movement->hasTarget = false;
+    movement->has_target = false;
     movement->vx = 0.0F;
     movement->vz = 0.0F;
     movement->path.clear();
-    movement->pathPending = false;
+    movement->path_pending = false;
     return;
   }
 
-  QVector3D const final_goal(movement->goalX, 0.0F, movement->goalY);
+  QVector3D const final_goal(movement->goal_x, 0.0F, movement->goal_y);
   bool const destination_allowed = isPointAllowed(final_goal, entity->getId());
 
-  if (movement->hasTarget && !destination_allowed) {
+  if (movement->has_target && !destination_allowed) {
     movement->path.clear();
-    movement->hasTarget = false;
-    movement->pathPending = false;
-    movement->pendingRequestId = 0;
+    movement->has_target = false;
+    movement->path_pending = false;
+    movement->pending_request_id = 0;
     movement->vx = 0.0F;
     movement->vz = 0.0F;
     return;
   }
 
-  if (movement->repathCooldown > 0.0F) {
-    movement->repathCooldown =
-        std::max(0.0F, movement->repathCooldown - deltaTime);
+  if (movement->repath_cooldown > 0.0F) {
+    movement->repath_cooldown =
+        std::max(0.0F, movement->repath_cooldown - deltaTime);
   }
 
-  if (movement->timeSinceLastPathRequest < 10.0F) {
-    movement->timeSinceLastPathRequest += deltaTime;
+  if (movement->time_since_last_path_request < 10.0F) {
+    movement->time_since_last_path_request += deltaTime;
   }
 
   const float max_speed = std::max(0.1F, unit->speed);
   const float accel = max_speed * 4.0F;
   const float damping = 6.0F;
 
-  if (!movement->hasTarget) {
+  if (!movement->has_target) {
     QVector3D const current_pos(transform->position.x, 0.0F,
                                 transform->position.z);
     float const goal_dist_sq = (final_goal - current_pos).lengthSquared();
     constexpr float k_stuck_distance_sq = 0.6F * 0.6F;
 
     bool requested_recovery_move = false;
-    if (!movement->pathPending && movement->repathCooldown <= 0.0F &&
+    if (!movement->path_pending && movement->repath_cooldown <= 0.0F &&
         goal_dist_sq > k_stuck_distance_sq && std::isfinite(goal_dist_sq) &&
         destination_allowed) {
       CommandService::MoveOptions opts;
@@ -208,7 +208,7 @@ void MovementSystem::moveUnit(Engine::Core::Entity *entity,
       std::vector<Engine::Core::EntityID> const ids = {entity->getId()};
       std::vector<QVector3D> const targets = {final_goal};
       CommandService::moveUnits(*world, ids, targets, opts);
-      movement->repathCooldown = repath_cooldown_seconds;
+      movement->repath_cooldown = repath_cooldown_seconds;
       requested_recovery_move = true;
     }
 
@@ -262,7 +262,7 @@ void MovementSystem::moveUnit(Engine::Core::Entity *entity,
 
       } else {
         bool issued_path_request = false;
-        if (!movement->pathPending && movement->repathCooldown <= 0.0F) {
+        if (!movement->path_pending && movement->repath_cooldown <= 0.0F) {
           float const goal_dist_sq = (final_goal - current_pos).lengthSquared();
           if (goal_dist_sq > 0.01F && destination_allowed) {
             CommandService::MoveOptions opts;
@@ -270,20 +270,20 @@ void MovementSystem::moveUnit(Engine::Core::Entity *entity,
             opts.allowDirectFallback = false;
             std::vector<Engine::Core::EntityID> const ids = {entity->getId()};
             std::vector<QVector3D> const targets = {
-                QVector3D(movement->goalX, 0.0F, movement->goalY)};
+                QVector3D(movement->goal_x, 0.0F, movement->goal_y)};
             CommandService::moveUnits(*world, ids, targets, opts);
-            movement->repathCooldown = repath_cooldown_seconds;
+            movement->repath_cooldown = repath_cooldown_seconds;
             issued_path_request = true;
           }
         }
 
         if (!issued_path_request) {
-          movement->pathPending = false;
-          movement->pendingRequestId = 0;
+          movement->path_pending = false;
+          movement->pending_request_id = 0;
         }
 
         movement->path.clear();
-        movement->hasTarget = false;
+        movement->has_target = false;
         movement->vx = 0.0F;
         movement->vz = 0.0F;
         return;
@@ -299,7 +299,7 @@ void MovementSystem::moveUnit(Engine::Core::Entity *entity,
     float dist2 = dx * dx + dz * dz;
 
     int safety_counter = max_waypoint_skip_count;
-    while (movement->hasTarget && dist2 < arrive_radius_sq &&
+    while (movement->has_target && dist2 < arrive_radius_sq &&
            safety_counter-- > 0) {
       if (!movement->path.empty()) {
         movement->path.erase(movement->path.begin());
@@ -315,12 +315,12 @@ void MovementSystem::moveUnit(Engine::Core::Entity *entity,
 
       transform->position.x = movement->target_x;
       transform->position.z = movement->target_y;
-      movement->hasTarget = false;
+      movement->has_target = false;
       movement->vx = movement->vz = 0.0F;
       break;
     }
 
-    if (!movement->hasTarget) {
+    if (!movement->has_target) {
       movement->vx *= std::max(0.0F, 1.0F - damping * deltaTime);
       movement->vz *= std::max(0.0F, 1.0F - damping * deltaTime);
     } else {
@@ -383,10 +383,10 @@ void MovementSystem::moveUnit(Engine::Core::Entity *entity,
       float const step =
           std::clamp(diff, -turn_speed * deltaTime, turn_speed * deltaTime);
       transform->rotation.y = current + step;
-    } else if (transform->hasDesiredYaw) {
+    } else if (transform->has_desired_yaw) {
 
       float const current = transform->rotation.y;
-      float const target_yaw = transform->desiredYaw;
+      float const target_yaw = transform->desired_yaw;
       float const diff =
           std::fmod((target_yaw - current + 540.0F), 360.0F) - 180.0F;
       float const turn_speed = 180.0F;
@@ -395,7 +395,7 @@ void MovementSystem::moveUnit(Engine::Core::Entity *entity,
       transform->rotation.y = current + step;
 
       if (std::fabs(diff) < 0.5F) {
-        transform->hasDesiredYaw = false;
+        transform->has_desired_yaw = false;
       }
     }
   }

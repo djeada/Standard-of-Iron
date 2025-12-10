@@ -233,13 +233,13 @@ GameEngine::GameEngine(QObject *parent)
           &GameEngine::global_cursor_changed);
 
   connect(m_selectionController.get(),
-          &Game::Systems::SelectionController::selectionChanged, this,
+          &Game::Systems::SelectionController::selection_changed, this,
           &GameEngine::selected_units_changed);
   connect(m_selectionController.get(),
-          &Game::Systems::SelectionController::selectionChanged, this,
+          &Game::Systems::SelectionController::selection_changed, this,
           &GameEngine::sync_selection_flags);
   connect(m_selectionController.get(),
-          &Game::Systems::SelectionController::selectionModelRefreshRequested,
+          &Game::Systems::SelectionController::selection_model_refresh_requested,
           this, &GameEngine::selected_units_data_changed);
   connect(m_commandController.get(),
           &App::Controllers::CommandController::attack_targetSelected,
@@ -965,20 +965,20 @@ auto GameEngine::get_selected_production_state() const -> QVariantMap {
       *m_world, selection_system->getSelectedUnits(), m_runtime.localOwnerId,
       st);
   m["has_barracks"] = st.has_barracks;
-  m["inProgress"] = st.inProgress;
+  m["inProgress"] = st.in_progress;
   m["product_type"] =
       QString::fromStdString(Game::Units::troop_typeToString(st.product_type));
-  m["timeRemaining"] = st.timeRemaining;
-  m["buildTime"] = st.buildTime;
-  m["producedCount"] = st.producedCount;
-  m["maxUnits"] = st.maxUnits;
-  m["villagerCost"] = st.villagerCost;
+  m["timeRemaining"] = st.time_remaining;
+  m["buildTime"] = st.build_time;
+  m["producedCount"] = st.produced_count;
+  m["maxUnits"] = st.max_units;
+  m["villagerCost"] = st.villager_cost;
   m["queueSize"] = st.queueSize;
   m["nation_id"] =
       QString::fromStdString(Game::Systems::nationIDToString(st.nation_id));
 
   QVariantList queue_list;
-  for (const auto &unit_type : st.productionQueue) {
+  for (const auto &unit_type : st.production_queue) {
     queue_list.append(
         QString::fromStdString(Game::Units::troop_typeToString(unit_type)));
   }

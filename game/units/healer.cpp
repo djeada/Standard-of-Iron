@@ -51,7 +51,7 @@ void Healer::init(const SpawnParams &params) {
 
   m_r = e->addComponent<Engine::Core::RenderableComponent>("", "");
   m_r->visible = true;
-  m_r->rendererId = profile.visuals.renderer_id;
+  m_r->renderer_id = profile.visuals.renderer_id;
 
   m_u = e->addComponent<Engine::Core::UnitComponent>();
   m_u->spawn_type = params.spawn_type;
@@ -73,8 +73,8 @@ void Healer::init(const SpawnParams &params) {
 
   m_mv = e->addComponent<Engine::Core::MovementComponent>();
   if (m_mv != nullptr) {
-    m_mv->goalX = params.position.x();
-    m_mv->goalY = params.position.z();
+    m_mv->goal_x = params.position.x();
+    m_mv->goal_y = params.position.z();
     m_mv->target_x = params.position.x();
     m_mv->target_y = params.position.z();
   }

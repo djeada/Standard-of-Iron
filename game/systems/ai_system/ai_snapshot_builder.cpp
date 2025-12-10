@@ -54,23 +54,23 @@ auto AISnapshotBuilder::build(const Engine::Core::World &world,
     if (auto *movement =
             entity->getComponent<Engine::Core::MovementComponent>()) {
       data.movement.hasComponent = true;
-      data.movement.hasTarget = movement->hasTarget;
+      data.movement.has_target = movement->has_target;
     }
 
     if (auto *production =
             entity->getComponent<Engine::Core::ProductionComponent>()) {
       data.production.hasComponent = true;
-      data.production.inProgress = production->inProgress;
-      data.production.buildTime = production->buildTime;
-      data.production.timeRemaining = production->timeRemaining;
-      data.production.producedCount = production->producedCount;
-      data.production.maxUnits = production->maxUnits;
+      data.production.in_progress = production->in_progress;
+      data.production.build_time = production->build_time;
+      data.production.time_remaining = production->time_remaining;
+      data.production.produced_count = production->produced_count;
+      data.production.max_units = production->max_units;
       data.production.product_type = production->product_type;
-      data.production.rallySet = production->rallySet;
-      data.production.rallyX = production->rallyX;
-      data.production.rallyZ = production->rallyZ;
+      data.production.rally_set = production->rally_set;
+      data.production.rally_x = production->rally_x;
+      data.production.rally_z = production->rally_z;
       data.production.queueSize =
-          static_cast<int>(production->productionQueue.size());
+          static_cast<int>(production->production_queue.size());
     }
 
     snapshot.friendlies.push_back(std::move(data));
