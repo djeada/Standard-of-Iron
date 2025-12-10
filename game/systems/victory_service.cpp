@@ -140,7 +140,7 @@ void VictoryService::checkVictoryConditions(Engine::Core::World &world) {
       }
     }
 
-    const auto *stats = m_stats_registry.getStats(m_localOwnerId);
+    const auto *stats = m_stats_registry.get_stats(m_localOwnerId);
     if (stats != nullptr) {
       qInfo() << "Final Stats - Troops Recruited:" << stats->troops_recruited
               << "Enemies Killed:" << stats->enemies_killed
@@ -182,7 +182,7 @@ void VictoryService::checkDefeatConditions(Engine::Core::World &world) {
         }
       }
 
-      const auto *stats = m_stats_registry.getStats(m_localOwnerId);
+      const auto *stats = m_stats_registry.get_stats(m_localOwnerId);
       if (stats != nullptr) {
         qInfo() << "Final Stats - Troops Recruited:" << stats->troops_recruited
                 << "Enemies Killed:" << stats->enemies_killed
@@ -204,7 +204,7 @@ auto VictoryService::checkElimination(Engine::Core::World &world) -> bool {
 
   int const local_team = m_owner_registry.getOwnerTeam(m_localOwnerId);
 
-  auto entities = world.getEntitiesWith<Engine::Core::UnitComponent>();
+  auto entities = world.get_entities_with<Engine::Core::UnitComponent>();
   for (auto *e : entities) {
     auto *unit = e->get_component<Engine::Core::UnitComponent>();
     if ((unit == nullptr) || unit->health <= 0) {
@@ -237,7 +237,7 @@ auto VictoryService::checkSurviveTime() const -> bool {
 
 auto VictoryService::checkNoUnits(Engine::Core::World &world) const -> bool {
 
-  auto entities = world.getEntitiesWith<Engine::Core::UnitComponent>();
+  auto entities = world.get_entities_with<Engine::Core::UnitComponent>();
   for (auto *e : entities) {
     auto *unit = e->get_component<Engine::Core::UnitComponent>();
     if ((unit == nullptr) || unit->health <= 0) {
@@ -254,7 +254,7 @@ auto VictoryService::checkNoUnits(Engine::Core::World &world) const -> bool {
 
 auto VictoryService::checkNoKeyStructures(Engine::Core::World &world) -> bool {
 
-  auto entities = world.getEntitiesWith<Engine::Core::UnitComponent>();
+  auto entities = world.get_entities_with<Engine::Core::UnitComponent>();
   for (auto *e : entities) {
     auto *unit = e->get_component<Engine::Core::UnitComponent>();
     if ((unit == nullptr) || unit->health <= 0) {

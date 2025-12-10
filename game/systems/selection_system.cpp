@@ -133,7 +133,7 @@ void SelectionController::select_all_player_troops(int local_owner_id) {
 
   m_selection_system->clearSelection();
 
-  auto entities = m_world->getEntitiesWith<Engine::Core::UnitComponent>();
+  auto entities = m_world->get_entities_with<Engine::Core::UnitComponent>();
   for (auto *e : entities) {
     auto *unit = e->get_component<Engine::Core::UnitComponent>();
     if ((unit == nullptr) || unit->owner_id != local_owner_id) {
@@ -161,7 +161,7 @@ void SelectionController::select_single_unit(Engine::Core::EntityID id,
     return;
   }
 
-  auto *entity = m_world->getEntity(id);
+  auto *entity = m_world->get_entity(id);
   if (entity == nullptr) {
     return;
   }
@@ -202,7 +202,7 @@ auto SelectionController::has_selected_type(const QString &type) const -> bool {
   }
   const auto &sel = m_selection_system->getSelectedUnits();
   for (auto id : sel) {
-    if (auto *e = m_world->getEntity(id)) {
+    if (auto *e = m_world->get_entity(id)) {
       if (auto *u = e->get_component<Engine::Core::UnitComponent>()) {
         if (QString::fromStdString(
                 Game::Units::spawn_typeToString(u->spawn_type)) == type) {

@@ -122,7 +122,7 @@ void CommandService::moveUnits(Engine::Core::World &world,
   }
 
   for (size_t i = 0; i < units.size(); ++i) {
-    auto *e = world.getEntity(units[i]);
+    auto *e = world.get_entity(units[i]);
     if (e == nullptr) {
       continue;
     }
@@ -349,7 +349,7 @@ void CommandService::moveGroup(Engine::Core::World &world,
   members.reserve(units.size());
 
   for (size_t i = 0; i < units.size(); ++i) {
-    auto *entity = world.getEntity(units[i]);
+    auto *entity = world.get_entity(units[i]);
     if (entity == nullptr) {
       continue;
     }
@@ -731,7 +731,7 @@ void CommandService::processPathResults(Engine::Core::World &world) {
     auto apply_to_member = [&](Engine::Core::EntityID member_id,
                                const QVector3D &target,
                                const QVector3D &offset) {
-      auto *member_entity = world.getEntity(member_id);
+      auto *member_entity = world.get_entity(member_id);
       if (member_entity == nullptr) {
         return;
       }
@@ -854,7 +854,7 @@ void CommandService::attack_target(
     return;
   }
   for (auto unit_id : units) {
-    auto *e = world.getEntity(unit_id);
+    auto *e = world.get_entity(unit_id);
     if (e == nullptr) {
       continue;
     }
@@ -882,7 +882,7 @@ void CommandService::attack_target(
       continue;
     }
 
-    auto *target_ent = world.getEntity(target_id);
+    auto *target_ent = world.get_entity(target_id);
     if (target_ent == nullptr) {
       continue;
     }

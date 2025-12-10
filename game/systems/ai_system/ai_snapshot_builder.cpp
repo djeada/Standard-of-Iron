@@ -11,7 +11,7 @@ auto AISnapshotBuilder::build(const Engine::Core::World &world,
   AISnapshot snapshot;
   snapshot.player_id = aiOwnerId;
 
-  auto friendlies = world.getUnitsOwnedBy(aiOwnerId);
+  auto friendlies = world.get_units_owned_by(aiOwnerId);
   snapshot.friendlies.reserve(friendlies.size());
 
   int skipped_no_ai = 0;
@@ -77,7 +77,7 @@ auto AISnapshotBuilder::build(const Engine::Core::World &world,
     added++;
   }
 
-  auto enemies = world.getEnemyUnits(aiOwnerId);
+  auto enemies = world.get_enemy_units(aiOwnerId);
   snapshot.visibleEnemies.reserve(enemies.size());
 
   for (auto *entity : enemies) {

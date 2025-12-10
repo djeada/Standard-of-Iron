@@ -143,7 +143,7 @@ void GlobalStatsRegistry::rebuild_from_world(Engine::Core::World &world) {
     m_player_stats[owner_id].game_start_time = startTime;
   }
 
-  auto entities = world.getEntitiesWith<Engine::Core::UnitComponent>();
+  auto entities = world.get_entities_with<Engine::Core::UnitComponent>();
   for (auto *e : entities) {
     auto *unit = e->get_component<Engine::Core::UnitComponent>();
     if ((unit == nullptr) || unit->health <= 0) {

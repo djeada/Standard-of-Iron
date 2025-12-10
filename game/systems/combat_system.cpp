@@ -25,9 +25,9 @@ void CombatSystem::update(Engine::Core::World *world, float delta_time) {
 }
 
 void CombatSystem::processAttacks(Engine::Core::World *world, float delta_time) {
-  auto units = world->getEntitiesWith<Engine::Core::UnitComponent>();
+  auto units = world->get_entities_with<Engine::Core::UnitComponent>();
 
-  auto *arrow_sys = world->getSystem<ArrowSystem>();
+  auto *arrow_sys = world->get_system<ArrowSystem>();
 
   for (auto *attacker : units) {
 
@@ -50,7 +50,7 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float delta_time) 
     }
 
     if ((attacker_atk != nullptr) && attacker_atk->in_melee_lock) {
-      auto *lock_target = world->getEntity(attacker_atk->melee_lock_target_id);
+      auto *lock_target = world->get_entity(attacker_atk->melee_lock_target_id);
       if ((lock_target == nullptr) ||
           lock_target->has_component<Engine::Core::PendingRemovalComponent>()) {
 
@@ -94,7 +94,7 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float delta_time) 
 
     if ((attacker_atk != nullptr) && attacker_atk->in_melee_lock &&
         attacker_atk->melee_lock_target_id != 0) {
-      auto *lock_target = world->getEntity(attacker_atk->melee_lock_target_id);
+      auto *lock_target = world->get_entity(attacker_atk->melee_lock_target_id);
       if ((lock_target != nullptr) &&
           !lock_target->has_component<Engine::Core::PendingRemovalComponent>()) {
 
@@ -156,7 +156,7 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float delta_time) 
 
     if ((attack_target != nullptr) && attack_target->target_id != 0) {
 
-      auto *target = world->getEntity(attack_target->target_id);
+      auto *target = world->get_entity(attack_target->target_id);
       if ((target != nullptr) &&
           !target->has_component<Engine::Core::PendingRemovalComponent>()) {
         auto *target_unit = target->get_component<Engine::Core::UnitComponent>();
@@ -633,7 +633,7 @@ void CombatSystem::dealDamage(Engine::Core::World *world,
 
     int attacker_owner_id = 0;
     if (attackerId != 0 && (world != nullptr)) {
-      auto *attacker = world->getEntity(attackerId);
+      auto *attacker = world->get_entity(attackerId);
       if (attacker != nullptr) {
         auto *attacker_unit =
             attacker->get_component<Engine::Core::UnitComponent>();
@@ -665,7 +665,7 @@ void CombatSystem::dealDamage(Engine::Core::World *world,
           target_atk->melee_lock_target_id != 0) {
 
         if (world != nullptr) {
-          auto *lock_partner = world->getEntity(target_atk->melee_lock_target_id);
+          auto *lock_partner = world->get_entity(target_atk->melee_lock_target_id);
           if ((lock_partner != nullptr) &&
               !lock_partner
                    ->has_component<Engine::Core::PendingRemovalComponent>()) {
@@ -728,7 +728,7 @@ void CombatSystem::updateCombatMode(
   }
 
   auto &owner_registry = Game::Systems::OwnerRegistry::instance();
-  auto units = world->getEntitiesWith<Engine::Core::UnitComponent>();
+  auto units = world->get_entities_with<Engine::Core::UnitComponent>();
 
   float closest_enemy_dist_sq = std::numeric_limits<float>::max();
   float closest_height_diff = 0.0F;
@@ -800,7 +800,7 @@ void CombatSystem::updateCombatMode(
 
 void CombatSystem::processAutoEngagement(Engine::Core::World *world,
                                          float delta_time) {
-  auto units = world->getEntitiesWith<Engine::Core::UnitComponent>();
+  auto units = world->get_entities_with<Engine::Core::UnitComponent>();
 
   for (auto it = m_engagementCooldowns.begin();
        it != m_engagementCooldowns.end();) {
@@ -905,7 +905,7 @@ auto CombatSystem::findNearestEnemy(Engine::Core::Entity *unit,
   }
 
   auto &owner_registry = Game::Systems::OwnerRegistry::instance();
-  auto units = world->getEntitiesWith<Engine::Core::UnitComponent>();
+  auto units = world->get_entities_with<Engine::Core::UnitComponent>();
 
   Engine::Core::Entity *nearest_enemy = nullptr;
   float nearest_dist_sq = max_range * max_range;

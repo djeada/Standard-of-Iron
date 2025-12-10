@@ -25,7 +25,7 @@ auto CaptureSystem::countNearbyTroops(Engine::Core::World *world,
                                       float barrack_x, float barrack_z,
                                       int owner_id, float radius) -> int {
   int total_troops = 0;
-  auto entities = world->getEntitiesWith<Engine::Core::UnitComponent>();
+  auto entities = world->get_entities_with<Engine::Core::UnitComponent>();
 
   for (auto *e : entities) {
     auto *unit = e->get_component<Engine::Core::UnitComponent>();
@@ -127,7 +127,7 @@ void CaptureSystem::processBarrackCapture(Engine::Core::World *world,
   constexpr float capture_radius = 8.0F;
   constexpr int troop_advantage_multiplier = 3;
 
-  auto barracks = world->getEntitiesWith<Engine::Core::BuildingComponent>();
+  auto barracks = world->get_entities_with<Engine::Core::BuildingComponent>();
 
   for (auto *barrack : barracks) {
     auto *unit = barrack->get_component<Engine::Core::UnitComponent>();
@@ -153,7 +153,7 @@ void CaptureSystem::processBarrackCapture(Engine::Core::World *world,
     int max_enemy_troops = 0;
     int capturing_player_id = -1;
 
-    auto entities = world->getEntitiesWith<Engine::Core::UnitComponent>();
+    auto entities = world->get_entities_with<Engine::Core::UnitComponent>();
     std::vector<int> player_ids;
     for (auto *e : entities) {
       auto *u = e->get_component<Engine::Core::UnitComponent>();

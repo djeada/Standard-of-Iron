@@ -14,8 +14,8 @@ void HealingSystem::update(Engine::Core::World *world, float delta_time) {
 
 void HealingSystem::processHealing(Engine::Core::World *world,
                                    float delta_time) {
-  auto healers = world->getEntitiesWith<Engine::Core::HealerComponent>();
-  auto *arrow_system = world->getSystem<ArrowSystem>();
+  auto healers = world->get_entities_with<Engine::Core::HealerComponent>();
+  auto *arrow_system = world->get_system<ArrowSystem>();
 
   for (auto *healer : healers) {
     if (healer->has_component<Engine::Core::PendingRemovalComponent>()) {
@@ -43,7 +43,7 @@ void HealingSystem::processHealing(Engine::Core::World *world,
     }
 
     bool healed_any = false;
-    auto units = world->getEntitiesWith<Engine::Core::UnitComponent>();
+    auto units = world->get_entities_with<Engine::Core::UnitComponent>();
     for (auto *target : units) {
       if (target->has_component<Engine::Core::PendingRemovalComponent>()) {
         continue;

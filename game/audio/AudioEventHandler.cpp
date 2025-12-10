@@ -84,7 +84,7 @@ void AudioEventHandler::onUnitSelected(
     return;
   }
 
-  auto *entity = m_world->getEntity(event.unit_id);
+  auto *entity = m_world->get_entity(event.unit_id);
   if (entity == nullptr) {
     return;
   }

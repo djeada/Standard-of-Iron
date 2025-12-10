@@ -51,7 +51,7 @@ auto CommandController::onAttackClick(qreal sx, qreal sy, int viewportWidth,
     return result;
   }
 
-  auto *target_entity = m_world->getEntity(target_id);
+  auto *target_entity = m_world->get_entity(target_id);
   if (target_entity == nullptr) {
     return result;
   }
@@ -84,7 +84,7 @@ auto CommandController::onStopCommand() -> CommandResult {
   }
 
   for (auto id : selected) {
-    auto *entity = m_world->getEntity(id);
+    auto *entity = m_world->get_entity(id);
     if (entity == nullptr) {
       continue;
     }
@@ -122,7 +122,7 @@ auto CommandController::onHoldCommand() -> CommandResult {
   }
 
   for (auto id : selected) {
-    auto *entity = m_world->getEntity(id);
+    auto *entity = m_world->get_entity(id);
     if (entity == nullptr) {
       continue;
     }
@@ -217,7 +217,7 @@ auto CommandController::onPatrolClick(qreal sx, qreal sy, int viewportWidth,
   QVector3D const second_waypoint = hit;
 
   for (auto id : selected) {
-    auto *entity = m_world->getEntity(id);
+    auto *entity = m_world->get_entity(id);
     if (entity == nullptr) {
       continue;
     }
@@ -306,7 +306,7 @@ auto CommandController::anySelectedInHoldMode() const -> bool {
 
   const auto &selected = m_selection_system->getSelectedUnits();
   for (Engine::Core::EntityID const entity_id : selected) {
-    Engine::Core::Entity *entity = m_world->getEntity(entity_id);
+    Engine::Core::Entity *entity = m_world->get_entity(entity_id);
     if (entity == nullptr) {
       continue;
     }

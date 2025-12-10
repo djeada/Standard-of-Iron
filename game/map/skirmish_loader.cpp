@@ -65,7 +65,7 @@ SkirmishLoader::SkirmishLoader(Engine::Core::World &world,
 
 void SkirmishLoader::resetGameState() {
   if (auto *selection_system =
-          m_world.getSystem<Game::Systems::SelectionSystem>()) {
+          m_world.get_system<Game::Systems::SelectionSystem>()) {
     selection_system->clearSelection();
   }
 
@@ -277,7 +277,7 @@ auto SkirmishLoader::start(const QString &map_path,
       }
     }
 
-    auto entities = m_world.getEntitiesWith<Engine::Core::UnitComponent>();
+    auto entities = m_world.get_entities_with<Engine::Core::UnitComponent>();
     std::unordered_map<int, int> owner_entity_count;
     for (auto *entity : entities) {
       auto *unit = entity->get_component<Engine::Core::UnitComponent>();
@@ -458,7 +458,7 @@ auto SkirmishLoader::start(const QString &map_path,
 
   Engine::Core::Entity *focus_entity = nullptr;
 
-  auto candidates = m_world.getEntitiesWith<Engine::Core::UnitComponent>();
+  auto candidates = m_world.get_entities_with<Engine::Core::UnitComponent>();
   for (auto *entity : candidates) {
     if (entity == nullptr) {
       continue;
@@ -475,7 +475,7 @@ auto SkirmishLoader::start(const QString &map_path,
   }
 
   if ((focus_entity == nullptr) && level_result.player_unit_id != 0) {
-    focus_entity = m_world.getEntity(level_result.player_unit_id);
+    focus_entity = m_world.get_entity(level_result.player_unit_id);
   }
 
   if (focus_entity != nullptr) {
