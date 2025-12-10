@@ -25,7 +25,7 @@ void ActionVFX::spawnAttackArrow(Engine::Core::World *world,
   }
 
   auto *target_trans =
-      target_entity->getComponent<Engine::Core::TransformComponent>();
+      target_entity->get_component<Engine::Core::TransformComponent>();
   if (target_trans == nullptr) {
     return;
   }

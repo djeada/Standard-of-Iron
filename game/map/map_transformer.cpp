@@ -207,7 +207,7 @@ auto MapTransformer::applyToWorld(
       continue;
     }
 
-    if (auto *r = e->getComponent<Engine::Core::RenderableComponent>()) {
+    if (auto *r = e->get_component<Engine::Core::RenderableComponent>()) {
       if (visuals != nullptr) {
         Game::Visuals::VisualDef defv;
         if (visuals->lookup(Game::Units::spawn_typeToString(s.type), defv)) {
@@ -219,9 +219,9 @@ auto MapTransformer::applyToWorld(
       }
     }
 
-    if (auto *t = e->getComponent<Engine::Core::TransformComponent>()) {
+    if (auto *t = e->get_component<Engine::Core::TransformComponent>()) {
       qInfo() << "Spawned" << Game::Units::spawn_typeToQString(s.type)
-              << "id=" << e->getId() << "at"
+              << "id=" << e->get_id() << "at"
               << QVector3D(t->position.x, t->position.y, t->position.z)
               << "(coordSystem="
               << (def.coordSystem == CoordSystem::Grid ? "Grid" : "World")

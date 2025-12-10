@@ -10,12 +10,12 @@ inline void reset_movement(Engine::Core::Entity *entity) {
     return;
   }
 
-  auto *movement = entity->getComponent<Engine::Core::MovementComponent>();
+  auto *movement = entity->get_component<Engine::Core::MovementComponent>();
   if (movement == nullptr) {
     return;
   }
 
-  auto *transform = entity->getComponent<Engine::Core::TransformComponent>();
+  auto *transform = entity->get_component<Engine::Core::TransformComponent>();
   movement->has_target = false;
   movement->path.clear();
   movement->path_pending = false;

@@ -67,7 +67,7 @@ void ProductionBehavior::execute(const AISnapshot &snapshot, AIContext &context,
 
     static int const log_counter = 0;
 
-    if (!entity.production.hasComponent) {
+    if (!entity.production.has_component) {
       continue;
     }
 

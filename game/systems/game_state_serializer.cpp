@@ -20,7 +20,7 @@ auto GameStateSerializer::buildMetadata(
   metadata["map_name"] = level.map_name;
   metadata["max_troops_per_player"] = level.max_troops_per_player;
   metadata["local_owner_id"] = runtime.local_owner_id;
-  metadata["playerUnitId"] = static_cast<qint64>(level.playerUnitId);
+  metadata["playerUnitId"] = static_cast<qint64>(level.player_unit_id);
 
   metadata["gameMaxTroopsPerPlayer"] =
       Game::GameConfig::instance().getMaxTroopsPerPlayer();
@@ -48,10 +48,10 @@ auto GameStateSerializer::buildMetadata(
   QJsonObject runtime_obj;
   runtime_obj["paused"] = runtime.paused;
   runtime_obj["time_scale"] = runtime.time_scale;
-  runtime_obj["victoryState"] = runtime.victoryState;
-  runtime_obj["cursorMode"] = runtime.cursorMode;
-  runtime_obj["selectedPlayerId"] = runtime.selectedPlayerId;
-  runtime_obj["followSelection"] = runtime.followSelection;
+  runtime_obj["victoryState"] = runtime.victory_state;
+  runtime_obj["cursorMode"] = runtime.cursor_mode;
+  runtime_obj["selectedPlayerId"] = runtime.selected_player_id;
+  runtime_obj["followSelection"] = runtime.follow_selection;
   metadata["runtime"] = runtime_obj;
 
   return metadata;
@@ -103,13 +103,13 @@ void GameStateSerializer::restoreRuntimeFromMetadata(
         runtime_obj.value("time_scale").toDouble(runtime.time_scale));
   }
 
-  runtime.victoryState =
-      runtime_obj.value("victoryState").toString(runtime.victoryState);
+  runtime.victory_state =
+      runtime_obj.value("victoryState").toString(runtime.victory_state);
 
   if (runtime_obj.contains("cursorMode")) {
     const auto cursor_value = runtime_obj.value("cursorMode");
     if (cursor_value.isDouble()) {
-      runtime.cursorMode = cursor_value.toInt(0);
+      runtime.cursor_mode = cursor_value.toInt(0);
     }
   }
 
@@ -118,11 +118,11 @@ void GameStateSerializer::restoreRuntimeFromMetadata(
         metadata.value("local_owner_id").toInt(runtime.local_owner_id);
   }
 
-  runtime.selectedPlayerId =
-      runtime_obj.value("selectedPlayerId").toInt(runtime.selectedPlayerId);
+  runtime.selected_player_id =
+      runtime_obj.value("selectedPlayerId").toInt(runtime.selected_player_id);
 
-  runtime.followSelection =
-      runtime_obj.value("followSelection").toBool(runtime.followSelection);
+  runtime.follow_selection =
+      runtime_obj.value("followSelection").toBool(runtime.follow_selection);
 }
 
 void GameStateSerializer::restoreLevelFromMetadata(const QJsonObject &metadata,
@@ -137,7 +137,7 @@ void GameStateSerializer::restoreLevelFromMetadata(const QJsonObject &metadata,
   }
 
   if (metadata.contains("playerUnitId")) {
-    level.playerUnitId = static_cast<Engine::Core::EntityID>(
+    level.player_unit_id = static_cast<Engine::Core::EntityID>(
         metadata.value("playerUnitId").toVariant().toULongLong());
   }
 

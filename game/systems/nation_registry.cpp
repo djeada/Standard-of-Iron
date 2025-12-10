@@ -17,7 +17,7 @@ namespace Game::Systems {
 auto Nation::getMeleeTroops() const -> std::vector<const TroopType *> {
   std::vector<const TroopType *> result;
   for (const auto &troop : availableTroops) {
-    if (troop.isMelee) {
+    if (troop.is_melee) {
       result.push_back(&troop);
     }
   }
@@ -27,7 +27,7 @@ auto Nation::getMeleeTroops() const -> std::vector<const TroopType *> {
 auto Nation::getRangedTroops() const -> std::vector<const TroopType *> {
   std::vector<const TroopType *> result;
   for (const auto &troop : availableTroops) {
-    if (!troop.isMelee) {
+    if (!troop.is_melee) {
       result.push_back(&troop);
     }
   }
@@ -74,12 +74,12 @@ auto Nation::getBestRangedTroop() const -> const TroopType * {
 
 auto Nation::isMeleeUnit(Game::Units::TroopType unit_type) const -> bool {
   const auto *troop = getTroop(unit_type);
-  return troop != nullptr && troop->isMelee;
+  return troop != nullptr && troop->is_melee;
 }
 
 auto Nation::is_ranged_unit(Game::Units::TroopType unit_type) const -> bool {
   const auto *troop = getTroop(unit_type);
-  return troop != nullptr && !troop->isMelee;
+  return troop != nullptr && !troop->is_melee;
 }
 
 auto NationRegistry::instance() -> NationRegistry & {
@@ -139,8 +139,8 @@ void NationRegistry::initializeDefaults() {
   if (nations.empty()) {
     Nation roman;
     roman.id = NationID::RomanRepublic;
-    roman.displayName = "Roman Republic";
-    roman.primaryBuilding = Game::Units::BuildingType::Barracks;
+    roman.display_name = "Roman Republic";
+    roman.primary_building = Game::Units::BuildingType::Barracks;
     roman.formation_type = FormationType::Roman;
 
     auto appendTroop = [&roman](Game::Units::TroopType type) {
@@ -149,13 +149,13 @@ void NationRegistry::initializeDefaults() {
 
       const auto &troop_class =
           Game::Units::TroopCatalog::instance().get_class_or_fallback(type);
-      troop_entry.displayName = troop_class.display_name;
-      troop_entry.isMelee = troop_class.production.is_melee;
+      troop_entry.display_name = troop_class.display_name;
+      troop_entry.is_melee = troop_class.production.is_melee;
       troop_entry.cost = troop_class.production.cost;
       troop_entry.build_time = troop_class.production.build_time;
       troop_entry.priority = troop_class.production.priority;
 
-      roman.availableTroops.push_back(std::move(troop_entry));
+      roman.available_troops.push_back(std::move(troop_entry));
     };
 
     appendTroop(Game::Units::TroopType::Archer);

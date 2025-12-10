@@ -33,19 +33,19 @@ void Unit::ensureCoreComponents() {
   }
   if (auto *e = entity()) {
     if (m_t == nullptr) {
-      m_t = e->getComponent<Engine::Core::TransformComponent>();
+      m_t = e->get_component<Engine::Core::TransformComponent>();
     }
     if (m_r == nullptr) {
-      m_r = e->getComponent<Engine::Core::RenderableComponent>();
+      m_r = e->get_component<Engine::Core::RenderableComponent>();
     }
     if (m_u == nullptr) {
-      m_u = e->getComponent<Engine::Core::UnitComponent>();
+      m_u = e->get_component<Engine::Core::UnitComponent>();
     }
     if (m_mv == nullptr) {
-      m_mv = e->getComponent<Engine::Core::MovementComponent>();
+      m_mv = e->get_component<Engine::Core::MovementComponent>();
     }
     if (m_atk == nullptr) {
-      m_atk = e->getComponent<Engine::Core::AttackComponent>();
+      m_atk = e->get_component<Engine::Core::AttackComponent>();
     }
   }
 }
@@ -54,7 +54,7 @@ void Unit::moveTo(float x, float z) {
   ensureCoreComponents();
   if (m_mv == nullptr) {
     if (auto *e = entity()) {
-      m_mv = e->addComponent<Engine::Core::MovementComponent>();
+      m_mv = e->add_component<Engine::Core::MovementComponent>();
     }
   }
   if (m_mv != nullptr) {
@@ -69,7 +69,7 @@ void Unit::moveTo(float x, float z) {
   }
 
   if (auto *e = entity()) {
-    auto *hold_comp = e->getComponent<Engine::Core::HoldModeComponent>();
+    auto *hold_comp = e->get_component<Engine::Core::HoldModeComponent>();
     if (hold_comp != nullptr) {
       hold_comp->active = false;
     }
@@ -78,7 +78,7 @@ void Unit::moveTo(float x, float z) {
 
 auto Unit::is_alive() const -> bool {
   if (auto *e = entity()) {
-    if (auto *u = e->getComponent<Engine::Core::UnitComponent>()) {
+    if (auto *u = e->get_component<Engine::Core::UnitComponent>()) {
       return u->health > 0;
     }
   }
@@ -87,7 +87,7 @@ auto Unit::is_alive() const -> bool {
 
 auto Unit::position() const -> QVector3D {
   if (auto *e = entity()) {
-    if (auto *t = e->getComponent<Engine::Core::TransformComponent>()) {
+    if (auto *t = e->get_component<Engine::Core::TransformComponent>()) {
       return {t->position.x, t->position.y, t->position.z};
     }
   }
@@ -100,16 +100,16 @@ void Unit::setHoldMode(bool enabled) {
     return;
   }
 
-  auto *hold_comp = e->getComponent<Engine::Core::HoldModeComponent>();
+  auto *hold_comp = e->get_component<Engine::Core::HoldModeComponent>();
 
   if (enabled) {
     if (hold_comp == nullptr) {
-      hold_comp = e->addComponent<Engine::Core::HoldModeComponent>();
+      hold_comp = e->add_component<Engine::Core::HoldModeComponent>();
     }
     hold_comp->active = true;
     hold_comp->exitCooldown = 0.0F;
 
-    auto *mv = e->getComponent<Engine::Core::MovementComponent>();
+    auto *mv = e->get_component<Engine::Core::MovementComponent>();
     if (mv != nullptr) {
       mv->has_target = false;
       mv->path.clear();
@@ -129,7 +129,7 @@ auto Unit::isInHoldMode() const -> bool {
     return false;
   }
 
-  auto *hold_comp = e->getComponent<Engine::Core::HoldModeComponent>();
+  auto *hold_comp = e->get_component<Engine::Core::HoldModeComponent>();
   return (hold_comp != nullptr) && hold_comp->active;
 }
 

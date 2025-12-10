@@ -77,7 +77,7 @@ auto LevelLoader::loadFromAssets(
         visuals_loaded ? &visual_catalog : nullptr;
     auto rt = Game::Map::MapTransformer::applyToWorld(def, world, catalog_ptr);
     if (!rt.unit_ids.empty()) {
-      res.playerUnitId = rt.unit_ids.front();
+      res.player_unit_id = rt.unit_ids.front();
     } else {
 
       auto &nationRegistry = Game::Systems::NationRegistry::instance();
@@ -96,7 +96,7 @@ auto LevelLoader::loadFromAssets(
         }
         if (auto unit =
                 reg->create(Game::Units::SpawnType::Archer, world, sp)) {
-          res.playerUnitId = unit->id();
+          res.player_unit_id = unit->id();
         } else {
           qWarning() << "LevelLoader: Fallback archer spawn failed";
         }
@@ -105,7 +105,7 @@ auto LevelLoader::loadFromAssets(
 
     bool has_barracks = false;
     for (auto *e : world.getEntitiesWith<Engine::Core::UnitComponent>()) {
-      if (auto *u = e->getComponent<Engine::Core::UnitComponent>()) {
+      if (auto *u = e->get_component<Engine::Core::UnitComponent>()) {
         if (u->spawn_type == Game::Units::SpawnType::Barracks &&
             owners.isPlayer(u->owner_id)) {
           has_barracks = true;
@@ -161,7 +161,7 @@ auto LevelLoader::loadFromAssets(
         sp.nation_id = nationRegistry.default_nation_id();
       }
       if (auto unit = reg->create(Game::Units::SpawnType::Archer, world, sp)) {
-        res.playerUnitId = unit->id();
+        res.player_unit_id = unit->id();
       }
     }
   }
