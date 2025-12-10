@@ -200,7 +200,7 @@ auto make_horse_dimensions(uint32_t seed) -> HorseDimensions {
 }
 
 auto make_horse_variant(uint32_t seed, const QVector3D &leather_base,
-                      const QVector3D &clothBase) -> HorseVariant {
+                      const QVector3D &cloth_base) -> HorseVariant {
   HorseVariant v;
 
   float const coat_hue = hash01(seed ^ 0x23456U);
@@ -232,8 +232,8 @@ auto make_horse_variant(uint32_t seed, const QVector3D &leather_base,
 
   float const leather_tone = randBetween(seed, 0x7788U, 0.78F, 0.96F);
   float const tack_tone = randBetween(seed, 0x88AAU, 0.58F, 0.78F);
-  QVector3D const leather_tint = leatherBase * leather_tone;
-  QVector3D tack_tint = leatherBase * tack_tone;
+  QVector3D const leather_tint = leather_base * leather_tone;
+  QVector3D tack_tint = leather_base * tack_tone;
   if (blaze_chance > 0.90F) {
 
     tack_tint = lerp(tack_tint, QVector3D(0.18F, 0.19F, 0.22F), 0.25F);
@@ -241,16 +241,16 @@ auto make_horse_variant(uint32_t seed, const QVector3D &leather_base,
   v.saddleColor = leather_tint;
   v.tack_color = tack_tint;
 
-  v.blanketColor = clothBase * randBetween(seed, 0x99B0U, 0.92F, 1.05F);
+  v.blanketColor = cloth_base * randBetween(seed, 0x99B0U, 0.92F, 1.05F);
 
   return v;
 }
 
 auto make_horse_profile(uint32_t seed, const QVector3D &leather_base,
-                      const QVector3D &clothBase) -> HorseProfile {
+                      const QVector3D &cloth_base) -> HorseProfile {
   HorseProfile profile;
-  profile.dims = makeHorseDimensions(seed);
-  profile.variant = makeHorseVariant(seed, leatherBase, clothBase);
+  profile.dims = make_horse_dimensions(seed);
+  profile.variant = make_horse_variant(seed, leather_base, cloth_base);
 
   profile.gait.cycleTime = randBetween(seed, 0xAA12U, 0.60F, 0.72F);
   profile.gait.frontLegPhase = randBetween(seed, 0xBB34U, 0.08F, 0.16F);
