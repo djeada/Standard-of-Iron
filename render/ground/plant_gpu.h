@@ -6,9 +6,9 @@
 namespace Render::GL {
 
 struct PlantInstanceGpu {
-  QVector4D posScale;
-  QVector4D colorSway;
-  QVector4D typeParams;
+  QVector4D pos_scale;
+  QVector4D color_sway;
+  QVector4D type_params;
 };
 
 struct PlantBatchParams {

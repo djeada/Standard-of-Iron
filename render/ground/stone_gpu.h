@@ -6,8 +6,8 @@
 namespace Render::GL {
 
 struct StoneInstanceGpu {
-  QVector4D posScale;
-  QVector4D colorRot;
+  QVector4D pos_scale;
+  QVector4D color_rot;
 };
 
 struct StoneBatchParams {
@@ -15,11 +15,11 @@ struct StoneBatchParams {
   static constexpr float kDefaultLightDirY = 0.8F;
   static constexpr float kDefaultLightDirZ = 0.45F;
 
-  static auto defaultLightDirection() -> QVector3D {
+  static auto default_light_direction() -> QVector3D {
     return {kDefaultLightDirX, kDefaultLightDirY, kDefaultLightDirZ};
   }
 
-  QVector3D light_direction = defaultLightDirection();
+  QVector3D light_direction = default_light_direction();
   float time = 0.0F;
 };
 
