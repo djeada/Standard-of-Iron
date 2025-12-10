@@ -81,9 +81,9 @@ void AISystem::update(Engine::Core::World *world, float delta_time) {
 
   for (auto &ai : m_aiInstances) {
 
-    ai.updateTimer += delta_time;
+    ai.update_timer += delta_time;
 
-    if (ai.updateTimer < 0.3F) {
+    if (ai.update_timer < 0.3F) {
       continue;
     }
 
@@ -98,10 +98,10 @@ void AISystem::update(Engine::Core::World *world, float delta_time) {
     AI::AIJob job;
     job.snapshot = std::move(snapshot);
     job.context = ai.context;
-    job.delta_time = ai.updateTimer;
+    job.delta_time = ai.update_timer;
 
     if (ai.worker->trySubmit(std::move(job))) {
-      ai.updateTimer = 0.0F;
+      ai.update_timer = 0.0F;
     }
   }
 }

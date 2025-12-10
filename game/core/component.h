@@ -223,11 +223,11 @@ public:
 
 class HoldModeComponent : public Component {
 public:
-  HoldModeComponent() : standUpDuration(Defaults::kHoldStandUpDuration) {}
+  HoldModeComponent() : stand_up_duration(Defaults::kHoldStandUpDuration) {}
 
   bool active{true};
-  float exitCooldown{0.0F};
-  float standUpDuration;
+  float exit_cooldown{0.0F};
+  float stand_up_duration;
 };
 
 class HealerComponent : public Component {
@@ -237,7 +237,7 @@ public:
   float healing_range{8.0F};
   int healing_amount{5};
   float healing_cooldown{2.0F};
-  float timeSinceLastHeal{0.0F};
+  float time_since_last_heal{0.0F};
 };
 
 } // namespace Engine::Core

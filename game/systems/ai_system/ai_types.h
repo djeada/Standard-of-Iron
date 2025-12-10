@@ -148,7 +148,7 @@ struct AICommand {
   std::vector<float> moveTargetZ;
 
   Engine::Core::EntityID target_id = 0;
-  bool shouldChase = false;
+  bool should_chase = false;
   Engine::Core::EntityID buildingId = 0;
   Game::Units::TroopType product_type = Game::Units::TroopType::Archer;
 };

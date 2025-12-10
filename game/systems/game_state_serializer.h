@@ -20,15 +20,15 @@ struct LevelSnapshot {
   QString map_path;
   QString map_name;
   Engine::Core::EntityID playerUnitId = 0;
-  float camFov = 45.0F;
-  float camNear = 0.1F;
-  float camFar = 1000.0F;
+  float cam_fov = 45.0F;
+  float cam_near = 0.1F;
+  float cam_far = 1000.0F;
   int max_troops_per_player = 50;
 };
 
 struct RuntimeSnapshot {
   bool paused = false;
-  float timeScale = 1.0F;
+  float time_scale = 1.0F;
   int local_owner_id = 1;
   QString victoryState = "";
   int cursorMode = 0;
