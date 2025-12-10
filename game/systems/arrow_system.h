@@ -14,8 +14,8 @@ struct ArrowInstance {
   float t{};
   float speed{};
   bool active{};
-  float arcHeight{};
-  float invDist{};
+  float arc_height{};
+  float inv_dist{};
 };
 
 class ArrowSystem : public Engine::Core::System {

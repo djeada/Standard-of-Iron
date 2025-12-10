@@ -71,9 +71,9 @@ void AICommandApplier::apply(Engine::Core::World &world, int aiOwnerId,
       }
 
       CommandService::MoveOptions opts;
-      opts.allowDirectFallback = true;
-      opts.clearAttackIntent = false;
-      opts.groupMove = owned_units.size() > 1;
+      opts.allow_direct_fallback = true;
+      opts.clear_attack_intent = false;
+      opts.group_move = owned_units.size() > 1;
       CommandService::moveUnits(world, owned_units, owned_targets, opts);
       break;
     }

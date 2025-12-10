@@ -126,7 +126,7 @@ void GlobalStatsRegistry::onBarrackCaptured(
     }
   }
 
-  auto &new_stats = m_playerStats[event.newOwnerId];
+  auto &new_stats = m_playerStats[event.new_owner_id];
   new_stats.barracksOwned++;
 }
 

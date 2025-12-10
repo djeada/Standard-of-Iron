@@ -116,7 +116,7 @@ void CommandService::moveUnits(Engine::Core::World &world,
     return;
   }
 
-  if (options.groupMove && units.size() > 1) {
+  if (options.group_move && units.size() > 1) {
     moveGroup(world, units, targets, options);
     return;
   }
@@ -131,7 +131,7 @@ void CommandService::moveUnits(Engine::Core::World &world,
     if ((hold_mode != nullptr) && hold_mode->active) {
 
       hold_mode->active = false;
-      hold_mode->exitCooldown = hold_mode->standUpDuration;
+      hold_mode->exit_cooldown = hold_mode->stand_up_duration;
     }
 
     auto *atk = e->getComponent<Engine::Core::AttackComponent>();
@@ -153,7 +153,7 @@ void CommandService::moveUnits(Engine::Core::World &world,
       continue;
     }
 
-    if (options.clearAttackIntent) {
+    if (options.clear_attack_intent) {
       e->removeComponent<Engine::Core::AttackTargetComponent>();
     }
 
@@ -244,7 +244,7 @@ void CommandService::moveUnits(Engine::Core::World &world,
       int const dx = std::abs(end.x - start.x);
       int const dz = std::abs(end.y - start.y);
       bool use_direct_path = (dx + dz) <= CommandService::DIRECT_PATH_THRESHOLD;
-      if (!options.allowDirectFallback) {
+      if (!options.allow_direct_fallback) {
         use_direct_path = false;
       }
 
@@ -357,7 +357,7 @@ void CommandService::moveGroup(Engine::Core::World &world,
     auto *hold_mode = entity->getComponent<Engine::Core::HoldModeComponent>();
     if ((hold_mode != nullptr) && hold_mode->active) {
       hold_mode->active = false;
-      hold_mode->exitCooldown = hold_mode->standUpDuration;
+      hold_mode->exit_cooldown = hold_mode->stand_up_duration;
     }
 
     auto *transform = entity->getComponent<Engine::Core::TransformComponent>();
@@ -376,7 +376,7 @@ void CommandService::moveGroup(Engine::Core::World &world,
     bool engaged =
         entity->getComponent<Engine::Core::AttackTargetComponent>() != nullptr;
 
-    if (options.clearAttackIntent) {
+    if (options.clear_attack_intent) {
       entity->removeComponent<Engine::Core::AttackTargetComponent>();
       engaged = false;
     }
@@ -401,7 +401,7 @@ void CommandService::moveGroup(Engine::Core::World &world,
     std::vector<Engine::Core::EntityID> const single_unit = {members[0].id};
     std::vector<QVector3D> const single_target = {members[0].target};
     MoveOptions single_options = options;
-    single_options.groupMove = false;
+    single_options.group_move = false;
     moveUnits(world, single_unit, single_target, single_options);
     return;
   }
@@ -492,7 +492,7 @@ void CommandService::moveGroup(Engine::Core::World &world,
       std::clamp(avg_target_distance * 0.5F, 4.0F, 12.0F);
   if (max_target_distance <= near_threshold) {
     MoveOptions direct_options = options;
-    direct_options.groupMove = false;
+    direct_options.group_move = false;
 
     std::vector<Engine::Core::EntityID> direct_ids;
     std::vector<QVector3D> direct_targets;
@@ -544,7 +544,7 @@ void CommandService::moveGroup(Engine::Core::World &world,
 
   if (!direct_members.empty()) {
     MoveOptions direct_options = options;
-    direct_options.groupMove = false;
+    direct_options.group_move = false;
 
     std::vector<Engine::Core::EntityID> direct_ids;
     std::vector<QVector3D> direct_targets;
@@ -562,7 +562,7 @@ void CommandService::moveGroup(Engine::Core::World &world,
   if (regroup_members.size() <= 1) {
     if (!regroup_members.empty()) {
       MoveOptions direct_options = options;
-      direct_options.groupMove = false;
+      direct_options.group_move = false;
       std::vector<Engine::Core::EntityID> const single_ids = {
           regroup_members.front().id};
       std::vector<QVector3D> const single_targets = {
@@ -643,7 +643,7 @@ void CommandService::moveGroup(Engine::Core::World &world,
   int const dx = std::abs(end.x - start.x);
   int const dz = std::abs(end.y - start.y);
   bool use_direct_path = (dx + dz) <= CommandService::DIRECT_PATH_THRESHOLD;
-  if (!options.allowDirectFallback) {
+  if (!options.allow_direct_fallback) {
     use_direct_path = false;
   }
 
@@ -792,7 +792,7 @@ void CommandService::processPathResults(Engine::Core::World &world) {
         }
       }
 
-      if (request_info.options.allowDirectFallback) {
+      if (request_info.options.allow_direct_fallback) {
         movement_component->target_x = target.x();
         movement_component->target_y = target.z();
         movement_component->has_target = true;
@@ -849,7 +849,7 @@ void CommandService::processPathResults(Engine::Core::World &world) {
 void CommandService::attack_target(
     Engine::Core::World &world,
     const std::vector<Engine::Core::EntityID> &units,
-    Engine::Core::EntityID target_id, bool shouldChase) {
+    Engine::Core::EntityID target_id, bool should_chase) {
   if (target_id == 0) {
     return;
   }
@@ -863,7 +863,7 @@ void CommandService::attack_target(
     if ((hold_mode != nullptr) && hold_mode->active) {
 
       hold_mode->active = false;
-      hold_mode->exitCooldown = hold_mode->standUpDuration;
+      hold_mode->exit_cooldown = hold_mode->stand_up_duration;
     }
 
     auto *attack_target =
@@ -876,9 +876,9 @@ void CommandService::attack_target(
     }
 
     attack_target->target_id = target_id;
-    attack_target->should_chase = shouldChase;
+    attack_target->should_chase = should_chase;
 
-    if (!shouldChase) {
+    if (!should_chase) {
       continue;
     }
 
@@ -934,8 +934,8 @@ void CommandService::attack_target(
     }
 
     CommandService::MoveOptions opts;
-    opts.clearAttackIntent = false;
-    opts.allowDirectFallback = true;
+    opts.clear_attack_intent = false;
+    opts.allow_direct_fallback = true;
     std::vector<Engine::Core::EntityID> const unit_ids = {unit_id};
     std::vector<QVector3D> const move_targets = {desired_pos};
     CommandService::moveUnits(world, unit_ids, move_targets, opts);
