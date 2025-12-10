@@ -16,28 +16,28 @@ PrimitiveBatcher::~PrimitiveBatcher() = default;
 void PrimitiveBatcher::addSphere(const QMatrix4x4 &transform,
                                  const QVector3D &color, float alpha) {
   PrimitiveInstanceGpu inst;
-  inst.setTransform(transform);
-  inst.setColor(color, alpha);
+  inst.set_transform(transform);
+  inst.set_color(color, alpha);
   m_spheres.push_back(inst);
-  ++s_batchStats.spheresSubmitted;
+  ++s_batchStats.spheres_submitted;
 }
 
 void PrimitiveBatcher::addCylinder(const QMatrix4x4 &transform,
                                    const QVector3D &color, float alpha) {
   PrimitiveInstanceGpu inst;
-  inst.setTransform(transform);
-  inst.setColor(color, alpha);
+  inst.set_transform(transform);
+  inst.set_color(color, alpha);
   m_cylinders.push_back(inst);
-  ++s_batchStats.cylindersSubmitted;
+  ++s_batchStats.cylinders_submitted;
 }
 
 void PrimitiveBatcher::addCone(const QMatrix4x4 &transform,
                                const QVector3D &color, float alpha) {
   PrimitiveInstanceGpu inst;
-  inst.setTransform(transform);
-  inst.setColor(color, alpha);
+  inst.set_transform(transform);
+  inst.set_color(color, alpha);
   m_cones.push_back(inst);
-  ++s_batchStats.conesSubmitted;
+  ++s_batchStats.cones_submitted;
 }
 
 void PrimitiveBatcher::clear() {
@@ -53,10 +53,10 @@ void PrimitiveBatcher::reserve(std::size_t spheres, std::size_t cylinders,
   m_cones.reserve(cones);
 }
 
-auto getPrimitiveBatchStats() -> const PrimitiveBatchStats & {
+auto get_primitive_batch_stats() -> const PrimitiveBatchStats & {
   return s_batchStats;
 }
 
-void resetPrimitiveBatchStats() { s_batchStats.reset(); }
+void reset_primitive_batch_stats() { s_batchStats.reset(); }
 
 } // namespace Render::GL
