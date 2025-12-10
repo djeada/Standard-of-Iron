@@ -230,7 +230,7 @@ void RiverbankAssetRenderer::generateAssetInstances() {
         float const type_rand = rand_01(rng);
         if (type_rand < 0.7F) {
 
-          instance.assetType = 0.0F;
+          instance.asset_type = 0.0F;
           float const size = 0.05F + rand_01(rng) * 0.1F;
           instance.scale[0] = size * (0.8F + rand_01(rng) * 0.4F);
           instance.scale[1] = size * (0.6F + rand_01(rng) * 0.3F);
@@ -242,7 +242,7 @@ void RiverbankAssetRenderer::generateAssetInstances() {
           instance.color[2] = color_var * 0.85F;
         } else if (type_rand < 0.9F) {
 
-          instance.assetType = 1.0F;
+          instance.asset_type = 1.0F;
           float const size = 0.1F + rand_01(rng) * 0.15F;
           instance.scale[0] = size;
           instance.scale[1] = size * (0.7F + rand_01(rng) * 0.4F);
@@ -258,7 +258,7 @@ void RiverbankAssetRenderer::generateAssetInstances() {
             continue;
           }
 
-          instance.assetType = 2.0F;
+          instance.asset_type = 2.0F;
           float const size = 0.3F + rand_01(rng) * 0.4F;
           instance.scale[0] = size * 0.3F;
           instance.scale[1] = size;
