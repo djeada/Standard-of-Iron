@@ -51,7 +51,7 @@ void AICommandApplier::apply(Engine::Core::World &world, int aiOwnerId,
 
       for (std::size_t idx = 0; idx < command.units.size(); ++idx) {
         auto entity_id = command.units[idx];
-        auto *entity = world.getEntity(entity_id);
+        auto *entity = world.get_entity(entity_id);
         if (entity == nullptr) {
           continue;
         }
@@ -87,7 +87,7 @@ void AICommandApplier::apply(Engine::Core::World &world, int aiOwnerId,
       owned_units.reserve(command.units.size());
 
       for (auto entity_id : command.units) {
-        auto *entity = world.getEntity(entity_id);
+        auto *entity = world.get_entity(entity_id);
         if (entity == nullptr) {
           continue;
         }
@@ -110,7 +110,7 @@ void AICommandApplier::apply(Engine::Core::World &world, int aiOwnerId,
     }
 
     case AICommandType::StartProduction: {
-      auto *entity = world.getEntity(command.buildingId);
+      auto *entity = world.get_entity(command.buildingId);
       if (entity == nullptr) {
         break;
       }
@@ -131,7 +131,7 @@ void AICommandApplier::apply(Engine::Core::World &world, int aiOwnerId,
       }
 
       int const current_troops =
-          Engine::Core::World::countTroopsForPlayer(aiOwnerId);
+          Engine::Core::World::count_troops_for_player(aiOwnerId);
       int const max_troops =
           Game::GameConfig::instance().getMaxTroopsPerPlayer();
       Game::Units::TroopType const product_type = production->product_type;

@@ -776,14 +776,14 @@ auto Serialization::serializeWorld(const World *world) -> QJsonDocument {
   QJsonObject world_obj;
   QJsonArray entities_array;
 
-  const auto &entities = world->getEntities();
+  const auto &entities = world->get_entities();
   for (const auto &[id, entity] : entities) {
     QJsonObject const entity_obj = serializeEntity(entity.get());
     entities_array.append(entity_obj);
   }
 
   world_obj["entities"] = entities_array;
-  world_obj["nextEntityId"] = static_cast<qint64>(world->getNextEntityId());
+  world_obj["nextEntityId"] = static_cast<qint64>(world->get_next_entity_id());
   world_obj["schemaVersion"] = 1;
   world_obj["owner_registry"] =
       Game::Systems::OwnerRegistry::instance().toJson();
@@ -807,8 +807,8 @@ void Serialization::deserializeWorld(World *world, const QJsonDocument &doc) {
     const auto entity_id =
         static_cast<EntityID>(entity_obj["id"].toVariant().toULongLong());
     auto *entity = entity_id == NULL_ENTITY
-                       ? world->createEntity()
-                       : world->createEntityWithId(entity_id);
+                       ? world->create_entity()
+                       : world->create_entity_with_id(entity_id);
     if (entity != nullptr) {
       deserializeEntity(entity, entity_obj);
     }
@@ -817,7 +817,7 @@ void Serialization::deserializeWorld(World *world, const QJsonDocument &doc) {
   if (world_obj.contains("nextEntityId")) {
     const auto next_id = static_cast<EntityID>(
         world_obj["nextEntityId"].toVariant().toULongLong());
-    world->setNextEntityId(next_id);
+    world->set_next_entity_id(next_id);
   }
 
   if (world_obj.contains("owner_registry")) {
