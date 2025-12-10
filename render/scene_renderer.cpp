@@ -388,7 +388,7 @@ void Renderer::renderWorld(Engine::Core::World *world) {
       world->getEntitiesWith<Engine::Core::RenderableComponent>();
 
   const auto &gfxSettings = Render::GraphicsSettings::instance();
-  const auto &batchConfig = gfxSettings.batchingConfig();
+  const auto &batch_config = gfxSettings.batching_config();
 
   float cameraHeight = 0.0F;
   if (m_camera != nullptr) {
@@ -414,16 +414,16 @@ void Renderer::renderWorld(Engine::Core::World *world) {
     }
   }
 
-  float batchingRatio =
-      gfxSettings.calculateBatchingRatio(visibleUnitCount, cameraHeight);
+  float batching_ratio =
+      gfxSettings.calculate_batching_ratio(visibleUnitCount, cameraHeight);
 
   PrimitiveBatcher batcher;
-  if (batchingRatio > 0.0F) {
+  if (batching_ratio > 0.0F) {
     batcher.reserve(2000, 4000, 500);
   }
 
-  float fullShaderMaxDistance = 30.0F * (1.0F - batchingRatio * 0.7F);
-  if (batchConfig.forceBatching) {
+  float fullShaderMaxDistance = 30.0F * (1.0F - batching_ratio * 0.7F);
+  if (batch_config.force_batching) {
     fullShaderMaxDistance = 0.0F;
   }
 
@@ -513,10 +513,10 @@ void Renderer::renderWorld(Engine::Core::World *world) {
         ctx.backend = m_backend.get();
         ctx.camera = m_camera;
 
-        bool useBatching = (batchingRatio > 0.0F) &&
+        bool useBatching = (batching_ratio > 0.0F) &&
                            (distanceToCamera > fullShaderMaxDistance) &&
                            !is_selected && !is_hovered &&
-                           !batchConfig.neverBatch;
+                           !batch_config.never_batch;
 
         if (useBatching) {
           fn(ctx, batchSubmitter);
