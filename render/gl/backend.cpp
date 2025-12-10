@@ -1143,11 +1143,11 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         }
       }
 
-      DepthMaskScope const depth_mask(terrain.depthWrite);
+      DepthMaskScope const depth_mask(terrain.depth_write);
       std::unique_ptr<PolygonOffsetScope> poly_scope;
-      if (terrain.depthBias != 0.0F) {
-        poly_scope = std::make_unique<PolygonOffsetScope>(terrain.depthBias,
-                                                          terrain.depthBias);
+      if (terrain.depth_bias != 0.0F) {
+        poly_scope = std::make_unique<PolygonOffsetScope>(terrain.depth_bias,
+                                                          terrain.depth_bias);
       }
 
       terrain.mesh->draw();
@@ -1292,7 +1292,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       active_shader->setUniform(uniforms->useTexture, it.texture != nullptr);
       active_shader->setUniform(uniforms->color, it.color);
       active_shader->setUniform(uniforms->alpha, it.alpha);
-      active_shader->setUniform(uniforms->materialId, it.materialId);
+      active_shader->setUniform(uniforms->materialId, it.material_id);
       it.mesh->draw();
       break;
     }
@@ -1316,7 +1316,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       m_effectsPipeline->m_gridShader->setUniform(
           m_effectsPipeline->m_gridUniforms.lineColor, k_grid_line_color);
       m_effectsPipeline->m_gridShader->setUniform(
-          m_effectsPipeline->m_gridUniforms.cellSize, gc.cellSize);
+          m_effectsPipeline->m_gridUniforms.cellSize, gc.cell_size);
       m_effectsPipeline->m_gridShader->setUniform(
           m_effectsPipeline->m_gridUniforms.thickness, gc.thickness);
 
@@ -1358,7 +1358,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         m_effectsPipeline->m_basicShader->setUniform(
             m_effectsPipeline->m_basicUniforms.model, m);
         m_effectsPipeline->m_basicShader->setUniform(
-            m_effectsPipeline->m_basicUniforms.alpha, sc.alphaOuter);
+            m_effectsPipeline->m_basicUniforms.alpha, sc.alpha_outer);
         ring->draw();
       }
 
@@ -1369,7 +1369,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         m_effectsPipeline->m_basicShader->setUniform(
             m_effectsPipeline->m_basicUniforms.model, sc.model);
         m_effectsPipeline->m_basicShader->setUniform(
-            m_effectsPipeline->m_basicUniforms.alpha, sc.alphaInner);
+            m_effectsPipeline->m_basicUniforms.alpha, sc.alpha_inner);
         ring->draw();
       }
       break;
@@ -1396,7 +1396,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       BlendScope const blend(true);
       for (int i = 0; i < 7; ++i) {
         float const scale = 1.35F + 0.12F * i;
-        float const a = sm.baseAlpha * (1.0F - 0.09F * i);
+        float const a = sm.base_alpha * (1.0F - 0.09F * i);
         QMatrix4x4 m = sm.model;
         m.translate(0.0F, 0.02F, 0.0F);
         m.scale(scale, 1.0F, scale);
@@ -1413,29 +1413,29 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
     }
     case PrimitiveBatchCmdIndex: {
       const auto &batch = std::get<PrimitiveBatchCmdIndex>(cmd);
-      if (batch.instanceCount() == 0 || m_primitiveBatchPipeline == nullptr ||
+      if (batch.instance_count() == 0 || m_primitiveBatchPipeline == nullptr ||
           !m_primitiveBatchPipeline->isInitialized()) {
         break;
       }
 
-      const auto *data = batch.instanceData();
+      const auto *data = batch.instance_data();
 
       switch (batch.type) {
       case PrimitiveType::Sphere:
         m_primitiveBatchPipeline->uploadSphereInstances(data,
-                                                        batch.instanceCount());
-        m_primitiveBatchPipeline->drawSpheres(batch.instanceCount(), view_proj);
+                                                        batch.instance_count());
+        m_primitiveBatchPipeline->drawSpheres(batch.instance_count(), view_proj);
         break;
       case PrimitiveType::Cylinder:
         m_primitiveBatchPipeline->uploadCylinderInstances(
-            data, batch.instanceCount());
-        m_primitiveBatchPipeline->drawCylinders(batch.instanceCount(),
+            data, batch.instance_count());
+        m_primitiveBatchPipeline->drawCylinders(batch.instance_count(),
                                                 view_proj);
         break;
       case PrimitiveType::Cone:
         m_primitiveBatchPipeline->uploadConeInstances(data,
-                                                      batch.instanceCount());
-        m_primitiveBatchPipeline->drawCones(batch.instanceCount(), view_proj);
+                                                      batch.instance_count());
+        m_primitiveBatchPipeline->drawCones(batch.instance_count(), view_proj);
         break;
       }
 
