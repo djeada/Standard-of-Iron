@@ -8,7 +8,7 @@
 
 namespace App::Utils {
 
-inline auto screenToGround(const Game::Systems::PickingService *pickingService,
+inline auto screen_to_ground(const Game::Systems::PickingService *pickingService,
                            const Render::GL::Camera *camera,
                            QQuickWindow *window, int viewportWidth,
                            int viewportHeight, const QPointF &screenPt,
@@ -23,7 +23,7 @@ inline auto screenToGround(const Game::Systems::PickingService *pickingService,
                                                        outWorld);
 }
 
-inline auto worldToScreen(const Game::Systems::PickingService *pickingService,
+inline auto world_to_screen(const Game::Systems::PickingService *pickingService,
                           const Render::GL::Camera *camera,
                           QQuickWindow *window, int viewportWidth,
                           int viewportHeight, const QVector3D &world,
