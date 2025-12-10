@@ -370,7 +370,7 @@ void GameEngine::on_right_click(qreal sx, qreal sy) {
 
   if (m_cursorManager->mode() == CursorMode::Patrol ||
       m_cursorManager->mode() == CursorMode::Attack) {
-    setCursorMode(CursorMode::Normal);
+    set_cursor_mode(CursorMode::Normal);
     return;
   }
 
@@ -460,7 +460,7 @@ void GameEngine::on_attack_click(qreal sx, qreal sy) {
   }
 
   if (result.resetCursorToNormal) {
-    setCursorMode(CursorMode::Normal);
+    set_cursor_mode(CursorMode::Normal);
   }
 }
 
@@ -476,7 +476,7 @@ void GameEngine::on_stop_command() {
 
   auto result = m_commandController->onStopCommand();
   if (result.resetCursorToNormal) {
-    setCursorMode(CursorMode::Normal);
+    set_cursor_mode(CursorMode::Normal);
   }
 }
 
@@ -488,7 +488,7 @@ void GameEngine::on_hold_command() {
 
   auto result = m_commandController->onHoldCommand();
   if (result.resetCursorToNormal) {
-    setCursorMode(CursorMode::Normal);
+    set_cursor_mode(CursorMode::Normal);
   }
 }
 
@@ -508,7 +508,7 @@ void GameEngine::on_patrol_click(qreal sx, qreal sy) {
   auto result = m_commandController->onPatrolClick(
       sx, sy, m_viewport.width, m_viewport.height, m_camera.get());
   if (result.resetCursorToNormal) {
-    setCursorMode(CursorMode::Normal);
+    set_cursor_mode(CursorMode::Normal);
   }
 }
 
@@ -539,7 +539,7 @@ void GameEngine::set_cursor_mode(CursorMode mode) {
 }
 
 void GameEngine::set_cursor_mode(const QString &mode) {
-  setCursorMode(CursorModeUtils::fromString(mode));
+  set_cursor_mode(CursorModeUtils::fromString(mode));
 }
 
 auto GameEngine::cursor_mode() const -> QString {
@@ -810,7 +810,7 @@ void GameEngine::sync_selection_flags() {
 
   if (selection_system->getSelectedUnits().empty()) {
     if (m_cursorManager && m_cursorManager->mode() != CursorMode::Normal) {
-      setCursorMode(CursorMode::Normal);
+      set_cursor_mode(CursorMode::Normal);
     }
   }
 }
@@ -1255,7 +1255,7 @@ void GameEngine::start_skirmish(const QString &map_path,
 
     if (updated_player_id != m_selectedPlayerId) {
       m_selectedPlayerId = updated_player_id;
-      emit selectedPlayerIdChanged();
+      emit selected_player_id_changed();
     }
 
     if (!result.ok && !result.errorMessage.isEmpty()) {
@@ -1666,7 +1666,7 @@ void GameEngine::rebuild_registries_after_load() {
 
   if (m_selectedPlayerId != m_runtime.localOwnerId) {
     m_selectedPlayerId = m_runtime.localOwnerId;
-    emit selectedPlayerIdChanged();
+    emit selected_player_id_changed();
   }
 }
 
@@ -1706,19 +1706,19 @@ auto GameEngine::to_runtime_snapshot() const -> Game::Systems::RuntimeSnapshot {
 void GameEngine::apply_runtime_snapshot(
     const Game::Systems::RuntimeSnapshot &snapshot) {
   m_runtime.localOwnerId = snapshot.localOwnerId;
-  setPaused(snapshot.paused);
-  setGameSpeed(snapshot.timeScale);
+  set_paused(snapshot.paused);
+  set_game_speed(snapshot.timeScale);
 
   if (snapshot.victoryState != m_runtime.victoryState) {
     m_runtime.victoryState = snapshot.victoryState;
     emit victory_state_changed();
   }
 
-  setCursorMode(CursorModeUtils::fromInt(snapshot.cursorMode));
+  set_cursor_mode(CursorModeUtils::fromInt(snapshot.cursorMode));
 
   if (snapshot.selectedPlayerId != m_selectedPlayerId) {
     m_selectedPlayerId = snapshot.selectedPlayerId;
-    emit selectedPlayerIdChanged();
+    emit selected_player_id_changed();
   }
 
   if (snapshot.followSelection != m_followSelectionEnabled) {
