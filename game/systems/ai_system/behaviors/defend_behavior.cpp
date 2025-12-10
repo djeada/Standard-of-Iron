@@ -149,7 +149,7 @@ void DefendBehavior::execute(const AISnapshot &snapshot, AIContext &context,
           attack.type = AICommandType::AttackTarget;
           attack.units = std::move(claimed_units);
           attack.target_id = target_info.target_id;
-          attack.shouldChase = true;
+          attack.should_chase = true;
           outCommands.push_back(std::move(attack));
           return;
         }

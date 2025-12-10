@@ -29,8 +29,8 @@ void AIReasoner::updateContext(const AISnapshot &snapshot, AIContext &ctx) {
   ctx.rangedCount = 0;
   ctx.damagedUnitsCount = 0;
   ctx.averageHealth = 1.0F;
-  ctx.rallyX = 0.0F;
-  ctx.rallyZ = 0.0F;
+  ctx.rally_x = 0.0F;
+  ctx.rally_z = 0.0F;
   ctx.barracksUnderThreat = false;
   ctx.nearbyThreatCount = 0;
   ctx.closest_threatDistance = std::numeric_limits<float>::infinity();
@@ -71,8 +71,8 @@ void AIReasoner::updateContext(const AISnapshot &snapshot, AIContext &ctx) {
       if (entity.spawn_type == Game::Units::SpawnType::Barracks &&
           ctx.primaryBarracks == 0) {
         ctx.primaryBarracks = entity.id;
-        ctx.rallyX = entity.posX - 5.0F;
-        ctx.rallyZ = entity.posZ;
+        ctx.rally_x = entity.posX - 5.0F;
+        ctx.rally_z = entity.posZ;
         ctx.basePosX = entity.posX;
         ctx.basePosY = entity.posY;
         ctx.basePosZ = entity.posZ;
@@ -96,7 +96,7 @@ void AIReasoner::updateContext(const AISnapshot &snapshot, AIContext &ctx) {
       }
     }
 
-    if (!entity.movement.hasComponent || !entity.movement.hasTarget) {
+    if (!entity.movement.hasComponent || !entity.movement.has_target) {
       ctx.idleUnits++;
     } else {
       ctx.combatUnits++;

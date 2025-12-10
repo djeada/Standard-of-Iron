@@ -73,12 +73,12 @@ void ProductionBehavior::execute(const AISnapshot &snapshot, AIContext &context,
 
     const auto &prod = entity.production;
 
-    if (prod.producedCount >= prod.maxUnits) {
+    if (prod.produced_count >= prod.max_units) {
       continue;
     }
 
     const int max_queue_size = 5;
-    int const total_in_queue = (prod.inProgress ? 1 : 0) + prod.queueSize;
+    int const total_in_queue = (prod.in_progress ? 1 : 0) + prod.queueSize;
     if (total_in_queue >= max_queue_size) {
       continue;
     }
