@@ -63,7 +63,7 @@ void Swordsman::init(const SpawnParams &params) {
   m_u->vision_range = profile.combat.vision_range;
   m_u->nation_id = nation_id;
 
-  if (params.aiControlled) {
+  if (params.ai_controlled) {
     e->add_component<Engine::Core::AIControlledComponent>();
   } else {
   }

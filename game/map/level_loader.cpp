@@ -87,7 +87,7 @@ auto LevelLoader::loadFromAssets(
         sp.position = QVector3D(0.0F, 0.0F, 0.0F);
         sp.player_id = 0;
         sp.spawn_type = Game::Units::SpawnType::Archer;
-        sp.aiControlled = !owners.isPlayer(sp.player_id);
+        sp.ai_controlled = !owners.isPlayer(sp.player_id);
         if (const auto *nation =
                 nationRegistry.getNationForPlayer(sp.player_id)) {
           sp.nation_id = nation->id;
@@ -121,7 +121,7 @@ auto LevelLoader::loadFromAssets(
         sp.position = QVector3D(-4.0F, 0.0F, -3.0F);
         sp.player_id = owners.getLocalPlayerId();
         sp.spawn_type = Game::Units::SpawnType::Barracks;
-        sp.aiControlled = !owners.isPlayer(sp.player_id);
+        sp.ai_controlled = !owners.isPlayer(sp.player_id);
         if (const auto *nation =
                 nationRegistry.getNationForPlayer(sp.player_id)) {
           sp.nation_id = nation->id;
@@ -153,7 +153,7 @@ auto LevelLoader::loadFromAssets(
       sp.position = QVector3D(0.0F, 0.0F, 0.0F);
       sp.player_id = 0;
       sp.spawn_type = Game::Units::SpawnType::Archer;
-      sp.aiControlled = !owners.isPlayer(sp.player_id);
+      sp.ai_controlled = !owners.isPlayer(sp.player_id);
       if (const auto *nation =
               nationRegistry.getNationForPlayer(sp.player_id)) {
         sp.nation_id = nation->id;
