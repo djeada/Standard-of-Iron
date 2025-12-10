@@ -12,7 +12,7 @@ struct AnimationInputs;
 struct HumanoidAnimationContext;
 class ISubmitter;
 
-inline auto calculateHorseLOD(float distance) -> HorseLOD;
+inline auto calculate_horse_lod(float distance) -> HorseLOD;
 
 struct HorseRenderStats {
   uint32_t horsesTotal{0};
@@ -32,9 +32,9 @@ struct HorseRenderStats {
   }
 };
 
-auto getHorseRenderStats() -> const HorseRenderStats &;
+auto get_horse_render_stats() -> const HorseRenderStats &;
 
-void resetHorseRenderStats();
+void reset_horse_render_stats();
 
 struct HorseDimensions {
   float bodyLength{};
@@ -159,11 +159,11 @@ struct HorseMotionSample {
   float rider_intensity = 0.0F;
 };
 
-auto makeHorseDimensions(uint32_t seed) -> HorseDimensions;
-auto makeHorseVariant(uint32_t seed, const QVector3D &leatherBase,
-                      const QVector3D &clothBase) -> HorseVariant;
-auto makeHorseProfile(uint32_t seed, const QVector3D &leatherBase,
-                      const QVector3D &clothBase) -> HorseProfile;
+auto make_horse_dimensions(uint32_t seed) -> HorseDimensions;
+auto make_horse_variant(uint32_t seed, const QVector3D &leather_base,
+                      const QVector3D &cloth_base) -> HorseVariant;
+auto make_horse_profile(uint32_t seed, const QVector3D &leather_base,
+                      const QVector3D &cloth_base) -> HorseProfile;
 auto compute_mount_frame(const HorseProfile &profile) -> MountedAttachmentFrame;
 auto compute_rein_state(uint32_t horse_seed,
                         const HumanoidAnimationContext &rider_ctx) -> ReinState;
@@ -174,7 +174,7 @@ auto evaluate_horse_motion(HorseProfile &profile, const AnimationInputs &anim,
     -> HorseMotionSample;
 void apply_mount_vertical_offset(MountedAttachmentFrame &frame, float bob);
 
-inline void scaleHorseDimensions(HorseDimensions &dims, float scale) {
+inline void scale_horse_dimensions(HorseDimensions &dims, float scale) {
   dims.bodyLength *= scale;
   dims.bodyWidth *= scale;
   dims.bodyHeight *= scale;
@@ -214,26 +214,26 @@ public:
               const ReinState *shared_reins,
               const HorseMotionSample *shared_motion, ISubmitter &out) const;
 
-  void renderSimplified(const DrawContext &ctx, const AnimationInputs &anim,
+  void render_simplified(const DrawContext &ctx, const AnimationInputs &anim,
                         const HumanoidAnimationContext &rider_ctx,
                         HorseProfile &profile,
                         const MountedAttachmentFrame *shared_mount,
                         const HorseMotionSample *shared_motion,
                         ISubmitter &out) const;
 
-  void renderMinimal(const DrawContext &ctx, HorseProfile &profile,
+  void render_minimal(const DrawContext &ctx, HorseProfile &profile,
                      const HorseMotionSample *shared_motion,
                      ISubmitter &out) const;
 
 protected:
-  virtual void drawAttachments(const DrawContext &, const AnimationInputs &,
+  virtual void draw_attachments(const DrawContext &, const AnimationInputs &,
                                const HumanoidAnimationContext &, HorseProfile &,
                                const MountedAttachmentFrame &, float, float,
                                float, const HorseBodyFrames &,
                                ISubmitter &) const {}
 
 private:
-  void renderFull(const DrawContext &ctx, const AnimationInputs &anim,
+  void render_full(const DrawContext &ctx, const AnimationInputs &anim,
                   const HumanoidAnimationContext &rider_ctx,
                   HorseProfile &profile,
                   const MountedAttachmentFrame *shared_mount,
@@ -242,7 +242,7 @@ private:
                   ISubmitter &out) const;
 };
 
-inline auto calculateHorseLOD(float distance) -> HorseLOD {
+inline auto calculate_horse_lod(float distance) -> HorseLOD {
   const auto &settings = Render::GraphicsSettings::instance();
   if (distance < settings.horseFullDetailDistance()) {
     return HorseLOD::Full;
