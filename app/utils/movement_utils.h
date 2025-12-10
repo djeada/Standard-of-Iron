@@ -5,7 +5,7 @@
 
 namespace App::Utils {
 
-inline void resetMovement(Engine::Core::Entity *entity) {
+inline void reset_movement(Engine::Core::Entity *entity) {
   if (entity == nullptr) {
     return;
   }
