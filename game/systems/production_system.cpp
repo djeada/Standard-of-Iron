@@ -46,12 +46,12 @@ void ProductionSystem::update(Engine::Core::World *world, float delta_time) {
   }
   auto entities = world->getEntitiesWith<Engine::Core::ProductionComponent>();
   for (auto *e : entities) {
-    auto *prod = e->getComponent<Engine::Core::ProductionComponent>();
+    auto *prod = e->get_component<Engine::Core::ProductionComponent>();
     if (prod == nullptr) {
       continue;
     }
 
-    auto *unit_comp = e->getComponent<Engine::Core::UnitComponent>();
+    auto *unit_comp = e->get_component<Engine::Core::UnitComponent>();
     if ((unit_comp != nullptr) &&
         Game::Core::isNeutralOwner(unit_comp->owner_id)) {
       continue;
@@ -74,8 +74,8 @@ void ProductionSystem::update(Engine::Core::World *world, float delta_time) {
     prod->time_remaining -= delta_time;
     if (prod->time_remaining <= 0.0F) {
 
-      auto *t = e->getComponent<Engine::Core::TransformComponent>();
-      auto *u = e->getComponent<Engine::Core::UnitComponent>();
+      auto *t = e->get_component<Engine::Core::TransformComponent>();
+      auto *u = e->get_component<Engine::Core::UnitComponent>();
       if ((t != nullptr) && (u != nullptr)) {
 
         int const current_troops =
@@ -102,7 +102,7 @@ void ProductionSystem::update(Engine::Core::World *world, float delta_time) {
           sp.spawn_type =
               Game::Units::spawn_typeFromTroopType(prod->product_type);
           sp.aiControlled =
-              e->hasComponent<Engine::Core::AIControlledComponent>();
+              e->has_component<Engine::Core::AIControlledComponent>();
           sp.nation_id = nation_id;
           auto unit = reg->create(sp.spawn_type, *world, sp);
 

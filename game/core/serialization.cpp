@@ -77,9 +77,9 @@ void deserializeColor(const QJsonArray &array, std::array<float, 3> &color) {
 
 auto Serialization::serializeEntity(const Entity *entity) -> QJsonObject {
   QJsonObject entity_obj;
-  entity_obj["id"] = static_cast<qint64>(entity->getId());
+  entity_obj["id"] = static_cast<qint64>(entity->get_id());
 
-  if (const auto *transform = entity->getComponent<TransformComponent>()) {
+  if (const auto *transform = entity->get_component<TransformComponent>()) {
     QJsonObject transform_obj;
     transform_obj["posX"] = transform->position.x;
     transform_obj["posY"] = transform->position.y;
@@ -95,7 +95,7 @@ auto Serialization::serializeEntity(const Entity *entity) -> QJsonObject {
     entity_obj["transform"] = transform_obj;
   }
 
-  if (const auto *renderable = entity->getComponent<RenderableComponent>()) {
+  if (const auto *renderable = entity->get_component<RenderableComponent>()) {
     QJsonObject renderable_obj;
     renderable_obj["meshPath"] = QString::fromStdString(renderable->mesh_path);
     renderable_obj["texturePath"] =
@@ -110,7 +110,7 @@ auto Serialization::serializeEntity(const Entity *entity) -> QJsonObject {
     entity_obj["renderable"] = renderable_obj;
   }
 
-  if (const auto *unit = entity->getComponent<UnitComponent>()) {
+  if (const auto *unit = entity->get_component<UnitComponent>()) {
     QJsonObject unit_obj;
     unit_obj["health"] = unit->health;
     unit_obj["max_health"] = unit->max_health;
@@ -123,7 +123,7 @@ auto Serialization::serializeEntity(const Entity *entity) -> QJsonObject {
     entity_obj["unit"] = unit_obj;
   }
 
-  if (const auto *movement = entity->getComponent<MovementComponent>()) {
+  if (const auto *movement = entity->get_component<MovementComponent>()) {
     QJsonObject movement_obj;
     movement_obj["hasTarget"] = movement->has_target;
     movement_obj["target_x"] = movement->target_x;
@@ -152,7 +152,7 @@ auto Serialization::serializeEntity(const Entity *entity) -> QJsonObject {
     entity_obj["movement"] = movement_obj;
   }
 
-  if (const auto *attack = entity->getComponent<AttackComponent>()) {
+  if (const auto *attack = entity->get_component<AttackComponent>()) {
     QJsonObject attack_obj;
     attack_obj["range"] = attack->range;
     attack_obj["damage"] = attack->damage;
@@ -173,7 +173,7 @@ auto Serialization::serializeEntity(const Entity *entity) -> QJsonObject {
   }
 
   if (const auto *attack_target =
-          entity->getComponent<AttackTargetComponent>()) {
+          entity->get_component<AttackTargetComponent>()) {
     QJsonObject attack_target_obj;
     attack_target_obj["target_id"] =
         static_cast<qint64>(attack_target->target_id);
@@ -181,7 +181,7 @@ auto Serialization::serializeEntity(const Entity *entity) -> QJsonObject {
     entity_obj["attack_target"] = attack_target_obj;
   }
 
-  if (const auto *patrol = entity->getComponent<PatrolComponent>()) {
+  if (const auto *patrol = entity->get_component<PatrolComponent>()) {
     QJsonObject patrol_obj;
     patrol_obj["currentWaypoint"] = static_cast<int>(patrol->current_waypoint);
     patrol_obj["patrolling"] = patrol->patrolling;
@@ -197,11 +197,11 @@ auto Serialization::serializeEntity(const Entity *entity) -> QJsonObject {
     entity_obj["patrol"] = patrol_obj;
   }
 
-  if (entity->getComponent<BuildingComponent>() != nullptr) {
+  if (entity->get_component<BuildingComponent>() != nullptr) {
     entity_obj["building"] = true;
   }
 
-  if (const auto *production = entity->getComponent<ProductionComponent>()) {
+  if (const auto *production = entity->get_component<ProductionComponent>()) {
     QJsonObject production_obj;
     production_obj["inProgress"] = production->in_progress;
     production_obj["buildTime"] = production->build_time;
@@ -224,11 +224,11 @@ auto Serialization::serializeEntity(const Entity *entity) -> QJsonObject {
     entity_obj["production"] = production_obj;
   }
 
-  if (entity->getComponent<AIControlledComponent>() != nullptr) {
+  if (entity->get_component<AIControlledComponent>() != nullptr) {
     entity_obj["aiControlled"] = true;
   }
 
-  if (const auto *capture = entity->getComponent<CaptureComponent>()) {
+  if (const auto *capture = entity->get_component<CaptureComponent>()) {
     QJsonObject capture_obj;
     capture_obj["capturing_player_id"] = capture->capturing_player_id;
     capture_obj["captureProgress"] =
@@ -244,7 +244,7 @@ auto Serialization::serializeEntity(const Entity *entity) -> QJsonObject {
 void Serialization::deserializeEntity(Entity *entity, const QJsonObject &json) {
   if (json.contains("transform")) {
     const auto transform_obj = json["transform"].toObject();
-    auto *transform = entity->addComponent<TransformComponent>();
+    auto *transform = entity->add_component<TransformComponent>();
     transform->position.x =
         static_cast<float>(transform_obj["posX"].toDouble());
     transform->position.y =
@@ -269,7 +269,7 @@ void Serialization::deserializeEntity(Entity *entity, const QJsonObject &json) {
 
   if (json.contains("renderable")) {
     const auto renderable_obj = json["renderable"].toObject();
-    auto *renderable = entity->addComponent<RenderableComponent>("", "");
+    auto *renderable = entity->add_component<RenderableComponent>("", "");
     renderable->mesh_path = renderable_obj["meshPath"].toString().toStdString();
     renderable->texture_path =
         renderable_obj["texturePath"].toString().toStdString();
@@ -286,7 +286,7 @@ void Serialization::deserializeEntity(Entity *entity, const QJsonObject &json) {
 
   if (json.contains("unit")) {
     const auto unit_obj = json["unit"].toObject();
-    auto *unit = entity->addComponent<UnitComponent>();
+    auto *unit = entity->add_component<UnitComponent>();
     unit->health = unit_obj["health"].toInt(Defaults::kUnitDefaultHealth);
     unit->max_health =
         unit_obj["max_health"].toInt(Defaults::kUnitDefaultHealth);
@@ -320,7 +320,7 @@ void Serialization::deserializeEntity(Entity *entity, const QJsonObject &json) {
 
   if (json.contains("movement")) {
     const auto movement_obj = json["movement"].toObject();
-    auto *movement = entity->addComponent<MovementComponent>();
+    auto *movement = entity->add_component<MovementComponent>();
     movement->has_target = movement_obj["hasTarget"].toBool(false);
     movement->target_x =
         static_cast<float>(movement_obj["target_x"].toDouble());
@@ -355,7 +355,7 @@ void Serialization::deserializeEntity(Entity *entity, const QJsonObject &json) {
 
   if (json.contains("attack")) {
     const auto attack_obj = json["attack"].toObject();
-    auto *attack = entity->addComponent<AttackComponent>();
+    auto *attack = entity->add_component<AttackComponent>();
     attack->range = static_cast<float>(attack_obj["range"].toDouble());
     attack->damage = attack_obj["damage"].toInt(0);
     attack->cooldown = static_cast<float>(attack_obj["cooldown"].toDouble());
@@ -382,7 +382,7 @@ void Serialization::deserializeEntity(Entity *entity, const QJsonObject &json) {
 
   if (json.contains("attack_target")) {
     const auto attack_target_obj = json["attack_target"].toObject();
-    auto *attack_target = entity->addComponent<AttackTargetComponent>();
+    auto *attack_target = entity->add_component<AttackTargetComponent>();
     attack_target->target_id = static_cast<EntityID>(
         attack_target_obj["target_id"].toVariant().toULongLong());
     attack_target->should_chase = attack_target_obj["shouldChase"].toBool(false);
@@ -390,7 +390,7 @@ void Serialization::deserializeEntity(Entity *entity, const QJsonObject &json) {
 
   if (json.contains("patrol")) {
     const auto patrol_obj = json["patrol"].toObject();
-    auto *patrol = entity->addComponent<PatrolComponent>();
+    auto *patrol = entity->add_component<PatrolComponent>();
     patrol->current_waypoint =
         static_cast<size_t>(std::max(0, patrol_obj["currentWaypoint"].toInt()));
     patrol->patrolling = patrol_obj["patrolling"].toBool(false);
@@ -407,12 +407,12 @@ void Serialization::deserializeEntity(Entity *entity, const QJsonObject &json) {
   }
 
   if (json.contains("building") && json["building"].toBool()) {
-    entity->addComponent<BuildingComponent>();
+    entity->add_component<BuildingComponent>();
   }
 
   if (json.contains("production")) {
     const auto production_obj = json["production"].toObject();
-    auto *production = entity->addComponent<ProductionComponent>();
+    auto *production = entity->add_component<ProductionComponent>();
     production->in_progress = production_obj["inProgress"].toBool(false);
     production->build_time =
         static_cast<float>(production_obj["buildTime"].toDouble());
@@ -439,12 +439,12 @@ void Serialization::deserializeEntity(Entity *entity, const QJsonObject &json) {
   }
 
   if (json.contains("aiControlled") && json["aiControlled"].toBool()) {
-    entity->addComponent<AIControlledComponent>();
+    entity->add_component<AIControlledComponent>();
   }
 
   if (json.contains("capture")) {
     const auto capture_obj = json["capture"].toObject();
-    auto *capture = entity->addComponent<CaptureComponent>();
+    auto *capture = entity->add_component<CaptureComponent>();
     capture->capturing_player_id = capture_obj["capturing_player_id"].toInt(-1);
     capture->capture_progress =
         static_cast<float>(capture_obj["captureProgress"].toDouble(0.0));

@@ -146,7 +146,7 @@ public:
   }
   [[nodiscard]] bool paused() const { return m_runtime.paused; }
   [[nodiscard]] float time_scale() const { return m_runtime.timeScale; }
-  [[nodiscard]] QString victory_state() const { return m_runtime.victoryState; }
+  [[nodiscard]] QString victory_state() const { return m_runtime.victory_state; }
   [[nodiscard]] QString cursor_mode() const;
   void set_cursor_mode(CursorMode mode);
   void set_cursor_mode(const QString &mode);
@@ -314,9 +314,9 @@ private:
   bool m_maps_loading = false;
   QString m_current_campaign_id;
   Engine::Core::ScopedEventSubscription<Engine::Core::UnitDiedEvent>
-      m_unitDiedSubscription;
+      m_unit_died_subscription;
   Engine::Core::ScopedEventSubscription<Engine::Core::UnitSpawnedEvent>
-      m_unitSpawnedSubscription;
+      m_unit_spawned_subscription;
   EntityCache m_entityCache;
   Engine::Core::AmbientState m_currentAmbientState =
       Engine::Core::AmbientState::PEACEFUL;

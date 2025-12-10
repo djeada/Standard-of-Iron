@@ -90,7 +90,7 @@ void CameraService::resetCamera(Render::GL::Camera &camera,
     if (e == nullptr) {
       continue;
     }
-    auto *u = e->getComponent<Engine::Core::UnitComponent>();
+    auto *u = e->get_component<Engine::Core::UnitComponent>();
     if (u == nullptr) {
       continue;
     }
@@ -111,7 +111,7 @@ void CameraService::resetCamera(Render::GL::Camera &camera,
 
 void CameraService::snapToEntity(Render::GL::Camera &camera,
                                  Engine::Core::Entity &entity) {
-  if (auto *t = entity.getComponent<Engine::Core::TransformComponent>()) {
+  if (auto *t = entity.get_component<Engine::Core::TransformComponent>()) {
     QVector3D const center(t->position.x, t->position.y, t->position.z);
     const auto &cam_config = Game::GameConfig::instance().camera();
     camera.setRTSView(center, cam_config.defaultDistance,
