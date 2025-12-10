@@ -279,7 +279,7 @@ GameEngine::GameEngine(QObject *parent)
 
   emit selected_units_changed();
 
-  m_unitDiedSubscription =
+  m_unit_died_subscription =
       Engine::Core::ScopedEventSubscription<Engine::Core::UnitDiedEvent>(
           [this](const Engine::Core::UnitDiedEvent &e) {
             on_unit_died(e);
@@ -293,7 +293,7 @@ GameEngine::GameEngine(QObject *parent)
             }
           });
 
-  m_unitSpawnedSubscription =
+  m_unit_spawned_subscription =
       Engine::Core::ScopedEventSubscription<Engine::Core::UnitSpawnedEvent>(
           [this](const Engine::Core::UnitSpawnedEvent &e) {
             on_unit_spawned(e);
@@ -389,7 +389,7 @@ void GameEngine::on_right_click(qreal sx, qreal sy) {
       auto *target_entity = m_world->getEntity(target_id);
       if (target_entity != nullptr) {
         auto *target_unit =
-            target_entity->getComponent<Engine::Core::UnitComponent>();
+            target_entity->get_component<Engine::Core::UnitComponent>();
         if (target_unit != nullptr) {
 
           bool const is_enemy =
@@ -449,7 +449,7 @@ void GameEngine::on_attack_click(qreal sx, qreal sy) {
       auto *target_entity = m_world->getEntity(target_id);
       if (target_entity != nullptr) {
         auto *target_unit =
-            target_entity->getComponent<Engine::Core::UnitComponent>();
+            target_entity->get_component<Engine::Core::UnitComponent>();
         if ((target_unit != nullptr) &&
             target_unit->owner_id != m_runtime.localOwnerId) {
           App::Controllers::ActionVFX::spawnAttackArrow(m_world.get(),
@@ -639,11 +639,11 @@ auto GameEngine::get_player_stats(int owner_id) -> QVariantMap {
   const auto *stats = stats_registry.getStats(owner_id);
 
   if (stats != nullptr) {
-    result["troopsRecruited"] = stats->troopsRecruited;
-    result["enemiesKilled"] = stats->enemiesKilled;
-    result["barracksOwned"] = stats->barracksOwned;
-    result["playTimeSec"] = stats->playTimeSec;
-    result["gameEnded"] = stats->gameEnded;
+    result["troopsRecruited"] = stats->troops_recruited;
+    result["enemiesKilled"] = stats->enemies_killed;
+    result["barracksOwned"] = stats->barracks_owned;
+    result["playTimeSec"] = stats->play_time_sec;
+    result["gameEnded"] = stats->game_ended;
   } else {
     result["troopsRecruited"] = 0;
     result["enemiesKilled"] = 0;
@@ -840,7 +840,7 @@ void GameEngine::reset_camera() {
   }
 
   m_cameraService->resetCamera(*m_camera, *m_world, m_runtime.localOwnerId,
-                               m_level.playerUnitId);
+                               m_level.player_unit_id);
 }
 
 void GameEngine::camera_zoom(float delta) {
@@ -898,7 +898,7 @@ void GameEngine::camera_follow_selection(bool enable) {
     return;
   }
 
-  m_cameraService->followSelection(*m_camera, *m_world, enable);
+  m_cameraService->follow_selection(*m_camera, *m_world, enable);
 }
 
 void GameEngine::camera_set_follow_lerp(float alpha) {
@@ -1011,7 +1011,7 @@ auto GameEngine::get_selected_units_command_mode() const -> QString {
       continue;
     }
 
-    auto *u = e->getComponent<Engine::Core::UnitComponent>();
+    auto *u = e->get_component<Engine::Core::UnitComponent>();
     if (u == nullptr) {
       continue;
     }
@@ -1021,11 +1021,11 @@ auto GameEngine::get_selected_units_command_mode() const -> QString {
 
     total_units++;
 
-    if (e->getComponent<Engine::Core::AttackTargetComponent>() != nullptr) {
+    if (e->get_component<Engine::Core::AttackTargetComponent>() != nullptr) {
       attacking_count++;
     }
 
-    auto *patrol = e->getComponent<Engine::Core::PatrolComponent>();
+    auto *patrol = e->get_component<Engine::Core::PatrolComponent>();
     if ((patrol != nullptr) && patrol->patrolling) {
       patrolling_count++;
     }
@@ -1079,7 +1079,7 @@ auto GameEngine::available_nations() const -> QVariantList {
         QStringLiteral("id"),
         QString::fromStdString(Game::Systems::nationIDToString(nation.id)));
     entry.insert(QStringLiteral("name"),
-                 QString::fromStdString(nation.displayName));
+                 QString::fromStdString(nation.display_name));
     ordered.append(entry);
   }
   std::sort(ordered.begin(), ordered.end(),
@@ -1202,8 +1202,8 @@ void GameEngine::start_skirmish(const QString &map_path,
   m_level.map_path = map_path;
   m_level.map_name = map_path;
 
-  if (!m_runtime.victoryState.isEmpty()) {
-    m_runtime.victoryState = "";
+  if (!m_runtime.victory_state.isEmpty()) {
+    m_runtime.victory_state = "";
     emit victory_state_changed();
   }
   if (m_victoryService) {
@@ -1264,7 +1264,7 @@ void GameEngine::start_skirmish(const QString &map_path,
 
     m_runtime.localOwnerId = updated_player_id;
     m_level.map_name = result.map_name;
-    m_level.playerUnitId = result.playerUnitId;
+    m_level.player_unit_id = result.player_unit_id;
     m_level.camFov = result.camFov;
     m_level.camNear = result.camNear;
     m_level.camFar = result.camFar;
@@ -1276,8 +1276,8 @@ void GameEngine::start_skirmish(const QString &map_path,
     if (m_victoryService) {
       m_victoryService->configure(result.victoryConfig, m_runtime.localOwnerId);
       m_victoryService->setVictoryCallback([this](const QString &state) {
-        if (m_runtime.victoryState != state) {
-          m_runtime.victoryState = state;
+        if (m_runtime.victory_state != state) {
+          m_runtime.victory_state = state;
           emit victory_state_changed();
 
           if (state == "victory" && !m_current_campaign_id.isEmpty()) {
@@ -1301,17 +1301,17 @@ void GameEngine::start_skirmish(const QString &map_path,
 
     rebuild_entity_cache();
     auto &troops = Game::Systems::TroopCountRegistry::instance();
-    troops.rebuildFromWorld(*m_world);
+    troops.rebuild_from_world(*m_world);
 
     auto &stats_registry = Game::Systems::GlobalStatsRegistry::instance();
-    stats_registry.rebuildFromWorld(*m_world);
+    stats_registry.rebuild_from_world(*m_world);
 
     auto &owner_registry = Game::Systems::OwnerRegistry::instance();
     const auto &all_owners = owner_registry.getAllOwners();
     for (const auto &owner : all_owners) {
       if (owner.type == Game::Systems::OwnerType::Player ||
           owner.type == Game::Systems::OwnerType::AI) {
-        stats_registry.markGameStart(owner.owner_id);
+        stats_registry.mark_game_start(owner.owner_id);
       }
     }
 
@@ -1506,8 +1506,8 @@ auto GameEngine::get_unit_info(Engine::Core::EntityID id, QString &name,
   if (e == nullptr) {
     return false;
   }
-  isBuilding = e->hasComponent<Engine::Core::BuildingComponent>();
-  if (auto *u = e->getComponent<Engine::Core::UnitComponent>()) {
+  isBuilding = e->has_component<Engine::Core::BuildingComponent>();
+  if (auto *u = e->get_component<Engine::Core::UnitComponent>()) {
     name =
         QString::fromStdString(Game::Units::spawn_typeToString(u->spawn_type));
     health = u->health;
@@ -1596,7 +1596,7 @@ void GameEngine::rebuild_entity_cache() {
   auto &owners = Game::Systems::OwnerRegistry::instance();
   auto entities = m_world->getEntitiesWith<Engine::Core::UnitComponent>();
   for (auto *e : entities) {
-    auto *unit = e->getComponent<Engine::Core::UnitComponent>();
+    auto *unit = e->get_component<Engine::Core::UnitComponent>();
     if ((unit == nullptr) || unit->health <= 0) {
       continue;
     }
@@ -1636,30 +1636,30 @@ void GameEngine::rebuild_registries_after_load() {
   m_runtime.localOwnerId = owner_registry.getLocalPlayerId();
 
   auto &troops = Game::Systems::TroopCountRegistry::instance();
-  troops.rebuildFromWorld(*m_world);
+  troops.rebuild_from_world(*m_world);
 
   auto &stats_registry = Game::Systems::GlobalStatsRegistry::instance();
-  stats_registry.rebuildFromWorld(*m_world);
+  stats_registry.rebuild_from_world(*m_world);
 
   const auto &all_owners = owner_registry.getAllOwners();
   for (const auto &owner : all_owners) {
     if (owner.type == Game::Systems::OwnerType::Player ||
         owner.type == Game::Systems::OwnerType::AI) {
-      stats_registry.markGameStart(owner.owner_id);
+      stats_registry.mark_game_start(owner.owner_id);
     }
   }
 
   rebuild_building_collisions();
 
-  m_level.playerUnitId = 0;
+  m_level.player_unit_id = 0;
   auto units = m_world->getEntitiesWith<Engine::Core::UnitComponent>();
   for (auto *entity : units) {
-    auto *unit = entity->getComponent<Engine::Core::UnitComponent>();
+    auto *unit = entity->get_component<Engine::Core::UnitComponent>();
     if (unit == nullptr) {
       continue;
     }
     if (unit->owner_id == m_runtime.localOwnerId) {
-      m_level.playerUnitId = entity->getId();
+      m_level.player_unit_id = entity->get_id();
       break;
     }
   }
@@ -1679,14 +1679,14 @@ void GameEngine::rebuild_building_collisions() {
 
   auto buildings = m_world->getEntitiesWith<Engine::Core::BuildingComponent>();
   for (auto *entity : buildings) {
-    auto *transform = entity->getComponent<Engine::Core::TransformComponent>();
-    auto *unit = entity->getComponent<Engine::Core::UnitComponent>();
+    auto *transform = entity->get_component<Engine::Core::TransformComponent>();
+    auto *unit = entity->get_component<Engine::Core::UnitComponent>();
     if ((transform == nullptr) || (unit == nullptr)) {
       continue;
     }
 
     registry.registerBuilding(
-        entity->getId(), Game::Units::spawn_typeToString(unit->spawn_type),
+        entity->get_id(), Game::Units::spawn_typeToString(unit->spawn_type),
         transform->position.x, transform->position.z, unit->owner_id);
   }
 }
@@ -1696,10 +1696,10 @@ auto GameEngine::to_runtime_snapshot() const -> Game::Systems::RuntimeSnapshot {
   snap.paused = m_runtime.paused;
   snap.timeScale = m_runtime.timeScale;
   snap.localOwnerId = m_runtime.localOwnerId;
-  snap.victoryState = m_runtime.victoryState;
-  snap.cursorMode = CursorModeUtils::toInt(m_runtime.cursorMode);
-  snap.selectedPlayerId = m_selectedPlayerId;
-  snap.followSelection = m_followSelectionEnabled;
+  snap.victory_state = m_runtime.victory_state;
+  snap.cursor_mode = CursorModeUtils::toInt(m_runtime.cursor_mode);
+  snap.selected_player_id = m_selectedPlayerId;
+  snap.follow_selection = m_followSelectionEnabled;
   return snap;
 }
 
@@ -1709,22 +1709,22 @@ void GameEngine::apply_runtime_snapshot(
   set_paused(snapshot.paused);
   set_game_speed(snapshot.timeScale);
 
-  if (snapshot.victoryState != m_runtime.victoryState) {
-    m_runtime.victoryState = snapshot.victoryState;
+  if (snapshot.victory_state != m_runtime.victory_state) {
+    m_runtime.victory_state = snapshot.victory_state;
     emit victory_state_changed();
   }
 
-  set_cursor_mode(CursorModeUtils::fromInt(snapshot.cursorMode));
+  set_cursor_mode(CursorModeUtils::fromInt(snapshot.cursor_mode));
 
-  if (snapshot.selectedPlayerId != m_selectedPlayerId) {
-    m_selectedPlayerId = snapshot.selectedPlayerId;
+  if (snapshot.selected_player_id != m_selectedPlayerId) {
+    m_selectedPlayerId = snapshot.selected_player_id;
     emit selected_player_id_changed();
   }
 
-  if (snapshot.followSelection != m_followSelectionEnabled) {
-    m_followSelectionEnabled = snapshot.followSelection;
+  if (snapshot.follow_selection != m_followSelectionEnabled) {
+    m_followSelectionEnabled = snapshot.follow_selection;
     if (m_camera && m_cameraService && m_world) {
-      m_cameraService->followSelection(*m_camera, *m_world,
+      m_cameraService->follow_selection(*m_camera, *m_world,
                                        m_followSelectionEnabled);
     }
   }
@@ -1930,10 +1930,10 @@ void GameEngine::update_ambient_state(float dt) {
 
   Engine::Core::AmbientState new_state = Engine::Core::AmbientState::PEACEFUL;
 
-  if (!m_runtime.victoryState.isEmpty()) {
-    if (m_runtime.victoryState == "victory") {
+  if (!m_runtime.victory_state.isEmpty()) {
+    if (m_runtime.victory_state == "victory") {
       new_state = Engine::Core::AmbientState::VICTORY;
-    } else if (m_runtime.victoryState == "defeat") {
+    } else if (m_runtime.victory_state == "defeat") {
       new_state = Engine::Core::AmbientState::DEFEAT;
     }
   } else if (is_player_in_combat()) {
@@ -1966,24 +1966,24 @@ auto GameEngine::is_player_in_combat() const -> bool {
   const float combat_check_radius = 15.0F;
 
   for (auto *entity : units) {
-    auto *unit = entity->getComponent<Engine::Core::UnitComponent>();
+    auto *unit = entity->get_component<Engine::Core::UnitComponent>();
     if ((unit == nullptr) || unit->owner_id != m_runtime.localOwnerId ||
         unit->health <= 0) {
       continue;
     }
 
-    if (entity->hasComponent<Engine::Core::AttackTargetComponent>()) {
+    if (entity->has_component<Engine::Core::AttackTargetComponent>()) {
       return true;
     }
 
-    auto *transform = entity->getComponent<Engine::Core::TransformComponent>();
+    auto *transform = entity->get_component<Engine::Core::TransformComponent>();
     if (transform == nullptr) {
       continue;
     }
 
     for (auto *other_entity : units) {
       auto *other_unit =
-          other_entity->getComponent<Engine::Core::UnitComponent>();
+          other_entity->get_component<Engine::Core::UnitComponent>();
       if ((other_unit == nullptr) ||
           other_unit->owner_id == m_runtime.localOwnerId ||
           other_unit->health <= 0) {
@@ -1991,7 +1991,7 @@ auto GameEngine::is_player_in_combat() const -> bool {
       }
 
       auto *other_transform =
-          other_entity->getComponent<Engine::Core::TransformComponent>();
+          other_entity->get_component<Engine::Core::TransformComponent>();
       if (other_transform == nullptr) {
         continue;
       }

@@ -97,11 +97,11 @@ auto PickingService::pick_single(
   Engine::Core::EntityID best_building_id = 0;
   auto ents = world.getEntitiesWith<Engine::Core::TransformComponent>();
   for (auto *e : ents) {
-    if (!e->hasComponent<Engine::Core::UnitComponent>()) {
+    if (!e->has_component<Engine::Core::UnitComponent>()) {
       continue;
     }
-    auto *t = e->getComponent<Engine::Core::TransformComponent>();
-    auto *u = e->getComponent<Engine::Core::UnitComponent>();
+    auto *t = e->get_component<Engine::Core::TransformComponent>();
+    auto *u = e->get_component<Engine::Core::UnitComponent>();
 
     if (owner_filter != 0 && u->owner_id != owner_filter) {
       continue;
@@ -116,7 +116,7 @@ auto PickingService::pick_single(
     auto const dx = float(sx - sp.x());
     auto const dy = float(sy - sp.y());
     float const d2 = dx * dx + dy * dy;
-    if (e->hasComponent<Engine::Core::BuildingComponent>()) {
+    if (e->has_component<Engine::Core::BuildingComponent>()) {
       bool hit = false;
       float pick_dist2 = d2;
       const float margin_x_z = 1.6F;
@@ -184,13 +184,13 @@ auto PickingService::pick_single(
       }
       if (hit && pick_dist2 < best_building_dist2) {
         best_building_dist2 = pick_dist2;
-        best_building_id = e->getId();
+        best_building_id = e->get_id();
       }
     } else {
       float const r2 = base_unit_pick_radius * base_unit_pick_radius;
       if (d2 <= r2 && d2 < best_unit_dist2) {
         best_unit_dist2 = d2;
-        best_unit_id = e->getId();
+        best_unit_id = e->get_id();
       }
     }
   }
@@ -238,17 +238,17 @@ auto PickingService::pickInRect(
   std::vector<Engine::Core::EntityID> picked;
   auto ents = world.getEntitiesWith<Engine::Core::TransformComponent>();
   for (auto *e : ents) {
-    if (!e->hasComponent<Engine::Core::UnitComponent>()) {
+    if (!e->has_component<Engine::Core::UnitComponent>()) {
       continue;
     }
-    if (e->hasComponent<Engine::Core::BuildingComponent>()) {
+    if (e->has_component<Engine::Core::BuildingComponent>()) {
       continue;
     }
-    auto *u = e->getComponent<Engine::Core::UnitComponent>();
+    auto *u = e->get_component<Engine::Core::UnitComponent>();
     if ((u == nullptr) || u->owner_id != owner_filter) {
       continue;
     }
-    auto *t = e->getComponent<Engine::Core::TransformComponent>();
+    auto *t = e->get_component<Engine::Core::TransformComponent>();
     QPointF sp;
     if (!camera.world_to_screen(
             QVector3D(t->position.x, t->position.y, t->position.z), view_w,
@@ -257,7 +257,7 @@ auto PickingService::pickInRect(
     }
     if (sp.x() >= min_x && sp.x() <= max_x && sp.y() >= min_y &&
         sp.y() <= max_y) {
-      picked.push_back(e->getId());
+      picked.push_back(e->get_id());
     }
   }
   return picked;

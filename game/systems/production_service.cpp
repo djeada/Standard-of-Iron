@@ -18,7 +18,7 @@ findFirstSelectedBarracks(Engine::Core::World &world,
                           int owner_id) -> Engine::Core::Entity * {
   for (auto id : selected) {
     if (auto *e = world.getEntity(id)) {
-      auto *u = e->getComponent<Engine::Core::UnitComponent>();
+      auto *u = e->get_component<Engine::Core::UnitComponent>();
       if ((u == nullptr) || u->owner_id != owner_id) {
         continue;
       }
@@ -63,14 +63,14 @@ auto ProductionService::startProductionForFirstSelectedBarracks(
   if (e == nullptr) {
     return ProductionResult::NoBarracks;
   }
-  auto *unit = e->getComponent<Engine::Core::UnitComponent>();
+  auto *unit = e->get_component<Engine::Core::UnitComponent>();
   const auto nation_id = resolve_nation_id(unit, owner_id);
   const auto profile =
       TroopProfileService::instance().get_profile(nation_id, unit_type);
 
-  auto *p = e->getComponent<Engine::Core::ProductionComponent>();
+  auto *p = e->get_component<Engine::Core::ProductionComponent>();
   if (p == nullptr) {
-    p = e->addComponent<Engine::Core::ProductionComponent>();
+    p = e->add_component<Engine::Core::ProductionComponent>();
   }
   if (p == nullptr) {
     return ProductionResult::NoBarracks;
@@ -117,9 +117,9 @@ auto ProductionService::setRallyForFirstSelectedBarracks(
   if (e == nullptr) {
     return false;
   }
-  auto *p = e->getComponent<Engine::Core::ProductionComponent>();
+  auto *p = e->get_component<Engine::Core::ProductionComponent>();
   if (p == nullptr) {
-    p = e->addComponent<Engine::Core::ProductionComponent>();
+    p = e->add_component<Engine::Core::ProductionComponent>();
   }
   if (p == nullptr) {
     return false;
@@ -140,12 +140,12 @@ auto ProductionService::getSelectedBarracksState(
     return false;
   }
   outState.has_barracks = true;
-  if (auto *unit = e->getComponent<Engine::Core::UnitComponent>()) {
+  if (auto *unit = e->get_component<Engine::Core::UnitComponent>()) {
     outState.nation_id = resolve_nation_id(unit, owner_id);
   } else {
     outState.nation_id = NationRegistry::instance().default_nation_id();
   }
-  if (auto *p = e->getComponent<Engine::Core::ProductionComponent>()) {
+  if (auto *p = e->get_component<Engine::Core::ProductionComponent>()) {
     outState.in_progress = p->in_progress;
     outState.product_type = p->product_type;
     outState.time_remaining = p->time_remaining;

@@ -56,7 +56,7 @@ void AICommandApplier::apply(Engine::Core::World &world, int aiOwnerId,
           continue;
         }
 
-        auto *unit = entity->getComponent<Engine::Core::UnitComponent>();
+        auto *unit = entity->get_component<Engine::Core::UnitComponent>();
         if ((unit == nullptr) || unit->owner_id != aiOwnerId) {
           continue;
         }
@@ -92,7 +92,7 @@ void AICommandApplier::apply(Engine::Core::World &world, int aiOwnerId,
           continue;
         }
 
-        auto *unit = entity->getComponent<Engine::Core::UnitComponent>();
+        auto *unit = entity->get_component<Engine::Core::UnitComponent>();
         if ((unit == nullptr) || unit->owner_id != aiOwnerId) {
           continue;
         }
@@ -116,7 +116,7 @@ void AICommandApplier::apply(Engine::Core::World &world, int aiOwnerId,
       }
 
       auto *production =
-          entity->getComponent<Engine::Core::ProductionComponent>();
+          entity->get_component<Engine::Core::ProductionComponent>();
       if (production == nullptr) {
         break;
       }
@@ -125,7 +125,7 @@ void AICommandApplier::apply(Engine::Core::World &world, int aiOwnerId,
         break;
       }
 
-      auto *unit = entity->getComponent<Engine::Core::UnitComponent>();
+      auto *unit = entity->get_component<Engine::Core::UnitComponent>();
       if ((unit != nullptr) && unit->owner_id != aiOwnerId) {
         break;
       }

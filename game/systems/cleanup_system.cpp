@@ -18,7 +18,7 @@ void CleanupSystem::removeDeadEntities(Engine::Core::World *world) {
 
   entities_to_remove.reserve(entities.size());
   for (auto *entity : entities) {
-    entities_to_remove.push_back(entity->getId());
+    entities_to_remove.push_back(entity->get_id());
   }
 
   for (auto entity_id : entities_to_remove) {

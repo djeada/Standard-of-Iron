@@ -27,7 +27,7 @@ struct FlagColors {
 inline void draw_rally_flag_if_any(const DrawContext &p, ISubmitter &out,
                                    Texture *white, const FlagColors &colors) {
   if (auto *prod =
-          p.entity->getComponent<Engine::Core::ProductionComponent>()) {
+          p.entity->get_component<Engine::Core::ProductionComponent>()) {
     if (prod->rally_set && (p.resources != nullptr)) {
       auto flag = Render::Geom::Flag::create(prod->rally_x, prod->rally_z,
                                              QVector3D(1.0F, 0.9F, 0.2F),
@@ -50,7 +50,7 @@ drawPoleWithBanner(const DrawContext &p, ISubmitter &out, Mesh *unit,
   QVector3D actualBannerColor = bannerColor;
 
   if (enableCapture && p.entity != nullptr) {
-    auto *capture = p.entity->getComponent<Engine::Core::CaptureComponent>();
+    auto *capture = p.entity->get_component<Engine::Core::CaptureComponent>();
     if ((capture != nullptr) && capture->is_being_captured) {
       float const progress = std::clamp(
           capture->capture_progress / capture->required_time, 0.0F, 1.0F);
@@ -87,7 +87,7 @@ inline CaptureColors get_capture_colors(const DrawContext &p,
   CaptureColors result{baseTeamColor, baseTeamTrim, 0.0F};
 
   if (p.entity != nullptr) {
-    auto *capture = p.entity->getComponent<Engine::Core::CaptureComponent>();
+    auto *capture = p.entity->get_component<Engine::Core::CaptureComponent>();
     if ((capture != nullptr) && capture->is_being_captured) {
       float const progress = std::clamp(
           capture->capture_progress / capture->required_time, 0.0F, 1.0F);

@@ -48,13 +48,13 @@ void renderPatrolFlags(Renderer *renderer, ResourceManager *resources,
   auto patrol_entities = world.getEntitiesWith<Engine::Core::PatrolComponent>();
 
   for (auto *entity : patrol_entities) {
-    auto *patrol = entity->getComponent<Engine::Core::PatrolComponent>();
+    auto *patrol = entity->get_component<Engine::Core::PatrolComponent>();
     if ((patrol == nullptr) || !patrol->patrolling ||
         patrol->waypoints.empty()) {
       continue;
     }
 
-    auto *unit = entity->getComponent<Engine::Core::UnitComponent>();
+    auto *unit = entity->get_component<Engine::Core::UnitComponent>();
     if ((unit == nullptr) || unit->health <= 0) {
       continue;
     }

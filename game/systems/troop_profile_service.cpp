@@ -63,15 +63,15 @@ auto TroopProfileService::build_profile(
   profile.formation_type = nation.formation_type;
 
   if (const auto *nationTroop = nation.getTroop(type)) {
-    profile.display_name = nationTroop->displayName;
+    profile.display_name = nationTroop->display_name;
     profile.production.cost = nationTroop->cost;
     profile.production.build_time = nationTroop->build_time;
     profile.production.priority = nationTroop->priority;
-    profile.production.is_melee = nationTroop->isMelee;
+    profile.production.is_melee = nationTroop->is_melee;
   }
 
-  auto variantIt = nation.troopVariants.find(type);
-  if (variantIt != nation.troopVariants.end()) {
+  auto variantIt = nation.troop_variants.find(type);
+  if (variantIt != nation.troop_variants.end()) {
     const auto &variant = variantIt->second;
     if (variant.health) {
       profile.combat.health = *variant.health;

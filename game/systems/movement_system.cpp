@@ -97,20 +97,20 @@ void MovementSystem::update(Engine::Core::World *world, float delta_time) {
 
 void MovementSystem::move_unit(Engine::Core::Entity *entity,
                               Engine::Core::World *world, float delta_time) {
-  auto *transform = entity->getComponent<Engine::Core::TransformComponent>();
-  auto *movement = entity->getComponent<Engine::Core::MovementComponent>();
-  auto *unit = entity->getComponent<Engine::Core::UnitComponent>();
+  auto *transform = entity->get_component<Engine::Core::TransformComponent>();
+  auto *movement = entity->get_component<Engine::Core::MovementComponent>();
+  auto *unit = entity->get_component<Engine::Core::UnitComponent>();
 
   if ((transform == nullptr) || (movement == nullptr) || (unit == nullptr)) {
     return;
   }
 
   if (unit->health <= 0 ||
-      entity->hasComponent<Engine::Core::PendingRemovalComponent>()) {
+      entity->has_component<Engine::Core::PendingRemovalComponent>()) {
     return;
   }
 
-  auto *hold_mode = entity->getComponent<Engine::Core::HoldModeComponent>();
+  auto *hold_mode = entity->get_component<Engine::Core::HoldModeComponent>();
   bool in_hold_mode = false;
   if (hold_mode != nullptr) {
     if (hold_mode->exit_cooldown > 0.0F) {
@@ -136,7 +136,7 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
   }
 
   if (in_hold_mode) {
-    if (!entity->hasComponent<Engine::Core::BuildingComponent>()) {
+    if (!entity->has_component<Engine::Core::BuildingComponent>()) {
       if (transform->has_desired_yaw) {
         float const current = transform->rotation.y;
         float const target_yaw = transform->desired_yaw;
@@ -155,7 +155,7 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
     return;
   }
 
-  auto *atk = entity->getComponent<Engine::Core::AttackComponent>();
+  auto *atk = entity->get_component<Engine::Core::AttackComponent>();
   if ((atk != nullptr) && atk->in_melee_lock) {
 
     movement->has_target = false;
@@ -167,7 +167,7 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
   }
 
   QVector3D const final_goal(movement->goal_x, 0.0F, movement->goal_y);
-  bool const destination_allowed = isPointAllowed(final_goal, entity->getId());
+  bool const destination_allowed = isPointAllowed(final_goal, entity->get_id());
 
   if (movement->has_target && !destination_allowed) {
     movement->path.clear();
@@ -205,7 +205,7 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
       CommandService::MoveOptions opts;
       opts.clear_attack_intent = false;
       opts.allow_direct_fallback = true;
-      std::vector<Engine::Core::EntityID> const ids = {entity->getId()};
+      std::vector<Engine::Core::EntityID> const ids = {entity->get_id()};
       std::vector<QVector3D> const targets = {final_goal};
       CommandService::moveUnits(*world, ids, targets, opts);
       movement->repath_cooldown = repath_cooldown_seconds;
@@ -241,7 +241,7 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
       while (!movement->path.empty() && skips_remaining-- > 0) {
         movement->path.erase(movement->path.begin());
         refresh_segment_target();
-        if (isSegmentWalkable(current_pos, segment_target, entity->getId())) {
+        if (isSegmentWalkable(current_pos, segment_target, entity->get_id())) {
           recovered = true;
           break;
         }
@@ -249,7 +249,7 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
 
       if (!recovered && movement->path.empty()) {
         refresh_segment_target();
-        if (isSegmentWalkable(current_pos, segment_target, entity->getId())) {
+        if (isSegmentWalkable(current_pos, segment_target, entity->get_id())) {
           recovered = true;
         }
       }
@@ -257,7 +257,7 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
       return recovered;
     };
 
-    if (!isSegmentWalkable(current_pos, segment_target, entity->getId())) {
+    if (!isSegmentWalkable(current_pos, segment_target, entity->get_id())) {
       if (try_advance_past_blocked_segment()) {
 
       } else {
@@ -268,7 +268,7 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
             CommandService::MoveOptions opts;
             opts.clear_attack_intent = false;
             opts.allow_direct_fallback = false;
-            std::vector<Engine::Core::EntityID> const ids = {entity->getId()};
+            std::vector<Engine::Core::EntityID> const ids = {entity->get_id()};
             std::vector<QVector3D> const targets = {
                 QVector3D(movement->goal_x, 0.0F, movement->goal_y)};
             CommandService::moveUnits(*world, ids, targets, opts);
@@ -368,7 +368,7 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
     }
   }
 
-  if (!entity->hasComponent<Engine::Core::BuildingComponent>()) {
+  if (!entity->has_component<Engine::Core::BuildingComponent>()) {
     float const speed2 =
         movement->vx * movement->vx + movement->vz * movement->vz;
     if (speed2 > 1e-5F) {

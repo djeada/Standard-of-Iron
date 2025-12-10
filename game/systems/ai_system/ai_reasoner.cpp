@@ -96,7 +96,7 @@ void AIReasoner::updateContext(const AISnapshot &snapshot, AIContext &ctx) {
       }
     }
 
-    if (!entity.movement.hasComponent || !entity.movement.has_target) {
+    if (!entity.movement.has_component || !entity.movement.has_target) {
       ctx.idleUnits++;
     } else {
       ctx.combatUnits++;

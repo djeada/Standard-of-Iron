@@ -57,7 +57,7 @@ auto CommandController::onAttackClick(qreal sx, qreal sy, int viewportWidth,
   }
 
   auto *target_unit =
-      target_entity->getComponent<Engine::Core::UnitComponent>();
+      target_entity->get_component<Engine::Core::UnitComponent>();
   if (target_unit == nullptr) {
     return result;
   }
@@ -90,14 +90,14 @@ auto CommandController::onStopCommand() -> CommandResult {
     }
 
     resetMovement(entity);
-    entity->removeComponent<Engine::Core::AttackTargetComponent>();
+    entity->remove_component<Engine::Core::AttackTargetComponent>();
 
-    if (auto *patrol = entity->getComponent<Engine::Core::PatrolComponent>()) {
+    if (auto *patrol = entity->get_component<Engine::Core::PatrolComponent>()) {
       patrol->patrolling = false;
       patrol->waypoints.clear();
     }
 
-    auto *hold_mode = entity->getComponent<Engine::Core::HoldModeComponent>();
+    auto *hold_mode = entity->get_component<Engine::Core::HoldModeComponent>();
     if ((hold_mode != nullptr) && hold_mode->active) {
       hold_mode->active = false;
       hold_mode->exitCooldown = hold_mode->standUpDuration;
@@ -127,7 +127,7 @@ auto CommandController::onHoldCommand() -> CommandResult {
       continue;
     }
 
-    auto *unit = entity->getComponent<Engine::Core::UnitComponent>();
+    auto *unit = entity->get_component<Engine::Core::UnitComponent>();
 
     if ((unit == nullptr) ||
         (unit->spawn_type != Game::Units::SpawnType::Archer &&
@@ -135,7 +135,7 @@ auto CommandController::onHoldCommand() -> CommandResult {
       continue;
     }
 
-    auto *hold_mode = entity->getComponent<Engine::Core::HoldModeComponent>();
+    auto *hold_mode = entity->get_component<Engine::Core::HoldModeComponent>();
 
     if ((hold_mode != nullptr) && hold_mode->active) {
       hold_mode->active = false;
@@ -145,21 +145,21 @@ auto CommandController::onHoldCommand() -> CommandResult {
     }
 
     resetMovement(entity);
-    entity->removeComponent<Engine::Core::AttackTargetComponent>();
+    entity->remove_component<Engine::Core::AttackTargetComponent>();
 
-    if (auto *patrol = entity->getComponent<Engine::Core::PatrolComponent>()) {
+    if (auto *patrol = entity->get_component<Engine::Core::PatrolComponent>()) {
       patrol->patrolling = false;
       patrol->waypoints.clear();
     }
 
     if (hold_mode == nullptr) {
-      hold_mode = entity->addComponent<Engine::Core::HoldModeComponent>();
+      hold_mode = entity->add_component<Engine::Core::HoldModeComponent>();
     }
     hold_mode->active = true;
     hold_mode->exitCooldown = 0.0F;
     emit hold_modeChanged(true);
 
-    auto *movement = entity->getComponent<Engine::Core::MovementComponent>();
+    auto *movement = entity->get_component<Engine::Core::MovementComponent>();
     if (movement != nullptr) {
       movement->has_target = false;
       movement->path.clear();
@@ -222,14 +222,14 @@ auto CommandController::onPatrolClick(qreal sx, qreal sy, int viewportWidth,
       continue;
     }
 
-    auto *building = entity->getComponent<Engine::Core::BuildingComponent>();
+    auto *building = entity->get_component<Engine::Core::BuildingComponent>();
     if (building != nullptr) {
       continue;
     }
 
-    auto *patrol = entity->getComponent<Engine::Core::PatrolComponent>();
+    auto *patrol = entity->get_component<Engine::Core::PatrolComponent>();
     if (patrol == nullptr) {
-      patrol = entity->addComponent<Engine::Core::PatrolComponent>();
+      patrol = entity->add_component<Engine::Core::PatrolComponent>();
     }
 
     if (patrol != nullptr) {
@@ -242,7 +242,7 @@ auto CommandController::onPatrolClick(qreal sx, qreal sy, int viewportWidth,
     }
 
     resetMovement(entity);
-    entity->removeComponent<Engine::Core::AttackTargetComponent>();
+    entity->remove_component<Engine::Core::AttackTargetComponent>();
   }
 
   clearPatrolFirstWaypoint();
@@ -311,7 +311,7 @@ auto CommandController::anySelectedInHoldMode() const -> bool {
       continue;
     }
 
-    auto *hold_mode = entity->getComponent<Engine::Core::HoldModeComponent>();
+    auto *hold_mode = entity->get_component<Engine::Core::HoldModeComponent>();
     if ((hold_mode != nullptr) && hold_mode->active) {
       return true;
     }

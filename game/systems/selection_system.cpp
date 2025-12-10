@@ -42,7 +42,7 @@ void SelectionSystem::select_unitsInArea(float x1, float y1, float x2,
 
 auto SelectionSystem::is_unit_in_area(Engine::Core::Entity *entity, float x1,
                                    float y1, float x2, float y2) -> bool {
-  auto *transform = entity->getComponent<Engine::Core::TransformComponent>();
+  auto *transform = entity->get_component<Engine::Core::TransformComponent>();
   if (transform == nullptr) {
     return false;
   }
@@ -135,12 +135,12 @@ void SelectionController::select_all_player_troops(int local_owner_id) {
 
   auto entities = m_world->getEntitiesWith<Engine::Core::UnitComponent>();
   for (auto *e : entities) {
-    auto *unit = e->getComponent<Engine::Core::UnitComponent>();
+    auto *unit = e->get_component<Engine::Core::UnitComponent>();
     if ((unit == nullptr) || unit->owner_id != local_owner_id) {
       continue;
     }
 
-    if (e->hasComponent<Engine::Core::BuildingComponent>()) {
+    if (e->has_component<Engine::Core::BuildingComponent>()) {
       continue;
     }
 
@@ -148,7 +148,7 @@ void SelectionController::select_all_player_troops(int local_owner_id) {
       continue;
     }
 
-    m_selection_system->selectUnit(e->getId());
+    m_selection_system->selectUnit(e->get_id());
   }
 
   syncSelectionFlags();
@@ -166,7 +166,7 @@ void SelectionController::select_single_unit(Engine::Core::EntityID id,
     return;
   }
 
-  auto *unit = entity->getComponent<Engine::Core::UnitComponent>();
+  auto *unit = entity->get_component<Engine::Core::UnitComponent>();
   if ((unit == nullptr) || (unit->health <= 0) ||
       (unit->owner_id != local_owner_id)) {
     return;
@@ -203,7 +203,7 @@ auto SelectionController::has_selected_type(const QString &type) const -> bool {
   const auto &sel = m_selection_system->getSelectedUnits();
   for (auto id : sel) {
     if (auto *e = m_world->getEntity(id)) {
-      if (auto *u = e->getComponent<Engine::Core::UnitComponent>()) {
+      if (auto *u = e->get_component<Engine::Core::UnitComponent>()) {
         if (QString::fromStdString(
                 Game::Units::spawn_typeToString(u->spawn_type)) == type) {
           return true;

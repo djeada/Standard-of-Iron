@@ -73,7 +73,7 @@ auto World::getUnitsOwnedBy(int owner_id) const -> std::vector<Entity *> {
   std::vector<Entity *> result;
   result.reserve(m_entities.size());
   for (const auto &[entity_id, entity] : m_entities) {
-    auto *unit = entity->getComponent<UnitComponent>();
+    auto *unit = entity->get_component<UnitComponent>();
     if (unit == nullptr) {
       continue;
     }
@@ -89,7 +89,7 @@ auto World::getUnitsNotOwnedBy(int owner_id) const -> std::vector<Entity *> {
   std::vector<Entity *> result;
   result.reserve(m_entities.size());
   for (const auto &[entity_id, entity] : m_entities) {
-    auto *unit = entity->getComponent<UnitComponent>();
+    auto *unit = entity->get_component<UnitComponent>();
     if (unit == nullptr) {
       continue;
     }
@@ -107,7 +107,7 @@ auto World::getAlliedUnits(int owner_id) const -> std::vector<Entity *> {
   auto &owner_registry = Game::Systems::OwnerRegistry::instance();
 
   for (const auto &[entity_id, entity] : m_entities) {
-    auto *unit = entity->getComponent<UnitComponent>();
+    auto *unit = entity->get_component<UnitComponent>();
     if (unit == nullptr) {
       continue;
     }
@@ -127,7 +127,7 @@ auto World::getEnemyUnits(int owner_id) const -> std::vector<Entity *> {
   auto &owner_registry = Game::Systems::OwnerRegistry::instance();
 
   for (const auto &[entity_id, entity] : m_entities) {
-    auto *unit = entity->getComponent<UnitComponent>();
+    auto *unit = entity->get_component<UnitComponent>();
     if (unit == nullptr) {
       continue;
     }
