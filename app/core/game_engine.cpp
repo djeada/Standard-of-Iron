@@ -252,7 +252,7 @@ GameEngine::GameEngine(QObject *parent)
                 auto *picking = m_pickingService.get();
                 if ((cam != nullptr) && (picking != nullptr)) {
                   Engine::Core::EntityID const target_id =
-                      Game::Systems::PickingService::pickUnitFirst(
+                      Game::Systems::PickingService::pick_unit_first(
                           0.0F, 0.0F, *m_world, *cam, m_viewport.width,
                           m_viewport.height, 0);
                   if (target_id != 0) {
@@ -574,7 +574,7 @@ void GameEngine::set_hover_at_screen(qreal sx, qreal sy) {
 
   m_cursorManager->updateCursorShape(m_window);
 
-  m_hoverTracker->updateHover(float(sx), float(sy), *m_world, *m_camera,
+  m_hoverTracker->update_hover(float(sx), float(sy), *m_world, *m_camera,
                               m_viewport.width, m_viewport.height);
 }
 
@@ -1221,7 +1221,7 @@ void GameEngine::start_skirmish(const QString &map_path,
     m_runtime.loading = true;
 
     if (m_hoverTracker) {
-      m_hoverTracker->updateHover(-1, -1, *m_world, *m_camera, 0, 0);
+      m_hoverTracker->update_hover(-1, -1, *m_world, *m_camera, 0, 0);
     }
 
     m_entityCache.reset();

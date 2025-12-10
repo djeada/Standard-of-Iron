@@ -26,13 +26,13 @@ void ArrowSystem::spawnArrow(const QVector3D &start, const QVector3D &end,
   m_arrows.push_back(a);
 }
 
-void ArrowSystem::update(Engine::Core::World *, float deltaTime) {
+void ArrowSystem::update(Engine::Core::World *, float delta_time) {
   for (auto &arrow : m_arrows) {
     if (!arrow.active) {
       continue;
     }
 
-    arrow.t += deltaTime * arrow.speed * arrow.invDist;
+    arrow.t += delta_time * arrow.speed * arrow.invDist;
     if (arrow.t >= 1.0F) {
       arrow.t = 1.0F;
       arrow.active = false;
