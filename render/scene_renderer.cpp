@@ -124,7 +124,7 @@ void Renderer::mesh(Mesh *mesh, const QMatrix4x4 &model, const QVector3D &color,
     QVector3D start;
     QVector3D end;
     float radius = 0.0F;
-    if (detail::decomposeUnitCylinder(model, start, end, radius)) {
+    if (detail::decompose_unit_cylinder(model, start, end, radius)) {
       cylinder(start, end, radius, color, alpha);
       return;
     }
