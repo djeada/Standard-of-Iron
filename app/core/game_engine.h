@@ -83,7 +83,7 @@ public:
   explicit GameEngine(QObject *parent = nullptr);
   ~GameEngine() override;
 
-  void cleanupOpenGLResources();
+  void cleanup_opengl_resources();
 
   Q_PROPERTY(QAbstractItemModel *selected_units_model READ selected_units_model
                  NOTIFY selected_units_changed)
@@ -205,7 +205,7 @@ public:
 
   void setWindow(QQuickWindow *w) { m_window = w; }
 
-  void ensureInitialized();
+  void ensure_initialized();
   void update(float dt);
   void render(int pixelWidth, int pixelHeight);
 
