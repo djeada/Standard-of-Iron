@@ -63,10 +63,10 @@ void Renderer::shutdown() { m_backend.reset(); }
 
 void Renderer::begin_frame() {
 
-  advancePoseCacheFrame();
+  advance_pose_cache_frame();
 
-  resetHumanoidRenderStats();
-  resetHorseRenderStats();
+  reset_humanoid_render_stats();
+  reset_horse_render_stats();
 
   m_active_queue = &m_queues[m_fill_queue_index];
   m_active_queue->clear();

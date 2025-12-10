@@ -21,9 +21,9 @@ namespace Render::GL {
 
 auto torso_mesh_without_bottom_cap() -> Mesh *;
 
-void advancePoseCacheFrame();
+void advance_pose_cache_frame();
 
-inline auto calculateHumanoidLOD(float distance) -> HumanoidLOD {
+inline auto calculate_humanoid_lod(float distance) -> HumanoidLOD {
   const auto &settings = Render::GraphicsSettings::instance();
   if (distance < settings.humanoidFullDetailDistance()) {
     return HumanoidLOD::Full;
@@ -61,7 +61,7 @@ public:
                               const HumanoidAnimationContext &anim_ctx,
                               uint32_t seed, HumanoidPose &ioPose) const;
 
-  virtual void addAttachments(const DrawContext &ctx, const HumanoidVariant &v,
+  virtual void add_attachments(const DrawContext &ctx, const HumanoidVariant &v,
                               const HumanoidPose &pose,
                               const HumanoidAnimationContext &anim_ctx,
                               ISubmitter &out) const;
@@ -74,21 +74,21 @@ public:
                           const HumanoidAnimationContext &anim,
                           ISubmitter &out) const;
 
-  virtual void draw_armorOverlay(const DrawContext &ctx,
+  virtual void draw_armor_overlay(const DrawContext &ctx,
                                  const HumanoidVariant &v,
                                  const HumanoidPose &pose, float y_top_cover,
                                  float torso_r, float shoulder_half_span,
                                  float upper_arm_r, const QVector3D &right_axis,
                                  ISubmitter &out) const;
 
-  virtual void drawShoulderDecorations(const DrawContext &ctx,
+  virtual void draw_shoulder_decorations(const DrawContext &ctx,
                                        const HumanoidVariant &v,
                                        const HumanoidPose &pose,
                                        float y_top_cover, float y_neck,
                                        const QVector3D &right_axis,
                                        ISubmitter &out) const;
 
-  virtual void drawFacialHair(const DrawContext &ctx, const HumanoidVariant &v,
+  virtual void draw_facial_hair(const DrawContext &ctx, const HumanoidVariant &v,
                               const HumanoidPose &pose, ISubmitter &out) const;
 
   void render(const DrawContext &ctx, ISubmitter &out) const;
@@ -97,24 +97,24 @@ public:
       const DrawContext &ctx, Engine::Core::UnitComponent *unit_comp,
       Engine::Core::TransformComponent *transform_comp) const -> float;
 
-  void drawSimplifiedBody(const DrawContext &ctx, const HumanoidVariant &v,
+  void draw_simplified_body(const DrawContext &ctx, const HumanoidVariant &v,
                           HumanoidPose &pose, ISubmitter &out) const;
 
-  void drawMinimalBody(const DrawContext &ctx, const HumanoidVariant &v,
+  void draw_minimal_body(const DrawContext &ctx, const HumanoidVariant &v,
                        const HumanoidPose &pose, ISubmitter &out) const;
 
-  static auto frameLocalPosition(const AttachmentFrame &frame,
+  static auto frame_local_position(const AttachmentFrame &frame,
                                  const QVector3D &local) -> QVector3D;
 
-  static auto makeFrameLocalTransform(const QMatrix4x4 &parent,
+  static auto make_frame_local_transform(const QMatrix4x4 &parent,
                                       const AttachmentFrame &frame,
                                       const QVector3D &local_offset,
                                       float uniform_scale) -> QMatrix4x4;
 
-  static auto headLocalPosition(const HeadFrame &frame,
+  static auto head_local_position(const HeadFrame &frame,
                                 const QVector3D &local) -> QVector3D;
 
-  static auto makeHeadLocalTransform(const QMatrix4x4 &parent,
+  static auto make_head_local_transform(const QMatrix4x4 &parent,
                                      const HeadFrame &frame,
                                      const QVector3D &local_offset,
                                      float uniform_scale) -> QMatrix4x4;
@@ -123,15 +123,15 @@ protected:
   mutable QVector3D m_cachedProportionScale;
   mutable bool m_proportionScaleCached = false;
 
-  static auto resolveFormation(const DrawContext &ctx) -> FormationParams;
+  static auto resolve_formation(const DrawContext &ctx) -> FormationParams;
 
-  static void computeLocomotionPose(uint32_t seed, float time, bool isMoving,
+  static void compute_locomotion_pose(uint32_t seed, float time, bool is_moving,
                                     const VariationParams &variation,
-                                    HumanoidPose &ioPose);
+                                    HumanoidPose &io_pose);
 
-  static auto resolveTeamTint(const DrawContext &ctx) -> QVector3D;
+  static auto resolve_team_tint(const DrawContext &ctx) -> QVector3D;
 
-  void drawCommonBody(const DrawContext &ctx, const HumanoidVariant &v,
+  void draw_common_body(const DrawContext &ctx, const HumanoidVariant &v,
                       HumanoidPose &pose, ISubmitter &out) const;
 };
 
@@ -159,10 +159,10 @@ struct HumanoidRenderStats {
   }
 };
 
-void advancePoseCacheFrame();
+void advance_pose_cache_frame();
 
-auto getHumanoidRenderStats() -> const HumanoidRenderStats &;
+auto get_humanoid_render_stats() -> const HumanoidRenderStats &;
 
-void resetHumanoidRenderStats();
+void reset_humanoid_render_stats();
 
 } // namespace Render::GL
