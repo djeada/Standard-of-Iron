@@ -1370,7 +1370,7 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
     inst_ctx.selected = ctx.selected;
     inst_ctx.hovered = ctx.hovered;
     inst_ctx.animationTime = ctx.animationTime;
-    inst_ctx.rendererId = ctx.rendererId;
+    inst_ctx.renderer_id = ctx.renderer_id;
     inst_ctx.backend = ctx.backend;
     inst_ctx.camera = ctx.camera;
 
@@ -1457,7 +1457,7 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
       if (speed > 1e-4F) {
         anim_ctx.locomotion_direction = velocity.normalized();
       }
-      anim_ctx.has_movement_target = movement_comp->hasTarget;
+      anim_ctx.has_movement_target = movement_comp->has_target;
       anim_ctx.movement_target =
           QVector3D(movement_comp->target_x, 0.0F, movement_comp->target_y);
     }

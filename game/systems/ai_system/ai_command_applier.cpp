@@ -105,7 +105,7 @@ void AICommandApplier::apply(Engine::Core::World &world, int aiOwnerId,
       }
 
       CommandService::attack_target(world, owned_units, command.target_id,
-                                    command.shouldChase);
+                                    command.should_chase);
       break;
     }
 
@@ -121,7 +121,7 @@ void AICommandApplier::apply(Engine::Core::World &world, int aiOwnerId,
         break;
       }
 
-      if (production->inProgress) {
+      if (production->in_progress) {
         break;
       }
 
@@ -144,8 +144,8 @@ void AICommandApplier::apply(Engine::Core::World &world, int aiOwnerId,
 
       production->product_type = command.product_type;
 
-      production->timeRemaining = production->buildTime;
-      production->inProgress = true;
+      production->time_remaining = production->build_time;
+      production->in_progress = true;
 
       break;
     }

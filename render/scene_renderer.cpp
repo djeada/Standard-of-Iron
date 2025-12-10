@@ -497,8 +497,8 @@ void Renderer::renderWorld(Engine::Core::World *world) {
     bool drawn_by_registry = false;
     if (m_entityRegistry) {
       std::string renderer_key;
-      if (!renderable->rendererId.empty()) {
-        renderer_key = renderable->rendererId;
+      if (!renderable->renderer_id.empty()) {
+        renderer_key = renderable->renderer_id;
       } else if (unit_comp != nullptr) {
         renderer_key = Game::Units::spawn_typeToString(unit_comp->spawn_type);
       }
@@ -509,7 +509,7 @@ void Renderer::renderWorld(Engine::Core::World *world) {
         ctx.selected = is_selected;
         ctx.hovered = is_hovered;
         ctx.animationTime = m_accumulatedTime;
-        ctx.rendererId = renderer_key;
+        ctx.renderer_id = renderer_key;
         ctx.backend = m_backend.get();
         ctx.camera = m_camera;
 

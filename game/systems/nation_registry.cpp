@@ -152,7 +152,7 @@ void NationRegistry::initializeDefaults() {
       troop_entry.displayName = troop_class.display_name;
       troop_entry.isMelee = troop_class.production.is_melee;
       troop_entry.cost = troop_class.production.cost;
-      troop_entry.buildTime = troop_class.production.build_time;
+      troop_entry.build_time = troop_class.production.build_time;
       troop_entry.priority = troop_class.production.priority;
 
       roman.availableTroops.push_back(std::move(troop_entry));

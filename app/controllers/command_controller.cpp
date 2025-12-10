@@ -161,9 +161,9 @@ auto CommandController::onHoldCommand() -> CommandResult {
 
     auto *movement = entity->getComponent<Engine::Core::MovementComponent>();
     if (movement != nullptr) {
-      movement->hasTarget = false;
+      movement->has_target = false;
       movement->path.clear();
-      movement->pathPending = false;
+      movement->path_pending = false;
       movement->vx = 0.0F;
       movement->vz = 0.0F;
     }
@@ -237,7 +237,7 @@ auto CommandController::onPatrolClick(qreal sx, qreal sy, int viewportWidth,
       patrol->waypoints.emplace_back(m_patrolFirstWaypoint.x(),
                                      m_patrolFirstWaypoint.z());
       patrol->waypoints.emplace_back(second_waypoint.x(), second_waypoint.z());
-      patrol->currentWaypoint = 0;
+      patrol->current_waypoint = 0;
       patrol->patrolling = true;
     }
 

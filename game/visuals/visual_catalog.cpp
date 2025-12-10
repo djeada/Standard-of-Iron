@@ -109,7 +109,7 @@ void applyToRenderable(const VisualDef &def,
   r.color[1] = def.color.y();
   r.color[2] = def.color.z();
   if (!def.texture.isEmpty()) {
-    r.texturePath = def.texture.toStdString();
+    r.texture_path = def.texture.toStdString();
   }
 }
 
