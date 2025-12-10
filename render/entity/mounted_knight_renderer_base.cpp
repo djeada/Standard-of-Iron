@@ -194,7 +194,7 @@ void MountedKnightRendererBase::draw_helmet(const DrawContext &ctx,
     HumanoidAnimationContext anim_ctx{};
     BodyFrames frames = pose.body_frames;
     if (ctx.entity != nullptr) {
-      auto *move = ctx.entity->getComponent<Engine::Core::MovementComponent>();
+      auto *move = ctx.entity->get_component<Engine::Core::MovementComponent>();
       if (move != nullptr) {
         float speed_sq = move->vx * move->vx + move->vz * move->vz;
         if (speed_sq > 0.0001F && m_config.helmet_offset_moving > 0.0F) {
@@ -228,7 +228,7 @@ auto MountedKnightRendererBase::resolve_shader_key(const DrawContext &ctx) const
     -> QString {
   std::string nation;
   if (ctx.entity != nullptr) {
-    if (auto *unit = ctx.entity->getComponent<Engine::Core::UnitComponent>()) {
+    if (auto *unit = ctx.entity->get_component<Engine::Core::UnitComponent>()) {
       nation = Game::Systems::nationIDToString(unit->nation_id);
     }
   }

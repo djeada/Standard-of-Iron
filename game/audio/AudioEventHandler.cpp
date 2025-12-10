@@ -89,7 +89,7 @@ void AudioEventHandler::onUnitSelected(
     return;
   }
 
-  auto *unit_component = entity->getComponent<Engine::Core::UnitComponent>();
+  auto *unit_component = entity->get_component<Engine::Core::UnitComponent>();
   if (unit_component == nullptr) {
     return;
   }

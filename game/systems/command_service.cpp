@@ -127,34 +127,34 @@ void CommandService::moveUnits(Engine::Core::World &world,
       continue;
     }
 
-    auto *hold_mode = e->getComponent<Engine::Core::HoldModeComponent>();
+    auto *hold_mode = e->get_component<Engine::Core::HoldModeComponent>();
     if ((hold_mode != nullptr) && hold_mode->active) {
 
       hold_mode->active = false;
       hold_mode->exit_cooldown = hold_mode->stand_up_duration;
     }
 
-    auto *atk = e->getComponent<Engine::Core::AttackComponent>();
+    auto *atk = e->get_component<Engine::Core::AttackComponent>();
     if ((atk != nullptr) && atk->in_melee_lock) {
 
       continue;
     }
 
-    auto *transform = e->getComponent<Engine::Core::TransformComponent>();
+    auto *transform = e->get_component<Engine::Core::TransformComponent>();
     if (transform == nullptr) {
       continue;
     }
 
-    auto *mv = e->getComponent<Engine::Core::MovementComponent>();
+    auto *mv = e->get_component<Engine::Core::MovementComponent>();
     if (mv == nullptr) {
-      mv = e->addComponent<Engine::Core::MovementComponent>();
+      mv = e->add_component<Engine::Core::MovementComponent>();
     }
     if (mv == nullptr) {
       continue;
     }
 
     if (options.clear_attack_intent) {
-      e->removeComponent<Engine::Core::AttackTargetComponent>();
+      e->remove_component<Engine::Core::AttackTargetComponent>();
     }
 
     const float target_x = targets[i].x();
@@ -354,34 +354,34 @@ void CommandService::moveGroup(Engine::Core::World &world,
       continue;
     }
 
-    auto *hold_mode = entity->getComponent<Engine::Core::HoldModeComponent>();
+    auto *hold_mode = entity->get_component<Engine::Core::HoldModeComponent>();
     if ((hold_mode != nullptr) && hold_mode->active) {
       hold_mode->active = false;
       hold_mode->exit_cooldown = hold_mode->stand_up_duration;
     }
 
-    auto *transform = entity->getComponent<Engine::Core::TransformComponent>();
+    auto *transform = entity->get_component<Engine::Core::TransformComponent>();
     if (transform == nullptr) {
       continue;
     }
 
-    auto *movement = entity->getComponent<Engine::Core::MovementComponent>();
+    auto *movement = entity->get_component<Engine::Core::MovementComponent>();
     if (movement == nullptr) {
-      movement = entity->addComponent<Engine::Core::MovementComponent>();
+      movement = entity->add_component<Engine::Core::MovementComponent>();
     }
     if (movement == nullptr) {
       continue;
     }
 
     bool engaged =
-        entity->getComponent<Engine::Core::AttackTargetComponent>() != nullptr;
+        entity->get_component<Engine::Core::AttackTargetComponent>() != nullptr;
 
     if (options.clear_attack_intent) {
-      entity->removeComponent<Engine::Core::AttackTargetComponent>();
+      entity->remove_component<Engine::Core::AttackTargetComponent>();
       engaged = false;
     }
 
-    auto *unit_component = entity->getComponent<Engine::Core::UnitComponent>();
+    auto *unit_component = entity->get_component<Engine::Core::UnitComponent>();
     float const member_speed = (unit_component != nullptr)
                                    ? std::max(0.1F, unit_component->speed)
                                    : 1.0F;
@@ -737,13 +737,13 @@ void CommandService::processPathResults(Engine::Core::World &world) {
       }
 
       auto *movement_component =
-          member_entity->getComponent<Engine::Core::MovementComponent>();
+          member_entity->get_component<Engine::Core::MovementComponent>();
       if (movement_component == nullptr) {
         return;
       }
 
       auto *member_transform =
-          member_entity->getComponent<Engine::Core::TransformComponent>();
+          member_entity->get_component<Engine::Core::TransformComponent>();
       if (member_transform == nullptr) {
         return;
       }
@@ -859,7 +859,7 @@ void CommandService::attack_target(
       continue;
     }
 
-    auto *hold_mode = e->getComponent<Engine::Core::HoldModeComponent>();
+    auto *hold_mode = e->get_component<Engine::Core::HoldModeComponent>();
     if ((hold_mode != nullptr) && hold_mode->active) {
 
       hold_mode->active = false;
@@ -867,9 +867,9 @@ void CommandService::attack_target(
     }
 
     auto *attack_target =
-        e->getComponent<Engine::Core::AttackTargetComponent>();
+        e->get_component<Engine::Core::AttackTargetComponent>();
     if (attack_target == nullptr) {
-      attack_target = e->addComponent<Engine::Core::AttackTargetComponent>();
+      attack_target = e->add_component<Engine::Core::AttackTargetComponent>();
     }
     if (attack_target == nullptr) {
       continue;
@@ -888,8 +888,8 @@ void CommandService::attack_target(
     }
 
     auto *t_trans =
-        target_ent->getComponent<Engine::Core::TransformComponent>();
-    auto *att_trans = e->getComponent<Engine::Core::TransformComponent>();
+        target_ent->get_component<Engine::Core::TransformComponent>();
+    auto *att_trans = e->get_component<Engine::Core::TransformComponent>();
     if ((t_trans == nullptr) || (att_trans == nullptr)) {
       continue;
     }
@@ -902,7 +902,7 @@ void CommandService::attack_target(
 
     float range = 2.0F;
     bool is_ranged_unit = false;
-    if (auto *atk = e->getComponent<Engine::Core::AttackComponent>()) {
+    if (auto *atk = e->get_component<Engine::Core::AttackComponent>()) {
       range = std::max(0.1F, atk->range);
       if (atk->can_ranged && atk->range > atk->melee_range * 1.5F) {
         is_ranged_unit = true;
@@ -913,7 +913,7 @@ void CommandService::attack_target(
     float const distance = direction.length();
     if (distance > 0.001F) {
       direction /= distance;
-      if (target_ent->hasComponent<Engine::Core::BuildingComponent>()) {
+      if (target_ent->has_component<Engine::Core::BuildingComponent>()) {
         float const scale_x = t_trans->scale.x;
         float const scale_z = t_trans->scale.z;
         float const target_radius = std::max(scale_x, scale_z) * 0.5F;
@@ -940,9 +940,9 @@ void CommandService::attack_target(
     std::vector<QVector3D> const move_targets = {desired_pos};
     CommandService::moveUnits(world, unit_ids, move_targets, opts);
 
-    auto *mv = e->getComponent<Engine::Core::MovementComponent>();
+    auto *mv = e->get_component<Engine::Core::MovementComponent>();
     if (mv == nullptr) {
-      mv = e->addComponent<Engine::Core::MovementComponent>();
+      mv = e->add_component<Engine::Core::MovementComponent>();
     }
     if (mv != nullptr) {
 

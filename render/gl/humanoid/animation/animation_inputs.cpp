@@ -23,17 +23,17 @@ auto sampleAnimState(const DrawContext &ctx) -> AnimationInputs {
     return anim;
   }
 
-  if (ctx.entity->hasComponent<Engine::Core::PendingRemovalComponent>()) {
+  if (ctx.entity->has_component<Engine::Core::PendingRemovalComponent>()) {
     return anim;
   }
 
-  auto *movement = ctx.entity->getComponent<Engine::Core::MovementComponent>();
-  auto *attack = ctx.entity->getComponent<Engine::Core::AttackComponent>();
+  auto *movement = ctx.entity->get_component<Engine::Core::MovementComponent>();
+  auto *attack = ctx.entity->get_component<Engine::Core::AttackComponent>();
   auto *attack_target =
-      ctx.entity->getComponent<Engine::Core::AttackTargetComponent>();
+      ctx.entity->get_component<Engine::Core::AttackTargetComponent>();
   auto *transform =
-      ctx.entity->getComponent<Engine::Core::TransformComponent>();
-  auto *hold_mode = ctx.entity->getComponent<Engine::Core::HoldModeComponent>();
+      ctx.entity->get_component<Engine::Core::TransformComponent>();
+  auto *hold_mode = ctx.entity->get_component<Engine::Core::HoldModeComponent>();
 
   anim.is_in_hold_mode = ((hold_mode != nullptr) && hold_mode->active);
   if ((hold_mode != nullptr) && !hold_mode->active &&
@@ -60,13 +60,13 @@ auto sampleAnimState(const DrawContext &ctx) -> AnimationInputs {
       auto *target = ctx.world->getEntity(attack_target->target_id);
       if (target != nullptr) {
         auto *target_transform =
-            target->getComponent<Engine::Core::TransformComponent>();
+            target->get_component<Engine::Core::TransformComponent>();
         if (target_transform != nullptr) {
           float const dx = target_transform->position.x - transform->position.x;
           float const dz = target_transform->position.z - transform->position.z;
           float const dist_squared = dx * dx + dz * dz;
           float target_radius = 0.0F;
-          if (target->hasComponent<Engine::Core::BuildingComponent>()) {
+          if (target->has_component<Engine::Core::BuildingComponent>()) {
             target_radius =
                 std::max(target_transform->scale.x, target_transform->scale.z) *
                 0.5F;

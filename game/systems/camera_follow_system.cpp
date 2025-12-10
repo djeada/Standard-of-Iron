@@ -18,7 +18,7 @@ void CameraFollowSystem::update(Engine::Core::World &world,
   int count = 0;
   for (auto id : sel) {
     if (auto *e = world.getEntity(id)) {
-      if (auto *t = e->getComponent<Engine::Core::TransformComponent>()) {
+      if (auto *t = e->get_component<Engine::Core::TransformComponent>()) {
         sum += QVector3D(t->position.x, t->position.y, t->position.z);
         ++count;
       }
@@ -42,7 +42,7 @@ void CameraFollowSystem::snapToSelection(Engine::Core::World &world,
   int count = 0;
   for (auto id : sel) {
     if (auto *e = world.getEntity(id)) {
-      if (auto *t = e->getComponent<Engine::Core::TransformComponent>()) {
+      if (auto *t = e->get_component<Engine::Core::TransformComponent>()) {
         sum += QVector3D(t->position.x, t->position.y, t->position.z);
         ++count;
       }

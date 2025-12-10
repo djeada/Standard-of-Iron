@@ -49,8 +49,8 @@ public:
   }
 
 private:
-  void onUnitDied(const Engine::Core::UnitDiedEvent &event);
-  void onBarrackCaptured(const Engine::Core::BarrackCapturedEvent &event);
+  void on_unit_died(const Engine::Core::UnitDiedEvent &event);
+  void on_barrack_captured(const Engine::Core::BarrackCapturedEvent &event);
   void checkVictoryConditions(Engine::Core::World &world);
   void checkDefeatConditions(Engine::Core::World &world);
 
@@ -73,9 +73,9 @@ private:
   VictoryCallback m_victoryCallback;
 
   Engine::Core::ScopedEventSubscription<Engine::Core::UnitDiedEvent>
-      m_unitDiedSubscription;
+      m_unit_died_subscription;
   Engine::Core::ScopedEventSubscription<Engine::Core::BarrackCapturedEvent>
-      m_barrackCapturedSubscription;
+      m_barrack_captured_subscription;
 
   Engine::Core::World *m_worldPtr = nullptr;
 
