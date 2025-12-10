@@ -76,7 +76,7 @@ RowLayout {
                 ListView {
                     id: selectedUnitsList
 
-                    model: (typeof game !== 'undefined' && game.selectedUnitsModel) ? game.selectedUnitsModel : null
+                    model: (typeof game !== 'undefined' && game.selected_units_model) ? game.selected_units_model : null
                     boundsBehavior: Flickable.StopAtBounds
                     flickableDirection: Flickable.VerticalFlick
                     spacing: 3
@@ -105,8 +105,8 @@ RowLayout {
                             onEntered: selectedUnitItem.isHovered = true
                             onExited: selectedUnitItem.isHovered = false
                             onClicked: function(mouse) {
-                                if (mouse.button === Qt.LeftButton && typeof game !== 'undefined' && game.selectUnitById && typeof unit_id !== 'undefined')
-                                    game.selectUnitById(unit_id);
+                                if (mouse.button === Qt.LeftButton && typeof game !== 'undefined' && game.select_unit_by_id && typeof unit_id !== 'undefined')
+                                    game.select_unit_by_id(unit_id);
 
                             }
                         }
@@ -360,8 +360,8 @@ RowLayout {
                 focusPolicy: Qt.NoFocus
                 enabled: bottomRoot.hasMovableUnits
                 onClicked: {
-                    if (typeof game !== 'undefined' && game.onStopCommand)
-                        game.onStopCommand();
+                    if (typeof game !== 'undefined' && game.on_stop_command)
+                        game.on_stop_command();
 
                 }
                 ToolTip.visible: hovered
@@ -391,7 +391,7 @@ RowLayout {
 
                 property bool isHoldActive: {
                     bottomRoot.selectionTick;
-                    return (typeof game !== 'undefined' && game.anySelectedInHoldMode) ? game.anySelectedInHoldMode() : false;
+                    return (typeof game !== 'undefined' && game.any_selected_in_hold_mode) ? game.any_selected_in_hold_mode() : false;
                 }
 
                 Layout.fillWidth: true
@@ -400,8 +400,8 @@ RowLayout {
                 focusPolicy: Qt.NoFocus
                 enabled: bottomRoot.hasMovableUnits
                 onClicked: {
-                    if (typeof game !== 'undefined' && game.onHoldCommand)
-                        game.onHoldCommand();
+                    if (typeof game !== 'undefined' && game.on_hold_command)
+                        game.on_hold_command();
 
                 }
                 ToolTip.visible: hovered
@@ -410,7 +410,7 @@ RowLayout {
 
                 Connections {
                     function onHoldModeChanged(active) {
-                        holdButton.isHoldActive = (typeof game !== 'undefined' && game.anySelectedInHoldMode) ? game.anySelectedInHoldMode() : false;
+                        holdButton.isHoldActive = (typeof game !== 'undefined' && game.any_selected_in_hold_mode) ? game.any_selected_in_hold_mode() : false;
                     }
 
                     target: (typeof game !== 'undefined') ? game : null
