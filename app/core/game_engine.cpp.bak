@@ -228,19 +228,19 @@ GameEngine::GameEngine(QObject *parent)
   }
 
   connect(m_cursorManager.get(), &CursorManager::modeChanged, this,
-          &GameEngine::cursor_mode_changed);
+          &GameEngine::cursorModeChanged);
   connect(m_cursorManager.get(), &CursorManager::globalCursorChanged, this,
-          &GameEngine::global_cursor_changed);
+          &GameEngine::globalCursorChanged);
 
   connect(m_selectionController.get(),
           &Game::Systems::SelectionController::selectionChanged, this,
-          &GameEngine::selected_units_changed);
+          &GameEngine::selectedUnitsChanged);
   connect(m_selectionController.get(),
           &Game::Systems::SelectionController::selectionChanged, this,
-          &GameEngine::sync_selection_flags);
+          &GameEngine::syncSelectionFlags);
   connect(m_selectionController.get(),
           &Game::Systems::SelectionController::selectionModelRefreshRequested,
-          this, &GameEngine::selected_units_data_changed);
+          this, &GameEngine::selectedUnitsDataChanged);
   connect(m_commandController.get(),
           &App::Controllers::CommandController::attack_targetSelected,
           [this]() {
@@ -270,14 +270,14 @@ GameEngine::GameEngine(QObject *parent)
           });
   connect(m_commandController.get(),
           &App::Controllers::CommandController::hold_modeChanged, this,
-          &GameEngine::hold_mode_changed);
+          &GameEngine::holdModeChanged);
 
-  connect(this, SIGNAL(selected_units_changed()), m_selectedUnitsModel,
+  connect(this, SIGNAL(selectedUnitsChanged()), m_selectedUnitsModel,
           SLOT(refresh()));
-  connect(this, SIGNAL(selected_units_data_changed()), m_selectedUnitsModel,
+  connect(this, SIGNAL(selectedUnitsDataChanged()), m_selectedUnitsModel,
           SLOT(refresh()));
 
-  emit selected_units_changed();
+  emit selectedUnitsChanged();
 
   m_unitDiedSubscription =
       Engine::Core::ScopedEventSubscription<Engine::Core::UnitDiedEvent>(
@@ -289,7 +289,7 @@ GameEngine::GameEngine(QObject *parent)
                   Game::Units::TroopConfig::instance().getIndividualsPerUnit(
                       e.spawn_type);
               m_enemyTroopsDefeated += individuals_per_unit;
-              emit enemy_troops_defeated_changed();
+              emit enemyTroopsDefeatedChanged();
             }
           });
 
@@ -346,7 +346,7 @@ void GameEngine::cleanupOpenGLResources() {
   qInfo() << "OpenGL resources cleaned up";
 }
 
-void GameEngine::on_map_clicked(qreal sx, qreal sy) {
+void GameEngine::onMapClicked(qreal sx, qreal sy) {
   if (m_window == nullptr) {
     return;
   }
@@ -358,7 +358,7 @@ void GameEngine::on_map_clicked(qreal sx, qreal sy) {
   }
 }
 
-void GameEngine::on_right_click(qreal sx, qreal sy) {
+void GameEngine::onRightClick(qreal sx, qreal sy) {
   if (m_window == nullptr) {
     return;
   }
@@ -421,7 +421,7 @@ void GameEngine::on_right_click(qreal sx, qreal sy) {
   }
 }
 
-void GameEngine::on_attack_click(qreal sx, qreal sy) {
+void GameEngine::onAttackClick(qreal sx, qreal sy) {
   if (m_window == nullptr) {
     return;
   }
@@ -464,11 +464,11 @@ void GameEngine::on_attack_click(qreal sx, qreal sy) {
   }
 }
 
-void GameEngine::reset_movement(Engine::Core::Entity *entity) {
+void GameEngine::resetMovement(Engine::Core::Entity *entity) {
   App::Utils::resetMovement(entity);
 }
 
-void GameEngine::on_stop_command() {
+void GameEngine::onStopCommand() {
   if (!m_commandController) {
     return;
   }
@@ -480,7 +480,7 @@ void GameEngine::on_stop_command() {
   }
 }
 
-void GameEngine::on_hold_command() {
+void GameEngine::onHoldCommand() {
   if (!m_commandController) {
     return;
   }
@@ -492,14 +492,14 @@ void GameEngine::on_hold_command() {
   }
 }
 
-auto GameEngine::any_selected_in_hold_mode() const -> bool {
+auto GameEngine::anySelectedInHoldMode() const -> bool {
   if (!m_commandController) {
     return false;
   }
   return m_commandController->anySelectedInHoldMode();
 }
 
-void GameEngine::on_patrol_click(qreal sx, qreal sy) {
+void GameEngine::onPatrolClick(qreal sx, qreal sy) {
   if (!m_commandController || !m_camera) {
     return;
   }
@@ -512,7 +512,7 @@ void GameEngine::on_patrol_click(qreal sx, qreal sy) {
   }
 }
 
-void GameEngine::update_cursor(Qt::CursorShape newCursor) {
+void GameEngine::updateCursor(Qt::CursorShape newCursor) {
   if (m_window == nullptr) {
     return;
   }
@@ -522,15 +522,15 @@ void GameEngine::update_cursor(Qt::CursorShape newCursor) {
   }
 }
 
-void GameEngine::set_error(const QString &errorMessage) {
+void GameEngine::setError(const QString &errorMessage) {
   if (m_runtime.lastError != errorMessage) {
     m_runtime.lastError = errorMessage;
     qCritical() << "GameEngine error:" << errorMessage;
-    emit last_error_changed();
+    emit lastErrorChanged();
   }
 }
 
-void GameEngine::set_cursor_mode(CursorMode mode) {
+void GameEngine::setCursorMode(CursorMode mode) {
   if (!m_cursorManager) {
     return;
   }
@@ -538,32 +538,32 @@ void GameEngine::set_cursor_mode(CursorMode mode) {
   m_cursorManager->updateCursorShape(m_window);
 }
 
-void GameEngine::set_cursor_mode(const QString &mode) {
+void GameEngine::setCursorMode(const QString &mode) {
   setCursorMode(CursorModeUtils::fromString(mode));
 }
 
-auto GameEngine::cursor_mode() const -> QString {
+auto GameEngine::cursorMode() const -> QString {
   if (!m_cursorManager) {
     return "normal";
   }
   return m_cursorManager->modeString();
 }
 
-auto GameEngine::global_cursor_x() const -> qreal {
+auto GameEngine::globalCursorX() const -> qreal {
   if (!m_cursorManager) {
     return 0;
   }
   return m_cursorManager->globalCursorX(m_window);
 }
 
-auto GameEngine::global_cursor_y() const -> qreal {
+auto GameEngine::globalCursorY() const -> qreal {
   if (!m_cursorManager) {
     return 0;
   }
   return m_cursorManager->globalCursorY(m_window);
 }
 
-void GameEngine::set_hover_at_screen(qreal sx, qreal sy) {
+void GameEngine::setHoverAtScreen(qreal sx, qreal sy) {
   if (m_window == nullptr) {
     return;
   }
@@ -578,7 +578,7 @@ void GameEngine::set_hover_at_screen(qreal sx, qreal sy) {
                               m_viewport.width, m_viewport.height);
 }
 
-void GameEngine::on_click_select(qreal sx, qreal sy, bool additive) {
+void GameEngine::onClickSelect(qreal sx, qreal sy, bool additive) {
   if (m_window == nullptr) {
     return;
   }
@@ -590,7 +590,7 @@ void GameEngine::on_click_select(qreal sx, qreal sy, bool additive) {
   }
 }
 
-void GameEngine::on_area_selected(qreal x1, qreal y1, qreal x2, qreal y2,
+void GameEngine::onAreaSelected(qreal x1, qreal y1, qreal x2, qreal y2,
                                 bool additive) {
   if (m_window == nullptr) {
     return;
@@ -603,14 +603,14 @@ void GameEngine::on_area_selected(qreal x1, qreal y1, qreal x2, qreal y2,
   }
 }
 
-void GameEngine::select_all_troops() {
+void GameEngine::selectAllTroops() {
   ensureInitialized();
   if (m_selectionController) {
     m_selectionController->selectAllPlayerTroops(m_runtime.localOwnerId);
   }
 }
 
-void GameEngine::select_unit_by_id(int unitId) {
+void GameEngine::selectUnitById(int unitId) {
   ensureInitialized();
   if (!m_selectionController || (unitId <= 0)) {
     return;
@@ -628,11 +628,11 @@ void GameEngine::ensureInitialized() {
   }
 }
 
-auto GameEngine::enemy_troops_defeated() const -> int {
+auto GameEngine::enemyTroopsDefeated() const -> int {
   return m_enemyTroopsDefeated;
 }
 
-auto GameEngine::get_player_stats(int owner_id) -> QVariantMap {
+auto GameEngine::getPlayerStats(int owner_id) -> QVariantMap {
   QVariantMap result;
 
   auto &stats_registry = Game::Systems::GlobalStatsRegistry::instance();
@@ -723,7 +723,7 @@ void GameEngine::update(float dt) {
       m_runtime.selectionRefreshCounter++;
       if (m_runtime.selectionRefreshCounter >= 15) {
         m_runtime.selectionRefreshCounter = 0;
-        emit selected_units_data_changed();
+        emit selectedUnitsDataChanged();
       }
     }
   }
@@ -782,25 +782,25 @@ void GameEngine::render(int pixelWidth, int pixelHeight) {
       current_y != m_runtime.lastCursorY) {
     m_runtime.lastCursorX = current_x;
     m_runtime.lastCursorY = current_y;
-    emit global_cursor_changed();
+    emit globalCursorChanged();
   }
 }
 
-auto GameEngine::screen_to_ground(const QPointF &screenPt,
+auto GameEngine::screenToGround(const QPointF &screenPt,
                                 QVector3D &outWorld) -> bool {
   return App::Utils::screenToGround(m_pickingService.get(), m_camera.get(),
                                     m_window, m_viewport.width,
                                     m_viewport.height, screenPt, outWorld);
 }
 
-auto GameEngine::world_to_screen(const QVector3D &world,
+auto GameEngine::worldToScreen(const QVector3D &world,
                                QPointF &outScreen) const -> bool {
   return App::Utils::worldToScreen(m_pickingService.get(), m_camera.get(),
                                    m_window, m_viewport.width,
                                    m_viewport.height, world, outScreen);
 }
 
-void GameEngine::sync_selection_flags() {
+void GameEngine::syncSelectionFlags() {
   auto *selection_system = m_world->getSystem<Game::Systems::SelectionSystem>();
   if (!m_world || (selection_system == nullptr)) {
     return;
@@ -815,7 +815,7 @@ void GameEngine::sync_selection_flags() {
   }
 }
 
-void GameEngine::camera_move(float dx, float dz) {
+void GameEngine::cameraMove(float dx, float dz) {
   ensureInitialized();
   if (!m_camera || !m_cameraService) {
     return;
@@ -824,7 +824,7 @@ void GameEngine::camera_move(float dx, float dz) {
   m_cameraService->move(*m_camera, dx, dz);
 }
 
-void GameEngine::camera_elevate(float dy) {
+void GameEngine::cameraElevate(float dy) {
   ensureInitialized();
   if (!m_camera || !m_cameraService) {
     return;
@@ -833,7 +833,7 @@ void GameEngine::camera_elevate(float dy) {
   m_cameraService->elevate(*m_camera, dy);
 }
 
-void GameEngine::reset_camera() {
+void GameEngine::resetCamera() {
   ensureInitialized();
   if (!m_camera || !m_world || !m_cameraService) {
     return;
@@ -843,7 +843,7 @@ void GameEngine::reset_camera() {
                                m_level.playerUnitId);
 }
 
-void GameEngine::camera_zoom(float delta) {
+void GameEngine::cameraZoom(float delta) {
   ensureInitialized();
   if (!m_camera || !m_cameraService) {
     return;
@@ -852,14 +852,14 @@ void GameEngine::camera_zoom(float delta) {
   m_cameraService->zoom(*m_camera, delta);
 }
 
-auto GameEngine::camera_distance() const -> float {
+auto GameEngine::cameraDistance() const -> float {
   if (!m_camera || !m_cameraService) {
     return 0.0F;
   }
   return m_cameraService->getDistance(*m_camera);
 }
 
-void GameEngine::camera_yaw(float degrees) {
+void GameEngine::cameraYaw(float degrees) {
   ensureInitialized();
   if (!m_camera || !m_cameraService) {
     return;
@@ -868,14 +868,14 @@ void GameEngine::camera_yaw(float degrees) {
   m_cameraService->yaw(*m_camera, degrees);
 }
 
-void GameEngine::camera_orbit(float yaw_deg, float pitch_deg) {
+void GameEngine::cameraOrbit(float yaw_deg, float pitch_deg) {
   ensureInitialized();
   if (!m_camera || !m_cameraService) {
     return;
   }
 
   if (!std::isfinite(yaw_deg) || !std::isfinite(pitch_deg)) {
-    qWarning() << "GameEngine::camera_orbit received invalid input, ignoring:"
+    qWarning() << "GameEngine::cameraOrbit received invalid input, ignoring:"
                << yaw_deg << pitch_deg;
     return;
   }
@@ -883,7 +883,7 @@ void GameEngine::camera_orbit(float yaw_deg, float pitch_deg) {
   m_cameraService->orbit(*m_camera, yaw_deg, pitch_deg);
 }
 
-void GameEngine::camera_orbitDirection(int direction, bool shift) {
+void GameEngine::cameraOrbitDirection(int direction, bool shift) {
   if (!m_camera || !m_cameraService) {
     return;
   }
@@ -891,7 +891,7 @@ void GameEngine::camera_orbitDirection(int direction, bool shift) {
   m_cameraService->orbitDirection(*m_camera, direction, shift);
 }
 
-void GameEngine::camera_follow_selection(bool enable) {
+void GameEngine::cameraFollowSelection(bool enable) {
   ensureInitialized();
   m_followSelectionEnabled = enable;
   if (!m_camera || !m_world || !m_cameraService) {
@@ -901,7 +901,7 @@ void GameEngine::camera_follow_selection(bool enable) {
   m_cameraService->followSelection(*m_camera, *m_world, enable);
 }
 
-void GameEngine::camera_set_follow_lerp(float alpha) {
+void GameEngine::cameraSetFollowLerp(float alpha) {
   ensureInitialized();
   if (!m_camera || !m_cameraService) {
     return;
@@ -910,7 +910,7 @@ void GameEngine::camera_set_follow_lerp(float alpha) {
   m_cameraService->setFollowLerp(*m_camera, alpha);
 }
 
-auto GameEngine::selected_units_model() -> QAbstractItemModel * {
+auto GameEngine::selectedUnitsModel() -> QAbstractItemModel * {
   return m_selectedUnitsModel;
 }
 
@@ -918,25 +918,25 @@ auto GameEngine::audio_system() -> QObject * {
   return m_audio_systemProxy.get();
 }
 
-auto GameEngine::has_units_selected() const -> bool {
+auto GameEngine::hasUnitsSelected() const -> bool {
   if (!m_selectionController) {
     return false;
   }
   return m_selectionController->hasUnitsSelected();
 }
 
-auto GameEngine::player_troop_count() const -> int {
+auto GameEngine::playerTroopCount() const -> int {
   return m_entityCache.playerTroopCount;
 }
 
-auto GameEngine::has_selected_type(const QString &type) const -> bool {
+auto GameEngine::hasSelectedType(const QString &type) const -> bool {
   if (!m_selectionController) {
     return false;
   }
   return m_selectionController->hasSelectedType(type);
 }
 
-void GameEngine::recruit_near_selected(const QString &unit_type) {
+void GameEngine::recruitNearSelected(const QString &unit_type) {
   ensureInitialized();
   if (!m_commandController) {
     return;
@@ -944,7 +944,7 @@ void GameEngine::recruit_near_selected(const QString &unit_type) {
   m_commandController->recruitNearSelected(unit_type, m_runtime.localOwnerId);
 }
 
-auto GameEngine::get_selected_production_state() const -> QVariantMap {
+auto GameEngine::getSelectedProductionState() const -> QVariantMap {
   QVariantMap m;
   m["has_barracks"] = false;
   m["inProgress"] = false;
@@ -987,7 +987,7 @@ auto GameEngine::get_selected_production_state() const -> QVariantMap {
   return m;
 }
 
-auto GameEngine::get_selected_units_command_mode() const -> QString {
+auto GameEngine::getSelectedUnitsCommandMode() const -> QString {
   if (!m_world) {
     return "normal";
   }
@@ -1045,7 +1045,7 @@ auto GameEngine::get_selected_units_command_mode() const -> QString {
   return "normal";
 }
 
-void GameEngine::set_rally_at_screen(qreal sx, qreal sy) {
+void GameEngine::setRallyAtScreen(qreal sx, qreal sy) {
   ensureInitialized();
   if (!m_commandController || !m_camera) {
     return;
@@ -1204,7 +1204,7 @@ void GameEngine::start_skirmish(const QString &map_path,
 
   if (!m_runtime.victoryState.isEmpty()) {
     m_runtime.victoryState = "";
-    emit victory_state_changed();
+    emit victoryStateChanged();
   }
   if (m_victoryService) {
     m_victoryService->reset();
@@ -1241,7 +1241,7 @@ void GameEngine::start_skirmish(const QString &map_path,
     loader.setOliveRenderer(m_olive.get());
     loader.setFireCampRenderer(m_firecamp.get());
 
-    loader.setOnOwnersUpdated([this]() { emit owner_info_changed(); });
+    loader.setOnOwnersUpdated([this]() { emit ownerInfoChanged(); });
 
     loader.setOnVisibilityMaskReady([this]() {
       m_runtime.visibilityVersion =
@@ -1278,7 +1278,7 @@ void GameEngine::start_skirmish(const QString &map_path,
       m_victoryService->setVictoryCallback([this](const QString &state) {
         if (m_runtime.victoryState != state) {
           m_runtime.victoryState = state;
-          emit victory_state_changed();
+          emit victoryStateChanged();
 
           if (state == "victory" && !m_current_campaign_id.isEmpty()) {
             mark_current_mission_completed();
@@ -1323,7 +1323,7 @@ void GameEngine::start_skirmish(const QString &map_path,
             Engine::Core::AmbientState::PEACEFUL,
             Engine::Core::AmbientState::PEACEFUL));
 
-    emit owner_info_changed();
+    emit ownerInfoChanged();
   }
 }
 
@@ -1347,7 +1347,7 @@ void GameEngine::load_game_from_slot(const QString &slotName) {
   loadFromSlot(slotName);
 }
 
-auto GameEngine::load_from_slot(const QString &slot) -> bool {
+auto GameEngine::loadFromSlot(const QString &slot) -> bool {
   if (!m_saveLoadService || !m_world) {
     setError("Load: not initialized");
     return false;
@@ -1395,12 +1395,12 @@ auto GameEngine::load_from_slot(const QString &slot) -> bool {
   m_runtime.loading = false;
   qInfo() << "Game load complete, victory/defeat checks re-enabled";
 
-  emit selected_units_changed();
-  emit owner_info_changed();
+  emit selectedUnitsChanged();
+  emit ownerInfoChanged();
   return true;
 }
 
-auto GameEngine::save_to_slot(const QString &slot, const QString &title) -> bool {
+auto GameEngine::saveToSlot(const QString &slot, const QString &title) -> bool {
   if (!m_saveLoadService || !m_world) {
     setError("Save: not initialized");
     return false;
@@ -1487,7 +1487,7 @@ auto GameEngine::getOwnerInfo() const -> QVariantList {
   return result;
 }
 
-void GameEngine::get_selected_unit_ids(
+void GameEngine::getSelectedUnitIds(
     std::vector<Engine::Core::EntityID> &out) const {
   out.clear();
   if (!m_selectionController) {
@@ -1496,7 +1496,7 @@ void GameEngine::get_selected_unit_ids(
   m_selectionController->getSelectedUnitIds(out);
 }
 
-auto GameEngine::get_unit_info(Engine::Core::EntityID id, QString &name,
+auto GameEngine::getUnitInfo(Engine::Core::EntityID id, QString &name,
                              int &health, int &max_health, bool &isBuilding,
                              bool &alive, QString &nation) const -> bool {
   if (!m_world) {
@@ -1523,7 +1523,7 @@ auto GameEngine::get_unit_info(Engine::Core::EntityID id, QString &name,
   return true;
 }
 
-void GameEngine::on_unit_spawned(const Engine::Core::UnitSpawnedEvent &event) {
+void GameEngine::onUnitSpawned(const Engine::Core::UnitSpawnedEvent &event) {
   auto &owners = Game::Systems::OwnerRegistry::instance();
 
   if (event.owner_id == m_runtime.localOwnerId) {
@@ -1551,7 +1551,7 @@ void GameEngine::on_unit_spawned(const Engine::Core::UnitSpawnedEvent &event) {
   emit_if_changed();
 }
 
-void GameEngine::on_unit_died(const Engine::Core::UnitDiedEvent &event) {
+void GameEngine::onUnitDied(const Engine::Core::UnitDiedEvent &event) {
   auto &owners = Game::Systems::OwnerRegistry::instance();
 
   if (event.owner_id == m_runtime.localOwnerId) {
@@ -1585,7 +1585,7 @@ void GameEngine::on_unit_died(const Engine::Core::UnitDiedEvent &event) {
   emit_if_changed();
 }
 
-void GameEngine::rebuild_entity_cache() {
+void GameEngine::rebuildEntityCache() {
   if (!m_world) {
     m_entityCache.reset();
     return;
@@ -1627,7 +1627,7 @@ void GameEngine::rebuild_entity_cache() {
   emit_if_changed();
 }
 
-void GameEngine::rebuild_registries_after_load() {
+void GameEngine::rebuildRegistriesAfterLoad() {
   if (!m_world) {
     return;
   }
@@ -1670,7 +1670,7 @@ void GameEngine::rebuild_registries_after_load() {
   }
 }
 
-void GameEngine::rebuild_building_collisions() {
+void GameEngine::rebuildBuildingCollisions() {
   auto &registry = Game::Systems::BuildingCollisionRegistry::instance();
   registry.clear();
   if (!m_world) {
@@ -1691,7 +1691,7 @@ void GameEngine::rebuild_building_collisions() {
   }
 }
 
-auto GameEngine::to_runtime_snapshot() const -> Game::Systems::RuntimeSnapshot {
+auto GameEngine::toRuntimeSnapshot() const -> Game::Systems::RuntimeSnapshot {
   Game::Systems::RuntimeSnapshot snap;
   snap.paused = m_runtime.paused;
   snap.timeScale = m_runtime.timeScale;
@@ -1703,7 +1703,7 @@ auto GameEngine::to_runtime_snapshot() const -> Game::Systems::RuntimeSnapshot {
   return snap;
 }
 
-void GameEngine::apply_runtime_snapshot(
+void GameEngine::applyRuntimeSnapshot(
     const Game::Systems::RuntimeSnapshot &snapshot) {
   m_runtime.localOwnerId = snapshot.localOwnerId;
   setPaused(snapshot.paused);
@@ -1711,7 +1711,7 @@ void GameEngine::apply_runtime_snapshot(
 
   if (snapshot.victoryState != m_runtime.victoryState) {
     m_runtime.victoryState = snapshot.victoryState;
-    emit victory_state_changed();
+    emit victoryStateChanged();
   }
 
   setCursorMode(CursorModeUtils::fromInt(snapshot.cursorMode));
@@ -1730,7 +1730,7 @@ void GameEngine::apply_runtime_snapshot(
   }
 }
 
-auto GameEngine::capture_screenshot() const -> QByteArray {
+auto GameEngine::captureScreenshot() const -> QByteArray {
   if (m_window == nullptr) {
     return {};
   }
@@ -1757,7 +1757,7 @@ auto GameEngine::capture_screenshot() const -> QByteArray {
   return buffer;
 }
 
-void GameEngine::restore_environment_from_metadata(const QJsonObject &metadata) {
+void GameEngine::restoreEnvironmentFromMetadata(const QJsonObject &metadata) {
   if (!m_world) {
     return;
   }
@@ -1907,18 +1907,18 @@ void GameEngine::restore_environment_from_metadata(const QJsonObject &metadata) 
   }
 }
 
-auto GameEngine::has_patrol_preview_waypoint() const -> bool {
+auto GameEngine::hasPatrolPreviewWaypoint() const -> bool {
   return m_commandController && m_commandController->hasPatrolFirstWaypoint();
 }
 
-auto GameEngine::get_patrol_preview_waypoint() const -> QVector3D {
+auto GameEngine::getPatrolPreviewWaypoint() const -> QVector3D {
   if (!m_commandController) {
     return {};
   }
   return m_commandController->getPatrolFirstWaypoint();
 }
 
-void GameEngine::update_ambient_state(float dt) {
+void GameEngine::updateAmbientState(float dt) {
 
   m_ambientCheckTimer += dt;
   const float check_interval = 2.0F;
@@ -1957,7 +1957,7 @@ void GameEngine::update_ambient_state(float dt) {
   }
 }
 
-auto GameEngine::is_player_in_combat() const -> bool {
+auto GameEngine::isPlayerInCombat() const -> bool {
   if (!m_world) {
     return false;
   }
@@ -2009,7 +2009,7 @@ auto GameEngine::is_player_in_combat() const -> bool {
   return false;
 }
 
-void GameEngine::load_audio_resources() {
+void GameEngine::loadAudioResources() {
   auto &audio_sys = AudioSystem::getInstance();
 
   QString const base_path =
