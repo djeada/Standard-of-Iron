@@ -22,11 +22,11 @@ namespace Render::GL {
 
 static HorseRenderStats s_horseRenderStats;
 
-auto getHorseRenderStats() -> const HorseRenderStats & {
+auto get_horse_render_stats() -> const HorseRenderStats & {
   return s_horseRenderStats;
 }
 
-void resetHorseRenderStats() { s_horseRenderStats.reset(); }
+void reset_horse_render_stats() { s_horseRenderStats.reset(); }
 
 using Render::Geom::clamp01;
 using Render::Geom::coneFromTo;
@@ -161,7 +161,7 @@ inline auto colorHash(const QVector3D &c) -> uint32_t {
 
 } // namespace
 
-auto makeHorseDimensions(uint32_t seed) -> HorseDimensions {
+auto make_horse_dimensions(uint32_t seed) -> HorseDimensions {
   HorseDimensions d{};
 
   d.bodyLength = randBetween(seed, 0x12U, 0.88F, 0.98F);
@@ -199,7 +199,7 @@ auto makeHorseDimensions(uint32_t seed) -> HorseDimensions {
   return d;
 }
 
-auto makeHorseVariant(uint32_t seed, const QVector3D &leatherBase,
+auto make_horse_variant(uint32_t seed, const QVector3D &leather_base,
                       const QVector3D &clothBase) -> HorseVariant {
   HorseVariant v;
 
@@ -246,7 +246,7 @@ auto makeHorseVariant(uint32_t seed, const QVector3D &leatherBase,
   return v;
 }
 
-auto makeHorseProfile(uint32_t seed, const QVector3D &leatherBase,
+auto make_horse_profile(uint32_t seed, const QVector3D &leather_base,
                       const QVector3D &clothBase) -> HorseProfile {
   HorseProfile profile;
   profile.dims = makeHorseDimensions(seed);
@@ -411,7 +411,7 @@ void apply_mount_vertical_offset(MountedAttachmentFrame &frame, float bob) {
   frame.bridle_base += offset;
 }
 
-void HorseRendererBase::renderFull(
+void HorseRendererBase::render_full(
     const DrawContext &ctx, const AnimationInputs &anim,
     const HumanoidAnimationContext &rider_ctx, HorseProfile &profile,
     const MountedAttachmentFrame *shared_mount, const ReinState *shared_reins,
@@ -1198,11 +1198,11 @@ void HorseRendererBase::renderFull(
   body_frames.muzzle.up = up;
   body_frames.muzzle.forward = forward;
 
-  drawAttachments(horse_ctx, anim, rider_ctx, profile, mount, phase, bob,
+  draw_attachments(horse_ctx, anim, rider_ctx, profile, mount, phase, bob,
                   rein_slack, body_frames, out);
 }
 
-void HorseRendererBase::renderSimplified(
+void HorseRendererBase::render_simplified(
     const DrawContext &ctx, const AnimationInputs &anim,
     const HumanoidAnimationContext &rider_ctx, HorseProfile &profile,
     const MountedAttachmentFrame *shared_mount,
@@ -1299,7 +1299,7 @@ void HorseRendererBase::renderSimplified(
                   g.rearLegPhase + 0.52F);
 }
 
-void HorseRendererBase::renderMinimal(const DrawContext &ctx,
+void HorseRendererBase::render_minimal(const DrawContext &ctx,
                                       HorseProfile &profile,
                                       const HorseMotionSample *shared_motion,
                                       ISubmitter &out) const {
@@ -1359,19 +1359,19 @@ void HorseRendererBase::render(const DrawContext &ctx,
   switch (lod) {
   case HorseLOD::Full:
     ++s_horseRenderStats.lodFull;
-    renderFull(ctx, anim, rider_ctx, profile, shared_mount, shared_reins,
+    render_full(ctx, anim, rider_ctx, profile, shared_mount, shared_reins,
                shared_motion, out);
     break;
 
   case HorseLOD::Reduced:
     ++s_horseRenderStats.lodReduced;
-    renderSimplified(ctx, anim, rider_ctx, profile, shared_mount, shared_motion,
+    render_simplified(ctx, anim, rider_ctx, profile, shared_mount, shared_motion,
                      out);
     break;
 
   case HorseLOD::Minimal:
     ++s_horseRenderStats.lodMinimal;
-    renderMinimal(ctx, profile, shared_motion, out);
+    render_minimal(ctx, profile, shared_motion, out);
     break;
 
   case HorseLOD::Billboard:
