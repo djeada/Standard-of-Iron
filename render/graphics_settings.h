@@ -12,36 +12,36 @@ enum class GraphicsQuality : uint8_t {
 };
 
 struct LODMultipliers {
-  float humanoidFull;
-  float humanoidReduced;
-  float humanoidMinimal;
-  float humanoidBillboard;
+  float humanoid_full;
+  float humanoid_reduced;
+  float humanoid_minimal;
+  float humanoid_billboard;
 
-  float horseFull;
-  float horseReduced;
-  float horseMinimal;
-  float horseBillboard;
+  float horse_full;
+  float horse_reduced;
+  float horse_minimal;
+  float horse_billboard;
 
-  float shadowDistance;
-  bool enableShadows;
+  float shadow_distance;
+  bool enable_shadows;
 };
 
 struct GraphicsFeatures {
-  bool enableFacialHair;
-  bool enableManeDetail;
-  bool enableTailDetail;
-  bool enableArmorDetail;
-  bool enableEquipmentDetail;
-  bool enableGroundShadows;
-  bool enablePoseCache;
+  bool enable_facial_hair;
+  bool enable_mane_detail;
+  bool enable_tail_detail;
+  bool enable_armor_detail;
+  bool enable_equipment_detail;
+  bool enable_ground_shadows;
+  bool enable_pose_cache;
 };
 
 struct BatchingConfig {
-  bool forceBatching;
-  bool neverBatch;
-  int batchingUnitThreshold;
-  float batchingZoomStart;
-  float batchingZoomFull;
+  bool force_batching;
+  bool never_batch;
+  int batching_unit_threshold;
+  float batching_zoom_start;
+  float batching_zoom_full;
 };
 
 class GraphicsSettings {
@@ -75,30 +75,30 @@ public:
   [[nodiscard]] auto
   calculateBatchingRatio(int visibleUnits,
                          float cameraHeight) const noexcept -> float {
-    if (m_batchingConfig.neverBatch) {
+    if (m_batchingConfig.never_batch) {
       return 0.0F;
     }
-    if (m_batchingConfig.forceBatching) {
+    if (m_batchingConfig.force_batching) {
       return 1.0F;
     }
 
     float unitFactor = 0.0F;
-    if (visibleUnits > m_batchingConfig.batchingUnitThreshold) {
+    if (visibleUnits > m_batchingConfig.batching_unit_threshold) {
 
-      int excess = visibleUnits - m_batchingConfig.batchingUnitThreshold;
-      int range = m_batchingConfig.batchingUnitThreshold * 3;
+      int excess = visibleUnits - m_batchingConfig.batching_unit_threshold;
+      int range = m_batchingConfig.batching_unit_threshold * 3;
       unitFactor = static_cast<float>(excess) / static_cast<float>(range);
       unitFactor =
           unitFactor < 0.0F ? 0.0F : (unitFactor > 1.0F ? 1.0F : unitFactor);
     }
 
     float zoomFactor = 0.0F;
-    if (cameraHeight > m_batchingConfig.batchingZoomStart) {
-      float range = m_batchingConfig.batchingZoomFull -
-                    m_batchingConfig.batchingZoomStart;
+    if (cameraHeight > m_batchingConfig.batching_zoom_start) {
+      float range = m_batchingConfig.batching_zoom_full -
+                    m_batchingConfig.batching_zoom_start;
       if (range > 0.0F) {
         zoomFactor =
-            (cameraHeight - m_batchingConfig.batchingZoomStart) / range;
+            (cameraHeight - m_batchingConfig.batching_zoom_start) / range;
         zoomFactor =
             zoomFactor < 0.0F ? 0.0F : (zoomFactor > 1.0F ? 1.0F : zoomFactor);
       }
@@ -108,36 +108,36 @@ public:
   }
 
   [[nodiscard]] auto humanoidFullDetailDistance() const noexcept -> float {
-    return kBaseHumanoidFull * m_lodMultipliers.humanoidFull;
+    return kBaseHumanoidFull * m_lodMultipliers.humanoid_full;
   }
   [[nodiscard]] auto humanoidReducedDetailDistance() const noexcept -> float {
-    return kBaseHumanoidReduced * m_lodMultipliers.humanoidReduced;
+    return kBaseHumanoidReduced * m_lodMultipliers.humanoid_reduced;
   }
   [[nodiscard]] auto humanoidMinimalDetailDistance() const noexcept -> float {
-    return kBaseHumanoidMinimal * m_lodMultipliers.humanoidMinimal;
+    return kBaseHumanoidMinimal * m_lodMultipliers.humanoid_minimal;
   }
   [[nodiscard]] auto humanoidBillboardDistance() const noexcept -> float {
-    return kBaseHumanoidBillboard * m_lodMultipliers.humanoidBillboard;
+    return kBaseHumanoidBillboard * m_lodMultipliers.humanoid_billboard;
   }
 
   [[nodiscard]] auto horseFullDetailDistance() const noexcept -> float {
-    return kBaseHorseFull * m_lodMultipliers.horseFull;
+    return kBaseHorseFull * m_lodMultipliers.horse_full;
   }
   [[nodiscard]] auto horseReducedDetailDistance() const noexcept -> float {
-    return kBaseHorseReduced * m_lodMultipliers.horseReduced;
+    return kBaseHorseReduced * m_lodMultipliers.horse_reduced;
   }
   [[nodiscard]] auto horseMinimalDetailDistance() const noexcept -> float {
-    return kBaseHorseMinimal * m_lodMultipliers.horseMinimal;
+    return kBaseHorseMinimal * m_lodMultipliers.horse_minimal;
   }
   [[nodiscard]] auto horseBillboardDistance() const noexcept -> float {
-    return kBaseHorseBillboard * m_lodMultipliers.horseBillboard;
+    return kBaseHorseBillboard * m_lodMultipliers.horse_billboard;
   }
 
   [[nodiscard]] auto shadowMaxDistance() const noexcept -> float {
-    return m_lodMultipliers.shadowDistance;
+    return m_lodMultipliers.shadow_distance;
   }
   [[nodiscard]] auto shadowsEnabled() const noexcept -> bool {
-    return m_lodMultipliers.enableShadows;
+    return m_lodMultipliers.enable_shadows;
   }
 
 private:
@@ -147,109 +147,109 @@ private:
     switch (q) {
     case GraphicsQuality::Low:
 
-      m_lodMultipliers = {.humanoidFull = 0.8F,
-                          .humanoidReduced = 0.8F,
-                          .humanoidMinimal = 0.8F,
-                          .humanoidBillboard = 0.8F,
-                          .horseFull = 0.8F,
-                          .horseReduced = 0.8F,
-                          .horseMinimal = 0.8F,
-                          .horseBillboard = 0.8F,
-                          .shadowDistance = 25.0F,
-                          .enableShadows = true};
-      m_features = {.enableFacialHair = false,
-                    .enableManeDetail = false,
-                    .enableTailDetail = false,
-                    .enableArmorDetail = true,
-                    .enableEquipmentDetail = true,
-                    .enableGroundShadows = true,
-                    .enablePoseCache = true};
-      m_batchingConfig = {.forceBatching = true,
-                          .neverBatch = false,
-                          .batchingUnitThreshold = 0,
-                          .batchingZoomStart = 0.0F,
-                          .batchingZoomFull = 0.0F};
+      m_lodMultipliers = {.humanoid_full = 0.8F,
+                          .humanoid_reduced = 0.8F,
+                          .humanoid_minimal = 0.8F,
+                          .humanoid_billboard = 0.8F,
+                          .horse_full = 0.8F,
+                          .horse_reduced = 0.8F,
+                          .horse_minimal = 0.8F,
+                          .horse_billboard = 0.8F,
+                          .shadow_distance = 25.0F,
+                          .enable_shadows = true};
+      m_features = {.enable_facial_hair = false,
+                    .enable_mane_detail = false,
+                    .enable_tail_detail = false,
+                    .enable_armor_detail = true,
+                    .enable_equipment_detail = true,
+                    .enable_ground_shadows = true,
+                    .enable_pose_cache = true};
+      m_batchingConfig = {.force_batching = true,
+                          .never_batch = false,
+                          .batching_unit_threshold = 0,
+                          .batching_zoom_start = 0.0F,
+                          .batching_zoom_full = 0.0F};
       break;
 
     case GraphicsQuality::Medium:
 
-      m_lodMultipliers = {.humanoidFull = 1.0F,
-                          .humanoidReduced = 1.0F,
-                          .humanoidMinimal = 1.0F,
-                          .humanoidBillboard = 1.0F,
-                          .horseFull = 1.0F,
-                          .horseReduced = 1.0F,
-                          .horseMinimal = 1.0F,
-                          .horseBillboard = 1.0F,
-                          .shadowDistance = 40.0F,
-                          .enableShadows = true};
-      m_features = {.enableFacialHair = true,
-                    .enableManeDetail = true,
-                    .enableTailDetail = true,
-                    .enableArmorDetail = true,
-                    .enableEquipmentDetail = true,
-                    .enableGroundShadows = true,
-                    .enablePoseCache = true};
+      m_lodMultipliers = {.humanoid_full = 1.0F,
+                          .humanoid_reduced = 1.0F,
+                          .humanoid_minimal = 1.0F,
+                          .humanoid_billboard = 1.0F,
+                          .horse_full = 1.0F,
+                          .horse_reduced = 1.0F,
+                          .horse_minimal = 1.0F,
+                          .horse_billboard = 1.0F,
+                          .shadow_distance = 40.0F,
+                          .enable_shadows = true};
+      m_features = {.enable_facial_hair = true,
+                    .enable_mane_detail = true,
+                    .enable_tail_detail = true,
+                    .enable_armor_detail = true,
+                    .enable_equipment_detail = true,
+                    .enable_ground_shadows = true,
+                    .enable_pose_cache = true};
 
-      m_batchingConfig = {.forceBatching = false,
-                          .neverBatch = false,
-                          .batchingUnitThreshold = 30,
-                          .batchingZoomStart = 60.0F,
-                          .batchingZoomFull = 90.0F};
+      m_batchingConfig = {.force_batching = false,
+                          .never_batch = false,
+                          .batching_unit_threshold = 30,
+                          .batching_zoom_start = 60.0F,
+                          .batching_zoom_full = 90.0F};
       break;
 
     case GraphicsQuality::High:
 
-      m_lodMultipliers = {.humanoidFull = 2.0F,
-                          .humanoidReduced = 2.0F,
-                          .humanoidMinimal = 2.0F,
-                          .humanoidBillboard = 2.0F,
-                          .horseFull = 2.0F,
-                          .horseReduced = 2.0F,
-                          .horseMinimal = 2.0F,
-                          .horseBillboard = 2.0F,
-                          .shadowDistance = 80.0F,
-                          .enableShadows = true};
-      m_features = {.enableFacialHair = true,
-                    .enableManeDetail = true,
-                    .enableTailDetail = true,
-                    .enableArmorDetail = true,
-                    .enableEquipmentDetail = true,
-                    .enableGroundShadows = true,
-                    .enablePoseCache = true};
+      m_lodMultipliers = {.humanoid_full = 2.0F,
+                          .humanoid_reduced = 2.0F,
+                          .humanoid_minimal = 2.0F,
+                          .humanoid_billboard = 2.0F,
+                          .horse_full = 2.0F,
+                          .horse_reduced = 2.0F,
+                          .horse_minimal = 2.0F,
+                          .horse_billboard = 2.0F,
+                          .shadow_distance = 80.0F,
+                          .enable_shadows = true};
+      m_features = {.enable_facial_hair = true,
+                    .enable_mane_detail = true,
+                    .enable_tail_detail = true,
+                    .enable_armor_detail = true,
+                    .enable_equipment_detail = true,
+                    .enable_ground_shadows = true,
+                    .enable_pose_cache = true};
 
-      m_batchingConfig = {.forceBatching = false,
-                          .neverBatch = false,
-                          .batchingUnitThreshold = 50,
-                          .batchingZoomStart = 80.0F,
-                          .batchingZoomFull = 120.0F};
+      m_batchingConfig = {.force_batching = false,
+                          .never_batch = false,
+                          .batching_unit_threshold = 50,
+                          .batching_zoom_start = 80.0F,
+                          .batching_zoom_full = 120.0F};
       break;
 
     case GraphicsQuality::Ultra:
 
-      m_lodMultipliers = {.humanoidFull = 100.0F,
-                          .humanoidReduced = 100.0F,
-                          .humanoidMinimal = 100.0F,
-                          .humanoidBillboard = 100.0F,
-                          .horseFull = 100.0F,
-                          .horseReduced = 100.0F,
-                          .horseMinimal = 100.0F,
-                          .horseBillboard = 100.0F,
-                          .shadowDistance = 200.0F,
-                          .enableShadows = true};
-      m_features = {.enableFacialHair = true,
-                    .enableManeDetail = true,
-                    .enableTailDetail = true,
-                    .enableArmorDetail = true,
-                    .enableEquipmentDetail = true,
-                    .enableGroundShadows = true,
-                    .enablePoseCache = false};
+      m_lodMultipliers = {.humanoid_full = 100.0F,
+                          .humanoid_reduced = 100.0F,
+                          .humanoid_minimal = 100.0F,
+                          .humanoid_billboard = 100.0F,
+                          .horse_full = 100.0F,
+                          .horse_reduced = 100.0F,
+                          .horse_minimal = 100.0F,
+                          .horse_billboard = 100.0F,
+                          .shadow_distance = 200.0F,
+                          .enable_shadows = true};
+      m_features = {.enable_facial_hair = true,
+                    .enable_mane_detail = true,
+                    .enable_tail_detail = true,
+                    .enable_armor_detail = true,
+                    .enable_equipment_detail = true,
+                    .enable_ground_shadows = true,
+                    .enable_pose_cache = false};
 
-      m_batchingConfig = {.forceBatching = false,
-                          .neverBatch = true,
-                          .batchingUnitThreshold = 999999,
-                          .batchingZoomStart = 999999.0F,
-                          .batchingZoomFull = 999999.0F};
+      m_batchingConfig = {.force_batching = false,
+                          .never_batch = true,
+                          .batching_unit_threshold = 999999,
+                          .batching_zoom_start = 999999.0F,
+                          .batching_zoom_full = 999999.0F};
       break;
     }
   }

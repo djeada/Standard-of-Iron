@@ -44,8 +44,8 @@ struct DrawContext {
   QMatrix4x4 model;
   bool selected = false;
   bool hovered = false;
-  float animationTime = 0.0F;
-  std::string rendererId;
+  float animation_time = 0.0F;
+  std::string renderer_id;
   class Backend *backend = nullptr;
   const Camera *camera = nullptr;
 };

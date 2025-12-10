@@ -1369,8 +1369,8 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
     DrawContext inst_ctx{ctx.resources, ctx.entity, ctx.world, inst_model};
     inst_ctx.selected = ctx.selected;
     inst_ctx.hovered = ctx.hovered;
-    inst_ctx.animationTime = ctx.animationTime;
-    inst_ctx.rendererId = ctx.rendererId;
+    inst_ctx.animation_time = ctx.animation_time;
+    inst_ctx.renderer_id = ctx.renderer_id;
     inst_ctx.backend = ctx.backend;
     inst_ctx.camera = ctx.camera;
 
