@@ -28,7 +28,7 @@ private:
   static auto isUnitIdle(Engine::Core::Entity *unit) -> bool;
   static auto findNearestEnemy(Engine::Core::Entity *unit,
                                Engine::Core::World *world,
-                               float maxRange) -> Engine::Core::Entity *;
+                               float max_range) -> Engine::Core::Entity *;
 
   std::unordered_map<Engine::Core::EntityID, float> m_engagementCooldowns;
   static constexpr float ENGAGEMENT_COOLDOWN = 0.5F;

@@ -21,7 +21,7 @@ private:
                                 float radius) -> int;
   static void transferBarrackOwnership(Engine::Core::World *world,
                                        Engine::Core::Entity *barrack,
-                                       int newOwnerId);
+                                       int new_owner_id);
 };
 
 } // namespace Game::Systems
