@@ -737,15 +737,15 @@ void GameEngine::render(int pixelWidth, int pixelHeight) {
   if (pixelWidth > 0 && pixelHeight > 0) {
     m_viewport.width = pixelWidth;
     m_viewport.height = pixelHeight;
-    m_renderer->setViewport(pixelWidth, pixelHeight);
+    m_renderer->set_viewport(pixelWidth, pixelHeight);
   }
   if (auto *selection_system =
           m_world->getSystem<Game::Systems::SelectionSystem>()) {
     const auto &sel = selection_system->getSelectedUnits();
     std::vector<unsigned int> const ids(sel.begin(), sel.end());
-    m_renderer->setSelectedEntities(ids);
+    m_renderer->set_selected_entities(ids);
   }
-  m_renderer->beginFrame();
+  m_renderer->begin_frame();
   if (auto *res = m_renderer->resources()) {
     for (auto *pass : m_passes) {
       if (pass != nullptr) {
@@ -774,7 +774,7 @@ void GameEngine::render(int pixelWidth, int pixelHeight) {
     Render::GL::renderPatrolFlags(m_renderer.get(), res, *m_world,
                                   preview_waypoint);
   }
-  m_renderer->endFrame();
+  m_renderer->end_frame();
 
   qreal const current_x = globalCursorX();
   qreal const current_y = globalCursorY();
