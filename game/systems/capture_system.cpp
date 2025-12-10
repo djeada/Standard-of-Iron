@@ -60,7 +60,7 @@ auto CaptureSystem::countNearbyTroops(Engine::Core::World *world,
 
 void CaptureSystem::transferBarrackOwnership(Engine::Core::World *,
                                              Engine::Core::Entity *barrack,
-                                             int newOwnerId) {
+                                             int new_owner_id) {
   auto *unit = barrack->getComponent<Engine::Core::UnitComponent>();
   auto *renderable = barrack->getComponent<Engine::Core::RenderableComponent>();
   auto *transform = barrack->getComponent<Engine::Core::TransformComponent>();
@@ -71,11 +71,11 @@ void CaptureSystem::transferBarrackOwnership(Engine::Core::World *,
   }
 
   int const previous_owner_id = unit->owner_id;
-  unit->owner_id = newOwnerId;
+  unit->owner_id = new_owner_id;
 
   auto &nation_registry = NationRegistry::instance();
-  if (!Game::Core::isNeutralOwner(newOwnerId)) {
-    if (const auto *nation = nation_registry.getNationForPlayer(newOwnerId)) {
+  if (!Game::Core::isNeutralOwner(new_owner_id)) {
+    if (const auto *nation = nation_registry.getNationForPlayer(new_owner_id)) {
       unit->nation_id = nation->id;
     } else {
       unit->nation_id = nation_registry.default_nation_id();
@@ -84,15 +84,15 @@ void CaptureSystem::transferBarrackOwnership(Engine::Core::World *,
     unit->nation_id = nation_registry.default_nation_id();
   }
 
-  QVector3D const tc = Game::Visuals::team_colorForOwner(newOwnerId);
+  QVector3D const tc = Game::Visuals::team_colorForOwner(new_owner_id);
   renderable->color[0] = tc.x();
   renderable->color[1] = tc.y();
   renderable->color[2] = tc.z();
 
   Game::Systems::BuildingCollisionRegistry::instance().updateBuildingOwner(
-      barrack->getId(), newOwnerId);
+      barrack->getId(), new_owner_id);
 
-  if (!Game::Core::isNeutralOwner(newOwnerId) && (prod == nullptr)) {
+  if (!Game::Core::isNeutralOwner(new_owner_id) && (prod == nullptr)) {
     prod = barrack->addComponent<Engine::Core::ProductionComponent>();
     if (prod != nullptr) {
       prod->product_type = Game::Units::TroopType::Archer;
@@ -108,7 +108,7 @@ void CaptureSystem::transferBarrackOwnership(Engine::Core::World *,
       prod->build_time = profile.production.build_time;
       prod->villager_cost = profile.individuals_per_unit;
     }
-  } else if (Game::Core::isNeutralOwner(newOwnerId) && (prod != nullptr)) {
+  } else if (Game::Core::isNeutralOwner(new_owner_id) && (prod != nullptr)) {
     barrack->removeComponent<Engine::Core::ProductionComponent>();
   } else if (prod != nullptr) {
     const auto profile = TroopProfileService::instance().get_profile(
@@ -119,7 +119,7 @@ void CaptureSystem::transferBarrackOwnership(Engine::Core::World *,
 
   Engine::Core::EventManager::instance().publish(
       Engine::Core::BarrackCapturedEvent(barrack->getId(), previous_owner_id,
-                                         newOwnerId));
+                                         new_owner_id));
 }
 
 void CaptureSystem::processBarrackCapture(Engine::Core::World *world,

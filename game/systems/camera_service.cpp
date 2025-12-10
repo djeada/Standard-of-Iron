@@ -121,8 +121,8 @@ void CameraService::snapToEntity(Render::GL::Camera &camera,
 
 void CameraService::updateFollow(Render::GL::Camera &camera,
                                  Engine::Core::World &world,
-                                 bool followEnabled) {
-  if (followEnabled) {
+                                 bool follow_enabled) {
+  if (follow_enabled) {
     if (auto *selection_system = world.getSystem<SelectionSystem>()) {
       m_followSystem->update(world, *selection_system, camera);
     }

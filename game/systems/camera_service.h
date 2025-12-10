@@ -39,7 +39,7 @@ public:
   static void snapToEntity(Render::GL::Camera &camera,
                            Engine::Core::Entity &entity);
   void updateFollow(Render::GL::Camera &camera, Engine::Core::World &world,
-                    bool followEnabled);
+                    bool follow_enabled);
 
 private:
   std::unique_ptr<CameraController> m_controller;

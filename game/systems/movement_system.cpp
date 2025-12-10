@@ -113,9 +113,9 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
   auto *hold_mode = entity->getComponent<Engine::Core::HoldModeComponent>();
   bool in_hold_mode = false;
   if (hold_mode != nullptr) {
-    if (hold_mode->exitCooldown > 0.0F) {
-      hold_mode->exitCooldown =
-          std::max(0.0F, hold_mode->exitCooldown - delta_time);
+    if (hold_mode->exit_cooldown > 0.0F) {
+      hold_mode->exit_cooldown =
+          std::max(0.0F, hold_mode->exit_cooldown - delta_time);
     }
 
     if (hold_mode->active) {
@@ -127,7 +127,7 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
       in_hold_mode = true;
     }
 
-    if (hold_mode->exitCooldown > 0.0F && !in_hold_mode) {
+    if (hold_mode->exit_cooldown > 0.0F && !in_hold_mode) {
       movement->vx = 0.0F;
       movement->vz = 0.0F;
 
@@ -203,8 +203,8 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
         goal_dist_sq > k_stuck_distance_sq && std::isfinite(goal_dist_sq) &&
         destination_allowed) {
       CommandService::MoveOptions opts;
-      opts.clearAttackIntent = false;
-      opts.allowDirectFallback = true;
+      opts.clear_attack_intent = false;
+      opts.allow_direct_fallback = true;
       std::vector<Engine::Core::EntityID> const ids = {entity->getId()};
       std::vector<QVector3D> const targets = {final_goal};
       CommandService::moveUnits(*world, ids, targets, opts);
@@ -266,8 +266,8 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
           float const goal_dist_sq = (final_goal - current_pos).lengthSquared();
           if (goal_dist_sq > 0.01F && destination_allowed) {
             CommandService::MoveOptions opts;
-            opts.clearAttackIntent = false;
-            opts.allowDirectFallback = false;
+            opts.clear_attack_intent = false;
+            opts.allow_direct_fallback = false;
             std::vector<Engine::Core::EntityID> const ids = {entity->getId()};
             std::vector<QVector3D> const targets = {
                 QVector3D(movement->goal_x, 0.0F, movement->goal_y)};

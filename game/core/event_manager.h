@@ -16,7 +16,7 @@ namespace Engine::Core {
 class Event {
 public:
   virtual ~Event() = default;
-  [[nodiscard]] virtual auto getTypeName() const -> const char * {
+  [[nodiscard]] virtual auto get_type_name() const -> const char * {
     return "Event";
   }
 };
@@ -26,8 +26,8 @@ template <typename T> using EventHandler = std::function<void(const T &)>;
 using SubscriptionHandle = std::size_t;
 
 struct EventStats {
-  size_t publishCount = 0;
-  size_t subscriberCount = 0;
+  size_t publish_count = 0;
+  size_t subscriber_count = 0;
 };
 
 class EventManager {
@@ -49,7 +49,7 @@ public:
     HandlerEntry const entry{handle, wrapper};
     m_handlers[std::type_index(typeid(T))].push_back(entry);
 
-    m_stats[std::type_index(typeid(T))].subscriberCount++;
+    m_stats[std::type_index(typeid(T))].subscriber_count++;
 
     return handle;
   }
@@ -69,7 +69,7 @@ public:
                      handlers.end());
 
       if (handlers.size() < sizeBefore) {
-        m_stats[std::type_index(typeid(T))].subscriberCount--;
+        m_stats[std::type_index(typeid(T))].subscriber_count--;
       }
     }
   }
@@ -83,7 +83,7 @@ public:
       auto it = m_handlers.find(std::type_index(typeid(T)));
       if (it != m_handlers.end()) {
         handlersCopy = it->second;
-        m_stats[std::type_index(typeid(T))].publishCount++;
+        m_stats[std::type_index(typeid(T))].publish_count++;
       }
     }
 
@@ -171,7 +171,7 @@ class UnitSelectedEvent : public Event {
 public:
   UnitSelectedEvent(EntityID unit_id) : unit_id(unit_id) {}
   EntityID unit_id;
-  [[nodiscard]] auto getTypeName() const -> const char * override {
+  [[nodiscard]] auto get_type_name() const -> const char * override {
     return "UNIT_SELECTED";
   }
 };
@@ -228,12 +228,12 @@ public:
 class BarrackCapturedEvent : public Event {
 public:
   BarrackCapturedEvent(EntityID barrackId, int previous_owner_id,
-                       int newOwnerId)
+                       int new_owner_id)
       : barrackId(barrackId), previous_owner_id(previous_owner_id),
-        newOwnerId(newOwnerId) {}
+        new_owner_id(new_owner_id) {}
   EntityID barrackId;
   int previous_owner_id;
-  int newOwnerId;
+  int new_owner_id;
 };
 
 enum class AmbientState { PEACEFUL, TENSE, COMBAT, VICTORY, DEFEAT };
@@ -244,18 +244,18 @@ public:
       : new_state(new_state), previous_state(previous_state) {}
   AmbientState new_state;
   AmbientState previous_state;
-  [[nodiscard]] auto getTypeName() const -> const char * override {
+  [[nodiscard]] auto get_type_name() const -> const char * override {
     return "AMBIENT_STATE_CHANGED";
   }
 };
 
 class AudioTriggerEvent : public Event {
 public:
-  AudioTriggerEvent(std::string soundId, float volume = 1.0F, bool loop = false,
+  AudioTriggerEvent(std::string sound_id, float volume = 1.0F, bool loop = false,
                     int priority = 0)
-      : soundId(std::move(soundId)), volume(volume), loop(loop),
+      : sound_id(std::move(sound_id)), volume(volume), loop(loop),
         priority(priority) {}
-  std::string soundId;
+  std::string sound_id;
   float volume;
   bool loop;
   int priority;
@@ -263,10 +263,10 @@ public:
 
 class MusicTriggerEvent : public Event {
 public:
-  MusicTriggerEvent(std::string musicId, float volume = 1.0F,
+  MusicTriggerEvent(std::string music_id, float volume = 1.0F,
                     bool crossfade = true)
-      : musicId(std::move(musicId)), volume(volume), crossfade(crossfade) {}
-  std::string musicId;
+      : music_id(std::move(music_id)), volume(volume), crossfade(crossfade) {}
+  std::string music_id;
   float volume;
   bool crossfade;
 };

@@ -22,9 +22,9 @@ struct Point;
 class CommandService {
 public:
   struct MoveOptions {
-    bool allowDirectFallback = true;
-    bool clearAttackIntent = true;
-    bool groupMove = false;
+    bool allow_direct_fallback = true;
+    bool clear_attack_intent = true;
+    bool group_move = false;
   };
 
   static constexpr int DIRECT_PATH_THRESHOLD = 8;
@@ -49,7 +49,7 @@ public:
   static void attack_target(Engine::Core::World &world,
                             const std::vector<Engine::Core::EntityID> &units,
                             Engine::Core::EntityID target_id,
-                            bool shouldChase = true);
+                            bool should_chase = true);
 
 private:
   struct PendingPathRequest {

@@ -47,7 +47,7 @@ auto GameStateSerializer::buildMetadata(
 
   QJsonObject runtime_obj;
   runtime_obj["paused"] = runtime.paused;
-  runtime_obj["timeScale"] = runtime.timeScale;
+  runtime_obj["time_scale"] = runtime.time_scale;
   runtime_obj["victoryState"] = runtime.victoryState;
   runtime_obj["cursorMode"] = runtime.cursorMode;
   runtime_obj["selectedPlayerId"] = runtime.selectedPlayerId;
@@ -98,9 +98,9 @@ void GameStateSerializer::restoreRuntimeFromMetadata(
     runtime.paused = runtime_obj.value("paused").toBool(runtime.paused);
   }
 
-  if (runtime_obj.contains("timeScale")) {
-    runtime.timeScale = static_cast<float>(
-        runtime_obj.value("timeScale").toDouble(runtime.timeScale));
+  if (runtime_obj.contains("time_scale")) {
+    runtime.time_scale = static_cast<float>(
+        runtime_obj.value("time_scale").toDouble(runtime.time_scale));
   }
 
   runtime.victoryState =
