@@ -36,9 +36,9 @@ void HealingSystem::processHealing(Engine::Core::World *world,
       continue;
     }
 
-    healer_comp->timeSinceLastHeal += delta_time;
+    healer_comp->time_since_last_heal += delta_time;
 
-    if (healer_comp->timeSinceLastHeal < healer_comp->healing_cooldown) {
+    if (healer_comp->time_since_last_heal < healer_comp->healing_cooldown) {
       continue;
     }
 
@@ -94,7 +94,7 @@ void HealingSystem::processHealing(Engine::Core::World *world,
     }
 
     if (healed_any) {
-      healer_comp->timeSinceLastHeal = 0.0F;
+      healer_comp->time_since_last_heal = 0.0F;
     }
   }
 }

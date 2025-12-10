@@ -11,28 +11,28 @@
 
 namespace Game::Systems {
 
-auto RomanFormation::calculatePositions(int unitCount, const QVector3D &center,
-                                        float baseSpacing) const
+auto RomanFormation::calculatePositions(int unit_count, const QVector3D &center,
+                                        float base_spacing) const
     -> std::vector<QVector3D> {
   std::vector<QVector3D> positions;
-  positions.reserve(unitCount);
+  positions.reserve(unit_count);
 
-  if (unitCount <= 0) {
+  if (unit_count <= 0) {
     return positions;
   }
 
-  float spacing = baseSpacing * 1.2F;
+  float spacing = base_spacing * 1.2F;
 
-  if (unitCount > 100) {
+  if (unit_count > 100) {
     spacing *= 2.0F;
-  } else if (unitCount > 50) {
+  } else if (unit_count > 50) {
     spacing *= 1.5F;
   }
 
-  int const rows = std::max(1, static_cast<int>(std::sqrt(unitCount * 0.7F)));
-  int const cols = (unitCount + rows - 1) / rows;
+  int const rows = std::max(1, static_cast<int>(std::sqrt(unit_count * 0.7F)));
+  int const cols = (unit_count + rows - 1) / rows;
 
-  for (int i = 0; i < unitCount; ++i) {
+  for (int i = 0; i < unit_count; ++i) {
     int const row = i / cols;
     int const col = i % cols;
 
@@ -47,29 +47,29 @@ auto RomanFormation::calculatePositions(int unitCount, const QVector3D &center,
 }
 
 auto BarbarianFormation::calculatePositions(
-    int unitCount, const QVector3D &center,
-    float baseSpacing) const -> std::vector<QVector3D> {
+    int unit_count, const QVector3D &center,
+    float base_spacing) const -> std::vector<QVector3D> {
   std::vector<QVector3D> positions;
-  positions.reserve(unitCount);
+  positions.reserve(unit_count);
 
-  if (unitCount <= 0) {
+  if (unit_count <= 0) {
     return positions;
   }
 
-  float spacing = baseSpacing * 1.8F;
+  float spacing = base_spacing * 1.8F;
 
-  if (unitCount > 100) {
+  if (unit_count > 100) {
     spacing *= 2.0F;
-  } else if (unitCount > 50) {
+  } else if (unit_count > 50) {
     spacing *= 1.5F;
   }
 
   std::mt19937 rng(42);
   std::uniform_real_distribution<float> dist(-0.3F, 0.3F);
 
-  int const side = std::ceil(std::sqrt(static_cast<float>(unitCount)));
+  int const side = std::ceil(std::sqrt(static_cast<float>(unit_count)));
 
-  for (int i = 0; i < unitCount; ++i) {
+  for (int i = 0; i < unit_count; ++i) {
     int const gx = i % side;
     int const gy = i / side;
 
@@ -100,15 +100,15 @@ void FormationSystem::initializeDefaults() {
 }
 
 auto FormationSystem::getFormationPositions(
-    FormationType type, int unitCount, const QVector3D &center,
-    float baseSpacing) -> std::vector<QVector3D> {
+    FormationType type, int unit_count, const QVector3D &center,
+    float base_spacing) -> std::vector<QVector3D> {
   auto it = m_formations.find(type);
   if (it == m_formations.end()) {
     qWarning() << "Formation type not found, using default spread";
-    return RomanFormation().calculatePositions(unitCount, center, baseSpacing);
+    return RomanFormation().calculatePositions(unit_count, center, base_spacing);
   }
 
-  return it->second->calculatePositions(unitCount, center, baseSpacing);
+  return it->second->calculatePositions(unit_count, center, base_spacing);
 }
 
 void FormationSystem::registerFormation(FormationType type,

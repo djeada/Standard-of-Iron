@@ -33,7 +33,7 @@ private:
   struct AIInstance {
     AI::AIContext context;
     std::unique_ptr<AI::AIWorker> worker;
-    float updateTimer = 0.0F;
+    float update_timer = 0.0F;
   };
 
   std::vector<AIInstance> m_aiInstances;

@@ -19,10 +19,10 @@ void ArrowSystem::spawnArrow(const QVector3D &start, const QVector3D &end,
   a.active = true;
   QVector3D const delta = end - start;
   float const dist = delta.length();
-  a.arcHeight = std::clamp(m_config.arcHeightMultiplier * dist,
+  a.arc_height = std::clamp(m_config.arcHeightMultiplier * dist,
                            m_config.arcHeightMin, m_config.arcHeightMax);
 
-  a.invDist = (dist > 0.001F) ? (1.0F / dist) : 1.0F;
+  a.inv_dist = (dist > 0.001F) ? (1.0F / dist) : 1.0F;
   m_arrows.push_back(a);
 }
 
@@ -32,7 +32,7 @@ void ArrowSystem::update(Engine::Core::World *, float delta_time) {
       continue;
     }
 
-    arrow.t += delta_time * arrow.speed * arrow.invDist;
+    arrow.t += delta_time * arrow.speed * arrow.inv_dist;
     if (arrow.t >= 1.0F) {
       arrow.t = 1.0F;
       arrow.active = false;

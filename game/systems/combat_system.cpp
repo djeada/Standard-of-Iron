@@ -339,9 +339,9 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float delta_time) 
 
                     if (need_new_command) {
                       CommandService::MoveOptions options;
-                      options.clearAttackIntent = false;
+                      options.clear_attack_intent = false;
 
-                      options.allowDirectFallback = true;
+                      options.allow_direct_fallback = true;
                       std::vector<Engine::Core::EntityID> const unit_ids = {
                           attacker->getId()};
                       std::vector<QVector3D> const move_targets = {desired_pos};
@@ -897,7 +897,7 @@ auto CombatSystem::isUnitIdle(Engine::Core::Entity *unit) -> bool {
 
 auto CombatSystem::findNearestEnemy(Engine::Core::Entity *unit,
                                     Engine::Core::World *world,
-                                    float maxRange) -> Engine::Core::Entity * {
+                                    float max_range) -> Engine::Core::Entity * {
   auto *unit_comp = unit->getComponent<Engine::Core::UnitComponent>();
   auto *unit_transform = unit->getComponent<Engine::Core::TransformComponent>();
   if ((unit_comp == nullptr) || (unit_transform == nullptr)) {
@@ -908,7 +908,7 @@ auto CombatSystem::findNearestEnemy(Engine::Core::Entity *unit,
   auto units = world->getEntitiesWith<Engine::Core::UnitComponent>();
 
   Engine::Core::Entity *nearest_enemy = nullptr;
-  float nearest_dist_sq = maxRange * maxRange;
+  float nearest_dist_sq = max_range * max_range;
 
   for (auto *target : units) {
     if (target == unit) {
