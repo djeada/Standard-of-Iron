@@ -11,7 +11,7 @@ void PatrolSystem::update(Engine::Core::World *world, float) {
     return;
   }
 
-  auto entities = world->getEntitiesWith<Engine::Core::PatrolComponent>();
+  auto entities = world->get_entities_with<Engine::Core::PatrolComponent>();
 
   for (auto *entity : entities) {
     auto *patrol = entity->get_component<Engine::Core::PatrolComponent>();
@@ -40,7 +40,7 @@ void PatrolSystem::update(Engine::Core::World *world, float) {
     }
 
     bool enemy_nearby = false;
-    auto all_entities = world->getEntitiesWith<Engine::Core::UnitComponent>();
+    auto all_entities = world->get_entities_with<Engine::Core::UnitComponent>();
     for (auto *other : all_entities) {
       auto *other_unit = other->get_component<Engine::Core::UnitComponent>();
       auto *other_transform =

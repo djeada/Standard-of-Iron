@@ -19,7 +19,7 @@ sanitize_selection(Engine::Core::World *world,
   std::vector<Engine::Core::EntityID> toKeep;
   toKeep.reserve(sel.size());
   for (auto id : sel) {
-    if (auto *e = world->getEntity(id)) {
+    if (auto *e = world->get_entity(id)) {
       if (auto *u = e->get_component<Engine::Core::UnitComponent>()) {
         if (u->health > 0) {
           toKeep.push_back(id);

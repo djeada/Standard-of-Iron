@@ -14,7 +14,7 @@ void TerrainAlignmentSystem::update(Engine::Core::World *world, float) {
     return;
   }
 
-  auto entities = world->getEntitiesWith<Engine::Core::TransformComponent>();
+  auto entities = world->get_entities_with<Engine::Core::TransformComponent>();
   for (auto *entity : entities) {
     alignEntityToTerrain(entity);
   }

@@ -17,7 +17,7 @@ findFirstSelectedBarracks(Engine::Core::World &world,
                           const std::vector<Engine::Core::EntityID> &selected,
                           int owner_id) -> Engine::Core::Entity * {
   for (auto id : selected) {
-    if (auto *e = world.getEntity(id)) {
+    if (auto *e = world.get_entity(id)) {
       auto *u = e->get_component<Engine::Core::UnitComponent>();
       if ((u == nullptr) || u->owner_id != owner_id) {
         continue;
@@ -83,7 +83,7 @@ auto ProductionService::startProductionForFirstSelectedBarracks(
   }
 
   int const current_troops =
-      Engine::Core::World::countTroopsForPlayer(owner_id);
+      Engine::Core::World::count_troops_for_player(owner_id);
   int const max_troops = Game::GameConfig::instance().getMaxTroopsPerPlayer();
   if (current_troops + individuals_per_unit > max_troops) {
     return ProductionResult::GlobalTroopLimitReached;
