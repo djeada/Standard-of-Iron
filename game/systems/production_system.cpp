@@ -44,7 +44,7 @@ void ProductionSystem::update(Engine::Core::World *world, float delta_time) {
   if (world == nullptr) {
     return;
   }
-  auto entities = world->getEntitiesWith<Engine::Core::ProductionComponent>();
+  auto entities = world->get_entities_with<Engine::Core::ProductionComponent>();
   for (auto *e : entities) {
     auto *prod = e->get_component<Engine::Core::ProductionComponent>();
     if (prod == nullptr) {
@@ -79,7 +79,7 @@ void ProductionSystem::update(Engine::Core::World *world, float delta_time) {
       if ((t != nullptr) && (u != nullptr)) {
 
         int const current_troops =
-            Engine::Core::World::countTroopsForPlayer(u->owner_id);
+            Engine::Core::World::count_troops_for_player(u->owner_id);
         int const max_troops =
             Game::GameConfig::instance().getMaxTroopsPerPlayer();
         if (current_troops + individuals_per_unit > max_troops) {

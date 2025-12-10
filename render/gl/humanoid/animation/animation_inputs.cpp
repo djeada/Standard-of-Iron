@@ -57,7 +57,7 @@ auto sampleAnimState(const DrawContext &ctx) -> AnimationInputs {
     bool target_in_range = false;
 
     if (ctx.world != nullptr) {
-      auto *target = ctx.world->getEntity(attack_target->target_id);
+      auto *target = ctx.world->get_entity(attack_target->target_id);
       if (target != nullptr) {
         auto *target_transform =
             target->get_component<Engine::Core::TransformComponent>();

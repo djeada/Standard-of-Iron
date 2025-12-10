@@ -88,7 +88,7 @@ auto isSegmentWalkable(const QVector3D &from, const QVector3D &to,
 
 void MovementSystem::update(Engine::Core::World *world, float delta_time) {
   CommandService::processPathResults(*world);
-  auto entities = world->getEntitiesWith<Engine::Core::MovementComponent>();
+  auto entities = world->get_entities_with<Engine::Core::MovementComponent>();
 
   for (auto *entity : entities) {
     move_unit(entity, world, delta_time);

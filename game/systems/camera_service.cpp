@@ -67,7 +67,7 @@ void CameraService::followSelection(Render::GL::Camera &camera,
   m_controller->setFollowEnabled(camera, enable);
 
   if (enable) {
-    if (auto *selection_system = world.getSystem<SelectionSystem>()) {
+    if (auto *selection_system = world.get_system<SelectionSystem>()) {
       m_followSystem->snapToSelection(world, *selection_system, camera);
     }
   } else {
@@ -86,7 +86,7 @@ void CameraService::resetCamera(Render::GL::Camera &camera,
                                 Engine::Core::World &world, int local_owner_id,
                                 unsigned int playerUnitId) {
   Engine::Core::Entity *focus_entity = nullptr;
-  for (auto *e : world.getEntitiesWith<Engine::Core::UnitComponent>()) {
+  for (auto *e : world.get_entities_with<Engine::Core::UnitComponent>()) {
     if (e == nullptr) {
       continue;
     }
@@ -101,7 +101,7 @@ void CameraService::resetCamera(Render::GL::Camera &camera,
     }
   }
   if ((focus_entity == nullptr) && playerUnitId != 0) {
-    focus_entity = world.getEntity(playerUnitId);
+    focus_entity = world.get_entity(playerUnitId);
   }
 
   if (focus_entity != nullptr) {
@@ -123,7 +123,7 @@ void CameraService::updateFollow(Render::GL::Camera &camera,
                                  Engine::Core::World &world,
                                  bool follow_enabled) {
   if (follow_enabled) {
-    if (auto *selection_system = world.getSystem<SelectionSystem>()) {
+    if (auto *selection_system = world.get_system<SelectionSystem>()) {
       m_followSystem->update(world, *selection_system, camera);
     }
   }
