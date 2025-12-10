@@ -59,7 +59,7 @@ public:
 
   virtual void customize_pose(const DrawContext &ctx,
                               const HumanoidAnimationContext &anim_ctx,
-                              uint32_t seed, HumanoidPose &ioPose) const;
+                              uint32_t seed, HumanoidPose &io_pose) const;
 
   virtual void add_attachments(const DrawContext &ctx, const HumanoidVariant &v,
                               const HumanoidPose &pose,
@@ -120,8 +120,8 @@ public:
                                      float uniform_scale) -> QMatrix4x4;
 
 protected:
-  mutable QVector3D m_cachedProportionScale;
-  mutable bool m_proportionScaleCached = false;
+  mutable QVector3D m_cached_proportion_scale;
+  mutable bool m_proportion_scale_cached = false;
 
   static auto resolve_formation(const DrawContext &ctx) -> FormationParams;
 
@@ -136,26 +136,26 @@ protected:
 };
 
 struct HumanoidRenderStats {
-  uint32_t soldiersTotal{0};
-  uint32_t soldiersRendered{0};
-  uint32_t soldiersSkippedFrustum{0};
-  uint32_t soldiersSkippedLOD{0};
-  uint32_t posesComputed{0};
-  uint32_t posesCached{0};
-  uint32_t lodFull{0};
-  uint32_t lodReduced{0};
-  uint32_t lodMinimal{0};
+  uint32_t soldiers_total{0};
+  uint32_t soldiers_rendered{0};
+  uint32_t soldiers_skipped_frustum{0};
+  uint32_t soldiers_skipped_lod{0};
+  uint32_t poses_computed{0};
+  uint32_t poses_cached{0};
+  uint32_t lod_full{0};
+  uint32_t lod_reduced{0};
+  uint32_t lod_minimal{0};
 
   void reset() {
-    soldiersTotal = 0;
-    soldiersRendered = 0;
-    soldiersSkippedFrustum = 0;
-    soldiersSkippedLOD = 0;
-    posesComputed = 0;
-    posesCached = 0;
-    lodFull = 0;
-    lodReduced = 0;
-    lodMinimal = 0;
+    soldiers_total = 0;
+    soldiers_rendered = 0;
+    soldiers_skipped_frustum = 0;
+    soldiers_skipped_lod = 0;
+    poses_computed = 0;
+    poses_cached = 0;
+    lod_full = 0;
+    lod_reduced = 0;
+    lod_minimal = 0;
   }
 };
 
