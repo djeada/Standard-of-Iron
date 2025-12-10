@@ -40,7 +40,7 @@ auto resolve_nation_id(const Engine::Core::UnitComponent *unit,
 
 } // namespace
 
-void ProductionSystem::update(Engine::Core::World *world, float deltaTime) {
+void ProductionSystem::update(Engine::Core::World *world, float delta_time) {
   if (world == nullptr) {
     return;
   }
@@ -71,7 +71,7 @@ void ProductionSystem::update(Engine::Core::World *world, float deltaTime) {
       prod->in_progress = false;
       continue;
     }
-    prod->time_remaining -= deltaTime;
+    prod->time_remaining -= delta_time;
     if (prod->time_remaining <= 0.0F) {
 
       auto *t = e->getComponent<Engine::Core::TransformComponent>();

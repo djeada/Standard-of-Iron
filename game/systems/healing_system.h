@@ -10,10 +10,10 @@ namespace Game::Systems {
 
 class HealingSystem : public Engine::Core::System {
 public:
-  void update(Engine::Core::World *world, float deltaTime) override;
+  void update(Engine::Core::World *world, float delta_time) override;
 
 private:
-  void processHealing(Engine::Core::World *world, float deltaTime);
+  void processHealing(Engine::Core::World *world, float delta_time);
 };
 
 } // namespace Game::Systems

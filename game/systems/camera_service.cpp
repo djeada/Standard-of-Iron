@@ -22,13 +22,13 @@ CameraService::CameraService()
 CameraService::~CameraService() = default;
 
 void CameraService::move(Render::GL::Camera &camera, float dx, float dz) {
-  float const dist = camera.getDistance();
+  float const dist = camera.get_distance();
   float const scale = std::max(0.12F, dist * 0.05F);
   m_controller->move(camera, dx * scale, dz * scale);
 }
 
 void CameraService::elevate(Render::GL::Camera &camera, float dy) {
-  float const distance = camera.getDistance();
+  float const distance = camera.get_distance();
   float const scale = std::clamp(distance * 0.05F, 0.1F, 5.0F);
   m_controller->moveUp(camera, dy * scale);
 }
@@ -37,8 +37,8 @@ void CameraService::zoom(Render::GL::Camera &camera, float delta) {
   m_controller->zoomDistance(camera, delta);
 }
 
-auto CameraService::getDistance(const Render::GL::Camera &camera) -> float {
-  return camera.getDistance();
+auto CameraService::get_distance(const Render::GL::Camera &camera) -> float {
+  return camera.get_distance();
 }
 
 void CameraService::yaw(Render::GL::Camera &camera, float degrees) {
@@ -71,8 +71,8 @@ void CameraService::followSelection(Render::GL::Camera &camera,
       m_followSystem->snapToSelection(world, *selection_system, camera);
     }
   } else {
-    auto pos = camera.getPosition();
-    auto tgt = camera.getTarget();
+    auto pos = camera.get_position();
+    auto tgt = camera.get_target();
     camera.lookAt(pos, tgt, QVector3D(0, 1, 0));
   }
 }
@@ -83,7 +83,7 @@ void CameraService::setFollowLerp(Render::GL::Camera &camera, float alpha) {
 }
 
 void CameraService::resetCamera(Render::GL::Camera &camera,
-                                Engine::Core::World &world, int localOwnerId,
+                                Engine::Core::World &world, int local_owner_id,
                                 unsigned int playerUnitId) {
   Engine::Core::Entity *focus_entity = nullptr;
   for (auto *e : world.getEntitiesWith<Engine::Core::UnitComponent>()) {
@@ -95,7 +95,7 @@ void CameraService::resetCamera(Render::GL::Camera &camera,
       continue;
     }
     if (u->spawn_type == Game::Units::SpawnType::Barracks &&
-        u->owner_id == localOwnerId && u->health > 0) {
+        u->owner_id == local_owner_id && u->health > 0) {
       focus_entity = e;
       break;
     }

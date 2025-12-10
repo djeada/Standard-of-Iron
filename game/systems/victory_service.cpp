@@ -40,10 +40,10 @@ void VictoryService::reset() {
 }
 
 void VictoryService::configure(const Game::Map::VictoryConfig &config,
-                               int localOwnerId) {
+                               int local_owner_id) {
   reset();
 
-  m_localOwnerId = localOwnerId;
+  m_localOwnerId = local_owner_id;
 
   if (config.victoryType == "elimination") {
     m_victoryType = VictoryType::Elimination;
@@ -72,7 +72,7 @@ void VictoryService::configure(const Game::Map::VictoryConfig &config,
   m_startupDelay = k_startup_delay_seconds;
 }
 
-void VictoryService::update(Engine::Core::World &world, float deltaTime) {
+void VictoryService::update(Engine::Core::World &world, float delta_time) {
   if (!m_victoryState.isEmpty()) {
     return;
   }
@@ -80,12 +80,12 @@ void VictoryService::update(Engine::Core::World &world, float deltaTime) {
   m_worldPtr = &world;
 
   if (m_startupDelay > 0.0F) {
-    m_startupDelay = std::max(0.0F, m_startupDelay - deltaTime);
+    m_startupDelay = std::max(0.0F, m_startupDelay - delta_time);
     return;
   }
 
   if (m_victoryType == VictoryType::SurviveTime) {
-    m_elapsedTime += deltaTime;
+    m_elapsedTime += delta_time;
   }
 
   checkVictoryConditions(world);

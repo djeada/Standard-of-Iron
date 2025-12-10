@@ -17,9 +17,9 @@
 namespace Game::Systems::AI {
 
 void DefendBehavior::execute(const AISnapshot &snapshot, AIContext &context,
-                             float deltaTime,
+                             float delta_time,
                              std::vector<AICommand> &outCommands) {
-  m_defendTimer += deltaTime;
+  m_defendTimer += delta_time;
 
   float const update_interval = context.barracksUnderThreat ? 0.5F : 1.5F;
 
@@ -142,7 +142,7 @@ void DefendBehavior::execute(const AISnapshot &snapshot, AIContext &context,
 
         auto claimed_units =
             claimUnits(defender_ids, getPriority(), "defending", context,
-                       m_defendTimer + deltaTime, 3.0F);
+                       m_defendTimer + delta_time, 3.0F);
 
         if (!claimed_units.empty()) {
           AICommand attack;
@@ -186,7 +186,7 @@ void DefendBehavior::execute(const AISnapshot &snapshot, AIContext &context,
 
         auto claimed_units =
             claimUnits(defender_ids, getPriority(), "intercepting", context,
-                       m_defendTimer + deltaTime, 2.0F);
+                       m_defendTimer + delta_time, 2.0F);
 
         if (!claimed_units.empty()) {
 
@@ -272,7 +272,7 @@ void DefendBehavior::execute(const AISnapshot &snapshot, AIContext &context,
 
   auto claimed_for_move =
       claimUnits(units_to_move, BehaviorPriority::Low, "positioning", context,
-                 m_defendTimer + deltaTime, 1.5F);
+                 m_defendTimer + delta_time, 1.5F);
 
   if (claimed_for_move.empty()) {
     return;
