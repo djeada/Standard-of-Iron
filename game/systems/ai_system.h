@@ -25,7 +25,7 @@ public:
   AISystem();
   ~AISystem() override;
 
-  void update(Engine::Core::World *world, float deltaTime) override;
+  void update(Engine::Core::World *world, float delta_time) override;
 
   void reinitialize();
 

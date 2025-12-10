@@ -86,17 +86,17 @@ auto isSegmentWalkable(const QVector3D &from, const QVector3D &to,
 
 } // namespace
 
-void MovementSystem::update(Engine::Core::World *world, float deltaTime) {
+void MovementSystem::update(Engine::Core::World *world, float delta_time) {
   CommandService::processPathResults(*world);
   auto entities = world->getEntitiesWith<Engine::Core::MovementComponent>();
 
   for (auto *entity : entities) {
-    moveUnit(entity, world, deltaTime);
+    move_unit(entity, world, delta_time);
   }
 }
 
-void MovementSystem::moveUnit(Engine::Core::Entity *entity,
-                              Engine::Core::World *world, float deltaTime) {
+void MovementSystem::move_unit(Engine::Core::Entity *entity,
+                              Engine::Core::World *world, float delta_time) {
   auto *transform = entity->getComponent<Engine::Core::TransformComponent>();
   auto *movement = entity->getComponent<Engine::Core::MovementComponent>();
   auto *unit = entity->getComponent<Engine::Core::UnitComponent>();
@@ -115,7 +115,7 @@ void MovementSystem::moveUnit(Engine::Core::Entity *entity,
   if (hold_mode != nullptr) {
     if (hold_mode->exitCooldown > 0.0F) {
       hold_mode->exitCooldown =
-          std::max(0.0F, hold_mode->exitCooldown - deltaTime);
+          std::max(0.0F, hold_mode->exitCooldown - delta_time);
     }
 
     if (hold_mode->active) {
@@ -144,7 +144,7 @@ void MovementSystem::moveUnit(Engine::Core::Entity *entity,
             std::fmod((target_yaw - current + 540.0F), 360.0F) - 180.0F;
         float const turn_speed = 180.0F;
         float const step =
-            std::clamp(diff, -turn_speed * deltaTime, turn_speed * deltaTime);
+            std::clamp(diff, -turn_speed * delta_time, turn_speed * delta_time);
         transform->rotation.y = current + step;
 
         if (std::fabs(diff) < 0.5F) {
@@ -181,11 +181,11 @@ void MovementSystem::moveUnit(Engine::Core::Entity *entity,
 
   if (movement->repath_cooldown > 0.0F) {
     movement->repath_cooldown =
-        std::max(0.0F, movement->repath_cooldown - deltaTime);
+        std::max(0.0F, movement->repath_cooldown - delta_time);
   }
 
   if (movement->time_since_last_path_request < 10.0F) {
-    movement->time_since_last_path_request += deltaTime;
+    movement->time_since_last_path_request += delta_time;
   }
 
   const float max_speed = std::max(0.1F, unit->speed);
@@ -213,8 +213,8 @@ void MovementSystem::moveUnit(Engine::Core::Entity *entity,
     }
 
     if (!requested_recovery_move) {
-      movement->vx *= std::max(0.0F, 1.0F - damping * deltaTime);
-      movement->vz *= std::max(0.0F, 1.0F - damping * deltaTime);
+      movement->vx *= std::max(0.0F, 1.0F - damping * delta_time);
+      movement->vz *= std::max(0.0F, 1.0F - damping * delta_time);
     }
   } else {
     QVector3D current_pos(transform->position.x, 0.0F, transform->position.z);
@@ -291,7 +291,7 @@ void MovementSystem::moveUnit(Engine::Core::Entity *entity,
     }
 
     float const arrive_radius =
-        std::clamp(max_speed * deltaTime * 2.0F, 0.05F, 0.25F);
+        std::clamp(max_speed * delta_time * 2.0F, 0.05F, 0.25F);
     float const arrive_radius_sq = arrive_radius * arrive_radius;
 
     float dx = movement->target_x - transform->position.x;
@@ -321,8 +321,8 @@ void MovementSystem::moveUnit(Engine::Core::Entity *entity,
     }
 
     if (!movement->has_target) {
-      movement->vx *= std::max(0.0F, 1.0F - damping * deltaTime);
-      movement->vz *= std::max(0.0F, 1.0F - damping * deltaTime);
+      movement->vx *= std::max(0.0F, 1.0F - damping * delta_time);
+      movement->vz *= std::max(0.0F, 1.0F - damping * delta_time);
     } else {
       float const distance = std::sqrt(std::max(dist2, 0.0F));
       float const nx = dx / std::max(0.0001F, distance);
@@ -337,16 +337,16 @@ void MovementSystem::moveUnit(Engine::Core::Entity *entity,
 
       float const ax = (desired_vx - movement->vx) * accel;
       float const az = (desired_vz - movement->vz) * accel;
-      movement->vx += ax * deltaTime;
-      movement->vz += az * deltaTime;
+      movement->vx += ax * delta_time;
+      movement->vz += az * delta_time;
 
-      movement->vx *= std::max(0.0F, 1.0F - 0.5F * damping * deltaTime);
-      movement->vz *= std::max(0.0F, 1.0F - 0.5F * damping * deltaTime);
+      movement->vx *= std::max(0.0F, 1.0F - 0.5F * damping * delta_time);
+      movement->vz *= std::max(0.0F, 1.0F - 0.5F * damping * delta_time);
     }
   }
 
-  transform->position.x += movement->vx * deltaTime;
-  transform->position.z += movement->vz * deltaTime;
+  transform->position.x += movement->vx * delta_time;
+  transform->position.z += movement->vz * delta_time;
 
   auto &terrain = Game::Map::TerrainService::instance();
   if (terrain.isInitialized()) {
@@ -381,7 +381,7 @@ void MovementSystem::moveUnit(Engine::Core::Entity *entity,
           std::fmod((target_yaw - current + 540.0F), 360.0F) - 180.0F;
       float const turn_speed = 720.0F;
       float const step =
-          std::clamp(diff, -turn_speed * deltaTime, turn_speed * deltaTime);
+          std::clamp(diff, -turn_speed * delta_time, turn_speed * delta_time);
       transform->rotation.y = current + step;
     } else if (transform->has_desired_yaw) {
 
@@ -391,7 +391,7 @@ void MovementSystem::moveUnit(Engine::Core::Entity *entity,
           std::fmod((target_yaw - current + 540.0F), 360.0F) - 180.0F;
       float const turn_speed = 180.0F;
       float const step =
-          std::clamp(diff, -turn_speed * deltaTime, turn_speed * deltaTime);
+          std::clamp(diff, -turn_speed * delta_time, turn_speed * delta_time);
       transform->rotation.y = current + step;
 
       if (std::fabs(diff) < 0.5F) {
@@ -401,7 +401,7 @@ void MovementSystem::moveUnit(Engine::Core::Entity *entity,
   }
 }
 
-auto MovementSystem::hasReachedTarget(
+auto MovementSystem::has_reached_target(
     const Engine::Core::TransformComponent *transform,
     const Engine::Core::MovementComponent *movement) -> bool {
   float const dx = movement->target_x - transform->position.x;

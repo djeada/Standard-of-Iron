@@ -26,7 +26,7 @@ public:
   void clear();
 
   void addSystem(std::unique_ptr<System> system);
-  void update(float deltaTime);
+  void update(float delta_time);
 
   auto systems() -> std::vector<std::unique_ptr<System>> & { return m_systems; }
 

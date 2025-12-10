@@ -42,7 +42,7 @@ auto CommandController::onAttackClick(qreal sx, qreal sy, int viewportWidth,
 
   auto *cam = static_cast<Render::GL::Camera *>(camera);
   Engine::Core::EntityID const target_id =
-      Game::Systems::PickingService::pickUnitFirst(
+      Game::Systems::PickingService::pick_unit_first(
           float(sx), float(sy), *m_world, *cam, viewportWidth, viewportHeight,
           0);
 
@@ -198,7 +198,7 @@ auto CommandController::onPatrolClick(qreal sx, qreal sy, int viewportWidth,
 
   auto *cam = static_cast<Render::GL::Camera *>(camera);
   QVector3D hit;
-  if (!Game::Systems::PickingService::screenToGround(
+  if (!Game::Systems::PickingService::screen_to_ground(
           QPointF(sx, sy), *cam, viewportWidth, viewportHeight, hit)) {
     if (m_hasPatrolFirstWaypoint) {
       clearPatrolFirstWaypoint();
@@ -262,7 +262,7 @@ auto CommandController::setRallyAtScreen(qreal sx, qreal sy, int viewportWidth,
 
   auto *cam = static_cast<Render::GL::Camera *>(camera);
   QVector3D hit;
-  if (!Game::Systems::PickingService::screenToGround(
+  if (!Game::Systems::PickingService::screen_to_ground(
           QPointF(sx, sy), *cam, viewportWidth, viewportHeight, hit)) {
     return result;
   }
