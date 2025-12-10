@@ -423,7 +423,7 @@ void Renderer::render_world(Engine::Core::World *world) {
   }
 
   float fullShaderMaxDistance = 30.0F * (1.0F - batchingRatio * 0.7F);
-  if (batchConfig.forceBatching) {
+  if (batchConfig.force_batching) {
     fullShaderMaxDistance = 0.0F;
   }
 
@@ -508,15 +508,15 @@ void Renderer::render_world(Engine::Core::World *world) {
 
         ctx.selected = is_selected;
         ctx.hovered = is_hovered;
-        ctx.animationTime = m_accumulated_time;
-        ctx.rendererId = renderer_key;
+        ctx.animation_time = m_accumulated_time;
+        ctx.renderer_id = renderer_key;
         ctx.backend = m_backend.get();
         ctx.camera = m_camera;
 
         bool useBatching = (batchingRatio > 0.0F) &&
                            (distanceToCamera > fullShaderMaxDistance) &&
                            !is_selected && !is_hovered &&
-                           !batchConfig.neverBatch;
+                           !batchConfig.never_batch;
 
         if (useBatching) {
           fn(ctx, batchSubmitter);

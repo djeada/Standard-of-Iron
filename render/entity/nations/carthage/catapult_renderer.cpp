@@ -245,7 +245,7 @@ void register_catapult_renderer(EntityRendererRegistry &registry) {
         drawBaseFrame(p, out, unit_cube, white_tex, palette);
         drawWheels(p, out, unit_cube, white_tex, palette);
         drawTorsionMechanism(p, out, unit_cube, white_tex, palette);
-        drawThrowingArm(p, out, unit_cube, white_tex, palette, p.animationTime);
+        drawThrowingArm(p, out, unit_cube, white_tex, palette, p.animation_time);
         drawWindlass(p, out, unit_cube, white_tex, palette);
         drawDecorations(p, out, unit_cube, white_tex, palette);
       });
