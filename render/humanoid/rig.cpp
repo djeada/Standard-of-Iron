@@ -163,13 +163,13 @@ auto HumanoidRendererBase::make_frame_local_transform(
 
 auto HumanoidRendererBase::head_local_position(
     const HeadFrame &frame, const QVector3D &local) -> QVector3D {
-  return frameLocalPosition(frame, local);
+  return frame_local_position(frame, local);
 }
 
 auto HumanoidRendererBase::make_head_local_transform(
     const QMatrix4x4 &parent, const HeadFrame &frame,
     const QVector3D &local_offset, float uniform_scale) -> QMatrix4x4 {
-  return makeFrameLocalTransform(parent, frame, local_offset, uniform_scale);
+  return make_frame_local_transform(parent, frame, local_offset, uniform_scale);
 }
 
 void HumanoidRendererBase::get_variant(const DrawContext &ctx, uint32_t seed,
