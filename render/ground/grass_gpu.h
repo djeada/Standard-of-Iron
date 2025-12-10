@@ -6,9 +6,9 @@
 namespace Render::GL {
 
 struct GrassInstanceGpu {
-  QVector4D posHeight{0.0F, 0.0F, 0.0F, 0.0F};
-  QVector4D colorWidth{0.0F, 0.0F, 0.0F, 0.0F};
-  QVector4D swayParams{0.0F, 0.0F, 0.0F, 0.0F};
+  QVector4D pos_height{0.0F, 0.0F, 0.0F, 0.0F};
+  QVector4D color_width{0.0F, 0.0F, 0.0F, 0.0F};
+  QVector4D sway_params{0.0F, 0.0F, 0.0F, 0.0F};
 };
 
 struct GrassBatchParams {
