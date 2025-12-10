@@ -19,7 +19,7 @@ auto HoverTracker::updateHover(float sx, float sy, Engine::Core::World &world,
     return 0;
   }
 
-  m_hoveredEntityId = m_pickingService->updateHover(
+  m_hoveredEntityId = m_pickingService->update_hover(
       sx, sy, world, camera, viewportWidth, viewportHeight);
 
   return m_hoveredEntityId;

@@ -19,7 +19,7 @@ auto GameStateSerializer::buildMetadata(
   metadata["map_path"] = level.map_path;
   metadata["map_name"] = level.map_name;
   metadata["max_troops_per_player"] = level.max_troops_per_player;
-  metadata["localOwnerId"] = runtime.localOwnerId;
+  metadata["local_owner_id"] = runtime.local_owner_id;
   metadata["playerUnitId"] = static_cast<qint64>(level.playerUnitId);
 
   metadata["gameMaxTroopsPerPlayer"] =
@@ -35,9 +35,9 @@ auto GameStateSerializer::buildMetadata(
   if (camera != nullptr) {
     QJsonObject camera_obj;
     camera_obj["position"] =
-        App::JsonUtils::vec3ToJsonArray(camera->getPosition());
-    camera_obj["target"] = App::JsonUtils::vec3ToJsonArray(camera->getTarget());
-    camera_obj["distance"] = camera->getDistance();
+        App::JsonUtils::vec3ToJsonArray(camera->get_position());
+    camera_obj["target"] = App::JsonUtils::vec3ToJsonArray(camera->get_target());
+    camera_obj["distance"] = camera->get_distance();
     camera_obj["pitch_deg"] = camera->getPitchDeg();
     camera_obj["fov"] = camera->getFOV();
     camera_obj["near"] = camera->getNear();
@@ -59,17 +59,17 @@ auto GameStateSerializer::buildMetadata(
 
 void GameStateSerializer::restoreCameraFromMetadata(const QJsonObject &metadata,
                                                     Render::GL::Camera *camera,
-                                                    int viewportWidth,
-                                                    int viewportHeight) {
+                                                    int viewport_width,
+                                                    int viewport_height) {
   if (!metadata.contains("camera") || (camera == nullptr)) {
     return;
   }
 
   const auto camera_obj = metadata.value("camera").toObject();
   const QVector3D position = App::JsonUtils::jsonArrayToVec3(
-      camera_obj.value("position"), camera->getPosition());
+      camera_obj.value("position"), camera->get_position());
   const QVector3D target = App::JsonUtils::jsonArrayToVec3(
-      camera_obj.value("target"), camera->getTarget());
+      camera_obj.value("target"), camera->get_target());
   camera->lookAt(position, target, QVector3D(0.0F, 1.0F, 0.0F));
 
   const float near_plane =
@@ -80,8 +80,8 @@ void GameStateSerializer::restoreCameraFromMetadata(const QJsonObject &metadata,
       static_cast<float>(camera_obj.value("fov").toDouble(camera->getFOV()));
 
   float aspect = camera->getAspect();
-  if (viewportHeight > 0) {
-    aspect = float(viewportWidth) / float(std::max(1, viewportHeight));
+  if (viewport_height > 0) {
+    aspect = float(viewport_width) / float(std::max(1, viewport_height));
   }
   camera->setPerspective(fov, aspect, near_plane, far_plane);
 }
@@ -113,9 +113,9 @@ void GameStateSerializer::restoreRuntimeFromMetadata(
     }
   }
 
-  if (metadata.contains("localOwnerId")) {
-    runtime.localOwnerId =
-        metadata.value("localOwnerId").toInt(runtime.localOwnerId);
+  if (metadata.contains("local_owner_id")) {
+    runtime.local_owner_id =
+        metadata.value("local_owner_id").toInt(runtime.local_owner_id);
   }
 
   runtime.selectedPlayerId =

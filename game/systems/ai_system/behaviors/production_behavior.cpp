@@ -9,9 +9,9 @@
 namespace Game::Systems::AI {
 
 void ProductionBehavior::execute(const AISnapshot &snapshot, AIContext &context,
-                                 float deltaTime,
+                                 float delta_time,
                                  std::vector<AICommand> &outCommands) {
-  m_productionTimer += deltaTime;
+  m_productionTimer += delta_time;
   if (m_productionTimer < 1.5F) {
     return;
   }

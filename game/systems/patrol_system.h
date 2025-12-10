@@ -9,7 +9,7 @@ public:
   PatrolSystem() = default;
   ~PatrolSystem() override = default;
 
-  void update(Engine::Core::World *world, float deltaTime) override;
+  void update(Engine::Core::World *world, float delta_time) override;
 };
 
 } // namespace Game::Systems
