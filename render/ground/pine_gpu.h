@@ -7,8 +7,8 @@
 namespace Render::GL {
 
 struct PineInstanceGpu {
-  QVector4D posScale;
-  QVector4D colorSway;
+  QVector4D pos_scale;
+  QVector4D color_sway;
   QVector4D rotation;
 };
 

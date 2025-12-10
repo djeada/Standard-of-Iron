@@ -286,9 +286,9 @@ void BiomeRenderer::generateGrassInstances() {
     float const orientation = rand_01(state) * MathConstants::k_two_pi;
 
     GrassInstanceGpu instance;
-    instance.posHeight = QVector4D(world_x, world_y, world_z, height);
-    instance.colorWidth = QVector4D(color.x(), color.y(), color.z(), width);
-    instance.swayParams =
+    instance.pos_height = QVector4D(world_x, world_y, world_z, height);
+    instance.color_width = QVector4D(color.x(), color.y(), color.z(), width);
+    instance.sway_params =
         QVector4D(sway_strength, sway_speed, sway_phase, orientation);
     m_grassInstances.push_back(instance);
     return true;
