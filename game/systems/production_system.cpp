@@ -101,7 +101,7 @@ void ProductionSystem::update(Engine::Core::World *world, float delta_time) {
           sp.player_id = u->owner_id;
           sp.spawn_type =
               Game::Units::spawn_typeFromTroopType(prod->product_type);
-          sp.aiControlled =
+          sp.ai_controlled =
               e->has_component<Engine::Core::AIControlledComponent>();
           sp.nation_id = nation_id;
           auto unit = reg->create(sp.spawn_type, *world, sp);
