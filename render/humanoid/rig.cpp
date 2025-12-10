@@ -1259,11 +1259,11 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
   HumanoidVariant variant;
   get_variant(ctx, seed, variant);
 
-  if (!m_proportionScaleCached) {
-    m_cachedProportionScale = get_proportion_scaling();
-    m_proportionScaleCached = true;
+  if (!m_proportion_scale_cached) {
+    m_cached_proportion_scale = get_proportion_scaling();
+    m_proportion_scale_cached = true;
   }
-  const QVector3D prop_scale = m_cachedProportionScale;
+  const QVector3D prop_scale = m_cached_proportion_scale;
   const float height_scale = prop_scale.y();
   const bool needs_height_scaling = std::abs(height_scale - 1.0F) > 0.001F;
 
@@ -1293,7 +1293,7 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
     return float(state & 0x7FFFFFU) / float(0x7FFFFFU);
   };
 
-  s_renderStats.soldiersTotal += visible_count;
+  s_renderStats.soldiers_total += visible_count;
 
   for (int idx = 0; idx < visible_count; ++idx) {
     int const r = idx / cols;
@@ -1364,7 +1364,7 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
       }
     }
 
-    ++s_renderStats.soldiersRendered;
+    ++s_renderStats.soldiers_rendered;
 
     DrawContext inst_ctx{ctx.resources, ctx.entity, ctx.world, inst_model};
     inst_ctx.selected = ctx.selected;
@@ -1400,7 +1400,7 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
 
         pose = cached.pose;
         usedCachedPose = true;
-        ++s_renderStats.posesCached;
+        ++s_renderStats.poses_cached;
       }
     }
 
@@ -1408,7 +1408,7 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
 
       compute_locomotion_pose(inst_seed, anim.time + phase_offset, anim.is_moving,
                             variation, pose);
-      ++s_renderStats.posesComputed;
+      ++s_renderStats.poses_computed;
 
       CachedPoseEntry &entry = s_poseCache[cacheKey];
       entry.pose = pose;
@@ -1648,7 +1648,7 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
     switch (soldier_lod) {
     case HumanoidLOD::Full:
 
-      ++s_renderStats.lodFull;
+      ++s_renderStats.lod_full;
       draw_common_body(inst_ctx, variant, pose, out);
       draw_facial_hair(inst_ctx, variant, pose, out);
       draw_armor(inst_ctx, variant, pose, anim_ctx, out);
@@ -1657,7 +1657,7 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
 
     case HumanoidLOD::Reduced:
 
-      ++s_renderStats.lodReduced;
+      ++s_renderStats.lod_reduced;
       draw_simplified_body(inst_ctx, variant, pose, out);
       draw_armor(inst_ctx, variant, pose, anim_ctx, out);
       add_attachments(inst_ctx, variant, pose, anim_ctx, out);
@@ -1665,7 +1665,7 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
 
     case HumanoidLOD::Minimal:
 
-      ++s_renderStats.lodMinimal;
+      ++s_renderStats.lod_minimal;
       draw_minimal_body(inst_ctx, variant, pose, out);
       break;
 
