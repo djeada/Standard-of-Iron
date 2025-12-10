@@ -379,13 +379,13 @@ void Renderer::renderWorld(Engine::Core::World *world) {
     return;
   }
 
-  std::lock_guard<std::recursive_mutex> const guard(world->getEntityMutex());
+  std::lock_guard<std::recursive_mutex> const guard(world->get_entity_mutex());
 
   auto &vis = Game::Map::VisibilityService::instance();
   const bool visibility_enabled = vis.isInitialized();
 
   auto renderable_entities =
-      world->getEntitiesWith<Engine::Core::RenderableComponent>();
+      world->get_entities_with<Engine::Core::RenderableComponent>();
 
   const auto &gfxSettings = Render::GraphicsSettings::instance();
   const auto &batch_config = gfxSettings.batching_config();

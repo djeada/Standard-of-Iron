@@ -38,7 +38,7 @@ auto MountedKnight::Create(Engine::Core::World &world,
 
 void MountedKnight::init(const SpawnParams &params) {
 
-  auto *e = m_world->createEntity();
+  auto *e = m_world->create_entity();
   m_id = e->get_id();
 
   const auto nation_id = resolve_nation_id(params);

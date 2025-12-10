@@ -92,25 +92,25 @@ public:
     }
   }
 
-  auto getStats(const std::type_index &eventType) const -> EventStats {
+  auto get_stats(const std::type_index &event_type) const -> EventStats {
     std::lock_guard<std::mutex> const lock(m_mutex);
-    auto it = m_stats.find(eventType);
+    auto it = m_stats.find(event_type);
     if (it != m_stats.end()) {
       return it->second;
     }
     return EventStats{};
   }
 
-  auto getSubscriberCount(const std::type_index &eventType) const -> size_t {
+  auto get_subscriber_count(const std::type_index &event_type) const -> size_t {
     std::lock_guard<std::mutex> const lock(m_mutex);
-    auto it = m_handlers.find(eventType);
+    auto it = m_handlers.find(event_type);
     if (it != m_handlers.end()) {
       return it->second.size();
     }
     return 0;
   }
 
-  void clearAllSubscriptions() {
+  void clear_all_subscriptions() {
     std::lock_guard<std::mutex> const lock(m_mutex);
     m_handlers.clear();
     m_stats.clear();

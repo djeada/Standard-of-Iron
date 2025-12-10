@@ -104,7 +104,7 @@ auto LevelLoader::loadFromAssets(
     }
 
     bool has_barracks = false;
-    for (auto *e : world.getEntitiesWith<Engine::Core::UnitComponent>()) {
+    for (auto *e : world.get_entities_with<Engine::Core::UnitComponent>()) {
       if (auto *u = e->get_component<Engine::Core::UnitComponent>()) {
         if (u->spawn_type == Game::Units::SpawnType::Barracks &&
             owners.isPlayer(u->owner_id)) {

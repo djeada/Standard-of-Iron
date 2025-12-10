@@ -18,7 +18,7 @@ Unit::Unit(Engine::Core::World &world, std::string type)
     : m_world(&world), m_type_string(std::move(type)) {}
 
 auto Unit::entity() const -> Engine::Core::Entity * {
-  return (m_world != nullptr) ? m_world->getEntity(m_id) : nullptr;
+  return (m_world != nullptr) ? m_world->get_entity(m_id) : nullptr;
 }
 
 auto Unit::resolve_nation_id(const SpawnParams &params)

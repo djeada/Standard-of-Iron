@@ -146,22 +146,22 @@ GameEngine::GameEngine(QObject *parent)
 
   std::unique_ptr<Engine::Core::System> arrow_sys =
       std::make_unique<Game::Systems::ArrowSystem>();
-  m_world->addSystem(std::move(arrow_sys));
+  m_world->add_system(std::move(arrow_sys));
 
-  m_world->addSystem(std::make_unique<Game::Systems::MovementSystem>());
-  m_world->addSystem(std::make_unique<Game::Systems::PatrolSystem>());
-  m_world->addSystem(std::make_unique<Game::Systems::CombatSystem>());
-  m_world->addSystem(std::make_unique<Game::Systems::HealingSystem>());
-  m_world->addSystem(std::make_unique<Game::Systems::CaptureSystem>());
-  m_world->addSystem(std::make_unique<Game::Systems::AISystem>());
-  m_world->addSystem(std::make_unique<Game::Systems::ProductionSystem>());
-  m_world->addSystem(std::make_unique<Game::Systems::TerrainAlignmentSystem>());
-  m_world->addSystem(std::make_unique<Game::Systems::CleanupSystem>());
+  m_world->add_system(std::make_unique<Game::Systems::MovementSystem>());
+  m_world->add_system(std::make_unique<Game::Systems::PatrolSystem>());
+  m_world->add_system(std::make_unique<Game::Systems::CombatSystem>());
+  m_world->add_system(std::make_unique<Game::Systems::HealingSystem>());
+  m_world->add_system(std::make_unique<Game::Systems::CaptureSystem>());
+  m_world->add_system(std::make_unique<Game::Systems::AISystem>());
+  m_world->add_system(std::make_unique<Game::Systems::ProductionSystem>());
+  m_world->add_system(std::make_unique<Game::Systems::TerrainAlignmentSystem>());
+  m_world->add_system(std::make_unique<Game::Systems::CleanupSystem>());
 
   {
     std::unique_ptr<Engine::Core::System> sel_sys =
         std::make_unique<Game::Systems::SelectionSystem>();
-    m_world->addSystem(std::move(sel_sys));
+    m_world->add_system(std::move(sel_sys));
   }
 
   m_pickingService = std::make_unique<Game::Systems::PickingService>();
@@ -169,7 +169,7 @@ GameEngine::GameEngine(QObject *parent)
   m_saveLoadService = std::make_unique<Game::Systems::SaveLoadService>();
   m_cameraService = std::make_unique<Game::Systems::CameraService>();
 
-  auto *selection_system = m_world->getSystem<Game::Systems::SelectionSystem>();
+  auto *selection_system = m_world->get_system<Game::Systems::SelectionSystem>();
   m_selectionController = std::make_unique<Game::Systems::SelectionController>(
       m_world.get(), selection_system, m_pickingService.get());
   m_commandController = std::make_unique<App::Controllers::CommandController>(
@@ -245,7 +245,7 @@ GameEngine::GameEngine(QObject *parent)
           &App::Controllers::CommandController::attack_targetSelected,
           [this]() {
             if (auto *sel_sys =
-                    m_world->getSystem<Game::Systems::SelectionSystem>()) {
+                    m_world->get_system<Game::Systems::SelectionSystem>()) {
               const auto &sel = sel_sys->getSelectedUnits();
               if (!sel.empty()) {
                 auto *cam = m_camera.get();
@@ -363,7 +363,7 @@ void GameEngine::on_right_click(qreal sx, qreal sy) {
     return;
   }
   ensure_initialized();
-  auto *selection_system = m_world->getSystem<Game::Systems::SelectionSystem>();
+  auto *selection_system = m_world->get_system<Game::Systems::SelectionSystem>();
   if (selection_system == nullptr) {
     return;
   }
@@ -386,7 +386,7 @@ void GameEngine::on_right_click(qreal sx, qreal sy) {
         m_viewport.height, 0);
 
     if (target_id != 0U) {
-      auto *target_entity = m_world->getEntity(target_id);
+      auto *target_entity = m_world->get_entity(target_id);
       if (target_entity != nullptr) {
         auto *target_unit =
             target_entity->get_component<Engine::Core::UnitComponent>();
@@ -433,7 +433,7 @@ void GameEngine::on_attack_click(qreal sx, qreal sy) {
   auto result = m_commandController->onAttackClick(
       sx, sy, m_viewport.width, m_viewport.height, m_camera.get());
 
-  auto *selection_system = m_world->getSystem<Game::Systems::SelectionSystem>();
+  auto *selection_system = m_world->get_system<Game::Systems::SelectionSystem>();
   if ((selection_system == nullptr) || !m_pickingService || !m_camera ||
       !m_world) {
     return;
@@ -446,7 +446,7 @@ void GameEngine::on_attack_click(qreal sx, qreal sy) {
         m_viewport.height, 0);
 
     if (target_id != 0) {
-      auto *target_entity = m_world->getEntity(target_id);
+      auto *target_entity = m_world->get_entity(target_id);
       if (target_entity != nullptr) {
         auto *target_unit =
             target_entity->get_component<Engine::Core::UnitComponent>();
@@ -636,7 +636,7 @@ auto GameEngine::get_player_stats(int owner_id) -> QVariantMap {
   QVariantMap result;
 
   auto &stats_registry = Game::Systems::GlobalStatsRegistry::instance();
-  const auto *stats = stats_registry.getStats(owner_id);
+  const auto *stats = stats_registry.get_stats(owner_id);
 
   if (stats != nullptr) {
     result["troopsRecruited"] = stats->troops_recruited;
@@ -717,7 +717,7 @@ void GameEngine::update(float dt) {
 
   if (m_selectedUnitsModel != nullptr) {
     auto *selection_system =
-        m_world->getSystem<Game::Systems::SelectionSystem>();
+        m_world->get_system<Game::Systems::SelectionSystem>();
     if ((selection_system != nullptr) &&
         !selection_system->getSelectedUnits().empty()) {
       m_runtime.selectionRefreshCounter++;
@@ -740,7 +740,7 @@ void GameEngine::render(int pixelWidth, int pixelHeight) {
     m_renderer->setViewport(pixelWidth, pixelHeight);
   }
   if (auto *selection_system =
-          m_world->getSystem<Game::Systems::SelectionSystem>()) {
+          m_world->get_system<Game::Systems::SelectionSystem>()) {
     const auto &sel = selection_system->getSelectedUnits();
     std::vector<unsigned int> const ids(sel.begin(), sel.end());
     m_renderer->setSelectedEntities(ids);
@@ -760,7 +760,7 @@ void GameEngine::render(int pixelWidth, int pixelHeight) {
     m_renderer->setLocalOwnerId(m_runtime.localOwnerId);
   }
   m_renderer->renderWorld(m_world.get());
-  if (auto *arrow_system = m_world->getSystem<Game::Systems::ArrowSystem>()) {
+  if (auto *arrow_system = m_world->get_system<Game::Systems::ArrowSystem>()) {
     if (auto *res = m_renderer->resources()) {
       Render::GL::renderArrows(m_renderer.get(), res, *arrow_system);
     }
@@ -801,7 +801,7 @@ auto GameEngine::world_to_screen(const QVector3D &world,
 }
 
 void GameEngine::sync_selection_flags() {
-  auto *selection_system = m_world->getSystem<Game::Systems::SelectionSystem>();
+  auto *selection_system = m_world->get_system<Game::Systems::SelectionSystem>();
   if (!m_world || (selection_system == nullptr)) {
     return;
   }
@@ -956,7 +956,7 @@ auto GameEngine::get_selected_production_state() const -> QVariantMap {
   if (!m_world) {
     return m;
   }
-  auto *selection_system = m_world->getSystem<Game::Systems::SelectionSystem>();
+  auto *selection_system = m_world->get_system<Game::Systems::SelectionSystem>();
   if (selection_system == nullptr) {
     return m;
   }
@@ -991,7 +991,7 @@ auto GameEngine::get_selected_units_command_mode() const -> QString {
   if (!m_world) {
     return "normal";
   }
-  auto *selection_system = m_world->getSystem<Game::Systems::SelectionSystem>();
+  auto *selection_system = m_world->get_system<Game::Systems::SelectionSystem>();
   if (selection_system == nullptr) {
     return "normal";
   }
@@ -1006,7 +1006,7 @@ auto GameEngine::get_selected_units_command_mode() const -> QString {
   int total_units = 0;
 
   for (auto id : sel) {
-    auto *e = m_world->getEntity(id);
+    auto *e = m_world->get_entity(id);
     if (e == nullptr) {
       continue;
     }
@@ -1295,7 +1295,7 @@ void GameEngine::start_skirmish(const QString &map_path,
 
     m_runtime.loading = false;
 
-    if (auto *ai_system = m_world->getSystem<Game::Systems::AISystem>()) {
+    if (auto *ai_system = m_world->get_system<Game::Systems::AISystem>()) {
       ai_system->reinitialize();
     }
 
@@ -1382,7 +1382,7 @@ auto GameEngine::load_from_slot(const QString &slot) -> bool {
   rebuild_registries_after_load();
   rebuild_entity_cache();
 
-  if (auto *ai_system = m_world->getSystem<Game::Systems::AISystem>()) {
+  if (auto *ai_system = m_world->get_system<Game::Systems::AISystem>()) {
     qInfo() << "Reinitializing AI system after loading saved game";
     ai_system->reinitialize();
   }
@@ -1502,7 +1502,7 @@ auto GameEngine::get_unit_info(Engine::Core::EntityID id, QString &name,
   if (!m_world) {
     return false;
   }
-  auto *e = m_world->getEntity(id);
+  auto *e = m_world->get_entity(id);
   if (e == nullptr) {
     return false;
   }
@@ -1594,7 +1594,7 @@ void GameEngine::rebuild_entity_cache() {
   m_entityCache.reset();
 
   auto &owners = Game::Systems::OwnerRegistry::instance();
-  auto entities = m_world->getEntitiesWith<Engine::Core::UnitComponent>();
+  auto entities = m_world->get_entities_with<Engine::Core::UnitComponent>();
   for (auto *e : entities) {
     auto *unit = e->get_component<Engine::Core::UnitComponent>();
     if ((unit == nullptr) || unit->health <= 0) {
@@ -1652,7 +1652,7 @@ void GameEngine::rebuild_registries_after_load() {
   rebuild_building_collisions();
 
   m_level.player_unit_id = 0;
-  auto units = m_world->getEntitiesWith<Engine::Core::UnitComponent>();
+  auto units = m_world->get_entities_with<Engine::Core::UnitComponent>();
   for (auto *entity : units) {
     auto *unit = entity->get_component<Engine::Core::UnitComponent>();
     if (unit == nullptr) {
@@ -1677,7 +1677,7 @@ void GameEngine::rebuild_building_collisions() {
     return;
   }
 
-  auto buildings = m_world->getEntitiesWith<Engine::Core::BuildingComponent>();
+  auto buildings = m_world->get_entities_with<Engine::Core::BuildingComponent>();
   for (auto *entity : buildings) {
     auto *transform = entity->get_component<Engine::Core::TransformComponent>();
     auto *unit = entity->get_component<Engine::Core::UnitComponent>();
@@ -1962,7 +1962,7 @@ auto GameEngine::is_player_in_combat() const -> bool {
     return false;
   }
 
-  auto units = m_world->getEntitiesWith<Engine::Core::UnitComponent>();
+  auto units = m_world->get_entities_with<Engine::Core::UnitComponent>();
   const float combat_check_radius = 15.0F;
 
   for (auto *entity : units) {

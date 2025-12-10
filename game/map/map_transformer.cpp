@@ -190,7 +190,7 @@ auto MapTransformer::applyToWorld(
       }
       auto obj = s_registry->create(s.type, world, sp);
       if (obj) {
-        e = world.getEntity(obj->id());
+        e = world.get_entity(obj->id());
         rt.unit_ids.push_back(obj->id());
       } else {
         qWarning() << "MapTransformer: no factory for spawn type"
