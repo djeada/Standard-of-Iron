@@ -64,20 +64,20 @@ void Barracks::init(const SpawnParams &params) {
   if (!Game::Core::isNeutralOwner(m_u->owner_id)) {
     if (auto *prod = e->addComponent<Engine::Core::ProductionComponent>()) {
       prod->product_type = TroopType::Archer;
-      prod->buildTime = 10.0F;
-      prod->maxUnits = params.maxPopulation;
-      prod->inProgress = false;
-      prod->timeRemaining = 0.0F;
-      prod->producedCount = 0;
-      prod->rallyX = m_t->position.x + 4.0F;
-      prod->rallyZ = m_t->position.z + 2.0F;
-      prod->rallySet = true;
+      prod->build_time = 10.0F;
+      prod->max_units = params.maxPopulation;
+      prod->in_progress = false;
+      prod->time_remaining = 0.0F;
+      prod->produced_count = 0;
+      prod->rally_x = m_t->position.x + 4.0F;
+      prod->rally_z = m_t->position.z + 2.0F;
+      prod->rally_set = true;
 
       const auto profile =
           Game::Systems::TroopProfileService::instance().get_profile(
               nation_id, prod->product_type);
-      prod->buildTime = profile.production.build_time;
-      prod->villagerCost = profile.individuals_per_unit;
+      prod->build_time = profile.production.build_time;
+      prod->villager_cost = profile.individuals_per_unit;
     }
   }
 

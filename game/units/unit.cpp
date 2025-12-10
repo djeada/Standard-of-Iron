@@ -60,12 +60,12 @@ void Unit::moveTo(float x, float z) {
   if (m_mv != nullptr) {
     m_mv->target_x = x;
     m_mv->target_y = z;
-    m_mv->hasTarget = true;
-    m_mv->goalX = x;
-    m_mv->goalY = z;
+    m_mv->has_target = true;
+    m_mv->goal_x = x;
+    m_mv->goal_y = z;
     m_mv->path.clear();
-    m_mv->pathPending = false;
-    m_mv->pendingRequestId = 0;
+    m_mv->path_pending = false;
+    m_mv->pending_request_id = 0;
   }
 
   if (auto *e = entity()) {
@@ -111,9 +111,9 @@ void Unit::setHoldMode(bool enabled) {
 
     auto *mv = e->getComponent<Engine::Core::MovementComponent>();
     if (mv != nullptr) {
-      mv->hasTarget = false;
+      mv->has_target = false;
       mv->path.clear();
-      mv->pathPending = false;
+      mv->path_pending = false;
     }
   } else {
     if (hold_comp != nullptr) {

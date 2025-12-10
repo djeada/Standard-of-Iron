@@ -49,20 +49,20 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
       continue;
     }
 
-    if ((attacker_atk != nullptr) && attacker_atk->inMeleeLock) {
-      auto *lock_target = world->getEntity(attacker_atk->meleeLockTargetId);
+    if ((attacker_atk != nullptr) && attacker_atk->in_melee_lock) {
+      auto *lock_target = world->getEntity(attacker_atk->melee_lock_target_id);
       if ((lock_target == nullptr) ||
           lock_target->hasComponent<Engine::Core::PendingRemovalComponent>()) {
 
-        attacker_atk->inMeleeLock = false;
-        attacker_atk->meleeLockTargetId = 0;
+        attacker_atk->in_melee_lock = false;
+        attacker_atk->melee_lock_target_id = 0;
       } else {
         auto *lock_target_unit =
             lock_target->getComponent<Engine::Core::UnitComponent>();
         if ((lock_target_unit == nullptr) || lock_target_unit->health <= 0) {
 
-          attacker_atk->inMeleeLock = false;
-          attacker_atk->meleeLockTargetId = 0;
+          attacker_atk->in_melee_lock = false;
+          attacker_atk->melee_lock_target_id = 0;
         } else {
 
           auto *att_t = attacker_transform;
@@ -92,9 +92,9 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
       }
     }
 
-    if ((attacker_atk != nullptr) && attacker_atk->inMeleeLock &&
-        attacker_atk->meleeLockTargetId != 0) {
-      auto *lock_target = world->getEntity(attacker_atk->meleeLockTargetId);
+    if ((attacker_atk != nullptr) && attacker_atk->in_melee_lock &&
+        attacker_atk->melee_lock_target_id != 0) {
+      auto *lock_target = world->getEntity(attacker_atk->melee_lock_target_id);
       if ((lock_target != nullptr) &&
           !lock_target->hasComponent<Engine::Core::PendingRemovalComponent>()) {
 
@@ -105,8 +105,8 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
               attacker->addComponent<Engine::Core::AttackTargetComponent>();
         }
         if (attack_target != nullptr) {
-          attack_target->target_id = attacker_atk->meleeLockTargetId;
-          attack_target->shouldChase = false;
+          attack_target->target_id = attacker_atk->melee_lock_target_id;
+          attack_target->should_chase = false;
         }
       }
     }
@@ -121,9 +121,9 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
 
       updateCombatMode(attacker, world, attacker_atk);
 
-      range = attacker_atk->getCurrentRange();
-      damage = attacker_atk->getCurrentDamage();
-      cooldown = attacker_atk->getCurrentCooldown();
+      range = attacker_atk->get_current_range();
+      damage = attacker_atk->get_current_damage();
+      cooldown = attacker_atk->get_current_cooldown();
 
       auto *hold_mode =
           attacker->getComponent<Engine::Core::HoldModeComponent>();
@@ -139,8 +139,8 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
         }
       }
 
-      attacker_atk->timeSinceLast += deltaTime;
-      t_accum = &attacker_atk->timeSinceLast;
+      attacker_atk->time_since_last += deltaTime;
+      t_accum = &attacker_atk->time_since_last;
     } else {
       tmp_accum += deltaTime;
       t_accum = &tmp_accum;
@@ -172,8 +172,8 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
             best_target = target;
 
             bool is_ranged_unit = false;
-            if ((attacker_atk != nullptr) && attacker_atk->canRanged &&
-                attacker_atk->currentMode ==
+            if ((attacker_atk != nullptr) && attacker_atk->can_ranged &&
+                attacker_atk->current_mode ==
                     Engine::Core::AttackComponent::CombatMode::Ranged) {
               is_ranged_unit = true;
             }
@@ -181,16 +181,16 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
             if (is_ranged_unit) {
               auto *movement =
                   attacker->getComponent<Engine::Core::MovementComponent>();
-              if ((movement != nullptr) && movement->hasTarget) {
-                movement->hasTarget = false;
+              if ((movement != nullptr) && movement->has_target) {
+                movement->has_target = false;
                 movement->vx = 0.0F;
                 movement->vz = 0.0F;
                 movement->path.clear();
                 if (attacker_transform != nullptr) {
                   movement->target_x = attacker_transform->position.x;
                   movement->target_y = attacker_transform->position.z;
-                  movement->goalX = attacker_transform->position.x;
-                  movement->goalY = attacker_transform->position.z;
+                  movement->goal_x = attacker_transform->position.x;
+                  movement->goal_y = attacker_transform->position.z;
                 }
               }
             }
@@ -205,11 +205,11 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
                 float const dz = tgt_t->position.z - att_t->position.z;
                 float const yaw =
                     std::atan2(dx, dz) * 180.0F / std::numbers::pi_v<float>;
-                att_t->desiredYaw = yaw;
-                att_t->hasDesiredYaw = true;
+                att_t->desired_yaw = yaw;
+                att_t->has_desired_yaw = true;
               }
             }
-          } else if (attack_target->shouldChase) {
+          } else if (attack_target->should_chase) {
 
             auto *hold_mode =
                 attacker->getComponent<Engine::Core::HoldModeComponent>();
@@ -222,8 +222,8 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
             }
 
             bool is_ranged_unit = false;
-            if ((attacker_atk != nullptr) && attacker_atk->canRanged &&
-                attacker_atk->currentMode ==
+            if ((attacker_atk != nullptr) && attacker_atk->can_ranged &&
+                attacker_atk->current_mode ==
                     Engine::Core::AttackComponent::CombatMode::Ranged) {
               is_ranged_unit = true;
             }
@@ -234,7 +234,7 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
               auto *movement =
                   attacker->getComponent<Engine::Core::MovementComponent>();
               if (movement != nullptr) {
-                movement->hasTarget = false;
+                movement->has_target = false;
                 movement->vx = 0.0F;
                 movement->vz = 0.0F;
                 movement->path.clear();
@@ -243,8 +243,8 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
                 if (attacker_transform_component != nullptr) {
                   movement->target_x = attacker_transform_component->position.x;
                   movement->target_y = attacker_transform_component->position.z;
-                  movement->goalX = attacker_transform_component->position.x;
-                  movement->goalY = attacker_transform_component->position.z;
+                  movement->goal_x = attacker_transform_component->position.x;
+                  movement->goal_y = attacker_transform_component->position.z;
                 }
               }
               best_target = target;
@@ -307,7 +307,7 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
 
                 if (movement != nullptr) {
                   if (hold_position) {
-                    movement->hasTarget = false;
+                    movement->has_target = false;
                     movement->vx = 0.0F;
                     movement->vz = 0.0F;
                     movement->path.clear();
@@ -316,9 +316,9 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
                           attacker_transform_component->position.x;
                       movement->target_y =
                           attacker_transform_component->position.z;
-                      movement->goalX =
+                      movement->goal_x =
                           attacker_transform_component->position.x;
-                      movement->goalY =
+                      movement->goal_y =
                           attacker_transform_component->position.z;
                     }
                   } else {
@@ -332,8 +332,8 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
 
                     float const diff_sq =
                         (planned_target - desired_pos).lengthSquared();
-                    bool need_new_command = !movement->pathPending;
-                    if (movement->hasTarget && diff_sq <= 0.25F * 0.25F) {
+                    bool need_new_command = !movement->path_pending;
+                    if (movement->has_target && diff_sq <= 0.25F * 0.25F) {
                       need_new_command = false;
                     }
 
@@ -412,19 +412,19 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
         auto *new_target =
             attacker->addComponent<Engine::Core::AttackTargetComponent>();
         new_target->target_id = best_target->getId();
-        new_target->shouldChase = false;
+        new_target->should_chase = false;
       } else {
         auto *existing_target =
             attacker->getComponent<Engine::Core::AttackTargetComponent>();
         if (existing_target->target_id != best_target->getId()) {
           existing_target->target_id = best_target->getId();
-          existing_target->shouldChase = false;
+          existing_target->should_chase = false;
         }
       }
 
       bool is_ranged_unit = false;
-      if ((attacker_atk != nullptr) && attacker_atk->canRanged &&
-          attacker_atk->currentMode ==
+      if ((attacker_atk != nullptr) && attacker_atk->can_ranged &&
+          attacker_atk->current_mode ==
               Engine::Core::AttackComponent::CombatMode::Ranged) {
         is_ranged_unit = true;
       }
@@ -432,16 +432,16 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
       if (is_ranged_unit) {
         auto *movement =
             attacker->getComponent<Engine::Core::MovementComponent>();
-        if ((movement != nullptr) && movement->hasTarget) {
-          movement->hasTarget = false;
+        if ((movement != nullptr) && movement->has_target) {
+          movement->has_target = false;
           movement->vx = 0.0F;
           movement->vz = 0.0F;
           movement->path.clear();
           if (attacker_transform != nullptr) {
             movement->target_x = attacker_transform->position.x;
             movement->target_y = attacker_transform->position.z;
-            movement->goalX = attacker_transform->position.x;
-            movement->goalY = attacker_transform->position.z;
+            movement->goal_x = attacker_transform->position.x;
+            movement->goal_y = attacker_transform->position.z;
           }
         }
       }
@@ -454,8 +454,8 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
           float const dz = tgt_t->position.z - att_t->position.z;
           float const yaw =
               std::atan2(dx, dz) * 180.0F / std::numbers::pi_v<float>;
-          att_t->desiredYaw = yaw;
-          att_t->hasDesiredYaw = true;
+          att_t->desired_yaw = yaw;
+          att_t->has_desired_yaw = true;
         }
       }
 
@@ -467,7 +467,7 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
         auto *att_u = attacker->getComponent<Engine::Core::UnitComponent>();
 
         if ((attacker_atk == nullptr) ||
-            attacker_atk->currentMode !=
+            attacker_atk->current_mode !=
                 Engine::Core::AttackComponent::CombatMode::Melee) {
           QVector3D const a_pos(att_t->position.x, att_t->position.y,
                                 att_t->position.z);
@@ -519,17 +519,17 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
       }
 
       if ((attacker_atk != nullptr) &&
-          attacker_atk->currentMode ==
+          attacker_atk->current_mode ==
               Engine::Core::AttackComponent::CombatMode::Melee) {
 
-        attacker_atk->inMeleeLock = true;
-        attacker_atk->meleeLockTargetId = best_target->getId();
+        attacker_atk->in_melee_lock = true;
+        attacker_atk->melee_lock_target_id = best_target->getId();
 
         auto *target_atk =
             best_target->getComponent<Engine::Core::AttackComponent>();
         if (target_atk != nullptr) {
-          target_atk->inMeleeLock = true;
-          target_atk->meleeLockTargetId = attacker->getId();
+          target_atk->in_melee_lock = true;
+          target_atk->melee_lock_target_id = attacker->getId();
         }
 
         auto *att_t =
@@ -613,10 +613,10 @@ auto CombatSystem::isInRange(Engine::Core::Entity *attacker,
 
   auto *attacker_atk = attacker->getComponent<Engine::Core::AttackComponent>();
   if ((attacker_atk != nullptr) &&
-      attacker_atk->currentMode ==
+      attacker_atk->current_mode ==
           Engine::Core::AttackComponent::CombatMode::Melee) {
     float const height_diff = std::abs(dy);
-    if (height_diff > attacker_atk->max_heightDifference) {
+    if (height_diff > attacker_atk->max_height_difference) {
       return false;
     }
   }
@@ -661,20 +661,20 @@ void CombatSystem::dealDamage(Engine::Core::World *world,
                                       killer_owner_id));
 
       auto *target_atk = target->getComponent<Engine::Core::AttackComponent>();
-      if ((target_atk != nullptr) && target_atk->inMeleeLock &&
-          target_atk->meleeLockTargetId != 0) {
+      if ((target_atk != nullptr) && target_atk->in_melee_lock &&
+          target_atk->melee_lock_target_id != 0) {
 
         if (world != nullptr) {
-          auto *lock_partner = world->getEntity(target_atk->meleeLockTargetId);
+          auto *lock_partner = world->getEntity(target_atk->melee_lock_target_id);
           if ((lock_partner != nullptr) &&
               !lock_partner
                    ->hasComponent<Engine::Core::PendingRemovalComponent>()) {
             auto *partner_atk =
                 lock_partner->getComponent<Engine::Core::AttackComponent>();
             if ((partner_atk != nullptr) &&
-                partner_atk->meleeLockTargetId == target->getId()) {
-              partner_atk->inMeleeLock = false;
-              partner_atk->meleeLockTargetId = 0;
+                partner_atk->melee_lock_target_id == target->getId()) {
+              partner_atk->in_melee_lock = false;
+              partner_atk->melee_lock_target_id = 0;
             }
           }
         }
@@ -691,11 +691,11 @@ void CombatSystem::dealDamage(Engine::Core::World *world,
 
       if (auto *movement =
               target->getComponent<Engine::Core::MovementComponent>()) {
-        movement->hasTarget = false;
+        movement->has_target = false;
         movement->vx = 0.0F;
         movement->vz = 0.0F;
         movement->path.clear();
-        movement->pathPending = false;
+        movement->path_pending = false;
       }
 
       target->addComponent<Engine::Core::PendingRemovalComponent>();
@@ -710,9 +710,9 @@ void CombatSystem::updateCombatMode(
     return;
   }
 
-  if (attack_comp->preferredMode !=
+  if (attack_comp->preferred_mode !=
       Engine::Core::AttackComponent::CombatMode::Auto) {
-    attack_comp->currentMode = attack_comp->preferredMode;
+    attack_comp->current_mode = attack_comp->preferred_mode;
     return;
   }
 
@@ -769,11 +769,11 @@ void CombatSystem::updateCombatMode(
   }
 
   if (closest_enemy_dist_sq == std::numeric_limits<float>::max()) {
-    if (attack_comp->canRanged) {
-      attack_comp->currentMode =
+    if (attack_comp->can_ranged) {
+      attack_comp->current_mode =
           Engine::Core::AttackComponent::CombatMode::Ranged;
     } else {
-      attack_comp->currentMode =
+      attack_comp->current_mode =
           Engine::Core::AttackComponent::CombatMode::Melee;
     }
     return;
@@ -782,19 +782,19 @@ void CombatSystem::updateCombatMode(
   float const closest_dist = std::sqrt(closest_enemy_dist_sq);
 
   bool const in_melee_range =
-      attack_comp->isInMeleeRange(closest_dist, closest_height_diff);
-  bool const in_ranged_range = attack_comp->isInRangedRange(closest_dist);
+      attack_comp->is_in_melee_range(closest_dist, closest_height_diff);
+  bool const in_ranged_range = attack_comp->is_in_ranged_range(closest_dist);
 
-  if (in_melee_range && attack_comp->canMelee) {
-    attack_comp->currentMode = Engine::Core::AttackComponent::CombatMode::Melee;
-  } else if (in_ranged_range && attack_comp->canRanged) {
-    attack_comp->currentMode =
+  if (in_melee_range && attack_comp->can_melee) {
+    attack_comp->current_mode = Engine::Core::AttackComponent::CombatMode::Melee;
+  } else if (in_ranged_range && attack_comp->can_ranged) {
+    attack_comp->current_mode =
         Engine::Core::AttackComponent::CombatMode::Ranged;
-  } else if (attack_comp->canRanged) {
-    attack_comp->currentMode =
+  } else if (attack_comp->can_ranged) {
+    attack_comp->current_mode =
         Engine::Core::AttackComponent::CombatMode::Ranged;
   } else {
-    attack_comp->currentMode = Engine::Core::AttackComponent::CombatMode::Melee;
+    attack_comp->current_mode = Engine::Core::AttackComponent::CombatMode::Melee;
   }
 }
 
@@ -828,12 +828,12 @@ void CombatSystem::processAutoEngagement(Engine::Core::World *world,
     }
 
     auto *attack_comp = unit->getComponent<Engine::Core::AttackComponent>();
-    if ((attack_comp == nullptr) || !attack_comp->canMelee) {
+    if ((attack_comp == nullptr) || !attack_comp->can_melee) {
       continue;
     }
 
-    if (attack_comp->canRanged &&
-        attack_comp->preferredMode !=
+    if (attack_comp->can_ranged &&
+        attack_comp->preferred_mode !=
             Engine::Core::AttackComponent::CombatMode::Melee) {
       continue;
     }
@@ -860,7 +860,7 @@ void CombatSystem::processAutoEngagement(Engine::Core::World *world,
       }
       if (attack_target != nullptr) {
         attack_target->target_id = nearest_enemy->getId();
-        attack_target->shouldChase = true;
+        attack_target->should_chase = true;
 
         m_engagementCooldowns[unit->getId()] = ENGAGEMENT_COOLDOWN;
       }
@@ -882,12 +882,12 @@ auto CombatSystem::isUnitIdle(Engine::Core::Entity *unit) -> bool {
   }
 
   auto *movement = unit->getComponent<Engine::Core::MovementComponent>();
-  if ((movement != nullptr) && movement->hasTarget) {
+  if ((movement != nullptr) && movement->has_target) {
     return false;
   }
 
   auto *attack_comp = unit->getComponent<Engine::Core::AttackComponent>();
-  if ((attack_comp != nullptr) && attack_comp->inMeleeLock) {
+  if ((attack_comp != nullptr) && attack_comp->in_melee_lock) {
     return false;
   }
 

@@ -27,7 +27,7 @@ void GatherBehavior::execute(const AISnapshot &snapshot, AIContext &context,
     return;
   }
 
-  QVector3D const rally_point(context.rallyX, 0.0F, context.rallyZ);
+  QVector3D const rally_point(context.rally_x, 0.0F, context.rally_z);
 
   std::vector<const EntitySnapshot *> units_to_gather;
   units_to_gather.reserve(snapshot.friendlies.size());
@@ -133,7 +133,7 @@ auto GatherBehavior::should_execute(const AISnapshot &snapshot,
 
   if (context.state == AIState::Defending) {
 
-    QVector3D const rally_point(context.rallyX, 0.0F, context.rallyZ);
+    QVector3D const rally_point(context.rally_x, 0.0F, context.rally_z);
     for (const auto &entity : snapshot.friendlies) {
       if (entity.isBuilding) {
         continue;

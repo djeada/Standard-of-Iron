@@ -143,7 +143,7 @@ static auto nation_loader_logger() -> QLoggingCategory & { return logger(); }
                             base_class.production.is_melee);
   const QJsonObject production = ensure_object(obj.value("production"));
   entry.cost = production.value("cost").toInt(base_class.production.cost);
-  entry.buildTime =
+  entry.build_time =
       static_cast<float>(production.value("build_time")
                              .toDouble(base_class.production.build_time));
   entry.priority =
