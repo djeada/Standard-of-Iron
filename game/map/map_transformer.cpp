@@ -175,8 +175,8 @@ auto MapTransformer::applyToWorld(
       sp.position = QVector3D(world_x, 0.0F, world_z);
       sp.player_id = effective_player_id;
       sp.spawn_type = s.type;
-      sp.aiControlled = !owner_registry.isPlayer(effective_player_id);
-      sp.maxPopulation = s.maxPopulation;
+      sp.ai_controlled = !owner_registry.isPlayer(effective_player_id);
+      sp.max_population = s.max_population;
 
       if (s.nation.has_value()) {
         sp.nation_id = s.nation.value();

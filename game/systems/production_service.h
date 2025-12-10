@@ -23,16 +23,16 @@ enum class ProductionResult {
 
 struct ProductionState {
   bool has_barracks = false;
-  bool inProgress = false;
+  bool in_progress = false;
   NationID nation_id = NationID::RomanRepublic;
   Game::Units::TroopType product_type = Game::Units::TroopType::Archer;
-  float timeRemaining = 0.0F;
-  float buildTime = 0.0F;
-  int producedCount = 0;
-  int maxUnits = 0;
-  int villagerCost = 1;
-  int queueSize = 0;
-  std::vector<Game::Units::TroopType> productionQueue;
+  float time_remaining = 0.0F;
+  float build_time = 0.0F;
+  int produced_count = 0;
+  int max_units = 0;
+  int villager_cost = 1;
+  int queue_size = 0;
+  std::vector<Game::Units::TroopType> production_queue;
 };
 
 class ProductionService {
