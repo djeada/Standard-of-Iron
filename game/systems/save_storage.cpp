@@ -91,7 +91,7 @@ SaveStorage::SaveStorage(QString database_path)
       m_connection_name(buildConnectionName(this)) {}
 
 SaveStorage::~SaveStorage() {
-  if (m_database.is_valid()) {
+  if (m_database.isValid()) {
     if (m_database.isOpen()) {
       m_database.close();
     }
@@ -102,7 +102,7 @@ SaveStorage::~SaveStorage() {
 }
 
 auto SaveStorage::initialize(QString *out_error) -> bool {
-  if (m_initialized && m_database.is_valid() && m_database.isOpen()) {
+  if (m_initialized && m_database.isValid() && m_database.isOpen()) {
     return true;
   }
   if (!open(out_error)) {
@@ -427,11 +427,11 @@ auto SaveStorage::deleteSlot(const QString &slotName,
 }
 
 auto SaveStorage::open(QString *out_error) const -> bool {
-  if (m_database.is_valid() && m_database.isOpen()) {
+  if (m_database.isValid() && m_database.isOpen()) {
     return true;
   }
 
-  if (!m_database.is_valid()) {
+  if (!m_database.isValid()) {
     m_database = QSqlDatabase::addDatabase(k_driver_name, m_connection_name);
     m_database.setDatabaseName(m_database_path);
     m_database.setConnectOptions(QStringLiteral("QSQLITE_BUSY_TIMEOUT=5000"));
