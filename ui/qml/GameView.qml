@@ -18,15 +18,15 @@ Item {
 
     function setPaused(paused) {
         isPaused = paused;
-        if (typeof game !== 'undefined' && game.setPaused)
-            game.setPaused(paused);
+        if (typeof game !== 'undefined' && game.set_paused)
+            game.set_paused(paused);
 
     }
 
     function setGameSpeed(speed) {
         gameSpeed = speed;
-        if (typeof game !== 'undefined' && game.setGameSpeed)
-            game.setGameSpeed(speed);
+        if (typeof game !== 'undefined' && game.set_game_speed)
+            game.set_game_speed(speed);
 
     }
 
@@ -71,80 +71,80 @@ Item {
             }
             break;
         case Qt.Key_S:
-            if (game.hasUnitsSelected) {
-                if (game.onStopCommand)
-                    game.onStopCommand();
+            if (game.has_units_selected) {
+                if (game.on_stop_command)
+                    game.on_stop_command();
 
                 event.accepted = true;
             }
             break;
         case Qt.Key_A:
-            if (game.hasUnitsSelected) {
-                game.cursorMode = "attack";
+            if (game.has_units_selected) {
+                game.cursor_mode = "attack";
                 event.accepted = true;
             }
             break;
         case Qt.Key_M:
-            if (game.hasUnitsSelected) {
-                game.cursorMode = "normal";
+            if (game.has_units_selected) {
+                game.cursor_mode = "normal";
                 event.accepted = true;
             }
             break;
         case Qt.Key_Up:
             beginPanKey(event);
-            game.cameraMove(0, inputStep);
+            game.camera_move(0, inputStep);
             ensurePanTimerRunning();
             event.accepted = true;
             break;
         case Qt.Key_Down:
             beginPanKey(event);
-            game.cameraMove(0, -inputStep);
+            game.camera_move(0, -inputStep);
             ensurePanTimerRunning();
             event.accepted = true;
             break;
         case Qt.Key_Left:
             beginPanKey(event);
-            game.cameraMove(-inputStep, 0);
+            game.camera_move(-inputStep, 0);
             ensurePanTimerRunning();
             event.accepted = true;
             break;
         case Qt.Key_Right:
             beginPanKey(event);
-            game.cameraMove(inputStep, 0);
+            game.camera_move(inputStep, 0);
             ensurePanTimerRunning();
             event.accepted = true;
             break;
         case Qt.Key_Q:
-            game.cameraYaw(-yawStep);
+            game.camera_yaw(-yawStep);
             event.accepted = true;
             break;
         case Qt.Key_E:
-            game.cameraYaw(yawStep);
+            game.camera_yaw(yawStep);
             event.accepted = true;
             break;
         case Qt.Key_R:
-            game.cameraOrbitDirection(1, shiftHeld);
+            game.camera_orbitDirection(1, shiftHeld);
             event.accepted = true;
             break;
         case Qt.Key_F:
-            game.cameraOrbitDirection(-1, shiftHeld);
+            game.camera_orbitDirection(-1, shiftHeld);
             event.accepted = true;
             break;
         case Qt.Key_X:
-            if (game.selectAllTroops)
-                game.selectAllTroops();
+            if (game.select_all_troops)
+                game.select_all_troops();
 
             event.accepted = true;
             break;
         case Qt.Key_P:
-            if (game.hasUnitsSelected) {
-                game.cursorMode = "patrol";
+            if (game.has_units_selected) {
+                game.cursor_mode = "patrol";
                 event.accepted = true;
             }
             break;
         case Qt.Key_H:
-            if (game.hasUnitsSelected && game.onHoldCommand) {
-                game.onHoldCommand();
+            if (game.has_units_selected && game.on_hold_command) {
+                game.on_hold_command();
                 event.accepted = true;
             }
             break;
@@ -210,7 +210,7 @@ Item {
                 dx += step;
 
             if (dx !== 0 || dz !== 0)
-                game.cameraMove(dx, dz);
+                game.camera_move(dx, dz);
 
         }
     }
@@ -225,15 +225,15 @@ Item {
         engine: game
         focus: false
         Component.onCompleted: {
-            if (typeof game !== 'undefined' && game.cursorMode)
-                gameView.cursorMode = game.cursorMode;
+            if (typeof game !== 'undefined' && game.cursor_mode)
+                gameView.cursorMode = game.cursor_mode;
 
         }
 
         Connections {
             function onCursorModeChanged() {
-                if (typeof game !== 'undefined' && game.cursorMode)
-                    gameView.cursorMode = game.cursorMode;
+                if (typeof game !== 'undefined' && game.cursor_mode)
+                    gameView.cursorMode = game.cursor_mode;
 
             }
 
@@ -255,13 +255,13 @@ Item {
             cursorShape: (gameView.cursorMode === "normal") ? Qt.ArrowCursor : Qt.BlankCursor
             enabled: gameView.visible
             onEntered: {
-                if (typeof game !== 'undefined' && game.setHoverAtScreen)
-                    game.setHoverAtScreen(0, 0);
+                if (typeof game !== 'undefined' && game.set_hover_at_screen)
+                    game.set_hover_at_screen(0, 0);
 
             }
             onExited: {
-                if (typeof game !== 'undefined' && game.setHoverAtScreen)
-                    game.setHoverAtScreen(-1, -1);
+                if (typeof game !== 'undefined' && game.set_hover_at_screen)
+                    game.set_hover_at_screen(-1, -1);
 
             }
             onPositionChanged: function(mouse) {
@@ -273,30 +273,30 @@ Item {
                     selectionBox.width = Math.abs(endX - startX);
                     selectionBox.height = Math.abs(endY - startY);
                 } else {
-                    if (typeof game !== 'undefined' && game.setHoverAtScreen)
-                        game.setHoverAtScreen(mouse.x, mouse.y);
+                    if (typeof game !== 'undefined' && game.set_hover_at_screen)
+                        game.set_hover_at_screen(mouse.x, mouse.y);
 
                 }
             }
             onWheel: function(w) {
                 var dy = (w.angleDelta ? w.angleDelta.y / 120 : w.delta / 120);
-                if (dy !== 0 && typeof game !== 'undefined' && game.cameraZoom)
-                    game.cameraZoom(dy * 0.8);
+                if (dy !== 0 && typeof game !== 'undefined' && game.camera_zoom)
+                    game.camera_zoom(dy * 0.8);
 
                 w.accepted = true;
             }
             onPressed: function(mouse) {
                 if (mouse.button === Qt.LeftButton) {
                     if (gameView.setRallyMode) {
-                        if (typeof game !== 'undefined' && game.setRallyAtScreen)
-                            game.setRallyAtScreen(mouse.x, mouse.y);
+                        if (typeof game !== 'undefined' && game.set_rally_at_screen)
+                            game.set_rally_at_screen(mouse.x, mouse.y);
 
                         gameView.setRallyMode = false;
                         return ;
                     }
                     if (gameView.cursorMode === "attack") {
-                        if (typeof game !== 'undefined' && game.onAttackClick)
-                            game.onAttackClick(mouse.x, mouse.y);
+                        if (typeof game !== 'undefined' && game.on_attack_click)
+                            game.on_attack_click(mouse.x, mouse.y);
 
                         return ;
                     }
@@ -304,8 +304,8 @@ Item {
                         return ;
 
                     if (gameView.cursorMode === "patrol") {
-                        if (typeof game !== 'undefined' && game.onPatrolClick)
-                            game.onPatrolClick(mouse.x, mouse.y);
+                        if (typeof game !== 'undefined' && game.on_patrol_click)
+                            game.on_patrol_click(mouse.x, mouse.y);
 
                         return ;
                     }
@@ -323,8 +323,8 @@ Item {
                     if (gameView.setRallyMode)
                         gameView.setRallyMode = false;
 
-                    if (typeof game !== 'undefined' && game.onRightClick)
-                        game.onRightClick(mouse.x, mouse.y);
+                    if (typeof game !== 'undefined' && game.on_right_click)
+                        game.on_right_click(mouse.x, mouse.y);
 
                 }
             }
@@ -334,13 +334,13 @@ Item {
                     selectionBox.visible = false;
                     if (selectionBox.width > 5 && selectionBox.height > 5) {
                         areaSelected(selectionBox.x, selectionBox.y, selectionBox.x + selectionBox.width, selectionBox.y + selectionBox.height);
-                        if (typeof game !== 'undefined' && game.onAreaSelected)
-                            game.onAreaSelected(selectionBox.x, selectionBox.y, selectionBox.x + selectionBox.width, selectionBox.y + selectionBox.height, false);
+                        if (typeof game !== 'undefined' && game.on_area_selected)
+                            game.on_area_selected(selectionBox.x, selectionBox.y, selectionBox.x + selectionBox.width, selectionBox.y + selectionBox.height, false);
 
                     } else {
                         mapClicked(mouse.x, mouse.y);
-                        if (typeof game !== 'undefined' && game.onClickSelect)
-                            game.onClickSelect(mouse.x, mouse.y, false);
+                        if (typeof game !== 'undefined' && game.on_click_select)
+                            game.on_click_select(mouse.x, mouse.y, false);
 
                     }
                 }
@@ -369,8 +369,8 @@ Item {
         width: 32
         height: 32
         z: 999999
-        x: (typeof game !== 'undefined' && game.globalCursorX) ? game.globalCursorX - 16 : 0
-        y: (typeof game !== 'undefined' && game.globalCursorY) ? game.globalCursorY - 16 : 0
+        x: (typeof game !== 'undefined' && game.global_cursor_x) ? game.global_cursor_x - 16 : 0
+        y: (typeof game !== 'undefined' && game.global_cursor_y) ? game.global_cursor_y - 16 : 0
 
         Item {
             id: attackCursorContainer

@@ -49,16 +49,16 @@ ApplicationWindow {
         onCommandModeChanged: function(mode) {
             console.log("Main: Command mode changed to:", mode);
             if (typeof game !== 'undefined') {
-                console.log("Main: Setting game.cursorMode property to", mode);
-                game.cursorMode = mode;
+                console.log("Main: Setting game.cursor_mode property to", mode);
+                game.cursor_mode = mode;
             } else {
                 console.log("Main: game is undefined");
             }
             gameViewItem.forceActiveFocus();
         }
         onRecruit: function(unitType) {
-            if (typeof game !== 'undefined' && game.recruitNearSelected)
-                game.recruitNearSelected(unitType);
+            if (typeof game !== 'undefined' && game.recruit_near_selected)
+                game.recruit_near_selected(unitType);
 
             gameViewItem.forceActiveFocus();
         }
@@ -325,28 +325,28 @@ ApplicationWindow {
             onPositionChanged: function(mouse) {
                 edgeScrollOverlay.xPos = mouse.x;
                 edgeScrollOverlay.yPos = mouse.y;
-                if (typeof game !== 'undefined' && game.setHoverAtScreen) {
+                if (typeof game !== 'undefined' && game.set_hover_at_screen) {
                     if (!edgeScrollOverlay.inHudZone(mouse.x, mouse.y))
-                        game.setHoverAtScreen(mouse.x, mouse.y);
+                        game.set_hover_at_screen(mouse.x, mouse.y);
                     else
-                        game.setHoverAtScreen(-1, -1);
+                        game.set_hover_at_screen(-1, -1);
                 }
             }
             onEntered: function() {
                 edgeScrollTimer.start();
-                if (typeof game !== 'undefined' && game.setHoverAtScreen) {
+                if (typeof game !== 'undefined' && game.set_hover_at_screen) {
                     if (!edgeScrollOverlay.inHudZone(edgeScrollOverlay.xPos, edgeScrollOverlay.yPos))
-                        game.setHoverAtScreen(edgeScrollOverlay.xPos, edgeScrollOverlay.yPos);
+                        game.set_hover_at_screen(edgeScrollOverlay.xPos, edgeScrollOverlay.yPos);
                     else
-                        game.setHoverAtScreen(-1, -1);
+                        game.set_hover_at_screen(-1, -1);
                 }
             }
             onExited: function() {
                 edgeScrollTimer.stop();
                 edgeScrollOverlay.xPos = -1;
                 edgeScrollOverlay.yPos = -1;
-                if (typeof game !== 'undefined' && game.setHoverAtScreen)
-                    game.setHoverAtScreen(-1, -1);
+                if (typeof game !== 'undefined' && game.set_hover_at_screen)
+                    game.set_hover_at_screen(-1, -1);
 
             }
         }
@@ -368,13 +368,13 @@ ApplicationWindow {
                     return ;
 
                 if (mainWindow.edgeScrollDisabled) {
-                    if (game.setHoverAtScreen)
-                        game.setHoverAtScreen(-1, -1);
+                    if (game.set_hover_at_screen)
+                        game.set_hover_at_screen(-1, -1);
 
                     return ;
                 }
-                if (game.setHoverAtScreen)
-                    game.setHoverAtScreen(x, y);
+                if (game.set_hover_at_screen)
+                    game.set_hover_at_screen(x, y);
 
                 const th = edgeScrollOverlay.horzThreshold;
                 const tv = edgeScrollOverlay.vertThreshold;
@@ -403,7 +403,7 @@ ApplicationWindow {
                 const dx = rawDx / edgeScrollOverlay.horzMaxSpeed;
                 const dz = rawDz / edgeScrollOverlay.vertMaxSpeed;
                 if (dx !== 0 || dz !== 0)
-                    game.cameraMove(dx, dz);
+                    game.camera_move(dx, dz);
 
             }
         }
@@ -420,7 +420,7 @@ ApplicationWindow {
         standardButtons: Dialog.Ok
         onAccepted: {
             if (game)
-                game.clearError();
+                game.clear_error();
 
         }
 
@@ -433,7 +433,7 @@ ApplicationWindow {
 
                 anchors.centerIn: parent
                 width: parent.width - 40
-                text: game ? game.lastError : ""
+                text: game ? game.last_error : ""
                 color: "#ffcccc"
                 wrapMode: Text.WordWrap
                 font.pixelSize: 14
@@ -445,7 +445,7 @@ ApplicationWindow {
 
     Connections {
         function onLastErrorChanged() {
-            if (game.lastError !== "")
+            if (game.last_error !== "")
                 errorDialog.open();
 
         }

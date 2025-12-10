@@ -4,7 +4,7 @@ import QtQuick.Controls 2.15
 Rectangle {
     id: summaryOverlay
 
-    property bool isVictory: (typeof game !== 'undefined' && game.victoryState === "victory")
+    property bool isVictory: (typeof game !== 'undefined' && game.victory_state === "victory")
     property var onClose: null
     property var onReturnToMainMenu: null
 
@@ -31,7 +31,7 @@ Rectangle {
         if (typeof game === 'undefined')
             return ;
 
-        var owners = game.ownerInfo;
+        var owners = game.owner_info;
         var localOwnerId = -1;
         var localTeamId = -1;
         var winningTeamId = -1;
@@ -57,7 +57,7 @@ Rectangle {
         for (var j = 0; j < owners.length; j++) {
             var owner = owners[j];
             if (owner.type === "Player" || owner.type === "AI") {
-                var stats = game.getPlayerStats(owner.id);
+                var stats = game.get_player_stats(owner.id);
                 var isLocalPlayer = (owner.id === localOwnerId);
                 var isWinner = (owner.team_id === winningTeamId);
                 var bannerColor = getBannerColor(owner.id, isLocalPlayer, owner.type === "AI", aiColorIndex);

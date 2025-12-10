@@ -39,7 +39,7 @@ auto SelectedUnitsModel::data(const QModelIndex &index,
   if (role == UnitIdRole) {
     return QVariant::fromValue<int>(static_cast<int>(id));
   }
-  if (!m_engine->getUnitInfo(id, name, hp, max_hp, is_b, alive, nation)) {
+  if (!m_engine->get_unit_info(id, name, hp, max_hp, is_b, alive, nation)) {
     return {};
   }
   if (role == NameRole) {
@@ -76,7 +76,7 @@ void SelectedUnitsModel::refresh() {
     return;
   }
   std::vector<Engine::Core::EntityID> ids;
-  m_engine->getSelectedUnitIds(ids);
+  m_engine->get_selected_unit_ids(ids);
 
   if (ids.size() == m_ids.size() &&
       std::equal(ids.begin(), ids.end(), m_ids.begin())) {
@@ -99,7 +99,7 @@ void SelectedUnitsModel::refresh() {
     int max_hp = 0;
     bool is_b = false;
     bool alive = false;
-    if (!m_engine->getUnitInfo(id, nm, hp, max_hp, is_b, alive, nation)) {
+    if (!m_engine->get_unit_info(id, nm, hp, max_hp, is_b, alive, nation)) {
       continue;
     }
     if (is_b) {
