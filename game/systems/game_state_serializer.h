@@ -29,7 +29,7 @@ struct LevelSnapshot {
 struct RuntimeSnapshot {
   bool paused = false;
   float timeScale = 1.0F;
-  int localOwnerId = 1;
+  int local_owner_id = 1;
   QString victoryState = "";
   int cursorMode = 0;
   int selectedPlayerId = 1;
@@ -45,7 +45,7 @@ public:
 
   static void restoreCameraFromMetadata(const QJsonObject &metadata,
                                         Render::GL::Camera *camera,
-                                        int viewportWidth, int viewportHeight);
+                                        int viewport_width, int viewport_height);
 
   static void restoreRuntimeFromMetadata(const QJsonObject &metadata,
                                          RuntimeSnapshot &runtime);

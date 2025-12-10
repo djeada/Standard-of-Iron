@@ -62,9 +62,9 @@ void World::addSystem(std::unique_ptr<System> system) {
   m_systems.push_back(std::move(system));
 }
 
-void World::update(float deltaTime) {
+void World::update(float delta_time) {
   for (auto &system : m_systems) {
-    system->update(this, deltaTime);
+    system->update(this, delta_time);
   }
 }
 

@@ -76,7 +76,7 @@ void Unit::moveTo(float x, float z) {
   }
 }
 
-auto Unit::isAlive() const -> bool {
+auto Unit::is_alive() const -> bool {
   if (auto *e = entity()) {
     if (auto *u = e->getComponent<Engine::Core::UnitComponent>()) {
       return u->health > 0;

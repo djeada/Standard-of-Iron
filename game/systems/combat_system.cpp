@@ -19,12 +19,12 @@
 
 namespace Game::Systems {
 
-void CombatSystem::update(Engine::Core::World *world, float deltaTime) {
-  processAttacks(world, deltaTime);
-  processAutoEngagement(world, deltaTime);
+void CombatSystem::update(Engine::Core::World *world, float delta_time) {
+  processAttacks(world, delta_time);
+  processAutoEngagement(world, delta_time);
 }
 
-void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
+void CombatSystem::processAttacks(Engine::Core::World *world, float delta_time) {
   auto units = world->getEntitiesWith<Engine::Core::UnitComponent>();
 
   auto *arrow_sys = world->getSystem<ArrowSystem>();
@@ -78,7 +78,7 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
 
             if (dist > max_melee_separation) {
               float const pull_amount =
-                  (dist - ideal_melee_distance) * 0.3F * deltaTime * 5.0F;
+                  (dist - ideal_melee_distance) * 0.3F * delta_time * 5.0F;
 
               if (dist > 0.001F) {
                 QVector3D const direction(dx / dist, 0.0F, dz / dist);
@@ -139,10 +139,10 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
         }
       }
 
-      attacker_atk->time_since_last += deltaTime;
+      attacker_atk->time_since_last += delta_time;
       t_accum = &attacker_atk->time_since_last;
     } else {
-      tmp_accum += deltaTime;
+      tmp_accum += delta_time;
       t_accum = &tmp_accum;
     }
 
@@ -168,7 +168,7 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
         if ((target_unit != nullptr) && target_unit->health > 0 &&
             target_unit->owner_id != attacker_unit->owner_id && !is_ally) {
 
-          if (isInRange(attacker, target, range)) {
+          if (is_in_range(attacker, target, range)) {
             best_target = target;
 
             bool is_ranged_unit = false;
@@ -214,7 +214,7 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
             auto *hold_mode =
                 attacker->getComponent<Engine::Core::HoldModeComponent>();
             if ((hold_mode != nullptr) && hold_mode->active) {
-              if (!isInRange(attacker, target, range)) {
+              if (!is_in_range(attacker, target, range)) {
                 attacker
                     ->removeComponent<Engine::Core::AttackTargetComponent>();
               }
@@ -228,7 +228,7 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
               is_ranged_unit = true;
             }
 
-            bool const currently_in_range = isInRange(attacker, target, range);
+            bool const currently_in_range = is_in_range(attacker, target, range);
 
             if (is_ranged_unit && currently_in_range) {
               auto *movement =
@@ -352,7 +352,7 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
                 }
               }
 
-              if (isInRange(attacker, target, range)) {
+              if (is_in_range(attacker, target, range)) {
                 best_target = target;
               }
             }
@@ -397,7 +397,7 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
           continue;
         }
 
-        if (isInRange(attacker, target, range)) {
+        if (is_in_range(attacker, target, range)) {
           best_target = target;
           break;
         }
@@ -572,7 +572,7 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float deltaTime) {
   }
 }
 
-auto CombatSystem::isInRange(Engine::Core::Entity *attacker,
+auto CombatSystem::is_in_range(Engine::Core::Entity *attacker,
                              Engine::Core::Entity *target,
                              float range) -> bool {
   auto *attacker_transform =
@@ -799,12 +799,12 @@ void CombatSystem::updateCombatMode(
 }
 
 void CombatSystem::processAutoEngagement(Engine::Core::World *world,
-                                         float deltaTime) {
+                                         float delta_time) {
   auto units = world->getEntitiesWith<Engine::Core::UnitComponent>();
 
   for (auto it = m_engagementCooldowns.begin();
        it != m_engagementCooldowns.end();) {
-    it->second -= deltaTime;
+    it->second -= delta_time;
     if (it->second <= 0.0F) {
       it = m_engagementCooldowns.erase(it);
     } else {

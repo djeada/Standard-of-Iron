@@ -8,12 +8,12 @@
 
 namespace Game::Systems {
 
-void HealingSystem::update(Engine::Core::World *world, float deltaTime) {
-  processHealing(world, deltaTime);
+void HealingSystem::update(Engine::Core::World *world, float delta_time) {
+  processHealing(world, delta_time);
 }
 
 void HealingSystem::processHealing(Engine::Core::World *world,
-                                   float deltaTime) {
+                                   float delta_time) {
   auto healers = world->getEntitiesWith<Engine::Core::HealerComponent>();
   auto *arrow_system = world->getSystem<ArrowSystem>();
 
@@ -36,7 +36,7 @@ void HealingSystem::processHealing(Engine::Core::World *world,
       continue;
     }
 
-    healer_comp->timeSinceLastHeal += deltaTime;
+    healer_comp->timeSinceLastHeal += delta_time;
 
     if (healer_comp->timeSinceLastHeal < healer_comp->healing_cooldown) {
       continue;

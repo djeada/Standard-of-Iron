@@ -14,9 +14,9 @@
 namespace Game::Systems::AI {
 
 void GatherBehavior::execute(const AISnapshot &snapshot, AIContext &context,
-                             float deltaTime,
+                             float delta_time,
                              std::vector<AICommand> &outCommands) {
-  m_gatherTimer += deltaTime;
+  m_gatherTimer += delta_time;
 
   if (m_gatherTimer < 1.0F) {
     return;
@@ -89,7 +89,7 @@ void GatherBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   }
 
   auto claimed_units = claimUnits(units_to_move, getPriority(), "gathering",
-                                  context, m_gatherTimer + deltaTime, 2.0F);
+                                  context, m_gatherTimer + delta_time, 2.0F);
 
   if (claimed_units.empty()) {
     return;

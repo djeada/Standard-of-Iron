@@ -165,9 +165,9 @@ void AIReasoner::updateContext(const AISnapshot &snapshot, AIContext &ctx) {
   }
 }
 
-void AIReasoner::updateStateMachine(AIContext &ctx, float deltaTime) {
-  ctx.stateTimer += deltaTime;
-  ctx.decisionTimer += deltaTime;
+void AIReasoner::updateStateMachine(AIContext &ctx, float delta_time) {
+  ctx.stateTimer += delta_time;
+  ctx.decisionTimer += delta_time;
 
   constexpr float min_state_duration = 3.0F;
 

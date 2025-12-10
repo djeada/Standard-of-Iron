@@ -32,9 +32,9 @@ public:
                        bool enable);
   void setFollowLerp(Render::GL::Camera &camera, float alpha);
   [[nodiscard]] static auto
-  getDistance(const Render::GL::Camera &camera) -> float;
+  get_distance(const Render::GL::Camera &camera) -> float;
   static void resetCamera(Render::GL::Camera &camera,
-                          Engine::Core::World &world, int localOwnerId,
+                          Engine::Core::World &world, int local_owner_id,
                           unsigned int playerUnitId);
   static void snapToEntity(Render::GL::Camera &camera,
                            Engine::Core::Entity &entity);

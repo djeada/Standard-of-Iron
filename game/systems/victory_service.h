@@ -29,11 +29,11 @@ public:
   VictoryService();
   ~VictoryService();
 
-  void configure(const Game::Map::VictoryConfig &config, int localOwnerId);
+  void configure(const Game::Map::VictoryConfig &config, int local_owner_id);
 
   void reset();
 
-  void update(Engine::Core::World &world, float deltaTime);
+  void update(Engine::Core::World &world, float delta_time);
 
   [[nodiscard]] auto getVictoryState() const -> QString {
     return m_victoryState;

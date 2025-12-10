@@ -161,7 +161,7 @@ struct AIResult {
 struct AIJob {
   AISnapshot snapshot;
   AIContext context;
-  float deltaTime = 0.0F;
+  float delta_time = 0.0F;
 };
 
 } // namespace Game::Systems::AI

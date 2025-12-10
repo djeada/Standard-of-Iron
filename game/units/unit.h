@@ -41,7 +41,7 @@ public:
   }
 
   void moveTo(float x, float z);
-  [[nodiscard]] auto isAlive() const -> bool;
+  [[nodiscard]] auto is_alive() const -> bool;
   [[nodiscard]] auto position() const -> QVector3D;
 
   void setHoldMode(bool enabled);

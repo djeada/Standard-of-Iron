@@ -44,7 +44,7 @@ void MapTransformer::setLocalOwnerId(int owner_id) {
   owners.setLocalPlayerId(owner_id);
 }
 
-auto MapTransformer::localOwnerId() -> int {
+auto MapTransformer::local_owner_id() -> int {
   auto &owners = Game::Systems::OwnerRegistry::instance();
   return owners.getLocalPlayerId();
 }

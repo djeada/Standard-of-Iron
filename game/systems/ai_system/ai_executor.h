@@ -15,7 +15,7 @@ public:
   auto operator=(const AIExecutor &) -> AIExecutor & = delete;
 
   static void run(const AISnapshot &snapshot, AIContext &context,
-                  float deltaTime, AIBehaviorRegistry &registry,
+                  float delta_time, AIBehaviorRegistry &registry,
                   std::vector<AICommand> &outCommands);
 };
 
