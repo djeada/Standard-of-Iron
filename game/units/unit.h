@@ -26,8 +26,8 @@ struct SpawnParams {
   QVector3D position{0, 0, 0};
   int player_id = 0;
   SpawnType spawn_type = SpawnType::Archer;
-  bool aiControlled = false;
-  int maxPopulation = 100;
+  bool ai_controlled = false;
+  int max_population = 100;
   Game::Systems::NationID nation_id = Game::Systems::NationID::RomanRepublic;
 };
 
