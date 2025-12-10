@@ -19,7 +19,7 @@ namespace Game::Systems {
 struct LevelSnapshot {
   QString map_path;
   QString map_name;
-  Engine::Core::EntityID playerUnitId = 0;
+  Engine::Core::EntityID player_unit_id = 0;
   float cam_fov = 45.0F;
   float cam_near = 0.1F;
   float cam_far = 1000.0F;
@@ -30,10 +30,10 @@ struct RuntimeSnapshot {
   bool paused = false;
   float time_scale = 1.0F;
   int local_owner_id = 1;
-  QString victoryState = "";
-  int cursorMode = 0;
-  int selectedPlayerId = 1;
-  bool followSelection = false;
+  QString victory_state = "";
+  int cursor_mode = 0;
+  int selected_player_id = 1;
+  bool follow_selection = false;
 };
 
 class GameStateSerializer {
