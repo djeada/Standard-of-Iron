@@ -96,25 +96,25 @@ void CaptureSystem::transferBarrackOwnership(Engine::Core::World *,
     prod = barrack->addComponent<Engine::Core::ProductionComponent>();
     if (prod != nullptr) {
       prod->product_type = Game::Units::TroopType::Archer;
-      prod->maxUnits = 150;
-      prod->inProgress = false;
-      prod->timeRemaining = 0.0F;
-      prod->producedCount = 0;
-      prod->rallyX = transform->position.x + 4.0F;
-      prod->rallyZ = transform->position.z + 2.0F;
-      prod->rallySet = true;
+      prod->max_units = 150;
+      prod->in_progress = false;
+      prod->time_remaining = 0.0F;
+      prod->produced_count = 0;
+      prod->rally_x = transform->position.x + 4.0F;
+      prod->rally_z = transform->position.z + 2.0F;
+      prod->rally_set = true;
       const auto profile = TroopProfileService::instance().get_profile(
           unit->nation_id, prod->product_type);
-      prod->buildTime = profile.production.build_time;
-      prod->villagerCost = profile.individuals_per_unit;
+      prod->build_time = profile.production.build_time;
+      prod->villager_cost = profile.individuals_per_unit;
     }
   } else if (Game::Core::isNeutralOwner(newOwnerId) && (prod != nullptr)) {
     barrack->removeComponent<Engine::Core::ProductionComponent>();
   } else if (prod != nullptr) {
     const auto profile = TroopProfileService::instance().get_profile(
         unit->nation_id, prod->product_type);
-    prod->buildTime = profile.production.build_time;
-    prod->villagerCost = profile.individuals_per_unit;
+    prod->build_time = profile.production.build_time;
+    prod->villager_cost = profile.individuals_per_unit;
   }
 
   Engine::Core::EventManager::instance().publish(
@@ -187,24 +187,24 @@ void CaptureSystem::processBarrackCapture(Engine::Core::World *world,
     if (can_capture && capturing_player_id != -1) {
       if (capture->capturing_player_id != capturing_player_id) {
         capture->capturing_player_id = capturing_player_id;
-        capture->captureProgress = 0.0F;
+        capture->capture_progress = 0.0F;
       }
 
-      capture->isBeingCaptured = true;
-      capture->captureProgress += deltaTime;
+      capture->is_being_captured = true;
+      capture->capture_progress += deltaTime;
 
-      if (capture->captureProgress >= capture->requiredTime) {
+      if (capture->capture_progress >= capture->required_time) {
         transferBarrackOwnership(world, barrack, capturing_player_id);
-        capture->captureProgress = 0.0F;
-        capture->isBeingCaptured = false;
+        capture->capture_progress = 0.0F;
+        capture->is_being_captured = false;
         capture->capturing_player_id = -1;
       }
     } else {
-      if (capture->isBeingCaptured) {
-        capture->captureProgress -= deltaTime * 2.0F;
-        if (capture->captureProgress <= 0.0F) {
-          capture->captureProgress = 0.0F;
-          capture->isBeingCaptured = false;
+      if (capture->is_being_captured) {
+        capture->capture_progress -= deltaTime * 2.0F;
+        if (capture->capture_progress <= 0.0F) {
+          capture->capture_progress = 0.0F;
+          capture->is_being_captured = false;
           capture->capturing_player_id = -1;
         }
       }

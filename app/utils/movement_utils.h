@@ -16,21 +16,21 @@ inline void reset_movement(Engine::Core::Entity *entity) {
   }
 
   auto *transform = entity->getComponent<Engine::Core::TransformComponent>();
-  movement->hasTarget = false;
+  movement->has_target = false;
   movement->path.clear();
-  movement->pathPending = false;
-  movement->pendingRequestId = 0;
-  movement->repathCooldown = 0.0F;
+  movement->path_pending = false;
+  movement->pending_request_id = 0;
+  movement->repath_cooldown = 0.0F;
   if (transform != nullptr) {
     movement->target_x = transform->position.x;
     movement->target_y = transform->position.z;
-    movement->goalX = transform->position.x;
-    movement->goalY = transform->position.z;
+    movement->goal_x = transform->position.x;
+    movement->goal_y = transform->position.z;
   } else {
     movement->target_x = 0.0F;
     movement->target_y = 0.0F;
-    movement->goalX = 0.0F;
-    movement->goalY = 0.0F;
+    movement->goal_x = 0.0F;
+    movement->goal_y = 0.0F;
   }
 }
 

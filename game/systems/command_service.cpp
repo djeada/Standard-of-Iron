@@ -135,7 +135,7 @@ void CommandService::moveUnits(Engine::Core::World &world,
     }
 
     auto *atk = e->getComponent<Engine::Core::AttackComponent>();
-    if ((atk != nullptr) && atk->inMeleeLock) {
+    if ((atk != nullptr) && atk->in_melee_lock) {
 
       continue;
     }
@@ -161,7 +161,7 @@ void CommandService::moveUnits(Engine::Core::World &world,
     const float target_z = targets[i].z();
 
     bool matched_pending = false;
-    if (mv->pathPending) {
+    if (mv->path_pending) {
       std::lock_guard<std::mutex> const lock(s_pendingMutex);
       auto request_it = s_entityToRequest.find(units[i]);
       if (request_it != s_entityToRequest.end()) {
@@ -179,32 +179,32 @@ void CommandService::moveUnits(Engine::Core::World &world,
       }
     }
 
-    mv->goalX = target_x;
-    mv->goalY = target_z;
+    mv->goal_x = target_x;
+    mv->goal_y = target_z;
 
     if (matched_pending) {
       continue;
     }
 
     bool should_suppress_path_request = false;
-    if (mv->timeSinceLastPathRequest < pathfinding_request_cooldown) {
+    if (mv->time_since_last_path_request < pathfinding_request_cooldown) {
 
-      float const last_goal_dx = mv->lastGoalX - target_x;
-      float const last_goal_dz = mv->lastGoalY - target_z;
+      float const last_goal_dx = mv->last_goal_x - target_x;
+      float const last_goal_dz = mv->last_goal_y - target_z;
       float const goal_movement_sq =
           last_goal_dx * last_goal_dx + last_goal_dz * last_goal_dz;
 
       if (goal_movement_sq < target_movement_threshold_sq) {
         should_suppress_path_request = true;
 
-        if (mv->hasTarget || mv->pathPending) {
+        if (mv->has_target || mv->path_pending) {
           continue;
         }
       }
     }
 
-    if (!mv->pathPending) {
-      bool const current_target_matches = mv->hasTarget && mv->path.empty();
+    if (!mv->path_pending) {
+      bool const current_target_matches = mv->has_target && mv->path.empty();
       if (current_target_matches) {
         float const dx = mv->target_x - target_x;
         float const dz = mv->target_y - target_z;
@@ -231,10 +231,10 @@ void CommandService::moveUnits(Engine::Core::World &world,
       if (start == end) {
         mv->target_x = target_x;
         mv->target_y = target_z;
-        mv->hasTarget = true;
+        mv->has_target = true;
         mv->path.clear();
-        mv->pathPending = false;
-        mv->pendingRequestId = 0;
+        mv->path_pending = false;
+        mv->pending_request_id = 0;
         mv->vx = 0.0F;
         mv->vz = 0.0F;
         clearPendingRequest(units[i]);
@@ -252,17 +252,17 @@ void CommandService::moveUnits(Engine::Core::World &world,
 
         mv->target_x = target_x;
         mv->target_y = target_z;
-        mv->hasTarget = true;
+        mv->has_target = true;
         mv->path.clear();
-        mv->pathPending = false;
-        mv->pendingRequestId = 0;
+        mv->path_pending = false;
+        mv->pending_request_id = 0;
         mv->vx = 0.0F;
         mv->vz = 0.0F;
         clearPendingRequest(units[i]);
 
-        mv->timeSinceLastPathRequest = 0.0F;
-        mv->lastGoalX = target_x;
-        mv->lastGoalY = target_z;
+        mv->time_since_last_path_request = 0.0F;
+        mv->last_goal_x = target_x;
+        mv->last_goal_y = target_z;
       } else {
 
         bool skip_new_request = false;
@@ -292,14 +292,14 @@ void CommandService::moveUnits(Engine::Core::World &world,
         }
 
         mv->path.clear();
-        mv->hasTarget = false;
+        mv->has_target = false;
         mv->vx = 0.0F;
         mv->vz = 0.0F;
-        mv->pathPending = true;
+        mv->path_pending = true;
 
         std::uint64_t const request_id =
             s_nextRequestId.fetch_add(1, std::memory_order_relaxed);
-        mv->pendingRequestId = request_id;
+        mv->pending_request_id = request_id;
 
         {
           std::lock_guard<std::mutex> const lock(s_pendingMutex);
@@ -310,18 +310,18 @@ void CommandService::moveUnits(Engine::Core::World &world,
 
         s_pathfinder->submitPathRequest(request_id, start, end);
 
-        mv->timeSinceLastPathRequest = 0.0F;
-        mv->lastGoalX = target_x;
-        mv->lastGoalY = target_z;
+        mv->time_since_last_path_request = 0.0F;
+        mv->last_goal_x = target_x;
+        mv->last_goal_y = target_z;
       }
     } else {
 
       mv->target_x = target_x;
       mv->target_y = target_z;
-      mv->hasTarget = true;
+      mv->has_target = true;
       mv->path.clear();
-      mv->pathPending = false;
-      mv->pendingRequestId = 0;
+      mv->path_pending = false;
+      mv->pending_request_id = 0;
       mv->vx = 0.0F;
       mv->vz = 0.0F;
       clearPendingRequest(units[i]);
@@ -599,18 +599,18 @@ void CommandService::moveGroup(Engine::Core::World &world,
   for (auto &member : members) {
     auto *mv = member.movement;
 
-    mv->goalX = member.target.x();
-    mv->goalY = member.target.z();
+    mv->goal_x = member.target.x();
+    mv->goal_y = member.target.z();
 
     clearPendingRequest(member.id);
     mv->target_x = member.transform->position.x;
     mv->target_y = member.transform->position.z;
-    mv->hasTarget = false;
+    mv->has_target = false;
     mv->vx = 0.0F;
     mv->vz = 0.0F;
     mv->path.clear();
-    mv->pathPending = false;
-    mv->pendingRequestId = 0;
+    mv->path_pending = false;
+    mv->pending_request_id = 0;
     units_needing_new_path.push_back(&member);
   }
 
@@ -622,7 +622,7 @@ void CommandService::moveGroup(Engine::Core::World &world,
     for (auto *member : units_needing_new_path) {
       member->movement->target_x = member->target.x();
       member->movement->target_y = member->target.z();
-      member->movement->hasTarget = true;
+      member->movement->has_target = true;
     }
     return;
   }
@@ -635,7 +635,7 @@ void CommandService::moveGroup(Engine::Core::World &world,
     for (auto *member : units_needing_new_path) {
       member->movement->target_x = member->target.x();
       member->movement->target_y = member->target.z();
-      member->movement->hasTarget = true;
+      member->movement->has_target = true;
     }
     return;
   }
@@ -651,11 +651,11 @@ void CommandService::moveGroup(Engine::Core::World &world,
     for (auto *member : units_needing_new_path) {
       member->movement->target_x = member->target.x();
       member->movement->target_y = member->target.z();
-      member->movement->hasTarget = true;
+      member->movement->has_target = true;
 
-      member->movement->timeSinceLastPathRequest = 0.0F;
-      member->movement->lastGoalX = member->target.x();
-      member->movement->lastGoalY = member->target.z();
+      member->movement->time_since_last_path_request = 0.0F;
+      member->movement->last_goal_x = member->target.x();
+      member->movement->last_goal_y = member->target.z();
     }
     return;
   }
@@ -664,12 +664,12 @@ void CommandService::moveGroup(Engine::Core::World &world,
       s_nextRequestId.fetch_add(1, std::memory_order_relaxed);
 
   for (auto *member : units_needing_new_path) {
-    member->movement->pathPending = true;
-    member->movement->pendingRequestId = request_id;
+    member->movement->path_pending = true;
+    member->movement->pending_request_id = request_id;
 
-    member->movement->timeSinceLastPathRequest = 0.0F;
-    member->movement->lastGoalX = member->target.x();
-    member->movement->lastGoalY = member->target.z();
+    member->movement->time_since_last_path_request = 0.0F;
+    member->movement->last_goal_x = member->target.x();
+    member->movement->last_goal_y = member->target.z();
   }
 
   PendingPathRequest pending;
@@ -748,18 +748,18 @@ void CommandService::processPathResults(Engine::Core::World &world) {
         return;
       }
 
-      if (!movement_component->pathPending ||
-          movement_component->pendingRequestId != result.request_id) {
-        movement_component->pathPending = false;
-        movement_component->pendingRequestId = 0;
+      if (!movement_component->path_pending ||
+          movement_component->pending_request_id != result.request_id) {
+        movement_component->path_pending = false;
+        movement_component->pending_request_id = 0;
         return;
       }
 
-      movement_component->pathPending = false;
-      movement_component->pendingRequestId = 0;
+      movement_component->path_pending = false;
+      movement_component->pending_request_id = 0;
       movement_component->path.clear();
-      movement_component->goalX = target.x();
-      movement_component->goalY = target.z();
+      movement_component->goal_x = target.x();
+      movement_component->goal_y = target.z();
       movement_component->vx = 0.0F;
       movement_component->vz = 0.0F;
 
@@ -787,7 +787,7 @@ void CommandService::processPathResults(Engine::Core::World &world) {
           movement_component->target_x = movement_component->path.front().first;
           movement_component->target_y =
               movement_component->path.front().second;
-          movement_component->hasTarget = true;
+          movement_component->has_target = true;
           return;
         }
       }
@@ -795,9 +795,9 @@ void CommandService::processPathResults(Engine::Core::World &world) {
       if (request_info.options.allowDirectFallback) {
         movement_component->target_x = target.x();
         movement_component->target_y = target.z();
-        movement_component->hasTarget = true;
+        movement_component->has_target = true;
       } else {
-        movement_component->hasTarget = false;
+        movement_component->has_target = false;
       }
     };
 
@@ -876,7 +876,7 @@ void CommandService::attack_target(
     }
 
     attack_target->target_id = target_id;
-    attack_target->shouldChase = shouldChase;
+    attack_target->should_chase = shouldChase;
 
     if (!shouldChase) {
       continue;
@@ -904,7 +904,7 @@ void CommandService::attack_target(
     bool is_ranged_unit = false;
     if (auto *atk = e->getComponent<Engine::Core::AttackComponent>()) {
       range = std::max(0.1F, atk->range);
-      if (atk->canRanged && atk->range > atk->meleeRange * 1.5F) {
+      if (atk->can_ranged && atk->range > atk->melee_range * 1.5F) {
         is_ranged_unit = true;
       }
     }
@@ -948,9 +948,9 @@ void CommandService::attack_target(
 
       mv->target_x = desired_pos.x();
       mv->target_y = desired_pos.z();
-      mv->goalX = desired_pos.x();
-      mv->goalY = desired_pos.z();
-      mv->hasTarget = true;
+      mv->goal_x = desired_pos.x();
+      mv->goal_y = desired_pos.z();
+      mv->has_target = true;
       mv->path.clear();
     }
   }

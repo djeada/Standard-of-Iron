@@ -68,7 +68,7 @@ void PatrolSystem::update(Engine::Core::World *world, float) {
         }
         if (attack_target != nullptr) {
           attack_target->target_id = other->getId();
-          attack_target->shouldChase = false;
+          attack_target->should_chase = false;
         }
         break;
       }
@@ -79,7 +79,7 @@ void PatrolSystem::update(Engine::Core::World *world, float) {
       continue;
     }
 
-    auto waypoint = patrol->waypoints[patrol->currentWaypoint];
+    auto waypoint = patrol->waypoints[patrol->current_waypoint];
     float target_x = waypoint.first;
     float target_z = waypoint.second;
 
@@ -89,18 +89,18 @@ void PatrolSystem::update(Engine::Core::World *world, float) {
 
     if (dist_sq < 1.0F) {
 
-      patrol->currentWaypoint =
-          (patrol->currentWaypoint + 1) % patrol->waypoints.size();
-      waypoint = patrol->waypoints[patrol->currentWaypoint];
+      patrol->current_waypoint =
+          (patrol->current_waypoint + 1) % patrol->waypoints.size();
+      waypoint = patrol->waypoints[patrol->current_waypoint];
       target_x = waypoint.first;
       target_z = waypoint.second;
     }
 
-    movement->hasTarget = true;
+    movement->has_target = true;
     movement->target_x = target_x;
     movement->target_y = target_z;
-    movement->goalX = target_x;
-    movement->goalY = target_z;
+    movement->goal_x = target_x;
+    movement->goal_y = target_z;
   }
 }
 
