@@ -283,11 +283,11 @@ Item {
                                 id: graphicsQualityComboBox
 
                                 Layout.fillWidth: true
-                                model: typeof graphicsSettings !== 'undefined' ? graphicsSettings.qualityOptions : ["Low", "Medium", "High", "Ultra"]
-                                currentIndex: typeof graphicsSettings !== 'undefined' ? graphicsSettings.qualityLevel : 1
+                                model: typeof graphicsSettings !== 'undefined' ? graphicsSettings.quality_options : ["Low", "Medium", "High", "Ultra"]
+                                currentIndex: typeof graphicsSettings !== 'undefined' ? graphicsSettings.quality_level : 1
                                 onActivated: function(index) {
                                     if (typeof graphicsSettings !== 'undefined')
-                                        graphicsSettings.qualityLevel = index;
+                                        graphicsSettings.quality_level = index;
 
                                 }
 
@@ -308,7 +308,7 @@ Item {
                             }
 
                             Label {
-                                text: typeof graphicsSettings !== 'undefined' ? graphicsSettings.getQualityDescription() : ""
+                                text: typeof graphicsSettings !== 'undefined' ? graphicsSettings.get_quality_description() : ""
                                 color: Theme.textSub
                                 font.pointSize: Theme.fontSizeSmall
                                 opacity: 0.7
