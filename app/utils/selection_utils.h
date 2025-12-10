@@ -20,7 +20,7 @@ sanitize_selection(Engine::Core::World *world,
   toKeep.reserve(sel.size());
   for (auto id : sel) {
     if (auto *e = world->getEntity(id)) {
-      if (auto *u = e->getComponent<Engine::Core::UnitComponent>()) {
+      if (auto *u = e->get_component<Engine::Core::UnitComponent>()) {
         if (u->health > 0) {
           toKeep.push_back(id);
         }

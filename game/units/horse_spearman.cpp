@@ -39,23 +39,23 @@ auto HorseSpearman::Create(Engine::Core::World &world,
 void HorseSpearman::init(const SpawnParams &params) {
 
   auto *e = m_world->createEntity();
-  m_id = e->getId();
+  m_id = e->get_id();
 
   const auto nation_id = resolve_nation_id(params);
   auto profile = Game::Systems::TroopProfileService::instance().get_profile(
       nation_id, TroopType::HorseSpearman);
 
-  m_t = e->addComponent<Engine::Core::TransformComponent>();
+  m_t = e->add_component<Engine::Core::TransformComponent>();
   m_t->position = {params.position.x(), params.position.y(),
                    params.position.z()};
   float const scale = profile.visuals.render_scale;
   m_t->scale = {scale, scale, scale};
 
-  m_r = e->addComponent<Engine::Core::RenderableComponent>("", "");
+  m_r = e->add_component<Engine::Core::RenderableComponent>("", "");
   m_r->visible = true;
   m_r->renderer_id = profile.visuals.renderer_id;
 
-  m_u = e->addComponent<Engine::Core::UnitComponent>();
+  m_u = e->add_component<Engine::Core::UnitComponent>();
   m_u->spawn_type = params.spawn_type;
   m_u->health = profile.combat.health;
   m_u->max_health = profile.combat.max_health;
@@ -65,7 +65,7 @@ void HorseSpearman::init(const SpawnParams &params) {
   m_u->nation_id = nation_id;
 
   if (params.aiControlled) {
-    e->addComponent<Engine::Core::AIControlledComponent>();
+    e->add_component<Engine::Core::AIControlledComponent>();
   } else {
   }
 
@@ -74,7 +74,7 @@ void HorseSpearman::init(const SpawnParams &params) {
   m_r->color[1] = tc.y();
   m_r->color[2] = tc.z();
 
-  m_mv = e->addComponent<Engine::Core::MovementComponent>();
+  m_mv = e->add_component<Engine::Core::MovementComponent>();
   if (m_mv != nullptr) {
     m_mv->goal_x = params.position.x();
     m_mv->goal_y = params.position.z();
@@ -82,7 +82,7 @@ void HorseSpearman::init(const SpawnParams &params) {
     m_mv->target_y = params.position.z();
   }
 
-  m_atk = e->addComponent<Engine::Core::AttackComponent>();
+  m_atk = e->add_component<Engine::Core::AttackComponent>();
 
   m_atk->range = profile.combat.ranged_range;
   m_atk->damage = profile.combat.ranged_damage;

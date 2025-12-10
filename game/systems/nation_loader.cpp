@@ -135,11 +135,11 @@ static auto nation_loader_logger() -> QLoggingCategory & { return logger(); }
 
   TroopType entry{};
   entry.unit_type = troop_type;
-  entry.displayName =
+  entry.display_name =
       read_string(obj, "display_name",
                   QString::fromStdString(base_class.display_name))
           .toStdString();
-  entry.isMelee = read_bool(ensure_object(obj.value("production")), "is_melee",
+  entry.is_melee = read_bool(ensure_object(obj.value("production")), "is_melee",
                             base_class.production.is_melee);
   const QJsonObject production = ensure_object(obj.value("production"));
   entry.cost = production.value("cost").toInt(base_class.production.cost);
@@ -149,7 +149,7 @@ static auto nation_loader_logger() -> QLoggingCategory & { return logger(); }
   entry.priority =
       production.value("priority").toInt(base_class.production.priority);
 
-  nation.availableTroops.push_back(entry);
+  nation.available_troops.push_back(entry);
 
   NationTroopVariant variant{};
   variant.unit_type = troop_type;
@@ -244,7 +244,7 @@ static auto nation_loader_logger() -> QLoggingCategory & { return logger(); }
   }
 
   if (has_variant) {
-    nation.troopVariants[troop_type] = std::move(variant);
+    nation.troop_variants[troop_type] = std::move(variant);
   }
 
   return true;
@@ -349,14 +349,14 @@ auto NationLoader::load_from_file(const QString &path)
   }
   nation.id = *parsed_id;
 
-  nation.displayName =
+  nation.display_name =
       root.value("display_name").toString(id_str).toStdString();
 
   const QString building_str =
       root.value("primary_building").toString(QStringLiteral("barracks"));
   auto parsed_building =
       Game::Units::buildingTypeFromString(building_str.toStdString());
-  nation.primaryBuilding =
+  nation.primary_building =
       parsed_building.value_or(Game::Units::BuildingType::Barracks);
   if (auto formation =
           parse_formation_type(root.value("formation_type").toString())) {

@@ -397,13 +397,13 @@ void Renderer::renderWorld(Engine::Core::World *world) {
 
   int visibleUnitCount = 0;
   for (auto *entity : renderable_entities) {
-    if (entity->hasComponent<Engine::Core::PendingRemovalComponent>()) {
+    if (entity->has_component<Engine::Core::PendingRemovalComponent>()) {
       continue;
     }
-    auto *unit_comp = entity->getComponent<Engine::Core::UnitComponent>();
+    auto *unit_comp = entity->get_component<Engine::Core::UnitComponent>();
     if (unit_comp != nullptr && unit_comp->health > 0) {
       auto *transform =
-          entity->getComponent<Engine::Core::TransformComponent>();
+          entity->get_component<Engine::Core::TransformComponent>();
       if (transform != nullptr && m_camera != nullptr) {
         QVector3D const unit_pos(transform->position.x, transform->position.y,
                                  transform->position.z);
@@ -431,19 +431,19 @@ void Renderer::renderWorld(Engine::Core::World *world) {
 
   for (auto *entity : renderable_entities) {
 
-    if (entity->hasComponent<Engine::Core::PendingRemovalComponent>()) {
+    if (entity->has_component<Engine::Core::PendingRemovalComponent>()) {
       continue;
     }
 
     auto *renderable =
-        entity->getComponent<Engine::Core::RenderableComponent>();
-    auto *transform = entity->getComponent<Engine::Core::TransformComponent>();
+        entity->get_component<Engine::Core::RenderableComponent>();
+    auto *transform = entity->get_component<Engine::Core::TransformComponent>();
 
     if (!renderable->visible || (transform == nullptr)) {
       continue;
     }
 
-    auto *unit_comp = entity->getComponent<Engine::Core::UnitComponent>();
+    auto *unit_comp = entity->get_component<Engine::Core::UnitComponent>();
     if ((unit_comp != nullptr) && unit_comp->health <= 0) {
       continue;
     }
@@ -482,8 +482,8 @@ void Renderer::renderWorld(Engine::Core::World *world) {
     }
 
     bool const is_selected =
-        (m_selectedIds.find(entity->getId()) != m_selectedIds.end());
-    bool const is_hovered = (entity->getId() == m_hoveredEntityId);
+        (m_selectedIds.find(entity->get_id()) != m_selectedIds.end());
+    bool const is_hovered = (entity->get_id() == m_hoveredEntityId);
 
     QMatrix4x4 model_matrix;
     model_matrix.translate(transform->position.x, transform->position.y,
@@ -578,7 +578,7 @@ void Renderer::renderWorld(Engine::Core::World *world) {
             std::max({transform->scale.x, transform->scale.z, 0.6F});
 
         float size_ratio = 1.0F;
-        if (auto *unit = entity->getComponent<Engine::Core::UnitComponent>()) {
+        if (auto *unit = entity->get_component<Engine::Core::UnitComponent>()) {
           int const mh = std::max(1, unit->max_health);
           size_ratio = std::clamp(unit->health / float(mh), 0.0F, 1.0F);
         }

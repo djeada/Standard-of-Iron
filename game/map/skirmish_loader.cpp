@@ -280,9 +280,9 @@ auto SkirmishLoader::start(const QString &map_path,
     auto entities = m_world.getEntitiesWith<Engine::Core::UnitComponent>();
     std::unordered_map<int, int> owner_entity_count;
     for (auto *entity : entities) {
-      auto *unit = entity->getComponent<Engine::Core::UnitComponent>();
+      auto *unit = entity->get_component<Engine::Core::UnitComponent>();
       auto *renderable =
-          entity->getComponent<Engine::Core::RenderableComponent>();
+          entity->get_component<Engine::Core::RenderableComponent>();
       if ((unit != nullptr) && (renderable != nullptr)) {
         const QVector3D team_color =
             Game::Visuals::team_colorForOwner(unit->owner_id);
@@ -463,7 +463,7 @@ auto SkirmishLoader::start(const QString &map_path,
     if (entity == nullptr) {
       continue;
     }
-    auto *unit = entity->getComponent<Engine::Core::UnitComponent>();
+    auto *unit = entity->get_component<Engine::Core::UnitComponent>();
     if (unit == nullptr) {
       continue;
     }
@@ -474,13 +474,13 @@ auto SkirmishLoader::start(const QString &map_path,
     }
   }
 
-  if ((focus_entity == nullptr) && level_result.playerUnitId != 0) {
-    focus_entity = m_world.getEntity(level_result.playerUnitId);
+  if ((focus_entity == nullptr) && level_result.player_unit_id != 0) {
+    focus_entity = m_world.getEntity(level_result.player_unit_id);
   }
 
   if (focus_entity != nullptr) {
     if (auto *transform =
-            focus_entity->getComponent<Engine::Core::TransformComponent>()) {
+            focus_entity->get_component<Engine::Core::TransformComponent>()) {
       result.focusPosition = QVector3D(
           transform->position.x, transform->position.y, transform->position.z);
       result.hasFocusPosition = true;
@@ -489,7 +489,7 @@ auto SkirmishLoader::start(const QString &map_path,
 
   result.ok = true;
   result.map_name = level_result.map_name;
-  result.playerUnitId = level_result.playerUnitId;
+  result.player_unit_id = level_result.player_unit_id;
   result.camFov = level_result.camFov;
   result.camNear = level_result.camNear;
   result.camFar = level_result.camFar;

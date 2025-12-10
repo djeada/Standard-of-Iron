@@ -11,13 +11,13 @@ class World;
 namespace Game::Systems {
 
 struct PlayerStats {
-  int troopsRecruited = 0;
-  int enemiesKilled = 0;
-  int barracksOwned = 0;
-  std::chrono::steady_clock::time_point gameStartTime;
-  std::chrono::steady_clock::time_point gameEndTime;
-  float playTimeSec = 0.0F;
-  bool gameEnded = false;
+  int troops_recruited = 0;
+  int enemies_killed = 0;
+  int barracks_owned = 0;
+  std::chrono::steady_clock::time_point game_start_time;
+  std::chrono::steady_clock::time_point game_end_time;
+  float play_time_sec = 0.0F;
+  bool game_ended = false;
 };
 
 class GlobalStatsRegistry {
@@ -30,15 +30,15 @@ public:
   auto getStats(int owner_id) const -> const PlayerStats *;
   auto getStats(int owner_id) -> PlayerStats *;
 
-  void markGameStart(int owner_id);
+  void mark_game_start(int owner_id);
 
-  void markGameEnd(int owner_id);
+  void mark_game_end(int owner_id);
 
-  void onUnitSpawned(const Engine::Core::UnitSpawnedEvent &event);
-  void onUnitDied(const Engine::Core::UnitDiedEvent &event);
-  void onBarrackCaptured(const Engine::Core::BarrackCapturedEvent &event);
+  void on_unit_spawned(const Engine::Core::UnitSpawnedEvent &event);
+  void on_unit_died(const Engine::Core::UnitDiedEvent &event);
+  void on_barrack_captured(const Engine::Core::BarrackCapturedEvent &event);
 
-  void rebuildFromWorld(Engine::Core::World &world);
+  void rebuild_from_world(Engine::Core::World &world);
 
 private:
   GlobalStatsRegistry() = default;
@@ -46,14 +46,14 @@ private:
   GlobalStatsRegistry(const GlobalStatsRegistry &) = delete;
   auto operator=(const GlobalStatsRegistry &) -> GlobalStatsRegistry & = delete;
 
-  std::unordered_map<int, PlayerStats> m_playerStats;
+  std::unordered_map<int, PlayerStats> m_player_stats;
 
   Engine::Core::ScopedEventSubscription<Engine::Core::UnitSpawnedEvent>
-      m_unitSpawnedSubscription;
+      m_unit_spawned_subscription;
   Engine::Core::ScopedEventSubscription<Engine::Core::UnitDiedEvent>
-      m_unitDiedSubscription;
+      m_unit_died_subscription;
   Engine::Core::ScopedEventSubscription<Engine::Core::BarrackCapturedEvent>
-      m_barrackCapturedSubscription;
+      m_barrack_captured_subscription;
 };
 
 } // namespace Game::Systems
