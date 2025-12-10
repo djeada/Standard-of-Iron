@@ -153,7 +153,7 @@ auto ProductionService::getSelectedBarracksState(
     outState.produced_count = p->produced_count;
     outState.max_units = p->max_units;
     outState.villager_cost = p->villager_cost;
-    outState.queueSize = static_cast<int>(p->production_queue.size());
+    outState.queue_size = static_cast<int>(p->production_queue.size());
     outState.production_queue = p->production_queue;
   }
   return true;

@@ -46,7 +46,7 @@ void Barracks::init(const SpawnParams &params) {
   m_u->vision_range = 22.0F;
   m_u->nation_id = nation_id;
 
-  if (params.aiControlled) {
+  if (params.ai_controlled) {
     e->add_component<Engine::Core::AIControlledComponent>();
   } else {
   }
@@ -65,7 +65,7 @@ void Barracks::init(const SpawnParams &params) {
     if (auto *prod = e->add_component<Engine::Core::ProductionComponent>()) {
       prod->product_type = TroopType::Archer;
       prod->build_time = 10.0F;
-      prod->max_units = params.maxPopulation;
+      prod->max_units = params.max_population;
       prod->in_progress = false;
       prod->time_remaining = 0.0F;
       prod->produced_count = 0;

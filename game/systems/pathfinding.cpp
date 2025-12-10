@@ -175,7 +175,7 @@ auto Pathfinding::findPathInternal(const Point &start,
   setGCost(start_idx, generation, 0);
   setParent(start_idx, generation, start_idx);
 
-  pushOpenNode({start_idx, calculateHeuristic(start, end), 0});
+  push_open_node({start_idx, calculateHeuristic(start, end), 0});
 
   const int max_iterations = std::max(m_width * m_height, 1);
   int iterations = 0;
@@ -185,9 +185,9 @@ auto Pathfinding::findPathInternal(const Point &start,
   while (!m_openHeap.empty() && iterations < max_iterations) {
     ++iterations;
 
-    QueueNode const current = popOpenNode();
+    QueueNode const current = pop_open_node();
 
-    if (current.gCost > getGCost(current.index, generation)) {
+    if (current.g_cost > getGCost(current.index, generation)) {
       continue;
     }
 
@@ -198,14 +198,14 @@ auto Pathfinding::findPathInternal(const Point &start,
     setClosed(current.index, generation);
 
     if (current.index == end_idx) {
-      final_cost = current.gCost;
+      final_cost = current.g_cost;
       break;
     }
 
     const Point current_point = toPoint(current.index);
     std::array<Point, 8> neighbors{};
     const std::size_t neighbor_count =
-        collectNeighbors(current_point, neighbors);
+        collect_neighbors(current_point, neighbors);
 
     for (std::size_t i = 0; i < neighbor_count; ++i) {
       const Point &neighbor = neighbors[i];
@@ -218,7 +218,7 @@ auto Pathfinding::findPathInternal(const Point &start,
         continue;
       }
 
-      const int tentative_gcost = current.gCost + 1;
+      const int tentative_gcost = current.g_cost + 1;
       if (tentative_gcost >= getGCost(neighbor_idx, generation)) {
         continue;
       }
@@ -227,7 +227,7 @@ auto Pathfinding::findPathInternal(const Point &start,
       setParent(neighbor_idx, generation, current.index);
 
       const int h_cost = calculateHeuristic(neighbor, end);
-      pushOpenNode({neighbor_idx, tentative_gcost + h_cost, tentative_gcost});
+      push_open_node({neighbor_idx, tentative_gcost + h_cost, tentative_gcost});
     }
   }
 
@@ -237,7 +237,7 @@ auto Pathfinding::findPathInternal(const Point &start,
 
   std::vector<Point> path;
   path.reserve(final_cost + 1);
-  buildPath(start_idx, end_idx, generation, final_cost + 1, path);
+  build_path(start_idx, end_idx, generation, final_cost + 1, path);
   return path;
 }
 
@@ -339,7 +339,7 @@ void Pathfinding::setParent(int index, std::uint32_t generation,
   }
 }
 
-auto Pathfinding::collectNeighbors(
+auto Pathfinding::collect_neighbors(
     const Point &point, std::array<Point, 8> &buffer) const -> std::size_t {
   std::size_t count = 0;
   for (int dx = -1; dx <= 1; ++dx) {
@@ -368,51 +368,51 @@ auto Pathfinding::collectNeighbors(
   return count;
 }
 
-void Pathfinding::buildPath(int startIndex, int endIndex,
-                            std::uint32_t generation, int expectedLength,
-                            std::vector<Point> &outPath) const {
-  outPath.clear();
-  if (expectedLength > 0) {
-    outPath.reserve(static_cast<std::size_t>(expectedLength));
+void Pathfinding::build_path(int start_index, int end_index,
+                            std::uint32_t generation, int expected_length,
+                            std::vector<Point> &out_path) const {
+  out_path.clear();
+  if (expected_length > 0) {
+    out_path.reserve(static_cast<std::size_t>(expected_length));
   }
-  int current = endIndex;
+  int current = end_index;
 
   while (current >= 0) {
-    outPath.push_back(toPoint(current));
-    if (current == startIndex) {
-      std::reverse(outPath.begin(), outPath.end());
+    out_path.push_back(toPoint(current));
+    if (current == start_index) {
+      std::reverse(out_path.begin(), out_path.end());
       return;
     }
 
     if (!hasParent(current, generation)) {
-      outPath.clear();
+      out_path.clear();
       return;
     }
 
     const int parent = getParent(current, generation);
     if (parent == current || parent < 0) {
-      outPath.clear();
+      out_path.clear();
       return;
     }
     current = parent;
   }
 
-  outPath.clear();
+  out_path.clear();
 }
 
-auto Pathfinding::heapLess(const QueueNode &lhs, const QueueNode &rhs) -> bool {
-  if (lhs.fCost != rhs.fCost) {
-    return lhs.fCost < rhs.fCost;
+auto Pathfinding::heap_less(const QueueNode &lhs, const QueueNode &rhs) -> bool {
+  if (lhs.f_cost != rhs.f_cost) {
+    return lhs.f_cost < rhs.f_cost;
   }
-  return lhs.gCost < rhs.gCost;
+  return lhs.g_cost < rhs.g_cost;
 }
 
-void Pathfinding::pushOpenNode(const QueueNode &node) {
+void Pathfinding::push_open_node(const QueueNode &node) {
   m_openHeap.push_back(node);
   std::size_t index = m_openHeap.size() - 1;
   while (index > 0) {
     std::size_t const parent = (index - 1) / 2;
-    if (heapLess(m_openHeap[parent], m_openHeap[index])) {
+    if (heap_less(m_openHeap[parent], m_openHeap[index])) {
       break;
     }
     std::swap(m_openHeap[parent], m_openHeap[index]);
@@ -420,7 +420,7 @@ void Pathfinding::pushOpenNode(const QueueNode &node) {
   }
 }
 
-auto Pathfinding::popOpenNode() -> Pathfinding::QueueNode {
+auto Pathfinding::pop_open_node() -> Pathfinding::QueueNode {
   QueueNode top = m_openHeap.front();
   QueueNode const last = m_openHeap.back();
   m_openHeap.pop_back();
@@ -433,10 +433,10 @@ auto Pathfinding::popOpenNode() -> Pathfinding::QueueNode {
       std::size_t const right = left + 1;
       std::size_t smallest = index;
 
-      if (left < size && !heapLess(m_openHeap[smallest], m_openHeap[left])) {
+      if (left < size && !heap_less(m_openHeap[smallest], m_openHeap[left])) {
         smallest = left;
       }
-      if (right < size && !heapLess(m_openHeap[smallest], m_openHeap[right])) {
+      if (right < size && !heap_less(m_openHeap[smallest], m_openHeap[right])) {
         smallest = right;
       }
       if (smallest == index) {

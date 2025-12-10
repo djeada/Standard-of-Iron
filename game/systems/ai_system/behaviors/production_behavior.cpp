@@ -78,7 +78,7 @@ void ProductionBehavior::execute(const AISnapshot &snapshot, AIContext &context,
     }
 
     const int max_queue_size = 5;
-    int const total_in_queue = (prod.in_progress ? 1 : 0) + prod.queueSize;
+    int const total_in_queue = (prod.in_progress ? 1 : 0) + prod.queue_size;
     if (total_in_queue >= max_queue_size) {
       continue;
     }

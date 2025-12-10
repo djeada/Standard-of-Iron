@@ -69,7 +69,7 @@ auto AISnapshotBuilder::build(const Engine::Core::World &world,
       data.production.rally_set = production->rally_set;
       data.production.rally_x = production->rally_x;
       data.production.rally_z = production->rally_z;
-      data.production.queueSize =
+      data.production.queue_size =
           static_cast<int>(production->production_queue.size());
     }
 

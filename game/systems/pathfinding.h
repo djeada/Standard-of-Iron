@@ -83,20 +83,20 @@ private:
   auto getParent(int index, std::uint32_t generation) const -> int;
   void setParent(int index, std::uint32_t generation, int parentIndex);
 
-  auto collectNeighbors(const Point &point,
+  auto collect_neighbors(const Point &point,
                         std::array<Point, 8> &buffer) const -> std::size_t;
-  void buildPath(int startIndex, int endIndex, std::uint32_t generation,
-                 int expectedLength, std::vector<Point> &outPath) const;
+  void build_path(int start_index, int end_index, std::uint32_t generation,
+                 int expected_length, std::vector<Point> &out_path) const;
 
   struct QueueNode {
     int index;
-    int fCost;
-    int gCost;
+    int f_cost;
+    int g_cost;
   };
 
-  static auto heapLess(const QueueNode &lhs, const QueueNode &rhs) -> bool;
-  void pushOpenNode(const QueueNode &node);
-  auto popOpenNode() -> QueueNode;
+  static auto heap_less(const QueueNode &lhs, const QueueNode &rhs) -> bool;
+  void push_open_node(const QueueNode &node);
+  auto pop_open_node() -> QueueNode;
 
   void workerLoop();
 
