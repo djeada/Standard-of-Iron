@@ -20,8 +20,8 @@ MountedHumanoidRendererBase::MountedHumanoidRendererBase() = default;
 
 auto MountedHumanoidRendererBase::get_scaled_horse_dimensions(
     uint32_t seed) const -> HorseDimensions {
-  HorseDimensions dims = makeHorseDimensions(seed);
-  scaleHorseDimensions(dims, get_mount_scale());
+  HorseDimensions dims = make_horse_dimensions(seed);
+  scale_horse_dimensions(dims, get_mount_scale());
   return dims;
 }
 
@@ -34,7 +34,7 @@ auto MountedHumanoidRendererBase::get_cached_horse_profile(
 
   HorseDimensions dims = get_scaled_horse_dimensions(seed);
   HorseProfile profile =
-      makeHorseProfile(seed, v.palette.leather, v.palette.cloth);
+      make_horse_profile(seed, v.palette.leather, v.palette.cloth);
   profile.dims = dims;
 
   m_profile_cache[seed] = profile;
@@ -134,7 +134,7 @@ void MountedHumanoidRendererBase::addAttachments(
         ctx.model.map(QVector3D(0.0F, 0.0F, 0.0F));
     float const distance =
         (horse_world_pos - ctx.camera->getPosition()).length();
-    horse_lod = calculateHorseLOD(distance);
+    horse_lod = calculate_horse_lod(distance);
   }
 
   m_horseRenderer.render(ctx, anim, anim_ctx, profile, mount_ptr, rein_ptr,
