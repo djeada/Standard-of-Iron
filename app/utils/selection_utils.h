@@ -10,7 +10,7 @@
 namespace App::Utils {
 
 inline void
-sanitizeSelection(Engine::Core::World *world,
+sanitize_selection(Engine::Core::World *world,
                   Game::Systems::SelectionSystem *selection_system) {
   if ((world == nullptr) || (selection_system == nullptr)) {
     return;

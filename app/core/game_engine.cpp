@@ -266,7 +266,7 @@ GameEngine::GameEngine(QObject *parent)
 
   connect(m_commandController.get(),
           &App::Controllers::CommandController::troopLimitReached, [this]() {
-            setError("Maximum troop limit reached. Cannot produce more units.");
+            set_error("Maximum troop limit reached. Cannot produce more units.");
           });
   connect(m_commandController.get(),
           &App::Controllers::CommandController::hold_modeChanged, this,
@@ -282,7 +282,7 @@ GameEngine::GameEngine(QObject *parent)
   m_unitDiedSubscription =
       Engine::Core::ScopedEventSubscription<Engine::Core::UnitDiedEvent>(
           [this](const Engine::Core::UnitDiedEvent &e) {
-            onUnitDied(e);
+            on_unit_died(e);
             if (e.owner_id != m_runtime.localOwnerId) {
 
               int const individuals_per_unit =
@@ -296,7 +296,7 @@ GameEngine::GameEngine(QObject *parent)
   m_unitSpawnedSubscription =
       Engine::Core::ScopedEventSubscription<Engine::Core::UnitSpawnedEvent>(
           [this](const Engine::Core::UnitSpawnedEvent &e) {
-            onUnitSpawned(e);
+            on_unit_spawned(e);
           });
 }
 
@@ -465,7 +465,7 @@ void GameEngine::on_attack_click(qreal sx, qreal sy) {
 }
 
 void GameEngine::reset_movement(Engine::Core::Entity *entity) {
-  App::Utils::resetMovement(entity);
+  App::Utils::reset_movement(entity);
 }
 
 void GameEngine::on_stop_command() {
@@ -624,7 +624,7 @@ void GameEngine::ensureInitialized() {
   Game::Map::WorldBootstrap::ensureInitialized(
       m_runtime.initialized, *m_renderer, *m_camera, m_ground.get(), &error);
   if (!error.isEmpty()) {
-    setError(error);
+    set_error(error);
   }
 }
 
@@ -788,14 +788,14 @@ void GameEngine::render(int pixelWidth, int pixelHeight) {
 
 auto GameEngine::screen_to_ground(const QPointF &screenPt,
                                 QVector3D &outWorld) -> bool {
-  return App::Utils::screenToGround(m_pickingService.get(), m_camera.get(),
+  return App::Utils::screen_to_ground(m_pickingService.get(), m_camera.get(),
                                     m_window, m_viewport.width,
                                     m_viewport.height, screenPt, outWorld);
 }
 
 auto GameEngine::world_to_screen(const QVector3D &world,
                                QPointF &outScreen) const -> bool {
-  return App::Utils::worldToScreen(m_pickingService.get(), m_camera.get(),
+  return App::Utils::world_to_screen(m_pickingService.get(), m_camera.get(),
                                    m_window, m_viewport.width,
                                    m_viewport.height, world, outScreen);
 }
@@ -806,7 +806,7 @@ void GameEngine::sync_selection_flags() {
     return;
   }
 
-  App::Utils::sanitizeSelection(m_world.get(), selection_system);
+  App::Utils::sanitize_selection(m_world.get(), selection_system);
 
   if (selection_system->getSelectedUnits().empty()) {
     if (m_cursorManager && m_cursorManager->mode() != CursorMode::Normal) {
@@ -1119,14 +1119,14 @@ void GameEngine::start_campaign_mission(const QString &campaign_id) {
   clearError();
 
   if (!m_saveLoadService) {
-    setError("Save/Load service not initialized");
+    set_error("Save/Load service not initialized");
     return;
   }
 
   QString error;
   auto campaigns = m_saveLoadService->list_campaigns(&error);
   if (!error.isEmpty()) {
-    setError("Failed to load campaign: " + error);
+    set_error("Failed to load campaign: " + error);
     return;
   }
 
@@ -1140,7 +1140,7 @@ void GameEngine::start_campaign_mission(const QString &campaign_id) {
   }
 
   if (selectedCampaign.isEmpty()) {
-    setError("Campaign not found: " + campaign_id);
+    set_error("Campaign not found: " + campaign_id);
     return;
   }
 
@@ -1259,7 +1259,7 @@ void GameEngine::start_skirmish(const QString &map_path,
     }
 
     if (!result.ok && !result.errorMessage.isEmpty()) {
-      setError(result.errorMessage);
+      set_error(result.errorMessage);
     }
 
     m_runtime.localOwnerId = updated_player_id;
@@ -1299,7 +1299,7 @@ void GameEngine::start_skirmish(const QString &map_path,
       ai_system->reinitialize();
     }
 
-    rebuildEntityCache();
+    rebuild_entity_cache();
     auto &troops = Game::Systems::TroopCountRegistry::instance();
     troops.rebuildFromWorld(*m_world);
 
@@ -1349,14 +1349,14 @@ void GameEngine::load_game_from_slot(const QString &slotName) {
 
 auto GameEngine::load_from_slot(const QString &slot) -> bool {
   if (!m_saveLoadService || !m_world) {
-    setError("Load: not initialized");
+    set_error("Load: not initialized");
     return false;
   }
 
   m_runtime.loading = true;
 
   if (!m_saveLoadService->loadGameFromSlot(*m_world, slot)) {
-    setError(m_saveLoadService->getLastError());
+    set_error(m_saveLoadService->getLastError());
     m_runtime.loading = false;
     return false;
   }
@@ -1380,7 +1380,7 @@ auto GameEngine::load_from_slot(const QString &slot) -> bool {
   qInfo() << "Factory registry reinitialized after loading saved game";
 
   rebuildRegistriesAfterLoad();
-  rebuildEntityCache();
+  rebuild_entity_cache();
 
   if (auto *ai_system = m_world->getSystem<Game::Systems::AISystem>()) {
     qInfo() << "Reinitializing AI system after loading saved game";
@@ -1402,7 +1402,7 @@ auto GameEngine::load_from_slot(const QString &slot) -> bool {
 
 auto GameEngine::save_to_slot(const QString &slot, const QString &title) -> bool {
   if (!m_saveLoadService || !m_world) {
-    setError("Save: not initialized");
+    set_error("Save: not initialized");
     return false;
   }
   Game::Systems::RuntimeSnapshot const runtime_snap = toRuntimeSnapshot();
@@ -1412,7 +1412,7 @@ auto GameEngine::save_to_slot(const QString &slot, const QString &title) -> bool
   const QByteArray screenshot = captureScreenshot();
   if (!m_saveLoadService->saveGameToSlot(*m_world, slot, title,
                                          m_level.map_name, meta, screenshot)) {
-    setError(m_saveLoadService->getLastError());
+    set_error(m_saveLoadService->getLastError());
     return false;
   }
   emit saveSlotsChanged();
@@ -1441,7 +1441,7 @@ auto GameEngine::delete_save_slot(const QString &slotName) -> bool {
   if (!success) {
     QString const error = m_saveLoadService->getLastError();
     qWarning() << "Failed to delete save slot:" << error;
-    setError(error);
+    set_error(error);
   } else {
     emit saveSlotsChanged();
   }
@@ -1574,7 +1574,7 @@ void GameEngine::on_unit_died(const Engine::Core::UnitDiedEvent &event) {
     }
   }
 
-  syncSelectionFlags();
+  sync_selection_flags();
 
   auto emit_if_changed = [&] {
     if (m_entityCache.playerTroopCount != m_runtime.lastTroopCount) {
