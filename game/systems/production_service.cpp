@@ -17,8 +17,8 @@ findFirstSelectedBarracks(Engine::Core::World &world,
                           const std::vector<Engine::Core::EntityID> &selected,
                           int owner_id) -> Engine::Core::Entity * {
   for (auto id : selected) {
-    if (auto *e = world.getEntity(id)) {
-      auto *u = e->getComponent<Engine::Core::UnitComponent>();
+    if (auto *e = world.get_entity(id)) {
+      auto *u = e->get_component<Engine::Core::UnitComponent>();
       if ((u == nullptr) || u->owner_id != owner_id) {
         continue;
       }
@@ -49,8 +49,8 @@ void apply_production_profile(Engine::Core::ProductionComponent *prod,
   }
   const auto profile =
       TroopProfileService::instance().get_profile(nation_id, unit_type);
-  prod->buildTime = profile.production.build_time;
-  prod->villagerCost = profile.individuals_per_unit;
+  prod->build_time = profile.production.build_time;
+  prod->villager_cost = profile.individuals_per_unit;
 }
 
 } // namespace
@@ -63,14 +63,14 @@ auto ProductionService::startProductionForFirstSelectedBarracks(
   if (e == nullptr) {
     return ProductionResult::NoBarracks;
   }
-  auto *unit = e->getComponent<Engine::Core::UnitComponent>();
+  auto *unit = e->get_component<Engine::Core::UnitComponent>();
   const auto nation_id = resolve_nation_id(unit, owner_id);
   const auto profile =
       TroopProfileService::instance().get_profile(nation_id, unit_type);
 
-  auto *p = e->getComponent<Engine::Core::ProductionComponent>();
+  auto *p = e->get_component<Engine::Core::ProductionComponent>();
   if (p == nullptr) {
-    p = e->addComponent<Engine::Core::ProductionComponent>();
+    p = e->add_component<Engine::Core::ProductionComponent>();
   }
   if (p == nullptr) {
     return ProductionResult::NoBarracks;
@@ -78,32 +78,32 @@ auto ProductionService::startProductionForFirstSelectedBarracks(
 
   int const individuals_per_unit = profile.individuals_per_unit;
 
-  if (p->producedCount + individuals_per_unit > p->maxUnits) {
+  if (p->produced_count + individuals_per_unit > p->max_units) {
     return ProductionResult::PerBarracksLimitReached;
   }
 
   int const current_troops =
-      Engine::Core::World::countTroopsForPlayer(owner_id);
+      Engine::Core::World::count_troops_for_player(owner_id);
   int const max_troops = Game::GameConfig::instance().getMaxTroopsPerPlayer();
   if (current_troops + individuals_per_unit > max_troops) {
     return ProductionResult::GlobalTroopLimitReached;
   }
 
   const int max_queue_size = 5;
-  int total_in_queue = p->inProgress ? 1 : 0;
-  total_in_queue += static_cast<int>(p->productionQueue.size());
+  int total_in_queue = p->in_progress ? 1 : 0;
+  total_in_queue += static_cast<int>(p->production_queue.size());
 
   if (total_in_queue >= max_queue_size) {
     return ProductionResult::QueueFull;
   }
 
-  if (p->inProgress) {
-    p->productionQueue.push_back(unit_type);
+  if (p->in_progress) {
+    p->production_queue.push_back(unit_type);
   } else {
     p->product_type = unit_type;
     apply_production_profile(p, nation_id, unit_type);
-    p->timeRemaining = p->buildTime;
-    p->inProgress = true;
+    p->time_remaining = p->build_time;
+    p->in_progress = true;
   }
 
   return ProductionResult::Success;
@@ -117,16 +117,16 @@ auto ProductionService::setRallyForFirstSelectedBarracks(
   if (e == nullptr) {
     return false;
   }
-  auto *p = e->getComponent<Engine::Core::ProductionComponent>();
+  auto *p = e->get_component<Engine::Core::ProductionComponent>();
   if (p == nullptr) {
-    p = e->addComponent<Engine::Core::ProductionComponent>();
+    p = e->add_component<Engine::Core::ProductionComponent>();
   }
   if (p == nullptr) {
     return false;
   }
-  p->rallyX = x;
-  p->rallyZ = z;
-  p->rallySet = true;
+  p->rally_x = x;
+  p->rally_z = z;
+  p->rally_set = true;
   return true;
 }
 
@@ -140,21 +140,21 @@ auto ProductionService::getSelectedBarracksState(
     return false;
   }
   outState.has_barracks = true;
-  if (auto *unit = e->getComponent<Engine::Core::UnitComponent>()) {
+  if (auto *unit = e->get_component<Engine::Core::UnitComponent>()) {
     outState.nation_id = resolve_nation_id(unit, owner_id);
   } else {
     outState.nation_id = NationRegistry::instance().default_nation_id();
   }
-  if (auto *p = e->getComponent<Engine::Core::ProductionComponent>()) {
-    outState.inProgress = p->inProgress;
+  if (auto *p = e->get_component<Engine::Core::ProductionComponent>()) {
+    outState.in_progress = p->in_progress;
     outState.product_type = p->product_type;
-    outState.timeRemaining = p->timeRemaining;
-    outState.buildTime = p->buildTime;
-    outState.producedCount = p->producedCount;
-    outState.maxUnits = p->maxUnits;
-    outState.villagerCost = p->villagerCost;
-    outState.queueSize = static_cast<int>(p->productionQueue.size());
-    outState.productionQueue = p->productionQueue;
+    outState.time_remaining = p->time_remaining;
+    outState.build_time = p->build_time;
+    outState.produced_count = p->produced_count;
+    outState.max_units = p->max_units;
+    outState.villager_cost = p->villager_cost;
+    outState.queue_size = static_cast<int>(p->production_queue.size());
+    outState.production_queue = p->production_queue;
   }
   return true;
 }

@@ -19,21 +19,21 @@ namespace Game::Systems {
 struct LevelSnapshot {
   QString map_path;
   QString map_name;
-  Engine::Core::EntityID playerUnitId = 0;
-  float camFov = 45.0F;
-  float camNear = 0.1F;
-  float camFar = 1000.0F;
+  Engine::Core::EntityID player_unit_id = 0;
+  float cam_fov = 45.0F;
+  float cam_near = 0.1F;
+  float cam_far = 1000.0F;
   int max_troops_per_player = 50;
 };
 
 struct RuntimeSnapshot {
   bool paused = false;
-  float timeScale = 1.0F;
-  int localOwnerId = 1;
-  QString victoryState = "";
-  int cursorMode = 0;
-  int selectedPlayerId = 1;
-  bool followSelection = false;
+  float time_scale = 1.0F;
+  int local_owner_id = 1;
+  QString victory_state = "";
+  int cursor_mode = 0;
+  int selected_player_id = 1;
+  bool follow_selection = false;
 };
 
 class GameStateSerializer {
@@ -45,7 +45,8 @@ public:
 
   static void restoreCameraFromMetadata(const QJsonObject &metadata,
                                         Render::GL::Camera *camera,
-                                        int viewportWidth, int viewportHeight);
+                                        int viewport_width,
+                                        int viewport_height);
 
   static void restoreRuntimeFromMetadata(const QJsonObject &metadata,
                                          RuntimeSnapshot &runtime);

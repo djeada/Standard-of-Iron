@@ -12,14 +12,14 @@ namespace Game::Systems {
 
 class MovementSystem : public Engine::Core::System {
 public:
-  void update(Engine::Core::World *world, float deltaTime) override;
+  void update(Engine::Core::World *world, float delta_time) override;
 
 private:
-  static void moveUnit(Engine::Core::Entity *entity, Engine::Core::World *world,
-                       float deltaTime);
+  static void move_unit(Engine::Core::Entity *entity,
+                        Engine::Core::World *world, float delta_time);
   static auto
-  hasReachedTarget(const Engine::Core::TransformComponent *transform,
-                   const Engine::Core::MovementComponent *movement) -> bool;
+  has_reached_target(const Engine::Core::TransformComponent *transform,
+                     const Engine::Core::MovementComponent *movement) -> bool;
 };
 
 } // namespace Game::Systems

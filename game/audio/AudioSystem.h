@@ -58,15 +58,15 @@ public:
   auto initialize() -> bool;
   void shutdown();
 
-  void playSound(const std::string &soundId,
+  void playSound(const std::string &sound_id,
                  float volume = AudioConstants::DEFAULT_VOLUME,
                  bool loop = false,
                  int priority = AudioConstants::DEFAULT_PRIORITY,
                  AudioCategory category = AudioCategory::SFX);
-  void playMusic(const std::string &musicId,
+  void playMusic(const std::string &music_id,
                  float volume = AudioConstants::DEFAULT_VOLUME,
                  bool crossfade = true);
-  void stopSound(const std::string &soundId);
+  void stopSound(const std::string &sound_id);
   void stopMusic();
   void setMasterVolume(float volume);
   void setSoundVolume(float volume);
@@ -75,12 +75,12 @@ public:
   void pauseAll();
   void resumeAll();
 
-  auto loadSound(const std::string &soundId, const std::string &filePath,
+  auto loadSound(const std::string &sound_id, const std::string &filePath,
                  AudioCategory category = AudioCategory::SFX) -> bool;
-  auto loadMusic(const std::string &musicId,
+  auto loadMusic(const std::string &music_id,
                  const std::string &filePath) -> bool;
-  void unloadSound(const std::string &soundId);
-  void unloadMusic(const std::string &musicId);
+  void unloadSound(const std::string &sound_id);
+  void unloadMusic(const std::string &music_id);
   void unloadAllSounds();
   void unloadAllMusic();
 
