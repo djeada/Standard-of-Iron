@@ -49,7 +49,9 @@ public:
   void set_camera(Camera *camera);
   void set_clear_color(float r, float g, float b, float a = 1.0F);
 
-  void update_animation_time(float delta_time) { m_accumulated_time += delta_time; }
+  void update_animation_time(float delta_time) {
+    m_accumulated_time += delta_time;
+  }
   auto get_animation_time() const -> float { return m_accumulated_time; }
 
   auto resources() const -> ResourceManager * {
@@ -149,9 +151,9 @@ public:
 
 private:
   void enqueue_selection_ring(Engine::Core::Entity *entity,
-                               Engine::Core::TransformComponent *transform,
-                               Engine::Core::UnitComponent *unit_comp,
-                               bool selected, bool hovered);
+                              Engine::Core::TransformComponent *transform,
+                              Engine::Core::UnitComponent *unit_comp,
+                              bool selected, bool hovered);
 
   Camera *m_camera = nullptr;
   std::shared_ptr<Backend> m_backend;

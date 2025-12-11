@@ -203,37 +203,37 @@ void drawWindlass(const DrawContext &p, ISubmitter &out, Mesh *unit,
 } // namespace
 
 void register_catapult_renderer(EntityRendererRegistry &registry) {
-  registry.register_renderer(
-      "troops/roman/catapult", [](const DrawContext &p, ISubmitter &out) {
-        Mesh *unit_cube = getUnitCube();
-        Texture *white_tex = nullptr;
+  registry.register_renderer("troops/roman/catapult", [](const DrawContext &p,
+                                                         ISubmitter &out) {
+    Mesh *unit_cube = getUnitCube();
+    Texture *white_tex = nullptr;
 
-        if (auto *scene_renderer = dynamic_cast<Renderer *>(&out)) {
-          unit_cube = scene_renderer->getMeshCube();
-          white_tex = scene_renderer->getWhiteTexture();
-        }
+    if (auto *scene_renderer = dynamic_cast<Renderer *>(&out)) {
+      unit_cube = scene_renderer->get_mesh_cube();
+      white_tex = scene_renderer->get_white_texture();
+    }
 
-        if (unit_cube == nullptr || white_tex == nullptr) {
-          return;
-        }
+    if (unit_cube == nullptr || white_tex == nullptr) {
+      return;
+    }
 
-        QVector3D team_color{0.8F, 0.2F, 0.2F};
-        if (p.entity != nullptr) {
-          if (auto *r =
-                  p.entity->getComponent<Engine::Core::RenderableComponent>()) {
-            team_color = QVector3D(r->color[0], r->color[1], r->color[2]);
-          }
-        }
+    QVector3D team_color{0.8F, 0.2F, 0.2F};
+    if (p.entity != nullptr) {
+      if (auto *r =
+              p.entity->getComponent<Engine::Core::RenderableComponent>()) {
+        team_color = QVector3D(r->color[0], r->color[1], r->color[2]);
+      }
+    }
 
-        auto palette = make_palette(team_color);
+    auto palette = make_palette(team_color);
 
-        drawBaseFrame(p, out, unit_cube, white_tex, palette);
-        drawWheels(p, out, unit_cube, white_tex, palette);
-        drawTorsionMechanism(p, out, unit_cube, white_tex, palette);
-        drawThrowingArm(p, out, unit_cube, white_tex, palette, p.animation_time);
-        drawWindlass(p, out, unit_cube, white_tex, palette);
-        drawDecorations(p, out, unit_cube, white_tex, palette);
-      });
+    drawBaseFrame(p, out, unit_cube, white_tex, palette);
+    drawWheels(p, out, unit_cube, white_tex, palette);
+    drawTorsionMechanism(p, out, unit_cube, white_tex, palette);
+    drawThrowingArm(p, out, unit_cube, white_tex, palette, p.animation_time);
+    drawWindlass(p, out, unit_cube, white_tex, palette);
+    drawDecorations(p, out, unit_cube, white_tex, palette);
+  });
 }
 
 } // namespace Render::GL::Roman
