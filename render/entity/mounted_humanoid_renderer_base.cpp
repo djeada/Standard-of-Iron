@@ -56,7 +56,7 @@ auto MountedHumanoidRendererBase::resolve_entity_ground_offset(
   }
 
   HorseDimensions dims = get_scaled_horse_dimensions(horse_seed);
-  float offset = -dims.barrel_centerY;
+  float offset = -dims.barrel_center_y;
   if (transform_comp != nullptr) {
     offset *= transform_comp->scale.y;
   }
@@ -103,7 +103,7 @@ void MountedHumanoidRendererBase::customize_pose(
   mounted_controller.finalizeHeadSync(mount, "customize_pose_final_sync");
 }
 
-void MountedHumanoidRendererBase::addAttachments(
+void MountedHumanoidRendererBase::add_attachments(
     const DrawContext &ctx, const HumanoidVariant &v, const HumanoidPose &pose,
     const HumanoidAnimationContext &anim_ctx, ISubmitter &out) const {
   static uint64_t s_mounted_frame_counter = 0;

@@ -672,7 +672,7 @@ void GameEngine::update(float dt) {
   }
 
   if (m_renderer) {
-    m_renderer->updateAnimationTime(dt);
+    m_renderer->update_animation_time(dt);
   }
 
   if (m_camera) {
@@ -754,12 +754,12 @@ void GameEngine::render(int pixelWidth, int pixelHeight) {
     }
   }
   if (m_renderer && m_hoverTracker) {
-    m_renderer->setHoveredEntityId(m_hoverTracker->getLastHoveredEntity());
+    m_renderer->set_hovered_entity_id(m_hoverTracker->getLastHoveredEntity());
   }
   if (m_renderer) {
-    m_renderer->setLocalOwnerId(m_runtime.localOwnerId);
+    m_renderer->set_local_owner_id(m_runtime.localOwnerId);
   }
-  m_renderer->renderWorld(m_world.get());
+  m_renderer->render_world(m_world.get());
   if (auto *arrow_system = m_world->getSystem<Game::Systems::ArrowSystem>()) {
     if (auto *res = m_renderer->resources()) {
       Render::GL::renderArrows(m_renderer.get(), res, *arrow_system);

@@ -69,7 +69,7 @@ void MountedKnightRendererBase::adjust_variation(
 void MountedKnightRendererBase::get_variant(const DrawContext &ctx,
                                             uint32_t seed,
                                             HumanoidVariant &v) const {
-  QVector3D const team_tint = resolveTeamTint(ctx);
+  QVector3D const team_tint = resolve_team_tint(ctx);
   v.palette = makeHumanoidPalette(team_tint, seed);
 }
 
@@ -82,7 +82,7 @@ void MountedKnightRendererBase::apply_riding_animation(
   float const speed_norm = anim_ctx.locomotion_normalized_speed();
   float const speed_lean = 0.0F;
   float const forward_lean =
-      (dims.seatForwardOffset * 0.08F + speed_lean) / 0.15F;
+      (dims.seat_forward_offset * 0.08F + speed_lean) / 0.15F;
 
   MountedPoseController::MountedRiderPoseRequest pose_request;
   pose_request.dims = dims;

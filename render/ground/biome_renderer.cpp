@@ -104,9 +104,9 @@ void BiomeRenderer::submit(Renderer &renderer, ResourceManager *resources) {
 
   if (m_grassInstanceBuffer && m_grassInstanceCount > 0) {
     GrassBatchParams params = m_grassParams;
-    params.time = renderer.getAnimationTime();
-    renderer.grassBatch(m_grassInstanceBuffer.get(), m_grassInstanceCount,
-                        params);
+    params.time = renderer.get_animation_time();
+    renderer.grass_batch(m_grassInstanceBuffer.get(), m_grassInstanceCount,
+                         params);
   }
 }
 

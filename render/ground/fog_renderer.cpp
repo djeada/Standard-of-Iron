@@ -40,7 +40,7 @@ void FogRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   (void)resources;
 
   if (!m_instances.empty()) {
-    renderer.fogBatch(m_instances.data(), m_instances.size());
+    renderer.fog_batch(m_instances.data(), m_instances.size());
   }
 }
 
