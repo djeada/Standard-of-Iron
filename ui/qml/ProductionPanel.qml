@@ -15,14 +15,15 @@ Rectangle {
     function defaultProductionState() {
         return {
             "has_barracks": false,
-            "producedCount": 0,
-            "maxUnits": 0,
-            "queueSize": 0,
-            "inProgress": false,
-            "productionQueue": [],
+            "produced_count": 0,
+            "max_units": 0,
+            "queue_size": 0,
+            "in_progress": false,
+            "production_queue": [],
             "product_type": "",
-            "villagerCost": 1,
-            "buildTime": 0,
+            "villager_cost": 1,
+            "build_time": 0,
+            "time_remaining": 0,
             "nation_id": ""
         };
     }
@@ -72,7 +73,7 @@ Rectangle {
             spacing: 8
 
             Rectangle {
-                property bool has_barracks: (productionPanel.selectionTick, (productionPanel.gameInstance && productionPanel.gameInstance.hasSelectedType && productionPanel.gameInstance.hasSelectedType("barracks")))
+                property bool has_barracks: (productionPanel.selectionTick, (productionPanel.gameInstance && productionPanel.gameInstance.has_selected_type && productionPanel.gameInstance.has_selected_type("barracks")))
 
                 width: parent.width
                 height: productionContent.height + 16
@@ -85,7 +86,7 @@ Rectangle {
                 Column {
                     id: productionContent
 
-                    property var prod: (productionPanel.selectionTick, (productionPanel.gameInstance && productionPanel.gameInstance.getSelectedProductionState) ? productionPanel.gameInstance.getSelectedProductionState() : productionPanel.defaultProductionState())
+                    property var prod: (productionPanel.selectionTick, (productionPanel.gameInstance && productionPanel.gameInstance.get_selected_production_state) ? productionPanel.gameInstance.get_selected_production_state() : productionPanel.defaultProductionState())
 
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.top: parent.top
@@ -109,19 +110,19 @@ Rectangle {
                             model: 5
 
                             Rectangle {
-                                property int queueTotal: (productionContent.prod.inProgress ? 1 : 0) + (productionContent.prod.queueSize || 0)
+                                property int queueTotal: (productionContent.prod.in_progress ? 1 : 0) + (productionContent.prod.queue_size || 0)
                                 property bool isOccupied: index < queueTotal
-                                property bool isProducing: index === 0 && productionContent.prod.inProgress
+                                property bool isProducing: index === 0 && productionContent.prod.in_progress
                                 property string queueUnitType: {
                                     if (!isOccupied)
                                         return "";
 
-                                    if (index === 0 && productionContent.prod.inProgress)
+                                    if (index === 0 && productionContent.prod.in_progress)
                                         return productionContent.prod.product_type || "archer";
 
-                                    var queueIndex = productionContent.prod.inProgress ? index - 1 : index;
-                                    if (productionContent.prod.productionQueue && productionContent.prod.productionQueue[queueIndex])
-                                        return productionContent.prod.productionQueue[queueIndex];
+                                    var queueIndex = productionContent.prod.in_progress ? index - 1 : index;
+                                    if (productionContent.prod.production_queue && productionContent.prod.production_queue[queueIndex])
+                                        return productionContent.prod.production_queue[queueIndex];
 
                                     return "archer";
                                 }
@@ -189,7 +190,7 @@ Rectangle {
                     }
 
                     Text {
-                        property int queueTotal: (productionContent.prod.inProgress ? 1 : 0) + (productionContent.prod.queueSize || 0)
+                        property int queueTotal: (productionContent.prod.in_progress ? 1 : 0) + (productionContent.prod.queue_size || 0)
 
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: queueTotal + " / 5"
@@ -206,7 +207,7 @@ Rectangle {
                         color: "#0a0f14"
                         border.color: "#2c3e50"
                         border.width: 2
-                        visible: productionContent.prod.inProgress
+                        visible: productionContent.prod.in_progress
 
                         Rectangle {
                             anchors.left: parent.left
@@ -214,10 +215,10 @@ Rectangle {
                             anchors.margins: 2
                             height: parent.height - 4
                             width: {
-                                if (!productionContent.prod.inProgress || productionContent.prod.buildTime <= 0)
+                                if (!productionContent.prod.in_progress || productionContent.prod.build_time <= 0)
                                     return 0;
 
-                                var progress = 1 - (Math.max(0, productionContent.prod.timeRemaining) / productionContent.prod.buildTime);
+                                var progress = 1 - (Math.max(0, productionContent.prod.time_remaining) / productionContent.prod.build_time);
                                 return Math.max(0, (parent.width - 4) * progress);
                             }
                             color: "#27ae60"
@@ -245,7 +246,7 @@ Rectangle {
 
                         Text {
                             anchors.centerIn: parent
-                            text: productionContent.prod.inProgress ? Math.max(0, productionContent.prod.timeRemaining).toFixed(1) + "s" : "Idle"
+                            text: productionContent.prod.in_progress ? Math.max(0, productionContent.prod.time_remaining).toFixed(1) + "s" : "Idle"
                             color: "#ecf0f1"
                             font.pointSize: 9
                             font.bold: true
@@ -257,8 +258,8 @@ Rectangle {
 
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter
-                        text: qsTr("Units Produced: %1 / %2").arg(productionContent.prod.producedCount || 0).arg(productionContent.prod.maxUnits || 0)
-                        color: (productionContent.prod.producedCount >= productionContent.prod.maxUnits) ? "#e74c3c" : "#bdc3c7"
+                        text: qsTr("Units Produced: %1 / %2").arg(productionContent.prod.produced_count || 0).arg(productionContent.prod.max_units || 0)
+                        color: (productionContent.prod.produced_count >= productionContent.prod.max_units) ? "#e74c3c" : "#bdc3c7"
                         font.pointSize: 8
                     }
 
@@ -267,7 +268,7 @@ Rectangle {
             }
 
             Rectangle {
-                property bool has_barracks: (productionPanel.selectionTick, (productionPanel.gameInstance && productionPanel.gameInstance.hasSelectedType && productionPanel.gameInstance.hasSelectedType("barracks")))
+                property bool has_barracks: (productionPanel.selectionTick, (productionPanel.gameInstance && productionPanel.gameInstance.has_selected_type && productionPanel.gameInstance.has_selected_type("barracks")))
 
                 width: parent.width
                 height: unitGridContent.height + 16
@@ -280,7 +281,7 @@ Rectangle {
                 Column {
                     id: unitGridContent
 
-                    property var prod: (productionPanel.selectionTick, (productionPanel.gameInstance && productionPanel.gameInstance.getSelectedProductionState) ? productionPanel.gameInstance.getSelectedProductionState() : productionPanel.defaultProductionState())
+                    property var prod: (productionPanel.selectionTick, (productionPanel.gameInstance && productionPanel.gameInstance.get_selected_production_state) ? productionPanel.gameInstance.get_selected_production_state() : productionPanel.defaultProductionState())
 
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.top: parent.top
@@ -302,8 +303,8 @@ Rectangle {
                         rowSpacing: 8
 
                         Rectangle {
-                            property int queueTotal: (unitGridContent.prod.inProgress ? 1 : 0) + (unitGridContent.prod.queueSize || 0)
-                            property bool isEnabled: unitGridContent.prod.has_barracks && unitGridContent.prod.producedCount < unitGridContent.prod.maxUnits && queueTotal < 5
+                            property int queueTotal: (unitGridContent.prod.in_progress ? 1 : 0) + (unitGridContent.prod.queue_size || 0)
+                            property bool isEnabled: unitGridContent.prod.has_barracks && unitGridContent.prod.produced_count < unitGridContent.prod.max_units && queueTotal < 5
 
                             width: 110
                             height: 80
@@ -350,7 +351,7 @@ Rectangle {
                                     id: archerCostText
 
                                     anchors.centerIn: parent
-                                    text: unitGridContent.prod.villagerCost || 1
+                                    text: unitGridContent.prod.villager_cost || 1
                                     color: archerCostBadge.parent.isEnabled ? "#fdf7e3" : "#8a8a8a"
                                     font.pointSize: 16
                                     font.bold: true
@@ -367,7 +368,7 @@ Rectangle {
                                 onClicked: productionPanel.recruitUnit("archer")
                                 cursorShape: parent.isEnabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
-                                ToolTip.text: parent.isEnabled ? qsTr("Recruit Archer\nCost: %1 villagers\nBuild time: %2s").arg(unitGridContent.prod.villagerCost || 1).arg((unitGridContent.prod.buildTime || 0).toFixed(0)) : (parent.queueTotal >= 5 ? qsTr("Queue is full (5/5)") : (unitGridContent.prod.producedCount >= unitGridContent.prod.maxUnits ? qsTr("Unit cap reached") : qsTr("Cannot recruit")))
+                                ToolTip.text: parent.isEnabled ? qsTr("Recruit Archer\nCost: %1 villagers\nBuild time: %2s").arg(unitGridContent.prod.villager_cost || 1).arg((unitGridContent.prod.build_time || 0).toFixed(0)) : (parent.queueTotal >= 5 ? qsTr("Queue is full (5/5)") : (unitGridContent.prod.produced_count >= unitGridContent.prod.max_units ? qsTr("Unit cap reached") : qsTr("Cannot recruit")))
                                 ToolTip.delay: 300
                             }
 
@@ -381,8 +382,8 @@ Rectangle {
                         }
 
                         Rectangle {
-                            property int queueTotal: (unitGridContent.prod.inProgress ? 1 : 0) + (unitGridContent.prod.queueSize || 0)
-                            property bool isEnabled: unitGridContent.prod.has_barracks && unitGridContent.prod.producedCount < unitGridContent.prod.maxUnits && queueTotal < 5
+                            property int queueTotal: (unitGridContent.prod.in_progress ? 1 : 0) + (unitGridContent.prod.queue_size || 0)
+                            property bool isEnabled: unitGridContent.prod.has_barracks && unitGridContent.prod.produced_count < unitGridContent.prod.max_units && queueTotal < 5
 
                             width: 110
                             height: 80
@@ -429,7 +430,7 @@ Rectangle {
                                     id: swordsmanCostText
 
                                     anchors.centerIn: parent
-                                    text: unitGridContent.prod.villagerCost || 1
+                                    text: unitGridContent.prod.villager_cost || 1
                                     color: swordsmanCostBadge.parent.isEnabled ? "#fdf7e3" : "#8a8a8a"
                                     font.pointSize: 16
                                     font.bold: true
@@ -446,7 +447,7 @@ Rectangle {
                                 onClicked: productionPanel.recruitUnit("swordsman")
                                 cursorShape: parent.isEnabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
-                                ToolTip.text: parent.isEnabled ? qsTr("Recruit Swordsman\nCost: %1 villagers\nBuild time: %2s").arg(unitGridContent.prod.villagerCost || 1).arg((unitGridContent.prod.buildTime || 0).toFixed(0)) : (parent.queueTotal >= 5 ? qsTr("Queue is full (5/5)") : (unitGridContent.prod.producedCount >= unitGridContent.prod.maxUnits ? qsTr("Unit cap reached") : qsTr("Cannot recruit")))
+                                ToolTip.text: parent.isEnabled ? qsTr("Recruit Swordsman\nCost: %1 villagers\nBuild time: %2s").arg(unitGridContent.prod.villager_cost || 1).arg((unitGridContent.prod.build_time || 0).toFixed(0)) : (parent.queueTotal >= 5 ? qsTr("Queue is full (5/5)") : (unitGridContent.prod.produced_count >= unitGridContent.prod.max_units ? qsTr("Unit cap reached") : qsTr("Cannot recruit")))
                                 ToolTip.delay: 300
                             }
 
@@ -460,8 +461,8 @@ Rectangle {
                         }
 
                         Rectangle {
-                            property int queueTotal: (unitGridContent.prod.inProgress ? 1 : 0) + (unitGridContent.prod.queueSize || 0)
-                            property bool isEnabled: unitGridContent.prod.has_barracks && unitGridContent.prod.producedCount < unitGridContent.prod.maxUnits && queueTotal < 5
+                            property int queueTotal: (unitGridContent.prod.in_progress ? 1 : 0) + (unitGridContent.prod.queue_size || 0)
+                            property bool isEnabled: unitGridContent.prod.has_barracks && unitGridContent.prod.produced_count < unitGridContent.prod.max_units && queueTotal < 5
 
                             width: 110
                             height: 80
@@ -508,7 +509,7 @@ Rectangle {
                                     id: spearmanCostText
 
                                     anchors.centerIn: parent
-                                    text: unitGridContent.prod.villagerCost || 1
+                                    text: unitGridContent.prod.villager_cost || 1
                                     color: spearmanCostBadge.parent.isEnabled ? "#fdf7e3" : "#8a8a8a"
                                     font.pointSize: 16
                                     font.bold: true
@@ -525,7 +526,7 @@ Rectangle {
                                 onClicked: productionPanel.recruitUnit("spearman")
                                 cursorShape: parent.isEnabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
-                                ToolTip.text: parent.isEnabled ? qsTr("Recruit Spearman\nCost: %1 villagers\nBuild time: %2s").arg(unitGridContent.prod.villagerCost || 1).arg((unitGridContent.prod.buildTime || 0).toFixed(0)) : (parent.queueTotal >= 5 ? qsTr("Queue is full (5/5)") : (unitGridContent.prod.producedCount >= unitGridContent.prod.maxUnits ? qsTr("Unit cap reached") : qsTr("Cannot recruit")))
+                                ToolTip.text: parent.isEnabled ? qsTr("Recruit Spearman\nCost: %1 villagers\nBuild time: %2s").arg(unitGridContent.prod.villager_cost || 1).arg((unitGridContent.prod.build_time || 0).toFixed(0)) : (parent.queueTotal >= 5 ? qsTr("Queue is full (5/5)") : (unitGridContent.prod.produced_count >= unitGridContent.prod.max_units ? qsTr("Unit cap reached") : qsTr("Cannot recruit")))
                                 ToolTip.delay: 300
                             }
 
@@ -539,8 +540,8 @@ Rectangle {
                         }
 
                         Rectangle {
-                            property int queueTotal: (unitGridContent.prod.inProgress ? 1 : 0) + (unitGridContent.prod.queueSize || 0)
-                            property bool isEnabled: unitGridContent.prod.has_barracks && unitGridContent.prod.producedCount < unitGridContent.prod.maxUnits && queueTotal < 5
+                            property int queueTotal: (unitGridContent.prod.in_progress ? 1 : 0) + (unitGridContent.prod.queue_size || 0)
+                            property bool isEnabled: unitGridContent.prod.has_barracks && unitGridContent.prod.produced_count < unitGridContent.prod.max_units && queueTotal < 5
 
                             width: 110
                             height: 80
@@ -587,7 +588,7 @@ Rectangle {
                                     id: horseKnightCostText
 
                                     anchors.centerIn: parent
-                                    text: unitGridContent.prod.villagerCost || 1
+                                    text: unitGridContent.prod.villager_cost || 1
                                     color: horseKnightCostBadge.parent.isEnabled ? "#fdf7e3" : "#8a8a8a"
                                     font.pointSize: 16
                                     font.bold: true
@@ -604,7 +605,7 @@ Rectangle {
                                 onClicked: productionPanel.recruitUnit("horse_swordsman")
                                 cursorShape: parent.isEnabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
-                                ToolTip.text: parent.isEnabled ? qsTr("Recruit Mounted Knight\nCost: %1 villagers\nBuild time: %2s").arg(unitGridContent.prod.villagerCost || 1).arg((unitGridContent.prod.buildTime || 0).toFixed(0)) : (parent.queueTotal >= 5 ? qsTr("Queue is full (5/5)") : (unitGridContent.prod.producedCount >= unitGridContent.prod.maxUnits ? qsTr("Unit cap reached") : qsTr("Cannot recruit")))
+                                ToolTip.text: parent.isEnabled ? qsTr("Recruit Mounted Knight\nCost: %1 villagers\nBuild time: %2s").arg(unitGridContent.prod.villager_cost || 1).arg((unitGridContent.prod.build_time || 0).toFixed(0)) : (parent.queueTotal >= 5 ? qsTr("Queue is full (5/5)") : (unitGridContent.prod.produced_count >= unitGridContent.prod.max_units ? qsTr("Unit cap reached") : qsTr("Cannot recruit")))
                                 ToolTip.delay: 300
                             }
 
@@ -618,8 +619,8 @@ Rectangle {
                         }
 
                         Rectangle {
-                            property int queueTotal: (unitGridContent.prod.inProgress ? 1 : 0) + (unitGridContent.prod.queueSize || 0)
-                            property bool isEnabled: unitGridContent.prod.has_barracks && unitGridContent.prod.producedCount < unitGridContent.prod.maxUnits && queueTotal < 5
+                            property int queueTotal: (unitGridContent.prod.in_progress ? 1 : 0) + (unitGridContent.prod.queue_size || 0)
+                            property bool isEnabled: unitGridContent.prod.has_barracks && unitGridContent.prod.produced_count < unitGridContent.prod.max_units && queueTotal < 5
 
                             width: 110
                             height: 80
@@ -666,7 +667,7 @@ Rectangle {
                                     id: horseArcherCostText
 
                                     anchors.centerIn: parent
-                                    text: unitGridContent.prod.villagerCost || 1
+                                    text: unitGridContent.prod.villager_cost || 1
                                     color: horseArcherCostBadge.parent.isEnabled ? "#fdf7e3" : "#8a8a8a"
                                     font.pointSize: 16
                                     font.bold: true
@@ -683,7 +684,7 @@ Rectangle {
                                 onClicked: productionPanel.recruitUnit("horse_archer")
                                 cursorShape: parent.isEnabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
-                                ToolTip.text: parent.isEnabled ? qsTr("Recruit Horse Archer\nCost: %1 villagers\nBuild time: %2s").arg(unitGridContent.prod.villagerCost || 1).arg((unitGridContent.prod.buildTime || 0).toFixed(0)) : (parent.queueTotal >= 5 ? qsTr("Queue is full (5/5)") : (unitGridContent.prod.producedCount >= unitGridContent.prod.maxUnits ? qsTr("Unit cap reached") : qsTr("Cannot recruit")))
+                                ToolTip.text: parent.isEnabled ? qsTr("Recruit Horse Archer\nCost: %1 villagers\nBuild time: %2s").arg(unitGridContent.prod.villager_cost || 1).arg((unitGridContent.prod.build_time || 0).toFixed(0)) : (parent.queueTotal >= 5 ? qsTr("Queue is full (5/5)") : (unitGridContent.prod.produced_count >= unitGridContent.prod.max_units ? qsTr("Unit cap reached") : qsTr("Cannot recruit")))
                                 ToolTip.delay: 300
                             }
 
@@ -697,8 +698,8 @@ Rectangle {
                         }
 
                         Rectangle {
-                            property int queueTotal: (unitGridContent.prod.inProgress ? 1 : 0) + (unitGridContent.prod.queueSize || 0)
-                            property bool isEnabled: unitGridContent.prod.has_barracks && unitGridContent.prod.producedCount < unitGridContent.prod.maxUnits && queueTotal < 5
+                            property int queueTotal: (unitGridContent.prod.in_progress ? 1 : 0) + (unitGridContent.prod.queue_size || 0)
+                            property bool isEnabled: unitGridContent.prod.has_barracks && unitGridContent.prod.produced_count < unitGridContent.prod.max_units && queueTotal < 5
 
                             width: 110
                             height: 80
@@ -745,7 +746,7 @@ Rectangle {
                                     id: horseSpearmanCostText
 
                                     anchors.centerIn: parent
-                                    text: unitGridContent.prod.villagerCost || 1
+                                    text: unitGridContent.prod.villager_cost || 1
                                     color: horseSpearmanCostBadge.parent.isEnabled ? "#fdf7e3" : "#8a8a8a"
                                     font.pointSize: 16
                                     font.bold: true
@@ -762,7 +763,7 @@ Rectangle {
                                 onClicked: productionPanel.recruitUnit("horse_spearman")
                                 cursorShape: parent.isEnabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
-                                ToolTip.text: parent.isEnabled ? qsTr("Recruit Horse Spearman\nCost: %1 villagers\nBuild time: %2s").arg(unitGridContent.prod.villagerCost || 1).arg((unitGridContent.prod.buildTime || 0).toFixed(0)) : (parent.queueTotal >= 5 ? qsTr("Queue is full (5/5)") : (unitGridContent.prod.producedCount >= unitGridContent.prod.maxUnits ? qsTr("Unit cap reached") : qsTr("Cannot recruit")))
+                                ToolTip.text: parent.isEnabled ? qsTr("Recruit Horse Spearman\nCost: %1 villagers\nBuild time: %2s").arg(unitGridContent.prod.villager_cost || 1).arg((unitGridContent.prod.build_time || 0).toFixed(0)) : (parent.queueTotal >= 5 ? qsTr("Queue is full (5/5)") : (unitGridContent.prod.produced_count >= unitGridContent.prod.max_units ? qsTr("Unit cap reached") : qsTr("Cannot recruit")))
                                 ToolTip.delay: 300
                             }
 
@@ -776,8 +777,8 @@ Rectangle {
                         }
 
                         Rectangle {
-                            property int queueTotal: (unitGridContent.prod.inProgress ? 1 : 0) + (unitGridContent.prod.queueSize || 0)
-                            property bool isEnabled: unitGridContent.prod.has_barracks && unitGridContent.prod.producedCount < unitGridContent.prod.maxUnits && queueTotal < 5
+                            property int queueTotal: (unitGridContent.prod.in_progress ? 1 : 0) + (unitGridContent.prod.queue_size || 0)
+                            property bool isEnabled: unitGridContent.prod.has_barracks && unitGridContent.prod.produced_count < unitGridContent.prod.max_units && queueTotal < 5
 
                             width: 110
                             height: 80
@@ -913,7 +914,6 @@ Rectangle {
 
                             MouseArea {
                                 id: ballistaMouseArea
-
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 enabled: parent.isEnabled
@@ -999,7 +999,7 @@ Rectangle {
                                 onClicked: productionPanel.recruitUnit("healer")
                                 cursorShape: parent.isEnabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
-                                ToolTip.text: parent.isEnabled ? qsTr("Recruit Healer\nCost: %1 villagers\nBuild time: %2s").arg(unitGridContent.prod.villagerCost || 1).arg((unitGridContent.prod.buildTime || 0).toFixed(0)) : (parent.queueTotal >= 5 ? qsTr("Queue is full (5/5)") : (unitGridContent.prod.producedCount >= unitGridContent.prod.maxUnits ? qsTr("Unit cap reached") : qsTr("Cannot recruit")))
+                                ToolTip.text: parent.isEnabled ? qsTr("Recruit Healer\nCost: %1 villagers\nBuild time: %2s").arg(unitGridContent.prod.villager_cost || 1).arg((unitGridContent.prod.build_time || 0).toFixed(0)) : (parent.queueTotal >= 5 ? qsTr("Queue is full (5/5)") : (unitGridContent.prod.produced_count >= unitGridContent.prod.max_units ? qsTr("Unit cap reached") : qsTr("Cannot recruit")))
                                 ToolTip.delay: 300
                             }
 
@@ -1019,7 +1019,7 @@ Rectangle {
             }
 
             Rectangle {
-                property bool has_barracks: (productionPanel.selectionTick, (productionPanel.gameInstance && productionPanel.gameInstance.hasSelectedType && productionPanel.gameInstance.hasSelectedType("barracks")))
+                property bool has_barracks: (productionPanel.selectionTick, (productionPanel.gameInstance && productionPanel.gameInstance.has_selected_type && productionPanel.gameInstance.has_selected_type("barracks")))
 
                 width: parent.width
                 height: 1
@@ -1028,7 +1028,7 @@ Rectangle {
             }
 
             Rectangle {
-                property bool has_barracks: (productionPanel.selectionTick, (productionPanel.gameInstance && productionPanel.gameInstance.hasSelectedType && productionPanel.gameInstance.hasSelectedType("barracks")))
+                property bool has_barracks: (productionPanel.selectionTick, (productionPanel.gameInstance && productionPanel.gameInstance.has_selected_type && productionPanel.gameInstance.has_selected_type("barracks")))
 
                 width: parent.width
                 height: rallyContent.height + 12
@@ -1041,7 +1041,7 @@ Rectangle {
                 Column {
                     id: rallyContent
 
-                    property var prod: (productionPanel.selectionTick, (productionPanel.gameInstance && productionPanel.gameInstance.getSelectedProductionState) ? productionPanel.gameInstance.getSelectedProductionState() : productionPanel.defaultProductionState())
+                    property var prod: (productionPanel.selectionTick, (productionPanel.gameInstance && productionPanel.gameInstance.get_selected_production_state) ? productionPanel.gameInstance.get_selected_production_state() : productionPanel.defaultProductionState())
 
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.top: parent.top
@@ -1091,14 +1091,14 @@ Rectangle {
             }
 
             Item {
-                property bool has_barracksSelected: (productionPanel.selectionTick, (productionPanel.gameInstance && productionPanel.gameInstance.hasSelectedType && productionPanel.gameInstance.hasSelectedType("barracks")))
+                property bool has_barracksSelected: (productionPanel.selectionTick, (productionPanel.gameInstance && productionPanel.gameInstance.has_selected_type && productionPanel.gameInstance.has_selected_type("barracks")))
 
                 height: 20
                 visible: !has_barracksSelected
             }
 
             Item {
-                property bool has_barracks: (productionPanel.selectionTick, (productionPanel.gameInstance && productionPanel.gameInstance.hasSelectedType && productionPanel.gameInstance.hasSelectedType("barracks")))
+                property bool has_barracks: (productionPanel.selectionTick, (productionPanel.gameInstance && productionPanel.gameInstance.has_selected_type && productionPanel.gameInstance.has_selected_type("barracks")))
 
                 visible: !has_barracks
                 width: parent.width

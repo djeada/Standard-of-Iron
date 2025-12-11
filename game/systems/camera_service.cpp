@@ -22,13 +22,13 @@ CameraService::CameraService()
 CameraService::~CameraService() = default;
 
 void CameraService::move(Render::GL::Camera &camera, float dx, float dz) {
-  float const dist = camera.getDistance();
+  float const dist = camera.get_distance();
   float const scale = std::max(0.12F, dist * 0.05F);
   m_controller->move(camera, dx * scale, dz * scale);
 }
 
 void CameraService::elevate(Render::GL::Camera &camera, float dy) {
-  float const distance = camera.getDistance();
+  float const distance = camera.get_distance();
   float const scale = std::clamp(distance * 0.05F, 0.1F, 5.0F);
   m_controller->moveUp(camera, dy * scale);
 }
@@ -37,8 +37,8 @@ void CameraService::zoom(Render::GL::Camera &camera, float delta) {
   m_controller->zoomDistance(camera, delta);
 }
 
-auto CameraService::getDistance(const Render::GL::Camera &camera) -> float {
-  return camera.getDistance();
+auto CameraService::get_distance(const Render::GL::Camera &camera) -> float {
+  return camera.get_distance();
 }
 
 void CameraService::yaw(Render::GL::Camera &camera, float degrees) {
@@ -53,8 +53,8 @@ void CameraService::orbit(Render::GL::Camera &camera, float yaw_deg,
   m_controller->orbit(camera, yaw_deg, pitch_deg);
 }
 
-void CameraService::orbitDirection(Render::GL::Camera &camera, int direction,
-                                   bool shift) {
+void CameraService::orbit_direction(Render::GL::Camera &camera, int direction,
+                                    bool shift) {
   const auto &cam_config = Game::GameConfig::instance().camera();
   float const step =
       shift ? cam_config.orbitStepShift : cam_config.orbitStepNormal;
@@ -62,17 +62,17 @@ void CameraService::orbitDirection(Render::GL::Camera &camera, int direction,
   orbit(camera, 0.0F, pitch);
 }
 
-void CameraService::followSelection(Render::GL::Camera &camera,
-                                    Engine::Core::World &world, bool enable) {
+void CameraService::follow_selection(Render::GL::Camera &camera,
+                                     Engine::Core::World &world, bool enable) {
   m_controller->setFollowEnabled(camera, enable);
 
   if (enable) {
-    if (auto *selection_system = world.getSystem<SelectionSystem>()) {
+    if (auto *selection_system = world.get_system<SelectionSystem>()) {
       m_followSystem->snapToSelection(world, *selection_system, camera);
     }
   } else {
-    auto pos = camera.getPosition();
-    auto tgt = camera.getTarget();
+    auto pos = camera.get_position();
+    auto tgt = camera.get_target();
     camera.lookAt(pos, tgt, QVector3D(0, 1, 0));
   }
 }
@@ -83,25 +83,25 @@ void CameraService::setFollowLerp(Render::GL::Camera &camera, float alpha) {
 }
 
 void CameraService::resetCamera(Render::GL::Camera &camera,
-                                Engine::Core::World &world, int localOwnerId,
-                                unsigned int playerUnitId) {
+                                Engine::Core::World &world, int local_owner_id,
+                                unsigned int player_unit_id) {
   Engine::Core::Entity *focus_entity = nullptr;
-  for (auto *e : world.getEntitiesWith<Engine::Core::UnitComponent>()) {
+  for (auto *e : world.get_entities_with<Engine::Core::UnitComponent>()) {
     if (e == nullptr) {
       continue;
     }
-    auto *u = e->getComponent<Engine::Core::UnitComponent>();
+    auto *u = e->get_component<Engine::Core::UnitComponent>();
     if (u == nullptr) {
       continue;
     }
     if (u->spawn_type == Game::Units::SpawnType::Barracks &&
-        u->owner_id == localOwnerId && u->health > 0) {
+        u->owner_id == local_owner_id && u->health > 0) {
       focus_entity = e;
       break;
     }
   }
-  if ((focus_entity == nullptr) && playerUnitId != 0) {
-    focus_entity = world.getEntity(playerUnitId);
+  if ((focus_entity == nullptr) && player_unit_id != 0U) {
+    focus_entity = world.get_entity(player_unit_id);
   }
 
   if (focus_entity != nullptr) {
@@ -111,7 +111,7 @@ void CameraService::resetCamera(Render::GL::Camera &camera,
 
 void CameraService::snapToEntity(Render::GL::Camera &camera,
                                  Engine::Core::Entity &entity) {
-  if (auto *t = entity.getComponent<Engine::Core::TransformComponent>()) {
+  if (auto *t = entity.get_component<Engine::Core::TransformComponent>()) {
     QVector3D const center(t->position.x, t->position.y, t->position.z);
     const auto &cam_config = Game::GameConfig::instance().camera();
     camera.setRTSView(center, cam_config.defaultDistance,
@@ -119,11 +119,11 @@ void CameraService::snapToEntity(Render::GL::Camera &camera,
   }
 }
 
-void CameraService::updateFollow(Render::GL::Camera &camera,
-                                 Engine::Core::World &world,
-                                 bool followEnabled) {
-  if (followEnabled) {
-    if (auto *selection_system = world.getSystem<SelectionSystem>()) {
+void CameraService::update_follow(Render::GL::Camera &camera,
+                                  Engine::Core::World &world,
+                                  bool follow_enabled) {
+  if (follow_enabled) {
+    if (auto *selection_system = world.get_system<SelectionSystem>()) {
       m_followSystem->update(world, *selection_system, camera);
     }
   }

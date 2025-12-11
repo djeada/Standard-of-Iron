@@ -18,10 +18,10 @@ public:
 
   auto getTroopCount(int owner_id) const -> int;
 
-  void onUnitSpawned(const Engine::Core::UnitSpawnedEvent &event);
-  void onUnitDied(const Engine::Core::UnitDiedEvent &event);
+  void on_unit_spawned(const Engine::Core::UnitSpawnedEvent &event);
+  void on_unit_died(const Engine::Core::UnitDiedEvent &event);
 
-  void rebuildFromWorld(Engine::Core::World &world);
+  void rebuild_from_world(Engine::Core::World &world);
 
 private:
   TroopCountRegistry() = default;
@@ -32,9 +32,9 @@ private:
   std::unordered_map<int, int> m_troop_counts;
 
   Engine::Core::ScopedEventSubscription<Engine::Core::UnitSpawnedEvent>
-      m_unitSpawnedSubscription;
+      m_unit_spawned_subscription;
   Engine::Core::ScopedEventSubscription<Engine::Core::UnitDiedEvent>
-      m_unitDiedSubscription;
+      m_unit_died_subscription;
 };
 
 } // namespace Game::Systems

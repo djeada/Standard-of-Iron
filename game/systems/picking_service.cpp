@@ -11,25 +11,26 @@
 
 namespace Game::Systems {
 
-auto PickingService::worldToScreen(const Render::GL::Camera &cam, int viewW,
-                                   int viewH, const QVector3D &world,
-                                   QPointF &out) -> bool {
-  return cam.worldToScreen(world, qreal(viewW), qreal(viewH), out);
+auto PickingService::world_to_screen(const Render::GL::Camera &cam, int view_w,
+                                     int view_h, const QVector3D &world,
+                                     QPointF &out) -> bool {
+  return cam.world_to_screen(world, qreal(view_w), qreal(view_h), out);
 }
 
-auto PickingService::screenToGround(const Render::GL::Camera &cam, int viewW,
-                                    int viewH, const QPointF &screenPt,
-                                    QVector3D &outWorld) -> bool {
-  if (viewW <= 0 || viewH <= 0) {
+auto PickingService::screen_to_ground(const Render::GL::Camera &cam, int view_w,
+                                      int view_h, const QPointF &screen_pt,
+                                      QVector3D &out_world) -> bool {
+  if (view_w <= 0 || view_h <= 0) {
     return false;
   }
-  return cam.screenToGround(screenPt.x(), screenPt.y(), qreal(viewW),
-                            qreal(viewH), outWorld);
+  return cam.screen_to_ground(screen_pt.x(), screen_pt.y(), qreal(view_w),
+                              qreal(view_h), out_world);
 }
 
-auto PickingService::projectBounds(const Render::GL::Camera &cam,
-                                   const QVector3D &center, float hx, float hz,
-                                   int viewW, int viewH, QRectF &out) -> bool {
+auto PickingService::project_bounds(const Render::GL::Camera &cam,
+                                    const QVector3D &center, float hx, float hz,
+                                    int view_w, int view_h,
+                                    QRectF &out) -> bool {
   QVector3D const corners[4] = {
       QVector3D(center.x() - hx, center.y(), center.z() - hz),
       QVector3D(center.x() + hx, center.y(), center.z() - hz),
@@ -37,7 +38,7 @@ auto PickingService::projectBounds(const Render::GL::Camera &cam,
       QVector3D(center.x() - hx, center.y(), center.z() + hz)};
   QPointF screen_pts[4];
   for (int i = 0; i < 4; ++i) {
-    if (!worldToScreen(cam, viewW, viewH, corners[i], screen_pts[i])) {
+    if (!world_to_screen(cam, view_w, view_h, corners[i], screen_pts[i])) {
       return false;
     }
   }
@@ -55,17 +56,18 @@ auto PickingService::projectBounds(const Render::GL::Camera &cam,
   return true;
 }
 
-auto PickingService::updateHover(float sx, float sy, Engine::Core::World &world,
-                                 const Render::GL::Camera &camera, int viewW,
-                                 int viewH) -> Engine::Core::EntityID {
-  if (sx < 0 || sy < 0 || sx >= viewW || sy >= viewH) {
+auto PickingService::update_hover(float sx, float sy,
+                                  Engine::Core::World &world,
+                                  const Render::GL::Camera &camera, int view_w,
+                                  int view_h) -> Engine::Core::EntityID {
+  if (sx < 0 || sy < 0 || sx >= view_w || sy >= view_h) {
     m_prev_hoverId = 0;
     return 0;
   }
   auto prev_hover = m_prev_hoverId;
 
   Engine::Core::EntityID const picked =
-      pickSingle(sx, sy, world, camera, viewW, viewH, 0, false);
+      pick_single(sx, sy, world, camera, view_w, view_h, 0, false);
 
   if (picked != 0 && picked != prev_hover) {
     m_hoverGraceTicks = 6;
@@ -84,10 +86,10 @@ auto PickingService::updateHover(float sx, float sy, Engine::Core::World &world,
   return current_hover;
 }
 
-auto PickingService::pickSingle(
+auto PickingService::pick_single(
     float sx, float sy, Engine::Core::World &world,
-    const Render::GL::Camera &camera, int viewW, int viewH, int ownerFilter,
-    bool preferBuildingsFirst) -> Engine::Core::EntityID {
+    const Render::GL::Camera &camera, int view_w, int view_h, int owner_filter,
+    bool prefer_buildings_first) -> Engine::Core::EntityID {
 
   const float base_unit_pick_radius = 30.0F;
   const float base_building_pick_radius = 30.0F;
@@ -95,28 +97,28 @@ auto PickingService::pickSingle(
   float best_building_dist2 = std::numeric_limits<float>::max();
   Engine::Core::EntityID best_unit_id = 0;
   Engine::Core::EntityID best_building_id = 0;
-  auto ents = world.getEntitiesWith<Engine::Core::TransformComponent>();
+  auto ents = world.get_entities_with<Engine::Core::TransformComponent>();
   for (auto *e : ents) {
-    if (!e->hasComponent<Engine::Core::UnitComponent>()) {
+    if (!e->has_component<Engine::Core::UnitComponent>()) {
       continue;
     }
-    auto *t = e->getComponent<Engine::Core::TransformComponent>();
-    auto *u = e->getComponent<Engine::Core::UnitComponent>();
+    auto *t = e->get_component<Engine::Core::TransformComponent>();
+    auto *u = e->get_component<Engine::Core::UnitComponent>();
 
-    if (ownerFilter != 0 && u->owner_id != ownerFilter) {
+    if (owner_filter != 0 && u->owner_id != owner_filter) {
       continue;
     }
 
     QPointF sp;
-    if (!camera.worldToScreen(
-            QVector3D(t->position.x, t->position.y, t->position.z), viewW,
-            viewH, sp)) {
+    if (!camera.world_to_screen(
+            QVector3D(t->position.x, t->position.y, t->position.z), view_w,
+            view_h, sp)) {
       continue;
     }
     auto const dx = float(sx - sp.x());
     auto const dy = float(sy - sp.y());
     float const d2 = dx * dx + dy * dy;
-    if (e->hasComponent<Engine::Core::BuildingComponent>()) {
+    if (e->has_component<Engine::Core::BuildingComponent>()) {
       bool hit = false;
       float pick_dist2 = d2;
       const float margin_x_z = 1.6F;
@@ -127,7 +129,7 @@ auto PickingService::pickSingle(
       QPointF pts[8];
       int ok_count = 0;
       auto project = [&](const QVector3D &w, QPointF &out) {
-        return camera.worldToScreen(w, viewW, viewH, out);
+        return camera.world_to_screen(w, view_w, view_h, out);
       };
       ok_count += static_cast<int>(
           project(QVector3D(t->position.x - hx, t->position.y + 0.0F,
@@ -184,17 +186,17 @@ auto PickingService::pickSingle(
       }
       if (hit && pick_dist2 < best_building_dist2) {
         best_building_dist2 = pick_dist2;
-        best_building_id = e->getId();
+        best_building_id = e->get_id();
       }
     } else {
       float const r2 = base_unit_pick_radius * base_unit_pick_radius;
       if (d2 <= r2 && d2 < best_unit_dist2) {
         best_unit_dist2 = d2;
-        best_unit_id = e->getId();
+        best_unit_id = e->get_id();
       }
     }
   }
-  if (preferBuildingsFirst) {
+  if (prefer_buildings_first) {
     if ((best_building_id != 0U) &&
         ((best_unit_id == 0U) || best_building_dist2 <= best_unit_dist2)) {
       return best_building_id;
@@ -213,51 +215,51 @@ auto PickingService::pickSingle(
   return 0;
 }
 
-auto PickingService::pickUnitFirst(float sx, float sy,
-                                   Engine::Core::World &world,
-                                   const Render::GL::Camera &camera, int viewW,
-                                   int viewH,
-                                   int ownerFilter) -> Engine::Core::EntityID {
+auto PickingService::pick_unit_first(
+    float sx, float sy, Engine::Core::World &world,
+    const Render::GL::Camera &camera, int view_w, int view_h,
+    int owner_filter) -> Engine::Core::EntityID {
 
-  auto id = pickSingle(sx, sy, world, camera, viewW, viewH, ownerFilter, false);
+  auto id =
+      pick_single(sx, sy, world, camera, view_w, view_h, owner_filter, false);
   if (id != 0) {
     return id;
   }
 
-  return pickSingle(sx, sy, world, camera, viewW, viewH, ownerFilter, true);
+  return pick_single(sx, sy, world, camera, view_w, view_h, owner_filter, true);
 }
 
-auto PickingService::pickInRect(
+auto PickingService::pick_in_rect(
     float x1, float y1, float x2, float y2, Engine::Core::World &world,
-    const Render::GL::Camera &camera, int viewW, int viewH,
-    int ownerFilter) -> std::vector<Engine::Core::EntityID> {
+    const Render::GL::Camera &camera, int view_w, int view_h,
+    int owner_filter) -> std::vector<Engine::Core::EntityID> {
   float const min_x = std::min(x1, x2);
   float const max_x = std::max(x1, x2);
   float const min_y = std::min(y1, y2);
   float const max_y = std::max(y1, y2);
   std::vector<Engine::Core::EntityID> picked;
-  auto ents = world.getEntitiesWith<Engine::Core::TransformComponent>();
+  auto ents = world.get_entities_with<Engine::Core::TransformComponent>();
   for (auto *e : ents) {
-    if (!e->hasComponent<Engine::Core::UnitComponent>()) {
+    if (!e->has_component<Engine::Core::UnitComponent>()) {
       continue;
     }
-    if (e->hasComponent<Engine::Core::BuildingComponent>()) {
+    if (e->has_component<Engine::Core::BuildingComponent>()) {
       continue;
     }
-    auto *u = e->getComponent<Engine::Core::UnitComponent>();
-    if ((u == nullptr) || u->owner_id != ownerFilter) {
+    auto *u = e->get_component<Engine::Core::UnitComponent>();
+    if ((u == nullptr) || u->owner_id != owner_filter) {
       continue;
     }
-    auto *t = e->getComponent<Engine::Core::TransformComponent>();
+    auto *t = e->get_component<Engine::Core::TransformComponent>();
     QPointF sp;
-    if (!camera.worldToScreen(
-            QVector3D(t->position.x, t->position.y, t->position.z), viewW,
-            viewH, sp)) {
+    if (!camera.world_to_screen(
+            QVector3D(t->position.x, t->position.y, t->position.z), view_w,
+            view_h, sp)) {
       continue;
     }
     if (sp.x() >= min_x && sp.x() <= max_x && sp.y() >= min_y &&
         sp.y() <= max_y) {
-      picked.push_back(e->getId());
+      picked.push_back(e->get_id());
     }
   }
   return picked;
