@@ -37,7 +37,7 @@ void CarthageHeavyHelmetRenderer::render(const DrawContext &ctx,
   const float helmet_scale = 1.08f;
   auto head_point = [&](const QVector3D &n) {
     QVector3D scaled = n * helmet_scale;
-    return HumanoidRendererBase::frameLocalPosition(head, scaled) +
+    return HumanoidRendererBase::frame_local_position(head, scaled) +
            head.up * lift;
   };
 

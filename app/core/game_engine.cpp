@@ -678,7 +678,7 @@ void GameEngine::update(float dt) {
   }
 
   if (m_renderer) {
-    m_renderer->updateAnimationTime(dt);
+    m_renderer->update_animation_time(dt);
   }
 
   if (m_camera) {
@@ -743,15 +743,15 @@ void GameEngine::render(int pixelWidth, int pixelHeight) {
   if (pixelWidth > 0 && pixelHeight > 0) {
     m_viewport.width = pixelWidth;
     m_viewport.height = pixelHeight;
-    m_renderer->setViewport(pixelWidth, pixelHeight);
+    m_renderer->set_viewport(pixelWidth, pixelHeight);
   }
   if (auto *selection_system =
           m_world->get_system<Game::Systems::SelectionSystem>()) {
     const auto &sel = selection_system->get_selected_units();
     std::vector<unsigned int> const ids(sel.begin(), sel.end());
-    m_renderer->setSelectedEntities(ids);
+    m_renderer->set_selected_entities(ids);
   }
-  m_renderer->beginFrame();
+  m_renderer->begin_frame();
   if (auto *res = m_renderer->resources()) {
     for (auto *pass : m_passes) {
       if (pass != nullptr) {
@@ -760,12 +760,12 @@ void GameEngine::render(int pixelWidth, int pixelHeight) {
     }
   }
   if (m_renderer && m_hoverTracker) {
-    m_renderer->setHoveredEntityId(m_hoverTracker->getLastHoveredEntity());
+    m_renderer->set_hovered_entity_id(m_hoverTracker->getLastHoveredEntity());
   }
   if (m_renderer) {
-    m_renderer->setLocalOwnerId(m_runtime.local_owner_id);
+    m_renderer->set_local_owner_id(m_runtime.local_owner_id);
   }
-  m_renderer->renderWorld(m_world.get());
+  m_renderer->render_world(m_world.get());
   if (auto *arrow_system = m_world->get_system<Game::Systems::ArrowSystem>()) {
     if (auto *res = m_renderer->resources()) {
       Render::GL::renderArrows(m_renderer.get(), res, *arrow_system);
@@ -780,7 +780,7 @@ void GameEngine::render(int pixelWidth, int pixelHeight) {
     Render::GL::renderPatrolFlags(m_renderer.get(), res, *m_world,
                                   preview_waypoint);
   }
-  m_renderer->endFrame();
+  m_renderer->end_frame();
 
   qreal const current_x = global_cursor_x();
   qreal const current_y = global_cursor_y();

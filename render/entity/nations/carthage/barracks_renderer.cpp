@@ -322,9 +322,9 @@ void draw_selection(const DrawContext &p, ISubmitter &out) {
   m.translate(pos.x(), 0.0F, pos.z());
   m.scale(2.6F, 1.0F, 2.2F);
   if (p.selected) {
-    out.selectionSmoke(m, QVector3D(0.2F, 0.85F, 0.2F), 0.35F);
+    out.selection_smoke(m, QVector3D(0.2F, 0.85F, 0.2F), 0.35F);
   } else if (p.hovered) {
-    out.selectionSmoke(m, QVector3D(0.95F, 0.92F, 0.25F), 0.22F);
+    out.selection_smoke(m, QVector3D(0.95F, 0.92F, 0.25F), 0.22F);
   }
 }
 

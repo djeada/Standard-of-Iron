@@ -199,7 +199,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
   const std::size_t count = queue.size();
   std::size_t i = 0;
   while (i < count) {
-    const auto &cmd = queue.getSorted(i);
+    const auto &cmd = queue.get_sorted(i);
     switch (cmd.index()) {
     case CylinderCmdIndex: {
       if (!m_cylinderPipeline) {
@@ -208,7 +208,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       }
       m_cylinderPipeline->m_cylinderScratch.clear();
       do {
-        const auto &cy = std::get<CylinderCmdIndex>(queue.getSorted(i));
+        const auto &cy = std::get<CylinderCmdIndex>(queue.get_sorted(i));
         BackendPipelines::CylinderPipeline::CylinderInstanceGpu gpu{};
         gpu.start = cy.start;
         gpu.end = cy.end;
@@ -217,7 +217,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         gpu.color = cy.color;
         m_cylinderPipeline->m_cylinderScratch.emplace_back(gpu);
         ++i;
-      } while (i < count && queue.getSorted(i).index() == CylinderCmdIndex);
+      } while (i < count && queue.get_sorted(i).index() == CylinderCmdIndex);
 
       const std::size_t instance_count =
           m_cylinderPipeline->m_cylinderScratch.size();
@@ -285,7 +285,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
     }
     case GrassBatchCmdIndex: {
       const auto &grass = std::get<GrassBatchCmdIndex>(cmd);
-      if ((grass.instanceBuffer == nullptr) || grass.instance_count == 0 ||
+      if ((grass.instance_buffer == nullptr) || grass.instance_count == 0 ||
           (m_terrainPipeline->m_grassShader == nullptr) ||
           (m_terrainPipeline->m_grassVao == 0U) ||
           m_terrainPipeline->m_grassVertexCount == 0) {
@@ -344,18 +344,18 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       }
 
       glBindVertexArray(m_terrainPipeline->m_grassVao);
-      grass.instanceBuffer->bind();
+      grass.instance_buffer->bind();
       const auto stride = static_cast<GLsizei>(sizeof(GrassInstanceGpu));
       glVertexAttribPointer(
           TexCoord, Vec4, GL_FLOAT, GL_FALSE, stride,
-          reinterpret_cast<void *>(offsetof(GrassInstanceGpu, posHeight)));
+          reinterpret_cast<void *>(offsetof(GrassInstanceGpu, pos_height)));
       glVertexAttribPointer(
           InstancePosition, Vec4, GL_FLOAT, GL_FALSE, stride,
-          reinterpret_cast<void *>(offsetof(GrassInstanceGpu, colorWidth)));
+          reinterpret_cast<void *>(offsetof(GrassInstanceGpu, color_width)));
       glVertexAttribPointer(
           InstanceScale, Vec4, GL_FLOAT, GL_FALSE, stride,
-          reinterpret_cast<void *>(offsetof(GrassInstanceGpu, swayParams)));
-      grass.instanceBuffer->unbind();
+          reinterpret_cast<void *>(offsetof(GrassInstanceGpu, sway_params)));
+      grass.instance_buffer->unbind();
 
       glDrawArraysInstanced(GL_TRIANGLES, 0,
                             m_terrainPipeline->m_grassVertexCount,
@@ -374,7 +374,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         continue;
       }
       const auto &stone = std::get<StoneBatchCmdIndex>(cmd);
-      if ((stone.instanceBuffer == nullptr) || stone.instance_count == 0 ||
+      if ((stone.instance_buffer == nullptr) || stone.instance_count == 0 ||
           (m_vegetationPipeline->stoneShader() == nullptr) ||
           (m_vegetationPipeline->m_stoneVao == 0U) ||
           m_vegetationPipeline->m_stoneIndexCount == 0) {
@@ -407,15 +407,15 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       }
 
       glBindVertexArray(m_vegetationPipeline->m_stoneVao);
-      stone.instanceBuffer->bind();
+      stone.instance_buffer->bind();
       const auto stride = static_cast<GLsizei>(sizeof(StoneInstanceGpu));
       glVertexAttribPointer(
           TexCoord, Vec4, GL_FLOAT, GL_FALSE, stride,
-          reinterpret_cast<void *>(offsetof(StoneInstanceGpu, posScale)));
+          reinterpret_cast<void *>(offsetof(StoneInstanceGpu, pos_scale)));
       glVertexAttribPointer(
           InstancePosition, Vec4, GL_FLOAT, GL_FALSE, stride,
-          reinterpret_cast<void *>(offsetof(StoneInstanceGpu, colorRot)));
-      stone.instanceBuffer->unbind();
+          reinterpret_cast<void *>(offsetof(StoneInstanceGpu, color_rot)));
+      stone.instance_buffer->unbind();
 
       glDrawElementsInstanced(GL_TRIANGLES,
                               m_vegetationPipeline->m_stoneIndexCount,
@@ -432,7 +432,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       }
       const auto &plant = std::get<PlantBatchCmdIndex>(cmd);
 
-      if ((plant.instanceBuffer == nullptr) || plant.instance_count == 0 ||
+      if ((plant.instance_buffer == nullptr) || plant.instance_count == 0 ||
           (m_vegetationPipeline->plantShader() == nullptr) ||
           (m_vegetationPipeline->m_plantVao == 0U) ||
           m_vegetationPipeline->m_plantIndexCount == 0) {
@@ -489,18 +489,18 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       }
 
       glBindVertexArray(m_vegetationPipeline->m_plantVao);
-      plant.instanceBuffer->bind();
+      plant.instance_buffer->bind();
       const auto stride = static_cast<GLsizei>(sizeof(PlantInstanceGpu));
       glVertexAttribPointer(
           InstancePosition, Vec4, GL_FLOAT, GL_FALSE, stride,
-          reinterpret_cast<void *>(offsetof(PlantInstanceGpu, posScale)));
+          reinterpret_cast<void *>(offsetof(PlantInstanceGpu, pos_scale)));
       glVertexAttribPointer(
           InstanceScale, Vec4, GL_FLOAT, GL_FALSE, stride,
-          reinterpret_cast<void *>(offsetof(PlantInstanceGpu, colorSway)));
+          reinterpret_cast<void *>(offsetof(PlantInstanceGpu, color_sway)));
       glVertexAttribPointer(
           InstanceColor, Vec4, GL_FLOAT, GL_FALSE, stride,
-          reinterpret_cast<void *>(offsetof(PlantInstanceGpu, typeParams)));
-      plant.instanceBuffer->unbind();
+          reinterpret_cast<void *>(offsetof(PlantInstanceGpu, type_params)));
+      plant.instance_buffer->unbind();
 
       glDrawElementsInstanced(GL_TRIANGLES,
                               m_vegetationPipeline->m_plantIndexCount,
@@ -521,7 +521,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       }
       const auto &pine = std::get<PineBatchCmdIndex>(cmd);
 
-      if ((pine.instanceBuffer == nullptr) || pine.instance_count == 0 ||
+      if ((pine.instance_buffer == nullptr) || pine.instance_count == 0 ||
           (m_vegetationPipeline->pineShader() == nullptr) ||
           (m_vegetationPipeline->m_pineVao == 0U) ||
           m_vegetationPipeline->m_pineIndexCount == 0) {
@@ -575,18 +575,18 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       }
 
       glBindVertexArray(m_vegetationPipeline->m_pineVao);
-      pine.instanceBuffer->bind();
+      pine.instance_buffer->bind();
       const auto stride = static_cast<GLsizei>(sizeof(PineInstanceGpu));
       glVertexAttribPointer(
           InstancePosition, Vec4, GL_FLOAT, GL_FALSE, stride,
-          reinterpret_cast<void *>(offsetof(PineInstanceGpu, posScale)));
+          reinterpret_cast<void *>(offsetof(PineInstanceGpu, pos_scale)));
       glVertexAttribPointer(
           InstanceScale, Vec4, GL_FLOAT, GL_FALSE, stride,
-          reinterpret_cast<void *>(offsetof(PineInstanceGpu, colorSway)));
+          reinterpret_cast<void *>(offsetof(PineInstanceGpu, color_sway)));
       glVertexAttribPointer(
           InstanceColor, Vec4, GL_FLOAT, GL_FALSE, stride,
           reinterpret_cast<void *>(offsetof(PineInstanceGpu, rotation)));
-      pine.instanceBuffer->unbind();
+      pine.instance_buffer->unbind();
 
       glDrawElementsInstanced(GL_TRIANGLES,
                               m_vegetationPipeline->m_pineIndexCount,
@@ -607,7 +607,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       }
       const auto &olive = std::get<OliveBatchCmdIndex>(cmd);
 
-      if ((olive.instanceBuffer == nullptr) || olive.instance_count == 0 ||
+      if ((olive.instance_buffer == nullptr) || olive.instance_count == 0 ||
           (m_vegetationPipeline->oliveShader() == nullptr) ||
           (m_vegetationPipeline->m_oliveVao == 0U) ||
           m_vegetationPipeline->m_oliveIndexCount == 0) {
@@ -663,7 +663,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       }
 
       glBindVertexArray(m_vegetationPipeline->m_oliveVao);
-      olive.instanceBuffer->bind();
+      olive.instance_buffer->bind();
       const auto stride = static_cast<GLsizei>(sizeof(OliveInstanceGpu));
       glVertexAttribPointer(
           InstancePosition, Vec4, GL_FLOAT, GL_FALSE, stride,
@@ -674,7 +674,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       glVertexAttribPointer(
           InstanceColor, Vec4, GL_FLOAT, GL_FALSE, stride,
           reinterpret_cast<void *>(offsetof(OliveInstanceGpu, rotation)));
-      olive.instanceBuffer->unbind();
+      olive.instance_buffer->unbind();
 
       glDrawElementsInstanced(GL_TRIANGLES,
                               m_vegetationPipeline->m_oliveIndexCount,
@@ -695,7 +695,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       }
       const auto &firecamp = std::get<FireCampBatchCmdIndex>(cmd);
 
-      if ((firecamp.instanceBuffer == nullptr) ||
+      if ((firecamp.instance_buffer == nullptr) ||
           firecamp.instance_count == 0 ||
           (m_vegetationPipeline->firecampShader() == nullptr) ||
           (m_vegetationPipeline->m_firecampVao == 0U) ||
@@ -734,19 +734,19 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
           Shader::InvalidUniform) {
         firecamp_shader->setUniform(
             m_vegetationPipeline->m_firecampUniforms.flickerSpeed,
-            firecamp.params.flickerSpeed);
+            firecamp.params.flicker_speed);
       }
       if (m_vegetationPipeline->m_firecampUniforms.flickerAmount !=
           Shader::InvalidUniform) {
         firecamp_shader->setUniform(
             m_vegetationPipeline->m_firecampUniforms.flickerAmount,
-            firecamp.params.flickerAmount);
+            firecamp.params.flicker_amount);
       }
       if (m_vegetationPipeline->m_firecampUniforms.glowStrength !=
           Shader::InvalidUniform) {
         firecamp_shader->setUniform(
             m_vegetationPipeline->m_firecampUniforms.glowStrength,
-            firecamp.params.glowStrength);
+            firecamp.params.glow_strength);
       }
       if (m_vegetationPipeline->m_firecampUniforms.camera_right !=
           Shader::InvalidUniform) {
@@ -783,7 +783,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       }
 
       glBindVertexArray(m_vegetationPipeline->m_firecampVao);
-      firecamp.instanceBuffer->bind();
+      firecamp.instance_buffer->bind();
       const auto stride = static_cast<GLsizei>(sizeof(FireCampInstanceGpu));
       glVertexAttribPointer(InstancePosition, Vec4, GL_FLOAT, GL_FALSE, stride,
                             reinterpret_cast<void *>(
@@ -791,7 +791,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       glVertexAttribPointer(InstanceScale, Vec4, GL_FLOAT, GL_FALSE, stride,
                             reinterpret_cast<void *>(
                                 offsetof(FireCampInstanceGpu, radius_phase)));
-      firecamp.instanceBuffer->unbind();
+      firecamp.instance_buffer->unbind();
 
       glDrawElementsInstanced(GL_TRIANGLES,
                               m_vegetationPipeline->m_firecampIndexCount,
@@ -1143,11 +1143,11 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         }
       }
 
-      DepthMaskScope const depth_mask(terrain.depthWrite);
+      DepthMaskScope const depth_mask(terrain.depth_write);
       std::unique_ptr<PolygonOffsetScope> poly_scope;
-      if (terrain.depthBias != 0.0F) {
-        poly_scope = std::make_unique<PolygonOffsetScope>(terrain.depthBias,
-                                                          terrain.depthBias);
+      if (terrain.depth_bias != 0.0F) {
+        poly_scope = std::make_unique<PolygonOffsetScope>(terrain.depth_bias,
+                                                          terrain.depth_bias);
       }
 
       terrain.mesh->draw();
@@ -1292,7 +1292,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       active_shader->setUniform(uniforms->useTexture, it.texture != nullptr);
       active_shader->setUniform(uniforms->color, it.color);
       active_shader->setUniform(uniforms->alpha, it.alpha);
-      active_shader->setUniform(uniforms->materialId, it.materialId);
+      active_shader->setUniform(uniforms->materialId, it.material_id);
       it.mesh->draw();
       break;
     }
@@ -1316,7 +1316,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       m_effectsPipeline->m_gridShader->setUniform(
           m_effectsPipeline->m_gridUniforms.lineColor, k_grid_line_color);
       m_effectsPipeline->m_gridShader->setUniform(
-          m_effectsPipeline->m_gridUniforms.cellSize, gc.cellSize);
+          m_effectsPipeline->m_gridUniforms.cellSize, gc.cell_size);
       m_effectsPipeline->m_gridShader->setUniform(
           m_effectsPipeline->m_gridUniforms.thickness, gc.thickness);
 
@@ -1358,7 +1358,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         m_effectsPipeline->m_basicShader->setUniform(
             m_effectsPipeline->m_basicUniforms.model, m);
         m_effectsPipeline->m_basicShader->setUniform(
-            m_effectsPipeline->m_basicUniforms.alpha, sc.alphaOuter);
+            m_effectsPipeline->m_basicUniforms.alpha, sc.alpha_outer);
         ring->draw();
       }
 
@@ -1369,7 +1369,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         m_effectsPipeline->m_basicShader->setUniform(
             m_effectsPipeline->m_basicUniforms.model, sc.model);
         m_effectsPipeline->m_basicShader->setUniform(
-            m_effectsPipeline->m_basicUniforms.alpha, sc.alphaInner);
+            m_effectsPipeline->m_basicUniforms.alpha, sc.alpha_inner);
         ring->draw();
       }
       break;
@@ -1396,7 +1396,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       BlendScope const blend(true);
       for (int i = 0; i < 7; ++i) {
         float const scale = 1.35F + 0.12F * i;
-        float const a = sm.baseAlpha * (1.0F - 0.09F * i);
+        float const a = sm.base_alpha * (1.0F - 0.09F * i);
         QMatrix4x4 m = sm.model;
         m.translate(0.0F, 0.02F, 0.0F);
         m.scale(scale, 1.0F, scale);
@@ -1413,29 +1413,30 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
     }
     case PrimitiveBatchCmdIndex: {
       const auto &batch = std::get<PrimitiveBatchCmdIndex>(cmd);
-      if (batch.instanceCount() == 0 || m_primitiveBatchPipeline == nullptr ||
+      if (batch.instance_count() == 0 || m_primitiveBatchPipeline == nullptr ||
           !m_primitiveBatchPipeline->isInitialized()) {
         break;
       }
 
-      const auto *data = batch.instanceData();
+      const auto *data = batch.instance_data();
 
       switch (batch.type) {
       case PrimitiveType::Sphere:
         m_primitiveBatchPipeline->uploadSphereInstances(data,
-                                                        batch.instanceCount());
-        m_primitiveBatchPipeline->drawSpheres(batch.instanceCount(), view_proj);
+                                                        batch.instance_count());
+        m_primitiveBatchPipeline->drawSpheres(batch.instance_count(),
+                                              view_proj);
         break;
       case PrimitiveType::Cylinder:
         m_primitiveBatchPipeline->uploadCylinderInstances(
-            data, batch.instanceCount());
-        m_primitiveBatchPipeline->drawCylinders(batch.instanceCount(),
+            data, batch.instance_count());
+        m_primitiveBatchPipeline->drawCylinders(batch.instance_count(),
                                                 view_proj);
         break;
       case PrimitiveType::Cone:
         m_primitiveBatchPipeline->uploadConeInstances(data,
-                                                      batch.instanceCount());
-        m_primitiveBatchPipeline->drawCones(batch.instanceCount(), view_proj);
+                                                      batch.instance_count());
+        m_primitiveBatchPipeline->drawCones(batch.instance_count(), view_proj);
         break;
       }
 

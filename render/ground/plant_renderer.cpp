@@ -93,8 +93,8 @@ void PlantRenderer::submit(Renderer &renderer, ResourceManager *resources) {
     if (use_visibility) {
       m_visibleInstances.reserve(m_plantInstanceCount);
       for (const auto &instance : m_plantInstances) {
-        float const world_x = instance.posScale.x();
-        float const world_z = instance.posScale.z();
+        float const world_x = instance.pos_scale.x();
+        float const world_z = instance.pos_scale.z();
         if (visibility.isVisibleWorld(world_x, world_z)) {
           m_visibleInstances.push_back(instance);
         }
@@ -122,8 +122,8 @@ void PlantRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   }
 
   PlantBatchParams params = m_plantParams;
-  params.time = renderer.getAnimationTime();
-  renderer.plantBatch(m_visibleInstanceBuffer.get(), visible_count, params);
+  params.time = renderer.get_animation_time();
+  renderer.plant_batch(m_visibleInstanceBuffer.get(), visible_count, params);
 }
 
 void PlantRenderer::clear() {
@@ -292,10 +292,10 @@ void PlantRenderer::generatePlantInstances() {
 
     PlantInstanceGpu instance;
 
-    instance.posScale = QVector4D(world_x, world_y + 0.05F, world_z, scale);
-    instance.colorSway =
+    instance.pos_scale = QVector4D(world_x, world_y + 0.05F, world_z, scale);
+    instance.color_sway =
         QVector4D(tint_color.x(), tint_color.y(), tint_color.z(), sway_phase);
-    instance.typeParams =
+    instance.type_params =
         QVector4D(plant_type, rotation, sway_strength, sway_speed);
     m_plantInstances.push_back(instance);
     return true;
