@@ -16,7 +16,7 @@ void PlumeRenderer::render(const DrawContext &ctx,
 
   const HorseAttachmentFrame &head = frames.head;
 
-  QVector3D const plume_color = variant.blanketColor;
+  QVector3D const plume_color = variant.blanket_color;
   float const sway = std::sin(anim.time * 2.5F) * 0.08F;
 
   QVector3D const base_pos =

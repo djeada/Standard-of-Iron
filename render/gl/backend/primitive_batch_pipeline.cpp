@@ -46,9 +46,9 @@ void PrimitiveBatchPipeline::shutdown() {
 
 void PrimitiveBatchPipeline::cacheUniforms() {
   if (m_shader != nullptr) {
-    m_uniforms.viewProj = m_shader->uniformHandle("u_viewProj");
-    m_uniforms.lightDir = m_shader->uniformHandle("u_lightDir");
-    m_uniforms.ambientStrength = m_shader->uniformHandle("u_ambientStrength");
+    m_uniforms.view_proj = m_shader->uniformHandle("u_viewProj");
+    m_uniforms.light_dir = m_shader->uniformHandle("u_lightDir");
+    m_uniforms.ambient_strength = m_shader->uniformHandle("u_ambientStrength");
   }
 }
 
@@ -64,25 +64,25 @@ void PrimitiveBatchPipeline::setupInstanceAttributes(GLuint vao,
   glEnableVertexAttribArray(3);
   glVertexAttribPointer(
       3, Vec4, GL_FLOAT, GL_FALSE, stride,
-      reinterpret_cast<void *>(offsetof(GL::PrimitiveInstanceGpu, modelCol0)));
+      reinterpret_cast<void *>(offsetof(GL::PrimitiveInstanceGpu, model_col0)));
   glVertexAttribDivisor(3, 1);
 
   glEnableVertexAttribArray(4);
   glVertexAttribPointer(
       4, Vec4, GL_FLOAT, GL_FALSE, stride,
-      reinterpret_cast<void *>(offsetof(GL::PrimitiveInstanceGpu, modelCol1)));
+      reinterpret_cast<void *>(offsetof(GL::PrimitiveInstanceGpu, model_col1)));
   glVertexAttribDivisor(4, 1);
 
   glEnableVertexAttribArray(5);
   glVertexAttribPointer(
       5, Vec4, GL_FLOAT, GL_FALSE, stride,
-      reinterpret_cast<void *>(offsetof(GL::PrimitiveInstanceGpu, modelCol2)));
+      reinterpret_cast<void *>(offsetof(GL::PrimitiveInstanceGpu, model_col2)));
   glVertexAttribDivisor(5, 1);
 
   glEnableVertexAttribArray(6);
-  glVertexAttribPointer(
-      6, Vec4, GL_FLOAT, GL_FALSE, stride,
-      reinterpret_cast<void *>(offsetof(GL::PrimitiveInstanceGpu, colorAlpha)));
+  glVertexAttribPointer(6, Vec4, GL_FLOAT, GL_FALSE, stride,
+                        reinterpret_cast<void *>(
+                            offsetof(GL::PrimitiveInstanceGpu, color_alpha)));
   glVertexAttribDivisor(6, 1);
 
   glBindVertexArray(0);
@@ -347,9 +347,9 @@ void PrimitiveBatchPipeline::drawSpheres(std::size_t count,
   }
 
   m_shader->use();
-  m_shader->setUniform(m_uniforms.viewProj, viewProj);
-  m_shader->setUniform(m_uniforms.lightDir, QVector3D(0.35F, 0.8F, 0.45F));
-  m_shader->setUniform(m_uniforms.ambientStrength, 0.3F);
+  m_shader->setUniform(m_uniforms.view_proj, viewProj);
+  m_shader->setUniform(m_uniforms.light_dir, QVector3D(0.35F, 0.8F, 0.45F));
+  m_shader->setUniform(m_uniforms.ambient_strength, 0.3F);
 
   glBindVertexArray(m_sphereVao);
   glDrawElementsInstanced(GL_TRIANGLES, m_sphereIndexCount, GL_UNSIGNED_INT,
@@ -364,9 +364,9 @@ void PrimitiveBatchPipeline::drawCylinders(std::size_t count,
   }
 
   m_shader->use();
-  m_shader->setUniform(m_uniforms.viewProj, viewProj);
-  m_shader->setUniform(m_uniforms.lightDir, QVector3D(0.35F, 0.8F, 0.45F));
-  m_shader->setUniform(m_uniforms.ambientStrength, 0.3F);
+  m_shader->setUniform(m_uniforms.view_proj, viewProj);
+  m_shader->setUniform(m_uniforms.light_dir, QVector3D(0.35F, 0.8F, 0.45F));
+  m_shader->setUniform(m_uniforms.ambient_strength, 0.3F);
 
   glBindVertexArray(m_cylinderVao);
   glDrawElementsInstanced(GL_TRIANGLES, m_cylinderIndexCount, GL_UNSIGNED_INT,
@@ -381,9 +381,9 @@ void PrimitiveBatchPipeline::drawCones(std::size_t count,
   }
 
   m_shader->use();
-  m_shader->setUniform(m_uniforms.viewProj, viewProj);
-  m_shader->setUniform(m_uniforms.lightDir, QVector3D(0.35F, 0.8F, 0.45F));
-  m_shader->setUniform(m_uniforms.ambientStrength, 0.3F);
+  m_shader->setUniform(m_uniforms.view_proj, viewProj);
+  m_shader->setUniform(m_uniforms.light_dir, QVector3D(0.35F, 0.8F, 0.45F));
+  m_shader->setUniform(m_uniforms.ambient_strength, 0.3F);
 
   glBindVertexArray(m_coneVao);
   glDrawElementsInstanced(GL_TRIANGLES, m_coneIndexCount, GL_UNSIGNED_INT,

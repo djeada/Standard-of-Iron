@@ -11,7 +11,7 @@ namespace Render::GL {
 
 auto sampleAnimState(const DrawContext &ctx) -> AnimationInputs {
   AnimationInputs anim{};
-  anim.time = ctx.animationTime;
+  anim.time = ctx.animation_time;
   anim.is_moving = false;
   anim.is_attacking = false;
   anim.is_melee = false;

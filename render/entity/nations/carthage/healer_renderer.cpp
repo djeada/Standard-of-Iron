@@ -81,7 +81,7 @@ public:
 
   void get_variant(const DrawContext &ctx, uint32_t seed,
                    HumanoidVariant &v) const override {
-    QVector3D const team_tint = resolveTeamTint(ctx);
+    QVector3D const team_tint = resolve_team_tint(ctx);
     v.palette = makeHumanoidPalette(team_tint, seed);
     auto const &style = resolve_style(ctx);
     apply_palette_overrides(style, team_tint, v);
@@ -161,10 +161,10 @@ public:
     controller.placeHandAt(false, idle_hand_r);
   }
 
-  void addAttachments(const DrawContext &ctx, const HumanoidVariant &v,
-                      const HumanoidPose &pose,
-                      const HumanoidAnimationContext &anim_ctx,
-                      ISubmitter &out) const override {}
+  void add_attachments(const DrawContext &ctx, const HumanoidVariant &v,
+                       const HumanoidPose &pose,
+                       const HumanoidAnimationContext &anim_ctx,
+                       ISubmitter &out) const override {}
 
   void draw_helmet(const DrawContext &ctx, const HumanoidVariant &v,
                    const HumanoidPose &pose, ISubmitter &out) const override {
@@ -207,7 +207,7 @@ public:
       return;
     }
 
-    QVector3D const team_tint = resolveTeamTint(ctx);
+    QVector3D const team_tint = resolve_team_tint(ctx);
     QVector3D const robe_cream(0.46F, 0.46F, 0.48F);
     QVector3D const robe_light(0.42F, 0.42F, 0.44F);
     QVector3D const robe_tan(0.38F, 0.38F, 0.40F);
@@ -456,11 +456,11 @@ void registerHealerRenderer(Render::GL::EntityRendererRegistry &registry) {
         }
         auto *scene_renderer = dynamic_cast<Renderer *>(&out);
         if ((scene_renderer != nullptr) && (healer_shader != nullptr)) {
-          scene_renderer->setCurrentShader(healer_shader);
+          scene_renderer->set_current_shader(healer_shader);
         }
         static_renderer.render(ctx, out);
         if (scene_renderer != nullptr) {
-          scene_renderer->setCurrentShader(nullptr);
+          scene_renderer->set_current_shader(nullptr);
         }
       });
 }

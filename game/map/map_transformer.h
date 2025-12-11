@@ -30,7 +30,7 @@ public:
   static auto
   getFactoryRegistry() -> std::shared_ptr<Game::Units::UnitFactoryRegistry>;
 
-  static void setLocalOwnerId(int owner_id);
+  static void set_local_owner_id(int owner_id);
   static auto local_owner_id() -> int;
 
   static void

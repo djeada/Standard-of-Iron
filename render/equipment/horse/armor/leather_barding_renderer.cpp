@@ -12,7 +12,7 @@ void LeatherBardingRenderer::render(const DrawContext &ctx,
                                     const HorseAnimationContext &,
                                     ISubmitter &out) const {
 
-  QVector3D const armor_color = variant.saddleColor * 0.90F;
+  QVector3D const armor_color = variant.saddle_color * 0.90F;
 
   const HorseAttachmentFrame &chest = frames.chest;
   QMatrix4x4 chest_armor = chest.make_local_transform(

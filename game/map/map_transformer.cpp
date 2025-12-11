@@ -39,7 +39,7 @@ auto MapTransformer::getFactoryRegistry()
   return s_registry;
 }
 
-void MapTransformer::setLocalOwnerId(int owner_id) {
+void MapTransformer::set_local_owner_id(int owner_id) {
   auto &owners = Game::Systems::OwnerRegistry::instance();
   owners.setLocalPlayerId(owner_id);
 }

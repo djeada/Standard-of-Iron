@@ -18,21 +18,21 @@ public:
   virtual ~ISubmitter() = default;
   virtual void mesh(Mesh *mesh, const QMatrix4x4 &model, const QVector3D &color,
                     Texture *tex = nullptr, float alpha = 1.0F,
-                    int materialId = 0) = 0;
+                    int material_id = 0) = 0;
   virtual void cylinder(const QVector3D &start, const QVector3D &end,
                         float radius, const QVector3D &color,
                         float alpha = 1.0F) = 0;
-  virtual void selectionRing(const QMatrix4x4 &model, float alphaInner,
-                             float alphaOuter, const QVector3D &color) = 0;
+  virtual void selection_ring(const QMatrix4x4 &model, float alpha_inner,
+                              float alpha_outer, const QVector3D &color) = 0;
   virtual void grid(const QMatrix4x4 &model, const QVector3D &color,
-                    float cellSize, float thickness, float extent) = 0;
-  virtual void selectionSmoke(const QMatrix4x4 &model, const QVector3D &color,
-                              float baseAlpha = 0.15F) = 0;
+                    float cell_size, float thickness, float extent) = 0;
+  virtual void selection_smoke(const QMatrix4x4 &model, const QVector3D &color,
+                               float base_alpha = 0.15F) = 0;
 };
 
 namespace detail {
-inline auto decomposeUnitCylinder(const QMatrix4x4 &model, QVector3D &start,
-                                  QVector3D &end, float &radius) -> bool {
+inline auto decompose_unit_cylinder(const QMatrix4x4 &model, QVector3D &start,
+                                    QVector3D &end, float &radius) -> bool {
   start = model.map(QVector3D(0.0F, -0.5F, 0.0F));
   end = model.map(QVector3D(0.0F, 0.5F, 0.0F));
   QVector3D const sx = model.mapVector(QVector3D(1.0F, 0.0F, 0.0F));
@@ -46,11 +46,11 @@ class QueueSubmitter : public ISubmitter {
 public:
   explicit QueueSubmitter(DrawQueue *queue) : m_queue(queue) {}
 
-  void setShader(Shader *shader) { m_shader = shader; }
+  void set_shader(Shader *shader) { m_shader = shader; }
 
   void mesh(Mesh *mesh, const QMatrix4x4 &model, const QVector3D &color,
             Texture *tex = nullptr, float alpha = 1.0F,
-            int materialId = 0) override {
+            int material_id = 0) override {
     if ((m_queue == nullptr) || (mesh == nullptr)) {
       return;
     }
@@ -60,7 +60,7 @@ public:
       QVector3D start;
       QVector3D end;
       float radius = 0.0F;
-      if (detail::decomposeUnitCylinder(model, start, end, radius)) {
+      if (detail::decompose_unit_cylinder(model, start, end, radius)) {
         CylinderCmd cyl;
         cyl.start = start;
         cyl.end = end;
@@ -77,7 +77,7 @@ public:
     cmd.model = model;
     cmd.color = color;
     cmd.alpha = alpha;
-    cmd.materialId = materialId;
+    cmd.material_id = material_id;
     cmd.shader = m_shader;
     m_queue->submit(cmd);
   }
@@ -94,19 +94,19 @@ public:
     cmd.alpha = alpha;
     m_queue->submit(cmd);
   }
-  void selectionRing(const QMatrix4x4 &model, float alphaInner,
-                     float alphaOuter, const QVector3D &color) override {
+  void selection_ring(const QMatrix4x4 &model, float alpha_inner,
+                      float alpha_outer, const QVector3D &color) override {
     if (m_queue == nullptr) {
       return;
     }
     SelectionRingCmd cmd;
     cmd.model = model;
-    cmd.alphaInner = alphaInner;
-    cmd.alphaOuter = alphaOuter;
+    cmd.alpha_inner = alpha_inner;
+    cmd.alpha_outer = alpha_outer;
     cmd.color = color;
     m_queue->submit(cmd);
   }
-  void grid(const QMatrix4x4 &model, const QVector3D &color, float cellSize,
+  void grid(const QMatrix4x4 &model, const QVector3D &color, float cell_size,
             float thickness, float extent) override {
     if (m_queue == nullptr) {
       return;
@@ -114,20 +114,20 @@ public:
     GridCmd cmd;
     cmd.model = model;
     cmd.color = color;
-    cmd.cellSize = cellSize;
+    cmd.cell_size = cell_size;
     cmd.thickness = thickness;
     cmd.extent = extent;
     m_queue->submit(cmd);
   }
-  void selectionSmoke(const QMatrix4x4 &model, const QVector3D &color,
-                      float baseAlpha = 0.15F) override {
+  void selection_smoke(const QMatrix4x4 &model, const QVector3D &color,
+                       float base_alpha = 0.15F) override {
     if (m_queue == nullptr) {
       return;
     }
     SelectionSmokeCmd cmd;
     cmd.model = model;
     cmd.color = color;
-    cmd.baseAlpha = baseAlpha;
+    cmd.base_alpha = base_alpha;
     m_queue->submit(cmd);
   }
 
@@ -142,30 +142,30 @@ public:
                              PrimitiveBatcher *batcher = nullptr)
       : m_fallback(fallback), m_batcher(batcher) {}
 
-  void setBatcher(PrimitiveBatcher *batcher) { m_batcher = batcher; }
-  void setEnabled(bool enabled) { m_enabled = enabled; }
+  void set_batcher(PrimitiveBatcher *batcher) { m_batcher = batcher; }
+  void set_enabled(bool enabled) { m_enabled = enabled; }
 
   void mesh(Mesh *mesh, const QMatrix4x4 &model, const QVector3D &color,
             Texture *tex = nullptr, float alpha = 1.0F,
-            int materialId = 0) override {
+            int material_id = 0) override {
 
     if (m_enabled && m_batcher != nullptr && tex == nullptr) {
       if (mesh == getUnitSphere()) {
-        m_batcher->addSphere(model, color, alpha);
+        m_batcher->add_sphere(model, color, alpha);
         return;
       }
       if (mesh == getUnitCylinder()) {
-        m_batcher->addCylinder(model, color, alpha);
+        m_batcher->add_cylinder(model, color, alpha);
         return;
       }
       if (mesh == getUnitCone()) {
-        m_batcher->addCone(model, color, alpha);
+        m_batcher->add_cone(model, color, alpha);
         return;
       }
     }
 
     if (m_fallback != nullptr) {
-      m_fallback->mesh(mesh, model, color, tex, alpha, materialId);
+      m_fallback->mesh(mesh, model, color, tex, alpha, material_id);
     }
   }
 
@@ -177,24 +177,24 @@ public:
     }
   }
 
-  void selectionRing(const QMatrix4x4 &model, float alphaInner,
-                     float alphaOuter, const QVector3D &color) override {
+  void selection_ring(const QMatrix4x4 &model, float alpha_inner,
+                      float alpha_outer, const QVector3D &color) override {
     if (m_fallback != nullptr) {
-      m_fallback->selectionRing(model, alphaInner, alphaOuter, color);
+      m_fallback->selection_ring(model, alpha_inner, alpha_outer, color);
     }
   }
 
-  void grid(const QMatrix4x4 &model, const QVector3D &color, float cellSize,
+  void grid(const QMatrix4x4 &model, const QVector3D &color, float cell_size,
             float thickness, float extent) override {
     if (m_fallback != nullptr) {
-      m_fallback->grid(model, color, cellSize, thickness, extent);
+      m_fallback->grid(model, color, cell_size, thickness, extent);
     }
   }
 
-  void selectionSmoke(const QMatrix4x4 &model, const QVector3D &color,
-                      float baseAlpha = 0.15F) override {
+  void selection_smoke(const QMatrix4x4 &model, const QVector3D &color,
+                       float base_alpha = 0.15F) override {
     if (m_fallback != nullptr) {
-      m_fallback->selectionSmoke(model, color, baseAlpha);
+      m_fallback->selection_smoke(model, color, base_alpha);
     }
   }
 

@@ -12,77 +12,77 @@ struct AnimationInputs;
 struct HumanoidAnimationContext;
 class ISubmitter;
 
-inline auto calculateHorseLOD(float distance) -> HorseLOD;
+inline auto calculate_horse_lod(float distance) -> HorseLOD;
 
 struct HorseRenderStats {
-  uint32_t horsesTotal{0};
-  uint32_t horsesRendered{0};
-  uint32_t horsesSkippedLOD{0};
-  uint32_t lodFull{0};
-  uint32_t lodReduced{0};
-  uint32_t lodMinimal{0};
+  uint32_t horses_total{0};
+  uint32_t horses_rendered{0};
+  uint32_t horses_skipped_lod{0};
+  uint32_t lod_full{0};
+  uint32_t lod_reduced{0};
+  uint32_t lod_minimal{0};
 
   void reset() {
-    horsesTotal = 0;
-    horsesRendered = 0;
-    horsesSkippedLOD = 0;
-    lodFull = 0;
-    lodReduced = 0;
-    lodMinimal = 0;
+    horses_total = 0;
+    horses_rendered = 0;
+    horses_skipped_lod = 0;
+    lod_full = 0;
+    lod_reduced = 0;
+    lod_minimal = 0;
   }
 };
 
-auto getHorseRenderStats() -> const HorseRenderStats &;
+auto get_horse_render_stats() -> const HorseRenderStats &;
 
-void resetHorseRenderStats();
+void reset_horse_render_stats();
 
 struct HorseDimensions {
-  float bodyLength{};
-  float bodyWidth{};
-  float bodyHeight{};
-  float barrel_centerY{};
+  float body_length{};
+  float body_width{};
+  float body_height{};
+  float barrel_center_y{};
 
-  float neckLength{};
-  float neckRise{};
+  float neck_length{};
+  float neck_rise{};
 
-  float headLength{};
-  float headWidth{};
-  float headHeight{};
-  float muzzleLength{};
+  float head_length{};
+  float head_width{};
+  float head_height{};
+  float muzzle_length{};
 
-  float legLength{};
-  float hoofHeight{};
+  float leg_length{};
+  float hoof_height{};
 
-  float tailLength{};
+  float tail_length{};
 
   float saddle_height{};
-  float saddleThickness{};
-  float seatForwardOffset{};
+  float saddle_thickness{};
+  float seat_forward_offset{};
 
-  float stirrupDrop{};
-  float stirrupOut{};
+  float stirrup_drop{};
+  float stirrup_out{};
 
-  float idleBobAmplitude{};
-  float moveBobAmplitude{};
+  float idle_bob_amplitude{};
+  float move_bob_amplitude{};
 };
 
 struct HorseVariant {
-  QVector3D coatColor;
+  QVector3D coat_color;
   QVector3D mane_color;
   QVector3D tail_color;
-  QVector3D muzzleColor;
+  QVector3D muzzle_color;
   QVector3D hoof_color;
-  QVector3D saddleColor;
-  QVector3D blanketColor;
+  QVector3D saddle_color;
+  QVector3D blanket_color;
   QVector3D tack_color;
 };
 
 struct HorseGait {
-  float cycleTime{};
-  float frontLegPhase{};
-  float rearLegPhase{};
-  float strideSwing{};
-  float strideLift{};
+  float cycle_time{};
+  float front_leg_phase{};
+  float rear_leg_phase{};
+  float stride_swing{};
+  float stride_lift{};
 };
 
 struct HorseProfile {
@@ -159,11 +159,11 @@ struct HorseMotionSample {
   float rider_intensity = 0.0F;
 };
 
-auto makeHorseDimensions(uint32_t seed) -> HorseDimensions;
-auto makeHorseVariant(uint32_t seed, const QVector3D &leatherBase,
-                      const QVector3D &clothBase) -> HorseVariant;
-auto makeHorseProfile(uint32_t seed, const QVector3D &leatherBase,
-                      const QVector3D &clothBase) -> HorseProfile;
+auto make_horse_dimensions(uint32_t seed) -> HorseDimensions;
+auto make_horse_variant(uint32_t seed, const QVector3D &leather_base,
+                        const QVector3D &cloth_base) -> HorseVariant;
+auto make_horse_profile(uint32_t seed, const QVector3D &leather_base,
+                        const QVector3D &cloth_base) -> HorseProfile;
 auto compute_mount_frame(const HorseProfile &profile) -> MountedAttachmentFrame;
 auto compute_rein_state(uint32_t horse_seed,
                         const HumanoidAnimationContext &rider_ctx) -> ReinState;
@@ -174,27 +174,27 @@ auto evaluate_horse_motion(HorseProfile &profile, const AnimationInputs &anim,
     -> HorseMotionSample;
 void apply_mount_vertical_offset(MountedAttachmentFrame &frame, float bob);
 
-inline void scaleHorseDimensions(HorseDimensions &dims, float scale) {
-  dims.bodyLength *= scale;
-  dims.bodyWidth *= scale;
-  dims.bodyHeight *= scale;
-  dims.neckLength *= scale;
-  dims.neckRise *= scale;
-  dims.headLength *= scale;
-  dims.headWidth *= scale;
-  dims.headHeight *= scale;
-  dims.muzzleLength *= scale;
-  dims.legLength *= scale;
-  dims.hoofHeight *= scale;
-  dims.tailLength *= scale;
-  dims.saddleThickness *= scale;
-  dims.seatForwardOffset *= scale;
-  dims.stirrupOut *= scale;
-  dims.stirrupDrop *= scale;
-  dims.barrel_centerY *= scale;
+inline void scale_horse_dimensions(HorseDimensions &dims, float scale) {
+  dims.body_length *= scale;
+  dims.body_width *= scale;
+  dims.body_height *= scale;
+  dims.neck_length *= scale;
+  dims.neck_rise *= scale;
+  dims.head_length *= scale;
+  dims.head_width *= scale;
+  dims.head_height *= scale;
+  dims.muzzle_length *= scale;
+  dims.leg_length *= scale;
+  dims.hoof_height *= scale;
+  dims.tail_length *= scale;
+  dims.saddle_thickness *= scale;
+  dims.seat_forward_offset *= scale;
+  dims.stirrup_out *= scale;
+  dims.stirrup_drop *= scale;
+  dims.barrel_center_y *= scale;
   dims.saddle_height *= scale;
-  dims.idleBobAmplitude *= scale;
-  dims.moveBobAmplitude *= scale;
+  dims.idle_bob_amplitude *= scale;
+  dims.move_bob_amplitude *= scale;
 }
 
 class HorseRendererBase {
@@ -214,35 +214,35 @@ public:
               const ReinState *shared_reins,
               const HorseMotionSample *shared_motion, ISubmitter &out) const;
 
-  void renderSimplified(const DrawContext &ctx, const AnimationInputs &anim,
-                        const HumanoidAnimationContext &rider_ctx,
-                        HorseProfile &profile,
-                        const MountedAttachmentFrame *shared_mount,
-                        const HorseMotionSample *shared_motion,
-                        ISubmitter &out) const;
+  void render_simplified(const DrawContext &ctx, const AnimationInputs &anim,
+                         const HumanoidAnimationContext &rider_ctx,
+                         HorseProfile &profile,
+                         const MountedAttachmentFrame *shared_mount,
+                         const HorseMotionSample *shared_motion,
+                         ISubmitter &out) const;
 
-  void renderMinimal(const DrawContext &ctx, HorseProfile &profile,
-                     const HorseMotionSample *shared_motion,
-                     ISubmitter &out) const;
+  void render_minimal(const DrawContext &ctx, HorseProfile &profile,
+                      const HorseMotionSample *shared_motion,
+                      ISubmitter &out) const;
 
 protected:
-  virtual void drawAttachments(const DrawContext &, const AnimationInputs &,
-                               const HumanoidAnimationContext &, HorseProfile &,
-                               const MountedAttachmentFrame &, float, float,
-                               float, const HorseBodyFrames &,
-                               ISubmitter &) const {}
+  virtual void draw_attachments(const DrawContext &, const AnimationInputs &,
+                                const HumanoidAnimationContext &,
+                                HorseProfile &, const MountedAttachmentFrame &,
+                                float, float, float, const HorseBodyFrames &,
+                                ISubmitter &) const {}
 
 private:
-  void renderFull(const DrawContext &ctx, const AnimationInputs &anim,
-                  const HumanoidAnimationContext &rider_ctx,
-                  HorseProfile &profile,
-                  const MountedAttachmentFrame *shared_mount,
-                  const ReinState *shared_reins,
-                  const HorseMotionSample *shared_motion,
-                  ISubmitter &out) const;
+  void render_full(const DrawContext &ctx, const AnimationInputs &anim,
+                   const HumanoidAnimationContext &rider_ctx,
+                   HorseProfile &profile,
+                   const MountedAttachmentFrame *shared_mount,
+                   const ReinState *shared_reins,
+                   const HorseMotionSample *shared_motion,
+                   ISubmitter &out) const;
 };
 
-inline auto calculateHorseLOD(float distance) -> HorseLOD {
+inline auto calculate_horse_lod(float distance) -> HorseLOD {
   const auto &settings = Render::GraphicsSettings::instance();
   if (distance < settings.horse_full_detail_distance()) {
     return HorseLOD::Full;

@@ -16,10 +16,10 @@ void Environment::apply(const MapDefinition &def,
   camera.setPerspective(def.camera.fovY, 16.0F / 9.0F, def.camera.near_plane,
                         def.camera.far_plane);
   Render::GL::Renderer::GridParams gp;
-  gp.cellSize = def.grid.tile_size;
+  gp.cell_size = def.grid.tile_size;
   gp.extent =
       std::max(def.grid.width, def.grid.height) * def.grid.tile_size * 0.5F;
-  renderer.setGridParams(gp);
+  renderer.set_grid_params(gp);
 }
 
 void Environment::applyDefault(Render::GL::Renderer &renderer,
@@ -30,9 +30,9 @@ void Environment::applyDefault(Render::GL::Renderer &renderer,
 
   camera.setPerspective(45.0F, 16.0F / 9.0F, 1.0F, 200.0F);
   Render::GL::Renderer::GridParams gp;
-  gp.cellSize = 1.0F;
+  gp.cell_size = 1.0F;
   gp.extent = 50.0F;
-  renderer.setGridParams(gp);
+  renderer.set_grid_params(gp);
 }
 
 } // namespace Game::Map
