@@ -11,10 +11,10 @@
 namespace Game::Systems::AI {
 
 void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
-                             float deltaTime,
+                             float delta_time,
                              std::vector<AICommand> &outCommands) {
-  m_attackTimer += deltaTime;
-  m_targetLockDuration += deltaTime;
+  m_attackTimer += delta_time;
+  m_targetLockDuration += delta_time;
 
   if (m_attackTimer < 1.5F) {
     return;
@@ -233,7 +233,7 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   }
 
   auto claimed_units = claimUnits(unit_ids, getPriority(), "attacking", context,
-                                  m_attackTimer + deltaTime, 2.5F);
+                                  m_attackTimer + delta_time, 2.5F);
 
   if (claimed_units.empty()) {
     return;
@@ -248,7 +248,7 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
       (context.state == AIState::Attacking || context.barracksUnderThreat) &&
       assessment.forceRatio >= 0.8F;
 
-  command.shouldChase = should_chase_aggressive;
+  command.should_chase = should_chase_aggressive;
 
   outCommands.push_back(std::move(command));
 }

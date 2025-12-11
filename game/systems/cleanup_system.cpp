@@ -14,15 +14,15 @@ void CleanupSystem::removeDeadEntities(Engine::Core::World *world) {
   std::vector<Engine::Core::EntityID> entities_to_remove;
 
   auto entities =
-      world->getEntitiesWith<Engine::Core::PendingRemovalComponent>();
+      world->get_entities_with<Engine::Core::PendingRemovalComponent>();
 
   entities_to_remove.reserve(entities.size());
   for (auto *entity : entities) {
-    entities_to_remove.push_back(entity->getId());
+    entities_to_remove.push_back(entity->get_id());
   }
 
   for (auto entity_id : entities_to_remove) {
-    world->destroyEntity(entity_id);
+    world->destroy_entity(entity_id);
   }
 }
 

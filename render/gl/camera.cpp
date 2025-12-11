@@ -398,8 +398,8 @@ void Camera::update(float dt) {
   }
 }
 
-auto Camera::screenToGround(qreal sx, qreal sy, qreal screenW, qreal screenH,
-                            QVector3D &outWorld) const -> bool {
+auto Camera::screen_to_ground(qreal sx, qreal sy, qreal screenW, qreal screenH,
+                              QVector3D &outWorld) const -> bool {
   if (screenW <= 0 || screenH <= 0) {
     return false;
   }
@@ -447,8 +447,8 @@ auto Camera::screenToGround(qreal sx, qreal sy, qreal screenW, qreal screenH,
   return finite(outWorld);
 }
 
-auto Camera::worldToScreen(const QVector3D &world, qreal screenW, qreal screenH,
-                           QPointF &outScreen) const -> bool {
+auto Camera::world_to_screen(const QVector3D &world, qreal screenW,
+                             qreal screenH, QPointF &outScreen) const -> bool {
   if (screenW <= 0 || screenH <= 0) {
     return false;
   }
@@ -573,7 +573,7 @@ auto Camera::getViewProjectionMatrix() const -> QMatrix4x4 {
   return getProjectionMatrix() * getViewMatrix();
 }
 
-auto Camera::getDistance() const -> float {
+auto Camera::get_distance() const -> float {
   return (m_position - m_target).length();
 }
 

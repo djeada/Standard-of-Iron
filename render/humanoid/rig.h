@@ -25,13 +25,13 @@ void advance_pose_cache_frame();
 
 inline auto calculate_humanoid_lod(float distance) -> HumanoidLOD {
   const auto &settings = Render::GraphicsSettings::instance();
-  if (distance < settings.humanoidFullDetailDistance()) {
+  if (distance < settings.humanoid_full_detail_distance()) {
     return HumanoidLOD::Full;
   }
-  if (distance < settings.humanoidReducedDetailDistance()) {
+  if (distance < settings.humanoid_reduced_detail_distance()) {
     return HumanoidLOD::Reduced;
   }
-  if (distance < settings.humanoidMinimalDetailDistance()) {
+  if (distance < settings.humanoid_minimal_detail_distance()) {
     return HumanoidLOD::Minimal;
   }
   return HumanoidLOD::Billboard;
