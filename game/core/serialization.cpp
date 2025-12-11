@@ -81,27 +81,27 @@ auto Serialization::serializeEntity(const Entity *entity) -> QJsonObject {
 
   if (const auto *transform = entity->get_component<TransformComponent>()) {
     QJsonObject transform_obj;
-    transform_obj["posX"] = transform->position.x;
-    transform_obj["posY"] = transform->position.y;
-    transform_obj["posZ"] = transform->position.z;
-    transform_obj["rotX"] = transform->rotation.x;
-    transform_obj["rotY"] = transform->rotation.y;
-    transform_obj["rotZ"] = transform->rotation.z;
+    transform_obj["pos_x"] = transform->position.x;
+    transform_obj["pos_y"] = transform->position.y;
+    transform_obj["pos_z"] = transform->position.z;
+    transform_obj["rot_x"] = transform->rotation.x;
+    transform_obj["rot_y"] = transform->rotation.y;
+    transform_obj["rot_z"] = transform->rotation.z;
     transform_obj["scale_x"] = transform->scale.x;
-    transform_obj["scaleY"] = transform->scale.y;
+    transform_obj["scale_y"] = transform->scale.y;
     transform_obj["scale_z"] = transform->scale.z;
-    transform_obj["hasDesiredYaw"] = transform->has_desired_yaw;
-    transform_obj["desiredYaw"] = transform->desired_yaw;
+    transform_obj["has_desired_yaw"] = transform->has_desired_yaw;
+    transform_obj["desired_yaw"] = transform->desired_yaw;
     entity_obj["transform"] = transform_obj;
   }
 
   if (const auto *renderable = entity->get_component<RenderableComponent>()) {
     QJsonObject renderable_obj;
-    renderable_obj["meshPath"] = QString::fromStdString(renderable->mesh_path);
-    renderable_obj["texturePath"] =
+    renderable_obj["mesh_path"] = QString::fromStdString(renderable->mesh_path);
+    renderable_obj["texture_path"] =
         QString::fromStdString(renderable->texture_path);
     if (!renderable->renderer_id.empty()) {
-      renderable_obj["rendererId"] =
+      renderable_obj["renderer_id"] =
           QString::fromStdString(renderable->renderer_id);
     }
     renderable_obj["visible"] = renderable->visible;
@@ -125,20 +125,20 @@ auto Serialization::serializeEntity(const Entity *entity) -> QJsonObject {
 
   if (const auto *movement = entity->get_component<MovementComponent>()) {
     QJsonObject movement_obj;
-    movement_obj["hasTarget"] = movement->has_target;
+    movement_obj["has_target"] = movement->has_target;
     movement_obj["target_x"] = movement->target_x;
     movement_obj["target_y"] = movement->target_y;
-    movement_obj["goalX"] = movement->goal_x;
-    movement_obj["goalY"] = movement->goal_y;
+    movement_obj["goal_x"] = movement->goal_x;
+    movement_obj["goal_y"] = movement->goal_y;
     movement_obj["vx"] = movement->vx;
     movement_obj["vz"] = movement->vz;
-    movement_obj["pathPending"] = movement->path_pending;
-    movement_obj["pendingRequestId"] =
+    movement_obj["path_pending"] = movement->path_pending;
+    movement_obj["pending_request_id"] =
         static_cast<qint64>(movement->pending_request_id);
-    movement_obj["repathCooldown"] = movement->repath_cooldown;
-    movement_obj["lastGoalX"] = movement->last_goal_x;
-    movement_obj["lastGoalY"] = movement->last_goal_y;
-    movement_obj["timeSinceLastPathRequest"] =
+    movement_obj["repath_cooldown"] = movement->repath_cooldown;
+    movement_obj["last_goal_x"] = movement->last_goal_x;
+    movement_obj["last_goal_y"] = movement->last_goal_y;
+    movement_obj["time_since_last_path_request"] =
         movement->time_since_last_path_request;
 
     QJsonArray path_array;
@@ -157,17 +157,17 @@ auto Serialization::serializeEntity(const Entity *entity) -> QJsonObject {
     attack_obj["range"] = attack->range;
     attack_obj["damage"] = attack->damage;
     attack_obj["cooldown"] = attack->cooldown;
-    attack_obj["timeSinceLast"] = attack->time_since_last;
-    attack_obj["meleeRange"] = attack->melee_range;
-    attack_obj["meleeDamage"] = attack->melee_damage;
-    attack_obj["meleeCooldown"] = attack->melee_cooldown;
-    attack_obj["preferredMode"] = combatModeToString(attack->preferred_mode);
-    attack_obj["currentMode"] = combatModeToString(attack->current_mode);
-    attack_obj["canMelee"] = attack->can_melee;
-    attack_obj["canRanged"] = attack->can_ranged;
-    attack_obj["max_heightDifference"] = attack->max_height_difference;
-    attack_obj["inMeleeLock"] = attack->in_melee_lock;
-    attack_obj["meleeLockTargetId"] =
+    attack_obj["time_since_last"] = attack->time_since_last;
+    attack_obj["melee_range"] = attack->melee_range;
+    attack_obj["melee_damage"] = attack->melee_damage;
+    attack_obj["melee_cooldown"] = attack->melee_cooldown;
+    attack_obj["preferred_mode"] = combatModeToString(attack->preferred_mode);
+    attack_obj["current_mode"] = combatModeToString(attack->current_mode);
+    attack_obj["can_melee"] = attack->can_melee;
+    attack_obj["can_ranged"] = attack->can_ranged;
+    attack_obj["max_height_difference"] = attack->max_height_difference;
+    attack_obj["in_melee_lock"] = attack->in_melee_lock;
+    attack_obj["melee_lock_target_id"] =
         static_cast<qint64>(attack->melee_lock_target_id);
     entity_obj["attack"] = attack_obj;
   }
@@ -177,13 +177,13 @@ auto Serialization::serializeEntity(const Entity *entity) -> QJsonObject {
     QJsonObject attack_target_obj;
     attack_target_obj["target_id"] =
         static_cast<qint64>(attack_target->target_id);
-    attack_target_obj["shouldChase"] = attack_target->should_chase;
+    attack_target_obj["should_chase"] = attack_target->should_chase;
     entity_obj["attack_target"] = attack_target_obj;
   }
 
   if (const auto *patrol = entity->get_component<PatrolComponent>()) {
     QJsonObject patrol_obj;
-    patrol_obj["currentWaypoint"] = static_cast<int>(patrol->current_waypoint);
+    patrol_obj["current_waypoint"] = static_cast<int>(patrol->current_waypoint);
     patrol_obj["patrolling"] = patrol->patrolling;
 
     QJsonArray waypoints_array;
@@ -203,17 +203,17 @@ auto Serialization::serializeEntity(const Entity *entity) -> QJsonObject {
 
   if (const auto *production = entity->get_component<ProductionComponent>()) {
     QJsonObject production_obj;
-    production_obj["inProgress"] = production->in_progress;
-    production_obj["buildTime"] = production->build_time;
-    production_obj["timeRemaining"] = production->time_remaining;
-    production_obj["producedCount"] = production->produced_count;
-    production_obj["maxUnits"] = production->max_units;
+    production_obj["in_progress"] = production->in_progress;
+    production_obj["build_time"] = production->build_time;
+    production_obj["time_remaining"] = production->time_remaining;
+    production_obj["produced_count"] = production->produced_count;
+    production_obj["max_units"] = production->max_units;
     production_obj["product_type"] = QString::fromStdString(
         Game::Units::troop_typeToString(production->product_type));
-    production_obj["rallyX"] = production->rally_x;
-    production_obj["rallyZ"] = production->rally_z;
-    production_obj["rallySet"] = production->rally_set;
-    production_obj["villagerCost"] = production->villager_cost;
+    production_obj["rally_x"] = production->rally_x;
+    production_obj["rally_z"] = production->rally_z;
+    production_obj["rally_set"] = production->rally_set;
+    production_obj["villager_cost"] = production->villager_cost;
 
     QJsonArray queue_array;
     for (const auto &queued : production->production_queue) {
@@ -231,10 +231,10 @@ auto Serialization::serializeEntity(const Entity *entity) -> QJsonObject {
   if (const auto *capture = entity->get_component<CaptureComponent>()) {
     QJsonObject capture_obj;
     capture_obj["capturing_player_id"] = capture->capturing_player_id;
-    capture_obj["captureProgress"] =
+    capture_obj["capture_progress"] =
         static_cast<double>(capture->capture_progress);
-    capture_obj["requiredTime"] = static_cast<double>(capture->required_time);
-    capture_obj["isBeingCaptured"] = capture->is_being_captured;
+    capture_obj["required_time"] = static_cast<double>(capture->required_time);
+    capture_obj["is_being_captured"] = capture->is_being_captured;
     entity_obj["capture"] = capture_obj;
   }
 
@@ -246,35 +246,37 @@ void Serialization::deserializeEntity(Entity *entity, const QJsonObject &json) {
     const auto transform_obj = json["transform"].toObject();
     auto *transform = entity->add_component<TransformComponent>();
     transform->position.x =
-        static_cast<float>(transform_obj["posX"].toDouble());
+        static_cast<float>(transform_obj["pos_x"].toDouble());
     transform->position.y =
-        static_cast<float>(transform_obj["posY"].toDouble());
+        static_cast<float>(transform_obj["pos_y"].toDouble());
     transform->position.z =
-        static_cast<float>(transform_obj["posZ"].toDouble());
+        static_cast<float>(transform_obj["pos_z"].toDouble());
     transform->rotation.x =
-        static_cast<float>(transform_obj["rotX"].toDouble());
+        static_cast<float>(transform_obj["rot_x"].toDouble());
     transform->rotation.y =
-        static_cast<float>(transform_obj["rotY"].toDouble());
+        static_cast<float>(transform_obj["rot_y"].toDouble());
     transform->rotation.z =
-        static_cast<float>(transform_obj["rotZ"].toDouble());
+        static_cast<float>(transform_obj["rot_z"].toDouble());
     transform->scale.x =
         static_cast<float>(transform_obj["scale_x"].toDouble());
-    transform->scale.y = static_cast<float>(transform_obj["scaleY"].toDouble());
+    transform->scale.y =
+        static_cast<float>(transform_obj["scale_y"].toDouble());
     transform->scale.z =
         static_cast<float>(transform_obj["scale_z"].toDouble());
-    transform->has_desired_yaw = transform_obj["hasDesiredYaw"].toBool(false);
+    transform->has_desired_yaw = transform_obj["has_desired_yaw"].toBool(false);
     transform->desired_yaw =
-        static_cast<float>(transform_obj["desiredYaw"].toDouble());
+        static_cast<float>(transform_obj["desired_yaw"].toDouble());
   }
 
   if (json.contains("renderable")) {
     const auto renderable_obj = json["renderable"].toObject();
     auto *renderable = entity->add_component<RenderableComponent>("", "");
-    renderable->mesh_path = renderable_obj["meshPath"].toString().toStdString();
+    renderable->mesh_path =
+        renderable_obj["mesh_path"].toString().toStdString();
     renderable->texture_path =
-        renderable_obj["texturePath"].toString().toStdString();
+        renderable_obj["texture_path"].toString().toStdString();
     renderable->renderer_id =
-        renderable_obj["rendererId"].toString().toStdString();
+        renderable_obj["renderer_id"].toString().toStdString();
     renderable->visible = renderable_obj["visible"].toBool(true);
     renderable->mesh =
         static_cast<RenderableComponent::MeshKind>(renderable_obj["mesh"].toInt(
@@ -321,26 +323,26 @@ void Serialization::deserializeEntity(Entity *entity, const QJsonObject &json) {
   if (json.contains("movement")) {
     const auto movement_obj = json["movement"].toObject();
     auto *movement = entity->add_component<MovementComponent>();
-    movement->has_target = movement_obj["hasTarget"].toBool(false);
+    movement->has_target = movement_obj["has_target"].toBool(false);
     movement->target_x =
         static_cast<float>(movement_obj["target_x"].toDouble());
     movement->target_y =
         static_cast<float>(movement_obj["target_y"].toDouble());
-    movement->goal_x = static_cast<float>(movement_obj["goalX"].toDouble());
-    movement->goal_y = static_cast<float>(movement_obj["goalY"].toDouble());
+    movement->goal_x = static_cast<float>(movement_obj["goal_x"].toDouble());
+    movement->goal_y = static_cast<float>(movement_obj["goal_y"].toDouble());
     movement->vx = static_cast<float>(movement_obj["vx"].toDouble());
     movement->vz = static_cast<float>(movement_obj["vz"].toDouble());
-    movement->path_pending = movement_obj["pathPending"].toBool(false);
+    movement->path_pending = movement_obj["path_pending"].toBool(false);
     movement->pending_request_id = static_cast<std::uint64_t>(
-        movement_obj["pendingRequestId"].toVariant().toULongLong());
+        movement_obj["pending_request_id"].toVariant().toULongLong());
     movement->repath_cooldown =
-        static_cast<float>(movement_obj["repathCooldown"].toDouble());
+        static_cast<float>(movement_obj["repath_cooldown"].toDouble());
     movement->last_goal_x =
-        static_cast<float>(movement_obj["lastGoalX"].toDouble());
+        static_cast<float>(movement_obj["last_goal_x"].toDouble());
     movement->last_goal_y =
-        static_cast<float>(movement_obj["lastGoalY"].toDouble());
-    movement->time_since_last_path_request =
-        static_cast<float>(movement_obj["timeSinceLastPathRequest"].toDouble());
+        static_cast<float>(movement_obj["last_goal_y"].toDouble());
+    movement->time_since_last_path_request = static_cast<float>(
+        movement_obj["time_since_last_path_request"].toDouble());
 
     movement->path.clear();
     const auto path_array = movement_obj["path"].toArray();
@@ -360,24 +362,24 @@ void Serialization::deserializeEntity(Entity *entity, const QJsonObject &json) {
     attack->damage = attack_obj["damage"].toInt(0);
     attack->cooldown = static_cast<float>(attack_obj["cooldown"].toDouble());
     attack->time_since_last =
-        static_cast<float>(attack_obj["timeSinceLast"].toDouble());
-    attack->melee_range = static_cast<float>(attack_obj["meleeRange"].toDouble(
+        static_cast<float>(attack_obj["time_since_last"].toDouble());
+    attack->melee_range = static_cast<float>(attack_obj["melee_range"].toDouble(
         static_cast<double>(Defaults::kAttackMeleeRange)));
-    attack->melee_damage = attack_obj["meleeDamage"].toInt(0);
+    attack->melee_damage = attack_obj["melee_damage"].toInt(0);
     attack->melee_cooldown =
-        static_cast<float>(attack_obj["meleeCooldown"].toDouble());
+        static_cast<float>(attack_obj["melee_cooldown"].toDouble());
     attack->preferred_mode =
-        combatModeFromString(attack_obj["preferredMode"].toString());
+        combatModeFromString(attack_obj["preferred_mode"].toString());
     attack->current_mode =
-        combatModeFromString(attack_obj["currentMode"].toString());
-    attack->can_melee = attack_obj["canMelee"].toBool(true);
-    attack->can_ranged = attack_obj["canRanged"].toBool(false);
+        combatModeFromString(attack_obj["current_mode"].toString());
+    attack->can_melee = attack_obj["can_melee"].toBool(true);
+    attack->can_ranged = attack_obj["can_ranged"].toBool(false);
     attack->max_height_difference =
-        static_cast<float>(attack_obj["max_heightDifference"].toDouble(
+        static_cast<float>(attack_obj["max_height_difference"].toDouble(
             static_cast<double>(Defaults::kAttackHeightTolerance)));
-    attack->in_melee_lock = attack_obj["inMeleeLock"].toBool(false);
+    attack->in_melee_lock = attack_obj["in_melee_lock"].toBool(false);
     attack->melee_lock_target_id = static_cast<EntityID>(
-        attack_obj["meleeLockTargetId"].toVariant().toULongLong());
+        attack_obj["melee_lock_target_id"].toVariant().toULongLong());
   }
 
   if (json.contains("attack_target")) {
@@ -385,14 +387,15 @@ void Serialization::deserializeEntity(Entity *entity, const QJsonObject &json) {
     auto *attack_target = entity->add_component<AttackTargetComponent>();
     attack_target->target_id = static_cast<EntityID>(
         attack_target_obj["target_id"].toVariant().toULongLong());
-    attack_target->should_chase = attack_target_obj["shouldChase"].toBool(false);
+    attack_target->should_chase =
+        attack_target_obj["should_chase"].toBool(false);
   }
 
   if (json.contains("patrol")) {
     const auto patrol_obj = json["patrol"].toObject();
     auto *patrol = entity->add_component<PatrolComponent>();
-    patrol->current_waypoint =
-        static_cast<size_t>(std::max(0, patrol_obj["currentWaypoint"].toInt()));
+    patrol->current_waypoint = static_cast<size_t>(
+        std::max(0, patrol_obj["current_waypoint"].toInt()));
     patrol->patrolling = patrol_obj["patrolling"].toBool(false);
 
     patrol->waypoints.clear();
@@ -413,21 +416,21 @@ void Serialization::deserializeEntity(Entity *entity, const QJsonObject &json) {
   if (json.contains("production")) {
     const auto production_obj = json["production"].toObject();
     auto *production = entity->add_component<ProductionComponent>();
-    production->in_progress = production_obj["inProgress"].toBool(false);
+    production->in_progress = production_obj["in_progress"].toBool(false);
     production->build_time =
-        static_cast<float>(production_obj["buildTime"].toDouble());
+        static_cast<float>(production_obj["build_time"].toDouble());
     production->time_remaining =
-        static_cast<float>(production_obj["timeRemaining"].toDouble());
-    production->produced_count = production_obj["producedCount"].toInt(0);
-    production->max_units = production_obj["maxUnits"].toInt(0);
+        static_cast<float>(production_obj["time_remaining"].toDouble());
+    production->produced_count = production_obj["produced_count"].toInt(0);
+    production->max_units = production_obj["max_units"].toInt(0);
     production->product_type = Game::Units::troop_typeFromString(
         production_obj["product_type"].toString().toStdString());
     production->rally_x =
-        static_cast<float>(production_obj["rallyX"].toDouble());
+        static_cast<float>(production_obj["rally_x"].toDouble());
     production->rally_z =
-        static_cast<float>(production_obj["rallyZ"].toDouble());
-    production->rally_set = production_obj["rallySet"].toBool(false);
-    production->villager_cost = production_obj["villagerCost"].toInt(1);
+        static_cast<float>(production_obj["rally_z"].toDouble());
+    production->rally_set = production_obj["rally_set"].toBool(false);
+    production->villager_cost = production_obj["villager_cost"].toInt(1);
 
     production->production_queue.clear();
     const auto queue_array = production_obj["queue"].toArray();
@@ -447,11 +450,11 @@ void Serialization::deserializeEntity(Entity *entity, const QJsonObject &json) {
     auto *capture = entity->add_component<CaptureComponent>();
     capture->capturing_player_id = capture_obj["capturing_player_id"].toInt(-1);
     capture->capture_progress =
-        static_cast<float>(capture_obj["captureProgress"].toDouble(0.0));
+        static_cast<float>(capture_obj["capture_progress"].toDouble(0.0));
     capture->required_time =
-        static_cast<float>(capture_obj["requiredTime"].toDouble(
+        static_cast<float>(capture_obj["required_time"].toDouble(
             static_cast<double>(Defaults::kCaptureRequiredTime)));
-    capture->is_being_captured = capture_obj["isBeingCaptured"].toBool(false);
+    capture->is_being_captured = capture_obj["is_being_captured"].toBool(false);
   }
 }
 

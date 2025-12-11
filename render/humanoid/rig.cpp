@@ -1219,7 +1219,8 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
   Engine::Core::MovementComponent *movement_comp = nullptr;
   Engine::Core::TransformComponent *transform_comp = nullptr;
   if (ctx.entity != nullptr) {
-    movement_comp = ctx.entity->get_component<Engine::Core::MovementComponent>();
+    movement_comp =
+        ctx.entity->get_component<Engine::Core::MovementComponent>();
     transform_comp =
         ctx.entity->get_component<Engine::Core::TransformComponent>();
   }
@@ -1355,7 +1356,7 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
     float soldier_distance = 0.0F;
     if (ctx.camera != nullptr) {
       soldier_distance =
-          (soldier_world_pos - ctx.camera->getPosition()).length();
+          (soldier_world_pos - ctx.camera->get_position()).length();
       soldier_lod = calculateHumanoidLOD(soldier_distance);
 
       if (soldier_lod == HumanoidLOD::Billboard) {
@@ -1552,10 +1553,10 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
 
     const auto &gfxSettings = Render::GraphicsSettings::instance();
     const bool shouldRenderShadow =
-        gfxSettings.shadowsEnabled() &&
+        gfxSettings.shadows_enabled() &&
         (soldier_lod == HumanoidLOD::Full ||
          soldier_lod == HumanoidLOD::Reduced) &&
-        soldier_distance < gfxSettings.shadowMaxDistance();
+        soldier_distance < gfxSettings.shadow_max_distance();
 
     if (shouldRenderShadow && inst_ctx.backend != nullptr &&
         inst_ctx.resources != nullptr) {

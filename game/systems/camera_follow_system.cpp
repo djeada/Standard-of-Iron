@@ -10,7 +10,7 @@ namespace Game::Systems {
 void CameraFollowSystem::update(Engine::Core::World &world,
                                 SelectionSystem &selection,
                                 Render::GL::Camera &camera) {
-  const auto &sel = selection.getSelectedUnits();
+  const auto &sel = selection.get_selected_units();
   if (sel.empty()) {
     return;
   }
@@ -34,7 +34,7 @@ void CameraFollowSystem::update(Engine::Core::World &world,
 void CameraFollowSystem::snapToSelection(Engine::Core::World &world,
                                          SelectionSystem &selection,
                                          Render::GL::Camera &camera) {
-  const auto &sel = selection.getSelectedUnits();
+  const auto &sel = selection.get_selected_units();
   if (sel.empty()) {
     return;
   }

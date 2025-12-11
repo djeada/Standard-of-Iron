@@ -66,7 +66,7 @@ SkirmishLoader::SkirmishLoader(Engine::Core::World &world,
 void SkirmishLoader::resetGameState() {
   if (auto *selection_system =
           m_world.get_system<Game::Systems::SelectionSystem>()) {
-    selection_system->clearSelection();
+    selection_system->clear_selection();
   }
 
   m_renderer.pause();
@@ -474,7 +474,7 @@ auto SkirmishLoader::start(const QString &map_path,
     }
   }
 
-  if ((focus_entity == nullptr) && level_result.player_unit_id != 0) {
+  if ((focus_entity == nullptr) && level_result.player_unit_id != 0U) {
     focus_entity = m_world.get_entity(level_result.player_unit_id);
   }
 
@@ -490,9 +490,9 @@ auto SkirmishLoader::start(const QString &map_path,
   result.ok = true;
   result.map_name = level_result.map_name;
   result.player_unit_id = level_result.player_unit_id;
-  result.camFov = level_result.camFov;
-  result.camNear = level_result.camNear;
-  result.camFar = level_result.camFar;
+  result.cam_fov = level_result.cam_fov;
+  result.cam_near = level_result.cam_near;
+  result.cam_far = level_result.cam_far;
   result.grid_width = level_result.grid_width;
   result.grid_height = level_result.grid_height;
   result.tile_size = level_result.tile_size;

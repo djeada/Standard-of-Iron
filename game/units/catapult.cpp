@@ -90,12 +90,13 @@ void Catapult::init(const SpawnParams &params) {
   m_atk->melee_damage = profile.combat.melee_damage;
   m_atk->melee_cooldown = profile.combat.melee_cooldown;
 
-  m_atk->preferred_mode = profile.combat.can_ranged
-                             ? Engine::Core::AttackComponent::CombatMode::Ranged
-                             : Engine::Core::AttackComponent::CombatMode::Melee;
+  m_atk->preferred_mode =
+      profile.combat.can_ranged
+          ? Engine::Core::AttackComponent::CombatMode::Ranged
+          : Engine::Core::AttackComponent::CombatMode::Melee;
   m_atk->current_mode = profile.combat.can_ranged
-                           ? Engine::Core::AttackComponent::CombatMode::Ranged
-                           : Engine::Core::AttackComponent::CombatMode::Melee;
+                            ? Engine::Core::AttackComponent::CombatMode::Ranged
+                            : Engine::Core::AttackComponent::CombatMode::Melee;
   m_atk->can_ranged = profile.combat.can_ranged;
   m_atk->can_melee = profile.combat.can_melee;
   m_atk->max_height_difference = 5.0F;
