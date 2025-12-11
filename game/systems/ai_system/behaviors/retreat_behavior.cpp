@@ -13,9 +13,9 @@
 namespace Game::Systems::AI {
 
 void RetreatBehavior::execute(const AISnapshot &snapshot, AIContext &context,
-                              float deltaTime,
+                              float delta_time,
                               std::vector<AICommand> &outCommands) {
-  m_retreatTimer += deltaTime;
+  m_retreatTimer += delta_time;
   if (m_retreatTimer < 1.0F) {
     return;
   }
@@ -81,7 +81,7 @@ void RetreatBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   }
 
   auto claimed_units = claimUnits(unit_ids, getPriority(), "retreating",
-                                  context, m_retreatTimer + deltaTime, 1.0F);
+                                  context, m_retreatTimer + delta_time, 1.0F);
 
   if (claimed_units.empty()) {
     return;

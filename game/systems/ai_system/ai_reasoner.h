@@ -14,7 +14,7 @@ public:
 
   static void updateContext(const AISnapshot &snapshot, AIContext &ctx);
 
-  static void updateStateMachine(AIContext &ctx, float deltaTime);
+  static void updateStateMachine(AIContext &ctx, float delta_time);
 };
 
 } // namespace Game::Systems::AI

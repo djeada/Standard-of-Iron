@@ -190,7 +190,7 @@ public:
     QVector3D team_tint = resolveTeamTint(ctx);
     uint32_t seed = 0U;
     if (ctx.entity != nullptr) {
-      auto *unit = ctx.entity->getComponent<Engine::Core::UnitComponent>();
+      auto *unit = ctx.entity->get_component<Engine::Core::UnitComponent>();
       if (unit != nullptr) {
         seed ^= uint32_t(unit->owner_id * 2654435761U);
       }
@@ -320,7 +320,7 @@ private:
     std::string nation_id;
     if (ctx.entity != nullptr) {
       if (auto *unit =
-              ctx.entity->getComponent<Engine::Core::UnitComponent>()) {
+              ctx.entity->get_component<Engine::Core::UnitComponent>()) {
         nation_id = Game::Systems::nationIDToString(unit->nation_id);
       }
     }

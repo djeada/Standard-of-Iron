@@ -36,24 +36,24 @@ auto Healer::Create(Engine::Core::World &world,
 
 void Healer::init(const SpawnParams &params) {
 
-  auto *e = m_world->createEntity();
-  m_id = e->getId();
+  auto *e = m_world->create_entity();
+  m_id = e->get_id();
 
   const auto nation_id = resolve_nation_id(params);
   auto profile = Game::Systems::TroopProfileService::instance().get_profile(
       nation_id, TroopType::Healer);
 
-  m_t = e->addComponent<Engine::Core::TransformComponent>();
+  m_t = e->add_component<Engine::Core::TransformComponent>();
   m_t->position = {params.position.x(), params.position.y(),
                    params.position.z()};
   float const scale = profile.visuals.render_scale;
   m_t->scale = {scale, scale, scale};
 
-  m_r = e->addComponent<Engine::Core::RenderableComponent>("", "");
+  m_r = e->add_component<Engine::Core::RenderableComponent>("", "");
   m_r->visible = true;
-  m_r->rendererId = profile.visuals.renderer_id;
+  m_r->renderer_id = profile.visuals.renderer_id;
 
-  m_u = e->addComponent<Engine::Core::UnitComponent>();
+  m_u = e->add_component<Engine::Core::UnitComponent>();
   m_u->spawn_type = params.spawn_type;
   m_u->health = profile.combat.health;
   m_u->max_health = profile.combat.max_health;
@@ -62,8 +62,8 @@ void Healer::init(const SpawnParams &params) {
   m_u->vision_range = profile.combat.vision_range;
   m_u->nation_id = nation_id;
 
-  if (params.aiControlled) {
-    e->addComponent<Engine::Core::AIControlledComponent>();
+  if (params.ai_controlled) {
+    e->add_component<Engine::Core::AIControlledComponent>();
   }
 
   QVector3D const tc = team_color(m_u->owner_id);
@@ -71,15 +71,15 @@ void Healer::init(const SpawnParams &params) {
   m_r->color[1] = tc.y();
   m_r->color[2] = tc.z();
 
-  m_mv = e->addComponent<Engine::Core::MovementComponent>();
+  m_mv = e->add_component<Engine::Core::MovementComponent>();
   if (m_mv != nullptr) {
-    m_mv->goalX = params.position.x();
-    m_mv->goalY = params.position.z();
+    m_mv->goal_x = params.position.x();
+    m_mv->goal_y = params.position.z();
     m_mv->target_x = params.position.x();
     m_mv->target_y = params.position.z();
   }
 
-  auto *healer_comp = e->addComponent<Engine::Core::HealerComponent>();
+  auto *healer_comp = e->add_component<Engine::Core::HealerComponent>();
   if (healer_comp != nullptr) {
     healer_comp->healing_range = profile.combat.vision_range * 0.6F;
     healer_comp->healing_amount =
