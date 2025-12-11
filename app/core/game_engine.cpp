@@ -763,7 +763,7 @@ void GameEngine::render(int pixelWidth, int pixelHeight) {
     m_renderer->set_hovered_entity_id(m_hoverTracker->getLastHoveredEntity());
   }
   if (m_renderer) {
-    m_renderer->set_local_owner_id(m_runtime.localOwnerId);
+    m_renderer->set_local_owner_id(m_runtime.local_owner_id);
   }
   m_renderer->render_world(m_world.get());
   if (auto *arrow_system = m_world->get_system<Game::Systems::ArrowSystem>()) {
