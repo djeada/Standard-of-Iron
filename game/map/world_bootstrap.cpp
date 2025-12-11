@@ -31,11 +31,11 @@ auto WorldBootstrap::initialize(Render::GL::Renderer &renderer,
   return true;
 }
 
-void WorldBootstrap::ensureInitialized(bool &initialized,
-                                       Render::GL::Renderer &renderer,
-                                       Render::GL::Camera &camera,
-                                       Render::GL::GroundRenderer *ground,
-                                       QString *out_error) {
+void WorldBootstrap::ensure_initialized(bool &initialized,
+                                        Render::GL::Renderer &renderer,
+                                        Render::GL::Camera &camera,
+                                        Render::GL::GroundRenderer *ground,
+                                        QString *out_error) {
   if (!initialized) {
     initialized = initialize(renderer, camera, ground, out_error);
   }

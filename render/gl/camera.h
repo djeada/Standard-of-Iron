@@ -49,10 +49,10 @@ public:
   void orbit(float yaw_deg, float pitch_deg);
 
   void update(float dt);
-  auto screenToGround(qreal sx, qreal sy, qreal screenW, qreal screenH,
-                      QVector3D &outWorld) const -> bool;
-  auto worldToScreen(const QVector3D &world, qreal screenW, qreal screenH,
-                     QPointF &outScreen) const -> bool;
+  auto screen_to_ground(qreal sx, qreal sy, qreal screenW, qreal screenH,
+                        QVector3D &outWorld) const -> bool;
+  auto world_to_screen(const QVector3D &world, qreal screenW, qreal screenH,
+                       QPointF &outScreen) const -> bool;
 
   void setFollowEnabled(bool enable) { m_followEnabled = enable; }
   [[nodiscard]] auto isFollowEnabled() const -> bool { return m_followEnabled; }
@@ -73,7 +73,9 @@ public:
   [[nodiscard]] auto getProjectionMatrix() const -> QMatrix4x4;
   [[nodiscard]] auto getViewProjectionMatrix() const -> QMatrix4x4;
 
-  [[nodiscard]] auto getTarget() const -> const QVector3D & { return m_target; }
+  [[nodiscard]] auto get_target() const -> const QVector3D & {
+    return m_target;
+  }
   [[nodiscard]] auto getUpVector() const -> const QVector3D & { return m_up; }
   [[nodiscard]] auto getRightVector() const -> const QVector3D & {
     return m_right;
@@ -81,10 +83,10 @@ public:
   [[nodiscard]] auto getForwardVector() const -> const QVector3D & {
     return m_front;
   }
-  [[nodiscard]] auto getPosition() const -> const QVector3D & {
+  [[nodiscard]] auto get_position() const -> const QVector3D & {
     return m_position;
   }
-  [[nodiscard]] auto getDistance() const -> float;
+  [[nodiscard]] auto get_distance() const -> float;
   [[nodiscard]] auto getPitchDeg() const -> float;
   [[nodiscard]] auto getFOV() const -> float { return m_fov; }
   [[nodiscard]] auto getAspect() const -> float { return m_aspect; }

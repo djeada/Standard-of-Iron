@@ -251,8 +251,8 @@ public:
 
 class AudioTriggerEvent : public Event {
 public:
-  AudioTriggerEvent(std::string sound_id, float volume = 1.0F, bool loop = false,
-                    int priority = 0)
+  AudioTriggerEvent(std::string sound_id, float volume = 1.0F,
+                    bool loop = false, int priority = 0)
       : sound_id(std::move(sound_id)), volume(volume), loop(loop),
         priority(priority) {}
   std::string sound_id;

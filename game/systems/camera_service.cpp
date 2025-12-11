@@ -53,8 +53,8 @@ void CameraService::orbit(Render::GL::Camera &camera, float yaw_deg,
   m_controller->orbit(camera, yaw_deg, pitch_deg);
 }
 
-void CameraService::orbitDirection(Render::GL::Camera &camera, int direction,
-                                   bool shift) {
+void CameraService::orbit_direction(Render::GL::Camera &camera, int direction,
+                                    bool shift) {
   const auto &cam_config = Game::GameConfig::instance().camera();
   float const step =
       shift ? cam_config.orbitStepShift : cam_config.orbitStepNormal;
@@ -62,8 +62,8 @@ void CameraService::orbitDirection(Render::GL::Camera &camera, int direction,
   orbit(camera, 0.0F, pitch);
 }
 
-void CameraService::followSelection(Render::GL::Camera &camera,
-                                    Engine::Core::World &world, bool enable) {
+void CameraService::follow_selection(Render::GL::Camera &camera,
+                                     Engine::Core::World &world, bool enable) {
   m_controller->setFollowEnabled(camera, enable);
 
   if (enable) {
@@ -84,7 +84,7 @@ void CameraService::setFollowLerp(Render::GL::Camera &camera, float alpha) {
 
 void CameraService::resetCamera(Render::GL::Camera &camera,
                                 Engine::Core::World &world, int local_owner_id,
-                                unsigned int playerUnitId) {
+                                unsigned int player_unit_id) {
   Engine::Core::Entity *focus_entity = nullptr;
   for (auto *e : world.get_entities_with<Engine::Core::UnitComponent>()) {
     if (e == nullptr) {
@@ -100,8 +100,8 @@ void CameraService::resetCamera(Render::GL::Camera &camera,
       break;
     }
   }
-  if ((focus_entity == nullptr) && playerUnitId != 0) {
-    focus_entity = world.get_entity(playerUnitId);
+  if ((focus_entity == nullptr) && player_unit_id != 0U) {
+    focus_entity = world.get_entity(player_unit_id);
   }
 
   if (focus_entity != nullptr) {
@@ -119,9 +119,9 @@ void CameraService::snapToEntity(Render::GL::Camera &camera,
   }
 }
 
-void CameraService::updateFollow(Render::GL::Camera &camera,
-                                 Engine::Core::World &world,
-                                 bool follow_enabled) {
+void CameraService::update_follow(Render::GL::Camera &camera,
+                                  Engine::Core::World &world,
+                                  bool follow_enabled) {
   if (follow_enabled) {
     if (auto *selection_system = world.get_system<SelectionSystem>()) {
       m_followSystem->update(world, *selection_system, camera);

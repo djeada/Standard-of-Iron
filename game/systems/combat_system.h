@@ -20,7 +20,7 @@ private:
                                Engine::Core::World *world,
                                Engine::Core::AttackComponent *attack_comp);
   static auto is_in_range(Engine::Core::Entity *attacker,
-                        Engine::Core::Entity *target, float range) -> bool;
+                          Engine::Core::Entity *target, float range) -> bool;
   static void dealDamage(Engine::Core::World *world,
                          Engine::Core::Entity *target, int damage,
                          Engine::Core::EntityID attackerId = 0);

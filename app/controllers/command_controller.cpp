@@ -34,7 +34,7 @@ auto CommandController::onAttackClick(qreal sx, qreal sy, int viewportWidth,
     return result;
   }
 
-  const auto &selected = m_selection_system->getSelectedUnits();
+  const auto &selected = m_selection_system->get_selected_units();
   if (selected.empty()) {
     result.resetCursorToNormal = true;
     return result;
@@ -78,7 +78,7 @@ auto CommandController::onStopCommand() -> CommandResult {
     return result;
   }
 
-  const auto &selected = m_selection_system->getSelectedUnits();
+  const auto &selected = m_selection_system->get_selected_units();
   if (selected.empty()) {
     return result;
   }
@@ -100,7 +100,7 @@ auto CommandController::onStopCommand() -> CommandResult {
     auto *hold_mode = entity->get_component<Engine::Core::HoldModeComponent>();
     if ((hold_mode != nullptr) && hold_mode->active) {
       hold_mode->active = false;
-      hold_mode->exitCooldown = hold_mode->standUpDuration;
+      hold_mode->exit_cooldown = hold_mode->stand_up_duration;
       emit hold_modeChanged(false);
     }
   }
@@ -116,7 +116,7 @@ auto CommandController::onHoldCommand() -> CommandResult {
     return result;
   }
 
-  const auto &selected = m_selection_system->getSelectedUnits();
+  const auto &selected = m_selection_system->get_selected_units();
   if (selected.empty()) {
     return result;
   }
@@ -139,7 +139,7 @@ auto CommandController::onHoldCommand() -> CommandResult {
 
     if ((hold_mode != nullptr) && hold_mode->active) {
       hold_mode->active = false;
-      hold_mode->exitCooldown = hold_mode->standUpDuration;
+      hold_mode->exit_cooldown = hold_mode->stand_up_duration;
       emit hold_modeChanged(false);
       continue;
     }
@@ -156,7 +156,7 @@ auto CommandController::onHoldCommand() -> CommandResult {
       hold_mode = entity->add_component<Engine::Core::HoldModeComponent>();
     }
     hold_mode->active = true;
-    hold_mode->exitCooldown = 0.0F;
+    hold_mode->exit_cooldown = 0.0F;
     emit hold_modeChanged(true);
 
     auto *movement = entity->get_component<Engine::Core::MovementComponent>();
@@ -187,7 +187,7 @@ auto CommandController::onPatrolClick(qreal sx, qreal sy, int viewportWidth,
     return result;
   }
 
-  const auto &selected = m_selection_system->getSelectedUnits();
+  const auto &selected = m_selection_system->get_selected_units();
   if (selected.empty()) {
     if (m_hasPatrolFirstWaypoint) {
       clearPatrolFirstWaypoint();
@@ -268,7 +268,7 @@ auto CommandController::setRallyAtScreen(qreal sx, qreal sy, int viewportWidth,
   }
 
   Game::Systems::ProductionService::setRallyForFirstSelectedBarracks(
-      *m_world, m_selection_system->getSelectedUnits(), localOwnerId, hit.x(),
+      *m_world, m_selection_system->get_selected_units(), localOwnerId, hit.x(),
       hit.z());
 
   result.inputConsumed = true;
@@ -281,7 +281,7 @@ void CommandController::recruitNearSelected(const QString &unit_type,
     return;
   }
 
-  const auto &sel = m_selection_system->getSelectedUnits();
+  const auto &sel = m_selection_system->get_selected_units();
   if (sel.empty()) {
     return;
   }
@@ -296,7 +296,7 @@ void CommandController::recruitNearSelected(const QString &unit_type,
 }
 
 void CommandController::resetMovement(Engine::Core::Entity *entity) {
-  App::Utils::resetMovement(entity);
+  App::Utils::reset_movement(entity);
 }
 
 auto CommandController::anySelectedInHoldMode() const -> bool {
@@ -304,7 +304,7 @@ auto CommandController::anySelectedInHoldMode() const -> bool {
     return false;
   }
 
-  const auto &selected = m_selection_system->getSelectedUnits();
+  const auto &selected = m_selection_system->get_selected_units();
   for (Engine::Core::EntityID const entity_id : selected) {
     Engine::Core::Entity *entity = m_world->get_entity(entity_id);
     if (entity == nullptr) {

@@ -32,7 +32,7 @@ public:
 private:
   std::vector<Engine::Core::EntityID> m_selected_units;
   static auto is_unit_in_area(Engine::Core::Entity *entity, float x1, float y1,
-                           float x2, float y2) -> bool;
+                              float x2, float y2) -> bool;
 };
 
 class SelectionController : public QObject {
@@ -44,10 +44,10 @@ public:
                       QObject *parent = nullptr);
 
   void on_click_select(qreal sx, qreal sy, bool additive, int viewport_width,
-                     int viewport_height, void *camera, int local_owner_id);
+                       int viewport_height, void *camera, int local_owner_id);
   void on_area_selected(qreal x1, qreal y1, qreal x2, qreal y2, bool additive,
-                      int viewport_width, int viewport_height, void *camera,
-                      int local_owner_id);
+                        int viewport_width, int viewport_height, void *camera,
+                        int local_owner_id);
   void on_right_click_clear_selection();
   void select_all_player_troops(int local_owner_id);
   void select_single_unit(Engine::Core::EntityID id, int local_owner_id);
