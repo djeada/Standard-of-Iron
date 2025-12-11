@@ -96,7 +96,7 @@ void MovementSystem::update(Engine::Core::World *world, float delta_time) {
 }
 
 void MovementSystem::move_unit(Engine::Core::Entity *entity,
-                              Engine::Core::World *world, float delta_time) {
+                               Engine::Core::World *world, float delta_time) {
   auto *transform = entity->get_component<Engine::Core::TransformComponent>();
   auto *movement = entity->get_component<Engine::Core::MovementComponent>();
   auto *unit = entity->get_component<Engine::Core::UnitComponent>();

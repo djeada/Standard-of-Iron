@@ -20,7 +20,7 @@ auto GameStateSerializer::buildMetadata(
   metadata["map_name"] = level.map_name;
   metadata["max_troops_per_player"] = level.max_troops_per_player;
   metadata["local_owner_id"] = runtime.local_owner_id;
-  metadata["playerUnitId"] = static_cast<qint64>(level.player_unit_id);
+  metadata["player_unit_id"] = static_cast<qint64>(level.player_unit_id);
 
   metadata["gameMaxTroopsPerPlayer"] =
       Game::GameConfig::instance().getMaxTroopsPerPlayer();
@@ -36,7 +36,8 @@ auto GameStateSerializer::buildMetadata(
     QJsonObject camera_obj;
     camera_obj["position"] =
         App::JsonUtils::vec3ToJsonArray(camera->get_position());
-    camera_obj["target"] = App::JsonUtils::vec3ToJsonArray(camera->get_target());
+    camera_obj["target"] =
+        App::JsonUtils::vec3ToJsonArray(camera->get_target());
     camera_obj["distance"] = camera->get_distance();
     camera_obj["pitch_deg"] = camera->getPitchDeg();
     camera_obj["fov"] = camera->getFOV();
@@ -136,9 +137,9 @@ void GameStateSerializer::restoreLevelFromMetadata(const QJsonObject &metadata,
     level.map_name = metadata.value("map_name").toString(level.map_name);
   }
 
-  if (metadata.contains("playerUnitId")) {
+  if (metadata.contains("player_unit_id")) {
     level.player_unit_id = static_cast<Engine::Core::EntityID>(
-        metadata.value("playerUnitId").toVariant().toULongLong());
+        metadata.value("player_unit_id").toVariant().toULongLong());
   }
 
   int max_troops = metadata.value("max_troops_per_player")

@@ -56,7 +56,8 @@ struct Nation {
 
   [[nodiscard]] auto get_melee_troops() const -> std::vector<const TroopType *>;
 
-  [[nodiscard]] auto get_ranged_troops() const -> std::vector<const TroopType *>;
+  [[nodiscard]] auto
+  get_ranged_troops() const -> std::vector<const TroopType *>;
 
   [[nodiscard]] auto
   getTroop(Game::Units::TroopType unit_type) const -> const TroopType *;

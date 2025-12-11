@@ -45,7 +45,8 @@ void renderPatrolFlags(Renderer *renderer, ResourceManager *resources,
     rendered_positions.insert(pos_hash);
   }
 
-  auto patrol_entities = world.get_entities_with<Engine::Core::PatrolComponent>();
+  auto patrol_entities =
+      world.get_entities_with<Engine::Core::PatrolComponent>();
 
   for (auto *entity : patrol_entities) {
     auto *patrol = entity->get_component<Engine::Core::PatrolComponent>();

@@ -269,7 +269,8 @@ void register_ballista_renderer(EntityRendererRegistry &registry) {
         QVector3D team_color{0.4F, 0.2F, 0.6F};
         if (p.entity != nullptr) {
           if (auto *r =
-                  p.entity->get_component<Engine::Core::RenderableComponent>()) {
+                  p.entity
+                      ->get_component<Engine::Core::RenderableComponent>()) {
             team_color = QVector3D(r->color[0], r->color[1], r->color[2]);
           }
         }

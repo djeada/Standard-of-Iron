@@ -135,7 +135,7 @@ public:
   EntityID melee_lock_target_id{0};
 
   [[nodiscard]] auto is_in_melee_range(float distance,
-                                    float height_diff) const -> bool {
+                                       float height_diff) const -> bool {
     return distance <= melee_range && height_diff <= max_height_difference;
   }
 

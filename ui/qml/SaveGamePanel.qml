@@ -34,7 +34,7 @@ Item {
     }
 
     Connections {
-        function onSaveSlotsChanged() {
+        function onSave_slots_changed() {
             if (typeof saveListModel !== 'undefined')
                 saveListModel.loadFromGame();
 

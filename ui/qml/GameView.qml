@@ -123,11 +123,11 @@ Item {
             event.accepted = true;
             break;
         case Qt.Key_R:
-            game.camera_orbitDirection(1, shiftHeld);
+            game.camera_orbit_direction(1, shiftHeld);
             event.accepted = true;
             break;
         case Qt.Key_F:
-            game.camera_orbitDirection(-1, shiftHeld);
+            game.camera_orbit_direction(-1, shiftHeld);
             event.accepted = true;
             break;
         case Qt.Key_X:
@@ -231,7 +231,7 @@ Item {
         }
 
         Connections {
-            function onCursorModeChanged() {
+            function onCursor_mode_changed() {
                 if (typeof game !== 'undefined' && game.cursor_mode)
                     gameView.cursorMode = game.cursor_mode;
 

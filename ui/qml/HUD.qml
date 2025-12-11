@@ -27,7 +27,7 @@ Item {
     }
 
     Connections {
-        function onSelectedUnitsChanged() {
+        function onSelected_units_changed() {
             selectionTick += 1;
             var hasTroops = false;
             if (typeof game !== 'undefined' && game.has_units_selected && game.has_selected_type) {

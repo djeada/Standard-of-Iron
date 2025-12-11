@@ -24,7 +24,8 @@ void CombatSystem::update(Engine::Core::World *world, float delta_time) {
   processAutoEngagement(world, delta_time);
 }
 
-void CombatSystem::processAttacks(Engine::Core::World *world, float delta_time) {
+void CombatSystem::processAttacks(Engine::Core::World *world,
+                                  float delta_time) {
   auto units = world->get_entities_with<Engine::Core::UnitComponent>();
 
   auto *arrow_sys = world->get_system<ArrowSystem>();
@@ -35,7 +36,8 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float delta_time) 
       continue;
     }
 
-    auto *attacker_unit = attacker->get_component<Engine::Core::UnitComponent>();
+    auto *attacker_unit =
+        attacker->get_component<Engine::Core::UnitComponent>();
     auto *attacker_transform =
         attacker->get_component<Engine::Core::TransformComponent>();
     auto *attacker_atk =
@@ -96,7 +98,8 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float delta_time) 
         attacker_atk->melee_lock_target_id != 0) {
       auto *lock_target = world->get_entity(attacker_atk->melee_lock_target_id);
       if ((lock_target != nullptr) &&
-          !lock_target->has_component<Engine::Core::PendingRemovalComponent>()) {
+          !lock_target
+               ->has_component<Engine::Core::PendingRemovalComponent>()) {
 
         auto *attack_target =
             attacker->get_component<Engine::Core::AttackTargetComponent>();
@@ -159,7 +162,8 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float delta_time) 
       auto *target = world->get_entity(attack_target->target_id);
       if ((target != nullptr) &&
           !target->has_component<Engine::Core::PendingRemovalComponent>()) {
-        auto *target_unit = target->get_component<Engine::Core::UnitComponent>();
+        auto *target_unit =
+            target->get_component<Engine::Core::UnitComponent>();
 
         auto &owner_registry = Game::Systems::OwnerRegistry::instance();
         bool const is_ally = owner_registry.areAllies(attacker_unit->owner_id,
@@ -228,7 +232,8 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float delta_time) 
               is_ranged_unit = true;
             }
 
-            bool const currently_in_range = is_in_range(attacker, target, range);
+            bool const currently_in_range =
+                is_in_range(attacker, target, range);
 
             if (is_ranged_unit && currently_in_range) {
               auto *movement =
@@ -302,7 +307,8 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float delta_time) 
                     attacker->get_component<Engine::Core::MovementComponent>();
                 if (movement == nullptr) {
                   movement =
-                      attacker->add_component<Engine::Core::MovementComponent>();
+                      attacker
+                          ->add_component<Engine::Core::MovementComponent>();
                 }
 
                 if (movement != nullptr) {
@@ -379,7 +385,8 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float delta_time) 
           continue;
         }
 
-        auto *target_unit = target->get_component<Engine::Core::UnitComponent>();
+        auto *target_unit =
+            target->get_component<Engine::Core::UnitComponent>();
         if ((target_unit == nullptr) || target_unit->health <= 0) {
           continue;
         }
@@ -449,7 +456,8 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float delta_time) 
       if (auto *att_t =
               attacker->get_component<Engine::Core::TransformComponent>()) {
         if (auto *tgt_t =
-                best_target->get_component<Engine::Core::TransformComponent>()) {
+                best_target
+                    ->get_component<Engine::Core::TransformComponent>()) {
           float const dx = tgt_t->position.x - att_t->position.x;
           float const dz = tgt_t->position.z - att_t->position.z;
           float const yaw =
@@ -573,8 +581,8 @@ void CombatSystem::processAttacks(Engine::Core::World *world, float delta_time) 
 }
 
 auto CombatSystem::is_in_range(Engine::Core::Entity *attacker,
-                             Engine::Core::Entity *target,
-                             float range) -> bool {
+                               Engine::Core::Entity *target,
+                               float range) -> bool {
   auto *attacker_transform =
       attacker->get_component<Engine::Core::TransformComponent>();
   auto *target_transform =
@@ -665,7 +673,8 @@ void CombatSystem::dealDamage(Engine::Core::World *world,
           target_atk->melee_lock_target_id != 0) {
 
         if (world != nullptr) {
-          auto *lock_partner = world->get_entity(target_atk->melee_lock_target_id);
+          auto *lock_partner =
+              world->get_entity(target_atk->melee_lock_target_id);
           if ((lock_partner != nullptr) &&
               !lock_partner
                    ->has_component<Engine::Core::PendingRemovalComponent>()) {
@@ -685,7 +694,8 @@ void CombatSystem::dealDamage(Engine::Core::World *world,
             target->get_id());
       }
 
-      if (auto *r = target->get_component<Engine::Core::RenderableComponent>()) {
+      if (auto *r =
+              target->get_component<Engine::Core::RenderableComponent>()) {
         r->visible = false;
       }
 
@@ -786,7 +796,8 @@ void CombatSystem::updateCombatMode(
   bool const in_ranged_range = attack_comp->is_in_ranged_range(closest_dist);
 
   if (in_melee_range && attack_comp->can_melee) {
-    attack_comp->current_mode = Engine::Core::AttackComponent::CombatMode::Melee;
+    attack_comp->current_mode =
+        Engine::Core::AttackComponent::CombatMode::Melee;
   } else if (in_ranged_range && attack_comp->can_ranged) {
     attack_comp->current_mode =
         Engine::Core::AttackComponent::CombatMode::Ranged;
@@ -794,7 +805,8 @@ void CombatSystem::updateCombatMode(
     attack_comp->current_mode =
         Engine::Core::AttackComponent::CombatMode::Ranged;
   } else {
-    attack_comp->current_mode = Engine::Core::AttackComponent::CombatMode::Melee;
+    attack_comp->current_mode =
+        Engine::Core::AttackComponent::CombatMode::Melee;
   }
 }
 
@@ -899,7 +911,8 @@ auto CombatSystem::findNearestEnemy(Engine::Core::Entity *unit,
                                     Engine::Core::World *world,
                                     float max_range) -> Engine::Core::Entity * {
   auto *unit_comp = unit->get_component<Engine::Core::UnitComponent>();
-  auto *unit_transform = unit->get_component<Engine::Core::TransformComponent>();
+  auto *unit_transform =
+      unit->get_component<Engine::Core::TransformComponent>();
   if ((unit_comp == nullptr) || (unit_transform == nullptr)) {
     return nullptr;
   }

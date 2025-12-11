@@ -392,7 +392,7 @@ void Renderer::renderWorld(Engine::Core::World *world) {
 
   float cameraHeight = 0.0F;
   if (m_camera != nullptr) {
-    cameraHeight = m_camera->getPosition().y();
+    cameraHeight = m_camera->get_position().y();
   }
 
   int visibleUnitCount = 0;
@@ -467,7 +467,7 @@ void Renderer::renderWorld(Engine::Core::World *world) {
         continue;
       }
 
-      QVector3D camPos = m_camera->getPosition();
+      QVector3D camPos = m_camera->get_position();
       float dx = unit_pos.x() - camPos.x();
       float dz = unit_pos.z() - camPos.z();
       distanceToCamera = std::sqrt(dx * dx + dz * dz);

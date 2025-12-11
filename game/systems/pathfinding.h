@@ -84,9 +84,9 @@ private:
   void setParent(int index, std::uint32_t generation, int parentIndex);
 
   auto collect_neighbors(const Point &point,
-                        std::array<Point, 8> &buffer) const -> std::size_t;
+                         std::array<Point, 8> &buffer) const -> std::size_t;
   void build_path(int start_index, int end_index, std::uint32_t generation,
-                 int expected_length, std::vector<Point> &out_path) const;
+                  int expected_length, std::vector<Point> &out_path) const;
 
   struct QueueNode {
     int index;

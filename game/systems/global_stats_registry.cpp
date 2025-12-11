@@ -86,7 +86,8 @@ void GlobalStatsRegistry::on_unit_spawned(
   }
 }
 
-void GlobalStatsRegistry::on_unit_died(const Engine::Core::UnitDiedEvent &event) {
+void GlobalStatsRegistry::on_unit_died(
+    const Engine::Core::UnitDiedEvent &event) {
 
   if (event.spawn_type == Game::Units::SpawnType::Barracks) {
     auto it = m_player_stats.find(event.owner_id);

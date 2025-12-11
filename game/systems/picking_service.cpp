@@ -12,24 +12,25 @@
 namespace Game::Systems {
 
 auto PickingService::world_to_screen(const Render::GL::Camera &cam, int view_w,
-                                   int view_h, const QVector3D &world,
-                                   QPointF &out) -> bool {
+                                     int view_h, const QVector3D &world,
+                                     QPointF &out) -> bool {
   return cam.world_to_screen(world, qreal(view_w), qreal(view_h), out);
 }
 
 auto PickingService::screen_to_ground(const Render::GL::Camera &cam, int view_w,
-                                    int view_h, const QPointF &screen_pt,
-                                    QVector3D &out_world) -> bool {
+                                      int view_h, const QPointF &screen_pt,
+                                      QVector3D &out_world) -> bool {
   if (view_w <= 0 || view_h <= 0) {
     return false;
   }
   return cam.screen_to_ground(screen_pt.x(), screen_pt.y(), qreal(view_w),
-                            qreal(view_h), out_world);
+                              qreal(view_h), out_world);
 }
 
-auto PickingService::projectBounds(const Render::GL::Camera &cam,
-                                   const QVector3D &center, float hx, float hz,
-                                   int view_w, int view_h, QRectF &out) -> bool {
+auto PickingService::project_bounds(const Render::GL::Camera &cam,
+                                    const QVector3D &center, float hx, float hz,
+                                    int view_w, int view_h,
+                                    QRectF &out) -> bool {
   QVector3D const corners[4] = {
       QVector3D(center.x() - hx, center.y(), center.z() - hz),
       QVector3D(center.x() + hx, center.y(), center.z() - hz),
@@ -55,9 +56,10 @@ auto PickingService::projectBounds(const Render::GL::Camera &cam,
   return true;
 }
 
-auto PickingService::update_hover(float sx, float sy, Engine::Core::World &world,
-                                 const Render::GL::Camera &camera, int view_w,
-                                 int view_h) -> Engine::Core::EntityID {
+auto PickingService::update_hover(float sx, float sy,
+                                  Engine::Core::World &world,
+                                  const Render::GL::Camera &camera, int view_w,
+                                  int view_h) -> Engine::Core::EntityID {
   if (sx < 0 || sy < 0 || sx >= view_w || sy >= view_h) {
     m_prev_hoverId = 0;
     return 0;
@@ -213,13 +215,13 @@ auto PickingService::pick_single(
   return 0;
 }
 
-auto PickingService::pick_unit_first(float sx, float sy,
-                                   Engine::Core::World &world,
-                                   const Render::GL::Camera &camera, int view_w,
-                                   int view_h,
-                                   int owner_filter) -> Engine::Core::EntityID {
+auto PickingService::pick_unit_first(
+    float sx, float sy, Engine::Core::World &world,
+    const Render::GL::Camera &camera, int view_w, int view_h,
+    int owner_filter) -> Engine::Core::EntityID {
 
-  auto id = pick_single(sx, sy, world, camera, view_w, view_h, owner_filter, false);
+  auto id =
+      pick_single(sx, sy, world, camera, view_w, view_h, owner_filter, false);
   if (id != 0) {
     return id;
   }
@@ -227,7 +229,7 @@ auto PickingService::pick_unit_first(float sx, float sy,
   return pick_single(sx, sy, world, camera, view_w, view_h, owner_filter, true);
 }
 
-auto PickingService::pickInRect(
+auto PickingService::pick_in_rect(
     float x1, float y1, float x2, float y2, Engine::Core::World &world,
     const Render::GL::Camera &camera, int view_w, int view_h,
     int owner_filter) -> std::vector<Engine::Core::EntityID> {

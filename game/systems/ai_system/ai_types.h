@@ -36,22 +36,22 @@ enum class BehaviorPriority {
 };
 
 struct MovementSnapshot {
-  bool hasComponent = false;
-  bool hasTarget = false;
+  bool has_component = false;
+  bool has_target = false;
 };
 
 struct ProductionSnapshot {
-  bool hasComponent = false;
-  bool inProgress = false;
-  float buildTime = 0.0F;
-  float timeRemaining = 0.0F;
-  int producedCount = 0;
-  int maxUnits = 0;
+  bool has_component = false;
+  bool in_progress = false;
+  float build_time = 0.0F;
+  float time_remaining = 0.0F;
+  int produced_count = 0;
+  int max_units = 0;
   Game::Units::TroopType product_type = Game::Units::TroopType::Archer;
-  bool rallySet = false;
-  float rallyX = 0.0F;
-  float rallyZ = 0.0F;
-  int queueSize = 0;
+  bool rally_set = false;
+  float rally_x = 0.0F;
+  float rally_z = 0.0F;
+  int queue_size = 0;
 };
 
 struct EntitySnapshot {
@@ -103,8 +103,8 @@ struct AIContext {
   std::vector<Engine::Core::EntityID> buildings;
   Engine::Core::EntityID primaryBarracks = 0;
 
-  float rallyX = 0.0F;
-  float rallyZ = 0.0F;
+  float rally_x = 0.0F;
+  float rally_z = 0.0F;
   int targetPriority = 0;
 
   int total_units = 0;

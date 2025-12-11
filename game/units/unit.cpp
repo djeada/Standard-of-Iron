@@ -107,7 +107,7 @@ void Unit::setHoldMode(bool enabled) {
       hold_comp = e->add_component<Engine::Core::HoldModeComponent>();
     }
     hold_comp->active = true;
-    hold_comp->exitCooldown = 0.0F;
+    hold_comp->exit_cooldown = 0.0F;
 
     auto *mv = e->get_component<Engine::Core::MovementComponent>();
     if (mv != nullptr) {
@@ -118,7 +118,7 @@ void Unit::setHoldMode(bool enabled) {
   } else {
     if (hold_comp != nullptr) {
       hold_comp->active = false;
-      hold_comp->exitCooldown = hold_comp->standUpDuration;
+      hold_comp->exit_cooldown = hold_comp->stand_up_duration;
     }
   }
 }

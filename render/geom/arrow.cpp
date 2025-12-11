@@ -110,7 +110,7 @@ void renderArrows(Renderer *renderer, ResourceManager *resources,
     const QVector3D delta = arrow.end - arrow.start;
     const float dist = std::max(0.001F, delta.length());
     QVector3D pos = arrow.start + delta * arrow.t;
-    float const h = arrow.arcHeight * 4.0F * arrow.t * (1.0F - arrow.t);
+    float const h = arrow.arc_height * 4.0F * arrow.t * (1.0F - arrow.t);
     pos.setY(pos.y() + h);
 
     QMatrix4x4 model;
@@ -125,7 +125,7 @@ void renderArrows(Renderer *renderer, ResourceManager *resources,
     constexpr float k_arc_center_offset = 0.5F;
     float const vy = (arrow.end.y() - arrow.start.y()) / dist;
     float const pitch_deg =
-        -std::atan2(vy - (k_arc_height_multiplier * arrow.arcHeight *
+        -std::atan2(vy - (k_arc_height_multiplier * arrow.arc_height *
                           (arrow.t - k_arc_center_offset) / dist),
                     1.0F) *
         k_rad_to_deg;

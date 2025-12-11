@@ -133,7 +133,7 @@ void MountedHumanoidRendererBase::addAttachments(
     QVector3D const horse_world_pos =
         ctx.model.map(QVector3D(0.0F, 0.0F, 0.0F));
     float const distance =
-        (horse_world_pos - ctx.camera->getPosition()).length();
+        (horse_world_pos - ctx.camera->get_position()).length();
     horse_lod = calculateHorseLOD(distance);
   }
 

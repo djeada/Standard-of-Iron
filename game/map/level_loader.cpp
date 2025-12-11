@@ -64,9 +64,9 @@ auto LevelLoader::loadFromAssets(
     Game::Map::TerrainService::instance().initialize(def);
 
     Game::Map::Environment::apply(def, renderer, camera);
-    res.camFov = def.camera.fovY;
-    res.camNear = def.camera.near_plane;
-    res.camFar = def.camera.far_plane;
+    res.cam_fov = def.camera.fovY;
+    res.cam_near = def.camera.near_plane;
+    res.cam_far = def.camera.far_plane;
     res.grid_width = def.grid.width;
     res.grid_height = def.grid.height;
     res.tile_size = def.grid.tile_size;
@@ -139,9 +139,9 @@ auto LevelLoader::loadFromAssets(
                << "- applying default environment";
     Game::Map::Environment::applyDefault(renderer, camera);
     res.ok = false;
-    res.camFov = camera.getFOV();
-    res.camNear = camera.getNear();
-    res.camFar = camera.getFar();
+    res.cam_fov = camera.getFOV();
+    res.cam_near = camera.getNear();
+    res.cam_far = camera.getFar();
     res.grid_width = 50;
     res.grid_height = 50;
     res.tile_size = 1.0F;
