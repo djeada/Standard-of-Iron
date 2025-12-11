@@ -56,11 +56,11 @@ public:
 
   void cylinder(const QVector3D &, const QVector3D &, float, const QVector3D &,
                 float) override {}
-  void selectionRing(const QMatrix4x4 &, float, float,
-                     const QVector3D &) override {}
+  void selection_ring(const QMatrix4x4 &, float, float,
+                      const QVector3D &) override {}
   void grid(const QMatrix4x4 &, const QVector3D &, float, float,
             float) override {}
-  void selectionSmoke(const QMatrix4x4 &, const QVector3D &, float) override {}
+  void selection_smoke(const QMatrix4x4 &, const QVector3D &, float) override {}
 };
 
 // Minimal renderer that reproduces the Carthage spearman proportions and

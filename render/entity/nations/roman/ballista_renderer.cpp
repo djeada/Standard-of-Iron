@@ -241,8 +241,8 @@ void register_ballista_renderer(EntityRendererRegistry &registry) {
       white = p.resources->white();
     }
     if (auto *scene_renderer = dynamic_cast<Renderer *>(&out)) {
-      unit = scene_renderer->getMeshCube();
-      white = scene_renderer->getWhiteTexture();
+      unit = scene_renderer->get_mesh_cube();
+      white = scene_renderer->get_white_texture();
     }
 
     if (unit == nullptr || white == nullptr) {

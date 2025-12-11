@@ -783,66 +783,210 @@ Rectangle {
                             width: 110
                             height: 80
                             radius: 6
+                            color: isEnabled ? (catapultMouseArea.containsMouse ? "#34495e" : "#2c3e50") : "#1a1a1a"
+                            border.color: isEnabled ? "#4a6572" : "#2a2a2a"
+                            border.width: 2
+                            opacity: isEnabled ? 1 : 0.5
+
+                            Image {
+                                id: catapultRecruitIcon
+
+                                anchors.fill: parent
+                                fillMode: Image.PreserveAspectCrop
+                                smooth: true
+                                source: productionPanel.unitIconSource("catapult", unitGridContent.prod.nation_id)
+                                visible: source !== ""
+                                opacity: parent.isEnabled ? 1 : 0.35
+                            }
+
+                            Text {
+                                anchors.centerIn: parent
+                                visible: !catapultRecruitIcon.visible
+                                text: productionPanel.unitIconEmoji("catapult")
+                                color: parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
+                                font.pointSize: 42
+                                opacity: parent.isEnabled ? 0.9 : 0.4
+                            }
+
+                            Rectangle {
+                                id: catapultCostBadge
+
+                                width: catapultCostText.implicitWidth + 12
+                                height: catapultCostText.implicitHeight + 6
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                anchors.bottom: parent.bottom
+                                anchors.bottomMargin: 6
+                                radius: 8
+                                color: parent.isEnabled ? "#000000b3" : "#00000066"
+                                border.color: parent.isEnabled ? "#f39c12" : "#555555"
+                                border.width: 1
+
+                                Text {
+                                    id: catapultCostText
+
+                                    anchors.centerIn: parent
+                                    text: unitGridContent.prod.villagerCost || 1
+                                    color: catapultCostBadge.parent.isEnabled ? "#fdf7e3" : "#8a8a8a"
+                                    font.pointSize: 16
+                                    font.bold: true
+                                }
+
+                            }
+
+                            MouseArea {
+                                id: catapultMouseArea
+
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                enabled: parent.isEnabled
+                                onClicked: productionPanel.recruitUnit("catapult")
+                                cursorShape: parent.isEnabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
+                                ToolTip.visible: containsMouse
+                                ToolTip.text: parent.isEnabled ? qsTr("Recruit Catapult\nCost: %1 villagers\nBuild time: %2s").arg(unitGridContent.prod.villagerCost || 1).arg((unitGridContent.prod.buildTime || 0).toFixed(0)) : (parent.queueTotal >= 5 ? qsTr("Queue is full (5/5)") : (unitGridContent.prod.producedCount >= unitGridContent.prod.maxUnits ? qsTr("Unit cap reached") : qsTr("Cannot recruit")))
+                                ToolTip.delay: 300
+                            }
+
+                            Rectangle {
+                                anchors.fill: parent
+                                color: "#ffffff"
+                                opacity: catapultMouseArea.pressed ? 0.2 : 0
+                                radius: parent.radius
+                            }
+
+                        }
+
+                        Rectangle {
+                            property int queueTotal: (unitGridContent.prod.inProgress ? 1 : 0) + (unitGridContent.prod.queueSize || 0)
+                            property bool isEnabled: unitGridContent.prod.has_barracks && unitGridContent.prod.producedCount < unitGridContent.prod.maxUnits && queueTotal < 5
+
+                            width: 110
+                            height: 80
+                            radius: 6
+                            color: isEnabled ? (ballistaMouseArea.containsMouse ? "#34495e" : "#2c3e50") : "#1a1a1a"
+                            border.color: isEnabled ? "#4a6572" : "#2a2a2a"
+                            border.width: 2
+                            opacity: isEnabled ? 1 : 0.5
+
+                            Image {
+                                id: ballistaRecruitIcon
+
+                                anchors.fill: parent
+                                fillMode: Image.PreserveAspectCrop
+                                smooth: true
+                                source: productionPanel.unitIconSource("ballista", unitGridContent.prod.nation_id)
+                                visible: source !== ""
+                                opacity: parent.isEnabled ? 1 : 0.35
+                            }
+
+                            Text {
+                                anchors.centerIn: parent
+                                visible: !ballistaRecruitIcon.visible
+                                text: productionPanel.unitIconEmoji("ballista")
+                                color: parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
+                                font.pointSize: 42
+                                opacity: parent.isEnabled ? 0.9 : 0.4
+                            }
+
+                            Rectangle {
+                                id: ballistaCostBadge
+
+                                width: ballistaCostText.implicitWidth + 12
+                                height: ballistaCostText.implicitHeight + 6
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                anchors.bottom: parent.bottom
+                                anchors.bottomMargin: 6
+                                radius: 8
+                                color: parent.isEnabled ? "#000000b3" : "#00000066"
+                                border.color: parent.isEnabled ? "#f39c12" : "#555555"
+                                border.width: 1
+
+                                Text {
+                                    id: ballistaCostText
+
+                                    anchors.centerIn: parent
+                                    text: unitGridContent.prod.villagerCost || 1
+                                    color: ballistaCostBadge.parent.isEnabled ? "#fdf7e3" : "#8a8a8a"
+                                    font.pointSize: 16
+                                    font.bold: true
+                                }
+
+                            }
+
+                            MouseArea {
+                                id: ballistaMouseArea
+
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                enabled: parent.isEnabled
+                                onClicked: productionPanel.recruitUnit("ballista")
+                                cursorShape: parent.isEnabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
+                                ToolTip.visible: containsMouse
+                                ToolTip.text: parent.isEnabled ? qsTr("Recruit Ballista\nCost: %1 villagers\nBuild time: %2s").arg(unitGridContent.prod.villagerCost || 1).arg((unitGridContent.prod.buildTime || 0).toFixed(0)) : (parent.queueTotal >= 5 ? qsTr("Queue is full (5/5)") : (unitGridContent.prod.producedCount >= unitGridContent.prod.maxUnits ? qsTr("Unit cap reached") : qsTr("Cannot recruit")))
+                                ToolTip.delay: 300
+                            }
+
+                            Rectangle {
+                                anchors.fill: parent
+                                color: "#ffffff"
+                                opacity: ballistaMouseArea.pressed ? 0.2 : 0
+                                radius: parent.radius
+                            }
+
+                        }
+
+                        Rectangle {
+                            property int queueTotal: (unitGridContent.prod.inProgress ? 1 : 0) + (unitGridContent.prod.queueSize || 0)
+                            property bool isEnabled: unitGridContent.prod.has_barracks && unitGridContent.prod.producedCount < unitGridContent.prod.maxUnits && queueTotal < 5
+
+                            width: 110
+                            height: 80
+                            radius: 6
                             color: isEnabled ? (healerMouseArea.containsMouse ? "#34495e" : "#2c3e50") : "#1a1a1a"
                             border.color: isEnabled ? "#4a6572" : "#2a2a2a"
                             border.width: 2
                             opacity: isEnabled ? 1 : 0.5
 
-                            Column {
+                            Image {
+                                id: healerRecruitIcon
+
+                                anchors.fill: parent
+                                fillMode: Image.PreserveAspectCrop
+                                smooth: true
+                                source: productionPanel.unitIconSource("healer", unitGridContent.prod.nation_id)
+                                visible: source !== ""
+                                opacity: parent.isEnabled ? 1 : 0.35
+                            }
+
+                            Text {
                                 anchors.centerIn: parent
-                                spacing: 4
+                                visible: !healerRecruitIcon.visible
+                                text: productionPanel.unitIconEmoji("healer")
+                                color: parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
+                                font.pointSize: 42
+                                opacity: parent.isEnabled ? 0.9 : 0.4
+                            }
 
-                                Item {
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                    width: 48
-                                    height: 48
+                            Rectangle {
+                                id: healerCostBadge
 
-                                    Image {
-                                        id: healerIcon
-
-                                        anchors.fill: parent
-                                        fillMode: Image.PreserveAspectFit
-                                        smooth: true
-                                        source: productionPanel.unitIconSource("healer", unitGridContent.prod.nation_id)
-                                        visible: source !== ""
-                                        opacity: parent.parent.parent.isEnabled ? 1 : 0.4
-                                    }
-
-                                    Text {
-                                        anchors.centerIn: parent
-                                        visible: !healerIcon.visible
-                                        text: productionPanel.unitIconEmoji("healer")
-                                        color: parent.parent.parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
-                                        font.pointSize: 20
-                                    }
-
-                                }
+                                width: healerCostText.implicitWidth + 12
+                                height: healerCostText.implicitHeight + 6
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                anchors.bottom: parent.bottom
+                                anchors.bottomMargin: 6
+                                radius: 8
+                                color: parent.isEnabled ? "#000000b3" : "#00000066"
+                                border.color: parent.isEnabled ? "#f39c12" : "#555555"
+                                border.width: 1
 
                                 Text {
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                    text: qsTr("Healer")
-                                    color: parent.parent.parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
-                                    font.pointSize: 10
+                                    id: healerCostText
+
+                                    anchors.centerIn: parent
+                                    text: unitGridContent.prod.villagerCost || 1
+                                    color: healerCostBadge.parent.isEnabled ? "#fdf7e3" : "#8a8a8a"
+                                    font.pointSize: 16
                                     font.bold: true
-                                }
-
-                                Row {
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                    spacing: 4
-
-                                    Text {
-                                        text: "👥"
-                                        color: parent.parent.parent.parent.isEnabled ? "#f39c12" : "#5a5a5a"
-                                        font.pointSize: 9
-                                    }
-
-                                    Text {
-                                        text: unitGridContent.prod.villager_cost || 1
-                                        color: parent.parent.parent.parent.isEnabled ? "#f39c12" : "#5a5a5a"
-                                        font.pointSize: 9
-                                        font.bold: true
-                                    }
-
                                 }
 
                             }

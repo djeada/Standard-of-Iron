@@ -39,9 +39,9 @@ public:
   [[nodiscard]] auto shader() const -> GL::Shader * { return m_shader; }
 
   struct Uniforms {
-    GL::Shader::UniformHandle viewProj{GL::Shader::InvalidUniform};
-    GL::Shader::UniformHandle lightDir{GL::Shader::InvalidUniform};
-    GL::Shader::UniformHandle ambientStrength{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle view_proj{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle light_dir{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle ambient_strength{GL::Shader::InvalidUniform};
   };
 
   Uniforms m_uniforms;

@@ -17,9 +17,9 @@ struct FireCampBatchParams {
   static constexpr float kDefaultGlowStrength = 1.25F;
 
   float time = 0.0F;
-  float flickerSpeed = kDefaultFlickerSpeed;
-  float flickerAmount = kDefaultFlickerAmount;
-  float glowStrength = kDefaultGlowStrength;
+  float flicker_speed = kDefaultFlickerSpeed;
+  float flicker_amount = kDefaultFlickerAmount;
+  float glow_strength = kDefaultGlowStrength;
 };
 
 } // namespace Render::GL

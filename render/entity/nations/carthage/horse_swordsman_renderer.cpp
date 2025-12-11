@@ -37,7 +37,7 @@ public:
                    HumanoidVariant &v) const override {
     MountedKnightRendererBase::get_variant(ctx, seed, v);
     const KnightStyleConfig style = carthage_style();
-    QVector3D const team_tint = resolveTeamTint(ctx);
+    QVector3D const team_tint = resolve_team_tint(ctx);
 
     auto apply_color = [&](const std::optional<QVector3D> &override_color,
                            QVector3D &target) {
@@ -97,11 +97,11 @@ void registerMountedKnightRenderer(EntityRendererRegistry &registry) {
         auto *scene_renderer = dynamic_cast<Renderer *>(&out);
         if ((scene_renderer != nullptr) &&
             (horse_swordsman_shader != nullptr)) {
-          scene_renderer->setCurrentShader(horse_swordsman_shader);
+          scene_renderer->set_current_shader(horse_swordsman_shader);
         }
         static_renderer.render(ctx, out);
         if (scene_renderer != nullptr) {
-          scene_renderer->setCurrentShader(nullptr);
+          scene_renderer->set_current_shader(nullptr);
         }
       });
 }

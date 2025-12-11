@@ -14,23 +14,23 @@ class Mesh;
 
 struct PrimitiveInstanceGpu {
 
-  QVector4D modelCol0{1.0F, 0.0F, 0.0F, 0.0F};
-  QVector4D modelCol1{0.0F, 1.0F, 0.0F, 0.0F};
-  QVector4D modelCol2{0.0F, 0.0F, 1.0F, 0.0F};
+  QVector4D model_col0{1.0F, 0.0F, 0.0F, 0.0F};
+  QVector4D model_col1{0.0F, 1.0F, 0.0F, 0.0F};
+  QVector4D model_col2{0.0F, 0.0F, 1.0F, 0.0F};
 
-  QVector4D colorAlpha{1.0F, 1.0F, 1.0F, 1.0F};
+  QVector4D color_alpha{1.0F, 1.0F, 1.0F, 1.0F};
 
-  void setTransform(const QMatrix4x4 &m) {
+  void set_transform(const QMatrix4x4 &m) {
 
-    modelCol0 = QVector4D(m(0, 0), m(1, 0), m(2, 0), m(0, 3));
+    model_col0 = QVector4D(m(0, 0), m(1, 0), m(2, 0), m(0, 3));
 
-    modelCol1 = QVector4D(m(0, 1), m(1, 1), m(2, 1), m(1, 3));
+    model_col1 = QVector4D(m(0, 1), m(1, 1), m(2, 1), m(1, 3));
 
-    modelCol2 = QVector4D(m(0, 2), m(1, 2), m(2, 2), m(2, 3));
+    model_col2 = QVector4D(m(0, 2), m(1, 2), m(2, 2), m(2, 3));
   }
 
-  void setColor(const QVector3D &color, float alpha = 1.0F) {
-    colorAlpha = QVector4D(color.x(), color.y(), color.z(), alpha);
+  void set_color(const QVector3D &color, float alpha = 1.0F) {
+    color_alpha = QVector4D(color.x(), color.y(), color.z(), alpha);
   }
 };
 
@@ -38,9 +38,9 @@ static_assert(sizeof(PrimitiveInstanceGpu) == 64,
               "PrimitiveInstanceGpu must be 64 bytes for GPU alignment");
 
 struct PrimitiveBatchParams {
-  QMatrix4x4 viewProj;
-  QVector3D lightDirection{0.35F, 0.8F, 0.45F};
-  float ambientStrength{0.3F};
+  QMatrix4x4 view_proj;
+  QVector3D light_direction{0.35F, 0.8F, 0.45F};
+  float ambient_strength{0.3F};
 };
 
 enum class PrimitiveType : uint8_t { Sphere = 0, Cylinder = 1, Cone = 2 };
@@ -50,10 +50,10 @@ struct PrimitiveBatchCmd {
   std::vector<PrimitiveInstanceGpu> instances;
   PrimitiveBatchParams params;
 
-  [[nodiscard]] auto instanceCount() const -> std::size_t {
+  [[nodiscard]] auto instance_count() const -> std::size_t {
     return instances.size();
   }
-  [[nodiscard]] auto instanceData() const -> const PrimitiveInstanceGpu * {
+  [[nodiscard]] auto instance_data() const -> const PrimitiveInstanceGpu * {
     return instances.empty() ? nullptr : instances.data();
   }
 };
@@ -63,34 +63,36 @@ public:
   PrimitiveBatcher();
   ~PrimitiveBatcher();
 
-  void addSphere(const QMatrix4x4 &transform, const QVector3D &color,
-                 float alpha = 1.0F);
-  void addCylinder(const QMatrix4x4 &transform, const QVector3D &color,
-                   float alpha = 1.0F);
-  void addCone(const QMatrix4x4 &transform, const QVector3D &color,
-               float alpha = 1.0F);
+  void add_sphere(const QMatrix4x4 &transform, const QVector3D &color,
+                  float alpha = 1.0F);
+  void add_cylinder(const QMatrix4x4 &transform, const QVector3D &color,
+                    float alpha = 1.0F);
+  void add_cone(const QMatrix4x4 &transform, const QVector3D &color,
+                float alpha = 1.0F);
 
-  [[nodiscard]] auto sphereCount() const -> std::size_t {
+  [[nodiscard]] auto sphere_count() const -> std::size_t {
     return m_spheres.size();
   }
-  [[nodiscard]] auto cylinderCount() const -> std::size_t {
+  [[nodiscard]] auto cylinder_count() const -> std::size_t {
     return m_cylinders.size();
   }
-  [[nodiscard]] auto coneCount() const -> std::size_t { return m_cones.size(); }
-  [[nodiscard]] auto totalCount() const -> std::size_t {
+  [[nodiscard]] auto cone_count() const -> std::size_t {
+    return m_cones.size();
+  }
+  [[nodiscard]] auto total_count() const -> std::size_t {
     return m_spheres.size() + m_cylinders.size() + m_cones.size();
   }
 
   [[nodiscard]] auto
-  sphereData() const -> const std::vector<PrimitiveInstanceGpu> & {
+  sphere_data() const -> const std::vector<PrimitiveInstanceGpu> & {
     return m_spheres;
   }
   [[nodiscard]] auto
-  cylinderData() const -> const std::vector<PrimitiveInstanceGpu> & {
+  cylinder_data() const -> const std::vector<PrimitiveInstanceGpu> & {
     return m_cylinders;
   }
   [[nodiscard]] auto
-  coneData() const -> const std::vector<PrimitiveInstanceGpu> & {
+  cone_data() const -> const std::vector<PrimitiveInstanceGpu> & {
     return m_cones;
   }
 
@@ -105,22 +107,22 @@ private:
 };
 
 struct PrimitiveBatchStats {
-  uint32_t spheresSubmitted{0};
-  uint32_t cylindersSubmitted{0};
-  uint32_t conesSubmitted{0};
-  uint32_t batchesRendered{0};
-  uint32_t drawCallsSaved{0};
+  uint32_t spheres_submitted{0};
+  uint32_t cylinders_submitted{0};
+  uint32_t cones_submitted{0};
+  uint32_t batches_rendered{0};
+  uint32_t draw_calls_saved{0};
 
   void reset() {
-    spheresSubmitted = 0;
-    cylindersSubmitted = 0;
-    conesSubmitted = 0;
-    batchesRendered = 0;
-    drawCallsSaved = 0;
+    spheres_submitted = 0;
+    cylinders_submitted = 0;
+    cones_submitted = 0;
+    batches_rendered = 0;
+    draw_calls_saved = 0;
   }
 };
 
-auto getPrimitiveBatchStats() -> const PrimitiveBatchStats &;
-void resetPrimitiveBatchStats();
+auto get_primitive_batch_stats() -> const PrimitiveBatchStats &;
+void reset_primitive_batch_stats();
 
 } // namespace Render::GL

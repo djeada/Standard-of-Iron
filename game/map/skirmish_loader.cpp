@@ -70,9 +70,9 @@ void SkirmishLoader::resetGameState() {
   }
 
   m_renderer.pause();
-  m_renderer.lockWorldForModification();
-  m_renderer.setSelectedEntities({});
-  m_renderer.setHoveredEntityId(0);
+  m_renderer.lock_world_for_modification();
+  m_renderer.set_selected_entities({});
+  m_renderer.set_hovered_entity_id(0);
 
   m_world.clear();
 
@@ -214,13 +214,13 @@ auto SkirmishLoader::start(const QString &map_path,
   if (team_overrides.size() >= 2 && unique_teams.size() < 2) {
     result.errorMessage = "Invalid team configuration: At least two teams must "
                           "be selected to start a match.";
-    m_renderer.unlockWorldForModification();
+    m_renderer.unlock_world_for_modification();
     m_renderer.resume();
     qWarning() << "SkirmishLoader: " << result.errorMessage;
     return result;
   }
 
-  Game::Map::MapTransformer::setLocalOwnerId(player_owner_id);
+  Game::Map::MapTransformer::set_local_owner_id(player_owner_id);
   Game::Map::MapTransformer::setPlayerTeamOverrides(team_overrides);
 
   auto &nation_registry = Game::Systems::NationRegistry::instance();
@@ -251,7 +251,7 @@ auto SkirmishLoader::start(const QString &map_path,
 
   if (!level_result.ok && !level_result.errorMessage.isEmpty()) {
     result.errorMessage = level_result.errorMessage;
-    m_renderer.unlockWorldForModification();
+    m_renderer.unlock_world_for_modification();
     m_renderer.resume();
     return result;
   }
@@ -453,7 +453,7 @@ auto SkirmishLoader::start(const QString &map_path,
     m_biome->refreshGrass();
   }
 
-  m_renderer.unlockWorldForModification();
+  m_renderer.unlock_world_for_modification();
   m_renderer.resume();
 
   Engine::Core::Entity *focus_entity = nullptr;
