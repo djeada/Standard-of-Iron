@@ -37,16 +37,17 @@ public:
     cylinder_count++;
   }
 
-  void selectionRing(const QMatrix4x4 & /*model*/, float /*alphaInner*/,
-                     float /*alphaOuter*/,
-                     const QVector3D & /*color*/) override {}
+  void selection_ring(const QMatrix4x4 & /*model*/, float /*alphaInner*/,
+                      float /*alphaOuter*/,
+                      const QVector3D & /*color*/) override {}
 
   void grid(const QMatrix4x4 & /*model*/, const QVector3D & /*color*/,
             float /*cellSize*/, float /*thickness*/,
             float /*extent*/) override {}
 
-  void selectionSmoke(const QMatrix4x4 & /*model*/, const QVector3D & /*color*/,
-                      float /*baseAlpha*/ = 0.15F) override {}
+  void selection_smoke(const QMatrix4x4 & /*model*/,
+                       const QVector3D & /*color*/,
+                       float /*baseAlpha*/ = 0.15F) override {}
 
   int mesh_count = 0;
   int cylinder_count = 0;
@@ -112,8 +113,8 @@ protected:
     frames.tail_base.up = QVector3D(0.0F, 1.0F, 0.0F);
     frames.tail_base.forward = QVector3D(0.0F, 0.0F, 1.0F);
 
-    variant.saddleColor = QVector3D(0.6F, 0.4F, 0.2F);
-    variant.blanketColor = QVector3D(0.8F, 0.1F, 0.1F);
+    variant.saddle_color = QVector3D(0.6F, 0.4F, 0.2F);
+    variant.blanket_color = QVector3D(0.8F, 0.1F, 0.1F);
     variant.tack_color = QVector3D(0.3F, 0.2F, 0.1F);
 
     anim.time = 0.0F;

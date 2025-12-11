@@ -166,7 +166,7 @@ void GroundRenderer::submit(Renderer &renderer, ResourceManager *resources) {
       (void)model_changed;
       (void)state_changed;
 
-      renderer.terrainChunk(plane, m_model, params, 0x0040U, true, +0.0008F);
+      renderer.terrain_chunk(plane, m_model, params, 0x0040U, true, +0.0008F);
 
       m_lastSubmittedModel = m_model;
       m_modelDirty = false;

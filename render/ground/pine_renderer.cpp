@@ -93,8 +93,8 @@ void PineRenderer::submit(Renderer &renderer, ResourceManager *resources) {
     if (use_visibility) {
       m_visibleInstances.reserve(m_pineInstanceCount);
       for (const auto &instance : m_pineInstances) {
-        float const world_x = instance.posScale.x();
-        float const world_z = instance.posScale.z();
+        float const world_x = instance.pos_scale.x();
+        float const world_z = instance.pos_scale.z();
         if (visibility.isVisibleWorld(world_x, world_z)) {
           m_visibleInstances.push_back(instance);
         }
@@ -120,8 +120,8 @@ void PineRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   }
 
   PineBatchParams params = m_pineParams;
-  params.time = renderer.getAnimationTime();
-  renderer.pineBatch(m_pineInstanceBuffer.get(), visible_count, params);
+  params.time = renderer.get_animation_time();
+  renderer.pine_batch(m_pineInstanceBuffer.get(), visible_count, params);
 }
 
 void PineRenderer::clear() {
@@ -238,8 +238,8 @@ void PineRenderer::generatePineInstances() {
 
     PineInstanceGpu instance;
 
-    instance.posScale = QVector4D(world_x, world_y, world_z, scale);
-    instance.colorSway =
+    instance.pos_scale = QVector4D(world_x, world_y, world_z, scale);
+    instance.color_sway =
         QVector4D(tint_color.x(), tint_color.y(), tint_color.z(), sway_phase);
     instance.rotation =
         QVector4D(rotation, silhouette_seed, needle_seed, bark_seed);

@@ -97,7 +97,7 @@ public:
 
   void get_variant(const DrawContext &ctx, uint32_t seed,
                    HumanoidVariant &v) const override {
-    QVector3D const team_tint = resolveTeamTint(ctx);
+    QVector3D const team_tint = resolve_team_tint(ctx);
     v.palette = makeHumanoidPalette(team_tint, seed);
     auto const &style = resolve_style(ctx);
     apply_palette_overrides(style, team_tint, v);
@@ -179,15 +179,15 @@ public:
     }
   }
 
-  void addAttachments(const DrawContext &ctx, const HumanoidVariant &v,
-                      const HumanoidPose &pose,
-                      const HumanoidAnimationContext &anim_ctx,
-                      ISubmitter &out) const override {
+  void add_attachments(const DrawContext &ctx, const HumanoidVariant &v,
+                       const HumanoidPose &pose,
+                       const HumanoidAnimationContext &anim_ctx,
+                       ISubmitter &out) const override {
     using HP = HumanProportions;
 
     auto const &style = resolve_style(ctx);
     const AnimationInputs &anim = anim_ctx.inputs;
-    QVector3D team_tint = resolveTeamTint(ctx);
+    QVector3D team_tint = resolve_team_tint(ctx);
     uint32_t seed = 0U;
     if (ctx.entity != nullptr) {
       auto *unit = ctx.entity->get_component<Engine::Core::UnitComponent>();
@@ -388,11 +388,11 @@ void registerArcherRenderer(Render::GL::EntityRendererRegistry &registry) {
         }
         auto *scene_renderer = dynamic_cast<Renderer *>(&out);
         if ((scene_renderer != nullptr) && (archer_shader != nullptr)) {
-          scene_renderer->setCurrentShader(archer_shader);
+          scene_renderer->set_current_shader(archer_shader);
         }
         static_renderer.render(ctx, out);
         if (scene_renderer != nullptr) {
-          scene_renderer->setCurrentShader(nullptr);
+          scene_renderer->set_current_shader(nullptr);
         }
       });
 }

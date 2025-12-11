@@ -48,11 +48,11 @@ void registerMountedKnightRenderer(EntityRendererRegistry &registry) {
         auto *scene_renderer = dynamic_cast<Renderer *>(&out);
         if ((scene_renderer != nullptr) &&
             (horse_swordsman_shader != nullptr)) {
-          scene_renderer->setCurrentShader(horse_swordsman_shader);
+          scene_renderer->set_current_shader(horse_swordsman_shader);
         }
         static_renderer.render(ctx, out);
         if (scene_renderer != nullptr) {
-          scene_renderer->setCurrentShader(nullptr);
+          scene_renderer->set_current_shader(nullptr);
         }
       });
 }

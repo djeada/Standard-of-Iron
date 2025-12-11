@@ -34,7 +34,7 @@ struct MeshCmd {
   QMatrix4x4 mvp;
   QVector3D color{1, 1, 1};
   float alpha = 1.0F;
-  int materialId = 0;
+  int material_id = 0;
   class Shader *shader = nullptr;
 };
 
@@ -59,37 +59,37 @@ struct FogBatchCmd {
 };
 
 struct GrassBatchCmd {
-  Buffer *instanceBuffer = nullptr;
+  Buffer *instance_buffer = nullptr;
   std::size_t instance_count = 0;
   GrassBatchParams params;
 };
 
 struct StoneBatchCmd {
-  Buffer *instanceBuffer = nullptr;
+  Buffer *instance_buffer = nullptr;
   std::size_t instance_count = 0;
   StoneBatchParams params;
 };
 
 struct PlantBatchCmd {
-  Buffer *instanceBuffer = nullptr;
+  Buffer *instance_buffer = nullptr;
   std::size_t instance_count = 0;
   PlantBatchParams params;
 };
 
 struct PineBatchCmd {
-  Buffer *instanceBuffer = nullptr;
+  Buffer *instance_buffer = nullptr;
   std::size_t instance_count = 0;
   PineBatchParams params;
 };
 
 struct OliveBatchCmd {
-  Buffer *instanceBuffer = nullptr;
+  Buffer *instance_buffer = nullptr;
   std::size_t instance_count = 0;
   OliveBatchParams params;
 };
 
 struct FireCampBatchCmd {
-  Buffer *instanceBuffer = nullptr;
+  Buffer *instance_buffer = nullptr;
   std::size_t instance_count = 0;
   FireCampBatchParams params;
 };
@@ -98,9 +98,9 @@ struct TerrainChunkCmd {
   Mesh *mesh = nullptr;
   QMatrix4x4 model;
   TerrainChunkParams params;
-  std::uint16_t sortKey = 0x8000U;
-  bool depthWrite = true;
-  float depthBias = 0.0F;
+  std::uint16_t sort_key = 0x8000U;
+  bool depth_write = true;
+  float depth_bias = 0.0F;
 };
 
 struct GridCmd {
@@ -108,7 +108,7 @@ struct GridCmd {
   QMatrix4x4 model;
   QMatrix4x4 mvp;
   QVector3D color{0.2F, 0.25F, 0.2F};
-  float cellSize = 1.0F;
+  float cell_size = 1.0F;
   float thickness = 0.06F;
   float extent = 50.0F;
 };
@@ -117,15 +117,15 @@ struct SelectionRingCmd {
   QMatrix4x4 model;
   QMatrix4x4 mvp;
   QVector3D color{0, 0, 0};
-  float alphaInner = 0.6F;
-  float alphaOuter = 0.25F;
+  float alpha_inner = 0.6F;
+  float alpha_outer = 0.25F;
 };
 
 struct SelectionSmokeCmd {
   QMatrix4x4 model;
   QMatrix4x4 mvp;
   QVector3D color{1, 1, 1};
-  float baseAlpha = 0.15F;
+  float base_alpha = 0.15F;
 };
 
 using DrawCmd =
@@ -180,7 +180,7 @@ constexpr std::size_t TerrainChunkCmdIndex =
 constexpr std::size_t PrimitiveBatchCmdIndex =
     static_cast<std::size_t>(DrawCmdType::PrimitiveBatch);
 
-inline auto drawCmdType(const DrawCmd &cmd) -> DrawCmdType {
+inline auto draw_cmd_type(const DrawCmd &cmd) -> DrawCmdType {
   return static_cast<DrawCmdType>(cmd.index());
 }
 
@@ -206,42 +206,42 @@ public:
   [[nodiscard]] auto empty() const -> bool { return m_items.empty(); }
   [[nodiscard]] auto size() const -> std::size_t { return m_items.size(); }
 
-  [[nodiscard]] auto getSorted(std::size_t i) const -> const DrawCmd & {
-    return m_items[m_sortIndices[i]];
+  [[nodiscard]] auto get_sorted(std::size_t i) const -> const DrawCmd & {
+    return m_items[m_sort_indices[i]];
   }
 
   [[nodiscard]] auto items() const -> const std::vector<DrawCmd> & {
     return m_items;
   }
 
-  void sortForBatching() {
+  void sort_for_batching() {
     const std::size_t count = m_items.size();
 
-    m_sortKeys.resize(count);
-    m_sortIndices.resize(count);
+    m_sort_keys.resize(count);
+    m_sort_indices.resize(count);
 
     for (std::size_t i = 0; i < count; ++i) {
-      m_sortIndices[i] = static_cast<uint32_t>(i);
-      m_sortKeys[i] = computeSortKey(m_items[i]);
+      m_sort_indices[i] = static_cast<uint32_t>(i);
+      m_sort_keys[i] = compute_sort_key(m_items[i]);
     }
 
     if (count >= 2) {
-      radixSortTwoPass(count);
+      radix_sort_two_pass(count);
     }
   }
 
 private:
-  void radixSortTwoPass(std::size_t count) {
+  void radix_sort_two_pass(std::size_t count) {
     constexpr int BUCKETS = 256;
 
-    m_tempIndices.resize(count);
+    m_temp_indices.resize(count);
 
     {
       int histogram[BUCKETS] = {0};
 
       for (std::size_t i = 0; i < count; ++i) {
         auto const bucket =
-            static_cast<uint8_t>(m_sortKeys[i] >> k_sort_key_bucket_shift);
+            static_cast<uint8_t>(m_sort_keys[i] >> k_sort_key_bucket_shift);
         ++histogram[bucket];
       }
 
@@ -252,9 +252,9 @@ private:
       }
 
       for (std::size_t i = 0; i < count; ++i) {
-        auto const bucket = static_cast<uint8_t>(m_sortKeys[m_sortIndices[i]] >>
-                                                 k_sort_key_bucket_shift);
-        m_tempIndices[offsets[bucket]++] = m_sortIndices[i];
+        auto const bucket = static_cast<uint8_t>(
+            m_sort_keys[m_sort_indices[i]] >> k_sort_key_bucket_shift);
+        m_temp_indices[offsets[bucket]++] = m_sort_indices[i];
       }
     }
 
@@ -263,7 +263,7 @@ private:
 
       for (std::size_t i = 0; i < count; ++i) {
         uint8_t const bucket =
-            static_cast<uint8_t>(m_sortKeys[m_tempIndices[i]] >> 48) & 0xFF;
+            static_cast<uint8_t>(m_sort_keys[m_temp_indices[i]] >> 48) & 0xFF;
         ++histogram[bucket];
       }
 
@@ -275,13 +275,13 @@ private:
 
       for (std::size_t i = 0; i < count; ++i) {
         uint8_t const bucket =
-            static_cast<uint8_t>(m_sortKeys[m_tempIndices[i]] >> 48) & 0xFF;
-        m_sortIndices[offsets[bucket]++] = m_tempIndices[i];
+            static_cast<uint8_t>(m_sort_keys[m_temp_indices[i]] >> 48) & 0xFF;
+        m_sort_indices[offsets[bucket]++] = m_temp_indices[i];
       }
     }
   }
 
-  [[nodiscard]] static auto computeSortKey(const DrawCmd &cmd) -> uint64_t {
+  [[nodiscard]] static auto compute_sort_key(const DrawCmd &cmd) -> uint64_t {
 
     enum class RenderOrder : uint8_t {
       TerrainChunk = 0,
@@ -334,42 +334,43 @@ private:
     } else if (cmd.index() == GrassBatchCmdIndex) {
       const auto &grass = std::get<GrassBatchCmdIndex>(cmd);
       uint64_t const bufferPtr =
-          reinterpret_cast<uintptr_t>(grass.instanceBuffer) &
+          reinterpret_cast<uintptr_t>(grass.instance_buffer) &
           0x0000FFFFFFFFFFFF;
       key |= bufferPtr;
     } else if (cmd.index() == StoneBatchCmdIndex) {
       const auto &stone = std::get<StoneBatchCmdIndex>(cmd);
       uint64_t const bufferPtr =
-          reinterpret_cast<uintptr_t>(stone.instanceBuffer) &
+          reinterpret_cast<uintptr_t>(stone.instance_buffer) &
           0x0000FFFFFFFFFFFF;
       key |= bufferPtr;
     } else if (cmd.index() == PlantBatchCmdIndex) {
       const auto &plant = std::get<PlantBatchCmdIndex>(cmd);
       uint64_t const bufferPtr =
-          reinterpret_cast<uintptr_t>(plant.instanceBuffer) &
+          reinterpret_cast<uintptr_t>(plant.instance_buffer) &
           0x0000FFFFFFFFFFFF;
       key |= bufferPtr;
     } else if (cmd.index() == PineBatchCmdIndex) {
       const auto &pine = std::get<PineBatchCmdIndex>(cmd);
       uint64_t const bufferPtr =
-          reinterpret_cast<uintptr_t>(pine.instanceBuffer) & 0x0000FFFFFFFFFFFF;
+          reinterpret_cast<uintptr_t>(pine.instance_buffer) &
+          0x0000FFFFFFFFFFFF;
       key |= bufferPtr;
     } else if (cmd.index() == OliveBatchCmdIndex) {
       const auto &olive = std::get<OliveBatchCmdIndex>(cmd);
       uint64_t const bufferPtr =
-          reinterpret_cast<uintptr_t>(olive.instanceBuffer) &
+          reinterpret_cast<uintptr_t>(olive.instance_buffer) &
           0x0000FFFFFFFFFFFF;
       key |= bufferPtr;
     } else if (cmd.index() == FireCampBatchCmdIndex) {
       const auto &firecamp = std::get<FireCampBatchCmdIndex>(cmd);
       uint64_t const bufferPtr =
-          reinterpret_cast<uintptr_t>(firecamp.instanceBuffer) &
+          reinterpret_cast<uintptr_t>(firecamp.instance_buffer) &
           0x0000FFFFFFFFFFFF;
       key |= bufferPtr;
     } else if (cmd.index() == TerrainChunkCmdIndex) {
       const auto &terrain = std::get<TerrainChunkCmdIndex>(cmd);
       auto const sortByte =
-          static_cast<uint64_t>((terrain.sortKey >> 8) & 0xFFU);
+          static_cast<uint64_t>((terrain.sort_key >> 8) & 0xFFU);
       key |= sortByte << 48;
       uint64_t const meshPtr =
           reinterpret_cast<uintptr_t>(terrain.mesh) & 0x0000FFFFFFFFFFFFU;
@@ -379,16 +380,16 @@ private:
 
       key |= static_cast<uint64_t>(prim.type) << 48;
 
-      key |= static_cast<uint64_t>(prim.instanceCount() & 0xFFFFFFFF);
+      key |= static_cast<uint64_t>(prim.instance_count() & 0xFFFFFFFF);
     }
 
     return key;
   }
 
   std::vector<DrawCmd> m_items;
-  std::vector<uint32_t> m_sortIndices;
-  std::vector<uint64_t> m_sortKeys;
-  std::vector<uint32_t> m_tempIndices;
+  std::vector<uint32_t> m_sort_indices;
+  std::vector<uint64_t> m_sort_keys;
+  std::vector<uint32_t> m_temp_indices;
 };
 
 } // namespace Render::GL
