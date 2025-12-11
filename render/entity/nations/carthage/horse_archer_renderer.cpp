@@ -52,11 +52,11 @@ void register_horse_archer_renderer(EntityRendererRegistry &registry) {
         }
         auto *scene_renderer = dynamic_cast<Renderer *>(&out);
         if ((scene_renderer != nullptr) && (horse_archer_shader != nullptr)) {
-          scene_renderer->setCurrentShader(horse_archer_shader);
+          scene_renderer->set_current_shader(horse_archer_shader);
         }
         static_renderer.render(ctx, out);
         if (scene_renderer != nullptr) {
-          scene_renderer->setCurrentShader(nullptr);
+          scene_renderer->set_current_shader(nullptr);
         }
       });
 }

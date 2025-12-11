@@ -134,12 +134,13 @@ void FireCampRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   }
 
   FireCampBatchParams params = m_fireCampParams;
-  params.time = renderer.getAnimationTime();
+  params.time = renderer.get_animation_time();
   params.flicker_amount = m_fireCampParams.flicker_amount *
-                         (0.9F + 0.25F * std::sin(params.time * 1.3F));
+                          (0.9F + 0.25F * std::sin(params.time * 1.3F));
   params.glow_strength = m_fireCampParams.glow_strength *
-                        (0.85F + 0.2F * std::sin(params.time * 1.7F + 1.2F));
-  renderer.firecampBatch(m_fireCampInstanceBuffer.get(), visible_count, params);
+                         (0.85F + 0.2F * std::sin(params.time * 1.7F + 1.2F));
+  renderer.firecamp_batch(m_fireCampInstanceBuffer.get(), visible_count,
+                          params);
 
   const QVector3D log_color(0.26F, 0.15F, 0.08F);
   const QVector3D char_color(0.08F, 0.05F, 0.03F);

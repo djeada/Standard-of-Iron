@@ -234,14 +234,14 @@ private:
   void radix_sort_two_pass(std::size_t count) {
     constexpr int BUCKETS = 256;
 
-    m_tempIndices.resize(count);
+    m_temp_indices.resize(count);
 
     {
       int histogram[BUCKETS] = {0};
 
       for (std::size_t i = 0; i < count; ++i) {
         auto const bucket =
-            static_cast<uint8_t>(m_sortKeys[i] >> k_sort_key_bucket_shift);
+            static_cast<uint8_t>(m_sort_keys[i] >> k_sort_key_bucket_shift);
         ++histogram[bucket];
       }
 
@@ -252,9 +252,9 @@ private:
       }
 
       for (std::size_t i = 0; i < count; ++i) {
-        auto const bucket = static_cast<uint8_t>(m_sortKeys[m_sortIndices[i]] >>
-                                                 k_sort_key_bucket_shift);
-        m_tempIndices[offsets[bucket]++] = m_sortIndices[i];
+        auto const bucket = static_cast<uint8_t>(
+            m_sort_keys[m_sort_indices[i]] >> k_sort_key_bucket_shift);
+        m_temp_indices[offsets[bucket]++] = m_sort_indices[i];
       }
     }
 
@@ -263,7 +263,7 @@ private:
 
       for (std::size_t i = 0; i < count; ++i) {
         uint8_t const bucket =
-            static_cast<uint8_t>(m_sortKeys[m_tempIndices[i]] >> 48) & 0xFF;
+            static_cast<uint8_t>(m_sort_keys[m_temp_indices[i]] >> 48) & 0xFF;
         ++histogram[bucket];
       }
 
@@ -275,13 +275,13 @@ private:
 
       for (std::size_t i = 0; i < count; ++i) {
         uint8_t const bucket =
-            static_cast<uint8_t>(m_sortKeys[m_tempIndices[i]] >> 48) & 0xFF;
-        m_sortIndices[offsets[bucket]++] = m_tempIndices[i];
+            static_cast<uint8_t>(m_sort_keys[m_temp_indices[i]] >> 48) & 0xFF;
+        m_sort_indices[offsets[bucket]++] = m_temp_indices[i];
       }
     }
   }
 
-  [[nodiscard]] static auto computeSortKey(const DrawCmd &cmd) -> uint64_t {
+  [[nodiscard]] static auto compute_sort_key(const DrawCmd &cmd) -> uint64_t {
 
     enum class RenderOrder : uint8_t {
       TerrainChunk = 0,
@@ -352,7 +352,8 @@ private:
     } else if (cmd.index() == PineBatchCmdIndex) {
       const auto &pine = std::get<PineBatchCmdIndex>(cmd);
       uint64_t const bufferPtr =
-          reinterpret_cast<uintptr_t>(pine.instance_buffer) & 0x0000FFFFFFFFFFFF;
+          reinterpret_cast<uintptr_t>(pine.instance_buffer) &
+          0x0000FFFFFFFFFFFF;
       key |= bufferPtr;
     } else if (cmd.index() == OliveBatchCmdIndex) {
       const auto &olive = std::get<OliveBatchCmdIndex>(cmd);

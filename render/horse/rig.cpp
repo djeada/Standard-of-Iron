@@ -194,13 +194,14 @@ auto make_horse_dimensions(uint32_t seed) -> HorseDimensions {
   float const shoulder_to_barrel_offset = d.body_height * 0.05F + 0.05F;
   d.barrel_center_y = leg_down_distance - shoulder_to_barrel_offset;
 
-  d.saddle_height = d.barrel_center_y + d.body_height * 0.55F + d.saddle_thickness;
+  d.saddle_height =
+      d.barrel_center_y + d.body_height * 0.55F + d.saddle_thickness;
 
   return d;
 }
 
 auto make_horse_variant(uint32_t seed, const QVector3D &leather_base,
-                      const QVector3D &cloth_base) -> HorseVariant {
+                        const QVector3D &cloth_base) -> HorseVariant {
   HorseVariant v;
 
   float const coat_hue = hash01(seed ^ 0x23456U);
@@ -247,7 +248,7 @@ auto make_horse_variant(uint32_t seed, const QVector3D &leather_base,
 }
 
 auto make_horse_profile(uint32_t seed, const QVector3D &leather_base,
-                      const QVector3D &cloth_base) -> HorseProfile {
+                        const QVector3D &cloth_base) -> HorseProfile {
   HorseProfile profile;
   profile.dims = make_horse_dimensions(seed);
   profile.variant = make_horse_variant(seed, leather_base, cloth_base);
@@ -304,9 +305,9 @@ auto compute_mount_frame(const HorseProfile &profile)
   frame.stirrup_bottom_right =
       frame.stirrup_attach_right + QVector3D(0.0F, -d.stirrup_drop, 0.0F);
 
-  QVector3D const neck_top(0.0F,
-                           d.barrel_center_y + d.body_height * 0.65F + d.neck_rise,
-                           d.body_length * 0.25F);
+  QVector3D const neck_top(
+      0.0F, d.barrel_center_y + d.body_height * 0.65F + d.neck_rise,
+      d.body_length * 0.25F);
   QVector3D const head_center =
       neck_top + QVector3D(0.0F, d.head_height * 0.10F, d.head_length * 0.40F);
 
@@ -512,7 +513,8 @@ void HorseRendererBase::render_full(
   {
     QMatrix4x4 rump = horse_ctx.model;
     rump.translate(rump_center);
-    rump.scale(d.body_width * 1.18F, d.body_height * 1.00F, d.body_length * 0.36F);
+    rump.scale(d.body_width * 1.18F, d.body_height * 1.00F,
+               d.body_length * 0.36F);
     QVector3D const rump_color =
         coatGradient(v.coat_color, 0.62F, -0.28F, coat_seed_a * 0.7F);
     out.mesh(getUnitSphere(), rump, rump_color, nullptr, 1.0F, 6);
@@ -524,7 +526,8 @@ void HorseRendererBase::render_full(
     hip.translate(rump_center + QVector3D(side * d.body_width * 0.95F,
                                           -d.body_height * 0.10F,
                                           -d.body_length * 0.08F));
-    hip.scale(d.body_width * 0.45F, d.body_height * 0.42F, d.body_length * 0.26F);
+    hip.scale(d.body_width * 0.45F, d.body_height * 0.42F,
+              d.body_length * 0.26F);
     QVector3D const hip_color =
         coatGradient(v.coat_color, 0.58F, -0.18F, coat_seed_b + side * 0.06F);
     out.mesh(getUnitSphere(), hip, hip_color, nullptr, 1.0F, 6);
@@ -750,8 +753,9 @@ void HorseRendererBase::render_full(
              1.0F, 6);
   }
 
-  QVector3D bridle_base = muzzle_center + QVector3D(0.0F, -d.head_height * 0.05F,
-                                                    d.muzzle_length * 0.20F);
+  QVector3D bridle_base =
+      muzzle_center +
+      QVector3D(0.0F, -d.head_height * 0.05F, d.muzzle_length * 0.20F);
   mount.bridle_base = bridle_base;
   QVector3D const cheek_anchor_left =
       head_center + QVector3D(d.head_width * 0.55F, d.head_height * 0.05F,
@@ -800,8 +804,8 @@ void HorseRendererBase::render_full(
       QVector3D const strand_base =
           forelock_base + QVector3D(offset, 0.0F, 0.0F);
       QVector3D const strand_tip =
-          strand_base +
-          QVector3D(offset * 0.4F, -d.head_height * 0.25F, d.head_length * 0.12F);
+          strand_base + QVector3D(offset * 0.4F, -d.head_height * 0.25F,
+                                  d.head_length * 0.12F);
       drawCone(out, horse_ctx.model, strand_tip, strand_base,
                d.head_width * 0.10F, v.mane_color * (0.94F + 0.03F * i), 0.96F,
                7);
@@ -812,7 +816,8 @@ void HorseRendererBase::render_full(
       rump_center +
       QVector3D(0.0F, d.body_height * 0.36F, -d.body_length * 0.34F);
   QVector3D const tail_ctrl =
-      tail_base + QVector3D(0.0F, -d.tail_length * 0.20F, -d.tail_length * 0.28F);
+      tail_base +
+      QVector3D(0.0F, -d.tail_length * 0.20F, -d.tail_length * 0.28F);
   QVector3D const tail_end =
       tail_base + QVector3D(0.0F, -d.tail_length, -d.tail_length * 0.70F);
   QVector3D const tail_color = lerp3(v.tail_color, v.mane_color, 0.35F);
@@ -844,8 +849,8 @@ void HorseRendererBase::render_full(
   for (int i = 0; i < 3; ++i) {
     float const spread = (i - 1) * d.body_width * 0.14F;
     QVector3D const fan_base =
-        tail_end +
-        QVector3D(spread * 0.15F, -d.body_width * 0.05F, -d.tail_length * 0.08F);
+        tail_end + QVector3D(spread * 0.15F, -d.body_width * 0.05F,
+                             -d.tail_length * 0.08F);
     QVector3D const fan_tip =
         fan_base +
         QVector3D(spread, -d.tail_length * 0.32F, -d.tail_length * 0.22F);
@@ -908,12 +913,13 @@ void HorseRendererBase::render_full(
 
     bool const is_rear = (forwardBias < 0.0F);
     if (!is_rear) {
-      stride = std::clamp(stride, -d.body_length * 0.02F, d.body_length * 0.18F);
+      stride =
+          std::clamp(stride, -d.body_length * 0.02F, d.body_length * 0.18F);
     }
 
     bool const tighten_legs = is_moving;
-    float const shoulder_out =
-        d.body_width * (tighten_legs ? 0.42F : 0.56F) * (is_rear ? 0.96F : 1.0F);
+    float const shoulder_out = d.body_width * (tighten_legs ? 0.42F : 0.56F) *
+                               (is_rear ? 0.96F : 1.0F);
     float const shoulder_height = (is_rear ? 0.02F : 0.05F);
     float const stance_pull =
         is_rear ? -d.body_length * 0.04F : d.body_length * 0.05F;
@@ -1199,7 +1205,7 @@ void HorseRendererBase::render_full(
   body_frames.muzzle.forward = forward;
 
   draw_attachments(horse_ctx, anim, rider_ctx, profile, mount, phase, bob,
-                  rein_slack, body_frames, out);
+                   rein_slack, body_frames, out);
 }
 
 void HorseRendererBase::render_simplified(
@@ -1234,7 +1240,8 @@ void HorseRendererBase::render_simplified(
   {
     QMatrix4x4 body = horse_ctx.model;
     body.translate(barrel_center);
-    body.scale(d.body_width * 1.0F, d.body_height * 0.85F, d.body_length * 0.80F);
+    body.scale(d.body_width * 1.0F, d.body_height * 0.85F,
+               d.body_length * 0.80F);
     out.mesh(getUnitSphere(), body, v.coat_color, nullptr, 1.0F, 6);
   }
 
@@ -1251,7 +1258,8 @@ void HorseRendererBase::render_simplified(
   {
     QMatrix4x4 head = horse_ctx.model;
     head.translate(head_center);
-    head.scale(d.head_width * 0.90F, d.head_height * 0.85F, d.head_length * 0.75F);
+    head.scale(d.head_width * 0.90F, d.head_height * 0.85F,
+               d.head_length * 0.75F);
     out.mesh(getUnitSphere(), head, v.coat_color, nullptr, 1.0F);
   }
 
@@ -1300,9 +1308,9 @@ void HorseRendererBase::render_simplified(
 }
 
 void HorseRendererBase::render_minimal(const DrawContext &ctx,
-                                      HorseProfile &profile,
-                                      const HorseMotionSample *shared_motion,
-                                      ISubmitter &out) const {
+                                       HorseProfile &profile,
+                                       const HorseMotionSample *shared_motion,
+                                       ISubmitter &out) const {
 
   const HorseDimensions &d = profile.dims;
   const HorseVariant &v = profile.variant;
@@ -1350,7 +1358,7 @@ void HorseRendererBase::render(const DrawContext &ctx,
   ++s_horseRenderStats.horses_total;
 
   if (lod == HorseLOD::Billboard) {
-    ++s_horseRenderStats.horsesSkippedLOD;
+    ++s_horseRenderStats.horses_skipped_lod;
     return;
   }
 
@@ -1360,13 +1368,13 @@ void HorseRendererBase::render(const DrawContext &ctx,
   case HorseLOD::Full:
     ++s_horseRenderStats.lod_full;
     render_full(ctx, anim, rider_ctx, profile, shared_mount, shared_reins,
-               shared_motion, out);
+                shared_motion, out);
     break;
 
   case HorseLOD::Reduced:
     ++s_horseRenderStats.lod_reduced;
-    render_simplified(ctx, anim, rider_ctx, profile, shared_mount, shared_motion,
-                     out);
+    render_simplified(ctx, anim, rider_ctx, profile, shared_mount,
+                      shared_motion, out);
     break;
 
   case HorseLOD::Minimal:

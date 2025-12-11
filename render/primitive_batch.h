@@ -76,7 +76,9 @@ public:
   [[nodiscard]] auto cylinder_count() const -> std::size_t {
     return m_cylinders.size();
   }
-  [[nodiscard]] auto cone_count() const -> std::size_t { return m_cones.size(); }
+  [[nodiscard]] auto cone_count() const -> std::size_t {
+    return m_cones.size();
+  }
   [[nodiscard]] auto total_count() const -> std::size_t {
     return m_spheres.size() + m_cylinders.size() + m_cones.size();
   }

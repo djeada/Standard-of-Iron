@@ -83,8 +83,8 @@ void StoneRenderer::submit(Renderer &renderer, ResourceManager *resources) {
     return;
   }
 
-  renderer.stoneBatch(m_stoneInstanceBuffer.get(), m_stoneInstanceCount,
-                      m_stoneParams);
+  renderer.stone_batch(m_stoneInstanceBuffer.get(), m_stoneInstanceCount,
+                       m_stoneParams);
 }
 
 void StoneRenderer::clear() {

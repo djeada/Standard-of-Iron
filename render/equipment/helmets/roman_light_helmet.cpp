@@ -30,7 +30,7 @@ void RomanLightHelmetRenderer::render(const DrawContext &ctx,
   }
 
   auto headPoint = [&](const QVector3D &normalized) -> QVector3D {
-    return HumanoidRendererBase::frameLocalPosition(head, normalized);
+    return HumanoidRendererBase::frame_local_position(head, normalized);
   };
 
   QVector3D const helmet_color =

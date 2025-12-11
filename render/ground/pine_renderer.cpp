@@ -120,8 +120,8 @@ void PineRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   }
 
   PineBatchParams params = m_pineParams;
-  params.time = renderer.getAnimationTime();
-  renderer.pineBatch(m_pineInstanceBuffer.get(), visible_count, params);
+  params.time = renderer.get_animation_time();
+  renderer.pine_batch(m_pineInstanceBuffer.get(), visible_count, params);
 }
 
 void PineRenderer::clear() {

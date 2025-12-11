@@ -122,8 +122,8 @@ void PlantRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   }
 
   PlantBatchParams params = m_plantParams;
-  params.time = renderer.getAnimationTime();
-  renderer.plantBatch(m_visibleInstanceBuffer.get(), visible_count, params);
+  params.time = renderer.get_animation_time();
+  renderer.plant_batch(m_visibleInstanceBuffer.get(), visible_count, params);
 }
 
 void PlantRenderer::clear() {
