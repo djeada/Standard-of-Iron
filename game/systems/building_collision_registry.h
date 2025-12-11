@@ -53,7 +53,7 @@ public:
 
   [[nodiscard]] static auto getOccupiedGridCells(
       const BuildingFootprint &footprint,
-      float gridCellSize = 1.0F) -> std::vector<std::pair<int, int>>;
+      float grid_cell_size = 1.0F) -> std::vector<std::pair<int, int>>;
 
   static constexpr float kDefaultGridPadding = 0.1F;
   static void setGridPadding(float padding);

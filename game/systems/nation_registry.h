@@ -38,25 +38,26 @@ struct NationTroopVariant {
 
 struct TroopType {
   Game::Units::TroopType unit_type;
-  std::string displayName;
-  bool isMelee = false;
+  std::string display_name;
+  bool is_melee = false;
   int cost = 100;
-  float buildTime = 5.0F;
+  float build_time = 5.0F;
   int priority = 0;
 };
 
 struct Nation {
   NationID id;
-  std::string displayName;
-  std::vector<TroopType> availableTroops;
-  Game::Units::BuildingType primaryBuilding =
+  std::string display_name;
+  std::vector<TroopType> available_troops;
+  Game::Units::BuildingType primary_building =
       Game::Units::BuildingType::Barracks;
   FormationType formation_type = FormationType::Roman;
-  std::unordered_map<Game::Units::TroopType, NationTroopVariant> troopVariants;
+  std::unordered_map<Game::Units::TroopType, NationTroopVariant> troop_variants;
 
-  [[nodiscard]] auto getMeleeTroops() const -> std::vector<const TroopType *>;
+  [[nodiscard]] auto get_melee_troops() const -> std::vector<const TroopType *>;
 
-  [[nodiscard]] auto getRangedTroops() const -> std::vector<const TroopType *>;
+  [[nodiscard]] auto
+  get_ranged_troops() const -> std::vector<const TroopType *>;
 
   [[nodiscard]] auto
   getTroop(Game::Units::TroopType unit_type) const -> const TroopType *;

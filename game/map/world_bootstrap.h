@@ -17,11 +17,11 @@ public:
                          Render::GL::GroundRenderer *ground = nullptr,
                          QString *out_error = nullptr) -> bool;
 
-  static void ensureInitialized(bool &initialized,
-                                Render::GL::Renderer &renderer,
-                                Render::GL::Camera &camera,
-                                Render::GL::GroundRenderer *ground = nullptr,
-                                QString *out_error = nullptr);
+  static void ensure_initialized(bool &initialized,
+                                 Render::GL::Renderer &renderer,
+                                 Render::GL::Camera &camera,
+                                 Render::GL::GroundRenderer *ground = nullptr,
+                                 QString *out_error = nullptr);
 };
 
 } // namespace Game::Map

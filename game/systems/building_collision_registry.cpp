@@ -131,7 +131,7 @@ auto BuildingCollisionRegistry::isPointInBuilding(
 
 auto BuildingCollisionRegistry::getOccupiedGridCells(
     const BuildingFootprint &footprint,
-    float gridCellSize) -> std::vector<std::pair<int, int>> {
+    float grid_cell_size) -> std::vector<std::pair<int, int>> {
   std::vector<std::pair<int, int>> cells;
 
   float const half_width = footprint.width / 2.0F;
@@ -139,13 +139,13 @@ auto BuildingCollisionRegistry::getOccupiedGridCells(
 
   float const padding = s_gridPadding;
   int const min_grid_x = static_cast<int>(
-      std::floor((footprint.center_x - half_width - padding) / gridCellSize));
+      std::floor((footprint.center_x - half_width - padding) / grid_cell_size));
   int const max_grid_x = static_cast<int>(
-      std::ceil((footprint.center_x + half_width + padding) / gridCellSize));
+      std::ceil((footprint.center_x + half_width + padding) / grid_cell_size));
   int const min_grid_z = static_cast<int>(
-      std::floor((footprint.center_z - half_depth - padding) / gridCellSize));
+      std::floor((footprint.center_z - half_depth - padding) / grid_cell_size));
   int const max_grid_z = static_cast<int>(
-      std::ceil((footprint.center_z + half_depth + padding) / gridCellSize));
+      std::ceil((footprint.center_z + half_depth + padding) / grid_cell_size));
 
   for (int gx = min_grid_x; gx < max_grid_x; ++gx) {
     for (int gz = min_grid_z; gz < max_grid_z; ++gz) {

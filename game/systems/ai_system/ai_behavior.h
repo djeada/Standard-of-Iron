@@ -11,7 +11,7 @@ public:
   virtual ~AIBehavior() = default;
 
   virtual void execute(const AISnapshot &snapshot, AIContext &context,
-                       float deltaTime,
+                       float delta_time,
                        std::vector<AICommand> &outCommands) = 0;
 
   [[nodiscard]] virtual auto

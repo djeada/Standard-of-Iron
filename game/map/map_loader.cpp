@@ -280,7 +280,7 @@ void readSpawns(const QJsonArray &arr, std::vector<UnitSpawn> &out) {
 
     spawn.team_id = spawn_obj.value(TEAM_ID).toInt(0);
     constexpr int default_max_population = 100;
-    spawn.maxPopulation =
+    spawn.max_population =
         spawn_obj.value(MAX_POPULATION).toInt(default_max_population);
 
     if (spawn_obj.contains(NATION)) {

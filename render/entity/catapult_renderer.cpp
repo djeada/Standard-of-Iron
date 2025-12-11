@@ -18,7 +18,7 @@ void register_catapult_renderer(EntityRendererRegistry &registry) {
           return;
         }
 
-        auto *unit = p.entity->getComponent<Engine::Core::UnitComponent>();
+        auto *unit = p.entity->get_component<Engine::Core::UnitComponent>();
         if (unit == nullptr) {
           return;
         }
