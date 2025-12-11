@@ -7,7 +7,7 @@ namespace Game::Systems {
 
 class CleanupSystem : public Engine::Core::System {
 public:
-  void update(Engine::Core::World *world, float deltaTime) override;
+  void update(Engine::Core::World *world, float delta_time) override;
 
 private:
   static void removeDeadEntities(Engine::Core::World *world);

@@ -11,7 +11,7 @@ auto AISnapshotBuilder::build(const Engine::Core::World &world,
   AISnapshot snapshot;
   snapshot.player_id = aiOwnerId;
 
-  auto friendlies = world.getUnitsOwnedBy(aiOwnerId);
+  auto friendlies = world.get_units_owned_by(aiOwnerId);
   snapshot.friendlies.reserve(friendlies.size());
 
   int skipped_no_ai = 0;
@@ -20,12 +20,12 @@ auto AISnapshotBuilder::build(const Engine::Core::World &world,
   int added = 0;
 
   for (auto *entity : friendlies) {
-    if (!entity->hasComponent<Engine::Core::AIControlledComponent>()) {
+    if (!entity->has_component<Engine::Core::AIControlledComponent>()) {
       skipped_no_ai++;
       continue;
     }
 
-    auto *unit = entity->getComponent<Engine::Core::UnitComponent>();
+    auto *unit = entity->get_component<Engine::Core::UnitComponent>();
     if (unit == nullptr) {
       skipped_no_unit++;
       continue;
@@ -37,64 +37,64 @@ auto AISnapshotBuilder::build(const Engine::Core::World &world,
     }
 
     EntitySnapshot data;
-    data.id = entity->getId();
+    data.id = entity->get_id();
     data.spawn_type = unit->spawn_type;
     data.owner_id = unit->owner_id;
     data.health = unit->health;
     data.max_health = unit->max_health;
-    data.isBuilding = entity->hasComponent<Engine::Core::BuildingComponent>();
+    data.isBuilding = entity->has_component<Engine::Core::BuildingComponent>();
 
     if (auto *transform =
-            entity->getComponent<Engine::Core::TransformComponent>()) {
+            entity->get_component<Engine::Core::TransformComponent>()) {
       data.posX = transform->position.x;
       data.posY = 0.0F;
       data.posZ = transform->position.z;
     }
 
     if (auto *movement =
-            entity->getComponent<Engine::Core::MovementComponent>()) {
-      data.movement.hasComponent = true;
-      data.movement.hasTarget = movement->hasTarget;
+            entity->get_component<Engine::Core::MovementComponent>()) {
+      data.movement.has_component = true;
+      data.movement.has_target = movement->has_target;
     }
 
     if (auto *production =
-            entity->getComponent<Engine::Core::ProductionComponent>()) {
-      data.production.hasComponent = true;
-      data.production.inProgress = production->inProgress;
-      data.production.buildTime = production->buildTime;
-      data.production.timeRemaining = production->timeRemaining;
-      data.production.producedCount = production->producedCount;
-      data.production.maxUnits = production->maxUnits;
+            entity->get_component<Engine::Core::ProductionComponent>()) {
+      data.production.has_component = true;
+      data.production.in_progress = production->in_progress;
+      data.production.build_time = production->build_time;
+      data.production.time_remaining = production->time_remaining;
+      data.production.produced_count = production->produced_count;
+      data.production.max_units = production->max_units;
       data.production.product_type = production->product_type;
-      data.production.rallySet = production->rallySet;
-      data.production.rallyX = production->rallyX;
-      data.production.rallyZ = production->rallyZ;
-      data.production.queueSize =
-          static_cast<int>(production->productionQueue.size());
+      data.production.rally_set = production->rally_set;
+      data.production.rally_x = production->rally_x;
+      data.production.rally_z = production->rally_z;
+      data.production.queue_size =
+          static_cast<int>(production->production_queue.size());
     }
 
     snapshot.friendlies.push_back(std::move(data));
     added++;
   }
 
-  auto enemies = world.getEnemyUnits(aiOwnerId);
+  auto enemies = world.get_enemy_units(aiOwnerId);
   snapshot.visibleEnemies.reserve(enemies.size());
 
   for (auto *entity : enemies) {
-    auto *unit = entity->getComponent<Engine::Core::UnitComponent>();
+    auto *unit = entity->get_component<Engine::Core::UnitComponent>();
     if ((unit == nullptr) || unit->health <= 0) {
       continue;
     }
 
-    auto *transform = entity->getComponent<Engine::Core::TransformComponent>();
+    auto *transform = entity->get_component<Engine::Core::TransformComponent>();
     if (transform == nullptr) {
       continue;
     }
 
     ContactSnapshot contact;
-    contact.id = entity->getId();
+    contact.id = entity->get_id();
     contact.isBuilding =
-        entity->hasComponent<Engine::Core::BuildingComponent>();
+        entity->has_component<Engine::Core::BuildingComponent>();
     contact.posX = transform->position.x;
     contact.posY = 0.0F;
     contact.posZ = transform->position.z;

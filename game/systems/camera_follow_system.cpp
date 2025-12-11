@@ -10,15 +10,15 @@ namespace Game::Systems {
 void CameraFollowSystem::update(Engine::Core::World &world,
                                 SelectionSystem &selection,
                                 Render::GL::Camera &camera) {
-  const auto &sel = selection.getSelectedUnits();
+  const auto &sel = selection.get_selected_units();
   if (sel.empty()) {
     return;
   }
   QVector3D sum(0, 0, 0);
   int count = 0;
   for (auto id : sel) {
-    if (auto *e = world.getEntity(id)) {
-      if (auto *t = e->getComponent<Engine::Core::TransformComponent>()) {
+    if (auto *e = world.get_entity(id)) {
+      if (auto *t = e->get_component<Engine::Core::TransformComponent>()) {
         sum += QVector3D(t->position.x, t->position.y, t->position.z);
         ++count;
       }
@@ -34,15 +34,15 @@ void CameraFollowSystem::update(Engine::Core::World &world,
 void CameraFollowSystem::snapToSelection(Engine::Core::World &world,
                                          SelectionSystem &selection,
                                          Render::GL::Camera &camera) {
-  const auto &sel = selection.getSelectedUnits();
+  const auto &sel = selection.get_selected_units();
   if (sel.empty()) {
     return;
   }
   QVector3D sum(0, 0, 0);
   int count = 0;
   for (auto id : sel) {
-    if (auto *e = world.getEntity(id)) {
-      if (auto *t = e->getComponent<Engine::Core::TransformComponent>()) {
+    if (auto *e = world.get_entity(id)) {
+      if (auto *t = e->get_component<Engine::Core::TransformComponent>()) {
         sum += QVector3D(t->position.x, t->position.y, t->position.z);
         ++count;
       }

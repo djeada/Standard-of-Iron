@@ -21,7 +21,7 @@ Rectangle {
 
     anchors.fill: parent
     color: Qt.rgba(0, 0, 0, 0.7)
-    visible: !manuallyHidden && (typeof game !== 'undefined' && game.victoryState !== "")
+    visible: !manuallyHidden && (typeof game !== 'undefined' && game.victory_state !== "")
     z: 100
     onVisibleChanged: {
         if (!visible)
@@ -30,10 +30,10 @@ Rectangle {
     }
 
     Connections {
-        function onVictoryStateChanged() {
-            if (typeof game !== 'undefined' && game.victoryState === "")
+        function onVictory_state_changed() {
+            if (typeof game !== 'undefined' && game.victory_state === "")
                 resetState();
-            else if (typeof game !== 'undefined' && game.victoryState !== "")
+            else if (typeof game !== 'undefined' && game.victory_state !== "")
                 manuallyHidden = false;
         }
 
@@ -55,15 +55,15 @@ Rectangle {
                 id: victoryText
 
                 anchors.horizontalCenter: parent.horizontalCenter
-                text: (typeof game !== 'undefined' && game.victoryState === "victory") ? qsTr("VICTORY!") : qsTr("DEFEAT")
-                color: (typeof game !== 'undefined' && game.victoryState === "victory") ? "#27ae60" : "#e74c3c"
+                text: (typeof game !== 'undefined' && game.victory_state === "victory") ? qsTr("VICTORY!") : qsTr("DEFEAT")
+                color: (typeof game !== 'undefined' && game.victory_state === "victory") ? "#27ae60" : "#e74c3c"
                 font.pointSize: 48
                 font.bold: true
             }
 
             Text {
                 anchors.horizontalCenter: parent.horizontalCenter
-                text: (typeof game !== 'undefined' && game.victoryState === "victory") ? qsTr("Enemy barracks destroyed!") : qsTr("Your barracks was destroyed!")
+                text: (typeof game !== 'undefined' && game.victory_state === "victory") ? qsTr("Enemy barracks destroyed!") : qsTr("Your barracks was destroyed!")
                 color: "white"
                 font.pointSize: 18
             }

@@ -13,15 +13,15 @@ auto TroopCountRegistry::instance() -> TroopCountRegistry & {
 }
 
 void TroopCountRegistry::initialize() {
-  m_unitSpawnedSubscription =
+  m_unit_spawned_subscription =
       Engine::Core::ScopedEventSubscription<Engine::Core::UnitSpawnedEvent>(
           [this](const Engine::Core::UnitSpawnedEvent &e) {
-            onUnitSpawned(e);
+            on_unit_spawned(e);
           });
 
-  m_unitDiedSubscription =
+  m_unit_died_subscription =
       Engine::Core::ScopedEventSubscription<Engine::Core::UnitDiedEvent>(
-          [this](const Engine::Core::UnitDiedEvent &e) { onUnitDied(e); });
+          [this](const Engine::Core::UnitDiedEvent &e) { on_unit_died(e); });
 }
 
 void TroopCountRegistry::clear() { m_troop_counts.clear(); }
@@ -34,7 +34,7 @@ auto TroopCountRegistry::getTroopCount(int owner_id) const -> int {
   return 0;
 }
 
-void TroopCountRegistry::onUnitSpawned(
+void TroopCountRegistry::on_unit_spawned(
     const Engine::Core::UnitSpawnedEvent &event) {
   if (event.spawn_type == Game::Units::SpawnType::Barracks) {
     return;
@@ -46,7 +46,8 @@ void TroopCountRegistry::onUnitSpawned(
   m_troop_counts[event.owner_id] += individuals_per_unit;
 }
 
-void TroopCountRegistry::onUnitDied(const Engine::Core::UnitDiedEvent &event) {
+void TroopCountRegistry::on_unit_died(
+    const Engine::Core::UnitDiedEvent &event) {
   if (event.spawn_type == Game::Units::SpawnType::Barracks) {
     return;
   }
@@ -60,12 +61,12 @@ void TroopCountRegistry::onUnitDied(const Engine::Core::UnitDiedEvent &event) {
   }
 }
 
-void TroopCountRegistry::rebuildFromWorld(Engine::Core::World &world) {
+void TroopCountRegistry::rebuild_from_world(Engine::Core::World &world) {
   m_troop_counts.clear();
 
-  auto entities = world.getEntitiesWith<Engine::Core::UnitComponent>();
+  auto entities = world.get_entities_with<Engine::Core::UnitComponent>();
   for (auto *e : entities) {
-    auto *unit = e->getComponent<Engine::Core::UnitComponent>();
+    auto *unit = e->get_component<Engine::Core::UnitComponent>();
     if ((unit == nullptr) || unit->health <= 0) {
       continue;
     }

@@ -51,12 +51,12 @@ void AICommandApplier::apply(Engine::Core::World &world, int aiOwnerId,
 
       for (std::size_t idx = 0; idx < command.units.size(); ++idx) {
         auto entity_id = command.units[idx];
-        auto *entity = world.getEntity(entity_id);
+        auto *entity = world.get_entity(entity_id);
         if (entity == nullptr) {
           continue;
         }
 
-        auto *unit = entity->getComponent<Engine::Core::UnitComponent>();
+        auto *unit = entity->get_component<Engine::Core::UnitComponent>();
         if ((unit == nullptr) || unit->owner_id != aiOwnerId) {
           continue;
         }
@@ -71,9 +71,9 @@ void AICommandApplier::apply(Engine::Core::World &world, int aiOwnerId,
       }
 
       CommandService::MoveOptions opts;
-      opts.allowDirectFallback = true;
-      opts.clearAttackIntent = false;
-      opts.groupMove = owned_units.size() > 1;
+      opts.allow_direct_fallback = true;
+      opts.clear_attack_intent = false;
+      opts.group_move = owned_units.size() > 1;
       CommandService::moveUnits(world, owned_units, owned_targets, opts);
       break;
     }
@@ -87,12 +87,12 @@ void AICommandApplier::apply(Engine::Core::World &world, int aiOwnerId,
       owned_units.reserve(command.units.size());
 
       for (auto entity_id : command.units) {
-        auto *entity = world.getEntity(entity_id);
+        auto *entity = world.get_entity(entity_id);
         if (entity == nullptr) {
           continue;
         }
 
-        auto *unit = entity->getComponent<Engine::Core::UnitComponent>();
+        auto *unit = entity->get_component<Engine::Core::UnitComponent>();
         if ((unit == nullptr) || unit->owner_id != aiOwnerId) {
           continue;
         }
@@ -105,33 +105,33 @@ void AICommandApplier::apply(Engine::Core::World &world, int aiOwnerId,
       }
 
       CommandService::attack_target(world, owned_units, command.target_id,
-                                    command.shouldChase);
+                                    command.should_chase);
       break;
     }
 
     case AICommandType::StartProduction: {
-      auto *entity = world.getEntity(command.buildingId);
+      auto *entity = world.get_entity(command.buildingId);
       if (entity == nullptr) {
         break;
       }
 
       auto *production =
-          entity->getComponent<Engine::Core::ProductionComponent>();
+          entity->get_component<Engine::Core::ProductionComponent>();
       if (production == nullptr) {
         break;
       }
 
-      if (production->inProgress) {
+      if (production->in_progress) {
         break;
       }
 
-      auto *unit = entity->getComponent<Engine::Core::UnitComponent>();
+      auto *unit = entity->get_component<Engine::Core::UnitComponent>();
       if ((unit != nullptr) && unit->owner_id != aiOwnerId) {
         break;
       }
 
       int const current_troops =
-          Engine::Core::World::countTroopsForPlayer(aiOwnerId);
+          Engine::Core::World::count_troops_for_player(aiOwnerId);
       int const max_troops =
           Game::GameConfig::instance().getMaxTroopsPerPlayer();
       Game::Units::TroopType const product_type = production->product_type;
@@ -144,8 +144,8 @@ void AICommandApplier::apply(Engine::Core::World &world, int aiOwnerId,
 
       production->product_type = command.product_type;
 
-      production->timeRemaining = production->buildTime;
-      production->inProgress = true;
+      production->time_remaining = production->build_time;
+      production->in_progress = true;
 
       break;
     }

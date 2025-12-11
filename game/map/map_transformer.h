@@ -31,7 +31,7 @@ public:
   getFactoryRegistry() -> std::shared_ptr<Game::Units::UnitFactoryRegistry>;
 
   static void set_local_owner_id(int owner_id);
-  static auto localOwnerId() -> int;
+  static auto local_owner_id() -> int;
 
   static void
   setPlayerTeamOverrides(const std::unordered_map<int, int> &overrides);

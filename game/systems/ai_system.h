@@ -25,7 +25,7 @@ public:
   AISystem();
   ~AISystem() override;
 
-  void update(Engine::Core::World *world, float deltaTime) override;
+  void update(Engine::Core::World *world, float delta_time) override;
 
   void reinitialize();
 
@@ -33,7 +33,7 @@ private:
   struct AIInstance {
     AI::AIContext context;
     std::unique_ptr<AI::AIWorker> worker;
-    float updateTimer = 0.0F;
+    float update_timer = 0.0F;
   };
 
   std::vector<AIInstance> m_aiInstances;

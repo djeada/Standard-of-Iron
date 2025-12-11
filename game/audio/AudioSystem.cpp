@@ -75,23 +75,23 @@ void AudioSystem::shutdown() {
   }
 }
 
-void AudioSystem::playSound(const std::string &soundId, float volume, bool loop,
-                            int priority, AudioCategory category) {
+void AudioSystem::playSound(const std::string &sound_id, float volume,
+                            bool loop, int priority, AudioCategory category) {
   std::lock_guard<std::mutex> const lock(queueMutex);
-  eventQueue.emplace(AudioEventType::PLAY_SOUND, soundId, volume, loop,
+  eventQueue.emplace(AudioEventType::PLAY_SOUND, sound_id, volume, loop,
                      priority, category);
   queueCondition.notify_one();
 }
 
-void AudioSystem::playMusic(const std::string &musicId, float volume, bool) {
+void AudioSystem::playMusic(const std::string &music_id, float volume, bool) {
   std::lock_guard<std::mutex> const lock(queueMutex);
-  eventQueue.emplace(AudioEventType::PLAY_MUSIC, musicId, volume);
+  eventQueue.emplace(AudioEventType::PLAY_MUSIC, music_id, volume);
   queueCondition.notify_one();
 }
 
-void AudioSystem::stopSound(const std::string &soundId) {
+void AudioSystem::stopSound(const std::string &sound_id) {
   std::lock_guard<std::mutex> const lock(queueMutex);
-  eventQueue.emplace(AudioEventType::STOP_SOUND, soundId);
+  eventQueue.emplace(AudioEventType::STOP_SOUND, sound_id);
   queueCondition.notify_one();
 }
 
@@ -169,11 +169,11 @@ void AudioSystem::resumeAll() {
   queueCondition.notify_one();
 }
 
-auto AudioSystem::loadSound(const std::string &soundId,
+auto AudioSystem::loadSound(const std::string &sound_id,
                             const std::string &filePath,
                             AudioCategory category) -> bool {
   std::lock_guard<std::mutex> const lock(resourceMutex);
-  if (sounds.find(soundId) != sounds.end()) {
+  if (sounds.find(sound_id) != sounds.end()) {
     return true;
   }
 
@@ -184,13 +184,13 @@ auto AudioSystem::loadSound(const std::string &soundId,
     return false;
   }
 
-  sounds[soundId] = std::move(sound);
-  soundCategories[soundId] = category;
-  activeResources.insert(soundId);
+  sounds[sound_id] = std::move(sound);
+  soundCategories[sound_id] = category;
+  activeResources.insert(sound_id);
   return true;
 }
 
-auto AudioSystem::loadMusic(const std::string &musicId,
+auto AudioSystem::loadMusic(const std::string &music_id,
                             const std::string &filePath) -> bool {
   std::lock_guard<std::mutex> const lock(resourceMutex);
 
@@ -199,20 +199,20 @@ auto AudioSystem::loadMusic(const std::string &musicId,
     return false;
   }
 
-  m_musicPlayer->registerTrack(musicId, filePath);
-  activeResources.insert(musicId);
+  m_musicPlayer->registerTrack(music_id, filePath);
+  activeResources.insert(music_id);
   return true;
 }
 
-void AudioSystem::unloadSound(const std::string &soundId) {
+void AudioSystem::unloadSound(const std::string &sound_id) {
   std::lock_guard<std::mutex> const lock(queueMutex);
-  eventQueue.emplace(AudioEventType::UNLOAD_RESOURCE, soundId);
+  eventQueue.emplace(AudioEventType::UNLOAD_RESOURCE, sound_id);
   queueCondition.notify_one();
 }
 
-void AudioSystem::unloadMusic(const std::string &musicId) {
+void AudioSystem::unloadMusic(const std::string &music_id) {
   std::lock_guard<std::mutex> const lock(queueMutex);
-  eventQueue.emplace(AudioEventType::UNLOAD_RESOURCE, musicId);
+  eventQueue.emplace(AudioEventType::UNLOAD_RESOURCE, music_id);
   queueCondition.notify_one();
 }
 

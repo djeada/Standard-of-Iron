@@ -9,9 +9,9 @@
 namespace Game::Systems::AI {
 
 void ProductionBehavior::execute(const AISnapshot &snapshot, AIContext &context,
-                                 float deltaTime,
+                                 float delta_time,
                                  std::vector<AICommand> &outCommands) {
-  m_productionTimer += deltaTime;
+  m_productionTimer += delta_time;
   if (m_productionTimer < 1.5F) {
     return;
   }
@@ -67,18 +67,18 @@ void ProductionBehavior::execute(const AISnapshot &snapshot, AIContext &context,
 
     static int const log_counter = 0;
 
-    if (!entity.production.hasComponent) {
+    if (!entity.production.has_component) {
       continue;
     }
 
     const auto &prod = entity.production;
 
-    if (prod.producedCount >= prod.maxUnits) {
+    if (prod.produced_count >= prod.max_units) {
       continue;
     }
 
     const int max_queue_size = 5;
-    int const total_in_queue = (prod.inProgress ? 1 : 0) + prod.queueSize;
+    int const total_in_queue = (prod.in_progress ? 1 : 0) + prod.queue_size;
     if (total_in_queue >= max_queue_size) {
       continue;
     }

@@ -204,8 +204,8 @@ auto HumanoidRendererBase::resolve_team_tint(const DrawContext &ctx)
   Engine::Core::RenderableComponent *rc = nullptr;
 
   if (ctx.entity != nullptr) {
-    unit = ctx.entity->getComponent<Engine::Core::UnitComponent>();
-    rc = ctx.entity->getComponent<Engine::Core::RenderableComponent>();
+    unit = ctx.entity->get_component<Engine::Core::UnitComponent>();
+    rc = ctx.entity->get_component<Engine::Core::RenderableComponent>();
   }
 
   if ((unit != nullptr) && unit->owner_id > 0) {
@@ -225,7 +225,7 @@ auto HumanoidRendererBase::resolve_formation(const DrawContext &ctx)
   params.spacing = 0.75F;
 
   if (ctx.entity != nullptr) {
-    auto *unit = ctx.entity->getComponent<Engine::Core::UnitComponent>();
+    auto *unit = ctx.entity->get_component<Engine::Core::UnitComponent>();
     if (unit != nullptr) {
       params.individuals_per_unit =
           Game::Units::TroopConfig::instance().getIndividualsPerUnit(
@@ -1209,15 +1209,16 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
 
   Engine::Core::UnitComponent *unit_comp = nullptr;
   if (ctx.entity != nullptr) {
-    unit_comp = ctx.entity->getComponent<Engine::Core::UnitComponent>();
+    unit_comp = ctx.entity->get_component<Engine::Core::UnitComponent>();
   }
 
   Engine::Core::MovementComponent *movement_comp = nullptr;
   Engine::Core::TransformComponent *transform_comp = nullptr;
   if (ctx.entity != nullptr) {
-    movement_comp = ctx.entity->getComponent<Engine::Core::MovementComponent>();
+    movement_comp =
+        ctx.entity->get_component<Engine::Core::MovementComponent>();
     transform_comp =
-        ctx.entity->getComponent<Engine::Core::TransformComponent>();
+        ctx.entity->get_component<Engine::Core::TransformComponent>();
   }
 
   float entity_ground_offset =
@@ -1351,7 +1352,7 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
     float soldier_distance = 0.0F;
     if (ctx.camera != nullptr) {
       soldier_distance =
-          (soldier_world_pos - ctx.camera->getPosition()).length();
+          (soldier_world_pos - ctx.camera->get_position()).length();
       soldier_lod = calculate_humanoid_lod(soldier_distance);
 
       if (soldier_lod == HumanoidLOD::Billboard) {
@@ -1453,7 +1454,7 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
       if (speed > 1e-4F) {
         anim_ctx.locomotion_direction = velocity.normalized();
       }
-      anim_ctx.has_movement_target = movement_comp->hasTarget;
+      anim_ctx.has_movement_target = movement_comp->has_target;
       anim_ctx.movement_target =
           QVector3D(movement_comp->target_x, 0.0F, movement_comp->target_y);
     }
@@ -1548,10 +1549,10 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
 
     const auto &gfxSettings = Render::GraphicsSettings::instance();
     const bool shouldRenderShadow =
-        gfxSettings.shadowsEnabled() &&
+        gfxSettings.shadows_enabled() &&
         (soldier_lod == HumanoidLOD::Full ||
          soldier_lod == HumanoidLOD::Reduced) &&
-        soldier_distance < gfxSettings.shadowMaxDistance();
+        soldier_distance < gfxSettings.shadow_max_distance();
 
     if (shouldRenderShadow && inst_ctx.backend != nullptr &&
         inst_ctx.resources != nullptr) {

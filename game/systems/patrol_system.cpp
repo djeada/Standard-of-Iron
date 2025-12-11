@@ -11,13 +11,13 @@ void PatrolSystem::update(Engine::Core::World *world, float) {
     return;
   }
 
-  auto entities = world->getEntitiesWith<Engine::Core::PatrolComponent>();
+  auto entities = world->get_entities_with<Engine::Core::PatrolComponent>();
 
   for (auto *entity : entities) {
-    auto *patrol = entity->getComponent<Engine::Core::PatrolComponent>();
-    auto *movement = entity->getComponent<Engine::Core::MovementComponent>();
-    auto *transform = entity->getComponent<Engine::Core::TransformComponent>();
-    auto *unit = entity->getComponent<Engine::Core::UnitComponent>();
+    auto *patrol = entity->get_component<Engine::Core::PatrolComponent>();
+    auto *movement = entity->get_component<Engine::Core::MovementComponent>();
+    auto *transform = entity->get_component<Engine::Core::TransformComponent>();
+    auto *unit = entity->get_component<Engine::Core::UnitComponent>();
 
     if ((patrol == nullptr) || (movement == nullptr) ||
         (transform == nullptr) || (unit == nullptr)) {
@@ -33,18 +33,18 @@ void PatrolSystem::update(Engine::Core::World *world, float) {
     }
 
     auto *attack_target =
-        entity->getComponent<Engine::Core::AttackTargetComponent>();
+        entity->get_component<Engine::Core::AttackTargetComponent>();
     if ((attack_target != nullptr) && attack_target->target_id != 0) {
 
       continue;
     }
 
     bool enemy_nearby = false;
-    auto all_entities = world->getEntitiesWith<Engine::Core::UnitComponent>();
+    auto all_entities = world->get_entities_with<Engine::Core::UnitComponent>();
     for (auto *other : all_entities) {
-      auto *other_unit = other->getComponent<Engine::Core::UnitComponent>();
+      auto *other_unit = other->get_component<Engine::Core::UnitComponent>();
       auto *other_transform =
-          other->getComponent<Engine::Core::TransformComponent>();
+          other->get_component<Engine::Core::TransformComponent>();
 
       if ((other_unit == nullptr) || (other_transform == nullptr) ||
           other_unit->health <= 0) {
@@ -62,13 +62,13 @@ void PatrolSystem::update(Engine::Core::World *world, float) {
         enemy_nearby = true;
 
         if (attack_target == nullptr) {
-          entity->addComponent<Engine::Core::AttackTargetComponent>();
+          entity->add_component<Engine::Core::AttackTargetComponent>();
           attack_target =
-              entity->getComponent<Engine::Core::AttackTargetComponent>();
+              entity->get_component<Engine::Core::AttackTargetComponent>();
         }
         if (attack_target != nullptr) {
-          attack_target->target_id = other->getId();
-          attack_target->shouldChase = false;
+          attack_target->target_id = other->get_id();
+          attack_target->should_chase = false;
         }
         break;
       }
@@ -79,7 +79,7 @@ void PatrolSystem::update(Engine::Core::World *world, float) {
       continue;
     }
 
-    auto waypoint = patrol->waypoints[patrol->currentWaypoint];
+    auto waypoint = patrol->waypoints[patrol->current_waypoint];
     float target_x = waypoint.first;
     float target_z = waypoint.second;
 
@@ -89,18 +89,18 @@ void PatrolSystem::update(Engine::Core::World *world, float) {
 
     if (dist_sq < 1.0F) {
 
-      patrol->currentWaypoint =
-          (patrol->currentWaypoint + 1) % patrol->waypoints.size();
-      waypoint = patrol->waypoints[patrol->currentWaypoint];
+      patrol->current_waypoint =
+          (patrol->current_waypoint + 1) % patrol->waypoints.size();
+      waypoint = patrol->waypoints[patrol->current_waypoint];
       target_x = waypoint.first;
       target_z = waypoint.second;
     }
 
-    movement->hasTarget = true;
+    movement->has_target = true;
     movement->target_x = target_x;
     movement->target_y = target_z;
-    movement->goalX = target_x;
-    movement->goalY = target_z;
+    movement->goal_x = target_x;
+    movement->goal_y = target_z;
   }
 }
 

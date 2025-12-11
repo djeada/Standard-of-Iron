@@ -37,10 +37,10 @@ struct SkirmishLoadResult {
   bool ok = false;
   QString map_name;
   QString errorMessage;
-  Engine::Core::EntityID playerUnitId = 0;
-  float camFov = 45.0F;
-  float camNear = 0.1F;
-  float camFar = 1000.0F;
+  Engine::Core::EntityID player_unit_id = 0;
+  float cam_fov = 45.0F;
+  float cam_near = 0.1F;
+  float cam_far = 1000.0F;
   int grid_width = 50;
   int grid_height = 50;
   float tile_size = 1.0F;

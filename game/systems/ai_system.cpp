@@ -68,12 +68,12 @@ void AISystem::initializeAIPlayers() {
 
 AISystem::~AISystem() = default;
 
-void AISystem::update(Engine::Core::World *world, float deltaTime) {
+void AISystem::update(Engine::Core::World *world, float delta_time) {
   if (world == nullptr) {
     return;
   }
 
-  m_totalGameTime += deltaTime;
+  m_totalGameTime += delta_time;
 
   m_commandFilter.update(m_totalGameTime);
 
@@ -81,9 +81,9 @@ void AISystem::update(Engine::Core::World *world, float deltaTime) {
 
   for (auto &ai : m_aiInstances) {
 
-    ai.updateTimer += deltaTime;
+    ai.update_timer += delta_time;
 
-    if (ai.updateTimer < 0.3F) {
+    if (ai.update_timer < 0.3F) {
       continue;
     }
 
@@ -98,10 +98,10 @@ void AISystem::update(Engine::Core::World *world, float deltaTime) {
     AI::AIJob job;
     job.snapshot = std::move(snapshot);
     job.context = ai.context;
-    job.deltaTime = ai.updateTimer;
+    job.delta_time = ai.update_timer;
 
     if (ai.worker->trySubmit(std::move(job))) {
-      ai.updateTimer = 0.0F;
+      ai.update_timer = 0.0F;
     }
   }
 }
