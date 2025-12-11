@@ -423,7 +423,7 @@ void Renderer::render_world(Engine::Core::World *world) {
   }
 
   float fullShaderMaxDistance = 30.0F * (1.0F - batching_ratio * 0.7F);
-  if (batchConfig.force_batching) {
+  if (batch_config.force_batching) {
     fullShaderMaxDistance = 0.0F;
   }
 

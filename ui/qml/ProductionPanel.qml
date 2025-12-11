@@ -914,6 +914,7 @@ Rectangle {
 
                             MouseArea {
                                 id: ballistaMouseArea
+
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 enabled: parent.isEnabled
