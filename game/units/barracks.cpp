@@ -23,21 +23,21 @@ auto Barracks::Create(Engine::Core::World &world,
 }
 
 void Barracks::init(const SpawnParams &params) {
-  auto *e = m_world->createEntity();
-  m_id = e->getId();
+  auto *e = m_world->create_entity();
+  m_id = e->get_id();
 
   const auto nation_id = resolve_nation_id(params);
 
-  m_t = e->addComponent<Engine::Core::TransformComponent>();
+  m_t = e->add_component<Engine::Core::TransformComponent>();
   m_t->position = {params.position.x(), params.position.y(),
                    params.position.z()};
   m_t->scale = {1.8F, 1.2F, 1.8F};
 
-  m_r = e->addComponent<Engine::Core::RenderableComponent>("", "");
+  m_r = e->add_component<Engine::Core::RenderableComponent>("", "");
   m_r->visible = true;
   m_r->mesh = Engine::Core::RenderableComponent::MeshKind::Cube;
 
-  m_u = e->addComponent<Engine::Core::UnitComponent>();
+  m_u = e->add_component<Engine::Core::UnitComponent>();
   m_u->spawn_type = params.spawn_type;
   m_u->health = 2000;
   m_u->max_health = 2000;
@@ -46,8 +46,8 @@ void Barracks::init(const SpawnParams &params) {
   m_u->vision_range = 22.0F;
   m_u->nation_id = nation_id;
 
-  if (params.aiControlled) {
-    e->addComponent<Engine::Core::AIControlledComponent>();
+  if (params.ai_controlled) {
+    e->add_component<Engine::Core::AIControlledComponent>();
   } else {
   }
 
@@ -56,28 +56,28 @@ void Barracks::init(const SpawnParams &params) {
   m_r->color[1] = tc.y();
   m_r->color[2] = tc.z();
 
-  e->addComponent<Engine::Core::BuildingComponent>();
+  e->add_component<Engine::Core::BuildingComponent>();
 
   Game::Systems::BuildingCollisionRegistry::instance().registerBuilding(
       m_id, m_type_string, m_t->position.x, m_t->position.z, m_u->owner_id);
 
   if (!Game::Core::isNeutralOwner(m_u->owner_id)) {
-    if (auto *prod = e->addComponent<Engine::Core::ProductionComponent>()) {
+    if (auto *prod = e->add_component<Engine::Core::ProductionComponent>()) {
       prod->product_type = TroopType::Archer;
-      prod->buildTime = 10.0F;
-      prod->maxUnits = params.maxPopulation;
-      prod->inProgress = false;
-      prod->timeRemaining = 0.0F;
-      prod->producedCount = 0;
-      prod->rallyX = m_t->position.x + 4.0F;
-      prod->rallyZ = m_t->position.z + 2.0F;
-      prod->rallySet = true;
+      prod->build_time = 10.0F;
+      prod->max_units = params.max_population;
+      prod->in_progress = false;
+      prod->time_remaining = 0.0F;
+      prod->produced_count = 0;
+      prod->rally_x = m_t->position.x + 4.0F;
+      prod->rally_z = m_t->position.z + 2.0F;
+      prod->rally_set = true;
 
       const auto profile =
           Game::Systems::TroopProfileService::instance().get_profile(
               nation_id, prod->product_type);
-      prod->buildTime = profile.production.build_time;
-      prod->villagerCost = profile.individuals_per_unit;
+      prod->build_time = profile.production.build_time;
+      prod->villager_cost = profile.individuals_per_unit;
     }
   }
 

@@ -22,8 +22,8 @@ public:
 
   void updateCursorShape(QQuickWindow *window);
 
-  static auto globalCursorX(QQuickWindow *window) -> qreal;
-  static auto globalCursorY(QQuickWindow *window) -> qreal;
+  static auto global_cursor_x(QQuickWindow *window) -> qreal;
+  static auto global_cursor_y(QQuickWindow *window) -> qreal;
 
   [[nodiscard]] auto hasPatrolFirstWaypoint() const -> bool {
     return m_hasFirstWaypoint;

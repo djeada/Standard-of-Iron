@@ -18,7 +18,7 @@ Unit::Unit(Engine::Core::World &world, std::string type)
     : m_world(&world), m_type_string(std::move(type)) {}
 
 auto Unit::entity() const -> Engine::Core::Entity * {
-  return (m_world != nullptr) ? m_world->getEntity(m_id) : nullptr;
+  return (m_world != nullptr) ? m_world->get_entity(m_id) : nullptr;
 }
 
 auto Unit::resolve_nation_id(const SpawnParams &params)
@@ -33,19 +33,19 @@ void Unit::ensureCoreComponents() {
   }
   if (auto *e = entity()) {
     if (m_t == nullptr) {
-      m_t = e->getComponent<Engine::Core::TransformComponent>();
+      m_t = e->get_component<Engine::Core::TransformComponent>();
     }
     if (m_r == nullptr) {
-      m_r = e->getComponent<Engine::Core::RenderableComponent>();
+      m_r = e->get_component<Engine::Core::RenderableComponent>();
     }
     if (m_u == nullptr) {
-      m_u = e->getComponent<Engine::Core::UnitComponent>();
+      m_u = e->get_component<Engine::Core::UnitComponent>();
     }
     if (m_mv == nullptr) {
-      m_mv = e->getComponent<Engine::Core::MovementComponent>();
+      m_mv = e->get_component<Engine::Core::MovementComponent>();
     }
     if (m_atk == nullptr) {
-      m_atk = e->getComponent<Engine::Core::AttackComponent>();
+      m_atk = e->get_component<Engine::Core::AttackComponent>();
     }
   }
 }
@@ -54,31 +54,31 @@ void Unit::moveTo(float x, float z) {
   ensureCoreComponents();
   if (m_mv == nullptr) {
     if (auto *e = entity()) {
-      m_mv = e->addComponent<Engine::Core::MovementComponent>();
+      m_mv = e->add_component<Engine::Core::MovementComponent>();
     }
   }
   if (m_mv != nullptr) {
     m_mv->target_x = x;
     m_mv->target_y = z;
-    m_mv->hasTarget = true;
-    m_mv->goalX = x;
-    m_mv->goalY = z;
+    m_mv->has_target = true;
+    m_mv->goal_x = x;
+    m_mv->goal_y = z;
     m_mv->path.clear();
-    m_mv->pathPending = false;
-    m_mv->pendingRequestId = 0;
+    m_mv->path_pending = false;
+    m_mv->pending_request_id = 0;
   }
 
   if (auto *e = entity()) {
-    auto *hold_comp = e->getComponent<Engine::Core::HoldModeComponent>();
+    auto *hold_comp = e->get_component<Engine::Core::HoldModeComponent>();
     if (hold_comp != nullptr) {
       hold_comp->active = false;
     }
   }
 }
 
-auto Unit::isAlive() const -> bool {
+auto Unit::is_alive() const -> bool {
   if (auto *e = entity()) {
-    if (auto *u = e->getComponent<Engine::Core::UnitComponent>()) {
+    if (auto *u = e->get_component<Engine::Core::UnitComponent>()) {
       return u->health > 0;
     }
   }
@@ -87,7 +87,7 @@ auto Unit::isAlive() const -> bool {
 
 auto Unit::position() const -> QVector3D {
   if (auto *e = entity()) {
-    if (auto *t = e->getComponent<Engine::Core::TransformComponent>()) {
+    if (auto *t = e->get_component<Engine::Core::TransformComponent>()) {
       return {t->position.x, t->position.y, t->position.z};
     }
   }
@@ -100,25 +100,25 @@ void Unit::setHoldMode(bool enabled) {
     return;
   }
 
-  auto *hold_comp = e->getComponent<Engine::Core::HoldModeComponent>();
+  auto *hold_comp = e->get_component<Engine::Core::HoldModeComponent>();
 
   if (enabled) {
     if (hold_comp == nullptr) {
-      hold_comp = e->addComponent<Engine::Core::HoldModeComponent>();
+      hold_comp = e->add_component<Engine::Core::HoldModeComponent>();
     }
     hold_comp->active = true;
-    hold_comp->exitCooldown = 0.0F;
+    hold_comp->exit_cooldown = 0.0F;
 
-    auto *mv = e->getComponent<Engine::Core::MovementComponent>();
+    auto *mv = e->get_component<Engine::Core::MovementComponent>();
     if (mv != nullptr) {
-      mv->hasTarget = false;
+      mv->has_target = false;
       mv->path.clear();
-      mv->pathPending = false;
+      mv->path_pending = false;
     }
   } else {
     if (hold_comp != nullptr) {
       hold_comp->active = false;
-      hold_comp->exitCooldown = hold_comp->standUpDuration;
+      hold_comp->exit_cooldown = hold_comp->stand_up_duration;
     }
   }
 }
@@ -129,7 +129,7 @@ auto Unit::isInHoldMode() const -> bool {
     return false;
   }
 
-  auto *hold_comp = e->getComponent<Engine::Core::HoldModeComponent>();
+  auto *hold_comp = e->get_component<Engine::Core::HoldModeComponent>();
   return (hold_comp != nullptr) && hold_comp->active;
 }
 

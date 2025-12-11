@@ -1375,14 +1375,14 @@ Item {
                                     if (typeof game === 'undefined')
                                         return Theme.cardBaseB;
 
-                                    return (game.selectedPlayerId === pid) ? Theme.selectedBg : Theme.cardBaseB;
+                                    return (game.selected_player_id === pid) ? Theme.selectedBg : Theme.cardBaseB;
                                 }
                                 border.color: {
                                     var pid = modelData;
                                     if (typeof game === 'undefined')
                                         return Theme.thumbBr;
 
-                                    return (game.selectedPlayerId === pid) ? Theme.selectedBr : Theme.thumbBr;
+                                    return (game.selected_player_id === pid) ? Theme.selectedBr : Theme.thumbBr;
                                 }
                                 border.width: 1
 
@@ -1394,7 +1394,7 @@ Item {
                                         if (typeof game === 'undefined')
                                             return Theme.textSub;
 
-                                        return (game.selectedPlayerId === pid) ? Theme.textMain : Theme.textSub;
+                                        return (game.selected_player_id === pid) ? Theme.textMain : Theme.textSub;
                                     }
                                     font.pixelSize: 12
                                     font.bold: {
@@ -1402,7 +1402,7 @@ Item {
                                         if (typeof game === 'undefined')
                                             return false;
 
-                                        return game.selectedPlayerId === pid;
+                                        return game.selected_player_id === pid;
                                     }
                                 }
 
@@ -1411,7 +1411,7 @@ Item {
                                     cursorShape: Qt.PointingHandCursor
                                     onClicked: {
                                         if (typeof game !== 'undefined')
-                                            game.selectedPlayerId = modelData;
+                                            game.selected_player_id = modelData;
 
                                     }
                                 }
@@ -1433,7 +1433,7 @@ Item {
 
                             var others = [];
                             for (var i = 0; i < it.player_ids.length; i++) {
-                                if (it.player_ids[i] !== game.selectedPlayerId)
+                                if (it.player_ids[i] !== game.selected_player_id)
                                     others.push(it.player_ids[i]);
 
                             }

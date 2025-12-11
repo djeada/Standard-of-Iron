@@ -110,14 +110,14 @@ auto VisibilityService::gatherVisionSources(Engine::Core::World &world,
     -> std::vector<VisibilityService::VisionSource> {
   std::vector<VisionSource> sources;
   const auto entities =
-      world.getEntitiesWith<Engine::Core::TransformComponent>();
+      world.get_entities_with<Engine::Core::TransformComponent>();
   const float range_padding = m_tile_size * k_half_cell_offset;
 
   auto &owner_registry = Game::Systems::OwnerRegistry::instance();
 
   for (auto *entity : entities) {
-    auto *transform = entity->getComponent<Engine::Core::TransformComponent>();
-    auto *unit = entity->getComponent<Engine::Core::UnitComponent>();
+    auto *transform = entity->get_component<Engine::Core::TransformComponent>();
+    auto *unit = entity->get_component<Engine::Core::UnitComponent>();
     if (transform == nullptr || unit == nullptr) {
       continue;
     }

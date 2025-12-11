@@ -14,7 +14,7 @@ public:
   auto operator=(const System &) -> System & = default;
   auto operator=(System &&) noexcept -> System & = default;
   virtual ~System() = default;
-  virtual void update(World *world, float deltaTime) = 0;
+  virtual void update(World *world, float delta_time) = 0;
 };
 
 } // namespace Engine::Core

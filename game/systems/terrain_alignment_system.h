@@ -10,7 +10,7 @@ namespace Game::Systems {
 
 class TerrainAlignmentSystem : public Engine::Core::System {
 public:
-  void update(Engine::Core::World *world, float deltaTime) override;
+  void update(Engine::Core::World *world, float delta_time) override;
 
 private:
   static void alignEntityToTerrain(Engine::Core::Entity *entity);

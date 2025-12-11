@@ -44,7 +44,7 @@ void MapTransformer::setLocalOwnerId(int owner_id) {
   owners.setLocalPlayerId(owner_id);
 }
 
-auto MapTransformer::localOwnerId() -> int {
+auto MapTransformer::local_owner_id() -> int {
   auto &owners = Game::Systems::OwnerRegistry::instance();
   return owners.getLocalPlayerId();
 }
@@ -175,8 +175,8 @@ auto MapTransformer::applyToWorld(
       sp.position = QVector3D(world_x, 0.0F, world_z);
       sp.player_id = effective_player_id;
       sp.spawn_type = s.type;
-      sp.aiControlled = !owner_registry.isPlayer(effective_player_id);
-      sp.maxPopulation = s.maxPopulation;
+      sp.ai_controlled = !owner_registry.isPlayer(effective_player_id);
+      sp.max_population = s.max_population;
 
       if (s.nation.has_value()) {
         sp.nation_id = s.nation.value();
@@ -190,7 +190,7 @@ auto MapTransformer::applyToWorld(
       }
       auto obj = s_registry->create(s.type, world, sp);
       if (obj) {
-        e = world.getEntity(obj->id());
+        e = world.get_entity(obj->id());
         rt.unit_ids.push_back(obj->id());
       } else {
         qWarning() << "MapTransformer: no factory for spawn type"
@@ -207,7 +207,7 @@ auto MapTransformer::applyToWorld(
       continue;
     }
 
-    if (auto *r = e->getComponent<Engine::Core::RenderableComponent>()) {
+    if (auto *r = e->get_component<Engine::Core::RenderableComponent>()) {
       if (visuals != nullptr) {
         Game::Visuals::VisualDef defv;
         if (visuals->lookup(Game::Units::spawn_typeToString(s.type), defv)) {
@@ -219,9 +219,9 @@ auto MapTransformer::applyToWorld(
       }
     }
 
-    if (auto *t = e->getComponent<Engine::Core::TransformComponent>()) {
+    if (auto *t = e->get_component<Engine::Core::TransformComponent>()) {
       qInfo() << "Spawned" << Game::Units::spawn_typeToQString(s.type)
-              << "id=" << e->getId() << "at"
+              << "id=" << e->get_id() << "at"
               << QVector3D(t->position.x, t->position.y, t->position.z)
               << "(coordSystem="
               << (def.coordSystem == CoordSystem::Grid ? "Grid" : "World")
