@@ -231,46 +231,46 @@ void drawRomanOrnaments(const DrawContext &p, ISubmitter &out, Mesh *unit,
 } // namespace
 
 void register_ballista_renderer(EntityRendererRegistry &registry) {
-  registry.register_renderer(
-      "troops/roman/ballista", [](const DrawContext &p, ISubmitter &out) {
-        Mesh *unit = getUnitCube();
-        Texture *white = nullptr;
+  registry.register_renderer("troops/roman/ballista", [](const DrawContext &p,
+                                                         ISubmitter &out) {
+    Mesh *unit = getUnitCube();
+    Texture *white = nullptr;
 
-        if (p.resources != nullptr) {
-          unit = p.resources->unit();
-          white = p.resources->white();
-        }
-        if (auto *scene_renderer = dynamic_cast<Renderer *>(&out)) {
-          unit = scene_renderer->get_mesh_cube();
-          white = scene_renderer->get_white_texture();
-        }
+    if (p.resources != nullptr) {
+      unit = p.resources->unit();
+      white = p.resources->white();
+    }
+    if (auto *scene_renderer = dynamic_cast<Renderer *>(&out)) {
+      unit = scene_renderer->get_mesh_cube();
+      white = scene_renderer->get_white_texture();
+    }
 
-        if (unit == nullptr || white == nullptr) {
-          return;
-        }
+    if (unit == nullptr || white == nullptr) {
+      return;
+    }
 
-        QVector3D team_color{0.8F, 0.2F, 0.2F};
-        if (p.entity != nullptr) {
-          if (auto *r =
-                  p.entity->get_component<Engine::Core::RenderableComponent>()) {
-            team_color = QVector3D(r->color[0], r->color[1], r->color[2]);
-          }
-        }
-        RomanBallistaPalette c = make_palette(team_color);
+    QVector3D team_color{0.8F, 0.2F, 0.2F};
+    if (p.entity != nullptr) {
+      if (auto *r =
+              p.entity->get_component<Engine::Core::RenderableComponent>()) {
+        team_color = QVector3D(r->color[0], r->color[1], r->color[2]);
+      }
+    }
+    RomanBallistaPalette c = make_palette(team_color);
 
-        DrawContext ctx = p;
-        ctx.model = p.model;
-        ctx.model.rotate(180.0F, 0.0F, 1.0F, 0.0F);
+    DrawContext ctx = p;
+    ctx.model = p.model;
+    ctx.model.rotate(180.0F, 0.0F, 1.0F, 0.0F);
 
-        drawBaseFrame(ctx, out, unit, white, c);
-        drawWheels(ctx, out, unit, white, c);
-        drawTorsionBundles(ctx, out, unit, white, c);
-        drawArms(ctx, out, unit, white, c);
-        drawBowstring(ctx, out, white, c);
-        drawSlide(ctx, out, unit, white, c);
-        drawTriggerMechanism(ctx, out, unit, white, c);
-        drawRomanOrnaments(ctx, out, unit, white, c);
-      });
+    drawBaseFrame(ctx, out, unit, white, c);
+    drawWheels(ctx, out, unit, white, c);
+    drawTorsionBundles(ctx, out, unit, white, c);
+    drawArms(ctx, out, unit, white, c);
+    drawBowstring(ctx, out, white, c);
+    drawSlide(ctx, out, unit, white, c);
+    drawTriggerMechanism(ctx, out, unit, white, c);
+    drawRomanOrnaments(ctx, out, unit, white, c);
+  });
 }
 
 } // namespace Render::GL::Roman

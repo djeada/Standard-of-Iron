@@ -39,8 +39,8 @@ public:
                      void *camera) -> CommandResult;
   auto setRallyAtScreen(qreal sx, qreal sy, int viewportWidth,
                         int viewportHeight, void *camera,
-                        int localOwnerId) -> CommandResult;
-  void recruitNearSelected(const QString &unit_type, int localOwnerId);
+                        int local_owner_id) -> CommandResult;
+  void recruitNearSelected(const QString &unit_type, int local_owner_id);
 
   [[nodiscard]] bool hasPatrolFirstWaypoint() const {
     return m_hasPatrolFirstWaypoint;

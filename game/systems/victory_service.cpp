@@ -43,7 +43,7 @@ void VictoryService::configure(const Game::Map::VictoryConfig &config,
                                int local_owner_id) {
   reset();
 
-  m_localOwnerId = local_owner_id;
+  m_local_owner_id = local_owner_id;
 
   if (config.victoryType == "elimination") {
     m_victoryType = VictoryType::Elimination;
@@ -140,7 +140,7 @@ void VictoryService::checkVictoryConditions(Engine::Core::World &world) {
       }
     }
 
-    const auto *stats = m_stats_registry.get_stats(m_localOwnerId);
+    const auto *stats = m_stats_registry.get_stats(m_local_owner_id);
     if (stats != nullptr) {
       qInfo() << "Final Stats - Troops Recruited:" << stats->troops_recruited
               << "Enemies Killed:" << stats->enemies_killed
@@ -182,7 +182,7 @@ void VictoryService::checkDefeatConditions(Engine::Core::World &world) {
         }
       }
 
-      const auto *stats = m_stats_registry.get_stats(m_localOwnerId);
+      const auto *stats = m_stats_registry.get_stats(m_local_owner_id);
       if (stats != nullptr) {
         qInfo() << "Final Stats - Troops Recruited:" << stats->troops_recruited
                 << "Enemies Killed:" << stats->enemies_killed
@@ -202,7 +202,7 @@ auto VictoryService::checkElimination(Engine::Core::World &world) -> bool {
 
   bool enemy_key_structures_alive = false;
 
-  int const local_team = m_owner_registry.getOwnerTeam(m_localOwnerId);
+  int const local_team = m_owner_registry.getOwnerTeam(m_local_owner_id);
 
   auto entities = world.get_entities_with<Engine::Core::UnitComponent>();
   for (auto *e : entities) {
@@ -211,11 +211,11 @@ auto VictoryService::checkElimination(Engine::Core::World &world) -> bool {
       continue;
     }
 
-    if (unit->owner_id == m_localOwnerId) {
+    if (unit->owner_id == m_local_owner_id) {
       continue;
     }
 
-    if (m_owner_registry.areAllies(m_localOwnerId, unit->owner_id)) {
+    if (m_owner_registry.areAllies(m_local_owner_id, unit->owner_id)) {
       continue;
     }
 
@@ -244,7 +244,7 @@ auto VictoryService::checkNoUnits(Engine::Core::World &world) const -> bool {
       continue;
     }
 
-    if (unit->owner_id == m_localOwnerId) {
+    if (unit->owner_id == m_local_owner_id) {
       return false;
     }
   }
@@ -261,7 +261,7 @@ auto VictoryService::checkNoKeyStructures(Engine::Core::World &world) -> bool {
       continue;
     }
 
-    if (unit->owner_id == m_localOwnerId) {
+    if (unit->owner_id == m_local_owner_id) {
       QString const unit_type_str = QString::fromStdString(
           Game::Units::spawn_typeToString(unit->spawn_type));
       if (std::find(m_keyStructures.begin(), m_keyStructures.end(),
