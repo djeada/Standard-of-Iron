@@ -52,7 +52,7 @@ Item {
     }
 
     Connections {
-        function onSaveSlotsChanged() {
+        function onSave_slots_changed() {
             if (typeof loadListModel === 'undefined')
                 return ;
 

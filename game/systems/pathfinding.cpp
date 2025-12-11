@@ -369,8 +369,8 @@ auto Pathfinding::collect_neighbors(
 }
 
 void Pathfinding::build_path(int start_index, int end_index,
-                            std::uint32_t generation, int expected_length,
-                            std::vector<Point> &out_path) const {
+                             std::uint32_t generation, int expected_length,
+                             std::vector<Point> &out_path) const {
   out_path.clear();
   if (expected_length > 0) {
     out_path.reserve(static_cast<std::size_t>(expected_length));
@@ -400,7 +400,8 @@ void Pathfinding::build_path(int start_index, int end_index,
   out_path.clear();
 }
 
-auto Pathfinding::heap_less(const QueueNode &lhs, const QueueNode &rhs) -> bool {
+auto Pathfinding::heap_less(const QueueNode &lhs,
+                            const QueueNode &rhs) -> bool {
   if (lhs.f_cost != rhs.f_cost) {
     return lhs.f_cost < rhs.f_cost;
   }

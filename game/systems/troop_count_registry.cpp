@@ -46,7 +46,8 @@ void TroopCountRegistry::on_unit_spawned(
   m_troop_counts[event.owner_id] += individuals_per_unit;
 }
 
-void TroopCountRegistry::on_unit_died(const Engine::Core::UnitDiedEvent &event) {
+void TroopCountRegistry::on_unit_died(
+    const Engine::Core::UnitDiedEvent &event) {
   if (event.spawn_type == Game::Units::SpawnType::Barracks) {
     return;
   }

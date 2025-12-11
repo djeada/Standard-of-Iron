@@ -45,7 +45,7 @@ struct DrawContext {
   bool selected = false;
   bool hovered = false;
   float animationTime = 0.0F;
-  std::string rendererId;
+  std::string renderer_id;
   class Backend *backend = nullptr;
   const Camera *camera = nullptr;
 };

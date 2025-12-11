@@ -89,13 +89,16 @@ public:
                  NOTIFY selected_units_changed)
   Q_PROPERTY(bool paused READ paused WRITE set_paused)
   Q_PROPERTY(float time_scale READ time_scale WRITE set_game_speed)
-  Q_PROPERTY(QString victory_state READ victory_state NOTIFY victory_state_changed)
+  Q_PROPERTY(
+      QString victory_state READ victory_state NOTIFY victory_state_changed)
   Q_PROPERTY(QString cursor_mode READ cursor_mode WRITE set_cursor_mode NOTIFY
                  cursor_mode_changed)
-  Q_PROPERTY(qreal global_cursor_x READ global_cursor_x NOTIFY global_cursor_changed)
-  Q_PROPERTY(qreal global_cursor_y READ global_cursor_y NOTIFY global_cursor_changed)
   Q_PROPERTY(
-      bool has_units_selected READ has_units_selected NOTIFY selected_units_changed)
+      qreal global_cursor_x READ global_cursor_x NOTIFY global_cursor_changed)
+  Q_PROPERTY(
+      qreal global_cursor_y READ global_cursor_y NOTIFY global_cursor_changed)
+  Q_PROPERTY(bool has_units_selected READ has_units_selected NOTIFY
+                 selected_units_changed)
   Q_PROPERTY(
       int player_troop_count READ player_troop_count NOTIFY troop_count_changed)
   Q_PROPERTY(int max_troops_per_player READ max_troops_per_player NOTIFY
@@ -108,7 +111,8 @@ public:
                  available_campaigns_changed)
   Q_PROPERTY(int enemy_troops_defeated READ enemy_troops_defeated NOTIFY
                  enemy_troops_defeated_changed)
-  Q_PROPERTY(QVariantList owner_info READ get_owner_info NOTIFY owner_info_changed)
+  Q_PROPERTY(
+      QVariantList owner_info READ get_owner_info NOTIFY owner_info_changed)
   Q_PROPERTY(int selected_player_id READ selected_player_id WRITE
                  set_selected_player_id NOTIFY selected_player_id_changed)
   Q_PROPERTY(QString last_error READ last_error NOTIFY last_error_changed)
@@ -118,7 +122,7 @@ public:
   Q_INVOKABLE void on_right_click(qreal sx, qreal sy);
   Q_INVOKABLE void on_click_select(qreal sx, qreal sy, bool additive = false);
   Q_INVOKABLE void on_area_selected(qreal x1, qreal y1, qreal x2, qreal y2,
-                                  bool additive = false);
+                                    bool additive = false);
   Q_INVOKABLE void select_all_troops();
   Q_INVOKABLE void select_unit_by_id(int unitId);
   Q_INVOKABLE void set_hover_at_screen(qreal sx, qreal sy);
@@ -142,11 +146,13 @@ public:
 
   Q_INVOKABLE void set_paused(bool paused) { m_runtime.paused = paused; }
   Q_INVOKABLE void set_game_speed(float speed) {
-    m_runtime.timeScale = std::max(0.0F, speed);
+    m_runtime.time_scale = std::max(0.0F, speed);
   }
   [[nodiscard]] bool paused() const { return m_runtime.paused; }
-  [[nodiscard]] float time_scale() const { return m_runtime.timeScale; }
-  [[nodiscard]] QString victory_state() const { return m_runtime.victory_state; }
+  [[nodiscard]] float time_scale() const { return m_runtime.time_scale; }
+  [[nodiscard]] QString victory_state() const {
+    return m_runtime.victory_state;
+  }
   [[nodiscard]] QString cursor_mode() const;
   void set_cursor_mode(CursorMode mode);
   void set_cursor_mode(const QString &mode);
@@ -168,10 +174,10 @@ public:
       emit selected_player_id_changed();
     }
   }
-  [[nodiscard]] QString last_error() const { return m_runtime.lastError; }
+  [[nodiscard]] QString last_error() const { return m_runtime.last_error; }
   Q_INVOKABLE void clear_error() {
-    if (!m_runtime.lastError.isEmpty()) {
-      m_runtime.lastError = "";
+    if (!m_runtime.last_error.isEmpty()) {
+      m_runtime.last_error = "";
       emit last_error_changed();
     }
   }
@@ -211,8 +217,8 @@ public:
 
   void get_selected_unit_ids(std::vector<Engine::Core::EntityID> &out) const;
   bool get_unit_info(Engine::Core::EntityID id, QString &name, int &health,
-                   int &max_health, bool &isBuilding, bool &alive,
-                   QString &nation) const;
+                     int &max_health, bool &isBuilding, bool &alive,
+                     QString &nation) const;
 
   [[nodiscard]] bool has_patrol_preview_waypoint() const;
   [[nodiscard]] QVector3D get_patrol_preview_waypoint() const;
@@ -222,12 +228,12 @@ private:
     bool initialized = false;
     bool paused = false;
     bool loading = false;
-    float timeScale = 1.0F;
-    int localOwnerId = 1;
-    QString victoryState = "";
-    CursorMode cursorMode{CursorMode::Normal};
-    QString lastError = "";
-    Qt::CursorShape currentCursor = Qt::ArrowCursor;
+    float time_scale = 1.0F;
+    int local_owner_id = 1;
+    QString victory_state = "";
+    CursorMode cursor_mode{CursorMode::Normal};
+    QString last_error = "";
+    Qt::CursorShape current_cursor = Qt::ArrowCursor;
     int lastTroopCount = 0;
     std::uint64_t visibilityVersion = 0;
     float visibilityUpdateAccumulator = 0.0F;
@@ -335,7 +341,6 @@ signals:
   void global_cursor_changed();
   void troop_count_changed();
   void available_maps_changed();
-  void maps_loading_changed();
   void available_campaigns_changed();
   void owner_info_changed();
   void selected_player_id_changed();

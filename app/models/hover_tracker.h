@@ -16,9 +16,9 @@ class HoverTracker {
 public:
   HoverTracker(Game::Systems::PickingService *pickingService);
 
-  auto updateHover(float sx, float sy, Engine::Core::World &world,
-                   const Render::GL::Camera &camera, int viewportWidth,
-                   int viewportHeight) -> Engine::Core::EntityID;
+  auto update_hover(float sx, float sy, Engine::Core::World &world,
+                    const Render::GL::Camera &camera, int viewportWidth,
+                    int viewportHeight) -> Engine::Core::EntityID;
 
   [[nodiscard]] auto getLastHoveredEntity() const -> Engine::Core::EntityID {
     return m_hoveredEntityId;

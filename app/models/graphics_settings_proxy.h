@@ -10,7 +10,8 @@ class GraphicsSettingsProxy : public QObject {
   Q_OBJECT
   Q_PROPERTY(int quality_level READ quality_level WRITE set_quality_level NOTIFY
                  quality_level_changed)
-  Q_PROPERTY(QString quality_name READ quality_name NOTIFY quality_level_changed)
+  Q_PROPERTY(
+      QString quality_name READ quality_name NOTIFY quality_level_changed)
   Q_PROPERTY(QStringList quality_options READ quality_options CONSTANT)
 
 public:

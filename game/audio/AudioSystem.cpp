@@ -75,8 +75,8 @@ void AudioSystem::shutdown() {
   }
 }
 
-void AudioSystem::playSound(const std::string &sound_id, float volume, bool loop,
-                            int priority, AudioCategory category) {
+void AudioSystem::playSound(const std::string &sound_id, float volume,
+                            bool loop, int priority, AudioCategory category) {
   std::lock_guard<std::mutex> const lock(queueMutex);
   eventQueue.emplace(AudioEventType::PLAY_SOUND, sound_id, volume, loop,
                      priority, category);
