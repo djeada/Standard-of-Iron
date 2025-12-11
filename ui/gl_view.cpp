@@ -66,7 +66,7 @@ void GLView::GLRenderer::render() {
   }
 
   try {
-    m_engine->ensureInitialized();
+    m_engine->ensure_initialized();
     m_engine->update(1.0F / 60.0F);
     m_engine->render(m_size.width(), m_size.height());
   } catch (const std::exception &e) {

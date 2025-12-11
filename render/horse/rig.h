@@ -244,13 +244,13 @@ private:
 
 inline auto calculate_horse_lod(float distance) -> HorseLOD {
   const auto &settings = Render::GraphicsSettings::instance();
-  if (distance < settings.horseFullDetailDistance()) {
+  if (distance < settings.horse_full_detail_distance()) {
     return HorseLOD::Full;
   }
-  if (distance < settings.horseReducedDetailDistance()) {
+  if (distance < settings.horse_reduced_detail_distance()) {
     return HorseLOD::Reduced;
   }
-  if (distance < settings.horseMinimalDetailDistance()) {
+  if (distance < settings.horse_minimal_detail_distance()) {
     return HorseLOD::Minimal;
   }
   return HorseLOD::Billboard;

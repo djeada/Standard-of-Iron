@@ -64,9 +64,9 @@ auto LevelLoader::loadFromAssets(
     Game::Map::TerrainService::instance().initialize(def);
 
     Game::Map::Environment::apply(def, renderer, camera);
-    res.camFov = def.camera.fovY;
-    res.camNear = def.camera.near_plane;
-    res.camFar = def.camera.far_plane;
+    res.cam_fov = def.camera.fovY;
+    res.cam_near = def.camera.near_plane;
+    res.cam_far = def.camera.far_plane;
     res.grid_width = def.grid.width;
     res.grid_height = def.grid.height;
     res.tile_size = def.grid.tile_size;
@@ -77,7 +77,7 @@ auto LevelLoader::loadFromAssets(
         visuals_loaded ? &visual_catalog : nullptr;
     auto rt = Game::Map::MapTransformer::applyToWorld(def, world, catalog_ptr);
     if (!rt.unit_ids.empty()) {
-      res.playerUnitId = rt.unit_ids.front();
+      res.player_unit_id = rt.unit_ids.front();
     } else {
 
       auto &nationRegistry = Game::Systems::NationRegistry::instance();
@@ -87,7 +87,7 @@ auto LevelLoader::loadFromAssets(
         sp.position = QVector3D(0.0F, 0.0F, 0.0F);
         sp.player_id = 0;
         sp.spawn_type = Game::Units::SpawnType::Archer;
-        sp.aiControlled = !owners.isPlayer(sp.player_id);
+        sp.ai_controlled = !owners.isPlayer(sp.player_id);
         if (const auto *nation =
                 nationRegistry.getNationForPlayer(sp.player_id)) {
           sp.nation_id = nation->id;
@@ -96,7 +96,7 @@ auto LevelLoader::loadFromAssets(
         }
         if (auto unit =
                 reg->create(Game::Units::SpawnType::Archer, world, sp)) {
-          res.playerUnitId = unit->id();
+          res.player_unit_id = unit->id();
         } else {
           qWarning() << "LevelLoader: Fallback archer spawn failed";
         }
@@ -104,8 +104,8 @@ auto LevelLoader::loadFromAssets(
     }
 
     bool has_barracks = false;
-    for (auto *e : world.getEntitiesWith<Engine::Core::UnitComponent>()) {
-      if (auto *u = e->getComponent<Engine::Core::UnitComponent>()) {
+    for (auto *e : world.get_entities_with<Engine::Core::UnitComponent>()) {
+      if (auto *u = e->get_component<Engine::Core::UnitComponent>()) {
         if (u->spawn_type == Game::Units::SpawnType::Barracks &&
             owners.isPlayer(u->owner_id)) {
           has_barracks = true;
@@ -121,7 +121,7 @@ auto LevelLoader::loadFromAssets(
         sp.position = QVector3D(-4.0F, 0.0F, -3.0F);
         sp.player_id = owners.getLocalPlayerId();
         sp.spawn_type = Game::Units::SpawnType::Barracks;
-        sp.aiControlled = !owners.isPlayer(sp.player_id);
+        sp.ai_controlled = !owners.isPlayer(sp.player_id);
         if (const auto *nation =
                 nationRegistry.getNationForPlayer(sp.player_id)) {
           sp.nation_id = nation->id;
@@ -139,9 +139,9 @@ auto LevelLoader::loadFromAssets(
                << "- applying default environment";
     Game::Map::Environment::applyDefault(renderer, camera);
     res.ok = false;
-    res.camFov = camera.getFOV();
-    res.camNear = camera.getNear();
-    res.camFar = camera.getFar();
+    res.cam_fov = camera.getFOV();
+    res.cam_near = camera.getNear();
+    res.cam_far = camera.getFar();
     res.grid_width = 50;
     res.grid_height = 50;
     res.tile_size = 1.0F;
@@ -153,7 +153,7 @@ auto LevelLoader::loadFromAssets(
       sp.position = QVector3D(0.0F, 0.0F, 0.0F);
       sp.player_id = 0;
       sp.spawn_type = Game::Units::SpawnType::Archer;
-      sp.aiControlled = !owners.isPlayer(sp.player_id);
+      sp.ai_controlled = !owners.isPlayer(sp.player_id);
       if (const auto *nation =
               nationRegistry.getNationForPlayer(sp.player_id)) {
         sp.nation_id = nation->id;
@@ -161,7 +161,7 @@ auto LevelLoader::loadFromAssets(
         sp.nation_id = nationRegistry.default_nation_id();
       }
       if (auto unit = reg->create(Game::Units::SpawnType::Archer, world, sp)) {
-        res.playerUnitId = unit->id();
+        res.player_unit_id = unit->id();
       }
     }
   }

@@ -294,7 +294,7 @@ void draw_health_bar(const DrawContext &p, ISubmitter &out, Mesh *unit,
   if (p.entity == nullptr) {
     return;
   }
-  auto *u = p.entity->getComponent<Engine::Core::UnitComponent>();
+  auto *u = p.entity->get_component<Engine::Core::UnitComponent>();
   if (u == nullptr) {
     return;
   }
@@ -333,8 +333,8 @@ void draw_barracks(const DrawContext &p, ISubmitter &out) {
     return;
   }
 
-  auto *t = p.entity->getComponent<Engine::Core::TransformComponent>();
-  auto *r = p.entity->getComponent<Engine::Core::RenderableComponent>();
+  auto *t = p.entity->get_component<Engine::Core::TransformComponent>();
+  auto *r = p.entity->get_component<Engine::Core::RenderableComponent>();
   if (!t || !r) {
     return;
   }

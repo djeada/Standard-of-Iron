@@ -25,8 +25,8 @@ void apply_production_profile(Engine::Core::ProductionComponent *prod,
   }
   const auto profile =
       TroopProfileService::instance().get_profile(nation_id, troop_type);
-  prod->buildTime = profile.production.build_time;
-  prod->villagerCost = profile.individuals_per_unit;
+  prod->build_time = profile.production.build_time;
+  prod->villager_cost = profile.individuals_per_unit;
 }
 
 auto resolve_nation_id(const Engine::Core::UnitComponent *unit,
@@ -40,24 +40,24 @@ auto resolve_nation_id(const Engine::Core::UnitComponent *unit,
 
 } // namespace
 
-void ProductionSystem::update(Engine::Core::World *world, float deltaTime) {
+void ProductionSystem::update(Engine::Core::World *world, float delta_time) {
   if (world == nullptr) {
     return;
   }
-  auto entities = world->getEntitiesWith<Engine::Core::ProductionComponent>();
+  auto entities = world->get_entities_with<Engine::Core::ProductionComponent>();
   for (auto *e : entities) {
-    auto *prod = e->getComponent<Engine::Core::ProductionComponent>();
+    auto *prod = e->get_component<Engine::Core::ProductionComponent>();
     if (prod == nullptr) {
       continue;
     }
 
-    auto *unit_comp = e->getComponent<Engine::Core::UnitComponent>();
+    auto *unit_comp = e->get_component<Engine::Core::UnitComponent>();
     if ((unit_comp != nullptr) &&
         Game::Core::isNeutralOwner(unit_comp->owner_id)) {
       continue;
     }
 
-    if (!prod->inProgress) {
+    if (!prod->in_progress) {
       continue;
     }
 
@@ -67,29 +67,29 @@ void ProductionSystem::update(Engine::Core::World *world, float deltaTime) {
         nation_id, prod->product_type);
     int const individuals_per_unit = current_profile.individuals_per_unit;
 
-    if (prod->producedCount + individuals_per_unit > prod->maxUnits) {
-      prod->inProgress = false;
+    if (prod->produced_count + individuals_per_unit > prod->max_units) {
+      prod->in_progress = false;
       continue;
     }
-    prod->timeRemaining -= deltaTime;
-    if (prod->timeRemaining <= 0.0F) {
+    prod->time_remaining -= delta_time;
+    if (prod->time_remaining <= 0.0F) {
 
-      auto *t = e->getComponent<Engine::Core::TransformComponent>();
-      auto *u = e->getComponent<Engine::Core::UnitComponent>();
+      auto *t = e->get_component<Engine::Core::TransformComponent>();
+      auto *u = e->get_component<Engine::Core::UnitComponent>();
       if ((t != nullptr) && (u != nullptr)) {
 
         int const current_troops =
-            Engine::Core::World::countTroopsForPlayer(u->owner_id);
+            Engine::Core::World::count_troops_for_player(u->owner_id);
         int const max_troops =
             Game::GameConfig::instance().getMaxTroopsPerPlayer();
         if (current_troops + individuals_per_unit > max_troops) {
-          prod->inProgress = false;
-          prod->timeRemaining = 0.0F;
+          prod->in_progress = false;
+          prod->time_remaining = 0.0F;
           continue;
         }
 
-        float const exit_offset = 2.5F + 0.2F * float(prod->producedCount % 5);
-        float const exit_angle = 0.5F * float(prod->producedCount % 8);
+        float const exit_offset = 2.5F + 0.2F * float(prod->produced_count % 5);
+        float const exit_angle = 0.5F * float(prod->produced_count % 8);
         QVector3D const exit_pos =
             QVector3D(t->position.x + exit_offset * std::cos(exit_angle), 0.0F,
                       t->position.z + exit_offset * std::sin(exit_angle));
@@ -101,28 +101,28 @@ void ProductionSystem::update(Engine::Core::World *world, float deltaTime) {
           sp.player_id = u->owner_id;
           sp.spawn_type =
               Game::Units::spawn_typeFromTroopType(prod->product_type);
-          sp.aiControlled =
-              e->hasComponent<Engine::Core::AIControlledComponent>();
+          sp.ai_controlled =
+              e->has_component<Engine::Core::AIControlledComponent>();
           sp.nation_id = nation_id;
           auto unit = reg->create(sp.spawn_type, *world, sp);
 
-          if (unit && prod->rallySet) {
-            unit->moveTo(prod->rallyX, prod->rallyZ);
+          if (unit && prod->rally_set) {
+            unit->moveTo(prod->rally_x, prod->rally_z);
           }
         }
 
-        prod->producedCount += individuals_per_unit;
+        prod->produced_count += individuals_per_unit;
       }
 
-      prod->inProgress = false;
-      prod->timeRemaining = 0.0F;
+      prod->in_progress = false;
+      prod->time_remaining = 0.0F;
 
-      if (!prod->productionQueue.empty()) {
-        prod->product_type = prod->productionQueue.front();
-        prod->productionQueue.erase(prod->productionQueue.begin());
+      if (!prod->production_queue.empty()) {
+        prod->product_type = prod->production_queue.front();
+        prod->production_queue.erase(prod->production_queue.begin());
         apply_production_profile(prod, nation_id, prod->product_type);
-        prod->timeRemaining = prod->buildTime;
-        prod->inProgress = true;
+        prod->time_remaining = prod->build_time;
+        prod->in_progress = true;
       }
     }
   }

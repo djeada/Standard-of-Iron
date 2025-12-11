@@ -383,8 +383,8 @@ void registerArcherRenderer(Render::GL::EntityRendererRegistry &registry) {
         Engine::Core::UnitComponent *unit = nullptr;
         Engine::Core::RenderableComponent *rc = nullptr;
         if (p.entity) {
-          unit = p.entity->getComponent<Engine::Core::UnitComponent>();
-          rc = p.entity->getComponent<Engine::Core::RenderableComponent>();
+          unit = p.entity->get_component<Engine::Core::UnitComponent>();
+          rc = p.entity->get_component<Engine::Core::RenderableComponent>();
         }
         if (unit && unit->owner_id > 0) {
           tunic = Game::Visuals::team_colorForOwner(unit->owner_id);
