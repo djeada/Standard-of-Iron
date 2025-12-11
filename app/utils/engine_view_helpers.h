@@ -8,34 +8,34 @@
 
 namespace App::Utils {
 
-inline auto screenToGround(const Game::Systems::PickingService *pickingService,
-                           const Render::GL::Camera *camera,
-                           QQuickWindow *window, int viewportWidth,
-                           int viewportHeight, const QPointF &screenPt,
-                           QVector3D &outWorld) -> bool {
+inline auto
+screen_to_ground(const Game::Systems::PickingService *pickingService,
+                 const Render::GL::Camera *camera, QQuickWindow *window,
+                 int viewportWidth, int viewportHeight, const QPointF &screenPt,
+                 QVector3D &outWorld) -> bool {
   if ((window == nullptr) || (camera == nullptr) ||
       (pickingService == nullptr)) {
     return false;
   }
   int const w = (viewportWidth > 0 ? viewportWidth : window->width());
   int const h = (viewportHeight > 0 ? viewportHeight : window->height());
-  return Game::Systems::PickingService::screenToGround(*camera, w, h, screenPt,
-                                                       outWorld);
+  return Game::Systems::PickingService::screen_to_ground(*camera, w, h,
+                                                         screenPt, outWorld);
 }
 
-inline auto worldToScreen(const Game::Systems::PickingService *pickingService,
-                          const Render::GL::Camera *camera,
-                          QQuickWindow *window, int viewportWidth,
-                          int viewportHeight, const QVector3D &world,
-                          QPointF &outScreen) -> bool {
+inline auto world_to_screen(const Game::Systems::PickingService *pickingService,
+                            const Render::GL::Camera *camera,
+                            QQuickWindow *window, int viewportWidth,
+                            int viewportHeight, const QVector3D &world,
+                            QPointF &outScreen) -> bool {
   if ((window == nullptr) || (camera == nullptr) ||
       (pickingService == nullptr)) {
     return false;
   }
   int const w = (viewportWidth > 0 ? viewportWidth : window->width());
   int const h = (viewportHeight > 0 ? viewportHeight : window->height());
-  return Game::Systems::PickingService::worldToScreen(*camera, w, h, world,
-                                                      outScreen);
+  return Game::Systems::PickingService::world_to_screen(*camera, w, h, world,
+                                                        outScreen);
 }
 
 } // namespace App::Utils

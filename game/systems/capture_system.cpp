@@ -17,19 +17,19 @@
 
 namespace Game::Systems {
 
-void CaptureSystem::update(Engine::Core::World *world, float deltaTime) {
-  processBarrackCapture(world, deltaTime);
+void CaptureSystem::update(Engine::Core::World *world, float delta_time) {
+  processBarrackCapture(world, delta_time);
 }
 
 auto CaptureSystem::countNearbyTroops(Engine::Core::World *world,
                                       float barrack_x, float barrack_z,
                                       int owner_id, float radius) -> int {
   int total_troops = 0;
-  auto entities = world->getEntitiesWith<Engine::Core::UnitComponent>();
+  auto entities = world->get_entities_with<Engine::Core::UnitComponent>();
 
   for (auto *e : entities) {
-    auto *unit = e->getComponent<Engine::Core::UnitComponent>();
-    auto *transform = e->getComponent<Engine::Core::TransformComponent>();
+    auto *unit = e->get_component<Engine::Core::UnitComponent>();
+    auto *transform = e->get_component<Engine::Core::TransformComponent>();
 
     if ((unit == nullptr) || (transform == nullptr) || unit->health <= 0) {
       continue;
@@ -60,22 +60,23 @@ auto CaptureSystem::countNearbyTroops(Engine::Core::World *world,
 
 void CaptureSystem::transferBarrackOwnership(Engine::Core::World *,
                                              Engine::Core::Entity *barrack,
-                                             int newOwnerId) {
-  auto *unit = barrack->getComponent<Engine::Core::UnitComponent>();
-  auto *renderable = barrack->getComponent<Engine::Core::RenderableComponent>();
-  auto *transform = barrack->getComponent<Engine::Core::TransformComponent>();
-  auto *prod = barrack->getComponent<Engine::Core::ProductionComponent>();
+                                             int new_owner_id) {
+  auto *unit = barrack->get_component<Engine::Core::UnitComponent>();
+  auto *renderable =
+      barrack->get_component<Engine::Core::RenderableComponent>();
+  auto *transform = barrack->get_component<Engine::Core::TransformComponent>();
+  auto *prod = barrack->get_component<Engine::Core::ProductionComponent>();
 
   if ((unit == nullptr) || (renderable == nullptr) || (transform == nullptr)) {
     return;
   }
 
   int const previous_owner_id = unit->owner_id;
-  unit->owner_id = newOwnerId;
+  unit->owner_id = new_owner_id;
 
   auto &nation_registry = NationRegistry::instance();
-  if (!Game::Core::isNeutralOwner(newOwnerId)) {
-    if (const auto *nation = nation_registry.getNationForPlayer(newOwnerId)) {
+  if (!Game::Core::isNeutralOwner(new_owner_id)) {
+    if (const auto *nation = nation_registry.getNationForPlayer(new_owner_id)) {
       unit->nation_id = nation->id;
     } else {
       unit->nation_id = nation_registry.default_nation_id();
@@ -84,54 +85,55 @@ void CaptureSystem::transferBarrackOwnership(Engine::Core::World *,
     unit->nation_id = nation_registry.default_nation_id();
   }
 
-  QVector3D const tc = Game::Visuals::team_colorForOwner(newOwnerId);
+  QVector3D const tc = Game::Visuals::team_colorForOwner(new_owner_id);
   renderable->color[0] = tc.x();
   renderable->color[1] = tc.y();
   renderable->color[2] = tc.z();
 
   Game::Systems::BuildingCollisionRegistry::instance().updateBuildingOwner(
-      barrack->getId(), newOwnerId);
+      barrack->get_id(), new_owner_id);
 
-  if (!Game::Core::isNeutralOwner(newOwnerId) && (prod == nullptr)) {
-    prod = barrack->addComponent<Engine::Core::ProductionComponent>();
+  if (!Game::Core::isNeutralOwner(new_owner_id) && (prod == nullptr)) {
+    prod = barrack->add_component<Engine::Core::ProductionComponent>();
     if (prod != nullptr) {
       prod->product_type = Game::Units::TroopType::Archer;
-      prod->maxUnits = 150;
-      prod->inProgress = false;
-      prod->timeRemaining = 0.0F;
-      prod->producedCount = 0;
-      prod->rallyX = transform->position.x + 4.0F;
-      prod->rallyZ = transform->position.z + 2.0F;
-      prod->rallySet = true;
+      prod->max_units = 150;
+      prod->in_progress = false;
+      prod->time_remaining = 0.0F;
+      prod->produced_count = 0;
+      prod->rally_x = transform->position.x + 4.0F;
+      prod->rally_z = transform->position.z + 2.0F;
+      prod->rally_set = true;
       const auto profile = TroopProfileService::instance().get_profile(
           unit->nation_id, prod->product_type);
-      prod->buildTime = profile.production.build_time;
-      prod->villagerCost = profile.individuals_per_unit;
+      prod->build_time = profile.production.build_time;
+      prod->villager_cost = profile.individuals_per_unit;
     }
-  } else if (Game::Core::isNeutralOwner(newOwnerId) && (prod != nullptr)) {
-    barrack->removeComponent<Engine::Core::ProductionComponent>();
+  } else if (Game::Core::isNeutralOwner(new_owner_id) && (prod != nullptr)) {
+    barrack->remove_component<Engine::Core::ProductionComponent>();
   } else if (prod != nullptr) {
     const auto profile = TroopProfileService::instance().get_profile(
         unit->nation_id, prod->product_type);
-    prod->buildTime = profile.production.build_time;
-    prod->villagerCost = profile.individuals_per_unit;
+    prod->build_time = profile.production.build_time;
+    prod->villager_cost = profile.individuals_per_unit;
   }
 
   Engine::Core::EventManager::instance().publish(
-      Engine::Core::BarrackCapturedEvent(barrack->getId(), previous_owner_id,
-                                         newOwnerId));
+      Engine::Core::BarrackCapturedEvent(barrack->get_id(), previous_owner_id,
+                                         new_owner_id));
 }
 
 void CaptureSystem::processBarrackCapture(Engine::Core::World *world,
-                                          float deltaTime) {
+                                          float delta_time) {
   constexpr float capture_radius = 8.0F;
   constexpr int troop_advantage_multiplier = 3;
 
-  auto barracks = world->getEntitiesWith<Engine::Core::BuildingComponent>();
+  auto barracks = world->get_entities_with<Engine::Core::BuildingComponent>();
 
   for (auto *barrack : barracks) {
-    auto *unit = barrack->getComponent<Engine::Core::UnitComponent>();
-    auto *transform = barrack->getComponent<Engine::Core::TransformComponent>();
+    auto *unit = barrack->get_component<Engine::Core::UnitComponent>();
+    auto *transform =
+        barrack->get_component<Engine::Core::TransformComponent>();
 
     if ((unit == nullptr) || (transform == nullptr)) {
       continue;
@@ -141,9 +143,9 @@ void CaptureSystem::processBarrackCapture(Engine::Core::World *world,
       continue;
     }
 
-    auto *capture = barrack->getComponent<Engine::Core::CaptureComponent>();
+    auto *capture = barrack->get_component<Engine::Core::CaptureComponent>();
     if (capture == nullptr) {
-      capture = barrack->addComponent<Engine::Core::CaptureComponent>();
+      capture = barrack->add_component<Engine::Core::CaptureComponent>();
     }
 
     float const barrack_x = transform->position.x;
@@ -153,10 +155,10 @@ void CaptureSystem::processBarrackCapture(Engine::Core::World *world,
     int max_enemy_troops = 0;
     int capturing_player_id = -1;
 
-    auto entities = world->getEntitiesWith<Engine::Core::UnitComponent>();
+    auto entities = world->get_entities_with<Engine::Core::UnitComponent>();
     std::vector<int> player_ids;
     for (auto *e : entities) {
-      auto *u = e->getComponent<Engine::Core::UnitComponent>();
+      auto *u = e->get_component<Engine::Core::UnitComponent>();
       if ((u != nullptr) && u->owner_id != barrack_owner_id &&
           !Game::Core::isNeutralOwner(u->owner_id)) {
         if (std::find(player_ids.begin(), player_ids.end(), u->owner_id) ==
@@ -187,24 +189,24 @@ void CaptureSystem::processBarrackCapture(Engine::Core::World *world,
     if (can_capture && capturing_player_id != -1) {
       if (capture->capturing_player_id != capturing_player_id) {
         capture->capturing_player_id = capturing_player_id;
-        capture->captureProgress = 0.0F;
+        capture->capture_progress = 0.0F;
       }
 
-      capture->isBeingCaptured = true;
-      capture->captureProgress += deltaTime;
+      capture->is_being_captured = true;
+      capture->capture_progress += delta_time;
 
-      if (capture->captureProgress >= capture->requiredTime) {
+      if (capture->capture_progress >= capture->required_time) {
         transferBarrackOwnership(world, barrack, capturing_player_id);
-        capture->captureProgress = 0.0F;
-        capture->isBeingCaptured = false;
+        capture->capture_progress = 0.0F;
+        capture->is_being_captured = false;
         capture->capturing_player_id = -1;
       }
     } else {
-      if (capture->isBeingCaptured) {
-        capture->captureProgress -= deltaTime * 2.0F;
-        if (capture->captureProgress <= 0.0F) {
-          capture->captureProgress = 0.0F;
-          capture->isBeingCaptured = false;
+      if (capture->is_being_captured) {
+        capture->capture_progress -= delta_time * 2.0F;
+        if (capture->capture_progress <= 0.0F) {
+          capture->capture_progress = 0.0F;
+          capture->is_being_captured = false;
           capture->capturing_player_id = -1;
         }
       }

@@ -15,17 +15,17 @@ namespace Engine::Core {
 World::World() = default;
 World::~World() = default;
 
-auto World::createEntity() -> Entity * {
-  const std::lock_guard<std::recursive_mutex> lock(m_entityMutex);
-  EntityID const id = m_nextEntityId++;
+auto World::create_entity() -> Entity * {
+  const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
+  EntityID const id = m_next_entity_id++;
   auto entity = std::make_unique<Entity>(id);
   auto *ptr = entity.get();
   m_entities[id] = std::move(entity);
   return ptr;
 }
 
-auto World::createEntityWithId(EntityID entity_id) -> Entity * {
-  const std::lock_guard<std::recursive_mutex> lock(m_entityMutex);
+auto World::create_entity_with_id(EntityID entity_id) -> Entity * {
+  const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
   if (entity_id == NULL_ENTITY) {
     return nullptr;
   }
@@ -34,46 +34,46 @@ auto World::createEntityWithId(EntityID entity_id) -> Entity * {
   auto *ptr = entity.get();
   m_entities[entity_id] = std::move(entity);
 
-  if (entity_id >= m_nextEntityId) {
-    m_nextEntityId = entity_id + 1;
+  if (entity_id >= m_next_entity_id) {
+    m_next_entity_id = entity_id + 1;
   }
 
   return ptr;
 }
 
-void World::destroyEntity(EntityID entity_id) {
-  const std::lock_guard<std::recursive_mutex> lock(m_entityMutex);
+void World::destroy_entity(EntityID entity_id) {
+  const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
   m_entities.erase(entity_id);
 }
 
 void World::clear() {
-  const std::lock_guard<std::recursive_mutex> lock(m_entityMutex);
+  const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
   m_entities.clear();
-  m_nextEntityId = 1;
+  m_next_entity_id = 1;
 }
 
-auto World::getEntity(EntityID entity_id) -> Entity * {
-  const std::lock_guard<std::recursive_mutex> lock(m_entityMutex);
+auto World::get_entity(EntityID entity_id) -> Entity * {
+  const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
   auto it = m_entities.find(entity_id);
   return it != m_entities.end() ? it->second.get() : nullptr;
 }
 
-void World::addSystem(std::unique_ptr<System> system) {
+void World::add_system(std::unique_ptr<System> system) {
   m_systems.push_back(std::move(system));
 }
 
-void World::update(float deltaTime) {
+void World::update(float delta_time) {
   for (auto &system : m_systems) {
-    system->update(this, deltaTime);
+    system->update(this, delta_time);
   }
 }
 
-auto World::getUnitsOwnedBy(int owner_id) const -> std::vector<Entity *> {
-  const std::lock_guard<std::recursive_mutex> lock(m_entityMutex);
+auto World::get_units_owned_by(int owner_id) const -> std::vector<Entity *> {
+  const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
   std::vector<Entity *> result;
   result.reserve(m_entities.size());
   for (const auto &[entity_id, entity] : m_entities) {
-    auto *unit = entity->getComponent<UnitComponent>();
+    auto *unit = entity->get_component<UnitComponent>();
     if (unit == nullptr) {
       continue;
     }
@@ -84,12 +84,13 @@ auto World::getUnitsOwnedBy(int owner_id) const -> std::vector<Entity *> {
   return result;
 }
 
-auto World::getUnitsNotOwnedBy(int owner_id) const -> std::vector<Entity *> {
-  const std::lock_guard<std::recursive_mutex> lock(m_entityMutex);
+auto World::get_units_not_owned_by(int owner_id) const
+    -> std::vector<Entity *> {
+  const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
   std::vector<Entity *> result;
   result.reserve(m_entities.size());
   for (const auto &[entity_id, entity] : m_entities) {
-    auto *unit = entity->getComponent<UnitComponent>();
+    auto *unit = entity->get_component<UnitComponent>();
     if (unit == nullptr) {
       continue;
     }
@@ -100,14 +101,14 @@ auto World::getUnitsNotOwnedBy(int owner_id) const -> std::vector<Entity *> {
   return result;
 }
 
-auto World::getAlliedUnits(int owner_id) const -> std::vector<Entity *> {
-  const std::lock_guard<std::recursive_mutex> lock(m_entityMutex);
+auto World::get_allied_units(int owner_id) const -> std::vector<Entity *> {
+  const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
   std::vector<Entity *> result;
   result.reserve(m_entities.size());
   auto &owner_registry = Game::Systems::OwnerRegistry::instance();
 
   for (const auto &[entity_id, entity] : m_entities) {
-    auto *unit = entity->getComponent<UnitComponent>();
+    auto *unit = entity->get_component<UnitComponent>();
     if (unit == nullptr) {
       continue;
     }
@@ -120,14 +121,14 @@ auto World::getAlliedUnits(int owner_id) const -> std::vector<Entity *> {
   return result;
 }
 
-auto World::getEnemyUnits(int owner_id) const -> std::vector<Entity *> {
-  const std::lock_guard<std::recursive_mutex> lock(m_entityMutex);
+auto World::get_enemy_units(int owner_id) const -> std::vector<Entity *> {
+  const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
   std::vector<Entity *> result;
   result.reserve(m_entities.size());
   auto &owner_registry = Game::Systems::OwnerRegistry::instance();
 
   for (const auto &[entity_id, entity] : m_entities) {
-    auto *unit = entity->getComponent<UnitComponent>();
+    auto *unit = entity->get_component<UnitComponent>();
     if (unit == nullptr) {
       continue;
     }
@@ -139,18 +140,18 @@ auto World::getEnemyUnits(int owner_id) const -> std::vector<Entity *> {
   return result;
 }
 
-auto World::countTroopsForPlayer(int owner_id) -> int {
+auto World::count_troops_for_player(int owner_id) -> int {
   return Game::Systems::TroopCountRegistry::instance().getTroopCount(owner_id);
 }
 
-auto World::getNextEntityId() const -> EntityID {
-  const std::lock_guard<std::recursive_mutex> lock(m_entityMutex);
-  return m_nextEntityId;
+auto World::get_next_entity_id() const -> EntityID {
+  const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
+  return m_next_entity_id;
 }
 
-void World::setNextEntityId(EntityID next_id) {
-  const std::lock_guard<std::recursive_mutex> lock(m_entityMutex);
-  m_nextEntityId = std::max(next_id, m_nextEntityId);
+void World::set_next_entity_id(EntityID next_id) {
+  const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
+  m_next_entity_id = std::max(next_id, m_next_entity_id);
 }
 
 } // namespace Engine::Core

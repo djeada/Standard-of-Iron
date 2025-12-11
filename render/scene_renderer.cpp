@@ -379,31 +379,31 @@ void Renderer::renderWorld(Engine::Core::World *world) {
     return;
   }
 
-  std::lock_guard<std::recursive_mutex> const guard(world->getEntityMutex());
+  std::lock_guard<std::recursive_mutex> const guard(world->get_entity_mutex());
 
   auto &vis = Game::Map::VisibilityService::instance();
   const bool visibility_enabled = vis.isInitialized();
 
   auto renderable_entities =
-      world->getEntitiesWith<Engine::Core::RenderableComponent>();
+      world->get_entities_with<Engine::Core::RenderableComponent>();
 
   const auto &gfxSettings = Render::GraphicsSettings::instance();
-  const auto &batchConfig = gfxSettings.batchingConfig();
+  const auto &batch_config = gfxSettings.batching_config();
 
   float cameraHeight = 0.0F;
   if (m_camera != nullptr) {
-    cameraHeight = m_camera->getPosition().y();
+    cameraHeight = m_camera->get_position().y();
   }
 
   int visibleUnitCount = 0;
   for (auto *entity : renderable_entities) {
-    if (entity->hasComponent<Engine::Core::PendingRemovalComponent>()) {
+    if (entity->has_component<Engine::Core::PendingRemovalComponent>()) {
       continue;
     }
-    auto *unit_comp = entity->getComponent<Engine::Core::UnitComponent>();
+    auto *unit_comp = entity->get_component<Engine::Core::UnitComponent>();
     if (unit_comp != nullptr && unit_comp->health > 0) {
       auto *transform =
-          entity->getComponent<Engine::Core::TransformComponent>();
+          entity->get_component<Engine::Core::TransformComponent>();
       if (transform != nullptr && m_camera != nullptr) {
         QVector3D const unit_pos(transform->position.x, transform->position.y,
                                  transform->position.z);
@@ -414,16 +414,16 @@ void Renderer::renderWorld(Engine::Core::World *world) {
     }
   }
 
-  float batchingRatio =
-      gfxSettings.calculateBatchingRatio(visibleUnitCount, cameraHeight);
+  float batching_ratio =
+      gfxSettings.calculate_batching_ratio(visibleUnitCount, cameraHeight);
 
   PrimitiveBatcher batcher;
-  if (batchingRatio > 0.0F) {
+  if (batching_ratio > 0.0F) {
     batcher.reserve(2000, 4000, 500);
   }
 
-  float fullShaderMaxDistance = 30.0F * (1.0F - batchingRatio * 0.7F);
-  if (batchConfig.forceBatching) {
+  float fullShaderMaxDistance = 30.0F * (1.0F - batching_ratio * 0.7F);
+  if (batch_config.force_batching) {
     fullShaderMaxDistance = 0.0F;
   }
 
@@ -431,19 +431,19 @@ void Renderer::renderWorld(Engine::Core::World *world) {
 
   for (auto *entity : renderable_entities) {
 
-    if (entity->hasComponent<Engine::Core::PendingRemovalComponent>()) {
+    if (entity->has_component<Engine::Core::PendingRemovalComponent>()) {
       continue;
     }
 
     auto *renderable =
-        entity->getComponent<Engine::Core::RenderableComponent>();
-    auto *transform = entity->getComponent<Engine::Core::TransformComponent>();
+        entity->get_component<Engine::Core::RenderableComponent>();
+    auto *transform = entity->get_component<Engine::Core::TransformComponent>();
 
     if (!renderable->visible || (transform == nullptr)) {
       continue;
     }
 
-    auto *unit_comp = entity->getComponent<Engine::Core::UnitComponent>();
+    auto *unit_comp = entity->get_component<Engine::Core::UnitComponent>();
     if ((unit_comp != nullptr) && unit_comp->health <= 0) {
       continue;
     }
@@ -467,7 +467,7 @@ void Renderer::renderWorld(Engine::Core::World *world) {
         continue;
       }
 
-      QVector3D camPos = m_camera->getPosition();
+      QVector3D camPos = m_camera->get_position();
       float dx = unit_pos.x() - camPos.x();
       float dz = unit_pos.z() - camPos.z();
       distanceToCamera = std::sqrt(dx * dx + dz * dz);
@@ -482,8 +482,8 @@ void Renderer::renderWorld(Engine::Core::World *world) {
     }
 
     bool const is_selected =
-        (m_selectedIds.find(entity->getId()) != m_selectedIds.end());
-    bool const is_hovered = (entity->getId() == m_hoveredEntityId);
+        (m_selectedIds.find(entity->get_id()) != m_selectedIds.end());
+    bool const is_hovered = (entity->get_id() == m_hoveredEntityId);
 
     QMatrix4x4 model_matrix;
     model_matrix.translate(transform->position.x, transform->position.y,
@@ -497,8 +497,8 @@ void Renderer::renderWorld(Engine::Core::World *world) {
     bool drawn_by_registry = false;
     if (m_entityRegistry) {
       std::string renderer_key;
-      if (!renderable->rendererId.empty()) {
-        renderer_key = renderable->rendererId;
+      if (!renderable->renderer_id.empty()) {
+        renderer_key = renderable->renderer_id;
       } else if (unit_comp != nullptr) {
         renderer_key = Game::Units::spawn_typeToString(unit_comp->spawn_type);
       }
@@ -509,14 +509,14 @@ void Renderer::renderWorld(Engine::Core::World *world) {
         ctx.selected = is_selected;
         ctx.hovered = is_hovered;
         ctx.animationTime = m_accumulatedTime;
-        ctx.rendererId = renderer_key;
+        ctx.renderer_id = renderer_key;
         ctx.backend = m_backend.get();
         ctx.camera = m_camera;
 
-        bool useBatching = (batchingRatio > 0.0F) &&
+        bool useBatching = (batching_ratio > 0.0F) &&
                            (distanceToCamera > fullShaderMaxDistance) &&
                            !is_selected && !is_hovered &&
-                           !batchConfig.neverBatch;
+                           !batch_config.never_batch;
 
         if (useBatching) {
           fn(ctx, batchSubmitter);
@@ -578,7 +578,7 @@ void Renderer::renderWorld(Engine::Core::World *world) {
             std::max({transform->scale.x, transform->scale.z, 0.6F});
 
         float size_ratio = 1.0F;
-        if (auto *unit = entity->getComponent<Engine::Core::UnitComponent>()) {
+        if (auto *unit = entity->get_component<Engine::Core::UnitComponent>()) {
           int const mh = std::max(1, unit->max_health);
           size_ratio = std::clamp(unit->health / float(mh), 0.0F, 1.0F);
         }

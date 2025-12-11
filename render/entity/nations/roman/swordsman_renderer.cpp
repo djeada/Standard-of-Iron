@@ -300,7 +300,7 @@ private:
     std::string nation_id;
     if (ctx.entity != nullptr) {
       if (auto *unit =
-              ctx.entity->getComponent<Engine::Core::UnitComponent>()) {
+              ctx.entity->get_component<Engine::Core::UnitComponent>()) {
         nation_id = Game::Systems::nationIDToString(unit->nation_id);
       }
     }

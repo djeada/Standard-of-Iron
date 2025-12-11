@@ -14,18 +14,18 @@ void ActionVFX::spawnAttackArrow(Engine::Core::World *world,
     return;
   }
 
-  auto *arrow_system = world->getSystem<Game::Systems::ArrowSystem>();
+  auto *arrow_system = world->get_system<Game::Systems::ArrowSystem>();
   if (arrow_system == nullptr) {
     return;
   }
 
-  auto *target_entity = world->getEntity(target_id);
+  auto *target_entity = world->get_entity(target_id);
   if (target_entity == nullptr) {
     return;
   }
 
   auto *target_trans =
-      target_entity->getComponent<Engine::Core::TransformComponent>();
+      target_entity->get_component<Engine::Core::TransformComponent>();
   if (target_trans == nullptr) {
     return;
   }

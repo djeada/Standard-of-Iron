@@ -26,9 +26,9 @@ public:
   void shutdown();
 
   void loadUnitVoiceMapping(const std::string &unit_type,
-                            const std::string &soundId);
+                            const std::string &sound_id);
   void loadAmbientMusic(Engine::Core::AmbientState state,
-                        const std::string &musicId);
+                        const std::string &music_id);
 
   void setVoiceSoundCategory(bool useVoiceCategory);
 

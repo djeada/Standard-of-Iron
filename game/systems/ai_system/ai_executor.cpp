@@ -7,7 +7,7 @@
 namespace Game::Systems::AI {
 
 void AIExecutor::run(const AISnapshot &snapshot, AIContext &context,
-                     float deltaTime, AIBehaviorRegistry &registry,
+                     float delta_time, AIBehaviorRegistry &registry,
                      std::vector<AICommand> &outCommands) {
 
   bool exclusive_behavior_executed = false;
@@ -20,7 +20,7 @@ void AIExecutor::run(const AISnapshot &snapshot, AIContext &context,
     bool const should_exec = behavior.should_execute(snapshot, context);
 
     if (should_exec) {
-      behavior.execute(snapshot, context, deltaTime, outCommands);
+      behavior.execute(snapshot, context, delta_time, outCommands);
 
       if (!behavior.canRunConcurrently()) {
         exclusive_behavior_executed = true;
