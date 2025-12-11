@@ -33,14 +33,15 @@ auto sampleAnimState(const DrawContext &ctx) -> AnimationInputs {
       ctx.entity->get_component<Engine::Core::AttackTargetComponent>();
   auto *transform =
       ctx.entity->get_component<Engine::Core::TransformComponent>();
-  auto *hold_mode = ctx.entity->get_component<Engine::Core::HoldModeComponent>();
+  auto *hold_mode =
+      ctx.entity->get_component<Engine::Core::HoldModeComponent>();
 
   anim.is_in_hold_mode = ((hold_mode != nullptr) && hold_mode->active);
   if ((hold_mode != nullptr) && !hold_mode->active &&
-      hold_mode->exitCooldown > 0.0F) {
+      hold_mode->exit_cooldown > 0.0F) {
     anim.is_exiting_hold = true;
     anim.hold_exit_progress =
-        1.0F - (hold_mode->exitCooldown / hold_mode->standUpDuration);
+        1.0F - (hold_mode->exit_cooldown / hold_mode->stand_up_duration);
   }
   anim.is_moving = ((movement != nullptr) && movement->has_target);
 

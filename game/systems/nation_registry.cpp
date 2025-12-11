@@ -14,9 +14,9 @@
 
 namespace Game::Systems {
 
-auto Nation::getMeleeTroops() const -> std::vector<const TroopType *> {
+auto Nation::get_melee_troops() const -> std::vector<const TroopType *> {
   std::vector<const TroopType *> result;
-  for (const auto &troop : availableTroops) {
+  for (const auto &troop : available_troops) {
     if (troop.is_melee) {
       result.push_back(&troop);
     }
@@ -24,9 +24,9 @@ auto Nation::getMeleeTroops() const -> std::vector<const TroopType *> {
   return result;
 }
 
-auto Nation::getRangedTroops() const -> std::vector<const TroopType *> {
+auto Nation::get_ranged_troops() const -> std::vector<const TroopType *> {
   std::vector<const TroopType *> result;
-  for (const auto &troop : availableTroops) {
+  for (const auto &troop : available_troops) {
     if (!troop.is_melee) {
       result.push_back(&troop);
     }
@@ -36,7 +36,7 @@ auto Nation::getRangedTroops() const -> std::vector<const TroopType *> {
 
 auto Nation::getTroop(Game::Units::TroopType unit_type) const
     -> const TroopType * {
-  for (const auto &troop : availableTroops) {
+  for (const auto &troop : available_troops) {
     if (troop.unit_type == unit_type) {
       return &troop;
     }
@@ -45,7 +45,7 @@ auto Nation::getTroop(Game::Units::TroopType unit_type) const
 }
 
 auto Nation::getBestMeleeTroop() const -> const TroopType * {
-  auto melee = getMeleeTroops();
+  auto melee = get_melee_troops();
   if (melee.empty()) {
     return nullptr;
   }
@@ -59,7 +59,7 @@ auto Nation::getBestMeleeTroop() const -> const TroopType * {
 }
 
 auto Nation::getBestRangedTroop() const -> const TroopType * {
-  auto ranged = getRangedTroops();
+  auto ranged = get_ranged_troops();
   if (ranged.empty()) {
     return nullptr;
   }

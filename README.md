@@ -274,10 +274,10 @@ Q_INVOKABLE void onMyCommand(qreal sx, qreal sy);
 void GameEngine::onMyCommand(qreal sx, qreal sy) {
     // Convert screen to world coordinates
     QVector3D hit;
-    if (!screenToGround(QPointF(sx, sy), hit)) return;
+    if (!screen_to_ground(QPointF(sx, sy), hit)) return;
     
     // Issue command to selected units
-    const auto& selected = m_selection_system->getSelectedUnits();
+    const auto& selected = m_selection_system->get_selected_units();
     for (auto id : selected) {
         // Process command...
     }

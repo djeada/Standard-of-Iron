@@ -45,7 +45,8 @@ public:
 
   static void restoreCameraFromMetadata(const QJsonObject &metadata,
                                         Render::GL::Camera *camera,
-                                        int viewport_width, int viewport_height);
+                                        int viewport_width,
+                                        int viewport_height);
 
   static void restoreRuntimeFromMetadata(const QJsonObject &metadata,
                                          RuntimeSnapshot &runtime);

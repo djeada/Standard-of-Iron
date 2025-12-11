@@ -11,11 +11,11 @@ namespace App::Utils {
 
 inline void
 sanitize_selection(Engine::Core::World *world,
-                  Game::Systems::SelectionSystem *selection_system) {
+                   Game::Systems::SelectionSystem *selection_system) {
   if ((world == nullptr) || (selection_system == nullptr)) {
     return;
   }
-  const auto &sel = selection_system->getSelectedUnits();
+  const auto &sel = selection_system->get_selected_units();
   std::vector<Engine::Core::EntityID> toKeep;
   toKeep.reserve(sel.size());
   for (auto id : sel) {
@@ -29,9 +29,9 @@ sanitize_selection(Engine::Core::World *world,
   }
   if (toKeep.size() != sel.size() ||
       !std::equal(toKeep.begin(), toKeep.end(), sel.begin())) {
-    selection_system->clearSelection();
+    selection_system->clear_selection();
     for (auto id : toKeep) {
-      selection_system->selectUnit(id);
+      selection_system->select_unit(id);
     }
   }
 }

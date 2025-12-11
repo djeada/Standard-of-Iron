@@ -444,7 +444,7 @@ ApplicationWindow {
     }
 
     Connections {
-        function onLastErrorChanged() {
+        function onLast_error_changed() {
             if (game.last_error !== "")
                 errorDialog.open();
 

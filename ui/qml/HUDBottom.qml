@@ -409,7 +409,7 @@ RowLayout {
                 ToolTip.delay: 500
 
                 Connections {
-                    function onHoldModeChanged(active) {
+                    function onHold_mode_changed(active) {
                         holdButton.isHoldActive = (typeof game !== 'undefined' && game.any_selected_in_hold_mode) ? game.any_selected_in_hold_mode() : false;
                     }
 

@@ -62,7 +62,8 @@ void CaptureSystem::transferBarrackOwnership(Engine::Core::World *,
                                              Engine::Core::Entity *barrack,
                                              int new_owner_id) {
   auto *unit = barrack->get_component<Engine::Core::UnitComponent>();
-  auto *renderable = barrack->get_component<Engine::Core::RenderableComponent>();
+  auto *renderable =
+      barrack->get_component<Engine::Core::RenderableComponent>();
   auto *transform = barrack->get_component<Engine::Core::TransformComponent>();
   auto *prod = barrack->get_component<Engine::Core::ProductionComponent>();
 
@@ -131,7 +132,8 @@ void CaptureSystem::processBarrackCapture(Engine::Core::World *world,
 
   for (auto *barrack : barracks) {
     auto *unit = barrack->get_component<Engine::Core::UnitComponent>();
-    auto *transform = barrack->get_component<Engine::Core::TransformComponent>();
+    auto *transform =
+        barrack->get_component<Engine::Core::TransformComponent>();
 
     if ((unit == nullptr) || (transform == nullptr)) {
       continue;

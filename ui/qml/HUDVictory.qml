@@ -30,7 +30,7 @@ Rectangle {
     }
 
     Connections {
-        function onVictoryStateChanged() {
+        function onVictory_state_changed() {
             if (typeof game !== 'undefined' && game.victory_state === "")
                 resetState();
             else if (typeof game !== 'undefined' && game.victory_state !== "")

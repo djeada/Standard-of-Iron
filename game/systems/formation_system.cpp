@@ -105,7 +105,8 @@ auto FormationSystem::getFormationPositions(
   auto it = m_formations.find(type);
   if (it == m_formations.end()) {
     qWarning() << "Formation type not found, using default spread";
-    return RomanFormation().calculatePositions(unit_count, center, base_spacing);
+    return RomanFormation().calculatePositions(unit_count, center,
+                                               base_spacing);
   }
 
   return it->second->calculatePositions(unit_count, center, base_spacing);
