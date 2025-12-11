@@ -83,104 +83,110 @@ public:
   explicit GameEngine(QObject *parent = nullptr);
   ~GameEngine() override;
 
-  void cleanupOpenGLResources();
+  void cleanup_opengl_resources();
 
-  Q_PROPERTY(QAbstractItemModel *selectedUnitsModel READ selectedUnitsModel
-                 NOTIFY selectedUnitsChanged)
-  Q_PROPERTY(bool paused READ paused WRITE setPaused)
-  Q_PROPERTY(float timeScale READ timeScale WRITE setGameSpeed)
-  Q_PROPERTY(QString victoryState READ victoryState NOTIFY victoryStateChanged)
-  Q_PROPERTY(QString cursorMode READ cursorMode WRITE setCursorMode NOTIFY
-                 cursorModeChanged)
-  Q_PROPERTY(qreal globalCursorX READ globalCursorX NOTIFY globalCursorChanged)
-  Q_PROPERTY(qreal globalCursorY READ globalCursorY NOTIFY globalCursorChanged)
+  Q_PROPERTY(QAbstractItemModel *selected_units_model READ selected_units_model
+                 NOTIFY selected_units_changed)
+  Q_PROPERTY(bool paused READ paused WRITE set_paused)
+  Q_PROPERTY(float time_scale READ time_scale WRITE set_game_speed)
   Q_PROPERTY(
-      bool hasUnitsSelected READ hasUnitsSelected NOTIFY selectedUnitsChanged)
+      QString victory_state READ victory_state NOTIFY victory_state_changed)
+  Q_PROPERTY(QString cursor_mode READ cursor_mode WRITE set_cursor_mode NOTIFY
+                 cursor_mode_changed)
   Q_PROPERTY(
-      int playerTroopCount READ playerTroopCount NOTIFY troop_countChanged)
+      qreal global_cursor_x READ global_cursor_x NOTIFY global_cursor_changed)
+  Q_PROPERTY(
+      qreal global_cursor_y READ global_cursor_y NOTIFY global_cursor_changed)
+  Q_PROPERTY(bool has_units_selected READ has_units_selected NOTIFY
+                 selected_units_changed)
+  Q_PROPERTY(
+      int player_troop_count READ player_troop_count NOTIFY troop_count_changed)
   Q_PROPERTY(int max_troops_per_player READ max_troops_per_player NOTIFY
-                 troop_countChanged)
+                 troop_count_changed)
   Q_PROPERTY(QVariantList available_maps READ available_maps NOTIFY
                  available_maps_changed)
   Q_PROPERTY(bool maps_loading READ maps_loading NOTIFY maps_loading_changed)
   Q_PROPERTY(QVariantList available_nations READ available_nations CONSTANT)
   Q_PROPERTY(QVariantList available_campaigns READ available_campaigns NOTIFY
                  available_campaigns_changed)
-  Q_PROPERTY(int enemyTroopsDefeated READ enemyTroopsDefeated NOTIFY
-                 enemyTroopsDefeatedChanged)
-  Q_PROPERTY(QVariantList ownerInfo READ getOwnerInfo NOTIFY ownerInfoChanged)
-  Q_PROPERTY(int selectedPlayerId READ selectedPlayerId WRITE
-                 setSelectedPlayerId NOTIFY selectedPlayerIdChanged)
-  Q_PROPERTY(QString lastError READ lastError NOTIFY lastErrorChanged)
+  Q_PROPERTY(int enemy_troops_defeated READ enemy_troops_defeated NOTIFY
+                 enemy_troops_defeated_changed)
+  Q_PROPERTY(
+      QVariantList owner_info READ get_owner_info NOTIFY owner_info_changed)
+  Q_PROPERTY(int selected_player_id READ selected_player_id WRITE
+                 set_selected_player_id NOTIFY selected_player_id_changed)
+  Q_PROPERTY(QString last_error READ last_error NOTIFY last_error_changed)
   Q_PROPERTY(QObject *audio_system READ audio_system CONSTANT)
 
-  Q_INVOKABLE void onMapClicked(qreal sx, qreal sy);
-  Q_INVOKABLE void onRightClick(qreal sx, qreal sy);
-  Q_INVOKABLE void onClickSelect(qreal sx, qreal sy, bool additive = false);
-  Q_INVOKABLE void onAreaSelected(qreal x1, qreal y1, qreal x2, qreal y2,
-                                  bool additive = false);
-  Q_INVOKABLE void selectAllTroops();
-  Q_INVOKABLE void selectUnitById(int unitId);
-  Q_INVOKABLE void setHoverAtScreen(qreal sx, qreal sy);
-  Q_INVOKABLE void onAttackClick(qreal sx, qreal sy);
-  Q_INVOKABLE void onStopCommand();
-  Q_INVOKABLE void onHoldCommand();
-  Q_INVOKABLE [[nodiscard]] bool anySelectedInHoldMode() const;
-  Q_INVOKABLE void onPatrolClick(qreal sx, qreal sy);
+  Q_INVOKABLE void on_map_clicked(qreal sx, qreal sy);
+  Q_INVOKABLE void on_right_click(qreal sx, qreal sy);
+  Q_INVOKABLE void on_click_select(qreal sx, qreal sy, bool additive = false);
+  Q_INVOKABLE void on_area_selected(qreal x1, qreal y1, qreal x2, qreal y2,
+                                    bool additive = false);
+  Q_INVOKABLE void select_all_troops();
+  Q_INVOKABLE void select_unit_by_id(int unitId);
+  Q_INVOKABLE void set_hover_at_screen(qreal sx, qreal sy);
+  Q_INVOKABLE void on_attack_click(qreal sx, qreal sy);
+  Q_INVOKABLE void on_stop_command();
+  Q_INVOKABLE void on_hold_command();
+  Q_INVOKABLE [[nodiscard]] bool any_selected_in_hold_mode() const;
+  Q_INVOKABLE void on_patrol_click(qreal sx, qreal sy);
 
-  Q_INVOKABLE void cameraMove(float dx, float dz);
-  Q_INVOKABLE void cameraElevate(float dy);
-  Q_INVOKABLE void resetCamera();
-  Q_INVOKABLE void cameraZoom(float delta);
-  Q_INVOKABLE [[nodiscard]] float cameraDistance() const;
-  Q_INVOKABLE void cameraYaw(float degrees);
-  Q_INVOKABLE void cameraOrbit(float yaw_deg, float pitch_deg);
-  Q_INVOKABLE void cameraOrbitDirection(int direction, bool shift);
-  Q_INVOKABLE void cameraFollowSelection(bool enable);
-  Q_INVOKABLE void cameraSetFollowLerp(float alpha);
+  Q_INVOKABLE void camera_move(float dx, float dz);
+  Q_INVOKABLE void camera_elevate(float dy);
+  Q_INVOKABLE void reset_camera();
+  Q_INVOKABLE void camera_zoom(float delta);
+  Q_INVOKABLE [[nodiscard]] float camera_distance() const;
+  Q_INVOKABLE void camera_yaw(float degrees);
+  Q_INVOKABLE void camera_orbit(float yaw_deg, float pitch_deg);
+  Q_INVOKABLE void camera_orbit_direction(int direction, bool shift);
+  Q_INVOKABLE void camera_follow_selection(bool enable);
+  Q_INVOKABLE void camera_set_follow_lerp(float alpha);
   Q_INVOKABLE void start_loading_maps();
 
-  Q_INVOKABLE void setPaused(bool paused) { m_runtime.paused = paused; }
-  Q_INVOKABLE void setGameSpeed(float speed) {
-    m_runtime.timeScale = std::max(0.0F, speed);
+  Q_INVOKABLE void set_paused(bool paused) { m_runtime.paused = paused; }
+  Q_INVOKABLE void set_game_speed(float speed) {
+    m_runtime.time_scale = std::max(0.0F, speed);
   }
   [[nodiscard]] bool paused() const { return m_runtime.paused; }
-  [[nodiscard]] float timeScale() const { return m_runtime.timeScale; }
-  [[nodiscard]] QString victoryState() const { return m_runtime.victoryState; }
-  [[nodiscard]] QString cursorMode() const;
-  void setCursorMode(CursorMode mode);
-  void setCursorMode(const QString &mode);
-  [[nodiscard]] qreal globalCursorX() const;
-  [[nodiscard]] qreal globalCursorY() const;
-  [[nodiscard]] bool hasUnitsSelected() const;
-  [[nodiscard]] int playerTroopCount() const;
+  [[nodiscard]] float time_scale() const { return m_runtime.time_scale; }
+  [[nodiscard]] QString victory_state() const {
+    return m_runtime.victory_state;
+  }
+  [[nodiscard]] QString cursor_mode() const;
+  void set_cursor_mode(CursorMode mode);
+  void set_cursor_mode(const QString &mode);
+  [[nodiscard]] qreal global_cursor_x() const;
+  [[nodiscard]] qreal global_cursor_y() const;
+  [[nodiscard]] bool has_units_selected() const;
+  [[nodiscard]] int player_troop_count() const;
   [[nodiscard]] int max_troops_per_player() const {
     return m_level.max_troops_per_player;
   }
-  [[nodiscard]] int enemyTroopsDefeated() const;
+  [[nodiscard]] int enemy_troops_defeated() const;
 
-  Q_INVOKABLE [[nodiscard]] static QVariantMap getPlayerStats(int owner_id);
+  Q_INVOKABLE [[nodiscard]] static QVariantMap get_player_stats(int owner_id);
 
-  [[nodiscard]] int selectedPlayerId() const { return m_selectedPlayerId; }
-  void setSelectedPlayerId(int id) {
+  [[nodiscard]] int selected_player_id() const { return m_selectedPlayerId; }
+  void set_selected_player_id(int id) {
     if (m_selectedPlayerId != id) {
       m_selectedPlayerId = id;
-      emit selectedPlayerIdChanged();
+      emit selected_player_id_changed();
     }
   }
-  [[nodiscard]] QString lastError() const { return m_runtime.lastError; }
-  Q_INVOKABLE void clearError() {
-    if (!m_runtime.lastError.isEmpty()) {
-      m_runtime.lastError = "";
-      emit lastErrorChanged();
+  [[nodiscard]] QString last_error() const { return m_runtime.last_error; }
+  Q_INVOKABLE void clear_error() {
+    if (!m_runtime.last_error.isEmpty()) {
+      m_runtime.last_error = "";
+      emit last_error_changed();
     }
   }
 
-  Q_INVOKABLE [[nodiscard]] bool hasSelectedType(const QString &type) const;
-  Q_INVOKABLE void recruitNearSelected(const QString &unit_type);
-  Q_INVOKABLE [[nodiscard]] QVariantMap getSelectedProductionState() const;
-  Q_INVOKABLE [[nodiscard]] QString getSelectedUnitsCommandMode() const;
-  Q_INVOKABLE void setRallyAtScreen(qreal sx, qreal sy);
+  Q_INVOKABLE [[nodiscard]] bool has_selected_type(const QString &type) const;
+  Q_INVOKABLE void recruit_near_selected(const QString &unit_type);
+  Q_INVOKABLE [[nodiscard]] QVariantMap get_selected_production_state() const;
+  Q_INVOKABLE [[nodiscard]] QString get_selected_units_command_mode() const;
+  Q_INVOKABLE void set_rally_at_screen(qreal sx, qreal sy);
   Q_INVOKABLE [[nodiscard]] QVariantList available_maps() const;
   [[nodiscard]] QVariantList available_nations() const;
   [[nodiscard]] QVariantList available_campaigns() const;
@@ -199,35 +205,35 @@ public:
   Q_INVOKABLE void refresh_save_slots();
   Q_INVOKABLE bool delete_save_slot(const QString &slot_name);
   Q_INVOKABLE void exit_game();
-  Q_INVOKABLE [[nodiscard]] QVariantList getOwnerInfo() const;
+  Q_INVOKABLE [[nodiscard]] QVariantList get_owner_info() const;
 
   QObject *audio_system();
 
   void setWindow(QQuickWindow *w) { m_window = w; }
 
-  void ensureInitialized();
+  void ensure_initialized();
   void update(float dt);
   void render(int pixelWidth, int pixelHeight);
 
-  void getSelectedUnitIds(std::vector<Engine::Core::EntityID> &out) const;
-  bool getUnitInfo(Engine::Core::EntityID id, QString &name, int &health,
-                   int &max_health, bool &isBuilding, bool &alive,
-                   QString &nation) const;
+  void get_selected_unit_ids(std::vector<Engine::Core::EntityID> &out) const;
+  bool get_unit_info(Engine::Core::EntityID id, QString &name, int &health,
+                     int &max_health, bool &isBuilding, bool &alive,
+                     QString &nation) const;
 
-  [[nodiscard]] bool hasPatrolPreviewWaypoint() const;
-  [[nodiscard]] QVector3D getPatrolPreviewWaypoint() const;
+  [[nodiscard]] bool has_patrol_preview_waypoint() const;
+  [[nodiscard]] QVector3D get_patrol_preview_waypoint() const;
 
 private:
   struct RuntimeState {
     bool initialized = false;
     bool paused = false;
     bool loading = false;
-    float timeScale = 1.0F;
-    int localOwnerId = 1;
-    QString victoryState = "";
-    CursorMode cursorMode{CursorMode::Normal};
-    QString lastError = "";
-    Qt::CursorShape currentCursor = Qt::ArrowCursor;
+    float time_scale = 1.0F;
+    int local_owner_id = 1;
+    QString victory_state = "";
+    CursorMode cursor_mode{CursorMode::Normal};
+    QString last_error = "";
+    Qt::CursorShape current_cursor = Qt::ArrowCursor;
     int lastTroopCount = 0;
     std::uint64_t visibilityVersion = 0;
     float visibilityUpdateAccumulator = 0.0F;
@@ -253,24 +259,24 @@ private:
     int height = 0;
   };
 
-  bool screenToGround(const QPointF &screenPt, QVector3D &outWorld);
-  bool worldToScreen(const QVector3D &world, QPointF &outScreen) const;
-  void syncSelectionFlags();
-  static void resetMovement(Engine::Core::Entity *entity);
-  QAbstractItemModel *selectedUnitsModel();
-  void onUnitSpawned(const Engine::Core::UnitSpawnedEvent &event);
-  void onUnitDied(const Engine::Core::UnitDiedEvent &event);
-  void rebuildEntityCache();
-  void rebuildRegistriesAfterLoad();
-  void rebuildBuildingCollisions();
-  void restoreEnvironmentFromMetadata(const QJsonObject &metadata);
-  void updateCursor(Qt::CursorShape newCursor);
-  void setError(const QString &errorMessage);
-  bool loadFromSlot(const QString &slot);
-  bool saveToSlot(const QString &slot, const QString &title);
-  [[nodiscard]] Game::Systems::RuntimeSnapshot toRuntimeSnapshot() const;
-  void applyRuntimeSnapshot(const Game::Systems::RuntimeSnapshot &snapshot);
-  [[nodiscard]] QByteArray captureScreenshot() const;
+  bool screen_to_ground(const QPointF &screenPt, QVector3D &outWorld);
+  bool world_to_screen(const QVector3D &world, QPointF &outScreen) const;
+  void sync_selection_flags();
+  static void reset_movement(Engine::Core::Entity *entity);
+  QAbstractItemModel *selected_units_model();
+  void on_unit_spawned(const Engine::Core::UnitSpawnedEvent &event);
+  void on_unit_died(const Engine::Core::UnitDiedEvent &event);
+  void rebuild_entity_cache();
+  void rebuild_registries_after_load();
+  void rebuild_building_collisions();
+  void restore_environment_from_metadata(const QJsonObject &metadata);
+  void update_cursor(Qt::CursorShape newCursor);
+  void set_error(const QString &errorMessage);
+  bool load_from_slot(const QString &slot);
+  bool save_to_slot(const QString &slot, const QString &title);
+  [[nodiscard]] Game::Systems::RuntimeSnapshot to_runtime_snapshot() const;
+  void apply_runtime_snapshot(const Game::Systems::RuntimeSnapshot &snapshot);
+  [[nodiscard]] QByteArray capture_screenshot() const;
 
   std::unique_ptr<Engine::Core::World> m_world;
   std::unique_ptr<Render::GL::Renderer> m_renderer;
@@ -314,33 +320,32 @@ private:
   bool m_maps_loading = false;
   QString m_current_campaign_id;
   Engine::Core::ScopedEventSubscription<Engine::Core::UnitDiedEvent>
-      m_unitDiedSubscription;
+      m_unit_died_subscription;
   Engine::Core::ScopedEventSubscription<Engine::Core::UnitSpawnedEvent>
-      m_unitSpawnedSubscription;
+      m_unit_spawned_subscription;
   EntityCache m_entityCache;
   Engine::Core::AmbientState m_currentAmbientState =
       Engine::Core::AmbientState::PEACEFUL;
   float m_ambientCheckTimer = 0.0F;
 
-  void updateAmbientState(float dt);
-  [[nodiscard]] bool isPlayerInCombat() const;
-  static void loadAudioResources();
+  void update_ambient_state(float dt);
+  [[nodiscard]] bool is_player_in_combat() const;
+  static void load_audio_resources();
   void load_campaigns();
 signals:
-  void selectedUnitsChanged();
-  void selectedUnitsDataChanged();
-  void enemyTroopsDefeatedChanged();
-  void victoryStateChanged();
-  void cursorModeChanged();
-  void globalCursorChanged();
-  void troop_countChanged();
+  void selected_units_changed();
+  void selected_units_data_changed();
+  void enemy_troops_defeated_changed();
+  void victory_state_changed();
+  void cursor_mode_changed();
+  void global_cursor_changed();
+  void troop_count_changed();
   void available_maps_changed();
-  void maps_loading_changed();
   void available_campaigns_changed();
-  void ownerInfoChanged();
-  void selectedPlayerIdChanged();
-  void lastErrorChanged();
-  void mapsLoadingChanged();
-  void saveSlotsChanged();
-  void holdModeChanged(bool active);
+  void owner_info_changed();
+  void selected_player_id_changed();
+  void last_error_changed();
+  void maps_loading_changed();
+  void save_slots_changed();
+  void hold_mode_changed(bool active);
 };

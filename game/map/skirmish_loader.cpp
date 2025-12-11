@@ -65,8 +65,8 @@ SkirmishLoader::SkirmishLoader(Engine::Core::World &world,
 
 void SkirmishLoader::resetGameState() {
   if (auto *selection_system =
-          m_world.getSystem<Game::Systems::SelectionSystem>()) {
-    selection_system->clearSelection();
+          m_world.get_system<Game::Systems::SelectionSystem>()) {
+    selection_system->clear_selection();
   }
 
   m_renderer.pause();
@@ -277,12 +277,12 @@ auto SkirmishLoader::start(const QString &map_path,
       }
     }
 
-    auto entities = m_world.getEntitiesWith<Engine::Core::UnitComponent>();
+    auto entities = m_world.get_entities_with<Engine::Core::UnitComponent>();
     std::unordered_map<int, int> owner_entity_count;
     for (auto *entity : entities) {
-      auto *unit = entity->getComponent<Engine::Core::UnitComponent>();
+      auto *unit = entity->get_component<Engine::Core::UnitComponent>();
       auto *renderable =
-          entity->getComponent<Engine::Core::RenderableComponent>();
+          entity->get_component<Engine::Core::RenderableComponent>();
       if ((unit != nullptr) && (renderable != nullptr)) {
         const QVector3D team_color =
             Game::Visuals::team_colorForOwner(unit->owner_id);
@@ -458,12 +458,12 @@ auto SkirmishLoader::start(const QString &map_path,
 
   Engine::Core::Entity *focus_entity = nullptr;
 
-  auto candidates = m_world.getEntitiesWith<Engine::Core::UnitComponent>();
+  auto candidates = m_world.get_entities_with<Engine::Core::UnitComponent>();
   for (auto *entity : candidates) {
     if (entity == nullptr) {
       continue;
     }
-    auto *unit = entity->getComponent<Engine::Core::UnitComponent>();
+    auto *unit = entity->get_component<Engine::Core::UnitComponent>();
     if (unit == nullptr) {
       continue;
     }
@@ -474,13 +474,13 @@ auto SkirmishLoader::start(const QString &map_path,
     }
   }
 
-  if ((focus_entity == nullptr) && level_result.playerUnitId != 0) {
-    focus_entity = m_world.getEntity(level_result.playerUnitId);
+  if ((focus_entity == nullptr) && level_result.player_unit_id != 0U) {
+    focus_entity = m_world.get_entity(level_result.player_unit_id);
   }
 
   if (focus_entity != nullptr) {
     if (auto *transform =
-            focus_entity->getComponent<Engine::Core::TransformComponent>()) {
+            focus_entity->get_component<Engine::Core::TransformComponent>()) {
       result.focusPosition = QVector3D(
           transform->position.x, transform->position.y, transform->position.z);
       result.hasFocusPosition = true;
@@ -489,10 +489,10 @@ auto SkirmishLoader::start(const QString &map_path,
 
   result.ok = true;
   result.map_name = level_result.map_name;
-  result.playerUnitId = level_result.playerUnitId;
-  result.camFov = level_result.camFov;
-  result.camNear = level_result.camNear;
-  result.camFar = level_result.camFar;
+  result.player_unit_id = level_result.player_unit_id;
+  result.cam_fov = level_result.cam_fov;
+  result.cam_near = level_result.cam_near;
+  result.cam_far = level_result.cam_far;
   result.grid_width = level_result.grid_width;
   result.grid_height = level_result.grid_height;
   result.tile_size = level_result.tile_size;

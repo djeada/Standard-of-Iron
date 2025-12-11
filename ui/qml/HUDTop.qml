@@ -265,8 +265,8 @@ Item {
                         font.pixelSize: 13
                         focusPolicy: Qt.NoFocus
                         onToggled: {
-                            if (typeof game !== 'undefined' && game.cameraFollowSelection)
-                                game.cameraFollowSelection(checked);
+                            if (typeof game !== 'undefined' && game.camera_follow_selection)
+                                game.camera_follow_selection(checked);
 
                         }
 
@@ -296,8 +296,8 @@ Item {
                         font.pixelSize: 13
                         focusPolicy: Qt.NoFocus
                         onClicked: {
-                            if (typeof game !== 'undefined' && game.resetCamera)
-                                game.resetCamera();
+                            if (typeof game !== 'undefined' && game.reset_camera)
+                                game.reset_camera();
 
                         }
 
@@ -341,12 +341,12 @@ Item {
                     Label {
                         id: playerLbl
 
-                        text: "🗡️ " + (typeof game !== 'undefined' ? game.playerTroopCount : 0) + " / " + (typeof game !== 'undefined' ? game.max_troops_per_player : 0)
+                        text: "🗡️ " + (typeof game !== 'undefined' ? game.player_troop_count : 0) + " / " + (typeof game !== 'undefined' ? game.max_troops_per_player : 0)
                         color: {
                             if (typeof game === 'undefined')
                                 return "#95a5a6";
 
-                            var count = game.playerTroopCount;
+                            var count = game.player_troop_count;
                             var max = game.max_troops_per_player;
                             if (count >= max)
                                 return "#e74c3c";
@@ -377,7 +377,7 @@ Item {
                             if (typeof game === 'undefined')
                                 return "Players: 0";
 
-                            var owners = game.ownerInfo;
+                            var owners = game.owner_info;
                             var playerCount = 0;
                             var aiCount = 0;
                             for (var i = 0; i < owners.length; i++) {
@@ -399,7 +399,7 @@ Item {
                             if (typeof game === 'undefined')
                                 return "";
 
-                            var owners = game.ownerInfo;
+                            var owners = game.owner_info;
                             var tip = "Owner IDs:\n";
                             for (var i = 0; i < owners.length; i++) {
                                 tip += owners[i].id + ": " + owners[i].name + " (" + owners[i].type + ")";
@@ -423,7 +423,7 @@ Item {
                     Label {
                         id: enemyLbl
 
-                        text: "💀 " + (typeof game !== 'undefined' ? game.enemyTroopsDefeated : 0)
+                        text: "💀 " + (typeof game !== 'undefined' ? game.enemy_troops_defeated : 0)
                         color: "#ecf0f1"
                         font.pixelSize: 14
                         elide: Text.ElideRight

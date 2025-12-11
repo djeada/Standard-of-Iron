@@ -6,10 +6,10 @@
 HoverTracker::HoverTracker(Game::Systems::PickingService *pickingService)
     : m_pickingService(pickingService) {}
 
-auto HoverTracker::updateHover(float sx, float sy, Engine::Core::World &world,
-                               const Render::GL::Camera &camera,
-                               int viewportWidth,
-                               int viewportHeight) -> Engine::Core::EntityID {
+auto HoverTracker::update_hover(float sx, float sy, Engine::Core::World &world,
+                                const Render::GL::Camera &camera,
+                                int viewportWidth,
+                                int viewportHeight) -> Engine::Core::EntityID {
   if (m_pickingService == nullptr) {
     return 0;
   }
@@ -19,7 +19,7 @@ auto HoverTracker::updateHover(float sx, float sy, Engine::Core::World &world,
     return 0;
   }
 
-  m_hoveredEntityId = m_pickingService->updateHover(
+  m_hoveredEntityId = m_pickingService->update_hover(
       sx, sy, world, camera, viewportWidth, viewportHeight);
 
   return m_hoveredEntityId;

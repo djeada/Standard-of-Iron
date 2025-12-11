@@ -14,7 +14,7 @@ void TerrainAlignmentSystem::update(Engine::Core::World *world, float) {
     return;
   }
 
-  auto entities = world->getEntitiesWith<Engine::Core::TransformComponent>();
+  auto entities = world->get_entities_with<Engine::Core::TransformComponent>();
   for (auto *entity : entities) {
     alignEntityToTerrain(entity);
   }
@@ -22,7 +22,7 @@ void TerrainAlignmentSystem::update(Engine::Core::World *world, float) {
 
 void TerrainAlignmentSystem::alignEntityToTerrain(
     Engine::Core::Entity *entity) {
-  auto *transform = entity->getComponent<Engine::Core::TransformComponent>();
+  auto *transform = entity->get_component<Engine::Core::TransformComponent>();
   if (transform == nullptr) {
     return;
   }
@@ -33,7 +33,7 @@ void TerrainAlignmentSystem::alignEntityToTerrain(
       transform->position.x, transform->position.z);
 
   float entity_base_offset = 0.0F;
-  if (auto *unit = entity->getComponent<Engine::Core::UnitComponent>()) {
+  if (auto *unit = entity->get_component<Engine::Core::UnitComponent>()) {
     entity_base_offset =
         Game::Units::TroopConfig::instance().getSelectionRingGroundOffset(
             unit->spawn_type);

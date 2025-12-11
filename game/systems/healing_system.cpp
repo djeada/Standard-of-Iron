@@ -8,24 +8,24 @@
 
 namespace Game::Systems {
 
-void HealingSystem::update(Engine::Core::World *world, float deltaTime) {
-  processHealing(world, deltaTime);
+void HealingSystem::update(Engine::Core::World *world, float delta_time) {
+  processHealing(world, delta_time);
 }
 
 void HealingSystem::processHealing(Engine::Core::World *world,
-                                   float deltaTime) {
-  auto healers = world->getEntitiesWith<Engine::Core::HealerComponent>();
-  auto *arrow_system = world->getSystem<ArrowSystem>();
+                                   float delta_time) {
+  auto healers = world->get_entities_with<Engine::Core::HealerComponent>();
+  auto *arrow_system = world->get_system<ArrowSystem>();
 
   for (auto *healer : healers) {
-    if (healer->hasComponent<Engine::Core::PendingRemovalComponent>()) {
+    if (healer->has_component<Engine::Core::PendingRemovalComponent>()) {
       continue;
     }
 
-    auto *healer_unit = healer->getComponent<Engine::Core::UnitComponent>();
+    auto *healer_unit = healer->get_component<Engine::Core::UnitComponent>();
     auto *healer_transform =
-        healer->getComponent<Engine::Core::TransformComponent>();
-    auto *healer_comp = healer->getComponent<Engine::Core::HealerComponent>();
+        healer->get_component<Engine::Core::TransformComponent>();
+    auto *healer_comp = healer->get_component<Engine::Core::HealerComponent>();
 
     if ((healer_unit == nullptr) || (healer_transform == nullptr) ||
         (healer_comp == nullptr)) {
@@ -36,22 +36,22 @@ void HealingSystem::processHealing(Engine::Core::World *world,
       continue;
     }
 
-    healer_comp->timeSinceLastHeal += deltaTime;
+    healer_comp->time_since_last_heal += delta_time;
 
-    if (healer_comp->timeSinceLastHeal < healer_comp->healing_cooldown) {
+    if (healer_comp->time_since_last_heal < healer_comp->healing_cooldown) {
       continue;
     }
 
     bool healed_any = false;
-    auto units = world->getEntitiesWith<Engine::Core::UnitComponent>();
+    auto units = world->get_entities_with<Engine::Core::UnitComponent>();
     for (auto *target : units) {
-      if (target->hasComponent<Engine::Core::PendingRemovalComponent>()) {
+      if (target->has_component<Engine::Core::PendingRemovalComponent>()) {
         continue;
       }
 
-      auto *target_unit = target->getComponent<Engine::Core::UnitComponent>();
+      auto *target_unit = target->get_component<Engine::Core::UnitComponent>();
       auto *target_transform =
-          target->getComponent<Engine::Core::TransformComponent>();
+          target->get_component<Engine::Core::TransformComponent>();
 
       if ((target_unit == nullptr) || (target_transform == nullptr)) {
         continue;
@@ -94,7 +94,7 @@ void HealingSystem::processHealing(Engine::Core::World *world,
     }
 
     if (healed_any) {
-      healer_comp->timeSinceLastHeal = 0.0F;
+      healer_comp->time_since_last_heal = 0.0F;
     }
   }
 }

@@ -6,7 +6,7 @@ namespace Game::Systems::AI {
 
 class DefendBehavior : public AIBehavior {
 public:
-  void execute(const AISnapshot &snapshot, AIContext &context, float deltaTime,
+  void execute(const AISnapshot &snapshot, AIContext &context, float delta_time,
                std::vector<AICommand> &outCommands) override;
 
   [[nodiscard]] auto
