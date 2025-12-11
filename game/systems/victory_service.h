@@ -67,7 +67,7 @@ private:
   float m_elapsedTime = 0.0F;
   float m_startupDelay = 0.0F;
 
-  int m_localOwnerId = 1;
+  int m_local_owner_id = 1;
   QString m_victoryState;
 
   VictoryCallback m_victoryCallback;

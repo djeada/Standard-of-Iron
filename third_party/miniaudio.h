@@ -5187,7 +5187,7 @@ typedef struct
     ma_atomic_vec3f position;  /* The absolute position of the listener. */
     ma_atomic_vec3f direction; /* The direction the listener is facing. The world up vector is config.worldUp. */
     ma_atomic_vec3f velocity;
-    ma_bool32 isEnabled;
+    ma_bool32 is_enabled;
 
     /* Memory management. */
     ma_bool32 _ownsHeap;
@@ -5211,7 +5211,7 @@ MA_API void ma_spatializer_listener_set_speed_of_sound(ma_spatializer_listener* 
 MA_API float ma_spatializer_listener_get_speed_of_sound(const ma_spatializer_listener* pListener);
 MA_API void ma_spatializer_listener_set_world_up(ma_spatializer_listener* pListener, float x, float y, float z);
 MA_API ma_vec3f ma_spatializer_listener_get_world_up(const ma_spatializer_listener* pListener);
-MA_API void ma_spatializer_listener_set_enabled(ma_spatializer_listener* pListener, ma_bool32 isEnabled);
+MA_API void ma_spatializer_listener_set_enabled(ma_spatializer_listener* pListener, ma_bool32 is_enabled);
 MA_API ma_bool32 ma_spatializer_listener_is_enabled(const ma_spatializer_listener* pListener);
 
 
@@ -11369,7 +11369,7 @@ MA_API void ma_engine_listener_set_cone(ma_engine* pEngine, ma_uint32 listenerIn
 MA_API void ma_engine_listener_get_cone(const ma_engine* pEngine, ma_uint32 listenerIndex, float* pInnerAngleInRadians, float* pOuterAngleInRadians, float* pOuterGain);
 MA_API void ma_engine_listener_set_world_up(ma_engine* pEngine, ma_uint32 listenerIndex, float x, float y, float z);
 MA_API ma_vec3f ma_engine_listener_get_world_up(const ma_engine* pEngine, ma_uint32 listenerIndex);
-MA_API void ma_engine_listener_set_enabled(ma_engine* pEngine, ma_uint32 listenerIndex, ma_bool32 isEnabled);
+MA_API void ma_engine_listener_set_enabled(ma_engine* pEngine, ma_uint32 listenerIndex, ma_bool32 is_enabled);
 MA_API ma_bool32 ma_engine_listener_is_enabled(const ma_engine* pEngine, ma_uint32 listenerIndex);
 
 #ifndef MA_NO_RESOURCE_MANAGER
@@ -51764,7 +51764,7 @@ MA_API ma_result ma_spatializer_listener_init_preallocated(const ma_spatializer_
     ma_atomic_vec3f_init(&pListener->position,  ma_vec3f_init_3f(0, 0, 0));
     ma_atomic_vec3f_init(&pListener->direction, ma_vec3f_init_3f(0, 0, -1));
     ma_atomic_vec3f_init(&pListener->velocity,  ma_vec3f_init_3f(0, 0,  0));
-    pListener->isEnabled = MA_TRUE;
+    pListener->is_enabled = MA_TRUE;
 
     /* Swap the forward direction if we're left handed (it was initialized based on right handed). */
     if (pListener->config.handedness == ma_handedness_left) {
@@ -51956,13 +51956,13 @@ MA_API ma_vec3f ma_spatializer_listener_get_world_up(const ma_spatializer_listen
     return pListener->config.worldUp;
 }
 
-MA_API void ma_spatializer_listener_set_enabled(ma_spatializer_listener* pListener, ma_bool32 isEnabled)
+MA_API void ma_spatializer_listener_set_enabled(ma_spatializer_listener* pListener, ma_bool32 is_enabled)
 {
     if (pListener == NULL) {
         return;
     }
 
-    pListener->isEnabled = isEnabled;
+    pListener->is_enabled = is_enabled;
 }
 
 MA_API ma_bool32 ma_spatializer_listener_is_enabled(const ma_spatializer_listener* pListener)
@@ -51971,7 +51971,7 @@ MA_API ma_bool32 ma_spatializer_listener_is_enabled(const ma_spatializer_listene
         return MA_FALSE;
     }
 
-    return pListener->isEnabled;
+    return pListener->is_enabled;
 }
 
 
@@ -78101,13 +78101,13 @@ MA_API ma_vec3f ma_engine_listener_get_world_up(const ma_engine* pEngine, ma_uin
     return ma_spatializer_listener_get_world_up(&pEngine->listeners[listenerIndex]);
 }
 
-MA_API void ma_engine_listener_set_enabled(ma_engine* pEngine, ma_uint32 listenerIndex, ma_bool32 isEnabled)
+MA_API void ma_engine_listener_set_enabled(ma_engine* pEngine, ma_uint32 listenerIndex, ma_bool32 is_enabled)
 {
     if (pEngine == NULL || listenerIndex >= pEngine->listenerCount) {
         return;
     }
 
-    ma_spatializer_listener_set_enabled(&pEngine->listeners[listenerIndex], isEnabled);
+    ma_spatializer_listener_set_enabled(&pEngine->listeners[listenerIndex], is_enabled);
 }
 
 MA_API ma_bool32 ma_engine_listener_is_enabled(const ma_engine* pEngine, ma_uint32 listenerIndex)
