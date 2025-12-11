@@ -80,9 +80,9 @@ void PrimitiveBatchPipeline::setupInstanceAttributes(GLuint vao,
   glVertexAttribDivisor(5, 1);
 
   glEnableVertexAttribArray(6);
-  glVertexAttribPointer(
-      6, Vec4, GL_FLOAT, GL_FALSE, stride,
-      reinterpret_cast<void *>(offsetof(GL::PrimitiveInstanceGpu, color_alpha)));
+  glVertexAttribPointer(6, Vec4, GL_FLOAT, GL_FALSE, stride,
+                        reinterpret_cast<void *>(
+                            offsetof(GL::PrimitiveInstanceGpu, color_alpha)));
   glVertexAttribDivisor(6, 1);
 
   glBindVertexArray(0);

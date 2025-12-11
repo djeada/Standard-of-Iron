@@ -28,7 +28,7 @@ void HeadwrapRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
   }
 
   auto headPoint = [&](const QVector3D &normalized) -> QVector3D {
-    return HumanoidRendererBase::frameLocalPosition(head, normalized);
+    return HumanoidRendererBase::frame_local_position(head, normalized);
   };
 
   QVector3D const band_top = headPoint(QVector3D(0.0F, 0.70F, 0.0F));

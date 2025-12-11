@@ -250,12 +250,12 @@ void RiverbankRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   auto &visibility = Game::Map::VisibilityService::instance();
   const bool use_visibility = visibility.isInitialized();
 
-  auto *shader = renderer.getShader("riverbank");
+  auto *shader = renderer.get_shader("riverbank");
   if (shader == nullptr) {
     return;
   }
 
-  renderer.setCurrentShader(shader);
+  renderer.set_current_shader(shader);
 
   QMatrix4x4 model;
   model.setToIdentity();
@@ -298,7 +298,7 @@ void RiverbankRenderer::submit(Renderer &renderer, ResourceManager *resources) {
     renderer.mesh(mesh, model, QVector3D(1.0F, 1.0F, 1.0F), nullptr, 1.0F);
   }
 
-  renderer.setCurrentShader(nullptr);
+  renderer.set_current_shader(nullptr);
 }
 
 } // namespace Render::GL

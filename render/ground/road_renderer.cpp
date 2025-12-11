@@ -155,16 +155,16 @@ void RoadRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   auto &visibility = Game::Map::VisibilityService::instance();
   const bool use_visibility = visibility.isInitialized();
 
-  auto *shader = renderer.getShader("road");
+  auto *shader = renderer.get_shader("road");
   if (shader == nullptr) {
 
-    shader = renderer.getShader("terrain");
+    shader = renderer.get_shader("terrain");
     if (shader == nullptr) {
       return;
     }
   }
 
-  renderer.setCurrentShader(shader);
+  renderer.set_current_shader(shader);
 
   QMatrix4x4 model;
   model.setToIdentity();
@@ -225,7 +225,7 @@ void RoadRenderer::submit(Renderer &renderer, ResourceManager *resources) {
     renderer.mesh(mesh, model, final_color, nullptr, alpha);
   }
 
-  renderer.setCurrentShader(nullptr);
+  renderer.set_current_shader(nullptr);
 }
 
 } // namespace Render::GL

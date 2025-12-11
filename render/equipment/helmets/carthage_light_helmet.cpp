@@ -114,7 +114,7 @@ void CarthageLightHelmetRenderer::render_bowl(const DrawContext &ctx,
   QVector3D const helmet_origin = head.origin + helmet_offset;
   auto head_point = [&](const QVector3D &n) {
     QVector3D p = n * helmet_scale;
-    return HumanoidRendererBase::frameLocalPosition(head, p) + helmet_offset;
+    return HumanoidRendererBase::frame_local_position(head, p) + helmet_offset;
   };
 
   QVector3D cap_center = helmet_origin + up * (R * 0.62F);
@@ -183,7 +183,7 @@ void CarthageLightHelmetRenderer::render_brim(const DrawContext &ctx,
   const float R = base_r * helmet_scale;
   QVector3D const helmet_offset = helmet_lift_vector(head);
   auto head_point = [&](const QVector3D &n) {
-    return HumanoidRendererBase::frameLocalPosition(head, n) + helmet_offset;
+    return HumanoidRendererBase::frame_local_position(head, n) + helmet_offset;
   };
 
   auto blade = [&](float sx) {
@@ -219,7 +219,7 @@ void CarthageLightHelmetRenderer::render_cheek_guards(
   const float R = base_r * helmet_scale;
   QVector3D const helmet_offset = helmet_lift_vector(head);
   auto head_point = [&](const QVector3D &n) {
-    return HumanoidRendererBase::frameLocalPosition(head, n) + helmet_offset;
+    return HumanoidRendererBase::frame_local_position(head, n) + helmet_offset;
   };
 
   auto side = [&](float sx) {
@@ -261,7 +261,7 @@ void CarthageLightHelmetRenderer::render_nasal_guard(
   const float R = head.radius;
   QVector3D const helmet_offset = helmet_lift_vector(head);
   auto head_point = [&](const QVector3D &n) {
-    return HumanoidRendererBase::frameLocalPosition(head, n) + helmet_offset;
+    return HumanoidRendererBase::frame_local_position(head, n) + helmet_offset;
   };
 
   QVector3D top = head_point(QVector3D(0.0f, 0.70f, 0.80f));
@@ -292,7 +292,7 @@ void CarthageLightHelmetRenderer::render_crest(const DrawContext &ctx,
   const float R = head.radius;
   QVector3D const helmet_offset = helmet_lift_vector(head);
   auto head_point = [&](const QVector3D &n) {
-    return HumanoidRendererBase::frameLocalPosition(head, n) + helmet_offset;
+    return HumanoidRendererBase::frame_local_position(head, n) + helmet_offset;
   };
 
   QVector3D left = head_point(QVector3D(-0.95f, 1.02f, 0.02f));
@@ -326,7 +326,7 @@ void CarthageLightHelmetRenderer::render_rivets(const DrawContext &ctx,
   const float R = head.radius;
   QVector3D const helmet_offset = helmet_lift_vector(head);
   auto head_point = [&](const QVector3D &n) {
-    return HumanoidRendererBase::frameLocalPosition(head, n) + helmet_offset;
+    return HumanoidRendererBase::frame_local_position(head, n) + helmet_offset;
   };
   QVector3D col = m_config.bronze_color * 1.25f;
 

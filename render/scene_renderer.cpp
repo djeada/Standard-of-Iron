@@ -235,7 +235,8 @@ void Renderer::olive_batch(Buffer *instance_buffer, std::size_t instance_count,
   m_active_queue->submit(cmd);
 }
 
-void Renderer::firecamp_batch(Buffer *instance_buffer, std::size_t instance_count,
+void Renderer::firecamp_batch(Buffer *instance_buffer,
+                              std::size_t instance_count,
                               const FireCampBatchParams &params) {
   if ((instance_buffer == nullptr) || instance_count == 0 ||
       (m_active_queue == nullptr)) {
@@ -305,10 +306,9 @@ void Renderer::selection_smoke(const QMatrix4x4 &model, const QVector3D &color,
   }
 }
 
-void Renderer::enqueue_selection_ring(Engine::Core::Entity *,
-                                      Engine::Core::TransformComponent *transform,
-                                      Engine::Core::UnitComponent *unit_comp,
-                                      bool selected, bool hovered) {
+void Renderer::enqueue_selection_ring(
+    Engine::Core::Entity *, Engine::Core::TransformComponent *transform,
+    Engine::Core::UnitComponent *unit_comp, bool selected, bool hovered) {
   if ((!selected && !hovered) || (transform == nullptr)) {
     return;
   }
@@ -473,7 +473,7 @@ void Renderer::render_world(Engine::Core::World *world) {
       distanceToCamera = std::sqrt(dx * dx + dz * dz);
     }
 
-    if ((unit_comp != nullptr) && unit_comp->owner_id != m_localOwnerId) {
+    if ((unit_comp != nullptr) && unit_comp->owner_id != m_local_owner_id) {
       if (visibility_enabled) {
         if (!vis.isVisibleWorld(transform->position.x, transform->position.z)) {
           continue;
@@ -482,8 +482,8 @@ void Renderer::render_world(Engine::Core::World *world) {
     }
 
     bool const is_selected =
-        (m_selectedIds.find(entity->getId()) != m_selectedIds.end());
-    bool const is_hovered = (entity->getId() == m_hoveredEntityId);
+        (m_selected_ids.find(entity->getId()) != m_selected_ids.end());
+    bool const is_hovered = (entity->getId() == m_hovered_entity_id);
 
     QMatrix4x4 model_matrix;
     model_matrix.translate(transform->position.x, transform->position.y,
@@ -525,7 +525,7 @@ void Renderer::render_world(Engine::Core::World *world) {
         }
 
         enqueue_selection_ring(entity, transform, unit_comp, is_selected,
-                              is_hovered);
+                               is_hovered);
         drawn_by_registry = true;
       }
     }
@@ -605,14 +605,15 @@ void Renderer::render_world(Engine::Core::World *world) {
         mesh(contact_quad, c2, col, white, outer_alpha);
       }
     }
-    enqueue_selection_ring(entity, transform, unit_comp, is_selected, is_hovered);
+    enqueue_selection_ring(entity, transform, unit_comp, is_selected,
+                           is_hovered);
     mesh(mesh_to_draw, model_matrix, color,
          (res != nullptr) ? res->white() : nullptr, 1.0F);
   }
 
   if ((m_active_queue != nullptr) && batcher.total_count() > 0) {
     PrimitiveBatchParams params;
-    params.viewProj = m_view_proj;
+    params.view_proj = m_view_proj;
 
     if (batcher.sphere_count() > 0) {
       PrimitiveBatchCmd cmd;
