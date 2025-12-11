@@ -68,7 +68,7 @@ void HorseArcherRendererBase::adjust_variation(
 
 void HorseArcherRendererBase::get_variant(const DrawContext &ctx, uint32_t seed,
                                           HumanoidVariant &v) const {
-  QVector3D const team_tint = resolveTeamTint(ctx);
+  QVector3D const team_tint = resolve_team_tint(ctx);
   v.palette = makeHumanoidPalette(team_tint, seed);
 }
 

@@ -83,8 +83,8 @@ void StoneRenderer::submit(Renderer &renderer, ResourceManager *resources) {
     return;
   }
 
-  renderer.stoneBatch(m_stoneInstanceBuffer.get(), m_stoneInstanceCount,
-                      m_stoneParams);
+  renderer.stone_batch(m_stoneInstanceBuffer.get(), m_stoneInstanceCount,
+                       m_stoneParams);
 }
 
 void StoneRenderer::clear() {
@@ -223,8 +223,8 @@ void StoneRenderer::generateStoneInstances() {
     float const rotation = rand_01(state) * MathConstants::k_two_pi;
 
     StoneInstanceGpu instance;
-    instance.posScale = QVector4D(world_x, world_y + 0.01F, world_z, scale);
-    instance.colorRot = QVector4D(color.x(), color.y(), color.z(), rotation);
+    instance.pos_scale = QVector4D(world_x, world_y + 0.01F, world_z, scale);
+    instance.color_rot = QVector4D(color.x(), color.y(), color.z(), rotation);
     m_stoneInstances.push_back(instance);
     return true;
   };

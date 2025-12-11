@@ -20,13 +20,13 @@ public:
       const std::vector<std::shared_ptr<IHorseEquipmentRenderer>> &attachments);
 
 protected:
-  void drawAttachments(const DrawContext &ctx, const AnimationInputs &anim,
-                       const HumanoidAnimationContext &rider_ctx,
-                       HorseProfile &profile,
-                       const MountedAttachmentFrame &mount, float phase,
-                       float bob, float rein_slack,
-                       const HorseBodyFrames &frames,
-                       ISubmitter &out) const override;
+  void draw_attachments(const DrawContext &ctx, const AnimationInputs &anim,
+                        const HumanoidAnimationContext &rider_ctx,
+                        HorseProfile &profile,
+                        const MountedAttachmentFrame &mount, float phase,
+                        float bob, float rein_slack,
+                        const HorseBodyFrames &frames,
+                        ISubmitter &out) const override;
 
 private:
   std::vector<std::shared_ptr<IHorseEquipmentRenderer>> m_attachments;

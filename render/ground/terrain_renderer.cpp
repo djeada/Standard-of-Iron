@@ -122,8 +122,8 @@ void TerrainRenderer::submit(Renderer &renderer, ResourceManager *resources) {
       }
     }
 
-    renderer.terrainChunk(chunk.mesh.get(), k_identity_matrix, chunk.params,
-                          0x0080U, true, 0.0F);
+    renderer.terrain_chunk(chunk.mesh.get(), k_identity_matrix, chunk.params,
+                           0x0080U, true, 0.0F);
   }
 }
 

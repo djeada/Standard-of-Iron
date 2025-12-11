@@ -253,7 +253,7 @@ auto CommandController::onPatrolClick(qreal sx, qreal sy, int viewportWidth,
 
 auto CommandController::setRallyAtScreen(qreal sx, qreal sy, int viewportWidth,
                                          int viewportHeight, void *camera,
-                                         int localOwnerId) -> CommandResult {
+                                         int local_owner_id) -> CommandResult {
   CommandResult result;
   if ((m_world == nullptr) || (m_selection_system == nullptr) ||
       (m_pickingService == nullptr) || (camera == nullptr)) {
@@ -268,15 +268,15 @@ auto CommandController::setRallyAtScreen(qreal sx, qreal sy, int viewportWidth,
   }
 
   Game::Systems::ProductionService::setRallyForFirstSelectedBarracks(
-      *m_world, m_selection_system->get_selected_units(), localOwnerId, hit.x(),
-      hit.z());
+      *m_world, m_selection_system->get_selected_units(), local_owner_id,
+      hit.x(), hit.z());
 
   result.inputConsumed = true;
   return result;
 }
 
 void CommandController::recruitNearSelected(const QString &unit_type,
-                                            int localOwnerId) {
+                                            int local_owner_id) {
   if ((m_world == nullptr) || (m_selection_system == nullptr)) {
     return;
   }
@@ -288,7 +288,7 @@ void CommandController::recruitNearSelected(const QString &unit_type,
 
   auto result =
       Game::Systems::ProductionService::startProductionForFirstSelectedBarracks(
-          *m_world, sel, localOwnerId, unit_type.toStdString());
+          *m_world, sel, local_owner_id, unit_type.toStdString());
 
   if (result == Game::Systems::ProductionResult::GlobalTroopLimitReached) {
     emit troopLimitReached();

@@ -18,7 +18,7 @@ public:
   ~FogRenderer() override = default;
 
   void setEnabled(bool enabled) { m_enabled = enabled; }
-  [[nodiscard]] auto isEnabled() const -> bool { return m_enabled; }
+  [[nodiscard]] auto is_enabled() const -> bool { return m_enabled; }
 
   void updateMask(int width, int height, float tile_size,
                   const std::vector<std::uint8_t> &cells);
