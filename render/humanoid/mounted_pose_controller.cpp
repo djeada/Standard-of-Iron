@@ -174,13 +174,13 @@ void MountedPoseController::applySaddleClearance(
     const MountedAttachmentFrame &mount, const HorseDimensions &dims,
     float forward_bias, float up_bias) {
   float const forward_pull =
-      std::max(0.0F, forward_bias) * (dims.bodyWidth * 0.12F) +
-      dims.seatForwardOffset * 0.30F;
+      std::max(0.0F, forward_bias) * (dims.body_width * 0.12F) +
+      dims.seat_forward_offset * 0.30F;
   float const up_lift =
-      std::max(0.0F, up_bias) * (dims.saddleThickness * 0.85F);
+      std::max(0.0F, up_bias) * (dims.saddle_thickness * 0.85F);
 
   QVector3D const offset = -mount.seat_forward * forward_pull +
-                           mount.seat_up * (up_lift + dims.bodyHeight * 0.01F);
+                           mount.seat_up * (up_lift + dims.body_height * 0.01F);
   m_pose.pelvis_pos += offset;
   translateUpperBody(offset);
   calculateRidingKnees(mount);
@@ -207,7 +207,7 @@ void MountedPoseController::stabilizeUpperBody(
   m_pose.shoulder_l += mid_offset;
   m_pose.shoulder_r += mid_offset;
 
-  float const desired_half = std::clamp(dims.bodyWidth * 0.44F, 0.10F, 0.32F);
+  float const desired_half = std::clamp(dims.body_width * 0.44F, 0.10F, 0.32F);
   m_pose.shoulder_l = desired_mid - right_flat * desired_half;
   m_pose.shoulder_r = desired_mid + right_flat * desired_half;
 
@@ -347,8 +347,8 @@ void MountedPoseController::applyShieldDefense(
 void MountedPoseController::applyShieldStowed(
     const MountedAttachmentFrame &mount, const HorseDimensions &dims) {
   QVector3D const rest =
-      seatRelative(mount, dims.bodyLength * -0.05F, -dims.bodyWidth * 0.55F,
-                   dims.saddleThickness * 0.5F);
+      seatRelative(mount, dims.body_length * -0.05F, -dims.body_width * 0.55F,
+                   dims.saddle_thickness * 0.5F);
   getHand(true) = rest;
   const QVector3D left_outward = computeOutwardDir(true);
   getElbow(true) = solveElbowIK(true, getShoulder(true), rest, left_outward,
@@ -361,9 +361,10 @@ void MountedPoseController::applySwordIdlePose(
     const MountedAttachmentFrame &mount, const HorseDimensions &dims) {
   QVector3D const shoulder_r = getShoulder(false);
   QVector3D const sword_anchor =
-      shoulder_r + mount.seat_right * (dims.bodyWidth * 0.90F) +
-      mount.seat_forward * (dims.bodyLength * 0.22F) +
-      mount.seat_up * (dims.bodyHeight * 0.06F + dims.saddleThickness * 0.10F);
+      shoulder_r + mount.seat_right * (dims.body_width * 0.90F) +
+      mount.seat_forward * (dims.body_length * 0.22F) +
+      mount.seat_up *
+          (dims.body_height * 0.06F + dims.saddle_thickness * 0.10F);
 
   getHand(false) = sword_anchor;
   const QVector3D right_outward = computeOutwardDir(false);

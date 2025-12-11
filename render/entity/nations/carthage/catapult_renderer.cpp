@@ -224,8 +224,8 @@ void register_catapult_renderer(EntityRendererRegistry &registry) {
         Texture *white_tex = nullptr;
 
         if (auto *scene_renderer = dynamic_cast<Renderer *>(&out)) {
-          unit_cube = scene_renderer->getMeshCube();
-          white_tex = scene_renderer->getWhiteTexture();
+          unit_cube = scene_renderer->get_mesh_cube();
+          white_tex = scene_renderer->get_white_texture();
         }
 
         if (unit_cube == nullptr || white_tex == nullptr) {
@@ -245,7 +245,8 @@ void register_catapult_renderer(EntityRendererRegistry &registry) {
         drawBaseFrame(p, out, unit_cube, white_tex, palette);
         drawWheels(p, out, unit_cube, white_tex, palette);
         drawTorsionMechanism(p, out, unit_cube, white_tex, palette);
-        drawThrowingArm(p, out, unit_cube, white_tex, palette, p.animation_time);
+        drawThrowingArm(p, out, unit_cube, white_tex, palette,
+                        p.animation_time);
         drawWindlass(p, out, unit_cube, white_tex, palette);
         drawDecorations(p, out, unit_cube, white_tex, palette);
       });

@@ -90,7 +90,7 @@ TEST_F(BodyFramesTest, FrameLocalPositionComputesCorrectly) {
 
   // Test frame-local position computation
   QVector3D local(1.0F, 0.0F, 0.0F); // Right
-  QVector3D world = HumanoidRendererBase::frameLocalPosition(frame, local);
+  QVector3D world = HumanoidRendererBase::frame_local_position(frame, local);
 
   // Expected: origin + right * (1.0 * radius)
   QVector3D expected = QVector3D(1.5F, 2.0F, 3.0F);
@@ -107,7 +107,7 @@ TEST_F(BodyFramesTest, FrameLocalPositionWithMultipleAxes) {
 
   // Test diagonal position
   QVector3D local(1.0F, 1.0F, 1.0F);
-  QVector3D world = HumanoidRendererBase::frameLocalPosition(frame, local);
+  QVector3D world = HumanoidRendererBase::frame_local_position(frame, local);
 
   // Expected: origin + right*1 + up*1 + forward*1
   QVector3D expected = QVector3D(1.0F, 1.0F, 1.0F);
@@ -126,7 +126,7 @@ TEST_F(BodyFramesTest, MakeFrameLocalTransformCreatesValidMatrix) {
   QVector3D localOffset(0.0F, 0.0F, 0.0F);
   float uniformScale = 1.0F;
 
-  QMatrix4x4 result = HumanoidRendererBase::makeFrameLocalTransform(
+  QMatrix4x4 result = HumanoidRendererBase::make_frame_local_transform(
       parent, frame, localOffset, uniformScale);
 
   // Verify the translation component
@@ -144,18 +144,18 @@ TEST_F(BodyFramesTest, LegacyHeadFunctionsStillWork) {
   headFrame.forward = QVector3D(0.0F, 0.0F, 1.0F);
   headFrame.radius = HP::HEAD_RADIUS;
 
-  // Test legacy headLocalPosition function
+  // Test legacy head_local_position function
   QVector3D local(1.0F, 0.0F, 0.0F);
-  QVector3D world = HumanoidRendererBase::headLocalPosition(headFrame, local);
+  QVector3D world = HumanoidRendererBase::head_local_position(headFrame, local);
   QVector3D expected = QVector3D(HP::HEAD_RADIUS, head_center_y, 0.0F);
   EXPECT_TRUE(approxEqual(world, expected));
 
-  // Test legacy makeHeadLocalTransform function
+  // Test legacy make_head_local_transform function
   QMatrix4x4 parent;
   QVector3D localOffset(0.0F, 0.0F, 0.0F);
   float uniformScale = 1.0F;
 
-  QMatrix4x4 result = HumanoidRendererBase::makeHeadLocalTransform(
+  QMatrix4x4 result = HumanoidRendererBase::make_head_local_transform(
       parent, headFrame, localOffset, uniformScale);
 
   QVector3D translation = result.map(QVector3D(0.0F, 0.0F, 0.0F));

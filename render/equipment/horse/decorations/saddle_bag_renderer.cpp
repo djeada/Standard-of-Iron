@@ -14,7 +14,7 @@ void SaddleBagRenderer::render(const DrawContext &ctx,
 
   const HorseAttachmentFrame &back = frames.back_center;
 
-  QVector3D const bag_color = variant.saddleColor * 0.85F;
+  QVector3D const bag_color = variant.saddle_color * 0.85F;
 
   for (int i = 0; i < 2; ++i) {
     float const side = (i == 0) ? 1.0F : -1.0F;

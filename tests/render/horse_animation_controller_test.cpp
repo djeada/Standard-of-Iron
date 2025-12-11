@@ -13,7 +13,7 @@ protected:
     // Create a basic horse profile
     QVector3D const leather_base(0.5F, 0.4F, 0.3F);
     QVector3D const cloth_base(0.7F, 0.2F, 0.1F);
-    profile = makeHorseProfile(12345, leather_base, cloth_base);
+    profile = make_horse_profile(12345, leather_base, cloth_base);
 
     // Initialize animation inputs
     anim.time = 0.0F;
@@ -59,22 +59,22 @@ TEST_F(HorseAnimationControllerTest, SetGaitUpdatesParameters) {
   // Test walk gait
   controller.setGait(GaitType::WALK);
   controller.updateGaitParameters();
-  EXPECT_TRUE(approxEqual(profile.gait.cycleTime, 1.0F, 0.01F));
+  EXPECT_TRUE(approxEqual(profile.gait.cycle_time, 1.0F, 0.01F));
 
   // Test trot gait
   controller.setGait(GaitType::TROT);
   controller.updateGaitParameters();
-  EXPECT_TRUE(approxEqual(profile.gait.cycleTime, 0.60F, 0.01F));
+  EXPECT_TRUE(approxEqual(profile.gait.cycle_time, 0.60F, 0.01F));
 
   // Test canter gait
   controller.setGait(GaitType::CANTER);
   controller.updateGaitParameters();
-  EXPECT_TRUE(approxEqual(profile.gait.cycleTime, 0.50F, 0.01F));
+  EXPECT_TRUE(approxEqual(profile.gait.cycle_time, 0.50F, 0.01F));
 
   // Test gallop gait
   controller.setGait(GaitType::GALLOP);
   controller.updateGaitParameters();
-  EXPECT_TRUE(approxEqual(profile.gait.cycleTime, 0.38F, 0.01F));
+  EXPECT_TRUE(approxEqual(profile.gait.cycle_time, 0.38F, 0.01F));
 }
 
 TEST_F(HorseAnimationControllerTest, IdleGeneratesBobbing) {
@@ -108,19 +108,19 @@ TEST_F(HorseAnimationControllerTest, AccelerateChangesGait) {
   // Advance time to complete transition
   anim.time += 0.5F;
   controller.updateGaitParameters();
-  EXPECT_TRUE(approxEqual(profile.gait.cycleTime, 1.0F, 0.01F));
+  EXPECT_TRUE(approxEqual(profile.gait.cycle_time, 1.0F, 0.01F));
 
   // Accelerate to trot speed
   controller.accelerate(3.0F);
   anim.time += 0.5F;
   controller.updateGaitParameters();
-  EXPECT_TRUE(approxEqual(profile.gait.cycleTime, 0.60F, 0.01F));
+  EXPECT_TRUE(approxEqual(profile.gait.cycle_time, 0.60F, 0.01F));
 
   // Accelerate to gallop speed
   controller.accelerate(6.0F);
   anim.time += 0.5F;
   controller.updateGaitParameters();
-  EXPECT_TRUE(approxEqual(profile.gait.cycleTime, 0.38F, 0.01F));
+  EXPECT_TRUE(approxEqual(profile.gait.cycle_time, 0.38F, 0.01F));
 }
 
 TEST_F(HorseAnimationControllerTest, DecelerateChangesGait) {
@@ -134,13 +134,13 @@ TEST_F(HorseAnimationControllerTest, DecelerateChangesGait) {
   // Advance time to complete transition
   anim.time += 0.5F;
   controller.updateGaitParameters();
-  EXPECT_TRUE(approxEqual(profile.gait.cycleTime, 0.50F, 0.01F));
+  EXPECT_TRUE(approxEqual(profile.gait.cycle_time, 0.50F, 0.01F));
 
   // Decelerate to trot
   controller.decelerate(2.0F);
   anim.time += 0.5F;
   controller.updateGaitParameters();
-  EXPECT_TRUE(approxEqual(profile.gait.cycleTime, 0.60F, 0.01F));
+  EXPECT_TRUE(approxEqual(profile.gait.cycle_time, 0.60F, 0.01F));
 }
 
 TEST_F(HorseAnimationControllerTest, TurnSetsAngles) {
@@ -296,7 +296,7 @@ TEST_F(HorseAnimationControllerTest, GaitTransitionsAreSmoothAndGradual) {
 
   // Start at walk
   controller.setGait(GaitType::WALK);
-  float const walk_cycle = profile.gait.cycleTime;
+  float const walk_cycle = profile.gait.cycle_time;
 
   // Accelerate to gallop
   controller.accelerate(10.0F);
@@ -304,12 +304,12 @@ TEST_F(HorseAnimationControllerTest, GaitTransitionsAreSmoothAndGradual) {
   // After short time, should be transitioning (not at final value)
   anim.time += 0.1F;
   controller.updateGaitParameters();
-  float const transition_cycle1 = profile.gait.cycleTime;
+  float const transition_cycle1 = profile.gait.cycle_time;
   EXPECT_GT(transition_cycle1, 0.38F);      // Not yet at gallop cycle time
   EXPECT_LT(transition_cycle1, walk_cycle); // But moving toward it
 
   // After enough time, should reach final value
   anim.time += 0.5F;
   controller.updateGaitParameters();
-  EXPECT_TRUE(approxEqual(profile.gait.cycleTime, 0.38F, 0.01F));
+  EXPECT_TRUE(approxEqual(profile.gait.cycle_time, 0.38F, 0.01F));
 }

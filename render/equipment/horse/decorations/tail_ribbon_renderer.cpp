@@ -15,7 +15,7 @@ void TailRibbonRenderer::render(const DrawContext &ctx,
 
   const HorseAttachmentFrame &tail = frames.tail_base;
 
-  QVector3D const ribbon_color = variant.blanketColor;
+  QVector3D const ribbon_color = variant.blanket_color;
 
   QVector3D const ribbon_start = tail.origin + tail.up * 0.05F;
   QVector3D const ribbon_end =

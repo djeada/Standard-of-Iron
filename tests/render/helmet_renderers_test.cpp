@@ -25,9 +25,9 @@ public:
     cylinder_count++;
   }
 
-  void selectionRing(const QMatrix4x4 & /*model*/, float /*alphaInner*/,
-                     float /*alphaOuter*/,
-                     const QVector3D & /*color*/) override {
+  void selection_ring(const QMatrix4x4 & /*model*/, float /*alphaInner*/,
+                      float /*alphaOuter*/,
+                      const QVector3D & /*color*/) override {
     // Not used in helmet rendering
   }
 
@@ -37,8 +37,9 @@ public:
     // Not used in helmet rendering
   }
 
-  void selectionSmoke(const QMatrix4x4 & /*model*/, const QVector3D & /*color*/,
-                      float /*baseAlpha*/) override {
+  void selection_smoke(const QMatrix4x4 & /*model*/,
+                       const QVector3D & /*color*/,
+                       float /*baseAlpha*/) override {
     // Not used in helmet rendering
   }
 

@@ -120,8 +120,8 @@ void OliveRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   }
 
   OliveBatchParams params = m_oliveParams;
-  params.time = renderer.getAnimationTime();
-  renderer.oliveBatch(m_oliveInstanceBuffer.get(), visible_count, params);
+  params.time = renderer.get_animation_time();
+  renderer.olive_batch(m_oliveInstanceBuffer.get(), visible_count, params);
 }
 
 void OliveRenderer::clear() {

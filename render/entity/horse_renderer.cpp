@@ -18,7 +18,7 @@ void HorseRenderer::setAttachments(
   m_attachments = attachments;
 }
 
-void HorseRenderer::drawAttachments(
+void HorseRenderer::draw_attachments(
     const DrawContext &ctx, const AnimationInputs &anim,
     const HumanoidAnimationContext &, HorseProfile &profile,
     const MountedAttachmentFrame &, float phase, float bob, float,

@@ -14,7 +14,7 @@ PrimitiveBatcher::PrimitiveBatcher() {
 PrimitiveBatcher::~PrimitiveBatcher() = default;
 
 void PrimitiveBatcher::add_sphere(const QMatrix4x4 &transform,
-                                 const QVector3D &color, float alpha) {
+                                  const QVector3D &color, float alpha) {
   PrimitiveInstanceGpu inst;
   inst.set_transform(transform);
   inst.set_color(color, alpha);
@@ -23,7 +23,7 @@ void PrimitiveBatcher::add_sphere(const QMatrix4x4 &transform,
 }
 
 void PrimitiveBatcher::add_cylinder(const QMatrix4x4 &transform,
-                                   const QVector3D &color, float alpha) {
+                                    const QVector3D &color, float alpha) {
   PrimitiveInstanceGpu inst;
   inst.set_transform(transform);
   inst.set_color(color, alpha);
@@ -32,7 +32,7 @@ void PrimitiveBatcher::add_cylinder(const QMatrix4x4 &transform,
 }
 
 void PrimitiveBatcher::add_cone(const QMatrix4x4 &transform,
-                               const QVector3D &color, float alpha) {
+                                const QVector3D &color, float alpha) {
   PrimitiveInstanceGpu inst;
   inst.set_transform(transform);
   inst.set_color(color, alpha);

@@ -17,10 +17,10 @@ public:
                       const HumanoidAnimationContext &anim_ctx, uint32_t seed,
                       HumanoidPose &pose) const override;
 
-  void addAttachments(const DrawContext &ctx, const HumanoidVariant &v,
-                      const HumanoidPose &pose,
-                      const HumanoidAnimationContext &anim_ctx,
-                      ISubmitter &out) const override;
+  void add_attachments(const DrawContext &ctx, const HumanoidVariant &v,
+                       const HumanoidPose &pose,
+                       const HumanoidAnimationContext &anim_ctx,
+                       ISubmitter &out) const override;
 
   virtual auto get_mount_scale() const -> float = 0;
 
