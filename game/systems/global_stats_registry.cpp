@@ -76,12 +76,11 @@ void GlobalStatsRegistry::on_unit_spawned(
   auto &stats = m_player_stats[event.owner_id];
 
   if (event.spawn_type != Game::Units::SpawnType::Barracks) {
-    int const individuals_per_unit =
-        Game::Units::TroopConfig::instance().getIndividualsPerUnit(
+    int const production_cost =
+        Game::Units::TroopConfig::instance().getProductionCost(
             event.spawn_type);
-    stats.troops_recruited += individuals_per_unit;
+    stats.troops_recruited += production_cost;
   } else {
-
     stats.barracks_owned++;
   }
 }
@@ -107,10 +106,10 @@ void GlobalStatsRegistry::on_unit_died(
       auto &stats = m_player_stats[event.killer_owner_id];
 
       if (event.spawn_type != Game::Units::SpawnType::Barracks) {
-        int const individuals_per_unit =
-            Game::Units::TroopConfig::instance().getIndividualsPerUnit(
+        int const production_cost =
+            Game::Units::TroopConfig::instance().getProductionCost(
                 event.spawn_type);
-        stats.enemies_killed += individuals_per_unit;
+        stats.enemies_killed += production_cost;
       }
     }
   }
@@ -156,10 +155,10 @@ void GlobalStatsRegistry::rebuild_from_world(Engine::Core::World &world) {
     if (unit->spawn_type == Game::Units::SpawnType::Barracks) {
       stats.barracks_owned++;
     } else {
-      int const individuals_per_unit =
-          Game::Units::TroopConfig::instance().getIndividualsPerUnit(
+      int const production_cost =
+          Game::Units::TroopConfig::instance().getProductionCost(
               unit->spawn_type);
-      stats.troops_recruited += individuals_per_unit;
+      stats.troops_recruited += production_cost;
     }
   }
 }

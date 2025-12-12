@@ -44,7 +44,7 @@ struct SkirmishLoadResult {
   int grid_width = 50;
   int grid_height = 50;
   float tile_size = 1.0F;
-  int max_troops_per_player = 50;
+  int max_troops_per_player = 500;
   VictoryConfig victoryConfig;
   QVector3D focusPosition;
   bool hasFocusPosition = false;
