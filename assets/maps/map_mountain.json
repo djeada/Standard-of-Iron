@@ -2,7 +2,7 @@
   "name": "Mountain Strongholds",
   "description": "A mountainous battlefield with strategic high ground and capture points",
   "coordSystem": "grid",
-  "maxTroopsPerPlayer": 500,
+  "maxTroopsPerPlayer": 2000,
   "grid": {
     "width": 300,
     "height": 300,
