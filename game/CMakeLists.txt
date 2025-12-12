@@ -64,6 +64,7 @@ add_library(game_systems STATIC
     map/world_bootstrap.cpp
     map/map_catalog.cpp
     map/skirmish_loader.cpp
+    map/minimap/minimap_generator.cpp
     visuals/visual_catalog.cpp
     units/unit.cpp
     units/archer.cpp
