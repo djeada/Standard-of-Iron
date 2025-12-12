@@ -6,6 +6,7 @@ add_executable(standard_of_iron_tests
     core/serialization_test.cpp
     core/ground_type_test.cpp
     db/save_storage_test.cpp
+    map/minimap_generator_test.cpp
     render/pose_controller_test.cpp
     render/pose_controller_compatibility_test.cpp
     render/mounted_pose_controller_test.cpp
