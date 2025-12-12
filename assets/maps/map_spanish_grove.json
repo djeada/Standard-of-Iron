@@ -2,7 +2,7 @@
   "name": "Spanish Olive Grove",
   "description": "A Mediterranean battlefield featuring rolling hills covered with ancient olive trees",
   "coordSystem": "grid",
-  "maxTroopsPerPlayer": 500,
+  "maxTroopsPerPlayer": 2000,
   "grid": {
     "width": 280,
     "height": 280,

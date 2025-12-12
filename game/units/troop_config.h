@@ -23,6 +23,22 @@ public:
     return 1;
   }
 
+  auto getProductionCost(TroopType unit_type) const -> int {
+    auto it = m_productionCost.find(unit_type);
+    if (it != m_productionCost.end()) {
+      return it->second;
+    }
+    return 50;
+  }
+
+  auto getBuildTime(TroopType unit_type) const -> float {
+    auto it = m_buildTime.find(unit_type);
+    if (it != m_buildTime.end()) {
+      return it->second;
+    }
+    return 5.0F;
+  }
+
   auto getMaxUnitsPerRow(TroopType unit_type) const -> int {
     auto it = m_maxUnitsPerRow.find(unit_type);
     if (it != m_maxUnitsPerRow.end()) {
@@ -57,6 +73,30 @@ public:
       return getIndividualsPerUnit(*troop_type_opt);
     }
     return 1;
+  }
+
+  auto getProductionCost(const std::string &unit_type) const -> int {
+    return getProductionCost(troop_typeFromString(unit_type));
+  }
+
+  auto getProductionCost(SpawnType spawn_type) const -> int {
+    auto troop_type_opt = spawn_typeToTroopType(spawn_type);
+    if (troop_type_opt) {
+      return getProductionCost(*troop_type_opt);
+    }
+    return 50;
+  }
+
+  auto getBuildTime(const std::string &unit_type) const -> float {
+    return getBuildTime(troop_typeFromString(unit_type));
+  }
+
+  auto getBuildTime(SpawnType spawn_type) const -> float {
+    auto troop_type_opt = spawn_typeToTroopType(spawn_type);
+    if (troop_type_opt) {
+      return getBuildTime(*troop_type_opt);
+    }
+    return 5.0F;
   }
 
   auto getMaxUnitsPerRow(const std::string &unit_type) const -> int {
@@ -149,6 +189,8 @@ private:
 
   void reload_from_catalog() {
     m_individuals_per_unit.clear();
+    m_productionCost.clear();
+    m_buildTime.clear();
     m_maxUnitsPerRow.clear();
     m_selectionRingSize.clear();
     m_selectionRingYOffset.clear();
@@ -159,6 +201,8 @@ private:
       const auto &troop_class = entry.second;
       auto type = troop_class.unit_type;
       m_individuals_per_unit[type] = troop_class.individuals_per_unit;
+      m_productionCost[type] = troop_class.production.cost;
+      m_buildTime[type] = troop_class.production.build_time;
       m_maxUnitsPerRow[type] = troop_class.max_units_per_row;
       m_selectionRingSize[type] = troop_class.visuals.selection_ring_size;
       m_selectionRingYOffset[type] =
@@ -169,6 +213,8 @@ private:
   }
 
   std::unordered_map<TroopType, int> m_individuals_per_unit;
+  std::unordered_map<TroopType, int> m_productionCost;
+  std::unordered_map<TroopType, float> m_buildTime;
   std::unordered_map<TroopType, int> m_maxUnitsPerRow;
   std::unordered_map<TroopType, float> m_selectionRingSize;
   std::unordered_map<TroopType, float> m_selectionRingYOffset;
