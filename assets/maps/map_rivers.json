@@ -2,7 +2,7 @@
   "name": "River Crossroads",
   "description": "Strategic river crossings with bridges and neutral barracks to capture",
   "coordSystem": "grid",
-  "maxTroopsPerPlayer": 300,
+  "maxTroopsPerPlayer": 2000,
   "grid": {
     "width": 120,
     "height": 120,
