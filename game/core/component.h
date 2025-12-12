@@ -23,7 +23,7 @@ inline constexpr float kAttackMeleeRange = 1.5F;
 inline constexpr float kAttackHeightTolerance = 2.0F;
 
 inline constexpr float kProductionDefaultBuildTime = 4.0F;
-inline constexpr int kProductionMaxUnits = 5;
+inline constexpr int kProductionMaxUnits = 10000;
 
 inline constexpr float kCaptureRequiredTime = 15.0F;
 

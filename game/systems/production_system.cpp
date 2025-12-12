@@ -66,8 +66,9 @@ void ProductionSystem::update(Engine::Core::World *world, float delta_time) {
     const auto current_profile = TroopProfileService::instance().get_profile(
         nation_id, prod->product_type);
     int const individuals_per_unit = current_profile.individuals_per_unit;
+    int const production_cost = current_profile.production.cost;
 
-    if (prod->produced_count + individuals_per_unit > prod->max_units) {
+    if (prod->produced_count + production_cost > prod->max_units) {
       prod->in_progress = false;
       continue;
     }
@@ -82,7 +83,7 @@ void ProductionSystem::update(Engine::Core::World *world, float delta_time) {
             Engine::Core::World::count_troops_for_player(u->owner_id);
         int const max_troops =
             Game::GameConfig::instance().getMaxTroopsPerPlayer();
-        if (current_troops + individuals_per_unit > max_troops) {
+        if (current_troops + production_cost > max_troops) {
           prod->in_progress = false;
           prod->time_remaining = 0.0F;
           continue;
@@ -111,7 +112,7 @@ void ProductionSystem::update(Engine::Core::World *world, float delta_time) {
           }
         }
 
-        prod->produced_count += individuals_per_unit;
+        prod->produced_count += production_cost;
       }
 
       prod->in_progress = false;

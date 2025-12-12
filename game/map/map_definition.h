@@ -67,7 +67,7 @@ struct MapDefinition {
   std::vector<FireCamp> firecamps;
   BiomeSettings biome;
   CoordSystem coordSystem = CoordSystem::Grid;
-  int max_troops_per_player = 50;
+  int max_troops_per_player = 500;
   VictoryConfig victory;
 };
 
