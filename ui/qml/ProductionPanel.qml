@@ -379,9 +379,9 @@ Rectangle {
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 onClicked: {
-                                    if (parent.isEnabled) {
+                                    if (parent.isEnabled)
                                         productionPanel.recruitUnit("archer");
-                                    }
+
                                 }
                                 cursorShape: parent.isEnabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
@@ -485,9 +485,9 @@ Rectangle {
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 onClicked: {
-                                    if (parent.isEnabled) {
+                                    if (parent.isEnabled)
                                         productionPanel.recruitUnit("swordsman");
-                                    }
+
                                 }
                                 cursorShape: parent.isEnabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
@@ -591,9 +591,9 @@ Rectangle {
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 onClicked: {
-                                    if (parent.isEnabled) {
+                                    if (parent.isEnabled)
                                         productionPanel.recruitUnit("spearman");
-                                    }
+
                                 }
                                 cursorShape: parent.isEnabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
@@ -697,9 +697,9 @@ Rectangle {
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 onClicked: {
-                                    if (parent.isEnabled) {
+                                    if (parent.isEnabled)
                                         productionPanel.recruitUnit("horse_swordsman");
-                                    }
+
                                 }
                                 cursorShape: parent.isEnabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
@@ -803,9 +803,9 @@ Rectangle {
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 onClicked: {
-                                    if (parent.isEnabled) {
+                                    if (parent.isEnabled)
                                         productionPanel.recruitUnit("horse_archer");
-                                    }
+
                                 }
                                 cursorShape: parent.isEnabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
@@ -909,9 +909,9 @@ Rectangle {
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 onClicked: {
-                                    if (parent.isEnabled) {
+                                    if (parent.isEnabled)
                                         productionPanel.recruitUnit("horse_spearman");
-                                    }
+
                                 }
                                 cursorShape: parent.isEnabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
@@ -1015,9 +1015,9 @@ Rectangle {
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 onClicked: {
-                                    if (parent.isEnabled) {
+                                    if (parent.isEnabled)
                                         productionPanel.recruitUnit("catapult");
-                                    }
+
                                 }
                                 cursorShape: parent.isEnabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
@@ -1121,9 +1121,9 @@ Rectangle {
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 onClicked: {
-                                    if (parent.isEnabled) {
+                                    if (parent.isEnabled)
                                         productionPanel.recruitUnit("ballista");
-                                    }
+
                                 }
                                 cursorShape: parent.isEnabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
@@ -1227,9 +1227,9 @@ Rectangle {
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 onClicked: {
-                                    if (parent.isEnabled) {
+                                    if (parent.isEnabled)
                                         productionPanel.recruitUnit("healer");
-                                    }
+
                                 }
                                 cursorShape: parent.isEnabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
