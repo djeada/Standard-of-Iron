@@ -29,13 +29,62 @@ struct CarthageCatapultPalette {
   QVector3D rope{0.58F, 0.50F, 0.38F};
   QVector3D leather{0.48F, 0.35F, 0.22F};
   QVector3D purple_trim{0.45F, 0.18F, 0.55F};
+  QVector3D stone{0.55F, 0.52F, 0.48F};
   QVector3D team{0.8F, 0.9F, 1.0F};
+};
+
+enum class CatapultAnimState { Idle, Loading, Firing, Resetting };
+
+struct CatapultAnimContext {
+  CatapultAnimState state{CatapultAnimState::Idle};
+  float loading_progress{0.0F};
+  float firing_progress{0.0F};
+  bool show_stone{false};
 };
 
 inline auto make_palette(const QVector3D &team) -> CarthageCatapultPalette {
   CarthageCatapultPalette p;
   p.team = clampVec01(team);
   return p;
+}
+
+inline auto
+get_anim_context(const Engine::Core::Entity *entity) -> CatapultAnimContext {
+  CatapultAnimContext ctx;
+  if (entity == nullptr) {
+    return ctx;
+  }
+
+  auto *loading =
+      entity->get_component<Engine::Core::CatapultLoadingComponent>();
+  if (loading == nullptr) {
+    return ctx;
+  }
+
+  switch (loading->state) {
+  case Engine::Core::CatapultLoadingComponent::LoadingState::Idle:
+    ctx.state = CatapultAnimState::Idle;
+    ctx.show_stone = false;
+    break;
+  case Engine::Core::CatapultLoadingComponent::LoadingState::Loading:
+    ctx.state = CatapultAnimState::Loading;
+    ctx.loading_progress = loading->get_loading_progress();
+    ctx.show_stone = true;
+    break;
+  case Engine::Core::CatapultLoadingComponent::LoadingState::ReadyToFire:
+    ctx.state = CatapultAnimState::Firing;
+    ctx.loading_progress = 1.0F;
+    ctx.firing_progress = 0.0F;
+    ctx.show_stone = true;
+    break;
+  case Engine::Core::CatapultLoadingComponent::LoadingState::Firing:
+    ctx.state = CatapultAnimState::Firing;
+    ctx.firing_progress = loading->get_firing_progress();
+    ctx.show_stone = ctx.firing_progress < 0.3F;
+    break;
+  }
+
+  return ctx;
 }
 
 inline void draw_box(ISubmitter &out, Mesh *unit, Texture *white,
@@ -130,7 +179,7 @@ void drawWheels(const DrawContext &p, ISubmitter &out, Mesh *unit,
 
 void drawThrowingArm(const DrawContext &p, ISubmitter &out, Mesh *unit,
                      Texture *white, const CarthageCatapultPalette &c,
-                     float animTime) {
+                     const CatapultAnimContext &anim_ctx) {
 
   draw_cyl(out, p.model, QVector3D(-0.30F, 0.22F, -0.10F),
            QVector3D(-0.20F, 0.70F, 0.05F), 0.055F, c.wood_cedar, white);
@@ -143,7 +192,24 @@ void drawThrowingArm(const DrawContext &p, ISubmitter &out, Mesh *unit,
   draw_cyl(out, p.model, QVector3D(-0.08F, 0.65F, 0.03F),
            QVector3D(0.08F, 0.65F, 0.03F), 0.06F, c.metal_bronze, white);
 
-  float arm_angle = std::sin(animTime * 0.4F) * 0.25F + 0.75F;
+  float arm_angle = 0.75F;
+
+  switch (anim_ctx.state) {
+  case CatapultAnimState::Idle:
+    arm_angle = 0.75F;
+    break;
+  case CatapultAnimState::Loading:
+    arm_angle = 0.75F + anim_ctx.loading_progress * 0.55F;
+    break;
+  case CatapultAnimState::Firing:
+    arm_angle = 1.30F - anim_ctx.firing_progress * 1.9F;
+    arm_angle = std::max(arm_angle, -0.35F);
+    break;
+  case CatapultAnimState::Resetting:
+    arm_angle = 0.75F;
+    break;
+  }
+
   QMatrix4x4 armMatrix = p.model;
   armMatrix.translate(0.0F, 0.60F, 0.03F);
   armMatrix.rotate(arm_angle * 57.3F, 1.0F, 0.0F, 0.0F);
@@ -156,6 +222,15 @@ void drawThrowingArm(const DrawContext &p, ISubmitter &out, Mesh *unit,
 
   draw_box(out, unit, white, armMatrix, QVector3D(0.0F, 0.0F, 0.30F),
            QVector3D(0.08F, 0.08F, 0.08F), c.metal_bronze);
+
+  if (anim_ctx.show_stone) {
+    QMatrix4x4 stone_matrix = armMatrix;
+    stone_matrix.translate(0.0F, 0.10F, -0.58F);
+    float const stone_scale = 0.09F;
+    stone_matrix.scale(stone_scale, stone_scale, stone_scale);
+
+    out.mesh(getUnitCube(), stone_matrix, c.stone, white, 1.0F);
+  }
 }
 
 void drawTorsionMechanism(const DrawContext &p, ISubmitter &out, Mesh *unit,
@@ -218,38 +293,39 @@ void drawWindlass(const DrawContext &p, ISubmitter &out, Mesh *unit,
 } // namespace
 
 void register_catapult_renderer(EntityRendererRegistry &registry) {
-  registry.register_renderer("troops/carthage/catapult", [](const DrawContext
-                                                                &p,
-                                                            ISubmitter &out) {
-    Mesh *unit_cube = getUnitCube();
-    Texture *white_tex = nullptr;
+  registry.register_renderer(
+      "troops/carthage/catapult", [](const DrawContext &p, ISubmitter &out) {
+        Mesh *unit_cube = getUnitCube();
+        Texture *white_tex = nullptr;
 
-    if (auto *scene_renderer = dynamic_cast<Renderer *>(&out)) {
-      unit_cube = scene_renderer->get_mesh_cube();
-      white_tex = scene_renderer->get_white_texture();
-    }
+        if (auto *scene_renderer = dynamic_cast<Renderer *>(&out)) {
+          unit_cube = scene_renderer->get_mesh_cube();
+          white_tex = scene_renderer->get_white_texture();
+        }
 
-    if (unit_cube == nullptr || white_tex == nullptr) {
-      return;
-    }
+        if (unit_cube == nullptr || white_tex == nullptr) {
+          return;
+        }
 
-    QVector3D team_color{0.4F, 0.2F, 0.6F};
-    if (p.entity != nullptr) {
-      if (auto *r =
-              p.entity->get_component<Engine::Core::RenderableComponent>()) {
-        team_color = QVector3D(r->color[0], r->color[1], r->color[2]);
-      }
-    }
+        QVector3D team_color{0.4F, 0.2F, 0.6F};
+        if (p.entity != nullptr) {
+          if (auto *r =
+                  p.entity
+                      ->get_component<Engine::Core::RenderableComponent>()) {
+            team_color = QVector3D(r->color[0], r->color[1], r->color[2]);
+          }
+        }
 
-    auto palette = make_palette(team_color);
+        auto palette = make_palette(team_color);
+        auto anim_ctx = get_anim_context(p.entity);
 
-    drawBaseFrame(p, out, unit_cube, white_tex, palette);
-    drawWheels(p, out, unit_cube, white_tex, palette);
-    drawTorsionMechanism(p, out, unit_cube, white_tex, palette);
-    drawThrowingArm(p, out, unit_cube, white_tex, palette, p.animation_time);
-    drawWindlass(p, out, unit_cube, white_tex, palette);
-    drawDecorations(p, out, unit_cube, white_tex, palette);
-  });
+        drawBaseFrame(p, out, unit_cube, white_tex, palette);
+        drawWheels(p, out, unit_cube, white_tex, palette);
+        drawTorsionMechanism(p, out, unit_cube, white_tex, palette);
+        drawThrowingArm(p, out, unit_cube, white_tex, palette, anim_ctx);
+        drawWindlass(p, out, unit_cube, white_tex, palette);
+        drawDecorations(p, out, unit_cube, white_tex, palette);
+      });
 }
 
 } // namespace Render::GL::Carthage

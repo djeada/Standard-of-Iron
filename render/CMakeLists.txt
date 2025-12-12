@@ -77,6 +77,8 @@ add_library(render_gl STATIC
     geom/selection_ring.cpp
     geom/selection_disc.cpp
     geom/arrow.cpp
+    geom/stone.cpp
+    geom/projectile_renderer.cpp
     geom/flag.cpp
     geom/patrol_flags.cpp
     geom/transforms.cpp

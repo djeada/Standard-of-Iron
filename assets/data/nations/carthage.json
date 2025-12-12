@@ -14,8 +14,8 @@
         "is_melee": false
       },
       "combat": {
-        "health": 75,
-        "max_health": 75,
+        "health": 675,
+        "max_health": 675,
         "speed": 3.2,
         "vision_range": 16.5,
         "ranged_range": 6.6,
@@ -49,8 +49,8 @@
         "is_melee": true
       },
       "combat": {
-        "health": 145,
-        "max_health": 145,
+        "health": 1305,
+        "max_health": 1305,
         "speed": 2.3,
         "vision_range": 14.0,
         "ranged_range": 1.5,
@@ -84,8 +84,8 @@
         "is_melee": true
       },
       "combat": {
-        "health": 125,
-        "max_health": 125,
+        "health": 1125,
+        "max_health": 1125,
         "speed": 2.6,
         "vision_range": 15.0,
         "ranged_range": 2.9,
@@ -119,8 +119,8 @@
         "is_melee": true
       },
       "combat": {
-        "health": 195,
-        "max_health": 195,
+        "health": 3120,
+        "max_health": 3120,
         "speed": 3.0,
         "vision_range": 18.0,
         "ranged_range": 1.5,
@@ -153,8 +153,8 @@
         "is_melee": false
       },
       "combat": {
-        "health": 95,
-        "max_health": 95,
+        "health": 855,
+        "max_health": 855,
         "speed": 2.7,
         "vision_range": 14.0,
         "ranged_range": 7.5,
@@ -168,7 +168,7 @@
       },
       "visuals": {
         "render_scale": 0.54,
-        "selection_ring_size": 1.2,
+        "selection_ring_size": 0.4,
         "selection_ring_y_offset": 0.0,
         "selection_ring_ground_offset": 0.0,
         "renderer_id": "troops/carthage/healer"
@@ -188,8 +188,8 @@
         "is_melee": false
       },
       "combat": {
-        "health": 140,
-        "max_health": 140,
+        "health": 2240,
+        "max_health": 2240,
         "speed": 3.0,
         "vision_range": 18.0,
         "ranged_range": 7.0,
@@ -222,8 +222,8 @@
         "is_melee": true
       },
       "combat": {
-        "health": 180,
-        "max_health": 180,
+        "health": 2880,
+        "max_health": 2880,
         "speed": 3.0,
         "vision_range": 16.0,
         "ranged_range": 1.5,

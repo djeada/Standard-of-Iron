@@ -474,9 +474,15 @@ void CombatSystem::processAttacks(Engine::Core::World *world,
             best_target->get_component<Engine::Core::TransformComponent>();
         auto *att_u = attacker->get_component<Engine::Core::UnitComponent>();
 
-        if ((attacker_atk == nullptr) ||
-            attacker_atk->current_mode !=
-                Engine::Core::AttackComponent::CombatMode::Melee) {
+        bool const should_show_arrow_vfx =
+            (att_u != nullptr &&
+             att_u->spawn_type != Game::Units::SpawnType::Catapult &&
+             att_u->spawn_type != Game::Units::SpawnType::Ballista);
+
+        if (should_show_arrow_vfx &&
+            ((attacker_atk == nullptr) ||
+             attacker_atk->current_mode !=
+                 Engine::Core::AttackComponent::CombatMode::Melee)) {
           QVector3D const a_pos(att_t->position.x, att_t->position.y,
                                 att_t->position.z);
           QVector3D const t_pos(tgt_t->position.x, tgt_t->position.y,
