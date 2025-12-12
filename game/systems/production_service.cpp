@@ -50,7 +50,7 @@ void apply_production_profile(Engine::Core::ProductionComponent *prod,
   const auto profile =
       TroopProfileService::instance().get_profile(nation_id, unit_type);
   prod->build_time = profile.production.build_time;
-  prod->villager_cost = profile.individuals_per_unit;
+  prod->villager_cost = profile.production.cost;
 }
 
 } // namespace
@@ -77,15 +77,16 @@ auto ProductionService::startProductionForFirstSelectedBarracks(
   }
 
   int const individuals_per_unit = profile.individuals_per_unit;
+  int const production_cost = profile.production.cost;
 
-  if (p->produced_count + individuals_per_unit > p->max_units) {
+  if (p->produced_count + production_cost > p->max_units) {
     return ProductionResult::PerBarracksLimitReached;
   }
 
   int const current_troops =
       Engine::Core::World::count_troops_for_player(owner_id);
   int const max_troops = Game::GameConfig::instance().getMaxTroopsPerPlayer();
-  if (current_troops + individuals_per_unit > max_troops) {
+  if (current_troops + production_cost > max_troops) {
     return ProductionResult::GlobalTroopLimitReached;
   }
 

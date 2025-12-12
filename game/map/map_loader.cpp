@@ -629,7 +629,7 @@ auto MapLoader::loadFromJsonFile(const QString &path, MapDefinition &outMap,
     }
   }
 
-  constexpr int default_max_troops = 50;
+  constexpr int default_max_troops = 500;
   if (root.contains(MAX_TROOPS_PER_PLAYER)) {
     outMap.max_troops_per_player =
         root.value(MAX_TROOPS_PER_PLAYER).toInt(default_max_troops);

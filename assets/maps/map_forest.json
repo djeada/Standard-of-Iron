@@ -2,7 +2,7 @@
   "name": "Forest Battlefield",
   "description": "A diverse forest battlefield with varied unit types and strategic terrain features",
   "coordSystem": "grid",
-  "maxTroopsPerPlayer": 500,
+  "maxTroopsPerPlayer": 2000,
   "grid": {
     "width": 250,
     "height": 250,
