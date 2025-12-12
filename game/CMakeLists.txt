@@ -33,6 +33,11 @@ add_library(game_systems STATIC
     systems/building_collision_registry.cpp
     systems/selection_system.cpp
     systems/arrow_system.cpp
+    systems/projectile_system.cpp
+    systems/arrow_projectile.cpp
+    systems/stone_projectile.cpp
+    systems/catapult_attack_system.cpp
+    systems/ballista_attack_system.cpp
     systems/camera_follow_system.cpp
     systems/camera_controller.cpp
     systems/camera_service.cpp
