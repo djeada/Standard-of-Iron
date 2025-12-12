@@ -56,6 +56,17 @@ Rectangle {
         return "👤";
     }
 
+    function getUnitProductionInfo(unitType) {
+        if (productionPanel.gameInstance && productionPanel.gameInstance.get_unit_production_info)
+            return productionPanel.gameInstance.get_unit_production_info(unitType);
+
+        return {
+            "cost": 50,
+            "build_time": 5,
+            "individuals_per_unit": 1
+        };
+    }
+
     color: "#0f1419"
     border.color: "#3498db"
     border.width: 2
@@ -305,14 +316,17 @@ Rectangle {
                         Rectangle {
                             property int queueTotal: (unitGridContent.prod.in_progress ? 1 : 0) + (unitGridContent.prod.queue_size || 0)
                             property bool isEnabled: unitGridContent.prod.has_barracks && unitGridContent.prod.produced_count < unitGridContent.prod.max_units && queueTotal < 5
+                            property var unitInfo: productionPanel.getUnitProductionInfo("archer")
+                            property bool isHovered: archerMouseArea.containsMouse
 
                             width: 110
                             height: 80
                             radius: 6
-                            color: isEnabled ? (archerMouseArea.containsMouse ? "#34495e" : "#2c3e50") : "#1a1a1a"
-                            border.color: isEnabled ? "#4a6572" : "#2a2a2a"
-                            border.width: 2
+                            color: isEnabled ? (isHovered ? "#1f8dd9" : "#2c3e50") : "#1a1a1a"
+                            border.color: isEnabled ? (isHovered ? "#00d4ff" : "#4a6572") : "#2a2a2a"
+                            border.width: isHovered && isEnabled ? 4 : 2
                             opacity: isEnabled ? 1 : 0.5
+                            scale: isHovered && isEnabled ? 1.1 : 1
 
                             Image {
                                 id: archerRecruitIcon
@@ -351,7 +365,7 @@ Rectangle {
                                     id: archerCostText
 
                                     anchors.centerIn: parent
-                                    text: unitGridContent.prod.villager_cost || 1
+                                    text: parent.parent.unitInfo.cost || 50
                                     color: archerCostBadge.parent.isEnabled ? "#fdf7e3" : "#8a8a8a"
                                     font.pointSize: 16
                                     font.bold: true
@@ -364,11 +378,14 @@ Rectangle {
 
                                 anchors.fill: parent
                                 hoverEnabled: true
-                                enabled: parent.isEnabled
-                                onClicked: productionPanel.recruitUnit("archer")
+                                onClicked: {
+                                    if (parent.isEnabled) {
+                                        productionPanel.recruitUnit("archer");
+                                    }
+                                }
                                 cursorShape: parent.isEnabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
-                                ToolTip.text: parent.isEnabled ? qsTr("Recruit Archer\nCost: %1 villagers\nBuild time: %2s").arg(unitGridContent.prod.villager_cost || 1).arg((unitGridContent.prod.build_time || 0).toFixed(0)) : (parent.queueTotal >= 5 ? qsTr("Queue is full (5/5)") : (unitGridContent.prod.produced_count >= unitGridContent.prod.max_units ? qsTr("Unit cap reached") : qsTr("Cannot recruit")))
+                                ToolTip.text: parent.isEnabled ? qsTr("Recruit Archer\nCost: %1 villagers\nBuild time: %2s").arg(parent.unitInfo.cost || 50).arg((parent.unitInfo.build_time || 5).toFixed(0)) : (parent.queueTotal >= 5 ? qsTr("Queue is full (5/5)") : (unitGridContent.prod.produced_count >= unitGridContent.prod.max_units ? qsTr("Unit cap reached") : qsTr("Cannot recruit")))
                                 ToolTip.delay: 300
                             }
 
@@ -379,19 +396,43 @@ Rectangle {
                                 radius: parent.radius
                             }
 
+                            Behavior on color {
+                                ColorAnimation {
+                                    duration: 150
+                                }
+
+                            }
+
+                            Behavior on border.color {
+                                ColorAnimation {
+                                    duration: 150
+                                }
+
+                            }
+
+                            Behavior on scale {
+                                NumberAnimation {
+                                    duration: 100
+                                }
+
+                            }
+
                         }
 
                         Rectangle {
                             property int queueTotal: (unitGridContent.prod.in_progress ? 1 : 0) + (unitGridContent.prod.queue_size || 0)
                             property bool isEnabled: unitGridContent.prod.has_barracks && unitGridContent.prod.produced_count < unitGridContent.prod.max_units && queueTotal < 5
+                            property var unitInfo: productionPanel.getUnitProductionInfo("swordsman")
+                            property bool isHovered: swordsmanMouseArea.containsMouse
 
                             width: 110
                             height: 80
                             radius: 6
-                            color: isEnabled ? (swordsmanMouseArea.containsMouse ? "#34495e" : "#2c3e50") : "#1a1a1a"
-                            border.color: isEnabled ? "#4a6572" : "#2a2a2a"
-                            border.width: 2
+                            color: isEnabled ? (isHovered ? "#1f8dd9" : "#2c3e50") : "#1a1a1a"
+                            border.color: isEnabled ? (isHovered ? "#00d4ff" : "#4a6572") : "#2a2a2a"
+                            border.width: isHovered && isEnabled ? 4 : 2
                             opacity: isEnabled ? 1 : 0.5
+                            scale: isHovered && isEnabled ? 1.1 : 1
 
                             Image {
                                 id: swordsmanRecruitIcon
@@ -430,7 +471,7 @@ Rectangle {
                                     id: swordsmanCostText
 
                                     anchors.centerIn: parent
-                                    text: unitGridContent.prod.villager_cost || 1
+                                    text: parent.parent.unitInfo.cost || 90
                                     color: swordsmanCostBadge.parent.isEnabled ? "#fdf7e3" : "#8a8a8a"
                                     font.pointSize: 16
                                     font.bold: true
@@ -443,11 +484,14 @@ Rectangle {
 
                                 anchors.fill: parent
                                 hoverEnabled: true
-                                enabled: parent.isEnabled
-                                onClicked: productionPanel.recruitUnit("swordsman")
+                                onClicked: {
+                                    if (parent.isEnabled) {
+                                        productionPanel.recruitUnit("swordsman");
+                                    }
+                                }
                                 cursorShape: parent.isEnabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
-                                ToolTip.text: parent.isEnabled ? qsTr("Recruit Swordsman\nCost: %1 villagers\nBuild time: %2s").arg(unitGridContent.prod.villager_cost || 1).arg((unitGridContent.prod.build_time || 0).toFixed(0)) : (parent.queueTotal >= 5 ? qsTr("Queue is full (5/5)") : (unitGridContent.prod.produced_count >= unitGridContent.prod.max_units ? qsTr("Unit cap reached") : qsTr("Cannot recruit")))
+                                ToolTip.text: parent.isEnabled ? qsTr("Recruit Swordsman\nCost: %1 villagers\nBuild time: %2s").arg(parent.unitInfo.cost || 90).arg((parent.unitInfo.build_time || 7).toFixed(0)) : (parent.queueTotal >= 5 ? qsTr("Queue is full (5/5)") : (unitGridContent.prod.produced_count >= unitGridContent.prod.max_units ? qsTr("Unit cap reached") : qsTr("Cannot recruit")))
                                 ToolTip.delay: 300
                             }
 
@@ -458,19 +502,43 @@ Rectangle {
                                 radius: parent.radius
                             }
 
+                            Behavior on color {
+                                ColorAnimation {
+                                    duration: 150
+                                }
+
+                            }
+
+                            Behavior on border.color {
+                                ColorAnimation {
+                                    duration: 150
+                                }
+
+                            }
+
+                            Behavior on scale {
+                                NumberAnimation {
+                                    duration: 100
+                                }
+
+                            }
+
                         }
 
                         Rectangle {
                             property int queueTotal: (unitGridContent.prod.in_progress ? 1 : 0) + (unitGridContent.prod.queue_size || 0)
                             property bool isEnabled: unitGridContent.prod.has_barracks && unitGridContent.prod.produced_count < unitGridContent.prod.max_units && queueTotal < 5
+                            property var unitInfo: productionPanel.getUnitProductionInfo("spearman")
+                            property bool isHovered: spearmanMouseArea.containsMouse
 
                             width: 110
                             height: 80
                             radius: 6
-                            color: isEnabled ? (spearmanMouseArea.containsMouse ? "#34495e" : "#2c3e50") : "#1a1a1a"
-                            border.color: isEnabled ? "#4a6572" : "#2a2a2a"
-                            border.width: 2
+                            color: isEnabled ? (isHovered ? "#1f8dd9" : "#2c3e50") : "#1a1a1a"
+                            border.color: isEnabled ? (isHovered ? "#00d4ff" : "#4a6572") : "#2a2a2a"
+                            border.width: isHovered && isEnabled ? 4 : 2
                             opacity: isEnabled ? 1 : 0.5
+                            scale: isHovered && isEnabled ? 1.1 : 1
 
                             Image {
                                 id: spearmanRecruitIcon
@@ -509,7 +577,7 @@ Rectangle {
                                     id: spearmanCostText
 
                                     anchors.centerIn: parent
-                                    text: unitGridContent.prod.villager_cost || 1
+                                    text: parent.parent.unitInfo.cost || 75
                                     color: spearmanCostBadge.parent.isEnabled ? "#fdf7e3" : "#8a8a8a"
                                     font.pointSize: 16
                                     font.bold: true
@@ -522,11 +590,14 @@ Rectangle {
 
                                 anchors.fill: parent
                                 hoverEnabled: true
-                                enabled: parent.isEnabled
-                                onClicked: productionPanel.recruitUnit("spearman")
+                                onClicked: {
+                                    if (parent.isEnabled) {
+                                        productionPanel.recruitUnit("spearman");
+                                    }
+                                }
                                 cursorShape: parent.isEnabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
-                                ToolTip.text: parent.isEnabled ? qsTr("Recruit Spearman\nCost: %1 villagers\nBuild time: %2s").arg(unitGridContent.prod.villager_cost || 1).arg((unitGridContent.prod.build_time || 0).toFixed(0)) : (parent.queueTotal >= 5 ? qsTr("Queue is full (5/5)") : (unitGridContent.prod.produced_count >= unitGridContent.prod.max_units ? qsTr("Unit cap reached") : qsTr("Cannot recruit")))
+                                ToolTip.text: parent.isEnabled ? qsTr("Recruit Spearman\nCost: %1 villagers\nBuild time: %2s").arg(parent.unitInfo.cost || 75).arg((parent.unitInfo.build_time || 6).toFixed(0)) : (parent.queueTotal >= 5 ? qsTr("Queue is full (5/5)") : (unitGridContent.prod.produced_count >= unitGridContent.prod.max_units ? qsTr("Unit cap reached") : qsTr("Cannot recruit")))
                                 ToolTip.delay: 300
                             }
 
@@ -537,19 +608,43 @@ Rectangle {
                                 radius: parent.radius
                             }
 
+                            Behavior on color {
+                                ColorAnimation {
+                                    duration: 150
+                                }
+
+                            }
+
+                            Behavior on border.color {
+                                ColorAnimation {
+                                    duration: 150
+                                }
+
+                            }
+
+                            Behavior on scale {
+                                NumberAnimation {
+                                    duration: 100
+                                }
+
+                            }
+
                         }
 
                         Rectangle {
                             property int queueTotal: (unitGridContent.prod.in_progress ? 1 : 0) + (unitGridContent.prod.queue_size || 0)
                             property bool isEnabled: unitGridContent.prod.has_barracks && unitGridContent.prod.produced_count < unitGridContent.prod.max_units && queueTotal < 5
+                            property var unitInfo: productionPanel.getUnitProductionInfo("horse_swordsman")
+                            property bool isHovered: horseKnightMouseArea.containsMouse
 
                             width: 110
                             height: 80
                             radius: 6
-                            color: isEnabled ? (horseKnightMouseArea.containsMouse ? "#34495e" : "#2c3e50") : "#1a1a1a"
-                            border.color: isEnabled ? "#4a6572" : "#2a2a2a"
-                            border.width: 2
+                            color: isEnabled ? (isHovered ? "#1f8dd9" : "#2c3e50") : "#1a1a1a"
+                            border.color: isEnabled ? (isHovered ? "#00d4ff" : "#4a6572") : "#2a2a2a"
+                            border.width: isHovered && isEnabled ? 4 : 2
                             opacity: isEnabled ? 1 : 0.5
+                            scale: isHovered && isEnabled ? 1.1 : 1
 
                             Image {
                                 id: horseKnightIcon
@@ -588,7 +683,7 @@ Rectangle {
                                     id: horseKnightCostText
 
                                     anchors.centerIn: parent
-                                    text: unitGridContent.prod.villager_cost || 1
+                                    text: parent.parent.unitInfo.cost || 150
                                     color: horseKnightCostBadge.parent.isEnabled ? "#fdf7e3" : "#8a8a8a"
                                     font.pointSize: 16
                                     font.bold: true
@@ -601,11 +696,14 @@ Rectangle {
 
                                 anchors.fill: parent
                                 hoverEnabled: true
-                                enabled: parent.isEnabled
-                                onClicked: productionPanel.recruitUnit("horse_swordsman")
+                                onClicked: {
+                                    if (parent.isEnabled) {
+                                        productionPanel.recruitUnit("horse_swordsman");
+                                    }
+                                }
                                 cursorShape: parent.isEnabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
-                                ToolTip.text: parent.isEnabled ? qsTr("Recruit Mounted Knight\nCost: %1 villagers\nBuild time: %2s").arg(unitGridContent.prod.villager_cost || 1).arg((unitGridContent.prod.build_time || 0).toFixed(0)) : (parent.queueTotal >= 5 ? qsTr("Queue is full (5/5)") : (unitGridContent.prod.produced_count >= unitGridContent.prod.max_units ? qsTr("Unit cap reached") : qsTr("Cannot recruit")))
+                                ToolTip.text: parent.isEnabled ? qsTr("Recruit Mounted Knight\nCost: %1 villagers\nBuild time: %2s").arg(parent.unitInfo.cost || 150).arg((parent.unitInfo.build_time || 10).toFixed(0)) : (parent.queueTotal >= 5 ? qsTr("Queue is full (5/5)") : (unitGridContent.prod.produced_count >= unitGridContent.prod.max_units ? qsTr("Unit cap reached") : qsTr("Cannot recruit")))
                                 ToolTip.delay: 300
                             }
 
@@ -616,19 +714,43 @@ Rectangle {
                                 radius: parent.radius
                             }
 
+                            Behavior on color {
+                                ColorAnimation {
+                                    duration: 150
+                                }
+
+                            }
+
+                            Behavior on border.color {
+                                ColorAnimation {
+                                    duration: 150
+                                }
+
+                            }
+
+                            Behavior on scale {
+                                NumberAnimation {
+                                    duration: 100
+                                }
+
+                            }
+
                         }
 
                         Rectangle {
                             property int queueTotal: (unitGridContent.prod.in_progress ? 1 : 0) + (unitGridContent.prod.queue_size || 0)
                             property bool isEnabled: unitGridContent.prod.has_barracks && unitGridContent.prod.produced_count < unitGridContent.prod.max_units && queueTotal < 5
+                            property var unitInfo: productionPanel.getUnitProductionInfo("horse_archer")
+                            property bool isHovered: horseArcherMouseArea.containsMouse
 
                             width: 110
                             height: 80
                             radius: 6
-                            color: isEnabled ? (horseArcherMouseArea.containsMouse ? "#34495e" : "#2c3e50") : "#1a1a1a"
-                            border.color: isEnabled ? "#4a6572" : "#2a2a2a"
-                            border.width: 2
+                            color: isEnabled ? (isHovered ? "#1f8dd9" : "#2c3e50") : "#1a1a1a"
+                            border.color: isEnabled ? (isHovered ? "#00d4ff" : "#4a6572") : "#2a2a2a"
+                            border.width: isHovered && isEnabled ? 4 : 2
                             opacity: isEnabled ? 1 : 0.5
+                            scale: isHovered && isEnabled ? 1.1 : 1
 
                             Image {
                                 id: horseArcherIcon
@@ -667,7 +789,7 @@ Rectangle {
                                     id: horseArcherCostText
 
                                     anchors.centerIn: parent
-                                    text: unitGridContent.prod.villager_cost || 1
+                                    text: parent.parent.unitInfo.cost || 120
                                     color: horseArcherCostBadge.parent.isEnabled ? "#fdf7e3" : "#8a8a8a"
                                     font.pointSize: 16
                                     font.bold: true
@@ -680,11 +802,14 @@ Rectangle {
 
                                 anchors.fill: parent
                                 hoverEnabled: true
-                                enabled: parent.isEnabled
-                                onClicked: productionPanel.recruitUnit("horse_archer")
+                                onClicked: {
+                                    if (parent.isEnabled) {
+                                        productionPanel.recruitUnit("horse_archer");
+                                    }
+                                }
                                 cursorShape: parent.isEnabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
-                                ToolTip.text: parent.isEnabled ? qsTr("Recruit Horse Archer\nCost: %1 villagers\nBuild time: %2s").arg(unitGridContent.prod.villager_cost || 1).arg((unitGridContent.prod.build_time || 0).toFixed(0)) : (parent.queueTotal >= 5 ? qsTr("Queue is full (5/5)") : (unitGridContent.prod.produced_count >= unitGridContent.prod.max_units ? qsTr("Unit cap reached") : qsTr("Cannot recruit")))
+                                ToolTip.text: parent.isEnabled ? qsTr("Recruit Horse Archer\nCost: %1 villagers\nBuild time: %2s").arg(parent.unitInfo.cost || 120).arg((parent.unitInfo.build_time || 9).toFixed(0)) : (parent.queueTotal >= 5 ? qsTr("Queue is full (5/5)") : (unitGridContent.prod.produced_count >= unitGridContent.prod.max_units ? qsTr("Unit cap reached") : qsTr("Cannot recruit")))
                                 ToolTip.delay: 300
                             }
 
@@ -695,19 +820,43 @@ Rectangle {
                                 radius: parent.radius
                             }
 
+                            Behavior on color {
+                                ColorAnimation {
+                                    duration: 150
+                                }
+
+                            }
+
+                            Behavior on border.color {
+                                ColorAnimation {
+                                    duration: 150
+                                }
+
+                            }
+
+                            Behavior on scale {
+                                NumberAnimation {
+                                    duration: 100
+                                }
+
+                            }
+
                         }
 
                         Rectangle {
                             property int queueTotal: (unitGridContent.prod.in_progress ? 1 : 0) + (unitGridContent.prod.queue_size || 0)
                             property bool isEnabled: unitGridContent.prod.has_barracks && unitGridContent.prod.produced_count < unitGridContent.prod.max_units && queueTotal < 5
+                            property var unitInfo: productionPanel.getUnitProductionInfo("horse_spearman")
+                            property bool isHovered: horseSpearmanMouseArea.containsMouse
 
                             width: 110
                             height: 80
                             radius: 6
-                            color: isEnabled ? (horseSpearmanMouseArea.containsMouse ? "#34495e" : "#2c3e50") : "#1a1a1a"
-                            border.color: isEnabled ? "#4a6572" : "#2a2a2a"
-                            border.width: 2
+                            color: isEnabled ? (isHovered ? "#1f8dd9" : "#2c3e50") : "#1a1a1a"
+                            border.color: isEnabled ? (isHovered ? "#00d4ff" : "#4a6572") : "#2a2a2a"
+                            border.width: isHovered && isEnabled ? 4 : 2
                             opacity: isEnabled ? 1 : 0.5
+                            scale: isHovered && isEnabled ? 1.1 : 1
 
                             Image {
                                 id: horseSpearmanIcon
@@ -746,7 +895,7 @@ Rectangle {
                                     id: horseSpearmanCostText
 
                                     anchors.centerIn: parent
-                                    text: unitGridContent.prod.villager_cost || 1
+                                    text: parent.parent.unitInfo.cost || 130
                                     color: horseSpearmanCostBadge.parent.isEnabled ? "#fdf7e3" : "#8a8a8a"
                                     font.pointSize: 16
                                     font.bold: true
@@ -759,11 +908,14 @@ Rectangle {
 
                                 anchors.fill: parent
                                 hoverEnabled: true
-                                enabled: parent.isEnabled
-                                onClicked: productionPanel.recruitUnit("horse_spearman")
+                                onClicked: {
+                                    if (parent.isEnabled) {
+                                        productionPanel.recruitUnit("horse_spearman");
+                                    }
+                                }
                                 cursorShape: parent.isEnabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
-                                ToolTip.text: parent.isEnabled ? qsTr("Recruit Horse Spearman\nCost: %1 villagers\nBuild time: %2s").arg(unitGridContent.prod.villager_cost || 1).arg((unitGridContent.prod.build_time || 0).toFixed(0)) : (parent.queueTotal >= 5 ? qsTr("Queue is full (5/5)") : (unitGridContent.prod.produced_count >= unitGridContent.prod.max_units ? qsTr("Unit cap reached") : qsTr("Cannot recruit")))
+                                ToolTip.text: parent.isEnabled ? qsTr("Recruit Horse Spearman\nCost: %1 villagers\nBuild time: %2s").arg(parent.unitInfo.cost || 130).arg((parent.unitInfo.build_time || 9).toFixed(0)) : (parent.queueTotal >= 5 ? qsTr("Queue is full (5/5)") : (unitGridContent.prod.produced_count >= unitGridContent.prod.max_units ? qsTr("Unit cap reached") : qsTr("Cannot recruit")))
                                 ToolTip.delay: 300
                             }
 
@@ -774,19 +926,43 @@ Rectangle {
                                 radius: parent.radius
                             }
 
+                            Behavior on color {
+                                ColorAnimation {
+                                    duration: 150
+                                }
+
+                            }
+
+                            Behavior on border.color {
+                                ColorAnimation {
+                                    duration: 150
+                                }
+
+                            }
+
+                            Behavior on scale {
+                                NumberAnimation {
+                                    duration: 100
+                                }
+
+                            }
+
                         }
 
                         Rectangle {
                             property int queueTotal: (unitGridContent.prod.in_progress ? 1 : 0) + (unitGridContent.prod.queue_size || 0)
                             property bool isEnabled: unitGridContent.prod.has_barracks && unitGridContent.prod.produced_count < unitGridContent.prod.max_units && queueTotal < 5
+                            property var unitInfo: productionPanel.getUnitProductionInfo("catapult")
+                            property bool isHovered: catapultMouseArea.containsMouse
 
                             width: 110
                             height: 80
                             radius: 6
-                            color: isEnabled ? (catapultMouseArea.containsMouse ? "#34495e" : "#2c3e50") : "#1a1a1a"
-                            border.color: isEnabled ? "#4a6572" : "#2a2a2a"
-                            border.width: 2
+                            color: isEnabled ? (isHovered ? "#1f8dd9" : "#2c3e50") : "#1a1a1a"
+                            border.color: isEnabled ? (isHovered ? "#00d4ff" : "#4a6572") : "#2a2a2a"
+                            border.width: isHovered && isEnabled ? 4 : 2
                             opacity: isEnabled ? 1 : 0.5
+                            scale: isHovered && isEnabled ? 1.1 : 1
 
                             Image {
                                 id: catapultRecruitIcon
@@ -825,7 +1001,7 @@ Rectangle {
                                     id: catapultCostText
 
                                     anchors.centerIn: parent
-                                    text: unitGridContent.prod.villagerCost || 1
+                                    text: parent.parent.unitInfo.cost || 200
                                     color: catapultCostBadge.parent.isEnabled ? "#fdf7e3" : "#8a8a8a"
                                     font.pointSize: 16
                                     font.bold: true
@@ -838,11 +1014,14 @@ Rectangle {
 
                                 anchors.fill: parent
                                 hoverEnabled: true
-                                enabled: parent.isEnabled
-                                onClicked: productionPanel.recruitUnit("catapult")
+                                onClicked: {
+                                    if (parent.isEnabled) {
+                                        productionPanel.recruitUnit("catapult");
+                                    }
+                                }
                                 cursorShape: parent.isEnabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
-                                ToolTip.text: parent.isEnabled ? qsTr("Recruit Catapult\nCost: %1 villagers\nBuild time: %2s").arg(unitGridContent.prod.villagerCost || 1).arg((unitGridContent.prod.buildTime || 0).toFixed(0)) : (parent.queueTotal >= 5 ? qsTr("Queue is full (5/5)") : (unitGridContent.prod.producedCount >= unitGridContent.prod.maxUnits ? qsTr("Unit cap reached") : qsTr("Cannot recruit")))
+                                ToolTip.text: parent.isEnabled ? qsTr("Recruit Catapult\nCost: %1 villagers\nBuild time: %2s").arg(parent.unitInfo.cost || 200).arg((parent.unitInfo.build_time || 12).toFixed(0)) : (parent.queueTotal >= 5 ? qsTr("Queue is full (5/5)") : (unitGridContent.prod.produced_count >= unitGridContent.prod.max_units ? qsTr("Unit cap reached") : qsTr("Cannot recruit")))
                                 ToolTip.delay: 300
                             }
 
@@ -853,19 +1032,43 @@ Rectangle {
                                 radius: parent.radius
                             }
 
+                            Behavior on color {
+                                ColorAnimation {
+                                    duration: 150
+                                }
+
+                            }
+
+                            Behavior on border.color {
+                                ColorAnimation {
+                                    duration: 150
+                                }
+
+                            }
+
+                            Behavior on scale {
+                                NumberAnimation {
+                                    duration: 100
+                                }
+
+                            }
+
                         }
 
                         Rectangle {
-                            property int queueTotal: (unitGridContent.prod.inProgress ? 1 : 0) + (unitGridContent.prod.queueSize || 0)
-                            property bool isEnabled: unitGridContent.prod.has_barracks && unitGridContent.prod.producedCount < unitGridContent.prod.maxUnits && queueTotal < 5
+                            property int queueTotal: (unitGridContent.prod.in_progress ? 1 : 0) + (unitGridContent.prod.queue_size || 0)
+                            property bool isEnabled: unitGridContent.prod.has_barracks && unitGridContent.prod.produced_count < unitGridContent.prod.max_units && queueTotal < 5
+                            property var unitInfo: productionPanel.getUnitProductionInfo("ballista")
+                            property bool isHovered: ballistaMouseArea.containsMouse
 
                             width: 110
                             height: 80
                             radius: 6
-                            color: isEnabled ? (ballistaMouseArea.containsMouse ? "#34495e" : "#2c3e50") : "#1a1a1a"
-                            border.color: isEnabled ? "#4a6572" : "#2a2a2a"
-                            border.width: 2
+                            color: isEnabled ? (isHovered ? "#1f8dd9" : "#2c3e50") : "#1a1a1a"
+                            border.color: isEnabled ? (isHovered ? "#00d4ff" : "#4a6572") : "#2a2a2a"
+                            border.width: isHovered && isEnabled ? 4 : 2
                             opacity: isEnabled ? 1 : 0.5
+                            scale: isHovered && isEnabled ? 1.1 : 1
 
                             Image {
                                 id: ballistaRecruitIcon
@@ -904,7 +1107,7 @@ Rectangle {
                                     id: ballistaCostText
 
                                     anchors.centerIn: parent
-                                    text: unitGridContent.prod.villagerCost || 1
+                                    text: parent.parent.unitInfo.cost || 180
                                     color: ballistaCostBadge.parent.isEnabled ? "#fdf7e3" : "#8a8a8a"
                                     font.pointSize: 16
                                     font.bold: true
@@ -917,11 +1120,14 @@ Rectangle {
 
                                 anchors.fill: parent
                                 hoverEnabled: true
-                                enabled: parent.isEnabled
-                                onClicked: productionPanel.recruitUnit("ballista")
+                                onClicked: {
+                                    if (parent.isEnabled) {
+                                        productionPanel.recruitUnit("ballista");
+                                    }
+                                }
                                 cursorShape: parent.isEnabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
-                                ToolTip.text: parent.isEnabled ? qsTr("Recruit Ballista\nCost: %1 villagers\nBuild time: %2s").arg(unitGridContent.prod.villagerCost || 1).arg((unitGridContent.prod.buildTime || 0).toFixed(0)) : (parent.queueTotal >= 5 ? qsTr("Queue is full (5/5)") : (unitGridContent.prod.producedCount >= unitGridContent.prod.maxUnits ? qsTr("Unit cap reached") : qsTr("Cannot recruit")))
+                                ToolTip.text: parent.isEnabled ? qsTr("Recruit Ballista\nCost: %1 villagers\nBuild time: %2s").arg(parent.unitInfo.cost || 180).arg((parent.unitInfo.build_time || 10).toFixed(0)) : (parent.queueTotal >= 5 ? qsTr("Queue is full (5/5)") : (unitGridContent.prod.produced_count >= unitGridContent.prod.max_units ? qsTr("Unit cap reached") : qsTr("Cannot recruit")))
                                 ToolTip.delay: 300
                             }
 
@@ -932,19 +1138,43 @@ Rectangle {
                                 radius: parent.radius
                             }
 
+                            Behavior on color {
+                                ColorAnimation {
+                                    duration: 150
+                                }
+
+                            }
+
+                            Behavior on border.color {
+                                ColorAnimation {
+                                    duration: 150
+                                }
+
+                            }
+
+                            Behavior on scale {
+                                NumberAnimation {
+                                    duration: 100
+                                }
+
+                            }
+
                         }
 
                         Rectangle {
-                            property int queueTotal: (unitGridContent.prod.inProgress ? 1 : 0) + (unitGridContent.prod.queueSize || 0)
-                            property bool isEnabled: unitGridContent.prod.has_barracks && unitGridContent.prod.producedCount < unitGridContent.prod.maxUnits && queueTotal < 5
+                            property int queueTotal: (unitGridContent.prod.in_progress ? 1 : 0) + (unitGridContent.prod.queue_size || 0)
+                            property bool isEnabled: unitGridContent.prod.has_barracks && unitGridContent.prod.produced_count < unitGridContent.prod.max_units && queueTotal < 5
+                            property var unitInfo: productionPanel.getUnitProductionInfo("healer")
+                            property bool isHovered: healerMouseArea.containsMouse
 
                             width: 110
                             height: 80
                             radius: 6
-                            color: isEnabled ? (healerMouseArea.containsMouse ? "#34495e" : "#2c3e50") : "#1a1a1a"
-                            border.color: isEnabled ? "#4a6572" : "#2a2a2a"
-                            border.width: 2
+                            color: isEnabled ? (isHovered ? "#1f8dd9" : "#2c3e50") : "#1a1a1a"
+                            border.color: isEnabled ? (isHovered ? "#00d4ff" : "#4a6572") : "#2a2a2a"
+                            border.width: isHovered && isEnabled ? 4 : 2
                             opacity: isEnabled ? 1 : 0.5
+                            scale: isHovered && isEnabled ? 1.1 : 1
 
                             Image {
                                 id: healerRecruitIcon
@@ -983,7 +1213,7 @@ Rectangle {
                                     id: healerCostText
 
                                     anchors.centerIn: parent
-                                    text: unitGridContent.prod.villagerCost || 1
+                                    text: parent.parent.unitInfo.cost || 100
                                     color: healerCostBadge.parent.isEnabled ? "#fdf7e3" : "#8a8a8a"
                                     font.pointSize: 16
                                     font.bold: true
@@ -996,11 +1226,14 @@ Rectangle {
 
                                 anchors.fill: parent
                                 hoverEnabled: true
-                                enabled: parent.isEnabled
-                                onClicked: productionPanel.recruitUnit("healer")
+                                onClicked: {
+                                    if (parent.isEnabled) {
+                                        productionPanel.recruitUnit("healer");
+                                    }
+                                }
                                 cursorShape: parent.isEnabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
-                                ToolTip.text: parent.isEnabled ? qsTr("Recruit Healer\nCost: %1 villagers\nBuild time: %2s").arg(unitGridContent.prod.villager_cost || 1).arg((unitGridContent.prod.build_time || 0).toFixed(0)) : (parent.queueTotal >= 5 ? qsTr("Queue is full (5/5)") : (unitGridContent.prod.produced_count >= unitGridContent.prod.max_units ? qsTr("Unit cap reached") : qsTr("Cannot recruit")))
+                                ToolTip.text: parent.isEnabled ? qsTr("Recruit Healer\nCost: %1 villagers\nBuild time: %2s").arg(parent.unitInfo.cost || 100).arg((parent.unitInfo.build_time || 8).toFixed(0)) : (parent.queueTotal >= 5 ? qsTr("Queue is full (5/5)") : (unitGridContent.prod.produced_count >= unitGridContent.prod.max_units ? qsTr("Unit cap reached") : qsTr("Cannot recruit")))
                                 ToolTip.delay: 300
                             }
 
@@ -1009,6 +1242,27 @@ Rectangle {
                                 color: "#ffffff"
                                 opacity: healerMouseArea.pressed ? 0.2 : 0
                                 radius: parent.radius
+                            }
+
+                            Behavior on color {
+                                ColorAnimation {
+                                    duration: 150
+                                }
+
+                            }
+
+                            Behavior on border.color {
+                                ColorAnimation {
+                                    duration: 150
+                                }
+
+                            }
+
+                            Behavior on scale {
+                                NumberAnimation {
+                                    duration: 100
+                                }
+
                             }
 
                         }
