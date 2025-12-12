@@ -240,4 +240,49 @@ public:
   float time_since_last_heal{0.0F};
 };
 
+class CatapultLoadingComponent : public Component {
+public:
+  enum class LoadingState { Idle, Loading, ReadyToFire, Firing };
+
+  CatapultLoadingComponent() = default;
+
+  LoadingState state{LoadingState::Idle};
+  float loading_time{0.0F};
+  float loading_duration{2.0F};
+  float firing_time{0.0F};
+  float firing_duration{0.5F};
+
+  EntityID target_id{0};
+  float target_locked_x{0.0F};
+  float target_locked_y{0.0F};
+  float target_locked_z{0.0F};
+  bool target_position_locked{false};
+
+  [[nodiscard]] auto get_loading_progress() const -> float {
+    if (loading_duration <= 0.0F) {
+      return 1.0F;
+    }
+    return std::min(loading_time / loading_duration, 1.0F);
+  }
+
+  [[nodiscard]] auto get_firing_progress() const -> float {
+    if (firing_duration <= 0.0F) {
+      return 1.0F;
+    }
+    return std::min(firing_time / firing_duration, 1.0F);
+  }
+
+  [[nodiscard]] auto is_loading() const -> bool {
+    return state == LoadingState::Loading;
+  }
+
+  [[nodiscard]] auto is_ready_to_fire() const -> bool {
+    return state == LoadingState::ReadyToFire;
+  }
+
+  [[nodiscard]] auto is_firing() const -> bool {
+    return state == LoadingState::Firing;
+  }
+};
+
 } // namespace Engine::Core
