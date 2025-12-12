@@ -40,10 +40,9 @@ void TroopCountRegistry::on_unit_spawned(
     return;
   }
 
-  int const individuals_per_unit =
-      Game::Units::TroopConfig::instance().getIndividualsPerUnit(
-          event.spawn_type);
-  m_troop_counts[event.owner_id] += individuals_per_unit;
+  int const production_cost =
+      Game::Units::TroopConfig::instance().getProductionCost(event.spawn_type);
+  m_troop_counts[event.owner_id] += production_cost;
 }
 
 void TroopCountRegistry::on_unit_died(
@@ -52,10 +51,10 @@ void TroopCountRegistry::on_unit_died(
     return;
   }
 
-  int const individuals_per_unit =
-      Game::Units::TroopConfig::instance().getIndividualsPerUnit(
-          event.spawn_type);
-  m_troop_counts[event.owner_id] -= individuals_per_unit;
+  int const production_cost =
+      Game::Units::TroopConfig::instance().getProductionCost(event.spawn_type);
+  int old_count = m_troop_counts[event.owner_id];
+  m_troop_counts[event.owner_id] -= production_cost;
   if (m_troop_counts[event.owner_id] < 0) {
     m_troop_counts[event.owner_id] = 0;
   }
@@ -75,10 +74,10 @@ void TroopCountRegistry::rebuild_from_world(Engine::Core::World &world) {
       continue;
     }
 
-    int const individuals_per_unit =
-        Game::Units::TroopConfig::instance().getIndividualsPerUnit(
+    int const production_cost =
+        Game::Units::TroopConfig::instance().getProductionCost(
             unit->spawn_type);
-    m_troop_counts[unit->owner_id] += individuals_per_unit;
+    m_troop_counts[unit->owner_id] += production_cost;
   }
 }
 

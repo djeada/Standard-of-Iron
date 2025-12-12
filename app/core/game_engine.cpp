@@ -995,6 +995,19 @@ auto GameEngine::get_selected_production_state() const -> QVariantMap {
   return m;
 }
 
+auto GameEngine::get_unit_production_info(const QString &unit_type) const
+    -> QVariantMap {
+  QVariantMap info;
+  const auto &config = Game::Units::TroopConfig::instance();
+  std::string type_str = unit_type.toStdString();
+
+  info["cost"] = config.getProductionCost(type_str);
+  info["build_time"] = static_cast<double>(config.getBuildTime(type_str));
+  info["individuals_per_unit"] = config.getIndividualsPerUnit(type_str);
+
+  return info;
+}
+
 auto GameEngine::get_selected_units_command_mode() const -> QString {
   if (!m_world) {
     return "normal";
@@ -1541,10 +1554,10 @@ void GameEngine::on_unit_spawned(const Engine::Core::UnitSpawnedEvent &event) {
     if (event.spawn_type == Game::Units::SpawnType::Barracks) {
       m_entityCache.playerBarracksAlive = true;
     } else {
-      int const individuals_per_unit =
-          Game::Units::TroopConfig::instance().getIndividualsPerUnit(
+      int const production_cost =
+          Game::Units::TroopConfig::instance().getProductionCost(
               event.spawn_type);
-      m_entityCache.playerTroopCount += individuals_per_unit;
+      m_entityCache.playerTroopCount += production_cost;
     }
   } else if (owners.isAI(event.owner_id)) {
     if (event.spawn_type == Game::Units::SpawnType::Barracks) {
@@ -1569,10 +1582,10 @@ void GameEngine::on_unit_died(const Engine::Core::UnitDiedEvent &event) {
     if (event.spawn_type == Game::Units::SpawnType::Barracks) {
       m_entityCache.playerBarracksAlive = false;
     } else {
-      int const individuals_per_unit =
-          Game::Units::TroopConfig::instance().getIndividualsPerUnit(
+      int const production_cost =
+          Game::Units::TroopConfig::instance().getProductionCost(
               event.spawn_type);
-      m_entityCache.playerTroopCount -= individuals_per_unit;
+      m_entityCache.playerTroopCount -= production_cost;
       m_entityCache.playerTroopCount =
           std::max(0, m_entityCache.playerTroopCount);
     }
@@ -1616,10 +1629,10 @@ void GameEngine::rebuild_entity_cache() {
       if (unit->spawn_type == Game::Units::SpawnType::Barracks) {
         m_entityCache.playerBarracksAlive = true;
       } else {
-        int const individuals_per_unit =
-            Game::Units::TroopConfig::instance().getIndividualsPerUnit(
+        int const production_cost =
+            Game::Units::TroopConfig::instance().getProductionCost(
                 unit->spawn_type);
-        m_entityCache.playerTroopCount += individuals_per_unit;
+        m_entityCache.playerTroopCount += production_cost;
       }
     } else if (owners.isAI(unit->owner_id)) {
       if (unit->spawn_type == Game::Units::SpawnType::Barracks) {

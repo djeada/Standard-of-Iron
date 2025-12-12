@@ -23,7 +23,7 @@ struct LevelSnapshot {
   float cam_fov = 45.0F;
   float cam_near = 0.1F;
   float cam_far = 1000.0F;
-  int max_troops_per_player = 50;
+  int max_troops_per_player = 500;
 };
 
 struct RuntimeSnapshot {
