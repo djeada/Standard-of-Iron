@@ -134,7 +134,7 @@ struct AIContext {
   int enemyBuildingsCount = 0;
   float averageEnemyDistance = 0.0F;
 
-  int max_troops_per_player = 50;
+  int max_troops_per_player = 500;
 
   std::unordered_map<Engine::Core::EntityID, float> buildingsUnderAttack;
 };
