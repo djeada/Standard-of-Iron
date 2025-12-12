@@ -59,9 +59,11 @@
 #include "game/map/world_bootstrap.h"
 #include "game/systems/ai_system.h"
 #include "game/systems/arrow_system.h"
+#include "game/systems/ballista_attack_system.h"
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/camera_service.h"
 #include "game/systems/capture_system.h"
+#include "game/systems/catapult_attack_system.h"
 #include "game/systems/cleanup_system.h"
 #include "game/systems/combat_system.h"
 #include "game/systems/command_service.h"
@@ -77,6 +79,7 @@
 #include "game/systems/picking_service.h"
 #include "game/systems/production_service.h"
 #include "game/systems/production_system.h"
+#include "game/systems/projectile_system.h"
 #include "game/systems/save_load_service.h"
 #include "game/systems/selection_system.h"
 #include "game/systems/terrain_alignment_system.h"
@@ -86,6 +89,7 @@
 #include "game/units/troop_config.h"
 #include "render/geom/arrow.h"
 #include "render/geom/patrol_flags.h"
+#include "render/geom/stone.h"
 #include "render/gl/bootstrap.h"
 #include "render/gl/camera.h"
 #include "render/ground/biome_renderer.h"
@@ -148,9 +152,15 @@ GameEngine::GameEngine(QObject *parent)
       std::make_unique<Game::Systems::ArrowSystem>();
   m_world->add_system(std::move(arrow_sys));
 
+  std::unique_ptr<Engine::Core::System> projectile_sys =
+      std::make_unique<Game::Systems::ProjectileSystem>();
+  m_world->add_system(std::move(projectile_sys));
+
   m_world->add_system(std::make_unique<Game::Systems::MovementSystem>());
   m_world->add_system(std::make_unique<Game::Systems::PatrolSystem>());
   m_world->add_system(std::make_unique<Game::Systems::CombatSystem>());
+  m_world->add_system(std::make_unique<Game::Systems::CatapultAttackSystem>());
+  m_world->add_system(std::make_unique<Game::Systems::BallistaAttackSystem>());
   m_world->add_system(std::make_unique<Game::Systems::HealingSystem>());
   m_world->add_system(std::make_unique<Game::Systems::CaptureSystem>());
   m_world->add_system(std::make_unique<Game::Systems::AISystem>());
@@ -769,6 +779,12 @@ void GameEngine::render(int pixelWidth, int pixelHeight) {
   if (auto *arrow_system = m_world->get_system<Game::Systems::ArrowSystem>()) {
     if (auto *res = m_renderer->resources()) {
       Render::GL::renderArrows(m_renderer.get(), res, *arrow_system);
+    }
+  }
+  if (auto *projectile_system =
+          m_world->get_system<Game::Systems::ProjectileSystem>()) {
+    if (auto *res = m_renderer->resources()) {
+      Render::GL::render_projectiles(m_renderer.get(), res, *projectile_system);
     }
   }
 

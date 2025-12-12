@@ -127,16 +127,40 @@
       "playerId": 1
     },
     {
-      "type": "ballista",
-      "x": 27,
-      "z": 34,
+      "type": "catapult",
+      "x": 30,
+      "z": 42,
       "playerId": 1
     },
     {
-      "type": "catapult",
-      "x": 27,
-      "z": 34,
-      "playerId": 1
+      "type": "archer",
+      "x": 44,
+      "z": 29,
+      "playerId": 2
+    },
+    {
+      "type": "spearman",
+      "x": 44,
+      "z": 31,
+      "playerId": 2
+    },
+    {
+      "type": "spearman",
+      "x": 44,
+      "z": 32,
+      "playerId": 2
+    },
+    {
+      "type": "swordsman",
+      "x": 46,
+      "z": 30,
+      "playerId": 2
+    },
+    {
+      "type": "swordsman",
+      "x": 46,
+      "z": 31,
+      "playerId": 2
     },
     {
       "type": "barracks",
