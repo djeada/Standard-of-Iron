@@ -28,13 +28,62 @@ struct RomanBallistaPalette {
   QVector3D metal_bronze{0.72F, 0.52F, 0.30F};
   QVector3D rope{0.62F, 0.55F, 0.42F};
   QVector3D leather{0.42F, 0.30F, 0.20F};
+  QVector3D bolt{0.35F, 0.30F, 0.25F};
   QVector3D team{0.8F, 0.9F, 1.0F};
+};
+
+enum class BallistaAnimState { Idle, Loading, Firing, Resetting };
+
+struct BallistaAnimContext {
+  BallistaAnimState state{BallistaAnimState::Idle};
+  float loading_progress{0.0F};
+  float firing_progress{0.0F};
+  bool show_bolt{false};
 };
 
 inline auto make_palette(const QVector3D &team) -> RomanBallistaPalette {
   RomanBallistaPalette p;
   p.team = clampVec01(team);
   return p;
+}
+
+inline auto
+get_anim_context(const Engine::Core::Entity *entity) -> BallistaAnimContext {
+  BallistaAnimContext ctx;
+  if (entity == nullptr) {
+    return ctx;
+  }
+
+  auto *loading =
+      entity->get_component<Engine::Core::CatapultLoadingComponent>();
+  if (loading == nullptr) {
+    return ctx;
+  }
+
+  switch (loading->state) {
+  case Engine::Core::CatapultLoadingComponent::LoadingState::Idle:
+    ctx.state = BallistaAnimState::Idle;
+    ctx.show_bolt = false;
+    break;
+  case Engine::Core::CatapultLoadingComponent::LoadingState::Loading:
+    ctx.state = BallistaAnimState::Loading;
+    ctx.loading_progress = loading->get_loading_progress();
+    ctx.show_bolt = true;
+    break;
+  case Engine::Core::CatapultLoadingComponent::LoadingState::ReadyToFire:
+    ctx.state = BallistaAnimState::Firing;
+    ctx.loading_progress = 1.0F;
+    ctx.firing_progress = 0.0F;
+    ctx.show_bolt = true;
+    break;
+  case Engine::Core::CatapultLoadingComponent::LoadingState::Firing:
+    ctx.state = BallistaAnimState::Firing;
+    ctx.firing_progress = loading->get_firing_progress();
+    ctx.show_bolt = ctx.firing_progress < 0.2F;
+    break;
+  }
+
+  return ctx;
 }
 
 inline void draw_box(ISubmitter &out, Mesh *unit, Texture *white,
@@ -170,7 +219,8 @@ void drawBowstring(const DrawContext &p, ISubmitter &out, Texture *white,
 }
 
 void drawSlide(const DrawContext &p, ISubmitter &out, Mesh *unit,
-               Texture *white, const RomanBallistaPalette &c) {
+               Texture *white, const RomanBallistaPalette &c,
+               const BallistaAnimContext &anim_ctx) {
 
   QMatrix4x4 tilted = p.model;
   tilted.rotate(30.0F, 1.0F, 0.0F, 0.0F);
@@ -188,6 +238,30 @@ void drawSlide(const DrawContext &p, ISubmitter &out, Mesh *unit,
 
   draw_cyl(out, tilted, QVector3D(0.0F, 0.26F, -0.25F),
            QVector3D(0.0F, 0.26F, -0.15F), 0.012F, c.metal_iron, white);
+
+  float slide_offset = 0.0F;
+  switch (anim_ctx.state) {
+  case BallistaAnimState::Idle:
+    slide_offset = 0.0F;
+    break;
+  case BallistaAnimState::Loading:
+    slide_offset = anim_ctx.loading_progress * 0.35F;
+    break;
+  case BallistaAnimState::Firing:
+    slide_offset = 0.35F * (1.0F - anim_ctx.firing_progress);
+    break;
+  case BallistaAnimState::Resetting:
+    slide_offset = 0.0F;
+    break;
+  }
+
+  if (anim_ctx.show_bolt) {
+    QMatrix4x4 bolt_matrix = tilted;
+    bolt_matrix.translate(0.0F, 0.26F, -0.20F + slide_offset);
+    float const bolt_scale = 0.04F;
+    bolt_matrix.scale(bolt_scale, bolt_scale, 0.15F);
+    out.mesh(getUnitCube(), bolt_matrix, c.bolt, white, 1.0F);
+  }
 }
 
 void drawTriggerMechanism(const DrawContext &p, ISubmitter &out, Mesh *unit,
@@ -257,6 +331,7 @@ void register_ballista_renderer(EntityRendererRegistry &registry) {
       }
     }
     RomanBallistaPalette c = make_palette(team_color);
+    auto anim_ctx = get_anim_context(p.entity);
 
     DrawContext ctx = p;
     ctx.model = p.model;
@@ -267,7 +342,7 @@ void register_ballista_renderer(EntityRendererRegistry &registry) {
     drawTorsionBundles(ctx, out, unit, white, c);
     drawArms(ctx, out, unit, white, c);
     drawBowstring(ctx, out, white, c);
-    drawSlide(ctx, out, unit, white, c);
+    drawSlide(ctx, out, unit, white, c, anim_ctx);
     drawTriggerMechanism(ctx, out, unit, white, c);
     drawRomanOrnaments(ctx, out, unit, white, c);
   });
