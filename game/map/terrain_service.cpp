@@ -23,20 +23,20 @@ void TerrainService::initialize(const MapDefinition &mapDef) {
   m_height_map->buildFromFeatures(mapDef.terrain);
   m_height_map->addRiverSegments(mapDef.rivers);
   m_height_map->addBridges(mapDef.bridges);
-  m_biomeSettings = mapDef.biome;
-  m_height_map->applyBiomeVariation(m_biomeSettings);
+  m_biome_settings = mapDef.biome;
+  m_height_map->applyBiomeVariation(m_biome_settings);
   m_fire_camps = mapDef.firecamps;
   m_road_segments = mapDef.roads;
 }
 
 void TerrainService::clear() {
   m_height_map.reset();
-  m_biomeSettings = BiomeSettings();
+  m_biome_settings = BiomeSettings();
   m_fire_camps.clear();
   m_road_segments.clear();
 }
 
-auto TerrainService::getTerrainHeight(float world_x,
+auto TerrainService::get_terrain_height(float world_x,
                                       float world_z) const -> float {
   if (!m_height_map) {
     return 0.0F;
@@ -44,7 +44,7 @@ auto TerrainService::getTerrainHeight(float world_x,
   return m_height_map->getHeightAt(world_x, world_z);
 }
 
-auto TerrainService::getTerrainHeightGrid(int grid_x,
+auto TerrainService::get_terrain_height_grid(int grid_x,
                                           int grid_z) const -> float {
   if (!m_height_map) {
     return 0.0F;
@@ -52,14 +52,14 @@ auto TerrainService::getTerrainHeightGrid(int grid_x,
   return m_height_map->getHeightAtGrid(grid_x, grid_z);
 }
 
-auto TerrainService::isWalkable(int grid_x, int grid_z) const -> bool {
+auto TerrainService::is_walkable(int grid_x, int grid_z) const -> bool {
   if (!m_height_map) {
     return true;
   }
   return m_height_map->isWalkable(grid_x, grid_z);
 }
 
-auto TerrainService::isForbidden(int grid_x, int grid_z) const -> bool {
+auto TerrainService::is_forbidden(int grid_x, int grid_z) const -> bool {
   if (!m_height_map) {
     return false;
   }
@@ -85,7 +85,7 @@ auto TerrainService::isForbidden(int grid_x, int grid_z) const -> bool {
   return registry.isPointInBuilding(world_x, world_z);
 }
 
-auto TerrainService::isForbiddenWorld(float world_x,
+auto TerrainService::is_forbidden_world(float world_x,
                                       float world_z) const -> bool {
   if (!m_height_map) {
     return false;
@@ -109,14 +109,14 @@ auto TerrainService::isForbiddenWorld(float world_x,
   return isForbidden(grid_x_int, grid_z_int);
 }
 
-auto TerrainService::isHillEntrance(int grid_x, int grid_z) const -> bool {
+auto TerrainService::is_hill_entrance(int grid_x, int grid_z) const -> bool {
   if (!m_height_map) {
     return false;
   }
   return m_height_map->isHillEntrance(grid_x, grid_z);
 }
 
-auto TerrainService::getTerrainType(int grid_x,
+auto TerrainService::get_terrain_type(int grid_x,
                                     int grid_z) const -> TerrainType {
   if (!m_height_map) {
     return TerrainType::Flat;
@@ -124,7 +124,7 @@ auto TerrainService::getTerrainType(int grid_x,
   return m_height_map->getTerrainType(grid_x, grid_z);
 }
 
-void TerrainService::restoreFromSerialized(
+void TerrainService::restore_from_serialized(
     int width, int height, float tile_size, const std::vector<float> &heights,
     const std::vector<TerrainType> &terrain_types,
     const std::vector<RiverSegment> &rivers,
@@ -132,7 +132,7 @@ void TerrainService::restoreFromSerialized(
     const BiomeSettings &biome) {
   m_height_map = std::make_unique<TerrainHeightMap>(width, height, tile_size);
   m_height_map->restoreFromData(heights, terrain_types, rivers, bridges);
-  m_biomeSettings = biome;
+  m_biome_settings = biome;
   m_road_segments = roads;
 }
 

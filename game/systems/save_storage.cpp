@@ -514,7 +514,7 @@ auto SaveStorage::schemaVersion(QString *out_error) const -> int {
   return 0;
 }
 
-auto SaveStorage::setSchemaVersion(int version,
+auto SaveStorage::set_schema_version(int version,
                                    QString *out_error) const -> bool {
   QSqlQuery pragma_query(m_database);
   if (!pragma_query.exec(
@@ -566,7 +566,7 @@ auto SaveStorage::createBaseSchema(QString *out_error) const -> bool {
   return true;
 }
 
-auto SaveStorage::migrateSchema(int fromVersion,
+auto SaveStorage::migrate_schema(int fromVersion,
                                 QString *out_error) const -> bool {
   int version = fromVersion;
 

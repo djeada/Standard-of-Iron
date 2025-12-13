@@ -35,7 +35,7 @@ namespace {
 auto resolve_nation_id(const Engine::Core::UnitComponent *unit,
                        int owner_id) -> Game::Systems::NationID {
   auto &registry = NationRegistry::instance();
-  if (const auto *nation = registry.getNationForPlayer(owner_id)) {
+  if (const auto *nation = registry.get_nation_for_player(owner_id)) {
     return nation->id;
   }
   return registry.default_nation_id();

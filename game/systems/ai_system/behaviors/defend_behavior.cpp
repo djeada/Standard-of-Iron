@@ -21,7 +21,7 @@ void DefendBehavior::execute(const AISnapshot &snapshot, AIContext &context,
                              std::vector<AICommand> &outCommands) {
   m_defendTimer += delta_time;
 
-  float const update_interval = context.barracksUnderThreat ? 0.5F : 1.5F;
+  float const update_interval = context.barracks_under_threat ? 0.5F : 1.5F;
 
   if (m_defendTimer < update_interval) {
     return;
@@ -57,7 +57,7 @@ void DefendBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   engaged_defenders.reserve(snapshot.friendlies.size());
 
   for (const auto &entity : snapshot.friendlies) {
-    if (entity.isBuilding) {
+    if (entity.is_building) {
       continue;
     }
 
@@ -92,7 +92,7 @@ void DefendBehavior::execute(const AISnapshot &snapshot, AIContext &context,
       ready_defenders.size() + engaged_defenders.size();
   std::size_t desired_count = total_available;
 
-  if (context.barracksUnderThreat || !context.buildingsUnderAttack.empty()) {
+  if (context.barracks_under_threat || !context.buildingsUnderAttack.empty()) {
 
     desired_count = total_available;
   } else {
@@ -109,7 +109,7 @@ void DefendBehavior::execute(const AISnapshot &snapshot, AIContext &context,
     return;
   }
 
-  if (context.barracksUnderThreat || !context.buildingsUnderAttack.empty()) {
+  if (context.barracks_under_threat || !context.buildingsUnderAttack.empty()) {
 
     std::vector<const ContactSnapshot *> nearby_threats;
     nearby_threats.reserve(snapshot.visibleEnemies.size());
@@ -154,7 +154,7 @@ void DefendBehavior::execute(const AISnapshot &snapshot, AIContext &context,
           return;
         }
       }
-    } else if (context.barracksUnderThreat ||
+    } else if (context.barracks_under_threat ||
                !context.buildingsUnderAttack.empty()) {
 
       const ContactSnapshot *closest_threat = nullptr;
@@ -307,15 +307,15 @@ auto DefendBehavior::should_execute(const AISnapshot &snapshot,
     return false;
   }
 
-  if (context.barracksUnderThreat || !context.buildingsUnderAttack.empty()) {
+  if (context.barracks_under_threat || !context.buildingsUnderAttack.empty()) {
     return true;
   }
 
-  if (context.state == AIState::Defending && context.idleUnits > 0) {
+  if (context.state == AIState::Defending && context.idle_units > 0) {
     return true;
   }
 
-  if (context.averageHealth < 0.6F && context.total_units > 0) {
+  if (context.average_health < 0.6F && context.total_units > 0) {
     return true;
   }
 

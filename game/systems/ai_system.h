@@ -45,7 +45,7 @@ private:
   AI::AICommandApplier m_applier;
   AI::AICommandFilter m_commandFilter;
 
-  float m_totalGameTime = 0.0F;
+  float m_total_game_time = 0.0F;
 
   Engine::Core::ScopedEventSubscription<Engine::Core::BuildingAttackedEvent>
       m_buildingAttackedSubscription;
