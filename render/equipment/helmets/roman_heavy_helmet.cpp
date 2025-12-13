@@ -79,13 +79,13 @@ void RomanHeavyHelmetRenderer::render(const DrawContext &ctx,
   QVector3D helm_bot = head_point({0.0f, helmet_bottom_y, 0.0f});
   QVector3D helm_top = head_point({0.0f, helmet_top_y, 0.0f});
 
-  submitter.mesh(getUnitCylinder(),
+  submitter.mesh(get_unit_cylinder(),
                  cylinder_between(ctx.model, helm_bot, helm_top, helm_r),
                  steel_color, nullptr, 1.0f, 2);
 
   QVector3D cap_top = head_point({0.0f, cap_top_y, 0.0f});
   submitter.mesh(
-      getUnitCylinder(),
+      get_unit_cylinder(),
       cylinder_between(ctx.model, helm_top, cap_top, helm_r * cap_scale),
       steel_color * 1.06f, nullptr, 1.0f, 2);
 
@@ -94,7 +94,7 @@ void RomanHeavyHelmetRenderer::render(const DrawContext &ctx,
   QVector3D brow_bot = brow_center - head.up * brow_bottom_offset;
 
   submitter.mesh(
-      getUnitCylinder(),
+      get_unit_cylinder(),
       cylinder_between(ctx.model, brow_bot, brow_top, helm_r * brow_scale),
       brass_color * 0.92f, nullptr, 1.0f, 2);
 
@@ -102,7 +102,7 @@ void RomanHeavyHelmetRenderer::render(const DrawContext &ctx,
   QVector3D neck_bot = head_point({0.0f, neck_bottom_y, neck_bottom_z});
 
   submitter.mesh(
-      getUnitCylinder(),
+      get_unit_cylinder(),
       cylinder_between(ctx.model, neck_bot, neck_top, helm_r * neck_scale),
       steel_color * 0.88f, nullptr, 1.0f, 2);
 
@@ -111,15 +111,15 @@ void RomanHeavyHelmetRenderer::render(const DrawContext &ctx,
   QVector3D crest_top = crest_mid + head.up * crest_top_offset;
 
   submitter.mesh(
-      getUnitCylinder(),
+      get_unit_cylinder(),
       cylinder_between(ctx.model, crest_base, crest_mid, crest_mount_radius),
       brass_color, nullptr, 1.0f, 2);
 
-  submitter.mesh(getUnitCone(),
+  submitter.mesh(get_unit_cone(),
                  cone_from_to(ctx.model, crest_mid, crest_top, crest_cone_radius),
                  QVector3D(0.96f, 0.12f, 0.12f), nullptr, 1.0f, 0);
 
-  submitter.mesh(getUnitSphere(),
+  submitter.mesh(get_unit_sphere(),
                  sphere_at(ctx.model, crest_top, crest_top_sphere_r),
                  brass_color, nullptr, 1.0f, 2);
 }

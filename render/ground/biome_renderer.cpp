@@ -94,7 +94,7 @@ void BiomeRenderer::submit(Renderer &renderer, ResourceManager *resources) {
       m_grassInstanceBuffer = std::make_unique<Buffer>(Buffer::Type::Vertex);
     }
     if (m_grassInstancesDirty && m_grassInstanceBuffer) {
-      m_grassInstanceBuffer->setData(m_grassInstances, Buffer::Usage::Static);
+      m_grassInstanceBuffer->set_data(m_grassInstances, Buffer::Usage::Static);
       m_grassInstancesDirty = false;
     }
   } else {

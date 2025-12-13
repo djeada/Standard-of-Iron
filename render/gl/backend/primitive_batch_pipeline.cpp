@@ -89,7 +89,7 @@ void PrimitiveBatchPipeline::setup_instance_attributes(GLuint vao,
 }
 
 void PrimitiveBatchPipeline::initialize_sphere_vao() {
-  Mesh *unit = getUnitSphere();
+  Mesh *unit = get_unit_sphere();
   if (unit == nullptr) {
     return;
   }
@@ -136,7 +136,7 @@ void PrimitiveBatchPipeline::initialize_sphere_vao() {
 }
 
 void PrimitiveBatchPipeline::initialize_cylinder_vao() {
-  Mesh *unit = getUnitCylinder();
+  Mesh *unit = get_unit_cylinder();
   if (unit == nullptr) {
     return;
   }
@@ -183,7 +183,7 @@ void PrimitiveBatchPipeline::initialize_cylinder_vao() {
 }
 
 void PrimitiveBatchPipeline::initialize_cone_vao() {
-  Mesh *unit = getUnitCone();
+  Mesh *unit = get_unit_cone();
   if (unit == nullptr) {
     return;
   }
@@ -350,9 +350,9 @@ void PrimitiveBatchPipeline::draw_spheres(std::size_t count,
   }
 
   m_shader->use();
-  m_shader->setUniform(m_uniforms.view_proj, view_proj);
-  m_shader->setUniform(m_uniforms.light_dir, QVector3D(0.35F, 0.8F, 0.45F));
-  m_shader->setUniform(m_uniforms.ambient_strength, 0.3F);
+  m_shader->set_uniform(m_uniforms.view_proj, view_proj);
+  m_shader->set_uniform(m_uniforms.light_dir, QVector3D(0.35F, 0.8F, 0.45F));
+  m_shader->set_uniform(m_uniforms.ambient_strength, 0.3F);
 
   glBindVertexArray(m_sphere_vao);
   glDrawElementsInstanced(GL_TRIANGLES, m_sphere_index_count, GL_UNSIGNED_INT,
@@ -367,9 +367,9 @@ void PrimitiveBatchPipeline::draw_cylinders(std::size_t count,
   }
 
   m_shader->use();
-  m_shader->setUniform(m_uniforms.view_proj, view_proj);
-  m_shader->setUniform(m_uniforms.light_dir, QVector3D(0.35F, 0.8F, 0.45F));
-  m_shader->setUniform(m_uniforms.ambient_strength, 0.3F);
+  m_shader->set_uniform(m_uniforms.view_proj, view_proj);
+  m_shader->set_uniform(m_uniforms.light_dir, QVector3D(0.35F, 0.8F, 0.45F));
+  m_shader->set_uniform(m_uniforms.ambient_strength, 0.3F);
 
   glBindVertexArray(m_cylinder_vao);
   glDrawElementsInstanced(GL_TRIANGLES, m_cylinder_index_count, GL_UNSIGNED_INT,
@@ -384,9 +384,9 @@ void PrimitiveBatchPipeline::draw_cones(std::size_t count,
   }
 
   m_shader->use();
-  m_shader->setUniform(m_uniforms.view_proj, view_proj);
-  m_shader->setUniform(m_uniforms.light_dir, QVector3D(0.35F, 0.8F, 0.45F));
-  m_shader->setUniform(m_uniforms.ambient_strength, 0.3F);
+  m_shader->set_uniform(m_uniforms.view_proj, view_proj);
+  m_shader->set_uniform(m_uniforms.light_dir, QVector3D(0.35F, 0.8F, 0.45F));
+  m_shader->set_uniform(m_uniforms.ambient_strength, 0.3F);
 
   glBindVertexArray(m_cone_vao);
   glDrawElementsInstanced(GL_TRIANGLES, m_cone_index_count, GL_UNSIGNED_INT,

@@ -48,20 +48,20 @@ void CarthageHeavyHelmetRenderer::render(const DrawContext &ctx,
   float base_r = R * 1.04f;
   QVector3D cone_base = head_point(QVector3D(0.0f, 0.58f, 0.0f));
   QVector3D cone_tip = head_point(QVector3D(0.0f, 1.46f, 0.0f));
-  submitter.mesh(getUnitCone(),
+  submitter.mesh(get_unit_cone(),
                  cone_from_to(ctx.model, cone_base, cone_tip, base_r), base_color,
                  nullptr, 1.0f, 2);
 
   QVector3D tip_base = head_point(QVector3D(0.0f, 1.12f, 0.0f));
   QVector3D tip_apex = head_point(QVector3D(0.0f, 1.70f, 0.0f));
-  submitter.mesh(getUnitCone(),
+  submitter.mesh(get_unit_cone(),
                  cone_from_to(ctx.model, tip_base, tip_apex,
                             std::max(0.05f, base_r * 0.28f)),
                  accent, nullptr, 1.0f, 2);
 
   QMatrix4x4 tip_cap =
       sphere_at(ctx.model, tip_apex + head.up * (R * 0.015f), R * 0.06f);
-  submitter.mesh(getUnitSphere(), tip_cap,
+  submitter.mesh(get_unit_sphere(), tip_cap,
                  mixColor(accent, m_config.glow_color, 0.48F), nullptr, 1.0f,
                  2);
 }

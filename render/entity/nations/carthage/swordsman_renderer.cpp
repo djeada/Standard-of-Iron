@@ -280,10 +280,10 @@ private:
     QVector3D const tip = hip + QVector3D(-0.05F, -0.22F, -0.12F);
     float const sheath_r = extras.swordWidth * 0.85F;
 
-    out.mesh(getUnitCylinder(), cylinder_between(ctx.model, hip, tip, sheath_r),
+    out.mesh(get_unit_cylinder(), cylinder_between(ctx.model, hip, tip, sheath_r),
              v.palette.leather * 0.9F, nullptr, 1.0F);
 
-    out.mesh(getUnitCone(),
+    out.mesh(get_unit_cone(),
              cone_from_to(ctx.model, tip, tip + QVector3D(-0.02F, -0.02F, -0.02F),
                         sheath_r),
              extras.metalColor, nullptr, 1.0F);
