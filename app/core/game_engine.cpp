@@ -16,7 +16,9 @@
 #include "game/audio/AudioSystem.h"
 #include "game/units/spawn_type.h"
 #include "game/units/troop_type.h"
+#include "level_orchestrator.h"
 #include "minimap_manager.h"
+#include "renderer_bootstrap.h"
 #include <QBuffer>
 #include <QCoreApplication>
 #include <QCursor>
@@ -133,54 +135,28 @@ GameEngine::GameEngine(QObject *parent)
   Game::Systems::GlobalStatsRegistry::instance().initialize();
 
   m_world = std::make_unique<Engine::Core::World>();
-  m_renderer = std::make_unique<Render::GL::Renderer>();
-  m_camera = std::make_unique<Render::GL::Camera>();
-  m_ground = std::make_unique<Render::GL::GroundRenderer>();
-  m_terrain = std::make_unique<Render::GL::TerrainRenderer>();
-  m_biome = std::make_unique<Render::GL::BiomeRenderer>();
-  m_river = std::make_unique<Render::GL::RiverRenderer>();
-  m_road = std::make_unique<Render::GL::RoadRenderer>();
-  m_riverbank = std::make_unique<Render::GL::RiverbankRenderer>();
-  m_bridge = std::make_unique<Render::GL::BridgeRenderer>();
-  m_fog = std::make_unique<Render::GL::FogRenderer>();
-  m_stone = std::make_unique<Render::GL::StoneRenderer>();
-  m_plant = std::make_unique<Render::GL::PlantRenderer>();
-  m_pine = std::make_unique<Render::GL::PineRenderer>();
-  m_olive = std::make_unique<Render::GL::OliveRenderer>();
-  m_firecamp = std::make_unique<Render::GL::FireCampRenderer>();
 
-  m_passes = {m_ground.get(), m_terrain.get(),   m_river.get(),
-              m_road.get(),   m_riverbank.get(), m_bridge.get(),
-              m_biome.get(),  m_stone.get(),     m_plant.get(),
-              m_pine.get(),   m_olive.get(),     m_firecamp.get(),
-              m_fog.get()};
+  // Initialize rendering components
+  auto rendering = RendererBootstrap::initialize_rendering();
+  m_renderer = std::move(rendering.renderer);
+  m_camera = std::move(rendering.camera);
+  m_ground = std::move(rendering.ground);
+  m_terrain = std::move(rendering.terrain);
+  m_biome = std::move(rendering.biome);
+  m_river = std::move(rendering.river);
+  m_road = std::move(rendering.road);
+  m_riverbank = std::move(rendering.riverbank);
+  m_bridge = std::move(rendering.bridge);
+  m_fog = std::move(rendering.fog);
+  m_stone = std::move(rendering.stone);
+  m_plant = std::move(rendering.plant);
+  m_pine = std::move(rendering.pine);
+  m_olive = std::move(rendering.olive);
+  m_firecamp = std::move(rendering.firecamp);
+  m_passes = std::move(rendering.passes);
 
-  std::unique_ptr<Engine::Core::System> arrow_sys =
-      std::make_unique<Game::Systems::ArrowSystem>();
-  m_world->add_system(std::move(arrow_sys));
-
-  std::unique_ptr<Engine::Core::System> projectile_sys =
-      std::make_unique<Game::Systems::ProjectileSystem>();
-  m_world->add_system(std::move(projectile_sys));
-
-  m_world->add_system(std::make_unique<Game::Systems::MovementSystem>());
-  m_world->add_system(std::make_unique<Game::Systems::PatrolSystem>());
-  m_world->add_system(std::make_unique<Game::Systems::CombatSystem>());
-  m_world->add_system(std::make_unique<Game::Systems::CatapultAttackSystem>());
-  m_world->add_system(std::make_unique<Game::Systems::BallistaAttackSystem>());
-  m_world->add_system(std::make_unique<Game::Systems::HealingSystem>());
-  m_world->add_system(std::make_unique<Game::Systems::CaptureSystem>());
-  m_world->add_system(std::make_unique<Game::Systems::AISystem>());
-  m_world->add_system(std::make_unique<Game::Systems::ProductionSystem>());
-  m_world->add_system(
-      std::make_unique<Game::Systems::TerrainAlignmentSystem>());
-  m_world->add_system(std::make_unique<Game::Systems::CleanupSystem>());
-
-  {
-    std::unique_ptr<Engine::Core::System> sel_sys =
-        std::make_unique<Game::Systems::SelectionSystem>();
-    m_world->add_system(std::move(sel_sys));
-  }
+  // Initialize world systems
+  RendererBootstrap::initialize_world_systems(*m_world);
 
   m_pickingService = std::make_unique<Game::Systems::PickingService>();
   m_victoryService = std::make_unique<Game::Systems::VictoryService>();
@@ -1283,58 +1259,41 @@ void GameEngine::start_skirmish(const QString &map_path,
       m_hoverTracker->update_hover(-1, -1, *m_world, *m_camera, 0, 0);
     }
 
-    m_entity_cache.reset();
+    LevelOrchestrator orchestrator;
+    LevelOrchestrator::RendererRefs renderers{
+        m_renderer.get(), m_camera.get(),     m_ground.get(),
+        m_terrain.get(),  m_biome.get(),      m_river.get(),
+        m_road.get(),     m_riverbank.get(),  m_bridge.get(),
+        m_fog.get(),      m_stone.get(),      m_plant.get(),
+        m_pine.get(),     m_olive.get(),      m_firecamp.get()};
 
-    Game::Map::SkirmishLoader loader(*m_world, *m_renderer, *m_camera);
-    loader.set_ground_renderer(m_ground.get());
-    loader.set_terrain_renderer(m_terrain.get());
-    loader.set_biome_renderer(m_biome.get());
-    loader.set_river_renderer(m_river.get());
-    loader.set_road_renderer(m_road.get());
-    loader.set_riverbank_renderer(m_riverbank.get());
-    loader.set_bridge_renderer(m_bridge.get());
-    loader.set_fog_renderer(m_fog.get());
-    loader.set_stone_renderer(m_stone.get());
-    loader.set_plant_renderer(m_plant.get());
-    loader.set_pine_renderer(m_pine.get());
-    loader.set_olive_renderer(m_olive.get());
-    loader.set_fire_camp_renderer(m_firecamp.get());
-
-    loader.set_on_owners_updated([this]() { emit owner_info_changed(); });
-
-    loader.set_on_visibility_mask_ready([this]() {
+    auto visibility_ready = [this]() {
       m_runtime.visibility_version =
           Game::Map::VisibilityService::instance().version();
       m_runtime.visibility_update_accumulator = 0.0F;
-    });
+    };
 
-    int updated_player_id = m_selected_player_id;
-    auto result = loader.start(map_path, playerConfigs, m_selected_player_id,
-                               updated_player_id);
+    auto owner_update = [this]() { emit owner_info_changed(); };
 
-    if (updated_player_id != m_selected_player_id) {
-      m_selected_player_id = updated_player_id;
+    auto load_result = orchestrator.load_skirmish(
+        map_path, playerConfigs, m_selected_player_id, *m_world, renderers,
+        m_level, m_entity_cache, m_victoryService.get(),
+        m_minimap_manager.get(), visibility_ready, owner_update);
+
+    if (load_result.updated_player_id != m_selected_player_id) {
+      m_selected_player_id = load_result.updated_player_id;
       emit selected_player_id_changed();
     }
 
-    if (!result.ok && !result.errorMessage.isEmpty()) {
-      set_error(result.errorMessage);
+    if (!load_result.success) {
+      set_error(load_result.error_message);
+      m_runtime.loading = false;
+      return;
     }
 
-    m_runtime.local_owner_id = updated_player_id;
-    m_level.map_name = result.map_name;
-    m_level.player_unit_id = result.player_unit_id;
-    m_level.cam_fov = result.cam_fov;
-    m_level.cam_near = result.cam_near;
-    m_level.cam_far = result.cam_far;
-    m_level.max_troops_per_player = result.max_troops_per_player;
-
-    Game::GameConfig::instance().set_max_troops_per_player(
-        result.max_troops_per_player);
+    m_runtime.local_owner_id = load_result.updated_player_id;
 
     if (m_victoryService) {
-      m_victoryService->configure(result.victoryConfig,
-                                  m_runtime.local_owner_id);
       m_victoryService->setVictoryCallback([this](const QString &state) {
         if (m_runtime.victory_state != state) {
           m_runtime.victory_state = state;
@@ -1347,44 +1306,9 @@ void GameEngine::start_skirmish(const QString &map_path,
       });
     }
 
-    if (result.has_focus_position && m_camera) {
-      const auto &cam_config = Game::GameConfig::instance().camera();
-      m_camera->set_rts_view(result.focusPosition, cam_config.default_distance,
-                             cam_config.default_pitch, cam_config.default_yaw);
-    }
-
-    Game::Map::MapDefinition map_def;
-    QString map_error;
-    if (Game::Map::MapLoader::loadFromJsonFile(map_path, map_def, &map_error)) {
-      if (m_minimap_manager) {
-        m_minimap_manager->generate_for_map(map_def);
-      }
-    } else {
-      qWarning() << "GameEngine: Failed to load map for minimap generation:"
-                 << map_error;
-    }
-
     m_runtime.loading = false;
 
-    if (auto *ai_system = m_world->get_system<Game::Systems::AISystem>()) {
-      ai_system->reinitialize();
-    }
-
     rebuild_entity_cache();
-    auto &troops = Game::Systems::TroopCountRegistry::instance();
-    troops.rebuild_from_world(*m_world);
-
-    auto &stats_registry = Game::Systems::GlobalStatsRegistry::instance();
-    stats_registry.rebuild_from_world(*m_world);
-
-    auto &owner_registry = Game::Systems::OwnerRegistry::instance();
-    const auto &all_owners = owner_registry.get_all_owners();
-    for (const auto &owner : all_owners) {
-      if (owner.type == Game::Systems::OwnerType::Player ||
-          owner.type == Game::Systems::OwnerType::AI) {
-        stats_registry.mark_game_start(owner.owner_id);
-      }
-    }
 
     m_ambient_state_manager = std::make_unique<AmbientStateManager>();
 
