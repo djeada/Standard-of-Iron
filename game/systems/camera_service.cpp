@@ -68,7 +68,7 @@ void CameraService::follow_selection(Render::GL::Camera &camera,
 
   if (enable) {
     if (auto *selection_system = world.get_system<SelectionSystem>()) {
-      m_followSystem->snapToSelection(world, *selection_system, camera);
+      m_followSystem->snap_to_selection(world, *selection_system, camera);
     }
   } else {
     auto pos = camera.get_position();

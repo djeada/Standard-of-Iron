@@ -32,9 +32,9 @@ void CameraFollowSystem::update(Engine::Core::World &world,
   }
 }
 
-void CameraFollowSystem::snapToSelection(Engine::Core::World &world,
-                                         SelectionSystem &selection,
-                                         Render::GL::Camera &camera) {
+void CameraFollowSystem::snap_to_selection(Engine::Core::World &world,
+                                           SelectionSystem &selection,
+                                           Render::GL::Camera &camera) {
   const auto &sel = selection.get_selected_units();
   if (sel.empty()) {
     return;
