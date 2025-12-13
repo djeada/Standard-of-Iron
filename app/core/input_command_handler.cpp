@@ -8,10 +8,10 @@
 #include "../utils/movement_utils.h"
 #include "game/core/component.h"
 #include "game/core/world.h"
+#include "game/game_config.h"
 #include "game/systems/command_service.h"
 #include "game/systems/formation_planner.h"
 #include "game/systems/picking_service.h"
-#include "game/systems/selection_controller.h"
 #include "game/systems/selection_system.h"
 #include "render/gl/camera.h"
 
@@ -22,9 +22,9 @@ InputCommandHandler::InputCommandHandler(
     CursorManager *cursor_manager, HoverTracker *hover_tracker,
     Game::Systems::PickingService *picking_service, Render::GL::Camera *camera)
     : m_world(world), m_selection_controller(selection_controller),
-      m_command_controller(command_controller), m_cursor_manager(cursor_manager),
-      m_hover_tracker(hover_tracker), m_picking_service(picking_service),
-      m_camera(camera) {}
+      m_command_controller(command_controller),
+      m_cursor_manager(cursor_manager), m_hover_tracker(hover_tracker),
+      m_picking_service(picking_service), m_camera(camera) {}
 
 void InputCommandHandler::on_map_clicked(qreal sx, qreal sy, int local_owner_id,
                                          const ViewportState &viewport) {
@@ -83,9 +83,8 @@ void InputCommandHandler::on_right_click(qreal sx, qreal sy, int local_owner_id,
 
   if (m_picking_service && m_camera) {
     QVector3D hit;
-    if (m_picking_service->screen_to_ground(QPointF(sx, sy), *m_camera,
-                                           viewport.width, viewport.height,
-                                           hit)) {
+    if (m_picking_service->screen_to_ground(
+            QPointF(sx, sy), *m_camera, viewport.width, viewport.height, hit)) {
       auto targets = Game::Systems::FormationPlanner::spreadFormation(
           int(sel.size()), hit,
           Game::GameConfig::instance().gameplay().formation_spacing_default);

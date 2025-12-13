@@ -6,13 +6,16 @@
 #include "game/map/environment.h"
 #include "game/map/map_loader.h"
 #include "game/map/terrain_service.h"
+#include "game/map/visibility_service.h"
 #include "game/systems/building_collision_registry.h"
+#include "game/systems/command_service.h"
 #include "game/systems/game_state_serializer.h"
 #include "game/systems/global_stats_registry.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/troop_count_registry.h"
-#include "game/systems/visibility_service.h"
+#include "game/units/troop_config.h"
 #include "game/units/troop_type.h"
+#include "game_engine.h"
 #include "minimap_manager.h"
 #include "render/gl/camera.h"
 #include "render/ground/biome_renderer.h"
@@ -110,7 +113,8 @@ void GameStateRestorer::rebuild_registries_after_load(
   }
 }
 
-void GameStateRestorer::rebuild_building_collisions(Engine::Core::World *world) {
+void GameStateRestorer::rebuild_building_collisions(
+    Engine::Core::World *world) {
   auto &registry = Game::Systems::BuildingCollisionRegistry::instance();
   registry.clear();
   if (!world) {
@@ -177,10 +181,10 @@ void GameStateRestorer::restore_environment_from_metadata(
   if (renderers.renderer && renderers.camera) {
     if (loaded_definition) {
       Game::Map::Environment::apply(def, *renderers.renderer,
-                                   *renderers.camera);
+                                    *renderers.camera);
     } else {
       Game::Map::Environment::applyDefault(*renderers.renderer,
-                                          *renderers.camera);
+                                           *renderers.camera);
     }
   }
 
@@ -217,7 +221,7 @@ void GameStateRestorer::restore_environment_from_metadata(
       }
       if (renderers.bridge) {
         renderers.bridge->configure(height_map->getBridges(),
-                                    height_map->getTileSize(), *height_map);
+                                    height_map->getTileSize());
       }
       if (renderers.biome) {
         renderers.biome->configure(*height_map,
@@ -232,7 +236,8 @@ void GameStateRestorer::restore_environment_from_metadata(
                                    terrain_service.biome_settings());
       }
       if (renderers.pine) {
-        renderers.pine->configure(*height_map, terrain_service.biome_settings());
+        renderers.pine->configure(*height_map,
+                                  terrain_service.biome_settings());
       }
       if (renderers.olive) {
         renderers.olive->configure(*height_map,
