@@ -84,13 +84,13 @@ struct alignas(16) Mat3x4 {
     return result;
   }
 
-  [[nodiscard]] auto transformPoint(const Vec3 &p) const noexcept -> Vec3 {
+  [[nodiscard]] auto transform_point(const Vec3 &p) const noexcept -> Vec3 {
     return {m[0][0] * p.x + m[0][1] * p.y + m[0][2] * p.z + m[0][3],
             m[1][0] * p.x + m[1][1] * p.y + m[1][2] * p.z + m[1][3],
             m[2][0] * p.x + m[2][1] * p.y + m[2][2] * p.z + m[2][3]};
   }
 
-  [[nodiscard]] auto transformVector(const Vec3 &v) const noexcept -> Vec3 {
+  [[nodiscard]] auto transform_vector(const Vec3 &v) const noexcept -> Vec3 {
     return {m[0][0] * v.x + m[0][1] * v.y + m[0][2] * v.z,
             m[1][0] * v.x + m[1][1] * v.y + m[1][2] * v.z,
             m[2][0] * v.x + m[2][1] * v.y + m[2][2] * v.z};
@@ -159,7 +159,7 @@ struct CylinderTransform {
     return ct;
   }
 
-  [[nodiscard]] auto toMatrix() const noexcept -> Mat3x4 {
+  [[nodiscard]] auto to_matrix() const noexcept -> Mat3x4 {
     Mat3x4 m;
 
     m.m[0][0] = tangent.x * radius;

@@ -20,7 +20,7 @@ auto RenderBootstrap::initialize(Renderer &renderer, Camera &camera) -> bool {
   qInfo() << "RenderBootstrap: OpenGL context is valid";
 
   qInfo() << "RenderBootstrap: Logging OpenGL capabilities...";
-  GLCapabilities::logCapabilities();
+  GLCapabilities::log_capabilities();
   qInfo() << "RenderBootstrap: Capabilities logged";
 
   qInfo() << "RenderBootstrap: Calling renderer.initialize()...";

@@ -98,7 +98,7 @@ void SkirmishLoader::resetGameState() {
   Game::Systems::NationRegistry::instance().clearPlayerAssignments();
 
   if (m_fog != nullptr) {
-    m_fog->updateMask(0, 0, 1.0F, {});
+    m_fog->update_mask(0, 0, 1.0F, {});
   }
 }
 
@@ -305,7 +305,7 @@ auto SkirmishLoader::start(const QString &map_path,
       m_ground->configure(level_result.tile_size, level_result.grid_width,
                           level_result.grid_height);
     } else {
-      m_ground->configureExtent(50.0F);
+      m_ground->configure_extent(50.0F);
     }
     if (terrain_service.isInitialized()) {
       m_ground->setBiome(terrain_service.biomeSettings());
@@ -440,7 +440,7 @@ auto SkirmishLoader::start(const QString &map_path,
   visibility_service.computeImmediate(m_world, player_owner_id);
 
   if ((m_fog != nullptr) && visibility_service.isInitialized()) {
-    m_fog->updateMask(
+    m_fog->update_mask(
         visibility_service.getWidth(), visibility_service.getHeight(),
         visibility_service.getTileSize(), visibility_service.snapshotCells());
 

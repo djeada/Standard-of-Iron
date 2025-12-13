@@ -393,9 +393,9 @@ auto evaluate_horse_motion(HorseProfile &profile, const AnimationInputs &anim,
     controller.idle(1.0F);
   }
 
-  controller.updateGaitParameters();
-  sample.phase = controller.getCurrentPhase();
-  sample.bob = controller.getCurrentBob();
+  controller.update_gait_parameters();
+  sample.phase = controller.get_current_phase();
+  sample.bob = controller.get_current_bob();
   return sample;
 }
 

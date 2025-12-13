@@ -155,7 +155,7 @@ void Backend::initialize() {
   qInfo() << "Backend::initialize() - Complete!";
 }
 
-void Backend::beginFrame() {
+void Backend::begin_frame() {
   if (m_viewportWidth > 0 && m_viewportHeight > 0) {
     glViewport(0, 0, m_viewportWidth, m_viewportHeight);
   }
@@ -170,7 +170,7 @@ void Backend::beginFrame() {
   glDepthMask(GL_TRUE);
 
   if (m_cylinderPipeline) {
-    m_cylinderPipeline->beginFrame();
+    m_cylinderPipeline->begin_frame();
   }
 }
 
@@ -238,7 +238,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
           cylinder_shader->set_uniform(
               m_cylinderPipeline->m_cylinderUniforms.view_proj, view_proj);
         }
-        m_cylinderPipeline->uploadCylinderInstances(instance_count);
+        m_cylinderPipeline->upload_cylinder_instances(instance_count);
         m_cylinderPipeline->draw_cylinders(instance_count);
       }
       continue;
@@ -277,8 +277,8 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
           fog_shader->set_uniform(m_cylinderPipeline->m_fogUniforms.view_proj,
                                  view_proj);
         }
-        m_cylinderPipeline->uploadFogInstances(instance_count);
-        m_cylinderPipeline->drawFog(instance_count);
+        m_cylinderPipeline->upload_fog_instances(instance_count);
+        m_cylinderPipeline->draw_fog(instance_count);
       }
       ++i;
       continue;
@@ -375,7 +375,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       }
       const auto &stone = std::get<StoneBatchCmdIndex>(cmd);
       if ((stone.instance_buffer == nullptr) || stone.instance_count == 0 ||
-          (m_vegetationPipeline->stoneShader() == nullptr) ||
+          (m_vegetationPipeline->stone_shader() == nullptr) ||
           (m_vegetationPipeline->m_stoneVao == 0U) ||
           m_vegetationPipeline->m_stoneIndexCount == 0) {
         break;
@@ -384,7 +384,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       DepthMaskScope const depth_mask(true);
       BlendScope const blend(false);
 
-      Shader *stone_shader = m_vegetationPipeline->stoneShader();
+      Shader *stone_shader = m_vegetationPipeline->stone_shader();
       if (m_lastBoundShader != stone_shader) {
         stone_shader->use();
         m_lastBoundShader = stone_shader;
@@ -433,7 +433,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       const auto &plant = std::get<PlantBatchCmdIndex>(cmd);
 
       if ((plant.instance_buffer == nullptr) || plant.instance_count == 0 ||
-          (m_vegetationPipeline->plantShader() == nullptr) ||
+          (m_vegetationPipeline->plant_shader() == nullptr) ||
           (m_vegetationPipeline->m_plantVao == 0U) ||
           m_vegetationPipeline->m_plantIndexCount == 0) {
         break;
@@ -449,7 +449,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         glDisable(GL_CULL_FACE);
       }
 
-      Shader *plant_shader = m_vegetationPipeline->plantShader();
+      Shader *plant_shader = m_vegetationPipeline->plant_shader();
       if (m_lastBoundShader != plant_shader) {
         plant_shader->use();
         m_lastBoundShader = plant_shader;
@@ -522,7 +522,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       const auto &pine = std::get<PineBatchCmdIndex>(cmd);
 
       if ((pine.instance_buffer == nullptr) || pine.instance_count == 0 ||
-          (m_vegetationPipeline->pineShader() == nullptr) ||
+          (m_vegetationPipeline->pine_shader() == nullptr) ||
           (m_vegetationPipeline->m_pineVao == 0U) ||
           m_vegetationPipeline->m_pineIndexCount == 0) {
         break;
@@ -537,7 +537,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         glDisable(GL_CULL_FACE);
       }
 
-      Shader *pine_shader = m_vegetationPipeline->pineShader();
+      Shader *pine_shader = m_vegetationPipeline->pine_shader();
       if (m_lastBoundShader != pine_shader) {
         pine_shader->use();
         m_lastBoundShader = pine_shader;
@@ -608,7 +608,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       const auto &olive = std::get<OliveBatchCmdIndex>(cmd);
 
       if ((olive.instance_buffer == nullptr) || olive.instance_count == 0 ||
-          (m_vegetationPipeline->oliveShader() == nullptr) ||
+          (m_vegetationPipeline->olive_shader() == nullptr) ||
           (m_vegetationPipeline->m_oliveVao == 0U) ||
           m_vegetationPipeline->m_oliveIndexCount == 0) {
         break;
@@ -623,7 +623,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         glDisable(GL_CULL_FACE);
       }
 
-      Shader *olive_shader = m_vegetationPipeline->oliveShader();
+      Shader *olive_shader = m_vegetationPipeline->olive_shader();
       if (m_lastBoundShader != olive_shader) {
         olive_shader->use();
         m_lastBoundShader = olive_shader;
@@ -697,7 +697,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
 
       if ((firecamp.instance_buffer == nullptr) ||
           firecamp.instance_count == 0 ||
-          (m_vegetationPipeline->firecampShader() == nullptr) ||
+          (m_vegetationPipeline->firecamp_shader() == nullptr) ||
           (m_vegetationPipeline->m_firecampVao == 0U) ||
           m_vegetationPipeline->m_firecampIndexCount == 0) {
         break;
@@ -712,7 +712,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         glDisable(GL_CULL_FACE);
       }
 
-      Shader *firecamp_shader = m_vegetationPipeline->firecampShader();
+      Shader *firecamp_shader = m_vegetationPipeline->firecamp_shader();
       if (m_lastBoundShader != firecamp_shader) {
         firecamp_shader->use();
         m_lastBoundShader = firecamp_shader;
@@ -1414,7 +1414,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
     case PrimitiveBatchCmdIndex: {
       const auto &batch = std::get<PrimitiveBatchCmdIndex>(cmd);
       if (batch.instance_count() == 0 || m_primitiveBatchPipeline == nullptr ||
-          !m_primitiveBatchPipeline->isInitialized()) {
+          !m_primitiveBatchPipeline->is_initialized()) {
         break;
       }
 

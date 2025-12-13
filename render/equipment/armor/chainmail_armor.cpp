@@ -15,7 +15,7 @@ namespace Render::GL {
 
 using Render::Geom::cylinder_between;
 
-auto ChainmailArmorRenderer::calculateRingColor(float x, float y,
+auto ChainmailArmorRenderer::calculate_ring_color(float x, float y,
                                                 float z) const -> QVector3D {
 
   float rust_noise =
@@ -110,7 +110,7 @@ void ChainmailArmorRenderer::renderShoulderGuards(const DrawContext &ctx,
   float const shoulder_radius = 0.08F;
 
   QVector3D left_color =
-      calculateRingColor(left_base.x(), left_base.y(), left_base.z());
+      calculate_ring_color(left_base.x(), left_base.y(), left_base.z());
   submitter.mesh(
       get_unit_cylinder(),
       cylinder_between(ctx.model, left_base, left_tip, shoulder_radius),
@@ -120,7 +120,7 @@ void ChainmailArmorRenderer::renderShoulderGuards(const DrawContext &ctx,
   QVector3D right_tip = right_base + torso.up * 0.08F + torso.right * 0.05F;
 
   QVector3D right_color =
-      calculateRingColor(right_base.x(), right_base.y(), right_base.z());
+      calculate_ring_color(right_base.x(), right_base.y(), right_base.z());
   submitter.mesh(
       get_unit_cylinder(),
       cylinder_between(ctx.model, right_base, right_tip, shoulder_radius),
@@ -171,7 +171,7 @@ void ChainmailArmorRenderer::renderArmMail(const DrawContext &ctx,
 
     float radius = 0.05F * (1.0F - t0 * 0.2F);
 
-    QVector3D color = calculateRingColor(pos0.x(), pos0.y(), pos0.z());
+    QVector3D color = calculate_ring_color(pos0.x(), pos0.y(), pos0.z());
     submitter.mesh(get_unit_cylinder(),
                    cylinder_between(ctx.model, pos0, pos1, radius), color,
                    nullptr, 0.75F);
@@ -189,7 +189,7 @@ void ChainmailArmorRenderer::renderArmMail(const DrawContext &ctx,
 
     float radius = 0.05F * (1.0F - t0 * 0.2F);
 
-    QVector3D color = calculateRingColor(pos0.x(), pos0.y(), pos0.z());
+    QVector3D color = calculate_ring_color(pos0.x(), pos0.y(), pos0.z());
     submitter.mesh(get_unit_cylinder(),
                    cylinder_between(ctx.model, pos0, pos1, radius), color,
                    nullptr, 0.75F);
@@ -225,7 +225,7 @@ void ChainmailArmorRenderer::renderRingDetails(
       ring_m.scale(m_config.ring_size);
 
       QVector3D color =
-          calculateRingColor(ring_pos.x(), ring_pos.y(), ring_pos.z());
+          calculate_ring_color(ring_pos.x(), ring_pos.y(), ring_pos.z());
       submitter.mesh(get_unit_sphere(), ring_m, color, nullptr, 0.85F);
     }
   }

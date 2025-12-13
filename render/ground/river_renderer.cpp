@@ -26,10 +26,10 @@ void RiverRenderer::configure(
     float tile_size) {
   m_riverSegments = riverSegments;
   m_tile_size = tile_size;
-  buildMeshes();
+  build_meshes();
 }
 
-void RiverRenderer::buildMeshes() {
+void RiverRenderer::build_meshes() {
   m_meshes.clear();
 
   if (m_riverSegments.empty()) {

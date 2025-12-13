@@ -15,7 +15,7 @@ namespace {
 const QMatrix4x4 k_identity_matrix;
 }
 
-void FogRenderer::updateMask(int width, int height, float tile_size,
+void FogRenderer::update_mask(int width, int height, float tile_size,
                              const std::vector<std::uint8_t> &cells) {
   m_width = std::max(0, width);
   m_height = std::max(0, height);
@@ -23,7 +23,7 @@ void FogRenderer::updateMask(int width, int height, float tile_size,
   m_half_width = m_width * 0.5F - 0.5F;
   m_half_height = m_height * 0.5F - 0.5F;
   m_cells = cells;
-  buildChunks();
+  build_chunks();
 }
 
 void FogRenderer::submit(Renderer &renderer, ResourceManager *resources) {
@@ -44,7 +44,7 @@ void FogRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   }
 }
 
-void FogRenderer::buildChunks() {
+void FogRenderer::build_chunks() {
   m_instances.clear();
 
   if (m_width <= 0 || m_height <= 0) {

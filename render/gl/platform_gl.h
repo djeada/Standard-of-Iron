@@ -6,7 +6,7 @@
 
 namespace Render::GL::Platform {
 
-inline auto supportsPersistentMapping() -> bool {
+inline auto supports_persistent_mapping() -> bool {
   auto *ctx = QOpenGLContext::currentContext();
   if (ctx == nullptr) {
     return false;
@@ -70,7 +70,7 @@ public:
 
   static auto createBuffer(GLuint buffer, GLsizeiptr size,
                            Mode *outMode) -> bool {
-    if (supportsPersistentMapping()) {
+    if (supports_persistent_mapping()) {
       typedef void(QOPENGLF_APIENTRYP type_glBufferStorage)(
           GLenum target, GLsizeiptr size, const void *data, GLbitfield flags);
 
@@ -108,7 +108,7 @@ public:
     return true;
   }
 
-  static auto mapBuffer(GLsizeiptr size, Mode mode) -> void * {
+  static auto map_buffer(GLsizeiptr size, Mode mode) -> void * {
     auto *gl = QOpenGLContext::currentContext()->extraFunctions();
 
     if (mode == Mode::Persistent) {

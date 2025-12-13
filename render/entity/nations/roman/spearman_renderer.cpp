@@ -120,7 +120,7 @@ public:
   void get_variant(const DrawContext &ctx, uint32_t seed,
                    HumanoidVariant &v) const override {
     QVector3D const team_tint = resolve_team_tint(ctx);
-    v.palette = makeHumanoidPalette(team_tint, seed);
+    v.palette = make_humanoid_palette(team_tint, seed);
     auto const &style = resolve_style(ctx);
     apply_palette_overrides(style, team_tint, v);
   }
@@ -216,7 +216,7 @@ public:
 
       auto *spear_renderer = dynamic_cast<SpearRenderer *>(spear.get());
       if (spear_renderer) {
-        spear_renderer->setConfig(spear_config);
+        spear_renderer->set_config(spear_config);
       }
       spear->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
     }
@@ -345,7 +345,7 @@ private:
   }
 };
 
-void registerSpearmanRenderer(Render::GL::EntityRendererRegistry &registry) {
+void register_spearman_renderer(Render::GL::EntityRendererRegistry &registry) {
   ensure_spearman_styles_registered();
   static SpearmanRenderer const renderer;
   registry.register_renderer(
