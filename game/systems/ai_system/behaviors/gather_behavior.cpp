@@ -61,7 +61,7 @@ void GatherBehavior::execute(const AISnapshot &snapshot, AIContext &context,
     formation_type = nation->formation_type;
   }
 
-  auto formation_targets = FormationSystem::instance().getFormationPositions(
+  auto formation_targets = FormationSystem::instance().get_formation_positions(
       formation_type, static_cast<int>(units_to_gather.size()), rally_point,
       1.4F);
 

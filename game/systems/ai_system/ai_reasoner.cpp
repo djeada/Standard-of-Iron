@@ -41,7 +41,7 @@ void AIReasoner::updateContext(const AISnapshot &snapshot, AIContext &ctx) {
   ctx.enemyBuildingsCount = 0;
   ctx.averageEnemyDistance = 0.0F;
   ctx.max_troops_per_player =
-      Game::GameConfig::instance().getMaxTroopsPerPlayer();
+      Game::GameConfig::instance().get_max_troops_per_player();
 
   constexpr float attack_record_timeout = 10.0F;
   auto it = ctx.buildingsUnderAttack.begin();

@@ -23,7 +23,7 @@ auto GameStateSerializer::buildMetadata(
   metadata["player_unit_id"] = static_cast<qint64>(level.player_unit_id);
 
   metadata["gameMaxTroopsPerPlayer"] =
-      Game::GameConfig::instance().getMaxTroopsPerPlayer();
+      Game::GameConfig::instance().get_max_troops_per_player();
 
   const auto &terrain_service = Game::Map::TerrainService::instance();
   if (const auto *height_map = terrain_service.getHeightMap()) {
@@ -145,10 +145,10 @@ void GameStateSerializer::restoreLevelFromMetadata(const QJsonObject &metadata,
   int max_troops = metadata.value("max_troops_per_player")
                        .toInt(level.max_troops_per_player);
   if (max_troops <= 0) {
-    max_troops = Game::GameConfig::instance().getMaxTroopsPerPlayer();
+    max_troops = Game::GameConfig::instance().get_max_troops_per_player();
   }
   level.max_troops_per_player = max_troops;
-  Game::GameConfig::instance().setMaxTroopsPerPlayer(max_troops);
+  Game::GameConfig::instance().set_max_troops_per_player(max_troops);
 }
 
 } // namespace Game::Systems
