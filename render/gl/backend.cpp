@@ -1545,6 +1545,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       const auto &aura = std::get<HealerAuraCmdIndex>(cmd);
       if (m_healerAuraPipeline == nullptr ||
           !m_healerAuraPipeline->is_initialized()) {
+        qWarning() << "Backend: HealerAuraPipeline not ready";
         break;
       }
       m_healerAuraPipeline->render_single_aura(aura.position, aura.color,

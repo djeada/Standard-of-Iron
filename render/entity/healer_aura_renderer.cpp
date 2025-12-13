@@ -39,13 +39,13 @@ void render_healer_auras(Renderer *renderer, ResourceManager *,
       continue;
     }
 
-    QVector3D position(transform->position.x, transform->position.y,
+    QVector3D position(transform->position.x, transform->position.y + 0.1F,
                        transform->position.z);
     float radius = healer_comp->healing_range;
 
     // Intensity based on whether actively healing
-    // Always show aura even when not healing (0.5 base, 1.0 when active)
-    float intensity = healer_comp->is_healing_active ? 1.0F : 0.5F;
+    // Always show aura even when not healing (0.7 base, 1.0 when active)
+    float intensity = healer_comp->is_healing_active ? 1.0F : 0.7F;
 
     // Golden-green healing color
     QVector3D color(0.4F, 1.0F, 0.5F);

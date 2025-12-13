@@ -30,39 +30,36 @@ void main() {
 
   vec3 coreColor = vec3(1.0, 1.0, 0.7);
   vec3 midColor = u_auraColor;
-  vec3 edgeColor = u_auraColor * 0.5;
+  vec3 edgeColor = u_auraColor * 0.7;
 
-  float radialFade = 1.0 - smoothstep(0.0, 1.0, v_radialDist);
+  // Dome effect: stronger at edges (high radialDist), fading toward top
+  float edgeFade = smoothstep(0.2, 0.9, v_radialDist);
+  float heightFade = 1.0 - smoothstep(0.0, 1.0, v_height);
+  
+  // Combine for dome shell effect
+  float shellFade = edgeFade * heightFade;
 
-  float heightFade = 1.0 - smoothstep(0.0, 1.5, v_height);
-
-  float falloff = radialFade * heightFade;
-
-  vec3 color = mix(edgeColor, midColor, radialFade);
-  color = mix(color, coreColor, radialFade * radialFade * 0.5);
-
+  vec3 color = mix(midColor, edgeColor, v_radialDist);
+  
+  // Animated swirl effect
   float angle = atan(v_worldPos.z, v_worldPos.x);
-  float swirl =
-      sin(angle * 4.0 + u_time * 2.0 + v_radialDist * 8.0) * 0.5 + 0.5;
-  color += coreColor * swirl * 0.15 * falloff;
+  float swirl = sin(angle * 4.0 + u_time * 2.0 + v_height * 5.0) * 0.5 + 0.5;
+  color += coreColor * swirl * 0.2 * shellFade;
 
+  // Flowing rings
+  float ring = sin(v_height * 15.0 - u_time * 3.0) * 0.5 + 0.5;
+  ring = pow(ring, 2.0);
+  color += midColor * ring * 0.3 * edgeFade;
+
+  // Particle effect
   vec2 particleUV = vec2(angle * 2.0, v_height * 3.0 - u_time * 1.5);
-  float particles = noise(particleUV * 8.0);
-  particles = pow(particles, 3.0) * 3.0;
-  color += coreColor * particles * falloff * 0.3;
+  float particles = noise(particleUV * 6.0);
+  particles = pow(particles, 2.0) * 2.0;
+  color += coreColor * particles * shellFade * 0.2;
 
-  float ring = sin(v_radialDist * 20.0 - u_time * 4.0) * 0.5 + 0.5;
-  ring = pow(ring, 4.0);
-  color += midColor * ring * 0.2 * heightFade;
-
-  float shimmer = noise(vec2(angle * 10.0, u_time * 2.0)) * (1.0 - radialFade);
-  color += coreColor * shimmer * 0.1;
-
-  float alpha = falloff * u_intensity * 0.6;
-
-  alpha += particles * falloff * u_intensity * 0.2;
-
-  alpha *= smoothstep(1.0, 0.7, v_radialDist);
-
-  FragColor = vec4(color, clamp(alpha, 0.0, 0.8));
+  // Alpha: visible shell around the dome
+  float alpha = shellFade * u_intensity * 0.7;
+  alpha += edgeFade * 0.15 * u_intensity;  // Base visibility at edges
+  
+  FragColor = vec4(color, clamp(alpha, 0.0, 0.85));
 }
