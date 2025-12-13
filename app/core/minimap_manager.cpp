@@ -183,6 +183,7 @@ void MinimapManager::update_units(
 
   std::vector<Game::Map::Minimap::UnitMarker> markers;
   // Reserve space for typical unit count to avoid reallocations
+  // Based on common game scenarios with up to ~100 units per side
   constexpr size_t EXPECTED_MAX_UNITS = 128;
   markers.reserve(EXPECTED_MAX_UNITS);
 
