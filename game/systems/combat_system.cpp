@@ -20,12 +20,12 @@
 namespace Game::Systems {
 
 void CombatSystem::update(Engine::Core::World *world, float delta_time) {
-  processAttacks(world, delta_time);
-  processAutoEngagement(world, delta_time);
+  process_attacks(world, delta_time);
+  process_auto_engagement(world, delta_time);
 }
 
-void CombatSystem::processAttacks(Engine::Core::World *world,
-                                  float delta_time) {
+void CombatSystem::process_attacks(Engine::Core::World *world,
+                                   float delta_time) {
   auto units = world->get_entities_with<Engine::Core::UnitComponent>();
 
   auto *arrow_sys = world->get_system<ArrowSystem>();
@@ -166,8 +166,8 @@ void CombatSystem::processAttacks(Engine::Core::World *world,
             target->get_component<Engine::Core::UnitComponent>();
 
         auto &owner_registry = Game::Systems::OwnerRegistry::instance();
-        bool const is_ally = owner_registry.areAllies(attacker_unit->owner_id,
-                                                      target_unit->owner_id);
+        bool const is_ally = owner_registry.are_allies(attacker_unit->owner_id,
+                                                       target_unit->owner_id);
 
         if ((target_unit != nullptr) && target_unit->health > 0 &&
             target_unit->owner_id != attacker_unit->owner_id && !is_ally) {
@@ -395,8 +395,8 @@ void CombatSystem::processAttacks(Engine::Core::World *world,
           continue;
         }
 
-        if (owner_registry.areAllies(attacker_unit->owner_id,
-                                     target_unit->owner_id)) {
+        if (owner_registry.are_allies(attacker_unit->owner_id,
+                                      target_unit->owner_id)) {
           continue;
         }
 
@@ -696,7 +696,7 @@ void CombatSystem::dealDamage(Engine::Core::World *world,
       }
 
       if (target->has_component<Engine::Core::BuildingComponent>()) {
-        BuildingCollisionRegistry::instance().unregisterBuilding(
+        BuildingCollisionRegistry::instance().unregister_building(
             target->get_id());
       }
 
@@ -759,8 +759,8 @@ void CombatSystem::updateCombatMode(
       continue;
     }
 
-    if (owner_registry.areAllies(attacker_unit->owner_id,
-                                 target_unit->owner_id)) {
+    if (owner_registry.are_allies(attacker_unit->owner_id,
+                                  target_unit->owner_id)) {
       continue;
     }
 
@@ -816,8 +816,8 @@ void CombatSystem::updateCombatMode(
   }
 }
 
-void CombatSystem::processAutoEngagement(Engine::Core::World *world,
-                                         float delta_time) {
+void CombatSystem::process_auto_engagement(Engine::Core::World *world,
+                                           float delta_time) {
   auto units = world->get_entities_with<Engine::Core::UnitComponent>();
 
   for (auto it = m_engagementCooldowns.begin();
@@ -861,7 +861,7 @@ void CombatSystem::processAutoEngagement(Engine::Core::World *world,
       continue;
     }
 
-    if (!isUnitIdle(unit)) {
+    if (!is_unit_idle(unit)) {
       continue;
     }
 
@@ -886,7 +886,7 @@ void CombatSystem::processAutoEngagement(Engine::Core::World *world,
   }
 }
 
-auto CombatSystem::isUnitIdle(Engine::Core::Entity *unit) -> bool {
+auto CombatSystem::is_unit_idle(Engine::Core::Entity *unit) -> bool {
 
   auto *hold_mode = unit->get_component<Engine::Core::HoldModeComponent>();
   if ((hold_mode != nullptr) && hold_mode->active) {
@@ -946,7 +946,7 @@ auto CombatSystem::findNearestEnemy(Engine::Core::Entity *unit,
     if (target_unit->owner_id == unit_comp->owner_id) {
       continue;
     }
-    if (owner_registry.areAllies(unit_comp->owner_id, target_unit->owner_id)) {
+    if (owner_registry.are_allies(unit_comp->owner_id, target_unit->owner_id)) {
       continue;
     }
 

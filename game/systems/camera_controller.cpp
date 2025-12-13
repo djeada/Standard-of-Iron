@@ -47,11 +47,12 @@ void CameraController::zoom_distance(Render::GL::Camera &camera, float delta) {
 }
 
 void CameraController::set_follow_enabled(Render::GL::Camera &camera,
-                                        bool enable) {
+                                          bool enable) {
   camera.set_follow_enabled(enable);
 }
 
-void CameraController::set_follow_lerp(Render::GL::Camera &camera, float alpha) {
+void CameraController::set_follow_lerp(Render::GL::Camera &camera,
+                                       float alpha) {
   camera.set_follow_lerp(alpha);
 }
 
