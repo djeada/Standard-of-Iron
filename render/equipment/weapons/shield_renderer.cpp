@@ -12,8 +12,8 @@
 
 namespace Render::GL {
 
-using Render::Geom::cylinderBetween;
-using Render::Geom::sphereAt;
+using Render::Geom::cylinder_between;
+using Render::Geom::sphere_at;
 
 ShieldRenderer::ShieldRenderer(ShieldRenderConfig config)
     : m_config(std::move(config)) {}
@@ -77,7 +77,7 @@ void ShieldRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
       QVector3D const p1 = shield_center + rot.map(v1);
 
       submitter.mesh(getUnitCylinder(),
-                     cylinderBetween(ctx.model, p0, p1, thickness), color,
+                     cylinder_between(ctx.model, p0, p1, thickness), color,
                      nullptr, 1.0F, m_config.material_id);
     }
   };
@@ -99,7 +99,7 @@ void ShieldRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
     QVector3D const grip_a = shield_center - axis_x * 0.035F - n * 0.030F;
     QVector3D const grip_b = shield_center + axis_x * 0.035F - n * 0.030F;
     submitter.mesh(getUnitCylinder(),
-                   cylinderBetween(ctx.model, grip_a, grip_b, 0.010F),
+                   cylinder_between(ctx.model, grip_a, grip_b, 0.010F),
                    palette.leather, nullptr, 1.0F, m_config.material_id);
   }
 
@@ -111,13 +111,13 @@ void ShieldRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
     QVector3D const top = center_front + axis_y * (shield_height * 0.90F);
     QVector3D const bot = center_front - axis_y * (shield_height * 0.90F);
     submitter.mesh(getUnitCylinder(),
-                   cylinderBetween(ctx.model, top, bot, bar_radius),
+                   cylinder_between(ctx.model, top, bot, bar_radius),
                    m_config.trim_color, nullptr, 1.0F, m_config.material_id);
 
     QVector3D const left = center_front - axis_x * (shield_width * 0.90F);
     QVector3D const right = center_front + axis_x * (shield_width * 0.90F);
     submitter.mesh(getUnitCylinder(),
-                   cylinderBetween(ctx.model, left, right, bar_radius),
+                   cylinder_between(ctx.model, left, right, bar_radius),
                    m_config.trim_color, nullptr, 1.0F, m_config.material_id);
   }
 }

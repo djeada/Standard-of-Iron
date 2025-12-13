@@ -11,9 +11,9 @@
 
 namespace Render::GL {
 
-using Render::Geom::coneFromTo;
-using Render::Geom::cylinderBetween;
-using Render::Geom::sphereAt;
+using Render::Geom::cone_from_to;
+using Render::Geom::cylinder_between;
+using Render::Geom::sphere_at;
 using Render::GL::Humanoid::saturate_color;
 
 namespace {
@@ -80,13 +80,13 @@ void RomanHeavyHelmetRenderer::render(const DrawContext &ctx,
   QVector3D helm_top = head_point({0.0f, helmet_top_y, 0.0f});
 
   submitter.mesh(getUnitCylinder(),
-                 cylinderBetween(ctx.model, helm_bot, helm_top, helm_r),
+                 cylinder_between(ctx.model, helm_bot, helm_top, helm_r),
                  steel_color, nullptr, 1.0f, 2);
 
   QVector3D cap_top = head_point({0.0f, cap_top_y, 0.0f});
   submitter.mesh(
       getUnitCylinder(),
-      cylinderBetween(ctx.model, helm_top, cap_top, helm_r * cap_scale),
+      cylinder_between(ctx.model, helm_top, cap_top, helm_r * cap_scale),
       steel_color * 1.06f, nullptr, 1.0f, 2);
 
   QVector3D brow_center = head_point({0.0f, brow_center_y, 0.0f});
@@ -95,7 +95,7 @@ void RomanHeavyHelmetRenderer::render(const DrawContext &ctx,
 
   submitter.mesh(
       getUnitCylinder(),
-      cylinderBetween(ctx.model, brow_bot, brow_top, helm_r * brow_scale),
+      cylinder_between(ctx.model, brow_bot, brow_top, helm_r * brow_scale),
       brass_color * 0.92f, nullptr, 1.0f, 2);
 
   QVector3D neck_top = head_point({0.0f, neck_top_y, neck_top_z});
@@ -103,7 +103,7 @@ void RomanHeavyHelmetRenderer::render(const DrawContext &ctx,
 
   submitter.mesh(
       getUnitCylinder(),
-      cylinderBetween(ctx.model, neck_bot, neck_top, helm_r * neck_scale),
+      cylinder_between(ctx.model, neck_bot, neck_top, helm_r * neck_scale),
       steel_color * 0.88f, nullptr, 1.0f, 2);
 
   QVector3D crest_base = cap_top;
@@ -112,15 +112,15 @@ void RomanHeavyHelmetRenderer::render(const DrawContext &ctx,
 
   submitter.mesh(
       getUnitCylinder(),
-      cylinderBetween(ctx.model, crest_base, crest_mid, crest_mount_radius),
+      cylinder_between(ctx.model, crest_base, crest_mid, crest_mount_radius),
       brass_color, nullptr, 1.0f, 2);
 
   submitter.mesh(getUnitCone(),
-                 coneFromTo(ctx.model, crest_mid, crest_top, crest_cone_radius),
+                 cone_from_to(ctx.model, crest_mid, crest_top, crest_cone_radius),
                  QVector3D(0.96f, 0.12f, 0.12f), nullptr, 1.0f, 0);
 
   submitter.mesh(getUnitSphere(),
-                 sphereAt(ctx.model, crest_top, crest_top_sphere_r),
+                 sphere_at(ctx.model, crest_top, crest_top_sphere_r),
                  brass_color, nullptr, 1.0f, 2);
 }
 

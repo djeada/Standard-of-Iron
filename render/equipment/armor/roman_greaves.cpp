@@ -10,8 +10,8 @@
 
 namespace Render::GL {
 
-using Render::Geom::cylinderBetween;
-using Render::Geom::sphereAt;
+using Render::Geom::cylinder_between;
+using Render::Geom::sphere_at;
 using Render::GL::Humanoid::saturate_color;
 
 void RomanGreavesRenderer::render(const DrawContext &ctx,

@@ -29,8 +29,8 @@ auto get_horse_render_stats() -> const HorseRenderStats & {
 void reset_horse_render_stats() { s_horseRenderStats.reset(); }
 
 using Render::Geom::clamp01;
-using Render::Geom::coneFromTo;
-using Render::Geom::cylinderBetween;
+using Render::Geom::cone_from_to;
+using Render::Geom::cylinder_between;
 using Render::Geom::lerp;
 using Render::Geom::smoothstep;
 
@@ -111,7 +111,7 @@ inline void draw_cylinder(ISubmitter &out, const QMatrix4x4 &model,
                           const QVector3D &a, const QVector3D &b, float radius,
                           const QVector3D &color, float alpha = 1.0F,
                           int materialId = 0) {
-  out.mesh(getUnitCylinder(), cylinderBetween(model, a, b, radius), color,
+  out.mesh(getUnitCylinder(), cylinder_between(model, a, b, radius), color,
            nullptr, alpha, materialId);
 }
 
@@ -119,7 +119,7 @@ inline void drawCone(ISubmitter &out, const QMatrix4x4 &model,
                      const QVector3D &tip, const QVector3D &base, float radius,
                      const QVector3D &color, float alpha = 1.0F,
                      int materialId = 0) {
-  out.mesh(getUnitCone(), coneFromTo(model, tip, base, radius), color, nullptr,
+  out.mesh(getUnitCone(), cone_from_to(model, tip, base, radius), color, nullptr,
            alpha, materialId);
 }
 
@@ -131,11 +131,11 @@ inline void drawRoundedSegment(ISubmitter &out, const QMatrix4x4 &model,
                                int materialId = 0) {
   float const mid_radius = 0.5F * (start_radius + end_radius);
   QVector3D const tint = lerp(start_color, end_color, 0.5F);
-  out.mesh(getUnitCylinder(), cylinderBetween(model, start, end, mid_radius),
+  out.mesh(getUnitCylinder(), cylinder_between(model, start, end, mid_radius),
            tint, nullptr, alpha, materialId);
-  out.mesh(getUnitSphere(), Render::Geom::sphereAt(model, start, start_radius),
+  out.mesh(getUnitSphere(), Render::Geom::sphere_at(model, start, start_radius),
            start_color, nullptr, alpha, materialId);
-  out.mesh(getUnitSphere(), Render::Geom::sphereAt(model, end, end_radius),
+  out.mesh(getUnitSphere(), Render::Geom::sphere_at(model, end, end_radius),
            end_color, nullptr, alpha, materialId);
 }
 
@@ -583,12 +583,12 @@ void HorseRendererBase::render_full(
   QVector3D const neck_color_base =
       coatGradient(v.coat_color, 0.78F, 0.12F, coat_seed_c * 0.6F);
   out.mesh(getUnitCylinder(),
-           cylinderBetween(horse_ctx.model, neck_base, neck_mid,
+           cylinder_between(horse_ctx.model, neck_base, neck_mid,
                            neck_radius * 1.00F),
            neck_color_base, nullptr, 1.0F);
   out.mesh(
       getUnitCylinder(),
-      cylinderBetween(horse_ctx.model, neck_mid, neck_top, neck_radius * 0.86F),
+      cylinder_between(horse_ctx.model, neck_mid, neck_top, neck_radius * 0.86F),
       lighten(neck_color_base, 1.03F), nullptr, 1.0F);
 
   {
@@ -669,11 +669,11 @@ void HorseRendererBase::render_full(
     QVector3D const inward =
         QVector3D(0.0F, -d.head_height * 0.02F, d.muzzle_length * -0.30F);
     out.mesh(getUnitCone(),
-             coneFromTo(horse_ctx.model, left_base + inward, left_base,
+             cone_from_to(horse_ctx.model, left_base + inward, left_base,
                         d.head_width * 0.11F),
              darken(v.muzzle_color, 0.6F), nullptr, 1.0F);
     out.mesh(getUnitCone(),
-             coneFromTo(horse_ctx.model, right_base + inward, right_base,
+             cone_from_to(horse_ctx.model, right_base + inward, right_base,
                         d.head_width * 0.11F),
              darken(v.muzzle_color, 0.6F), nullptr, 1.0F);
   }
@@ -699,11 +699,11 @@ void HorseRendererBase::render_full(
                     ear_flick_r);
 
   out.mesh(getUnitCone(),
-           coneFromTo(horse_ctx.model, ear_tip_left, ear_base_left,
+           cone_from_to(horse_ctx.model, ear_tip_left, ear_base_left,
                       d.head_width * 0.11F),
            v.mane_color, nullptr, 1.0F);
   out.mesh(getUnitCone(),
-           coneFromTo(horse_ctx.model, ear_tip_right, ear_base_right,
+           cone_from_to(horse_ctx.model, ear_tip_right, ear_base_right,
                       d.head_width * 0.11F),
            v.mane_color, nullptr, 1.0F);
 
@@ -790,7 +790,7 @@ void HorseRendererBase::render_full(
     QVector3D const seg_end =
         seg_start + QVector3D(sway, 0.07F - t * 0.05F, -0.05F - t * 0.03F);
     out.mesh(getUnitCylinder(),
-             cylinderBetween(horse_ctx.model, seg_start, seg_end,
+             cylinder_between(horse_ctx.model, seg_start, seg_end,
                              d.head_width * (0.10F * (1.0F - t * 0.4F))),
              v.mane_color * (0.98F + t * 0.05F), nullptr, 1.0F, 7);
   }
