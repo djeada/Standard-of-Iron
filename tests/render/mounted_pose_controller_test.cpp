@@ -82,7 +82,7 @@ TEST_F(MountedPoseControllerTest, ConstructorInitializesCorrectly) {
 TEST_F(MountedPoseControllerTest, MountOnHorsePositionsPelvisOnSaddle) {
   MountedPoseController controller(pose, anim_ctx);
 
-  controller.mountOnHorse(mount);
+  controller.mount_on_horse(mount);
 
   // Pelvis should be at seat position
   EXPECT_TRUE(approxEqual(pose.pelvis_pos, mount.seat_position));
@@ -91,7 +91,7 @@ TEST_F(MountedPoseControllerTest, MountOnHorsePositionsPelvisOnSaddle) {
 TEST_F(MountedPoseControllerTest, MountOnHorsePlacesFeetInStirrups) {
   MountedPoseController controller(pose, anim_ctx);
 
-  controller.mountOnHorse(mount);
+  controller.mount_on_horse(mount);
 
   // Feet should be in stirrups
   EXPECT_TRUE(approxEqual(pose.foot_l, mount.stirrup_bottom_left));
@@ -103,7 +103,7 @@ TEST_F(MountedPoseControllerTest, MountOnHorseLiftsUpperBody) {
 
   float const original_shoulder_y = pose.shoulder_l.y();
 
-  controller.mountOnHorse(mount);
+  controller.mount_on_horse(mount);
 
   // Shoulders should be lifted when mounted
   EXPECT_GT(pose.shoulder_l.y(), original_shoulder_y);
@@ -113,7 +113,7 @@ TEST_F(MountedPoseControllerTest, MountOnHorseLiftsUpperBody) {
 TEST_F(MountedPoseControllerTest, DismountRestoresStandingPosition) {
   MountedPoseController controller(pose, anim_ctx);
 
-  controller.mountOnHorse(mount);
+  controller.mount_on_horse(mount);
   controller.dismount();
 
   // Pelvis should be back at standing height
@@ -263,7 +263,7 @@ TEST_F(MountedPoseControllerTest, RidingShieldDefenseRaisesHand) {
 TEST_F(MountedPoseControllerTest, HoldReinsPositionsHandsCorrectly) {
   MountedPoseController controller(pose, anim_ctx);
 
-  controller.mountOnHorse(mount);
+  controller.mount_on_horse(mount);
   controller.holdReins(mount, 0.5F, 0.5F, 0.3F, 0.3F);
 
   // Hands should stay near the saddle area with a slight forward bias
@@ -276,7 +276,7 @@ TEST_F(MountedPoseControllerTest, HoldReinsPositionsHandsCorrectly) {
 TEST_F(MountedPoseControllerTest, HoldReinsSlackAffectsHandPosition) {
   MountedPoseController controller(pose, anim_ctx);
 
-  controller.mountOnHorse(mount);
+  controller.mount_on_horse(mount);
   controller.holdReins(mount, 0.0F, 0.0F, 1.0F, 1.0F);
   QVector3D const tight_left = pose.hand_l;
 
@@ -332,7 +332,7 @@ TEST_F(MountedPoseControllerTest, HoldBowMountedPositionsHandsCorrectly) {
 TEST_F(MountedPoseControllerTest, KneePositionValidForMountedRiding) {
   MountedPoseController controller(pose, anim_ctx);
 
-  controller.mountOnHorse(mount);
+  controller.mount_on_horse(mount);
 
   // Knees should be between pelvis and feet
   EXPECT_LT(pose.knee_l.y(), pose.pelvis_pos.y());
@@ -361,7 +361,7 @@ TEST_F(MountedPoseControllerTest, AllMethodsHandleEdgeCases) {
   MountedPoseController controller(pose, anim_ctx);
 
   // Should not crash with various inputs
-  EXPECT_NO_THROW(controller.mountOnHorse(mount));
+  EXPECT_NO_THROW(controller.mount_on_horse(mount));
   EXPECT_NO_THROW(controller.dismount());
   EXPECT_NO_THROW(controller.ridingIdle(mount));
   EXPECT_NO_THROW(controller.ridingLeaning(mount, 0.0F, 0.0F));
@@ -404,7 +404,7 @@ TEST_F(MountedPoseControllerTest, FullRidingSequence) {
   MountedPoseController controller(pose, anim_ctx);
 
   // Simulate a full riding sequence
-  controller.mountOnHorse(mount);
+  controller.mount_on_horse(mount);
   EXPECT_TRUE(approxEqual(pose.pelvis_pos, mount.seat_position));
 
   controller.ridingIdle(mount);

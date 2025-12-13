@@ -19,7 +19,7 @@ public:
                       const HumanoidAnimationContext &anim,
                       ISubmitter &submitter) = 0;
 
-  static auto nextRenderId() -> uint64_t {
+  static auto next_render_id() -> uint64_t {
     static std::atomic<uint64_t> counter{0};
     return ++counter;
   }

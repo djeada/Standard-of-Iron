@@ -13,8 +13,8 @@
 
 namespace Render::GL {
 
-using Render::Geom::cylinderBetween;
-using Render::Geom::sphereAt;
+using Render::Geom::cylinder_between;
+using Render::Geom::sphere_at;
 
 static constexpr float k_helmet_vertical_lift = 0.14F;
 
@@ -42,7 +42,7 @@ static inline void submit_disk(ISubmitter &submitter, const DrawContext &ctx,
   QVector3D a = center - 0.5f * thickness * n;
   QVector3D b = center + 0.5f * thickness * n;
 
-  submitter.mesh(getUnitCylinder(), cylinderBetween(ctx.model, a, b, radius),
+  submitter.mesh(get_unit_cylinder(), cylinder_between(ctx.model, a, b, radius),
                  color, nullptr, roughness, material_id);
 }
 
@@ -58,14 +58,14 @@ static inline void submit_spike(ISubmitter &submitter, const DrawContext &ctx,
   d.normalize();
   QVector3D tip = base + d * length;
 
-  submitter.mesh(getUnitCylinder(),
-                 cylinderBetween(ctx.model, base, tip, base_radius), color,
+  submitter.mesh(get_unit_cylinder(),
+                 cylinder_between(ctx.model, base, tip, base_radius), color,
                  nullptr, roughness, material_id);
   QMatrix4x4 m;
   m = ctx.model;
   m.translate(tip);
   m.scale(base_radius * 1.1f);
-  submitter.mesh(getUnitSphere(), m, color * 1.05f, nullptr, roughness,
+  submitter.mesh(get_unit_sphere(), m, color * 1.05f, nullptr, roughness,
                  material_id);
 }
 
@@ -121,30 +121,30 @@ void CarthageLightHelmetRenderer::render_bowl(const DrawContext &ctx,
   QMatrix4x4 bowl = ctx.model;
   bowl.translate(cap_center);
   bowl.scale(R * 0.88F, R * 0.82F, R * 0.88F);
-  submitter.mesh(getUnitSphere(), bowl, m_config.leather_color * 0.94F, nullptr,
-                 0.9F, 2);
+  submitter.mesh(get_unit_sphere(), bowl, m_config.leather_color * 0.94F,
+                 nullptr, 0.9F, 2);
 
   QVector3D taper_top = helmet_origin + up * (R * 0.48F);
   QVector3D taper_bot = helmet_origin + up * (R * 0.26F);
-  submitter.mesh(getUnitCylinder(),
-                 cylinderBetween(ctx.model, taper_top, taper_bot, R * 0.78F),
+  submitter.mesh(get_unit_cylinder(),
+                 cylinder_between(ctx.model, taper_top, taper_bot, R * 0.78F),
                  m_config.leather_color * 0.86F, nullptr, 0.92F, 2);
 
   QVector3D band_top = helmet_origin + up * (R * 0.24F);
   QVector3D band_bot = helmet_origin + up * (R * 0.10F);
-  submitter.mesh(getUnitCylinder(),
-                 cylinderBetween(ctx.model, band_top, band_bot, R * 0.92F),
+  submitter.mesh(get_unit_cylinder(),
+                 cylinder_between(ctx.model, band_top, band_bot, R * 0.92F),
                  m_config.leather_color * 0.72F, nullptr, 0.95F, 2);
 
   QVector3D crest_base = helmet_origin + up * (R * 0.82F);
   QVector3D crest_tip = crest_base + up * (R * 0.55F);
-  submitter.mesh(getUnitCylinder(),
-                 cylinderBetween(ctx.model, crest_base, crest_tip, R * 0.35F),
+  submitter.mesh(get_unit_cylinder(),
+                 cylinder_between(ctx.model, crest_base, crest_tip, R * 0.35F),
                  m_config.bronze_color * 0.78F, nullptr, 0.92F, 2);
   QMatrix4x4 crest_cap = ctx.model;
   crest_cap.translate(crest_tip);
   crest_cap.scale(R * 0.42F, R * 0.32F, R * 0.42F);
-  submitter.mesh(getUnitSphere(), crest_cap, m_config.bronze_color * 0.88F,
+  submitter.mesh(get_unit_sphere(), crest_cap, m_config.bronze_color * 0.88F,
                  nullptr, 0.93F, 2);
 
   QVector3D strap_front_top =
@@ -152,8 +152,8 @@ void CarthageLightHelmetRenderer::render_bowl(const DrawContext &ctx,
   QVector3D strap_front_bot =
       helmet_origin + up * (R * 0.20F) + forward * (R * 0.70F);
   submitter.mesh(
-      getUnitCylinder(),
-      cylinderBetween(ctx.model, strap_front_top, strap_front_bot, R * 0.20F),
+      get_unit_cylinder(),
+      cylinder_between(ctx.model, strap_front_top, strap_front_bot, R * 0.20F),
       m_config.bronze_color * 0.85F, nullptr, 0.92F, 2);
 
   QVector3D strap_left_top =
@@ -161,8 +161,8 @@ void CarthageLightHelmetRenderer::render_bowl(const DrawContext &ctx,
   QVector3D strap_left_bot =
       helmet_origin + up * (R * 0.16F) - right * (R * 0.72F);
   submitter.mesh(
-      getUnitCylinder(),
-      cylinderBetween(ctx.model, strap_left_top, strap_left_bot, R * 0.16F),
+      get_unit_cylinder(),
+      cylinder_between(ctx.model, strap_left_top, strap_left_bot, R * 0.16F),
       m_config.bronze_color * 0.90F, nullptr, 0.95F, 2);
 
   QVector3D strap_right_top =
@@ -170,8 +170,8 @@ void CarthageLightHelmetRenderer::render_bowl(const DrawContext &ctx,
   QVector3D strap_right_bot =
       helmet_origin + up * (R * 0.16F) + right * (R * 0.72F);
   submitter.mesh(
-      getUnitCylinder(),
-      cylinderBetween(ctx.model, strap_right_top, strap_right_bot, R * 0.16F),
+      get_unit_cylinder(),
+      cylinder_between(ctx.model, strap_right_top, strap_right_bot, R * 0.16F),
       m_config.bronze_color * 0.90F, nullptr, 0.95F, 2);
 }
 
@@ -199,8 +199,8 @@ void CarthageLightHelmetRenderer::render_brim(const DrawContext &ctx,
 
   auto connect_brow = [&](const QVector3D &a, const QVector3D &b,
                           float radius_scale) {
-    submitter.mesh(getUnitCylinder(),
-                   cylinderBetween(ctx.model, a, b, R * radius_scale),
+    submitter.mesh(get_unit_cylinder(),
+                   cylinder_between(ctx.model, a, b, R * radius_scale),
                    m_config.bronze_color * 1.08f, nullptr, 0.95f, 2);
   };
 
@@ -240,7 +240,7 @@ void CarthageLightHelmetRenderer::render_cheek_guards(
         QMatrix4x4 riv_m = ctx.model;
         riv_m.translate(center + n * (thick * 0.55f));
         riv_m.scale(R * 0.06f);
-        submitter.mesh(getUnitSphere(), riv_m, m_config.bronze_color * 1.28f,
+        submitter.mesh(get_unit_sphere(), riv_m, m_config.bronze_color * 1.28f,
                        nullptr, 1.0f, 2);
       }
     }
@@ -266,22 +266,22 @@ void CarthageLightHelmetRenderer::render_nasal_guard(
 
   QVector3D top = head_point(QVector3D(0.0f, 0.70f, 0.80f));
   QVector3D bot = head_point(QVector3D(0.0f, -0.04f, 0.95f));
-  submitter.mesh(getUnitCylinder(),
-                 cylinderBetween(ctx.model, bot, top, R * 0.14f),
+  submitter.mesh(get_unit_cylinder(),
+                 cylinder_between(ctx.model, bot, top, R * 0.14f),
                  m_config.bronze_color * 0.98f, nullptr, 0.9f, 2);
 
   QVector3D left = top + head.right * (R * 0.30f);
   QVector3D right = top - head.right * (R * 0.30f);
-  submitter.mesh(getUnitCylinder(),
-                 cylinderBetween(ctx.model, left, right, R * 0.07f),
+  submitter.mesh(get_unit_cylinder(),
+                 cylinder_between(ctx.model, left, right, R * 0.07f),
                  m_config.bronze_color * 1.06f, nullptr, 0.93f, 2);
 
   for (int i = 0; i < 3; ++i) {
     float yy = -0.02f - 0.08f * i;
     QVector3D gl = head_point(QVector3D(-0.32f, yy, 0.96f));
     QVector3D gr = head_point(QVector3D(0.32f, yy, 0.96f));
-    submitter.mesh(getUnitCylinder(),
-                   cylinderBetween(ctx.model, gl, gr, R * 0.045f),
+    submitter.mesh(get_unit_cylinder(),
+                   cylinder_between(ctx.model, gl, gr, R * 0.045f),
                    m_config.bronze_color * 1.02f, nullptr, 0.9f, 2);
   }
 }
@@ -297,8 +297,8 @@ void CarthageLightHelmetRenderer::render_crest(const DrawContext &ctx,
 
   QVector3D left = head_point(QVector3D(-0.95f, 1.02f, 0.02f));
   QVector3D right = head_point(QVector3D(0.95f, 1.02f, 0.02f));
-  submitter.mesh(getUnitCylinder(),
-                 cylinderBetween(ctx.model, left, right, R * 0.12f),
+  submitter.mesh(get_unit_cylinder(),
+                 cylinder_between(ctx.model, left, right, R * 0.12f),
                  m_config.bronze_color * 1.12f, nullptr, 0.96f, 2);
 
   QVector3D crest_color(0.85f, 0.15f, 0.18f);
@@ -314,8 +314,8 @@ void CarthageLightHelmetRenderer::render_crest(const DrawContext &ctx,
     float spread = (float((i % 5) - 2)) * R * 0.06f;
     tip += head.forward * 0.0f + head.right * 0.0f;
     QVector3D col = crest_color * (0.9f + 0.18f * ((i % 2) ? 1.0f : 0.0f));
-    submitter.mesh(getUnitCylinder(),
-                   cylinderBetween(ctx.model, base, tip, R * 0.04f), col,
+    submitter.mesh(get_unit_cylinder(),
+                   cylinder_between(ctx.model, base, tip, R * 0.04f), col,
                    nullptr, 0.62f, 2);
   }
 }
@@ -338,7 +338,7 @@ void CarthageLightHelmetRenderer::render_rivets(const DrawContext &ctx,
     QMatrix4x4 m = ctx.model;
     m.translate(p1);
     m.scale(R * 0.058f);
-    submitter.mesh(getUnitSphere(), m, col, nullptr, 1.0f, 2);
+    submitter.mesh(get_unit_sphere(), m, col, nullptr, 1.0f, 2);
   }
   int n2 = 12;
   for (int i = 0; i < n2; ++i) {
@@ -348,7 +348,7 @@ void CarthageLightHelmetRenderer::render_rivets(const DrawContext &ctx,
     QMatrix4x4 m = ctx.model;
     m.translate(p2);
     m.scale(R * 0.05f);
-    submitter.mesh(getUnitSphere(), m, col * 0.98f, nullptr, 1.0f, 2);
+    submitter.mesh(get_unit_sphere(), m, col * 0.98f, nullptr, 1.0f, 2);
   }
 
   int sp = 7;

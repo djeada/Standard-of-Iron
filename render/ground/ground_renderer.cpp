@@ -39,7 +39,7 @@ void GroundRenderer::recomputeModel() {
   }
 }
 
-void GroundRenderer::updateNoiseOffset() {
+void GroundRenderer::update_noise_offset() {
   const float span_x = (m_width > 0 ? float(m_width) * m_tile_size : m_extent);
   const float span_z =
       (m_height > 0 ? float(m_height) * m_tile_size : m_extent);
@@ -57,7 +57,7 @@ void GroundRenderer::updateNoiseOffset() {
   }
 }
 
-auto GroundRenderer::buildParams() const -> TerrainChunkParams {
+auto GroundRenderer::build_params() const -> TerrainChunkParams {
   if (m_cachedParamsValid) {
     return m_cachedParams;
   }
@@ -148,7 +148,7 @@ auto GroundRenderer::buildParams() const -> TerrainChunkParams {
 }
 
 void GroundRenderer::submit(Renderer &renderer, ResourceManager *resources) {
-  syncBiomeFromService();
+  sync_biome_from_service();
 
   if (resources == nullptr) {
     return;
@@ -157,7 +157,7 @@ void GroundRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   if (m_hasBiome) {
     Mesh *plane = resources->ground();
     if (plane != nullptr) {
-      const TerrainChunkParams params = buildParams();
+      const TerrainChunkParams params = build_params();
 
       const bool model_changed =
           m_modelDirty || (m_lastSubmittedModel != m_model);
@@ -182,7 +182,7 @@ void GroundRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   renderer.grid(m_model, m_color, cell, 0.06F, extent);
 }
 
-void GroundRenderer::syncBiomeFromService() {
+void GroundRenderer::sync_biome_from_service() {
   auto &service = Game::Map::TerrainService::instance();
   if (!service.is_initialized()) {
     return;
@@ -191,7 +191,7 @@ void GroundRenderer::syncBiomeFromService() {
   if (!m_hasBiome || !biomeEquals(current, m_biome_settings)) {
     m_biome_settings = current;
     m_hasBiome = true;
-    updateNoiseOffset();
+    update_noise_offset();
     invalidateParamsCache();
   }
 }

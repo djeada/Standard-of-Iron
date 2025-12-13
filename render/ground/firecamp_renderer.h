@@ -29,8 +29,8 @@ public:
   void clear();
 
 private:
-  void generateFireCampInstances();
-  void addExplicitFireCamps();
+  void generate_firecamp_instances();
+  void add_explicit_firecamps();
 
   int m_width = 0;
   int m_height = 0;

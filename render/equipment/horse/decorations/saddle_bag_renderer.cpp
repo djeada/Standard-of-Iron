@@ -22,7 +22,7 @@ void SaddleBagRenderer::render(const DrawContext &ctx,
     QMatrix4x4 bag = back.make_local_transform(
         ctx.model, QVector3D(side * 0.28F, -0.12F, -0.15F), 1.0F);
     bag.scale(0.18F, 0.22F, 0.30F);
-    out.mesh(getUnitSphere(), bag, bag_color, nullptr, 1.0F, 4);
+    out.mesh(get_unit_sphere(), bag, bag_color, nullptr, 1.0F, 4);
 
     QMatrix4x4 strap_attachment = back.make_local_transform(
         ctx.model, QVector3D(side * 0.28F, 0.02F, -0.10F), 1.0F);

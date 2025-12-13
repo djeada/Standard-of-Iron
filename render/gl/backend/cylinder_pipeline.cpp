@@ -39,46 +39,46 @@ auto CylinderPipeline::initialize() -> bool {
     return false;
   }
 
-  initializeCylinderPipeline();
-  initializeFogPipeline();
-  cacheUniforms();
+  initialize_cylinder_pipeline();
+  initialize_fog_pipeline();
+  cache_uniforms();
 
   m_initialized = true;
   return true;
 }
 
 void CylinderPipeline::shutdown() {
-  shutdownCylinderPipeline();
-  shutdownFogPipeline();
+  shutdown_cylinder_pipeline();
+  shutdown_fog_pipeline();
   m_initialized = false;
 }
 
-void CylinderPipeline::cacheUniforms() {
+void CylinderPipeline::cache_uniforms() {
   if (m_cylinderShader != nullptr) {
     m_cylinderUniforms.view_proj =
-        m_cylinderShader->uniformHandle("u_viewProj");
+        m_cylinderShader->uniform_handle("u_viewProj");
   }
 
   if (m_fogShader != nullptr) {
-    m_fogUniforms.view_proj = m_fogShader->uniformHandle("u_viewProj");
+    m_fogUniforms.view_proj = m_fogShader->uniform_handle("u_viewProj");
   }
 }
 
-void CylinderPipeline::beginFrame() {
-  if (m_cylinderPersistentBuffer.isValid()) {
-    m_cylinderPersistentBuffer.beginFrame();
+void CylinderPipeline::begin_frame() {
+  if (m_cylinderPersistentBuffer.is_valid()) {
+    m_cylinderPersistentBuffer.begin_frame();
   }
 
-  if (m_fogPersistentBuffer.isValid()) {
-    m_fogPersistentBuffer.beginFrame();
+  if (m_fogPersistentBuffer.is_valid()) {
+    m_fogPersistentBuffer.begin_frame();
   }
 }
 
-void CylinderPipeline::initializeCylinderPipeline() {
+void CylinderPipeline::initialize_cylinder_pipeline() {
   initializeOpenGLFunctions();
-  shutdownCylinderPipeline();
+  shutdown_cylinder_pipeline();
 
-  Mesh *unit = getUnitCylinder();
+  Mesh *unit = get_unit_cylinder();
   if (unit == nullptr) {
     return;
   }
@@ -171,7 +171,7 @@ void CylinderPipeline::initializeCylinderPipeline() {
                                 : m_cylinderInstanceCapacity);
 }
 
-void CylinderPipeline::shutdownCylinderPipeline() {
+void CylinderPipeline::shutdown_cylinder_pipeline() {
 
   if (QOpenGLContext::currentContext() == nullptr) {
 
@@ -210,14 +210,14 @@ void CylinderPipeline::shutdownCylinderPipeline() {
   m_cylinderScratch.clear();
 }
 
-void CylinderPipeline::uploadCylinderInstances(std::size_t count) {
+void CylinderPipeline::upload_cylinder_instances(std::size_t count) {
   if (count == 0) {
     return;
   }
 
   initializeOpenGLFunctions();
 
-  if (m_usePersistentBuffers && m_cylinderPersistentBuffer.isValid()) {
+  if (m_usePersistentBuffers && m_cylinderPersistentBuffer.is_valid()) {
     if (count > m_cylinderPersistentBuffer.capacity()) {
       count = m_cylinderPersistentBuffer.capacity();
     }
@@ -260,9 +260,9 @@ void CylinderPipeline::draw_cylinders(std::size_t count) {
   glBindVertexArray(0);
 }
 
-void CylinderPipeline::initializeFogPipeline() {
+void CylinderPipeline::initialize_fog_pipeline() {
   initializeOpenGLFunctions();
-  shutdownFogPipeline();
+  shutdown_fog_pipeline();
 
   const Vertex vertices[Geometry::QuadVertexCount] = {
       {{-0.5F, 0.0F, -0.5F}, {0.0F, 1.0F, 0.0F}, {0.0F, 0.0F}},
@@ -337,7 +337,7 @@ void CylinderPipeline::initializeFogPipeline() {
   m_fogScratch.reserve(m_fogInstanceCapacity);
 }
 
-void CylinderPipeline::shutdownFogPipeline() {
+void CylinderPipeline::shutdown_fog_pipeline() {
 
   if (QOpenGLContext::currentContext() == nullptr) {
 
@@ -374,7 +374,7 @@ void CylinderPipeline::shutdownFogPipeline() {
   m_fogScratch.clear();
 }
 
-void CylinderPipeline::uploadFogInstances(std::size_t count) {
+void CylinderPipeline::upload_fog_instances(std::size_t count) {
   if ((m_fogInstanceBuffer == 0U) || count == 0) {
     return;
   }
@@ -396,7 +396,7 @@ void CylinderPipeline::uploadFogInstances(std::size_t count) {
   glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-void CylinderPipeline::drawFog(std::size_t count) {
+void CylinderPipeline::draw_fog(std::size_t count) {
   if ((m_fogVao == 0U) || m_fogIndexCount == 0 || count == 0) {
     return;
   }

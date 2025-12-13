@@ -65,7 +65,7 @@ void RiverbankAssetRenderer::configure(
   m_assetParams.light_direction = QVector3D(0.35F, 0.8F, 0.45F);
   m_assetParams.time = 0.0F;
 
-  generateAssetInstances();
+  generate_asset_instances();
 }
 
 void RiverbankAssetRenderer::submit(Renderer &, ResourceManager *resources) {
@@ -109,8 +109,8 @@ void RiverbankAssetRenderer::submit(Renderer &, ResourceManager *resources) {
       m_assetInstanceBuffer = std::make_unique<Buffer>(Buffer::Type::Vertex);
     }
     if (!m_visibleInstances.empty()) {
-      m_assetInstanceBuffer->setData(m_visibleInstances,
-                                     Buffer::Usage::Dynamic);
+      m_assetInstanceBuffer->set_data(m_visibleInstances,
+                                      Buffer::Usage::Dynamic);
     }
 
     m_cachedVisibilityVersion = current_version;
@@ -135,7 +135,7 @@ void RiverbankAssetRenderer::clear() {
   m_visibilityDirty = true;
 }
 
-void RiverbankAssetRenderer::generateAssetInstances() {
+void RiverbankAssetRenderer::generate_asset_instances() {
   m_assetInstances.clear();
 
   if (m_riverSegments.empty() || m_width < 2 || m_height < 2) {

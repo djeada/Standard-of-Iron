@@ -30,11 +30,11 @@ void CameraService::move(Render::GL::Camera &camera, float dx, float dz) {
 void CameraService::elevate(Render::GL::Camera &camera, float dy) {
   float const distance = camera.get_distance();
   float const scale = std::clamp(distance * 0.05F, 0.1F, 5.0F);
-  m_controller->moveUp(camera, dy * scale);
+  m_controller->move_up(camera, dy * scale);
 }
 
 void CameraService::zoom(Render::GL::Camera &camera, float delta) {
-  m_controller->zoomDistance(camera, delta);
+  m_controller->zoom_distance(camera, delta);
 }
 
 auto CameraService::get_distance(const Render::GL::Camera &camera) -> float {
@@ -114,8 +114,8 @@ void CameraService::snapToEntity(Render::GL::Camera &camera,
   if (auto *t = entity.get_component<Engine::Core::TransformComponent>()) {
     QVector3D const center(t->position.x, t->position.y, t->position.z);
     const auto &cam_config = Game::GameConfig::instance().camera();
-    camera.setRTSView(center, cam_config.default_distance,
-                      cam_config.default_pitch, cam_config.default_yaw);
+    camera.set_rts_view(center, cam_config.default_distance,
+                        cam_config.default_pitch, cam_config.default_yaw);
   }
 }
 
