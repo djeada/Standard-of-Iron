@@ -30,12 +30,12 @@ public:
   void look_at(const QVector3D &target);
 
   auto solve_elbow_ik(bool is_left, const QVector3D &shoulder,
-                    const QVector3D &hand, const QVector3D &outward_dir,
-                    float along_frac, float lateral_offset, float y_bias,
-                    float outward_sign) const -> QVector3D;
+                      const QVector3D &hand, const QVector3D &outward_dir,
+                      float along_frac, float lateral_offset, float y_bias,
+                      float outward_sign) const -> QVector3D;
 
   auto solve_knee_ik(bool is_left, const QVector3D &hip, const QVector3D &foot,
-                   float height_scale) const -> QVector3D;
+                     float height_scale) const -> QVector3D;
 
   auto get_shoulder_y(bool is_left) const -> float;
   auto get_pelvis_y() const -> float;

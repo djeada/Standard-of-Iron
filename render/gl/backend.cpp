@@ -191,7 +191,8 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
     return;
   }
 
-  const QMatrix4x4 view_proj = cam.get_projection_matrix() * cam.get_view_matrix();
+  const QMatrix4x4 view_proj =
+      cam.get_projection_matrix() * cam.get_view_matrix();
 
   m_lastBoundShader = nullptr;
   m_lastBoundTexture = nullptr;
@@ -275,7 +276,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         if (m_cylinderPipeline->m_fogUniforms.view_proj !=
             Shader::InvalidUniform) {
           fog_shader->set_uniform(m_cylinderPipeline->m_fogUniforms.view_proj,
-                                 view_proj);
+                                  view_proj);
         }
         m_cylinderPipeline->upload_fog_instances(instance_count);
         m_cylinderPipeline->draw_fog(instance_count);
@@ -464,7 +465,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       if (m_vegetationPipeline->m_plantUniforms.time !=
           Shader::InvalidUniform) {
         plant_shader->set_uniform(m_vegetationPipeline->m_plantUniforms.time,
-                                 plant.params.time);
+                                  plant.params.time);
       }
       if (m_vegetationPipeline->m_plantUniforms.wind_strength !=
           Shader::InvalidUniform) {
@@ -547,11 +548,11 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       if (m_vegetationPipeline->m_pineUniforms.view_proj !=
           Shader::InvalidUniform) {
         pine_shader->set_uniform(m_vegetationPipeline->m_pineUniforms.view_proj,
-                                view_proj);
+                                 view_proj);
       }
       if (m_vegetationPipeline->m_pineUniforms.time != Shader::InvalidUniform) {
         pine_shader->set_uniform(m_vegetationPipeline->m_pineUniforms.time,
-                                pine.params.time);
+                                 pine.params.time);
       }
       if (m_vegetationPipeline->m_pineUniforms.wind_strength !=
           Shader::InvalidUniform) {
@@ -561,8 +562,9 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       }
       if (m_vegetationPipeline->m_pineUniforms.wind_speed !=
           Shader::InvalidUniform) {
-        pine_shader->set_uniform(m_vegetationPipeline->m_pineUniforms.wind_speed,
-                                pine.params.wind_speed);
+        pine_shader->set_uniform(
+            m_vegetationPipeline->m_pineUniforms.wind_speed,
+            pine.params.wind_speed);
       }
       if (m_vegetationPipeline->m_pineUniforms.light_direction !=
           Shader::InvalidUniform) {
@@ -638,7 +640,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       if (m_vegetationPipeline->m_oliveUniforms.time !=
           Shader::InvalidUniform) {
         olive_shader->set_uniform(m_vegetationPipeline->m_oliveUniforms.time,
-                                 olive.params.time);
+                                  olive.params.time);
       }
       if (m_vegetationPipeline->m_oliveUniforms.wind_strength !=
           Shader::InvalidUniform) {
@@ -828,12 +830,12 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
 
         if (m_terrainPipeline->m_groundUniforms.mvp != Shader::InvalidUniform) {
           active_shader->set_uniform(m_terrainPipeline->m_groundUniforms.mvp,
-                                    mvp);
+                                     mvp);
         }
         if (m_terrainPipeline->m_groundUniforms.model !=
             Shader::InvalidUniform) {
           active_shader->set_uniform(m_terrainPipeline->m_groundUniforms.model,
-                                    terrain.model);
+                                     terrain.model);
         }
         if (m_terrainPipeline->m_groundUniforms.grass_primary !=
             Shader::InvalidUniform) {
@@ -862,7 +864,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         if (m_terrainPipeline->m_groundUniforms.tint !=
             Shader::InvalidUniform) {
           active_shader->set_uniform(m_terrainPipeline->m_groundUniforms.tint,
-                                    terrain.params.tint);
+                                     terrain.params.tint);
         }
         if (m_terrainPipeline->m_groundUniforms.noise_offset !=
             Shader::InvalidUniform) {
@@ -969,12 +971,12 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         if (m_terrainPipeline->m_terrainUniforms.mvp !=
             Shader::InvalidUniform) {
           active_shader->set_uniform(m_terrainPipeline->m_terrainUniforms.mvp,
-                                    mvp);
+                                     mvp);
         }
         if (m_terrainPipeline->m_terrainUniforms.model !=
             Shader::InvalidUniform) {
           active_shader->set_uniform(m_terrainPipeline->m_terrainUniforms.model,
-                                    terrain.model);
+                                     terrain.model);
         }
         if (m_terrainPipeline->m_terrainUniforms.grass_primary !=
             Shader::InvalidUniform) {
@@ -1015,7 +1017,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         if (m_terrainPipeline->m_terrainUniforms.tint !=
             Shader::InvalidUniform) {
           active_shader->set_uniform(m_terrainPipeline->m_terrainUniforms.tint,
-                                    terrain.params.tint);
+                                     terrain.params.tint);
         }
         if (m_terrainPipeline->m_terrainUniforms.noise_offset !=
             Shader::InvalidUniform) {
@@ -1189,13 +1191,13 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         }
 
         active_shader->set_uniform(m_waterPipeline->m_riverUniforms.model,
-                                  it.model);
+                                   it.model);
         active_shader->set_uniform(m_waterPipeline->m_riverUniforms.view,
-                                  cam.get_view_matrix());
+                                   cam.get_view_matrix());
         active_shader->set_uniform(m_waterPipeline->m_riverUniforms.projection,
-                                  cam.get_projection_matrix());
+                                   cam.get_projection_matrix());
         active_shader->set_uniform(m_waterPipeline->m_riverUniforms.time,
-                                  m_animationTime);
+                                   m_animationTime);
 
         it.mesh->draw();
         break;
@@ -1208,14 +1210,14 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         }
 
         active_shader->set_uniform(m_waterPipeline->m_riverbankUniforms.model,
-                                  it.model);
+                                   it.model);
         active_shader->set_uniform(m_waterPipeline->m_riverbankUniforms.view,
-                                  cam.get_view_matrix());
+                                   cam.get_view_matrix());
         active_shader->set_uniform(
             m_waterPipeline->m_riverbankUniforms.projection,
             cam.get_projection_matrix());
         active_shader->set_uniform(m_waterPipeline->m_riverbankUniforms.time,
-                                  m_animationTime);
+                                   m_animationTime);
 
         it.mesh->draw();
         break;
@@ -1228,11 +1230,11 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         }
 
         active_shader->set_uniform(m_waterPipeline->m_bridgeUniforms.mvp,
-                                  it.mvp);
+                                   it.mvp);
         active_shader->set_uniform(m_waterPipeline->m_bridgeUniforms.model,
-                                  it.model);
+                                   it.model);
         active_shader->set_uniform(m_waterPipeline->m_bridgeUniforms.color,
-                                  it.color);
+                                   it.color);
 
         QVector3D const light_dir(0.35F, 0.8F, 0.45F);
         active_shader->set_uniform(
@@ -1248,13 +1250,14 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
           m_lastBoundShader = active_shader;
         }
 
-        active_shader->set_uniform(m_waterPipeline->m_road_uniforms.mvp, it.mvp);
+        active_shader->set_uniform(m_waterPipeline->m_road_uniforms.mvp,
+                                   it.mvp);
         active_shader->set_uniform(m_waterPipeline->m_road_uniforms.model,
-                                  it.model);
+                                   it.model);
         active_shader->set_uniform(m_waterPipeline->m_road_uniforms.color,
-                                  it.color);
+                                   it.color);
         active_shader->set_uniform(m_waterPipeline->m_road_uniforms.alpha,
-                                  it.alpha);
+                                   it.alpha);
 
         QVector3D const road_light_dir(0.35F, 0.8F, 0.45F);
         active_shader->set_uniform(

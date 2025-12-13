@@ -185,7 +185,7 @@ void Camera::lookAt(const QVector3D &position, const QVector3D &target,
 }
 
 void Camera::set_perspective(float fov, float aspect, float near_plane,
-                            float far_plane) {
+                             float far_plane) {
   if (!finite(fov) || !finite(aspect) || !finite(near_plane) ||
       !finite(far_plane)) {
     return;
@@ -200,7 +200,7 @@ void Camera::set_perspective(float fov, float aspect, float near_plane,
 }
 
 void Camera::set_orthographic(float left, float right, float bottom, float top,
-                             float near_plane, float far_plane) {
+                              float near_plane, float far_plane) {
   if (!finite(left) || !finite(right) || !finite(bottom) || !finite(top) ||
       !finite(near_plane) || !finite(far_plane)) {
     return;
@@ -508,7 +508,7 @@ void Camera::update_follow(const QVector3D &targetCenter) {
 }
 
 void Camera::set_rts_view(const QVector3D &center, float distance, float angle,
-                        float yaw_deg) {
+                          float yaw_deg) {
   if (!finite(center) || !finite(distance) || !finite(angle) ||
       !finite(yaw_deg)) {
     return;
@@ -729,7 +729,8 @@ void Camera::computeYawPitchFromOffset(const QVector3D &off, float &yaw_deg,
   pitch_deg = pitch;
 }
 
-auto Camera::is_in_frustum(const QVector3D &center, float radius) const -> bool {
+auto Camera::is_in_frustum(const QVector3D &center,
+                           float radius) const -> bool {
 
   QMatrix4x4 const vp = get_view_projection_matrix();
 
