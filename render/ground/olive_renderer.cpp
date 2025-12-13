@@ -46,14 +46,14 @@ OliveRenderer::OliveRenderer() = default;
 OliveRenderer::~OliveRenderer() = default;
 
 void OliveRenderer::configure(const Game::Map::TerrainHeightMap &height_map,
-                              const Game::Map::BiomeSettings &biomeSettings) {
+                              const Game::Map::BiomeSettings &biome_settings) {
   m_width = height_map.getWidth();
   m_height = height_map.getHeight();
   m_tile_size = height_map.getTileSize();
   m_heightData = height_map.getHeightData();
   m_terrain_types = height_map.getTerrainTypes();
-  m_biomeSettings = biomeSettings;
-  m_noiseSeed = biomeSettings.seed;
+  m_biome_settings = biome_settings;
+  m_noiseSeed = biome_settings.seed;
 
   m_oliveInstances.clear();
   m_oliveInstanceBuffer.reset();
@@ -80,7 +80,7 @@ void OliveRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   }
 
   auto &visibility = Game::Map::VisibilityService::instance();
-  const bool use_visibility = visibility.isInitialized();
+  const bool use_visibility = visibility.is_initialized();
   const std::uint64_t current_version =
       use_visibility ? visibility.version() : 0;
 
@@ -141,7 +141,7 @@ void OliveRenderer::generate_olive_instances() {
     return;
   }
 
-  if (m_biomeSettings.ground_type != Game::Map::GroundType::GrassDry) {
+  if (m_biome_settings.ground_type != Game::Map::GroundType::GrassDry) {
     m_oliveInstancesDirty = false;
     return;
   }
@@ -151,19 +151,19 @@ void OliveRenderer::generate_olive_instances() {
   const float tile_safe = std::max(0.1F, m_tile_size);
 
   const float edge_padding =
-      std::clamp(m_biomeSettings.spawn_edge_padding, 0.0F, 0.5F);
+      std::clamp(m_biome_settings.spawn_edge_padding, 0.0F, 0.5F);
   const float edge_margin_x = static_cast<float>(m_width) * edge_padding;
   const float edge_margin_z = static_cast<float>(m_height) * edge_padding;
 
   float olive_density =
-      (m_biomeSettings.ground_type == Game::Map::GroundType::GrassDry) ? 0.12F
-                                                                       : 0.05F;
-  if (m_biomeSettings.plant_density > 0.0F) {
+      (m_biome_settings.ground_type == Game::Map::GroundType::GrassDry) ? 0.12F
+                                                                        : 0.05F;
+  if (m_biome_settings.plant_density > 0.0F) {
     float const density_mult =
-        (m_biomeSettings.ground_type == Game::Map::GroundType::GrassDry)
+        (m_biome_settings.ground_type == Game::Map::GroundType::GrassDry)
             ? 0.15F
             : 0.08F;
-    olive_density = m_biomeSettings.plant_density * density_mult;
+    olive_density = m_biome_settings.plant_density * density_mult;
   }
 
   std::vector<QVector3D> normals(static_cast<qsizetype>(m_width * m_height),
@@ -240,7 +240,7 @@ void OliveRenderer::generate_olive_instances() {
     float const base_scale = remap(rand_01(state), 2.8F, 5.5F) * tile_safe;
     float const dry_scale = remap(rand_01(state), 3.2F, 6.5F) * tile_safe;
     float const chosen_scale =
-        (m_biomeSettings.ground_type == Game::Map::GroundType::GrassDry)
+        (m_biome_settings.ground_type == Game::Map::GroundType::GrassDry)
             ? dry_scale
             : base_scale;
 

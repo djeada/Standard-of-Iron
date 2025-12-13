@@ -325,7 +325,7 @@ void Renderer::enqueue_selection_ring(
     if (troop_type_opt) {
       const auto &nation_reg = Game::Systems::NationRegistry::instance();
       const Game::Systems::Nation *nation =
-          nation_reg.getNationForPlayer(unit_comp->owner_id);
+          nation_reg.get_nation_for_player(unit_comp->owner_id);
       Game::Systems::NationID nation_id =
           nation != nullptr ? nation->id : nation_reg.default_nation_id();
 
@@ -353,8 +353,8 @@ void Renderer::enqueue_selection_ring(
                 transform->position.z);
   auto &terrain_service = Game::Map::TerrainService::instance();
   float terrain_y = transform->position.y;
-  if (terrain_service.isInitialized()) {
-    terrain_y = terrain_service.getTerrainHeight(pos.x(), pos.z());
+  if (terrain_service.is_initialized()) {
+    terrain_y = terrain_service.get_terrain_height(pos.x(), pos.z());
   } else {
     terrain_y -= ground_offset * scale_y;
   }
@@ -382,7 +382,7 @@ void Renderer::render_world(Engine::Core::World *world) {
   std::lock_guard<std::recursive_mutex> const guard(world->get_entity_mutex());
 
   auto &vis = Game::Map::VisibilityService::instance();
-  const bool visibility_enabled = vis.isInitialized();
+  const bool visibility_enabled = vis.is_initialized();
 
   auto renderable_entities =
       world->get_entities_with<Engine::Core::RenderableComponent>();

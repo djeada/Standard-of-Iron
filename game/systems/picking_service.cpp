@@ -70,17 +70,17 @@ auto PickingService::update_hover(float sx, float sy,
       pick_single(sx, sy, world, camera, view_w, view_h, 0, false);
 
   if (picked != 0 && picked != prev_hover) {
-    m_hoverGraceTicks = 6;
+    m_hover_grace_ticks = 6;
   }
 
   Engine::Core::EntityID current_hover = picked;
-  if (current_hover == 0 && prev_hover != 0 && m_hoverGraceTicks > 0) {
+  if (current_hover == 0 && prev_hover != 0 && m_hover_grace_ticks > 0) {
 
     current_hover = prev_hover;
   }
 
-  if (m_hoverGraceTicks > 0) {
-    --m_hoverGraceTicks;
+  if (m_hover_grace_ticks > 0) {
+    --m_hover_grace_ticks;
   }
   m_prev_hoverId = current_hover;
   return current_hover;

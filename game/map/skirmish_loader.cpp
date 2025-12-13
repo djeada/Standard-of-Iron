@@ -63,7 +63,7 @@ SkirmishLoader::SkirmishLoader(Engine::Core::World &world,
                                Render::GL::Camera &camera)
     : m_world(world), m_renderer(renderer), m_camera(camera) {}
 
-void SkirmishLoader::resetGameState() {
+void SkirmishLoader::reset_game_state() {
   if (auto *selection_system =
           m_world.get_system<Game::Systems::SelectionSystem>()) {
     selection_system->clear_selection();
@@ -95,7 +95,7 @@ void SkirmishLoader::resetGameState() {
   auto &troop_registry = Game::Systems::TroopCountRegistry::instance();
   troop_registry.clear();
 
-  Game::Systems::NationRegistry::instance().clearPlayerAssignments();
+  Game::Systems::NationRegistry::instance().clear_player_assignments();
 
   if (m_fog != nullptr) {
     m_fog->update_mask(0, 0, 1.0F, {});
@@ -104,11 +104,11 @@ void SkirmishLoader::resetGameState() {
 
 auto SkirmishLoader::start(const QString &map_path,
                            const QVariantList &playerConfigs,
-                           int selectedPlayerId,
-                           int &outSelectedPlayerId) -> SkirmishLoadResult {
+                           int selected_player_id,
+                           int &out_selected_player_id) -> SkirmishLoadResult {
   SkirmishLoadResult result;
 
-  resetGameState();
+  reset_game_state();
 
   QSet<int> map_player_ids;
   QFile map_file(map_path);
@@ -140,17 +140,17 @@ auto SkirmishLoader::start(const QString &map_path,
 
   auto &owner_registry = Game::Systems::OwnerRegistry::instance();
 
-  int player_owner_id = selectedPlayerId;
+  int player_owner_id = selected_player_id;
 
   if (!map_player_ids.contains(player_owner_id)) {
     if (!map_player_ids.isEmpty()) {
       QList<int> sorted_ids = map_player_ids.values();
       std::sort(sorted_ids.begin(), sorted_ids.end());
       player_owner_id = sorted_ids.first();
-      qWarning() << "Selected player ID" << selectedPlayerId
+      qWarning() << "Selected player ID" << selected_player_id
                  << "not found in map spawns. Using" << player_owner_id
                  << "instead.";
-      outSelectedPlayerId = player_owner_id;
+      out_selected_player_id = player_owner_id;
     } else {
       qWarning() << "No valid player spawns found in map. Using default "
                     "player ID"
@@ -158,7 +158,7 @@ auto SkirmishLoader::start(const QString &map_path,
     }
   }
 
-  owner_registry.setLocalPlayerId(player_owner_id);
+  owner_registry.set_local_player_id(player_owner_id);
 
   std::unordered_map<int, int> team_overrides;
   std::unordered_map<int, Game::Systems::NationID> nation_overrides;
@@ -229,20 +229,20 @@ auto SkirmishLoader::start(const QString &map_path,
     int player_id = *it;
     auto nat_it = nation_overrides.find(player_id);
     if (nat_it != nation_overrides.end()) {
-      nation_registry.setPlayerNation(player_id, nat_it->second);
+      nation_registry.set_player_nation(player_id, nat_it->second);
     } else {
-      nation_registry.setPlayerNation(player_id,
-                                      nation_registry.default_nation_id());
+      nation_registry.set_player_nation(player_id,
+                                        nation_registry.default_nation_id());
     }
   }
 
   if (map_player_ids.isEmpty()) {
     auto nat_it = nation_overrides.find(player_owner_id);
     if (nat_it != nation_overrides.end()) {
-      nation_registry.setPlayerNation(player_owner_id, nat_it->second);
+      nation_registry.set_player_nation(player_owner_id, nat_it->second);
     } else {
-      nation_registry.setPlayerNation(player_owner_id,
-                                      nation_registry.default_nation_id());
+      nation_registry.set_player_nation(player_owner_id,
+                                        nation_registry.default_nation_id());
     }
   }
 
@@ -272,8 +272,8 @@ auto SkirmishLoader::start(const QString &map_path,
         const int red = color_hex.mid(1, 2).toInt(&conversion_ok, hex_base);
         const int green = color_hex.mid(3, 2).toInt(&conversion_ok, hex_base);
         const int blue = color_hex.mid(5, 2).toInt(&conversion_ok, hex_base);
-        owner_registry.setOwnerColor(player_id, red / color_scale,
-                                     green / color_scale, blue / color_scale);
+        owner_registry.set_owner_color(player_id, red / color_scale,
+                                       green / color_scale, blue / color_scale);
       }
     }
 
@@ -307,96 +307,97 @@ auto SkirmishLoader::start(const QString &map_path,
     } else {
       m_ground->configure_extent(50.0F);
     }
-    if (terrain_service.isInitialized()) {
-      m_ground->setBiome(terrain_service.biomeSettings());
+    if (terrain_service.is_initialized()) {
+      m_ground->setBiome(terrain_service.biome_settings());
     }
   }
 
   if (m_terrain != nullptr) {
-    if (terrain_service.isInitialized() &&
-        (terrain_service.getHeightMap() != nullptr)) {
-      m_terrain->configure(*terrain_service.getHeightMap(),
-                           terrain_service.biomeSettings());
+    if (terrain_service.is_initialized() &&
+        (terrain_service.get_height_map() != nullptr)) {
+      m_terrain->configure(*terrain_service.get_height_map(),
+                           terrain_service.biome_settings());
     }
   }
 
   if (m_biome != nullptr) {
-    if (terrain_service.isInitialized() &&
-        (terrain_service.getHeightMap() != nullptr)) {
-      m_biome->configure(*terrain_service.getHeightMap(),
-                         terrain_service.biomeSettings());
+    if (terrain_service.is_initialized() &&
+        (terrain_service.get_height_map() != nullptr)) {
+      m_biome->configure(*terrain_service.get_height_map(),
+                         terrain_service.biome_settings());
     }
   }
 
   if (m_river != nullptr) {
-    if (terrain_service.isInitialized() &&
-        (terrain_service.getHeightMap() != nullptr)) {
-      m_river->configure(terrain_service.getHeightMap()->getRiverSegments(),
-                         terrain_service.getHeightMap()->getTileSize());
+    if (terrain_service.is_initialized() &&
+        (terrain_service.get_height_map() != nullptr)) {
+      m_river->configure(terrain_service.get_height_map()->getRiverSegments(),
+                         terrain_service.get_height_map()->getTileSize());
     }
   }
 
   if (m_road != nullptr) {
-    if (terrain_service.isInitialized() &&
-        (terrain_service.getHeightMap() != nullptr)) {
+    if (terrain_service.is_initialized() &&
+        (terrain_service.get_height_map() != nullptr)) {
       m_road->configure(terrain_service.road_segments(),
-                        terrain_service.getHeightMap()->getTileSize());
+                        terrain_service.get_height_map()->getTileSize());
     }
   }
 
   if (m_riverbank != nullptr) {
-    if (terrain_service.isInitialized() &&
-        (terrain_service.getHeightMap() != nullptr)) {
-      m_riverbank->configure(terrain_service.getHeightMap()->getRiverSegments(),
-                             *terrain_service.getHeightMap());
+    if (terrain_service.is_initialized() &&
+        (terrain_service.get_height_map() != nullptr)) {
+      m_riverbank->configure(
+          terrain_service.get_height_map()->getRiverSegments(),
+          *terrain_service.get_height_map());
     }
   }
 
   if (m_bridge != nullptr) {
-    if (terrain_service.isInitialized() &&
-        (terrain_service.getHeightMap() != nullptr)) {
-      m_bridge->configure(terrain_service.getHeightMap()->getBridges(),
-                          terrain_service.getHeightMap()->getTileSize());
+    if (terrain_service.is_initialized() &&
+        (terrain_service.get_height_map() != nullptr)) {
+      m_bridge->configure(terrain_service.get_height_map()->getBridges(),
+                          terrain_service.get_height_map()->getTileSize());
     }
   }
 
   if (m_stone != nullptr) {
-    if (terrain_service.isInitialized() &&
-        (terrain_service.getHeightMap() != nullptr)) {
-      m_stone->configure(*terrain_service.getHeightMap(),
-                         terrain_service.biomeSettings());
+    if (terrain_service.is_initialized() &&
+        (terrain_service.get_height_map() != nullptr)) {
+      m_stone->configure(*terrain_service.get_height_map(),
+                         terrain_service.biome_settings());
     }
   }
 
   if (m_plant != nullptr) {
-    if (terrain_service.isInitialized() &&
-        (terrain_service.getHeightMap() != nullptr)) {
-      m_plant->configure(*terrain_service.getHeightMap(),
-                         terrain_service.biomeSettings());
+    if (terrain_service.is_initialized() &&
+        (terrain_service.get_height_map() != nullptr)) {
+      m_plant->configure(*terrain_service.get_height_map(),
+                         terrain_service.biome_settings());
     }
   }
 
   if (m_pine != nullptr) {
-    if (terrain_service.isInitialized() &&
-        (terrain_service.getHeightMap() != nullptr)) {
-      m_pine->configure(*terrain_service.getHeightMap(),
-                        terrain_service.biomeSettings());
+    if (terrain_service.is_initialized() &&
+        (terrain_service.get_height_map() != nullptr)) {
+      m_pine->configure(*terrain_service.get_height_map(),
+                        terrain_service.biome_settings());
     }
   }
 
   if (m_olive != nullptr) {
-    if (terrain_service.isInitialized() &&
-        (terrain_service.getHeightMap() != nullptr)) {
-      m_olive->configure(*terrain_service.getHeightMap(),
-                         terrain_service.biomeSettings());
+    if (terrain_service.is_initialized() &&
+        (terrain_service.get_height_map() != nullptr)) {
+      m_olive->configure(*terrain_service.get_height_map(),
+                         terrain_service.biome_settings());
     }
   }
 
   if (m_firecamp != nullptr) {
-    if (terrain_service.isInitialized() &&
-        (terrain_service.getHeightMap() != nullptr)) {
-      m_firecamp->configure(*terrain_service.getHeightMap(),
-                            terrain_service.biomeSettings());
+    if (terrain_service.is_initialized() &&
+        (terrain_service.get_height_map() != nullptr)) {
+      m_firecamp->configure(*terrain_service.get_height_map(),
+                            terrain_service.biome_settings());
 
       const auto &fire_camps = terrain_service.fire_camps();
       if (!fire_camps.empty()) {
@@ -404,7 +405,7 @@ auto SkirmishLoader::start(const QString &map_path,
         std::vector<float> intensities;
         std::vector<float> radii;
 
-        const auto *height_map = terrain_service.getHeightMap();
+        const auto *height_map = terrain_service.get_height_map();
         const float tile_size = height_map->getTileSize();
         const int width = height_map->getWidth();
         const int height = height_map->getHeight();
@@ -416,7 +417,7 @@ auto SkirmishLoader::start(const QString &map_path,
           float const world_x = (fc.x - half_width) * tile_size;
           float const world_z = (fc.z - half_height) * tile_size;
           float const world_y =
-              terrain_service.getTerrainHeight(world_x, world_z);
+              terrain_service.get_terrain_height(world_x, world_z);
 
           positions.emplace_back(world_x, world_y, world_z);
           intensities.push_back(fc.intensity);
@@ -439,7 +440,7 @@ auto SkirmishLoader::start(const QString &map_path,
   visibility_service.initialize(map_width, map_height, level_result.tile_size);
   visibility_service.computeImmediate(m_world, player_owner_id);
 
-  if ((m_fog != nullptr) && visibility_service.isInitialized()) {
+  if ((m_fog != nullptr) && visibility_service.is_initialized()) {
     m_fog->update_mask(
         visibility_service.getWidth(), visibility_service.getHeight(),
         visibility_service.getTileSize(), visibility_service.snapshotCells());
@@ -483,7 +484,7 @@ auto SkirmishLoader::start(const QString &map_path,
             focus_entity->get_component<Engine::Core::TransformComponent>()) {
       result.focusPosition = QVector3D(
           transform->position.x, transform->position.y, transform->position.z);
-      result.hasFocusPosition = true;
+      result.has_focus_position = true;
     }
   }
 
