@@ -238,7 +238,7 @@ public:
   int healing_amount{5};
   float healing_cooldown{2.0F};
   float time_since_last_heal{0.0F};
-  bool is_healing_active{false};  ///< True when actively healing (for aura effect)
+  bool is_healing_active{false};
 };
 
 class CatapultLoadingComponent : public Component {

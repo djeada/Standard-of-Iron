@@ -5,19 +5,11 @@
 
 namespace Game::Systems {
 
-/**
- * @brief Magical healing beam projectile for healer visual effects.
- *
- * Unlike damaging projectiles, this is purely visual - the healing
- * has already been applied. The beam provides impressive magical
- * feedback showing energy flowing from healer to target.
- */
 class HealingBeam : public Projectile {
 public:
   HealingBeam(const QVector3D &healer_pos, const QVector3D &target_pos,
               const QVector3D &color, float duration = 0.8F);
 
-  // Projectile interface
   auto get_start() const -> QVector3D override { return m_healer_pos; }
   auto get_end() const -> QVector3D override { return m_target_pos; }
   auto get_color() const -> QVector3D override { return m_color; }
@@ -27,7 +19,6 @@ public:
   auto get_scale() const -> float override { return m_beam_width; }
   auto is_active() const -> bool override { return m_active; }
 
-  // Healing beams don't apply damage
   auto should_apply_damage() const -> bool override { return false; }
   auto get_damage() const -> int override { return 0; }
   auto get_target_id() const -> Engine::Core::EntityID override { return 0; }
@@ -39,7 +30,6 @@ public:
   void update(float delta_time) override;
   void deactivate() override { m_active = false; }
 
-  // Healing beam specific
   auto get_duration() const -> float { return m_duration; }
   auto get_beam_width() const -> float { return m_beam_width; }
   auto get_intensity() const -> float { return m_intensity; }

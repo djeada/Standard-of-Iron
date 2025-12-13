@@ -4,16 +4,14 @@
 
 namespace Game::Systems {
 
-void HealingBeamSystem::update(Engine::Core::World * /*world*/,
-                               float delta_time) {
-  // Update all beams
+void HealingBeamSystem::update(Engine::Core::World *, float delta_time) {
+
   for (auto &beam : m_beams) {
     if (beam && beam->is_active()) {
       beam->update(delta_time);
     }
   }
 
-  // Remove inactive beams
   m_beams.erase(std::remove_if(m_beams.begin(), m_beams.end(),
                                [](const std::unique_ptr<HealingBeam> &beam) {
                                  return !beam || !beam->is_active();

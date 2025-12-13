@@ -4,7 +4,7 @@
 #include "../gl/backend.h"
 #include "../gl/camera.h"
 #include "../gl/mesh.h"
-#include "../gl/resource_manager.h"
+#include "../gl/resources.h"
 #include "../gl/shader.h"
 #include "../scene_renderer.h"
 #include <QMatrix4x4>
@@ -29,24 +29,21 @@ auto HealingBeamRenderer::initialize(Backend *backend) -> bool {
     return false;
   }
 
-  // Get healing beam shader
   m_beam_shader = m_backend->shader(QStringLiteral("healing_beam"));
   if (m_beam_shader == nullptr) {
     return false;
   }
 
-  // Cache uniform handles
-  m_u_mvp = m_beam_shader->uniformHandle("u_mvp");
-  m_u_model = m_beam_shader->uniformHandle("u_model");
-  m_u_time = m_beam_shader->uniformHandle("u_time");
-  m_u_progress = m_beam_shader->uniformHandle("u_progress");
-  m_u_start_pos = m_beam_shader->uniformHandle("u_startPos");
-  m_u_end_pos = m_beam_shader->uniformHandle("u_endPos");
-  m_u_beam_width = m_beam_shader->uniformHandle("u_beamWidth");
-  m_u_heal_color = m_beam_shader->uniformHandle("u_healColor");
-  m_u_alpha = m_beam_shader->uniformHandle("u_alpha");
+  m_u_mvp = m_beam_shader->uniform_handle("u_mvp");
+  m_u_model = m_beam_shader->uniform_handle("u_model");
+  m_u_time = m_beam_shader->uniform_handle("u_time");
+  m_u_progress = m_beam_shader->uniform_handle("u_progress");
+  m_u_start_pos = m_beam_shader->uniform_handle("u_startPos");
+  m_u_end_pos = m_beam_shader->uniform_handle("u_endPos");
+  m_u_beam_width = m_beam_shader->uniform_handle("u_beamWidth");
+  m_u_heal_color = m_beam_shader->uniform_handle("u_healColor");
+  m_u_alpha = m_beam_shader->uniform_handle("u_alpha");
 
-  // Create beam mesh
   m_beam_mesh = create_beam_mesh();
   if (!m_beam_mesh) {
     return false;
@@ -67,10 +64,8 @@ auto HealingBeamRenderer::create_beam_mesh() -> std::unique_ptr<Mesh> {
   std::vector<Vertex> vertices;
   std::vector<unsigned int> indices;
 
-  // Create a tube mesh along Z axis (0 to 1)
-  // The vertex shader will deform this along the beam path
-  constexpr int segments_along = 32;   // Along beam length
-  constexpr int segments_around = 12;  // Around beam circumference
+  constexpr int segments_along = 32;
+  constexpr int segments_around = 12;
   constexpr float pi = std::numbers::pi_v<float>;
 
   for (int i = 0; i <= segments_along; ++i) {
@@ -82,7 +77,6 @@ auto HealingBeamRenderer::create_beam_mesh() -> std::unique_ptr<Mesh> {
       float x = std::cos(angle);
       float y = std::sin(angle);
 
-      // Position: x,y define cross-section, z is position along beam
       Vertex v;
       v.position = {x, y, t};
       v.normal = {x, y, 0.0F};
@@ -91,7 +85,6 @@ auto HealingBeamRenderer::create_beam_mesh() -> std::unique_ptr<Mesh> {
     }
   }
 
-  // Generate indices for triangle strip
   for (int i = 0; i < segments_along; ++i) {
     for (int j = 0; j < segments_around; ++j) {
       int curr = i * (segments_around + 1) + j;
@@ -118,10 +111,9 @@ void HealingBeamRenderer::render(
     return;
   }
 
-  // Enable blending for glow effect
   glEnable(GL_BLEND);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE); // Additive blending for glow
-  glDepthMask(GL_FALSE);             // Don't write to depth buffer
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+  glDepthMask(GL_FALSE);
 
   m_beam_shader->use();
 
@@ -131,34 +123,30 @@ void HealingBeamRenderer::render(
     }
   }
 
-  // Restore state
   glDepthMask(GL_TRUE);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
 void HealingBeamRenderer::render_beam(const Game::Systems::HealingBeam &beam,
-                                      const Camera &cam,
-                                      float animation_time) {
+                                      const Camera &cam, float animation_time) {
   QMatrix4x4 model;
   model.setToIdentity();
 
-  QMatrix4x4 mvp = cam.getProjectionMatrix() * cam.getViewMatrix() * model;
+  QMatrix4x4 mvp = cam.get_projection_matrix() * cam.get_view_matrix() * model;
 
-  m_beam_shader->setUniform(m_u_mvp, mvp);
-  m_beam_shader->setUniform(m_u_model, model);
-  m_beam_shader->setUniform(m_u_time, animation_time);
-  m_beam_shader->setUniform(m_u_progress,
-                            std::min(beam.get_progress(), 1.0F));
-  m_beam_shader->setUniform(m_u_start_pos, beam.get_start());
-  m_beam_shader->setUniform(m_u_end_pos, beam.get_end());
-  m_beam_shader->setUniform(m_u_beam_width, beam.get_beam_width());
-  m_beam_shader->setUniform(m_u_heal_color, beam.get_color());
-  m_beam_shader->setUniform(m_u_alpha, beam.get_intensity());
+  m_beam_shader->set_uniform(m_u_mvp, mvp);
+  m_beam_shader->set_uniform(m_u_model, model);
+  m_beam_shader->set_uniform(m_u_time, animation_time);
+  m_beam_shader->set_uniform(m_u_progress, std::min(beam.get_progress(), 1.0F));
+  m_beam_shader->set_uniform(m_u_start_pos, beam.get_start());
+  m_beam_shader->set_uniform(m_u_end_pos, beam.get_end());
+  m_beam_shader->set_uniform(m_u_beam_width, beam.get_beam_width());
+  m_beam_shader->set_uniform(m_u_heal_color, beam.get_color());
+  m_beam_shader->set_uniform(m_u_alpha, beam.get_intensity());
 
   m_beam_mesh->draw();
 }
 
-// Static renderer instance for the free function
 namespace {
 HealingBeamRenderer &get_healing_beam_renderer() {
   static HealingBeamRenderer renderer;
@@ -166,9 +154,8 @@ HealingBeamRenderer &get_healing_beam_renderer() {
 }
 } // namespace
 
-void render_healing_beams(
-    Renderer *renderer, ResourceManager * /*resources*/,
-    const Game::Systems::HealingBeamSystem &beam_system) {
+void render_healing_beams(Renderer *renderer, ResourceManager *,
+                          const Game::Systems::HealingBeamSystem &beam_system) {
   if (renderer == nullptr || beam_system.get_beam_count() == 0) {
     return;
   }

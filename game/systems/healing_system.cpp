@@ -78,7 +78,6 @@ void HealingSystem::process_healing(Engine::Core::World *world,
           target_unit->health = target_unit->max_health;
         }
 
-        // Spawn magical healing beam visual effect
         if (healing_beam_system != nullptr) {
           QVector3D const healer_pos(healer_transform->position.x,
                                      healer_transform->position.y + 1.2F,
@@ -86,7 +85,7 @@ void HealingSystem::process_healing(Engine::Core::World *world,
           QVector3D const target_pos(target_transform->position.x,
                                      target_transform->position.y + 0.8F,
                                      target_transform->position.z);
-          // Golden-green healing color
+
           QVector3D const heal_color(0.4F, 1.0F, 0.5F);
           healing_beam_system->spawn_beam(healer_pos, target_pos, heal_color,
                                           0.7F);
@@ -98,7 +97,7 @@ void HealingSystem::process_healing(Engine::Core::World *world,
 
     if (healed_any) {
       healer_comp->time_since_last_heal = 0.0F;
-      // Mark healer as actively healing (for aura effect)
+
       healer_comp->is_healing_active = true;
     } else {
       healer_comp->is_healing_active = false;
