@@ -60,7 +60,7 @@ struct EntitySnapshot {
   int owner_id = 0;
   int health = 0;
   int max_health = 0;
-  bool isBuilding = false;
+  bool is_building = false;
 
   float posX = 0.0F;
   float posY = 0.0F;
@@ -72,7 +72,7 @@ struct EntitySnapshot {
 
 struct ContactSnapshot {
   Engine::Core::EntityID id = 0;
-  bool isBuilding = false;
+  bool is_building = false;
 
   float posX = 0.0F;
   float posY = 0.0F;
@@ -88,14 +88,14 @@ struct AISnapshot {
   std::vector<EntitySnapshot> friendlies;
   std::vector<ContactSnapshot> visibleEnemies;
 
-  float gameTime = 0.0F;
+  float game_time = 0.0F;
 };
 
 struct AIContext {
   int player_id = 0;
   AIState state = AIState::Idle;
-  float stateTimer = 0.0F;
-  float decisionTimer = 0.0F;
+  float state_timer = 0.0F;
+  float decision_timer = 0.0F;
 
   const Game::Systems::Nation *nation = nullptr;
 
@@ -105,28 +105,28 @@ struct AIContext {
 
   float rally_x = 0.0F;
   float rally_z = 0.0F;
-  int targetPriority = 0;
+  int target_priority = 0;
 
   int total_units = 0;
-  int idleUnits = 0;
-  int combatUnits = 0;
-  float averageHealth = 1.0F;
-  bool barracksUnderThreat = false;
-  int nearbyThreatCount = 0;
-  float closest_threatDistance = 0.0F;
+  int idle_units = 0;
+  int combat_units = 0;
+  float average_health = 1.0F;
+  bool barracks_under_threat = false;
+  int nearby_threat_count = 0;
+  float closest_threat_distance = 0.0F;
 
-  float basePosX = 0.0F;
-  float basePosY = 0.0F;
-  float basePosZ = 0.0F;
+  float base_pos_x = 0.0F;
+  float base_pos_y = 0.0F;
+  float base_pos_z = 0.0F;
 
   struct UnitAssignment {
     BehaviorPriority ownerPriority = BehaviorPriority::Normal;
-    float assignmentTime = 0.0F;
+    float assignment_time = 0.0F;
     std::string assignedTask;
   };
   std::unordered_map<Engine::Core::EntityID, UnitAssignment> assignedUnits;
 
-  int meleeCount = 0;
+  int melee_count = 0;
   int rangedCount = 0;
   int damagedUnitsCount = 0;
 

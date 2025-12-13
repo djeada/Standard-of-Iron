@@ -32,7 +32,7 @@ void RetreatBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   constexpr float low_health = 0.50F;
 
   for (const auto &entity : snapshot.friendlies) {
-    if (entity.isBuilding) {
+    if (entity.is_building) {
       continue;
     }
 
@@ -57,7 +57,7 @@ void RetreatBehavior::execute(const AISnapshot &snapshot, AIContext &context,
     return;
   }
 
-  QVector3D retreat_pos(context.basePosX, context.basePosY, context.basePosZ);
+  QVector3D retreat_pos(context.base_pos_x, context.base_pos_y, context.base_pos_z);
 
   retreat_pos.setX(retreat_pos.x() - 8.0F);
 
@@ -121,7 +121,7 @@ auto RetreatBehavior::should_execute(const AISnapshot &snapshot,
   constexpr float critical_health = 0.35F;
 
   for (const auto &entity : snapshot.friendlies) {
-    if (entity.isBuilding) {
+    if (entity.is_building) {
       continue;
     }
 

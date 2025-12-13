@@ -102,7 +102,7 @@ auto VisualCatalog::lookup(const std::string &unitType,
   return true;
 }
 
-void applyToRenderable(const VisualDef &def,
+void apply_to_renderable(const VisualDef &def,
                        Engine::Core::RenderableComponent &r) {
   r.mesh = toRenderableMesh(def.mesh);
   r.color[0] = def.color.x();

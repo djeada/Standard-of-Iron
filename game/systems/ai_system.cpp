@@ -48,14 +48,14 @@ void AISystem::reinitialize() {
 
 void AISystem::initializeAIPlayers() {
   auto &registry = OwnerRegistry::instance();
-  const auto &ai_owner_ids = registry.getAIOwnerIds();
+  const auto &ai_owner_ids = registry.get_ai_owner_ids();
 
   if (ai_owner_ids.empty()) {
     return;
   }
 
   for (uint32_t const player_id : ai_owner_ids) {
-    int const team_id = registry.getOwnerTeam(player_id);
+    int const team_id = registry.get_owner_team(player_id);
     AIInstance instance;
     instance.context.player_id = player_id;
     instance.context.state = AI::AIState::Idle;
@@ -73,9 +73,9 @@ void AISystem::update(Engine::Core::World *world, float delta_time) {
     return;
   }
 
-  m_totalGameTime += delta_time;
+  m_total_game_time += delta_time;
 
-  m_commandFilter.update(m_totalGameTime);
+  m_commandFilter.update(m_total_game_time);
 
   processResults(*world);
 
@@ -93,7 +93,7 @@ void AISystem::update(Engine::Core::World *world, float delta_time) {
 
     AI::AISnapshot snapshot = Game::Systems::AI::AISnapshotBuilder::build(
         *world, ai.context.player_id);
-    snapshot.gameTime = m_totalGameTime;
+    snapshot.gameTime = m_total_game_time;
 
     AI::AIJob job;
     job.snapshot = std::move(snapshot);
@@ -106,7 +106,7 @@ void AISystem::update(Engine::Core::World *world, float delta_time) {
   }
 }
 
-void AISystem::processResults(Engine::Core::World &world) {
+void AISystem::process_results(Engine::Core::World &world) {
 
   for (auto &ai : m_aiInstances) {
 
@@ -119,7 +119,7 @@ void AISystem::processResults(Engine::Core::World &world) {
       ai.context = result.context;
 
       auto filtered_commands =
-          m_commandFilter.filter(result.commands, m_totalGameTime);
+          m_commandFilter.filter(result.commands, m_total_game_time);
 
       Game::Systems::AI::AICommandApplier::apply(world, ai.context.player_id,
                                                  filtered_commands);
@@ -129,11 +129,11 @@ void AISystem::processResults(Engine::Core::World &world) {
   }
 }
 
-void AISystem::onBuildingAttacked(
+void AISystem::on_building_attacked(
     const Engine::Core::BuildingAttackedEvent &event) {
   for (auto &ai : m_aiInstances) {
     if (ai.context.player_id == event.owner_id) {
-      ai.context.buildingsUnderAttack[event.buildingId] = m_totalGameTime;
+      ai.context.buildingsUnderAttack[event.buildingId] = m_total_game_time;
 
       if (event.buildingId == ai.context.primaryBarracks) {
         ai.context.barracksUnderThreat = true;
