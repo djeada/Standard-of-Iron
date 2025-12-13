@@ -300,7 +300,7 @@ private:
       SelectionRing = 15
     };
 
-    static constexpr uint8_t kTypeOrder[] = {
+    static constexpr uint8_t k_type_order[] = {
         static_cast<uint8_t>(RenderOrder::Grid),
         static_cast<uint8_t>(RenderOrder::SelectionRing),
         static_cast<uint8_t>(RenderOrder::SelectionSmoke),
@@ -316,65 +316,65 @@ private:
         static_cast<uint8_t>(RenderOrder::TerrainChunk),
         static_cast<uint8_t>(RenderOrder::PrimitiveBatch)};
 
-    const std::size_t typeIndex = cmd.index();
-    constexpr std::size_t typeCount =
-        sizeof(kTypeOrder) / sizeof(kTypeOrder[0]);
-    const uint8_t typeOrder = typeIndex < typeCount
-                                  ? kTypeOrder[typeIndex]
-                                  : static_cast<uint8_t>(typeIndex);
+    const std::size_t type_index = cmd.index();
+    constexpr std::size_t type_count =
+        sizeof(k_type_order) / sizeof(k_type_order[0]);
+    const uint8_t type_order = type_index < type_count
+                                   ? k_type_order[type_index]
+                                   : static_cast<uint8_t>(type_index);
 
-    uint64_t key = static_cast<uint64_t>(typeOrder) << 56;
+    uint64_t key = static_cast<uint64_t>(type_order) << 56;
 
     if (cmd.index() == MeshCmdIndex) {
       const auto &mesh = std::get<MeshCmdIndex>(cmd);
 
-      uint64_t const texPtr =
+      uint64_t const tex_ptr =
           reinterpret_cast<uintptr_t>(mesh.texture) & 0x0000FFFFFFFFFFFF;
-      key |= texPtr;
+      key |= tex_ptr;
     } else if (cmd.index() == GrassBatchCmdIndex) {
       const auto &grass = std::get<GrassBatchCmdIndex>(cmd);
-      uint64_t const bufferPtr =
+      uint64_t const buffer_ptr =
           reinterpret_cast<uintptr_t>(grass.instance_buffer) &
           0x0000FFFFFFFFFFFF;
-      key |= bufferPtr;
+      key |= buffer_ptr;
     } else if (cmd.index() == StoneBatchCmdIndex) {
       const auto &stone = std::get<StoneBatchCmdIndex>(cmd);
-      uint64_t const bufferPtr =
+      uint64_t const buffer_ptr =
           reinterpret_cast<uintptr_t>(stone.instance_buffer) &
           0x0000FFFFFFFFFFFF;
-      key |= bufferPtr;
+      key |= buffer_ptr;
     } else if (cmd.index() == PlantBatchCmdIndex) {
       const auto &plant = std::get<PlantBatchCmdIndex>(cmd);
-      uint64_t const bufferPtr =
+      uint64_t const buffer_ptr =
           reinterpret_cast<uintptr_t>(plant.instance_buffer) &
           0x0000FFFFFFFFFFFF;
-      key |= bufferPtr;
+      key |= buffer_ptr;
     } else if (cmd.index() == PineBatchCmdIndex) {
       const auto &pine = std::get<PineBatchCmdIndex>(cmd);
-      uint64_t const bufferPtr =
+      uint64_t const buffer_ptr =
           reinterpret_cast<uintptr_t>(pine.instance_buffer) &
           0x0000FFFFFFFFFFFF;
-      key |= bufferPtr;
+      key |= buffer_ptr;
     } else if (cmd.index() == OliveBatchCmdIndex) {
       const auto &olive = std::get<OliveBatchCmdIndex>(cmd);
-      uint64_t const bufferPtr =
+      uint64_t const buffer_ptr =
           reinterpret_cast<uintptr_t>(olive.instance_buffer) &
           0x0000FFFFFFFFFFFF;
-      key |= bufferPtr;
+      key |= buffer_ptr;
     } else if (cmd.index() == FireCampBatchCmdIndex) {
       const auto &firecamp = std::get<FireCampBatchCmdIndex>(cmd);
-      uint64_t const bufferPtr =
+      uint64_t const buffer_ptr =
           reinterpret_cast<uintptr_t>(firecamp.instance_buffer) &
           0x0000FFFFFFFFFFFF;
-      key |= bufferPtr;
+      key |= buffer_ptr;
     } else if (cmd.index() == TerrainChunkCmdIndex) {
       const auto &terrain = std::get<TerrainChunkCmdIndex>(cmd);
-      auto const sortByte =
+      auto const sort_byte =
           static_cast<uint64_t>((terrain.sort_key >> 8) & 0xFFU);
-      key |= sortByte << 48;
-      uint64_t const meshPtr =
+      key |= sort_byte << 48;
+      uint64_t const mesh_ptr =
           reinterpret_cast<uintptr_t>(terrain.mesh) & 0x0000FFFFFFFFFFFFU;
-      key |= meshPtr;
+      key |= mesh_ptr;
     } else if (cmd.index() == PrimitiveBatchCmdIndex) {
       const auto &prim = std::get<PrimitiveBatchCmdIndex>(cmd);
 
