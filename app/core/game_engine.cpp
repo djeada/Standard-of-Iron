@@ -64,6 +64,7 @@
 #include "game/map/map_loader.h"
 #include "game/map/map_transformer.h"
 #include "game/map/minimap/minimap_generator.h"
+#include "game/map/minimap/map_preview_generator.h"
 #include "game/map/minimap/unit_layer.h"
 #include "game/map/skirmish_loader.h"
 #include "game/map/terrain_service.h"
@@ -1488,4 +1489,11 @@ auto GameEngine::minimap_image() const -> QImage {
     return m_minimap_manager->get_image();
   }
   return QImage();
+}
+
+auto GameEngine::generate_map_preview(const QString &map_path,
+                                      const QVariantList &player_configs) const
+    -> QImage {
+  Game::Map::Minimap::MapPreviewGenerator generator;
+  return generator.generate_preview(map_path, player_configs);
 }
