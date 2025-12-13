@@ -3,6 +3,7 @@
 #include "../shader.h"
 #include "pipeline_interface.h"
 #include <GL/gl.h>
+#include <QMatrix4x4>
 #include <QVector3D>
 #include <vector>
 
@@ -55,6 +56,14 @@ public:
    * @brief Render all collected healer auras.
    */
   void render(const Camera &cam, float animation_time);
+
+  /**
+   * @brief Render a single healer aura with given parameters.
+   * Called from backend execute() when processing HealerAuraCmd.
+   */
+  void render_single_aura(const QVector3D &position, const QVector3D &color,
+                          float radius, float intensity, float time,
+                          const QMatrix4x4 &view_proj);
 
   /**
    * @brief Clear collected healer data.

@@ -1541,6 +1541,18 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       m_lastBoundShader = nullptr;  // Pipeline manages its own shader
       break;
     }
+    case HealerAuraCmdIndex: {
+      const auto &aura = std::get<HealerAuraCmdIndex>(cmd);
+      if (m_healerAuraPipeline == nullptr ||
+          !m_healerAuraPipeline->is_initialized()) {
+        break;
+      }
+      m_healerAuraPipeline->render_single_aura(aura.position, aura.color,
+                                               aura.radius, aura.intensity,
+                                               aura.time, view_proj);
+      m_lastBoundShader = nullptr;  // Pipeline manages its own shader
+      break;
+    }
     default:
       break;
     }

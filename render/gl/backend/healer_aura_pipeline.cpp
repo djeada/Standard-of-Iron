@@ -348,4 +348,60 @@ void HealerAuraPipeline::render_aura(const HealerAuraData &data,
   glDrawElements(GL_TRIANGLES, m_indexCount, GL_UNSIGNED_INT, nullptr);
 }
 
+void HealerAuraPipeline::render_single_aura(const QVector3D &position,
+                                            const QVector3D &color,
+                                            float radius, float intensity,
+                                            float time,
+                                            const QMatrix4x4 &view_proj) {
+  if (!is_initialized()) {
+    return;
+  }
+  if (intensity < 0.01F) {
+    return;
+  }
+
+  initializeOpenGLFunctions();
+
+  // Save GL state
+  GLboolean cullEnabled = glIsEnabled(GL_CULL_FACE);
+  GLboolean depthMaskEnabled = GL_TRUE;
+  glGetBooleanv(GL_DEPTH_WRITEMASK, &depthMaskEnabled);
+
+  // Set up state for aura rendering
+  glDisable(GL_CULL_FACE);
+  glEnable(GL_DEPTH_TEST);
+  glDepthMask(GL_FALSE);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE);  // Additive blending
+
+  m_auraShader->use();
+  glBindVertexArray(m_vao);
+
+  // Create model matrix
+  QMatrix4x4 model;
+  model.setToIdentity();
+  model.translate(position);
+  model.scale(radius);
+
+  QMatrix4x4 mvp = view_proj * model;
+
+  m_auraShader->set_uniform(m_uniforms.mvp, mvp);
+  m_auraShader->set_uniform(m_uniforms.model, model);
+  m_auraShader->set_uniform(m_uniforms.time, time);
+  m_auraShader->set_uniform(m_uniforms.auraRadius, 1.0F);
+  m_auraShader->set_uniform(m_uniforms.intensity, intensity);
+  m_auraShader->set_uniform(m_uniforms.auraColor, color);
+
+  glDrawElements(GL_TRIANGLES, m_indexCount, GL_UNSIGNED_INT, nullptr);
+
+  glBindVertexArray(0);
+
+  // Restore GL state
+  glDepthMask(depthMaskEnabled);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  if (cullEnabled) {
+    glEnable(GL_CULL_FACE);
+  }
+}
+
 } // namespace Render::GL::BackendPipelines
