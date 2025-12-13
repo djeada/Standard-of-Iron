@@ -7,6 +7,7 @@ Rectangle {
     property var mapPath: ""
     property var playerConfigs: []
     property bool loading: false
+    property string previewId: ""
 
     radius: Theme.radiusLarge
     color: Theme.cardBase
@@ -17,6 +18,7 @@ Rectangle {
     function refreshPreview() {
         if (!mapPath || mapPath === "" || !playerConfigs || playerConfigs.length === 0) {
             previewImage.source = "";
+            previewId = "";
             return;
         }
 
@@ -26,8 +28,19 @@ Rectangle {
 
         loading = true;
         try {
+            // Generate a unique ID based on map path and player configs
+            var configStr = JSON.stringify(playerConfigs);
+            var newId = mapPath + "_" + configStr.length + "_" + Date.now();
+            
             var preview = game.generate_map_preview(mapPath, playerConfigs);
-            previewImage.image = preview;
+            
+            if (typeof mapPreviewProvider !== "undefined") {
+                mapPreviewProvider.set_preview_image(newId, preview);
+                previewId = newId;
+                // Force image reload by changing the source
+                previewImage.source = "image://mappreview/" + newId;
+            }
+            
             loading = false;
         } catch (e) {
             console.error("MapPreview: Failed to generate preview:", e);
@@ -76,7 +89,8 @@ Rectangle {
             height: width
             fillMode: Image.PreserveAspectFit
             smooth: true
-            visible: !loading && source !== ""
+            cache: false
+            visible: !loading && status === Image.Ready
         }
 
         Text {
@@ -85,7 +99,7 @@ Rectangle {
             color: Theme.textHint
             font.pixelSize: 13
             horizontalAlignment: Text.AlignHCenter
-            visible: !loading && previewImage.source === "" && mapPath === ""
+            visible: !loading && previewImage.status !== Image.Ready && mapPath === ""
         }
 
         Text {
@@ -94,7 +108,7 @@ Rectangle {
             color: Theme.textHint
             font.pixelSize: 13
             horizontalAlignment: Text.AlignHCenter
-            visible: !loading && previewImage.source === "" && mapPath !== ""
+            visible: !loading && previewImage.status !== Image.Ready && mapPath !== ""
         }
 
         Item {
