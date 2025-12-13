@@ -127,6 +127,9 @@ public:
 
   void selection_smoke(const QMatrix4x4 &model, const QVector3D &color,
                        float base_alpha = 0.15F) override;
+  void healing_beam(const QVector3D &start, const QVector3D &end,
+                    const QVector3D &color, float progress, float beam_width,
+                    float intensity, float time) override;
   void terrain_chunk(Mesh *mesh, const QMatrix4x4 &model,
                      const TerrainChunkParams &params,
                      std::uint16_t sort_key = 0x8000U, bool depth_write = true,

@@ -230,14 +230,11 @@ void HealingBeamPipeline::render(
     const Game::Systems::HealingBeamSystem *beam_system, const Camera &cam,
     float animation_time) {
   if (!is_initialized()) {
-    qWarning() << "HealingBeamPipeline::render - not initialized";
     return;
   }
   if (beam_system == nullptr || beam_system->get_beam_count() == 0) {
     return;
   }
-
-  qDebug() << "HealingBeamPipeline::render - rendering" << beam_system->get_beam_count() << "beams";
 
   initializeOpenGLFunctions();
   clear_gl_errors();
@@ -311,6 +308,55 @@ void HealingBeamPipeline::render_beam(const Game::Systems::HealingBeam &beam,
   m_beamShader->set_uniform(m_uniforms.alpha, alpha);
 
   glDrawElements(GL_TRIANGLES, m_indexCount, GL_UNSIGNED_INT, nullptr);
+}
+
+void HealingBeamPipeline::render_single_beam(
+    const QVector3D &start, const QVector3D &end, const QVector3D &color,
+    float progress, float beam_width, float intensity, float time,
+    const QMatrix4x4 &view_proj) {
+  if (!is_initialized()) {
+    return;
+  }
+  if (intensity < 0.01F) {
+    return;
+  }
+
+  initializeOpenGLFunctions();
+
+  // Save GL state
+  GLboolean cullEnabled = glIsEnabled(GL_CULL_FACE);
+  GLboolean depthMaskEnabled = GL_TRUE;
+  glGetBooleanv(GL_DEPTH_WRITEMASK, &depthMaskEnabled);
+
+  // Set up state for glow rendering
+  glDisable(GL_CULL_FACE);
+  glEnable(GL_DEPTH_TEST);
+  glDepthMask(GL_FALSE);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+
+  m_beamShader->use();
+  glBindVertexArray(m_vao);
+
+  m_beamShader->set_uniform(m_uniforms.mvp, view_proj);
+  m_beamShader->set_uniform(m_uniforms.time, time);
+  m_beamShader->set_uniform(m_uniforms.progress, std::clamp(progress, 0.0F, 1.0F));
+  m_beamShader->set_uniform(m_uniforms.startPos, start);
+  m_beamShader->set_uniform(m_uniforms.endPos, end);
+  m_beamShader->set_uniform(m_uniforms.beamWidth, beam_width);
+  m_beamShader->set_uniform(m_uniforms.healColor, color);
+  m_beamShader->set_uniform(m_uniforms.alpha, std::clamp(intensity, 0.0F, 1.0F));
+
+  glDrawElements(GL_TRIANGLES, m_indexCount, GL_UNSIGNED_INT, nullptr);
+
+  glBindVertexArray(0);
+
+  // Restore GL state
+  glDepthMask(depthMaskEnabled);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  if (cullEnabled) {
+    glEnable(GL_CULL_FACE);
+  }
 }
 
 } // namespace Render::GL::BackendPipelines

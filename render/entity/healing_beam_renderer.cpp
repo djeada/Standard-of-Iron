@@ -1,10 +1,7 @@
 #include "healing_beam_renderer.h"
+#include "../../game/systems/healing_beam.h"
 #include "../../game/systems/healing_beam_system.h"
-#include "../gl/backend.h"
-#include "../gl/backend/healing_beam_pipeline.h"
-#include "../gl/camera.h"
 #include "../scene_renderer.h"
-#include <QDebug>
 
 namespace Render::GL {
 
@@ -14,19 +11,20 @@ void render_healing_beams(Renderer *renderer, ResourceManager *,
     return;
   }
 
-  auto *backend = renderer->backend();
-  auto *camera = renderer->camera();
-  if (backend == nullptr || camera == nullptr) {
-    return;
-  }
+  float animation_time = renderer->get_animation_time();
 
-  auto *pipeline = backend->healing_beam_pipeline();
-  if (pipeline == nullptr) {
-    qWarning() << "HealingBeamPipeline not available";
-    return;
+  // Submit each beam through the renderer's submitter interface
+  for (const auto &beam : beam_system.get_beams()) {
+    if (beam && beam->is_active()) {
+      float intensity = beam->get_intensity();
+      if (intensity < 0.01F) {
+        continue;
+      }
+      renderer->healing_beam(beam->get_start(), beam->get_end(),
+                             beam->get_color(), beam->get_progress(),
+                             beam->get_beam_width(), intensity, animation_time);
+    }
   }
-
-  pipeline->render(&beam_system, *camera, renderer->get_animation_time());
 }
 
 } // namespace Render::GL

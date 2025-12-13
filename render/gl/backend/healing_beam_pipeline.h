@@ -3,6 +3,8 @@
 #include "../shader.h"
 #include "pipeline_interface.h"
 #include <GL/gl.h>
+#include <QMatrix4x4>
+#include <QVector3D>
 #include <vector>
 
 namespace Game::Systems {
@@ -47,6 +49,15 @@ public:
    */
   void render(const Game::Systems::HealingBeamSystem *beam_system,
               const Camera &cam, float animation_time);
+
+  /**
+   * @brief Render a single healing beam with given parameters.
+   * Called from backend execute() when processing HealingBeamCmd.
+   */
+  void render_single_beam(const QVector3D &start, const QVector3D &end,
+                          const QVector3D &color, float progress,
+                          float beam_width, float intensity, float time,
+                          const QMatrix4x4 &view_proj);
 
 private:
   void render_beam(const Game::Systems::HealingBeam &beam, const Camera &cam,

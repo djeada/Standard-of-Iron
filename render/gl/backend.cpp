@@ -1528,6 +1528,19 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       m_lastBoundShader = m_primitiveBatchPipeline->shader();
       break;
     }
+    case HealingBeamCmdIndex: {
+      const auto &beam = std::get<HealingBeamCmdIndex>(cmd);
+      if (m_healingBeamPipeline == nullptr ||
+          !m_healingBeamPipeline->is_initialized()) {
+        break;
+      }
+      m_healingBeamPipeline->render_single_beam(beam.start_pos, beam.end_pos,
+                                                beam.color, beam.progress,
+                                                beam.beam_width, beam.intensity,
+                                                beam.time, view_proj);
+      m_lastBoundShader = nullptr;  // Pipeline manages its own shader
+      break;
+    }
     default:
       break;
     }

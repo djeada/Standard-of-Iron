@@ -28,6 +28,9 @@ public:
                     float cell_size, float thickness, float extent) = 0;
   virtual void selection_smoke(const QMatrix4x4 &model, const QVector3D &color,
                                float base_alpha = 0.15F) = 0;
+  virtual void healing_beam(const QVector3D &start, const QVector3D &end,
+                            const QVector3D &color, float progress,
+                            float beam_width, float intensity, float time) = 0;
 };
 
 namespace detail {
@@ -131,6 +134,22 @@ public:
     cmd.base_alpha = base_alpha;
     m_queue->submit(cmd);
   }
+  void healing_beam(const QVector3D &start, const QVector3D &end,
+                    const QVector3D &color, float progress, float beam_width,
+                    float intensity, float time) override {
+    if (m_queue == nullptr) {
+      return;
+    }
+    HealingBeamCmd cmd;
+    cmd.start_pos = start;
+    cmd.end_pos = end;
+    cmd.color = color;
+    cmd.progress = progress;
+    cmd.beam_width = beam_width;
+    cmd.intensity = intensity;
+    cmd.time = time;
+    m_queue->submit(cmd);
+  }
 
 private:
   DrawQueue *m_queue = nullptr;
@@ -198,6 +217,15 @@ public:
                        float base_alpha = 0.15F) override {
     if (m_fallback != nullptr) {
       m_fallback->selection_smoke(model, color, base_alpha);
+    }
+  }
+
+  void healing_beam(const QVector3D &start, const QVector3D &end,
+                    const QVector3D &color, float progress, float beam_width,
+                    float intensity, float time) override {
+    if (m_fallback != nullptr) {
+      m_fallback->healing_beam(start, end, color, progress, beam_width,
+                               intensity, time);
     }
   }
 
