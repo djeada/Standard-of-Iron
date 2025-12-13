@@ -76,7 +76,8 @@ void CaptureSystem::transferBarrackOwnership(Engine::Core::World *,
 
   auto &nation_registry = NationRegistry::instance();
   if (!Game::Core::isNeutralOwner(new_owner_id)) {
-    if (const auto *nation = nation_registry.get_nation_for_player(new_owner_id)) {
+    if (const auto *nation =
+            nation_registry.get_nation_for_player(new_owner_id)) {
       unit->nation_id = nation->id;
     } else {
       unit->nation_id = nation_registry.default_nation_id();

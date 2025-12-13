@@ -71,7 +71,7 @@ void OwnerRegistry::clear() {
 }
 
 auto OwnerRegistry::register_owner(OwnerType type,
-                                  const std::string &name) -> int {
+                                   const std::string &name) -> int {
   int const owner_id = m_next_owner_id++;
   OwnerInfo info;
   info.owner_id = owner_id;
@@ -104,7 +104,7 @@ auto OwnerRegistry::register_owner(OwnerType type,
 }
 
 void OwnerRegistry::register_owner_with_id(int owner_id, OwnerType type,
-                                        const std::string &name) {
+                                           const std::string &name) {
   if (m_owner_id_to_index.find(owner_id) != m_owner_id_to_index.end()) {
     return;
   }
@@ -145,7 +145,9 @@ void OwnerRegistry::set_local_player_id(int player_id) {
   m_local_player_id = player_id;
 }
 
-auto OwnerRegistry::get_local_player_id() const -> int { return m_local_player_id; }
+auto OwnerRegistry::get_local_player_id() const -> int {
+  return m_local_player_id;
+}
 
 auto OwnerRegistry::is_player(int owner_id) const -> bool {
   auto it = m_owner_id_to_index.find(owner_id);
@@ -279,7 +281,8 @@ void OwnerRegistry::set_owner_color(int owner_id, float r, float g, float b) {
   }
 }
 
-auto OwnerRegistry::get_owner_color(int owner_id) const -> std::array<float, 3> {
+auto OwnerRegistry::get_owner_color(int owner_id) const
+    -> std::array<float, 3> {
   auto it = m_owner_id_to_index.find(owner_id);
   if (it != m_owner_id_to_index.end()) {
     return m_owners[it->second].color;
