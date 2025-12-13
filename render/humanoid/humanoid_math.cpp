@@ -5,9 +5,9 @@
 namespace Render::GL {
 
 auto elbow_bend_torso(const QVector3D &shoulder, const QVector3D &hand,
-                    const QVector3D &outwardDir, float alongFrac,
-                    float lateral_offset, float yBias,
-                    float outwardSign) -> QVector3D {
+                      const QVector3D &outwardDir, float alongFrac,
+                      float lateral_offset, float yBias,
+                      float outwardSign) -> QVector3D {
   QVector3D dir = hand - shoulder;
   float const dist = std::max(dir.length(), 1e-5F);
   dir /= dist;

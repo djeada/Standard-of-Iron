@@ -26,7 +26,9 @@ public:
   [[nodiscard]] auto plant_shader() const -> GL::Shader * {
     return m_plantShader;
   }
-  [[nodiscard]] auto pine_shader() const -> GL::Shader * { return m_pineShader; }
+  [[nodiscard]] auto pine_shader() const -> GL::Shader * {
+    return m_pineShader;
+  }
   [[nodiscard]] auto olive_shader() const -> GL::Shader * {
     return m_oliveShader;
   }

@@ -90,7 +90,7 @@ void SwordRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
 
   submitter.mesh(get_unit_cylinder(),
                  cylinder_between(ctx.model, handle_end, blade_base,
-                                 m_config.handle_radius),
+                                  m_config.handle_radius),
                  palette.leather, nullptr, 1.0F, m_config.material_id);
 
   QVector3D const guard_center = blade_base;
@@ -149,14 +149,14 @@ void SwordRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
 
     submitter.mesh(get_unit_cylinder(),
                    cylinder_between(ctx.model, start + right * offset,
-                                   end + right * offset,
-                                   blade_thickness * 0.8F),
+                                    end + right * offset,
+                                    blade_thickness * 0.8F),
                    color * 0.92F, nullptr, 1.0F, m_config.material_id);
 
     submitter.mesh(get_unit_cylinder(),
                    cylinder_between(ctx.model, start - right * offset,
-                                   end - right * offset,
-                                   blade_thickness * 0.8F),
+                                    end - right * offset,
+                                    blade_thickness * 0.8F),
                    color * 0.92F, nullptr, 1.0F, m_config.material_id);
   };
 
@@ -185,7 +185,7 @@ void SwordRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
       blade_base + sword_dir * (tip_start_dist - 0.06F);
   submitter.mesh(get_unit_cylinder(),
                  cylinder_between(ctx.model, fuller_start, fuller_end,
-                                 blade_thickness * 0.6F),
+                                  blade_thickness * 0.6F),
                  m_config.metal_color * 0.65F, nullptr, 1.0F,
                  m_config.material_id);
 
@@ -201,10 +201,10 @@ void SwordRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
     float const alpha = clamp01(0.35F * (1.0F - t));
     QVector3D const trail_start = blade_base - sword_dir * 0.05F;
     QVector3D const trail_end = blade_base - sword_dir * (0.28F + 0.15F * t);
-    submitter.mesh(get_unit_cone(),
-                   cone_from_to(ctx.model, trail_end, trail_start, base_w * 0.9F),
-                   m_config.metal_color * 0.9F, nullptr, alpha,
-                   m_config.material_id);
+    submitter.mesh(
+        get_unit_cone(),
+        cone_from_to(ctx.model, trail_end, trail_start, base_w * 0.9F),
+        m_config.metal_color * 0.9F, nullptr, alpha, m_config.material_id);
   }
 }
 

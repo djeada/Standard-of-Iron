@@ -21,7 +21,7 @@ public:
   [[nodiscard]] auto is_enabled() const -> bool { return m_enabled; }
 
   void update_mask(int width, int height, float tile_size,
-                  const std::vector<std::uint8_t> &cells);
+                   const std::vector<std::uint8_t> &cells);
 
   void submit(Renderer &renderer, ResourceManager *resources) override;
 

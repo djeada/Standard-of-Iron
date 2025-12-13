@@ -194,7 +194,8 @@ TEST_F(HumanoidPoseControllerTest, SolveKneeIKReturnsValidPosition) {
   QVector3D const foot(0.10F, 0.0F, 0.05F);
   float const height_scale = 1.0F;
 
-  QVector3D const knee = controller.solve_knee_ik(false, hip, foot, height_scale);
+  QVector3D const knee =
+      controller.solve_knee_ik(false, hip, foot, height_scale);
 
   // Knee should be between hip and foot (in Y)
   EXPECT_LT(knee.y(), hip.y());
@@ -212,7 +213,8 @@ TEST_F(HumanoidPoseControllerTest, SolveKneeIKPreventsGroundPenetration) {
   QVector3D const foot(0.50F, 0.0F, 0.50F); // Far foot
   float const height_scale = 1.0F;
 
-  QVector3D const knee = controller.solve_knee_ik(true, hip, foot, height_scale);
+  QVector3D const knee =
+      controller.solve_knee_ik(true, hip, foot, height_scale);
 
   // Knee should be at or above the floor threshold
   float const min_knee_y =

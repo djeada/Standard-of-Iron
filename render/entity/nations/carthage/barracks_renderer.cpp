@@ -244,14 +244,14 @@ void draw_phoenician_banner(const DrawContext &p, ISubmitter &out, Mesh *unit,
   QVector3D const beam_end(pole_x + beam_length + 0.02F, beam_y, pole_z);
   out.mesh(get_unit_cylinder(),
            p.model * Render::Geom::cylinder_between(beam_start, beam_end,
-                                                   pole_radius * 0.35F),
+                                                    pole_radius * 0.35F),
            c.cedar, white, 1.0F);
 
   QVector3D const connector_top(
       beam_end.x(), beam_end.y() - banner_height * 0.35F, beam_end.z());
   out.mesh(get_unit_cylinder(),
            p.model * Render::Geom::cylinder_between(beam_end, connector_top,
-                                                   pole_radius * 0.18F),
+                                                    pole_radius * 0.18F),
            c.limestone, white, 1.0F);
 
   float const panel_x = beam_end.x() + (banner_width * 0.5F - beam_length);

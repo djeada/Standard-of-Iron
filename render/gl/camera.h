@@ -30,9 +30,9 @@ public:
               const QVector3D &up);
 
   void set_perspective(float fov, float aspect, float near_plane,
-                      float far_plane);
+                       float far_plane);
   void set_orthographic(float left, float right, float bottom, float top,
-                       float near_plane, float far_plane);
+                        float near_plane, float far_plane);
 
   void move_forward(float distance);
   void move_right(float distance);
@@ -55,18 +55,21 @@ public:
                        QPointF &outScreen) const -> bool;
 
   void set_follow_enabled(bool enable) { m_followEnabled = enable; }
-  [[nodiscard]] auto is_follow_enabled() const -> bool { return m_followEnabled; }
+  [[nodiscard]] auto is_follow_enabled() const -> bool {
+    return m_followEnabled;
+  }
   void set_follow_lerp(float alpha) { m_followLerp = alpha; }
   void set_follow_offset(const QVector3D &off) { m_followOffset = off; }
   void capture_follow_offset() { m_followOffset = m_position - m_target; }
   void update_follow(const QVector3D &targetCenter);
 
   void set_rts_view(const QVector3D &center,
-                  float distance = CameraDefaults::k_default_rts_distance,
-                  float angle = CameraDefaults::k_default_rts_angle,
-                  float yaw_deg = CameraDefaults::k_default_rts_yaw);
-  void set_top_down_view(const QVector3D &center,
-                      float distance = CameraDefaults::k_default_rts_distance);
+                    float distance = CameraDefaults::k_default_rts_distance,
+                    float angle = CameraDefaults::k_default_rts_angle,
+                    float yaw_deg = CameraDefaults::k_default_rts_yaw);
+  void
+  set_top_down_view(const QVector3D &center,
+                    float distance = CameraDefaults::k_default_rts_distance);
   void apply_soft_boundaries(bool isPanning = false);
 
   [[nodiscard]] auto get_view_matrix() const -> QMatrix4x4;
@@ -94,7 +97,7 @@ public:
   [[nodiscard]] auto get_far() const -> float { return m_far_plane; }
 
   [[nodiscard]] auto is_in_frustum(const QVector3D &center,
-                                 float radius) const -> bool;
+                                   float radius) const -> bool;
 
 private:
   QVector3D m_position{0.0F, 0.0F, 0.0F};

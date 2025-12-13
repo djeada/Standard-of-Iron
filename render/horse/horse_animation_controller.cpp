@@ -172,7 +172,9 @@ auto HorseAnimationController::get_current_phase() const -> float {
   return m_phase;
 }
 
-auto HorseAnimationController::get_current_bob() const -> float { return m_bob; }
+auto HorseAnimationController::get_current_bob() const -> float {
+  return m_bob;
+}
 
 auto HorseAnimationController::get_stride_cycle() const -> float {
   GaitParameters const params = getGaitParams(m_current_gait);

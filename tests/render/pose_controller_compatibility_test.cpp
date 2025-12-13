@@ -49,7 +49,8 @@ protected:
 };
 
 TEST_F(PoseControllerCompatibilityTest, ElbowIKMatchesLegacyFunction) {
-  // Test that controller's solveElbowIK produces same result as elbow_bend_torso
+  // Test that controller's solveElbowIK produces same result as
+  // elbow_bend_torso
 
   QVector3D const shoulder(0.21F, 1.45F, 0.0F);
   QVector3D const hand(0.35F, 1.15F, 0.75F);
@@ -62,13 +63,13 @@ TEST_F(PoseControllerCompatibilityTest, ElbowIKMatchesLegacyFunction) {
   // Legacy approach
   QVector3D const legacy_elbow =
       elbow_bend_torso(shoulder, hand, outward_dir, along_frac, lateral_offset,
-                     y_bias, outward_sign);
+                       y_bias, outward_sign);
 
   // New controller approach
   HumanoidPoseController controller(pose, anim_ctx);
   QVector3D const controller_elbow =
       controller.solve_elbow_ik(false, shoulder, hand, outward_dir, along_frac,
-                              lateral_offset, y_bias, outward_sign);
+                                lateral_offset, y_bias, outward_sign);
 
   // Should be identical
   EXPECT_TRUE(approxEqual(legacy_elbow, controller_elbow, 0.001F))
@@ -93,7 +94,7 @@ TEST_F(PoseControllerCompatibilityTest, PlaceHandAtUsesCorrectElbowIK) {
   right_axis.normalize();
   QVector3D const outward_r = right_axis;
   legacy_pose.elbow_r = elbow_bend_torso(legacy_pose.shoulder_r, target_hand,
-                                       outward_r, 0.48F, 0.12F, 0.02F, 1.0F);
+                                         outward_r, 0.48F, 0.12F, 0.02F, 1.0F);
 
   // New controller approach
   HumanoidPoseController controller(pose, anim_ctx);

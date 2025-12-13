@@ -163,7 +163,7 @@ void CarthageShieldRenderer::render(const DrawContext &ctx,
 
   submitter.mesh(get_unit_cylinder(),
                  cylinder_between(ctx.model, emblem_body_bot, emblem_body_top,
-                                 emblem_radius),
+                                  emblem_radius),
                  metal_color, nullptr, 1.0F, 4);
 
   QVector3D const emblem_arm_height =
@@ -175,21 +175,22 @@ void CarthageShieldRenderer::render(const DrawContext &ctx,
 
   submitter.mesh(get_unit_cylinder(),
                  cylinder_between(ctx.model, emblem_arm_left, emblem_arm_right,
-                                 emblem_radius * 0.75F),
+                                  emblem_radius * 0.75F),
                  metal_color, nullptr, 1.0F, 4);
 
   submitter.mesh(get_unit_sphere(),
                  sphere_at(ctx.model,
-                          emblem_body_top + axis_y * (shield_radius * 0.05F),
-                          emblem_radius * 1.4F),
+                           emblem_body_top + axis_y * (shield_radius * 0.05F),
+                           emblem_radius * 1.4F),
                  metal_color, nullptr, 1.0F, 4);
 
-  submitter.mesh(get_unit_cone(),
-                 cone_from_to(ctx.model,
-                            emblem_body_bot - axis_y * (shield_radius * 0.04F),
-                            emblem_plane - axis_y * (shield_radius * 0.22F),
-                            emblem_radius * 1.6F),
-                 metal_color, nullptr, 1.0F, 4);
+  submitter.mesh(
+      get_unit_cone(),
+      cone_from_to(ctx.model,
+                   emblem_body_bot - axis_y * (shield_radius * 0.04F),
+                   emblem_plane - axis_y * (shield_radius * 0.22F),
+                   emblem_radius * 1.6F),
+      metal_color, nullptr, 1.0F, 4);
 
   QVector3D const grip_a = shield_center - axis_x * 0.035F - n * 0.030F;
   QVector3D const grip_b = shield_center + axis_x * 0.035F - n * 0.030F;
