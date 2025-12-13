@@ -7,6 +7,7 @@
 #include "../shader_cache.h"
 #include <QDebug>
 #include <QMatrix4x4>
+#include <QOpenGLContext>
 #include <cmath>
 #include <numbers>
 
@@ -63,6 +64,15 @@ void HealerAuraPipeline::shutdown() {
 }
 
 void HealerAuraPipeline::shutdown_geometry() {
+  if (QOpenGLContext::currentContext() == nullptr) {
+    // Context already destroyed; just drop IDs to avoid GL calls.
+    m_vao = 0;
+    m_vertexBuffer = 0;
+    m_indexBuffer = 0;
+    m_indexCount = 0;
+    return;
+  }
+
   initializeOpenGLFunctions();
   clear_gl_errors();
 
