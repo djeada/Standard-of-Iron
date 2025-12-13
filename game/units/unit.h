@@ -40,12 +40,12 @@ public:
     return m_type_string;
   }
 
-  void moveTo(float x, float z);
+  void move_to(float x, float z);
   [[nodiscard]] auto is_alive() const -> bool;
   [[nodiscard]] auto position() const -> QVector3D;
 
-  void setHoldMode(bool enabled);
-  [[nodiscard]] auto isInHoldMode() const -> bool;
+  void set_hold_mode(bool enabled);
+  [[nodiscard]] auto is_in_hold_mode() const -> bool;
 
 protected:
   Unit(Engine::Core::World &world, TroopType type);
