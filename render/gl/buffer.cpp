@@ -73,7 +73,10 @@ void VertexArray::bind() {
   }
   
   // Clear any pre-existing errors from previous operations
-  while (glGetError() != GL_NO_ERROR) {}\n  \n  glBindVertexArray(m_vao);
+  while (glGetError() != GL_NO_ERROR) {
+  }
+
+  glBindVertexArray(m_vao);
   GLenum bindErr = glGetError();
   if (bindErr != GL_NO_ERROR) {
     qWarning() << "VertexArray glBindVertexArray error" << bindErr << "vao"
