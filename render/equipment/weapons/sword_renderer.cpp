@@ -16,8 +16,8 @@ namespace Render::GL {
 
 using Render::Geom::clamp01;
 using Render::Geom::clampf;
-using Render::Geom::coneFromTo;
-using Render::Geom::cylinderBetween;
+using Render::Geom::cone_from_to;
+using Render::Geom::cylinder_between;
 using Render::Geom::easeInOutCubic;
 using Render::Geom::lerp;
 using Render::Geom::nlerp;
@@ -89,7 +89,7 @@ void SwordRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
   QVector3D const blade_tip = grip_pos + sword_dir * m_config.sword_length;
 
   submitter.mesh(getUnitCylinder(),
-                 cylinderBetween(ctx.model, handle_end, blade_base,
+                 cylinder_between(ctx.model, handle_end, blade_base,
                                  m_config.handle_radius),
                  palette.leather, nullptr, 1.0F, m_config.material_id);
 
@@ -107,7 +107,7 @@ void SwordRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
   QVector3D const guard_r = guard_center + guard_right * gw;
 
   submitter.mesh(getUnitCylinder(),
-                 cylinderBetween(ctx.model, guard_l, guard_r, 0.014F),
+                 cylinder_between(ctx.model, guard_l, guard_r, 0.014F),
                  m_config.metal_color, nullptr, 1.0F, m_config.material_id);
 
   QMatrix4x4 gl = ctx.model;
@@ -144,17 +144,17 @@ void SwordRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
     float const offset = width * 0.33F;
 
     submitter.mesh(getUnitCylinder(),
-                   cylinderBetween(ctx.model, start, end, blade_thickness),
+                   cylinder_between(ctx.model, start, end, blade_thickness),
                    color, nullptr, 1.0F, m_config.material_id);
 
     submitter.mesh(getUnitCylinder(),
-                   cylinderBetween(ctx.model, start + right * offset,
+                   cylinder_between(ctx.model, start + right * offset,
                                    end + right * offset,
                                    blade_thickness * 0.8F),
                    color * 0.92F, nullptr, 1.0F, m_config.material_id);
 
     submitter.mesh(getUnitCylinder(),
-                   cylinderBetween(ctx.model, start - right * offset,
+                   cylinder_between(ctx.model, start - right * offset,
                                    end - right * offset,
                                    blade_thickness * 0.8F),
                    color * 0.92F, nullptr, 1.0F, m_config.material_id);
@@ -175,7 +175,7 @@ void SwordRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
     float const w = lerp(mid_w, tip_w, t1);
     submitter.mesh(
         getUnitCylinder(),
-        cylinderBetween(ctx.model, seg_start, seg_end, blade_thickness),
+        cylinder_between(ctx.model, seg_start, seg_end, blade_thickness),
         m_config.metal_color * (1.0F - i * 0.03F), nullptr, 1.0F,
         m_config.material_id);
   }
@@ -184,7 +184,7 @@ void SwordRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
   QVector3D const fuller_end =
       blade_base + sword_dir * (tip_start_dist - 0.06F);
   submitter.mesh(getUnitCylinder(),
-                 cylinderBetween(ctx.model, fuller_start, fuller_end,
+                 cylinder_between(ctx.model, fuller_start, fuller_end,
                                  blade_thickness * 0.6F),
                  m_config.metal_color * 0.65F, nullptr, 1.0F,
                  m_config.material_id);
@@ -202,7 +202,7 @@ void SwordRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
     QVector3D const trail_start = blade_base - sword_dir * 0.05F;
     QVector3D const trail_end = blade_base - sword_dir * (0.28F + 0.15F * t);
     submitter.mesh(getUnitCone(),
-                   coneFromTo(ctx.model, trail_end, trail_start, base_w * 0.9F),
+                   cone_from_to(ctx.model, trail_end, trail_start, base_w * 0.9F),
                    m_config.metal_color * 0.9F, nullptr, alpha,
                    m_config.material_id);
   }

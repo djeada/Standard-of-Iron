@@ -14,8 +14,8 @@
 
 namespace Render::GL {
 
-using Render::Geom::coneFromTo;
-using Render::Geom::cylinderBetween;
+using Render::Geom::cone_from_to;
+using Render::Geom::cylinder_between;
 using Render::GL::HashXorShift::k_golden_ratio;
 
 QuiverRenderer::QuiverRenderer(QuiverRenderConfig config)
@@ -39,7 +39,7 @@ void QuiverRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
 
   submitter.mesh(
       getUnitCylinder(),
-      cylinderBetween(ctx.model, q_base, q_top, m_config.quiver_radius),
+      cylinder_between(ctx.model, q_base, q_top, m_config.quiver_radius),
       palette.leather, nullptr, 1.0F, m_config.material_id);
 
   uint32_t seed = 0U;
@@ -52,20 +52,20 @@ void QuiverRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
 
   QVector3D const a1 = q_top + QVector3D(0.00F + j, 0.08F, 0.00F + k);
   submitter.mesh(getUnitCylinder(),
-                 cylinderBetween(ctx.model, q_top, a1, 0.010F), palette.wood,
+                 cylinder_between(ctx.model, q_top, a1, 0.010F), palette.wood,
                  nullptr, 1.0F, m_config.material_id);
   submitter.mesh(getUnitCone(),
-                 coneFromTo(ctx.model, a1, a1 + QVector3D(0, 0.05F, 0), 0.025F),
+                 cone_from_to(ctx.model, a1, a1 + QVector3D(0, 0.05F, 0), 0.025F),
                  m_config.fletching_color, nullptr, 1.0F, m_config.material_id);
 
   if (m_config.num_arrows >= 2) {
     QVector3D const a2 = q_top + QVector3D(0.02F - j, 0.07F, 0.02F - k);
     submitter.mesh(getUnitCylinder(),
-                   cylinderBetween(ctx.model, q_top, a2, 0.010F), palette.wood,
+                   cylinder_between(ctx.model, q_top, a2, 0.010F), palette.wood,
                    nullptr, 1.0F, m_config.material_id);
     submitter.mesh(
         getUnitCone(),
-        coneFromTo(ctx.model, a2, a2 + QVector3D(0, 0.05F, 0), 0.025F),
+        cone_from_to(ctx.model, a2, a2 + QVector3D(0, 0.05F, 0), 0.025F),
         m_config.fletching_color, nullptr, 1.0F, m_config.material_id);
   }
 }

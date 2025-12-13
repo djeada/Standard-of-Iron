@@ -88,12 +88,12 @@ void register_spearman_style(const std::string &nation_id,
 }
 
 using Render::Geom::clamp01;
-using Render::Geom::coneFromTo;
-using Render::Geom::cylinderBetween;
+using Render::Geom::cone_from_to;
+using Render::Geom::cylinder_between;
 using Render::Geom::easeInOutCubic;
 using Render::Geom::lerp;
 using Render::Geom::smoothstep;
-using Render::Geom::sphereAt;
+using Render::Geom::sphere_at;
 using Render::GL::Humanoid::mix_palette_color;
 using Render::GL::Humanoid::saturate_color;
 
