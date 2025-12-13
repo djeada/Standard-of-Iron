@@ -798,7 +798,6 @@ void GameEngine::render(int pixelWidth, int pixelHeight) {
   }
   if (auto *healing_beam_system =
           m_world->get_system<Game::Systems::HealingBeamSystem>()) {
-    }
     if (auto *res = m_renderer->resources()) {
       Render::GL::render_healing_beams(m_renderer.get(), res,
                                        *healing_beam_system);
