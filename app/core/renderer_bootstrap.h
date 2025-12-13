@@ -6,7 +6,6 @@
 namespace Render::GL {
 class Renderer;
 class Camera;
-class ResourceManager;
 class GroundRenderer;
 class TerrainRenderer;
 class BiomeRenderer;
