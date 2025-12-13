@@ -18,7 +18,7 @@ namespace {
 
 using Render::Geom::clamp01;
 using Render::Geom::clampVec01;
-using Render::Geom::cylinderBetween;
+using Render::Geom::cylinder_between;
 
 struct RomanCatapultPalette {
   QVector3D wood_frame{0.45F, 0.32F, 0.18F};
@@ -98,7 +98,7 @@ inline void draw_box(ISubmitter &out, Mesh *unit, Texture *white,
 inline void draw_cyl(ISubmitter &out, const QMatrix4x4 &model,
                      const QVector3D &a, const QVector3D &b, float r,
                      const QVector3D &color, Texture *white) {
-  out.mesh(getUnitCylinder(), model * cylinderBetween(a, b, r), color, white,
+  out.mesh(getUnitCylinder(), model * cylinder_between(a, b, r), color, white,
            1.0F);
 }
 

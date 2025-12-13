@@ -14,9 +14,9 @@
 
 namespace Render::GL {
 
-using Render::Geom::coneFromTo;
-using Render::Geom::cylinderBetween;
-using Render::Geom::sphereAt;
+using Render::Geom::cone_from_to;
+using Render::Geom::cylinder_between;
+using Render::Geom::sphere_at;
 using Render::GL::Humanoid::saturate_color;
 
 TunicRenderer::TunicRenderer(const TunicConfig &config) : m_config(config) {}
@@ -136,7 +136,7 @@ void TunicRenderer::renderTorsoArmor(const DrawContext &ctx,
 
       float const seg_r = (r1 + r2) * 0.5F * 0.08F;
       submitter.mesh(getUnitCylinder(),
-                     cylinderBetween(ctx.model, p1, p2, seg_r), color, nullptr,
+                     cylinder_between(ctx.model, p1, p2, seg_r), color, nullptr,
                      1.0F);
     }
   };
@@ -171,7 +171,7 @@ void TunicRenderer::renderTorsoArmor(const DrawContext &ctx,
                             forward * (r2 * cos_a) + up * (y2 - origin.y());
 
       submitter.mesh(getUnitCylinder(),
-                     cylinderBetween(ctx.model, top, bot, torso_r * 0.06F),
+                     cylinder_between(ctx.model, top, bot, torso_r * 0.06F),
                      steel_color * 0.96F, nullptr, 1.0F);
     }
   };
@@ -217,7 +217,7 @@ void TunicRenderer::renderPauldrons(const DrawContext &ctx,
           shoulder + outward * (0.02F + static_cast<float>(i) * 0.008F);
       seg_pos.setY(seg_y);
 
-      submitter.mesh(getUnitSphere(), sphereAt(ctx.model, seg_pos, seg_r),
+      submitter.mesh(getUnitSphere(), sphere_at(ctx.model, seg_pos, seg_r),
                      i == 0
                          ? steel_color * 1.05F
                          : steel_color * (1.0F - static_cast<float>(i) * 0.03F),
@@ -253,14 +253,14 @@ void TunicRenderer::renderGorget(const DrawContext &ctx,
                              torso.origin.z());
 
   submitter.mesh(getUnitCylinder(),
-                 cylinderBetween(ctx.model, gorget_bot, gorget_top,
+                 cylinder_between(ctx.model, gorget_bot, gorget_top,
                                  HP::NECK_RADIUS * 2.6F),
                  steel_color * 1.08F, nullptr, 1.0F);
 
   QVector3D const a = gorget_top + QVector3D(0, 0.005F, 0);
   QVector3D const b = gorget_top - QVector3D(0, 0.005F, 0);
   submitter.mesh(getUnitCylinder(),
-                 cylinderBetween(ctx.model, a, b, HP::NECK_RADIUS * 2.62F),
+                 cylinder_between(ctx.model, a, b, HP::NECK_RADIUS * 2.62F),
                  brass_color, nullptr, 1.0F);
 }
 
@@ -285,14 +285,14 @@ void TunicRenderer::renderBelt(const DrawContext &ctx,
 
   submitter.mesh(
       getUnitCylinder(),
-      cylinderBetween(ctx.model, belt_bot, belt_top, waist_r * 1.08F),
+      cylinder_between(ctx.model, belt_bot, belt_top, waist_r * 1.08F),
       steel_color * 0.94F, nullptr, 1.0F);
 
   QVector3D const trim_top = belt_top + QVector3D(0, 0.005F, 0);
   QVector3D const trim_bot = belt_bot - QVector3D(0, 0.005F, 0);
   submitter.mesh(
       getUnitCylinder(),
-      cylinderBetween(ctx.model, trim_bot, trim_top, waist_r * 1.12F),
+      cylinder_between(ctx.model, trim_bot, trim_top, waist_r * 1.12F),
       brass_color * 0.95F, nullptr, 1.0F);
 }
 

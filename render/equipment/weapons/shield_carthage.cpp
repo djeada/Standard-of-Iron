@@ -14,9 +14,9 @@
 
 namespace Render::GL {
 
-using Render::Geom::coneFromTo;
-using Render::Geom::cylinderBetween;
-using Render::Geom::sphereAt;
+using Render::Geom::cone_from_to;
+using Render::Geom::cylinder_between;
+using Render::Geom::sphere_at;
 
 namespace {
 
@@ -140,7 +140,7 @@ void CarthageShieldRenderer::render(const DrawContext &ctx,
                          axis_y * (shield_radius * std::sin(a1));
 
     submitter.mesh(getUnitCylinder(),
-                   cylinderBetween(ctx.model, p0, p1, 0.012F), trim_color,
+                   cylinder_between(ctx.model, p0, p1, 0.012F), trim_color,
                    nullptr, 1.0F, 4);
   }
 
@@ -162,7 +162,7 @@ void CarthageShieldRenderer::render(const DrawContext &ctx,
   float const emblem_radius = shield_radius * 0.028F;
 
   submitter.mesh(getUnitCylinder(),
-                 cylinderBetween(ctx.model, emblem_body_bot, emblem_body_top,
+                 cylinder_between(ctx.model, emblem_body_bot, emblem_body_top,
                                  emblem_radius),
                  metal_color, nullptr, 1.0F, 4);
 
@@ -174,18 +174,18 @@ void CarthageShieldRenderer::render(const DrawContext &ctx,
       emblem_arm_height + axis_x * (shield_radius * 0.22F);
 
   submitter.mesh(getUnitCylinder(),
-                 cylinderBetween(ctx.model, emblem_arm_left, emblem_arm_right,
+                 cylinder_between(ctx.model, emblem_arm_left, emblem_arm_right,
                                  emblem_radius * 0.75F),
                  metal_color, nullptr, 1.0F, 4);
 
   submitter.mesh(getUnitSphere(),
-                 sphereAt(ctx.model,
+                 sphere_at(ctx.model,
                           emblem_body_top + axis_y * (shield_radius * 0.05F),
                           emblem_radius * 1.4F),
                  metal_color, nullptr, 1.0F, 4);
 
   submitter.mesh(getUnitCone(),
-                 coneFromTo(ctx.model,
+                 cone_from_to(ctx.model,
                             emblem_body_bot - axis_y * (shield_radius * 0.04F),
                             emblem_plane - axis_y * (shield_radius * 0.22F),
                             emblem_radius * 1.6F),
@@ -194,7 +194,7 @@ void CarthageShieldRenderer::render(const DrawContext &ctx,
   QVector3D const grip_a = shield_center - axis_x * 0.035F - n * 0.030F;
   QVector3D const grip_b = shield_center + axis_x * 0.035F - n * 0.030F;
   submitter.mesh(getUnitCylinder(),
-                 cylinderBetween(ctx.model, grip_a, grip_b, 0.010F),
+                 cylinder_between(ctx.model, grip_a, grip_b, 0.010F),
                  palette.leather, nullptr, 1.0F, 4);
 }
 

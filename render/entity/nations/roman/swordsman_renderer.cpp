@@ -67,13 +67,13 @@ void register_swordsman_style(const std::string &nation_id,
 
 using Render::Geom::clamp01;
 using Render::Geom::clampf;
-using Render::Geom::coneFromTo;
-using Render::Geom::cylinderBetween;
+using Render::Geom::cone_from_to;
+using Render::Geom::cylinder_between;
 using Render::Geom::easeInOutCubic;
 using Render::Geom::lerp;
 using Render::Geom::nlerp;
 using Render::Geom::smoothstep;
-using Render::Geom::sphereAt;
+using Render::Geom::sphere_at;
 using Render::GL::Humanoid::mix_palette_color;
 using Render::GL::Humanoid::saturate_color;
 
@@ -284,11 +284,11 @@ private:
     QVector3D const tip = hip + QVector3D(-0.05F, -0.22F, -0.12F);
     float const sheath_r = extras.swordWidth * 0.85F;
 
-    out.mesh(getUnitCylinder(), cylinderBetween(ctx.model, hip, tip, sheath_r),
+    out.mesh(getUnitCylinder(), cylinder_between(ctx.model, hip, tip, sheath_r),
              v.palette.leather * 0.9F, nullptr, 1.0F);
 
     out.mesh(getUnitCone(),
-             coneFromTo(ctx.model, tip, tip + QVector3D(-0.02F, -0.02F, -0.02F),
+             cone_from_to(ctx.model, tip, tip + QVector3D(-0.02F, -0.02F, -0.02F),
                         sheath_r),
              extras.metalColor, nullptr, 1.0F);
   }

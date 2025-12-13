@@ -13,7 +13,7 @@
 
 namespace Render::GL {
 
-using Render::Geom::cylinderBetween;
+using Render::Geom::cylinder_between;
 
 auto ChainmailArmorRenderer::calculateRingColor(float x, float y,
                                                 float z) const -> QVector3D {
@@ -113,7 +113,7 @@ void ChainmailArmorRenderer::renderShoulderGuards(const DrawContext &ctx,
       calculateRingColor(left_base.x(), left_base.y(), left_base.z());
   submitter.mesh(
       getUnitCylinder(),
-      cylinderBetween(ctx.model, left_base, left_tip, shoulder_radius),
+      cylinder_between(ctx.model, left_base, left_tip, shoulder_radius),
       left_color, nullptr, 0.8F);
 
   QVector3D right_base = shoulder_r.origin;
@@ -123,7 +123,7 @@ void ChainmailArmorRenderer::renderShoulderGuards(const DrawContext &ctx,
       calculateRingColor(right_base.x(), right_base.y(), right_base.z());
   submitter.mesh(
       getUnitCylinder(),
-      cylinderBetween(ctx.model, right_base, right_tip, shoulder_radius),
+      cylinder_between(ctx.model, right_base, right_tip, shoulder_radius),
       right_color, nullptr, 0.8F);
 
   if (m_config.detail_level >= 1) {
@@ -173,7 +173,7 @@ void ChainmailArmorRenderer::renderArmMail(const DrawContext &ctx,
 
     QVector3D color = calculateRingColor(pos0.x(), pos0.y(), pos0.z());
     submitter.mesh(getUnitCylinder(),
-                   cylinderBetween(ctx.model, pos0, pos1, radius), color,
+                   cylinder_between(ctx.model, pos0, pos1, radius), color,
                    nullptr, 0.75F);
   }
 
@@ -191,7 +191,7 @@ void ChainmailArmorRenderer::renderArmMail(const DrawContext &ctx,
 
     QVector3D color = calculateRingColor(pos0.x(), pos0.y(), pos0.z());
     submitter.mesh(getUnitCylinder(),
-                   cylinderBetween(ctx.model, pos0, pos1, radius), color,
+                   cylinder_between(ctx.model, pos0, pos1, radius), color,
                    nullptr, 0.75F);
   }
 }

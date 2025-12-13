@@ -13,8 +13,8 @@
 
 namespace Render::GL {
 
-using Render::Geom::cylinderBetween;
-using Render::Geom::sphereAt;
+using Render::Geom::cylinder_between;
+using Render::Geom::sphere_at;
 using Render::GL::Humanoid::saturate_color;
 
 void RomanScutumRenderer::render(const DrawContext &ctx,
@@ -110,7 +110,7 @@ void RomanScutumRenderer::render(const DrawContext &ctx,
   }
 
   submitter.mesh(getUnitSphere(),
-                 sphereAt(ctx.model, boss_center, boss_radius * 0.8F),
+                 sphere_at(ctx.model, boss_center, boss_radius * 0.8F),
                  bronze_color * 1.1F, nullptr, 1.0F, 4);
 
   float const y_pos = shield_height * 0.48F;
