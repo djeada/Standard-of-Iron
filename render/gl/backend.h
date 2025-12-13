@@ -57,7 +57,7 @@ public:
     return m_shaderCache ? m_shaderCache->get(name) : nullptr;
   }
   auto get_or_load_shader(const QString &name, const QString &vertPath,
-                       const QString &fragPath) -> Shader * {
+                          const QString &fragPath) -> Shader * {
     if (!m_shaderCache) {
       return nullptr;
     }

@@ -46,9 +46,10 @@ void RomanLightHelmetRenderer::render(const DrawContext &ctx,
                  helmet_color, nullptr, 1.0F, 2);
 
   QVector3D const apex_pos = headPoint(QVector3D(0.0F, 1.48F, 0.0F));
-  submitter.mesh(get_unit_cone(),
-                 cone_from_to(ctx.model, helmet_top, apex_pos, helmet_r * 0.97F),
-                 helmet_accent, nullptr, 1.0F, 2);
+  submitter.mesh(
+      get_unit_cone(),
+      cone_from_to(ctx.model, helmet_top, apex_pos, helmet_r * 0.97F),
+      helmet_accent, nullptr, 1.0F, 2);
 
   auto ring = [&](float y_offset, float r_scale, const QVector3D &col) {
     QVector3D const center = headPoint(QVector3D(0.0F, y_offset, 0.0F));
@@ -67,7 +68,7 @@ void RomanLightHelmetRenderer::render(const DrawContext &ctx,
   QVector3D const neck_guard_bot = headPoint(QVector3D(0.0F, -0.32F, -0.92F));
   submitter.mesh(get_unit_cylinder(),
                  cylinder_between(ctx.model, neck_guard_bot, neck_guard_top,
-                                 helmet_r * 0.86F),
+                                  helmet_r * 0.86F),
                  helmet_color * 0.90F, nullptr, 1.0F, 2);
 
   QVector3D const crest_base = apex_pos;

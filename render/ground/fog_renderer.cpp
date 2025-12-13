@@ -16,7 +16,7 @@ const QMatrix4x4 k_identity_matrix;
 }
 
 void FogRenderer::update_mask(int width, int height, float tile_size,
-                             const std::vector<std::uint8_t> &cells) {
+                              const std::vector<std::uint8_t> &cells) {
   m_width = std::max(0, width);
   m_height = std::max(0, height);
   m_tile_size = std::max(0.0001F, tile_size);

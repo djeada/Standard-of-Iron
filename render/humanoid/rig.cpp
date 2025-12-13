@@ -392,10 +392,10 @@ void HumanoidRendererBase::compute_locomotion_pose(
   QVector3D const outward_l = -right_axis;
   QVector3D const outward_r = right_axis;
 
-  pose.elbow_l = elbow_bend_torso(pose.shoulder_l, pose.hand_l, outward_l, 0.45F,
-                                0.15F, -0.08F, +1.0F);
-  pose.elbow_r = elbow_bend_torso(pose.shoulder_r, pose.hand_r, outward_r, 0.48F,
-                                0.12F, 0.02F, +1.0F);
+  pose.elbow_l = elbow_bend_torso(pose.shoulder_l, pose.hand_l, outward_l,
+                                  0.45F, 0.15F, -0.08F, +1.0F);
+  pose.elbow_r = elbow_bend_torso(pose.shoulder_r, pose.hand_r, outward_r,
+                                  0.48F, 0.12F, 0.02F, +1.0F);
 }
 
 void HumanoidRendererBase::draw_common_body(const DrawContext &ctx,
@@ -516,7 +516,7 @@ void HumanoidRendererBase::draw_common_body(const DrawContext &ctx,
   QVector3D const chin_pos = pose.head_pos - head_up * head_r;
   out.mesh(get_unit_cylinder(),
            cylinder_between(ctx.model, pose.neck_base, chin_pos,
-                           HP::NECK_RADIUS * width_scale),
+                            HP::NECK_RADIUS * width_scale),
            v.palette.skin * 0.9F, nullptr, 1.0F);
 
   QMatrix4x4 head_rot;
@@ -792,8 +792,8 @@ void HumanoidRendererBase::draw_common_body(const DrawContext &ctx,
 
     foot_mat = foot_mat * scale_mat * shear_mat;
 
-    out.mesh(get_unit_capsule(), foot_mat, v.palette.leatherDark * 0.92F, nullptr,
-             1.0F);
+    out.mesh(get_unit_capsule(), foot_mat, v.palette.leatherDark * 0.92F,
+             nullptr, 1.0F);
   };
 
   draw_foot(pose.foot_l, true);
@@ -969,8 +969,8 @@ void HumanoidRendererBase::draw_facial_hair(const DrawContext &ctx,
 
         QVector3D const mid = root + (tip - root) * 0.40F;
         out.mesh(get_unit_cylinder(),
-                 cylinder_between(ctx.model, root, mid, base_radius), root_color,
-                 nullptr, 1.0F);
+                 cylinder_between(ctx.model, root, mid, base_radius),
+                 root_color, nullptr, 1.0F);
 
         out.mesh(get_unit_cone(), cone_from_to(ctx.model, mid, tip, mid_radius),
                  tip_color, nullptr, 1.0F);
@@ -1034,8 +1034,9 @@ void HumanoidRendererBase::draw_facial_hair(const DrawContext &ctx,
             saturate(hair_root * (color_jitter * 0.95F));
         QVector3D const tip_color = saturate(hair_tip * (color_jitter * 1.02F));
 
-        out.mesh(get_unit_sphere(), sphere_at(ctx.model, root, base_radius * 0.7F),
-                 root_color, nullptr, 1.0F);
+        out.mesh(get_unit_sphere(),
+                 sphere_at(ctx.model, root, base_radius * 0.7F), root_color,
+                 nullptr, 1.0F);
 
         QVector3D const mid = root + (tip - root) * 0.5F;
         out.mesh(get_unit_cylinder(),
@@ -1167,24 +1168,24 @@ void HumanoidRendererBase::draw_simplified_body(const DrawContext &ctx,
 
   out.mesh(get_unit_cylinder(),
            cylinder_between(ctx.model, pose.shoulder_l, pose.hand_l,
-                           (upper_arm_r + fore_arm_r) * 0.5F),
+                            (upper_arm_r + fore_arm_r) * 0.5F),
            v.palette.cloth, nullptr, 1.0F);
   out.mesh(get_unit_cylinder(),
            cylinder_between(ctx.model, pose.shoulder_r, pose.hand_r,
-                           (upper_arm_r + fore_arm_r) * 0.5F),
+                            (upper_arm_r + fore_arm_r) * 0.5F),
            v.palette.cloth, nullptr, 1.0F);
 
   QVector3D const hip_l = pose.pelvis_pos + QVector3D(-0.10F, -0.02F, 0.0F);
   QVector3D const hip_r = pose.pelvis_pos + QVector3D(0.10F, -0.02F, 0.0F);
 
-  out.mesh(
-      get_unit_cylinder(),
-      cylinder_between(ctx.model, hip_l, pose.foot_l, (thigh_r + shin_r) * 0.5F),
-      v.palette.cloth * 0.92F, nullptr, 1.0F);
-  out.mesh(
-      get_unit_cylinder(),
-      cylinder_between(ctx.model, hip_r, pose.foot_r, (thigh_r + shin_r) * 0.5F),
-      v.palette.cloth * 0.92F, nullptr, 1.0F);
+  out.mesh(get_unit_cylinder(),
+           cylinder_between(ctx.model, hip_l, pose.foot_l,
+                            (thigh_r + shin_r) * 0.5F),
+           v.palette.cloth * 0.92F, nullptr, 1.0F);
+  out.mesh(get_unit_cylinder(),
+           cylinder_between(ctx.model, hip_r, pose.foot_r,
+                            (thigh_r + shin_r) * 0.5F),
+           v.palette.cloth * 0.92F, nullptr, 1.0F);
 }
 
 void HumanoidRendererBase::draw_minimal_body(const DrawContext &ctx,
@@ -1198,8 +1199,9 @@ void HumanoidRendererBase::draw_minimal_body(const DrawContext &ctx,
 
   float const body_radius = HP::TORSO_TOP_R * get_torso_scale();
 
-  out.mesh(get_unit_capsule(), capsule_between(ctx.model, top, bot, body_radius),
-           v.palette.cloth, nullptr, 1.0F);
+  out.mesh(get_unit_capsule(),
+           capsule_between(ctx.model, top, bot, body_radius), v.palette.cloth,
+           nullptr, 1.0F);
 }
 
 void HumanoidRendererBase::render(const DrawContext &ctx,
@@ -1631,7 +1633,8 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
           if (auto *renderer = dynamic_cast<Renderer *>(&out)) {
             Shader *previous_shader = renderer->get_current_shader();
             renderer->set_current_shader(shadowShader);
-            shadowShader->set_uniform(QStringLiteral("u_lightDir"), dir_for_use);
+            shadowShader->set_uniform(QStringLiteral("u_lightDir"),
+                                      dir_for_use);
 
             out.mesh(quadMesh, shadowModel, QVector3D(0.0F, 0.0F, 0.0F),
                      nullptr, k_shadow_base_alpha, 0);

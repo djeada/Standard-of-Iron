@@ -17,7 +17,8 @@ public:
   ~Texture() override;
 
   auto load_from_file(const QString &path) -> bool;
-  auto create_empty(int width, int height, Format format = Format::RGBA) -> bool;
+  auto create_empty(int width, int height,
+                    Format format = Format::RGBA) -> bool;
 
   void bind(int unit = 0);
   void unbind();

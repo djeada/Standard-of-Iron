@@ -348,40 +348,40 @@ private:
 void register_spearman_renderer(Render::GL::EntityRendererRegistry &registry) {
   ensure_spearman_styles_registered();
   static SpearmanRenderer const renderer;
-  registry.register_renderer(
-      "troops/roman/spearman", [](const DrawContext &ctx, ISubmitter &out) {
-        static SpearmanRenderer const static_renderer;
-        Shader *spearman_shader = nullptr;
-        auto acquireShader = [&](const QString &shader_key) -> Shader * {
-          if (ctx.backend == nullptr || shader_key.isEmpty()) {
-            return nullptr;
-          }
-          Shader *shader = ctx.backend->shader(shader_key);
-          if (shader != nullptr) {
-            return shader;
-          }
-          if (auto resources = lookup_spearman_shader_resources(shader_key)) {
-            shader = ctx.backend->get_or_load_shader(shader_key, resources->vertex,
-                                                  resources->fragment);
-          }
-          return shader;
-        };
-        if (ctx.backend != nullptr) {
-          QString shader_key = static_renderer.resolve_shader_key(ctx);
-          spearman_shader = acquireShader(shader_key);
-          if (spearman_shader == nullptr) {
-            spearman_shader = acquireShader(QStringLiteral("spearman"));
-          }
-        }
-        auto *scene_renderer = dynamic_cast<Renderer *>(&out);
-        if ((scene_renderer != nullptr) && (spearman_shader != nullptr)) {
-          scene_renderer->set_current_shader(spearman_shader);
-        }
-        static_renderer.render(ctx, out);
-        if (scene_renderer != nullptr) {
-          scene_renderer->set_current_shader(nullptr);
-        }
-      });
+  registry.register_renderer("troops/roman/spearman", [](const DrawContext &ctx,
+                                                         ISubmitter &out) {
+    static SpearmanRenderer const static_renderer;
+    Shader *spearman_shader = nullptr;
+    auto acquireShader = [&](const QString &shader_key) -> Shader * {
+      if (ctx.backend == nullptr || shader_key.isEmpty()) {
+        return nullptr;
+      }
+      Shader *shader = ctx.backend->shader(shader_key);
+      if (shader != nullptr) {
+        return shader;
+      }
+      if (auto resources = lookup_spearman_shader_resources(shader_key)) {
+        shader = ctx.backend->get_or_load_shader(shader_key, resources->vertex,
+                                                 resources->fragment);
+      }
+      return shader;
+    };
+    if (ctx.backend != nullptr) {
+      QString shader_key = static_renderer.resolve_shader_key(ctx);
+      spearman_shader = acquireShader(shader_key);
+      if (spearman_shader == nullptr) {
+        spearman_shader = acquireShader(QStringLiteral("spearman"));
+      }
+    }
+    auto *scene_renderer = dynamic_cast<Renderer *>(&out);
+    if ((scene_renderer != nullptr) && (spearman_shader != nullptr)) {
+      scene_renderer->set_current_shader(spearman_shader);
+    }
+    static_renderer.render(ctx, out);
+    if (scene_renderer != nullptr) {
+      scene_renderer->set_current_shader(nullptr);
+    }
+  });
 }
 
 } // namespace Render::GL::Roman

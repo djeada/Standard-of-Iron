@@ -14,15 +14,15 @@ auto get_unit_cylinder(int radialSegments = kDefaultRadialSegments) -> Mesh *;
 auto get_unit_cube() -> Mesh *;
 
 auto get_unit_sphere(int latSegments = kDefaultLatitudeSegments,
-                   int lonSegments = kDefaultRadialSegments) -> Mesh *;
+                     int lonSegments = kDefaultRadialSegments) -> Mesh *;
 
 auto get_unit_cone(int radialSegments = kDefaultRadialSegments) -> Mesh *;
 
 auto get_unit_capsule(int radialSegments = kDefaultRadialSegments,
-                    int heightSegments = kDefaultCapsuleHeightSegments)
+                      int heightSegments = kDefaultCapsuleHeightSegments)
     -> Mesh *;
 
 auto get_unit_torso(int radialSegments = kDefaultRadialSegments,
-                  int heightSegments = kDefaultTorsoHeightSegments) -> Mesh *;
+                    int heightSegments = kDefaultTorsoHeightSegments) -> Mesh *;
 
 } // namespace Render::GL
