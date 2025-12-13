@@ -109,7 +109,7 @@ auto SaveLoadService::saveGameToSlot(Engine::Core::World &world,
 }
 
 auto SaveLoadService::load_game_from_slot(Engine::Core::World &world,
-                                       const QString &slotName) -> bool {
+                                          const QString &slotName) -> bool {
   qInfo() << "Loading game from slot:" << slotName;
 
   try {

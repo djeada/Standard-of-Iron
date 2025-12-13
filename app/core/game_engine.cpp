@@ -195,17 +195,17 @@ GameEngine::GameEngine(QObject *parent)
   m_hoverTracker = std::make_unique<HoverTracker>(m_pickingService.get());
 
   m_mapCatalog = std::make_unique<Game::Map::MapCatalog>(this);
-  connect(m_mapCatalog.get(), &Game::Map::MapCatalog::mapLoaded, this,
+  connect(m_mapCatalog.get(), &Game::Map::MapCatalog::map_loaded, this,
           [this](const QVariantMap &mapData) {
             m_available_maps.append(mapData);
             emit available_maps_changed();
           });
-  connect(m_mapCatalog.get(), &Game::Map::MapCatalog::loadingChanged, this,
+  connect(m_mapCatalog.get(), &Game::Map::MapCatalog::loading_changed, this,
           [this](bool loading) {
             m_maps_loading = loading;
             emit maps_loading_changed();
           });
-  connect(m_mapCatalog.get(), &Game::Map::MapCatalog::allMapsLoaded, this,
+  connect(m_mapCatalog.get(), &Game::Map::MapCatalog::all_maps_loaded, this,
           [this]() { emit available_maps_changed(); });
 
   if (AudioSystem::getInstance().initialize()) {
@@ -936,7 +936,7 @@ void GameEngine::camera_set_follow_lerp(float alpha) {
     return;
   }
 
-  m_cameraService->setFollowLerp(*m_camera, alpha);
+  m_cameraService->set_follow_lerp(*m_camera, alpha);
 }
 
 auto GameEngine::selected_units_model() -> QAbstractItemModel * {
@@ -1102,7 +1102,7 @@ void GameEngine::set_rally_at_screen(qreal sx, qreal sy) {
 void GameEngine::start_loading_maps() {
   m_available_maps.clear();
   if (m_mapCatalog) {
-    m_mapCatalog->loadMapsAsync();
+    m_mapCatalog->load_maps_async();
   }
   load_campaigns();
 }
@@ -1409,7 +1409,7 @@ auto GameEngine::load_from_slot(const QString &slot) -> bool {
 
   m_runtime.loading = true;
 
-  if (!m_saveLoadService->loadGameFromSlot(*m_world, slot)) {
+  if (!m_saveLoadService->load_game_from_slot(*m_world, slot)) {
     set_error(m_saveLoadService->getLastError());
     m_runtime.loading = false;
     return false;
@@ -1480,7 +1480,7 @@ auto GameEngine::get_save_slots() const -> QVariantList {
     return {};
   }
 
-  return m_saveLoadService->getSaveSlots();
+  return m_saveLoadService->get_save_slots();
 }
 
 void GameEngine::refresh_save_slots() { emit save_slots_changed(); }
@@ -2358,7 +2358,7 @@ void GameEngine::update_minimap_units() {
       marker.world_z = transform->position.z;
       marker.owner_id = unit->owner_id;
       marker.is_selected = selected_ids.count(entity_id) > 0;
-      marker.is_building = Game::Units::isBuildingSpawn(unit->spawn_type);
+      marker.is_building = Game::Units::is_building_spawn(unit->spawn_type);
 
       markers.push_back(marker);
     }

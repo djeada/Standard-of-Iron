@@ -173,10 +173,10 @@ public:
 
   Q_INVOKABLE [[nodiscard]] static QVariantMap get_player_stats(int owner_id);
 
-  [[nodiscard]] int selected_player_id() const { return m_selectedPlayerId; }
+  [[nodiscard]] int selected_player_id() const { return m_selected_player_id; }
   void set_selected_player_id(int id) {
-    if (m_selectedPlayerId != id) {
-      m_selectedPlayerId = id;
+    if (m_selected_player_id != id) {
+      m_selected_player_id = id;
       emit selected_player_id_changed();
     }
   }
@@ -332,7 +332,7 @@ private:
   Game::Systems::LevelSnapshot m_level;
   SelectedUnitsModel *m_selectedUnitsModel = nullptr;
   int m_enemyTroopsDefeated = 0;
-  int m_selectedPlayerId = 1;
+  int m_selected_player_id = 1;
   QVariantList m_available_maps;
   QVariantList m_available_campaigns;
   bool m_maps_loading = false;

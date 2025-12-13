@@ -16,7 +16,7 @@ public:
   void initialize();
   void clear();
 
-  auto getTroopCount(int owner_id) const -> int;
+  auto get_troop_count(int owner_id) const -> int;
 
   void on_unit_spawned(const Engine::Core::UnitSpawnedEvent &event);
   void on_unit_died(const Engine::Core::UnitDiedEvent &event);

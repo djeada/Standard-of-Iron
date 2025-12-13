@@ -1414,7 +1414,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
     case PrimitiveBatchCmdIndex: {
       const auto &batch = std::get<PrimitiveBatchCmdIndex>(cmd);
       if (batch.instance_count() == 0 || m_primitiveBatchPipeline == nullptr ||
-          !m_primitiveBatchPipeline->isInitialized()) {
+          !m_primitiveBatchPipeline->is_initialized()) {
         break;
       }
 

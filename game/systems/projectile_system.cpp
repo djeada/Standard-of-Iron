@@ -27,9 +27,9 @@ void ProjectileSystem::spawn_arrow(const QVector3D &start, const QVector3D &end,
                             m_arrow_config.arc_height_max * 0.6F);
   } else {
 
-    arc_height =
-        std::clamp(m_arrow_config.arc_height_multiplier * dist,
-                   m_arrow_config.arc_height_min, m_arrow_config.arc_height_max);
+    arc_height = std::clamp(m_arrow_config.arc_height_multiplier * dist,
+                            m_arrow_config.arc_height_min,
+                            m_arrow_config.arc_height_max);
   }
   float inv_dist = (dist > 0.001F) ? (1.0F / dist) : 1.0F;
 
