@@ -47,7 +47,7 @@ struct SkirmishLoadResult {
   int max_troops_per_player = 500;
   VictoryConfig victoryConfig;
   QVector3D focusPosition;
-  bool hasFocusPosition = false;
+  bool has_focus_position = false;
 };
 
 class SkirmishLoader {
@@ -91,8 +91,8 @@ public:
   }
 
   auto start(const QString &map_path, const QVariantList &playerConfigs,
-             int selectedPlayerId,
-             int &outSelectedPlayerId) -> SkirmishLoadResult;
+             int selected_player_id,
+             int &out_selected_player_id) -> SkirmishLoadResult;
 
 private:
   void resetGameState();

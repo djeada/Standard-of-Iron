@@ -35,7 +35,7 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   float group_center_z = 0.0F;
 
   for (const auto &entity : snapshot.friendlies) {
-    if (entity.isBuilding) {
+    if (entity.is_building) {
       continue;
     }
 
@@ -90,7 +90,7 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
       float closest_barracks_dist_sq = std::numeric_limits<float>::max();
 
       for (const auto &enemy : snapshot.visibleEnemies) {
-        if (enemy.isBuilding) {
+        if (enemy.is_building) {
           float const dist_sq =
               distance_squared(enemy.posX, enemy.posY, enemy.posZ,
                                group_center_x, group_center_y, group_center_z);
@@ -190,7 +190,7 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
 
   bool const being_attacked = context.damagedUnitsCount > 0;
 
-  if (!assessment.shouldEngage && !context.barracksUnderThreat &&
+  if (!assessment.should_engage && !context.barracks_under_threat &&
       !being_attacked) {
 
     m_lastTarget = 0;
@@ -245,8 +245,8 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   command.target_id = target_info.target_id;
 
   bool const should_chase_aggressive =
-      (context.state == AIState::Attacking || context.barracksUnderThreat) &&
-      assessment.forceRatio >= 0.8F;
+      (context.state == AIState::Attacking || context.barracks_under_threat) &&
+      assessment.force_ratio >= 0.8F;
 
   command.should_chase = should_chase_aggressive;
 
@@ -261,7 +261,7 @@ auto AttackBehavior::should_execute(const AISnapshot &snapshot,
 
   int ready_units = 0;
   for (const auto &entity : snapshot.friendlies) {
-    if (entity.isBuilding) {
+    if (entity.is_building) {
       continue;
     }
 
@@ -285,7 +285,7 @@ auto AttackBehavior::should_execute(const AISnapshot &snapshot,
   }
 
   if (context.state == AIState::Defending) {
-    return context.barracksUnderThreat && ready_units >= 2;
+    return context.barracks_under_threat && ready_units >= 2;
   }
 
   return ready_units >= 1;

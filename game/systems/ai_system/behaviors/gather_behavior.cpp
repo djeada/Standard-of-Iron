@@ -33,7 +33,7 @@ void GatherBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   units_to_gather.reserve(snapshot.friendlies.size());
 
   for (const auto &entity : snapshot.friendlies) {
-    if (entity.isBuilding) {
+    if (entity.is_building) {
       continue;
     }
 
@@ -135,7 +135,7 @@ auto GatherBehavior::should_execute(const AISnapshot &snapshot,
 
     QVector3D const rally_point(context.rally_x, 0.0F, context.rally_z);
     for (const auto &entity : snapshot.friendlies) {
-      if (entity.isBuilding) {
+      if (entity.is_building) {
         continue;
       }
 
