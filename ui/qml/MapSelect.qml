@@ -841,6 +841,22 @@ Item {
 
             }
 
+            MapPreview {
+                id: mapPreview
+
+                height: 300
+                visible: selectedMapData !== null
+                mapPath: selectedMapPath
+                playerConfigs: getPlayerConfigs()
+
+                anchors {
+                    top: descr.bottom
+                    left: parent.left
+                    right: parent.right
+                    topMargin: Theme.spacingLarge
+                }
+            }
+
             Rectangle {
                 id: playerConfigPanel
 
@@ -852,7 +868,7 @@ Item {
                 visible: selectedMapData !== null
 
                 anchors {
-                    top: descr.bottom
+                    top: mapPreview.bottom
                     left: parent.left
                     right: parent.right
                     topMargin: Theme.spacingLarge + 4
