@@ -85,7 +85,7 @@ auto ProductionService::startProductionForFirstSelectedBarracks(
 
   int const current_troops =
       Engine::Core::World::count_troops_for_player(owner_id);
-  int const max_troops = Game::GameConfig::instance().getMaxTroopsPerPlayer();
+  int const max_troops = Game::GameConfig::instance().get_max_troops_per_player();
   if (current_troops + production_cost > max_troops) {
     return ProductionResult::GlobalTroopLimitReached;
   }

@@ -25,8 +25,8 @@ void Environment::apply(const MapDefinition &def,
 void Environment::applyDefault(Render::GL::Renderer &renderer,
                                Render::GL::Camera &camera) {
   const auto &camera_config = Game::GameConfig::instance().camera();
-  camera.setRTSView(QVector3D(0, 0, 0), 15.0F, camera_config.defaultPitch,
-                    camera_config.defaultYaw);
+  camera.setRTSView(QVector3D(0, 0, 0), 15.0F, camera_config.default_pitch,
+                    camera_config.default_yaw);
 
   camera.setPerspective(45.0F, 16.0F / 9.0F, 1.0F, 200.0F);
   Render::GL::Renderer::GridParams gp;
