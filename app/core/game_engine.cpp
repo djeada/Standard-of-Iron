@@ -1197,7 +1197,7 @@ void GameEngine::start_skirmish(const QString &map_path,
 
 void GameEngine::open_settings() {
   if (m_saveLoadService) {
-    m_saveLoadService->openSettings();
+    m_saveLoadService->open_settings();
   }
 }
 
@@ -1224,12 +1224,12 @@ auto GameEngine::load_from_slot(const QString &slot) -> bool {
   m_runtime.loading = true;
 
   if (!m_saveLoadService->load_game_from_slot(*m_world, slot)) {
-    set_error(m_saveLoadService->getLastError());
+    set_error(m_saveLoadService->get_last_error());
     m_runtime.loading = false;
     return false;
   }
 
-  const QJsonObject meta = m_saveLoadService->getLastMetadata();
+  const QJsonObject meta = m_saveLoadService->get_last_metadata();
 
   Game::Systems::GameStateSerializer::restoreLevelFromMetadata(meta, m_level);
   Game::Systems::GameStateSerializer::restoreCameraFromMetadata(
@@ -1288,9 +1288,9 @@ auto GameEngine::save_to_slot(const QString &slot,
       *m_world, m_camera.get(), m_level, runtime_snap);
   meta["title"] = title;
   const QByteArray screenshot = capture_screenshot();
-  if (!m_saveLoadService->saveGameToSlot(*m_world, slot, title,
+  if (!m_saveLoadService->save_game_to_slot(*m_world, slot, title,
                                          m_level.map_name, meta, screenshot)) {
-    set_error(m_saveLoadService->getLastError());
+    set_error(m_saveLoadService->get_last_error());
     return false;
   }
   emit save_slots_changed();
@@ -1314,10 +1314,10 @@ auto GameEngine::delete_save_slot(const QString &slotName) -> bool {
     return false;
   }
 
-  bool const success = m_saveLoadService->deleteSaveSlot(slotName);
+  bool const success = m_saveLoadService->delete_save_slot(slotName);
 
   if (!success) {
-    QString const error = m_saveLoadService->getLastError();
+    QString const error = m_saveLoadService->get_last_error();
     qWarning() << "Failed to delete save slot:" << error;
     set_error(error);
   } else {
@@ -1358,7 +1358,7 @@ auto GameEngine::capture_screenshot() const -> QByteArray { return {}; }
 
 void GameEngine::exit_game() {
   if (m_saveLoadService) {
-    m_saveLoadService->exitGame();
+    m_saveLoadService->exit_game();
   }
 }
 
