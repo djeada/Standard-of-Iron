@@ -111,7 +111,7 @@ void PlantRenderer::submit(Renderer &renderer, ResourceManager *resources) {
         m_visibleInstanceBuffer =
             std::make_unique<Buffer>(Buffer::Type::Vertex);
       }
-      m_visibleInstanceBuffer->setData(m_visibleInstances,
+      m_visibleInstanceBuffer->set_data(m_visibleInstances,
                                        Buffer::Usage::Static);
     }
   }

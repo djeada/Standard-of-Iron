@@ -84,24 +84,24 @@ void BowRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
     float const t = float(i) / float(k_bowstring_segments);
     QVector3D const cur = q_bezier(bot_end, ctrl, top_end, t);
     submitter.mesh(
-        getUnitCylinder(),
+        get_unit_cylinder(),
         cylinder_between(ctx.model, prev, cur, m_config.bow_rod_radius),
         k_dark_bow_color, nullptr, 1.0F, m_config.material_id);
     prev = cur;
   }
 
-  submitter.mesh(getUnitCylinder(),
+  submitter.mesh(get_unit_cylinder(),
                  cylinder_between(ctx.model, grip - up * 0.05F,
                                  grip + up * 0.05F,
                                  m_config.bow_rod_radius * 1.45F),
                  k_dark_bow_color, nullptr, 1.0F, m_config.material_id);
 
   submitter.mesh(
-      getUnitCylinder(),
+      get_unit_cylinder(),
       cylinder_between(ctx.model, top_end, nock, m_config.string_radius),
       m_config.string_color, nullptr, 1.0F, m_config.material_id);
   submitter.mesh(
-      getUnitCylinder(),
+      get_unit_cylinder(),
       cylinder_between(ctx.model, nock, bot_end, m_config.string_radius),
       m_config.string_color, nullptr, 1.0F, m_config.material_id);
 
@@ -109,7 +109,7 @@ void BowRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
       anim.inputs.is_attacking && !anim.inputs.is_melee;
   if (is_bow_attacking) {
     submitter.mesh(
-        getUnitCylinder(),
+        get_unit_cylinder(),
         cylinder_between(ctx.model, frames.hand_l.origin, nock, 0.0045F),
         m_config.string_color * 0.9F, nullptr, 1.0F, m_config.material_id);
   }
@@ -147,12 +147,12 @@ void BowRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
     QVector3D const tail = nock - forward * 0.06F;
     QVector3D const tip = tail + forward * 0.90F;
 
-    submitter.mesh(getUnitCylinder(),
+    submitter.mesh(get_unit_cylinder(),
                    cylinder_between(ctx.model, tail, tip, 0.018F), palette.wood,
                    nullptr, 1.0F, m_config.material_id);
 
     QVector3D const head_base = tip - forward * 0.10F;
-    submitter.mesh(getUnitCone(), cone_from_to(ctx.model, head_base, tip, 0.05F),
+    submitter.mesh(get_unit_cone(), cone_from_to(ctx.model, head_base, tip, 0.05F),
                    m_config.metal_color, nullptr, 1.0F, m_config.material_id);
 
     QVector3D const f1b = tail - forward * 0.02F;
@@ -160,10 +160,10 @@ void BowRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
     QVector3D const f2b = tail + forward * 0.02F;
     QVector3D const f2a = f2b + forward * 0.06F;
 
-    submitter.mesh(getUnitCone(), cone_from_to(ctx.model, f1b, f1a, 0.04F),
+    submitter.mesh(get_unit_cone(), cone_from_to(ctx.model, f1b, f1a, 0.04F),
                    m_config.fletching_color, nullptr, 1.0F,
                    m_config.material_id);
-    submitter.mesh(getUnitCone(), cone_from_to(ctx.model, f2a, f2b, 0.04F),
+    submitter.mesh(get_unit_cone(), cone_from_to(ctx.model, f2a, f2b, 0.04F),
                    m_config.fletching_color, nullptr, 1.0F,
                    m_config.material_id);
   }

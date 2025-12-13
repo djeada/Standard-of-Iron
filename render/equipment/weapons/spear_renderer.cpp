@@ -33,11 +33,11 @@ void SpearRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
   shaft_mid.setY(shaft_mid.y() + 0.02F);
 
   submitter.mesh(
-      getUnitCylinder(),
+      get_unit_cylinder(),
       cylinder_between(ctx.model, shaft_base, shaft_mid, m_config.shaft_radius),
       m_config.shaft_color, nullptr, 1.0F, m_config.material_id);
 
-  submitter.mesh(getUnitCylinder(),
+  submitter.mesh(get_unit_cylinder(),
                  cylinder_between(ctx.model, shaft_mid, shaft_tip,
                                  m_config.shaft_radius * 0.95F),
                  m_config.shaft_color * 0.98F, nullptr, 1.0F,
@@ -47,13 +47,13 @@ void SpearRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
   QVector3D const spearhead_tip =
       shaft_tip + spear_dir * m_config.spearhead_length;
 
-  submitter.mesh(getUnitCone(),
+  submitter.mesh(get_unit_cone(),
                  cone_from_to(ctx.model, spearhead_base, spearhead_tip,
                             m_config.shaft_radius * 1.8F),
                  m_config.spearhead_color, nullptr, 1.0F, m_config.material_id);
 
   QVector3D const grip_end = grip_pos + spear_dir * 0.10F;
-  submitter.mesh(getUnitCylinder(),
+  submitter.mesh(get_unit_cylinder(),
                  cylinder_between(ctx.model, grip_pos, grip_end,
                                  m_config.shaft_radius * 1.5F),
                  palette.leather * 0.92F, nullptr, 1.0F, m_config.material_id);

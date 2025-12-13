@@ -377,7 +377,7 @@ void registerArcherRenderer(Render::GL::EntityRendererRegistry &registry) {
           archer_shader = ctx.backend->shader(shader_key);
           if ((archer_shader == nullptr) &&
               shader_key == QStringLiteral("archer_carthage")) {
-            archer_shader = ctx.backend->getOrLoadShader(
+            archer_shader = ctx.backend->get_or_load_shader(
                 shader_key,
                 QStringLiteral(":/assets/shaders/archer_carthage.vert"),
                 QStringLiteral(":/assets/shaders/archer_carthage.frag"));

@@ -55,7 +55,7 @@ public:
       return;
     }
 
-    if (mesh == getUnitCylinder() && (tex == nullptr) &&
+    if (mesh == get_unit_cylinder() && (tex == nullptr) &&
         (m_shader == nullptr)) {
       QVector3D start;
       QVector3D end;
@@ -150,15 +150,15 @@ public:
             int material_id = 0) override {
 
     if (m_enabled && m_batcher != nullptr && tex == nullptr) {
-      if (mesh == getUnitSphere()) {
+      if (mesh == get_unit_sphere()) {
         m_batcher->add_sphere(model, color, alpha);
         return;
       }
-      if (mesh == getUnitCylinder()) {
+      if (mesh == get_unit_cylinder()) {
         m_batcher->add_cylinder(model, color, alpha);
         return;
       }
-      if (mesh == getUnitCone()) {
+      if (mesh == get_unit_cone()) {
         m_batcher->add_cone(model, color, alpha);
         return;
       }

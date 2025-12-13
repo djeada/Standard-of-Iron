@@ -4,7 +4,7 @@
 
 namespace Render::GL {
 
-auto elbowBendTorso(const QVector3D &shoulder, const QVector3D &hand,
+auto elbow_bend_torso(const QVector3D &shoulder, const QVector3D &hand,
                     const QVector3D &outwardDir, float alongFrac,
                     float lateral_offset, float yBias,
                     float outwardSign) -> QVector3D {
