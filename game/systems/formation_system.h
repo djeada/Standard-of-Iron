@@ -60,14 +60,14 @@ public:
   static auto instance() -> FormationSystem &;
 
   auto
-  getFormationPositions(FormationType type, int unit_count,
+  get_formation_positions(FormationType type, int unit_count,
                         const QVector3D &center,
                         float base_spacing = 1.0F) -> std::vector<QVector3D>;
 
   void registerFormation(FormationType type,
                          std::unique_ptr<IFormation> formation);
 
-  auto getFormation(FormationType type) const -> const IFormation *;
+  auto get_formation(FormationType type) const -> const IFormation *;
 
 private:
   FormationSystem();
