@@ -4,6 +4,7 @@
 #include "../backend.h"
 #include "../camera.h"
 #include "../mesh.h"
+#include "../render_constants.h"
 #include "../shader_cache.h"
 #include <QDebug>
 #include <QMatrix4x4>
@@ -11,6 +12,9 @@
 #include <numbers>
 
 namespace Render::GL::BackendPipelines {
+
+using namespace Render::GL::VertexAttrib;
+using namespace Render::GL::ComponentCount;
 
 auto HealingBeamPipeline::initialize() -> bool {
   if (m_shaderCache == nullptr) {
@@ -27,10 +31,10 @@ auto HealingBeamPipeline::initialize() -> bool {
   }
 
   cache_uniforms();
-  create_beam_mesh();
+  create_beam_geometry();
 
-  if (!m_beamMesh) {
-    qWarning() << "HealingBeamPipeline: Failed to create beam mesh";
+  if (m_vao == 0) {
+    qWarning() << "HealingBeamPipeline: Failed to create beam geometry";
     return false;
   }
 
@@ -39,8 +43,24 @@ auto HealingBeamPipeline::initialize() -> bool {
 }
 
 void HealingBeamPipeline::shutdown() {
-  m_beamMesh.reset();
+  shutdown_geometry();
   m_beamShader = nullptr;
+}
+
+void HealingBeamPipeline::shutdown_geometry() {
+  if (m_vao != 0) {
+    glDeleteVertexArrays(1, &m_vao);
+    m_vao = 0;
+  }
+  if (m_vertexBuffer != 0) {
+    glDeleteBuffers(1, &m_vertexBuffer);
+    m_vertexBuffer = 0;
+  }
+  if (m_indexBuffer != 0) {
+    glDeleteBuffers(1, &m_indexBuffer);
+    m_indexBuffer = 0;
+  }
+  m_indexCount = 0;
 }
 
 void HealingBeamPipeline::cache_uniforms() {
@@ -64,10 +84,13 @@ void HealingBeamPipeline::cache_uniforms() {
 }
 
 auto HealingBeamPipeline::is_initialized() const -> bool {
-  return m_beamShader != nullptr && m_beamMesh != nullptr;
+  return m_beamShader != nullptr && m_vao != 0;
 }
 
-void HealingBeamPipeline::create_beam_mesh() {
+void HealingBeamPipeline::create_beam_geometry() {
+  initializeOpenGLFunctions();
+  shutdown_geometry();
+
   std::vector<Vertex> vertices;
   std::vector<unsigned int> indices;
 
@@ -111,9 +134,43 @@ void HealingBeamPipeline::create_beam_mesh() {
     }
   }
 
-  m_beamMesh = std::make_unique<Mesh>(vertices, indices);
-  qDebug() << "HealingBeamPipeline mesh created: vertices=" << vertices.size()
-           << "indices=" << indices.size();
+  // Create VAO
+  glGenVertexArrays(1, &m_vao);
+  glBindVertexArray(m_vao);
+
+  // Create vertex buffer
+  glGenBuffers(1, &m_vertexBuffer);
+  glBindBuffer(GL_ARRAY_BUFFER, m_vertexBuffer);
+  glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex),
+               vertices.data(), GL_STATIC_DRAW);
+
+  // Create index buffer
+  glGenBuffers(1, &m_indexBuffer);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_indexBuffer);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int),
+               indices.data(), GL_STATIC_DRAW);
+  m_indexCount = static_cast<GLsizei>(indices.size());
+
+  // Set up vertex attributes (position, normal, texcoord)
+  glEnableVertexAttribArray(VertexAttrib::Position);
+  glVertexAttribPointer(VertexAttrib::Position, ComponentCount::Vec3, GL_FLOAT,
+                        GL_FALSE, sizeof(Vertex),
+                        reinterpret_cast<void *>(offsetof(Vertex, position)));
+
+  glEnableVertexAttribArray(VertexAttrib::Normal);
+  glVertexAttribPointer(VertexAttrib::Normal, ComponentCount::Vec3, GL_FLOAT,
+                        GL_FALSE, sizeof(Vertex),
+                        reinterpret_cast<void *>(offsetof(Vertex, normal)));
+
+  glEnableVertexAttribArray(VertexAttrib::TexCoord);
+  glVertexAttribPointer(VertexAttrib::TexCoord, ComponentCount::Vec2, GL_FLOAT,
+                        GL_FALSE, sizeof(Vertex),
+                        reinterpret_cast<void *>(offsetof(Vertex, tex_coord)));
+
+  glBindVertexArray(0);
+
+  qDebug() << "HealingBeamPipeline geometry created: vertices="
+           << vertices.size() << "indices=" << indices.size() << "vao=" << m_vao;
 }
 
 void HealingBeamPipeline::render(
@@ -139,6 +196,7 @@ void HealingBeamPipeline::render(
   glDepthMask(GL_FALSE);
 
   m_beamShader->use();
+  glBindVertexArray(m_vao);
 
   qDebug() << "HealingBeamPipeline rendering" << beam_system->get_beam_count()
            << "beams";
@@ -148,6 +206,8 @@ void HealingBeamPipeline::render(
       render_beam(*beam, cam, animation_time);
     }
   }
+
+  glBindVertexArray(0);
 
   // Restore GL state
   glDepthMask(depthMaskEnabled);
@@ -184,7 +244,7 @@ void HealingBeamPipeline::render_beam(const Game::Systems::HealingBeam &beam,
   m_beamShader->set_uniform(m_uniforms.healColor, beam.get_color());
   m_beamShader->set_uniform(m_uniforms.alpha, beam.get_intensity());
 
-  m_beamMesh->draw();
+  glDrawElements(GL_TRIANGLES, m_indexCount, GL_UNSIGNED_INT, nullptr);
 }
 
 } // namespace Render::GL::BackendPipelines

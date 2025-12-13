@@ -1,9 +1,8 @@
 #pragma once
 
-#include "../mesh.h"
 #include "../shader.h"
 #include "pipeline_interface.h"
-#include <memory>
+#include <GL/gl.h>
 #include <vector>
 
 namespace Game::Systems {
@@ -52,12 +51,18 @@ public:
 private:
   void render_beam(const Game::Systems::HealingBeam &beam, const Camera &cam,
                    float animation_time);
-  void create_beam_mesh();
+  void create_beam_geometry();
+  void shutdown_geometry();
 
   GL::Backend *m_backend = nullptr;
   GL::ShaderCache *m_shaderCache = nullptr;
   GL::Shader *m_beamShader = nullptr;
-  std::unique_ptr<GL::Mesh> m_beamMesh;
+
+  // Raw OpenGL handles like other pipelines
+  GLuint m_vao = 0;
+  GLuint m_vertexBuffer = 0;
+  GLuint m_indexBuffer = 0;
+  GLsizei m_indexCount = 0;
 
   // Cached uniform handles
   struct BeamUniforms {
