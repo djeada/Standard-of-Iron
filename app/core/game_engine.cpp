@@ -12,10 +12,12 @@
 #include "app/utils/movement_utils.h"
 #include "app/utils/selection_utils.h"
 #include "audio_resource_loader.h"
+#include "camera_controller.h"
 #include "core/system.h"
 #include "game/audio/AudioSystem.h"
 #include "game/units/spawn_type.h"
 #include "game/units/troop_type.h"
+#include "input_command_handler.h"
 #include "level_orchestrator.h"
 #include "minimap_manager.h"
 #include "renderer_bootstrap.h"
@@ -199,6 +201,14 @@ GameEngine::GameEngine(QObject *parent)
   m_minimap_manager = std::make_unique<MinimapManager>();
   m_ambient_state_manager = std::make_unique<AmbientStateManager>();
 
+  m_input_handler = std::make_unique<InputCommandHandler>(
+      m_world.get(), m_selectionController.get(), m_commandController.get(),
+      m_cursorManager.get(), m_hoverTracker.get(), m_pickingService.get(),
+      m_camera.get());
+
+  m_camera_controller = std::make_unique<CameraController>(
+      m_camera.get(), m_cameraService.get(), m_world.get());
+
   m_audioEventHandler =
       std::make_unique<Game::Audio::AudioEventHandler>(m_world.get());
   if (m_audioEventHandler->initialize()) {
@@ -351,10 +361,9 @@ void GameEngine::on_map_clicked(qreal sx, qreal sy) {
     return;
   }
   ensure_initialized();
-  if (m_selectionController && m_camera) {
-    m_selectionController->on_click_select(sx, sy, false, m_viewport.width,
-                                           m_viewport.height, m_camera.get(),
-                                           m_runtime.local_owner_id);
+  if (m_input_handler) {
+    m_input_handler->on_map_clicked(sx, sy, m_runtime.local_owner_id,
+                                    m_viewport);
   }
 }
 
@@ -363,62 +372,9 @@ void GameEngine::on_right_click(qreal sx, qreal sy) {
     return;
   }
   ensure_initialized();
-  auto *selection_system =
-      m_world->get_system<Game::Systems::SelectionSystem>();
-  if (selection_system == nullptr) {
-    return;
-  }
-
-  if (m_cursorManager->mode() == CursorMode::Patrol ||
-      m_cursorManager->mode() == CursorMode::Attack) {
-    set_cursor_mode(CursorMode::Normal);
-    return;
-  }
-
-  const auto &sel = selection_system->get_selected_units();
-  if (sel.empty()) {
-
-    return;
-  }
-
-  if (m_pickingService && m_camera) {
-    Engine::Core::EntityID const target_id = m_pickingService->pick_unit_first(
-        float(sx), float(sy), *m_world, *m_camera, m_viewport.width,
-        m_viewport.height, 0);
-
-    if (target_id != 0U) {
-      auto *target_entity = m_world->get_entity(target_id);
-      if (target_entity != nullptr) {
-        auto *target_unit =
-            target_entity->get_component<Engine::Core::UnitComponent>();
-        if (target_unit != nullptr) {
-
-          bool const is_enemy =
-              (target_unit->owner_id != m_runtime.local_owner_id);
-
-          if (is_enemy) {
-
-            Game::Systems::CommandService::attack_target(*m_world, sel,
-                                                         target_id, true);
-            return;
-          }
-        }
-      }
-    }
-  }
-
-  if (m_pickingService && m_camera) {
-    QVector3D hit;
-    if (m_pickingService->screen_to_ground(QPointF(sx, sy), *m_camera,
-                                           m_viewport.width, m_viewport.height,
-                                           hit)) {
-      auto targets = Game::Systems::FormationPlanner::spreadFormation(
-          int(sel.size()), hit,
-          Game::GameConfig::instance().gameplay().formation_spacing_default);
-      Game::Systems::CommandService::MoveOptions opts;
-      opts.group_move = sel.size() > 1;
-      Game::Systems::CommandService::moveUnits(*m_world, sel, targets, opts);
-    }
+  if (m_input_handler) {
+    m_input_handler->on_right_click(sx, sy, m_runtime.local_owner_id,
+                                    m_viewport);
   }
 }
 
@@ -427,91 +383,44 @@ void GameEngine::on_attack_click(qreal sx, qreal sy) {
     return;
   }
   ensure_initialized();
-  if (!m_commandController || !m_camera) {
-    return;
-  }
-
-  auto result = m_commandController->onAttackClick(
-      sx, sy, m_viewport.width, m_viewport.height, m_camera.get());
-
-  auto *selection_system =
-      m_world->get_system<Game::Systems::SelectionSystem>();
-  if ((selection_system == nullptr) || !m_pickingService || !m_camera ||
-      !m_world) {
-    return;
-  }
-
-  const auto &selected = selection_system->get_selected_units();
-  if (!selected.empty()) {
-    Engine::Core::EntityID const target_id = m_pickingService->pick_unit_first(
-        float(sx), float(sy), *m_world, *m_camera, m_viewport.width,
-        m_viewport.height, 0);
-
-    if (target_id != 0) {
-      auto *target_entity = m_world->get_entity(target_id);
-      if (target_entity != nullptr) {
-        auto *target_unit =
-            target_entity->get_component<Engine::Core::UnitComponent>();
-        if ((target_unit != nullptr) &&
-            target_unit->owner_id != m_runtime.local_owner_id) {
-          App::Controllers::ActionVFX::spawnAttackArrow(m_world.get(),
-                                                        target_id);
-        }
-      }
-    }
-  }
-
-  if (result.resetCursorToNormal) {
-    set_cursor_mode(CursorMode::Normal);
+  if (m_input_handler) {
+    m_input_handler->on_attack_click(sx, sy, m_viewport);
   }
 }
 
 void GameEngine::reset_movement(Engine::Core::Entity *entity) {
-  App::Utils::reset_movement(entity);
+  InputCommandHandler::reset_movement(entity);
 }
 
 void GameEngine::on_stop_command() {
-  if (!m_commandController) {
+  if (!m_input_handler) {
     return;
   }
   ensure_initialized();
-
-  auto result = m_commandController->onStopCommand();
-  if (result.resetCursorToNormal) {
-    set_cursor_mode(CursorMode::Normal);
-  }
+  m_input_handler->on_stop_command();
 }
 
 void GameEngine::on_hold_command() {
-  if (!m_commandController) {
+  if (!m_input_handler) {
     return;
   }
   ensure_initialized();
-
-  auto result = m_commandController->onHoldCommand();
-  if (result.resetCursorToNormal) {
-    set_cursor_mode(CursorMode::Normal);
-  }
+  m_input_handler->on_hold_command();
 }
 
 auto GameEngine::any_selected_in_hold_mode() const -> bool {
-  if (!m_commandController) {
+  if (!m_input_handler) {
     return false;
   }
-  return m_commandController->anySelectedInHoldMode();
+  return m_input_handler->any_selected_in_hold_mode();
 }
 
 void GameEngine::on_patrol_click(qreal sx, qreal sy) {
-  if (!m_commandController || !m_camera) {
+  if (!m_input_handler || !m_camera) {
     return;
   }
   ensure_initialized();
-
-  auto result = m_commandController->onPatrolClick(
-      sx, sy, m_viewport.width, m_viewport.height, m_camera.get());
-  if (result.resetCursorToNormal) {
-    set_cursor_mode(CursorMode::Normal);
-  }
+  m_input_handler->on_patrol_click(sx, sy, m_viewport);
 }
 
 void GameEngine::update_cursor(Qt::CursorShape newCursor) {
@@ -570,14 +479,9 @@ void GameEngine::set_hover_at_screen(qreal sx, qreal sy) {
     return;
   }
   ensure_initialized();
-  if (!m_hoverTracker || !m_camera || !m_world) {
-    return;
+  if (m_input_handler) {
+    m_input_handler->set_hover_at_screen(sx, sy, m_viewport);
   }
-
-  m_cursorManager->updateCursorShape(m_window);
-
-  m_hoverTracker->update_hover(float(sx), float(sy), *m_world, *m_camera,
-                               m_viewport.width, m_viewport.height);
 }
 
 void GameEngine::on_click_select(qreal sx, qreal sy, bool additive) {
@@ -585,10 +489,9 @@ void GameEngine::on_click_select(qreal sx, qreal sy, bool additive) {
     return;
   }
   ensure_initialized();
-  if (m_selectionController && m_camera) {
-    m_selectionController->on_click_select(sx, sy, additive, m_viewport.width,
-                                           m_viewport.height, m_camera.get(),
-                                           m_runtime.local_owner_id);
+  if (m_input_handler) {
+    m_input_handler->on_click_select(sx, sy, additive,
+                                     m_runtime.local_owner_id, m_viewport);
   }
 }
 
@@ -598,27 +501,24 @@ void GameEngine::on_area_selected(qreal x1, qreal y1, qreal x2, qreal y2,
     return;
   }
   ensure_initialized();
-  if (m_selectionController && m_camera) {
-    m_selectionController->on_area_selected(
-        x1, y1, x2, y2, additive, m_viewport.width, m_viewport.height,
-        m_camera.get(), m_runtime.local_owner_id);
+  if (m_input_handler) {
+    m_input_handler->on_area_selected(x1, y1, x2, y2, additive,
+                                      m_runtime.local_owner_id, m_viewport);
   }
 }
 
 void GameEngine::select_all_troops() {
   ensure_initialized();
-  if (m_selectionController) {
-    m_selectionController->select_all_player_troops(m_runtime.local_owner_id);
+  if (m_input_handler) {
+    m_input_handler->select_all_troops(m_runtime.local_owner_id);
   }
 }
 
 void GameEngine::select_unit_by_id(int unitId) {
   ensure_initialized();
-  if (!m_selectionController || (unitId <= 0)) {
-    return;
+  if (m_input_handler) {
+    m_input_handler->select_unit_by_id(unitId, m_runtime.local_owner_id);
   }
-  m_selectionController->select_single_unit(
-      static_cast<Engine::Core::EntityID>(unitId), m_runtime.local_owner_id);
 }
 
 void GameEngine::ensure_initialized() {
@@ -723,9 +623,8 @@ void GameEngine::update(float dt) {
     m_victoryService->update(*m_world, dt);
   }
 
-  if (m_followSelectionEnabled && m_camera && m_world && m_cameraService) {
-    m_cameraService->update_follow(*m_camera, *m_world,
-                                   m_followSelectionEnabled);
+  if (m_camera_controller) {
+    m_camera_controller->update_follow(m_followSelectionEnabled);
   }
 
   if (m_selectedUnitsModel != nullptr) {
@@ -837,97 +736,72 @@ void GameEngine::sync_selection_flags() {
 
 void GameEngine::camera_move(float dx, float dz) {
   ensure_initialized();
-  if (!m_camera || !m_cameraService) {
-    return;
+  if (m_camera_controller) {
+    m_camera_controller->move(dx, dz);
   }
-
-  m_cameraService->move(*m_camera, dx, dz);
 }
 
 void GameEngine::camera_elevate(float dy) {
   ensure_initialized();
-  if (!m_camera || !m_cameraService) {
-    return;
+  if (m_camera_controller) {
+    m_camera_controller->elevate(dy);
   }
-
-  m_cameraService->elevate(*m_camera, dy);
 }
 
 void GameEngine::reset_camera() {
   ensure_initialized();
-  if (!m_camera || !m_world || !m_cameraService) {
-    return;
+  if (m_camera_controller) {
+    m_camera_controller->reset(m_runtime.local_owner_id, m_level);
   }
-
-  m_cameraService->resetCamera(*m_camera, *m_world, m_runtime.local_owner_id,
-                               m_level.player_unit_id);
 }
 
 void GameEngine::camera_zoom(float delta) {
   ensure_initialized();
-  if (!m_camera || !m_cameraService) {
-    return;
+  if (m_camera_controller) {
+    m_camera_controller->zoom(delta);
   }
-
-  m_cameraService->zoom(*m_camera, delta);
 }
 
 auto GameEngine::camera_distance() const -> float {
-  if (!m_camera || !m_cameraService) {
-    return 0.0F;
+  if (m_camera_controller) {
+    return m_camera_controller->distance();
   }
-  return m_cameraService->get_distance(*m_camera);
+  return 0.0F;
 }
 
 void GameEngine::camera_yaw(float degrees) {
   ensure_initialized();
-  if (!m_camera || !m_cameraService) {
-    return;
+  if (m_camera_controller) {
+    m_camera_controller->yaw(degrees);
   }
-
-  m_cameraService->yaw(*m_camera, degrees);
 }
 
 void GameEngine::camera_orbit(float yaw_deg, float pitch_deg) {
   ensure_initialized();
-  if (!m_camera || !m_cameraService) {
-    return;
+  if (m_camera_controller) {
+    m_camera_controller->orbit(yaw_deg, pitch_deg);
   }
-
-  if (!std::isfinite(yaw_deg) || !std::isfinite(pitch_deg)) {
-    qWarning() << "GameEngine::camera_orbit received invalid input, ignoring:"
-               << yaw_deg << pitch_deg;
-    return;
-  }
-
-  m_cameraService->orbit(*m_camera, yaw_deg, pitch_deg);
 }
 
 void GameEngine::camera_orbit_direction(int direction, bool shift) {
-  if (!m_camera || !m_cameraService) {
-    return;
+  if (m_camera_controller) {
+    m_camera_controller->orbit_direction(direction, shift);
   }
-
-  m_cameraService->orbit_direction(*m_camera, direction, shift);
 }
 
 void GameEngine::camera_follow_selection(bool enable) {
   ensure_initialized();
   m_followSelectionEnabled = enable;
-  if (!m_camera || !m_world || !m_cameraService) {
-    return;
+  if (m_camera_controller) {
+    m_camera_controller->follow_selection(enable);
   }
-
-  m_cameraService->follow_selection(*m_camera, *m_world, enable);
 }
 
 void GameEngine::camera_set_follow_lerp(float alpha) {
   ensure_initialized();
-  if (!m_camera || !m_cameraService) {
-    return;
+  if (m_camera_controller) {
+    m_camera_controller->set_follow_lerp(alpha);
   }
-
-  m_cameraService->set_follow_lerp(*m_camera, alpha);
 }
 
 auto GameEngine::selected_units_model() -> QAbstractItemModel * {
