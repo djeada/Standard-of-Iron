@@ -17,6 +17,7 @@
 #include "game/audio/AudioSystem.h"
 #include "game/units/spawn_type.h"
 #include "game/units/troop_type.h"
+#include "game_state_restorer.h"
 #include "input_command_handler.h"
 #include "level_orchestrator.h"
 #include "minimap_manager.h"
@@ -1182,7 +1183,8 @@ void GameEngine::start_skirmish(const QString &map_path,
 
     m_runtime.loading = false;
 
-    rebuild_entity_cache();
+    GameStateRestorer::rebuild_entity_cache(m_world.get(), m_entity_cache,
+                                            m_runtime.local_owner_id);
 
     m_ambient_state_manager = std::make_unique<AmbientStateManager>();
 
@@ -1240,15 +1242,25 @@ auto GameEngine::load_from_slot(const QString &slot) -> bool {
                                                                  runtime_snap);
   apply_runtime_snapshot(runtime_snap);
 
-  restore_environment_from_metadata(meta);
+  GameStateRestorer::RendererRefs renderers{
+      m_renderer.get(), m_camera.get(),     m_ground.get(),
+      m_terrain.get(),  m_biome.get(),      m_river.get(),
+      m_road.get(),     m_riverbank.get(),  m_bridge.get(),
+      m_fog.get(),      m_stone.get(),      m_plant.get(),
+      m_pine.get(),     m_olive.get(),      m_firecamp.get()};
+  GameStateRestorer::restore_environment_from_metadata(
+      meta, m_world.get(), renderers, m_level, m_runtime.local_owner_id,
+      m_viewport);
 
   auto unit_reg = std::make_shared<Game::Units::UnitFactoryRegistry>();
   Game::Units::registerBuiltInUnits(*unit_reg);
   Game::Map::MapTransformer::setFactoryRegistry(unit_reg);
   qInfo() << "Factory registry reinitialized after loading saved game";
 
-  rebuild_registries_after_load();
-  rebuild_entity_cache();
+  GameStateRestorer::rebuild_registries_after_load(
+      m_world.get(), m_selected_player_id, m_level, m_runtime.local_owner_id);
+  GameStateRestorer::rebuild_entity_cache(m_world.get(), m_entity_cache,
+                                          m_runtime.local_owner_id);
 
   if (auto *ai_system = m_world->get_system<Game::Systems::AISystem>()) {
     qInfo() << "Reinitializing AI system after loading saved game";
@@ -1443,352 +1455,6 @@ void GameEngine::on_unit_died(const Engine::Core::UnitDiedEvent &event) {
     }
   }
 
-  sync_selection_flags();
-
-  auto emit_if_changed = [&] {
-    if (m_entity_cache.player_troop_count != m_runtime.last_troop_count) {
-      m_runtime.last_troop_count = m_entity_cache.player_troop_count;
-      emit troop_count_changed();
-    }
-  };
-  emit_if_changed();
-}
-
-void GameEngine::rebuild_entity_cache() {
-  if (!m_world) {
-    m_entity_cache.reset();
-    return;
-  }
-
-  m_entity_cache.reset();
-
-  auto &owners = Game::Systems::OwnerRegistry::instance();
-  auto entities = m_world->get_entities_with<Engine::Core::UnitComponent>();
-  for (auto *e : entities) {
-    auto *unit = e->get_component<Engine::Core::UnitComponent>();
-    if ((unit == nullptr) || unit->health <= 0) {
-      continue;
-    }
-
-    if (unit->owner_id == m_runtime.local_owner_id) {
-      if (unit->spawn_type == Game::Units::SpawnType::Barracks) {
-        m_entity_cache.player_barracks_alive = true;
-      } else {
-        int const production_cost =
-            Game::Units::TroopConfig::instance().getProductionCost(
-                unit->spawn_type);
-        m_entity_cache.player_troop_count += production_cost;
-      }
-    } else if (owners.is_ai(unit->owner_id)) {
-      if (unit->spawn_type == Game::Units::SpawnType::Barracks) {
-        m_entity_cache.enemy_barracks_count++;
-        m_entity_cache.enemy_barracks_alive = true;
-      }
-    }
-  }
-
-  auto emit_if_changed = [&] {
-    if (m_entity_cache.player_troop_count != m_runtime.last_troop_count) {
-      m_runtime.last_troop_count = m_entity_cache.player_troop_count;
-      emit troop_count_changed();
-    }
-  };
-  emit_if_changed();
-}
-
-void GameEngine::rebuild_registries_after_load() {
-  if (!m_world) {
-    return;
-  }
-
-  auto &owner_registry = Game::Systems::OwnerRegistry::instance();
-  m_runtime.local_owner_id = owner_registry.get_local_player_id();
-
-  auto &troops = Game::Systems::TroopCountRegistry::instance();
-  troops.rebuild_from_world(*m_world);
-
-  auto &stats_registry = Game::Systems::GlobalStatsRegistry::instance();
-  stats_registry.rebuild_from_world(*m_world);
-
-  const auto &all_owners = owner_registry.get_all_owners();
-  for (const auto &owner : all_owners) {
-    if (owner.type == Game::Systems::OwnerType::Player ||
-        owner.type == Game::Systems::OwnerType::AI) {
-      stats_registry.mark_game_start(owner.owner_id);
-    }
-  }
-
-  rebuild_building_collisions();
-
-  m_level.player_unit_id = 0;
-  auto units = m_world->get_entities_with<Engine::Core::UnitComponent>();
-  for (auto *entity : units) {
-    auto *unit = entity->get_component<Engine::Core::UnitComponent>();
-    if (unit == nullptr) {
-      continue;
-    }
-    if (unit->owner_id == m_runtime.local_owner_id) {
-      m_level.player_unit_id = entity->get_id();
-      break;
-    }
-  }
-
-  if (m_selected_player_id != m_runtime.local_owner_id) {
-    m_selected_player_id = m_runtime.local_owner_id;
-    emit selected_player_id_changed();
-  }
-}
-
-void GameEngine::rebuild_building_collisions() {
-  auto &registry = Game::Systems::BuildingCollisionRegistry::instance();
-  registry.clear();
-  if (!m_world) {
-    return;
-  }
-
-  auto buildings =
-      m_world->get_entities_with<Engine::Core::BuildingComponent>();
-  for (auto *entity : buildings) {
-    auto *transform = entity->get_component<Engine::Core::TransformComponent>();
-    auto *unit = entity->get_component<Engine::Core::UnitComponent>();
-    if ((transform == nullptr) || (unit == nullptr)) {
-      continue;
-    }
-
-    registry.register_building(
-        entity->get_id(), Game::Units::spawn_typeToString(unit->spawn_type),
-        transform->position.x, transform->position.z, unit->owner_id);
-  }
-}
-
-auto GameEngine::to_runtime_snapshot() const -> Game::Systems::RuntimeSnapshot {
-  Game::Systems::RuntimeSnapshot snap;
-  snap.paused = m_runtime.paused;
-  snap.time_scale = m_runtime.time_scale;
-  snap.local_owner_id = m_runtime.local_owner_id;
-  snap.victory_state = m_runtime.victory_state;
-  snap.cursor_mode = CursorModeUtils::toInt(m_runtime.cursor_mode);
-  snap.selected_player_id = m_selected_player_id;
-  snap.follow_selection = m_followSelectionEnabled;
-  return snap;
-}
-
-void GameEngine::apply_runtime_snapshot(
-    const Game::Systems::RuntimeSnapshot &snapshot) {
-  m_runtime.local_owner_id = snapshot.local_owner_id;
-  set_paused(snapshot.paused);
-  set_game_speed(snapshot.time_scale);
-
-  if (snapshot.victory_state != m_runtime.victory_state) {
-    m_runtime.victory_state = snapshot.victory_state;
-    emit victory_state_changed();
-  }
-
-  set_cursor_mode(CursorModeUtils::fromInt(snapshot.cursor_mode));
-
-  if (snapshot.selected_player_id != m_selected_player_id) {
-    m_selected_player_id = snapshot.selected_player_id;
-    emit selected_player_id_changed();
-  }
-
-  if (snapshot.follow_selection != m_followSelectionEnabled) {
-    m_followSelectionEnabled = snapshot.follow_selection;
-    if (m_camera && m_cameraService && m_world) {
-      m_cameraService->follow_selection(*m_camera, *m_world,
-                                        m_followSelectionEnabled);
-    }
-  }
-}
-
-auto GameEngine::capture_screenshot() const -> QByteArray {
-  if (m_window == nullptr) {
-    return {};
-  }
-
-  QImage const image = m_window->grabWindow();
-  if (image.isNull()) {
-    return {};
-  }
-
-  const QSize target_size(320, 180);
-  QImage const scaled =
-      image.scaled(target_size, Qt::KeepAspectRatio, Qt::SmoothTransformation);
-
-  QByteArray buffer;
-  QBuffer q_buffer(&buffer);
-  if (!q_buffer.open(QIODevice::WriteOnly)) {
-    return {};
-  }
-
-  if (!scaled.save(&q_buffer, "PNG")) {
-    return {};
-  }
-
-  return buffer;
-}
-
-void GameEngine::restore_environment_from_metadata(
-    const QJsonObject &metadata) {
-  if (!m_world) {
-    return;
-  }
-
-  const auto fallback_grid_width = metadata.value("grid_width").toInt(50);
-  const auto fallback_grid_height = metadata.value("grid_height").toInt(50);
-  const float fallback_tile_size =
-      static_cast<float>(metadata.value("tile_size").toDouble(1.0));
-
-  auto &terrain_service = Game::Map::TerrainService::instance();
-
-  bool const terrain_already_restored = terrain_service.is_initialized();
-
-  Game::Map::MapDefinition def;
-  QString map_error;
-  bool loaded_definition = false;
-  const QString &map_path = m_level.map_path;
-
-  if (!terrain_already_restored && !map_path.isEmpty()) {
-    loaded_definition =
-        Game::Map::MapLoader::loadFromJsonFile(map_path, def, &map_error);
-    if (!loaded_definition) {
-      qWarning() << "GameEngine: Failed to load map definition from" << map_path
-                 << "during save load:" << map_error;
-    }
-  }
-
-  if (!terrain_already_restored && loaded_definition) {
-    terrain_service.initialize(def);
-
-    if (!def.name.isEmpty()) {
-      m_level.map_name = def.name;
-    }
-
-    m_level.cam_fov = def.camera.fovY;
-    m_level.cam_near = def.camera.near_plane;
-    m_level.cam_far = def.camera.far_plane;
-  }
-
-  if (m_renderer && m_camera) {
-    if (loaded_definition) {
-      Game::Map::Environment::apply(def, *m_renderer, *m_camera);
-
-      if (m_minimap_manager) {
-        m_minimap_manager->generate_for_map(def);
-      }
-    } else {
-      Game::Map::Environment::applyDefault(*m_renderer, *m_camera);
-    }
-  }
-
-  if (terrain_service.is_initialized()) {
-    const auto *height_map = terrain_service.get_height_map();
-    const int grid_width =
-        (height_map != nullptr) ? height_map->getWidth() : fallback_grid_width;
-    const int grid_height = (height_map != nullptr) ? height_map->getHeight()
-                                                    : fallback_grid_height;
-    const float tile_size = (height_map != nullptr) ? height_map->getTileSize()
-                                                    : fallback_tile_size;
-
-    if (m_ground) {
-      m_ground->configure(tile_size, grid_width, grid_height);
-      m_ground->setBiome(terrain_service.biome_settings());
-    }
-
-    if (height_map != nullptr) {
-      if (m_terrain) {
-        m_terrain->configure(*height_map, terrain_service.biome_settings());
-      }
-      if (m_river) {
-        m_river->configure(height_map->getRiverSegments(),
-                           height_map->getTileSize());
-      }
-      if (m_road) {
-        m_road->configure(terrain_service.road_segments(),
-                          height_map->getTileSize());
-      }
-      if (m_riverbank) {
-        m_riverbank->configure(height_map->getRiverSegments(), *height_map);
-      }
-      if (m_bridge) {
-        m_bridge->configure(height_map->getBridges(),
-                            height_map->getTileSize());
-      }
-      if (m_biome) {
-        m_biome->configure(*height_map, terrain_service.biome_settings());
-        m_biome->refreshGrass();
-      }
-      if (m_stone) {
-        m_stone->configure(*height_map, terrain_service.biome_settings());
-      }
-      if (m_plant) {
-        m_plant->configure(*height_map, terrain_service.biome_settings());
-      }
-      if (m_pine) {
-        m_pine->configure(*height_map, terrain_service.biome_settings());
-      }
-      if (m_olive) {
-        m_olive->configure(*height_map, terrain_service.biome_settings());
-      }
-      if (m_firecamp) {
-        m_firecamp->configure(*height_map, terrain_service.biome_settings());
-      }
-    }
-
-    Game::Systems::CommandService::initialize(grid_width, grid_height);
-
-    auto &visibility_service = Game::Map::VisibilityService::instance();
-    visibility_service.initialize(grid_width, grid_height, tile_size);
-    visibility_service.computeImmediate(*m_world, m_runtime.local_owner_id);
-
-    if (m_fog && visibility_service.is_initialized()) {
-      m_fog->update_mask(
-          visibility_service.getWidth(), visibility_service.getHeight(),
-          visibility_service.getTileSize(), visibility_service.snapshotCells());
-    }
-
-    m_runtime.visibility_version = visibility_service.version();
-    m_runtime.visibility_update_accumulator = 0.0F;
-  } else {
-    if (m_renderer && m_camera) {
-      Game::Map::Environment::applyDefault(*m_renderer, *m_camera);
-    }
-
-    Game::Map::MapDefinition fallback_def;
-    fallback_def.grid.width = fallback_grid_width;
-    fallback_def.grid.height = fallback_grid_height;
-    fallback_def.grid.tile_size = fallback_tile_size;
-    fallback_def.max_troops_per_player = m_level.max_troops_per_player;
-    terrain_service.initialize(fallback_def);
-
-    if (m_ground) {
-      m_ground->configure(fallback_tile_size, fallback_grid_width,
-                          fallback_grid_height);
-    }
-
-    Game::Systems::CommandService::initialize(fallback_grid_width,
-                                              fallback_grid_height);
-
-    auto &visibility_service = Game::Map::VisibilityService::instance();
-    visibility_service.initialize(fallback_grid_width, fallback_grid_height,
-                                  fallback_tile_size);
-    visibility_service.computeImmediate(*m_world, m_runtime.local_owner_id);
-
-    if (m_fog && visibility_service.is_initialized()) {
-      m_fog->update_mask(
-          visibility_service.getWidth(), visibility_service.getHeight(),
-          visibility_service.getTileSize(), visibility_service.snapshotCells());
-    }
-    m_runtime.visibility_version = visibility_service.version();
-    m_runtime.visibility_update_accumulator = 0.0F;
-  }
-}
-
-auto GameEngine::has_patrol_preview_waypoint() const -> bool {
-  return m_commandController && m_commandController->hasPatrolFirstWaypoint();
-}
-
-auto GameEngine::get_patrol_preview_waypoint() const -> QVector3D {
-  if (!m_commandController) {
     return {};
   }
   return m_commandController->getPatrolFirstWaypoint();
