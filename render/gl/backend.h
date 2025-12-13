@@ -26,6 +26,7 @@ class WaterPipeline;
 class EffectsPipeline;
 class PrimitiveBatchPipeline;
 class BannerPipeline;
+class HealingBeamPipeline;
 } // namespace Render::GL::BackendPipelines
 
 namespace Render::GL {
@@ -68,6 +69,11 @@ public:
   [[nodiscard]] auto banner_mesh() const -> Mesh *;
 
   [[nodiscard]] auto banner_shader() const -> Shader *;
+
+  [[nodiscard]] auto healing_beam_pipeline()
+      -> BackendPipelines::HealingBeamPipeline * {
+    return m_healingBeamPipeline.get();
+  }
 
   void enable_depth_test(bool enable) {
     if (enable) {
@@ -114,6 +120,7 @@ private:
   std::unique_ptr<BackendPipelines::PrimitiveBatchPipeline>
       m_primitiveBatchPipeline;
   std::unique_ptr<BackendPipelines::BannerPipeline> m_bannerPipeline;
+  std::unique_ptr<BackendPipelines::HealingBeamPipeline> m_healingBeamPipeline;
 
   Shader *m_basicShader = nullptr;
   Shader *m_gridShader = nullptr;

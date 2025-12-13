@@ -2,6 +2,7 @@
 #include "../../game/systems/healing_beam.h"
 #include "../../game/systems/healing_beam_system.h"
 #include "../gl/backend.h"
+#include "../gl/backend/healing_beam_pipeline.h"
 #include "../gl/camera.h"
 #include "../gl/mesh.h"
 #include "../gl/resources.h"
@@ -12,7 +13,6 @@
 #include <QOpenGLContext>
 #include <cmath>
 #include <numbers>
-#include <unordered_map>
 #include <vector>
 
 namespace Render::GL {
@@ -200,35 +200,6 @@ void HealingBeamRenderer::render_beam(const Game::Systems::HealingBeam &beam,
   }
 }
 
-namespace {
-// Store renderer per-context to handle OpenGL context switches
-std::unordered_map<QOpenGLContext *, std::unique_ptr<HealingBeamRenderer>>
-    s_context_renderers;
-
-HealingBeamRenderer *get_healing_beam_renderer_for_context() {
-  auto *ctx = QOpenGLContext::currentContext();
-  if (!ctx) {
-    return nullptr;
-  }
-
-  auto it = s_context_renderers.find(ctx);
-  if (it != s_context_renderers.end()) {
-    return it->second.get();
-  }
-
-  // Create new renderer for this context
-  auto renderer = std::make_unique<HealingBeamRenderer>();
-  auto *ptr = renderer.get();
-  s_context_renderers[ctx] = std::move(renderer);
-
-  // Clean up when context is destroyed
-  QObject::connect(ctx, &QOpenGLContext::aboutToBeDestroyed,
-                   [ctx]() { s_context_renderers.erase(ctx); });
-
-  return ptr;
-}
-} // namespace
-
 void render_healing_beams(Renderer *renderer, ResourceManager *,
                           const Game::Systems::HealingBeamSystem &beam_system) {
   if (renderer == nullptr || beam_system.get_beam_count() == 0) {
@@ -241,16 +212,13 @@ void render_healing_beams(Renderer *renderer, ResourceManager *,
     return;
   }
 
-  auto *beam_renderer = get_healing_beam_renderer_for_context();
-  if (!beam_renderer) {
+  auto *pipeline = backend->healing_beam_pipeline();
+  if (pipeline == nullptr) {
+    qWarning() << "HealingBeamPipeline not available";
     return;
   }
 
-  if (!beam_renderer->initialize(backend)) {
-    return;
-  }
-
-  beam_renderer->render(&beam_system, *camera, renderer->get_animation_time());
+  pipeline->render(&beam_system, *camera, renderer->get_animation_time());
 }
 
 } // namespace Render::GL
