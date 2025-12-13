@@ -17,12 +17,13 @@ add_executable(standard_of_iron_tests
     render/horse_animation_controller_test.cpp
     render/rider_proportions_test.cpp
     render/horse_equipment_renderers_test.cpp
+    test_main.cpp
 )
 
 # Link against GTest, project libraries
 target_link_libraries(standard_of_iron_tests
     PRIVATE
-        GTest::gtest_main
+        GTest::gtest
         GTest::gmock
         Qt${QT_VERSION_MAJOR}::Core
         Qt${QT_VERSION_MAJOR}::Gui

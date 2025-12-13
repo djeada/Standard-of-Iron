@@ -331,6 +331,7 @@ Item {
 
                 spacing: 12
                 Layout.alignment: Qt.AlignVCenter
+                Layout.rightMargin: 260
 
                 Row {
                     id: statsRow
@@ -439,32 +440,66 @@ Item {
                     Layout.preferredWidth: Math.round(topPanel.height * 2.2)
                     Layout.minimumWidth: Math.round(topPanel.height * 1.6)
                     Layout.preferredHeight: topPanel.height - 8
+                }
 
-                    Rectangle {
-                        anchors.fill: parent
-                        color: "#0f1a22"
-                        radius: 8
-                        border.width: 2
-                        border.color: "#3498db"
+            }
 
-                        Rectangle {
-                            anchors.fill: parent
-                            anchors.margins: 3
-                            radius: 6
-                            color: "#0a0f14"
+        }
 
-                            Label {
-                                anchors.centerIn: parent
-                                text: qsTr("MINIMAP")
-                                color: "#3f5362"
-                                font.pixelSize: 12
-                                font.bold: true
-                            }
+    }
 
-                        }
+    Rectangle {
+        id: minimapContainer
 
+        visible: !topRoot.ultraCompact
+        width: 240
+        height: 240
+        anchors.right: parent.right
+        anchors.top: parent.top
+        anchors.rightMargin: 8
+        anchors.topMargin: 8
+        z: 100
+        color: "#0f1a22"
+        radius: 8
+        border.width: 2
+        border.color: "#3498db"
+
+        Rectangle {
+            anchors.fill: parent
+            anchors.margins: 3
+            radius: 6
+            color: "#0a0f14"
+
+            Image {
+                id: minimapImage
+
+                property int imageVersion: 0
+
+                anchors.fill: parent
+                anchors.margins: 2
+                source: imageVersion > 0 ? "image://minimap/v" + imageVersion : ""
+                fillMode: Image.PreserveAspectFit
+                smooth: true
+                cache: false
+                asynchronous: false
+
+                Connections {
+                    function onMinimap_image_changed() {
+                        Qt.callLater(function() {
+                            minimapImage.imageVersion++;
+                        });
                     }
 
+                    target: game
+                }
+
+                Label {
+                    anchors.centerIn: parent
+                    text: qsTr("MINIMAP")
+                    color: "#3f5362"
+                    font.pixelSize: 12
+                    font.bold: true
+                    visible: parent.status !== Image.Ready
                 }
 
             }
