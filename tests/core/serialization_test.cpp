@@ -592,6 +592,15 @@ TEST_F(SerializationTest, CompleteEntityWithAllComponents) {
   auto *capture = entity->add_component<CaptureComponent>();
   capture->is_being_captured = true;
 
+  auto *hold_mode = entity->add_component<HoldModeComponent>();
+  hold_mode->active = true;
+
+  auto *healer = entity->add_component<HealerComponent>();
+  healer->healing_amount = 10;
+
+  auto *catapult = entity->add_component<CatapultLoadingComponent>();
+  catapult->state = CatapultLoadingComponent::LoadingState::Idle;
+
   QJsonObject json = Serialization::serializeEntity(entity);
 
   EXPECT_TRUE(json.contains("transform"));
@@ -604,6 +613,9 @@ TEST_F(SerializationTest, CompleteEntityWithAllComponents) {
   EXPECT_TRUE(json.contains("production"));
   EXPECT_TRUE(json.contains("aiControlled"));
   EXPECT_TRUE(json.contains("capture"));
+  EXPECT_TRUE(json.contains("hold_mode"));
+  EXPECT_TRUE(json.contains("healer"));
+  EXPECT_TRUE(json.contains("catapult_loading"));
 
   auto *new_entity = world->create_entity();
   Serialization::deserializeEntity(new_entity, json);
@@ -618,6 +630,9 @@ TEST_F(SerializationTest, CompleteEntityWithAllComponents) {
   EXPECT_NE(new_entity->get_component<ProductionComponent>(), nullptr);
   EXPECT_NE(new_entity->get_component<AIControlledComponent>(), nullptr);
   EXPECT_NE(new_entity->get_component<CaptureComponent>(), nullptr);
+  EXPECT_NE(new_entity->get_component<HoldModeComponent>(), nullptr);
+  EXPECT_NE(new_entity->get_component<HealerComponent>(), nullptr);
+  EXPECT_NE(new_entity->get_component<CatapultLoadingComponent>(), nullptr);
 }
 
 TEST_F(SerializationTest, EmptyWorldSerialization) {
@@ -629,4 +644,149 @@ TEST_F(SerializationTest, EmptyWorldSerialization) {
   EXPECT_TRUE(world_obj.contains("entities"));
   QJsonArray entities = world_obj["entities"].toArray();
   EXPECT_EQ(entities.size(), 0);
+}
+
+TEST_F(SerializationTest, HoldModeComponentSerialization) {
+  auto *entity = world->create_entity();
+  auto *hold_mode = entity->add_component<HoldModeComponent>();
+
+  hold_mode->active = false;
+  hold_mode->exit_cooldown = 1.5F;
+  hold_mode->stand_up_duration = 3.0F;
+
+  QJsonObject json = Serialization::serializeEntity(entity);
+
+  ASSERT_TRUE(json.contains("hold_mode"));
+  QJsonObject hold_mode_obj = json["hold_mode"].toObject();
+
+  EXPECT_FALSE(hold_mode_obj["active"].toBool());
+  EXPECT_FLOAT_EQ(hold_mode_obj["exit_cooldown"].toDouble(), 1.5);
+  EXPECT_FLOAT_EQ(hold_mode_obj["stand_up_duration"].toDouble(), 3.0);
+}
+
+TEST_F(SerializationTest, HoldModeComponentRoundTrip) {
+  auto *original_entity = world->create_entity();
+  auto *hold_mode = original_entity->add_component<HoldModeComponent>();
+  hold_mode->active = true;
+  hold_mode->exit_cooldown = 2.5F;
+  hold_mode->stand_up_duration = 4.0F;
+
+  QJsonObject json = Serialization::serializeEntity(original_entity);
+
+  auto *new_entity = world->create_entity();
+  Serialization::deserializeEntity(new_entity, json);
+
+  auto *deserialized = new_entity->get_component<HoldModeComponent>();
+  ASSERT_NE(deserialized, nullptr);
+  EXPECT_TRUE(deserialized->active);
+  EXPECT_FLOAT_EQ(deserialized->exit_cooldown, 2.5F);
+  EXPECT_FLOAT_EQ(deserialized->stand_up_duration, 4.0F);
+}
+
+TEST_F(SerializationTest, HealerComponentSerialization) {
+  auto *entity = world->create_entity();
+  auto *healer = entity->add_component<HealerComponent>();
+
+  healer->healing_range = 12.0F;
+  healer->healing_amount = 10;
+  healer->healing_cooldown = 3.0F;
+  healer->time_since_last_heal = 1.0F;
+
+  QJsonObject json = Serialization::serializeEntity(entity);
+
+  ASSERT_TRUE(json.contains("healer"));
+  QJsonObject healer_obj = json["healer"].toObject();
+
+  EXPECT_FLOAT_EQ(healer_obj["healing_range"].toDouble(), 12.0);
+  EXPECT_EQ(healer_obj["healing_amount"].toInt(), 10);
+  EXPECT_FLOAT_EQ(healer_obj["healing_cooldown"].toDouble(), 3.0);
+  EXPECT_FLOAT_EQ(healer_obj["time_since_last_heal"].toDouble(), 1.0);
+}
+
+TEST_F(SerializationTest, HealerComponentRoundTrip) {
+  auto *original_entity = world->create_entity();
+  auto *healer = original_entity->add_component<HealerComponent>();
+  healer->healing_range = 15.0F;
+  healer->healing_amount = 8;
+  healer->healing_cooldown = 4.0F;
+  healer->time_since_last_heal = 2.0F;
+
+  QJsonObject json = Serialization::serializeEntity(original_entity);
+
+  auto *new_entity = world->create_entity();
+  Serialization::deserializeEntity(new_entity, json);
+
+  auto *deserialized = new_entity->get_component<HealerComponent>();
+  ASSERT_NE(deserialized, nullptr);
+  EXPECT_FLOAT_EQ(deserialized->healing_range, 15.0F);
+  EXPECT_EQ(deserialized->healing_amount, 8);
+  EXPECT_FLOAT_EQ(deserialized->healing_cooldown, 4.0F);
+  EXPECT_FLOAT_EQ(deserialized->time_since_last_heal, 2.0F);
+}
+
+TEST_F(SerializationTest, CatapultLoadingComponentSerialization) {
+  auto *entity = world->create_entity();
+  auto *catapult = entity->add_component<CatapultLoadingComponent>();
+
+  catapult->state = CatapultLoadingComponent::LoadingState::Loading;
+  catapult->loading_time = 1.0F;
+  catapult->loading_duration = 3.0F;
+  catapult->firing_time = 0.0F;
+  catapult->firing_duration = 1.0F;
+  catapult->target_id = 42;
+  catapult->target_locked_x = 100.0F;
+  catapult->target_locked_y = 50.0F;
+  catapult->target_locked_z = 200.0F;
+  catapult->target_position_locked = true;
+
+  QJsonObject json = Serialization::serializeEntity(entity);
+
+  ASSERT_TRUE(json.contains("catapult_loading"));
+  QJsonObject catapult_obj = json["catapult_loading"].toObject();
+
+  EXPECT_EQ(catapult_obj["state"].toInt(),
+            static_cast<int>(CatapultLoadingComponent::LoadingState::Loading));
+  EXPECT_FLOAT_EQ(catapult_obj["loading_time"].toDouble(), 1.0);
+  EXPECT_FLOAT_EQ(catapult_obj["loading_duration"].toDouble(), 3.0);
+  EXPECT_FLOAT_EQ(catapult_obj["firing_time"].toDouble(), 0.0);
+  EXPECT_FLOAT_EQ(catapult_obj["firing_duration"].toDouble(), 1.0);
+  EXPECT_EQ(catapult_obj["target_id"].toVariant().toULongLong(), 42ULL);
+  EXPECT_FLOAT_EQ(catapult_obj["target_locked_x"].toDouble(), 100.0);
+  EXPECT_FLOAT_EQ(catapult_obj["target_locked_y"].toDouble(), 50.0);
+  EXPECT_FLOAT_EQ(catapult_obj["target_locked_z"].toDouble(), 200.0);
+  EXPECT_TRUE(catapult_obj["target_position_locked"].toBool());
+}
+
+TEST_F(SerializationTest, CatapultLoadingComponentRoundTrip) {
+  auto *original_entity = world->create_entity();
+  auto *catapult = original_entity->add_component<CatapultLoadingComponent>();
+  catapult->state = CatapultLoadingComponent::LoadingState::ReadyToFire;
+  catapult->loading_time = 2.0F;
+  catapult->loading_duration = 4.0F;
+  catapult->firing_time = 0.25F;
+  catapult->firing_duration = 0.75F;
+  catapult->target_id = 99;
+  catapult->target_locked_x = 150.0F;
+  catapult->target_locked_y = 75.0F;
+  catapult->target_locked_z = 250.0F;
+  catapult->target_position_locked = false;
+
+  QJsonObject json = Serialization::serializeEntity(original_entity);
+
+  auto *new_entity = world->create_entity();
+  Serialization::deserializeEntity(new_entity, json);
+
+  auto *deserialized = new_entity->get_component<CatapultLoadingComponent>();
+  ASSERT_NE(deserialized, nullptr);
+  EXPECT_EQ(deserialized->state,
+            CatapultLoadingComponent::LoadingState::ReadyToFire);
+  EXPECT_FLOAT_EQ(deserialized->loading_time, 2.0F);
+  EXPECT_FLOAT_EQ(deserialized->loading_duration, 4.0F);
+  EXPECT_FLOAT_EQ(deserialized->firing_time, 0.25F);
+  EXPECT_FLOAT_EQ(deserialized->firing_duration, 0.75F);
+  EXPECT_EQ(deserialized->target_id, 99U);
+  EXPECT_FLOAT_EQ(deserialized->target_locked_x, 150.0F);
+  EXPECT_FLOAT_EQ(deserialized->target_locked_y, 75.0F);
+  EXPECT_FLOAT_EQ(deserialized->target_locked_z, 250.0F);
+  EXPECT_FALSE(deserialized->target_position_locked);
 }

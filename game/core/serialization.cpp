@@ -238,6 +238,48 @@ auto Serialization::serializeEntity(const Entity *entity) -> QJsonObject {
     entity_obj["capture"] = capture_obj;
   }
 
+  if (const auto *hold_mode = entity->get_component<HoldModeComponent>()) {
+    QJsonObject hold_mode_obj;
+    hold_mode_obj["active"] = hold_mode->active;
+    hold_mode_obj["exit_cooldown"] =
+        static_cast<double>(hold_mode->exit_cooldown);
+    hold_mode_obj["stand_up_duration"] =
+        static_cast<double>(hold_mode->stand_up_duration);
+    entity_obj["hold_mode"] = hold_mode_obj;
+  }
+
+  if (const auto *healer = entity->get_component<HealerComponent>()) {
+    QJsonObject healer_obj;
+    healer_obj["healing_range"] = static_cast<double>(healer->healing_range);
+    healer_obj["healing_amount"] = healer->healing_amount;
+    healer_obj["healing_cooldown"] =
+        static_cast<double>(healer->healing_cooldown);
+    healer_obj["time_since_last_heal"] =
+        static_cast<double>(healer->time_since_last_heal);
+    entity_obj["healer"] = healer_obj;
+  }
+
+  if (const auto *catapult =
+          entity->get_component<CatapultLoadingComponent>()) {
+    QJsonObject catapult_obj;
+    catapult_obj["state"] = static_cast<int>(catapult->state);
+    catapult_obj["loading_time"] = static_cast<double>(catapult->loading_time);
+    catapult_obj["loading_duration"] =
+        static_cast<double>(catapult->loading_duration);
+    catapult_obj["firing_time"] = static_cast<double>(catapult->firing_time);
+    catapult_obj["firing_duration"] =
+        static_cast<double>(catapult->firing_duration);
+    catapult_obj["target_id"] = static_cast<qint64>(catapult->target_id);
+    catapult_obj["target_locked_x"] =
+        static_cast<double>(catapult->target_locked_x);
+    catapult_obj["target_locked_y"] =
+        static_cast<double>(catapult->target_locked_y);
+    catapult_obj["target_locked_z"] =
+        static_cast<double>(catapult->target_locked_z);
+    catapult_obj["target_position_locked"] = catapult->target_position_locked;
+    entity_obj["catapult_loading"] = catapult_obj;
+  }
+
   return entity_obj;
 }
 
@@ -455,6 +497,55 @@ void Serialization::deserializeEntity(Entity *entity, const QJsonObject &json) {
         static_cast<float>(capture_obj["required_time"].toDouble(
             static_cast<double>(Defaults::kCaptureRequiredTime)));
     capture->is_being_captured = capture_obj["is_being_captured"].toBool(false);
+  }
+
+  if (json.contains("hold_mode")) {
+    const auto hold_mode_obj = json["hold_mode"].toObject();
+    auto *hold_mode = entity->add_component<HoldModeComponent>();
+    hold_mode->active = hold_mode_obj["active"].toBool(true);
+    hold_mode->exit_cooldown =
+        static_cast<float>(hold_mode_obj["exit_cooldown"].toDouble(0.0));
+    hold_mode->stand_up_duration =
+        static_cast<float>(hold_mode_obj["stand_up_duration"].toDouble(
+            static_cast<double>(Defaults::kHoldStandUpDuration)));
+  }
+
+  if (json.contains("healer")) {
+    const auto healer_obj = json["healer"].toObject();
+    auto *healer = entity->add_component<HealerComponent>();
+    healer->healing_range =
+        static_cast<float>(healer_obj["healing_range"].toDouble(8.0));
+    healer->healing_amount = healer_obj["healing_amount"].toInt(5);
+    healer->healing_cooldown =
+        static_cast<float>(healer_obj["healing_cooldown"].toDouble(2.0));
+    healer->time_since_last_heal =
+        static_cast<float>(healer_obj["time_since_last_heal"].toDouble(0.0));
+  }
+
+  if (json.contains("catapult_loading")) {
+    const auto catapult_obj = json["catapult_loading"].toObject();
+    auto *catapult = entity->add_component<CatapultLoadingComponent>();
+    catapult->state = static_cast<CatapultLoadingComponent::LoadingState>(
+        catapult_obj["state"].toInt(
+            static_cast<int>(CatapultLoadingComponent::LoadingState::Idle)));
+    catapult->loading_time =
+        static_cast<float>(catapult_obj["loading_time"].toDouble(0.0));
+    catapult->loading_duration =
+        static_cast<float>(catapult_obj["loading_duration"].toDouble(2.0));
+    catapult->firing_time =
+        static_cast<float>(catapult_obj["firing_time"].toDouble(0.0));
+    catapult->firing_duration =
+        static_cast<float>(catapult_obj["firing_duration"].toDouble(0.5));
+    catapult->target_id = static_cast<EntityID>(
+        catapult_obj["target_id"].toVariant().toULongLong());
+    catapult->target_locked_x =
+        static_cast<float>(catapult_obj["target_locked_x"].toDouble(0.0));
+    catapult->target_locked_y =
+        static_cast<float>(catapult_obj["target_locked_y"].toDouble(0.0));
+    catapult->target_locked_z =
+        static_cast<float>(catapult_obj["target_locked_z"].toDouble(0.0));
+    catapult->target_position_locked =
+        catapult_obj["target_position_locked"].toBool(false);
   }
 }
 
