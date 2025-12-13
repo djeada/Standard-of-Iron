@@ -132,6 +132,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
         app/core/level_orchestrator.cpp
         app/core/input_command_handler.cpp
         app/core/camera_controller.cpp
+        app/core/game_state_restorer.cpp
         app/models/audio_system_proxy.cpp
         app/models/graphics_settings_proxy.cpp
         app/models/cursor_manager.cpp
@@ -156,6 +157,7 @@ else()
         app/core/level_orchestrator.cpp
         app/core/input_command_handler.cpp
         app/core/camera_controller.cpp
+        app/core/game_state_restorer.cpp
         app/models/audio_system_proxy.cpp
         app/models/graphics_settings_proxy.cpp
         app/models/cursor_manager.cpp
