@@ -96,6 +96,8 @@
 #include "render/geom/arrow.h"
 #include "render/geom/patrol_flags.h"
 #include "render/geom/stone.h"
+#include "render/gl/backend.h"
+#include "render/gl/backend/healer_aura_pipeline.h"
 #include "render/gl/bootstrap.h"
 #include "render/gl/camera.h"
 #include "render/ground/biome_renderer.h"
@@ -801,6 +803,15 @@ void GameEngine::render(int pixelWidth, int pixelHeight) {
     if (auto *res = m_renderer->resources()) {
       Render::GL::render_healing_beams(m_renderer.get(), res,
                                        *healing_beam_system);
+    }
+  }
+
+  // Render healer auras
+  if (auto *backend = m_renderer->backend()) {
+    if (auto *aura_pipeline = backend->healer_aura_pipeline()) {
+      aura_pipeline->collect_healers(m_world.get());
+      aura_pipeline->render(*m_renderer->camera(),
+                            m_renderer->get_animation_time());
     }
   }
 

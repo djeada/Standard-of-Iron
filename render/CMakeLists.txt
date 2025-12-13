@@ -18,6 +18,7 @@ add_library(render_gl STATIC
     gl/backend/primitive_batch_pipeline.cpp
     gl/backend/banner_pipeline.cpp
     gl/backend/healing_beam_pipeline.cpp
+    gl/backend/healer_aura_pipeline.cpp
     gl/shader_cache.cpp
     gl/state_scopes.cpp
     draw_queue.cpp

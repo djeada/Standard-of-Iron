@@ -5,7 +5,6 @@ layout(location = 1) in vec3 a_normal;
 layout(location = 2) in vec2 a_texCoord;
 
 uniform mat4 u_mvp;
-uniform mat4 u_model;
 uniform float u_time;
 uniform float u_progress;
 uniform vec3 u_startPos;
@@ -50,7 +49,11 @@ void main() {
   vec3 beamCenter = bezierArc(visibleT, u_startPos, u_endPos, arcHeight);
   vec3 tangent = bezierTangent(visibleT, u_startPos, u_endPos, arcHeight);
 
+  // Create local coordinate frame with safe handling for vertical tangents
   vec3 up = vec3(0.0, 1.0, 0.0);
+  if (abs(dot(tangent, up)) > 0.99) {
+    up = vec3(1.0, 0.0, 0.0);
+  }
   vec3 right = normalize(cross(tangent, up));
   vec3 localUp = normalize(cross(right, tangent));
 

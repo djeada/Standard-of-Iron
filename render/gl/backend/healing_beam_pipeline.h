@@ -51,7 +51,7 @@ public:
 private:
   void render_beam(const Game::Systems::HealingBeam &beam, const Camera &cam,
                    float animation_time);
-  void create_beam_geometry();
+  auto create_beam_geometry() -> bool;
   void shutdown_geometry();
 
   GL::Backend *m_backend = nullptr;
@@ -67,7 +67,6 @@ private:
   // Cached uniform handles
   struct BeamUniforms {
     GL::Shader::UniformHandle mvp{GL::Shader::InvalidUniform};
-    GL::Shader::UniformHandle model{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle time{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle progress{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle startPos{GL::Shader::InvalidUniform};

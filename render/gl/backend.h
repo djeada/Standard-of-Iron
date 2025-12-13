@@ -27,6 +27,7 @@ class EffectsPipeline;
 class PrimitiveBatchPipeline;
 class BannerPipeline;
 class HealingBeamPipeline;
+class HealerAuraPipeline;
 } // namespace Render::GL::BackendPipelines
 
 namespace Render::GL {
@@ -75,6 +76,11 @@ public:
     return m_healingBeamPipeline.get();
   }
 
+  [[nodiscard]] auto healer_aura_pipeline()
+      -> BackendPipelines::HealerAuraPipeline * {
+    return m_healerAuraPipeline.get();
+  }
+
   void enable_depth_test(bool enable) {
     if (enable) {
       glEnable(GL_DEPTH_TEST);
@@ -121,6 +127,7 @@ private:
       m_primitiveBatchPipeline;
   std::unique_ptr<BackendPipelines::BannerPipeline> m_bannerPipeline;
   std::unique_ptr<BackendPipelines::HealingBeamPipeline> m_healingBeamPipeline;
+  std::unique_ptr<BackendPipelines::HealerAuraPipeline> m_healerAuraPipeline;
 
   Shader *m_basicShader = nullptr;
   Shader *m_gridShader = nullptr;

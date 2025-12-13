@@ -7,6 +7,7 @@
 #include "backend/character_pipeline.h"
 #include "backend/cylinder_pipeline.h"
 #include "backend/effects_pipeline.h"
+#include "backend/healer_aura_pipeline.h"
 #include "backend/healing_beam_pipeline.h"
 #include "backend/primitive_batch_pipeline.h"
 #include "backend/terrain_pipeline.h"
@@ -157,6 +158,13 @@ void Backend::initialize() {
           this, m_shaderCache.get());
   m_healingBeamPipeline->initialize();
   qInfo() << "Backend: HealingBeamPipeline initialized";
+
+  qInfo() << "Backend: Creating HealerAuraPipeline...";
+  m_healerAuraPipeline =
+      std::make_unique<BackendPipelines::HealerAuraPipeline>(
+          this, m_shaderCache.get());
+  m_healerAuraPipeline->initialize();
+  qInfo() << "Backend: HealerAuraPipeline initialized";
 
   qInfo() << "Backend: Loading basic shaders...";
   m_basicShader = m_shaderCache->get(QStringLiteral("basic"));
