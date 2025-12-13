@@ -92,7 +92,7 @@ inline auto claimUnits(
 
       AIContext::UnitAssignment assignment;
       assignment.ownerPriority = priority;
-      assignment.assignmentTime = currentTime;
+      assignment.assignment_time = currentTime;
       assignment.assignedTask = taskName;
       context.assignedUnits[unit_id] = assignment;
       claimed.push_back(unit_id);
@@ -100,7 +100,7 @@ inline auto claimUnits(
     } else {
 
       const auto &existing = it->second;
-      float const assignmentAge = currentTime - existing.assignmentTime;
+      float const assignmentAge = currentTime - existing.assignment_time;
 
       bool const canSteal = (priority > existing.ownerPriority) &&
                             (assignmentAge > minLockDuration);
@@ -109,7 +109,7 @@ inline auto claimUnits(
 
         AIContext::UnitAssignment assignment;
         assignment.ownerPriority = priority;
-        assignment.assignmentTime = currentTime;
+        assignment.assignment_time = currentTime;
         assignment.assignedTask = taskName;
         context.assignedUnits[unit_id] = assignment;
         claimed.push_back(unit_id);
@@ -131,7 +131,7 @@ inline void cleanupDeadUnits(const AISnapshot &snapshot, AIContext &context) {
 
   std::unordered_set<Engine::Core::EntityID> aliveUnits;
   for (const auto &entity : snapshot.friendlies) {
-    if (!entity.isBuilding) {
+    if (!entity.is_building) {
       aliveUnits.insert(entity.id);
     }
   }

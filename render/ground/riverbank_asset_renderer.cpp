@@ -47,15 +47,15 @@ RiverbankAssetRenderer::~RiverbankAssetRenderer() = default;
 void RiverbankAssetRenderer::configure(
     const std::vector<Game::Map::RiverSegment> &riverSegments,
     const Game::Map::TerrainHeightMap &height_map,
-    const Game::Map::BiomeSettings &biomeSettings) {
+    const Game::Map::BiomeSettings &biome_settings) {
   m_riverSegments = riverSegments;
   m_width = height_map.getWidth();
   m_height = height_map.getHeight();
   m_tile_size = height_map.getTileSize();
   m_heightData = height_map.getHeightData();
   m_terrain_types = height_map.getTerrainTypes();
-  m_biomeSettings = biomeSettings;
-  m_noiseSeed = biomeSettings.seed;
+  m_biome_settings = biome_settings;
+  m_noiseSeed = biome_settings.seed;
 
   m_assetInstances.clear();
   m_assetInstanceBuffer.reset();
@@ -76,7 +76,7 @@ void RiverbankAssetRenderer::submit(Renderer &, ResourceManager *resources) {
   }
 
   auto &visibility = Game::Map::VisibilityService::instance();
-  const bool use_visibility = visibility.isInitialized();
+  const bool use_visibility = visibility.is_initialized();
   const std::uint64_t current_version =
       use_visibility ? visibility.version() : 0;
 
