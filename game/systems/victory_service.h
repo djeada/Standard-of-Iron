@@ -63,9 +63,9 @@ private:
   std::vector<QString> m_keyStructures;
   std::vector<DefeatCondition> m_defeatConditions;
 
-  float m_surviveTimeDuration = 0.0F;
-  float m_elapsedTime = 0.0F;
-  float m_startupDelay = 0.0F;
+  float m_survive_time_duration = 0.0F;
+  float m_elapsed_time = 0.0F;
+  float m_startup_delay = 0.0F;
 
   int m_local_owner_id = 1;
   QString m_victoryState;

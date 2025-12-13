@@ -31,8 +31,8 @@ VictoryService::~VictoryService() = default;
 
 void VictoryService::reset() {
   m_victoryState = "";
-  m_elapsedTime = 0.0F;
-  m_startupDelay = 0.0F;
+  m_elapsed_time = 0.0F;
+  m_startup_delay = 0.0F;
   m_worldPtr = nullptr;
   m_victoryCallback = nullptr;
   m_keyStructures.clear();
@@ -50,7 +50,7 @@ void VictoryService::configure(const Game::Map::VictoryConfig &config,
     m_keyStructures = config.keyStructures;
   } else if (config.victoryType == "survive_time") {
     m_victoryType = VictoryType::SurviveTime;
-    m_surviveTimeDuration = config.surviveTimeDuration;
+    m_survive_time_duration = config.surviveTimeDuration;
   } else {
     m_victoryType = VictoryType::Elimination;
     m_keyStructures = {"barracks"};
@@ -69,7 +69,7 @@ void VictoryService::configure(const Game::Map::VictoryConfig &config,
     m_defeatConditions.push_back(DefeatCondition::NoKeyStructures);
   }
 
-  m_startupDelay = k_startup_delay_seconds;
+  m_startup_delay = k_startup_delay_seconds;
 }
 
 void VictoryService::update(Engine::Core::World &world, float delta_time) {
@@ -79,13 +79,13 @@ void VictoryService::update(Engine::Core::World &world, float delta_time) {
 
   m_worldPtr = &world;
 
-  if (m_startupDelay > 0.0F) {
-    m_startupDelay = std::max(0.0F, m_startupDelay - delta_time);
+  if (m_startup_delay > 0.0F) {
+    m_startup_delay = std::max(0.0F, m_startup_delay - delta_time);
     return;
   }
 
   if (m_victoryType == VictoryType::SurviveTime) {
-    m_elapsedTime += delta_time;
+    m_elapsed_time += delta_time;
   }
 
   checkVictoryConditions(world);
@@ -113,7 +113,7 @@ void VictoryService::on_barrack_captured(
   checkDefeatConditions(*m_worldPtr);
 }
 
-void VictoryService::checkVictoryConditions(Engine::Core::World &world) {
+void VictoryService::check_victory_conditions(Engine::Core::World &world) {
   bool victory = false;
 
   switch (m_victoryType) {
@@ -132,7 +132,7 @@ void VictoryService::checkVictoryConditions(Engine::Core::World &world) {
     m_victoryState = "victory";
     qInfo() << "VICTORY! Conditions met.";
 
-    const auto &all_owners = m_owner_registry.getAllOwners();
+    const auto &all_owners = m_owner_registry.get_all_owners();
     for (const auto &owner : all_owners) {
       if (owner.type == Game::Systems::OwnerType::Player ||
           owner.type == Game::Systems::OwnerType::AI) {
@@ -154,7 +154,7 @@ void VictoryService::checkVictoryConditions(Engine::Core::World &world) {
   }
 }
 
-void VictoryService::checkDefeatConditions(Engine::Core::World &world) {
+void VictoryService::check_defeat_conditions(Engine::Core::World &world) {
   for (const auto &condition : m_defeatConditions) {
     bool defeat = false;
 
@@ -174,7 +174,7 @@ void VictoryService::checkDefeatConditions(Engine::Core::World &world) {
       m_victoryState = "defeat";
       qInfo() << "DEFEAT! Condition met.";
 
-      const auto &all_owners = m_owner_registry.getAllOwners();
+      const auto &all_owners = m_owner_registry.get_all_owners();
       for (const auto &owner : all_owners) {
         if (owner.type == Game::Systems::OwnerType::Player ||
             owner.type == Game::Systems::OwnerType::AI) {
@@ -198,11 +198,11 @@ void VictoryService::checkDefeatConditions(Engine::Core::World &world) {
   }
 }
 
-auto VictoryService::checkElimination(Engine::Core::World &world) -> bool {
+auto VictoryService::check_elimination(Engine::Core::World &world) -> bool {
 
   bool enemy_key_structures_alive = false;
 
-  int const local_team = m_owner_registry.getOwnerTeam(m_local_owner_id);
+  int const local_team = m_owner_registry.get_owner_team(m_local_owner_id);
 
   auto entities = world.get_entities_with<Engine::Core::UnitComponent>();
   for (auto *e : entities) {
@@ -215,7 +215,7 @@ auto VictoryService::checkElimination(Engine::Core::World &world) -> bool {
       continue;
     }
 
-    if (m_owner_registry.areAllies(m_local_owner_id, unit->owner_id)) {
+    if (m_owner_registry.are_allies(m_local_owner_id, unit->owner_id)) {
       continue;
     }
 
@@ -232,10 +232,10 @@ auto VictoryService::checkElimination(Engine::Core::World &world) -> bool {
 }
 
 auto VictoryService::checkSurviveTime() const -> bool {
-  return m_elapsedTime >= m_surviveTimeDuration;
+  return m_elapsed_time >= m_survive_time_duration;
 }
 
-auto VictoryService::checkNoUnits(Engine::Core::World &world) const -> bool {
+auto VictoryService::check_no_units(Engine::Core::World &world) const -> bool {
 
   auto entities = world.get_entities_with<Engine::Core::UnitComponent>();
   for (auto *e : entities) {
@@ -252,7 +252,7 @@ auto VictoryService::checkNoUnits(Engine::Core::World &world) const -> bool {
   return true;
 }
 
-auto VictoryService::checkNoKeyStructures(Engine::Core::World &world) -> bool {
+auto VictoryService::check_no_key_structures(Engine::Core::World &world) -> bool {
 
   auto entities = world.get_entities_with<Engine::Core::UnitComponent>();
   for (auto *e : entities) {

@@ -15,17 +15,17 @@ namespace Game::Systems::AI {
 auto TacticalUtils::assessEngagement(
     const std::vector<const EntitySnapshot *> &friendlies,
     const std::vector<const ContactSnapshot *> &enemies,
-    float minForceRatio) -> TacticalUtils::EngagementAssessment {
+    float min_force_ratio) -> TacticalUtils::EngagementAssessment {
 
   EngagementAssessment result;
 
   if (friendlies.empty() || enemies.empty()) {
-    result.shouldEngage = false;
+    result.should_engage = false;
     return result;
   }
 
-  result.friendlyCount = static_cast<int>(friendlies.size());
-  result.enemyCount = static_cast<int>(enemies.size());
+  result.friendly_count = static_cast<int>(friendlies.size());
+  result.enemy_count = static_cast<int>(enemies.size());
 
   float total_friendly_health = 0.0F;
   float total_enemy_health = 0.0F;
@@ -48,26 +48,26 @@ auto TacticalUtils::assessEngagement(
     }
   }
 
-  result.avgFriendlyHealth =
+  result.avg_friendly_health =
       valid_friendlies > 0 ? (total_friendly_health / valid_friendlies) : 1.0F;
-  result.avgEnemyHealth =
+  result.avg_enemy_health =
       valid_enemies > 0 ? (total_enemy_health / valid_enemies) : 1.0F;
 
   float const friendly_strength =
-      static_cast<float>(result.friendlyCount) * result.avgFriendlyHealth;
+      static_cast<float>(result.friendly_count) * result.avg_friendly_health;
   float const enemy_strength =
-      static_cast<float>(result.enemyCount) * result.avgEnemyHealth;
+      static_cast<float>(result.enemy_count) * result.avg_enemy_health;
 
   if (enemy_strength < 0.01F) {
-    result.forceRatio = 10.0F;
+    result.force_ratio = 10.0F;
   } else {
-    result.forceRatio = friendly_strength / enemy_strength;
+    result.force_ratio = friendly_strength / enemy_strength;
   }
 
-  result.confidenceLevel =
-      std::clamp((result.forceRatio - 0.5F) / 1.5F, 0.0F, 1.0F);
+  result.confidence_level =
+      std::clamp((result.force_ratio - 0.5F) / 1.5F, 0.0F, 1.0F);
 
-  result.shouldEngage = (result.forceRatio >= minForceRatio);
+  result.should_engage = (result.force_ratio >= min_force_ratio);
 
   return result;
 }
@@ -109,7 +109,7 @@ auto TacticalUtils::selectFocusFireTarget(
         Game::Units::spawn_typeToString(enemy->spawn_type), context.nation);
     score += type_priority * 3.0F;
 
-    if (!enemy->isBuilding) {
+    if (!enemy->is_building) {
       score += 5.0F;
     }
 
@@ -124,25 +124,25 @@ auto TacticalUtils::selectFocusFireTarget(
 
     if (context.primaryBarracks != 0) {
       float const dist_to_base =
-          distance(enemy->posX, enemy->posY, enemy->posZ, context.basePosX,
-                   context.basePosY, context.basePosZ);
+          distance(enemy->posX, enemy->posY, enemy->posZ, context.base_pos_x,
+                   context.base_pos_y, context.base_pos_z);
 
       if (dist_to_base < 16.0F) {
         score += (16.0F - dist_to_base) * 0.8F;
       }
     }
 
-    if (context.state == AIState::Attacking && !enemy->isBuilding) {
+    if (context.state == AIState::Attacking && !enemy->is_building) {
       score += 3.0F;
     }
 
     if (score > best_target.score) {
       best_target.target_id = enemy->id;
       best_target.score = score;
-      best_target.distanceToGroup = dist;
-      best_target.isLowHealth =
+      best_target.distance_to_group = dist;
+      best_target.is_low_health =
           (enemy->max_health > 0 && enemy->health < enemy->max_health / 2);
-      best_target.isIsolated = isolated;
+      best_target.is_isolated = isolated;
     }
   }
 
@@ -184,9 +184,9 @@ auto TacticalUtils::calculateForceStrength(
 auto TacticalUtils::isTargetIsolated(
     const ContactSnapshot &target,
     const std::vector<const ContactSnapshot *> &allEnemies,
-    float isolationRadius) -> bool {
+    float isolation_radius) -> bool {
 
-  const float isolation_radius_sq = isolationRadius * isolationRadius;
+  const float isolation_radius_sq = isolation_radius * isolation_radius;
   int nearby_allies = 0;
 
   for (const auto *enemy : allEnemies) {
@@ -226,7 +226,7 @@ auto TacticalUtils::getUnitTypePriority(const std::string &unit_type,
   }
 
   auto spawn_type = Game::Units::spawn_typeFromString(unit_type);
-  if (spawn_type && Game::Units::isBuildingSpawn(*spawn_type)) {
+  if (spawn_type && Game::Units::is_buildingSpawn(*spawn_type)) {
     return 0.5F;
   }
 
