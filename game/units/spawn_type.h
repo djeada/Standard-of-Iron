@@ -137,7 +137,7 @@ inline auto isTroopSpawn(SpawnType type) -> bool {
   return type != SpawnType::Barracks;
 }
 
-inline auto isBuildingSpawn(SpawnType type) -> bool {
+inline auto is_building_spawn(SpawnType type) -> bool {
   return type == SpawnType::Barracks;
 }
 

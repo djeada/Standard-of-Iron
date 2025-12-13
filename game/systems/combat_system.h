@@ -15,7 +15,7 @@ public:
   void update(Engine::Core::World *world, float delta_time) override;
 
 private:
-  static void processAttacks(Engine::Core::World *world, float delta_time);
+  static void process_attacks(Engine::Core::World *world, float delta_time);
   static void updateCombatMode(Engine::Core::Entity *attacker,
                                Engine::Core::World *world,
                                Engine::Core::AttackComponent *attack_comp);
@@ -24,8 +24,8 @@ private:
   static void dealDamage(Engine::Core::World *world,
                          Engine::Core::Entity *target, int damage,
                          Engine::Core::EntityID attackerId = 0);
-  void processAutoEngagement(Engine::Core::World *world, float delta_time);
-  static auto isUnitIdle(Engine::Core::Entity *unit) -> bool;
+  void process_auto_engagement(Engine::Core::World *world, float delta_time);
+  static auto is_unit_idle(Engine::Core::Entity *unit) -> bool;
   static auto findNearestEnemy(Engine::Core::Entity *unit,
                                Engine::Core::World *world,
                                float max_range) -> Engine::Core::Entity *;

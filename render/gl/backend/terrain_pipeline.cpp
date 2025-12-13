@@ -42,7 +42,7 @@ auto TerrainPipeline::initialize() -> bool {
 
   cacheUniforms();
 
-  return isInitialized();
+  return is_initialized();
 }
 
 void TerrainPipeline::shutdown() {
@@ -58,7 +58,7 @@ void TerrainPipeline::cacheUniforms() {
   cacheTerrainUniforms();
 }
 
-auto TerrainPipeline::isInitialized() const -> bool {
+auto TerrainPipeline::is_initialized() const -> bool {
   return m_grassShader != nullptr && m_groundShader != nullptr &&
          m_terrainShader != nullptr && m_grassVao != 0;
 }

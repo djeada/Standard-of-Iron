@@ -153,7 +153,7 @@ void RoadRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   Q_UNUSED(resources);
 
   auto &visibility = Game::Map::VisibilityService::instance();
-  const bool use_visibility = visibility.isInitialized();
+  const bool use_visibility = visibility.is_initialized();
 
   auto *shader = renderer.get_shader("road");
   if (shader == nullptr) {
