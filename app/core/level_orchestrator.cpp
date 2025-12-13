@@ -10,6 +10,7 @@
 #include "game/systems/owner_registry.h"
 #include "game/systems/troop_count_registry.h"
 #include "game/systems/victory_service.h"
+#include "game_engine.h"
 #include "minimap_manager.h"
 #include "render/gl/camera.h"
 #include "render/scene_renderer.h"
@@ -48,7 +49,7 @@ auto LevelOrchestrator::load_skirmish(
   loader.set_on_visibility_mask_ready(visibility_ready);
 
   auto load_result = loader.start(map_path, player_configs, selected_player_id,
-                                   result.updated_player_id);
+                                  result.updated_player_id);
 
   if (!load_result.ok) {
     result.success = false;
@@ -73,10 +74,9 @@ auto LevelOrchestrator::load_skirmish(
 
   if (load_result.has_focus_position && renderers.camera) {
     const auto &cam_config = Game::GameConfig::instance().camera();
-    renderers.camera->set_rts_view(load_result.focusPosition,
-                                   cam_config.default_distance,
-                                   cam_config.default_pitch,
-                                   cam_config.default_yaw);
+    renderers.camera->set_rts_view(
+        load_result.focusPosition, cam_config.default_distance,
+        cam_config.default_pitch, cam_config.default_yaw);
   }
 
   Game::Map::MapDefinition map_def;

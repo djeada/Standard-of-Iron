@@ -7,9 +7,9 @@
 #include <QDebug>
 #include <cmath>
 
-CameraController::CameraController(
-    Render::GL::Camera *camera, Game::Systems::CameraService *camera_service,
-    Engine::Core::World *world)
+CameraController::CameraController(Render::GL::Camera *camera,
+                                   Game::Systems::CameraService *camera_service,
+                                   Engine::Core::World *world)
     : m_camera(camera), m_camera_service(camera_service), m_world(world) {}
 
 void CameraController::move(float dx, float dz) {

@@ -2,14 +2,15 @@
 
 #include "game/core/component.h"
 #include "game/core/world.h"
+#include "game_engine.h"
 #include <QDebug>
 
 AmbientStateManager::AmbientStateManager() = default;
 
 void AmbientStateManager::update(float dt, Engine::Core::World *world,
-                                  int local_owner_id,
-                                  const EntityCache &entity_cache,
-                                  const QString &victory_state) {
+                                 int local_owner_id,
+                                 const EntityCache &entity_cache,
+                                 const QString &victory_state) {
   m_ambient_check_timer += dt;
   const float check_interval = 2.0F;
 
@@ -45,9 +46,8 @@ void AmbientStateManager::update(float dt, Engine::Core::World *world,
   }
 }
 
-auto AmbientStateManager::is_player_in_combat(Engine::Core::World *world,
-                                              int local_owner_id) const
-    -> bool {
+auto AmbientStateManager::is_player_in_combat(
+    Engine::Core::World *world, int local_owner_id) const -> bool {
   if (!world) {
     return false;
   }
