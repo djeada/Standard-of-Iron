@@ -69,6 +69,41 @@ TEST_F(SerializationTest, TransformComponentSerialization) {
   EXPECT_FLOAT_EQ(transform_obj["desired_yaw"].toDouble(), 45.0);
 }
 
+TEST_F(SerializationTest, TransformComponentRoundTrip) {
+  auto *original_entity = world->create_entity();
+  auto *transform = original_entity->add_component<TransformComponent>();
+  transform->position.x = 15.0F;
+  transform->position.y = 25.0F;
+  transform->position.z = 35.0F;
+  transform->rotation.x = 1.0F;
+  transform->rotation.y = 2.0F;
+  transform->rotation.z = 3.0F;
+  transform->scale.x = 1.5F;
+  transform->scale.y = 2.5F;
+  transform->scale.z = 3.5F;
+  transform->has_desired_yaw = true;
+  transform->desired_yaw = 90.0F;
+
+  QJsonObject json = Serialization::serializeEntity(original_entity);
+
+  auto *new_entity = world->create_entity();
+  Serialization::deserializeEntity(new_entity, json);
+
+  auto *deserialized = new_entity->get_component<TransformComponent>();
+  ASSERT_NE(deserialized, nullptr);
+  EXPECT_FLOAT_EQ(deserialized->position.x, 15.0F);
+  EXPECT_FLOAT_EQ(deserialized->position.y, 25.0F);
+  EXPECT_FLOAT_EQ(deserialized->position.z, 35.0F);
+  EXPECT_FLOAT_EQ(deserialized->rotation.x, 1.0F);
+  EXPECT_FLOAT_EQ(deserialized->rotation.y, 2.0F);
+  EXPECT_FLOAT_EQ(deserialized->rotation.z, 3.0F);
+  EXPECT_FLOAT_EQ(deserialized->scale.x, 1.5F);
+  EXPECT_FLOAT_EQ(deserialized->scale.y, 2.5F);
+  EXPECT_FLOAT_EQ(deserialized->scale.z, 3.5F);
+  EXPECT_TRUE(deserialized->has_desired_yaw);
+  EXPECT_FLOAT_EQ(deserialized->desired_yaw, 90.0F);
+}
+
 TEST_F(SerializationTest, UnitComponentSerialization) {
   auto *entity = world->create_entity();
   auto *unit = entity->add_component<UnitComponent>();
@@ -93,6 +128,33 @@ TEST_F(SerializationTest, UnitComponentSerialization) {
   EXPECT_EQ(unit_obj["unit_type"].toString(), QString("archer"));
   EXPECT_EQ(unit_obj["owner_id"].toInt(), 1);
   EXPECT_EQ(unit_obj["nation_id"].toString(), QString("roman_republic"));
+}
+
+TEST_F(SerializationTest, UnitComponentRoundTrip) {
+  auto *original_entity = world->create_entity();
+  auto *unit = original_entity->add_component<UnitComponent>();
+  unit->health = 75;
+  unit->max_health = 150;
+  unit->speed = 7.5F;
+  unit->vision_range = 20.0F;
+  unit->spawn_type = Game::Units::SpawnType::Spearman;
+  unit->owner_id = 2;
+  unit->nation_id = Game::Systems::NationID::Carthage;
+
+  QJsonObject json = Serialization::serializeEntity(original_entity);
+
+  auto *new_entity = world->create_entity();
+  Serialization::deserializeEntity(new_entity, json);
+
+  auto *deserialized = new_entity->get_component<UnitComponent>();
+  ASSERT_NE(deserialized, nullptr);
+  EXPECT_EQ(deserialized->health, 75);
+  EXPECT_EQ(deserialized->max_health, 150);
+  EXPECT_FLOAT_EQ(deserialized->speed, 7.5F);
+  EXPECT_FLOAT_EQ(deserialized->vision_range, 20.0F);
+  EXPECT_EQ(deserialized->spawn_type, Game::Units::SpawnType::Spearman);
+  EXPECT_EQ(deserialized->owner_id, 2);
+  EXPECT_EQ(deserialized->nation_id, Game::Systems::NationID::Carthage);
 }
 
 TEST_F(SerializationTest, MovementComponentSerialization) {
@@ -373,6 +435,129 @@ TEST_F(SerializationTest, PatrolComponentSerialization) {
   QJsonObject wp0 = waypoints[0].toObject();
   EXPECT_FLOAT_EQ(wp0["x"].toDouble(), 10.0);
   EXPECT_FLOAT_EQ(wp0["y"].toDouble(), 20.0);
+}
+
+TEST_F(SerializationTest, PatrolComponentRoundTrip) {
+  auto *original_entity = world->create_entity();
+  auto *patrol = original_entity->add_component<PatrolComponent>();
+  patrol->current_waypoint = 2;
+  patrol->patrolling = true;
+  patrol->waypoints.emplace_back(15.0F, 25.0F);
+  patrol->waypoints.emplace_back(35.0F, 45.0F);
+
+  QJsonObject json = Serialization::serializeEntity(original_entity);
+
+  auto *new_entity = world->create_entity();
+  Serialization::deserializeEntity(new_entity, json);
+
+  auto *deserialized = new_entity->get_component<PatrolComponent>();
+  ASSERT_NE(deserialized, nullptr);
+  EXPECT_EQ(deserialized->current_waypoint, 2UL);
+  EXPECT_TRUE(deserialized->patrolling);
+  EXPECT_EQ(deserialized->waypoints.size(), 2UL);
+  EXPECT_FLOAT_EQ(deserialized->waypoints[0].first, 15.0F);
+  EXPECT_FLOAT_EQ(deserialized->waypoints[0].second, 25.0F);
+}
+
+TEST_F(SerializationTest, MovementComponentRoundTrip) {
+  auto *original_entity = world->create_entity();
+  auto *movement = original_entity->add_component<MovementComponent>();
+  movement->has_target = true;
+  movement->target_x = 100.0F;
+  movement->target_y = 200.0F;
+  movement->goal_x = 150.0F;
+  movement->goal_y = 250.0F;
+  movement->vx = 1.5F;
+  movement->vz = 2.5F;
+  movement->path.emplace_back(10.0F, 20.0F);
+  movement->path.emplace_back(30.0F, 40.0F);
+
+  QJsonObject json = Serialization::serializeEntity(original_entity);
+
+  auto *new_entity = world->create_entity();
+  Serialization::deserializeEntity(new_entity, json);
+
+  auto *deserialized = new_entity->get_component<MovementComponent>();
+  ASSERT_NE(deserialized, nullptr);
+  EXPECT_TRUE(deserialized->has_target);
+  EXPECT_FLOAT_EQ(deserialized->target_x, 100.0F);
+  EXPECT_FLOAT_EQ(deserialized->target_y, 200.0F);
+  EXPECT_FLOAT_EQ(deserialized->goal_x, 150.0F);
+  EXPECT_FLOAT_EQ(deserialized->goal_y, 250.0F);
+  EXPECT_FLOAT_EQ(deserialized->vx, 1.5F);
+  EXPECT_FLOAT_EQ(deserialized->vz, 2.5F);
+  EXPECT_EQ(deserialized->path.size(), 2UL);
+}
+
+TEST_F(SerializationTest, AttackComponentRoundTrip) {
+  auto *original_entity = world->create_entity();
+  auto *attack = original_entity->add_component<AttackComponent>();
+  attack->range = 15.0F;
+  attack->damage = 30;
+  attack->cooldown = 2.5F;
+  attack->melee_range = 3.0F;
+  attack->melee_damage = 20;
+  attack->preferred_mode = AttackComponent::CombatMode::Ranged;
+  attack->current_mode = AttackComponent::CombatMode::Melee;
+  attack->can_melee = true;
+  attack->can_ranged = true;
+  attack->in_melee_lock = true;
+  attack->melee_lock_target_id = 42;
+
+  QJsonObject json = Serialization::serializeEntity(original_entity);
+
+  auto *new_entity = world->create_entity();
+  Serialization::deserializeEntity(new_entity, json);
+
+  auto *deserialized = new_entity->get_component<AttackComponent>();
+  ASSERT_NE(deserialized, nullptr);
+  EXPECT_FLOAT_EQ(deserialized->range, 15.0F);
+  EXPECT_EQ(deserialized->damage, 30);
+  EXPECT_FLOAT_EQ(deserialized->cooldown, 2.5F);
+  EXPECT_FLOAT_EQ(deserialized->melee_range, 3.0F);
+  EXPECT_EQ(deserialized->melee_damage, 20);
+  EXPECT_EQ(deserialized->preferred_mode, AttackComponent::CombatMode::Ranged);
+  EXPECT_EQ(deserialized->current_mode, AttackComponent::CombatMode::Melee);
+  EXPECT_TRUE(deserialized->can_melee);
+  EXPECT_TRUE(deserialized->can_ranged);
+  EXPECT_TRUE(deserialized->in_melee_lock);
+  EXPECT_EQ(deserialized->melee_lock_target_id, 42U);
+}
+
+TEST_F(SerializationTest, ProductionComponentRoundTrip) {
+  auto *original_entity = world->create_entity();
+  auto *production = original_entity->add_component<ProductionComponent>();
+  production->in_progress = true;
+  production->build_time = 15.0F;
+  production->time_remaining = 7.5F;
+  production->produced_count = 5;
+  production->max_units = 20;
+  production->product_type = Game::Units::TroopType::Spearman;
+  production->rally_x = 150.0F;
+  production->rally_z = 250.0F;
+  production->rally_set = true;
+  production->villager_cost = 3;
+  production->production_queue.push_back(Game::Units::TroopType::Archer);
+
+  QJsonObject json = Serialization::serializeEntity(original_entity);
+
+  auto *new_entity = world->create_entity();
+  Serialization::deserializeEntity(new_entity, json);
+
+  auto *deserialized = new_entity->get_component<ProductionComponent>();
+  ASSERT_NE(deserialized, nullptr);
+  EXPECT_TRUE(deserialized->in_progress);
+  EXPECT_FLOAT_EQ(deserialized->build_time, 15.0F);
+  EXPECT_FLOAT_EQ(deserialized->time_remaining, 7.5F);
+  EXPECT_EQ(deserialized->produced_count, 5);
+  EXPECT_EQ(deserialized->max_units, 20);
+  EXPECT_EQ(deserialized->product_type, Game::Units::TroopType::Spearman);
+  EXPECT_FLOAT_EQ(deserialized->rally_x, 150.0F);
+  EXPECT_FLOAT_EQ(deserialized->rally_z, 250.0F);
+  EXPECT_TRUE(deserialized->rally_set);
+  EXPECT_EQ(deserialized->villager_cost, 3);
+  EXPECT_EQ(deserialized->production_queue.size(), 1UL);
+  EXPECT_EQ(deserialized->production_queue[0], Game::Units::TroopType::Archer);
 }
 
 TEST_F(SerializationTest, RenderableComponentSerialization) {
