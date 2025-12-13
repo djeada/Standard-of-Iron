@@ -25,15 +25,15 @@ void renderPatrolFlags(Renderer *renderer, ResourceManager *resources,
 
   if (preview_waypoint.has_value()) {
     auto flag = Geom::Flag::create(preview_waypoint->x(), preview_waypoint->z(),
-                                   QVector3D(0.3F, 1.0F, 0.4F),
-                                   QVector3D(0.3F, 0.2F, 0.1F), 0.9F);
+                                   QVector3D(0.4F, 1.0F, 0.5F),
+                                   QVector3D(0.35F, 0.25F, 0.15F), 1.5F);
 
     renderer->mesh(resources->unit(), flag.pole, flag.poleColor,
-                   resources->white(), 0.8F);
+                   resources->white(), 1.0F);
     renderer->mesh(resources->unit(), flag.pennant, flag.pennantColor,
-                   resources->white(), 0.8F);
+                   resources->white(), 1.0F);
     renderer->mesh(resources->unit(), flag.finial, flag.pennantColor,
-                   resources->white(), 0.8F);
+                   resources->white(), 1.0F);
 
     auto const grid_x =
         static_cast<int32_t>(preview_waypoint->x() * k_position_grid_precision);
@@ -75,8 +75,8 @@ void renderPatrolFlags(Renderer *renderer, ResourceManager *resources,
       }
 
       auto flag = Geom::Flag::create(waypoint.first, waypoint.second,
-                                     QVector3D(0.2F, 0.9F, 0.3F),
-                                     QVector3D(0.3F, 0.2F, 0.1F), 0.8F);
+                                     QVector3D(0.3F, 1.0F, 0.4F),
+                                     QVector3D(0.35F, 0.25F, 0.15F), 1.4F);
 
       renderer->mesh(resources->unit(), flag.pole, flag.poleColor,
                      resources->white(), 1.0F);

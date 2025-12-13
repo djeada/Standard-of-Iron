@@ -30,8 +30,8 @@ inline void draw_rally_flag_if_any(const DrawContext &p, ISubmitter &out,
           p.entity->get_component<Engine::Core::ProductionComponent>()) {
     if (prod->rally_set && (p.resources != nullptr)) {
       auto flag = Render::Geom::Flag::create(prod->rally_x, prod->rally_z,
-                                             QVector3D(1.0F, 0.9F, 0.2F),
-                                             colors.woodDark, 1.0F);
+                                             QVector3D(1.0F, 0.95F, 0.3F),
+                                             colors.woodDark, 1.6F);
       Mesh *unit = p.resources->unit();
       out.mesh(unit, flag.pole, flag.poleColor, white, 1.0F);
       out.mesh(unit, flag.pennant, flag.pennantColor, white, 1.0F);
