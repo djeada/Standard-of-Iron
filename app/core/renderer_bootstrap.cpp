@@ -50,12 +50,12 @@ auto RendererBootstrap::initialize_rendering() -> RenderingComponents {
   components.olive = std::make_unique<Render::GL::OliveRenderer>();
   components.firecamp = std::make_unique<Render::GL::FireCampRenderer>();
 
-  components.passes = {components.ground.get(),  components.terrain.get(),
-                       components.river.get(),    components.road.get(),
+  components.passes = {components.ground.get(),    components.terrain.get(),
+                       components.river.get(),     components.road.get(),
                        components.riverbank.get(), components.bridge.get(),
-                       components.biome.get(),    components.stone.get(),
-                       components.plant.get(),    components.pine.get(),
-                       components.olive.get(),    components.firecamp.get(),
+                       components.biome.get(),     components.stone.get(),
+                       components.plant.get(),     components.pine.get(),
+                       components.olive.get(),     components.firecamp.get(),
                        components.fog.get()};
 
   return components;
