@@ -2,6 +2,7 @@
 #include "../core/component.h"
 #include "../core/world.h"
 #include "healing_beam_system.h"
+#include <QDebug>
 #include <cmath>
 #include <qvectornd.h>
 #include <vector>
@@ -89,6 +90,9 @@ void HealingSystem::process_healing(Engine::Core::World *world,
           QVector3D const heal_color(0.4F, 1.0F, 0.5F);
           healing_beam_system->spawn_beam(healer_pos, target_pos, heal_color,
                                           0.7F);
+          qDebug() << "HealingSystem: healer" << healer->get_id()
+                   << "healed target" << target->get_id() << "color"
+                   << heal_color << "cooldown" << healer_comp->healing_cooldown;
         }
 
         healed_any = true;

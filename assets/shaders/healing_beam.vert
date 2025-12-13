@@ -70,7 +70,9 @@ void main() {
   worldPos += localUp * wave;
 
   v_worldPos = worldPos;
-  v_edgeDist = length(vec2(a_position.x, a_position.y));
+
+  v_edgeDist =
+      clamp(length(sectionOffset) / max(u_beamWidth, 0.0001), 0.0, 1.0);
 
   float pulse = 0.7 + 0.3 * sin(u_time * 6.0 + t * 10.0);
   v_glowIntensity = (1.0 - v_edgeDist) * pulse;

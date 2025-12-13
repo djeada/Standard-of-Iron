@@ -7,6 +7,7 @@
 #include "../gl/resources.h"
 #include "../gl/shader.h"
 #include "../scene_renderer.h"
+#include <QDebug>
 #include <QMatrix4x4>
 #include <cmath>
 #include <numbers>
@@ -22,6 +23,11 @@ auto HealingBeamRenderer::initialize(Backend *backend) -> bool {
     return true;
   }
 
+  if (QOpenGLContext::currentContext() == nullptr) {
+    qWarning() << "HealingBeamRenderer initialize: no current GL context";
+    return false;
+  }
+
   initializeOpenGLFunctions();
 
   m_backend = backend;
@@ -31,11 +37,13 @@ auto HealingBeamRenderer::initialize(Backend *backend) -> bool {
 
   m_beam_shader = m_backend->shader(QStringLiteral("healing_beam"));
   if (m_beam_shader == nullptr) {
+    qWarning() << "HealingBeamRenderer failed: shader 'healing_beam' missing";
     return false;
   }
 
   m_u_mvp = m_beam_shader->uniform_handle("u_mvp");
-  m_u_model = m_beam_shader->uniform_handle("u_model");
+
+  m_u_model = m_beam_shader->optional_uniform_handle("u_model");
   m_u_time = m_beam_shader->uniform_handle("u_time");
   m_u_progress = m_beam_shader->uniform_handle("u_progress");
   m_u_start_pos = m_beam_shader->uniform_handle("u_startPos");
@@ -49,6 +57,29 @@ auto HealingBeamRenderer::initialize(Backend *backend) -> bool {
     return false;
   }
 
+  auto required_valid = [this]() {
+    return m_u_mvp != Shader::InvalidUniform &&
+           m_u_time != Shader::InvalidUniform &&
+           m_u_progress != Shader::InvalidUniform &&
+           m_u_start_pos != Shader::InvalidUniform &&
+           m_u_end_pos != Shader::InvalidUniform &&
+           m_u_beam_width != Shader::InvalidUniform &&
+           m_u_heal_color != Shader::InvalidUniform &&
+           m_u_alpha != Shader::InvalidUniform;
+  };
+  if (!required_valid()) {
+    qWarning() << "HealingBeamRenderer failed: missing required uniform handles"
+               << "mvp" << m_u_mvp << "time" << m_u_time << "progress"
+               << m_u_progress << "start" << m_u_start_pos << "end"
+               << m_u_end_pos << "width" << m_u_beam_width << "color"
+               << m_u_heal_color << "alpha" << m_u_alpha;
+    return false;
+  }
+
+  qInfo() << "HealingBeamRenderer initialized. Vertices:"
+          << m_beam_mesh->getVertices().size()
+          << "Indices:" << m_beam_mesh->getIndices().size();
+  qInfo() << "HealingBeamRenderer initialized";
   m_initialized = true;
   return true;
 }
@@ -106,16 +137,25 @@ auto HealingBeamRenderer::create_beam_mesh() -> std::unique_ptr<Mesh> {
 void HealingBeamRenderer::render(
     const Game::Systems::HealingBeamSystem *beam_system, const Camera &cam,
     float animation_time) {
+  if (QOpenGLContext::currentContext() == nullptr) {
+    qWarning() << "HealingBeamRenderer render: no current GL context, skip";
+    return;
+  }
   if (!m_initialized || beam_system == nullptr ||
       beam_system->get_beam_count() == 0) {
     return;
   }
 
+  GLboolean cullEnabled = glIsEnabled(GL_CULL_FACE);
+  GLboolean depthEnabled = glIsEnabled(GL_DEPTH_TEST);
+  glDisable(GL_CULL_FACE);
+  glDisable(GL_DEPTH_TEST);
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE);
   glDepthMask(GL_FALSE);
 
   m_beam_shader->use();
+  qDebug() << "Rendering healing beams count:" << beam_system->get_beam_count();
 
   for (const auto &beam : beam_system->get_beams()) {
     if (beam && beam->is_active()) {
@@ -125,6 +165,12 @@ void HealingBeamRenderer::render(
 
   glDepthMask(GL_TRUE);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  if (depthEnabled == GL_TRUE) {
+    glEnable(GL_DEPTH_TEST);
+  }
+  if (cullEnabled == GL_TRUE) {
+    glEnable(GL_CULL_FACE);
+  }
 }
 
 void HealingBeamRenderer::render_beam(const Game::Systems::HealingBeam &beam,
@@ -145,6 +191,11 @@ void HealingBeamRenderer::render_beam(const Game::Systems::HealingBeam &beam,
   m_beam_shader->set_uniform(m_u_alpha, beam.get_intensity());
 
   m_beam_mesh->draw();
+
+  GLenum err = glGetError();
+  if (err != GL_NO_ERROR) {
+    qWarning() << "HealingBeamRenderer GL error" << err;
+  }
 }
 
 namespace {
