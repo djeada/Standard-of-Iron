@@ -127,7 +127,7 @@ auto MapCatalog::availableMaps() -> QVariantList {
   return list;
 }
 
-void MapCatalog::loadMapsAsync() {
+void MapCatalog::load_maps_async() {
   if (m_loading) {
     return;
   }
@@ -135,15 +135,15 @@ void MapCatalog::loadMapsAsync() {
   m_maps.clear();
   m_pendingFiles.clear();
   m_loading = true;
-  emit loadingChanged(true);
+  emit loading_changed(true);
 
   const QString maps_root =
       Utils::Resources::resolveResourcePath(QStringLiteral(":/assets/maps"));
   QDir const maps_dir(maps_root);
   if (!maps_dir.exists()) {
     m_loading = false;
-    emit loadingChanged(false);
-    emit allMapsLoaded();
+    emit loading_changed(false);
+    emit all_maps_loaded();
     return;
   }
 
@@ -152,19 +152,19 @@ void MapCatalog::loadMapsAsync() {
 
   if (m_pendingFiles.isEmpty()) {
     m_loading = false;
-    emit loadingChanged(false);
-    emit allMapsLoaded();
+    emit loading_changed(false);
+    emit all_maps_loaded();
     return;
   }
 
-  QTimer::singleShot(0, this, &MapCatalog::loadNextMap);
+  QTimer::singleShot(0, this, &MapCatalog::load_next_map);
 }
 
-void MapCatalog::loadNextMap() {
+void MapCatalog::load_next_map() {
   if (m_pendingFiles.isEmpty()) {
     m_loading = false;
-    emit loadingChanged(false);
-    emit allMapsLoaded();
+    emit loading_changed(false);
+    emit all_maps_loaded();
     return;
   }
 
@@ -178,15 +178,15 @@ void MapCatalog::loadNextMap() {
   QVariantMap const entry = loadSingleMap(path);
   if (!entry.isEmpty()) {
     m_maps.append(entry);
-    emit mapLoaded(entry);
+    emit map_loaded(entry);
   }
 
   if (!m_pendingFiles.isEmpty()) {
-    QTimer::singleShot(10, this, &MapCatalog::loadNextMap);
+    QTimer::singleShot(10, this, &MapCatalog::load_next_map);
   } else {
     m_loading = false;
-    emit loadingChanged(false);
-    emit allMapsLoaded();
+    emit loading_changed(false);
+    emit all_maps_loaded();
   }
 }
 

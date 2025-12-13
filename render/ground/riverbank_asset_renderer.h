@@ -19,7 +19,7 @@ public:
 
   void configure(const std::vector<Game::Map::RiverSegment> &riverSegments,
                  const Game::Map::TerrainHeightMap &height_map,
-                 const Game::Map::BiomeSettings &biomeSettings);
+                 const Game::Map::BiomeSettings &biome_settings);
 
   void submit(Renderer &renderer, ResourceManager *resources) override;
 
@@ -35,7 +35,7 @@ private:
 
   std::vector<float> m_heightData;
   std::vector<Game::Map::TerrainType> m_terrain_types;
-  Game::Map::BiomeSettings m_biomeSettings;
+  Game::Map::BiomeSettings m_biome_settings;
   std::uint32_t m_noiseSeed = 0U;
 
   std::vector<RiverbankAssetInstanceGpu> m_assetInstances;

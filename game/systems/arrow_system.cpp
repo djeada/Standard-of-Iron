@@ -19,8 +19,8 @@ void ArrowSystem::spawnArrow(const QVector3D &start, const QVector3D &end,
   a.active = true;
   QVector3D const delta = end - start;
   float const dist = delta.length();
-  a.arc_height = std::clamp(m_config.arcHeightMultiplier * dist,
-                            m_config.arcHeightMin, m_config.arcHeightMax);
+  a.arc_height = std::clamp(m_config.arc_height_multiplier * dist,
+                            m_config.arc_height_min, m_config.arc_height_max);
 
   a.inv_dist = (dist > 0.001F) ? (1.0F / dist) : 1.0F;
   m_arrows.push_back(a);

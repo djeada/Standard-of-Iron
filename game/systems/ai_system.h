@@ -45,16 +45,16 @@ private:
   AI::AICommandApplier m_applier;
   AI::AICommandFilter m_commandFilter;
 
-  float m_totalGameTime = 0.0F;
+  float m_total_game_time = 0.0F;
 
   Engine::Core::ScopedEventSubscription<Engine::Core::BuildingAttackedEvent>
       m_buildingAttackedSubscription;
 
   void initializeAIPlayers();
 
-  void processResults(Engine::Core::World &world);
+  void process_results(Engine::Core::World &world);
 
-  void onBuildingAttacked(const Engine::Core::BuildingAttackedEvent &event);
+  void on_building_attacked(const Engine::Core::BuildingAttackedEvent &event);
 };
 
 } // namespace Game::Systems

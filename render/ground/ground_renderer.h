@@ -38,7 +38,7 @@ public:
   void setColor(const QVector3D &c) { m_color = c; }
 
   void setBiome(const Game::Map::BiomeSettings &settings) {
-    m_biomeSettings = settings;
+    m_biome_settings = settings;
     m_hasBiome = true;
     updateNoiseOffset();
 
@@ -62,7 +62,7 @@ private:
 
   QVector3D m_color{0.15F, 0.18F, 0.15F};
   QMatrix4x4 m_model;
-  Game::Map::BiomeSettings m_biomeSettings;
+  Game::Map::BiomeSettings m_biome_settings;
   bool m_hasBiome = false;
   QVector2D m_noiseOffset{0.0F, 0.0F};
   float m_noiseAngle = 0.0F;

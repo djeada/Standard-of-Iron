@@ -9,11 +9,11 @@
 namespace Game::Systems {
 
 void HealingSystem::update(Engine::Core::World *world, float delta_time) {
-  processHealing(world, delta_time);
+  process_healing(world, delta_time);
 }
 
-void HealingSystem::processHealing(Engine::Core::World *world,
-                                   float delta_time) {
+void HealingSystem::process_healing(Engine::Core::World *world,
+                                    float delta_time) {
   auto healers = world->get_entities_with<Engine::Core::HealerComponent>();
   auto *arrow_system = world->get_system<ArrowSystem>();
 

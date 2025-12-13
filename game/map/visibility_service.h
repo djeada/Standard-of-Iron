@@ -28,7 +28,7 @@ public:
   auto update(Engine::Core::World &world, int player_id) -> bool;
   void computeImmediate(Engine::Core::World &world, int player_id);
 
-  auto isInitialized() const -> bool { return m_initialized; }
+  auto is_initialized() const -> bool { return m_initialized; }
 
   auto getWidth() const -> int { return m_width; }
   auto getHeight() const -> int { return m_height; }
