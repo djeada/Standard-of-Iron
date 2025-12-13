@@ -44,7 +44,7 @@ inline auto valueNoise(float x, float z, uint32_t salt = 0U) -> float {
   return nx0 * (1 - tz) + nx1 * tz;
 }
 
-inline auto sectionFor(Game::Map::TerrainType type) -> int {
+inline auto section_for(Game::Map::TerrainType type) -> int {
   switch (type) {
   case Game::Map::TerrainType::Mountain:
     return 2;
@@ -84,7 +84,7 @@ void BiomeRenderer::configure(const Game::Map::TerrainHeightMap &height_map,
   m_grassParams.light_direction = QVector3D(0.35F, 0.8F, 0.45F);
   m_grassParams.time = 0.0F;
 
-  generateGrassInstances();
+  generate_grass_instances();
 }
 
 void BiomeRenderer::submit(Renderer &renderer, ResourceManager *resources) {
@@ -94,7 +94,7 @@ void BiomeRenderer::submit(Renderer &renderer, ResourceManager *resources) {
       m_grassInstanceBuffer = std::make_unique<Buffer>(Buffer::Type::Vertex);
     }
     if (m_grassInstancesDirty && m_grassInstanceBuffer) {
-      m_grassInstanceBuffer->setData(m_grassInstances, Buffer::Usage::Static);
+      m_grassInstanceBuffer->set_data(m_grassInstances, Buffer::Usage::Static);
       m_grassInstancesDirty = false;
     }
   } else {
@@ -117,9 +117,9 @@ void BiomeRenderer::clear() {
   m_grassInstancesDirty = false;
 }
 
-void BiomeRenderer::refreshGrass() { generateGrassInstances(); }
+void BiomeRenderer::refreshGrass() { generate_grass_instances(); }
 
-void BiomeRenderer::generateGrassInstances() {
+void BiomeRenderer::generate_grass_instances() {
   QElapsedTimer timer;
   timer.start();
 
@@ -297,10 +297,10 @@ void BiomeRenderer::generateGrassInstances() {
 
   auto quad_section = [&](Game::Map::TerrainType a, Game::Map::TerrainType b,
                           Game::Map::TerrainType c, Game::Map::TerrainType d) {
-    int const priority_a = sectionFor(a);
-    int const priority_b = sectionFor(b);
-    int const priority_c = sectionFor(c);
-    int const priority_d = sectionFor(d);
+    int const priority_a = section_for(a);
+    int const priority_b = section_for(b);
+    int const priority_c = section_for(c);
+    int const priority_d = section_for(d);
     int result = priority_a;
     result = std::max(result, priority_b);
     result = std::max(result, priority_c);

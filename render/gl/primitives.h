@@ -10,19 +10,19 @@ inline constexpr int kDefaultLatitudeSegments = 16;
 inline constexpr int kDefaultCapsuleHeightSegments = 1;
 inline constexpr int kDefaultTorsoHeightSegments = 8;
 
-auto getUnitCylinder(int radialSegments = kDefaultRadialSegments) -> Mesh *;
-auto getUnitCube() -> Mesh *;
+auto get_unit_cylinder(int radialSegments = kDefaultRadialSegments) -> Mesh *;
+auto get_unit_cube() -> Mesh *;
 
-auto getUnitSphere(int latSegments = kDefaultLatitudeSegments,
-                   int lonSegments = kDefaultRadialSegments) -> Mesh *;
+auto get_unit_sphere(int latSegments = kDefaultLatitudeSegments,
+                     int lonSegments = kDefaultRadialSegments) -> Mesh *;
 
-auto getUnitCone(int radialSegments = kDefaultRadialSegments) -> Mesh *;
+auto get_unit_cone(int radialSegments = kDefaultRadialSegments) -> Mesh *;
 
-auto getUnitCapsule(int radialSegments = kDefaultRadialSegments,
-                    int heightSegments = kDefaultCapsuleHeightSegments)
+auto get_unit_capsule(int radialSegments = kDefaultRadialSegments,
+                      int heightSegments = kDefaultCapsuleHeightSegments)
     -> Mesh *;
 
-auto getUnitTorso(int radialSegments = kDefaultRadialSegments,
-                  int heightSegments = kDefaultTorsoHeightSegments) -> Mesh *;
+auto get_unit_torso(int radialSegments = kDefaultRadialSegments,
+                    int heightSegments = kDefaultTorsoHeightSegments) -> Mesh *;
 
 } // namespace Render::GL

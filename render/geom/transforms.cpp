@@ -13,8 +13,8 @@ const float k_epsilon_sq = k_epsilon * k_epsilon;
 constexpr float k_flip_rotation_degrees = 180.0F;
 } // namespace
 
-auto cylinderBetween(const QVector3D &a, const QVector3D &b,
-                     float radius) -> QMatrix4x4 {
+auto cylinder_between(const QVector3D &a, const QVector3D &b,
+                      float radius) -> QMatrix4x4 {
 
   const QVector3D diff = b - a;
   const float len_sq = diff.lengthSquared();
@@ -40,23 +40,23 @@ auto cylinderBetween(const QVector3D &a, const QVector3D &b,
   return m;
 }
 
-auto sphereAt(const QVector3D &pos, float radius) -> QMatrix4x4 {
+auto sphere_at(const QVector3D &pos, float radius) -> QMatrix4x4 {
   QMatrix4x4 m;
   m.translate(pos);
   m.scale(radius, radius, radius);
   return m;
 }
 
-auto sphereAt(const QMatrix4x4 &parent, const QVector3D &pos,
-              float radius) -> QMatrix4x4 {
+auto sphere_at(const QMatrix4x4 &parent, const QVector3D &pos,
+               float radius) -> QMatrix4x4 {
   QMatrix4x4 m = parent;
   m.translate(pos);
   m.scale(radius, radius, radius);
   return m;
 }
 
-auto cylinderBetween(const QMatrix4x4 &parent, const QVector3D &a,
-                     const QVector3D &b, float radius) -> QMatrix4x4 {
+auto cylinder_between(const QMatrix4x4 &parent, const QVector3D &a,
+                      const QVector3D &b, float radius) -> QMatrix4x4 {
 
   const QVector3D diff = b - a;
   const float len_sq = diff.lengthSquared();
@@ -77,24 +77,24 @@ auto cylinderBetween(const QMatrix4x4 &parent, const QVector3D &a,
   return m;
 }
 
-auto coneFromTo(const QVector3D &base_center, const QVector3D &apex,
-                float base_radius) -> QMatrix4x4 {
-  return cylinderBetween(base_center, apex, base_radius);
+auto cone_from_to(const QVector3D &base_center, const QVector3D &apex,
+                  float base_radius) -> QMatrix4x4 {
+  return cylinder_between(base_center, apex, base_radius);
 }
 
-auto coneFromTo(const QMatrix4x4 &parent, const QVector3D &base_center,
-                const QVector3D &apex, float base_radius) -> QMatrix4x4 {
-  return cylinderBetween(parent, base_center, apex, base_radius);
+auto cone_from_to(const QMatrix4x4 &parent, const QVector3D &base_center,
+                  const QVector3D &apex, float base_radius) -> QMatrix4x4 {
+  return cylinder_between(parent, base_center, apex, base_radius);
 }
 
-auto capsuleBetween(const QVector3D &a, const QVector3D &b,
-                    float radius) -> QMatrix4x4 {
-  return cylinderBetween(a, b, radius);
+auto capsule_between(const QVector3D &a, const QVector3D &b,
+                     float radius) -> QMatrix4x4 {
+  return cylinder_between(a, b, radius);
 }
 
-auto capsuleBetween(const QMatrix4x4 &parent, const QVector3D &a,
-                    const QVector3D &b, float radius) -> QMatrix4x4 {
-  return cylinderBetween(parent, a, b, radius);
+auto capsule_between(const QMatrix4x4 &parent, const QVector3D &a,
+                     const QVector3D &b, float radius) -> QMatrix4x4 {
+  return cylinder_between(parent, a, b, radius);
 }
 
 } // namespace Render::Geom

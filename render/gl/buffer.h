@@ -17,18 +17,18 @@ public:
   void bind();
   void unbind();
 
-  void setData(const void *data, size_t size, Usage usage = Usage::Static);
+  void set_data(const void *data, size_t size, Usage usage = Usage::Static);
 
   template <typename T>
-  void setData(const std::vector<T> &data, Usage usage = Usage::Static) {
-    setData(data.data(), data.size() * sizeof(T), usage);
+  void set_data(const std::vector<T> &data, Usage usage = Usage::Static) {
+    set_data(data.data(), data.size() * sizeof(T), usage);
   }
 
 private:
   GLuint m_buffer = 0;
   Type m_type;
-  [[nodiscard]] auto getGLType() const -> GLenum;
-  [[nodiscard]] static auto getGLUsage(Usage usage) -> GLenum;
+  [[nodiscard]] auto get_gl_type() const -> GLenum;
+  [[nodiscard]] static auto get_gl_usage(Usage usage) -> GLenum;
 };
 
 class VertexArray : protected QOpenGLFunctions_3_3_Core {
@@ -40,7 +40,7 @@ public:
   void unbind();
 
   void add_vertexBuffer(Buffer &buffer, const std::vector<int> &layout);
-  void setIndexBuffer(Buffer &buffer);
+  void set_index_buffer(Buffer &buffer);
 
 private:
   GLuint m_vao = 0;

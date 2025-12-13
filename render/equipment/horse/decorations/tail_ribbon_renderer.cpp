@@ -31,7 +31,7 @@ void TailRibbonRenderer::render(const DrawContext &ctx,
   QMatrix4x4 bow = ctx.model;
   bow.translate(ribbon_start);
   bow.scale(0.08F, 0.08F, 0.06F);
-  out.mesh(getUnitSphere(), bow, ribbon_color, nullptr, 1.0F, 4);
+  out.mesh(get_unit_sphere(), bow, ribbon_color, nullptr, 1.0F, 4);
 }
 
 } // namespace Render::GL

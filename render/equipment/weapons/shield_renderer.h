@@ -28,7 +28,7 @@ public:
               const HumanoidAnimationContext &anim,
               ISubmitter &submitter) override;
 
-  void setConfig(const ShieldRenderConfig &config) { m_config = config; }
+  void set_config(const ShieldRenderConfig &config) { m_config = config; }
 
 private:
   ShieldRenderConfig m_config;

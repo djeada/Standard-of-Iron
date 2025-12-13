@@ -26,7 +26,7 @@ public:
     const QString resolved_frag =
         Utils::Resources::resolveResourcePath(fragPath);
     auto sh = std::make_unique<Shader>();
-    if (!sh->loadFromFiles(resolved_vert, resolved_frag)) {
+    if (!sh->load_from_files(resolved_vert, resolved_frag)) {
       qWarning() << "ShaderCache: Failed to load shader" << name;
       return nullptr;
     }
@@ -40,7 +40,8 @@ public:
     return (it != m_named.end()) ? it->second.get() : nullptr;
   }
 
-  auto getOrLoad(const QString &vertPath, const QString &fragPath) -> Shader * {
+  auto get_or_load(const QString &vertPath,
+                   const QString &fragPath) -> Shader * {
     const QString resolved_vert =
         Utils::Resources::resolveResourcePath(vertPath);
     const QString resolved_frag =
@@ -51,7 +52,7 @@ public:
       return it->second.get();
     }
     auto sh = std::make_unique<Shader>();
-    if (!sh->loadFromFiles(resolved_vert, resolved_frag)) {
+    if (!sh->load_from_files(resolved_vert, resolved_frag)) {
       qWarning() << "ShaderCache: Failed to load shader from paths:"
                  << resolved_vert << "," << resolved_frag;
       return nullptr;

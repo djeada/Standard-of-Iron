@@ -49,7 +49,8 @@ protected:
 };
 
 TEST_F(PoseControllerCompatibilityTest, ElbowIKMatchesLegacyFunction) {
-  // Test that controller's solveElbowIK produces same result as elbowBendTorso
+  // Test that controller's solveElbowIK produces same result as
+  // elbow_bend_torso
 
   QVector3D const shoulder(0.21F, 1.45F, 0.0F);
   QVector3D const hand(0.35F, 1.15F, 0.75F);
@@ -61,14 +62,14 @@ TEST_F(PoseControllerCompatibilityTest, ElbowIKMatchesLegacyFunction) {
 
   // Legacy approach
   QVector3D const legacy_elbow =
-      elbowBendTorso(shoulder, hand, outward_dir, along_frac, lateral_offset,
-                     y_bias, outward_sign);
+      elbow_bend_torso(shoulder, hand, outward_dir, along_frac, lateral_offset,
+                       y_bias, outward_sign);
 
   // New controller approach
   HumanoidPoseController controller(pose, anim_ctx);
   QVector3D const controller_elbow =
-      controller.solveElbowIK(false, shoulder, hand, outward_dir, along_frac,
-                              lateral_offset, y_bias, outward_sign);
+      controller.solve_elbow_ik(false, shoulder, hand, outward_dir, along_frac,
+                                lateral_offset, y_bias, outward_sign);
 
   // Should be identical
   EXPECT_TRUE(approxEqual(legacy_elbow, controller_elbow, 0.001F))
@@ -92,8 +93,8 @@ TEST_F(PoseControllerCompatibilityTest, PlaceHandAtUsesCorrectElbowIK) {
   right_axis.setY(0.0F);
   right_axis.normalize();
   QVector3D const outward_r = right_axis;
-  legacy_pose.elbow_r = elbowBendTorso(legacy_pose.shoulder_r, target_hand,
-                                       outward_r, 0.48F, 0.12F, 0.02F, 1.0F);
+  legacy_pose.elbow_r = elbow_bend_torso(legacy_pose.shoulder_r, target_hand,
+                                         outward_r, 0.48F, 0.12F, 0.02F, 1.0F);
 
   // New controller approach
   HumanoidPoseController controller(pose, anim_ctx);
@@ -119,14 +120,14 @@ TEST_F(PoseControllerCompatibilityTest, KneeIKHandlesExtremeCases) {
   // Very short distance (hip very close to foot)
   QVector3D const hip1(0.0F, 0.50F, 0.0F);
   QVector3D const foot1(0.05F, 0.45F, 0.05F);
-  QVector3D const knee1 = controller.solveKneeIK(true, hip1, foot1, 1.0F);
+  QVector3D const knee1 = controller.solve_knee_ik(true, hip1, foot1, 1.0F);
   EXPECT_GE(knee1.y(), HumanProportions::GROUND_Y);
   EXPECT_LE(knee1.y(), hip1.y());
 
   // Maximum reach (foot very far from hip)
   QVector3D const hip2(0.0F, 1.00F, 0.0F);
   QVector3D const foot2(0.80F, 0.0F, 0.80F);
-  QVector3D const knee2 = controller.solveKneeIK(false, hip2, foot2, 1.0F);
+  QVector3D const knee2 = controller.solve_knee_ik(false, hip2, foot2, 1.0F);
   EXPECT_GE(knee2.y(), HumanProportions::GROUND_Y);
   EXPECT_LE(knee2.y(), hip2.y());
 }

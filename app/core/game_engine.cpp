@@ -716,10 +716,10 @@ void GameEngine::update(float dt) {
       const auto new_version = visibility_service.version();
       if (new_version != m_runtime.visibilityVersion) {
         if (m_fog) {
-          m_fog->updateMask(visibility_service.getWidth(),
-                            visibility_service.getHeight(),
-                            visibility_service.getTileSize(),
-                            visibility_service.snapshotCells());
+          m_fog->update_mask(visibility_service.getWidth(),
+                             visibility_service.getHeight(),
+                             visibility_service.getTileSize(),
+                             visibility_service.snapshotCells());
         }
         m_runtime.visibilityVersion = new_version;
       }
@@ -784,7 +784,7 @@ void GameEngine::render(int pixelWidth, int pixelHeight) {
   m_renderer->render_world(m_world.get());
   if (auto *arrow_system = m_world->get_system<Game::Systems::ArrowSystem>()) {
     if (auto *res = m_renderer->resources()) {
-      Render::GL::renderArrows(m_renderer.get(), res, *arrow_system);
+      Render::GL::render_arrows(m_renderer.get(), res, *arrow_system);
     }
   }
   if (auto *projectile_system =
@@ -1334,8 +1334,8 @@ void GameEngine::start_skirmish(const QString &map_path,
 
     if (result.has_focus_position && m_camera) {
       const auto &cam_config = Game::GameConfig::instance().camera();
-      m_camera->setRTSView(result.focusPosition, cam_config.default_distance,
-                           cam_config.default_pitch, cam_config.default_yaw);
+      m_camera->set_rts_view(result.focusPosition, cam_config.default_distance,
+                             cam_config.default_pitch, cam_config.default_yaw);
     }
 
     Game::Map::MapDefinition map_def;
@@ -1925,7 +1925,7 @@ void GameEngine::restore_environment_from_metadata(
     visibility_service.computeImmediate(*m_world, m_runtime.local_owner_id);
 
     if (m_fog && visibility_service.is_initialized()) {
-      m_fog->updateMask(
+      m_fog->update_mask(
           visibility_service.getWidth(), visibility_service.getHeight(),
           visibility_service.getTileSize(), visibility_service.snapshotCells());
     }
@@ -1956,8 +1956,9 @@ void GameEngine::restore_environment_from_metadata(
     visibility_service.initialize(fallback_grid_width, fallback_grid_height,
                                   fallback_tile_size);
     visibility_service.computeImmediate(*m_world, m_runtime.local_owner_id);
+
     if (m_fog && visibility_service.is_initialized()) {
-      m_fog->updateMask(
+      m_fog->update_mask(
           visibility_service.getWidth(), visibility_service.getHeight(),
           visibility_service.getTileSize(), visibility_service.snapshotCells());
     }

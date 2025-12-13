@@ -27,7 +27,7 @@ public:
   void clear();
 
 private:
-  void generateGrassInstances();
+  void generate_grass_instances();
 
   int m_width = 0;
   int m_height = 0;
