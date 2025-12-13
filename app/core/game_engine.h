@@ -12,6 +12,7 @@
 #include "game/core/event_manager.h"
 #include "game/systems/game_state_serializer.h"
 #include "minimap_manager.h"
+#include "renderer_bootstrap.h"
 #include <QJsonObject>
 #include <QList>
 #include <QMatrix4x4>
