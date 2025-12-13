@@ -84,6 +84,8 @@ void MinimapManager::update_fog(float dt, int local_owner_id) {
   const int img_width = m_minimap_image.width();
   const int img_height = m_minimap_image.height();
 
+  // Rotation constants for -45 degree isometric projection
+  // k_inv_cos = -cos(45°), k_inv_sin = sin(45°)
   constexpr float k_inv_cos = -0.70710678118F;
   constexpr float k_inv_sin = 0.70710678118F;
 
@@ -180,7 +182,9 @@ void MinimapManager::update_units(
   }
 
   std::vector<Game::Map::Minimap::UnitMarker> markers;
-  markers.reserve(128);
+  // Reserve space for typical unit count to avoid reallocations
+  constexpr size_t EXPECTED_MAX_UNITS = 128;
+  markers.reserve(EXPECTED_MAX_UNITS);
 
   std::unordered_set<Engine::Core::EntityID> selected_ids;
   if (selection_system) {
