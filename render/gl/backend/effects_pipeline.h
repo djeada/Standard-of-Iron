@@ -18,7 +18,7 @@ public:
   auto initialize() -> bool override;
   void shutdown() override;
   void cacheUniforms() override;
-  [[nodiscard]] auto isInitialized() const -> bool override;
+  [[nodiscard]] auto is_initialized() const -> bool override;
 
   struct GridUniforms {
     GL::Shader::UniformHandle mvp{GL::Shader::InvalidUniform};

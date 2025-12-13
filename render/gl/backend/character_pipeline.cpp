@@ -34,7 +34,7 @@ auto CharacterPipeline::initialize() -> bool {
 
   cacheUniforms();
 
-  return isInitialized();
+  return is_initialized();
 }
 
 void CharacterPipeline::shutdown() {
@@ -52,7 +52,7 @@ void CharacterPipeline::cacheUniforms() {
   cacheSpearmanUniforms();
 }
 
-auto CharacterPipeline::isInitialized() const -> bool {
+auto CharacterPipeline::is_initialized() const -> bool {
   return m_basicShader != nullptr && m_archerShader != nullptr &&
          m_swordsmanShader != nullptr && m_spearmanShader != nullptr;
 }

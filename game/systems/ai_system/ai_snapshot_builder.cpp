@@ -42,7 +42,7 @@ auto AISnapshotBuilder::build(const Engine::Core::World &world,
     data.owner_id = unit->owner_id;
     data.health = unit->health;
     data.max_health = unit->max_health;
-    data.isBuilding = entity->has_component<Engine::Core::BuildingComponent>();
+    data.is_building = entity->has_component<Engine::Core::BuildingComponent>();
 
     if (auto *transform =
             entity->get_component<Engine::Core::TransformComponent>()) {
@@ -93,7 +93,7 @@ auto AISnapshotBuilder::build(const Engine::Core::World &world,
 
     ContactSnapshot contact;
     contact.id = entity->get_id();
-    contact.isBuilding =
+    contact.is_building =
         entity->has_component<Engine::Core::BuildingComponent>();
     contact.posX = transform->position.x;
     contact.posY = 0.0F;

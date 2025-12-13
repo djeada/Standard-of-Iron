@@ -125,7 +125,7 @@ GameEngine::GameEngine(QObject *parent)
     : QObject(parent),
       m_selectedUnitsModel(new SelectedUnitsModel(this, this)) {
 
-  Game::Systems::NationRegistry::instance().initializeDefaults();
+  Game::Systems::NationRegistry::instance().initialize_defaults();
   Game::Systems::TroopCountRegistry::instance().initialize();
   Game::Systems::GlobalStatsRegistry::instance().initialize();
 
@@ -195,17 +195,17 @@ GameEngine::GameEngine(QObject *parent)
   m_hoverTracker = std::make_unique<HoverTracker>(m_pickingService.get());
 
   m_mapCatalog = std::make_unique<Game::Map::MapCatalog>(this);
-  connect(m_mapCatalog.get(), &Game::Map::MapCatalog::mapLoaded, this,
+  connect(m_mapCatalog.get(), &Game::Map::MapCatalog::map_loaded, this,
           [this](const QVariantMap &mapData) {
             m_available_maps.append(mapData);
             emit available_maps_changed();
           });
-  connect(m_mapCatalog.get(), &Game::Map::MapCatalog::loadingChanged, this,
+  connect(m_mapCatalog.get(), &Game::Map::MapCatalog::loading_changed, this,
           [this](bool loading) {
             m_maps_loading = loading;
             emit maps_loading_changed();
           });
-  connect(m_mapCatalog.get(), &Game::Map::MapCatalog::allMapsLoaded, this,
+  connect(m_mapCatalog.get(), &Game::Map::MapCatalog::all_maps_loaded, this,
           [this]() { emit available_maps_changed(); });
 
   if (AudioSystem::getInstance().initialize()) {
@@ -432,7 +432,7 @@ void GameEngine::on_right_click(qreal sx, qreal sy) {
                                            hit)) {
       auto targets = Game::Systems::FormationPlanner::spreadFormation(
           int(sel.size()), hit,
-          Game::GameConfig::instance().gameplay().formationSpacingDefault);
+          Game::GameConfig::instance().gameplay().formation_spacing_default);
       Game::Systems::CommandService::MoveOptions opts;
       opts.group_move = sel.size() > 1;
       Game::Systems::CommandService::moveUnits(*m_world, sel, targets, opts);
@@ -703,7 +703,7 @@ void GameEngine::update(float dt) {
     m_world->update(dt);
 
     auto &visibility_service = Game::Map::VisibilityService::instance();
-    if (visibility_service.isInitialized()) {
+    if (visibility_service.is_initialized()) {
 
       m_runtime.visibilityUpdateAccumulator += dt;
       const float visibility_update_interval =
@@ -936,7 +936,7 @@ void GameEngine::camera_set_follow_lerp(float alpha) {
     return;
   }
 
-  m_cameraService->setFollowLerp(*m_camera, alpha);
+  m_cameraService->set_follow_lerp(*m_camera, alpha);
 }
 
 auto GameEngine::selected_units_model() -> QAbstractItemModel * {
@@ -1102,7 +1102,7 @@ void GameEngine::set_rally_at_screen(qreal sx, qreal sy) {
 void GameEngine::start_loading_maps() {
   m_available_maps.clear();
   if (m_mapCatalog) {
-    m_mapCatalog->loadMapsAsync();
+    m_mapCatalog->load_maps_async();
   }
   load_campaigns();
 }
@@ -1114,7 +1114,7 @@ auto GameEngine::available_maps() const -> QVariantList {
 auto GameEngine::available_nations() const -> QVariantList {
   QVariantList nations;
   const auto &registry = Game::Systems::NationRegistry::instance();
-  const auto &all = registry.getAllNations();
+  const auto &all = registry.get_all_nations();
   QList<QVariantMap> ordered;
   ordered.reserve(static_cast<int>(all.size()));
   for (const auto &nation : all) {
@@ -1271,34 +1271,34 @@ void GameEngine::start_skirmish(const QString &map_path,
     m_entityCache.reset();
 
     Game::Map::SkirmishLoader loader(*m_world, *m_renderer, *m_camera);
-    loader.setGroundRenderer(m_ground.get());
-    loader.setTerrainRenderer(m_terrain.get());
-    loader.setBiomeRenderer(m_biome.get());
-    loader.setRiverRenderer(m_river.get());
-    loader.setRoadRenderer(m_road.get());
-    loader.setRiverbankRenderer(m_riverbank.get());
-    loader.setBridgeRenderer(m_bridge.get());
-    loader.setFogRenderer(m_fog.get());
-    loader.setStoneRenderer(m_stone.get());
-    loader.setPlantRenderer(m_plant.get());
-    loader.setPineRenderer(m_pine.get());
-    loader.setOliveRenderer(m_olive.get());
-    loader.setFireCampRenderer(m_firecamp.get());
+    loader.set_ground_renderer(m_ground.get());
+    loader.set_terrain_renderer(m_terrain.get());
+    loader.set_biome_renderer(m_biome.get());
+    loader.set_river_renderer(m_river.get());
+    loader.set_road_renderer(m_road.get());
+    loader.set_riverbank_renderer(m_riverbank.get());
+    loader.set_bridge_renderer(m_bridge.get());
+    loader.set_fog_renderer(m_fog.get());
+    loader.set_stone_renderer(m_stone.get());
+    loader.set_plant_renderer(m_plant.get());
+    loader.set_pine_renderer(m_pine.get());
+    loader.set_olive_renderer(m_olive.get());
+    loader.set_fire_camp_renderer(m_firecamp.get());
 
-    loader.setOnOwnersUpdated([this]() { emit owner_info_changed(); });
+    loader.set_on_owners_updated([this]() { emit owner_info_changed(); });
 
-    loader.setOnVisibilityMaskReady([this]() {
+    loader.set_on_visibility_mask_ready([this]() {
       m_runtime.visibilityVersion =
           Game::Map::VisibilityService::instance().version();
       m_runtime.visibilityUpdateAccumulator = 0.0F;
     });
 
-    int updated_player_id = m_selectedPlayerId;
-    auto result = loader.start(map_path, playerConfigs, m_selectedPlayerId,
+    int updated_player_id = m_selected_player_id;
+    auto result = loader.start(map_path, playerConfigs, m_selected_player_id,
                                updated_player_id);
 
-    if (updated_player_id != m_selectedPlayerId) {
-      m_selectedPlayerId = updated_player_id;
+    if (updated_player_id != m_selected_player_id) {
+      m_selected_player_id = updated_player_id;
       emit selected_player_id_changed();
     }
 
@@ -1314,7 +1314,7 @@ void GameEngine::start_skirmish(const QString &map_path,
     m_level.cam_far = result.cam_far;
     m_level.max_troops_per_player = result.max_troops_per_player;
 
-    Game::GameConfig::instance().setMaxTroopsPerPlayer(
+    Game::GameConfig::instance().set_max_troops_per_player(
         result.max_troops_per_player);
 
     if (m_victoryService) {
@@ -1332,10 +1332,10 @@ void GameEngine::start_skirmish(const QString &map_path,
       });
     }
 
-    if (result.hasFocusPosition && m_camera) {
+    if (result.has_focus_position && m_camera) {
       const auto &cam_config = Game::GameConfig::instance().camera();
-      m_camera->setRTSView(result.focusPosition, cam_config.defaultDistance,
-                           cam_config.defaultPitch, cam_config.defaultYaw);
+      m_camera->setRTSView(result.focusPosition, cam_config.default_distance,
+                           cam_config.default_pitch, cam_config.default_yaw);
     }
 
     Game::Map::MapDefinition map_def;
@@ -1361,7 +1361,7 @@ void GameEngine::start_skirmish(const QString &map_path,
     stats_registry.rebuild_from_world(*m_world);
 
     auto &owner_registry = Game::Systems::OwnerRegistry::instance();
-    const auto &all_owners = owner_registry.getAllOwners();
+    const auto &all_owners = owner_registry.get_all_owners();
     for (const auto &owner : all_owners) {
       if (owner.type == Game::Systems::OwnerType::Player ||
           owner.type == Game::Systems::OwnerType::AI) {
@@ -1409,7 +1409,7 @@ auto GameEngine::load_from_slot(const QString &slot) -> bool {
 
   m_runtime.loading = true;
 
-  if (!m_saveLoadService->loadGameFromSlot(*m_world, slot)) {
+  if (!m_saveLoadService->load_game_from_slot(*m_world, slot)) {
     set_error(m_saveLoadService->getLastError());
     m_runtime.loading = false;
     return false;
@@ -1480,7 +1480,7 @@ auto GameEngine::get_save_slots() const -> QVariantList {
     return {};
   }
 
-  return m_saveLoadService->getSaveSlots();
+  return m_saveLoadService->get_save_slots();
 }
 
 void GameEngine::refresh_save_slots() { emit save_slots_changed(); }
@@ -1513,7 +1513,7 @@ void GameEngine::exit_game() {
 auto GameEngine::get_owner_info() const -> QVariantList {
   QVariantList result;
   const auto &owner_registry = Game::Systems::OwnerRegistry::instance();
-  const auto &owners = owner_registry.getAllOwners();
+  const auto &owners = owner_registry.get_all_owners();
 
   for (const auto &owner : owners) {
     QVariantMap owner_map;
@@ -1590,7 +1590,7 @@ void GameEngine::on_unit_spawned(const Engine::Core::UnitSpawnedEvent &event) {
               event.spawn_type);
       m_entityCache.playerTroopCount += production_cost;
     }
-  } else if (owners.isAI(event.owner_id)) {
+  } else if (owners.is_ai(event.owner_id)) {
     if (event.spawn_type == Game::Units::SpawnType::Barracks) {
       m_entityCache.enemyBarracksCount++;
       m_entityCache.enemyBarracksAlive = true;
@@ -1620,7 +1620,7 @@ void GameEngine::on_unit_died(const Engine::Core::UnitDiedEvent &event) {
       m_entityCache.playerTroopCount =
           std::max(0, m_entityCache.playerTroopCount);
     }
-  } else if (owners.isAI(event.owner_id)) {
+  } else if (owners.is_ai(event.owner_id)) {
     if (event.spawn_type == Game::Units::SpawnType::Barracks) {
       m_entityCache.enemyBarracksCount--;
       m_entityCache.enemyBarracksCount =
@@ -1665,7 +1665,7 @@ void GameEngine::rebuild_entity_cache() {
                 unit->spawn_type);
         m_entityCache.playerTroopCount += production_cost;
       }
-    } else if (owners.isAI(unit->owner_id)) {
+    } else if (owners.is_ai(unit->owner_id)) {
       if (unit->spawn_type == Game::Units::SpawnType::Barracks) {
         m_entityCache.enemyBarracksCount++;
         m_entityCache.enemyBarracksAlive = true;
@@ -1688,7 +1688,7 @@ void GameEngine::rebuild_registries_after_load() {
   }
 
   auto &owner_registry = Game::Systems::OwnerRegistry::instance();
-  m_runtime.local_owner_id = owner_registry.getLocalPlayerId();
+  m_runtime.local_owner_id = owner_registry.get_local_player_id();
 
   auto &troops = Game::Systems::TroopCountRegistry::instance();
   troops.rebuild_from_world(*m_world);
@@ -1696,7 +1696,7 @@ void GameEngine::rebuild_registries_after_load() {
   auto &stats_registry = Game::Systems::GlobalStatsRegistry::instance();
   stats_registry.rebuild_from_world(*m_world);
 
-  const auto &all_owners = owner_registry.getAllOwners();
+  const auto &all_owners = owner_registry.get_all_owners();
   for (const auto &owner : all_owners) {
     if (owner.type == Game::Systems::OwnerType::Player ||
         owner.type == Game::Systems::OwnerType::AI) {
@@ -1719,8 +1719,8 @@ void GameEngine::rebuild_registries_after_load() {
     }
   }
 
-  if (m_selectedPlayerId != m_runtime.local_owner_id) {
-    m_selectedPlayerId = m_runtime.local_owner_id;
+  if (m_selected_player_id != m_runtime.local_owner_id) {
+    m_selected_player_id = m_runtime.local_owner_id;
     emit selected_player_id_changed();
   }
 }
@@ -1741,7 +1741,7 @@ void GameEngine::rebuild_building_collisions() {
       continue;
     }
 
-    registry.registerBuilding(
+    registry.register_building(
         entity->get_id(), Game::Units::spawn_typeToString(unit->spawn_type),
         transform->position.x, transform->position.z, unit->owner_id);
   }
@@ -1754,7 +1754,7 @@ auto GameEngine::to_runtime_snapshot() const -> Game::Systems::RuntimeSnapshot {
   snap.local_owner_id = m_runtime.local_owner_id;
   snap.victory_state = m_runtime.victory_state;
   snap.cursor_mode = CursorModeUtils::toInt(m_runtime.cursor_mode);
-  snap.selected_player_id = m_selectedPlayerId;
+  snap.selected_player_id = m_selected_player_id;
   snap.follow_selection = m_followSelectionEnabled;
   return snap;
 }
@@ -1772,8 +1772,8 @@ void GameEngine::apply_runtime_snapshot(
 
   set_cursor_mode(CursorModeUtils::fromInt(snapshot.cursor_mode));
 
-  if (snapshot.selected_player_id != m_selectedPlayerId) {
-    m_selectedPlayerId = snapshot.selected_player_id;
+  if (snapshot.selected_player_id != m_selected_player_id) {
+    m_selected_player_id = snapshot.selected_player_id;
     emit selected_player_id_changed();
   }
 
@@ -1826,7 +1826,7 @@ void GameEngine::restore_environment_from_metadata(
 
   auto &terrain_service = Game::Map::TerrainService::instance();
 
-  bool const terrain_already_restored = terrain_service.isInitialized();
+  bool const terrain_already_restored = terrain_service.is_initialized();
 
   Game::Map::MapDefinition def;
   QString map_error;
@@ -1864,8 +1864,8 @@ void GameEngine::restore_environment_from_metadata(
     }
   }
 
-  if (terrain_service.isInitialized()) {
-    const auto *height_map = terrain_service.getHeightMap();
+  if (terrain_service.is_initialized()) {
+    const auto *height_map = terrain_service.get_height_map();
     const int grid_width =
         (height_map != nullptr) ? height_map->getWidth() : fallback_grid_width;
     const int grid_height = (height_map != nullptr) ? height_map->getHeight()
@@ -1875,12 +1875,12 @@ void GameEngine::restore_environment_from_metadata(
 
     if (m_ground) {
       m_ground->configure(tile_size, grid_width, grid_height);
-      m_ground->setBiome(terrain_service.biomeSettings());
+      m_ground->setBiome(terrain_service.biome_settings());
     }
 
     if (height_map != nullptr) {
       if (m_terrain) {
-        m_terrain->configure(*height_map, terrain_service.biomeSettings());
+        m_terrain->configure(*height_map, terrain_service.biome_settings());
       }
       if (m_river) {
         m_river->configure(height_map->getRiverSegments(),
@@ -1898,23 +1898,23 @@ void GameEngine::restore_environment_from_metadata(
                             height_map->getTileSize());
       }
       if (m_biome) {
-        m_biome->configure(*height_map, terrain_service.biomeSettings());
+        m_biome->configure(*height_map, terrain_service.biome_settings());
         m_biome->refreshGrass();
       }
       if (m_stone) {
-        m_stone->configure(*height_map, terrain_service.biomeSettings());
+        m_stone->configure(*height_map, terrain_service.biome_settings());
       }
       if (m_plant) {
-        m_plant->configure(*height_map, terrain_service.biomeSettings());
+        m_plant->configure(*height_map, terrain_service.biome_settings());
       }
       if (m_pine) {
-        m_pine->configure(*height_map, terrain_service.biomeSettings());
+        m_pine->configure(*height_map, terrain_service.biome_settings());
       }
       if (m_olive) {
-        m_olive->configure(*height_map, terrain_service.biomeSettings());
+        m_olive->configure(*height_map, terrain_service.biome_settings());
       }
       if (m_firecamp) {
-        m_firecamp->configure(*height_map, terrain_service.biomeSettings());
+        m_firecamp->configure(*height_map, terrain_service.biome_settings());
       }
     }
 
@@ -1924,7 +1924,7 @@ void GameEngine::restore_environment_from_metadata(
     visibility_service.initialize(grid_width, grid_height, tile_size);
     visibility_service.computeImmediate(*m_world, m_runtime.local_owner_id);
 
-    if (m_fog && visibility_service.isInitialized()) {
+    if (m_fog && visibility_service.is_initialized()) {
       m_fog->updateMask(
           visibility_service.getWidth(), visibility_service.getHeight(),
           visibility_service.getTileSize(), visibility_service.snapshotCells());
@@ -1956,7 +1956,7 @@ void GameEngine::restore_environment_from_metadata(
     visibility_service.initialize(fallback_grid_width, fallback_grid_height,
                                   fallback_tile_size);
     visibility_service.computeImmediate(*m_world, m_runtime.local_owner_id);
-    if (m_fog && visibility_service.isInitialized()) {
+    if (m_fog && visibility_service.is_initialized()) {
       m_fog->updateMask(
           visibility_service.getWidth(), visibility_service.getHeight(),
           visibility_service.getTileSize(), visibility_service.snapshotCells());
@@ -2197,7 +2197,7 @@ void GameEngine::update_minimap_fog(float dt) {
   m_minimap_update_timer = 0.0F;
 
   auto &visibility_service = Game::Map::VisibilityService::instance();
-  if (!visibility_service.isInitialized()) {
+  if (!visibility_service.is_initialized()) {
 
     if (m_minimap_image != m_minimap_base_image) {
       m_minimap_image = m_minimap_base_image;
@@ -2358,7 +2358,7 @@ void GameEngine::update_minimap_units() {
       marker.world_z = transform->position.z;
       marker.owner_id = unit->owner_id;
       marker.is_selected = selected_ids.count(entity_id) > 0;
-      marker.is_building = Game::Units::isBuildingSpawn(unit->spawn_type);
+      marker.is_building = Game::Units::is_building_spawn(unit->spawn_type);
 
       markers.push_back(marker);
     }

@@ -54,7 +54,7 @@ public:
   auto world_to_screen(const QVector3D &world, qreal screenW, qreal screenH,
                        QPointF &outScreen) const -> bool;
 
-  void setFollowEnabled(bool enable) { m_followEnabled = enable; }
+  void set_follow_enabled(bool enable) { m_followEnabled = enable; }
   [[nodiscard]] auto isFollowEnabled() const -> bool { return m_followEnabled; }
   void setFollowLerp(float alpha) { m_followLerp = alpha; }
   void setFollowOffset(const QVector3D &off) { m_followOffset = off; }

@@ -33,7 +33,7 @@ void GatherBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   units_to_gather.reserve(snapshot.friendlies.size());
 
   for (const auto &entity : snapshot.friendlies) {
-    if (entity.isBuilding) {
+    if (entity.is_building) {
       continue;
     }
 
@@ -55,13 +55,13 @@ void GatherBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   }
 
   const Nation *nation =
-      NationRegistry::instance().getNationForPlayer(context.player_id);
+      NationRegistry::instance().get_nation_for_player(context.player_id);
   FormationType formation_type = FormationType::Roman;
   if (nation != nullptr) {
     formation_type = nation->formation_type;
   }
 
-  auto formation_targets = FormationSystem::instance().getFormationPositions(
+  auto formation_targets = FormationSystem::instance().get_formation_positions(
       formation_type, static_cast<int>(units_to_gather.size()), rally_point,
       1.4F);
 
@@ -135,7 +135,7 @@ auto GatherBehavior::should_execute(const AISnapshot &snapshot,
 
     QVector3D const rally_point(context.rally_x, 0.0F, context.rally_z);
     for (const auto &entity : snapshot.friendlies) {
-      if (entity.isBuilding) {
+      if (entity.is_building) {
         continue;
       }
 

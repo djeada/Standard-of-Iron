@@ -133,7 +133,7 @@ void AICommandApplier::apply(Engine::Core::World &world, int aiOwnerId,
       int const current_troops =
           Engine::Core::World::count_troops_for_player(aiOwnerId);
       int const max_troops =
-          Game::GameConfig::instance().getMaxTroopsPerPlayer();
+          Game::GameConfig::instance().get_max_troops_per_player();
       Game::Units::TroopType const product_type = production->product_type;
       int const individuals_per_unit =
           Game::Units::TroopConfig::instance().getIndividualsPerUnit(

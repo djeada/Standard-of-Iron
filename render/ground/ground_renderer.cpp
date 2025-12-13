@@ -43,7 +43,7 @@ void GroundRenderer::updateNoiseOffset() {
   const float span_x = (m_width > 0 ? float(m_width) * m_tile_size : m_extent);
   const float span_z =
       (m_height > 0 ? float(m_height) * m_tile_size : m_extent);
-  const auto seed = static_cast<float>(m_biomeSettings.seed % 1024U);
+  const auto seed = static_cast<float>(m_biome_settings.seed % 1024U);
 
   QVector2D new_offset;
   new_offset.setX(span_x * 0.37F + seed * 0.21F);
@@ -64,52 +64,52 @@ auto GroundRenderer::buildParams() const -> TerrainChunkParams {
 
   TerrainChunkParams params;
 
-  const QVector3D primary = m_biomeSettings.grass_primary * 0.97F;
-  const QVector3D secondary = m_biomeSettings.grass_secondary * 0.93F;
-  const QVector3D dry = m_biomeSettings.grass_dry * 0.90F;
-  const QVector3D soil = m_biomeSettings.soil_color * 0.68F;
+  const QVector3D primary = m_biome_settings.grass_primary * 0.97F;
+  const QVector3D secondary = m_biome_settings.grass_secondary * 0.93F;
+  const QVector3D dry = m_biome_settings.grass_dry * 0.90F;
+  const QVector3D soil = m_biome_settings.soil_color * 0.68F;
 
   params.grass_primary = saturate(primary);
   params.grass_secondary = saturate(secondary);
   params.grass_dry = saturate(dry);
   params.soil_color = saturate(soil);
-  params.rock_low = saturate(m_biomeSettings.rock_low);
-  params.rock_high = saturate(m_biomeSettings.rock_high);
+  params.rock_low = saturate(m_biome_settings.rock_low);
+  params.rock_high = saturate(m_biome_settings.rock_high);
 
   params.tint = QVector3D(0.96F, 0.98F, 0.96F);
 
   params.tile_size = std::max(0.25F, m_tile_size);
 
   params.macro_noise_scale =
-      std::max(0.012F, m_biomeSettings.terrain_macro_noise_scale * 0.60F);
+      std::max(0.012F, m_biome_settings.terrain_macro_noise_scale * 0.60F);
   params.detail_noise_scale =
-      std::max(0.045F, m_biomeSettings.terrain_detail_noise_scale * 0.75F);
+      std::max(0.045F, m_biome_settings.terrain_detail_noise_scale * 0.75F);
 
   params.slope_rock_threshold =
-      std::clamp(m_biomeSettings.terrain_rock_threshold + 0.30F, 0.40F, 0.90F);
+      std::clamp(m_biome_settings.terrain_rock_threshold + 0.30F, 0.40F, 0.90F);
   params.slope_rock_sharpness =
-      std::clamp(m_biomeSettings.terrain_rock_sharpness + 1.5F, 2.0F, 6.0F);
+      std::clamp(m_biome_settings.terrain_rock_sharpness + 1.5F, 2.0F, 6.0F);
 
-  params.soil_blend_height = m_biomeSettings.terrain_soil_height - 1.25F;
+  params.soil_blend_height = m_biome_settings.terrain_soil_height - 1.25F;
   params.soil_blend_sharpness =
-      std::clamp(m_biomeSettings.terrain_soil_sharpness * 0.75F, 1.5F, 5.0F);
+      std::clamp(m_biome_settings.terrain_soil_sharpness * 0.75F, 1.5F, 5.0F);
 
   params.noise_offset = m_noiseOffset;
   params.noise_angle = m_noiseAngle;
 
   float target_amp;
   float target_freq;
-  if (m_biomeSettings.ground_irregularity_enabled) {
+  if (m_biome_settings.ground_irregularity_enabled) {
 
-    target_amp = std::clamp(m_biomeSettings.irregularity_amplitude * 0.85F,
+    target_amp = std::clamp(m_biome_settings.irregularity_amplitude * 0.85F,
                             0.15F, 0.70F);
-    target_freq = std::max(0.45F, m_biomeSettings.irregularity_scale * 2.5F);
+    target_freq = std::max(0.45F, m_biome_settings.irregularity_scale * 2.5F);
   } else {
 
-    target_amp = std::clamp(m_biomeSettings.height_noise_amplitude * 0.22F,
+    target_amp = std::clamp(m_biome_settings.height_noise_amplitude * 0.22F,
                             0.10F, 0.20F);
     target_freq =
-        std::max(0.6F, m_biomeSettings.height_noise_frequency * 1.05F);
+        std::max(0.6F, m_biome_settings.height_noise_frequency * 1.05F);
   }
   params.height_noise_strength = target_amp;
   params.height_noise_frequency = target_freq;
@@ -120,27 +120,27 @@ auto GroundRenderer::buildParams() const -> TerrainChunkParams {
 
   params.albedo_jitter = 0.05F;
 
-  params.ambient_boost = m_biomeSettings.terrain_ambient_boost * 0.85F;
+  params.ambient_boost = m_biome_settings.terrain_ambient_boost * 0.85F;
 
   params.rock_detail_strength =
-      m_biomeSettings.terrain_rock_detail_strength * 0.18F;
+      m_biome_settings.terrain_rock_detail_strength * 0.18F;
 
   QVector3D const l(0.35F, 0.85F, 0.42F);
   params.light_direction = l.normalized();
 
   params.is_ground_plane = true;
 
-  params.snow_coverage = std::clamp(m_biomeSettings.snow_coverage, 0.0F, 1.0F);
+  params.snow_coverage = std::clamp(m_biome_settings.snow_coverage, 0.0F, 1.0F);
   params.moisture_level =
-      std::clamp(m_biomeSettings.moisture_level, 0.0F, 1.0F);
+      std::clamp(m_biome_settings.moisture_level, 0.0F, 1.0F);
   params.crack_intensity =
-      std::clamp(m_biomeSettings.crack_intensity, 0.0F, 1.0F);
-  params.rock_exposure = std::clamp(m_biomeSettings.rock_exposure, 0.0F, 1.0F);
+      std::clamp(m_biome_settings.crack_intensity, 0.0F, 1.0F);
+  params.rock_exposure = std::clamp(m_biome_settings.rock_exposure, 0.0F, 1.0F);
   params.grass_saturation =
-      std::clamp(m_biomeSettings.grass_saturation, 0.0F, 1.5F);
+      std::clamp(m_biome_settings.grass_saturation, 0.0F, 1.5F);
   params.soil_roughness =
-      std::clamp(m_biomeSettings.soil_roughness, 0.0F, 1.0F);
-  params.snow_color = saturate(m_biomeSettings.snow_color);
+      std::clamp(m_biome_settings.soil_roughness, 0.0F, 1.0F);
+  params.snow_color = saturate(m_biome_settings.snow_color);
 
   m_cachedParams = params;
   m_cachedParamsValid = true;
@@ -184,12 +184,12 @@ void GroundRenderer::submit(Renderer &renderer, ResourceManager *resources) {
 
 void GroundRenderer::syncBiomeFromService() {
   auto &service = Game::Map::TerrainService::instance();
-  if (!service.isInitialized()) {
+  if (!service.is_initialized()) {
     return;
   }
-  const auto &current = service.biomeSettings();
-  if (!m_hasBiome || !biomeEquals(current, m_biomeSettings)) {
-    m_biomeSettings = current;
+  const auto &current = service.biome_settings();
+  if (!m_hasBiome || !biomeEquals(current, m_biome_settings)) {
+    m_biome_settings = current;
     m_hasBiome = true;
     updateNoiseOffset();
     invalidateParamsCache();

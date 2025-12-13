@@ -37,10 +37,10 @@ auto isPointAllowed(const QVector3D &pos,
     if (!pathfinder->isWalkable(grid_x, grid_z)) {
       return false;
     }
-  } else if (terrain_service.isInitialized()) {
+  } else if (terrain_service.is_initialized()) {
     int const grid_x = static_cast<int>(std::round(pos.x()));
     int const grid_z = static_cast<int>(std::round(pos.z()));
-    if (!terrain_service.isWalkable(grid_x, grid_z)) {
+    if (!terrain_service.is_walkable(grid_x, grid_z)) {
       return false;
     }
   }
@@ -349,8 +349,8 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
   transform->position.z += movement->vz * delta_time;
 
   auto &terrain = Game::Map::TerrainService::instance();
-  if (terrain.isInitialized()) {
-    const Game::Map::TerrainHeightMap *hm = terrain.getHeightMap();
+  if (terrain.is_initialized()) {
+    const Game::Map::TerrainHeightMap *hm = terrain.get_height_map();
     if (hm != nullptr) {
       const float tile = hm->getTileSize();
       const int w = hm->getWidth();

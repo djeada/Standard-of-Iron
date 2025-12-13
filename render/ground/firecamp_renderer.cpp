@@ -58,14 +58,14 @@ FireCampRenderer::~FireCampRenderer() = default;
 
 void FireCampRenderer::configure(
     const Game::Map::TerrainHeightMap &height_map,
-    const Game::Map::BiomeSettings &biomeSettings) {
+    const Game::Map::BiomeSettings &biome_settings) {
   m_width = height_map.getWidth();
   m_height = height_map.getHeight();
   m_tile_size = height_map.getTileSize();
   m_heightData = height_map.getHeightData();
   m_terrain_types = height_map.getTerrainTypes();
-  m_biomeSettings = biomeSettings;
-  m_noiseSeed = biomeSettings.seed;
+  m_biome_settings = biome_settings;
+  m_noiseSeed = biome_settings.seed;
 
   m_fireCampInstances.clear();
   m_fireCampInstanceBuffer.reset();
@@ -92,7 +92,7 @@ void FireCampRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   }
 
   auto &visibility = Game::Map::VisibilityService::instance();
-  const bool use_visibility = visibility.isInitialized();
+  const bool use_visibility = visibility.is_initialized();
   const std::uint64_t current_version =
       use_visibility ? visibility.version() : 0;
 
@@ -261,7 +261,7 @@ void FireCampRenderer::generateFireCampInstances() {
   const float tile_safe = std::max(0.1F, m_tile_size);
 
   const float edge_padding =
-      std::clamp(m_biomeSettings.spawn_edge_padding, 0.0F, 0.5F);
+      std::clamp(m_biome_settings.spawn_edge_padding, 0.0F, 0.5F);
   const float edge_margin_x = static_cast<float>(m_width) * edge_padding;
   const float edge_margin_z = static_cast<float>(m_height) * edge_padding;
 
