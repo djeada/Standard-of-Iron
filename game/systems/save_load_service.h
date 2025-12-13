@@ -36,9 +36,9 @@ public:
 
   void clearError() { m_last_error.clear(); }
 
-  auto getLastMetadata() const -> QJsonObject { return m_lastMetadata; }
+  auto getLastMetadata() const -> QJsonObject { return m_last_metadata; }
   auto getLastTitle() const -> QString { return m_lastTitle; }
-  auto getLastScreenshot() const -> QByteArray { return m_lastScreenshot; }
+  auto getLastScreenshot() const -> QByteArray { return m_last_screenshot; }
 
   auto list_campaigns(QString *out_error = nullptr) const -> QVariantList;
   auto get_campaign_progress(const QString &campaign_id,
@@ -56,9 +56,9 @@ private:
   static void ensureSavesDirectoryExists();
 
   mutable QString m_last_error;
-  QJsonObject m_lastMetadata;
+  QJsonObject m_last_metadata;
   QString m_lastTitle;
-  QByteArray m_lastScreenshot;
+  QByteArray m_last_screenshot;
   std::unique_ptr<SaveStorage> m_storage;
 };
 

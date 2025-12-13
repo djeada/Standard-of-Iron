@@ -30,8 +30,8 @@ void ProductionBehavior::execute(const AISnapshot &snapshot, AIContext &context,
 
   bool produce_ranged = true;
 
-  if (context.barracksUnderThreat || context.state == AIState::Defending) {
-    produce_ranged = (context.meleeCount > context.rangedCount);
+  if (context.barracks_under_threat || context.state == AIState::Defending) {
+    produce_ranged = (context.melee_count > context.rangedCount);
   } else {
 
     float const ranged_ratio =
@@ -56,7 +56,7 @@ void ProductionBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   }
 
   for (const auto &entity : snapshot.friendlies) {
-    if (!entity.isBuilding ||
+    if (!entity.is_building ||
         entity.spawn_type != Game::Units::SpawnType::Barracks) {
       continue;
     }

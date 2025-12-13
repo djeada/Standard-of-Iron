@@ -77,7 +77,7 @@ void CameraService::follow_selection(Render::GL::Camera &camera,
   }
 }
 
-void CameraService::setFollowLerp(Render::GL::Camera &camera, float alpha) {
+void CameraService::set_follow_lerp(Render::GL::Camera &camera, float alpha) {
   float const a = std::clamp(alpha, 0.0F, 1.0F);
   m_controller->setFollowLerp(camera, a);
 }

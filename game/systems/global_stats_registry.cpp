@@ -102,7 +102,7 @@ void GlobalStatsRegistry::on_unit_died(
 
     auto &owner_registry = OwnerRegistry::instance();
 
-    if (owner_registry.areEnemies(event.killer_owner_id, event.owner_id)) {
+    if (owner_registry.are_enemies(event.killer_owner_id, event.owner_id)) {
       auto &stats = m_player_stats[event.killer_owner_id];
 
       if (event.spawn_type != Game::Units::SpawnType::Barracks) {

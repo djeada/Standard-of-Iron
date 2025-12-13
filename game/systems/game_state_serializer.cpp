@@ -26,7 +26,7 @@ auto GameStateSerializer::buildMetadata(
       Game::GameConfig::instance().get_max_troops_per_player();
 
   const auto &terrain_service = Game::Map::TerrainService::instance();
-  if (const auto *height_map = terrain_service.getHeightMap()) {
+  if (const auto *height_map = terrain_service.get_height_map()) {
     metadata["grid_width"] = height_map->getWidth();
     metadata["grid_height"] = height_map->getHeight();
     metadata["tile_size"] = height_map->getTileSize();
