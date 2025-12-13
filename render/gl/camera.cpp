@@ -412,7 +412,7 @@ auto Camera::screen_to_ground(qreal sx, qreal sy, qreal screenW, qreal screenH,
 
   bool ok = false;
   QMatrix4x4 const inv_vp =
-      (getProjectionMatrix() * getViewMatrix()).inverted(&ok);
+      (get_projection_matrix() * get_view_matrix()).inverted(&ok);
   if (!ok) {
     return false;
   }
@@ -457,7 +457,7 @@ auto Camera::world_to_screen(const QVector3D &world, qreal screenW,
   }
 
   QVector4D const clip =
-      getProjectionMatrix() * getViewMatrix() * QVector4D(world, 1.0F);
+      get_projection_matrix() * get_view_matrix() * QVector4D(world, 1.0F);
   if (std::abs(clip.w()) < k_eps) {
     return false;
   }
@@ -548,13 +548,13 @@ void Camera::setTopDownView(const QVector3D &center, float distance) {
   applySoftBoundaries();
 }
 
-auto Camera::getViewMatrix() const -> QMatrix4x4 {
+auto Camera::get_view_matrix() const -> QMatrix4x4 {
   QMatrix4x4 view;
   view.lookAt(m_position, m_target, m_up);
   return view;
 }
 
-auto Camera::getProjectionMatrix() const -> QMatrix4x4 {
+auto Camera::get_projection_matrix() const -> QMatrix4x4 {
   QMatrix4x4 projection;
   if (m_isPerspective) {
     projection.perspective(m_fov, m_aspect, m_near_plane, m_far_plane);
@@ -569,15 +569,15 @@ auto Camera::getProjectionMatrix() const -> QMatrix4x4 {
   return projection;
 }
 
-auto Camera::getViewProjectionMatrix() const -> QMatrix4x4 {
-  return getProjectionMatrix() * getViewMatrix();
+auto Camera::get_view_projection_matrix() const -> QMatrix4x4 {
+  return get_projection_matrix() * get_view_matrix();
 }
 
 auto Camera::get_distance() const -> float {
   return (m_position - m_target).length();
 }
 
-auto Camera::getPitchDeg() const -> float {
+auto Camera::get_pitch_deg() const -> float {
   QVector3D const off = m_position - m_target;
   QVector3D const dir = -off;
   if (dir.lengthSquared() < 1e-6F) {
@@ -621,7 +621,7 @@ void Camera::applySoftBoundaries(bool isPanning) {
   const float map_max_z = half_h * tile;
 
   float const camera_height = m_position.y() - m_ground_y;
-  float const pitch_deg = getPitchDeg();
+  float const pitch_deg = get_pitch_deg();
 
   float const map_width = map_max_x - map_min_x;
   float const map_depth = map_max_z - map_min_z;
@@ -729,9 +729,9 @@ void Camera::computeYawPitchFromOffset(const QVector3D &off, float &yaw_deg,
   pitch_deg = pitch;
 }
 
-auto Camera::isInFrustum(const QVector3D &center, float radius) const -> bool {
+auto Camera::is_in_frustum(const QVector3D &center, float radius) const -> bool {
 
-  QMatrix4x4 const vp = getViewProjectionMatrix();
+  QMatrix4x4 const vp = get_view_projection_matrix();
 
   float m[MatrixSize];
   const float *data = vp.constData();

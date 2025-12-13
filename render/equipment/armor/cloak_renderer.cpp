@@ -107,7 +107,7 @@ void CloakRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
     QVector3D clasp_pos =
         shoulder_mid + up * (torso_r * 0.5F) + forward * (torso_r * 0.2F);
     submitter.mesh(
-        getUnitSphere(),
+        get_unit_sphere(),
         Render::Geom::sphere_at(ctx.model, clasp_pos, torso_r * 0.12F),
         trim_color, nullptr, 1.0F, 1);
   }

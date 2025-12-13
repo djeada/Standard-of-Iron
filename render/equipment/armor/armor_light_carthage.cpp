@@ -78,7 +78,7 @@ void ArmorLightCarthageRenderer::render(const DrawContext &ctx,
   QMatrix4x4 cuirass = cylinder_between(ctx.model, top, bottom, main_radius);
   cuirass.scale(1.0F, 1.0F, std::max(0.15F, main_depth / main_radius));
   Mesh *torso_mesh = torso_mesh_without_bottom_cap();
-  submitter.mesh(torso_mesh != nullptr ? torso_mesh : getUnitTorso(), cuirass,
+  submitter.mesh(torso_mesh != nullptr ? torso_mesh : get_unit_torso(), cuirass,
                  metal_color, nullptr, 1.0F, 1);
 
   auto strap = [&](float side) {
@@ -86,7 +86,7 @@ void ArmorLightCarthageRenderer::render(const DrawContext &ctx,
         top + right * (torso_r * 0.54F * side) - up * (torso_r * 0.04F);
     QVector3D chest_anchor =
         shoulder_anchor - up * (torso_r * 0.82F) + forward * (torso_r * 0.22F);
-    submitter.mesh(getUnitCylinder(),
+    submitter.mesh(get_unit_cylinder(),
                    cylinder_between(ctx.model, shoulder_anchor, chest_anchor,
                                    torso_r * 0.12F),
                    leather_highlight * 0.95F, nullptr, 1.0F, 1);
@@ -102,7 +102,7 @@ void ArmorLightCarthageRenderer::render(const DrawContext &ctx,
                                            front_panel_bottom, torso_r * 0.56F);
   front_panel.scale(1.18F, 1.0F,
                     std::max(0.22F, (torso_depth * 0.76F) / (torso_r * 0.76F)));
-  submitter.mesh(torso_mesh != nullptr ? torso_mesh : getUnitTorso(),
+  submitter.mesh(torso_mesh != nullptr ? torso_mesh : get_unit_torso(),
                  front_panel, cloth_accent, nullptr, 1.0F, 1);
 
   QVector3D back_panel_top =
@@ -113,7 +113,7 @@ void ArmorLightCarthageRenderer::render(const DrawContext &ctx,
                                           back_panel_bottom, torso_r * 0.58F);
   back_panel.scale(1.18F, 1.0F,
                    std::max(0.22F, (torso_depth * 0.74F) / (torso_r * 0.80F)));
-  submitter.mesh(torso_mesh != nullptr ? torso_mesh : getUnitTorso(),
+  submitter.mesh(torso_mesh != nullptr ? torso_mesh : get_unit_torso(),
                  back_panel, metal_core, nullptr, 1.0F, 1);
 }
 

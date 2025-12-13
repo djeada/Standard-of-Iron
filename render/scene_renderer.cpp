@@ -72,7 +72,7 @@ void Renderer::begin_frame() {
   m_active_queue->clear();
 
   if (m_camera != nullptr) {
-    m_view_proj = m_camera->getProjectionMatrix() * m_camera->getViewMatrix();
+    m_view_proj = m_camera->get_projection_matrix() * m_camera->get_view_matrix();
   }
 
   if (m_backend) {
@@ -109,8 +109,8 @@ void Renderer::set_viewport(int width, int height) {
   }
   if ((m_camera != nullptr) && height > 0) {
     float const aspect = float(width) / float(height);
-    m_camera->setPerspective(m_camera->getFOV(), aspect, m_camera->getNear(),
-                             m_camera->getFar());
+    m_camera->setPerspective(m_camera->get_fov(), aspect, m_camera->get_near(),
+                             m_camera->get_far());
   }
 }
 void Renderer::mesh(Mesh *mesh, const QMatrix4x4 &model, const QVector3D &color,
@@ -119,7 +119,7 @@ void Renderer::mesh(Mesh *mesh, const QMatrix4x4 &model, const QVector3D &color,
     return;
   }
 
-  if (mesh == getUnitCylinder() && (texture == nullptr) &&
+  if (mesh == get_unit_cylinder() && (texture == nullptr) &&
       (m_current_shader == nullptr)) {
     QVector3D start;
     QVector3D end;
@@ -407,7 +407,7 @@ void Renderer::render_world(Engine::Core::World *world) {
       if (transform != nullptr && m_camera != nullptr) {
         QVector3D const unit_pos(transform->position.x, transform->position.y,
                                  transform->position.z);
-        if (m_camera->isInFrustum(unit_pos, 4.0F)) {
+        if (m_camera->is_in_frustum(unit_pos, 4.0F)) {
           ++visibleUnitCount;
         }
       }
@@ -463,7 +463,7 @@ void Renderer::render_world(Engine::Core::World *world) {
 
       QVector3D const unit_pos(transform->position.x, transform->position.y,
                                transform->position.z);
-      if (!m_camera->isInFrustum(unit_pos, cull_radius)) {
+      if (!m_camera->is_in_frustum(unit_pos, cull_radius)) {
         continue;
       }
 
