@@ -99,7 +99,7 @@ void FormationSystem::initializeDefaults() {
                     std::make_unique<BarbarianFormation>());
 }
 
-auto FormationSystem::getFormationPositions(
+auto FormationSystem::get_formation_positions(
     FormationType type, int unit_count, const QVector3D &center,
     float base_spacing) -> std::vector<QVector3D> {
   auto it = m_formations.find(type);
@@ -117,7 +117,7 @@ void FormationSystem::registerFormation(FormationType type,
   m_formations[type] = std::move(formation);
 }
 
-auto FormationSystem::getFormation(FormationType type) const
+auto FormationSystem::get_formation(FormationType type) const
     -> const IFormation * {
   auto it = m_formations.find(type);
   if (it == m_formations.end()) {

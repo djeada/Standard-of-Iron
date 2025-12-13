@@ -57,14 +57,14 @@ void CameraService::orbit_direction(Render::GL::Camera &camera, int direction,
                                     bool shift) {
   const auto &cam_config = Game::GameConfig::instance().camera();
   float const step =
-      shift ? cam_config.orbitStepShift : cam_config.orbitStepNormal;
+      shift ? cam_config.orbit_step_shift : cam_config.orbit_step_normal;
   float const pitch = step * float(direction);
   orbit(camera, 0.0F, pitch);
 }
 
 void CameraService::follow_selection(Render::GL::Camera &camera,
                                      Engine::Core::World &world, bool enable) {
-  m_controller->setFollowEnabled(camera, enable);
+  m_controller->set_follow_enabled(camera, enable);
 
   if (enable) {
     if (auto *selection_system = world.get_system<SelectionSystem>()) {
@@ -77,9 +77,9 @@ void CameraService::follow_selection(Render::GL::Camera &camera,
   }
 }
 
-void CameraService::setFollowLerp(Render::GL::Camera &camera, float alpha) {
+void CameraService::set_follow_lerp(Render::GL::Camera &camera, float alpha) {
   float const a = std::clamp(alpha, 0.0F, 1.0F);
-  m_controller->setFollowLerp(camera, a);
+  m_controller->set_follow_lerp(camera, a);
 }
 
 void CameraService::resetCamera(Render::GL::Camera &camera,
@@ -114,8 +114,8 @@ void CameraService::snapToEntity(Render::GL::Camera &camera,
   if (auto *t = entity.get_component<Engine::Core::TransformComponent>()) {
     QVector3D const center(t->position.x, t->position.y, t->position.z);
     const auto &cam_config = Game::GameConfig::instance().camera();
-    camera.setRTSView(center, cam_config.defaultDistance,
-                      cam_config.defaultPitch, cam_config.defaultYaw);
+    camera.setRTSView(center, cam_config.default_distance,
+                      cam_config.default_pitch, cam_config.default_yaw);
   }
 }
 

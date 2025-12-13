@@ -71,9 +71,9 @@ void Pathfinding::updateBuildingObstacles() {
   }
 
   auto &terrain_service = Game::Map::TerrainService::instance();
-  if (terrain_service.isInitialized()) {
+  if (terrain_service.is_initialized()) {
     const Game::Map::TerrainHeightMap *height_map =
-        terrain_service.getHeightMap();
+        terrain_service.get_height_map();
     const int terrain_width =
         (height_map != nullptr) ? height_map->getWidth() : 0;
     const int terrain_height =
@@ -83,7 +83,7 @@ void Pathfinding::updateBuildingObstacles() {
       for (int x = 0; x < m_width; ++x) {
         bool blocked = false;
         if (x < terrain_width && z < terrain_height) {
-          blocked = !terrain_service.isWalkable(x, z);
+          blocked = !terrain_service.is_walkable(x, z);
         } else {
           blocked = true;
         }
