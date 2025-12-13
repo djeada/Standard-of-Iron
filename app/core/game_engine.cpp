@@ -798,20 +798,6 @@ void GameEngine::render(int pixelWidth, int pixelHeight) {
   }
   if (auto *healing_beam_system =
           m_world->get_system<Game::Systems::HealingBeamSystem>()) {
-    // DEBUG: Spawn a test beam if none exist
-    if (healing_beam_system->get_beam_count() == 0) {
-      static bool test_beam_spawned = false;
-      static float test_timer = 0.0F;
-      test_timer += 0.016F;  // Approximately 60fps
-      if (!test_beam_spawned && test_timer > 2.0F) {
-        // Spawn a visible test beam in the center of the map
-        QVector3D start(0.0F, 1.5F, 0.0F);
-        QVector3D end(5.0F, 1.5F, 5.0F);
-        QVector3D color(0.4F, 1.0F, 0.5F);
-        healing_beam_system->spawn_beam(start, end, color, 3.0F);
-        qInfo() << "DEBUG: Spawned test healing beam from" << start << "to" << end;
-        test_beam_spawned = true;
-      }
     }
     if (auto *res = m_renderer->resources()) {
       Render::GL::render_healing_beams(m_renderer.get(), res,
