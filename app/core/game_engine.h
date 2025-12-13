@@ -86,8 +86,6 @@ class AudioSystemProxy;
 
 class QQuickWindow;
 
-// Cache for tracking entity counts to avoid frequent queries
-// Used by GameEngine and passed to AmbientStateManager for state transitions
 struct EntityCache {
   int player_troop_count = 0;
   bool player_barracks_alive = false;
@@ -272,11 +270,6 @@ private:
     qreal last_cursor_y = -1.0;
     int selection_refresh_counter = 0;
   };
-  struct ViewportState {
-    int width = 0;
-    int height = 0;
-  };
-
   bool screen_to_ground(const QPointF &screenPt, QVector3D &outWorld);
   bool world_to_screen(const QVector3D &world, QPointF &outScreen) const;
   void sync_selection_flags();

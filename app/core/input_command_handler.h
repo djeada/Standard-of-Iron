@@ -17,7 +17,7 @@ namespace Game::Systems {
 class SelectionSystem;
 class SelectionController;
 class PickingService;
-}
+} // namespace Game::Systems
 
 namespace App::Controllers {
 class CommandController;
@@ -36,7 +36,8 @@ public:
   InputCommandHandler(Engine::Core::World *world,
                       Game::Systems::SelectionController *selection_controller,
                       App::Controllers::CommandController *command_controller,
-                      CursorManager *cursor_manager, HoverTracker *hover_tracker,
+                      CursorManager *cursor_manager,
+                      HoverTracker *hover_tracker,
                       Game::Systems::PickingService *picking_service,
                       Render::GL::Camera *camera);
 
