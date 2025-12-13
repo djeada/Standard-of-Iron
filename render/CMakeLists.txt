@@ -65,6 +65,7 @@ add_library(render_gl STATIC
     entity/nations/roman/healer_style.cpp
     entity/nations/carthage/healer_renderer.cpp
     entity/nations/carthage/healer_style.cpp
+    entity/healing_beam_renderer.cpp
     entity/barracks_renderer.cpp
     entity/nations/roman/barracks_renderer.cpp
     entity/nations/carthage/barracks_renderer.cpp
