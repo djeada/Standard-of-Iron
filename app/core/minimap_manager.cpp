@@ -8,8 +8,8 @@
 #include "game/map/visibility_service.h"
 #include "game/systems/selection_system.h"
 #include "game/units/troop_type.h"
-#include <QPainter>
 #include <QDebug>
+#include <QPainter>
 #include <algorithm>
 #include <unordered_set>
 
@@ -17,8 +17,7 @@ MinimapManager::MinimapManager() = default;
 
 MinimapManager::~MinimapManager() = default;
 
-void MinimapManager::generate_for_map(
-    const Game::Map::MapDefinition &map_def) {
+void MinimapManager::generate_for_map(const Game::Map::MapDefinition &map_def) {
   Game::Map::Minimap::MinimapGenerator generator;
   m_minimap_base_image = generator.generate(map_def);
 
@@ -84,8 +83,6 @@ void MinimapManager::update_fog(float dt, int local_owner_id) {
   const int img_width = m_minimap_image.width();
   const int img_height = m_minimap_image.height();
 
-  // Rotation constants for -45 degree isometric projection
-  // k_inv_cos = -cos(45°), k_inv_sin = sin(45°)
   constexpr float k_inv_cos = -0.70710678118F;
   constexpr float k_inv_sin = 0.70710678118F;
 
@@ -182,8 +179,7 @@ void MinimapManager::update_units(
   }
 
   std::vector<Game::Map::Minimap::UnitMarker> markers;
-  // Reserve space for typical unit count to avoid reallocations
-  // Based on common game scenarios with up to ~100 units per side
+
   constexpr size_t EXPECTED_MAX_UNITS = 128;
   markers.reserve(EXPECTED_MAX_UNITS);
 
@@ -194,8 +190,7 @@ void MinimapManager::update_units(
   }
 
   {
-    const std::lock_guard<std::recursive_mutex> lock(
-        world->get_entity_mutex());
+    const std::lock_guard<std::recursive_mutex> lock(world->get_entity_mutex());
     const auto &entities = world->get_entities();
 
     for (const auto &[entity_id, entity] : entities) {

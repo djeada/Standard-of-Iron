@@ -31,7 +31,9 @@ public:
                     Game::Systems::SelectionSystem *selection_system);
 
   [[nodiscard]] const QImage &get_image() const { return m_minimap_image; }
-  [[nodiscard]] bool has_minimap() const { return !m_minimap_base_image.isNull(); }
+  [[nodiscard]] bool has_minimap() const {
+    return !m_minimap_base_image.isNull();
+  }
 
 private:
   QImage m_minimap_image;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QImage>
+#include <QMutex>
 #include <QQuickImageProvider>
 
 class MinimapImageProvider : public QQuickImageProvider {
@@ -14,4 +15,5 @@ public:
 
 private:
   QImage m_minimap_image;
+  QMutex m_mutex;
 };

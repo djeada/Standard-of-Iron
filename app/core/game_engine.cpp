@@ -139,7 +139,6 @@ GameEngine::GameEngine(QObject *parent)
 
   m_world = std::make_unique<Engine::Core::World>();
 
-  // Initialize rendering components
   auto rendering = RendererBootstrap::initialize_rendering();
   m_renderer = std::move(rendering.renderer);
   m_camera = std::move(rendering.camera);
@@ -158,7 +157,6 @@ GameEngine::GameEngine(QObject *parent)
   m_firecamp = std::move(rendering.firecamp);
   m_passes = std::move(rendering.passes);
 
-  // Initialize world systems
   RendererBootstrap::initialize_world_systems(*m_world);
 
   m_pickingService = std::make_unique<Game::Systems::PickingService>();
@@ -491,8 +489,8 @@ void GameEngine::on_click_select(qreal sx, qreal sy, bool additive) {
   }
   ensure_initialized();
   if (m_input_handler) {
-    m_input_handler->on_click_select(sx, sy, additive,
-                                     m_runtime.local_owner_id, m_viewport);
+    m_input_handler->on_click_select(sx, sy, additive, m_runtime.local_owner_id,
+                                     m_viewport);
   }
 }
 
@@ -594,7 +592,8 @@ void GameEngine::update(float dt) {
       m_runtime.visibility_update_accumulator += dt;
       const float visibility_update_interval =
           Game::GameConfig::instance().gameplay().visibility_update_interval;
-      if (m_runtime.visibility_update_accumulator >= visibility_update_interval) {
+      if (m_runtime.visibility_update_accumulator >=
+          visibility_update_interval) {
         m_runtime.visibility_update_accumulator = 0.0F;
         visibility_service.update(*m_world, m_runtime.local_owner_id);
       }
@@ -1136,11 +1135,10 @@ void GameEngine::start_skirmish(const QString &map_path,
 
     LevelOrchestrator orchestrator;
     LevelOrchestrator::RendererRefs renderers{
-        m_renderer.get(), m_camera.get(),     m_ground.get(),
-        m_terrain.get(),  m_biome.get(),      m_river.get(),
-        m_road.get(),     m_riverbank.get(),  m_bridge.get(),
-        m_fog.get(),      m_stone.get(),      m_plant.get(),
-        m_pine.get(),     m_olive.get(),      m_firecamp.get()};
+        m_renderer.get(), m_camera.get(), m_ground.get(),  m_terrain.get(),
+        m_biome.get(),    m_river.get(),  m_road.get(),    m_riverbank.get(),
+        m_bridge.get(),   m_fog.get(),    m_stone.get(),   m_plant.get(),
+        m_pine.get(),     m_olive.get(),  m_firecamp.get()};
 
     auto visibility_ready = [this]() {
       m_runtime.visibility_version =
@@ -1243,11 +1241,10 @@ auto GameEngine::load_from_slot(const QString &slot) -> bool {
   apply_runtime_snapshot(runtime_snap);
 
   GameStateRestorer::RendererRefs renderers{
-      m_renderer.get(), m_camera.get(),     m_ground.get(),
-      m_terrain.get(),  m_biome.get(),      m_river.get(),
-      m_road.get(),     m_riverbank.get(),  m_bridge.get(),
-      m_fog.get(),      m_stone.get(),      m_plant.get(),
-      m_pine.get(),     m_olive.get(),      m_firecamp.get()};
+      m_renderer.get(), m_camera.get(), m_ground.get(),  m_terrain.get(),
+      m_biome.get(),    m_river.get(),  m_road.get(),    m_riverbank.get(),
+      m_bridge.get(),   m_fog.get(),    m_stone.get(),   m_plant.get(),
+      m_pine.get(),     m_olive.get(),  m_firecamp.get()};
   GameStateRestorer::restore_environment_from_metadata(
       meta, m_world.get(), renderers, m_level, m_runtime.local_owner_id,
       m_viewport);
@@ -1329,6 +1326,35 @@ auto GameEngine::delete_save_slot(const QString &slotName) -> bool {
 
   return success;
 }
+
+auto GameEngine::to_runtime_snapshot() const -> Game::Systems::RuntimeSnapshot {
+  Game::Systems::RuntimeSnapshot snapshot;
+  snapshot.paused = m_runtime.paused;
+  snapshot.time_scale = m_runtime.time_scale;
+  snapshot.local_owner_id = m_runtime.local_owner_id;
+  snapshot.victory_state = m_runtime.victory_state;
+  snapshot.cursor_mode = static_cast<int>(m_runtime.cursor_mode);
+  snapshot.selected_player_id = m_selected_player_id;
+  snapshot.follow_selection = m_followSelectionEnabled;
+  return snapshot;
+}
+
+void GameEngine::apply_runtime_snapshot(
+    const Game::Systems::RuntimeSnapshot &snapshot) {
+  m_runtime.paused = snapshot.paused;
+  m_runtime.time_scale = snapshot.time_scale;
+  m_runtime.local_owner_id = snapshot.local_owner_id;
+  m_runtime.victory_state = snapshot.victory_state;
+  m_selected_player_id = snapshot.selected_player_id;
+  m_followSelectionEnabled = snapshot.follow_selection;
+
+  m_runtime.cursor_mode = static_cast<CursorMode>(snapshot.cursor_mode);
+  if (m_cursorManager) {
+    m_cursorManager->setMode(m_runtime.cursor_mode);
+  }
+}
+
+auto GameEngine::capture_screenshot() const -> QByteArray { return {}; }
 
 void GameEngine::exit_game() {
   if (m_saveLoadService) {
@@ -1451,7 +1477,8 @@ void GameEngine::on_unit_died(const Engine::Core::UnitDiedEvent &event) {
       m_entity_cache.enemy_barracks_count--;
       m_entity_cache.enemy_barracks_count =
           std::max(0, m_entity_cache.enemy_barracks_count);
-      m_entity_cache.enemy_barracks_alive = (m_entity_cache.enemy_barracks_count > 0);
+      m_entity_cache.enemy_barracks_alive =
+          (m_entity_cache.enemy_barracks_count > 0);
     }
   }
 }
@@ -1462,4 +1489,3 @@ auto GameEngine::minimap_image() const -> QImage {
   }
   return QImage();
 }
-
