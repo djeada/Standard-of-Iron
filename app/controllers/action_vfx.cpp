@@ -37,7 +37,7 @@ void ActionVFX::spawnAttackArrow(Engine::Core::World *world,
 
   arrow_system->spawnArrow(above_target, target_pos,
                            QVector3D(1.0F, 0.2F, 0.2F),
-                           Game::GameConfig::instance().arrow().speedAttack);
+                           Game::GameConfig::instance().arrow().speed_attack);
 }
 
 } // namespace App::Controllers

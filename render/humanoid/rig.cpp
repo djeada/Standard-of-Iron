@@ -1594,12 +1594,12 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
 
         auto &terrain_service = Game::Map::TerrainService::instance();
 
-        if (terrain_service.isInitialized()) {
+        if (terrain_service.is_initialized()) {
 
           QVector3D const instPos =
               inst_ctx.model.map(QVector3D(0.0F, 0.0F, 0.0F));
           float const shadowY =
-              terrain_service.getTerrainHeight(instPos.x(), instPos.z());
+              terrain_service.get_terrain_height(instPos.x(), instPos.z());
 
           QVector3D light_dir = k_shadow_light_dir.normalized();
           QVector2D light_dir_xz(light_dir.x(), light_dir.z());

@@ -51,21 +51,21 @@ public:
 private:
   void on_unit_died(const Engine::Core::UnitDiedEvent &event);
   void on_barrack_captured(const Engine::Core::BarrackCapturedEvent &event);
-  void checkVictoryConditions(Engine::Core::World &world);
-  void checkDefeatConditions(Engine::Core::World &world);
+  void check_victory_conditions(Engine::Core::World &world);
+  void check_defeat_conditions(Engine::Core::World &world);
 
-  auto checkElimination(Engine::Core::World &world) -> bool;
+  auto check_elimination(Engine::Core::World &world) -> bool;
   [[nodiscard]] auto checkSurviveTime() const -> bool;
-  auto checkNoUnits(Engine::Core::World &world) const -> bool;
-  auto checkNoKeyStructures(Engine::Core::World &world) -> bool;
+  auto check_no_units(Engine::Core::World &world) const -> bool;
+  auto check_no_key_structures(Engine::Core::World &world) -> bool;
 
   VictoryType m_victoryType = VictoryType::Elimination;
   std::vector<QString> m_keyStructures;
   std::vector<DefeatCondition> m_defeatConditions;
 
-  float m_surviveTimeDuration = 0.0F;
-  float m_elapsedTime = 0.0F;
-  float m_startupDelay = 0.0F;
+  float m_survive_time_duration = 0.0F;
+  float m_elapsed_time = 0.0F;
+  float m_startup_delay = 0.0F;
 
   int m_local_owner_id = 1;
   QString m_victoryState;

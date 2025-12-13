@@ -41,12 +41,12 @@ auto MapTransformer::getFactoryRegistry()
 
 void MapTransformer::set_local_owner_id(int owner_id) {
   auto &owners = Game::Systems::OwnerRegistry::instance();
-  owners.setLocalPlayerId(owner_id);
+  owners.set_local_player_id(owner_id);
 }
 
 auto MapTransformer::local_owner_id() -> int {
   auto &owners = Game::Systems::OwnerRegistry::instance();
-  return owners.getLocalPlayerId();
+  return owners.get_local_player_id();
 }
 
 void MapTransformer::setPlayerTeamOverrides(
@@ -58,7 +58,7 @@ void MapTransformer::clearPlayerTeamOverrides() {
   s_player_team_overrides.clear();
 }
 
-auto MapTransformer::applyToWorld(
+auto MapTransformer::apply_to_world(
     const MapDefinition &def, Engine::Core::World &world,
     const Game::Visuals::VisualCatalog *visuals) -> MapRuntime {
   MapRuntime rt;
@@ -87,11 +87,11 @@ auto MapTransformer::applyToWorld(
       continue;
     }
 
-    if (owner_registry.getOwnerType(player_id) ==
+    if (owner_registry.get_owner_type(player_id) ==
         Game::Systems::OwnerType::Neutral) {
 
       bool const is_local_player =
-          (player_id == owner_registry.getLocalPlayerId());
+          (player_id == owner_registry.get_local_player_id());
       Game::Systems::OwnerType const owner_type =
           is_local_player ? Game::Systems::OwnerType::Player
                           : Game::Systems::OwnerType::AI;
@@ -100,7 +100,7 @@ auto MapTransformer::applyToWorld(
           is_local_player ? "Player " + std::to_string(player_id)
                           : "AI Player " + std::to_string(player_id);
 
-      owner_registry.registerOwnerWithId(player_id, owner_type, owner_name);
+      owner_registry.register_owner_with_id(player_id, owner_type, owner_name);
     }
 
     int final_team_id = 0;
@@ -116,7 +116,7 @@ auto MapTransformer::applyToWorld(
       } else {
       }
     }
-    owner_registry.setOwnerTeam(player_id, final_team_id);
+    owner_registry.set_owner_team(player_id, final_team_id);
   }
 
   for (const auto &s : def.spawns) {
@@ -141,7 +141,8 @@ auto MapTransformer::applyToWorld(
     }
 
     auto &terrain = Game::Map::TerrainService::instance();
-    if (terrain.isInitialized() && terrain.isForbiddenWorld(world_x, world_z)) {
+    if (terrain.is_initialized() &&
+        terrain.is_forbidden_world(world_x, world_z)) {
       const float tile = std::max(0.0001F, def.grid.tile_size);
       bool found = false;
       const int max_radius = 12;
@@ -154,7 +155,7 @@ auto MapTransformer::applyToWorld(
             }
             float const cand_x = world_x + float(ox) * tile;
             float const cand_z = world_z + float(oz) * tile;
-            if (!terrain.isForbiddenWorld(cand_x, cand_z)) {
+            if (!terrain.is_forbidden_world(cand_x, cand_z)) {
               world_x = cand_x;
               world_z = cand_z;
               found = true;
@@ -175,14 +176,14 @@ auto MapTransformer::applyToWorld(
       sp.position = QVector3D(world_x, 0.0F, world_z);
       sp.player_id = effective_player_id;
       sp.spawn_type = s.type;
-      sp.ai_controlled = !owner_registry.isPlayer(effective_player_id);
+      sp.ai_controlled = !owner_registry.is_player(effective_player_id);
       sp.max_population = s.max_population;
 
       if (s.nation.has_value()) {
         sp.nation_id = s.nation.value();
       } else if (const auto *nation =
                      Game::Systems::NationRegistry::instance()
-                         .getNationForPlayer(effective_player_id)) {
+                         .get_nation_for_player(effective_player_id)) {
         sp.nation_id = nation->id;
       } else {
         sp.nation_id =
@@ -211,7 +212,7 @@ auto MapTransformer::applyToWorld(
       if (visuals != nullptr) {
         Game::Visuals::VisualDef defv;
         if (visuals->lookup(Game::Units::spawn_typeToString(s.type), defv)) {
-          Game::Visuals::applyToRenderable(defv, *r);
+          Game::Visuals::apply_to_renderable(defv, *r);
         }
       }
       if (r->color[0] == 0.0F && r->color[1] == 0.0F && r->color[2] == 0.0F) {

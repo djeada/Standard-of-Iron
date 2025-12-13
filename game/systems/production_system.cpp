@@ -32,7 +32,7 @@ void apply_production_profile(Engine::Core::ProductionComponent *prod,
 auto resolve_nation_id(const Engine::Core::UnitComponent *unit,
                        int owner_id) -> Game::Systems::NationID {
   auto &registry = NationRegistry::instance();
-  if (const auto *nation = registry.getNationForPlayer(owner_id)) {
+  if (const auto *nation = registry.get_nation_for_player(owner_id)) {
     return nation->id;
   }
   return registry.default_nation_id();
@@ -82,7 +82,7 @@ void ProductionSystem::update(Engine::Core::World *world, float delta_time) {
         int const current_troops =
             Engine::Core::World::count_troops_for_player(u->owner_id);
         int const max_troops =
-            Game::GameConfig::instance().getMaxTroopsPerPlayer();
+            Game::GameConfig::instance().get_max_troops_per_player();
         if (current_troops + production_cost > max_troops) {
           prod->in_progress = false;
           prod->time_remaining = 0.0F;
@@ -108,7 +108,7 @@ void ProductionSystem::update(Engine::Core::World *world, float delta_time) {
           auto unit = reg->create(sp.spawn_type, *world, sp);
 
           if (unit && prod->rally_set) {
-            unit->moveTo(prod->rally_x, prod->rally_z);
+            unit->move_to(prod->rally_x, prod->rally_z);
           }
         }
 
