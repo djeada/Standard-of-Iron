@@ -166,6 +166,13 @@ public:
         resolve(kShaderBase + QStringLiteral("troop_shadow.frag"));
     load(QStringLiteral("troop_shadow"), troopShadowVert, troopShadowFrag);
 
+    // Banner cloth shader with GPU wind animation
+    const QString bannerVert =
+        resolve(kShaderBase + QStringLiteral("banner.vert"));
+    const QString bannerFrag =
+        resolve(kShaderBase + QStringLiteral("banner.frag"));
+    load(QStringLiteral("banner"), bannerVert, bannerFrag);
+
     const auto loadBaseShader = [&](const QString &name) {
       const QString vert =
           resolve(kShaderBase + name + QStringLiteral(".vert"));

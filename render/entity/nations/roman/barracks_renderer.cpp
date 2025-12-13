@@ -4,6 +4,8 @@
 #include "../../../geom/flag.h"
 #include "../../../geom/math_utils.h"
 #include "../../../geom/transforms.h"
+#include "../../../gl/backend.h"
+#include "../../../gl/backend/banner_pipeline.h"
 #include "../../../gl/primitives.h"
 #include "../../../gl/resources.h"
 #include "../../../submitter.h"
@@ -171,7 +173,8 @@ void drawGate(const DrawContext &p, ISubmitter &out, Mesh *unit, Texture *white,
 }
 
 void drawStandards(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                   Texture *white, const RomanPalette &c) {
+                   Texture *white, const RomanPalette &c,
+                   const BarracksFlagRenderer::ClothBannerResources *cloth) {
   float const pole_x = 2.0F;
   float const pole_z = -1.5F;
   float const pole_height = 2.6F;
@@ -215,12 +218,12 @@ void drawStandards(const DrawContext &p, ISubmitter &out, Mesh *unit,
 
   float const panel_x = beam_end.x() + (banner_width * 0.5F - beam_length);
 
-  // Banner with tassels and decorative trim
+  // Banner with tassels and decorative trim (GPU cloth animation)
   QVector3D banner_center(panel_x, flag_y, pole_z + 0.02F);
   BarracksFlagRenderer::drawBannerWithTassels(
       p, out, unit, white, banner_center, banner_width * 0.5F,
       banner_height * 0.5F, 0.02F, captureColors.teamColor,
-      captureColors.teamTrimColor);
+      captureColors.teamTrimColor, cloth);
 
   // Eagle finial on top
   draw_box(out, unit, white, p.model,
@@ -304,13 +307,20 @@ void draw_barracks(const DrawContext &p, ISubmitter &out) {
   QVector3D const team(r->color[0], r->color[1], r->color[2]);
   RomanPalette const c = make_palette(team);
 
+  // Get cloth banner resources from backend if available
+  BarracksFlagRenderer::ClothBannerResources cloth;
+  if (p.backend != nullptr) {
+    cloth.clothMesh = p.backend->bannerMesh();
+    cloth.bannerShader = p.backend->bannerShader();
+  }
+
   drawFortressBase(p, out, unit, white, c);
   drawFortressWalls(p, out, unit, white, c);
   drawCornerTowers(p, out, unit, white, c);
   drawCourtyard(p, out, unit, white, c);
   drawRomanRoof(p, out, unit, white, c);
   drawGate(p, out, unit, white, c);
-  drawStandards(p, out, unit, white, c);
+  drawStandards(p, out, unit, white, c, &cloth);
   draw_rally_flag(p, out, white, c);
   draw_health_bar(p, out, unit, white);
   draw_selection(p, out);

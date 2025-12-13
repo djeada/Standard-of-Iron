@@ -4,6 +4,7 @@
 #include "../../../geom/flag.h"
 #include "../../../geom/math_utils.h"
 #include "../../../geom/transforms.h"
+#include "../../../gl/backend.h"
 #include "../../../gl/primitives.h"
 #include "../../../gl/resources.h"
 #include "../../../submitter.h"
@@ -211,7 +212,8 @@ void draw_trading_goods(const DrawContext &p, ISubmitter &out, Mesh *unit,
 }
 
 void draw_phoenician_banner(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                            Texture *white, const CarthagePalette &c) {
+                            Texture *white, const CarthagePalette &c,
+                            const BarracksFlagRenderer::ClothBannerResources *cloth) {
   float const pole_x = 0.0F;
   float const pole_z = -2.0F;
   float const pole_height = 3.0F;
@@ -255,12 +257,12 @@ void draw_phoenician_banner(const DrawContext &p, ISubmitter &out, Mesh *unit,
 
   float const panel_x = beam_end.x() + (banner_width * 0.5F - beam_length);
 
-  // Phoenician banner with tassels and decorative trim
+  // Phoenician banner with GPU cloth animation
   QVector3D banner_center(panel_x, flag_y, pole_z + 0.02F);
   BarracksFlagRenderer::drawBannerWithTassels(
       p, out, unit, white, banner_center, banner_width * 0.5F,
       banner_height * 0.5F, 0.02F, captureColors.teamColor,
-      captureColors.teamTrimColor);
+      captureColors.teamTrimColor, cloth);
 
   // Decorative crescent moon finial (Carthaginian symbol)
   draw_box(out, unit, white, p.model,
@@ -344,13 +346,20 @@ void draw_barracks(const DrawContext &p, ISubmitter &out) {
   QVector3D const team(r->color[0], r->color[1], r->color[2]);
   CarthagePalette const c = make_palette(team);
 
+  // Get cloth banner resources from backend if available
+  BarracksFlagRenderer::ClothBannerResources cloth;
+  if (p.backend != nullptr) {
+    cloth.clothMesh = p.backend->bannerMesh();
+    cloth.bannerShader = p.backend->bannerShader();
+  }
+
   draw_platform(p, out, unit, white, c);
   draw_colonnade(p, out, unit, white, c);
   draw_central_courtyard(p, out, unit, white, c);
   draw_chamber(p, out, unit, white, c);
   draw_terrace(p, out, unit, white, c);
   draw_trading_goods(p, out, unit, white, c);
-  draw_phoenician_banner(p, out, unit, white, c);
+  draw_phoenician_banner(p, out, unit, white, c, &cloth);
   draw_rally_flag(p, out, white, c);
   draw_health_bar(p, out, unit, white);
   draw_selection(p, out);

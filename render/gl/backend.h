@@ -25,6 +25,7 @@ class CharacterPipeline;
 class WaterPipeline;
 class EffectsPipeline;
 class PrimitiveBatchPipeline;
+class BannerPipeline;
 } // namespace Render::GL::BackendPipelines
 
 namespace Render::GL {
@@ -63,6 +64,18 @@ public:
     }
     return m_shaderCache->load(name, vertPath, fragPath);
   }
+
+  /**
+   * @brief Get the banner cloth mesh for GPU-animated banners.
+   * @return Subdivided plane mesh suitable for cloth simulation, or nullptr.
+   */
+  [[nodiscard]] auto bannerMesh() const -> Mesh *;
+
+  /**
+   * @brief Get the banner shader for cloth animation.
+   * @return Banner shader, or nullptr if not initialized.
+   */
+  [[nodiscard]] auto bannerShader() const -> Shader *;
 
   void enableDepthTest(bool enable) {
     if (enable) {
@@ -108,6 +121,7 @@ private:
   std::unique_ptr<BackendPipelines::EffectsPipeline> m_effectsPipeline;
   std::unique_ptr<BackendPipelines::PrimitiveBatchPipeline>
       m_primitiveBatchPipeline;
+  std::unique_ptr<BackendPipelines::BannerPipeline> m_bannerPipeline;
 
   Shader *m_basicShader = nullptr;
   Shader *m_gridShader = nullptr;

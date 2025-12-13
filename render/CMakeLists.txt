@@ -16,6 +16,7 @@ add_library(render_gl STATIC
     gl/backend/water_pipeline.cpp
     gl/backend/effects_pipeline.cpp
     gl/backend/primitive_batch_pipeline.cpp
+    gl/backend/banner_pipeline.cpp
     gl/shader_cache.cpp
     gl/state_scopes.cpp
     draw_queue.cpp

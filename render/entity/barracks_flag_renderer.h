@@ -6,6 +6,7 @@
 #include "../geom/flag.h"
 #include "../geom/transforms.h"
 #include "../gl/primitives.h"
+#include "../gl/shader.h"
 #include "renderer_constants.h"
 #include "submitter.h"
 
@@ -23,6 +24,16 @@ struct FlagColors {
   QVector3D timber;
   QVector3D timberLight;
   QVector3D woodDark;
+};
+
+/**
+ * @brief Resources for rendering cloth banners with GPU animation.
+ *
+ * These should be obtained from the BannerPipeline in the backend.
+ */
+struct ClothBannerResources {
+  Mesh *clothMesh = nullptr;   ///< Subdivided plane mesh for cloth deformation
+  Shader *bannerShader = nullptr; ///< Banner shader with wind animation
 };
 
 inline void draw_rally_flag_if_any(const DrawContext &p, ISubmitter &out,
@@ -44,10 +55,12 @@ inline void draw_rally_flag_if_any(const DrawContext &p, ISubmitter &out,
 }
 
 /**
- * @brief Draw a banner with decorative tassels.
+ * @brief Draw a banner with GPU-based cloth animation and decorative tassels.
  *
- * Main cloth animation is done via GPU shader (banner.vert/frag).
- * This function adds CPU-side decorative elements like tassels.
+ * Uses vertex shader for realistic cloth physics (wave deformation, ripples)
+ * and fragment shader for fabric rendering (weave pattern, folds, sheen).
+ *
+ * @param cloth Optional cloth resources for GPU animation. If null, falls back to static rendering.
  */
 inline void drawBannerWithTassels(const DrawContext &p, ISubmitter &out,
                                   Mesh *unit, Texture *white,
@@ -55,14 +68,39 @@ inline void drawBannerWithTassels(const DrawContext &p, ISubmitter &out,
                                   float half_width, float half_height,
                                   float depth, const QVector3D &banner_color,
                                   const QVector3D &trim_color,
+                                  const ClothBannerResources *cloth = nullptr,
                                   int material_id = 0) {
-  // Main banner - uses shader for cloth animation
-  QMatrix4x4 banner_transform = Render::Geom::BannerCloth::generate_banner_transform(
-      banner_center, half_width, half_height, depth);
-  out.mesh(unit, p.model * banner_transform, banner_color, white, 1.0F,
-           material_id);
+  // Banner transform: position, orientation, and scale
+  QMatrix4x4 banner_transform;
+  banner_transform.translate(banner_center);
+  // Rotate so plane hangs vertically (plane is created in XZ, rotate to XY)
+  banner_transform.rotate(90.0F, 1.0F, 0.0F, 0.0F);
+  banner_transform.scale(half_width * 2.0F, half_height * 2.0F, 1.0F);
 
-  // Add decorative tassels (simple CPU animation)
+  // Use GPU cloth animation if resources available
+  if (cloth != nullptr && cloth->clothMesh != nullptr &&
+      cloth->bannerShader != nullptr) {
+    // Cast to QueueSubmitter to set shader
+    auto *queueSubmitter = dynamic_cast<QueueSubmitter *>(&out);
+    if (queueSubmitter != nullptr) {
+      queueSubmitter->set_shader(cloth->bannerShader);
+      out.mesh(cloth->clothMesh, p.model * banner_transform, banner_color,
+               white, 1.0F, material_id);
+      queueSubmitter->set_shader(nullptr); // Reset shader
+    } else {
+      // Fallback if not QueueSubmitter
+      out.mesh(cloth->clothMesh, p.model * banner_transform, banner_color,
+               white, 1.0F, material_id);
+    }
+  } else {
+    // Fallback: use simple box mesh (no animation)
+    QMatrix4x4 box_transform = Render::Geom::BannerCloth::generate_banner_transform(
+        banner_center, half_width, half_height, depth);
+    out.mesh(unit, p.model * box_transform, banner_color, white, 1.0F,
+             material_id);
+  }
+
+  // Add decorative tassels (simple CPU animation - very lightweight)
   auto tassels = Render::Geom::BannerTassels::generate_bottom_tassels(
       banner_center, half_width * 2.0F, half_height * 2.0F, 0.06F, 5,
       p.animation_time, trim_color,
@@ -75,14 +113,6 @@ inline void drawBannerWithTassels(const DrawContext &p, ISubmitter &out,
 
   for (const auto &tip : tassels.tip_transforms) {
     out.mesh(unit, p.model * tip, tassels.tip_color, white, 1.0F);
-  }
-
-  // Decorative border trim overlay
-  auto trims = Render::Geom::BannerEmbroidery::generate_border_trim(
-      banner_center, half_width, half_height, 0.035F, trim_color);
-
-  for (const auto &trim : trims) {
-    out.mesh(unit, p.model * trim.transform, trim.color, white, trim.alpha);
   }
 }
 
