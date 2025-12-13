@@ -69,7 +69,7 @@ void HorseArcherRendererBase::adjust_variation(
 void HorseArcherRendererBase::get_variant(const DrawContext &ctx, uint32_t seed,
                                           HumanoidVariant &v) const {
   QVector3D const team_tint = resolve_team_tint(ctx);
-  v.palette = makeHumanoidPalette(team_tint, seed);
+  v.palette = make_humanoid_palette(team_tint, seed);
 }
 
 void HorseArcherRendererBase::apply_riding_animation(
@@ -107,7 +107,7 @@ void HorseArcherRendererBase::draw_equipment(
       bow_config.bow_x = 0.0F;
 
       if (auto *bow_renderer = dynamic_cast<BowRenderer *>(bow.get())) {
-        bow_renderer->setConfig(bow_config);
+        bow_renderer->set_config(bow_config);
       }
       bow->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
     }
@@ -123,7 +123,7 @@ void HorseArcherRendererBase::draw_equipment(
 
       if (auto *quiver_renderer =
               dynamic_cast<QuiverRenderer *>(quiver.get())) {
-        quiver_renderer->setConfig(quiver_config);
+        quiver_renderer->set_config(quiver_config);
       }
       quiver->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
     }
@@ -185,7 +185,7 @@ void HorseArcherRendererBase::draw_armor(const DrawContext &ctx,
       cloak_config.shoulder_material_id = m_config.cloak_shoulder_material_id;
 
       if (auto *cloak_renderer = dynamic_cast<CloakRenderer *>(cloak.get())) {
-        cloak_renderer->setConfig(cloak_config);
+        cloak_renderer->set_config(cloak_config);
       }
 
       cloak->render(ctx, pose.body_frames, v.palette, anim, out);

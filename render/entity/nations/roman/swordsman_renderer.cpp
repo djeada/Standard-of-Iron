@@ -115,7 +115,7 @@ public:
   void get_variant(const DrawContext &ctx, uint32_t seed,
                    HumanoidVariant &v) const override {
     QVector3D const team_tint = resolve_team_tint(ctx);
-    v.palette = makeHumanoidPalette(team_tint, seed);
+    v.palette = make_humanoid_palette(team_tint, seed);
     auto const &style = resolve_style(ctx);
     apply_palette_overrides(style, team_tint, v);
   }
@@ -134,7 +134,7 @@ public:
     if (anim.is_attacking && anim.is_melee) {
       float const attack_phase =
           std::fmod(anim.time * KNIGHT_INV_ATTACK_CYCLE_TIME, 1.0F);
-      controller.swordSlash(attack_phase);
+      controller.sword_slash(attack_phase);
     } else {
       QVector3D const idle_hand_r(0.30F + arm_asymmetry,
                                   HP::SHOULDER_Y - 0.02F + arm_height_jitter,
@@ -191,7 +191,7 @@ public:
 
       auto *sword_renderer = dynamic_cast<SwordRenderer *>(sword.get());
       if (sword_renderer) {
-        sword_renderer->setConfig(sword_config);
+        sword_renderer->set_config(sword_config);
       }
       sword->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
     }
@@ -378,7 +378,7 @@ private:
   }
 };
 
-void registerKnightRenderer(Render::GL::EntityRendererRegistry &registry) {
+void register_knight_renderer(Render::GL::EntityRendererRegistry &registry) {
   ensure_swordsman_styles_registered();
   static KnightRenderer const renderer;
   registry.register_renderer(

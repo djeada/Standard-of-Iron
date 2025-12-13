@@ -20,21 +20,21 @@ public:
 
   void placeHandAt(bool is_left, const QVector3D &target_position);
 
-  void aimBow(float draw_phase);
+  void aim_bow(float draw_phase);
   void meleeStrike(float strike_phase);
   void graspTwoHanded(const QVector3D &grip_center, float hand_separation);
   void spearThrust(float attack_phase);
-  void swordSlash(float attack_phase);
-  void mountOnHorse(float saddle_height);
+  void sword_slash(float attack_phase);
+  void mount_on_horse(float saddle_height);
   void hold_sword_and_shield();
   void look_at(const QVector3D &target);
 
-  auto solveElbowIK(bool is_left, const QVector3D &shoulder,
+  auto solve_elbow_ik(bool is_left, const QVector3D &shoulder,
                     const QVector3D &hand, const QVector3D &outward_dir,
                     float along_frac, float lateral_offset, float y_bias,
                     float outward_sign) const -> QVector3D;
 
-  auto solveKneeIK(bool is_left, const QVector3D &hip, const QVector3D &foot,
+  auto solve_knee_ik(bool is_left, const QVector3D &hip, const QVector3D &foot,
                    float height_scale) const -> QVector3D;
 
   auto get_shoulder_y(bool is_left) const -> float;
@@ -44,16 +44,16 @@ private:
   HumanoidPose &m_pose;
   const HumanoidAnimationContext &m_anim_ctx;
 
-  auto getShoulder(bool is_left) const -> const QVector3D &;
+  auto get_shoulder(bool is_left) const -> const QVector3D &;
 
-  auto getHand(bool is_left) -> QVector3D &;
-  auto getHand(bool is_left) const -> const QVector3D &;
+  auto get_hand(bool is_left) -> QVector3D &;
+  auto get_hand(bool is_left) const -> const QVector3D &;
 
-  auto getElbow(bool is_left) -> QVector3D &;
+  auto get_elbow(bool is_left) -> QVector3D &;
 
-  auto computeRightAxis() const -> QVector3D;
+  auto compute_right_axis() const -> QVector3D;
 
-  auto computeOutwardDir(bool is_left) const -> QVector3D;
+  auto compute_outward_dir(bool is_left) const -> QVector3D;
 };
 
 } // namespace Render::GL

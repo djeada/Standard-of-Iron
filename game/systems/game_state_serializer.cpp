@@ -84,7 +84,7 @@ void GameStateSerializer::restoreCameraFromMetadata(const QJsonObject &metadata,
   if (viewport_height > 0) {
     aspect = float(viewport_width) / float(std::max(1, viewport_height));
   }
-  camera->setPerspective(fov, aspect, near_plane, far_plane);
+  camera->set_perspective(fov, aspect, near_plane, far_plane);
 }
 
 void GameStateSerializer::restoreRuntimeFromMetadata(

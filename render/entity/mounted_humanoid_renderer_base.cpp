@@ -78,7 +78,7 @@ void MountedHumanoidRendererBase::customize_pose(
   HorseProfile mount_profile{};
   mount_profile.dims = dims;
   MountedAttachmentFrame mount = compute_mount_frame(mount_profile);
-  tuneMountedKnightFrame(dims, mount);
+  tune_mounted_knight_frame(dims, mount);
   HorseMotionSample const motion =
       evaluate_horse_motion(mount_profile, anim, anim_ctx);
   apply_mount_vertical_offset(mount, motion.bob);
@@ -93,14 +93,14 @@ void MountedHumanoidRendererBase::customize_pose(
 
   MountedPoseController mounted_controller(pose, anim_ctx);
 
-  mounted_controller.mountOnHorse(mount);
+  mounted_controller.mount_on_horse(mount);
 
   apply_riding_animation(mounted_controller, mount, anim_ctx, pose, dims,
                          reins);
 
   applyMountedKnightLowerBody(dims, mount, anim_ctx, pose);
 
-  mounted_controller.finalizeHeadSync(mount, "customize_pose_final_sync");
+  mounted_controller.finalize_head_sync(mount, "customize_pose_final_sync");
 }
 
 void MountedHumanoidRendererBase::add_attachments(

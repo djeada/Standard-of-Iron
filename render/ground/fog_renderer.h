@@ -20,13 +20,13 @@ public:
   void setEnabled(bool enabled) { m_enabled = enabled; }
   [[nodiscard]] auto is_enabled() const -> bool { return m_enabled; }
 
-  void updateMask(int width, int height, float tile_size,
+  void update_mask(int width, int height, float tile_size,
                   const std::vector<std::uint8_t> &cells);
 
   void submit(Renderer &renderer, ResourceManager *resources) override;
 
 private:
-  void buildChunks();
+  void build_chunks();
 
   using FogInstance = FogInstanceData;
 

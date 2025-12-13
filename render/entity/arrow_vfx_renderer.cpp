@@ -376,7 +376,7 @@ static inline void drawBowAndArrow(const DrawContext &p, ISubmitter &out,
            nullptr, 1.0F);
 }
 
-void registerArcherRenderer(Render::GL::EntityRendererRegistry &registry) {
+void register_archer_renderer(Render::GL::EntityRendererRegistry &registry) {
   registry.register_renderer(
       "archer", [](const DrawContext &p, ISubmitter &out) {
         QVector3D tunic(0.8F, 0.9F, 1.0F);

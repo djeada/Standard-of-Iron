@@ -28,7 +28,7 @@ Shader::~Shader() {
   }
 }
 
-auto Shader::loadFromFiles(const QString &vertexPath,
+auto Shader::load_from_files(const QString &vertexPath,
                            const QString &fragmentPath) -> bool {
   const QString resolved_vert =
       Utils::Resources::resolveResourcePath(vertexPath);
@@ -61,22 +61,22 @@ auto Shader::loadFromFiles(const QString &vertexPath,
   QString const vertex_source = vertex_stream.readAll();
   QString const fragment_source = fragment_stream.readAll();
 
-  return loadFromSource(vertex_source, fragment_source);
+  return load_from_source(vertex_source, fragment_source);
 }
 
-auto Shader::loadFromSource(const QString &vertex_source,
+auto Shader::load_from_source(const QString &vertex_source,
                             const QString &fragment_source) -> bool {
   initializeOpenGLFunctions();
   m_uniformCache.clear();
-  GLuint const vertex_shader = compileShader(vertex_source, GL_VERTEX_SHADER);
+  GLuint const vertex_shader = compile_shader(vertex_source, GL_VERTEX_SHADER);
   GLuint const fragment_shader =
-      compileShader(fragment_source, GL_FRAGMENT_SHADER);
+      compile_shader(fragment_source, GL_FRAGMENT_SHADER);
 
   if (vertex_shader == 0 || fragment_shader == 0) {
     return false;
   }
 
-  bool const success = linkProgram(vertex_shader, fragment_shader);
+  bool const success = link_program(vertex_shader, fragment_shader);
 
   glDeleteShader(vertex_shader);
   glDeleteShader(fragment_shader);
@@ -121,11 +121,11 @@ auto uniformHandleImpl(
 }
 } // namespace
 
-auto Shader::uniformHandle(const char *name) -> Shader::UniformHandle {
+auto Shader::uniform_handle(const char *name) -> Shader::UniformHandle {
   return uniformHandleImpl(*this, m_program, m_uniformCache, name, true);
 }
 
-auto Shader::optionalUniformHandle(const char *name) -> Shader::UniformHandle {
+auto Shader::optional_uniform_handle(const char *name) -> Shader::UniformHandle {
   return uniformHandleImpl(*this, m_program, m_uniformCache, name, false);
 }
 
@@ -169,27 +169,27 @@ void Shader::set_uniform(UniformHandle handle, bool value) {
 }
 
 void Shader::set_uniform(const char *name, float value) {
-  set_uniform(uniformHandle(name), value);
+  set_uniform(uniform_handle(name), value);
 }
 
 void Shader::set_uniform(const char *name, const QVector3D &value) {
-  set_uniform(uniformHandle(name), value);
+  set_uniform(uniform_handle(name), value);
 }
 
 void Shader::set_uniform(const char *name, const QVector2D &value) {
-  set_uniform(uniformHandle(name), value);
+  set_uniform(uniform_handle(name), value);
 }
 
 void Shader::set_uniform(const char *name, const QMatrix4x4 &value) {
-  set_uniform(uniformHandle(name), value);
+  set_uniform(uniform_handle(name), value);
 }
 
 void Shader::set_uniform(const char *name, int value) {
-  set_uniform(uniformHandle(name), value);
+  set_uniform(uniform_handle(name), value);
 }
 
 void Shader::set_uniform(const char *name, bool value) {
-  set_uniform(uniformHandle(name), value);
+  set_uniform(uniform_handle(name), value);
 }
 
 void Shader::set_uniform(const QString &name, float value) {
@@ -221,7 +221,7 @@ void Shader::set_uniform(const QString &name, bool value) {
   set_uniform(name, static_cast<int>(value));
 }
 
-auto Shader::compileShader(const QString &source, GLenum type) -> GLuint {
+auto Shader::compile_shader(const QString &source, GLenum type) -> GLuint {
   initializeOpenGLFunctions();
   GLuint const shader = glCreateShader(type);
 
@@ -243,7 +243,7 @@ auto Shader::compileShader(const QString &source, GLenum type) -> GLuint {
   return shader;
 }
 
-auto Shader::linkProgram(GLuint vertex_shader, GLuint fragment_shader) -> bool {
+auto Shader::link_program(GLuint vertex_shader, GLuint fragment_shader) -> bool {
   initializeOpenGLFunctions();
   m_program = glCreateProgram();
   glAttachShader(m_program, vertex_shader);

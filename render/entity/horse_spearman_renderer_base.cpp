@@ -71,7 +71,7 @@ void HorseSpearmanRendererBase::get_variant(const DrawContext &ctx,
                                             uint32_t seed,
                                             HumanoidVariant &v) const {
   QVector3D const team_tint = resolve_team_tint(ctx);
-  v.palette = makeHumanoidPalette(team_tint, seed);
+  v.palette = make_humanoid_palette(team_tint, seed);
 }
 
 void HorseSpearmanRendererBase::apply_riding_animation(
@@ -128,7 +128,7 @@ void HorseSpearmanRendererBase::draw_equipment(
       spear_config.spearhead_length = 0.18F;
 
       if (auto *spear_renderer = dynamic_cast<SpearRenderer *>(spear.get())) {
-        spear_renderer->setConfig(spear_config);
+        spear_renderer->set_config(spear_config);
       }
       spear->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
     }

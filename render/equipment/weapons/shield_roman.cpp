@@ -24,7 +24,7 @@ RomanShieldRenderer::RomanShieldRenderer() {
   config.shield_aspect = 1.3F;
   config.has_cross_decal = false;
 
-  setConfig(config);
+  set_config(config);
 }
 
 void RomanShieldRenderer::render(const DrawContext &ctx,

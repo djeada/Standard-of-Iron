@@ -9,7 +9,7 @@ namespace Render::GL {
 
 class GLCapabilities {
 public:
-  static void logCapabilities() {
+  static void log_capabilities() {
     auto *ctx = QOpenGLContext::currentContext();
     if (ctx == nullptr) {
       qWarning() << "GLCapabilities: No current OpenGL context";
@@ -71,7 +71,7 @@ public:
     qInfo() << "==================================";
   }
 
-  static auto isExtensionSupported(const char *extension) -> bool {
+  static auto is_extension_supported(const char *extension) -> bool {
     auto *ctx = QOpenGLContext::currentContext();
     if (ctx == nullptr) {
       return false;

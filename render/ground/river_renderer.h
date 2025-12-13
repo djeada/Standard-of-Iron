@@ -22,7 +22,7 @@ public:
   void submit(Renderer &renderer, ResourceManager *resources) override;
 
 private:
-  void buildMeshes();
+  void build_meshes();
 
   std::vector<Game::Map::RiverSegment> m_riverSegments;
   float m_tile_size = 1.0F;

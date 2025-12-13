@@ -91,7 +91,7 @@ auto Arrow::get() -> GL::Mesh * {
 
 namespace GL {
 
-void renderArrows(Renderer *renderer, ResourceManager *resources,
+void render_arrows(Renderer *renderer, ResourceManager *resources,
                   const Game::Systems::ArrowSystem &arrow_system) {
   if ((renderer == nullptr) || (resources == nullptr)) {
     return;

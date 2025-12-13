@@ -30,10 +30,10 @@ void RiverbankRenderer::configure(
   m_grid_width = height_map.getWidth();
   m_grid_height = height_map.getHeight();
   m_heights = height_map.getHeightData();
-  buildMeshes();
+  build_meshes();
 }
 
-void RiverbankRenderer::buildMeshes() {
+void RiverbankRenderer::build_meshes() {
   m_meshes.clear();
   m_visibilitySamples.clear();
 

@@ -34,7 +34,7 @@ public:
               const HumanoidAnimationContext &anim,
               ISubmitter &submitter) override;
 
-  void setConfig(const BowRenderConfig &config) { m_config = config; }
+  void set_config(const BowRenderConfig &config) { m_config = config; }
 
 private:
   BowRenderConfig m_config;

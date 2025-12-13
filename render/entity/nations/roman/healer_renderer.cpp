@@ -82,7 +82,7 @@ public:
   void get_variant(const DrawContext &ctx, uint32_t seed,
                    HumanoidVariant &v) const override {
     QVector3D const team_tint = resolve_team_tint(ctx);
-    v.palette = makeHumanoidPalette(team_tint, seed);
+    v.palette = make_humanoid_palette(team_tint, seed);
     auto const &style = resolve_style(ctx);
     apply_palette_overrides(style, team_tint, v);
   }
@@ -133,7 +133,7 @@ public:
                   const HumanoidAnimationContext &anim,
                   ISubmitter &out) const override {
 
-    drawHealerTunic(ctx, v, pose, out);
+    draw_healer_tunic(ctx, v, pose, out);
 
     if (resolve_style(ctx).show_armor) {
       auto &registry = EquipmentRegistry::instance();
@@ -144,7 +144,7 @@ public:
     }
   }
 
-  void drawHealerTunic(const DrawContext &ctx, const HumanoidVariant &v,
+  void draw_healer_tunic(const DrawContext &ctx, const HumanoidVariant &v,
                        const HumanoidPose &pose, ISubmitter &out) const {
     using HP = HumanProportions;
     const BodyFrames &frames = pose.body_frames;
@@ -451,7 +451,7 @@ private:
   }
 };
 
-void registerHealerRenderer(Render::GL::EntityRendererRegistry &registry) {
+void register_healer_renderer(Render::GL::EntityRendererRegistry &registry) {
   ensure_healer_styles_registered();
   static HealerRenderer const renderer;
   registry.register_renderer(
