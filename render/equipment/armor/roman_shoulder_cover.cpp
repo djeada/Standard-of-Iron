@@ -8,7 +8,7 @@
 
 namespace Render::GL {
 
-using Render::Geom::sphereAt;
+using Render::Geom::sphere_at;
 
 void RomanShoulderCoverRenderer::render(const DrawContext &ctx,
                                         const BodyFrames &frames,

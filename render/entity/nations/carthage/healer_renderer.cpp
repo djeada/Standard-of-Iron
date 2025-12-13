@@ -35,8 +35,8 @@
 #include <string_view>
 #include <unordered_map>
 
-using Render::Geom::cylinderBetween;
-using Render::Geom::sphereAt;
+using Render::Geom::cylinder_between;
+using Render::Geom::sphere_at;
 
 namespace Render::GL::Carthage {
 
@@ -256,7 +256,7 @@ public:
                              forward * (r2 * cos2) + up * (y_pos - origin.y());
 
         out.mesh(getUnitCylinder(),
-                 cylinderBetween(ctx.model, p1, p2, thickness), color, nullptr,
+                 cylinder_between(ctx.model, p1, p2, thickness), color, nullptr,
                  1.0F, materialId);
       }
     };
@@ -300,15 +300,15 @@ public:
     QVector3D const sash_top = origin + up * (sash_y + 0.028F - origin.y());
     QVector3D const sash_bot = origin + up * (sash_y - 0.028F - origin.y());
     out.mesh(getUnitCylinder(),
-             cylinderBetween(ctx.model, sash_bot, sash_top, torso_r * 0.99F),
+             cylinder_between(ctx.model, sash_bot, sash_top, torso_r * 0.99F),
              purple_tyrian, nullptr, 1.0F, k_mat_purple_trim);
 
     out.mesh(getUnitCylinder(),
-             cylinderBetween(ctx.model, sash_top, sash_top - up * 0.006F,
+             cylinder_between(ctx.model, sash_top, sash_top - up * 0.006F,
                              torso_r * 1.02F),
              team_tint, nullptr, 1.0F, k_mat_tools);
     out.mesh(getUnitCylinder(),
-             cylinderBetween(ctx.model, sash_bot + up * 0.006F, sash_bot,
+             cylinder_between(ctx.model, sash_bot + up * 0.006F, sash_bot,
                              torso_r * 1.02F),
              team_tint, nullptr, 1.0F, k_mat_tools);
 
@@ -317,23 +317,23 @@ public:
     QVector3D const sash_hang_end =
         sash_hang_start - up * 0.12F + forward * 0.02F;
     out.mesh(getUnitCylinder(),
-             cylinderBetween(ctx.model, sash_hang_start, sash_hang_end, 0.018F),
+             cylinder_between(ctx.model, sash_hang_start, sash_hang_end, 0.018F),
              purple_dark, nullptr, 1.0F, k_mat_purple_trim);
 
     out.mesh(getUnitSphere(),
-             sphereAt(ctx.model, sash_hang_end - up * 0.01F, 0.015F),
+             sphere_at(ctx.model, sash_hang_end - up * 0.01F, 0.015F),
              bronze_color, nullptr, 1.0F, k_mat_tools);
 
     float const neck_y = y_shoulder + 0.04F;
     QVector3D const neck_center = origin + up * (neck_y - origin.y());
 
     out.mesh(getUnitCylinder(),
-             cylinderBetween(ctx.model, neck_center - up * 0.012F,
+             cylinder_between(ctx.model, neck_center - up * 0.012F,
                              neck_center + up * 0.012F, HP::NECK_RADIUS * 1.7F),
              robe_tan, nullptr, 1.0F, k_mat_tunic);
 
     out.mesh(getUnitCylinder(),
-             cylinderBetween(ctx.model, neck_center + up * 0.010F,
+             cylinder_between(ctx.model, neck_center + up * 0.010F,
                              neck_center + up * 0.018F, HP::NECK_RADIUS * 2.0F),
              purple_tyrian * 0.9F, nullptr, 1.0F, k_mat_purple_trim);
 
@@ -348,14 +348,14 @@ public:
                                      up * (t * 0.05F);
         float const sleeve_r = HP::UPPER_ARM_R * (1.55F - t * 0.08F);
         QVector3D const sleeve_color = robe_cream * (1.0F - t * 0.04F);
-        out.mesh(getUnitSphere(), sphereAt(ctx.model, sleeve_pos, sleeve_r),
+        out.mesh(getUnitSphere(), sphere_at(ctx.model, sleeve_pos, sleeve_r),
                  sleeve_color, nullptr, 1.0F, k_mat_tunic);
       }
 
       QVector3D const cuff_pos =
           anchor + outward * 0.055F + forward * 0.040F - up * 0.05F;
       out.mesh(getUnitSphere(),
-               sphereAt(ctx.model, cuff_pos, HP::UPPER_ARM_R * 1.15F),
+               sphere_at(ctx.model, cuff_pos, HP::UPPER_ARM_R * 1.15F),
                purple_tyrian * 0.85F, nullptr, 1.0F, k_mat_purple_trim);
     };
     drawFlowingSleeve(frames.shoulder_l.origin, -right);
@@ -363,11 +363,11 @@ public:
 
     QVector3D const pendant_pos = origin + forward * (torso_depth * 0.6F) +
                                   up * (y_shoulder - 0.06F - origin.y());
-    out.mesh(getUnitSphere(), sphereAt(ctx.model, pendant_pos, 0.022F),
+    out.mesh(getUnitSphere(), sphere_at(ctx.model, pendant_pos, 0.022F),
              bronze_color, nullptr, 1.0F, k_mat_tools);
 
     out.mesh(getUnitCylinder(),
-             cylinderBetween(ctx.model,
+             cylinder_between(ctx.model,
                              neck_center + forward * (torso_depth * 0.3F),
                              pendant_pos + up * 0.01F, 0.006F),
              bronze_color * 0.85F, nullptr, 1.0F, k_mat_tools);
