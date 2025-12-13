@@ -54,16 +54,19 @@ inline void drawBannerWithTassels(
     const QVector3D &banner_center, float half_width, float half_height,
     float depth, const QVector3D &banner_color, const QVector3D &trim_color,
     const ClothBannerResources *cloth = nullptr, int material_id = 0) {
+  (void)trim_color; // Trim color handled by shader
+  (void)depth;      // Depth not used for cloth mesh
 
   QMatrix4x4 banner_transform;
   banner_transform.translate(banner_center);
 
+  // Rotate so plane hangs vertically (plane is created in XZ, rotate to XY)
   banner_transform.rotate(90.0F, 1.0F, 0.0F, 0.0F);
   banner_transform.scale(half_width * 2.0F, half_height * 2.0F, 1.0F);
 
   if (cloth != nullptr && cloth->clothMesh != nullptr &&
       cloth->bannerShader != nullptr) {
-
+    // Use GPU cloth animation with subdivided mesh
     auto *queueSubmitter = dynamic_cast<QueueSubmitter *>(&out);
     if (queueSubmitter != nullptr) {
       queueSubmitter->set_shader(cloth->bannerShader);
@@ -71,31 +74,18 @@ inline void drawBannerWithTassels(
                white, 1.0F, material_id);
       queueSubmitter->set_shader(nullptr);
     } else {
-
       out.mesh(cloth->clothMesh, p.model * banner_transform, banner_color,
                white, 1.0F, material_id);
     }
   } else {
-
+    // Fallback: use simple box mesh (no animation)
     QMatrix4x4 box_transform =
         Render::Geom::BannerCloth::generate_banner_transform(
-            banner_center, half_width, half_height, depth);
+            banner_center, half_width, half_height, 0.02F);
     out.mesh(unit, p.model * box_transform, banner_color, white, 1.0F,
              material_id);
   }
-
-  auto tassels = Render::Geom::BannerTassels::generate_bottom_tassels(
-      banner_center, half_width * 2.0F, half_height * 2.0F, 0.06F, 5,
-      p.animation_time, trim_color, QVector3D(0.85F, 0.75F, 0.45F));
-
-  for (const auto &thread : tassels.thread_transforms) {
-    out.mesh(get_unit_cylinder(), p.model * thread, tassels.thread_color, white,
-             1.0F);
-  }
-
-  for (const auto &tip : tassels.tip_transforms) {
-    out.mesh(unit, p.model * tip, tassels.tip_color, white, 1.0F);
-  }
+  // No tassels - clean banner look with GPU wind animation
 }
 
 inline void
