@@ -38,6 +38,7 @@
 #include "app/core/game_engine.h"
 #include "app/core/language_manager.h"
 #include "app/models/graphics_settings_proxy.h"
+#include "app/models/minimap_image_provider.h"
 #include "ui/gl_view.h"
 #include "ui/theme.h"
 
@@ -288,12 +289,35 @@ auto main(int argc, char *argv[]) -> int {
 
   qInfo() << "Setting up QML engine...";
   engine = std::make_unique<QQmlApplicationEngine>();
+
+  // Register minimap image provider
+  qInfo() << "Registering minimap image provider...";
+  auto *minimap_provider = new MinimapImageProvider();
+  engine->addImageProvider("minimap", minimap_provider);
+
   qInfo() << "Adding context properties...";
   engine->rootContext()->setContextProperty("languageManager",
                                             language_manager.get());
   engine->rootContext()->setContextProperty("game", game_engine.get());
   engine->rootContext()->setContextProperty("graphicsSettings",
                                             graphics_settings.get());
+
+  // Connect minimap image updates to the provider with DirectConnection
+  // This ensures the image is set in the provider BEFORE QML reacts to the
+  // signal
+  QObject::connect(
+      game_engine.get(), &GameEngine::minimap_image_changed, &app,
+      [minimap_provider, game_engine_ptr = game_engine.get()]() {
+        minimap_provider->set_minimap_image(game_engine_ptr->minimap_image());
+      },
+      Qt::DirectConnection);
+
+  // Set initial minimap image if available
+  if (!game_engine->minimap_image().isNull()) {
+    qInfo() << "Setting initial minimap image";
+    minimap_provider->set_minimap_image(game_engine->minimap_image());
+  }
+
   qInfo() << "Adding import path...";
   engine->addImportPath("qrc:/StandardOfIron/ui/qml");
   engine->addImportPath("qrc:/");
