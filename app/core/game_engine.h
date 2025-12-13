@@ -8,9 +8,11 @@
 #include "../utils/movement_utils.h"
 #include "../utils/selection_utils.h"
 #include "ambient_state_manager.h"
+#include "camera_controller.h"
 #include "game/audio/AudioEventHandler.h"
 #include "game/core/event_manager.h"
 #include "game/systems/game_state_serializer.h"
+#include "input_command_handler.h"
 #include "minimap_manager.h"
 #include "renderer_bootstrap.h"
 #include <QJsonObject>
@@ -325,6 +327,8 @@ private:
   std::unique_ptr<App::Models::AudioSystemProxy> m_audio_systemProxy;
   std::unique_ptr<MinimapManager> m_minimap_manager;
   std::unique_ptr<AmbientStateManager> m_ambient_state_manager;
+  std::unique_ptr<InputCommandHandler> m_input_handler;
+  std::unique_ptr<CameraController> m_camera_controller;
   QQuickWindow *m_window = nullptr;
   RuntimeState m_runtime;
   ViewportState m_viewport;

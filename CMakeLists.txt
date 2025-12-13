@@ -130,6 +130,8 @@ if(QT_VERSION_MAJOR EQUAL 6)
         app/core/audio_resource_loader.cpp
         app/core/renderer_bootstrap.cpp
         app/core/level_orchestrator.cpp
+        app/core/input_command_handler.cpp
+        app/core/camera_controller.cpp
         app/models/audio_system_proxy.cpp
         app/models/graphics_settings_proxy.cpp
         app/models/cursor_manager.cpp
@@ -152,6 +154,8 @@ else()
         app/core/audio_resource_loader.cpp
         app/core/renderer_bootstrap.cpp
         app/core/level_orchestrator.cpp
+        app/core/input_command_handler.cpp
+        app/core/camera_controller.cpp
         app/models/audio_system_proxy.cpp
         app/models/graphics_settings_proxy.cpp
         app/models/cursor_manager.cpp
