@@ -32,6 +32,6 @@ private:
 auto meshKindFromString(const QString &s) -> VisualDef::MeshKind;
 
 void apply_to_renderable(const VisualDef &def,
-                       Engine::Core::RenderableComponent &r);
+                         Engine::Core::RenderableComponent &r);
 
 } // namespace Game::Visuals

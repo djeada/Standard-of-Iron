@@ -32,7 +32,7 @@ auto WaterPipeline::initialize() -> bool {
 
   cacheUniforms();
 
-  return isInitialized();
+  return is_initialized();
 }
 
 void WaterPipeline::shutdown() {
@@ -49,7 +49,7 @@ void WaterPipeline::cacheUniforms() {
   cache_road_uniforms();
 }
 
-auto WaterPipeline::isInitialized() const -> bool {
+auto WaterPipeline::is_initialized() const -> bool {
   return m_riverShader != nullptr && m_riverbankShader != nullptr &&
          m_bridgeShader != nullptr && m_road_shader != nullptr;
 }

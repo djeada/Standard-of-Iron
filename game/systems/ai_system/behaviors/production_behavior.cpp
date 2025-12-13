@@ -20,7 +20,7 @@ void ProductionBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   static int const exec_counter = 0;
 
   auto &nation_registry = Game::Systems::NationRegistry::instance();
-  const auto *nation = nation_registry.getNationForPlayer(context.player_id);
+  const auto *nation = nation_registry.get_nation_for_player(context.player_id);
 
   if (nation == nullptr) {
 
