@@ -58,7 +58,7 @@ void MapTransformer::clearPlayerTeamOverrides() {
   s_player_team_overrides.clear();
 }
 
-auto MapTransformer::applyToWorld(
+auto MapTransformer::apply_to_world(
     const MapDefinition &def, Engine::Core::World &world,
     const Game::Visuals::VisualCatalog *visuals) -> MapRuntime {
   MapRuntime rt;
@@ -141,7 +141,8 @@ auto MapTransformer::applyToWorld(
     }
 
     auto &terrain = Game::Map::TerrainService::instance();
-    if (terrain.is_initialized() && terrain.is_forbidden_world(world_x, world_z)) {
+    if (terrain.is_initialized() &&
+        terrain.is_forbidden_world(world_x, world_z)) {
       const float tile = std::max(0.0001F, def.grid.tile_size);
       bool found = false;
       const int max_radius = 12;
@@ -211,7 +212,7 @@ auto MapTransformer::applyToWorld(
       if (visuals != nullptr) {
         Game::Visuals::VisualDef defv;
         if (visuals->lookup(Game::Units::spawn_typeToString(s.type), defv)) {
-          Game::Visuals::applyToRenderable(defv, *r);
+          Game::Visuals::apply_to_renderable(defv, *r);
         }
       }
       if (r->color[0] == 0.0F && r->color[1] == 0.0F && r->color[2] == 0.0F) {

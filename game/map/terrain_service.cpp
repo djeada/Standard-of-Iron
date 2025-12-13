@@ -37,7 +37,7 @@ void TerrainService::clear() {
 }
 
 auto TerrainService::get_terrain_height(float world_x,
-                                      float world_z) const -> float {
+                                        float world_z) const -> float {
   if (!m_height_map) {
     return 0.0F;
   }
@@ -45,7 +45,7 @@ auto TerrainService::get_terrain_height(float world_x,
 }
 
 auto TerrainService::get_terrain_height_grid(int grid_x,
-                                          int grid_z) const -> float {
+                                             int grid_z) const -> float {
   if (!m_height_map) {
     return 0.0F;
   }
@@ -86,7 +86,7 @@ auto TerrainService::is_forbidden(int grid_x, int grid_z) const -> bool {
 }
 
 auto TerrainService::is_forbidden_world(float world_x,
-                                      float world_z) const -> bool {
+                                        float world_z) const -> bool {
   if (!m_height_map) {
     return false;
   }
@@ -106,7 +106,7 @@ auto TerrainService::is_forbidden_world(float world_x,
   const int grid_x_int = static_cast<int>(std::round(grid_x));
   const int grid_z_int = static_cast<int>(std::round(grid_z));
 
-  return isForbidden(grid_x_int, grid_z_int);
+  return is_forbidden(grid_x_int, grid_z_int);
 }
 
 auto TerrainService::is_hill_entrance(int grid_x, int grid_z) const -> bool {
@@ -117,7 +117,7 @@ auto TerrainService::is_hill_entrance(int grid_x, int grid_z) const -> bool {
 }
 
 auto TerrainService::get_terrain_type(int grid_x,
-                                    int grid_z) const -> TerrainType {
+                                      int grid_z) const -> TerrainType {
   if (!m_height_map) {
     return TerrainType::Flat;
   }

@@ -75,23 +75,23 @@ class NationRegistry {
 public:
   static auto instance() -> NationRegistry &;
 
-  void registerNation(Nation nation);
+  void register_nation(Nation nation);
 
   auto getNation(NationID nationId) const -> const Nation *;
 
-  auto getNationForPlayer(int player_id) const -> const Nation *;
+  auto get_nation_for_player(int player_id) const -> const Nation *;
 
-  void setPlayerNation(int player_id, NationID nationId);
+  void set_player_nation(int player_id, NationID nationId);
 
-  auto getAllNations() const -> const std::vector<Nation> & {
+  auto get_all_nations() const -> const std::vector<Nation> & {
     return m_nations;
   }
 
-  void initializeDefaults();
+  void initialize_defaults();
 
   void clear();
 
-  void clearPlayerAssignments();
+  void clear_player_assignments();
 
   auto default_nation_id() const -> NationID { return m_defaultNation; }
 

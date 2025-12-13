@@ -61,8 +61,8 @@ public:
 
   auto
   get_formation_positions(FormationType type, int unit_count,
-                        const QVector3D &center,
-                        float base_spacing = 1.0F) -> std::vector<QVector3D>;
+                          const QVector3D &center,
+                          float base_spacing = 1.0F) -> std::vector<QVector3D>;
 
   void registerFormation(FormationType type,
                          std::unique_ptr<IFormation> formation);
