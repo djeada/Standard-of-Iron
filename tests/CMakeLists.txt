@@ -29,8 +29,8 @@ target_link_libraries(standard_of_iron_tests
         Qt${QT_VERSION_MAJOR}::Gui
         Qt${QT_VERSION_MAJOR}::Sql
         engine_core
-        game_systems
         render_gl
+        game_systems
 )
 
 # Include directories
