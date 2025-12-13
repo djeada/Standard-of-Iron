@@ -43,7 +43,7 @@ public:
   auto operator=(Backend &&) -> Backend & = delete;
 
   void initialize();
-  void beginFrame();
+  void begin_frame();
   void setViewport(int w, int h);
   void setClearColor(float r, float g, float b, float a);
   void setAnimationTime(float time) { m_animationTime = time; }
@@ -64,7 +64,7 @@ public:
     return m_shaderCache->load(name, vertPath, fragPath);
   }
 
-  void enableDepthTest(bool enable) {
+  void enable_depth_test(bool enable) {
     if (enable) {
       glEnable(GL_DEPTH_TEST);
     } else {
@@ -74,7 +74,7 @@ public:
   void setDepthFunc(GLenum func) { glDepthFunc(func); }
   void setDepthMask(bool write) { glDepthMask(write ? GL_TRUE : GL_FALSE); }
 
-  void enableBlend(bool enable) {
+  void enable_blend(bool enable) {
     if (enable) {
       glEnable(GL_BLEND);
     } else {
@@ -83,7 +83,7 @@ public:
   }
   void setBlendFunc(GLenum src, GLenum dst) { glBlendFunc(src, dst); }
 
-  void enablePolygonOffset(bool enable) {
+  void enable_polygon_offset(bool enable) {
     if (enable) {
       glEnable(GL_POLYGON_OFFSET_FILL);
     } else {

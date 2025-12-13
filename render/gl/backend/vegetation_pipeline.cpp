@@ -59,7 +59,7 @@ auto VegetationPipeline::initialize() -> bool {
   initializePinePipeline();
   initializeOlivePipeline();
   initializeFireCampPipeline();
-  cacheUniforms();
+  cache_uniforms();
 
   m_initialized = true;
   return true;
@@ -74,58 +74,58 @@ void VegetationPipeline::shutdown() {
   m_initialized = false;
 }
 
-void VegetationPipeline::cacheUniforms() {
+void VegetationPipeline::cache_uniforms() {
   if (m_stoneShader != nullptr) {
-    m_stoneUniforms.view_proj = m_stoneShader->uniformHandle("uViewProj");
+    m_stoneUniforms.view_proj = m_stoneShader->uniform_handle("uViewProj");
     m_stoneUniforms.light_direction =
-        m_stoneShader->uniformHandle("uLightDirection");
+        m_stoneShader->uniform_handle("uLightDirection");
   }
 
   if (m_plantShader != nullptr) {
-    m_plantUniforms.view_proj = m_plantShader->uniformHandle("uViewProj");
-    m_plantUniforms.time = m_plantShader->uniformHandle("uTime");
+    m_plantUniforms.view_proj = m_plantShader->uniform_handle("uViewProj");
+    m_plantUniforms.time = m_plantShader->uniform_handle("uTime");
     m_plantUniforms.wind_strength =
-        m_plantShader->uniformHandle("uWindStrength");
-    m_plantUniforms.wind_speed = m_plantShader->uniformHandle("uWindSpeed");
+        m_plantShader->uniform_handle("uWindStrength");
+    m_plantUniforms.wind_speed = m_plantShader->uniform_handle("uWindSpeed");
     m_plantUniforms.light_direction =
-        m_plantShader->uniformHandle("uLightDirection");
+        m_plantShader->uniform_handle("uLightDirection");
   }
 
   if (m_pineShader != nullptr) {
-    m_pineUniforms.view_proj = m_pineShader->uniformHandle("uViewProj");
-    m_pineUniforms.time = m_pineShader->uniformHandle("uTime");
-    m_pineUniforms.wind_strength = m_pineShader->uniformHandle("uWindStrength");
-    m_pineUniforms.wind_speed = m_pineShader->uniformHandle("uWindSpeed");
+    m_pineUniforms.view_proj = m_pineShader->uniform_handle("uViewProj");
+    m_pineUniforms.time = m_pineShader->uniform_handle("uTime");
+    m_pineUniforms.wind_strength = m_pineShader->uniform_handle("uWindStrength");
+    m_pineUniforms.wind_speed = m_pineShader->uniform_handle("uWindSpeed");
     m_pineUniforms.light_direction =
-        m_pineShader->uniformHandle("uLightDirection");
+        m_pineShader->uniform_handle("uLightDirection");
   }
 
   if (m_oliveShader != nullptr) {
-    m_oliveUniforms.view_proj = m_oliveShader->uniformHandle("uViewProj");
-    m_oliveUniforms.time = m_oliveShader->uniformHandle("uTime");
+    m_oliveUniforms.view_proj = m_oliveShader->uniform_handle("uViewProj");
+    m_oliveUniforms.time = m_oliveShader->uniform_handle("uTime");
     m_oliveUniforms.wind_strength =
-        m_oliveShader->uniformHandle("uWindStrength");
-    m_oliveUniforms.wind_speed = m_oliveShader->uniformHandle("uWindSpeed");
+        m_oliveShader->uniform_handle("uWindStrength");
+    m_oliveUniforms.wind_speed = m_oliveShader->uniform_handle("uWindSpeed");
     m_oliveUniforms.light_direction =
-        m_oliveShader->uniformHandle("uLightDirection");
+        m_oliveShader->uniform_handle("uLightDirection");
   }
 
   if (m_firecampShader != nullptr) {
     m_firecampUniforms.view_proj =
-        m_firecampShader->uniformHandle("u_viewProj");
-    m_firecampUniforms.time = m_firecampShader->uniformHandle("u_time");
+        m_firecampShader->uniform_handle("u_viewProj");
+    m_firecampUniforms.time = m_firecampShader->uniform_handle("u_time");
     m_firecampUniforms.flickerSpeed =
-        m_firecampShader->uniformHandle("u_flickerSpeed");
+        m_firecampShader->uniform_handle("u_flickerSpeed");
     m_firecampUniforms.flickerAmount =
-        m_firecampShader->uniformHandle("u_flickerAmount");
+        m_firecampShader->uniform_handle("u_flickerAmount");
     m_firecampUniforms.glowStrength =
-        m_firecampShader->uniformHandle("u_glowStrength");
+        m_firecampShader->uniform_handle("u_glowStrength");
     m_firecampUniforms.fireTexture =
-        m_firecampShader->uniformHandle("fireTexture");
+        m_firecampShader->uniform_handle("fireTexture");
     m_firecampUniforms.camera_right =
-        m_firecampShader->uniformHandle("u_cameraRight");
+        m_firecampShader->uniform_handle("u_cameraRight");
     m_firecampUniforms.camera_forward =
-        m_firecampShader->uniformHandle("u_cameraForward");
+        m_firecampShader->uniform_handle("u_cameraForward");
   }
 }
 

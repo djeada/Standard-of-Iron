@@ -17,8 +17,8 @@ public:
 
   auto initialize() -> bool override;
   void shutdown() override;
-  void cacheUniforms() override;
-  [[nodiscard]] auto isInitialized() const -> bool override;
+  void cache_uniforms() override;
+  [[nodiscard]] auto is_initialized() const -> bool override;
 
   struct GridUniforms {
     GL::Shader::UniformHandle mvp{GL::Shader::InvalidUniform};
@@ -48,8 +48,8 @@ private:
   GL::Backend *m_backend = nullptr;
   GL::ShaderCache *m_shaderCache = nullptr;
 
-  void cacheBasicUniforms();
-  void cacheGridUniforms();
+  void cache_basic_uniforms();
+  void cache_grid_uniforms();
 };
 
 } // namespace BackendPipelines

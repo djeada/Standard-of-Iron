@@ -19,7 +19,7 @@ CloakRenderer::CloakRenderer(const CloakConfig &config) : m_config(config) {
   m_shoulder_mesh.reset(createPlaneMesh(1.0F, 1.0F, 12));
 }
 
-void CloakRenderer::setConfig(const CloakConfig &config) { m_config = config; }
+void CloakRenderer::set_config(const CloakConfig &config) { m_config = config; }
 
 void CloakRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
                            const HumanoidPalette &palette,
