@@ -20,7 +20,7 @@ namespace {
 
 using Render::Geom::clamp01;
 using Render::Geom::clampVec01;
-using Render::Geom::cylinderBetween;
+using Render::Geom::cylinder_between;
 
 struct CarthagePalette {
   QVector3D limestone{0.96F, 0.94F, 0.88F};
@@ -58,7 +58,7 @@ inline void draw_box(ISubmitter &out, Mesh *unit, Texture *white,
 inline void draw_cyl(ISubmitter &out, const QMatrix4x4 &model,
                      const QVector3D &a, const QVector3D &b, float r,
                      const QVector3D &color, Texture *white) {
-  out.mesh(getUnitCylinder(), model * cylinderBetween(a, b, r), color, white,
+  out.mesh(get_unit_cylinder(), model * cylinder_between(a, b, r), color, white,
            1.0F);
 }
 
@@ -242,16 +242,16 @@ void draw_phoenician_banner(const DrawContext &p, ISubmitter &out, Mesh *unit,
 
   QVector3D const beam_start(pole_x + 0.02F, beam_y, pole_z);
   QVector3D const beam_end(pole_x + beam_length + 0.02F, beam_y, pole_z);
-  out.mesh(getUnitCylinder(),
-           p.model * Render::Geom::cylinderBetween(beam_start, beam_end,
-                                                   pole_radius * 0.35F),
+  out.mesh(get_unit_cylinder(),
+           p.model * Render::Geom::cylinder_between(beam_start, beam_end,
+                                                    pole_radius * 0.35F),
            c.cedar, white, 1.0F);
 
   QVector3D const connector_top(
       beam_end.x(), beam_end.y() - banner_height * 0.35F, beam_end.z());
-  out.mesh(getUnitCylinder(),
-           p.model * Render::Geom::cylinderBetween(beam_end, connector_top,
-                                                   pole_radius * 0.18F),
+  out.mesh(get_unit_cylinder(),
+           p.model * Render::Geom::cylinder_between(beam_end, connector_top,
+                                                    pole_radius * 0.18F),
            c.limestone, white, 1.0F);
 
   float const panel_x = beam_end.x() + (banner_width * 0.5F - beam_length);

@@ -35,8 +35,8 @@
 #include <string_view>
 #include <unordered_map>
 
-using Render::Geom::cylinderBetween;
-using Render::Geom::sphereAt;
+using Render::Geom::cylinder_between;
+using Render::Geom::sphere_at;
 
 namespace Render::GL::Roman {
 
@@ -82,7 +82,7 @@ public:
   void get_variant(const DrawContext &ctx, uint32_t seed,
                    HumanoidVariant &v) const override {
     QVector3D const team_tint = resolve_team_tint(ctx);
-    v.palette = makeHumanoidPalette(team_tint, seed);
+    v.palette = make_humanoid_palette(team_tint, seed);
     auto const &style = resolve_style(ctx);
     apply_palette_overrides(style, team_tint, v);
   }
@@ -133,7 +133,7 @@ public:
                   const HumanoidAnimationContext &anim,
                   ISubmitter &out) const override {
 
-    drawHealerTunic(ctx, v, pose, out);
+    draw_healer_tunic(ctx, v, pose, out);
 
     if (resolve_style(ctx).show_armor) {
       auto &registry = EquipmentRegistry::instance();
@@ -144,8 +144,8 @@ public:
     }
   }
 
-  void drawHealerTunic(const DrawContext &ctx, const HumanoidVariant &v,
-                       const HumanoidPose &pose, ISubmitter &out) const {
+  void draw_healer_tunic(const DrawContext &ctx, const HumanoidVariant &v,
+                         const HumanoidPose &pose, ISubmitter &out) const {
     using HP = HumanProportions;
     const BodyFrames &frames = pose.body_frames;
     const AttachmentFrame &torso = frames.torso;
@@ -206,8 +206,8 @@ public:
                              forward * (depth * cos2) +
                              up * (y_pos - origin.y());
 
-        out.mesh(getUnitCylinder(),
-                 cylinderBetween(ctx.model, p1, p2, thickness), color, nullptr,
+        out.mesh(get_unit_cylinder(),
+                 cylinder_between(ctx.model, p1, p2, thickness), color, nullptr,
                  1.0F);
       }
     };
@@ -218,8 +218,8 @@ public:
       QVector3D const top_pos = origin + up * (y_top - origin.y());
       QVector3D const bot_pos = origin + up * (y_bot - origin.y());
       float const avg_r = (width_top + width_bot) * 0.5F;
-      out.mesh(getUnitCylinder(),
-               cylinderBetween(ctx.model, bot_pos, top_pos, avg_r), color,
+      out.mesh(get_unit_cylinder(),
+               cylinder_between(ctx.model, bot_pos, top_pos, avg_r), color,
                nullptr, 1.0F);
     };
 
@@ -249,18 +249,18 @@ public:
     float const sash_y = y_waist + 0.010F;
     QVector3D const sash_center = origin + up * (sash_y - origin.y());
 
-    out.mesh(getUnitCylinder(),
-             cylinderBetween(ctx.model, sash_center - up * 0.022F,
-                             sash_center + up * 0.022F, torso_r * 0.86F),
+    out.mesh(get_unit_cylinder(),
+             cylinder_between(ctx.model, sash_center - up * 0.022F,
+                              sash_center + up * 0.022F, torso_r * 0.86F),
              sash_red, nullptr, 1.0F);
 
-    out.mesh(getUnitCylinder(),
-             cylinderBetween(ctx.model, sash_center + up * 0.020F,
-                             sash_center + up * 0.026F, torso_r * 0.88F),
+    out.mesh(get_unit_cylinder(),
+             cylinder_between(ctx.model, sash_center + up * 0.020F,
+                              sash_center + up * 0.026F, torso_r * 0.88F),
              trim_gold, nullptr, 1.0F);
-    out.mesh(getUnitCylinder(),
-             cylinderBetween(ctx.model, sash_center - up * 0.026F,
-                             sash_center - up * 0.020F, torso_r * 0.88F),
+    out.mesh(get_unit_cylinder(),
+             cylinder_between(ctx.model, sash_center - up * 0.026F,
+                              sash_center - up * 0.020F, torso_r * 0.88F),
              trim_gold, nullptr, 1.0F);
 
     if (style.show_cape) {
@@ -280,23 +280,23 @@ public:
                                      up * (cape_bottom_y - right_top.y()) +
                                      back.forward * 0.05F;
 
-      out.mesh(getUnitCylinder(),
-               cylinderBetween(ctx.model, left_top, right_top, 0.020F),
+      out.mesh(get_unit_cylinder(),
+               cylinder_between(ctx.model, left_top, right_top, 0.020F),
                cape_color, nullptr, 1.0F);
-      out.mesh(getUnitCylinder(),
-               cylinderBetween(ctx.model, left_top, left_bottom, 0.028F),
+      out.mesh(get_unit_cylinder(),
+               cylinder_between(ctx.model, left_top, left_bottom, 0.028F),
                cape_color, nullptr, 1.0F);
-      out.mesh(getUnitCylinder(),
-               cylinderBetween(ctx.model, right_top, right_bottom, 0.028F),
+      out.mesh(get_unit_cylinder(),
+               cylinder_between(ctx.model, right_top, right_bottom, 0.028F),
                cape_color, nullptr, 1.0F);
-      out.mesh(getUnitCylinder(),
-               cylinderBetween(ctx.model, left_bottom, right_bottom, 0.022F),
+      out.mesh(get_unit_cylinder(),
+               cylinder_between(ctx.model, left_bottom, right_bottom, 0.022F),
                cape_color * 0.94F, nullptr, 1.0F);
 
       QVector3D const cape_trim_top =
           (left_top + right_top) * 0.5F + back.forward * 0.01F;
-      out.mesh(getUnitSphere(),
-               sphereAt(ctx.model, cape_trim_top, torso_r * 0.16F),
+      out.mesh(get_unit_sphere(),
+               sphere_at(ctx.model, cape_trim_top, torso_r * 0.16F),
                trim_gold * 0.9F, nullptr, 1.0F);
     }
 
@@ -305,13 +305,13 @@ public:
     float const cross_half = torso_r * 0.36F;
     float const cross_thickness = torso_r * 0.18F;
     QVector3D const cross_color = saturate_color(sash_red * 1.05F);
-    out.mesh(getUnitCylinder(),
-             cylinderBetween(ctx.model, emblem_center - right * cross_half,
-                             emblem_center + right * cross_half,
-                             cross_thickness),
+    out.mesh(get_unit_cylinder(),
+             cylinder_between(ctx.model, emblem_center - right * cross_half,
+                              emblem_center + right * cross_half,
+                              cross_thickness),
              cross_color, nullptr, 1.0F);
-    out.mesh(getUnitCylinder(),
-             cylinderBetween(
+    out.mesh(get_unit_cylinder(),
+             cylinder_between(
                  ctx.model, emblem_center - up * (cross_half * 1.1F),
                  emblem_center + up * (cross_half * 1.1F), cross_thickness),
              cross_color, nullptr, 1.0F);
@@ -344,9 +344,9 @@ public:
     auto drawSleeve = [&](const QVector3D &shoulder_pos,
                           const QVector3D &outward,
                           const QVector3D &elbow_pos) {
-      out.mesh(getUnitSphere(),
-               sphereAt(ctx.model, shoulder_pos + outward * 0.01F,
-                        HP::UPPER_ARM_R * 1.6F),
+      out.mesh(get_unit_sphere(),
+               sphere_at(ctx.model, shoulder_pos + outward * 0.01F,
+                         HP::UPPER_ARM_R * 1.6F),
                tunic_white, nullptr, 1.0F);
 
       for (int i = 0; i < 5; ++i) {
@@ -355,13 +355,13 @@ public:
                                      outward * (0.01F - t * 0.005F);
         float const sleeve_r = HP::UPPER_ARM_R * (1.55F - t * 0.35F);
         QVector3D const sleeve_color = tunic_white * (1.0F - t * 0.06F);
-        out.mesh(getUnitSphere(), sphereAt(ctx.model, sleeve_pos, sleeve_r),
+        out.mesh(get_unit_sphere(), sphere_at(ctx.model, sleeve_pos, sleeve_r),
                  sleeve_color, nullptr, 1.0F);
       }
 
       QVector3D const cuff_pos = elbow_pos + outward * 0.005F;
-      out.mesh(getUnitSphere(),
-               sphereAt(ctx.model, cuff_pos, HP::UPPER_ARM_R * 1.25F),
+      out.mesh(get_unit_sphere(),
+               sphere_at(ctx.model, cuff_pos, HP::UPPER_ARM_R * 1.25F),
                tunic_cream * 0.95F, nullptr, 1.0F);
     };
     drawSleeve(frames.shoulder_l.origin, -right, pose.elbow_l);
@@ -372,7 +372,7 @@ public:
                                   forward * (torso_depth * 0.15F);
 
     out.mesh(
-        getUnitCube(),
+        get_unit_cube(),
         [&]() {
           QMatrix4x4 m = ctx.model;
           m.translate(satchel_pos);
@@ -382,7 +382,7 @@ public:
         leather_brown, nullptr, 1.0F);
 
     out.mesh(
-        getUnitCube(),
+        get_unit_cube(),
         [&]() {
           QMatrix4x4 m = ctx.model;
           m.translate(satchel_pos + up * 0.035F + forward * 0.01F);
@@ -394,7 +394,7 @@ public:
     QVector3D const clasp_pos = origin + right * (torso_r * 0.4F) +
                                 up * (y_shoulder - origin.y()) +
                                 forward * (torso_depth * 0.3F);
-    out.mesh(getUnitSphere(), sphereAt(ctx.model, clasp_pos, 0.022F),
+    out.mesh(get_unit_sphere(), sphere_at(ctx.model, clasp_pos, 0.022F),
              metal_bronze, nullptr, 1.0F);
   }
 
@@ -451,7 +451,7 @@ private:
   }
 };
 
-void registerHealerRenderer(Render::GL::EntityRendererRegistry &registry) {
+void register_healer_renderer(Render::GL::EntityRendererRegistry &registry) {
   ensure_healer_styles_registered();
   static HealerRenderer const renderer;
   registry.register_renderer(

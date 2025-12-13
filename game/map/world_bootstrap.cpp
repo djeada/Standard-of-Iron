@@ -25,7 +25,7 @@ auto WorldBootstrap::initialize(Render::GL::Renderer &renderer,
   }
 
   if (ground != nullptr) {
-    ground->configureExtent(50.0F);
+    ground->configure_extent(50.0F);
   }
 
   return true;

@@ -22,7 +22,7 @@ constexpr float k_uv_center = 0.5F;
 constexpr float k_uv_scale = 0.5F;
 constexpr int k_indices_per_quad = 6;
 
-auto createUnitCylinderMesh(int radialSegments) -> Mesh * {
+auto create_unit_cylinder_mesh(int radialSegments) -> Mesh * {
   const float radius = k_unit_radius;
   const float half_h = k_half_scalar;
 
@@ -97,7 +97,7 @@ auto createUnitCylinderMesh(int radialSegments) -> Mesh * {
   return new Mesh(v, idx);
 }
 
-auto createUnitSphereMesh(int latSegments, int lonSegments) -> Mesh * {
+auto create_unit_sphere_mesh(int latSegments, int lonSegments) -> Mesh * {
   const float r = k_unit_radius;
   std::vector<Vertex> v;
   std::vector<unsigned int> idx;
@@ -139,7 +139,7 @@ auto createUnitSphereMesh(int latSegments, int lonSegments) -> Mesh * {
   return new Mesh(v, idx);
 }
 
-auto createUnitConeMesh(int radialSegments) -> Mesh * {
+auto create_unit_cone_mesh(int radialSegments) -> Mesh * {
   const float base_r = k_unit_radius;
   const float half_h = k_half_scalar;
 
@@ -267,13 +267,13 @@ auto createCapsuleMesh(int radialSegments, int heightSegments) -> Mesh * {
   return new Mesh(verts, idx);
 }
 
-auto simpleHash(float seed) -> float {
+auto simple_hash(float seed) -> float {
   float const x =
       std::sin(seed * k_micro_noise_frequency) * k_micro_noise_scale;
   return x - std::floor(x);
 }
 
-auto createUnitTorsoMesh(int radialSegments, int heightSegments) -> Mesh * {
+auto create_unit_torso_mesh(int radialSegments, int heightSegments) -> Mesh * {
   const float half_h = k_half_scalar;
 
   constexpr float k_lower_extension = 0.05F;
@@ -575,37 +575,38 @@ auto createUnitTorsoMesh(int radialSegments, int heightSegments) -> Mesh * {
 
 } // namespace
 
-auto getUnitCylinder(int radialSegments) -> Mesh * {
+auto get_unit_cylinder(int radialSegments) -> Mesh * {
   static std::unique_ptr<Mesh> const s_mesh(
-      createUnitCylinderMesh(radialSegments));
+      create_unit_cylinder_mesh(radialSegments));
   return s_mesh.get();
 }
 
-auto getUnitCube() -> Mesh * {
+auto get_unit_cube() -> Mesh * {
   static std::unique_ptr<Mesh> const s_mesh(createCubeMesh());
   return s_mesh.get();
 }
 
-auto getUnitSphere(int latSegments, int lonSegments) -> Mesh * {
+auto get_unit_sphere(int latSegments, int lonSegments) -> Mesh * {
   static std::unique_ptr<Mesh> const s_mesh(
-      createUnitSphereMesh(latSegments, lonSegments));
+      create_unit_sphere_mesh(latSegments, lonSegments));
   return s_mesh.get();
 }
 
-auto getUnitCone(int radialSegments) -> Mesh * {
-  static std::unique_ptr<Mesh> const s_mesh(createUnitConeMesh(radialSegments));
+auto get_unit_cone(int radialSegments) -> Mesh * {
+  static std::unique_ptr<Mesh> const s_mesh(
+      create_unit_cone_mesh(radialSegments));
   return s_mesh.get();
 }
 
-auto getUnitCapsule(int radialSegments, int heightSegments) -> Mesh * {
+auto get_unit_capsule(int radialSegments, int heightSegments) -> Mesh * {
   static std::unique_ptr<Mesh> const s_mesh(
       createCapsuleMesh(radialSegments, heightSegments));
   return s_mesh.get();
 }
 
-auto getUnitTorso(int radialSegments, int heightSegments) -> Mesh * {
+auto get_unit_torso(int radialSegments, int heightSegments) -> Mesh * {
   static std::unique_ptr<Mesh> const s_mesh(
-      createUnitTorsoMesh(radialSegments, heightSegments));
+      create_unit_torso_mesh(radialSegments, heightSegments));
   return s_mesh.get();
 }
 

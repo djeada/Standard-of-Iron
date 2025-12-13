@@ -17,7 +17,7 @@ public:
 
   auto initialize() -> bool override;
   void shutdown() override;
-  void cacheUniforms() override;
+  void cache_uniforms() override;
   [[nodiscard]] auto is_initialized() const -> bool override;
 
   struct RiverUniforms {
@@ -63,9 +63,9 @@ private:
   GL::Backend *m_backend = nullptr;
   GL::ShaderCache *m_shaderCache = nullptr;
 
-  void cacheRiverUniforms();
-  void cacheRiverbankUniforms();
-  void cacheBridgeUniforms();
+  void cache_river_uniforms();
+  void cache_riverbank_uniforms();
+  void cache_bridge_uniforms();
   void cache_road_uniforms();
 };
 
