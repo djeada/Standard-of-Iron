@@ -23,18 +23,18 @@ public:
     return m_initialized;
   }
 
-  void beginFrame();
+  void begin_frame();
 
-  void uploadSphereInstances(const GL::PrimitiveInstanceGpu *data,
-                             std::size_t count);
-  void uploadCylinderInstances(const GL::PrimitiveInstanceGpu *data,
+  void upload_sphere_instances(const GL::PrimitiveInstanceGpu *data,
                                std::size_t count);
-  void uploadConeInstances(const GL::PrimitiveInstanceGpu *data,
-                           std::size_t count);
+  void upload_cylinder_instances(const GL::PrimitiveInstanceGpu *data,
+                                 std::size_t count);
+  void upload_cone_instances(const GL::PrimitiveInstanceGpu *data,
+                             std::size_t count);
 
-  void drawSpheres(std::size_t count, const QMatrix4x4 &viewProj);
-  void drawCylinders(std::size_t count, const QMatrix4x4 &viewProj);
-  void drawCones(std::size_t count, const QMatrix4x4 &viewProj);
+  void draw_spheres(std::size_t count, const QMatrix4x4 &view_proj);
+  void draw_cylinders(std::size_t count, const QMatrix4x4 &view_proj);
+  void draw_cones(std::size_t count, const QMatrix4x4 &view_proj);
 
   [[nodiscard]] auto shader() const -> GL::Shader * { return m_shader; }
 
@@ -47,41 +47,41 @@ public:
   Uniforms m_uniforms;
 
 private:
-  void initializeSphereVao();
-  void initializeCylinderVao();
-  void initializeConeVao();
-  void shutdownVaos();
+  void initialize_sphere_vao();
+  void initialize_cylinder_vao();
+  void initialize_cone_vao();
+  void shutdown_vaos();
 
-  void setupInstanceAttributes(GLuint vao, GLuint instanceBuffer);
+  void setup_instance_attributes(GLuint vao, GLuint instance_buffer);
 
-  GL::ShaderCache *m_shaderCache;
+  GL::ShaderCache *m_shader_cache;
   bool m_initialized{false};
 
   GL::Shader *m_shader{nullptr};
 
-  GLuint m_sphereVao{0};
-  GLuint m_sphereVertexBuffer{0};
-  GLuint m_sphereIndexBuffer{0};
-  GLuint m_sphereInstanceBuffer{0};
-  GLsizei m_sphereIndexCount{0};
-  std::size_t m_sphereInstanceCapacity{0};
+  GLuint m_sphere_vao{0};
+  GLuint m_sphere_vertex_buffer{0};
+  GLuint m_sphere_index_buffer{0};
+  GLuint m_sphere_instance_buffer{0};
+  GLsizei m_sphere_index_count{0};
+  std::size_t m_sphere_instance_capacity{0};
 
-  GLuint m_cylinderVao{0};
-  GLuint m_cylinderVertexBuffer{0};
-  GLuint m_cylinderIndexBuffer{0};
-  GLuint m_cylinderInstanceBuffer{0};
-  GLsizei m_cylinderIndexCount{0};
-  std::size_t m_cylinderInstanceCapacity{0};
+  GLuint m_cylinder_vao{0};
+  GLuint m_cylinder_vertex_buffer{0};
+  GLuint m_cylinder_index_buffer{0};
+  GLuint m_cylinder_instance_buffer{0};
+  GLsizei m_cylinder_index_count{0};
+  std::size_t m_cylinder_instance_capacity{0};
 
-  GLuint m_coneVao{0};
-  GLuint m_coneVertexBuffer{0};
-  GLuint m_coneIndexBuffer{0};
-  GLuint m_coneInstanceBuffer{0};
-  GLsizei m_coneIndexCount{0};
-  std::size_t m_coneInstanceCapacity{0};
+  GLuint m_cone_vao{0};
+  GLuint m_cone_vertex_buffer{0};
+  GLuint m_cone_index_buffer{0};
+  GLuint m_cone_instance_buffer{0};
+  GLsizei m_cone_index_count{0};
+  std::size_t m_cone_instance_capacity{0};
 
-  static constexpr std::size_t kDefaultInstanceCapacity = 4096;
-  static constexpr float kGrowthFactor = 1.5F;
+  static constexpr std::size_t k_default_instance_capacity = 4096;
+  static constexpr float k_growth_factor = 1.5F;
 };
 
 } // namespace Render::GL::BackendPipelines

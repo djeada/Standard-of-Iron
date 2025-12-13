@@ -10,10 +10,10 @@ MinimapTextureManager::MinimapTextureManager()
 
 MinimapTextureManager::~MinimapTextureManager() = default;
 
-auto MinimapTextureManager::generateForMap(const MapDefinition &mapDef)
+auto MinimapTextureManager::generate_for_map(const MapDefinition &map_def)
     -> bool {
-  // Generate the minimap image
-  m_image = m_generator->generate(mapDef);
+
+  m_image = m_generator->generate(map_def);
 
   if (m_image.isNull()) {
     qWarning() << "MinimapTextureManager: Failed to generate minimap image";
@@ -23,26 +23,17 @@ auto MinimapTextureManager::generateForMap(const MapDefinition &mapDef)
   qDebug() << "MinimapTextureManager: Generated minimap of size"
            << m_image.width() << "x" << m_image.height();
 
-  // Note: OpenGL texture upload would happen here when an OpenGL context is available
-  // For now, we just store the image. The texture upload would be:
-  // 1. Convert QImage to appropriate format (RGBA8888)
-  // 2. Upload to OpenGL via m_texture->loadFromData() or similar
-  // This is left as a TODO because it requires an active OpenGL context
-
   return true;
 }
 
-auto MinimapTextureManager::getTexture() const -> Render::GL::Texture * {
+auto MinimapTextureManager::get_texture() const -> Render::GL::Texture * {
   return m_texture.get();
 }
 
-auto MinimapTextureManager::getImage() const -> const QImage & {
+auto MinimapTextureManager::get_image() const -> const QImage & {
   return m_image;
 }
 
-void MinimapTextureManager::clear() {
-  m_image = QImage();
-  // Clear OpenGL texture if needed
-}
+void MinimapTextureManager::clear() { m_image = QImage(); }
 
 } // namespace Game::Map::Minimap

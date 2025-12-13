@@ -4,66 +4,63 @@
 #include <QImage>
 #include <cstdint>
 #include <memory>
+#include <utility>
+
+class QPainter;
 
 namespace Game::Map::Minimap {
 
-/**
- * @brief Generates static minimap textures from map JSON definitions.
- *
- * This class implements Stage I of the minimap system - generating a static
- * background texture that includes:
- * - Terrain colors based on biome settings
- * - Rivers as blue polylines
- * - Mountains/hills as shaded symbols
- * - Roads as paths
- * - Villages/structures as simplified icons
- *
- * The generated texture is meant to be uploaded to OpenGL once during map
- * load and never recalculated during gameplay.
- */
 class MinimapGenerator {
 public:
-  /**
-   * @brief Configuration for minimap generation
-   */
   struct Config {
-    int resolution_width;     // Width of minimap texture in pixels
-    int resolution_height;    // Height of minimap texture in pixels
-    float pixels_per_tile;    // How many pixels per grid tile
+    float pixels_per_tile = 2.0F;
 
-    Config()
-        : resolution_width(256), resolution_height(256), pixels_per_tile(2.0F) {}
+    Config() = default;
   };
 
   MinimapGenerator();
   explicit MinimapGenerator(const Config &config);
 
-  /**
-   * @brief Generates a minimap texture from a map definition
-   * @param mapDef The map definition containing terrain, rivers, etc.
-   * @return A QImage containing the generated minimap texture
-   */
-  [[nodiscard]] auto generate(const MapDefinition &mapDef) -> QImage;
+  [[nodiscard]] auto generate(const MapDefinition &map_def) -> QImage;
 
 private:
   Config m_config;
 
-  // Helper methods for rendering different map elements
-  void renderTerrainBase(QImage &image, const MapDefinition &mapDef);
-  void renderTerrainFeatures(QImage &image, const MapDefinition &mapDef);
-  void renderRivers(QImage &image, const MapDefinition &mapDef);
-  void renderRoads(QImage &image, const MapDefinition &mapDef);
-  void renderStructures(QImage &image, const MapDefinition &mapDef);
+  void render_parchment_background(QImage &image);
+  void render_terrain_base(QImage &image, const MapDefinition &map_def);
+  void render_terrain_features(QImage &image, const MapDefinition &map_def);
+  void render_rivers(QImage &image, const MapDefinition &map_def);
+  void render_roads(QImage &image, const MapDefinition &map_def);
+  void render_bridges(QImage &image, const MapDefinition &map_def);
+  void render_structures(QImage &image, const MapDefinition &map_def);
+  void apply_historical_styling(QImage &image);
 
-  // Coordinate conversion
-  [[nodiscard]] auto worldToPixel(float world_x, float world_z,
-                                  const GridDefinition &grid) const
-      -> std::pair<int, int>;
+  static void draw_mountain_symbol(QPainter &painter, float cx, float cy,
+                                   float width, float height);
+  static void draw_hill_symbol(QPainter &painter, float cx, float cy,
+                               float width, float height);
+  static void draw_river_segment(QPainter &painter, float x1, float y1,
+                                 float x2, float y2, float width);
+  static void draw_road_segment(QPainter &painter, float x1, float y1, float x2,
+                                float y2, float width);
+  static void draw_fortress_icon(QPainter &painter, float cx, float cy,
+                                 const QColor &fill, const QColor &border);
 
-  // Color utilities
-  [[nodiscard]] static auto biomeToBaseColor(const BiomeSettings &biome)
-      -> QColor;
-  [[nodiscard]] static auto terrainFeatureColor(TerrainType type) -> QColor;
+  static void draw_map_border(QPainter &painter, int width, int height);
+  static void apply_vignette(QPainter &painter, int width, int height);
+  static void draw_compass_rose(QPainter &painter, int width, int height);
+
+  [[nodiscard]] auto
+  world_to_pixel(float world_x, float world_z,
+                 const GridDefinition &grid) const -> std::pair<float, float>;
+
+  [[nodiscard]] auto
+  world_to_pixel_size(float world_size,
+                      const GridDefinition &grid) const -> float;
+
+  [[nodiscard]] static auto
+  biome_to_base_color(const BiomeSettings &biome) -> QColor;
+  [[nodiscard]] static auto terrain_feature_color(TerrainType type) -> QColor;
 };
 
 } // namespace Game::Map::Minimap
