@@ -865,7 +865,7 @@ auto Serialization::saveToFile(const QString &filename,
   return true;
 }
 
-auto Serialization::loadFromFile(const QString &filename) -> QJsonDocument {
+auto Serialization::load_from_file(const QString &filename) -> QJsonDocument {
   QFile file(filename);
   if (!file.open(QIODevice::ReadOnly)) {
     qWarning() << "Could not open file for reading:" << filename;

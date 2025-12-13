@@ -10,6 +10,6 @@ struct HealerStyleConfig;
 void register_healer_style(const std::string &nation_id,
                            const HealerStyleConfig &style);
 
-void registerHealerRenderer(EntityRendererRegistry &registry);
+void register_healer_renderer(EntityRendererRegistry &registry);
 
 } // namespace Render::GL::Roman

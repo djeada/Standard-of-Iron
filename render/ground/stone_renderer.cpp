@@ -75,7 +75,7 @@ void StoneRenderer::submit(Renderer &renderer, ResourceManager *resources) {
       m_stoneInstanceBuffer = std::make_unique<Buffer>(Buffer::Type::Vertex);
     }
     if (m_stoneInstancesDirty && m_stoneInstanceBuffer) {
-      m_stoneInstanceBuffer->setData(m_stoneInstances, Buffer::Usage::Static);
+      m_stoneInstanceBuffer->set_data(m_stoneInstances, Buffer::Usage::Static);
       m_stoneInstancesDirty = false;
     }
   } else {

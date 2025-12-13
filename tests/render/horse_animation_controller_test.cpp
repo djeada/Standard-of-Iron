@@ -48,9 +48,9 @@ protected:
 TEST_F(HorseAnimationControllerTest, ConstructorInitializesCorrectly) {
   HorseAnimationController controller(profile, anim, rider_ctx);
 
-  EXPECT_EQ(controller.getCurrentPhase(), 0.0F);
-  EXPECT_EQ(controller.getCurrentBob(), 0.0F);
-  EXPECT_GT(controller.getStrideCycle(), 0.0F);
+  EXPECT_EQ(controller.get_current_phase(), 0.0F);
+  EXPECT_EQ(controller.get_current_bob(), 0.0F);
+  EXPECT_GT(controller.get_stride_cycle(), 0.0F);
 }
 
 TEST_F(HorseAnimationControllerTest, SetGaitUpdatesParameters) {
@@ -58,22 +58,22 @@ TEST_F(HorseAnimationControllerTest, SetGaitUpdatesParameters) {
 
   // Test walk gait
   controller.setGait(GaitType::WALK);
-  controller.updateGaitParameters();
+  controller.update_gait_parameters();
   EXPECT_TRUE(approxEqual(profile.gait.cycle_time, 1.0F, 0.01F));
 
   // Test trot gait
   controller.setGait(GaitType::TROT);
-  controller.updateGaitParameters();
+  controller.update_gait_parameters();
   EXPECT_TRUE(approxEqual(profile.gait.cycle_time, 0.60F, 0.01F));
 
   // Test canter gait
   controller.setGait(GaitType::CANTER);
-  controller.updateGaitParameters();
+  controller.update_gait_parameters();
   EXPECT_TRUE(approxEqual(profile.gait.cycle_time, 0.50F, 0.01F));
 
   // Test gallop gait
   controller.setGait(GaitType::GALLOP);
-  controller.updateGaitParameters();
+  controller.update_gait_parameters();
   EXPECT_TRUE(approxEqual(profile.gait.cycle_time, 0.38F, 0.01F));
 }
 
@@ -81,14 +81,14 @@ TEST_F(HorseAnimationControllerTest, IdleGeneratesBobbing) {
   HorseAnimationController controller(profile, anim, rider_ctx);
 
   controller.idle(1.0F);
-  float const phase1 = controller.getCurrentPhase();
-  float const bob1 = controller.getCurrentBob();
+  float const phase1 = controller.get_current_phase();
+  float const bob1 = controller.get_current_bob();
 
   // Advance time
   anim.time = 1.0F;
   controller.idle(1.0F);
-  float const phase2 = controller.getCurrentPhase();
-  float const bob2 = controller.getCurrentBob();
+  float const phase2 = controller.get_current_phase();
+  float const bob2 = controller.get_current_bob();
 
   // Phase and bob should change over time
   EXPECT_NE(phase1, phase2);
@@ -107,19 +107,19 @@ TEST_F(HorseAnimationControllerTest, AccelerateChangesGait) {
   controller.accelerate(2.0F);
   // Advance time to complete transition
   anim.time += 0.5F;
-  controller.updateGaitParameters();
+  controller.update_gait_parameters();
   EXPECT_TRUE(approxEqual(profile.gait.cycle_time, 1.0F, 0.01F));
 
   // Accelerate to trot speed
   controller.accelerate(3.0F);
   anim.time += 0.5F;
-  controller.updateGaitParameters();
+  controller.update_gait_parameters();
   EXPECT_TRUE(approxEqual(profile.gait.cycle_time, 0.60F, 0.01F));
 
   // Accelerate to gallop speed
   controller.accelerate(6.0F);
   anim.time += 0.5F;
-  controller.updateGaitParameters();
+  controller.update_gait_parameters();
   EXPECT_TRUE(approxEqual(profile.gait.cycle_time, 0.38F, 0.01F));
 }
 
@@ -133,13 +133,13 @@ TEST_F(HorseAnimationControllerTest, DecelerateChangesGait) {
   controller.decelerate(3.0F);
   // Advance time to complete transition
   anim.time += 0.5F;
-  controller.updateGaitParameters();
+  controller.update_gait_parameters();
   EXPECT_TRUE(approxEqual(profile.gait.cycle_time, 0.50F, 0.01F));
 
   // Decelerate to trot
   controller.decelerate(2.0F);
   anim.time += 0.5F;
-  controller.updateGaitParameters();
+  controller.update_gait_parameters();
   EXPECT_TRUE(approxEqual(profile.gait.cycle_time, 0.60F, 0.01F));
 }
 
@@ -152,19 +152,19 @@ TEST_F(HorseAnimationControllerTest, TurnSetsAngles) {
   controller.turn(yaw, banking);
 
   // We can't directly test internal state, but we can verify no crashes
-  EXPECT_NO_THROW(controller.updateGaitParameters());
+  EXPECT_NO_THROW(controller.update_gait_parameters());
 }
 
 TEST_F(HorseAnimationControllerTest, StrafeStepModifiesPhase) {
   HorseAnimationController controller(profile, anim, rider_ctx);
 
-  float const initial_phase = controller.getCurrentPhase();
+  float const initial_phase = controller.get_current_phase();
 
   controller.strafeStep(true, 1.0F);
-  float const after_left = controller.getCurrentPhase();
+  float const after_left = controller.get_current_phase();
 
   controller.strafeStep(false, 1.0F);
-  float const after_right = controller.getCurrentPhase();
+  float const after_right = controller.get_current_phase();
 
   // Phase should change after strafe steps
   EXPECT_NE(initial_phase, after_left);
@@ -189,18 +189,18 @@ TEST_F(HorseAnimationControllerTest, SpecialAnimationsExecuteWithoutErrors) {
   EXPECT_NO_THROW(controller.jumpObstacle(1.5F, 3.0F));
 
   // Should still update parameters without crash
-  EXPECT_NO_THROW(controller.updateGaitParameters());
+  EXPECT_NO_THROW(controller.update_gait_parameters());
 }
 
 TEST_F(HorseAnimationControllerTest, StateQueriesReturnValidValues) {
   HorseAnimationController controller(profile, anim, rider_ctx);
 
   controller.setGait(GaitType::TROT);
-  controller.updateGaitParameters();
+  controller.update_gait_parameters();
 
-  float const phase = controller.getCurrentPhase();
-  float const bob = controller.getCurrentBob();
-  float const stride = controller.getStrideCycle();
+  float const phase = controller.get_current_phase();
+  float const bob = controller.get_current_bob();
+  float const stride = controller.get_stride_cycle();
 
   // Phase should be in [0, 1)
   EXPECT_GE(phase, 0.0F);
@@ -225,13 +225,13 @@ TEST_F(HorseAnimationControllerTest, UpdateGaitParametersWithRiderContext) {
   rider_ctx.gait.normalized_speed = 0.5F;
 
   controller.setGait(GaitType::WALK);
-  controller.updateGaitParameters();
+  controller.update_gait_parameters();
 
   // Phase should match rider context
-  EXPECT_TRUE(approxEqual(controller.getCurrentPhase(), 0.25F, 0.01F));
+  EXPECT_TRUE(approxEqual(controller.get_current_phase(), 0.25F, 0.01F));
 
   // Bob should be non-zero during movement
-  EXPECT_NE(controller.getCurrentBob(), 0.0F);
+  EXPECT_NE(controller.get_current_bob(), 0.0F);
 }
 
 TEST_F(HorseAnimationControllerTest, PhaseProgressesOverTime) {
@@ -240,16 +240,16 @@ TEST_F(HorseAnimationControllerTest, PhaseProgressesOverTime) {
   controller.setGait(GaitType::WALK);
 
   anim.time = 0.0F;
-  controller.updateGaitParameters();
-  float const phase1 = controller.getCurrentPhase();
+  controller.update_gait_parameters();
+  float const phase1 = controller.get_current_phase();
 
   anim.time = 0.4F;
-  controller.updateGaitParameters();
-  float const phase2 = controller.getCurrentPhase();
+  controller.update_gait_parameters();
+  float const phase2 = controller.get_current_phase();
 
   anim.time = 0.8F;
-  controller.updateGaitParameters();
-  float const phase3 = controller.getCurrentPhase();
+  controller.update_gait_parameters();
+  float const phase3 = controller.get_current_phase();
 
   // Phase should increase as time progresses
   EXPECT_NE(phase1, phase2);
@@ -262,10 +262,10 @@ TEST_F(HorseAnimationControllerTest, BobIntensityAffectsIdleBob) {
   anim.time = 0.5F;
 
   controller.idle(0.5F);
-  float const bob_half = std::abs(controller.getCurrentBob());
+  float const bob_half = std::abs(controller.get_current_bob());
 
   controller.idle(1.0F);
-  float const bob_full = std::abs(controller.getCurrentBob());
+  float const bob_full = std::abs(controller.get_current_bob());
 
   // Full intensity should produce larger bob
   EXPECT_GE(bob_full, bob_half);
@@ -303,13 +303,13 @@ TEST_F(HorseAnimationControllerTest, GaitTransitionsAreSmoothAndGradual) {
 
   // After short time, should be transitioning (not at final value)
   anim.time += 0.1F;
-  controller.updateGaitParameters();
+  controller.update_gait_parameters();
   float const transition_cycle1 = profile.gait.cycle_time;
   EXPECT_GT(transition_cycle1, 0.38F);      // Not yet at gallop cycle time
   EXPECT_LT(transition_cycle1, walk_cycle); // But moving toward it
 
   // After enough time, should reach final value
   anim.time += 0.5F;
-  controller.updateGaitParameters();
+  controller.update_gait_parameters();
   EXPECT_TRUE(approxEqual(profile.gait.cycle_time, 0.38F, 0.01F));
 }
