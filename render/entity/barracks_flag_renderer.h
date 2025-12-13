@@ -98,13 +98,12 @@ inline void drawBannerWithTassels(
     const QVector3D &banner_center, float half_width, float half_height,
     float depth, const QVector3D &banner_color, const QVector3D &trim_color,
     const ClothBannerResources *cloth = nullptr, int material_id = 0) {
-  (void)trim_color; // Trim color handled by shader
-  (void)depth;      // Depth not used for cloth mesh
+  (void)trim_color;
+  (void)depth;
 
   QMatrix4x4 banner_transform;
   banner_transform.translate(banner_center);
 
-  // Rotate so plane hangs vertically (plane is created in XZ, rotate to XY)
   banner_transform.rotate(90.0F, 1.0F, 0.0F, 0.0F);
   banner_transform.scale(half_width * 2.0F, half_height * 2.0F, 1.0F);
 
@@ -114,14 +113,13 @@ inline void drawBannerWithTassels(
     out.mesh(cloth->clothMesh, p.model * banner_transform, banner_color, white,
              1.0F, material_id);
   } else {
-    // Fallback: use simple box mesh (no animation)
+
     QMatrix4x4 box_transform =
         Render::Geom::BannerCloth::generate_banner_transform(
             banner_center, half_width, half_height, 0.02F);
     out.mesh(unit, p.model * box_transform, banner_color, white, 1.0F,
              material_id);
   }
-  // No tassels - clean banner look with GPU wind animation
 }
 
 inline void
