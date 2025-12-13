@@ -110,7 +110,7 @@ void OliveRenderer::submit(Renderer &renderer, ResourceManager *resources) {
       if (!m_oliveInstanceBuffer) {
         m_oliveInstanceBuffer = std::make_unique<Buffer>(Buffer::Type::Vertex);
       }
-      m_oliveInstanceBuffer->setData(m_visibleInstances, Buffer::Usage::Static);
+      m_oliveInstanceBuffer->set_data(m_visibleInstances, Buffer::Usage::Static);
     }
   }
 

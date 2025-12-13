@@ -139,7 +139,7 @@ void CarthageShieldRenderer::render(const DrawContext &ctx,
                          axis_x * (shield_radius * std::cos(a1)) +
                          axis_y * (shield_radius * std::sin(a1));
 
-    submitter.mesh(getUnitCylinder(),
+    submitter.mesh(get_unit_cylinder(),
                    cylinder_between(ctx.model, p0, p1, 0.012F), trim_color,
                    nullptr, 1.0F, 4);
   }
@@ -151,7 +151,7 @@ void CarthageShieldRenderer::render(const DrawContext &ctx,
     medallion.rotate(k_shield_yaw_degrees, 0.0F, 1.0F, 0.0F);
     medallion.scale(shield_radius * 0.34F, shield_radius * 0.34F,
                     shield_radius * 0.08F);
-    submitter.mesh(getUnitCylinder(), medallion, trim_color * 0.95F, nullptr,
+    submitter.mesh(get_unit_cylinder(), medallion, trim_color * 0.95F, nullptr,
                    1.0F, 4);
   }
 
@@ -161,7 +161,7 @@ void CarthageShieldRenderer::render(const DrawContext &ctx,
       emblem_plane - axis_y * (shield_radius * 0.08F);
   float const emblem_radius = shield_radius * 0.028F;
 
-  submitter.mesh(getUnitCylinder(),
+  submitter.mesh(get_unit_cylinder(),
                  cylinder_between(ctx.model, emblem_body_bot, emblem_body_top,
                                  emblem_radius),
                  metal_color, nullptr, 1.0F, 4);
@@ -173,18 +173,18 @@ void CarthageShieldRenderer::render(const DrawContext &ctx,
   QVector3D const emblem_arm_right =
       emblem_arm_height + axis_x * (shield_radius * 0.22F);
 
-  submitter.mesh(getUnitCylinder(),
+  submitter.mesh(get_unit_cylinder(),
                  cylinder_between(ctx.model, emblem_arm_left, emblem_arm_right,
                                  emblem_radius * 0.75F),
                  metal_color, nullptr, 1.0F, 4);
 
-  submitter.mesh(getUnitSphere(),
+  submitter.mesh(get_unit_sphere(),
                  sphere_at(ctx.model,
                           emblem_body_top + axis_y * (shield_radius * 0.05F),
                           emblem_radius * 1.4F),
                  metal_color, nullptr, 1.0F, 4);
 
-  submitter.mesh(getUnitCone(),
+  submitter.mesh(get_unit_cone(),
                  cone_from_to(ctx.model,
                             emblem_body_bot - axis_y * (shield_radius * 0.04F),
                             emblem_plane - axis_y * (shield_radius * 0.22F),
@@ -193,7 +193,7 @@ void CarthageShieldRenderer::render(const DrawContext &ctx,
 
   QVector3D const grip_a = shield_center - axis_x * 0.035F - n * 0.030F;
   QVector3D const grip_b = shield_center + axis_x * 0.035F - n * 0.030F;
-  submitter.mesh(getUnitCylinder(),
+  submitter.mesh(get_unit_cylinder(),
                  cylinder_between(ctx.model, grip_a, grip_b, 0.010F),
                  palette.leather, nullptr, 1.0F, 4);
 }

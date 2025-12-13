@@ -24,13 +24,13 @@ void Mesh::setupBuffers() {
 
   m_vao->bind();
 
-  m_vbo->setData(m_vertices);
+  m_vbo->set_data(m_vertices);
 
-  m_ebo->setData(m_indices);
+  m_ebo->set_data(m_indices);
 
   std::vector<int> const layout = {Vec3, Vec3, Vec2};
   m_vao->add_vertexBuffer(*m_vbo, layout);
-  m_vao->setIndexBuffer(*m_ebo);
+  m_vao->set_index_buffer(*m_ebo);
 
   m_vao->unbind();
 }

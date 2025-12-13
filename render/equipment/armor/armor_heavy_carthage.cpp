@@ -71,7 +71,7 @@ void ArmorHeavyCarthageRenderer::render(const DrawContext &ctx,
     QMatrix4x4 m = cylinder_between(ctx.model, a, b, radius);
     m.scale(scale_x, 1.0F, depth_scale_for(base_z));
     Mesh *torso_mesh = torso_mesh_without_bottom_cap();
-    submitter.mesh(torso_mesh != nullptr ? torso_mesh : getUnitTorso(), m,
+    submitter.mesh(torso_mesh != nullptr ? torso_mesh : get_unit_torso(), m,
                    color, nullptr, 1.0F, material_id);
   };
 

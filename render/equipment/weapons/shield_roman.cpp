@@ -59,7 +59,7 @@ void RomanShieldRenderer::render(const DrawContext &ctx,
   shield_body.rotate(k_shield_yaw_degrees, 0.0F, 1.0F, 0.0F);
   shield_body.scale(shield_width * 0.005F, shield_height * 0.5F, 0.24F);
 
-  submitter.mesh(getUnitCube(), shield_body, shield_color, nullptr, 1.0F, 4);
+  submitter.mesh(get_unit_cube(), shield_body, shield_color, nullptr, 1.0F, 4);
 
   float const rim_thickness = 0.020F;
 
@@ -67,7 +67,7 @@ void RomanShieldRenderer::render(const DrawContext &ctx,
                        axis_x * (shield_width * 0.5F);
   QVector3D top_right = shield_center + axis_y * (shield_height * 0.5F) +
                         axis_x * (shield_width * 0.5F);
-  submitter.mesh(getUnitCylinder(),
+  submitter.mesh(get_unit_cylinder(),
                  cylinder_between(ctx.model, top_left, top_right, rim_thickness),
                  trim_color, nullptr, 1.0F, 4);
 
@@ -75,18 +75,18 @@ void RomanShieldRenderer::render(const DrawContext &ctx,
                        axis_x * (shield_width * 0.5F);
   QVector3D bot_right = shield_center - axis_y * (shield_height * 0.5F) +
                         axis_x * (shield_width * 0.5F);
-  submitter.mesh(getUnitCylinder(),
+  submitter.mesh(get_unit_cylinder(),
                  cylinder_between(ctx.model, bot_left, bot_right, rim_thickness),
                  trim_color, nullptr, 1.0F, 4);
 
   float const boss_radius = 0.08F;
-  submitter.mesh(getUnitSphere(),
+  submitter.mesh(get_unit_sphere(),
                  sphere_at(ctx.model, shield_center + n * 0.05F, boss_radius),
                  metal_color, nullptr, 1.0F, 4);
 
   QVector3D const grip_a = shield_center - axis_x * 0.06F - n * 0.03F;
   QVector3D const grip_b = shield_center + axis_x * 0.06F - n * 0.03F;
-  submitter.mesh(getUnitCylinder(),
+  submitter.mesh(get_unit_cylinder(),
                  cylinder_between(ctx.model, grip_a, grip_b, 0.012F),
                  palette.leather, nullptr, 1.0F, 0);
 }

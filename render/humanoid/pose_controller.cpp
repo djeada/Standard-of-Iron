@@ -91,7 +91,7 @@ auto HumanoidPoseController::solveElbowIK(
     const QVector3D &outward_dir, float along_frac, float lateral_offset,
     float y_bias, float outward_sign) const -> QVector3D {
 
-  return elbowBendTorso(shoulder, hand, outward_dir, along_frac, lateral_offset,
+  return elbow_bend_torso(shoulder, hand, outward_dir, along_frac, lateral_offset,
                         y_bias, outward_sign);
 }
 

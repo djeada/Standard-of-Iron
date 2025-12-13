@@ -55,7 +55,7 @@ public:
                        QPointF &outScreen) const -> bool;
 
   void setFollowEnabled(bool enable) { m_followEnabled = enable; }
-  [[nodiscard]] auto isFollowEnabled() const -> bool { return m_followEnabled; }
+  [[nodiscard]] auto is_follow_enabled() const -> bool { return m_followEnabled; }
   void setFollowLerp(float alpha) { m_followLerp = alpha; }
   void setFollowOffset(const QVector3D &off) { m_followOffset = off; }
   void captureFollowOffset() { m_followOffset = m_position - m_target; }
@@ -69,31 +69,31 @@ public:
                       float distance = CameraDefaults::k_default_rts_distance);
   void applySoftBoundaries(bool isPanning = false);
 
-  [[nodiscard]] auto getViewMatrix() const -> QMatrix4x4;
-  [[nodiscard]] auto getProjectionMatrix() const -> QMatrix4x4;
-  [[nodiscard]] auto getViewProjectionMatrix() const -> QMatrix4x4;
+  [[nodiscard]] auto get_view_matrix() const -> QMatrix4x4;
+  [[nodiscard]] auto get_projection_matrix() const -> QMatrix4x4;
+  [[nodiscard]] auto get_view_projection_matrix() const -> QMatrix4x4;
 
   [[nodiscard]] auto get_target() const -> const QVector3D & {
     return m_target;
   }
-  [[nodiscard]] auto getUpVector() const -> const QVector3D & { return m_up; }
-  [[nodiscard]] auto getRightVector() const -> const QVector3D & {
+  [[nodiscard]] auto get_up_vector() const -> const QVector3D & { return m_up; }
+  [[nodiscard]] auto get_right_vector() const -> const QVector3D & {
     return m_right;
   }
-  [[nodiscard]] auto getForwardVector() const -> const QVector3D & {
+  [[nodiscard]] auto get_forward_vector() const -> const QVector3D & {
     return m_front;
   }
   [[nodiscard]] auto get_position() const -> const QVector3D & {
     return m_position;
   }
   [[nodiscard]] auto get_distance() const -> float;
-  [[nodiscard]] auto getPitchDeg() const -> float;
-  [[nodiscard]] auto getFOV() const -> float { return m_fov; }
-  [[nodiscard]] auto getAspect() const -> float { return m_aspect; }
-  [[nodiscard]] auto getNear() const -> float { return m_near_plane; }
-  [[nodiscard]] auto getFar() const -> float { return m_far_plane; }
+  [[nodiscard]] auto get_pitch_deg() const -> float;
+  [[nodiscard]] auto get_fov() const -> float { return m_fov; }
+  [[nodiscard]] auto get_aspect() const -> float { return m_aspect; }
+  [[nodiscard]] auto get_near() const -> float { return m_near_plane; }
+  [[nodiscard]] auto get_far() const -> float { return m_far_plane; }
 
-  [[nodiscard]] auto isInFrustum(const QVector3D &center,
+  [[nodiscard]] auto is_in_frustum(const QVector3D &center,
                                  float radius) const -> bool;
 
 private:

@@ -41,12 +41,12 @@ void RomanLightHelmetRenderer::render(const DrawContext &ctx,
   QVector3D const helmet_bot = headPoint(QVector3D(0.0F, 0.08F, 0.0F));
   float const helmet_r = head_r * 1.08F;
 
-  submitter.mesh(getUnitCylinder(),
+  submitter.mesh(get_unit_cylinder(),
                  cylinder_between(ctx.model, helmet_bot, helmet_top, helmet_r),
                  helmet_color, nullptr, 1.0F, 2);
 
   QVector3D const apex_pos = headPoint(QVector3D(0.0F, 1.48F, 0.0F));
-  submitter.mesh(getUnitCone(),
+  submitter.mesh(get_unit_cone(),
                  cone_from_to(ctx.model, helmet_top, apex_pos, helmet_r * 0.97F),
                  helmet_accent, nullptr, 1.0F, 2);
 
@@ -55,7 +55,7 @@ void RomanLightHelmetRenderer::render(const DrawContext &ctx,
     float const h = head_r * 0.018F;
     QVector3D const a = center + head.up * (h * 0.5F);
     QVector3D const b = center - head.up * (h * 0.5F);
-    submitter.mesh(getUnitCylinder(),
+    submitter.mesh(get_unit_cylinder(),
                    cylinder_between(ctx.model, a, b, helmet_r * r_scale), col,
                    nullptr, 1.0F, 2);
   };
@@ -65,7 +65,7 @@ void RomanLightHelmetRenderer::render(const DrawContext &ctx,
 
   QVector3D const neck_guard_top = headPoint(QVector3D(0.0F, 0.03F, -0.85F));
   QVector3D const neck_guard_bot = headPoint(QVector3D(0.0F, -0.32F, -0.92F));
-  submitter.mesh(getUnitCylinder(),
+  submitter.mesh(get_unit_cylinder(),
                  cylinder_between(ctx.model, neck_guard_bot, neck_guard_top,
                                  helmet_r * 0.86F),
                  helmet_color * 0.90F, nullptr, 1.0F, 2);
@@ -74,15 +74,15 @@ void RomanLightHelmetRenderer::render(const DrawContext &ctx,
   QVector3D const crest_mid = crest_base + head.up * 0.09F;
   QVector3D const crest_top = crest_mid + head.up * 0.12F;
 
-  submitter.mesh(getUnitCylinder(),
+  submitter.mesh(get_unit_cylinder(),
                  cylinder_between(ctx.model, crest_base, crest_mid, 0.018F),
                  helmet_accent, nullptr, 1.0F, 2);
 
-  submitter.mesh(getUnitCone(),
+  submitter.mesh(get_unit_cone(),
                  cone_from_to(ctx.model, crest_mid, crest_top, 0.042F),
                  QVector3D(0.88F, 0.18F, 0.18F), nullptr, 1.0F, 0);
 
-  submitter.mesh(getUnitSphere(), sphere_at(ctx.model, crest_top, 0.020F),
+  submitter.mesh(get_unit_sphere(), sphere_at(ctx.model, crest_top, 0.020F),
                  helmet_accent, nullptr, 1.0F, 2);
 }
 

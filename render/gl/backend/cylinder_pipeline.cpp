@@ -78,7 +78,7 @@ void CylinderPipeline::initializeCylinderPipeline() {
   initializeOpenGLFunctions();
   shutdownCylinderPipeline();
 
-  Mesh *unit = getUnitCylinder();
+  Mesh *unit = get_unit_cylinder();
   if (unit == nullptr) {
     return;
   }

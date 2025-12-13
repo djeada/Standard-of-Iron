@@ -139,9 +139,9 @@ auto LevelLoader::loadFromAssets(
                << "- applying default environment";
     Game::Map::Environment::applyDefault(renderer, camera);
     res.ok = false;
-    res.cam_fov = camera.getFOV();
-    res.cam_near = camera.getNear();
-    res.cam_far = camera.getFar();
+    res.cam_fov = camera.get_fov();
+    res.cam_near = camera.get_near();
+    res.cam_far = camera.get_far();
     res.grid_width = 50;
     res.grid_height = 50;
     res.tile_size = 1.0F;

@@ -109,7 +109,7 @@ void RiverbankAssetRenderer::submit(Renderer &, ResourceManager *resources) {
       m_assetInstanceBuffer = std::make_unique<Buffer>(Buffer::Type::Vertex);
     }
     if (!m_visibleInstances.empty()) {
-      m_assetInstanceBuffer->setData(m_visibleInstances,
+      m_assetInstanceBuffer->set_data(m_visibleInstances,
                                      Buffer::Usage::Dynamic);
     }
 
