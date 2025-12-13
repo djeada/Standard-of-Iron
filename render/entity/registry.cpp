@@ -40,17 +40,17 @@ auto EntityRendererRegistry::get(const std::string &type) const -> RenderFunc {
 }
 
 void registerBuiltInEntityRenderers(EntityRendererRegistry &registry) {
-  Roman::registerArcherRenderer(registry);
-  Carthage::registerArcherRenderer(registry);
+  Roman::register_archer_renderer(registry);
+  Carthage::register_archer_renderer(registry);
 
-  Roman::registerSpearmanRenderer(registry);
-  Carthage::registerSpearmanRenderer(registry);
+  Roman::register_spearman_renderer(registry);
+  Carthage::register_spearman_renderer(registry);
 
-  Roman::registerKnightRenderer(registry);
-  Carthage::registerKnightRenderer(registry);
+  Roman::register_knight_renderer(registry);
+  Carthage::register_knight_renderer(registry);
 
-  Roman::registerMountedKnightRenderer(registry);
-  Carthage::registerMountedKnightRenderer(registry);
+  Roman::register_mounted_knight_renderer(registry);
+  Carthage::register_mounted_knight_renderer(registry);
 
   Roman::register_horse_archer_renderer(registry);
   Carthage::register_horse_archer_renderer(registry);
@@ -58,8 +58,8 @@ void registerBuiltInEntityRenderers(EntityRendererRegistry &registry) {
   Roman::register_horse_spearman_renderer(registry);
   Carthage::register_horse_spearman_renderer(registry);
 
-  Roman::registerHealerRenderer(registry);
-  Carthage::registerHealerRenderer(registry);
+  Roman::register_healer_renderer(registry);
+  Carthage::register_healer_renderer(registry);
 
   register_catapult_renderer(registry);
 

@@ -15,7 +15,7 @@ CarthageSwordRenderer::CarthageSwordRenderer() {
   config.blade_taper_bias = 0.70F;
   config.has_scabbard = true;
 
-  setConfig(config);
+  set_config(config);
 }
 
 } // namespace Render::GL

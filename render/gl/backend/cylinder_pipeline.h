@@ -16,18 +16,18 @@ public:
 
   auto initialize() -> bool override;
   void shutdown() override;
-  void cacheUniforms() override;
+  void cache_uniforms() override;
   [[nodiscard]] auto is_initialized() const -> bool override {
     return m_initialized;
   }
 
-  void beginFrame();
+  void begin_frame();
 
-  void uploadCylinderInstances(std::size_t count);
+  void upload_cylinder_instances(std::size_t count);
   void draw_cylinders(std::size_t count);
 
-  void uploadFogInstances(std::size_t count);
-  void drawFog(std::size_t count);
+  void upload_fog_instances(std::size_t count);
+  void draw_fog(std::size_t count);
 
   [[nodiscard]] auto cylinderShader() const -> GL::Shader * {
     return m_cylinderShader;
@@ -64,10 +64,10 @@ public:
   std::vector<FogInstanceGpu> m_fogScratch;
 
 private:
-  void initializeCylinderPipeline();
-  void shutdownCylinderPipeline();
-  void initializeFogPipeline();
-  void shutdownFogPipeline();
+  void initialize_cylinder_pipeline();
+  void shutdown_cylinder_pipeline();
+  void initialize_fog_pipeline();
+  void shutdown_fog_pipeline();
 
   GL::ShaderCache *m_shaderCache;
   bool m_initialized{false};

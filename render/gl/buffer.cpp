@@ -19,17 +19,17 @@ void Buffer::bind() {
     initializeOpenGLFunctions();
     glGenBuffers(1, &m_buffer);
   }
-  glBindBuffer(getGLType(), m_buffer);
+  glBindBuffer(get_gl_type(), m_buffer);
 }
 
-void Buffer::unbind() { glBindBuffer(getGLType(), 0); }
+void Buffer::unbind() { glBindBuffer(get_gl_type(), 0); }
 
-void Buffer::setData(const void *data, size_t size, Usage usage) {
+void Buffer::set_data(const void *data, size_t size, Usage usage) {
   bind();
-  glBufferData(getGLType(), size, data, getGLUsage(usage));
+  glBufferData(get_gl_type(), size, data, get_gl_usage(usage));
 }
 
-auto Buffer::getGLType() const -> GLenum {
+auto Buffer::get_gl_type() const -> GLenum {
   switch (m_type) {
   case Type::Vertex:
     return GL_ARRAY_BUFFER;
@@ -41,7 +41,7 @@ auto Buffer::getGLType() const -> GLenum {
   return GL_ARRAY_BUFFER;
 }
 
-auto Buffer::getGLUsage(Usage usage) -> GLenum {
+auto Buffer::get_gl_usage(Usage usage) -> GLenum {
   switch (usage) {
   case Usage::Static:
     return GL_STATIC_DRAW;
@@ -91,7 +91,7 @@ void VertexArray::add_vertexBuffer(Buffer &buffer,
   }
 }
 
-void VertexArray::setIndexBuffer(Buffer &buffer) {
+void VertexArray::set_index_buffer(Buffer &buffer) {
   bind();
   buffer.bind();
 }

@@ -30,7 +30,7 @@ auto WaterPipeline::initialize() -> bool {
     qWarning() << "WaterPipeline: Failed to load road shader";
   }
 
-  cacheUniforms();
+  cache_uniforms();
 
   return is_initialized();
 }
@@ -42,10 +42,10 @@ void WaterPipeline::shutdown() {
   m_road_shader = nullptr;
 }
 
-void WaterPipeline::cacheUniforms() {
-  cacheRiverUniforms();
-  cacheRiverbankUniforms();
-  cacheBridgeUniforms();
+void WaterPipeline::cache_uniforms() {
+  cache_river_uniforms();
+  cache_riverbank_uniforms();
+  cache_bridge_uniforms();
   cache_road_uniforms();
 }
 
@@ -54,39 +54,39 @@ auto WaterPipeline::is_initialized() const -> bool {
          m_bridgeShader != nullptr && m_road_shader != nullptr;
 }
 
-void WaterPipeline::cacheRiverUniforms() {
+void WaterPipeline::cache_river_uniforms() {
   if (m_riverShader == nullptr) {
     return;
   }
 
-  m_riverUniforms.model = m_riverShader->uniformHandle("model");
-  m_riverUniforms.view = m_riverShader->uniformHandle("view");
-  m_riverUniforms.projection = m_riverShader->uniformHandle("projection");
-  m_riverUniforms.time = m_riverShader->uniformHandle("time");
+  m_riverUniforms.model = m_riverShader->uniform_handle("model");
+  m_riverUniforms.view = m_riverShader->uniform_handle("view");
+  m_riverUniforms.projection = m_riverShader->uniform_handle("projection");
+  m_riverUniforms.time = m_riverShader->uniform_handle("time");
 }
 
-void WaterPipeline::cacheRiverbankUniforms() {
+void WaterPipeline::cache_riverbank_uniforms() {
   if (m_riverbankShader == nullptr) {
     return;
   }
 
-  m_riverbankUniforms.model = m_riverbankShader->uniformHandle("model");
-  m_riverbankUniforms.view = m_riverbankShader->uniformHandle("view");
+  m_riverbankUniforms.model = m_riverbankShader->uniform_handle("model");
+  m_riverbankUniforms.view = m_riverbankShader->uniform_handle("view");
   m_riverbankUniforms.projection =
-      m_riverbankShader->uniformHandle("projection");
-  m_riverbankUniforms.time = m_riverbankShader->uniformHandle("time");
+      m_riverbankShader->uniform_handle("projection");
+  m_riverbankUniforms.time = m_riverbankShader->uniform_handle("time");
 }
 
-void WaterPipeline::cacheBridgeUniforms() {
+void WaterPipeline::cache_bridge_uniforms() {
   if (m_bridgeShader == nullptr) {
     return;
   }
 
-  m_bridgeUniforms.mvp = m_bridgeShader->uniformHandle("u_mvp");
-  m_bridgeUniforms.model = m_bridgeShader->uniformHandle("u_model");
-  m_bridgeUniforms.color = m_bridgeShader->uniformHandle("u_color");
+  m_bridgeUniforms.mvp = m_bridgeShader->uniform_handle("u_mvp");
+  m_bridgeUniforms.model = m_bridgeShader->uniform_handle("u_model");
+  m_bridgeUniforms.color = m_bridgeShader->uniform_handle("u_color");
   m_bridgeUniforms.light_direction =
-      m_bridgeShader->uniformHandle("u_lightDirection");
+      m_bridgeShader->uniform_handle("u_lightDirection");
 }
 
 void WaterPipeline::cache_road_uniforms() {
@@ -94,12 +94,12 @@ void WaterPipeline::cache_road_uniforms() {
     return;
   }
 
-  m_road_uniforms.mvp = m_road_shader->uniformHandle("u_mvp");
-  m_road_uniforms.model = m_road_shader->uniformHandle("u_model");
-  m_road_uniforms.color = m_road_shader->uniformHandle("u_color");
+  m_road_uniforms.mvp = m_road_shader->uniform_handle("u_mvp");
+  m_road_uniforms.model = m_road_shader->uniform_handle("u_model");
+  m_road_uniforms.color = m_road_shader->uniform_handle("u_color");
   m_road_uniforms.light_direction =
-      m_road_shader->uniformHandle("u_light_direction");
-  m_road_uniforms.alpha = m_road_shader->uniformHandle("u_alpha");
+      m_road_shader->uniform_handle("u_light_direction");
+  m_road_uniforms.alpha = m_road_shader->uniform_handle("u_alpha");
 }
 
 } // namespace Render::GL::BackendPipelines

@@ -30,8 +30,8 @@ public:
   void setWireframe(bool enable) { m_wireframe = enable; }
 
 private:
-  void buildMeshes();
-  [[nodiscard]] static auto sectionFor(Game::Map::TerrainType type) -> int;
+  void build_meshes();
+  [[nodiscard]] static auto section_for(Game::Map::TerrainType type) -> int;
 
   [[nodiscard]] auto getTerrainColor(Game::Map::TerrainType type,
                                      float height) const -> QVector3D;

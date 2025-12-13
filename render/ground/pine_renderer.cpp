@@ -110,7 +110,7 @@ void PineRenderer::submit(Renderer &renderer, ResourceManager *resources) {
       if (!m_pineInstanceBuffer) {
         m_pineInstanceBuffer = std::make_unique<Buffer>(Buffer::Type::Vertex);
       }
-      m_pineInstanceBuffer->setData(m_visibleInstances, Buffer::Usage::Static);
+      m_pineInstanceBuffer->set_data(m_visibleInstances, Buffer::Usage::Static);
     }
   }
 

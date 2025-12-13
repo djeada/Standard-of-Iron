@@ -16,7 +16,7 @@ Texture::~Texture() {
   }
 }
 
-auto Texture::loadFromFile(const QString &path) -> bool {
+auto Texture::load_from_file(const QString &path) -> bool {
   initializeOpenGLFunctions();
   QImage image;
   if (!image.load(path)) {
@@ -35,8 +35,8 @@ auto Texture::loadFromFile(const QString &path) -> bool {
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_width, m_height, 0, GL_RGBA,
                GL_UNSIGNED_BYTE, image.constBits());
 
-  setFilter(Filter::Linear, Filter::Linear);
-  setWrap(Wrap::Repeat, Wrap::Repeat);
+  set_filter(Filter::Linear, Filter::Linear);
+  set_wrap(Wrap::Repeat, Wrap::Repeat);
 
   glGenerateMipmap(GL_TEXTURE_2D);
 
@@ -45,7 +45,7 @@ auto Texture::loadFromFile(const QString &path) -> bool {
   return true;
 }
 
-auto Texture::createEmpty(int width, int height, Format format) -> bool {
+auto Texture::create_empty(int width, int height, Format format) -> bool {
   initializeOpenGLFunctions();
   m_width = width;
   m_height = height;
@@ -53,7 +53,7 @@ auto Texture::createEmpty(int width, int height, Format format) -> bool {
 
   bind();
 
-  GLenum const gl_format = getGLFormat(format);
+  GLenum const gl_format = get_gl_format(format);
   GLenum internal_format = gl_format;
   GLenum type = GL_UNSIGNED_BYTE;
 
@@ -65,8 +65,8 @@ auto Texture::createEmpty(int width, int height, Format format) -> bool {
   glTexImage2D(GL_TEXTURE_2D, 0, internal_format, width, height, 0, gl_format,
                type, nullptr);
 
-  setFilter(Filter::Linear, Filter::Linear);
-  setWrap(Wrap::ClampToEdge, Wrap::ClampToEdge);
+  set_filter(Filter::Linear, Filter::Linear);
+  set_wrap(Wrap::ClampToEdge, Wrap::ClampToEdge);
 
   unbind();
 
@@ -87,19 +87,21 @@ void Texture::unbind() {
   glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void Texture::setFilter(Filter minFilter, Filter magFilter) {
+void Texture::set_filter(Filter minFilter, Filter magFilter) {
   bind();
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, getGLFilter(minFilter));
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, getGLFilter(magFilter));
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+                  get_gl_filter(minFilter));
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
+                  get_gl_filter(magFilter));
 }
 
-void Texture::setWrap(Wrap sWrap, Wrap tWrap) {
+void Texture::set_wrap(Wrap sWrap, Wrap tWrap) {
   bind();
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, getGLWrap(sWrap));
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, getGLWrap(tWrap));
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, get_gl_wrap(sWrap));
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, get_gl_wrap(tWrap));
 }
 
-auto Texture::getGLFormat(Format format) -> GLenum {
+auto Texture::get_gl_format(Format format) -> GLenum {
   switch (format) {
   case Format::RGB:
     return GL_RGB;
@@ -111,7 +113,7 @@ auto Texture::getGLFormat(Format format) -> GLenum {
   return GL_RGBA;
 }
 
-auto Texture::getGLFilter(Filter filter) -> GLenum {
+auto Texture::get_gl_filter(Filter filter) -> GLenum {
   switch (filter) {
   case Filter::Nearest:
     return GL_NEAREST;
@@ -121,7 +123,7 @@ auto Texture::getGLFilter(Filter filter) -> GLenum {
   return GL_LINEAR;
 }
 
-auto Texture::getGLWrap(Wrap wrap) -> GLenum {
+auto Texture::get_gl_wrap(Wrap wrap) -> GLenum {
   switch (wrap) {
   case Wrap::Repeat:
     return GL_REPEAT;

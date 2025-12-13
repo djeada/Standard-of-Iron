@@ -92,7 +92,7 @@ public:
   }
   auto load_shader(const QString &name, const QString &vert_path,
                    const QString &frag_path) -> Shader * {
-    return m_backend ? m_backend->getOrLoadShader(name, vert_path, frag_path)
+    return m_backend ? m_backend->get_or_load_shader(name, vert_path, frag_path)
                      : nullptr;
   }
 

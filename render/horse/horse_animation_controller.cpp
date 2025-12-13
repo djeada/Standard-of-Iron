@@ -90,7 +90,7 @@ void HorseAnimationController::setGait(GaitType gait) {
     break;
   }
 
-  updateGaitParameters();
+  update_gait_parameters();
 }
 
 void HorseAnimationController::idle(float bob_intensity) {
@@ -102,7 +102,7 @@ void HorseAnimationController::idle(float bob_intensity) {
   m_bob = std::sin(phase * 2.0F * k_pi) * m_profile.dims.idle_bob_amplitude *
           bob_intensity;
 
-  updateGaitParameters();
+  update_gait_parameters();
 }
 
 void HorseAnimationController::accelerate(float speed_delta) {
@@ -128,7 +128,7 @@ void HorseAnimationController::accelerate(float speed_delta) {
     m_transition_start_time = m_anim.time;
   }
 
-  updateGaitParameters();
+  update_gait_parameters();
 }
 
 void HorseAnimationController::decelerate(float speed_delta) {
@@ -168,18 +168,20 @@ void HorseAnimationController::jumpObstacle(float height, float distance) {
   m_jump_distance = std::max(0.0F, distance);
 }
 
-auto HorseAnimationController::getCurrentPhase() const -> float {
+auto HorseAnimationController::get_current_phase() const -> float {
   return m_phase;
 }
 
-auto HorseAnimationController::getCurrentBob() const -> float { return m_bob; }
+auto HorseAnimationController::get_current_bob() const -> float {
+  return m_bob;
+}
 
-auto HorseAnimationController::getStrideCycle() const -> float {
+auto HorseAnimationController::get_stride_cycle() const -> float {
   GaitParameters const params = getGaitParams(m_current_gait);
   return params.cycle_time;
 }
 
-void HorseAnimationController::updateGaitParameters() {
+void HorseAnimationController::update_gait_parameters() {
 
   constexpr float transition_duration = 0.3F;
   if (m_gait_transition_progress < 1.0F) {

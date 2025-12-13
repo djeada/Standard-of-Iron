@@ -30,7 +30,7 @@ auto makeMountedKnightConfig() -> MountedKnightRendererConfig {
 
 } // namespace
 
-void registerMountedKnightRenderer(EntityRendererRegistry &registry) {
+void register_mounted_knight_renderer(EntityRendererRegistry &registry) {
   registry.register_renderer(
       "troops/roman/horse_swordsman",
       [](const DrawContext &ctx, ISubmitter &out) {
