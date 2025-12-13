@@ -71,7 +71,9 @@ void VertexArray::bind() {
       qWarning() << "VertexArray glGenVertexArrays error" << genErr;
     }
   }
-  glBindVertexArray(m_vao);
+  
+  // Clear any pre-existing errors from previous operations
+  while (glGetError() != GL_NO_ERROR) {}\n  \n  glBindVertexArray(m_vao);
   GLenum bindErr = glGetError();
   if (bindErr != GL_NO_ERROR) {
     qWarning() << "VertexArray glBindVertexArray error" << bindErr << "vao"

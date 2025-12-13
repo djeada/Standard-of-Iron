@@ -196,6 +196,10 @@ void HealingBeamPipeline::render(
   glDepthMask(GL_FALSE);
 
   m_beamShader->use();
+  
+  // Clear any pre-existing errors from previous operations
+  while (glGetError() != GL_NO_ERROR) {}
+  
   glBindVertexArray(m_vao);
 
   GLenum vaoErr = glGetError();
@@ -203,9 +207,6 @@ void HealingBeamPipeline::render(
     qWarning() << "HealingBeamPipeline glBindVertexArray error:" << vaoErr
                << "vao=" << m_vao;
   }
-
-  qDebug() << "HealingBeamPipeline rendering" << beam_system->get_beam_count()
-           << "beams using vao=" << m_vao;
 
   for (const auto &beam : beam_system->get_beams()) {
     if (beam && beam->is_active()) {
@@ -236,11 +237,6 @@ void HealingBeamPipeline::render_beam(const Game::Systems::HealingBeam &beam,
 
   QMatrix4x4 mvp =
       cam.get_projection_matrix() * cam.get_view_matrix() * model;
-
-  qDebug() << "render_beam: start=" << beam.get_start()
-           << "end=" << beam.get_end() << "progress=" << beam.get_progress()
-           << "width=" << beam.get_beam_width() << "alpha=" << beam.get_intensity()
-           << "vao=" << m_vao << "indexCount=" << m_indexCount;
 
   m_beamShader->set_uniform(m_uniforms.mvp, mvp);
   if (m_uniforms.model != Shader::InvalidUniform) {

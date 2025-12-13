@@ -81,7 +81,8 @@ void main() {
     v_glowIntensity *= 0.0;
   }
 
-  v_normal = mat3(u_model) * a_normal;
+  // Normal doesn't need transformation since we're in world space already
+  v_normal = a_normal;
   v_texCoord = vec2(t, a_position.x * 0.5 + 0.5);
 
   gl_Position = u_mvp * vec4(worldPos, 1.0);
