@@ -230,11 +230,14 @@ void HealingBeamPipeline::render(
     const Game::Systems::HealingBeamSystem *beam_system, const Camera &cam,
     float animation_time) {
   if (!is_initialized()) {
+    qWarning() << "HealingBeamPipeline::render - not initialized";
     return;
   }
   if (beam_system == nullptr || beam_system->get_beam_count() == 0) {
     return;
   }
+
+  qDebug() << "HealingBeamPipeline::render - rendering" << beam_system->get_beam_count() << "beams";
 
   initializeOpenGLFunctions();
   clear_gl_errors();

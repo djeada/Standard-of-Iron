@@ -242,6 +242,11 @@ void HealerAuraPipeline::collect_healers(Engine::Core::World *world) {
   }
 
   auto healers = world->get_entities_with<Engine::Core::HealerComponent>();
+  
+  static int s_debugCounter = 0;
+  if (++s_debugCounter % 300 == 0) {  // Log every ~5 seconds at 60fps
+    qDebug() << "HealerAuraPipeline::collect_healers - found" << healers.size() << "healers";
+  }
 
   for (auto *healer : healers) {
     if (healer->has_component<Engine::Core::PendingRemovalComponent>()) {
@@ -268,19 +273,39 @@ void HealerAuraPipeline::collect_healers(Engine::Core::World *world) {
     data.is_active = healer_comp->is_healing_active;
     
     // Intensity based on whether actively healing
-    data.intensity = data.is_active ? 0.8F : 0.3F;
+    // Always show aura even when not healing (0.5 base, 1.0 when active)
+    data.intensity = data.is_active ? 1.0F : 0.5F;
     
     // Golden-green healing color
     data.color = QVector3D(0.4F, 1.0F, 0.5F);
 
     m_healerData.push_back(data);
+    
+    if (s_debugCounter % 300 == 0) {
+      qDebug() << "  Healer at" << data.position << "radius" << data.radius 
+               << "active" << data.is_active << "intensity" << data.intensity;
+    }
   }
 }
 
 void HealerAuraPipeline::render(const Camera &cam, float animation_time) {
-  if (!is_initialized() || m_healerData.empty()) {
+  if (!is_initialized()) {
+    qWarning() << "HealerAuraPipeline::render - not initialized";
     return;
   }
+  
+  // DEBUG: Track if we're being called
+  static int s_callCounter = 0;
+  if (++s_callCounter % 600 == 0) {
+    qDebug() << "HealerAuraPipeline::render called" << s_callCounter 
+             << "times, healer count:" << m_healerData.size();
+  }
+  
+  if (m_healerData.empty()) {
+    return;
+  }
+
+  qDebug() << "HealerAuraPipeline::render - rendering" << m_healerData.size() << "auras";
 
   initializeOpenGLFunctions();
   clear_gl_errors();
@@ -330,13 +355,17 @@ void HealerAuraPipeline::render_aura(const HealerAuraData &data,
   QMatrix4x4 model;
   model.setToIdentity();
   model.translate(data.position);
+  // Scale by radius (shader expects unit sphere)
+  model.scale(data.radius);
 
-  QMatrix4x4 mvp = cam.get_projection_matrix() * cam.get_view_matrix() * model;
+  QMatrix4x4 vp = cam.get_projection_matrix() * cam.get_view_matrix();
+  QMatrix4x4 mvp = vp * model;
 
   m_auraShader->set_uniform(m_uniforms.mvp, mvp);
   m_auraShader->set_uniform(m_uniforms.model, model);
   m_auraShader->set_uniform(m_uniforms.time, animation_time);
-  m_auraShader->set_uniform(m_uniforms.auraRadius, data.radius);
+  // Pass 1.0 since we scale in model matrix now
+  m_auraShader->set_uniform(m_uniforms.auraRadius, 1.0F);
   m_auraShader->set_uniform(m_uniforms.intensity, data.intensity);
   m_auraShader->set_uniform(m_uniforms.auraColor, data.color);
 
