@@ -96,7 +96,7 @@ auto torso_mesh_without_bottom_cap() -> Mesh * {
     return s_mesh.get();
   }
 
-  Mesh *base = getUnitTorso();
+  Mesh *base = get_unit_torso();
   if (base == nullptr) {
     return nullptr;
   }
@@ -392,9 +392,9 @@ void HumanoidRendererBase::compute_locomotion_pose(
   QVector3D const outward_l = -right_axis;
   QVector3D const outward_r = right_axis;
 
-  pose.elbow_l = elbowBendTorso(pose.shoulder_l, pose.hand_l, outward_l, 0.45F,
+  pose.elbow_l = elbow_bend_torso(pose.shoulder_l, pose.hand_l, outward_l, 0.45F,
                                 0.15F, -0.08F, +1.0F);
-  pose.elbow_r = elbowBendTorso(pose.shoulder_r, pose.hand_r, outward_r, 0.48F,
+  pose.elbow_r = elbow_bend_torso(pose.shoulder_r, pose.hand_r, outward_r, 0.48F,
                                 0.12F, 0.02F, +1.0F);
 }
 
@@ -514,7 +514,7 @@ void HumanoidRendererBase::draw_common_body(const DrawContext &ctx,
   }
 
   QVector3D const chin_pos = pose.head_pos - head_up * head_r;
-  out.mesh(getUnitCylinder(),
+  out.mesh(get_unit_cylinder(),
            cylinder_between(ctx.model, pose.neck_base, chin_pos,
                            HP::NECK_RADIUS * width_scale),
            v.palette.skin * 0.9F, nullptr, 1.0F);
@@ -530,7 +530,7 @@ void HumanoidRendererBase::draw_common_body(const DrawContext &ctx,
   head_transform = head_transform * head_rot;
   head_transform.scale(head_r);
 
-  out.mesh(getUnitSphere(), head_transform, v.palette.skin, nullptr, 1.0F);
+  out.mesh(get_unit_sphere(), head_transform, v.palette.skin, nullptr, 1.0F);
 
   pose.head_frame.origin = pose.head_pos;
   pose.head_frame.right = head_right;
@@ -703,53 +703,53 @@ void HumanoidRendererBase::draw_common_body(const DrawContext &ctx,
   QVector3D const right_eye_world = eyePosition(0.32F);
   float const eye_radius = pose.body_frames.head.radius * 0.17F;
 
-  out.mesh(getUnitSphere(), sphere_at(ctx.model, left_eye_world, eye_radius),
+  out.mesh(get_unit_sphere(), sphere_at(ctx.model, left_eye_world, eye_radius),
            iris, nullptr, 1.0F);
-  out.mesh(getUnitSphere(), sphere_at(ctx.model, right_eye_world, eye_radius),
+  out.mesh(get_unit_sphere(), sphere_at(ctx.model, right_eye_world, eye_radius),
            iris, nullptr, 1.0F);
 
   out.mesh(
-      getUnitCylinder(),
+      get_unit_cylinder(),
       cylinder_between(ctx.model, pose.shoulder_l, pose.elbow_l, upper_arm_r),
       v.palette.cloth, nullptr, 1.0F);
-  out.mesh(getUnitSphere(), sphere_at(ctx.model, pose.elbow_l, joint_r),
+  out.mesh(get_unit_sphere(), sphere_at(ctx.model, pose.elbow_l, joint_r),
            v.palette.cloth * 0.95F, nullptr, 1.0F);
-  out.mesh(getUnitCylinder(),
+  out.mesh(get_unit_cylinder(),
            cylinder_between(ctx.model, pose.elbow_l, pose.hand_l, fore_arm_r),
            v.palette.skin * 0.95F, nullptr, 1.0F);
-  out.mesh(getUnitSphere(), sphere_at(ctx.model, pose.hand_l, hand_r),
+  out.mesh(get_unit_sphere(), sphere_at(ctx.model, pose.hand_l, hand_r),
            v.palette.leatherDark * 0.92F, nullptr, 1.0F);
 
   out.mesh(
-      getUnitCylinder(),
+      get_unit_cylinder(),
       cylinder_between(ctx.model, pose.shoulder_r, pose.elbow_r, upper_arm_r),
       v.palette.cloth, nullptr, 1.0F);
-  out.mesh(getUnitSphere(), sphere_at(ctx.model, pose.elbow_r, joint_r),
+  out.mesh(get_unit_sphere(), sphere_at(ctx.model, pose.elbow_r, joint_r),
            v.palette.cloth * 0.95F, nullptr, 1.0F);
-  out.mesh(getUnitCylinder(),
+  out.mesh(get_unit_cylinder(),
            cylinder_between(ctx.model, pose.elbow_r, pose.hand_r, fore_arm_r),
            v.palette.skin * 0.95F, nullptr, 1.0F);
-  out.mesh(getUnitSphere(), sphere_at(ctx.model, pose.hand_r, hand_r),
+  out.mesh(get_unit_sphere(), sphere_at(ctx.model, pose.hand_r, hand_r),
            v.palette.leatherDark * 0.92F, nullptr, 1.0F);
 
   QVector3D const hip_l = pose.pelvis_pos + QVector3D(-0.10F, -0.02F, 0.0F);
   QVector3D const hip_r = pose.pelvis_pos + QVector3D(0.10F, -0.02F, 0.0F);
 
-  out.mesh(getUnitCylinder(),
+  out.mesh(get_unit_cylinder(),
            cylinder_between(ctx.model, hip_l, pose.knee_l, thigh_r),
            v.palette.cloth * 0.92F, nullptr, 1.0F);
-  out.mesh(getUnitSphere(), sphere_at(ctx.model, pose.knee_l, leg_joint_r),
+  out.mesh(get_unit_sphere(), sphere_at(ctx.model, pose.knee_l, leg_joint_r),
            v.palette.cloth * 0.90F, nullptr, 1.0F);
-  out.mesh(getUnitCylinder(),
+  out.mesh(get_unit_cylinder(),
            cylinder_between(ctx.model, pose.knee_l, pose.foot_l, shin_r),
            v.palette.leather * 0.95F, nullptr, 1.0F);
 
-  out.mesh(getUnitCylinder(),
+  out.mesh(get_unit_cylinder(),
            cylinder_between(ctx.model, hip_r, pose.knee_r, thigh_r),
            v.palette.cloth * 0.92F, nullptr, 1.0F);
-  out.mesh(getUnitSphere(), sphere_at(ctx.model, pose.knee_r, leg_joint_r),
+  out.mesh(get_unit_sphere(), sphere_at(ctx.model, pose.knee_r, leg_joint_r),
            v.palette.cloth * 0.90F, nullptr, 1.0F);
-  out.mesh(getUnitCylinder(),
+  out.mesh(get_unit_cylinder(),
            cylinder_between(ctx.model, pose.knee_r, pose.foot_r, shin_r),
            v.palette.leather * 0.95F, nullptr, 1.0F);
 
@@ -792,7 +792,7 @@ void HumanoidRendererBase::draw_common_body(const DrawContext &ctx,
 
     foot_mat = foot_mat * scale_mat * shear_mat;
 
-    out.mesh(getUnitCapsule(), foot_mat, v.palette.leatherDark * 0.92F, nullptr,
+    out.mesh(get_unit_capsule(), foot_mat, v.palette.leatherDark * 0.92F, nullptr,
              1.0F);
   };
 
@@ -965,14 +965,14 @@ void HumanoidRendererBase::draw_facial_hair(const DrawContext &ctx,
         QVector3D const tip_color = saturate(hair_tip * color_jitter);
 
         QMatrix4x4 base_blob = sphere_at(ctx.model, root, base_radius * 0.95F);
-        out.mesh(getUnitSphere(), base_blob, root_color, nullptr, 1.0F);
+        out.mesh(get_unit_sphere(), base_blob, root_color, nullptr, 1.0F);
 
         QVector3D const mid = root + (tip - root) * 0.40F;
-        out.mesh(getUnitCylinder(),
+        out.mesh(get_unit_cylinder(),
                  cylinder_between(ctx.model, root, mid, base_radius), root_color,
                  nullptr, 1.0F);
 
-        out.mesh(getUnitCone(), cone_from_to(ctx.model, mid, tip, mid_radius),
+        out.mesh(get_unit_cone(), cone_from_to(ctx.model, mid, tip, mid_radius),
                  tip_color, nullptr, 1.0F);
       }
     }
@@ -1034,14 +1034,14 @@ void HumanoidRendererBase::draw_facial_hair(const DrawContext &ctx,
             saturate(hair_root * (color_jitter * 0.95F));
         QVector3D const tip_color = saturate(hair_tip * (color_jitter * 1.02F));
 
-        out.mesh(getUnitSphere(), sphere_at(ctx.model, root, base_radius * 0.7F),
+        out.mesh(get_unit_sphere(), sphere_at(ctx.model, root, base_radius * 0.7F),
                  root_color, nullptr, 1.0F);
 
         QVector3D const mid = root + (tip - root) * 0.5F;
-        out.mesh(getUnitCylinder(),
+        out.mesh(get_unit_cylinder(),
                  cylinder_between(ctx.model, root, mid, base_radius * 0.85F),
                  root_color, nullptr, 1.0F);
-        out.mesh(getUnitCone(), cone_from_to(ctx.model, mid, tip, mid_radius),
+        out.mesh(get_unit_cone(), cone_from_to(ctx.model, mid, tip, mid_radius),
                  tip_color, nullptr, 1.0F);
       }
     }
@@ -1163,13 +1163,13 @@ void HumanoidRendererBase::draw_simplified_body(const DrawContext &ctx,
   QMatrix4x4 head_transform = ctx.model;
   head_transform.translate(pose.head_pos);
   head_transform.scale(head_r);
-  out.mesh(getUnitSphere(), head_transform, v.palette.skin, nullptr, 1.0F);
+  out.mesh(get_unit_sphere(), head_transform, v.palette.skin, nullptr, 1.0F);
 
-  out.mesh(getUnitCylinder(),
+  out.mesh(get_unit_cylinder(),
            cylinder_between(ctx.model, pose.shoulder_l, pose.hand_l,
                            (upper_arm_r + fore_arm_r) * 0.5F),
            v.palette.cloth, nullptr, 1.0F);
-  out.mesh(getUnitCylinder(),
+  out.mesh(get_unit_cylinder(),
            cylinder_between(ctx.model, pose.shoulder_r, pose.hand_r,
                            (upper_arm_r + fore_arm_r) * 0.5F),
            v.palette.cloth, nullptr, 1.0F);
@@ -1178,11 +1178,11 @@ void HumanoidRendererBase::draw_simplified_body(const DrawContext &ctx,
   QVector3D const hip_r = pose.pelvis_pos + QVector3D(0.10F, -0.02F, 0.0F);
 
   out.mesh(
-      getUnitCylinder(),
+      get_unit_cylinder(),
       cylinder_between(ctx.model, hip_l, pose.foot_l, (thigh_r + shin_r) * 0.5F),
       v.palette.cloth * 0.92F, nullptr, 1.0F);
   out.mesh(
-      getUnitCylinder(),
+      get_unit_cylinder(),
       cylinder_between(ctx.model, hip_r, pose.foot_r, (thigh_r + shin_r) * 0.5F),
       v.palette.cloth * 0.92F, nullptr, 1.0F);
 }
@@ -1198,7 +1198,7 @@ void HumanoidRendererBase::draw_minimal_body(const DrawContext &ctx,
 
   float const body_radius = HP::TORSO_TOP_R * get_torso_scale();
 
-  out.mesh(getUnitCapsule(), capsule_between(ctx.model, top, bot, body_radius),
+  out.mesh(get_unit_capsule(), capsule_between(ctx.model, top, bot, body_radius),
            v.palette.cloth, nullptr, 1.0F);
 }
 
@@ -1343,7 +1343,7 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
 
     constexpr float kSoldierCullRadius = 0.6F;
     if (ctx.camera != nullptr &&
-        !ctx.camera->isInFrustum(soldier_world_pos, kSoldierCullRadius)) {
+        !ctx.camera->is_in_frustum(soldier_world_pos, kSoldierCullRadius)) {
       ++s_renderStats.soldiers_skipped_frustum;
       continue;
     }
@@ -1631,7 +1631,7 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
           if (auto *renderer = dynamic_cast<Renderer *>(&out)) {
             Shader *previous_shader = renderer->get_current_shader();
             renderer->set_current_shader(shadowShader);
-            shadowShader->setUniform(QStringLiteral("u_lightDir"), dir_for_use);
+            shadowShader->set_uniform(QStringLiteral("u_lightDir"), dir_for_use);
 
             out.mesh(quadMesh, shadowModel, QVector3D(0.0F, 0.0F, 0.0F),
                      nullptr, k_shadow_base_alpha, 0);

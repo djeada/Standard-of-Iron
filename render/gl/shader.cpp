@@ -129,96 +129,96 @@ auto Shader::optionalUniformHandle(const char *name) -> Shader::UniformHandle {
   return uniformHandleImpl(*this, m_program, m_uniformCache, name, false);
 }
 
-void Shader::setUniform(UniformHandle handle, float value) {
+void Shader::set_uniform(UniformHandle handle, float value) {
   initializeOpenGLFunctions();
   if (handle != InvalidUniform) {
     glUniform1f(handle, value);
   }
 }
 
-void Shader::setUniform(UniformHandle handle, const QVector3D &value) {
+void Shader::set_uniform(UniformHandle handle, const QVector3D &value) {
   initializeOpenGLFunctions();
   if (handle != InvalidUniform) {
     glUniform3f(handle, value.x(), value.y(), value.z());
   }
 }
 
-void Shader::setUniform(UniformHandle handle, const QVector2D &value) {
+void Shader::set_uniform(UniformHandle handle, const QVector2D &value) {
   initializeOpenGLFunctions();
   if (handle != InvalidUniform) {
     glUniform2f(handle, value.x(), value.y());
   }
 }
 
-void Shader::setUniform(UniformHandle handle, const QMatrix4x4 &value) {
+void Shader::set_uniform(UniformHandle handle, const QMatrix4x4 &value) {
   initializeOpenGLFunctions();
   if (handle != InvalidUniform) {
     glUniformMatrix4fv(handle, 1, GL_FALSE, value.constData());
   }
 }
 
-void Shader::setUniform(UniformHandle handle, int value) {
+void Shader::set_uniform(UniformHandle handle, int value) {
   initializeOpenGLFunctions();
   if (handle != InvalidUniform) {
     glUniform1i(handle, value);
   }
 }
 
-void Shader::setUniform(UniformHandle handle, bool value) {
-  setUniform(handle, static_cast<int>(value));
+void Shader::set_uniform(UniformHandle handle, bool value) {
+  set_uniform(handle, static_cast<int>(value));
 }
 
-void Shader::setUniform(const char *name, float value) {
-  setUniform(uniformHandle(name), value);
+void Shader::set_uniform(const char *name, float value) {
+  set_uniform(uniformHandle(name), value);
 }
 
-void Shader::setUniform(const char *name, const QVector3D &value) {
-  setUniform(uniformHandle(name), value);
+void Shader::set_uniform(const char *name, const QVector3D &value) {
+  set_uniform(uniformHandle(name), value);
 }
 
-void Shader::setUniform(const char *name, const QVector2D &value) {
-  setUniform(uniformHandle(name), value);
+void Shader::set_uniform(const char *name, const QVector2D &value) {
+  set_uniform(uniformHandle(name), value);
 }
 
-void Shader::setUniform(const char *name, const QMatrix4x4 &value) {
-  setUniform(uniformHandle(name), value);
+void Shader::set_uniform(const char *name, const QMatrix4x4 &value) {
+  set_uniform(uniformHandle(name), value);
 }
 
-void Shader::setUniform(const char *name, int value) {
-  setUniform(uniformHandle(name), value);
+void Shader::set_uniform(const char *name, int value) {
+  set_uniform(uniformHandle(name), value);
 }
 
-void Shader::setUniform(const char *name, bool value) {
-  setUniform(uniformHandle(name), value);
+void Shader::set_uniform(const char *name, bool value) {
+  set_uniform(uniformHandle(name), value);
 }
 
-void Shader::setUniform(const QString &name, float value) {
+void Shader::set_uniform(const QString &name, float value) {
   const QByteArray utf8 = name.toUtf8();
-  setUniform(utf8.constData(), value);
+  set_uniform(utf8.constData(), value);
 }
 
-void Shader::setUniform(const QString &name, const QVector3D &value) {
+void Shader::set_uniform(const QString &name, const QVector3D &value) {
   const QByteArray utf8 = name.toUtf8();
-  setUniform(utf8.constData(), value);
+  set_uniform(utf8.constData(), value);
 }
 
-void Shader::setUniform(const QString &name, const QVector2D &value) {
+void Shader::set_uniform(const QString &name, const QVector2D &value) {
   const QByteArray utf8 = name.toUtf8();
-  setUniform(utf8.constData(), value);
+  set_uniform(utf8.constData(), value);
 }
 
-void Shader::setUniform(const QString &name, const QMatrix4x4 &value) {
+void Shader::set_uniform(const QString &name, const QMatrix4x4 &value) {
   const QByteArray utf8 = name.toUtf8();
-  setUniform(utf8.constData(), value);
+  set_uniform(utf8.constData(), value);
 }
 
-void Shader::setUniform(const QString &name, int value) {
+void Shader::set_uniform(const QString &name, int value) {
   const QByteArray utf8 = name.toUtf8();
-  setUniform(utf8.constData(), value);
+  set_uniform(utf8.constData(), value);
 }
 
-void Shader::setUniform(const QString &name, bool value) {
-  setUniform(name, static_cast<int>(value));
+void Shader::set_uniform(const QString &name, bool value) {
+  set_uniform(name, static_cast<int>(value));
 }
 
 auto Shader::compileShader(const QString &source, GLenum type) -> GLuint {

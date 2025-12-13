@@ -28,26 +28,26 @@ public:
   auto uniformHandle(const char *name) -> UniformHandle;
   auto optionalUniformHandle(const char *name) -> UniformHandle;
 
-  void setUniform(UniformHandle handle, float value);
-  void setUniform(UniformHandle handle, const QVector3D &value);
-  void setUniform(UniformHandle handle, const QVector2D &value);
-  void setUniform(UniformHandle handle, const QMatrix4x4 &value);
-  void setUniform(UniformHandle handle, int value);
-  void setUniform(UniformHandle handle, bool value);
+  void set_uniform(UniformHandle handle, float value);
+  void set_uniform(UniformHandle handle, const QVector3D &value);
+  void set_uniform(UniformHandle handle, const QVector2D &value);
+  void set_uniform(UniformHandle handle, const QMatrix4x4 &value);
+  void set_uniform(UniformHandle handle, int value);
+  void set_uniform(UniformHandle handle, bool value);
 
-  void setUniform(const char *name, float value);
-  void setUniform(const char *name, const QVector3D &value);
-  void setUniform(const char *name, const QVector2D &value);
-  void setUniform(const char *name, const QMatrix4x4 &value);
-  void setUniform(const char *name, int value);
-  void setUniform(const char *name, bool value);
+  void set_uniform(const char *name, float value);
+  void set_uniform(const char *name, const QVector3D &value);
+  void set_uniform(const char *name, const QVector2D &value);
+  void set_uniform(const char *name, const QMatrix4x4 &value);
+  void set_uniform(const char *name, int value);
+  void set_uniform(const char *name, bool value);
 
-  void setUniform(const QString &name, float value);
-  void setUniform(const QString &name, const QVector3D &value);
-  void setUniform(const QString &name, const QVector2D &value);
-  void setUniform(const QString &name, const QMatrix4x4 &value);
-  void setUniform(const QString &name, int value);
-  void setUniform(const QString &name, bool value);
+  void set_uniform(const QString &name, float value);
+  void set_uniform(const QString &name, const QVector3D &value);
+  void set_uniform(const QString &name, const QVector2D &value);
+  void set_uniform(const QString &name, const QMatrix4x4 &value);
+  void set_uniform(const QString &name, int value);
+  void set_uniform(const QString &name, bool value);
 
 private:
   GLuint m_program = 0;
