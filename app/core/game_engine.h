@@ -7,9 +7,11 @@
 #include "../utils/engine_view_helpers.h"
 #include "../utils/movement_utils.h"
 #include "../utils/selection_utils.h"
+#include "ambient_state_manager.h"
 #include "game/audio/AudioEventHandler.h"
 #include "game/core/event_manager.h"
 #include "game/systems/game_state_serializer.h"
+#include "minimap_manager.h"
 #include <QJsonObject>
 #include <QList>
 #include <QMatrix4x4>
@@ -244,25 +246,12 @@ private:
     CursorMode cursor_mode{CursorMode::Normal};
     QString last_error = "";
     Qt::CursorShape current_cursor = Qt::ArrowCursor;
-    int lastTroopCount = 0;
-    std::uint64_t visibilityVersion = 0;
-    float visibilityUpdateAccumulator = 0.0F;
-    qreal lastCursorX = -1.0;
-    qreal lastCursorY = -1.0;
-    int selectionRefreshCounter = 0;
-  };
-  struct EntityCache {
-    int playerTroopCount = 0;
-    bool playerBarracksAlive = false;
-    bool enemyBarracksAlive = false;
-    int enemyBarracksCount = 0;
-
-    void reset() {
-      playerTroopCount = 0;
-      playerBarracksAlive = false;
-      enemyBarracksAlive = false;
-      enemyBarracksCount = 0;
-    }
+    int last_troop_count = 0;
+    std::uint64_t visibility_version = 0;
+    float visibility_update_accumulator = 0.0F;
+    qreal last_cursor_x = -1.0;
+    qreal last_cursor_y = -1.0;
+    int selection_refresh_counter = 0;
   };
   struct ViewportState {
     int width = 0;
@@ -317,14 +306,8 @@ private:
   std::unique_ptr<Game::Map::MapCatalog> m_mapCatalog;
   std::unique_ptr<Game::Audio::AudioEventHandler> m_audioEventHandler;
   std::unique_ptr<App::Models::AudioSystemProxy> m_audio_systemProxy;
-  QImage m_minimap_image;
-  QImage m_minimap_base_image;
-  std::uint64_t m_minimap_fog_version = 0;
-  std::unique_ptr<Game::Map::Minimap::UnitLayer> m_unit_layer;
-  float m_world_width = 0.0F;
-  float m_world_height = 0.0F;
-  float m_minimap_update_timer = 0.0F;
-  static constexpr float MINIMAP_UPDATE_INTERVAL = 0.1F;
+  std::unique_ptr<MinimapManager> m_minimap_manager;
+  std::unique_ptr<AmbientStateManager> m_ambient_state_manager;
   QQuickWindow *m_window = nullptr;
   RuntimeState m_runtime;
   ViewportState m_viewport;
@@ -341,18 +324,9 @@ private:
       m_unit_died_subscription;
   Engine::Core::ScopedEventSubscription<Engine::Core::UnitSpawnedEvent>
       m_unit_spawned_subscription;
-  EntityCache m_entityCache;
-  Engine::Core::AmbientState m_currentAmbientState =
-      Engine::Core::AmbientState::PEACEFUL;
-  float m_ambientCheckTimer = 0.0F;
+  EntityCache m_entity_cache;
 
-  void update_ambient_state(float dt);
-  [[nodiscard]] bool is_player_in_combat() const;
-  static void load_audio_resources();
   void load_campaigns();
-  void generate_minimap_for_map(const Game::Map::MapDefinition &map_def);
-  void update_minimap_fog(float dt);
-  void update_minimap_units();
 signals:
   void selected_units_changed();
   void selected_units_data_changed();
