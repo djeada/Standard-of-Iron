@@ -18,6 +18,6 @@ class ArrowSystem;
 namespace Render::GL {
 
 void render_arrows(Renderer *renderer, ResourceManager *resources,
-                  const Game::Systems::ArrowSystem &arrow_system);
+                   const Game::Systems::ArrowSystem &arrow_system);
 
 }

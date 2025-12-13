@@ -11,10 +11,10 @@ void Environment::apply(const MapDefinition &def,
                         Render::GL::Renderer &renderer,
                         Render::GL::Camera &camera) {
 
-  camera.set_rts_view(def.camera.center, def.camera.distance, def.camera.tiltDeg,
-                    def.camera.yaw_deg);
+  camera.set_rts_view(def.camera.center, def.camera.distance,
+                      def.camera.tiltDeg, def.camera.yaw_deg);
   camera.set_perspective(def.camera.fovY, 16.0F / 9.0F, def.camera.near_plane,
-                        def.camera.far_plane);
+                         def.camera.far_plane);
   Render::GL::Renderer::GridParams gp;
   gp.cell_size = def.grid.tile_size;
   gp.extent =

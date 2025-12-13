@@ -254,7 +254,7 @@ void TunicRenderer::renderGorget(const DrawContext &ctx,
 
   submitter.mesh(get_unit_cylinder(),
                  cylinder_between(ctx.model, gorget_bot, gorget_top,
-                                 HP::NECK_RADIUS * 2.6F),
+                                  HP::NECK_RADIUS * 2.6F),
                  steel_color * 1.08F, nullptr, 1.0F);
 
   QVector3D const a = gorget_top + QVector3D(0, 0.005F, 0);

@@ -78,8 +78,8 @@ void RomanGreavesRenderer::render(const DrawContext &ctx,
 
       seg_transform.scale(segment_width, greave_len * 0.5F, greave_thickness);
 
-      submitter.mesh(get_unit_cube(), seg_transform, greaves_color, nullptr, 1.0F,
-                     5);
+      submitter.mesh(get_unit_cube(), seg_transform, greaves_color, nullptr,
+                     1.0F, 5);
     }
   };
 

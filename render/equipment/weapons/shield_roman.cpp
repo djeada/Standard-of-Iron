@@ -67,17 +67,19 @@ void RomanShieldRenderer::render(const DrawContext &ctx,
                        axis_x * (shield_width * 0.5F);
   QVector3D top_right = shield_center + axis_y * (shield_height * 0.5F) +
                         axis_x * (shield_width * 0.5F);
-  submitter.mesh(get_unit_cylinder(),
-                 cylinder_between(ctx.model, top_left, top_right, rim_thickness),
-                 trim_color, nullptr, 1.0F, 4);
+  submitter.mesh(
+      get_unit_cylinder(),
+      cylinder_between(ctx.model, top_left, top_right, rim_thickness),
+      trim_color, nullptr, 1.0F, 4);
 
   QVector3D bot_left = shield_center - axis_y * (shield_height * 0.5F) -
                        axis_x * (shield_width * 0.5F);
   QVector3D bot_right = shield_center - axis_y * (shield_height * 0.5F) +
                         axis_x * (shield_width * 0.5F);
-  submitter.mesh(get_unit_cylinder(),
-                 cylinder_between(ctx.model, bot_left, bot_right, rim_thickness),
-                 trim_color, nullptr, 1.0F, 4);
+  submitter.mesh(
+      get_unit_cylinder(),
+      cylinder_between(ctx.model, bot_left, bot_right, rim_thickness),
+      trim_color, nullptr, 1.0F, 4);
 
   float const boss_radius = 0.08F;
   submitter.mesh(get_unit_sphere(),

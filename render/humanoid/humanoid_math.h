@@ -26,8 +26,8 @@ inline auto right_of(const QVector3D &fwd) -> QVector3D {
 }
 
 auto elbow_bend_torso(const QVector3D &shoulder, const QVector3D &hand,
-                    const QVector3D &outwardDir, float alongFrac,
-                    float lateral_offset, float yBias,
-                    float outwardSign) -> QVector3D;
+                      const QVector3D &outwardDir, float alongFrac,
+                      float lateral_offset, float yBias,
+                      float outwardSign) -> QVector3D;
 
 } // namespace Render::GL

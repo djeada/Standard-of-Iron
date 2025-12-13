@@ -16,7 +16,7 @@ namespace Render::GL {
 using Render::Geom::cylinder_between;
 
 auto ChainmailArmorRenderer::calculate_ring_color(float x, float y,
-                                                float z) const -> QVector3D {
+                                                  float z) const -> QVector3D {
 
   float rust_noise =
       std::sin(x * 127.3F) * std::cos(y * 97.1F) * std::sin(z * 83.7F);
