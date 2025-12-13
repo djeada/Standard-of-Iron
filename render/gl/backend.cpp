@@ -1422,21 +1422,21 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
 
       switch (batch.type) {
       case PrimitiveType::Sphere:
-        m_primitiveBatchPipeline->uploadSphereInstances(data,
-                                                        batch.instance_count());
-        m_primitiveBatchPipeline->drawSpheres(batch.instance_count(),
-                                              view_proj);
+        m_primitiveBatchPipeline->upload_sphere_instances(
+            data, batch.instance_count());
+        m_primitiveBatchPipeline->draw_spheres(batch.instance_count(),
+                                               view_proj);
         break;
       case PrimitiveType::Cylinder:
-        m_primitiveBatchPipeline->uploadCylinderInstances(
+        m_primitiveBatchPipeline->upload_cylinder_instances(
             data, batch.instance_count());
-        m_primitiveBatchPipeline->drawCylinders(batch.instance_count(),
-                                                view_proj);
+        m_primitiveBatchPipeline->draw_cylinders(batch.instance_count(),
+                                                 view_proj);
         break;
       case PrimitiveType::Cone:
-        m_primitiveBatchPipeline->uploadConeInstances(data,
-                                                      batch.instance_count());
-        m_primitiveBatchPipeline->drawCones(batch.instance_count(), view_proj);
+        m_primitiveBatchPipeline->upload_cone_instances(data,
+                                                        batch.instance_count());
+        m_primitiveBatchPipeline->draw_cones(batch.instance_count(), view_proj);
         break;
       }
 
