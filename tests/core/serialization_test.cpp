@@ -1149,7 +1149,7 @@ TEST_F(SerializationTest, BuildingOwnershipAndCaptureStatePreserved) {
   std::vector<BuildingData> buildings = {
       {100.0F, 100.0F, 1, -1, 0.0F, false},        // Owned by player 1, not being captured
       {200.0F, 200.0F, 2, 1, 7.5F, true},          // Owned by player 2, being captured by player 1
-      {300.0F, 300.0F, 1, 2, 15.0F, true},         // Owned by player 1, fully captured by player 2
+      {300.0F, 300.0F, 1, 2, 15.0F, true},         // Owned by player 1, being captured by player 2
       {400.0F, 400.0F, -1, -1, 0.0F, false},       // Neutral building
   };
 
@@ -1234,6 +1234,7 @@ TEST_F(SerializationTest, UnitMovementStatePreserved) {
   movement->path.emplace_back(20.0F, 30.0F);
   movement->path.emplace_back(35.0F, 45.0F);
   movement->path.emplace_back(50.0F, 60.0F);
+  const size_t expected_path_size = movement->path.size();
 
   // Serialize and restore
   QJsonDocument doc = Serialization::serializeWorld(world.get());
@@ -1256,7 +1257,7 @@ TEST_F(SerializationTest, UnitMovementStatePreserved) {
   EXPECT_FLOAT_EQ(restored_movement->vz, 3.0F);
 
   // Verify path is preserved
-  ASSERT_EQ(restored_movement->path.size(), 3UL);
+  ASSERT_EQ(restored_movement->path.size(), expected_path_size);
   EXPECT_FLOAT_EQ(restored_movement->path[0].first, 20.0F);
   EXPECT_FLOAT_EQ(restored_movement->path[0].second, 30.0F);
   EXPECT_FLOAT_EQ(restored_movement->path[1].first, 35.0F);
