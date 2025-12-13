@@ -22,15 +22,15 @@ public:
     m_width = width;
     m_height = height;
     recomputeModel();
-    updateNoiseOffset();
+    update_noise_offset();
 
     invalidateParamsCache();
   }
 
-  void configureExtent(float extent) {
+  void configure_extent(float extent) {
     m_extent = extent;
     recomputeModel();
-    updateNoiseOffset();
+    update_noise_offset();
 
     invalidateParamsCache();
   }
@@ -40,7 +40,7 @@ public:
   void setBiome(const Game::Map::BiomeSettings &settings) {
     m_biomeSettings = settings;
     m_hasBiome = true;
-    updateNoiseOffset();
+    update_noise_offset();
 
     invalidateParamsCache();
   }
@@ -49,9 +49,9 @@ public:
 
 private:
   void recomputeModel();
-  void updateNoiseOffset();
-  auto buildParams() const -> Render::GL::TerrainChunkParams;
-  void syncBiomeFromService();
+  void update_noise_offset();
+  auto build_params() const -> Render::GL::TerrainChunkParams;
+  void sync_biome_from_service();
   static auto biomeEquals(const Game::Map::BiomeSettings &a,
                           const Game::Map::BiomeSettings &b) -> bool;
 

@@ -77,7 +77,7 @@ void FireCampRenderer::configure(
   m_fireCampParams.flicker_amount = 0.02F;
   m_fireCampParams.glow_strength = 1.1F;
 
-  generateFireCampInstances();
+  generate_firecamp_instances();
 }
 
 void FireCampRenderer::submit(Renderer &renderer, ResourceManager *resources) {
@@ -218,11 +218,11 @@ void FireCampRenderer::setExplicitFireCamps(
   m_explicitRadii = radii;
   m_fireCampInstancesDirty = true;
   if (m_width > 0 && m_height > 0 && !m_heightData.empty()) {
-    generateFireCampInstances();
+    generate_firecamp_instances();
   }
 }
 
-void FireCampRenderer::addExplicitFireCamps() {
+void FireCampRenderer::add_explicit_firecamps() {
   if (m_explicitPositions.empty()) {
     return;
   }
@@ -249,7 +249,7 @@ void FireCampRenderer::addExplicitFireCamps() {
   }
 }
 
-void FireCampRenderer::generateFireCampInstances() {
+void FireCampRenderer::generate_firecamp_instances() {
   m_fireCampInstances.clear();
 
   if (m_width < 2 || m_height < 2 || m_heightData.empty()) {
@@ -377,7 +377,7 @@ void FireCampRenderer::generateFireCampInstances() {
     }
   }
 
-  addExplicitFireCamps();
+  add_explicit_firecamps();
 
   m_fireCampInstanceCount = m_fireCampInstances.size();
   m_fireCampInstancesDirty = m_fireCampInstanceCount > 0;

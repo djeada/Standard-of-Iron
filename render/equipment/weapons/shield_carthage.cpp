@@ -83,7 +83,7 @@ CarthageShieldRenderer::CarthageShieldRenderer(float scale_multiplier)
   config.shield_aspect = 1.0F;
   config.has_cross_decal = false;
 
-  setConfig(config);
+  set_config(config);
 }
 
 void CarthageShieldRenderer::render(const DrawContext &ctx,

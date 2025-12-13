@@ -33,7 +33,7 @@ auto PrimitiveBatchPipeline::initialize() -> bool {
   initialize_sphere_vao();
   initialize_cylinder_vao();
   initialize_cone_vao();
-  cacheUniforms();
+  cache_uniforms();
 
   m_initialized = true;
   return true;
@@ -44,11 +44,11 @@ void PrimitiveBatchPipeline::shutdown() {
   m_initialized = false;
 }
 
-void PrimitiveBatchPipeline::cacheUniforms() {
+void PrimitiveBatchPipeline::cache_uniforms() {
   if (m_shader != nullptr) {
-    m_uniforms.view_proj = m_shader->uniformHandle("u_viewProj");
-    m_uniforms.light_dir = m_shader->uniformHandle("u_lightDir");
-    m_uniforms.ambient_strength = m_shader->uniformHandle("u_ambientStrength");
+    m_uniforms.view_proj = m_shader->uniform_handle("u_viewProj");
+    m_uniforms.light_dir = m_shader->uniform_handle("u_lightDir");
+    m_uniforms.ambient_strength = m_shader->uniform_handle("u_ambientStrength");
   }
 }
 

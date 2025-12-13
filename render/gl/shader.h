@@ -17,16 +17,16 @@ public:
   Shader();
   ~Shader() override;
 
-  auto loadFromFiles(const QString &vertexPath,
+  auto load_from_files(const QString &vertexPath,
                      const QString &fragmentPath) -> bool;
-  auto loadFromSource(const QString &vertex_source,
+  auto load_from_source(const QString &vertex_source,
                       const QString &fragment_source) -> bool;
 
   void use();
   void release();
 
-  auto uniformHandle(const char *name) -> UniformHandle;
-  auto optionalUniformHandle(const char *name) -> UniformHandle;
+  auto uniform_handle(const char *name) -> UniformHandle;
+  auto optional_uniform_handle(const char *name) -> UniformHandle;
 
   void set_uniform(UniformHandle handle, float value);
   void set_uniform(UniformHandle handle, const QVector3D &value);
@@ -51,8 +51,8 @@ public:
 
 private:
   GLuint m_program = 0;
-  auto compileShader(const QString &source, GLenum type) -> GLuint;
-  auto linkProgram(GLuint vertex_shader, GLuint fragment_shader) -> bool;
+  auto compile_shader(const QString &source, GLenum type) -> GLuint;
+  auto link_program(GLuint vertex_shader, GLuint fragment_shader) -> bool;
 
   std::unordered_map<std::string, UniformHandle> m_uniformCache;
 };

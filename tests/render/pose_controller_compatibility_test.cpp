@@ -67,7 +67,7 @@ TEST_F(PoseControllerCompatibilityTest, ElbowIKMatchesLegacyFunction) {
   // New controller approach
   HumanoidPoseController controller(pose, anim_ctx);
   QVector3D const controller_elbow =
-      controller.solveElbowIK(false, shoulder, hand, outward_dir, along_frac,
+      controller.solve_elbow_ik(false, shoulder, hand, outward_dir, along_frac,
                               lateral_offset, y_bias, outward_sign);
 
   // Should be identical
@@ -119,14 +119,14 @@ TEST_F(PoseControllerCompatibilityTest, KneeIKHandlesExtremeCases) {
   // Very short distance (hip very close to foot)
   QVector3D const hip1(0.0F, 0.50F, 0.0F);
   QVector3D const foot1(0.05F, 0.45F, 0.05F);
-  QVector3D const knee1 = controller.solveKneeIK(true, hip1, foot1, 1.0F);
+  QVector3D const knee1 = controller.solve_knee_ik(true, hip1, foot1, 1.0F);
   EXPECT_GE(knee1.y(), HumanProportions::GROUND_Y);
   EXPECT_LE(knee1.y(), hip1.y());
 
   // Maximum reach (foot very far from hip)
   QVector3D const hip2(0.0F, 1.00F, 0.0F);
   QVector3D const foot2(0.80F, 0.0F, 0.80F);
-  QVector3D const knee2 = controller.solveKneeIK(false, hip2, foot2, 1.0F);
+  QVector3D const knee2 = controller.solve_knee_ik(false, hip2, foot2, 1.0F);
   EXPECT_GE(knee2.y(), HumanProportions::GROUND_Y);
   EXPECT_LE(knee2.y(), hip2.y());
 }
