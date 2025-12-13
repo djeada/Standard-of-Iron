@@ -1454,10 +1454,6 @@ void GameEngine::on_unit_died(const Engine::Core::UnitDiedEvent &event) {
       m_entity_cache.enemy_barracks_alive = (m_entity_cache.enemy_barracks_count > 0);
     }
   }
-
-    return {};
-  }
-  return m_commandController->getPatrolFirstWaypoint();
 }
 
 auto GameEngine::minimap_image() const -> QImage {
