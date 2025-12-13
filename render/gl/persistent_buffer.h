@@ -63,7 +63,7 @@ public:
 
     m_bufferMode = mode;
 
-    m_mappedPtr = Platform::BufferStorageHelper::mapBuffer(m_totalSize, mode);
+    m_mappedPtr = Platform::BufferStorageHelper::map_buffer(m_totalSize, mode);
 
     if (m_mappedPtr == nullptr) {
       qWarning() << "PersistentRingBuffer: Failed to map buffer";
@@ -112,7 +112,7 @@ public:
     m_totalSize = 0;
   }
 
-  void beginFrame() {
+  void begin_frame() {
     m_currentFrame = (m_currentFrame + 1) % m_buffersInFlight;
     m_frameOffset = m_currentFrame * m_capacity * sizeof(T);
     m_currentCount = 0;
@@ -163,7 +163,7 @@ public:
 
   [[nodiscard]] auto buffer() const -> GLuint { return m_buffer; }
 
-  [[nodiscard]] auto currentOffset() const -> std::size_t {
+  [[nodiscard]] auto current_offset() const -> std::size_t {
     return m_frameOffset;
   }
 
@@ -171,7 +171,7 @@ public:
 
   [[nodiscard]] auto count() const -> std::size_t { return m_currentCount; }
 
-  [[nodiscard]] auto isValid() const -> bool {
+  [[nodiscard]] auto is_valid() const -> bool {
     return m_buffer != 0 &&
            (m_bufferMode == Platform::BufferStorageHelper::Mode::Fallback ||
             m_mappedPtr != nullptr);

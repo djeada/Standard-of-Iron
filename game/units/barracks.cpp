@@ -58,7 +58,7 @@ void Barracks::init(const SpawnParams &params) {
 
   e->add_component<Engine::Core::BuildingComponent>();
 
-  Game::Systems::BuildingCollisionRegistry::instance().registerBuilding(
+  Game::Systems::BuildingCollisionRegistry::instance().register_building(
       m_id, m_type_string, m_t->position.x, m_t->position.z, m_u->owner_id);
 
   if (!Game::Core::isNeutralOwner(m_u->owner_id)) {

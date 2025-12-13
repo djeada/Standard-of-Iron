@@ -19,7 +19,7 @@ CloakRenderer::CloakRenderer(const CloakConfig &config) : m_config(config) {
   m_shoulder_mesh.reset(createPlaneMesh(1.0F, 1.0F, 12));
 }
 
-void CloakRenderer::setConfig(const CloakConfig &config) { m_config = config; }
+void CloakRenderer::set_config(const CloakConfig &config) { m_config = config; }
 
 void CloakRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
                            const HumanoidPalette &palette,
@@ -107,8 +107,8 @@ void CloakRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
     QVector3D clasp_pos =
         shoulder_mid + up * (torso_r * 0.5F) + forward * (torso_r * 0.2F);
     submitter.mesh(
-        getUnitSphere(),
-        Render::Geom::sphereAt(ctx.model, clasp_pos, torso_r * 0.12F),
+        get_unit_sphere(),
+        Render::Geom::sphere_at(ctx.model, clasp_pos, torso_r * 0.12F),
         trim_color, nullptr, 1.0F, 1);
   }
 }

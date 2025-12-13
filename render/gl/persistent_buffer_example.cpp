@@ -4,7 +4,7 @@
 
 PersistentRingBuffer<CylinderInstanceGpu> m_cylinderPersistentBuffer;
 
-void Backend::initializeCylinderPipeline() {
+void Backend::initialize_cylinder_pipeline() {
   constexpr std::size_t k_initial_persistent_capacity = 10000;
   constexpr int k_buffers_in_flight = 3;
   if (m_cylinderPersistentBuffer.initialize(k_initial_persistent_capacity,
@@ -15,18 +15,18 @@ void Backend::initializeCylinderPipeline() {
   }
 }
 
-void Backend::beginFrame() {
+void Backend::begin_frame() {
 
-  if (m_cylinderPersistentBuffer.isValid()) {
-    m_cylinderPersistentBuffer.beginFrame();
+  if (m_cylinderPersistentBuffer.is_valid()) {
+    m_cylinderPersistentBuffer.begin_frame();
   }
 }
 
-void Backend::uploadCylinderInstances(std::size_t count) {
+void Backend::upload_cylinder_instances(std::size_t count) {
   if (count == 0)
     return;
 
-  if (m_cylinderPersistentBuffer.isValid()) {
+  if (m_cylinderPersistentBuffer.is_valid()) {
     if (count > m_cylinderPersistentBuffer.capacity()) {
       qWarning() << "Too many cylinders:" << count
                  << "max:" << m_cylinderPersistentBuffer.capacity();
@@ -71,7 +71,7 @@ void Backend::draw_cylinders(std::size_t count) {
   glBindVertexArray(0);
 }
 
-void Backend::shutdownCylinderPipeline() {
+void Backend::shutdown_cylinder_pipeline() {
 
   m_cylinderPersistentBuffer.destroy();
 }

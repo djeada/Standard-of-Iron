@@ -29,17 +29,17 @@ public:
   void lookAt(const QVector3D &position, const QVector3D &target,
               const QVector3D &up);
 
-  void setPerspective(float fov, float aspect, float near_plane,
-                      float far_plane);
-  void setOrthographic(float left, float right, float bottom, float top,
-                       float near_plane, float far_plane);
+  void set_perspective(float fov, float aspect, float near_plane,
+                       float far_plane);
+  void set_orthographic(float left, float right, float bottom, float top,
+                        float near_plane, float far_plane);
 
-  void moveForward(float distance);
-  void moveRight(float distance);
-  void moveUp(float distance);
+  void move_forward(float distance);
+  void move_right(float distance);
+  void move_up(float distance);
   void zoom(float delta);
 
-  void zoomDistance(float delta);
+  void zoom_distance(float delta);
   void rotate(float yaw, float pitch);
 
   void pan(float right_dist, float forwardDist);
@@ -54,47 +54,50 @@ public:
   auto world_to_screen(const QVector3D &world, qreal screenW, qreal screenH,
                        QPointF &outScreen) const -> bool;
 
-  void setFollowEnabled(bool enable) { m_followEnabled = enable; }
-  [[nodiscard]] auto isFollowEnabled() const -> bool { return m_followEnabled; }
-  void setFollowLerp(float alpha) { m_followLerp = alpha; }
-  void setFollowOffset(const QVector3D &off) { m_followOffset = off; }
-  void captureFollowOffset() { m_followOffset = m_position - m_target; }
-  void updateFollow(const QVector3D &targetCenter);
+  void set_follow_enabled(bool enable) { m_followEnabled = enable; }
+  [[nodiscard]] auto is_follow_enabled() const -> bool {
+    return m_followEnabled;
+  }
+  void set_follow_lerp(float alpha) { m_followLerp = alpha; }
+  void set_follow_offset(const QVector3D &off) { m_followOffset = off; }
+  void capture_follow_offset() { m_followOffset = m_position - m_target; }
+  void update_follow(const QVector3D &targetCenter);
 
-  void setRTSView(const QVector3D &center,
-                  float distance = CameraDefaults::k_default_rts_distance,
-                  float angle = CameraDefaults::k_default_rts_angle,
-                  float yaw_deg = CameraDefaults::k_default_rts_yaw);
-  void setTopDownView(const QVector3D &center,
-                      float distance = CameraDefaults::k_default_rts_distance);
-  void applySoftBoundaries(bool isPanning = false);
+  void set_rts_view(const QVector3D &center,
+                    float distance = CameraDefaults::k_default_rts_distance,
+                    float angle = CameraDefaults::k_default_rts_angle,
+                    float yaw_deg = CameraDefaults::k_default_rts_yaw);
+  void
+  set_top_down_view(const QVector3D &center,
+                    float distance = CameraDefaults::k_default_rts_distance);
+  void apply_soft_boundaries(bool isPanning = false);
 
-  [[nodiscard]] auto getViewMatrix() const -> QMatrix4x4;
-  [[nodiscard]] auto getProjectionMatrix() const -> QMatrix4x4;
-  [[nodiscard]] auto getViewProjectionMatrix() const -> QMatrix4x4;
+  [[nodiscard]] auto get_view_matrix() const -> QMatrix4x4;
+  [[nodiscard]] auto get_projection_matrix() const -> QMatrix4x4;
+  [[nodiscard]] auto get_view_projection_matrix() const -> QMatrix4x4;
 
   [[nodiscard]] auto get_target() const -> const QVector3D & {
     return m_target;
   }
-  [[nodiscard]] auto getUpVector() const -> const QVector3D & { return m_up; }
-  [[nodiscard]] auto getRightVector() const -> const QVector3D & {
+  [[nodiscard]] auto get_up_vector() const -> const QVector3D & { return m_up; }
+  [[nodiscard]] auto get_right_vector() const -> const QVector3D & {
     return m_right;
   }
-  [[nodiscard]] auto getForwardVector() const -> const QVector3D & {
+  [[nodiscard]] auto get_forward_vector() const -> const QVector3D & {
     return m_front;
   }
   [[nodiscard]] auto get_position() const -> const QVector3D & {
     return m_position;
   }
   [[nodiscard]] auto get_distance() const -> float;
-  [[nodiscard]] auto getPitchDeg() const -> float;
-  [[nodiscard]] auto getFOV() const -> float { return m_fov; }
-  [[nodiscard]] auto getAspect() const -> float { return m_aspect; }
-  [[nodiscard]] auto getNear() const -> float { return m_near_plane; }
-  [[nodiscard]] auto getFar() const -> float { return m_far_plane; }
+  [[nodiscard]] auto get_pitch_deg() const -> float;
+  [[nodiscard]] auto get_fov() const -> float { return m_fov; }
+  [[nodiscard]] auto get_aspect() const -> float { return m_aspect; }
+  [[nodiscard]] auto get_near() const -> float { return m_near_plane; }
+  [[nodiscard]] auto get_far() const -> float { return m_far_plane; }
 
-  [[nodiscard]] auto isInFrustum(const QVector3D &center,
-                                 float radius) const -> bool;
+  [[nodiscard]] auto is_in_frustum(const QVector3D &center,
+                                   float radius) const -> bool;
 
 private:
   QVector3D m_position{0.0F, 0.0F, 0.0F};
@@ -134,9 +137,9 @@ private:
   float m_orbitTime = 0.0F;
   float m_orbitDuration = 0.12F;
 
-  void updateVectors();
+  void update_vectors();
 
-  void clampAboveGround();
+  void clamp_above_ground();
   static void computeYawPitchFromOffset(const QVector3D &off, float &yaw_deg,
                                         float &pitch_deg);
 };

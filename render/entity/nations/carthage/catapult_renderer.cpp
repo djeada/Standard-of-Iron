@@ -18,7 +18,7 @@ namespace {
 
 using Render::Geom::clamp01;
 using Render::Geom::clampVec01;
-using Render::Geom::cylinderBetween;
+using Render::Geom::cylinder_between;
 
 struct CarthageCatapultPalette {
   QVector3D wood_cedar{0.52F, 0.35F, 0.22F};
@@ -99,7 +99,7 @@ inline void draw_box(ISubmitter &out, Mesh *unit, Texture *white,
 inline void draw_cyl(ISubmitter &out, const QMatrix4x4 &model,
                      const QVector3D &a, const QVector3D &b, float r,
                      const QVector3D &color, Texture *white) {
-  out.mesh(getUnitCylinder(), model * cylinderBetween(a, b, r), color, white,
+  out.mesh(get_unit_cylinder(), model * cylinder_between(a, b, r), color, white,
            1.0F);
 }
 
@@ -229,7 +229,7 @@ void drawThrowingArm(const DrawContext &p, ISubmitter &out, Mesh *unit,
     float const stone_scale = 0.09F;
     stone_matrix.scale(stone_scale, stone_scale, stone_scale);
 
-    out.mesh(getUnitCube(), stone_matrix, c.stone, white, 1.0F);
+    out.mesh(get_unit_cube(), stone_matrix, c.stone, white, 1.0F);
   }
 }
 
@@ -295,7 +295,7 @@ void drawWindlass(const DrawContext &p, ISubmitter &out, Mesh *unit,
 void register_catapult_renderer(EntityRendererRegistry &registry) {
   registry.register_renderer(
       "troops/carthage/catapult", [](const DrawContext &p, ISubmitter &out) {
-        Mesh *unit_cube = getUnitCube();
+        Mesh *unit_cube = get_unit_cube();
         Texture *white_tex = nullptr;
 
         if (auto *scene_renderer = dynamic_cast<Renderer *>(&out)) {

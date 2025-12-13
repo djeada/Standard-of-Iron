@@ -32,15 +32,16 @@ public:
 
   static auto getBuildingSize(const std::string &buildingType) -> BuildingSize;
 
-  void registerBuilding(unsigned int entity_id, const std::string &buildingType,
-                        float center_x, float center_z, int owner_id);
+  void register_building(unsigned int entity_id,
+                         const std::string &buildingType, float center_x,
+                         float center_z, int owner_id);
 
-  void unregisterBuilding(unsigned int entity_id);
+  void unregister_building(unsigned int entity_id);
 
-  void updateBuildingPosition(unsigned int entity_id, float center_x,
-                              float center_z);
+  void update_building_position(unsigned int entity_id, float center_x,
+                                float center_z);
 
-  void updateBuildingOwner(unsigned int entity_id, int owner_id);
+  void update_building_owner(unsigned int entity_id, int owner_id);
 
   [[nodiscard]] auto
   getAllBuildings() const -> const std::vector<BuildingFootprint> & {

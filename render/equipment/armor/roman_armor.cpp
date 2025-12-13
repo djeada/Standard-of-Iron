@@ -13,9 +13,9 @@
 
 namespace Render::GL {
 
-using Render::Geom::coneFromTo;
-using Render::Geom::cylinderBetween;
-using Render::Geom::sphereAt;
+using Render::Geom::cone_from_to;
+using Render::Geom::cylinder_between;
+using Render::Geom::sphere_at;
 using Render::GL::Humanoid::saturate_color;
 
 void RomanHeavyArmorRenderer::render(const DrawContext &ctx,
@@ -72,10 +72,10 @@ void RomanHeavyArmorRenderer::render(const DrawContext &ctx,
   QVector3D bottom = waist.origin - waist_up * (waist_r * 0.45F) -
                      forward * (torso_r * 0.016F);
 
-  QMatrix4x4 plates = cylinderBetween(ctx.model, top, bottom, torso_r * 1.24F);
+  QMatrix4x4 plates = cylinder_between(ctx.model, top, bottom, torso_r * 1.24F);
   plates.scale(1.18F, 1.0F, depth_scale_for(1.10F));
   Mesh *torso_mesh = torso_mesh_without_bottom_cap();
-  submitter.mesh(torso_mesh != nullptr ? torso_mesh : getUnitTorso(), plates,
+  submitter.mesh(torso_mesh != nullptr ? torso_mesh : get_unit_torso(), plates,
                  steel_color, nullptr, 1.0F, 1);
 
   auto renderShoulderGuard = [&](const QVector3D &shoulder_pos,
@@ -85,7 +85,7 @@ void RomanHeavyArmorRenderer::render(const DrawContext &ctx,
     upper.translate(upper_pos);
     upper.scale(HP::UPPER_ARM_R * 1.90F, HP::UPPER_ARM_R * 0.42F,
                 HP::UPPER_ARM_R * 1.65F);
-    submitter.mesh(getUnitSphere(), upper, steel_color * 0.98F, nullptr, 1.0F,
+    submitter.mesh(get_unit_sphere(), upper, steel_color * 0.98F, nullptr, 1.0F,
                    1);
 
     QVector3D lower_pos = upper_pos - up * 0.06F + outward * 0.02F;
@@ -93,13 +93,13 @@ void RomanHeavyArmorRenderer::render(const DrawContext &ctx,
     lower.translate(lower_pos);
     lower.scale(HP::UPPER_ARM_R * 1.68F, HP::UPPER_ARM_R * 0.38F,
                 HP::UPPER_ARM_R * 1.48F);
-    submitter.mesh(getUnitSphere(), lower, steel_color * 0.94F, nullptr, 1.0F,
+    submitter.mesh(get_unit_sphere(), lower, steel_color * 0.94F, nullptr, 1.0F,
                    1);
 
     QMatrix4x4 rivet = ctx.model;
     rivet.translate(upper_pos + forward * 0.04F);
     rivet.scale(0.012F);
-    submitter.mesh(getUnitSphere(), rivet, brass_color, nullptr, 1.0F);
+    submitter.mesh(get_unit_sphere(), rivet, brass_color, nullptr, 1.0F);
   };
 
   renderShoulderGuard(frames.shoulder_l.origin, -right);
@@ -157,10 +157,10 @@ void RomanLightArmorRenderer::render(const DrawContext &ctx,
   float main_radius = torso_r * 1.26F;
   float const main_depth = torso_depth * 1.24F;
 
-  QMatrix4x4 cuirass = cylinderBetween(ctx.model, top, bottom, main_radius);
+  QMatrix4x4 cuirass = cylinder_between(ctx.model, top, bottom, main_radius);
   cuirass.scale(1.0F, 1.0F, std::max(0.15F, main_depth / main_radius));
   Mesh *torso_mesh = torso_mesh_without_bottom_cap();
-  submitter.mesh(torso_mesh != nullptr ? torso_mesh : getUnitTorso(), cuirass,
+  submitter.mesh(torso_mesh != nullptr ? torso_mesh : get_unit_torso(), cuirass,
                  leather_highlight, nullptr, 1.0F, 1);
 
   auto strap = [&](float side) {
@@ -168,9 +168,9 @@ void RomanLightArmorRenderer::render(const DrawContext &ctx,
         top + right * (torso_r * 0.54F * side) - up * (torso_r * 0.04F);
     QVector3D chest_anchor =
         shoulder_anchor - up * (torso_r * 0.82F) + forward * (torso_r * 0.22F);
-    submitter.mesh(getUnitCylinder(),
-                   cylinderBetween(ctx.model, shoulder_anchor, chest_anchor,
-                                   torso_r * 0.10F),
+    submitter.mesh(get_unit_cylinder(),
+                   cylinder_between(ctx.model, shoulder_anchor, chest_anchor,
+                                    torso_r * 0.10F),
                    leather_highlight * 0.95F, nullptr, 1.0F, 1);
   };
   strap(1.0F);
@@ -180,22 +180,22 @@ void RomanLightArmorRenderer::render(const DrawContext &ctx,
       top + forward * (torso_depth * 0.35F) - up * (torso_r * 0.06F);
   QVector3D front_panel_bottom =
       bottom + forward * (torso_depth * 0.38F) + up * (torso_r * 0.03F);
-  QMatrix4x4 front_panel = cylinderBetween(ctx.model, front_panel_top,
-                                           front_panel_bottom, torso_r * 0.48F);
+  QMatrix4x4 front_panel = cylinder_between(
+      ctx.model, front_panel_top, front_panel_bottom, torso_r * 0.48F);
   front_panel.scale(1.18F, 1.0F,
                     std::max(0.22F, (torso_depth * 0.76F) / (torso_r * 0.76F)));
-  submitter.mesh(torso_mesh != nullptr ? torso_mesh : getUnitTorso(),
+  submitter.mesh(torso_mesh != nullptr ? torso_mesh : get_unit_torso(),
                  front_panel, leather_highlight, nullptr, 1.0F, 1);
 
   QVector3D back_panel_top =
       top - forward * (torso_depth * 0.32F) - up * (torso_r * 0.05F);
   QVector3D back_panel_bottom =
       bottom - forward * (torso_depth * 0.34F) + up * (torso_r * 0.02F);
-  QMatrix4x4 back_panel = cylinderBetween(ctx.model, back_panel_top,
-                                          back_panel_bottom, torso_r * 0.50F);
+  QMatrix4x4 back_panel = cylinder_between(ctx.model, back_panel_top,
+                                           back_panel_bottom, torso_r * 0.50F);
   back_panel.scale(1.18F, 1.0F,
                    std::max(0.22F, (torso_depth * 0.74F) / (torso_r * 0.80F)));
-  submitter.mesh(torso_mesh != nullptr ? torso_mesh : getUnitTorso(),
+  submitter.mesh(torso_mesh != nullptr ? torso_mesh : get_unit_torso(),
                  back_panel, leather_shadow, nullptr, 1.0F, 1);
 }
 

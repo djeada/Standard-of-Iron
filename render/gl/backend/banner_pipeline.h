@@ -10,13 +10,6 @@ class Mesh;
 
 namespace BackendPipelines {
 
-/**
- * @brief Pipeline for rendering cloth banners with GPU-based wind animation.
- *
- * Uses vertex shader for realistic cloth physics simulation (wave deformation,
- * ripples, sway) and fragment shader for fabric rendering (weave pattern,
- * folds, sheen).
- */
 class BannerPipeline final : public IPipeline {
 public:
   explicit BannerPipeline(GL::Backend *backend, GL::ShaderCache *shaderCache)
@@ -25,14 +18,9 @@ public:
 
   auto initialize() -> bool override;
   void shutdown() override;
-  void cacheUniforms() override;
-  [[nodiscard]] auto isInitialized() const -> bool override;
+  void cache_uniforms() override;
+  [[nodiscard]] auto is_initialized() const -> bool override;
 
-  /**
-   * @brief Get a subdivided plane mesh suitable for cloth simulation.
-   * @param subdivisions Number of subdivisions (higher = more realistic cloth)
-   * @return Pointer to cached mesh, or nullptr if not initialized.
-   */
   auto getBannerMesh(int subdivisions = 16) -> GL::Mesh *;
 
   struct BannerUniforms {
@@ -54,7 +42,6 @@ private:
   GL::Backend *m_backend = nullptr;
   GL::ShaderCache *m_shaderCache = nullptr;
 
-  // Cached banner meshes with different subdivision levels
   std::unique_ptr<GL::Mesh> m_bannerMesh16;
   std::unique_ptr<GL::Mesh> m_bannerMesh8;
 

@@ -29,8 +29,8 @@ auto get_horse_render_stats() -> const HorseRenderStats & {
 void reset_horse_render_stats() { s_horseRenderStats.reset(); }
 
 using Render::Geom::clamp01;
-using Render::Geom::coneFromTo;
-using Render::Geom::cylinderBetween;
+using Render::Geom::cone_from_to;
+using Render::Geom::cylinder_between;
 using Render::Geom::lerp;
 using Render::Geom::smoothstep;
 
@@ -111,7 +111,7 @@ inline void draw_cylinder(ISubmitter &out, const QMatrix4x4 &model,
                           const QVector3D &a, const QVector3D &b, float radius,
                           const QVector3D &color, float alpha = 1.0F,
                           int materialId = 0) {
-  out.mesh(getUnitCylinder(), cylinderBetween(model, a, b, radius), color,
+  out.mesh(get_unit_cylinder(), cylinder_between(model, a, b, radius), color,
            nullptr, alpha, materialId);
 }
 
@@ -119,8 +119,8 @@ inline void drawCone(ISubmitter &out, const QMatrix4x4 &model,
                      const QVector3D &tip, const QVector3D &base, float radius,
                      const QVector3D &color, float alpha = 1.0F,
                      int materialId = 0) {
-  out.mesh(getUnitCone(), coneFromTo(model, tip, base, radius), color, nullptr,
-           alpha, materialId);
+  out.mesh(get_unit_cone(), cone_from_to(model, tip, base, radius), color,
+           nullptr, alpha, materialId);
 }
 
 inline void drawRoundedSegment(ISubmitter &out, const QMatrix4x4 &model,
@@ -131,11 +131,12 @@ inline void drawRoundedSegment(ISubmitter &out, const QMatrix4x4 &model,
                                int materialId = 0) {
   float const mid_radius = 0.5F * (start_radius + end_radius);
   QVector3D const tint = lerp(start_color, end_color, 0.5F);
-  out.mesh(getUnitCylinder(), cylinderBetween(model, start, end, mid_radius),
+  out.mesh(get_unit_cylinder(), cylinder_between(model, start, end, mid_radius),
            tint, nullptr, alpha, materialId);
-  out.mesh(getUnitSphere(), Render::Geom::sphereAt(model, start, start_radius),
-           start_color, nullptr, alpha, materialId);
-  out.mesh(getUnitSphere(), Render::Geom::sphereAt(model, end, end_radius),
+  out.mesh(get_unit_sphere(),
+           Render::Geom::sphere_at(model, start, start_radius), start_color,
+           nullptr, alpha, materialId);
+  out.mesh(get_unit_sphere(), Render::Geom::sphere_at(model, end, end_radius),
            end_color, nullptr, alpha, materialId);
 }
 
@@ -393,9 +394,9 @@ auto evaluate_horse_motion(HorseProfile &profile, const AnimationInputs &anim,
     controller.idle(1.0F);
   }
 
-  controller.updateGaitParameters();
-  sample.phase = controller.getCurrentPhase();
-  sample.bob = controller.getCurrentBob();
+  controller.update_gait_parameters();
+  sample.phase = controller.get_current_phase();
+  sample.bob = controller.get_current_bob();
   return sample;
 }
 
@@ -486,7 +487,7 @@ void HorseRendererBase::render_full(
                 d.body_length * 0.36F);
     QVector3D const chest_color =
         coatGradient(v.coat_color, 0.75F, 0.20F, coat_seed_a);
-    out.mesh(getUnitSphere(), chest, chest_color, nullptr, 1.0F, 6);
+    out.mesh(get_unit_sphere(), chest, chest_color, nullptr, 1.0F, 6);
   }
 
   {
@@ -497,7 +498,7 @@ void HorseRendererBase::render_full(
                   d.body_length * 0.18F);
     QVector3D const wither_color =
         coatGradient(v.coat_color, 0.88F, 0.35F, coat_seed_b);
-    out.mesh(getUnitSphere(), withers, wither_color, nullptr, 1.0F, 6);
+    out.mesh(get_unit_sphere(), withers, wither_color, nullptr, 1.0F, 6);
   }
 
   {
@@ -507,7 +508,7 @@ void HorseRendererBase::render_full(
                 d.body_length * 0.40F);
     QVector3D const belly_color =
         coatGradient(v.coat_color, 0.25F, -0.10F, coat_seed_c);
-    out.mesh(getUnitSphere(), belly, belly_color, nullptr, 1.0F, 6);
+    out.mesh(get_unit_sphere(), belly, belly_color, nullptr, 1.0F, 6);
   }
 
   {
@@ -517,7 +518,7 @@ void HorseRendererBase::render_full(
                d.body_length * 0.36F);
     QVector3D const rump_color =
         coatGradient(v.coat_color, 0.62F, -0.28F, coat_seed_a * 0.7F);
-    out.mesh(getUnitSphere(), rump, rump_color, nullptr, 1.0F, 6);
+    out.mesh(get_unit_sphere(), rump, rump_color, nullptr, 1.0F, 6);
   }
 
   for (int i = 0; i < 2; ++i) {
@@ -530,7 +531,7 @@ void HorseRendererBase::render_full(
               d.body_length * 0.26F);
     QVector3D const hip_color =
         coatGradient(v.coat_color, 0.58F, -0.18F, coat_seed_b + side * 0.06F);
-    out.mesh(getUnitSphere(), hip, hip_color, nullptr, 1.0F, 6);
+    out.mesh(get_unit_sphere(), hip, hip_color, nullptr, 1.0F, 6);
 
     QMatrix4x4 haunch = horse_ctx.model;
     haunch.translate(rump_center + QVector3D(side * d.body_width * 0.88F,
@@ -540,7 +541,7 @@ void HorseRendererBase::render_full(
                            d.body_length * 0.18F));
     QVector3D const haunch_color =
         coatGradient(v.coat_color, 0.72F, -0.26F, coat_seed_c + side * 0.04F);
-    out.mesh(getUnitSphere(), haunch, lighten(haunch_color, 1.02F), nullptr,
+    out.mesh(get_unit_sphere(), haunch, lighten(haunch_color, 1.02F), nullptr,
              1.0F, 6);
   }
 
@@ -556,7 +557,7 @@ void HorseRendererBase::render_full(
                           d.body_length * 0.54F));
     QVector3D const spine_color =
         coatGradient(v.coat_color, 0.74F, -0.06F, coat_seed_d * 0.92F);
-    out.mesh(getUnitSphere(), spine, spine_color, nullptr, 1.0F, 6);
+    out.mesh(get_unit_sphere(), spine, spine_color, nullptr, 1.0F, 6);
   }
 
   {
@@ -565,7 +566,7 @@ void HorseRendererBase::render_full(
                                                 d.body_length * 0.28F));
     sternum.scale(QVector3D(d.body_width * 0.50F, d.body_height * 0.14F,
                             d.body_length * 0.12F));
-    out.mesh(getUnitSphere(), sternum,
+    out.mesh(get_unit_sphere(), sternum,
              coatGradient(v.coat_color, 0.18F, 0.18F, coat_seed_a * 0.4F),
              nullptr, 1.0F, 6);
   }
@@ -582,14 +583,14 @@ void HorseRendererBase::render_full(
       QVector3D(0.0F, d.body_height * 0.02F, d.body_length * 0.02F);
   QVector3D const neck_color_base =
       coatGradient(v.coat_color, 0.78F, 0.12F, coat_seed_c * 0.6F);
-  out.mesh(getUnitCylinder(),
-           cylinderBetween(horse_ctx.model, neck_base, neck_mid,
-                           neck_radius * 1.00F),
+  out.mesh(get_unit_cylinder(),
+           cylinder_between(horse_ctx.model, neck_base, neck_mid,
+                            neck_radius * 1.00F),
            neck_color_base, nullptr, 1.0F);
-  out.mesh(
-      getUnitCylinder(),
-      cylinderBetween(horse_ctx.model, neck_mid, neck_top, neck_radius * 0.86F),
-      lighten(neck_color_base, 1.03F), nullptr, 1.0F);
+  out.mesh(get_unit_cylinder(),
+           cylinder_between(horse_ctx.model, neck_mid, neck_top,
+                            neck_radius * 0.86F),
+           lighten(neck_color_base, 1.03F), nullptr, 1.0F);
 
   {
     QVector3D const jugular_start =
@@ -631,7 +632,7 @@ void HorseRendererBase::render_full(
                 d.head_length * 0.80F);
     QVector3D const skull_color =
         coatGradient(v.coat_color, 0.82F, 0.30F, coat_seed_d * 0.8F);
-    out.mesh(getUnitSphere(), skull, skull_color, nullptr, 1.0F);
+    out.mesh(get_unit_sphere(), skull, skull_color, nullptr, 1.0F);
   }
 
   for (int i = 0; i < 2; ++i) {
@@ -643,7 +644,7 @@ void HorseRendererBase::render_full(
                 d.head_length * 0.60F);
     QVector3D const cheek_color =
         coatGradient(v.coat_color, 0.70F, 0.18F, coat_seed_a * 0.9F);
-    out.mesh(getUnitSphere(), cheek, cheek_color, nullptr, 1.0F, 6);
+    out.mesh(get_unit_sphere(), cheek, cheek_color, nullptr, 1.0F, 6);
   }
 
   QVector3D const muzzle_center =
@@ -655,7 +656,7 @@ void HorseRendererBase::render_full(
                      QVector3D(0.0F, -d.head_height * 0.05F, 0.0F));
     muzzle.scale(d.head_width * 0.68F, d.head_height * 0.60F,
                  d.muzzle_length * 1.05F);
-    out.mesh(getUnitSphere(), muzzle, v.muzzle_color, nullptr, 1.0F);
+    out.mesh(get_unit_sphere(), muzzle, v.muzzle_color, nullptr, 1.0F);
   }
 
   {
@@ -668,13 +669,13 @@ void HorseRendererBase::render_full(
         nostril_base + QVector3D(-d.head_width * 0.26F, 0.0F, 0.0F);
     QVector3D const inward =
         QVector3D(0.0F, -d.head_height * 0.02F, d.muzzle_length * -0.30F);
-    out.mesh(getUnitCone(),
-             coneFromTo(horse_ctx.model, left_base + inward, left_base,
-                        d.head_width * 0.11F),
+    out.mesh(get_unit_cone(),
+             cone_from_to(horse_ctx.model, left_base + inward, left_base,
+                          d.head_width * 0.11F),
              darken(v.muzzle_color, 0.6F), nullptr, 1.0F);
-    out.mesh(getUnitCone(),
-             coneFromTo(horse_ctx.model, right_base + inward, right_base,
-                        d.head_width * 0.11F),
+    out.mesh(get_unit_cone(),
+             cone_from_to(horse_ctx.model, right_base + inward, right_base,
+                          d.head_width * 0.11F),
              darken(v.muzzle_color, 0.6F), nullptr, 1.0F);
   }
 
@@ -698,13 +699,13 @@ void HorseRendererBase::render_full(
                               -d.head_length * 0.10F),
                     ear_flick_r);
 
-  out.mesh(getUnitCone(),
-           coneFromTo(horse_ctx.model, ear_tip_left, ear_base_left,
-                      d.head_width * 0.11F),
+  out.mesh(get_unit_cone(),
+           cone_from_to(horse_ctx.model, ear_tip_left, ear_base_left,
+                        d.head_width * 0.11F),
            v.mane_color, nullptr, 1.0F);
-  out.mesh(getUnitCone(),
-           coneFromTo(horse_ctx.model, ear_tip_right, ear_base_right,
-                      d.head_width * 0.11F),
+  out.mesh(get_unit_cone(),
+           cone_from_to(horse_ctx.model, ear_tip_right, ear_base_right,
+                        d.head_width * 0.11F),
            v.mane_color, nullptr, 1.0F);
 
   QVector3D const eye_left =
@@ -720,15 +721,15 @@ void HorseRendererBase::render_full(
       QMatrix4x4 eye = horse_ctx.model;
       eye.translate(pos);
       eye.scale(d.head_width * 0.14F);
-      out.mesh(getUnitSphere(), eye, eye_base_color, nullptr, 1.0F, 6);
+      out.mesh(get_unit_sphere(), eye, eye_base_color, nullptr, 1.0F, 6);
     }
     {
 
       QMatrix4x4 pupil = horse_ctx.model;
       pupil.translate(pos + QVector3D(0.0F, 0.0F, d.head_width * 0.04F));
       pupil.scale(d.head_width * 0.05F);
-      out.mesh(getUnitSphere(), pupil, QVector3D(0.03F, 0.03F, 0.03F), nullptr,
-               1.0F, 6);
+      out.mesh(get_unit_sphere(), pupil, QVector3D(0.03F, 0.03F, 0.03F),
+               nullptr, 1.0F, 6);
     }
     {
 
@@ -736,7 +737,7 @@ void HorseRendererBase::render_full(
       spec.translate(pos + QVector3D(d.head_width * 0.03F, d.head_width * 0.03F,
                                      d.head_width * 0.03F));
       spec.scale(d.head_width * 0.02F);
-      out.mesh(getUnitSphere(), spec, QVector3D(0.95F, 0.95F, 0.95F), nullptr,
+      out.mesh(get_unit_sphere(), spec, QVector3D(0.95F, 0.95F, 0.95F), nullptr,
                1.0F, 6);
     }
   };
@@ -749,7 +750,7 @@ void HorseRendererBase::render_full(
                                             d.head_length * 0.10F));
     blaze.scale(d.head_width * 0.22F, d.head_height * 0.32F,
                 d.head_length * 0.10F);
-    out.mesh(getUnitSphere(), blaze, QVector3D(0.92F, 0.92F, 0.90F), nullptr,
+    out.mesh(get_unit_sphere(), blaze, QVector3D(0.92F, 0.92F, 0.90F), nullptr,
              1.0F, 6);
   }
 
@@ -789,9 +790,9 @@ void HorseRendererBase::render_full(
                    : std::sin((anim.time * 0.8F + t * 2.3F)) * 0.02F);
     QVector3D const seg_end =
         seg_start + QVector3D(sway, 0.07F - t * 0.05F, -0.05F - t * 0.03F);
-    out.mesh(getUnitCylinder(),
-             cylinderBetween(horse_ctx.model, seg_start, seg_end,
-                             d.head_width * (0.10F * (1.0F - t * 0.4F))),
+    out.mesh(get_unit_cylinder(),
+             cylinder_between(horse_ctx.model, seg_start, seg_end,
+                              d.head_width * (0.10F * (1.0F - t * 0.4F))),
              v.mane_color * (0.98F + t * 0.05F), nullptr, 1.0F, 7);
   }
 
@@ -842,7 +843,7 @@ void HorseRendererBase::render_full(
                                               -d.body_length * 0.01F));
     tail_knot.scale(QVector3D(d.body_width * 0.24F, d.body_width * 0.18F,
                               d.body_width * 0.20F));
-    out.mesh(getUnitSphere(), tail_knot, lighten(tail_color, 0.92F), nullptr,
+    out.mesh(get_unit_sphere(), tail_knot, lighten(tail_color, 0.92F), nullptr,
              1.0F, 7);
   }
 
@@ -867,14 +868,14 @@ void HorseRendererBase::render_full(
     QMatrix4x4 hoof_block = horse_ctx.model;
     hoof_block.translate(hoof_center);
     hoof_block.scale(QVector3D(half_width, hoof_height * 0.5F, half_depth));
-    out.mesh(getUnitCylinder(), hoof_block, wall_tint, nullptr, 1.0F, 8);
+    out.mesh(get_unit_cylinder(), hoof_block, wall_tint, nullptr, 1.0F, 8);
 
     QMatrix4x4 sole = horse_ctx.model;
     sole.translate(hoof_center + QVector3D(0.0F, -hoof_height * 0.45F, 0.0F));
     sole.scale(
         QVector3D(half_width * 0.92F, hoof_height * 0.08F, half_depth * 0.95F));
-    out.mesh(getUnitCylinder(), sole, darken(hoof_color, 0.72F), nullptr, 1.0F,
-             8);
+    out.mesh(get_unit_cylinder(), sole, darken(hoof_color, 0.72F), nullptr,
+             1.0F, 8);
 
     QMatrix4x4 toe = horse_ctx.model;
     toe.translate(hoof_center + QVector3D(0.0F, -hoof_height * 0.10F,
@@ -882,14 +883,14 @@ void HorseRendererBase::render_full(
                                                   : half_depth * 0.30F));
     toe.scale(
         QVector3D(half_width * 0.85F, hoof_height * 0.20F, half_depth * 0.70F));
-    out.mesh(getUnitSphere(), toe, lighten(hoof_color, 1.10F), nullptr, 1.0F,
+    out.mesh(get_unit_sphere(), toe, lighten(hoof_color, 1.10F), nullptr, 1.0F,
              8);
 
     QMatrix4x4 coronet = horse_ctx.model;
     coronet.translate(hoof_top + QVector3D(0.0F, -hoof_height * 0.10F, 0.0F));
     coronet.scale(
         QVector3D(half_width * 0.95F, half_width * 0.60F, half_depth * 1.05F));
-    out.mesh(getUnitSphere(), coronet, lighten(hoof_color, 1.16F), nullptr,
+    out.mesh(get_unit_sphere(), coronet, lighten(hoof_color, 1.16F), nullptr,
              1.0F, 8);
   };
 
@@ -971,7 +972,7 @@ void HorseRendererBase::render_full(
                                               -d.body_length * 0.02F));
       socket_cap.scale(QVector3D(d.body_width * 0.36F, d.body_width * 0.28F,
                                  d.body_length * 0.18F));
-      out.mesh(getUnitSphere(), socket_cap,
+      out.mesh(get_unit_sphere(), socket_cap,
                coatGradient(v.coat_color, 0.60F, -0.24F,
                             coat_seed_c + lateralSign * 0.02F),
                nullptr, 1.0F);
@@ -1242,7 +1243,7 @@ void HorseRendererBase::render_simplified(
     body.translate(barrel_center);
     body.scale(d.body_width * 1.0F, d.body_height * 0.85F,
                d.body_length * 0.80F);
-    out.mesh(getUnitSphere(), body, v.coat_color, nullptr, 1.0F, 6);
+    out.mesh(get_unit_sphere(), body, v.coat_color, nullptr, 1.0F, 6);
   }
 
   QVector3D const neck_base =
@@ -1260,7 +1261,7 @@ void HorseRendererBase::render_simplified(
     head.translate(head_center);
     head.scale(d.head_width * 0.90F, d.head_height * 0.85F,
                d.head_length * 0.75F);
-    out.mesh(getUnitSphere(), head, v.coat_color, nullptr, 1.0F);
+    out.mesh(get_unit_sphere(), head, v.coat_color, nullptr, 1.0F);
   }
 
   QVector3D const front_anchor =
@@ -1296,7 +1297,7 @@ void HorseRendererBase::render_simplified(
     QMatrix4x4 hoof = horse_ctx.model;
     hoof.translate(foot);
     hoof.scale(d.body_width * 0.28F, d.hoof_height, d.body_width * 0.30F);
-    out.mesh(getUnitCylinder(), hoof, v.hoof_color, nullptr, 1.0F, 8);
+    out.mesh(get_unit_cylinder(), hoof, v.hoof_color, nullptr, 1.0F, 8);
   };
 
   draw_simple_leg(front_anchor, 1.0F, d.body_length * 0.15F, g.front_leg_phase);
@@ -1330,7 +1331,7 @@ void HorseRendererBase::render_minimal(const DrawContext &ctx,
   body.translate(center);
   body.scale(d.body_width * 1.2F, d.body_height + d.neck_rise * 0.5F,
              d.body_length + d.head_length * 0.5F);
-  out.mesh(getUnitSphere(), body, v.coat_color, nullptr, 1.0F, 6);
+  out.mesh(get_unit_sphere(), body, v.coat_color, nullptr, 1.0F, 6);
 
   for (int i = 0; i < 4; ++i) {
     float const x_sign = (i % 2 == 0) ? 1.0F : -1.0F;

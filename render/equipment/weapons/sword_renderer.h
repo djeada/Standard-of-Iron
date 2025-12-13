@@ -31,7 +31,7 @@ public:
               const HumanoidAnimationContext &anim,
               ISubmitter &submitter) override;
 
-  void setConfig(const SwordRenderConfig &config) { m_config = config; }
+  void set_config(const SwordRenderConfig &config) { m_config = config; }
 
 private:
   SwordRenderConfig m_config;

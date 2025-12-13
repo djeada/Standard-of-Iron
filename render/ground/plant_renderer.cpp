@@ -46,14 +46,14 @@ PlantRenderer::PlantRenderer() = default;
 PlantRenderer::~PlantRenderer() = default;
 
 void PlantRenderer::configure(const Game::Map::TerrainHeightMap &height_map,
-                              const Game::Map::BiomeSettings &biomeSettings) {
+                              const Game::Map::BiomeSettings &biome_settings) {
   m_width = height_map.getWidth();
   m_height = height_map.getHeight();
   m_tile_size = height_map.getTileSize();
   m_heightData = height_map.getHeightData();
   m_terrain_types = height_map.getTerrainTypes();
-  m_biomeSettings = biomeSettings;
-  m_noiseSeed = biomeSettings.seed;
+  m_biome_settings = biome_settings;
+  m_noiseSeed = biome_settings.seed;
 
   m_plantInstances.clear();
   m_plantInstanceBuffer.reset();
@@ -62,8 +62,8 @@ void PlantRenderer::configure(const Game::Map::TerrainHeightMap &height_map,
 
   m_plantParams.light_direction = QVector3D(0.35F, 0.8F, 0.45F);
   m_plantParams.time = 0.0F;
-  m_plantParams.wind_strength = m_biomeSettings.sway_strength;
-  m_plantParams.wind_speed = m_biomeSettings.sway_speed;
+  m_plantParams.wind_strength = m_biome_settings.sway_strength;
+  m_plantParams.wind_speed = m_biome_settings.sway_speed;
 
   generatePlantInstances();
 }
@@ -80,7 +80,7 @@ void PlantRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   }
 
   auto &visibility = Game::Map::VisibilityService::instance();
-  const bool use_visibility = visibility.isInitialized();
+  const bool use_visibility = visibility.is_initialized();
   const std::uint64_t current_version =
       use_visibility ? visibility.version() : 0;
 
@@ -111,8 +111,8 @@ void PlantRenderer::submit(Renderer &renderer, ResourceManager *resources) {
         m_visibleInstanceBuffer =
             std::make_unique<Buffer>(Buffer::Type::Vertex);
       }
-      m_visibleInstanceBuffer->setData(m_visibleInstances,
-                                       Buffer::Usage::Static);
+      m_visibleInstanceBuffer->set_data(m_visibleInstances,
+                                        Buffer::Usage::Static);
     }
   }
 
@@ -147,7 +147,7 @@ void PlantRenderer::generatePlantInstances() {
   }
 
   const float plant_density =
-      std::clamp(m_biomeSettings.plant_density, 0.0F, 2.0F);
+      std::clamp(m_biome_settings.plant_density, 0.0F, 2.0F);
 
   if (plant_density < 0.01F) {
     m_plantInstanceCount = 0;
@@ -160,7 +160,7 @@ void PlantRenderer::generatePlantInstances() {
   const float tile_safe = std::max(0.001F, m_tile_size);
 
   const float edge_padding =
-      std::clamp(m_biomeSettings.spawn_edge_padding, 0.0F, 0.5F);
+      std::clamp(m_biome_settings.spawn_edge_padding, 0.0F, 0.5F);
   const float edge_margin_x = static_cast<float>(m_width) * edge_padding;
   const float edge_margin_z = static_cast<float>(m_height) * edge_padding;
 
@@ -275,8 +275,8 @@ void PlantRenderer::generatePlantInstances() {
     float const plant_type = std::floor(rand_01(state) * 4.0F);
 
     float const color_var = remap(rand_01(state), 0.0F, 1.0F);
-    QVector3D const base_color = m_biomeSettings.grass_primary * 0.7F;
-    QVector3D const var_color = m_biomeSettings.grass_secondary * 0.8F;
+    QVector3D const base_color = m_biome_settings.grass_primary * 0.7F;
+    QVector3D const var_color = m_biome_settings.grass_secondary * 0.8F;
     QVector3D tint_color =
         base_color * (1.0F - color_var) + var_color * color_var;
 

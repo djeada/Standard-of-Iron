@@ -127,14 +127,14 @@ inline auto smoothApproach(float current, float target,
 
 } // namespace
 
-Camera::Camera() { updateVectors(); }
+Camera::Camera() { update_vectors(); }
 
 void Camera::setPosition(const QVector3D &position) {
   if (!finite(position)) {
     return;
   }
   m_position = position;
-  applySoftBoundaries();
+  apply_soft_boundaries();
 
   QVector3D const new_front = (m_target - m_position);
   orthonormalize(new_front, m_front, m_right, m_up);
@@ -145,7 +145,7 @@ void Camera::setTarget(const QVector3D &target) {
     return;
   }
   m_target = target;
-  applySoftBoundaries();
+  apply_soft_boundaries();
 
   QVector3D dir = (m_target - m_position);
   if (dir.lengthSquared() < k_eps) {
@@ -177,15 +177,15 @@ void Camera::lookAt(const QVector3D &position, const QVector3D &target,
   m_position = position;
   m_target = (position == target) ? position + QVector3D(0, 0, -1) : target;
 
-  applySoftBoundaries();
+  apply_soft_boundaries();
 
   QVector3D const f = (m_target - m_position);
   m_up = up.lengthSquared() < k_eps ? QVector3D(0, 1, 0) : up.normalized();
   orthonormalize(f, m_front, m_right, m_up);
 }
 
-void Camera::setPerspective(float fov, float aspect, float near_plane,
-                            float far_plane) {
+void Camera::set_perspective(float fov, float aspect, float near_plane,
+                             float far_plane) {
   if (!finite(fov) || !finite(aspect) || !finite(near_plane) ||
       !finite(far_plane)) {
     return;
@@ -199,8 +199,8 @@ void Camera::setPerspective(float fov, float aspect, float near_plane,
   m_far_plane = std::max(far_plane, m_near_plane + 1e-3F);
 }
 
-void Camera::setOrthographic(float left, float right, float bottom, float top,
-                             float near_plane, float far_plane) {
+void Camera::set_orthographic(float left, float right, float bottom, float top,
+                              float near_plane, float far_plane) {
   if (!finite(left) || !finite(right) || !finite(bottom) || !finite(top) ||
       !finite(near_plane) || !finite(far_plane)) {
     return;
@@ -216,31 +216,31 @@ void Camera::setOrthographic(float left, float right, float bottom, float top,
   m_far_plane = std::max(far_plane, m_near_plane + 1e-3F);
 }
 
-void Camera::moveForward(float distance) {
+void Camera::move_forward(float distance) {
   if (!finite(distance)) {
     return;
   }
   m_position += m_front * distance;
   m_target = m_position + m_front;
-  applySoftBoundaries();
+  apply_soft_boundaries();
 }
 
-void Camera::moveRight(float distance) {
+void Camera::move_right(float distance) {
   if (!finite(distance)) {
     return;
   }
   m_position += m_right * distance;
   m_target = m_position + m_front;
-  applySoftBoundaries();
+  apply_soft_boundaries();
 }
 
-void Camera::moveUp(float distance) {
+void Camera::move_up(float distance) {
   if (!finite(distance)) {
     return;
   }
   m_position += QVector3D(0, 1, 0) * distance;
   m_target = m_position + m_front;
-  applySoftBoundaries();
+  apply_soft_boundaries();
 }
 
 void Camera::zoom(float delta) {
@@ -265,7 +265,7 @@ void Camera::zoom(float delta) {
   }
 }
 
-void Camera::zoomDistance(float delta) {
+void Camera::zoom_distance(float delta) {
   if (!finite(delta)) {
     return;
   }
@@ -288,7 +288,7 @@ void Camera::zoomDistance(float delta) {
 
   m_position = new_pos;
 
-  applySoftBoundaries();
+  apply_soft_boundaries();
 
   QVector3D const f = (m_target - m_position);
   orthonormalize(f, m_front, m_right, m_up);
@@ -316,7 +316,7 @@ void Camera::pan(float right_dist, float forwardDist) {
   m_position += delta;
   m_target += delta;
 
-  applySoftBoundaries(true);
+  apply_soft_boundaries(true);
 }
 
 void Camera::elevate(float dy) {
@@ -324,7 +324,7 @@ void Camera::elevate(float dy) {
     return;
   }
   m_position.setY(m_position.y() + dy);
-  applySoftBoundaries();
+  apply_soft_boundaries();
 }
 
 void Camera::yaw(float degrees) {
@@ -389,7 +389,7 @@ void Camera::update(float dt) {
   QVector3D const fwd = safeNormalize(new_dir, m_front);
   m_position = m_target - fwd * r;
 
-  applySoftBoundaries();
+  apply_soft_boundaries();
 
   orthonormalize((m_target - m_position), m_front, m_right, m_up);
 
@@ -412,7 +412,7 @@ auto Camera::screen_to_ground(qreal sx, qreal sy, qreal screenW, qreal screenH,
 
   bool ok = false;
   QMatrix4x4 const inv_vp =
-      (getProjectionMatrix() * getViewMatrix()).inverted(&ok);
+      (get_projection_matrix() * get_view_matrix()).inverted(&ok);
   if (!ok) {
     return false;
   }
@@ -457,7 +457,7 @@ auto Camera::world_to_screen(const QVector3D &world, qreal screenW,
   }
 
   QVector4D const clip =
-      getProjectionMatrix() * getViewMatrix() * QVector4D(world, 1.0F);
+      get_projection_matrix() * get_view_matrix() * QVector4D(world, 1.0F);
   if (std::abs(clip.w()) < k_eps) {
     return false;
   }
@@ -477,7 +477,7 @@ auto Camera::world_to_screen(const QVector3D &world, qreal screenW,
   return qIsFinite(sx) && qIsFinite(sy);
 }
 
-void Camera::updateFollow(const QVector3D &targetCenter) {
+void Camera::update_follow(const QVector3D &targetCenter) {
   if (!m_followEnabled) {
     return;
   }
@@ -502,13 +502,13 @@ void Camera::updateFollow(const QVector3D &targetCenter) {
   m_target = targetCenter;
   m_position = new_pos;
 
-  applySoftBoundaries();
+  apply_soft_boundaries();
 
   orthonormalize((m_target - m_position), m_front, m_right, m_up);
 }
 
-void Camera::setRTSView(const QVector3D &center, float distance, float angle,
-                        float yaw_deg) {
+void Camera::set_rts_view(const QVector3D &center, float distance, float angle,
+                          float yaw_deg) {
   if (!finite(center) || !finite(distance) || !finite(angle) ||
       !finite(yaw_deg)) {
     return;
@@ -531,10 +531,10 @@ void Camera::setRTSView(const QVector3D &center, float distance, float angle,
   QVector3D const f = (m_target - m_position);
   orthonormalize(f, m_front, m_right, m_up);
 
-  applySoftBoundaries();
+  apply_soft_boundaries();
 }
 
-void Camera::setTopDownView(const QVector3D &center, float distance) {
+void Camera::set_top_down_view(const QVector3D &center, float distance) {
   if (!finite(center) || !finite(distance)) {
     return;
   }
@@ -543,18 +543,18 @@ void Camera::setTopDownView(const QVector3D &center, float distance) {
   m_position = center + QVector3D(0, std::max(distance, 0.01F), 0);
   m_up = QVector3D(0, 0, -1);
   m_front = safeNormalize((m_target - m_position), QVector3D(0, 0, 1));
-  updateVectors();
+  update_vectors();
 
-  applySoftBoundaries();
+  apply_soft_boundaries();
 }
 
-auto Camera::getViewMatrix() const -> QMatrix4x4 {
+auto Camera::get_view_matrix() const -> QMatrix4x4 {
   QMatrix4x4 view;
   view.lookAt(m_position, m_target, m_up);
   return view;
 }
 
-auto Camera::getProjectionMatrix() const -> QMatrix4x4 {
+auto Camera::get_projection_matrix() const -> QMatrix4x4 {
   QMatrix4x4 projection;
   if (m_isPerspective) {
     projection.perspective(m_fov, m_aspect, m_near_plane, m_far_plane);
@@ -569,15 +569,15 @@ auto Camera::getProjectionMatrix() const -> QMatrix4x4 {
   return projection;
 }
 
-auto Camera::getViewProjectionMatrix() const -> QMatrix4x4 {
-  return getProjectionMatrix() * getViewMatrix();
+auto Camera::get_view_projection_matrix() const -> QMatrix4x4 {
+  return get_projection_matrix() * get_view_matrix();
 }
 
 auto Camera::get_distance() const -> float {
   return (m_position - m_target).length();
 }
 
-auto Camera::getPitchDeg() const -> float {
+auto Camera::get_pitch_deg() const -> float {
   QVector3D const off = m_position - m_target;
   QVector3D const dir = -off;
   if (dir.lengthSquared() < 1e-6F) {
@@ -588,12 +588,12 @@ auto Camera::getPitchDeg() const -> float {
   return qRadiansToDegrees(pitch_rad);
 }
 
-void Camera::updateVectors() {
+void Camera::update_vectors() {
   QVector3D const f = (m_target - m_position);
   orthonormalize(f, m_front, m_right, m_up);
 }
 
-void Camera::applySoftBoundaries(bool isPanning) {
+void Camera::apply_soft_boundaries(bool isPanning) {
   if (!qIsFinite(m_position.y())) {
     return;
   }
@@ -603,7 +603,7 @@ void Camera::applySoftBoundaries(bool isPanning) {
   }
 
   auto &vis = Game::Map::VisibilityService::instance();
-  if (!vis.isInitialized()) {
+  if (!vis.is_initialized()) {
     return;
   }
 
@@ -621,7 +621,7 @@ void Camera::applySoftBoundaries(bool isPanning) {
   const float map_max_z = half_h * tile;
 
   float const camera_height = m_position.y() - m_ground_y;
-  float const pitch_deg = getPitchDeg();
+  float const pitch_deg = get_pitch_deg();
 
   float const map_width = map_max_x - map_min_x;
   float const map_depth = map_max_z - map_min_z;
@@ -704,7 +704,7 @@ void Camera::applySoftBoundaries(bool isPanning) {
   m_lastPosition = m_position;
 }
 
-void Camera::clampAboveGround() {
+void Camera::clamp_above_ground() {
   if (!qIsFinite(m_position.y())) {
     return;
   }
@@ -729,9 +729,10 @@ void Camera::computeYawPitchFromOffset(const QVector3D &off, float &yaw_deg,
   pitch_deg = pitch;
 }
 
-auto Camera::isInFrustum(const QVector3D &center, float radius) const -> bool {
+auto Camera::is_in_frustum(const QVector3D &center,
+                           float radius) const -> bool {
 
-  QMatrix4x4 const vp = getViewProjectionMatrix();
+  QMatrix4x4 const vp = get_view_projection_matrix();
 
   float m[MatrixSize];
   const float *data = vp.constData();

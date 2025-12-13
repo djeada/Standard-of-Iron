@@ -30,7 +30,7 @@ public:
   void orbit_direction(Render::GL::Camera &camera, int direction, bool shift);
   void follow_selection(Render::GL::Camera &camera, Engine::Core::World &world,
                         bool enable);
-  void setFollowLerp(Render::GL::Camera &camera, float alpha);
+  void set_follow_lerp(Render::GL::Camera &camera, float alpha);
   [[nodiscard]] static auto
   get_distance(const Render::GL::Camera &camera) -> float;
   static void resetCamera(Render::GL::Camera &camera,

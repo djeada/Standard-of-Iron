@@ -84,13 +84,13 @@ struct alignas(16) Mat3x4 {
     return result;
   }
 
-  [[nodiscard]] auto transformPoint(const Vec3 &p) const noexcept -> Vec3 {
+  [[nodiscard]] auto transform_point(const Vec3 &p) const noexcept -> Vec3 {
     return {m[0][0] * p.x + m[0][1] * p.y + m[0][2] * p.z + m[0][3],
             m[1][0] * p.x + m[1][1] * p.y + m[1][2] * p.z + m[1][3],
             m[2][0] * p.x + m[2][1] * p.y + m[2][2] * p.z + m[2][3]};
   }
 
-  [[nodiscard]] auto transformVector(const Vec3 &v) const noexcept -> Vec3 {
+  [[nodiscard]] auto transform_vector(const Vec3 &v) const noexcept -> Vec3 {
     return {m[0][0] * v.x + m[0][1] * v.y + m[0][2] * v.z,
             m[1][0] * v.x + m[1][1] * v.y + m[1][2] * v.z,
             m[2][0] * v.x + m[2][1] * v.y + m[2][2] * v.z};
@@ -159,7 +159,7 @@ struct CylinderTransform {
     return ct;
   }
 
-  [[nodiscard]] auto toMatrix() const noexcept -> Mat3x4 {
+  [[nodiscard]] auto to_matrix() const noexcept -> Mat3x4 {
     Mat3x4 m;
 
     m.m[0][0] = tangent.x * radius;
@@ -182,8 +182,8 @@ struct CylinderTransform {
   }
 };
 
-inline auto cylinderBetweenFast(const Vec3 &a, const Vec3 &b,
-                                float radius) noexcept -> Mat3x4 {
+inline auto cylinder_between_fast(const Vec3 &a, const Vec3 &b,
+                                  float radius) noexcept -> Mat3x4 {
   const float dx = b.x - a.x;
   const float dy = b.y - a.y;
   const float dz = b.z - a.z;
@@ -277,7 +277,7 @@ inline auto cylinderBetweenFast(const Vec3 &a, const Vec3 &b,
   return result;
 }
 
-inline auto sphereAtFast(const Vec3 &pos, float radius) noexcept -> Mat3x4 {
+inline auto sphere_at_fast(const Vec3 &pos, float radius) noexcept -> Mat3x4 {
   Mat3x4 m;
   m.m[0][0] = radius;
   m.m[0][1] = 0;
@@ -292,16 +292,16 @@ inline auto sphereAtFast(const Vec3 &pos, float radius) noexcept -> Mat3x4 {
   return m;
 }
 
-inline auto cylinderBetweenFast(const Mat3x4 &parent, const Vec3 &a,
-                                const Vec3 &b,
-                                float radius) noexcept -> Mat3x4 {
-  Mat3x4 const local = cylinderBetweenFast(a, b, radius);
+inline auto cylinder_between_fast(const Mat3x4 &parent, const Vec3 &a,
+                                  const Vec3 &b,
+                                  float radius) noexcept -> Mat3x4 {
+  Mat3x4 const local = cylinder_between_fast(a, b, radius);
   return parent * local;
 }
 
-inline auto sphereAtFast(const Mat3x4 &parent, const Vec3 &pos,
-                         float radius) noexcept -> Mat3x4 {
-  Mat3x4 const local = sphereAtFast(pos, radius);
+inline auto sphere_at_fast(const Mat3x4 &parent, const Vec3 &pos,
+                           float radius) noexcept -> Mat3x4 {
+  Mat3x4 const local = sphere_at_fast(pos, radius);
   return parent * local;
 }
 

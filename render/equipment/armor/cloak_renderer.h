@@ -23,7 +23,7 @@ class CloakRenderer : public IEquipmentRenderer {
 public:
   explicit CloakRenderer(const CloakConfig &config = CloakConfig{});
 
-  void setConfig(const CloakConfig &config);
+  void set_config(const CloakConfig &config);
 
   void render(const DrawContext &ctx, const BodyFrames &frames,
               const HumanoidPalette &palette,

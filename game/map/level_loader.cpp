@@ -75,7 +75,8 @@ auto LevelLoader::loadFromAssets(
 
     const Game::Visuals::VisualCatalog *catalog_ptr =
         visuals_loaded ? &visual_catalog : nullptr;
-    auto rt = Game::Map::MapTransformer::applyToWorld(def, world, catalog_ptr);
+    auto rt =
+        Game::Map::MapTransformer::apply_to_world(def, world, catalog_ptr);
     if (!rt.unit_ids.empty()) {
       res.player_unit_id = rt.unit_ids.front();
     } else {
@@ -87,9 +88,9 @@ auto LevelLoader::loadFromAssets(
         sp.position = QVector3D(0.0F, 0.0F, 0.0F);
         sp.player_id = 0;
         sp.spawn_type = Game::Units::SpawnType::Archer;
-        sp.ai_controlled = !owners.isPlayer(sp.player_id);
+        sp.ai_controlled = !owners.is_player(sp.player_id);
         if (const auto *nation =
-                nationRegistry.getNationForPlayer(sp.player_id)) {
+                nationRegistry.get_nation_for_player(sp.player_id)) {
           sp.nation_id = nation->id;
         } else {
           sp.nation_id = nationRegistry.default_nation_id();
@@ -107,7 +108,7 @@ auto LevelLoader::loadFromAssets(
     for (auto *e : world.get_entities_with<Engine::Core::UnitComponent>()) {
       if (auto *u = e->get_component<Engine::Core::UnitComponent>()) {
         if (u->spawn_type == Game::Units::SpawnType::Barracks &&
-            owners.isPlayer(u->owner_id)) {
+            owners.is_player(u->owner_id)) {
           has_barracks = true;
           break;
         }
@@ -119,11 +120,11 @@ auto LevelLoader::loadFromAssets(
       if (reg2) {
         Game::Units::SpawnParams sp;
         sp.position = QVector3D(-4.0F, 0.0F, -3.0F);
-        sp.player_id = owners.getLocalPlayerId();
+        sp.player_id = owners.get_local_player_id();
         sp.spawn_type = Game::Units::SpawnType::Barracks;
-        sp.ai_controlled = !owners.isPlayer(sp.player_id);
+        sp.ai_controlled = !owners.is_player(sp.player_id);
         if (const auto *nation =
-                nationRegistry.getNationForPlayer(sp.player_id)) {
+                nationRegistry.get_nation_for_player(sp.player_id)) {
           sp.nation_id = nation->id;
         } else {
           sp.nation_id = nationRegistry.default_nation_id();
@@ -139,9 +140,9 @@ auto LevelLoader::loadFromAssets(
                << "- applying default environment";
     Game::Map::Environment::applyDefault(renderer, camera);
     res.ok = false;
-    res.cam_fov = camera.getFOV();
-    res.cam_near = camera.getNear();
-    res.cam_far = camera.getFar();
+    res.cam_fov = camera.get_fov();
+    res.cam_near = camera.get_near();
+    res.cam_far = camera.get_far();
     res.grid_width = 50;
     res.grid_height = 50;
     res.tile_size = 1.0F;
@@ -153,9 +154,9 @@ auto LevelLoader::loadFromAssets(
       sp.position = QVector3D(0.0F, 0.0F, 0.0F);
       sp.player_id = 0;
       sp.spawn_type = Game::Units::SpawnType::Archer;
-      sp.ai_controlled = !owners.isPlayer(sp.player_id);
+      sp.ai_controlled = !owners.is_player(sp.player_id);
       if (const auto *nation =
-              nationRegistry.getNationForPlayer(sp.player_id)) {
+              nationRegistry.get_nation_for_player(sp.player_id)) {
         sp.nation_id = nation->id;
       } else {
         sp.nation_id = nationRegistry.default_nation_id();

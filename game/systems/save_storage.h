@@ -41,11 +41,11 @@ private:
   auto open(QString *out_error = nullptr) const -> bool;
   auto ensureSchema(QString *out_error = nullptr) const -> bool;
   auto createBaseSchema(QString *out_error = nullptr) const -> bool;
-  auto migrateSchema(int fromVersion,
-                     QString *out_error = nullptr) const -> bool;
+  auto migrate_schema(int fromVersion,
+                      QString *out_error = nullptr) const -> bool;
   auto schemaVersion(QString *out_error = nullptr) const -> int;
-  auto setSchemaVersion(int version,
-                        QString *out_error = nullptr) const -> bool;
+  auto set_schema_version(int version,
+                          QString *out_error = nullptr) const -> bool;
   auto migrate_to_2(QString *out_error = nullptr) const -> bool;
 
   QString m_database_path;

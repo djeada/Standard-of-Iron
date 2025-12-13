@@ -24,11 +24,11 @@ public:
   void buck(float intensity);
   void jumpObstacle(float height, float distance);
 
-  auto getCurrentPhase() const -> float;
-  auto getCurrentBob() const -> float;
-  auto getStrideCycle() const -> float;
+  auto get_current_phase() const -> float;
+  auto get_current_bob() const -> float;
+  auto get_stride_cycle() const -> float;
 
-  void updateGaitParameters();
+  void update_gait_parameters();
 
 private:
   HorseProfile &m_profile;

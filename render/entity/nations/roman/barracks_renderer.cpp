@@ -21,7 +21,7 @@ namespace {
 
 using Render::Geom::clamp01;
 using Render::Geom::clampVec01;
-using Render::Geom::cylinderBetween;
+using Render::Geom::cylinder_between;
 
 struct RomanPalette {
   QVector3D stone_light{0.62F, 0.60F, 0.58F};
@@ -58,7 +58,7 @@ inline void draw_box(ISubmitter &out, Mesh *unit, Texture *white,
 inline void draw_cyl(ISubmitter &out, const QMatrix4x4 &model,
                      const QVector3D &a, const QVector3D &b, float r,
                      const QVector3D &color, Texture *white) {
-  out.mesh(getUnitCylinder(), model * cylinderBetween(a, b, r), color, white,
+  out.mesh(get_unit_cylinder(), model * cylinder_between(a, b, r), color, white,
            1.0F);
 }
 
@@ -202,39 +202,36 @@ void drawStandards(const DrawContext &p, ISubmitter &out, Mesh *unit,
   float flag_y =
       pole_height - banner_height / 2.0F - captureColors.loweringOffset;
 
-  QVector3D const beam_start(pole_x + 0.03F, beam_y, pole_z);
-  QVector3D const beam_end(pole_x + beam_length + 0.03F, beam_y, pole_z);
-  out.mesh(getUnitCylinder(),
-           p.model * Render::Geom::cylinderBetween(beam_start, beam_end,
-                                                   pole_radius * 0.45F),
+  QVector3D const beam_start(pole_x + 0.02F, beam_y, pole_z);
+  QVector3D const beam_end(pole_x + beam_length + 0.02F, beam_y, pole_z);
+  out.mesh(get_unit_cylinder(),
+           p.model * Render::Geom::cylinder_between(beam_start, beam_end,
+                                                    pole_radius * 0.35F),
            c.wood, white, 1.0F);
 
   QVector3D const connector_top(
       beam_end.x(), beam_end.y() - banner_height * 0.35F, beam_end.z());
-  out.mesh(getUnitCylinder(),
-           p.model * Render::Geom::cylinderBetween(beam_end, connector_top,
-                                                   pole_radius * 0.25F),
+  out.mesh(get_unit_cylinder(),
+           p.model * Render::Geom::cylinder_between(beam_end, connector_top,
+                                                    pole_radius * 0.18F),
            c.iron, white, 1.0F);
 
   float const panel_x = beam_end.x() + (banner_width * 0.5F - beam_length);
 
-  // Banner with tassels and decorative trim (GPU cloth animation)
   QVector3D banner_center(panel_x, flag_y, pole_z + 0.02F);
   BarracksFlagRenderer::drawBannerWithTassels(
       p, out, unit, white, banner_center, banner_width * 0.5F,
       banner_height * 0.5F, 0.02F, captureColors.teamColor,
       captureColors.teamTrimColor, cloth);
 
-  // Eagle finial on top
   draw_box(out, unit, white, p.model,
            QVector3D(pole_x, pole_height + 0.2F, pole_z),
            QVector3D(0.12F, 0.10F, 0.12F), c.iron);
 
-  // Decorative pole rings
   for (int i = 0; i < 3; ++i) {
     float ring_y = 0.5F + static_cast<float>(i) * 0.6F;
-    out.mesh(getUnitCylinder(),
-             p.model * Render::Geom::cylinderBetween(
+    out.mesh(get_unit_cylinder(),
+             p.model * Render::Geom::cylinder_between(
                            QVector3D(pole_x, ring_y, pole_z),
                            QVector3D(pole_x, ring_y + 0.03F, pole_z),
                            pole_radius * 2.2F),
@@ -307,11 +304,10 @@ void draw_barracks(const DrawContext &p, ISubmitter &out) {
   QVector3D const team(r->color[0], r->color[1], r->color[2]);
   RomanPalette const c = make_palette(team);
 
-  // Get cloth banner resources from backend if available
   BarracksFlagRenderer::ClothBannerResources cloth;
   if (p.backend != nullptr) {
-    cloth.clothMesh = p.backend->bannerMesh();
-    cloth.bannerShader = p.backend->bannerShader();
+    cloth.clothMesh = p.backend->banner_mesh();
+    cloth.bannerShader = p.backend->banner_shader();
   }
 
   drawFortressBase(p, out, unit, white, c);

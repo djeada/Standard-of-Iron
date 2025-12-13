@@ -13,25 +13,25 @@ struct Vertex;
 
 namespace BackendImpl {
 
-void initializeCylinderPipeline(Backend *backend);
+void initialize_cylinder_pipeline(Backend *backend);
 
-void shutdownCylinderPipeline(Backend *backend);
+void shutdown_cylinder_pipeline(Backend *backend);
 
 void cacheCylinderUniforms(Backend *backend);
 
-void uploadCylinderInstances(Backend *backend, std::size_t count);
+void upload_cylinder_instances(Backend *backend, std::size_t count);
 
 void draw_cylinders(Backend *backend, std::size_t count);
 
-void initializeFogPipeline(Backend *backend);
+void initialize_fog_pipeline(Backend *backend);
 
-void shutdownFogPipeline(Backend *backend);
+void shutdown_fog_pipeline(Backend *backend);
 
 void cacheFogUniforms(Backend *backend);
 
-void uploadFogInstances(Backend *backend, std::size_t count);
+void upload_fog_instances(Backend *backend, std::size_t count);
 
-void drawFog(Backend *backend, std::size_t count);
+void draw_fog(Backend *backend, std::size_t count);
 
 } // namespace BackendImpl
 } // namespace Render::GL

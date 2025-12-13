@@ -21,14 +21,12 @@ auto BannerPipeline::initialize() -> bool {
     return false;
   }
 
-  // Create subdivided plane meshes for cloth simulation
-  // Higher subdivision = more vertices = smoother cloth deformation
   m_bannerMesh16.reset(GL::createPlaneMesh(1.0F, 1.0F, 16));
   m_bannerMesh8.reset(GL::createPlaneMesh(1.0F, 1.0F, 8));
 
-  cacheUniforms();
+  cache_uniforms();
 
-  return isInitialized();
+  return is_initialized();
 }
 
 void BannerPipeline::shutdown() {
@@ -37,9 +35,9 @@ void BannerPipeline::shutdown() {
   m_bannerMesh8.reset();
 }
 
-void BannerPipeline::cacheUniforms() { cacheBannerUniforms(); }
+void BannerPipeline::cache_uniforms() { cacheBannerUniforms(); }
 
-auto BannerPipeline::isInitialized() const -> bool {
+auto BannerPipeline::is_initialized() const -> bool {
   return m_bannerShader != nullptr && m_bannerMesh16 != nullptr;
 }
 
@@ -55,16 +53,16 @@ void BannerPipeline::cacheBannerUniforms() {
     return;
   }
 
-  m_bannerUniforms.mvp = m_bannerShader->uniformHandle("u_mvp");
-  m_bannerUniforms.model = m_bannerShader->uniformHandle("u_model");
-  m_bannerUniforms.time = m_bannerShader->uniformHandle("u_time");
+  m_bannerUniforms.mvp = m_bannerShader->uniform_handle("u_mvp");
+  m_bannerUniforms.model = m_bannerShader->uniform_handle("u_model");
+  m_bannerUniforms.time = m_bannerShader->uniform_handle("u_time");
   m_bannerUniforms.windStrength =
-      m_bannerShader->uniformHandle("u_windStrength");
-  m_bannerUniforms.color = m_bannerShader->uniformHandle("u_color");
-  m_bannerUniforms.trimColor = m_bannerShader->uniformHandle("u_trimColor");
-  m_bannerUniforms.texture = m_bannerShader->uniformHandle("u_texture");
-  m_bannerUniforms.useTexture = m_bannerShader->uniformHandle("u_useTexture");
-  m_bannerUniforms.alpha = m_bannerShader->uniformHandle("u_alpha");
+      m_bannerShader->uniform_handle("u_windStrength");
+  m_bannerUniforms.color = m_bannerShader->uniform_handle("u_color");
+  m_bannerUniforms.trimColor = m_bannerShader->uniform_handle("u_trimColor");
+  m_bannerUniforms.texture = m_bannerShader->uniform_handle("u_texture");
+  m_bannerUniforms.useTexture = m_bannerShader->uniform_handle("u_useTexture");
+  m_bannerUniforms.alpha = m_bannerShader->uniform_handle("u_alpha");
 }
 
 } // namespace Render::GL::BackendPipelines

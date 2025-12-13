@@ -35,13 +35,13 @@ auto BuildingCollisionRegistry::getBuildingSize(const std::string &buildingType)
   return {2.0F, 2.0F};
 }
 
-void BuildingCollisionRegistry::registerBuilding(
+void BuildingCollisionRegistry::register_building(
     unsigned int entity_id, const std::string &buildingType, float center_x,
     float center_z, int owner_id) {
 
   if (m_entityToIndex.find(entity_id) != m_entityToIndex.end()) {
 
-    updateBuildingPosition(entity_id, center_x, center_z);
+    update_building_position(entity_id, center_x, center_z);
     return;
   }
 
@@ -57,7 +57,7 @@ void BuildingCollisionRegistry::registerBuilding(
   }
 }
 
-void BuildingCollisionRegistry::unregisterBuilding(unsigned int entity_id) {
+void BuildingCollisionRegistry::unregister_building(unsigned int entity_id) {
   auto it = m_entityToIndex.find(entity_id);
   if (it == m_entityToIndex.end()) {
     return;
@@ -79,9 +79,9 @@ void BuildingCollisionRegistry::unregisterBuilding(unsigned int entity_id) {
   }
 }
 
-void BuildingCollisionRegistry::updateBuildingPosition(unsigned int entity_id,
-                                                       float center_x,
-                                                       float center_z) {
+void BuildingCollisionRegistry::update_building_position(unsigned int entity_id,
+                                                         float center_x,
+                                                         float center_z) {
   auto it = m_entityToIndex.find(entity_id);
   if (it == m_entityToIndex.end()) {
     return;
@@ -96,8 +96,8 @@ void BuildingCollisionRegistry::updateBuildingPosition(unsigned int entity_id,
   }
 }
 
-void BuildingCollisionRegistry::updateBuildingOwner(unsigned int entity_id,
-                                                    int owner_id) {
+void BuildingCollisionRegistry::update_building_owner(unsigned int entity_id,
+                                                      int owner_id) {
   auto it = m_entityToIndex.find(entity_id);
   if (it == m_entityToIndex.end()) {
     return;

@@ -5,7 +5,7 @@ namespace Render::Geom {
 
 namespace {
 constexpr float k_pi = 3.14159265358979F;
-} // namespace
+}
 
 auto BannerCloth::generate_banner_transform(const QVector3D &center,
                                             float half_width, float half_height,
@@ -42,7 +42,6 @@ auto BannerTassels::generate_bottom_tassels(
   for (int i = 0; i < count; ++i) {
     float const x = start_x + spacing * static_cast<float>(i);
 
-    // Simple sine wave sway - lightweight CPU calculation
     float const phase = animation_time * 2.5F + static_cast<float>(i) * 0.7F;
     float const sway = std::sin(phase) * 0.04F;
 
@@ -65,17 +64,15 @@ auto BannerTassels::generate_bottom_tassels(
   return result;
 }
 
-auto BannerEmbroidery::generate_border_trim(const QVector3D &banner_center,
-                                            float half_width, float half_height,
-                                            float border_thickness,
-                                            const QVector3D &trim_color)
-    -> std::vector<EmbroideryLayer> {
+auto BannerEmbroidery::generate_border_trim(
+    const QVector3D &banner_center, float half_width, float half_height,
+    float border_thickness,
+    const QVector3D &trim_color) -> std::vector<EmbroideryLayer> {
   std::vector<EmbroideryLayer> layers;
   layers.reserve(4);
 
   float const z_offset = 0.005F;
 
-  // Top border
   {
     EmbroideryLayer layer;
     layer.transform.translate(banner_center.x(),
@@ -89,7 +86,6 @@ auto BannerEmbroidery::generate_border_trim(const QVector3D &banner_center,
     layers.push_back(layer);
   }
 
-  // Bottom border
   {
     EmbroideryLayer layer;
     layer.transform.translate(banner_center.x(),
@@ -103,7 +99,6 @@ auto BannerEmbroidery::generate_border_trim(const QVector3D &banner_center,
     layers.push_back(layer);
   }
 
-  // Left border
   {
     EmbroideryLayer layer;
     layer.transform.translate(banner_center.x() - half_width +
@@ -116,7 +111,6 @@ auto BannerEmbroidery::generate_border_trim(const QVector3D &banner_center,
     layers.push_back(layer);
   }
 
-  // Right border
   {
     EmbroideryLayer layer;
     layer.transform.translate(banner_center.x() + half_width -
