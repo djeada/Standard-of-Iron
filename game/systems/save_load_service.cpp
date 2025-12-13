@@ -95,9 +95,9 @@ auto SaveLoadService::saveGameToSlot(Engine::Core::World &world,
       return false;
     }
 
-    m_lastMetadata = combined_metadata;
+    m_last_metadata = combined_metadata;
     m_lastTitle = title;
-    m_lastScreenshot = screenshot;
+    m_last_screenshot = screenshot;
     m_last_error.clear();
     return true;
   } catch (const std::exception &e) {
@@ -108,8 +108,8 @@ auto SaveLoadService::saveGameToSlot(Engine::Core::World &world,
   }
 }
 
-auto SaveLoadService::loadGameFromSlot(Engine::Core::World &world,
-                                       const QString &slotName) -> bool {
+auto SaveLoadService::load_game_from_slot(Engine::Core::World &world,
+                                          const QString &slotName) -> bool {
   qInfo() << "Loading game from slot:" << slotName;
 
   try {
@@ -145,9 +145,9 @@ auto SaveLoadService::loadGameFromSlot(Engine::Core::World &world,
     world.clear();
     Engine::Core::Serialization::deserializeWorld(&world, doc);
 
-    m_lastMetadata = metadata;
+    m_last_metadata = metadata;
     m_lastTitle = title;
-    m_lastScreenshot = screenshot;
+    m_last_screenshot = screenshot;
     m_last_error.clear();
     return true;
   } catch (const std::exception &e) {
@@ -158,7 +158,7 @@ auto SaveLoadService::loadGameFromSlot(Engine::Core::World &world,
   }
 }
 
-auto SaveLoadService::getSaveSlots() const -> QVariantList {
+auto SaveLoadService::get_save_slots() const -> QVariantList {
   if (!m_storage) {
     return {};
   }

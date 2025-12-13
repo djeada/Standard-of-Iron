@@ -21,7 +21,7 @@ struct MapRuntime {
 
 class MapTransformer {
 public:
-  static auto applyToWorld(
+  static auto apply_to_world(
       const MapDefinition &def, Engine::Core::World &world,
       const Game::Visuals::VisualCatalog *visuals = nullptr) -> MapRuntime;
 

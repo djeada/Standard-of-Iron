@@ -16,7 +16,7 @@ public:
   auto initialize() -> bool override;
   void shutdown() override;
   void cacheUniforms() override;
-  [[nodiscard]] auto isInitialized() const -> bool override {
+  [[nodiscard]] auto is_initialized() const -> bool override {
     return m_initialized;
   }
 
