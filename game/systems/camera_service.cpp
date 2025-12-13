@@ -57,7 +57,7 @@ void CameraService::orbit_direction(Render::GL::Camera &camera, int direction,
                                     bool shift) {
   const auto &cam_config = Game::GameConfig::instance().camera();
   float const step =
-      shift ? cam_config.orbitStepShift : cam_config.orbitStepNormal;
+      shift ? cam_config.orbit_step_shift : cam_config.orbit_step_normal;
   float const pitch = step * float(direction);
   orbit(camera, 0.0F, pitch);
 }
@@ -114,8 +114,8 @@ void CameraService::snapToEntity(Render::GL::Camera &camera,
   if (auto *t = entity.get_component<Engine::Core::TransformComponent>()) {
     QVector3D const center(t->position.x, t->position.y, t->position.z);
     const auto &cam_config = Game::GameConfig::instance().camera();
-    camera.set_rts_view(center, cam_config.defaultDistance,
-                      cam_config.defaultPitch, cam_config.defaultYaw);
+    camera.set_rts_view(center, cam_config.default_distance,
+                        cam_config.default_pitch, cam_config.default_yaw);
   }
 }
 

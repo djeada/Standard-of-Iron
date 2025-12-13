@@ -26,7 +26,7 @@ void TroopCountRegistry::initialize() {
 
 void TroopCountRegistry::clear() { m_troop_counts.clear(); }
 
-auto TroopCountRegistry::getTroopCount(int owner_id) const -> int {
+auto TroopCountRegistry::get_troop_count(int owner_id) const -> int {
   auto it = m_troop_counts.find(owner_id);
   if (it != m_troop_counts.end()) {
     return it->second;

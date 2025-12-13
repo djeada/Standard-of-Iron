@@ -455,7 +455,7 @@ void MinimapGenerator::render_structures(QImage &image,
   painter.setRenderHint(QPainter::Antialiasing, true);
 
   for (const auto &spawn : map_def.spawns) {
-    if (!Game::Units::isBuildingSpawn(spawn.type)) {
+    if (!Game::Units::is_building_spawn(spawn.type)) {
       continue;
     }
 

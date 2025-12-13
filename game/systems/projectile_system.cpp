@@ -22,14 +22,14 @@ void ProjectileSystem::spawn_arrow(const QVector3D &start, const QVector3D &end,
   float arc_height;
   if (is_ballista_bolt) {
 
-    arc_height = std::clamp(m_arrow_config.arcHeightMultiplier * dist * 0.4F,
-                            m_arrow_config.arcHeightMin * 0.5F,
-                            m_arrow_config.arcHeightMax * 0.6F);
+    arc_height = std::clamp(m_arrow_config.arc_height_multiplier * dist * 0.4F,
+                            m_arrow_config.arc_height_min * 0.5F,
+                            m_arrow_config.arc_height_max * 0.6F);
   } else {
 
-    arc_height =
-        std::clamp(m_arrow_config.arcHeightMultiplier * dist,
-                   m_arrow_config.arcHeightMin, m_arrow_config.arcHeightMax);
+    arc_height = std::clamp(m_arrow_config.arc_height_multiplier * dist,
+                            m_arrow_config.arc_height_min,
+                            m_arrow_config.arc_height_max);
   }
   float inv_dist = (dist > 0.001F) ? (1.0F / dist) : 1.0F;
 
