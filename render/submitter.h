@@ -46,6 +46,7 @@ class QueueSubmitter : public ISubmitter {
 public:
   explicit QueueSubmitter(DrawQueue *queue) : m_queue(queue) {}
 
+  [[nodiscard]] Shader *shader() const { return m_shader; }
   void set_shader(Shader *shader) { m_shader = shader; }
 
   void mesh(Mesh *mesh, const QMatrix4x4 &model, const QVector3D &color,
@@ -141,6 +142,8 @@ public:
   explicit BatchingSubmitter(ISubmitter *fallback,
                              PrimitiveBatcher *batcher = nullptr)
       : m_fallback(fallback), m_batcher(batcher) {}
+
+  [[nodiscard]] ISubmitter *fallback_submitter() const { return m_fallback; }
 
   void set_batcher(PrimitiveBatcher *batcher) { m_batcher = batcher; }
   void set_enabled(bool enabled) { m_enabled = enabled; }

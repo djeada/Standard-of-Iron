@@ -7,6 +7,7 @@
 #include "../geom/transforms.h"
 #include "../gl/primitives.h"
 #include "../gl/shader.h"
+#include "../scene_renderer.h"
 #include "renderer_constants.h"
 #include "submitter.h"
 
@@ -29,6 +30,49 @@ struct FlagColors {
 struct ClothBannerResources {
   Mesh *clothMesh = nullptr;
   Shader *bannerShader = nullptr;
+};
+
+struct BannerShaderScope {
+  explicit BannerShaderScope(ISubmitter &submitter, Shader *shader) {
+    if (shader == nullptr) {
+      return;
+    }
+
+    if (auto *queue = dynamic_cast<QueueSubmitter *>(&submitter)) {
+      m_queue = queue;
+      m_previousQueueShader = queue->shader();
+      queue->set_shader(shader);
+      return;
+    }
+
+    ISubmitter *fallback = &submitter;
+    if (auto *batch = dynamic_cast<BatchingSubmitter *>(&submitter)) {
+      if (batch->fallback_submitter() != nullptr) {
+        fallback = batch->fallback_submitter();
+      }
+    }
+
+    m_renderer = dynamic_cast<Renderer *>(fallback);
+    if (m_renderer != nullptr) {
+      m_previousRendererShader = m_renderer->get_current_shader();
+      m_renderer->set_current_shader(shader);
+    }
+  }
+
+  ~BannerShaderScope() {
+    if (m_queue != nullptr) {
+      m_queue->set_shader(m_previousQueueShader);
+    }
+    if (m_renderer != nullptr) {
+      m_renderer->set_current_shader(m_previousRendererShader);
+    }
+  }
+
+private:
+  QueueSubmitter *m_queue = nullptr;
+  Shader *m_previousQueueShader = nullptr;
+  Renderer *m_renderer = nullptr;
+  Shader *m_previousRendererShader = nullptr;
 };
 
 inline void draw_rally_flag_if_any(const DrawContext &p, ISubmitter &out,
@@ -66,17 +110,9 @@ inline void drawBannerWithTassels(
 
   if (cloth != nullptr && cloth->clothMesh != nullptr &&
       cloth->bannerShader != nullptr) {
-    // Use GPU cloth animation with subdivided mesh
-    auto *queueSubmitter = dynamic_cast<QueueSubmitter *>(&out);
-    if (queueSubmitter != nullptr) {
-      queueSubmitter->set_shader(cloth->bannerShader);
-      out.mesh(cloth->clothMesh, p.model * banner_transform, banner_color,
-               white, 1.0F, material_id);
-      queueSubmitter->set_shader(nullptr);
-    } else {
-      out.mesh(cloth->clothMesh, p.model * banner_transform, banner_color,
-               white, 1.0F, material_id);
-    }
+    BannerShaderScope shaderScope(out, cloth->bannerShader);
+    out.mesh(cloth->clothMesh, p.model * banner_transform, banner_color, white,
+             1.0F, material_id);
   } else {
     // Fallback: use simple box mesh (no animation)
     QMatrix4x4 box_transform =
