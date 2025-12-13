@@ -844,7 +844,7 @@ Item {
             MapPreview {
                 id: mapPreview
 
-                height: 300
+                height: 240
                 visible: selectedMapData !== null
                 mapPath: selectedMapPath
                 playerConfigs: getPlayerConfigs()
@@ -853,14 +853,14 @@ Item {
                     top: descr.bottom
                     left: parent.left
                     right: parent.right
-                    topMargin: Theme.spacingLarge
+                    topMargin: Theme.spacingMedium
                 }
             }
 
             Rectangle {
                 id: playerConfigPanel
 
-                height: Math.min(280, (playersModel.count * 60) + 90)
+                height: Math.min(240, (playersModel.count * 60) + 90)
                 radius: Theme.radiusLarge
                 color: Theme.cardBaseA
                 border.color: Theme.panelBr
@@ -871,7 +871,7 @@ Item {
                     top: mapPreview.bottom
                     left: parent.left
                     right: parent.right
-                    topMargin: Theme.spacingLarge + 4
+                    topMargin: Theme.spacingMedium
                 }
 
                 Column {
