@@ -80,6 +80,7 @@ add_library(render_gl STATIC
     geom/stone.cpp
     geom/projectile_renderer.cpp
     geom/flag.cpp
+    geom/banner_cloth.cpp
     geom/patrol_flags.cpp
     geom/transforms.cpp
     humanoid/humanoid_math.cpp

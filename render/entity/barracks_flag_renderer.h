@@ -2,6 +2,7 @@
 
 #include "../../game/core/component.h"
 #include "../../game/visuals/team_colors.h"
+#include "../geom/banner_cloth.h"
 #include "../geom/flag.h"
 #include "../geom/transforms.h"
 #include "../gl/primitives.h"
@@ -29,14 +30,59 @@ inline void draw_rally_flag_if_any(const DrawContext &p, ISubmitter &out,
   if (auto *prod =
           p.entity->get_component<Engine::Core::ProductionComponent>()) {
     if (prod->rally_set && (p.resources != nullptr)) {
+      // Simple static flag - animation would require shader integration
       auto flag = Render::Geom::Flag::create(prod->rally_x, prod->rally_z,
                                              QVector3D(1.0F, 0.95F, 0.3F),
                                              colors.woodDark, 1.6F);
+
       Mesh *unit = p.resources->unit();
       out.mesh(unit, flag.pole, flag.poleColor, white, 1.0F);
       out.mesh(unit, flag.pennant, flag.pennantColor, white, 1.0F);
       out.mesh(unit, flag.finial, flag.pennantColor, white, 1.0F);
     }
+  }
+}
+
+/**
+ * @brief Draw a banner with decorative tassels.
+ *
+ * Main cloth animation is done via GPU shader (banner.vert/frag).
+ * This function adds CPU-side decorative elements like tassels.
+ */
+inline void drawBannerWithTassels(const DrawContext &p, ISubmitter &out,
+                                  Mesh *unit, Texture *white,
+                                  const QVector3D &banner_center,
+                                  float half_width, float half_height,
+                                  float depth, const QVector3D &banner_color,
+                                  const QVector3D &trim_color,
+                                  int material_id = 0) {
+  // Main banner - uses shader for cloth animation
+  QMatrix4x4 banner_transform = Render::Geom::BannerCloth::generate_banner_transform(
+      banner_center, half_width, half_height, depth);
+  out.mesh(unit, p.model * banner_transform, banner_color, white, 1.0F,
+           material_id);
+
+  // Add decorative tassels (simple CPU animation)
+  auto tassels = Render::Geom::BannerTassels::generate_bottom_tassels(
+      banner_center, half_width * 2.0F, half_height * 2.0F, 0.06F, 5,
+      p.animation_time, trim_color,
+      QVector3D(0.85F, 0.75F, 0.45F)); // Gold tips
+
+  for (const auto &thread : tassels.thread_transforms) {
+    out.mesh(getUnitCylinder(), p.model * thread, tassels.thread_color, white,
+             1.0F);
+  }
+
+  for (const auto &tip : tassels.tip_transforms) {
+    out.mesh(unit, p.model * tip, tassels.tip_color, white, 1.0F);
+  }
+
+  // Decorative border trim overlay
+  auto trims = Render::Geom::BannerEmbroidery::generate_border_trim(
+      banner_center, half_width, half_height, 0.035F, trim_color);
+
+  for (const auto &trim : trims) {
+    out.mesh(unit, p.model * trim.transform, trim.color, white, trim.alpha);
   }
 }
 
