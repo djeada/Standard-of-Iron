@@ -48,6 +48,8 @@ public:
 
   void set_camera(Camera *camera);
   void set_clear_color(float r, float g, float b, float a = 1.0F);
+  auto camera() const -> Camera * { return m_camera; }
+  auto backend() -> Backend * { return m_backend.get(); }
 
   void update_animation_time(float delta_time) {
     m_accumulated_time += delta_time;

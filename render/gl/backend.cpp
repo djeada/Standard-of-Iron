@@ -3,6 +3,7 @@
 #include "../geom/selection_disc.h"
 #include "../geom/selection_ring.h"
 #include "../primitive_batch.h"
+#include "backend/banner_pipeline.h"
 #include "backend/character_pipeline.h"
 #include "backend/cylinder_pipeline.h"
 #include "backend/effects_pipeline.h"
@@ -143,6 +144,12 @@ void Backend::initialize() {
   m_primitiveBatchPipeline->initialize();
   qInfo() << "Backend: PrimitiveBatchPipeline initialized";
 
+  qInfo() << "Backend: Creating BannerPipeline...";
+  m_bannerPipeline = std::make_unique<BackendPipelines::BannerPipeline>(
+      this, m_shaderCache.get());
+  m_bannerPipeline->initialize();
+  qInfo() << "Backend: BannerPipeline initialized";
+
   qInfo() << "Backend: Loading basic shaders...";
   m_basicShader = m_shaderCache->get(QStringLiteral("basic"));
   m_gridShader = m_shaderCache->get(QStringLiteral("grid"));
@@ -153,6 +160,20 @@ void Backend::initialize() {
     qWarning() << "Backend: grid shader missing";
   }
   qInfo() << "Backend::initialize() - Complete!";
+}
+
+auto Backend::banner_mesh() const -> Mesh * {
+  if (m_bannerPipeline != nullptr) {
+    return m_bannerPipeline->getBannerMesh();
+  }
+  return nullptr;
+}
+
+auto Backend::banner_shader() const -> Shader * {
+  if (m_bannerPipeline != nullptr) {
+    return m_bannerPipeline->m_bannerShader;
+  }
+  return nullptr;
 }
 
 void Backend::begin_frame() {
@@ -1262,6 +1283,51 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         QVector3D const road_light_dir(0.35F, 0.8F, 0.45F);
         active_shader->set_uniform(
             m_waterPipeline->m_road_uniforms.light_direction, road_light_dir);
+
+        it.mesh->draw();
+        break;
+      }
+
+      if (m_bannerPipeline != nullptr &&
+          active_shader == m_bannerPipeline->m_bannerShader) {
+        if (m_lastBoundShader != active_shader) {
+          active_shader->use();
+          m_lastBoundShader = active_shader;
+        }
+
+        QMatrix4x4 mvp =
+            cam.get_projection_matrix() * cam.get_view_matrix() * it.model;
+        active_shader->set_uniform(m_bannerPipeline->m_bannerUniforms.mvp, mvp);
+        active_shader->set_uniform(m_bannerPipeline->m_bannerUniforms.model,
+                                   it.model);
+        active_shader->set_uniform(m_bannerPipeline->m_bannerUniforms.time,
+                                   m_animationTime);
+
+        float windStrength = 0.8F + 0.2F * std::sin(m_animationTime * 0.5F);
+        active_shader->set_uniform(
+            m_bannerPipeline->m_bannerUniforms.windStrength, windStrength);
+        active_shader->set_uniform(m_bannerPipeline->m_bannerUniforms.color,
+                                   it.color);
+
+        QVector3D trimColor = it.color * 0.7F;
+        active_shader->set_uniform(m_bannerPipeline->m_bannerUniforms.trimColor,
+                                   trimColor);
+        active_shader->set_uniform(m_bannerPipeline->m_bannerUniforms.alpha,
+                                   it.alpha);
+        active_shader->set_uniform(
+            m_bannerPipeline->m_bannerUniforms.useTexture,
+            it.texture != nullptr);
+
+        Texture *tex_to_use =
+            (it.texture != nullptr)
+                ? it.texture
+                : (m_resources ? m_resources->white() : nullptr);
+        if ((tex_to_use != nullptr) && tex_to_use != m_lastBoundTexture) {
+          tex_to_use->bind(0);
+          m_lastBoundTexture = tex_to_use;
+          active_shader->set_uniform(m_bannerPipeline->m_bannerUniforms.texture,
+                                     0);
+        }
 
         it.mesh->draw();
         break;

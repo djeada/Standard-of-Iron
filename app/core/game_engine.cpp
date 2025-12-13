@@ -74,6 +74,7 @@
 #include "game/systems/formation_planner.h"
 #include "game/systems/game_state_serializer.h"
 #include "game/systems/global_stats_registry.h"
+#include "game/systems/healing_beam_system.h"
 #include "game/systems/healing_system.h"
 #include "game/systems/movement_system.h"
 #include "game/systems/nation_id.h"
@@ -91,6 +92,7 @@
 #include "game/systems/victory_service.h"
 #include "game/units/factory.h"
 #include "game/units/troop_config.h"
+#include "render/entity/healing_beam_renderer.h"
 #include "render/geom/arrow.h"
 #include "render/geom/patrol_flags.h"
 #include "render/geom/stone.h"
@@ -165,6 +167,7 @@ GameEngine::GameEngine(QObject *parent)
   m_world->add_system(std::make_unique<Game::Systems::CombatSystem>());
   m_world->add_system(std::make_unique<Game::Systems::CatapultAttackSystem>());
   m_world->add_system(std::make_unique<Game::Systems::BallistaAttackSystem>());
+  m_world->add_system(std::make_unique<Game::Systems::HealingBeamSystem>());
   m_world->add_system(std::make_unique<Game::Systems::HealingSystem>());
   m_world->add_system(std::make_unique<Game::Systems::CaptureSystem>());
   m_world->add_system(std::make_unique<Game::Systems::AISystem>());
@@ -791,6 +794,13 @@ void GameEngine::render(int pixelWidth, int pixelHeight) {
           m_world->get_system<Game::Systems::ProjectileSystem>()) {
     if (auto *res = m_renderer->resources()) {
       Render::GL::render_projectiles(m_renderer.get(), res, *projectile_system);
+    }
+  }
+  if (auto *healing_beam_system =
+          m_world->get_system<Game::Systems::HealingBeamSystem>()) {
+    if (auto *res = m_renderer->resources()) {
+      Render::GL::render_healing_beams(m_renderer.get(), res,
+                                       *healing_beam_system);
     }
   }
 

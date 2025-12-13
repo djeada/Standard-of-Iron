@@ -25,6 +25,7 @@ class CharacterPipeline;
 class WaterPipeline;
 class EffectsPipeline;
 class PrimitiveBatchPipeline;
+class BannerPipeline;
 } // namespace Render::GL::BackendPipelines
 
 namespace Render::GL {
@@ -63,6 +64,10 @@ public:
     }
     return m_shaderCache->load(name, vertPath, fragPath);
   }
+
+  [[nodiscard]] auto banner_mesh() const -> Mesh *;
+
+  [[nodiscard]] auto banner_shader() const -> Shader *;
 
   void enable_depth_test(bool enable) {
     if (enable) {
@@ -108,6 +113,7 @@ private:
   std::unique_ptr<BackendPipelines::EffectsPipeline> m_effectsPipeline;
   std::unique_ptr<BackendPipelines::PrimitiveBatchPipeline>
       m_primitiveBatchPipeline;
+  std::unique_ptr<BackendPipelines::BannerPipeline> m_bannerPipeline;
 
   Shader *m_basicShader = nullptr;
   Shader *m_gridShader = nullptr;
