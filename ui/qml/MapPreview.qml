@@ -1,5 +1,6 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
+import StandardOfIron 1.0
 
 Rectangle {
     id: root
@@ -28,9 +29,15 @@ Rectangle {
 
         loading = true;
         try {
-            // Generate a unique ID based on map path and player configs
+            // Generate a unique ID based on map path and a simple hash of configs
             var configStr = JSON.stringify(playerConfigs);
-            var newId = mapPath + "_" + configStr.length + "_" + Date.now();
+            var hash = 0;
+            for (var i = 0; i < configStr.length; i++) {
+                var char = configStr.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash = hash & hash; // Convert to 32-bit integer
+            }
+            var newId = mapPath + "_" + hash + "_" + Date.now();
             
             var preview = game.generate_map_preview(mapPath, playerConfigs);
             

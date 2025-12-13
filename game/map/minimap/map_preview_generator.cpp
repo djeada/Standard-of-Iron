@@ -18,6 +18,11 @@ namespace {
 constexpr float k_camera_yaw_cos = -0.70710678118F;
 constexpr float k_camera_yaw_sin = -0.70710678118F;
 
+// Player base marker sizing constants
+constexpr float BASE_SIZE = 16.0F;
+constexpr float INNER_SIZE_RATIO = 0.35F;
+constexpr float INNER_OFFSET_RATIO = 0.3F;
+
 } // namespace
 
 MapPreviewGenerator::MapPreviewGenerator()
@@ -111,7 +116,6 @@ void MapPreviewGenerator::draw_player_bases(
     const auto [px, py] =
         world_to_pixel(spawn.x, spawn.z, map_def.grid, pixels_per_tile);
 
-    constexpr float BASE_SIZE = 16.0F;
     constexpr float HALF = BASE_SIZE * 0.5F;
 
     QColor border_color = player_color.darker(150);
@@ -122,8 +126,9 @@ void MapPreviewGenerator::draw_player_bases(
 
     painter.setBrush(player_color.lighter(130));
     painter.setPen(Qt::NoPen);
-    constexpr float INNER_SIZE = BASE_SIZE * 0.35F;
-    painter.drawEllipse(QPointF(px - HALF * 0.3F, py - HALF * 0.3F),
+    constexpr float INNER_SIZE = BASE_SIZE * INNER_SIZE_RATIO;
+    painter.drawEllipse(QPointF(px - HALF * INNER_OFFSET_RATIO,
+                                py - HALF * INNER_OFFSET_RATIO),
                         INNER_SIZE * 0.5F, INNER_SIZE * 0.5F);
   }
 }
