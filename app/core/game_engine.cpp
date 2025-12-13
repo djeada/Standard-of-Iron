@@ -1386,9 +1386,7 @@ void GameEngine::start_skirmish(const QString &map_path,
       }
     }
 
-    if (m_ambient_state_manager) {
-      m_ambient_state_manager = std::make_unique<AmbientStateManager>();
-    }
+    m_ambient_state_manager = std::make_unique<AmbientStateManager>();
 
     Engine::Core::EventManager::instance().publish(
         Engine::Core::AmbientStateChangedEvent(
@@ -1996,5 +1994,12 @@ auto GameEngine::get_patrol_preview_waypoint() const -> QVector3D {
     return {};
   }
   return m_commandController->getPatrolFirstWaypoint();
+}
+
+auto GameEngine::minimap_image() const -> QImage {
+  if (m_minimap_manager) {
+    return m_minimap_manager->get_image();
+  }
+  return QImage();
 }
 

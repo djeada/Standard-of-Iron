@@ -9,7 +9,6 @@ struct MapDefinition;
 namespace Minimap {
 class UnitLayer;
 }
-namespace VisibilityService;
 } // namespace Game::Map
 
 namespace Engine::Core {
