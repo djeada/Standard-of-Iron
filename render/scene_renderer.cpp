@@ -76,7 +76,7 @@ void Renderer::begin_frame() {
   }
 
   if (m_backend) {
-    m_backend->beginFrame();
+    m_backend->begin_frame();
   }
 }
 
@@ -109,7 +109,7 @@ void Renderer::set_viewport(int width, int height) {
   }
   if ((m_camera != nullptr) && height > 0) {
     float const aspect = float(width) / float(height);
-    m_camera->setPerspective(m_camera->get_fov(), aspect, m_camera->get_near(),
+    m_camera->set_perspective(m_camera->get_fov(), aspect, m_camera->get_near(),
                              m_camera->get_far());
   }
 }

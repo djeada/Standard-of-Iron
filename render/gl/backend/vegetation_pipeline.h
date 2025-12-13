@@ -15,22 +15,22 @@ public:
 
   auto initialize() -> bool override;
   void shutdown() override;
-  void cacheUniforms() override;
-  [[nodiscard]] auto isInitialized() const -> bool override {
+  void cache_uniforms() override;
+  [[nodiscard]] auto is_initialized() const -> bool override {
     return m_initialized;
   }
 
-  [[nodiscard]] auto stoneShader() const -> GL::Shader * {
+  [[nodiscard]] auto stone_shader() const -> GL::Shader * {
     return m_stoneShader;
   }
-  [[nodiscard]] auto plantShader() const -> GL::Shader * {
+  [[nodiscard]] auto plant_shader() const -> GL::Shader * {
     return m_plantShader;
   }
-  [[nodiscard]] auto pineShader() const -> GL::Shader * { return m_pineShader; }
-  [[nodiscard]] auto oliveShader() const -> GL::Shader * {
+  [[nodiscard]] auto pine_shader() const -> GL::Shader * { return m_pineShader; }
+  [[nodiscard]] auto olive_shader() const -> GL::Shader * {
     return m_oliveShader;
   }
-  [[nodiscard]] auto firecampShader() const -> GL::Shader * {
+  [[nodiscard]] auto firecamp_shader() const -> GL::Shader * {
     return m_firecampShader;
   }
 

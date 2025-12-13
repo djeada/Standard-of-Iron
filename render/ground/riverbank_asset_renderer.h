@@ -26,7 +26,7 @@ public:
   void clear();
 
 private:
-  void generateAssetInstances();
+  void generate_asset_instances();
 
   std::vector<Game::Map::RiverSegment> m_riverSegments;
   int m_width = 0;

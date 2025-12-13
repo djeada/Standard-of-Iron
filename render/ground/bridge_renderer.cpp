@@ -27,10 +27,10 @@ void BridgeRenderer::configure(const std::vector<Game::Map::Bridge> &bridges,
                                float tile_size) {
   m_bridges = bridges;
   m_tile_size = tile_size;
-  buildMeshes();
+  build_meshes();
 }
 
-void BridgeRenderer::buildMeshes() {
+void BridgeRenderer::build_meshes() {
   m_meshes.clear();
 
   if (m_bridges.empty()) {

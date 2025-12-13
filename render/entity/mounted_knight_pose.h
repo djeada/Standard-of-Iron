@@ -33,7 +33,7 @@ struct MountedKnightPoseTuning {
   float swordOutsetFactor = 0.72F;
 };
 
-inline void tuneMountedKnightFrame(const HorseDimensions &dims,
+inline void tune_mounted_knight_frame(const HorseDimensions &dims,
                                    MountedAttachmentFrame &mount,
                                    const MountedKnightPoseTuning &cfg = {}) {
   auto reposition_stirrup = [&](bool is_left) {

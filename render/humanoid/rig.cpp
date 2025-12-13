@@ -175,7 +175,7 @@ auto HumanoidRendererBase::make_head_local_transform(
 void HumanoidRendererBase::get_variant(const DrawContext &ctx, uint32_t seed,
                                        HumanoidVariant &v) const {
   QVector3D const team_tint = resolve_team_tint(ctx);
-  v.palette = makeHumanoidPalette(team_tint, seed);
+  v.palette = make_humanoid_palette(team_tint, seed);
 }
 
 void HumanoidRendererBase::customize_pose(const DrawContext &,
@@ -1205,7 +1205,7 @@ void HumanoidRendererBase::draw_minimal_body(const DrawContext &ctx,
 void HumanoidRendererBase::render(const DrawContext &ctx,
                                   ISubmitter &out) const {
   FormationParams const formation = resolve_formation(ctx);
-  AnimationInputs const anim = sampleAnimState(ctx);
+  AnimationInputs const anim = sample_anim_state(ctx);
 
   Engine::Core::UnitComponent *unit_comp = nullptr;
   if (ctx.entity != nullptr) {

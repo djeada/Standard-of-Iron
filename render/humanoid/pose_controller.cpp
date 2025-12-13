@@ -71,22 +71,22 @@ void HumanoidPoseController::lean(const QVector3D &direction, float amount) {
 void HumanoidPoseController::placeHandAt(bool is_left,
                                          const QVector3D &target_position) {
 
-  getHand(is_left) = target_position;
+  get_hand(is_left) = target_position;
 
-  const QVector3D &shoulder = getShoulder(is_left);
-  const QVector3D outward_dir = computeOutwardDir(is_left);
+  const QVector3D &shoulder = get_shoulder(is_left);
+  const QVector3D outward_dir = compute_outward_dir(is_left);
 
   float const along_frac = is_left ? 0.45F : 0.48F;
   float const lateral_offset = is_left ? 0.15F : 0.12F;
   float const y_bias = is_left ? -0.08F : 0.02F;
   float const outward_sign = 1.0F;
 
-  getElbow(is_left) =
-      solveElbowIK(is_left, shoulder, target_position, outward_dir, along_frac,
+  get_elbow(is_left) =
+      solve_elbow_ik(is_left, shoulder, target_position, outward_dir, along_frac,
                    lateral_offset, y_bias, outward_sign);
 }
 
-auto HumanoidPoseController::solveElbowIK(
+auto HumanoidPoseController::solve_elbow_ik(
     bool, const QVector3D &shoulder, const QVector3D &hand,
     const QVector3D &outward_dir, float along_frac, float lateral_offset,
     float y_bias, float outward_sign) const -> QVector3D {
@@ -95,7 +95,7 @@ auto HumanoidPoseController::solveElbowIK(
                         y_bias, outward_sign);
 }
 
-auto HumanoidPoseController::solveKneeIK(
+auto HumanoidPoseController::solve_knee_ik(
     bool is_left, const QVector3D &hip, const QVector3D &foot,
     float height_scale) const -> QVector3D {
   using HP = HumanProportions;
@@ -151,24 +151,24 @@ auto HumanoidPoseController::solveKneeIK(
   return knee;
 }
 
-auto HumanoidPoseController::getShoulder(bool is_left) const
+auto HumanoidPoseController::get_shoulder(bool is_left) const
     -> const QVector3D & {
   return is_left ? m_pose.shoulder_l : m_pose.shoulder_r;
 }
 
-auto HumanoidPoseController::getHand(bool is_left) -> QVector3D & {
+auto HumanoidPoseController::get_hand(bool is_left) -> QVector3D & {
   return is_left ? m_pose.hand_l : m_pose.hand_r;
 }
 
-auto HumanoidPoseController::getHand(bool is_left) const -> const QVector3D & {
+auto HumanoidPoseController::get_hand(bool is_left) const -> const QVector3D & {
   return is_left ? m_pose.hand_l : m_pose.hand_r;
 }
 
-auto HumanoidPoseController::getElbow(bool is_left) -> QVector3D & {
+auto HumanoidPoseController::get_elbow(bool is_left) -> QVector3D & {
   return is_left ? m_pose.elbow_l : m_pose.elbow_r;
 }
 
-auto HumanoidPoseController::computeRightAxis() const -> QVector3D {
+auto HumanoidPoseController::compute_right_axis() const -> QVector3D {
   QVector3D right_axis = m_pose.shoulder_r - m_pose.shoulder_l;
   right_axis.setY(0.0F);
   if (right_axis.lengthSquared() < 1e-8F) {
@@ -178,9 +178,9 @@ auto HumanoidPoseController::computeRightAxis() const -> QVector3D {
   return right_axis;
 }
 
-auto HumanoidPoseController::computeOutwardDir(bool is_left) const
+auto HumanoidPoseController::compute_outward_dir(bool is_left) const
     -> QVector3D {
-  QVector3D const right_axis = computeRightAxis();
+  QVector3D const right_axis = compute_right_axis();
   return is_left ? -right_axis : right_axis;
 }
 
@@ -192,7 +192,7 @@ auto HumanoidPoseController::get_pelvis_y() const -> float {
   return m_pose.pelvis_pos.y();
 }
 
-void HumanoidPoseController::aimBow(float draw_phase) {
+void HumanoidPoseController::aim_bow(float draw_phase) {
   using HP = HumanProportions;
 
   draw_phase = std::clamp(draw_phase, 0.0F, 1.0F);
@@ -291,7 +291,7 @@ void HumanoidPoseController::graspTwoHanded(const QVector3D &grip_center,
                                             float hand_separation) {
   hand_separation = std::clamp(hand_separation, 0.1F, 0.8F);
 
-  QVector3D const right_axis = computeRightAxis();
+  QVector3D const right_axis = compute_right_axis();
 
   QVector3D const right_hand_pos =
       grip_center + right_axis * (hand_separation * 0.5F);
@@ -373,7 +373,7 @@ void HumanoidPoseController::spearThrust(float attack_phase) {
   placeHandAt(true, hand_l_target);
 }
 
-void HumanoidPoseController::swordSlash(float attack_phase) {
+void HumanoidPoseController::sword_slash(float attack_phase) {
   using HP = HumanProportions;
 
   attack_phase = std::clamp(attack_phase, 0.0F, 1.0F);
@@ -435,7 +435,7 @@ void HumanoidPoseController::swordSlash(float attack_phase) {
   placeHandAt(true, hand_l_target);
 }
 
-void HumanoidPoseController::mountOnHorse(float saddle_height) {
+void HumanoidPoseController::mount_on_horse(float saddle_height) {
 
   float const offset_y = saddle_height - m_pose.pelvis_pos.y();
   m_pose.pelvis_pos.setY(saddle_height);

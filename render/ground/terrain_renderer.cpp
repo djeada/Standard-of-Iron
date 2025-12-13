@@ -88,7 +88,7 @@ void TerrainRenderer::configure(const Game::Map::TerrainHeightMap &height_map,
   m_terrain_types = height_map.getTerrainTypes();
   m_biomeSettings = biomeSettings;
   m_noiseSeed = biomeSettings.seed;
-  buildMeshes();
+  build_meshes();
 }
 
 void TerrainRenderer::submit(Renderer &renderer, ResourceManager *resources) {
@@ -127,7 +127,7 @@ void TerrainRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   }
 }
 
-auto TerrainRenderer::sectionFor(Game::Map::TerrainType type) -> int {
+auto TerrainRenderer::section_for(Game::Map::TerrainType type) -> int {
   switch (type) {
   case Game::Map::TerrainType::Mountain:
     return 2;
@@ -139,7 +139,7 @@ auto TerrainRenderer::sectionFor(Game::Map::TerrainType type) -> int {
   }
 }
 
-void TerrainRenderer::buildMeshes() {
+void TerrainRenderer::build_meshes() {
   QElapsedTimer timer;
   timer.start();
 
@@ -307,10 +307,10 @@ void TerrainRenderer::buildMeshes() {
 
   auto quad_section = [&](Game::Map::TerrainType a, Game::Map::TerrainType b,
                           Game::Map::TerrainType c, Game::Map::TerrainType d) {
-    int const priority_a = sectionFor(a);
-    int const priority_b = sectionFor(b);
-    int const priority_c = sectionFor(c);
-    int const priority_d = sectionFor(d);
+    int const priority_a = section_for(a);
+    int const priority_b = section_for(b);
+    int const priority_c = section_for(c);
+    int const priority_d = section_for(d);
     int result = priority_a;
     result = std::max(result, priority_b);
     result = std::max(result, priority_c);

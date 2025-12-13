@@ -22,7 +22,7 @@ class ChainmailArmorRenderer : public IEquipmentRenderer {
 public:
   ChainmailArmorRenderer() = default;
 
-  void setConfig(const ChainmailArmorConfig &config) { m_config = config; }
+  void set_config(const ChainmailArmorConfig &config) { m_config = config; }
 
   void render(const DrawContext &ctx, const BodyFrames &frames,
               const HumanoidPalette &palette,
@@ -42,7 +42,7 @@ private:
                          float radius, float height, const QVector3D &up,
                          const QVector3D &right, ISubmitter &submitter);
 
-  auto calculateRingColor(float x, float y, float z) const -> QVector3D;
+  auto calculate_ring_color(float x, float y, float z) const -> QVector3D;
 };
 
 } // namespace Render::GL

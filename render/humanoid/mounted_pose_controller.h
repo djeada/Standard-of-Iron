@@ -17,7 +17,7 @@ public:
   MountedPoseController(HumanoidPose &pose,
                         const HumanoidAnimationContext &anim_ctx);
 
-  void mountOnHorse(const MountedAttachmentFrame &mount);
+  void mount_on_horse(const MountedAttachmentFrame &mount);
   void dismount();
 
   void ridingIdle(const MountedAttachmentFrame &mount);
@@ -73,64 +73,64 @@ public:
     bool rightHandOnReins{true};
   };
 
-  void applyPose(const MountedAttachmentFrame &mount,
+  void apply_pose(const MountedAttachmentFrame &mount,
                  const MountedRiderPoseRequest &request);
 
-  void finalizeHeadSync(const MountedAttachmentFrame &mount,
+  void finalize_head_sync(const MountedAttachmentFrame &mount,
                         std::string_view debug_label = "final_head_sync");
 
 private:
   HumanoidPose &m_pose;
   const HumanoidAnimationContext &m_anim_ctx;
 
-  void attachFeetToStirrups(const MountedAttachmentFrame &mount);
+  void attach_feet_to_stirrups(const MountedAttachmentFrame &mount);
   void positionPelvisOnSaddle(const MountedAttachmentFrame &mount);
-  void translateUpperBody(const QVector3D &delta);
-  void calculateRidingKnees(const MountedAttachmentFrame &mount);
+  void translate_upper_body(const QVector3D &delta);
+  void calculate_riding_knees(const MountedAttachmentFrame &mount);
 
-  auto solveElbowIK(bool is_left, const QVector3D &shoulder,
+  auto solve_elbow_ik(bool is_left, const QVector3D &shoulder,
                     const QVector3D &hand, const QVector3D &outward_dir,
                     float along_frac, float lateral_offset, float y_bias,
                     float outward_sign) const -> QVector3D;
 
-  auto solveKneeIK(bool is_left, const QVector3D &hip, const QVector3D &foot,
+  auto solve_knee_ik(bool is_left, const QVector3D &hip, const QVector3D &foot,
                    float height_scale) const -> QVector3D;
 
-  auto getShoulder(bool is_left) const -> const QVector3D &;
-  auto getHand(bool is_left) -> QVector3D &;
-  auto getHand(bool is_left) const -> const QVector3D &;
-  auto getElbow(bool is_left) -> QVector3D &;
-  auto computeRightAxis() const -> QVector3D;
-  auto computeOutwardDir(bool is_left) const -> QVector3D;
+  auto get_shoulder(bool is_left) const -> const QVector3D &;
+  auto get_hand(bool is_left) -> QVector3D &;
+  auto get_hand(bool is_left) const -> const QVector3D &;
+  auto get_elbow(bool is_left) -> QVector3D &;
+  auto compute_right_axis() const -> QVector3D;
+  auto compute_outward_dir(bool is_left) const -> QVector3D;
 
-  void applyLean(const MountedAttachmentFrame &mount, float forward_lean,
+  void apply_lean(const MountedAttachmentFrame &mount, float forward_lean,
                  float side_lean);
-  void applyShieldDefense(const MountedAttachmentFrame &mount, bool raised);
-  void applyShieldStowed(const MountedAttachmentFrame &mount,
+  void apply_shield_defense(const MountedAttachmentFrame &mount, bool raised);
+  void apply_shield_stowed(const MountedAttachmentFrame &mount,
                          const HorseDimensions &dims);
-  void applySwordIdlePose(const MountedAttachmentFrame &mount,
+  void apply_sword_idle_pose(const MountedAttachmentFrame &mount,
                           const HorseDimensions &dims);
-  void applySwordStrike(const MountedAttachmentFrame &mount, float attack_phase,
+  void apply_sword_strike(const MountedAttachmentFrame &mount, float attack_phase,
                         bool keep_left_hand);
-  void applySpearThrust(const MountedAttachmentFrame &mount,
+  void apply_spear_thrust(const MountedAttachmentFrame &mount,
                         float attack_phase);
-  void applySpearGuard(const MountedAttachmentFrame &mount, SpearGrip grip);
-  void applyBowDraw(const MountedAttachmentFrame &mount, float draw_phase);
-  void applySaddleClearance(const MountedAttachmentFrame &mount,
+  void apply_spear_guard(const MountedAttachmentFrame &mount, SpearGrip grip);
+  void apply_bow_draw(const MountedAttachmentFrame &mount, float draw_phase);
+  void apply_saddle_clearance(const MountedAttachmentFrame &mount,
                             const HorseDimensions &dims, float forward_bias,
                             float up_bias);
   void stabilizeUpperBody(const MountedAttachmentFrame &mount,
                           const HorseDimensions &dims);
-  void applyTorsoSculpt(const MountedAttachmentFrame &mount, float compression,
+  void apply_torso_sculpt(const MountedAttachmentFrame &mount, float compression,
                         float twist, float shoulderDip);
-  void updateHeadHierarchy(const MountedAttachmentFrame &mount,
+  void update_head_hierarchy(const MountedAttachmentFrame &mount,
                            float extra_forward_tilt, float extra_side_tilt,
                            std::string_view debug_label = "head_sync");
   void holdReinsImpl(const MountedAttachmentFrame &mount, float left_slack,
                      float right_slack, float left_tension, float right_tension,
                      bool apply_left, bool apply_right);
 
-  void applyFixedHeadFrame(const MountedAttachmentFrame &mount,
+  void apply_fixed_head_frame(const MountedAttachmentFrame &mount,
                            std::string_view debug_label);
 };
 

@@ -8,7 +8,7 @@ namespace Render::GL {
 
 using Render::Geom::clampVec01;
 
-auto makeHumanoidPalette(const QVector3D &team_tint,
+auto make_humanoid_palette(const QVector3D &team_tint,
                          uint32_t seed) -> HumanoidPalette {
   HumanoidPalette p;
 

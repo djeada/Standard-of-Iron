@@ -716,7 +716,7 @@ void GameEngine::update(float dt) {
       const auto new_version = visibility_service.version();
       if (new_version != m_runtime.visibilityVersion) {
         if (m_fog) {
-          m_fog->updateMask(visibility_service.getWidth(),
+          m_fog->update_mask(visibility_service.getWidth(),
                             visibility_service.getHeight(),
                             visibility_service.getTileSize(),
                             visibility_service.snapshotCells());
@@ -784,7 +784,7 @@ void GameEngine::render(int pixelWidth, int pixelHeight) {
   m_renderer->render_world(m_world.get());
   if (auto *arrow_system = m_world->get_system<Game::Systems::ArrowSystem>()) {
     if (auto *res = m_renderer->resources()) {
-      Render::GL::renderArrows(m_renderer.get(), res, *arrow_system);
+      Render::GL::render_arrows(m_renderer.get(), res, *arrow_system);
     }
   }
   if (auto *projectile_system =
@@ -936,7 +936,7 @@ void GameEngine::camera_set_follow_lerp(float alpha) {
     return;
   }
 
-  m_cameraService->setFollowLerp(*m_camera, alpha);
+  m_cameraService->set_follow_lerp(*m_camera, alpha);
 }
 
 auto GameEngine::selected_units_model() -> QAbstractItemModel * {
@@ -1334,7 +1334,7 @@ void GameEngine::start_skirmish(const QString &map_path,
 
     if (result.hasFocusPosition && m_camera) {
       const auto &cam_config = Game::GameConfig::instance().camera();
-      m_camera->setRTSView(result.focusPosition, cam_config.defaultDistance,
+      m_camera->set_rts_view(result.focusPosition, cam_config.defaultDistance,
                            cam_config.defaultPitch, cam_config.defaultYaw);
     }
 
@@ -1925,7 +1925,7 @@ void GameEngine::restore_environment_from_metadata(
     visibility_service.computeImmediate(*m_world, m_runtime.local_owner_id);
 
     if (m_fog && visibility_service.isInitialized()) {
-      m_fog->updateMask(
+      m_fog->update_mask(
           visibility_service.getWidth(), visibility_service.getHeight(),
           visibility_service.getTileSize(), visibility_service.snapshotCells());
     }
@@ -1957,7 +1957,7 @@ void GameEngine::restore_environment_from_metadata(
                                   fallback_tile_size);
     visibility_service.computeImmediate(*m_world, m_runtime.local_owner_id);
     if (m_fog && visibility_service.isInitialized()) {
-      m_fog->updateMask(
+      m_fog->update_mask(
           visibility_service.getWidth(), visibility_service.getHeight(),
           visibility_service.getTileSize(), visibility_service.snapshotCells());
     }
