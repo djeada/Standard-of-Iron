@@ -41,7 +41,7 @@ void BuildingCollisionRegistry::register_building(
 
   if (m_entityToIndex.find(entity_id) != m_entityToIndex.end()) {
 
-    updateBuildingPosition(entity_id, center_x, center_z);
+    update_building_position(entity_id, center_x, center_z);
     return;
   }
 
@@ -80,8 +80,8 @@ void BuildingCollisionRegistry::unregister_building(unsigned int entity_id) {
 }
 
 void BuildingCollisionRegistry::update_building_position(unsigned int entity_id,
-                                                       float center_x,
-                                                       float center_z) {
+                                                         float center_x,
+                                                         float center_z) {
   auto it = m_entityToIndex.find(entity_id);
   if (it == m_entityToIndex.end()) {
     return;
@@ -97,7 +97,7 @@ void BuildingCollisionRegistry::update_building_position(unsigned int entity_id,
 }
 
 void BuildingCollisionRegistry::update_building_owner(unsigned int entity_id,
-                                                    int owner_id) {
+                                                      int owner_id) {
   auto it = m_entityToIndex.find(entity_id);
   if (it == m_entityToIndex.end()) {
     return;

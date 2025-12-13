@@ -64,7 +64,7 @@ void CameraService::orbit_direction(Render::GL::Camera &camera, int direction,
 
 void CameraService::follow_selection(Render::GL::Camera &camera,
                                      Engine::Core::World &world, bool enable) {
-  m_controller->setFollowEnabled(camera, enable);
+  m_controller->set_follow_enabled(camera, enable);
 
   if (enable) {
     if (auto *selection_system = world.get_system<SelectionSystem>()) {
@@ -79,7 +79,7 @@ void CameraService::follow_selection(Render::GL::Camera &camera,
 
 void CameraService::set_follow_lerp(Render::GL::Camera &camera, float alpha) {
   float const a = std::clamp(alpha, 0.0F, 1.0F);
-  m_controller->setFollowLerp(camera, a);
+  m_controller->set_follow_lerp(camera, a);
 }
 
 void CameraService::resetCamera(Render::GL::Camera &camera,

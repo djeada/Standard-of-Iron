@@ -109,7 +109,8 @@ auto NationRegistry::getNation(NationID nationId) const -> const Nation * {
   return &m_nations[it->second];
 }
 
-auto NationRegistry::get_nation_for_player(int player_id) const -> const Nation * {
+auto NationRegistry::get_nation_for_player(int player_id) const
+    -> const Nation * {
 
   auto it = m_playerNations.find(player_id);
   if (it != m_playerNations.end()) {
@@ -123,7 +124,7 @@ auto NationRegistry::get_nation_for_player(int player_id) const -> const Nation 
   return nation;
 }
 
-void NationRegistry::setPlayerNation(int player_id, NationID nationId) {
+void NationRegistry::set_player_nation(int player_id, NationID nationId) {
   m_playerNations[player_id] = nationId;
 }
 
@@ -163,12 +164,12 @@ void NationRegistry::initialize_defaults() {
     appendTroop(Game::Units::TroopType::Spearman);
     appendTroop(Game::Units::TroopType::MountedKnight);
 
-    registerNation(std::move(roman));
+    register_nation(std::move(roman));
     m_defaultNation = NationID::RomanRepublic;
   } else {
     NationID fallback_default = nations.front().id;
     for (auto &nation : nations) {
-      registerNation(std::move(nation));
+      register_nation(std::move(nation));
     }
     m_defaultNation = fallback_default;
   }

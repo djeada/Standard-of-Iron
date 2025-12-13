@@ -34,7 +34,7 @@ AISystem::AISystem() {
   m_buildingAttackedSubscription = Engine::Core::ScopedEventSubscription<
       Engine::Core::BuildingAttackedEvent>(
       [this](const Engine::Core::BuildingAttackedEvent &event) {
-        this->onBuildingAttacked(event);
+        this->on_building_attacked(event);
       });
 
   initializeAIPlayers();
@@ -77,7 +77,7 @@ void AISystem::update(Engine::Core::World *world, float delta_time) {
 
   m_commandFilter.update(m_total_game_time);
 
-  processResults(*world);
+  process_results(*world);
 
   for (auto &ai : m_aiInstances) {
 
@@ -93,7 +93,7 @@ void AISystem::update(Engine::Core::World *world, float delta_time) {
 
     AI::AISnapshot snapshot = Game::Systems::AI::AISnapshotBuilder::build(
         *world, ai.context.player_id);
-    snapshot.gameTime = m_total_game_time;
+    snapshot.game_time = m_total_game_time;
 
     AI::AIJob job;
     job.snapshot = std::move(snapshot);
@@ -136,7 +136,7 @@ void AISystem::on_building_attacked(
       ai.context.buildingsUnderAttack[event.buildingId] = m_total_game_time;
 
       if (event.buildingId == ai.context.primaryBarracks) {
-        ai.context.barracksUnderThreat = true;
+        ai.context.barracks_under_threat = true;
       }
       break;
     }

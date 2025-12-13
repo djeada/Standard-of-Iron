@@ -108,7 +108,7 @@ auto SkirmishLoader::start(const QString &map_path,
                            int &out_selected_player_id) -> SkirmishLoadResult {
   SkirmishLoadResult result;
 
-  resetGameState();
+  reset_game_state();
 
   QSet<int> map_player_ids;
   QFile map_file(map_path);
@@ -229,20 +229,20 @@ auto SkirmishLoader::start(const QString &map_path,
     int player_id = *it;
     auto nat_it = nation_overrides.find(player_id);
     if (nat_it != nation_overrides.end()) {
-      nation_registry.setPlayerNation(player_id, nat_it->second);
+      nation_registry.set_player_nation(player_id, nat_it->second);
     } else {
-      nation_registry.setPlayerNation(player_id,
-                                      nation_registry.default_nation_id());
+      nation_registry.set_player_nation(player_id,
+                                        nation_registry.default_nation_id());
     }
   }
 
   if (map_player_ids.isEmpty()) {
     auto nat_it = nation_overrides.find(player_owner_id);
     if (nat_it != nation_overrides.end()) {
-      nation_registry.setPlayerNation(player_owner_id, nat_it->second);
+      nation_registry.set_player_nation(player_owner_id, nat_it->second);
     } else {
-      nation_registry.setPlayerNation(player_owner_id,
-                                      nation_registry.default_nation_id());
+      nation_registry.set_player_nation(player_owner_id,
+                                        nation_registry.default_nation_id());
     }
   }
 
@@ -273,7 +273,7 @@ auto SkirmishLoader::start(const QString &map_path,
         const int green = color_hex.mid(3, 2).toInt(&conversion_ok, hex_base);
         const int blue = color_hex.mid(5, 2).toInt(&conversion_ok, hex_base);
         owner_registry.set_owner_color(player_id, red / color_scale,
-                                     green / color_scale, blue / color_scale);
+                                       green / color_scale, blue / color_scale);
       }
     }
 
@@ -347,8 +347,9 @@ auto SkirmishLoader::start(const QString &map_path,
   if (m_riverbank != nullptr) {
     if (terrain_service.is_initialized() &&
         (terrain_service.get_height_map() != nullptr)) {
-      m_riverbank->configure(terrain_service.get_height_map()->getRiverSegments(),
-                             *terrain_service.get_height_map());
+      m_riverbank->configure(
+          terrain_service.get_height_map()->getRiverSegments(),
+          *terrain_service.get_height_map());
     }
   }
 

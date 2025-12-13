@@ -57,7 +57,8 @@ void RetreatBehavior::execute(const AISnapshot &snapshot, AIContext &context,
     return;
   }
 
-  QVector3D retreat_pos(context.base_pos_x, context.base_pos_y, context.base_pos_z);
+  QVector3D retreat_pos(context.base_pos_x, context.base_pos_y,
+                        context.base_pos_z);
 
   retreat_pos.setX(retreat_pos.x() - 8.0F);
 

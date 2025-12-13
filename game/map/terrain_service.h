@@ -18,10 +18,10 @@ public:
   void clear();
 
   [[nodiscard]] auto get_terrain_height(float world_x,
-                                      float world_z) const -> float;
+                                        float world_z) const -> float;
 
   [[nodiscard]] auto get_terrain_height_grid(int grid_x,
-                                          int grid_z) const -> float;
+                                             int grid_z) const -> float;
 
   [[nodiscard]] auto is_walkable(int grid_x, int grid_z) const -> bool;
 
@@ -30,10 +30,10 @@ public:
   [[nodiscard]] auto is_forbidden(int grid_x, int grid_z) const -> bool;
 
   [[nodiscard]] auto is_forbidden_world(float world_x,
-                                      float world_z) const -> bool;
+                                        float world_z) const -> bool;
 
   [[nodiscard]] auto get_terrain_type(int grid_x,
-                                    int grid_z) const -> TerrainType;
+                                      int grid_z) const -> TerrainType;
 
   [[nodiscard]] auto get_height_map() const -> const TerrainHeightMap * {
     return m_height_map.get();
@@ -59,12 +59,12 @@ public:
   }
 
   void restore_from_serialized(int width, int height, float tile_size,
-                             const std::vector<float> &heights,
-                             const std::vector<TerrainType> &terrain_types,
-                             const std::vector<RiverSegment> &rivers,
-                             const std::vector<RoadSegment> &roads,
-                             const std::vector<Bridge> &bridges,
-                             const BiomeSettings &biome);
+                               const std::vector<float> &heights,
+                               const std::vector<TerrainType> &terrain_types,
+                               const std::vector<RiverSegment> &rivers,
+                               const std::vector<RoadSegment> &roads,
+                               const std::vector<Bridge> &bridges,
+                               const BiomeSettings &biome);
 
 private:
   TerrainService() = default;

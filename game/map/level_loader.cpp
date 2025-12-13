@@ -75,7 +75,8 @@ auto LevelLoader::loadFromAssets(
 
     const Game::Visuals::VisualCatalog *catalog_ptr =
         visuals_loaded ? &visual_catalog : nullptr;
-    auto rt = Game::Map::MapTransformer::applyToWorld(def, world, catalog_ptr);
+    auto rt =
+        Game::Map::MapTransformer::apply_to_world(def, world, catalog_ptr);
     if (!rt.unit_ids.empty()) {
       res.player_unit_id = rt.unit_ids.front();
     } else {

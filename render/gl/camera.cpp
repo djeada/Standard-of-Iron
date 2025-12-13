@@ -603,7 +603,7 @@ void Camera::applySoftBoundaries(bool isPanning) {
   }
 
   auto &vis = Game::Map::VisibilityService::instance();
-  if (!vis.isInitialized()) {
+  if (!vis.is_initialized()) {
     return;
   }
 

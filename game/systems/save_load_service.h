@@ -25,10 +25,10 @@ public:
                       const QJsonObject &metadata = {},
                       const QByteArray &screenshot = QByteArray()) -> bool;
 
-  auto loadGameFromSlot(Engine::Core::World &world,
-                        const QString &slotName) -> bool;
+  auto load_game_from_slot(Engine::Core::World &world,
+                           const QString &slotName) -> bool;
 
-  auto getSaveSlots() const -> QVariantList;
+  auto get_save_slots() const -> QVariantList;
 
   auto deleteSaveSlot(const QString &slotName) -> bool;
 

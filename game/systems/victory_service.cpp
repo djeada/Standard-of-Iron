@@ -88,12 +88,12 @@ void VictoryService::update(Engine::Core::World &world, float delta_time) {
     m_elapsed_time += delta_time;
   }
 
-  checkVictoryConditions(world);
+  check_victory_conditions(world);
   if (!m_victoryState.isEmpty()) {
     return;
   }
 
-  checkDefeatConditions(world);
+  check_defeat_conditions(world);
 }
 
 void VictoryService::on_unit_died(const Engine::Core::UnitDiedEvent &event) {}
@@ -105,12 +105,12 @@ void VictoryService::on_barrack_captured(
     return;
   }
 
-  checkVictoryConditions(*m_worldPtr);
+  check_victory_conditions(*m_worldPtr);
   if (!m_victoryState.isEmpty()) {
     return;
   }
 
-  checkDefeatConditions(*m_worldPtr);
+  check_defeat_conditions(*m_worldPtr);
 }
 
 void VictoryService::check_victory_conditions(Engine::Core::World &world) {
@@ -118,7 +118,7 @@ void VictoryService::check_victory_conditions(Engine::Core::World &world) {
 
   switch (m_victoryType) {
   case VictoryType::Elimination:
-    victory = checkElimination(world);
+    victory = check_elimination(world);
     break;
   case VictoryType::SurviveTime:
     victory = checkSurviveTime();
@@ -160,10 +160,10 @@ void VictoryService::check_defeat_conditions(Engine::Core::World &world) {
 
     switch (condition) {
     case DefeatCondition::NoUnits:
-      defeat = checkNoUnits(world);
+      defeat = check_no_units(world);
       break;
     case DefeatCondition::NoKeyStructures:
-      defeat = checkNoKeyStructures(world);
+      defeat = check_no_key_structures(world);
       break;
     case DefeatCondition::TimeExpired:
 
@@ -252,7 +252,8 @@ auto VictoryService::check_no_units(Engine::Core::World &world) const -> bool {
   return true;
 }
 
-auto VictoryService::check_no_key_structures(Engine::Core::World &world) -> bool {
+auto VictoryService::check_no_key_structures(Engine::Core::World &world)
+    -> bool {
 
   auto entities = world.get_entities_with<Engine::Core::UnitComponent>();
   for (auto *e : entities) {

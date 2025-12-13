@@ -437,7 +437,7 @@ This roadmap replaces the single nation template with a scalable civilization la
 ### Phase 3 — Multi-Nation Support
 - Author Roman and Carthaginian JSON definitions with differentiated stats, formations, and renderer ids; set the default nation in `NationRegistry` to one of them.
 - Rename the shared melee infantry profile to `Swordsman` so nations can share core assets while still tuning stats in their override files.
-- Audit gameplay systems (AI build orders, UI panels, tutorials) to resolve troop data via `NationRegistry::getNationForPlayer` instead of assuming Kingdom of Iron.
+- Audit gameplay systems (AI build orders, UI panels, tutorials) to resolve troop data via `NationRegistry::get_nation_for_player` instead of assuming Kingdom of Iron.
 - Register renderer variants (e.g., `render/entity/roman_archer_renderer.cpp`) keyed by the profile’s renderer id, with graceful fallbacks to baseline assets.
 - Add hooks for balance levers (passive modifiers, tech prerequisites) inside `NationTroopVariant` so future expansions require data changes rather than engine rewrites.
 

@@ -480,12 +480,12 @@ auto SaveStorage::ensureSchema(QString *out_error) const -> bool {
     return false;
   }
 
-  if (!migrateSchema(current_version, out_error)) {
+  if (!migrate_schema(current_version, out_error)) {
     transaction.rollback();
     return false;
   }
 
-  if (!setSchemaVersion(k_current_schema_version, out_error)) {
+  if (!set_schema_version(k_current_schema_version, out_error)) {
     transaction.rollback();
     return false;
   }
@@ -515,7 +515,7 @@ auto SaveStorage::schemaVersion(QString *out_error) const -> int {
 }
 
 auto SaveStorage::set_schema_version(int version,
-                                   QString *out_error) const -> bool {
+                                     QString *out_error) const -> bool {
   QSqlQuery pragma_query(m_database);
   if (!pragma_query.exec(
           QStringLiteral("PRAGMA user_version = %1").arg(version))) {
@@ -567,7 +567,7 @@ auto SaveStorage::createBaseSchema(QString *out_error) const -> bool {
 }
 
 auto SaveStorage::migrate_schema(int fromVersion,
-                                QString *out_error) const -> bool {
+                                 QString *out_error) const -> bool {
   int version = fromVersion;
 
   while (version < k_current_schema_version) {

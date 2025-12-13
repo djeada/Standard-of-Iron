@@ -13,7 +13,7 @@ public:
 
   static auto availableMaps() -> QVariantList;
 
-  Q_INVOKABLE void loadMapsAsync();
+  Q_INVOKABLE void load_maps_async();
 
   [[nodiscard]] auto isLoading() const -> bool { return m_loading; }
   [[nodiscard]] auto maps() const -> const QVariantList & { return m_maps; }

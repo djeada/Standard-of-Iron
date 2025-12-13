@@ -58,35 +58,35 @@ public:
   SkirmishLoader(Engine::Core::World &world, Render::GL::Renderer &renderer,
                  Render::GL::Camera &camera);
 
-  void setGroundRenderer(Render::GL::GroundRenderer *ground) {
+  void set_ground_renderer(Render::GL::GroundRenderer *ground) {
     m_ground = ground;
   }
-  void setTerrainRenderer(Render::GL::TerrainRenderer *terrain) {
+  void set_terrain_renderer(Render::GL::TerrainRenderer *terrain) {
     m_terrain = terrain;
   }
-  void setBiomeRenderer(Render::GL::BiomeRenderer *biome) { m_biome = biome; }
-  void setRiverRenderer(Render::GL::RiverRenderer *river) { m_river = river; }
-  void setRoadRenderer(Render::GL::RoadRenderer *road) { m_road = road; }
-  void setRiverbankRenderer(Render::GL::RiverbankRenderer *riverbank) {
+  void set_biome_renderer(Render::GL::BiomeRenderer *biome) { m_biome = biome; }
+  void set_river_renderer(Render::GL::RiverRenderer *river) { m_river = river; }
+  void set_road_renderer(Render::GL::RoadRenderer *road) { m_road = road; }
+  void set_riverbank_renderer(Render::GL::RiverbankRenderer *riverbank) {
     m_riverbank = riverbank;
   }
-  void setBridgeRenderer(Render::GL::BridgeRenderer *bridge) {
+  void set_bridge_renderer(Render::GL::BridgeRenderer *bridge) {
     m_bridge = bridge;
   }
-  void setFogRenderer(Render::GL::FogRenderer *fog) { m_fog = fog; }
-  void setStoneRenderer(Render::GL::StoneRenderer *stone) { m_stone = stone; }
-  void setPlantRenderer(Render::GL::PlantRenderer *plant) { m_plant = plant; }
-  void setPineRenderer(Render::GL::PineRenderer *pine) { m_pine = pine; }
-  void setOliveRenderer(Render::GL::OliveRenderer *olive) { m_olive = olive; }
-  void setFireCampRenderer(Render::GL::FireCampRenderer *firecamp) {
+  void set_fog_renderer(Render::GL::FogRenderer *fog) { m_fog = fog; }
+  void set_stone_renderer(Render::GL::StoneRenderer *stone) { m_stone = stone; }
+  void set_plant_renderer(Render::GL::PlantRenderer *plant) { m_plant = plant; }
+  void set_pine_renderer(Render::GL::PineRenderer *pine) { m_pine = pine; }
+  void set_olive_renderer(Render::GL::OliveRenderer *olive) { m_olive = olive; }
+  void set_fire_camp_renderer(Render::GL::FireCampRenderer *firecamp) {
     m_firecamp = firecamp;
   }
 
-  void setOnOwnersUpdated(OwnersUpdatedCallback callback) {
+  void set_on_owners_updated(OwnersUpdatedCallback callback) {
     m_onOwnersUpdated = std::move(callback);
   }
 
-  void setOnVisibilityMaskReady(VisibilityMaskReadyCallback callback) {
+  void set_on_visibility_mask_ready(VisibilityMaskReadyCallback callback) {
     m_onVisibilityMaskReady = std::move(callback);
   }
 
@@ -95,7 +95,7 @@ public:
              int &out_selected_player_id) -> SkirmishLoadResult;
 
 private:
-  void resetGameState();
+  void reset_game_state();
   Engine::Core::World &m_world;
   Render::GL::Renderer &m_renderer;
   Render::GL::Camera &m_camera;

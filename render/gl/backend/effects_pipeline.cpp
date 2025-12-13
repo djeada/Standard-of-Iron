@@ -24,7 +24,7 @@ auto EffectsPipeline::initialize() -> bool {
 
   cacheUniforms();
 
-  return isInitialized();
+  return is_initialized();
 }
 
 void EffectsPipeline::shutdown() {
@@ -37,7 +37,7 @@ void EffectsPipeline::cacheUniforms() {
   cacheGridUniforms();
 }
 
-auto EffectsPipeline::isInitialized() const -> bool {
+auto EffectsPipeline::is_initialized() const -> bool {
   return m_basicShader != nullptr && m_gridShader != nullptr;
 }
 

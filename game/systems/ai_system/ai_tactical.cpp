@@ -226,7 +226,7 @@ auto TacticalUtils::getUnitTypePriority(const std::string &unit_type,
   }
 
   auto spawn_type = Game::Units::spawn_typeFromString(unit_type);
-  if (spawn_type && Game::Units::is_buildingSpawn(*spawn_type)) {
+  if (spawn_type && Game::Units::is_building_spawn(*spawn_type)) {
     return 0.5F;
   }
 

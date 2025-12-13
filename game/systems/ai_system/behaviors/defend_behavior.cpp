@@ -228,7 +228,7 @@ void DefendBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   }
 
   const Nation *nation =
-      NationRegistry::instance().getNationForPlayer(context.player_id);
+      NationRegistry::instance().get_nation_for_player(context.player_id);
   FormationType formation_type = FormationType::Roman;
   if (nation != nullptr) {
     formation_type = nation->formation_type;

@@ -13,8 +13,9 @@ namespace Game::Systems::AI {
 void AIReasoner::updateContext(const AISnapshot &snapshot, AIContext &ctx) {
 
   if (ctx.nation == nullptr) {
-    ctx.nation = Game::Systems::NationRegistry::instance().getNationForPlayer(
-        ctx.player_id);
+    ctx.nation =
+        Game::Systems::NationRegistry::instance().get_nation_for_player(
+            ctx.player_id);
   }
 
   cleanupDeadUnits(snapshot, ctx);
@@ -127,8 +128,9 @@ void AIReasoner::updateContext(const AISnapshot &snapshot, AIContext &ctx) {
     }
 
     if (ctx.primaryBarracks != 0) {
-      float const dist = distance(enemy.posX, enemy.posY, enemy.posZ,
-                                  ctx.base_pos_x, ctx.base_pos_y, ctx.base_pos_z);
+      float const dist =
+          distance(enemy.posX, enemy.posY, enemy.posZ, ctx.base_pos_x,
+                   ctx.base_pos_y, ctx.base_pos_z);
       total_enemy_dist += dist;
     }
   }
@@ -155,7 +157,8 @@ void AIReasoner::updateContext(const AISnapshot &snapshot, AIContext &ctx) {
         ctx.nearby_threat_count++;
 
         float const dist = std::sqrt(std::max(dist_sq, 0.0F));
-        ctx.closest_threat_distance = std::min(ctx.closest_threat_distance, dist);
+        ctx.closest_threat_distance =
+            std::min(ctx.closest_threat_distance, dist);
       }
     }
 

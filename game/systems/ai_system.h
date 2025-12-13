@@ -52,9 +52,9 @@ private:
 
   void initializeAIPlayers();
 
-  void processResults(Engine::Core::World &world);
+  void process_results(Engine::Core::World &world);
 
-  void onBuildingAttacked(const Engine::Core::BuildingAttackedEvent &event);
+  void on_building_attacked(const Engine::Core::BuildingAttackedEvent &event);
 };
 
 } // namespace Game::Systems
