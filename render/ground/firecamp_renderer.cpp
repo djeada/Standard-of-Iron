@@ -124,7 +124,7 @@ void FireCampRenderer::submit(Renderer &renderer, ResourceManager *resources) {
             std::make_unique<Buffer>(Buffer::Type::Vertex);
       }
       m_fireCampInstanceBuffer->set_data(m_visibleInstances,
-                                        Buffer::Usage::Static);
+                                         Buffer::Usage::Static);
     }
   }
 

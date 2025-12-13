@@ -417,8 +417,8 @@ void register_spearman_renderer(Render::GL::EntityRendererRegistry &registry) {
             return shader;
           }
           if (auto resources = lookup_spearman_shader_resources(shader_key)) {
-            shader = ctx.backend->get_or_load_shader(shader_key, resources->vertex,
-                                                  resources->fragment);
+            shader = ctx.backend->get_or_load_shader(
+                shader_key, resources->vertex, resources->fragment);
           }
           return shader;
         };

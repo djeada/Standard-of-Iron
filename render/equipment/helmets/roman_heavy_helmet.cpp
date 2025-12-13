@@ -115,9 +115,10 @@ void RomanHeavyHelmetRenderer::render(const DrawContext &ctx,
       cylinder_between(ctx.model, crest_base, crest_mid, crest_mount_radius),
       brass_color, nullptr, 1.0f, 2);
 
-  submitter.mesh(get_unit_cone(),
-                 cone_from_to(ctx.model, crest_mid, crest_top, crest_cone_radius),
-                 QVector3D(0.96f, 0.12f, 0.12f), nullptr, 1.0f, 0);
+  submitter.mesh(
+      get_unit_cone(),
+      cone_from_to(ctx.model, crest_mid, crest_top, crest_cone_radius),
+      QVector3D(0.96f, 0.12f, 0.12f), nullptr, 1.0f, 0);
 
   submitter.mesh(get_unit_sphere(),
                  sphere_at(ctx.model, crest_top, crest_top_sphere_r),

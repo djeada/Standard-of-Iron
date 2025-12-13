@@ -121,8 +121,8 @@ void CarthageLightHelmetRenderer::render_bowl(const DrawContext &ctx,
   QMatrix4x4 bowl = ctx.model;
   bowl.translate(cap_center);
   bowl.scale(R * 0.88F, R * 0.82F, R * 0.88F);
-  submitter.mesh(get_unit_sphere(), bowl, m_config.leather_color * 0.94F, nullptr,
-                 0.9F, 2);
+  submitter.mesh(get_unit_sphere(), bowl, m_config.leather_color * 0.94F,
+                 nullptr, 0.9F, 2);
 
   QVector3D taper_top = helmet_origin + up * (R * 0.48F);
   QVector3D taper_bot = helmet_origin + up * (R * 0.26F);

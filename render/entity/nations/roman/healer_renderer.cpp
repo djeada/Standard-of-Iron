@@ -145,7 +145,7 @@ public:
   }
 
   void draw_healer_tunic(const DrawContext &ctx, const HumanoidVariant &v,
-                       const HumanoidPose &pose, ISubmitter &out) const {
+                         const HumanoidPose &pose, ISubmitter &out) const {
     using HP = HumanProportions;
     const BodyFrames &frames = pose.body_frames;
     const AttachmentFrame &torso = frames.torso;
@@ -251,16 +251,16 @@ public:
 
     out.mesh(get_unit_cylinder(),
              cylinder_between(ctx.model, sash_center - up * 0.022F,
-                             sash_center + up * 0.022F, torso_r * 0.86F),
+                              sash_center + up * 0.022F, torso_r * 0.86F),
              sash_red, nullptr, 1.0F);
 
     out.mesh(get_unit_cylinder(),
              cylinder_between(ctx.model, sash_center + up * 0.020F,
-                             sash_center + up * 0.026F, torso_r * 0.88F),
+                              sash_center + up * 0.026F, torso_r * 0.88F),
              trim_gold, nullptr, 1.0F);
     out.mesh(get_unit_cylinder(),
              cylinder_between(ctx.model, sash_center - up * 0.026F,
-                             sash_center - up * 0.020F, torso_r * 0.88F),
+                              sash_center - up * 0.020F, torso_r * 0.88F),
              trim_gold, nullptr, 1.0F);
 
     if (style.show_cape) {
@@ -307,8 +307,8 @@ public:
     QVector3D const cross_color = saturate_color(sash_red * 1.05F);
     out.mesh(get_unit_cylinder(),
              cylinder_between(ctx.model, emblem_center - right * cross_half,
-                             emblem_center + right * cross_half,
-                             cross_thickness),
+                              emblem_center + right * cross_half,
+                              cross_thickness),
              cross_color, nullptr, 1.0F);
     out.mesh(get_unit_cylinder(),
              cylinder_between(
@@ -346,7 +346,7 @@ public:
                           const QVector3D &elbow_pos) {
       out.mesh(get_unit_sphere(),
                sphere_at(ctx.model, shoulder_pos + outward * 0.01F,
-                        HP::UPPER_ARM_R * 1.6F),
+                         HP::UPPER_ARM_R * 1.6F),
                tunic_white, nullptr, 1.0F);
 
       for (int i = 0; i < 5; ++i) {

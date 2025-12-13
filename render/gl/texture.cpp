@@ -89,8 +89,10 @@ void Texture::unbind() {
 
 void Texture::set_filter(Filter minFilter, Filter magFilter) {
   bind();
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, get_gl_filter(minFilter));
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, get_gl_filter(magFilter));
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+                  get_gl_filter(minFilter));
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
+                  get_gl_filter(magFilter));
 }
 
 void Texture::set_wrap(Wrap sWrap, Wrap tWrap) {

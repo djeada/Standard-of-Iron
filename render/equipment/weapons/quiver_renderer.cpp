@@ -54,9 +54,10 @@ void QuiverRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
   submitter.mesh(get_unit_cylinder(),
                  cylinder_between(ctx.model, q_top, a1, 0.010F), palette.wood,
                  nullptr, 1.0F, m_config.material_id);
-  submitter.mesh(get_unit_cone(),
-                 cone_from_to(ctx.model, a1, a1 + QVector3D(0, 0.05F, 0), 0.025F),
-                 m_config.fletching_color, nullptr, 1.0F, m_config.material_id);
+  submitter.mesh(
+      get_unit_cone(),
+      cone_from_to(ctx.model, a1, a1 + QVector3D(0, 0.05F, 0), 0.025F),
+      m_config.fletching_color, nullptr, 1.0F, m_config.material_id);
 
   if (m_config.num_arrows >= 2) {
     QVector3D const a2 = q_top + QVector3D(0.02F - j, 0.07F, 0.02F - k);

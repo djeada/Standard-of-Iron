@@ -38,16 +38,16 @@ void CarthageShoulderCoverRenderer::render(const DrawContext &ctx,
     QMatrix4x4 upper = ctx.model;
     upper.translate(upper_pos);
     upper.scale(upper_arm_r * 1.75F, upper_arm_r * 0.38F, upper_arm_r * 1.55F);
-    submitter.mesh(get_unit_sphere(), upper, leather_color * 1.05F, nullptr, 1.0F,
-                   1);
+    submitter.mesh(get_unit_sphere(), upper, leather_color * 1.05F, nullptr,
+                   1.0F, 1);
 
     QVector3D lower_pos = upper_pos - QVector3D(0.0F, 0.045F, 0.0F) +
                           outward * (outward_offset * 0.75F);
     QMatrix4x4 lower = ctx.model;
     lower.translate(lower_pos);
     lower.scale(upper_arm_r * 1.58F, upper_arm_r * 0.34F, upper_arm_r * 1.40F);
-    submitter.mesh(get_unit_sphere(), lower, leather_color * 0.96F, nullptr, 1.0F,
-                   1);
+    submitter.mesh(get_unit_sphere(), lower, leather_color * 0.96F, nullptr,
+                   1.0F, 1);
 
     QVector3D trim_pos = lower_pos - QVector3D(0.0F, 0.025F, 0.0F) +
                          outward * (outward_offset * 0.55F);

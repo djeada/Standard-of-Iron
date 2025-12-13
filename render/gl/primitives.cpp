@@ -593,7 +593,8 @@ auto get_unit_sphere(int latSegments, int lonSegments) -> Mesh * {
 }
 
 auto get_unit_cone(int radialSegments) -> Mesh * {
-  static std::unique_ptr<Mesh> const s_mesh(create_unit_cone_mesh(radialSegments));
+  static std::unique_ptr<Mesh> const s_mesh(
+      create_unit_cone_mesh(radialSegments));
   return s_mesh.get();
 }
 

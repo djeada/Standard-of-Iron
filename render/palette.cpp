@@ -9,7 +9,7 @@ namespace Render::GL {
 using Render::Geom::clampVec01;
 
 auto make_humanoid_palette(const QVector3D &team_tint,
-                         uint32_t seed) -> HumanoidPalette {
+                           uint32_t seed) -> HumanoidPalette {
   HumanoidPalette p;
 
   float const variation = (hash_01(seed) - 0.5F) * 0.08F;

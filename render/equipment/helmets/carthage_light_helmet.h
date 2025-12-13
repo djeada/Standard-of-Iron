@@ -22,7 +22,9 @@ class CarthageLightHelmetRenderer : public IEquipmentRenderer {
 public:
   CarthageLightHelmetRenderer() = default;
 
-  void set_config(const CarthageLightHelmetConfig &config) { m_config = config; }
+  void set_config(const CarthageLightHelmetConfig &config) {
+    m_config = config;
+  }
 
   void render(const DrawContext &ctx, const BodyFrames &frames,
               const HumanoidPalette &palette,

@@ -92,8 +92,8 @@ void BowRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
 
   submitter.mesh(get_unit_cylinder(),
                  cylinder_between(ctx.model, grip - up * 0.05F,
-                                 grip + up * 0.05F,
-                                 m_config.bow_rod_radius * 1.45F),
+                                  grip + up * 0.05F,
+                                  m_config.bow_rod_radius * 1.45F),
                  k_dark_bow_color, nullptr, 1.0F, m_config.material_id);
 
   submitter.mesh(
@@ -152,7 +152,8 @@ void BowRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
                    nullptr, 1.0F, m_config.material_id);
 
     QVector3D const head_base = tip - forward * 0.10F;
-    submitter.mesh(get_unit_cone(), cone_from_to(ctx.model, head_base, tip, 0.05F),
+    submitter.mesh(get_unit_cone(),
+                   cone_from_to(ctx.model, head_base, tip, 0.05F),
                    m_config.metal_color, nullptr, 1.0F, m_config.material_id);
 
     QVector3D const f1b = tail - forward * 0.02F;

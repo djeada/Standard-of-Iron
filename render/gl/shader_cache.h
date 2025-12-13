@@ -40,7 +40,8 @@ public:
     return (it != m_named.end()) ? it->second.get() : nullptr;
   }
 
-  auto get_or_load(const QString &vertPath, const QString &fragPath) -> Shader * {
+  auto get_or_load(const QString &vertPath,
+                   const QString &fragPath) -> Shader * {
     const QString resolved_vert =
         Utils::Resources::resolveResourcePath(vertPath);
     const QString resolved_frag =

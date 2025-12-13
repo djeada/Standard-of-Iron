@@ -24,12 +24,14 @@ void ChampionRenderer::render(const DrawContext &ctx,
   QMatrix4x4 upper_plate = chest.make_local_transform(
       ctx.model, QVector3D(0.0F, 0.12F, 0.05F), 0.85F);
   upper_plate.scale(0.38F, 0.18F, 0.32F);
-  out.mesh(get_unit_sphere(), upper_plate, armor_color * 1.05F, nullptr, 1.0F, 1);
+  out.mesh(get_unit_sphere(), upper_plate, armor_color * 1.05F, nullptr, 1.0F,
+           1);
 
   QMatrix4x4 lower_plate = chest.make_local_transform(
       ctx.model, QVector3D(0.0F, -0.12F, 0.05F), 0.85F);
   lower_plate.scale(0.38F, 0.18F, 0.32F);
-  out.mesh(get_unit_sphere(), lower_plate, armor_color * 0.95F, nullptr, 1.0F, 1);
+  out.mesh(get_unit_sphere(), lower_plate, armor_color * 0.95F, nullptr, 1.0F,
+           1);
 }
 
 } // namespace Render::GL

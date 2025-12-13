@@ -149,8 +149,8 @@ static inline void drawTorso(const DrawContext &p, ISubmitter &out,
   float torso_radius = HP::TORSO_TOP_R;
 
   out.mesh(get_unit_cylinder(),
-           cylinder_between(p.model, torso_top, torsoBot, torso_radius), C.tunic,
-           nullptr, 1.0F);
+           cylinder_between(p.model, torso_top, torsoBot, torso_radius),
+           C.tunic, nullptr, 1.0F);
 
   QVector3D waist{0.0F, HP::WAIST_Y, 0.0F};
   QVector3D hipCenter = (P.hipL + P.hipR) * 0.5F;
@@ -187,8 +187,8 @@ static inline void drawHeadAndNeck(const DrawContext &p, ISubmitter &out,
 
   QVector3D domeC = P.head_pos + QVector3D(0.0F, P.head_r * 0.25F, 0.0F);
   float domeR = P.head_r * 1.05F;
-  out.mesh(get_unit_sphere(), sphere_at(p.model, domeC, domeR), C.metal, nullptr,
-           1.0F);
+  out.mesh(get_unit_sphere(), sphere_at(p.model, domeC, domeR), C.metal,
+           nullptr, 1.0F);
 
   QVector3D visorBase(0.0F, P.head_pos.y() + P.head_r * 0.10F,
                       P.head_r * 0.80F);
@@ -298,8 +298,9 @@ static inline void drawQuiver(const DrawContext &p, ISubmitter &out,
   QVector3D q_base(-0.10F, HP::CHEST_Y, -0.22F);
 
   float quiver_r = HP::HEAD_RADIUS * 0.45F;
-  out.mesh(get_unit_cylinder(), cylinder_between(p.model, q_base, qTop, quiver_r),
-           C.leather, nullptr, 1.0F);
+  out.mesh(get_unit_cylinder(),
+           cylinder_between(p.model, q_base, qTop, quiver_r), C.leather,
+           nullptr, 1.0F);
 
   float j = (hash_01(seed) - 0.5F) * 0.04F;
   float k = (hash_01(seed ^ HashXorShift::k_golden_ratio) - 0.5F) * 0.04F;
@@ -343,13 +344,14 @@ static inline void drawBowAndArrow(const DrawContext &p, ISubmitter &out,
   for (int i = 1; i <= k_bow_curve_segments; ++i) {
     float t = float(i) / float(k_bow_curve_segments);
     QVector3D cur = q_bezier(bot_end, ctrl, top_end, t);
-    out.mesh(get_unit_cylinder(), cylinder_between(p.model, prev, cur, P.bowRodR),
-             C.wood, nullptr, 1.0F);
+    out.mesh(get_unit_cylinder(),
+             cylinder_between(p.model, prev, cur, P.bowRodR), C.wood, nullptr,
+             1.0F);
     prev = cur;
   }
   out.mesh(get_unit_cylinder(),
            cylinder_between(p.model, grip - up * 0.05F, grip + up * 0.05F,
-                           P.bowRodR * 1.45F),
+                            P.bowRodR * 1.45F),
            C.wood, nullptr, 1.0F);
 
   out.mesh(get_unit_cylinder(),
@@ -358,7 +360,8 @@ static inline void drawBowAndArrow(const DrawContext &p, ISubmitter &out,
   out.mesh(get_unit_cylinder(),
            cylinder_between(p.model, nock, bot_end, P.stringR), C.stringCol,
            nullptr, 1.0F);
-  out.mesh(get_unit_cylinder(), cylinder_between(p.model, P.hand_l, nock, 0.0045F),
+  out.mesh(get_unit_cylinder(),
+           cylinder_between(p.model, P.hand_l, nock, 0.0045F),
            C.stringCol * 0.9F, nullptr, 1.0F);
 
   QVector3D tail = nock - forward * 0.06F;

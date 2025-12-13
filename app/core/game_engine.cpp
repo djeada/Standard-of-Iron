@@ -717,9 +717,9 @@ void GameEngine::update(float dt) {
       if (new_version != m_runtime.visibilityVersion) {
         if (m_fog) {
           m_fog->update_mask(visibility_service.getWidth(),
-                            visibility_service.getHeight(),
-                            visibility_service.getTileSize(),
-                            visibility_service.snapshotCells());
+                             visibility_service.getHeight(),
+                             visibility_service.getTileSize(),
+                             visibility_service.snapshotCells());
         }
         m_runtime.visibilityVersion = new_version;
       }
@@ -1335,7 +1335,7 @@ void GameEngine::start_skirmish(const QString &map_path,
     if (result.has_focus_position && m_camera) {
       const auto &cam_config = Game::GameConfig::instance().camera();
       m_camera->set_rts_view(result.focusPosition, cam_config.default_distance,
-                            cam_config.default_pitch, cam_config.default_yaw);
+                             cam_config.default_pitch, cam_config.default_yaw);
     }
 
     Game::Map::MapDefinition map_def;

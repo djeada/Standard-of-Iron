@@ -58,8 +58,8 @@ void ShieldRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
     m.translate(shield_center - n * plate_half);
     m.rotate(k_shield_yaw_degrees, 0.0F, 1.0F, 0.0F);
     m.scale(shield_width * 0.985F, shield_height * 0.985F, plate_full);
-    submitter.mesh(get_unit_cylinder(), m, palette.leather * 0.8F, nullptr, 1.0F,
-                   m_config.material_id);
+    submitter.mesh(get_unit_cylinder(), m, palette.leather * 0.8F, nullptr,
+                   1.0F, m_config.material_id);
   }
 
   auto draw_ring_rotated = [&](float width, float height, float thickness,

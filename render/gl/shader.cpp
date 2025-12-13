@@ -29,7 +29,7 @@ Shader::~Shader() {
 }
 
 auto Shader::load_from_files(const QString &vertexPath,
-                           const QString &fragmentPath) -> bool {
+                             const QString &fragmentPath) -> bool {
   const QString resolved_vert =
       Utils::Resources::resolveResourcePath(vertexPath);
   const QString resolved_frag =
@@ -65,7 +65,7 @@ auto Shader::load_from_files(const QString &vertexPath,
 }
 
 auto Shader::load_from_source(const QString &vertex_source,
-                            const QString &fragment_source) -> bool {
+                              const QString &fragment_source) -> bool {
   initializeOpenGLFunctions();
   m_uniformCache.clear();
   GLuint const vertex_shader = compile_shader(vertex_source, GL_VERTEX_SHADER);
@@ -125,7 +125,8 @@ auto Shader::uniform_handle(const char *name) -> Shader::UniformHandle {
   return uniformHandleImpl(*this, m_program, m_uniformCache, name, true);
 }
 
-auto Shader::optional_uniform_handle(const char *name) -> Shader::UniformHandle {
+auto Shader::optional_uniform_handle(const char *name)
+    -> Shader::UniformHandle {
   return uniformHandleImpl(*this, m_program, m_uniformCache, name, false);
 }
 
@@ -243,7 +244,8 @@ auto Shader::compile_shader(const QString &source, GLenum type) -> GLuint {
   return shader;
 }
 
-auto Shader::link_program(GLuint vertex_shader, GLuint fragment_shader) -> bool {
+auto Shader::link_program(GLuint vertex_shader,
+                          GLuint fragment_shader) -> bool {
   initializeOpenGLFunctions();
   m_program = glCreateProgram();
   glAttachShader(m_program, vertex_shader);

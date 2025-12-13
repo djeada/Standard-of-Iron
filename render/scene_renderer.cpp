@@ -72,7 +72,8 @@ void Renderer::begin_frame() {
   m_active_queue->clear();
 
   if (m_camera != nullptr) {
-    m_view_proj = m_camera->get_projection_matrix() * m_camera->get_view_matrix();
+    m_view_proj =
+        m_camera->get_projection_matrix() * m_camera->get_view_matrix();
   }
 
   if (m_backend) {
@@ -110,7 +111,7 @@ void Renderer::set_viewport(int width, int height) {
   if ((m_camera != nullptr) && height > 0) {
     float const aspect = float(width) / float(height);
     m_camera->set_perspective(m_camera->get_fov(), aspect, m_camera->get_near(),
-                             m_camera->get_far());
+                              m_camera->get_far());
   }
 }
 void Renderer::mesh(Mesh *mesh, const QMatrix4x4 &model, const QVector3D &color,

@@ -18,9 +18,9 @@ public:
   ~Shader() override;
 
   auto load_from_files(const QString &vertexPath,
-                     const QString &fragmentPath) -> bool;
+                       const QString &fragmentPath) -> bool;
   auto load_from_source(const QString &vertex_source,
-                      const QString &fragment_source) -> bool;
+                        const QString &fragment_source) -> bool;
 
   void use();
   void release();
