@@ -235,7 +235,7 @@ void DefendBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   }
 
   QVector3D const defend_pos(defend_pos_x, defend_pos_y, defend_pos_z);
-  auto targets = FormationSystem::instance().getFormationPositions(
+  auto targets = FormationSystem::instance().get_formation_positions(
       formation_type, static_cast<int>(unclaimed_defenders.size()), defend_pos,
       3.0F);
 

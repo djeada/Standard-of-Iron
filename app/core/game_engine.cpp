@@ -432,7 +432,7 @@ void GameEngine::on_right_click(qreal sx, qreal sy) {
                                            hit)) {
       auto targets = Game::Systems::FormationPlanner::spreadFormation(
           int(sel.size()), hit,
-          Game::GameConfig::instance().gameplay().formationSpacingDefault);
+          Game::GameConfig::instance().gameplay().formation_spacing_default);
       Game::Systems::CommandService::MoveOptions opts;
       opts.group_move = sel.size() > 1;
       Game::Systems::CommandService::moveUnits(*m_world, sel, targets, opts);
@@ -1314,7 +1314,7 @@ void GameEngine::start_skirmish(const QString &map_path,
     m_level.cam_far = result.cam_far;
     m_level.max_troops_per_player = result.max_troops_per_player;
 
-    Game::GameConfig::instance().setMaxTroopsPerPlayer(
+    Game::GameConfig::instance().set_max_troops_per_player(
         result.max_troops_per_player);
 
     if (m_victoryService) {
@@ -1334,8 +1334,8 @@ void GameEngine::start_skirmish(const QString &map_path,
 
     if (result.hasFocusPosition && m_camera) {
       const auto &cam_config = Game::GameConfig::instance().camera();
-      m_camera->setRTSView(result.focusPosition, cam_config.defaultDistance,
-                           cam_config.defaultPitch, cam_config.defaultYaw);
+      m_camera->setRTSView(result.focusPosition, cam_config.default_distance,
+                           cam_config.default_pitch, cam_config.default_yaw);
     }
 
     Game::Map::MapDefinition map_def;
