@@ -39,6 +39,7 @@
 #include "app/core/language_manager.h"
 #include "app/models/graphics_settings_proxy.h"
 #include "app/models/minimap_image_provider.h"
+#include "app/models/map_preview_image_provider.h"
 #include "ui/gl_view.h"
 #include "ui/theme.h"
 
@@ -295,10 +296,17 @@ auto main(int argc, char *argv[]) -> int {
   auto *minimap_provider = new MinimapImageProvider();
   engine->addImageProvider("minimap", minimap_provider);
 
+  // Register map preview image provider
+  qInfo() << "Registering map preview image provider...";
+  auto *map_preview_provider = new MapPreviewImageProvider();
+  engine->addImageProvider("mappreview", map_preview_provider);
+
   qInfo() << "Adding context properties...";
   engine->rootContext()->setContextProperty("languageManager",
                                             language_manager.get());
   engine->rootContext()->setContextProperty("game", game_engine.get());
+  engine->rootContext()->setContextProperty("mapPreviewProvider",
+                                            map_preview_provider);
   engine->rootContext()->setContextProperty("graphicsSettings",
                                             graphics_settings.get());
 
