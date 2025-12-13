@@ -12,8 +12,8 @@
 
 namespace Render::GL {
 
-using Render::Geom::cylinderBetween;
-using Render::Geom::sphereAt;
+using Render::Geom::cylinder_between;
+using Render::Geom::sphere_at;
 
 RomanShieldRenderer::RomanShieldRenderer() {
   ShieldRenderConfig config;
@@ -68,7 +68,7 @@ void RomanShieldRenderer::render(const DrawContext &ctx,
   QVector3D top_right = shield_center + axis_y * (shield_height * 0.5F) +
                         axis_x * (shield_width * 0.5F);
   submitter.mesh(getUnitCylinder(),
-                 cylinderBetween(ctx.model, top_left, top_right, rim_thickness),
+                 cylinder_between(ctx.model, top_left, top_right, rim_thickness),
                  trim_color, nullptr, 1.0F, 4);
 
   QVector3D bot_left = shield_center - axis_y * (shield_height * 0.5F) -
@@ -76,18 +76,18 @@ void RomanShieldRenderer::render(const DrawContext &ctx,
   QVector3D bot_right = shield_center - axis_y * (shield_height * 0.5F) +
                         axis_x * (shield_width * 0.5F);
   submitter.mesh(getUnitCylinder(),
-                 cylinderBetween(ctx.model, bot_left, bot_right, rim_thickness),
+                 cylinder_between(ctx.model, bot_left, bot_right, rim_thickness),
                  trim_color, nullptr, 1.0F, 4);
 
   float const boss_radius = 0.08F;
   submitter.mesh(getUnitSphere(),
-                 sphereAt(ctx.model, shield_center + n * 0.05F, boss_radius),
+                 sphere_at(ctx.model, shield_center + n * 0.05F, boss_radius),
                  metal_color, nullptr, 1.0F, 4);
 
   QVector3D const grip_a = shield_center - axis_x * 0.06F - n * 0.03F;
   QVector3D const grip_b = shield_center + axis_x * 0.06F - n * 0.03F;
   submitter.mesh(getUnitCylinder(),
-                 cylinderBetween(ctx.model, grip_a, grip_b, 0.012F),
+                 cylinder_between(ctx.model, grip_a, grip_b, 0.012F),
                  palette.leather, nullptr, 1.0F, 0);
 }
 

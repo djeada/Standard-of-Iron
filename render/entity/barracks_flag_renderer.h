@@ -65,7 +65,7 @@ drawPoleWithBanner(const DrawContext &p, ISubmitter &out, Mesh *unit,
 
   out.mesh(getUnitCylinder(),
            p.model *
-               Render::Geom::cylinderBetween(poleStart, poleEnd, poleRadius),
+               Render::Geom::cylinder_between(poleStart, poleEnd, poleRadius),
            poleColor, white, 1.0F);
 
   QMatrix4x4 bannerTransform = p.model;
