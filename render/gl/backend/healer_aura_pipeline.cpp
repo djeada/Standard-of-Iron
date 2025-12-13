@@ -354,13 +354,20 @@ void HealerAuraPipeline::render_single_aura(const QVector3D &position,
                                             float time,
                                             const QMatrix4x4 &view_proj) {
   if (!is_initialized()) {
+    qWarning() << "HealerAuraPipeline::render_single_aura - not initialized!";
     return;
   }
   if (intensity < 0.01F) {
     return;
   }
 
-  initializeOpenGLFunctions();
+  static int s_renderCount = 0;
+  if (++s_renderCount % 300 == 0) {
+    qDebug() << "HealerAuraPipeline::render_single_aura called" << s_renderCount
+             << "times, pos:" << position << "radius:" << radius;
+  }
+
+  initializeOpenGLFunctions();;
 
   // Save GL state
   GLboolean cullEnabled = glIsEnabled(GL_CULL_FACE);

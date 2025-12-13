@@ -2,6 +2,7 @@
 #include "../../game/core/component.h"
 #include "../../game/core/world.h"
 #include "../scene_renderer.h"
+#include <QDebug>
 
 namespace Render::GL {
 
@@ -14,6 +15,11 @@ void render_healer_auras(Renderer *renderer, ResourceManager *,
   float animation_time = renderer->get_animation_time();
 
   auto healers = world->get_entities_with<Engine::Core::HealerComponent>();
+
+  static int s_debugCounter = 0;
+  if (++s_debugCounter % 300 == 0) {
+    qDebug() << "render_healer_auras: found" << healers.size() << "healers";
+  }
 
   for (auto *healer : healers) {
     if (healer->has_component<Engine::Core::PendingRemovalComponent>()) {
@@ -43,6 +49,11 @@ void render_healer_auras(Renderer *renderer, ResourceManager *,
 
     // Golden-green healing color
     QVector3D color(0.4F, 1.0F, 0.5F);
+
+    if (s_debugCounter % 300 == 0) {
+      qDebug() << "  Submitting aura at" << position << "radius" << radius
+               << "intensity" << intensity;
+    }
 
     renderer->healer_aura(position, color, radius, intensity, animation_time);
   }
