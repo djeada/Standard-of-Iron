@@ -459,7 +459,16 @@ void MinimapGenerator::render_structures(QImage &image,
       continue;
     }
 
-    const auto [px, py] = world_to_pixel(spawn.x, spawn.z, map_def.grid);
+    // Transform grid coordinates to world coordinates (centered at origin)
+    float world_x = spawn.x;
+    float world_z = spawn.z;
+    if (map_def.coordSystem == CoordSystem::Grid) {
+      const float tile = std::max(0.0001F, map_def.grid.tile_size);
+      world_x = (spawn.x - (map_def.grid.width * 0.5F - 0.5F)) * tile;
+      world_z = (spawn.z - (map_def.grid.height * 0.5F - 0.5F)) * tile;
+    }
+
+    const auto [px, py] = world_to_pixel(world_x, world_z, map_def.grid);
 
     QColor fill_color = Palette::STRUCTURE_STONE;
     QColor border_color = Palette::STRUCTURE_SHADOW;
