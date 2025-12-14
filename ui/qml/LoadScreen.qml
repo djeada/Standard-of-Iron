@@ -6,6 +6,16 @@ Rectangle {
 
     property real progress: 0.0
     property bool isLoading: false
+    
+    // Progress animation constants
+    readonly property real initialSpeed: 0.02
+    readonly property real progressThreshold1: 0.5
+    readonly property real progressThreshold2: 0.7
+    readonly property real progressThreshold3: 0.9
+    readonly property real speedSlow: 0.015
+    readonly property real speedSlower: 0.01
+    readonly property real speedSlowest: 0.005
+    readonly property real minIncrement: 0.001
 
     anchors.fill: parent
     color: "#000000"
@@ -51,11 +61,14 @@ Rectangle {
             // Progress fill
             Rectangle {
                 id: progressFill
+                
+                readonly property real availableWidth: parent.width - 8
+                
                 anchors.left: parent.left
                 anchors.top: parent.top
                 anchors.bottom: parent.bottom
                 anchors.margins: 4
-                width: Math.max(0, Math.min(parent.width - 8, (parent.width - 8) * loadScreen.progress))
+                width: Math.max(0, Math.min(availableWidth, availableWidth * loadScreen.progress))
                 color: "#f39c12"
                 radius: 2
 
@@ -96,7 +109,7 @@ Rectangle {
         repeat: true
         running: loadScreen.isLoading
 
-        property real speed: 0.02
+        property real speed: loadScreen.initialSpeed
 
         onTriggered: {
             if (loadScreen.progress < 1.0) {
@@ -105,17 +118,17 @@ Rectangle {
                 var increment = speed * remaining;
                 
                 // Ensure minimum progress increment
-                increment = Math.max(0.001, increment);
+                increment = Math.max(loadScreen.minIncrement, increment);
                 
                 loadScreen.progress = Math.min(1.0, loadScreen.progress + increment);
                 
                 // Slow down as we get closer to 100%
-                if (loadScreen.progress > 0.9) {
-                    speed = 0.005;
-                } else if (loadScreen.progress > 0.7) {
-                    speed = 0.01;
-                } else if (loadScreen.progress > 0.5) {
-                    speed = 0.015;
+                if (loadScreen.progress > loadScreen.progressThreshold3) {
+                    speed = loadScreen.speedSlowest;
+                } else if (loadScreen.progress > loadScreen.progressThreshold2) {
+                    speed = loadScreen.speedSlower;
+                } else if (loadScreen.progress > loadScreen.progressThreshold1) {
+                    speed = loadScreen.speedSlow;
                 }
             }
         }
@@ -125,7 +138,7 @@ Rectangle {
     onIsLoadingChanged: {
         if (isLoading) {
             progress = 0.0;
-            progressTimer.speed = 0.02;
+            progressTimer.speed = loadScreen.initialSpeed;
         }
     }
 
