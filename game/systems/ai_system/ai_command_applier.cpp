@@ -30,14 +30,14 @@ void AICommandApplier::apply(Engine::Core::World &world, int aiOwnerId,
       std::vector<float> expanded_y;
       std::vector<float> expanded_z;
 
-      if (command.moveTargetX.size() != command.units.size()) {
-        replicateLastTargetIfNeeded(command.moveTargetX, command.moveTargetY,
-                                    command.moveTargetZ, command.units.size(),
+      if (command.move_target_x.size() != command.units.size()) {
+        replicateLastTargetIfNeeded(command.move_target_x, command.move_target_y,
+                                    command.move_target_z, command.units.size(),
                                     expanded_x, expanded_y, expanded_z);
       } else {
-        expanded_x = command.moveTargetX;
-        expanded_y = command.moveTargetY;
-        expanded_z = command.moveTargetZ;
+        expanded_x = command.move_target_x;
+        expanded_y = command.move_target_y;
+        expanded_z = command.move_target_z;
       }
 
       if (expanded_x.empty()) {
@@ -110,7 +110,7 @@ void AICommandApplier::apply(Engine::Core::World &world, int aiOwnerId,
     }
 
     case AICommandType::StartProduction: {
-      auto *entity = world.get_entity(command.buildingId);
+      auto *entity = world.get_entity(command.building_id);
       if (entity == nullptr) {
         break;
       }

@@ -36,10 +36,10 @@ auto AICommandFilter::filter(const std::vector<AICommand> &commands,
         target_id = cmd.target_id;
       } else if (cmd.type == AICommandType::MoveUnits) {
 
-        if (i < cmd.moveTargetX.size()) {
-          move_x = cmd.moveTargetX[i];
-          move_y = cmd.moveTargetY[i];
-          move_z = cmd.moveTargetZ[i];
+        if (i < cmd.move_target_x.size()) {
+          move_x = cmd.move_target_x[i];
+          move_y = cmd.move_target_y[i];
+          move_z = cmd.move_target_z[i];
         }
       }
 
@@ -71,17 +71,17 @@ auto AICommandFilter::filter(const std::vector<AICommand> &commands,
 
           if (std::find(valid_units.begin(), valid_units.end(), cmd.units[i]) !=
               valid_units.end()) {
-            if (i < cmd.moveTargetX.size()) {
-              new_target_x.push_back(cmd.moveTargetX[i]);
-              new_target_y.push_back(cmd.moveTargetY[i]);
-              new_target_z.push_back(cmd.moveTargetZ[i]);
+            if (i < cmd.move_target_x.size()) {
+              new_target_x.push_back(cmd.move_target_x[i]);
+              new_target_y.push_back(cmd.move_target_y[i]);
+              new_target_z.push_back(cmd.move_target_z[i]);
             }
           }
         }
 
-        filtered_cmd.moveTargetX = std::move(new_target_x);
-        filtered_cmd.moveTargetY = std::move(new_target_y);
-        filtered_cmd.moveTargetZ = std::move(new_target_z);
+        filtered_cmd.move_target_x = std::move(new_target_x);
+        filtered_cmd.move_target_y = std::move(new_target_y);
+        filtered_cmd.move_target_z = std::move(new_target_z);
       }
 
       filtered.push_back(std::move(filtered_cmd));
@@ -116,26 +116,26 @@ void AICommandFilter::recordCommand(const AICommand &cmd, float currentTime) {
     CommandHistory entry{};
     entry.unit_id = cmd.units[i];
     entry.type = cmd.type;
-    entry.issuedTime = currentTime;
+    entry.issued_time = currentTime;
 
     if (cmd.type == AICommandType::AttackTarget) {
       entry.target_id = cmd.target_id;
-      entry.moveTargetX = 0.0F;
-      entry.moveTargetY = 0.0F;
-      entry.moveTargetZ = 0.0F;
+      entry.move_target_x = 0.0F;
+      entry.move_target_y = 0.0F;
+      entry.move_target_z = 0.0F;
     } else if (cmd.type == AICommandType::MoveUnits) {
       entry.target_id = 0;
-      if (i < cmd.moveTargetX.size()) {
-        entry.moveTargetX = cmd.moveTargetX[i];
-        entry.moveTargetY = cmd.moveTargetY[i];
-        entry.moveTargetZ = cmd.moveTargetZ[i];
+      if (i < cmd.move_target_x.size()) {
+        entry.move_target_x = cmd.move_target_x[i];
+        entry.move_target_y = cmd.move_target_y[i];
+        entry.move_target_z = cmd.move_target_z[i];
       }
     } else {
 
       entry.target_id = 0;
-      entry.moveTargetX = 0.0F;
-      entry.moveTargetY = 0.0F;
-      entry.moveTargetZ = 0.0F;
+      entry.move_target_x = 0.0F;
+      entry.move_target_y = 0.0F;
+      entry.move_target_z = 0.0F;
     }
 
     m_history.push_back(entry);
@@ -146,7 +146,7 @@ void AICommandFilter::cleanupHistory(float currentTime) {
 
   m_history.erase(std::remove_if(m_history.begin(), m_history.end(),
                                  [&](const CommandHistory &entry) {
-                                   return (currentTime - entry.issuedTime) >
+                                   return (currentTime - entry.issued_time) >
                                           m_cooldownPeriod;
                                  }),
                   m_history.end());
@@ -165,7 +165,7 @@ auto AICommandFilter::CommandHistory::isSimilarTo(
     return false;
   }
 
-  if ((currentTime - issuedTime) > cooldown) {
+  if ((currentTime - issued_time) > cooldown) {
     return false;
   }
 
@@ -176,9 +176,9 @@ auto AICommandFilter::CommandHistory::isSimilarTo(
 
   case AICommandType::MoveUnits: {
 
-    const float dx = moveTargetX - x;
-    const float dy = moveTargetY - y;
-    const float dz = moveTargetZ - z;
+    const float dx = move_target_x - x;
+    const float dy = move_target_y - y;
+    const float dz = move_target_z - z;
     const float dist_sq = dx * dx + dy * dy + dz * dz;
     const float threshold = 3.0F * 3.0F;
     return dist_sq < threshold;
