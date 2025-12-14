@@ -51,9 +51,10 @@ auto CombatDustPipeline::initialize() -> bool {
 
   m_dust_shader = m_shader_cache->get("combat_dust");
   if (m_dust_shader == nullptr) {
-    m_dust_shader =
-        m_shader_cache->load("combat_dust", ":/shaders/combat_dust.vert",
-                             ":/shaders/combat_dust.frag");
+
+    m_dust_shader = m_shader_cache->load(
+        "combat_dust", QStringLiteral(":/assets/shaders/combat_dust.vert"),
+        QStringLiteral(":/assets/shaders/combat_dust.frag"));
   }
   if (m_dust_shader == nullptr) {
     qWarning() << "CombatDustPipeline: Failed to get combat_dust shader";
