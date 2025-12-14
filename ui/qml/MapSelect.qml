@@ -35,19 +35,33 @@ Item {
     }
 
     function hasMinimumDistinctTeams() {
-        if (playersModel.count < 2)
+        let enabledPlayers = [];
+        for (let i = 0; i < playersModel.count; i++) {
+            let p = playersModel.get(i);
+            if (p.isEnabled) {
+                enabledPlayers.push(p);
+            }
+        }
+
+        if (enabledPlayers.length < 2)
             return false;
 
         let teams = new Set();
-        for (let i = 0; i < playersModel.count; i++) {
-            teams.add(playersModel.get(i).team_id);
+        for (let i = 0; i < enabledPlayers.length; i++) {
+            teams.add(enabledPlayers[i].team_id);
         }
         return teams.size >= 2;
     }
 
     function updateValidationError() {
-        if (playersModel.count < 2)
-            validationError = "Need at least 2 players to start";
+        let enabledCount = 0;
+        for (let i = 0; i < playersModel.count; i++) {
+            if (playersModel.get(i).isEnabled)
+                enabledCount++;
+        }
+        
+        if (enabledCount < 2)
+            validationError = "Need at least 2 enabled players to start";
         else if (!hasMinimumDistinctTeams())
             validationError = "At least two teams must be selected to start a match";
         else
@@ -97,7 +111,8 @@ Item {
             "teamIcon": Theme.teamIcons[0],
             "nationId": defaultNation.id,
             "nationName": defaultNation.name,
-            "isHuman": true
+            "isHuman": true,
+            "isEnabled": true
         });
         let cpuId = mapData.player_ids.find(function(id) {
             return id !== humanPlayerId;
@@ -148,7 +163,8 @@ Item {
             "teamIcon": Theme.teamIcons[defaultTeamId],
             "nationId": defaultNation.id,
             "nationName": defaultNation.name,
-            "isHuman": false
+            "isHuman": false,
+            "isEnabled": true
         });
         updateValidationError();
     }
@@ -224,10 +240,23 @@ Item {
         playersModel.setProperty(index, "nationName", nextNation.name);
     }
 
+    function togglePlayerEnabled(index) {
+        if (index < 0 || index >= playersModel.count)
+            return ;
+
+        let p = playersModel.get(index);
+        let newEnabled = !p.isEnabled;
+        playersModel.setProperty(index, "isEnabled", newEnabled);
+        updateValidationError();
+    }
+
     function getPlayerConfigs() {
         let configs = [];
         for (let i = 0; i < playersModel.count; i++) {
             let p = playersModel.get(i);
+            if (!p.isEnabled)
+                continue;
+
             let config = {
                 "player_id": p.player_id,
                 "colorHex": p.colorHex,
@@ -245,8 +274,14 @@ Item {
         if (selectedMapIndex < 0 || !selectedMapPath)
             return ;
 
-        if (playersModel.count < 2) {
-            console.log("MapSelect: Need at least 2 players to start");
+        let enabledCount = 0;
+        for (let i = 0; i < playersModel.count; i++) {
+            if (playersModel.get(i).isEnabled)
+                enabledCount++;
+        }
+
+        if (enabledCount < 2) {
+            console.log("MapSelect: Need at least 2 enabled players to start");
             updateValidationError();
             return ;
         }
@@ -257,7 +292,7 @@ Item {
         }
         validationError = "";
         let configs = getPlayerConfigs();
-        console.log("MapSelect: Starting game with", playersModel.count, "players");
+        console.log("MapSelect: Starting game with", configs.length, "enabled players");
         root.mapChosen(selectedMapPath, configs);
     }
 
@@ -954,22 +989,79 @@ Item {
                                 anchors.fill: parent
                                 anchors.margins: Theme.spacingSmall + 2
 
-                                Text {
-                                    id: playerNameText
+                                Rectangle {
+                                    id: enabledCheckbox
 
+                                    width: 32
+                                    height: 32
+                                    radius: Theme.radiusSmall
                                     anchors.left: parent.left
                                     anchors.leftMargin: 4
                                     anchors.verticalCenter: parent.verticalCenter
+                                    color: enabledCheckMA.containsMouse ? Qt.lighter(Theme.cardBase, 1.2) : Theme.cardBase
+                                    border.color: model.isEnabled ? Theme.accent : Theme.thumbBr
+                                    border.width: enabledCheckMA.containsMouse ? 2 : 1
+                                    ToolTip.visible: enabledCheckMA.containsMouse
+                                    ToolTip.text: model.isEnabled ? qsTr("Disable player (spectate only)") : qsTr("Enable player")
+
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: model.isEnabled ? "✓" : ""
+                                        color: Theme.accent
+                                        font.pixelSize: 18
+                                        font.bold: true
+                                    }
+
+                                    MouseArea {
+                                        id: enabledCheckMA
+
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: togglePlayerEnabled(index)
+                                    }
+
+                                    Behavior on color {
+                                        ColorAnimation {
+                                            duration: Theme.animFast
+                                        }
+
+                                    }
+
+                                    Behavior on border.color {
+                                        ColorAnimation {
+                                            duration: Theme.animFast
+                                        }
+
+                                    }
+
+                                    Behavior on border.width {
+                                        NumberAnimation {
+                                            duration: Theme.animFast
+                                        }
+
+                                    }
+
+                                }
+
+                                Text {
+                                    id: playerNameText
+
+                                    anchors.left: enabledCheckbox.right
+                                    anchors.leftMargin: Theme.spacingSmall
+                                    anchors.verticalCenter: parent.verticalCenter
                                     text: model.playerName || ""
-                                    color: model.isHuman ? Theme.accentBright : Theme.textBright
+                                    color: model.isEnabled ? (model.isHuman ? Theme.accentBright : Theme.textBright) : Theme.textDim
                                     font.pixelSize: model.isHuman ? 15 : 14
                                     font.bold: true
+                                    opacity: model.isEnabled ? 1.0 : 0.5
                                 }
 
                                 Row {
                                     anchors.right: parent.right
                                     anchors.verticalCenter: parent.verticalCenter
                                     spacing: Theme.spacingMedium
+                                    opacity: model.isEnabled ? 1.0 : 0.4
 
                                     Rectangle {
                                         width: 105

@@ -1191,7 +1191,12 @@ void GameEngine::start_skirmish(const QString &map_path,
             Engine::Core::AmbientState::PEACEFUL,
             Engine::Core::AmbientState::PEACEFUL));
 
+    if (m_input_handler) {
+      m_input_handler->set_spectator_mode(m_level.is_spectator_mode);
+    }
+
     emit owner_info_changed();
+    emit spectator_mode_changed();
   }
 }
 
