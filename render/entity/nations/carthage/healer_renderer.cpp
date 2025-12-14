@@ -189,7 +189,6 @@ public:
           pose.head_pos +
           QVector3D(look_dir.x() * 0.18F, 0.0F, look_dir.z() * 0.45F);
       controller.look_at(head_focus);
-      controller.lean(look_dir, 0.16F);
 
     } else {
 

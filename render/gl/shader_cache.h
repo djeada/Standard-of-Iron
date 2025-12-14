@@ -185,6 +185,10 @@ public:
         resolve(kShaderBase + QStringLiteral("healing_aura.frag"));
     load(QStringLiteral("healing_aura"), healingAuraVert, healingAuraFrag);
 
+    load(QStringLiteral("combat_dust"),
+         resolve(kShaderBase + QStringLiteral("combat_dust.vert")),
+         resolve(kShaderBase + QStringLiteral("combat_dust.frag")));
+
     const auto loadBaseShader = [&](const QString &name) {
       const QString vert =
           resolve(kShaderBase + name + QStringLiteral(".vert"));
