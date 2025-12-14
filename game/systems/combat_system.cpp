@@ -6,6 +6,7 @@
 #include "../visuals/team_colors.h"
 #include "arrow_system.h"
 #include "building_collision_registry.h"
+#include "camera_visibility_service.h"
 #include "command_service.h"
 #include "owner_registry.h"
 #include "units/spawn_type.h"
@@ -1018,6 +1019,7 @@ auto CombatSystem::findNearestEnemy(Engine::Core::Entity *unit,
 void CombatSystem::process_hit_feedback(Engine::Core::World *world,
                                         float delta_time) {
   auto units = world->get_entities_with<Engine::Core::HitFeedbackComponent>();
+  auto &visibility = CameraVisibilityService::instance();
 
   for (auto *unit : units) {
     if (unit->has_component<Engine::Core::PendingRemovalComponent>()) {
@@ -1041,10 +1043,16 @@ void CombatSystem::process_hit_feedback(Engine::Core::World *world,
       feedback->knockback_x = 0.0F;
       feedback->knockback_z = 0.0F;
     } else {
-      float const fade = 1.0F - progress;
       auto *transform =
           unit->get_component<Engine::Core::TransformComponent>();
       if (transform != nullptr) {
+        if (!visibility.should_process_detailed_effects(
+                transform->position.x, transform->position.y,
+                transform->position.z)) {
+          continue;
+        }
+
+        float const fade = 1.0F - progress;
         float const max_displacement_per_frame = 0.02F;
         float const dx = feedback->knockback_x * fade * delta_time;
         float const dz = feedback->knockback_z * fade * delta_time;
