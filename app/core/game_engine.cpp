@@ -102,6 +102,7 @@
 #include "game/systems/victory_service.h"
 #include "game/units/factory.h"
 #include "game/units/troop_config.h"
+#include "render/entity/combat_dust_renderer.h"
 #include "render/entity/healer_aura_renderer.h"
 #include "render/entity/healing_beam_renderer.h"
 #include "render/geom/arrow.h"
@@ -703,6 +704,10 @@ void GameEngine::render(int pixelWidth, int pixelHeight) {
 
   if (auto *res = m_renderer->resources()) {
     Render::GL::render_healer_auras(m_renderer.get(), res, m_world.get());
+  }
+
+  if (auto *res = m_renderer->resources()) {
+    Render::GL::render_combat_dust(m_renderer.get(), res, m_world.get());
   }
 
   if (auto *res = m_renderer->resources()) {

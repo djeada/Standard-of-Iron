@@ -5,6 +5,7 @@
 #include "../primitive_batch.h"
 #include "backend/banner_pipeline.h"
 #include "backend/character_pipeline.h"
+#include "backend/combat_dust_pipeline.h"
 #include "backend/cylinder_pipeline.h"
 #include "backend/effects_pipeline.h"
 #include "backend/healer_aura_pipeline.h"
@@ -164,6 +165,12 @@ void Backend::initialize() {
       this, m_shaderCache.get());
   m_healerAuraPipeline->initialize();
   qInfo() << "Backend: HealerAuraPipeline initialized";
+
+  qInfo() << "Backend: Creating CombatDustPipeline...";
+  m_combatDustPipeline = std::make_unique<BackendPipelines::CombatDustPipeline>(
+      this, m_shaderCache.get());
+  m_combatDustPipeline->initialize();
+  qInfo() << "Backend: CombatDustPipeline initialized";
 
   qInfo() << "Backend: Loading basic shaders...";
   m_basicShader = m_shaderCache->get(QStringLiteral("basic"));
