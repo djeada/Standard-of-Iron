@@ -250,37 +250,98 @@ void HumanoidPoseController::meleeStrike(float strike_phase) {
 
   strike_phase = std::clamp(strike_phase, 0.0F, 1.0F);
 
-  QVector3D const rest_pos(0.25F, HP::SHOULDER_Y, 0.10F);
-  QVector3D const raised_pos(0.28F, HP::SHOULDER_Y + 0.15F, 0.08F);
-  QVector3D const strike_pos(0.32F, HP::SHOULDER_Y - 0.10F, 0.55F);
+  // Define key positions for a natural horizontal slash toward the target
+  QVector3D const rest_pos(0.22F, HP::SHOULDER_Y + 0.02F, 0.18F);
+  QVector3D const chamber_pos(0.30F, HP::SHOULDER_Y + 0.08F, 0.05F);
+  QVector3D const strike_pos(0.28F, HP::SHOULDER_Y - 0.05F, 0.65F);
+  QVector3D const followthrough_pos(0.10F, HP::SHOULDER_Y - 0.12F, 0.55F);
 
   QVector3D hand_r_target;
   QVector3D hand_l_target;
 
-  if (strike_phase < 0.25F) {
+  // Body dynamics
+  float torso_twist = 0.0F;
+  float forward_lean = 0.0F;
+  float shoulder_dip = 0.0F;
+  float step_forward = 0.0F;
 
-    float t = strike_phase / 0.25F;
-    t = t * t;
-    hand_r_target = rest_pos * (1.0F - t) + raised_pos * t;
-    hand_l_target = QVector3D(-0.15F, HP::SHOULDER_Y - 0.1F * t, 0.20F);
-  } else if (strike_phase < 0.35F) {
+  if (strike_phase < 0.20F) {
+    // Phase 1: Chamber - pull weapon back, twist torso away
+    float t = strike_phase / 0.20F;
+    float ease_t = t * t;
+    hand_r_target = rest_pos * (1.0F - ease_t) + chamber_pos * ease_t;
+    hand_l_target = QVector3D(-0.18F, HP::SHOULDER_Y + 0.02F, 0.22F - 0.08F * t);
 
-    hand_r_target = raised_pos;
-    hand_l_target = QVector3D(-0.15F, HP::SHOULDER_Y - 0.1F, 0.20F);
-  } else if (strike_phase < 0.55F) {
+    // Twist torso back to coil for the strike
+    torso_twist = -0.04F * ease_t;
+    shoulder_dip = -0.02F * ease_t;
+  } else if (strike_phase < 0.28F) {
+    // Phase 2: Brief anticipation hold
+    hand_r_target = chamber_pos;
+    hand_l_target = QVector3D(-0.18F, HP::SHOULDER_Y + 0.02F, 0.14F);
+    torso_twist = -0.04F;
+    shoulder_dip = -0.02F;
+  } else if (strike_phase < 0.48F) {
+    // Phase 3: Explosive strike - uncoil torso, step forward
+    float t = (strike_phase - 0.28F) / 0.20F;
+    float power_t = t * t * (3.0F - 2.0F * t); // smoothstep for power
+    hand_r_target = chamber_pos * (1.0F - power_t) + strike_pos * power_t;
+    hand_l_target = QVector3D(-0.18F + 0.06F * power_t,
+                              HP::SHOULDER_Y + 0.02F - 0.08F * power_t,
+                              0.14F + 0.20F * power_t);
 
-    float t = (strike_phase - 0.35F) / 0.2F;
-    t = t * t * t;
-    hand_r_target = raised_pos * (1.0F - t) + strike_pos * t;
-    hand_l_target = QVector3D(-0.15F, HP::SHOULDER_Y - 0.1F * (1.0F - t * 0.5F),
-                              0.20F + 0.15F * t);
+    // Uncoil torso forward and rotate into strike
+    torso_twist = -0.04F + 0.10F * power_t;
+    forward_lean = 0.08F * power_t;
+    shoulder_dip = -0.02F + 0.05F * power_t;
+    step_forward = 0.06F * power_t;
+  } else if (strike_phase < 0.65F) {
+    // Phase 4: Follow-through - weapon continues past target
+    float t = (strike_phase - 0.48F) / 0.17F;
+    float ease_t = t * t;
+    hand_r_target = strike_pos * (1.0F - ease_t) + followthrough_pos * ease_t;
+    hand_l_target = QVector3D(-0.12F, HP::SHOULDER_Y - 0.06F, 0.34F);
+
+    torso_twist = 0.06F - 0.02F * t;
+    forward_lean = 0.08F - 0.03F * t;
+    shoulder_dip = 0.03F;
+    step_forward = 0.06F;
   } else {
+    // Phase 5: Recovery - return to guard
+    float t = (strike_phase - 0.65F) / 0.35F;
+    float ease_t = 1.0F - (1.0F - t) * (1.0F - t);
+    hand_r_target = followthrough_pos * (1.0F - ease_t) + rest_pos * ease_t;
+    hand_l_target = QVector3D(-0.12F + (-0.18F + 0.12F) * ease_t,
+                              HP::SHOULDER_Y - 0.06F * (1.0F - ease_t) +
+                                  0.02F * ease_t,
+                              0.34F * (1.0F - ease_t) + 0.22F * ease_t);
 
-    float t = (strike_phase - 0.55F) / 0.45F;
-    t = 1.0F - (1.0F - t) * (1.0F - t);
-    hand_r_target = strike_pos * (1.0F - t) + rest_pos * t;
-    hand_l_target = QVector3D(-0.15F, HP::SHOULDER_Y - 0.05F * (1.0F - t),
-                              0.35F * (1.0F - t) + 0.20F * t);
+    torso_twist = 0.04F * (1.0F - ease_t);
+    forward_lean = 0.05F * (1.0F - ease_t);
+    shoulder_dip = 0.03F * (1.0F - ease_t);
+    step_forward = 0.06F * (1.0F - ease_t);
+  }
+
+  // Apply body dynamics
+  if (std::abs(torso_twist) > 0.001F) {
+    m_pose.shoulder_r.setZ(m_pose.shoulder_r.z() + torso_twist);
+    m_pose.shoulder_l.setZ(m_pose.shoulder_l.z() - torso_twist * 0.5F);
+  }
+
+  if (forward_lean > 0.001F) {
+    m_pose.shoulder_l.setZ(m_pose.shoulder_l.z() + forward_lean);
+    m_pose.shoulder_r.setZ(m_pose.shoulder_r.z() + forward_lean);
+    m_pose.neck_base.setZ(m_pose.neck_base.z() + forward_lean * 0.8F);
+    m_pose.head_pos.setZ(m_pose.head_pos.z() + forward_lean * 0.6F);
+  }
+
+  if (std::abs(shoulder_dip) > 0.001F) {
+    m_pose.shoulder_r.setY(m_pose.shoulder_r.y() + shoulder_dip);
+  }
+
+  if (step_forward > 0.001F) {
+    m_pose.foot_r.setZ(m_pose.foot_r.z() + step_forward);
+    m_pose.knee_r.setZ(m_pose.knee_r.z() + step_forward * 0.5F);
   }
 
   placeHandAt(false, hand_r_target);
@@ -378,57 +439,109 @@ void HumanoidPoseController::sword_slash(float attack_phase) {
 
   attack_phase = std::clamp(attack_phase, 0.0F, 1.0F);
 
+  // Key positions for a diagonal downward slash
   QVector3D const rest_pos(0.20F, HP::SHOULDER_Y + 0.05F, 0.15F);
-  QVector3D const prepare_pos(0.24F, HP::SHOULDER_Y + 0.12F, 0.05F);
-  QVector3D const raised_pos(0.26F, HP::SHOULDER_Y + 0.18F, 0.12F);
-  QVector3D const strike_pos(0.30F, HP::SHOULDER_Y - 0.12F, 0.58F);
+  QVector3D const chamber_pos(0.28F, HP::SHOULDER_Y + 0.20F, 0.02F);
+  QVector3D const apex_pos(0.30F, HP::SHOULDER_Y + 0.25F, 0.08F);
+  QVector3D const strike_pos(0.18F, HP::SHOULDER_Y - 0.15F, 0.62F);
+  QVector3D const followthrough_pos(0.05F, HP::WAIST_Y + 0.10F, 0.50F);
   QVector3D const recover_pos(0.22F, HP::SHOULDER_Y + 0.02F, 0.22F);
 
   QVector3D hand_r_target;
   QVector3D hand_l_target;
 
-  auto easeInOutCubic = [](float t) {
-    return t < 0.5F ? 4.0F * t * t * t
-                    : 1.0F - std::pow(-2.0F * t + 2.0F, 3.0F) / 2.0F;
-  };
+  // Body dynamics
+  float torso_twist = 0.0F;
+  float forward_lean = 0.0F;
+  float shoulder_rotation = 0.0F;
+  float weight_shift = 0.0F;
 
-  auto smoothstep = [](float edge0, float edge1, float x) {
-    float t = std::clamp((x - edge0) / (edge1 - edge0), 0.0F, 1.0F);
-    return t * t * (3.0F - 2.0F * t);
-  };
+  auto smoothstep = [](float t) { return t * t * (3.0F - 2.0F * t); };
+  auto ease_out = [](float t) { return 1.0F - (1.0F - t) * (1.0F - t); };
+  auto ease_in = [](float t) { return t * t; };
 
-  auto lerp = [](float a, float b, float t) { return a * (1.0F - t) + b * t; };
+  if (attack_phase < 0.15F) {
+    // Phase 1: Prepare - raise weapon to chamber position
+    float t = attack_phase / 0.15F;
+    float ease_t = ease_in(t);
+    hand_r_target = rest_pos * (1.0F - ease_t) + chamber_pos * ease_t;
+    hand_l_target = QVector3D(-0.20F, HP::SHOULDER_Y - 0.02F, 0.15F + 0.02F * t);
 
-  if (attack_phase < 0.18F) {
+    // Rotate shoulders back, coiling for strike
+    torso_twist = -0.05F * ease_t;
+    shoulder_rotation = 0.03F * ease_t;
+  } else if (attack_phase < 0.28F) {
+    // Phase 2: Apex - weapon at highest point, brief tension
+    float t = (attack_phase - 0.15F) / 0.13F;
+    float ease_t = smoothstep(t);
+    hand_r_target = chamber_pos * (1.0F - ease_t) + apex_pos * ease_t;
+    hand_l_target = QVector3D(-0.20F, HP::SHOULDER_Y - 0.04F, 0.17F);
 
-    float const t = easeInOutCubic(attack_phase / 0.18F);
-    hand_r_target = rest_pos * (1.0F - t) + prepare_pos * t;
+    torso_twist = -0.05F;
+    shoulder_rotation = 0.03F + 0.02F * ease_t;
+    weight_shift = -0.02F * ease_t; // Weight shifts back before strike
+  } else if (attack_phase < 0.48F) {
+    // Phase 3: Strike - explosive diagonal slash downward
+    float t = (attack_phase - 0.28F) / 0.20F;
+    float power_t = t * t * t; // Fast acceleration
+    hand_r_target = apex_pos * (1.0F - power_t) + strike_pos * power_t;
     hand_l_target =
-        QVector3D(-0.21F, HP::SHOULDER_Y - 0.02F - 0.03F * t, 0.15F);
-  } else if (attack_phase < 0.32F) {
+        QVector3D(-0.20F + 0.08F * power_t,
+                  HP::SHOULDER_Y - 0.04F - 0.06F * power_t, 0.17F + 0.22F * power_t);
 
-    float const t = easeInOutCubic((attack_phase - 0.18F) / 0.14F);
-    hand_r_target = prepare_pos * (1.0F - t) + raised_pos * t;
-    hand_l_target = QVector3D(-0.21F, HP::SHOULDER_Y - 0.05F, 0.17F);
-  } else if (attack_phase < 0.52F) {
+    // Explosive uncoil - torso rotates into strike, body leans forward
+    torso_twist = -0.05F + 0.14F * power_t;
+    forward_lean = 0.10F * power_t;
+    shoulder_rotation = 0.05F - 0.08F * power_t;
+    weight_shift = -0.02F + 0.08F * power_t;
+  } else if (attack_phase < 0.62F) {
+    // Phase 4: Follow-through - weapon continues past target
+    float t = (attack_phase - 0.48F) / 0.14F;
+    float ease_t = smoothstep(t);
+    hand_r_target = strike_pos * (1.0F - ease_t) + followthrough_pos * ease_t;
+    hand_l_target = QVector3D(-0.12F, HP::SHOULDER_Y - 0.10F, 0.39F);
 
-    float t = (attack_phase - 0.32F) / 0.20F;
-    t = t * t * t;
-    hand_r_target = raised_pos * (1.0F - t) + strike_pos * t;
-    hand_l_target = QVector3D(
-        -0.21F, HP::SHOULDER_Y - 0.03F * (1.0F - 0.5F * t), 0.17F + 0.20F * t);
-  } else if (attack_phase < 0.72F) {
-
-    float const t = easeInOutCubic((attack_phase - 0.52F) / 0.20F);
-    hand_r_target = strike_pos * (1.0F - t) + recover_pos * t;
-    hand_l_target = QVector3D(-0.20F, HP::SHOULDER_Y - 0.015F * (1.0F - t),
-                              lerp(0.37F, 0.20F, t));
+    torso_twist = 0.09F - 0.03F * t;
+    forward_lean = 0.10F - 0.02F * t;
+    weight_shift = 0.06F;
   } else {
+    // Phase 5: Recovery - return to guard
+    float t = (attack_phase - 0.62F) / 0.38F;
+    float ease_t = ease_out(t);
+    hand_r_target =
+        followthrough_pos * (1.0F - ease_t) + recover_pos * 0.5F * ease_t +
+        rest_pos * 0.5F * ease_t;
+    hand_l_target =
+        QVector3D(-0.12F - 0.08F * ease_t, HP::SHOULDER_Y - 0.10F * (1.0F - ease_t),
+                  0.39F * (1.0F - ease_t) + 0.15F * ease_t);
 
-    float const t = smoothstep(0.72F, 1.0F, attack_phase);
-    hand_r_target = recover_pos * (1.0F - t) + rest_pos * t;
-    hand_l_target = QVector3D(-0.20F - 0.02F * (1.0F - t), HP::SHOULDER_Y,
-                              lerp(0.20F, 0.15F, t));
+    torso_twist = 0.06F * (1.0F - ease_t);
+    forward_lean = 0.08F * (1.0F - ease_t);
+    weight_shift = 0.06F * (1.0F - ease_t);
+  }
+
+  // Apply body dynamics
+  if (std::abs(torso_twist) > 0.001F) {
+    m_pose.shoulder_r.setZ(m_pose.shoulder_r.z() + torso_twist);
+    m_pose.shoulder_l.setZ(m_pose.shoulder_l.z() - torso_twist * 0.6F);
+  }
+
+  if (std::abs(shoulder_rotation) > 0.001F) {
+    m_pose.shoulder_r.setY(m_pose.shoulder_r.y() - shoulder_rotation);
+    m_pose.shoulder_l.setY(m_pose.shoulder_l.y() + shoulder_rotation * 0.4F);
+  }
+
+  if (forward_lean > 0.001F) {
+    m_pose.shoulder_l.setZ(m_pose.shoulder_l.z() + forward_lean);
+    m_pose.shoulder_r.setZ(m_pose.shoulder_r.z() + forward_lean);
+    m_pose.neck_base.setZ(m_pose.neck_base.z() + forward_lean * 0.7F);
+    m_pose.head_pos.setZ(m_pose.head_pos.z() + forward_lean * 0.5F);
+    m_pose.pelvis_pos.setZ(m_pose.pelvis_pos.z() + forward_lean * 0.3F);
+  }
+
+  if (std::abs(weight_shift) > 0.001F) {
+    m_pose.foot_r.setZ(m_pose.foot_r.z() + weight_shift);
+    m_pose.knee_r.setZ(m_pose.knee_r.z() + weight_shift * 0.6F);
   }
 
   placeHandAt(false, hand_r_target);
@@ -500,22 +613,30 @@ void HumanoidPoseController::sword_slash_variant(float attack_phase,
 
   attack_phase = std::clamp(attack_phase, 0.0F, 1.0F);
 
+  // Base positions - will be modified by variant
   QVector3D rest_pos(0.20F, HP::SHOULDER_Y + 0.05F, 0.15F);
-  QVector3D prepare_pos(0.24F, HP::SHOULDER_Y + 0.12F, 0.05F);
-  QVector3D raised_pos(0.26F, HP::SHOULDER_Y + 0.18F, 0.12F);
-  QVector3D strike_pos(0.30F, HP::SHOULDER_Y - 0.12F, 0.58F);
-  QVector3D recover_pos(0.22F, HP::SHOULDER_Y + 0.02F, 0.22F);
+  QVector3D chamber_pos(0.28F, HP::SHOULDER_Y + 0.20F, 0.02F);
+  QVector3D apex_pos(0.30F, HP::SHOULDER_Y + 0.25F, 0.08F);
+  QVector3D strike_pos(0.18F, HP::SHOULDER_Y - 0.15F, 0.62F);
+  QVector3D followthrough_pos(0.05F, HP::WAIST_Y + 0.10F, 0.50F);
 
+  // Variant-specific attack patterns
+  float strike_direction = 1.0F; // 1.0 = right-to-left, -1.0 = left-to-right
   switch (variant % 3) {
   case 1:
-    prepare_pos = QVector3D(-0.08F, HP::SHOULDER_Y + 0.15F, 0.06F);
-    raised_pos = QVector3D(-0.06F, HP::SHOULDER_Y + 0.20F, 0.10F);
-    strike_pos = QVector3D(0.35F, HP::SHOULDER_Y - 0.10F, 0.55F);
+    // Left-to-right diagonal slash
+    chamber_pos = QVector3D(-0.10F, HP::SHOULDER_Y + 0.22F, 0.04F);
+    apex_pos = QVector3D(-0.08F, HP::SHOULDER_Y + 0.28F, 0.10F);
+    strike_pos = QVector3D(0.32F, HP::SHOULDER_Y - 0.12F, 0.58F);
+    followthrough_pos = QVector3D(0.40F, HP::WAIST_Y + 0.08F, 0.48F);
+    strike_direction = -1.0F;
     break;
   case 2:
-    prepare_pos = QVector3D(0.32F, HP::SHOULDER_Y + 0.10F, 0.02F);
-    raised_pos = QVector3D(0.35F, HP::SHOULDER_Y + 0.08F, 0.08F);
-    strike_pos = QVector3D(0.18F, HP::SHOULDER_Y - 0.08F, 0.60F);
+    // Horizontal slash from right
+    chamber_pos = QVector3D(0.35F, HP::SHOULDER_Y + 0.10F, 0.0F);
+    apex_pos = QVector3D(0.38F, HP::SHOULDER_Y + 0.08F, 0.06F);
+    strike_pos = QVector3D(0.05F, HP::SHOULDER_Y - 0.05F, 0.65F);
+    followthrough_pos = QVector3D(-0.10F, HP::SHOULDER_Y - 0.10F, 0.55F);
     break;
   default:
     break;
@@ -524,43 +645,87 @@ void HumanoidPoseController::sword_slash_variant(float attack_phase,
   QVector3D hand_r_target;
   QVector3D hand_l_target;
 
-  auto easeInOutCubic = [](float t) {
-    return t < 0.5F ? 4.0F * t * t * t
-                    : 1.0F - std::pow(-2.0F * t + 2.0F, 3.0F) / 2.0F;
-  };
+  // Body dynamics
+  float torso_twist = 0.0F;
+  float forward_lean = 0.0F;
+  float shoulder_rotation = 0.0F;
+  float weight_shift = 0.0F;
 
-  auto smoothstep = [](float edge0, float edge1, float x) {
-    float t = std::clamp((x - edge0) / (edge1 - edge0), 0.0F, 1.0F);
-    return t * t * (3.0F - 2.0F * t);
-  };
+  auto smoothstep = [](float t) { return t * t * (3.0F - 2.0F * t); };
+  auto ease_out = [](float t) { return 1.0F - (1.0F - t) * (1.0F - t); };
 
-  auto lerp = [](float a, float b, float t) { return a * (1.0F - t) + b * t; };
+  if (attack_phase < 0.15F) {
+    float t = attack_phase / 0.15F;
+    float ease_t = t * t;
+    hand_r_target = rest_pos * (1.0F - ease_t) + chamber_pos * ease_t;
+    hand_l_target = QVector3D(-0.20F, HP::SHOULDER_Y - 0.02F, 0.15F);
 
-  if (attack_phase < 0.18F) {
-    float const t = easeInOutCubic(attack_phase / 0.18F);
-    hand_r_target = rest_pos * (1.0F - t) + prepare_pos * t;
+    torso_twist = -0.05F * strike_direction * ease_t;
+    shoulder_rotation = 0.03F * ease_t;
+  } else if (attack_phase < 0.28F) {
+    float t = (attack_phase - 0.15F) / 0.13F;
+    float ease_t = smoothstep(t);
+    hand_r_target = chamber_pos * (1.0F - ease_t) + apex_pos * ease_t;
+    hand_l_target = QVector3D(-0.20F, HP::SHOULDER_Y - 0.04F, 0.17F);
+
+    torso_twist = -0.05F * strike_direction;
+    shoulder_rotation = 0.03F + 0.02F * ease_t;
+    weight_shift = -0.02F * ease_t;
+  } else if (attack_phase < 0.48F) {
+    float t = (attack_phase - 0.28F) / 0.20F;
+    float power_t = t * t * t;
+    hand_r_target = apex_pos * (1.0F - power_t) + strike_pos * power_t;
     hand_l_target =
-        QVector3D(-0.21F, HP::SHOULDER_Y - 0.02F - 0.03F * t, 0.15F);
-  } else if (attack_phase < 0.32F) {
-    float const t = easeInOutCubic((attack_phase - 0.18F) / 0.14F);
-    hand_r_target = prepare_pos * (1.0F - t) + raised_pos * t;
-    hand_l_target = QVector3D(-0.21F, HP::SHOULDER_Y - 0.05F, 0.17F);
-  } else if (attack_phase < 0.52F) {
-    float t = (attack_phase - 0.32F) / 0.20F;
-    t = t * t * t;
-    hand_r_target = raised_pos * (1.0F - t) + strike_pos * t;
-    hand_l_target = QVector3D(
-        -0.21F, HP::SHOULDER_Y - 0.03F * (1.0F - 0.5F * t), 0.17F + 0.20F * t);
-  } else if (attack_phase < 0.72F) {
-    float const t = easeInOutCubic((attack_phase - 0.52F) / 0.20F);
-    hand_r_target = strike_pos * (1.0F - t) + recover_pos * t;
-    hand_l_target = QVector3D(-0.20F, HP::SHOULDER_Y - 0.015F * (1.0F - t),
-                              lerp(0.37F, 0.20F, t));
+        QVector3D(-0.20F + 0.08F * power_t,
+                  HP::SHOULDER_Y - 0.04F - 0.06F * power_t, 0.17F + 0.22F * power_t);
+
+    torso_twist = -0.05F * strike_direction + 0.14F * strike_direction * power_t;
+    forward_lean = 0.10F * power_t;
+    shoulder_rotation = 0.05F - 0.08F * power_t;
+    weight_shift = -0.02F + 0.08F * power_t;
+  } else if (attack_phase < 0.62F) {
+    float t = (attack_phase - 0.48F) / 0.14F;
+    float ease_t = smoothstep(t);
+    hand_r_target = strike_pos * (1.0F - ease_t) + followthrough_pos * ease_t;
+    hand_l_target = QVector3D(-0.12F, HP::SHOULDER_Y - 0.10F, 0.39F);
+
+    torso_twist = 0.09F * strike_direction - 0.03F * strike_direction * t;
+    forward_lean = 0.10F - 0.02F * t;
+    weight_shift = 0.06F;
   } else {
-    float const t = smoothstep(0.72F, 1.0F, attack_phase);
-    hand_r_target = recover_pos * (1.0F - t) + rest_pos * t;
-    hand_l_target = QVector3D(-0.20F - 0.02F * (1.0F - t), HP::SHOULDER_Y,
-                              lerp(0.20F, 0.15F, t));
+    float t = (attack_phase - 0.62F) / 0.38F;
+    float ease_t = ease_out(t);
+    hand_r_target = followthrough_pos * (1.0F - ease_t) + rest_pos * ease_t;
+    hand_l_target =
+        QVector3D(-0.12F - 0.08F * ease_t, HP::SHOULDER_Y - 0.10F * (1.0F - ease_t),
+                  0.39F * (1.0F - ease_t) + 0.15F * ease_t);
+
+    torso_twist = 0.06F * strike_direction * (1.0F - ease_t);
+    forward_lean = 0.08F * (1.0F - ease_t);
+    weight_shift = 0.06F * (1.0F - ease_t);
+  }
+
+  // Apply body dynamics
+  if (std::abs(torso_twist) > 0.001F) {
+    m_pose.shoulder_r.setZ(m_pose.shoulder_r.z() + torso_twist);
+    m_pose.shoulder_l.setZ(m_pose.shoulder_l.z() - torso_twist * 0.6F);
+  }
+
+  if (std::abs(shoulder_rotation) > 0.001F) {
+    m_pose.shoulder_r.setY(m_pose.shoulder_r.y() - shoulder_rotation);
+    m_pose.shoulder_l.setY(m_pose.shoulder_l.y() + shoulder_rotation * 0.4F);
+  }
+
+  if (forward_lean > 0.001F) {
+    m_pose.shoulder_l.setZ(m_pose.shoulder_l.z() + forward_lean);
+    m_pose.shoulder_r.setZ(m_pose.shoulder_r.z() + forward_lean);
+    m_pose.neck_base.setZ(m_pose.neck_base.z() + forward_lean * 0.7F);
+    m_pose.head_pos.setZ(m_pose.head_pos.z() + forward_lean * 0.5F);
+  }
+
+  if (std::abs(weight_shift) > 0.001F) {
+    m_pose.foot_r.setZ(m_pose.foot_r.z() + weight_shift);
+    m_pose.knee_r.setZ(m_pose.knee_r.z() + weight_shift * 0.6F);
   }
 
   placeHandAt(false, hand_r_target);
