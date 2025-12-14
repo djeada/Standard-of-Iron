@@ -6,9 +6,45 @@
 #include "core/event_manager.h"
 #include "units/spawn_type.h"
 #include <chrono>
+#include <random>
 #include <string>
 
 namespace Game::Audio {
+
+namespace {
+
+thread_local std::mt19937 g_audio_rng(std::random_device{}());
+
+auto get_pitch_variation() -> float {
+  std::uniform_real_distribution<float> dist(0.9F, 1.1F);
+  return dist(g_audio_rng);
+}
+
+auto get_volume_variation() -> float {
+  std::uniform_real_distribution<float> dist(0.85F, 1.0F);
+  return dist(g_audio_rng);
+}
+
+auto get_hit_sound_for_type(Game::Units::SpawnType type) -> std::string {
+  switch (type) {
+  case Game::Units::SpawnType::Knight:
+  case Game::Units::SpawnType::MountedKnight:
+    return "combat_hit_sword";
+  case Game::Units::SpawnType::Spearman:
+  case Game::Units::SpawnType::HorseSpearman:
+    return "combat_hit_spear";
+  case Game::Units::SpawnType::Archer:
+  case Game::Units::SpawnType::HorseArcher:
+    return "combat_hit_arrow";
+  case Game::Units::SpawnType::Catapult:
+  case Game::Units::SpawnType::Ballista:
+    return "combat_hit_siege";
+  default:
+    return "combat_hit_generic";
+  }
+}
+
+} // namespace
 
 AudioEventHandler::AudioEventHandler(Engine::Core::World *world)
     : m_world(world) {}
@@ -44,6 +80,12 @@ auto AudioEventHandler::initialize() -> bool {
             onMusicTrigger(event);
           });
 
+  m_combatHitSub =
+      Engine::Core::ScopedEventSubscription<Engine::Core::CombatHitEvent>(
+          [](const Engine::Core::CombatHitEvent &event) {
+            onCombatHit(event);
+          });
+
   m_initialized = true;
   return true;
 }
@@ -57,6 +99,7 @@ void AudioEventHandler::shutdown() {
   m_ambientChangedSub.unsubscribe();
   m_audioTriggerSub.unsubscribe();
   m_musicTriggerSub.unsubscribe();
+  m_combatHitSub.unsubscribe();
 
   m_unitVoiceMap.clear();
   m_ambientMusicMap.clear();
@@ -138,6 +181,21 @@ void AudioEventHandler::onMusicTrigger(
     const Engine::Core::MusicTriggerEvent &event) {
   AudioSystem::getInstance().playMusic(event.music_id, event.volume,
                                        event.crossfade);
+}
+
+void AudioEventHandler::onCombatHit(const Engine::Core::CombatHitEvent &event) {
+  std::string const sound_id = get_hit_sound_for_type(event.attacker_type);
+  float const volume = COMBAT_HIT_VOLUME * get_volume_variation();
+
+  AudioSystem::getInstance().playSound(sound_id, volume, false,
+                                       COMBAT_HIT_PRIORITY,
+                                       AudioCategory::SFX);
+
+  if (event.is_killing_blow) {
+    AudioSystem::getInstance().playSound("combat_death", volume * 0.9F, false,
+                                         COMBAT_HIT_PRIORITY + 1,
+                                         AudioCategory::SFX);
+  }
 }
 
 } // namespace Game::Audio
