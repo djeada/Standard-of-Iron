@@ -35,7 +35,7 @@ namespace Engine::Core {
 
 namespace {
 
-auto combatModeToString(AttackComponent::CombatMode mode) -> QString {
+auto combat_mode_to_string(AttackComponent::CombatMode mode) -> QString {
   switch (mode) {
   case AttackComponent::CombatMode::Melee:
     return "melee";
@@ -47,7 +47,8 @@ auto combatModeToString(AttackComponent::CombatMode mode) -> QString {
   }
 }
 
-auto combatModeFromString(const QString &value) -> AttackComponent::CombatMode {
+auto combat_mode_from_string(const QString &value)
+    -> AttackComponent::CombatMode {
   if (value == "melee") {
     return AttackComponent::CombatMode::Melee;
   }
@@ -57,7 +58,7 @@ auto combatModeFromString(const QString &value) -> AttackComponent::CombatMode {
   return AttackComponent::CombatMode::Auto;
 }
 
-auto serializeColor(const std::array<float, 3> &color) -> QJsonArray {
+auto serialize_color(const std::array<float, 3> &color) -> QJsonArray {
   QJsonArray array;
   array.append(color[0]);
   array.append(color[1]);
@@ -65,7 +66,7 @@ auto serializeColor(const std::array<float, 3> &color) -> QJsonArray {
   return array;
 }
 
-void deserializeColor(const QJsonArray &array, std::array<float, 3> &color) {
+void deserialize_color(const QJsonArray &array, std::array<float, 3> &color) {
   if (array.size() >= 3) {
     color[0] = static_cast<float>(array.at(0).toDouble());
     color[1] = static_cast<float>(array.at(1).toDouble());
@@ -75,7 +76,7 @@ void deserializeColor(const QJsonArray &array, std::array<float, 3> &color) {
 
 } // namespace
 
-auto Serialization::serializeEntity(const Entity *entity) -> QJsonObject {
+auto Serialization::serialize_entity(const Entity *entity) -> QJsonObject {
   QJsonObject entity_obj;
   entity_obj["id"] = static_cast<qint64>(entity->get_id());
 
@@ -106,7 +107,7 @@ auto Serialization::serializeEntity(const Entity *entity) -> QJsonObject {
     }
     renderable_obj["visible"] = renderable->visible;
     renderable_obj["mesh"] = static_cast<int>(renderable->mesh);
-    renderable_obj["color"] = serializeColor(renderable->color);
+    renderable_obj["color"] = serialize_color(renderable->color);
     entity_obj["renderable"] = renderable_obj;
   }
 
@@ -161,8 +162,9 @@ auto Serialization::serializeEntity(const Entity *entity) -> QJsonObject {
     attack_obj["melee_range"] = attack->melee_range;
     attack_obj["melee_damage"] = attack->melee_damage;
     attack_obj["melee_cooldown"] = attack->melee_cooldown;
-    attack_obj["preferred_mode"] = combatModeToString(attack->preferred_mode);
-    attack_obj["current_mode"] = combatModeToString(attack->current_mode);
+    attack_obj["preferred_mode"] =
+        combat_mode_to_string(attack->preferred_mode);
+    attack_obj["current_mode"] = combat_mode_to_string(attack->current_mode);
     attack_obj["can_melee"] = attack->can_melee;
     attack_obj["can_ranged"] = attack->can_ranged;
     attack_obj["max_height_difference"] = attack->max_height_difference;
@@ -238,10 +240,53 @@ auto Serialization::serializeEntity(const Entity *entity) -> QJsonObject {
     entity_obj["capture"] = capture_obj;
   }
 
+  if (const auto *hold_mode = entity->get_component<HoldModeComponent>()) {
+    QJsonObject hold_mode_obj;
+    hold_mode_obj["active"] = hold_mode->active;
+    hold_mode_obj["exit_cooldown"] =
+        static_cast<double>(hold_mode->exit_cooldown);
+    hold_mode_obj["stand_up_duration"] =
+        static_cast<double>(hold_mode->stand_up_duration);
+    entity_obj["hold_mode"] = hold_mode_obj;
+  }
+
+  if (const auto *healer = entity->get_component<HealerComponent>()) {
+    QJsonObject healer_obj;
+    healer_obj["healing_range"] = static_cast<double>(healer->healing_range);
+    healer_obj["healing_amount"] = healer->healing_amount;
+    healer_obj["healing_cooldown"] =
+        static_cast<double>(healer->healing_cooldown);
+    healer_obj["time_since_last_heal"] =
+        static_cast<double>(healer->time_since_last_heal);
+    entity_obj["healer"] = healer_obj;
+  }
+
+  if (const auto *catapult =
+          entity->get_component<CatapultLoadingComponent>()) {
+    QJsonObject catapult_obj;
+    catapult_obj["state"] = static_cast<int>(catapult->state);
+    catapult_obj["loading_time"] = static_cast<double>(catapult->loading_time);
+    catapult_obj["loading_duration"] =
+        static_cast<double>(catapult->loading_duration);
+    catapult_obj["firing_time"] = static_cast<double>(catapult->firing_time);
+    catapult_obj["firing_duration"] =
+        static_cast<double>(catapult->firing_duration);
+    catapult_obj["target_id"] = static_cast<qint64>(catapult->target_id);
+    catapult_obj["target_locked_x"] =
+        static_cast<double>(catapult->target_locked_x);
+    catapult_obj["target_locked_y"] =
+        static_cast<double>(catapult->target_locked_y);
+    catapult_obj["target_locked_z"] =
+        static_cast<double>(catapult->target_locked_z);
+    catapult_obj["target_position_locked"] = catapult->target_position_locked;
+    entity_obj["catapult_loading"] = catapult_obj;
+  }
+
   return entity_obj;
 }
 
-void Serialization::deserializeEntity(Entity *entity, const QJsonObject &json) {
+void Serialization::deserialize_entity(Entity *entity,
+                                       const QJsonObject &json) {
   if (json.contains("transform")) {
     const auto transform_obj = json["transform"].toObject();
     auto *transform = entity->add_component<TransformComponent>();
@@ -282,7 +327,7 @@ void Serialization::deserializeEntity(Entity *entity, const QJsonObject &json) {
         static_cast<RenderableComponent::MeshKind>(renderable_obj["mesh"].toInt(
             static_cast<int>(RenderableComponent::MeshKind::Cube)));
     if (renderable_obj.contains("color")) {
-      deserializeColor(renderable_obj["color"].toArray(), renderable->color);
+      deserialize_color(renderable_obj["color"].toArray(), renderable->color);
     }
   }
 
@@ -369,9 +414,9 @@ void Serialization::deserializeEntity(Entity *entity, const QJsonObject &json) {
     attack->melee_cooldown =
         static_cast<float>(attack_obj["melee_cooldown"].toDouble());
     attack->preferred_mode =
-        combatModeFromString(attack_obj["preferred_mode"].toString());
+        combat_mode_from_string(attack_obj["preferred_mode"].toString());
     attack->current_mode =
-        combatModeFromString(attack_obj["current_mode"].toString());
+        combat_mode_from_string(attack_obj["current_mode"].toString());
     attack->can_melee = attack_obj["can_melee"].toBool(true);
     attack->can_ranged = attack_obj["can_ranged"].toBool(false);
     attack->max_height_difference =
@@ -456,9 +501,58 @@ void Serialization::deserializeEntity(Entity *entity, const QJsonObject &json) {
             static_cast<double>(Defaults::kCaptureRequiredTime)));
     capture->is_being_captured = capture_obj["is_being_captured"].toBool(false);
   }
+
+  if (json.contains("hold_mode")) {
+    const auto hold_mode_obj = json["hold_mode"].toObject();
+    auto *hold_mode = entity->add_component<HoldModeComponent>();
+    hold_mode->active = hold_mode_obj["active"].toBool(true);
+    hold_mode->exit_cooldown =
+        static_cast<float>(hold_mode_obj["exit_cooldown"].toDouble(0.0));
+    hold_mode->stand_up_duration =
+        static_cast<float>(hold_mode_obj["stand_up_duration"].toDouble(
+            static_cast<double>(Defaults::kHoldStandUpDuration)));
+  }
+
+  if (json.contains("healer")) {
+    const auto healer_obj = json["healer"].toObject();
+    auto *healer = entity->add_component<HealerComponent>();
+    healer->healing_range =
+        static_cast<float>(healer_obj["healing_range"].toDouble(8.0));
+    healer->healing_amount = healer_obj["healing_amount"].toInt(5);
+    healer->healing_cooldown =
+        static_cast<float>(healer_obj["healing_cooldown"].toDouble(2.0));
+    healer->time_since_last_heal =
+        static_cast<float>(healer_obj["time_since_last_heal"].toDouble(0.0));
+  }
+
+  if (json.contains("catapult_loading")) {
+    const auto catapult_obj = json["catapult_loading"].toObject();
+    auto *catapult = entity->add_component<CatapultLoadingComponent>();
+    catapult->state = static_cast<CatapultLoadingComponent::LoadingState>(
+        catapult_obj["state"].toInt(
+            static_cast<int>(CatapultLoadingComponent::LoadingState::Idle)));
+    catapult->loading_time =
+        static_cast<float>(catapult_obj["loading_time"].toDouble(0.0));
+    catapult->loading_duration =
+        static_cast<float>(catapult_obj["loading_duration"].toDouble(2.0));
+    catapult->firing_time =
+        static_cast<float>(catapult_obj["firing_time"].toDouble(0.0));
+    catapult->firing_duration =
+        static_cast<float>(catapult_obj["firing_duration"].toDouble(0.5));
+    catapult->target_id = static_cast<EntityID>(
+        catapult_obj["target_id"].toVariant().toULongLong());
+    catapult->target_locked_x =
+        static_cast<float>(catapult_obj["target_locked_x"].toDouble(0.0));
+    catapult->target_locked_y =
+        static_cast<float>(catapult_obj["target_locked_y"].toDouble(0.0));
+    catapult->target_locked_z =
+        static_cast<float>(catapult_obj["target_locked_z"].toDouble(0.0));
+    catapult->target_position_locked =
+        catapult_obj["target_position_locked"].toBool(false);
+  }
 }
 
-auto Serialization::serializeTerrain(
+auto Serialization::serialize_terrain(
     const Game::Map::TerrainHeightMap *height_map,
     const Game::Map::BiomeSettings &biome,
     const std::vector<Game::Map::RoadSegment> &roads) -> QJsonObject {
@@ -580,7 +674,7 @@ auto Serialization::serializeTerrain(
   return terrain_obj;
 }
 
-void Serialization::deserializeTerrain(
+void Serialization::deserialize_terrain(
     Game::Map::TerrainHeightMap *height_map, Game::Map::BiomeSettings &biome,
     std::vector<Game::Map::RoadSegment> &roads, const QJsonObject &json) {
   if ((height_map == nullptr) || json.isEmpty()) {
@@ -775,13 +869,13 @@ void Serialization::deserializeTerrain(
   height_map->restoreFromData(heights, terrain_types, rivers, bridges);
 }
 
-auto Serialization::serializeWorld(const World *world) -> QJsonDocument {
+auto Serialization::serialize_world(const World *world) -> QJsonDocument {
   QJsonObject world_obj;
   QJsonArray entities_array;
 
   const auto &entities = world->get_entities();
   for (const auto &[id, entity] : entities) {
-    QJsonObject const entity_obj = serializeEntity(entity.get());
+    QJsonObject const entity_obj = serialize_entity(entity.get());
     entities_array.append(entity_obj);
   }
 
@@ -794,15 +888,15 @@ auto Serialization::serializeWorld(const World *world) -> QJsonDocument {
   const auto &terrain_service = Game::Map::TerrainService::instance();
   if (terrain_service.is_initialized() &&
       (terrain_service.get_height_map() != nullptr)) {
-    world_obj["terrain"] = serializeTerrain(terrain_service.get_height_map(),
-                                            terrain_service.biome_settings(),
-                                            terrain_service.road_segments());
+    world_obj["terrain"] = serialize_terrain(terrain_service.get_height_map(),
+                                             terrain_service.biome_settings(),
+                                             terrain_service.road_segments());
   }
 
   return QJsonDocument(world_obj);
 }
 
-void Serialization::deserializeWorld(World *world, const QJsonDocument &doc) {
+void Serialization::deserialize_world(World *world, const QJsonDocument &doc) {
   auto world_obj = doc.object();
   auto entities_array = world_obj["entities"].toArray();
   for (const auto &value : entities_array) {
@@ -813,7 +907,7 @@ void Serialization::deserializeWorld(World *world, const QJsonDocument &doc) {
                        ? world->create_entity()
                        : world->create_entity_with_id(entity_id);
     if (entity != nullptr) {
-      deserializeEntity(entity, entity_obj);
+      deserialize_entity(entity, entity_obj);
     }
   }
 
@@ -844,7 +938,7 @@ void Serialization::deserializeWorld(World *world, const QJsonDocument &doc) {
 
     auto temp_height_map =
         std::make_unique<Game::Map::TerrainHeightMap>(width, height, tile_size);
-    deserializeTerrain(temp_height_map.get(), biome, roads, terrain_obj);
+    deserialize_terrain(temp_height_map.get(), biome, roads, terrain_obj);
 
     auto &terrain_service = Game::Map::TerrainService::instance();
     terrain_service.restore_from_serialized(
@@ -854,8 +948,8 @@ void Serialization::deserializeWorld(World *world, const QJsonDocument &doc) {
   }
 }
 
-auto Serialization::saveToFile(const QString &filename,
-                               const QJsonDocument &doc) -> bool {
+auto Serialization::save_to_file(const QString &filename,
+                                 const QJsonDocument &doc) -> bool {
   QFile file(filename);
   if (!file.open(QIODevice::WriteOnly)) {
     qWarning() << "Could not open file for writing:" << filename;
