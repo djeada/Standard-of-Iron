@@ -233,6 +233,9 @@ public:
   Q_INVOKABLE bool delete_save_slot(const QString &slot_name);
   Q_INVOKABLE void exit_game();
   Q_INVOKABLE [[nodiscard]] QVariantList get_owner_info() const;
+  Q_INVOKABLE [[nodiscard]] QImage
+  generate_map_preview(const QString &map_path,
+                       const QVariantList &player_configs) const;
 
   [[nodiscard]] QImage minimap_image() const;
 
