@@ -45,6 +45,7 @@ public:
 private:
   QImage m_minimap_image;
   QImage m_minimap_base_image;
+  QImage m_minimap_fog_image;
   std::uint64_t m_minimap_fog_version = 0;
   std::unique_ptr<Game::Map::Minimap::UnitLayer> m_unit_layer;
   std::unique_ptr<Game::Map::Minimap::CameraViewportLayer> m_camera_viewport_layer;
