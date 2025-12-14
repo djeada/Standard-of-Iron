@@ -1002,7 +1002,7 @@ Item {
                                     border.color: model.isEnabled ? Theme.accent : Theme.thumbBr
                                     border.width: enabledCheckMA.containsMouse ? 2 : 1
                                     ToolTip.visible: enabledCheckMA.containsMouse
-                                    ToolTip.text: model.isEnabled ? qsTr("Disable player (spectate only)") : qsTr("Enable player")
+                                    ToolTip.text: model.isEnabled ? qsTr("Disable player (spectator mode)") : qsTr("Enable player")
 
                                     Text {
                                         anchors.centerIn: parent
@@ -1025,21 +1025,18 @@ Item {
                                         ColorAnimation {
                                             duration: Theme.animFast
                                         }
-
                                     }
 
                                     Behavior on border.color {
                                         ColorAnimation {
                                             duration: Theme.animFast
                                         }
-
                                     }
 
                                     Behavior on border.width {
                                         NumberAnimation {
                                             duration: Theme.animFast
                                         }
-
                                     }
 
                                 }
