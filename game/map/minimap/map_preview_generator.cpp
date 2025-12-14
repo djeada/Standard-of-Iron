@@ -2,6 +2,7 @@
 #include "../../units/spawn_type.h"
 #include "../map_loader.h"
 #include "minimap_generator.h"
+#include "minimap_utils.h"
 #include <QColor>
 #include <QFile>
 #include <QJsonDocument>
@@ -14,9 +15,6 @@
 namespace Game::Map::Minimap {
 
 namespace {
-
-constexpr float k_camera_yaw_cos = -0.70710678118F;
-constexpr float k_camera_yaw_sin = -0.70710678118F;
 
 constexpr float BASE_SIZE = 16.0F;
 constexpr float INNER_SIZE_RATIO = 0.35F;
@@ -112,15 +110,8 @@ void MapPreviewGenerator::draw_player_bases(
       continue;
     }
 
-    // Transform grid coordinates to world coordinates (centered at origin)
-    float world_x = spawn.x;
-    float world_z = spawn.z;
-    if (map_def.coordSystem == CoordSystem::Grid) {
-      const float tile = std::max(0.0001F, map_def.grid.tile_size);
-      world_x = (spawn.x - (map_def.grid.width * 0.5F - 0.5F)) * tile;
-      world_z = (spawn.z - (map_def.grid.height * 0.5F - 0.5F)) * tile;
-    }
-
+    const auto [world_x, world_z] =
+        grid_to_world_coords(spawn.x, spawn.z, map_def);
     const auto [px, py] =
         world_to_pixel(world_x, world_z, map_def.grid, pixels_per_tile);
 
@@ -145,10 +136,10 @@ auto MapPreviewGenerator::world_to_pixel(
     float world_x, float world_z, const GridDefinition &grid,
     float pixels_per_tile) const -> std::pair<float, float> {
 
-  const float rotated_x =
-      world_x * k_camera_yaw_cos - world_z * k_camera_yaw_sin;
-  const float rotated_z =
-      world_x * k_camera_yaw_sin + world_z * k_camera_yaw_cos;
+  const float rotated_x = world_x * Constants::k_camera_yaw_cos -
+                          world_z * Constants::k_camera_yaw_sin;
+  const float rotated_z = world_x * Constants::k_camera_yaw_sin +
+                          world_z * Constants::k_camera_yaw_cos;
 
   const float world_width = grid.width * grid.tile_size;
   const float world_height = grid.height * grid.tile_size;
