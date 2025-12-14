@@ -23,7 +23,6 @@ void ExpandBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   }
   m_expand_timer = 0.0F;
 
-  // Find neutral barracks
   const ContactSnapshot *closest_neutral_barracks = nullptr;
   float closest_distance_sq = std::numeric_limits<float>::max();
 
@@ -36,12 +35,10 @@ void ExpandBehavior::execute(const AISnapshot &snapshot, AIContext &context,
       continue;
     }
 
-    // Check if it's neutral
     if (!Game::Core::isNeutralOwner(enemy.owner_id)) {
       continue;
     }
 
-    // Calculate distance from base
     if (context.primary_barracks != 0) {
       float const dx = enemy.posX - context.base_pos_x;
       float const dz = enemy.posZ - context.base_pos_z;
@@ -58,7 +55,6 @@ void ExpandBehavior::execute(const AISnapshot &snapshot, AIContext &context,
     return;
   }
 
-  // Gather units that are not engaged
   std::vector<const EntitySnapshot *> available_units;
   available_units.reserve(snapshot.friendly_units.size());
 
@@ -67,7 +63,6 @@ void ExpandBehavior::execute(const AISnapshot &snapshot, AIContext &context,
       continue;
     }
 
-    // Don't take units that are currently engaged in combat
     if (isEntityEngaged(entity, snapshot.visible_enemies)) {
       continue;
     }
@@ -79,9 +74,8 @@ void ExpandBehavior::execute(const AISnapshot &snapshot, AIContext &context,
     return;
   }
 
-  // Move units toward the neutral barracks
-  constexpr float CAPTURE_APPROACH_DISTANCE = 5.0F; // Get close to capture
-  
+  constexpr float CAPTURE_APPROACH_DISTANCE = 5.0F;
+
   std::vector<Engine::Core::EntityID> unit_ids;
   std::vector<float> target_x;
   std::vector<float> target_y;
@@ -94,37 +88,35 @@ void ExpandBehavior::execute(const AISnapshot &snapshot, AIContext &context,
 
   for (const auto *unit : available_units) {
     unit_ids.push_back(unit->id);
-    
-    // Calculate approach position (slightly offset for better capture positioning)
+
     float offset_x = 0.0F;
     float offset_z = 0.0F;
-    
+
     if (context.primary_barracks != 0) {
       float const dx = unit->posX - closest_neutral_barracks->posX;
       float const dz = unit->posZ - closest_neutral_barracks->posZ;
       float const dist = std::sqrt(dx * dx + dz * dz);
-      
+
       if (dist > 0.1F) {
         offset_x = -(dx / dist) * CAPTURE_APPROACH_DISTANCE;
         offset_z = -(dz / dist) * CAPTURE_APPROACH_DISTANCE;
       }
     }
-    
+
     target_x.push_back(closest_neutral_barracks->posX + offset_x);
     target_y.push_back(0.0F);
     target_z.push_back(closest_neutral_barracks->posZ + offset_z);
   }
 
-  auto claimed_units = claimUnits(unit_ids, getPriority(), "expanding",
-                                  context, snapshot.game_time, 2.0F);
+  auto claimed_units = claimUnits(unit_ids, getPriority(), "expanding", context,
+                                  snapshot.game_time, 2.0F);
 
   if (claimed_units.empty()) {
     return;
   }
 
-  // Filter targets to match claimed units using unordered_set for O(n) lookup
-  std::unordered_set<Engine::Core::EntityID> claimed_set(claimed_units.begin(), 
-                                                           claimed_units.end());
+  std::unordered_set<Engine::Core::EntityID> claimed_set(claimed_units.begin(),
+                                                         claimed_units.end());
   std::vector<float> filtered_x;
   std::vector<float> filtered_y;
   std::vector<float> filtered_z;
@@ -153,9 +145,8 @@ auto ExpandBehavior::should_execute(const AISnapshot &snapshot,
     return false;
   }
 
-  // Check if there are any neutral barracks visible
   for (const auto &enemy : snapshot.visible_enemies) {
-    if (enemy.is_building && 
+    if (enemy.is_building &&
         enemy.spawn_type == Game::Units::SpawnType::Barracks &&
         Game::Core::isNeutralOwner(enemy.owner_id)) {
       return true;

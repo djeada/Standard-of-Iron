@@ -73,7 +73,7 @@ struct EntitySnapshot {
 struct ContactSnapshot {
   Engine::Core::EntityID id = 0;
   bool is_building = false;
-  int owner_id = 0;  // Add owner_id to identify neutral buildings
+  int owner_id = 0;
 
   float posX = 0.0F;
   float posY = 0.0F;
@@ -140,13 +140,11 @@ struct AIContext {
 
   std::unordered_map<Engine::Core::EntityID, float> buildings_under_attack;
 
-  // Anti-deadlock tracking
   int consecutive_no_progress_cycles = 0;
   float last_meaningful_action_time = 0.0F;
   int last_total_units = 0;
-  float max_state_duration = 60.0F; // Force state change after 60s
-  
-  // Debug/profiling data
+  float max_state_duration = 60.0F;
+
   struct DebugInfo {
     int total_decisions_made = 0;
     int total_commands_issued = 0;

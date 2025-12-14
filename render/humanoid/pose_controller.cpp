@@ -495,7 +495,7 @@ void HumanoidPoseController::hit_flinch(float intensity) {
 }
 
 void HumanoidPoseController::sword_slash_variant(float attack_phase,
-                                                  std::uint8_t variant) {
+                                                 std::uint8_t variant) {
   using HP = HumanProportions;
 
   attack_phase = std::clamp(attack_phase, 0.0F, 1.0F);
@@ -568,7 +568,7 @@ void HumanoidPoseController::sword_slash_variant(float attack_phase,
 }
 
 void HumanoidPoseController::spear_thrust_variant(float attack_phase,
-                                                   std::uint8_t variant) {
+                                                  std::uint8_t variant) {
   using HP = HumanProportions;
 
   attack_phase = std::clamp(attack_phase, 0.0F, 1.0F);
@@ -640,22 +640,17 @@ void HumanoidPoseController::spear_thrust_variant(float attack_phase,
 }
 
 void HumanoidPoseController::tilt_torso(float side_tilt, float forward_tilt) {
-  // Apply subtle tilt to upper body components
-  // side_tilt: positive = lean right, negative = lean left
-  // forward_tilt: positive = lean forward, negative = lean back
 
   QVector3D const right = m_anim_ctx.heading_right();
   QVector3D const forward = m_anim_ctx.heading_forward();
 
   QVector3D const offset = right * side_tilt + forward * forward_tilt;
 
-  // Apply offset to upper body positions
   m_pose.shoulder_l += offset;
   m_pose.shoulder_r += offset;
   m_pose.neck_base += offset * 1.2F;
   m_pose.head_pos += offset * 1.5F;
 
-  // Also adjust body frames if they're initialized
   m_pose.body_frames.torso.origin += offset;
   m_pose.body_frames.head.origin += offset * 1.5F;
 }

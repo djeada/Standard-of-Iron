@@ -23,10 +23,9 @@ void AIExecutor::run(const AISnapshot &snapshot, AIContext &context,
       size_t commands_before = outCommands.size();
       behavior.execute(snapshot, context, delta_time, outCommands);
       size_t commands_after = outCommands.size();
-      
-      // Track commands issued for debugging
-      context.debug_info.total_commands_issued += 
-        static_cast<int>(commands_after - commands_before);
+
+      context.debug_info.total_commands_issued +=
+          static_cast<int>(commands_after - commands_before);
 
       if (!behavior.canRunConcurrently()) {
         exclusive_behavior_executed = true;

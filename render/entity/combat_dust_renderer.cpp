@@ -44,15 +44,13 @@ void render_combat_dust(Renderer *renderer, ResourceManager *,
       continue;
     }
 
-    // Only render dust for units in active melee combat
     if (!attack->in_melee_lock) {
       continue;
     }
 
-    // Skip units not visible to the camera
     if (!visibility.is_entity_visible(transform->position.x,
-                                       transform->position.z,
-                                       kVisibilityCheckRadius)) {
+                                      transform->position.z,
+                                      kVisibilityCheckRadius)) {
       continue;
     }
 

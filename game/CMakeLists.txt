@@ -28,6 +28,7 @@ add_library(game_systems STATIC
     systems/ai_system/behaviors/attack_behavior.cpp
     systems/ai_system/behaviors/defend_behavior.cpp
     systems/ai_system/behaviors/retreat_behavior.cpp
+    systems/ai_system/behaviors/expand_behavior.cpp
     systems/patrol_system.cpp
     systems/pathfinding.cpp
     systems/building_collision_registry.cpp

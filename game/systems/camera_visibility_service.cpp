@@ -42,7 +42,7 @@ auto CameraVisibilityService::is_entity_visible(float world_x, float world_z,
 
 namespace {
 constexpr float kDetailEffectsFrustumRadius = 2.0F;
-} // namespace
+}
 
 auto CameraVisibilityService::should_process_detailed_effects(
     float world_x, float world_y, float world_z,

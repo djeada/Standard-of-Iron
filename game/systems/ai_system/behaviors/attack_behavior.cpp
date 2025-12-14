@@ -58,52 +58,50 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   group_center_y *= inv_count;
   group_center_z *= inv_count;
 
-  // If no enemies visible and in attacking state, be proactive and scout/advance
   if (snapshot.visible_enemies.empty()) {
-    // Scouting threshold lower than proactive attack (3 vs 4) allows early exploration
+
     constexpr int MIN_UNITS_FOR_SCOUTING = 3;
-    if (context.state == AIState::Attacking && context.total_units >= MIN_UNITS_FOR_SCOUTING) {
-      // Scout in different directions to explore the map
-      constexpr float SCOUT_ADVANCE_DISTANCE = 40.0F; // Increased from 30 for better exploration
-      constexpr float SCOUT_ROTATION_INTERVAL = 10.0F; // Change direction every 10s
-      
+    if (context.state == AIState::Attacking &&
+        context.total_units >= MIN_UNITS_FOR_SCOUTING) {
+
+      constexpr float SCOUT_ADVANCE_DISTANCE = 40.0F;
+      constexpr float SCOUT_ROTATION_INTERVAL = 10.0F;
+
       m_lastScoutTime += delta_time;
       if (m_lastScoutTime > SCOUT_ROTATION_INTERVAL) {
-        m_scoutDirection = (m_scoutDirection + 1) % 4; // Rotate through N/E/S/W
+        m_scoutDirection = (m_scoutDirection + 1) % 4;
         m_lastScoutTime = 0.0F;
       }
-      
+
       float scout_x = 0.0F;
       float scout_z = 0.0F;
-      
-      // If we have a base position, scout in rotating cardinal directions
+
       if (context.primary_barracks != 0) {
-        // Calculate direction based on scout direction
+
         switch (m_scoutDirection) {
-          case 0: // North
-            scout_x = context.base_pos_x;
-            scout_z = context.base_pos_z + SCOUT_ADVANCE_DISTANCE;
-            break;
-          case 1: // East
-            scout_x = context.base_pos_x + SCOUT_ADVANCE_DISTANCE;
-            scout_z = context.base_pos_z;
-            break;
-          case 2: // South
-            scout_x = context.base_pos_x;
-            scout_z = context.base_pos_z - SCOUT_ADVANCE_DISTANCE;
-            break;
-          case 3: // West
-            scout_x = context.base_pos_x - SCOUT_ADVANCE_DISTANCE;
-            scout_z = context.base_pos_z;
-            break;
+        case 0:
+          scout_x = context.base_pos_x;
+          scout_z = context.base_pos_z + SCOUT_ADVANCE_DISTANCE;
+          break;
+        case 1:
+          scout_x = context.base_pos_x + SCOUT_ADVANCE_DISTANCE;
+          scout_z = context.base_pos_z;
+          break;
+        case 2:
+          scout_x = context.base_pos_x;
+          scout_z = context.base_pos_z - SCOUT_ADVANCE_DISTANCE;
+          break;
+        case 3:
+          scout_x = context.base_pos_x - SCOUT_ADVANCE_DISTANCE;
+          scout_z = context.base_pos_z;
+          break;
         }
       } else {
-        // No base, scout toward map center
+
         scout_x = 0.0F;
         scout_z = 0.0F;
       }
-      
-      // Issue scout command
+
       std::vector<Engine::Core::EntityID> unit_ids;
       std::vector<float> target_x;
       std::vector<float> target_y;
@@ -341,12 +339,10 @@ auto AttackBehavior::should_execute(const AISnapshot &snapshot,
     return false;
   }
 
-  // Always execute in Attacking state to enable proactive scouting
   if (context.state == AIState::Attacking) {
     return true;
   }
 
-  // For other states, require visible enemies
   if (snapshot.visible_enemies.empty()) {
     return false;
   }

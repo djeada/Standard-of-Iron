@@ -92,7 +92,8 @@ void DefendBehavior::execute(const AISnapshot &snapshot, AIContext &context,
       ready_defenders.size() + engaged_defenders.size();
   std::size_t desired_count = total_available;
 
-  if (context.barracks_under_threat || !context.buildings_under_attack.empty()) {
+  if (context.barracks_under_threat ||
+      !context.buildings_under_attack.empty()) {
 
     desired_count = total_available;
   } else {
@@ -109,7 +110,8 @@ void DefendBehavior::execute(const AISnapshot &snapshot, AIContext &context,
     return;
   }
 
-  if (context.barracks_under_threat || !context.buildings_under_attack.empty()) {
+  if (context.barracks_under_threat ||
+      !context.buildings_under_attack.empty()) {
 
     std::vector<const ContactSnapshot *> nearby_threats;
     nearby_threats.reserve(snapshot.visible_enemies.size());
@@ -307,7 +309,8 @@ auto DefendBehavior::should_execute(const AISnapshot &snapshot,
     return false;
   }
 
-  if (context.barracks_under_threat || !context.buildings_under_attack.empty()) {
+  if (context.barracks_under_threat ||
+      !context.buildings_under_attack.empty()) {
     return true;
   }
 

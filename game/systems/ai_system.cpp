@@ -86,7 +86,6 @@ void AISystem::update(Engine::Core::World *world, float delta_time) {
 
     ai.update_timer += delta_time;
 
-    // Use configurable update interval for scalability
     if (ai.update_timer < m_update_interval) {
       continue;
     }
