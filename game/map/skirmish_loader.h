@@ -48,6 +48,7 @@ struct SkirmishLoadResult {
   VictoryConfig victoryConfig;
   QVector3D focusPosition;
   bool has_focus_position = false;
+  bool is_spectator_mode = false;
 };
 
 class SkirmishLoader {
