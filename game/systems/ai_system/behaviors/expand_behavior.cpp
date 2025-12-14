@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -115,20 +116,21 @@ void ExpandBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   }
 
   auto claimed_units = claimUnits(unit_ids, getPriority(), "expanding",
-                                  context, m_expand_timer + delta_time, 2.0F);
+                                  context, snapshot.game_time, 2.0F);
 
   if (claimed_units.empty()) {
     return;
   }
 
-  // Filter targets to match claimed units
+  // Filter targets to match claimed units using unordered_set for O(n) lookup
+  std::unordered_set<Engine::Core::EntityID> claimed_set(claimed_units.begin(), 
+                                                           claimed_units.end());
   std::vector<float> filtered_x;
   std::vector<float> filtered_y;
   std::vector<float> filtered_z;
 
   for (size_t i = 0; i < unit_ids.size(); ++i) {
-    if (std::find(claimed_units.begin(), claimed_units.end(), unit_ids[i]) !=
-        claimed_units.end()) {
+    if (claimed_set.count(unit_ids[i]) > 0) {
       filtered_x.push_back(target_x[i]);
       filtered_y.push_back(target_y[i]);
       filtered_z.push_back(target_z[i]);
