@@ -1,15 +1,11 @@
 #include "unit_layer.h"
+#include "minimap_utils.h"
 
 #include <QPainter>
 #include <algorithm>
 #include <cmath>
 
 namespace Game::Map::Minimap {
-
-namespace {
-constexpr float k_camera_yaw_cos = -0.70710678118F;
-constexpr float k_camera_yaw_sin = -0.70710678118F;
-} // namespace
 
 void UnitLayer::init(int width, int height, float world_width,
                      float world_height) {
@@ -30,10 +26,10 @@ void UnitLayer::init(int width, int height, float world_width,
 auto UnitLayer::world_to_pixel(float world_x,
                                float world_z) const -> std::pair<float, float> {
 
-  const float rotated_x =
-      world_x * k_camera_yaw_cos - world_z * k_camera_yaw_sin;
-  const float rotated_z =
-      world_x * k_camera_yaw_sin + world_z * k_camera_yaw_cos;
+  const float rotated_x = world_x * Constants::k_camera_yaw_cos -
+                          world_z * Constants::k_camera_yaw_sin;
+  const float rotated_z = world_x * Constants::k_camera_yaw_sin +
+                          world_z * Constants::k_camera_yaw_cos;
 
   const float px = (rotated_x + m_offset_x) * m_scale_x;
   const float py = (rotated_z + m_offset_y) * m_scale_y;

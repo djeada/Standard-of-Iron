@@ -3,14 +3,18 @@
 #include "game/core/component.h"
 #include "game/core/world.h"
 #include "game/map/map_loader.h"
+#include "game/map/minimap/camera_viewport_layer.h"
 #include "game/map/minimap/minimap_generator.h"
+#include "game/map/minimap/minimap_utils.h"
 #include "game/map/minimap/unit_layer.h"
 #include "game/map/visibility_service.h"
 #include "game/systems/selection_system.h"
 #include "game/units/troop_type.h"
+#include "render/gl/camera.h"
 #include <QDebug>
 #include <QPainter>
 #include <algorithm>
+#include <cmath>
 #include <unordered_set>
 
 MinimapManager::MinimapManager() = default;
@@ -28,6 +32,11 @@ void MinimapManager::generate_for_map(const Game::Map::MapDefinition &map_def) {
 
     m_world_width = static_cast<float>(map_def.grid.width);
     m_world_height = static_cast<float>(map_def.grid.height);
+    m_tile_size = map_def.grid.tile_size;
+
+    // Initialize fog image with a copy of the base image
+    m_minimap_fog_image = m_minimap_base_image.copy();
+    m_minimap_image = m_minimap_fog_image.copy();
 
     m_unit_layer = std::make_unique<Game::Map::Minimap::UnitLayer>();
     m_unit_layer->init(m_minimap_base_image.width(),
@@ -35,6 +44,12 @@ void MinimapManager::generate_for_map(const Game::Map::MapDefinition &map_def) {
                        m_world_height);
     qDebug() << "MinimapManager: Initialized unit layer for world"
              << m_world_width << "x" << m_world_height;
+
+    m_camera_viewport_layer =
+        std::make_unique<Game::Map::Minimap::CameraViewportLayer>();
+    m_camera_viewport_layer->init(m_minimap_base_image.width(),
+                                  m_minimap_base_image.height(), m_world_width,
+                                  m_world_height);
 
     m_minimap_fog_version = 0;
     m_minimap_update_timer = MINIMAP_UPDATE_INTERVAL;
@@ -57,14 +72,16 @@ void MinimapManager::update_fog(float dt, int local_owner_id) {
 
   auto &visibility_service = Game::Map::VisibilityService::instance();
   if (!visibility_service.is_initialized()) {
-    if (m_minimap_image != m_minimap_base_image) {
-      m_minimap_image = m_minimap_base_image;
+    if (m_minimap_fog_image.isNull() ||
+        m_minimap_fog_image.size() != m_minimap_base_image.size()) {
+      m_minimap_fog_image = m_minimap_base_image.copy();
     }
     return;
   }
 
   const auto current_version = visibility_service.version();
-  if (current_version == m_minimap_fog_version && !m_minimap_image.isNull()) {
+  if (current_version == m_minimap_fog_version &&
+      !m_minimap_fog_image.isNull()) {
     return;
   }
   m_minimap_fog_version = current_version;
@@ -74,14 +91,14 @@ void MinimapManager::update_fog(float dt, int local_owner_id) {
   const auto cells = visibility_service.snapshotCells();
 
   if (cells.empty() || vis_width <= 0 || vis_height <= 0) {
-    m_minimap_image = m_minimap_base_image;
+    m_minimap_fog_image = m_minimap_base_image.copy();
     return;
   }
 
-  m_minimap_image = m_minimap_base_image.copy();
+  m_minimap_fog_image = m_minimap_base_image.copy();
 
-  const int img_width = m_minimap_image.width();
-  const int img_height = m_minimap_image.height();
+  const int img_width = m_minimap_fog_image.width();
+  const int img_height = m_minimap_fog_image.height();
 
   constexpr float k_inv_cos = -0.70710678118F;
   constexpr float k_inv_sin = 0.70710678118F;
@@ -123,7 +140,7 @@ void MinimapManager::update_fog(float dt, int local_owner_id) {
   const float half_vis_h = static_cast<float>(vis_height) * 0.5F;
 
   for (int y = 0; y < img_height; ++y) {
-    auto *scanline = reinterpret_cast<QRgb *>(m_minimap_image.scanLine(y));
+    auto *scanline = reinterpret_cast<QRgb *>(m_minimap_fog_image.scanLine(y));
 
     for (int x = 0; x < img_width; ++x) {
       const float centered_x = static_cast<float>(x) - half_img_w;
@@ -174,9 +191,13 @@ void MinimapManager::update_fog(float dt, int local_owner_id) {
 void MinimapManager::update_units(
     Engine::Core::World *world,
     Game::Systems::SelectionSystem *selection_system) {
-  if (m_minimap_image.isNull() || !m_unit_layer || !world) {
+  if (m_minimap_fog_image.isNull() || !m_unit_layer || !world) {
     return;
   }
+
+  // Always start with a fresh copy of the fog-processed base image
+  // to prevent overlays (units, camera viewport) from accumulating
+  m_minimap_image = m_minimap_fog_image.copy();
 
   std::vector<Game::Map::Minimap::UnitMarker> markers;
 
@@ -196,6 +217,11 @@ void MinimapManager::update_units(
     for (const auto &[entity_id, entity] : entities) {
       const auto *unit = entity->get_component<Engine::Core::UnitComponent>();
       if (!unit) {
+        continue;
+      }
+
+      // Skip dead units - they should not appear on the minimap
+      if (unit->health <= 0) {
         continue;
       }
 
@@ -223,5 +249,44 @@ void MinimapManager::update_units(
     QPainter painter(&m_minimap_image);
     painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
     painter.drawImage(0, 0, unit_overlay);
+  }
+}
+
+void MinimapManager::update_camera_viewport(const Render::GL::Camera *camera,
+                                            float screen_width,
+                                            float screen_height) {
+  if (m_minimap_image.isNull() || !m_camera_viewport_layer || !camera) {
+    return;
+  }
+
+  // Get camera target position (where the camera is looking)
+  const QVector3D &target = camera->get_target();
+
+  // Estimate the visible world area based on camera distance and FOV
+  const float distance = camera->get_distance();
+  const float fov_rad =
+      camera->get_fov() * Game::Map::Minimap::Constants::k_degrees_to_radians;
+  const float aspect = screen_width / std::max(screen_height, 1.0F);
+
+  // Calculate approximate viewport dimensions in world space
+  // Based on the vertical FOV and camera distance
+  const float viewport_half_height = distance * std::tan(fov_rad * 0.5F);
+  const float viewport_half_width = viewport_half_height * aspect;
+
+  // Convert from world units to tile units for the minimap
+  const float viewport_width = viewport_half_width * 2.0F / m_tile_size;
+  const float viewport_height = viewport_half_height * 2.0F / m_tile_size;
+
+  // Update the camera viewport layer
+  m_camera_viewport_layer->update(target.x() / m_tile_size,
+                                  target.z() / m_tile_size, viewport_width,
+                                  viewport_height);
+
+  // Draw the camera viewport overlay on the minimap
+  const QImage &viewport_overlay = m_camera_viewport_layer->get_image();
+  if (!viewport_overlay.isNull()) {
+    QPainter painter(&m_minimap_image);
+    painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
+    painter.drawImage(0, 0, viewport_overlay);
   }
 }
