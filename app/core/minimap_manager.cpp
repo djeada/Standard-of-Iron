@@ -34,7 +34,6 @@ void MinimapManager::generate_for_map(const Game::Map::MapDefinition &map_def) {
     m_world_height = static_cast<float>(map_def.grid.height);
     m_tile_size = map_def.grid.tile_size;
 
-    // Initialize fog image with a copy of the base image
     m_minimap_fog_image = m_minimap_base_image.copy();
     m_minimap_image = m_minimap_fog_image.copy();
 
@@ -195,8 +194,6 @@ void MinimapManager::update_units(
     return;
   }
 
-  // Always start with a fresh copy of the fog-processed base image
-  // to prevent overlays (units, camera viewport) from accumulating
   m_minimap_image = m_minimap_fog_image.copy();
 
   std::vector<Game::Map::Minimap::UnitMarker> markers;
@@ -220,7 +217,6 @@ void MinimapManager::update_units(
         continue;
       }
 
-      // Skip dead units - they should not appear on the minimap
       if (unit->health <= 0) {
         continue;
       }
@@ -259,30 +255,23 @@ void MinimapManager::update_camera_viewport(const Render::GL::Camera *camera,
     return;
   }
 
-  // Get camera target position (where the camera is looking)
   const QVector3D &target = camera->get_target();
 
-  // Estimate the visible world area based on camera distance and FOV
   const float distance = camera->get_distance();
   const float fov_rad =
       camera->get_fov() * Game::Map::Minimap::Constants::k_degrees_to_radians;
   const float aspect = screen_width / std::max(screen_height, 1.0F);
 
-  // Calculate approximate viewport dimensions in world space
-  // Based on the vertical FOV and camera distance
   const float viewport_half_height = distance * std::tan(fov_rad * 0.5F);
   const float viewport_half_width = viewport_half_height * aspect;
 
-  // Convert from world units to tile units for the minimap
   const float viewport_width = viewport_half_width * 2.0F / m_tile_size;
   const float viewport_height = viewport_half_height * 2.0F / m_tile_size;
 
-  // Update the camera viewport layer
   m_camera_viewport_layer->update(target.x() / m_tile_size,
                                   target.z() / m_tile_size, viewport_width,
                                   viewport_height);
 
-  // Draw the camera viewport overlay on the minimap
   const QImage &viewport_overlay = m_camera_viewport_layer->get_image();
   if (!viewport_overlay.isNull()) {
     QPainter painter(&m_minimap_image);

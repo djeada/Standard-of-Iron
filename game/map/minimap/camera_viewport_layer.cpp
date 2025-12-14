@@ -59,10 +59,8 @@ void CameraViewportLayer::update(float camera_x, float camera_z,
   QPainter painter(&m_image);
   painter.setRenderHint(QPainter::Antialiasing, true);
 
-  // Convert camera center position to pixel coordinates
   const auto [px, py] = world_to_pixel(camera_x, camera_z);
 
-  // Convert viewport dimensions to pixel space
   const float pixel_width = viewport_width * m_scale_x;
   const float pixel_height = viewport_height * m_scale_y;
 
@@ -72,7 +70,7 @@ void CameraViewportLayer::update(float camera_x, float camera_z,
 void CameraViewportLayer::draw_viewport_rect(QPainter &painter, float px,
                                              float py, float pixel_width,
                                              float pixel_height) {
-  // Calculate the rectangle bounds centered at the camera position
+
   const float half_w = pixel_width * 0.5F;
   const float half_h = pixel_height * 0.5F;
 
@@ -80,7 +78,6 @@ void CameraViewportLayer::draw_viewport_rect(QPainter &painter, float px,
               static_cast<qreal>(pixel_width),
               static_cast<qreal>(pixel_height));
 
-  // Draw a semi-transparent border rectangle
   QColor border_color(m_border_r, m_border_g, m_border_b, m_border_a);
   QPen pen(border_color);
   pen.setWidthF(static_cast<qreal>(m_border_width));
@@ -88,35 +85,31 @@ void CameraViewportLayer::draw_viewport_rect(QPainter &painter, float px,
   painter.setBrush(Qt::NoBrush);
   painter.drawRect(rect);
 
-  // Draw corner markers for better visibility
   const float corner_size =
       std::min(pixel_width, pixel_height) * k_corner_size_ratio;
   const float actual_corner = std::max(corner_size, k_min_corner_size);
 
   QColor corner_color(m_border_r, m_border_g, m_border_b, 255);
   QPen corner_pen(corner_color);
-  corner_pen.setWidthF(static_cast<qreal>(m_border_width) + k_corner_pen_offset);
+  corner_pen.setWidthF(static_cast<qreal>(m_border_width) +
+                       k_corner_pen_offset);
   painter.setPen(corner_pen);
 
-  // Top-left corner
   painter.drawLine(QPointF(rect.left(), rect.top()),
                    QPointF(rect.left() + actual_corner, rect.top()));
   painter.drawLine(QPointF(rect.left(), rect.top()),
                    QPointF(rect.left(), rect.top() + actual_corner));
 
-  // Top-right corner
   painter.drawLine(QPointF(rect.right(), rect.top()),
                    QPointF(rect.right() - actual_corner, rect.top()));
   painter.drawLine(QPointF(rect.right(), rect.top()),
                    QPointF(rect.right(), rect.top() + actual_corner));
 
-  // Bottom-left corner
   painter.drawLine(QPointF(rect.left(), rect.bottom()),
                    QPointF(rect.left() + actual_corner, rect.bottom()));
   painter.drawLine(QPointF(rect.left(), rect.bottom()),
                    QPointF(rect.left(), rect.bottom() - actual_corner));
 
-  // Bottom-right corner
   painter.drawLine(QPointF(rect.right(), rect.bottom()),
                    QPointF(rect.right() - actual_corner, rect.bottom()));
   painter.drawLine(QPointF(rect.right(), rect.bottom()),
