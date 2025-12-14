@@ -71,8 +71,7 @@ void VertexArray::bind() {
       qWarning() << "VertexArray glGenVertexArrays error" << genErr;
     }
   }
-  
-  // Clear any pre-existing errors from previous operations
+
   while (glGetError() != GL_NO_ERROR) {
   }
 

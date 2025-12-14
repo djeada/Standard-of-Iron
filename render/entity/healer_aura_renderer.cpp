@@ -28,12 +28,10 @@ void render_healer_auras(Renderer *renderer, ResourceManager *,
       continue;
     }
 
-    // Skip dead healers
     if (unit_comp != nullptr && unit_comp->health <= 0) {
       continue;
     }
 
-    // Only show aura when actively healing
     if (!healer_comp->is_healing_active) {
       continue;
     }
@@ -42,10 +40,8 @@ void render_healer_auras(Renderer *renderer, ResourceManager *,
                        transform->position.z);
     float radius = healer_comp->healing_range;
 
-    // Full intensity when actively healing
     float intensity = 1.0F;
 
-    // Golden-green healing color
     QVector3D color(0.4F, 1.0F, 0.5F);
 
     renderer->healer_aura(position, color, radius, intensity, animation_time);

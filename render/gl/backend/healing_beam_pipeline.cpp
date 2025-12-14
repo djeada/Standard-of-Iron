@@ -17,13 +17,12 @@ using namespace Render::GL::VertexAttrib;
 using namespace Render::GL::ComponentCount;
 
 namespace {
-// Helper to clear any pending OpenGL errors
+
 void clear_gl_errors() {
   while (glGetError() != GL_NO_ERROR) {
   }
 }
 
-// Check for OpenGL errors and log them
 auto check_gl_error(const char *operation) -> bool {
   GLenum err = glGetError();
   if (err != GL_NO_ERROR) {
@@ -89,7 +88,6 @@ void HealingBeamPipeline::cache_uniforms() {
     return;
   }
 
-  // Use uniform_handle for required uniforms
   m_uniforms.mvp = m_beamShader->uniform_handle("u_mvp");
   m_uniforms.time = m_beamShader->uniform_handle("u_time");
   m_uniforms.progress = m_beamShader->uniform_handle("u_progress");
@@ -112,57 +110,49 @@ auto HealingBeamPipeline::create_beam_geometry() -> bool {
   std::vector<Vertex> vertices;
   std::vector<unsigned int> indices;
 
-  // Create a tube mesh along Z axis (0 to 1)
-  // The vertex shader will deform this along the beam path
-  constexpr int segments_along = 24;  // Along beam length
-  constexpr int segments_around = 8;  // Around beam circumference
+  constexpr int segments_along = 24;
+  constexpr int segments_around = 8;
   constexpr float pi = std::numbers::pi_v<float>;
 
-  vertices.reserve(static_cast<size_t>((segments_along + 1) *
-                                       (segments_around + 1)));
+  vertices.reserve(
+      static_cast<size_t>((segments_along + 1) * (segments_around + 1)));
   indices.reserve(static_cast<size_t>(segments_along * segments_around * 6));
 
   for (int i = 0; i <= segments_along; ++i) {
     float t = static_cast<float>(i) / static_cast<float>(segments_along);
 
     for (int j = 0; j <= segments_around; ++j) {
-      float angle =
-          static_cast<float>(j) / static_cast<float>(segments_around) * 2.0F *
-          pi;
+      float angle = static_cast<float>(j) /
+                    static_cast<float>(segments_around) * 2.0F * pi;
 
       float x = std::cos(angle);
       float y = std::sin(angle);
 
-      // Position: x,y define cross-section, z is position along beam (t)
       Vertex v;
       v.position = {x, y, t};
       v.normal = {x, y, 0.0F};
-      v.tex_coord = {static_cast<float>(j) / static_cast<float>(segments_around),
-                     t};
+      v.tex_coord = {
+          static_cast<float>(j) / static_cast<float>(segments_around), t};
       vertices.push_back(v);
     }
   }
 
-  // Generate indices for triangles
   for (int i = 0; i < segments_along; ++i) {
     for (int j = 0; j < segments_around; ++j) {
       unsigned int curr =
           static_cast<unsigned int>(i * (segments_around + 1) + j);
       unsigned int next = curr + static_cast<unsigned int>(segments_around + 1);
 
-      // First triangle
       indices.push_back(curr);
       indices.push_back(next);
       indices.push_back(curr + 1);
 
-      // Second triangle
       indices.push_back(curr + 1);
       indices.push_back(next);
       indices.push_back(next + 1);
     }
   }
 
-  // Create VAO
   glGenVertexArrays(1, &m_vao);
   if (!check_gl_error("glGenVertexArrays") || m_vao == 0) {
     return false;
@@ -175,7 +165,6 @@ auto HealingBeamPipeline::create_beam_geometry() -> bool {
     return false;
   }
 
-  // Create vertex buffer
   glGenBuffers(1, &m_vertexBuffer);
   glBindBuffer(GL_ARRAY_BUFFER, m_vertexBuffer);
   glBufferData(GL_ARRAY_BUFFER,
@@ -186,13 +175,11 @@ auto HealingBeamPipeline::create_beam_geometry() -> bool {
     return false;
   }
 
-  // Create index buffer
   glGenBuffers(1, &m_indexBuffer);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_indexBuffer);
-  glBufferData(
-      GL_ELEMENT_ARRAY_BUFFER,
-      static_cast<GLsizeiptr>(indices.size() * sizeof(unsigned int)),
-      indices.data(), GL_STATIC_DRAW);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+               static_cast<GLsizeiptr>(indices.size() * sizeof(unsigned int)),
+               indices.data(), GL_STATIC_DRAW);
   if (!check_gl_error("index buffer")) {
     shutdown_geometry();
     return false;
@@ -200,7 +187,6 @@ auto HealingBeamPipeline::create_beam_geometry() -> bool {
 
   m_indexCount = static_cast<GLsizei>(indices.size());
 
-  // Set up vertex attributes (position, normal, texcoord)
   glEnableVertexAttribArray(VertexAttrib::Position);
   glVertexAttribPointer(VertexAttrib::Position, ComponentCount::Vec3, GL_FLOAT,
                         GL_FALSE, sizeof(Vertex),
@@ -239,7 +225,6 @@ void HealingBeamPipeline::render(
   initializeOpenGLFunctions();
   clear_gl_errors();
 
-  // Save current GL state
   GLboolean cullEnabled = glIsEnabled(GL_CULL_FACE);
   GLboolean depthTestEnabled = glIsEnabled(GL_DEPTH_TEST);
   GLboolean blendEnabled = glIsEnabled(GL_BLEND);
@@ -251,12 +236,11 @@ void HealingBeamPipeline::render(
   glGetIntegerv(GL_BLEND_SRC_ALPHA, &prevBlendSrc);
   glGetIntegerv(GL_BLEND_DST_ALPHA, &prevBlendDst);
 
-  // Set up state for glow rendering
   glDisable(GL_CULL_FACE);
   glEnable(GL_DEPTH_TEST);
-  glDepthMask(GL_FALSE); // Don't write to depth buffer
+  glDepthMask(GL_FALSE);
   glEnable(GL_BLEND);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE); // Additive blending for glow
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 
   m_beamShader->use();
   glBindVertexArray(m_vao);
@@ -269,7 +253,6 @@ void HealingBeamPipeline::render(
 
   glBindVertexArray(0);
 
-  // Restore GL state
   glDepthMask(depthMaskEnabled);
   glBlendFunc(static_cast<GLenum>(prevBlendSrc),
               static_cast<GLenum>(prevBlendDst));
@@ -293,7 +276,6 @@ void HealingBeamPipeline::render_beam(const Game::Systems::HealingBeam &beam,
   float progress = std::clamp(beam.get_progress(), 0.0F, 1.0F);
   float alpha = std::clamp(beam.get_intensity(), 0.0F, 1.0F);
 
-  // Skip nearly invisible beams
   if (alpha < 0.01F) {
     return;
   }
@@ -310,10 +292,12 @@ void HealingBeamPipeline::render_beam(const Game::Systems::HealingBeam &beam,
   glDrawElements(GL_TRIANGLES, m_indexCount, GL_UNSIGNED_INT, nullptr);
 }
 
-void HealingBeamPipeline::render_single_beam(
-    const QVector3D &start, const QVector3D &end, const QVector3D &color,
-    float progress, float beam_width, float intensity, float time,
-    const QMatrix4x4 &view_proj) {
+void HealingBeamPipeline::render_single_beam(const QVector3D &start,
+                                             const QVector3D &end,
+                                             const QVector3D &color,
+                                             float progress, float beam_width,
+                                             float intensity, float time,
+                                             const QMatrix4x4 &view_proj) {
   if (!is_initialized()) {
     return;
   }
@@ -323,12 +307,10 @@ void HealingBeamPipeline::render_single_beam(
 
   initializeOpenGLFunctions();
 
-  // Save GL state
   GLboolean cullEnabled = glIsEnabled(GL_CULL_FACE);
   GLboolean depthMaskEnabled = GL_TRUE;
   glGetBooleanv(GL_DEPTH_WRITEMASK, &depthMaskEnabled);
 
-  // Set up state for glow rendering
   glDisable(GL_CULL_FACE);
   glEnable(GL_DEPTH_TEST);
   glDepthMask(GL_FALSE);
@@ -340,18 +322,19 @@ void HealingBeamPipeline::render_single_beam(
 
   m_beamShader->set_uniform(m_uniforms.mvp, view_proj);
   m_beamShader->set_uniform(m_uniforms.time, time);
-  m_beamShader->set_uniform(m_uniforms.progress, std::clamp(progress, 0.0F, 1.0F));
+  m_beamShader->set_uniform(m_uniforms.progress,
+                            std::clamp(progress, 0.0F, 1.0F));
   m_beamShader->set_uniform(m_uniforms.startPos, start);
   m_beamShader->set_uniform(m_uniforms.endPos, end);
   m_beamShader->set_uniform(m_uniforms.beamWidth, beam_width);
   m_beamShader->set_uniform(m_uniforms.healColor, color);
-  m_beamShader->set_uniform(m_uniforms.alpha, std::clamp(intensity, 0.0F, 1.0F));
+  m_beamShader->set_uniform(m_uniforms.alpha,
+                            std::clamp(intensity, 0.0F, 1.0F));
 
   glDrawElements(GL_TRIANGLES, m_indexCount, GL_UNSIGNED_INT, nullptr);
 
   glBindVertexArray(0);
 
-  // Restore GL state
   glDepthMask(depthMaskEnabled);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   if (cullEnabled) {
