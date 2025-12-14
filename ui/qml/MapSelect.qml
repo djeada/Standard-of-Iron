@@ -38,11 +38,10 @@ Item {
         let enabledPlayers = [];
         for (let i = 0; i < playersModel.count; i++) {
             let p = playersModel.get(i);
-            if (p.isEnabled) {
+            if (p.isEnabled)
                 enabledPlayers.push(p);
-            }
-        }
 
+        }
         if (enabledPlayers.length < 2)
             return false;
 
@@ -58,8 +57,8 @@ Item {
         for (let i = 0; i < playersModel.count; i++) {
             if (playersModel.get(i).isEnabled)
                 enabledCount++;
+
         }
-        
         if (enabledCount < 2)
             validationError = "Need at least 2 enabled players to start";
         else if (!hasMinimumDistinctTeams())
@@ -278,8 +277,8 @@ Item {
         for (let i = 0; i < playersModel.count; i++) {
             if (playersModel.get(i).isEnabled)
                 enabledCount++;
-        }
 
+        }
         if (enabledCount < 2) {
             console.log("MapSelect: Need at least 2 enabled players to start");
             updateValidationError();
@@ -1032,18 +1031,21 @@ Item {
                                         ColorAnimation {
                                             duration: Theme.animFast
                                         }
+
                                     }
 
                                     Behavior on border.color {
                                         ColorAnimation {
                                             duration: Theme.animFast
                                         }
+
                                     }
 
                                     Behavior on border.width {
                                         NumberAnimation {
                                             duration: Theme.animFast
                                         }
+
                                     }
 
                                 }
@@ -1058,14 +1060,14 @@ Item {
                                     color: model.isEnabled ? (model.isHuman ? Theme.accentBright : Theme.textBright) : Theme.textDim
                                     font.pixelSize: model.isHuman ? 15 : 14
                                     font.bold: true
-                                    opacity: model.isEnabled ? 1.0 : 0.5
+                                    opacity: model.isEnabled ? 1 : 0.5
                                 }
 
                                 Row {
                                     anchors.right: parent.right
                                     anchors.verticalCenter: parent.verticalCenter
                                     spacing: Theme.spacingMedium
-                                    opacity: model.isEnabled ? 1.0 : 0.4
+                                    opacity: model.isEnabled ? 1 : 0.4
 
                                     Rectangle {
                                         width: 105
