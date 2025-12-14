@@ -293,8 +293,8 @@ void AIReasoner::updateStateMachine(const AISnapshot &snapshot, AIContext &ctx,
     break;
 
   case AIState::Gathering:
-    // Attack thresholds: reactive (2 units with enemies) vs proactive (4 units)
-    constexpr int MIN_UNITS_FOR_REACTIVE_ATTACK = 3;
+    // Attack thresholds: reactive (2+ units with enemies) vs proactive (4+ units)
+    constexpr int MIN_UNITS_FOR_REACTIVE_ATTACK = 2;  // Updated to match comment
     constexpr int MIN_UNITS_FOR_PROACTIVE_ATTACK = 4;  // Lowered from 5 to be more aggressive
     constexpr int MIN_UNITS_FOR_EXPANSION = 3;
     
@@ -306,7 +306,7 @@ void AIReasoner::updateStateMachine(const AISnapshot &snapshot, AIContext &ctx,
     } else if (ctx.neutral_barracks_count > 0 && ctx.total_units >= MIN_UNITS_FOR_EXPANSION) {
       // Neutral barracks available, prioritize expansion
       ctx.state = AIState::Expanding;
-    } else if (ctx.visible_enemy_count > 0 && ctx.total_units >= 2) {
+    } else if (ctx.visible_enemy_count > 0 && ctx.total_units >= MIN_UNITS_FOR_REACTIVE_ATTACK) {
       // Enemy spotted, engage with current force (minimum 2)
       ctx.state = AIState::Attacking;
     } else if (ctx.total_units >= MIN_UNITS_FOR_PROACTIVE_ATTACK) {
