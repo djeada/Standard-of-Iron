@@ -284,6 +284,7 @@ void AIReasoner::updateStateMachine(const AISnapshot &snapshot, AIContext &ctx,
     break;
 
   case AIState::Gathering:
+    constexpr int MIN_UNITS_FOR_PROACTIVE_ATTACK = 5;
     if (ctx.total_units >= 3) {
       // Have enough units to attack proactively
       ctx.state = AIState::Attacking;
@@ -295,7 +296,7 @@ void AIReasoner::updateStateMachine(const AISnapshot &snapshot, AIContext &ctx,
     } else if (ctx.visible_enemy_count > 0 && ctx.total_units >= 2) {
       // Enemy spotted, engage with current force
       ctx.state = AIState::Attacking;
-    } else if (ctx.total_units >= 5) {
+    } else if (ctx.total_units >= MIN_UNITS_FOR_PROACTIVE_ATTACK) {
       // Have a decent army, go on the offensive even without visible enemies
       ctx.state = AIState::Attacking;
     }
