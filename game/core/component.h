@@ -285,6 +285,8 @@ public:
   float healing_cooldown{2.0F};
   float time_since_last_heal{0.0F};
   bool is_healing_active{false};
+  float healing_target_x{0.0F};
+  float healing_target_z{0.0F};
 };
 
 class CatapultLoadingComponent : public Component {
