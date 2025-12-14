@@ -60,32 +60,47 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
 
   // If no enemies visible and in attacking state, be proactive and scout/advance
   if (snapshot.visible_enemies.empty()) {
-    // Scouting threshold lower than proactive attack (3 vs 5) allows early exploration
+    // Scouting threshold lower than proactive attack (3 vs 4) allows early exploration
     constexpr int MIN_UNITS_FOR_SCOUTING = 3;
     if (context.state == AIState::Attacking && context.total_units >= MIN_UNITS_FOR_SCOUTING) {
-      // Scout toward map center or away from base to find enemies
-      constexpr float SCOUT_ADVANCE_DISTANCE = 30.0F; // Units to advance when scouting
-      constexpr float MAP_CENTER_APPROACH_FACTOR = 0.5F; // Fraction toward opposite of base
+      // Scout in different directions to explore the map
+      constexpr float SCOUT_ADVANCE_DISTANCE = 40.0F; // Increased from 30 for better exploration
+      constexpr float SCOUT_ROTATION_INTERVAL = 10.0F; // Change direction every 10s
       
-      float scout_x = 0.0F; // Default: map center
+      m_lastScoutTime += delta_time;
+      if (m_lastScoutTime > SCOUT_ROTATION_INTERVAL) {
+        m_scoutDirection = (m_scoutDirection + 1) % 4; // Rotate through N/E/S/W
+        m_lastScoutTime = 0.0F;
+      }
+      
+      float scout_x = 0.0F;
       float scout_z = 0.0F;
       
-      // If we have a base position, scout away from it
+      // If we have a base position, scout in rotating cardinal directions
       if (context.primary_barracks != 0) {
-        // Calculate direction away from base
-        float dx = group_center_x - context.base_pos_x;
-        float dz = group_center_z - context.base_pos_z;
-        float dist = std::sqrt(dx * dx + dz * dz);
-        
-        if (dist > 1.0F) {
-          // Advance away from base to find enemies
-          scout_x = group_center_x + (dx / dist) * SCOUT_ADVANCE_DISTANCE;
-          scout_z = group_center_z + (dz / dist) * SCOUT_ADVANCE_DISTANCE;
-        } else {
-          // Too close to base - head toward map center (0, 0)
-          scout_x = 0.0F;
-          scout_z = 0.0F;
+        // Calculate direction based on scout direction
+        switch (m_scoutDirection) {
+          case 0: // North
+            scout_x = context.base_pos_x;
+            scout_z = context.base_pos_z + SCOUT_ADVANCE_DISTANCE;
+            break;
+          case 1: // East
+            scout_x = context.base_pos_x + SCOUT_ADVANCE_DISTANCE;
+            scout_z = context.base_pos_z;
+            break;
+          case 2: // South
+            scout_x = context.base_pos_x;
+            scout_z = context.base_pos_z - SCOUT_ADVANCE_DISTANCE;
+            break;
+          case 3: // West
+            scout_x = context.base_pos_x - SCOUT_ADVANCE_DISTANCE;
+            scout_z = context.base_pos_z;
+            break;
         }
+      } else {
+        // No base, scout toward map center
+        scout_x = 0.0F;
+        scout_z = 0.0F;
       }
       
       // Issue scout command
