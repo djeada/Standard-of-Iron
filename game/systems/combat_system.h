@@ -16,6 +16,10 @@ public:
 
 private:
   static void process_attacks(Engine::Core::World *world, float delta_time);
+  static void process_hit_feedback(Engine::Core::World *world,
+                                   float delta_time);
+  static void process_combat_state(Engine::Core::World *world,
+                                   float delta_time);
   static void updateCombatMode(Engine::Core::Entity *attacker,
                                Engine::Core::World *world,
                                Engine::Core::AttackComponent *attack_comp);
@@ -24,6 +28,9 @@ private:
   static void dealDamage(Engine::Core::World *world,
                          Engine::Core::Entity *target, int damage,
                          Engine::Core::EntityID attackerId = 0);
+  static void apply_hit_feedback(Engine::Core::Entity *target,
+                                 Engine::Core::EntityID attacker_id,
+                                 Engine::Core::World *world);
   void process_auto_engagement(Engine::Core::World *world, float delta_time);
   static auto is_unit_idle(Engine::Core::Entity *unit) -> bool;
   static auto findNearestEnemy(Engine::Core::Entity *unit,
