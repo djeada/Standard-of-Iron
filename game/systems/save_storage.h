@@ -17,19 +17,19 @@ public:
 
   auto initialize(QString *out_error = nullptr) -> bool;
 
-  auto saveSlot(const QString &slotName, const QString &title,
-                const QJsonObject &metadata, const QByteArray &worldState,
-                const QByteArray &screenshot,
-                QString *out_error = nullptr) -> bool;
+  auto save_slot(const QString &slot_name, const QString &title,
+                 const QJsonObject &metadata, const QByteArray &world_state,
+                 const QByteArray &screenshot,
+                 QString *out_error = nullptr) -> bool;
 
-  auto loadSlot(const QString &slotName, QByteArray &worldState,
-                QJsonObject &metadata, QByteArray &screenshot, QString &title,
-                QString *out_error = nullptr) -> bool;
+  auto load_slot(const QString &slot_name, QByteArray &world_state,
+                 QJsonObject &metadata, QByteArray &screenshot, QString &title,
+                 QString *out_error = nullptr) -> bool;
 
-  auto listSlots(QString *out_error = nullptr) const -> QVariantList;
+  auto list_slots(QString *out_error = nullptr) const -> QVariantList;
 
-  auto deleteSlot(const QString &slotName,
-                  QString *out_error = nullptr) -> bool;
+  auto delete_slot(const QString &slot_name,
+                   QString *out_error = nullptr) -> bool;
 
   auto list_campaigns(QString *out_error = nullptr) const -> QVariantList;
   auto get_campaign_progress(const QString &campaign_id,
@@ -39,11 +39,11 @@ public:
 
 private:
   auto open(QString *out_error = nullptr) const -> bool;
-  auto ensureSchema(QString *out_error = nullptr) const -> bool;
-  auto createBaseSchema(QString *out_error = nullptr) const -> bool;
-  auto migrate_schema(int fromVersion,
+  auto ensure_schema(QString *out_error = nullptr) const -> bool;
+  auto create_base_schema(QString *out_error = nullptr) const -> bool;
+  auto migrate_schema(int from_version,
                       QString *out_error = nullptr) const -> bool;
-  auto schemaVersion(QString *out_error = nullptr) const -> int;
+  auto schema_version(QString *out_error = nullptr) const -> int;
   auto set_schema_version(int version,
                           QString *out_error = nullptr) const -> bool;
   auto migrate_to_2(QString *out_error = nullptr) const -> bool;
