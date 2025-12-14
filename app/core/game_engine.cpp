@@ -63,6 +63,7 @@
 #include "game/map/map_catalog.h"
 #include "game/map/map_loader.h"
 #include "game/map/map_transformer.h"
+#include "game/map/minimap/map_preview_generator.h"
 #include "game/map/minimap/minimap_generator.h"
 #include "game/map/minimap/unit_layer.h"
 #include "game/map/skirmish_loader.h"
@@ -1288,8 +1289,8 @@ auto GameEngine::save_to_slot(const QString &slot,
       *m_world, m_camera.get(), m_level, runtime_snap);
   meta["title"] = title;
   const QByteArray screenshot = capture_screenshot();
-  if (!m_saveLoadService->save_game_to_slot(*m_world, slot, title,
-                                         m_level.map_name, meta, screenshot)) {
+  if (!m_saveLoadService->save_game_to_slot(
+          *m_world, slot, title, m_level.map_name, meta, screenshot)) {
     set_error(m_saveLoadService->get_last_error());
     return false;
   }
@@ -1488,4 +1489,11 @@ auto GameEngine::minimap_image() const -> QImage {
     return m_minimap_manager->get_image();
   }
   return QImage();
+}
+
+auto GameEngine::generate_map_preview(const QString &map_path,
+                                      const QVariantList &player_configs) const
+    -> QImage {
+  Game::Map::Minimap::MapPreviewGenerator generator;
+  return generator.generate_preview(map_path, player_configs);
 }

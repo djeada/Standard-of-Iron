@@ -1057,9 +1057,12 @@ TEST_F(SerializationTest, OwnerRegistryTeamsAndColorsPreserved) {
   registry.clear();
 
   // Register players with specific teams and colors
-  int player1 = registry.register_owner(Game::Systems::OwnerType::Player, "Blue Kingdom");
-  int player2 = registry.register_owner(Game::Systems::OwnerType::AI, "Red Empire");
-  int player3 = registry.register_owner(Game::Systems::OwnerType::Player, "Green Alliance");
+  int player1 =
+      registry.register_owner(Game::Systems::OwnerType::Player, "Blue Kingdom");
+  int player2 =
+      registry.register_owner(Game::Systems::OwnerType::AI, "Red Empire");
+  int player3 = registry.register_owner(Game::Systems::OwnerType::Player,
+                                        "Green Alliance");
 
   // Set teams (player1 and player3 are allies)
   registry.set_owner_team(player1, 1);
@@ -1137,7 +1140,8 @@ TEST_F(SerializationTest, OwnerRegistryTeamsAndColorsPreserved) {
 }
 
 TEST_F(SerializationTest, BuildingOwnershipAndCaptureStatePreserved) {
-  // Create buildings (barracks/villages) with different ownership and capture states
+  // Create buildings (barracks/villages) with different ownership and capture
+  // states
   struct BuildingData {
     float x, z;
     int owner_id;
@@ -1147,10 +1151,13 @@ TEST_F(SerializationTest, BuildingOwnershipAndCaptureStatePreserved) {
   };
 
   std::vector<BuildingData> buildings = {
-      {100.0F, 100.0F, 1, -1, 0.0F, false},        // Owned by player 1, not being captured
-      {200.0F, 200.0F, 2, 1, 7.5F, true},          // Owned by player 2, being captured by player 1
-      {300.0F, 300.0F, 1, 2, 15.0F, true},         // Owned by player 1, being captured by player 2
-      {400.0F, 400.0F, -1, -1, 0.0F, false},       // Neutral building
+      {100.0F, 100.0F, 1, -1, 0.0F,
+       false}, // Owned by player 1, not being captured
+      {200.0F, 200.0F, 2, 1, 7.5F,
+       true}, // Owned by player 2, being captured by player 1
+      {300.0F, 300.0F, 1, 2, 15.0F,
+       true}, // Owned by player 1, being captured by player 2
+      {400.0F, 400.0F, -1, -1, 0.0F, false}, // Neutral building
   };
 
   std::vector<EntityID> building_ids;
@@ -1378,6 +1385,7 @@ TEST_F(SerializationTest, NationIdentityPreserved) {
 
   auto *restored_carthage_comp =
       restored_carthage->get_component<UnitComponent>();
-  EXPECT_EQ(restored_carthage_comp->nation_id, Game::Systems::NationID::Carthage);
+  EXPECT_EQ(restored_carthage_comp->nation_id,
+            Game::Systems::NationID::Carthage);
   EXPECT_EQ(restored_carthage_comp->spawn_type, Game::Units::SpawnType::Archer);
 }
