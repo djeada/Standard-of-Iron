@@ -28,6 +28,11 @@ public:
                     float cell_size, float thickness, float extent) = 0;
   virtual void selection_smoke(const QMatrix4x4 &model, const QVector3D &color,
                                float base_alpha = 0.15F) = 0;
+  virtual void healing_beam(const QVector3D &start, const QVector3D &end,
+                            const QVector3D &color, float progress,
+                            float beam_width, float intensity, float time) = 0;
+  virtual void healer_aura(const QVector3D &position, const QVector3D &color,
+                           float radius, float intensity, float time) = 0;
 };
 
 namespace detail {
@@ -46,6 +51,7 @@ class QueueSubmitter : public ISubmitter {
 public:
   explicit QueueSubmitter(DrawQueue *queue) : m_queue(queue) {}
 
+  [[nodiscard]] Shader *shader() const { return m_shader; }
   void set_shader(Shader *shader) { m_shader = shader; }
 
   void mesh(Mesh *mesh, const QMatrix4x4 &model, const QVector3D &color,
@@ -130,6 +136,35 @@ public:
     cmd.base_alpha = base_alpha;
     m_queue->submit(cmd);
   }
+  void healing_beam(const QVector3D &start, const QVector3D &end,
+                    const QVector3D &color, float progress, float beam_width,
+                    float intensity, float time) override {
+    if (m_queue == nullptr) {
+      return;
+    }
+    HealingBeamCmd cmd;
+    cmd.start_pos = start;
+    cmd.end_pos = end;
+    cmd.color = color;
+    cmd.progress = progress;
+    cmd.beam_width = beam_width;
+    cmd.intensity = intensity;
+    cmd.time = time;
+    m_queue->submit(cmd);
+  }
+  void healer_aura(const QVector3D &position, const QVector3D &color,
+                   float radius, float intensity, float time) override {
+    if (m_queue == nullptr) {
+      return;
+    }
+    HealerAuraCmd cmd;
+    cmd.position = position;
+    cmd.color = color;
+    cmd.radius = radius;
+    cmd.intensity = intensity;
+    cmd.time = time;
+    m_queue->submit(cmd);
+  }
 
 private:
   DrawQueue *m_queue = nullptr;
@@ -141,6 +176,8 @@ public:
   explicit BatchingSubmitter(ISubmitter *fallback,
                              PrimitiveBatcher *batcher = nullptr)
       : m_fallback(fallback), m_batcher(batcher) {}
+
+  [[nodiscard]] ISubmitter *fallback_submitter() const { return m_fallback; }
 
   void set_batcher(PrimitiveBatcher *batcher) { m_batcher = batcher; }
   void set_enabled(bool enabled) { m_enabled = enabled; }
@@ -195,6 +232,22 @@ public:
                        float base_alpha = 0.15F) override {
     if (m_fallback != nullptr) {
       m_fallback->selection_smoke(model, color, base_alpha);
+    }
+  }
+
+  void healing_beam(const QVector3D &start, const QVector3D &end,
+                    const QVector3D &color, float progress, float beam_width,
+                    float intensity, float time) override {
+    if (m_fallback != nullptr) {
+      m_fallback->healing_beam(start, end, color, progress, beam_width,
+                               intensity, time);
+    }
+  }
+
+  void healer_aura(const QVector3D &position, const QVector3D &color,
+                   float radius, float intensity, float time) override {
+    if (m_fallback != nullptr) {
+      m_fallback->healer_aura(position, color, radius, intensity, time);
     }
   }
 

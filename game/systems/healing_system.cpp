@@ -1,7 +1,8 @@
 #include "healing_system.h"
 #include "../core/component.h"
 #include "../core/world.h"
-#include "arrow_system.h"
+#include "healing_beam_system.h"
+#include <QDebug>
 #include <cmath>
 #include <qvectornd.h>
 #include <vector>
@@ -15,7 +16,7 @@ void HealingSystem::update(Engine::Core::World *world, float delta_time) {
 void HealingSystem::process_healing(Engine::Core::World *world,
                                     float delta_time) {
   auto healers = world->get_entities_with<Engine::Core::HealerComponent>();
-  auto *arrow_system = world->get_system<ArrowSystem>();
+  auto *healing_beam_system = world->get_system<HealingBeamSystem>();
 
   for (auto *healer : healers) {
     if (healer->has_component<Engine::Core::PendingRemovalComponent>()) {
@@ -78,15 +79,17 @@ void HealingSystem::process_healing(Engine::Core::World *world,
           target_unit->health = target_unit->max_health;
         }
 
-        if (arrow_system != nullptr) {
+        if (healing_beam_system != nullptr) {
           QVector3D const healer_pos(healer_transform->position.x,
-                                     healer_transform->position.y + 1.0F,
+                                     healer_transform->position.y + 1.2F,
                                      healer_transform->position.z);
           QVector3D const target_pos(target_transform->position.x,
-                                     target_transform->position.y + 1.0F,
+                                     target_transform->position.y + 0.8F,
                                      target_transform->position.z);
-          arrow_system->spawnArrow(healer_pos, target_pos,
-                                   QVector3D(0.2F, 1.0F, 0.4F), 6.0F);
+
+          QVector3D const heal_color(0.4F, 1.0F, 0.5F);
+          healing_beam_system->spawn_beam(healer_pos, target_pos, heal_color,
+                                          0.7F);
         }
 
         healed_any = true;
@@ -95,6 +98,10 @@ void HealingSystem::process_healing(Engine::Core::World *world,
 
     if (healed_any) {
       healer_comp->time_since_last_heal = 0.0F;
+
+      healer_comp->is_healing_active = true;
+    } else {
+      healer_comp->is_healing_active = false;
     }
   }
 }

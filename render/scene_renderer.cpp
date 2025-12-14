@@ -307,6 +307,35 @@ void Renderer::selection_smoke(const QMatrix4x4 &model, const QVector3D &color,
   }
 }
 
+void Renderer::healing_beam(const QVector3D &start, const QVector3D &end,
+                            const QVector3D &color, float progress,
+                            float beam_width, float intensity, float time) {
+  HealingBeamCmd cmd;
+  cmd.start_pos = start;
+  cmd.end_pos = end;
+  cmd.color = color;
+  cmd.progress = progress;
+  cmd.beam_width = beam_width;
+  cmd.intensity = intensity;
+  cmd.time = time;
+  if (m_active_queue != nullptr) {
+    m_active_queue->submit(cmd);
+  }
+}
+
+void Renderer::healer_aura(const QVector3D &position, const QVector3D &color,
+                           float radius, float intensity, float time) {
+  HealerAuraCmd cmd;
+  cmd.position = position;
+  cmd.color = color;
+  cmd.radius = radius;
+  cmd.intensity = intensity;
+  cmd.time = time;
+  if (m_active_queue != nullptr) {
+    m_active_queue->submit(cmd);
+  }
+}
+
 void Renderer::enqueue_selection_ring(
     Engine::Core::Entity *, Engine::Core::TransformComponent *transform,
     Engine::Core::UnitComponent *unit_comp, bool selected, bool hovered) {

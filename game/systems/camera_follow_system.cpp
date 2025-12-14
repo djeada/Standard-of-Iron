@@ -26,8 +26,7 @@ void CameraFollowSystem::update(Engine::Core::World &world,
   }
   if (count > 0) {
     QVector3D const center = sum / float(count);
-    // update_follow() smoothly lerps to the new center and sets the target internally.
-    // Calling setTarget() here would cause a snap before the lerp, creating flicker.
+
     camera.update_follow(center);
   }
 }

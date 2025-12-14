@@ -1,7 +1,6 @@
 #include "minimap_image_provider.h"
 
 #include <QMutexLocker>
-
 MinimapImageProvider::MinimapImageProvider()
     : QQuickImageProvider(QQuickImageProvider::Image) {}
 
