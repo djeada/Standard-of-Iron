@@ -129,6 +129,13 @@ public:
       controller.placeHandAt(true, heal_hand_l);
       controller.placeHandAt(false, heal_hand_r);
 
+      QVector3D const look_dir(target_dir_x, 0.0F, target_dir_z);
+      QVector3D const head_focus =
+          pose.head_pos +
+          QVector3D(look_dir.x() * 0.18F, 0.0F, look_dir.z() * 0.45F);
+      controller.look_at(head_focus);
+      controller.lean(look_dir, 0.18F);
+
     } else {
 
       float const forward_offset = 0.16F + (anim.is_moving ? 0.05F : 0.0F);

@@ -174,8 +174,22 @@ public:
       controller.placeHandAt(true, heal_hand_l);
       controller.placeHandAt(false, heal_hand_r);
 
-      float const torso_sway = 0.012F * sway_phase;
-      controller.tilt_torso(torso_sway, 0.008F * sway_phase_offset);
+      float target_dir_x = 0.0F;
+      float target_dir_z = 1.0F;
+      float const target_dist =
+          std::sqrt(anim.healing_target_dx * anim.healing_target_dx +
+                    anim.healing_target_dz * anim.healing_target_dz);
+      if (target_dist > 0.01F) {
+        target_dir_x = anim.healing_target_dx / target_dist;
+        target_dir_z = anim.healing_target_dz / target_dist;
+      }
+
+      QVector3D const look_dir(target_dir_x, 0.0F, target_dir_z);
+      QVector3D const head_focus =
+          pose.head_pos +
+          QVector3D(look_dir.x() * 0.18F, 0.0F, look_dir.z() * 0.45F);
+      controller.look_at(head_focus);
+      controller.lean(look_dir, 0.16F);
 
     } else {
 
