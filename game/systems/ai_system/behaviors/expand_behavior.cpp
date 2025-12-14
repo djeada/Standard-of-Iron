@@ -130,7 +130,7 @@ void ExpandBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   std::vector<float> filtered_z;
 
   for (size_t i = 0; i < unit_ids.size(); ++i) {
-    if (claimed_set.count(unit_ids[i]) > 0) {
+    if (claimed_set.contains(unit_ids[i])) {
       filtered_x.push_back(target_x[i]);
       filtered_y.push_back(target_y[i]);
       filtered_z.push_back(target_z[i]);
