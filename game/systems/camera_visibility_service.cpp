@@ -40,6 +40,10 @@ auto CameraVisibilityService::is_entity_visible(float world_x, float world_z,
   return is_position_visible(world_x, kDefaultEntityHeight, world_z, radius);
 }
 
+namespace {
+constexpr float kDetailEffectsFrustumRadius = 2.0F;
+} // namespace
+
 auto CameraVisibilityService::should_process_detailed_effects(
     float world_x, float world_y, float world_z,
     float max_detail_distance) const -> bool {
@@ -48,7 +52,8 @@ auto CameraVisibilityService::should_process_detailed_effects(
     return true;
   }
 
-  if (!m_camera->is_in_frustum(QVector3D(world_x, world_y, world_z), 2.0F)) {
+  if (!m_camera->is_in_frustum(QVector3D(world_x, world_y, world_z),
+                               kDetailEffectsFrustumRadius)) {
     return false;
   }
 
