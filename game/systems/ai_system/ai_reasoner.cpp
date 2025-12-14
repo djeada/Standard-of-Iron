@@ -20,6 +20,9 @@ void AIReasoner::updateContext(const AISnapshot &snapshot, AIContext &ctx) {
 
   cleanupDeadUnits(snapshot, ctx);
 
+  // Track unit count for deadlock detection
+  int previous_unit_count = ctx.total_units;
+
   ctx.military_units.clear();
   ctx.buildings.clear();
   ctx.primary_barracks = 0;
@@ -166,6 +169,18 @@ void AIReasoner::updateContext(const AISnapshot &snapshot, AIContext &ctx) {
       ctx.closest_threat_distance = std::numeric_limits<float>::infinity();
     }
   }
+
+  // Deadlock detection: track if we're making progress
+  if (ctx.total_units != previous_unit_count || ctx.combat_units > 0) {
+    // Making progress - units changed or units are active
+    ctx.consecutive_no_progress_cycles = 0;
+    ctx.last_meaningful_action_time = snapshot.game_time;
+  } else if (ctx.idle_units > 0 || ctx.visible_enemy_count > 0) {
+    // Potentially stuck - have units but they're not doing anything productive
+    ctx.consecutive_no_progress_cycles++;
+  }
+  
+  ctx.last_total_units = ctx.total_units;
 }
 
 void AIReasoner::updateStateMachine(AIContext &ctx, float delta_time) {
@@ -173,8 +188,25 @@ void AIReasoner::updateStateMachine(AIContext &ctx, float delta_time) {
   ctx.decision_timer += delta_time;
 
   constexpr float min_state_duration = 3.0F;
+  constexpr int max_no_progress_cycles = 10; // ~3 seconds of no progress
+
+  // Detect deadlock conditions
+  bool deadlock_detected = false;
+  
+  // Force state change if stuck in same state too long
+  if (ctx.state_timer > ctx.max_state_duration) {
+    deadlock_detected = true;
+  }
+  
+  // Detect if AI is stuck with idle units not making progress
+  if (ctx.consecutive_no_progress_cycles >= max_no_progress_cycles && 
+      ctx.idle_units > 0) {
+    deadlock_detected = true;
+  }
 
   AIState previous_state = ctx.state;
+  
+  // Critical override: immediate defense response
   if ((ctx.barracks_under_threat || !ctx.buildings_under_attack.empty()) &&
       ctx.state != AIState::Defending) {
 
@@ -184,6 +216,29 @@ void AIReasoner::updateStateMachine(AIContext &ctx, float delta_time) {
   else if (ctx.visible_enemy_count > 0 && ctx.average_enemy_distance < 50.0F &&
            (ctx.state == AIState::Gathering || ctx.state == AIState::Idle)) {
     ctx.state = AIState::Defending;
+  }
+  
+  // Deadlock recovery: force a state transition
+  if (deadlock_detected && ctx.state != AIState::Defending) {
+    // Try to break out of stuck state
+    if (ctx.state == AIState::Idle && ctx.total_units > 0) {
+      ctx.state = AIState::Gathering;
+    } else if (ctx.state == AIState::Gathering) {
+      if (ctx.visible_enemy_count > 0) {
+        ctx.state = AIState::Attacking;
+      } else {
+        ctx.state = AIState::Idle;
+      }
+    } else if (ctx.state == AIState::Attacking) {
+      // Clear assignments to allow fresh decisions
+      ctx.assigned_units.clear();
+      if (ctx.average_health < 0.5F) {
+        ctx.state = AIState::Defending;
+      } else {
+        ctx.state = AIState::Idle;
+      }
+    }
+    ctx.consecutive_no_progress_cycles = 0;
   }
 
   if (ctx.decision_timer < 2.0F) {
@@ -237,6 +292,9 @@ void AIReasoner::updateStateMachine(AIContext &ctx, float delta_time) {
     } else if (ctx.total_units == 0) {
 
       ctx.state = AIState::Idle;
+    } else if (ctx.visible_enemy_count == 0 && ctx.state_timer > 15.0F) {
+      // No enemies visible for a while, go back to idle
+      ctx.state = AIState::Idle;
     }
 
     break;
@@ -248,7 +306,7 @@ void AIReasoner::updateStateMachine(AIContext &ctx, float delta_time) {
     } else if (ctx.total_units >= 4 && ctx.average_health > 0.65F) {
 
       ctx.state = AIState::Attacking;
-    } else if (ctx.average_health > 0.80F) {
+    } else if (ctx.average_health > 0.80F && ctx.visible_enemy_count == 0) {
 
       ctx.state = AIState::Idle;
     }
@@ -259,6 +317,10 @@ void AIReasoner::updateStateMachine(AIContext &ctx, float delta_time) {
     if (ctx.state_timer > 6.0F && ctx.average_health > 0.55F) {
 
       ctx.state = AIState::Defending;
+    } else if (ctx.state_timer > 12.0F) {
+      // Force recovery after 12 seconds
+      ctx.state = AIState::Idle;
+      ctx.assigned_units.clear();
     }
     break;
 
@@ -270,6 +332,8 @@ void AIReasoner::updateStateMachine(AIContext &ctx, float delta_time) {
 
   if (ctx.state != previous_state) {
     ctx.state_timer = 0.0F;
+    // Reset progress tracking on state change
+    ctx.consecutive_no_progress_cycles = 0;
   }
 }
 

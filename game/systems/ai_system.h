@@ -28,6 +28,10 @@ public:
   void update(Engine::Core::World *world, float delta_time) override;
 
   void reinitialize();
+  
+  // Performance tuning
+  void set_update_interval(float interval) { m_update_interval = interval; }
+  float get_update_interval() const { return m_update_interval; }
 
 private:
   struct AIInstance {
@@ -46,6 +50,7 @@ private:
   AI::AICommandFilter m_commandFilter;
 
   float m_total_game_time = 0.0F;
+  float m_update_interval = 0.3F; // Default 300ms, configurable for performance
 
   Engine::Core::ScopedEventSubscription<Engine::Core::BuildingAttackedEvent>
       m_buildingAttackedSubscription;
