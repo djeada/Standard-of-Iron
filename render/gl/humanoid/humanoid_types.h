@@ -6,6 +6,16 @@
 
 namespace Render::GL {
 
+enum class CombatAnimPhase : std::uint8_t {
+  Idle,
+  Advance,
+  WindUp,
+  Strike,
+  Impact,
+  Recover,
+  Reposition
+};
+
 struct AnimationInputs {
   float time;
   bool is_moving;
@@ -14,6 +24,14 @@ struct AnimationInputs {
   bool is_in_hold_mode;
   bool is_exiting_hold;
   float hold_exit_progress;
+  CombatAnimPhase combat_phase{CombatAnimPhase::Idle};
+  float combat_phase_progress{0.0F};
+  std::uint8_t attack_variant{0};
+  bool is_hit_reacting{false};
+  float hit_reaction_intensity{0.0F};
+  bool is_healing{false};
+  float healing_target_dx{0.0F};
+  float healing_target_dz{0.0F};
 };
 
 struct FormationParams {
