@@ -21,10 +21,6 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   }
   m_attackTimer = 0.0F;
 
-  if (snapshot.visible_enemies.empty()) {
-    return;
-  }
-
   std::vector<const EntitySnapshot *> engaged_units;
   std::vector<const EntitySnapshot *> ready_units;
   engaged_units.reserve(snapshot.friendly_units.size());
@@ -61,6 +57,55 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   group_center_x *= inv_count;
   group_center_y *= inv_count;
   group_center_z *= inv_count;
+
+  // If no enemies visible and in attacking state, be proactive and scout/advance
+  if (snapshot.visible_enemies.empty()) {
+    if (context.state == AIState::Attacking && context.total_units >= 3) {
+      // Scout toward map center or away from base to find enemies
+      float scout_x = 0.0F; // Map center
+      float scout_z = 0.0F;
+      
+      // If we have a base position, scout away from it
+      if (context.primary_barracks != 0) {
+        // Calculate direction away from base
+        float dx = group_center_x - context.base_pos_x;
+        float dz = group_center_z - context.base_pos_z;
+        float dist = std::sqrt(dx * dx + dz * dz);
+        
+        if (dist > 1.0F) {
+          // Advance 30 units away from base
+          scout_x = group_center_x + (dx / dist) * 30.0F;
+          scout_z = group_center_z + (dz / dist) * 30.0F;
+        } else {
+          // Move toward map center if too close to base
+          scout_x = -context.base_pos_x * 0.5F;
+          scout_z = -context.base_pos_z * 0.5F;
+        }
+      }
+      
+      // Issue scout command
+      std::vector<Engine::Core::EntityID> unit_ids;
+      std::vector<float> target_x;
+      std::vector<float> target_y;
+      std::vector<float> target_z;
+
+      for (const auto *unit : ready_units) {
+        unit_ids.push_back(unit->id);
+        target_x.push_back(scout_x);
+        target_y.push_back(0.0F);
+        target_z.push_back(scout_z);
+      }
+
+      AICommand cmd;
+      cmd.type = AICommandType::MoveUnits;
+      cmd.units = std::move(unit_ids);
+      cmd.move_target_x = std::move(target_x);
+      cmd.move_target_y = std::move(target_y);
+      cmd.move_target_z = std::move(target_z);
+      outCommands.push_back(cmd);
+    }
+    return;
+  }
 
   std::vector<const ContactSnapshot *> nearby_enemies;
   nearby_enemies.reserve(snapshot.visible_enemies.size());
@@ -276,12 +321,14 @@ auto AttackBehavior::should_execute(const AISnapshot &snapshot,
     return false;
   }
 
-  if (snapshot.visible_enemies.empty()) {
-    return false;
-  }
-
+  // Always execute in Attacking state to enable proactive scouting
   if (context.state == AIState::Attacking) {
     return true;
+  }
+
+  // For other states, require visible enemies
+  if (snapshot.visible_enemies.empty()) {
+    return false;
   }
 
   if (context.state == AIState::Defending) {

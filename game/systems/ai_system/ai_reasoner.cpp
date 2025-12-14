@@ -269,7 +269,8 @@ void AIReasoner::updateStateMachine(const AISnapshot &snapshot, AIContext &ctx,
   // Improved strategic decision-making: consider relative strength
   switch (ctx.state) {
   case AIState::Idle:
-    if (ctx.idle_units >= 2) {
+    if (ctx.idle_units >= 1) {
+      // Be more proactive - start gathering even with 1 unit
       ctx.state = AIState::Gathering;
     } else if (ctx.average_health < 0.40F && ctx.total_units > 0) {
 
@@ -284,15 +285,18 @@ void AIReasoner::updateStateMachine(const AISnapshot &snapshot, AIContext &ctx,
 
   case AIState::Gathering:
     if (ctx.total_units >= 3) {
-      // Have enough units to attack
+      // Have enough units to attack proactively
       ctx.state = AIState::Attacking;
-    } else if (ctx.total_units < 2) {
+    } else if (ctx.total_units < 1) {
       ctx.state = AIState::Idle;
     } else if (ctx.average_health < 0.40F) {
       // Army is weak, defend
       ctx.state = AIState::Defending;
     } else if (ctx.visible_enemy_count > 0 && ctx.total_units >= 2) {
       // Enemy spotted, engage with current force
+      ctx.state = AIState::Attacking;
+    } else if (ctx.total_units >= 5) {
+      // Have a decent army, go on the offensive even without visible enemies
       ctx.state = AIState::Attacking;
     }
     break;
