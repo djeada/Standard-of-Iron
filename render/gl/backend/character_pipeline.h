@@ -18,8 +18,8 @@ public:
 
   auto initialize() -> bool override;
   void shutdown() override;
-  void cacheUniforms() override;
-  [[nodiscard]] auto isInitialized() const -> bool override;
+  void cache_uniforms() override;
+  [[nodiscard]] auto is_initialized() const -> bool override;
 
   struct BasicUniforms {
     GL::Shader::UniformHandle mvp{GL::Shader::InvalidUniform};
@@ -48,12 +48,12 @@ private:
   GL::ShaderCache *m_shaderCache = nullptr;
   std::unordered_map<GL::Shader *, BasicUniforms> m_uniformCache;
 
-  void cacheBasicUniforms();
-  void cacheArcherUniforms();
-  void cacheKnightUniforms();
-  void cacheSpearmanUniforms();
+  void cache_basic_uniforms();
+  void cache_archer_uniforms();
+  void cache_knight_uniforms();
+  void cache_spearman_uniforms();
   BasicUniforms buildUniformSet(GL::Shader *shader) const;
-  void cacheNationVariants(const QString &baseKey);
+  void cache_nation_variants(const QString &baseKey);
 };
 
 } // namespace BackendPipelines

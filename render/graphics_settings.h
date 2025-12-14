@@ -57,7 +57,7 @@ public:
 
   void setQuality(GraphicsQuality q) noexcept {
     m_quality = q;
-    applyPreset(q);
+    apply_preset(q);
   }
 
   [[nodiscard]] auto
@@ -148,7 +148,7 @@ public:
 private:
   GraphicsSettings() { setQuality(GraphicsQuality::Ultra); }
 
-  void applyPreset(GraphicsQuality q) noexcept {
+  void apply_preset(GraphicsQuality q) noexcept {
     switch (q) {
     case GraphicsQuality::Low:
 

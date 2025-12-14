@@ -13,7 +13,7 @@ public:
   void update(Engine::Core::World *world, float delta_time) override;
 
 private:
-  void processHealing(Engine::Core::World *world, float delta_time);
+  void process_healing(Engine::Core::World *world, float delta_time);
 };
 
 } // namespace Game::Systems

@@ -48,14 +48,14 @@ StoneRenderer::StoneRenderer() = default;
 StoneRenderer::~StoneRenderer() = default;
 
 void StoneRenderer::configure(const Game::Map::TerrainHeightMap &height_map,
-                              const Game::Map::BiomeSettings &biomeSettings) {
+                              const Game::Map::BiomeSettings &biome_settings) {
   m_width = height_map.getWidth();
   m_height = height_map.getHeight();
   m_tile_size = height_map.getTileSize();
   m_heightData = height_map.getHeightData();
   m_terrain_types = height_map.getTerrainTypes();
-  m_biomeSettings = biomeSettings;
-  m_noiseSeed = biomeSettings.seed;
+  m_biome_settings = biome_settings;
+  m_noiseSeed = biome_settings.seed;
 
   m_stoneInstances.clear();
   m_stoneInstanceBuffer.reset();
@@ -75,7 +75,7 @@ void StoneRenderer::submit(Renderer &renderer, ResourceManager *resources) {
       m_stoneInstanceBuffer = std::make_unique<Buffer>(Buffer::Type::Vertex);
     }
     if (m_stoneInstancesDirty && m_stoneInstanceBuffer) {
-      m_stoneInstanceBuffer->setData(m_stoneInstances, Buffer::Usage::Static);
+      m_stoneInstanceBuffer->set_data(m_stoneInstances, Buffer::Usage::Static);
       m_stoneInstancesDirty = false;
     }
   } else {
@@ -111,7 +111,7 @@ void StoneRenderer::generateStoneInstances() {
   const float tile_safe = std::max(0.001F, m_tile_size);
 
   const float edge_padding =
-      std::clamp(m_biomeSettings.spawn_edge_padding, 0.0F, 0.5F);
+      std::clamp(m_biome_settings.spawn_edge_padding, 0.0F, 0.5F);
   const float edge_margin_x = static_cast<float>(m_width) * edge_padding;
   const float edge_margin_z = static_cast<float>(m_height) * edge_padding;
 
@@ -212,8 +212,8 @@ void StoneRenderer::generateStoneInstances() {
     float const scale = remap(rand_01(state), 0.08F, 0.25F) * tile_safe;
 
     float const color_var = remap(rand_01(state), 0.0F, 1.0F);
-    QVector3D const base_rock = m_biomeSettings.rock_low;
-    QVector3D const high_rock = m_biomeSettings.rock_high;
+    QVector3D const base_rock = m_biome_settings.rock_low;
+    QVector3D const high_rock = m_biome_settings.rock_high;
     QVector3D color = base_rock * (1.0F - color_var) + high_rock * color_var;
 
     float const brown_mix = remap(rand_01(state), 0.0F, 0.4F);

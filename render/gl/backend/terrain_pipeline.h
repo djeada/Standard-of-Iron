@@ -20,8 +20,8 @@ public:
 
   auto initialize() -> bool override;
   void shutdown() override;
-  void cacheUniforms() override;
-  [[nodiscard]] auto isInitialized() const -> bool override;
+  void cache_uniforms() override;
+  [[nodiscard]] auto is_initialized() const -> bool override;
 
   struct GrassUniforms {
     GL::Shader::UniformHandle view_proj{GL::Shader::InvalidUniform};
@@ -110,9 +110,9 @@ private:
   GL::Backend *m_backend = nullptr;
   GL::ShaderCache *m_shaderCache = nullptr;
 
-  void cacheGrassUniforms();
-  void cacheGroundUniforms();
-  void cacheTerrainUniforms();
+  void cache_grass_uniforms();
+  void cache_ground_uniforms();
+  void cache_terrain_uniforms();
 
   void initializeGrassGeometry();
   void shutdownGrassGeometry();

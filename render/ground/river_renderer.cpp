@@ -26,10 +26,10 @@ void RiverRenderer::configure(
     float tile_size) {
   m_riverSegments = riverSegments;
   m_tile_size = tile_size;
-  buildMeshes();
+  build_meshes();
 }
 
-void RiverRenderer::buildMeshes() {
+void RiverRenderer::build_meshes() {
   m_meshes.clear();
 
   if (m_riverSegments.empty()) {
@@ -160,7 +160,7 @@ void RiverRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   Q_UNUSED(resources);
 
   auto &visibility = Game::Map::VisibilityService::instance();
-  const bool use_visibility = visibility.isInitialized();
+  const bool use_visibility = visibility.is_initialized();
 
   auto *shader = renderer.get_shader("river");
   if (shader == nullptr) {

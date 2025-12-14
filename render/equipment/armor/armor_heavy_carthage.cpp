@@ -11,7 +11,7 @@
 
 namespace Render::GL {
 
-using Render::Geom::cylinderBetween;
+using Render::Geom::cylinder_between;
 
 void ArmorHeavyCarthageRenderer::render(const DrawContext &ctx,
                                         const BodyFrames &frames,
@@ -68,10 +68,10 @@ void ArmorHeavyCarthageRenderer::render(const DrawContext &ctx,
   auto draw_torso = [&](const QVector3D &a, const QVector3D &b, float radius,
                         const QVector3D &color, float scale_x, float base_z,
                         int material_id = 1) {
-    QMatrix4x4 m = cylinderBetween(ctx.model, a, b, radius);
+    QMatrix4x4 m = cylinder_between(ctx.model, a, b, radius);
     m.scale(scale_x, 1.0F, depth_scale_for(base_z));
     Mesh *torso_mesh = torso_mesh_without_bottom_cap();
-    submitter.mesh(torso_mesh != nullptr ? torso_mesh : getUnitTorso(), m,
+    submitter.mesh(torso_mesh != nullptr ? torso_mesh : get_unit_torso(), m,
                    color, nullptr, 1.0F, material_id);
   };
 

@@ -88,12 +88,12 @@ void register_spearman_style(const std::string &nation_id,
 }
 
 using Render::Geom::clamp01;
-using Render::Geom::coneFromTo;
-using Render::Geom::cylinderBetween;
+using Render::Geom::cone_from_to;
+using Render::Geom::cylinder_between;
 using Render::Geom::easeInOutCubic;
 using Render::Geom::lerp;
 using Render::Geom::smoothstep;
-using Render::Geom::sphereAt;
+using Render::Geom::sphere_at;
 using Render::GL::Humanoid::mix_palette_color;
 using Render::GL::Humanoid::saturate_color;
 
@@ -125,7 +125,7 @@ public:
   void get_variant(const DrawContext &ctx, uint32_t seed,
                    HumanoidVariant &v) const override {
     QVector3D const team_tint = resolve_team_tint(ctx);
-    v.palette = makeHumanoidPalette(team_tint, seed);
+    v.palette = make_humanoid_palette(team_tint, seed);
     auto const &style = resolve_style(ctx);
     apply_palette_overrides(style, team_tint, v);
 
@@ -274,7 +274,7 @@ public:
 
       auto *spear_renderer = dynamic_cast<SpearRenderer *>(spear.get());
       if (spear_renderer) {
-        spear_renderer->setConfig(spear_config);
+        spear_renderer->set_config(spear_config);
       }
       spear->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
     }
@@ -401,7 +401,7 @@ private:
   }
 };
 
-void registerSpearmanRenderer(Render::GL::EntityRendererRegistry &registry) {
+void register_spearman_renderer(Render::GL::EntityRendererRegistry &registry) {
   ensure_spearman_styles_registered();
   static SpearmanRenderer const renderer;
   registry.register_renderer(
@@ -417,8 +417,8 @@ void registerSpearmanRenderer(Render::GL::EntityRendererRegistry &registry) {
             return shader;
           }
           if (auto resources = lookup_spearman_shader_resources(shader_key)) {
-            shader = ctx.backend->getOrLoadShader(shader_key, resources->vertex,
-                                                  resources->fragment);
+            shader = ctx.backend->get_or_load_shader(
+                shader_key, resources->vertex, resources->fragment);
           }
           return shader;
         };

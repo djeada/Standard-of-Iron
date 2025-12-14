@@ -72,11 +72,12 @@ void Renderer::begin_frame() {
   m_active_queue->clear();
 
   if (m_camera != nullptr) {
-    m_view_proj = m_camera->getProjectionMatrix() * m_camera->getViewMatrix();
+    m_view_proj =
+        m_camera->get_projection_matrix() * m_camera->get_view_matrix();
   }
 
   if (m_backend) {
-    m_backend->beginFrame();
+    m_backend->begin_frame();
   }
 }
 
@@ -109,8 +110,8 @@ void Renderer::set_viewport(int width, int height) {
   }
   if ((m_camera != nullptr) && height > 0) {
     float const aspect = float(width) / float(height);
-    m_camera->setPerspective(m_camera->getFOV(), aspect, m_camera->getNear(),
-                             m_camera->getFar());
+    m_camera->set_perspective(m_camera->get_fov(), aspect, m_camera->get_near(),
+                              m_camera->get_far());
   }
 }
 void Renderer::mesh(Mesh *mesh, const QMatrix4x4 &model, const QVector3D &color,
@@ -119,7 +120,7 @@ void Renderer::mesh(Mesh *mesh, const QMatrix4x4 &model, const QVector3D &color,
     return;
   }
 
-  if (mesh == getUnitCylinder() && (texture == nullptr) &&
+  if (mesh == get_unit_cylinder() && (texture == nullptr) &&
       (m_current_shader == nullptr)) {
     QVector3D start;
     QVector3D end;
@@ -306,6 +307,35 @@ void Renderer::selection_smoke(const QMatrix4x4 &model, const QVector3D &color,
   }
 }
 
+void Renderer::healing_beam(const QVector3D &start, const QVector3D &end,
+                            const QVector3D &color, float progress,
+                            float beam_width, float intensity, float time) {
+  HealingBeamCmd cmd;
+  cmd.start_pos = start;
+  cmd.end_pos = end;
+  cmd.color = color;
+  cmd.progress = progress;
+  cmd.beam_width = beam_width;
+  cmd.intensity = intensity;
+  cmd.time = time;
+  if (m_active_queue != nullptr) {
+    m_active_queue->submit(cmd);
+  }
+}
+
+void Renderer::healer_aura(const QVector3D &position, const QVector3D &color,
+                           float radius, float intensity, float time) {
+  HealerAuraCmd cmd;
+  cmd.position = position;
+  cmd.color = color;
+  cmd.radius = radius;
+  cmd.intensity = intensity;
+  cmd.time = time;
+  if (m_active_queue != nullptr) {
+    m_active_queue->submit(cmd);
+  }
+}
+
 void Renderer::enqueue_selection_ring(
     Engine::Core::Entity *, Engine::Core::TransformComponent *transform,
     Engine::Core::UnitComponent *unit_comp, bool selected, bool hovered) {
@@ -325,7 +355,7 @@ void Renderer::enqueue_selection_ring(
     if (troop_type_opt) {
       const auto &nation_reg = Game::Systems::NationRegistry::instance();
       const Game::Systems::Nation *nation =
-          nation_reg.getNationForPlayer(unit_comp->owner_id);
+          nation_reg.get_nation_for_player(unit_comp->owner_id);
       Game::Systems::NationID nation_id =
           nation != nullptr ? nation->id : nation_reg.default_nation_id();
 
@@ -353,8 +383,8 @@ void Renderer::enqueue_selection_ring(
                 transform->position.z);
   auto &terrain_service = Game::Map::TerrainService::instance();
   float terrain_y = transform->position.y;
-  if (terrain_service.isInitialized()) {
-    terrain_y = terrain_service.getTerrainHeight(pos.x(), pos.z());
+  if (terrain_service.is_initialized()) {
+    terrain_y = terrain_service.get_terrain_height(pos.x(), pos.z());
   } else {
     terrain_y -= ground_offset * scale_y;
   }
@@ -382,7 +412,7 @@ void Renderer::render_world(Engine::Core::World *world) {
   std::lock_guard<std::recursive_mutex> const guard(world->get_entity_mutex());
 
   auto &vis = Game::Map::VisibilityService::instance();
-  const bool visibility_enabled = vis.isInitialized();
+  const bool visibility_enabled = vis.is_initialized();
 
   auto renderable_entities =
       world->get_entities_with<Engine::Core::RenderableComponent>();
@@ -407,7 +437,7 @@ void Renderer::render_world(Engine::Core::World *world) {
       if (transform != nullptr && m_camera != nullptr) {
         QVector3D const unit_pos(transform->position.x, transform->position.y,
                                  transform->position.z);
-        if (m_camera->isInFrustum(unit_pos, 4.0F)) {
+        if (m_camera->is_in_frustum(unit_pos, 4.0F)) {
           ++visibleUnitCount;
         }
       }
@@ -463,7 +493,7 @@ void Renderer::render_world(Engine::Core::World *world) {
 
       QVector3D const unit_pos(transform->position.x, transform->position.y,
                                transform->position.z);
-      if (!m_camera->isInFrustum(unit_pos, cull_radius)) {
+      if (!m_camera->is_in_frustum(unit_pos, cull_radius)) {
         continue;
       }
 
