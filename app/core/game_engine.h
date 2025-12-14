@@ -144,6 +144,7 @@ public:
       QImage minimap_image READ minimap_image NOTIFY minimap_image_changed)
   Q_PROPERTY(bool is_spectator_mode READ is_spectator_mode NOTIFY
                  spectator_mode_changed)
+  Q_PROPERTY(bool is_loading READ is_loading NOTIFY is_loading_changed)
 
   Q_INVOKABLE void on_map_clicked(qreal sx, qreal sy);
   Q_INVOKABLE void on_right_click(qreal sx, qreal sy);
@@ -243,6 +244,10 @@ public:
 
   [[nodiscard]] bool is_spectator_mode() const {
     return m_level.is_spectator_mode;
+  }
+
+  [[nodiscard]] bool is_loading() const {
+    return m_runtime.loading;
   }
 
   QObject *audio_system();
@@ -368,4 +373,5 @@ signals:
   void save_slots_changed();
   void hold_mode_changed(bool active);
   void spectator_mode_changed();
+  void is_loading_changed();
 };
