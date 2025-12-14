@@ -21,17 +21,17 @@ void RetreatBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   }
   m_retreatTimer = 0.0F;
 
-  if (context.primaryBarracks == 0) {
+  if (context.primary_barracks == 0) {
     return;
   }
 
   std::vector<const EntitySnapshot *> retreating_units;
-  retreating_units.reserve(snapshot.friendlies.size());
+  retreating_units.reserve(snapshot.friendly_units.size());
 
   constexpr float critical_health = 0.35F;
   constexpr float low_health = 0.50F;
 
-  for (const auto &entity : snapshot.friendlies) {
+  for (const auto &entity : snapshot.friendly_units) {
     if (entity.is_building) {
       continue;
     }
@@ -48,7 +48,7 @@ void RetreatBehavior::execute(const AISnapshot &snapshot, AIContext &context,
     }
 
     else if (health_ratio < low_health &&
-             isEntityEngaged(entity, snapshot.visibleEnemies)) {
+             isEntityEngaged(entity, snapshot.visible_enemies)) {
       retreating_units.push_back(&entity);
     }
   }
@@ -103,15 +103,15 @@ void RetreatBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   AICommand command;
   command.type = AICommandType::MoveUnits;
   command.units = std::move(claimed_units);
-  command.moveTargetX = std::move(filtered_x);
-  command.moveTargetY = std::move(filtered_y);
-  command.moveTargetZ = std::move(filtered_z);
+  command.move_target_x = std::move(filtered_x);
+  command.move_target_y = std::move(filtered_y);
+  command.move_target_z = std::move(filtered_z);
   outCommands.push_back(std::move(command));
 }
 
 auto RetreatBehavior::should_execute(const AISnapshot &snapshot,
                                      const AIContext &context) const -> bool {
-  if (context.primaryBarracks == 0) {
+  if (context.primary_barracks == 0) {
     return false;
   }
 
@@ -121,7 +121,7 @@ auto RetreatBehavior::should_execute(const AISnapshot &snapshot,
 
   constexpr float critical_health = 0.35F;
 
-  for (const auto &entity : snapshot.friendlies) {
+  for (const auto &entity : snapshot.friendly_units) {
     if (entity.is_building) {
       continue;
     }
