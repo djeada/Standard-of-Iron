@@ -47,7 +47,8 @@ auto combat_mode_to_string(AttackComponent::CombatMode mode) -> QString {
   }
 }
 
-auto combat_mode_from_string(const QString &value) -> AttackComponent::CombatMode {
+auto combat_mode_from_string(const QString &value)
+    -> AttackComponent::CombatMode {
   if (value == "melee") {
     return AttackComponent::CombatMode::Melee;
   }
@@ -161,7 +162,8 @@ auto Serialization::serialize_entity(const Entity *entity) -> QJsonObject {
     attack_obj["melee_range"] = attack->melee_range;
     attack_obj["melee_damage"] = attack->melee_damage;
     attack_obj["melee_cooldown"] = attack->melee_cooldown;
-    attack_obj["preferred_mode"] = combat_mode_to_string(attack->preferred_mode);
+    attack_obj["preferred_mode"] =
+        combat_mode_to_string(attack->preferred_mode);
     attack_obj["current_mode"] = combat_mode_to_string(attack->current_mode);
     attack_obj["can_melee"] = attack->can_melee;
     attack_obj["can_ranged"] = attack->can_ranged;
@@ -283,7 +285,8 @@ auto Serialization::serialize_entity(const Entity *entity) -> QJsonObject {
   return entity_obj;
 }
 
-void Serialization::deserialize_entity(Entity *entity, const QJsonObject &json) {
+void Serialization::deserialize_entity(Entity *entity,
+                                       const QJsonObject &json) {
   if (json.contains("transform")) {
     const auto transform_obj = json["transform"].toObject();
     auto *transform = entity->add_component<TransformComponent>();
@@ -886,8 +889,8 @@ auto Serialization::serialize_world(const World *world) -> QJsonDocument {
   if (terrain_service.is_initialized() &&
       (terrain_service.get_height_map() != nullptr)) {
     world_obj["terrain"] = serialize_terrain(terrain_service.get_height_map(),
-                                            terrain_service.biome_settings(),
-                                            terrain_service.road_segments());
+                                             terrain_service.biome_settings(),
+                                             terrain_service.road_segments());
   }
 
   return QJsonDocument(world_obj);
@@ -946,7 +949,7 @@ void Serialization::deserialize_world(World *world, const QJsonDocument &doc) {
 }
 
 auto Serialization::save_to_file(const QString &filename,
-                                const QJsonDocument &doc) -> bool {
+                                 const QJsonDocument &doc) -> bool {
   QFile file(filename);
   if (!file.open(QIODevice::WriteOnly)) {
     qWarning() << "Could not open file for writing:" << filename;
