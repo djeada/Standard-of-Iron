@@ -287,6 +287,16 @@ auto VisibilityService::snapshotCells() const -> std::vector<std::uint8_t> {
   return m_cells;
 }
 
+void VisibilityService::reveal_all() {
+  if (!m_initialized) {
+    return;
+  }
+  std::unique_lock<std::shared_mutex> const lock(m_cellsMutex);
+  std::fill(m_cells.begin(), m_cells.end(),
+            static_cast<std::uint8_t>(VisibilityState::Visible));
+  m_version.fetch_add(1, std::memory_order_release);
+}
+
 auto VisibilityService::inBounds(int grid_x, int grid_z) const -> bool {
   return grid_x >= 0 && grid_x < m_width && grid_z >= 0 && grid_z < m_height;
 }

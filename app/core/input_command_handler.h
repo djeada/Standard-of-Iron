@@ -59,6 +59,10 @@ public:
   void set_hover_at_screen(qreal sx, qreal sy, const ViewportState &viewport);
   static void reset_movement(Engine::Core::Entity *entity);
 
+  void set_spectator_mode(bool is_spectator) {
+    m_is_spectator_mode = is_spectator;
+  }
+
 private:
   Engine::Core::World *m_world;
   Game::Systems::SelectionController *m_selection_controller;
@@ -67,4 +71,5 @@ private:
   HoverTracker *m_hover_tracker;
   Game::Systems::PickingService *m_picking_service;
   Render::GL::Camera *m_camera;
+  bool m_is_spectator_mode = false;
 };
