@@ -79,6 +79,7 @@ add_library(game_systems STATIC
     map/minimap/fog_of_war_mask.cpp
     map/minimap/minimap_manager.cpp
     map/minimap/unit_layer.cpp
+    map/minimap/camera_viewport_layer.cpp
     visuals/visual_catalog.cpp
     units/unit.cpp
     units/archer.cpp
