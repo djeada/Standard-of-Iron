@@ -15,6 +15,7 @@ public:
   void standIdle();
 
   void kneel(float depth);
+  void kneelTransition(float progress, bool standing_up);
 
   void lean(const QVector3D &direction, float amount);
 
@@ -24,6 +25,7 @@ public:
   void meleeStrike(float strike_phase);
   void graspTwoHanded(const QVector3D &grip_center, float hand_separation);
   void spearThrust(float attack_phase);
+  void spearThrustFromHold(float attack_phase, float hold_depth);
   void sword_slash(float attack_phase);
   void sword_slash_variant(float attack_phase, std::uint8_t variant);
   void spear_thrust_variant(float attack_phase, std::uint8_t variant);
