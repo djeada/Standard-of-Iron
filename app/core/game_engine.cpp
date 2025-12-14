@@ -83,6 +83,7 @@
 #include "game/systems/formation_planner.h"
 #include "game/systems/game_state_serializer.h"
 #include "game/systems/global_stats_registry.h"
+#include "game/systems/healing_beam_system.h"
 #include "game/systems/healing_system.h"
 #include "game/systems/movement_system.h"
 #include "game/systems/nation_id.h"
@@ -100,6 +101,8 @@
 #include "game/systems/victory_service.h"
 #include "game/units/factory.h"
 #include "game/units/troop_config.h"
+#include "render/entity/healer_aura_renderer.h"
+#include "render/entity/healing_beam_renderer.h"
 #include "render/geom/arrow.h"
 #include "render/geom/patrol_flags.h"
 #include "render/geom/stone.h"
@@ -683,6 +686,17 @@ void GameEngine::render(int pixelWidth, int pixelHeight) {
     if (auto *res = m_renderer->resources()) {
       Render::GL::render_projectiles(m_renderer.get(), res, *projectile_system);
     }
+  }
+  if (auto *healing_beam_system =
+          m_world->get_system<Game::Systems::HealingBeamSystem>()) {
+    if (auto *res = m_renderer->resources()) {
+      Render::GL::render_healing_beams(m_renderer.get(), res,
+                                       *healing_beam_system);
+    }
+  }
+
+  if (auto *res = m_renderer->resources()) {
+    Render::GL::render_healer_auras(m_renderer.get(), res, m_world.get());
   }
 
   if (auto *res = m_renderer->resources()) {

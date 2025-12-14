@@ -48,6 +48,8 @@ add_library(game_systems STATIC
     systems/capture_system.cpp
     systems/terrain_alignment_system.cpp
     systems/healing_system.cpp
+    systems/healing_beam.cpp
+    systems/healing_beam_system.cpp
     systems/owner_registry.cpp
     systems/troop_count_registry.cpp
     systems/global_stats_registry.cpp
