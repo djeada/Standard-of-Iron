@@ -98,6 +98,7 @@ void SkirmishLoader::reset_game_state() {
   Game::Systems::NationRegistry::instance().clear_player_assignments();
 
   if (m_fog != nullptr) {
+    m_fog->setEnabled(true);
     m_fog->update_mask(0, 0, 1.0F, {});
   }
 }
@@ -448,8 +449,14 @@ auto SkirmishLoader::start(const QString &map_path,
 
   if (is_spectator_mode) {
     visibility_service.reveal_all();
+    if (m_fog != nullptr) {
+      m_fog->setEnabled(false);
+    }
   } else {
     visibility_service.computeImmediate(m_world, player_owner_id);
+    if (m_fog != nullptr) {
+      m_fog->setEnabled(true);
+    }
   }
 
   if ((m_fog != nullptr) && visibility_service.is_initialized()) {
