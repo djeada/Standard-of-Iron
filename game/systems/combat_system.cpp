@@ -22,7 +22,15 @@ namespace Game::Systems {
 
 namespace {
 thread_local std::mt19937 gen(std::random_device{}());
+
+auto isUnitInHoldMode(Engine::Core::Entity *entity) -> bool {
+  if (entity == nullptr) {
+    return false;
+  }
+  auto *hold_mode = entity->get_component<Engine::Core::HoldModeComponent>();
+  return (hold_mode != nullptr) && hold_mode->active;
 }
+} // namespace
 
 void CombatSystem::update(Engine::Core::World *world, float delta_time) {
   process_hit_feedback(world, delta_time);
@@ -86,14 +94,17 @@ void CombatSystem::process_attacks(Engine::Core::World *world,
             const float max_melee_separation = 0.9F;
 
             if (dist > max_melee_separation) {
-              float const pull_amount =
-                  (dist - ideal_melee_distance) * 0.3F * delta_time * 5.0F;
+              // Check if attacker is in hold mode - don't pull if so
+              if (!isUnitInHoldMode(attacker)) {
+                float const pull_amount =
+                    (dist - ideal_melee_distance) * 0.3F * delta_time * 5.0F;
 
-              if (dist > 0.001F) {
-                QVector3D const direction(dx / dist, 0.0F, dz / dist);
+                if (dist > 0.001F) {
+                  QVector3D const direction(dx / dist, 0.0F, dz / dist);
 
-                att_t->position.x += direction.x() * pull_amount;
-                att_t->position.z += direction.z() * pull_amount;
+                  att_t->position.x += direction.x() * pull_amount;
+                  att_t->position.z += direction.z() * pull_amount;
+                }
               }
             }
           }
@@ -141,11 +152,14 @@ void CombatSystem::process_attacks(Engine::Core::World *world,
         if (attacker_unit->spawn_type == Game::Units::SpawnType::Archer) {
 
           range *= 1.5F;
-          damage = static_cast<int>(damage * 1.3F);
+          damage = static_cast<int>(damage * 1.5F);
         } else if (attacker_unit->spawn_type ==
                    Game::Units::SpawnType::Spearman) {
 
-          damage = static_cast<int>(damage * 1.4F);
+          damage = static_cast<int>(damage * 2.0F);
+        } else {
+          // All other units in hold mode get a significant attack bonus
+          damage = static_cast<int>(damage * 1.75F);
         }
       }
 
@@ -593,11 +607,16 @@ void CombatSystem::process_attacks(Engine::Core::World *world,
             if (dist > 0.001F) {
               QVector3D const direction(dx / dist, 0.0F, dz / dist);
 
-              att_t->position.x += direction.x() * move_amount;
-              att_t->position.z += direction.z() * move_amount;
+              // Check hold mode - don't move units that are holding
+              if (!isUnitInHoldMode(attacker)) {
+                att_t->position.x += direction.x() * move_amount;
+                att_t->position.z += direction.z() * move_amount;
+              }
 
-              tgt_t->position.x -= direction.x() * move_amount;
-              tgt_t->position.z -= direction.z() * move_amount;
+              if (!isUnitInHoldMode(best_target)) {
+                tgt_t->position.x -= direction.x() * move_amount;
+                tgt_t->position.z -= direction.z() * move_amount;
+              }
             }
           }
         }
