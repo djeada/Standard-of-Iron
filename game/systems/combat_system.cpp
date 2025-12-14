@@ -22,7 +22,7 @@ namespace Game::Systems {
 
 namespace {
 thread_local std::mt19937 gen(std::random_device{}());
-} // namespace
+}
 
 void CombatSystem::update(Engine::Core::World *world, float delta_time) {
   process_hit_feedback(world, delta_time);
@@ -692,9 +692,8 @@ void CombatSystem::dealDamage(Engine::Core::World *world,
     Game::Units::SpawnType const attacker_type =
         attacker_type_opt.value_or(Game::Units::SpawnType::Knight);
 
-    Engine::Core::EventManager::instance().publish(
-        Engine::Core::CombatHitEvent(attackerId, target->get_id(), damage,
-                                     attacker_type, is_killing_blow));
+    Engine::Core::EventManager::instance().publish(Engine::Core::CombatHitEvent(
+        attackerId, target->get_id(), damage, attacker_type, is_killing_blow));
 
     if (unit->health > 0) {
       apply_hit_feedback(target, attackerId, world);
@@ -1026,15 +1025,15 @@ void CombatSystem::process_hit_feedback(Engine::Core::World *world,
       continue;
     }
 
-    auto *feedback =
-        unit->get_component<Engine::Core::HitFeedbackComponent>();
+    auto *feedback = unit->get_component<Engine::Core::HitFeedbackComponent>();
     if (feedback == nullptr || !feedback->is_reacting) {
       continue;
     }
 
     feedback->reaction_time += delta_time;
-    float const progress = feedback->reaction_time /
-                           Engine::Core::HitFeedbackComponent::kReactionDuration;
+    float const progress =
+        feedback->reaction_time /
+        Engine::Core::HitFeedbackComponent::kReactionDuration;
 
     if (progress >= 1.0F) {
       feedback->is_reacting = false;
@@ -1043,8 +1042,7 @@ void CombatSystem::process_hit_feedback(Engine::Core::World *world,
       feedback->knockback_x = 0.0F;
       feedback->knockback_z = 0.0F;
     } else {
-      auto *transform =
-          unit->get_component<Engine::Core::TransformComponent>();
+      auto *transform = unit->get_component<Engine::Core::TransformComponent>();
       if (transform != nullptr) {
         if (!visibility.should_process_detailed_effects(
                 transform->position.x, transform->position.y,
@@ -1138,8 +1136,7 @@ void CombatSystem::apply_hit_feedback(Engine::Core::Entity *target,
     return;
   }
 
-  auto *feedback =
-      target->get_component<Engine::Core::HitFeedbackComponent>();
+  auto *feedback = target->get_component<Engine::Core::HitFeedbackComponent>();
   if (feedback == nullptr) {
     feedback = target->add_component<Engine::Core::HitFeedbackComponent>();
   }
