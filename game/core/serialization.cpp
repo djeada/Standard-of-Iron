@@ -789,13 +789,13 @@ auto Serialization::serializeWorld(const World *world) -> QJsonDocument {
   world_obj["nextEntityId"] = static_cast<qint64>(world->get_next_entity_id());
   world_obj["schemaVersion"] = 1;
   world_obj["owner_registry"] =
-      Game::Systems::OwnerRegistry::instance().toJson();
+      Game::Systems::OwnerRegistry::instance().to_json();
 
   const auto &terrain_service = Game::Map::TerrainService::instance();
-  if (terrain_service.isInitialized() &&
-      (terrain_service.getHeightMap() != nullptr)) {
-    world_obj["terrain"] = serializeTerrain(terrain_service.getHeightMap(),
-                                            terrain_service.biomeSettings(),
+  if (terrain_service.is_initialized() &&
+      (terrain_service.get_height_map() != nullptr)) {
+    world_obj["terrain"] = serializeTerrain(terrain_service.get_height_map(),
+                                            terrain_service.biome_settings(),
                                             terrain_service.road_segments());
   }
 
@@ -824,7 +824,7 @@ void Serialization::deserializeWorld(World *world, const QJsonDocument &doc) {
   }
 
   if (world_obj.contains("owner_registry")) {
-    Game::Systems::OwnerRegistry::instance().fromJson(
+    Game::Systems::OwnerRegistry::instance().from_json(
         world_obj["owner_registry"].toObject());
   }
 
@@ -847,7 +847,7 @@ void Serialization::deserializeWorld(World *world, const QJsonDocument &doc) {
     deserializeTerrain(temp_height_map.get(), biome, roads, terrain_obj);
 
     auto &terrain_service = Game::Map::TerrainService::instance();
-    terrain_service.restoreFromSerialized(
+    terrain_service.restore_from_serialized(
         width, height, tile_size, temp_height_map->getHeightData(),
         temp_height_map->getTerrainTypes(), temp_height_map->getRiverSegments(),
         roads, temp_height_map->getBridges(), biome);
@@ -865,7 +865,7 @@ auto Serialization::saveToFile(const QString &filename,
   return true;
 }
 
-auto Serialization::loadFromFile(const QString &filename) -> QJsonDocument {
+auto Serialization::load_from_file(const QString &filename) -> QJsonDocument {
   QFile file(filename);
   if (!file.open(QIODevice::ReadOnly)) {
     qWarning() << "Could not open file for reading:" << filename;

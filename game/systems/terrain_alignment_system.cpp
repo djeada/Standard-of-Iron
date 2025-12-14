@@ -10,7 +10,7 @@ namespace Game::Systems {
 void TerrainAlignmentSystem::update(Engine::Core::World *world, float) {
   auto &terrain_service = Game::Map::TerrainService::instance();
 
-  if (!terrain_service.isInitialized()) {
+  if (!terrain_service.is_initialized()) {
     return;
   }
 
@@ -29,7 +29,7 @@ void TerrainAlignmentSystem::alignEntityToTerrain(
 
   auto &terrain_service = Game::Map::TerrainService::instance();
 
-  float const terrain_height = terrain_service.getTerrainHeight(
+  float const terrain_height = terrain_service.get_terrain_height(
       transform->position.x, transform->position.z);
 
   float entity_base_offset = 0.0F;

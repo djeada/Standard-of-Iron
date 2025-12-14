@@ -61,7 +61,7 @@ python3 scripts/validate_shader_uniforms.py
 When creating a new rendering pipeline:
 
 1. Inherit from `IPipeline` interface
-2. Implement `initialize()`, `shutdown()`, `cacheUniforms()`, `isInitialized()`
+2. Implement `initialize()`, `shutdown()`, `cacheUniforms()`, `is_initialized()`
 3. Add validation to ensure uniform names match shader files
 4. Document any shader dependencies
 5. Update this README with the new pipeline

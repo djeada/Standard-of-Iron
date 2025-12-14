@@ -1,5 +1,6 @@
 #include "buffer.h"
 #include <GL/gl.h>
+#include <QDebug>
 #include <cstddef>
 #include <qopenglext.h>
 #include <vector>
@@ -19,17 +20,17 @@ void Buffer::bind() {
     initializeOpenGLFunctions();
     glGenBuffers(1, &m_buffer);
   }
-  glBindBuffer(getGLType(), m_buffer);
+  glBindBuffer(get_gl_type(), m_buffer);
 }
 
-void Buffer::unbind() { glBindBuffer(getGLType(), 0); }
+void Buffer::unbind() { glBindBuffer(get_gl_type(), 0); }
 
-void Buffer::setData(const void *data, size_t size, Usage usage) {
+void Buffer::set_data(const void *data, size_t size, Usage usage) {
   bind();
-  glBufferData(getGLType(), size, data, getGLUsage(usage));
+  glBufferData(get_gl_type(), size, data, get_gl_usage(usage));
 }
 
-auto Buffer::getGLType() const -> GLenum {
+auto Buffer::get_gl_type() const -> GLenum {
   switch (m_type) {
   case Type::Vertex:
     return GL_ARRAY_BUFFER;
@@ -41,7 +42,7 @@ auto Buffer::getGLType() const -> GLenum {
   return GL_ARRAY_BUFFER;
 }
 
-auto Buffer::getGLUsage(Usage usage) -> GLenum {
+auto Buffer::get_gl_usage(Usage usage) -> GLenum {
   switch (usage) {
   case Usage::Static:
     return GL_STATIC_DRAW;
@@ -65,8 +66,22 @@ void VertexArray::bind() {
   if (m_vao == 0U) {
     initializeOpenGLFunctions();
     glGenVertexArrays(1, &m_vao);
+    GLenum genErr = glGetError();
+    if (genErr != GL_NO_ERROR) {
+      qWarning() << "VertexArray glGenVertexArrays error" << genErr;
+    }
   }
+  
+  // Clear any pre-existing errors from previous operations
+  while (glGetError() != GL_NO_ERROR) {
+  }
+
   glBindVertexArray(m_vao);
+  GLenum bindErr = glGetError();
+  if (bindErr != GL_NO_ERROR) {
+    qWarning() << "VertexArray glBindVertexArray error" << bindErr << "vao"
+               << m_vao;
+  }
 }
 
 void VertexArray::unbind() { glBindVertexArray(0); }
@@ -91,7 +106,7 @@ void VertexArray::add_vertexBuffer(Buffer &buffer,
   }
 }
 
-void VertexArray::setIndexBuffer(Buffer &buffer) {
+void VertexArray::set_index_buffer(Buffer &buffer) {
   bind();
   buffer.bind();
 }

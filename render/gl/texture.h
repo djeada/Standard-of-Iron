@@ -16,17 +16,18 @@ public:
   Texture();
   ~Texture() override;
 
-  auto loadFromFile(const QString &path) -> bool;
-  auto createEmpty(int width, int height, Format format = Format::RGBA) -> bool;
+  auto load_from_file(const QString &path) -> bool;
+  auto create_empty(int width, int height,
+                    Format format = Format::RGBA) -> bool;
 
   void bind(int unit = 0);
   void unbind();
 
-  void setFilter(Filter minFilter, Filter magFilter);
-  void setWrap(Wrap sWrap, Wrap tWrap);
+  void set_filter(Filter minFilter, Filter magFilter);
+  void set_wrap(Wrap sWrap, Wrap tWrap);
 
-  [[nodiscard]] auto getWidth() const -> int { return m_width; }
-  [[nodiscard]] auto getHeight() const -> int { return m_height; }
+  [[nodiscard]] auto get_width() const -> int { return m_width; }
+  [[nodiscard]] auto get_height() const -> int { return m_height; }
 
 private:
   GLuint m_texture = 0;
@@ -34,9 +35,9 @@ private:
   int m_height = 0;
   Format m_format = Format::RGBA;
 
-  [[nodiscard]] static auto getGLFormat(Format format) -> GLenum;
-  [[nodiscard]] static auto getGLFilter(Filter filter) -> GLenum;
-  [[nodiscard]] static auto getGLWrap(Wrap wrap) -> GLenum;
+  [[nodiscard]] static auto get_gl_format(Format format) -> GLenum;
+  [[nodiscard]] static auto get_gl_filter(Filter filter) -> GLenum;
+  [[nodiscard]] static auto get_gl_wrap(Wrap wrap) -> GLenum;
 };
 
 } // namespace Render::GL

@@ -23,10 +23,10 @@ auto GameStateSerializer::buildMetadata(
   metadata["player_unit_id"] = static_cast<qint64>(level.player_unit_id);
 
   metadata["gameMaxTroopsPerPlayer"] =
-      Game::GameConfig::instance().getMaxTroopsPerPlayer();
+      Game::GameConfig::instance().get_max_troops_per_player();
 
   const auto &terrain_service = Game::Map::TerrainService::instance();
-  if (const auto *height_map = terrain_service.getHeightMap()) {
+  if (const auto *height_map = terrain_service.get_height_map()) {
     metadata["grid_width"] = height_map->getWidth();
     metadata["grid_height"] = height_map->getHeight();
     metadata["tile_size"] = height_map->getTileSize();
@@ -39,10 +39,10 @@ auto GameStateSerializer::buildMetadata(
     camera_obj["target"] =
         App::JsonUtils::vec3ToJsonArray(camera->get_target());
     camera_obj["distance"] = camera->get_distance();
-    camera_obj["pitch_deg"] = camera->getPitchDeg();
-    camera_obj["fov"] = camera->getFOV();
-    camera_obj["near"] = camera->getNear();
-    camera_obj["far"] = camera->getFar();
+    camera_obj["pitch_deg"] = camera->get_pitch_deg();
+    camera_obj["fov"] = camera->get_fov();
+    camera_obj["near"] = camera->get_near();
+    camera_obj["far"] = camera->get_far();
     metadata["camera"] = camera_obj;
   }
 
@@ -74,17 +74,17 @@ void GameStateSerializer::restoreCameraFromMetadata(const QJsonObject &metadata,
   camera->lookAt(position, target, QVector3D(0.0F, 1.0F, 0.0F));
 
   const float near_plane =
-      static_cast<float>(camera_obj.value("near").toDouble(camera->getNear()));
+      static_cast<float>(camera_obj.value("near").toDouble(camera->get_near()));
   const float far_plane =
-      static_cast<float>(camera_obj.value("far").toDouble(camera->getFar()));
+      static_cast<float>(camera_obj.value("far").toDouble(camera->get_far()));
   const float fov =
-      static_cast<float>(camera_obj.value("fov").toDouble(camera->getFOV()));
+      static_cast<float>(camera_obj.value("fov").toDouble(camera->get_fov()));
 
-  float aspect = camera->getAspect();
+  float aspect = camera->get_aspect();
   if (viewport_height > 0) {
     aspect = float(viewport_width) / float(std::max(1, viewport_height));
   }
-  camera->setPerspective(fov, aspect, near_plane, far_plane);
+  camera->set_perspective(fov, aspect, near_plane, far_plane);
 }
 
 void GameStateSerializer::restoreRuntimeFromMetadata(
@@ -145,10 +145,10 @@ void GameStateSerializer::restoreLevelFromMetadata(const QJsonObject &metadata,
   int max_troops = metadata.value("max_troops_per_player")
                        .toInt(level.max_troops_per_player);
   if (max_troops <= 0) {
-    max_troops = Game::GameConfig::instance().getMaxTroopsPerPlayer();
+    max_troops = Game::GameConfig::instance().get_max_troops_per_player();
   }
   level.max_troops_per_player = max_troops;
-  Game::GameConfig::instance().setMaxTroopsPerPlayer(max_troops);
+  Game::GameConfig::instance().set_max_troops_per_player(max_troops);
 }
 
 } // namespace Game::Systems

@@ -25,7 +25,7 @@ auto TroopProfileService::get_profile(
     const auto fallback_id = NationRegistry::instance().default_nation_id();
     nation = NationRegistry::instance().getNation(fallback_id);
     if (nation == nullptr) {
-      const auto &all = NationRegistry::instance().getAllNations();
+      const auto &all = NationRegistry::instance().get_all_nations();
       if (all.empty()) {
         const auto &catalog_class =
             Game::Units::TroopCatalog::instance().get_class_or_fallback(type);

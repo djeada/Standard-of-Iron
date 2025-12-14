@@ -48,6 +48,8 @@ public:
 
   void set_camera(Camera *camera);
   void set_clear_color(float r, float g, float b, float a = 1.0F);
+  auto camera() const -> Camera * { return m_camera; }
+  auto backend() -> Backend * { return m_backend.get(); }
 
   void update_animation_time(float delta_time) {
     m_accumulated_time += delta_time;
@@ -92,7 +94,7 @@ public:
   }
   auto load_shader(const QString &name, const QString &vert_path,
                    const QString &frag_path) -> Shader * {
-    return m_backend ? m_backend->getOrLoadShader(name, vert_path, frag_path)
+    return m_backend ? m_backend->get_or_load_shader(name, vert_path, frag_path)
                      : nullptr;
   }
 
@@ -125,6 +127,11 @@ public:
 
   void selection_smoke(const QMatrix4x4 &model, const QVector3D &color,
                        float base_alpha = 0.15F) override;
+  void healing_beam(const QVector3D &start, const QVector3D &end,
+                    const QVector3D &color, float progress, float beam_width,
+                    float intensity, float time) override;
+  void healer_aura(const QVector3D &position, const QVector3D &color,
+                   float radius, float intensity, float time) override;
   void terrain_chunk(Mesh *mesh, const QMatrix4x4 &model,
                      const TerrainChunkParams &params,
                      std::uint16_t sort_key = 0x8000U, bool depth_write = true,

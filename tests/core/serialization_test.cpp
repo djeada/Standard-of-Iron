@@ -289,7 +289,7 @@ TEST_F(SerializationTest, SaveAndLoadFromFile) {
 
   EXPECT_TRUE(Serialization::saveToFile(filename, doc));
 
-  QJsonDocument loaded_doc = Serialization::loadFromFile(filename);
+  QJsonDocument loaded_doc = Serialization::load_from_file(filename);
   EXPECT_FALSE(loaded_doc.isNull());
 
   auto new_world = std::make_unique<World>();
