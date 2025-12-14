@@ -124,9 +124,16 @@ jobs:
 
       # Code signing (optional: signs .exe with Authenticode)
       - name: Sign executable
-        if: ${{ secrets.WINDOWS_CERTIFICATE != '' }}
+        if: ${{ secrets.WINDOWS_CERTIFICATE != '' && secrets.WINDOWS_CERTIFICATE_PASSWORD != '' }}
         shell: pwsh
         run: |
+          # Validate that the executable exists
+          $exePath = "$env:APP_DIR\${{ env.APP_NAME }}.exe"
+          if (!(Test-Path $exePath)) {
+            Write-Error "Executable not found at: $exePath"
+            exit 1
+          }
+          
           # Decode certificate from base64 secret and save to temp file
           $certPath = "$env:TEMP\cert.pfx"
           $certBytes = [System.Convert]::FromBase64String("${{ secrets.WINDOWS_CERTIFICATE }}")
@@ -139,14 +146,13 @@ jobs:
               Select-Object -First 1
             
             if (-not $signtool) {
-              Write-Warning "signtool.exe not found. Skipping code signing."
-              exit 0
+              Write-Error "signtool.exe not found in Windows Kits directory"
+              exit 1
             }
             
             Write-Host "Using signtool: $($signtool.FullName)"
             
-            # Sign the executable
-            $exePath = "$env:APP_DIR\${{ env.APP_NAME }}.exe"
+            # Prepare signing arguments
             $certPassword = "${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}"
             
             $signArgs = @(
@@ -171,7 +177,15 @@ jobs:
             Write-Host "Successfully signed $exePath"
             
             # Verify the signature
+            Write-Host "Verifying signature..."
             & $signtool.FullName verify /pa /v $exePath
+            
+            if ($LASTEXITCODE -ne 0) {
+              Write-Error "Signature verification failed with exit code $LASTEXITCODE"
+              exit 1
+            }
+            
+            Write-Host "Signature verification successful"
             
           } finally {
             # Clean up certificate file
