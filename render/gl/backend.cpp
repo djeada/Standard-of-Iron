@@ -1558,6 +1558,18 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       m_lastBoundShader = nullptr;
       break;
     }
+    case CombatDustCmdIndex: {
+      const auto &dust = std::get<CombatDustCmdIndex>(cmd);
+      if (m_combatDustPipeline == nullptr ||
+          !m_combatDustPipeline->is_initialized()) {
+        break;
+      }
+      m_combatDustPipeline->render_single_dust(dust.position, dust.color,
+                                               dust.radius, dust.intensity,
+                                               dust.time, view_proj);
+      m_lastBoundShader = nullptr;
+      break;
+    }
     default:
       break;
     }
