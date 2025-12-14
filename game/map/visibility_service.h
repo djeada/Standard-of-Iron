@@ -43,6 +43,8 @@ public:
     return m_version.load(std::memory_order_relaxed);
   }
 
+  void reveal_all();
+
 private:
   auto inBounds(int x, int z) const -> bool;
   auto index(int x, int z) const -> int;

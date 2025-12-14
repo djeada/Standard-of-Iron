@@ -98,6 +98,7 @@ void SkirmishLoader::reset_game_state() {
   Game::Systems::NationRegistry::instance().clear_player_assignments();
 
   if (m_fog != nullptr) {
+    m_fog->setEnabled(true);
     m_fog->update_mask(0, 0, 1.0F, {});
   }
 }
@@ -164,6 +165,8 @@ auto SkirmishLoader::start(const QString &map_path,
   std::unordered_map<int, Game::Systems::NationID> nation_overrides;
   QVariantList saved_player_configs;
   std::set<int> processed_player_ids;
+  bool is_spectator_mode = false;
+  bool has_human_player = false;
 
   if (!playerConfigs.isEmpty()) {
 
@@ -175,8 +178,11 @@ auto SkirmishLoader::start(const QString &map_path,
       const bool is_human = config.value("isHuman", false).toBool();
       const QString nation_id_str = config.value("nationId").toString();
 
-      if (is_human && player_id != player_owner_id) {
-        player_id = player_owner_id;
+      if (is_human) {
+        has_human_player = true;
+        if (player_id != player_owner_id) {
+          player_id = player_owner_id;
+        }
       }
 
       if (processed_player_ids.contains(player_id)) {
@@ -204,6 +210,8 @@ auto SkirmishLoader::start(const QString &map_path,
         saved_player_configs.append(updated_config);
       }
     }
+
+    is_spectator_mode = !has_human_player && !saved_player_configs.isEmpty();
   }
 
   std::set<int> unique_teams;
@@ -438,7 +446,18 @@ auto SkirmishLoader::start(const QString &map_path,
 
   auto &visibility_service = Game::Map::VisibilityService::instance();
   visibility_service.initialize(map_width, map_height, level_result.tile_size);
-  visibility_service.computeImmediate(m_world, player_owner_id);
+
+  if (is_spectator_mode) {
+    visibility_service.reveal_all();
+    if (m_fog != nullptr) {
+      m_fog->setEnabled(false);
+    }
+  } else {
+    visibility_service.computeImmediate(m_world, player_owner_id);
+    if (m_fog != nullptr) {
+      m_fog->setEnabled(true);
+    }
+  }
 
   if ((m_fog != nullptr) && visibility_service.is_initialized()) {
     m_fog->update_mask(
@@ -499,6 +518,7 @@ auto SkirmishLoader::start(const QString &map_path,
   result.tile_size = level_result.tile_size;
   result.max_troops_per_player = level_result.max_troops_per_player;
   result.victoryConfig = level_result.victoryConfig;
+  result.is_spectator_mode = is_spectator_mode;
 
   return result;
 }
