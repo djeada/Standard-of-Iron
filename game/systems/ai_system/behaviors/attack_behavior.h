@@ -25,7 +25,7 @@ private:
   float m_attackTimer = 0.0F;
   Engine::Core::EntityID m_lastTarget = 0;
   float m_targetLockDuration = 0.0F;
-  int m_scoutDirection = 0;  // Track which direction to scout (0-3 for N/E/S/W)
+  int m_scoutDirection = 0;
   float m_lastScoutTime = 0.0F;
 };
 

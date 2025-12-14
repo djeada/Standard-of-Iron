@@ -39,8 +39,8 @@ private:
   CameraVisibilityService() = default;
   ~CameraVisibilityService() = default;
   CameraVisibilityService(const CameraVisibilityService &) = delete;
-  auto operator=(const CameraVisibilityService &)
-      -> CameraVisibilityService & = delete;
+  auto operator=(const CameraVisibilityService &) -> CameraVisibilityService & =
+                                                         delete;
 
   const Render::GL::Camera *m_camera{nullptr};
   mutable std::mutex m_mutex;

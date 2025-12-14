@@ -183,8 +183,7 @@ void AudioEventHandler::onCombatHit(const Engine::Core::CombatHitEvent &event) {
   float const volume = COMBAT_HIT_VOLUME * get_volume_variation();
 
   AudioSystem::getInstance().playSound(sound_id, volume, false,
-                                       COMBAT_HIT_PRIORITY,
-                                       AudioCategory::SFX);
+                                       COMBAT_HIT_PRIORITY, AudioCategory::SFX);
 
   if (event.is_killing_blow) {
     AudioSystem::getInstance().playSound("combat_death", volume * 0.9F, false,

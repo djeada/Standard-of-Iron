@@ -51,8 +51,9 @@ auto CombatDustPipeline::initialize() -> bool {
 
   m_dust_shader = m_shader_cache->get("combat_dust");
   if (m_dust_shader == nullptr) {
-    m_dust_shader = m_shader_cache->load(
-        "combat_dust", ":/shaders/combat_dust.vert", ":/shaders/combat_dust.frag");
+    m_dust_shader =
+        m_shader_cache->load("combat_dust", ":/shaders/combat_dust.vert",
+                             ":/shaders/combat_dust.frag");
   }
   if (m_dust_shader == nullptr) {
     qWarning() << "CombatDustPipeline: Failed to get combat_dust shader";
@@ -134,7 +135,6 @@ auto CombatDustPipeline::create_dust_geometry() -> bool {
   std::vector<DustVertex> vertices;
   std::vector<unsigned int> indices;
 
-  // Create a flat disc with multiple concentric rings for dust billboards
   constexpr int rings = 6;
   constexpr int segments = 16;
   constexpr float pi = std::numbers::pi_v<float>;
@@ -241,14 +241,13 @@ auto CombatDustPipeline::create_dust_geometry() -> bool {
 }
 
 void CombatDustPipeline::collect_combat_zones(Engine::Core::World *world,
-                                               float animation_time) {
+                                              float animation_time) {
   m_dust_data.clear();
 
   if (world == nullptr) {
     return;
   }
 
-  // Find units that are attacking (in melee combat)
   auto units = world->get_entities_with<Engine::Core::UnitComponent>();
 
   for (auto *unit : units) {
@@ -268,15 +267,13 @@ void CombatDustPipeline::collect_combat_zones(Engine::Core::World *world,
       continue;
     }
 
-    // Only create dust for units in active melee combat
     if (attack == nullptr || !attack->in_melee_lock) {
       continue;
     }
 
-    // Create dust at combat location
     CombatDustData data;
-    data.position = QVector3D(transform->position.x, kDustYOffset,
-                               transform->position.z);
+    data.position =
+        QVector3D(transform->position.x, kDustYOffset, transform->position.z);
     data.radius = kDefaultDustRadius;
     data.intensity = kDefaultDustIntensity;
     data.color = QVector3D(kDustColorR, kDustColorG, kDustColorB);
@@ -343,7 +340,7 @@ void CombatDustPipeline::render(const Camera &cam, float animation_time) {
 }
 
 void CombatDustPipeline::render_dust(const CombatDustData &data,
-                                      const Camera &cam) {
+                                     const Camera &cam) {
   QMatrix4x4 model;
   model.setToIdentity();
   model.translate(data.position);
