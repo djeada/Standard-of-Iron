@@ -301,8 +301,8 @@ void AIReasoner::updateStateMachine(AIContext &ctx, float delta_time) {
     } else if (ctx.visible_enemy_count == 0 && ctx.state_timer > 15.0F) {
       // No enemies visible for a while, regroup
       ctx.state = AIState::Idle;
-    } else if (ctx.average_health < 0.50F && ctx.damaged_units_count > ctx.total_units / 2) {
-      // More than half damaged, consider retreating to defend
+    } else if (ctx.average_health < 0.50F && ctx.damaged_units_count * 2 > ctx.total_units) {
+      // More than half damaged (integer-safe comparison), consider retreating to defend
       if (!ctx.barracks_under_threat) {
         ctx.state = AIState::Defending;
       }
