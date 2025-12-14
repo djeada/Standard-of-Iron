@@ -380,9 +380,9 @@ void MountedPoseController::apply_sword_strike(
     bool keep_left_hand) {
   attack_phase = std::clamp(attack_phase, 0.0F, 1.0F);
 
-  QVector3D const rest_pos = seatRelative(mount, 0.0F, 0.15F, 0.05F);
-  QVector3D const raised_pos = seatRelative(mount, 0.0F, 0.20F, 0.50F);
-  QVector3D const strike_pos = seatRelative(mount, 0.40F, 0.25F, -0.15F);
+  QVector3D const rest_pos = seatRelative(mount, 0.05F, 0.18F, 0.08F);
+  QVector3D const raised_pos = seatRelative(mount, 0.0F, 0.22F, 0.30F);
+  QVector3D const strike_pos = seatRelative(mount, 0.50F, 0.28F, 0.05F);
 
   QVector3D hand_r_target;
   QVector3D hand_l_target =
@@ -397,9 +397,8 @@ void MountedPoseController::apply_sword_strike(
     float t = (attack_phase - 0.30F) / 0.20F;
     t = t * t * t;
     hand_r_target = raised_pos * (1.0F - t) + strike_pos * t;
-    hand_r_target += mount.seat_up * (-0.25F - 0.12F * t);
 
-    QVector3D const lean = mount.seat_forward * (0.12F * t);
+    QVector3D const lean = mount.seat_forward * (0.10F * t);
     m_pose.shoulder_l += lean;
     m_pose.shoulder_r += lean;
     m_pose.neck_base += lean * 0.9F;
