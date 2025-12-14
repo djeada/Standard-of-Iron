@@ -1,0 +1,55 @@
+name: Linux Build
+on: [push, pull_request]
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-22.04
+    env:
+      BUILD_TYPE: Release
+      APP_NAME: standard_of_iron
+      APP_DIR: build/bin
+    steps:
+      - uses: actions/checkout@v4
+
+      # Qt (use either apt or install-qt-action; action ensures consistent Qt)
+      - uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.6.3'
+          host: 'linux'
+          arch: 'gcc_64'
+          cache: true
+          modules: 'qt5compat qtmultimedia'
+
+      - name: Install build deps
+        run: sudo apt-get update && sudo apt-get install -y ninja-build patchelf file rsync
+
+      - name: Configure
+        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DDEFAULT_LANG=en
+      - name: Build
+        run: cmake --build build --config ${BUILD_TYPE}
+
+      - name: Download linuxdeploy + Qt plugin
+        run: |
+          wget -q https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
+          wget -q https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/continuous/linuxdeploy-plugin-qt-x86_64.AppImage
+          chmod +x linuxdeploy-*.AppImage
+
+      - name: Prepare AppDir
+        run: |
+          mkdir -p AppDir/usr/bin
+          cp "${APP_DIR}/${APP_NAME}" AppDir/usr/bin/
+          mkdir -p AppDir/usr/share/applications
+          cp dist/linux/standard_of_iron.desktop AppDir/usr/share/applications/
+          mkdir -p AppDir/usr/share/icons/hicolor/256x256/apps
+          cp dist/linux/standard_of_iron.png AppDir/usr/share/icons/hicolor/256x256/apps/
+          rsync -a assets/ AppDir/usr/bin/assets/
+
+      - name: Build AppImage
+        run: |
+          export QML_SOURCES_PATHS="ui/qml"
+          ./linuxdeploy-x86_64.AppImage --appdir AppDir --plugin qt --output appimage
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-${{ env.BUILD_TYPE }}
+          path: ./*.AppImage
