@@ -12,7 +12,7 @@ auto AISnapshotBuilder::build(const Engine::Core::World &world,
   snapshot.player_id = aiOwnerId;
 
   auto friendlies = world.get_units_owned_by(aiOwnerId);
-  snapshot.friendlies.reserve(friendlies.size());
+  snapshot.friendly_units.reserve(friendlies.size());
 
   int skipped_no_ai = 0;
   int skipped_no_unit = 0;
@@ -73,12 +73,12 @@ auto AISnapshotBuilder::build(const Engine::Core::World &world,
           static_cast<int>(production->production_queue.size());
     }
 
-    snapshot.friendlies.push_back(std::move(data));
+    snapshot.friendly_units.push_back(std::move(data));
     added++;
   }
 
   auto enemies = world.get_enemy_units(aiOwnerId);
-  snapshot.visibleEnemies.reserve(enemies.size());
+  snapshot.visible_enemies.reserve(enemies.size());
 
   for (auto *entity : enemies) {
     auto *unit = entity->get_component<Engine::Core::UnitComponent>();
@@ -103,7 +103,7 @@ auto AISnapshotBuilder::build(const Engine::Core::World &world,
     contact.max_health = unit->max_health;
     contact.spawn_type = unit->spawn_type;
 
-    snapshot.visibleEnemies.push_back(std::move(contact));
+    snapshot.visible_enemies.push_back(std::move(contact));
   }
 
   return snapshot;
