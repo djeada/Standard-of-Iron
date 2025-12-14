@@ -132,6 +132,8 @@ public:
                     float intensity, float time) override;
   void healer_aura(const QVector3D &position, const QVector3D &color,
                    float radius, float intensity, float time) override;
+  void combat_dust(const QVector3D &position, const QVector3D &color,
+                   float radius, float intensity, float time) override;
   void terrain_chunk(Mesh *mesh, const QMatrix4x4 &model,
                      const TerrainChunkParams &params,
                      std::uint16_t sort_key = 0x8000U, bool depth_write = true,
