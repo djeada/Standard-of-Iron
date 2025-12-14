@@ -592,7 +592,7 @@ void GameEngine::update(float dt) {
     m_world->update(dt);
 
     auto &visibility_service = Game::Map::VisibilityService::instance();
-    if (visibility_service.is_initialized()) {
+    if (visibility_service.is_initialized() && !m_level.is_spectator_mode) {
       m_runtime.visibility_update_accumulator += dt;
       const float visibility_update_interval =
           Game::GameConfig::instance().gameplay().visibility_update_interval;
@@ -615,7 +615,9 @@ void GameEngine::update(float dt) {
     }
 
     if (m_minimap_manager) {
-      m_minimap_manager->update_fog(dt, m_runtime.local_owner_id);
+      if (!m_level.is_spectator_mode) {
+        m_minimap_manager->update_fog(dt, m_runtime.local_owner_id);
+      }
       auto *selection_system =
           m_world->get_system<Game::Systems::SelectionSystem>();
       m_minimap_manager->update_units(m_world.get(), selection_system);
@@ -1206,7 +1208,12 @@ void GameEngine::start_skirmish(const QString &map_path,
             Engine::Core::AmbientState::PEACEFUL,
             Engine::Core::AmbientState::PEACEFUL));
 
+    if (m_input_handler) {
+      m_input_handler->set_spectator_mode(m_level.is_spectator_mode);
+    }
+
     emit owner_info_changed();
+    emit spectator_mode_changed();
   }
 }
 

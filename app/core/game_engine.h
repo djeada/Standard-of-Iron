@@ -142,6 +142,8 @@ public:
   Q_PROPERTY(QObject *audio_system READ audio_system CONSTANT)
   Q_PROPERTY(
       QImage minimap_image READ minimap_image NOTIFY minimap_image_changed)
+  Q_PROPERTY(bool is_spectator_mode READ is_spectator_mode NOTIFY
+                 spectator_mode_changed)
 
   Q_INVOKABLE void on_map_clicked(qreal sx, qreal sy);
   Q_INVOKABLE void on_right_click(qreal sx, qreal sy);
@@ -238,6 +240,10 @@ public:
                        const QVariantList &player_configs) const;
 
   [[nodiscard]] QImage minimap_image() const;
+
+  [[nodiscard]] bool is_spectator_mode() const {
+    return m_level.is_spectator_mode;
+  }
 
   QObject *audio_system();
 
@@ -361,4 +367,5 @@ signals:
   void minimap_image_changed();
   void save_slots_changed();
   void hold_mode_changed(bool active);
+  void spectator_mode_changed();
 };
