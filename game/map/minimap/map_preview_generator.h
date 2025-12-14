@@ -21,9 +21,9 @@ public:
   MapPreviewGenerator();
   ~MapPreviewGenerator();
 
-  [[nodiscard]] auto generate_preview(const QString &map_path,
-                                      const QVariantList &player_configs)
-      -> QImage;
+  [[nodiscard]] auto
+  generate_preview(const QString &map_path,
+                   const QVariantList &player_configs) -> QImage;
 
 private:
   std::unique_ptr<MinimapGenerator> m_minimap_generator;

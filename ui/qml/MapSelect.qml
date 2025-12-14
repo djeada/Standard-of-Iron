@@ -352,207 +352,212 @@ Item {
                 bottomMargin: Theme.spacingMedium
             }
 
-            Text {
-                id: leftTitle
+            ColumnLayout {
+                anchors.fill: parent
+                anchors.margins: 0
+                spacing: Theme.spacingMedium
 
-                text: qsTr("Maps")
-                color: Theme.textMain
-                font.pixelSize: 20
-                font.bold: true
+                Text {
+                    id: leftTitle
 
-                anchors {
-                    top: parent.top
-                    left: parent.left
-                    right: parent.right
+                    text: qsTr("Maps")
+                    color: Theme.textMain
+                    font.pixelSize: 20
+                    font.bold: true
+                    Layout.fillWidth: true
                 }
 
-            }
+                MapPreview {
+                    id: mapPreviewLeft
 
-            Rectangle {
-                id: listFrame
-
-                color: Qt.rgba(0, 0, 0, 0)
-                radius: Theme.radiusLarge
-                border.color: Theme.panelBr
-                border.width: 1
-                clip: true
-
-                anchors {
-                    top: leftTitle.bottom
-                    left: parent.left
-                    right: parent.right
-                    bottom: parent.bottom
-                    topMargin: Theme.spacingMedium
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: visible ? 240 : 0
+                    visible: selectedMapData !== null
+                    mapPath: selectedMapPath
+                    playerConfigs: getPlayerConfigs()
                 }
 
-                ListView {
-                    id: list
+                Rectangle {
+                    id: listFrame
 
-                    anchors.fill: parent
-                    anchors.margins: Theme.spacingSmall
-                    model: mapsModel
-                    spacing: Theme.spacingSmall
-                    currentIndex: (count > 0 ? 0 : -1)
-                    keyNavigationWraps: false
-                    boundsBehavior: Flickable.StopAtBounds
-                    onCurrentIndexChanged: {
-                        if (currentIndex < 0) {
-                            selectedMapIndex = -1;
-                            selectedMapData = null;
-                            selectedMapPath = "";
-                            playersModel.clear();
-                            return ;
-                        }
-                        selectedMapIndex = currentIndex;
-                        selectedMapData = getMapData(currentIndex);
-                        selectedMapPath = selectedMapData ? (selectedMapData.path || selectedMapData.file || "") : "";
-                        initializePlayers(selectedMapData);
-                    }
+                    color: Qt.rgba(0, 0, 0, 0)
+                    radius: Theme.radiusLarge
+                    border.color: Theme.panelBr
+                    border.width: 1
+                    clip: true
+                    Layout.fillWidth: true
+                    Layout.fillHeight: (!mapsLoading && list.count > 0)
 
-                    delegate: Item {
-                        id: row
+                    ListView {
+                        id: list
 
-                        width: list.width
-                        height: 72
-
-                        MouseArea {
-                            id: rowMouse
-
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            acceptedButtons: Qt.LeftButton
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: list.currentIndex = index
-                            onDoubleClicked: acceptSelection()
+                        anchors.fill: parent
+                        anchors.margins: Theme.spacingSmall
+                        model: mapsModel
+                        spacing: Theme.spacingSmall
+                        currentIndex: (count > 0 ? 0 : -1)
+                        keyNavigationWraps: false
+                        boundsBehavior: Flickable.StopAtBounds
+                        onCurrentIndexChanged: {
+                            if (currentIndex < 0) {
+                                selectedMapIndex = -1;
+                                selectedMapData = null;
+                                selectedMapPath = "";
+                                playersModel.clear();
+                                return ;
+                            }
+                            selectedMapIndex = currentIndex;
+                            selectedMapData = getMapData(currentIndex);
+                            selectedMapPath = selectedMapData ? (selectedMapData.path || selectedMapData.file || "") : "";
+                            initializePlayers(selectedMapData);
                         }
 
-                        Rectangle {
-                            id: card
+                        delegate: Item {
+                            id: row
 
-                            anchors.fill: parent
-                            radius: Theme.radiusLarge
-                            clip: true
-                            color: rowMouse.containsPress ? Theme.hoverBg : (index === list.currentIndex ? Theme.selectedBg : (rowMouse.containsMouse ? Qt.rgba(1, 1, 1, 0.03) : Qt.rgba(0, 0, 0, 0)))
-                            border.width: 1
-                            border.color: (index === list.currentIndex) ? Theme.selectedBr : (rowMouse.containsMouse ? Qt.rgba(1, 1, 1, 0.15) : Theme.thumbBr)
+                            width: list.width
+                            height: 72
 
-                            Rectangle {
-                                id: thumbWrap
+                            MouseArea {
+                                id: rowMouse
 
-                                width: 76
-                                height: 54
-                                radius: Theme.radiusMedium
-                                color: Theme.cardBase
-                                border.color: Theme.thumbBr
-                                border.width: 1
-                                clip: true
-
-                                anchors {
-                                    left: parent.left
-                                    leftMargin: Theme.spacingSmall
-                                    verticalCenter: parent.verticalCenter
-                                }
-
-                                Image {
-                                    id: thumbImage
-
-                                    anchors.fill: parent
-                                    source: (typeof thumbnail !== "undefined" && thumbnail !== "") ? thumbnail : ""
-                                    asynchronous: true
-                                    fillMode: Image.PreserveAspectCrop
-                                    visible: status === Image.Ready
-                                }
-
-                                Rectangle {
-                                    anchors.fill: parent
-                                    color: Theme.cardBase
-                                    visible: !thumbImage.visible
-
-                                    Text {
-                                        anchors.centerIn: parent
-                                        text: "🗺"
-                                        font.pixelSize: 24
-                                        color: Theme.textDim
-                                    }
-
-                                }
-
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                acceptedButtons: Qt.LeftButton
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: list.currentIndex = index
+                                onDoubleClicked: acceptSelection()
                             }
 
-                            Item {
-                                height: 54
+                            Rectangle {
+                                id: card
 
-                                anchors {
-                                    left: thumbWrap.right
-                                    right: parent.right
-                                    leftMargin: Theme.spacingSmall
-                                    rightMargin: Theme.spacingSmall
-                                    verticalCenter: parent.verticalCenter
-                                }
+                                anchors.fill: parent
+                                radius: Theme.radiusLarge
+                                clip: true
+                                color: rowMouse.containsPress ? Theme.hoverBg : (index === list.currentIndex ? Theme.selectedBg : (rowMouse.containsMouse ? Qt.rgba(1, 1, 1, 0.03) : Qt.rgba(0, 0, 0, 0)))
+                                border.width: 1
+                                border.color: (index === list.currentIndex) ? Theme.selectedBr : (rowMouse.containsMouse ? Qt.rgba(1, 1, 1, 0.15) : Theme.thumbBr)
 
-                                Text {
-                                    id: map_name
+                                Rectangle {
+                                    id: thumbWrap
 
-                                    text: (typeof name !== "undefined") ? String(name) : (typeof modelData === "string" ? modelData : (modelData && modelData.name ? String(modelData.name) : ""))
-                                    color: (index === list.currentIndex) ? Theme.textMain : Theme.textBright
-                                    font.pixelSize: (index === list.currentIndex) ? 17 : 15
-                                    font.bold: (index === list.currentIndex)
-                                    elide: Text.ElideRight
+                                    width: 76
+                                    height: 54
+                                    radius: Theme.radiusMedium
+                                    color: Theme.cardBase
+                                    border.color: Theme.thumbBr
+                                    border.width: 1
+                                    clip: true
 
                                     anchors {
-                                        top: parent.top
                                         left: parent.left
-                                        right: parent.right
+                                        leftMargin: Theme.spacingSmall
+                                        verticalCenter: parent.verticalCenter
                                     }
 
-                                    Behavior on font.pixelSize {
-                                        NumberAnimation {
-                                            duration: Theme.animNormal
+                                    Image {
+                                        id: thumbImage
+
+                                        anchors.fill: parent
+                                        source: (typeof thumbnail !== "undefined" && thumbnail !== "") ? thumbnail : ""
+                                        asynchronous: true
+                                        fillMode: Image.PreserveAspectCrop
+                                        visible: status === Image.Ready
+                                    }
+
+                                    Rectangle {
+                                        anchors.fill: parent
+                                        color: Theme.cardBase
+                                        visible: !thumbImage.visible
+
+                                        Text {
+                                            anchors.centerIn: parent
+                                            text: "🗺"
+                                            font.pixelSize: 24
+                                            color: Theme.textDim
                                         }
 
                                     }
 
                                 }
 
-                                Text {
-                                    text: (typeof description !== "undefined") ? String(description) : (modelData && modelData.description ? String(modelData.description) : "")
-                                    color: (index === list.currentIndex) ? Theme.accentBright : Theme.textSub
-                                    font.pixelSize: 12
-                                    elide: Text.ElideRight
+                                Item {
+                                    height: 54
 
                                     anchors {
-                                        left: parent.left
+                                        left: thumbWrap.right
                                         right: parent.right
-                                        bottom: parent.bottom
-                                    }
-
-                                }
-
-                                Text {
-                                    text: "›"
-                                    font.pointSize: 18
-                                    color: (index === list.currentIndex) ? Theme.textMain : Theme.textHint
-
-                                    anchors {
-                                        right: parent.right
-                                        rightMargin: 0
+                                        leftMargin: Theme.spacingSmall
+                                        rightMargin: Theme.spacingSmall
                                         verticalCenter: parent.verticalCenter
                                     }
 
+                                    Text {
+                                        id: map_name
+
+                                        text: (typeof name !== "undefined") ? String(name) : (typeof modelData === "string" ? modelData : (modelData && modelData.name ? String(modelData.name) : ""))
+                                        color: (index === list.currentIndex) ? Theme.textMain : Theme.textBright
+                                        font.pixelSize: (index === list.currentIndex) ? 17 : 15
+                                        font.bold: (index === list.currentIndex)
+                                        elide: Text.ElideRight
+
+                                        anchors {
+                                            top: parent.top
+                                            left: parent.left
+                                            right: parent.right
+                                        }
+
+                                        Behavior on font.pixelSize {
+                                            NumberAnimation {
+                                                duration: Theme.animNormal
+                                            }
+
+                                        }
+
+                                    }
+
+                                    Text {
+                                        text: (typeof description !== "undefined") ? String(description) : (modelData && modelData.description ? String(modelData.description) : "")
+                                        color: (index === list.currentIndex) ? Theme.accentBright : Theme.textSub
+                                        font.pixelSize: 12
+                                        elide: Text.ElideRight
+
+                                        anchors {
+                                            left: parent.left
+                                            right: parent.right
+                                            bottom: parent.bottom
+                                        }
+
+                                    }
+
+                                    Text {
+                                        text: "›"
+                                        font.pointSize: 18
+                                        color: (index === list.currentIndex) ? Theme.textMain : Theme.textHint
+
+                                        anchors {
+                                            right: parent.right
+                                            rightMargin: 0
+                                            verticalCenter: parent.verticalCenter
+                                        }
+
+                                    }
+
                                 }
 
-                            }
+                                Behavior on color {
+                                    ColorAnimation {
+                                        duration: Theme.animNormal
+                                    }
 
-                            Behavior on color {
-                                ColorAnimation {
-                                    duration: Theme.animNormal
                                 }
 
-                            }
+                                Behavior on border.color {
+                                    ColorAnimation {
+                                        duration: Theme.animNormal
+                                    }
 
-                            Behavior on border.color {
-                                ColorAnimation {
-                                    duration: Theme.animNormal
                                 }
 
                             }
@@ -563,50 +568,52 @@ Item {
 
                 }
 
-            }
-
-            Item {
-                anchors.fill: parent
-                visible: list.count === 0 && !mapsLoading
-
-                Text {
-                    text: qsTr("No maps available")
-                    color: Theme.textSub
-                    font.pixelSize: 14
-                    anchors.centerIn: parent
-                }
-
-            }
-
-            Item {
-                anchors.fill: parent
-                visible: mapsLoading
-
-                Column {
-                    anchors.centerIn: parent
-                    spacing: Theme.spacingSmall
+                Item {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: visible
+                    visible: list.count === 0 && !mapsLoading
 
                     Text {
-                        text: "⟳"
-                        font.pixelSize: 24
-                        color: Theme.accent
-                        anchors.horizontalCenter: parent.horizontalCenter
-
-                        RotationAnimator on rotation {
-                            from: 0
-                            to: 360
-                            duration: 1500
-                            loops: Animation.Infinite
-                            running: mapsLoading
-                        }
-
-                    }
-
-                    Text {
-                        text: qsTr("Loading maps...")
+                        text: qsTr("No maps available")
                         color: Theme.textSub
-                        font.pixelSize: 12
-                        anchors.horizontalCenter: parent.horizontalCenter
+                        font.pixelSize: 14
+                        anchors.centerIn: parent
+                    }
+
+                }
+
+                Item {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: visible
+                    visible: mapsLoading
+
+                    Column {
+                        anchors.centerIn: parent
+                        spacing: Theme.spacingSmall
+
+                        Text {
+                            text: "⟳"
+                            font.pixelSize: 24
+                            color: Theme.accent
+                            anchors.horizontalCenter: parent.horizontalCenter
+
+                            RotationAnimator on rotation {
+                                from: 0
+                                to: 360
+                                duration: 1500
+                                loops: Animation.Infinite
+                                running: mapsLoading
+                            }
+
+                        }
+
+                        Text {
+                            text: qsTr("Loading maps...")
+                            color: Theme.textSub
+                            font.pixelSize: 12
+                            anchors.horizontalCenter: parent.horizontalCenter
+                        }
+
                     }
 
                 }
@@ -841,26 +848,10 @@ Item {
 
             }
 
-            MapPreview {
-                id: mapPreview
-
-                height: 300
-                visible: selectedMapData !== null
-                mapPath: selectedMapPath
-                playerConfigs: getPlayerConfigs()
-
-                anchors {
-                    top: descr.bottom
-                    left: parent.left
-                    right: parent.right
-                    topMargin: Theme.spacingLarge
-                }
-            }
-
             Rectangle {
                 id: playerConfigPanel
 
-                height: Math.min(280, (playersModel.count * 60) + 90)
+                height: Math.min(240, (playersModel.count * 60) + 90)
                 radius: Theme.radiusLarge
                 color: Theme.cardBaseA
                 border.color: Theme.panelBr
@@ -868,10 +859,10 @@ Item {
                 visible: selectedMapData !== null
 
                 anchors {
-                    top: mapPreview.bottom
+                    top: descr.bottom
                     left: parent.left
                     right: parent.right
-                    topMargin: Theme.spacingLarge + 4
+                    topMargin: Theme.spacingMedium
                 }
 
                 Column {

@@ -1,6 +1,6 @@
 #include "map_preview_generator.h"
-#include "../map_loader.h"
 #include "../../units/spawn_type.h"
+#include "../map_loader.h"
 #include "minimap_generator.h"
 #include <QColor>
 #include <QFile>
@@ -18,6 +18,10 @@ namespace {
 constexpr float k_camera_yaw_cos = -0.70710678118F;
 constexpr float k_camera_yaw_sin = -0.70710678118F;
 
+constexpr float BASE_SIZE = 16.0F;
+constexpr float INNER_SIZE_RATIO = 0.35F;
+constexpr float INNER_OFFSET_RATIO = 0.3F;
+
 } // namespace
 
 MapPreviewGenerator::MapPreviewGenerator()
@@ -25,9 +29,8 @@ MapPreviewGenerator::MapPreviewGenerator()
 
 MapPreviewGenerator::~MapPreviewGenerator() = default;
 
-auto MapPreviewGenerator::generate_preview(const QString &map_path,
-                                           const QVariantList &player_configs)
-    -> QImage {
+auto MapPreviewGenerator::generate_preview(
+    const QString &map_path, const QVariantList &player_configs) -> QImage {
 
   MapDefinition map_def;
   QString error;
@@ -39,14 +42,15 @@ auto MapPreviewGenerator::generate_preview(const QString &map_path,
 
   QImage preview = m_minimap_generator->generate(map_def);
 
-  std::vector<PlayerConfig> parsed_configs = parse_player_configs(player_configs);
+  std::vector<PlayerConfig> parsed_configs =
+      parse_player_configs(player_configs);
   draw_player_bases(preview, map_def, parsed_configs);
 
   return preview;
 }
 
-auto MapPreviewGenerator::parse_player_configs(const QVariantList &configs) const
-    -> std::vector<PlayerConfig> {
+auto MapPreviewGenerator::parse_player_configs(
+    const QVariantList &configs) const -> std::vector<PlayerConfig> {
   std::vector<PlayerConfig> result;
 
   for (const QVariant &var : configs) {
@@ -111,7 +115,6 @@ void MapPreviewGenerator::draw_player_bases(
     const auto [px, py] =
         world_to_pixel(spawn.x, spawn.z, map_def.grid, pixels_per_tile);
 
-    constexpr float BASE_SIZE = 16.0F;
     constexpr float HALF = BASE_SIZE * 0.5F;
 
     QColor border_color = player_color.darker(150);
@@ -122,16 +125,16 @@ void MapPreviewGenerator::draw_player_bases(
 
     painter.setBrush(player_color.lighter(130));
     painter.setPen(Qt::NoPen);
-    constexpr float INNER_SIZE = BASE_SIZE * 0.35F;
-    painter.drawEllipse(QPointF(px - HALF * 0.3F, py - HALF * 0.3F),
-                        INNER_SIZE * 0.5F, INNER_SIZE * 0.5F);
+    constexpr float INNER_SIZE = BASE_SIZE * INNER_SIZE_RATIO;
+    painter.drawEllipse(
+        QPointF(px - HALF * INNER_OFFSET_RATIO, py - HALF * INNER_OFFSET_RATIO),
+        INNER_SIZE * 0.5F, INNER_SIZE * 0.5F);
   }
 }
 
-auto MapPreviewGenerator::world_to_pixel(float world_x, float world_z,
-                                         const GridDefinition &grid,
-                                         float pixels_per_tile) const
-    -> std::pair<float, float> {
+auto MapPreviewGenerator::world_to_pixel(
+    float world_x, float world_z, const GridDefinition &grid,
+    float pixels_per_tile) const -> std::pair<float, float> {
 
   const float rotated_x =
       world_x * k_camera_yaw_cos - world_z * k_camera_yaw_sin;

@@ -1,5 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
+import QtQuick.Layouts 1.15
+import StandardOfIron 1.0
 
 Rectangle {
     id: root
@@ -9,38 +11,31 @@ Rectangle {
     property bool loading: false
     property string previewId: ""
 
-    radius: Theme.radiusLarge
-    color: Theme.cardBase
-    border.color: Theme.panelBr
-    border.width: 1
-    clip: true
-
     function refreshPreview() {
         if (!mapPath || mapPath === "" || !playerConfigs || playerConfigs.length === 0) {
             previewImage.source = "";
             previewId = "";
-            return;
+            return ;
         }
-
-        if (typeof game === "undefined" || !game.generate_map_preview) {
-            return;
-        }
+        if (typeof game === "undefined" || !game.generate_map_preview)
+            return ;
 
         loading = true;
         try {
-            // Generate a unique ID based on map path and player configs
             var configStr = JSON.stringify(playerConfigs);
-            var newId = mapPath + "_" + configStr.length + "_" + Date.now();
-            
+            var hash = 0;
+            for (var i = 0; i < configStr.length; i++) {
+                var codePoint = configStr.charCodeAt(i);
+                hash = ((hash << 5) - hash) + codePoint;
+                hash = hash & hash;
+            }
+            var newId = mapPath + "_" + hash + "_" + Date.now();
             var preview = game.generate_map_preview(mapPath, playerConfigs);
-            
             if (typeof mapPreviewProvider !== "undefined") {
                 mapPreviewProvider.set_preview_image(newId, preview);
                 previewId = newId;
-                // Force image reload by changing the source
                 previewImage.source = "image://mappreview/" + newId;
             }
-            
             loading = false;
         } catch (e) {
             console.error("MapPreview: Failed to generate preview:", e);
@@ -48,6 +43,11 @@ Rectangle {
         }
     }
 
+    radius: Theme.radiusLarge
+    color: Theme.cardBase
+    border.color: Theme.panelBr
+    border.width: 1
+    clip: true
     onMapPathChanged: refreshPreview()
     onPlayerConfigsChanged: refreshPreview()
 
@@ -58,15 +58,22 @@ Rectangle {
         color: Theme.textMain
         font.pixelSize: 16
         font.bold: true
+
         anchors {
             top: parent.top
             left: parent.left
             margins: Theme.spacingMedium
         }
+
     }
 
     Rectangle {
         id: previewContainer
+
+        color: Theme.cardBaseB
+        radius: Theme.radiusMedium
+        border.color: Theme.thumbBr
+        border.width: 1
 
         anchors {
             top: titleText.bottom
@@ -76,21 +83,48 @@ Rectangle {
             margins: Theme.spacingMedium
         }
 
-        color: Theme.cardBaseB
-        radius: Theme.radiusMedium
-        border.color: Theme.thumbBr
-        border.width: 1
+        RowLayout {
+            id: previewRow
 
-        Image {
-            id: previewImage
+            anchors.fill: parent
+            anchors.margins: Theme.spacingSmall
+            spacing: Theme.spacingMedium
+            visible: !loading
 
-            anchors.centerIn: parent
-            width: Math.min(parent.width - 20, parent.height - 20)
-            height: width
-            fillMode: Image.PreserveAspectFit
-            smooth: true
-            cache: false
-            visible: !loading && status === Image.Ready
+            Item {
+                id: imageWrapper
+
+                Layout.alignment: Qt.AlignVCenter | Qt.AlignHCenter
+                Layout.preferredWidth: Math.min(previewContainer.width * 0.6, previewContainer.height - Theme.spacingLarge)
+                Layout.preferredHeight: Layout.preferredWidth
+
+                Image {
+                    id: previewImage
+
+                    anchors.fill: parent
+                    fillMode: Image.PreserveAspectFit
+                    smooth: true
+                    cache: false
+                    visible: status === Image.Ready
+                }
+
+            }
+
+            Text {
+                id: legendText
+
+                text: qsTr("Player bases shown as colored circles")
+                color: Theme.textSubLite
+                font.pixelSize: 12
+                font.italic: true
+                wrapMode: Text.WordWrap
+                horizontalAlignment: Text.AlignLeft
+                verticalAlignment: Text.AlignVCenter
+                Layout.fillWidth: true
+                Layout.alignment: Qt.AlignVCenter
+                visible: mapPath !== ""
+            }
+
         }
 
         Text {
@@ -130,22 +164,11 @@ Rectangle {
                     loops: Animation.Infinite
                     running: loading
                 }
+
             }
+
         }
+
     }
 
-    Text {
-        anchors {
-            bottom: parent.bottom
-            left: parent.left
-            right: parent.right
-            margins: Theme.spacingSmall
-        }
-        text: qsTr("Player bases shown as colored circles")
-        color: Theme.textSubLite
-        font.pixelSize: 10
-        font.italic: true
-        horizontalAlignment: Text.AlignHCenter
-        wrapMode: Text.WordWrap
-    }
 }
