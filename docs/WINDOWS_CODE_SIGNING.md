@@ -145,6 +145,6 @@ Potential improvements for the code signing implementation:
 
 ## References
 
-- [Microsoft SignTool Documentation](https://docs.microsoft.com/en-us/windows/win32/seccrypto/signtool)
-- [Windows Authenticode Documentation](https://docs.microsoft.com/en-us/windows-hardware/drivers/install/authenticode)
+- [Microsoft SignTool Documentation](https://learn.microsoft.com/en-us/windows/win32/seccrypto/signtool)
+- [Windows Authenticode Documentation](https://learn.microsoft.com/en-us/windows-hardware/drivers/install/authenticode)
 - [GitHub Actions Encrypted Secrets](https://docs.github.com/en/actions/security-guides/encrypted-secrets)
