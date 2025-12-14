@@ -147,7 +147,7 @@ public:
 
     if (anim.is_attacking && !anim.is_in_hold_mode) {
       float const attack_phase =
-          std::fmod(anim.time * ARCHER_INV_ATTACK_CYCLE_TIME, 1.0F);
+          std::fmod(anim_ctx.attack_phase * ARCHER_INV_ATTACK_CYCLE_TIME, 1.0F);
 
       if (anim.is_melee) {
         controller.meleeStrike(attack_phase);
