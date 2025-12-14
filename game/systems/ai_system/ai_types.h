@@ -85,8 +85,8 @@ struct ContactSnapshot {
 
 struct AISnapshot {
   int player_id = 0;
-  std::vector<EntitySnapshot> friendlies;
-  std::vector<ContactSnapshot> visibleEnemies;
+  std::vector<EntitySnapshot> friendly_units;
+  std::vector<ContactSnapshot> visible_enemies;
 
   float game_time = 0.0F;
 };
@@ -99,9 +99,9 @@ struct AIContext {
 
   const Game::Systems::Nation *nation = nullptr;
 
-  std::vector<Engine::Core::EntityID> militaryUnits;
+  std::vector<Engine::Core::EntityID> military_units;
   std::vector<Engine::Core::EntityID> buildings;
-  Engine::Core::EntityID primaryBarracks = 0;
+  Engine::Core::EntityID primary_barracks = 0;
 
   float rally_x = 0.0F;
   float rally_z = 0.0F;
@@ -120,36 +120,36 @@ struct AIContext {
   float base_pos_z = 0.0F;
 
   struct UnitAssignment {
-    BehaviorPriority ownerPriority = BehaviorPriority::Normal;
+    BehaviorPriority owner_priority = BehaviorPriority::Normal;
     float assignment_time = 0.0F;
-    std::string assignedTask;
+    std::string assigned_task;
   };
-  std::unordered_map<Engine::Core::EntityID, UnitAssignment> assignedUnits;
+  std::unordered_map<Engine::Core::EntityID, UnitAssignment> assigned_units;
 
   int melee_count = 0;
-  int rangedCount = 0;
-  int damagedUnitsCount = 0;
+  int ranged_count = 0;
+  int damaged_units_count = 0;
 
-  int visibleEnemyCount = 0;
-  int enemyBuildingsCount = 0;
-  float averageEnemyDistance = 0.0F;
+  int visible_enemy_count = 0;
+  int enemy_buildings_count = 0;
+  float average_enemy_distance = 0.0F;
 
   int max_troops_per_player = 500;
 
-  std::unordered_map<Engine::Core::EntityID, float> buildingsUnderAttack;
+  std::unordered_map<Engine::Core::EntityID, float> buildings_under_attack;
 };
 
 struct AICommand {
   AICommandType type = AICommandType::MoveUnits;
   std::vector<Engine::Core::EntityID> units;
 
-  std::vector<float> moveTargetX;
-  std::vector<float> moveTargetY;
-  std::vector<float> moveTargetZ;
+  std::vector<float> move_target_x;
+  std::vector<float> move_target_y;
+  std::vector<float> move_target_z;
 
   Engine::Core::EntityID target_id = 0;
   bool should_chase = false;
-  Engine::Core::EntityID buildingId = 0;
+  Engine::Core::EntityID building_id = 0;
   Game::Units::TroopType product_type = Game::Units::TroopType::Archer;
 };
 
