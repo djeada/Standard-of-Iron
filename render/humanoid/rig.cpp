@@ -1334,7 +1334,7 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
     }
 
     QMatrix4x4 inst_model;
-    float applied_yaw = yaw_offset;
+    float applied_yaw = applied_yaw_offset;
 
     if (transform_comp != nullptr) {
       applied_yaw = transform_comp->rotation.y + applied_yaw_offset;
