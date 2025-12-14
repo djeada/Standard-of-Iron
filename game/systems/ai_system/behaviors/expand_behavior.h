@@ -4,7 +4,7 @@
 
 namespace Game::Systems::AI {
 
-class AttackBehavior : public AIBehavior {
+class ExpandBehavior : public AIBehavior {
 public:
   void execute(const AISnapshot &snapshot, AIContext &context, float delta_time,
                std::vector<AICommand> &outCommands) override;
@@ -14,7 +14,7 @@ public:
                  const AIContext &context) const -> bool override;
 
   [[nodiscard]] auto getPriority() const -> BehaviorPriority override {
-    return BehaviorPriority::Normal;
+    return BehaviorPriority::High;
   }
 
   [[nodiscard]] auto canRunConcurrently() const -> bool override {
@@ -22,11 +22,7 @@ public:
   }
 
 private:
-  float m_attackTimer = 0.0F;
-  Engine::Core::EntityID m_lastTarget = 0;
-  float m_targetLockDuration = 0.0F;
-  int m_scoutDirection = 0;  // Track which direction to scout (0-3 for N/E/S/W)
-  float m_lastScoutTime = 0.0F;
+  float m_expand_timer = 0.0F;
 };
 
 } // namespace Game::Systems::AI
