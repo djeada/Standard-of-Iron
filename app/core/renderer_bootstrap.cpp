@@ -8,6 +8,7 @@
 #include "game/systems/catapult_attack_system.h"
 #include "game/systems/cleanup_system.h"
 #include "game/systems/combat_system.h"
+#include "game/systems/healing_beam_system.h"
 #include "game/systems/healing_system.h"
 #include "game/systems/movement_system.h"
 #include "game/systems/patrol_system.h"
@@ -69,6 +70,7 @@ void RendererBootstrap::initialize_world_systems(Engine::Core::World &world) {
   world.add_system(std::make_unique<Game::Systems::CombatSystem>());
   world.add_system(std::make_unique<Game::Systems::CatapultAttackSystem>());
   world.add_system(std::make_unique<Game::Systems::BallistaAttackSystem>());
+  world.add_system(std::make_unique<Game::Systems::HealingBeamSystem>());
   world.add_system(std::make_unique<Game::Systems::HealingSystem>());
   world.add_system(std::make_unique<Game::Systems::CaptureSystem>());
   world.add_system(std::make_unique<Game::Systems::AISystem>());

@@ -3,9 +3,12 @@
 #include "../geom/selection_disc.h"
 #include "../geom/selection_ring.h"
 #include "../primitive_batch.h"
+#include "backend/banner_pipeline.h"
 #include "backend/character_pipeline.h"
 #include "backend/cylinder_pipeline.h"
 #include "backend/effects_pipeline.h"
+#include "backend/healer_aura_pipeline.h"
+#include "backend/healing_beam_pipeline.h"
 #include "backend/primitive_batch_pipeline.h"
 #include "backend/terrain_pipeline.h"
 #include "backend/vegetation_pipeline.h"
@@ -143,6 +146,25 @@ void Backend::initialize() {
   m_primitiveBatchPipeline->initialize();
   qInfo() << "Backend: PrimitiveBatchPipeline initialized";
 
+  qInfo() << "Backend: Creating BannerPipeline...";
+  m_bannerPipeline = std::make_unique<BackendPipelines::BannerPipeline>(
+      this, m_shaderCache.get());
+  m_bannerPipeline->initialize();
+  qInfo() << "Backend: BannerPipeline initialized";
+
+  qInfo() << "Backend: Creating HealingBeamPipeline...";
+  m_healingBeamPipeline =
+      std::make_unique<BackendPipelines::HealingBeamPipeline>(
+          this, m_shaderCache.get());
+  m_healingBeamPipeline->initialize();
+  qInfo() << "Backend: HealingBeamPipeline initialized";
+
+  qInfo() << "Backend: Creating HealerAuraPipeline...";
+  m_healerAuraPipeline = std::make_unique<BackendPipelines::HealerAuraPipeline>(
+      this, m_shaderCache.get());
+  m_healerAuraPipeline->initialize();
+  qInfo() << "Backend: HealerAuraPipeline initialized";
+
   qInfo() << "Backend: Loading basic shaders...";
   m_basicShader = m_shaderCache->get(QStringLiteral("basic"));
   m_gridShader = m_shaderCache->get(QStringLiteral("grid"));
@@ -153,6 +175,20 @@ void Backend::initialize() {
     qWarning() << "Backend: grid shader missing";
   }
   qInfo() << "Backend::initialize() - Complete!";
+}
+
+auto Backend::banner_mesh() const -> Mesh * {
+  if (m_bannerPipeline != nullptr) {
+    return m_bannerPipeline->getBannerMesh();
+  }
+  return nullptr;
+}
+
+auto Backend::banner_shader() const -> Shader * {
+  if (m_bannerPipeline != nullptr) {
+    return m_bannerPipeline->m_bannerShader;
+  }
+  return nullptr;
 }
 
 void Backend::begin_frame() {
@@ -1267,6 +1303,51 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         break;
       }
 
+      if (m_bannerPipeline != nullptr &&
+          active_shader == m_bannerPipeline->m_bannerShader) {
+        if (m_lastBoundShader != active_shader) {
+          active_shader->use();
+          m_lastBoundShader = active_shader;
+        }
+
+        QMatrix4x4 mvp =
+            cam.get_projection_matrix() * cam.get_view_matrix() * it.model;
+        active_shader->set_uniform(m_bannerPipeline->m_bannerUniforms.mvp, mvp);
+        active_shader->set_uniform(m_bannerPipeline->m_bannerUniforms.model,
+                                   it.model);
+        active_shader->set_uniform(m_bannerPipeline->m_bannerUniforms.time,
+                                   m_animationTime);
+
+        float windStrength = 0.8F + 0.2F * std::sin(m_animationTime * 0.5F);
+        active_shader->set_uniform(
+            m_bannerPipeline->m_bannerUniforms.windStrength, windStrength);
+        active_shader->set_uniform(m_bannerPipeline->m_bannerUniforms.color,
+                                   it.color);
+
+        QVector3D trimColor = it.color * 0.7F;
+        active_shader->set_uniform(m_bannerPipeline->m_bannerUniforms.trimColor,
+                                   trimColor);
+        active_shader->set_uniform(m_bannerPipeline->m_bannerUniforms.alpha,
+                                   it.alpha);
+        active_shader->set_uniform(
+            m_bannerPipeline->m_bannerUniforms.useTexture,
+            it.texture != nullptr);
+
+        Texture *tex_to_use =
+            (it.texture != nullptr)
+                ? it.texture
+                : (m_resources ? m_resources->white() : nullptr);
+        if ((tex_to_use != nullptr) && tex_to_use != m_lastBoundTexture) {
+          tex_to_use->bind(0);
+          m_lastBoundTexture = tex_to_use;
+          active_shader->set_uniform(m_bannerPipeline->m_bannerUniforms.texture,
+                                     0);
+        }
+
+        it.mesh->draw();
+        break;
+      }
+
       auto *uniforms = m_characterPipeline
                            ? m_characterPipeline->resolveUniforms(active_shader)
                            : nullptr;
@@ -1444,6 +1525,30 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       }
 
       m_lastBoundShader = m_primitiveBatchPipeline->shader();
+      break;
+    }
+    case HealingBeamCmdIndex: {
+      const auto &beam = std::get<HealingBeamCmdIndex>(cmd);
+      if (m_healingBeamPipeline == nullptr ||
+          !m_healingBeamPipeline->is_initialized()) {
+        break;
+      }
+      m_healingBeamPipeline->render_single_beam(
+          beam.start_pos, beam.end_pos, beam.color, beam.progress,
+          beam.beam_width, beam.intensity, beam.time, view_proj);
+      m_lastBoundShader = nullptr;
+      break;
+    }
+    case HealerAuraCmdIndex: {
+      const auto &aura = std::get<HealerAuraCmdIndex>(cmd);
+      if (m_healerAuraPipeline == nullptr ||
+          !m_healerAuraPipeline->is_initialized()) {
+        break;
+      }
+      m_healerAuraPipeline->render_single_aura(aura.position, aura.color,
+                                               aura.radius, aura.intensity,
+                                               aura.time, view_proj);
+      m_lastBoundShader = nullptr;
       break;
     }
     default:
