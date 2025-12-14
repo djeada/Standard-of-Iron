@@ -251,8 +251,8 @@ void HumanoidPoseController::meleeStrike(float strike_phase) {
   strike_phase = std::clamp(strike_phase, 0.0F, 1.0F);
 
   QVector3D const rest_pos(0.25F, HP::SHOULDER_Y, 0.10F);
-  QVector3D const raised_pos(0.30F, HP::HEAD_TOP_Y + 0.2F, -0.05F);
-  QVector3D const strike_pos(0.35F, HP::WAIST_Y, 0.45F);
+  QVector3D const raised_pos(0.28F, HP::SHOULDER_Y + 0.15F, 0.08F);
+  QVector3D const strike_pos(0.32F, HP::SHOULDER_Y - 0.10F, 0.55F);
 
   QVector3D hand_r_target;
   QVector3D hand_l_target;
@@ -379,9 +379,9 @@ void HumanoidPoseController::sword_slash(float attack_phase) {
   attack_phase = std::clamp(attack_phase, 0.0F, 1.0F);
 
   QVector3D const rest_pos(0.20F, HP::SHOULDER_Y + 0.05F, 0.15F);
-  QVector3D const prepare_pos(0.26F, HP::HEAD_TOP_Y + 0.18F, -0.06F);
-  QVector3D const raised_pos(0.25F, HP::HEAD_TOP_Y + 0.22F, 0.02F);
-  QVector3D const strike_pos(0.30F, HP::WAIST_Y - 0.05F, 0.50F);
+  QVector3D const prepare_pos(0.24F, HP::SHOULDER_Y + 0.12F, 0.05F);
+  QVector3D const raised_pos(0.26F, HP::SHOULDER_Y + 0.18F, 0.12F);
+  QVector3D const strike_pos(0.30F, HP::SHOULDER_Y - 0.12F, 0.58F);
   QVector3D const recover_pos(0.22F, HP::SHOULDER_Y + 0.02F, 0.22F);
 
   QVector3D hand_r_target;
@@ -501,21 +501,21 @@ void HumanoidPoseController::sword_slash_variant(float attack_phase,
   attack_phase = std::clamp(attack_phase, 0.0F, 1.0F);
 
   QVector3D rest_pos(0.20F, HP::SHOULDER_Y + 0.05F, 0.15F);
-  QVector3D prepare_pos(0.26F, HP::HEAD_TOP_Y + 0.18F, -0.06F);
-  QVector3D raised_pos(0.25F, HP::HEAD_TOP_Y + 0.22F, 0.02F);
-  QVector3D strike_pos(0.30F, HP::WAIST_Y - 0.05F, 0.50F);
+  QVector3D prepare_pos(0.24F, HP::SHOULDER_Y + 0.12F, 0.05F);
+  QVector3D raised_pos(0.26F, HP::SHOULDER_Y + 0.18F, 0.12F);
+  QVector3D strike_pos(0.30F, HP::SHOULDER_Y - 0.12F, 0.58F);
   QVector3D recover_pos(0.22F, HP::SHOULDER_Y + 0.02F, 0.22F);
 
   switch (variant % 3) {
   case 1:
-    prepare_pos = QVector3D(-0.10F, HP::HEAD_TOP_Y + 0.15F, 0.0F);
-    raised_pos = QVector3D(-0.08F, HP::HEAD_TOP_Y + 0.18F, 0.05F);
-    strike_pos = QVector3D(0.35F, HP::SHOULDER_Y - 0.10F, 0.48F);
+    prepare_pos = QVector3D(-0.08F, HP::SHOULDER_Y + 0.15F, 0.06F);
+    raised_pos = QVector3D(-0.06F, HP::SHOULDER_Y + 0.20F, 0.10F);
+    strike_pos = QVector3D(0.35F, HP::SHOULDER_Y - 0.10F, 0.55F);
     break;
   case 2:
-    prepare_pos = QVector3D(0.35F, HP::SHOULDER_Y + 0.08F, -0.10F);
-    raised_pos = QVector3D(0.38F, HP::SHOULDER_Y + 0.05F, 0.0F);
-    strike_pos = QVector3D(0.15F, HP::WAIST_Y + 0.05F, 0.55F);
+    prepare_pos = QVector3D(0.32F, HP::SHOULDER_Y + 0.10F, 0.02F);
+    raised_pos = QVector3D(0.35F, HP::SHOULDER_Y + 0.08F, 0.08F);
+    strike_pos = QVector3D(0.18F, HP::SHOULDER_Y - 0.08F, 0.60F);
     break;
   default:
     break;
