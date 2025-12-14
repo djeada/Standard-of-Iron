@@ -271,4 +271,20 @@ public:
   bool crossfade;
 };
 
+class CombatHitEvent : public Event {
+public:
+  CombatHitEvent(EntityID attacker_id, EntityID target_id, int damage,
+                 Game::Units::SpawnType attacker_type, bool is_killing_blow)
+      : attacker_id(attacker_id), target_id(target_id), damage(damage),
+        attacker_type(attacker_type), is_killing_blow(is_killing_blow) {}
+  EntityID attacker_id;
+  EntityID target_id;
+  int damage;
+  Game::Units::SpawnType attacker_type;
+  bool is_killing_blow;
+  [[nodiscard]] auto get_type_name() const -> const char * override {
+    return "COMBAT_HIT";
+  }
+};
+
 } // namespace Engine::Core
