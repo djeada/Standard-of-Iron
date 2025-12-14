@@ -31,12 +31,12 @@ void ProductionBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   bool produce_ranged = true;
 
   if (context.barracks_under_threat || context.state == AIState::Defending) {
-    produce_ranged = (context.melee_count > context.rangedCount);
+    produce_ranged = (context.melee_count > context.ranged_count);
   } else {
 
     float const ranged_ratio =
         (context.total_units > 0)
-            ? static_cast<float>(context.rangedCount) / context.total_units
+            ? static_cast<float>(context.ranged_count) / context.total_units
             : 0.0F;
     produce_ranged = (ranged_ratio < 0.6F);
   }
@@ -55,7 +55,7 @@ void ProductionBehavior::execute(const AISnapshot &snapshot, AIContext &context,
     return;
   }
 
-  for (const auto &entity : snapshot.friendlies) {
+  for (const auto &entity : snapshot.friendly_units) {
     if (!entity.is_building ||
         entity.spawn_type != Game::Units::SpawnType::Barracks) {
       continue;
@@ -85,7 +85,7 @@ void ProductionBehavior::execute(const AISnapshot &snapshot, AIContext &context,
 
     AICommand command;
     command.type = AICommandType::StartProduction;
-    command.buildingId = entity.id;
+    command.building_id = entity.id;
     command.product_type = troop_type->unit_type;
     outCommands.push_back(std::move(command));
 
