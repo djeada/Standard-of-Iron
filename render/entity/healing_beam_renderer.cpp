@@ -13,7 +13,6 @@ void render_healing_beams(Renderer *renderer, ResourceManager *,
 
   float animation_time = renderer->get_animation_time();
 
-  // Submit each beam through the renderer's submitter interface
   for (const auto &beam : beam_system.get_beams()) {
     if (beam && beam->is_active()) {
       float intensity = beam->get_intensity();
