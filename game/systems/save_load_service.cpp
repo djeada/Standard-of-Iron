@@ -125,8 +125,8 @@ auto SaveLoadService::load_game_from_slot(Engine::Core::World &world,
     QString title;
 
     QString load_error;
-    if (!m_storage->load_slot(slot_name, world_bytes, metadata, screenshot, title,
-                              &load_error)) {
+    if (!m_storage->load_slot(slot_name, world_bytes, metadata, screenshot,
+                              title, &load_error)) {
       m_last_error = load_error;
       qWarning() << "SaveLoadService: failed to load slot" << load_error;
       return false;
