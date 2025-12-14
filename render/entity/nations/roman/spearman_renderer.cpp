@@ -140,7 +140,6 @@ public:
       float const hold_t =
           anim.is_in_hold_mode ? 1.0F : (1.0F - anim.hold_exit_progress);
 
-      // Use improved kneel transition when exiting hold
       if (anim.is_exiting_hold) {
         controller.kneelTransition(anim.hold_exit_progress, true);
       } else {
@@ -149,14 +148,13 @@ public:
       controller.lean(QVector3D(0.0F, 0.0F, 1.0F),
                       hold_t * k_lean_amount_multiplier);
 
-      // Check if attacking while in hold position
       if (anim.is_attacking && anim.is_melee && anim.is_in_hold_mode) {
         float const attack_phase = std::fmod(
             anim_ctx.attack_phase * SPEARMAN_INV_ATTACK_CYCLE_TIME, 1.0F);
         controller.spearThrustFromHold(attack_phase,
                                        hold_t * k_kneel_depth_multiplier);
       } else {
-        // Standard hold position hand placement
+
         float const lowered_shoulder_y = controller.get_shoulder_y(true);
         float const pelvis_y = controller.get_pelvis_y();
 
