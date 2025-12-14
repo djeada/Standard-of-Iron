@@ -79,6 +79,17 @@ void HealingSystem::process_healing(Engine::Core::World *world,
           target_unit->health = target_unit->max_health;
         }
 
+        // Store healing target position for animation
+        healer_comp->healing_target_x = target_transform->position.x;
+        healer_comp->healing_target_z = target_transform->position.z;
+
+        // Make healer face the target being healed
+        if (dist > 0.1F) {
+          float const target_yaw = std::atan2(dx, dz) * 180.0F / 3.14159265F;
+          healer_transform->desired_yaw = target_yaw;
+          healer_transform->has_desired_yaw = true;
+        }
+
         if (healing_beam_system != nullptr) {
           QVector3D const healer_pos(healer_transform->position.x,
                                      healer_transform->position.y + 1.2F,
