@@ -133,8 +133,8 @@ public:
 
     if (anim.is_attacking && anim.is_melee) {
       float const attack_phase =
-          std::fmod(anim.time * KNIGHT_INV_ATTACK_CYCLE_TIME, 1.0F);
-      controller.sword_slash(attack_phase);
+          std::fmod(anim_ctx.attack_phase * KNIGHT_INV_ATTACK_CYCLE_TIME, 1.0F);
+      controller.sword_slash_variant(attack_phase, anim.attack_variant);
     } else {
       QVector3D const idle_hand_r(0.30F + arm_asymmetry,
                                   HP::SHOULDER_Y - 0.02F + arm_height_jitter,
