@@ -18,6 +18,7 @@ public:
                                  float delta_time);
   
   // Validate and sanitize AI state to ensure consistency
+  // This modifies the context to fix any invalid states
   static void validateState(AIContext &ctx);
 };
 
