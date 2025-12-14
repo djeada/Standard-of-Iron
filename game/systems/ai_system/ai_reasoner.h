@@ -14,7 +14,8 @@ public:
 
   static void updateContext(const AISnapshot &snapshot, AIContext &ctx);
 
-  static void updateStateMachine(AIContext &ctx, float delta_time);
+  static void updateStateMachine(const AISnapshot &snapshot, AIContext &ctx, 
+                                 float delta_time);
   
   // Validate and sanitize AI state to ensure consistency
   static void validateState(AIContext &ctx);
