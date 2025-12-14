@@ -65,6 +65,15 @@ void HealingBeamPipeline::shutdown() {
 }
 
 void HealingBeamPipeline::shutdown_geometry() {
+  if (QOpenGLContext::currentContext() == nullptr) {
+
+    m_vao = 0;
+    m_vertexBuffer = 0;
+    m_indexBuffer = 0;
+    m_indexCount = 0;
+    return;
+  }
+
   initializeOpenGLFunctions();
   clear_gl_errors();
 
