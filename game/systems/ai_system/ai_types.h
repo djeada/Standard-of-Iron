@@ -143,6 +143,17 @@ struct AIContext {
   float last_meaningful_action_time = 0.0F;
   int last_total_units = 0;
   float max_state_duration = 60.0F; // Force state change after 60s
+  
+  // Debug/profiling data
+  struct DebugInfo {
+    int total_decisions_made = 0;
+    int total_commands_issued = 0;
+    int state_transitions = 0;
+    int deadlock_recoveries = 0;
+    float last_update_time = 0.0F;
+    float total_cpu_time = 0.0F;
+  };
+  DebugInfo debug_info;
 };
 
 struct AICommand {
