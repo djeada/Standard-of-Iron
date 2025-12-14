@@ -146,11 +146,20 @@ struct HealerAuraCmd {
   float time = 0.0F;
 };
 
+struct CombatDustCmd {
+  QVector3D position{0, 0, 0};
+  QVector3D color{0.6F, 0.55F, 0.45F};
+  float radius = 2.0F;
+  float intensity = 0.7F;
+  float time = 0.0F;
+};
+
 using DrawCmd = std::variant<GridCmd, SelectionRingCmd, SelectionSmokeCmd,
                              CylinderCmd, MeshCmd, FogBatchCmd, GrassBatchCmd,
                              StoneBatchCmd, PlantBatchCmd, PineBatchCmd,
                              OliveBatchCmd, FireCampBatchCmd, TerrainChunkCmd,
-                             PrimitiveBatchCmd, HealingBeamCmd, HealerAuraCmd>;
+                             PrimitiveBatchCmd, HealingBeamCmd, HealerAuraCmd,
+                             CombatDustCmd>;
 
 enum class DrawCmdType : std::uint8_t {
   Grid = 0,
@@ -168,7 +177,8 @@ enum class DrawCmdType : std::uint8_t {
   TerrainChunk = 12,
   PrimitiveBatch = 13,
   HealingBeam = 14,
-  HealerAura = 15
+  HealerAura = 15,
+  CombatDust = 16
 };
 
 constexpr std::size_t MeshCmdIndex =
@@ -203,6 +213,8 @@ constexpr std::size_t HealingBeamCmdIndex =
     static_cast<std::size_t>(DrawCmdType::HealingBeam);
 constexpr std::size_t HealerAuraCmdIndex =
     static_cast<std::size_t>(DrawCmdType::HealerAura);
+constexpr std::size_t CombatDustCmdIndex =
+    static_cast<std::size_t>(DrawCmdType::CombatDust);
 
 inline auto draw_cmd_type(const DrawCmd &cmd) -> DrawCmdType {
   return static_cast<DrawCmdType>(cmd.index());
@@ -228,6 +240,7 @@ public:
   void submit(const PrimitiveBatchCmd &c) { m_items.emplace_back(c); }
   void submit(const HealingBeamCmd &c) { m_items.emplace_back(c); }
   void submit(const HealerAuraCmd &c) { m_items.emplace_back(c); }
+  void submit(const CombatDustCmd &c) { m_items.emplace_back(c); }
 
   [[nodiscard]] auto empty() const -> bool { return m_items.empty(); }
   [[nodiscard]] auto size() const -> std::size_t { return m_items.size(); }
