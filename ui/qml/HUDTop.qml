@@ -326,6 +326,44 @@ Item {
                 Layout.fillWidth: true
             }
 
+            Rectangle {
+                id: spectatorIndicator
+
+                visible: typeof game !== 'undefined' && game.is_spectator_mode
+                Layout.preferredWidth: spectatorLabel.width + 24
+                Layout.preferredHeight: Math.min(36, topPanel.height - 16)
+                color: "#e74c3c"
+                radius: 6
+                border.color: "#c0392b"
+                border.width: 1
+                Layout.alignment: Qt.AlignVCenter
+
+                Label {
+                    id: spectatorLabel
+
+                    anchors.centerIn: parent
+                    text: "👁 " + qsTr("SPECTATOR MODE")
+                    color: "#ecf0f1"
+                    font.pixelSize: 13
+                    font.bold: true
+                }
+
+                ToolTip {
+                    visible: spectatorMA.containsMouse
+                    text: qsTr("Watching CPU-only match. All players are AI-controlled. You cannot issue commands.")
+                    delay: 300
+                }
+
+                MouseArea {
+                    id: spectatorMA
+
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    acceptedButtons: Qt.NoButton
+                }
+
+            }
+
             RowLayout {
                 id: rightGroup
 

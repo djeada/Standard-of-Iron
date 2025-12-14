@@ -63,6 +63,7 @@ auto LevelOrchestrator::load_skirmish(
   level.cam_near = load_result.cam_near;
   level.cam_far = load_result.cam_far;
   level.max_troops_per_player = load_result.max_troops_per_player;
+  level.is_spectator_mode = load_result.is_spectator_mode;
 
   Game::GameConfig::instance().set_max_troops_per_player(
       load_result.max_troops_per_player);
