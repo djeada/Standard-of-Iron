@@ -109,6 +109,23 @@ ApplicationWindow {
 
     }
 
+    LoadScreen {
+        id: loadScreen
+
+        anchors.fill: parent
+        z: 15
+        isLoading: (typeof game !== 'undefined') ? game.is_loading : false
+
+        Connections {
+            target: game
+            function onIs_loading_changed() {
+                if (!game.is_loading) {
+                    loadScreen.completeLoading();
+                }
+            }
+        }
+    }
+
     MainMenu {
         id: mainMenu
 
