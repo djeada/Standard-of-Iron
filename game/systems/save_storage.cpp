@@ -25,12 +25,12 @@ namespace {
 constexpr const char *k_driver_name = "QSQLITE";
 constexpr int k_current_schema_version = 2;
 
-auto buildConnectionName(const SaveStorage *instance) -> QString {
+auto build_connection_name(const SaveStorage *instance) -> QString {
   return QStringLiteral("SaveStorage_%1")
       .arg(reinterpret_cast<quintptr>(instance), 0, 16);
 }
 
-auto lastErrorString(const QSqlError &error) -> QString {
+auto last_error_string(const QSqlError &error) -> QString {
   if (error.type() == QSqlError::NoError) {
     return {};
   }
@@ -45,7 +45,7 @@ public:
     if (!m_database.transaction()) {
       if (out_error != nullptr) {
         *out_error = QStringLiteral("Failed to begin transaction: %1")
-                         .arg(lastErrorString(m_database.lastError()));
+                         .arg(last_error_string(m_database.lastError()));
       }
       return false;
     }
@@ -61,7 +61,7 @@ public:
     if (!m_database.commit()) {
       if (out_error != nullptr) {
         *out_error = QStringLiteral("Failed to commit transaction: %1")
-                         .arg(lastErrorString(m_database.lastError()));
+                         .arg(last_error_string(m_database.lastError()));
       }
       rollback();
       return false;
@@ -88,7 +88,7 @@ private:
 
 SaveStorage::SaveStorage(QString database_path)
     : m_database_path(std::move(database_path)),
-      m_connection_name(buildConnectionName(this)) {}
+      m_connection_name(build_connection_name(this)) {}
 
 SaveStorage::~SaveStorage() {
   if (m_database.isValid()) {
@@ -108,18 +108,18 @@ auto SaveStorage::initialize(QString *out_error) -> bool {
   if (!open(out_error)) {
     return false;
   }
-  if (!ensureSchema(out_error)) {
+  if (!ensure_schema(out_error)) {
     return false;
   }
   m_initialized = true;
   return true;
 }
 
-auto SaveStorage::saveSlot(const QString &slotName, const QString &title,
-                           const QJsonObject &metadata,
-                           const QByteArray &worldState,
-                           const QByteArray &screenshot,
-                           QString *out_error) -> bool {
+auto SaveStorage::save_slot(const QString &slot_name, const QString &title,
+                            const QJsonObject &metadata,
+                            const QByteArray &world_state,
+                            const QByteArray &screenshot,
+                            QString *out_error) -> bool {
   if (!initialize(out_error)) {
     return false;
   }
@@ -147,7 +147,7 @@ auto SaveStorage::saveSlot(const QString &slotName, const QString &title,
   if (!query.prepare(insert_sql)) {
     if (out_error != nullptr) {
       *out_error = QStringLiteral("Failed to prepare save query: %1")
-                       .arg(lastErrorString(query.lastError()));
+                       .arg(last_error_string(query.lastError()));
     }
     return false;
   }
@@ -161,12 +161,12 @@ auto SaveStorage::saveSlot(const QString &slotName, const QString &title,
   const QByteArray metadata_bytes =
       QJsonDocument(metadata).toJson(QJsonDocument::Compact);
 
-  query.bindValue(QStringLiteral(":slot_name"), slotName);
+  query.bindValue(QStringLiteral(":slot_name"), slot_name);
   query.bindValue(QStringLiteral(":title"), title);
   query.bindValue(QStringLiteral(":map_name"), map_name);
   query.bindValue(QStringLiteral(":timestamp"), now_iso);
   query.bindValue(QStringLiteral(":metadata"), metadata_bytes);
-  query.bindValue(QStringLiteral(":world_state"), worldState);
+  query.bindValue(QStringLiteral(":world_state"), world_state);
   if (screenshot.isEmpty()) {
     query.bindValue(QStringLiteral(":screenshot"),
                     QVariant(QMetaType::fromType<QByteArray>()));
@@ -179,7 +179,7 @@ auto SaveStorage::saveSlot(const QString &slotName, const QString &title,
   if (!query.exec()) {
     if (out_error != nullptr) {
       *out_error = QStringLiteral("Failed to persist save slot: %1")
-                       .arg(lastErrorString(query.lastError()));
+                       .arg(last_error_string(query.lastError()));
     }
     transaction.rollback();
     return false;
@@ -192,9 +192,9 @@ auto SaveStorage::saveSlot(const QString &slotName, const QString &title,
   return true;
 }
 
-auto SaveStorage::loadSlot(const QString &slotName, QByteArray &worldState,
-                           QJsonObject &metadata, QByteArray &screenshot,
-                           QString &title, QString *out_error) -> bool {
+auto SaveStorage::load_slot(const QString &slot_name, QByteArray &world_state,
+                            QJsonObject &metadata, QByteArray &screenshot,
+                            QString &title, QString *out_error) -> bool {
   if (!initialize(out_error)) {
     return false;
   }
@@ -203,19 +203,19 @@ auto SaveStorage::loadSlot(const QString &slotName, QByteArray &worldState,
   query.prepare(QStringLiteral(
       "SELECT title, metadata, world_state, screenshot FROM saves "
       "WHERE slot_name = :slot_name"));
-  query.bindValue(QStringLiteral(":slot_name"), slotName);
+  query.bindValue(QStringLiteral(":slot_name"), slot_name);
 
   if (!query.exec()) {
     if (out_error != nullptr) {
       *out_error = QStringLiteral("Failed to read save slot: %1")
-                       .arg(lastErrorString(query.lastError()));
+                       .arg(last_error_string(query.lastError()));
     }
     return false;
   }
 
   if (!query.next()) {
     if (out_error != nullptr) {
-      *out_error = QStringLiteral("Save slot '%1' not found").arg(slotName);
+      *out_error = QStringLiteral("Save slot '%1' not found").arg(slot_name);
     }
     return false;
   }
@@ -223,12 +223,12 @@ auto SaveStorage::loadSlot(const QString &slotName, QByteArray &worldState,
   title = query.value(0).toString();
   const QByteArray metadata_bytes = query.value(1).toByteArray();
   metadata = QJsonDocument::fromJson(metadata_bytes).object();
-  worldState = query.value(2).toByteArray();
+  world_state = query.value(2).toByteArray();
   screenshot = query.value(3).toByteArray();
   return true;
 }
 
-auto SaveStorage::listSlots(QString *out_error) const -> QVariantList {
+auto SaveStorage::list_slots(QString *out_error) const -> QVariantList {
   QVariantList result;
   if (!const_cast<SaveStorage *>(this)->initialize(out_error)) {
     return result;
@@ -240,7 +240,7 @@ auto SaveStorage::listSlots(QString *out_error) const -> QVariantList {
           "FROM saves ORDER BY datetime(timestamp) DESC"))) {
     if (out_error != nullptr) {
       *out_error = QStringLiteral("Failed to enumerate save slots: %1")
-                       .arg(lastErrorString(query.lastError()));
+                       .arg(last_error_string(query.lastError()));
     }
     return result;
   }
@@ -295,7 +295,7 @@ auto SaveStorage::list_campaigns(QString *out_error) const -> QVariantList {
   if (!query.exec(sql)) {
     if (out_error != nullptr) {
       *out_error = QStringLiteral("Failed to list campaigns: %1")
-                       .arg(lastErrorString(query.lastError()));
+                       .arg(last_error_string(query.lastError()));
     }
     return result;
   }
@@ -332,7 +332,7 @@ auto SaveStorage::get_campaign_progress(
   if (!query.exec()) {
     if (out_error != nullptr) {
       *out_error = QStringLiteral("Failed to get campaign progress: %1")
-                       .arg(lastErrorString(query.lastError()));
+                       .arg(last_error_string(query.lastError()));
     }
     return result;
   }
@@ -373,7 +373,7 @@ auto SaveStorage::mark_campaign_completed(const QString &campaign_id,
   if (!query.exec()) {
     if (out_error != nullptr) {
       *out_error = QStringLiteral("Failed to mark campaign as completed: %1")
-                       .arg(lastErrorString(query.lastError()));
+                       .arg(last_error_string(query.lastError()));
     }
     transaction.rollback();
     return false;
@@ -386,8 +386,8 @@ auto SaveStorage::mark_campaign_completed(const QString &campaign_id,
   return true;
 }
 
-auto SaveStorage::deleteSlot(const QString &slotName,
-                             QString *out_error) -> bool {
+auto SaveStorage::delete_slot(const QString &slot_name,
+                              QString *out_error) -> bool {
   if (!initialize(out_error)) {
     return false;
   }
@@ -400,12 +400,12 @@ auto SaveStorage::deleteSlot(const QString &slotName,
   QSqlQuery query(m_database);
   query.prepare(
       QStringLiteral("DELETE FROM saves WHERE slot_name = :slot_name"));
-  query.bindValue(QStringLiteral(":slot_name"), slotName);
+  query.bindValue(QStringLiteral(":slot_name"), slot_name);
 
   if (!query.exec()) {
     if (out_error != nullptr) {
       *out_error = QStringLiteral("Failed to delete save slot: %1")
-                       .arg(lastErrorString(query.lastError()));
+                       .arg(last_error_string(query.lastError()));
     }
     transaction.rollback();
     return false;
@@ -413,7 +413,7 @@ auto SaveStorage::deleteSlot(const QString &slotName,
 
   if (query.numRowsAffected() == 0) {
     if (out_error != nullptr) {
-      *out_error = QStringLiteral("Save slot '%1' not found").arg(slotName);
+      *out_error = QStringLiteral("Save slot '%1' not found").arg(slot_name);
     }
     transaction.rollback();
     return false;
@@ -440,7 +440,7 @@ auto SaveStorage::open(QString *out_error) const -> bool {
   if (!m_database.open()) {
     if (out_error != nullptr) {
       *out_error = QStringLiteral("Failed to open save database: %1")
-                       .arg(lastErrorString(m_database.lastError()));
+                       .arg(last_error_string(m_database.lastError()));
     }
     return false;
   }
@@ -454,8 +454,8 @@ auto SaveStorage::open(QString *out_error) const -> bool {
   return true;
 }
 
-auto SaveStorage::ensureSchema(QString *out_error) const -> bool {
-  const int current_version = schemaVersion(out_error);
+auto SaveStorage::ensure_schema(QString *out_error) const -> bool {
+  const int current_version = schema_version(out_error);
   if (current_version < 0) {
     return false;
   }
@@ -497,12 +497,12 @@ auto SaveStorage::ensureSchema(QString *out_error) const -> bool {
   return true;
 }
 
-auto SaveStorage::schemaVersion(QString *out_error) const -> int {
+auto SaveStorage::schema_version(QString *out_error) const -> int {
   QSqlQuery pragma_query(m_database);
   if (!pragma_query.exec(QStringLiteral("PRAGMA user_version"))) {
     if (out_error != nullptr) {
       *out_error = QStringLiteral("Failed to read schema version: %1")
-                       .arg(lastErrorString(pragma_query.lastError()));
+                       .arg(last_error_string(pragma_query.lastError()));
     }
     return -1;
   }
@@ -521,14 +521,14 @@ auto SaveStorage::set_schema_version(int version,
           QStringLiteral("PRAGMA user_version = %1").arg(version))) {
     if (out_error != nullptr) {
       *out_error = QStringLiteral("Failed to update schema version: %1")
-                       .arg(lastErrorString(pragma_query.lastError()));
+                       .arg(last_error_string(pragma_query.lastError()));
     }
     return false;
   }
   return true;
 }
 
-auto SaveStorage::createBaseSchema(QString *out_error) const -> bool {
+auto SaveStorage::create_base_schema(QString *out_error) const -> bool {
   QSqlQuery query(m_database);
   const QString create_sql =
       QStringLiteral("CREATE TABLE IF NOT EXISTS saves ("
@@ -547,7 +547,7 @@ auto SaveStorage::createBaseSchema(QString *out_error) const -> bool {
   if (!query.exec(create_sql)) {
     if (out_error != nullptr) {
       *out_error = QStringLiteral("Failed to create save schema: %1")
-                       .arg(lastErrorString(query.lastError()));
+                       .arg(last_error_string(query.lastError()));
     }
     return false;
   }
@@ -558,7 +558,7 @@ auto SaveStorage::createBaseSchema(QString *out_error) const -> bool {
           "(updated_at DESC)"))) {
     if (out_error != nullptr) {
       *out_error = QStringLiteral("Failed to build save index: %1")
-                       .arg(lastErrorString(index_query.lastError()));
+                       .arg(last_error_string(index_query.lastError()));
     }
     return false;
   }
@@ -573,7 +573,7 @@ auto SaveStorage::migrate_schema(int fromVersion,
   while (version < k_current_schema_version) {
     switch (version) {
     case 0:
-      if (!createBaseSchema(out_error)) {
+      if (!create_base_schema(out_error)) {
         return false;
       }
       version = 1;
@@ -611,7 +611,7 @@ auto SaveStorage::migrate_to_2(QString *out_error) const -> bool {
   if (!query.exec(create_campaigns_sql)) {
     if (out_error != nullptr) {
       *out_error = QStringLiteral("Failed to create campaigns table: %1")
-                       .arg(lastErrorString(query.lastError()));
+                       .arg(last_error_string(query.lastError()));
     }
     return false;
   }
@@ -630,7 +630,7 @@ auto SaveStorage::migrate_to_2(QString *out_error) const -> bool {
     if (out_error != nullptr) {
       *out_error =
           QStringLiteral("Failed to create campaign_progress table: %1")
-              .arg(lastErrorString(progress_query.lastError()));
+              .arg(last_error_string(progress_query.lastError()));
     }
     return false;
   }
@@ -646,7 +646,7 @@ auto SaveStorage::migrate_to_2(QString *out_error) const -> bool {
   if (!insert_query.exec(insert_campaign_sql)) {
     if (out_error != nullptr) {
       *out_error = QStringLiteral("Failed to insert initial campaign: %1")
-                       .arg(lastErrorString(insert_query.lastError()));
+                       .arg(last_error_string(insert_query.lastError()));
     }
     return false;
   }
@@ -658,8 +658,9 @@ auto SaveStorage::migrate_to_2(QString *out_error) const -> bool {
 
   if (!progress_insert_query.exec(insert_progress_sql)) {
     if (out_error != nullptr) {
-      *out_error = QStringLiteral("Failed to initialize campaign progress: %1")
-                       .arg(lastErrorString(progress_insert_query.lastError()));
+      *out_error =
+          QStringLiteral("Failed to initialize campaign progress: %1")
+              .arg(last_error_string(progress_insert_query.lastError()));
     }
     return false;
   }

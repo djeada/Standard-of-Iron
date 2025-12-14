@@ -21,9 +21,9 @@ public:
   static void update(Engine::Core::World &world, SelectionSystem &selection,
                      Render::GL::Camera &camera);
 
-  static void snapToSelection(Engine::Core::World &world,
-                              SelectionSystem &selection,
-                              Render::GL::Camera &camera);
+  static void snap_to_selection(Engine::Core::World &world,
+                                SelectionSystem &selection,
+                                Render::GL::Camera &camera);
 };
 
 } // namespace Game::Systems

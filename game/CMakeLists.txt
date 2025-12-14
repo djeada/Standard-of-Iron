@@ -72,6 +72,7 @@ add_library(game_systems STATIC
     map/map_catalog.cpp
     map/skirmish_loader.cpp
     map/minimap/minimap_generator.cpp
+    map/minimap/map_preview_generator.cpp
     map/minimap/minimap_texture_manager.cpp
     map/minimap/fog_of_war_mask.cpp
     map/minimap/minimap_manager.cpp

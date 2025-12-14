@@ -569,12 +569,14 @@ void MinimapGenerator::apply_vignette(QPainter &painter, int width,
 
 void MinimapGenerator::draw_compass_rose(QPainter &painter, int width,
                                          int height) {
+  const float min_dim = static_cast<float>(std::min(width, height));
+  const float margin = std::clamp(min_dim * 0.06F, 12.0F, 32.0F);
+  const float SIZE = std::clamp(min_dim * 0.08F, 14.0F, 42.0F);
+  const float cx = static_cast<float>(width) - margin;
+  const float cy = static_cast<float>(height) - margin;
 
-  const float cx = static_cast<float>(width) - 18.0F;
-  const float cy = static_cast<float>(height) - 18.0F;
-  constexpr float SIZE = 10.0F;
-
-  painter.setPen(QPen(Palette::INK_MEDIUM, 1.2));
+  const float stroke = std::max(1.2F, SIZE * 0.08F);
+  painter.setPen(QPen(Palette::INK_MEDIUM, stroke));
   painter.setBrush(Qt::NoBrush);
 
   QPainterPath north_arrow;
@@ -599,13 +601,15 @@ void MinimapGenerator::draw_compass_rose(QPainter &painter, int width,
                    QPointF(cx + SIZE * 0.7F, cy));
 
   painter.setBrush(Palette::INK_MEDIUM);
-  painter.drawEllipse(QPointF(cx, cy), 2.0, 2.0);
+  const float dot_radius = std::max(2.0F, SIZE * 0.2F);
+  painter.drawEllipse(QPointF(cx, cy), dot_radius, dot_radius);
 
-  painter.setPen(QPen(Palette::INK_DARK, 1.2F));
-  const float n_left = cx - 3.5F;
-  const float n_right = cx + 3.5F;
-  const float n_top = cy - SIZE - 7.0F;
-  const float n_bottom = cy - SIZE - 1.5F;
+  painter.setPen(QPen(Palette::INK_DARK, stroke));
+  const float n_half_width = SIZE * 0.35F;
+  const float n_left = cx - n_half_width;
+  const float n_right = cx + n_half_width;
+  const float n_top = cy - SIZE - SIZE * 0.7F;
+  const float n_bottom = cy - SIZE - SIZE * 0.15F;
 
   QPainterPath n_path;
   n_path.moveTo(n_left, n_bottom);
