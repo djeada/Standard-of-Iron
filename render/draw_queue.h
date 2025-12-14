@@ -146,11 +146,11 @@ struct HealerAuraCmd {
   float time = 0.0F;
 };
 
-using DrawCmd =
-    std::variant<GridCmd, SelectionRingCmd, SelectionSmokeCmd, CylinderCmd,
-                 MeshCmd, FogBatchCmd, GrassBatchCmd, StoneBatchCmd,
-                 PlantBatchCmd, PineBatchCmd, OliveBatchCmd, FireCampBatchCmd,
-                 TerrainChunkCmd, PrimitiveBatchCmd, HealingBeamCmd, HealerAuraCmd>;
+using DrawCmd = std::variant<GridCmd, SelectionRingCmd, SelectionSmokeCmd,
+                             CylinderCmd, MeshCmd, FogBatchCmd, GrassBatchCmd,
+                             StoneBatchCmd, PlantBatchCmd, PineBatchCmd,
+                             OliveBatchCmd, FireCampBatchCmd, TerrainChunkCmd,
+                             PrimitiveBatchCmd, HealingBeamCmd, HealerAuraCmd>;
 
 enum class DrawCmdType : std::uint8_t {
   Grid = 0,

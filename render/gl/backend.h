@@ -71,13 +71,13 @@ public:
 
   [[nodiscard]] auto banner_shader() const -> Shader *;
 
-  [[nodiscard]] auto healing_beam_pipeline()
-      -> BackendPipelines::HealingBeamPipeline * {
+  [[nodiscard]] auto
+  healing_beam_pipeline() -> BackendPipelines::HealingBeamPipeline * {
     return m_healingBeamPipeline.get();
   }
 
-  [[nodiscard]] auto healer_aura_pipeline()
-      -> BackendPipelines::HealerAuraPipeline * {
+  [[nodiscard]] auto
+  healer_aura_pipeline() -> BackendPipelines::HealerAuraPipeline * {
     return m_healerAuraPipeline.get();
   }
 
