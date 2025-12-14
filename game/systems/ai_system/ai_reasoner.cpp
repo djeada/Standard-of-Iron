@@ -293,9 +293,9 @@ void AIReasoner::updateStateMachine(const AISnapshot &snapshot, AIContext &ctx,
     break;
 
   case AIState::Gathering:
-    // Attack thresholds: reactive (2 units with enemies) vs proactive (5 units)
+    // Attack thresholds: reactive (2 units with enemies) vs proactive (4 units)
     constexpr int MIN_UNITS_FOR_REACTIVE_ATTACK = 3;
-    constexpr int MIN_UNITS_FOR_PROACTIVE_ATTACK = 5;
+    constexpr int MIN_UNITS_FOR_PROACTIVE_ATTACK = 4;  // Lowered from 5 to be more aggressive
     constexpr int MIN_UNITS_FOR_EXPANSION = 3;
     
     if (ctx.total_units < 1) {
