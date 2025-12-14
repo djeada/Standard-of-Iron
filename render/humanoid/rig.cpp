@@ -1525,8 +1525,7 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
     if (anim.is_attacking) {
       float const attack_offset = phase_offset * 1.5F;
       anim_ctx.attack_phase = std::fmod(anim.time + attack_offset, 1.0F);
-      anim_ctx.inputs.attack_variant =
-          static_cast<std::uint8_t>(inst_seed % 3);
+      anim_ctx.inputs.attack_variant = static_cast<std::uint8_t>(inst_seed % 3);
     }
 
     customize_pose(inst_ctx, anim_ctx, inst_seed, pose);

@@ -220,8 +220,8 @@ public:
       controller.placeHandAt(true, hand_l_pos);
 
     } else if (anim.is_attacking && anim.is_melee && !anim.is_in_hold_mode) {
-      float const attack_phase =
-          std::fmod(anim_ctx.attack_phase * SPEARMAN_INV_ATTACK_CYCLE_TIME, 1.0F);
+      float const attack_phase = std::fmod(
+          anim_ctx.attack_phase * SPEARMAN_INV_ATTACK_CYCLE_TIME, 1.0F);
       controller.spear_thrust_variant(attack_phase, anim.attack_variant);
     } else {
       QVector3D const idle_hand_r(0.28F + arm_asymmetry,

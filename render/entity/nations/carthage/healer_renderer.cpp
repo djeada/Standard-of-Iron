@@ -151,37 +151,34 @@ public:
     float const arm_asymmetry = (hash_01(seed ^ 0xDEF0U) - 0.5F) * 0.04F;
 
     if (anim.is_healing) {
-      // Healing animation: mystical channeling pose with staff-like gestures
+
       float const healing_time = anim.time * 2.2F;
       float const sway_phase = std::sin(healing_time);
       float const sway_phase_offset = std::sin(healing_time + 0.7F);
 
-      // One arm raised high (channeling), one arm extended forward
       float const high_arm_height =
           HP::SHOULDER_Y + 0.18F + 0.04F * sway_phase + arm_height_jitter;
-      float const extended_arm_height =
-          HP::SHOULDER_Y + 0.05F + 0.02F * sway_phase_offset + arm_height_jitter;
+      float const extended_arm_height = HP::SHOULDER_Y + 0.05F +
+                                        0.02F * sway_phase_offset +
+                                        arm_height_jitter;
 
-      // Gentle circular motion for mystical effect
       float const circle_x = 0.03F * std::sin(healing_time * 0.8F);
       float const circle_z = 0.02F * std::cos(healing_time * 0.8F);
 
       QVector3D const heal_hand_l(-0.08F + arm_asymmetry + circle_x,
-                                   high_arm_height,
-                                   0.28F + circle_z);
+                                  high_arm_height, 0.28F + circle_z);
       QVector3D const heal_hand_r(0.15F - arm_asymmetry * 0.5F,
-                                   extended_arm_height,
-                                   0.40F + 0.03F * sway_phase_offset);
+                                  extended_arm_height,
+                                  0.40F + 0.03F * sway_phase_offset);
 
       controller.placeHandAt(true, heal_hand_l);
       controller.placeHandAt(false, heal_hand_r);
 
-      // Subtle body sway during channeling
       float const torso_sway = 0.012F * sway_phase;
       controller.tilt_torso(torso_sway, 0.008F * sway_phase_offset);
 
     } else {
-      // Normal idle pose with staff
+
       QVector3D const idle_hand_l(-0.10F + arm_asymmetry,
                                   HP::SHOULDER_Y + 0.10F + arm_height_jitter,
                                   0.45F);

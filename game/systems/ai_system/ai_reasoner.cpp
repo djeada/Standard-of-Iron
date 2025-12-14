@@ -1,4 +1,5 @@
 #include "ai_reasoner.h"
+#include "../../core/ownership_constants.h"
 #include "../../game_config.h"
 #include "../nation_registry.h"
 #include "ai_utils.h"
@@ -20,7 +21,6 @@ void AIReasoner::updateContext(const AISnapshot &snapshot, AIContext &ctx) {
 
   cleanupDeadUnits(snapshot, ctx);
 
-  // Track unit count for deadlock detection
   int previous_unit_count = ctx.total_units;
 
   ctx.military_units.clear();
@@ -129,8 +129,8 @@ void AIReasoner::updateContext(const AISnapshot &snapshot, AIContext &ctx) {
   for (const auto &enemy : snapshot.visible_enemies) {
     if (enemy.is_building) {
       ctx.enemy_buildings_count++;
-      // Check if this is a neutral barracks
-      if (enemy.spawn_type == Game::Units::SpawnType::Barracks && 
+
+      if (enemy.spawn_type == Game::Units::SpawnType::Barracks &&
           Game::Core::isNeutralOwner(enemy.owner_id)) {
         ctx.neutral_barracks_count++;
       }
@@ -176,49 +176,44 @@ void AIReasoner::updateContext(const AISnapshot &snapshot, AIContext &ctx) {
     }
   }
 
-  // Deadlock detection: track if we're making progress
   if (ctx.total_units != previous_unit_count || ctx.combat_units > 0) {
-    // Making progress - units changed or units are active
+
     ctx.consecutive_no_progress_cycles = 0;
     ctx.last_meaningful_action_time = snapshot.game_time;
   } else if (ctx.idle_units > 0 || ctx.visible_enemy_count > 0) {
-    // Potentially stuck - have units but they're not doing anything productive
+
     ctx.consecutive_no_progress_cycles++;
   }
-  
-  // Initialize last_meaningful_action_time if not set
+
   if (ctx.last_meaningful_action_time == 0.0F) {
     ctx.last_meaningful_action_time = snapshot.game_time;
   }
-  
+
   ctx.last_total_units = ctx.total_units;
 }
 
-void AIReasoner::updateStateMachine(const AISnapshot &snapshot, AIContext &ctx, 
+void AIReasoner::updateStateMachine(const AISnapshot &snapshot, AIContext &ctx,
                                     float delta_time) {
   ctx.state_timer += delta_time;
   ctx.decision_timer += delta_time;
 
   constexpr float min_state_duration = 3.0F;
-  constexpr float max_no_progress_duration = 3.0F; // Time-based threshold
+  constexpr float max_no_progress_duration = 3.0F;
 
-  // Detect deadlock conditions
   bool deadlock_detected = false;
-  
-  // Force state change if stuck in same state too long
+
   if (ctx.state_timer > ctx.max_state_duration) {
     deadlock_detected = true;
   }
-  
-  // Detect if AI is stuck with idle units not making progress (time-based)
-  float time_since_progress = snapshot.game_time - ctx.last_meaningful_action_time;
+
+  float time_since_progress =
+      snapshot.game_time - ctx.last_meaningful_action_time;
   if (time_since_progress >= max_no_progress_duration && ctx.idle_units > 0) {
     deadlock_detected = true;
   }
 
   AIState previous_state = ctx.state;
-  
-  // Critical override: immediate defense response
+
   if ((ctx.barracks_under_threat || !ctx.buildings_under_attack.empty()) &&
       ctx.state != AIState::Defending) {
 
@@ -229,10 +224,9 @@ void AIReasoner::updateStateMachine(const AISnapshot &snapshot, AIContext &ctx,
            (ctx.state == AIState::Gathering || ctx.state == AIState::Idle)) {
     ctx.state = AIState::Defending;
   }
-  
-  // Deadlock recovery: force a state transition
+
   if (deadlock_detected && ctx.state != AIState::Defending) {
-    // Try to break out of stuck state
+
     if (ctx.state == AIState::Idle && ctx.total_units > 0) {
       ctx.state = AIState::Gathering;
     } else if (ctx.state == AIState::Gathering) {
@@ -242,7 +236,7 @@ void AIReasoner::updateStateMachine(const AISnapshot &snapshot, AIContext &ctx,
         ctx.state = AIState::Idle;
       }
     } else if (ctx.state == AIState::Attacking) {
-      // Clear assignments to allow fresh decisions
+
       ctx.assigned_units.clear();
       if (ctx.average_health < 0.5F) {
         ctx.state = AIState::Defending;
@@ -272,62 +266,63 @@ void AIReasoner::updateStateMachine(const AISnapshot &snapshot, AIContext &ctx,
     return;
   }
 
-  // Improved strategic decision-making: consider relative strength
   switch (ctx.state) {
   case AIState::Idle:
     if (ctx.idle_units >= 1) {
-      // Be more proactive - start gathering even with 1 unit
+
       ctx.state = AIState::Gathering;
     } else if (ctx.average_health < 0.40F && ctx.total_units > 0) {
 
       ctx.state = AIState::Defending;
     } else if (ctx.neutral_barracks_count > 0 && ctx.total_units >= 3) {
-      // Neutral barracks available, prioritize expansion
+
       ctx.state = AIState::Expanding;
     } else if (ctx.total_units >= 1 && ctx.visible_enemy_count > 0) {
-      // Only attack if we have units, consider tactical situation
+
       if (ctx.total_units >= 2 || ctx.barracks_under_threat) {
         ctx.state = AIState::Attacking;
       }
     }
     break;
 
-  case AIState::Gathering:
-    // Attack thresholds: 2+ units when enemies visible, 4+ units proactively
+  case AIState::Gathering: {
+
     constexpr int MIN_UNITS_FOR_REACTIVE_ATTACK = 2;
-    constexpr int MIN_UNITS_FOR_PROACTIVE_ATTACK = 4;  // Lowered from 5 to be more aggressive
+    constexpr int MIN_UNITS_FOR_PROACTIVE_ATTACK = 4;
     constexpr int MIN_UNITS_FOR_EXPANSION = 3;
-    
+
     if (ctx.total_units < 1) {
       ctx.state = AIState::Idle;
     } else if (ctx.average_health < 0.40F) {
-      // Army is weak, defend
+
       ctx.state = AIState::Defending;
-    } else if (ctx.neutral_barracks_count > 0 && ctx.total_units >= MIN_UNITS_FOR_EXPANSION) {
-      // Neutral barracks available, prioritize expansion
+    } else if (ctx.neutral_barracks_count > 0 &&
+               ctx.total_units >= MIN_UNITS_FOR_EXPANSION) {
+
       ctx.state = AIState::Expanding;
-    } else if (ctx.visible_enemy_count > 0 && ctx.total_units >= MIN_UNITS_FOR_REACTIVE_ATTACK) {
-      // Enemy spotted, engage with current force (minimum 2)
+    } else if (ctx.visible_enemy_count > 0 &&
+               ctx.total_units >= MIN_UNITS_FOR_REACTIVE_ATTACK) {
+
       ctx.state = AIState::Attacking;
     } else if (ctx.total_units >= MIN_UNITS_FOR_PROACTIVE_ATTACK) {
-      // Have a decent army, go on the offensive even without visible enemies
+
       ctx.state = AIState::Attacking;
     }
-    break;
+  } break;
 
   case AIState::Attacking:
     if (ctx.average_health < 0.25F) {
-      // Army critically damaged, retreat
+
       ctx.state = AIState::Retreating;
     } else if (ctx.total_units == 0) {
-      // Lost all units
+
       ctx.state = AIState::Idle;
     } else if (ctx.visible_enemy_count == 0 && ctx.state_timer > 15.0F) {
-      // No enemies visible for a while, regroup
+
       ctx.state = AIState::Idle;
-    } else if (ctx.average_health < 0.50F && ctx.damaged_units_count * 2 > ctx.total_units) {
-      // More than half of units are damaged (using multiply to avoid integer division)
-      // Consider retreating to defend
+    } else if (ctx.average_health < 0.50F &&
+               ctx.damaged_units_count * 2 > ctx.total_units) {
+
       if (!ctx.barracks_under_threat) {
         ctx.state = AIState::Defending;
       }
@@ -338,15 +333,15 @@ void AIReasoner::updateStateMachine(const AISnapshot &snapshot, AIContext &ctx,
   case AIState::Defending:
 
     if (ctx.barracks_under_threat || !ctx.buildings_under_attack.empty()) {
-      // Stay in defense mode
+
     } else if (ctx.total_units >= 4 && ctx.average_health > 0.65F) {
-      // Strong army, cleared threats, counter-attack
+
       ctx.state = AIState::Attacking;
     } else if (ctx.average_health > 0.80F && ctx.visible_enemy_count == 0) {
-      // Healthy and no enemies, return to idle
+
       ctx.state = AIState::Idle;
     } else if (ctx.total_units < 2 && !ctx.barracks_under_threat) {
-      // Very few units left, fall back to idle
+
       ctx.state = AIState::Idle;
     }
     break;
@@ -354,35 +349,36 @@ void AIReasoner::updateStateMachine(const AISnapshot &snapshot, AIContext &ctx,
   case AIState::Retreating:
 
     if (ctx.state_timer > 6.0F && ctx.average_health > 0.55F) {
-      // Recovered enough, switch to defense
+
       ctx.state = AIState::Defending;
     } else if (ctx.state_timer > 12.0F) {
-      // Force recovery after 12 seconds
+
       ctx.state = AIState::Idle;
       ctx.assigned_units.clear();
     } else if (ctx.average_health > 0.70F && ctx.state_timer > 3.0F) {
-      // Recovered quickly, can resume defense
+
       ctx.state = AIState::Defending;
     }
     break;
 
   case AIState::Expanding:
-    // Transition out of expansion state when appropriate
+
     if (ctx.neutral_barracks_count == 0) {
-      // No more neutral barracks, return to gathering or attacking
+
       if (ctx.visible_enemy_count > 0) {
         ctx.state = AIState::Attacking;
       } else {
         ctx.state = AIState::Gathering;
       }
     } else if (ctx.total_units < 2) {
-      // Not enough units to expand, return to gathering
+
       ctx.state = AIState::Gathering;
-    } else if (ctx.barracks_under_threat || !ctx.buildings_under_attack.empty()) {
-      // Under attack, defend first
+    } else if (ctx.barracks_under_threat ||
+               !ctx.buildings_under_attack.empty()) {
+
       ctx.state = AIState::Defending;
     } else if (ctx.average_health < 0.40F) {
-      // Army weak, defend
+
       ctx.state = AIState::Defending;
     }
     break;
@@ -390,52 +386,46 @@ void AIReasoner::updateStateMachine(const AISnapshot &snapshot, AIContext &ctx,
 
   if (ctx.state != previous_state) {
     ctx.state_timer = 0.0F;
-    // Reset progress tracking on state change
+
     ctx.consecutive_no_progress_cycles = 0;
     ctx.debug_info.state_transitions++;
   }
 }
 
 void AIReasoner::validateState(AIContext &ctx) {
-  // Ensure state is valid and consistent with reality
-  
-  // Named constants for validation thresholds
+
   constexpr size_t MAX_ASSIGNMENT_MULTIPLIER = 2;
   constexpr int MAX_NO_PROGRESS_CYCLES = 50;
   constexpr float MAX_STATE_TIMER = 1000.0F;
   constexpr float MAX_DECISION_TIMER = 100.0F;
-  
-  // If no units, can only be Idle
+
   if (ctx.total_units == 0 && ctx.state != AIState::Idle) {
     ctx.state = AIState::Idle;
     ctx.state_timer = 0.0F;
     ctx.consecutive_no_progress_cycles = 0;
   }
-  
-  // If no barracks, should not be in certain states
+
   if (ctx.primary_barracks == 0 && ctx.buildings.empty()) {
     if (ctx.state == AIState::Defending && !ctx.barracks_under_threat) {
       ctx.state = AIState::Idle;
       ctx.state_timer = 0.0F;
     }
   }
-  
-  // Sanitize timers to prevent overflow
+
   if (ctx.state_timer > MAX_STATE_TIMER) {
     ctx.state_timer = ctx.max_state_duration;
   }
   if (ctx.decision_timer > MAX_DECISION_TIMER) {
     ctx.decision_timer = 0.0F;
   }
-  
-  // Clear stuck assignments for dead units
-  size_t max_expected_assignments = static_cast<size_t>(ctx.total_units) * MAX_ASSIGNMENT_MULTIPLIER;
+
+  size_t max_expected_assignments =
+      static_cast<size_t>(ctx.total_units) * MAX_ASSIGNMENT_MULTIPLIER;
   if (ctx.assigned_units.size() > max_expected_assignments) {
-    // Too many assignments, likely has dead units
+
     ctx.assigned_units.clear();
   }
-  
-  // Reset consecutive no-progress if it gets too high
+
   if (ctx.consecutive_no_progress_cycles > MAX_NO_PROGRESS_CYCLES) {
     ctx.consecutive_no_progress_cycles = 0;
     ctx.state = AIState::Idle;

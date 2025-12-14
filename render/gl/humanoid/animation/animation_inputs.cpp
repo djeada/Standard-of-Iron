@@ -79,7 +79,6 @@ auto sample_anim_state(const DrawContext &ctx) -> AnimationInputs {
   }
   anim.is_moving = ((movement != nullptr) && movement->has_target);
 
-  // Check for healing state
   auto *healer = ctx.entity->get_component<Engine::Core::HealerComponent>();
   if (healer != nullptr && healer->is_healing_active && transform != nullptr) {
     anim.is_healing = true;
@@ -88,7 +87,8 @@ auto sample_anim_state(const DrawContext &ctx) -> AnimationInputs {
   }
 
   if (combat_state != nullptr) {
-    anim.combat_phase = map_combat_state_to_phase(combat_state->animation_state);
+    anim.combat_phase =
+        map_combat_state_to_phase(combat_state->animation_state);
     if (combat_state->state_duration > 0.0F) {
       anim.combat_phase_progress =
           combat_state->state_time / combat_state->state_duration;
@@ -98,10 +98,11 @@ auto sample_anim_state(const DrawContext &ctx) -> AnimationInputs {
 
   if (hit_feedback != nullptr && hit_feedback->is_reacting) {
     anim.is_hit_reacting = true;
-    float const progress = hit_feedback->reaction_time /
-                           Engine::Core::HitFeedbackComponent::kReactionDuration;
-    anim.hit_reaction_intensity = hit_feedback->reaction_intensity *
-                                  std::max(0.0F, 1.0F - progress);
+    float const progress =
+        hit_feedback->reaction_time /
+        Engine::Core::HitFeedbackComponent::kReactionDuration;
+    anim.hit_reaction_intensity =
+        hit_feedback->reaction_intensity * std::max(0.0F, 1.0F - progress);
   }
 
   if ((attack != nullptr) && (attack_target != nullptr) &&
