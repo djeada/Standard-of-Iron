@@ -28,6 +28,9 @@ InputCommandHandler::InputCommandHandler(
 
 void InputCommandHandler::on_map_clicked(qreal sx, qreal sy, int local_owner_id,
                                          const ViewportState &viewport) {
+  if (m_is_spectator_mode) {
+    return;
+  }
   if (m_selection_controller && m_camera) {
     m_selection_controller->on_click_select(sx, sy, false, viewport.width,
                                             viewport.height, m_camera,
@@ -37,6 +40,9 @@ void InputCommandHandler::on_map_clicked(qreal sx, qreal sy, int local_owner_id,
 
 void InputCommandHandler::on_right_click(qreal sx, qreal sy, int local_owner_id,
                                          const ViewportState &viewport) {
+  if (m_is_spectator_mode) {
+    return;
+  }
   if (!m_world) {
     return;
   }
@@ -97,6 +103,9 @@ void InputCommandHandler::on_right_click(qreal sx, qreal sy, int local_owner_id,
 
 void InputCommandHandler::on_attack_click(qreal sx, qreal sy,
                                           const ViewportState &viewport) {
+  if (m_is_spectator_mode) {
+    return;
+  }
   if (!m_command_controller || !m_camera) {
     return;
   }
@@ -139,6 +148,9 @@ void InputCommandHandler::reset_movement(Engine::Core::Entity *entity) {
 }
 
 void InputCommandHandler::on_stop_command() {
+  if (m_is_spectator_mode) {
+    return;
+  }
   if (!m_command_controller) {
     return;
   }
@@ -150,6 +162,9 @@ void InputCommandHandler::on_stop_command() {
 }
 
 void InputCommandHandler::on_hold_command() {
+  if (m_is_spectator_mode) {
+    return;
+  }
   if (!m_command_controller) {
     return;
   }
@@ -169,6 +184,9 @@ auto InputCommandHandler::any_selected_in_hold_mode() const -> bool {
 
 void InputCommandHandler::on_patrol_click(qreal sx, qreal sy,
                                           const ViewportState &viewport) {
+  if (m_is_spectator_mode) {
+    return;
+  }
   if (!m_command_controller || !m_camera) {
     return;
   }
@@ -183,6 +201,9 @@ void InputCommandHandler::on_patrol_click(qreal sx, qreal sy,
 void InputCommandHandler::on_click_select(qreal sx, qreal sy, bool additive,
                                           int local_owner_id,
                                           const ViewportState &viewport) {
+  if (m_is_spectator_mode) {
+    return;
+  }
   if (m_selection_controller && m_camera) {
     m_selection_controller->on_click_select(sx, sy, additive, viewport.width,
                                             viewport.height, m_camera,
@@ -194,6 +215,9 @@ void InputCommandHandler::on_area_selected(qreal x1, qreal y1, qreal x2,
                                            qreal y2, bool additive,
                                            int local_owner_id,
                                            const ViewportState &viewport) {
+  if (m_is_spectator_mode) {
+    return;
+  }
   if (m_selection_controller && m_camera) {
     m_selection_controller->on_area_selected(x1, y1, x2, y2, additive,
                                              viewport.width, viewport.height,
@@ -202,12 +226,18 @@ void InputCommandHandler::on_area_selected(qreal x1, qreal y1, qreal x2,
 }
 
 void InputCommandHandler::select_all_troops(int local_owner_id) {
+  if (m_is_spectator_mode) {
+    return;
+  }
   if (m_selection_controller) {
     m_selection_controller->select_all_player_troops(local_owner_id);
   }
 }
 
 void InputCommandHandler::select_unit_by_id(int unit_id, int local_owner_id) {
+  if (m_is_spectator_mode) {
+    return;
+  }
   if (!m_selection_controller || (unit_id <= 0)) {
     return;
   }
