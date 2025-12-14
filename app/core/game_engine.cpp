@@ -75,6 +75,7 @@
 #include "game/systems/ballista_attack_system.h"
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/camera_service.h"
+#include "game/systems/camera_visibility_service.h"
 #include "game/systems/capture_system.h"
 #include "game/systems/catapult_attack_system.h"
 #include "game/systems/cleanup_system.h"
@@ -652,6 +653,9 @@ void GameEngine::render(int pixelWidth, int pixelHeight) {
   if (!m_renderer || !m_world || !m_runtime.initialized || m_runtime.loading) {
     return;
   }
+
+  Game::Systems::CameraVisibilityService::instance().set_camera(m_camera.get());
+
   if (pixelWidth > 0 && pixelHeight > 0) {
     m_viewport.width = pixelWidth;
     m_viewport.height = pixelHeight;
