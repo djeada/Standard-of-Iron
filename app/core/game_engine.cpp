@@ -1157,6 +1157,7 @@ void GameEngine::start_skirmish(const QString &map_path,
   if (m_world && m_renderer && m_camera) {
 
     m_runtime.loading = true;
+    emit is_loading_changed();
 
     if (m_hoverTracker) {
       m_hoverTracker->update_hover(-1, -1, *m_world, *m_camera, 0, 0);
@@ -1209,6 +1210,7 @@ void GameEngine::start_skirmish(const QString &map_path,
     }
 
     m_runtime.loading = false;
+    emit is_loading_changed();
 
     GameStateRestorer::rebuild_entity_cache(m_world.get(), m_entity_cache,
                                             m_runtime.local_owner_id);

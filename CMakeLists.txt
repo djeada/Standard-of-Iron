@@ -201,6 +201,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
             ui/qml/BattleSummary.qml
             ui/qml/GameView.qml
             ui/qml/CursorManager.qml
+            ui/qml/LoadScreen.qml
         RESOURCES
             assets/shaders/archer.frag
             assets/shaders/archer.vert
