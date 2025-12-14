@@ -4,6 +4,8 @@
 #include "../../../geom/flag.h"
 #include "../../../geom/math_utils.h"
 #include "../../../geom/transforms.h"
+#include "../../../gl/backend.h"
+#include "../../../gl/backend/banner_pipeline.h"
 #include "../../../gl/primitives.h"
 #include "../../../gl/resources.h"
 #include "../../../submitter.h"
@@ -19,7 +21,7 @@ namespace {
 
 using Render::Geom::clamp01;
 using Render::Geom::clampVec01;
-using Render::Geom::cylinderBetween;
+using Render::Geom::cylinder_between;
 
 struct RomanPalette {
   QVector3D stone_light{0.62F, 0.60F, 0.58F};
@@ -56,7 +58,7 @@ inline void draw_box(ISubmitter &out, Mesh *unit, Texture *white,
 inline void draw_cyl(ISubmitter &out, const QMatrix4x4 &model,
                      const QVector3D &a, const QVector3D &b, float r,
                      const QVector3D &color, Texture *white) {
-  out.mesh(getUnitCylinder(), model * cylinderBetween(a, b, r), color, white,
+  out.mesh(get_unit_cylinder(), model * cylinder_between(a, b, r), color, white,
            1.0F);
 }
 
@@ -171,14 +173,14 @@ void drawGate(const DrawContext &p, ISubmitter &out, Mesh *unit, Texture *white,
 }
 
 void drawStandards(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                   Texture *white, const RomanPalette &c) {
+                   Texture *white, const RomanPalette &c,
+                   const BarracksFlagRenderer::ClothBannerResources *cloth) {
   float const pole_x = 2.0F;
   float const pole_z = -1.5F;
   float const pole_height = 2.6F;
   float const pole_radius = 0.045F;
   float const banner_width = 0.8F;
   float const banner_height = 0.5F;
-  float const panel_depth = 0.03F;
 
   QVector3D const pole_center(pole_x, pole_height / 2.0F, pole_z);
   QVector3D const pole_size(pole_radius * 1.8F, pole_height / 2.0F,
@@ -200,43 +202,41 @@ void drawStandards(const DrawContext &p, ISubmitter &out, Mesh *unit,
   float flag_y =
       pole_height - banner_height / 2.0F - captureColors.loweringOffset;
 
-  QVector3D const beam_start(pole_x + 0.03F, beam_y, pole_z);
-  QVector3D const beam_end(pole_x + beam_length + 0.03F, beam_y, pole_z);
-  out.mesh(getUnitCylinder(),
-           p.model * Render::Geom::cylinderBetween(beam_start, beam_end,
-                                                   pole_radius * 0.45F),
+  QVector3D const beam_start(pole_x + 0.02F, beam_y, pole_z);
+  QVector3D const beam_end(pole_x + beam_length + 0.02F, beam_y, pole_z);
+  out.mesh(get_unit_cylinder(),
+           p.model * Render::Geom::cylinder_between(beam_start, beam_end,
+                                                    pole_radius * 0.35F),
            c.wood, white, 1.0F);
 
   QVector3D const connector_top(
       beam_end.x(), beam_end.y() - banner_height * 0.35F, beam_end.z());
-  out.mesh(getUnitCylinder(),
-           p.model * Render::Geom::cylinderBetween(beam_end, connector_top,
-                                                   pole_radius * 0.25F),
+  out.mesh(get_unit_cylinder(),
+           p.model * Render::Geom::cylinder_between(beam_end, connector_top,
+                                                    pole_radius * 0.18F),
            c.iron, white, 1.0F);
 
   float const panel_x = beam_end.x() + (banner_width * 0.5F - beam_length);
 
-  QMatrix4x4 panelTransform = p.model;
-  panelTransform.translate(QVector3D(panel_x, flag_y, pole_z + 0.02F));
-  panelTransform.scale(
-      QVector3D(banner_width / 2.0F, banner_height / 2.0F, panel_depth));
-  out.mesh(unit, panelTransform, captureColors.teamColor, white, 1.0F);
-
-  QMatrix4x4 trimBottom = p.model;
-  trimBottom.translate(QVector3D(panel_x, flag_y - banner_height / 2.0F + 0.06F,
-                                 pole_z + 0.02F));
-  trimBottom.scale(QVector3D(banner_width / 2.0F + 0.03F, 0.06F, 0.02F));
-  out.mesh(unit, trimBottom, captureColors.teamTrimColor, white, 1.0F);
-
-  QMatrix4x4 trimTop = p.model;
-  trimTop.translate(QVector3D(panel_x, flag_y + banner_height / 2.0F - 0.06F,
-                              pole_z + 0.02F));
-  trimTop.scale(QVector3D(banner_width / 2.0F + 0.03F, 0.06F, 0.02F));
-  out.mesh(unit, trimTop, captureColors.teamTrimColor, white, 1.0F);
+  QVector3D banner_center(panel_x, flag_y, pole_z + 0.02F);
+  BarracksFlagRenderer::drawBannerWithTassels(
+      p, out, unit, white, banner_center, banner_width * 0.5F,
+      banner_height * 0.5F, 0.02F, captureColors.teamColor,
+      captureColors.teamTrimColor, cloth);
 
   draw_box(out, unit, white, p.model,
            QVector3D(pole_x, pole_height + 0.2F, pole_z),
            QVector3D(0.12F, 0.10F, 0.12F), c.iron);
+
+  for (int i = 0; i < 3; ++i) {
+    float ring_y = 0.5F + static_cast<float>(i) * 0.6F;
+    out.mesh(get_unit_cylinder(),
+             p.model * Render::Geom::cylinder_between(
+                           QVector3D(pole_x, ring_y, pole_z),
+                           QVector3D(pole_x, ring_y + 0.03F, pole_z),
+                           pole_radius * 2.2F),
+             c.iron, white, 1.0F);
+  }
 }
 
 void draw_rally_flag(const DrawContext &p, ISubmitter &out, Texture *white,
@@ -304,13 +304,19 @@ void draw_barracks(const DrawContext &p, ISubmitter &out) {
   QVector3D const team(r->color[0], r->color[1], r->color[2]);
   RomanPalette const c = make_palette(team);
 
+  BarracksFlagRenderer::ClothBannerResources cloth;
+  if (p.backend != nullptr) {
+    cloth.clothMesh = p.backend->banner_mesh();
+    cloth.bannerShader = p.backend->banner_shader();
+  }
+
   drawFortressBase(p, out, unit, white, c);
   drawFortressWalls(p, out, unit, white, c);
   drawCornerTowers(p, out, unit, white, c);
   drawCourtyard(p, out, unit, white, c);
   drawRomanRoof(p, out, unit, white, c);
   drawGate(p, out, unit, white, c);
-  drawStandards(p, out, unit, white, c);
+  drawStandards(p, out, unit, white, c, &cloth);
   draw_rally_flag(p, out, white, c);
   draw_health_bar(p, out, unit, white);
   draw_selection(p, out);

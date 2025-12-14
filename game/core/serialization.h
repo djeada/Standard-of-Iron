@@ -32,7 +32,7 @@ public:
 
   static auto saveToFile(const QString &filename,
                          const QJsonDocument &doc) -> bool;
-  static auto loadFromFile(const QString &filename) -> QJsonDocument;
+  static auto load_from_file(const QString &filename) -> QJsonDocument;
 };
 
 } // namespace Engine::Core

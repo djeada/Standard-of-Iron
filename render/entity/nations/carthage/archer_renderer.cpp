@@ -74,9 +74,9 @@ void register_archer_style(const std::string &nation_id,
 
 using Render::Geom::clamp01;
 using Render::Geom::clampf;
-using Render::Geom::coneFromTo;
-using Render::Geom::cylinderBetween;
-using Render::Geom::sphereAt;
+using Render::Geom::cone_from_to;
+using Render::Geom::cylinder_between;
+using Render::Geom::sphere_at;
 using Render::GL::Humanoid::mix_palette_color;
 using Render::GL::Humanoid::saturate_color;
 
@@ -98,7 +98,7 @@ public:
   void get_variant(const DrawContext &ctx, uint32_t seed,
                    HumanoidVariant &v) const override {
     QVector3D const team_tint = resolve_team_tint(ctx);
-    v.palette = makeHumanoidPalette(team_tint, seed);
+    v.palette = make_humanoid_palette(team_tint, seed);
     auto const &style = resolve_style(ctx);
     apply_palette_overrides(style, team_tint, v);
 
@@ -174,7 +174,7 @@ public:
       if (anim.is_melee) {
         controller.meleeStrike(attack_phase);
       } else {
-        controller.aimBow(attack_phase);
+        controller.aim_bow(attack_phase);
       }
     }
   }
@@ -218,7 +218,7 @@ public:
 
         auto *cloak_renderer = dynamic_cast<CloakRenderer *>(cloak.get());
         if (cloak_renderer) {
-          cloak_renderer->setConfig(cloak_config);
+          cloak_renderer->set_config(cloak_config);
         }
 
         cloak->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
@@ -234,7 +234,7 @@ public:
 
       auto *quiver_renderer = dynamic_cast<QuiverRenderer *>(quiver.get());
       if (quiver_renderer) {
-        quiver_renderer->setConfig(quiver_config);
+        quiver_renderer->set_config(quiver_config);
       }
 
       quiver->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
@@ -262,7 +262,7 @@ public:
 
       auto *bow_renderer = dynamic_cast<BowRenderer *>(bow.get());
       if (bow_renderer) {
-        bow_renderer->setConfig(bow_config);
+        bow_renderer->set_config(bow_config);
       }
 
       bow->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
@@ -365,7 +365,7 @@ private:
   }
 };
 
-void registerArcherRenderer(Render::GL::EntityRendererRegistry &registry) {
+void register_archer_renderer(Render::GL::EntityRendererRegistry &registry) {
   ensure_archer_styles_registered();
   static ArcherRenderer const renderer;
   registry.register_renderer(
@@ -377,7 +377,7 @@ void registerArcherRenderer(Render::GL::EntityRendererRegistry &registry) {
           archer_shader = ctx.backend->shader(shader_key);
           if ((archer_shader == nullptr) &&
               shader_key == QStringLiteral("archer_carthage")) {
-            archer_shader = ctx.backend->getOrLoadShader(
+            archer_shader = ctx.backend->get_or_load_shader(
                 shader_key,
                 QStringLiteral(":/assets/shaders/archer_carthage.vert"),
                 QStringLiteral(":/assets/shaders/archer_carthage.frag"));

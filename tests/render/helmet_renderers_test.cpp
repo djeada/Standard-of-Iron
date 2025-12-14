@@ -43,6 +43,19 @@ public:
     // Not used in helmet rendering
   }
 
+  void healing_beam(const QVector3D & /*start*/, const QVector3D & /*end*/,
+                    const QVector3D & /*color*/, float /*progress*/,
+                    float /*beam_width*/, float /*intensity*/,
+                    float /*time*/) override {
+    // Not used in helmet rendering
+  }
+
+  void healer_aura(const QVector3D & /*position*/, const QVector3D & /*color*/,
+                   float /*radius*/, float /*intensity*/,
+                   float /*time*/) override {
+    // Not used in helmet rendering
+  }
+
   int mesh_count = 0;
   int cylinder_count = 0;
 };

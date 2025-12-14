@@ -127,7 +127,7 @@ auto VisibilityService::gatherVisionSources(Engine::Core::World &world,
     }
 
     if (unit->owner_id != player_id &&
-        !owner_registry.areAllies(player_id, unit->owner_id)) {
+        !owner_registry.are_allies(player_id, unit->owner_id)) {
       continue;
     }
 

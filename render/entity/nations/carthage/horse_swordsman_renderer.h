@@ -4,6 +4,6 @@
 
 namespace Render::GL::Carthage {
 
-void registerMountedKnightRenderer(EntityRendererRegistry &registry);
+void register_mounted_knight_renderer(EntityRendererRegistry &registry);
 
 }

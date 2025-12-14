@@ -10,8 +10,8 @@
 
 namespace Render::GL {
 
-using Render::Geom::cylinderBetween;
-using Render::Geom::sphereAt;
+using Render::Geom::cylinder_between;
+using Render::Geom::sphere_at;
 using Render::GL::Humanoid::saturate_color;
 
 void RomanGreavesRenderer::render(const DrawContext &ctx,
@@ -78,8 +78,8 @@ void RomanGreavesRenderer::render(const DrawContext &ctx,
 
       seg_transform.scale(segment_width, greave_len * 0.5F, greave_thickness);
 
-      submitter.mesh(getUnitCube(), seg_transform, greaves_color, nullptr, 1.0F,
-                     5);
+      submitter.mesh(get_unit_cube(), seg_transform, greaves_color, nullptr,
+                     1.0F, 5);
     }
   };
 

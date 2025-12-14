@@ -23,15 +23,15 @@ public:
   ~TerrainRenderer() override;
 
   void configure(const Game::Map::TerrainHeightMap &height_map,
-                 const Game::Map::BiomeSettings &biomeSettings);
+                 const Game::Map::BiomeSettings &biome_settings);
 
   void submit(Renderer &renderer, ResourceManager *resources) override;
 
   void setWireframe(bool enable) { m_wireframe = enable; }
 
 private:
-  void buildMeshes();
-  [[nodiscard]] static auto sectionFor(Game::Map::TerrainType type) -> int;
+  void build_meshes();
+  [[nodiscard]] static auto section_for(Game::Map::TerrainType type) -> int;
 
   [[nodiscard]] auto getTerrainColor(Game::Map::TerrainType type,
                                      float height) const -> QVector3D;
@@ -64,7 +64,7 @@ private:
   std::vector<float> m_heightData;
   std::vector<Game::Map::TerrainType> m_terrain_types;
   std::vector<ChunkMesh> m_chunks;
-  Game::Map::BiomeSettings m_biomeSettings;
+  Game::Map::BiomeSettings m_biome_settings;
   std::uint32_t m_noiseSeed = 0U;
 };
 

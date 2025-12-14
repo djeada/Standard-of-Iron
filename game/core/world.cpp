@@ -114,7 +114,7 @@ auto World::get_allied_units(int owner_id) const -> std::vector<Entity *> {
     }
 
     if (unit->owner_id == owner_id ||
-        owner_registry.areAllies(owner_id, unit->owner_id)) {
+        owner_registry.are_allies(owner_id, unit->owner_id)) {
       result.push_back(entity.get());
     }
   }
@@ -133,7 +133,7 @@ auto World::get_enemy_units(int owner_id) const -> std::vector<Entity *> {
       continue;
     }
 
-    if (owner_registry.areEnemies(owner_id, unit->owner_id)) {
+    if (owner_registry.are_enemies(owner_id, unit->owner_id)) {
       result.push_back(entity.get());
     }
   }
@@ -141,7 +141,8 @@ auto World::get_enemy_units(int owner_id) const -> std::vector<Entity *> {
 }
 
 auto World::count_troops_for_player(int owner_id) -> int {
-  return Game::Systems::TroopCountRegistry::instance().getTroopCount(owner_id);
+  return Game::Systems::TroopCountRegistry::instance().get_troop_count(
+      owner_id);
 }
 
 auto World::get_next_entity_id() const -> EntityID {
