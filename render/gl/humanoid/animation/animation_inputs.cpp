@@ -9,6 +9,31 @@
 
 namespace Render::GL {
 
+namespace {
+
+auto map_combat_state_to_phase(Engine::Core::CombatAnimationState state)
+    -> CombatAnimPhase {
+  switch (state) {
+  case Engine::Core::CombatAnimationState::Advance:
+    return CombatAnimPhase::Advance;
+  case Engine::Core::CombatAnimationState::WindUp:
+    return CombatAnimPhase::WindUp;
+  case Engine::Core::CombatAnimationState::Strike:
+    return CombatAnimPhase::Strike;
+  case Engine::Core::CombatAnimationState::Impact:
+    return CombatAnimPhase::Impact;
+  case Engine::Core::CombatAnimationState::Recover:
+    return CombatAnimPhase::Recover;
+  case Engine::Core::CombatAnimationState::Reposition:
+    return CombatAnimPhase::Reposition;
+  case Engine::Core::CombatAnimationState::Idle:
+  default:
+    return CombatAnimPhase::Idle;
+  }
+}
+
+} // namespace
+
 auto sample_anim_state(const DrawContext &ctx) -> AnimationInputs {
   AnimationInputs anim{};
   anim.time = ctx.animation_time;
@@ -18,6 +43,11 @@ auto sample_anim_state(const DrawContext &ctx) -> AnimationInputs {
   anim.is_in_hold_mode = false;
   anim.is_exiting_hold = false;
   anim.hold_exit_progress = 0.0F;
+  anim.combat_phase = CombatAnimPhase::Idle;
+  anim.combat_phase_progress = 0.0F;
+  anim.attack_variant = 0;
+  anim.is_hit_reacting = false;
+  anim.hit_reaction_intensity = 0.0F;
 
   if (ctx.entity == nullptr) {
     return anim;
@@ -35,6 +65,10 @@ auto sample_anim_state(const DrawContext &ctx) -> AnimationInputs {
       ctx.entity->get_component<Engine::Core::TransformComponent>();
   auto *hold_mode =
       ctx.entity->get_component<Engine::Core::HoldModeComponent>();
+  auto *combat_state =
+      ctx.entity->get_component<Engine::Core::CombatStateComponent>();
+  auto *hit_feedback =
+      ctx.entity->get_component<Engine::Core::HitFeedbackComponent>();
 
   anim.is_in_hold_mode = ((hold_mode != nullptr) && hold_mode->active);
   if ((hold_mode != nullptr) && !hold_mode->active &&
@@ -44,6 +78,31 @@ auto sample_anim_state(const DrawContext &ctx) -> AnimationInputs {
         1.0F - (hold_mode->exit_cooldown / hold_mode->stand_up_duration);
   }
   anim.is_moving = ((movement != nullptr) && movement->has_target);
+
+  // Check for healing state
+  auto *healer = ctx.entity->get_component<Engine::Core::HealerComponent>();
+  if (healer != nullptr && healer->is_healing_active && transform != nullptr) {
+    anim.is_healing = true;
+    anim.healing_target_dx = healer->healing_target_x - transform->position.x;
+    anim.healing_target_dz = healer->healing_target_z - transform->position.z;
+  }
+
+  if (combat_state != nullptr) {
+    anim.combat_phase = map_combat_state_to_phase(combat_state->animation_state);
+    if (combat_state->state_duration > 0.0F) {
+      anim.combat_phase_progress =
+          combat_state->state_time / combat_state->state_duration;
+    }
+    anim.attack_variant = combat_state->attack_variant;
+  }
+
+  if (hit_feedback != nullptr && hit_feedback->is_reacting) {
+    anim.is_hit_reacting = true;
+    float const progress = hit_feedback->reaction_time /
+                           Engine::Core::HitFeedbackComponent::kReactionDuration;
+    anim.hit_reaction_intensity = hit_feedback->reaction_intensity *
+                                  std::max(0.0F, 1.0F - progress);
+  }
 
   if ((attack != nullptr) && (attack_target != nullptr) &&
       attack_target->target_id > 0 && (transform != nullptr)) {

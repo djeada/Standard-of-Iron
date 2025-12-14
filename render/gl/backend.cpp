@@ -5,6 +5,7 @@
 #include "../primitive_batch.h"
 #include "backend/banner_pipeline.h"
 #include "backend/character_pipeline.h"
+#include "backend/combat_dust_pipeline.h"
 #include "backend/cylinder_pipeline.h"
 #include "backend/effects_pipeline.h"
 #include "backend/healer_aura_pipeline.h"
@@ -164,6 +165,12 @@ void Backend::initialize() {
       this, m_shaderCache.get());
   m_healerAuraPipeline->initialize();
   qInfo() << "Backend: HealerAuraPipeline initialized";
+
+  qInfo() << "Backend: Creating CombatDustPipeline...";
+  m_combatDustPipeline = std::make_unique<BackendPipelines::CombatDustPipeline>(
+      this, m_shaderCache.get());
+  m_combatDustPipeline->initialize();
+  qInfo() << "Backend: CombatDustPipeline initialized";
 
   qInfo() << "Backend: Loading basic shaders...";
   m_basicShader = m_shaderCache->get(QStringLiteral("basic"));
@@ -1548,6 +1555,18 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       m_healerAuraPipeline->render_single_aura(aura.position, aura.color,
                                                aura.radius, aura.intensity,
                                                aura.time, view_proj);
+      m_lastBoundShader = nullptr;
+      break;
+    }
+    case CombatDustCmdIndex: {
+      const auto &dust = std::get<CombatDustCmdIndex>(cmd);
+      if (m_combatDustPipeline == nullptr ||
+          !m_combatDustPipeline->is_initialized()) {
+        break;
+      }
+      m_combatDustPipeline->render_single_dust(dust.position, dust.color,
+                                               dust.radius, dust.intensity,
+                                               dust.time, view_proj);
       m_lastBoundShader = nullptr;
       break;
     }

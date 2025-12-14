@@ -6,6 +6,7 @@
 #include "../visuals/team_colors.h"
 #include "arrow_system.h"
 #include "building_collision_registry.h"
+#include "camera_visibility_service.h"
 #include "command_service.h"
 #include "owner_registry.h"
 #include "units/spawn_type.h"
@@ -19,7 +20,13 @@
 
 namespace Game::Systems {
 
+namespace {
+thread_local std::mt19937 gen(std::random_device{}());
+} // namespace
+
 void CombatSystem::update(Engine::Core::World *world, float delta_time) {
+  process_hit_feedback(world, delta_time);
+  process_combat_state(world, delta_time);
   process_attacks(world, delta_time);
   process_auto_engagement(world, delta_time);
 }
@@ -539,6 +546,28 @@ void CombatSystem::process_attacks(Engine::Core::World *world,
         attacker_atk->in_melee_lock = true;
         attacker_atk->melee_lock_target_id = best_target->get_id();
 
+        auto *combat_state =
+            attacker->get_component<Engine::Core::CombatStateComponent>();
+        if (combat_state == nullptr) {
+          combat_state =
+              attacker->add_component<Engine::Core::CombatStateComponent>();
+        }
+        if (combat_state != nullptr &&
+            combat_state->animation_state ==
+                Engine::Core::CombatAnimationState::Idle) {
+          combat_state->animation_state =
+              Engine::Core::CombatAnimationState::Advance;
+          combat_state->state_time = 0.0F;
+          combat_state->state_duration =
+              Engine::Core::CombatStateComponent::kAdvanceDuration;
+          std::uniform_real_distribution<float> offset_dist(0.0F, 0.15F);
+          combat_state->attack_offset = offset_dist(gen);
+          std::uniform_int_distribution<int> variant_dist(
+              0, Engine::Core::CombatStateComponent::kMaxAttackVariants - 1);
+          combat_state->attack_variant =
+              static_cast<std::uint8_t>(variant_dist(gen));
+        }
+
         auto *target_atk =
             best_target->get_component<Engine::Core::AttackComponent>();
         if (target_atk != nullptr) {
@@ -643,9 +672,11 @@ void CombatSystem::dealDamage(Engine::Core::World *world,
                               Engine::Core::EntityID attackerId) {
   auto *unit = target->get_component<Engine::Core::UnitComponent>();
   if (unit != nullptr) {
+    bool const is_killing_blow = (unit->health > 0 && unit->health <= damage);
     unit->health = std::max(0, unit->health - damage);
 
     int attacker_owner_id = 0;
+    std::optional<Game::Units::SpawnType> attacker_type_opt;
     if (attackerId != 0 && (world != nullptr)) {
       auto *attacker = world->get_entity(attackerId);
       if (attacker != nullptr) {
@@ -653,8 +684,20 @@ void CombatSystem::dealDamage(Engine::Core::World *world,
             attacker->get_component<Engine::Core::UnitComponent>();
         if (attacker_unit != nullptr) {
           attacker_owner_id = attacker_unit->owner_id;
+          attacker_type_opt = attacker_unit->spawn_type;
         }
       }
+    }
+
+    Game::Units::SpawnType const attacker_type =
+        attacker_type_opt.value_or(Game::Units::SpawnType::Knight);
+
+    Engine::Core::EventManager::instance().publish(
+        Engine::Core::CombatHitEvent(attackerId, target->get_id(), damage,
+                                     attacker_type, is_killing_blow));
+
+    if (unit->health > 0) {
+      apply_hit_feedback(target, attackerId, world);
     }
 
     if (target->has_component<Engine::Core::BuildingComponent>() &&
@@ -971,6 +1014,173 @@ auto CombatSystem::findNearestEnemy(Engine::Core::Entity *unit,
   }
 
   return nearest_enemy;
+}
+
+void CombatSystem::process_hit_feedback(Engine::Core::World *world,
+                                        float delta_time) {
+  auto units = world->get_entities_with<Engine::Core::HitFeedbackComponent>();
+  auto &visibility = CameraVisibilityService::instance();
+
+  for (auto *unit : units) {
+    if (unit->has_component<Engine::Core::PendingRemovalComponent>()) {
+      continue;
+    }
+
+    auto *feedback =
+        unit->get_component<Engine::Core::HitFeedbackComponent>();
+    if (feedback == nullptr || !feedback->is_reacting) {
+      continue;
+    }
+
+    feedback->reaction_time += delta_time;
+    float const progress = feedback->reaction_time /
+                           Engine::Core::HitFeedbackComponent::kReactionDuration;
+
+    if (progress >= 1.0F) {
+      feedback->is_reacting = false;
+      feedback->reaction_time = 0.0F;
+      feedback->reaction_intensity = 0.0F;
+      feedback->knockback_x = 0.0F;
+      feedback->knockback_z = 0.0F;
+    } else {
+      auto *transform =
+          unit->get_component<Engine::Core::TransformComponent>();
+      if (transform != nullptr) {
+        if (!visibility.should_process_detailed_effects(
+                transform->position.x, transform->position.y,
+                transform->position.z)) {
+          continue;
+        }
+
+        float const fade = 1.0F - progress;
+        float const max_displacement_per_frame = 0.02F;
+        float const dx = feedback->knockback_x * fade * delta_time;
+        float const dz = feedback->knockback_z * fade * delta_time;
+        float const displacement = std::sqrt(dx * dx + dz * dz);
+        float const scale = (displacement > max_displacement_per_frame &&
+                             displacement > 0.0001F)
+                                ? max_displacement_per_frame / displacement
+                                : 1.0F;
+        transform->position.x += dx * scale;
+        transform->position.z += dz * scale;
+      }
+    }
+  }
+}
+
+void CombatSystem::process_combat_state(Engine::Core::World *world,
+                                        float delta_time) {
+  auto units = world->get_entities_with<Engine::Core::CombatStateComponent>();
+
+  for (auto *unit : units) {
+    if (unit->has_component<Engine::Core::PendingRemovalComponent>()) {
+      continue;
+    }
+
+    auto *combat_state =
+        unit->get_component<Engine::Core::CombatStateComponent>();
+    if (combat_state == nullptr) {
+      continue;
+    }
+
+    if (combat_state->is_hit_paused) {
+      combat_state->hit_pause_remaining -= delta_time;
+      if (combat_state->hit_pause_remaining <= 0.0F) {
+        combat_state->is_hit_paused = false;
+        combat_state->hit_pause_remaining = 0.0F;
+      }
+      continue;
+    }
+
+    combat_state->state_time += delta_time;
+
+    if (combat_state->state_time >= combat_state->state_duration) {
+      using CS = Engine::Core::CombatAnimationState;
+      using CSC = Engine::Core::CombatStateComponent;
+
+      switch (combat_state->animation_state) {
+      case CS::Advance:
+        combat_state->animation_state = CS::WindUp;
+        combat_state->state_duration = CSC::kWindUpDuration;
+        break;
+      case CS::WindUp:
+        combat_state->animation_state = CS::Strike;
+        combat_state->state_duration = CSC::kStrikeDuration;
+        break;
+      case CS::Strike:
+        combat_state->animation_state = CS::Impact;
+        combat_state->state_duration = CSC::kImpactDuration;
+        break;
+      case CS::Impact:
+        combat_state->animation_state = CS::Recover;
+        combat_state->state_duration = CSC::kRecoverDuration;
+        break;
+      case CS::Recover:
+        combat_state->animation_state = CS::Reposition;
+        combat_state->state_duration = CSC::kRepositionDuration;
+        break;
+      case CS::Reposition:
+      case CS::Idle:
+      default:
+        combat_state->animation_state = CS::Idle;
+        combat_state->state_duration = 0.0F;
+        break;
+      }
+      combat_state->state_time = 0.0F;
+    }
+  }
+}
+
+void CombatSystem::apply_hit_feedback(Engine::Core::Entity *target,
+                                      Engine::Core::EntityID attacker_id,
+                                      Engine::Core::World *world) {
+  if (target == nullptr) {
+    return;
+  }
+
+  auto *feedback =
+      target->get_component<Engine::Core::HitFeedbackComponent>();
+  if (feedback == nullptr) {
+    feedback = target->add_component<Engine::Core::HitFeedbackComponent>();
+  }
+  if (feedback == nullptr) {
+    return;
+  }
+
+  feedback->is_reacting = true;
+  feedback->reaction_time = 0.0F;
+  feedback->reaction_intensity = 1.0F;
+
+  auto *target_transform =
+      target->get_component<Engine::Core::TransformComponent>();
+  if (target_transform != nullptr && attacker_id != 0 && world != nullptr) {
+    auto *attacker = world->get_entity(attacker_id);
+    if (attacker != nullptr) {
+      auto *attacker_transform =
+          attacker->get_component<Engine::Core::TransformComponent>();
+      if (attacker_transform != nullptr) {
+        float const dx =
+            target_transform->position.x - attacker_transform->position.x;
+        float const dz =
+            target_transform->position.z - attacker_transform->position.z;
+        float const dist = std::sqrt(dx * dx + dz * dz);
+        if (dist > 0.001F) {
+          float const knockback =
+              Engine::Core::HitFeedbackComponent::kMaxKnockback;
+          feedback->knockback_x = (dx / dist) * knockback;
+          feedback->knockback_z = (dz / dist) * knockback;
+        }
+      }
+    }
+  }
+
+  auto *combat_state =
+      target->get_component<Engine::Core::CombatStateComponent>();
+  if (combat_state != nullptr) {
+    combat_state->is_hit_paused = true;
+    combat_state->hit_pause_remaining =
+        Engine::Core::CombatStateComponent::kHitPauseDuration;
+  }
 }
 
 } // namespace Game::Systems

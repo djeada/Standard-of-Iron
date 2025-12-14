@@ -75,6 +75,7 @@
 #include "game/systems/ballista_attack_system.h"
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/camera_service.h"
+#include "game/systems/camera_visibility_service.h"
 #include "game/systems/capture_system.h"
 #include "game/systems/catapult_attack_system.h"
 #include "game/systems/cleanup_system.h"
@@ -101,6 +102,7 @@
 #include "game/systems/victory_service.h"
 #include "game/units/factory.h"
 #include "game/units/troop_config.h"
+#include "render/entity/combat_dust_renderer.h"
 #include "render/entity/healer_aura_renderer.h"
 #include "render/entity/healing_beam_renderer.h"
 #include "render/geom/arrow.h"
@@ -652,6 +654,9 @@ void GameEngine::render(int pixelWidth, int pixelHeight) {
   if (!m_renderer || !m_world || !m_runtime.initialized || m_runtime.loading) {
     return;
   }
+
+  Game::Systems::CameraVisibilityService::instance().set_camera(m_camera.get());
+
   if (pixelWidth > 0 && pixelHeight > 0) {
     m_viewport.width = pixelWidth;
     m_viewport.height = pixelHeight;
@@ -699,6 +704,10 @@ void GameEngine::render(int pixelWidth, int pixelHeight) {
 
   if (auto *res = m_renderer->resources()) {
     Render::GL::render_healer_auras(m_renderer.get(), res, m_world.get());
+  }
+
+  if (auto *res = m_renderer->resources()) {
+    Render::GL::render_combat_dust(m_renderer.get(), res, m_world.get());
   }
 
   if (auto *res = m_renderer->resources()) {
