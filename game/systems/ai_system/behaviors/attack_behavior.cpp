@@ -62,6 +62,9 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   if (snapshot.visible_enemies.empty()) {
     if (context.state == AIState::Attacking && context.total_units >= 3) {
       // Scout toward map center or away from base to find enemies
+      constexpr float SCOUT_ADVANCE_DISTANCE = 30.0F; // Units to advance when scouting
+      constexpr float MAP_CENTER_APPROACH_FACTOR = 0.5F; // Fraction toward opposite of base
+      
       float scout_x = 0.0F; // Map center
       float scout_z = 0.0F;
       
@@ -73,13 +76,13 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
         float dist = std::sqrt(dx * dx + dz * dz);
         
         if (dist > 1.0F) {
-          // Advance 30 units away from base
-          scout_x = group_center_x + (dx / dist) * 30.0F;
-          scout_z = group_center_z + (dz / dist) * 30.0F;
+          // Advance away from base to find enemies
+          scout_x = group_center_x + (dx / dist) * SCOUT_ADVANCE_DISTANCE;
+          scout_z = group_center_z + (dz / dist) * SCOUT_ADVANCE_DISTANCE;
         } else {
-          // Move toward map center if too close to base
-          scout_x = -context.base_pos_x * 0.5F;
-          scout_z = -context.base_pos_z * 0.5F;
+          // Move toward map center if too close to base (opposite direction)
+          scout_x = -context.base_pos_x * MAP_CENTER_APPROACH_FACTOR;
+          scout_z = -context.base_pos_z * MAP_CENTER_APPROACH_FACTOR;
         }
       }
       
