@@ -65,7 +65,7 @@ void HealerAuraPipeline::shutdown() {
 
 void HealerAuraPipeline::shutdown_geometry() {
   if (QOpenGLContext::currentContext() == nullptr) {
-    // Context already destroyed; just drop IDs to avoid GL calls.
+
     m_vao = 0;
     m_vertexBuffer = 0;
     m_indexBuffer = 0;
@@ -108,7 +108,6 @@ auto HealerAuraPipeline::is_initialized() const -> bool {
   return m_auraShader != nullptr && m_vao != 0 && m_indexCount > 0;
 }
 
-// Mesh vertex structure
 struct AuraVertex {
   float position[3];
   float normal[3];
@@ -123,21 +122,21 @@ auto HealerAuraPipeline::create_dome_geometry() -> bool {
   std::vector<AuraVertex> vertices;
   std::vector<unsigned int> indices;
 
-  // Create a hemisphere/dome mesh
-  constexpr int stacks = 8;   // Vertical divisions
-  constexpr int slices = 16;  // Horizontal divisions
+  constexpr int stacks = 8;
+  constexpr int slices = 16;
   constexpr float pi = std::numbers::pi_v<float>;
 
   vertices.reserve(static_cast<size_t>((stacks + 1) * (slices + 1)));
 
-  // Generate vertices
   for (int i = 0; i <= stacks; ++i) {
-    float phi = (static_cast<float>(i) / static_cast<float>(stacks)) * pi * 0.5F;
+    float phi =
+        (static_cast<float>(i) / static_cast<float>(stacks)) * pi * 0.5F;
     float y = std::sin(phi);
     float r = std::cos(phi);
 
     for (int j = 0; j <= slices; ++j) {
-      float theta = (static_cast<float>(j) / static_cast<float>(slices)) * pi * 2.0F;
+      float theta =
+          (static_cast<float>(j) / static_cast<float>(slices)) * pi * 2.0F;
       float x = r * std::cos(theta);
       float z = r * std::sin(theta);
 
@@ -154,7 +153,6 @@ auto HealerAuraPipeline::create_dome_geometry() -> bool {
     }
   }
 
-  // Generate indices
   indices.reserve(static_cast<size_t>(stacks * slices * 6));
   for (int i = 0; i < stacks; ++i) {
     for (int j = 0; j < slices; ++j) {
@@ -171,7 +169,6 @@ auto HealerAuraPipeline::create_dome_geometry() -> bool {
     }
   }
 
-  // Create VAO
   glGenVertexArrays(1, &m_vao);
   if (!check_gl_error("glGenVertexArrays") || m_vao == 0) {
     return false;
@@ -184,7 +181,6 @@ auto HealerAuraPipeline::create_dome_geometry() -> bool {
     return false;
   }
 
-  // Create vertex buffer
   glGenBuffers(1, &m_vertexBuffer);
   glBindBuffer(GL_ARRAY_BUFFER, m_vertexBuffer);
   glBufferData(GL_ARRAY_BUFFER,
@@ -195,7 +191,6 @@ auto HealerAuraPipeline::create_dome_geometry() -> bool {
     return false;
   }
 
-  // Create index buffer
   glGenBuffers(1, &m_indexBuffer);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_indexBuffer);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER,
@@ -208,11 +203,11 @@ auto HealerAuraPipeline::create_dome_geometry() -> bool {
 
   m_indexCount = static_cast<GLsizei>(indices.size());
 
-  // Set up vertex attributes
   glEnableVertexAttribArray(VertexAttrib::Position);
-  glVertexAttribPointer(VertexAttrib::Position, ComponentCount::Vec3, GL_FLOAT,
-                        GL_FALSE, sizeof(AuraVertex),
-                        reinterpret_cast<void *>(offsetof(AuraVertex, position)));
+  glVertexAttribPointer(
+      VertexAttrib::Position, ComponentCount::Vec3, GL_FLOAT, GL_FALSE,
+      sizeof(AuraVertex),
+      reinterpret_cast<void *>(offsetof(AuraVertex, position)));
 
   glEnableVertexAttribArray(VertexAttrib::Normal);
   glVertexAttribPointer(VertexAttrib::Normal, ComponentCount::Vec3, GL_FLOAT,
@@ -220,9 +215,10 @@ auto HealerAuraPipeline::create_dome_geometry() -> bool {
                         reinterpret_cast<void *>(offsetof(AuraVertex, normal)));
 
   glEnableVertexAttribArray(VertexAttrib::TexCoord);
-  glVertexAttribPointer(VertexAttrib::TexCoord, ComponentCount::Vec2, GL_FLOAT,
-                        GL_FALSE, sizeof(AuraVertex),
-                        reinterpret_cast<void *>(offsetof(AuraVertex, tex_coord)));
+  glVertexAttribPointer(
+      VertexAttrib::TexCoord, ComponentCount::Vec2, GL_FLOAT, GL_FALSE,
+      sizeof(AuraVertex),
+      reinterpret_cast<void *>(offsetof(AuraVertex, tex_coord)));
 
   glBindVertexArray(0);
 
@@ -256,7 +252,6 @@ void HealerAuraPipeline::collect_healers(Engine::Core::World *world) {
       continue;
     }
 
-    // Skip dead healers
     if (unit_comp != nullptr && unit_comp->health <= 0) {
       continue;
     }
@@ -266,12 +261,9 @@ void HealerAuraPipeline::collect_healers(Engine::Core::World *world) {
                               transform->position.z);
     data.radius = healer_comp->healing_range;
     data.is_active = healer_comp->is_healing_active;
-    
-    // Intensity based on whether actively healing
-    // Always show aura even when not healing (0.5 base, 1.0 when active)
+
     data.intensity = data.is_active ? 1.0F : 0.5F;
-    
-    // Golden-green healing color
+
     data.color = QVector3D(0.4F, 1.0F, 0.5F);
 
     m_healerData.push_back(data);
@@ -286,19 +278,17 @@ void HealerAuraPipeline::render(const Camera &cam, float animation_time) {
   initializeOpenGLFunctions();
   clear_gl_errors();
 
-  // Save GL state
   GLboolean cullEnabled = glIsEnabled(GL_CULL_FACE);
   GLboolean depthTestEnabled = glIsEnabled(GL_DEPTH_TEST);
   GLboolean blendEnabled = glIsEnabled(GL_BLEND);
   GLboolean depthMaskEnabled = GL_TRUE;
   glGetBooleanv(GL_DEPTH_WRITEMASK, &depthMaskEnabled);
 
-  // Set up state for aura rendering
-  glDisable(GL_CULL_FACE);  // Render both sides
+  glDisable(GL_CULL_FACE);
   glEnable(GL_DEPTH_TEST);
-  glDepthMask(GL_FALSE);    // Don't write to depth
+  glDepthMask(GL_FALSE);
   glEnable(GL_BLEND);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE);  // Additive blending
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 
   m_auraShader->use();
   glBindVertexArray(m_vao);
@@ -309,7 +299,6 @@ void HealerAuraPipeline::render(const Camera &cam, float animation_time) {
 
   glBindVertexArray(0);
 
-  // Restore GL state
   glDepthMask(depthMaskEnabled);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   if (!blendEnabled) {
@@ -327,11 +316,11 @@ void HealerAuraPipeline::render(const Camera &cam, float animation_time) {
 
 void HealerAuraPipeline::render_aura(const HealerAuraData &data,
                                      const Camera &cam, float animation_time) {
-  // Create model matrix that positions the aura at the healer
+
   QMatrix4x4 model;
   model.setToIdentity();
   model.translate(data.position);
-  // Scale by radius (shader expects unit sphere)
+
   model.scale(data.radius);
 
   QMatrix4x4 vp = cam.get_projection_matrix() * cam.get_view_matrix();
@@ -340,7 +329,7 @@ void HealerAuraPipeline::render_aura(const HealerAuraData &data,
   m_auraShader->set_uniform(m_uniforms.mvp, mvp);
   m_auraShader->set_uniform(m_uniforms.model, model);
   m_auraShader->set_uniform(m_uniforms.time, animation_time);
-  // Pass 1.0 since we scale in model matrix now
+
   m_auraShader->set_uniform(m_uniforms.auraRadius, 1.0F);
   m_auraShader->set_uniform(m_uniforms.intensity, data.intensity);
   m_auraShader->set_uniform(m_uniforms.auraColor, data.color);
@@ -360,24 +349,22 @@ void HealerAuraPipeline::render_single_aura(const QVector3D &position,
     return;
   }
 
-  initializeOpenGLFunctions();;
+  initializeOpenGLFunctions();
+  ;
 
-  // Save GL state
   GLboolean cullEnabled = glIsEnabled(GL_CULL_FACE);
   GLboolean depthMaskEnabled = GL_TRUE;
   glGetBooleanv(GL_DEPTH_WRITEMASK, &depthMaskEnabled);
 
-  // Set up state for aura rendering
   glDisable(GL_CULL_FACE);
   glEnable(GL_DEPTH_TEST);
   glDepthMask(GL_FALSE);
   glEnable(GL_BLEND);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE);  // Additive blending
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 
   m_auraShader->use();
   glBindVertexArray(m_vao);
 
-  // Create model matrix
   QMatrix4x4 model;
   model.setToIdentity();
   model.translate(position);
@@ -396,7 +383,6 @@ void HealerAuraPipeline::render_single_aura(const QVector3D &position,
 
   glBindVertexArray(0);
 
-  // Restore GL state
   glDepthMask(depthMaskEnabled);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   if (cullEnabled) {

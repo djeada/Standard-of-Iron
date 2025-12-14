@@ -160,9 +160,8 @@ void Backend::initialize() {
   qInfo() << "Backend: HealingBeamPipeline initialized";
 
   qInfo() << "Backend: Creating HealerAuraPipeline...";
-  m_healerAuraPipeline =
-      std::make_unique<BackendPipelines::HealerAuraPipeline>(
-          this, m_shaderCache.get());
+  m_healerAuraPipeline = std::make_unique<BackendPipelines::HealerAuraPipeline>(
+      this, m_shaderCache.get());
   m_healerAuraPipeline->initialize();
   qInfo() << "Backend: HealerAuraPipeline initialized";
 
@@ -1534,11 +1533,10 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
           !m_healingBeamPipeline->is_initialized()) {
         break;
       }
-      m_healingBeamPipeline->render_single_beam(beam.start_pos, beam.end_pos,
-                                                beam.color, beam.progress,
-                                                beam.beam_width, beam.intensity,
-                                                beam.time, view_proj);
-      m_lastBoundShader = nullptr;  // Pipeline manages its own shader
+      m_healingBeamPipeline->render_single_beam(
+          beam.start_pos, beam.end_pos, beam.color, beam.progress,
+          beam.beam_width, beam.intensity, beam.time, view_proj);
+      m_lastBoundShader = nullptr;
       break;
     }
     case HealerAuraCmdIndex: {
@@ -1550,7 +1548,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       m_healerAuraPipeline->render_single_aura(aura.position, aura.color,
                                                aura.radius, aura.intensity,
                                                aura.time, view_proj);
-      m_lastBoundShader = nullptr;  // Pipeline manages its own shader
+      m_lastBoundShader = nullptr;
       break;
     }
     default:

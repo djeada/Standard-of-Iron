@@ -49,7 +49,6 @@ void main() {
   vec3 beamCenter = bezierArc(visibleT, u_startPos, u_endPos, arcHeight);
   vec3 tangent = bezierTangent(visibleT, u_startPos, u_endPos, arcHeight);
 
-  // Create local coordinate frame with safe handling for vertical tangents
   vec3 up = vec3(0.0, 1.0, 0.0);
   if (abs(dot(tangent, up)) > 0.99) {
     up = vec3(1.0, 0.0, 0.0);
@@ -84,7 +83,6 @@ void main() {
     v_glowIntensity *= 0.0;
   }
 
-  // Normal doesn't need transformation since we're in world space already
   v_normal = a_normal;
   v_texCoord = vec2(t, a_position.x * 0.5 + 0.5);
 
