@@ -5,6 +5,7 @@
 #include "game/map/map_loader.h"
 #include "game/map/minimap/camera_viewport_layer.h"
 #include "game/map/minimap/minimap_generator.h"
+#include "game/map/minimap/minimap_utils.h"
 #include "game/map/minimap/unit_layer.h"
 #include "game/map/visibility_service.h"
 #include "game/systems/selection_system.h"
@@ -254,7 +255,7 @@ void MinimapManager::update_camera_viewport(const Render::GL::Camera *camera,
   // Estimate the visible world area based on camera distance and FOV
   const float distance = camera->get_distance();
   const float fov_rad =
-      static_cast<float>(camera->get_fov() * M_PI / 180.0);
+      camera->get_fov() * Game::Map::Minimap::Constants::k_degrees_to_radians;
   const float aspect = screen_width / std::max(screen_height, 1.0F);
 
   // Calculate approximate viewport dimensions in world space
