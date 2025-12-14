@@ -1312,11 +1312,29 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
     float const vertical_jitter = (fast_random(rng_state) - 0.5F) * 0.03F;
     float const yaw_offset = (fast_random(rng_state) - 0.5F) * 5.0F;
     float const phase_offset = fast_random(rng_state) * 0.25F;
+
+    if (anim.is_attacking && anim.is_melee) {
+      float const combat_jitter_x =
+          (fast_random(rng_state) - 0.5F) * formation.spacing * 0.4F;
+      float const combat_jitter_z =
+          (fast_random(rng_state) - 0.5F) * formation.spacing * 0.3F;
+      float const sway_time = anim.time + phase_offset * 2.0F;
+      float const sway_x = std::sin(sway_time * 1.5F) * 0.05F;
+      float const sway_z = std::cos(sway_time * 1.2F) * 0.04F;
+      offset_x += combat_jitter_x + sway_x;
+      offset_z += combat_jitter_z + sway_z;
+    }
+
     float applied_vertical_jitter = vertical_jitter;
     float applied_yaw_offset = yaw_offset;
 
+    if (anim.is_attacking && anim.is_melee) {
+      float const combat_yaw = (fast_random(rng_state) - 0.5F) * 15.0F;
+      applied_yaw_offset += combat_yaw;
+    }
+
     QMatrix4x4 inst_model;
-    float applied_yaw = yaw_offset;
+    float applied_yaw = applied_yaw_offset;
 
     if (transform_comp != nullptr) {
       applied_yaw = transform_comp->rotation.y + applied_yaw_offset;
@@ -1505,7 +1523,10 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
       anim_ctx.gait.stride_distance = 0.0F;
     }
     if (anim.is_attacking) {
-      anim_ctx.attack_phase = std::fmod(anim.time, 1.0F);
+      float const attack_offset = phase_offset * 1.5F;
+      anim_ctx.attack_phase = std::fmod(anim.time + attack_offset, 1.0F);
+      anim_ctx.inputs.attack_variant =
+          static_cast<std::uint8_t>(inst_seed % 3);
     }
 
     customize_pose(inst_ctx, anim_ctx, inst_seed, pose);

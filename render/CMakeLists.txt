@@ -19,6 +19,7 @@ add_library(render_gl STATIC
     gl/backend/banner_pipeline.cpp
     gl/backend/healing_beam_pipeline.cpp
     gl/backend/healer_aura_pipeline.cpp
+    gl/backend/combat_dust_pipeline.cpp
     gl/shader_cache.cpp
     gl/state_scopes.cpp
     draw_queue.cpp
@@ -69,6 +70,7 @@ add_library(render_gl STATIC
     entity/nations/carthage/healer_style.cpp
     entity/healing_beam_renderer.cpp
     entity/healer_aura_renderer.cpp
+    entity/combat_dust_renderer.cpp
     entity/barracks_renderer.cpp
     entity/nations/roman/barracks_renderer.cpp
     entity/nations/carthage/barracks_renderer.cpp

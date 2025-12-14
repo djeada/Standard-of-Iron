@@ -56,6 +56,12 @@ public:
     // Not used in helmet rendering
   }
 
+  void combat_dust(const QVector3D & /*position*/, const QVector3D & /*color*/,
+                   float /*radius*/, float /*intensity*/,
+                   float /*time*/) override {
+    // Not used in helmet rendering
+  }
+
   int mesh_count = 0;
   int cylinder_count = 0;
 };

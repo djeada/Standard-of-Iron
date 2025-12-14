@@ -18,6 +18,8 @@ class AudioEventHandler {
 public:
   static constexpr float UNIT_SELECTION_VOLUME = 1.0F;
   static constexpr int UNIT_SELECTION_PRIORITY = 5;
+  static constexpr float COMBAT_HIT_VOLUME = 0.6F;
+  static constexpr int COMBAT_HIT_PRIORITY = 3;
 
   AudioEventHandler(Engine::Core::World *world);
   ~AudioEventHandler();
@@ -38,6 +40,7 @@ private:
   onAmbientStateChanged(const Engine::Core::AmbientStateChangedEvent &event);
   static void onAudioTrigger(const Engine::Core::AudioTriggerEvent &event);
   static void onMusicTrigger(const Engine::Core::MusicTriggerEvent &event);
+  static void onCombatHit(const Engine::Core::CombatHitEvent &event);
 
   Engine::Core::World *m_world;
   std::unordered_map<std::string, std::string> m_unitVoiceMap;
@@ -57,6 +60,8 @@ private:
       m_audioTriggerSub;
   Engine::Core::ScopedEventSubscription<Engine::Core::MusicTriggerEvent>
       m_musicTriggerSub;
+  Engine::Core::ScopedEventSubscription<Engine::Core::CombatHitEvent>
+      m_combatHitSub;
 
   bool m_initialized{false};
 };

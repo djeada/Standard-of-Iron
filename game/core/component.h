@@ -164,6 +164,52 @@ public:
   bool should_chase{false};
 };
 
+enum class CombatAnimationState : std::uint8_t {
+  Idle,
+  Advance,
+  WindUp,
+  Strike,
+  Impact,
+  Recover,
+  Reposition
+};
+
+class CombatStateComponent : public Component {
+public:
+  CombatStateComponent() = default;
+
+  CombatAnimationState animation_state{CombatAnimationState::Idle};
+  float state_time{0.0F};
+  float state_duration{0.0F};
+  float attack_offset{0.0F};
+  std::uint8_t attack_variant{0};
+  bool is_hit_paused{false};
+  float hit_pause_remaining{0.0F};
+
+  static constexpr float kHitPauseDuration = 0.05F;
+  static constexpr float kAdvanceDuration = 0.12F;
+  static constexpr float kWindUpDuration = 0.15F;
+  static constexpr float kStrikeDuration = 0.20F;
+  static constexpr float kImpactDuration = 0.08F;
+  static constexpr float kRecoverDuration = 0.25F;
+  static constexpr float kRepositionDuration = 0.15F;
+  static constexpr std::uint8_t kMaxAttackVariants = 3;
+};
+
+class HitFeedbackComponent : public Component {
+public:
+  HitFeedbackComponent() = default;
+
+  bool is_reacting{false};
+  float reaction_time{0.0F};
+  float reaction_intensity{0.0F};
+  float knockback_x{0.0F};
+  float knockback_z{0.0F};
+
+  static constexpr float kReactionDuration = 0.25F;
+  static constexpr float kMaxKnockback = 0.15F;
+};
+
 class PatrolComponent : public Component {
 public:
   PatrolComponent() = default;
@@ -239,6 +285,8 @@ public:
   float healing_cooldown{2.0F};
   float time_since_last_heal{0.0F};
   bool is_healing_active{false};
+  float healing_target_x{0.0F};
+  float healing_target_z{0.0F};
 };
 
 class CatapultLoadingComponent : public Component {
