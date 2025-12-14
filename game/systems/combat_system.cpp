@@ -22,7 +22,15 @@ namespace Game::Systems {
 
 namespace {
 thread_local std::mt19937 gen(std::random_device{}());
+
+auto isUnitInHoldMode(Engine::Core::Entity *entity) -> bool {
+  if (entity == nullptr) {
+    return false;
+  }
+  auto *hold_mode = entity->get_component<Engine::Core::HoldModeComponent>();
+  return (hold_mode != nullptr) && hold_mode->active;
 }
+} // namespace
 
 void CombatSystem::update(Engine::Core::World *world, float delta_time) {
   process_hit_feedback(world, delta_time);
@@ -87,12 +95,7 @@ void CombatSystem::process_attacks(Engine::Core::World *world,
 
             if (dist > max_melee_separation) {
               // Check if attacker is in hold mode - don't pull if so
-              auto *attacker_hold =
-                  attacker->get_component<Engine::Core::HoldModeComponent>();
-              bool const attacker_holding =
-                  (attacker_hold != nullptr) && attacker_hold->active;
-
-              if (!attacker_holding) {
+              if (!isUnitInHoldMode(attacker)) {
                 float const pull_amount =
                     (dist - ideal_melee_distance) * 0.3F * delta_time * 5.0F;
 
@@ -604,24 +607,13 @@ void CombatSystem::process_attacks(Engine::Core::World *world,
             if (dist > 0.001F) {
               QVector3D const direction(dx / dist, 0.0F, dz / dist);
 
-              // Check hold mode for attacker - don't move if holding
-              auto *attacker_hold =
-                  attacker->get_component<Engine::Core::HoldModeComponent>();
-              bool const attacker_holding =
-                  (attacker_hold != nullptr) && attacker_hold->active;
-
-              // Check hold mode for target - don't move if holding
-              auto *target_hold =
-                  best_target->get_component<Engine::Core::HoldModeComponent>();
-              bool const target_holding =
-                  (target_hold != nullptr) && target_hold->active;
-
-              if (!attacker_holding) {
+              // Check hold mode - don't move units that are holding
+              if (!isUnitInHoldMode(attacker)) {
                 att_t->position.x += direction.x() * move_amount;
                 att_t->position.z += direction.z() * move_amount;
               }
 
-              if (!target_holding) {
+              if (!isUnitInHoldMode(best_target)) {
                 tgt_t->position.x -= direction.x() * move_amount;
                 tgt_t->position.z -= direction.z() * move_amount;
               }
