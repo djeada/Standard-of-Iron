@@ -9,7 +9,7 @@ struct MapDefinition;
 namespace Minimap {
 class UnitLayer;
 class CameraViewportLayer;
-}
+} // namespace Minimap
 } // namespace Game::Map
 
 namespace Engine::Core {
@@ -48,7 +48,8 @@ private:
   QImage m_minimap_fog_image;
   std::uint64_t m_minimap_fog_version = 0;
   std::unique_ptr<Game::Map::Minimap::UnitLayer> m_unit_layer;
-  std::unique_ptr<Game::Map::Minimap::CameraViewportLayer> m_camera_viewport_layer;
+  std::unique_ptr<Game::Map::Minimap::CameraViewportLayer>
+      m_camera_viewport_layer;
   float m_world_width = 0.0F;
   float m_world_height = 0.0F;
   float m_tile_size = 1.0F;
