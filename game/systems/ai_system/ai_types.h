@@ -137,6 +137,12 @@ struct AIContext {
   int max_troops_per_player = 500;
 
   std::unordered_map<Engine::Core::EntityID, float> buildings_under_attack;
+
+  // Anti-deadlock tracking
+  int consecutive_no_progress_cycles = 0;
+  float last_meaningful_action_time = 0.0F;
+  int last_total_units = 0;
+  float max_state_duration = 60.0F; // Force state change after 60s
 };
 
 struct AICommand {
