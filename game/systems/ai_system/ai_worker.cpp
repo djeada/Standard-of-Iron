@@ -81,7 +81,8 @@ void AIWorker::workerLoop() {
 
       Game::Systems::AI::AIReasoner::updateContext(job.snapshot,
                                                    result.context);
-      Game::Systems::AI::AIReasoner::updateStateMachine(result.context,
+      Game::Systems::AI::AIReasoner::updateStateMachine(job.snapshot, 
+                                                        result.context,
                                                         job.delta_time);
       Game::Systems::AI::AIReasoner::validateState(result.context);
       Game::Systems::AI::AIExecutor::run(job.snapshot, result.context,
