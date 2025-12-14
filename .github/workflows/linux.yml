@@ -1,0 +1,41 @@
+name: Linux Build
+on:
+  push:
+    tags:
+      - 'v*'   # run only on tags like v1.2.3
+
+permissions:
+  contents: read
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-22.04
+    env:
+      BUILD_TYPE: Release
+      APP_NAME: standard_of_iron
+      APP_DIR: build/bin
+    steps:
+      - uses: actions/checkout@v4
+
+      # Qt (use either apt or install-qt-action; action ensures consistent Qt)
+      - uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.6.3'
+          host: 'linux'
+          arch: 'gcc_64'
+          cache: true
+          modules: 'qt5compat qtmultimedia'
+
+      - name: Install build deps
+        run: sudo apt-get update && sudo apt-get install -y ninja-build patchelf file rsync
+
+      - name: Build
+        run: ./scripts/build-linux.sh ${BUILD_TYPE} en
+
+      - name: Package AppImage
+        run: ./scripts/package-appimage.sh ${APP_NAME} ${APP_DIR} ui/qml
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-${{ env.BUILD_TYPE }}
+          path: ./*.AppImage
