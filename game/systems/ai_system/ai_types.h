@@ -73,6 +73,7 @@ struct EntitySnapshot {
 struct ContactSnapshot {
   Engine::Core::EntityID id = 0;
   bool is_building = false;
+  int owner_id = 0;  // Add owner_id to identify neutral buildings
 
   float posX = 0.0F;
   float posY = 0.0F;
@@ -132,6 +133,7 @@ struct AIContext {
 
   int visible_enemy_count = 0;
   int enemy_buildings_count = 0;
+  int neutral_barracks_count = 0;
   float average_enemy_distance = 0.0F;
 
   int max_troops_per_player = 500;
