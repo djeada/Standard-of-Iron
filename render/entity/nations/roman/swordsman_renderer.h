@@ -10,6 +10,6 @@ struct KnightStyleConfig;
 void register_swordsman_style(const std::string &nation_id,
                               const KnightStyleConfig &style);
 
-void registerKnightRenderer(EntityRendererRegistry &registry);
+void register_knight_renderer(EntityRendererRegistry &registry);
 
 } // namespace Render::GL::Roman

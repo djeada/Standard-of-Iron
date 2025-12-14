@@ -17,30 +17,30 @@ public:
 
   void clear();
 
-  [[nodiscard]] auto getTerrainHeight(float world_x,
-                                      float world_z) const -> float;
+  [[nodiscard]] auto get_terrain_height(float world_x,
+                                        float world_z) const -> float;
 
-  [[nodiscard]] auto getTerrainHeightGrid(int grid_x,
-                                          int grid_z) const -> float;
+  [[nodiscard]] auto get_terrain_height_grid(int grid_x,
+                                             int grid_z) const -> float;
 
-  [[nodiscard]] auto isWalkable(int grid_x, int grid_z) const -> bool;
+  [[nodiscard]] auto is_walkable(int grid_x, int grid_z) const -> bool;
 
-  [[nodiscard]] auto isHillEntrance(int grid_x, int grid_z) const -> bool;
+  [[nodiscard]] auto is_hill_entrance(int grid_x, int grid_z) const -> bool;
 
-  [[nodiscard]] auto isForbidden(int grid_x, int grid_z) const -> bool;
+  [[nodiscard]] auto is_forbidden(int grid_x, int grid_z) const -> bool;
 
-  [[nodiscard]] auto isForbiddenWorld(float world_x,
-                                      float world_z) const -> bool;
+  [[nodiscard]] auto is_forbidden_world(float world_x,
+                                        float world_z) const -> bool;
 
-  [[nodiscard]] auto getTerrainType(int grid_x,
-                                    int grid_z) const -> TerrainType;
+  [[nodiscard]] auto get_terrain_type(int grid_x,
+                                      int grid_z) const -> TerrainType;
 
-  [[nodiscard]] auto getHeightMap() const -> const TerrainHeightMap * {
+  [[nodiscard]] auto get_height_map() const -> const TerrainHeightMap * {
     return m_height_map.get();
   }
 
-  [[nodiscard]] auto biomeSettings() const -> const BiomeSettings & {
-    return m_biomeSettings;
+  [[nodiscard]] auto biome_settings() const -> const BiomeSettings & {
+    return m_biome_settings;
   }
 
   [[nodiscard]] auto fire_camps() const -> const std::vector<FireCamp> & {
@@ -54,17 +54,17 @@ public:
   [[nodiscard]] auto is_point_on_road(float world_x,
                                       float world_z) const -> bool;
 
-  [[nodiscard]] auto isInitialized() const -> bool {
+  [[nodiscard]] auto is_initialized() const -> bool {
     return m_height_map != nullptr;
   }
 
-  void restoreFromSerialized(int width, int height, float tile_size,
-                             const std::vector<float> &heights,
-                             const std::vector<TerrainType> &terrain_types,
-                             const std::vector<RiverSegment> &rivers,
-                             const std::vector<RoadSegment> &roads,
-                             const std::vector<Bridge> &bridges,
-                             const BiomeSettings &biome);
+  void restore_from_serialized(int width, int height, float tile_size,
+                               const std::vector<float> &heights,
+                               const std::vector<TerrainType> &terrain_types,
+                               const std::vector<RiverSegment> &rivers,
+                               const std::vector<RoadSegment> &roads,
+                               const std::vector<Bridge> &bridges,
+                               const BiomeSettings &biome);
 
 private:
   TerrainService() = default;
@@ -74,7 +74,7 @@ private:
   auto operator=(const TerrainService &) -> TerrainService & = delete;
 
   std::unique_ptr<TerrainHeightMap> m_height_map;
-  BiomeSettings m_biomeSettings;
+  BiomeSettings m_biome_settings;
   std::vector<FireCamp> m_fire_camps;
   std::vector<RoadSegment> m_road_segments;
 };

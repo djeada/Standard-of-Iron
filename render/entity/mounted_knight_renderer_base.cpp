@@ -70,7 +70,7 @@ void MountedKnightRendererBase::get_variant(const DrawContext &ctx,
                                             uint32_t seed,
                                             HumanoidVariant &v) const {
   QVector3D const team_tint = resolve_team_tint(ctx);
-  v.palette = makeHumanoidPalette(team_tint, seed);
+  v.palette = make_humanoid_palette(team_tint, seed);
 }
 
 void MountedKnightRendererBase::apply_riding_animation(
@@ -127,7 +127,7 @@ void MountedKnightRendererBase::apply_riding_animation(
     pose_request.rightHandOnReins = !m_config.has_sword;
   }
 
-  mounted_controller.applyPose(mount, pose_request);
+  mounted_controller.apply_pose(mount, pose_request);
 }
 
 void MountedKnightRendererBase::draw_equipment(
@@ -156,7 +156,7 @@ void MountedKnightRendererBase::draw_equipment(
       sword_config.sword_width = sword_width;
 
       if (auto *sword_renderer = dynamic_cast<SwordRenderer *>(sword.get())) {
-        sword_renderer->setConfig(sword_config);
+        sword_renderer->set_config(sword_config);
       }
       sword->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
     }

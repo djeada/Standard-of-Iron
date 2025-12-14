@@ -52,6 +52,9 @@ struct IRenderPass;
 } // namespace Render::GL
 
 namespace Game {
+namespace Map::Minimap {
+class UnitLayer;
+}
 namespace Systems {
 class SelectionSystem;
 class SelectionController;
@@ -63,7 +66,8 @@ class SaveLoadService;
 } // namespace Systems
 namespace Map {
 class MapCatalog;
-}
+struct MapDefinition;
+} // namespace Map
 } // namespace Game
 
 namespace App {
@@ -117,6 +121,8 @@ public:
                  set_selected_player_id NOTIFY selected_player_id_changed)
   Q_PROPERTY(QString last_error READ last_error NOTIFY last_error_changed)
   Q_PROPERTY(QObject *audio_system READ audio_system CONSTANT)
+  Q_PROPERTY(
+      QImage minimap_image READ minimap_image NOTIFY minimap_image_changed)
 
   Q_INVOKABLE void on_map_clicked(qreal sx, qreal sy);
   Q_INVOKABLE void on_right_click(qreal sx, qreal sy);
@@ -167,10 +173,10 @@ public:
 
   Q_INVOKABLE [[nodiscard]] static QVariantMap get_player_stats(int owner_id);
 
-  [[nodiscard]] int selected_player_id() const { return m_selectedPlayerId; }
+  [[nodiscard]] int selected_player_id() const { return m_selected_player_id; }
   void set_selected_player_id(int id) {
-    if (m_selectedPlayerId != id) {
-      m_selectedPlayerId = id;
+    if (m_selected_player_id != id) {
+      m_selected_player_id = id;
       emit selected_player_id_changed();
     }
   }
@@ -208,6 +214,8 @@ public:
   Q_INVOKABLE bool delete_save_slot(const QString &slot_name);
   Q_INVOKABLE void exit_game();
   Q_INVOKABLE [[nodiscard]] QVariantList get_owner_info() const;
+
+  [[nodiscard]] QImage minimap_image() const;
 
   QObject *audio_system();
 
@@ -309,6 +317,14 @@ private:
   std::unique_ptr<Game::Map::MapCatalog> m_mapCatalog;
   std::unique_ptr<Game::Audio::AudioEventHandler> m_audioEventHandler;
   std::unique_ptr<App::Models::AudioSystemProxy> m_audio_systemProxy;
+  QImage m_minimap_image;
+  QImage m_minimap_base_image;
+  std::uint64_t m_minimap_fog_version = 0;
+  std::unique_ptr<Game::Map::Minimap::UnitLayer> m_unit_layer;
+  float m_world_width = 0.0F;
+  float m_world_height = 0.0F;
+  float m_minimap_update_timer = 0.0F;
+  static constexpr float MINIMAP_UPDATE_INTERVAL = 0.1F;
   QQuickWindow *m_window = nullptr;
   RuntimeState m_runtime;
   ViewportState m_viewport;
@@ -316,7 +332,7 @@ private:
   Game::Systems::LevelSnapshot m_level;
   SelectedUnitsModel *m_selectedUnitsModel = nullptr;
   int m_enemyTroopsDefeated = 0;
-  int m_selectedPlayerId = 1;
+  int m_selected_player_id = 1;
   QVariantList m_available_maps;
   QVariantList m_available_campaigns;
   bool m_maps_loading = false;
@@ -334,6 +350,9 @@ private:
   [[nodiscard]] bool is_player_in_combat() const;
   static void load_audio_resources();
   void load_campaigns();
+  void generate_minimap_for_map(const Game::Map::MapDefinition &map_def);
+  void update_minimap_fog(float dt);
+  void update_minimap_units();
 signals:
   void selected_units_changed();
   void selected_units_data_changed();
@@ -348,6 +367,7 @@ signals:
   void selected_player_id_changed();
   void last_error_changed();
   void maps_loading_changed();
+  void minimap_image_changed();
   void save_slots_changed();
   void hold_mode_changed(bool active);
 };

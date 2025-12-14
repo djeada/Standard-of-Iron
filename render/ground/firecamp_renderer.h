@@ -18,7 +18,7 @@ public:
   ~FireCampRenderer() override;
 
   void configure(const Game::Map::TerrainHeightMap &height_map,
-                 const Game::Map::BiomeSettings &biomeSettings);
+                 const Game::Map::BiomeSettings &biome_settings);
 
   void setExplicitFireCamps(const std::vector<QVector3D> &positions,
                             const std::vector<float> &intensities = {},
@@ -29,8 +29,8 @@ public:
   void clear();
 
 private:
-  void generateFireCampInstances();
-  void addExplicitFireCamps();
+  void generate_firecamp_instances();
+  void add_explicit_firecamps();
 
   int m_width = 0;
   int m_height = 0;
@@ -38,7 +38,7 @@ private:
 
   std::vector<float> m_heightData;
   std::vector<Game::Map::TerrainType> m_terrain_types;
-  Game::Map::BiomeSettings m_biomeSettings;
+  Game::Map::BiomeSettings m_biome_settings;
   std::uint32_t m_noiseSeed = 0U;
 
   std::vector<FireCampInstanceGpu> m_fireCampInstances;

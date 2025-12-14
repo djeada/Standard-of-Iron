@@ -27,7 +27,7 @@ public:
               const HumanoidAnimationContext &anim,
               ISubmitter &submitter) override;
 
-  void setConfig(const SpearRenderConfig &config) { m_config = config; }
+  void set_config(const SpearRenderConfig &config) { m_config = config; }
 
 private:
   SpearRenderConfig m_config;

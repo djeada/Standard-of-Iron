@@ -2,6 +2,7 @@
 #include "gl/buffer.h"
 #include "render_constants.h"
 #include <GL/gl.h>
+#include <QDebug>
 #include <QOpenGLFunctions_3_3_Core>
 #include <memory>
 #include <vector>
@@ -17,6 +18,11 @@ Mesh::Mesh(const std::vector<Vertex> &vertices,
 Mesh::~Mesh() = default;
 
 void Mesh::setupBuffers() {
+  if (QOpenGLContext::currentContext() == nullptr) {
+    qWarning() << "Mesh::setupBuffers called without current GL context; "
+                  "skipping VAO/VBO creation";
+    return;
+  }
   initializeOpenGLFunctions();
   m_vao = std::make_unique<VertexArray>();
   m_vbo = std::make_unique<Buffer>(Buffer::Type::Vertex);
@@ -24,28 +30,48 @@ void Mesh::setupBuffers() {
 
   m_vao->bind();
 
-  m_vbo->setData(m_vertices);
+  m_vbo->set_data(m_vertices);
 
-  m_ebo->setData(m_indices);
+  m_ebo->set_data(m_indices);
 
   std::vector<int> const layout = {Vec3, Vec3, Vec2};
   m_vao->add_vertexBuffer(*m_vbo, layout);
-  m_vao->setIndexBuffer(*m_ebo);
+  m_vao->set_index_buffer(*m_ebo);
 
   m_vao->unbind();
+
+  GLenum err = glGetError();
+  if (err != GL_NO_ERROR) {
+    qWarning() << "Mesh::setupBuffers GL error" << err;
+  }
 }
 
 void Mesh::draw() {
   if (!m_vao) {
     setupBuffers();
   }
+  if (QOpenGLContext::currentContext() == nullptr) {
+    qWarning() << "Mesh::draw called without current GL context; skipping draw"
+               << "indices" << m_indices.size();
+    return;
+  }
   m_vao->bind();
 
   initializeOpenGLFunctions();
+  GLenum preErr = glGetError();
+  if (preErr != GL_NO_ERROR) {
+    qWarning() << "Mesh::draw pre-draw GL error" << preErr << "vao"
+               << (m_vao ? m_vao->id() : 0) << "indices" << m_indices.size();
+  }
   glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(m_indices.size()),
                  GL_UNSIGNED_INT, nullptr);
 
   m_vao->unbind();
+
+  GLenum err = glGetError();
+  if (err != GL_NO_ERROR) {
+    qWarning() << "Mesh::draw GL error" << err << "indices" << m_indices.size();
+  }
 }
 
 auto createQuadMesh() -> Mesh * {
