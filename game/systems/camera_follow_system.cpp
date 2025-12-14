@@ -27,7 +27,7 @@ void CameraFollowSystem::update(Engine::Core::World &world,
   if (count > 0) {
     QVector3D const center = sum / float(count);
     camera.setTarget(center);
-    camera.updateFollow(center);
+    camera.update_follow(center);
   }
 }
 
@@ -51,7 +51,7 @@ void CameraFollowSystem::snapToSelection(Engine::Core::World &world,
   if (count > 0) {
     QVector3D const target = sum / float(count);
     camera.setTarget(target);
-    camera.captureFollowOffset();
+    camera.capture_follow_offset();
   }
 }
 

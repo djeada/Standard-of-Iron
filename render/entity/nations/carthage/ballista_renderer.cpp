@@ -18,7 +18,7 @@ namespace {
 
 using Render::Geom::clamp01;
 using Render::Geom::clampVec01;
-using Render::Geom::cylinderBetween;
+using Render::Geom::cylinder_between;
 
 struct CarthageBallistaPalette {
   QVector3D wood_frame{0.50F, 0.35F, 0.20F};
@@ -100,7 +100,7 @@ inline void draw_box(ISubmitter &out, Mesh *unit, Texture *white,
 inline void draw_cyl(ISubmitter &out, const QMatrix4x4 &model,
                      const QVector3D &a, const QVector3D &b, float r,
                      const QVector3D &color, Texture *white) {
-  out.mesh(getUnitCylinder(), model * cylinderBetween(a, b, r), color, white,
+  out.mesh(get_unit_cylinder(), model * cylinder_between(a, b, r), color, white,
            1.0F);
 }
 
@@ -208,12 +208,12 @@ void drawArms(const DrawContext &p, ISubmitter &out, Mesh *unit, Texture *white,
   QMatrix4x4 left_socket = tilted;
   left_socket.translate(QVector3D(-0.43F, 0.31F, -0.08F));
   left_socket.scale(0.022F);
-  out.mesh(getUnitSphere(), left_socket, c.metal_bronze, white, 1.0F);
+  out.mesh(get_unit_sphere(), left_socket, c.metal_bronze, white, 1.0F);
 
   QMatrix4x4 right_socket = tilted;
   right_socket.translate(QVector3D(0.43F, 0.31F, -0.08F));
   right_socket.scale(0.022F);
-  out.mesh(getUnitSphere(), right_socket, c.metal_bronze, white, 1.0F);
+  out.mesh(get_unit_sphere(), right_socket, c.metal_bronze, white, 1.0F);
 }
 
 void drawBowstring(const DrawContext &p, ISubmitter &out, Texture *white,
@@ -270,7 +270,7 @@ void drawSlide(const DrawContext &p, ISubmitter &out, Mesh *unit,
     bolt_matrix.translate(0.0F, 0.25F, -0.19F + slide_offset);
     float const bolt_scale = 0.038F;
     bolt_matrix.scale(bolt_scale, bolt_scale, 0.14F);
-    out.mesh(getUnitCube(), bolt_matrix, c.bolt, white, 1.0F);
+    out.mesh(get_unit_cube(), bolt_matrix, c.bolt, white, 1.0F);
   }
 }
 
@@ -301,17 +301,17 @@ void drawCarthageOrnaments(const DrawContext &p, ISubmitter &out, Mesh *unit,
   QMatrix4x4 front_orb = base;
   front_orb.translate(QVector3D(0.0F, 0.32F, -0.30F));
   front_orb.scale(0.025F);
-  out.mesh(getUnitSphere(), front_orb, c.metal_gold, white, 1.0F);
+  out.mesh(get_unit_sphere(), front_orb, c.metal_gold, white, 1.0F);
 
   QMatrix4x4 left_orb = base;
   left_orb.translate(QVector3D(-0.38F, 0.27F, -0.26F));
   left_orb.scale(0.018F);
-  out.mesh(getUnitSphere(), left_orb, c.metal_bronze, white, 1.0F);
+  out.mesh(get_unit_sphere(), left_orb, c.metal_bronze, white, 1.0F);
 
   QMatrix4x4 right_orb = base;
   right_orb.translate(QVector3D(0.38F, 0.27F, -0.26F));
   right_orb.scale(0.018F);
-  out.mesh(getUnitSphere(), right_orb, c.metal_bronze, white, 1.0F);
+  out.mesh(get_unit_sphere(), right_orb, c.metal_bronze, white, 1.0F);
 
   draw_box(out, unit, white, p.model, QVector3D(-0.38F, 0.22F, 0.0F),
            QVector3D(0.02F, 0.01F, 0.25F), c.purple_accent);
@@ -324,7 +324,7 @@ void drawCarthageOrnaments(const DrawContext &p, ISubmitter &out, Mesh *unit,
 void register_ballista_renderer(EntityRendererRegistry &registry) {
   registry.register_renderer(
       "troops/carthage/ballista", [](const DrawContext &p, ISubmitter &out) {
-        Mesh *unit = getUnitCube();
+        Mesh *unit = get_unit_cube();
         Texture *white = nullptr;
 
         if (p.resources != nullptr) {

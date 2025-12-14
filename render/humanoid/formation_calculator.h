@@ -20,7 +20,7 @@ public:
   calculateOffset(int idx, int row, int col, int rows, int cols, float spacing,
                   uint32_t seed) const -> FormationOffset = 0;
 
-  [[nodiscard]] virtual auto getDescription() const -> const char * = 0;
+  [[nodiscard]] virtual auto get_description() const -> const char * = 0;
 };
 
 class RomanInfantryFormation : public IFormationCalculator {
@@ -29,7 +29,7 @@ public:
   calculateOffset(int idx, int row, int col, int rows, int cols, float spacing,
                   uint32_t seed) const -> FormationOffset override;
 
-  [[nodiscard]] auto getDescription() const -> const char * override {
+  [[nodiscard]] auto get_description() const -> const char * override {
     return "Roman Infantry (Perfect Grid)";
   }
 };
@@ -40,7 +40,7 @@ public:
   calculateOffset(int idx, int row, int col, int rows, int cols, float spacing,
                   uint32_t seed) const -> FormationOffset override;
 
-  [[nodiscard]] auto getDescription() const -> const char * override {
+  [[nodiscard]] auto get_description() const -> const char * override {
     return "Roman Cavalry (Wide Grid)";
   }
 };
@@ -51,7 +51,7 @@ public:
   calculateOffset(int idx, int row, int col, int rows, int cols, float spacing,
                   uint32_t seed) const -> FormationOffset override;
 
-  [[nodiscard]] auto getDescription() const -> const char * override {
+  [[nodiscard]] auto get_description() const -> const char * override {
     return "Carthage Infantry (Irregular)";
   }
 };
@@ -62,7 +62,7 @@ public:
   calculateOffset(int idx, int row, int col, int rows, int cols, float spacing,
                   uint32_t seed) const -> FormationOffset override;
 
-  [[nodiscard]] auto getDescription() const -> const char * override {
+  [[nodiscard]] auto get_description() const -> const char * override {
     return "Carthage Cavalry (Loose/Skirmish)";
   }
 };

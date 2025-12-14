@@ -48,6 +48,8 @@ add_library(game_systems STATIC
     systems/capture_system.cpp
     systems/terrain_alignment_system.cpp
     systems/healing_system.cpp
+    systems/healing_beam.cpp
+    systems/healing_beam_system.cpp
     systems/owner_registry.cpp
     systems/troop_count_registry.cpp
     systems/global_stats_registry.cpp
@@ -69,6 +71,11 @@ add_library(game_systems STATIC
     map/world_bootstrap.cpp
     map/map_catalog.cpp
     map/skirmish_loader.cpp
+    map/minimap/minimap_generator.cpp
+    map/minimap/minimap_texture_manager.cpp
+    map/minimap/fog_of_war_mask.cpp
+    map/minimap/minimap_manager.cpp
+    map/minimap/unit_layer.cpp
     visuals/visual_catalog.cpp
     units/unit.cpp
     units/archer.cpp

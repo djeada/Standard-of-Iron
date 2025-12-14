@@ -27,10 +27,10 @@ void BridgeRenderer::configure(const std::vector<Game::Map::Bridge> &bridges,
                                float tile_size) {
   m_bridges = bridges;
   m_tile_size = tile_size;
-  buildMeshes();
+  build_meshes();
 }
 
-void BridgeRenderer::buildMeshes() {
+void BridgeRenderer::build_meshes() {
   m_meshes.clear();
 
   if (m_bridges.empty()) {
@@ -220,7 +220,7 @@ void BridgeRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   Q_UNUSED(resources);
 
   auto &visibility = Game::Map::VisibilityService::instance();
-  const bool use_visibility = visibility.isInitialized();
+  const bool use_visibility = visibility.is_initialized();
 
   auto *shader = renderer.get_shader("bridge");
   if (shader == nullptr) {

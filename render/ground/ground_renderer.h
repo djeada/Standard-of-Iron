@@ -22,15 +22,15 @@ public:
     m_width = width;
     m_height = height;
     recomputeModel();
-    updateNoiseOffset();
+    update_noise_offset();
 
     invalidateParamsCache();
   }
 
-  void configureExtent(float extent) {
+  void configure_extent(float extent) {
     m_extent = extent;
     recomputeModel();
-    updateNoiseOffset();
+    update_noise_offset();
 
     invalidateParamsCache();
   }
@@ -38,9 +38,9 @@ public:
   void setColor(const QVector3D &c) { m_color = c; }
 
   void setBiome(const Game::Map::BiomeSettings &settings) {
-    m_biomeSettings = settings;
+    m_biome_settings = settings;
     m_hasBiome = true;
-    updateNoiseOffset();
+    update_noise_offset();
 
     invalidateParamsCache();
   }
@@ -49,9 +49,9 @@ public:
 
 private:
   void recomputeModel();
-  void updateNoiseOffset();
-  auto buildParams() const -> Render::GL::TerrainChunkParams;
-  void syncBiomeFromService();
+  void update_noise_offset();
+  auto build_params() const -> Render::GL::TerrainChunkParams;
+  void sync_biome_from_service();
   static auto biomeEquals(const Game::Map::BiomeSettings &a,
                           const Game::Map::BiomeSettings &b) -> bool;
 
@@ -62,7 +62,7 @@ private:
 
   QVector3D m_color{0.15F, 0.18F, 0.15F};
   QMatrix4x4 m_model;
-  Game::Map::BiomeSettings m_biomeSettings;
+  Game::Map::BiomeSettings m_biome_settings;
   bool m_hasBiome = false;
   QVector2D m_noiseOffset{0.0F, 0.0F};
   float m_noiseAngle = 0.0F;

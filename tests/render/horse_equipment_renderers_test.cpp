@@ -49,6 +49,15 @@ public:
                        const QVector3D & /*color*/,
                        float /*baseAlpha*/ = 0.15F) override {}
 
+  void healing_beam(const QVector3D & /*start*/, const QVector3D & /*end*/,
+                    const QVector3D & /*color*/, float /*progress*/,
+                    float /*beam_width*/, float /*intensity*/,
+                    float /*time*/) override {}
+
+  void healer_aura(const QVector3D & /*position*/, const QVector3D & /*color*/,
+                   float /*radius*/, float /*intensity*/,
+                   float /*time*/) override {}
+
   int mesh_count = 0;
   int cylinder_count = 0;
 };

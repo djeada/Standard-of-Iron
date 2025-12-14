@@ -18,6 +18,6 @@ namespace Render::GL {
 
 struct DrawContext;
 
-auto sampleAnimState(const DrawContext &ctx) -> AnimationInputs;
+auto sample_anim_state(const DrawContext &ctx) -> AnimationInputs;
 
 } // namespace Render::GL

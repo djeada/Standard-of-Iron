@@ -13,9 +13,9 @@ public:
 
   virtual void shutdown() = 0;
 
-  virtual void cacheUniforms() = 0;
+  virtual void cache_uniforms() = 0;
 
-  [[nodiscard]] virtual auto isInitialized() const -> bool = 0;
+  [[nodiscard]] virtual auto is_initialized() const -> bool = 0;
 };
 
 } // namespace Render::GL::BackendPipelines

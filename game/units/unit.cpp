@@ -50,7 +50,7 @@ void Unit::ensureCoreComponents() {
   }
 }
 
-void Unit::moveTo(float x, float z) {
+void Unit::move_to(float x, float z) {
   ensureCoreComponents();
   if (m_mv == nullptr) {
     if (auto *e = entity()) {
@@ -94,7 +94,7 @@ auto Unit::position() const -> QVector3D {
   return {};
 }
 
-void Unit::setHoldMode(bool enabled) {
+void Unit::set_hold_mode(bool enabled) {
   auto *e = entity();
   if (e == nullptr) {
     return;
@@ -123,7 +123,7 @@ void Unit::setHoldMode(bool enabled) {
   }
 }
 
-auto Unit::isInHoldMode() const -> bool {
+auto Unit::is_in_hold_mode() const -> bool {
   auto *e = entity();
   if (e == nullptr) {
     return false;

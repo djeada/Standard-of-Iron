@@ -14,50 +14,50 @@ using namespace Render::GL::VertexAttrib;
 using namespace Render::GL::ComponentCount;
 
 PrimitiveBatchPipeline::PrimitiveBatchPipeline(ShaderCache *shaderCache)
-    : m_shaderCache(shaderCache) {}
+    : m_shader_cache(shaderCache) {}
 
 PrimitiveBatchPipeline::~PrimitiveBatchPipeline() { shutdown(); }
 
 auto PrimitiveBatchPipeline::initialize() -> bool {
   initializeOpenGLFunctions();
 
-  if (m_shaderCache == nullptr) {
+  if (m_shader_cache == nullptr) {
     return false;
   }
 
-  m_shader = m_shaderCache->get(QStringLiteral("primitive_instanced"));
+  m_shader = m_shader_cache->get(QStringLiteral("primitive_instanced"));
   if (m_shader == nullptr) {
     return false;
   }
 
-  initializeSphereVao();
-  initializeCylinderVao();
-  initializeConeVao();
-  cacheUniforms();
+  initialize_sphere_vao();
+  initialize_cylinder_vao();
+  initialize_cone_vao();
+  cache_uniforms();
 
   m_initialized = true;
   return true;
 }
 
 void PrimitiveBatchPipeline::shutdown() {
-  shutdownVaos();
+  shutdown_vaos();
   m_initialized = false;
 }
 
-void PrimitiveBatchPipeline::cacheUniforms() {
+void PrimitiveBatchPipeline::cache_uniforms() {
   if (m_shader != nullptr) {
-    m_uniforms.view_proj = m_shader->uniformHandle("u_viewProj");
-    m_uniforms.light_dir = m_shader->uniformHandle("u_lightDir");
-    m_uniforms.ambient_strength = m_shader->uniformHandle("u_ambientStrength");
+    m_uniforms.view_proj = m_shader->uniform_handle("u_viewProj");
+    m_uniforms.light_dir = m_shader->uniform_handle("u_lightDir");
+    m_uniforms.ambient_strength = m_shader->uniform_handle("u_ambientStrength");
   }
 }
 
-void PrimitiveBatchPipeline::beginFrame() {}
+void PrimitiveBatchPipeline::begin_frame() {}
 
-void PrimitiveBatchPipeline::setupInstanceAttributes(GLuint vao,
-                                                     GLuint instanceBuffer) {
+void PrimitiveBatchPipeline::setup_instance_attributes(GLuint vao,
+                                                       GLuint instance_buffer) {
   glBindVertexArray(vao);
-  glBindBuffer(GL_ARRAY_BUFFER, instanceBuffer);
+  glBindBuffer(GL_ARRAY_BUFFER, instance_buffer);
 
   const auto stride = static_cast<GLsizei>(sizeof(GL::PrimitiveInstanceGpu));
 
@@ -88,8 +88,8 @@ void PrimitiveBatchPipeline::setupInstanceAttributes(GLuint vao,
   glBindVertexArray(0);
 }
 
-void PrimitiveBatchPipeline::initializeSphereVao() {
-  Mesh *unit = getUnitSphere();
+void PrimitiveBatchPipeline::initialize_sphere_vao() {
+  Mesh *unit = get_unit_sphere();
   if (unit == nullptr) {
     return;
   }
@@ -100,19 +100,19 @@ void PrimitiveBatchPipeline::initializeSphereVao() {
     return;
   }
 
-  glGenVertexArrays(1, &m_sphereVao);
-  glBindVertexArray(m_sphereVao);
+  glGenVertexArrays(1, &m_sphere_vao);
+  glBindVertexArray(m_sphere_vao);
 
-  glGenBuffers(1, &m_sphereVertexBuffer);
-  glBindBuffer(GL_ARRAY_BUFFER, m_sphereVertexBuffer);
+  glGenBuffers(1, &m_sphere_vertex_buffer);
+  glBindBuffer(GL_ARRAY_BUFFER, m_sphere_vertex_buffer);
   glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex),
                vertices.data(), GL_STATIC_DRAW);
 
-  glGenBuffers(1, &m_sphereIndexBuffer);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_sphereIndexBuffer);
+  glGenBuffers(1, &m_sphere_index_buffer);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_sphere_index_buffer);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int),
                indices.data(), GL_STATIC_DRAW);
-  m_sphereIndexCount = static_cast<GLsizei>(indices.size());
+  m_sphere_index_count = static_cast<GLsizei>(indices.size());
 
   glEnableVertexAttribArray(Position);
   glVertexAttribPointer(Position, Vec3, GL_FLOAT, GL_FALSE, sizeof(Vertex),
@@ -124,19 +124,19 @@ void PrimitiveBatchPipeline::initializeSphereVao() {
   glVertexAttribPointer(TexCoord, Vec2, GL_FLOAT, GL_FALSE, sizeof(Vertex),
                         reinterpret_cast<void *>(offsetof(Vertex, tex_coord)));
 
-  glGenBuffers(1, &m_sphereInstanceBuffer);
-  glBindBuffer(GL_ARRAY_BUFFER, m_sphereInstanceBuffer);
-  m_sphereInstanceCapacity = kDefaultInstanceCapacity;
+  glGenBuffers(1, &m_sphere_instance_buffer);
+  glBindBuffer(GL_ARRAY_BUFFER, m_sphere_instance_buffer);
+  m_sphere_instance_capacity = k_default_instance_capacity;
   glBufferData(GL_ARRAY_BUFFER,
-               m_sphereInstanceCapacity * sizeof(GL::PrimitiveInstanceGpu),
+               m_sphere_instance_capacity * sizeof(GL::PrimitiveInstanceGpu),
                nullptr, GL_DYNAMIC_DRAW);
 
-  setupInstanceAttributes(m_sphereVao, m_sphereInstanceBuffer);
+  setup_instance_attributes(m_sphere_vao, m_sphere_instance_buffer);
   glBindVertexArray(0);
 }
 
-void PrimitiveBatchPipeline::initializeCylinderVao() {
-  Mesh *unit = getUnitCylinder();
+void PrimitiveBatchPipeline::initialize_cylinder_vao() {
+  Mesh *unit = get_unit_cylinder();
   if (unit == nullptr) {
     return;
   }
@@ -147,19 +147,19 @@ void PrimitiveBatchPipeline::initializeCylinderVao() {
     return;
   }
 
-  glGenVertexArrays(1, &m_cylinderVao);
-  glBindVertexArray(m_cylinderVao);
+  glGenVertexArrays(1, &m_cylinder_vao);
+  glBindVertexArray(m_cylinder_vao);
 
-  glGenBuffers(1, &m_cylinderVertexBuffer);
-  glBindBuffer(GL_ARRAY_BUFFER, m_cylinderVertexBuffer);
+  glGenBuffers(1, &m_cylinder_vertex_buffer);
+  glBindBuffer(GL_ARRAY_BUFFER, m_cylinder_vertex_buffer);
   glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex),
                vertices.data(), GL_STATIC_DRAW);
 
-  glGenBuffers(1, &m_cylinderIndexBuffer);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_cylinderIndexBuffer);
+  glGenBuffers(1, &m_cylinder_index_buffer);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_cylinder_index_buffer);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int),
                indices.data(), GL_STATIC_DRAW);
-  m_cylinderIndexCount = static_cast<GLsizei>(indices.size());
+  m_cylinder_index_count = static_cast<GLsizei>(indices.size());
 
   glEnableVertexAttribArray(Position);
   glVertexAttribPointer(Position, Vec3, GL_FLOAT, GL_FALSE, sizeof(Vertex),
@@ -171,19 +171,19 @@ void PrimitiveBatchPipeline::initializeCylinderVao() {
   glVertexAttribPointer(TexCoord, Vec2, GL_FLOAT, GL_FALSE, sizeof(Vertex),
                         reinterpret_cast<void *>(offsetof(Vertex, tex_coord)));
 
-  glGenBuffers(1, &m_cylinderInstanceBuffer);
-  glBindBuffer(GL_ARRAY_BUFFER, m_cylinderInstanceBuffer);
-  m_cylinderInstanceCapacity = kDefaultInstanceCapacity;
+  glGenBuffers(1, &m_cylinder_instance_buffer);
+  glBindBuffer(GL_ARRAY_BUFFER, m_cylinder_instance_buffer);
+  m_cylinder_instance_capacity = k_default_instance_capacity;
   glBufferData(GL_ARRAY_BUFFER,
-               m_cylinderInstanceCapacity * sizeof(GL::PrimitiveInstanceGpu),
+               m_cylinder_instance_capacity * sizeof(GL::PrimitiveInstanceGpu),
                nullptr, GL_DYNAMIC_DRAW);
 
-  setupInstanceAttributes(m_cylinderVao, m_cylinderInstanceBuffer);
+  setup_instance_attributes(m_cylinder_vao, m_cylinder_instance_buffer);
   glBindVertexArray(0);
 }
 
-void PrimitiveBatchPipeline::initializeConeVao() {
-  Mesh *unit = getUnitCone();
+void PrimitiveBatchPipeline::initialize_cone_vao() {
+  Mesh *unit = get_unit_cone();
   if (unit == nullptr) {
     return;
   }
@@ -194,19 +194,19 @@ void PrimitiveBatchPipeline::initializeConeVao() {
     return;
   }
 
-  glGenVertexArrays(1, &m_coneVao);
-  glBindVertexArray(m_coneVao);
+  glGenVertexArrays(1, &m_cone_vao);
+  glBindVertexArray(m_cone_vao);
 
-  glGenBuffers(1, &m_coneVertexBuffer);
-  glBindBuffer(GL_ARRAY_BUFFER, m_coneVertexBuffer);
+  glGenBuffers(1, &m_cone_vertex_buffer);
+  glBindBuffer(GL_ARRAY_BUFFER, m_cone_vertex_buffer);
   glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex),
                vertices.data(), GL_STATIC_DRAW);
 
-  glGenBuffers(1, &m_coneIndexBuffer);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_coneIndexBuffer);
+  glGenBuffers(1, &m_cone_index_buffer);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_cone_index_buffer);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int),
                indices.data(), GL_STATIC_DRAW);
-  m_coneIndexCount = static_cast<GLsizei>(indices.size());
+  m_cone_index_count = static_cast<GLsizei>(indices.size());
 
   glEnableVertexAttribArray(Position);
   glVertexAttribPointer(Position, Vec3, GL_FLOAT, GL_FALSE, sizeof(Vertex),
@@ -218,82 +218,83 @@ void PrimitiveBatchPipeline::initializeConeVao() {
   glVertexAttribPointer(TexCoord, Vec2, GL_FLOAT, GL_FALSE, sizeof(Vertex),
                         reinterpret_cast<void *>(offsetof(Vertex, tex_coord)));
 
-  glGenBuffers(1, &m_coneInstanceBuffer);
-  glBindBuffer(GL_ARRAY_BUFFER, m_coneInstanceBuffer);
-  m_coneInstanceCapacity = kDefaultInstanceCapacity;
+  glGenBuffers(1, &m_cone_instance_buffer);
+  glBindBuffer(GL_ARRAY_BUFFER, m_cone_instance_buffer);
+  m_cone_instance_capacity = k_default_instance_capacity;
   glBufferData(GL_ARRAY_BUFFER,
-               m_coneInstanceCapacity * sizeof(GL::PrimitiveInstanceGpu),
+               m_cone_instance_capacity * sizeof(GL::PrimitiveInstanceGpu),
                nullptr, GL_DYNAMIC_DRAW);
 
-  setupInstanceAttributes(m_coneVao, m_coneInstanceBuffer);
+  setup_instance_attributes(m_cone_vao, m_cone_instance_buffer);
   glBindVertexArray(0);
 }
 
-void PrimitiveBatchPipeline::shutdownVaos() {
-  if (m_sphereVao != 0) {
-    glDeleteVertexArrays(1, &m_sphereVao);
-    m_sphereVao = 0;
+void PrimitiveBatchPipeline::shutdown_vaos() {
+  if (m_sphere_vao != 0) {
+    glDeleteVertexArrays(1, &m_sphere_vao);
+    m_sphere_vao = 0;
   }
-  if (m_sphereVertexBuffer != 0) {
-    glDeleteBuffers(1, &m_sphereVertexBuffer);
-    m_sphereVertexBuffer = 0;
+  if (m_sphere_vertex_buffer != 0) {
+    glDeleteBuffers(1, &m_sphere_vertex_buffer);
+    m_sphere_vertex_buffer = 0;
   }
-  if (m_sphereIndexBuffer != 0) {
-    glDeleteBuffers(1, &m_sphereIndexBuffer);
-    m_sphereIndexBuffer = 0;
+  if (m_sphere_index_buffer != 0) {
+    glDeleteBuffers(1, &m_sphere_index_buffer);
+    m_sphere_index_buffer = 0;
   }
-  if (m_sphereInstanceBuffer != 0) {
-    glDeleteBuffers(1, &m_sphereInstanceBuffer);
-    m_sphereInstanceBuffer = 0;
-  }
-
-  if (m_cylinderVao != 0) {
-    glDeleteVertexArrays(1, &m_cylinderVao);
-    m_cylinderVao = 0;
-  }
-  if (m_cylinderVertexBuffer != 0) {
-    glDeleteBuffers(1, &m_cylinderVertexBuffer);
-    m_cylinderVertexBuffer = 0;
-  }
-  if (m_cylinderIndexBuffer != 0) {
-    glDeleteBuffers(1, &m_cylinderIndexBuffer);
-    m_cylinderIndexBuffer = 0;
-  }
-  if (m_cylinderInstanceBuffer != 0) {
-    glDeleteBuffers(1, &m_cylinderInstanceBuffer);
-    m_cylinderInstanceBuffer = 0;
+  if (m_sphere_instance_buffer != 0) {
+    glDeleteBuffers(1, &m_sphere_instance_buffer);
+    m_sphere_instance_buffer = 0;
   }
 
-  if (m_coneVao != 0) {
-    glDeleteVertexArrays(1, &m_coneVao);
-    m_coneVao = 0;
+  if (m_cylinder_vao != 0) {
+    glDeleteVertexArrays(1, &m_cylinder_vao);
+    m_cylinder_vao = 0;
   }
-  if (m_coneVertexBuffer != 0) {
-    glDeleteBuffers(1, &m_coneVertexBuffer);
-    m_coneVertexBuffer = 0;
+  if (m_cylinder_vertex_buffer != 0) {
+    glDeleteBuffers(1, &m_cylinder_vertex_buffer);
+    m_cylinder_vertex_buffer = 0;
   }
-  if (m_coneIndexBuffer != 0) {
-    glDeleteBuffers(1, &m_coneIndexBuffer);
-    m_coneIndexBuffer = 0;
+  if (m_cylinder_index_buffer != 0) {
+    glDeleteBuffers(1, &m_cylinder_index_buffer);
+    m_cylinder_index_buffer = 0;
   }
-  if (m_coneInstanceBuffer != 0) {
-    glDeleteBuffers(1, &m_coneInstanceBuffer);
-    m_coneInstanceBuffer = 0;
+  if (m_cylinder_instance_buffer != 0) {
+    glDeleteBuffers(1, &m_cylinder_instance_buffer);
+    m_cylinder_instance_buffer = 0;
+  }
+
+  if (m_cone_vao != 0) {
+    glDeleteVertexArrays(1, &m_cone_vao);
+    m_cone_vao = 0;
+  }
+  if (m_cone_vertex_buffer != 0) {
+    glDeleteBuffers(1, &m_cone_vertex_buffer);
+    m_cone_vertex_buffer = 0;
+  }
+  if (m_cone_index_buffer != 0) {
+    glDeleteBuffers(1, &m_cone_index_buffer);
+    m_cone_index_buffer = 0;
+  }
+  if (m_cone_instance_buffer != 0) {
+    glDeleteBuffers(1, &m_cone_instance_buffer);
+    m_cone_instance_buffer = 0;
   }
 }
 
-void PrimitiveBatchPipeline::uploadSphereInstances(
+void PrimitiveBatchPipeline::upload_sphere_instances(
     const GL::PrimitiveInstanceGpu *data, std::size_t count) {
   if (count == 0 || data == nullptr) {
     return;
   }
 
-  glBindBuffer(GL_ARRAY_BUFFER, m_sphereInstanceBuffer);
+  glBindBuffer(GL_ARRAY_BUFFER, m_sphere_instance_buffer);
 
-  if (count > m_sphereInstanceCapacity) {
-    m_sphereInstanceCapacity = static_cast<std::size_t>(count * kGrowthFactor);
+  if (count > m_sphere_instance_capacity) {
+    m_sphere_instance_capacity =
+        static_cast<std::size_t>(count * k_growth_factor);
     glBufferData(GL_ARRAY_BUFFER,
-                 m_sphereInstanceCapacity * sizeof(GL::PrimitiveInstanceGpu),
+                 m_sphere_instance_capacity * sizeof(GL::PrimitiveInstanceGpu),
                  nullptr, GL_DYNAMIC_DRAW);
   }
 
@@ -301,19 +302,20 @@ void PrimitiveBatchPipeline::uploadSphereInstances(
                   data);
 }
 
-void PrimitiveBatchPipeline::uploadCylinderInstances(
+void PrimitiveBatchPipeline::upload_cylinder_instances(
     const GL::PrimitiveInstanceGpu *data, std::size_t count) {
   if (count == 0 || data == nullptr) {
     return;
   }
 
-  glBindBuffer(GL_ARRAY_BUFFER, m_cylinderInstanceBuffer);
+  glBindBuffer(GL_ARRAY_BUFFER, m_cylinder_instance_buffer);
 
-  if (count > m_cylinderInstanceCapacity) {
-    m_cylinderInstanceCapacity =
-        static_cast<std::size_t>(count * kGrowthFactor);
+  if (count > m_cylinder_instance_capacity) {
+    m_cylinder_instance_capacity =
+        static_cast<std::size_t>(count * k_growth_factor);
     glBufferData(GL_ARRAY_BUFFER,
-                 m_cylinderInstanceCapacity * sizeof(GL::PrimitiveInstanceGpu),
+                 m_cylinder_instance_capacity *
+                     sizeof(GL::PrimitiveInstanceGpu),
                  nullptr, GL_DYNAMIC_DRAW);
   }
 
@@ -321,18 +323,19 @@ void PrimitiveBatchPipeline::uploadCylinderInstances(
                   data);
 }
 
-void PrimitiveBatchPipeline::uploadConeInstances(
+void PrimitiveBatchPipeline::upload_cone_instances(
     const GL::PrimitiveInstanceGpu *data, std::size_t count) {
   if (count == 0 || data == nullptr) {
     return;
   }
 
-  glBindBuffer(GL_ARRAY_BUFFER, m_coneInstanceBuffer);
+  glBindBuffer(GL_ARRAY_BUFFER, m_cone_instance_buffer);
 
-  if (count > m_coneInstanceCapacity) {
-    m_coneInstanceCapacity = static_cast<std::size_t>(count * kGrowthFactor);
+  if (count > m_cone_instance_capacity) {
+    m_cone_instance_capacity =
+        static_cast<std::size_t>(count * k_growth_factor);
     glBufferData(GL_ARRAY_BUFFER,
-                 m_coneInstanceCapacity * sizeof(GL::PrimitiveInstanceGpu),
+                 m_cone_instance_capacity * sizeof(GL::PrimitiveInstanceGpu),
                  nullptr, GL_DYNAMIC_DRAW);
   }
 
@@ -340,53 +343,53 @@ void PrimitiveBatchPipeline::uploadConeInstances(
                   data);
 }
 
-void PrimitiveBatchPipeline::drawSpheres(std::size_t count,
-                                         const QMatrix4x4 &viewProj) {
-  if (count == 0 || m_sphereVao == 0 || m_shader == nullptr) {
+void PrimitiveBatchPipeline::draw_spheres(std::size_t count,
+                                          const QMatrix4x4 &view_proj) {
+  if (count == 0 || m_sphere_vao == 0 || m_shader == nullptr) {
     return;
   }
 
   m_shader->use();
-  m_shader->setUniform(m_uniforms.view_proj, viewProj);
-  m_shader->setUniform(m_uniforms.light_dir, QVector3D(0.35F, 0.8F, 0.45F));
-  m_shader->setUniform(m_uniforms.ambient_strength, 0.3F);
+  m_shader->set_uniform(m_uniforms.view_proj, view_proj);
+  m_shader->set_uniform(m_uniforms.light_dir, QVector3D(0.35F, 0.8F, 0.45F));
+  m_shader->set_uniform(m_uniforms.ambient_strength, 0.3F);
 
-  glBindVertexArray(m_sphereVao);
-  glDrawElementsInstanced(GL_TRIANGLES, m_sphereIndexCount, GL_UNSIGNED_INT,
+  glBindVertexArray(m_sphere_vao);
+  glDrawElementsInstanced(GL_TRIANGLES, m_sphere_index_count, GL_UNSIGNED_INT,
                           nullptr, static_cast<GLsizei>(count));
   glBindVertexArray(0);
 }
 
-void PrimitiveBatchPipeline::drawCylinders(std::size_t count,
-                                           const QMatrix4x4 &viewProj) {
-  if (count == 0 || m_cylinderVao == 0 || m_shader == nullptr) {
+void PrimitiveBatchPipeline::draw_cylinders(std::size_t count,
+                                            const QMatrix4x4 &view_proj) {
+  if (count == 0 || m_cylinder_vao == 0 || m_shader == nullptr) {
     return;
   }
 
   m_shader->use();
-  m_shader->setUniform(m_uniforms.view_proj, viewProj);
-  m_shader->setUniform(m_uniforms.light_dir, QVector3D(0.35F, 0.8F, 0.45F));
-  m_shader->setUniform(m_uniforms.ambient_strength, 0.3F);
+  m_shader->set_uniform(m_uniforms.view_proj, view_proj);
+  m_shader->set_uniform(m_uniforms.light_dir, QVector3D(0.35F, 0.8F, 0.45F));
+  m_shader->set_uniform(m_uniforms.ambient_strength, 0.3F);
 
-  glBindVertexArray(m_cylinderVao);
-  glDrawElementsInstanced(GL_TRIANGLES, m_cylinderIndexCount, GL_UNSIGNED_INT,
+  glBindVertexArray(m_cylinder_vao);
+  glDrawElementsInstanced(GL_TRIANGLES, m_cylinder_index_count, GL_UNSIGNED_INT,
                           nullptr, static_cast<GLsizei>(count));
   glBindVertexArray(0);
 }
 
-void PrimitiveBatchPipeline::drawCones(std::size_t count,
-                                       const QMatrix4x4 &viewProj) {
-  if (count == 0 || m_coneVao == 0 || m_shader == nullptr) {
+void PrimitiveBatchPipeline::draw_cones(std::size_t count,
+                                        const QMatrix4x4 &view_proj) {
+  if (count == 0 || m_cone_vao == 0 || m_shader == nullptr) {
     return;
   }
 
   m_shader->use();
-  m_shader->setUniform(m_uniforms.view_proj, viewProj);
-  m_shader->setUniform(m_uniforms.light_dir, QVector3D(0.35F, 0.8F, 0.45F));
-  m_shader->setUniform(m_uniforms.ambient_strength, 0.3F);
+  m_shader->set_uniform(m_uniforms.view_proj, view_proj);
+  m_shader->set_uniform(m_uniforms.light_dir, QVector3D(0.35F, 0.8F, 0.45F));
+  m_shader->set_uniform(m_uniforms.ambient_strength, 0.3F);
 
-  glBindVertexArray(m_coneVao);
-  glDrawElementsInstanced(GL_TRIANGLES, m_coneIndexCount, GL_UNSIGNED_INT,
+  glBindVertexArray(m_cone_vao);
+  glDrawElementsInstanced(GL_TRIANGLES, m_cone_index_count, GL_UNSIGNED_INT,
                           nullptr, static_cast<GLsizei>(count));
   glBindVertexArray(0);
 }
