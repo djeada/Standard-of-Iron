@@ -94,7 +94,7 @@ void CombatSystem::process_attacks(Engine::Core::World *world,
             const float max_melee_separation = 0.9F;
 
             if (dist > max_melee_separation) {
-              // Check if attacker is in hold mode - don't pull if so
+
               if (!isUnitInHoldMode(attacker)) {
                 float const pull_amount =
                     (dist - ideal_melee_distance) * 0.3F * delta_time * 5.0F;
@@ -158,7 +158,7 @@ void CombatSystem::process_attacks(Engine::Core::World *world,
 
           damage = static_cast<int>(damage * 2.0F);
         } else {
-          // All other units in hold mode get a significant attack bonus
+
           damage = static_cast<int>(damage * 1.75F);
         }
       }
@@ -607,7 +607,6 @@ void CombatSystem::process_attacks(Engine::Core::World *world,
             if (dist > 0.001F) {
               QVector3D const direction(dx / dist, 0.0F, dz / dist);
 
-              // Check hold mode - don't move units that are holding
               if (!isUnitInHoldMode(attacker)) {
                 att_t->position.x += direction.x() * move_amount;
                 att_t->position.z += direction.z() * move_amount;
