@@ -336,6 +336,19 @@ void Renderer::healer_aura(const QVector3D &position, const QVector3D &color,
   }
 }
 
+void Renderer::combat_dust(const QVector3D &position, const QVector3D &color,
+                           float radius, float intensity, float time) {
+  CombatDustCmd cmd;
+  cmd.position = position;
+  cmd.color = color;
+  cmd.radius = radius;
+  cmd.intensity = intensity;
+  cmd.time = time;
+  if (m_active_queue != nullptr) {
+    m_active_queue->submit(cmd);
+  }
+}
+
 void Renderer::enqueue_selection_ring(
     Engine::Core::Entity *, Engine::Core::TransformComponent *transform,
     Engine::Core::UnitComponent *unit_comp, bool selected, bool hovered) {
