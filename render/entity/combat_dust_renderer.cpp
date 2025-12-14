@@ -6,6 +6,16 @@
 
 namespace Render::GL {
 
+namespace {
+constexpr float kDustRadius = 2.0F;
+constexpr float kDustIntensity = 0.6F;
+constexpr float kDustYOffset = 0.05F;
+constexpr float kDustColorR = 0.6F;
+constexpr float kDustColorG = 0.55F;
+constexpr float kDustColorB = 0.45F;
+constexpr float kVisibilityCheckRadius = 3.0F;
+} // namespace
+
 void render_combat_dust(Renderer *renderer, ResourceManager *,
                         Engine::Core::World *world) {
   if (renderer == nullptr || world == nullptr) {
@@ -41,18 +51,17 @@ void render_combat_dust(Renderer *renderer, ResourceManager *,
 
     // Skip units not visible to the camera
     if (!visibility.is_entity_visible(transform->position.x,
-                                       transform->position.z, 3.0F)) {
+                                       transform->position.z,
+                                       kVisibilityCheckRadius)) {
       continue;
     }
 
-    QVector3D position(transform->position.x, 0.05F, transform->position.z);
-    float radius = 2.0F;
-    float intensity = 0.6F;
+    QVector3D position(transform->position.x, kDustYOffset,
+                       transform->position.z);
+    QVector3D color(kDustColorR, kDustColorG, kDustColorB);
 
-    // Dusty brown color
-    QVector3D color(0.6F, 0.55F, 0.45F);
-
-    renderer->combat_dust(position, color, radius, intensity, animation_time);
+    renderer->combat_dust(position, color, kDustRadius, kDustIntensity,
+                          animation_time);
   }
 }
 
