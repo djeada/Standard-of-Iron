@@ -180,15 +180,21 @@ void AIReasoner::updateContext(const AISnapshot &snapshot, AIContext &ctx) {
     ctx.consecutive_no_progress_cycles++;
   }
   
+  // Initialize last_meaningful_action_time if not set
+  if (ctx.last_meaningful_action_time == 0.0F) {
+    ctx.last_meaningful_action_time = snapshot.game_time;
+  }
+  
   ctx.last_total_units = ctx.total_units;
 }
 
-void AIReasoner::updateStateMachine(AIContext &ctx, float delta_time) {
+void AIReasoner::updateStateMachine(const AISnapshot &snapshot, AIContext &ctx, 
+                                    float delta_time) {
   ctx.state_timer += delta_time;
   ctx.decision_timer += delta_time;
 
   constexpr float min_state_duration = 3.0F;
-  constexpr int max_no_progress_cycles = 10; // ~3 seconds of no progress
+  constexpr float max_no_progress_duration = 3.0F; // Time-based threshold
 
   // Detect deadlock conditions
   bool deadlock_detected = false;
@@ -198,9 +204,9 @@ void AIReasoner::updateStateMachine(AIContext &ctx, float delta_time) {
     deadlock_detected = true;
   }
   
-  // Detect if AI is stuck with idle units not making progress
-  if (ctx.consecutive_no_progress_cycles >= max_no_progress_cycles && 
-      ctx.idle_units > 0) {
+  // Detect if AI is stuck with idle units not making progress (time-based)
+  float time_since_progress = snapshot.game_time - ctx.last_meaningful_action_time;
+  if (time_since_progress >= max_no_progress_duration && ctx.idle_units > 0) {
     deadlock_detected = true;
   }
 
@@ -302,7 +308,8 @@ void AIReasoner::updateStateMachine(AIContext &ctx, float delta_time) {
       // No enemies visible for a while, regroup
       ctx.state = AIState::Idle;
     } else if (ctx.average_health < 0.50F && ctx.damaged_units_count * 2 > ctx.total_units) {
-      // More than half damaged (integer-safe comparison), consider retreating to defend
+      // More than half of units are damaged (using multiply to avoid integer division)
+      // Consider retreating to defend
       if (!ctx.barracks_under_threat) {
         ctx.state = AIState::Defending;
       }
@@ -358,6 +365,12 @@ void AIReasoner::updateStateMachine(AIContext &ctx, float delta_time) {
 void AIReasoner::validateState(AIContext &ctx) {
   // Ensure state is valid and consistent with reality
   
+  // Named constants for validation thresholds
+  constexpr size_t MAX_ASSIGNMENT_MULTIPLIER = 2;
+  constexpr int MAX_NO_PROGRESS_CYCLES = 50;
+  constexpr float MAX_STATE_TIMER = 1000.0F;
+  constexpr float MAX_DECISION_TIMER = 100.0F;
+  
   // If no units, can only be Idle
   if (ctx.total_units == 0 && ctx.state != AIState::Idle) {
     ctx.state = AIState::Idle;
@@ -374,21 +387,22 @@ void AIReasoner::validateState(AIContext &ctx) {
   }
   
   // Sanitize timers to prevent overflow
-  if (ctx.state_timer > 1000.0F) {
+  if (ctx.state_timer > MAX_STATE_TIMER) {
     ctx.state_timer = ctx.max_state_duration;
   }
-  if (ctx.decision_timer > 100.0F) {
+  if (ctx.decision_timer > MAX_DECISION_TIMER) {
     ctx.decision_timer = 0.0F;
   }
   
   // Clear stuck assignments for dead units
-  if (ctx.assigned_units.size() > static_cast<size_t>(ctx.total_units * 2)) {
+  size_t max_expected_assignments = static_cast<size_t>(ctx.total_units) * MAX_ASSIGNMENT_MULTIPLIER;
+  if (ctx.assigned_units.size() > max_expected_assignments) {
     // Too many assignments, likely has dead units
     ctx.assigned_units.clear();
   }
   
   // Reset consecutive no-progress if it gets too high
-  if (ctx.consecutive_no_progress_cycles > 50) {
+  if (ctx.consecutive_no_progress_cycles > MAX_NO_PROGRESS_CYCLES) {
     ctx.consecutive_no_progress_cycles = 0;
     ctx.state = AIState::Idle;
     ctx.assigned_units.clear();
