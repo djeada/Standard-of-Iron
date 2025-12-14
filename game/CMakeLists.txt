@@ -14,6 +14,13 @@ target_link_libraries(engine_core PUBLIC Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERS
 add_library(game_systems STATIC
     systems/movement_system.cpp
     systems/combat_system.cpp
+    systems/combat_system/combat_utils.cpp
+    systems/combat_system/damage_processor.cpp
+    systems/combat_system/combat_mode_processor.cpp
+    systems/combat_system/auto_engagement.cpp
+    systems/combat_system/hit_feedback_processor.cpp
+    systems/combat_system/combat_state_processor.cpp
+    systems/combat_system/attack_processor.cpp
     systems/cleanup_system.cpp
     systems/ai_system.cpp
     systems/ai_system/ai_command_applier.cpp
