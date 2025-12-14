@@ -2,6 +2,7 @@
 #include "../core/world.h"
 #include "ai_system/behaviors/attack_behavior.h"
 #include "ai_system/behaviors/defend_behavior.h"
+#include "ai_system/behaviors/expand_behavior.h"
 #include "ai_system/behaviors/gather_behavior.h"
 #include "ai_system/behaviors/production_behavior.h"
 #include "ai_system/behaviors/retreat_behavior.h"
@@ -26,6 +27,8 @@ AISystem::AISystem() {
 
   m_behaviorRegistry.registerBehavior(
       std::make_unique<AI::ProductionBehavior>());
+
+  m_behaviorRegistry.registerBehavior(std::make_unique<AI::ExpandBehavior>());
 
   m_behaviorRegistry.registerBehavior(std::make_unique<AI::AttackBehavior>());
 
@@ -83,7 +86,8 @@ void AISystem::update(Engine::Core::World *world, float delta_time) {
 
     ai.update_timer += delta_time;
 
-    if (ai.update_timer < 0.3F) {
+    // Use configurable update interval for scalability
+    if (ai.update_timer < m_update_interval) {
       continue;
     }
 
@@ -133,9 +137,9 @@ void AISystem::on_building_attacked(
     const Engine::Core::BuildingAttackedEvent &event) {
   for (auto &ai : m_aiInstances) {
     if (ai.context.player_id == event.owner_id) {
-      ai.context.buildingsUnderAttack[event.buildingId] = m_total_game_time;
+      ai.context.buildings_under_attack[event.buildingId] = m_total_game_time;
 
-      if (event.buildingId == ai.context.primaryBarracks) {
+      if (event.buildingId == ai.context.primary_barracks) {
         ai.context.barracks_under_threat = true;
       }
       break;

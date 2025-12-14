@@ -23,21 +23,21 @@ void GatherBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   }
   m_gatherTimer = 0.0F;
 
-  if (context.primaryBarracks == 0) {
+  if (context.primary_barracks == 0) {
     return;
   }
 
   QVector3D const rally_point(context.rally_x, 0.0F, context.rally_z);
 
   std::vector<const EntitySnapshot *> units_to_gather;
-  units_to_gather.reserve(snapshot.friendlies.size());
+  units_to_gather.reserve(snapshot.friendly_units.size());
 
-  for (const auto &entity : snapshot.friendlies) {
+  for (const auto &entity : snapshot.friendly_units) {
     if (entity.is_building) {
       continue;
     }
 
-    if (isEntityEngaged(entity, snapshot.visibleEnemies)) {
+    if (isEntityEngaged(entity, snapshot.visible_enemies)) {
       continue;
     }
 
@@ -110,16 +110,16 @@ void GatherBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   AICommand command;
   command.type = AICommandType::MoveUnits;
   command.units = std::move(claimed_units);
-  command.moveTargetX = std::move(filtered_x);
-  command.moveTargetY = std::move(filtered_y);
-  command.moveTargetZ = std::move(filtered_z);
+  command.move_target_x = std::move(filtered_x);
+  command.move_target_y = std::move(filtered_y);
+  command.move_target_z = std::move(filtered_z);
 
   outCommands.push_back(std::move(command));
 }
 
 auto GatherBehavior::should_execute(const AISnapshot &snapshot,
                                     const AIContext &context) const -> bool {
-  if (context.primaryBarracks == 0) {
+  if (context.primary_barracks == 0) {
     return false;
   }
 
@@ -134,7 +134,7 @@ auto GatherBehavior::should_execute(const AISnapshot &snapshot,
   if (context.state == AIState::Defending) {
 
     QVector3D const rally_point(context.rally_x, 0.0F, context.rally_z);
-    for (const auto &entity : snapshot.friendlies) {
+    for (const auto &entity : snapshot.friendly_units) {
       if (entity.is_building) {
         continue;
       }
