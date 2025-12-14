@@ -125,12 +125,21 @@ if(QT_VERSION_MAJOR EQUAL 6)
         main.cpp
         app/core/game_engine.cpp
         app/core/language_manager.cpp
+        app/core/minimap_manager.cpp
+        app/core/ambient_state_manager.cpp
+        app/core/audio_resource_loader.cpp
+        app/core/renderer_bootstrap.cpp
+        app/core/level_orchestrator.cpp
+        app/core/input_command_handler.cpp
+        app/core/camera_controller.cpp
+        app/core/game_state_restorer.cpp
         app/models/audio_system_proxy.cpp
         app/models/graphics_settings_proxy.cpp
         app/models/cursor_manager.cpp
         app/models/hover_tracker.cpp
         app/models/selected_units_model.cpp
         app/models/minimap_image_provider.cpp
+        app/models/map_preview_image_provider.cpp
         app/controllers/command_controller.cpp
         app/controllers/action_vfx.cpp
         app/utils/json_vec_utils.cpp
@@ -142,12 +151,21 @@ else()
         main.cpp
         app/core/game_engine.cpp
         app/core/language_manager.cpp
+        app/core/minimap_manager.cpp
+        app/core/ambient_state_manager.cpp
+        app/core/audio_resource_loader.cpp
+        app/core/renderer_bootstrap.cpp
+        app/core/level_orchestrator.cpp
+        app/core/input_command_handler.cpp
+        app/core/camera_controller.cpp
+        app/core/game_state_restorer.cpp
         app/models/audio_system_proxy.cpp
         app/models/graphics_settings_proxy.cpp
         app/models/cursor_manager.cpp
         app/models/hover_tracker.cpp
         app/models/selected_units_model.cpp
         app/models/minimap_image_provider.cpp
+        app/models/map_preview_image_provider.cpp
         app/controllers/command_controller.cpp
         app/controllers/action_vfx.cpp
         app/utils/json_vec_utils.cpp
@@ -165,6 +183,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
             ui/qml/Main.qml
             ui/qml/MainMenu.qml
             ui/qml/MapSelect.qml
+            ui/qml/MapPreview.qml
             ui/qml/MapListPanel.qml
             ui/qml/PlayerListItem.qml
             ui/qml/PlayerConfigPanel.qml
