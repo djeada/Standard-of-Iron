@@ -167,6 +167,24 @@ public:
         resolve(kShaderBase + QStringLiteral("troop_shadow.frag"));
     load(QStringLiteral("troop_shadow"), troopShadowVert, troopShadowFrag);
 
+    const QString bannerVert =
+        resolve(kShaderBase + QStringLiteral("banner.vert"));
+    const QString bannerFrag =
+        resolve(kShaderBase + QStringLiteral("banner.frag"));
+    load(QStringLiteral("banner"), bannerVert, bannerFrag);
+
+    const QString healingBeamVert =
+        resolve(kShaderBase + QStringLiteral("healing_beam.vert"));
+    const QString healingBeamFrag =
+        resolve(kShaderBase + QStringLiteral("healing_beam.frag"));
+    load(QStringLiteral("healing_beam"), healingBeamVert, healingBeamFrag);
+
+    const QString healingAuraVert =
+        resolve(kShaderBase + QStringLiteral("healing_aura.vert"));
+    const QString healingAuraFrag =
+        resolve(kShaderBase + QStringLiteral("healing_aura.frag"));
+    load(QStringLiteral("healing_aura"), healingAuraVert, healingAuraFrag);
+
     const auto loadBaseShader = [&](const QString &name) {
       const QString vert =
           resolve(kShaderBase + name + QStringLiteral(".vert"));
