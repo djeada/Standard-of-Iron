@@ -17,6 +17,14 @@ using namespace Render::GL::VertexAttrib;
 using namespace Render::GL::ComponentCount;
 
 namespace {
+constexpr float kMinDustIntensity = 0.01F;
+constexpr float kDefaultDustRadius = 2.0F;
+constexpr float kDefaultDustIntensity = 0.6F;
+constexpr float kDustColorR = 0.6F;
+constexpr float kDustColorG = 0.55F;
+constexpr float kDustColorB = 0.45F;
+constexpr float kDustYOffset = 0.05F;
+
 void clear_gl_errors() {
   while (glGetError() != GL_NO_ERROR) {
   }
@@ -267,11 +275,11 @@ void CombatDustPipeline::collect_combat_zones(Engine::Core::World *world,
 
     // Create dust at combat location
     CombatDustData data;
-    data.position = QVector3D(transform->position.x, 0.05F,
+    data.position = QVector3D(transform->position.x, kDustYOffset,
                                transform->position.z);
-    data.radius = 2.0F;  // Dust radius around combat
-    data.intensity = 0.7F;
-    data.color = QVector3D(0.6F, 0.55F, 0.45F); // Dusty brown color
+    data.radius = kDefaultDustRadius;
+    data.intensity = kDefaultDustIntensity;
+    data.color = QVector3D(kDustColorR, kDustColorG, kDustColorB);
     data.time = animation_time;
 
     m_dust_data.push_back(data);
@@ -363,7 +371,7 @@ void CombatDustPipeline::render_single_dust(const QVector3D &position,
   if (!is_initialized()) {
     return;
   }
-  if (intensity < 0.01F) {
+  if (intensity < kMinDustIntensity) {
     return;
   }
 
