@@ -613,6 +613,10 @@ void HumanoidPoseController::sword_slash_variant(float attack_phase,
 
   attack_phase = std::clamp(attack_phase, 0.0F, 1.0F);
 
+  // Strike direction constants
+  constexpr float kStrikeRightToLeft = 1.0F;
+  constexpr float kStrikeLeftToRight = -1.0F;
+
   // Base positions - will be modified by variant
   QVector3D rest_pos(0.20F, HP::SHOULDER_Y + 0.05F, 0.15F);
   QVector3D chamber_pos(0.28F, HP::SHOULDER_Y + 0.20F, 0.02F);
@@ -621,7 +625,7 @@ void HumanoidPoseController::sword_slash_variant(float attack_phase,
   QVector3D followthrough_pos(0.05F, HP::WAIST_Y + 0.10F, 0.50F);
 
   // Variant-specific attack patterns
-  float strike_direction = 1.0F; // 1.0 = right-to-left, -1.0 = left-to-right
+  float strike_direction = kStrikeRightToLeft;
   switch (variant % 3) {
   case 1:
     // Left-to-right diagonal slash
@@ -629,7 +633,7 @@ void HumanoidPoseController::sword_slash_variant(float attack_phase,
     apex_pos = QVector3D(-0.08F, HP::SHOULDER_Y + 0.28F, 0.10F);
     strike_pos = QVector3D(0.32F, HP::SHOULDER_Y - 0.12F, 0.58F);
     followthrough_pos = QVector3D(0.40F, HP::WAIST_Y + 0.08F, 0.48F);
-    strike_direction = -1.0F;
+    strike_direction = kStrikeLeftToRight;
     break;
   case 2:
     // Horizontal slash from right
@@ -660,7 +664,7 @@ void HumanoidPoseController::sword_slash_variant(float attack_phase,
     hand_r_target = rest_pos * (1.0F - ease_t) + chamber_pos * ease_t;
     hand_l_target = QVector3D(-0.20F, HP::SHOULDER_Y - 0.02F, 0.15F);
 
-    torso_twist = -0.05F * strike_direction * ease_t;
+    torso_twist = strike_direction * (-0.05F * ease_t);
     shoulder_rotation = 0.03F * ease_t;
   } else if (attack_phase < 0.28F) {
     float t = (attack_phase - 0.15F) / 0.13F;
@@ -668,7 +672,7 @@ void HumanoidPoseController::sword_slash_variant(float attack_phase,
     hand_r_target = chamber_pos * (1.0F - ease_t) + apex_pos * ease_t;
     hand_l_target = QVector3D(-0.20F, HP::SHOULDER_Y - 0.04F, 0.17F);
 
-    torso_twist = -0.05F * strike_direction;
+    torso_twist = strike_direction * (-0.05F);
     shoulder_rotation = 0.03F + 0.02F * ease_t;
     weight_shift = -0.02F * ease_t;
   } else if (attack_phase < 0.48F) {
@@ -679,7 +683,7 @@ void HumanoidPoseController::sword_slash_variant(float attack_phase,
         QVector3D(-0.20F + 0.08F * power_t,
                   HP::SHOULDER_Y - 0.04F - 0.06F * power_t, 0.17F + 0.22F * power_t);
 
-    torso_twist = -0.05F * strike_direction + 0.14F * strike_direction * power_t;
+    torso_twist = strike_direction * (-0.05F + 0.14F * power_t);
     forward_lean = 0.10F * power_t;
     shoulder_rotation = 0.05F - 0.08F * power_t;
     weight_shift = -0.02F + 0.08F * power_t;
@@ -689,7 +693,7 @@ void HumanoidPoseController::sword_slash_variant(float attack_phase,
     hand_r_target = strike_pos * (1.0F - ease_t) + followthrough_pos * ease_t;
     hand_l_target = QVector3D(-0.12F, HP::SHOULDER_Y - 0.10F, 0.39F);
 
-    torso_twist = 0.09F * strike_direction - 0.03F * strike_direction * t;
+    torso_twist = strike_direction * (0.09F - 0.03F * t);
     forward_lean = 0.10F - 0.02F * t;
     weight_shift = 0.06F;
   } else {
