@@ -103,7 +103,8 @@ signtool verify /pa /v standard_of_iron.exe
    - Update the GitHub secret when renewing
 
 3. **Timestamping**:
-   - The signature includes a trusted timestamp
+   - The signature includes a trusted timestamp via RFC 3161 protocol
+   - Timestamp URL uses HTTP (not HTTPS) as per RFC 3161 standard - the timestamp response is cryptographically signed
    - Signatures remain valid even after the certificate expires (as long as signed before expiration)
    - If the timestamp server is unavailable, signing will fail (this is expected behavior)
 
