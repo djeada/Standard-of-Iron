@@ -445,7 +445,7 @@ auto SkirmishLoader::start(const QString &map_path,
 
   auto &visibility_service = Game::Map::VisibilityService::instance();
   visibility_service.initialize(map_width, map_height, level_result.tile_size);
-  
+
   if (is_spectator_mode) {
     visibility_service.reveal_all();
   } else {
