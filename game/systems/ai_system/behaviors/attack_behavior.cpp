@@ -60,6 +60,7 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
 
   // If no enemies visible and in attacking state, be proactive and scout/advance
   if (snapshot.visible_enemies.empty()) {
+    // Scouting threshold lower than proactive attack (3 vs 5) allows early exploration
     constexpr int MIN_UNITS_FOR_SCOUTING = 3;
     if (context.state == AIState::Attacking && context.total_units >= MIN_UNITS_FOR_SCOUTING) {
       // Scout toward map center or away from base to find enemies
