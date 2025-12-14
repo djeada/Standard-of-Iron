@@ -569,7 +569,6 @@ void MinimapGenerator::apply_vignette(QPainter &painter, int width,
 
 void MinimapGenerator::draw_compass_rose(QPainter &painter, int width,
                                          int height) {
-
   const float min_dim = static_cast<float>(std::min(width, height));
   const float margin = std::clamp(min_dim * 0.06F, 12.0F, 32.0F);
   const float SIZE = std::clamp(min_dim * 0.08F, 14.0F, 42.0F);

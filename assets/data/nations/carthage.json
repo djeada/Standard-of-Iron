@@ -156,7 +156,7 @@
         "health": 855,
         "max_health": 855,
         "speed": 2.7,
-        "vision_range": 14.0,
+        "vision_range": 7.0,
         "ranged_range": 7.5,
         "ranged_damage": 4,
         "ranged_cooldown": 2.2,

@@ -1,5 +1,6 @@
 #include "buffer.h"
 #include <GL/gl.h>
+#include <QDebug>
 #include <cstddef>
 #include <qopenglext.h>
 #include <vector>
@@ -65,8 +66,21 @@ void VertexArray::bind() {
   if (m_vao == 0U) {
     initializeOpenGLFunctions();
     glGenVertexArrays(1, &m_vao);
+    GLenum genErr = glGetError();
+    if (genErr != GL_NO_ERROR) {
+      qWarning() << "VertexArray glGenVertexArrays error" << genErr;
+    }
   }
+
+  while (glGetError() != GL_NO_ERROR) {
+  }
+
   glBindVertexArray(m_vao);
+  GLenum bindErr = glGetError();
+  if (bindErr != GL_NO_ERROR) {
+    qWarning() << "VertexArray glBindVertexArray error" << bindErr << "vao"
+               << m_vao;
+  }
 }
 
 void VertexArray::unbind() { glBindVertexArray(0); }

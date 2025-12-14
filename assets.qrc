@@ -70,6 +70,10 @@
         <file>assets/shaders/terrain_chunk.vert</file>
         <file>assets/shaders/troop_shadow.frag</file>
         <file>assets/shaders/troop_shadow.vert</file>
+        <file>assets/shaders/healing_beam.frag</file>
+        <file>assets/shaders/healing_beam.vert</file>
+        <file>assets/shaders/healing_aura.frag</file>
+        <file>assets/shaders/healing_aura.vert</file>
         
         <!-- Map files -->
         <file>assets/maps/map_forest.json</file>

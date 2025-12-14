@@ -16,6 +16,9 @@ add_library(render_gl STATIC
     gl/backend/water_pipeline.cpp
     gl/backend/effects_pipeline.cpp
     gl/backend/primitive_batch_pipeline.cpp
+    gl/backend/banner_pipeline.cpp
+    gl/backend/healing_beam_pipeline.cpp
+    gl/backend/healer_aura_pipeline.cpp
     gl/shader_cache.cpp
     gl/state_scopes.cpp
     draw_queue.cpp
@@ -64,6 +67,8 @@ add_library(render_gl STATIC
     entity/nations/roman/healer_style.cpp
     entity/nations/carthage/healer_renderer.cpp
     entity/nations/carthage/healer_style.cpp
+    entity/healing_beam_renderer.cpp
+    entity/healer_aura_renderer.cpp
     entity/barracks_renderer.cpp
     entity/nations/roman/barracks_renderer.cpp
     entity/nations/carthage/barracks_renderer.cpp
@@ -80,6 +85,7 @@ add_library(render_gl STATIC
     geom/stone.cpp
     geom/projectile_renderer.cpp
     geom/flag.cpp
+    geom/banner_cloth.cpp
     geom/patrol_flags.cpp
     geom/transforms.cpp
     humanoid/humanoid_math.cpp

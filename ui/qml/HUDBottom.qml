@@ -151,10 +151,10 @@ RowLayout {
                                 border.width: 1
 
                                 Rectangle {
-                                    width: parent.width * (typeof healthRatio !== 'undefined' ? healthRatio : 0)
+                                    width: parent.width * (typeof health_ratio !== 'undefined' ? health_ratio : 0)
                                     height: parent.height
                                     color: {
-                                        var ratio = (typeof healthRatio !== 'undefined' ? healthRatio : 0);
+                                        var ratio = (typeof health_ratio !== 'undefined' ? health_ratio : 0);
                                         if (ratio > 0.6)
                                             return "#27ae60";
 
