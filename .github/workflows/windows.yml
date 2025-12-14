@@ -122,6 +122,64 @@ jobs:
       - name: Build
         run: cmake --build build
 
+      # Code signing (optional: signs .exe with Authenticode)
+      - name: Sign executable
+        if: ${{ secrets.WINDOWS_CERTIFICATE != '' }}
+        shell: pwsh
+        run: |
+          # Decode certificate from base64 secret and save to temp file
+          $certPath = "$env:TEMP\cert.pfx"
+          $certBytes = [System.Convert]::FromBase64String("${{ secrets.WINDOWS_CERTIFICATE }}")
+          [System.IO.File]::WriteAllBytes($certPath, $certBytes)
+          
+          try {
+            # Find signtool.exe
+            $signtool = Get-ChildItem "C:\Program Files (x86)\Windows Kits" -Recurse -Filter "signtool.exe" -ErrorAction SilentlyContinue |
+              Where-Object { $_.FullName -match "x64" } |
+              Select-Object -First 1
+            
+            if (-not $signtool) {
+              Write-Warning "signtool.exe not found. Skipping code signing."
+              exit 0
+            }
+            
+            Write-Host "Using signtool: $($signtool.FullName)"
+            
+            # Sign the executable
+            $exePath = "$env:APP_DIR\${{ env.APP_NAME }}.exe"
+            $certPassword = "${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}"
+            
+            $signArgs = @(
+              "sign",
+              "/f", $certPath,
+              "/p", $certPassword,
+              "/tr", "http://timestamp.digicert.com",
+              "/td", "SHA256",
+              "/fd", "SHA256",
+              "/v",
+              $exePath
+            )
+            
+            Write-Host "Signing $exePath..."
+            & $signtool.FullName $signArgs
+            
+            if ($LASTEXITCODE -ne 0) {
+              Write-Error "Code signing failed with exit code $LASTEXITCODE"
+              exit 1
+            }
+            
+            Write-Host "Successfully signed $exePath"
+            
+            # Verify the signature
+            & $signtool.FullName verify /pa /v $exePath
+            
+          } finally {
+            # Clean up certificate file
+            if (Test-Path $certPath) {
+              Remove-Item $certPath -Force
+            }
+          }
+
       # Deploy Qt DLLs (dynamic linking ensures LGPL v3 compliance)
       - name: Deploy Qt
         shell: pwsh
