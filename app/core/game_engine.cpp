@@ -6,14 +6,22 @@
 #include "../models/cursor_manager.h"
 #include "../models/hover_tracker.h"
 #include "AudioEventHandler.h"
+#include "ambient_state_manager.h"
 #include "app/models/cursor_mode.h"
 #include "app/utils/engine_view_helpers.h"
 #include "app/utils/movement_utils.h"
 #include "app/utils/selection_utils.h"
+#include "audio_resource_loader.h"
+#include "camera_controller.h"
 #include "core/system.h"
 #include "game/audio/AudioSystem.h"
 #include "game/units/spawn_type.h"
 #include "game/units/troop_type.h"
+#include "game_state_restorer.h"
+#include "input_command_handler.h"
+#include "level_orchestrator.h"
+#include "minimap_manager.h"
+#include "renderer_bootstrap.h"
 #include <QBuffer>
 #include <QCoreApplication>
 #include <QCursor>
@@ -55,6 +63,7 @@
 #include "game/map/map_catalog.h"
 #include "game/map/map_loader.h"
 #include "game/map/map_transformer.h"
+#include "game/map/minimap/map_preview_generator.h"
 #include "game/map/minimap/minimap_generator.h"
 #include "game/map/minimap/unit_layer.h"
 #include "game/map/skirmish_loader.h"
@@ -97,7 +106,6 @@
 #include "render/geom/arrow.h"
 #include "render/geom/patrol_flags.h"
 #include "render/geom/stone.h"
-#include "render/gl/backend.h"
 #include "render/gl/bootstrap.h"
 #include "render/gl/camera.h"
 #include "render/ground/biome_renderer.h"
@@ -134,55 +142,26 @@ GameEngine::GameEngine(QObject *parent)
   Game::Systems::GlobalStatsRegistry::instance().initialize();
 
   m_world = std::make_unique<Engine::Core::World>();
-  m_renderer = std::make_unique<Render::GL::Renderer>();
-  m_camera = std::make_unique<Render::GL::Camera>();
-  m_ground = std::make_unique<Render::GL::GroundRenderer>();
-  m_terrain = std::make_unique<Render::GL::TerrainRenderer>();
-  m_biome = std::make_unique<Render::GL::BiomeRenderer>();
-  m_river = std::make_unique<Render::GL::RiverRenderer>();
-  m_road = std::make_unique<Render::GL::RoadRenderer>();
-  m_riverbank = std::make_unique<Render::GL::RiverbankRenderer>();
-  m_bridge = std::make_unique<Render::GL::BridgeRenderer>();
-  m_fog = std::make_unique<Render::GL::FogRenderer>();
-  m_stone = std::make_unique<Render::GL::StoneRenderer>();
-  m_plant = std::make_unique<Render::GL::PlantRenderer>();
-  m_pine = std::make_unique<Render::GL::PineRenderer>();
-  m_olive = std::make_unique<Render::GL::OliveRenderer>();
-  m_firecamp = std::make_unique<Render::GL::FireCampRenderer>();
 
-  m_passes = {m_ground.get(), m_terrain.get(),   m_river.get(),
-              m_road.get(),   m_riverbank.get(), m_bridge.get(),
-              m_biome.get(),  m_stone.get(),     m_plant.get(),
-              m_pine.get(),   m_olive.get(),     m_firecamp.get(),
-              m_fog.get()};
+  auto rendering = RendererBootstrap::initialize_rendering();
+  m_renderer = std::move(rendering.renderer);
+  m_camera = std::move(rendering.camera);
+  m_ground = std::move(rendering.ground);
+  m_terrain = std::move(rendering.terrain);
+  m_biome = std::move(rendering.biome);
+  m_river = std::move(rendering.river);
+  m_road = std::move(rendering.road);
+  m_riverbank = std::move(rendering.riverbank);
+  m_bridge = std::move(rendering.bridge);
+  m_fog = std::move(rendering.fog);
+  m_stone = std::move(rendering.stone);
+  m_plant = std::move(rendering.plant);
+  m_pine = std::move(rendering.pine);
+  m_olive = std::move(rendering.olive);
+  m_firecamp = std::move(rendering.firecamp);
+  m_passes = std::move(rendering.passes);
 
-  std::unique_ptr<Engine::Core::System> arrow_sys =
-      std::make_unique<Game::Systems::ArrowSystem>();
-  m_world->add_system(std::move(arrow_sys));
-
-  std::unique_ptr<Engine::Core::System> projectile_sys =
-      std::make_unique<Game::Systems::ProjectileSystem>();
-  m_world->add_system(std::move(projectile_sys));
-
-  m_world->add_system(std::make_unique<Game::Systems::MovementSystem>());
-  m_world->add_system(std::make_unique<Game::Systems::PatrolSystem>());
-  m_world->add_system(std::make_unique<Game::Systems::CombatSystem>());
-  m_world->add_system(std::make_unique<Game::Systems::CatapultAttackSystem>());
-  m_world->add_system(std::make_unique<Game::Systems::BallistaAttackSystem>());
-  m_world->add_system(std::make_unique<Game::Systems::HealingBeamSystem>());
-  m_world->add_system(std::make_unique<Game::Systems::HealingSystem>());
-  m_world->add_system(std::make_unique<Game::Systems::CaptureSystem>());
-  m_world->add_system(std::make_unique<Game::Systems::AISystem>());
-  m_world->add_system(std::make_unique<Game::Systems::ProductionSystem>());
-  m_world->add_system(
-      std::make_unique<Game::Systems::TerrainAlignmentSystem>());
-  m_world->add_system(std::make_unique<Game::Systems::CleanupSystem>());
-
-  {
-    std::unique_ptr<Engine::Core::System> sel_sys =
-        std::make_unique<Game::Systems::SelectionSystem>();
-    m_world->add_system(std::move(sel_sys));
-  }
+  RendererBootstrap::initialize_world_systems(*m_world);
 
   m_pickingService = std::make_unique<Game::Systems::PickingService>();
   m_victoryService = std::make_unique<Game::Systems::VictoryService>();
@@ -215,12 +194,23 @@ GameEngine::GameEngine(QObject *parent)
 
   if (AudioSystem::getInstance().initialize()) {
     qInfo() << "AudioSystem initialized successfully";
-    load_audio_resources();
+    AudioResourceLoader::load_audio_resources();
   } else {
     qWarning() << "Failed to initialize AudioSystem";
   }
 
   m_audio_systemProxy = std::make_unique<App::Models::AudioSystemProxy>(this);
+
+  m_minimap_manager = std::make_unique<MinimapManager>();
+  m_ambient_state_manager = std::make_unique<AmbientStateManager>();
+
+  m_input_handler = std::make_unique<InputCommandHandler>(
+      m_world.get(), m_selectionController.get(), m_commandController.get(),
+      m_cursorManager.get(), m_hoverTracker.get(), m_pickingService.get(),
+      m_camera.get());
+
+  m_camera_controller = std::make_unique<CameraController>(
+      m_camera.get(), m_cameraService.get(), m_world.get());
 
   m_audioEventHandler =
       std::make_unique<Game::Audio::AudioEventHandler>(m_world.get());
@@ -374,10 +364,9 @@ void GameEngine::on_map_clicked(qreal sx, qreal sy) {
     return;
   }
   ensure_initialized();
-  if (m_selectionController && m_camera) {
-    m_selectionController->on_click_select(sx, sy, false, m_viewport.width,
-                                           m_viewport.height, m_camera.get(),
-                                           m_runtime.local_owner_id);
+  if (m_input_handler) {
+    m_input_handler->on_map_clicked(sx, sy, m_runtime.local_owner_id,
+                                    m_viewport);
   }
 }
 
@@ -386,62 +375,9 @@ void GameEngine::on_right_click(qreal sx, qreal sy) {
     return;
   }
   ensure_initialized();
-  auto *selection_system =
-      m_world->get_system<Game::Systems::SelectionSystem>();
-  if (selection_system == nullptr) {
-    return;
-  }
-
-  if (m_cursorManager->mode() == CursorMode::Patrol ||
-      m_cursorManager->mode() == CursorMode::Attack) {
-    set_cursor_mode(CursorMode::Normal);
-    return;
-  }
-
-  const auto &sel = selection_system->get_selected_units();
-  if (sel.empty()) {
-
-    return;
-  }
-
-  if (m_pickingService && m_camera) {
-    Engine::Core::EntityID const target_id = m_pickingService->pick_unit_first(
-        float(sx), float(sy), *m_world, *m_camera, m_viewport.width,
-        m_viewport.height, 0);
-
-    if (target_id != 0U) {
-      auto *target_entity = m_world->get_entity(target_id);
-      if (target_entity != nullptr) {
-        auto *target_unit =
-            target_entity->get_component<Engine::Core::UnitComponent>();
-        if (target_unit != nullptr) {
-
-          bool const is_enemy =
-              (target_unit->owner_id != m_runtime.local_owner_id);
-
-          if (is_enemy) {
-
-            Game::Systems::CommandService::attack_target(*m_world, sel,
-                                                         target_id, true);
-            return;
-          }
-        }
-      }
-    }
-  }
-
-  if (m_pickingService && m_camera) {
-    QVector3D hit;
-    if (m_pickingService->screen_to_ground(QPointF(sx, sy), *m_camera,
-                                           m_viewport.width, m_viewport.height,
-                                           hit)) {
-      auto targets = Game::Systems::FormationPlanner::spreadFormation(
-          int(sel.size()), hit,
-          Game::GameConfig::instance().gameplay().formation_spacing_default);
-      Game::Systems::CommandService::MoveOptions opts;
-      opts.group_move = sel.size() > 1;
-      Game::Systems::CommandService::moveUnits(*m_world, sel, targets, opts);
-    }
+  if (m_input_handler) {
+    m_input_handler->on_right_click(sx, sy, m_runtime.local_owner_id,
+                                    m_viewport);
   }
 }
 
@@ -450,91 +386,44 @@ void GameEngine::on_attack_click(qreal sx, qreal sy) {
     return;
   }
   ensure_initialized();
-  if (!m_commandController || !m_camera) {
-    return;
-  }
-
-  auto result = m_commandController->onAttackClick(
-      sx, sy, m_viewport.width, m_viewport.height, m_camera.get());
-
-  auto *selection_system =
-      m_world->get_system<Game::Systems::SelectionSystem>();
-  if ((selection_system == nullptr) || !m_pickingService || !m_camera ||
-      !m_world) {
-    return;
-  }
-
-  const auto &selected = selection_system->get_selected_units();
-  if (!selected.empty()) {
-    Engine::Core::EntityID const target_id = m_pickingService->pick_unit_first(
-        float(sx), float(sy), *m_world, *m_camera, m_viewport.width,
-        m_viewport.height, 0);
-
-    if (target_id != 0) {
-      auto *target_entity = m_world->get_entity(target_id);
-      if (target_entity != nullptr) {
-        auto *target_unit =
-            target_entity->get_component<Engine::Core::UnitComponent>();
-        if ((target_unit != nullptr) &&
-            target_unit->owner_id != m_runtime.local_owner_id) {
-          App::Controllers::ActionVFX::spawnAttackArrow(m_world.get(),
-                                                        target_id);
-        }
-      }
-    }
-  }
-
-  if (result.resetCursorToNormal) {
-    set_cursor_mode(CursorMode::Normal);
+  if (m_input_handler) {
+    m_input_handler->on_attack_click(sx, sy, m_viewport);
   }
 }
 
 void GameEngine::reset_movement(Engine::Core::Entity *entity) {
-  App::Utils::reset_movement(entity);
+  InputCommandHandler::reset_movement(entity);
 }
 
 void GameEngine::on_stop_command() {
-  if (!m_commandController) {
+  if (!m_input_handler) {
     return;
   }
   ensure_initialized();
-
-  auto result = m_commandController->onStopCommand();
-  if (result.resetCursorToNormal) {
-    set_cursor_mode(CursorMode::Normal);
-  }
+  m_input_handler->on_stop_command();
 }
 
 void GameEngine::on_hold_command() {
-  if (!m_commandController) {
+  if (!m_input_handler) {
     return;
   }
   ensure_initialized();
-
-  auto result = m_commandController->onHoldCommand();
-  if (result.resetCursorToNormal) {
-    set_cursor_mode(CursorMode::Normal);
-  }
+  m_input_handler->on_hold_command();
 }
 
 auto GameEngine::any_selected_in_hold_mode() const -> bool {
-  if (!m_commandController) {
+  if (!m_input_handler) {
     return false;
   }
-  return m_commandController->anySelectedInHoldMode();
+  return m_input_handler->any_selected_in_hold_mode();
 }
 
 void GameEngine::on_patrol_click(qreal sx, qreal sy) {
-  if (!m_commandController || !m_camera) {
+  if (!m_input_handler || !m_camera) {
     return;
   }
   ensure_initialized();
-
-  auto result = m_commandController->onPatrolClick(
-      sx, sy, m_viewport.width, m_viewport.height, m_camera.get());
-  if (result.resetCursorToNormal) {
-    set_cursor_mode(CursorMode::Normal);
-  }
+  m_input_handler->on_patrol_click(sx, sy, m_viewport);
 }
 
 void GameEngine::update_cursor(Qt::CursorShape newCursor) {
@@ -593,14 +482,9 @@ void GameEngine::set_hover_at_screen(qreal sx, qreal sy) {
     return;
   }
   ensure_initialized();
-  if (!m_hoverTracker || !m_camera || !m_world) {
-    return;
+  if (m_input_handler) {
+    m_input_handler->set_hover_at_screen(sx, sy, m_viewport);
   }
-
-  m_cursorManager->updateCursorShape(m_window);
-
-  m_hoverTracker->update_hover(float(sx), float(sy), *m_world, *m_camera,
-                               m_viewport.width, m_viewport.height);
 }
 
 void GameEngine::on_click_select(qreal sx, qreal sy, bool additive) {
@@ -608,10 +492,9 @@ void GameEngine::on_click_select(qreal sx, qreal sy, bool additive) {
     return;
   }
   ensure_initialized();
-  if (m_selectionController && m_camera) {
-    m_selectionController->on_click_select(sx, sy, additive, m_viewport.width,
-                                           m_viewport.height, m_camera.get(),
-                                           m_runtime.local_owner_id);
+  if (m_input_handler) {
+    m_input_handler->on_click_select(sx, sy, additive, m_runtime.local_owner_id,
+                                     m_viewport);
   }
 }
 
@@ -621,27 +504,24 @@ void GameEngine::on_area_selected(qreal x1, qreal y1, qreal x2, qreal y2,
     return;
   }
   ensure_initialized();
-  if (m_selectionController && m_camera) {
-    m_selectionController->on_area_selected(
-        x1, y1, x2, y2, additive, m_viewport.width, m_viewport.height,
-        m_camera.get(), m_runtime.local_owner_id);
+  if (m_input_handler) {
+    m_input_handler->on_area_selected(x1, y1, x2, y2, additive,
+                                      m_runtime.local_owner_id, m_viewport);
   }
 }
 
 void GameEngine::select_all_troops() {
   ensure_initialized();
-  if (m_selectionController) {
-    m_selectionController->select_all_player_troops(m_runtime.local_owner_id);
+  if (m_input_handler) {
+    m_input_handler->select_all_troops(m_runtime.local_owner_id);
   }
 }
 
 void GameEngine::select_unit_by_id(int unitId) {
   ensure_initialized();
-  if (!m_selectionController || (unitId <= 0)) {
-    return;
+  if (m_input_handler) {
+    m_input_handler->select_unit_by_id(unitId, m_runtime.local_owner_id);
   }
-  m_selectionController->select_single_unit(
-      static_cast<Engine::Core::EntityID>(unitId), m_runtime.local_owner_id);
 }
 
 void GameEngine::ensure_initialized() {
@@ -693,7 +573,11 @@ void GameEngine::update(float dt) {
   }
 
   if (!m_runtime.paused && !m_runtime.loading) {
-    update_ambient_state(dt);
+    if (m_ambient_state_manager) {
+      m_ambient_state_manager->update(dt, m_world.get(),
+                                      m_runtime.local_owner_id, m_entity_cache,
+                                      m_runtime.victory_state);
+    }
   }
 
   if (m_renderer) {
@@ -709,37 +593,42 @@ void GameEngine::update(float dt) {
 
     auto &visibility_service = Game::Map::VisibilityService::instance();
     if (visibility_service.is_initialized()) {
-
-      m_runtime.visibilityUpdateAccumulator += dt;
+      m_runtime.visibility_update_accumulator += dt;
       const float visibility_update_interval =
           Game::GameConfig::instance().gameplay().visibility_update_interval;
-      if (m_runtime.visibilityUpdateAccumulator >= visibility_update_interval) {
-        m_runtime.visibilityUpdateAccumulator = 0.0F;
+      if (m_runtime.visibility_update_accumulator >=
+          visibility_update_interval) {
+        m_runtime.visibility_update_accumulator = 0.0F;
         visibility_service.update(*m_world, m_runtime.local_owner_id);
       }
 
       const auto new_version = visibility_service.version();
-      if (new_version != m_runtime.visibilityVersion) {
+      if (new_version != m_runtime.visibility_version) {
         if (m_fog) {
           m_fog->update_mask(visibility_service.getWidth(),
                              visibility_service.getHeight(),
                              visibility_service.getTileSize(),
                              visibility_service.snapshotCells());
         }
-        m_runtime.visibilityVersion = new_version;
+        m_runtime.visibility_version = new_version;
       }
     }
 
-    update_minimap_fog(dt);
+    if (m_minimap_manager) {
+      m_minimap_manager->update_fog(dt, m_runtime.local_owner_id);
+      auto *selection_system =
+          m_world->get_system<Game::Systems::SelectionSystem>();
+      m_minimap_manager->update_units(m_world.get(), selection_system);
+      emit minimap_image_changed();
+    }
   }
 
   if (m_victoryService && m_world) {
     m_victoryService->update(*m_world, dt);
   }
 
-  if (m_followSelectionEnabled && m_camera && m_world && m_cameraService) {
-    m_cameraService->update_follow(*m_camera, *m_world,
-                                   m_followSelectionEnabled);
+  if (m_camera_controller) {
+    m_camera_controller->update_follow(m_followSelectionEnabled);
   }
 
   if (m_selectedUnitsModel != nullptr) {
@@ -747,9 +636,9 @@ void GameEngine::update(float dt) {
         m_world->get_system<Game::Systems::SelectionSystem>();
     if ((selection_system != nullptr) &&
         !selection_system->get_selected_units().empty()) {
-      m_runtime.selectionRefreshCounter++;
-      if (m_runtime.selectionRefreshCounter >= 15) {
-        m_runtime.selectionRefreshCounter = 0;
+      m_runtime.selection_refresh_counter++;
+      if (m_runtime.selection_refresh_counter >= 15) {
+        m_runtime.selection_refresh_counter = 0;
         emit selected_units_data_changed();
       }
     }
@@ -806,9 +695,8 @@ void GameEngine::render(int pixelWidth, int pixelHeight) {
     }
   }
 
-  {
-    Render::GL::render_healer_auras(m_renderer.get(), m_renderer->resources(),
-                                    m_world.get());
+  if (auto *res = m_renderer->resources()) {
+    Render::GL::render_healer_auras(m_renderer.get(), res, m_world.get());
   }
 
   if (auto *res = m_renderer->resources()) {
@@ -823,10 +711,10 @@ void GameEngine::render(int pixelWidth, int pixelHeight) {
 
   qreal const current_x = global_cursor_x();
   qreal const current_y = global_cursor_y();
-  if (current_x != m_runtime.lastCursorX ||
-      current_y != m_runtime.lastCursorY) {
-    m_runtime.lastCursorX = current_x;
-    m_runtime.lastCursorY = current_y;
+  if (current_x != m_runtime.last_cursor_x ||
+      current_y != m_runtime.last_cursor_y) {
+    m_runtime.last_cursor_x = current_x;
+    m_runtime.last_cursor_y = current_y;
     emit global_cursor_changed();
   }
 }
@@ -863,97 +751,72 @@ void GameEngine::sync_selection_flags() {
 
 void GameEngine::camera_move(float dx, float dz) {
   ensure_initialized();
-  if (!m_camera || !m_cameraService) {
-    return;
+  if (m_camera_controller) {
+    m_camera_controller->move(dx, dz);
   }
-
-  m_cameraService->move(*m_camera, dx, dz);
 }
 
 void GameEngine::camera_elevate(float dy) {
   ensure_initialized();
-  if (!m_camera || !m_cameraService) {
-    return;
+  if (m_camera_controller) {
+    m_camera_controller->elevate(dy);
   }
-
-  m_cameraService->elevate(*m_camera, dy);
 }
 
 void GameEngine::reset_camera() {
   ensure_initialized();
-  if (!m_camera || !m_world || !m_cameraService) {
-    return;
+  if (m_camera_controller) {
+    m_camera_controller->reset(m_runtime.local_owner_id, m_level);
   }
-
-  m_cameraService->resetCamera(*m_camera, *m_world, m_runtime.local_owner_id,
-                               m_level.player_unit_id);
 }
 
 void GameEngine::camera_zoom(float delta) {
   ensure_initialized();
-  if (!m_camera || !m_cameraService) {
-    return;
+  if (m_camera_controller) {
+    m_camera_controller->zoom(delta);
   }
-
-  m_cameraService->zoom(*m_camera, delta);
 }
 
 auto GameEngine::camera_distance() const -> float {
-  if (!m_camera || !m_cameraService) {
-    return 0.0F;
+  if (m_camera_controller) {
+    return m_camera_controller->distance();
   }
-  return m_cameraService->get_distance(*m_camera);
+  return 0.0F;
 }
 
 void GameEngine::camera_yaw(float degrees) {
   ensure_initialized();
-  if (!m_camera || !m_cameraService) {
-    return;
+  if (m_camera_controller) {
+    m_camera_controller->yaw(degrees);
   }
-
-  m_cameraService->yaw(*m_camera, degrees);
 }
 
 void GameEngine::camera_orbit(float yaw_deg, float pitch_deg) {
   ensure_initialized();
-  if (!m_camera || !m_cameraService) {
-    return;
+  if (m_camera_controller) {
+    m_camera_controller->orbit(yaw_deg, pitch_deg);
   }
-
-  if (!std::isfinite(yaw_deg) || !std::isfinite(pitch_deg)) {
-    qWarning() << "GameEngine::camera_orbit received invalid input, ignoring:"
-               << yaw_deg << pitch_deg;
-    return;
-  }
-
-  m_cameraService->orbit(*m_camera, yaw_deg, pitch_deg);
 }
 
 void GameEngine::camera_orbit_direction(int direction, bool shift) {
-  if (!m_camera || !m_cameraService) {
-    return;
+  if (m_camera_controller) {
+    m_camera_controller->orbit_direction(direction, shift);
   }
-
-  m_cameraService->orbit_direction(*m_camera, direction, shift);
 }
 
 void GameEngine::camera_follow_selection(bool enable) {
   ensure_initialized();
   m_followSelectionEnabled = enable;
-  if (!m_camera || !m_world || !m_cameraService) {
-    return;
+  if (m_camera_controller) {
+    m_camera_controller->follow_selection(enable);
   }
-
-  m_cameraService->follow_selection(*m_camera, *m_world, enable);
 }
 
 void GameEngine::camera_set_follow_lerp(float alpha) {
   ensure_initialized();
-  if (!m_camera || !m_cameraService) {
-    return;
+  if (m_camera_controller) {
+    m_camera_controller->set_follow_lerp(alpha);
   }
-
-  m_cameraService->set_follow_lerp(*m_camera, alpha);
 }
 
 auto GameEngine::selected_units_model() -> QAbstractItemModel * {
@@ -972,7 +835,7 @@ auto GameEngine::has_units_selected() const -> bool {
 }
 
 auto GameEngine::player_troop_count() const -> int {
-  return m_entityCache.playerTroopCount;
+  return m_entity_cache.player_troop_count;
 }
 
 auto GameEngine::has_selected_type(const QString &type) const -> bool {
@@ -1191,23 +1054,23 @@ void GameEngine::start_campaign_mission(const QString &campaign_id) {
     return;
   }
 
-  QVariantMap selectedCampaign;
+  QVariantMap selected_campaign;
   for (const auto &campaign : campaigns) {
-    auto campaignMap = campaign.toMap();
-    if (campaignMap.value("id").toString() == campaign_id) {
-      selectedCampaign = campaignMap;
+    auto campaign_map = campaign.toMap();
+    if (campaign_map.value("id").toString() == campaign_id) {
+      selected_campaign = campaign_map;
       break;
     }
   }
 
-  if (selectedCampaign.isEmpty()) {
+  if (selected_campaign.isEmpty()) {
     set_error("Campaign not found: " + campaign_id);
     return;
   }
 
   m_current_campaign_id = campaign_id;
 
-  QString mapPath = selectedCampaign.value("mapPath").toString();
+  QString map_path = selected_campaign.value("mapPath").toString();
 
   QVariantList playerConfigs;
 
@@ -1229,7 +1092,7 @@ void GameEngine::start_campaign_mission(const QString &campaign_id) {
   player2.insert("isHuman", false);
   playerConfigs.append(player2);
 
-  start_skirmish(mapPath, playerConfigs);
+  start_skirmish(map_path, playerConfigs);
 }
 
 void GameEngine::mark_current_mission_completed() {
@@ -1285,58 +1148,40 @@ void GameEngine::start_skirmish(const QString &map_path,
       m_hoverTracker->update_hover(-1, -1, *m_world, *m_camera, 0, 0);
     }
 
-    m_entityCache.reset();
+    LevelOrchestrator orchestrator;
+    LevelOrchestrator::RendererRefs renderers{
+        m_renderer.get(), m_camera.get(), m_ground.get(),  m_terrain.get(),
+        m_biome.get(),    m_river.get(),  m_road.get(),    m_riverbank.get(),
+        m_bridge.get(),   m_fog.get(),    m_stone.get(),   m_plant.get(),
+        m_pine.get(),     m_olive.get(),  m_firecamp.get()};
 
-    Game::Map::SkirmishLoader loader(*m_world, *m_renderer, *m_camera);
-    loader.set_ground_renderer(m_ground.get());
-    loader.set_terrain_renderer(m_terrain.get());
-    loader.set_biome_renderer(m_biome.get());
-    loader.set_river_renderer(m_river.get());
-    loader.set_road_renderer(m_road.get());
-    loader.set_riverbank_renderer(m_riverbank.get());
-    loader.set_bridge_renderer(m_bridge.get());
-    loader.set_fog_renderer(m_fog.get());
-    loader.set_stone_renderer(m_stone.get());
-    loader.set_plant_renderer(m_plant.get());
-    loader.set_pine_renderer(m_pine.get());
-    loader.set_olive_renderer(m_olive.get());
-    loader.set_fire_camp_renderer(m_firecamp.get());
-
-    loader.set_on_owners_updated([this]() { emit owner_info_changed(); });
-
-    loader.set_on_visibility_mask_ready([this]() {
-      m_runtime.visibilityVersion =
+    auto visibility_ready = [this]() {
+      m_runtime.visibility_version =
           Game::Map::VisibilityService::instance().version();
-      m_runtime.visibilityUpdateAccumulator = 0.0F;
-    });
+      m_runtime.visibility_update_accumulator = 0.0F;
+    };
 
-    int updated_player_id = m_selected_player_id;
-    auto result = loader.start(map_path, playerConfigs, m_selected_player_id,
-                               updated_player_id);
+    auto owner_update = [this]() { emit owner_info_changed(); };
 
-    if (updated_player_id != m_selected_player_id) {
-      m_selected_player_id = updated_player_id;
+    auto load_result = orchestrator.load_skirmish(
+        map_path, playerConfigs, m_selected_player_id, *m_world, renderers,
+        m_level, m_entity_cache, m_victoryService.get(),
+        m_minimap_manager.get(), visibility_ready, owner_update);
+
+    if (load_result.updated_player_id != m_selected_player_id) {
+      m_selected_player_id = load_result.updated_player_id;
       emit selected_player_id_changed();
     }
 
-    if (!result.ok && !result.errorMessage.isEmpty()) {
-      set_error(result.errorMessage);
+    if (!load_result.success) {
+      set_error(load_result.error_message);
+      m_runtime.loading = false;
+      return;
     }
 
-    m_runtime.local_owner_id = updated_player_id;
-    m_level.map_name = result.map_name;
-    m_level.player_unit_id = result.player_unit_id;
-    m_level.cam_fov = result.cam_fov;
-    m_level.cam_near = result.cam_near;
-    m_level.cam_far = result.cam_far;
-    m_level.max_troops_per_player = result.max_troops_per_player;
-
-    Game::GameConfig::instance().set_max_troops_per_player(
-        result.max_troops_per_player);
+    m_runtime.local_owner_id = load_result.updated_player_id;
 
     if (m_victoryService) {
-      m_victoryService->configure(result.victoryConfig,
-                                  m_runtime.local_owner_id);
       m_victoryService->setVictoryCallback([this](const QString &state) {
         if (m_runtime.victory_state != state) {
           m_runtime.victory_state = state;
@@ -1349,45 +1194,12 @@ void GameEngine::start_skirmish(const QString &map_path,
       });
     }
 
-    if (result.has_focus_position && m_camera) {
-      const auto &cam_config = Game::GameConfig::instance().camera();
-      m_camera->set_rts_view(result.focusPosition, cam_config.default_distance,
-                             cam_config.default_pitch, cam_config.default_yaw);
-    }
-
-    Game::Map::MapDefinition map_def;
-    QString map_error;
-    if (Game::Map::MapLoader::loadFromJsonFile(map_path, map_def, &map_error)) {
-      generate_minimap_for_map(map_def);
-    } else {
-      qWarning() << "GameEngine: Failed to load map for minimap generation:"
-                 << map_error;
-    }
-
     m_runtime.loading = false;
 
-    if (auto *ai_system = m_world->get_system<Game::Systems::AISystem>()) {
-      ai_system->reinitialize();
-    }
+    GameStateRestorer::rebuild_entity_cache(m_world.get(), m_entity_cache,
+                                            m_runtime.local_owner_id);
 
-    rebuild_entity_cache();
-    auto &troops = Game::Systems::TroopCountRegistry::instance();
-    troops.rebuild_from_world(*m_world);
-
-    auto &stats_registry = Game::Systems::GlobalStatsRegistry::instance();
-    stats_registry.rebuild_from_world(*m_world);
-
-    auto &owner_registry = Game::Systems::OwnerRegistry::instance();
-    const auto &all_owners = owner_registry.get_all_owners();
-    for (const auto &owner : all_owners) {
-      if (owner.type == Game::Systems::OwnerType::Player ||
-          owner.type == Game::Systems::OwnerType::AI) {
-        stats_registry.mark_game_start(owner.owner_id);
-      }
-    }
-
-    m_currentAmbientState = Engine::Core::AmbientState::PEACEFUL;
-    m_ambientCheckTimer = 0.0F;
+    m_ambient_state_manager = std::make_unique<AmbientStateManager>();
 
     Engine::Core::EventManager::instance().publish(
         Engine::Core::AmbientStateChangedEvent(
@@ -1400,7 +1212,7 @@ void GameEngine::start_skirmish(const QString &map_path,
 
 void GameEngine::open_settings() {
   if (m_saveLoadService) {
-    m_saveLoadService->openSettings();
+    m_saveLoadService->open_settings();
   }
 }
 
@@ -1427,12 +1239,12 @@ auto GameEngine::load_from_slot(const QString &slot) -> bool {
   m_runtime.loading = true;
 
   if (!m_saveLoadService->load_game_from_slot(*m_world, slot)) {
-    set_error(m_saveLoadService->getLastError());
+    set_error(m_saveLoadService->get_last_error());
     m_runtime.loading = false;
     return false;
   }
 
-  const QJsonObject meta = m_saveLoadService->getLastMetadata();
+  const QJsonObject meta = m_saveLoadService->get_last_metadata();
 
   Game::Systems::GameStateSerializer::restoreLevelFromMetadata(meta, m_level);
   Game::Systems::GameStateSerializer::restoreCameraFromMetadata(
@@ -1443,15 +1255,24 @@ auto GameEngine::load_from_slot(const QString &slot) -> bool {
                                                                  runtime_snap);
   apply_runtime_snapshot(runtime_snap);
 
-  restore_environment_from_metadata(meta);
+  GameStateRestorer::RendererRefs renderers{
+      m_renderer.get(), m_camera.get(), m_ground.get(),  m_terrain.get(),
+      m_biome.get(),    m_river.get(),  m_road.get(),    m_riverbank.get(),
+      m_bridge.get(),   m_fog.get(),    m_stone.get(),   m_plant.get(),
+      m_pine.get(),     m_olive.get(),  m_firecamp.get()};
+  GameStateRestorer::restore_environment_from_metadata(
+      meta, m_world.get(), renderers, m_level, m_runtime.local_owner_id,
+      m_viewport);
 
   auto unit_reg = std::make_shared<Game::Units::UnitFactoryRegistry>();
   Game::Units::registerBuiltInUnits(*unit_reg);
   Game::Map::MapTransformer::setFactoryRegistry(unit_reg);
   qInfo() << "Factory registry reinitialized after loading saved game";
 
-  rebuild_registries_after_load();
-  rebuild_entity_cache();
+  GameStateRestorer::rebuild_registries_after_load(
+      m_world.get(), m_selected_player_id, m_level, m_runtime.local_owner_id);
+  GameStateRestorer::rebuild_entity_cache(m_world.get(), m_entity_cache,
+                                          m_runtime.local_owner_id);
 
   if (auto *ai_system = m_world->get_system<Game::Systems::AISystem>()) {
     qInfo() << "Reinitializing AI system after loading saved game";
@@ -1482,9 +1303,9 @@ auto GameEngine::save_to_slot(const QString &slot,
       *m_world, m_camera.get(), m_level, runtime_snap);
   meta["title"] = title;
   const QByteArray screenshot = capture_screenshot();
-  if (!m_saveLoadService->saveGameToSlot(*m_world, slot, title,
-                                         m_level.map_name, meta, screenshot)) {
-    set_error(m_saveLoadService->getLastError());
+  if (!m_saveLoadService->save_game_to_slot(
+          *m_world, slot, title, m_level.map_name, meta, screenshot)) {
+    set_error(m_saveLoadService->get_last_error());
     return false;
   }
   emit save_slots_changed();
@@ -1508,10 +1329,10 @@ auto GameEngine::delete_save_slot(const QString &slotName) -> bool {
     return false;
   }
 
-  bool const success = m_saveLoadService->deleteSaveSlot(slotName);
+  bool const success = m_saveLoadService->delete_save_slot(slotName);
 
   if (!success) {
-    QString const error = m_saveLoadService->getLastError();
+    QString const error = m_saveLoadService->get_last_error();
     qWarning() << "Failed to delete save slot:" << error;
     set_error(error);
   } else {
@@ -1521,9 +1342,38 @@ auto GameEngine::delete_save_slot(const QString &slotName) -> bool {
   return success;
 }
 
+auto GameEngine::to_runtime_snapshot() const -> Game::Systems::RuntimeSnapshot {
+  Game::Systems::RuntimeSnapshot snapshot;
+  snapshot.paused = m_runtime.paused;
+  snapshot.time_scale = m_runtime.time_scale;
+  snapshot.local_owner_id = m_runtime.local_owner_id;
+  snapshot.victory_state = m_runtime.victory_state;
+  snapshot.cursor_mode = static_cast<int>(m_runtime.cursor_mode);
+  snapshot.selected_player_id = m_selected_player_id;
+  snapshot.follow_selection = m_followSelectionEnabled;
+  return snapshot;
+}
+
+void GameEngine::apply_runtime_snapshot(
+    const Game::Systems::RuntimeSnapshot &snapshot) {
+  m_runtime.paused = snapshot.paused;
+  m_runtime.time_scale = snapshot.time_scale;
+  m_runtime.local_owner_id = snapshot.local_owner_id;
+  m_runtime.victory_state = snapshot.victory_state;
+  m_selected_player_id = snapshot.selected_player_id;
+  m_followSelectionEnabled = snapshot.follow_selection;
+
+  m_runtime.cursor_mode = static_cast<CursorMode>(snapshot.cursor_mode);
+  if (m_cursorManager) {
+    m_cursorManager->setMode(m_runtime.cursor_mode);
+  }
+}
+
+auto GameEngine::capture_screenshot() const -> QByteArray { return {}; }
+
 void GameEngine::exit_game() {
   if (m_saveLoadService) {
-    m_saveLoadService->exitGame();
+    m_saveLoadService->exit_game();
   }
 }
 
@@ -1600,23 +1450,23 @@ void GameEngine::on_unit_spawned(const Engine::Core::UnitSpawnedEvent &event) {
 
   if (event.owner_id == m_runtime.local_owner_id) {
     if (event.spawn_type == Game::Units::SpawnType::Barracks) {
-      m_entityCache.playerBarracksAlive = true;
+      m_entity_cache.player_barracks_alive = true;
     } else {
       int const production_cost =
           Game::Units::TroopConfig::instance().getProductionCost(
               event.spawn_type);
-      m_entityCache.playerTroopCount += production_cost;
+      m_entity_cache.player_troop_count += production_cost;
     }
   } else if (owners.is_ai(event.owner_id)) {
     if (event.spawn_type == Game::Units::SpawnType::Barracks) {
-      m_entityCache.enemyBarracksCount++;
-      m_entityCache.enemyBarracksAlive = true;
+      m_entity_cache.enemy_barracks_count++;
+      m_entity_cache.enemy_barracks_alive = true;
     }
   }
 
   auto emit_if_changed = [&] {
-    if (m_entityCache.playerTroopCount != m_runtime.lastTroopCount) {
-      m_runtime.lastTroopCount = m_entityCache.playerTroopCount;
+    if (m_entity_cache.player_troop_count != m_runtime.last_troop_count) {
+      m_runtime.last_troop_count = m_entity_cache.player_troop_count;
       emit troop_count_changed();
     }
   };
@@ -1628,768 +1478,36 @@ void GameEngine::on_unit_died(const Engine::Core::UnitDiedEvent &event) {
 
   if (event.owner_id == m_runtime.local_owner_id) {
     if (event.spawn_type == Game::Units::SpawnType::Barracks) {
-      m_entityCache.playerBarracksAlive = false;
+      m_entity_cache.player_barracks_alive = false;
     } else {
       int const production_cost =
           Game::Units::TroopConfig::instance().getProductionCost(
               event.spawn_type);
-      m_entityCache.playerTroopCount -= production_cost;
-      m_entityCache.playerTroopCount =
-          std::max(0, m_entityCache.playerTroopCount);
+      m_entity_cache.player_troop_count -= production_cost;
+      m_entity_cache.player_troop_count =
+          std::max(0, m_entity_cache.player_troop_count);
     }
   } else if (owners.is_ai(event.owner_id)) {
     if (event.spawn_type == Game::Units::SpawnType::Barracks) {
-      m_entityCache.enemyBarracksCount--;
-      m_entityCache.enemyBarracksCount =
-          std::max(0, m_entityCache.enemyBarracksCount);
-      m_entityCache.enemyBarracksAlive = (m_entityCache.enemyBarracksCount > 0);
-    }
-  }
-
-  sync_selection_flags();
-
-  auto emit_if_changed = [&] {
-    if (m_entityCache.playerTroopCount != m_runtime.lastTroopCount) {
-      m_runtime.lastTroopCount = m_entityCache.playerTroopCount;
-      emit troop_count_changed();
-    }
-  };
-  emit_if_changed();
-}
-
-void GameEngine::rebuild_entity_cache() {
-  if (!m_world) {
-    m_entityCache.reset();
-    return;
-  }
-
-  m_entityCache.reset();
-
-  auto &owners = Game::Systems::OwnerRegistry::instance();
-  auto entities = m_world->get_entities_with<Engine::Core::UnitComponent>();
-  for (auto *e : entities) {
-    auto *unit = e->get_component<Engine::Core::UnitComponent>();
-    if ((unit == nullptr) || unit->health <= 0) {
-      continue;
-    }
-
-    if (unit->owner_id == m_runtime.local_owner_id) {
-      if (unit->spawn_type == Game::Units::SpawnType::Barracks) {
-        m_entityCache.playerBarracksAlive = true;
-      } else {
-        int const production_cost =
-            Game::Units::TroopConfig::instance().getProductionCost(
-                unit->spawn_type);
-        m_entityCache.playerTroopCount += production_cost;
-      }
-    } else if (owners.is_ai(unit->owner_id)) {
-      if (unit->spawn_type == Game::Units::SpawnType::Barracks) {
-        m_entityCache.enemyBarracksCount++;
-        m_entityCache.enemyBarracksAlive = true;
-      }
-    }
-  }
-
-  auto emit_if_changed = [&] {
-    if (m_entityCache.playerTroopCount != m_runtime.lastTroopCount) {
-      m_runtime.lastTroopCount = m_entityCache.playerTroopCount;
-      emit troop_count_changed();
-    }
-  };
-  emit_if_changed();
-}
-
-void GameEngine::rebuild_registries_after_load() {
-  if (!m_world) {
-    return;
-  }
-
-  auto &owner_registry = Game::Systems::OwnerRegistry::instance();
-  m_runtime.local_owner_id = owner_registry.get_local_player_id();
-
-  auto &troops = Game::Systems::TroopCountRegistry::instance();
-  troops.rebuild_from_world(*m_world);
-
-  auto &stats_registry = Game::Systems::GlobalStatsRegistry::instance();
-  stats_registry.rebuild_from_world(*m_world);
-
-  const auto &all_owners = owner_registry.get_all_owners();
-  for (const auto &owner : all_owners) {
-    if (owner.type == Game::Systems::OwnerType::Player ||
-        owner.type == Game::Systems::OwnerType::AI) {
-      stats_registry.mark_game_start(owner.owner_id);
-    }
-  }
-
-  rebuild_building_collisions();
-
-  m_level.player_unit_id = 0;
-  auto units = m_world->get_entities_with<Engine::Core::UnitComponent>();
-  for (auto *entity : units) {
-    auto *unit = entity->get_component<Engine::Core::UnitComponent>();
-    if (unit == nullptr) {
-      continue;
-    }
-    if (unit->owner_id == m_runtime.local_owner_id) {
-      m_level.player_unit_id = entity->get_id();
-      break;
-    }
-  }
-
-  if (m_selected_player_id != m_runtime.local_owner_id) {
-    m_selected_player_id = m_runtime.local_owner_id;
-    emit selected_player_id_changed();
-  }
-}
-
-void GameEngine::rebuild_building_collisions() {
-  auto &registry = Game::Systems::BuildingCollisionRegistry::instance();
-  registry.clear();
-  if (!m_world) {
-    return;
-  }
-
-  auto buildings =
-      m_world->get_entities_with<Engine::Core::BuildingComponent>();
-  for (auto *entity : buildings) {
-    auto *transform = entity->get_component<Engine::Core::TransformComponent>();
-    auto *unit = entity->get_component<Engine::Core::UnitComponent>();
-    if ((transform == nullptr) || (unit == nullptr)) {
-      continue;
-    }
-
-    registry.register_building(
-        entity->get_id(), Game::Units::spawn_typeToString(unit->spawn_type),
-        transform->position.x, transform->position.z, unit->owner_id);
-  }
-}
-
-auto GameEngine::to_runtime_snapshot() const -> Game::Systems::RuntimeSnapshot {
-  Game::Systems::RuntimeSnapshot snap;
-  snap.paused = m_runtime.paused;
-  snap.time_scale = m_runtime.time_scale;
-  snap.local_owner_id = m_runtime.local_owner_id;
-  snap.victory_state = m_runtime.victory_state;
-  snap.cursor_mode = CursorModeUtils::toInt(m_runtime.cursor_mode);
-  snap.selected_player_id = m_selected_player_id;
-  snap.follow_selection = m_followSelectionEnabled;
-  return snap;
-}
-
-void GameEngine::apply_runtime_snapshot(
-    const Game::Systems::RuntimeSnapshot &snapshot) {
-  m_runtime.local_owner_id = snapshot.local_owner_id;
-  set_paused(snapshot.paused);
-  set_game_speed(snapshot.time_scale);
-
-  if (snapshot.victory_state != m_runtime.victory_state) {
-    m_runtime.victory_state = snapshot.victory_state;
-    emit victory_state_changed();
-  }
-
-  set_cursor_mode(CursorModeUtils::fromInt(snapshot.cursor_mode));
-
-  if (snapshot.selected_player_id != m_selected_player_id) {
-    m_selected_player_id = snapshot.selected_player_id;
-    emit selected_player_id_changed();
-  }
-
-  if (snapshot.follow_selection != m_followSelectionEnabled) {
-    m_followSelectionEnabled = snapshot.follow_selection;
-    if (m_camera && m_cameraService && m_world) {
-      m_cameraService->follow_selection(*m_camera, *m_world,
-                                        m_followSelectionEnabled);
+      m_entity_cache.enemy_barracks_count--;
+      m_entity_cache.enemy_barracks_count =
+          std::max(0, m_entity_cache.enemy_barracks_count);
+      m_entity_cache.enemy_barracks_alive =
+          (m_entity_cache.enemy_barracks_count > 0);
     }
   }
 }
 
-auto GameEngine::capture_screenshot() const -> QByteArray {
-  if (m_window == nullptr) {
-    return {};
+auto GameEngine::minimap_image() const -> QImage {
+  if (m_minimap_manager) {
+    return m_minimap_manager->get_image();
   }
-
-  QImage const image = m_window->grabWindow();
-  if (image.isNull()) {
-    return {};
-  }
-
-  const QSize target_size(320, 180);
-  QImage const scaled =
-      image.scaled(target_size, Qt::KeepAspectRatio, Qt::SmoothTransformation);
-
-  QByteArray buffer;
-  QBuffer q_buffer(&buffer);
-  if (!q_buffer.open(QIODevice::WriteOnly)) {
-    return {};
-  }
-
-  if (!scaled.save(&q_buffer, "PNG")) {
-    return {};
-  }
-
-  return buffer;
+  return QImage();
 }
 
-void GameEngine::restore_environment_from_metadata(
-    const QJsonObject &metadata) {
-  if (!m_world) {
-    return;
-  }
-
-  const auto fallback_grid_width = metadata.value("grid_width").toInt(50);
-  const auto fallback_grid_height = metadata.value("grid_height").toInt(50);
-  const float fallback_tile_size =
-      static_cast<float>(metadata.value("tile_size").toDouble(1.0));
-
-  auto &terrain_service = Game::Map::TerrainService::instance();
-
-  bool const terrain_already_restored = terrain_service.is_initialized();
-
-  Game::Map::MapDefinition def;
-  QString map_error;
-  bool loaded_definition = false;
-  const QString &map_path = m_level.map_path;
-
-  if (!terrain_already_restored && !map_path.isEmpty()) {
-    loaded_definition =
-        Game::Map::MapLoader::loadFromJsonFile(map_path, def, &map_error);
-    if (!loaded_definition) {
-      qWarning() << "GameEngine: Failed to load map definition from" << map_path
-                 << "during save load:" << map_error;
-    }
-  }
-
-  if (!terrain_already_restored && loaded_definition) {
-    terrain_service.initialize(def);
-
-    if (!def.name.isEmpty()) {
-      m_level.map_name = def.name;
-    }
-
-    m_level.cam_fov = def.camera.fovY;
-    m_level.cam_near = def.camera.near_plane;
-    m_level.cam_far = def.camera.far_plane;
-  }
-
-  if (m_renderer && m_camera) {
-    if (loaded_definition) {
-      Game::Map::Environment::apply(def, *m_renderer, *m_camera);
-
-      generate_minimap_for_map(def);
-    } else {
-      Game::Map::Environment::applyDefault(*m_renderer, *m_camera);
-    }
-  }
-
-  if (terrain_service.is_initialized()) {
-    const auto *height_map = terrain_service.get_height_map();
-    const int grid_width =
-        (height_map != nullptr) ? height_map->getWidth() : fallback_grid_width;
-    const int grid_height = (height_map != nullptr) ? height_map->getHeight()
-                                                    : fallback_grid_height;
-    const float tile_size = (height_map != nullptr) ? height_map->getTileSize()
-                                                    : fallback_tile_size;
-
-    if (m_ground) {
-      m_ground->configure(tile_size, grid_width, grid_height);
-      m_ground->setBiome(terrain_service.biome_settings());
-    }
-
-    if (height_map != nullptr) {
-      if (m_terrain) {
-        m_terrain->configure(*height_map, terrain_service.biome_settings());
-      }
-      if (m_river) {
-        m_river->configure(height_map->getRiverSegments(),
-                           height_map->getTileSize());
-      }
-      if (m_road) {
-        m_road->configure(terrain_service.road_segments(),
-                          height_map->getTileSize());
-      }
-      if (m_riverbank) {
-        m_riverbank->configure(height_map->getRiverSegments(), *height_map);
-      }
-      if (m_bridge) {
-        m_bridge->configure(height_map->getBridges(),
-                            height_map->getTileSize());
-      }
-      if (m_biome) {
-        m_biome->configure(*height_map, terrain_service.biome_settings());
-        m_biome->refreshGrass();
-      }
-      if (m_stone) {
-        m_stone->configure(*height_map, terrain_service.biome_settings());
-      }
-      if (m_plant) {
-        m_plant->configure(*height_map, terrain_service.biome_settings());
-      }
-      if (m_pine) {
-        m_pine->configure(*height_map, terrain_service.biome_settings());
-      }
-      if (m_olive) {
-        m_olive->configure(*height_map, terrain_service.biome_settings());
-      }
-      if (m_firecamp) {
-        m_firecamp->configure(*height_map, terrain_service.biome_settings());
-      }
-    }
-
-    Game::Systems::CommandService::initialize(grid_width, grid_height);
-
-    auto &visibility_service = Game::Map::VisibilityService::instance();
-    visibility_service.initialize(grid_width, grid_height, tile_size);
-    visibility_service.computeImmediate(*m_world, m_runtime.local_owner_id);
-
-    if (m_fog && visibility_service.is_initialized()) {
-      m_fog->update_mask(
-          visibility_service.getWidth(), visibility_service.getHeight(),
-          visibility_service.getTileSize(), visibility_service.snapshotCells());
-    }
-
-    m_runtime.visibilityVersion = visibility_service.version();
-    m_runtime.visibilityUpdateAccumulator = 0.0F;
-  } else {
-    if (m_renderer && m_camera) {
-      Game::Map::Environment::applyDefault(*m_renderer, *m_camera);
-    }
-
-    Game::Map::MapDefinition fallback_def;
-    fallback_def.grid.width = fallback_grid_width;
-    fallback_def.grid.height = fallback_grid_height;
-    fallback_def.grid.tile_size = fallback_tile_size;
-    fallback_def.max_troops_per_player = m_level.max_troops_per_player;
-    terrain_service.initialize(fallback_def);
-
-    if (m_ground) {
-      m_ground->configure(fallback_tile_size, fallback_grid_width,
-                          fallback_grid_height);
-    }
-
-    Game::Systems::CommandService::initialize(fallback_grid_width,
-                                              fallback_grid_height);
-
-    auto &visibility_service = Game::Map::VisibilityService::instance();
-    visibility_service.initialize(fallback_grid_width, fallback_grid_height,
-                                  fallback_tile_size);
-    visibility_service.computeImmediate(*m_world, m_runtime.local_owner_id);
-
-    if (m_fog && visibility_service.is_initialized()) {
-      m_fog->update_mask(
-          visibility_service.getWidth(), visibility_service.getHeight(),
-          visibility_service.getTileSize(), visibility_service.snapshotCells());
-    }
-    m_runtime.visibilityVersion = visibility_service.version();
-    m_runtime.visibilityUpdateAccumulator = 0.0F;
-  }
-}
-
-auto GameEngine::has_patrol_preview_waypoint() const -> bool {
-  return m_commandController && m_commandController->hasPatrolFirstWaypoint();
-}
-
-auto GameEngine::get_patrol_preview_waypoint() const -> QVector3D {
-  if (!m_commandController) {
-    return {};
-  }
-  return m_commandController->getPatrolFirstWaypoint();
-}
-
-void GameEngine::update_ambient_state(float dt) {
-
-  m_ambientCheckTimer += dt;
-  const float check_interval = 2.0F;
-
-  if (m_ambientCheckTimer < check_interval) {
-    return;
-  }
-  m_ambientCheckTimer = 0.0F;
-
-  Engine::Core::AmbientState new_state = Engine::Core::AmbientState::PEACEFUL;
-
-  if (!m_runtime.victory_state.isEmpty()) {
-    if (m_runtime.victory_state == "victory") {
-      new_state = Engine::Core::AmbientState::VICTORY;
-    } else if (m_runtime.victory_state == "defeat") {
-      new_state = Engine::Core::AmbientState::DEFEAT;
-    }
-  } else if (is_player_in_combat()) {
-
-    new_state = Engine::Core::AmbientState::COMBAT;
-  } else if (m_entityCache.enemyBarracksAlive &&
-             m_entityCache.playerBarracksAlive) {
-
-    new_state = Engine::Core::AmbientState::TENSE;
-  }
-
-  if (new_state != m_currentAmbientState) {
-    Engine::Core::AmbientState const previous_state = m_currentAmbientState;
-    m_currentAmbientState = new_state;
-
-    Engine::Core::EventManager::instance().publish(
-        Engine::Core::AmbientStateChangedEvent(new_state, previous_state));
-
-    qInfo() << "Ambient state changed from" << static_cast<int>(previous_state)
-            << "to" << static_cast<int>(new_state);
-  }
-}
-
-auto GameEngine::is_player_in_combat() const -> bool {
-  if (!m_world) {
-    return false;
-  }
-
-  auto units = m_world->get_entities_with<Engine::Core::UnitComponent>();
-  const float combat_check_radius = 15.0F;
-
-  for (auto *entity : units) {
-    auto *unit = entity->get_component<Engine::Core::UnitComponent>();
-    if ((unit == nullptr) || unit->owner_id != m_runtime.local_owner_id ||
-        unit->health <= 0) {
-      continue;
-    }
-
-    if (entity->has_component<Engine::Core::AttackTargetComponent>()) {
-      return true;
-    }
-
-    auto *transform = entity->get_component<Engine::Core::TransformComponent>();
-    if (transform == nullptr) {
-      continue;
-    }
-
-    for (auto *other_entity : units) {
-      auto *other_unit =
-          other_entity->get_component<Engine::Core::UnitComponent>();
-      if ((other_unit == nullptr) ||
-          other_unit->owner_id == m_runtime.local_owner_id ||
-          other_unit->health <= 0) {
-        continue;
-      }
-
-      auto *other_transform =
-          other_entity->get_component<Engine::Core::TransformComponent>();
-      if (other_transform == nullptr) {
-        continue;
-      }
-
-      float const dx = transform->position.x - other_transform->position.x;
-      float const dz = transform->position.z - other_transform->position.z;
-      float const dist_sq = dx * dx + dz * dz;
-
-      if (dist_sq < combat_check_radius * combat_check_radius) {
-        return true;
-      }
-    }
-  }
-
-  return false;
-}
-
-void GameEngine::load_audio_resources() {
-  auto &audio_sys = AudioSystem::getInstance();
-
-  QString const base_path =
-      QCoreApplication::applicationDirPath() + "/assets/audio/";
-  qInfo() << "Loading audio resources from:" << base_path;
-
-  QDir const audio_dir(base_path);
-  if (!audio_dir.exists()) {
-    qWarning() << "Audio assets directory does not exist:" << base_path;
-    qWarning() << "Application directory:"
-               << QCoreApplication::applicationDirPath();
-    return;
-  }
-
-  if (audio_sys.loadSound("archer_voice",
-                          (base_path + "voices/archer_voice.wav").toStdString(),
-                          AudioCategory::VOICE)) {
-    qInfo() << "Loaded archer voice";
-  } else {
-    qWarning() << "Failed to load archer voice from:"
-               << (base_path + "voices/archer_voice.wav");
-  }
-
-  if (audio_sys.loadSound(
-          "swordsman_voice",
-          (base_path + "voices/swordsman_voice.wav").toStdString(),
-          AudioCategory::VOICE)) {
-    qInfo() << "Loaded swordsman voice";
-  } else {
-    qWarning() << "Failed to load swordsman voice from:"
-               << (base_path + "voices/swordsman_voice.wav");
-  }
-
-  if (audio_sys.loadSound(
-          "spearman_voice",
-          (base_path + "voices/spearman_voice.wav").toStdString(),
-          AudioCategory::VOICE)) {
-    qInfo() << "Loaded spearman voice";
-  } else {
-    qWarning() << "Failed to load spearman voice from:"
-               << (base_path + "voices/spearman_voice.wav");
-  }
-
-  if (audio_sys.loadMusic("music_peaceful",
-                          (base_path + "music/peaceful.wav").toStdString())) {
-    qInfo() << "Loaded peaceful music";
-  } else {
-    qWarning() << "Failed to load peaceful music from:"
-               << (base_path + "music/peaceful.wav");
-  }
-
-  if (audio_sys.loadMusic("music_tense",
-                          (base_path + "music/tense.wav").toStdString())) {
-    qInfo() << "Loaded tense music";
-  } else {
-    qWarning() << "Failed to load tense music from:"
-               << (base_path + "music/tense.wav");
-  }
-
-  if (audio_sys.loadMusic("music_combat",
-                          (base_path + "music/combat.wav").toStdString())) {
-    qInfo() << "Loaded combat music";
-  } else {
-    qWarning() << "Failed to load combat music from:"
-               << (base_path + "music/combat.wav");
-  }
-
-  if (audio_sys.loadMusic("music_victory",
-                          (base_path + "music/victory.wav").toStdString())) {
-    qInfo() << "Loaded victory music";
-  } else {
-    qWarning() << "Failed to load victory music from:"
-               << (base_path + "music/victory.wav");
-  }
-
-  if (audio_sys.loadMusic("music_defeat",
-                          (base_path + "music/defeat.wav").toStdString())) {
-    qInfo() << "Loaded defeat music";
-  } else {
-    qWarning() << "Failed to load defeat music from:"
-               << (base_path + "music/defeat.wav");
-  }
-
-  qInfo() << "Audio resources loading complete";
-}
-
-auto GameEngine::minimap_image() const -> QImage { return m_minimap_image; }
-
-void GameEngine::generate_minimap_for_map(
-    const Game::Map::MapDefinition &map_def) {
-  Game::Map::Minimap::MinimapGenerator generator;
-  m_minimap_base_image = generator.generate(map_def);
-
-  if (!m_minimap_base_image.isNull()) {
-    qDebug() << "GameEngine: Generated minimap of size"
-             << m_minimap_base_image.width() << "x"
-             << m_minimap_base_image.height();
-
-    m_world_width = static_cast<float>(map_def.grid.width);
-    m_world_height = static_cast<float>(map_def.grid.height);
-
-    m_unit_layer = std::make_unique<Game::Map::Minimap::UnitLayer>();
-    m_unit_layer->init(m_minimap_base_image.width(),
-                       m_minimap_base_image.height(), m_world_width,
-                       m_world_height);
-    qDebug() << "GameEngine: Initialized unit layer for world" << m_world_width
-             << "x" << m_world_height;
-
-    m_minimap_fog_version = 0;
-    m_minimap_update_timer = MINIMAP_UPDATE_INTERVAL;
-    update_minimap_fog(0.0F);
-  } else {
-    qWarning() << "GameEngine: Failed to generate minimap";
-  }
-}
-
-void GameEngine::update_minimap_fog(float dt) {
-  if (m_minimap_base_image.isNull()) {
-    return;
-  }
-
-  m_minimap_update_timer += dt;
-  if (m_minimap_update_timer < MINIMAP_UPDATE_INTERVAL) {
-    return;
-  }
-  m_minimap_update_timer = 0.0F;
-
-  auto &visibility_service = Game::Map::VisibilityService::instance();
-  if (!visibility_service.is_initialized()) {
-
-    if (m_minimap_image != m_minimap_base_image) {
-      m_minimap_image = m_minimap_base_image;
-      emit minimap_image_changed();
-    }
-    return;
-  }
-
-  const auto current_version = visibility_service.version();
-  if (current_version == m_minimap_fog_version && !m_minimap_image.isNull()) {
-
-    update_minimap_units();
-    return;
-  }
-  m_minimap_fog_version = current_version;
-
-  const int vis_width = visibility_service.getWidth();
-  const int vis_height = visibility_service.getHeight();
-  const auto cells = visibility_service.snapshotCells();
-
-  if (cells.empty() || vis_width <= 0 || vis_height <= 0) {
-    m_minimap_image = m_minimap_base_image;
-    emit minimap_image_changed();
-    return;
-  }
-
-  m_minimap_image = m_minimap_base_image.copy();
-
-  const int img_width = m_minimap_image.width();
-  const int img_height = m_minimap_image.height();
-
-  constexpr float k_inv_cos = -0.70710678118F;
-  constexpr float k_inv_sin = 0.70710678118F;
-
-  const float scale_x =
-      static_cast<float>(vis_width) / static_cast<float>(img_width);
-  const float scale_y =
-      static_cast<float>(vis_height) / static_cast<float>(img_height);
-
-  constexpr int FOG_R = 45;
-  constexpr int FOG_G = 38;
-  constexpr int FOG_B = 30;
-  constexpr int ALPHA_UNSEEN = 180;
-  constexpr int ALPHA_EXPLORED = 60;
-  constexpr int ALPHA_VISIBLE = 0;
-  constexpr float ALPHA_THRESHOLD = 0.5F;
-  constexpr float ALPHA_SCALE = 1.0F / 255.0F;
-
-  auto get_alpha = [&cells, vis_width, ALPHA_VISIBLE, ALPHA_EXPLORED,
-                    ALPHA_UNSEEN](int vx, int vy) -> float {
-    const size_t idx = static_cast<size_t>(vy * vis_width + vx);
-    if (idx >= cells.size()) {
-      return static_cast<float>(ALPHA_UNSEEN);
-    }
-    const auto state = static_cast<Game::Map::VisibilityState>(cells[idx]);
-    switch (state) {
-    case Game::Map::VisibilityState::Visible:
-      return static_cast<float>(ALPHA_VISIBLE);
-    case Game::Map::VisibilityState::Explored:
-      return static_cast<float>(ALPHA_EXPLORED);
-    default:
-      return static_cast<float>(ALPHA_UNSEEN);
-    }
-  };
-
-  const float half_img_w = static_cast<float>(img_width) * 0.5F;
-  const float half_img_h = static_cast<float>(img_height) * 0.5F;
-  const float half_vis_w = static_cast<float>(vis_width) * 0.5F;
-  const float half_vis_h = static_cast<float>(vis_height) * 0.5F;
-
-  for (int y = 0; y < img_height; ++y) {
-    auto *scanline = reinterpret_cast<QRgb *>(m_minimap_image.scanLine(y));
-
-    for (int x = 0; x < img_width; ++x) {
-
-      const float centered_x = static_cast<float>(x) - half_img_w;
-      const float centered_y = static_cast<float>(y) - half_img_h;
-
-      const float world_x = centered_x * k_inv_cos - centered_y * k_inv_sin;
-      const float world_y = centered_x * k_inv_sin + centered_y * k_inv_cos;
-
-      const float vis_x = (world_x * scale_x) + half_vis_w;
-      const float vis_y = (world_y * scale_y) + half_vis_h;
-
-      const int vx0 = std::clamp(static_cast<int>(vis_x), 0, vis_width - 1);
-      const int vx1 = std::clamp(vx0 + 1, 0, vis_width - 1);
-      const float fx = vis_x - static_cast<float>(vx0);
-
-      const int vy0 = std::clamp(static_cast<int>(vis_y), 0, vis_height - 1);
-      const int vy1 = std::clamp(vy0 + 1, 0, vis_height - 1);
-      const float fy = vis_y - static_cast<float>(vy0);
-
-      const float a00 = get_alpha(vx0, vy0);
-      const float a10 = get_alpha(vx1, vy0);
-      const float a01 = get_alpha(vx0, vy1);
-      const float a11 = get_alpha(vx1, vy1);
-
-      const float alpha_top = a00 + (a10 - a00) * fx;
-      const float alpha_bot = a01 + (a11 - a01) * fx;
-      const float fog_alpha = alpha_top + (alpha_bot - alpha_top) * fy;
-
-      if (fog_alpha > ALPHA_THRESHOLD) {
-        const QRgb original = scanline[x];
-        const int orig_r = qRed(original);
-        const int orig_g = qGreen(original);
-        const int orig_b = qBlue(original);
-
-        const float blend = fog_alpha * ALPHA_SCALE;
-        const float inv_blend = 1.0F - blend;
-
-        const int new_r = static_cast<int>(orig_r * inv_blend + FOG_R * blend);
-        const int new_g = static_cast<int>(orig_g * inv_blend + FOG_G * blend);
-        const int new_b = static_cast<int>(orig_b * inv_blend + FOG_B * blend);
-
-        scanline[x] = qRgba(new_r, new_g, new_b, 255);
-      }
-    }
-  }
-
-  update_minimap_units();
-}
-
-void GameEngine::update_minimap_units() {
-  if (m_minimap_image.isNull() || !m_unit_layer || !m_world) {
-    emit minimap_image_changed();
-    return;
-  }
-
-  std::vector<Game::Map::Minimap::UnitMarker> markers;
-  markers.reserve(128);
-
-  std::unordered_set<Engine::Core::EntityID> selected_ids;
-  if (auto *selection_system =
-          m_world->get_system<Game::Systems::SelectionSystem>()) {
-    const auto &sel = selection_system->get_selected_units();
-    selected_ids.insert(sel.begin(), sel.end());
-  }
-
-  {
-    const std::lock_guard<std::recursive_mutex> lock(
-        m_world->get_entity_mutex());
-    const auto &entities = m_world->get_entities();
-
-    for (const auto &[entity_id, entity] : entities) {
-      const auto *unit = entity->get_component<Engine::Core::UnitComponent>();
-      if (!unit) {
-        continue;
-      }
-
-      const auto *transform =
-          entity->get_component<Engine::Core::TransformComponent>();
-      if (!transform) {
-        continue;
-      }
-
-      Game::Map::Minimap::UnitMarker marker;
-      marker.world_x = transform->position.x;
-      marker.world_z = transform->position.z;
-      marker.owner_id = unit->owner_id;
-      marker.is_selected = selected_ids.count(entity_id) > 0;
-      marker.is_building = Game::Units::is_building_spawn(unit->spawn_type);
-
-      markers.push_back(marker);
-    }
-  }
-
-  m_unit_layer->update(markers);
-
-  const QImage &unit_overlay = m_unit_layer->get_image();
-  if (!unit_overlay.isNull()) {
-    QPainter painter(&m_minimap_image);
-    painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
-    painter.drawImage(0, 0, unit_overlay);
-  }
-
-  emit minimap_image_changed();
+auto GameEngine::generate_map_preview(const QString &map_path,
+                                      const QVariantList &player_configs) const
+    -> QImage {
+  Game::Map::Minimap::MapPreviewGenerator generator;
+  return generator.generate_preview(map_path, player_configs);
 }

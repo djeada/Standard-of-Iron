@@ -254,7 +254,7 @@ void draw_phoenician_banner(
   out.mesh(get_unit_cylinder(),
            p.model * Render::Geom::cylinder_between(beam_end, connector_top,
                                                     pole_radius * 0.18F),
-           c.gold, white, 1.0F);
+           c.limestone, white, 1.0F);
 
   float const panel_x = beam_end.x() + (banner_width * 0.5F - beam_length);
 

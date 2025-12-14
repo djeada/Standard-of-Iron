@@ -80,7 +80,6 @@ public:
   healer_aura_pipeline() -> BackendPipelines::HealerAuraPipeline * {
     return m_healerAuraPipeline.get();
   }
-
   void enable_depth_test(bool enable) {
     if (enable) {
       glEnable(GL_DEPTH_TEST);
