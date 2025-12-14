@@ -15,11 +15,6 @@ namespace {
 
 thread_local std::mt19937 g_audio_rng(std::random_device{}());
 
-auto get_pitch_variation() -> float {
-  std::uniform_real_distribution<float> dist(0.9F, 1.1F);
-  return dist(g_audio_rng);
-}
-
 auto get_volume_variation() -> float {
   std::uniform_real_distribution<float> dist(0.85F, 1.0F);
   return dist(g_audio_rng);
