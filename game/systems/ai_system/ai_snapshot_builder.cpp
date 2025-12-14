@@ -93,6 +93,7 @@ auto AISnapshotBuilder::build(const Engine::Core::World &world,
 
     ContactSnapshot contact;
     contact.id = entity->get_id();
+    contact.owner_id = unit->owner_id;
     contact.is_building =
         entity->has_component<Engine::Core::BuildingComponent>();
     contact.posX = transform->position.x;

@@ -43,6 +43,7 @@ void AIReasoner::updateContext(const AISnapshot &snapshot, AIContext &ctx) {
   ctx.base_pos_z = 0.0F;
   ctx.visible_enemy_count = 0;
   ctx.enemy_buildings_count = 0;
+  ctx.neutral_barracks_count = 0;
   ctx.average_enemy_distance = 0.0F;
   ctx.max_troops_per_player =
       Game::GameConfig::instance().get_max_troops_per_player();
@@ -128,6 +129,11 @@ void AIReasoner::updateContext(const AISnapshot &snapshot, AIContext &ctx) {
   for (const auto &enemy : snapshot.visible_enemies) {
     if (enemy.is_building) {
       ctx.enemy_buildings_count++;
+      // Check if this is a neutral barracks
+      if (enemy.spawn_type == Game::Units::SpawnType::Barracks && 
+          Game::Core::isNeutralOwner(enemy.owner_id)) {
+        ctx.neutral_barracks_count++;
+      }
     }
 
     if (ctx.primary_barracks != 0) {
@@ -275,6 +281,9 @@ void AIReasoner::updateStateMachine(const AISnapshot &snapshot, AIContext &ctx,
     } else if (ctx.average_health < 0.40F && ctx.total_units > 0) {
 
       ctx.state = AIState::Defending;
+    } else if (ctx.neutral_barracks_count > 0 && ctx.total_units >= 3) {
+      // Neutral barracks available, prioritize expansion
+      ctx.state = AIState::Expanding;
     } else if (ctx.total_units >= 1 && ctx.visible_enemy_count > 0) {
       // Only attack if we have units, consider tactical situation
       if (ctx.total_units >= 2 || ctx.barracks_under_threat) {
@@ -287,12 +296,16 @@ void AIReasoner::updateStateMachine(const AISnapshot &snapshot, AIContext &ctx,
     // Attack thresholds: reactive (2 units with enemies) vs proactive (5 units)
     constexpr int MIN_UNITS_FOR_REACTIVE_ATTACK = 3;
     constexpr int MIN_UNITS_FOR_PROACTIVE_ATTACK = 5;
+    constexpr int MIN_UNITS_FOR_EXPANSION = 3;
     
     if (ctx.total_units < 1) {
       ctx.state = AIState::Idle;
     } else if (ctx.average_health < 0.40F) {
       // Army is weak, defend
       ctx.state = AIState::Defending;
+    } else if (ctx.neutral_barracks_count > 0 && ctx.total_units >= MIN_UNITS_FOR_EXPANSION) {
+      // Neutral barracks available, prioritize expansion
+      ctx.state = AIState::Expanding;
     } else if (ctx.visible_enemy_count > 0 && ctx.total_units >= 2) {
       // Enemy spotted, engage with current force (minimum 2)
       ctx.state = AIState::Attacking;
@@ -354,8 +367,24 @@ void AIReasoner::updateStateMachine(const AISnapshot &snapshot, AIContext &ctx,
     break;
 
   case AIState::Expanding:
-    // Expansion not yet implemented, return to idle
-    ctx.state = AIState::Idle;
+    // Transition out of expansion state when appropriate
+    if (ctx.neutral_barracks_count == 0) {
+      // No more neutral barracks, return to gathering or attacking
+      if (ctx.visible_enemy_count > 0) {
+        ctx.state = AIState::Attacking;
+      } else {
+        ctx.state = AIState::Gathering;
+      }
+    } else if (ctx.total_units < 2) {
+      // Not enough units to expand, return to gathering
+      ctx.state = AIState::Gathering;
+    } else if (ctx.barracks_under_threat || !ctx.buildings_under_attack.empty()) {
+      // Under attack, defend first
+      ctx.state = AIState::Defending;
+    } else if (ctx.average_health < 0.40F) {
+      // Army weak, defend
+      ctx.state = AIState::Defending;
+    }
     break;
   }
 
