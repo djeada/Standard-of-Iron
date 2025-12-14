@@ -140,25 +140,34 @@ jobs:
           [System.IO.File]::WriteAllBytes($certPath, $certBytes)
           
           try {
-            # Find signtool.exe
-            $signtool = Get-ChildItem "C:\Program Files (x86)\Windows Kits" -Recurse -Filter "signtool.exe" -ErrorAction SilentlyContinue |
-              Where-Object { $_.FullName -match "x64" } |
-              Select-Object -First 1
+            # Find signtool.exe - check multiple potential locations
+            $searchPaths = @(
+              "$env:ProgramFiles(x86)\Windows Kits",
+              "$env:ProgramFiles\Windows Kits"
+            )
+            
+            $signtool = $null
+            foreach ($searchPath in $searchPaths) {
+              if (Test-Path $searchPath) {
+                $signtool = Get-ChildItem $searchPath -Recurse -Filter "signtool.exe" -ErrorAction SilentlyContinue |
+                  Where-Object { $_.FullName -match "x64" } |
+                  Select-Object -First 1
+                if ($signtool) { break }
+              }
+            }
             
             if (-not $signtool) {
-              Write-Error "signtool.exe not found in Windows Kits directory"
+              Write-Error "signtool.exe not found in Windows Kits directories"
               exit 1
             }
             
             Write-Host "Using signtool: $($signtool.FullName)"
             
-            # Prepare signing arguments
-            $certPassword = "${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}"
-            
+            # Prepare signing arguments - pass password directly without intermediate variable
             $signArgs = @(
               "sign",
               "/f", $certPath,
-              "/p", $certPassword,
+              "/p", "${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}",
               "/tr", "http://timestamp.digicert.com",
               "/td", "SHA256",
               "/fd", "SHA256",
