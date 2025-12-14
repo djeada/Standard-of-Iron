@@ -86,14 +86,22 @@ void CombatSystem::process_attacks(Engine::Core::World *world,
             const float max_melee_separation = 0.9F;
 
             if (dist > max_melee_separation) {
-              float const pull_amount =
-                  (dist - ideal_melee_distance) * 0.3F * delta_time * 5.0F;
+              // Check if attacker is in hold mode - don't pull if so
+              auto *attacker_hold =
+                  attacker->get_component<Engine::Core::HoldModeComponent>();
+              bool const attacker_holding =
+                  (attacker_hold != nullptr) && attacker_hold->active;
 
-              if (dist > 0.001F) {
-                QVector3D const direction(dx / dist, 0.0F, dz / dist);
+              if (!attacker_holding) {
+                float const pull_amount =
+                    (dist - ideal_melee_distance) * 0.3F * delta_time * 5.0F;
 
-                att_t->position.x += direction.x() * pull_amount;
-                att_t->position.z += direction.z() * pull_amount;
+                if (dist > 0.001F) {
+                  QVector3D const direction(dx / dist, 0.0F, dz / dist);
+
+                  att_t->position.x += direction.x() * pull_amount;
+                  att_t->position.z += direction.z() * pull_amount;
+                }
               }
             }
           }
@@ -141,11 +149,14 @@ void CombatSystem::process_attacks(Engine::Core::World *world,
         if (attacker_unit->spawn_type == Game::Units::SpawnType::Archer) {
 
           range *= 1.5F;
-          damage = static_cast<int>(damage * 1.3F);
+          damage = static_cast<int>(damage * 1.5F);
         } else if (attacker_unit->spawn_type ==
                    Game::Units::SpawnType::Spearman) {
 
-          damage = static_cast<int>(damage * 1.4F);
+          damage = static_cast<int>(damage * 2.0F);
+        } else {
+          // All other units in hold mode get a significant attack bonus
+          damage = static_cast<int>(damage * 1.75F);
         }
       }
 
@@ -593,11 +604,27 @@ void CombatSystem::process_attacks(Engine::Core::World *world,
             if (dist > 0.001F) {
               QVector3D const direction(dx / dist, 0.0F, dz / dist);
 
-              att_t->position.x += direction.x() * move_amount;
-              att_t->position.z += direction.z() * move_amount;
+              // Check hold mode for attacker - don't move if holding
+              auto *attacker_hold =
+                  attacker->get_component<Engine::Core::HoldModeComponent>();
+              bool const attacker_holding =
+                  (attacker_hold != nullptr) && attacker_hold->active;
 
-              tgt_t->position.x -= direction.x() * move_amount;
-              tgt_t->position.z -= direction.z() * move_amount;
+              // Check hold mode for target - don't move if holding
+              auto *target_hold =
+                  best_target->get_component<Engine::Core::HoldModeComponent>();
+              bool const target_holding =
+                  (target_hold != nullptr) && target_hold->active;
+
+              if (!attacker_holding) {
+                att_t->position.x += direction.x() * move_amount;
+                att_t->position.z += direction.z() * move_amount;
+              }
+
+              if (!target_holding) {
+                tgt_t->position.x -= direction.x() * move_amount;
+                tgt_t->position.z -= direction.z() * move_amount;
+              }
             }
           }
         }
