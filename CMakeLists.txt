@@ -139,6 +139,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
         app/models/hover_tracker.cpp
         app/models/selected_units_model.cpp
         app/models/minimap_image_provider.cpp
+        app/models/map_preview_image_provider.cpp
         app/controllers/command_controller.cpp
         app/controllers/action_vfx.cpp
         app/utils/json_vec_utils.cpp
@@ -164,6 +165,7 @@ else()
         app/models/hover_tracker.cpp
         app/models/selected_units_model.cpp
         app/models/minimap_image_provider.cpp
+        app/models/map_preview_image_provider.cpp
         app/controllers/command_controller.cpp
         app/controllers/action_vfx.cpp
         app/utils/json_vec_utils.cpp
@@ -181,6 +183,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
             ui/qml/Main.qml
             ui/qml/MainMenu.qml
             ui/qml/MapSelect.qml
+            ui/qml/MapPreview.qml
             ui/qml/MapListPanel.qml
             ui/qml/PlayerListItem.qml
             ui/qml/PlayerConfigPanel.qml

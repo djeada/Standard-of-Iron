@@ -3,3 +3,4 @@ StyledButton 1.0 StyledButton.qml
 ProductionPanel 1.0 ProductionPanel.qml
 SaveGamePanel 1.0 SaveGamePanel.qml
 LoadGamePanel 1.0 LoadGamePanel.qml
+MapPreview 1.0 MapPreview.qml

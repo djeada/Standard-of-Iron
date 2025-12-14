@@ -116,10 +116,10 @@ auto SaveStorage::initialize(QString *out_error) -> bool {
 }
 
 auto SaveStorage::save_slot(const QString &slot_name, const QString &title,
-                           const QJsonObject &metadata,
-                           const QByteArray &world_state,
-                           const QByteArray &screenshot,
-                           QString *out_error) -> bool {
+                            const QJsonObject &metadata,
+                            const QByteArray &world_state,
+                            const QByteArray &screenshot,
+                            QString *out_error) -> bool {
   if (!initialize(out_error)) {
     return false;
   }
@@ -193,8 +193,8 @@ auto SaveStorage::save_slot(const QString &slot_name, const QString &title,
 }
 
 auto SaveStorage::load_slot(const QString &slot_name, QByteArray &world_state,
-                           QJsonObject &metadata, QByteArray &screenshot,
-                           QString &title, QString *out_error) -> bool {
+                            QJsonObject &metadata, QByteArray &screenshot,
+                            QString &title, QString *out_error) -> bool {
   if (!initialize(out_error)) {
     return false;
   }
@@ -658,8 +658,9 @@ auto SaveStorage::migrate_to_2(QString *out_error) const -> bool {
 
   if (!progress_insert_query.exec(insert_progress_sql)) {
     if (out_error != nullptr) {
-      *out_error = QStringLiteral("Failed to initialize campaign progress: %1")
-                       .arg(last_error_string(progress_insert_query.lastError()));
+      *out_error =
+          QStringLiteral("Failed to initialize campaign progress: %1")
+              .arg(last_error_string(progress_insert_query.lastError()));
     }
     return false;
   }
