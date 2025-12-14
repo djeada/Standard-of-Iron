@@ -25,11 +25,11 @@ private:
 
     Engine::Core::EntityID target_id;
 
-    float moveTargetX;
-    float moveTargetY;
-    float moveTargetZ;
+    float move_target_x;
+    float move_target_y;
+    float move_target_z;
 
-    float issuedTime;
+    float issued_time;
 
     [[nodiscard]] auto isSimilarTo(const AICommandType &cmdType,
                                    Engine::Core::EntityID unit,
