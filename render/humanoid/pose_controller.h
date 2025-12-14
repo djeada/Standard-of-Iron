@@ -31,6 +31,7 @@ public:
   void hold_sword_and_shield();
   void look_at(const QVector3D &target);
   void hit_flinch(float intensity);
+  void tilt_torso(float side_tilt, float forward_tilt);
 
   auto solve_elbow_ik(bool is_left, const QVector3D &shoulder,
                       const QVector3D &hand, const QVector3D &outward_dir,

@@ -29,6 +29,9 @@ struct AnimationInputs {
   std::uint8_t attack_variant{0};
   bool is_hit_reacting{false};
   float hit_reaction_intensity{0.0F};
+  bool is_healing{false};
+  float healing_target_dx{0.0F};
+  float healing_target_dz{0.0F};
 };
 
 struct FormationParams {

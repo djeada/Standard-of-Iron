@@ -79,6 +79,14 @@ auto sample_anim_state(const DrawContext &ctx) -> AnimationInputs {
   }
   anim.is_moving = ((movement != nullptr) && movement->has_target);
 
+  // Check for healing state
+  auto *healer = ctx.entity->get_component<Engine::Core::HealerComponent>();
+  if (healer != nullptr && healer->is_healing_active && transform != nullptr) {
+    anim.is_healing = true;
+    anim.healing_target_dx = healer->healing_target_x - transform->position.x;
+    anim.healing_target_dz = healer->healing_target_z - transform->position.z;
+  }
+
   if (combat_state != nullptr) {
     anim.combat_phase = map_combat_state_to_phase(combat_state->animation_state);
     if (combat_state->state_duration > 0.0F) {

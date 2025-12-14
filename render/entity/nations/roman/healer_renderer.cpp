@@ -98,15 +98,57 @@ public:
     float const arm_height_jitter = (hash_01(seed ^ 0xABCDU) - 0.5F) * 0.03F;
     float const arm_asymmetry = (hash_01(seed ^ 0xDEF0U) - 0.5F) * 0.06F;
 
-    float const forward_offset = 0.16F + (anim.is_moving ? 0.05F : 0.0F);
-    float const hand_height = HP::WAIST_Y + 0.04F + arm_height_jitter;
-    QVector3D const idle_hand_l(-0.16F + arm_asymmetry, hand_height,
-                                forward_offset);
-    QVector3D const idle_hand_r(0.12F - arm_asymmetry * 0.6F,
-                                hand_height + 0.01F, forward_offset * 0.9F);
+    if (anim.is_healing) {
+      // Healing animation: raised arms with gentle swaying motion
+      float const healing_time = anim.time * 2.5F;
+      float const sway_phase = std::sin(healing_time);
+      float const sway_phase_offset = std::sin(healing_time + 0.5F);
 
-    controller.placeHandAt(true, idle_hand_l);
-    controller.placeHandAt(false, idle_hand_r);
+      // Arms raised outward in channeling pose
+      float const base_arm_height = HP::SHOULDER_Y - 0.02F + arm_height_jitter;
+      float const sway_height = 0.03F * sway_phase;
+
+      // Arms extended toward target direction
+      float const target_dist =
+          std::sqrt(anim.healing_target_dx * anim.healing_target_dx +
+                    anim.healing_target_dz * anim.healing_target_dz);
+      float target_dir_x = 0.0F;
+      float target_dir_z = 1.0F;
+      if (target_dist > 0.01F) {
+        target_dir_x = anim.healing_target_dx / target_dist;
+        target_dir_z = anim.healing_target_dz / target_dist;
+      }
+
+      // Hands positioned forward and outward for channeling
+      float const arm_spread = 0.18F + 0.02F * sway_phase_offset;
+      float const forward_reach = 0.22F + 0.03F * std::sin(healing_time * 0.7F);
+
+      QVector3D const heal_hand_l(-arm_spread + arm_asymmetry * 0.3F,
+                                   base_arm_height + sway_height,
+                                   forward_reach);
+      QVector3D const heal_hand_r(arm_spread - arm_asymmetry * 0.3F,
+                                   base_arm_height + sway_height + 0.01F,
+                                   forward_reach * 0.95F);
+
+      controller.placeHandAt(true, heal_hand_l);
+      controller.placeHandAt(false, heal_hand_r);
+
+      // Gentle torso sway during healing
+      float const torso_sway = 0.015F * sway_phase;
+      controller.tilt_torso(torso_sway, 0.0F);
+
+    } else {
+      // Normal idle pose
+      float const forward_offset = 0.16F + (anim.is_moving ? 0.05F : 0.0F);
+      float const hand_height = HP::WAIST_Y + 0.04F + arm_height_jitter;
+      QVector3D const idle_hand_l(-0.16F + arm_asymmetry, hand_height,
+                                  forward_offset);
+      QVector3D const idle_hand_r(0.12F - arm_asymmetry * 0.6F,
+                                  hand_height + 0.01F, forward_offset * 0.9F);
+
+      controller.placeHandAt(true, idle_hand_l);
+      controller.placeHandAt(false, idle_hand_r);
+    }
   }
 
   void add_attachments(const DrawContext &ctx, const HumanoidVariant &v,
