@@ -41,6 +41,7 @@ add_library(game_systems STATIC
     systems/camera_follow_system.cpp
     systems/camera_controller.cpp
     systems/camera_service.cpp
+    systems/camera_visibility_service.cpp
     systems/picking_service.cpp
     systems/command_service.cpp
     systems/production_service.cpp
