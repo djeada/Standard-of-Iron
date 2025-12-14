@@ -591,7 +591,52 @@ void HumanoidPoseController::spear_thrust_variant(float attack_phase,
     break;
   }
 
-  spearThrust(attack_phase);
+  QVector3D hand_r_target;
+  QVector3D hand_l_target;
+
+  auto easeInOutCubic = [](float t) {
+    return t < 0.5F ? 4.0F * t * t * t
+                    : 1.0F - std::pow(-2.0F * t + 2.0F, 3.0F) / 2.0F;
+  };
+
+  auto smoothstep = [](float edge0, float edge1, float x) {
+    float t = std::clamp((x - edge0) / (edge1 - edge0), 0.0F, 1.0F);
+    return t * t * (3.0F - 2.0F * t);
+  };
+
+  auto lerp = [](float a, float b, float t) { return a * (1.0F - t) + b * t; };
+
+  if (attack_phase < 0.20F) {
+    float const t = easeInOutCubic(attack_phase / 0.20F);
+    hand_r_target = guard_pos * (1.0F - t) + prepare_pos * t;
+    hand_l_target = QVector3D(-0.10F, HP::SHOULDER_Y - 0.05F,
+                              0.20F * (1.0F - t) + 0.08F * t);
+  } else if (attack_phase < 0.30F) {
+    hand_r_target = prepare_pos;
+    hand_l_target = QVector3D(-0.10F, HP::SHOULDER_Y - 0.05F, 0.08F);
+  } else if (attack_phase < 0.50F) {
+    float t = (attack_phase - 0.30F) / 0.20F;
+    t = t * t * t;
+    hand_r_target = prepare_pos * (1.0F - t) + thrust_pos * t;
+    hand_l_target =
+        QVector3D(-0.10F + 0.05F * t, HP::SHOULDER_Y - 0.05F + 0.03F * t,
+                  0.08F + 0.45F * t);
+  } else if (attack_phase < 0.70F) {
+    float const t = easeInOutCubic((attack_phase - 0.50F) / 0.20F);
+    hand_r_target = thrust_pos * (1.0F - t) + recover_pos * t;
+    hand_l_target = QVector3D(-0.05F * (1.0F - t) - 0.10F * t,
+                              HP::SHOULDER_Y - 0.02F * (1.0F - t) - 0.06F * t,
+                              lerp(0.53F, 0.35F, t));
+  } else {
+    float const t = smoothstep(0.70F, 1.0F, attack_phase);
+    hand_r_target = recover_pos * (1.0F - t) + guard_pos * t;
+    hand_l_target =
+        QVector3D(-0.10F - 0.02F * (1.0F - t),
+                  HP::SHOULDER_Y - 0.06F + 0.01F * t, lerp(0.35F, 0.25F, t));
+  }
+
+  placeHandAt(false, hand_r_target);
+  placeHandAt(true, hand_l_target);
 }
 
 } // namespace Render::GL

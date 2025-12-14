@@ -675,7 +675,7 @@ void CombatSystem::dealDamage(Engine::Core::World *world,
     unit->health = std::max(0, unit->health - damage);
 
     int attacker_owner_id = 0;
-    Game::Units::SpawnType attacker_type = Game::Units::SpawnType::Archer;
+    std::optional<Game::Units::SpawnType> attacker_type_opt;
     if (attackerId != 0 && (world != nullptr)) {
       auto *attacker = world->get_entity(attackerId);
       if (attacker != nullptr) {
@@ -683,10 +683,13 @@ void CombatSystem::dealDamage(Engine::Core::World *world,
             attacker->get_component<Engine::Core::UnitComponent>();
         if (attacker_unit != nullptr) {
           attacker_owner_id = attacker_unit->owner_id;
-          attacker_type = attacker_unit->spawn_type;
+          attacker_type_opt = attacker_unit->spawn_type;
         }
       }
     }
+
+    Game::Units::SpawnType const attacker_type =
+        attacker_type_opt.value_or(Game::Units::SpawnType::Knight);
 
     Engine::Core::EventManager::instance().publish(
         Engine::Core::CombatHitEvent(attackerId, target->get_id(), damage,
@@ -1042,8 +1045,16 @@ void CombatSystem::process_hit_feedback(Engine::Core::World *world,
       auto *transform =
           unit->get_component<Engine::Core::TransformComponent>();
       if (transform != nullptr) {
-        transform->position.x += feedback->knockback_x * fade * delta_time;
-        transform->position.z += feedback->knockback_z * fade * delta_time;
+        float const max_displacement_per_frame = 0.02F;
+        float const dx = feedback->knockback_x * fade * delta_time;
+        float const dz = feedback->knockback_z * fade * delta_time;
+        float const displacement = std::sqrt(dx * dx + dz * dz);
+        float const scale = (displacement > max_displacement_per_frame &&
+                             displacement > 0.0001F)
+                                ? max_displacement_per_frame / displacement
+                                : 1.0F;
+        transform->position.x += dx * scale;
+        transform->position.z += dz * scale;
       }
     }
   }
