@@ -105,7 +105,7 @@ void HumanoidPoseController::kneelTransition(float progress, bool standing_up) {
       float rise_t = ease_in_out(t);
 
       // Slight upward momentum boost
-      float lift_boost = 0.02F * std::sin(rise_t * 3.14159F);
+      float lift_boost = 0.02F * std::sin(rise_t * std::numbers::pi_v<float>);
       m_pose.pelvis_pos.setY(m_pose.pelvis_pos.y() + lift_boost);
       m_pose.shoulder_l.setY(m_pose.shoulder_l.y() + lift_boost);
       m_pose.shoulder_r.setY(m_pose.shoulder_r.y() + lift_boost);
@@ -144,7 +144,7 @@ void HumanoidPoseController::kneelTransition(float progress, bool standing_up) {
       float t = (progress - 0.30F) / 0.45F;
 
       // Controlled forward lean during descent
-      float controlled_lean = 0.04F * std::sin(t * 3.14159F);
+      float controlled_lean = 0.04F * std::sin(t * std::numbers::pi_v<float>);
       m_pose.shoulder_l.setZ(m_pose.shoulder_l.z() + controlled_lean);
       m_pose.shoulder_r.setZ(m_pose.shoulder_r.z() + controlled_lean);
     }
