@@ -38,8 +38,8 @@
 #include "app/core/game_engine.h"
 #include "app/core/language_manager.h"
 #include "app/models/graphics_settings_proxy.h"
-#include "app/models/minimap_image_provider.h"
 #include "app/models/map_preview_image_provider.h"
+#include "app/models/minimap_image_provider.h"
 #include "ui/gl_view.h"
 #include "ui/theme.h"
 
