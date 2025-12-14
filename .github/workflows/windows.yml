@@ -124,8 +124,11 @@ jobs:
 
       # Code signing (optional: signs .exe with Authenticode)
       - name: Sign executable
-        if: ${{ secrets.WINDOWS_CERTIFICATE != '' && secrets.WINDOWS_CERTIFICATE_PASSWORD != '' }}
+        if: ${{ secrets.WINDOWS_CERTIFICATE && secrets.WINDOWS_CERTIFICATE_PASSWORD }}
         shell: pwsh
+        env:
+          CERT_DATA: ${{ secrets.WINDOWS_CERTIFICATE }}
+          CERT_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
         run: |
           # Validate that the executable exists
           $exePath = "$env:APP_DIR\${{ env.APP_NAME }}.exe"
@@ -136,7 +139,7 @@ jobs:
           
           # Decode certificate from base64 secret and save to temp file
           $certPath = "$env:TEMP\cert.pfx"
-          $certBytes = [System.Convert]::FromBase64String("${{ secrets.WINDOWS_CERTIFICATE }}")
+          $certBytes = [System.Convert]::FromBase64String($env:CERT_DATA)
           [System.IO.File]::WriteAllBytes($certPath, $certBytes)
           
           try {
@@ -163,11 +166,11 @@ jobs:
             
             Write-Host "Using signtool: $($signtool.FullName)"
             
-            # Prepare signing arguments - pass password directly without intermediate variable
+            # Prepare signing arguments - use environment variable for password
             $signArgs = @(
               "sign",
               "/f", $certPath,
-              "/p", "${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}",
+              "/p", $env:CERT_PASSWORD,
               "/tr", "http://timestamp.digicert.com",
               "/td", "SHA256",
               "/fd", "SHA256",
