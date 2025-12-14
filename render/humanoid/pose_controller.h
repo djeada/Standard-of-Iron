@@ -25,9 +25,13 @@ public:
   void graspTwoHanded(const QVector3D &grip_center, float hand_separation);
   void spearThrust(float attack_phase);
   void sword_slash(float attack_phase);
+  void sword_slash_variant(float attack_phase, std::uint8_t variant);
+  void spear_thrust_variant(float attack_phase, std::uint8_t variant);
   void mount_on_horse(float saddle_height);
   void hold_sword_and_shield();
   void look_at(const QVector3D &target);
+  void hit_flinch(float intensity);
+  void tilt_torso(float side_tilt, float forward_tilt);
 
   auto solve_elbow_ik(bool is_left, const QVector3D &shoulder,
                       const QVector3D &hand, const QVector3D &outward_dir,

@@ -33,6 +33,8 @@ public:
                             float beam_width, float intensity, float time) = 0;
   virtual void healer_aura(const QVector3D &position, const QVector3D &color,
                            float radius, float intensity, float time) = 0;
+  virtual void combat_dust(const QVector3D &position, const QVector3D &color,
+                           float radius, float intensity, float time) = 0;
 };
 
 namespace detail {
@@ -165,6 +167,19 @@ public:
     cmd.time = time;
     m_queue->submit(cmd);
   }
+  void combat_dust(const QVector3D &position, const QVector3D &color,
+                   float radius, float intensity, float time) override {
+    if (m_queue == nullptr) {
+      return;
+    }
+    CombatDustCmd cmd;
+    cmd.position = position;
+    cmd.color = color;
+    cmd.radius = radius;
+    cmd.intensity = intensity;
+    cmd.time = time;
+    m_queue->submit(cmd);
+  }
 
 private:
   DrawQueue *m_queue = nullptr;
@@ -248,6 +263,13 @@ public:
                    float radius, float intensity, float time) override {
     if (m_fallback != nullptr) {
       m_fallback->healer_aura(position, color, radius, intensity, time);
+    }
+  }
+
+  void combat_dust(const QVector3D &position, const QVector3D &color,
+                   float radius, float intensity, float time) override {
+    if (m_fallback != nullptr) {
+      m_fallback->combat_dust(position, color, radius, intensity, time);
     }
   }
 
