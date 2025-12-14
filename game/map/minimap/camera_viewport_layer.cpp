@@ -8,6 +8,12 @@
 
 namespace Game::Map::Minimap {
 
+namespace {
+constexpr float k_corner_size_ratio = 0.15F;
+constexpr float k_min_corner_size = 4.0F;
+constexpr float k_corner_pen_offset = 1.0F;
+} // namespace
+
 void CameraViewportLayer::init(int width, int height, float world_width,
                                float world_height) {
   m_width = width;
@@ -83,13 +89,13 @@ void CameraViewportLayer::draw_viewport_rect(QPainter &painter, float px,
   painter.drawRect(rect);
 
   // Draw corner markers for better visibility
-  const float corner_size = std::min(pixel_width, pixel_height) * 0.15F;
-  const float corner_min = 4.0F;
-  const float actual_corner = std::max(corner_size, corner_min);
+  const float corner_size =
+      std::min(pixel_width, pixel_height) * k_corner_size_ratio;
+  const float actual_corner = std::max(corner_size, k_min_corner_size);
 
   QColor corner_color(m_border_r, m_border_g, m_border_b, 255);
   QPen corner_pen(corner_color);
-  corner_pen.setWidthF(static_cast<qreal>(m_border_width) + 1.0);
+  corner_pen.setWidthF(static_cast<qreal>(m_border_width) + k_corner_pen_offset);
   painter.setPen(corner_pen);
 
   // Top-left corner
