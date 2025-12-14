@@ -239,16 +239,19 @@ void AIReasoner::updateStateMachine(AIContext &ctx, float delta_time) {
       }
     }
     ctx.consecutive_no_progress_cycles = 0;
+    ctx.debug_info.deadlock_recoveries++;
   }
 
   if (ctx.decision_timer < 2.0F) {
     if (ctx.state != previous_state) {
       ctx.state_timer = 0.0F;
+      ctx.debug_info.state_transitions++;
     }
     return;
   }
 
   ctx.decision_timer = 0.0F;
+  ctx.debug_info.total_decisions_made++;
   previous_state = ctx.state;
 
   if (ctx.state_timer < min_state_duration &&
@@ -334,6 +337,7 @@ void AIReasoner::updateStateMachine(AIContext &ctx, float delta_time) {
     ctx.state_timer = 0.0F;
     // Reset progress tracking on state change
     ctx.consecutive_no_progress_cycles = 0;
+    ctx.debug_info.state_transitions++;
   }
 }
 
