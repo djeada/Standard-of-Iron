@@ -28,7 +28,7 @@ void DefendBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   }
   m_defendTimer = 0.0F;
 
-  if (context.primaryBarracks == 0) {
+  if (context.primary_barracks == 0) {
     return;
   }
 
@@ -37,8 +37,8 @@ void DefendBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   float defend_pos_z = 0.0F;
   bool found_barracks = false;
 
-  for (const auto &entity : snapshot.friendlies) {
-    if (entity.id == context.primaryBarracks) {
+  for (const auto &entity : snapshot.friendly_units) {
+    if (entity.id == context.primary_barracks) {
       defend_pos_x = entity.posX;
       defend_pos_y = entity.posY;
       defend_pos_z = entity.posZ;
@@ -53,15 +53,15 @@ void DefendBehavior::execute(const AISnapshot &snapshot, AIContext &context,
 
   std::vector<const EntitySnapshot *> ready_defenders;
   std::vector<const EntitySnapshot *> engaged_defenders;
-  ready_defenders.reserve(snapshot.friendlies.size());
-  engaged_defenders.reserve(snapshot.friendlies.size());
+  ready_defenders.reserve(snapshot.friendly_units.size());
+  engaged_defenders.reserve(snapshot.friendly_units.size());
 
-  for (const auto &entity : snapshot.friendlies) {
+  for (const auto &entity : snapshot.friendly_units) {
     if (entity.is_building) {
       continue;
     }
 
-    if (isEntityEngaged(entity, snapshot.visibleEnemies)) {
+    if (isEntityEngaged(entity, snapshot.visible_enemies)) {
       engaged_defenders.push_back(&entity);
     } else {
       ready_defenders.push_back(&entity);
@@ -92,7 +92,7 @@ void DefendBehavior::execute(const AISnapshot &snapshot, AIContext &context,
       ready_defenders.size() + engaged_defenders.size();
   std::size_t desired_count = total_available;
 
-  if (context.barracks_under_threat || !context.buildingsUnderAttack.empty()) {
+  if (context.barracks_under_threat || !context.buildings_under_attack.empty()) {
 
     desired_count = total_available;
   } else {
@@ -109,15 +109,15 @@ void DefendBehavior::execute(const AISnapshot &snapshot, AIContext &context,
     return;
   }
 
-  if (context.barracks_under_threat || !context.buildingsUnderAttack.empty()) {
+  if (context.barracks_under_threat || !context.buildings_under_attack.empty()) {
 
     std::vector<const ContactSnapshot *> nearby_threats;
-    nearby_threats.reserve(snapshot.visibleEnemies.size());
+    nearby_threats.reserve(snapshot.visible_enemies.size());
 
     constexpr float defend_radius = 40.0F;
     const float defend_radius_sq = defend_radius * defend_radius;
 
-    for (const auto &enemy : snapshot.visibleEnemies) {
+    for (const auto &enemy : snapshot.visible_enemies) {
       float const dist_sq =
           distance_squared(enemy.posX, enemy.posY, enemy.posZ, defend_pos_x,
                            defend_pos_y, defend_pos_z);
@@ -155,12 +155,12 @@ void DefendBehavior::execute(const AISnapshot &snapshot, AIContext &context,
         }
       }
     } else if (context.barracks_under_threat ||
-               !context.buildingsUnderAttack.empty()) {
+               !context.buildings_under_attack.empty()) {
 
       const ContactSnapshot *closest_threat = nullptr;
       float closest_dist_sq = std::numeric_limits<float>::max();
 
-      for (const auto &enemy : snapshot.visibleEnemies) {
+      for (const auto &enemy : snapshot.visible_enemies) {
         float const dist_sq =
             distance_squared(enemy.posX, enemy.posY, enemy.posZ, defend_pos_x,
                              defend_pos_y, defend_pos_z);
@@ -205,9 +205,9 @@ void DefendBehavior::execute(const AISnapshot &snapshot, AIContext &context,
           AICommand move;
           move.type = AICommandType::MoveUnits;
           move.units = std::move(claimed_units);
-          move.moveTargetX = std::move(filtered_x);
-          move.moveTargetY = std::move(filtered_y);
-          move.moveTargetZ = std::move(filtered_z);
+          move.move_target_x = std::move(filtered_x);
+          move.move_target_y = std::move(filtered_y);
+          move.move_target_z = std::move(filtered_z);
           outCommands.push_back(std::move(move));
           return;
         }
@@ -217,8 +217,8 @@ void DefendBehavior::execute(const AISnapshot &snapshot, AIContext &context,
 
   std::vector<const EntitySnapshot *> unclaimed_defenders;
   for (const auto *unit : ready_defenders) {
-    auto it = context.assignedUnits.find(unit->id);
-    if (it == context.assignedUnits.end()) {
+    auto it = context.assigned_units.find(unit->id);
+    if (it == context.assigned_units.end()) {
       unclaimed_defenders.push_back(unit);
     }
   }
@@ -293,9 +293,9 @@ void DefendBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   AICommand command;
   command.type = AICommandType::MoveUnits;
   command.units = std::move(claimed_for_move);
-  command.moveTargetX = std::move(filtered_x);
-  command.moveTargetY = std::move(filtered_y);
-  command.moveTargetZ = std::move(filtered_z);
+  command.move_target_x = std::move(filtered_x);
+  command.move_target_y = std::move(filtered_y);
+  command.move_target_z = std::move(filtered_z);
   outCommands.push_back(std::move(command));
 }
 
@@ -303,11 +303,11 @@ auto DefendBehavior::should_execute(const AISnapshot &snapshot,
                                     const AIContext &context) const -> bool {
   (void)snapshot;
 
-  if (context.primaryBarracks == 0) {
+  if (context.primary_barracks == 0) {
     return false;
   }
 
-  if (context.barracks_under_threat || !context.buildingsUnderAttack.empty()) {
+  if (context.barracks_under_threat || !context.buildings_under_attack.empty()) {
     return true;
   }
 
