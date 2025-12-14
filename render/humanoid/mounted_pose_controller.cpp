@@ -380,7 +380,6 @@ void MountedPoseController::apply_sword_strike(
     bool keep_left_hand) {
   attack_phase = std::clamp(attack_phase, 0.0F, 1.0F);
 
-  // Key positions for mounted cavalry slash (typically to the side/down)
   QVector3D const rest_pos = seatRelative(mount, 0.08F, 0.20F, 0.12F);
   QVector3D const chamber_pos = seatRelative(mount, -0.05F, 0.25F, 0.40F);
   QVector3D const apex_pos = seatRelative(mount, -0.02F, 0.30F, 0.48F);
@@ -391,14 +390,13 @@ void MountedPoseController::apply_sword_strike(
   QVector3D hand_l_target =
       reinAnchor(mount, true, 0.20F, 0.25F) + mount.seat_up * -0.02F;
 
-  // Body dynamics for mounted combat
   float torso_twist = 0.0F;
   float side_lean = 0.0F;
   float forward_lean = 0.0F;
   float shoulder_dip = 0.0F;
 
   if (attack_phase < 0.18F) {
-    // Phase 1: Chamber - raise weapon overhead, twist body back
+
     float t = attack_phase / 0.18F;
     float ease_t = t * t;
     hand_r_target = rest_pos * (1.0F - ease_t) + chamber_pos * ease_t;
@@ -408,7 +406,7 @@ void MountedPoseController::apply_sword_strike(
 
     update_head_hierarchy(mount, 0.0F, 0.0F, "sword_chamber");
   } else if (attack_phase < 0.28F) {
-    // Phase 2: Apex - brief pause at highest point
+
     float t = (attack_phase - 0.18F) / 0.10F;
     float ease_t = t * t * (3.0F - 2.0F * t);
     hand_r_target = chamber_pos * (1.0F - ease_t) + apex_pos * ease_t;
@@ -418,23 +416,22 @@ void MountedPoseController::apply_sword_strike(
 
     update_head_hierarchy(mount, 0.0F, 0.0F, "sword_apex");
   } else if (attack_phase < 0.48F) {
-    // Phase 3: Strike - explosive downward/outward slash
+
     float t = (attack_phase - 0.28F) / 0.20F;
     float power_t = t * t * t;
     hand_r_target = apex_pos * (1.0F - power_t) + strike_pos * power_t;
 
-    // Uncoil body into the strike
     torso_twist = -0.04F + 0.12F * power_t;
-    side_lean = 0.08F * power_t;     // Lean into strike direction
+    side_lean = 0.08F * power_t;
     forward_lean = 0.06F * power_t;
     shoulder_dip = 0.05F - 0.08F * power_t;
 
-    // Tighten reins during strike for stability
     hand_l_target += mount.seat_up * (-0.03F * power_t);
 
-    update_head_hierarchy(mount, 0.3F * power_t, 0.2F * power_t, "sword_strike");
+    update_head_hierarchy(mount, 0.3F * power_t, 0.2F * power_t,
+                          "sword_strike");
   } else if (attack_phase < 0.65F) {
-    // Phase 4: Follow-through
+
     float t = (attack_phase - 0.48F) / 0.17F;
     float ease_t = t * t * (3.0F - 2.0F * t);
     hand_r_target = strike_pos * (1.0F - ease_t) + followthrough_pos * ease_t;
@@ -446,7 +443,7 @@ void MountedPoseController::apply_sword_strike(
 
     update_head_hierarchy(mount, 0.15F, 0.1F, "sword_followthrough");
   } else {
-    // Phase 5: Recovery - return to guard
+
     float t = (attack_phase - 0.65F) / 0.35F;
     float ease_t = 1.0F - (1.0F - t) * (1.0F - t);
     hand_r_target = followthrough_pos * (1.0F - ease_t) + rest_pos * ease_t;
@@ -459,7 +456,6 @@ void MountedPoseController::apply_sword_strike(
     update_head_hierarchy(mount, 0.0F, 0.0F, "sword_recover");
   }
 
-  // Apply body dynamics relative to mount orientation
   if (std::abs(torso_twist) > 0.001F) {
     QVector3D const twist_offset = mount.seat_forward * torso_twist;
     m_pose.shoulder_r += twist_offset;
@@ -504,7 +500,6 @@ void MountedPoseController::apply_spear_thrust(
     const MountedAttachmentFrame &mount, float attack_phase) {
   attack_phase = std::clamp(attack_phase, 0.0F, 1.0F);
 
-  // Key positions for lance/spear thrust from horseback
   QVector3D const guard_pos = seatRelative(mount, 0.12F, 0.15F, 0.15F);
   QVector3D const couch_pos = seatRelative(mount, 0.05F, 0.12F, 0.08F);
   QVector3D const thrust_pos = seatRelative(mount, 0.95F, 0.08F, 0.18F);
@@ -513,27 +508,25 @@ void MountedPoseController::apply_spear_thrust(
   QVector3D hand_r_target;
   QVector3D hand_l_target;
 
-  // Body dynamics for couched lance thrust
   float forward_lean = 0.0F;
   float torso_twist = 0.0F;
   float shoulder_drop = 0.0F;
   float torso_compression = 0.0F;
 
   if (attack_phase < 0.20F) {
-    // Phase 1: Couch the spear - lower and align for thrust
+
     float t = attack_phase / 0.20F;
     float ease_t = t * t;
     hand_r_target = guard_pos * (1.0F - ease_t) + couch_pos * ease_t;
     hand_l_target = guard_pos - mount.seat_right * 0.25F +
                     (couch_pos - guard_pos) * ease_t * 0.6F;
 
-    // Slight crouch for power
     torso_compression = 0.03F * ease_t;
     forward_lean = 0.04F * ease_t;
 
     update_head_hierarchy(mount, 0.1F * ease_t, 0.0F, "spear_couch");
   } else if (attack_phase < 0.30F) {
-    // Phase 2: Brief tension before thrust
+
     hand_r_target = couch_pos;
     hand_l_target = couch_pos - mount.seat_right * 0.22F;
 
@@ -542,14 +535,13 @@ void MountedPoseController::apply_spear_thrust(
 
     update_head_hierarchy(mount, 0.1F, 0.0F, "spear_tension");
   } else if (attack_phase < 0.50F) {
-    // Phase 3: Explosive thrust - extend fully forward
+
     float t = (attack_phase - 0.30F) / 0.20F;
     float power_t = t * t * t;
     hand_r_target = couch_pos * (1.0F - power_t) + thrust_pos * power_t;
     hand_l_target = (couch_pos - mount.seat_right * 0.22F) * (1.0F - power_t) +
                     (thrust_pos - mount.seat_right * 0.28F) * power_t;
 
-    // Explosive body extension
     forward_lean = 0.04F + 0.16F * power_t;
     torso_twist = 0.05F * power_t;
     shoulder_drop = 0.04F * power_t;
@@ -557,7 +549,7 @@ void MountedPoseController::apply_spear_thrust(
 
     update_head_hierarchy(mount, 0.5F * power_t, 0.0F, "spear_thrust");
   } else if (attack_phase < 0.65F) {
-    // Phase 4: Full extension - hold at maximum reach
+
     float t = (attack_phase - 0.50F) / 0.15F;
     float ease_t = t * t * (3.0F - 2.0F * t);
     hand_r_target = thrust_pos * (1.0F - ease_t) + extended_pos * ease_t;
@@ -570,12 +562,13 @@ void MountedPoseController::apply_spear_thrust(
 
     update_head_hierarchy(mount, 0.5F, 0.0F, "spear_extend");
   } else {
-    // Phase 5: Recovery - return to guard
+
     float t = (attack_phase - 0.65F) / 0.35F;
     float ease_t = 1.0F - (1.0F - t) * (1.0F - t);
     hand_r_target = extended_pos * (1.0F - ease_t) + guard_pos * ease_t;
-    hand_l_target = (extended_pos - mount.seat_right * 0.32F) * (1.0F - ease_t) +
-                    (guard_pos - mount.seat_right * 0.25F) * ease_t;
+    hand_l_target =
+        (extended_pos - mount.seat_right * 0.32F) * (1.0F - ease_t) +
+        (guard_pos - mount.seat_right * 0.25F) * ease_t;
 
     forward_lean = 0.20F * (1.0F - ease_t);
     torso_twist = 0.05F * (1.0F - ease_t);
@@ -584,7 +577,6 @@ void MountedPoseController::apply_spear_thrust(
     update_head_hierarchy(mount, 0.0F, 0.0F, "spear_recover");
   }
 
-  // Apply body dynamics relative to mount orientation
   if (forward_lean > 0.001F) {
     QVector3D const lean_offset = mount.seat_forward * forward_lean;
     m_pose.shoulder_l += lean_offset;
