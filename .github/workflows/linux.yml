@@ -40,8 +40,8 @@ jobs:
           cp "${APP_DIR}/${APP_NAME}" AppDir/usr/bin/
           mkdir -p AppDir/usr/share/applications
           cp dist/linux/standard_of_iron.desktop AppDir/usr/share/applications/
-          mkdir -p AppDir/usr/share/icons/hicolor/256x256/apps
-          cp dist/linux/standard_of_iron.png AppDir/usr/share/icons/hicolor/256x256/apps/
+          mkdir -p AppDir/usr/share/icons/hicolor/1024x1024/apps
+          cp dist/linux/standard_of_iron.png AppDir/usr/share/icons/hicolor/1024x1024/apps/
           rsync -a assets/ AppDir/usr/bin/assets/
 
       - name: Build AppImage
