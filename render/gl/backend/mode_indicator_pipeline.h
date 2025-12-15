@@ -4,6 +4,7 @@
 #include "pipeline_interface.h"
 #include <GL/gl.h>
 #include <QMatrix4x4>
+#include <QOpenGLFunctions>
 #include <QVector3D>
 
 namespace Render::GL {
@@ -13,7 +14,8 @@ class Mesh;
 
 namespace BackendPipelines {
 
-class ModeIndicatorPipeline final : public IPipeline {
+class ModeIndicatorPipeline final : public IPipeline,
+                                    protected QOpenGLFunctions {
 public:
   explicit ModeIndicatorPipeline(GL::Backend *backend,
                                  GL::ShaderCache *shaderCache)
