@@ -58,9 +58,7 @@ compile_commands.json
 # Build directories
 build/
 build-*/
-dist/
-# Exception: keep deployment config files
-!dist/linux/
+# Note: dist/ contains deployment configs and is tracked
 _codeql_build_dir/
 _codeql_detected_source_root
 
