@@ -99,4 +99,11 @@ inline constexpr const char *BRIDGE_WIDTH = "width";
 
 inline constexpr const char *ROAD_STYLE = "style";
 
+inline constexpr const char *RAIN = "rain";
+inline constexpr const char *RAIN_ENABLED = "enabled";
+inline constexpr const char *RAIN_CYCLE_DURATION = "cycleDuration";
+inline constexpr const char *RAIN_ACTIVE_DURATION = "activeDuration";
+inline constexpr const char *RAIN_INTENSITY = "intensity";
+inline constexpr const char *RAIN_FADE_DURATION = "fadeDuration";
+
 } // namespace Game::Map::JsonKeys
