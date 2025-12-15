@@ -31,7 +31,9 @@
 #include "render/scene_renderer.h"
 #include "units/spawn_type.h"
 #include "units/troop_type.h"
+#include <QCoreApplication>
 #include <QDebug>
+#include <QEventLoop>
 #include <QFile>
 #include <QJsonArray>
 #include <QJsonDocument>
@@ -109,7 +111,12 @@ auto SkirmishLoader::start(const QString &map_path,
                            int &out_selected_player_id) -> SkirmishLoadResult {
   SkirmishLoadResult result;
 
+  auto pump_events = []() {
+    QCoreApplication::processEvents(QEventLoop::AllEvents);
+  };
+
   reset_game_state();
+  pump_events();
 
   QSet<int> map_player_ids;
   QFile map_file(map_path);
@@ -256,6 +263,7 @@ auto SkirmishLoader::start(const QString &map_path,
 
   auto level_result = Game::Map::LevelLoader::loadFromAssets(
       map_path, m_world, m_renderer, m_camera);
+  pump_events();
 
   if (!level_result.ok && !level_result.errorMessage.isEmpty()) {
     result.errorMessage = level_result.errorMessage;
@@ -286,6 +294,7 @@ auto SkirmishLoader::start(const QString &map_path,
     }
 
     auto entities = m_world.get_entities_with<Engine::Core::UnitComponent>();
+    pump_events();
     std::unordered_map<int, int> owner_entity_count;
     for (auto *entity : entities) {
       auto *unit = entity->get_component<Engine::Core::UnitComponent>();
@@ -301,6 +310,7 @@ auto SkirmishLoader::start(const QString &map_path,
       }
     }
   }
+  pump_events();
 
   if (m_onOwnersUpdated) {
     m_onOwnersUpdated();
@@ -436,6 +446,7 @@ auto SkirmishLoader::start(const QString &map_path,
       }
     }
   }
+  pump_events();
 
   constexpr int default_map_size = 100;
   const int map_width =
@@ -446,6 +457,7 @@ auto SkirmishLoader::start(const QString &map_path,
 
   auto &visibility_service = Game::Map::VisibilityService::instance();
   visibility_service.initialize(map_width, map_height, level_result.tile_size);
+  pump_events();
 
   if (is_spectator_mode) {
     visibility_service.reveal_all();
@@ -468,6 +480,7 @@ auto SkirmishLoader::start(const QString &map_path,
       m_onVisibilityMaskReady();
     }
   }
+  pump_events();
 
   if (m_biome != nullptr) {
     m_biome->refreshGrass();

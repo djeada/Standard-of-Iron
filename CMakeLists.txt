@@ -276,6 +276,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
             assets/visuals/unit_visuals.json
             assets/visuals/emblems/rome.png
             assets/visuals/emblems/cartaghe.png
+            assets/visuals/load_screen.png
             assets/visuals/icons/archer_rome.png
             assets/visuals/icons/archer_cartaghe.png
             assets/visuals/icons/swordsman_rome.png
