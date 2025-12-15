@@ -352,12 +352,31 @@ auto create_unit_torso_mesh(int radialSegments, int heightSegments) -> Mesh * {
     Axes A;
   };
 
+  // Torso profile keys - defines width (ax) and depth (az) at height t
+  // Profile is inverted: t=0 is shoulders/top, t=1 is pelvis/bottom
+  // Improved shoulder/trapezius shaping with gradual curves
   const Key keys[] = {
-      {0.10F, {0.94F, 0.88F}}, {0.20F, {0.98F, 0.92F}}, {0.45F, {0.76F, 0.70F}},
-      {0.65F, {1.12F, 1.06F}}, {0.85F, {1.30F, 1.25F}}, {1.02F, {1.48F, 1.20F}},
-      {1.10F, {1.12F, 0.92F}},
+      {0.00F, {0.72F, 0.65F}},  // Neck base - narrow
+      {0.08F, {0.88F, 0.82F}},  // Trapezius slope start
+      {0.15F, {1.02F, 0.95F}},  // Shoulder peak - widest point
+      {0.22F, {0.98F, 0.92F}},  // Below shoulders - slight taper
+      {0.45F, {0.76F, 0.70F}},  // Waist - narrowest
+      {0.65F, {1.12F, 1.06F}},  // Hips widening
+      {0.85F, {1.30F, 1.25F}},  // Upper pelvis
+      {1.02F, {1.48F, 1.20F}},  // Pelvis peak
+      {1.10F, {1.12F, 0.92F}},  // Lower pelvis taper
   };
   constexpr int key_count = sizeof(keys) / sizeof(keys[0]);
+
+  // Shoulder rounding parameters - adds lateral bulge at shoulder height
+  constexpr float k_shoulder_bulge_amp = 0.08F;
+  constexpr float k_shoulder_bulge_start = 0.10F;
+  constexpr float k_shoulder_bulge_end = 0.22F;
+
+  // Trapezius rounding - adds smooth slope from neck to shoulders
+  constexpr float k_trap_slope_amp = 0.04F;
+  constexpr float k_trap_slope_start = 0.00F;
+  constexpr float k_trap_slope_end = 0.12F;
 
   auto cat_rom = [](float p0, float p1, float p2, float p3, float u) {
     return 0.5F * ((2.0F * p1) + (-p0 + p2) * u +
@@ -433,6 +452,20 @@ auto create_unit_torso_mesh(int radialSegments, int heightSegments) -> Mesh * {
          cos2;
     s += k_theta_cos_amp * smooth_band(t, k_theta_cos_start, k_theta_cos_end) *
          cos_a;
+
+    // Shoulder bulge - adds roundness at shoulder level for lateral angles
+    float const shoulder_band =
+        smooth_band(t, k_shoulder_bulge_start, k_shoulder_bulge_end);
+    // sin_a peaks at sides (±90°), so use abs(sin_a) for both shoulders
+    float const lateral_factor = std::abs(sin_a);
+    s += k_shoulder_bulge_amp * shoulder_band * lateral_factor;
+
+    // Trapezius slope - smooth curve from neck to shoulder
+    float const trap_band = smooth_band(t, k_trap_slope_start, k_trap_slope_end);
+    // Affects front-back more than sides for natural trap shape
+    float const trap_factor = (1.0F - std::abs(sin_a)) * 0.7F + 0.3F;
+    s += k_trap_slope_amp * trap_band * trap_factor;
+
     return 1.0F + s;
   };
 
