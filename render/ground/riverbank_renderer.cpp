@@ -174,10 +174,12 @@ void RiverbankRenderer::build_meshes() {
       left_outer.position[2] = outer_left.z();
 
       // Calculate slope normal for the bank
-      QVector3D bank_left_vec = QVector3D(left_outer.position[0] - left_inner.position[0],
-                                          left_outer.position[1] - left_inner.position[1],
-                                          left_outer.position[2] - left_inner.position[2]);
+      // Convert vertex positions to QVector3D for easier manipulation
+      QVector3D left_inner_pos(left_inner.position[0], left_inner.position[1], left_inner.position[2]);
+      QVector3D left_outer_pos(left_outer.position[0], left_outer.position[1], left_outer.position[2]);
+      QVector3D bank_left_vec = left_outer_pos - left_inner_pos;
       QVector3D tangent = dir;
+      // Left bank: cross product order gives outward-facing normal
       QVector3D slope_normal = QVector3D::crossProduct(bank_left_vec, tangent).normalized();
 
       left_inner.normal[0] = slope_normal.x();
@@ -210,9 +212,11 @@ void RiverbankRenderer::build_meshes() {
       right_outer.position[2] = outer_right.z();
 
       // Calculate slope normal for the right bank
-      QVector3D bank_right_vec = QVector3D(right_outer.position[0] - right_inner.position[0],
-                                           right_outer.position[1] - right_inner.position[1],
-                                           right_outer.position[2] - right_inner.position[2]);
+      // Convert vertex positions to QVector3D for easier manipulation
+      QVector3D right_inner_pos(right_inner.position[0], right_inner.position[1], right_inner.position[2]);
+      QVector3D right_outer_pos(right_outer.position[0], right_outer.position[1], right_outer.position[2]);
+      QVector3D bank_right_vec = right_outer_pos - right_inner_pos;
+      // Right bank: reversed cross product order gives outward-facing normal (opposite side)
       QVector3D slope_normal_right = QVector3D::crossProduct(tangent, bank_right_vec).normalized();
 
       right_inner.normal[0] = slope_normal_right.x();
