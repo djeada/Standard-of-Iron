@@ -23,6 +23,7 @@
 #include "render/ground/olive_renderer.h"
 #include "render/ground/pine_renderer.h"
 #include "render/ground/plant_renderer.h"
+#include "render/ground/rain_renderer.h"
 #include "render/ground/river_renderer.h"
 #include "render/ground/riverbank_renderer.h"
 #include "render/ground/road_renderer.h"
@@ -437,6 +438,17 @@ auto SkirmishLoader::start(const QString &map_path,
     }
   }
 
+  if (m_rain != nullptr) {
+    const float world_width = level_result.grid_width * level_result.tile_size;
+    const float world_height =
+        level_result.grid_height * level_result.tile_size;
+    m_rain->configure(world_width, world_height, level_result.biome_seed);
+    m_rain->set_enabled(level_result.rainSettings.enabled);
+    m_rain->set_intensity(level_result.rainSettings.enabled
+                              ? level_result.rainSettings.intensity
+                              : 0.0F);
+  }
+
   constexpr int default_map_size = 100;
   const int map_width =
       level_result.ok ? level_result.grid_width : default_map_size;
@@ -518,6 +530,8 @@ auto SkirmishLoader::start(const QString &map_path,
   result.tile_size = level_result.tile_size;
   result.max_troops_per_player = level_result.max_troops_per_player;
   result.victoryConfig = level_result.victoryConfig;
+  result.rainSettings = level_result.rainSettings;
+  result.biome_seed = level_result.biome_seed;
   result.is_spectator_mode = is_spectator_mode;
 
   return result;
