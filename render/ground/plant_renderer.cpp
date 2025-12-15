@@ -1,7 +1,5 @@
 #include "plant_renderer.h"
-#include "../../game/map/terrain_service.h"
 #include "../../game/map/visibility_service.h"
-#include "../../game/systems/building_collision_registry.h"
 #include "../gl/buffer.h"
 #include "../scene_renderer.h"
 #include "gl/render_constants.h"
@@ -9,6 +7,7 @@
 #include "ground/plant_gpu.h"
 #include "ground_utils.h"
 #include "map/terrain.h"
+#include "spawn_validator.h"
 #include <QVector2D>
 #include <algorithm>
 #include <cmath>
@@ -155,120 +154,35 @@ void PlantRenderer::generatePlantInstances() {
     return;
   }
 
-  const float half_width = m_width * 0.5F - 0.5F;
-  const float half_height = m_height * 0.5F - 0.5F;
   const float tile_safe = std::max(0.001F, m_tile_size);
 
-  const float edge_padding =
-      std::clamp(m_biome_settings.spawn_edge_padding, 0.0F, 0.5F);
-  const float edge_margin_x = static_cast<float>(m_width) * edge_padding;
-  const float edge_margin_z = static_cast<float>(m_height) * edge_padding;
+  // Build terrain cache for spawn validation
+  SpawnTerrainCache terrain_cache;
+  terrain_cache.build_from_height_map(m_heightData, m_terrain_types, m_width,
+                                      m_height, m_tile_size);
 
-  std::vector<QVector3D> normals(static_cast<qsizetype>(m_width * m_height),
-                                 QVector3D(0.0F, 1.0F, 0.0F));
+  // Configure spawn validator for plants
+  SpawnValidationConfig config = make_plant_spawn_config();
+  config.grid_width = m_width;
+  config.grid_height = m_height;
+  config.tile_size = m_tile_size;
+  config.edge_padding = m_biome_settings.spawn_edge_padding;
 
-  auto sample_height_at = [&](float gx, float gz) -> float {
-    gx = std::clamp(gx, 0.0F, float(m_width - 1));
-    gz = std::clamp(gz, 0.0F, float(m_height - 1));
-    int const x0 = int(std::floor(gx));
-    int const z0 = int(std::floor(gz));
-    int const x1 = std::min(x0 + 1, m_width - 1);
-    int const z1 = std::min(z0 + 1, m_height - 1);
-    float const tx = gx - float(x0);
-    float const tz = gz - float(z0);
-    float const h00 = m_heightData[z0 * m_width + x0];
-    float const h10 = m_heightData[z0 * m_width + x1];
-    float const h01 = m_heightData[z1 * m_width + x0];
-    float const h11 = m_heightData[z1 * m_width + x1];
-    float const h0 = h00 * (1.0F - tx) + h10 * tx;
-    float const h1 = h01 * (1.0F - tx) + h11 * tx;
-    return h0 * (1.0F - tz) + h1 * tz;
-  };
-
-  for (int z = 0; z < m_height; ++z) {
-    for (int x = 0; x < m_width; ++x) {
-      int const idx = z * m_width + x;
-      float const gx0 = std::clamp(float(x) - 1.0F, 0.0F, float(m_width - 1));
-      float const gx1 = std::clamp(float(x) + 1.0F, 0.0F, float(m_width - 1));
-      float const gz0 = std::clamp(float(z) - 1.0F, 0.0F, float(m_height - 1));
-      float const gz1 = std::clamp(float(z) + 1.0F, 0.0F, float(m_height - 1));
-
-      float const h_l = sample_height_at(gx0, float(z));
-      float const h_r = sample_height_at(gx1, float(z));
-      float const h_d = sample_height_at(float(x), gz0);
-      float const h_u = sample_height_at(float(x), gz1);
-
-      QVector3D const dx(2.0F * m_tile_size, h_r - h_l, 0.0F);
-      QVector3D const dz(0.0F, h_u - h_d, 2.0F * m_tile_size);
-      QVector3D n = QVector3D::crossProduct(dz, dx);
-      if (n.lengthSquared() > 0.0F) {
-        n.normalize();
-      } else {
-        n = QVector3D(0, 1, 0);
-      }
-      normals[idx] = n;
-    }
-  }
+  SpawnValidator validator(terrain_cache, config);
 
   auto add_plant = [&](float gx, float gz, uint32_t &state) -> bool {
-    if (gx < edge_margin_x || gx > m_width - 1 - edge_margin_x ||
-        gz < edge_margin_z || gz > m_height - 1 - edge_margin_z) {
+    // Use unified spawn validator for all checks
+    if (!validator.can_spawn_at_grid(gx, gz)) {
       return false;
     }
 
     float const sgx = std::clamp(gx, 0.0F, float(m_width - 1));
     float const sgz = std::clamp(gz, 0.0F, float(m_height - 1));
 
-    int const ix = std::clamp(int(std::floor(sgx + 0.5F)), 0, m_width - 1);
-    int const iz = std::clamp(int(std::floor(sgz + 0.5F)), 0, m_height - 1);
-    int const normal_idx = iz * m_width + ix;
-
-    if (m_terrain_types[normal_idx] == Game::Map::TerrainType::Mountain) {
-      return false;
-    }
-
-    if (m_terrain_types[normal_idx] == Game::Map::TerrainType::River) {
-      return false;
-    }
-
-    constexpr int k_river_margin = 1;
-    for (int dz = -k_river_margin; dz <= k_river_margin; ++dz) {
-      for (int dx = -k_river_margin; dx <= k_river_margin; ++dx) {
-        if (dx == 0 && dz == 0) {
-          continue;
-        }
-        int const nx = ix + dx;
-        int const nz = iz + dz;
-        if (nx >= 0 && nx < m_width && nz >= 0 && nz < m_height) {
-          int const n_idx = nz * m_width + nx;
-          if (m_terrain_types[n_idx] == Game::Map::TerrainType::River) {
-            return false;
-          }
-        }
-      }
-    }
-
-    QVector3D const normal = normals[normal_idx];
-    float const slope = 1.0F - std::clamp(normal.y(), 0.0F, 1.0F);
-
-    if (slope > 0.65F) {
-      return false;
-    }
-
-    float const world_x = (gx - half_width) * m_tile_size;
-    float const world_z = (gz - half_height) * m_tile_size;
-    float const world_y = sample_height_at(sgx, sgz);
-
-    auto &building_registry =
-        Game::Systems::BuildingCollisionRegistry::instance();
-    if (building_registry.isPointInBuilding(world_x, world_z)) {
-      return false;
-    }
-
-    auto &terrain_service = Game::Map::TerrainService::instance();
-    if (terrain_service.is_point_on_road(world_x, world_z)) {
-      return false;
-    }
+    float world_x = 0.0F;
+    float world_z = 0.0F;
+    validator.grid_to_world(gx, gz, world_x, world_z);
+    float const world_y = terrain_cache.sample_height_at(sgx, sgz);
 
     float const scale = remap(rand_01(state), 0.30F, 0.80F) * tile_safe;
 
@@ -301,22 +215,20 @@ void PlantRenderer::generatePlantInstances() {
     return true;
   };
 
-  int cells_checked = 0;
-  int cells_passed = 0;
-  int plants_added = 0;
+  const float half_width = m_width * 0.5F - 0.5F;
 
   for (int z = 0; z < m_height; z += 3) {
     for (int x = 0; x < m_width; x += 3) {
-      cells_checked++;
       int const idx = z * m_width + x;
 
-      if (m_terrain_types[idx] == Game::Map::TerrainType::Mountain ||
-          m_terrain_types[idx] == Game::Map::TerrainType::River) {
+      Game::Map::TerrainType const terrain_type =
+          terrain_cache.get_terrain_type_at(x, z);
+      if (terrain_type == Game::Map::TerrainType::Mountain ||
+          terrain_type == Game::Map::TerrainType::River) {
         continue;
       }
 
-      QVector3D const normal = normals[idx];
-      float const slope = 1.0F - std::clamp(normal.y(), 0.0F, 1.0F);
+      float const slope = terrain_cache.get_slope_at(x, z);
       if (slope > 0.65F) {
         continue;
       }
@@ -324,8 +236,10 @@ void PlantRenderer::generatePlantInstances() {
       uint32_t state = hash_coords(
           x, z, m_noiseSeed ^ 0x8F3C5A7EU ^ static_cast<uint32_t>(idx));
 
-      float const world_x = (x - half_width) * m_tile_size;
-      float const world_z = (z - half_height) * m_tile_size;
+      float world_x = 0.0F;
+      float world_z = 0.0F;
+      validator.grid_to_world(static_cast<float>(x), static_cast<float>(z),
+                              world_x, world_z);
 
       float const cluster_noise = valueNoise(world_x * 0.05F, world_z * 0.05F,
                                              m_noiseSeed ^ 0x4B9D2F1AU);
@@ -334,10 +248,8 @@ void PlantRenderer::generatePlantInstances() {
         continue;
       }
 
-      cells_passed++;
-
       float density_mult = 1.0F;
-      if (m_terrain_types[idx] == Game::Map::TerrainType::Hill) {
+      if (terrain_type == Game::Map::TerrainType::Hill) {
         density_mult = 0.6F;
       }
 
@@ -351,9 +263,7 @@ void PlantRenderer::generatePlantInstances() {
       for (int i = 0; i < plant_count; ++i) {
         float const gx = float(x) + rand_01(state) * 3.0F;
         float const gz = float(z) + rand_01(state) * 3.0F;
-        if (add_plant(gx, gz, state)) {
-          plants_added++;
-        }
+        add_plant(gx, gz, state);
       }
     }
   }
