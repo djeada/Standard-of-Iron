@@ -20,6 +20,7 @@
 #include "game_state_restorer.h"
 #include "input_command_handler.h"
 #include "level_orchestrator.h"
+#include "loading_progress_tracker.h"
 #include "minimap_manager.h"
 #include "renderer_bootstrap.h"
 #include <QBuffer>
@@ -170,6 +171,19 @@ GameEngine::GameEngine(QObject *parent)
   m_victoryService = std::make_unique<Game::Systems::VictoryService>();
   m_saveLoadService = std::make_unique<Game::Systems::SaveLoadService>();
   m_cameraService = std::make_unique<Game::Systems::CameraService>();
+  
+  // Initialize loading progress tracker
+  m_loading_progress_tracker = std::make_unique<LoadingProgressTracker>(this);
+  connect(m_loading_progress_tracker.get(),
+          &LoadingProgressTracker::progress_changed, this,
+          [this](float progress) {
+            emit loading_progress_changed(progress);
+          });
+  connect(m_loading_progress_tracker.get(),
+          &LoadingProgressTracker::stage_changed, this,
+          [this](LoadingProgressTracker::LoadingStage, QString detail) {
+            emit loading_stage_changed(detail);
+          });
 
   auto *selection_system =
       m_world->get_system<Game::Systems::SelectionSystem>();
@@ -1160,6 +1174,11 @@ void GameEngine::start_skirmish(const QString &map_path,
     m_runtime.loading = true;
     emit is_loading_changed();
     
+    // Start progress tracking
+    if (m_loading_progress_tracker) {
+      m_loading_progress_tracker->start_loading();
+    }
+    
     // Process events to allow UI to update before heavy loading
     QCoreApplication::processEvents();
 
@@ -1185,7 +1204,8 @@ void GameEngine::start_skirmish(const QString &map_path,
     auto load_result = orchestrator.load_skirmish(
         map_path, playerConfigs, m_selected_player_id, *m_world, renderers,
         m_level, m_entity_cache, m_victoryService.get(),
-        m_minimap_manager.get(), visibility_ready, owner_update);
+        m_minimap_manager.get(), visibility_ready, owner_update,
+        m_loading_progress_tracker.get());
 
     if (load_result.updated_player_id != m_selected_player_id) {
       m_selected_player_id = load_result.updated_player_id;
@@ -1211,6 +1231,12 @@ void GameEngine::start_skirmish(const QString &map_path,
           }
         }
       });
+    }
+
+    // Mark loading complete
+    if (m_loading_progress_tracker) {
+      m_loading_progress_tracker->set_stage(
+          LoadingProgressTracker::LoadingStage::COMPLETED);
     }
 
     m_runtime.loading = false;
@@ -1535,4 +1561,24 @@ auto GameEngine::generate_map_preview(const QString &map_path,
     -> QImage {
   Game::Map::Minimap::MapPreviewGenerator generator;
   return generator.generate_preview(map_path, player_configs);
+}
+
+float GameEngine::loading_progress() const {
+  if (m_loading_progress_tracker) {
+    return m_loading_progress_tracker->progress();
+  }
+  return 0.0F;
+}
+
+QString GameEngine::loading_stage_text() const {
+  if (m_loading_progress_tracker) {
+    auto stage = m_loading_progress_tracker->current_stage();
+    auto stage_name = m_loading_progress_tracker->stage_name(stage);
+    auto detail = m_loading_progress_tracker->current_detail();
+    if (!detail.isEmpty()) {
+      return stage_name + " - " + detail;
+    }
+    return stage_name;
+  }
+  return QString();
 }
