@@ -60,9 +60,18 @@ void RainManager::update(float delta_time) {
 
   if (target_state != m_state) {
     transition_to(target_state);
+    
+    if (target_state == RainState::FadingIn) {
+      m_state_time = m_cycle_time - rain_start;
+    } else if (target_state == RainState::FadingOut) {
+      m_state_time = m_cycle_time - fade_out_start;
+    } else if (target_state == RainState::Active) {
+      m_state_time = m_cycle_time - fade_in_end;
+    }
+  } else {
+    m_state_time += delta_time;
   }
-
-  m_state_time += delta_time;
+  
   update_intensity(delta_time);
 }
 
