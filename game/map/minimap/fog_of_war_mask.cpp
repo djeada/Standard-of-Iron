@@ -95,9 +95,8 @@ void FogOfWarMask::clear_current_visibility() {
       const uint8_t cell_val = (byte_val >> bit_offset) & 0x03;
 
       if (cell_val == static_cast<uint8_t>(VisibilityState::Visible)) {
-        new_val |=
-            static_cast<uint8_t>(static_cast<uint8_t>(VisibilityState::Revealed)
-                                 << bit_offset);
+        new_val |= static_cast<uint8_t>(
+            static_cast<uint8_t>(VisibilityState::Revealed) << bit_offset);
       } else {
         new_val |= static_cast<uint8_t>(cell_val << bit_offset);
       }

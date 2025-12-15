@@ -157,6 +157,8 @@ public:
                    const OliveBatchParams &params);
   void firecamp_batch(Buffer *instance_buffer, std::size_t instance_count,
                       const FireCampBatchParams &params);
+  void rain_batch(Buffer *instance_buffer, std::size_t instance_count,
+                  const RainBatchParams &params);
 
 private:
   void enqueue_selection_ring(Engine::Core::Entity *entity,

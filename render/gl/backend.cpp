@@ -11,6 +11,7 @@
 #include "backend/healer_aura_pipeline.h"
 #include "backend/healing_beam_pipeline.h"
 #include "backend/primitive_batch_pipeline.h"
+#include "backend/rain_pipeline.h"
 #include "backend/terrain_pipeline.h"
 #include "backend/vegetation_pipeline.h"
 #include "backend/water_pipeline.h"
@@ -22,6 +23,7 @@
 #include "ground/olive_gpu.h"
 #include "ground/pine_gpu.h"
 #include "ground/plant_gpu.h"
+#include "ground/rain_gpu.h"
 #include "ground/stone_gpu.h"
 #include "mesh.h"
 #include "render_constants.h"
@@ -171,6 +173,12 @@ void Backend::initialize() {
       this, m_shaderCache.get());
   m_combatDustPipeline->initialize();
   qInfo() << "Backend: CombatDustPipeline initialized";
+
+  qInfo() << "Backend: Creating RainPipeline...";
+  m_rainPipeline = std::make_unique<BackendPipelines::RainPipeline>(
+      this, m_shaderCache.get());
+  m_rainPipeline->initialize();
+  qInfo() << "Backend: RainPipeline initialized";
 
   qInfo() << "Backend: Loading basic shaders...";
   m_basicShader = m_shaderCache->get(QStringLiteral("basic"));
@@ -848,6 +856,14 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         glEnable(GL_CULL_FACE);
       }
 
+      break;
+    }
+    case RainBatchCmdIndex: {
+      const auto &rain = std::get<RainBatchCmdIndex>(cmd);
+      if (m_rainPipeline == nullptr || !m_rainPipeline->is_initialized()) {
+        break;
+      }
+      m_rainPipeline->render(cam, rain.params.intensity, rain.params.time);
       break;
     }
     case TerrainChunkCmdIndex: {
