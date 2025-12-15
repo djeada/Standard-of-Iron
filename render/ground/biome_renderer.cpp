@@ -333,8 +333,6 @@ void BiomeRenderer::generate_grass_instances() {
         continue;
       }
 
-      bool const is_primarily_flat = flat_count >= hill_count;
-
       float const avg_slope = chunk_slope_sum / float(sample_count);
 
       uint32_t state = hash_coords(chunk_x, chunk_z, m_noiseSeed ^ 0xC915872BU);
