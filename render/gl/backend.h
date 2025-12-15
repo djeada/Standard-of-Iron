@@ -88,8 +88,7 @@ public:
     return m_combatDustPipeline.get();
   }
 
-  [[nodiscard]] auto
-  rain_pipeline() -> BackendPipelines::RainPipeline * {
+  [[nodiscard]] auto rain_pipeline() -> BackendPipelines::RainPipeline * {
     return m_rainPipeline.get();
   }
 

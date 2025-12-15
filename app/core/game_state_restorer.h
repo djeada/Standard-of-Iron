@@ -22,6 +22,7 @@ class PlantRenderer;
 class PineRenderer;
 class OliveRenderer;
 class FireCampRenderer;
+class RainRenderer;
 } // namespace Render::GL
 
 namespace Game::Systems {
@@ -51,6 +52,7 @@ public:
     Render::GL::PineRenderer *pine;
     Render::GL::OliveRenderer *olive;
     Render::GL::FireCampRenderer *firecamp;
+    Render::GL::RainRenderer *rain;
   };
 
   static void restore_environment_from_metadata(

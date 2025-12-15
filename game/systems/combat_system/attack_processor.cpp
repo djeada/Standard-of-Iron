@@ -1,8 +1,4 @@
 #include "attack_processor.h"
-#include "combat_mode_processor.h"
-#include "combat_types.h"
-#include "combat_utils.h"
-#include "damage_processor.h"
 #include "../../core/component.h"
 #include "../../core/world.h"
 #include "../../units/spawn_type.h"
@@ -11,6 +7,10 @@
 #include "../arrow_system.h"
 #include "../command_service.h"
 #include "../owner_registry.h"
+#include "combat_mode_processor.h"
+#include "combat_types.h"
+#include "combat_utils.h"
+#include "damage_processor.h"
 
 #include <algorithm>
 #include <cmath>
@@ -45,8 +45,10 @@ void face_target(Engine::Core::TransformComponent *attacker_transform,
   if ((attacker_transform == nullptr) || (target_transform == nullptr)) {
     return;
   }
-  float const dx = target_transform->position.x - attacker_transform->position.x;
-  float const dz = target_transform->position.z - attacker_transform->position.z;
+  float const dx =
+      target_transform->position.x - attacker_transform->position.x;
+  float const dz =
+      target_transform->position.z - attacker_transform->position.z;
   float const yaw = std::atan2(dx, dz) * 180.0F / std::numbers::pi_v<float>;
   attacker_transform->desired_yaw = yaw;
   attacker_transform->has_desired_yaw = true;
@@ -93,9 +95,9 @@ void process_melee_lock(Engine::Core::Entity *attacker,
 
   if (dist > Constants::kMaxMeleeSeparation) {
     if (!is_unit_in_hold_mode(attacker)) {
-      float const pull_amount =
-          (dist - Constants::kIdealMeleeDistance) * Constants::kMeleePullFactor *
-          delta_time * Constants::kMeleePullSpeed;
+      float const pull_amount = (dist - Constants::kIdealMeleeDistance) *
+                                Constants::kMeleePullFactor * delta_time *
+                                Constants::kMeleePullSpeed;
 
       if (dist > Constants::kMinDistance) {
         QVector3D const direction(dx / dist, 0.0F, dz / dist);
@@ -135,17 +137,14 @@ void apply_hold_mode_bonuses(Engine::Core::Entity *attacker,
 
   if (unit_comp->spawn_type == Game::Units::SpawnType::Archer) {
     range *= Constants::kRangeMultiplierHold;
-    damage =
-        static_cast<int>(static_cast<float>(damage) *
-                         Constants::kDamageMultiplierArcherHold);
+    damage = static_cast<int>(static_cast<float>(damage) *
+                              Constants::kDamageMultiplierArcherHold);
   } else if (unit_comp->spawn_type == Game::Units::SpawnType::Spearman) {
-    damage =
-        static_cast<int>(static_cast<float>(damage) *
-                         Constants::kDamageMultiplierSpearmanHold);
+    damage = static_cast<int>(static_cast<float>(damage) *
+                              Constants::kDamageMultiplierSpearmanHold);
   } else {
-    damage =
-        static_cast<int>(static_cast<float>(damage) *
-                         Constants::kDamageMultiplierDefaultHold);
+    damage = static_cast<int>(static_cast<float>(damage) *
+                              Constants::kDamageMultiplierDefaultHold);
   }
 }
 
@@ -169,9 +168,8 @@ void spawn_arrows(Engine::Core::Entity *attacker, Engine::Core::Entity *target,
                         tgt_t->position.z);
   QVector3D const dir = (t_pos - a_pos).normalized();
   QVector3D const color =
-      (att_u != nullptr)
-          ? Game::Visuals::team_colorForOwner(att_u->owner_id)
-          : QVector3D(0.8F, 0.9F, 1.0F);
+      (att_u != nullptr) ? Game::Visuals::team_colorForOwner(att_u->owner_id)
+                         : QVector3D(0.8F, 0.9F, 1.0F);
 
   int arrow_count = 1;
   if (att_u != nullptr) {
@@ -187,8 +185,8 @@ void spawn_arrows(Engine::Core::Entity *attacker, Engine::Core::Entity *target,
 
   for (int i = 0; i < arrow_count; ++i) {
     static thread_local std::mt19937 spread_gen(std::random_device{}());
-    std::uniform_real_distribution<float> spread_dist(Constants::kArrowSpreadMin,
-                                                      Constants::kArrowSpreadMax);
+    std::uniform_real_distribution<float> spread_dist(
+        Constants::kArrowSpreadMin, Constants::kArrowSpreadMax);
 
     QVector3D const perpendicular(-dir.z(), 0.0F, dir.x());
     QVector3D const up_vector(0.0F, 1.0F, 0.0F);
@@ -205,14 +203,13 @@ void spawn_arrows(Engine::Core::Entity *attacker, Engine::Core::Entity *target,
                                  up_vector * vertical_offset +
                                  dir * depth_offset;
 
-    QVector3D const start = a_pos +
-                            QVector3D(0.0F, Constants::kArrowStartHeight, 0.0F) +
-                            dir * Constants::kArrowStartOffset + start_offset;
-    QVector3D const end =
-        t_pos +
-        QVector3D(Constants::kArrowTargetOffset, Constants::kArrowTargetOffset,
-                  0.0F) +
-        end_offset;
+    QVector3D const start =
+        a_pos + QVector3D(0.0F, Constants::kArrowStartHeight, 0.0F) +
+        dir * Constants::kArrowStartOffset + start_offset;
+    QVector3D const end = t_pos +
+                          QVector3D(Constants::kArrowTargetOffset,
+                                    Constants::kArrowTargetOffset, 0.0F) +
+                          end_offset;
 
     arrow_sys->spawnArrow(start, end, color, Constants::kArrowSpeed);
   }
@@ -231,8 +228,8 @@ void initiate_melee_combat(Engine::Core::Entity *attacker,
     combat_state =
         attacker->add_component<Engine::Core::CombatStateComponent>();
   }
-  if (combat_state != nullptr &&
-      combat_state->animation_state == Engine::Core::CombatAnimationState::Idle) {
+  if (combat_state != nullptr && combat_state->animation_state ==
+                                     Engine::Core::CombatAnimationState::Idle) {
     combat_state->animation_state = Engine::Core::CombatAnimationState::Advance;
     combat_state->state_time = 0.0F;
     combat_state->state_duration =
@@ -241,8 +238,7 @@ void initiate_melee_combat(Engine::Core::Entity *attacker,
     combat_state->attack_offset = offset_dist(gen);
     std::uniform_int_distribution<int> variant_dist(
         0, Engine::Core::CombatStateComponent::kMaxAttackVariants - 1);
-    combat_state->attack_variant =
-        static_cast<std::uint8_t>(variant_dist(gen));
+    combat_state->attack_variant = static_cast<std::uint8_t>(variant_dist(gen));
   }
 
   auto *target_atk = target->get_component<Engine::Core::AttackComponent>();
@@ -259,8 +255,8 @@ void initiate_melee_combat(Engine::Core::Entity *attacker,
     float const dist = std::sqrt(dx * dx + dz * dz);
 
     if (dist > Constants::kIdealMeleeDistance + 0.1F) {
-      float const move_amount =
-          (dist - Constants::kIdealMeleeDistance) * Constants::kMoveAmountFactor;
+      float const move_amount = (dist - Constants::kIdealMeleeDistance) *
+                                Constants::kMoveAmountFactor;
 
       if (dist > Constants::kMinDistance) {
         QVector3D const direction(dx / dist, 0.0F, dz / dist);
@@ -346,8 +342,8 @@ void process_attacks(Engine::Core::World *world, float delta_time) {
             target->get_component<Engine::Core::UnitComponent>();
 
         auto &owner_registry = Game::Systems::OwnerRegistry::instance();
-        bool const is_ally = owner_registry.are_allies(
-            attacker_unit->owner_id, target_unit->owner_id);
+        bool const is_ally = owner_registry.are_allies(attacker_unit->owner_id,
+                                                       target_unit->owner_id);
 
         if ((target_unit != nullptr) && target_unit->health > 0 &&
             target_unit->owner_id != attacker_unit->owner_id && !is_ally) {
@@ -358,8 +354,9 @@ void process_attacks(Engine::Core::World *world, float delta_time) {
             if (ranged_unit) {
               stop_unit_movement(attacker, attacker_transform);
             }
-            face_target(attacker_transform,
-                        target->get_component<Engine::Core::TransformComponent>());
+            face_target(
+                attacker_transform,
+                target->get_component<Engine::Core::TransformComponent>());
           } else if (attack_target->should_chase) {
             auto *hold_mode =
                 attacker->get_component<Engine::Core::HoldModeComponent>();
@@ -389,8 +386,7 @@ void process_attacks(Engine::Core::World *world, float delta_time) {
                 if (target_is_building) {
                   float const scale_x = target_transform->scale.x;
                   float const scale_z = target_transform->scale.z;
-                  float const target_radius =
-                      std::max(scale_x, scale_z) * 0.5F;
+                  float const target_radius = std::max(scale_x, scale_z) * 0.5F;
                   QVector3D direction = target_pos - attacker_pos;
                   float const distance_sq = direction.lengthSquared();
                   if (distance_sq > 0.000001F) {
@@ -425,7 +421,8 @@ void process_attacks(Engine::Core::World *world, float delta_time) {
                     attacker->get_component<Engine::Core::MovementComponent>();
                 if (movement == nullptr) {
                   movement =
-                      attacker->add_component<Engine::Core::MovementComponent>();
+                      attacker
+                          ->add_component<Engine::Core::MovementComponent>();
                 }
 
                 if (movement != nullptr) {
@@ -540,8 +537,9 @@ void process_attacks(Engine::Core::World *world, float delta_time) {
         stop_unit_movement(attacker, attacker_transform);
       }
 
-      face_target(attacker_transform,
-                  best_target->get_component<Engine::Core::TransformComponent>());
+      face_target(
+          attacker_transform,
+          best_target->get_component<Engine::Core::TransformComponent>());
 
       auto *att_u = attacker->get_component<Engine::Core::UnitComponent>();
       bool const should_show_arrow_vfx =

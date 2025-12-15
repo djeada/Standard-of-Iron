@@ -175,8 +175,8 @@ void Backend::initialize() {
   qInfo() << "Backend: CombatDustPipeline initialized";
 
   qInfo() << "Backend: Creating RainPipeline...";
-  m_rainPipeline =
-      std::make_unique<BackendPipelines::RainPipeline>(this, m_shaderCache.get());
+  m_rainPipeline = std::make_unique<BackendPipelines::RainPipeline>(
+      this, m_shaderCache.get());
   m_rainPipeline->initialize();
   qInfo() << "Backend: RainPipeline initialized";
 
