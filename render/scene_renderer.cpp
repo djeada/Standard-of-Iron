@@ -506,9 +506,10 @@ void Renderer::enqueue_mode_indicator(
       float const ndc_y = clip_pos.y() / clip_pos.w();
       float const ndc_z = clip_pos.z() / clip_pos.w();
 
-      // Check if outside frustum
-      if (ndc_x < -1.5F || ndc_x > 1.5F || ndc_y < -1.5F || ndc_y > 1.5F ||
-          ndc_z < -1.0F || ndc_z > 1.0F) {
+      // Check if outside frustum with margin for safety
+      constexpr float margin = Render::Geom::k_frustum_cull_margin;
+      if (ndc_x < -margin || ndc_x > margin || ndc_y < -margin ||
+          ndc_y > margin || ndc_z < -1.0F || ndc_z > 1.0F) {
         return; // Culled
       }
     }
