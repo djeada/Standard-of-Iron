@@ -418,6 +418,14 @@ Quick start for contributors:
 3. Run `make format` before committing changes
 4. Open a Pull Request
 
+### Code Signing and Distribution
+
+For maintainers preparing official releases:
+
+- **macOS**: See [docs/MACOS_SIGNING.md](docs/MACOS_SIGNING.md) for code signing and notarization setup
+- **Windows**: Code signing is configured in the Windows workflow (uses `WINDOWS_CERTIFICATE` secret)
+- **Linux**: AppImage distribution does not require code signing
+
 ## Nation System Migration Plan
 
 This roadmap replaces the single nation template with a scalable civilization layer that allows Romans, Carthage, and future nations to share troop classes but diverge on stats, formations, and visuals.
