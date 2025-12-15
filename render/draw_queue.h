@@ -161,12 +161,20 @@ struct CombatDustCmd {
   float time = 0.0F;
 };
 
+struct ModeIndicatorCmd {
+  QMatrix4x4 model;
+  QMatrix4x4 mvp;
+  QVector3D color{1.0F, 1.0F, 1.0F};
+  float alpha = 1.0F;
+  int mode_type = 0; // 0 = hold, 1 = guard
+};
+
 using DrawCmd =
     std::variant<GridCmd, SelectionRingCmd, SelectionSmokeCmd, CylinderCmd,
                  MeshCmd, FogBatchCmd, GrassBatchCmd, StoneBatchCmd,
                  PlantBatchCmd, PineBatchCmd, OliveBatchCmd, FireCampBatchCmd,
                  RainBatchCmd, TerrainChunkCmd, PrimitiveBatchCmd,
-                 HealingBeamCmd, HealerAuraCmd, CombatDustCmd>;
+                 HealingBeamCmd, HealerAuraCmd, CombatDustCmd, ModeIndicatorCmd>;
 
 enum class DrawCmdType : std::uint8_t {
   Grid = 0,
@@ -186,7 +194,8 @@ enum class DrawCmdType : std::uint8_t {
   PrimitiveBatch = 14,
   HealingBeam = 15,
   HealerAura = 16,
-  CombatDust = 17
+  CombatDust = 17,
+  ModeIndicator = 18
 };
 
 constexpr std::size_t MeshCmdIndex =
@@ -225,6 +234,8 @@ constexpr std::size_t HealerAuraCmdIndex =
     static_cast<std::size_t>(DrawCmdType::HealerAura);
 constexpr std::size_t CombatDustCmdIndex =
     static_cast<std::size_t>(DrawCmdType::CombatDust);
+constexpr std::size_t ModeIndicatorCmdIndex =
+    static_cast<std::size_t>(DrawCmdType::ModeIndicator);
 
 inline auto draw_cmd_type(const DrawCmd &cmd) -> DrawCmdType {
   return static_cast<DrawCmdType>(cmd.index());
@@ -252,6 +263,7 @@ public:
   void submit(const HealingBeamCmd &c) { m_items.emplace_back(c); }
   void submit(const HealerAuraCmd &c) { m_items.emplace_back(c); }
   void submit(const CombatDustCmd &c) { m_items.emplace_back(c); }
+  void submit(const ModeIndicatorCmd &c) { m_items.emplace_back(c); }
 
   [[nodiscard]] auto empty() const -> bool { return m_items.empty(); }
   [[nodiscard]] auto size() const -> std::size_t { return m_items.size(); }
@@ -348,7 +360,8 @@ private:
       FogBatch = 11,
       SelectionSmoke = 12,
       Grid = 13,
-      SelectionRing = 16
+      SelectionRing = 16,
+      ModeIndicator = 17
     };
 
     static constexpr uint8_t k_type_order[] = {
@@ -366,7 +379,11 @@ private:
         static_cast<uint8_t>(RenderOrder::FireCampBatch),
         static_cast<uint8_t>(RenderOrder::RainBatch),
         static_cast<uint8_t>(RenderOrder::TerrainChunk),
-        static_cast<uint8_t>(RenderOrder::PrimitiveBatch)};
+        static_cast<uint8_t>(RenderOrder::PrimitiveBatch),
+        15, // HealingBeam
+        16, // HealerAura
+        17, // CombatDust
+        static_cast<uint8_t>(RenderOrder::ModeIndicator)};
 
     const std::size_t type_index = cmd.index();
     constexpr std::size_t type_count =
