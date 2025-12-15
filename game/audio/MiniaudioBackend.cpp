@@ -56,20 +56,19 @@ auto MiniaudioBackend::initialize(int device_rate, int,
   config.sampleRate = m_sample_rate;
   config.dataCallback = audioCallback;
 
-  auto *wrapper = new DeviceWrapper{this};
-  config.pUserData = wrapper;
+  auto wrapper = std::unique_ptr<DeviceWrapper>(new DeviceWrapper{this});
+  config.pUserData = wrapper.get();
 
-  m_device = new ma_device();
-  if (ma_device_init(nullptr, &config, m_device) != MA_SUCCESS) {
+  m_device = std::make_unique<ma_device>();
+  if (ma_device_init(nullptr, &config, m_device.get()) != MA_SUCCESS) {
     qWarning() << "MiniaudioBackend: Failed to initialize audio device";
     qWarning() << "  Requested sample rate:" << m_sample_rate;
     qWarning() << "  Requested channels:" << m_output_channels;
     qWarning() << "  This may indicate no audio device is available";
-    delete m_device;
-    m_device = nullptr;
-    delete wrapper;
     return false;
   }
+
+  m_device_wrapper = std::move(wrapper);
 
   m_channels.resize(std::max(1, music_channels));
   for (auto &channel : m_channels) {
@@ -81,12 +80,11 @@ auto MiniaudioBackend::initialize(int device_rate, int,
     sfx = SoundEffect{};
   }
 
-  if (ma_device_start(m_device) != MA_SUCCESS) {
+  if (ma_device_start(m_device.get()) != MA_SUCCESS) {
     qWarning() << "MiniaudioBackend: Failed to start audio device";
-    ma_device_uninit(m_device);
-    delete m_device;
-    m_device = nullptr;
-    delete wrapper;
+    ma_device_uninit(m_device.get());
+    m_device.reset();
+    m_device_wrapper.reset();
     return false;
   }
 
@@ -108,12 +106,10 @@ void MiniaudioBackend::stop_device() {
   if (m_device == nullptr) {
     return;
   }
-  auto *wrapper = reinterpret_cast<DeviceWrapper *>(m_device->pUserData);
-  ma_device_stop(m_device);
-  ma_device_uninit(m_device);
-  delete m_device;
-  m_device = nullptr;
-  delete wrapper;
+  ma_device_stop(m_device.get());
+  ma_device_uninit(m_device.get());
+  m_device.reset();
+  m_device_wrapper.reset();
 }
 
 auto MiniaudioBackend::predecode(const QString &id,
