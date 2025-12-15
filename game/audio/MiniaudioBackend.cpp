@@ -56,7 +56,7 @@ auto MiniaudioBackend::initialize(int device_rate, int,
   config.sampleRate = m_sample_rate;
   config.dataCallback = audioCallback;
 
-  auto wrapper = std::make_unique<DeviceWrapper>(DeviceWrapper{this});
+  auto wrapper = std::unique_ptr<DeviceWrapper>(new DeviceWrapper{this});
   config.pUserData = wrapper.get();
 
   m_device = std::make_unique<ma_device>();
