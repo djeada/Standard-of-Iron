@@ -4,6 +4,8 @@
 #include "combat_types.h"
 #include "combat_utils.h"
 
+#include <cmath>
+
 namespace Game::Systems::Combat {
 
 void AutoEngagement::process(Engine::Core::World *world, float delta_time) {
@@ -49,12 +51,19 @@ void AutoEngagement::process(Engine::Core::World *world, float delta_time) {
       continue;
     }
 
-    if (!is_unit_idle(unit)) {
+    auto *guard_mode = unit->get_component<Engine::Core::GuardModeComponent>();
+    bool const in_guard_mode = (guard_mode != nullptr) && guard_mode->active;
+
+    if (!in_guard_mode && !is_unit_idle(unit)) {
       continue;
     }
 
-    float const vision_range = unit_comp->vision_range;
-    auto *nearest_enemy = find_nearest_enemy(unit, world, vision_range);
+    float detection_range = unit_comp->vision_range;
+    if (in_guard_mode) {
+      detection_range = std::min(detection_range, guard_mode->guard_radius);
+    }
+
+    auto *nearest_enemy = find_nearest_enemy(unit, world, detection_range);
 
     if (nearest_enemy != nullptr) {
       auto *attack_target =
@@ -65,7 +74,7 @@ void AutoEngagement::process(Engine::Core::World *world, float delta_time) {
       }
       if (attack_target != nullptr) {
         attack_target->target_id = nearest_enemy->get_id();
-        attack_target->should_chase = true;
+        attack_target->should_chase = !in_guard_mode;
 
         m_engagement_cooldowns[unit->get_id()] = Constants::kEngagementCooldown;
       }
