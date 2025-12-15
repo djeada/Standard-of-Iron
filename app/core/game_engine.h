@@ -15,6 +15,7 @@
 #include "input_command_handler.h"
 #include "minimap_manager.h"
 #include "renderer_bootstrap.h"
+#include <QElapsedTimer>
 #include <QJsonObject>
 #include <QList>
 #include <QMatrix4x4>
@@ -85,6 +86,7 @@ class AudioSystemProxy;
 } // namespace App
 
 class QQuickWindow;
+class LoadingProgressTracker;
 
 struct EntityCache {
   int player_troop_count = 0;
@@ -144,6 +146,11 @@ public:
       QImage minimap_image READ minimap_image NOTIFY minimap_image_changed)
   Q_PROPERTY(bool is_spectator_mode READ is_spectator_mode NOTIFY
                  spectator_mode_changed)
+  Q_PROPERTY(bool is_loading READ is_loading NOTIFY is_loading_changed)
+  Q_PROPERTY(float loading_progress READ loading_progress NOTIFY
+                 loading_progress_changed)
+  Q_PROPERTY(QString loading_stage_text READ loading_stage_text NOTIFY
+                 loading_stage_changed)
 
   Q_INVOKABLE void on_map_clicked(qreal sx, qreal sy);
   Q_INVOKABLE void on_right_click(qreal sx, qreal sy);
@@ -245,6 +252,13 @@ public:
     return m_level.is_spectator_mode;
   }
 
+  [[nodiscard]] bool is_loading() const {
+    return m_runtime.loading || m_loading_overlay_active;
+  }
+
+  [[nodiscard]] float loading_progress() const;
+  [[nodiscard]] QString loading_stage_text() const;
+
   QObject *audio_system();
 
   void setWindow(QQuickWindow *w) { m_window = w; }
@@ -297,6 +311,8 @@ private:
   [[nodiscard]] Game::Systems::RuntimeSnapshot to_runtime_snapshot() const;
   void apply_runtime_snapshot(const Game::Systems::RuntimeSnapshot &snapshot);
   [[nodiscard]] QByteArray capture_screenshot() const;
+  void perform_skirmish_load(const QString &map_path,
+                             const QVariantList &playerConfigs);
 
   std::unique_ptr<Engine::Core::World> m_world;
   std::unique_ptr<Render::GL::Renderer> m_renderer;
@@ -331,6 +347,7 @@ private:
   std::unique_ptr<AmbientStateManager> m_ambient_state_manager;
   std::unique_ptr<InputCommandHandler> m_input_handler;
   std::unique_ptr<CameraController> m_camera_controller;
+  std::unique_ptr<LoadingProgressTracker> m_loading_progress_tracker;
   QQuickWindow *m_window = nullptr;
   RuntimeState m_runtime;
   ViewportState m_viewport;
@@ -343,6 +360,12 @@ private:
   QVariantList m_available_campaigns;
   bool m_maps_loading = false;
   QString m_current_campaign_id;
+  bool m_loading_overlay_active = false;
+  bool m_loading_overlay_wait_for_first_frame = false;
+  int m_loading_overlay_frames_remaining = 0;
+  qint64 m_loading_overlay_min_duration_ms = 0;
+  QElapsedTimer m_loading_overlay_timer;
+  bool m_finalize_progress_after_overlay = false;
   Engine::Core::ScopedEventSubscription<Engine::Core::UnitDiedEvent>
       m_unit_died_subscription;
   Engine::Core::ScopedEventSubscription<Engine::Core::UnitSpawnedEvent>
@@ -368,4 +391,7 @@ signals:
   void save_slots_changed();
   void hold_mode_changed(bool active);
   void spectator_mode_changed();
+  void is_loading_changed();
+  void loading_progress_changed(float progress);
+  void loading_stage_changed(QString stage_text);
 };
