@@ -2,10 +2,12 @@
 
 #include <atomic>
 #include <chrono>
+#include <condition_variable>
 #include <cstdint>
-#include <future>
 #include <mutex>
+#include <optional>
 #include <shared_mutex>
+#include <thread>
 #include <vector>
 
 namespace Engine::Core {
@@ -46,6 +48,8 @@ public:
 
   void reveal_all();
 
+  ~VisibilityService();
+
 private:
   auto inBounds(int x, int z) const -> bool;
   auto index(int x, int z) const -> int;
@@ -77,12 +81,13 @@ private:
                            int player_id) const -> std::vector<VisionSource>;
   auto composeJobPayload(const std::vector<VisionSource> &sources) const
       -> JobPayload;
-  void startAsyncJob(JobPayload &&payload);
-  auto integrateCompletedJob() -> bool;
-  static auto executeJob(JobPayload payload) -> JobResult;
+  void enqueueJob(JobPayload &&payload);
+  void integrateResult(JobResult &&result);
   auto shouldStartNewJob() const -> bool;
-  static auto computeSourcesHash(const std::vector<VisionSource> &sources)
-      -> std::size_t;
+  void resetThrottle();
+  void workerLoop();
+  void ensureWorkerRunning();
+  static auto executeJob(JobPayload payload) -> JobResult;
 
   VisibilityService() = default;
 
@@ -97,10 +102,15 @@ private:
   std::vector<std::uint8_t> m_cells;
   std::atomic<std::uint64_t> m_version{0};
   mutable std::atomic<std::uint64_t> m_generation{0};
-  std::future<JobResult> m_pendingJob;
-  std::atomic<bool> m_jobActive{false};
   std::chrono::steady_clock::time_point m_lastJobStartTime{};
-  std::size_t m_lastSourcesHash{0};
+
+  std::mutex m_queueMutex;
+  std::condition_variable m_queueCv;
+  std::optional<JobPayload> m_pendingPayload;
+  std::optional<JobResult> m_completedResult;
+  std::thread m_workerThread;
+  std::atomic<bool> m_workerRunning{false};
+  std::atomic<bool> m_shutdownRequested{false};
 };
 
 } // namespace Game::Map
