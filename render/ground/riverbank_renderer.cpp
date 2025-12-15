@@ -103,7 +103,7 @@ void RiverbankRenderer::build_meshes() {
     QVector3D const perpendicular(-dir.z(), 0.0F, dir.x());
     float const half_width = segment.width * 0.5F;
 
-    float const bank_width = 0.2F;
+    float const bank_width = 0.8F;
 
     int length_steps =
         static_cast<int>(std::ceil(length / (m_tile_size * 0.5F))) + 1;
@@ -153,8 +153,6 @@ void RiverbankRenderer::build_meshes() {
       QVector3D const outer_right =
           inner_right + perpendicular * (bank_width + outer_variation);
 
-      float const normal[3] = {0.0F, 1.0F, 0.0F};
-
       Vertex left_inner;
       Vertex left_outer;
       float const height_inner_left =
@@ -162,22 +160,36 @@ void RiverbankRenderer::build_meshes() {
       float const height_outer_left =
           sample_height(outer_left.x(), outer_left.z());
 
+      // Add height to create a raised bank effect (like a small hill)
+      // Inner edge is lower (near water), outer edge is higher
+      float const bank_height_inner = 0.15F;
+      float const bank_height_outer = 0.45F;
+
       left_inner.position[0] = inner_left.x();
-      left_inner.position[1] = height_inner_left + 0.05F;
+      left_inner.position[1] = height_inner_left + bank_height_inner;
       left_inner.position[2] = inner_left.z();
-      left_inner.normal[0] = normal[0];
-      left_inner.normal[1] = normal[1];
-      left_inner.normal[2] = normal[2];
+      
+      left_outer.position[0] = outer_left.x();
+      left_outer.position[1] = height_outer_left + bank_height_outer;
+      left_outer.position[2] = outer_left.z();
+
+      // Calculate slope normal for the bank
+      QVector3D bank_left_vec = QVector3D(left_outer.position[0] - left_inner.position[0],
+                                          left_outer.position[1] - left_inner.position[1],
+                                          left_outer.position[2] - left_inner.position[2]);
+      QVector3D tangent = dir;
+      QVector3D slope_normal = QVector3D::crossProduct(bank_left_vec, tangent).normalized();
+
+      left_inner.normal[0] = slope_normal.x();
+      left_inner.normal[1] = slope_normal.y();
+      left_inner.normal[2] = slope_normal.z();
       left_inner.tex_coord[0] = 0.0F;
       left_inner.tex_coord[1] = t;
       vertices.push_back(left_inner);
 
-      left_outer.position[0] = outer_left.x();
-      left_outer.position[1] = height_outer_left + 0.05F;
-      left_outer.position[2] = outer_left.z();
-      left_outer.normal[0] = normal[0];
-      left_outer.normal[1] = normal[1];
-      left_outer.normal[2] = normal[2];
+      left_outer.normal[0] = slope_normal.x();
+      left_outer.normal[1] = slope_normal.y();
+      left_outer.normal[2] = slope_normal.z();
       left_outer.tex_coord[0] = 1.0F;
       left_outer.tex_coord[1] = t;
       vertices.push_back(left_outer);
@@ -190,21 +202,29 @@ void RiverbankRenderer::build_meshes() {
           sample_height(outer_right.x(), outer_right.z());
 
       right_inner.position[0] = inner_right.x();
-      right_inner.position[1] = height_inner_right + 0.05F;
+      right_inner.position[1] = height_inner_right + bank_height_inner;
       right_inner.position[2] = inner_right.z();
-      right_inner.normal[0] = normal[0];
-      right_inner.normal[1] = normal[1];
-      right_inner.normal[2] = normal[2];
+
+      right_outer.position[0] = outer_right.x();
+      right_outer.position[1] = height_outer_right + bank_height_outer;
+      right_outer.position[2] = outer_right.z();
+
+      // Calculate slope normal for the right bank
+      QVector3D bank_right_vec = QVector3D(right_outer.position[0] - right_inner.position[0],
+                                           right_outer.position[1] - right_inner.position[1],
+                                           right_outer.position[2] - right_inner.position[2]);
+      QVector3D slope_normal_right = QVector3D::crossProduct(tangent, bank_right_vec).normalized();
+
+      right_inner.normal[0] = slope_normal_right.x();
+      right_inner.normal[1] = slope_normal_right.y();
+      right_inner.normal[2] = slope_normal_right.z();
       right_inner.tex_coord[0] = 0.0F;
       right_inner.tex_coord[1] = t;
       vertices.push_back(right_inner);
 
-      right_outer.position[0] = outer_right.x();
-      right_outer.position[1] = height_outer_right + 0.05F;
-      right_outer.position[2] = outer_right.z();
-      right_outer.normal[0] = normal[0];
-      right_outer.normal[1] = normal[1];
-      right_outer.normal[2] = normal[2];
+      right_outer.normal[0] = slope_normal_right.x();
+      right_outer.normal[1] = slope_normal_right.y();
+      right_outer.normal[2] = slope_normal_right.z();
       right_outer.tex_coord[0] = 1.0F;
       right_outer.tex_coord[1] = t;
       vertices.push_back(right_outer);
@@ -275,22 +295,25 @@ void RiverbankRenderer::submit(Renderer &renderer, ResourceManager *resources) {
 
     if (use_visibility) {
       bool any_visible = false;
+      bool any_explored = false;
+      
       if (mesh_index - 1 < m_visibilitySamples.size()) {
         const auto &samples = m_visibilitySamples[mesh_index - 1];
-        const int min_required =
-            std::max<int>(2, static_cast<int>(samples.size() * 0.3F));
-        int visible_count = 0;
+        
+        // Check if any part is visible or explored
         for (const auto &pos : samples) {
           if (visibility.isVisibleWorld(pos.x(), pos.z())) {
-            ++visible_count;
-            if (visible_count >= min_required) {
-              any_visible = true;
-              break;
-            }
+            any_visible = true;
+            break;
+          }
+          if (visibility.isExploredWorld(pos.x(), pos.z())) {
+            any_explored = true;
           }
         }
       }
-      if (!any_visible) {
+      
+      // Don't render if neither visible nor explored (completely hidden in fog of war)
+      if (!any_visible && !any_explored) {
         continue;
       }
     }
