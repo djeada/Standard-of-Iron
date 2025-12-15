@@ -73,13 +73,14 @@ void ModeIndicatorPipeline::render_indicator(Mesh *mesh,
     return;
   }
 
-  initializeOpenGLFunctions();
-  clear_gl_errors();
-
   // Save current GL state
   GLboolean depthMaskEnabled = GL_TRUE;
   glGetBooleanv(GL_DEPTH_WRITEMASK, &depthMaskEnabled);
   GLboolean blendEnabled = glIsEnabled(GL_BLEND);
+  GLint blendSrc = 0;
+  GLint blendDst = 0;
+  glGetIntegerv(GL_BLEND_SRC_ALPHA, &blendSrc);
+  glGetIntegerv(GL_BLEND_DST_ALPHA, &blendDst);
 
   // Set up rendering state for mode indicators
   glEnable(GL_DEPTH_TEST);
@@ -100,7 +101,7 @@ void ModeIndicatorPipeline::render_indicator(Mesh *mesh,
 
   // Restore GL state
   glDepthMask(depthMaskEnabled);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glBlendFunc(blendSrc, blendDst);
   if (!blendEnabled) {
     glDisable(GL_BLEND);
   }
