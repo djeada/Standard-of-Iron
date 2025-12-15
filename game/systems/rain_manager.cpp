@@ -17,11 +17,11 @@ void RainManager::reset() {
   m_current_intensity = 0.0F;
   m_state_time = 0.0F;
 
-  if (m_settings.enabled && m_seed != 0) {
-    m_cycle_time =
-        static_cast<float>(m_seed % static_cast<std::uint32_t>(
-                                        m_settings.cycle_duration * 1000.0F)) /
-        1000.0F;
+  if (m_settings.enabled && m_seed != 0 &&
+      m_settings.cycle_duration >= 1.0F) {
+    const auto cycle_ms = static_cast<std::uint32_t>(
+        std::max(1.0F, m_settings.cycle_duration) * 1000.0F);
+    m_cycle_time = static_cast<float>(m_seed % cycle_ms) / 1000.0F;
   } else {
     m_cycle_time = 0.0F;
   }
@@ -40,8 +40,11 @@ void RainManager::update(float delta_time) {
 
   const float rain_start = 0.0F;
   const float rain_end = m_settings.active_duration;
-  const float fade_in_end = rain_start + m_settings.fade_duration;
-  const float fade_out_start = rain_end - m_settings.fade_duration;
+  const float effective_fade =
+      std::min(m_settings.fade_duration, m_settings.active_duration / 2.0F);
+  const float fade_in_end = rain_start + effective_fade;
+  const float fade_out_start =
+      std::max(fade_in_end, rain_end - effective_fade);
 
   RainState target_state = RainState::Clear;
 
