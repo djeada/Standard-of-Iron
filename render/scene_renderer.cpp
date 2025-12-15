@@ -523,8 +523,9 @@ void Renderer::enqueue_mode_indicator(
     QVector3D const to_camera = (cam_pos - pos).normalized();
     
     // Calculate rotation to face camera (billboard)
+    constexpr float k_pi = 3.14159265358979323846F;
     float const yaw = std::atan2(to_camera.x(), to_camera.z());
-    indicator_model.rotate(yaw * 180.0F / 3.14159265F, 0, 1, 0);
+    indicator_model.rotate(yaw * 180.0F / k_pi, 0, 1, 0);
   }
 
   // Determine mode type and color
