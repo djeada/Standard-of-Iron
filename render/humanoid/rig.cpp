@@ -717,11 +717,11 @@ void HumanoidRendererBase::draw_common_body(const DrawContext &ctx,
   // Render rounded shoulder caps (deltoids) for more human-like upper body
   float const shoulder_cap_r = upper_arm_r * HP::SHOULDER_CAP_RADIUS_SCALE;
   QVector3D const shoulder_cap_offset_l =
-      pose.shoulder_l + up_axis * (shoulder_cap_r * 0.3F) -
-      right_axis * (shoulder_cap_r * 0.2F);
+      pose.shoulder_l + up_axis * (shoulder_cap_r * HP::SHOULDER_CAP_UP_OFFSET) -
+      right_axis * (shoulder_cap_r * HP::SHOULDER_CAP_LATERAL_OFFSET);
   QVector3D const shoulder_cap_offset_r =
-      pose.shoulder_r + up_axis * (shoulder_cap_r * 0.3F) +
-      right_axis * (shoulder_cap_r * 0.2F);
+      pose.shoulder_r + up_axis * (shoulder_cap_r * HP::SHOULDER_CAP_UP_OFFSET) +
+      right_axis * (shoulder_cap_r * HP::SHOULDER_CAP_LATERAL_OFFSET);
 
   out.mesh(get_unit_sphere(),
            sphere_at(ctx.model, shoulder_cap_offset_l, shoulder_cap_r),
@@ -733,9 +733,11 @@ void HumanoidRendererBase::draw_common_body(const DrawContext &ctx,
   // Render trapezius muscles (connecting neck to shoulders)
   float const trap_radius = HP::NECK_RADIUS * HP::TRAP_HEIGHT_SCALE;
   QVector3D const trap_base_l =
-      pose.neck_base - up_axis * 0.02F - right_axis * (shoulder_half_span * HP::TRAP_WIDTH_SCALE);
+      pose.neck_base - up_axis * HP::TRAP_VERTICAL_OFFSET -
+      right_axis * (shoulder_half_span * HP::TRAP_WIDTH_SCALE);
   QVector3D const trap_base_r =
-      pose.neck_base - up_axis * 0.02F + right_axis * (shoulder_half_span * HP::TRAP_WIDTH_SCALE);
+      pose.neck_base - up_axis * HP::TRAP_VERTICAL_OFFSET +
+      right_axis * (shoulder_half_span * HP::TRAP_WIDTH_SCALE);
 
   out.mesh(get_unit_capsule(),
            capsule_between(ctx.model, pose.neck_base, trap_base_l, trap_radius),
