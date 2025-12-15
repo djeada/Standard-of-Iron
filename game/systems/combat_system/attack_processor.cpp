@@ -365,6 +365,42 @@ void process_attacks(Engine::Core::World *world, float delta_time) {
               continue;
             }
 
+            auto *guard_mode =
+                attacker->get_component<Engine::Core::GuardModeComponent>();
+            if ((guard_mode != nullptr) && guard_mode->active) {
+              float guard_x = guard_mode->guard_position_x;
+              float guard_z = guard_mode->guard_position_z;
+              if (guard_mode->guarded_entity_id != 0) {
+                auto *guarded_entity =
+                    world->get_entity(guard_mode->guarded_entity_id);
+                if (guarded_entity != nullptr) {
+                  auto *guarded_transform =
+                      guarded_entity
+                          ->get_component<Engine::Core::TransformComponent>();
+                  if (guarded_transform != nullptr) {
+                    guard_x = guarded_transform->position.x;
+                    guard_z = guarded_transform->position.z;
+                  }
+                }
+              }
+              auto *target_transform =
+                  target->get_component<Engine::Core::TransformComponent>();
+              if (target_transform != nullptr) {
+                float const dx =
+                    target_transform->position.x - guard_x;
+                float const dz =
+                    target_transform->position.z - guard_z;
+                float const dist_sq = dx * dx + dz * dz;
+                float const guard_radius_sq =
+                    guard_mode->guard_radius * guard_mode->guard_radius;
+                if (dist_sq > guard_radius_sq) {
+                  attacker
+                      ->remove_component<Engine::Core::AttackTargetComponent>();
+                  continue;
+                }
+              }
+            }
+
             if (ranged_unit && is_in_range(attacker, target, range)) {
               stop_unit_movement(attacker, attacker_transform);
               best_target = target;
@@ -562,10 +598,55 @@ void process_attacks(Engine::Core::World *world, float delta_time) {
 
       deal_damage(world, best_target, damage, attacker->get_id());
       *t_accum = 0.0F;
+
+      auto *guard_mode =
+          attacker->get_component<Engine::Core::GuardModeComponent>();
+      if ((guard_mode != nullptr) && guard_mode->active) {
+        guard_mode->returning_to_guard_position = false;
+      }
     } else {
       if ((attack_target == nullptr) &&
           attacker->has_component<Engine::Core::AttackTargetComponent>()) {
         attacker->remove_component<Engine::Core::AttackTargetComponent>();
+      }
+
+      auto *guard_mode =
+          attacker->get_component<Engine::Core::GuardModeComponent>();
+      if ((guard_mode != nullptr) && guard_mode->active &&
+          !guard_mode->returning_to_guard_position) {
+        float guard_x = guard_mode->guard_position_x;
+        float guard_z = guard_mode->guard_position_z;
+
+        if (guard_mode->guarded_entity_id != 0) {
+          auto *guarded_entity =
+              world->get_entity(guard_mode->guarded_entity_id);
+          if (guarded_entity != nullptr) {
+            auto *guarded_transform =
+                guarded_entity
+                    ->get_component<Engine::Core::TransformComponent>();
+            if (guarded_transform != nullptr) {
+              guard_x = guarded_transform->position.x;
+              guard_z = guarded_transform->position.z;
+            }
+          }
+        }
+
+        float const dx = guard_x - attacker_transform->position.x;
+        float const dz = guard_z - attacker_transform->position.z;
+        float const dist_sq = dx * dx + dz * dz;
+
+        constexpr float kReturnThresholdSq = 1.0F;
+        if (dist_sq > kReturnThresholdSq) {
+          guard_mode->returning_to_guard_position = true;
+          CommandService::MoveOptions options;
+          options.clear_attack_intent = true;
+          options.allow_direct_fallback = true;
+          std::vector<Engine::Core::EntityID> const unit_ids = {
+              attacker->get_id()};
+          std::vector<QVector3D> const move_targets = {
+              QVector3D(guard_x, 0.0F, guard_z)};
+          CommandService::moveUnits(*world, unit_ids, move_targets, options);
+        }
       }
     }
   }

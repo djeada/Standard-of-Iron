@@ -317,6 +317,14 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
       transform->position.z = movement->target_y;
       movement->has_target = false;
       movement->vx = movement->vz = 0.0F;
+
+      auto *guard_mode =
+          entity->get_component<Engine::Core::GuardModeComponent>();
+      if ((guard_mode != nullptr) && guard_mode->active &&
+          guard_mode->returning_to_guard_position) {
+        guard_mode->returning_to_guard_position = false;
+      }
+
       break;
     }
 

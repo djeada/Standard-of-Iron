@@ -13,6 +13,14 @@ auto is_unit_in_hold_mode(Engine::Core::Entity *entity) -> bool {
   return (hold_mode != nullptr) && hold_mode->active;
 }
 
+auto is_unit_in_guard_mode(Engine::Core::Entity *entity) -> bool {
+  if (entity == nullptr) {
+    return false;
+  }
+  auto *guard_mode = entity->get_component<Engine::Core::GuardModeComponent>();
+  return (guard_mode != nullptr) && guard_mode->active;
+}
+
 auto is_in_range(Engine::Core::Entity *attacker, Engine::Core::Entity *target,
                  float range) -> bool {
   auto *attacker_transform =
@@ -57,6 +65,12 @@ auto is_in_range(Engine::Core::Entity *attacker, Engine::Core::Entity *target,
 auto is_unit_idle(Engine::Core::Entity *unit) -> bool {
   auto *hold_mode = unit->get_component<Engine::Core::HoldModeComponent>();
   if ((hold_mode != nullptr) && hold_mode->active) {
+    return false;
+  }
+
+  auto *guard_mode = unit->get_component<Engine::Core::GuardModeComponent>();
+  if ((guard_mode != nullptr) && guard_mode->active &&
+      guard_mode->returning_to_guard_position) {
     return false;
   }
 
