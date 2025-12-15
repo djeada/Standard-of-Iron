@@ -27,6 +27,8 @@
 #include <QCoreApplication>
 #include <QCursor>
 #include <QDebug>
+#include <QElapsedTimer>
+#include <QEventLoop>
 #include <QImage>
 #include <QOpenGLContext>
 #include <QPainter>
@@ -171,14 +173,11 @@ GameEngine::GameEngine(QObject *parent)
   m_victoryService = std::make_unique<Game::Systems::VictoryService>();
   m_saveLoadService = std::make_unique<Game::Systems::SaveLoadService>();
   m_cameraService = std::make_unique<Game::Systems::CameraService>();
-  
-  // Initialize loading progress tracker
+
   m_loading_progress_tracker = std::make_unique<LoadingProgressTracker>(this);
   connect(m_loading_progress_tracker.get(),
           &LoadingProgressTracker::progress_changed, this,
-          [this](float progress) {
-            emit loading_progress_changed(progress);
-          });
+          [this](float progress) { emit loading_progress_changed(progress); });
   connect(m_loading_progress_tracker.get(),
           &LoadingProgressTracker::stage_changed, this,
           [this](LoadingProgressTracker::LoadingStage, QString detail) {
@@ -738,6 +737,25 @@ void GameEngine::render(int pixelWidth, int pixelHeight) {
   }
   m_renderer->end_frame();
 
+  if (m_loading_overlay_wait_for_first_frame) {
+    if (m_loading_overlay_frames_remaining > 0) {
+      m_loading_overlay_frames_remaining--;
+    }
+    const bool enough_time = m_loading_overlay_timer.isValid() &&
+                             (m_loading_overlay_timer.elapsed() >=
+                              m_loading_overlay_min_duration_ms);
+    if (enough_time && m_loading_overlay_frames_remaining <= 0) {
+      m_loading_overlay_wait_for_first_frame = false;
+      m_loading_overlay_active = false;
+      if (m_finalize_progress_after_overlay && m_loading_progress_tracker) {
+        m_loading_progress_tracker->set_stage(
+            LoadingProgressTracker::LoadingStage::COMPLETED);
+      }
+      m_finalize_progress_after_overlay = false;
+      emit is_loading_changed();
+    }
+  }
+
   qreal const current_x = global_cursor_x();
   qreal const current_y = global_cursor_y();
   if (current_x != m_runtime.last_cursor_x ||
@@ -1166,99 +1184,116 @@ void GameEngine::start_skirmish(const QString &map_path,
 
   if (!m_runtime.initialized) {
     ensure_initialized();
+  }
+
+  if (!m_world || !m_renderer || !m_camera) {
+    set_error("Cannot start skirmish: renderer not initialized");
     return;
   }
 
-  if (m_world && m_renderer && m_camera) {
+  m_finalize_progress_after_overlay = false;
+  m_loading_overlay_active = true;
+  m_runtime.loading = true;
+  emit is_loading_changed();
 
-    m_runtime.loading = true;
-    emit is_loading_changed();
-    
-    // Start progress tracking
-    if (m_loading_progress_tracker) {
-      m_loading_progress_tracker->start_loading();
-    }
-    
-    // Process events to allow UI to update before heavy loading
-    QCoreApplication::processEvents();
+  if (m_loading_progress_tracker) {
+    m_loading_progress_tracker->start_loading();
+  }
 
-    if (m_hoverTracker) {
-      m_hoverTracker->update_hover(-1, -1, *m_world, *m_camera, 0, 0);
-    }
+  QCoreApplication::processEvents(QEventLoop::AllEvents);
+  QTimer::singleShot(50, this, [this, map_path, playerConfigs]() {
+    perform_skirmish_load(map_path, playerConfigs);
+  });
+}
 
-    LevelOrchestrator orchestrator;
-    LevelOrchestrator::RendererRefs renderers{
-        m_renderer.get(), m_camera.get(), m_ground.get(),  m_terrain.get(),
-        m_biome.get(),    m_river.get(),  m_road.get(),    m_riverbank.get(),
-        m_bridge.get(),   m_fog.get(),    m_stone.get(),   m_plant.get(),
-        m_pine.get(),     m_olive.get(),  m_firecamp.get()};
+void GameEngine::perform_skirmish_load(const QString &map_path,
+                                       const QVariantList &playerConfigs) {
 
-    auto visibility_ready = [this]() {
-      m_runtime.visibility_version =
-          Game::Map::VisibilityService::instance().version();
-      m_runtime.visibility_update_accumulator = 0.0F;
-    };
-
-    auto owner_update = [this]() { emit owner_info_changed(); };
-
-    auto load_result = orchestrator.load_skirmish(
-        map_path, playerConfigs, m_selected_player_id, *m_world, renderers,
-        m_level, m_entity_cache, m_victoryService.get(),
-        m_minimap_manager.get(), visibility_ready, owner_update,
-        m_loading_progress_tracker.get());
-
-    if (load_result.updated_player_id != m_selected_player_id) {
-      m_selected_player_id = load_result.updated_player_id;
-      emit selected_player_id_changed();
-    }
-
-    if (!load_result.success) {
-      set_error(load_result.error_message);
-      m_runtime.loading = false;
-      return;
-    }
-
-    m_runtime.local_owner_id = load_result.updated_player_id;
-
-    if (m_victoryService) {
-      m_victoryService->setVictoryCallback([this](const QString &state) {
-        if (m_runtime.victory_state != state) {
-          m_runtime.victory_state = state;
-          emit victory_state_changed();
-
-          if (state == "victory" && !m_current_campaign_id.isEmpty()) {
-            mark_current_mission_completed();
-          }
-        }
-      });
-    }
-
-    // Mark loading complete
-    if (m_loading_progress_tracker) {
-      m_loading_progress_tracker->set_stage(
-          LoadingProgressTracker::LoadingStage::COMPLETED);
-    }
-
+  if (!(m_world && m_renderer && m_camera)) {
+    set_error("Cannot start skirmish: renderer not initialized");
     m_runtime.loading = false;
     emit is_loading_changed();
-
-    GameStateRestorer::rebuild_entity_cache(m_world.get(), m_entity_cache,
-                                            m_runtime.local_owner_id);
-
-    m_ambient_state_manager = std::make_unique<AmbientStateManager>();
-
-    Engine::Core::EventManager::instance().publish(
-        Engine::Core::AmbientStateChangedEvent(
-            Engine::Core::AmbientState::PEACEFUL,
-            Engine::Core::AmbientState::PEACEFUL));
-
-    if (m_input_handler) {
-      m_input_handler->set_spectator_mode(m_level.is_spectator_mode);
-    }
-
-    emit owner_info_changed();
-    emit spectator_mode_changed();
+    return;
   }
+
+  if (m_hoverTracker) {
+    m_hoverTracker->update_hover(-1, -1, *m_world, *m_camera, 0, 0);
+  }
+
+  LevelOrchestrator orchestrator;
+  LevelOrchestrator::RendererRefs renderers{
+      m_renderer.get(), m_camera.get(), m_ground.get(),  m_terrain.get(),
+      m_biome.get(),    m_river.get(),  m_road.get(),    m_riverbank.get(),
+      m_bridge.get(),   m_fog.get(),    m_stone.get(),   m_plant.get(),
+      m_pine.get(),     m_olive.get(),  m_firecamp.get()};
+
+  auto visibility_ready = [this]() {
+    m_runtime.visibility_version =
+        Game::Map::VisibilityService::instance().version();
+    m_runtime.visibility_update_accumulator = 0.0F;
+  };
+
+  auto owner_update = [this]() { emit owner_info_changed(); };
+
+  auto load_result = orchestrator.load_skirmish(
+      map_path, playerConfigs, m_selected_player_id, *m_world, renderers,
+      m_level, m_entity_cache, m_victoryService.get(), m_minimap_manager.get(),
+      visibility_ready, owner_update, m_loading_progress_tracker.get());
+
+  if (load_result.updated_player_id != m_selected_player_id) {
+    m_selected_player_id = load_result.updated_player_id;
+    emit selected_player_id_changed();
+  }
+
+  if (!load_result.success) {
+    set_error(load_result.error_message);
+    m_runtime.loading = false;
+    m_loading_overlay_active = false;
+    m_loading_overlay_wait_for_first_frame = false;
+    m_finalize_progress_after_overlay = false;
+    emit is_loading_changed();
+    return;
+  }
+
+  m_runtime.local_owner_id = load_result.updated_player_id;
+
+  if (m_victoryService) {
+    m_victoryService->setVictoryCallback([this](const QString &state) {
+      if (m_runtime.victory_state != state) {
+        m_runtime.victory_state = state;
+        emit victory_state_changed();
+
+        if (state == "victory" && !m_current_campaign_id.isEmpty()) {
+          mark_current_mission_completed();
+        }
+      }
+    });
+  }
+
+  m_runtime.loading = false;
+  m_loading_overlay_wait_for_first_frame = true;
+  m_loading_overlay_frames_remaining = 3;
+  m_loading_overlay_min_duration_ms = 1200;
+  m_loading_overlay_timer.restart();
+  m_finalize_progress_after_overlay = true;
+  emit is_loading_changed();
+
+  GameStateRestorer::rebuild_entity_cache(m_world.get(), m_entity_cache,
+                                          m_runtime.local_owner_id);
+
+  m_ambient_state_manager = std::make_unique<AmbientStateManager>();
+
+  Engine::Core::EventManager::instance().publish(
+      Engine::Core::AmbientStateChangedEvent(
+          Engine::Core::AmbientState::PEACEFUL,
+          Engine::Core::AmbientState::PEACEFUL));
+
+  if (m_input_handler) {
+    m_input_handler->set_spectator_mode(m_level.is_spectator_mode);
+  }
+
+  emit owner_info_changed();
+  emit spectator_mode_changed();
 }
 
 void GameEngine::open_settings() {
@@ -1287,11 +1322,18 @@ auto GameEngine::load_from_slot(const QString &slot) -> bool {
     return false;
   }
 
+  m_finalize_progress_after_overlay = false;
+  m_loading_overlay_active = true;
   m_runtime.loading = true;
+  emit is_loading_changed();
 
   if (!m_saveLoadService->load_game_from_slot(*m_world, slot)) {
     set_error(m_saveLoadService->get_last_error());
     m_runtime.loading = false;
+    m_loading_overlay_active = false;
+    m_loading_overlay_wait_for_first_frame = false;
+    m_finalize_progress_after_overlay = false;
+    emit is_loading_changed();
     return false;
   }
 
@@ -1336,6 +1378,12 @@ auto GameEngine::load_from_slot(const QString &slot) -> bool {
   }
 
   m_runtime.loading = false;
+  m_loading_overlay_wait_for_first_frame = true;
+  m_loading_overlay_frames_remaining = 3;
+  m_loading_overlay_min_duration_ms = 1200;
+  m_loading_overlay_timer.restart();
+  m_finalize_progress_after_overlay = true;
+  emit is_loading_changed();
   qInfo() << "Game load complete, victory/defeat checks re-enabled";
 
   emit selected_units_changed();

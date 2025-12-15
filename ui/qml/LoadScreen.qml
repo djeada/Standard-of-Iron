@@ -4,24 +4,44 @@ import QtQuick.Controls 2.15
 Rectangle {
     id: load_screen
 
-    property real progress: 0.0
+    property real progress: 0
     property bool is_loading: false
     property string stage_text: "Loading..."
-    property bool use_real_progress: true  // Toggle between real and fake progress
+    property bool use_real_progress: true
+    property var _bgSources: ["qrc:/qt/qml/StandardOfIron/assets/visuals/load_screen.png", "qrc:/StandardOfIron/assets/visuals/load_screen.png", "qrc:/assets/visuals/load_screen.png", "assets/visuals/load_screen.png"]
+    property int _bgIndex: 0
+
+    function complete_loading() {
+        load_screen.progress = 1;
+    }
 
     anchors.fill: parent
     color: "#000000"
     visible: is_loading
+    onIs_loadingChanged: {
+        if (is_loading) {
+            if (!use_real_progress)
+                progress = 0;
 
-    // Background image
-    Image {
-        id: background_image
-        anchors.fill: parent
-        source: "qrc:/assets/visuals/load_screen.png"
-        fillMode: Image.PreserveAspectCrop
+        }
     }
 
-    // Dark overlay for better text visibility
+    Image {
+        id: background_image
+
+        anchors.fill: parent
+        source: load_screen._bgSources[load_screen._bgIndex]
+        cache: true
+        asynchronous: false
+        fillMode: Image.PreserveAspectCrop
+        onStatusChanged: {
+            if (status === Image.Error && load_screen._bgIndex + 1 < load_screen._bgSources.length) {
+                load_screen._bgIndex += 1;
+                source = load_screen._bgSources[load_screen._bgIndex];
+            }
+        }
+    }
+
     Rectangle {
         anchors.fill: parent
         color: "#40000000"
@@ -41,7 +61,6 @@ Rectangle {
             anchors.horizontalCenter: parent.horizontalCenter
         }
 
-        // Progress bar container
         Rectangle {
             width: parent.width
             height: 40
@@ -50,12 +69,11 @@ Rectangle {
             border.width: 2
             radius: 4
 
-            // Progress fill
             Rectangle {
                 id: progress_fill
-                
+
                 readonly property real available_width: parent.width - 8
-                
+
                 anchors.left: parent.left
                 anchors.top: parent.top
                 anchors.bottom: parent.bottom
@@ -64,19 +82,32 @@ Rectangle {
                 color: "#f39c12"
                 radius: 2
 
-                // Shine effect
                 Rectangle {
                     anchors.fill: parent
-                    gradient: Gradient {
-                        GradientStop { position: 0.0; color: "#40ffffff" }
-                        GradientStop { position: 0.5; color: "#00ffffff" }
-                        GradientStop { position: 1.0; color: "#40ffffff" }
-                    }
                     radius: parent.radius
+
+                    gradient: Gradient {
+                        GradientStop {
+                            position: 0
+                            color: "#40ffffff"
+                        }
+
+                        GradientStop {
+                            position: 0.5
+                            color: "#00ffffff"
+                        }
+
+                        GradientStop {
+                            position: 1
+                            color: "#40ffffff"
+                        }
+
+                    }
+
                 }
+
             }
 
-            // Progress text
             Text {
                 anchors.centerIn: parent
                 text: Math.floor(load_screen.progress * 100) + "%"
@@ -84,6 +115,7 @@ Rectangle {
                 font.pixelSize: 18
                 font.bold: true
             }
+
         }
 
         Text {
@@ -92,29 +124,7 @@ Rectangle {
             font.pixelSize: 18
             anchors.horizontalCenter: parent.horizontalCenter
         }
+
     }
 
-    // Reset progress when loading starts
-    onIs_loadingChanged: {
-        if (is_loading) {
-            if (!use_real_progress) {
-                progress = 0.0;
-            }
-        }
-    }
-
-    // Function to complete loading immediately
-    function complete_loading() {
-        load_screen.progress = 1.0;
-        complete_timer.start();
-    }
-
-    Timer {
-        id: complete_timer
-        interval: 300
-        repeat: false
-        onTriggered: {
-            load_screen.is_loading = false;
-        }
-    }
 }

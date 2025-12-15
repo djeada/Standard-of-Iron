@@ -63,7 +63,8 @@ void deal_damage(Engine::Core::World *world, Engine::Core::Entity *target,
     if ((target_atk != nullptr) && target_atk->in_melee_lock &&
         target_atk->melee_lock_target_id != 0) {
       if (world != nullptr) {
-        auto *lock_partner = world->get_entity(target_atk->melee_lock_target_id);
+        auto *lock_partner =
+            world->get_entity(target_atk->melee_lock_target_id);
         if ((lock_partner != nullptr) &&
             !lock_partner
                  ->has_component<Engine::Core::PendingRemovalComponent>()) {
