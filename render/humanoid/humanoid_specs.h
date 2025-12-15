@@ -46,7 +46,6 @@ struct HumanProportions {
   static constexpr float SHOULDER_CAP_RADIUS_SCALE = 0.85F;
   static constexpr float SHOULDER_CAP_UP_OFFSET = 0.3F;
   static constexpr float SHOULDER_CAP_LATERAL_OFFSET = 0.2F;
-  static constexpr float DELTOID_RADIUS_SCALE = 0.75F;
 
   // Body structure offsets
   static constexpr float HIP_LATERAL_OFFSET = 0.10F;
