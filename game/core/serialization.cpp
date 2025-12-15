@@ -250,6 +250,22 @@ auto Serialization::serialize_entity(const Entity *entity) -> QJsonObject {
     entity_obj["hold_mode"] = hold_mode_obj;
   }
 
+  if (const auto *guard_mode = entity->get_component<GuardModeComponent>()) {
+    QJsonObject guard_mode_obj;
+    guard_mode_obj["active"] = guard_mode->active;
+    guard_mode_obj["guarded_entity_id"] =
+        static_cast<qint64>(guard_mode->guarded_entity_id);
+    guard_mode_obj["guard_position_x"] =
+        static_cast<double>(guard_mode->guard_position_x);
+    guard_mode_obj["guard_position_z"] =
+        static_cast<double>(guard_mode->guard_position_z);
+    guard_mode_obj["guard_radius"] =
+        static_cast<double>(guard_mode->guard_radius);
+    guard_mode_obj["returning_to_guard_position"] =
+        guard_mode->returning_to_guard_position;
+    entity_obj["guard_mode"] = guard_mode_obj;
+  }
+
   if (const auto *healer = entity->get_component<HealerComponent>()) {
     QJsonObject healer_obj;
     healer_obj["healing_range"] = static_cast<double>(healer->healing_range);
@@ -511,6 +527,23 @@ void Serialization::deserialize_entity(Entity *entity,
     hold_mode->stand_up_duration =
         static_cast<float>(hold_mode_obj["stand_up_duration"].toDouble(
             static_cast<double>(Defaults::kHoldStandUpDuration)));
+  }
+
+  if (json.contains("guard_mode")) {
+    const auto guard_mode_obj = json["guard_mode"].toObject();
+    auto *guard_mode = entity->add_component<GuardModeComponent>();
+    guard_mode->active = guard_mode_obj["active"].toBool(true);
+    guard_mode->guarded_entity_id = static_cast<EntityID>(
+        guard_mode_obj["guarded_entity_id"].toVariant().toULongLong());
+    guard_mode->guard_position_x =
+        static_cast<float>(guard_mode_obj["guard_position_x"].toDouble(0.0));
+    guard_mode->guard_position_z =
+        static_cast<float>(guard_mode_obj["guard_position_z"].toDouble(0.0));
+    guard_mode->guard_radius =
+        static_cast<float>(guard_mode_obj["guard_radius"].toDouble(
+            static_cast<double>(Defaults::kGuardDefaultRadius)));
+    guard_mode->returning_to_guard_position =
+        guard_mode_obj["returning_to_guard_position"].toBool(false);
   }
 
   if (json.contains("healer")) {
