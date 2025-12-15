@@ -38,6 +38,16 @@ jobs:
       - name: Create DMG
         run: |
           hdiutil create -volname "Standard of Iron" -srcfolder "${APP_DIR}/${APP_NAME}.app" -ov -format UDZO "standard_of_iron-macos.dmg"
+      - name: Sign and Notarize (optional)
+        env:
+          MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
+          MACOS_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
+          MACOS_KEYCHAIN_PASSWORD: ${{ secrets.MACOS_KEYCHAIN_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          ./scripts/sign-and-notarize-macos.sh "${APP_DIR}/${APP_NAME}.app" "standard_of_iron-macos.dmg"
       - uses: actions/upload-artifact@v4
         with:
           name: macos-${{ env.BUILD_TYPE }}
