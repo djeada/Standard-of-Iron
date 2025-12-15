@@ -30,6 +30,7 @@ inline constexpr float kCaptureRequiredTime = 15.0F;
 inline constexpr float kHoldStandUpDuration = 2.0F;
 
 inline constexpr float kGuardDefaultRadius = 10.0F;
+inline constexpr float kGuardReturnThreshold = 1.0F;
 } // namespace Defaults
 
 class TransformComponent : public Component {
@@ -288,6 +289,7 @@ public:
   float guard_position_z{0.0F};
   float guard_radius;
   bool returning_to_guard_position{false};
+  bool has_guard_target{false};
 };
 
 class HealerComponent : public Component {
