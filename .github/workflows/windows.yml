@@ -225,110 +225,32 @@ jobs:
             'Translations = translations'
           ) | Set-Content -Encoding ASCII "$env:APP_DIR\qt.conf"
 
-      # SAFE: write run_debug.cmd
-      - name: Add run_debug.cmd
+      # Copy Windows launcher and debug scripts from dist/windows/
+      - name: Copy launcher and debug scripts
         shell: pwsh
         run: |
-          @(
-            '@echo off'
-            'setlocal'
-            'cd /d "%~dp0"'
-            'set QT_DEBUG_PLUGINS=1'
-            'set QT_LOGGING_RULES=qt.*=true;qt.qml=true;qqml.*=true;qt.rhi.*=true'
-            'set QT_OPENGL=desktop'
-            'set QT_QPA_PLATFORM=windows'
-            'echo Starting with Desktop OpenGL...'
-            'echo Logging to runlog.txt'
-            '"%~dp0standard_of_iron.exe" 1> "%~dp0runlog.txt" 2>&1'
-            'echo ExitCode: %ERRORLEVEL%>> "%~dp0runlog.txt"'
-            'type "%~dp0runlog.txt"'
-            'pause'
-          ) | Set-Content -Encoding ASCII "$env:APP_DIR\run_debug.cmd"
-
-      - name: Add run_debug_softwaregl.cmd
-        shell: pwsh
-        run: |
-          @(
-            '@echo off'
-            'setlocal'
-            'cd /d "%~dp0"'
-            'set QT_DEBUG_PLUGINS=1'
-            'set QT_LOGGING_RULES=qt.*=true;qt.qml=true;qqml.*=true;qt.quick.*=true;qt.rhi.*=true'
-            'set QT_OPENGL=software'
-            'set QT_QPA_PLATFORM=windows'
-            'echo Starting with Software OpenGL...'
-            'echo Logging to runlog_software.txt'
-            '"%~dp0standard_of_iron.exe" 1> "%~dp0runlog_software.txt" 2>&1'
-            'echo ExitCode: %ERRORLEVEL%>> "%~dp0runlog_software.txt"'
-            'type "%~dp0runlog_software.txt"'
-            'pause'
-          ) | Set-Content -Encoding ASCII "$env:APP_DIR\run_debug_softwaregl.cmd"
-
-      - name: Add run_debug_angle.cmd
-        shell: pwsh
-        run: |
-          @(
-            '@echo off'
-            'setlocal'
-            'cd /d "%~dp0"'
-            'set QT_DEBUG_PLUGINS=1'
-            'set QT_LOGGING_RULES=qt.*=true;qt.qml=true;qqml.*=true;qt.rhi.*=true'
-            'set QT_OPENGL=angle'
-            'set QT_ANGLE_PLATFORM=d3d11'
-            'set QT_QPA_PLATFORM=windows'
-            'echo Starting with ANGLE (OpenGL ES via D3D11)...'
-            'echo Logging to runlog_angle.txt'
-            '"%~dp0standard_of_iron.exe" 1> "%~dp0runlog_angle.txt" 2>&1'
-            'echo ExitCode: %ERRORLEVEL%>> "%~dp0runlog_angle.txt"'
-            'type "%~dp0runlog_angle.txt"'
-            'pause'
-          ) | Set-Content -Encoding ASCII "$env:APP_DIR\run_debug_angle.cmd"
-
-      # Add user-friendly startup wrapper
-      - name: Add LAUNCH.bat (user-friendly startup script)
-        shell: pwsh
-        run: |
-          @(
-            '@echo off'
-            'echo ============================================'
-            'echo    Standard of Iron - Game Launcher'
-            'echo ============================================'
-            'echo.'
-            'echo Starting game...'
-            'echo.'
-            'cd /d "%~dp0"'
-            ''
-            'REM Start the game (runs independently, logs via debug scripts if needed)'
-            'start "" "%~dp0standard_of_iron.exe"'
-            ''
-            'REM Wait a moment for process to initialize (3 seconds for slower systems)'
-            'timeout /t 3 /nobreak > nul'
-            ''
-            'REM Check if process is running'
-            'tasklist /FI "IMAGENAME eq standard_of_iron.exe" 2>NUL | find /I /N "standard_of_iron.exe">NUL'
-            'if "%ERRORLEVEL%"=="0" ('
-            '    echo Game started successfully!'
-            '    echo.'
-            '    echo If you encounter problems, try these troubleshooting scripts:'
-            '    echo   - run_debug.cmd            ^(Standard OpenGL mode with logging^)'
-            '    echo   - run_debug_angle.cmd      ^(ANGLE mode - compatible with most GPUs^)'
-            '    echo   - run_debug_softwaregl.cmd ^(Software mode - works on all systems^)'
-            '    echo.'
-            '    echo See README.txt for more information.'
-            ') else ('
-            '    echo.'
-            '    echo ERROR: Game failed to start!'
-            '    echo.'
-            '    echo TROUBLESHOOTING:'
-            '    echo   1. Try running: run_debug.cmd'
-            '    echo      ^(Captures detailed logs in runlog.txt^)'
-            '    echo   2. If that fails, try: run_debug_softwaregl.cmd'
-            '    echo      ^(CPU-based rendering, works on all systems^)'
-            '    echo   3. See README.txt for more help'
-            '    echo.'
-            ')'
-            'pause'
-          ) | Set-Content -Encoding ASCII "$env:APP_DIR\LAUNCH.bat"
+          Write-Host "Copying Windows launcher and debug scripts..."
+          $scripts = @(
+            "LAUNCH.bat",
+            "run_debug.cmd",
+            "run_debug_angle.cmd",
+            "run_debug_softwaregl.cmd"
+          )
+          
+          foreach ($script in $scripts) {
+            $src = "dist\windows\$script"
+            $dst = "$env:APP_DIR\$script"
+            
+            if (!(Test-Path $src)) {
+              Write-Error "Source script not found: $src"
+              exit 1
+            }
+            
+            Copy-Item $src $dst -Force
+            Write-Host "✓ Copied $script"
+          }
+          
+          Write-Host "All launcher scripts deployed successfully."
 
       # Add comprehensive README for users
       - name: Add README.txt for distribution
