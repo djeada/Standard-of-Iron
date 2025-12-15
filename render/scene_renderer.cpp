@@ -10,6 +10,7 @@
 #include "equipment/equipment_registry.h"
 #include "game/core/component.h"
 #include "game/core/world.h"
+#include "geom/mode_indicator.h"
 #include "gl/backend.h"
 #include "gl/buffer.h"
 #include "gl/camera.h"
@@ -527,11 +528,11 @@ void Renderer::enqueue_mode_indicator(
   }
 
   // Determine mode type and color
-  int mode_type = 0; // 0 = hold, 1 = guard
-  QVector3D color(1.0F, 0.3F, 0.3F); // Red for hold mode
+  int mode_type = Render::Geom::k_mode_type_hold; // Hold mode by default
+  QVector3D color(1.0F, 0.3F, 0.3F);               // Red for hold mode
 
   if (has_guard_mode) {
-    mode_type = 1;
+    mode_type = Render::Geom::k_mode_type_guard;
     color = QVector3D(0.3F, 0.5F, 1.0F); // Blue for guard mode
   }
 
