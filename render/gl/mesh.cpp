@@ -74,7 +74,7 @@ void Mesh::draw() {
   }
 }
 
-auto createQuadMesh() -> Mesh * {
+auto createQuadMesh() -> std::unique_ptr<Mesh> {
   std::vector<Vertex> const vertices = {
 
       {{-1.0F, -1.0F, 0.0F}, {0.0F, 0.0F, 1.0F}, {0.0F, 0.0F}},
@@ -84,10 +84,10 @@ auto createQuadMesh() -> Mesh * {
 
   std::vector<unsigned int> const indices = {0, 1, 2, 2, 3, 0};
 
-  return new Mesh(vertices, indices);
+  return std::make_unique<Mesh>(vertices, indices);
 }
 
-auto createCubeMesh() -> Mesh * {
+auto createCubeMesh() -> std::unique_ptr<Mesh> {
   std::vector<Vertex> const vertices = {
 
       {{-1.0F, -1.0F, 1.0F}, {0.0F, 0.0F, 1.0F}, {0.0F, 0.0F}},
@@ -113,10 +113,10 @@ auto createCubeMesh() -> Mesh * {
 
                                              4, 7, 1, 1, 0, 4};
 
-  return new Mesh(vertices, indices);
+  return std::make_unique<Mesh>(vertices, indices);
 }
 
-auto createPlaneMesh(float width, float height, int subdivisions) -> Mesh * {
+auto createPlaneMesh(float width, float height, int subdivisions) -> std::unique_ptr<Mesh> {
   std::vector<Vertex> vertices;
   std::vector<unsigned int> indices;
 
@@ -153,7 +153,7 @@ auto createPlaneMesh(float width, float height, int subdivisions) -> Mesh * {
     }
   }
 
-  return new Mesh(vertices, indices);
+  return std::make_unique<Mesh>(vertices, indices);
 }
 
 } // namespace Render::GL

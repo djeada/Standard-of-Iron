@@ -14,7 +14,7 @@
 namespace Render {
 namespace Geom {
 
-static auto create_stone_mesh() -> GL::Mesh * {
+static auto create_stone_mesh() -> std::unique_ptr<GL::Mesh> {
   using GL::Vertex;
   std::vector<GL::Vertex> verts;
   std::vector<unsigned int> idx;
@@ -70,12 +70,12 @@ static auto create_stone_mesh() -> GL::Mesh * {
     }
   }
 
-  return new GL::Mesh(verts, idx);
+  return std::make_unique<GL::Mesh>(verts, idx);
 }
 
 auto Stone::get() -> GL::Mesh * {
-  static GL::Mesh *mesh = create_stone_mesh();
-  return mesh;
+  static std::unique_ptr<GL::Mesh> const mesh = create_stone_mesh();
+  return mesh.get();
 }
 
 } // namespace Geom

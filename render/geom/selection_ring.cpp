@@ -11,7 +11,7 @@ namespace Render::Geom {
 
 std::unique_ptr<Render::GL::Mesh> SelectionRing::s_mesh;
 
-static auto createRingMesh() -> Render::GL::Mesh * {
+static auto createRingMesh() -> std::unique_ptr<Render::GL::Mesh> {
   using namespace Render::GL;
   std::vector<Vertex> verts;
   std::vector<unsigned int> idx;
@@ -38,12 +38,12 @@ static auto createRingMesh() -> Render::GL::Mesh * {
     idx.push_back(base + 3);
     idx.push_back(base + 0);
   }
-  return new Mesh(verts, idx);
+  return std::make_unique<Mesh>(verts, idx);
 }
 
 auto SelectionRing::get() -> Render::GL::Mesh * {
   if (!s_mesh) {
-    s_mesh.reset(createRingMesh());
+    s_mesh = createRingMesh();
   }
   return s_mesh.get();
 }
