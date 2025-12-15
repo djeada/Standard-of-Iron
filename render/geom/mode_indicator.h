@@ -5,8 +5,6 @@
 
 namespace Render::Geom {
 
-enum class UnitMode { Hold, Guard };
-
 // Mode type constants for rendering
 constexpr int k_mode_type_hold = 0;
 constexpr int k_mode_type_guard = 1;
