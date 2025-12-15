@@ -1,6 +1,7 @@
 #pragma once
 
 #include <atomic>
+#include <chrono>
 #include <cstdint>
 #include <future>
 #include <mutex>
@@ -79,6 +80,9 @@ private:
   void startAsyncJob(JobPayload &&payload);
   auto integrateCompletedJob() -> bool;
   static auto executeJob(JobPayload payload) -> JobResult;
+  auto shouldStartNewJob() const -> bool;
+  static auto computeSourcesHash(const std::vector<VisionSource> &sources)
+      -> std::size_t;
 
   VisibilityService() = default;
 
@@ -95,6 +99,8 @@ private:
   mutable std::atomic<std::uint64_t> m_generation{0};
   std::future<JobResult> m_pendingJob;
   std::atomic<bool> m_jobActive{false};
+  std::chrono::steady_clock::time_point m_lastJobStartTime{};
+  std::size_t m_lastSourcesHash{0};
 };
 
 } // namespace Game::Map
