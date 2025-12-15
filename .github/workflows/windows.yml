@@ -269,8 +269,8 @@ jobs:
             'set QT_OPENGL=angle'
             'set QT_ANGLE_PLATFORM=d3d11'
             'set QT_QPA_PLATFORM=windows'
-            '"%~dp0${{ env.APP_NAME }}.exe" 1> "%~dp0runlog.txt" 2>&1'
-            'echo ExitCode %ERRORLEVEL%>> "%~dp0runlog.txt"'
+            '"%~dp0${{ env.APP_NAME }}.exe" 1> "%~dp0runlog_angle.txt" 2>&1'
+            'echo ExitCode %ERRORLEVEL%>> "%~dp0runlog_angle.txt"'
             'pause'
           ) | Set-Content -Encoding ASCII "$env:APP_DIR\run_debug_angle.cmd"
 
