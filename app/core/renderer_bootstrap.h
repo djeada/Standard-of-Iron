@@ -19,6 +19,7 @@ class PlantRenderer;
 class PineRenderer;
 class OliveRenderer;
 class FireCampRenderer;
+class RainRenderer;
 struct IRenderPass;
 } // namespace Render::GL
 
@@ -44,6 +45,7 @@ public:
     std::unique_ptr<Render::GL::PineRenderer> pine;
     std::unique_ptr<Render::GL::OliveRenderer> olive;
     std::unique_ptr<Render::GL::FireCampRenderer> firecamp;
+    std::unique_ptr<Render::GL::RainRenderer> rain;
     std::vector<Render::GL::IRenderPass *> passes;
   };
 

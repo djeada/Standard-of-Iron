@@ -95,6 +95,7 @@
 #include "game/systems/production_service.h"
 #include "game/systems/production_system.h"
 #include "game/systems/projectile_system.h"
+#include "game/systems/rain_manager.h"
 #include "game/systems/save_load_service.h"
 #include "game/systems/selection_system.h"
 #include "game/systems/terrain_alignment_system.h"
@@ -118,6 +119,7 @@
 #include "render/ground/olive_renderer.h"
 #include "render/ground/pine_renderer.h"
 #include "render/ground/plant_renderer.h"
+#include "render/ground/rain_renderer.h"
 #include "render/ground/river_renderer.h"
 #include "render/ground/riverbank_renderer.h"
 #include "render/ground/road_renderer.h"
@@ -161,6 +163,7 @@ GameEngine::GameEngine(QObject *parent)
   m_pine = std::move(rendering.pine);
   m_olive = std::move(rendering.olive);
   m_firecamp = std::move(rendering.firecamp);
+  m_rain = std::move(rendering.rain);
   m_passes = std::move(rendering.passes);
 
   RendererBootstrap::initialize_world_systems(*m_world);
@@ -169,6 +172,7 @@ GameEngine::GameEngine(QObject *parent)
   m_victoryService = std::make_unique<Game::Systems::VictoryService>();
   m_saveLoadService = std::make_unique<Game::Systems::SaveLoadService>();
   m_cameraService = std::make_unique<Game::Systems::CameraService>();
+  m_rainManager = std::make_unique<Game::Systems::RainManager>();
 
   auto *selection_system =
       m_world->get_system<Game::Systems::SelectionSystem>();
@@ -354,6 +358,8 @@ void GameEngine::cleanup_opengl_resources() {
   m_pine.reset();
   m_olive.reset();
   m_firecamp.reset();
+  m_rain.reset();
+  m_rainManager.reset();
 
   m_renderer.reset();
   m_resources.reset();
@@ -1167,7 +1173,7 @@ void GameEngine::start_skirmish(const QString &map_path,
         m_renderer.get(), m_camera.get(), m_ground.get(),  m_terrain.get(),
         m_biome.get(),    m_river.get(),  m_road.get(),    m_riverbank.get(),
         m_bridge.get(),   m_fog.get(),    m_stone.get(),   m_plant.get(),
-        m_pine.get(),     m_olive.get(),  m_firecamp.get()};
+        m_pine.get(),     m_olive.get(),  m_firecamp.get(), m_rain.get()};
 
     auto visibility_ready = [this]() {
       m_runtime.visibility_version =
@@ -1278,7 +1284,7 @@ auto GameEngine::load_from_slot(const QString &slot) -> bool {
       m_renderer.get(), m_camera.get(), m_ground.get(),  m_terrain.get(),
       m_biome.get(),    m_river.get(),  m_road.get(),    m_riverbank.get(),
       m_bridge.get(),   m_fog.get(),    m_stone.get(),   m_plant.get(),
-      m_pine.get(),     m_olive.get(),  m_firecamp.get()};
+      m_pine.get(),     m_olive.get(),  m_firecamp.get(), m_rain.get()};
   GameStateRestorer::restore_environment_from_metadata(
       meta, m_world.get(), renderers, m_level, m_runtime.local_owner_id,
       m_viewport);
