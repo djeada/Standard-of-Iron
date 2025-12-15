@@ -415,5 +415,12 @@
     "defeat_conditions": [
       "no_key_structures"
     ]
+  },
+  "rain": {
+    "enabled": true,
+    "cycleDuration": 300.0,
+    "activeDuration": 60.0,
+    "intensity": 0.5,
+    "fadeDuration": 5.0
   }
 }
