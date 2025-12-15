@@ -11,6 +11,7 @@
 #include "backend/effects_pipeline.h"
 #include "backend/healer_aura_pipeline.h"
 #include "backend/healing_beam_pipeline.h"
+#include "backend/mode_indicator_pipeline.h"
 #include "backend/primitive_batch_pipeline.h"
 #include "backend/rain_pipeline.h"
 #include "backend/terrain_pipeline.h"
@@ -180,6 +181,13 @@ void Backend::initialize() {
       this, m_shaderCache.get());
   m_rainPipeline->initialize();
   qInfo() << "Backend: RainPipeline initialized";
+
+  qInfo() << "Backend: Creating ModeIndicatorPipeline...";
+  m_modeIndicatorPipeline =
+      std::make_unique<BackendPipelines::ModeIndicatorPipeline>(
+          this, m_shaderCache.get());
+  m_modeIndicatorPipeline->initialize();
+  qInfo() << "Backend: ModeIndicatorPipeline initialized";
 
   qInfo() << "Backend: Loading basic shaders...";
   m_basicShader = m_shaderCache->get(QStringLiteral("basic"));
@@ -1589,7 +1597,12 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
     }
     case ModeIndicatorCmdIndex: {
       const auto &mc = std::get<ModeIndicatorCmdIndex>(cmd);
-      
+
+      if (m_modeIndicatorPipeline == nullptr ||
+          !m_modeIndicatorPipeline->is_initialized()) {
+        break;
+      }
+
       // Get the appropriate mesh based on mode type
       Mesh *indicator_mesh = nullptr;
       if (mc.mode_type == Render::Geom::k_mode_type_hold) {
@@ -1602,28 +1615,12 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         break;
       }
 
-      // Use basic shader for rendering
-      if (m_lastBoundShader != m_effectsPipeline->m_basicShader) {
-        m_effectsPipeline->m_basicShader->use();
-        m_lastBoundShader = m_effectsPipeline->m_basicShader;
-      }
+      // Use the mode indicator pipeline to render with custom shader
+      m_modeIndicatorPipeline->render_indicator(
+          indicator_mesh, mc.model, view_proj, mc.color, mc.alpha,
+          m_animationTime);
 
-      m_effectsPipeline->m_basicShader->set_uniform(
-          m_effectsPipeline->m_basicUniforms.useTexture, false);
-      m_effectsPipeline->m_basicShader->set_uniform(
-          m_effectsPipeline->m_basicUniforms.color, mc.color);
-      m_effectsPipeline->m_basicShader->set_uniform(
-          m_effectsPipeline->m_basicUniforms.mvp, mc.mvp);
-      m_effectsPipeline->m_basicShader->set_uniform(
-          m_effectsPipeline->m_basicUniforms.model, mc.model);
-      m_effectsPipeline->m_basicShader->set_uniform(
-          m_effectsPipeline->m_basicUniforms.alpha, mc.alpha);
-
-      // Enable blending for transparency
-      DepthMaskScope const depth_mask(false);
-      BlendScope const blend(true);
-
-      indicator_mesh->draw();
+      m_lastBoundShader = nullptr;
       break;
     }
     default:
