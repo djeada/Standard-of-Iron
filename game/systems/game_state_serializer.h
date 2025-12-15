@@ -1,9 +1,11 @@
 #pragma once
 
+#include "../map/map_definition.h"
 #include <QByteArray>
 #include <QJsonObject>
 #include <QString>
 #include <QVector3D>
+#include <cstdint>
 
 namespace Engine::Core {
 class World;
@@ -24,7 +26,12 @@ struct LevelSnapshot {
   float cam_near = 0.1F;
   float cam_far = 1000.0F;
   int max_troops_per_player = 500;
+  int grid_width = 50;
+  int grid_height = 50;
+  float tile_size = 1.0F;
   bool is_spectator_mode = false;
+  Game::Map::RainSettings rain;
+  std::uint32_t biome_seed = 0;
 };
 
 struct RuntimeSnapshot {

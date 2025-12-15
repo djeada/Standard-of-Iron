@@ -5,6 +5,7 @@
 #include "ground/olive_gpu.h"
 #include "ground/pine_gpu.h"
 #include "ground/plant_gpu.h"
+#include "ground/rain_gpu.h"
 #include "ground/stone_gpu.h"
 #include "ground/terrain_gpu.h"
 #include "primitive_batch.h"
@@ -94,6 +95,12 @@ struct FireCampBatchCmd {
   FireCampBatchParams params;
 };
 
+struct RainBatchCmd {
+  Buffer *instance_buffer = nullptr;
+  std::size_t instance_count = 0;
+  RainBatchParams params;
+};
+
 struct TerrainChunkCmd {
   Mesh *mesh = nullptr;
   QMatrix4x4 model;
@@ -158,8 +165,8 @@ using DrawCmd =
     std::variant<GridCmd, SelectionRingCmd, SelectionSmokeCmd, CylinderCmd,
                  MeshCmd, FogBatchCmd, GrassBatchCmd, StoneBatchCmd,
                  PlantBatchCmd, PineBatchCmd, OliveBatchCmd, FireCampBatchCmd,
-                 TerrainChunkCmd, PrimitiveBatchCmd, HealingBeamCmd,
-                 HealerAuraCmd, CombatDustCmd>;
+                 RainBatchCmd, TerrainChunkCmd, PrimitiveBatchCmd,
+                 HealingBeamCmd, HealerAuraCmd, CombatDustCmd>;
 
 enum class DrawCmdType : std::uint8_t {
   Grid = 0,
@@ -174,11 +181,12 @@ enum class DrawCmdType : std::uint8_t {
   PineBatch = 9,
   OliveBatch = 10,
   FireCampBatch = 11,
-  TerrainChunk = 12,
-  PrimitiveBatch = 13,
-  HealingBeam = 14,
-  HealerAura = 15,
-  CombatDust = 16
+  RainBatch = 12,
+  TerrainChunk = 13,
+  PrimitiveBatch = 14,
+  HealingBeam = 15,
+  HealerAura = 16,
+  CombatDust = 17
 };
 
 constexpr std::size_t MeshCmdIndex =
@@ -205,6 +213,8 @@ constexpr std::size_t OliveBatchCmdIndex =
     static_cast<std::size_t>(DrawCmdType::OliveBatch);
 constexpr std::size_t FireCampBatchCmdIndex =
     static_cast<std::size_t>(DrawCmdType::FireCampBatch);
+constexpr std::size_t RainBatchCmdIndex =
+    static_cast<std::size_t>(DrawCmdType::RainBatch);
 constexpr std::size_t TerrainChunkCmdIndex =
     static_cast<std::size_t>(DrawCmdType::TerrainChunk);
 constexpr std::size_t PrimitiveBatchCmdIndex =
@@ -236,6 +246,7 @@ public:
   void submit(const PineBatchCmd &c) { m_items.emplace_back(c); }
   void submit(const OliveBatchCmd &c) { m_items.emplace_back(c); }
   void submit(const FireCampBatchCmd &c) { m_items.emplace_back(c); }
+  void submit(const RainBatchCmd &c) { m_items.emplace_back(c); }
   void submit(const TerrainChunkCmd &c) { m_items.emplace_back(c); }
   void submit(const PrimitiveBatchCmd &c) { m_items.emplace_back(c); }
   void submit(const HealingBeamCmd &c) { m_items.emplace_back(c); }
@@ -330,13 +341,14 @@ private:
       PineBatch = 4,
       OliveBatch = 5,
       FireCampBatch = 6,
-      PrimitiveBatch = 7,
-      Mesh = 8,
-      Cylinder = 9,
-      FogBatch = 10,
-      SelectionSmoke = 11,
-      Grid = 12,
-      SelectionRing = 15
+      RainBatch = 7,
+      PrimitiveBatch = 8,
+      Mesh = 9,
+      Cylinder = 10,
+      FogBatch = 11,
+      SelectionSmoke = 12,
+      Grid = 13,
+      SelectionRing = 16
     };
 
     static constexpr uint8_t k_type_order[] = {
@@ -352,6 +364,7 @@ private:
         static_cast<uint8_t>(RenderOrder::PineBatch),
         static_cast<uint8_t>(RenderOrder::OliveBatch),
         static_cast<uint8_t>(RenderOrder::FireCampBatch),
+        static_cast<uint8_t>(RenderOrder::RainBatch),
         static_cast<uint8_t>(RenderOrder::TerrainChunk),
         static_cast<uint8_t>(RenderOrder::PrimitiveBatch)};
 

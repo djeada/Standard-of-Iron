@@ -251,6 +251,20 @@ void Renderer::firecamp_batch(Buffer *instance_buffer,
   m_active_queue->submit(cmd);
 }
 
+void Renderer::rain_batch(Buffer *instance_buffer, std::size_t instance_count,
+                          const RainBatchParams &params) {
+  if ((instance_buffer == nullptr) || instance_count == 0 ||
+      (m_active_queue == nullptr)) {
+    return;
+  }
+  RainBatchCmd cmd;
+  cmd.instance_buffer = instance_buffer;
+  cmd.instance_count = instance_count;
+  cmd.params = params;
+  cmd.params.time = m_accumulated_time;
+  m_active_queue->submit(cmd);
+}
+
 void Renderer::terrain_chunk(Mesh *mesh, const QMatrix4x4 &model,
                              const TerrainChunkParams &params,
                              std::uint16_t sort_key, bool depth_write,

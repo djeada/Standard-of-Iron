@@ -60,6 +60,8 @@ auto LevelLoader::loadFromAssets(
   if (Game::Map::MapLoader::loadFromJsonFile(resolved_map_path, def, &err)) {
     res.ok = true;
     res.map_name = def.name;
+    res.rainSettings = def.rain;
+    res.biome_seed = def.biome.seed;
 
     Game::Map::TerrainService::instance().initialize(def);
 

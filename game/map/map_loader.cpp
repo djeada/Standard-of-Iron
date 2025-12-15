@@ -258,6 +258,27 @@ void readVictoryConfig(const QJsonObject &obj, VictoryConfig &out) {
   }
 }
 
+void readRainConfig(const QJsonObject &obj, RainSettings &out) {
+  if (obj.contains(RAIN_ENABLED)) {
+    out.enabled = obj.value(RAIN_ENABLED).toBool(out.enabled);
+  }
+  if (obj.contains(RAIN_CYCLE_DURATION)) {
+    out.cycle_duration =
+        float(obj.value(RAIN_CYCLE_DURATION).toDouble(out.cycle_duration));
+  }
+  if (obj.contains(RAIN_ACTIVE_DURATION)) {
+    out.active_duration =
+        float(obj.value(RAIN_ACTIVE_DURATION).toDouble(out.active_duration));
+  }
+  if (obj.contains(RAIN_INTENSITY)) {
+    out.intensity = float(obj.value(RAIN_INTENSITY).toDouble(out.intensity));
+  }
+  if (obj.contains(RAIN_FADE_DURATION)) {
+    out.fade_duration =
+        float(obj.value(RAIN_FADE_DURATION).toDouble(out.fade_duration));
+  }
+}
+
 void readSpawns(const QJsonArray &arr, std::vector<UnitSpawn> &out) {
   out.clear();
   out.reserve(arr.size());
@@ -682,6 +703,10 @@ auto MapLoader::loadFromJsonFile(const QString &path, MapDefinition &outMap,
 
   if (root.contains(VICTORY) && root.value(VICTORY).isObject()) {
     readVictoryConfig(root.value(VICTORY).toObject(), outMap.victory);
+  }
+
+  if (root.contains(RAIN) && root.value(RAIN).isObject()) {
+    readRainConfig(root.value(RAIN).toObject(), outMap.rain);
   }
 
   return true;

@@ -54,6 +54,7 @@ class PlantRenderer;
 class PineRenderer;
 class OliveRenderer;
 class FireCampRenderer;
+class RainRenderer;
 struct IRenderPass;
 } // namespace Render::GL
 
@@ -69,6 +70,7 @@ class PickingService;
 class VictoryService;
 class CameraService;
 class SaveLoadService;
+class RainManager;
 } // namespace Systems
 namespace Map {
 class MapCatalog;
@@ -331,6 +333,8 @@ private:
   std::unique_ptr<Render::GL::PineRenderer> m_pine;
   std::unique_ptr<Render::GL::OliveRenderer> m_olive;
   std::unique_ptr<Render::GL::FireCampRenderer> m_firecamp;
+  std::unique_ptr<Render::GL::RainRenderer> m_rain;
+  std::unique_ptr<Game::Systems::RainManager> m_rainManager;
   std::vector<Render::GL::IRenderPass *> m_passes;
   std::unique_ptr<Game::Systems::PickingService> m_pickingService;
   std::unique_ptr<Game::Systems::VictoryService> m_victoryService;
