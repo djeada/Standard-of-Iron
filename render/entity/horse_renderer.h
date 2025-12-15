@@ -16,7 +16,7 @@ public:
   explicit HorseRenderer(
       std::vector<std::shared_ptr<IHorseEquipmentRenderer>> attachments);
 
-  void setAttachments(
+  void set_attachments(
       const std::vector<std::shared_ptr<IHorseEquipmentRenderer>> &attachments);
 
 protected:

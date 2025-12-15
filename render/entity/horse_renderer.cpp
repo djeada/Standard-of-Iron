@@ -13,7 +13,7 @@ HorseRenderer::HorseRenderer(
     std::vector<std::shared_ptr<IHorseEquipmentRenderer>> attachments)
     : m_attachments(std::move(attachments)) {}
 
-void HorseRenderer::setAttachments(
+void HorseRenderer::set_attachments(
     const std::vector<std::shared_ptr<IHorseEquipmentRenderer>> &attachments) {
   m_attachments = attachments;
 }
