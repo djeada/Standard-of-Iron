@@ -73,6 +73,10 @@ void Unit::move_to(float x, float z) {
     if (hold_comp != nullptr) {
       hold_comp->active = false;
     }
+    auto *guard_comp = e->get_component<Engine::Core::GuardModeComponent>();
+    if (guard_comp != nullptr) {
+      guard_comp->active = false;
+    }
   }
 }
 
@@ -109,6 +113,11 @@ void Unit::set_hold_mode(bool enabled) {
     hold_comp->active = true;
     hold_comp->exit_cooldown = 0.0F;
 
+    auto *guard_comp = e->get_component<Engine::Core::GuardModeComponent>();
+    if (guard_comp != nullptr) {
+      guard_comp->active = false;
+    }
+
     auto *mv = e->get_component<Engine::Core::MovementComponent>();
     if (mv != nullptr) {
       mv->has_target = false;
@@ -131,6 +140,113 @@ auto Unit::is_in_hold_mode() const -> bool {
 
   auto *hold_comp = e->get_component<Engine::Core::HoldModeComponent>();
   return (hold_comp != nullptr) && hold_comp->active;
+}
+
+void Unit::set_guard_mode(bool enabled) {
+  auto *e = entity();
+  if (e == nullptr) {
+    return;
+  }
+
+  auto *guard_comp = e->get_component<Engine::Core::GuardModeComponent>();
+
+  if (enabled) {
+    if (guard_comp == nullptr) {
+      guard_comp = e->add_component<Engine::Core::GuardModeComponent>();
+    }
+    guard_comp->active = true;
+    guard_comp->returning_to_guard_position = false;
+
+    auto *hold_comp = e->get_component<Engine::Core::HoldModeComponent>();
+    if (hold_comp != nullptr) {
+      hold_comp->active = false;
+    }
+
+    if (guard_comp->guarded_entity_id == 0 && guard_comp->guard_position_x == 0.0F &&
+        guard_comp->guard_position_z == 0.0F) {
+      auto *transform = e->get_component<Engine::Core::TransformComponent>();
+      if (transform != nullptr) {
+        guard_comp->guard_position_x = transform->position.x;
+        guard_comp->guard_position_z = transform->position.z;
+      }
+    }
+  } else {
+    if (guard_comp != nullptr) {
+      guard_comp->active = false;
+    }
+  }
+}
+
+void Unit::set_guard_target(Engine::Core::EntityID target_id) {
+  auto *e = entity();
+  if (e == nullptr) {
+    return;
+  }
+
+  auto *guard_comp = e->get_component<Engine::Core::GuardModeComponent>();
+  if (guard_comp == nullptr) {
+    guard_comp = e->add_component<Engine::Core::GuardModeComponent>();
+  }
+
+  guard_comp->guarded_entity_id = target_id;
+  guard_comp->guard_position_x = 0.0F;
+  guard_comp->guard_position_z = 0.0F;
+  guard_comp->active = true;
+  guard_comp->returning_to_guard_position = false;
+
+  auto *hold_comp = e->get_component<Engine::Core::HoldModeComponent>();
+  if (hold_comp != nullptr) {
+    hold_comp->active = false;
+  }
+}
+
+void Unit::set_guard_position(float x, float z) {
+  auto *e = entity();
+  if (e == nullptr) {
+    return;
+  }
+
+  auto *guard_comp = e->get_component<Engine::Core::GuardModeComponent>();
+  if (guard_comp == nullptr) {
+    guard_comp = e->add_component<Engine::Core::GuardModeComponent>();
+  }
+
+  guard_comp->guarded_entity_id = 0;
+  guard_comp->guard_position_x = x;
+  guard_comp->guard_position_z = z;
+  guard_comp->active = true;
+  guard_comp->returning_to_guard_position = false;
+
+  auto *hold_comp = e->get_component<Engine::Core::HoldModeComponent>();
+  if (hold_comp != nullptr) {
+    hold_comp->active = false;
+  }
+}
+
+auto Unit::is_in_guard_mode() const -> bool {
+  auto *e = entity();
+  if (e == nullptr) {
+    return false;
+  }
+
+  auto *guard_comp = e->get_component<Engine::Core::GuardModeComponent>();
+  return (guard_comp != nullptr) && guard_comp->active;
+}
+
+void Unit::clear_guard_mode() {
+  auto *e = entity();
+  if (e == nullptr) {
+    return;
+  }
+
+  auto *guard_comp = e->get_component<Engine::Core::GuardModeComponent>();
+  if (guard_comp != nullptr) {
+    guard_comp->active = false;
+    guard_comp->guarded_entity_id = 0;
+    guard_comp->guard_position_x = 0.0F;
+    guard_comp->guard_position_z = 0.0F;
+    guard_comp->returning_to_guard_position = false;
+  }
 }
 
 } // namespace Game::Units
