@@ -781,6 +781,11 @@ TEST_F(SerializationTest, CompleteEntityWithAllComponents) {
   auto *hold_mode = entity->add_component<HoldModeComponent>();
   hold_mode->active = true;
 
+  auto *guard_mode = entity->add_component<GuardModeComponent>();
+  guard_mode->active = false;
+  guard_mode->guard_position_x = 25.0F;
+  guard_mode->guard_position_z = 35.0F;
+
   auto *healer = entity->add_component<HealerComponent>();
   healer->healing_amount = 10;
 
@@ -800,6 +805,7 @@ TEST_F(SerializationTest, CompleteEntityWithAllComponents) {
   EXPECT_TRUE(json.contains("aiControlled"));
   EXPECT_TRUE(json.contains("capture"));
   EXPECT_TRUE(json.contains("hold_mode"));
+  EXPECT_TRUE(json.contains("guard_mode"));
   EXPECT_TRUE(json.contains("healer"));
   EXPECT_TRUE(json.contains("catapult_loading"));
 
@@ -817,6 +823,7 @@ TEST_F(SerializationTest, CompleteEntityWithAllComponents) {
   EXPECT_NE(new_entity->get_component<AIControlledComponent>(), nullptr);
   EXPECT_NE(new_entity->get_component<CaptureComponent>(), nullptr);
   EXPECT_NE(new_entity->get_component<HoldModeComponent>(), nullptr);
+  EXPECT_NE(new_entity->get_component<GuardModeComponent>(), nullptr);
   EXPECT_NE(new_entity->get_component<HealerComponent>(), nullptr);
   EXPECT_NE(new_entity->get_component<CatapultLoadingComponent>(), nullptr);
 }
@@ -867,6 +874,60 @@ TEST_F(SerializationTest, HoldModeComponentRoundTrip) {
   EXPECT_TRUE(deserialized->active);
   EXPECT_FLOAT_EQ(deserialized->exit_cooldown, 2.5F);
   EXPECT_FLOAT_EQ(deserialized->stand_up_duration, 4.0F);
+}
+
+TEST_F(SerializationTest, GuardModeComponentSerialization) {
+  auto *entity = world->create_entity();
+  auto *guard_mode = entity->add_component<GuardModeComponent>();
+
+  guard_mode->active = true;
+  guard_mode->guarded_entity_id = 42;
+  guard_mode->guard_position_x = 100.0F;
+  guard_mode->guard_position_z = 200.0F;
+  guard_mode->guard_radius = 15.0F;
+  guard_mode->returning_to_guard_position = true;
+  guard_mode->has_guard_target = true;
+
+  QJsonObject json = Serialization::serialize_entity(entity);
+
+  ASSERT_TRUE(json.contains("guard_mode"));
+  QJsonObject guard_mode_obj = json["guard_mode"].toObject();
+
+  EXPECT_TRUE(guard_mode_obj["active"].toBool());
+  EXPECT_EQ(guard_mode_obj["guarded_entity_id"].toVariant().toULongLong(),
+            42ULL);
+  EXPECT_FLOAT_EQ(guard_mode_obj["guard_position_x"].toDouble(), 100.0);
+  EXPECT_FLOAT_EQ(guard_mode_obj["guard_position_z"].toDouble(), 200.0);
+  EXPECT_FLOAT_EQ(guard_mode_obj["guard_radius"].toDouble(), 15.0);
+  EXPECT_TRUE(guard_mode_obj["returning_to_guard_position"].toBool());
+  EXPECT_TRUE(guard_mode_obj["has_guard_target"].toBool());
+}
+
+TEST_F(SerializationTest, GuardModeComponentRoundTrip) {
+  auto *original_entity = world->create_entity();
+  auto *guard_mode = original_entity->add_component<GuardModeComponent>();
+  guard_mode->active = true;
+  guard_mode->guarded_entity_id = 99;
+  guard_mode->guard_position_x = 50.0F;
+  guard_mode->guard_position_z = 75.0F;
+  guard_mode->guard_radius = 12.0F;
+  guard_mode->returning_to_guard_position = false;
+  guard_mode->has_guard_target = true;
+
+  QJsonObject json = Serialization::serialize_entity(original_entity);
+
+  auto *new_entity = world->create_entity();
+  Serialization::deserialize_entity(new_entity, json);
+
+  auto *deserialized = new_entity->get_component<GuardModeComponent>();
+  ASSERT_NE(deserialized, nullptr);
+  EXPECT_TRUE(deserialized->active);
+  EXPECT_EQ(deserialized->guarded_entity_id, 99U);
+  EXPECT_FLOAT_EQ(deserialized->guard_position_x, 50.0F);
+  EXPECT_FLOAT_EQ(deserialized->guard_position_z, 75.0F);
+  EXPECT_FLOAT_EQ(deserialized->guard_radius, 12.0F);
+  EXPECT_FALSE(deserialized->returning_to_guard_position);
+  EXPECT_TRUE(deserialized->has_guard_target);
 }
 
 TEST_F(SerializationTest, HealerComponentSerialization) {

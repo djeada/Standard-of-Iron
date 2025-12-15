@@ -11,6 +11,8 @@ namespace Game::Systems::Combat {
 
 auto is_unit_in_hold_mode(Engine::Core::Entity *entity) -> bool;
 
+auto is_unit_in_guard_mode(Engine::Core::Entity *entity) -> bool;
+
 auto is_in_range(Engine::Core::Entity *attacker, Engine::Core::Entity *target,
                  float range) -> bool;
 
