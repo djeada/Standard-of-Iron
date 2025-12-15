@@ -96,12 +96,14 @@ echo "✅ Found certificate: $CERTIFICATE_NAME"
 
 # Sign all frameworks and dylibs in the app bundle first (deep signing)
 echo "🔏 Signing frameworks and libraries..."
-find "$APP_PATH/Contents/Frameworks" -name "*.framework" -o -name "*.dylib" 2>/dev/null | while read -r framework; do
+find "$APP_PATH/Contents/Frameworks" \( -name "*.framework" -o -name "*.dylib" \) 2>/dev/null | while read -r framework; do
     echo "  Signing: $framework"
-    codesign --force --verify --verbose --timestamp \
+    if ! codesign --force --verify --verbose --timestamp \
         --options runtime \
         --sign "$CERTIFICATE_NAME" \
-        "$framework" || true
+        "$framework" 2>&1; then
+        echo "  ⚠️  Warning: Failed to sign $framework, continuing..."
+    fi
 done
 
 # Sign Qt plugins
@@ -109,16 +111,18 @@ if [ -d "$APP_PATH/Contents/PlugIns" ]; then
     echo "🔏 Signing Qt plugins..."
     find "$APP_PATH/Contents/PlugIns" -name "*.dylib" 2>/dev/null | while read -r plugin; do
         echo "  Signing: $plugin"
-        codesign --force --verify --verbose --timestamp \
+        if ! codesign --force --verify --verbose --timestamp \
             --options runtime \
             --sign "$CERTIFICATE_NAME" \
-            "$plugin" || true
+            "$plugin" 2>&1; then
+            echo "  ⚠️  Warning: Failed to sign $plugin, continuing..."
+        fi
     done
 fi
 
 # Sign the main executable
 if [ -d "$APP_PATH/Contents/MacOS" ]; then
-    EXECUTABLE=$(find "$APP_PATH/Contents/MacOS" -type f -perm +111 | head -1)
+    EXECUTABLE=$(find "$APP_PATH/Contents/MacOS" -type f -executable | head -1)
     if [ -n "$EXECUTABLE" ]; then
         echo "🔏 Signing main executable: $EXECUTABLE"
         codesign --force --verify --verbose --timestamp \
