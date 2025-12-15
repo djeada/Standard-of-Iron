@@ -22,7 +22,7 @@ constexpr float k_uv_center = 0.5F;
 constexpr float k_uv_scale = 0.5F;
 constexpr int k_indices_per_quad = 6;
 
-auto create_unit_cylinder_mesh(int radialSegments) -> Mesh * {
+auto create_unit_cylinder_mesh(int radialSegments) -> std::unique_ptr<Mesh> {
   const float radius = k_unit_radius;
   const float half_h = k_half_scalar;
 
@@ -94,10 +94,10 @@ auto create_unit_cylinder_mesh(int radialSegments) -> Mesh * {
     idx.push_back(base_bot + i);
   }
 
-  return new Mesh(v, idx);
+  return std::make_unique<Mesh>(v, idx);
 }
 
-auto create_unit_sphere_mesh(int latSegments, int lonSegments) -> Mesh * {
+auto create_unit_sphere_mesh(int latSegments, int lonSegments) -> std::unique_ptr<Mesh> {
   const float r = k_unit_radius;
   std::vector<Vertex> v;
   std::vector<unsigned int> idx;
@@ -136,10 +136,10 @@ auto create_unit_sphere_mesh(int latSegments, int lonSegments) -> Mesh * {
     }
   }
 
-  return new Mesh(v, idx);
+  return std::make_unique<Mesh>(v, idx);
 }
 
-auto create_unit_cone_mesh(int radialSegments) -> Mesh * {
+auto create_unit_cone_mesh(int radialSegments) -> std::unique_ptr<Mesh> {
   const float base_r = k_unit_radius;
   const float half_h = k_half_scalar;
 
@@ -185,10 +185,10 @@ auto create_unit_cone_mesh(int radialSegments) -> Mesh * {
     idx.push_back(base_start + i);
   }
 
-  return new Mesh(v, idx);
+  return std::make_unique<Mesh>(v, idx);
 }
 
-auto createCapsuleMesh(int radialSegments, int heightSegments) -> Mesh * {
+auto createCapsuleMesh(int radialSegments, int heightSegments) -> std::unique_ptr<Mesh> {
   constexpr float k_capsule_radius = 0.25F;
   const float radius = k_capsule_radius;
   const float half_h = k_half_scalar;
@@ -264,7 +264,7 @@ auto createCapsuleMesh(int radialSegments, int heightSegments) -> Mesh * {
     idx.push_back(base_bot + i);
   }
 
-  return new Mesh(verts, idx);
+  return std::make_unique<Mesh>(verts, idx);
 }
 
 auto simple_hash(float seed) -> float {
@@ -273,7 +273,7 @@ auto simple_hash(float seed) -> float {
   return x - std::floor(x);
 }
 
-auto create_unit_torso_mesh(int radialSegments, int heightSegments) -> Mesh * {
+auto create_unit_torso_mesh(int radialSegments, int heightSegments) -> std::unique_ptr<Mesh> {
   const float half_h = k_half_scalar;
 
   constexpr float k_lower_extension = 0.05F;
@@ -603,7 +603,7 @@ auto create_unit_torso_mesh(int radialSegments, int heightSegments) -> Mesh * {
     }
   }
 
-  return new Mesh(v, idx);
+  return std::make_unique<Mesh>(v, idx);
 }
 
 } // namespace
