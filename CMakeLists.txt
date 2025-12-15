@@ -130,6 +130,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
         app/core/audio_resource_loader.cpp
         app/core/renderer_bootstrap.cpp
         app/core/level_orchestrator.cpp
+        app/core/loading_progress_tracker.cpp
         app/core/input_command_handler.cpp
         app/core/camera_controller.cpp
         app/core/game_state_restorer.cpp
@@ -156,6 +157,7 @@ else()
         app/core/audio_resource_loader.cpp
         app/core/renderer_bootstrap.cpp
         app/core/level_orchestrator.cpp
+        app/core/loading_progress_tracker.cpp
         app/core/input_command_handler.cpp
         app/core/camera_controller.cpp
         app/core/game_state_restorer.cpp
