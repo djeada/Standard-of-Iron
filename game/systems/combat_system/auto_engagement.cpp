@@ -1,8 +1,8 @@
 #include "auto_engagement.h"
-#include "combat_types.h"
-#include "combat_utils.h"
 #include "../../core/component.h"
 #include "../../core/world.h"
+#include "combat_types.h"
+#include "combat_utils.h"
 
 namespace Game::Systems::Combat {
 
