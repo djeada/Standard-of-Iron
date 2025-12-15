@@ -38,6 +38,28 @@ struct HumanProportions {
 
   static constexpr float UPPER_ARM_LEN = 0.32F;
   static constexpr float FORE_ARM_LEN = 0.27F;
+
+  // Shoulder and trapezius geometry for rounded upper body
+  static constexpr float TRAP_WIDTH_SCALE = 0.42F;
+  static constexpr float TRAP_HEIGHT_SCALE = 0.55F;
+  static constexpr float SHOULDER_CAP_RADIUS_SCALE = 0.85F;
+  static constexpr float DELTOID_RADIUS_SCALE = 0.75F;
+
+  // Body structure offsets
+  static constexpr float HIP_LATERAL_OFFSET = 0.10F;
+  static constexpr float HIP_VERTICAL_OFFSET = -0.02F;
+  static constexpr float FOOT_Y_OFFSET_DEFAULT = 0.022F;
+
+  // Torso depth and shape constants
+  static constexpr float TORSO_DEPTH_FACTOR_BASE = 0.55F;
+  static constexpr float TORSO_DEPTH_FACTOR_MIN = 0.40F;
+  static constexpr float TORSO_DEPTH_FACTOR_MAX = 0.85F;
+  static constexpr float TORSO_TOP_COVER_OFFSET = -0.03F;
+
+  // Rendering thresholds and tolerances
+  static constexpr float EPSILON_SMALL = 1e-5F;
+  static constexpr float EPSILON_TINY = 1e-6F;
+  static constexpr float EPSILON_VECTOR = 1e-8F;
 };
 
 enum class MaterialType : uint8_t {
