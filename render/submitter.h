@@ -35,6 +35,8 @@ public:
                            float radius, float intensity, float time) = 0;
   virtual void combat_dust(const QVector3D &position, const QVector3D &color,
                            float radius, float intensity, float time) = 0;
+  virtual void mode_indicator(const QMatrix4x4 &model, int mode_type,
+                              const QVector3D &color, float alpha = 1.0F) = 0;
 };
 
 namespace detail {
@@ -180,6 +182,18 @@ public:
     cmd.time = time;
     m_queue->submit(cmd);
   }
+  void mode_indicator(const QMatrix4x4 &model, int mode_type,
+                      const QVector3D &color, float alpha = 1.0F) override {
+    if (m_queue == nullptr) {
+      return;
+    }
+    ModeIndicatorCmd cmd;
+    cmd.model = model;
+    cmd.mode_type = mode_type;
+    cmd.color = color;
+    cmd.alpha = alpha;
+    m_queue->submit(cmd);
+  }
 
 private:
   DrawQueue *m_queue = nullptr;
@@ -270,6 +284,13 @@ public:
                    float radius, float intensity, float time) override {
     if (m_fallback != nullptr) {
       m_fallback->combat_dust(position, color, radius, intensity, time);
+    }
+  }
+
+  void mode_indicator(const QMatrix4x4 &model, int mode_type,
+                      const QVector3D &color, float alpha = 1.0F) override {
+    if (m_fallback != nullptr) {
+      m_fallback->mode_indicator(model, mode_type, color, alpha);
     }
   }
 
