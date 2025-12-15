@@ -5,6 +5,8 @@
 #include <functional>
 #include <memory>
 
+class LoadingProgressTracker;
+
 namespace Engine::Core {
 class World;
 }
@@ -70,5 +72,6 @@ public:
       const RendererRefs &renderers, Game::Systems::LevelSnapshot &level,
       EntityCache &entity_cache, Game::Systems::VictoryService *victory_service,
       MinimapManager *minimap_manager, VisibilityReadyCallback visibility_ready,
-      OwnerUpdateCallback owner_update);
+      OwnerUpdateCallback owner_update,
+      LoadingProgressTracker *progress_tracker = nullptr);
 };

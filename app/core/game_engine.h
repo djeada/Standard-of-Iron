@@ -85,6 +85,7 @@ class AudioSystemProxy;
 } // namespace App
 
 class QQuickWindow;
+class LoadingProgressTracker;
 
 struct EntityCache {
   int player_troop_count = 0;
@@ -145,6 +146,10 @@ public:
   Q_PROPERTY(bool is_spectator_mode READ is_spectator_mode NOTIFY
                  spectator_mode_changed)
   Q_PROPERTY(bool is_loading READ is_loading NOTIFY is_loading_changed)
+  Q_PROPERTY(float loading_progress READ loading_progress NOTIFY
+                 loading_progress_changed)
+  Q_PROPERTY(QString loading_stage_text READ loading_stage_text NOTIFY
+                 loading_stage_changed)
 
   Q_INVOKABLE void on_map_clicked(qreal sx, qreal sy);
   Q_INVOKABLE void on_right_click(qreal sx, qreal sy);
@@ -250,6 +255,9 @@ public:
     return m_runtime.loading;
   }
 
+  [[nodiscard]] float loading_progress() const;
+  [[nodiscard]] QString loading_stage_text() const;
+
   QObject *audio_system();
 
   void setWindow(QQuickWindow *w) { m_window = w; }
@@ -336,6 +344,7 @@ private:
   std::unique_ptr<AmbientStateManager> m_ambient_state_manager;
   std::unique_ptr<InputCommandHandler> m_input_handler;
   std::unique_ptr<CameraController> m_camera_controller;
+  std::unique_ptr<LoadingProgressTracker> m_loading_progress_tracker;
   QQuickWindow *m_window = nullptr;
   RuntimeState m_runtime;
   ViewportState m_viewport;
@@ -374,4 +383,6 @@ signals:
   void hold_mode_changed(bool active);
   void spectator_mode_changed();
   void is_loading_changed();
+  void loading_progress_changed(float progress);
+  void loading_stage_changed(QString stage_text);
 };

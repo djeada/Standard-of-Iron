@@ -6,16 +6,8 @@ Rectangle {
 
     property real progress: 0.0
     property bool is_loading: false
-    
-    // Progress animation constants
-    readonly property real initial_speed: 0.02
-    readonly property real progress_threshold_1: 0.5
-    readonly property real progress_threshold_2: 0.7
-    readonly property real progress_threshold_3: 0.9
-    readonly property real speed_slow: 0.015
-    readonly property real speed_slower: 0.01
-    readonly property real speed_slowest: 0.005
-    readonly property real min_increment: 0.001
+    property string stage_text: "Loading..."
+    property bool use_real_progress: true  // Toggle between real and fake progress
 
     anchors.fill: parent
     color: "#000000"
@@ -95,50 +87,19 @@ Rectangle {
         }
 
         Text {
-            text: qsTr("Preparing battlefield...")
+            text: load_screen.stage_text
             color: "#bdc3c7"
             font.pixelSize: 18
             anchors.horizontalCenter: parent.horizontalCenter
         }
     }
 
-    // Fake progress animation
-    Timer {
-        id: progress_timer
-        interval: 50
-        repeat: true
-        running: load_screen.is_loading
-
-        property real speed: load_screen.initial_speed
-
-        onTriggered: {
-            if (load_screen.progress < 1.0) {
-                // Start fast, then slow down exponentially
-                var remaining = 1.0 - load_screen.progress;
-                var increment = speed * remaining;
-                
-                // Ensure minimum progress increment
-                increment = Math.max(load_screen.min_increment, increment);
-                
-                load_screen.progress = Math.min(1.0, load_screen.progress + increment);
-                
-                // Slow down as we get closer to 100%
-                if (load_screen.progress > load_screen.progress_threshold_3) {
-                    speed = load_screen.speed_slowest;
-                } else if (load_screen.progress > load_screen.progress_threshold_2) {
-                    speed = load_screen.speed_slower;
-                } else if (load_screen.progress > load_screen.progress_threshold_1) {
-                    speed = load_screen.speed_slow;
-                }
-            }
-        }
-    }
-
     // Reset progress when loading starts
     onIs_loadingChanged: {
         if (is_loading) {
-            progress = 0.0;
-            progress_timer.speed = load_screen.initial_speed;
+            if (!use_real_progress) {
+                progress = 0.0;
+            }
         }
     }
 
