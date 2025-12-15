@@ -162,12 +162,12 @@ void Unit::set_guard_mode(bool enabled) {
       hold_comp->active = false;
     }
 
-    if (guard_comp->guarded_entity_id == 0 && guard_comp->guard_position_x == 0.0F &&
-        guard_comp->guard_position_z == 0.0F) {
+    if (!guard_comp->has_guard_target) {
       auto *transform = e->get_component<Engine::Core::TransformComponent>();
       if (transform != nullptr) {
         guard_comp->guard_position_x = transform->position.x;
         guard_comp->guard_position_z = transform->position.z;
+        guard_comp->has_guard_target = true;
       }
     }
   } else {
@@ -193,6 +193,7 @@ void Unit::set_guard_target(Engine::Core::EntityID target_id) {
   guard_comp->guard_position_z = 0.0F;
   guard_comp->active = true;
   guard_comp->returning_to_guard_position = false;
+  guard_comp->has_guard_target = true;
 
   auto *hold_comp = e->get_component<Engine::Core::HoldModeComponent>();
   if (hold_comp != nullptr) {
@@ -216,6 +217,7 @@ void Unit::set_guard_position(float x, float z) {
   guard_comp->guard_position_z = z;
   guard_comp->active = true;
   guard_comp->returning_to_guard_position = false;
+  guard_comp->has_guard_target = true;
 
   auto *hold_comp = e->get_component<Engine::Core::HoldModeComponent>();
   if (hold_comp != nullptr) {
@@ -246,6 +248,7 @@ void Unit::clear_guard_mode() {
     guard_comp->guard_position_x = 0.0F;
     guard_comp->guard_position_z = 0.0F;
     guard_comp->returning_to_guard_position = false;
+    guard_comp->has_guard_target = false;
   }
 }
 
