@@ -23,6 +23,7 @@ namespace {
 constexpr float k_default_vision_range = 12.0F;
 constexpr float k_half_cell_offset = 0.5F;
 constexpr float k_min_tile_size = 0.0001F;
+constexpr std::chrono::milliseconds k_min_job_interval{50};
 
 auto inBoundsStatic(int grid_x, int grid_z, int width, int height) -> bool {
   return grid_x >= 0 && grid_x < width && grid_z >= 0 && grid_z < height;
@@ -58,6 +59,8 @@ void VisibilityService::initialize(int width, int height, float tile_size) {
   m_cells.assign(count, static_cast<std::uint8_t>(VisibilityState::Unseen));
   m_version.store(1, std::memory_order_release);
   m_generation.store(0, std::memory_order_release);
+  m_lastSourcesHash = 0;
+  m_lastJobStartTime = {};
   m_initialized = true;
 }
 
@@ -69,6 +72,7 @@ void VisibilityService::reset() {
   std::fill(m_cells.begin(), m_cells.end(),
             static_cast<std::uint8_t>(VisibilityState::Unseen));
   m_version.fetch_add(1, std::memory_order_release);
+  m_lastSourcesHash = 0;
 }
 
 auto VisibilityService::update(Engine::Core::World &world,
@@ -79,10 +83,14 @@ auto VisibilityService::update(Engine::Core::World &world,
 
   const bool integrated = integrateCompletedJob();
 
-  if (!m_jobActive.load(std::memory_order_acquire)) {
+  if (!m_jobActive.load(std::memory_order_acquire) && shouldStartNewJob()) {
     const auto sources = gatherVisionSources(world, player_id);
-    auto payload = composeJobPayload(sources);
-    startAsyncJob(std::move(payload));
+    const auto sources_hash = computeSourcesHash(sources);
+    if (sources_hash != m_lastSourcesHash) {
+      m_lastSourcesHash = sources_hash;
+      auto payload = composeJobPayload(sources);
+      startAsyncJob(std::move(payload));
+    }
   }
 
   return integrated;
@@ -166,6 +174,7 @@ auto VisibilityService::composeJobPayload(
 
 void VisibilityService::startAsyncJob(JobPayload &&payload) {
   m_jobActive.store(true, std::memory_order_release);
+  m_lastJobStartTime = std::chrono::steady_clock::now();
   m_pendingJob = std::async(std::launch::async, executeJob, std::move(payload));
 }
 
@@ -309,6 +318,25 @@ auto VisibilityService::worldToGrid(float world_coord,
                                     float half) const -> int {
   const float grid_coord = world_coord / m_tile_size + half;
   return static_cast<int>(std::floor(grid_coord + k_half_cell_offset));
+}
+
+auto VisibilityService::shouldStartNewJob() const -> bool {
+  const auto now = std::chrono::steady_clock::now();
+  return (now - m_lastJobStartTime) >= k_min_job_interval;
+}
+
+auto VisibilityService::computeSourcesHash(
+    const std::vector<VisionSource> &sources) -> std::size_t {
+  std::size_t hash = sources.size();
+  for (const auto &source : sources) {
+    hash ^= static_cast<std::size_t>(source.center_x) +
+            0x9e3779b9 + (hash << 6) + (hash >> 2);
+    hash ^= static_cast<std::size_t>(source.center_z) +
+            0x9e3779b9 + (hash << 6) + (hash >> 2);
+    hash ^= static_cast<std::size_t>(source.cell_radius) +
+            0x9e3779b9 + (hash << 6) + (hash >> 2);
+  }
+  return hash;
 }
 
 } // namespace Game::Map
