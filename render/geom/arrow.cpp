@@ -17,7 +17,7 @@
 namespace Render {
 namespace Geom {
 
-static auto createArrowMesh() -> GL::Mesh * {
+static auto createArrowMesh() -> std::unique_ptr<GL::Mesh> {
   using GL::Vertex;
   std::vector<GL::Vertex> verts;
   std::vector<unsigned int> idx;
@@ -79,12 +79,12 @@ static auto createArrowMesh() -> GL::Mesh * {
     idx.push_back(ring_start + next);
   }
 
-  return new GL::Mesh(verts, idx);
+  return std::make_unique<GL::Mesh>(verts, idx);
 }
 
 auto Arrow::get() -> GL::Mesh * {
-  static GL::Mesh *mesh = createArrowMesh();
-  return mesh;
+  static std::unique_ptr<GL::Mesh> const mesh = createArrowMesh();
+  return mesh.get();
 }
 
 } // namespace Geom
