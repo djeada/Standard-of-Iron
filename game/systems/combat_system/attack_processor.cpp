@@ -635,7 +635,9 @@ void process_attacks(Engine::Core::World *world, float delta_time) {
         float const dz = guard_z - attacker_transform->position.z;
         float const dist_sq = dx * dx + dz * dz;
 
-        constexpr float kReturnThresholdSq = 1.0F;
+        float const kReturnThresholdSq =
+            Engine::Core::Defaults::kGuardReturnThreshold *
+            Engine::Core::Defaults::kGuardReturnThreshold;
         if (dist_sq > kReturnThresholdSq) {
           guard_mode->returning_to_guard_position = true;
           CommandService::MoveOptions options;

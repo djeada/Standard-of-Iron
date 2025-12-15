@@ -263,6 +263,7 @@ auto Serialization::serialize_entity(const Entity *entity) -> QJsonObject {
         static_cast<double>(guard_mode->guard_radius);
     guard_mode_obj["returning_to_guard_position"] =
         guard_mode->returning_to_guard_position;
+    guard_mode_obj["has_guard_target"] = guard_mode->has_guard_target;
     entity_obj["guard_mode"] = guard_mode_obj;
   }
 
@@ -544,6 +545,8 @@ void Serialization::deserialize_entity(Entity *entity,
             static_cast<double>(Defaults::kGuardDefaultRadius)));
     guard_mode->returning_to_guard_position =
         guard_mode_obj["returning_to_guard_position"].toBool(false);
+    guard_mode->has_guard_target =
+        guard_mode_obj["has_guard_target"].toBool(false);
   }
 
   if (json.contains("healer")) {
