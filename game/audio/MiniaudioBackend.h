@@ -5,8 +5,10 @@
 #include <QString>
 #include <QVector>
 #include <atomic>
+#include <memory>
 
 struct ma_device;
+struct DeviceWrapper;
 
 class MiniaudioBackend : public QObject {
   Q_OBJECT
@@ -76,7 +78,8 @@ private:
   void stop_device();
   auto find_free_sound_slot() const -> int;
 
-  ma_device *m_device{nullptr};
+  std::unique_ptr<ma_device> m_device{nullptr};
+  std::unique_ptr<DeviceWrapper> m_device_wrapper{nullptr};
   int m_sample_rate{DEFAULT_SAMPLE_RATE};
   int m_output_channels{DEFAULT_OUTPUT_CHANNELS};
 

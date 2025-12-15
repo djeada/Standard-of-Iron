@@ -21,8 +21,8 @@ auto BannerPipeline::initialize() -> bool {
     return false;
   }
 
-  m_bannerMesh16.reset(GL::createPlaneMesh(1.0F, 1.0F, 16));
-  m_bannerMesh8.reset(GL::createPlaneMesh(1.0F, 1.0F, 8));
+  m_bannerMesh16 = GL::createPlaneMesh(1.0F, 1.0F, 16);
+  m_bannerMesh8 = GL::createPlaneMesh(1.0F, 1.0F, 8);
 
   cache_uniforms();
 
