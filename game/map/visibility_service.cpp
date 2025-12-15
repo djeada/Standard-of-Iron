@@ -368,8 +368,6 @@ auto VisibilityService::shouldStartNewJob() const -> bool {
   return (now - m_lastJobStartTime) >= k_min_job_interval;
 }
 
-void VisibilityService::resetThrottle() {
-  m_lastJobStartTime = {};
-}
+void VisibilityService::resetThrottle() { m_lastJobStartTime = {}; }
 
 } // namespace Game::Map
