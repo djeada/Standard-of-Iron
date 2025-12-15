@@ -1,8 +1,8 @@
 #include "hit_feedback_processor.h"
-#include "combat_types.h"
 #include "../../core/component.h"
 #include "../../core/world.h"
 #include "../camera_visibility_service.h"
+#include "combat_types.h"
 
 #include <cmath>
 

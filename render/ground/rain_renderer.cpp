@@ -55,11 +55,11 @@ void RainRenderer::submit(Renderer &renderer, ResourceManager *resources) {
 
   const float delta_time = 0.016F;
   if (m_intensity < m_target_intensity) {
-    m_intensity =
-        std::min(m_target_intensity, m_intensity + delta_time * k_intensity_lerp_speed);
+    m_intensity = std::min(m_target_intensity,
+                           m_intensity + delta_time * k_intensity_lerp_speed);
   } else if (m_intensity > m_target_intensity) {
-    m_intensity =
-        std::max(m_target_intensity, m_intensity - delta_time * k_intensity_lerp_speed);
+    m_intensity = std::max(m_target_intensity,
+                           m_intensity - delta_time * k_intensity_lerp_speed);
   }
 
   if (m_intensity < 0.001F) {
@@ -69,8 +69,8 @@ void RainRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   const float time = renderer.get_animation_time();
   update_drop_positions(time);
 
-  const auto visible_count =
-      static_cast<std::size_t>(static_cast<float>(m_rain_drops.size()) * m_intensity);
+  const auto visible_count = static_cast<std::size_t>(
+      static_cast<float>(m_rain_drops.size()) * m_intensity);
 
   if (visible_count == 0) {
     return;
@@ -111,7 +111,8 @@ void RainRenderer::generate_rain_drops() {
     const float x = (rand_01(state) - 0.5F) * m_rain_area_radius * 2.0F;
     state = hash_coords(static_cast<int>(i * 31), static_cast<int>(i), state);
     const float z = (rand_01(state) - 0.5F) * m_rain_area_radius * 2.0F;
-    state = hash_coords(static_cast<int>(i * 7), static_cast<int>(i * 13), state);
+    state =
+        hash_coords(static_cast<int>(i * 7), static_cast<int>(i * 13), state);
     const float y = rand_01(state) * m_rain_height;
 
     state = hash_coords(static_cast<int>(i), static_cast<int>(i * 23), state);
@@ -129,7 +130,7 @@ void RainRenderer::generate_rain_drops() {
   m_instance_count = m_rain_drops.size();
 }
 
-void RainRenderer::update_drop_positions(float /*time*/) {
+void RainRenderer::update_drop_positions(float) {
   const float cycle_height = m_rain_height;
 
   for (auto &drop : m_rain_drops) {
