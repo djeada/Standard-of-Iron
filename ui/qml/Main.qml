@@ -110,17 +110,17 @@ ApplicationWindow {
     }
 
     LoadScreen {
-        id: loadScreen
+        id: load_screen
 
         anchors.fill: parent
         z: 15
-        isLoading: (typeof game !== 'undefined') ? game.is_loading : false
+        is_loading: (typeof game !== 'undefined') ? game.is_loading : false
 
         Connections {
             target: game
             function onIs_loading_changed() {
                 if (!game.is_loading) {
-                    loadScreen.completeLoading();
+                    load_screen.complete_loading();
                 }
             }
         }

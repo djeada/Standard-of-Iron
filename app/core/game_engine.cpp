@@ -31,6 +31,7 @@
 #include <QPainter>
 #include <QQuickWindow>
 #include <QSize>
+#include <QTimer>
 #include <QVariant>
 #include <QVariantMap>
 #include <memory>
@@ -1158,6 +1159,9 @@ void GameEngine::start_skirmish(const QString &map_path,
 
     m_runtime.loading = true;
     emit is_loading_changed();
+    
+    // Process events to allow UI to update before heavy loading
+    QCoreApplication::processEvents();
 
     if (m_hoverTracker) {
       m_hoverTracker->update_hover(-1, -1, *m_world, *m_camera, 0, 0);
