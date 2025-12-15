@@ -6,6 +6,10 @@
 #include <memory>
 #include <vector>
 
+namespace {
+constexpr float k_pi = 3.14159265358979323846F;
+}
+
 namespace Render::Geom {
 
 std::unique_ptr<Render::GL::Mesh> ModeIndicator::s_hold_mesh;
@@ -131,7 +135,7 @@ auto ModeIndicator::create_guard_mode_mesh()
 
   // Top semicircle vertices
   for (int i = 0; i <= segments; ++i) {
-    float const angle = 3.14159265F * (i / float(segments)); // 0 to PI
+    float const angle = k_pi * (i / float(segments)); // 0 to PI
     float const x = half_width * std::cos(angle);
     float const y = top_height * std::sin(angle);
     verts.push_back({{x, y, 0.0F}, {n.x(), n.y(), n.z()}, {0.5F, 1.0F}});
