@@ -1,5 +1,5 @@
 #include "mode_indicator.h"
-#include "gl/mesh.h"
+#include "../gl/mesh.h"
 #include <QVector3D>
 #include <cmath>
 #include <cstddef>

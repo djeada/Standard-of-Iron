@@ -1592,9 +1592,9 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       
       // Get the appropriate mesh based on mode type
       Mesh *indicator_mesh = nullptr;
-      if (mc.mode_type == 0) {
+      if (mc.mode_type == Render::Geom::k_mode_type_hold) {
         indicator_mesh = Render::Geom::ModeIndicator::get_hold_mode_mesh();
-      } else if (mc.mode_type == 1) {
+      } else if (mc.mode_type == Render::Geom::k_mode_type_guard) {
         indicator_mesh = Render::Geom::ModeIndicator::get_guard_mode_mesh();
       }
 
