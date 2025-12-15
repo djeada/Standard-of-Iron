@@ -665,8 +665,8 @@ void HumanoidRendererBase::draw_common_body(const DrawContext &ctx,
   pose.body_frames.foot_r.forward = foot_forward_r;
   pose.body_frames.foot_r.radius = foot_radius;
 
-  auto computeShinFrame = [&](const QVector3D &ankle, const QVector3D &knee,
-                              float right_sign) -> AttachmentFrame {
+  auto compute_shin_frame = [&](const QVector3D &ankle, const QVector3D &knee,
+                                float right_sign) -> AttachmentFrame {
     AttachmentFrame shin{};
     shin.origin = ankle;
 
@@ -694,19 +694,19 @@ void HumanoidRendererBase::draw_common_body(const DrawContext &ctx,
     return shin;
   };
 
-  pose.body_frames.shin_l = computeShinFrame(pose.foot_l, pose.knee_l, -1.0F);
-  pose.body_frames.shin_r = computeShinFrame(pose.foot_r, pose.knee_r, 1.0F);
+  pose.body_frames.shin_l = compute_shin_frame(pose.foot_l, pose.knee_l, -1.0F);
+  pose.body_frames.shin_r = compute_shin_frame(pose.foot_r, pose.knee_r, 1.0F);
 
   QVector3D const iris = QVector3D(0.10F, 0.10F, 0.12F);
-  auto eyePosition = [&](float lateral) {
+  auto eye_position = [&](float lateral) {
     QVector3D const local(lateral, 0.12F, 0.92F);
     QVector3D world = frame_local_position(pose.body_frames.head, local);
     world +=
         pose.body_frames.head.forward * (pose.body_frames.head.radius * 0.02F);
     return world;
   };
-  QVector3D const left_eye_world = eyePosition(-0.32F);
-  QVector3D const right_eye_world = eyePosition(0.32F);
+  QVector3D const left_eye_world = eye_position(-0.32F);
+  QVector3D const right_eye_world = eye_position(0.32F);
   float const eye_radius = pose.body_frames.head.radius * 0.17F;
 
   out.mesh(get_unit_sphere(), sphere_at(ctx.model, left_eye_world, eye_radius),
@@ -1617,22 +1617,22 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
       }
     }
 
-    const auto &gfxSettings = Render::GraphicsSettings::instance();
-    const bool shouldRenderShadow =
-        gfxSettings.shadows_enabled() &&
+    const auto &gfx_settings = Render::GraphicsSettings::instance();
+    const bool should_render_shadow =
+        gfx_settings.shadows_enabled() &&
         (soldier_lod == HumanoidLOD::Full ||
          soldier_lod == HumanoidLOD::Reduced) &&
-        soldier_distance < gfxSettings.shadow_max_distance();
+        soldier_distance < gfx_settings.shadow_max_distance();
 
-    if (shouldRenderShadow && inst_ctx.backend != nullptr &&
+    if (should_render_shadow && inst_ctx.backend != nullptr &&
         inst_ctx.resources != nullptr) {
-      auto *shadowShader =
+      auto *shadow_shader =
           inst_ctx.backend->shader(QStringLiteral("troop_shadow"));
-      auto *quadMesh = inst_ctx.resources->quad();
+      auto *quad_mesh = inst_ctx.resources->quad();
 
-      if (shadowShader != nullptr && quadMesh != nullptr) {
+      if (shadow_shader != nullptr && quad_mesh != nullptr) {
 
-        float const shadowSize =
+        float const shadow_size =
             is_mounted_spawn ? k_shadow_size_mounted : k_shadow_size_infantry;
         float depth_boost = 1.0F;
         float width_boost = 1.0F;
@@ -1657,19 +1657,19 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
           }
         }
 
-        float const shadowWidth =
-            shadowSize * (is_mounted_spawn ? 1.05F : 1.0F) * width_boost;
-        float const shadowDepth =
-            shadowSize * (is_mounted_spawn ? 1.30F : 1.10F) * depth_boost;
+        float const shadow_width =
+            shadow_size * (is_mounted_spawn ? 1.05F : 1.0F) * width_boost;
+        float const shadow_depth =
+            shadow_size * (is_mounted_spawn ? 1.30F : 1.10F) * depth_boost;
 
         auto &terrain_service = Game::Map::TerrainService::instance();
 
         if (terrain_service.is_initialized()) {
 
-          QVector3D const instPos =
+          QVector3D const inst_pos =
               inst_ctx.model.map(QVector3D(0.0F, 0.0F, 0.0F));
-          float const shadowY =
-              terrain_service.get_terrain_height(instPos.x(), instPos.z());
+          float const shadow_y =
+              terrain_service.get_terrain_height(inst_pos.x(), inst_pos.z());
 
           QVector3D light_dir = k_shadow_light_dir.normalized();
           QVector2D light_dir_xz(light_dir.x(), light_dir.z());
@@ -1685,26 +1685,26 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
           } else {
             dir_for_use.normalize();
           }
-          float const shadowOffset = shadowDepth * 1.25F;
-          QVector2D const offset2d = dir_for_use * shadowOffset;
-          float const lightYawDeg = qRadiansToDegrees(
+          float const shadow_offset = shadow_depth * 1.25F;
+          QVector2D const offset_2d = dir_for_use * shadow_offset;
+          float const light_yaw_deg = qRadiansToDegrees(
               std::atan2(double(dir_for_use.x()), double(dir_for_use.y())));
 
-          QMatrix4x4 shadowModel;
-          shadowModel.translate(instPos.x() + offset2d.x(),
-                                shadowY + k_shadow_ground_offset,
-                                instPos.z() + offset2d.y());
-          shadowModel.rotate(lightYawDeg, 0.0F, 1.0F, 0.0F);
-          shadowModel.rotate(-90.0F, 1.0F, 0.0F, 0.0F);
-          shadowModel.scale(shadowWidth, shadowDepth, 1.0F);
+          QMatrix4x4 shadow_model;
+          shadow_model.translate(inst_pos.x() + offset_2d.x(),
+                                 shadow_y + k_shadow_ground_offset,
+                                 inst_pos.z() + offset_2d.y());
+          shadow_model.rotate(light_yaw_deg, 0.0F, 1.0F, 0.0F);
+          shadow_model.rotate(-90.0F, 1.0F, 0.0F, 0.0F);
+          shadow_model.scale(shadow_width, shadow_depth, 1.0F);
 
           if (auto *renderer = dynamic_cast<Renderer *>(&out)) {
             Shader *previous_shader = renderer->get_current_shader();
-            renderer->set_current_shader(shadowShader);
-            shadowShader->set_uniform(QStringLiteral("u_lightDir"),
-                                      dir_for_use);
+            renderer->set_current_shader(shadow_shader);
+            shadow_shader->set_uniform(QStringLiteral("u_lightDir"),
+                                       dir_for_use);
 
-            out.mesh(quadMesh, shadowModel, QVector3D(0.0F, 0.0F, 0.0F),
+            out.mesh(quad_mesh, shadow_model, QVector3D(0.0F, 0.0F, 0.0F),
                      nullptr, k_shadow_base_alpha, 0);
 
             renderer->set_current_shader(previous_shader);
