@@ -227,18 +227,17 @@ void VisibilityService::workerLoop() {
       if (m_pendingPayload.has_value()) {
         payload_to_process = std::move(m_pendingPayload);
         m_pendingPayload.reset();
+      } else {
+        m_workerRunning.store(false, std::memory_order_release);
+        break;
       }
     }
 
     if (payload_to_process.has_value()) {
       auto result = executeJob(std::move(payload_to_process.value()));
       std::lock_guard<std::mutex> const lock(m_queueMutex);
-      m_completedResult = std::move(result);
-    } else {
-      std::lock_guard<std::mutex> const lock(m_queueMutex);
-      if (!m_pendingPayload.has_value()) {
-        m_workerRunning.store(false, std::memory_order_release);
-        break;
+      if (!m_completedResult.has_value() || result.changed) {
+        m_completedResult = std::move(result);
       }
     }
   }
