@@ -463,8 +463,8 @@ void Renderer::enqueue_mode_indicator(
   }
 
   // Calculate position above unit
-  float indicator_height = 2.0F; // Height above unit
-  float indicator_size = 0.4F;   // Size of indicator mesh
+  float indicator_height = Render::Geom::k_indicator_height_base;
+  float indicator_size = Render::Geom::k_indicator_size;
 
   // Adjust based on unit scale
   if (unit_comp != nullptr) {
@@ -483,7 +483,9 @@ void Renderer::enqueue_mode_indicator(
               nation_id, *troop_type_opt);
 
       // Use unit height to position indicator
-      indicator_height += profile.visuals.selection_ring_y_offset * 2.0F;
+      indicator_height +=
+          profile.visuals.selection_ring_y_offset *
+          Render::Geom::k_indicator_height_multiplier;
     }
   }
 
@@ -529,15 +531,16 @@ void Renderer::enqueue_mode_indicator(
   }
 
   // Determine mode type and color
-  int mode_type = Render::Geom::k_mode_type_hold; // Hold mode by default
-  QVector3D color(1.0F, 0.3F, 0.3F);               // Red for hold mode
+  int mode_type = Render::Geom::k_mode_type_hold;
+  QVector3D color = Render::Geom::k_hold_mode_color;
 
   if (has_guard_mode) {
     mode_type = Render::Geom::k_mode_type_guard;
-    color = QVector3D(0.3F, 0.5F, 1.0F); // Blue for guard mode
+    color = Render::Geom::k_guard_mode_color;
   }
 
-  mode_indicator(indicator_model, mode_type, color, 0.85F);
+  mode_indicator(indicator_model, mode_type, color,
+                 Render::Geom::k_indicator_alpha);
 }
 
 void Renderer::render_world(Engine::Core::World *world) {
