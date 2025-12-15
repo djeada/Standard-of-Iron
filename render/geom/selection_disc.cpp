@@ -9,7 +9,7 @@ namespace Render::Geom {
 
 std::unique_ptr<Render::GL::Mesh> SelectionDisc::s_mesh;
 
-static auto createDiscMesh() -> Render::GL::Mesh * {
+static auto createDiscMesh() -> std::unique_ptr<Render::GL::Mesh> {
   using namespace Render::GL;
   std::vector<Vertex> verts;
   std::vector<unsigned int> idx;
@@ -28,12 +28,12 @@ static auto createDiscMesh() -> Render::GL::Mesh * {
     idx.push_back(i);
     idx.push_back(i + 1);
   }
-  return new Mesh(verts, idx);
+  return std::make_unique<Mesh>(verts, idx);
 }
 
 auto SelectionDisc::get() -> Render::GL::Mesh * {
   if (!s_mesh) {
-    s_mesh.reset(createDiscMesh());
+    s_mesh = createDiscMesh();
   }
   return s_mesh.get();
 }
