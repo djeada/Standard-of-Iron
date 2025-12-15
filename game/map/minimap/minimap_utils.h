@@ -32,4 +32,19 @@ grid_to_world_coords(float grid_x, float grid_z,
   return {world_x, world_z};
 }
 
+inline auto world_to_pixel(float world_x, float world_z, float world_width,
+                           float world_height, float img_width,
+                           float img_height) -> std::pair<float, float> {
+  const float rotated_x = world_x * Constants::k_camera_yaw_cos -
+                          world_z * Constants::k_camera_yaw_sin;
+  const float rotated_z = world_x * Constants::k_camera_yaw_sin +
+                          world_z * Constants::k_camera_yaw_cos;
+
+  const float px = (rotated_x + world_width * 0.5F) * (img_width / world_width);
+  const float py =
+      (rotated_z + world_height * 0.5F) * (img_height / world_height);
+
+  return {px, py};
+}
+
 } // namespace Game::Map::Minimap

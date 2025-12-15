@@ -4,6 +4,7 @@
 #include <QString>
 #include <QVariantList>
 #include <QVector3D>
+#include <cstdint>
 #include <functional>
 #include <memory>
 #include <utility>

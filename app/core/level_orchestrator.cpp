@@ -11,9 +11,11 @@
 #include "game/systems/troop_count_registry.h"
 #include "game/systems/victory_service.h"
 #include "game_engine.h"
+#include "loading_progress_tracker.h"
 #include "minimap_manager.h"
 #include "render/gl/camera.h"
 #include "render/scene_renderer.h"
+#include <QCoreApplication>
 #include <QDebug>
 
 auto LevelOrchestrator::load_skirmish(
@@ -22,23 +24,64 @@ auto LevelOrchestrator::load_skirmish(
     const RendererRefs &renderers, Game::Systems::LevelSnapshot &level,
     EntityCache &entity_cache, Game::Systems::VictoryService *victory_service,
     MinimapManager *minimap_manager, VisibilityReadyCallback visibility_ready,
-    OwnerUpdateCallback owner_update) -> LevelLoadResult {
+    OwnerUpdateCallback owner_update,
+    LoadingProgressTracker *progress_tracker) -> LevelLoadResult {
 
   LevelLoadResult result;
   result.updated_player_id = selected_player_id;
+
+  if (progress_tracker) {
+    progress_tracker->set_stage(
+        LoadingProgressTracker::LoadingStage::LOADING_MAP_DATA);
+    QCoreApplication::processEvents();
+  }
 
   entity_cache.reset();
 
   Game::Map::SkirmishLoader loader(world, *renderers.renderer,
                                    *renderers.camera);
+
+  if (progress_tracker) {
+    progress_tracker->set_stage(
+        LoadingProgressTracker::LoadingStage::LOADING_TERRAIN);
+    QCoreApplication::processEvents();
+  }
+
   loader.set_ground_renderer(renderers.ground);
   loader.set_terrain_renderer(renderers.terrain);
+
+  if (progress_tracker) {
+    progress_tracker->set_stage(
+        LoadingProgressTracker::LoadingStage::LOADING_BIOME);
+    QCoreApplication::processEvents();
+  }
+
   loader.set_biome_renderer(renderers.biome);
+
+  if (progress_tracker) {
+    progress_tracker->set_stage(
+        LoadingProgressTracker::LoadingStage::LOADING_WATER_FEATURES);
+    QCoreApplication::processEvents();
+  }
+
   loader.set_river_renderer(renderers.river);
-  loader.set_road_renderer(renderers.road);
   loader.set_riverbank_renderer(renderers.riverbank);
   loader.set_bridge_renderer(renderers.bridge);
-  loader.set_fog_renderer(renderers.fog);
+
+  if (progress_tracker) {
+    progress_tracker->set_stage(
+        LoadingProgressTracker::LoadingStage::LOADING_ROADS);
+    QCoreApplication::processEvents();
+  }
+
+  loader.set_road_renderer(renderers.road);
+
+  if (progress_tracker) {
+    progress_tracker->set_stage(
+        LoadingProgressTracker::LoadingStage::LOADING_ENVIRONMENT);
+    QCoreApplication::processEvents();
+  }
+
   loader.set_stone_renderer(renderers.stone);
   loader.set_plant_renderer(renderers.plant);
   loader.set_pine_renderer(renderers.pine);
@@ -46,8 +89,22 @@ auto LevelOrchestrator::load_skirmish(
   loader.set_fire_camp_renderer(renderers.firecamp);
   loader.set_rain_renderer(renderers.rain);
 
+  if (progress_tracker) {
+    progress_tracker->set_stage(
+        LoadingProgressTracker::LoadingStage::LOADING_FOG);
+    QCoreApplication::processEvents();
+  }
+
+  loader.set_fog_renderer(renderers.fog);
+
   loader.set_on_owners_updated(owner_update);
   loader.set_on_visibility_mask_ready(visibility_ready);
+
+  if (progress_tracker) {
+    progress_tracker->set_stage(
+        LoadingProgressTracker::LoadingStage::LOADING_ENTITIES);
+    QCoreApplication::processEvents();
+  }
 
   auto load_result = loader.start(map_path, player_configs, selected_player_id,
                                   result.updated_player_id);
@@ -55,7 +112,16 @@ auto LevelOrchestrator::load_skirmish(
   if (!load_result.ok) {
     result.success = false;
     result.error_message = load_result.errorMessage;
+    if (progress_tracker) {
+      progress_tracker->report_error(load_result.errorMessage);
+    }
     return result;
+  }
+
+  if (progress_tracker) {
+    progress_tracker->set_stage(
+        LoadingProgressTracker::LoadingStage::LOADING_AUDIO);
+    QCoreApplication::processEvents();
   }
 
   level.map_name = load_result.map_name;
@@ -86,6 +152,12 @@ auto LevelOrchestrator::load_skirmish(
         cam_config.default_pitch, cam_config.default_yaw);
   }
 
+  if (progress_tracker) {
+    progress_tracker->set_stage(
+        LoadingProgressTracker::LoadingStage::GENERATING_MINIMAP);
+    QCoreApplication::processEvents();
+  }
+
   Game::Map::MapDefinition map_def;
   QString map_error;
   if (Game::Map::MapLoader::loadFromJsonFile(map_path, map_def, &map_error)) {
@@ -114,6 +186,12 @@ auto LevelOrchestrator::load_skirmish(
         owner.type == Game::Systems::OwnerType::AI) {
       stats_registry.mark_game_start(owner.owner_id);
     }
+  }
+
+  if (progress_tracker) {
+    progress_tracker->set_stage(
+        LoadingProgressTracker::LoadingStage::FINALIZING);
+    QCoreApplication::processEvents();
   }
 
   result.success = true;
