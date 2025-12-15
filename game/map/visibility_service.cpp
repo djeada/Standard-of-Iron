@@ -10,7 +10,6 @@
 #include <chrono>
 #include <cmath>
 #include <cstdint>
-#include <future>
 #include <mutex>
 #include <shared_mutex>
 #include <utility>
@@ -23,6 +22,7 @@ namespace {
 constexpr float k_default_vision_range = 12.0F;
 constexpr float k_half_cell_offset = 0.5F;
 constexpr float k_min_tile_size = 0.0001F;
+constexpr std::chrono::milliseconds k_min_job_interval{50};
 
 auto inBoundsStatic(int grid_x, int grid_z, int width, int height) -> bool {
   return grid_x >= 0 && grid_x < width && grid_z >= 0 && grid_z < height;
@@ -44,6 +44,14 @@ auto VisibilityService::instance() -> VisibilityService & {
   return s_instance;
 }
 
+VisibilityService::~VisibilityService() {
+  m_shutdownRequested.store(true, std::memory_order_release);
+  m_queueCv.notify_all();
+  if (m_workerThread.joinable()) {
+    m_workerThread.join();
+  }
+}
+
 void VisibilityService::initialize(int width, int height, float tile_size) {
   std::unique_lock<std::shared_mutex> const lock(m_cellsMutex);
   m_width = std::max(1, width);
@@ -58,6 +66,7 @@ void VisibilityService::initialize(int width, int height, float tile_size) {
   m_cells.assign(count, static_cast<std::uint8_t>(VisibilityState::Unseen));
   m_version.store(1, std::memory_order_release);
   m_generation.store(0, std::memory_order_release);
+  resetThrottle();
   m_initialized = true;
 }
 
@@ -69,6 +78,7 @@ void VisibilityService::reset() {
   std::fill(m_cells.begin(), m_cells.end(),
             static_cast<std::uint8_t>(VisibilityState::Unseen));
   m_version.fetch_add(1, std::memory_order_release);
+  resetThrottle();
 }
 
 auto VisibilityService::update(Engine::Core::World &world,
@@ -77,12 +87,20 @@ auto VisibilityService::update(Engine::Core::World &world,
     return false;
   }
 
-  const bool integrated = integrateCompletedJob();
+  bool integrated = false;
+  {
+    std::lock_guard<std::mutex> const lock(m_queueMutex);
+    if (m_completedResult.has_value()) {
+      integrateResult(std::move(m_completedResult.value()));
+      m_completedResult.reset();
+      integrated = true;
+    }
+  }
 
-  if (!m_jobActive.load(std::memory_order_acquire)) {
+  if (shouldStartNewJob()) {
     const auto sources = gatherVisionSources(world, player_id);
     auto payload = composeJobPayload(sources);
-    startAsyncJob(std::move(payload));
+    enqueueJob(std::move(payload));
   }
 
   return integrated;
@@ -103,6 +121,7 @@ void VisibilityService::computeImmediate(Engine::Core::World &world,
     m_cells = std::move(result.cells);
     m_version.fetch_add(1, std::memory_order_release);
   }
+  resetThrottle();
 }
 
 auto VisibilityService::gatherVisionSources(Engine::Core::World &world,
@@ -164,32 +183,64 @@ auto VisibilityService::composeJobPayload(
                     m_cells, sources,  generation_value};
 }
 
-void VisibilityService::startAsyncJob(JobPayload &&payload) {
-  m_jobActive.store(true, std::memory_order_release);
-  m_pendingJob = std::async(std::launch::async, executeJob, std::move(payload));
+void VisibilityService::enqueueJob(JobPayload &&payload) {
+  {
+    std::lock_guard<std::mutex> const lock(m_queueMutex);
+    m_pendingPayload = std::move(payload);
+    m_lastJobStartTime = std::chrono::steady_clock::now();
+  }
+  ensureWorkerRunning();
+  m_queueCv.notify_one();
 }
 
-auto VisibilityService::integrateCompletedJob() -> bool {
-  if (!m_jobActive.load(std::memory_order_acquire)) {
-    return false;
-  }
-
-  if (m_pendingJob.wait_for(std::chrono::seconds(0)) !=
-      std::future_status::ready) {
-    return false;
-  }
-
-  auto result = m_pendingJob.get();
-  m_jobActive.store(false, std::memory_order_release);
-
+void VisibilityService::integrateResult(JobResult &&result) {
   if (result.changed) {
     std::unique_lock<std::shared_mutex> const lock(m_cellsMutex);
     m_cells = std::move(result.cells);
     m_version.fetch_add(1, std::memory_order_release);
-    return true;
   }
+}
 
-  return false;
+void VisibilityService::ensureWorkerRunning() {
+  bool expected = false;
+  if (m_workerRunning.compare_exchange_strong(expected, true,
+                                              std::memory_order_acq_rel)) {
+    if (m_workerThread.joinable()) {
+      m_workerThread.join();
+    }
+    m_workerThread = std::thread(&VisibilityService::workerLoop, this);
+  }
+}
+
+void VisibilityService::workerLoop() {
+  while (!m_shutdownRequested.load(std::memory_order_acquire)) {
+    std::optional<JobPayload> payload_to_process;
+    {
+      std::unique_lock<std::mutex> lock(m_queueMutex);
+      m_queueCv.wait_for(lock, std::chrono::milliseconds(100), [this] {
+        return m_pendingPayload.has_value() ||
+               m_shutdownRequested.load(std::memory_order_acquire);
+      });
+      if (m_shutdownRequested.load(std::memory_order_acquire)) {
+        break;
+      }
+      if (m_pendingPayload.has_value()) {
+        payload_to_process = std::move(m_pendingPayload);
+        m_pendingPayload.reset();
+      } else {
+        m_workerRunning.store(false, std::memory_order_release);
+        break;
+      }
+    }
+
+    if (payload_to_process.has_value()) {
+      auto result = executeJob(std::move(payload_to_process.value()));
+      std::lock_guard<std::mutex> const lock(m_queueMutex);
+      if (!m_completedResult.has_value() || result.changed) {
+        m_completedResult = std::move(result);
+      }
+    }
+  }
 }
 
 auto VisibilityService::executeJob(JobPayload payload)
@@ -295,6 +346,7 @@ void VisibilityService::reveal_all() {
   std::fill(m_cells.begin(), m_cells.end(),
             static_cast<std::uint8_t>(VisibilityState::Visible));
   m_version.fetch_add(1, std::memory_order_release);
+  resetThrottle();
 }
 
 auto VisibilityService::inBounds(int grid_x, int grid_z) const -> bool {
@@ -309,6 +361,15 @@ auto VisibilityService::worldToGrid(float world_coord,
                                     float half) const -> int {
   const float grid_coord = world_coord / m_tile_size + half;
   return static_cast<int>(std::floor(grid_coord + k_half_cell_offset));
+}
+
+auto VisibilityService::shouldStartNewJob() const -> bool {
+  const auto now = std::chrono::steady_clock::now();
+  return (now - m_lastJobStartTime) >= k_min_job_interval;
+}
+
+void VisibilityService::resetThrottle() {
+  m_lastJobStartTime = {};
 }
 
 } // namespace Game::Map
