@@ -76,6 +76,8 @@
         <file>assets/shaders/healing_aura.vert</file>
         <file>assets/shaders/combat_dust.frag</file>
         <file>assets/shaders/combat_dust.vert</file>
+        <file>assets/shaders/rain.frag</file>
+        <file>assets/shaders/rain.vert</file>
         
         <!-- Map files -->
         <file>assets/maps/map_forest.json</file>

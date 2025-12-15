@@ -11,6 +11,7 @@
 #include "backend/healer_aura_pipeline.h"
 #include "backend/healing_beam_pipeline.h"
 #include "backend/primitive_batch_pipeline.h"
+#include "backend/rain_pipeline.h"
 #include "backend/terrain_pipeline.h"
 #include "backend/vegetation_pipeline.h"
 #include "backend/water_pipeline.h"
@@ -172,6 +173,12 @@ void Backend::initialize() {
       this, m_shaderCache.get());
   m_combatDustPipeline->initialize();
   qInfo() << "Backend: CombatDustPipeline initialized";
+
+  qInfo() << "Backend: Creating RainPipeline...";
+  m_rainPipeline =
+      std::make_unique<BackendPipelines::RainPipeline>(this, m_shaderCache.get());
+  m_rainPipeline->initialize();
+  qInfo() << "Backend: RainPipeline initialized";
 
   qInfo() << "Backend: Loading basic shaders...";
   m_basicShader = m_shaderCache->get(QStringLiteral("basic"));
@@ -852,10 +859,11 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       break;
     }
     case RainBatchCmdIndex: {
-      // Rain rendering stub - infrastructure in place for future visual
-      // implementation. The RainManager handles cycle timing and intensity
-      // transitions. Visual rendering will be added when particle/overlay
-      // system is implemented.
+      const auto &rain = std::get<RainBatchCmdIndex>(cmd);
+      if (m_rainPipeline == nullptr || !m_rainPipeline->is_initialized()) {
+        break;
+      }
+      m_rainPipeline->render(cam, rain.params.intensity, rain.params.time);
       break;
     }
     case TerrainChunkCmdIndex: {
