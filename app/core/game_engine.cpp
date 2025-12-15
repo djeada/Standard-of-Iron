@@ -636,6 +636,17 @@ void GameEngine::update(float dt) {
     }
   }
 
+  if (m_rainManager) {
+    m_rainManager->update(dt);
+    if (m_rain) {
+      m_rain->set_enabled(m_rainManager->is_enabled());
+      m_rain->set_intensity(m_rainManager->get_intensity());
+      if (m_camera) {
+        m_rain->set_camera_position(m_camera->get_position());
+      }
+    }
+  }
+
   if (m_victoryService && m_world) {
     m_victoryService->update(*m_world, dt);
   }
@@ -1170,9 +1181,9 @@ void GameEngine::start_skirmish(const QString &map_path,
 
     LevelOrchestrator orchestrator;
     LevelOrchestrator::RendererRefs renderers{
-        m_renderer.get(), m_camera.get(), m_ground.get(),  m_terrain.get(),
-        m_biome.get(),    m_river.get(),  m_road.get(),    m_riverbank.get(),
-        m_bridge.get(),   m_fog.get(),    m_stone.get(),   m_plant.get(),
+        m_renderer.get(), m_camera.get(), m_ground.get(),   m_terrain.get(),
+        m_biome.get(),    m_river.get(),  m_road.get(),     m_riverbank.get(),
+        m_bridge.get(),   m_fog.get(),    m_stone.get(),    m_plant.get(),
         m_pine.get(),     m_olive.get(),  m_firecamp.get(), m_rain.get()};
 
     auto visibility_ready = [this]() {
@@ -1212,6 +1223,23 @@ void GameEngine::start_skirmish(const QString &map_path,
           }
         }
       });
+    }
+
+    if (m_rainManager) {
+      m_rainManager->configure(m_level.rain, m_level.biome_seed);
+    }
+    if (m_rain) {
+      const float world_width =
+          static_cast<float>(m_level.grid_width) * m_level.tile_size;
+      const float world_height =
+          static_cast<float>(m_level.grid_height) * m_level.tile_size;
+      m_rain->configure(world_width, world_height, m_level.biome_seed);
+      m_rain->set_enabled(m_level.rain.enabled);
+      const float initial_intensity =
+          m_rainManager
+              ? m_rainManager->get_intensity()
+              : (m_level.rain.enabled ? m_level.rain.intensity : 0.0F);
+      m_rain->set_intensity(initial_intensity);
     }
 
     m_runtime.loading = false;
@@ -1281,9 +1309,9 @@ auto GameEngine::load_from_slot(const QString &slot) -> bool {
   apply_runtime_snapshot(runtime_snap);
 
   GameStateRestorer::RendererRefs renderers{
-      m_renderer.get(), m_camera.get(), m_ground.get(),  m_terrain.get(),
-      m_biome.get(),    m_river.get(),  m_road.get(),    m_riverbank.get(),
-      m_bridge.get(),   m_fog.get(),    m_stone.get(),   m_plant.get(),
+      m_renderer.get(), m_camera.get(), m_ground.get(),   m_terrain.get(),
+      m_biome.get(),    m_river.get(),  m_road.get(),     m_riverbank.get(),
+      m_bridge.get(),   m_fog.get(),    m_stone.get(),    m_plant.get(),
       m_pine.get(),     m_olive.get(),  m_firecamp.get(), m_rain.get()};
   GameStateRestorer::restore_environment_from_metadata(
       meta, m_world.get(), renderers, m_level, m_runtime.local_owner_id,

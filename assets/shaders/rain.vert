@@ -16,31 +16,25 @@ const float AREA_HEIGHT = 30.0;
 const float AREA_RADIUS = 50.0;
 
 void main() {
-    float speed = a_offset.z;
-    float y_offset = a_offset.y;
-    
-    // Animate rain falling with time
-    float fall_distance = mod(speed * u_time, AREA_HEIGHT);
-    
-    // Calculate position relative to camera
-    vec3 pos = a_position;
-    pos.x += u_camera_pos.x;
-    pos.z += u_camera_pos.z;
-    
-    // Apply falling animation
-    pos.y = pos.y - fall_distance + y_offset;
-    
-    // Wrap around when below ground
-    if (pos.y < 0.0) {
-        pos.y += AREA_HEIGHT;
-    }
-    
-    // Add slight wind effect
-    pos.x += u_wind.x * (AREA_HEIGHT - pos.y) * 0.1;
-    pos.z += u_wind.z * (AREA_HEIGHT - pos.y) * 0.1;
-    
-    gl_Position = u_view_proj * vec4(pos, 1.0);
-    
-    // Fade based on intensity and per-drop alpha
-    v_alpha = a_alpha * u_intensity;
+  float speed = a_offset.z;
+  float y_offset = a_offset.y;
+
+  float fall_distance = mod(speed * u_time, AREA_HEIGHT);
+
+  vec3 pos = a_position;
+  pos.x += u_camera_pos.x;
+  pos.z += u_camera_pos.z;
+
+  pos.y = pos.y - fall_distance + y_offset;
+
+  if (pos.y < 0.0) {
+    pos.y += AREA_HEIGHT;
+  }
+
+  pos.x += u_wind.x * (AREA_HEIGHT - pos.y) * 0.1;
+  pos.z += u_wind.z * (AREA_HEIGHT - pos.y) * 0.1;
+
+  gl_Position = u_view_proj * vec4(pos, 1.0);
+
+  v_alpha = a_alpha * u_intensity;
 }

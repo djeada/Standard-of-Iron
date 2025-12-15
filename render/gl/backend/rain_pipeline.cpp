@@ -45,9 +45,9 @@ auto RainPipeline::initialize() -> bool {
 
   m_rain_shader = m_shader_cache->get("rain");
   if (m_rain_shader == nullptr) {
-    m_rain_shader =
-        m_shader_cache->load("rain", QStringLiteral(":/assets/shaders/rain.vert"),
-                             QStringLiteral(":/assets/shaders/rain.frag"));
+    m_rain_shader = m_shader_cache->load(
+        "rain", QStringLiteral(":/assets/shaders/rain.vert"),
+        QStringLiteral(":/assets/shaders/rain.frag"));
   }
   if (m_rain_shader == nullptr) {
     qWarning() << "RainPipeline: Failed to get rain shader";
