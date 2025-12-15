@@ -39,14 +39,6 @@ struct HumanProportions {
   static constexpr float UPPER_ARM_LEN = 0.32F;
   static constexpr float FORE_ARM_LEN = 0.27F;
 
-  // Shoulder and trapezius geometry for rounded upper body
-  static constexpr float TRAP_WIDTH_SCALE = 0.42F;
-  static constexpr float TRAP_HEIGHT_SCALE = 0.55F;
-  static constexpr float TRAP_VERTICAL_OFFSET = 0.02F;
-  static constexpr float SHOULDER_CAP_RADIUS_SCALE = 0.85F;
-  static constexpr float SHOULDER_CAP_UP_OFFSET = 0.3F;
-  static constexpr float SHOULDER_CAP_LATERAL_OFFSET = 0.2F;
-
   // Body structure offsets
   static constexpr float HIP_LATERAL_OFFSET = 0.10F;
   static constexpr float HIP_VERTICAL_OFFSET = -0.02F;
