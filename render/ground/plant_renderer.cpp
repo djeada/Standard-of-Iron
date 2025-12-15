@@ -215,8 +215,6 @@ void PlantRenderer::generatePlantInstances() {
     return true;
   };
 
-  const float half_width = m_width * 0.5F - 0.5F;
-
   for (int z = 0; z < m_height; z += 3) {
     for (int x = 0; x < m_width; x += 3) {
       int const idx = z * m_width + x;

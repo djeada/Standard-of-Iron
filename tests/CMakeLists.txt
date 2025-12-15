@@ -18,6 +18,7 @@ add_executable(standard_of_iron_tests
     render/horse_animation_controller_test.cpp
     render/rider_proportions_test.cpp
     render/horse_equipment_renderers_test.cpp
+    render/spawn_validator_test.cpp
     test_main.cpp
 )
 
