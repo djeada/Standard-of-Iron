@@ -61,7 +61,7 @@ auto main(int argc, char *argv[]) -> int {
   qDebug() << "Step 4: Using MinimapTextureManager (recommended approach)...";
 
   MinimapTextureManager manager;
-  if (!manager.generateForMap(mapDef)) {
+  if (!manager.generate_for_map(mapDef)) {
     qCritical() << "Failed to generate minimap via manager";
     return 1;
   }

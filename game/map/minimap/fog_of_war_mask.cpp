@@ -83,25 +83,26 @@ auto FogOfWarMask::world_to_fog(float world_x,
 }
 
 void FogOfWarMask::clear_current_visibility() {
-
-  const size_t total_cells =
-      static_cast<size_t>(m_fog_width) * static_cast<size_t>(m_fog_height);
-
-  for (size_t i = 0; i < total_cells; ++i) {
-    const size_t byte_index = i / 4;
-    const int bit_offset = static_cast<int>((i % 4) * 2);
-
-    const uint8_t current = static_cast<uint8_t>(
-        (m_visibility_data[byte_index] >> bit_offset) & 0x03);
-
-    if (current == static_cast<uint8_t>(VisibilityState::Visible)) {
-
-      const uint8_t mask = static_cast<uint8_t>(~(0x03 << bit_offset));
-      const uint8_t value = static_cast<uint8_t>(
-          static_cast<uint8_t>(VisibilityState::Revealed) << bit_offset);
-      m_visibility_data[byte_index] =
-          static_cast<uint8_t>((m_visibility_data[byte_index] & mask) | value);
+  for (size_t byte_idx = 0; byte_idx < m_visibility_data.size(); ++byte_idx) {
+    uint8_t byte_val = m_visibility_data[byte_idx];
+    if (byte_val == 0) {
+      continue;
     }
+
+    uint8_t new_val = 0;
+    for (int cell = 0; cell < 4; ++cell) {
+      const int bit_offset = cell * 2;
+      const uint8_t cell_val = (byte_val >> bit_offset) & 0x03;
+
+      if (cell_val == static_cast<uint8_t>(VisibilityState::Visible)) {
+        new_val |=
+            static_cast<uint8_t>(static_cast<uint8_t>(VisibilityState::Revealed)
+                                 << bit_offset);
+      } else {
+        new_val |= static_cast<uint8_t>(cell_val << bit_offset);
+      }
+    }
+    m_visibility_data[byte_idx] = new_val;
   }
 }
 
@@ -186,20 +187,7 @@ void FogOfWarMask::reset() {
 }
 
 void FogOfWarMask::reveal_all() {
-
-  const size_t total_cells =
-      static_cast<size_t>(m_fog_width) * static_cast<size_t>(m_fog_height);
-
-  for (size_t i = 0; i < total_cells; ++i) {
-    const size_t byte_index = i / 4;
-    const int bit_offset = static_cast<int>((i % 4) * 2);
-
-    const uint8_t mask = static_cast<uint8_t>(~(0x03 << bit_offset));
-    const uint8_t value = static_cast<uint8_t>(
-        static_cast<uint8_t>(VisibilityState::Revealed) << bit_offset);
-    m_visibility_data[byte_index] =
-        static_cast<uint8_t>((m_visibility_data[byte_index] & mask) | value);
-  }
+  std::memset(m_visibility_data.data(), 0x55, m_visibility_data.size());
 
   m_dirty = true;
 }
