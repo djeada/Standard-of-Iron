@@ -47,6 +47,12 @@ public:
   void set_hold_mode(bool enabled);
   [[nodiscard]] auto is_in_hold_mode() const -> bool;
 
+  void set_guard_mode(bool enabled);
+  void set_guard_target(Engine::Core::EntityID target_id);
+  void set_guard_position(float x, float z);
+  [[nodiscard]] auto is_in_guard_mode() const -> bool;
+  void clear_guard_mode();
+
 protected:
   Unit(Engine::Core::World &world, TroopType type);
   Unit(Engine::Core::World &world, std::string type);

@@ -28,6 +28,9 @@ inline constexpr int kProductionMaxUnits = 10000;
 inline constexpr float kCaptureRequiredTime = 15.0F;
 
 inline constexpr float kHoldStandUpDuration = 2.0F;
+
+inline constexpr float kGuardDefaultRadius = 10.0F;
+inline constexpr float kGuardReturnThreshold = 1.0F;
 } // namespace Defaults
 
 class TransformComponent : public Component {
@@ -274,6 +277,19 @@ public:
   bool active{true};
   float exit_cooldown{0.0F};
   float stand_up_duration;
+};
+
+class GuardModeComponent : public Component {
+public:
+  GuardModeComponent() : guard_radius(Defaults::kGuardDefaultRadius) {}
+
+  bool active{true};
+  EntityID guarded_entity_id{0};
+  float guard_position_x{0.0F};
+  float guard_position_z{0.0F};
+  float guard_radius;
+  bool returning_to_guard_position{false};
+  bool has_guard_target{false};
 };
 
 class HealerComponent : public Component {
