@@ -113,24 +113,25 @@ auto MinimapGenerator::world_to_pixel_size(
 }
 
 void MinimapGenerator::render_parchment_background(QImage &image) {
-  QPainter painter(&image);
+  const int BASE_R = Palette::PARCHMENT_BASE.red();
+  const int BASE_G = Palette::PARCHMENT_BASE.green();
+  const int BASE_B = Palette::PARCHMENT_BASE.blue();
 
   for (int y = 0; y < image.height(); ++y) {
+    auto *scanline = reinterpret_cast<uint32_t *>(image.scanLine(y));
     for (int x = 0; x < image.width(); ++x) {
-
       const float noise = hash_coords(x / 3, y / 3, 42) * 0.08F;
 
-      QColor pixel = Palette::PARCHMENT_BASE;
-      int r = pixel.red() + static_cast<int>(noise * 20);
-      int g = pixel.green() + static_cast<int>(noise * 18);
-      int b = pixel.blue() + static_cast<int>(noise * 15);
+      const int r = std::clamp(BASE_R + static_cast<int>(noise * 20), 0, 255);
+      const int g = std::clamp(BASE_G + static_cast<int>(noise * 18), 0, 255);
+      const int b = std::clamp(BASE_B + static_cast<int>(noise * 15), 0, 255);
 
-      pixel.setRgb(std::clamp(r, 0, 255), std::clamp(g, 0, 255),
-                   std::clamp(b, 0, 255));
-      image.setPixelColor(x, y, pixel);
+      scanline[x] = (255U << 24) | (static_cast<uint32_t>(b) << 16) |
+                    (static_cast<uint32_t>(g) << 8) | static_cast<uint32_t>(r);
     }
   }
 
+  QPainter painter(&image);
   painter.setRenderHint(QPainter::Antialiasing, true);
 
   std::mt19937 rng(12345);

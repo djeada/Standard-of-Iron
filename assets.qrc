@@ -88,6 +88,7 @@
         <file>assets/visuals/unit_visuals.json</file>
         <file>assets/visuals/emblems/rome.png</file>
         <file>assets/visuals/emblems/cartaghe.png</file>
+        <file>assets/visuals/load_screen.png</file>
         <!-- Unit icons -->
         <file>assets/visuals/icons/archer_rome.png</file>
         <file>assets/visuals/icons/archer_cartaghe.png</file>
