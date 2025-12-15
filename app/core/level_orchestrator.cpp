@@ -31,7 +31,8 @@ auto LevelOrchestrator::load_skirmish(
   result.updated_player_id = selected_player_id;
 
   if (progress_tracker) {
-    progress_tracker->set_stage(LoadingProgressTracker::LoadingStage::LOADING_MAP_DATA);
+    progress_tracker->set_stage(
+        LoadingProgressTracker::LoadingStage::LOADING_MAP_DATA);
     QCoreApplication::processEvents();
   }
 
@@ -39,61 +40,68 @@ auto LevelOrchestrator::load_skirmish(
 
   Game::Map::SkirmishLoader loader(world, *renderers.renderer,
                                    *renderers.camera);
-  
+
   if (progress_tracker) {
-    progress_tracker->set_stage(LoadingProgressTracker::LoadingStage::LOADING_TERRAIN);
+    progress_tracker->set_stage(
+        LoadingProgressTracker::LoadingStage::LOADING_TERRAIN);
     QCoreApplication::processEvents();
   }
-  
+
   loader.set_ground_renderer(renderers.ground);
   loader.set_terrain_renderer(renderers.terrain);
-  
+
   if (progress_tracker) {
-    progress_tracker->set_stage(LoadingProgressTracker::LoadingStage::LOADING_BIOME);
+    progress_tracker->set_stage(
+        LoadingProgressTracker::LoadingStage::LOADING_BIOME);
     QCoreApplication::processEvents();
   }
-  
+
   loader.set_biome_renderer(renderers.biome);
-  
+
   if (progress_tracker) {
-    progress_tracker->set_stage(LoadingProgressTracker::LoadingStage::LOADING_WATER_FEATURES);
+    progress_tracker->set_stage(
+        LoadingProgressTracker::LoadingStage::LOADING_WATER_FEATURES);
     QCoreApplication::processEvents();
   }
-  
+
   loader.set_river_renderer(renderers.river);
   loader.set_riverbank_renderer(renderers.riverbank);
   loader.set_bridge_renderer(renderers.bridge);
-  
+
   if (progress_tracker) {
-    progress_tracker->set_stage(LoadingProgressTracker::LoadingStage::LOADING_ROADS);
+    progress_tracker->set_stage(
+        LoadingProgressTracker::LoadingStage::LOADING_ROADS);
     QCoreApplication::processEvents();
   }
-  
+
   loader.set_road_renderer(renderers.road);
-  
+
   if (progress_tracker) {
-    progress_tracker->set_stage(LoadingProgressTracker::LoadingStage::LOADING_ENVIRONMENT);
+    progress_tracker->set_stage(
+        LoadingProgressTracker::LoadingStage::LOADING_ENVIRONMENT);
     QCoreApplication::processEvents();
   }
-  
+
   loader.set_stone_renderer(renderers.stone);
   loader.set_plant_renderer(renderers.plant);
   loader.set_pine_renderer(renderers.pine);
   loader.set_olive_renderer(renderers.olive);
   loader.set_fire_camp_renderer(renderers.firecamp);
-  
+
   if (progress_tracker) {
-    progress_tracker->set_stage(LoadingProgressTracker::LoadingStage::LOADING_FOG);
+    progress_tracker->set_stage(
+        LoadingProgressTracker::LoadingStage::LOADING_FOG);
     QCoreApplication::processEvents();
   }
-  
+
   loader.set_fog_renderer(renderers.fog);
 
   loader.set_on_owners_updated(owner_update);
   loader.set_on_visibility_mask_ready(visibility_ready);
 
   if (progress_tracker) {
-    progress_tracker->set_stage(LoadingProgressTracker::LoadingStage::LOADING_ENTITIES);
+    progress_tracker->set_stage(
+        LoadingProgressTracker::LoadingStage::LOADING_ENTITIES);
     QCoreApplication::processEvents();
   }
 
@@ -110,7 +118,8 @@ auto LevelOrchestrator::load_skirmish(
   }
 
   if (progress_tracker) {
-    progress_tracker->set_stage(LoadingProgressTracker::LoadingStage::LOADING_AUDIO);
+    progress_tracker->set_stage(
+        LoadingProgressTracker::LoadingStage::LOADING_AUDIO);
     QCoreApplication::processEvents();
   }
 
@@ -138,7 +147,8 @@ auto LevelOrchestrator::load_skirmish(
   }
 
   if (progress_tracker) {
-    progress_tracker->set_stage(LoadingProgressTracker::LoadingStage::GENERATING_MINIMAP);
+    progress_tracker->set_stage(
+        LoadingProgressTracker::LoadingStage::GENERATING_MINIMAP);
     QCoreApplication::processEvents();
   }
 
@@ -173,7 +183,8 @@ auto LevelOrchestrator::load_skirmish(
   }
 
   if (progress_tracker) {
-    progress_tracker->set_stage(LoadingProgressTracker::LoadingStage::FINALIZING);
+    progress_tracker->set_stage(
+        LoadingProgressTracker::LoadingStage::FINALIZING);
     QCoreApplication::processEvents();
   }
 
