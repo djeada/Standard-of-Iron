@@ -2,6 +2,7 @@
 #include "../draw_queue.h"
 #include "../geom/selection_disc.h"
 #include "../geom/selection_ring.h"
+#include "../geom/mode_indicator.h"
 #include "../primitive_batch.h"
 #include "backend/banner_pipeline.h"
 #include "backend/character_pipeline.h"
@@ -1584,6 +1585,45 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
                                                dust.radius, dust.intensity,
                                                dust.time, view_proj);
       m_lastBoundShader = nullptr;
+      break;
+    }
+    case ModeIndicatorCmdIndex: {
+      const auto &mc = std::get<ModeIndicatorCmdIndex>(cmd);
+      
+      // Get the appropriate mesh based on mode type
+      Mesh *indicator_mesh = nullptr;
+      if (mc.mode_type == 0) {
+        indicator_mesh = Render::Geom::ModeIndicator::get_hold_mode_mesh();
+      } else if (mc.mode_type == 1) {
+        indicator_mesh = Render::Geom::ModeIndicator::get_guard_mode_mesh();
+      }
+
+      if (indicator_mesh == nullptr) {
+        break;
+      }
+
+      // Use basic shader for rendering
+      if (m_lastBoundShader != m_effectsPipeline->m_basicShader) {
+        m_effectsPipeline->m_basicShader->use();
+        m_lastBoundShader = m_effectsPipeline->m_basicShader;
+      }
+
+      m_effectsPipeline->m_basicShader->set_uniform(
+          m_effectsPipeline->m_basicUniforms.useTexture, false);
+      m_effectsPipeline->m_basicShader->set_uniform(
+          m_effectsPipeline->m_basicUniforms.color, mc.color);
+      m_effectsPipeline->m_basicShader->set_uniform(
+          m_effectsPipeline->m_basicUniforms.mvp, mc.mvp);
+      m_effectsPipeline->m_basicShader->set_uniform(
+          m_effectsPipeline->m_basicUniforms.model, mc.model);
+      m_effectsPipeline->m_basicShader->set_uniform(
+          m_effectsPipeline->m_basicUniforms.alpha, mc.alpha);
+
+      // Enable blending for transparency
+      DepthMaskScope const depth_mask(false);
+      BlendScope const blend(true);
+
+      indicator_mesh->draw();
       break;
     }
     default:

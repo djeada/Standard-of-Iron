@@ -134,6 +134,8 @@ public:
                    float radius, float intensity, float time) override;
   void combat_dust(const QVector3D &position, const QVector3D &color,
                    float radius, float intensity, float time) override;
+  void mode_indicator(const QMatrix4x4 &model, int mode_type,
+                      const QVector3D &color, float alpha = 1.0F) override;
   void terrain_chunk(Mesh *mesh, const QMatrix4x4 &model,
                      const TerrainChunkParams &params,
                      std::uint16_t sort_key = 0x8000U, bool depth_write = true,
@@ -165,6 +167,9 @@ private:
                               Engine::Core::TransformComponent *transform,
                               Engine::Core::UnitComponent *unit_comp,
                               bool selected, bool hovered);
+  void enqueue_mode_indicator(Engine::Core::Entity *entity,
+                              Engine::Core::TransformComponent *transform,
+                              Engine::Core::UnitComponent *unit_comp);
 
   Camera *m_camera = nullptr;
   std::shared_ptr<Backend> m_backend;

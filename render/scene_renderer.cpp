@@ -363,6 +363,19 @@ void Renderer::combat_dust(const QVector3D &position, const QVector3D &color,
   }
 }
 
+void Renderer::mode_indicator(const QMatrix4x4 &model, int mode_type,
+                               const QVector3D &color, float alpha) {
+  ModeIndicatorCmd cmd;
+  cmd.model = model;
+  cmd.mvp = m_view_proj * model;
+  cmd.mode_type = mode_type;
+  cmd.color = color;
+  cmd.alpha = alpha;
+  if (m_active_queue != nullptr) {
+    m_active_queue->submit(cmd);
+  }
+}
+
 void Renderer::enqueue_selection_ring(
     Engine::Core::Entity *, Engine::Core::TransformComponent *transform,
     Engine::Core::UnitComponent *unit_comp, bool selected, bool hovered) {
@@ -426,6 +439,103 @@ void Renderer::enqueue_selection_ring(
   } else if (hovered) {
     selection_ring(ring_model, 0.35F, 0.15F, QVector3D(0.90F, 0.90F, 0.25F));
   }
+}
+
+void Renderer::enqueue_mode_indicator(
+    Engine::Core::Entity *entity, Engine::Core::TransformComponent *transform,
+    Engine::Core::UnitComponent *unit_comp) {
+  if ((entity == nullptr) || (transform == nullptr)) {
+    return;
+  }
+
+  // Check for hold mode
+  auto *hold_mode = entity->get_component<Engine::Core::HoldModeComponent>();
+  bool const has_hold_mode = (hold_mode != nullptr) && hold_mode->active;
+
+  // Check for guard mode
+  auto *guard_mode = entity->get_component<Engine::Core::GuardModeComponent>();
+  bool const has_guard_mode = (guard_mode != nullptr) && guard_mode->active;
+
+  // Only render indicator if unit has a special mode active
+  if (!has_hold_mode && !has_guard_mode) {
+    return;
+  }
+
+  // Calculate position above unit
+  float indicator_height = 2.0F; // Height above unit
+  float indicator_size = 0.4F;   // Size of indicator mesh
+
+  // Adjust based on unit scale
+  if (unit_comp != nullptr) {
+    auto troop_type_opt =
+        Game::Units::spawn_typeToTroopType(unit_comp->spawn_type);
+
+    if (troop_type_opt) {
+      const auto &nation_reg = Game::Systems::NationRegistry::instance();
+      const Game::Systems::Nation *nation =
+          nation_reg.get_nation_for_player(unit_comp->owner_id);
+      Game::Systems::NationID nation_id =
+          nation != nullptr ? nation->id : nation_reg.default_nation_id();
+
+      const auto profile =
+          Game::Systems::TroopProfileService::instance().get_profile(
+              nation_id, *troop_type_opt);
+
+      // Use unit height to position indicator
+      indicator_height += profile.visuals.selection_ring_y_offset * 2.0F;
+    }
+  }
+
+  if (transform != nullptr) {
+    indicator_height *= transform->scale.y;
+  }
+
+  // Calculate frustum culling (similar to entity rendering)
+  QVector3D const pos(transform->position.x,
+                      transform->position.y + indicator_height,
+                      transform->position.z);
+
+  // Simple frustum check - if camera is available, check if position is visible
+  if (m_camera != nullptr) {
+    QVector4D const clip_pos = m_view_proj * QVector4D(pos, 1.0F);
+    if (clip_pos.w() > 0.0F) {
+      float const ndc_x = clip_pos.x() / clip_pos.w();
+      float const ndc_y = clip_pos.y() / clip_pos.w();
+      float const ndc_z = clip_pos.z() / clip_pos.w();
+
+      // Check if outside frustum
+      if (ndc_x < -1.5F || ndc_x > 1.5F || ndc_y < -1.5F || ndc_y > 1.5F ||
+          ndc_z < -1.0F || ndc_z > 1.0F) {
+        return; // Culled
+      }
+    }
+  }
+
+  // Create model matrix for indicator
+  QMatrix4x4 indicator_model;
+  indicator_model.translate(pos);
+  indicator_model.scale(indicator_size, indicator_size, indicator_size);
+
+  // Billboard effect - make indicator face camera
+  if (m_camera != nullptr) {
+    QVector3D const cam_pos = m_camera->get_position();
+    QVector3D const to_camera = (cam_pos - pos).normalized();
+    
+    // Calculate rotation to face camera (billboard)
+    float const yaw = std::atan2(to_camera.x(), to_camera.z());
+    indicator_model.rotate(yaw * 180.0F / 3.14159265F, 0, 1, 0);
+  }
+
+  // Determine mode type and color
+  int mode_type = 0; // 0 = hold, 1 = guard
+  QVector3D color(1.0F, 0.3F, 0.3F); // Red for hold mode
+
+  if (has_guard_mode) {
+    mode_type = 1;
+    color = QVector3D(0.3F, 0.5F, 1.0F); // Blue for guard mode
+  }
+
+  mode_indicator(indicator_model, mode_type, color, 0.85F);
 }
 
 void Renderer::render_world(Engine::Core::World *world) {
@@ -583,6 +693,7 @@ void Renderer::render_world(Engine::Core::World *world) {
 
         enqueue_selection_ring(entity, transform, unit_comp, is_selected,
                                is_hovered);
+        enqueue_mode_indicator(entity, transform, unit_comp);
         drawn_by_registry = true;
       }
     }
@@ -664,6 +775,7 @@ void Renderer::render_world(Engine::Core::World *world) {
     }
     enqueue_selection_ring(entity, transform, unit_comp, is_selected,
                            is_hovered);
+    enqueue_mode_indicator(entity, transform, unit_comp);
     mesh(mesh_to_draw, model_matrix, color,
          (res != nullptr) ? res->white() : nullptr, 1.0F);
   }
