@@ -73,19 +73,11 @@ void ModeIndicatorPipeline::render_indicator(Mesh *mesh,
     return;
   }
 
-  // Save current GL state
-  GLboolean depthMaskEnabled = GL_TRUE;
-  glGetBooleanv(GL_DEPTH_WRITEMASK, &depthMaskEnabled);
-  GLboolean blendEnabled = glIsEnabled(GL_BLEND);
-  GLint blendSrc = 0;
-  GLint blendDst = 0;
-  glGetIntegerv(GL_BLEND_SRC_ALPHA, &blendSrc);
-  glGetIntegerv(GL_BLEND_DST_ALPHA, &blendDst);
-
-  // Set up rendering state for mode indicators
+  // Use state scopes for automatic GL state management
+  DepthMaskScope const depth_mask(false);
+  BlendScope const blend(true);
+  
   glEnable(GL_DEPTH_TEST);
-  glDepthMask(GL_FALSE); // Don't write to depth buffer
-  glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE); // Additive blending for glow effect
 
   m_indicatorShader->use();
@@ -98,13 +90,6 @@ void ModeIndicatorPipeline::render_indicator(Mesh *mesh,
   m_indicatorShader->set_uniform(m_uniforms.time, time);
 
   mesh->draw();
-
-  // Restore GL state
-  glDepthMask(depthMaskEnabled);
-  glBlendFunc(blendSrc, blendDst);
-  if (!blendEnabled) {
-    glDisable(GL_BLEND);
-  }
 
   check_gl_error("render_indicator");
 }
