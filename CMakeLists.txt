@@ -130,6 +130,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
         app/core/audio_resource_loader.cpp
         app/core/renderer_bootstrap.cpp
         app/core/level_orchestrator.cpp
+        app/core/loading_progress_tracker.cpp
         app/core/input_command_handler.cpp
         app/core/camera_controller.cpp
         app/core/game_state_restorer.cpp
@@ -156,6 +157,7 @@ else()
         app/core/audio_resource_loader.cpp
         app/core/renderer_bootstrap.cpp
         app/core/level_orchestrator.cpp
+        app/core/loading_progress_tracker.cpp
         app/core/input_command_handler.cpp
         app/core/camera_controller.cpp
         app/core/game_state_restorer.cpp
@@ -201,6 +203,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
             ui/qml/BattleSummary.qml
             ui/qml/GameView.qml
             ui/qml/CursorManager.qml
+            ui/qml/LoadScreen.qml
         RESOURCES
             assets/shaders/archer.frag
             assets/shaders/archer.vert
@@ -273,6 +276,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
             assets/visuals/unit_visuals.json
             assets/visuals/emblems/rome.png
             assets/visuals/emblems/cartaghe.png
+            assets/visuals/load_screen.png
             assets/visuals/icons/archer_rome.png
             assets/visuals/icons/archer_cartaghe.png
             assets/visuals/icons/swordsman_rome.png

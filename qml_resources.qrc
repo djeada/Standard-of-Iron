@@ -23,5 +23,6 @@
         <file>ui/qml/BattleSummary.qml</file>
         <file>ui/qml/GameView.qml</file>
         <file>ui/qml/CursorManager.qml</file>
+        <file>ui/qml/LoadScreen.qml</file>
     </qresource>
 </RCC>
