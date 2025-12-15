@@ -29,9 +29,9 @@ protected:
     pose.pelvis_pos = QVector3D(0.0F, HP::WAIST_Y, 0.0F);
     pose.hand_l = QVector3D(-0.05F, HP::SHOULDER_Y + 0.05F, 0.55F);
     pose.hand_r = QVector3D(0.15F, HP::SHOULDER_Y + 0.15F, 0.20F);
-    pose.foot_l = QVector3D(-0.14F, 0.022F, 0.06F);
-    pose.foot_r = QVector3D(0.14F, 0.022F, -0.06F);
-    pose.foot_y_offset = 0.022F;
+    pose.foot_l = QVector3D(-0.14F, HP::FOOT_Y_OFFSET_DEFAULT, 0.06F);
+    pose.foot_r = QVector3D(0.14F, HP::FOOT_Y_OFFSET_DEFAULT, -0.06F);
+    pose.foot_y_offset = HP::FOOT_Y_OFFSET_DEFAULT;
 
     anim_ctx = HumanoidAnimationContext{};
     anim_ctx.variation = VariationParams::fromSeed(12345);
