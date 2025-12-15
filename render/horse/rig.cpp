@@ -229,6 +229,9 @@ constexpr float kMoveBobAmplitudeMin = 0.024F;
 constexpr float kMoveBobAmplitudeMax = 0.032F;
 
 // Derived calculation constants
+// Leg segment ratios represent the proportion of total leg length for each segment.
+// Upper (femur/humerus) + Middle (tibia/radius) + Lower (cannon/fetlock) = 1.01
+// Note: Slightly exceeds 1.0 to account for joint overlap in the rendering model.
 constexpr float kLegSegmentRatioUpper = 0.59F;
 constexpr float kLegSegmentRatioMiddle = 0.30F;
 constexpr float kLegSegmentRatioLower = 0.12F;
@@ -641,7 +644,7 @@ constexpr float kHandleUpBase = -0.10F;
 constexpr float kHandleUpSlackScale = -0.30F;
 constexpr float kHandleUpTensionScale = 0.04F;
 constexpr float kDirLengthThreshold = 1e-4F;
-constexpr float kBaseLength = 0.85F;
+constexpr float kReinBaseLength = 0.85F;
 constexpr float kSlackLengthScale = 0.12F;
 
 } // namespace ReinConstants
@@ -686,7 +689,7 @@ auto compute_rein_handle(const MountedAttachmentFrame &mount, bool is_left,
   }
   dir.normalize();
 
-  float const rein_length = kBaseLength + clamped_slack * kSlackLengthScale;
+  float const rein_length = kReinBaseLength + clamped_slack * kSlackLengthScale;
   return bit + dir * rein_length;
 }
 
