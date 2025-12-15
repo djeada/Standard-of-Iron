@@ -113,9 +113,9 @@ auto MinimapGenerator::world_to_pixel_size(
 }
 
 void MinimapGenerator::render_parchment_background(QImage &image) {
-  const int BASE_R = 235;
-  const int BASE_G = 220;
-  const int BASE_B = 190;
+  const int BASE_R = Palette::PARCHMENT_BASE.red();
+  const int BASE_G = Palette::PARCHMENT_BASE.green();
+  const int BASE_B = Palette::PARCHMENT_BASE.blue();
 
   for (int y = 0; y < image.height(); ++y) {
     auto *scanline = reinterpret_cast<uint32_t *>(image.scanLine(y));
