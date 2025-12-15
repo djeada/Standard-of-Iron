@@ -69,8 +69,8 @@ private:
   void setupBuffers();
 };
 
-auto createQuadMesh() -> Mesh *;
-auto createCubeMesh() -> Mesh *;
-auto createPlaneMesh(float width, float height, int subdivisions = 1) -> Mesh *;
+auto createQuadMesh() -> std::unique_ptr<Mesh>;
+auto createCubeMesh() -> std::unique_ptr<Mesh>;
+auto createPlaneMesh(float width, float height, int subdivisions = 1) -> std::unique_ptr<Mesh>;
 
 } // namespace Render::GL
