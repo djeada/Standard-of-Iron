@@ -79,7 +79,8 @@ security import "$CERT_PATH" -k "$KEYCHAIN_PATH" -P "$MACOS_CERTIFICATE_PASSWORD
 security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
 
 # Set the keychain as the default for codesign operations
-security list-keychains -d user -s "$KEYCHAIN_PATH" $(security list-keychains -d user | sed s/\"//g)
+# shellcheck disable=SC2046
+security list-keychains -d user -s "$KEYCHAIN_PATH" $(security list-keychains -d user | sed 's/"//g')
 
 # Find the Developer ID Application certificate
 CERTIFICATE_NAME=$(security find-identity -v -p codesigning "$KEYCHAIN_PATH" | grep "Developer ID Application" | head -1 | sed 's/.*"\(.*\)"/\1/')
@@ -116,7 +117,7 @@ if [ -d "$APP_PATH/Contents/PlugIns" ]; then
 fi
 
 # Sign the main executable
-if [ -f "$APP_PATH/Contents/MacOS/"* ]; then
+if [ -d "$APP_PATH/Contents/MacOS" ]; then
     EXECUTABLE=$(find "$APP_PATH/Contents/MacOS" -type f -perm +111 | head -1)
     if [ -n "$EXECUTABLE" ]; then
         echo "🔏 Signing main executable: $EXECUTABLE"
