@@ -29,7 +29,7 @@ void LoadingProgressTracker::set_stage(LoadingStage stage,
 }
 
 void LoadingProgressTracker::complete_stage(LoadingStage stage) {
-  // Automatically advance to next stage
+
   auto next_stage = static_cast<int>(stage) + 1;
   if (next_stage < static_cast<int>(LoadingStage::COMPLETED)) {
     set_stage(static_cast<LoadingStage>(next_stage));
@@ -94,9 +94,8 @@ QString LoadingProgressTracker::stage_name(LoadingStage stage) const {
 }
 
 float LoadingProgressTracker::stage_to_progress(LoadingStage stage) const {
-  // Map each stage to a progress value (0.0 to 1.0)
-  // Distribute progress across all stages
-  const float total_stages = 13.0F; // Excluding NOT_STARTED, COMPLETED, FAILED
+
+  const float total_stages = 13.0F;
 
   switch (stage) {
   case LoadingStage::NOT_STARTED:

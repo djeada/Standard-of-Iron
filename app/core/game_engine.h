@@ -15,6 +15,7 @@
 #include "input_command_handler.h"
 #include "minimap_manager.h"
 #include "renderer_bootstrap.h"
+#include <QElapsedTimer>
 #include <QJsonObject>
 #include <QList>
 #include <QMatrix4x4>
@@ -252,7 +253,7 @@ public:
   }
 
   [[nodiscard]] bool is_loading() const {
-    return m_runtime.loading;
+    return m_runtime.loading || m_loading_overlay_active;
   }
 
   [[nodiscard]] float loading_progress() const;
@@ -310,6 +311,8 @@ private:
   [[nodiscard]] Game::Systems::RuntimeSnapshot to_runtime_snapshot() const;
   void apply_runtime_snapshot(const Game::Systems::RuntimeSnapshot &snapshot);
   [[nodiscard]] QByteArray capture_screenshot() const;
+  void perform_skirmish_load(const QString &map_path,
+                             const QVariantList &playerConfigs);
 
   std::unique_ptr<Engine::Core::World> m_world;
   std::unique_ptr<Render::GL::Renderer> m_renderer;
@@ -357,6 +360,12 @@ private:
   QVariantList m_available_campaigns;
   bool m_maps_loading = false;
   QString m_current_campaign_id;
+  bool m_loading_overlay_active = false;
+  bool m_loading_overlay_wait_for_first_frame = false;
+  int m_loading_overlay_frames_remaining = 0;
+  qint64 m_loading_overlay_min_duration_ms = 0;
+  QElapsedTimer m_loading_overlay_timer;
+  bool m_finalize_progress_after_overlay = false;
   Engine::Core::ScopedEventSubscription<Engine::Core::UnitDiedEvent>
       m_unit_died_subscription;
   Engine::Core::ScopedEventSubscription<Engine::Core::UnitSpawnedEvent>
