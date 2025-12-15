@@ -4,6 +4,7 @@
 #include <QString>
 #include <QVariantList>
 #include <QVector3D>
+#include <cstdint>
 #include <functional>
 #include <memory>
 #include <utility>
@@ -25,6 +26,7 @@ class PlantRenderer;
 class PineRenderer;
 class OliveRenderer;
 class FireCampRenderer;
+class RainRenderer;
 class RiverRenderer;
 class RoadRenderer;
 class RiverbankRenderer;
@@ -49,6 +51,8 @@ struct SkirmishLoadResult {
   QVector3D focusPosition;
   bool has_focus_position = false;
   bool is_spectator_mode = false;
+  RainSettings rainSettings;
+  std::uint32_t biome_seed = 0;
 };
 
 class SkirmishLoader {
@@ -82,6 +86,7 @@ public:
   void set_fire_camp_renderer(Render::GL::FireCampRenderer *firecamp) {
     m_firecamp = firecamp;
   }
+  void set_rain_renderer(Render::GL::RainRenderer *rain) { m_rain = rain; }
 
   void set_on_owners_updated(OwnersUpdatedCallback callback) {
     m_onOwnersUpdated = std::move(callback);
@@ -113,6 +118,7 @@ private:
   Render::GL::PineRenderer *m_pine = nullptr;
   Render::GL::OliveRenderer *m_olive = nullptr;
   Render::GL::FireCampRenderer *m_firecamp = nullptr;
+  Render::GL::RainRenderer *m_rain = nullptr;
   OwnersUpdatedCallback m_onOwnersUpdated;
   VisibilityMaskReadyCallback m_onVisibilityMaskReady;
 };

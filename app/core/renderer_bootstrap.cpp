@@ -25,6 +25,7 @@
 #include "render/ground/olive_renderer.h"
 #include "render/ground/pine_renderer.h"
 #include "render/ground/plant_renderer.h"
+#include "render/ground/rain_renderer.h"
 #include "render/ground/river_renderer.h"
 #include "render/ground/riverbank_renderer.h"
 #include "render/ground/road_renderer.h"
@@ -50,6 +51,7 @@ auto RendererBootstrap::initialize_rendering() -> RenderingComponents {
   components.pine = std::make_unique<Render::GL::PineRenderer>();
   components.olive = std::make_unique<Render::GL::OliveRenderer>();
   components.firecamp = std::make_unique<Render::GL::FireCampRenderer>();
+  components.rain = std::make_unique<Render::GL::RainRenderer>();
 
   components.passes = {components.ground.get(),    components.terrain.get(),
                        components.river.get(),     components.road.get(),
@@ -57,7 +59,7 @@ auto RendererBootstrap::initialize_rendering() -> RenderingComponents {
                        components.biome.get(),     components.stone.get(),
                        components.plant.get(),     components.pine.get(),
                        components.olive.get(),     components.firecamp.get(),
-                       components.fog.get()};
+                       components.rain.get(),      components.fog.get()};
 
   return components;
 }
