@@ -25,6 +25,7 @@ add_library(render_gl STATIC
     gl/state_scopes.cpp
     draw_queue.cpp
     primitive_batch.cpp
+    ground/spawn_validator.cpp
     ground/ground_renderer.cpp
     ground/fog_renderer.cpp
     ground/terrain_renderer.cpp
