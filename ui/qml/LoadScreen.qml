@@ -2,28 +2,28 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 
 Rectangle {
-    id: loadScreen
+    id: load_screen
 
     property real progress: 0.0
-    property bool isLoading: false
+    property bool is_loading: false
     
     // Progress animation constants
-    readonly property real initialSpeed: 0.02
-    readonly property real progressThreshold1: 0.5
-    readonly property real progressThreshold2: 0.7
-    readonly property real progressThreshold3: 0.9
-    readonly property real speedSlow: 0.015
-    readonly property real speedSlower: 0.01
-    readonly property real speedSlowest: 0.005
-    readonly property real minIncrement: 0.001
+    readonly property real initial_speed: 0.02
+    readonly property real progress_threshold_1: 0.5
+    readonly property real progress_threshold_2: 0.7
+    readonly property real progress_threshold_3: 0.9
+    readonly property real speed_slow: 0.015
+    readonly property real speed_slower: 0.01
+    readonly property real speed_slowest: 0.005
+    readonly property real min_increment: 0.001
 
     anchors.fill: parent
     color: "#000000"
-    visible: isLoading
+    visible: is_loading
 
     // Background image
     Image {
-        id: backgroundImage
+        id: background_image
         anchors.fill: parent
         source: "qrc:/assets/visuals/load_screen.png"
         fillMode: Image.PreserveAspectCrop
@@ -60,15 +60,15 @@ Rectangle {
 
             // Progress fill
             Rectangle {
-                id: progressFill
+                id: progress_fill
                 
-                readonly property real availableWidth: parent.width - 8
+                readonly property real available_width: parent.width - 8
                 
                 anchors.left: parent.left
                 anchors.top: parent.top
                 anchors.bottom: parent.bottom
                 anchors.margins: 4
-                width: Math.max(0, Math.min(availableWidth, availableWidth * loadScreen.progress))
+                width: Math.max(0, Math.min(available_width, available_width * load_screen.progress))
                 color: "#f39c12"
                 radius: 2
 
@@ -87,7 +87,7 @@ Rectangle {
             // Progress text
             Text {
                 anchors.centerIn: parent
-                text: Math.floor(loadScreen.progress * 100) + "%"
+                text: Math.floor(load_screen.progress * 100) + "%"
                 color: "#ecf0f1"
                 font.pixelSize: 18
                 font.bold: true
@@ -104,56 +104,56 @@ Rectangle {
 
     // Fake progress animation
     Timer {
-        id: progressTimer
+        id: progress_timer
         interval: 50
         repeat: true
-        running: loadScreen.isLoading
+        running: load_screen.is_loading
 
-        property real speed: loadScreen.initialSpeed
+        property real speed: load_screen.initial_speed
 
         onTriggered: {
-            if (loadScreen.progress < 1.0) {
+            if (load_screen.progress < 1.0) {
                 // Start fast, then slow down exponentially
-                var remaining = 1.0 - loadScreen.progress;
+                var remaining = 1.0 - load_screen.progress;
                 var increment = speed * remaining;
                 
                 // Ensure minimum progress increment
-                increment = Math.max(loadScreen.minIncrement, increment);
+                increment = Math.max(load_screen.min_increment, increment);
                 
-                loadScreen.progress = Math.min(1.0, loadScreen.progress + increment);
+                load_screen.progress = Math.min(1.0, load_screen.progress + increment);
                 
                 // Slow down as we get closer to 100%
-                if (loadScreen.progress > loadScreen.progressThreshold3) {
-                    speed = loadScreen.speedSlowest;
-                } else if (loadScreen.progress > loadScreen.progressThreshold2) {
-                    speed = loadScreen.speedSlower;
-                } else if (loadScreen.progress > loadScreen.progressThreshold1) {
-                    speed = loadScreen.speedSlow;
+                if (load_screen.progress > load_screen.progress_threshold_3) {
+                    speed = load_screen.speed_slowest;
+                } else if (load_screen.progress > load_screen.progress_threshold_2) {
+                    speed = load_screen.speed_slower;
+                } else if (load_screen.progress > load_screen.progress_threshold_1) {
+                    speed = load_screen.speed_slow;
                 }
             }
         }
     }
 
     // Reset progress when loading starts
-    onIsLoadingChanged: {
-        if (isLoading) {
+    onIs_loadingChanged: {
+        if (is_loading) {
             progress = 0.0;
-            progressTimer.speed = loadScreen.initialSpeed;
+            progress_timer.speed = load_screen.initial_speed;
         }
     }
 
     // Function to complete loading immediately
-    function completeLoading() {
-        loadScreen.progress = 1.0;
-        completeTimer.start();
+    function complete_loading() {
+        load_screen.progress = 1.0;
+        complete_timer.start();
     }
 
     Timer {
-        id: completeTimer
+        id: complete_timer
         interval: 300
         repeat: false
         onTriggered: {
-            loadScreen.isLoading = false;
+            load_screen.is_loading = false;
         }
     }
 }
