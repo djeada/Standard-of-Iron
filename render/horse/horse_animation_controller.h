@@ -11,18 +11,18 @@ public:
   HorseAnimationController(HorseProfile &profile, const AnimationInputs &anim,
                            const HumanoidAnimationContext &rider_ctx);
 
-  void setGait(GaitType gait);
+  void set_gait(GaitType gait);
   void idle(float bob_intensity = 1.0F);
   void accelerate(float speed_delta);
   void decelerate(float speed_delta);
 
   void turn(float yaw_radians, float banking_amount);
-  void strafeStep(bool left, float distance);
+  void strafe_step(bool left, float distance);
 
   void rear(float height_factor);
   void kick(bool rear_legs, float power);
   void buck(float intensity);
-  void jumpObstacle(float height, float distance);
+  void jump_obstacle(float height, float distance);
 
   auto get_current_phase() const -> float;
   auto get_current_bob() const -> float;

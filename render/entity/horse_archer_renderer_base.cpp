@@ -44,7 +44,7 @@ HorseArcherRendererBase::HorseArcherRendererBase(
     m_config.quiver_equipment_id.clear();
   }
 
-  m_horseRenderer.setAttachments(m_config.horse_attachments);
+  m_horseRenderer.set_attachments(m_config.horse_attachments);
 }
 
 auto HorseArcherRendererBase::get_proportion_scaling() const -> QVector3D {

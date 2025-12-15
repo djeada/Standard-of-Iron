@@ -711,13 +711,13 @@ auto evaluate_horse_motion(HorseProfile &profile, const AnimationInputs &anim,
     if (speed < kIdleSpeedMax) {
       controller.idle(1.0F);
     } else if (speed < kWalkSpeedMax) {
-      controller.setGait(GaitType::WALK);
+      controller.set_gait(GaitType::WALK);
     } else if (speed < kTrotSpeedMax) {
-      controller.setGait(GaitType::TROT);
+      controller.set_gait(GaitType::TROT);
     } else if (speed < kCanterSpeedMax) {
-      controller.setGait(GaitType::CANTER);
+      controller.set_gait(GaitType::CANTER);
     } else {
-      controller.setGait(GaitType::GALLOP);
+      controller.set_gait(GaitType::GALLOP);
     }
   } else {
     controller.idle(1.0F);

@@ -66,7 +66,7 @@ HorseAnimationController::HorseAnimationController(
   m_transition_start_time = 0.0F;
 }
 
-void HorseAnimationController::setGait(GaitType gait) {
+void HorseAnimationController::set_gait(GaitType gait) {
 
   m_current_gait = gait;
   m_target_gait = gait;
@@ -140,7 +140,7 @@ void HorseAnimationController::turn(float yaw_radians, float banking_amount) {
   m_banking = std::clamp(banking_amount, -1.0F, 1.0F);
 }
 
-void HorseAnimationController::strafeStep(bool left, float distance) {
+void HorseAnimationController::strafe_step(bool left, float distance) {
 
   float const direction = left ? -1.0F : 1.0F;
   m_phase = std::fmod(m_phase + direction * distance * 0.1F, 1.0F);
@@ -162,7 +162,7 @@ void HorseAnimationController::buck(float intensity) {
   m_buck_intensity = std::clamp(intensity, 0.0F, 1.0F);
 }
 
-void HorseAnimationController::jumpObstacle(float height, float distance) {
+void HorseAnimationController::jump_obstacle(float height, float distance) {
   m_is_jumping = true;
   m_jump_height = std::max(0.0F, height);
   m_jump_distance = std::max(0.0F, distance);
