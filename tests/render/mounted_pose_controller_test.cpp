@@ -204,31 +204,31 @@ TEST_F(MountedPoseControllerTest, RidingReiningLeansTorsoBack) {
 TEST_F(MountedPoseControllerTest, RidingMeleeStrikeAnimatesCorrectly) {
   MountedPoseController controller(pose, anim_ctx);
 
-  // Test windup phase
+  // Test chamber phase (raising weapon)
   controller.ridingMeleeStrike(mount, 0.15F);
-  float const windup_y = pose.hand_r.y();
+  float const chamber_y = pose.hand_r.y();
 
-  // Test strike phase
-  controller.ridingMeleeStrike(mount, 0.40F);
-  float const strike_y = pose.hand_r.y();
+  // Test apex phase (weapon at highest point)
+  controller.ridingMeleeStrike(mount, 0.25F);
+  float const apex_y = pose.hand_r.y();
 
-  // Hand should be lower during strike than windup
-  EXPECT_LT(strike_y, windup_y);
+  // Hand should be higher at apex than during chamber
+  EXPECT_GT(apex_y, chamber_y);
 }
 
 TEST_F(MountedPoseControllerTest, RidingSpearThrustAnimatesCorrectly) {
   MountedPoseController controller(pose, anim_ctx);
 
-  // Test guard phase
-  controller.ridingSpearThrust(mount, 0.10F);
-  float const guard_z = pose.hand_r.z();
+  // Test couch phase (spear pulled back)
+  controller.ridingSpearThrust(mount, 0.25F);
+  float const couch_z = pose.hand_r.z();
 
-  // Test thrust phase
-  controller.ridingSpearThrust(mount, 0.35F);
+  // Test mid-thrust phase (spear extending forward)
+  controller.ridingSpearThrust(mount, 0.45F);
   float const thrust_z = pose.hand_r.z();
 
   // Hand should move forward during thrust
-  EXPECT_GT(thrust_z, guard_z);
+  EXPECT_GT(thrust_z, couch_z);
 }
 
 TEST_F(MountedPoseControllerTest, RidingBowShotAnimatesCorrectly) {
