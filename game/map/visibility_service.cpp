@@ -10,6 +10,7 @@
 #include <chrono>
 #include <cmath>
 #include <cstdint>
+#include <cstring>
 #include <future>
 #include <mutex>
 #include <shared_mutex>
@@ -335,6 +336,9 @@ auto VisibilityService::computeSourcesHash(
             0x9e3779b9 + (hash << 6) + (hash >> 2);
     hash ^= static_cast<std::size_t>(source.cell_radius) +
             0x9e3779b9 + (hash << 6) + (hash >> 2);
+    std::size_t range_bits = 0;
+    std::memcpy(&range_bits, &source.expanded_range_sq, sizeof(float));
+    hash ^= range_bits + 0x9e3779b9 + (hash << 6) + (hash >> 2);
   }
   return hash;
 }
