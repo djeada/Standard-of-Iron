@@ -143,10 +143,6 @@ void RainRenderer::update_drop_positions(float /*time*/) {
     }
 
     drop.pos_velocity.setY(y);
-
-    const float offset_x = m_camera_position.x();
-    const float offset_z = m_camera_position.z();
-    drop.size_alpha.setW(offset_x);
   }
 }
 
