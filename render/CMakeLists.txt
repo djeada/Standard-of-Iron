@@ -38,6 +38,7 @@ add_library(render_gl STATIC
     ground/plant_renderer.cpp
     ground/pine_renderer.cpp
     ground/firecamp_renderer.cpp
+    ground/rain_renderer.cpp
     entity/registry.cpp
     entity/nations/roman/archer_renderer.cpp
     entity/nations/carthage/archer_renderer.cpp

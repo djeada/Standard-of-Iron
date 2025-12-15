@@ -22,6 +22,7 @@
 #include "ground/olive_gpu.h"
 #include "ground/pine_gpu.h"
 #include "ground/plant_gpu.h"
+#include "ground/rain_gpu.h"
 #include "ground/stone_gpu.h"
 #include "mesh.h"
 #include "render_constants.h"
@@ -848,6 +849,13 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         glEnable(GL_CULL_FACE);
       }
 
+      break;
+    }
+    case RainBatchCmdIndex: {
+      // Rain rendering stub - infrastructure in place for future visual
+      // implementation. The RainManager handles cycle timing and intensity
+      // transitions. Visual rendering will be added when particle/overlay
+      // system is implemented.
       break;
     }
     case TerrainChunkCmdIndex: {
