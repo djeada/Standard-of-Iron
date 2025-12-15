@@ -44,7 +44,7 @@ HorseSpearmanRendererBase::HorseSpearmanRendererBase(
     m_config.shield_equipment_id.clear();
   }
 
-  m_horseRenderer.setAttachments(m_config.horse_attachments);
+  m_horseRenderer.set_attachments(m_config.horse_attachments);
 }
 
 auto HorseSpearmanRendererBase::get_proportion_scaling() const -> QVector3D {
