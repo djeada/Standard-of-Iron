@@ -886,6 +886,7 @@ TEST_F(SerializationTest, GuardModeComponentSerialization) {
   guard_mode->guard_position_z = 200.0F;
   guard_mode->guard_radius = 15.0F;
   guard_mode->returning_to_guard_position = true;
+  guard_mode->has_guard_target = true;
 
   QJsonObject json = Serialization::serialize_entity(entity);
 
@@ -899,6 +900,7 @@ TEST_F(SerializationTest, GuardModeComponentSerialization) {
   EXPECT_FLOAT_EQ(guard_mode_obj["guard_position_z"].toDouble(), 200.0);
   EXPECT_FLOAT_EQ(guard_mode_obj["guard_radius"].toDouble(), 15.0);
   EXPECT_TRUE(guard_mode_obj["returning_to_guard_position"].toBool());
+  EXPECT_TRUE(guard_mode_obj["has_guard_target"].toBool());
 }
 
 TEST_F(SerializationTest, GuardModeComponentRoundTrip) {
@@ -910,6 +912,7 @@ TEST_F(SerializationTest, GuardModeComponentRoundTrip) {
   guard_mode->guard_position_z = 75.0F;
   guard_mode->guard_radius = 12.0F;
   guard_mode->returning_to_guard_position = false;
+  guard_mode->has_guard_target = true;
 
   QJsonObject json = Serialization::serialize_entity(original_entity);
 
@@ -924,6 +927,7 @@ TEST_F(SerializationTest, GuardModeComponentRoundTrip) {
   EXPECT_FLOAT_EQ(deserialized->guard_position_z, 75.0F);
   EXPECT_FLOAT_EQ(deserialized->guard_radius, 12.0F);
   EXPECT_FALSE(deserialized->returning_to_guard_position);
+  EXPECT_TRUE(deserialized->has_guard_target);
 }
 
 TEST_F(SerializationTest, HealerComponentSerialization) {
