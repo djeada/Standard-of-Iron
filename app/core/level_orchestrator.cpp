@@ -87,6 +87,7 @@ auto LevelOrchestrator::load_skirmish(
   loader.set_pine_renderer(renderers.pine);
   loader.set_olive_renderer(renderers.olive);
   loader.set_fire_camp_renderer(renderers.firecamp);
+  loader.set_rain_renderer(renderers.rain);
 
   if (progress_tracker) {
     progress_tracker->set_stage(
@@ -129,7 +130,12 @@ auto LevelOrchestrator::load_skirmish(
   level.cam_near = load_result.cam_near;
   level.cam_far = load_result.cam_far;
   level.max_troops_per_player = load_result.max_troops_per_player;
+  level.grid_width = load_result.grid_width;
+  level.grid_height = load_result.grid_height;
+  level.tile_size = load_result.tile_size;
   level.is_spectator_mode = load_result.is_spectator_mode;
+  level.rain = load_result.rainSettings;
+  level.biome_seed = load_result.biome_seed;
 
   Game::GameConfig::instance().set_max_troops_per_player(
       load_result.max_troops_per_player);

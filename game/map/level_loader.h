@@ -2,6 +2,7 @@
 
 #include "map_definition.h"
 #include <QString>
+#include <cstdint>
 #include <memory>
 
 namespace Engine::Core {
@@ -29,6 +30,8 @@ struct LevelLoadResult {
   float tile_size = 1.0F;
   int max_troops_per_player = 500;
   VictoryConfig victoryConfig;
+  RainSettings rainSettings;
+  std::uint32_t biome_seed = 0;
 };
 
 class LevelLoader {

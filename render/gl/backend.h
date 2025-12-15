@@ -29,6 +29,7 @@ class BannerPipeline;
 class HealingBeamPipeline;
 class HealerAuraPipeline;
 class CombatDustPipeline;
+class RainPipeline;
 } // namespace Render::GL::BackendPipelines
 
 namespace Render::GL {
@@ -87,6 +88,10 @@ public:
     return m_combatDustPipeline.get();
   }
 
+  [[nodiscard]] auto rain_pipeline() -> BackendPipelines::RainPipeline * {
+    return m_rainPipeline.get();
+  }
+
   void enable_depth_test(bool enable) {
     if (enable) {
       glEnable(GL_DEPTH_TEST);
@@ -135,6 +140,7 @@ private:
   std::unique_ptr<BackendPipelines::HealingBeamPipeline> m_healingBeamPipeline;
   std::unique_ptr<BackendPipelines::HealerAuraPipeline> m_healerAuraPipeline;
   std::unique_ptr<BackendPipelines::CombatDustPipeline> m_combatDustPipeline;
+  std::unique_ptr<BackendPipelines::RainPipeline> m_rainPipeline;
 
   Shader *m_basicShader = nullptr;
   Shader *m_gridShader = nullptr;

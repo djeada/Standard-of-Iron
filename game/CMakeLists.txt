@@ -70,6 +70,7 @@ add_library(game_systems STATIC
     systems/nation_loader.cpp
     systems/formation_system.cpp
     systems/troop_profile_service.cpp
+    systems/rain_manager.cpp
     map/map_loader.cpp
     map/level_loader.cpp
     map/map_transformer.cpp
