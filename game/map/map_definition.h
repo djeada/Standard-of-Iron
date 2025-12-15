@@ -55,6 +55,14 @@ struct VictoryConfig {
   std::vector<QString> defeatConditions = {"no_key_structures"};
 };
 
+struct RainSettings {
+  bool enabled = false;
+  float cycle_duration = 300.0F;
+  float active_duration = 60.0F;
+  float intensity = 0.5F;
+  float fade_duration = 5.0F;
+};
+
 struct MapDefinition {
   QString name;
   GridDefinition grid;
@@ -69,6 +77,7 @@ struct MapDefinition {
   CoordSystem coordSystem = CoordSystem::Grid;
   int max_troops_per_player = 500;
   VictoryConfig victory;
+  RainSettings rain;
 };
 
 } // namespace Game::Map
