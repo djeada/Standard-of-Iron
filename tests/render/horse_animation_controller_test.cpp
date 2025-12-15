@@ -57,22 +57,22 @@ TEST_F(HorseAnimationControllerTest, SetGaitUpdatesParameters) {
   HorseAnimationController controller(profile, anim, rider_ctx);
 
   // Test walk gait
-  controller.setGait(GaitType::WALK);
+  controller.set_gait(GaitType::WALK);
   controller.update_gait_parameters();
   EXPECT_TRUE(approxEqual(profile.gait.cycle_time, 1.0F, 0.01F));
 
   // Test trot gait
-  controller.setGait(GaitType::TROT);
+  controller.set_gait(GaitType::TROT);
   controller.update_gait_parameters();
   EXPECT_TRUE(approxEqual(profile.gait.cycle_time, 0.60F, 0.01F));
 
   // Test canter gait
-  controller.setGait(GaitType::CANTER);
+  controller.set_gait(GaitType::CANTER);
   controller.update_gait_parameters();
   EXPECT_TRUE(approxEqual(profile.gait.cycle_time, 0.50F, 0.01F));
 
   // Test gallop gait
-  controller.setGait(GaitType::GALLOP);
+  controller.set_gait(GaitType::GALLOP);
   controller.update_gait_parameters();
   EXPECT_TRUE(approxEqual(profile.gait.cycle_time, 0.38F, 0.01F));
 }
@@ -101,7 +101,7 @@ TEST_F(HorseAnimationControllerTest, AccelerateChangesGait) {
   HorseAnimationController controller(profile, anim, rider_ctx);
 
   // Start at idle
-  controller.setGait(GaitType::IDLE);
+  controller.set_gait(GaitType::IDLE);
 
   // Accelerate to walk speed
   controller.accelerate(2.0F);
@@ -127,7 +127,7 @@ TEST_F(HorseAnimationControllerTest, DecelerateChangesGait) {
   HorseAnimationController controller(profile, anim, rider_ctx);
 
   // Start at gallop
-  controller.setGait(GaitType::GALLOP);
+  controller.set_gait(GaitType::GALLOP);
 
   // Decelerate to canter
   controller.decelerate(3.0F);
@@ -160,10 +160,10 @@ TEST_F(HorseAnimationControllerTest, StrafeStepModifiesPhase) {
 
   float const initial_phase = controller.get_current_phase();
 
-  controller.strafeStep(true, 1.0F);
+  controller.strafe_step(true, 1.0F);
   float const after_left = controller.get_current_phase();
 
-  controller.strafeStep(false, 1.0F);
+  controller.strafe_step(false, 1.0F);
   float const after_right = controller.get_current_phase();
 
   // Phase should change after strafe steps
@@ -186,7 +186,7 @@ TEST_F(HorseAnimationControllerTest, SpecialAnimationsExecuteWithoutErrors) {
   EXPECT_NO_THROW(controller.buck(0.7F));
 
   // Test jump
-  EXPECT_NO_THROW(controller.jumpObstacle(1.5F, 3.0F));
+  EXPECT_NO_THROW(controller.jump_obstacle(1.5F, 3.0F));
 
   // Should still update parameters without crash
   EXPECT_NO_THROW(controller.update_gait_parameters());
@@ -195,7 +195,7 @@ TEST_F(HorseAnimationControllerTest, SpecialAnimationsExecuteWithoutErrors) {
 TEST_F(HorseAnimationControllerTest, StateQueriesReturnValidValues) {
   HorseAnimationController controller(profile, anim, rider_ctx);
 
-  controller.setGait(GaitType::TROT);
+  controller.set_gait(GaitType::TROT);
   controller.update_gait_parameters();
 
   float const phase = controller.get_current_phase();
@@ -224,7 +224,7 @@ TEST_F(HorseAnimationControllerTest, UpdateGaitParametersWithRiderContext) {
   rider_ctx.gait.speed = 1.5F;
   rider_ctx.gait.normalized_speed = 0.5F;
 
-  controller.setGait(GaitType::WALK);
+  controller.set_gait(GaitType::WALK);
   controller.update_gait_parameters();
 
   // Phase should match rider context
@@ -237,7 +237,7 @@ TEST_F(HorseAnimationControllerTest, UpdateGaitParametersWithRiderContext) {
 TEST_F(HorseAnimationControllerTest, PhaseProgressesOverTime) {
   HorseAnimationController controller(profile, anim, rider_ctx);
 
-  controller.setGait(GaitType::WALK);
+  controller.set_gait(GaitType::WALK);
 
   anim.time = 0.0F;
   controller.update_gait_parameters();
@@ -295,7 +295,7 @@ TEST_F(HorseAnimationControllerTest, GaitTransitionsAreSmoothAndGradual) {
   HorseAnimationController controller(profile, anim, rider_ctx);
 
   // Start at walk
-  controller.setGait(GaitType::WALK);
+  controller.set_gait(GaitType::WALK);
   float const walk_cycle = profile.gait.cycle_time;
 
   // Accelerate to gallop
