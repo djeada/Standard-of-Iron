@@ -28,9 +28,9 @@ protected:
     pose.elbow_r = QVector3D(0.25F, HP::SHOULDER_Y - 0.10F, 0.10F);
     pose.knee_l = QVector3D(-0.10F, HP::KNEE_Y, 0.05F);
     pose.knee_r = QVector3D(0.10F, HP::KNEE_Y, -0.05F);
-    pose.foot_l = QVector3D(-0.14F, 0.022F, 0.06F);
-    pose.foot_r = QVector3D(0.14F, 0.022F, -0.06F);
-    pose.foot_y_offset = 0.022F;
+    pose.foot_l = QVector3D(-0.14F, HP::FOOT_Y_OFFSET_DEFAULT, 0.06F);
+    pose.foot_r = QVector3D(0.14F, HP::FOOT_Y_OFFSET_DEFAULT, -0.06F);
+    pose.foot_y_offset = HP::FOOT_Y_OFFSET_DEFAULT;
 
     // Initialize animation context with default idle state
     anim_ctx = HumanoidAnimationContext{};
