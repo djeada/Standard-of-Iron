@@ -365,7 +365,7 @@ void Renderer::combat_dust(const QVector3D &position, const QVector3D &color,
 }
 
 void Renderer::mode_indicator(const QMatrix4x4 &model, int mode_type,
-                               const QVector3D &color, float alpha) {
+                              const QVector3D &color, float alpha) {
   ModeIndicatorCmd cmd;
   cmd.model = model;
   cmd.mvp = m_view_proj * model;
@@ -449,24 +449,19 @@ void Renderer::enqueue_mode_indicator(
     return;
   }
 
-  // Check for hold mode
   auto *hold_mode = entity->get_component<Engine::Core::HoldModeComponent>();
   bool const has_hold_mode = (hold_mode != nullptr) && hold_mode->active;
 
-  // Check for guard mode
   auto *guard_mode = entity->get_component<Engine::Core::GuardModeComponent>();
   bool const has_guard_mode = (guard_mode != nullptr) && guard_mode->active;
 
-  // Only render indicator if unit has a special mode active
   if (!has_hold_mode && !has_guard_mode) {
     return;
   }
 
-  // Calculate position above unit
   float indicator_height = Render::Geom::k_indicator_height_base;
   float indicator_size = Render::Geom::k_indicator_size;
 
-  // Adjust based on unit scale
   if (unit_comp != nullptr) {
     auto troop_type_opt =
         Game::Units::spawn_typeToTroopType(unit_comp->spawn_type);
@@ -482,10 +477,8 @@ void Renderer::enqueue_mode_indicator(
           Game::Systems::TroopProfileService::instance().get_profile(
               nation_id, *troop_type_opt);
 
-      // Use unit height to position indicator
-      indicator_height +=
-          profile.visuals.selection_ring_y_offset *
-          Render::Geom::k_indicator_height_multiplier;
+      indicator_height += profile.visuals.selection_ring_y_offset *
+                          Render::Geom::k_indicator_height_multiplier;
     }
   }
 
@@ -493,12 +486,10 @@ void Renderer::enqueue_mode_indicator(
     indicator_height *= transform->scale.y;
   }
 
-  // Calculate frustum culling (similar to entity rendering)
   QVector3D const pos(transform->position.x,
                       transform->position.y + indicator_height,
                       transform->position.z);
 
-  // Simple frustum check - if camera is available, check if position is visible
   if (m_camera != nullptr) {
     QVector4D const clip_pos = m_view_proj * QVector4D(pos, 1.0F);
     if (clip_pos.w() > 0.0F) {
@@ -506,32 +497,27 @@ void Renderer::enqueue_mode_indicator(
       float const ndc_y = clip_pos.y() / clip_pos.w();
       float const ndc_z = clip_pos.z() / clip_pos.w();
 
-      // Check if outside frustum with margin for safety
       constexpr float margin = Render::Geom::k_frustum_cull_margin;
       if (ndc_x < -margin || ndc_x > margin || ndc_y < -margin ||
           ndc_y > margin || ndc_z < -1.0F || ndc_z > 1.0F) {
-        return; // Culled
+        return;
       }
     }
   }
 
-  // Create model matrix for indicator
   QMatrix4x4 indicator_model;
   indicator_model.translate(pos);
   indicator_model.scale(indicator_size, indicator_size, indicator_size);
 
-  // Billboard effect - make indicator face camera
   if (m_camera != nullptr) {
     QVector3D const cam_pos = m_camera->get_position();
     QVector3D const to_camera = (cam_pos - pos).normalized();
-    
-    // Calculate rotation to face camera (billboard)
+
     constexpr float k_pi = 3.14159265358979323846F;
     float const yaw = std::atan2(to_camera.x(), to_camera.z());
     indicator_model.rotate(yaw * 180.0F / k_pi, 0, 1, 0);
   }
 
-  // Determine mode type and color
   int mode_type = Render::Geom::k_mode_type_hold;
   QVector3D color = Render::Geom::k_hold_mode_color;
 
