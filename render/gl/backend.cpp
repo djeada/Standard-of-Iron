@@ -1,5 +1,6 @@
 #include "backend.h"
 #include "../draw_queue.h"
+#include "../geom/mode_indicator.h"
 #include "../geom/selection_disc.h"
 #include "../geom/selection_ring.h"
 #include "../primitive_batch.h"
@@ -10,6 +11,7 @@
 #include "backend/effects_pipeline.h"
 #include "backend/healer_aura_pipeline.h"
 #include "backend/healing_beam_pipeline.h"
+#include "backend/mode_indicator_pipeline.h"
 #include "backend/primitive_batch_pipeline.h"
 #include "backend/rain_pipeline.h"
 #include "backend/terrain_pipeline.h"
@@ -179,6 +181,13 @@ void Backend::initialize() {
       this, m_shaderCache.get());
   m_rainPipeline->initialize();
   qInfo() << "Backend: RainPipeline initialized";
+
+  qInfo() << "Backend: Creating ModeIndicatorPipeline...";
+  m_modeIndicatorPipeline =
+      std::make_unique<BackendPipelines::ModeIndicatorPipeline>(
+          this, m_shaderCache.get());
+  m_modeIndicatorPipeline->initialize();
+  qInfo() << "Backend: ModeIndicatorPipeline initialized";
 
   qInfo() << "Backend: Loading basic shaders...";
   m_basicShader = m_shaderCache->get(QStringLiteral("basic"));
@@ -1583,6 +1592,36 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       m_combatDustPipeline->render_single_dust(dust.position, dust.color,
                                                dust.radius, dust.intensity,
                                                dust.time, view_proj);
+      m_lastBoundShader = nullptr;
+      break;
+    }
+    case ModeIndicatorCmdIndex: {
+      const auto &mc = std::get<ModeIndicatorCmdIndex>(cmd);
+
+      if (m_modeIndicatorPipeline == nullptr ||
+          !m_modeIndicatorPipeline->is_initialized()) {
+        break;
+      }
+
+      Mesh *indicator_mesh = nullptr;
+      if (mc.mode_type == Render::Geom::k_mode_type_attack) {
+        indicator_mesh = Render::Geom::ModeIndicator::get_attack_mode_mesh();
+      } else if (mc.mode_type == Render::Geom::k_mode_type_guard) {
+        indicator_mesh = Render::Geom::ModeIndicator::get_guard_mode_mesh();
+      } else if (mc.mode_type == Render::Geom::k_mode_type_hold) {
+        indicator_mesh = Render::Geom::ModeIndicator::get_hold_mode_mesh();
+      } else if (mc.mode_type == Render::Geom::k_mode_type_patrol) {
+        indicator_mesh = Render::Geom::ModeIndicator::get_patrol_mode_mesh();
+      }
+
+      if (indicator_mesh == nullptr) {
+        break;
+      }
+
+      m_modeIndicatorPipeline->render_indicator(indicator_mesh, mc.model,
+                                                view_proj, mc.color, mc.alpha,
+                                                m_animationTime);
+
       m_lastBoundShader = nullptr;
       break;
     }
