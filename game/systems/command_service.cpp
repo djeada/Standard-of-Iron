@@ -142,8 +142,20 @@ void CommandService::moveUnits(Engine::Core::World &world,
 
     auto *atk = e->get_component<Engine::Core::AttackComponent>();
     if ((atk != nullptr) && atk->in_melee_lock) {
+      Engine::Core::EntityID const locked_target_id = atk->melee_lock_target_id;
 
-      continue;
+      atk->in_melee_lock = false;
+      atk->melee_lock_target_id = 0;
+
+      auto *lock_target = world.get_entity(locked_target_id);
+      if (lock_target != nullptr) {
+        auto *target_atk =
+            lock_target->get_component<Engine::Core::AttackComponent>();
+        if (target_atk != nullptr) {
+          target_atk->in_melee_lock = false;
+          target_atk->melee_lock_target_id = 0;
+        }
+      }
     }
 
     auto *transform = e->get_component<Engine::Core::TransformComponent>();
