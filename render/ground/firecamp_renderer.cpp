@@ -221,8 +221,7 @@ void FireCampRenderer::setExplicitFireCamps(
   }
 }
 
-void FireCampRenderer::add_explicit_firecamps(
-    const SpawnValidator &validator) {
+void FireCampRenderer::add_explicit_firecamps(const SpawnValidator &validator) {
   if (m_explicitPositions.empty()) {
     return;
   }
@@ -230,9 +229,8 @@ void FireCampRenderer::add_explicit_firecamps(
   for (size_t i = 0; i < m_explicitPositions.size(); ++i) {
     const QVector3D &pos = m_explicitPositions[i];
 
-    // Validate explicit firecamp positions
     if (!validator.can_spawn_at_world(pos.x(), pos.z())) {
-      continue; // Skip invalid positions
+      continue;
     }
 
     float intensity = 1.0F;
@@ -263,12 +261,10 @@ void FireCampRenderer::generate_firecamp_instances() {
 
   const float tile_safe = std::max(0.1F, m_tile_size);
 
-  // Build terrain cache for spawn validation
   SpawnTerrainCache terrain_cache;
   terrain_cache.build_from_height_map(m_heightData, m_terrain_types, m_width,
                                       m_height, m_tile_size);
 
-  // Configure spawn validator for fire camps
   SpawnValidationConfig config = make_firecamp_spawn_config();
   config.grid_width = m_width;
   config.grid_height = m_height;
@@ -280,7 +276,6 @@ void FireCampRenderer::generate_firecamp_instances() {
   float const fire_camp_density = 0.02F;
 
   auto add_fire_camp = [&](float gx, float gz, uint32_t &state) -> bool {
-    // Use unified spawn validator for all checks
     if (!validator.can_spawn_at_grid(gx, gz)) {
       return false;
     }

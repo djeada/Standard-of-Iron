@@ -312,7 +312,6 @@ Item {
 
                         return ;
                     }
-
                     if (gameView.cursorMode === "patrol") {
                         if (typeof game !== 'undefined' && game.on_patrol_click)
                             game.on_patrol_click(mouse.x, mouse.y);

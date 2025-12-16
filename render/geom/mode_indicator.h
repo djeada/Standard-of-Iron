@@ -6,7 +6,6 @@
 
 namespace Render::Geom {
 
-// Mode type constants
 constexpr int k_mode_type_attack = 0;
 constexpr int k_mode_type_guard = 1;
 constexpr int k_mode_type_hold = 2;
@@ -18,11 +17,10 @@ constexpr float k_indicator_alpha = 0.85F;
 constexpr float k_indicator_height_multiplier = 2.0F;
 constexpr float k_frustum_cull_margin = 1.5F;
 
-// Mode indicator colors
-const QVector3D k_attack_mode_color(1.0F, 0.3F, 0.3F);  // Red
-const QVector3D k_guard_mode_color(0.3F, 0.5F, 1.0F);   // Blue
-const QVector3D k_hold_mode_color(1.0F, 0.6F, 0.2F);    // Orange
-const QVector3D k_patrol_mode_color(0.5F, 0.5F, 0.5F);  // Gray
+const QVector3D k_attack_mode_color(1.0F, 0.3F, 0.3F);
+const QVector3D k_guard_mode_color(0.3F, 0.5F, 1.0F);
+const QVector3D k_hold_mode_color(1.0F, 0.6F, 0.2F);
+const QVector3D k_patrol_mode_color(0.5F, 0.5F, 0.5F);
 
 class ModeIndicator {
 public:

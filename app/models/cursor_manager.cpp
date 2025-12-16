@@ -68,4 +68,6 @@ void CursorManager::set_patrol_first_waypoint(const QVector3D &waypoint) {
   m_has_first_waypoint = true;
 }
 
-void CursorManager::clear_patrol_first_waypoint() { m_has_first_waypoint = false; }
+void CursorManager::clear_patrol_first_waypoint() {
+  m_has_first_waypoint = false;
+}
