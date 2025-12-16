@@ -154,9 +154,10 @@ inline auto canUseGuardMode(SpawnType type) -> bool {
 }
 
 // Check if a unit type can use hold mode
-// All troops can hold
+// Only infantry (swordsman), spearman, and archer can use hold mode
 inline auto canUseHoldMode(SpawnType type) -> bool {
-  return type != SpawnType::Barracks;
+  return type == SpawnType::Archer || type == SpawnType::Knight ||
+         type == SpawnType::Spearman;
 }
 
 // Check if a unit type can use patrol mode
