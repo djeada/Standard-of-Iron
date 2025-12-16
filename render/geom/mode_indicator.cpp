@@ -142,13 +142,18 @@ auto ModeIndicator::create_guard_mode_mesh()
   constexpr float shield_height = 0.9F;
   constexpr float top_radius = 0.32F;
   constexpr float boss_radius = 0.13F;
+  constexpr float top_arc_ratio = 0.2F;
+  constexpr float mid_height_ratio = 0.15F;
+  constexpr float bottom_height_ratio = 0.5F;
+  constexpr float boss_center_ratio = 0.08F;
 
   QVector3D const n(0, 0, 1);
 
   float const half_width = shield_width * 0.5F;
-  float const top_arc_center_y = shield_height * 0.2F;
-  float const mid_y = -shield_height * 0.15F;
-  float const bottom_y = -shield_height * 0.5F;
+  float const top_arc_center_y = shield_height * top_arc_ratio;
+  float const mid_y = -shield_height * mid_height_ratio;
+  float const bottom_y = -shield_height * bottom_height_ratio;
+  float const boss_center_y = shield_height * boss_center_ratio;
 
   size_t const center_idx = verts.size();
   verts.push_back({{0.0F, 0.0F, 0.0F}, {n.x(), n.y(), n.z()}, {0.5F, 0.5F}});
@@ -202,12 +207,12 @@ auto ModeIndicator::create_guard_mode_mesh()
   constexpr int boss_segments = 20;
   size_t const boss_center = verts.size();
   verts.push_back(
-      {{0.0F, shield_height * 0.08F, 0.0F}, {n.x(), n.y(), n.z()}, {0.5F, 0.5F}});
+      {{0.0F, boss_center_y, 0.0F}, {n.x(), n.y(), n.z()}, {0.5F, 0.5F}});
 
   for (int i = 0; i <= boss_segments; ++i) {
     float const angle = (i / float(boss_segments)) * 2.0F * k_pi;
     float const x = boss_radius * std::cos(angle);
-    float const y = shield_height * 0.08F + boss_radius * std::sin(angle);
+    float const y = boss_center_y + boss_radius * std::sin(angle);
     verts.push_back({{x, y, 0.0F}, {n.x(), n.y(), n.z()}, {0.6F, 0.7F}});
   }
 
