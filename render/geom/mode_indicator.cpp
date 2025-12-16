@@ -17,7 +17,7 @@ std::unique_ptr<Render::GL::Mesh> ModeIndicator::s_guard_mesh;
 std::unique_ptr<Render::GL::Mesh> ModeIndicator::s_hold_mesh;
 std::unique_ptr<Render::GL::Mesh> ModeIndicator::s_patrol_mesh;
 
-// Attack mode: crossed swords (reusing existing create_hold_mode_mesh)
+// Attack mode: crossed swords
 auto ModeIndicator::create_attack_mode_mesh()
     -> std::unique_ptr<Render::GL::Mesh> {
   using namespace Render::GL;
