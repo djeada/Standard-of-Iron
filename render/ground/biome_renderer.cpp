@@ -1,6 +1,4 @@
 #include "biome_renderer.h"
-#include "../../game/map/terrain_service.h"
-#include "../../game/systems/building_collision_registry.h"
 #include "../gl/buffer.h"
 #include "../gl/render_constants.h"
 #include "../scene_renderer.h"
@@ -8,6 +6,7 @@
 #include "ground/grass_gpu.h"
 #include "ground_utils.h"
 #include "map/terrain.h"
+#include "spawn_validator.h"
 #include <QDebug>
 #include <QElapsedTimer>
 #include <QVector2D>
@@ -137,83 +136,27 @@ void BiomeRenderer::generate_grass_instances() {
     return;
   }
 
-  const float half_width = m_width * 0.5F - 0.5F;
-  const float half_height = m_height * 0.5F - 0.5F;
   const float tile_safe = std::max(0.001F, m_tile_size);
 
-  const float edge_padding =
-      std::clamp(m_biome_settings.spawn_edge_padding, 0.0F, 0.5F);
-  const float edge_margin_x = static_cast<float>(m_width) * edge_padding;
-  const float edge_margin_z = static_cast<float>(m_height) * edge_padding;
+  // Build terrain cache for spawn validation
+  SpawnTerrainCache terrain_cache;
+  terrain_cache.build_from_height_map(m_heightData, m_terrain_types, m_width,
+                                      m_height, m_tile_size);
 
-  std::vector<QVector3D> normals(static_cast<qsizetype>(m_width * m_height),
-                                 QVector3D(0.0F, 1.0F, 0.0F));
+  // Configure spawn validator for grass
+  SpawnValidationConfig config = make_grass_spawn_config();
+  config.grid_width = m_width;
+  config.grid_height = m_height;
+  config.tile_size = m_tile_size;
+  config.edge_padding = m_biome_settings.spawn_edge_padding;
+  // Note: We handle river margin specially for grass (with reduced density
+  // near rivers) so we disable the strict river margin check in the validator
+  config.check_river_margin = false;
 
-  auto sample_height_at = [&](float gx, float gz) -> float {
-    gx = std::clamp(gx, 0.0F, float(m_width - 1));
-    gz = std::clamp(gz, 0.0F, float(m_height - 1));
-    int const x0 = int(std::floor(gx));
-    int const z0 = int(std::floor(gz));
-    int const x1 = std::min(x0 + 1, m_width - 1);
-    int const z1 = std::min(z0 + 1, m_height - 1);
-    float const tx = gx - float(x0);
-    float const tz = gz - float(z0);
-    float const h00 = m_heightData[z0 * m_width + x0];
-    float const h10 = m_heightData[z0 * m_width + x1];
-    float const h01 = m_heightData[z1 * m_width + x0];
-    float const h11 = m_heightData[z1 * m_width + x1];
-    float const h0 = h00 * (1.0F - tx) + h10 * tx;
-    float const h1 = h01 * (1.0F - tx) + h11 * tx;
-    return h0 * (1.0F - tz) + h1 * tz;
-  };
+  SpawnValidator validator(terrain_cache, config);
 
-  for (int z = 0; z < m_height; ++z) {
-    for (int x = 0; x < m_width; ++x) {
-      int const idx = z * m_width + x;
-      float const gx0 = std::clamp(float(x) - 1.0F, 0.0F, float(m_width - 1));
-      float const gx1 = std::clamp(float(x) + 1.0F, 0.0F, float(m_width - 1));
-      float const gz0 = std::clamp(float(z) - 1.0F, 0.0F, float(m_height - 1));
-      float const gz1 = std::clamp(float(z) + 1.0F, 0.0F, float(m_height - 1));
-
-      float const h_l = sample_height_at(gx0, float(z));
-      float const h_r = sample_height_at(gx1, float(z));
-      float const h_d = sample_height_at(float(x), gz0);
-      float const h_u = sample_height_at(float(x), gz1);
-
-      QVector3D const dx(2.0F * m_tile_size, h_r - h_l, 0.0F);
-      QVector3D const dz(0.0F, h_u - h_d, 2.0F * m_tile_size);
-      QVector3D n = QVector3D::crossProduct(dz, dx);
-      if (n.lengthSquared() > 0.0F) {
-        n.normalize();
-      } else {
-        n = QVector3D(0, 1, 0);
-      }
-      normals[idx] = n;
-    }
-  }
-
-  auto add_grass_blade = [&](float gx, float gz, uint32_t &state) {
-    if (gx < edge_margin_x || gx > m_width - 1 - edge_margin_x ||
-        gz < edge_margin_z || gz > m_height - 1 - edge_margin_z) {
-      return false;
-    }
-
-    float const sgx = std::clamp(gx, 0.0F, float(m_width - 1));
-    float const sgz = std::clamp(gz, 0.0F, float(m_height - 1));
-
-    int const ix = std::clamp(int(std::floor(sgx + 0.5F)), 0, m_width - 1);
-    int const iz = std::clamp(int(std::floor(sgz + 0.5F)), 0, m_height - 1);
-    int const normal_idx = iz * m_width + ix;
-
-    if (m_terrain_types[normal_idx] == Game::Map::TerrainType::Mountain ||
-        m_terrain_types[normal_idx] == Game::Map::TerrainType::Hill) {
-      return false;
-    }
-
-    if (m_terrain_types[normal_idx] == Game::Map::TerrainType::River) {
-      return false;
-    }
-
+  // Helper to check river margin with special riverbank density logic
+  auto check_riverbank = [&](int ix, int iz, uint32_t &state) -> bool {
     constexpr int k_river_margin = 1;
     int near_river_count = 0;
     for (int dz = -k_river_margin; dz <= k_river_margin; ++dz) {
@@ -224,8 +167,8 @@ void BiomeRenderer::generate_grass_instances() {
         int const nx = ix + dx;
         int const nz = iz + dz;
         if (nx >= 0 && nx < m_width && nz >= 0 && nz < m_height) {
-          int const n_idx = nz * m_width + nx;
-          if (m_terrain_types[n_idx] == Game::Map::TerrainType::River) {
+          if (terrain_cache.get_terrain_type_at(nx, nz) ==
+              Game::Map::TerrainType::River) {
             near_river_count++;
           }
         }
@@ -233,33 +176,38 @@ void BiomeRenderer::generate_grass_instances() {
     }
 
     if (near_river_count > 0) {
-
+      // Allow some grass near riverbanks with reduced density
       float const riverbank_density = 0.15F;
       if (rand_01(state) > riverbank_density) {
         return false;
       }
     }
+    return true;
+  };
 
-    QVector3D const normal = normals[normal_idx];
-    float const slope = 1.0F - std::clamp(normal.y(), 0.0F, 1.0F);
-    if (slope > 0.92F) {
+  auto add_grass_blade = [&](float gx, float gz, uint32_t &state) {
+    // Use unified spawn validator for most checks
+    if (!validator.can_spawn_at_grid(gx, gz)) {
       return false;
     }
 
-    float const world_x = (gx - half_width) * m_tile_size;
-    float const world_z = (gz - half_height) * m_tile_size;
-    float const world_y = sample_height_at(sgx, sgz);
+    float const sgx = std::clamp(gx, 0.0F, float(m_width - 1));
+    float const sgz = std::clamp(gz, 0.0F, float(m_height - 1));
 
-    auto &building_registry =
-        Game::Systems::BuildingCollisionRegistry::instance();
-    if (building_registry.isPointInBuilding(world_x, world_z)) {
+    int const ix = std::clamp(int(std::floor(sgx + 0.5F)), 0, m_width - 1);
+    int const iz = std::clamp(int(std::floor(sgz + 0.5F)), 0, m_height - 1);
+
+    // Special riverbank handling for grass
+    if (!check_riverbank(ix, iz, state)) {
       return false;
     }
 
-    auto &terrain_service = Game::Map::TerrainService::instance();
-    if (terrain_service.is_point_on_road(world_x, world_z)) {
-      return false;
-    }
+    float world_x = 0.0F;
+    float world_z = 0.0F;
+    validator.grid_to_world(gx, gz, world_x, world_z);
+    float const world_y = terrain_cache.sample_height_at(sgx, sgz);
+
+    float const slope = terrain_cache.get_slope_at(ix, iz);
 
     float const lush_noise =
         valueNoise(world_x * 0.06F, world_z * 0.06F, m_noiseSeed ^ 0x9235U);
@@ -324,38 +272,51 @@ void BiomeRenderer::generate_grass_instances() {
 
       for (int z = chunk_z; z < chunk_max_z && z < m_height - 1; ++z) {
         for (int x = chunk_x; x < chunk_max_x && x < m_width - 1; ++x) {
-          int const idx0 = z * m_width + x;
-          int const idx1 = idx0 + 1;
-          int const idx2 = (z + 1) * m_width + x;
-          int const idx3 = idx2 + 1;
+          Game::Map::TerrainType const t0 =
+              terrain_cache.get_terrain_type_at(x, z);
+          Game::Map::TerrainType const t1 =
+              terrain_cache.get_terrain_type_at(x + 1, z);
+          Game::Map::TerrainType const t2 =
+              terrain_cache.get_terrain_type_at(x, z + 1);
+          Game::Map::TerrainType const t3 =
+              terrain_cache.get_terrain_type_at(x + 1, z + 1);
 
-          if (m_terrain_types[idx0] == Game::Map::TerrainType::Mountain ||
-              m_terrain_types[idx1] == Game::Map::TerrainType::Mountain ||
-              m_terrain_types[idx2] == Game::Map::TerrainType::Mountain ||
-              m_terrain_types[idx3] == Game::Map::TerrainType::Mountain ||
-              m_terrain_types[idx0] == Game::Map::TerrainType::River ||
-              m_terrain_types[idx1] == Game::Map::TerrainType::River ||
-              m_terrain_types[idx2] == Game::Map::TerrainType::River ||
-              m_terrain_types[idx3] == Game::Map::TerrainType::River) {
+          if (t0 == Game::Map::TerrainType::Mountain ||
+              t1 == Game::Map::TerrainType::Mountain ||
+              t2 == Game::Map::TerrainType::Mountain ||
+              t3 == Game::Map::TerrainType::Mountain ||
+              t0 == Game::Map::TerrainType::River ||
+              t1 == Game::Map::TerrainType::River ||
+              t2 == Game::Map::TerrainType::River ||
+              t3 == Game::Map::TerrainType::River) {
             mountain_count++;
-          } else if (m_terrain_types[idx0] == Game::Map::TerrainType::Hill ||
-                     m_terrain_types[idx1] == Game::Map::TerrainType::Hill ||
-                     m_terrain_types[idx2] == Game::Map::TerrainType::Hill ||
-                     m_terrain_types[idx3] == Game::Map::TerrainType::Hill) {
+          } else if (t0 == Game::Map::TerrainType::Hill ||
+                     t1 == Game::Map::TerrainType::Hill ||
+                     t2 == Game::Map::TerrainType::Hill ||
+                     t3 == Game::Map::TerrainType::Hill) {
             hill_count++;
           } else {
             flat_count++;
           }
 
-          float const quad_height = (m_heightData[idx0] + m_heightData[idx1] +
-                                     m_heightData[idx2] + m_heightData[idx3]) *
+          int const idx0 = z * m_width + x;
+          int const idx1 = idx0 + 1;
+          int const idx2 = (z + 1) * m_width + x;
+          int const idx3 = idx2 + 1;
+
+          float const quad_height = (m_heightData[static_cast<size_t>(idx0)] +
+                                     m_heightData[static_cast<size_t>(idx1)] +
+                                     m_heightData[static_cast<size_t>(idx2)] +
+                                     m_heightData[static_cast<size_t>(idx3)]) *
                                     0.25F;
           chunk_height_sum += quad_height;
 
-          float const n_y = (normals[idx0].y() + normals[idx1].y() +
-                             normals[idx2].y() + normals[idx3].y()) *
-                            0.25F;
-          chunk_slope_sum += 1.0F - std::clamp(n_y, 0.0F, 1.0F);
+          float const slope0 = terrain_cache.get_slope_at(x, z);
+          float const slope1 = terrain_cache.get_slope_at(x + 1, z);
+          float const slope2 = terrain_cache.get_slope_at(x, z + 1);
+          float const slope3 = terrain_cache.get_slope_at(x + 1, z + 1);
+          float const avg_slope = (slope0 + slope1 + slope2 + slope3) * 0.25F;
+          chunk_slope_sum += avg_slope;
           sample_count++;
         }
       }
@@ -371,8 +332,6 @@ void BiomeRenderer::generate_grass_instances() {
       if (usable_coverage < 0.05F) {
         continue;
       }
-
-      bool const is_primarily_flat = flat_count >= hill_count;
 
       float const avg_slope = chunk_slope_sum / float(sample_count);
 
@@ -410,16 +369,14 @@ void BiomeRenderer::generate_grass_instances() {
                 std::clamp(int(std::round(candidate_gx)), 0, m_width - 1);
             int const cz =
                 std::clamp(int(std::round(candidate_gz)), 0, m_height - 1);
-            int const center_idx = cz * m_width + cx;
-            if (m_terrain_types[center_idx] ==
-                    Game::Map::TerrainType::Mountain ||
-                m_terrain_types[center_idx] == Game::Map::TerrainType::River) {
+            Game::Map::TerrainType const center_terrain_type =
+                terrain_cache.get_terrain_type_at(cx, cz);
+            if (center_terrain_type == Game::Map::TerrainType::Mountain ||
+                center_terrain_type == Game::Map::TerrainType::River) {
               continue;
             }
 
-            QVector3D const center_normal = normals[center_idx];
-            float const center_slope =
-                1.0F - std::clamp(center_normal.y(), 0.0F, 1.0F);
+            float const center_slope = terrain_cache.get_slope_at(cx, cz);
             if (center_slope > 0.92F) {
               continue;
             }
@@ -461,20 +418,20 @@ void BiomeRenderer::generate_grass_instances() {
   if (background_density > 0.0F) {
     for (int z = 0; z < m_height; ++z) {
       for (int x = 0; x < m_width; ++x) {
-        int const idx = z * m_width + x;
-
-        if (m_terrain_types[idx] == Game::Map::TerrainType::Mountain ||
-            m_terrain_types[idx] == Game::Map::TerrainType::Hill ||
-            m_terrain_types[idx] == Game::Map::TerrainType::River) {
+        Game::Map::TerrainType const terrain_type =
+            terrain_cache.get_terrain_type_at(x, z);
+        if (terrain_type == Game::Map::TerrainType::Mountain ||
+            terrain_type == Game::Map::TerrainType::Hill ||
+            terrain_type == Game::Map::TerrainType::River) {
           continue;
         }
 
-        QVector3D const normal = normals[idx];
-        float const slope = 1.0F - std::clamp(normal.y(), 0.0F, 1.0F);
+        float const slope = terrain_cache.get_slope_at(x, z);
         if (slope > 0.95F) {
           continue;
         }
 
+        int const idx = z * m_width + x;
         uint32_t state = hash_coords(
             x, z, m_noiseSeed ^ 0x51bda7U ^ static_cast<uint32_t>(idx));
         int base_count = static_cast<int>(std::floor(background_density));
@@ -494,19 +451,6 @@ void BiomeRenderer::generate_grass_instances() {
 
   m_grassInstanceCount = m_grassInstances.size();
   m_grassInstancesDirty = m_grassInstanceCount > 0;
-
-  int debug_flat_count = 0;
-  int debug_hill_count = 0;
-  int debug_mountain_count = 0;
-  for (const auto &type : m_terrain_types) {
-    if (type == Game::Map::TerrainType::Flat) {
-      debug_flat_count++;
-    } else if (type == Game::Map::TerrainType::Hill) {
-      debug_hill_count++;
-    } else if (type == Game::Map::TerrainType::Mountain) {
-      debug_mountain_count++;
-    }
-  }
 }
 
 } // namespace Render::GL

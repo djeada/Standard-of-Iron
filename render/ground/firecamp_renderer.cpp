@@ -1,7 +1,5 @@
 #include "firecamp_renderer.h"
-#include "../../game/map/terrain_service.h"
 #include "../../game/map/visibility_service.h"
-#include "../../game/systems/building_collision_registry.h"
 #include "../gl/buffer.h"
 #include "../scene_renderer.h"
 #include "gl/render_constants.h"
@@ -9,6 +7,7 @@
 #include "ground/firecamp_gpu.h"
 #include "ground_utils.h"
 #include "map/terrain.h"
+#include "spawn_validator.h"
 #include <QDebug>
 #include <QVector2D>
 #include <algorithm>
@@ -222,13 +221,19 @@ void FireCampRenderer::setExplicitFireCamps(
   }
 }
 
-void FireCampRenderer::add_explicit_firecamps() {
+void FireCampRenderer::add_explicit_firecamps(
+    const SpawnValidator &validator) {
   if (m_explicitPositions.empty()) {
     return;
   }
 
   for (size_t i = 0; i < m_explicitPositions.size(); ++i) {
     const QVector3D &pos = m_explicitPositions[i];
+
+    // Validate explicit firecamp positions
+    if (!validator.can_spawn_at_world(pos.x(), pos.z())) {
+      continue; // Skip invalid positions
+    }
 
     float intensity = 1.0F;
     if (i < m_explicitIntensities.size()) {
@@ -256,40 +261,27 @@ void FireCampRenderer::generate_firecamp_instances() {
     return;
   }
 
-  const float half_width = static_cast<float>(m_width) * 0.5F;
-  const float half_height = static_cast<float>(m_height) * 0.5F;
   const float tile_safe = std::max(0.1F, m_tile_size);
 
-  const float edge_padding =
-      std::clamp(m_biome_settings.spawn_edge_padding, 0.0F, 0.5F);
-  const float edge_margin_x = static_cast<float>(m_width) * edge_padding;
-  const float edge_margin_z = static_cast<float>(m_height) * edge_padding;
+  // Build terrain cache for spawn validation
+  SpawnTerrainCache terrain_cache;
+  terrain_cache.build_from_height_map(m_heightData, m_terrain_types, m_width,
+                                      m_height, m_tile_size);
+
+  // Configure spawn validator for fire camps
+  SpawnValidationConfig config = make_firecamp_spawn_config();
+  config.grid_width = m_width;
+  config.grid_height = m_height;
+  config.tile_size = m_tile_size;
+  config.edge_padding = m_biome_settings.spawn_edge_padding;
+
+  SpawnValidator validator(terrain_cache, config);
 
   float const fire_camp_density = 0.02F;
 
-  std::vector<QVector3D> normals(static_cast<qsizetype>(m_width * m_height),
-                                 QVector3D(0, 1, 0));
-  for (int z = 1; z < m_height - 1; ++z) {
-    for (int x = 1; x < m_width - 1; ++x) {
-      int const idx = z * m_width + x;
-      float const h_l = m_heightData[(z)*m_width + (x - 1)];
-      float const h_r = m_heightData[(z)*m_width + (x + 1)];
-      float const h_d = m_heightData[(z - 1) * m_width + (x)];
-      float const h_u = m_heightData[(z + 1) * m_width + (x)];
-
-      QVector3D n = QVector3D(h_l - h_r, 2.0F * tile_safe, h_d - h_u);
-      if (n.lengthSquared() > 0.0F) {
-        n.normalize();
-      } else {
-        n = QVector3D(0, 1, 0);
-      }
-      normals[idx] = n;
-    }
-  }
-
   auto add_fire_camp = [&](float gx, float gz, uint32_t &state) -> bool {
-    if (gx < edge_margin_x || gx > m_width - 1 - edge_margin_x ||
-        gz < edge_margin_z || gz > m_height - 1 - edge_margin_z) {
+    // Use unified spawn validator for all checks
+    if (!validator.can_spawn_at_grid(gx, gz)) {
       return false;
     }
 
@@ -300,27 +292,10 @@ void FireCampRenderer::generate_firecamp_instances() {
     int const iz = std::clamp(int(std::floor(sgz + 0.5F)), 0, m_height - 1);
     int const normal_idx = iz * m_width + ix;
 
-    QVector3D const normal = normals[normal_idx];
-    float const slope = 1.0F - std::clamp(normal.y(), 0.0F, 1.0F);
-
-    if (slope > 0.3F) {
-      return false;
-    }
-
-    float const world_x = (gx - half_width) * m_tile_size;
-    float const world_z = (gz - half_height) * m_tile_size;
-    float const world_y = m_heightData[normal_idx];
-
-    auto &building_registry =
-        Game::Systems::BuildingCollisionRegistry::instance();
-    if (building_registry.isPointInBuilding(world_x, world_z)) {
-      return false;
-    }
-
-    auto &terrain_service = Game::Map::TerrainService::instance();
-    if (terrain_service.is_point_on_road(world_x, world_z)) {
-      return false;
-    }
+    float world_x = 0.0F;
+    float world_z = 0.0F;
+    validator.grid_to_world(gx, gz, world_x, world_z);
+    float const world_y = m_heightData[static_cast<size_t>(normal_idx)];
 
     float const intensity = remap(rand_01(state), 0.8F, 1.2F);
     float const radius = remap(rand_01(state), 2.0F, 4.0F) * tile_safe;
@@ -342,8 +317,7 @@ void FireCampRenderer::generate_firecamp_instances() {
     for (int x = 0; x < m_width; x += k_grid_spacing) {
       int const idx = z * m_width + x;
 
-      QVector3D const normal = normals[idx];
-      float const slope = 1.0F - std::clamp(normal.y(), 0.0F, 1.0F);
+      float const slope = terrain_cache.get_slope_at(x, z);
       if (slope > 0.3F) {
         continue;
       }
@@ -351,8 +325,10 @@ void FireCampRenderer::generate_firecamp_instances() {
       uint32_t state = hash_coords(
           x, z, m_noiseSeed ^ 0xF12ECA3FU ^ static_cast<uint32_t>(idx));
 
-      float const world_x = (x - half_width) * m_tile_size;
-      float const world_z = (z - half_height) * m_tile_size;
+      float world_x = 0.0F;
+      float world_z = 0.0F;
+      validator.grid_to_world(static_cast<float>(x), static_cast<float>(z),
+                              world_x, world_z);
 
       float const cluster_noise = valueNoise(world_x * 0.02F, world_z * 0.02F,
                                              m_noiseSeed ^ 0xCA3F12E0U);
@@ -361,10 +337,12 @@ void FireCampRenderer::generate_firecamp_instances() {
         continue;
       }
 
+      Game::Map::TerrainType const terrain_type =
+          terrain_cache.get_terrain_type_at(x, z);
       float density_mult = 1.0F;
-      if (m_terrain_types[idx] == Game::Map::TerrainType::Hill) {
+      if (terrain_type == Game::Map::TerrainType::Hill) {
         density_mult = 0.5F;
-      } else if (m_terrain_types[idx] == Game::Map::TerrainType::Mountain) {
+      } else if (terrain_type == Game::Map::TerrainType::Mountain) {
         density_mult = 0.0F;
       }
 
@@ -377,7 +355,7 @@ void FireCampRenderer::generate_firecamp_instances() {
     }
   }
 
-  add_explicit_firecamps();
+  add_explicit_firecamps(validator);
 
   m_fireCampInstanceCount = m_fireCampInstances.size();
   m_fireCampInstancesDirty = m_fireCampInstanceCount > 0;
