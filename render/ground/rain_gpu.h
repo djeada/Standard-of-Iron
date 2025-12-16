@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../../game/map/map_definition.h"
 #include <QVector3D>
 #include <QVector4D>
 #include <cstdint>
@@ -12,15 +13,19 @@ struct RainDropInstanceGpu {
 };
 
 struct RainBatchParams {
-  static constexpr float k_default_drop_speed = 15.0F;
-  static constexpr float k_default_drop_length = 0.8F;
-  static constexpr float k_default_drop_width = 0.02F;
+  static constexpr float k_default_rain_drop_speed = 20.0F;
+  static constexpr float k_default_rain_drop_length = 1.2F;
+  static constexpr float k_default_rain_drop_width = 0.025F;
+  
+  static constexpr float k_default_snow_drop_speed = 3.5F;
+  static constexpr float k_default_snow_drop_size = 0.08F;
 
+  Game::Map::WeatherType weather_type = Game::Map::WeatherType::Rain;
   float time = 0.0F;
   float intensity = 0.5F;
-  float drop_speed = k_default_drop_speed;
-  float drop_length = k_default_drop_length;
-  float drop_width = k_default_drop_width;
+  float drop_speed = k_default_rain_drop_speed;
+  float drop_length = k_default_rain_drop_length;
+  float drop_width = k_default_rain_drop_width;
   float wind_strength = 0.0F;
   QVector3D wind_direction{1.0F, 0.0F, 0.3F};
 };

@@ -9,6 +9,8 @@ uniform float u_time;
 uniform float u_intensity;
 uniform vec3 u_camera_pos;
 uniform vec3 u_wind;
+uniform int u_weather_type; // 0 = Rain, 1 = Snow
+uniform float u_wind_strength;
 
 out float v_alpha;
 
@@ -31,8 +33,19 @@ void main() {
     pos.y += AREA_HEIGHT;
   }
 
-  pos.x += u_wind.x * (AREA_HEIGHT - pos.y) * 0.1;
-  pos.z += u_wind.z * (AREA_HEIGHT - pos.y) * 0.1;
+  // Apply wind effect - stronger for snow which is lighter
+  float wind_factor = (u_weather_type == 1) ? 0.25 : 0.1;
+  float height_factor = (AREA_HEIGHT - pos.y) / AREA_HEIGHT;
+  
+  pos.x += u_wind.x * height_factor * wind_factor * (1.0 + u_wind_strength);
+  pos.z += u_wind.z * height_factor * wind_factor * (1.0 + u_wind_strength);
+
+  // Add subtle horizontal drift for snow
+  if (u_weather_type == 1) {
+    float drift = sin(u_time * 0.5 + a_position.x * 0.3) * 0.15;
+    pos.x += drift;
+    pos.z += cos(u_time * 0.3 + a_position.z * 0.4) * 0.1;
+  }
 
   gl_Position = u_view_proj * vec4(pos, 1.0);
 

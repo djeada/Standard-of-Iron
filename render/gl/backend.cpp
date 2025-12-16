@@ -863,7 +863,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       if (m_rainPipeline == nullptr || !m_rainPipeline->is_initialized()) {
         break;
       }
-      m_rainPipeline->render(cam, rain.params.intensity, rain.params.time);
+      m_rainPipeline->render(cam, rain.params);
       break;
     }
     case TerrainChunkCmdIndex: {
