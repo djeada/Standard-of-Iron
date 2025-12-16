@@ -20,8 +20,8 @@ using Render::Geom::sphere_at;
 
 namespace {
 
-auto create_unit_hemisphere_mesh(int lat_segments = 12,
-                                 int lon_segments = 32) -> std::unique_ptr<Mesh> {
+auto create_unit_hemisphere_mesh(int lat_segments = 12, int lon_segments = 32)
+    -> std::unique_ptr<Mesh> {
   std::vector<Vertex> vertices;
   std::vector<unsigned int> indices;
   vertices.reserve((lat_segments + 1) * (lon_segments + 1));
