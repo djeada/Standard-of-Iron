@@ -455,9 +455,8 @@ void Renderer::enqueue_mode_indicator(
   auto *guard_mode = entity->get_component<Engine::Core::GuardModeComponent>();
   bool const has_guard_mode = (guard_mode != nullptr) && guard_mode->active;
 
-  bool const show_for_debug = (unit_comp != nullptr);
-
-  if (!has_hold_mode && !has_guard_mode && !show_for_debug) {
+  // Only render if unit has an active mode
+  if (!has_hold_mode && !has_guard_mode) {
     return;
   }
 
