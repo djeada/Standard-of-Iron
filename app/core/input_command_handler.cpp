@@ -54,7 +54,8 @@ void InputCommandHandler::on_right_click(qreal sx, qreal sy, int local_owner_id,
   }
 
   if (m_cursor_manager->mode() == CursorMode::Patrol ||
-      m_cursor_manager->mode() == CursorMode::Attack) {
+      m_cursor_manager->mode() == CursorMode::Attack ||
+      m_cursor_manager->mode() == CursorMode::Guard) {
     m_cursor_manager->setMode(CursorMode::Normal);
     return;
   }
@@ -175,11 +176,48 @@ void InputCommandHandler::on_hold_command() {
   }
 }
 
+void InputCommandHandler::on_guard_command() {
+  if (m_is_spectator_mode) {
+    return;
+  }
+  if (!m_command_controller) {
+    return;
+  }
+
+  auto result = m_command_controller->onGuardCommand();
+  if (result.resetCursorToNormal) {
+    m_cursor_manager->setMode(CursorMode::Normal);
+  }
+}
+
+void InputCommandHandler::on_guard_click(qreal sx, qreal sy,
+                                         const ViewportState &viewport) {
+  if (m_is_spectator_mode) {
+    return;
+  }
+  if (!m_command_controller || !m_camera) {
+    return;
+  }
+
+  auto result = m_command_controller->onGuardClick(sx, sy, viewport.width,
+                                                   viewport.height, m_camera);
+  if (result.resetCursorToNormal) {
+    m_cursor_manager->setMode(CursorMode::Normal);
+  }
+}
+
 auto InputCommandHandler::any_selected_in_hold_mode() const -> bool {
   if (!m_command_controller) {
     return false;
   }
   return m_command_controller->anySelectedInHoldMode();
+}
+
+auto InputCommandHandler::any_selected_in_guard_mode() const -> bool {
+  if (!m_command_controller) {
+    return false;
+  }
+  return m_command_controller->anySelectedInGuardMode();
 }
 
 void InputCommandHandler::on_patrol_click(qreal sx, qreal sy,
