@@ -149,56 +149,30 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
 
     if (should_advance && !snapshot.visible_enemies.empty()) {
 
-      const ContactSnapshot *target_barracks = nullptr;
-      float closest_barracks_dist_sq = std::numeric_limits<float>::max();
-
-      for (const auto &enemy : snapshot.visible_enemies) {
-        if (enemy.is_building) {
-          float const dist_sq =
-              distance_squared(enemy.posX, enemy.posY, enemy.posZ,
-                               group_center_x, group_center_y, group_center_z);
-          if (dist_sq < closest_barracks_dist_sq) {
-            closest_barracks_dist_sq = dist_sq;
-            target_barracks = &enemy;
-          }
-        }
-      }
-
+      // Don't auto-attack buildings - they should only be targeted explicitly
+      // Find closest enemy troop (not building) to advance toward
       const ContactSnapshot *closest_enemy = nullptr;
       float closest_dist_sq = std::numeric_limits<float>::max();
 
-      if (target_barracks == nullptr) {
-        for (const auto &enemy : snapshot.visible_enemies) {
-          float const dist_sq =
-              distance_squared(enemy.posX, enemy.posY, enemy.posZ,
-                               group_center_x, group_center_y, group_center_z);
-          if (dist_sq < closest_dist_sq) {
-            closest_dist_sq = dist_sq;
-            closest_enemy = &enemy;
-          }
+      for (const auto &enemy : snapshot.visible_enemies) {
+        if (enemy.is_building) {
+          continue; // Skip buildings - only target troops
+        }
+        float const dist_sq =
+            distance_squared(enemy.posX, enemy.posY, enemy.posZ,
+                             group_center_x, group_center_y, group_center_z);
+        if (dist_sq < closest_dist_sq) {
+          closest_dist_sq = dist_sq;
+          closest_enemy = &enemy;
         }
       }
 
-      const ContactSnapshot *target =
-          (target_barracks != nullptr) ? target_barracks : closest_enemy;
+      const ContactSnapshot *target = closest_enemy;
 
       if ((target != nullptr) && !ready_units.empty()) {
 
         float attack_pos_x = target->posX;
         float attack_pos_z = target->posZ;
-
-        if (target_barracks != nullptr) {
-
-          float const dx = group_center_x - target->posX;
-          float const dz = group_center_z - target->posZ;
-          float const dist = std::sqrt(dx * dx + dz * dz);
-          if (dist > 0.1F) {
-            attack_pos_x += (dx / dist) * 3.0F;
-            attack_pos_z += (dz / dist) * 3.0F;
-          } else {
-            attack_pos_x += 3.0F;
-          }
-        }
 
         bool needs_new_command = false;
         if (m_lastTarget != target->id) {
