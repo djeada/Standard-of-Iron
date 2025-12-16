@@ -12,6 +12,7 @@
 #include "game/systems/healing_system.h"
 #include "game/systems/movement_system.h"
 #include "game/systems/patrol_system.h"
+#include "game/systems/guard_system.h"
 #include "game/systems/production_system.h"
 #include "game/systems/projectile_system.h"
 #include "game/systems/selection_system.h"
@@ -69,6 +70,7 @@ void RendererBootstrap::initialize_world_systems(Engine::Core::World &world) {
   world.add_system(std::make_unique<Game::Systems::ProjectileSystem>());
   world.add_system(std::make_unique<Game::Systems::MovementSystem>());
   world.add_system(std::make_unique<Game::Systems::PatrolSystem>());
+  world.add_system(std::make_unique<Game::Systems::GuardSystem>());
   world.add_system(std::make_unique<Game::Systems::CombatSystem>());
   world.add_system(std::make_unique<Game::Systems::CatapultAttackSystem>());
   world.add_system(std::make_unique<Game::Systems::BallistaAttackSystem>());
