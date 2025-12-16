@@ -20,8 +20,8 @@ constexpr float kRainColorR = 0.7F;
 constexpr float kRainColorG = 0.75F;
 constexpr float kRainColorB = 0.85F;
 
-constexpr float kSnowColorR = 0.95F;
-constexpr float kSnowColorG = 0.95F;
+constexpr float kSnowColorR = 1.0F;
+constexpr float kSnowColorG = 1.0F;
 constexpr float kSnowColorB = 1.0F;
 
 void clear_gl_errors() {
