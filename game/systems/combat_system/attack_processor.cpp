@@ -90,16 +90,7 @@ void process_melee_lock(Engine::Core::Entity *attacker,
   }
 
   face_target(att_t, tgt_t);
-
-  auto *lock_target_atk =
-      lock_target->get_component<Engine::Core::AttackComponent>();
-  if (lock_target_atk != nullptr) {
-    auto *lock_target_transform =
-        lock_target->get_component<Engine::Core::TransformComponent>();
-    if (lock_target_transform != nullptr) {
-      face_target(lock_target_transform, att_t);
-    }
-  }
+  face_target(tgt_t, att_t);
 
   float const dx = tgt_t->position.x - att_t->position.x;
   float const dz = tgt_t->position.z - att_t->position.z;
