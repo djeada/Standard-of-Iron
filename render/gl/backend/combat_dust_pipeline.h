@@ -48,11 +48,17 @@ public:
 
   void collect_building_flames(Engine::Core::World *world, float animation_time);
 
+  void collect_all_effects(Engine::Core::World *world, float animation_time);
+
   void render(const Camera &cam, float animation_time);
 
   void render_single_dust(const QVector3D &position, const QVector3D &color,
                           float radius, float intensity, float time,
                           const QMatrix4x4 &view_proj);
+
+  void render_single_flame(const QVector3D &position, const QVector3D &color,
+                           float radius, float intensity, float time,
+                           const QMatrix4x4 &view_proj);
 
   void clear_data() { m_dust_data.clear(); }
 
