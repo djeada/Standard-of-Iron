@@ -19,6 +19,11 @@ struct RainBatchParams {
   
   static constexpr float k_default_snow_drop_speed = 3.5F;
   static constexpr float k_default_snow_drop_size = 0.08F;
+  
+  static constexpr float k_rain_speed_variation_min = 0.8F;
+  static constexpr float k_rain_speed_variation_range = 0.4F;
+  static constexpr float k_snow_speed_variation_min = 0.6F;
+  static constexpr float k_snow_speed_variation_range = 0.8F;
 
   Game::Map::WeatherType weather_type = Game::Map::WeatherType::Rain;
   float time = 0.0F;

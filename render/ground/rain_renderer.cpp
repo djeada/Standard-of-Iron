@@ -35,16 +35,7 @@ void RainRenderer::configure(float world_width, float world_height,
   m_params.intensity = 0.0F;
   m_params.wind_strength = 0.0F;
   
-  if (type == Game::Map::WeatherType::Snow) {
-    m_params.drop_speed = RainBatchParams::k_default_snow_drop_speed;
-    m_params.drop_length = RainBatchParams::k_default_snow_drop_size;
-    m_params.drop_width = RainBatchParams::k_default_snow_drop_size;
-  } else {
-    m_params.drop_speed = RainBatchParams::k_default_rain_drop_speed;
-    m_params.drop_length = RainBatchParams::k_default_rain_drop_length;
-    m_params.drop_width = RainBatchParams::k_default_rain_drop_width;
-  }
-
+  update_weather_params();
   generate_rain_drops();
 }
 
@@ -55,17 +46,19 @@ void RainRenderer::set_intensity(float intensity) {
 void RainRenderer::set_weather_type(Game::Map::WeatherType type) {
   if (m_params.weather_type != type) {
     m_params.weather_type = type;
-    
-    // Update particle parameters based on weather type
-    if (type == Game::Map::WeatherType::Snow) {
-      m_params.drop_speed = RainBatchParams::k_default_snow_drop_speed;
-      m_params.drop_length = RainBatchParams::k_default_snow_drop_size;
-      m_params.drop_width = RainBatchParams::k_default_snow_drop_size;
-    } else {
-      m_params.drop_speed = RainBatchParams::k_default_rain_drop_speed;
-      m_params.drop_length = RainBatchParams::k_default_rain_drop_length;
-      m_params.drop_width = RainBatchParams::k_default_rain_drop_width;
-    }
+    update_weather_params();
+  }
+}
+
+void RainRenderer::update_weather_params() {
+  if (m_params.weather_type == Game::Map::WeatherType::Snow) {
+    m_params.drop_speed = RainBatchParams::k_default_snow_drop_speed;
+    m_params.drop_length = RainBatchParams::k_default_snow_drop_size;
+    m_params.drop_width = RainBatchParams::k_default_snow_drop_size;
+  } else {
+    m_params.drop_speed = RainBatchParams::k_default_rain_drop_speed;
+    m_params.drop_length = RainBatchParams::k_default_rain_drop_length;
+    m_params.drop_width = RainBatchParams::k_default_rain_drop_width;
   }
 }
 
@@ -158,10 +151,12 @@ void RainRenderer::generate_rain_drops() {
     float speed_variation;
     if (m_params.weather_type == Game::Map::WeatherType::Snow) {
       // Snow has more varied, gentler speeds
-      speed_variation = 0.6F + rand_01(state) * 0.8F;
+      speed_variation = RainBatchParams::k_snow_speed_variation_min + 
+                       rand_01(state) * RainBatchParams::k_snow_speed_variation_range;
     } else {
       // Rain has more consistent, faster speeds
-      speed_variation = 0.8F + rand_01(state) * 0.4F;
+      speed_variation = RainBatchParams::k_rain_speed_variation_min + 
+                       rand_01(state) * RainBatchParams::k_rain_speed_variation_range;
     }
 
     RainDropInstanceGpu drop;
