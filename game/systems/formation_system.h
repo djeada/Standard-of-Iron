@@ -8,7 +8,7 @@
 
 namespace Game::Systems {
 
-enum class FormationType { Roman, Barbarian };
+enum class FormationType { Roman, Barbarian, Carthage };
 
 }
 
@@ -52,6 +52,17 @@ public:
 
   [[nodiscard]] auto getType() const -> FormationType override {
     return FormationType::Barbarian;
+  }
+};
+
+class CarthageFormation : public IFormation {
+public:
+  [[nodiscard]] auto calculatePositions(int unit_count, const QVector3D &center,
+                                        float base_spacing = 1.0F) const
+      -> std::vector<QVector3D> override;
+
+  [[nodiscard]] auto getType() const -> FormationType override {
+    return FormationType::Carthage;
   }
 };
 
