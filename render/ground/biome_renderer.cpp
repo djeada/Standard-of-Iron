@@ -138,24 +138,20 @@ void BiomeRenderer::generate_grass_instances() {
 
   const float tile_safe = std::max(0.001F, m_tile_size);
 
-  // Build terrain cache for spawn validation
   SpawnTerrainCache terrain_cache;
   terrain_cache.build_from_height_map(m_heightData, m_terrain_types, m_width,
                                       m_height, m_tile_size);
 
-  // Configure spawn validator for grass
   SpawnValidationConfig config = make_grass_spawn_config();
   config.grid_width = m_width;
   config.grid_height = m_height;
   config.tile_size = m_tile_size;
   config.edge_padding = m_biome_settings.spawn_edge_padding;
-  // Note: We handle river margin specially for grass (with reduced density
-  // near rivers) so we disable the strict river margin check in the validator
+
   config.check_river_margin = false;
 
   SpawnValidator validator(terrain_cache, config);
 
-  // Helper to check river margin with special riverbank density logic
   auto check_riverbank = [&](int ix, int iz, uint32_t &state) -> bool {
     constexpr int k_river_margin = 1;
     int near_river_count = 0;
@@ -176,7 +172,7 @@ void BiomeRenderer::generate_grass_instances() {
     }
 
     if (near_river_count > 0) {
-      // Allow some grass near riverbanks with reduced density
+
       float const riverbank_density = 0.15F;
       if (rand_01(state) > riverbank_density) {
         return false;
@@ -186,7 +182,6 @@ void BiomeRenderer::generate_grass_instances() {
   };
 
   auto add_grass_blade = [&](float gx, float gz, uint32_t &state) {
-    // Use unified spawn validator for most checks
     if (!validator.can_spawn_at_grid(gx, gz)) {
       return false;
     }
@@ -197,7 +192,6 @@ void BiomeRenderer::generate_grass_instances() {
     int const ix = std::clamp(int(std::floor(sgx + 0.5F)), 0, m_width - 1);
     int const iz = std::clamp(int(std::floor(sgz + 0.5F)), 0, m_height - 1);
 
-    // Special riverbank handling for grass
     if (!check_riverbank(ix, iz, state)) {
       return false;
     }

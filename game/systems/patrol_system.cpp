@@ -54,7 +54,6 @@ void PatrolSystem::update(Engine::Core::World *world, float) {
         continue;
       }
 
-      // Don't auto-attack buildings - they should only be targeted explicitly
       if (other->has_component<Engine::Core::BuildingComponent>()) {
         continue;
       }

@@ -17,7 +17,8 @@ protected:
     height_data.resize(static_cast<size_t>(width * height), 0.0F);
 
     // Initialize terrain types (all flat by default)
-    terrain_types.resize(static_cast<size_t>(width * height), TerrainType::Flat);
+    terrain_types.resize(static_cast<size_t>(width * height),
+                         TerrainType::Flat);
   }
 
   void build_cache() {

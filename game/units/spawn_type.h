@@ -141,27 +141,19 @@ inline auto is_building_spawn(SpawnType type) -> bool {
   return type == SpawnType::Barracks;
 }
 
-// Check if a unit type can use attack mode
-// Healers cannot attack
 inline auto can_use_attack_mode(SpawnType type) -> bool {
   return type != SpawnType::Healer && type != SpawnType::Barracks;
 }
 
-// Check if a unit type can use guard mode
-// All troops can guard
 inline auto can_use_guard_mode(SpawnType type) -> bool {
   return type != SpawnType::Barracks;
 }
 
-// Check if a unit type can use hold mode
-// Only swordsman (Knight), spearman, and archer can use hold mode
 inline auto can_use_hold_mode(SpawnType type) -> bool {
   return type == SpawnType::Archer || type == SpawnType::Knight ||
          type == SpawnType::Spearman;
 }
 
-// Check if a unit type can use patrol mode
-// All troops can patrol
 inline auto can_use_patrol_mode(SpawnType type) -> bool {
   return type != SpawnType::Barracks;
 }
