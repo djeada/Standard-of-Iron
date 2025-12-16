@@ -7,6 +7,9 @@
 using namespace Engine::Core;
 using namespace Game::Systems;
 
+// Detection range from patrol_system.cpp (line 61)
+constexpr float kPatrolDetectionRangeSq = 25.0F;
+
 class PatrolSystemTest : public ::testing::Test {
 protected:
   void SetUp() override {
@@ -38,7 +41,8 @@ TEST_F(PatrolSystemTest, PatrollingUnitIgnoresEnemyBuildings) {
   patrol->patrolling = true;
   patrol->current_waypoint = 0;
 
-  // Create an enemy building nearby (within detection range of 5 units = 25.0F dist_sq)
+  // Create an enemy building nearby (within detection range of 25.0F dist_sq)
+  // Distance of 3.0F units from origin results in dist_sq = 9.0F, which is < 25.0F
   auto *enemy_building = world->create_entity();
   auto *enemy_transform = enemy_building->add_component<TransformComponent>(3.0F, 0.0F, 0.0F);
   auto *enemy_unit_comp = enemy_building->add_component<UnitComponent>(100, 100, 0.0F, 10.0F);
