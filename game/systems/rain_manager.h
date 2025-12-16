@@ -39,6 +39,14 @@ public:
            m_state == RainState::FadingOut;
   }
 
+  [[nodiscard]] auto get_weather_type() const -> Game::Map::WeatherType {
+    return m_settings.type;
+  }
+
+  [[nodiscard]] auto get_wind_strength() const -> float {
+    return m_settings.wind_strength;
+  }
+
   using StateChangeCallback = std::function<void(RainState new_state)>;
   void set_state_change_callback(StateChangeCallback callback) {
     m_state_callback = std::move(callback);

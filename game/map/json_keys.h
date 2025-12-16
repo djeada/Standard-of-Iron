@@ -101,9 +101,11 @@ inline constexpr const char *ROAD_STYLE = "style";
 
 inline constexpr const char *RAIN = "rain";
 inline constexpr const char *RAIN_ENABLED = "enabled";
+inline constexpr const char *RAIN_TYPE = "type";
 inline constexpr const char *RAIN_CYCLE_DURATION = "cycleDuration";
 inline constexpr const char *RAIN_ACTIVE_DURATION = "activeDuration";
 inline constexpr const char *RAIN_INTENSITY = "intensity";
 inline constexpr const char *RAIN_FADE_DURATION = "fadeDuration";
+inline constexpr const char *RAIN_WIND_STRENGTH = "windStrength";
 
 } // namespace Game::Map::JsonKeys
