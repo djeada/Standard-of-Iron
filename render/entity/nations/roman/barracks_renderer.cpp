@@ -10,6 +10,7 @@
 #include "../../../gl/resources.h"
 #include "../../../submitter.h"
 #include "../../barracks_flag_renderer.h"
+#include "../../building_state.h"
 #include "../../registry.h"
 
 #include <QMatrix4x4>
@@ -22,22 +23,6 @@ namespace {
 using Render::Geom::clamp01;
 using Render::Geom::clampVec01;
 using Render::Geom::cylinder_between;
-
-enum class BuildingState {
-  Normal,    // health >= 70%
-  Damaged,   // 30% <= health < 70%
-  Destroyed  // health < 30%
-};
-
-inline auto get_building_state(float health_ratio) -> BuildingState {
-  if (health_ratio >= 0.70F) {
-    return BuildingState::Normal;
-  } else if (health_ratio >= 0.30F) {
-    return BuildingState::Damaged;
-  } else {
-    return BuildingState::Destroyed;
-  }
-}
 
 struct RomanPalette {
   QVector3D stone_light{0.62F, 0.60F, 0.58F};

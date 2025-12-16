@@ -9,6 +9,7 @@
 #include "../../../gl/resources.h"
 #include "../../../submitter.h"
 #include "../../barracks_flag_renderer.h"
+#include "../../building_state.h"
 #include "../../registry.h"
 
 #include <QMatrix4x4>
@@ -22,22 +23,6 @@ namespace {
 using Render::Geom::clamp01;
 using Render::Geom::clampVec01;
 using Render::Geom::cylinder_between;
-
-enum class BuildingState {
-  Normal,    // health >= 70%
-  Damaged,   // 30% <= health < 70%
-  Destroyed  // health < 30%
-};
-
-inline auto get_building_state(float health_ratio) -> BuildingState {
-  if (health_ratio >= 0.70F) {
-    return BuildingState::Normal;
-  } else if (health_ratio >= 0.30F) {
-    return BuildingState::Damaged;
-  } else {
-    return BuildingState::Destroyed;
-  }
-}
 
 struct CarthagePalette {
   QVector3D limestone{0.96F, 0.94F, 0.88F};
@@ -103,6 +88,8 @@ void draw_colonnade(const DrawContext &p, ISubmitter &out, Mesh *unit,
                     BuildingState state) {
   float const col_height = 1.6F;
   float const col_radius = 0.10F;
+  static constexpr float FRONT_COLUMN_SPACING_RANGE = 2.5F;
+  static constexpr float SIDE_COLUMN_SPACING_RANGE = 2.0F;
   
   // Reduce column height for damaged/destroyed states
   float height_multiplier = 1.0F;
@@ -116,7 +103,7 @@ void draw_colonnade(const DrawContext &p, ISubmitter &out, Mesh *unit,
   }
 
   for (int i = 0; i < num_columns; ++i) {
-    float const x = -1.25F + float(i) * (num_columns > 1 ? 2.5F / (num_columns - 1) : 0.0F);
+    float const x = -1.25F + float(i) * (num_columns > 1 ? FRONT_COLUMN_SPACING_RANGE / (num_columns - 1) : 0.0F);
     float const z = 1.4F;
 
     draw_box(out, unit, white, p.model, QVector3D(x, 0.25F, z),
@@ -140,7 +127,7 @@ void draw_colonnade(const DrawContext &p, ISubmitter &out, Mesh *unit,
 
   int side_columns = (state == BuildingState::Destroyed) ? 2 : 3;
   for (int i = 0; i < side_columns; ++i) {
-    float const z = -1.0F + float(i) * (side_columns > 1 ? 2.0F / (side_columns - 1) : 0.0F);
+    float const z = -1.0F + float(i) * (side_columns > 1 ? SIDE_COLUMN_SPACING_RANGE / (side_columns - 1) : 0.0F);
 
     float const x_left = -1.6F;
     draw_box(out, unit, white, p.model, QVector3D(x_left, 0.25F, z),
