@@ -10,6 +10,7 @@
 #include "equipment/equipment_registry.h"
 #include "game/core/component.h"
 #include "game/core/world.h"
+#include "geom/mode_indicator.h"
 #include "gl/backend.h"
 #include "gl/buffer.h"
 #include "gl/camera.h"
@@ -363,6 +364,19 @@ void Renderer::combat_dust(const QVector3D &position, const QVector3D &color,
   }
 }
 
+void Renderer::mode_indicator(const QMatrix4x4 &model, int mode_type,
+                              const QVector3D &color, float alpha) {
+  ModeIndicatorCmd cmd;
+  cmd.model = model;
+  cmd.mvp = m_view_proj * model;
+  cmd.mode_type = mode_type;
+  cmd.color = color;
+  cmd.alpha = alpha;
+  if (m_active_queue != nullptr) {
+    m_active_queue->submit(cmd);
+  }
+}
+
 void Renderer::enqueue_selection_ring(
     Engine::Core::Entity *, Engine::Core::TransformComponent *transform,
     Engine::Core::UnitComponent *unit_comp, bool selected, bool hovered) {
@@ -426,6 +440,113 @@ void Renderer::enqueue_selection_ring(
   } else if (hovered) {
     selection_ring(ring_model, 0.35F, 0.15F, QVector3D(0.90F, 0.90F, 0.25F));
   }
+}
+
+void Renderer::enqueue_mode_indicator(
+    Engine::Core::Entity *entity, Engine::Core::TransformComponent *transform,
+    Engine::Core::UnitComponent *unit_comp) {
+  if ((entity == nullptr) || (transform == nullptr)) {
+    return;
+  }
+
+  // Check for all mode types
+  auto *attack_comp = entity->get_component<Engine::Core::AttackComponent>();
+  bool const has_attack = (attack_comp != nullptr) && attack_comp->in_melee_lock;
+
+  auto *guard_mode = entity->get_component<Engine::Core::GuardModeComponent>();
+  bool const has_guard_mode = (guard_mode != nullptr) && guard_mode->active;
+
+  auto *hold_mode = entity->get_component<Engine::Core::HoldModeComponent>();
+  bool const has_hold_mode = (hold_mode != nullptr) && hold_mode->active;
+
+  auto *patrol_comp = entity->get_component<Engine::Core::PatrolComponent>();
+  bool const has_patrol = (patrol_comp != nullptr) && patrol_comp->patrolling;
+
+  // Only render if unit has an active mode
+  if (!has_attack && !has_guard_mode && !has_hold_mode && !has_patrol) {
+    return;
+  }
+
+  float indicator_height = Render::Geom::k_indicator_height_base;
+  float indicator_size = Render::Geom::k_indicator_size;
+
+  if (unit_comp != nullptr) {
+    auto troop_type_opt =
+        Game::Units::spawn_typeToTroopType(unit_comp->spawn_type);
+
+    if (troop_type_opt) {
+      const auto &nation_reg = Game::Systems::NationRegistry::instance();
+      const Game::Systems::Nation *nation =
+          nation_reg.get_nation_for_player(unit_comp->owner_id);
+      Game::Systems::NationID nation_id =
+          nation != nullptr ? nation->id : nation_reg.default_nation_id();
+
+      const auto profile =
+          Game::Systems::TroopProfileService::instance().get_profile(
+              nation_id, *troop_type_opt);
+
+      indicator_height += profile.visuals.selection_ring_y_offset *
+                          Render::Geom::k_indicator_height_multiplier;
+    }
+  }
+
+  if (transform != nullptr) {
+    indicator_height *= transform->scale.y;
+  }
+
+  QVector3D const pos(transform->position.x,
+                      transform->position.y + indicator_height,
+                      transform->position.z);
+
+  if (m_camera != nullptr) {
+    QVector4D const clip_pos = m_view_proj * QVector4D(pos, 1.0F);
+    if (clip_pos.w() > 0.0F) {
+      float const ndc_x = clip_pos.x() / clip_pos.w();
+      float const ndc_y = clip_pos.y() / clip_pos.w();
+      float const ndc_z = clip_pos.z() / clip_pos.w();
+
+      constexpr float margin = Render::Geom::k_frustum_cull_margin;
+      if (ndc_x < -margin || ndc_x > margin || ndc_y < -margin ||
+          ndc_y > margin || ndc_z < -1.0F || ndc_z > 1.0F) {
+        return;
+      }
+    }
+  }
+
+  QMatrix4x4 indicator_model;
+  indicator_model.translate(pos);
+  indicator_model.scale(indicator_size, indicator_size, indicator_size);
+
+  if (m_camera != nullptr) {
+    QVector3D const cam_pos = m_camera->get_position();
+    QVector3D const to_camera = (cam_pos - pos).normalized();
+
+    constexpr float k_pi = 3.14159265358979323846F;
+    float const yaw = std::atan2(to_camera.x(), to_camera.z());
+    indicator_model.rotate(yaw * 180.0F / k_pi, 0, 1, 0);
+  }
+
+  // Determine mode type and color (priority: attack > guard > hold > patrol)
+  int mode_type = Render::Geom::k_mode_type_patrol;
+  QVector3D color = Render::Geom::k_patrol_mode_color;
+
+  if (has_hold_mode) {
+    mode_type = Render::Geom::k_mode_type_hold;
+    color = Render::Geom::k_hold_mode_color;
+  }
+
+  if (has_guard_mode) {
+    mode_type = Render::Geom::k_mode_type_guard;
+    color = Render::Geom::k_guard_mode_color;
+  }
+
+  if (has_attack) {
+    mode_type = Render::Geom::k_mode_type_attack;
+    color = Render::Geom::k_attack_mode_color;
+  }
+
+  mode_indicator(indicator_model, mode_type, color,
+                 Render::Geom::k_indicator_alpha);
 }
 
 void Renderer::render_world(Engine::Core::World *world) {
@@ -583,6 +704,7 @@ void Renderer::render_world(Engine::Core::World *world) {
 
         enqueue_selection_ring(entity, transform, unit_comp, is_selected,
                                is_hovered);
+        enqueue_mode_indicator(entity, transform, unit_comp);
         drawn_by_registry = true;
       }
     }
@@ -664,6 +786,7 @@ void Renderer::render_world(Engine::Core::World *world) {
     }
     enqueue_selection_ring(entity, transform, unit_comp, is_selected,
                            is_hovered);
+    enqueue_mode_indicator(entity, transform, unit_comp);
     mesh(mesh_to_draw, model_matrix, color,
          (res != nullptr) ? res->white() : nullptr, 1.0F);
   }

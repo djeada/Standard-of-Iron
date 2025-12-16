@@ -62,6 +62,11 @@ public:
     // Not used in helmet rendering
   }
 
+  void mode_indicator(const QMatrix4x4 & /*model*/, int /*mode_type*/,
+                      const QVector3D & /*color*/, float /*alpha*/) override {
+    // Not used in helmet rendering
+  }
+
   int mesh_count = 0;
   int cylinder_count = 0;
 };
