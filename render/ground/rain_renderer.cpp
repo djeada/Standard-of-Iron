@@ -177,5 +177,3 @@ void RainRenderer::generate_rain_drops() {
 }
 
 } // namespace Render::GL
-
-} // namespace Render::GL
