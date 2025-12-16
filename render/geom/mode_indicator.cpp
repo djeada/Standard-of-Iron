@@ -24,12 +24,13 @@ auto ModeIndicator::create_attack_mode_mesh()
   std::vector<Vertex> verts;
   std::vector<unsigned int> idx;
 
-  constexpr float sword_length = 0.8F;
-  constexpr float sword_width = 0.12F;
-  constexpr float blade_length = 0.6F;
+  constexpr float sword_length = 0.9F;
+  constexpr float sword_width = 0.1F;
+  constexpr float blade_length = 0.65F;
   constexpr float handle_length = 0.2F;
-  constexpr float cross_guard_width = 0.2F;
-  constexpr float cross_guard_height = 0.05F;
+  constexpr float cross_guard_width = 0.25F;
+  constexpr float cross_guard_height = 0.06F;
+  constexpr float blade_tip_width = 0.03F;
 
   const float angles[] = {0.785398F, -0.785398F};
 
@@ -45,8 +46,8 @@ auto ModeIndicator::create_attack_mode_mesh()
 
     float blade_verts[4][2] = {{-blade_half_width, 0.0F},
                                {blade_half_width, 0.0F},
-                               {blade_half_width, blade_length},
-                               {-blade_half_width, blade_length}};
+                               {blade_tip_width, blade_length},
+                               {-blade_tip_width, blade_length}};
 
     for (int i = 0; i < 4; ++i) {
       float const local_x = blade_verts[i][0];
@@ -106,9 +107,10 @@ auto ModeIndicator::create_guard_mode_mesh()
   std::vector<Vertex> verts;
   std::vector<unsigned int> idx;
 
-  constexpr float shield_width = 0.6F;
-  constexpr float shield_height = 0.7F;
-  constexpr int segments = 12;
+  constexpr float shield_width = 0.65F;
+  constexpr float shield_height = 0.75F;
+  constexpr int segments = 16;
+  constexpr float boss_radius = 0.12F;
 
   QVector3D const n(0, 0, 1);
 
@@ -147,6 +149,24 @@ auto ModeIndicator::create_guard_mode_mesh()
   idx.push_back(bottom_idx);
   idx.push_back(rightmost_idx);
 
+  // Add center boss (raised decorative circle)
+  constexpr int boss_segments = 12;
+  size_t const boss_center = verts.size();
+  verts.push_back({{0.0F, 0.0F, 0.0F}, {n.x(), n.y(), n.z()}, {0.5F, 0.5F}});
+
+  for (int i = 0; i <= boss_segments; ++i) {
+    float const angle = (i / float(boss_segments)) * 2.0F * k_pi;
+    float const x = boss_radius * std::cos(angle);
+    float const y = boss_radius * std::sin(angle);
+    verts.push_back({{x, y, 0.0F}, {n.x(), n.y(), n.z()}, {0.5F, 0.8F}});
+  }
+
+  for (int i = 0; i < boss_segments; ++i) {
+    idx.push_back(boss_center);
+    idx.push_back(boss_center + 1 + i);
+    idx.push_back(boss_center + 1 + i + 1);
+  }
+
   return std::make_unique<Mesh>(verts, idx);
 }
 
@@ -157,12 +177,12 @@ auto ModeIndicator::create_hold_mode_mesh()
   std::vector<Vertex> verts;
   std::vector<unsigned int> idx;
 
-  constexpr float anchor_width = 0.5F;
-  constexpr float anchor_height = 0.7F;
-  constexpr float ring_radius = 0.15F;
-  constexpr float shank_width = 0.08F;
-  constexpr float fluke_width = 0.25F;
-  constexpr float fluke_height = 0.2F;
+  constexpr float anchor_width = 0.55F;
+  constexpr float anchor_height = 0.75F;
+  constexpr float ring_radius = 0.12F;
+  constexpr float shank_width = 0.07F;
+  constexpr float fluke_width = 0.28F;
+  constexpr float fluke_height = 0.22F;
 
   QVector3D const n(0, 0, 1);
 
@@ -247,9 +267,10 @@ auto ModeIndicator::create_patrol_mode_mesh()
   std::vector<Vertex> verts;
   std::vector<unsigned int> idx;
 
-  constexpr float foot_length = 0.25F;
-  constexpr float foot_width = 0.15F;
-  constexpr float step_offset = 0.2F;
+  constexpr float foot_length = 0.28F;
+  constexpr float foot_width = 0.16F;
+  constexpr float step_offset = 0.22F;
+  constexpr float toe_size = 0.05F;
 
   QVector3D const n(0, 0, 1);
 
@@ -275,6 +296,31 @@ auto ModeIndicator::create_patrol_mode_mesh()
       idx.push_back(base);
       idx.push_back(base + 1 + i);
       idx.push_back(base + 1 + i + 1);
+    }
+
+    // Add toe details (small circles at front)
+    for (int toe = 0; toe < 3; ++toe) {
+      float const toe_x_offset = (toe - 1) * toe_size * 1.8F;
+      float const toe_y_offset = foot_length * 0.35F;
+      
+      size_t const toe_center = verts.size();
+      verts.push_back({{x_offset + toe_x_offset, y_offset + toe_y_offset, 0.0F},
+                       {n.x(), n.y(), n.z()},
+                       {0.5F, 0.5F}});
+
+      constexpr int toe_segments = 6;
+      for (int i = 0; i <= toe_segments; ++i) {
+        float const angle = (i / float(toe_segments)) * 2.0F * k_pi;
+        float const tx = x_offset + toe_x_offset + toe_size * std::cos(angle);
+        float const ty = y_offset + toe_y_offset + toe_size * std::sin(angle);
+        verts.push_back({{tx, ty, 0.0F}, {n.x(), n.y(), n.z()}, {0.5F, 1.0F}});
+      }
+
+      for (int i = 0; i < toe_segments; ++i) {
+        idx.push_back(toe_center);
+        idx.push_back(toe_center + 1 + i);
+        idx.push_back(toe_center + 1 + i + 1);
+      }
     }
   }
 
