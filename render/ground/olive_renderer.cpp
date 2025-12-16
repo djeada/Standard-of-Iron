@@ -1,7 +1,5 @@
 #include "olive_renderer.h"
-#include "../../game/map/terrain_service.h"
 #include "../../game/map/visibility_service.h"
-#include "../../game/systems/building_collision_registry.h"
 #include "../gl/buffer.h"
 #include "../scene_renderer.h"
 #include "gl/render_constants.h"
@@ -9,6 +7,7 @@
 #include "ground/olive_gpu.h"
 #include "ground_utils.h"
 #include "map/terrain.h"
+#include "spawn_validator.h"
 #include <QVector2D>
 #include <algorithm>
 #include <cmath>
@@ -147,14 +146,7 @@ void OliveRenderer::generate_olive_instances() {
     return;
   }
 
-  const float half_width = static_cast<float>(m_width) * 0.5F;
-  const float half_height = static_cast<float>(m_height) * 0.5F;
   const float tile_safe = std::max(0.1F, m_tile_size);
-
-  const float edge_padding =
-      std::clamp(m_biome_settings.spawn_edge_padding, 0.0F, 0.5F);
-  const float edge_margin_x = static_cast<float>(m_width) * edge_padding;
-  const float edge_margin_z = static_cast<float>(m_height) * edge_padding;
 
   float olive_density =
       (m_biome_settings.ground_type == Game::Map::GroundType::GrassDry) ? 0.12F
@@ -167,29 +159,24 @@ void OliveRenderer::generate_olive_instances() {
     olive_density = m_biome_settings.plant_density * density_mult;
   }
 
-  std::vector<QVector3D> normals(static_cast<qsizetype>(m_width * m_height),
-                                 QVector3D(0, 1, 0));
-  for (int z = 1; z < m_height - 1; ++z) {
-    for (int x = 1; x < m_width - 1; ++x) {
-      int const idx = z * m_width + x;
-      float const h_l = m_heightData[(z)*m_width + (x - 1)];
-      float const h_r = m_heightData[(z)*m_width + (x + 1)];
-      float const h_d = m_heightData[(z - 1) * m_width + (x)];
-      float const h_u = m_heightData[(z + 1) * m_width + (x)];
+  // Build terrain cache for spawn validation
+  SpawnTerrainCache terrain_cache;
+  terrain_cache.build_from_height_map(m_heightData, m_terrain_types, m_width,
+                                      m_height, m_tile_size);
 
-      QVector3D n = QVector3D(h_l - h_r, 2.0F * tile_safe, h_d - h_u);
-      if (n.lengthSquared() > 0.0F) {
-        n.normalize();
-      } else {
-        n = QVector3D(0, 1, 0);
-      }
-      normals[idx] = n;
-    }
-  }
+  // Configure spawn validator for trees
+  SpawnValidationConfig config = make_tree_spawn_config();
+  config.grid_width = m_width;
+  config.grid_height = m_height;
+  config.tile_size = m_tile_size;
+  config.edge_padding = m_biome_settings.spawn_edge_padding;
+  config.max_slope = 0.65F; // Olive trees can't grow on steep slopes
+
+  SpawnValidator validator(terrain_cache, config);
 
   auto add_olive = [&](float gx, float gz, uint32_t &state) -> bool {
-    if (gx < edge_margin_x || gx > m_width - 1 - edge_margin_x ||
-        gz < edge_margin_z || gz > m_height - 1 - edge_margin_z) {
+    // Use unified spawn validator for all checks
+    if (!validator.can_spawn_at_grid(gx, gz)) {
       return false;
     }
 
@@ -200,23 +187,10 @@ void OliveRenderer::generate_olive_instances() {
     int const iz = std::clamp(int(std::floor(sgz + 0.5F)), 0, m_height - 1);
     int const normal_idx = iz * m_width + ix;
 
-    QVector3D const normal = normals[normal_idx];
-    float const slope = 1.0F - std::clamp(normal.y(), 0.0F, 1.0F);
-
-    float const world_x = (gx - half_width) * m_tile_size;
-    float const world_z = (gz - half_height) * m_tile_size;
-    float const world_y = m_heightData[normal_idx];
-
-    auto &building_registry =
-        Game::Systems::BuildingCollisionRegistry::instance();
-    if (building_registry.isPointInBuilding(world_x, world_z)) {
-      return false;
-    }
-
-    auto &terrain_service = Game::Map::TerrainService::instance();
-    if (terrain_service.is_point_on_road(world_x, world_z)) {
-      return false;
-    }
+    float world_x = 0.0F;
+    float world_z = 0.0F;
+    validator.grid_to_world(gx, gz, world_x, world_z);
+    float const world_y = m_heightData[static_cast<size_t>(normal_idx)];
 
     float const color_var = remap(rand_01(state), 0.0F, 1.0F);
     QVector3D const base_color(0.35F, 0.42F, 0.28F);
@@ -258,8 +232,7 @@ void OliveRenderer::generate_olive_instances() {
     for (int x = 0; x < m_width; x += 6) {
       int const idx = z * m_width + x;
 
-      QVector3D const normal = normals[idx];
-      float const slope = 1.0F - std::clamp(normal.y(), 0.0F, 1.0F);
+      float const slope = terrain_cache.get_slope_at(x, z);
       if (slope > 0.65F) {
         continue;
       }
@@ -267,13 +240,12 @@ void OliveRenderer::generate_olive_instances() {
       uint32_t state = hash_coords(
           x, z, m_noiseSeed ^ 0xCD34EF56U ^ static_cast<uint32_t>(idx));
 
-      float const world_x = (x - half_width) * m_tile_size;
-      float const world_z = (z - half_height) * m_tile_size;
-
+      Game::Map::TerrainType const terrain_type =
+          terrain_cache.get_terrain_type_at(x, z);
       float density_mult = 1.0F;
-      if (m_terrain_types[idx] == Game::Map::TerrainType::Hill) {
+      if (terrain_type == Game::Map::TerrainType::Hill) {
         density_mult = 1.15F;
-      } else if (m_terrain_types[idx] == Game::Map::TerrainType::Mountain) {
+      } else if (terrain_type == Game::Map::TerrainType::Mountain) {
         density_mult = 0.5F;
       }
 
