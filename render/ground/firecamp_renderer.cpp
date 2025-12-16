@@ -221,13 +221,19 @@ void FireCampRenderer::setExplicitFireCamps(
   }
 }
 
-void FireCampRenderer::add_explicit_firecamps() {
+void FireCampRenderer::add_explicit_firecamps(
+    const SpawnValidator &validator) {
   if (m_explicitPositions.empty()) {
     return;
   }
 
   for (size_t i = 0; i < m_explicitPositions.size(); ++i) {
     const QVector3D &pos = m_explicitPositions[i];
+
+    // Validate explicit firecamp positions
+    if (!validator.can_spawn_at_world(pos.x(), pos.z())) {
+      continue; // Skip invalid positions
+    }
 
     float intensity = 1.0F;
     if (i < m_explicitIntensities.size()) {
@@ -349,7 +355,7 @@ void FireCampRenderer::generate_firecamp_instances() {
     }
   }
 
-  add_explicit_firecamps();
+  add_explicit_firecamps(validator);
 
   m_fireCampInstanceCount = m_fireCampInstances.size();
   m_fireCampInstancesDirty = m_fireCampInstanceCount > 0;
