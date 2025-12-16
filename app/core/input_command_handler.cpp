@@ -54,8 +54,9 @@ void InputCommandHandler::on_right_click(qreal sx, qreal sy, int local_owner_id,
   }
 
   if (m_cursor_manager->mode() == CursorMode::Patrol ||
-      m_cursor_manager->mode() == CursorMode::Attack) {
-    m_cursor_manager->setMode(CursorMode::Normal);
+      m_cursor_manager->mode() == CursorMode::Attack ||
+      m_cursor_manager->mode() == CursorMode::Guard) {
+    m_cursor_manager->set_mode(CursorMode::Normal);
     return;
   }
 
@@ -110,8 +111,8 @@ void InputCommandHandler::on_attack_click(qreal sx, qreal sy,
     return;
   }
 
-  auto result = m_command_controller->onAttackClick(sx, sy, viewport.width,
-                                                    viewport.height, m_camera);
+  auto result = m_command_controller->on_attack_click(sx, sy, viewport.width,
+                                                      viewport.height, m_camera);
 
   auto *selection_system =
       m_world->get_system<Game::Systems::SelectionSystem>();
@@ -138,8 +139,8 @@ void InputCommandHandler::on_attack_click(qreal sx, qreal sy,
     }
   }
 
-  if (result.resetCursorToNormal) {
-    m_cursor_manager->setMode(CursorMode::Normal);
+  if (result.reset_cursor_to_normal) {
+    m_cursor_manager->set_mode(CursorMode::Normal);
   }
 }
 
@@ -155,9 +156,9 @@ void InputCommandHandler::on_stop_command() {
     return;
   }
 
-  auto result = m_command_controller->onStopCommand();
-  if (result.resetCursorToNormal) {
-    m_cursor_manager->setMode(CursorMode::Normal);
+  auto result = m_command_controller->on_stop_command();
+  if (result.reset_cursor_to_normal) {
+    m_cursor_manager->set_mode(CursorMode::Normal);
   }
 }
 
@@ -169,9 +170,39 @@ void InputCommandHandler::on_hold_command() {
     return;
   }
 
-  auto result = m_command_controller->onHoldCommand();
-  if (result.resetCursorToNormal) {
-    m_cursor_manager->setMode(CursorMode::Normal);
+  auto result = m_command_controller->on_hold_command();
+  if (result.reset_cursor_to_normal) {
+    m_cursor_manager->set_mode(CursorMode::Normal);
+  }
+}
+
+void InputCommandHandler::on_guard_command() {
+  if (m_is_spectator_mode) {
+    return;
+  }
+  if (!m_command_controller) {
+    return;
+  }
+
+  auto result = m_command_controller->on_guard_command();
+  if (result.reset_cursor_to_normal) {
+    m_cursor_manager->set_mode(CursorMode::Normal);
+  }
+}
+
+void InputCommandHandler::on_guard_click(qreal sx, qreal sy,
+                                         const ViewportState &viewport) {
+  if (m_is_spectator_mode) {
+    return;
+  }
+  if (!m_command_controller || !m_camera) {
+    return;
+  }
+
+  auto result = m_command_controller->on_guard_click(sx, sy, viewport.width,
+                                                     viewport.height, m_camera);
+  if (result.reset_cursor_to_normal) {
+    m_cursor_manager->set_mode(CursorMode::Normal);
   }
 }
 
@@ -179,7 +210,14 @@ auto InputCommandHandler::any_selected_in_hold_mode() const -> bool {
   if (!m_command_controller) {
     return false;
   }
-  return m_command_controller->anySelectedInHoldMode();
+  return m_command_controller->any_selected_in_hold_mode();
+}
+
+auto InputCommandHandler::any_selected_in_guard_mode() const -> bool {
+  if (!m_command_controller) {
+    return false;
+  }
+  return m_command_controller->any_selected_in_guard_mode();
 }
 
 void InputCommandHandler::on_patrol_click(qreal sx, qreal sy,
@@ -191,10 +229,10 @@ void InputCommandHandler::on_patrol_click(qreal sx, qreal sy,
     return;
   }
 
-  auto result = m_command_controller->onPatrolClick(sx, sy, viewport.width,
-                                                    viewport.height, m_camera);
-  if (result.resetCursorToNormal) {
-    m_cursor_manager->setMode(CursorMode::Normal);
+  auto result = m_command_controller->on_patrol_click(sx, sy, viewport.width,
+                                                      viewport.height, m_camera);
+  if (result.reset_cursor_to_normal) {
+    m_cursor_manager->set_mode(CursorMode::Normal);
   }
 }
 
@@ -250,8 +288,6 @@ void InputCommandHandler::set_hover_at_screen(qreal sx, qreal sy,
   if (!m_hover_tracker || !m_camera || !m_world) {
     return;
   }
-
-  m_cursor_manager->updateCursorShape(nullptr);
 
   m_hover_tracker->update_hover(float(sx), float(sy), *m_world, *m_camera,
                                 viewport.width, viewport.height);
