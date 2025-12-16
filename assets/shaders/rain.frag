@@ -45,7 +45,8 @@ void main() {
     // Soft edge falloff
     float edge = 1.0 - smoothstep(0.7, 1.0, length(coord));
     
-    float alpha = flake * edge * v_alpha * 0.8;
+    // Increased alpha for better visibility
+    float alpha = flake * edge * v_alpha * 0.95;
     frag_color = vec4(u_rain_color, alpha);
   } else {
     // Rain rendering (lines)
