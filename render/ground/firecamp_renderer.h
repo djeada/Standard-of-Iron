@@ -8,6 +8,10 @@
 #include <memory>
 #include <vector>
 
+namespace Render::Ground {
+class SpawnValidator;
+}
+
 namespace Render::GL {
 class Buffer;
 class Renderer;
@@ -30,7 +34,7 @@ public:
 
 private:
   void generate_firecamp_instances();
-  void add_explicit_firecamps();
+  void add_explicit_firecamps(const Render::Ground::SpawnValidator &validator);
 
   int m_width = 0;
   int m_height = 0;
