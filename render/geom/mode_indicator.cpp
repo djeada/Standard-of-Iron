@@ -32,6 +32,8 @@ auto ModeIndicator::create_attack_mode_mesh()
   constexpr float cross_guard_height = 0.06F;
   constexpr float blade_tip_width = 0.03F;
   constexpr float handle_offset = 0.25F; // Offset handles so swords cross at top
+  constexpr float guard_position_ratio = 0.15F;
+  constexpr float handle_width_ratio = 0.3F;
 
   const float angles[] = {0.785398F, -0.785398F}; // 45 degrees
   const float x_offsets[] = {-handle_offset, handle_offset}; // Separate handles
@@ -77,7 +79,7 @@ auto ModeIndicator::create_attack_mode_mesh()
     size_t const guard_base = verts.size();
     float const guard_half_width = cross_guard_width * 0.5F;
     float const guard_half_height = cross_guard_height * 0.5F;
-    float const guard_y = blade_length * 0.15F;
+    float const guard_y = blade_length * guard_position_ratio;
 
     float guard_verts[4][2] = {
         {-guard_half_width, guard_y - guard_half_height},
@@ -105,7 +107,7 @@ auto ModeIndicator::create_attack_mode_mesh()
 
     // Handle below guard
     size_t const handle_base = verts.size();
-    float const handle_half_width = sword_width * 0.3F;
+    float const handle_half_width = sword_width * handle_width_ratio;
     float const handle_start = -handle_length;
 
     float handle_verts[4][2] = {
@@ -381,6 +383,7 @@ auto ModeIndicator::create_patrol_mode_mesh()
   constexpr float arrow_head_length = 0.15F;
   constexpr float arrow_head_width = 0.15F;
   constexpr int circle_segments = 24;
+  constexpr float arrow_end_ratio = 0.85F; // How far around the circle the arrow extends
 
   QVector3D const n(0, 0, 1);
 
@@ -388,7 +391,7 @@ auto ModeIndicator::create_patrol_mode_mesh()
   for (int arrow = 0; arrow < 2; ++arrow) {
     // Determine which half of the circle (top or bottom)
     float const start_angle = arrow == 0 ? 0.0F : k_pi;
-    float const end_angle = arrow == 0 ? k_pi * 0.85F : k_pi * 1.85F;
+    float const end_angle = arrow == 0 ? k_pi * arrow_end_ratio : k_pi * (1.0F + arrow_end_ratio);
     int const segments = circle_segments / 2;
 
     // Draw the curved path
