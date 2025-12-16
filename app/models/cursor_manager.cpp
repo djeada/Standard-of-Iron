@@ -12,35 +12,35 @@
 
 CursorManager::CursorManager(QObject *parent) : QObject(parent) {}
 
-void CursorManager::setMode(CursorMode mode) {
-  if (m_cursorMode == mode) {
+void CursorManager::set_mode(CursorMode mode) {
+  if (m_cursor_mode == mode) {
     return;
   }
 
-  if (m_cursorMode == CursorMode::Patrol && mode != CursorMode::Patrol) {
-    m_hasFirstWaypoint = false;
+  if (m_cursor_mode == CursorMode::Patrol && mode != CursorMode::Patrol) {
+    m_has_first_waypoint = false;
   }
 
-  m_cursorMode = mode;
+  m_cursor_mode = mode;
 
-  emit modeChanged();
-  emit globalCursorChanged();
+  emit mode_changed();
+  emit global_cursor_changed();
 }
 
-void CursorManager::setMode(const QString &mode) {
-  setMode(CursorModeUtils::fromString(mode));
+void CursorManager::set_mode(const QString &mode) {
+  set_mode(CursorModeUtils::fromString(mode));
 }
 
-void CursorManager::updateCursorShape(QQuickWindow *window) {
+void CursorManager::update_cursor_shape(QQuickWindow *window) {
   if (window == nullptr) {
     return;
   }
 
   Qt::CursorShape const desired_cursor =
-      (m_cursorMode == CursorMode::Normal) ? Qt::ArrowCursor : Qt::BlankCursor;
+      (m_cursor_mode == CursorMode::Normal) ? Qt::ArrowCursor : Qt::BlankCursor;
 
-  if (m_currentCursor != desired_cursor) {
-    m_currentCursor = desired_cursor;
+  if (m_current_cursor != desired_cursor) {
+    m_current_cursor = desired_cursor;
     window->setCursor(desired_cursor);
   }
 }
@@ -63,9 +63,9 @@ auto CursorManager::global_cursor_y(QQuickWindow *window) -> qreal {
   return local_pos.y();
 }
 
-void CursorManager::setPatrolFirstWaypoint(const QVector3D &waypoint) {
-  m_firstWaypoint = waypoint;
-  m_hasFirstWaypoint = true;
+void CursorManager::set_patrol_first_waypoint(const QVector3D &waypoint) {
+  m_first_waypoint = waypoint;
+  m_has_first_waypoint = true;
 }
 
-void CursorManager::clearPatrolFirstWaypoint() { m_hasFirstWaypoint = false; }
+void CursorManager::clear_patrol_first_waypoint() { m_has_first_waypoint = false; }

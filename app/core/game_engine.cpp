@@ -258,9 +258,9 @@ GameEngine::GameEngine(QObject *parent)
     qWarning() << "Failed to initialize AudioEventHandler";
   }
 
-  connect(m_cursorManager.get(), &CursorManager::modeChanged, this,
+  connect(m_cursorManager.get(), &CursorManager::mode_changed, this,
           &GameEngine::cursor_mode_changed);
-  connect(m_cursorManager.get(), &CursorManager::globalCursorChanged, this,
+  connect(m_cursorManager.get(), &CursorManager::global_cursor_changed, this,
           &GameEngine::global_cursor_changed);
 
   connect(m_selectionController.get(),
@@ -274,7 +274,7 @@ GameEngine::GameEngine(QObject *parent)
       &Game::Systems::SelectionController::selection_model_refresh_requested,
       this, &GameEngine::selected_units_data_changed);
   connect(m_commandController.get(),
-          &App::Controllers::CommandController::attack_targetSelected,
+          &App::Controllers::CommandController::attack_target_selected,
           [this]() {
             if (auto *sel_sys =
                     m_world->get_system<Game::Systems::SelectionSystem>()) {
@@ -297,15 +297,15 @@ GameEngine::GameEngine(QObject *parent)
           });
 
   connect(m_commandController.get(),
-          &App::Controllers::CommandController::troopLimitReached, [this]() {
+          &App::Controllers::CommandController::troop_limit_reached, [this]() {
             set_error(
                 "Maximum troop limit reached. Cannot produce more units.");
           });
   connect(m_commandController.get(),
-          &App::Controllers::CommandController::hold_modeChanged, this,
+          &App::Controllers::CommandController::hold_mode_changed, this,
           &GameEngine::hold_mode_changed);
   connect(m_commandController.get(),
-          &App::Controllers::CommandController::guard_modeChanged, this,
+          &App::Controllers::CommandController::guard_mode_changed, this,
           &GameEngine::guard_mode_changed);
 
   connect(this, SIGNAL(selected_units_changed()), m_selectedUnitsModel,
@@ -496,8 +496,8 @@ void GameEngine::set_cursor_mode(CursorMode mode) {
   if (!m_cursorManager) {
     return;
   }
-  m_cursorManager->setMode(mode);
-  m_cursorManager->updateCursorShape(m_window);
+  m_cursorManager->set_mode(mode);
+  m_cursorManager->update_cursor_shape(m_window);
 }
 
 void GameEngine::set_cursor_mode(const QString &mode) {
@@ -508,7 +508,7 @@ auto GameEngine::cursor_mode() const -> QString {
   if (!m_cursorManager) {
     return "normal";
   }
-  return m_cursorManager->modeString();
+  return m_cursorManager->mode_string();
 }
 
 auto GameEngine::global_cursor_x() const -> qreal {
@@ -774,8 +774,8 @@ void GameEngine::render(int pixelWidth, int pixelHeight) {
 
   if (auto *res = m_renderer->resources()) {
     std::optional<QVector3D> preview_waypoint;
-    if (m_commandController && m_commandController->hasPatrolFirstWaypoint()) {
-      preview_waypoint = m_commandController->getPatrolFirstWaypoint();
+    if (m_commandController && m_commandController->has_patrol_first_waypoint()) {
+      preview_waypoint = m_commandController->get_patrol_first_waypoint();
     }
     Render::GL::renderPatrolFlags(m_renderer.get(), res, *m_world,
                                   preview_waypoint);
@@ -944,7 +944,7 @@ void GameEngine::recruit_near_selected(const QString &unit_type) {
   if (!m_commandController) {
     return;
   }
-  m_commandController->recruitNearSelected(unit_type, m_runtime.local_owner_id);
+  m_commandController->recruit_near_selected(unit_type, m_runtime.local_owner_id);
 }
 
 auto GameEngine::get_selected_production_state() const -> QVariantMap {
@@ -1121,16 +1121,16 @@ auto GameEngine::get_selected_units_mode_availability() const -> QVariantMap {
       continue;
     }
 
-    if (can_attack && !Game::Units::canUseAttackMode(u->spawn_type)) {
+    if (can_attack && !Game::Units::can_use_attack_mode(u->spawn_type)) {
       can_attack = false;
     }
-    if (can_guard && !Game::Units::canUseGuardMode(u->spawn_type)) {
+    if (can_guard && !Game::Units::can_use_guard_mode(u->spawn_type)) {
       can_guard = false;
     }
-    if (can_hold && !Game::Units::canUseHoldMode(u->spawn_type)) {
+    if (can_hold && !Game::Units::can_use_hold_mode(u->spawn_type)) {
       can_hold = false;
     }
-    if (can_patrol && !Game::Units::canUsePatrolMode(u->spawn_type)) {
+    if (can_patrol && !Game::Units::can_use_patrol_mode(u->spawn_type)) {
       can_patrol = false;
     }
   }
@@ -1148,9 +1148,9 @@ void GameEngine::set_rally_at_screen(qreal sx, qreal sy) {
   if (!m_commandController || !m_camera) {
     return;
   }
-  m_commandController->setRallyAtScreen(sx, sy, m_viewport.width,
-                                        m_viewport.height, m_camera.get(),
-                                        m_runtime.local_owner_id);
+  m_commandController->set_rally_at_screen(sx, sy, m_viewport.width,
+                                           m_viewport.height, m_camera.get(),
+                                           m_runtime.local_owner_id);
 }
 
 void GameEngine::start_loading_maps() {
@@ -1609,7 +1609,7 @@ void GameEngine::apply_runtime_snapshot(
 
   m_runtime.cursor_mode = static_cast<CursorMode>(snapshot.cursor_mode);
   if (m_cursorManager) {
-    m_cursorManager->setMode(m_runtime.cursor_mode);
+    m_cursorManager->set_mode(m_runtime.cursor_mode);
   }
 }
 
