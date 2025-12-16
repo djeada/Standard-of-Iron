@@ -150,16 +150,16 @@ void RiverbankRenderer::build_meshes() {
       };
       
       constexpr RingProfile k_left_rings[k_rings_per_side] = {
-        {0.0F, 0.05F},    // water edge - just above water
-        {0.25F, 0.35F},   // inner midslope
-        {0.5F, 0.6F},     // crest - peak of bank
-        {0.75F, 0.25F},   // outer midslope
-        {1.0F, 0.0F}      // terrain blend
+        {0.0F, 0.02F},    // water edge - just above water (halved from 0.05)
+        {0.125F, 0.175F}, // inner midslope (halved from 0.25, 0.35)
+        {0.25F, 0.3F},    // crest - peak of bank (halved from 0.5, 0.6)
+        {0.375F, 0.125F}, // outer midslope (halved from 0.75, 0.25)
+        {0.5F, -0.02F}    // terrain blend (halved width, slightly below to avoid z-fighting)
       };
       
       // Add some noise-based width variation to ring distances
-      float const ring_noise = noise(center_pos.x() * 3.0F, center_pos.z() * 3.0F) * 0.15F;
-      float const base_bank_width = 1.0F + ring_noise;
+      float const ring_noise = noise(center_pos.x() * 3.0F, center_pos.z() * 3.0F) * 0.075F;
+      float const base_bank_width = 0.5F + ring_noise; // Halved from 1.0F
 
       // Build vertices for left bank rings
       unsigned int const ring_start_idx = static_cast<unsigned int>(vertices.size());
@@ -437,31 +437,40 @@ void RiverbankRenderer::submit(Renderer &renderer, ResourceManager *resources) {
     }
 
     if (use_visibility) {
-      bool any_visible = false;
-      bool any_explored = false;
+      int max_visibility_state = 0;
       
       if (mesh_index - 1 < m_visibilitySamples.size()) {
         const auto &samples = m_visibilitySamples[mesh_index - 1];
         
-        // Check if any part is visible or explored
+        // Check visibility state (same logic as bridges)
         for (const auto &pos : samples) {
           if (visibility.isVisibleWorld(pos.x(), pos.z())) {
-            any_visible = true;
+            max_visibility_state = 2; // Fully visible
             break;
           }
           if (visibility.isExploredWorld(pos.x(), pos.z())) {
-            any_explored = true;
+            max_visibility_state = std::max(max_visibility_state, 1); // Explored
           }
         }
       }
       
-      // Don't render if neither visible nor explored (completely hidden in fog of war)
-      if (!any_visible && !any_explored) {
+      // Don't render if completely hidden in fog of war
+      if (max_visibility_state == 0) {
         continue;
       }
+      
+      // Render with reduced alpha if only explored (not currently visible)
+      float alpha = 1.0F;
+      QVector3D color_multiplier(1.0F, 1.0F, 1.0F);
+      if (max_visibility_state == 1) {
+        alpha = 0.5F;
+        color_multiplier = QVector3D(0.4F, 0.4F, 0.45F);
+      }
+      
+      renderer.mesh(mesh, model, color_multiplier, nullptr, alpha);
+    } else {
+      renderer.mesh(mesh, model, QVector3D(1.0F, 1.0F, 1.0F), nullptr, 1.0F);
     }
-
-    renderer.mesh(mesh, model, QVector3D(1.0F, 1.0F, 1.0F), nullptr, 1.0F);
   }
 
   renderer.set_current_shader(nullptr);
