@@ -20,6 +20,7 @@ add_library(render_gl STATIC
     gl/backend/healing_beam_pipeline.cpp
     gl/backend/healer_aura_pipeline.cpp
     gl/backend/combat_dust_pipeline.cpp
+    gl/backend/mode_indicator_pipeline.cpp
     gl/backend/rain_pipeline.cpp
     gl/shader_cache.cpp
     gl/state_scopes.cpp
@@ -88,6 +89,7 @@ add_library(render_gl STATIC
     geom/selection_disc.cpp
     geom/arrow.cpp
     geom/stone.cpp
+    geom/mode_indicator.cpp
     geom/projectile_renderer.cpp
     geom/flag.cpp
     geom/banner_cloth.cpp
