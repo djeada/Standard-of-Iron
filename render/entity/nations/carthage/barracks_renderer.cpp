@@ -23,6 +23,22 @@ using Render::Geom::clamp01;
 using Render::Geom::clampVec01;
 using Render::Geom::cylinder_between;
 
+enum class BuildingState {
+  Normal,    // health >= 70%
+  Damaged,   // 30% <= health < 70%
+  Destroyed  // health < 30%
+};
+
+inline auto get_building_state(float health_ratio) -> BuildingState {
+  if (health_ratio >= 0.70F) {
+    return BuildingState::Normal;
+  } else if (health_ratio >= 0.30F) {
+    return BuildingState::Damaged;
+  } else {
+    return BuildingState::Destroyed;
+  }
+}
+
 struct CarthagePalette {
   QVector3D limestone{0.96F, 0.94F, 0.88F};
   QVector3D limestone_shade{0.88F, 0.85F, 0.78F};
@@ -83,51 +99,67 @@ void draw_platform(const DrawContext &p, ISubmitter &out, Mesh *unit,
 }
 
 void draw_colonnade(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                    Texture *white, const CarthagePalette &c) {
+                    Texture *white, const CarthagePalette &c,
+                    BuildingState state) {
   float const col_height = 1.6F;
   float const col_radius = 0.10F;
+  
+  // Reduce column height for damaged/destroyed states
+  float height_multiplier = 1.0F;
+  int num_columns = 6;
+  if (state == BuildingState::Damaged) {
+    height_multiplier = 0.7F;
+    num_columns = 4;  // Fewer columns for damaged state
+  } else if (state == BuildingState::Destroyed) {
+    height_multiplier = 0.4F;
+    num_columns = 2;  // Even fewer columns for destroyed state
+  }
 
-  for (int i = 0; i < 6; ++i) {
-    float const x = -1.25F + float(i) * 0.5F;
+  for (int i = 0; i < num_columns; ++i) {
+    float const x = -1.25F + float(i) * (num_columns > 1 ? 2.5F / (num_columns - 1) : 0.0F);
     float const z = 1.4F;
 
     draw_box(out, unit, white, p.model, QVector3D(x, 0.25F, z),
              QVector3D(col_radius * 1.2F, 0.05F, col_radius * 1.2F), c.marble);
 
     draw_cyl(out, p.model, QVector3D(x, 0.2F, z),
-             QVector3D(x, 0.2F + col_height, z), col_radius, c.limestone,
+             QVector3D(x, 0.2F + col_height * height_multiplier, z), col_radius, c.limestone,
              white);
 
     draw_box(out, unit, white, p.model,
-             QVector3D(x, 0.2F + col_height + 0.05F, z),
+             QVector3D(x, 0.2F + col_height * height_multiplier + 0.05F, z),
              QVector3D(col_radius * 1.5F, 0.08F, col_radius * 1.5F), c.marble);
 
-    draw_box(out, unit, white, p.model,
-             QVector3D(x, 0.2F + col_height + 0.12F, z),
-             QVector3D(col_radius * 1.3F, 0.04F, col_radius * 1.3F), c.gold);
+    // Skip gold decorations if destroyed
+    if (state != BuildingState::Destroyed) {
+      draw_box(out, unit, white, p.model,
+               QVector3D(x, 0.2F + col_height * height_multiplier + 0.12F, z),
+               QVector3D(col_radius * 1.3F, 0.04F, col_radius * 1.3F), c.gold);
+    }
   }
 
-  for (int i = 0; i < 3; ++i) {
-    float const z = -1.0F + float(i) * 1.0F;
+  int side_columns = (state == BuildingState::Destroyed) ? 2 : 3;
+  for (int i = 0; i < side_columns; ++i) {
+    float const z = -1.0F + float(i) * (side_columns > 1 ? 2.0F / (side_columns - 1) : 0.0F);
 
     float const x_left = -1.6F;
     draw_box(out, unit, white, p.model, QVector3D(x_left, 0.25F, z),
              QVector3D(col_radius * 1.2F, 0.05F, col_radius * 1.2F), c.marble);
     draw_cyl(out, p.model, QVector3D(x_left, 0.2F, z),
-             QVector3D(x_left, 0.2F + col_height, z), col_radius, c.limestone,
+             QVector3D(x_left, 0.2F + col_height * height_multiplier, z), col_radius, c.limestone,
              white);
     draw_box(out, unit, white, p.model,
-             QVector3D(x_left, 0.2F + col_height + 0.05F, z),
+             QVector3D(x_left, 0.2F + col_height * height_multiplier + 0.05F, z),
              QVector3D(col_radius * 1.5F, 0.08F, col_radius * 1.5F), c.marble);
 
     float const x_right = 1.6F;
     draw_box(out, unit, white, p.model, QVector3D(x_right, 0.25F, z),
              QVector3D(col_radius * 1.2F, 0.05F, col_radius * 1.2F), c.marble);
     draw_cyl(out, p.model, QVector3D(x_right, 0.2F, z),
-             QVector3D(x_right, 0.2F + col_height, z), col_radius, c.limestone,
+             QVector3D(x_right, 0.2F + col_height * height_multiplier, z), col_radius, c.limestone,
              white);
     draw_box(out, unit, white, p.model,
-             QVector3D(x_right, 0.2F + col_height + 0.05F, z),
+             QVector3D(x_right, 0.2F + col_height * height_multiplier + 0.05F, z),
              QVector3D(col_radius * 1.5F, 0.08F, col_radius * 1.5F), c.marble);
   }
 }
@@ -179,7 +211,12 @@ void draw_chamber(const DrawContext &p, ISubmitter &out, Mesh *unit,
 }
 
 void draw_terrace(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                  Texture *white, const CarthagePalette &c) {
+                  Texture *white, const CarthagePalette &c,
+                  BuildingState state) {
+  // Skip terrace if destroyed
+  if (state == BuildingState::Destroyed) {
+    return;
+  }
 
   draw_box(out, unit, white, p.model, QVector3D(0.0F, 2.05F, 0.0F),
            QVector3D(1.7F, 0.08F, 1.5F), c.marble);
@@ -335,8 +372,17 @@ void draw_barracks(const DrawContext &p, ISubmitter &out) {
 
   auto *t = p.entity->get_component<Engine::Core::TransformComponent>();
   auto *r = p.entity->get_component<Engine::Core::RenderableComponent>();
+  auto *u = p.entity->get_component<Engine::Core::UnitComponent>();
   if (!t || !r) {
     return;
+  }
+
+  // Determine building state based on health
+  BuildingState state = BuildingState::Normal;
+  if (u != nullptr) {
+    float const health_ratio =
+        std::clamp(u->health / float(std::max(1, u->max_health)), 0.0F, 1.0F);
+    state = get_building_state(health_ratio);
   }
 
   Mesh *unit = p.resources->unit();
@@ -351,10 +397,10 @@ void draw_barracks(const DrawContext &p, ISubmitter &out) {
   }
 
   draw_platform(p, out, unit, white, c);
-  draw_colonnade(p, out, unit, white, c);
+  draw_colonnade(p, out, unit, white, c, state);
   draw_central_courtyard(p, out, unit, white, c);
   draw_chamber(p, out, unit, white, c);
-  draw_terrace(p, out, unit, white, c);
+  draw_terrace(p, out, unit, white, c, state);
   draw_trading_goods(p, out, unit, white, c);
   draw_phoenician_banner(p, out, unit, white, c, &cloth);
   draw_rally_flag(p, out, white, c);

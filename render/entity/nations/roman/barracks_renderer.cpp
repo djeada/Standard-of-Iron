@@ -23,6 +23,22 @@ using Render::Geom::clamp01;
 using Render::Geom::clampVec01;
 using Render::Geom::cylinder_between;
 
+enum class BuildingState {
+  Normal,    // health >= 70%
+  Damaged,   // 30% <= health < 70%
+  Destroyed  // health < 30%
+};
+
+inline auto get_building_state(float health_ratio) -> BuildingState {
+  if (health_ratio >= 0.70F) {
+    return BuildingState::Normal;
+  } else if (health_ratio >= 0.30F) {
+    return BuildingState::Damaged;
+  } else {
+    return BuildingState::Destroyed;
+  }
+}
+
 struct RomanPalette {
   QVector3D stone_light{0.62F, 0.60F, 0.58F};
   QVector3D stone_dark{0.50F, 0.48F, 0.46F};
@@ -83,53 +99,77 @@ void drawFortressBase(const DrawContext &p, ISubmitter &out, Mesh *unit,
 }
 
 void drawFortressWalls(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                       Texture *white, const RomanPalette &c) {
+                       Texture *white, const RomanPalette &c,
+                       BuildingState state) {
   float const wall_height = 1.2F;
+  
+  // Reduce wall height for damaged/destroyed states
+  float height_multiplier = 1.0F;
+  if (state == BuildingState::Damaged) {
+    height_multiplier = 0.7F;
+  } else if (state == BuildingState::Destroyed) {
+    height_multiplier = 0.4F;
+  }
 
   draw_box(out, unit, white, p.model,
-           QVector3D(0.0F, wall_height * 0.5F + 0.3F, -1.3F),
-           QVector3D(1.5F, wall_height * 0.5F, 0.12F), c.stone_light);
+           QVector3D(0.0F, wall_height * 0.5F * height_multiplier + 0.3F, -1.3F),
+           QVector3D(1.5F, wall_height * 0.5F * height_multiplier, 0.12F), c.stone_light);
   draw_box(out, unit, white, p.model,
-           QVector3D(0.0F, wall_height * 0.5F + 0.3F, 1.3F),
-           QVector3D(1.5F, wall_height * 0.5F, 0.12F), c.stone_light);
+           QVector3D(0.0F, wall_height * 0.5F * height_multiplier + 0.3F, 1.3F),
+           QVector3D(1.5F, wall_height * 0.5F * height_multiplier, 0.12F), c.stone_light);
   draw_box(out, unit, white, p.model,
-           QVector3D(-1.6F, wall_height * 0.5F + 0.3F, 0.0F),
-           QVector3D(0.12F, wall_height * 0.5F, 1.2F), c.stone_light);
+           QVector3D(-1.6F, wall_height * 0.5F * height_multiplier + 0.3F, 0.0F),
+           QVector3D(0.12F, wall_height * 0.5F * height_multiplier, 1.2F), c.stone_light);
   draw_box(out, unit, white, p.model,
-           QVector3D(1.6F, wall_height * 0.5F + 0.3F, 0.0F),
-           QVector3D(0.12F, wall_height * 0.5F, 1.2F), c.stone_light);
+           QVector3D(1.6F, wall_height * 0.5F * height_multiplier + 0.3F, 0.0F),
+           QVector3D(0.12F, wall_height * 0.5F * height_multiplier, 1.2F), c.stone_light);
 
-  for (int i = 0; i < 6; ++i) {
-    float const x = -1.2F + float(i) * 0.5F;
-    draw_box(out, unit, white, p.model,
-             QVector3D(x, wall_height + 0.35F, -1.25F),
-             QVector3D(0.2F, 0.05F, 0.05F), c.brick);
+  // Skip decorative bricks if destroyed
+  if (state != BuildingState::Destroyed) {
+    for (int i = 0; i < 6; ++i) {
+      float const x = -1.2F + float(i) * 0.5F;
+      draw_box(out, unit, white, p.model,
+               QVector3D(x, wall_height * height_multiplier + 0.35F, -1.25F),
+               QVector3D(0.2F, 0.05F, 0.05F), c.brick);
+    }
   }
 }
 
 void drawCornerTowers(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                      Texture *white, const RomanPalette &c) {
+                      Texture *white, const RomanPalette &c,
+                      BuildingState state) {
   QVector3D corners[4] = {
       QVector3D(-1.5F, 0.0F, -1.2F), QVector3D(1.5F, 0.0F, -1.2F),
       QVector3D(-1.5F, 0.0F, 1.2F), QVector3D(1.5F, 0.0F, 1.2F)};
 
+  // Reduce tower height for damaged/destroyed states
+  float height_multiplier = 1.0F;
+  if (state == BuildingState::Damaged) {
+    height_multiplier = 0.7F;
+  } else if (state == BuildingState::Destroyed) {
+    height_multiplier = 0.3F;
+  }
+
   for (int i = 0; i < 4; ++i) {
 
     draw_box(out, unit, white, p.model,
-             QVector3D(corners[i].x(), 0.65F, corners[i].z()),
-             QVector3D(0.25F, 0.65F, 0.25F), c.stone_dark);
+             QVector3D(corners[i].x(), 0.65F * height_multiplier, corners[i].z()),
+             QVector3D(0.25F, 0.65F * height_multiplier, 0.25F), c.stone_dark);
 
-    draw_box(out, unit, white, p.model,
-             QVector3D(corners[i].x(), 1.45F, corners[i].z()),
-             QVector3D(0.28F, 0.15F, 0.28F), c.brick_dark);
-
-    for (int j = 0; j < 4; ++j) {
-      float angle = float(j) * 1.57F;
-      float ox = sinf(angle) * 0.18F;
-      float oz = cosf(angle) * 0.18F;
+    // Skip top decorations if destroyed
+    if (state != BuildingState::Destroyed) {
       draw_box(out, unit, white, p.model,
-               QVector3D(corners[i].x() + ox, 1.68F, corners[i].z() + oz),
-               QVector3D(0.06F, 0.08F, 0.06F), c.stone_light);
+               QVector3D(corners[i].x(), 1.45F * height_multiplier, corners[i].z()),
+               QVector3D(0.28F, 0.15F, 0.28F), c.brick_dark);
+
+      for (int j = 0; j < 4; ++j) {
+        float angle = float(j) * 1.57F;
+        float ox = sinf(angle) * 0.18F;
+        float oz = cosf(angle) * 0.18F;
+        draw_box(out, unit, white, p.model,
+                 QVector3D(corners[i].x() + ox, 1.68F * height_multiplier, corners[i].z() + oz),
+                 QVector3D(0.06F, 0.08F, 0.06F), c.stone_light);
+      }
     }
   }
 }
@@ -148,7 +188,12 @@ void drawCourtyard(const DrawContext &p, ISubmitter &out, Mesh *unit,
 }
 
 void drawRomanRoof(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                   Texture *white, const RomanPalette &c) {
+                   Texture *white, const RomanPalette &c,
+                   BuildingState state) {
+  // Skip roof if destroyed
+  if (state == BuildingState::Destroyed) {
+    return;
+  }
 
   draw_box(out, unit, white, p.model, QVector3D(0.0F, 1.58F, 0.0F),
            QVector3D(1.55F, 0.05F, 1.25F), c.tile_red);
@@ -295,8 +340,17 @@ void draw_barracks(const DrawContext &p, ISubmitter &out) {
 
   auto *t = p.entity->get_component<Engine::Core::TransformComponent>();
   auto *r = p.entity->get_component<Engine::Core::RenderableComponent>();
+  auto *u = p.entity->get_component<Engine::Core::UnitComponent>();
   if (!t || !r) {
     return;
+  }
+
+  // Determine building state based on health
+  BuildingState state = BuildingState::Normal;
+  if (u != nullptr) {
+    float const health_ratio =
+        std::clamp(u->health / float(std::max(1, u->max_health)), 0.0F, 1.0F);
+    state = get_building_state(health_ratio);
   }
 
   Mesh *unit = p.resources->unit();
@@ -311,10 +365,10 @@ void draw_barracks(const DrawContext &p, ISubmitter &out) {
   }
 
   drawFortressBase(p, out, unit, white, c);
-  drawFortressWalls(p, out, unit, white, c);
-  drawCornerTowers(p, out, unit, white, c);
+  drawFortressWalls(p, out, unit, white, c, state);
+  drawCornerTowers(p, out, unit, white, c, state);
   drawCourtyard(p, out, unit, white, c);
-  drawRomanRoof(p, out, unit, white, c);
+  drawRomanRoof(p, out, unit, white, c, state);
   drawGate(p, out, unit, white, c);
   drawStandards(p, out, unit, white, c, &cloth);
   draw_rally_flag(p, out, white, c);
