@@ -3,6 +3,7 @@
 #include "../camera.h"
 #include "../render_constants.h"
 #include "../shader_cache.h"
+#include "../../ground/rain_gpu.h"
 #include <QDebug>
 #include <QOpenGLContext>
 #include <cmath>
@@ -110,6 +111,8 @@ void RainPipeline::cache_uniforms() {
   m_uniforms.camera_pos = m_rain_shader->uniform_handle("u_camera_pos");
   m_uniforms.rain_color = m_rain_shader->uniform_handle("u_rain_color");
   m_uniforms.wind = m_rain_shader->uniform_handle("u_wind");
+  m_uniforms.weather_type = m_rain_shader->uniform_handle("u_weather_type");
+  m_uniforms.wind_strength = m_rain_shader->uniform_handle("u_wind_strength");
 }
 
 auto RainPipeline::is_initialized() const -> bool {
@@ -241,8 +244,8 @@ auto RainPipeline::create_rain_geometry() -> bool {
   return true;
 }
 
-void RainPipeline::render(const Camera &cam, float intensity, float time) {
-  if (!is_initialized() || intensity < 0.01F) {
+void RainPipeline::render(const Camera &cam, const RainBatchParams &params) {
+  if (!is_initialized() || params.intensity < 0.01F) {
     return;
   }
 
@@ -264,14 +267,26 @@ void RainPipeline::render(const Camera &cam, float intensity, float time) {
 
   QMatrix4x4 view_proj = cam.get_projection_matrix() * cam.get_view_matrix();
   QVector3D camera_pos = cam.get_position();
-  QVector3D rain_color(kRainColorR, kRainColorG, kRainColorB);
+  
+  // Choose color based on weather type
+  QVector3D particle_color;
+  if (params.weather_type == Game::Map::WeatherType::Snow) {
+    // Brighter white for snow
+    particle_color = QVector3D(0.95F, 0.95F, 1.0F);
+  } else {
+    // Bluish-gray for rain
+    particle_color = QVector3D(kRainColorR, kRainColorG, kRainColorB);
+  }
 
   m_rain_shader->set_uniform(m_uniforms.view_proj, view_proj);
-  m_rain_shader->set_uniform(m_uniforms.time, time);
-  m_rain_shader->set_uniform(m_uniforms.intensity, intensity);
+  m_rain_shader->set_uniform(m_uniforms.time, params.time);
+  m_rain_shader->set_uniform(m_uniforms.intensity, params.intensity);
   m_rain_shader->set_uniform(m_uniforms.camera_pos, camera_pos);
-  m_rain_shader->set_uniform(m_uniforms.rain_color, rain_color);
-  m_rain_shader->set_uniform(m_uniforms.wind, m_wind_direction);
+  m_rain_shader->set_uniform(m_uniforms.rain_color, particle_color);
+  m_rain_shader->set_uniform(m_uniforms.wind, params.wind_direction);
+  m_rain_shader->set_uniform(m_uniforms.weather_type, 
+                            static_cast<int>(params.weather_type));
+  m_rain_shader->set_uniform(m_uniforms.wind_strength, params.wind_strength);
 
   glDrawElements(GL_LINES, m_index_count, GL_UNSIGNED_INT, nullptr);
 
