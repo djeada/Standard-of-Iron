@@ -13,6 +13,7 @@ uniform int u_weather_type;
 uniform float u_wind_strength;
 
 out float v_alpha;
+out float v_rotation;
 
 const float AREA_HEIGHT = 30.0;
 const float AREA_RADIUS = 50.0;
@@ -25,6 +26,8 @@ const float SNOW_DRIFT_FREQ_Z = 0.3;
 const float SNOW_DRIFT_SCALE_X = 0.3;
 const float SNOW_DRIFT_AMPLITUDE_X = 0.15;
 const float SNOW_DRIFT_AMPLITUDE_Z = 0.1;
+
+const float SNOW_POINT_SIZE = 8.0;
 
 void main() {
   float speed = a_offset.z;
@@ -57,6 +60,12 @@ void main() {
     pos.z +=
         cos(u_time * SNOW_DRIFT_FREQ_Z + a_position.z * SNOW_DRIFT_SCALE_X) *
         SNOW_DRIFT_AMPLITUDE_Z;
+    
+    // Set point size for snowflakes
+    gl_PointSize = SNOW_POINT_SIZE;
+    
+    // Vary rotation based on position for visual variety
+    v_rotation = a_position.x * 2.0 + a_position.z * 3.0 + u_time * 0.2;
   }
 
   gl_Position = u_view_proj * vec4(pos, 1.0);
