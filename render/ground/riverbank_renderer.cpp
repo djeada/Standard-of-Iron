@@ -5,6 +5,7 @@
 #include "../scene_renderer.h"
 #include "ground_utils.h"
 #include "map/terrain.h"
+#include <GL/gl.h>
 #include <QVector2D>
 #include <QVector3D>
 #include <algorithm>
@@ -30,6 +31,10 @@ void RiverbankRenderer::configure(
   m_grid_width = height_map.getWidth();
   m_grid_height = height_map.getHeight();
   m_heights = height_map.getHeightData();
+  m_visibilityTexture.reset();
+  m_cachedVisibilityVersion = 0;
+  m_visibilityWidth = 0;
+  m_visibilityHeight = 0;
   build_meshes();
 }
 
@@ -103,7 +108,8 @@ void RiverbankRenderer::build_meshes() {
     QVector3D const perpendicular(-dir.z(), 0.0F, dir.x());
     float const half_width = segment.width * 0.5F;
 
-    float const bank_width = 0.2F;
+    constexpr int k_rings_per_side = 5;
+    constexpr int k_total_rings = k_rings_per_side * 2;
 
     int length_steps =
         static_cast<int>(std::ceil(length / (m_tile_size * 0.5F))) + 1;
@@ -139,94 +145,271 @@ void RiverbankRenderer::build_meshes() {
       QVector3D const center_offset = perpendicular * meander;
       center_pos += center_offset;
 
-      QVector3D const inner_left =
-          center_pos - perpendicular * (half_width + width_variation);
-      QVector3D const inner_right =
-          center_pos + perpendicular * (half_width + width_variation);
-      samples.push_back(inner_left);
-      samples.push_back(inner_right);
+      struct RingProfile {
+        float distance_from_water;
+        float height_offset;
+      };
 
-      float const outer_variation =
-          noise(center_pos.x() * 8.0F, center_pos.z() * 8.0F) * 0.5F;
-      QVector3D const outer_left =
-          inner_left - perpendicular * (bank_width + outer_variation);
-      QVector3D const outer_right =
-          inner_right + perpendicular * (bank_width + outer_variation);
+      constexpr RingProfile k_left_rings[k_rings_per_side] = {{0.0F, 0.02F},
+                                                              {0.125F, 0.175F},
+                                                              {0.25F, 0.3F},
+                                                              {0.375F, 0.125F},
+                                                              {0.5F, -0.15F}};
 
-      float const normal[3] = {0.0F, 1.0F, 0.0F};
+      float const ring_noise =
+          noise(center_pos.x() * 3.0F, center_pos.z() * 3.0F) * 0.075F;
+      float const base_bank_width = 0.5F + ring_noise;
 
-      Vertex left_inner;
-      Vertex left_outer;
-      float const height_inner_left =
-          sample_height(inner_left.x(), inner_left.z());
-      float const height_outer_left =
-          sample_height(outer_left.x(), outer_left.z());
+      unsigned int const ring_start_idx =
+          static_cast<unsigned int>(vertices.size());
 
-      left_inner.position[0] = inner_left.x();
-      left_inner.position[1] = height_inner_left + 0.05F;
-      left_inner.position[2] = inner_left.z();
-      left_inner.normal[0] = normal[0];
-      left_inner.normal[1] = normal[1];
-      left_inner.normal[2] = normal[2];
-      left_inner.tex_coord[0] = 0.0F;
-      left_inner.tex_coord[1] = t;
-      vertices.push_back(left_inner);
+      for (int ring = 0; ring < k_rings_per_side; ++ring) {
+        float const ring_dist =
+            k_left_rings[ring].distance_from_water * base_bank_width;
+        float const ring_height = k_left_rings[ring].height_offset;
 
-      left_outer.position[0] = outer_left.x();
-      left_outer.position[1] = height_outer_left + 0.05F;
-      left_outer.position[2] = outer_left.z();
-      left_outer.normal[0] = normal[0];
-      left_outer.normal[1] = normal[1];
-      left_outer.normal[2] = normal[2];
-      left_outer.tex_coord[0] = 1.0F;
-      left_outer.tex_coord[1] = t;
-      vertices.push_back(left_outer);
+        QVector3D const ring_pos =
+            center_pos -
+            perpendicular * (half_width + width_variation + ring_dist);
+        float const terrain_height = sample_height(ring_pos.x(), ring_pos.z());
 
-      Vertex right_inner;
-      Vertex right_outer;
-      float const height_inner_right =
-          sample_height(inner_right.x(), inner_right.z());
-      float const height_outer_right =
-          sample_height(outer_right.x(), outer_right.z());
+        if (ring == 0) {
+          samples.push_back(ring_pos);
+        }
 
-      right_inner.position[0] = inner_right.x();
-      right_inner.position[1] = height_inner_right + 0.05F;
-      right_inner.position[2] = inner_right.z();
-      right_inner.normal[0] = normal[0];
-      right_inner.normal[1] = normal[1];
-      right_inner.normal[2] = normal[2];
-      right_inner.tex_coord[0] = 0.0F;
-      right_inner.tex_coord[1] = t;
-      vertices.push_back(right_inner);
+        Vertex vtx{};
+        vtx.position[0] = ring_pos.x();
+        vtx.position[1] = terrain_height + ring_height;
+        vtx.position[2] = ring_pos.z();
 
-      right_outer.position[0] = outer_right.x();
-      right_outer.position[1] = height_outer_right + 0.05F;
-      right_outer.position[2] = outer_right.z();
-      right_outer.normal[0] = normal[0];
-      right_outer.normal[1] = normal[1];
-      right_outer.normal[2] = normal[2];
-      right_outer.tex_coord[0] = 1.0F;
-      right_outer.tex_coord[1] = t;
-      vertices.push_back(right_outer);
+        QVector3D normal;
+        if (ring == 0) {
+
+          QVector3D const next_ring_pos =
+              center_pos -
+              perpendicular *
+                  (half_width + width_variation +
+                   k_left_rings[1].distance_from_water * base_bank_width);
+          float const next_terrain =
+              sample_height(next_ring_pos.x(), next_ring_pos.z());
+          QVector3D slope_vec(next_ring_pos.x() - ring_pos.x(),
+                              (next_terrain + k_left_rings[1].height_offset) -
+                                  (terrain_height + ring_height),
+                              next_ring_pos.z() - ring_pos.z());
+          normal = QVector3D::crossProduct(slope_vec, dir).normalized();
+        } else if (ring == k_rings_per_side - 1) {
+
+          unsigned int prev_idx = ring_start_idx + ring - 1;
+          QVector3D prev_pos(vertices[prev_idx].position[0],
+                             vertices[prev_idx].position[1],
+                             vertices[prev_idx].position[2]);
+          QVector3D slope_vec(ring_pos.x() - prev_pos.x(),
+                              (terrain_height + ring_height) - prev_pos.y(),
+                              ring_pos.z() - prev_pos.z());
+          normal = QVector3D::crossProduct(slope_vec, dir).normalized();
+        } else {
+
+          unsigned int prev_idx = ring_start_idx + ring - 1;
+          QVector3D prev_pos(vertices[prev_idx].position[0],
+                             vertices[prev_idx].position[1],
+                             vertices[prev_idx].position[2]);
+
+          QVector3D const next_ring_pos =
+              center_pos -
+              perpendicular * (half_width + width_variation +
+                               k_left_rings[ring + 1].distance_from_water *
+                                   base_bank_width);
+          float const next_terrain =
+              sample_height(next_ring_pos.x(), next_ring_pos.z());
+
+          QVector3D slope_from_prev(ring_pos.x() - prev_pos.x(),
+                                    (terrain_height + ring_height) -
+                                        prev_pos.y(),
+                                    ring_pos.z() - prev_pos.z());
+          QVector3D slope_to_next(
+              next_ring_pos.x() - ring_pos.x(),
+              (next_terrain + k_left_rings[ring + 1].height_offset) -
+                  (terrain_height + ring_height),
+              next_ring_pos.z() - ring_pos.z());
+
+          QVector3D n1 =
+              QVector3D::crossProduct(slope_from_prev, dir).normalized();
+          QVector3D n2 =
+              QVector3D::crossProduct(slope_to_next, dir).normalized();
+          normal = ((n1 + n2) * 0.5F).normalized();
+        }
+
+        vtx.normal[0] = normal.x();
+        vtx.normal[1] = normal.y();
+        vtx.normal[2] = normal.z();
+        vtx.tex_coord[0] = static_cast<float>(ring) / (k_rings_per_side - 1);
+        vtx.tex_coord[1] = t;
+        vertices.push_back(vtx);
+      }
+
+      for (int ring = 0; ring < k_rings_per_side; ++ring) {
+        float const ring_dist =
+            k_left_rings[ring].distance_from_water * base_bank_width;
+        float const ring_height = k_left_rings[ring].height_offset;
+
+        QVector3D const ring_pos =
+            center_pos +
+            perpendicular * (half_width + width_variation + ring_dist);
+        float const terrain_height = sample_height(ring_pos.x(), ring_pos.z());
+
+        if (ring == 0) {
+          samples.push_back(ring_pos);
+        }
+
+        Vertex vtx{};
+        vtx.position[0] = ring_pos.x();
+        vtx.position[1] = terrain_height + ring_height;
+        vtx.position[2] = ring_pos.z();
+
+        QVector3D normal;
+        if (ring == 0) {
+          QVector3D const next_ring_pos =
+              center_pos +
+              perpendicular *
+                  (half_width + width_variation +
+                   k_left_rings[1].distance_from_water * base_bank_width);
+          float const next_terrain =
+              sample_height(next_ring_pos.x(), next_ring_pos.z());
+          QVector3D slope_vec(next_ring_pos.x() - ring_pos.x(),
+                              (next_terrain + k_left_rings[1].height_offset) -
+                                  (terrain_height + ring_height),
+                              next_ring_pos.z() - ring_pos.z());
+          normal = QVector3D::crossProduct(dir, slope_vec).normalized();
+        } else if (ring == k_rings_per_side - 1) {
+          unsigned int prev_idx = ring_start_idx + k_rings_per_side + ring - 1;
+          QVector3D prev_pos(vertices[prev_idx].position[0],
+                             vertices[prev_idx].position[1],
+                             vertices[prev_idx].position[2]);
+          QVector3D slope_vec(ring_pos.x() - prev_pos.x(),
+                              (terrain_height + ring_height) - prev_pos.y(),
+                              ring_pos.z() - prev_pos.z());
+          normal = QVector3D::crossProduct(dir, slope_vec).normalized();
+        } else {
+          unsigned int prev_idx = ring_start_idx + k_rings_per_side + ring - 1;
+          QVector3D prev_pos(vertices[prev_idx].position[0],
+                             vertices[prev_idx].position[1],
+                             vertices[prev_idx].position[2]);
+
+          QVector3D const next_ring_pos =
+              center_pos +
+              perpendicular * (half_width + width_variation +
+                               k_left_rings[ring + 1].distance_from_water *
+                                   base_bank_width);
+          float const next_terrain =
+              sample_height(next_ring_pos.x(), next_ring_pos.z());
+
+          QVector3D slope_from_prev(ring_pos.x() - prev_pos.x(),
+                                    (terrain_height + ring_height) -
+                                        prev_pos.y(),
+                                    ring_pos.z() - prev_pos.z());
+          QVector3D slope_to_next(
+              next_ring_pos.x() - ring_pos.x(),
+              (next_terrain + k_left_rings[ring + 1].height_offset) -
+                  (terrain_height + ring_height),
+              next_ring_pos.z() - ring_pos.z());
+
+          QVector3D n1 =
+              QVector3D::crossProduct(dir, slope_from_prev).normalized();
+          QVector3D n2 =
+              QVector3D::crossProduct(dir, slope_to_next).normalized();
+          normal = ((n1 + n2) * 0.5F).normalized();
+        }
+
+        vtx.normal[0] = normal.x();
+        vtx.normal[1] = normal.y();
+        vtx.normal[2] = normal.z();
+        vtx.tex_coord[0] = static_cast<float>(ring) / (k_rings_per_side - 1);
+        vtx.tex_coord[1] = t;
+        vertices.push_back(vtx);
+      }
+
+      {
+        Vertex const &water_edge_left = vertices[ring_start_idx];
+        Vertex skirt_vtx = water_edge_left;
+        skirt_vtx.position[1] = -0.05F;
+        skirt_vtx.normal[0] = -perpendicular.x();
+        skirt_vtx.normal[1] = 0.0F;
+        skirt_vtx.normal[2] = -perpendicular.z();
+        vertices.push_back(skirt_vtx);
+      }
+
+      {
+        Vertex const &water_edge_right =
+            vertices[ring_start_idx + k_rings_per_side];
+        Vertex skirt_vtx = water_edge_right;
+        skirt_vtx.position[1] = -0.05F;
+        skirt_vtx.normal[0] = perpendicular.x();
+        skirt_vtx.normal[1] = 0.0F;
+        skirt_vtx.normal[2] = perpendicular.z();
+        vertices.push_back(skirt_vtx);
+      }
 
       if (i < length_steps - 1) {
-        unsigned int const idx0 = i * 4;
+        unsigned int const base_idx = ring_start_idx;
+        unsigned int const next_base_idx = base_idx + k_total_rings + 2;
 
-        indices.push_back(idx0 + 0);
-        indices.push_back(idx0 + 4);
-        indices.push_back(idx0 + 1);
+        for (int ring = 0; ring < k_rings_per_side - 1; ++ring) {
+          unsigned int idx0 = base_idx + ring;
+          unsigned int idx1 = base_idx + ring + 1;
+          unsigned int idx2 = next_base_idx + ring;
+          unsigned int idx3 = next_base_idx + ring + 1;
 
-        indices.push_back(idx0 + 1);
-        indices.push_back(idx0 + 4);
-        indices.push_back(idx0 + 5);
+          indices.push_back(idx0);
+          indices.push_back(idx2);
+          indices.push_back(idx1);
 
-        indices.push_back(idx0 + 2);
-        indices.push_back(idx0 + 3);
-        indices.push_back(idx0 + 6);
+          indices.push_back(idx1);
+          indices.push_back(idx2);
+          indices.push_back(idx3);
+        }
 
-        indices.push_back(idx0 + 3);
-        indices.push_back(idx0 + 7);
-        indices.push_back(idx0 + 6);
+        for (int ring = 0; ring < k_rings_per_side - 1; ++ring) {
+          unsigned int idx0 = base_idx + k_rings_per_side + ring;
+          unsigned int idx1 = base_idx + k_rings_per_side + ring + 1;
+          unsigned int idx2 = next_base_idx + k_rings_per_side + ring;
+          unsigned int idx3 = next_base_idx + k_rings_per_side + ring + 1;
+
+          indices.push_back(idx0);
+          indices.push_back(idx1);
+          indices.push_back(idx2);
+
+          indices.push_back(idx1);
+          indices.push_back(idx3);
+          indices.push_back(idx2);
+        }
+
+        {
+          unsigned int left_top = base_idx;
+          unsigned int left_bottom = base_idx + k_total_rings;
+          unsigned int left_top_next = next_base_idx;
+          unsigned int left_bottom_next = next_base_idx + k_total_rings;
+
+          indices.push_back(left_top);
+          indices.push_back(left_bottom);
+          indices.push_back(left_top_next);
+
+          indices.push_back(left_bottom);
+          indices.push_back(left_bottom_next);
+          indices.push_back(left_top_next);
+
+          unsigned int right_top = base_idx + k_rings_per_side;
+          unsigned int right_bottom = base_idx + k_total_rings + 1;
+          unsigned int right_top_next = next_base_idx + k_rings_per_side;
+          unsigned int right_bottom_next = next_base_idx + k_total_rings + 1;
+
+          indices.push_back(right_top);
+          indices.push_back(right_top_next);
+          indices.push_back(right_bottom);
+
+          indices.push_back(right_bottom);
+          indices.push_back(right_top_next);
+          indices.push_back(right_bottom_next);
+        }
       }
     }
 
@@ -247,15 +430,83 @@ void RiverbankRenderer::submit(Renderer &renderer, ResourceManager *resources) {
 
   Q_UNUSED(resources);
 
-  auto &visibility = Game::Map::VisibilityService::instance();
-  const bool use_visibility = visibility.is_initialized();
-
   auto *shader = renderer.get_shader("riverbank");
   if (shader == nullptr) {
     return;
   }
 
   renderer.set_current_shader(shader);
+
+  auto *backend = renderer.backend();
+  auto &visibility = Game::Map::VisibilityService::instance();
+  const bool use_visibility = visibility.is_initialized();
+
+  Texture *visibility_tex = nullptr;
+  QVector2D visibility_size(0.0F, 0.0F);
+
+  if (use_visibility) {
+    const int vis_w = visibility.getWidth();
+    const int vis_h = visibility.getHeight();
+    const std::uint64_t version = visibility.version();
+    bool const size_changed =
+        (vis_w != m_visibilityWidth) || (vis_h != m_visibilityHeight);
+
+    if (!m_visibilityTexture || size_changed) {
+      m_visibilityTexture = std::make_unique<Texture>();
+      m_visibilityTexture->create_empty(vis_w, vis_h, Texture::Format::RGBA);
+      m_visibilityTexture->set_filter(Texture::Filter::Nearest,
+                                      Texture::Filter::Nearest);
+      m_visibilityTexture->set_wrap(Texture::Wrap::ClampToEdge,
+                                    Texture::Wrap::ClampToEdge);
+      m_visibilityWidth = vis_w;
+      m_visibilityHeight = vis_h;
+      m_cachedVisibilityVersion = 0;
+    }
+
+    if (version != m_cachedVisibilityVersion || size_changed) {
+      auto cells = visibility.snapshotCells();
+      std::vector<unsigned char> texels(
+          static_cast<std::size_t>(vis_w * vis_h * 4), 0U);
+
+      for (int z = 0; z < vis_h; ++z) {
+        for (int x = 0; x < vis_w; ++x) {
+          int const idx = z * vis_w + x;
+          unsigned char val = 0U;
+          switch (static_cast<Game::Map::VisibilityState>(cells[idx])) {
+          case Game::Map::VisibilityState::Visible:
+            val = 255U;
+            break;
+          case Game::Map::VisibilityState::Explored:
+            val = 128U;
+            break;
+          case Game::Map::VisibilityState::Unseen:
+          default:
+            val = 0U;
+            break;
+          }
+          texels[static_cast<std::size_t>(idx * 4)] = val;
+          texels[static_cast<std::size_t>(idx * 4 + 3)] = 255;
+        }
+      }
+
+      m_visibilityTexture->bind();
+      glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, vis_w, vis_h, GL_RGBA,
+                      GL_UNSIGNED_BYTE, texels.data());
+      visibility_tex = m_visibilityTexture.get();
+      m_cachedVisibilityVersion = version;
+    } else {
+      visibility_tex = m_visibilityTexture.get();
+    }
+
+    visibility_size =
+        QVector2D(static_cast<float>(vis_w), static_cast<float>(vis_h));
+  }
+
+  if (backend != nullptr) {
+    backend->setRiverbankVisibility(use_visibility && visibility_tex != nullptr,
+                                    visibility_tex, visibility_size,
+                                    m_tile_size, m_exploredDimFactor);
+  }
 
   QMatrix4x4 model;
   model.setToIdentity();
@@ -273,29 +524,36 @@ void RiverbankRenderer::submit(Renderer &renderer, ResourceManager *resources) {
       continue;
     }
 
+    float segment_visibility = 1.0F;
     if (use_visibility) {
-      bool any_visible = false;
-      if (mesh_index - 1 < m_visibilitySamples.size()) {
-        const auto &samples = m_visibilitySamples[mesh_index - 1];
-        const int min_required =
-            std::max<int>(2, static_cast<int>(samples.size() * 0.3F));
-        int visible_count = 0;
-        for (const auto &pos : samples) {
-          if (visibility.isVisibleWorld(pos.x(), pos.z())) {
-            ++visible_count;
-            if (visible_count >= min_required) {
-              any_visible = true;
-              break;
-            }
-          }
+      enum class SegmentState { Hidden, Explored, Visible };
+      SegmentState state = SegmentState::Hidden;
+
+      const auto &samples = m_visibilitySamples[mesh_index - 1];
+      if (samples.empty()) {
+        state = SegmentState::Visible;
+      }
+      for (const auto &sample : samples) {
+        if (visibility.isVisibleWorld(sample.x(), sample.z())) {
+          state = SegmentState::Visible;
+          break;
+        }
+        if ((state == SegmentState::Hidden) &&
+            visibility.isExploredWorld(sample.x(), sample.z())) {
+          state = SegmentState::Explored;
         }
       }
-      if (!any_visible) {
+
+      if (state == SegmentState::Hidden) {
         continue;
       }
+
+      segment_visibility =
+          (state == SegmentState::Visible) ? 1.0F : m_exploredDimFactor;
     }
 
-    renderer.mesh(mesh, model, QVector3D(1.0F, 1.0F, 1.0F), nullptr, 1.0F);
+    renderer.mesh(mesh, model, QVector3D(1.0F, 1.0F, 1.0F), nullptr,
+                  segment_visibility);
   }
 
   renderer.set_current_shader(nullptr);
