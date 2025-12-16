@@ -146,6 +146,8 @@ auto ModeIndicator::create_guard_mode_mesh()
   constexpr float mid_height_ratio = 0.15F;
   constexpr float bottom_height_ratio = 0.5F;
   constexpr float boss_center_ratio = 0.08F;
+  constexpr float boss_texture_u = 0.6F;
+  constexpr float boss_texture_v = 0.7F;
 
   QVector3D const n(0, 0, 1);
 
@@ -213,7 +215,7 @@ auto ModeIndicator::create_guard_mode_mesh()
     float const angle = (i / float(boss_segments)) * 2.0F * k_pi;
     float const x = boss_radius * std::cos(angle);
     float const y = boss_center_y + boss_radius * std::sin(angle);
-    verts.push_back({{x, y, 0.0F}, {n.x(), n.y(), n.z()}, {0.6F, 0.7F}});
+    verts.push_back({{x, y, 0.0F}, {n.x(), n.y(), n.z()}, {boss_texture_u, boss_texture_v}});
   }
 
   for (int i = 0; i < boss_segments; ++i) {
