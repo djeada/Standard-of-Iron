@@ -1604,10 +1604,14 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       }
 
       Mesh *indicator_mesh = nullptr;
-      if (mc.mode_type == Render::Geom::k_mode_type_hold) {
-        indicator_mesh = Render::Geom::ModeIndicator::get_hold_mode_mesh();
+      if (mc.mode_type == Render::Geom::k_mode_type_attack) {
+        indicator_mesh = Render::Geom::ModeIndicator::get_attack_mode_mesh();
       } else if (mc.mode_type == Render::Geom::k_mode_type_guard) {
         indicator_mesh = Render::Geom::ModeIndicator::get_guard_mode_mesh();
+      } else if (mc.mode_type == Render::Geom::k_mode_type_hold) {
+        indicator_mesh = Render::Geom::ModeIndicator::get_hold_mode_mesh();
+      } else if (mc.mode_type == Render::Geom::k_mode_type_patrol) {
+        indicator_mesh = Render::Geom::ModeIndicator::get_patrol_mode_mesh();
       }
 
       if (indicator_mesh == nullptr) {
