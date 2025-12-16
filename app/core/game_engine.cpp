@@ -304,6 +304,9 @@ GameEngine::GameEngine(QObject *parent)
   connect(m_commandController.get(),
           &App::Controllers::CommandController::hold_modeChanged, this,
           &GameEngine::hold_mode_changed);
+  connect(m_commandController.get(),
+          &App::Controllers::CommandController::guard_modeChanged, this,
+          &GameEngine::guard_mode_changed);
 
   connect(this, SIGNAL(selected_units_changed()), m_selectedUnitsModel,
           SLOT(refresh()));
@@ -433,11 +436,34 @@ void GameEngine::on_hold_command() {
   m_input_handler->on_hold_command();
 }
 
+void GameEngine::on_guard_command() {
+  if (!m_input_handler) {
+    return;
+  }
+  ensure_initialized();
+  m_input_handler->on_guard_command();
+}
+
+void GameEngine::on_guard_click(qreal sx, qreal sy) {
+  if (!m_input_handler || !m_camera) {
+    return;
+  }
+  ensure_initialized();
+  m_input_handler->on_guard_click(sx, sy, m_viewport);
+}
+
 auto GameEngine::any_selected_in_hold_mode() const -> bool {
   if (!m_input_handler) {
     return false;
   }
   return m_input_handler->any_selected_in_hold_mode();
+}
+
+auto GameEngine::any_selected_in_guard_mode() const -> bool {
+  if (!m_input_handler) {
+    return false;
+  }
+  return m_input_handler->any_selected_in_guard_mode();
 }
 
 void GameEngine::on_patrol_click(qreal sx, qreal sy) {
@@ -1033,6 +1059,72 @@ auto GameEngine::get_selected_units_command_mode() const -> QString {
   }
 
   return "normal";
+}
+
+auto GameEngine::get_selected_units_mode_availability() const -> QVariantMap {
+  QVariantMap result;
+  result["canAttack"] = true;
+  result["canGuard"] = true;
+  result["canHold"] = true;
+  result["canPatrol"] = true;
+
+  if (!m_world) {
+    return result;
+  }
+  auto *selection_system =
+      m_world->get_system<Game::Systems::SelectionSystem>();
+  if (selection_system == nullptr) {
+    return result;
+  }
+
+  const auto &sel = selection_system->get_selected_units();
+  if (sel.empty()) {
+    return result;
+  }
+
+  // Check mode availability across all selected units
+  // If ANY unit cannot use a mode, that mode is disabled
+  bool can_attack = true;
+  bool can_guard = true;
+  bool can_hold = true;
+  bool can_patrol = true;
+
+  for (auto id : sel) {
+    auto *e = m_world->get_entity(id);
+    if (e == nullptr) {
+      continue;
+    }
+
+    auto *u = e->get_component<Engine::Core::UnitComponent>();
+    if (u == nullptr) {
+      continue;
+    }
+
+    // Skip buildings
+    if (u->spawn_type == Game::Units::SpawnType::Barracks) {
+      continue;
+    }
+
+    if (!Game::Units::canUseAttackMode(u->spawn_type)) {
+      can_attack = false;
+    }
+    if (!Game::Units::canUseGuardMode(u->spawn_type)) {
+      can_guard = false;
+    }
+    if (!Game::Units::canUseHoldMode(u->spawn_type)) {
+      can_hold = false;
+    }
+    if (!Game::Units::canUsePatrolMode(u->spawn_type)) {
+      can_patrol = false;
+    }
+  }
+
+  result["canAttack"] = can_attack;
+  result["canGuard"] = can_guard;
+  result["canHold"] = can_hold;
+  result["canPatrol"] = can_patrol;
+
+  return result;
 }
 
 void GameEngine::set_rally_at_screen(qreal sx, qreal sy) {

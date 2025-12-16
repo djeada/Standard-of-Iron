@@ -141,6 +141,30 @@ inline auto is_building_spawn(SpawnType type) -> bool {
   return type == SpawnType::Barracks;
 }
 
+// Check if a unit type can use attack mode
+// Healers cannot attack
+inline auto canUseAttackMode(SpawnType type) -> bool {
+  return type != SpawnType::Healer && type != SpawnType::Barracks;
+}
+
+// Check if a unit type can use guard mode
+// All troops can guard
+inline auto canUseGuardMode(SpawnType type) -> bool {
+  return type != SpawnType::Barracks;
+}
+
+// Check if a unit type can use hold mode
+// All troops can hold
+inline auto canUseHoldMode(SpawnType type) -> bool {
+  return type != SpawnType::Barracks;
+}
+
+// Check if a unit type can use patrol mode
+// All troops can patrol
+inline auto canUsePatrolMode(SpawnType type) -> bool {
+  return type != SpawnType::Barracks;
+}
+
 inline auto spawn_typeToTroopType(SpawnType type) -> std::optional<TroopType> {
   switch (type) {
   case SpawnType::Archer:

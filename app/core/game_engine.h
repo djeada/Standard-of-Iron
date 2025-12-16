@@ -165,7 +165,10 @@ public:
   Q_INVOKABLE void on_attack_click(qreal sx, qreal sy);
   Q_INVOKABLE void on_stop_command();
   Q_INVOKABLE void on_hold_command();
+  Q_INVOKABLE void on_guard_command();
+  Q_INVOKABLE void on_guard_click(qreal sx, qreal sy);
   Q_INVOKABLE [[nodiscard]] bool any_selected_in_hold_mode() const;
+  Q_INVOKABLE [[nodiscard]] bool any_selected_in_guard_mode() const;
   Q_INVOKABLE void on_patrol_click(qreal sx, qreal sy);
 
   Q_INVOKABLE void camera_move(float dx, float dz);
@@ -224,6 +227,8 @@ public:
   Q_INVOKABLE [[nodiscard]] QVariantMap
   get_unit_production_info(const QString &unit_type) const;
   Q_INVOKABLE [[nodiscard]] QString get_selected_units_command_mode() const;
+  Q_INVOKABLE [[nodiscard]] QVariantMap get_selected_units_mode_availability()
+      const;
   Q_INVOKABLE void set_rally_at_screen(qreal sx, qreal sy);
   Q_INVOKABLE [[nodiscard]] QVariantList available_maps() const;
   [[nodiscard]] QVariantList available_nations() const;
@@ -394,6 +399,7 @@ signals:
   void minimap_image_changed();
   void save_slots_changed();
   void hold_mode_changed(bool active);
+  void guard_mode_changed(bool active);
   void spectator_mode_changed();
   void is_loading_changed();
   void loading_progress_changed(float progress);
