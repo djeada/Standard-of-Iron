@@ -166,15 +166,15 @@ struct ModeIndicatorCmd {
   QMatrix4x4 mvp;
   QVector3D color{1.0F, 1.0F, 1.0F};
   float alpha = 1.0F;
-  int mode_type = 0; // 0 = hold, 1 = guard
+  int mode_type = 0;
 };
 
-using DrawCmd =
-    std::variant<GridCmd, SelectionRingCmd, SelectionSmokeCmd, CylinderCmd,
-                 MeshCmd, FogBatchCmd, GrassBatchCmd, StoneBatchCmd,
-                 PlantBatchCmd, PineBatchCmd, OliveBatchCmd, FireCampBatchCmd,
-                 RainBatchCmd, TerrainChunkCmd, PrimitiveBatchCmd,
-                 HealingBeamCmd, HealerAuraCmd, CombatDustCmd, ModeIndicatorCmd>;
+using DrawCmd = std::variant<GridCmd, SelectionRingCmd, SelectionSmokeCmd,
+                             CylinderCmd, MeshCmd, FogBatchCmd, GrassBatchCmd,
+                             StoneBatchCmd, PlantBatchCmd, PineBatchCmd,
+                             OliveBatchCmd, FireCampBatchCmd, RainBatchCmd,
+                             TerrainChunkCmd, PrimitiveBatchCmd, HealingBeamCmd,
+                             HealerAuraCmd, CombatDustCmd, ModeIndicatorCmd>;
 
 enum class DrawCmdType : std::uint8_t {
   Grid = 0,
@@ -380,9 +380,9 @@ private:
         static_cast<uint8_t>(RenderOrder::RainBatch),
         static_cast<uint8_t>(RenderOrder::TerrainChunk),
         static_cast<uint8_t>(RenderOrder::PrimitiveBatch),
-        15, // HealingBeam
-        16, // HealerAura
-        17, // CombatDust
+        15,
+        16,
+        17,
         static_cast<uint8_t>(RenderOrder::ModeIndicator)};
 
     const std::size_t type_index = cmd.index();
