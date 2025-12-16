@@ -160,10 +160,11 @@ void RiverbankRenderer::build_meshes() {
       float const height_outer_left =
           sample_height(outer_left.x(), outer_left.z());
 
-      // Add height to create a raised bank effect (like a small hill)
-      // Inner edge is lower (near water), outer edge is higher
-      float const bank_height_inner = 0.15F;
-      float const bank_height_outer = 0.45F;
+      // Create a valley/trough effect: outer edges at terrain level, inner edges below
+      // This creates a two-sided hill that slopes DOWN toward the river from both sides
+      // Water sits in this depression, hidden from horizontal viewing angles
+      float const bank_height_inner = -0.35F;  // Below terrain (near water)
+      float const bank_height_outer = 0.05F;   // At or slightly above terrain
 
       left_inner.position[0] = inner_left.x();
       left_inner.position[1] = height_inner_left + bank_height_inner;
@@ -173,13 +174,13 @@ void RiverbankRenderer::build_meshes() {
       left_outer.position[1] = height_outer_left + bank_height_outer;
       left_outer.position[2] = outer_left.z();
 
-      // Calculate slope normal for the bank
+      // Calculate slope normal for the bank (valley geometry slopes down toward water)
       // Convert vertex positions to QVector3D for easier manipulation
       QVector3D left_inner_pos(left_inner.position[0], left_inner.position[1], left_inner.position[2]);
       QVector3D left_outer_pos(left_outer.position[0], left_outer.position[1], left_outer.position[2]);
       QVector3D bank_left_vec = left_outer_pos - left_inner_pos;
       QVector3D tangent = dir;
-      // Left bank: cross product order gives outward-facing normal
+      // Left bank: cross product gives inward-facing normal (toward river due to valley)
       QVector3D slope_normal = QVector3D::crossProduct(bank_left_vec, tangent).normalized();
 
       left_inner.normal[0] = slope_normal.x();
@@ -211,12 +212,12 @@ void RiverbankRenderer::build_meshes() {
       right_outer.position[1] = height_outer_right + bank_height_outer;
       right_outer.position[2] = outer_right.z();
 
-      // Calculate slope normal for the right bank
+      // Calculate slope normal for the right bank (valley geometry slopes down toward water)
       // Convert vertex positions to QVector3D for easier manipulation
       QVector3D right_inner_pos(right_inner.position[0], right_inner.position[1], right_inner.position[2]);
       QVector3D right_outer_pos(right_outer.position[0], right_outer.position[1], right_outer.position[2]);
       QVector3D bank_right_vec = right_outer_pos - right_inner_pos;
-      // Right bank: reversed cross product order gives outward-facing normal (opposite side)
+      // Right bank: reversed cross product gives inward-facing normal (toward river, opposite side)
       QVector3D slope_normal_right = QVector3D::crossProduct(tangent, bank_right_vec).normalized();
 
       right_inner.normal[0] = slope_normal_right.x();
