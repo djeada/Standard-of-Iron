@@ -30,7 +30,7 @@ auto ModeIndicator::create_attack_mode_mesh()
   constexpr float cross_guard_width = 0.25F;
   constexpr float cross_guard_height = 0.06F;
   constexpr float blade_tip_width = 0.03F;
-  constexpr float handle_offset = 0.25F;
+  constexpr float handle_offset = 0.08F;
   constexpr float guard_position_ratio = 0.15F;
   constexpr float handle_width_ratio = 0.3F;
 
@@ -138,16 +138,16 @@ auto ModeIndicator::create_guard_mode_mesh()
   std::vector<Vertex> verts;
   std::vector<unsigned int> idx;
 
-  constexpr float shield_width = 0.65F;
-  constexpr float shield_height = 0.75F;
+  constexpr float shield_width = 0.8F;
+  constexpr float shield_height = 0.85F;
   constexpr int segments = 16;
   constexpr float boss_radius = 0.12F;
 
   QVector3D const n(0, 0, 1);
 
   float const half_width = shield_width * 0.5F;
-  float const top_height = shield_height * 0.4F;
-  float const bottom_height = shield_height * 0.6F;
+  float const top_height = shield_height * 0.45F;
+  float const bottom_height = shield_height * 0.55F;
 
   size_t const center_idx = verts.size();
   verts.push_back({{0.0F, 0.0F, 0.0F}, {n.x(), n.y(), n.z()}, {0.5F, 0.5F}});
