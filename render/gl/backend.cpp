@@ -1,8 +1,8 @@
 #include "backend.h"
 #include "../draw_queue.h"
+#include "../geom/mode_indicator.h"
 #include "../geom/selection_disc.h"
 #include "../geom/selection_ring.h"
-#include "../geom/mode_indicator.h"
 #include "../primitive_batch.h"
 #include "backend/banner_pipeline.h"
 #include "backend/character_pipeline.h"
@@ -1603,7 +1603,6 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         break;
       }
 
-      // Get the appropriate mesh based on mode type
       Mesh *indicator_mesh = nullptr;
       if (mc.mode_type == Render::Geom::k_mode_type_hold) {
         indicator_mesh = Render::Geom::ModeIndicator::get_hold_mode_mesh();
@@ -1615,10 +1614,9 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         break;
       }
 
-      // Use the mode indicator pipeline to render with custom shader
-      m_modeIndicatorPipeline->render_indicator(
-          indicator_mesh, mc.model, view_proj, mc.color, mc.alpha,
-          m_animationTime);
+      m_modeIndicatorPipeline->render_indicator(indicator_mesh, mc.model,
+                                                view_proj, mc.color, mc.alpha,
+                                                m_animationTime);
 
       m_lastBoundShader = nullptr;
       break;

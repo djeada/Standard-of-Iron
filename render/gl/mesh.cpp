@@ -116,7 +116,8 @@ auto createCubeMesh() -> std::unique_ptr<Mesh> {
   return std::make_unique<Mesh>(vertices, indices);
 }
 
-auto createPlaneMesh(float width, float height, int subdivisions) -> std::unique_ptr<Mesh> {
+auto createPlaneMesh(float width, float height,
+                     int subdivisions) -> std::unique_ptr<Mesh> {
   std::vector<Vertex> vertices;
   std::vector<unsigned int> indices;
 

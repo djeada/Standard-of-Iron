@@ -65,20 +65,19 @@ auto ModeIndicatorPipeline::is_initialized() const -> bool {
 }
 
 void ModeIndicatorPipeline::render_indicator(Mesh *mesh,
-                                              const QMatrix4x4 &model,
-                                              const QMatrix4x4 &view_proj,
-                                              const QVector3D &color,
-                                              float alpha, float time) {
+                                             const QMatrix4x4 &model,
+                                             const QMatrix4x4 &view_proj,
+                                             const QVector3D &color,
+                                             float alpha, float time) {
   if (!is_initialized() || mesh == nullptr) {
     return;
   }
 
-  // Use state scopes for automatic GL state management
   DepthMaskScope const depth_mask(false);
   BlendScope const blend(true);
-  
+
   glEnable(GL_DEPTH_TEST);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE); // Additive blending for glow effect
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 
   m_indicatorShader->use();
 
