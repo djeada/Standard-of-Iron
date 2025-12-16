@@ -12,7 +12,7 @@ constexpr int k_mode_type_guard = 1;
 constexpr int k_mode_type_hold = 2;
 constexpr int k_mode_type_patrol = 3;
 
-constexpr float k_indicator_height_base = 2.0F;
+constexpr float k_indicator_height_base = 2.5F;
 constexpr float k_indicator_size = 0.4F;
 constexpr float k_indicator_alpha = 0.85F;
 constexpr float k_indicator_height_multiplier = 2.0F;
