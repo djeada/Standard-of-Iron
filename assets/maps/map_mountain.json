@@ -636,5 +636,14 @@
     "defeat_conditions": [
       "no_key_structures"
     ]
+  },
+  "rain": {
+    "enabled": true,
+    "type": "snow",
+    "cycleDuration": 400.0,
+    "activeDuration": 120.0,
+    "intensity": 0.65,
+    "fadeDuration": 8.0,
+    "windStrength": 0.3
   }
 }

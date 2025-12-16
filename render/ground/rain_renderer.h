@@ -24,9 +24,12 @@ public:
   [[nodiscard]] auto is_enabled() const -> bool { return m_enabled; }
 
   void configure(float world_width, float world_height,
-                 std::uint32_t seed = 12345U);
+                 std::uint32_t seed = 12345U,
+                 Game::Map::WeatherType type = Game::Map::WeatherType::Rain);
 
   void set_intensity(float intensity);
+  void set_weather_type(Game::Map::WeatherType type);
+  void set_wind_strength(float strength);
   void set_camera_position(const QVector3D &position);
 
   void submit(Renderer &renderer, ResourceManager *resources) override;
@@ -35,7 +38,7 @@ public:
 
 private:
   void generate_rain_drops();
-  void update_drop_positions(float time);
+  void update_weather_params();
 
   bool m_enabled = false;
   float m_world_width = 100.0F;
@@ -53,7 +56,8 @@ private:
   std::size_t m_instance_count = 0;
   RainBatchParams m_params;
 
-  static constexpr std::size_t k_max_rain_drops = 2000;
+  static constexpr std::size_t k_max_rain_drops = 5000;
+  static constexpr std::size_t k_max_snow_drops = 3000;
   static constexpr float k_intensity_lerp_speed = 2.0F;
 };
 
