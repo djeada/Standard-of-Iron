@@ -12,10 +12,13 @@ constexpr float k_pi = 3.14159265358979323846F;
 
 namespace Render::Geom {
 
-std::unique_ptr<Render::GL::Mesh> ModeIndicator::s_hold_mesh;
+std::unique_ptr<Render::GL::Mesh> ModeIndicator::s_attack_mesh;
 std::unique_ptr<Render::GL::Mesh> ModeIndicator::s_guard_mesh;
+std::unique_ptr<Render::GL::Mesh> ModeIndicator::s_hold_mesh;
+std::unique_ptr<Render::GL::Mesh> ModeIndicator::s_patrol_mesh;
 
-auto ModeIndicator::create_hold_mode_mesh()
+// Attack mode: crossed swords (reusing existing create_hold_mode_mesh)
+auto ModeIndicator::create_attack_mode_mesh()
     -> std::unique_ptr<Render::GL::Mesh> {
   using namespace Render::GL;
   std::vector<Vertex> verts;
@@ -147,11 +150,142 @@ auto ModeIndicator::create_guard_mode_mesh()
   return std::make_unique<Mesh>(verts, idx);
 }
 
-auto ModeIndicator::get_hold_mode_mesh() -> Render::GL::Mesh * {
-  if (!s_hold_mesh) {
-    s_hold_mesh = create_hold_mode_mesh();
+// Hold mode: anchor shape
+auto ModeIndicator::create_hold_mode_mesh()
+    -> std::unique_ptr<Render::GL::Mesh> {
+  using namespace Render::GL;
+  std::vector<Vertex> verts;
+  std::vector<unsigned int> idx;
+
+  constexpr float anchor_width = 0.5F;
+  constexpr float anchor_height = 0.7F;
+  constexpr float ring_radius = 0.15F;
+  constexpr float shank_width = 0.08F;
+  constexpr float fluke_width = 0.25F;
+  constexpr float fluke_height = 0.2F;
+
+  QVector3D const n(0, 0, 1);
+
+  // Ring at top (circle)
+  constexpr int ring_segments = 12;
+  size_t const ring_center = verts.size();
+  verts.push_back({{0.0F, anchor_height * 0.7F, 0.0F},
+                   {n.x(), n.y(), n.z()},
+                   {0.5F, 0.5F}});
+
+  for (int i = 0; i <= ring_segments; ++i) {
+    float const angle = (i / float(ring_segments)) * 2.0F * k_pi;
+    float const x = ring_radius * std::cos(angle);
+    float const y = anchor_height * 0.7F + ring_radius * std::sin(angle);
+    verts.push_back({{x, y, 0.0F}, {n.x(), n.y(), n.z()}, {0.5F, 1.0F}});
   }
-  return s_hold_mesh.get();
+
+  for (int i = 0; i < ring_segments; ++i) {
+    idx.push_back(ring_center);
+    idx.push_back(ring_center + 1 + i);
+    idx.push_back(ring_center + 1 + i + 1);
+  }
+
+  // Shank (vertical bar)
+  float const shank_half = shank_width * 0.5F;
+  size_t const shank_base = verts.size();
+  verts.push_back({{-shank_half, anchor_height * 0.6F, 0.0F},
+                   {n.x(), n.y(), n.z()},
+                   {0.0F, 1.0F}});
+  verts.push_back({{shank_half, anchor_height * 0.6F, 0.0F},
+                   {n.x(), n.y(), n.z()},
+                   {1.0F, 1.0F}});
+  verts.push_back(
+      {{shank_half, -anchor_height * 0.3F, 0.0F}, {n.x(), n.y(), n.z()}, {1.0F, 0.0F}});
+  verts.push_back({{-shank_half, -anchor_height * 0.3F, 0.0F},
+                   {n.x(), n.y(), n.z()},
+                   {0.0F, 0.0F}});
+
+  idx.push_back(shank_base + 0);
+  idx.push_back(shank_base + 1);
+  idx.push_back(shank_base + 2);
+  idx.push_back(shank_base + 2);
+  idx.push_back(shank_base + 3);
+  idx.push_back(shank_base + 0);
+
+  // Flukes (arms at bottom)
+  float const fluke_y = -anchor_height * 0.3F;
+
+  // Left fluke
+  size_t const left_fluke_base = verts.size();
+  verts.push_back({{-shank_half, fluke_y, 0.0F}, {n.x(), n.y(), n.z()}, {0.0F, 0.5F}});
+  verts.push_back(
+      {{-fluke_width, fluke_y - fluke_height, 0.0F}, {n.x(), n.y(), n.z()}, {0.0F, 0.0F}});
+  verts.push_back({{-shank_half, fluke_y - fluke_height * 0.5F, 0.0F},
+                   {n.x(), n.y(), n.z()},
+                   {0.5F, 0.0F}});
+
+  idx.push_back(left_fluke_base + 0);
+  idx.push_back(left_fluke_base + 1);
+  idx.push_back(left_fluke_base + 2);
+
+  // Right fluke
+  size_t const right_fluke_base = verts.size();
+  verts.push_back({{shank_half, fluke_y, 0.0F}, {n.x(), n.y(), n.z()}, {1.0F, 0.5F}});
+  verts.push_back(
+      {{fluke_width, fluke_y - fluke_height, 0.0F}, {n.x(), n.y(), n.z()}, {1.0F, 0.0F}});
+  verts.push_back({{shank_half, fluke_y - fluke_height * 0.5F, 0.0F},
+                   {n.x(), n.y(), n.z()},
+                   {0.5F, 0.0F}});
+
+  idx.push_back(right_fluke_base + 0);
+  idx.push_back(right_fluke_base + 1);
+  idx.push_back(right_fluke_base + 2);
+
+  return std::make_unique<Mesh>(verts, idx);
+}
+
+// Patrol mode: footsteps
+auto ModeIndicator::create_patrol_mode_mesh()
+    -> std::unique_ptr<Render::GL::Mesh> {
+  using namespace Render::GL;
+  std::vector<Vertex> verts;
+  std::vector<unsigned int> idx;
+
+  constexpr float foot_length = 0.25F;
+  constexpr float foot_width = 0.15F;
+  constexpr float step_offset = 0.2F;
+
+  QVector3D const n(0, 0, 1);
+
+  // Create two footprints offset from each other
+  for (int foot = 0; foot < 2; ++foot) {
+    float const x_offset = (foot == 0) ? -step_offset : step_offset;
+    float const y_offset = (foot == 0) ? 0.15F : -0.15F;
+
+    size_t const base = verts.size();
+
+    // Footprint shape (ellipse)
+    constexpr int segments = 8;
+    verts.push_back({{x_offset, y_offset, 0.0F}, {n.x(), n.y(), n.z()}, {0.5F, 0.5F}});
+
+    for (int i = 0; i <= segments; ++i) {
+      float const angle = (i / float(segments)) * 2.0F * k_pi;
+      float const x = x_offset + (foot_width * 0.5F) * std::cos(angle);
+      float const y = y_offset + (foot_length * 0.5F) * std::sin(angle);
+      verts.push_back({{x, y, 0.0F}, {n.x(), n.y(), n.z()}, {0.5F, 1.0F}});
+    }
+
+    for (int i = 0; i < segments; ++i) {
+      idx.push_back(base);
+      idx.push_back(base + 1 + i);
+      idx.push_back(base + 1 + i + 1);
+    }
+  }
+
+  return std::make_unique<Mesh>(verts, idx);
+}
+
+auto ModeIndicator::get_attack_mode_mesh() -> Render::GL::Mesh * {
+  if (!s_attack_mesh) {
+    s_attack_mesh = create_attack_mode_mesh();
+  }
+  return s_attack_mesh.get();
 }
 
 auto ModeIndicator::get_guard_mode_mesh() -> Render::GL::Mesh * {
@@ -159,6 +293,20 @@ auto ModeIndicator::get_guard_mode_mesh() -> Render::GL::Mesh * {
     s_guard_mesh = create_guard_mode_mesh();
   }
   return s_guard_mesh.get();
+}
+
+auto ModeIndicator::get_hold_mode_mesh() -> Render::GL::Mesh * {
+  if (!s_hold_mesh) {
+    s_hold_mesh = create_hold_mode_mesh();
+  }
+  return s_hold_mesh.get();
+}
+
+auto ModeIndicator::get_patrol_mode_mesh() -> Render::GL::Mesh * {
+  if (!s_patrol_mesh) {
+    s_patrol_mesh = create_patrol_mode_mesh();
+  }
+  return s_patrol_mesh.get();
 }
 
 } // namespace Render::Geom
