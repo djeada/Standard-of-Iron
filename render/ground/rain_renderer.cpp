@@ -20,7 +20,7 @@ RainRenderer::RainRenderer() = default;
 RainRenderer::~RainRenderer() = default;
 
 void RainRenderer::configure(float world_width, float world_height,
-                             std::uint32_t seed) {
+                             std::uint32_t seed, Game::Map::WeatherType type) {
   m_world_width = std::max(1.0F, world_width);
   m_world_height = std::max(1.0F, world_height);
   m_seed = seed;
@@ -29,17 +29,40 @@ void RainRenderer::configure(float world_width, float world_height,
   m_instance_buffer.reset();
   m_instance_count = 0;
 
+  m_params.weather_type = type;
   m_params.time = 0.0F;
   m_params.intensity = 0.0F;
-  m_params.drop_speed = RainBatchParams::k_default_drop_speed;
-  m_params.drop_length = RainBatchParams::k_default_drop_length;
-  m_params.drop_width = RainBatchParams::k_default_drop_width;
+  m_params.wind_strength = 0.0F;
 
+  update_weather_params();
   generate_rain_drops();
 }
 
 void RainRenderer::set_intensity(float intensity) {
   m_target_intensity = std::clamp(intensity, 0.0F, 1.0F);
+}
+
+void RainRenderer::set_weather_type(Game::Map::WeatherType type) {
+  if (m_params.weather_type != type) {
+    m_params.weather_type = type;
+    update_weather_params();
+  }
+}
+
+void RainRenderer::update_weather_params() {
+  if (m_params.weather_type == Game::Map::WeatherType::Snow) {
+    m_params.drop_speed = RainBatchParams::k_default_snow_drop_speed;
+    m_params.drop_length = RainBatchParams::k_default_snow_drop_size;
+    m_params.drop_width = RainBatchParams::k_default_snow_drop_size;
+  } else {
+    m_params.drop_speed = RainBatchParams::k_default_rain_drop_speed;
+    m_params.drop_length = RainBatchParams::k_default_rain_drop_length;
+    m_params.drop_width = RainBatchParams::k_default_rain_drop_width;
+  }
+}
+
+void RainRenderer::set_wind_strength(float strength) {
+  m_params.wind_strength = strength;
 }
 
 void RainRenderer::set_camera_position(const QVector3D &position) {
@@ -67,7 +90,6 @@ void RainRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   }
 
   const float time = renderer.get_animation_time();
-  update_drop_positions(time);
 
   const auto visible_count = static_cast<std::size_t>(
       static_cast<float>(m_rain_drops.size()) * m_intensity);
@@ -100,11 +122,17 @@ void RainRenderer::clear() {
 
 void RainRenderer::generate_rain_drops() {
   m_rain_drops.clear();
-  m_rain_drops.reserve(k_max_rain_drops);
+
+  const std::size_t max_drops =
+      (m_params.weather_type == Game::Map::WeatherType::Snow)
+          ? k_max_snow_drops
+          : k_max_rain_drops;
+
+  m_rain_drops.reserve(max_drops);
 
   uint32_t state = m_seed;
 
-  for (std::size_t i = 0; i < k_max_rain_drops; ++i) {
+  for (std::size_t i = 0; i < max_drops; ++i) {
     state = hash_coords(static_cast<int>(i), static_cast<int>(i * 17),
                         m_seed ^ 0xDA1A1234U);
 
@@ -116,7 +144,19 @@ void RainRenderer::generate_rain_drops() {
     const float y = rand_01(state) * m_rain_height;
 
     state = hash_coords(static_cast<int>(i), static_cast<int>(i * 23), state);
-    const float speed_variation = 0.8F + rand_01(state) * 0.4F;
+
+    float speed_variation;
+    if (m_params.weather_type == Game::Map::WeatherType::Snow) {
+
+      speed_variation =
+          RainBatchParams::k_snow_speed_variation_min +
+          rand_01(state) * RainBatchParams::k_snow_speed_variation_range;
+    } else {
+
+      speed_variation =
+          RainBatchParams::k_rain_speed_variation_min +
+          rand_01(state) * RainBatchParams::k_rain_speed_variation_range;
+    }
 
     RainDropInstanceGpu drop;
     drop.pos_velocity =
@@ -128,23 +168,6 @@ void RainRenderer::generate_rain_drops() {
   }
 
   m_instance_count = m_rain_drops.size();
-}
-
-void RainRenderer::update_drop_positions(float) {
-  const float cycle_height = m_rain_height;
-
-  for (auto &drop : m_rain_drops) {
-    const float speed = drop.pos_velocity.w();
-    float y = drop.pos_velocity.y();
-
-    y -= speed * 0.016F;
-
-    if (y < 0.0F) {
-      y += cycle_height;
-    }
-
-    drop.pos_velocity.setY(y);
-  }
 }
 
 } // namespace Render::GL
