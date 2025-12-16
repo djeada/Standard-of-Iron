@@ -9,7 +9,7 @@ uniform float u_time;
 uniform float u_intensity;
 uniform vec3 u_camera_pos;
 uniform vec3 u_wind;
-uniform int u_weather_type; // 0 = Rain, 1 = Snow
+uniform int u_weather_type;
 uniform float u_wind_strength;
 
 out float v_alpha;
@@ -17,11 +17,9 @@ out float v_alpha;
 const float AREA_HEIGHT = 30.0;
 const float AREA_RADIUS = 50.0;
 
-// Wind effect constants
 const float RAIN_WIND_FACTOR = 0.1;
 const float SNOW_WIND_FACTOR = 0.25;
 
-// Snow drift animation constants
 const float SNOW_DRIFT_FREQ_X = 0.5;
 const float SNOW_DRIFT_FREQ_Z = 0.3;
 const float SNOW_DRIFT_SCALE_X = 0.3;
@@ -44,20 +42,21 @@ void main() {
     pos.y += AREA_HEIGHT;
   }
 
-  // Apply wind effect - stronger for snow which is lighter
-  float wind_factor = (u_weather_type == 1) ? SNOW_WIND_FACTOR : RAIN_WIND_FACTOR;
+  float wind_factor =
+      (u_weather_type == 1) ? SNOW_WIND_FACTOR : RAIN_WIND_FACTOR;
   float height_factor = (AREA_HEIGHT - pos.y) / AREA_HEIGHT;
-  
+
   pos.x += u_wind.x * height_factor * wind_factor * (1.0 + u_wind_strength);
   pos.z += u_wind.z * height_factor * wind_factor * (1.0 + u_wind_strength);
 
-  // Add subtle horizontal drift for snow
   if (u_weather_type == 1) {
-    float drift = sin(u_time * SNOW_DRIFT_FREQ_X + a_position.x * SNOW_DRIFT_SCALE_X) 
-                  * SNOW_DRIFT_AMPLITUDE_X;
+    float drift =
+        sin(u_time * SNOW_DRIFT_FREQ_X + a_position.x * SNOW_DRIFT_SCALE_X) *
+        SNOW_DRIFT_AMPLITUDE_X;
     pos.x += drift;
-    pos.z += cos(u_time * SNOW_DRIFT_FREQ_Z + a_position.z * SNOW_DRIFT_SCALE_X) 
-             * SNOW_DRIFT_AMPLITUDE_Z;
+    pos.z +=
+        cos(u_time * SNOW_DRIFT_FREQ_Z + a_position.z * SNOW_DRIFT_SCALE_X) *
+        SNOW_DRIFT_AMPLITUDE_Z;
   }
 
   gl_Position = u_view_proj * vec4(pos, 1.0);

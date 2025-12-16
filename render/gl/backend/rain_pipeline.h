@@ -11,6 +11,7 @@ namespace Render::GL {
 class ShaderCache;
 class Backend;
 class Camera;
+struct RainBatchParams;
 
 namespace BackendPipelines {
 
