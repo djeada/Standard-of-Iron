@@ -38,6 +38,7 @@ public:
 
 private:
   void generate_rain_drops();
+  void update_weather_params();
 
   bool m_enabled = false;
   float m_world_width = 100.0F;
