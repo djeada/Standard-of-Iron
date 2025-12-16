@@ -289,8 +289,6 @@ void InputCommandHandler::set_hover_at_screen(qreal sx, qreal sy,
     return;
   }
 
-  m_cursor_manager->update_cursor_shape(nullptr);
-
   m_hover_tracker->update_hover(float(sx), float(sy), *m_world, *m_camera,
                                 viewport.width, viewport.height);
 }

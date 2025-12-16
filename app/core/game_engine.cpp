@@ -258,8 +258,13 @@ GameEngine::GameEngine(QObject *parent)
     qWarning() << "Failed to initialize AudioEventHandler";
   }
 
-  connect(m_cursorManager.get(), &CursorManager::mode_changed, this,
-          &GameEngine::cursor_mode_changed);
+  connect(m_cursorManager.get(), &CursorManager::mode_changed, this, [this]() {
+    // Update the Qt cursor shape on the window when mode changes
+    if (m_cursorManager && m_window) {
+      m_cursorManager->update_cursor_shape(m_window);
+    }
+    emit cursor_mode_changed();
+  });
   connect(m_cursorManager.get(), &CursorManager::global_cursor_changed, this,
           &GameEngine::global_cursor_changed);
 
