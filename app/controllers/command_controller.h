@@ -19,8 +19,8 @@ class PickingService;
 namespace App::Controllers {
 
 struct CommandResult {
-  bool inputConsumed = false;
-  bool resetCursorToNormal = false;
+  bool input_consumed = false;
+  bool reset_cursor_to_normal = false;
 };
 
 class CommandController : public QObject {
@@ -28,44 +28,49 @@ class CommandController : public QObject {
 public:
   CommandController(Engine::Core::World *world,
                     Game::Systems::SelectionSystem *selection_system,
-                    Game::Systems::PickingService *pickingService,
+                    Game::Systems::PickingService *picking_service,
                     QObject *parent = nullptr);
 
-  auto onAttackClick(qreal sx, qreal sy, int viewportWidth, int viewportHeight,
-                     void *camera) -> CommandResult;
-  auto onStopCommand() -> CommandResult;
-  auto onHoldCommand() -> CommandResult;
-  auto onPatrolClick(qreal sx, qreal sy, int viewportWidth, int viewportHeight,
-                     void *camera) -> CommandResult;
-  auto setRallyAtScreen(qreal sx, qreal sy, int viewportWidth,
-                        int viewportHeight, void *camera,
-                        int local_owner_id) -> CommandResult;
-  void recruitNearSelected(const QString &unit_type, int local_owner_id);
+  auto on_attack_click(qreal sx, qreal sy, int viewport_width,
+                       int viewport_height, void *camera) -> CommandResult;
+  auto on_stop_command() -> CommandResult;
+  auto on_hold_command() -> CommandResult;
+  auto on_guard_command() -> CommandResult;
+  auto on_guard_click(qreal sx, qreal sy, int viewport_width,
+                      int viewport_height, void *camera) -> CommandResult;
+  auto on_patrol_click(qreal sx, qreal sy, int viewport_width,
+                       int viewport_height, void *camera) -> CommandResult;
+  auto set_rally_at_screen(qreal sx, qreal sy, int viewport_width,
+                           int viewport_height, void *camera,
+                           int local_owner_id) -> CommandResult;
+  void recruit_near_selected(const QString &unit_type, int local_owner_id);
 
-  [[nodiscard]] bool hasPatrolFirstWaypoint() const {
-    return m_hasPatrolFirstWaypoint;
+  [[nodiscard]] bool has_patrol_first_waypoint() const {
+    return m_has_patrol_first_waypoint;
   }
-  [[nodiscard]] QVector3D getPatrolFirstWaypoint() const {
-    return m_patrolFirstWaypoint;
+  [[nodiscard]] QVector3D get_patrol_first_waypoint() const {
+    return m_patrol_first_waypoint;
   }
-  void clearPatrolFirstWaypoint() { m_hasPatrolFirstWaypoint = false; }
+  void clear_patrol_first_waypoint() { m_has_patrol_first_waypoint = false; }
 
-  Q_INVOKABLE [[nodiscard]] bool anySelectedInHoldMode() const;
+  Q_INVOKABLE [[nodiscard]] bool any_selected_in_hold_mode() const;
+  Q_INVOKABLE [[nodiscard]] bool any_selected_in_guard_mode() const;
 
 signals:
-  void attack_targetSelected();
-  void troopLimitReached();
-  void hold_modeChanged(bool active);
+  void attack_target_selected();
+  void troop_limit_reached();
+  void hold_mode_changed(bool active);
+  void guard_mode_changed(bool active);
 
 private:
   Engine::Core::World *m_world;
   Game::Systems::SelectionSystem *m_selection_system;
-  Game::Systems::PickingService *m_pickingService;
+  Game::Systems::PickingService *m_picking_service;
 
-  bool m_hasPatrolFirstWaypoint = false;
-  QVector3D m_patrolFirstWaypoint;
+  bool m_has_patrol_first_waypoint = false;
+  QVector3D m_patrol_first_waypoint;
 
-  static void resetMovement(Engine::Core::Entity *entity);
+  static void reset_movement(Engine::Core::Entity *entity);
 };
 
 } // namespace App::Controllers

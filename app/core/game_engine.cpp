@@ -258,9 +258,14 @@ GameEngine::GameEngine(QObject *parent)
     qWarning() << "Failed to initialize AudioEventHandler";
   }
 
-  connect(m_cursorManager.get(), &CursorManager::modeChanged, this,
-          &GameEngine::cursor_mode_changed);
-  connect(m_cursorManager.get(), &CursorManager::globalCursorChanged, this,
+  connect(m_cursorManager.get(), &CursorManager::mode_changed, this, [this]() {
+    // Update the Qt cursor shape on the window when mode changes
+    if (m_cursorManager && m_window) {
+      m_cursorManager->update_cursor_shape(m_window);
+    }
+    emit cursor_mode_changed();
+  });
+  connect(m_cursorManager.get(), &CursorManager::global_cursor_changed, this,
           &GameEngine::global_cursor_changed);
 
   connect(m_selectionController.get(),
@@ -274,7 +279,7 @@ GameEngine::GameEngine(QObject *parent)
       &Game::Systems::SelectionController::selection_model_refresh_requested,
       this, &GameEngine::selected_units_data_changed);
   connect(m_commandController.get(),
-          &App::Controllers::CommandController::attack_targetSelected,
+          &App::Controllers::CommandController::attack_target_selected,
           [this]() {
             if (auto *sel_sys =
                     m_world->get_system<Game::Systems::SelectionSystem>()) {
@@ -297,13 +302,16 @@ GameEngine::GameEngine(QObject *parent)
           });
 
   connect(m_commandController.get(),
-          &App::Controllers::CommandController::troopLimitReached, [this]() {
+          &App::Controllers::CommandController::troop_limit_reached, [this]() {
             set_error(
                 "Maximum troop limit reached. Cannot produce more units.");
           });
   connect(m_commandController.get(),
-          &App::Controllers::CommandController::hold_modeChanged, this,
+          &App::Controllers::CommandController::hold_mode_changed, this,
           &GameEngine::hold_mode_changed);
+  connect(m_commandController.get(),
+          &App::Controllers::CommandController::guard_mode_changed, this,
+          &GameEngine::guard_mode_changed);
 
   connect(this, SIGNAL(selected_units_changed()), m_selectedUnitsModel,
           SLOT(refresh()));
@@ -433,11 +441,34 @@ void GameEngine::on_hold_command() {
   m_input_handler->on_hold_command();
 }
 
+void GameEngine::on_guard_command() {
+  if (!m_input_handler) {
+    return;
+  }
+  ensure_initialized();
+  m_input_handler->on_guard_command();
+}
+
+void GameEngine::on_guard_click(qreal sx, qreal sy) {
+  if (!m_input_handler || !m_camera) {
+    return;
+  }
+  ensure_initialized();
+  m_input_handler->on_guard_click(sx, sy, m_viewport);
+}
+
 auto GameEngine::any_selected_in_hold_mode() const -> bool {
   if (!m_input_handler) {
     return false;
   }
   return m_input_handler->any_selected_in_hold_mode();
+}
+
+auto GameEngine::any_selected_in_guard_mode() const -> bool {
+  if (!m_input_handler) {
+    return false;
+  }
+  return m_input_handler->any_selected_in_guard_mode();
 }
 
 void GameEngine::on_patrol_click(qreal sx, qreal sy) {
@@ -470,8 +501,8 @@ void GameEngine::set_cursor_mode(CursorMode mode) {
   if (!m_cursorManager) {
     return;
   }
-  m_cursorManager->setMode(mode);
-  m_cursorManager->updateCursorShape(m_window);
+  m_cursorManager->set_mode(mode);
+  m_cursorManager->update_cursor_shape(m_window);
 }
 
 void GameEngine::set_cursor_mode(const QString &mode) {
@@ -482,7 +513,7 @@ auto GameEngine::cursor_mode() const -> QString {
   if (!m_cursorManager) {
     return "normal";
   }
-  return m_cursorManager->modeString();
+  return m_cursorManager->mode_string();
 }
 
 auto GameEngine::global_cursor_x() const -> qreal {
@@ -748,8 +779,8 @@ void GameEngine::render(int pixelWidth, int pixelHeight) {
 
   if (auto *res = m_renderer->resources()) {
     std::optional<QVector3D> preview_waypoint;
-    if (m_commandController && m_commandController->hasPatrolFirstWaypoint()) {
-      preview_waypoint = m_commandController->getPatrolFirstWaypoint();
+    if (m_commandController && m_commandController->has_patrol_first_waypoint()) {
+      preview_waypoint = m_commandController->get_patrol_first_waypoint();
     }
     Render::GL::renderPatrolFlags(m_renderer.get(), res, *m_world,
                                   preview_waypoint);
@@ -808,6 +839,8 @@ void GameEngine::sync_selection_flags() {
 
   App::Utils::sanitize_selection(m_world.get(), selection_system);
 
+  // Reset cursor mode to Normal when selection becomes empty
+  // This ensures the cursor mode doesn't persist without any units selected
   if (selection_system->get_selected_units().empty()) {
     if (m_cursorManager && m_cursorManager->mode() != CursorMode::Normal) {
       set_cursor_mode(CursorMode::Normal);
@@ -916,7 +949,7 @@ void GameEngine::recruit_near_selected(const QString &unit_type) {
   if (!m_commandController) {
     return;
   }
-  m_commandController->recruitNearSelected(unit_type, m_runtime.local_owner_id);
+  m_commandController->recruit_near_selected(unit_type, m_runtime.local_owner_id);
 }
 
 auto GameEngine::get_selected_production_state() const -> QVariantMap {
@@ -993,6 +1026,7 @@ auto GameEngine::get_selected_units_command_mode() const -> QString {
 
   int attacking_count = 0;
   int patrolling_count = 0;
+  int guarding_count = 0;
   int total_units = 0;
 
   for (auto id : sel) {
@@ -1019,6 +1053,11 @@ auto GameEngine::get_selected_units_command_mode() const -> QString {
     if ((patrol != nullptr) && patrol->patrolling) {
       patrolling_count++;
     }
+
+    auto *guard = e->get_component<Engine::Core::GuardModeComponent>();
+    if ((guard != nullptr) && guard->active) {
+      guarding_count++;
+    }
   }
 
   if (total_units == 0) {
@@ -1031,8 +1070,82 @@ auto GameEngine::get_selected_units_command_mode() const -> QString {
   if (attacking_count == total_units) {
     return "attack";
   }
+  if (guarding_count == total_units) {
+    return "guard";
+  }
 
   return "normal";
+}
+
+auto GameEngine::get_selected_units_mode_availability() const -> QVariantMap {
+  QVariantMap result;
+  result["canAttack"] = true;
+  result["canGuard"] = true;
+  result["canHold"] = true;
+  result["canPatrol"] = true;
+
+  if (!m_world) {
+    return result;
+  }
+  auto *selection_system =
+      m_world->get_system<Game::Systems::SelectionSystem>();
+  if (selection_system == nullptr) {
+    return result;
+  }
+
+  const auto &sel = selection_system->get_selected_units();
+  if (sel.empty()) {
+    return result;
+  }
+
+  // Check mode availability across all selected units
+  // If ANY unit cannot use a mode, that mode is disabled
+  bool can_attack = true;
+  bool can_guard = true;
+  bool can_hold = true;
+  bool can_patrol = true;
+
+  for (auto id : sel) {
+    // Early exit if all modes are already disabled
+    if (!can_attack && !can_guard && !can_hold && !can_patrol) {
+      break;
+    }
+
+    auto *e = m_world->get_entity(id);
+    if (e == nullptr) {
+      continue;
+    }
+
+    auto *u = e->get_component<Engine::Core::UnitComponent>();
+    if (u == nullptr) {
+      continue;
+    }
+
+    // Skip buildings
+    if (u->spawn_type == Game::Units::SpawnType::Barracks) {
+      continue;
+    }
+
+    if (can_attack && !Game::Units::can_use_attack_mode(u->spawn_type)) {
+      can_attack = false;
+    }
+    if (can_guard && !Game::Units::can_use_guard_mode(u->spawn_type)) {
+      can_guard = false;
+    }
+    if (can_hold && !Game::Units::can_use_hold_mode(u->spawn_type)) {
+      can_hold = false;
+    }
+    if (can_patrol && !Game::Units::can_use_patrol_mode(u->spawn_type)) {
+      can_patrol = false;
+    }
+  }
+
+  result["canAttack"] = can_attack;
+  result["canGuard"] = can_guard;
+  result["canHold"] = can_hold;
+  result["canPatrol"] = can_patrol;
+
+  return result;
 }
 
 void GameEngine::set_rally_at_screen(qreal sx, qreal sy) {
@@ -1040,9 +1153,9 @@ void GameEngine::set_rally_at_screen(qreal sx, qreal sy) {
   if (!m_commandController || !m_camera) {
     return;
   }
-  m_commandController->setRallyAtScreen(sx, sy, m_viewport.width,
-                                        m_viewport.height, m_camera.get(),
-                                        m_runtime.local_owner_id);
+  m_commandController->set_rally_at_screen(sx, sy, m_viewport.width,
+                                           m_viewport.height, m_camera.get(),
+                                           m_runtime.local_owner_id);
 }
 
 void GameEngine::start_loading_maps() {
@@ -1501,7 +1614,7 @@ void GameEngine::apply_runtime_snapshot(
 
   m_runtime.cursor_mode = static_cast<CursorMode>(snapshot.cursor_mode);
   if (m_cursorManager) {
-    m_cursorManager->setMode(m_runtime.cursor_mode);
+    m_cursorManager->set_mode(m_runtime.cursor_mode);
   }
 }
 

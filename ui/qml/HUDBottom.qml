@@ -9,6 +9,21 @@ RowLayout {
     property string currentCommandMode
     property int selectionTick
     property bool hasMovableUnits
+    property var modeAvailability: ({
+        "canAttack": true,
+        "canGuard": true,
+        "canHold": true,
+        "canPatrol": true
+    })
+
+    function updateModeAvailability() {
+        if (typeof game !== 'undefined' && game.get_selected_units_mode_availability) {
+            modeAvailability = game.get_selected_units_mode_availability();
+        }
+    }
+
+    Component.onCompleted: updateModeAvailability()
+    onSelectionTickChanged: updateModeAvailability()
 
     signal commandModeChanged(string mode)
     signal recruit(string unitType)
@@ -255,18 +270,22 @@ RowLayout {
             columnSpacing: 6
 
             Button {
+                id: attackButton
+
+                property bool modeAvailable: bottomRoot.modeAvailability.canAttack !== false
+
                 Layout.fillWidth: true
                 Layout.preferredHeight: 38
                 text: qsTr("Attack")
                 focusPolicy: Qt.NoFocus
-                enabled: bottomRoot.hasMovableUnits
+                enabled: bottomRoot.hasMovableUnits && modeAvailable
                 checkable: true
                 checked: bottomRoot.currentCommandMode === "attack" && bottomRoot.hasMovableUnits
                 onClicked: {
                     bottomRoot.commandModeChanged(checked ? "attack" : "normal");
                 }
                 ToolTip.visible: hovered
-                ToolTip.text: bottomRoot.hasMovableUnits ? qsTr("Attack enemy units or buildings.\nUnits will chase targets.") : qsTr("Select troops first")
+                ToolTip.text: !modeAvailable ? qsTr("Attack not available for selected units (e.g. healers)") : (bottomRoot.hasMovableUnits ? qsTr("Attack enemy units or buildings.\nUnits will chase targets.") : qsTr("Select troops first"))
                 ToolTip.delay: 500
 
                 background: Rectangle {
@@ -288,18 +307,22 @@ RowLayout {
             }
 
             Button {
+                id: guardButton
+
+                property bool modeAvailable: bottomRoot.modeAvailability.canGuard !== false
+
                 Layout.fillWidth: true
                 Layout.preferredHeight: 38
                 text: qsTr("Guard")
                 focusPolicy: Qt.NoFocus
-                enabled: bottomRoot.hasMovableUnits
+                enabled: bottomRoot.hasMovableUnits && modeAvailable
                 checkable: true
                 checked: bottomRoot.currentCommandMode === "guard" && bottomRoot.hasMovableUnits
                 onClicked: {
                     bottomRoot.commandModeChanged(checked ? "guard" : "normal");
                 }
                 ToolTip.visible: hovered
-                ToolTip.text: bottomRoot.hasMovableUnits ? qsTr("Guard a position.\nUnits will defend from all sides.") : qsTr("Select troops first")
+                ToolTip.text: !modeAvailable ? qsTr("Guard not available for selected units") : (bottomRoot.hasMovableUnits ? qsTr("Guard a position.\nUnits will defend from all sides.") : qsTr("Select troops first"))
                 ToolTip.delay: 500
 
                 background: Rectangle {
@@ -321,18 +344,22 @@ RowLayout {
             }
 
             Button {
+                id: patrolButton
+
+                property bool modeAvailable: bottomRoot.modeAvailability.canPatrol !== false
+
                 Layout.fillWidth: true
                 Layout.preferredHeight: 38
                 text: qsTr("Patrol")
                 focusPolicy: Qt.NoFocus
-                enabled: bottomRoot.hasMovableUnits
+                enabled: bottomRoot.hasMovableUnits && modeAvailable
                 checkable: true
                 checked: bottomRoot.currentCommandMode === "patrol" && bottomRoot.hasMovableUnits
                 onClicked: {
                     bottomRoot.commandModeChanged(checked ? "patrol" : "normal");
                 }
                 ToolTip.visible: hovered
-                ToolTip.text: bottomRoot.hasMovableUnits ? qsTr("Patrol between waypoints.\nClick start and end points.") : qsTr("Select troops first")
+                ToolTip.text: !modeAvailable ? qsTr("Patrol not available for selected units") : (bottomRoot.hasMovableUnits ? qsTr("Patrol between waypoints.\nClick start and end points.") : qsTr("Select troops first"))
                 ToolTip.delay: 500
 
                 background: Rectangle {
@@ -393,19 +420,20 @@ RowLayout {
                     bottomRoot.selectionTick;
                     return (typeof game !== 'undefined' && game.any_selected_in_hold_mode) ? game.any_selected_in_hold_mode() : false;
                 }
+                property bool modeAvailable: bottomRoot.modeAvailability.canHold !== false
 
                 Layout.fillWidth: true
                 Layout.preferredHeight: 38
                 text: qsTr("Hold")
                 focusPolicy: Qt.NoFocus
-                enabled: bottomRoot.hasMovableUnits
+                enabled: bottomRoot.hasMovableUnits && modeAvailable
                 onClicked: {
                     if (typeof game !== 'undefined' && game.on_hold_command)
                         game.on_hold_command();
 
                 }
                 ToolTip.visible: hovered
-                ToolTip.text: bottomRoot.hasMovableUnits ? (isHoldActive ? qsTr("Exit hold mode (toggle)") : qsTr("Hold position and defend")) : qsTr("Select troops first")
+                ToolTip.text: !modeAvailable ? qsTr("Hold not available for selected units") : (bottomRoot.hasMovableUnits ? (isHoldActive ? qsTr("Exit hold mode (toggle)") : qsTr("Hold position and defend")) : qsTr("Select troops first"))
                 ToolTip.delay: 500
 
                 Connections {
