@@ -86,6 +86,47 @@ auto BarbarianFormation::calculatePositions(
   return positions;
 }
 
+auto CarthageFormation::calculatePositions(
+    int unit_count, const QVector3D &center,
+    float base_spacing) const -> std::vector<QVector3D> {
+  std::vector<QVector3D> positions;
+  positions.reserve(unit_count);
+
+  if (unit_count <= 0) {
+    return positions;
+  }
+
+  float spacing = base_spacing * 1.5F;
+
+  if (unit_count > 100) {
+    spacing *= 2.0F;
+  } else if (unit_count > 50) {
+    spacing *= 1.5F;
+  }
+
+  std::mt19937 rng(84);
+  std::uniform_real_distribution<float> dist(-0.25F, 0.25F);
+
+  int const rows = std::max(1, static_cast<int>(std::sqrt(unit_count * 0.8F)));
+  int const cols = (unit_count + rows - 1) / rows;
+
+  for (int i = 0; i < unit_count; ++i) {
+    int const row = i / cols;
+    int const col = i % cols;
+
+    float const base_x = (col - (cols - 1) * 0.5F) * spacing;
+    float const base_z = (row - (rows - 1) * 0.5F) * spacing * 0.85F;
+
+    float const jitter_x = dist(rng) * spacing;
+    float const jitter_z = dist(rng) * spacing;
+
+    positions.emplace_back(center.x() + base_x + jitter_x, center.y(),
+                           center.z() + base_z + jitter_z);
+  }
+
+  return positions;
+}
+
 auto FormationSystem::instance() -> FormationSystem & {
   static FormationSystem inst;
   return inst;
@@ -97,6 +138,8 @@ void FormationSystem::initializeDefaults() {
   registerFormation(FormationType::Roman, std::make_unique<RomanFormation>());
   registerFormation(FormationType::Barbarian,
                     std::make_unique<BarbarianFormation>());
+  registerFormation(FormationType::Carthage,
+                    std::make_unique<CarthageFormation>());
 }
 
 auto FormationSystem::get_formation_positions(
