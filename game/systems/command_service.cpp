@@ -366,7 +366,8 @@ void CommandService::moveGroup(Engine::Core::World &world,
       hold_mode->exit_cooldown = hold_mode->stand_up_duration;
     }
 
-    auto *guard_mode = entity->get_component<Engine::Core::GuardModeComponent>();
+    auto *guard_mode =
+        entity->get_component<Engine::Core::GuardModeComponent>();
     if ((guard_mode != nullptr) && guard_mode->active &&
         !guard_mode->returning_to_guard_position) {
       guard_mode->active = false;
