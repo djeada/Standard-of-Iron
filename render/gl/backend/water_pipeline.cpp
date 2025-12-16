@@ -75,6 +75,18 @@ void WaterPipeline::cache_riverbank_uniforms() {
   m_riverbankUniforms.projection =
       m_riverbankShader->uniform_handle("projection");
   m_riverbankUniforms.time = m_riverbankShader->uniform_handle("time");
+  m_riverbankUniforms.visibility_texture =
+      m_riverbankShader->uniform_handle("u_visibilityTex");
+  m_riverbankUniforms.visibility_size =
+      m_riverbankShader->uniform_handle("u_visibilitySize");
+  m_riverbankUniforms.visibility_tile_size =
+      m_riverbankShader->uniform_handle("u_visibilityTileSize");
+  m_riverbankUniforms.explored_alpha =
+      m_riverbankShader->uniform_handle("u_exploredAlpha");
+  m_riverbankUniforms.has_visibility =
+      m_riverbankShader->uniform_handle("u_hasVisibility");
+  m_riverbankUniforms.segment_visibility =
+      m_riverbankShader->uniform_handle("u_segmentVisibility");
 }
 
 void WaterPipeline::cache_bridge_uniforms() {

@@ -81,7 +81,8 @@ void advance_pose_cache_frame() {
   if ((s_current_frame & 0x1FF) == 0) {
     auto it = s_pose_cache.begin();
     while (it != s_pose_cache.end()) {
-      if (s_current_frame - it->second.frame_number > k_pose_cache_max_age * 2) {
+      if (s_current_frame - it->second.frame_number >
+          k_pose_cache_max_age * 2) {
         it = s_pose_cache.erase(it);
       } else {
         ++it;
@@ -440,9 +441,9 @@ void HumanoidRendererBase::draw_common_body(const DrawContext &ctx,
   const float torso_r = torso_r_base * torso_scale;
   float const depth_scale = scaling.z();
 
-  const float torso_depth_factor = std::clamp(
-      HP::TORSO_DEPTH_FACTOR_BASE + (depth_scale - 1.0F) * 0.20F,
-      HP::TORSO_DEPTH_FACTOR_MIN, HP::TORSO_DEPTH_FACTOR_MAX);
+  const float torso_depth_factor =
+      std::clamp(HP::TORSO_DEPTH_FACTOR_BASE + (depth_scale - 1.0F) * 0.20F,
+                 HP::TORSO_DEPTH_FACTOR_MIN, HP::TORSO_DEPTH_FACTOR_MAX);
   float torso_depth = torso_r * torso_depth_factor;
 
   const float y_top_cover =
@@ -1146,9 +1147,9 @@ void HumanoidRendererBase::draw_simplified_body(const DrawContext &ctx,
       std::max(HP::TORSO_TOP_R, shoulder_half_span * 0.95F);
   const float torso_r = torso_r_base * torso_scale;
   float const depth_scale = scaling.z();
-  const float torso_depth_factor = std::clamp(
-      HP::TORSO_DEPTH_FACTOR_BASE + (depth_scale - 1.0F) * 0.20F,
-      HP::TORSO_DEPTH_FACTOR_MIN, HP::TORSO_DEPTH_FACTOR_MAX);
+  const float torso_depth_factor =
+      std::clamp(HP::TORSO_DEPTH_FACTOR_BASE + (depth_scale - 1.0F) * 0.20F,
+                 HP::TORSO_DEPTH_FACTOR_MIN, HP::TORSO_DEPTH_FACTOR_MAX);
   float torso_depth = torso_r * torso_depth_factor;
 
   const float y_top_cover =
