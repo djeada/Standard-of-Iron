@@ -262,6 +262,14 @@ void readRainConfig(const QJsonObject &obj, RainSettings &out) {
   if (obj.contains(RAIN_ENABLED)) {
     out.enabled = obj.value(RAIN_ENABLED).toBool(out.enabled);
   }
+  if (obj.contains(RAIN_TYPE)) {
+    QString type_str = obj.value(RAIN_TYPE).toString("rain").toLower();
+    if (type_str == "snow") {
+      out.type = WeatherType::Snow;
+    } else {
+      out.type = WeatherType::Rain;
+    }
+  }
   if (obj.contains(RAIN_CYCLE_DURATION)) {
     out.cycle_duration =
         float(obj.value(RAIN_CYCLE_DURATION).toDouble(out.cycle_duration));
@@ -276,6 +284,10 @@ void readRainConfig(const QJsonObject &obj, RainSettings &out) {
   if (obj.contains(RAIN_FADE_DURATION)) {
     out.fade_duration =
         float(obj.value(RAIN_FADE_DURATION).toDouble(out.fade_duration));
+  }
+  if (obj.contains(RAIN_WIND_STRENGTH)) {
+    out.wind_strength =
+        float(obj.value(RAIN_WIND_STRENGTH).toDouble(out.wind_strength));
   }
 }
 
