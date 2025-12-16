@@ -54,6 +54,11 @@ void PatrolSystem::update(Engine::Core::World *world, float) {
         continue;
       }
 
+      // Don't auto-attack buildings - they should only be targeted explicitly
+      if (other->has_component<Engine::Core::BuildingComponent>()) {
+        continue;
+      }
+
       float const dx = other_transform->position.x - transform->position.x;
       float const dz = other_transform->position.z - transform->position.z;
       float const dist_sq = dx * dx + dz * dz;
