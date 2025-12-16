@@ -121,8 +121,6 @@ auto CommandController::on_hold_command() -> CommandResult {
     return result;
   }
 
-  // First, determine if all eligible units already have hold mode active
-  // If all do, we disable it; if any don't, we enable it for all
   int eligible_count = 0;
   int hold_active_count = 0;
 
@@ -137,7 +135,6 @@ auto CommandController::on_hold_command() -> CommandResult {
       continue;
     }
 
-    // Skip buildings
     if (unit->spawn_type == Game::Units::SpawnType::Barracks) {
       continue;
     }
@@ -154,7 +151,6 @@ auto CommandController::on_hold_command() -> CommandResult {
     return result;
   }
 
-  // Determine target state: if all have hold active, disable; otherwise enable
   const bool should_enable_hold = (hold_active_count < eligible_count);
 
   for (auto id : selected) {
@@ -168,7 +164,6 @@ auto CommandController::on_hold_command() -> CommandResult {
       continue;
     }
 
-    // Skip buildings
     if (unit->spawn_type == Game::Units::SpawnType::Barracks) {
       continue;
     }
@@ -176,7 +171,7 @@ auto CommandController::on_hold_command() -> CommandResult {
     auto *hold_mode = entity->get_component<Engine::Core::HoldModeComponent>();
 
     if (should_enable_hold) {
-      // Enable hold mode
+
       reset_movement(entity);
       entity->remove_component<Engine::Core::AttackTargetComponent>();
 
@@ -201,7 +196,7 @@ auto CommandController::on_hold_command() -> CommandResult {
         movement->vz = 0.0F;
       }
     } else {
-      // Disable hold mode
+
       if ((hold_mode != nullptr) && hold_mode->active) {
         hold_mode->active = false;
         hold_mode->exit_cooldown = hold_mode->stand_up_duration;
@@ -293,10 +288,9 @@ auto CommandController::on_patrol_click(qreal sx, qreal sy, int viewport_width,
   return result;
 }
 
-auto CommandController::set_rally_at_screen(qreal sx, qreal sy,
-                                            int viewport_width,
-                                            int viewport_height, void *camera,
-                                            int local_owner_id) -> CommandResult {
+auto CommandController::set_rally_at_screen(
+    qreal sx, qreal sy, int viewport_width, int viewport_height, void *camera,
+    int local_owner_id) -> CommandResult {
   CommandResult result;
   if ((m_world == nullptr) || (m_selection_system == nullptr) ||
       (m_picking_service == nullptr) || (camera == nullptr)) {
@@ -396,8 +390,6 @@ auto CommandController::on_guard_command() -> CommandResult {
     return result;
   }
 
-  // First, determine if all eligible units already have guard mode active
-  // If all do, we disable it; if any don't, we enable it for all
   int eligible_count = 0;
   int guard_active_count = 0;
 
@@ -412,7 +404,6 @@ auto CommandController::on_guard_command() -> CommandResult {
       continue;
     }
 
-    // Skip buildings
     if (unit->spawn_type == Game::Units::SpawnType::Barracks) {
       continue;
     }
@@ -430,7 +421,6 @@ auto CommandController::on_guard_command() -> CommandResult {
     return result;
   }
 
-  // Determine target state: if all have guard active, disable; otherwise enable
   const bool should_enable_guard = (guard_active_count < eligible_count);
 
   for (auto id : selected) {
@@ -444,7 +434,6 @@ auto CommandController::on_guard_command() -> CommandResult {
       continue;
     }
 
-    // Skip buildings
     if (unit->spawn_type == Game::Units::SpawnType::Barracks) {
       continue;
     }
@@ -453,14 +442,13 @@ auto CommandController::on_guard_command() -> CommandResult {
         entity->get_component<Engine::Core::GuardModeComponent>();
 
     if (should_enable_guard) {
-      // Enable guard mode at current position
+
       if (guard_mode == nullptr) {
         guard_mode = entity->add_component<Engine::Core::GuardModeComponent>();
       }
       guard_mode->active = true;
       guard_mode->returning_to_guard_position = false;
 
-      // Set guard position to current position
       auto *transform =
           entity->get_component<Engine::Core::TransformComponent>();
       if (transform != nullptr) {
@@ -470,21 +458,19 @@ auto CommandController::on_guard_command() -> CommandResult {
         guard_mode->guarded_entity_id = 0;
       }
 
-      // Disable hold mode if active
       auto *hold_mode =
           entity->get_component<Engine::Core::HoldModeComponent>();
       if ((hold_mode != nullptr) && hold_mode->active) {
         hold_mode->active = false;
       }
 
-      // Clear patrol
       if (auto *patrol =
               entity->get_component<Engine::Core::PatrolComponent>()) {
         patrol->patrolling = false;
         patrol->waypoints.clear();
       }
     } else {
-      // Disable guard mode
+
       if ((guard_mode != nullptr) && guard_mode->active) {
         guard_mode->active = false;
         guard_mode->guarded_entity_id = 0;
@@ -527,7 +513,6 @@ auto CommandController::on_guard_click(qreal sx, qreal sy, int viewport_width,
     return result;
   }
 
-  // Set guard position for all selected units
   for (auto id : selected) {
     auto *entity = m_world->get_entity(id);
     if (entity == nullptr) {
@@ -552,15 +537,12 @@ auto CommandController::on_guard_click(qreal sx, qreal sy, int viewport_width,
     guard_mode->returning_to_guard_position = false;
     guard_mode->has_guard_target = true;
 
-    // Disable hold mode if active
     auto *hold_mode = entity->get_component<Engine::Core::HoldModeComponent>();
     if ((hold_mode != nullptr) && hold_mode->active) {
       hold_mode->active = false;
     }
 
-    // Clear patrol
-    if (auto *patrol =
-            entity->get_component<Engine::Core::PatrolComponent>()) {
+    if (auto *patrol = entity->get_component<Engine::Core::PatrolComponent>()) {
       patrol->patrolling = false;
       patrol->waypoints.clear();
     }

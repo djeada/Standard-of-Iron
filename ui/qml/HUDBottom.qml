@@ -16,17 +16,14 @@ RowLayout {
         "canPatrol": true
     })
 
-    function updateModeAvailability() {
-        if (typeof game !== 'undefined' && game.get_selected_units_mode_availability) {
-            modeAvailability = game.get_selected_units_mode_availability();
-        }
-    }
-
-    Component.onCompleted: updateModeAvailability()
-    onSelectionTickChanged: updateModeAvailability()
-
     signal commandModeChanged(string mode)
     signal recruit(string unitType)
+
+    function updateModeAvailability() {
+        if (typeof game !== 'undefined' && game.get_selected_units_mode_availability)
+            modeAvailability = game.get_selected_units_mode_availability();
+
+    }
 
     function unitIconSource(unitType, nationKey) {
         if (typeof StyleGuide === "undefined" || !StyleGuide.unitIconSources || !unitType)
@@ -47,6 +44,8 @@ RowLayout {
         return "👤";
     }
 
+    Component.onCompleted: updateModeAvailability()
+    onSelectionTickChanged: updateModeAvailability()
     anchors.fill: parent
     anchors.margins: 10
     spacing: 12

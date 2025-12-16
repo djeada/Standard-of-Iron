@@ -149,18 +149,16 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
 
     if (should_advance && !snapshot.visible_enemies.empty()) {
 
-      // Don't auto-attack buildings - they should only be targeted explicitly
-      // Find closest enemy troop (not building) to advance toward
       const ContactSnapshot *closest_enemy = nullptr;
       float closest_dist_sq = std::numeric_limits<float>::max();
 
       for (const auto &enemy : snapshot.visible_enemies) {
         if (enemy.is_building) {
-          continue; // Skip buildings - only target troops
+          continue;
         }
         float const dist_sq =
-            distance_squared(enemy.posX, enemy.posY, enemy.posZ,
-                             group_center_x, group_center_y, group_center_z);
+            distance_squared(enemy.posX, enemy.posY, enemy.posZ, group_center_x,
+                             group_center_y, group_center_z);
         if (dist_sq < closest_dist_sq) {
           closest_dist_sq = dist_sq;
           closest_enemy = &enemy;

@@ -159,23 +159,20 @@ void OliveRenderer::generate_olive_instances() {
     olive_density = m_biome_settings.plant_density * density_mult;
   }
 
-  // Build terrain cache for spawn validation
   SpawnTerrainCache terrain_cache;
   terrain_cache.build_from_height_map(m_heightData, m_terrain_types, m_width,
                                       m_height, m_tile_size);
 
-  // Configure spawn validator for trees
   SpawnValidationConfig config = make_tree_spawn_config();
   config.grid_width = m_width;
   config.grid_height = m_height;
   config.tile_size = m_tile_size;
   config.edge_padding = m_biome_settings.spawn_edge_padding;
-  config.max_slope = 0.65F; // Olive trees can't grow on steep slopes
+  config.max_slope = 0.65F;
 
   SpawnValidator validator(terrain_cache, config);
 
   auto add_olive = [&](float gx, float gz, uint32_t &state) -> bool {
-    // Use unified spawn validator for all checks
     if (!validator.can_spawn_at_grid(gx, gz)) {
       return false;
     }
