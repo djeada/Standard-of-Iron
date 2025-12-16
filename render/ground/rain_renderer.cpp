@@ -20,8 +20,7 @@ RainRenderer::RainRenderer() = default;
 RainRenderer::~RainRenderer() = default;
 
 void RainRenderer::configure(float world_width, float world_height,
-                             std::uint32_t seed,
-                             Game::Map::WeatherType type) {
+                             std::uint32_t seed, Game::Map::WeatherType type) {
   m_world_width = std::max(1.0F, world_width);
   m_world_height = std::max(1.0F, world_height);
   m_seed = seed;
@@ -34,7 +33,7 @@ void RainRenderer::configure(float world_width, float world_height,
   m_params.time = 0.0F;
   m_params.intensity = 0.0F;
   m_params.wind_strength = 0.0F;
-  
+
   update_weather_params();
   generate_rain_drops();
 }
@@ -103,7 +102,6 @@ void RainRenderer::submit(Renderer &renderer, ResourceManager *resources) {
     m_instance_buffer = std::make_unique<Buffer>(Buffer::Type::Vertex);
   }
 
-  // Upload particle data once - positions are updated in the shader
   m_instance_buffer->set_data(m_rain_drops.data(),
                               visible_count * sizeof(RainDropInstanceGpu),
                               Buffer::Usage::Dynamic);
@@ -124,13 +122,12 @@ void RainRenderer::clear() {
 
 void RainRenderer::generate_rain_drops() {
   m_rain_drops.clear();
-  
-  // Use different max counts based on weather type
-  const std::size_t max_drops = 
-      (m_params.weather_type == Game::Map::WeatherType::Snow) 
-          ? k_max_snow_drops 
+
+  const std::size_t max_drops =
+      (m_params.weather_type == Game::Map::WeatherType::Snow)
+          ? k_max_snow_drops
           : k_max_rain_drops;
-  
+
   m_rain_drops.reserve(max_drops);
 
   uint32_t state = m_seed;
@@ -147,16 +144,18 @@ void RainRenderer::generate_rain_drops() {
     const float y = rand_01(state) * m_rain_height;
 
     state = hash_coords(static_cast<int>(i), static_cast<int>(i * 23), state);
-    
+
     float speed_variation;
     if (m_params.weather_type == Game::Map::WeatherType::Snow) {
-      // Snow has more varied, gentler speeds
-      speed_variation = RainBatchParams::k_snow_speed_variation_min + 
-                       rand_01(state) * RainBatchParams::k_snow_speed_variation_range;
+
+      speed_variation =
+          RainBatchParams::k_snow_speed_variation_min +
+          rand_01(state) * RainBatchParams::k_snow_speed_variation_range;
     } else {
-      // Rain has more consistent, faster speeds
-      speed_variation = RainBatchParams::k_rain_speed_variation_min + 
-                       rand_01(state) * RainBatchParams::k_rain_speed_variation_range;
+
+      speed_variation =
+          RainBatchParams::k_rain_speed_variation_min +
+          rand_01(state) * RainBatchParams::k_rain_speed_variation_range;
     }
 
     RainDropInstanceGpu drop;
