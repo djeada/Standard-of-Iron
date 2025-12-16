@@ -55,12 +55,16 @@ struct VictoryConfig {
   std::vector<QString> defeatConditions = {"no_key_structures"};
 };
 
+enum class WeatherType { Rain, Snow };
+
 struct RainSettings {
   bool enabled = false;
+  WeatherType type = WeatherType::Rain;
   float cycle_duration = 300.0F;
   float active_duration = 60.0F;
   float intensity = 0.5F;
   float fade_duration = 5.0F;
+  float wind_strength = 0.0F;
 };
 
 struct MapDefinition {

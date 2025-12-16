@@ -11,6 +11,7 @@ namespace Render::GL {
 class ShaderCache;
 class Backend;
 class Camera;
+struct RainBatchParams;
 
 namespace BackendPipelines {
 
@@ -32,7 +33,7 @@ public:
   void cache_uniforms() override;
   [[nodiscard]] auto is_initialized() const -> bool override;
 
-  void render(const Camera &cam, float intensity, float time);
+  void render(const Camera &cam, const RainBatchParams &params);
 
   void set_intensity(float intensity) { m_intensity = intensity; }
   void set_wind(const QVector3D &wind) { m_wind_direction = wind; }
@@ -55,9 +56,9 @@ private:
   QVector3D m_wind_direction{0.1F, 0.0F, 0.0F};
 
   std::vector<RainDropData> m_rain_drops;
-  static constexpr std::size_t k_max_drops = 1000;
-  static constexpr float k_drop_speed = 15.0F;
-  static constexpr float k_drop_length = 0.5F;
+  static constexpr std::size_t k_max_drops = 3000;
+  static constexpr float k_drop_speed = 20.0F;
+  static constexpr float k_drop_length = 1.2F;
   static constexpr float k_area_radius = 50.0F;
   static constexpr float k_area_height = 30.0F;
 
@@ -68,6 +69,8 @@ private:
     GL::Shader::UniformHandle camera_pos{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle rain_color{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle wind{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle weather_type{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle wind_strength{GL::Shader::InvalidUniform};
   };
 
   RainUniforms m_uniforms;
