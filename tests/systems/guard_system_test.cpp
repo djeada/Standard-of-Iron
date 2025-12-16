@@ -41,8 +41,8 @@ TEST_F(GuardSystemTest, GuardFollowsMovingEntity) {
   guard_mode->guard_position_x = 5.0F;
   guard_mode->guard_position_z = 5.0F;
 
-  // Run the guard system - guard should not move yet (distance is only sqrt(50)
-  // ~ 7.07, threshold is 2)
+  // Run the guard system - distance is sqrt(50) ≈ 7.07, which exceeds
+  // threshold of 2, so guard should move
   GuardSystem::update(world.get(), 0.1F);
 
   // Guard should have movement target set because the distance exceeds the
