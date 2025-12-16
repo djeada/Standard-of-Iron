@@ -17,7 +17,7 @@ struct RainBatchParams {
   static constexpr float k_default_rain_drop_length = 1.2F;
   static constexpr float k_default_rain_drop_width = 0.025F;
 
-  static constexpr float k_default_snow_drop_speed = 2.0F;
+  static constexpr float k_default_snow_drop_speed = 0.1F;
   static constexpr float k_default_snow_drop_size = 0.08F;
 
   static constexpr float k_rain_speed_variation_min = 0.8F;
