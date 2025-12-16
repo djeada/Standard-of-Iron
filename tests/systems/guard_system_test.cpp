@@ -49,7 +49,7 @@ TEST_F(GuardSystemTest, GuardFollowsMovingEntity) {
   // threshold
   EXPECT_TRUE(guard_movement->has_target);
   EXPECT_FLOAT_EQ(guard_movement->goal_x, 5.0F);
-  EXPECT_FLOAT_EQ(guard_movement->goal_y, 5.0F);
+  EXPECT_FLOAT_EQ(guard_movement->goal_y, 5.0F); // goal_y represents Z coordinate
 
   // Move the guarded unit to a new position
   guarded_transform->position.x = 15.0F;
@@ -65,7 +65,7 @@ TEST_F(GuardSystemTest, GuardFollowsMovingEntity) {
   // Guard should have new movement target
   EXPECT_TRUE(guard_movement->has_target);
   EXPECT_FLOAT_EQ(guard_movement->goal_x, 15.0F);
-  EXPECT_FLOAT_EQ(guard_movement->goal_y, 15.0F);
+  EXPECT_FLOAT_EQ(guard_movement->goal_y, 15.0F); // goal_y represents Z coordinate
   EXPECT_TRUE(guard_mode->returning_to_guard_position);
 }
 
@@ -171,7 +171,7 @@ TEST_F(GuardSystemTest, GuardReturnsToPositionWhenGuardingLocation) {
   // Guard should have movement target set to return to guard position
   EXPECT_TRUE(guard_movement->has_target);
   EXPECT_FLOAT_EQ(guard_movement->goal_x, 10.0F);
-  EXPECT_FLOAT_EQ(guard_movement->goal_y, 10.0F);
+  EXPECT_FLOAT_EQ(guard_movement->goal_y, 10.0F); // goal_y represents Z coordinate
   EXPECT_TRUE(guard_mode->returning_to_guard_position);
 }
 
