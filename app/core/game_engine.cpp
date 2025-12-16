@@ -62,6 +62,7 @@
 #include "game/core/event_manager.h"
 #include "game/core/world.h"
 #include "game/game_config.h"
+#include "game/map/campaign_loader.h"
 #include "game/map/environment.h"
 #include "game/map/level_loader.h"
 #include "game/map/map_catalog.h"
@@ -70,6 +71,7 @@
 #include "game/map/minimap/map_preview_generator.h"
 #include "game/map/minimap/minimap_generator.h"
 #include "game/map/minimap/unit_layer.h"
+#include "game/map/mission_loader.h"
 #include "game/map/skirmish_loader.h"
 #include "game/map/terrain_service.h"
 #include "game/map/visibility_service.h"
@@ -107,6 +109,7 @@
 #include "game/systems/victory_service.h"
 #include "game/units/factory.h"
 #include "game/units/troop_config.h"
+#include "utils/resource_utils.h"
 #include "render/entity/combat_dust_renderer.h"
 #include "render/entity/healer_aura_renderer.h"
 #include "render/entity/healing_beam_renderer.h"
@@ -1214,60 +1217,65 @@ void GameEngine::load_campaigns() {
   emit available_campaigns_changed();
 }
 
-void GameEngine::start_campaign_mission(const QString &campaign_id) {
+void GameEngine::start_campaign_mission(const QString &mission_path) {
   clear_error();
 
-  if (!m_saveLoadService) {
-    set_error("Save/Load service not initialized");
+  // Parse mission_path as "campaign_id/mission_id"
+  const QStringList parts = mission_path.split('/');
+  if (parts.size() != 2) {
+    set_error("Invalid mission path format. Expected: campaign_id/mission_id");
     return;
   }
 
+  const QString campaign_id = parts[0];
+  const QString mission_id = parts[1];
+
+  // Load the mission JSON file
+  const QString mission_file_path = Utils::Resources::resolveResourcePath(
+      QString(":/assets/missions/%1.json").arg(mission_id));
+
+  Game::Mission::MissionDefinition mission;
   QString error;
-  auto campaigns = m_saveLoadService->list_campaigns(&error);
-  if (!error.isEmpty()) {
-    set_error("Failed to load campaign: " + error);
-    return;
-  }
-
-  QVariantMap selected_campaign;
-  for (const auto &campaign : campaigns) {
-    auto campaign_map = campaign.toMap();
-    if (campaign_map.value("id").toString() == campaign_id) {
-      selected_campaign = campaign_map;
-      break;
-    }
-  }
-
-  if (selected_campaign.isEmpty()) {
-    set_error("Campaign not found: " + campaign_id);
+  if (!Game::Mission::MissionLoader::loadFromJsonFile(mission_file_path, mission, &error)) {
+    set_error(QString("Failed to load mission %1: %2").arg(mission_id).arg(error));
     return;
   }
 
   m_current_campaign_id = campaign_id;
+  m_current_mission_id = mission_id;
 
-  QString map_path = selected_campaign.value("mapPath").toString();
-
+  // Build player configs from mission definition
   QVariantList playerConfigs;
 
+  // Add human player from mission
   QVariantMap player1;
   player1.insert("player_id", 1);
-  player1.insert("playerName", "Carthage");
+  player1.insert("playerName", mission.player_setup.nation);
   player1.insert("colorIndex", 0);
   player1.insert("team_id", 0);
-  player1.insert("nationId", "carthage");
+  player1.insert("nationId", mission.player_setup.nation);
   player1.insert("isHuman", true);
   playerConfigs.append(player1);
 
-  QVariantMap player2;
-  player2.insert("player_id", 2);
-  player2.insert("playerName", "Rome");
-  player2.insert("colorIndex", 1);
-  player2.insert("team_id", 1);
-  player2.insert("nationId", "roman_republic");
-  player2.insert("isHuman", false);
-  playerConfigs.append(player2);
+  // Add AI players from mission
+  int player_id = 2;
+  for (const auto &ai_setup : mission.ai_setups) {
+    QVariantMap ai_player;
+    ai_player.insert("player_id", player_id);
+    ai_player.insert("playerName", ai_setup.nation);
+    ai_player.insert("colorIndex", player_id - 1);
+    ai_player.insert("team_id", player_id - 1);
+    ai_player.insert("nationId", ai_setup.nation);
+    ai_player.insert("isHuman", false);
+    playerConfigs.append(ai_player);
+    player_id++;
+  }
 
-  start_skirmish(map_path, playerConfigs);
+  // Store mission definition for victory condition integration
+  m_current_mission_definition = mission;
+
+  // Start the game with the mission's map
+  start_skirmish(mission.map_path, playerConfigs);
 }
 
 void GameEngine::mark_current_mission_completed() {
@@ -1384,6 +1392,44 @@ void GameEngine::perform_skirmish_load(const QString &map_path,
   }
 
   m_runtime.local_owner_id = load_result.updated_player_id;
+
+  // If we're loading a mission, override victory conditions with mission-specific ones
+  if (m_victoryService && m_current_mission_definition.has_value()) {
+    const auto &mission = *m_current_mission_definition;
+    
+    // Convert mission victory conditions to VictoryConfig
+    Game::Map::VictoryConfig mission_victory_config;
+    
+    // Determine victory type from mission conditions
+    if (!mission.victory_conditions.empty()) {
+      const auto &first_condition = mission.victory_conditions[0];
+      if (first_condition.type == "destroy_all_enemies") {
+        mission_victory_config.victoryType = "elimination";
+        mission_victory_config.keyStructures = {"barracks"};
+      } else if (first_condition.type == "survive_duration" && first_condition.duration.has_value()) {
+        mission_victory_config.victoryType = "survive_time";
+        mission_victory_config.surviveTimeDuration = *first_condition.duration;
+      } else {
+        mission_victory_config.victoryType = "elimination";
+        mission_victory_config.keyStructures = {"barracks"};
+      }
+    }
+    
+    // Convert mission defeat conditions
+    for (const auto &defeat_condition : mission.defeat_conditions) {
+      if (defeat_condition.type == "lose_structure" && defeat_condition.structure_type.has_value()) {
+        mission_victory_config.defeatConditions.push_back("no_key_structures");
+        mission_victory_config.keyStructures.push_back(*defeat_condition.structure_type);
+      } else if (defeat_condition.type == "lose_all_units") {
+        mission_victory_config.defeatConditions.push_back("no_units");
+      }
+    }
+    
+    // Configure victory service with mission-specific conditions
+    m_victoryService->configure(mission_victory_config, m_runtime.local_owner_id);
+    
+    qInfo() << "Applied mission victory conditions from" << m_current_mission_id;
+  }
 
   if (m_victoryService) {
     m_victoryService->setVictoryCallback([this](const QString &state) {
