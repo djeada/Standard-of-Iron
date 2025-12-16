@@ -455,7 +455,11 @@ void Renderer::enqueue_mode_indicator(
   auto *guard_mode = entity->get_component<Engine::Core::GuardModeComponent>();
   bool const has_guard_mode = (guard_mode != nullptr) && guard_mode->active;
 
-  if (!has_hold_mode && !has_guard_mode) {
+  // DEBUG: Always show indicator for testing purposes
+  // TODO: Remove this debug code once verified working
+  bool const show_for_debug = (unit_comp != nullptr);
+  
+  if (!has_hold_mode && !has_guard_mode && !show_for_debug) {
     return;
   }
 
@@ -525,6 +529,8 @@ void Renderer::enqueue_mode_indicator(
     mode_type = Render::Geom::k_mode_type_guard;
     color = Render::Geom::k_guard_mode_color;
   }
+  // DEBUG: For units without mode, use hold mode visual
+  // TODO: Remove when verified working
 
   mode_indicator(indicator_model, mode_type, color,
                  Render::Geom::k_indicator_alpha);
