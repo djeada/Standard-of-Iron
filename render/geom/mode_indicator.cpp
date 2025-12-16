@@ -138,57 +138,77 @@ auto ModeIndicator::create_guard_mode_mesh()
   std::vector<Vertex> verts;
   std::vector<unsigned int> idx;
 
-  constexpr float shield_width = 0.8F;
-  constexpr float shield_height = 0.85F;
-  constexpr int segments = 16;
-  constexpr float boss_radius = 0.12F;
+  constexpr float shield_width = 0.7F;
+  constexpr float shield_height = 0.9F;
+  constexpr float top_radius = 0.32F;
+  constexpr float boss_radius = 0.13F;
 
   QVector3D const n(0, 0, 1);
 
   float const half_width = shield_width * 0.5F;
-  float const top_height = shield_height * 0.45F;
-  float const bottom_height = shield_height * 0.55F;
+  float const top_arc_center_y = shield_height * 0.2F;
+  float const mid_y = -shield_height * 0.15F;
+  float const bottom_y = -shield_height * 0.5F;
 
   size_t const center_idx = verts.size();
   verts.push_back({{0.0F, 0.0F, 0.0F}, {n.x(), n.y(), n.z()}, {0.5F, 0.5F}});
 
-  for (int i = 0; i <= segments; ++i) {
-    float const angle = k_pi * (i / float(segments));
-    float const x = half_width * std::cos(angle);
-    float const y = top_height * std::sin(angle);
-    verts.push_back({{x, y, 0.0F}, {n.x(), n.y(), n.z()}, {0.5F, 1.0F}});
+  constexpr int top_arc_segments = 16;
+  for (int i = 0; i <= top_arc_segments; ++i) {
+    float const t = i / float(top_arc_segments);
+    float const angle = k_pi * t;
+    float const x = top_radius * std::cos(angle);
+    float const y = top_arc_center_y + top_radius * std::sin(angle);
+    verts.push_back({{x, y, 0.0F}, {n.x(), n.y(), n.z()}, {t, 1.0F}});
   }
+
+  size_t const left_mid_idx = verts.size();
+  verts.push_back(
+      {{-half_width, mid_y, 0.0F}, {n.x(), n.y(), n.z()}, {0.0F, 0.35F}});
+
+  size_t const right_mid_idx = verts.size();
+  verts.push_back(
+      {{half_width, mid_y, 0.0F}, {n.x(), n.y(), n.z()}, {1.0F, 0.35F}});
 
   size_t const bottom_idx = verts.size();
   verts.push_back(
-      {{0.0F, -bottom_height, 0.0F}, {n.x(), n.y(), n.z()}, {0.5F, 0.0F}});
+      {{0.0F, bottom_y, 0.0F}, {n.x(), n.y(), n.z()}, {0.5F, 0.0F}});
 
-  for (int i = 0; i < segments; ++i) {
+  for (int i = 0; i < top_arc_segments; ++i) {
     idx.push_back(center_idx);
     idx.push_back(center_idx + 1 + i);
     idx.push_back(center_idx + 1 + i + 1);
   }
 
   size_t const leftmost_idx = center_idx + 1;
-  size_t const rightmost_idx = center_idx + 1 + segments;
+  size_t const rightmost_idx = center_idx + 1 + top_arc_segments;
 
   idx.push_back(center_idx);
   idx.push_back(leftmost_idx);
+  idx.push_back(left_mid_idx);
+
+  idx.push_back(center_idx);
+  idx.push_back(left_mid_idx);
   idx.push_back(bottom_idx);
 
   idx.push_back(center_idx);
   idx.push_back(bottom_idx);
+  idx.push_back(right_mid_idx);
+
+  idx.push_back(center_idx);
+  idx.push_back(right_mid_idx);
   idx.push_back(rightmost_idx);
 
-  constexpr int boss_segments = 12;
+  constexpr int boss_segments = 20;
   size_t const boss_center = verts.size();
-  verts.push_back({{0.0F, 0.0F, 0.0F}, {n.x(), n.y(), n.z()}, {0.5F, 0.5F}});
+  verts.push_back(
+      {{0.0F, shield_height * 0.08F, 0.0F}, {n.x(), n.y(), n.z()}, {0.5F, 0.5F}});
 
   for (int i = 0; i <= boss_segments; ++i) {
     float const angle = (i / float(boss_segments)) * 2.0F * k_pi;
     float const x = boss_radius * std::cos(angle);
-    float const y = boss_radius * std::sin(angle);
-    verts.push_back({{x, y, 0.0F}, {n.x(), n.y(), n.z()}, {0.5F, 0.8F}});
+    float const y = shield_height * 0.08F + boss_radius * std::sin(angle);
+    verts.push_back({{x, y, 0.0F}, {n.x(), n.y(), n.z()}, {0.6F, 0.7F}});
   }
 
   for (int i = 0; i < boss_segments; ++i) {
