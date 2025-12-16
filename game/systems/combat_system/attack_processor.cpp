@@ -386,10 +386,8 @@ void process_attacks(Engine::Core::World *world, float delta_time) {
               auto *target_transform =
                   target->get_component<Engine::Core::TransformComponent>();
               if (target_transform != nullptr) {
-                float const dx =
-                    target_transform->position.x - guard_x;
-                float const dz =
-                    target_transform->position.z - guard_z;
+                float const dx = target_transform->position.x - guard_x;
+                float const dz = target_transform->position.z - guard_z;
                 float const dist_sq = dx * dx + dz * dz;
                 float const guard_radius_sq =
                     guard_mode->guard_radius * guard_mode->guard_radius;
