@@ -217,3 +217,57 @@ TEST_F(RainManagerTest, DeterministicTimingWithSeed) {
 
   EXPECT_FLOAT_EQ(manager1.get_cycle_time(), manager2.get_cycle_time());
 }
+
+TEST_F(RainManagerTest, WeatherTypeDefaultsToRain) {
+  RainSettings settings;
+  settings.enabled = true;
+  settings.cycle_duration = 100.0F;
+  settings.active_duration = 30.0F;
+  settings.intensity = 0.8F;
+  settings.fade_duration = 5.0F;
+
+  rain_manager->configure(settings, 12345);
+
+  EXPECT_EQ(rain_manager->get_weather_type(), WeatherType::Rain);
+}
+
+TEST_F(RainManagerTest, WeatherTypeCanBeSetToSnow) {
+  RainSettings settings;
+  settings.enabled = true;
+  settings.type = WeatherType::Snow;
+  settings.cycle_duration = 100.0F;
+  settings.active_duration = 30.0F;
+  settings.intensity = 0.8F;
+  settings.fade_duration = 5.0F;
+
+  rain_manager->configure(settings, 12345);
+
+  EXPECT_EQ(rain_manager->get_weather_type(), WeatherType::Snow);
+}
+
+TEST_F(RainManagerTest, WindStrengthDefaultsToZero) {
+  RainSettings settings;
+  settings.enabled = true;
+  settings.cycle_duration = 100.0F;
+  settings.active_duration = 30.0F;
+  settings.intensity = 0.8F;
+  settings.fade_duration = 5.0F;
+
+  rain_manager->configure(settings, 12345);
+
+  EXPECT_FLOAT_EQ(rain_manager->get_wind_strength(), 0.0F);
+}
+
+TEST_F(RainManagerTest, WindStrengthCanBeConfigured) {
+  RainSettings settings;
+  settings.enabled = true;
+  settings.cycle_duration = 100.0F;
+  settings.active_duration = 30.0F;
+  settings.intensity = 0.8F;
+  settings.fade_duration = 5.0F;
+  settings.wind_strength = 0.5F;
+
+  rain_manager->configure(settings, 12345);
+
+  EXPECT_FLOAT_EQ(rain_manager->get_wind_strength(), 0.5F);
+}
