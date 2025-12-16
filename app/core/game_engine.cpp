@@ -1298,7 +1298,7 @@ void GameEngine::perform_skirmish_load(const QString &map_path,
     const float world_height =
         static_cast<float>(m_level.grid_height) * m_level.tile_size;
     m_rain->configure(world_width, world_height, m_level.biome_seed,
-                     m_level.rain.type);
+                      m_level.rain.type);
     m_rain->set_enabled(m_level.rain.enabled);
     m_rain->set_wind_strength(m_level.rain.wind_strength);
     const float initial_intensity =
