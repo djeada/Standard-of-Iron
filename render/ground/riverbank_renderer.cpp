@@ -410,9 +410,6 @@ void RiverbankRenderer::submit(Renderer &renderer, ResourceManager *resources) {
 
   Q_UNUSED(resources);
 
-  auto &visibility = Game::Map::VisibilityService::instance();
-  const bool use_visibility = visibility.is_initialized();
-
   auto *shader = renderer.get_shader("riverbank");
   if (shader == nullptr) {
     return;
@@ -436,32 +433,7 @@ void RiverbankRenderer::submit(Renderer &renderer, ResourceManager *resources) {
       continue;
     }
 
-    QVector3D dir = segment.end - segment.start;
-    float const length = dir.length();
-
-    if (use_visibility) {
-      bool any_visible = false;
-      dir.normalize();
-
-      // Sample visibility along the segment - only render if visible (not explored)
-      int const samples_per_segment = 5;
-      for (int i = 0; i < samples_per_segment; ++i) {
-        float const t =
-            static_cast<float>(i) / static_cast<float>(samples_per_segment - 1);
-        QVector3D const pos = segment.start + dir * (length * t);
-
-        if (visibility.isVisibleWorld(pos.x(), pos.z())) {
-          any_visible = true;
-          break;
-        }
-      }
-
-      // Don't render if not visible (let fog overlay handle explored areas)
-      if (!any_visible) {
-        continue;
-      }
-    }
-
+    // Always render - fog overlay handles visibility naturally (like terrain)
     renderer.mesh(mesh, model, QVector3D(1.0F, 1.0F, 1.0F), nullptr, 1.0F);
   }
 
