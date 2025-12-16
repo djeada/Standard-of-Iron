@@ -140,6 +140,12 @@ void CommandService::moveUnits(Engine::Core::World &world,
       guard_mode->active = false;
     }
 
+    auto *formation_mode =
+        e->get_component<Engine::Core::FormationModeComponent>();
+    if ((formation_mode != nullptr) && formation_mode->active) {
+      formation_mode->active = false;
+    }
+
     auto *atk = e->get_component<Engine::Core::AttackComponent>();
     if ((atk != nullptr) && atk->in_melee_lock) {
 
@@ -371,6 +377,12 @@ void CommandService::moveGroup(Engine::Core::World &world,
     if ((guard_mode != nullptr) && guard_mode->active &&
         !guard_mode->returning_to_guard_position) {
       guard_mode->active = false;
+    }
+
+    auto *formation_mode =
+        entity->get_component<Engine::Core::FormationModeComponent>();
+    if ((formation_mode != nullptr) && formation_mode->active) {
+      formation_mode->active = false;
     }
 
     auto *transform = entity->get_component<Engine::Core::TransformComponent>();
@@ -882,6 +894,12 @@ void CommandService::attack_target(
     auto *guard_mode = e->get_component<Engine::Core::GuardModeComponent>();
     if ((guard_mode != nullptr) && guard_mode->active) {
       guard_mode->active = false;
+    }
+
+    auto *formation_mode =
+        e->get_component<Engine::Core::FormationModeComponent>();
+    if ((formation_mode != nullptr) && formation_mode->active) {
+      formation_mode->active = false;
     }
 
     auto *attack_target =
