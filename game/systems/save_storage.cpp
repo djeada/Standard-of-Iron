@@ -1,6 +1,8 @@
 #include "save_storage.h"
 
 #include <QDateTime>
+#include <QDir>
+#include <QFile>
 #include <QJsonDocument>
 #include <QMetaType>
 #include <QSqlDatabase>
@@ -18,6 +20,10 @@
 #include <qstringliteral.h>
 #include <qvariant.h>
 #include <utility>
+
+#include "../map/campaign_loader.h"
+#include "../map/mission_loader.h"
+#include "utils/resource_utils.h"
 
 namespace Game::Systems {
 
@@ -278,41 +284,62 @@ auto SaveStorage::list_slots(QString *out_error) const -> QVariantList {
 
 auto SaveStorage::list_campaigns(QString *out_error) const -> QVariantList {
   QVariantList result;
-  if (!const_cast<SaveStorage *>(this)->initialize(out_error)) {
-    return result;
-  }
-
-  QSqlQuery query(m_database);
-  const QString sql = QStringLiteral(
-      "SELECT c.id, c.title, c.description, c.map_path, c.order_index, "
-      "COALESCE(p.completed, 0) as completed, COALESCE(p.unlocked, 0) as "
-      "unlocked, "
-      "p.completed_at "
-      "FROM campaigns c "
-      "LEFT JOIN campaign_progress p ON c.id = p.campaign_id "
-      "ORDER BY c.order_index ASC");
-
-  if (!query.exec(sql)) {
-    if (out_error != nullptr) {
-      *out_error = QStringLiteral("Failed to list campaigns: %1")
-                       .arg(last_error_string(query.lastError()));
+  
+  // Load campaigns from JSON files in assets/campaigns/
+  const QString campaigns_path = Utils::Resources::resolveResourcePath(
+      QStringLiteral(":/assets/campaigns"));
+  
+  QDir campaigns_dir(campaigns_path);
+  if (!campaigns_dir.exists()) {
+    // Fallback to file system path if resource path doesn't work
+    campaigns_dir = QDir(QStringLiteral("assets/campaigns"));
+    if (!campaigns_dir.exists()) {
+      if (out_error != nullptr) {
+        *out_error = QStringLiteral("Campaigns directory not found");
+      }
+      return result;
     }
-    return result;
   }
-
-  while (query.next()) {
-    QVariantMap campaign;
-    campaign.insert(QStringLiteral("id"), query.value(0).toString());
-    campaign.insert(QStringLiteral("title"), query.value(1).toString());
-    campaign.insert(QStringLiteral("description"), query.value(2).toString());
-    campaign.insert(QStringLiteral("mapPath"), query.value(3).toString());
-    campaign.insert(QStringLiteral("orderIndex"), query.value(4).toInt());
-    campaign.insert(QStringLiteral("completed"), query.value(5).toInt() != 0);
-    campaign.insert(QStringLiteral("unlocked"), query.value(6).toInt() != 0);
-    campaign.insert(QStringLiteral("completedAt"), query.value(7).toString());
-    result.append(campaign);
+  
+  const QStringList campaign_files = campaigns_dir.entryList(
+      QStringList() << QStringLiteral("*.json"), QDir::Files);
+  
+  for (const auto &campaign_file : campaign_files) {
+    const QString campaign_path = campaigns_dir.filePath(campaign_file);
+    
+    Game::Campaign::CampaignDefinition campaign;
+    QString error;
+    if (!Game::Campaign::CampaignLoader::loadFromJsonFile(campaign_path, campaign, &error)) {
+      qWarning() << "Failed to load campaign" << campaign_file << ":" << error;
+      continue;
+    }
+    
+    QVariantMap campaign_map;
+    campaign_map.insert(QStringLiteral("id"), campaign.id);
+    campaign_map.insert(QStringLiteral("title"), campaign.title);
+    campaign_map.insert(QStringLiteral("description"), campaign.description);
+    campaign_map.insert(QStringLiteral("unlocked"), true); // For now, all campaigns are unlocked
+    campaign_map.insert(QStringLiteral("completed"), false); // Progress tracking can be added later
+    
+    // Add missions info
+    QVariantList missions_list;
+    for (const auto &mission : campaign.missions) {
+      QVariantMap mission_map;
+      mission_map.insert(QStringLiteral("mission_id"), mission.mission_id);
+      mission_map.insert(QStringLiteral("order_index"), mission.order_index);
+      if (mission.intro_text.has_value()) {
+        mission_map.insert(QStringLiteral("intro_text"), *mission.intro_text);
+      }
+      if (mission.outro_text.has_value()) {
+        mission_map.insert(QStringLiteral("outro_text"), *mission.outro_text);
+      }
+      missions_list.append(mission_map);
+    }
+    campaign_map.insert(QStringLiteral("missions"), missions_list);
+    
+    result.append(campaign_map);
   }
-
+  
   return result;
 }
 
