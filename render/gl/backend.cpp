@@ -1287,6 +1287,51 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         active_shader->set_uniform(m_waterPipeline->m_riverbankUniforms.time,
                                    m_animationTime);
 
+        if (m_waterPipeline->m_riverbankUniforms.segment_visibility !=
+            Shader::InvalidUniform) {
+          active_shader->set_uniform(
+              m_waterPipeline->m_riverbankUniforms.segment_visibility,
+              it.alpha);
+        }
+
+        if (m_waterPipeline->m_riverbankUniforms.has_visibility !=
+            Shader::InvalidUniform) {
+          int const has_vis = m_riverbankVisibility.enabled ? 1 : 0;
+          active_shader->set_uniform(
+              m_waterPipeline->m_riverbankUniforms.has_visibility, has_vis);
+        }
+
+        if (m_riverbankVisibility.enabled &&
+            m_riverbankVisibility.texture != nullptr) {
+          if (m_waterPipeline->m_riverbankUniforms.visibility_size !=
+              Shader::InvalidUniform) {
+            active_shader->set_uniform(
+                m_waterPipeline->m_riverbankUniforms.visibility_size,
+                m_riverbankVisibility.size);
+          }
+          if (m_waterPipeline->m_riverbankUniforms.visibility_tile_size !=
+              Shader::InvalidUniform) {
+            active_shader->set_uniform(
+                m_waterPipeline->m_riverbankUniforms.visibility_tile_size,
+                m_riverbankVisibility.tile_size);
+          }
+          if (m_waterPipeline->m_riverbankUniforms.explored_alpha !=
+              Shader::InvalidUniform) {
+            active_shader->set_uniform(
+                m_waterPipeline->m_riverbankUniforms.explored_alpha,
+                m_riverbankVisibility.explored_alpha);
+          }
+          constexpr int k_riverbank_vis_texture_unit = 7;
+          m_riverbankVisibility.texture->bind(k_riverbank_vis_texture_unit);
+          if (m_waterPipeline->m_riverbankUniforms.visibility_texture !=
+              Shader::InvalidUniform) {
+            active_shader->set_uniform(
+                m_waterPipeline->m_riverbankUniforms.visibility_texture,
+                k_riverbank_vis_texture_unit);
+          }
+          m_lastBoundTexture = m_riverbankVisibility.texture;
+        }
+
         it.mesh->draw();
         break;
       }
