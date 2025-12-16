@@ -834,10 +834,12 @@ void GameEngine::sync_selection_flags() {
 
   App::Utils::sanitize_selection(m_world.get(), selection_system);
 
-  // Reset cursor mode to Normal when selection changes
-  // This ensures the cursor mode doesn't persist from the previous selection
-  if (m_cursorManager && m_cursorManager->mode() != CursorMode::Normal) {
-    set_cursor_mode(CursorMode::Normal);
+  // Reset cursor mode to Normal when selection becomes empty
+  // This ensures the cursor mode doesn't persist without any units selected
+  if (selection_system->get_selected_units().empty()) {
+    if (m_cursorManager && m_cursorManager->mode() != CursorMode::Normal) {
+      set_cursor_mode(CursorMode::Normal);
+    }
   }
 }
 
@@ -1099,6 +1101,11 @@ auto GameEngine::get_selected_units_mode_availability() const -> QVariantMap {
   bool can_patrol = true;
 
   for (auto id : sel) {
+    // Early exit if all modes are already disabled
+    if (!can_attack && !can_guard && !can_hold && !can_patrol) {
+      break;
+    }
+
     auto *e = m_world->get_entity(id);
     if (e == nullptr) {
       continue;
@@ -1114,16 +1121,16 @@ auto GameEngine::get_selected_units_mode_availability() const -> QVariantMap {
       continue;
     }
 
-    if (!Game::Units::canUseAttackMode(u->spawn_type)) {
+    if (can_attack && !Game::Units::canUseAttackMode(u->spawn_type)) {
       can_attack = false;
     }
-    if (!Game::Units::canUseGuardMode(u->spawn_type)) {
+    if (can_guard && !Game::Units::canUseGuardMode(u->spawn_type)) {
       can_guard = false;
     }
-    if (!Game::Units::canUseHoldMode(u->spawn_type)) {
+    if (can_hold && !Game::Units::canUseHoldMode(u->spawn_type)) {
       can_hold = false;
     }
-    if (!Game::Units::canUsePatrolMode(u->spawn_type)) {
+    if (can_patrol && !Game::Units::canUsePatrolMode(u->spawn_type)) {
       can_patrol = false;
     }
   }
