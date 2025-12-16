@@ -6,10 +6,6 @@
 
 namespace Render::Ground {
 
-// ============================================================================
-// SpawnTerrainCache implementation
-// ============================================================================
-
 void SpawnTerrainCache::build_from_height_map(
     const std::vector<float> &height_data,
     const std::vector<Game::Map::TerrainType> &types, int w, int h, float ts) {
@@ -19,7 +15,6 @@ void SpawnTerrainCache::build_from_height_map(
   heights = height_data;
   terrain_types = types;
 
-  // Build normals from height data
   normals.resize(static_cast<size_t>(width * height),
                  QVector3D(0.0F, 1.0F, 0.0F));
 
@@ -105,68 +100,54 @@ auto SpawnTerrainCache::get_terrain_type_at(int grid_x, int grid_z) const
   return terrain_types[static_cast<size_t>(idx)];
 }
 
-// ============================================================================
-// SpawnValidator implementation
-// ============================================================================
-
 SpawnValidator::SpawnValidator(const SpawnTerrainCache &cache,
                                const SpawnValidationConfig &config)
     : m_cache(cache), m_config(config) {
-  // Precompute edge margins
+
   float const edge_padding = std::clamp(m_config.edge_padding, 0.0F, 0.5F);
   m_edge_margin_x = static_cast<float>(m_config.grid_width) * edge_padding;
   m_edge_margin_z = static_cast<float>(m_config.grid_height) * edge_padding;
 
-  // Precompute coordinate conversion values
   m_half_width = static_cast<float>(m_config.grid_width) * 0.5F - 0.5F;
   m_half_height = static_cast<float>(m_config.grid_height) * 0.5F - 0.5F;
 }
 
 auto SpawnValidator::can_spawn_at_grid(float gx, float gz) const -> bool {
-  // Check edge padding
+
   if (!check_edge_padding(gx, gz)) {
     return false;
   }
 
-  // Get integer grid position for terrain lookups
   float const sgx =
       std::clamp(gx, 0.0F, static_cast<float>(m_config.grid_width - 1));
   float const sgz =
       std::clamp(gz, 0.0F, static_cast<float>(m_config.grid_height - 1));
 
-  int const grid_x =
-      std::clamp(static_cast<int>(std::floor(sgx + 0.5F)), 0,
-                 m_config.grid_width - 1);
-  int const grid_z =
-      std::clamp(static_cast<int>(std::floor(sgz + 0.5F)), 0,
-                 m_config.grid_height - 1);
+  int const grid_x = std::clamp(static_cast<int>(std::floor(sgx + 0.5F)), 0,
+                                m_config.grid_width - 1);
+  int const grid_z = std::clamp(static_cast<int>(std::floor(sgz + 0.5F)), 0,
+                                m_config.grid_height - 1);
 
-  // Check terrain type
   if (!check_terrain_type(grid_x, grid_z)) {
     return false;
   }
 
-  // Check river margin
   if (m_config.check_river_margin && !check_river_margin(grid_x, grid_z)) {
     return false;
   }
 
-  // Check slope
   if (m_config.check_slope && !check_slope(grid_x, grid_z)) {
     return false;
   }
 
-  // Convert to world coordinates for building and road checks
   float world_x = 0.0F;
   float world_z = 0.0F;
   grid_to_world(gx, gz, world_x, world_z);
 
-  // Check building collision
   if (m_config.check_buildings && !check_building_collision(world_x, world_z)) {
     return false;
   }
 
-  // Check road collision
   if (m_config.check_roads && !check_road_collision(world_x, world_z)) {
     return false;
   }
@@ -174,8 +155,8 @@ auto SpawnValidator::can_spawn_at_grid(float gx, float gz) const -> bool {
   return true;
 }
 
-auto SpawnValidator::can_spawn_at_world(float world_x, float world_z) const
-    -> bool {
+auto SpawnValidator::can_spawn_at_world(float world_x,
+                                        float world_z) const -> bool {
   float gx = 0.0F;
   float gz = 0.0F;
   world_to_grid(world_x, world_z, gx, gz);
@@ -257,15 +238,11 @@ auto SpawnValidator::check_building_collision(float world_x,
   return !building_registry.isPointInBuilding(world_x, world_z);
 }
 
-auto SpawnValidator::check_road_collision(float world_x, float world_z) const
-    -> bool {
+auto SpawnValidator::check_road_collision(float world_x,
+                                          float world_z) const -> bool {
   auto &terrain_service = Game::Map::TerrainService::instance();
   return !terrain_service.is_point_on_road(world_x, world_z);
 }
-
-// ============================================================================
-// Factory functions for common spawn configurations
-// ============================================================================
 
 auto make_plant_spawn_config() -> SpawnValidationConfig {
   SpawnValidationConfig config;

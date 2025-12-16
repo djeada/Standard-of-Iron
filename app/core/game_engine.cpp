@@ -259,7 +259,6 @@ GameEngine::GameEngine(QObject *parent)
   }
 
   connect(m_cursorManager.get(), &CursorManager::mode_changed, this, [this]() {
-    // Update the Qt cursor shape on the window when mode changes
     if (m_cursorManager && m_window) {
       m_cursorManager->update_cursor_shape(m_window);
     }
@@ -779,7 +778,8 @@ void GameEngine::render(int pixelWidth, int pixelHeight) {
 
   if (auto *res = m_renderer->resources()) {
     std::optional<QVector3D> preview_waypoint;
-    if (m_commandController && m_commandController->has_patrol_first_waypoint()) {
+    if (m_commandController &&
+        m_commandController->has_patrol_first_waypoint()) {
       preview_waypoint = m_commandController->get_patrol_first_waypoint();
     }
     Render::GL::renderPatrolFlags(m_renderer.get(), res, *m_world,
@@ -839,8 +839,6 @@ void GameEngine::sync_selection_flags() {
 
   App::Utils::sanitize_selection(m_world.get(), selection_system);
 
-  // Reset cursor mode to Normal when selection becomes empty
-  // This ensures the cursor mode doesn't persist without any units selected
   if (selection_system->get_selected_units().empty()) {
     if (m_cursorManager && m_cursorManager->mode() != CursorMode::Normal) {
       set_cursor_mode(CursorMode::Normal);
@@ -949,7 +947,8 @@ void GameEngine::recruit_near_selected(const QString &unit_type) {
   if (!m_commandController) {
     return;
   }
-  m_commandController->recruit_near_selected(unit_type, m_runtime.local_owner_id);
+  m_commandController->recruit_near_selected(unit_type,
+                                             m_runtime.local_owner_id);
 }
 
 auto GameEngine::get_selected_production_state() const -> QVariantMap {
@@ -1098,15 +1097,13 @@ auto GameEngine::get_selected_units_mode_availability() const -> QVariantMap {
     return result;
   }
 
-  // Check mode availability across all selected units
-  // If ANY unit cannot use a mode, that mode is disabled
   bool can_attack = true;
   bool can_guard = true;
   bool can_hold = true;
   bool can_patrol = true;
 
   for (auto id : sel) {
-    // Early exit if all modes are already disabled
+
     if (!can_attack && !can_guard && !can_hold && !can_patrol) {
       break;
     }
@@ -1121,7 +1118,6 @@ auto GameEngine::get_selected_units_mode_availability() const -> QVariantMap {
       continue;
     }
 
-    // Skip buildings
     if (u->spawn_type == Game::Units::SpawnType::Barracks) {
       continue;
     }

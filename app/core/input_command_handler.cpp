@@ -111,8 +111,8 @@ void InputCommandHandler::on_attack_click(qreal sx, qreal sy,
     return;
   }
 
-  auto result = m_command_controller->on_attack_click(sx, sy, viewport.width,
-                                                      viewport.height, m_camera);
+  auto result = m_command_controller->on_attack_click(
+      sx, sy, viewport.width, viewport.height, m_camera);
 
   auto *selection_system =
       m_world->get_system<Game::Systems::SelectionSystem>();
@@ -229,8 +229,8 @@ void InputCommandHandler::on_patrol_click(qreal sx, qreal sy,
     return;
   }
 
-  auto result = m_command_controller->on_patrol_click(sx, sy, viewport.width,
-                                                      viewport.height, m_camera);
+  auto result = m_command_controller->on_patrol_click(
+      sx, sy, viewport.width, viewport.height, m_camera);
   if (result.reset_cursor_to_normal) {
     m_cursor_manager->set_mode(CursorMode::Normal);
   }
