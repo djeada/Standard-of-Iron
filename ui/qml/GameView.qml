@@ -142,6 +142,12 @@ Item {
                 event.accepted = true;
             }
             break;
+        case Qt.Key_G:
+            if (game.has_units_selected) {
+                game.cursor_mode = "guard";
+                event.accepted = true;
+            }
+            break;
         case Qt.Key_H:
             if (game.has_units_selected && game.on_hold_command) {
                 game.on_hold_command();
@@ -300,8 +306,12 @@ Item {
 
                         return ;
                     }
-                    if (gameView.cursorMode === "guard")
+                    if (gameView.cursorMode === "guard") {
+                        if (typeof game !== 'undefined' && game.on_guard_click)
+                            game.on_guard_click(mouse.x, mouse.y);
+
                         return ;
+                    }
 
                     if (gameView.cursorMode === "patrol") {
                         if (typeof game !== 'undefined' && game.on_patrol_click)
