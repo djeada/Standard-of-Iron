@@ -655,6 +655,8 @@ void GameEngine::update(float dt) {
     if (m_rain) {
       m_rain->set_enabled(m_rainManager->is_enabled());
       m_rain->set_intensity(m_rainManager->get_intensity());
+      m_rain->set_weather_type(m_rainManager->get_weather_type());
+      m_rain->set_wind_strength(m_rainManager->get_wind_strength());
       if (m_camera) {
         m_rain->set_camera_position(m_camera->get_position());
       }
@@ -1295,8 +1297,10 @@ void GameEngine::perform_skirmish_load(const QString &map_path,
         static_cast<float>(m_level.grid_width) * m_level.tile_size;
     const float world_height =
         static_cast<float>(m_level.grid_height) * m_level.tile_size;
-    m_rain->configure(world_width, world_height, m_level.biome_seed);
+    m_rain->configure(world_width, world_height, m_level.biome_seed,
+                     m_level.rain.type);
     m_rain->set_enabled(m_level.rain.enabled);
+    m_rain->set_wind_strength(m_level.rain.wind_strength);
     const float initial_intensity =
         m_rainManager ? m_rainManager->get_intensity()
                       : (m_level.rain.enabled ? m_level.rain.intensity : 0.0F);
