@@ -20,34 +20,34 @@ namespace App::Controllers {
 CommandController::CommandController(
     Engine::Core::World *world,
     Game::Systems::SelectionSystem *selection_system,
-    Game::Systems::PickingService *pickingService, QObject *parent)
+    Game::Systems::PickingService *picking_service, QObject *parent)
     : QObject(parent), m_world(world), m_selection_system(selection_system),
-      m_pickingService(pickingService) {}
+      m_picking_service(picking_service) {}
 
-auto CommandController::onAttackClick(qreal sx, qreal sy, int viewportWidth,
-                                      int viewportHeight,
-                                      void *camera) -> CommandResult {
+auto CommandController::on_attack_click(qreal sx, qreal sy, int viewport_width,
+                                        int viewport_height,
+                                        void *camera) -> CommandResult {
   CommandResult result;
-  if ((m_selection_system == nullptr) || (m_pickingService == nullptr) ||
+  if ((m_selection_system == nullptr) || (m_picking_service == nullptr) ||
       (camera == nullptr) || (m_world == nullptr)) {
-    result.resetCursorToNormal = true;
+    result.reset_cursor_to_normal = true;
     return result;
   }
 
   const auto &selected = m_selection_system->get_selected_units();
   if (selected.empty()) {
-    result.resetCursorToNormal = true;
+    result.reset_cursor_to_normal = true;
     return result;
   }
 
   auto *cam = static_cast<Render::GL::Camera *>(camera);
   Engine::Core::EntityID const target_id =
       Game::Systems::PickingService::pick_unit_first(
-          float(sx), float(sy), *m_world, *cam, viewportWidth, viewportHeight,
+          float(sx), float(sy), *m_world, *cam, viewport_width, viewport_height,
           0);
 
   if (target_id == 0) {
-    result.resetCursorToNormal = true;
+    result.reset_cursor_to_normal = true;
     return result;
   }
 
@@ -65,14 +65,14 @@ auto CommandController::onAttackClick(qreal sx, qreal sy, int viewportWidth,
   Game::Systems::CommandService::attack_target(*m_world, selected, target_id,
                                                true);
 
-  emit attack_targetSelected();
+  emit attack_target_selected();
 
-  result.inputConsumed = true;
-  result.resetCursorToNormal = true;
+  result.input_consumed = true;
+  result.reset_cursor_to_normal = true;
   return result;
 }
 
-auto CommandController::onStopCommand() -> CommandResult {
+auto CommandController::on_stop_command() -> CommandResult {
   CommandResult result;
   if ((m_selection_system == nullptr) || (m_world == nullptr)) {
     return result;
@@ -89,7 +89,7 @@ auto CommandController::onStopCommand() -> CommandResult {
       continue;
     }
 
-    resetMovement(entity);
+    reset_movement(entity);
     entity->remove_component<Engine::Core::AttackTargetComponent>();
 
     if (auto *patrol = entity->get_component<Engine::Core::PatrolComponent>()) {
@@ -101,16 +101,16 @@ auto CommandController::onStopCommand() -> CommandResult {
     if ((hold_mode != nullptr) && hold_mode->active) {
       hold_mode->active = false;
       hold_mode->exit_cooldown = hold_mode->stand_up_duration;
-      emit hold_modeChanged(false);
+      emit hold_mode_changed(false);
     }
   }
 
-  result.inputConsumed = true;
-  result.resetCursorToNormal = true;
+  result.input_consumed = true;
+  result.reset_cursor_to_normal = true;
   return result;
 }
 
-auto CommandController::onHoldCommand() -> CommandResult {
+auto CommandController::on_hold_command() -> CommandResult {
   CommandResult result;
   if ((m_selection_system == nullptr) || (m_world == nullptr)) {
     return result;
@@ -177,7 +177,7 @@ auto CommandController::onHoldCommand() -> CommandResult {
 
     if (should_enable_hold) {
       // Enable hold mode
-      resetMovement(entity);
+      reset_movement(entity);
       entity->remove_component<Engine::Core::AttackTargetComponent>();
 
       if (auto *patrol =
@@ -209,31 +209,31 @@ auto CommandController::onHoldCommand() -> CommandResult {
     }
   }
 
-  emit hold_modeChanged(should_enable_hold);
+  emit hold_mode_changed(should_enable_hold);
 
-  result.inputConsumed = true;
-  result.resetCursorToNormal = true;
+  result.input_consumed = true;
+  result.reset_cursor_to_normal = true;
   return result;
 }
 
-auto CommandController::onPatrolClick(qreal sx, qreal sy, int viewportWidth,
-                                      int viewportHeight,
-                                      void *camera) -> CommandResult {
+auto CommandController::on_patrol_click(qreal sx, qreal sy, int viewport_width,
+                                        int viewport_height,
+                                        void *camera) -> CommandResult {
   CommandResult result;
   if ((m_selection_system == nullptr) || (m_world == nullptr) ||
-      (m_pickingService == nullptr) || (camera == nullptr)) {
-    if (m_hasPatrolFirstWaypoint) {
-      clearPatrolFirstWaypoint();
-      result.resetCursorToNormal = true;
+      (m_picking_service == nullptr) || (camera == nullptr)) {
+    if (m_has_patrol_first_waypoint) {
+      clear_patrol_first_waypoint();
+      result.reset_cursor_to_normal = true;
     }
     return result;
   }
 
   const auto &selected = m_selection_system->get_selected_units();
   if (selected.empty()) {
-    if (m_hasPatrolFirstWaypoint) {
-      clearPatrolFirstWaypoint();
-      result.resetCursorToNormal = true;
+    if (m_has_patrol_first_waypoint) {
+      clear_patrol_first_waypoint();
+      result.reset_cursor_to_normal = true;
     }
     return result;
   }
@@ -241,18 +241,18 @@ auto CommandController::onPatrolClick(qreal sx, qreal sy, int viewportWidth,
   auto *cam = static_cast<Render::GL::Camera *>(camera);
   QVector3D hit;
   if (!Game::Systems::PickingService::screen_to_ground(
-          QPointF(sx, sy), *cam, viewportWidth, viewportHeight, hit)) {
-    if (m_hasPatrolFirstWaypoint) {
-      clearPatrolFirstWaypoint();
-      result.resetCursorToNormal = true;
+          QPointF(sx, sy), *cam, viewport_width, viewport_height, hit)) {
+    if (m_has_patrol_first_waypoint) {
+      clear_patrol_first_waypoint();
+      result.reset_cursor_to_normal = true;
     }
     return result;
   }
 
-  if (!m_hasPatrolFirstWaypoint) {
-    m_hasPatrolFirstWaypoint = true;
-    m_patrolFirstWaypoint = hit;
-    result.inputConsumed = true;
+  if (!m_has_patrol_first_waypoint) {
+    m_has_patrol_first_waypoint = true;
+    m_patrol_first_waypoint = hit;
+    result.input_consumed = true;
     return result;
   }
 
@@ -276,36 +276,37 @@ auto CommandController::onPatrolClick(qreal sx, qreal sy, int viewportWidth,
 
     if (patrol != nullptr) {
       patrol->waypoints.clear();
-      patrol->waypoints.emplace_back(m_patrolFirstWaypoint.x(),
-                                     m_patrolFirstWaypoint.z());
+      patrol->waypoints.emplace_back(m_patrol_first_waypoint.x(),
+                                     m_patrol_first_waypoint.z());
       patrol->waypoints.emplace_back(second_waypoint.x(), second_waypoint.z());
       patrol->current_waypoint = 0;
       patrol->patrolling = true;
     }
 
-    resetMovement(entity);
+    reset_movement(entity);
     entity->remove_component<Engine::Core::AttackTargetComponent>();
   }
 
-  clearPatrolFirstWaypoint();
-  result.inputConsumed = true;
-  result.resetCursorToNormal = true;
+  clear_patrol_first_waypoint();
+  result.input_consumed = true;
+  result.reset_cursor_to_normal = true;
   return result;
 }
 
-auto CommandController::setRallyAtScreen(qreal sx, qreal sy, int viewportWidth,
-                                         int viewportHeight, void *camera,
-                                         int local_owner_id) -> CommandResult {
+auto CommandController::set_rally_at_screen(qreal sx, qreal sy,
+                                            int viewport_width,
+                                            int viewport_height, void *camera,
+                                            int local_owner_id) -> CommandResult {
   CommandResult result;
   if ((m_world == nullptr) || (m_selection_system == nullptr) ||
-      (m_pickingService == nullptr) || (camera == nullptr)) {
+      (m_picking_service == nullptr) || (camera == nullptr)) {
     return result;
   }
 
   auto *cam = static_cast<Render::GL::Camera *>(camera);
   QVector3D hit;
   if (!Game::Systems::PickingService::screen_to_ground(
-          QPointF(sx, sy), *cam, viewportWidth, viewportHeight, hit)) {
+          QPointF(sx, sy), *cam, viewport_width, viewport_height, hit)) {
     return result;
   }
 
@@ -313,12 +314,12 @@ auto CommandController::setRallyAtScreen(qreal sx, qreal sy, int viewportWidth,
       *m_world, m_selection_system->get_selected_units(), local_owner_id,
       hit.x(), hit.z());
 
-  result.inputConsumed = true;
+  result.input_consumed = true;
   return result;
 }
 
-void CommandController::recruitNearSelected(const QString &unit_type,
-                                            int local_owner_id) {
+void CommandController::recruit_near_selected(const QString &unit_type,
+                                              int local_owner_id) {
   if ((m_world == nullptr) || (m_selection_system == nullptr)) {
     return;
   }
@@ -333,15 +334,15 @@ void CommandController::recruitNearSelected(const QString &unit_type,
           *m_world, sel, local_owner_id, unit_type.toStdString());
 
   if (result == Game::Systems::ProductionResult::GlobalTroopLimitReached) {
-    emit troopLimitReached();
+    emit troop_limit_reached();
   }
 }
 
-void CommandController::resetMovement(Engine::Core::Entity *entity) {
+void CommandController::reset_movement(Engine::Core::Entity *entity) {
   App::Utils::reset_movement(entity);
 }
 
-auto CommandController::anySelectedInHoldMode() const -> bool {
+auto CommandController::any_selected_in_hold_mode() const -> bool {
   if ((m_selection_system == nullptr) || (m_world == nullptr)) {
     return false;
   }
@@ -359,7 +360,10 @@ auto CommandController::anySelectedInHoldMode() const -> bool {
     }
   }
 
-auto CommandController::anySelectedInGuardMode() const -> bool {
+  return false;
+}
+
+auto CommandController::any_selected_in_guard_mode() const -> bool {
   if ((m_selection_system == nullptr) || (m_world == nullptr)) {
     return false;
   }
@@ -381,7 +385,7 @@ auto CommandController::anySelectedInGuardMode() const -> bool {
   return false;
 }
 
-auto CommandController::onGuardCommand() -> CommandResult {
+auto CommandController::on_guard_command() -> CommandResult {
   CommandResult result;
   if ((m_selection_system == nullptr) || (m_world == nullptr)) {
     return result;
@@ -492,34 +496,34 @@ auto CommandController::onGuardCommand() -> CommandResult {
     }
   }
 
-  emit guard_modeChanged(should_enable_guard);
+  emit guard_mode_changed(should_enable_guard);
 
-  result.inputConsumed = true;
-  result.resetCursorToNormal = true;
+  result.input_consumed = true;
+  result.reset_cursor_to_normal = true;
   return result;
 }
 
-auto CommandController::onGuardClick(qreal sx, qreal sy, int viewportWidth,
-                                     int viewportHeight,
-                                     void *camera) -> CommandResult {
+auto CommandController::on_guard_click(qreal sx, qreal sy, int viewport_width,
+                                       int viewport_height,
+                                       void *camera) -> CommandResult {
   CommandResult result;
-  if ((m_selection_system == nullptr) || (m_pickingService == nullptr) ||
+  if ((m_selection_system == nullptr) || (m_picking_service == nullptr) ||
       (camera == nullptr) || (m_world == nullptr)) {
-    result.resetCursorToNormal = true;
+    result.reset_cursor_to_normal = true;
     return result;
   }
 
   const auto &selected = m_selection_system->get_selected_units();
   if (selected.empty()) {
-    result.resetCursorToNormal = true;
+    result.reset_cursor_to_normal = true;
     return result;
   }
 
   auto *cam = static_cast<Render::GL::Camera *>(camera);
   QVector3D hit;
   if (!Game::Systems::PickingService::screen_to_ground(
-          QPointF(sx, sy), *cam, viewportWidth, viewportHeight, hit)) {
-    result.resetCursorToNormal = true;
+          QPointF(sx, sy), *cam, viewport_width, viewport_height, hit)) {
+    result.reset_cursor_to_normal = true;
     return result;
   }
 
@@ -561,14 +565,14 @@ auto CommandController::onGuardClick(qreal sx, qreal sy, int viewportWidth,
       patrol->waypoints.clear();
     }
 
-    resetMovement(entity);
+    reset_movement(entity);
     entity->remove_component<Engine::Core::AttackTargetComponent>();
   }
 
-  emit guard_modeChanged(true);
+  emit guard_mode_changed(true);
 
-  result.inputConsumed = true;
-  result.resetCursorToNormal = true;
+  result.input_consumed = true;
+  result.reset_cursor_to_normal = true;
   return result;
 }
 
