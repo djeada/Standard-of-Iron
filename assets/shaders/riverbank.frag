@@ -6,6 +6,12 @@ in vec3 WorldPos;
 in vec3 Normal;
 
 uniform float time;
+uniform sampler2D u_visibilityTex;
+uniform vec2 u_visibilitySize;
+uniform float u_visibilityTileSize;
+uniform float u_exploredAlpha;
+uniform int u_hasVisibility;
+uniform float u_segmentVisibility;
 
 float saturate(float x) { return clamp(x, 0.0, 1.0); }
 vec2 saturate(vec2 v) { return clamp(v, vec2(0.0), vec2(1.0)); }
@@ -41,6 +47,22 @@ vec2 warp(vec2 uv) {
 void main() {
 
   vec2 uv = warp(WorldPos.xz * 0.45);
+
+  float visibilityFactor = 1.0;
+  if (u_hasVisibility == 1 && u_visibilitySize.x > 0.0 &&
+      u_visibilitySize.y > 0.0) {
+    float tileSize = max(u_visibilityTileSize, 0.0001);
+    vec2 grid = vec2(WorldPos.x / tileSize, WorldPos.z / tileSize);
+    grid += (u_visibilitySize * 0.5) - vec2(0.5);
+    vec2 visUV = (grid + vec2(0.5)) / u_visibilitySize;
+    float visSample = texture(u_visibilityTex, visUV).r;
+    if (visSample < 0.25) {
+      discard;
+    } else if (visSample < 0.75) {
+      visibilityFactor = u_exploredAlpha;
+    }
+  }
+  visibilityFactor *= u_segmentVisibility;
 
   vec3 wetSoil = vec3(0.20, 0.17, 0.14);
   vec3 dampSoil = vec3(0.32, 0.27, 0.22);
@@ -100,6 +122,8 @@ void main() {
   color += spec * vec3(0.30, 0.33, 0.36);
 
   color *= (1.0 - streaks * 0.07 * (0.3 + 0.7 * wetness));
+
+  color *= visibilityFactor;
 
   FragColor = vec4(saturate(color), 1.0);
 }
