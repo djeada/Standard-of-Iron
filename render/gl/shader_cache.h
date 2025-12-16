@@ -189,6 +189,10 @@ public:
          resolve(kShaderBase + QStringLiteral("combat_dust.vert")),
          resolve(kShaderBase + QStringLiteral("combat_dust.frag")));
 
+    load(QStringLiteral("mode_indicator"),
+         resolve(kShaderBase + QStringLiteral("mode_indicator.vert")),
+         resolve(kShaderBase + QStringLiteral("mode_indicator.frag")));
+
     const auto loadBaseShader = [&](const QString &name) {
       const QString vert =
           resolve(kShaderBase + name + QStringLiteral(".vert"));
