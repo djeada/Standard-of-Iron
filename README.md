@@ -1,499 +1,478 @@
-# Standard of Iron - RTS Game
+# Standard of Iron
 
-A modern real-time strategy (RTS) game built with C++20, Qt 6, and OpenGL 3.3 Core. Command archers and barracks in tactical battles with complete unit control, production systems, and victory conditions.
+**A historical real-time strategy engine set during the Punic Wars**
 
-## Features
+Standard of Iron delivers a complete game engine stack—rendering, audio, AI, and gameplay—purpose-built for large-scale tactical battles between Rome and Carthage. The project supports persistent campaigns with full save/load functionality, multiple playable factions with distinct unit rosters, and deep troop customization through data-driven configuration. Written in C++20, it uses OpenGL 3.3 for rendering and Qt 6 for the interface layer.
 
-### Core Gameplay
-- **Unit Production**: Build archers from barracks with production queues
-- **Distinct Nations**: Choose between the Roman Republic and Carthaginian Empire
-- **Rally Points**: Set spawn locations for newly produced units (visual yellow flags)
-- **Combat System**: Ranged archer combat with health bars and visual arrow projectiles
-- **Barrack Capture**: Take control of neutral or enemy barracks with 3× troop advantage
-- **AI Opponents**: Computer-controlled enemy that produces units and attacks your base
-- **Skirmish Setup**: Pick teams, colors, and nations before launching into battle
-- **Victory/Defeat**: Win by destroying the enemy barracks, lose if yours is destroyed
-- **Team Colors**: Visual distinction between player (blue) and enemy (red) units
+---
 
-### Advanced Unit Commands
-- **Move**: Left-click to move selected units to a location
-- **Attack**: Use Attack command to force units to target enemies
-- **Stop**: Halt all unit actions immediately
-- **Patrol**: Set two waypoints for units to patrol (green flags), auto-engaging nearby enemies
-- **Formation Planning**: Units automatically spread into formations when given group movement orders
+## Engine Systems
 
-### Selection & Control
-- **Click Selection**: Click individual units or buildings
-- **Area Selection**: Drag to select multiple units in a rectangle
-- **Additive Selection**: Hold Shift to add to current selection
-- **Smart Selection**: Selection system filters out dead units automatically
-- **Selection Feedback**: Blue selection rings on selected units, hover rings on buildings
+### Game Engine
 
-### Visual Systems
-- **3D Rendering**: OpenGL-based rendering with custom shaders
-- **Unit Visuals**: Distinct archer models with team-colored details and dynamic cloth simulation
-- **Cloth Physics**: Real-time tunic skirt simulation with wind, movement response, and leg collision
-- **Building Visuals**: Detailed barracks with banners and production indicators
-- **Health Bars**: Visible health for all units and buildings
-- **Flag Markers**: Rally points (yellow) and patrol waypoints (green)
-- **Arrow VFX**: Animated arrow projectiles with arcing trajectories
-- **Terrain Grid**: Optional grid overlay for tactical planning
-- **Material Shading**: View-dependent sheen effects and wrap diffuse lighting for fabric
+The game logic layer follows an *Entity-Component-System* architecture, separating data storage from processing logic so that new gameplay features can be added without modifying existing systems.
 
-### Camera System
-- **Free Movement**: WASD or arrow keys to pan camera
-- **Rotation**: Q/E keys to rotate view
-- **Elevation**: R/F keys to adjust height
-- **Follow Mode**: Camera follows selected units (optional)
-- **Edge Scrolling**: Move mouse to screen edges to pan
-- **Smart UI Detection**: Edge scrolling disabled over HUD elements
+- When units receive movement orders, the *pathfinding* module computes grid-based routes that avoid obstacles and respect formation spacing; without this, units would overlap or clip through structures.
+- Damage resolution flows through a dedicated *combat system* that calculates hit detection, applies damage values, and triggers death handling—skipping any step would leave units immortal or cause silent failures.
+- A centralized *AI director* evaluates threats, issues build orders, and coordinates attacks; disabling it results in passive opponents that never produce troops or respond to incursions.
+- Buildings with production capability maintain a *spawn queue* that respects population caps and timers, ensuring that rapid-clicking the recruit button does not bypass limits.
+- Units assigned to patrol follow a *waypoint loop* and automatically engage enemies within aggro range; omitting the aggro check would make patrols purely decorative.
+- Territory changes hands through a *capture system* requiring sustained troop presence—a 3× advantage held for five seconds—so that momentary skirmishes do not flip ownership.
+- The *serialization layer* writes complete world state to disk, enabling mid-campaign saves; without it, progress would reset on every launch.
 
-### User Interface
-- **Production Panel**: Shows building queue, progress, and unit counts
-- **Command Buttons**: Context-sensitive controls (disabled when no units selected)
-- **Speed Controls**: Pause and adjust game speed (0.5x to 2x)
-- **Victory/Defeat Notification**: Clear on-screen messages for game end
-- **Real-time Updates**: Production timers and status update live
-- **Cursor Modes**: Visual feedback for attack, patrol, and guard modes
+### Render Engine
 
-### Map Configuration
-- **Data-Driven Victory Conditions**: Configure win/loss conditions via map JSON files
-- **Flexible Game Modes**: Support for elimination, survive time, and custom objectives
-- **Key Structure Definitions**: Specify which buildings must be protected or destroyed
-- **Map-Specific Rules**: Different maps can have unique victory conditions without engine changes
+A custom OpenGL 3.3 pipeline handles all visual output, organized into discrete passes that can be profiled and optimized independently.
 
-### Engine Architecture
-- **Entity-Component-System (ECS)**: Flexible game object system with templated components
-- **Event System**: Type-safe event management with subscription/publishing
-- **Serialization**: JSON-based world and entity persistence
-- **Multi-System Architecture**: Separate systems for AI, combat, movement, pathfinding, patrol, production
-- **VictoryService**: Standalone service for managing victory/defeat conditions with event-based monitoring
+- The *scene renderer* orchestrates multi-pass drawing with depth sorting and shader batching, reducing GPU state changes that would otherwise cause frame drops.
+- Each entity type has a dedicated *renderer class* (archers, barracks, horses) that encapsulates mesh binding and material setup, making it straightforward to add new unit visuals.
+- Humanoid units feature *skeletal animation* combined with procedural cloth physics that responds to wind and leg movement; static meshes would look lifeless during marches.
+- Terrain draws through a *ground renderer* supporting normal maps and an optional tactical grid overlay useful for range estimation.
+- Visual feedback—arrows in flight, health bars, selection rings—comes from a *VFX system* that batches transparent geometry for correct blending.
+- All material effects (fabric sheen, wrap lighting) are defined in GLSL *shaders* loaded at startup; missing shader files cause a fallback to flat colors.
+- The *camera controller* supports rotation, elevation, edge scrolling, and follow mode, with automatic disabling over UI regions to prevent accidental panning.
+
+### Audio Engine
+
+Spatial sound playback relies on the *miniaudio* library, chosen for its lightweight footprint and cross-platform support.
+
+- Sounds attached to units use *positional audio* with distance attenuation and stereo panning, so combat on the left side of the map sounds left-biased in headphones.
+- An *event bus* triggers playback for combat hits, footsteps, and UI clicks; missing event bindings result in silent actions.
+- Audio files load through a *resource cache* that prevents redundant disk reads when the same sound plays repeatedly.
+- Separate volume sliders for master, SFX, and music allow players to mute background tracks without losing combat feedback.
+
+### Campaign Layer
+
+The full Punic Wars setting pits the *Roman Republic* against the *Carthaginian Empire*, each with unique unit stats and visual styling.
+
+- Campaign progress persists across sessions via the *save/load system*, storing territory control, unit counts, and player-set rally points.
+- Each map defines its own *victory conditions* in JSON—elimination, survival timer, or structure defense—so designers can vary objectives without engine changes.
+- Troop stats and formation preferences live in *nation config files*, enabling balance tweaks by editing JSON rather than recompiling.
+
+---
+
+## Gameplay
+
+### Strategic Systems
+
+- Choosing a *faction* (Rome or Carthage) determines starting units, available reinforcements, and visual theming; neutral starts are not currently supported.
+- Buildings with production capability maintain a *recruitment queue* that displays progress and respects population caps, preventing endless unit spam.
+- Capturing an enemy or neutral barracks requires holding a 3× *troop advantage* within eight world units for five seconds; failing to maintain presence resets progress at double speed.
+- The *AI opponent* follows scripted build orders, evaluates threat levels, and commits to attacks when strength thresholds are met; it does not cheat with extra resources.
+- Before battle, the *skirmish setup* screen lets players pick teams, colors, and nations; skipping it defaults to Rome versus Carthage with preset colors.
+
+### Tactical Commands
+
+- Left-clicking a destination issues a *move order* that spreads units into formation automatically; right-clicking on the ground does the same when units are selected.
+- Pressing A enters *attack mode*, changing the cursor and treating the next click as a force-attack regardless of target alliance.
+- Pressing P twice sets a two-point *patrol route* where units walk between waypoints and engage enemies that enter aggro range.
+- The S key sends a *stop command* that halts movement, cancels attacks, and clears patrol loops immediately.
+- The H key toggles *hold position*, preventing units from chasing fleeing enemies beyond their current location.
+- Buildings selected during production display a *rally point* flag; right-clicking relocates it so new units spawn closer to the front line.
+
+### Selection Interface
+
+- Clicking a single unit or building performs a *direct selection*, clearing any previous group; shift-click adds to the existing selection instead.
+- Dragging a rectangle performs *area selection*, capturing all friendly units within the bounds—useful for grabbing scattered reinforcements.
+- Pressing X triggers *select all*, gathering every controllable unit on the map into one group for mass orders.
+- The selection system runs a *filter pass* each frame, automatically removing dead units so commands never target corpses.
+- Right-clicking with units selected issues a *context command*: move if the target is ground, attack if it's an enemy, or interact if it's an allied structure.
+
+### Visual Presentation
+
+- Each faction's archers use distinct *3D models* with team-colored tunics and equipment, making ownership obvious at a glance.
+- Tunics feature real-time *cloth simulation* driven by wind vectors and leg collision, adding movement realism absent from static meshes.
+- Materials apply *wrap diffuse lighting* and view-dependent sheen so fabric surfaces catch light naturally during camera rotation.
+- Every combat unit and structure displays a *health bar* that updates in real time; hiding health would force players to guess remaining durability.
+- Arrows travel along arcing *projectile paths* computed from launch angle and gravity, visually connecting shooters to targets.
+- An optional *tactical grid* overlays the terrain for players who want precise range and spacing information.
+- The camera supports full *free movement*: pan with arrow keys, rotate with Q/E, elevate with R/F, and edge-scroll by pushing the cursor to screen borders (disabled when hovering UI panels).
+
+### Victory and Defeat
+
+- In *elimination mode*, the match ends when all enemy key structures (barracks, headquarters) are destroyed.
+- In *survival mode*, the player must hold territory for a specified duration defined in the map JSON (e.g., 600 seconds).
+- Defeat triggers when all player key structures fall or, in some modes, when no player units remain alive.
+- All conditions are *data-driven*, meaning new objective types require JSON edits rather than code changes.
+
+---
 
 ## Requirements
 
-- **C++20** compatible compiler (GCC 10+ or Clang 11+)
-- **Qt 6.4+** with Quick, OpenGL modules
-- **OpenGL 3.3+** support
-- **CMake 3.21+**
+**Build-time dependencies:**
 
-## Building
+- A *C++20* compiler is required (GCC 10+, Clang 11+, or MSVC 19.29+); older standards lack features like concepts and ranges used throughout the codebase.
+- The build system expects *CMake 3.21* or later; earlier versions fail to parse modern target properties.
+- Qt 6.4 or newer must be installed with the Core, Quick, OpenGL, and Multimedia modules; missing modules cause link errors for UI and audio.
+- The GPU driver must expose an *OpenGL 3.3 Core Profile*; integrated graphics from before 2012 may lack support.
 
-### Linux
+**Runtime requirements:**
 
-We currently support Ubuntu/Debian and Manjaro/Arch.
+- A GPU with *OpenGL 3.3* drivers is mandatory; software rendering is not supported.
+- At least 4 GB of RAM is needed, though 8 GB is recommended when running battles with several hundred units.
+- Supported operating systems include *Linux* (Ubuntu 20.04+, Arch, Manjaro) and *Windows 10* or later.
+
+---
+
+## Build Instructions
+
+### Linux (Ubuntu/Debian, Arch/Manjaro)
 
 ```bash
-# Clone
 git clone https://github.com/djeada/Standard-of-Iron.git
 cd Standard-of-Iron
 
-# Install dependencies
+# Install system dependencies (runs apt or pacman as appropriate)
 make install
 
-# Build
+# Compile the engine and game binary
 make build
-```
 
-### Running
-```bash
-# Main game
+# Launch the game
 make run
 ```
 
-### Testing
+### Running Tests
+
 ```bash
-# Run all tests
+# Execute the full test suite
 make test
 
-# Build tests only
+# Build test binary only (useful for IDE integration)
 cd build && make standard_of_iron_tests
 
-# Run specific test suites
+# Filter to specific test suites
 ./build/bin/standard_of_iron_tests --gtest_filter=SerializationTest.*
 ./build/bin/standard_of_iron_tests --gtest_filter=SaveStorageTest.*
 ```
 
-For more details on testing, see [tests/README.md](tests/README.md).
+See [tests/README.md](tests/README.md) for additional testing documentation.
 
-## Project Structure
+---
+
+## Architecture
+
+### Directory Layout
 
 ```
-├── game/
-│   ├── core/              # ECS framework, components, world management
-│   ├── systems/           # Game logic systems
-│   │   ├── movement_system      # Unit movement and pathfinding
-│   │   ├── combat_system        # Damage, health, and combat
-│   │   ├── ai_system            # Enemy AI behavior
-│   │   ├── patrol_system        # Patrol route management
-│   │   ├── production_system    # Unit production and queues
-│   │   ├── selection_system     # Unit/building selection
-│   │   ├── arrow_system         # Arrow projectile VFX
-│   │   ├── victory_service      # Victory/defeat condition management
-│   │   └── ...
-│   ├── map/               # Level loading and map data
-│   ├── units/             # Unit type definitions (archer, barracks)
-│   └── visuals/           # Visual configuration and team colors
-├── render/
-│   ├── gl/                # OpenGL rendering system
-│   ├── entity/            # Entity-specific renderers
-│   ├── geom/              # Geometry utilities (flags, arrows, selection)
-│   └── ground/            # Terrain rendering
-├── tests/                 # Unit and integration tests
-│   ├── core/              # Core engine tests (serialization)
-│   ├── db/                # Database tests (save/load)
-│   └── README.md          # Testing guide
-├── assets/
-│   ├── shaders/           # GLSL shaders
-│   ├── maps/              # Level data (JSON)
-│   └── units/             # Unit definitions
-├── ui/qml/                # Qt Quick UI components
-│   ├── Main.qml           # Application window
-│   ├── GameView.qml       # 3D game viewport
-│   └── HUD.qml            # Heads-up display
-└── app/                   # Application entry and game engine
+app/
+  controllers/   Input handling, VFX triggers
+  core/          Engine loop, level orchestration, state transitions
+
+game/
+  core/          ECS primitives, component definitions, world state
+  systems/       Per-frame logic (movement, combat, AI, production)
+  map/           Level loading, victory condition parsing
+  units/         Unit type factories and stat definitions
+  visuals/       Team colors, visual configuration
+
+render/
+  gl/            OpenGL wrappers (shaders, buffers, VAOs)
+  entity/        Renderer classes for units, buildings, effects
+  geom/          Procedural geometry (arrows, flags, rings)
+  ground/        Terrain mesh and grid overlay
+  humanoid/      Skeletal animation and cloth physics
+
+assets/
+  audio/         WAV and OGG sound files
+  data/          JSON configs for troops, nations, rules
+  maps/          Level definitions with spawn and victory data
+  meshes/        Binary mesh files
+  shaders/       GLSL source (vertex, fragment)
+  textures/      PNG textures for units, buildings, terrain
+
+ui/qml/          Qt Quick components (HUD, menus, dialogs)
+tests/           GTest-based unit and integration tests
+scripts/         Build helpers, validation scripts, deployment tools
 ```
+
+### ECS Implementation
+
+The engine uses an *Entity-Component-System* pattern to decouple data from logic.
+
+- Each game object is represented by a 64-bit *entity ID* with no behavior of its own; attaching components determines what systems will process it.
+- A *component* is a plain data struct (Transform, Unit, Movement, Health) stored contiguously for cache efficiency; polymorphism is avoided.
+- A *system* iterates over entities that have a required set of components and performs one logical step per frame; ordering is explicit to avoid race conditions.
+
+**Core component types:**
+
+- `TransformComponent` stores world-space position, rotation, and scale; without it, an entity cannot be rendered or participate in physics.
+- `UnitComponent` holds health, faction, speed, damage, and unit type; this is the primary marker for combatants.
+- `MovementComponent` tracks the target position, current velocity, and pathfinding state; clearing it stops the unit.
+- `AttackTargetComponent` references the target entity, attack range, and cooldown timer; removing it cancels an ongoing attack.
+- `PatrolComponent` contains the waypoint list, current index, and aggro radius; patrol behavior is disabled if waypoints are empty.
+- `ProductionComponent` manages the build queue, spawn timer, and rally point position; buildings without this component cannot train units.
+- `BuildingComponent` holds building type, capture progress, and ownership; it distinguishes structures from mobile units.
+
+**System execution order (per frame):**
+
+1. *ArrowSystem* updates projectile positions and triggers hit detection.
+2. *MovementSystem* advances units toward their targets and recalculates paths when blocked.
+3. *PatrolSystem* cycles waypoints and scans for enemies within aggro range.
+4. *CombatSystem* executes attacks, applies damage, and removes dead entities.
+5. *AISystem* evaluates strategic state and issues commands to AI-owned units.
+6. *ProductionSystem* decrements spawn timers and instantiates new units at rally points.
+7. *SelectionSystem* synchronizes UI state with entity selection sets.
+
+### Render Pipeline
+
+Rendering is organized into sequential passes that allow clear profiling and targeted optimization.
+
+1. The *scene setup* pass computes camera matrices and configures the viewport.
+2. The *terrain pass* draws the ground mesh with normal mapping and an optional tactical grid.
+3. The *entity pass* batches units and buildings by shader type, applying skeletal animation for humanoids and flag animation for structures.
+4. The *VFX pass* renders transparent geometry (arrows, health bars, selection rings) with correct depth blending.
+5. The *UI overlay* pass draws patrol flags, rally markers, and capture progress bars on top of the scene.
+6. In debug builds, a *visualization pass* shows pathfinding grids and collision bounds.
+
+**Optimizations applied:**
+
+- Entities sharing the same shader are batched into a single draw call, reducing GPU state switches.
+- *Frustum culling* skips entities outside the camera view, avoiding wasted vertex processing.
+- Complex scenes use a *depth pre-pass* to minimize overdraw during the main shading pass.
+- Particle effects leverage *instanced rendering* to draw many quads with a single draw call.
+
+---
 
 ## Controls
 
-### Camera Controls
-- **Arrow Keys**: Pan camera
-- **Q/E**: Rotate camera left/right
-- **R/F**: Move camera up/down
-- **Mouse to Screen Edge**: Edge scrolling (disabled over UI)
+### Camera
 
-### Selection Controls
-- **Left Click**: Select unit or building (clears previous selection)
-- **Click + Drag**: Area selection (draw rectangle to select multiple units)
-- **Shift + Click**: Add to selection
-- **Left Click on Empty Terrain**: Deselect all units
-- **X**: Select all controllable units
+| Input | Action |
+|-------|--------|
+| Arrow Keys / WASD | Pan the camera across the battlefield |
+| Q / E | Rotate view left or right |
+| R / F | Raise or lower camera elevation |
+| Mouse to screen edge | Edge scrolling (disabled when cursor is over UI) |
+
+### Selection
+
+| Input | Action |
+|-------|--------|
+| Left-click | Select a single unit or building |
+| Click and drag | Draw a selection rectangle around multiple units |
+| Shift + click | Add to the current selection |
+| X | Select all controllable units on the map |
+| Click empty ground | Deselect everything |
 
 ### Unit Commands
-- **Right-Click on Terrain**: Move selected units to target location
-- **Right-Click on Enemy**: Attack the target enemy unit/building
-- **Right-Click on Ally**: Interact with ally (future: repair, garrison, etc.)
-- **A**: Enter attack mode (then click target)
-- **M**: Enter move mode (normal cursor)
-- **S**: Stop all selected units (halts movement, attack, and patrol)
-- **P**: Enter patrol mode (click two waypoints to set patrol route)
-- **H**: Hold position (units won't chase enemies)
+
+| Input | Action |
+|-------|--------|
+| Right-click ground | Move selected units to location |
+| Right-click enemy | Attack the target |
+| A, then click | Enter attack mode and force-attack the clicked target |
+| M | Return to normal move cursor |
+| S | Stop all current actions |
+| P, click twice | Set a two-point patrol route |
+| H | Hold position (units will not chase) |
 
 ### Building Commands
-- **Recruit**: Select barracks, click Recruit Archer button
-- **Set Rally Point**: Click rally button, then click location (or right-click with barracks selected)
+
+| Input | Action |
+|-------|--------|
+| Select barracks → Recruit button | Add a unit to the production queue |
+| Right-click (with barracks selected) | Set the rally point for new units |
 
 ### Game Controls
-- **Space**: Pause/Resume
-- **ESC**: Cancel current command mode (attack/patrol/guard) or open menu
-- **Speed Slider**: Adjust game speed (0.5x - 2x)
 
-### Keyboard Shortcuts Summary
-**Camera Movement:**
-- **Up/Down/Left/Right**: Pan camera with arrow keys
-- **Q**: Rotate left
-- **E**: Rotate right
-- **R**: Elevate camera
-- **F**: Lower camera
+| Input | Action |
+|-------|--------|
+| Space | Pause or resume the game |
+| ESC | Cancel current command mode or open the menu |
+| Speed slider | Adjust simulation speed (0.5× to 2×) |
 
-**Unit Commands:**
-- **X**: Select all controllable units
-- **A**: Attack mode (when units selected)
-- **M**: Move mode / normal cursor
-- **S**: Stop command (when units selected)
-- **P**: Patrol mode
-- **H**: Hold position
+---
 
-## How to Play
+## Data Configuration
 
-### Objective
-Destroy the enemy barracks while protecting your own.
+### Map Files
 
-### Basic Strategy
-1. **Build Archers**: Select your barracks and recruit archers
-2. **Set Rally Point**: Right-click with barracks selected to set spawn location
-3. **Gather Forces**: Let archers accumulate at rally point
-4. **Attack**: Select archers (click or drag-select), then right-click on enemy barracks to attack
-5. **Defend**: Keep producing units to defend against enemy attacks
-
-### Advanced Tactics
-- **Patrol Routes**: Press P with units selected, then click two waypoints to set patrol route
-- **Formation Attacks**: Select multiple units (drag-select) before attacking for better damage
-- **Rally Management**: Position rally points strategically (safe but close to action)
-- **Production Timing**: Don't let your barracks sit idle
-- **Resource Management**: Each barracks can only have 10 units maximum
-- **Quick Commands**: Use hotkeys (A for attack, S for stop, P for patrol) for faster gameplay
-
-## Architecture Overview
-
-### Entity-Component-System
-The engine uses a modern ECS architecture where:
-- **Entities** are unique IDs representing game objects
-- **Components** store data (Transform, Renderable, Unit, Movement, Health, Patrol, etc.)
-- **Systems** process entities with specific component combinations each frame
-
-### Key Components
-- `TransformComponent`: Position, rotation, scale
-- `UnitComponent`: Health, owner, unit type, speed, damage
-- `MovementComponent`: Target position, pathfinding data
-- `PatrolComponent`: Waypoints, patrol state
-- `AttackTargetComponent`: Target entity, chase behavior
-- `ProductionComponent`: Queue, timer, rally point
-- `BuildingComponent`: Building-specific data
-
-### Game Systems (Update Order)
-1. **ArrowSystem**: Updates arrow VFX projectiles
-2. **MovementSystem**: Moves units, executes pathfinding
-3. **PatrolSystem**: Manages patrol routes, detects enemies
-4. **CombatSystem**: Processes attacks, applies damage
-5. **AISystem**: Controls enemy behavior
-6. **ProductionSystem**: Handles unit spawning
-7. **SelectionSystem**: Manages selection state
-
-### Rendering Pipeline
-1. **Scene Setup**: Camera matrices and viewport
-2. **Ground Rendering**: Terrain with optional grid
-3. **Entity Rendering**: All units and buildings (via entity-specific renderers)
-4. **Arrow VFX**: Projectile effects
-5. **Patrol Flags**: Waypoint markers (green) and rally points (yellow)
-6. **UI Overlay**: HUD, selection indicators, health bars
-
-## Extending the Game
-
-### Adding New Unit Types
-1. Create unit definition in `game/units/`
-2. Add renderer in `render/entity/`
-3. Register in entity renderer registry
-4. Add to production service (optional)
-
-### Creating Custom Commands
-```cpp
-// In game_engine.h
-Q_INVOKABLE void onMyCommand(qreal sx, qreal sy);
-
-// In game_engine.cpp
-void GameEngine::onMyCommand(qreal sx, qreal sy) {
-    // Convert screen to world coordinates
-    QVector3D hit;
-    if (!screen_to_ground(QPointF(sx, sy), hit)) return;
-    
-    // Issue command to selected units
-    const auto& selected = m_selection_system->get_selected_units();
-    for (auto id : selected) {
-        // Process command...
-    }
-}
-```
-
-### Adding UI Elements
-Edit QML files in `ui/qml/` to add new buttons, panels, or overlays.
-
-### Configuring Victory Conditions
-Maps can define custom victory and defeat conditions in their JSON files. Add a `"victory"` section:
+Each map is a JSON document that defines terrain dimensions, spawn points, and victory conditions.
 
 ```json
 {
-  "name": "My Custom Map",
+  "name": "Siege of Carthage",
+  "terrain": { "width": 100, "height": 100 },
   "victory": {
     "type": "elimination",
     "key_structures": ["barracks", "HQ"],
     "defeat_conditions": ["no_key_structures"]
   },
-  ...
+  "spawns": [
+    { "type": "barracks", "x": 30, "z": 50, "player_id": 1, "nation": "rome", "maxPopulation": 100 },
+    { "type": "barracks", "x": 70, "z": 50, "player_id": 2, "nation": "carthage", "maxPopulation": 100 }
+  ]
 }
 ```
 
-**Victory Types:**
-- `"elimination"`: Destroy all enemy key structures to win
-- `"survive_time"`: Survive for a specified duration (use `"duration"` in seconds)
+- Setting the *victory type* to `elimination` ends the match when all key structures are destroyed; setting it to `survive_time` with a `duration` value requires holding out for that many seconds.
+- Listing structures in *key_structures* marks them as required for victory; unlisted buildings can be lost without triggering defeat.
+- Adding `no_key_structures` to *defeat_conditions* causes a loss when all key structures fall; adding `no_units` triggers defeat when the last unit dies.
 
-**Defeat Conditions:**
-- `"no_key_structures"`: Lose if all your key structures are destroyed
-- `"no_units"`: Lose if you have no units remaining
+### Neutral Barracks
 
-**Example: Survival Mode**
+Omitting the `player_id` field creates a *neutral barracks* that starts inactive and can be captured by any player.
+
 ```json
-"victory": {
-  "type": "survive_time",
-  "duration": 600,
-  "defeat_conditions": ["no_units"]
-}
+{ "type": "barracks", "x": 50, "z": 50, "maxPopulation": 150 }
 ```
 
-**Example: Headquarters Defense**
-```json
-"victory": {
-  "type": "elimination",
-  "key_structures": ["HQ", "barracks"],
-  "defeat_conditions": ["no_key_structures"]
-}
-```
+- A neutral structure does not produce troops until captured; this encourages map control and prevents early-game turtling.
+- Capture requires maintaining a 3× troop advantage within eight world units for five seconds; partial progress decays at double speed if advantage is lost.
 
-### Neutral (Unowned) Barracks
-Maps can include neutral barracks that start without an owner. These barracks are inactive until captured by a player.
+### Nation Configuration
 
-**To create a neutral barracks, omit the `player_id` field:**
+Each faction is defined in a JSON file under `assets/data/nations/`.
+
 ```json
 {
-  "type": "barracks",
-  "x": 50,
-  "z": 50,
-  "maxPopulation": 150
+  "id": "rome",
+  "display_name": "Roman Republic",
+  "troop_variants": {
+    "archer": {
+      "stat_modifiers": { "health": 110, "damage": 12 },
+      "formation": "testudo",
+      "renderer": "roman_archer"
+    }
+  }
 }
 ```
 
-**Properties of neutral barracks:**
-- Appear **gray/neutral** on the map
-- Do **not produce troops**
-- Do **not respond** to player or AI commands
-- Can be **captured** by players using the capture system
-- AI systems automatically **skip** neutral barracks
+- Baseline troop stats live in `assets/data/troops/base.json`; the *stat_modifiers* in nation files override those defaults at runtime.
+- The *renderer* field selects which visual class to use; if the specified renderer is missing, the engine falls back to the default model.
+- Changing a nation's *formation* preference alters how units spread when given group orders.
 
-### Barrack Capture System
+---
 
-Players can capture neutral or enemy barracks by maintaining a sufficient troop presence:
+## Development
 
-**Capture Requirements:**
-- **3× troop advantage** within 8 units of the barrack
-- Maintain advantage for **5 seconds**
-- Works with both neutral and enemy-owned barracks
+### Contributing
 
-**Visual Feedback:**
-- **Progress bar** appears above barrack showing capture percentage (golden/yellow)
-- **Flag animation**: Flag lowers and transitions to capturing player's color
-- Flag returns to normal position when capture completes
+See [CONTRIBUTING.md](CONTRIBUTING.md) for full guidelines covering environment setup, formatting standards, and pull request workflow.
 
-**Capture Effects:**
-- Ownership transfers to capturing player
-- Production component activated (for neutral → player captures)
-- Building color updates to new owner's team color
-- Rally point automatically set near the barrack
+**Quick start:**
 
-**Capture Interruption:**
-If troop advantage is lost, progress decays at 2× the accumulation rate.
-
-**Example Map:** See `assets/maps/barrack_capture_test.json` for a test scenario.
-
-For detailed technical documentation, see `game/systems/CAPTURE_SYSTEM.md`.
-
-**Example map with neutral barracks:**
-```json
-"spawns": [
-  {
-    "type": "barracks",
-    "x": 30,
-    "z": 50,
-    "player_id": 1,
-    "maxPopulation": 100
-  },
-  {
-    "type": "barracks",
-    "x": 50,
-    "z": 50,
-    "maxPopulation": 150
-  },
-  {
-    "type": "barracks",
-    "x": 70,
-    "z": 50,
-    "player_id": 2,
-    "maxPopulation": 100
-  }
-]
+```bash
+git clone https://github.com/<your-fork>/Standard-of-Iron.git
+make install   # Install system dependencies
+make format    # Apply code formatting before committing
+make test      # Verify all tests pass
 ```
 
-In this example, the middle barracks starts neutral while players 1 and 2 each have their own barracks.
+### Extending the Engine
 
-## Contributing
+**Adding a new unit type:**
 
-We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines on:
+1. Create a unit definition in `game/units/<unit_type>.cpp` that registers components and default stats.
+2. Implement a renderer in `render/entity/<unit_type>_renderer.cpp` to handle mesh binding and materials.
+3. Register the factory in `UnitFactoryRegistry` so production systems can instantiate it.
+4. Add troop entries to the relevant nation JSON files under `assets/data/nations/`.
 
-- Setting up your development environment
-- Code formatting requirements (C++, QML, shaders)
-- Building and testing the project
-- Submitting pull requests
+**Adding a custom command:**
 
-Quick start for contributors:
-1. Fork the repository
-2. Run `make install` to set up dependencies
-3. Run `make format` before committing changes
-4. Open a Pull Request
+```cpp
+// game_engine.h
+Q_INVOKABLE void onCustomCommand(qreal sx, qreal sy);
 
-### Code Signing and Distribution
+// game_engine.cpp
+void GameEngine::onCustomCommand(qreal sx, qreal sy) {
+    QVector3D world_pos;
+    if (!screen_to_ground(QPointF(sx, sy), world_pos)) return;
+    for (auto id : m_selection_system->get_selected_units()) {
+        // Issue command to entity
+    }
+}
+```
 
-For maintainers preparing official releases:
+**Adding UI elements:**
 
-- **macOS**: See [docs/MACOS_SIGNING.md](docs/MACOS_SIGNING.md) for code signing and notarization setup
-- **Windows**: Code signing is configured in the Windows workflow (uses `WINDOWS_CERTIFICATE` secret)
-- **Linux**: AppImage distribution does not require code signing
+Edit or add QML files in `ui/qml/`. HUD components communicate with the engine via Qt signals, so new panels only need to bind to exposed properties.
 
-## Nation System Migration Plan
+### Code Signing (Maintainers)
 
-This roadmap replaces the single nation template with a scalable civilization layer that allows Romans, Carthage, and future nations to share troop classes but diverge on stats, formations, and visuals.
+- For macOS notarization, follow [docs/MACOS_SIGNING.md](docs/MACOS_SIGNING.md).
+- Windows builds use the `WINDOWS_CERTIFICATE` secret configured in GitHub Actions.
+- Linux AppImage distribution does not require code signing.
 
-### Phase 1 — Core Data Foundations
-- Introduce a `TroopClass` catalog describing baseline stats/metadata for each `Game::Units::TroopType` (health, speed, damage, default renderer, individuals per unit, etc.).
-- Refactor existing unit constructors (`game/units/*.cpp`) to hydrate components from the catalog instead of hard-coded literals; keep overrides minimal to validate the abstraction.
-- Extend `Nation` (`game/systems/nation_registry.h`) with a `NationTroopVariant` map that captures per-nation overrides (stat deltas, formation preference, renderer id).
-- Persist current values into `assets/data/troops/base.json` plus nation JSONs so runtime data mirrors today’s behavior.
+---
 
-### Phase 2 — Loading & Profiles
-- Add a JSON loader (`game/systems/nation_loader.*`) that builds `Nation` objects from disk and registers them through `NationRegistry::initializeDefaults`.
-- Create `TroopProfileService` to merge `TroopClass` defaults with `NationTroopVariant` overrides and expose `get_profile(nationId, TroopType)`.
-- Thread the owning nation id through production: extend `SpawnParams` and update `ProductionSystem`, `UnitFactoryRegistry`, and AI spawners so units receive the correct profile at creation.
-- Update `TroopConfig` accessors to read formation spacing/individual counts from profiles, falling back to catalog defaults when overrides are absent.
+## Roadmap
 
-### Phase 3 — Multi-Nation Support
-- Author Roman and Carthaginian JSON definitions with differentiated stats, formations, and renderer ids; set the default nation in `NationRegistry` to one of them.
-- Rename the shared melee infantry profile to `Swordsman` so nations can share core assets while still tuning stats in their override files.
-- Audit gameplay systems (AI build orders, UI panels, tutorials) to resolve troop data via `NationRegistry::get_nation_for_player` instead of assuming Kingdom of Iron.
-- Register renderer variants (e.g., `render/entity/roman_archer_renderer.cpp`) keyed by the profile’s renderer id, with graceful fallbacks to baseline assets.
-- Add hooks for balance levers (passive modifiers, tech prerequisites) inside `NationTroopVariant` so future expansions require data changes rather than engine rewrites.
+### Nation System Migration
 
-### Validation & Rollout
-- Unit tests or integration checks should confirm: data loading succeeds, profiles are applied per player, production counts respect nation-specific `individualsPerUnit`, and renderers switch with the nation.
-- Ship the migration behind a feature flag or debug toggle if needed, then remove the legacy hard-coded nation data once parity tests pass.
+The engine is transitioning from a single hardcoded nation to a scalable multi-faction architecture. This allows Rome, Carthage, and future civilizations to share troop classes while diverging on stats, formations, and visuals.
 
-## Development Status
+**Phase 1 — Data Foundations**
 
-### Completed Features ✅
-- Core ECS framework
-- OpenGL rendering system
-- Unit production and AI
-- Combat and health systems
-- Data-driven victory/defeat conditions
-- VictoryService with configurable game modes
-- Patrol system with visual waypoints
-- Selection and command interface
-- Rally point system
-- Team colors and visual polish
+- A *TroopClass* catalog will store baseline stats (health, speed, damage, renderer) for each unit type; without it, every faction would duplicate the same data.
+- Unit constructors in `game/units/` will read from the catalog instead of hardcoded literals, reducing the surface area for copy-paste errors.
+- The *NationTroopVariant* structure will capture per-faction overrides (stat deltas, formation preference, renderer ID) inside the Nation object.
+- Initial data will be persisted to `assets/data/troops/base.json` and per-nation JSONs so runtime behavior matches the current build.
 
-### In Progress 🚧
-- Guard command (stationary defense)
-- Hold command (no chasing)
-- Additional unit types
+**Phase 2 — Runtime Loading**
 
-### Future Roadmap 🎯
-- Multiplayer networking
-- More unit types (melee, siege)
-- Resource gathering system
-- Multiple maps ✅ Implemented 
-- Campaign mode
-- Advanced AI behaviors
-- Save/load game state ✅ Implemented 
-- ~~Sound effects and music~~ ✅ Implemented 
+- A JSON loader in `game/systems/nation_loader.*` will construct Nation objects from disk and register them through *NationRegistry*.
+- The *TroopProfileService* will merge catalog defaults with nation overrides and expose `get_profile(nationId, TroopType)` for systems to query.
+- The production pipeline (SpawnParams, ProductionSystem, AI spawners) will thread the owning nation ID so units receive the correct profile at creation.
+- Formation spacing and individual counts will read from profiles, falling back to catalog defaults when overrides are absent.
+
+**Phase 3 — Multi-Faction Deployment**
+
+- Roman and Carthaginian JSON definitions will ship with differentiated stats, formations, and renderer IDs.
+- Shared melee infantry will rename to *Swordsman* so multiple factions can reference the same base asset while tuning stats independently.
+- Gameplay systems (AI build orders, UI panels, tutorials) will resolve troop data through `NationRegistry::get_nation_for_player`.
+- Faction-specific renderers (e.g., `roman_archer_renderer.cpp`) will register by renderer ID, with fallback to baseline assets if missing.
+- Balance hooks for passive modifiers and tech prerequisites will live inside NationTroopVariant, avoiding engine rewrites for future expansions.
+
+**Validation**
+
+- Unit tests will confirm data loading, profile application, and correct production counts per nation.
+- Renderer switching will be verified across factions before legacy hardcoded data is removed.
+
+---
+
+### Current Status
+
+**Completed:**
+
+- The *ECS framework* drives all game logic, separating data storage from system processing.
+- A custom *OpenGL render pipeline* handles multi-pass drawing with batching and culling.
+- The *AI director* issues build orders, evaluates threats, and controls units without cheating.
+- A *combat system* processes attacks, applies damage, and removes dead entities each frame.
+- *Victory conditions* are data-driven, supporting elimination, survival, and custom objectives.
+- *Patrol routes* display visual waypoint flags and engage enemies within aggro range.
+- *Rally points* direct newly spawned units to player-specified locations.
+- Full *save/load* serialization preserves campaign state across sessions.
+- *Spatial audio* provides positional sound for combat and movement.
+- Multiple *map files* are playable with distinct layouts and objectives.
+
+**In Progress:**
+
+- A *guard command* for stationary defense stance is under development.
+- A *hold command* that prevents chasing is being finalized.
+- Additional unit types (cavalry, siege) are in prototype.
+
+**Planned:**
+
+- *Multiplayer networking* for LAN and online matchmaking.
+- A *resource economy* with gathering and spending.
+- *Campaign progression* tracking territory control and unit veterancy.
+- *Mod support* with exposed data formats and tooling.
+
+---
 
 ## License
 
-MIT License - see LICENSE file for details.
+This project is released under the MIT License. See [LICENSE](LICENSE) for full text.
 
-### Third-Party Software Licenses
+### Third-Party Licenses
 
-This game uses the **Qt framework** (https://www.qt.io), which is licensed under the **GNU Lesser General Public License v3 (LGPL v3)**.
+- The engine uses the *Qt framework* (https://www.qt.io), licensed under the GNU Lesser General Public License v3 (LGPL v3). Qt is dynamically linked, allowing library replacement. Source code is available at https://www.qt.io/download-open-source.
+- Audio playback uses *miniaudio* (public domain / MIT-0). See [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md) for details.
 
-- Qt is dynamically linked in this application, allowing you to replace the Qt libraries with your own versions.
-- You may obtain a copy of the LGPL v3 license at https://www.gnu.org/licenses/lgpl-3.0.html
-- Qt source code is available at https://www.qt.io/download-open-source
+---
 
 ## Acknowledgments
 
-Built with modern C++20, Qt 6, and OpenGL 3.3 Core. Special thanks to the open-source community for excellent documentation and tools.
+Standard of Iron is built with C++20, Qt 6, and OpenGL 3.3. Development has benefited from open-source documentation, community feedback, and contributions from volunteers listed in [CONTRIBUTORS.md](CONTRIBUTORS.md).
