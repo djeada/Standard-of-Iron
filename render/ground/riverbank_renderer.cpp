@@ -438,15 +438,12 @@ void RiverbankRenderer::submit(Renderer &renderer, ResourceManager *resources) {
 
     QVector3D dir = segment.end - segment.start;
     float const length = dir.length();
-    
-    float alpha = 1.0F;
-    QVector3D color_multiplier(1.0F, 1.0F, 1.0F);
 
     if (use_visibility) {
-      int max_visibility_state = 0;
+      bool any_visible = false;
       dir.normalize();
 
-      // Sample visibility along the segment (like bridges/rivers/roads)
+      // Sample visibility along the segment - only render if visible (not explored)
       int const samples_per_segment = 5;
       for (int i = 0; i < samples_per_segment; ++i) {
         float const t =
@@ -454,27 +451,18 @@ void RiverbankRenderer::submit(Renderer &renderer, ResourceManager *resources) {
         QVector3D const pos = segment.start + dir * (length * t);
 
         if (visibility.isVisibleWorld(pos.x(), pos.z())) {
-          max_visibility_state = 2; // Fully visible
+          any_visible = true;
           break;
-        }
-        if (visibility.isExploredWorld(pos.x(), pos.z())) {
-          max_visibility_state = std::max(max_visibility_state, 1); // Explored
         }
       }
 
-      // Don't render if completely hidden in fog of war
-      if (max_visibility_state == 0) {
+      // Don't render if not visible (let fog overlay handle explored areas)
+      if (!any_visible) {
         continue;
-      }
-      
-      // Render with reduced alpha if only explored (not currently visible)
-      if (max_visibility_state == 1) {
-        alpha = 0.5F;
-        color_multiplier = QVector3D(0.4F, 0.4F, 0.45F);
       }
     }
 
-    renderer.mesh(mesh, model, color_multiplier, nullptr, alpha);
+    renderer.mesh(mesh, model, QVector3D(1.0F, 1.0F, 1.0F), nullptr, 1.0F);
   }
 
   renderer.set_current_shader(nullptr);
