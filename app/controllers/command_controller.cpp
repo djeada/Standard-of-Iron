@@ -121,6 +121,11 @@ auto CommandController::onHoldCommand() -> CommandResult {
     return result;
   }
 
+  // First, determine if all eligible units already have hold mode active
+  // If all do, we disable it; if any don't, we enable it for all
+  int eligible_count = 0;
+  int hold_active_count = 0;
+
   for (auto id : selected) {
     auto *entity = m_world->get_entity(id);
     if (entity == nullptr) {
@@ -128,46 +133,83 @@ auto CommandController::onHoldCommand() -> CommandResult {
     }
 
     auto *unit = entity->get_component<Engine::Core::UnitComponent>();
+    if (unit == nullptr) {
+      continue;
+    }
 
-    if ((unit == nullptr) ||
-        (unit->spawn_type != Game::Units::SpawnType::Archer &&
-         unit->spawn_type != Game::Units::SpawnType::Spearman)) {
+    // Skip buildings
+    if (unit->spawn_type == Game::Units::SpawnType::Barracks) {
+      continue;
+    }
+
+    eligible_count++;
+
+    auto *hold_mode = entity->get_component<Engine::Core::HoldModeComponent>();
+    if ((hold_mode != nullptr) && hold_mode->active) {
+      hold_active_count++;
+    }
+  }
+
+  if (eligible_count == 0) {
+    return result;
+  }
+
+  // Determine target state: if all have hold active, disable; otherwise enable
+  const bool should_enable_hold = (hold_active_count < eligible_count);
+
+  for (auto id : selected) {
+    auto *entity = m_world->get_entity(id);
+    if (entity == nullptr) {
+      continue;
+    }
+
+    auto *unit = entity->get_component<Engine::Core::UnitComponent>();
+    if (unit == nullptr) {
+      continue;
+    }
+
+    // Skip buildings
+    if (unit->spawn_type == Game::Units::SpawnType::Barracks) {
       continue;
     }
 
     auto *hold_mode = entity->get_component<Engine::Core::HoldModeComponent>();
 
-    if ((hold_mode != nullptr) && hold_mode->active) {
-      hold_mode->active = false;
-      hold_mode->exit_cooldown = hold_mode->stand_up_duration;
-      emit hold_modeChanged(false);
-      continue;
-    }
+    if (should_enable_hold) {
+      // Enable hold mode
+      resetMovement(entity);
+      entity->remove_component<Engine::Core::AttackTargetComponent>();
 
-    resetMovement(entity);
-    entity->remove_component<Engine::Core::AttackTargetComponent>();
+      if (auto *patrol =
+              entity->get_component<Engine::Core::PatrolComponent>()) {
+        patrol->patrolling = false;
+        patrol->waypoints.clear();
+      }
 
-    if (auto *patrol = entity->get_component<Engine::Core::PatrolComponent>()) {
-      patrol->patrolling = false;
-      patrol->waypoints.clear();
-    }
+      if (hold_mode == nullptr) {
+        hold_mode = entity->add_component<Engine::Core::HoldModeComponent>();
+      }
+      hold_mode->active = true;
+      hold_mode->exit_cooldown = 0.0F;
 
-    if (hold_mode == nullptr) {
-      hold_mode = entity->add_component<Engine::Core::HoldModeComponent>();
-    }
-    hold_mode->active = true;
-    hold_mode->exit_cooldown = 0.0F;
-    emit hold_modeChanged(true);
-
-    auto *movement = entity->get_component<Engine::Core::MovementComponent>();
-    if (movement != nullptr) {
-      movement->has_target = false;
-      movement->path.clear();
-      movement->path_pending = false;
-      movement->vx = 0.0F;
-      movement->vz = 0.0F;
+      auto *movement = entity->get_component<Engine::Core::MovementComponent>();
+      if (movement != nullptr) {
+        movement->has_target = false;
+        movement->path.clear();
+        movement->path_pending = false;
+        movement->vx = 0.0F;
+        movement->vz = 0.0F;
+      }
+    } else {
+      // Disable hold mode
+      if ((hold_mode != nullptr) && hold_mode->active) {
+        hold_mode->active = false;
+        hold_mode->exit_cooldown = hold_mode->stand_up_duration;
+      }
     }
   }
+
+  emit hold_modeChanged(should_enable_hold);
 
   result.inputConsumed = true;
   result.resetCursorToNormal = true;
@@ -317,7 +359,217 @@ auto CommandController::anySelectedInHoldMode() const -> bool {
     }
   }
 
+auto CommandController::anySelectedInGuardMode() const -> bool {
+  if ((m_selection_system == nullptr) || (m_world == nullptr)) {
+    return false;
+  }
+
+  const auto &selected = m_selection_system->get_selected_units();
+  for (Engine::Core::EntityID const entity_id : selected) {
+    Engine::Core::Entity *entity = m_world->get_entity(entity_id);
+    if (entity == nullptr) {
+      continue;
+    }
+
+    auto *guard_mode =
+        entity->get_component<Engine::Core::GuardModeComponent>();
+    if ((guard_mode != nullptr) && guard_mode->active) {
+      return true;
+    }
+  }
+
   return false;
+}
+
+auto CommandController::onGuardCommand() -> CommandResult {
+  CommandResult result;
+  if ((m_selection_system == nullptr) || (m_world == nullptr)) {
+    return result;
+  }
+
+  const auto &selected = m_selection_system->get_selected_units();
+  if (selected.empty()) {
+    return result;
+  }
+
+  // First, determine if all eligible units already have guard mode active
+  // If all do, we disable it; if any don't, we enable it for all
+  int eligible_count = 0;
+  int guard_active_count = 0;
+
+  for (auto id : selected) {
+    auto *entity = m_world->get_entity(id);
+    if (entity == nullptr) {
+      continue;
+    }
+
+    auto *unit = entity->get_component<Engine::Core::UnitComponent>();
+    if (unit == nullptr) {
+      continue;
+    }
+
+    // Skip buildings
+    if (unit->spawn_type == Game::Units::SpawnType::Barracks) {
+      continue;
+    }
+
+    eligible_count++;
+
+    auto *guard_mode =
+        entity->get_component<Engine::Core::GuardModeComponent>();
+    if ((guard_mode != nullptr) && guard_mode->active) {
+      guard_active_count++;
+    }
+  }
+
+  if (eligible_count == 0) {
+    return result;
+  }
+
+  // Determine target state: if all have guard active, disable; otherwise enable
+  const bool should_enable_guard = (guard_active_count < eligible_count);
+
+  for (auto id : selected) {
+    auto *entity = m_world->get_entity(id);
+    if (entity == nullptr) {
+      continue;
+    }
+
+    auto *unit = entity->get_component<Engine::Core::UnitComponent>();
+    if (unit == nullptr) {
+      continue;
+    }
+
+    // Skip buildings
+    if (unit->spawn_type == Game::Units::SpawnType::Barracks) {
+      continue;
+    }
+
+    auto *guard_mode =
+        entity->get_component<Engine::Core::GuardModeComponent>();
+
+    if (should_enable_guard) {
+      // Enable guard mode at current position
+      if (guard_mode == nullptr) {
+        guard_mode = entity->add_component<Engine::Core::GuardModeComponent>();
+      }
+      guard_mode->active = true;
+      guard_mode->returning_to_guard_position = false;
+
+      // Set guard position to current position
+      auto *transform =
+          entity->get_component<Engine::Core::TransformComponent>();
+      if (transform != nullptr) {
+        guard_mode->guard_position_x = transform->position.x;
+        guard_mode->guard_position_z = transform->position.z;
+        guard_mode->has_guard_target = true;
+        guard_mode->guarded_entity_id = 0;
+      }
+
+      // Disable hold mode if active
+      auto *hold_mode =
+          entity->get_component<Engine::Core::HoldModeComponent>();
+      if ((hold_mode != nullptr) && hold_mode->active) {
+        hold_mode->active = false;
+      }
+
+      // Clear patrol
+      if (auto *patrol =
+              entity->get_component<Engine::Core::PatrolComponent>()) {
+        patrol->patrolling = false;
+        patrol->waypoints.clear();
+      }
+    } else {
+      // Disable guard mode
+      if ((guard_mode != nullptr) && guard_mode->active) {
+        guard_mode->active = false;
+        guard_mode->guarded_entity_id = 0;
+        guard_mode->guard_position_x = 0.0F;
+        guard_mode->guard_position_z = 0.0F;
+        guard_mode->returning_to_guard_position = false;
+        guard_mode->has_guard_target = false;
+      }
+    }
+  }
+
+  emit guard_modeChanged(should_enable_guard);
+
+  result.inputConsumed = true;
+  result.resetCursorToNormal = true;
+  return result;
+}
+
+auto CommandController::onGuardClick(qreal sx, qreal sy, int viewportWidth,
+                                     int viewportHeight,
+                                     void *camera) -> CommandResult {
+  CommandResult result;
+  if ((m_selection_system == nullptr) || (m_pickingService == nullptr) ||
+      (camera == nullptr) || (m_world == nullptr)) {
+    result.resetCursorToNormal = true;
+    return result;
+  }
+
+  const auto &selected = m_selection_system->get_selected_units();
+  if (selected.empty()) {
+    result.resetCursorToNormal = true;
+    return result;
+  }
+
+  auto *cam = static_cast<Render::GL::Camera *>(camera);
+  QVector3D hit;
+  if (!Game::Systems::PickingService::screen_to_ground(
+          QPointF(sx, sy), *cam, viewportWidth, viewportHeight, hit)) {
+    result.resetCursorToNormal = true;
+    return result;
+  }
+
+  // Set guard position for all selected units
+  for (auto id : selected) {
+    auto *entity = m_world->get_entity(id);
+    if (entity == nullptr) {
+      continue;
+    }
+
+    auto *building = entity->get_component<Engine::Core::BuildingComponent>();
+    if (building != nullptr) {
+      continue;
+    }
+
+    auto *guard_mode =
+        entity->get_component<Engine::Core::GuardModeComponent>();
+    if (guard_mode == nullptr) {
+      guard_mode = entity->add_component<Engine::Core::GuardModeComponent>();
+    }
+
+    guard_mode->active = true;
+    guard_mode->guarded_entity_id = 0;
+    guard_mode->guard_position_x = hit.x();
+    guard_mode->guard_position_z = hit.z();
+    guard_mode->returning_to_guard_position = false;
+    guard_mode->has_guard_target = true;
+
+    // Disable hold mode if active
+    auto *hold_mode = entity->get_component<Engine::Core::HoldModeComponent>();
+    if ((hold_mode != nullptr) && hold_mode->active) {
+      hold_mode->active = false;
+    }
+
+    // Clear patrol
+    if (auto *patrol =
+            entity->get_component<Engine::Core::PatrolComponent>()) {
+      patrol->patrolling = false;
+      patrol->waypoints.clear();
+    }
+
+    resetMovement(entity);
+    entity->remove_component<Engine::Core::AttackTargetComponent>();
+  }
+
+  emit guard_modeChanged(true);
+
+  result.inputConsumed = true;
+  result.resetCursorToNormal = true;
+  return result;
 }
 
 } // namespace App::Controllers

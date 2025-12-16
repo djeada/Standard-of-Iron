@@ -35,6 +35,9 @@ public:
                      void *camera) -> CommandResult;
   auto onStopCommand() -> CommandResult;
   auto onHoldCommand() -> CommandResult;
+  auto onGuardCommand() -> CommandResult;
+  auto onGuardClick(qreal sx, qreal sy, int viewportWidth, int viewportHeight,
+                    void *camera) -> CommandResult;
   auto onPatrolClick(qreal sx, qreal sy, int viewportWidth, int viewportHeight,
                      void *camera) -> CommandResult;
   auto setRallyAtScreen(qreal sx, qreal sy, int viewportWidth,
@@ -51,11 +54,13 @@ public:
   void clearPatrolFirstWaypoint() { m_hasPatrolFirstWaypoint = false; }
 
   Q_INVOKABLE [[nodiscard]] bool anySelectedInHoldMode() const;
+  Q_INVOKABLE [[nodiscard]] bool anySelectedInGuardMode() const;
 
 signals:
   void attack_targetSelected();
   void troopLimitReached();
   void hold_modeChanged(bool active);
+  void guard_modeChanged(bool active);
 
 private:
   Engine::Core::World *m_world;
