@@ -394,9 +394,10 @@ void CombatDustPipeline::render(const Camera &cam, float animation_time) {
   m_dust_shader->use();
   glBindVertexArray(m_vao);
 
-  for (auto &data : m_dust_data) {
-    data.time = animation_time;
-    render_dust(data, cam);
+  for (const auto &data : m_dust_data) {
+    CombatDustData render_data = data;
+    render_data.time = animation_time;
+    render_dust(render_data, cam);
   }
 
   glBindVertexArray(0);
