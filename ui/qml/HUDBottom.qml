@@ -475,6 +475,77 @@ RowLayout {
 
             }
 
+            Button {
+                id: formationButton
+
+                property bool isFormationActive: {
+                    bottomRoot.selectionTick;
+                    return (typeof game !== 'undefined' && game.any_selected_in_formation_mode) ? game.any_selected_in_formation_mode() : false;
+                }
+                property int selectedCount: (typeof game !== 'undefined' && game.selected_units_model) ? game.selected_units_model.rowCount() : 0
+
+                Layout.fillWidth: true
+                Layout.preferredHeight: 38
+                text: qsTr("Formation")
+                focusPolicy: Qt.NoFocus
+                enabled: bottomRoot.hasMovableUnits && selectedCount > 1
+                onClicked: {
+                    if (typeof game !== 'undefined' && game.on_formation_command)
+                        game.on_formation_command();
+
+                }
+                ToolTip.visible: hovered
+                ToolTip.text: {
+                    if (!bottomRoot.hasMovableUnits)
+                        return qsTr("Select troops first");
+
+                    if (selectedCount <= 1)
+                        return qsTr("Select multiple units to use formation");
+
+                    return isFormationActive ? qsTr("Exit formation mode (toggle)") : qsTr("Arrange units in tactical formation");
+                }
+                ToolTip.delay: 500
+
+                Connections {
+                    function onFormation_mode_changed(active) {
+                        formationButton.isFormationActive = (typeof game !== 'undefined' && game.any_selected_in_formation_mode) ? game.any_selected_in_formation_mode() : false;
+                    }
+
+                    target: (typeof game !== 'undefined') ? game : null
+                }
+
+                background: Rectangle {
+                    color: {
+                        if (!parent.enabled)
+                            return "#1a252f";
+
+                        if (parent.isFormationActive)
+                            return "#16a085";
+
+                        if (parent.pressed)
+                            return "#16a085";
+
+                        if (parent.hovered)
+                            return "#1abc9c";
+
+                        return "#34495e";
+                    }
+                    radius: 6
+                    border.color: parent.enabled ? (parent.isFormationActive ? "#d35400" : "#16a085") : "#1a252f"
+                    border.width: parent.isFormationActive ? 3 : 2
+                }
+
+                contentItem: Text {
+                    text: (parent.isFormationActive ? "✓ " : "") + "🎯\n" + parent.text
+                    font.pointSize: 8
+                    font.bold: true
+                    color: parent.enabled ? "#ecf0f1" : "#7f8c8d"
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                }
+
+            }
+
         }
 
     }
