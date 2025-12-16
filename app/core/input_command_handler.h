@@ -49,9 +49,11 @@ public:
   void on_stop_command();
   void on_hold_command();
   void on_guard_command();
+  void on_formation_command();
   void on_guard_click(qreal sx, qreal sy, const ViewportState &viewport);
   [[nodiscard]] bool any_selected_in_hold_mode() const;
   [[nodiscard]] bool any_selected_in_guard_mode() const;
+  [[nodiscard]] bool any_selected_in_formation_mode() const;
   void on_patrol_click(qreal sx, qreal sy, const ViewportState &viewport);
   void on_click_select(qreal sx, qreal sy, bool additive, int local_owner_id,
                        const ViewportState &viewport);
