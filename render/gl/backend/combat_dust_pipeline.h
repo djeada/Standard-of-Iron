@@ -18,12 +18,18 @@ class Camera;
 
 namespace BackendPipelines {
 
+enum class EffectType {
+  Dust,
+  Flame
+};
+
 struct CombatDustData {
   QVector3D position;
   float radius;
   float intensity;
   QVector3D color;
   float time;
+  EffectType effect_type{EffectType::Dust};
 };
 
 class CombatDustPipeline final : public IPipeline {
@@ -40,6 +46,8 @@ public:
 
   void collect_combat_zones(Engine::Core::World *world, float animation_time);
 
+  void collect_building_flames(Engine::Core::World *world, float animation_time);
+
   void render(const Camera &cam, float animation_time);
 
   void render_single_dust(const QVector3D &position, const QVector3D &color,
@@ -50,6 +58,9 @@ public:
 
   void add_dust_zone(const QVector3D &position, float radius, float intensity,
                      const QVector3D &color, float time);
+
+  void add_flame_zone(const QVector3D &position, float radius, float intensity,
+                      const QVector3D &color, float time);
 
 private:
   void render_dust(const CombatDustData &data, const Camera &cam);
@@ -75,6 +86,7 @@ private:
     GL::Shader::UniformHandle radius{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle intensity{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle dust_color{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle effect_type{GL::Shader::InvalidUniform};
   };
 
   DustUniforms m_uniforms;
