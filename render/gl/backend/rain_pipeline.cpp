@@ -265,8 +265,7 @@ void RainPipeline::render(const Camera &cam, const RainBatchParams &params) {
   glDepthMask(GL_FALSE);
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  
-  // Enable point sprites for snow
+
   if (params.weather_type == Game::Map::WeatherType::Snow) {
     glEnable(GL_PROGRAM_POINT_SIZE);
   }
@@ -296,17 +295,16 @@ void RainPipeline::render(const Camera &cam, const RainBatchParams &params) {
                              static_cast<int>(params.weather_type));
   m_rain_shader->set_uniform(m_uniforms.wind_strength, params.wind_strength);
 
-  // Use different draw mode for snow vs rain
   if (params.weather_type == Game::Map::WeatherType::Snow) {
-    // Draw as points for snowflakes (only use first vertex of each pair)
+
     glDrawElements(GL_POINTS, m_index_count / 2, GL_UNSIGNED_INT, nullptr);
   } else {
-    // Draw as lines for rain
+
     glDrawElements(GL_LINES, m_index_count, GL_UNSIGNED_INT, nullptr);
   }
 
   glBindVertexArray(0);
-  
+
   if (params.weather_type == Game::Map::WeatherType::Snow) {
     glDisable(GL_PROGRAM_POINT_SIZE);
   }

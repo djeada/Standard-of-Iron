@@ -27,10 +27,13 @@ const float SNOW_DRIFT_SCALE_X = 0.3;
 const float SNOW_DRIFT_AMPLITUDE_X = 0.15;
 const float SNOW_DRIFT_AMPLITUDE_Z = 0.1;
 
-const float SNOW_POINT_SIZE = 16.0;
+const float SNOW_POINT_SIZE = 22.0;
 
 void main() {
   float speed = a_offset.z;
+  if (u_weather_type == 1) {
+    speed *= 0.15;
+  }
   float y_offset = a_offset.y;
 
   float fall_distance = mod(speed * u_time, AREA_HEIGHT);
@@ -60,11 +63,9 @@ void main() {
     pos.z +=
         cos(u_time * SNOW_DRIFT_FREQ_Z + a_position.z * SNOW_DRIFT_SCALE_X) *
         SNOW_DRIFT_AMPLITUDE_Z;
-    
-    // Set point size for snowflakes
+
     gl_PointSize = SNOW_POINT_SIZE;
-    
-    // Vary rotation based on position for visual variety
+
     v_rotation = a_position.x * 2.0 + a_position.z * 3.0 + u_time * 0.2;
   }
 
