@@ -834,10 +834,10 @@ void GameEngine::sync_selection_flags() {
 
   App::Utils::sanitize_selection(m_world.get(), selection_system);
 
-  if (selection_system->get_selected_units().empty()) {
-    if (m_cursorManager && m_cursorManager->mode() != CursorMode::Normal) {
-      set_cursor_mode(CursorMode::Normal);
-    }
+  // Reset cursor mode to Normal when selection changes
+  // This ensures the cursor mode doesn't persist from the previous selection
+  if (m_cursorManager && m_cursorManager->mode() != CursorMode::Normal) {
+    set_cursor_mode(CursorMode::Normal);
   }
 }
 
@@ -1019,6 +1019,7 @@ auto GameEngine::get_selected_units_command_mode() const -> QString {
 
   int attacking_count = 0;
   int patrolling_count = 0;
+  int guarding_count = 0;
   int total_units = 0;
 
   for (auto id : sel) {
@@ -1045,6 +1046,11 @@ auto GameEngine::get_selected_units_command_mode() const -> QString {
     if ((patrol != nullptr) && patrol->patrolling) {
       patrolling_count++;
     }
+
+    auto *guard = e->get_component<Engine::Core::GuardModeComponent>();
+    if ((guard != nullptr) && guard->active) {
+      guarding_count++;
+    }
   }
 
   if (total_units == 0) {
@@ -1056,6 +1062,9 @@ auto GameEngine::get_selected_units_command_mode() const -> QString {
   }
   if (attacking_count == total_units) {
     return "attack";
+  }
+  if (guarding_count == total_units) {
+    return "guard";
   }
 
   return "normal";
