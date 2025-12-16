@@ -1646,9 +1646,9 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
           !m_combatDustPipeline->is_initialized()) {
         break;
       }
-      m_combatDustPipeline->add_flame_zone(flame.position, flame.radius,
-                                           flame.intensity, flame.color,
-                                           flame.time);
+      m_combatDustPipeline->render_single_flame(flame.position, flame.color,
+                                                flame.radius, flame.intensity,
+                                                flame.time, view_proj);
       m_lastBoundShader = nullptr;
       break;
     }
