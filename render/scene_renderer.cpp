@@ -449,9 +449,9 @@ void Renderer::enqueue_mode_indicator(
     return;
   }
 
-  // Check for all mode types
   auto *attack_comp = entity->get_component<Engine::Core::AttackComponent>();
-  bool const has_attack = (attack_comp != nullptr) && attack_comp->in_melee_lock;
+  bool const has_attack =
+      (attack_comp != nullptr) && attack_comp->in_melee_lock;
 
   auto *guard_mode = entity->get_component<Engine::Core::GuardModeComponent>();
   bool const has_guard_mode = (guard_mode != nullptr) && guard_mode->active;
@@ -462,7 +462,6 @@ void Renderer::enqueue_mode_indicator(
   auto *patrol_comp = entity->get_component<Engine::Core::PatrolComponent>();
   bool const has_patrol = (patrol_comp != nullptr) && patrol_comp->patrolling;
 
-  // Only render if unit has an active mode
   if (!has_attack && !has_guard_mode && !has_hold_mode && !has_patrol) {
     return;
   }
@@ -526,7 +525,6 @@ void Renderer::enqueue_mode_indicator(
     indicator_model.rotate(yaw * 180.0F / k_pi, 0, 1, 0);
   }
 
-  // Determine mode type and color (priority: attack > guard > hold > patrol)
   int mode_type = Render::Geom::k_mode_type_patrol;
   QVector3D color = Render::Geom::k_patrol_mode_color;
 

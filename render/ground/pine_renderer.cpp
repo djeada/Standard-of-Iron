@@ -152,12 +152,10 @@ void PineRenderer::generatePineInstances() {
     pine_density = m_biome_settings.plant_density * 0.3F;
   }
 
-  // Build terrain cache for spawn validation
   SpawnTerrainCache terrain_cache;
   terrain_cache.build_from_height_map(m_heightData, m_terrain_types, m_width,
                                       m_height, m_tile_size);
 
-  // Configure spawn validator for trees
   SpawnValidationConfig config = make_tree_spawn_config();
   config.grid_width = m_width;
   config.grid_height = m_height;
@@ -167,7 +165,6 @@ void PineRenderer::generatePineInstances() {
   SpawnValidator validator(terrain_cache, config);
 
   auto add_pine = [&](float gx, float gz, uint32_t &state) -> bool {
-    // Use unified spawn validator for all checks
     if (!validator.can_spawn_at_grid(gx, gz)) {
       return false;
     }

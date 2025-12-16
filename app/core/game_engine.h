@@ -227,8 +227,8 @@ public:
   Q_INVOKABLE [[nodiscard]] QVariantMap
   get_unit_production_info(const QString &unit_type) const;
   Q_INVOKABLE [[nodiscard]] QString get_selected_units_command_mode() const;
-  Q_INVOKABLE [[nodiscard]] QVariantMap get_selected_units_mode_availability()
-      const;
+  Q_INVOKABLE [[nodiscard]] QVariantMap
+  get_selected_units_mode_availability() const;
   Q_INVOKABLE void set_rally_at_screen(qreal sx, qreal sy);
   Q_INVOKABLE [[nodiscard]] QVariantList available_maps() const;
   [[nodiscard]] QVariantList available_nations() const;
