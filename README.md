@@ -24,6 +24,8 @@ The game logic layer follows an *Entity-Component-System* architecture, separati
 
 A custom OpenGL 3.3 pipeline handles all visual output, organized into discrete passes that can be profiled and optimized independently.
 
+![untitled-ezgif com-optimize](https://github.com/user-attachments/assets/2405d711-1708-48ff-aaae-bb56f18881f0)
+
 - The *scene renderer* orchestrates multi-pass drawing with depth sorting and shader batching, reducing GPU state changes that would otherwise cause frame drops.
 - Each entity type has a dedicated *renderer class* (archers, barracks, horses) that encapsulates mesh binding and material setup, making it straightforward to add new unit visuals.
 - Humanoid units feature *skeletal animation* combined with procedural cloth physics that responds to wind and leg movement; static meshes would look lifeless during marches.
@@ -446,12 +448,6 @@ The engine is transitioning from a single hardcoded nation to a scalable multi-f
 - Full *save/load* serialization preserves campaign state across sessions.
 - *Spatial audio* provides positional sound for combat and movement.
 - Multiple *map files* are playable with distinct layouts and objectives.
-
-**In Progress:**
-
-- A *guard command* for stationary defense stance is under development.
-- A *hold command* that prevents chasing is being finalized.
-- Additional unit types (cavalry, siege) are in prototype.
 
 **Planned:**
 
