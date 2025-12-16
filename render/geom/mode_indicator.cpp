@@ -271,6 +271,8 @@ auto ModeIndicator::create_patrol_mode_mesh()
   constexpr float foot_width = 0.16F;
   constexpr float step_offset = 0.22F;
   constexpr float toe_size = 0.05F;
+  constexpr float toe_spacing_multiplier = 1.8F;
+  constexpr float toe_position_ratio = 0.35F;
 
   QVector3D const n(0, 0, 1);
 
@@ -300,8 +302,8 @@ auto ModeIndicator::create_patrol_mode_mesh()
 
     // Add toe details (small circles at front)
     for (int toe = 0; toe < 3; ++toe) {
-      float const toe_x_offset = (toe - 1) * toe_size * 1.8F;
-      float const toe_y_offset = foot_length * 0.35F;
+      float const toe_x_offset = (toe - 1) * toe_size * toe_spacing_multiplier;
+      float const toe_y_offset = foot_length * toe_position_ratio;
       
       size_t const toe_center = verts.size();
       verts.push_back({{x_offset + toe_x_offset, y_offset + toe_y_offset, 0.0F},
