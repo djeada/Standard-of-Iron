@@ -460,7 +460,7 @@ void Renderer::enqueue_mode_indicator(
   bool const has_hold_mode = (hold_mode != nullptr) && hold_mode->active;
 
   auto *patrol_comp = entity->get_component<Engine::Core::PatrolComponent>();
-  bool const has_patrol = (patrol_comp != nullptr) && patrol_comp->is_patrolling;
+  bool const has_patrol = (patrol_comp != nullptr) && patrol_comp->patrolling;
 
   // Only render if unit has an active mode
   if (!has_attack && !has_guard_mode && !has_hold_mode && !has_patrol) {
