@@ -27,7 +27,7 @@ const float SNOW_DRIFT_SCALE_X = 0.3;
 const float SNOW_DRIFT_AMPLITUDE_X = 0.15;
 const float SNOW_DRIFT_AMPLITUDE_Z = 0.1;
 
-const float SNOW_POINT_SIZE = 8.0;
+const float SNOW_POINT_SIZE = 16.0;
 
 void main() {
   float speed = a_offset.z;
