@@ -25,6 +25,14 @@ constexpr float kDustColorG = 0.55F;
 constexpr float kDustColorB = 0.45F;
 constexpr float kDustYOffset = 0.05F;
 
+constexpr float kDefaultFlameRadius = 3.0F;
+constexpr float kDefaultFlameIntensity = 0.8F;
+constexpr float kFlameColorR = 1.0F;
+constexpr float kFlameColorG = 0.4F;
+constexpr float kFlameColorB = 0.1F;
+constexpr float kFlameYOffset = 0.5F;
+constexpr float kBuildingHealthThreshold = 0.5F;
+
 void clear_gl_errors() {
   while (glGetError() != GL_NO_ERROR) {
   }
@@ -116,6 +124,7 @@ void CombatDustPipeline::cache_uniforms() {
   m_uniforms.radius = m_dust_shader->uniform_handle("u_radius");
   m_uniforms.intensity = m_dust_shader->uniform_handle("u_intensity");
   m_uniforms.dust_color = m_dust_shader->uniform_handle("u_dust_color");
+  m_uniforms.effect_type = m_dust_shader->uniform_handle("u_effect_type");
 }
 
 auto CombatDustPipeline::is_initialized() const -> bool {
@@ -279,6 +288,53 @@ void CombatDustPipeline::collect_combat_zones(Engine::Core::World *world,
     data.intensity = kDefaultDustIntensity;
     data.color = QVector3D(kDustColorR, kDustColorG, kDustColorB);
     data.time = animation_time;
+    data.effect_type = EffectType::Dust;
+
+    m_dust_data.push_back(data);
+  }
+}
+
+void CombatDustPipeline::collect_building_flames(Engine::Core::World *world,
+                                                 float animation_time) {
+  if (world == nullptr) {
+    return;
+  }
+
+  auto buildings = world->get_entities_with<Engine::Core::BuildingComponent>();
+
+  for (auto *building : buildings) {
+    if (building->has_component<Engine::Core::PendingRemovalComponent>()) {
+      continue;
+    }
+
+    auto *unit_comp = building->get_component<Engine::Core::UnitComponent>();
+    auto *transform = building->get_component<Engine::Core::TransformComponent>();
+
+    if (transform == nullptr || unit_comp == nullptr) {
+      continue;
+    }
+
+    if (unit_comp->health <= 0) {
+      continue;
+    }
+
+    float health_ratio = static_cast<float>(unit_comp->health) / 
+                         static_cast<float>(unit_comp->max_health);
+    
+    if (health_ratio > kBuildingHealthThreshold) {
+      continue;
+    }
+
+    float flame_intensity = kDefaultFlameIntensity * (1.0F - health_ratio);
+    
+    CombatDustData data;
+    data.position =
+        QVector3D(transform->position.x, kFlameYOffset, transform->position.z);
+    data.radius = kDefaultFlameRadius;
+    data.intensity = flame_intensity;
+    data.color = QVector3D(kFlameColorR, kFlameColorG, kFlameColorB);
+    data.time = animation_time;
+    data.effect_type = EffectType::Flame;
 
     m_dust_data.push_back(data);
   }
@@ -293,6 +349,20 @@ void CombatDustPipeline::add_dust_zone(const QVector3D &position, float radius,
   data.intensity = intensity;
   data.color = color;
   data.time = time;
+  data.effect_type = EffectType::Dust;
+  m_dust_data.push_back(data);
+}
+
+void CombatDustPipeline::add_flame_zone(const QVector3D &position, float radius,
+                                        float intensity, const QVector3D &color,
+                                        float time) {
+  CombatDustData data;
+  data.position = position;
+  data.radius = radius;
+  data.intensity = intensity;
+  data.color = color;
+  data.time = time;
+  data.effect_type = EffectType::Flame;
   m_dust_data.push_back(data);
 }
 
@@ -357,6 +427,8 @@ void CombatDustPipeline::render_dust(const CombatDustData &data,
   m_dust_shader->set_uniform(m_uniforms.radius, data.radius);
   m_dust_shader->set_uniform(m_uniforms.intensity, data.intensity);
   m_dust_shader->set_uniform(m_uniforms.dust_color, data.color);
+  m_dust_shader->set_uniform(m_uniforms.effect_type, 
+                             static_cast<int>(data.effect_type));
 
   glDrawElements(GL_TRIANGLES, m_index_count, GL_UNSIGNED_INT, nullptr);
 }
