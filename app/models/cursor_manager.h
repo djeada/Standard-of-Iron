@@ -13,34 +13,34 @@ class CursorManager : public QObject {
 public:
   explicit CursorManager(QObject *parent = nullptr);
 
-  [[nodiscard]] auto mode() const -> CursorMode { return m_cursorMode; }
-  void setMode(CursorMode mode);
-  void setMode(const QString &mode);
-  [[nodiscard]] auto modeString() const -> QString {
-    return CursorModeUtils::toString(m_cursorMode);
+  [[nodiscard]] auto mode() const -> CursorMode { return m_cursor_mode; }
+  void set_mode(CursorMode mode);
+  void set_mode(const QString &mode);
+  [[nodiscard]] auto mode_string() const -> QString {
+    return CursorModeUtils::toString(m_cursor_mode);
   }
 
-  void updateCursorShape(QQuickWindow *window);
+  void update_cursor_shape(QQuickWindow *window);
 
   static auto global_cursor_x(QQuickWindow *window) -> qreal;
   static auto global_cursor_y(QQuickWindow *window) -> qreal;
 
-  [[nodiscard]] auto hasPatrolFirstWaypoint() const -> bool {
-    return m_hasFirstWaypoint;
+  [[nodiscard]] auto has_patrol_first_waypoint() const -> bool {
+    return m_has_first_waypoint;
   }
-  void setPatrolFirstWaypoint(const QVector3D &waypoint);
-  void clearPatrolFirstWaypoint();
-  [[nodiscard]] auto getPatrolFirstWaypoint() const -> QVector3D {
-    return m_firstWaypoint;
+  void set_patrol_first_waypoint(const QVector3D &waypoint);
+  void clear_patrol_first_waypoint();
+  [[nodiscard]] auto get_patrol_first_waypoint() const -> QVector3D {
+    return m_first_waypoint;
   }
 
 signals:
-  void modeChanged();
-  void globalCursorChanged();
+  void mode_changed();
+  void global_cursor_changed();
 
 private:
-  CursorMode m_cursorMode{CursorMode::Normal};
-  Qt::CursorShape m_currentCursor = Qt::ArrowCursor;
-  bool m_hasFirstWaypoint = false;
-  QVector3D m_firstWaypoint;
+  CursorMode m_cursor_mode{CursorMode::Normal};
+  Qt::CursorShape m_current_cursor = Qt::ArrowCursor;
+  bool m_has_first_waypoint = false;
+  QVector3D m_first_waypoint;
 };
