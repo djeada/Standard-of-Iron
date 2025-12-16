@@ -11,6 +11,7 @@
 #include "camera_controller.h"
 #include "game/audio/AudioEventHandler.h"
 #include "game/core/event_manager.h"
+#include "game/map/mission_definition.h"
 #include "game/systems/game_state_serializer.h"
 #include "input_command_handler.h"
 #include "minimap_manager.h"
@@ -27,6 +28,7 @@
 #include <algorithm>
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <vector>
 
 namespace Engine::Core {
@@ -369,6 +371,8 @@ private:
   QVariantList m_available_campaigns;
   bool m_maps_loading = false;
   QString m_current_campaign_id;
+  QString m_current_mission_id;
+  std::optional<Game::Mission::MissionDefinition> m_current_mission_definition;
   bool m_loading_overlay_active = false;
   bool m_loading_overlay_wait_for_first_frame = false;
   int m_loading_overlay_frames_remaining = 0;
