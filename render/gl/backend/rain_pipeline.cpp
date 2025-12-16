@@ -20,6 +20,10 @@ constexpr float kRainColorR = 0.7F;
 constexpr float kRainColorG = 0.75F;
 constexpr float kRainColorB = 0.85F;
 
+constexpr float kSnowColorR = 0.95F;
+constexpr float kSnowColorG = 0.95F;
+constexpr float kSnowColorB = 1.0F;
+
 void clear_gl_errors() {
   while (glGetError() != GL_NO_ERROR) {
   }
@@ -272,7 +276,7 @@ void RainPipeline::render(const Camera &cam, const RainBatchParams &params) {
   QVector3D particle_color;
   if (params.weather_type == Game::Map::WeatherType::Snow) {
     // Brighter white for snow
-    particle_color = QVector3D(0.95F, 0.95F, 1.0F);
+    particle_color = QVector3D(kSnowColorR, kSnowColorG, kSnowColorB);
   } else {
     // Bluish-gray for rain
     particle_color = QVector3D(kRainColorR, kRainColorG, kRainColorB);
