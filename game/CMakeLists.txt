@@ -72,6 +72,7 @@ add_library(game_systems STATIC
     systems/formation_system.cpp
     systems/troop_profile_service.cpp
     systems/rain_manager.cpp
+    systems/stamina_system.cpp
     map/map_loader.cpp
     map/level_loader.cpp
     map/mission_loader.cpp

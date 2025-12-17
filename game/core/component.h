@@ -370,4 +370,32 @@ public:
   float formation_center_z{0.0F};
 };
 
+class StaminaComponent : public Component {
+public:
+  StaminaComponent() = default;
+
+  float stamina{100.0F};
+  float max_stamina{100.0F};
+  float regen_rate{10.0F};
+  float depletion_rate{20.0F};
+  bool is_running{false};
+  bool run_requested{false};
+
+  static constexpr float kRunSpeedMultiplier = 1.5F;
+  static constexpr float kMinStaminaToStartRun = 10.0F;
+
+  [[nodiscard]] auto get_stamina_ratio() const -> float {
+    if (max_stamina <= 0.0F) {
+      return 0.0F;
+    }
+    return stamina / max_stamina;
+  }
+
+  [[nodiscard]] auto can_start_running() const -> bool {
+    return stamina >= kMinStaminaToStartRun;
+  }
+
+  [[nodiscard]] auto has_stamina() const -> bool { return stamina > 0.0F; }
+};
+
 } // namespace Engine::Core
