@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../core/system.h"
+#include "../core/world.h"
 
 namespace Engine::Core {
 class World;
