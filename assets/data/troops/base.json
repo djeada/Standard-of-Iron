@@ -311,6 +311,41 @@
         "individuals_per_unit": 1,
         "max_units_per_row": 1
       }
+    },
+    {
+      "id": "builder",
+      "display_name": "Builder",
+      "production": {
+        "cost": 60,
+        "build_time": 6.0,
+        "priority": 4,
+        "is_melee": true
+      },
+      "combat": {
+        "health": 720,
+        "max_health": 720,
+        "speed": 2.0,
+        "vision_range": 10.0,
+        "ranged_range": 1.5,
+        "ranged_damage": 2,
+        "ranged_cooldown": 2.0,
+        "melee_range": 1.5,
+        "melee_damage": 5,
+        "melee_cooldown": 1.0,
+        "can_ranged": false,
+        "can_melee": true
+      },
+      "visuals": {
+        "render_scale": 0.50,
+        "selection_ring_size": 1.0,
+        "selection_ring_y_offset": 0.0,
+        "selection_ring_ground_offset": 0.0,
+        "renderer_id": "troops/roman/builder"
+      },
+      "formation": {
+        "individuals_per_unit": 12,
+        "max_units_per_row": 4
+      }
     }
   ]
 }

@@ -573,6 +573,11 @@ RowLayout {
                 game.start_building_placement("defense_tower");
 
         }
+        onBuilderConstruction: function(itemType) {
+            if (typeof game !== 'undefined' && game.start_builder_construction)
+                game.start_builder_construction(itemType);
+
+        }
     }
 
 }
