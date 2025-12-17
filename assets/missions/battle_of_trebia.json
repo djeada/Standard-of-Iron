@@ -1,0 +1,157 @@
+{
+  "id": "battle_of_trebia",
+  "title": "Battle of Trebia",
+  "summary": "Lure the Roman army into the freezing river and strike with concealed forces in a devastating ambush",
+  "teaching_goal": "Ambush tactics and multi-phase engagements. Teaches players to coordinate attacks from multiple directions and use concealment.",
+  "narrative_intent": "Demonstrates Hannibal's mastery of deception and timing. Player must execute a planned ambush.",
+  "map_path": ":/assets/maps/map_battle_trebia.json",
+  "player_setup": {
+    "nation": "carthage",
+    "faction": "carthaginian",
+    "color": "blue",
+    "starting_units": [
+      {
+        "type": "spearman",
+        "count": 18,
+        "position": {"x": 60, "z": 80}
+      },
+      {
+        "type": "swordsman",
+        "count": 15,
+        "position": {"x": 62, "z": 78}
+      },
+      {
+        "type": "horse_swordsman",
+        "count": 10,
+        "position": {"x": 58, "z": 82}
+      },
+      {
+        "type": "archer",
+        "count": 12,
+        "position": {"x": 60, "z": 76}
+      }
+    ],
+    "hidden_units": [
+      {
+        "type": "swordsman",
+        "count": 15,
+        "position": {"x": 90, "z": 50},
+        "reveal_trigger": "enemy_crosses_river"
+      },
+      {
+        "type": "horse_swordsman",
+        "count": 8,
+        "position": {"x": 30, "z": 50},
+        "reveal_trigger": "enemy_crosses_river"
+      }
+    ],
+    "starting_buildings": [],
+    "starting_resources": {
+      "gold": 400,
+      "food": 300
+    }
+  },
+  "ai_setups": [
+    {
+      "id": "roman_main_army",
+      "nation": "roman_republic",
+      "faction": "roman",
+      "color": "red",
+      "difficulty": "hard",
+      "personality": {
+        "aggression": 0.8,
+        "defense": 0.4,
+        "harassment": 0.3
+      },
+      "starting_units": [
+        {
+          "type": "spearman",
+          "count": 25,
+          "position": {"x": 60, "z": 30}
+        },
+        {
+          "type": "swordsman",
+          "count": 20,
+          "position": {"x": 62, "z": 28}
+        },
+        {
+          "type": "archer",
+          "count": 10,
+          "position": {"x": 64, "z": 32}
+        },
+        {
+          "type": "horse_swordsman",
+          "count": 8,
+          "position": {"x": 58, "z": 32}
+        }
+      ],
+      "starting_buildings": [
+        {
+          "type": "barracks",
+          "position": {"x": 60, "z": 20},
+          "max_population": 200
+        }
+      ],
+      "ai_behavior_phases": [
+        {
+          "phase": "initial",
+          "behavior": "advance_to_river",
+          "duration": 120.0
+        },
+        {
+          "phase": "crossing",
+          "behavior": "cross_river_aggressive",
+          "trigger": "reach_river"
+        }
+      ]
+    }
+  ],
+  "victory_conditions": [
+    {
+      "type": "destroy_all_enemies",
+      "description": "Annihilate the Roman army"
+    }
+  ],
+  "defeat_conditions": [
+    {
+      "type": "lose_all_units",
+      "description": "Do not lose all your units"
+    }
+  ],
+  "optional_objectives": [
+    {
+      "type": "ambush_success",
+      "description": "Trigger ambush while Romans are crossing the river"
+    }
+  ],
+  "events": [
+    {
+      "trigger": {
+        "type": "timer",
+        "time": 45.0
+      },
+      "actions": [
+        {
+          "type": "show_message",
+          "text": "The Romans are taking the bait! Prepare your ambush forces."
+        }
+      ]
+    },
+    {
+      "trigger": {
+        "type": "custom",
+        "condition": "enemy_crosses_river"
+      },
+      "actions": [
+        {
+          "type": "show_message",
+          "text": "Now! Strike from both flanks!"
+        },
+        {
+          "type": "reveal_units",
+          "unit_groups": ["hidden_flanking_forces"]
+        }
+      ]
+    }
+  ]
+}

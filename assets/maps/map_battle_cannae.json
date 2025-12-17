@@ -1,0 +1,81 @@
+{
+  "name": "Battle of Cannae",
+  "description": "The legendary battlefield where the greatest double envelopment in history took place",
+  "coordSystem": "grid",
+  "maxTroopsPerPlayer": 3000,
+  "grid": {
+    "width": 180,
+    "height": 120,
+    "tileSize": 1.0
+  },
+  "biome": {
+    "groundType": "grass_dry",
+    "seed": 10005,
+    "patchDensity": 2.5,
+    "patchJitter": 0.8,
+    "plantDensity": 0.35,
+    "groundIrregularityEnabled": true,
+    "irregularityScale": 0.11,
+    "irregularityAmplitude": 0.05
+  },
+  "camera": {
+    "center": [90, 0, 60],
+    "distance": 40.0,
+    "tiltDeg": 45.0,
+    "yaw": 225.0,
+    "fovY": 45.0,
+    "near": 1.0,
+    "far": 500.0
+  },
+  "spawns": [],
+  "firecamps": [
+    {
+      "x": 55,
+      "z": 55,
+      "intensity": 1.0,
+      "radius": 3.0
+    },
+    {
+      "x": 55,
+      "z": 65,
+      "intensity": 1.0,
+      "radius": 3.0
+    },
+    {
+      "x": 135,
+      "z": 55,
+      "intensity": 1.0,
+      "radius": 3.0
+    },
+    {
+      "x": 135,
+      "z": 65,
+      "intensity": 1.0,
+      "radius": 3.0
+    }
+  ],
+  "terrain": [
+    {
+      "type": "river",
+      "path": [
+        {"x": 90, "z": 15},
+        {"x": 90, "z": 35}
+      ],
+      "width": 8.0,
+      "depth": 1.5,
+      "description": "Aufidus River in background"
+    },
+    {
+      "type": "plain",
+      "x": 90,
+      "z": 60,
+      "width": 140,
+      "depth": 80,
+      "description": "Open plain - perfect for the double envelopment"
+    }
+  ],
+  "victory": {
+    "type": "encirclement",
+    "description": "Execute the double envelopment"
+  }
+}
