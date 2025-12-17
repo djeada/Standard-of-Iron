@@ -11,6 +11,7 @@
 #include "camera_controller.h"
 #include "game/audio/AudioEventHandler.h"
 #include "game/core/event_manager.h"
+#include "game/map/mission_definition.h"
 #include "game/systems/game_state_serializer.h"
 #include "input_command_handler.h"
 #include "minimap_manager.h"
@@ -27,6 +28,7 @@
 #include <algorithm>
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <vector>
 
 namespace Engine::Core {
@@ -166,9 +168,11 @@ public:
   Q_INVOKABLE void on_stop_command();
   Q_INVOKABLE void on_hold_command();
   Q_INVOKABLE void on_guard_command();
+  Q_INVOKABLE void on_formation_command();
   Q_INVOKABLE void on_guard_click(qreal sx, qreal sy);
   Q_INVOKABLE [[nodiscard]] bool any_selected_in_hold_mode() const;
   Q_INVOKABLE [[nodiscard]] bool any_selected_in_guard_mode() const;
+  Q_INVOKABLE [[nodiscard]] bool any_selected_in_formation_mode() const;
   Q_INVOKABLE void on_patrol_click(qreal sx, qreal sy);
 
   Q_INVOKABLE void camera_move(float dx, float dz);
@@ -369,6 +373,8 @@ private:
   QVariantList m_available_campaigns;
   bool m_maps_loading = false;
   QString m_current_campaign_id;
+  QString m_current_mission_id;
+  std::optional<Game::Mission::MissionDefinition> m_current_mission_definition;
   bool m_loading_overlay_active = false;
   bool m_loading_overlay_wait_for_first_frame = false;
   int m_loading_overlay_frames_remaining = 0;
@@ -400,6 +406,7 @@ signals:
   void save_slots_changed();
   void hold_mode_changed(bool active);
   void guard_mode_changed(bool active);
+  void formation_mode_changed(bool active);
   void spectator_mode_changed();
   void is_loading_changed();
   void loading_progress_changed(float progress);
