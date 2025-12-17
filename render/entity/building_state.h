@@ -2,11 +2,7 @@
 
 namespace Render::GL {
 
-enum class BuildingState {
-  Normal,    // health >= 70%
-  Damaged,   // 30% <= health < 70%
-  Destroyed  // health < 30%
-};
+enum class BuildingState { Normal, Damaged, Destroyed };
 
 inline auto get_building_state(float health_ratio) -> BuildingState {
   if (health_ratio >= 0.70F) {
