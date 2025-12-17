@@ -6,6 +6,7 @@
 #include "defense_tower_renderer.h"
 #include "nations/carthage/archer_renderer.h"
 #include "nations/carthage/ballista_renderer.h"
+#include "nations/carthage/builder_renderer.h"
 #include "nations/carthage/catapult_renderer.h"
 #include "nations/carthage/healer_renderer.h"
 #include "nations/carthage/horse_archer_renderer.h"
@@ -15,6 +16,7 @@
 #include "nations/carthage/swordsman_renderer.h"
 #include "nations/roman/archer_renderer.h"
 #include "nations/roman/ballista_renderer.h"
+#include "nations/roman/builder_renderer.h"
 #include "nations/roman/catapult_renderer.h"
 #include "nations/roman/healer_renderer.h"
 #include "nations/roman/horse_archer_renderer.h"
@@ -61,6 +63,9 @@ void registerBuiltInEntityRenderers(EntityRendererRegistry &registry) {
 
   Roman::register_healer_renderer(registry);
   Carthage::register_healer_renderer(registry);
+
+  Roman::register_builder_renderer(registry);
+  Carthage::register_builder_renderer(registry);
 
   register_catapult_renderer(registry);
 
