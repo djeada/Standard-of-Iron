@@ -306,7 +306,8 @@ void CombatDustPipeline::collect_building_flames(Engine::Core::World *world,
     }
 
     auto *unit_comp = building->get_component<Engine::Core::UnitComponent>();
-    auto *transform = building->get_component<Engine::Core::TransformComponent>();
+    auto *transform =
+        building->get_component<Engine::Core::TransformComponent>();
 
     if (transform == nullptr || unit_comp == nullptr) {
       continue;
@@ -316,15 +317,15 @@ void CombatDustPipeline::collect_building_flames(Engine::Core::World *world,
       continue;
     }
 
-    float health_ratio = static_cast<float>(unit_comp->health) / 
+    float health_ratio = static_cast<float>(unit_comp->health) /
                          static_cast<float>(unit_comp->max_health);
-    
+
     if (health_ratio > kBuildingHealthThreshold) {
       continue;
     }
 
     float flame_intensity = kDefaultFlameIntensity * (1.0F - health_ratio);
-    
+
     CombatDustData data;
     data.position =
         QVector3D(transform->position.x, kFlameYOffset, transform->position.z);
@@ -433,7 +434,7 @@ void CombatDustPipeline::render_dust(const CombatDustData &data,
   m_dust_shader->set_uniform(m_uniforms.radius, data.radius);
   m_dust_shader->set_uniform(m_uniforms.intensity, data.intensity);
   m_dust_shader->set_uniform(m_uniforms.dust_color, data.color);
-  m_dust_shader->set_uniform(m_uniforms.effect_type, 
+  m_dust_shader->set_uniform(m_uniforms.effect_type,
                              static_cast<int>(data.effect_type));
 
   glDrawElements(GL_TRIANGLES, m_index_count, GL_UNSIGNED_INT, nullptr);
@@ -480,7 +481,7 @@ void CombatDustPipeline::render_single_dust(const QVector3D &position,
   m_dust_shader->set_uniform(m_uniforms.radius, radius);
   m_dust_shader->set_uniform(m_uniforms.intensity, intensity);
   m_dust_shader->set_uniform(m_uniforms.dust_color, color);
-  m_dust_shader->set_uniform(m_uniforms.effect_type, 
+  m_dust_shader->set_uniform(m_uniforms.effect_type,
                              static_cast<int>(EffectType::Dust));
 
   glDrawElements(GL_TRIANGLES, m_index_count, GL_UNSIGNED_INT, nullptr);
@@ -534,7 +535,7 @@ void CombatDustPipeline::render_single_flame(const QVector3D &position,
   m_dust_shader->set_uniform(m_uniforms.radius, radius);
   m_dust_shader->set_uniform(m_uniforms.intensity, intensity);
   m_dust_shader->set_uniform(m_uniforms.dust_color, color);
-  m_dust_shader->set_uniform(m_uniforms.effect_type, 
+  m_dust_shader->set_uniform(m_uniforms.effect_type,
                              static_cast<int>(EffectType::Flame));
 
   glDrawElements(GL_TRIANGLES, m_index_count, GL_UNSIGNED_INT, nullptr);
