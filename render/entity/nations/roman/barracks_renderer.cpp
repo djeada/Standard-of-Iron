@@ -316,59 +316,53 @@ void draw_health_bar(const DrawContext &p, ISubmitter &out, Mesh *unit,
   
   // Outer glow effect - pulsing red when under attack
   if (under_attack) {
-    float pulse = 0.7F + 0.3F * sinf(p.animation_time * 4.0F);
-    QVector3D glow_color(0.9F, 0.2F, 0.2F);
+    float pulse = HEALTHBAR_PULSE_MIN + HEALTHBAR_PULSE_AMPLITUDE * 
+                  sinf(p.animation_time * HEALTHBAR_PULSE_SPEED);
     draw_box(out, unit, white, p.model, QVector3D(0.0F, bar_y, 0.0F),
              QVector3D(bar_width * 0.5F + border_thickness * 3.0F,
                        bar_height * 0.5F + border_thickness * 3.0F, 0.095F),
-             glow_color * pulse * 0.6F);
+             HealthBarColors::GLOW_ATTACK * pulse * 0.6F);
   }
   
   // Metallic border frame - silver/steel color
-  QVector3D const border_color(0.45F, 0.45F, 0.50F);
   draw_box(out, unit, white, p.model, QVector3D(0.0F, bar_y, 0.0F),
            QVector3D(bar_width * 0.5F + border_thickness,
                      bar_height * 0.5F + border_thickness, 0.09F),
-           border_color);
+           HealthBarColors::BORDER);
   
   // Inner border (darker for depth)
-  QVector3D const inner_border(0.25F, 0.25F, 0.28F);
   draw_box(out, unit, white, p.model, QVector3D(0.0F, bar_y, 0.0F),
            QVector3D(bar_width * 0.5F + border_thickness * 0.5F,
                      bar_height * 0.5F + border_thickness * 0.5F, 0.088F),
-           inner_border);
+           HealthBarColors::INNER_BORDER);
   
   // Background - dark with slight gradient
-  QVector3D const bg_dark(0.08F, 0.08F, 0.10F);
   draw_box(out, unit, white, p.model, QVector3D(0.0F, bar_y + 0.003F, 0.0F),
-           QVector3D(bar_width * 0.5F, bar_height * 0.5F, 0.085F), bg_dark);
+           QVector3D(bar_width * 0.5F, bar_height * 0.5F, 0.085F), 
+           HealthBarColors::BACKGROUND);
 
   // Determine state and color with vibrant, saturated colors
   QVector3D fg_color;
   QVector3D fg_dark; // Darker shade for gradient
   
-  if (ratio >= 0.70F) {
-    // Normal state: Bright emerald green
-    fg_color = QVector3D(0.10F, 1.0F, 0.30F);
-    fg_dark = QVector3D(0.05F, 0.60F, 0.15F);
-  } else if (ratio >= 0.30F) {
-    // Damaged state: Vibrant orange/amber
-    float t = (ratio - 0.30F) / 0.40F;
-    QVector3D damaged_color(1.0F, 0.75F, 0.10F);
-    QVector3D damaged_dark(0.70F, 0.45F, 0.05F);
-    QVector3D normal_color(0.10F, 1.0F, 0.30F);
-    QVector3D normal_dark(0.05F, 0.60F, 0.15F);
-    fg_color = normal_color * t + damaged_color * (1.0F - t);
-    fg_dark = normal_dark * t + damaged_dark * (1.0F - t);
+  if (ratio >= HEALTH_THRESHOLD_NORMAL) {
+    fg_color = HealthBarColors::NORMAL_BRIGHT;
+    fg_dark = HealthBarColors::NORMAL_DARK;
+  } else if (ratio >= HEALTH_THRESHOLD_DAMAGED) {
+    // Damaged state: interpolate between normal and damaged
+    float t = (ratio - HEALTH_THRESHOLD_DAMAGED) / 
+              (HEALTH_THRESHOLD_NORMAL - HEALTH_THRESHOLD_DAMAGED);
+    fg_color = HealthBarColors::NORMAL_BRIGHT * t + 
+               HealthBarColors::DAMAGED_BRIGHT * (1.0F - t);
+    fg_dark = HealthBarColors::NORMAL_DARK * t + 
+              HealthBarColors::DAMAGED_DARK * (1.0F - t);
   } else {
-    // Destroyed state: Intense red
-    float t = ratio / 0.30F;
-    QVector3D critical_color(1.0F, 0.15F, 0.15F);
-    QVector3D critical_dark(0.70F, 0.08F, 0.08F);
-    QVector3D damaged_color(1.0F, 0.75F, 0.10F);
-    QVector3D damaged_dark(0.70F, 0.45F, 0.05F);
-    fg_color = damaged_color * t + critical_color * (1.0F - t);
-    fg_dark = damaged_dark * t + critical_dark * (1.0F - t);
+    // Destroyed state: interpolate between damaged and critical
+    float t = ratio / HEALTH_THRESHOLD_DAMAGED;
+    fg_color = HealthBarColors::DAMAGED_BRIGHT * t + 
+               HealthBarColors::CRITICAL_BRIGHT * (1.0F - t);
+    fg_dark = HealthBarColors::DAMAGED_DARK * t + 
+              HealthBarColors::CRITICAL_DARK * (1.0F - t);
   }
   
   // Bottom layer (darker) for gradient effect
@@ -392,34 +386,32 @@ void draw_health_bar(const DrawContext &p, ISubmitter &out, Mesh *unit,
            clampVec01(highlight));
   
   // Add subtle shine line at very top
-  QVector3D const shine = QVector3D(1.0F, 1.0F, 1.0F) * 0.8F;
   draw_box(out, unit, white, p.model,
            QVector3D(-(bar_width * (1.0F - ratio)) * 0.5F,
                      bar_y + bar_height * 0.48F, 0.0F),
            QVector3D(bar_width * ratio * 0.5F, bar_height * 0.08F, 0.073F),
-           shine);
+           HealthBarColors::SHINE * 0.8F);
   
   // Enhanced segment markers - more visible
-  QVector3D const segment_color(0.35F, 0.35F, 0.40F);
-  QVector3D const segment_highlight(0.55F, 0.55F, 0.60F);
-  
   // 70% marker with highlight
-  float marker_70_x = bar_width * 0.5F * (0.70F - 0.5F);
+  float marker_70_x = bar_width * 0.5F * (HEALTH_THRESHOLD_NORMAL - 0.5F);
   draw_box(out, unit, white, p.model,
            QVector3D(marker_70_x, bar_y, 0.0F),
-           QVector3D(0.015F, bar_height * 0.55F, 0.09F), segment_color);
+           QVector3D(0.015F, bar_height * 0.55F, 0.09F), HealthBarColors::SEGMENT);
   draw_box(out, unit, white, p.model,
            QVector3D(marker_70_x - 0.003F, bar_y + bar_height * 0.40F, 0.0F),
-           QVector3D(0.008F, bar_height * 0.15F, 0.091F), segment_highlight);
+           QVector3D(0.008F, bar_height * 0.15F, 0.091F), 
+           HealthBarColors::SEGMENT_HIGHLIGHT);
   
   // 30% marker with highlight
-  float marker_30_x = bar_width * 0.5F * (0.30F - 0.5F);
+  float marker_30_x = bar_width * 0.5F * (HEALTH_THRESHOLD_DAMAGED - 0.5F);
   draw_box(out, unit, white, p.model,
            QVector3D(marker_30_x, bar_y, 0.0F),
-           QVector3D(0.015F, bar_height * 0.55F, 0.09F), segment_color);
+           QVector3D(0.015F, bar_height * 0.55F, 0.09F), HealthBarColors::SEGMENT);
   draw_box(out, unit, white, p.model,
            QVector3D(marker_30_x - 0.003F, bar_y + bar_height * 0.40F, 0.0F),
-           QVector3D(0.008F, bar_height * 0.15F, 0.091F), segment_highlight);
+           QVector3D(0.008F, bar_height * 0.15F, 0.091F), 
+           HealthBarColors::SEGMENT_HIGHLIGHT);
 }
 
 void draw_selection(const DrawContext &p, ISubmitter &out) {
