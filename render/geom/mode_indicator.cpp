@@ -30,7 +30,7 @@ auto ModeIndicator::create_attack_mode_mesh()
   constexpr float cross_guard_width = 0.25F;
   constexpr float cross_guard_height = 0.06F;
   constexpr float blade_tip_width = 0.03F;
-  constexpr float handle_offset = 0.08F;
+  constexpr float handle_offset = -0.18F;
   constexpr float guard_position_ratio = 0.15F;
   constexpr float handle_width_ratio = 0.3F;
 
@@ -138,92 +138,92 @@ auto ModeIndicator::create_guard_mode_mesh()
   std::vector<Vertex> verts;
   std::vector<unsigned int> idx;
 
-  constexpr float shield_width = 0.7F;
-  constexpr float shield_height = 0.9F;
-  constexpr float top_radius = 0.32F;
-  constexpr float boss_radius = 0.13F;
-  constexpr float top_arc_ratio = 0.2F;
-  constexpr float mid_height_ratio = 0.15F;
-  constexpr float bottom_height_ratio = 0.5F;
-  constexpr float boss_center_ratio = 0.08F;
-  constexpr float boss_texture_u = 0.6F;
-  constexpr float boss_texture_v = 0.7F;
-
   QVector3D const n(0, 0, 1);
 
-  float const half_width = shield_width * 0.5F;
-  float const top_arc_center_y = shield_height * top_arc_ratio;
-  float const mid_y = -shield_height * mid_height_ratio;
-  float const bottom_y = -shield_height * bottom_height_ratio;
-  float const boss_center_y = shield_height * boss_center_ratio;
+  constexpr float shield_width = 0.45F;
+  constexpr float shield_height = 0.55F;
+  constexpr float inner_scale = 0.78F;
+  constexpr float boss_radius = 0.12F;
+  constexpr float boss_height = 0.01F;
 
-  size_t const center_idx = verts.size();
-  verts.push_back({{0.0F, 0.0F, 0.0F}, {n.x(), n.y(), n.z()}, {0.5F, 0.5F}});
+  auto add_vert = [&](float x, float y, float u, float v, float z = 0.0F) {
+    verts.push_back({{x, y, z}, {n.x(), n.y(), n.z()}, {u, v}});
+    return static_cast<unsigned int>(verts.size() - 1);
+  };
 
-  constexpr int top_arc_segments = 16;
-  for (int i = 0; i <= top_arc_segments; ++i) {
-    float const t = i / float(top_arc_segments);
-    float const angle = k_pi * t;
-    float const x = top_radius * std::cos(angle);
-    float const y = top_arc_center_y + top_radius * std::sin(angle);
-    verts.push_back({{x, y, 0.0F}, {n.x(), n.y(), n.z()}, {t, 1.0F}});
+  auto uv_for = [&](float x, float y) {
+    float u = (x / shield_width) * 0.5F + 0.5F;
+    float v = (y / shield_height) * 0.5F + 0.5F;
+    return QVector2D(u, v);
+  };
+
+  const std::vector<QVector2D> outline = {
+      {-shield_width * 0.55F, shield_height * 0.55F},
+      {-shield_width * 0.20F, shield_height * 0.57F},
+      {shield_width * 0.20F, shield_height * 0.57F},
+      {shield_width * 0.55F, shield_height * 0.55F},
+      {shield_width * 0.60F, shield_height * 0.20F},
+      {shield_width * 0.65F, -shield_height * 0.10F},
+      {shield_width * 0.45F, -shield_height * 0.45F},
+      {shield_width * 0.20F, -shield_height * 0.75F},
+      {0.0F, -shield_height * 1.0F},
+      {-shield_width * 0.20F, -shield_height * 0.75F},
+      {-shield_width * 0.45F, -shield_height * 0.45F},
+      {-shield_width * 0.65F, -shield_height * 0.10F},
+      {-shield_width * 0.60F, shield_height * 0.20F},
+  };
+
+  std::vector<unsigned int> outer_idx;
+  std::vector<unsigned int> inner_idx;
+  outer_idx.reserve(outline.size());
+  inner_idx.reserve(outline.size());
+
+  for (const auto &p : outline) {
+    auto uv = uv_for(p.x(), p.y());
+    outer_idx.push_back(add_vert(p.x(), p.y(), uv.x(), uv.y()));
+
+    QVector2D inner_p = p * inner_scale;
+    auto inner_uv = uv_for(inner_p.x(), inner_p.y());
+    inner_idx.push_back(
+        add_vert(inner_p.x(), inner_p.y(), inner_uv.x(), inner_uv.y()));
   }
 
-  size_t const left_mid_idx = verts.size();
-  verts.push_back(
-      {{-half_width, mid_y, 0.0F}, {n.x(), n.y(), n.z()}, {0.0F, 0.35F}});
+  for (size_t i = 0; i < outer_idx.size(); ++i) {
+    size_t next = (i + 1) % outer_idx.size();
+    idx.push_back(outer_idx[i]);
+    idx.push_back(outer_idx[next]);
+    idx.push_back(inner_idx[i]);
 
-  size_t const right_mid_idx = verts.size();
-  verts.push_back(
-      {{half_width, mid_y, 0.0F}, {n.x(), n.y(), n.z()}, {1.0F, 0.35F}});
-
-  size_t const bottom_idx = verts.size();
-  verts.push_back(
-      {{0.0F, bottom_y, 0.0F}, {n.x(), n.y(), n.z()}, {0.5F, 0.0F}});
-
-  for (int i = 0; i < top_arc_segments; ++i) {
-    idx.push_back(center_idx);
-    idx.push_back(center_idx + 1 + i);
-    idx.push_back(center_idx + 1 + i + 1);
+    idx.push_back(inner_idx[i]);
+    idx.push_back(outer_idx[next]);
+    idx.push_back(inner_idx[next]);
   }
 
-  size_t const leftmost_idx = center_idx + 1;
-  size_t const rightmost_idx = center_idx + 1 + top_arc_segments;
+  unsigned int face_center =
+      add_vert(0.0F, -shield_height * 0.05F, 0.5F, 0.45F);
+  for (size_t i = 0; i < inner_idx.size(); ++i) {
+    size_t next = (i + 1) % inner_idx.size();
+    idx.push_back(face_center);
+    idx.push_back(inner_idx[i]);
+    idx.push_back(inner_idx[next]);
+  }
 
-  idx.push_back(center_idx);
-  idx.push_back(leftmost_idx);
-  idx.push_back(left_mid_idx);
-
-  idx.push_back(center_idx);
-  idx.push_back(left_mid_idx);
-  idx.push_back(bottom_idx);
-
-  idx.push_back(center_idx);
-  idx.push_back(bottom_idx);
-  idx.push_back(right_mid_idx);
-
-  idx.push_back(center_idx);
-  idx.push_back(right_mid_idx);
-  idx.push_back(rightmost_idx);
-
-  constexpr int boss_segments = 20;
-  size_t const boss_center = verts.size();
-  verts.push_back(
-      {{0.0F, boss_center_y, 0.0F}, {n.x(), n.y(), n.z()}, {0.5F, 0.5F}});
-
+  unsigned int boss_center =
+      add_vert(0.0F, shield_height * 0.05F, 0.5F, 0.55F, boss_height);
+  constexpr int boss_segments = 14;
+  std::vector<unsigned int> boss_ring;
+  boss_ring.reserve(boss_segments + 1);
   for (int i = 0; i <= boss_segments; ++i) {
     float const angle = (i / float(boss_segments)) * 2.0F * k_pi;
     float const x = boss_radius * std::cos(angle);
-    float const y = boss_center_y + boss_radius * std::sin(angle);
-    verts.push_back({{x, y, 0.0F},
-                     {n.x(), n.y(), n.z()},
-                     {boss_texture_u, boss_texture_v}});
+    float const y = shield_height * 0.05F + boss_radius * std::sin(angle);
+    auto uv = uv_for(x, y);
+    boss_ring.push_back(add_vert(x, y, uv.x(), uv.y(), boss_height));
   }
-
   for (int i = 0; i < boss_segments; ++i) {
     idx.push_back(boss_center);
-    idx.push_back(boss_center + 1 + i);
-    idx.push_back(boss_center + 1 + i + 1);
+    idx.push_back(boss_ring[i]);
+    idx.push_back(boss_ring[i + 1]);
   }
 
   return std::make_unique<Mesh>(verts, idx);
@@ -235,164 +235,92 @@ auto ModeIndicator::create_hold_mode_mesh()
   std::vector<Vertex> verts;
   std::vector<unsigned int> idx;
 
-  constexpr float anchor_width = 0.6F;
-  constexpr float anchor_height = 0.8F;
-  constexpr float ring_outer_radius = 0.1F;
-  constexpr float ring_inner_radius = 0.06F;
-  constexpr float shank_width = 0.05F;
-  constexpr float fluke_width = 0.32F;
-  constexpr float fluke_height = 0.18F;
-  constexpr float stock_width = 0.22F;
+  constexpr float anchor_height = 0.9F;
+  constexpr float ring_outer = 0.08F;
+  constexpr float ring_inner = 0.05F;
+  constexpr float shank_width = 0.06F;
+  constexpr float cross_width = 0.45F;
+  constexpr float cross_height = 0.07F;
+  constexpr float fluke_span = 0.65F;
+  constexpr float fluke_drop = 0.35F;
 
   QVector3D const n(0, 0, 1);
+  auto add = [&](float x, float y, float u, float v) {
+    verts.push_back({{x, y, 0.0F}, {n.x(), n.y(), n.z()}, {u, v}});
+    return static_cast<unsigned int>(verts.size() - 1);
+  };
 
-  constexpr int ring_segments = 16;
-  float const ring_y = anchor_height * 0.65F;
-
+  constexpr int ring_segments = 14;
+  float const ring_y = anchor_height * 0.45F;
   for (int i = 0; i < ring_segments; ++i) {
-    float const angle1 = (i / float(ring_segments)) * 2.0F * k_pi;
-    float const angle2 = ((i + 1) / float(ring_segments)) * 2.0F * k_pi;
-
-    float const x1_outer = ring_outer_radius * std::cos(angle1);
-    float const y1_outer = ring_y + ring_outer_radius * std::sin(angle1);
-    float const x2_outer = ring_outer_radius * std::cos(angle2);
-    float const y2_outer = ring_y + ring_outer_radius * std::sin(angle2);
-
-    float const x1_inner = ring_inner_radius * std::cos(angle1);
-    float const y1_inner = ring_y + ring_inner_radius * std::sin(angle1);
-    float const x2_inner = ring_inner_radius * std::cos(angle2);
-    float const y2_inner = ring_y + ring_inner_radius * std::sin(angle2);
-
-    size_t const base = verts.size();
-    verts.push_back(
-        {{x1_outer, y1_outer, 0.0F}, {n.x(), n.y(), n.z()}, {0.0F, 1.0F}});
-    verts.push_back(
-        {{x2_outer, y2_outer, 0.0F}, {n.x(), n.y(), n.z()}, {1.0F, 1.0F}});
-    verts.push_back(
-        {{x2_inner, y2_inner, 0.0F}, {n.x(), n.y(), n.z()}, {1.0F, 0.0F}});
-    verts.push_back(
-        {{x1_inner, y1_inner, 0.0F}, {n.x(), n.y(), n.z()}, {0.0F, 0.0F}});
-
-    idx.push_back(base + 0);
-    idx.push_back(base + 1);
-    idx.push_back(base + 2);
-    idx.push_back(base + 2);
-    idx.push_back(base + 3);
-    idx.push_back(base + 0);
+    float a0 = (i / float(ring_segments)) * 2.0F * k_pi;
+    float a1 = ((i + 1) / float(ring_segments)) * 2.0F * k_pi;
+    float x0o = ring_outer * std::cos(a0);
+    float y0o = ring_y + ring_outer * std::sin(a0);
+    float x1o = ring_outer * std::cos(a1);
+    float y1o = ring_y + ring_outer * std::sin(a1);
+    float x0i = ring_inner * std::cos(a0);
+    float y0i = ring_y + ring_inner * std::sin(a0);
+    float x1i = ring_inner * std::cos(a1);
+    float y1i = ring_y + ring_inner * std::sin(a1);
+    unsigned int b = verts.size();
+    verts.push_back({{x0o, y0o, 0.0F}, {n.x(), n.y(), n.z()}, {0.0F, 1.0F}});
+    verts.push_back({{x1o, y1o, 0.0F}, {n.x(), n.y(), n.z()}, {1.0F, 1.0F}});
+    verts.push_back({{x1i, y1i, 0.0F}, {n.x(), n.y(), n.z()}, {1.0F, 0.0F}});
+    verts.push_back({{x0i, y0i, 0.0F}, {n.x(), n.y(), n.z()}, {0.0F, 0.0F}});
+    idx.insert(idx.end(), {b + 0, b + 1, b + 2, b + 2, b + 3, b + 0});
   }
 
   float const shank_half = shank_width * 0.5F;
-  size_t const shank_base = verts.size();
-  verts.push_back({{-shank_half, ring_y - ring_inner_radius, 0.0F},
-                   {n.x(), n.y(), n.z()},
-                   {0.0F, 1.0F}});
-  verts.push_back({{shank_half, ring_y - ring_inner_radius, 0.0F},
-                   {n.x(), n.y(), n.z()},
-                   {1.0F, 1.0F}});
-  verts.push_back({{shank_half, -anchor_height * 0.25F, 0.0F},
-                   {n.x(), n.y(), n.z()},
-                   {1.0F, 0.0F}});
-  verts.push_back({{-shank_half, -anchor_height * 0.25F, 0.0F},
-                   {n.x(), n.y(), n.z()},
-                   {0.0F, 0.0F}});
+  float const shank_top = ring_y - ring_inner;
+  float const shank_bottom = -anchor_height * 0.15F;
+  unsigned int shank_base = verts.size();
+  verts.push_back(
+      {{-shank_half, shank_top, 0.0F}, {n.x(), n.y(), n.z()}, {0.0F, 1.0F}});
+  verts.push_back(
+      {{shank_half, shank_top, 0.0F}, {n.x(), n.y(), n.z()}, {1.0F, 1.0F}});
+  verts.push_back(
+      {{shank_half, shank_bottom, 0.0F}, {n.x(), n.y(), n.z()}, {1.0F, 0.0F}});
+  verts.push_back(
+      {{-shank_half, shank_bottom, 0.0F}, {n.x(), n.y(), n.z()}, {0.0F, 0.0F}});
+  idx.insert(idx.end(), {shank_base + 0, shank_base + 1, shank_base + 2,
+                         shank_base + 2, shank_base + 3, shank_base + 0});
 
-  idx.push_back(shank_base + 0);
-  idx.push_back(shank_base + 1);
-  idx.push_back(shank_base + 2);
-  idx.push_back(shank_base + 2);
-  idx.push_back(shank_base + 3);
-  idx.push_back(shank_base + 0);
-
-  float const stock_y = -anchor_height * 0.25F;
-  float const stock_half = stock_width * 0.5F;
-  float const stock_height = shank_width;
-
-  size_t const stock_base = verts.size();
-  verts.push_back({{-stock_half, stock_y - stock_height * 0.5F, 0.0F},
+  float const cross_y = shank_bottom;
+  float const cross_half_w = cross_width * 0.5F;
+  float const cross_half_h = cross_height * 0.5F;
+  unsigned int cross_base = verts.size();
+  verts.push_back({{-cross_half_w, cross_y - cross_half_h, 0.0F},
                    {n.x(), n.y(), n.z()},
                    {0.0F, 0.5F}});
-  verts.push_back({{stock_half, stock_y - stock_height * 0.5F, 0.0F},
+  verts.push_back({{cross_half_w, cross_y - cross_half_h, 0.0F},
                    {n.x(), n.y(), n.z()},
                    {1.0F, 0.5F}});
-  verts.push_back({{stock_half, stock_y + stock_height * 0.5F, 0.0F},
+  verts.push_back({{cross_half_w, cross_y + cross_half_h, 0.0F},
                    {n.x(), n.y(), n.z()},
                    {1.0F, 0.5F}});
-  verts.push_back({{-stock_half, stock_y + stock_height * 0.5F, 0.0F},
+  verts.push_back({{-cross_half_w, cross_y + cross_half_h, 0.0F},
                    {n.x(), n.y(), n.z()},
                    {0.0F, 0.5F}});
+  idx.insert(idx.end(), {cross_base + 0, cross_base + 1, cross_base + 2,
+                         cross_base + 2, cross_base + 3, cross_base + 0});
 
-  idx.push_back(stock_base + 0);
-  idx.push_back(stock_base + 1);
-  idx.push_back(stock_base + 2);
-  idx.push_back(stock_base + 2);
-  idx.push_back(stock_base + 3);
-  idx.push_back(stock_base + 0);
+  float const fluke_y = cross_y - fluke_drop;
+  float const fluke_tip_y = -anchor_height * 0.55F;
+  auto add_tri = [&](QVector2D a, QVector2D b, QVector2D c) {
+    unsigned int ia = add(a.x(), a.y(), 0.0F, 0.0F);
+    unsigned int ib = add(b.x(), b.y(), 1.0F, 0.5F);
+    unsigned int ic = add(c.x(), c.y(), 0.0F, 1.0F);
+    idx.insert(idx.end(), {ia, ib, ic});
+  };
 
-  float const fluke_y_start = stock_y;
-  float const fluke_y_end = stock_y - fluke_height;
+  add_tri({-cross_half_w, cross_y}, {-fluke_span * 0.55F, fluke_y},
+          {-fluke_span, fluke_tip_y});
+  add_tri({cross_half_w, cross_y}, {fluke_span * 0.55F, fluke_y},
+          {fluke_span, fluke_tip_y});
 
-  constexpr int fluke_segments = 8;
-  for (int i = 0; i < fluke_segments; ++i) {
-    float const t1 = i / float(fluke_segments);
-    float const t2 = (i + 1) / float(fluke_segments);
-
-    float const x1_inner = -shank_half - (fluke_width - shank_half) * t1 * t1;
-    float const y1 = fluke_y_start - fluke_height * t1;
-    float const x2_inner = -shank_half - (fluke_width - shank_half) * t2 * t2;
-    float const y2 = fluke_y_start - fluke_height * t2;
-
-    float const fluke_thickness = shank_width * (1.0F + t1 * 0.5F);
-    float const x1_outer = x1_inner - fluke_thickness * 0.5F;
-    float const x2_outer = x2_inner - fluke_thickness * 0.5F;
-
-    size_t const base = verts.size();
-    verts.push_back(
-        {{x1_inner, y1, 0.0F}, {n.x(), n.y(), n.z()}, {0.0F, 1.0F}});
-    verts.push_back(
-        {{x2_inner, y2, 0.0F}, {n.x(), n.y(), n.z()}, {1.0F, 1.0F}});
-    verts.push_back(
-        {{x2_outer, y2, 0.0F}, {n.x(), n.y(), n.z()}, {1.0F, 0.0F}});
-    verts.push_back(
-        {{x1_outer, y1, 0.0F}, {n.x(), n.y(), n.z()}, {0.0F, 0.0F}});
-
-    idx.push_back(base + 0);
-    idx.push_back(base + 1);
-    idx.push_back(base + 2);
-    idx.push_back(base + 2);
-    idx.push_back(base + 3);
-    idx.push_back(base + 0);
-  }
-
-  for (int i = 0; i < fluke_segments; ++i) {
-    float const t1 = i / float(fluke_segments);
-    float const t2 = (i + 1) / float(fluke_segments);
-
-    float const x1_inner = shank_half + (fluke_width - shank_half) * t1 * t1;
-    float const y1 = fluke_y_start - fluke_height * t1;
-    float const x2_inner = shank_half + (fluke_width - shank_half) * t2 * t2;
-    float const y2 = fluke_y_start - fluke_height * t2;
-
-    float const fluke_thickness = shank_width * (1.0F + t1 * 0.5F);
-    float const x1_outer = x1_inner + fluke_thickness * 0.5F;
-    float const x2_outer = x2_inner + fluke_thickness * 0.5F;
-
-    size_t const base = verts.size();
-    verts.push_back(
-        {{x1_inner, y1, 0.0F}, {n.x(), n.y(), n.z()}, {0.0F, 1.0F}});
-    verts.push_back(
-        {{x2_inner, y2, 0.0F}, {n.x(), n.y(), n.z()}, {1.0F, 1.0F}});
-    verts.push_back(
-        {{x2_outer, y2, 0.0F}, {n.x(), n.y(), n.z()}, {1.0F, 0.0F}});
-    verts.push_back(
-        {{x1_outer, y1, 0.0F}, {n.x(), n.y(), n.z()}, {0.0F, 0.0F}});
-
-    idx.push_back(base + 0);
-    idx.push_back(base + 1);
-    idx.push_back(base + 2);
-    idx.push_back(base + 2);
-    idx.push_back(base + 3);
-    idx.push_back(base + 0);
-  }
+  add_tri({-shank_half * 0.6F, cross_y}, {shank_half * 0.6F, cross_y},
+          {0.0F, fluke_tip_y});
 
   return std::make_unique<Mesh>(verts, idx);
 }
