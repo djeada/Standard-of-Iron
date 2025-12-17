@@ -208,6 +208,20 @@ void InputCommandHandler::on_formation_command() {
   }
 }
 
+void InputCommandHandler::on_run_command() {
+  if (m_is_spectator_mode) {
+    return;
+  }
+  if (!m_command_controller) {
+    return;
+  }
+
+  auto result = m_command_controller->on_run_command();
+  if (result.reset_cursor_to_normal) {
+    m_cursor_manager->set_mode(CursorMode::Normal);
+  }
+}
+
 void InputCommandHandler::on_guard_click(qreal sx, qreal sy,
                                          const ViewportState &viewport) {
   if (m_is_spectator_mode) {
@@ -243,6 +257,13 @@ auto InputCommandHandler::any_selected_in_formation_mode() const -> bool {
     return false;
   }
   return m_command_controller->any_selected_in_formation_mode();
+}
+
+auto InputCommandHandler::any_selected_in_run_mode() const -> bool {
+  if (!m_command_controller) {
+    return false;
+  }
+  return m_command_controller->any_selected_in_run_mode();
 }
 
 void InputCommandHandler::on_patrol_click(qreal sx, qreal sy,
