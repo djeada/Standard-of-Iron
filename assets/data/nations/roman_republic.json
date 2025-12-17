@@ -22,7 +22,7 @@
         "ranged_damage": 13,
         "ranged_cooldown": 1.1,
         "melee_range": 1.5,
-        "melee_damage": 5,
+        "melee_damage": 1,
         "melee_cooldown": 0.8,
         "can_ranged": true,
         "can_melee": true
@@ -153,15 +153,15 @@
         "is_melee": false
       },
       "combat": {
-        "health": 945,
-        "max_health": 945,
+        "health": 430,
+        "max_health": 430,
         "speed": 2.6,
         "vision_range": 7.0,
         "ranged_range": 8.5,
         "ranged_damage": 6,
         "ranged_cooldown": 1.8,
         "melee_range": 1.5,
-        "melee_damage": 3,
+        "melee_damage": 1,
         "melee_cooldown": 1.5,
         "can_ranged": false,
         "can_melee": true
@@ -196,7 +196,7 @@
         "ranged_damage": 14,
         "ranged_cooldown": 1.5,
         "melee_range": 1.8,
-        "melee_damage": 8,
+        "melee_damage": 1,
         "melee_cooldown": 0.9,
         "can_ranged": true,
         "can_melee": true
