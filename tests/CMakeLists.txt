@@ -7,6 +7,8 @@ add_executable(standard_of_iron_tests
     core/ground_type_test.cpp
     db/save_storage_test.cpp
     map/minimap_generator_test.cpp
+    map/mission_loader_test.cpp
+    map/campaign_loader_test.cpp
     systems/rain_manager_test.cpp
     systems/patrol_system_test.cpp
     render/pose_controller_test.cpp
