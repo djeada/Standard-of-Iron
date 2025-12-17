@@ -2,7 +2,7 @@
   "id": "carthage",
   "display_name": "Carthaginian Empire",
   "primary_building": "barracks",
-  "formation_type": "barbarian",
+  "formation_type": "carthage",
   "troops": [
     {
       "id": "archer",
