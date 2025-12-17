@@ -46,6 +46,10 @@ void AutoEngagement::process(Engine::Core::World *world, float delta_time) {
       continue;
     }
 
+    if (!should_auto_engage_melee(unit)) {
+      continue;
+    }
+
     if (m_engagement_cooldowns.find(unit->get_id()) !=
         m_engagement_cooldowns.end()) {
       continue;
