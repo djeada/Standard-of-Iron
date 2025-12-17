@@ -7,6 +7,10 @@
 
 namespace Game::Systems {
 
+namespace {
+constexpr float kMinMovementSpeedSq = 0.01F;
+} // namespace
+
 void StaminaSystem::update(Engine::Core::World *world, float delta_time) {
   if (world == nullptr) {
     return;
@@ -36,8 +40,9 @@ void StaminaSystem::update(Engine::Core::World *world, float delta_time) {
 
     bool is_moving = false;
     if (movement != nullptr) {
-      float const speed_sq = movement->vx * movement->vx + movement->vz * movement->vz;
-      is_moving = speed_sq > 0.01F;
+      float const speed_sq =
+          movement->vx * movement->vx + movement->vz * movement->vz;
+      is_moving = speed_sq > kMinMovementSpeedSq;
     }
 
     if (stamina->run_requested && is_moving) {
