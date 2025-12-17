@@ -8,6 +8,7 @@
 #include "nation_registry.h"
 #include <QVector3D>
 #include <cmath>
+#include <unordered_map>
 #include <vector>
 
 namespace Game::Systems {
@@ -113,9 +114,18 @@ public:
             formation_type, unit_infos, center, spacing);
 
     std::vector<QVector3D> positions;
-    positions.reserve(formation_positions.size());
+    positions.resize(units.size(), center);
+
+    std::unordered_map<Engine::Core::EntityID, size_t> unit_to_original_idx;
+    for (size_t i = 0; i < units.size(); ++i) {
+      unit_to_original_idx[units[i]] = i;
+    }
+
     for (const auto &fpos : formation_positions) {
-      positions.push_back(fpos.position);
+      auto it = unit_to_original_idx.find(fpos.entity_id);
+      if (it != unit_to_original_idx.end()) {
+        positions[it->second] = fpos.position;
+      }
     }
 
     return positions;

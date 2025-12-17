@@ -591,4 +591,56 @@ void CombatDustPipeline::render_single_flame(const QVector3D &position,
   }
 }
 
+void CombatDustPipeline::render_single_stone_impact(
+    const QVector3D &position, const QVector3D &color, float radius,
+    float intensity, float time, const QMatrix4x4 &view_proj) {
+  if (!is_initialized()) {
+    return;
+  }
+  if (intensity < kMinDustIntensity) {
+    return;
+  }
+
+  initializeOpenGLFunctions();
+
+  GLboolean cull_enabled = glIsEnabled(GL_CULL_FACE);
+  GLboolean depth_mask_enabled = GL_TRUE;
+  glGetBooleanv(GL_DEPTH_WRITEMASK, &depth_mask_enabled);
+
+  glDisable(GL_CULL_FACE);
+  glEnable(GL_DEPTH_TEST);
+  glDepthMask(GL_FALSE);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+  m_dust_shader->use();
+  glBindVertexArray(m_vao);
+
+  QMatrix4x4 model;
+  model.setToIdentity();
+  model.translate(position);
+  model.scale(radius);
+
+  QMatrix4x4 mvp = view_proj * model;
+
+  m_dust_shader->set_uniform(m_uniforms.mvp, mvp);
+  m_dust_shader->set_uniform(m_uniforms.model, model);
+  m_dust_shader->set_uniform(m_uniforms.time, time);
+  m_dust_shader->set_uniform(m_uniforms.center, position);
+  m_dust_shader->set_uniform(m_uniforms.radius, radius);
+  m_dust_shader->set_uniform(m_uniforms.intensity, intensity);
+  m_dust_shader->set_uniform(m_uniforms.dust_color, color);
+  m_dust_shader->set_uniform(m_uniforms.effect_type,
+                             static_cast<int>(EffectType::StoneImpact));
+
+  glDrawElements(GL_TRIANGLES, m_index_count, GL_UNSIGNED_INT, nullptr);
+
+  glBindVertexArray(0);
+
+  glDepthMask(depth_mask_enabled);
+  if (cull_enabled) {
+    glEnable(GL_CULL_FACE);
+  }
+}
+
 } // namespace Render::GL::BackendPipelines
