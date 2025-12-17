@@ -99,7 +99,7 @@ public:
 
     float const forward_offset = 0.18F + (anim.is_moving ? 0.04F : 0.0F);
     float const hand_height = HP::WAIST_Y + 0.06F + arm_height_jitter;
-    
+
     QVector3D const idle_hand_l(-0.18F + arm_asymmetry, hand_height,
                                 forward_offset);
     QVector3D const idle_hand_r(0.14F - arm_asymmetry * 0.6F,
@@ -130,9 +130,10 @@ public:
     QVector3D const handle_top = hand_r + up * 0.08F;
     QVector3D const handle_bottom = handle_top - up * handle_length;
 
-    out.mesh(get_unit_cylinder(),
-             cylinder_between(ctx.model, handle_bottom, handle_top, handle_radius),
-             wood_color, nullptr, 1.0F);
+    out.mesh(
+        get_unit_cylinder(),
+        cylinder_between(ctx.model, handle_bottom, handle_top, handle_radius),
+        wood_color, nullptr, 1.0F);
 
     float const head_width = 0.06F;
     float const head_height = 0.04F;
@@ -140,9 +141,10 @@ public:
     QVector3D const head_left = head_center - forward * (head_width * 0.5F);
     QVector3D const head_right = head_center + forward * (head_width * 0.5F);
 
-    out.mesh(get_unit_cylinder(),
-             cylinder_between(ctx.model, head_left, head_right, head_height * 0.5F),
-             metal_color, nullptr, 1.0F);
+    out.mesh(
+        get_unit_cylinder(),
+        cylinder_between(ctx.model, head_left, head_right, head_height * 0.5F),
+        metal_color, nullptr, 1.0F);
   }
 
   void draw_helmet(const DrawContext &ctx, const HumanoidVariant &v,
@@ -242,7 +244,8 @@ public:
 
     constexpr int skirt_layers = 6;
     for (int layer = 0; layer < skirt_layers; ++layer) {
-      float const t = static_cast<float>(layer) / static_cast<float>(skirt_layers - 1);
+      float const t =
+          static_cast<float>(layer) / static_cast<float>(skirt_layers - 1);
       float const y = y_waist - 0.02F - t * (y_waist - y_tunic_bottom);
       float const flare = 1.0F + t * 0.25F;
       float const width = torso_r * 0.82F * flare;
@@ -257,15 +260,17 @@ public:
                                    up * (y_tunic_bottom - 0.02F - origin.y());
     float const apron_width = torso_r * 0.7F;
 
-    out.mesh(get_unit_cube(),
-             [&]() {
-               QMatrix4x4 m = ctx.model;
-               QVector3D const center = (apron_top + apron_bottom) * 0.5F;
-               m.translate(center);
-               m.scale(apron_width, (apron_top.y() - apron_bottom.y()) * 0.5F, 0.015F);
-               return m;
-             }(),
-             apron_color, nullptr, 1.0F);
+    out.mesh(
+        get_unit_cube(),
+        [&]() {
+          QMatrix4x4 m = ctx.model;
+          QVector3D const center = (apron_top + apron_bottom) * 0.5F;
+          m.translate(center);
+          m.scale(apron_width, (apron_top.y() - apron_bottom.y()) * 0.5F,
+                  0.015F);
+          return m;
+        }(),
+        apron_color, nullptr, 1.0F);
 
     if (style.show_tool_belt) {
       float const belt_y = y_waist + 0.01F;
@@ -278,17 +283,18 @@ public:
       QVector3D const pouch_pos = origin + right * (torso_r * 0.75F) +
                                   up * (belt_y - 0.06F - origin.y()) +
                                   forward * (torso_depth * 0.12F);
-      out.mesh(get_unit_cube(),
-               [&]() {
-                 QMatrix4x4 m = ctx.model;
-                 m.translate(pouch_pos);
-                 m.scale(0.04F, 0.05F, 0.03F);
-                 return m;
-               }(),
-               leather_brown * 0.9F, nullptr, 1.0F);
+      out.mesh(
+          get_unit_cube(),
+          [&]() {
+            QMatrix4x4 m = ctx.model;
+            m.translate(pouch_pos);
+            m.scale(0.04F, 0.05F, 0.03F);
+            return m;
+          }(),
+          leather_brown * 0.9F, nullptr, 1.0F);
 
-      QVector3D const buckle_pos = origin + forward * (torso_depth * 0.85F) +
-                                   up * (belt_y - origin.y());
+      QVector3D const buckle_pos =
+          origin + forward * (torso_depth * 0.85F) + up * (belt_y - origin.y());
       out.mesh(get_unit_sphere(), sphere_at(ctx.model, buckle_pos, 0.018F),
                metal_bronze, nullptr, 1.0F);
     }
@@ -316,7 +322,8 @@ public:
   }
 
 private:
-  auto resolve_style(const DrawContext &ctx) const -> const BuilderStyleConfig & {
+  auto
+  resolve_style(const DrawContext &ctx) const -> const BuilderStyleConfig & {
     ensure_builder_styles_registered();
     auto &styles = style_registry();
     std::string nation_id;
