@@ -318,6 +318,12 @@ Item {
 
                         return ;
                     }
+                    if (gameView.cursorMode === "place_building") {
+                        if (typeof game !== 'undefined' && game.place_building_at_screen)
+                            game.place_building_at_screen(mouse.x, mouse.y);
+
+                        return ;
+                    }
                     isSelecting = true;
                     startX = mouse.x;
                     startY = mouse.y;

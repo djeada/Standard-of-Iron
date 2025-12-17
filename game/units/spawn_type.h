@@ -19,7 +19,8 @@ enum class SpawnType : std::uint8_t {
   Healer,
   Catapult,
   Ballista,
-  Barracks
+  Barracks,
+  DefenseTower
 };
 
 inline auto spawn_typeToQString(SpawnType type) -> QString {
@@ -44,6 +45,8 @@ inline auto spawn_typeToQString(SpawnType type) -> QString {
     return QStringLiteral("ballista");
   case SpawnType::Barracks:
     return QStringLiteral("barracks");
+  case SpawnType::DefenseTower:
+    return QStringLiteral("defense_tower");
   }
   return QStringLiteral("archer");
 }
@@ -95,6 +98,10 @@ inline auto tryParseSpawnType(const QString &value, SpawnType &out) -> bool {
     out = SpawnType::Barracks;
     return true;
   }
+  if (lowered == QStringLiteral("defense_tower")) {
+    out = SpawnType::DefenseTower;
+    return true;
+  }
   return false;
 }
 
@@ -130,23 +137,27 @@ spawn_typeFromString(const std::string &str) -> std::optional<SpawnType> {
   if (str == "barracks") {
     return SpawnType::Barracks;
   }
+  if (str == "defense_tower") {
+    return SpawnType::DefenseTower;
+  }
   return std::nullopt;
 }
 
 inline auto isTroopSpawn(SpawnType type) -> bool {
-  return type != SpawnType::Barracks;
+  return type != SpawnType::Barracks && type != SpawnType::DefenseTower;
 }
 
 inline auto is_building_spawn(SpawnType type) -> bool {
-  return type == SpawnType::Barracks;
+  return type == SpawnType::Barracks || type == SpawnType::DefenseTower;
 }
 
 inline auto can_use_attack_mode(SpawnType type) -> bool {
-  return type != SpawnType::Healer && type != SpawnType::Barracks;
+  return type != SpawnType::Healer && type != SpawnType::Barracks &&
+         type != SpawnType::DefenseTower;
 }
 
 inline auto can_use_guard_mode(SpawnType type) -> bool {
-  return type != SpawnType::Barracks;
+  return type != SpawnType::Barracks && type != SpawnType::DefenseTower;
 }
 
 inline auto can_use_hold_mode(SpawnType type) -> bool {
@@ -155,7 +166,7 @@ inline auto can_use_hold_mode(SpawnType type) -> bool {
 }
 
 inline auto can_use_patrol_mode(SpawnType type) -> bool {
-  return type != SpawnType::Barracks;
+  return type != SpawnType::Barracks && type != SpawnType::DefenseTower;
 }
 
 inline auto spawn_typeToTroopType(SpawnType type) -> std::optional<TroopType> {
