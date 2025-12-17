@@ -1,0 +1,156 @@
+{
+  "id": "battle_of_trasimene",
+  "title": "Battle of Lake Trasimene",
+  "summary": "Execute the perfect lakeside ambush - trap and destroy an entire Roman legion in the morning mist",
+  "teaching_goal": "Perfect ambush execution and terrain exploitation. Teaches players to use fog of war and natural terrain for devastating surprise attacks.",
+  "narrative_intent": "Showcases Hannibal's greatest ambush - complete annihilation through superior positioning and patience.",
+  "map_path": ":/assets/maps/map_battle_trasimene.json",
+  "player_setup": {
+    "nation": "carthage",
+    "faction": "carthaginian",
+    "color": "blue",
+    "starting_units": [
+      {
+        "type": "spearman",
+        "count": 12,
+        "position": {"x": 70, "z": 40},
+        "hidden": true
+      },
+      {
+        "type": "swordsman",
+        "count": 15,
+        "position": {"x": 90, "z": 60},
+        "hidden": true
+      },
+      {
+        "type": "horse_swordsman",
+        "count": 10,
+        "position": {"x": 110, "z": 80},
+        "hidden": true
+      },
+      {
+        "type": "archer",
+        "count": 8,
+        "position": {"x": 85, "z": 35},
+        "hidden": true
+      },
+      {
+        "type": "spearman",
+        "count": 10,
+        "position": {"x": 95, "z": 85},
+        "hidden": true
+      }
+    ],
+    "starting_buildings": [],
+    "starting_resources": {
+      "gold": 200,
+      "food": 150
+    }
+  },
+  "ai_setups": [
+    {
+      "id": "roman_legion_flaminius",
+      "nation": "roman_republic",
+      "faction": "roman",
+      "color": "red",
+      "difficulty": "hard",
+      "personality": {
+        "aggression": 0.7,
+        "defense": 0.3,
+        "harassment": 0.2
+      },
+      "starting_units": [
+        {
+          "type": "spearman",
+          "count": 30,
+          "position": {"x": 30, "z": 60}
+        },
+        {
+          "type": "swordsman",
+          "count": 25,
+          "position": {"x": 32, "z": 58}
+        },
+        {
+          "type": "archer",
+          "count": 12,
+          "position": {"x": 28, "z": 62}
+        },
+        {
+          "type": "horse_swordsman",
+          "count": 8,
+          "position": {"x": 34, "z": 60}
+        }
+      ],
+      "starting_buildings": [],
+      "ai_behavior_phases": [
+        {
+          "phase": "march",
+          "behavior": "march_along_path",
+          "path": "lakeside_road",
+          "duration": 180.0
+        }
+      ]
+    }
+  ],
+  "victory_conditions": [
+    {
+      "type": "destroy_all_enemies",
+      "description": "Annihilate the Roman legion - leave no survivors"
+    }
+  ],
+  "defeat_conditions": [
+    {
+      "type": "lose_all_units",
+      "description": "Do not lose all your units"
+    },
+    {
+      "type": "enemy_escape",
+      "escape_threshold": 0.3,
+      "description": "Do not let more than 30% of Romans escape"
+    }
+  ],
+  "optional_objectives": [
+    {
+      "type": "kill_commander",
+      "commander_name": "Flaminius",
+      "description": "Kill the Roman consul Flaminius"
+    }
+  ],
+  "map_effects": [
+    {
+      "type": "fog",
+      "duration": 120.0,
+      "visibility_reduction": 0.6,
+      "description": "Morning mist reduces visibility"
+    }
+  ],
+  "events": [
+    {
+      "trigger": {
+        "type": "timer",
+        "time": 30.0
+      },
+      "actions": [
+        {
+          "type": "show_message",
+          "text": "The Romans march blindly into your trap. Wait for the perfect moment..."
+        }
+      ]
+    },
+    {
+      "trigger": {
+        "type": "custom",
+        "condition": "romans_in_kill_zone"
+      },
+      "actions": [
+        {
+          "type": "show_message",
+          "text": "The trap is sprung! Attack from all sides!"
+        },
+        {
+          "type": "reveal_all_units"
+        }
+      ]
+    }
+  ]
+}
