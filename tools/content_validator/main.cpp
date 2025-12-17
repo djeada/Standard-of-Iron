@@ -38,14 +38,13 @@ auto validateMissionFile(const QString &file_path) -> ValidationResult {
   QString error_msg;
 
   if (!Game::Mission::MissionLoader::loadFromJsonFile(file_path, mission,
-                                                       &error_msg)) {
+                                                      &error_msg)) {
     result.addError(QString("Failed to parse mission %1: %2")
                         .arg(file_path)
                         .arg(error_msg));
     return result;
   }
 
-  // Validate required fields
   if (mission.id.isEmpty()) {
     result.addError(QString("Mission %1: missing 'id' field").arg(file_path));
   }
@@ -59,24 +58,21 @@ auto validateMissionFile(const QString &file_path) -> ValidationResult {
     result.addError(
         QString("Mission %1: missing 'map_path' field").arg(file_path));
   } else {
-    // Check if referenced map exists
+
     QString map_path = mission.map_path;
-    // Handle Qt resource paths
+
     if (map_path.startsWith(":/")) {
-      map_path = map_path.mid(2); // Remove ":/"
+      map_path = map_path.mid(2);
     }
-    // Construct absolute path
+
     QString abs_map_path =
         QDir::currentPath() + "/" + map_path.replace("assets/", "");
 
-    // Try multiple locations
     bool map_found = false;
-    QStringList search_paths = {
-        abs_map_path,
-        QDir::currentPath() + "/assets/maps/" +
-            QFileInfo(map_path).fileName(),
-        mission.map_path // Original path as fallback
-    };
+    QStringList search_paths = {abs_map_path,
+                                QDir::currentPath() + "/assets/maps/" +
+                                    QFileInfo(map_path).fileName(),
+                                mission.map_path};
 
     for (const auto &search_path : search_paths) {
       if (QFile::exists(search_path)) {
@@ -93,22 +89,19 @@ auto validateMissionFile(const QString &file_path) -> ValidationResult {
     }
   }
 
-  // Validate player setup
   if (mission.player_setup.nation.isEmpty()) {
     result.addWarning(
         QString("Mission %1: player_setup missing 'nation'").arg(file_path));
   }
 
-  // Validate victory conditions
   if (mission.victory_conditions.empty()) {
     result.addError(
         QString("Mission %1: no victory conditions defined").arg(file_path));
   }
 
-  // Validate defeat conditions
   if (mission.defeat_conditions.empty()) {
-    result.addWarning(QString("Mission %1: no defeat conditions defined")
-                          .arg(file_path));
+    result.addWarning(
+        QString("Mission %1: no defeat conditions defined").arg(file_path));
   }
 
   return result;
@@ -129,17 +122,15 @@ auto validateCampaignFile(const QString &file_path,
   QString error_msg;
 
   if (!Game::Campaign::CampaignLoader::loadFromJsonFile(file_path, campaign,
-                                                         &error_msg)) {
+                                                        &error_msg)) {
     result.addError(QString("Failed to parse campaign %1: %2")
                         .arg(file_path)
                         .arg(error_msg));
     return result;
   }
 
-  // Validate required fields
   if (campaign.id.isEmpty()) {
-    result.addError(
-        QString("Campaign %1: missing 'id' field").arg(file_path));
+    result.addError(QString("Campaign %1: missing 'id' field").arg(file_path));
   }
 
   if (campaign.title.isEmpty()) {
@@ -148,23 +139,19 @@ auto validateCampaignFile(const QString &file_path,
   }
 
   if (campaign.missions.empty()) {
-    result.addError(
-        QString("Campaign %1: no missions defined").arg(file_path));
+    result.addError(QString("Campaign %1: no missions defined").arg(file_path));
     return result;
   }
 
-  // Validate mission order indices
   std::set<int> order_indices;
   for (const auto &mission : campaign.missions) {
     if (order_indices.count(mission.order_index) > 0) {
-      result.addError(
-          QString("Campaign %1: duplicate order_index %2")
-              .arg(file_path)
-              .arg(mission.order_index));
+      result.addError(QString("Campaign %1: duplicate order_index %2")
+                          .arg(file_path)
+                          .arg(mission.order_index));
     }
     order_indices.insert(mission.order_index);
 
-    // Check if referenced mission exists
     if (!available_missions.count(mission.mission_id)) {
       result.addError(QString("Campaign %1: references unknown mission '%2'")
                           .arg(file_path)
@@ -172,7 +159,6 @@ auto validateCampaignFile(const QString &file_path,
     }
   }
 
-  // Check if order indices are contiguous
   if (!order_indices.empty()) {
     const int min_index = *order_indices.begin();
     const int max_index = *order_indices.rbegin();
@@ -242,7 +228,6 @@ auto main(int argc, char *argv[]) -> int {
   bool all_valid = true;
   std::set<QString> mission_ids;
 
-  // First, validate all missions and collect their IDs
   const QDir missions_dir = base_dir.filePath("missions");
   if (missions_dir.exists()) {
     const QStringList mission_files =
@@ -258,10 +243,10 @@ auto main(int argc, char *argv[]) -> int {
       printResults(result, QString("missions/") + mission_file);
 
       if (result.success) {
-        // Load mission to get its ID
+
         Game::Mission::MissionDefinition mission;
         if (Game::Mission::MissionLoader::loadFromJsonFile(mission_path,
-                                                            mission)) {
+                                                           mission)) {
           mission_ids.insert(mission.id);
         }
       } else {
@@ -272,7 +257,6 @@ auto main(int argc, char *argv[]) -> int {
     std::cout << "\nNo missions directory found (this is OK)" << std::endl;
   }
 
-  // Then validate campaigns
   const QDir campaigns_dir = base_dir.filePath("campaigns");
   if (campaigns_dir.exists()) {
     const QStringList campaign_files =

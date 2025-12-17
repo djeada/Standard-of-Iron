@@ -1,6 +1,7 @@
 #pragma once
 
 #include "campaign_definition.h"
+#include <QJsonObject>
 #include <QString>
 
 namespace Game::Campaign {
