@@ -43,34 +43,44 @@ void main() {
     float time_pulse = 0.7 + 0.3 * sin(u_time * 1.5);
     v_alpha = edge_fade * time_pulse * u_intensity;
   } else {
-    // Flame effect - realistic fire with upward licking motion
-    // Use texture coordinates to create flame shape
+
     float height = a_texcoord.y;
-    
-    // Reduce horizontal wave motion - flames should be mostly vertical
-    float flame_wave_x = sin(u_time * 4.0 + pos.x * 8.0 + height * 6.0) * 0.03 * height;
-    float flame_wave_z = cos(u_time * 4.5 + pos.z * 8.0 + height * 6.0) * 0.03 * height;
-    pos.x += flame_wave_x;
-    pos.z += flame_wave_z;
+    float angle_t = a_texcoord.x;
+    float angle = angle_t * 6.28318;
 
-    // Strong upward motion with turbulence
-    float flame_rise = height * height * 2.0;
+    float tongue_count = 8.0;
+    float tongue_id = floor(angle_t * tongue_count);
+    float tongue_local = fract(angle_t * tongue_count);
+    float tongue_phase = tongue_id * 1.618;
 
-    // Add turbulent upward motion
-    float turbulence = sin(u_time * 6.0 + pos.x * 12.0) * cos(u_time * 5.5 + pos.z * 12.0);
-    flame_rise += turbulence * 0.15 * height;
+    float tongue_time = u_time + tongue_phase * 0.5;
 
-    pos.y += flame_rise;
+    float sway_x = sin(tongue_time * 3.5 + height * 4.0) * 0.2 * height;
+    float sway_z = cos(tongue_time * 3.0 + height * 3.5) * 0.2 * height;
 
-    // Stronger flicker at the top (flames dance more at tips)
-    float flicker = 0.95 + 0.05 * sin(u_time * 10.0 + normalized_dist * 15.0) * height;
-    pos.y *= flicker;
+    float cos_a = cos(angle);
+    float sin_a = sin(angle);
+    pos.x += sway_x * (-sin_a) + sway_z * cos_a;
+    pos.z += sway_x * cos_a + sway_z * sin_a;
 
-    // Much stronger alpha for visibility
-    float edge_fade = smoothstep(1.0, 0.4, normalized_dist);
-    float height_fade = smoothstep(1.0, 0.2, height);
-    float flicker_alpha = 0.95 + 0.05 * sin(u_time * 7.0);
-    v_alpha = edge_fade * height_fade * flicker_alpha * u_intensity * 2.5;
+    float tongue_bulge = sin(tongue_local * 3.14159) * 0.3;
+    float radial_expansion = 1.0 + tongue_bulge * (0.5 + 0.5 * height);
+    pos.x *= radial_expansion;
+    pos.z *= radial_expansion;
+
+    float rise_speed = sin(tongue_time * 5.0 + height * 2.0) * 0.15;
+    float vertical_scale = 1.8 + rise_speed + height * 0.5;
+    pos.y *= vertical_scale;
+
+    float turb = sin(tongue_time * 8.0 + height * 10.0) * 0.1 * height * height;
+    pos.y += turb;
+
+    float flicker = 0.85 + 0.15 * sin(tongue_time * 12.0 + height * 8.0);
+
+    float height_fade = 1.0 - smoothstep(0.5, 1.0, height);
+    float tongue_edge_fade =
+        smoothstep(0.0, 0.2, tongue_local) * smoothstep(1.0, 0.8, tongue_local);
+    v_alpha = height_fade * tongue_edge_fade * flicker * u_intensity * 1.5;
   }
 
   v_world_pos = (u_model * vec4(pos, 1.0)).xyz;
