@@ -14,6 +14,14 @@ constexpr float kDustColorR = 0.6F;
 constexpr float kDustColorG = 0.55F;
 constexpr float kDustColorB = 0.45F;
 constexpr float kVisibilityCheckRadius = 3.0F;
+
+constexpr float kFlameRadius = 3.0F;
+constexpr float kFlameIntensity = 0.8F;
+constexpr float kFlameYOffset = 0.5F;
+constexpr float kFlameColorR = 1.0F;
+constexpr float kFlameColorG = 0.4F;
+constexpr float kFlameColorB = 0.1F;
+constexpr float kBuildingHealthThreshold = 0.5F;
 } // namespace
 
 void render_combat_dust(Renderer *renderer, ResourceManager *,
@@ -60,6 +68,48 @@ void render_combat_dust(Renderer *renderer, ResourceManager *,
 
     renderer->combat_dust(position, color, kDustRadius, kDustIntensity,
                           animation_time);
+  }
+
+  auto buildings = world->get_entities_with<Engine::Core::BuildingComponent>();
+
+  for (auto *building : buildings) {
+    if (building->has_component<Engine::Core::PendingRemovalComponent>()) {
+      continue;
+    }
+
+    auto *transform =
+        building->get_component<Engine::Core::TransformComponent>();
+    auto *unit_comp = building->get_component<Engine::Core::UnitComponent>();
+
+    if (transform == nullptr || unit_comp == nullptr) {
+      continue;
+    }
+
+    if (unit_comp->health <= 0) {
+      continue;
+    }
+
+    float health_ratio = static_cast<float>(unit_comp->health) /
+                         static_cast<float>(unit_comp->max_health);
+
+    if (health_ratio > kBuildingHealthThreshold) {
+      continue;
+    }
+
+    if (!visibility.is_entity_visible(transform->position.x,
+                                      transform->position.z,
+                                      kVisibilityCheckRadius)) {
+      continue;
+    }
+
+    float flame_intensity = kFlameIntensity * (1.0F - health_ratio);
+
+    QVector3D position(transform->position.x, kFlameYOffset,
+                       transform->position.z);
+    QVector3D color(kFlameColorR, kFlameColorG, kFlameColorB);
+
+    renderer->building_flame(position, color, kFlameRadius, flame_intensity,
+                             animation_time);
   }
 }
 
