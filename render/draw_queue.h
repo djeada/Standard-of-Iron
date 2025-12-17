@@ -177,13 +177,13 @@ struct ModeIndicatorCmd {
   int mode_type = 0;
 };
 
-using DrawCmd = std::variant<GridCmd, SelectionRingCmd, SelectionSmokeCmd,
-                             CylinderCmd, MeshCmd, FogBatchCmd, GrassBatchCmd,
-                             StoneBatchCmd, PlantBatchCmd, PineBatchCmd,
-                             OliveBatchCmd, FireCampBatchCmd, RainBatchCmd,
-                             TerrainChunkCmd, PrimitiveBatchCmd, HealingBeamCmd,
-                             HealerAuraCmd, CombatDustCmd, BuildingFlameCmd,
-                             ModeIndicatorCmd>;
+using DrawCmd =
+    std::variant<GridCmd, SelectionRingCmd, SelectionSmokeCmd, CylinderCmd,
+                 MeshCmd, FogBatchCmd, GrassBatchCmd, StoneBatchCmd,
+                 PlantBatchCmd, PineBatchCmd, OliveBatchCmd, FireCampBatchCmd,
+                 RainBatchCmd, TerrainChunkCmd, PrimitiveBatchCmd,
+                 HealingBeamCmd, HealerAuraCmd, CombatDustCmd, BuildingFlameCmd,
+                 ModeIndicatorCmd>;
 
 enum class DrawCmdType : std::uint8_t {
   Grid = 0,
