@@ -26,7 +26,7 @@ void apply_production_profile(Engine::Core::ProductionComponent *prod,
   const auto profile =
       TroopProfileService::instance().get_profile(nation_id, troop_type);
   prod->build_time = profile.production.build_time;
-  prod->villager_cost = profile.individuals_per_unit;
+  prod->villager_cost = profile.production.cost;
 }
 
 auto resolve_nation_id(const Engine::Core::UnitComponent *unit,

@@ -48,10 +48,10 @@ auto CaptureSystem::countNearbyTroops(Engine::Core::World *world,
     float const dist_sq = dx * dx + dz * dz;
 
     if (dist_sq <= radius * radius) {
-      int const individuals_per_unit =
-          Game::Units::TroopConfig::instance().getIndividualsPerUnit(
+      int const production_cost =
+          Game::Units::TroopConfig::instance().getProductionCost(
               unit->spawn_type);
-      total_troops += individuals_per_unit;
+      total_troops += production_cost;
     }
   }
 
@@ -108,7 +108,7 @@ void CaptureSystem::transferBarrackOwnership(Engine::Core::World *,
       const auto profile = TroopProfileService::instance().get_profile(
           unit->nation_id, prod->product_type);
       prod->build_time = profile.production.build_time;
-      prod->villager_cost = profile.individuals_per_unit;
+      prod->villager_cost = profile.production.cost;
     }
   } else if (Game::Core::isNeutralOwner(new_owner_id) && (prod != nullptr)) {
     barrack->remove_component<Engine::Core::ProductionComponent>();
@@ -116,7 +116,7 @@ void CaptureSystem::transferBarrackOwnership(Engine::Core::World *,
     const auto profile = TroopProfileService::instance().get_profile(
         unit->nation_id, prod->product_type);
     prod->build_time = profile.production.build_time;
-    prod->villager_cost = profile.individuals_per_unit;
+    prod->villager_cost = profile.production.cost;
   }
 
   Engine::Core::EventManager::instance().publish(
