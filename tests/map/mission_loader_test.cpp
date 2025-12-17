@@ -1,5 +1,5 @@
-#include "game/map/mission_loader.h"
 #include "game/map/mission_definition.h"
+#include "game/map/mission_loader.h"
 #include <QTemporaryFile>
 #include <gtest/gtest.h>
 
@@ -85,14 +85,15 @@ protected:
 TEST_F(MissionLoaderTest, LoadsValidMission) {
   QTemporaryFile temp_file;
   ASSERT_TRUE(temp_file.open());
-  
+
   temp_file.write(createTestMission().toUtf8());
   temp_file.flush();
-  
+
   MissionDefinition mission;
   QString error;
-  bool result = MissionLoader::loadFromJsonFile(temp_file.fileName(), mission, &error);
-  
+  bool result =
+      MissionLoader::loadFromJsonFile(temp_file.fileName(), mission, &error);
+
   EXPECT_TRUE(result) << "Error: " << error.toStdString();
   EXPECT_EQ(mission.id, "test_mission");
   EXPECT_EQ(mission.title, "Test Mission");
@@ -103,14 +104,15 @@ TEST_F(MissionLoaderTest, LoadsValidMission) {
 TEST_F(MissionLoaderTest, ParsesPlayerSetup) {
   QTemporaryFile temp_file;
   ASSERT_TRUE(temp_file.open());
-  
+
   temp_file.write(createTestMission().toUtf8());
   temp_file.flush();
-  
+
   MissionDefinition mission;
   QString error;
-  ASSERT_TRUE(MissionLoader::loadFromJsonFile(temp_file.fileName(), mission, &error));
-  
+  ASSERT_TRUE(
+      MissionLoader::loadFromJsonFile(temp_file.fileName(), mission, &error));
+
   EXPECT_EQ(mission.player_setup.nation, "roman_republic");
   EXPECT_EQ(mission.player_setup.faction, "roman");
   EXPECT_EQ(mission.player_setup.color, "red");
@@ -123,14 +125,15 @@ TEST_F(MissionLoaderTest, ParsesPlayerSetup) {
 TEST_F(MissionLoaderTest, ParsesAISetups) {
   QTemporaryFile temp_file;
   ASSERT_TRUE(temp_file.open());
-  
+
   temp_file.write(createTestMission().toUtf8());
   temp_file.flush();
-  
+
   MissionDefinition mission;
   QString error;
-  ASSERT_TRUE(MissionLoader::loadFromJsonFile(temp_file.fileName(), mission, &error));
-  
+  ASSERT_TRUE(
+      MissionLoader::loadFromJsonFile(temp_file.fileName(), mission, &error));
+
   ASSERT_EQ(mission.ai_setups.size(), 1);
   EXPECT_EQ(mission.ai_setups[0].id, "enemy_1");
   EXPECT_EQ(mission.ai_setups[0].nation, "carthage");
@@ -142,14 +145,15 @@ TEST_F(MissionLoaderTest, ParsesAISetups) {
 TEST_F(MissionLoaderTest, ParsesVictoryConditions) {
   QTemporaryFile temp_file;
   ASSERT_TRUE(temp_file.open());
-  
+
   temp_file.write(createTestMission().toUtf8());
   temp_file.flush();
-  
+
   MissionDefinition mission;
   QString error;
-  ASSERT_TRUE(MissionLoader::loadFromJsonFile(temp_file.fileName(), mission, &error));
-  
+  ASSERT_TRUE(
+      MissionLoader::loadFromJsonFile(temp_file.fileName(), mission, &error));
+
   ASSERT_EQ(mission.victory_conditions.size(), 1);
   EXPECT_EQ(mission.victory_conditions[0].type, "survive_duration");
   EXPECT_TRUE(mission.victory_conditions[0].duration.has_value());
@@ -159,14 +163,15 @@ TEST_F(MissionLoaderTest, ParsesVictoryConditions) {
 TEST_F(MissionLoaderTest, ParsesDefeatConditions) {
   QTemporaryFile temp_file;
   ASSERT_TRUE(temp_file.open());
-  
+
   temp_file.write(createTestMission().toUtf8());
   temp_file.flush();
-  
+
   MissionDefinition mission;
   QString error;
-  ASSERT_TRUE(MissionLoader::loadFromJsonFile(temp_file.fileName(), mission, &error));
-  
+  ASSERT_TRUE(
+      MissionLoader::loadFromJsonFile(temp_file.fileName(), mission, &error));
+
   ASSERT_EQ(mission.defeat_conditions.size(), 1);
   EXPECT_EQ(mission.defeat_conditions[0].type, "lose_structure");
   EXPECT_TRUE(mission.defeat_conditions[0].structure_type.has_value());
@@ -176,14 +181,15 @@ TEST_F(MissionLoaderTest, ParsesDefeatConditions) {
 TEST_F(MissionLoaderTest, FailsOnInvalidJSON) {
   QTemporaryFile temp_file;
   ASSERT_TRUE(temp_file.open());
-  
+
   temp_file.write("{ invalid json }");
   temp_file.flush();
-  
+
   MissionDefinition mission;
   QString error;
-  bool result = MissionLoader::loadFromJsonFile(temp_file.fileName(), mission, &error);
-  
+  bool result =
+      MissionLoader::loadFromJsonFile(temp_file.fileName(), mission, &error);
+
   EXPECT_FALSE(result);
   EXPECT_FALSE(error.isEmpty());
 }
@@ -191,8 +197,9 @@ TEST_F(MissionLoaderTest, FailsOnInvalidJSON) {
 TEST_F(MissionLoaderTest, FailsOnNonexistentFile) {
   MissionDefinition mission;
   QString error;
-  bool result = MissionLoader::loadFromJsonFile("/nonexistent/file.json", mission, &error);
-  
+  bool result = MissionLoader::loadFromJsonFile("/nonexistent/file.json",
+                                                mission, &error);
+
   EXPECT_FALSE(result);
   EXPECT_FALSE(error.isEmpty());
 }
