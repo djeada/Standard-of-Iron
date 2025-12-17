@@ -25,12 +25,12 @@ constexpr float kFlameColorG = 0.4F;
 constexpr float kFlameColorB = 0.1F;
 constexpr float kBuildingHealthThreshold = 0.5F;
 
-constexpr float kStoneImpactRadius = 3.5F;
-constexpr float kStoneImpactIntensity = 1.0F;
-constexpr float kStoneImpactColorR = 0.65F;
-constexpr float kStoneImpactColorG = 0.60F;
-constexpr float kStoneImpactColorB = 0.50F;
-constexpr float kStoneImpactYOffset = 0.1F;
+constexpr float kStoneImpactRadius = 4.0F;
+constexpr float kStoneImpactIntensity = 1.2F;
+constexpr float kStoneImpactColorR = 0.85F;
+constexpr float kStoneImpactColorG = 0.75F;
+constexpr float kStoneImpactColorB = 0.55F;
+constexpr float kStoneImpactYOffset = 0.15F;
 constexpr float kStoneImpactThreshold = 0.95F;
 } // namespace
 
@@ -157,8 +157,8 @@ void render_combat_dust(Renderer *renderer, ResourceManager *,
       QVector3D color(kStoneImpactColorR, kStoneImpactColorG,
                       kStoneImpactColorB);
 
-      renderer->combat_dust(position, color, kStoneImpactRadius,
-                            kStoneImpactIntensity, animation_time);
+      renderer->building_flame(position, color, kStoneImpactRadius,
+                               kStoneImpactIntensity, animation_time);
     }
   }
 }
