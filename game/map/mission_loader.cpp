@@ -191,12 +191,14 @@ auto MissionLoader::loadFromJsonFile(const QString &file_path,
   }
 
   QJsonParseError parse_error;
-  const QJsonDocument doc = QJsonDocument::fromJson(file.readAll(), &parse_error);
+  const QJsonDocument doc =
+      QJsonDocument::fromJson(file.readAll(), &parse_error);
   file.close();
 
   if (parse_error.error != QJsonParseError::NoError) {
     if (error_msg != nullptr) {
-      *error_msg = QString("JSON parse error: %1").arg(parse_error.errorString());
+      *error_msg =
+          QString("JSON parse error: %1").arg(parse_error.errorString());
     }
     return false;
   }
@@ -210,18 +212,16 @@ auto MissionLoader::loadFromJsonFile(const QString &file_path,
 
   const QJsonObject root = doc.object();
 
-  // Parse required fields
   out_mission.id = root["id"].toString();
   out_mission.title = root["title"].toString();
   out_mission.summary = root["summary"].toString();
   out_mission.map_path = root["map_path"].toString();
 
-  // Parse player setup
   if (root.contains("player_setup")) {
-    out_mission.player_setup = parsePlayerSetup(root["player_setup"].toObject());
+    out_mission.player_setup =
+        parsePlayerSetup(root["player_setup"].toObject());
   }
 
-  // Parse AI setups
   if (root.contains("ai_setups")) {
     const QJsonArray ai_setups = root["ai_setups"].toArray();
     for (const auto &ai_val : ai_setups) {
@@ -229,7 +229,6 @@ auto MissionLoader::loadFromJsonFile(const QString &file_path,
     }
   }
 
-  // Parse victory conditions
   if (root.contains("victory_conditions")) {
     const QJsonArray victory = root["victory_conditions"].toArray();
     for (const auto &cond_val : victory) {
@@ -238,15 +237,14 @@ auto MissionLoader::loadFromJsonFile(const QString &file_path,
     }
   }
 
-  // Parse defeat conditions
   if (root.contains("defeat_conditions")) {
     const QJsonArray defeat = root["defeat_conditions"].toArray();
     for (const auto &cond_val : defeat) {
-      out_mission.defeat_conditions.push_back(parseCondition(cond_val.toObject()));
+      out_mission.defeat_conditions.push_back(
+          parseCondition(cond_val.toObject()));
     }
   }
 
-  // Parse events
   if (root.contains("events")) {
     const QJsonArray events = root["events"].toArray();
     for (const auto &event_val : events) {

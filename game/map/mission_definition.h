@@ -2,7 +2,6 @@
 
 #include "../systems/nation_id.h"
 #include <QString>
-#include <QVector3D>
 #include <optional>
 #include <vector>
 
