@@ -13,9 +13,8 @@ namespace Game::Units {
 DefenseTower::DefenseTower(Engine::Core::World &world)
     : Unit(world, "defense_tower") {}
 
-auto DefenseTower::create(
-    Engine::Core::World &world,
-    const SpawnParams &params) -> std::unique_ptr<DefenseTower> {
+auto DefenseTower::create(Engine::Core::World &world, const SpawnParams &params)
+    -> std::unique_ptr<DefenseTower> {
   auto unit = std::unique_ptr<DefenseTower>(new DefenseTower(world));
   unit->init(params);
   return unit;

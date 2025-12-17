@@ -164,7 +164,8 @@ void draw_defense_tower(const DrawContext &p, ISubmitter &out) {
 
 } // namespace
 
-void register_defense_tower_renderer(Render::GL::EntityRendererRegistry &registry) {
+void register_defense_tower_renderer(
+    Render::GL::EntityRendererRegistry &registry) {
   registry.register_renderer("defense_tower_carthage", draw_defense_tower);
 }
 

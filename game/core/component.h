@@ -350,4 +350,13 @@ public:
   }
 };
 
+class FormationModeComponent : public Component {
+public:
+  FormationModeComponent() = default;
+
+  bool active{false};
+  float formation_center_x{0.0F};
+  float formation_center_z{0.0F};
+};
+
 } // namespace Engine::Core

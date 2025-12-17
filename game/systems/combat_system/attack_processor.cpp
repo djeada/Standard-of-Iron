@@ -89,6 +89,9 @@ void process_melee_lock(Engine::Core::Entity *attacker,
     return;
   }
 
+  face_target(att_t, tgt_t);
+  face_target(tgt_t, att_t);
+
   float const dx = tgt_t->position.x - att_t->position.x;
   float const dz = tgt_t->position.z - att_t->position.z;
   float const dist = std::sqrt(dx * dx + dz * dz);
@@ -250,6 +253,9 @@ void initiate_melee_combat(Engine::Core::Entity *attacker,
   auto *att_t = attacker->get_component<Engine::Core::TransformComponent>();
   auto *tgt_t = target->get_component<Engine::Core::TransformComponent>();
   if ((att_t != nullptr) && (tgt_t != nullptr)) {
+    face_target(att_t, tgt_t);
+    face_target(tgt_t, att_t);
+
     float const dx = tgt_t->position.x - att_t->position.x;
     float const dz = tgt_t->position.z - att_t->position.z;
     float const dist = std::sqrt(dx * dx + dz * dz);

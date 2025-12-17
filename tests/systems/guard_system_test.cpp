@@ -14,6 +14,7 @@ protected:
   void TearDown() override { world.reset(); }
 
   std::unique_ptr<World> world;
+  GuardSystem guard_system;
 };
 
 TEST_F(GuardSystemTest, GuardFollowsMovingEntity) {
@@ -43,20 +44,21 @@ TEST_F(GuardSystemTest, GuardFollowsMovingEntity) {
 
   // Run the guard system - distance is sqrt(50) ≈ 7.07, which exceeds
   // threshold of 2, so guard should move
-  GuardSystem::update(world.get(), 0.1F);
+  guard_system.update(world.get(), 0.1F);
 
   // Guard should have movement target set because the distance exceeds the
   // threshold
   EXPECT_TRUE(guard_movement->has_target);
   EXPECT_FLOAT_EQ(guard_movement->goal_x, 5.0F);
-  EXPECT_FLOAT_EQ(guard_movement->goal_y, 5.0F); // goal_y represents Z coordinate
+  EXPECT_FLOAT_EQ(guard_movement->goal_y,
+                  5.0F); // goal_y represents Z coordinate
 
   // Move the guarded unit to a new position
   guarded_transform->position.x = 15.0F;
   guarded_transform->position.z = 15.0F;
 
   // Run the guard system again
-  GuardSystem::update(world.get(), 0.1F);
+  guard_system.update(world.get(), 0.1F);
 
   // Guard's stored position should be updated
   EXPECT_FLOAT_EQ(guard_mode->guard_position_x, 15.0F);
@@ -65,7 +67,8 @@ TEST_F(GuardSystemTest, GuardFollowsMovingEntity) {
   // Guard should have new movement target
   EXPECT_TRUE(guard_movement->has_target);
   EXPECT_FLOAT_EQ(guard_movement->goal_x, 15.0F);
-  EXPECT_FLOAT_EQ(guard_movement->goal_y, 15.0F); // goal_y represents Z coordinate
+  EXPECT_FLOAT_EQ(guard_movement->goal_y,
+                  15.0F); // goal_y represents Z coordinate
   EXPECT_TRUE(guard_mode->returning_to_guard_position);
 }
 
@@ -96,7 +99,7 @@ TEST_F(GuardSystemTest, GuardDoesNotFollowSmallMovements) {
 
   // Run the guard system - guard should not move (distance is less than
   // threshold)
-  GuardSystem::update(world.get(), 0.1F);
+  guard_system.update(world.get(), 0.1F);
 
   // Guard should not have movement target set (distance too small)
   EXPECT_FALSE(guard_movement->has_target);
@@ -138,7 +141,7 @@ TEST_F(GuardSystemTest, GuardDoesNotFollowWhileAttacking) {
   attack_target->target_id = enemy->get_id();
 
   // Run the guard system
-  GuardSystem::update(world.get(), 0.1F);
+  guard_system.update(world.get(), 0.1F);
 
   // Guard should NOT follow the guarded unit while attacking
   EXPECT_FALSE(guard_movement->has_target);
@@ -166,12 +169,13 @@ TEST_F(GuardSystemTest, GuardReturnsToPositionWhenGuardingLocation) {
   guard_mode->returning_to_guard_position = false;
 
   // Run the guard system - guard should move back to guard position
-  GuardSystem::update(world.get(), 0.1F);
+  guard_system.update(world.get(), 0.1F);
 
   // Guard should have movement target set to return to guard position
   EXPECT_TRUE(guard_movement->has_target);
   EXPECT_FLOAT_EQ(guard_movement->goal_x, 10.0F);
-  EXPECT_FLOAT_EQ(guard_movement->goal_y, 10.0F); // goal_y represents Z coordinate
+  EXPECT_FLOAT_EQ(guard_movement->goal_y,
+                  10.0F); // goal_y represents Z coordinate
   EXPECT_TRUE(guard_mode->returning_to_guard_position);
 }
 
@@ -194,7 +198,7 @@ TEST_F(GuardSystemTest, GuardDoesNotMoveWhenAlreadyAtPosition) {
   guard_mode->returning_to_guard_position = false;
 
   // Run the guard system
-  GuardSystem::update(world.get(), 0.1F);
+  guard_system.update(world.get(), 0.1F);
 
   // Guard should not move (already at position)
   EXPECT_FALSE(guard_movement->has_target);
