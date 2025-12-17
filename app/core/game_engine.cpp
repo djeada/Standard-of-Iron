@@ -983,15 +983,22 @@ void GameEngine::place_building_at_screen(qreal sx, qreal sy) {
   params.ai_controlled = false;
 
   auto &nation_registry = Game::Systems::NationRegistry::instance();
-  params.nation_id = nation_registry.get_player_nation(m_runtime.local_owner_id);
+  if (const auto *nation =
+          nation_registry.get_nation_for_player(m_runtime.local_owner_id)) {
+    params.nation_id = nation->id;
+  } else {
+    params.nation_id = nation_registry.default_nation_id();
+  }
 
   if (m_pending_building_type == QStringLiteral("defense_tower")) {
     params.spawn_type = Game::Units::SpawnType::DefenseTower;
 
-    auto &registry = Game::Units::UnitFactoryRegistry::instance();
-    auto unit = registry.create(*m_world, params.spawn_type, params);
-    if (unit) {
-      qInfo() << "Placed defense tower at" << hit.x() << hit.z();
+    auto registry = Game::Map::MapTransformer::getFactoryRegistry();
+    if (registry) {
+      auto unit = registry->create(params.spawn_type, *m_world, params);
+      if (unit) {
+        qInfo() << "Placed defense tower at" << hit.x() << hit.z();
+      }
     }
   }
 
