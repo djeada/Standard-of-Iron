@@ -122,8 +122,8 @@ void draw_health_bar(const DrawContext &p, ISubmitter &out, Mesh *unit,
   QVector3D const fg = QVector3D(0.22F, 0.78F, 0.22F) * ratio +
                        QVector3D(0.85F, 0.15F, 0.15F) * (1.0F - ratio);
   draw_box(out, unit, white, p.model,
-           QVector3D(-(0.6F * (1.0F - ratio)) * 0.5F, 3.21F, 0.0F),
-           QVector3D(0.6F * ratio * 0.5F, 0.025F, 0.045F), fg);
+           QVector3D(-0.3F * (1.0F - ratio), 3.21F, 0.0F),
+           QVector3D(0.3F * ratio, 0.025F, 0.045F), fg);
 }
 
 void draw_selection(const DrawContext &p, ISubmitter &out) {
