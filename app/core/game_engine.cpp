@@ -1667,6 +1667,8 @@ void GameEngine::perform_skirmish_load(const QString &map_path,
   GameStateRestorer::rebuild_entity_cache(m_world.get(), m_entity_cache,
                                           m_runtime.local_owner_id);
 
+  emit troop_count_changed();
+
   m_ambient_state_manager = std::make_unique<AmbientStateManager>();
 
   Engine::Core::EventManager::instance().publish(
@@ -1752,6 +1754,8 @@ auto GameEngine::load_from_slot(const QString &slot) -> bool {
       m_world.get(), m_selected_player_id, m_level, m_runtime.local_owner_id);
   GameStateRestorer::rebuild_entity_cache(m_world.get(), m_entity_cache,
                                           m_runtime.local_owner_id);
+
+  emit troop_count_changed();
 
   if (auto *ai_system = m_world->get_system<Game::Systems::AISystem>()) {
     qInfo() << "Reinitializing AI system after loading saved game";
