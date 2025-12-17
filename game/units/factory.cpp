@@ -2,6 +2,7 @@
 #include "archer.h"
 #include "ballista.h"
 #include "barracks.h"
+#include "builder.h"
 #include "catapult.h"
 #include "defense_tower.h"
 #include "healer.h"
@@ -59,6 +60,11 @@ void registerBuiltInUnits(UnitFactoryRegistry &reg) {
   reg.registerFactory(SpawnType::Ballista, [](Engine::Core::World &world,
                                               const SpawnParams &params) {
     return Ballista::Create(world, params);
+  });
+
+  reg.registerFactory(SpawnType::Builder, [](Engine::Core::World &world,
+                                             const SpawnParams &params) {
+    return Builder::Create(world, params);
   });
 
   reg.registerFactory(SpawnType::Barracks, [](Engine::Core::World &world,

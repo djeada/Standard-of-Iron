@@ -245,6 +245,41 @@
         "individuals_per_unit": 9,
         "max_units_per_row": 3
       }
+    },
+    {
+      "id": "builder",
+      "display_name": "Phoenician Craftsman",
+      "production": {
+        "cost": 55,
+        "build_time": 5.8,
+        "priority": 4,
+        "is_melee": true
+      },
+      "combat": {
+        "health": 675,
+        "max_health": 675,
+        "speed": 2.2,
+        "vision_range": 10.0,
+        "ranged_range": 1.5,
+        "ranged_damage": 2,
+        "ranged_cooldown": 2.0,
+        "melee_range": 1.5,
+        "melee_damage": 5,
+        "melee_cooldown": 1.0,
+        "can_ranged": false,
+        "can_melee": true
+      },
+      "visuals": {
+        "render_scale": 0.54,
+        "selection_ring_size": 0.4,
+        "selection_ring_y_offset": 0.0,
+        "selection_ring_ground_offset": 0.0,
+        "renderer_id": "troops/carthage/builder"
+      },
+      "formation": {
+        "individuals_per_unit": 1,
+        "max_units_per_row": 1
+      }
     }
   ]
 }
