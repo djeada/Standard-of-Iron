@@ -23,8 +23,7 @@
       {
         "type": "horse_swordsman",
         "count": 10,
-        "position": {"x": 58, "z": 62},
-        "note": "Weakened cavalry - Numidians have defected"
+        "position": {"x": 58, "z": 62}
       },
       {
         "type": "archer",
@@ -34,8 +33,7 @@
       {
         "type": "elephant",
         "count": 8,
-        "position": {"x": 56, "z": 60},
-        "note": "Untrained elephants - can panic"
+        "position": {"x": 56, "z": 60}
       }
     ],
     "starting_buildings": [],
@@ -54,8 +52,7 @@
       "personality": {
         "aggression": 0.8,
         "defense": 0.7,
-        "harassment": 0.5,
-        "tactical_genius": 0.9
+        "harassment": 0.5
       },
       "starting_units": [
         {
@@ -71,8 +68,7 @@
         {
           "type": "horse_swordsman",
           "count": 15,
-          "position": {"x": 155, "z": 62},
-          "note": "Includes Numidian cavalry - defected from Carthage"
+          "position": {"x": 155, "z": 62}
         },
         {
           "type": "archer",
@@ -126,23 +122,6 @@
     {
       "type": "overcome_cavalry_disadvantage",
       "description": "Win despite inferior cavalry"
-    }
-  ],
-  "special_mechanics": [
-    {
-      "type": "elephant_panic",
-      "trigger_conditions": ["heavy_fire", "loud_noises"],
-      "effect": "Elephants may panic and damage own troops",
-      "description": "Untrained elephants are unpredictable"
-    },
-    {
-      "type": "scipio_tactics",
-      "description": "Scipio adapts and counters Hannibal's famous tactics",
-      "effects": [
-        "Creates lanes for elephant charges",
-        "Uses superior cavalry for envelopment",
-        "Maintains disciplined formations"
-      ]
     }
   ],
   "events": [

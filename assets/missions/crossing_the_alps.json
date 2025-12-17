@@ -33,8 +33,7 @@
       {
         "type": "elephant",
         "count": 3,
-        "position": {"x": 44, "z": 40},
-        "note": "War elephants - can be lost"
+        "position": {"x": 44, "z": 40}
       }
     ],
     "starting_buildings": [],
@@ -66,9 +65,6 @@
           "count": 6,
           "position": {"x": 82, "z": 58}
         }
-      ],
-      "ambush_points": [
-        {"position": {"x": 70, "z": 50}, "trigger_distance": 15}
       ]
     },
     {
@@ -93,9 +89,6 @@
           "count": 8,
           "position": {"x": 112, "z": 88}
         }
-      ],
-      "ambush_points": [
-        {"position": {"x": 100, "z": 80}, "trigger_distance": 15}
       ]
     }
   ],
@@ -123,23 +116,6 @@
       "type": "save_elephants",
       "min_elephants": 2,
       "description": "Bonus: Save at least 2 elephants"
-    }
-  ],
-  "environmental_hazards": [
-    {
-      "type": "cold_attrition",
-      "damage_per_minute": 2,
-      "affected_areas": ["mountain_passes"],
-      "description": "Freezing cold causes gradual attrition"
-    },
-    {
-      "type": "avalanche_zones",
-      "locations": [
-        {"x": 90, "z": 70, "radius": 20},
-        {"x": 120, "z": 110, "radius": 25}
-      ],
-      "trigger_chance": 0.3,
-      "description": "Avalanches can occur in certain areas"
     }
   ],
   "events": [
