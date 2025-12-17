@@ -93,9 +93,10 @@ void Healer::init(const SpawnParams &params) {
         profile.combat.can_ranged
             ? Engine::Core::AttackComponent::CombatMode::Ranged
             : Engine::Core::AttackComponent::CombatMode::Melee;
-    m_atk->current_mode = profile.combat.can_ranged
-                              ? Engine::Core::AttackComponent::CombatMode::Ranged
-                              : Engine::Core::AttackComponent::CombatMode::Melee;
+    m_atk->current_mode =
+        profile.combat.can_ranged
+            ? Engine::Core::AttackComponent::CombatMode::Ranged
+            : Engine::Core::AttackComponent::CombatMode::Melee;
     m_atk->can_ranged = profile.combat.can_ranged;
     m_atk->can_melee = profile.combat.can_melee;
   }
