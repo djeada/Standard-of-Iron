@@ -1652,6 +1652,18 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       m_lastBoundShader = nullptr;
       break;
     }
+    case StoneImpactCmdIndex: {
+      const auto &impact = std::get<StoneImpactCmdIndex>(cmd);
+      if (m_combatDustPipeline == nullptr ||
+          !m_combatDustPipeline->is_initialized()) {
+        break;
+      }
+      m_combatDustPipeline->render_single_stone_impact(
+          impact.position, impact.color, impact.radius, impact.intensity,
+          impact.time, view_proj);
+      m_lastBoundShader = nullptr;
+      break;
+    }
     case ModeIndicatorCmdIndex: {
       const auto &mc = std::get<ModeIndicatorCmdIndex>(cmd);
 

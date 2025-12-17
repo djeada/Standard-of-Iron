@@ -61,6 +61,10 @@ public:
   void combat_dust(const QVector3D & /*position*/, const QVector3D & /*color*/,
                    float /*radius*/, float /*intensity*/,
                    float /*time*/) override {}
+
+  void stone_impact(const QVector3D & /*position*/, const QVector3D & /*color*/,
+                    float /*radius*/, float /*intensity*/,
+                    float /*time*/) override {}
   void mode_indicator(const QMatrix4x4 & /*model*/, int /*mode_type*/,
                       const QVector3D & /*color*/, float /*alpha*/) override {}
 
