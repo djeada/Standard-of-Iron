@@ -123,148 +123,67 @@ public:
     float const jitter = (hash_01(seed ^ 0xABCDU) - 0.5F) * 0.04F;
     float const asym = (hash_01(seed ^ 0xDEF0U) - 0.5F) * 0.05F;
 
-    // Craftsman pose - measuring/working stance
+    // Craftsman pose - one hand holding hammer, other extended/relaxed
     float const forward = 0.20F + (anim.is_moving ? 0.02F : 0.0F);
-    QVector3D const work_hand(-0.12F + asym, HP::WAIST_Y + 0.10F + jitter, forward + 0.04F);
-    QVector3D const guide_hand(0.18F - asym * 0.5F, HP::SHOULDER_Y - 0.04F + jitter * 0.5F, 0.15F);
+    QVector3D const hammer_hand(-0.12F + asym, HP::WAIST_Y + 0.10F + jitter, forward + 0.04F);
+    // Right hand more relaxed and extended (longer forearm appearance)
+    QVector3D const rest_hand(0.22F - asym * 0.5F, HP::WAIST_Y - 0.04F + jitter * 0.5F, 0.10F);
 
-    controller.placeHandAt(true, work_hand);
-    controller.placeHandAt(false, guide_hand);
+    controller.placeHandAt(true, hammer_hand);
+    controller.placeHandAt(false, rest_hand);
   }
 
   void add_attachments(const DrawContext &ctx, const HumanoidVariant &v,
                        const HumanoidPose &pose,
                        const HumanoidAnimationContext &anim_ctx,
                        ISubmitter &out) const override {
-    uint32_t const seed = reinterpret_cast<uintptr_t>(ctx.entity) & 0xFFFFFFFFU;
-    
-    // Varied tools for Phoenician craftsmen
-    float const tool_roll = hash_01(seed ^ 0x2345U);
-    if (tool_roll < 0.30F) {
-      draw_adze(ctx, v, pose, seed, out);
-    } else if (tool_roll < 0.55F) {
-      draw_chisel_mallet(ctx, v, pose, seed, out);
-    } else if (tool_roll < 0.80F) {
-      draw_saw(ctx, v, pose, seed, out);
-    } else {
-      draw_measuring_rod(ctx, v, pose, seed, out);
-    }
-    
-    // Some carry a rope coil
-    if (hash_01(seed ^ 0x6789U) < 0.35F) {
-      draw_rope_coil(ctx, v, pose, out);
-    }
+    // All builders hold stone hammers
+    draw_stone_hammer(ctx, v, pose, out);
   }
 
-  void draw_adze(const DrawContext &ctx, const HumanoidVariant &v,
-                 const HumanoidPose &pose, uint32_t seed, ISubmitter &out) const {
+  void draw_stone_hammer(const DrawContext &ctx, const HumanoidVariant &v,
+                         const HumanoidPose &pose, ISubmitter &out) const {
     QVector3D const wood = v.palette.wood;
-    QVector3D const metal = v.palette.metal * 0.88F;
+    // Stone color - grey with slight variation
+    QVector3D const stone_color(0.52F, 0.50F, 0.46F);
+    QVector3D const stone_dark(0.42F, 0.40F, 0.36F);
 
     QVector3D const hand = pose.hand_l;
     QVector3D const up(0.0F, 1.0F, 0.0F);
-    QVector3D const fwd(0.0F, 0.0F, 1.0F);
+    QVector3D const right(1.0F, 0.0F, 0.0F);
 
+    // Wooden handle
     float const h_len = 0.30F;
     QVector3D const h_top = hand + up * 0.11F;
     QVector3D const h_bot = h_top - up * h_len;
 
     out.mesh(get_unit_cylinder(), cylinder_between(ctx.model, h_bot, h_top, 0.015F), wood, nullptr, 1.0F);
 
-    // Adze blade (curved, perpendicular to handle)
-    QVector3D const blade_start = h_top + up * 0.02F;
-    QVector3D const blade_end = blade_start + fwd * 0.09F - up * 0.03F;
-    out.mesh(get_unit_cylinder(), cylinder_between(ctx.model, blade_start, blade_end, 0.018F), metal, nullptr, 1.0F);
-  }
-
-  void draw_chisel_mallet(const DrawContext &ctx, const HumanoidVariant &v,
-                          const HumanoidPose &pose, uint32_t seed, ISubmitter &out) const {
-    QVector3D const wood = v.palette.wood;
-    QVector3D const metal = v.palette.metal;
-
-    QVector3D const hand_l = pose.hand_l;
-    QVector3D const hand_r = pose.hand_r;
-    QVector3D const up(0.0F, 1.0F, 0.0F);
-    QVector3D const right(1.0F, 0.0F, 0.0F);
-
-    // Chisel in left hand
-    QVector3D const c_top = hand_l + up * 0.08F;
-    QVector3D const c_bot = c_top - up * 0.16F;
-    out.mesh(get_unit_cylinder(), cylinder_between(ctx.model, c_bot, c_top, 0.010F), metal, nullptr, 1.0F);
-
-    // Small mallet in right hand
-    QVector3D const m_top = hand_r + up * 0.08F;
-    QVector3D const m_bot = m_top - up * 0.18F;
-    out.mesh(get_unit_cylinder(), cylinder_between(ctx.model, m_bot, m_top, 0.012F), wood, nullptr, 1.0F);
+    // Stone hammer head - rough, natural look
+    float const head_len = 0.09F;
+    float const head_r = 0.028F;
+    QVector3D const head_center = h_top + up * 0.03F;
     
-    QVector3D const head = m_top + up * 0.02F;
+    // Main stone head
     out.mesh(get_unit_cylinder(),
-             cylinder_between(ctx.model, head - right * 0.03F, head + right * 0.03F, 0.028F),
-             wood * 0.8F, nullptr, 1.0F);
-  }
-
-  void draw_saw(const DrawContext &ctx, const HumanoidVariant &v,
-                const HumanoidPose &pose, uint32_t seed, ISubmitter &out) const {
-    QVector3D const wood = v.palette.wood;
-    QVector3D const metal = v.palette.metal * 0.9F;
-
-    QVector3D const hand = pose.hand_l;
-    QVector3D const up(0.0F, 1.0F, 0.0F);
-    QVector3D const fwd(0.0F, 0.0F, 1.0F);
-
-    // Handle
-    QVector3D const h_start = hand;
-    QVector3D const h_end = hand + up * 0.08F + fwd * 0.02F;
-    out.mesh(get_unit_cylinder(), cylinder_between(ctx.model, h_start, h_end, 0.016F), wood, nullptr, 1.0F);
-
-    // Blade
-    QVector3D const b_start = h_end;
-    QVector3D const b_end = b_start + fwd * 0.25F - up * 0.02F;
-    out.mesh(get_unit_cylinder(), cylinder_between(ctx.model, b_start, b_end, 0.008F), metal, nullptr, 1.0F);
-  }
-
-  void draw_measuring_rod(const DrawContext &ctx, const HumanoidVariant &v,
-                          const HumanoidPose &pose, uint32_t seed, ISubmitter &out) const {
-    QVector3D const wood = v.palette.wood * 1.1F;
-    QVector3D const mark_color(0.2F, 0.15F, 0.1F);
-
-    QVector3D const hand = pose.hand_l;
-    QVector3D const up(0.0F, 1.0F, 0.0F);
-
-    // Long measuring rod
-    QVector3D const rod_top = hand + up * 0.35F;
-    QVector3D const rod_bot = hand - up * 0.10F;
-    out.mesh(get_unit_cylinder(), cylinder_between(ctx.model, rod_bot, rod_top, 0.012F), wood, nullptr, 1.0F);
-
-    // Measurement marks
-    for (int i = 0; i < 4; ++i) {
-      float t = 0.2F + float(i) * 0.2F;
-      QVector3D pos = rod_bot * (1.0F - t) + rod_top * t;
-      out.mesh(get_unit_sphere(), sphere_at(ctx.model, pos, 0.014F), mark_color, nullptr, 1.0F);
-    }
-  }
-
-  void draw_rope_coil(const DrawContext &ctx, const HumanoidVariant &v,
-                      const HumanoidPose &pose, ISubmitter &out) const {
-    const BodyFrames &frames = pose.body_frames;
-    QVector3D const rope_color(0.55F, 0.45F, 0.32F);
-
-    // Rope coil worn across shoulder
-    QVector3D const shoulder = frames.shoulder_r.origin;
-    QVector3D const hip = frames.waist.origin - frames.waist.right * 0.06F;
+             cylinder_between(ctx.model, head_center - right * (head_len * 0.5F),
+                              head_center + right * (head_len * 0.5F), head_r),
+             stone_color, nullptr, 1.0F);
     
-    // Draw as series of spheres
-    for (int i = 0; i < 6; ++i) {
-      float t = float(i) / 5.0F;
-      QVector3D pos = shoulder * (1.0F - t) + hip * t;
-      pos += QVector3D(0.02F, 0.0F, 0.03F);
-      out.mesh(get_unit_sphere(), sphere_at(ctx.model, pos, 0.022F), rope_color, nullptr, 1.0F);
-    }
+    // Striking face
+    out.mesh(get_unit_sphere(),
+             sphere_at(ctx.model, head_center + right * (head_len * 0.5F), head_r * 1.1F),
+             stone_dark, nullptr, 1.0F);
+    
+    // Back peen
+    out.mesh(get_unit_sphere(),
+             sphere_at(ctx.model, head_center - right * (head_len * 0.5F), head_r * 0.85F),
+             stone_color * 0.92F, nullptr, 1.0F);
   }
 
   void draw_helmet(const DrawContext &ctx, const HumanoidVariant &v,
                    const HumanoidPose &pose, ISubmitter &out) const override {
-    // Phoenician craftsmen wear headwraps
+    // Phoenician craftsmen wear headwraps (kept as cultural element)
     draw_headwrap(ctx, v, pose, out);
   }
 
@@ -310,8 +229,6 @@ public:
     }
     
     QVector3D const robe_dark = robe_color * 0.88F;
-    QVector3D const sash_color(0.55F, 0.25F, 0.18F); // Red-brown sash
-    QVector3D const leather = v.palette.leather;
 
     const QVector3D &origin = torso.origin;
     const QVector3D &right = torso.right;
@@ -352,14 +269,7 @@ public:
       ring(y, tr * (1.06F - t * 0.12F), td * (1.00F - t * 0.10F), c, 0.026F - t * 0.003F);
     }
 
-    // Sash/belt area
-    float const sash_y = y_w + 0.005F;
-    QVector3D const sash_c = origin + up * (sash_y - origin.y());
-    out.mesh(get_unit_cylinder(),
-             cylinder_between(ctx.model, sash_c - up * 0.022F, sash_c + up * 0.022F, tr * 0.94F),
-             sash_color, nullptr, 1.0F);
-
-    // Longer skirt - Phoenician style
+    // Longer skirt - Phoenician style - NO BELT/SASH
     for (int i = 0; i < 6; ++i) {
       float t = float(i) / 5.0F;
       float y = y_w - 0.02F - t * (y_w - y_hem);
@@ -367,17 +277,6 @@ public:
       QVector3D c = robe_color * (1.0F - t * 0.06F);
       ring(y, tr * 0.85F * flare, td * 0.80F * flare, c, 0.020F + t * 0.008F);
     }
-
-    // Tool bag on belt
-    QVector3D const bag = origin + right * (tr * 0.72F) + up * (sash_y - 0.06F - origin.y()) + forward * td * 0.08F;
-    out.mesh(get_unit_cube(),
-             [&]() {
-               QMatrix4x4 m = ctx.model;
-               m.translate(bag);
-               m.scale(0.042F, 0.058F, 0.035F);
-               return m;
-             }(),
-             leather * 0.92F, nullptr, 1.0F);
 
     // Flowing sleeves
     auto sleeve = [&](const QVector3D &sh, const QVector3D &out_dir) {
@@ -392,6 +291,26 @@ public:
     };
     sleeve(frames.shoulder_l.origin, -right);
     sleeve(frames.shoulder_r.origin, right);
+
+    // Extended forearm on non-hammer arm (right side)
+    draw_extended_forearm(ctx, v, pose, out);
+  }
+
+  void draw_extended_forearm(const DrawContext &ctx, const HumanoidVariant &v,
+                             const HumanoidPose &pose, ISubmitter &out) const {
+    // Draw additional forearm segments on right arm to make it appear longer
+    QVector3D const skin_color = v.palette.skin;
+    
+    QVector3D const elbow_r = pose.elbow_r;
+    QVector3D const hand_r = pose.hand_r;
+    
+    // Add extra segments along the forearm
+    for (int i = 0; i < 4; ++i) {
+      float t = 0.25F + float(i) * 0.20F;
+      QVector3D pos = elbow_r * (1.0F - t) + hand_r * t;
+      float r = 0.022F - float(i) * 0.002F;
+      out.mesh(get_unit_sphere(), sphere_at(ctx.model, pos, r), skin_color, nullptr, 1.0F);
+    }
   }
 
 private:
