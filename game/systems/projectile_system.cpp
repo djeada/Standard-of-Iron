@@ -62,12 +62,12 @@ void ProjectileSystem::update(Engine::Core::World *world, float delta_time) {
   for (auto &projectile : m_projectiles) {
     projectile->update(delta_time);
 
-    if (!projectile->is_active()) {
-      continue;
-    }
-
     if (projectile->should_apply_damage() && world != nullptr) {
       apply_impact_damage(world, projectile.get());
+    }
+
+    if (!projectile->is_active()) {
+      continue;
     }
   }
 
@@ -78,7 +78,16 @@ void ProjectileSystem::update(Engine::Core::World *world, float delta_time) {
 }
 
 void ProjectileSystem::apply_impact_damage(Engine::Core::World *world,
-                                           const Projectile *projectile) {
+                                           Projectile *projectile) {
+  if (projectile == nullptr) {
+    return;
+  }
+
+  constexpr float k_min_progress_for_impact = 0.98F;
+  if (projectile->get_progress() < k_min_progress_for_impact) {
+    return;
+  }
+
   if (projectile->get_target_id() == 0) {
     return;
   }
@@ -113,6 +122,7 @@ void ProjectileSystem::apply_impact_damage(Engine::Core::World *world,
   }
 
   target_unit->health -= projectile->get_damage();
+  projectile->deactivate();
   if (target_unit->health <= 0) {
     target_unit->health = 0;
 
