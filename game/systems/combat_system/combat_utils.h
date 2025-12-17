@@ -21,4 +21,6 @@ auto is_unit_idle(Engine::Core::Entity *unit) -> bool;
 auto find_nearest_enemy(Engine::Core::Entity *unit, Engine::Core::World *world,
                         float max_range) -> Engine::Core::Entity *;
 
+auto should_auto_engage_melee(Engine::Core::Entity *unit) -> bool;
+
 } // namespace Game::Systems::Combat
