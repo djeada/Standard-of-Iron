@@ -193,7 +193,7 @@ QtObject {
     })
 
     function iconPath(filename) {
-        return "qrc:/StandardOfIron/assets/visuals/icons/" + filename;
+        return Qt.resolvedUrl("../../assets/visuals/icons/" + filename);
     }
 
 }
