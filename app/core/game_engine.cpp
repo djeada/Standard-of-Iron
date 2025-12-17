@@ -332,10 +332,10 @@ GameEngine::GameEngine(QObject *parent)
             on_unit_died(e);
             if (e.owner_id != m_runtime.local_owner_id) {
 
-              int const individuals_per_unit =
-                  Game::Units::TroopConfig::instance().getIndividualsPerUnit(
+              int const production_cost =
+                  Game::Units::TroopConfig::instance().getProductionCost(
                       e.spawn_type);
-              m_enemyTroopsDefeated += individuals_per_unit;
+              m_enemyTroopsDefeated += production_cost;
               emit enemy_troops_defeated_changed();
             }
           });
