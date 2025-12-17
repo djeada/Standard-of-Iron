@@ -27,7 +27,7 @@ struct FormationPosition {
   float facing_angle;
 };
 
-}
+} // namespace Game::Systems
 
 namespace std {
 template <> struct hash<Game::Systems::FormationType> {
@@ -47,11 +47,9 @@ public:
       int unit_count, const QVector3D &center,
       float base_spacing = 1.0F) const -> std::vector<QVector3D> = 0;
 
-  [[nodiscard]] virtual auto
-  calculateFormationPositions(const std::vector<UnitFormationInfo> &units,
-                              const QVector3D &center,
-                              float base_spacing = 1.0F) const
-      -> std::vector<FormationPosition> = 0;
+  [[nodiscard]] virtual auto calculateFormationPositions(
+      const std::vector<UnitFormationInfo> &units, const QVector3D &center,
+      float base_spacing = 1.0F) const -> std::vector<FormationPosition> = 0;
 
   [[nodiscard]] virtual auto getType() const -> FormationType = 0;
 };

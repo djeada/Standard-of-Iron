@@ -227,6 +227,10 @@ public:
 
   Q_INVOKABLE [[nodiscard]] bool has_selected_type(const QString &type) const;
   Q_INVOKABLE void recruit_near_selected(const QString &unit_type);
+  Q_INVOKABLE void start_building_placement(const QString &building_type);
+  Q_INVOKABLE void place_building_at_screen(qreal sx, qreal sy);
+  Q_INVOKABLE void cancel_building_placement();
+  Q_INVOKABLE [[nodiscard]] QString pending_building_type() const;
   Q_INVOKABLE [[nodiscard]] QVariantMap get_selected_production_state() const;
   Q_INVOKABLE [[nodiscard]] QVariantMap
   get_unit_production_info(const QString &unit_type) const;
@@ -373,6 +377,7 @@ private:
   QVariantList m_available_campaigns;
   bool m_maps_loading = false;
   QString m_current_campaign_id;
+  QString m_pending_building_type;
   QString m_current_mission_id;
   std::optional<Game::Mission::MissionDefinition> m_current_mission_definition;
   bool m_loading_overlay_active = false;

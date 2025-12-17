@@ -106,6 +106,8 @@ add_library(game_systems STATIC
     units/troop_catalog_loader.cpp
     units/factory.cpp
     units/barracks.cpp
+    units/defense_tower.cpp
+    systems/defense_tower_system.cpp
 )
 
 target_include_directories(game_systems PUBLIC .)
