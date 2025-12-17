@@ -336,15 +336,15 @@
         "can_melee": true
       },
       "visuals": {
-        "render_scale": 0.55,
-        "selection_ring_size": 1.2,
+        "render_scale": 0.50,
+        "selection_ring_size": 1.0,
         "selection_ring_y_offset": 0.0,
         "selection_ring_ground_offset": 0.0,
         "renderer_id": "troops/roman/builder"
       },
       "formation": {
-        "individuals_per_unit": 1,
-        "max_units_per_row": 1
+        "individuals_per_unit": 12,
+        "max_units_per_row": 4
       }
     }
   ]
