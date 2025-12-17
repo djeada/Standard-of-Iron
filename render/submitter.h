@@ -35,6 +35,8 @@ public:
                            float radius, float intensity, float time) = 0;
   virtual void combat_dust(const QVector3D &position, const QVector3D &color,
                            float radius, float intensity, float time) = 0;
+  virtual void stone_impact(const QVector3D &position, const QVector3D &color,
+                            float radius, float intensity, float time) = 0;
   virtual void mode_indicator(const QMatrix4x4 &model, int mode_type,
                               const QVector3D &color, float alpha = 1.0F) = 0;
 };
@@ -182,6 +184,19 @@ public:
     cmd.time = time;
     m_queue->submit(cmd);
   }
+  void stone_impact(const QVector3D &position, const QVector3D &color,
+                    float radius, float intensity, float time) override {
+    if (m_queue == nullptr) {
+      return;
+    }
+    StoneImpactCmd cmd;
+    cmd.position = position;
+    cmd.color = color;
+    cmd.radius = radius;
+    cmd.intensity = intensity;
+    cmd.time = time;
+    m_queue->submit(cmd);
+  }
   void mode_indicator(const QMatrix4x4 &model, int mode_type,
                       const QVector3D &color, float alpha = 1.0F) override {
     if (m_queue == nullptr) {
@@ -284,6 +299,13 @@ public:
                    float radius, float intensity, float time) override {
     if (m_fallback != nullptr) {
       m_fallback->combat_dust(position, color, radius, intensity, time);
+    }
+  }
+
+  void stone_impact(const QVector3D &position, const QVector3D &color,
+                    float radius, float intensity, float time) override {
+    if (m_fallback != nullptr) {
+      m_fallback->stone_impact(position, color, radius, intensity, time);
     }
   }
 
