@@ -35,10 +35,10 @@ TEST_F(FormationSystemTest, CarthageFormationHasJitter) {
 
   auto positions1 = FormationSystem::instance().get_formation_positions(
       FormationType::Carthage, unit_count, center, spacing);
-  
+
   // Carthage formation uses jitter, so positions won't be perfectly aligned
   EXPECT_EQ(positions1.size(), 9);
-  
+
   // Check that all positions are near the center (within reasonable bounds)
   for (const auto &pos : positions1) {
     EXPECT_LT(std::abs(pos.x() - center.x()), spacing * 5.0F);
@@ -82,19 +82,19 @@ TEST_F(FormationSystemTest, BarbarianFormationIsLooser) {
 
 TEST_F(FormationSystemTest, HandlesZeroUnits) {
   QVector3D center(0.0F, 0.0F, 0.0F);
-  
+
   auto positions = FormationSystem::instance().get_formation_positions(
       FormationType::Roman, 0, center, 1.0F);
-  
+
   EXPECT_TRUE(positions.empty());
 }
 
 TEST_F(FormationSystemTest, HandlesSingleUnit) {
   QVector3D center(5.0F, 0.0F, 10.0F);
-  
+
   auto positions = FormationSystem::instance().get_formation_positions(
       FormationType::Roman, 1, center, 1.0F);
-  
+
   EXPECT_EQ(positions.size(), 1);
   EXPECT_FLOAT_EQ(positions[0].x(), center.x());
   EXPECT_FLOAT_EQ(positions[0].y(), center.y());
