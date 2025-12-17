@@ -135,16 +135,26 @@ auto ModeIndicator::create_attack_mode_mesh()
 auto ModeIndicator::create_guard_mode_mesh()
     -> std::unique_ptr<Render::GL::Mesh> {
   using namespace Render::GL;
+
   std::vector<Vertex> verts;
   std::vector<unsigned int> idx;
 
   QVector3D const n(0, 0, 1);
 
-  constexpr float shield_width = 0.45F;
-  constexpr float shield_height = 0.55F;
-  constexpr float inner_scale = 0.78F;
-  constexpr float boss_radius = 0.12F;
-  constexpr float boss_height = 0.01F;
+  // =========================
+  // PROPORTIONS (FIXED)
+  // =========================
+  constexpr float shield_width  = 0.42F;
+  constexpr float shield_height = 0.62F;
+
+  constexpr float inner_scale = 0.82F;
+
+  // Curvature illusion
+  constexpr float face_curve_z = 0.025F;
+
+  // Boss
+  constexpr float boss_radius = 0.095F;
+  constexpr float boss_height = 0.04F;
 
   auto add_vert = [&](float x, float y, float u, float v, float z = 0.0F) {
     verts.push_back({{x, y, z}, {n.x(), n.y(), n.z()}, {u, v}});
@@ -157,73 +167,91 @@ auto ModeIndicator::create_guard_mode_mesh()
     return QVector2D(u, v);
   };
 
+  // =========================
+  // CLEAN, READABLE SILHOUETTE
+  // =========================
   const std::vector<QVector2D> outline = {
-      {-shield_width * 0.55F, shield_height * 0.55F},
-      {-shield_width * 0.20F, shield_height * 0.57F},
-      {shield_width * 0.20F, shield_height * 0.57F},
-      {shield_width * 0.55F, shield_height * 0.55F},
-      {shield_width * 0.60F, shield_height * 0.20F},
-      {shield_width * 0.65F, -shield_height * 0.10F},
-      {shield_width * 0.45F, -shield_height * 0.45F},
-      {shield_width * 0.20F, -shield_height * 0.75F},
-      {0.0F, -shield_height * 1.0F},
-      {-shield_width * 0.20F, -shield_height * 0.75F},
-      {-shield_width * 0.45F, -shield_height * 0.45F},
-      {-shield_width * 0.65F, -shield_height * 0.10F},
-      {-shield_width * 0.60F, shield_height * 0.20F},
+      {-0.55F * shield_width,  0.55F * shield_height},
+      {-0.20F * shield_width,  0.60F * shield_height},
+      { 0.20F * shield_width,  0.60F * shield_height},
+      { 0.55F * shield_width,  0.55F * shield_height},
+
+      { 0.65F * shield_width,  0.15F * shield_height},
+      { 0.55F * shield_width, -0.25F * shield_height},
+      { 0.25F * shield_width, -0.60F * shield_height},
+
+      { 0.00F,                -0.85F * shield_height},
+
+      {-0.25F * shield_width, -0.60F * shield_height},
+      {-0.55F * shield_width, -0.25F * shield_height},
+      {-0.65F * shield_width,  0.15F * shield_height},
   };
 
+  // =========================
+  // OUTER + INNER RINGS
+  // =========================
   std::vector<unsigned int> outer_idx;
   std::vector<unsigned int> inner_idx;
-  outer_idx.reserve(outline.size());
-  inner_idx.reserve(outline.size());
 
-  for (const auto &p : outline) {
+  for (auto const& p : outline) {
     auto uv = uv_for(p.x(), p.y());
-    outer_idx.push_back(add_vert(p.x(), p.y(), uv.x(), uv.y()));
+    outer_idx.push_back(add_vert(p.x(), p.y(), uv.x(), uv.y(), 0.0F));
 
-    QVector2D inner_p = p * inner_scale;
-    auto inner_uv = uv_for(inner_p.x(), inner_p.y());
-    inner_idx.push_back(
-        add_vert(inner_p.x(), inner_p.y(), inner_uv.x(), inner_uv.y()));
+    QVector2D ip = p * inner_scale;
+
+    // Push inner face forward for curvature illusion
+    float z = face_curve_z * (1.0F - std::abs(ip.y()) / shield_height);
+    auto iuv = uv_for(ip.x(), ip.y());
+
+    inner_idx.push_back(add_vert(ip.x(), ip.y(), iuv.x(), iuv.y(), z));
   }
 
+  // Side walls
   for (size_t i = 0; i < outer_idx.size(); ++i) {
     size_t next = (i + 1) % outer_idx.size();
-    idx.push_back(outer_idx[i]);
-    idx.push_back(outer_idx[next]);
-    idx.push_back(inner_idx[i]);
 
-    idx.push_back(inner_idx[i]);
-    idx.push_back(outer_idx[next]);
-    idx.push_back(inner_idx[next]);
+    idx.insert(idx.end(), {
+        outer_idx[i], outer_idx[next], inner_idx[i],
+        inner_idx[i], outer_idx[next], inner_idx[next]
+    });
   }
 
+  // =========================
+  // FRONT FACE (FAN)
+  // =========================
   unsigned int face_center =
-      add_vert(0.0F, -shield_height * 0.05F, 0.5F, 0.45F);
+      add_vert(0.0F, -shield_height * 0.05F, 0.5F, 0.45F, face_curve_z);
+
   for (size_t i = 0; i < inner_idx.size(); ++i) {
     size_t next = (i + 1) % inner_idx.size();
-    idx.push_back(face_center);
-    idx.push_back(inner_idx[i]);
-    idx.push_back(inner_idx[next]);
+    idx.insert(idx.end(), {
+        face_center, inner_idx[i], inner_idx[next]
+    });
   }
 
+  // =========================
+  // BOSS (CENTERED, STRUCTURAL)
+  // =========================
+  constexpr int boss_segments = 18;
+
   unsigned int boss_center =
-      add_vert(0.0F, shield_height * 0.05F, 0.5F, 0.55F, boss_height);
-  constexpr int boss_segments = 14;
+      add_vert(0.0F, shield_height * 0.08F, 0.5F, 0.58F, boss_height);
+
   std::vector<unsigned int> boss_ring;
   boss_ring.reserve(boss_segments + 1);
+
   for (int i = 0; i <= boss_segments; ++i) {
-    float const angle = (i / float(boss_segments)) * 2.0F * k_pi;
-    float const x = boss_radius * std::cos(angle);
-    float const y = shield_height * 0.05F + boss_radius * std::sin(angle);
+    float a = (i / float(boss_segments)) * 2.0F * k_pi;
+    float x = boss_radius * std::cos(a);
+    float y = shield_height * 0.08F + boss_radius * std::sin(a);
     auto uv = uv_for(x, y);
     boss_ring.push_back(add_vert(x, y, uv.x(), uv.y(), boss_height));
   }
+
   for (int i = 0; i < boss_segments; ++i) {
-    idx.push_back(boss_center);
-    idx.push_back(boss_ring[i]);
-    idx.push_back(boss_ring[i + 1]);
+    idx.insert(idx.end(), {
+        boss_center, boss_ring[i], boss_ring[i + 1]
+    });
   }
 
   return std::make_unique<Mesh>(verts, idx);
@@ -232,81 +260,106 @@ auto ModeIndicator::create_guard_mode_mesh()
 auto ModeIndicator::create_hold_mode_mesh()
     -> std::unique_ptr<Render::GL::Mesh> {
   using namespace Render::GL;
+
   std::vector<Vertex> verts;
   std::vector<unsigned int> idx;
 
+  // =========================
+  // PROPORTIONS (FIXED)
+  // =========================
   constexpr float anchor_height = 0.9F;
-  constexpr float ring_outer = 0.08F;
-  constexpr float ring_inner = 0.05F;
-  constexpr float shank_width = 0.06F;
-  constexpr float cross_width = 0.45F;
-  constexpr float cross_height = 0.07F;
-  constexpr float fluke_span = 0.65F;
-  constexpr float fluke_drop = 0.35F;
+
+  // Thick, structural ring
+  constexpr float ring_outer = 0.11F;
+  constexpr float ring_inner = 0.065F;
+
+  // Real pillar, not a line
+  constexpr float shank_width = 0.12F;
+
+  // Shorter, heavier cross
+  constexpr float cross_width = 0.32F;
+  constexpr float cross_height = 0.11F;
+
+  // Tighter flukes
+  constexpr float fluke_span = 0.48F;
+  constexpr float fluke_drop = 0.28F;
 
   QVector3D const n(0, 0, 1);
+
   auto add = [&](float x, float y, float u, float v) {
     verts.push_back({{x, y, 0.0F}, {n.x(), n.y(), n.z()}, {u, v}});
     return static_cast<unsigned int>(verts.size() - 1);
   };
 
-  constexpr int ring_segments = 14;
-  float const ring_y = anchor_height * 0.45F;
+  // =========================
+  // RING (LOWER + INTEGRATED)
+  // =========================
+  constexpr int ring_segments = 18;
+  float const ring_y = anchor_height * 0.32F;
+
   for (int i = 0; i < ring_segments; ++i) {
     float a0 = (i / float(ring_segments)) * 2.0F * k_pi;
     float a1 = ((i + 1) / float(ring_segments)) * 2.0F * k_pi;
+
     float x0o = ring_outer * std::cos(a0);
     float y0o = ring_y + ring_outer * std::sin(a0);
     float x1o = ring_outer * std::cos(a1);
     float y1o = ring_y + ring_outer * std::sin(a1);
+
     float x0i = ring_inner * std::cos(a0);
     float y0i = ring_y + ring_inner * std::sin(a0);
     float x1i = ring_inner * std::cos(a1);
     float y1i = ring_y + ring_inner * std::sin(a1);
+
     unsigned int b = verts.size();
-    verts.push_back({{x0o, y0o, 0.0F}, {n.x(), n.y(), n.z()}, {0.0F, 1.0F}});
-    verts.push_back({{x1o, y1o, 0.0F}, {n.x(), n.y(), n.z()}, {1.0F, 1.0F}});
-    verts.push_back({{x1i, y1i, 0.0F}, {n.x(), n.y(), n.z()}, {1.0F, 0.0F}});
-    verts.push_back({{x0i, y0i, 0.0F}, {n.x(), n.y(), n.z()}, {0.0F, 0.0F}});
+    verts.push_back({{x0o, y0o, 0.0F}, n, {0.0F, 1.0F}});
+    verts.push_back({{x1o, y1o, 0.0F}, n, {1.0F, 1.0F}});
+    verts.push_back({{x1i, y1i, 0.0F}, n, {1.0F, 0.0F}});
+    verts.push_back({{x0i, y0i, 0.0F}, n, {0.0F, 0.0F}});
+
     idx.insert(idx.end(), {b + 0, b + 1, b + 2, b + 2, b + 3, b + 0});
   }
 
+  // =========================
+  // SHANK (PILLAR)
+  // =========================
   float const shank_half = shank_width * 0.5F;
-  float const shank_top = ring_y - ring_inner;
-  float const shank_bottom = -anchor_height * 0.15F;
-  unsigned int shank_base = verts.size();
-  verts.push_back(
-      {{-shank_half, shank_top, 0.0F}, {n.x(), n.y(), n.z()}, {0.0F, 1.0F}});
-  verts.push_back(
-      {{shank_half, shank_top, 0.0F}, {n.x(), n.y(), n.z()}, {1.0F, 1.0F}});
-  verts.push_back(
-      {{shank_half, shank_bottom, 0.0F}, {n.x(), n.y(), n.z()}, {1.0F, 0.0F}});
-  verts.push_back(
-      {{-shank_half, shank_bottom, 0.0F}, {n.x(), n.y(), n.z()}, {0.0F, 0.0F}});
-  idx.insert(idx.end(), {shank_base + 0, shank_base + 1, shank_base + 2,
-                         shank_base + 2, shank_base + 3, shank_base + 0});
+  float const shank_top = ring_y - ring_inner * 0.9F;
+  float const shank_bottom = -anchor_height * 0.18F;
 
+  unsigned int shank_base = verts.size();
+  verts.push_back({{-shank_half, shank_top, 0.0F}, n, {0.0F, 1.0F}});
+  verts.push_back({{ shank_half, shank_top, 0.0F}, n, {1.0F, 1.0F}});
+  verts.push_back({{ shank_half, shank_bottom, 0.0F}, n, {1.0F, 0.0F}});
+  verts.push_back({{-shank_half, shank_bottom, 0.0F}, n, {0.0F, 0.0F}});
+
+  idx.insert(idx.end(),
+             {shank_base + 0, shank_base + 1, shank_base + 2,
+              shank_base + 2, shank_base + 3, shank_base + 0});
+
+  // =========================
+  // CROSS (STRUCTURAL, NOT UI)
+  // =========================
   float const cross_y = shank_bottom;
   float const cross_half_w = cross_width * 0.5F;
   float const cross_half_h = cross_height * 0.5F;
-  unsigned int cross_base = verts.size();
-  verts.push_back({{-cross_half_w, cross_y - cross_half_h, 0.0F},
-                   {n.x(), n.y(), n.z()},
-                   {0.0F, 0.5F}});
-  verts.push_back({{cross_half_w, cross_y - cross_half_h, 0.0F},
-                   {n.x(), n.y(), n.z()},
-                   {1.0F, 0.5F}});
-  verts.push_back({{cross_half_w, cross_y + cross_half_h, 0.0F},
-                   {n.x(), n.y(), n.z()},
-                   {1.0F, 0.5F}});
-  verts.push_back({{-cross_half_w, cross_y + cross_half_h, 0.0F},
-                   {n.x(), n.y(), n.z()},
-                   {0.0F, 0.5F}});
-  idx.insert(idx.end(), {cross_base + 0, cross_base + 1, cross_base + 2,
-                         cross_base + 2, cross_base + 3, cross_base + 0});
 
+  unsigned int cross_base = verts.size();
+  verts.push_back({{-cross_half_w, cross_y - cross_half_h, 0.0F}, n, {0.0F, 0.5F}});
+  verts.push_back({{ cross_half_w, cross_y - cross_half_h, 0.0F}, n, {1.0F, 0.5F}});
+  verts.push_back({{ cross_half_w, cross_y + cross_half_h, 0.0F}, n, {1.0F, 0.5F}});
+  verts.push_back({{-cross_half_w, cross_y + cross_half_h, 0.0F}, n, {0.0F, 0.5F}});
+
+  idx.insert(idx.end(),
+             {cross_base + 0, cross_base + 1, cross_base + 2,
+              cross_base + 2, cross_base + 3, cross_base + 0});
+
+  // =========================
+  // FLUKES (LOAD BEARING)
+  // =========================
   float const fluke_y = cross_y - fluke_drop;
-  float const fluke_tip_y = -anchor_height * 0.55F;
+  float const fluke_tip_y = -anchor_height * 0.58F;
+
   auto add_tri = [&](QVector2D a, QVector2D b, QVector2D c) {
     unsigned int ia = add(a.x(), a.y(), 0.0F, 0.0F);
     unsigned int ib = add(b.x(), b.y(), 1.0F, 0.5F);
@@ -314,12 +367,18 @@ auto ModeIndicator::create_hold_mode_mesh()
     idx.insert(idx.end(), {ia, ib, ic});
   };
 
-  add_tri({-cross_half_w, cross_y}, {-fluke_span * 0.55F, fluke_y},
+  // Side flukes
+  add_tri({-cross_half_w * 0.9F, cross_y},
+          {-fluke_span * 0.6F, fluke_y},
           {-fluke_span, fluke_tip_y});
-  add_tri({cross_half_w, cross_y}, {fluke_span * 0.55F, fluke_y},
-          {fluke_span, fluke_tip_y});
 
-  add_tri({-shank_half * 0.6F, cross_y}, {shank_half * 0.6F, cross_y},
+  add_tri({ cross_half_w * 0.9F, cross_y},
+          { fluke_span * 0.6F, fluke_y},
+          { fluke_span, fluke_tip_y});
+
+  // Center stabilizer
+  add_tri({-shank_half * 0.8F, cross_y},
+          { shank_half * 0.8F, cross_y},
           {0.0F, fluke_tip_y});
 
   return std::make_unique<Mesh>(verts, idx);
