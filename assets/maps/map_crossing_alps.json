@@ -1,0 +1,128 @@
+{
+  "name": "Crossing the Alps",
+  "description": "The legendary Alpine crossing - survive treacherous mountain passes and hostile tribes",
+  "coordSystem": "grid",
+  "maxTroopsPerPlayer": 2000,
+  "grid": {
+    "width": 180,
+    "height": 180,
+    "tileSize": 1.0
+  },
+  "biome": {
+    "groundType": "alpine_mix",
+    "seed": 10007,
+    "patchDensity": 2.2,
+    "patchJitter": 0.75,
+    "plantDensity": 0.3,
+    "groundIrregularityEnabled": true,
+    "irregularityScale": 0.18,
+    "irregularityAmplitude": 0.12
+  },
+  "camera": {
+    "center": [90, 0, 90],
+    "distance": 42.0,
+    "tiltDeg": 45.0,
+    "yaw": 225.0,
+    "fovY": 45.0,
+    "near": 1.0,
+    "far": 550.0
+  },
+  "spawns": [],
+  "firecamps": [
+    {
+      "x": 35,
+      "z": 35,
+      "intensity": 1.2,
+      "radius": 3.5
+    },
+    {
+      "x": 65,
+      "z": 65,
+      "intensity": 1.1,
+      "radius": 3.2
+    },
+    {
+      "x": 95,
+      "z": 95,
+      "intensity": 1.0,
+      "radius": 3.0
+    },
+    {
+      "x": 125,
+      "z": 125,
+      "intensity": 1.1,
+      "radius": 3.2
+    },
+    {
+      "x": 155,
+      "z": 155,
+      "intensity": 1.2,
+      "radius": 3.5
+    }
+  ],
+  "terrain": [
+    {
+      "type": "mountain",
+      "x": 60,
+      "z": 50,
+      "radius": 20,
+      "height": 8.0,
+      "description": "First major peak"
+    },
+    {
+      "type": "mountain",
+      "x": 90,
+      "z": 80,
+      "radius": 25,
+      "height": 10.0,
+      "description": "Highest peak - most dangerous"
+    },
+    {
+      "type": "mountain",
+      "x": 120,
+      "z": 110,
+      "radius": 22,
+      "height": 9.0,
+      "description": "Second major peak"
+    },
+    {
+      "type": "pass",
+      "path": [
+        {"x": 40, "z": 40},
+        {"x": 60, "z": 55},
+        {"x": 75, "z": 70},
+        {"x": 95, "z": 90},
+        {"x": 110, "z": 105},
+        {"x": 130, "z": 125},
+        {"x": 150, "z": 150}
+      ],
+      "width": 8.0,
+      "description": "Treacherous mountain pass"
+    },
+    {
+      "type": "avalanche_zone",
+      "x": 90,
+      "z": 70,
+      "radius": 20,
+      "description": "Dangerous avalanche area"
+    },
+    {
+      "type": "avalanche_zone",
+      "x": 120,
+      "z": 110,
+      "radius": 25,
+      "description": "Dangerous avalanche area"
+    }
+  ],
+  "victory": {
+    "type": "reach_destination",
+    "destination": {"x": 150, "z": 150},
+    "description": "Reach the Italian side of the Alps"
+  },
+  "weather": {
+    "type": "snow",
+    "intensity": 0.8,
+    "temperature": "extreme_cold",
+    "description": "Harsh Alpine winter"
+  }
+}
