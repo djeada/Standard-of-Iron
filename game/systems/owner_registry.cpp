@@ -229,6 +229,10 @@ auto OwnerRegistry::are_allies(int owner_id1, int owner_id2) const -> bool {
   int const team1 = get_owner_team(owner_id1);
   int const team2 = get_owner_team(owner_id2);
 
+  if (team1 == 0 || team2 == 0) {
+    return false;
+  }
+
   bool const result = (team1 == team2);
 
   return result;
