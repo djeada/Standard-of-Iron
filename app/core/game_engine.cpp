@@ -332,10 +332,10 @@ GameEngine::GameEngine(QObject *parent)
             on_unit_died(e);
             if (e.owner_id != m_runtime.local_owner_id) {
 
-              int const individuals_per_unit =
-                  Game::Units::TroopConfig::instance().getIndividualsPerUnit(
+              int const production_cost =
+                  Game::Units::TroopConfig::instance().getProductionCost(
                       e.spawn_type);
-              m_enemyTroopsDefeated += individuals_per_unit;
+              m_enemyTroopsDefeated += production_cost;
               emit enemy_troops_defeated_changed();
             }
           });
@@ -1667,6 +1667,8 @@ void GameEngine::perform_skirmish_load(const QString &map_path,
   GameStateRestorer::rebuild_entity_cache(m_world.get(), m_entity_cache,
                                           m_runtime.local_owner_id);
 
+  emit troop_count_changed();
+
   m_ambient_state_manager = std::make_unique<AmbientStateManager>();
 
   Engine::Core::EventManager::instance().publish(
@@ -1752,6 +1754,8 @@ auto GameEngine::load_from_slot(const QString &slot) -> bool {
       m_world.get(), m_selected_player_id, m_level, m_runtime.local_owner_id);
   GameStateRestorer::rebuild_entity_cache(m_world.get(), m_entity_cache,
                                           m_runtime.local_owner_id);
+
+  emit troop_count_changed();
 
   if (auto *ai_system = m_world->get_system<Game::Systems::AISystem>()) {
     qInfo() << "Reinitializing AI system after loading saved game";
