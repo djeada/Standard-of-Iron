@@ -364,6 +364,19 @@ void Renderer::combat_dust(const QVector3D &position, const QVector3D &color,
   }
 }
 
+void Renderer::building_flame(const QVector3D &position, const QVector3D &color,
+                              float radius, float intensity, float time) {
+  BuildingFlameCmd cmd;
+  cmd.position = position;
+  cmd.color = color;
+  cmd.radius = radius;
+  cmd.intensity = intensity;
+  cmd.time = time;
+  if (m_active_queue != nullptr) {
+    m_active_queue->submit(cmd);
+  }
+}
+
 void Renderer::mode_indicator(const QMatrix4x4 &model, int mode_type,
                               const QVector3D &color, float alpha) {
   ModeIndicatorCmd cmd;

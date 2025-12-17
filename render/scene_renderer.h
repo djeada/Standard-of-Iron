@@ -134,6 +134,8 @@ public:
                    float radius, float intensity, float time) override;
   void combat_dust(const QVector3D &position, const QVector3D &color,
                    float radius, float intensity, float time) override;
+  void building_flame(const QVector3D &position, const QVector3D &color,
+                      float radius, float intensity, float time);
   void mode_indicator(const QMatrix4x4 &model, int mode_type,
                       const QVector3D &color, float alpha = 1.0F) override;
   void terrain_chunk(Mesh *mesh, const QMatrix4x4 &model,
