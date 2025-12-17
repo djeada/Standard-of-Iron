@@ -3,6 +3,7 @@
 #include "../core/component.h"
 #include "../core/entity.h"
 #include "../core/world.h"
+#include "../units/spawn_type.h"
 #include "formation_system.h"
 #include "nation_registry.h"
 #include <QVector3D>
@@ -44,6 +45,7 @@ public:
     FormationType formation_type = FormationType::Roman;
     bool formation_type_determined = false;
 
+    // First pass: check if all units are in formation mode and determine nation
     for (auto unit_id : units) {
       auto *entity = world.get_entity(unit_id);
       if (entity == nullptr) {
@@ -75,8 +77,52 @@ public:
       return spreadFormation(int(units.size()), center, spacing);
     }
 
-    return FormationSystem::instance().get_formation_positions(
-        formation_type, int(units.size()), center, spacing);
+    // Gather unit information for advanced formation
+    std::vector<UnitFormationInfo> unit_infos;
+    unit_infos.reserve(units.size());
+
+    for (auto unit_id : units) {
+      auto *entity = world.get_entity(unit_id);
+      if (entity == nullptr) {
+        continue;
+      }
+
+      auto *unit_comp = entity->get_component<Engine::Core::UnitComponent>();
+      auto *transform =
+          entity->get_component<Engine::Core::TransformComponent>();
+
+      if (unit_comp != nullptr && transform != nullptr) {
+        auto troop_type_opt =
+            Game::Units::spawn_typeToTroopType(unit_comp->spawn_type);
+        if (troop_type_opt.has_value()) {
+          UnitFormationInfo info;
+          info.entity_id = unit_id;
+          info.troop_type = troop_type_opt.value();
+          info.current_position =
+              QVector3D(transform->position.x, transform->position.y,
+                        transform->position.z);
+          unit_infos.push_back(info);
+        }
+      }
+    }
+
+    if (unit_infos.empty()) {
+      return spreadFormation(int(units.size()), center, spacing);
+    }
+
+    // Get formation positions with facing information
+    auto formation_positions =
+        FormationSystem::instance().get_formation_positions_with_facing(
+            formation_type, unit_infos, center, spacing);
+
+    // Convert to simple positions (facing will be handled later via transform)
+    std::vector<QVector3D> positions;
+    positions.reserve(formation_positions.size());
+    for (const auto &fpos : formation_positions) {
+      positions.push_back(fpos.position);
+    }
+
+    return positions;
   }
 };
 
