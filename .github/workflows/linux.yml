@@ -5,7 +5,7 @@ on:
       - 'v*'   # run only on tags like v1.2.3
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build-linux:
@@ -39,3 +39,9 @@ jobs:
         with:
           name: linux-${{ env.BUILD_TYPE }}
           path: ./*.AppImage
+
+      - name: Attach to GitHub Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: '*.AppImage'

@@ -37,6 +37,7 @@ add_library(game_systems STATIC
     systems/ai_system/behaviors/retreat_behavior.cpp
     systems/ai_system/behaviors/expand_behavior.cpp
     systems/patrol_system.cpp
+    systems/guard_system.cpp
     systems/pathfinding.cpp
     systems/building_collision_registry.cpp
     systems/selection_system.cpp
@@ -73,6 +74,8 @@ add_library(game_systems STATIC
     systems/rain_manager.cpp
     map/map_loader.cpp
     map/level_loader.cpp
+    map/mission_loader.cpp
+    map/campaign_loader.cpp
     map/map_transformer.cpp
     map/environment.cpp
     map/terrain.cpp
