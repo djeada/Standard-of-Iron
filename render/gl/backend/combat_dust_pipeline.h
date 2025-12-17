@@ -18,10 +18,7 @@ class Camera;
 
 namespace BackendPipelines {
 
-enum class EffectType {
-  Dust,
-  Flame
-};
+enum class EffectType { Dust, Flame };
 
 struct CombatDustData {
   QVector3D position;
@@ -46,7 +43,8 @@ public:
 
   void collect_combat_zones(Engine::Core::World *world, float animation_time);
 
-  void collect_building_flames(Engine::Core::World *world, float animation_time);
+  void collect_building_flames(Engine::Core::World *world,
+                               float animation_time);
 
   void collect_all_effects(Engine::Core::World *world, float animation_time);
 
