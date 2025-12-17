@@ -18,7 +18,7 @@ class Camera;
 
 namespace BackendPipelines {
 
-enum class EffectType { Dust, Flame };
+enum class EffectType { Dust, Flame, StoneImpact };
 
 struct CombatDustData {
   QVector3D position;
@@ -57,6 +57,11 @@ public:
   void render_single_flame(const QVector3D &position, const QVector3D &color,
                            float radius, float intensity, float time,
                            const QMatrix4x4 &view_proj);
+
+  void render_single_stone_impact(const QVector3D &position,
+                                  const QVector3D &color, float radius,
+                                  float intensity, float time,
+                                  const QMatrix4x4 &view_proj);
 
   void clear_data() { m_dust_data.clear(); }
 
