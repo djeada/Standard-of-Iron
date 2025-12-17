@@ -1,0 +1,82 @@
+{
+  "name": "Battle of Ticino",
+  "description": "First clash on Italian soil - cavalry battle on fertile farmland",
+  "coordSystem": "grid",
+  "maxTroopsPerPlayer": 1800,
+  "grid": {
+    "width": 200,
+    "height": 120,
+    "tileSize": 1.0
+  },
+  "biome": {
+    "groundType": "soil_fertile",
+    "seed": 10002,
+    "patchDensity": 3.5,
+    "patchJitter": 0.9,
+    "plantDensity": 0.6,
+    "groundIrregularityEnabled": true,
+    "irregularityScale": 0.12,
+    "irregularityAmplitude": 0.06
+  },
+  "camera": {
+    "center": [100, 0, 60],
+    "distance": 35.0,
+    "tiltDeg": 45.0,
+    "yaw": 225.0,
+    "fovY": 45.0,
+    "near": 1.0,
+    "far": 500.0
+  },
+  "spawns": [],
+  "firecamps": [
+    {
+      "x": 45,
+      "z": 55,
+      "intensity": 1.0,
+      "radius": 3.0
+    },
+    {
+      "x": 50,
+      "z": 65,
+      "intensity": 1.0,
+      "radius": 3.0
+    },
+    {
+      "x": 155,
+      "z": 55,
+      "intensity": 1.0,
+      "radius": 3.0
+    },
+    {
+      "x": 165,
+      "z": 65,
+      "intensity": 1.0,
+      "radius": 3.0
+    }
+  ],
+  "terrain": [
+    {
+      "type": "river",
+      "path": [
+        {"x": 100, "z": 30},
+        {"x": 100, "z": 50},
+        {"x": 102, "z": 70},
+        {"x": 100, "z": 90}
+      ],
+      "width": 6.0,
+      "depth": 1.5,
+      "description": "Ticino River in background"
+    },
+    {
+      "type": "hill",
+      "x": 50,
+      "z": 60,
+      "radius": 8,
+      "height": 2.0
+    }
+  ],
+  "victory": {
+    "type": "elimination",
+    "description": "Defeat Roman cavalry forces"
+  }
+}
