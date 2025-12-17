@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../core/component.h"
 #include "../core/entity.h"
 #include "../core/world.h"
 #include "formation_system.h"
@@ -7,11 +8,6 @@
 #include <QVector3D>
 #include <cmath>
 #include <vector>
-
-namespace Engine::Core {
-struct UnitComponent;
-struct FormationModeComponent;
-} // namespace Engine::Core
 
 namespace Game::Systems {
 
@@ -35,10 +31,11 @@ public:
     return out;
   }
 
-  static auto spread_formation_by_nation(
-      Engine::Core::World &world,
-      const std::vector<Engine::Core::EntityID> &units, const QVector3D &center,
-      float spacing = 1.0F) -> std::vector<QVector3D> {
+  static auto
+  spread_formation_by_nation(Engine::Core::World &world,
+                             const std::vector<Engine::Core::EntityID> &units,
+                             const QVector3D &center,
+                             float spacing = 1.0F) -> std::vector<QVector3D> {
     if (units.empty()) {
       return {};
     }

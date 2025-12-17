@@ -1245,18 +1245,18 @@ void GameEngine::start_campaign_mission(const QString &mission_path) {
   const QString campaign_id = parts[0];
   const QString mission_id = parts[1];
 
-  // Try multiple filesystem locations first, then Qt resources
   QStringList search_paths = {
       QString("assets/missions/%1.json").arg(mission_id),
       QString("../assets/missions/%1.json").arg(mission_id),
       QString("../../assets/missions/%1.json").arg(mission_id),
-      QCoreApplication::applicationDirPath() + QString("/assets/missions/%1.json").arg(mission_id),
-      QCoreApplication::applicationDirPath() + QString("/../assets/missions/%1.json").arg(mission_id)
-  };
-  
+      QCoreApplication::applicationDirPath() +
+          QString("/assets/missions/%1.json").arg(mission_id),
+      QCoreApplication::applicationDirPath() +
+          QString("/../assets/missions/%1.json").arg(mission_id)};
+
   QString mission_file_path;
   bool found = false;
-  
+
   for (const QString &path : search_paths) {
     if (QFile::exists(path)) {
       mission_file_path = path;
@@ -1265,9 +1265,9 @@ void GameEngine::start_campaign_mission(const QString &mission_path) {
       break;
     }
   }
-  
+
   if (!found) {
-    // Try Qt resource path
+
     mission_file_path = QString(":/assets/missions/%1.json").arg(mission_id);
     qInfo() << "Loading mission from Qt resources:" << mission_file_path;
   }
