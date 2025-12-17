@@ -98,6 +98,25 @@ public:
     float const arm_jitter = (hash_01(seed ^ 0xABCDU) - 0.5F) * 0.04F;
     float const asymmetry = (hash_01(seed ^ 0xDEF0U) - 0.5F) * 0.05F;
 
+    // Construction animation - hammer swinging motion
+    if (anim.is_constructing) {
+      // Cyclic hammer swing animation
+      float const swing_cycle = std::fmod(anim.time * 2.5F + float(seed % 100) * 0.01F, 1.0F);
+      float const swing_angle = std::sin(swing_cycle * 2.0F * std::numbers::pi_v<float>) * 0.35F;
+      
+      // Hammer hand goes up and down in swinging motion
+      float const hammer_y_offset = HP::SHOULDER_Y - 0.08F + std::abs(swing_angle) * 0.15F;
+      float const hammer_forward = 0.28F + swing_angle * 0.12F;
+      
+      QVector3D const hammer_hand(-0.08F + asymmetry, hammer_y_offset, hammer_forward);
+      // Other hand braces or holds material
+      QVector3D const brace_hand(0.16F - asymmetry * 0.5F, HP::WAIST_Y + 0.06F, 0.22F);
+      
+      controller.placeHandAt(true, hammer_hand);
+      controller.placeHandAt(false, brace_hand);
+      return;
+    }
+
     // Working pose - one hand forward holding hammer, other relaxed at side
     float const hammer_hand_forward = 0.22F + (anim.is_moving ? 0.03F : 0.0F);
     float const hammer_hand_height = HP::WAIST_Y + 0.08F + arm_jitter;
