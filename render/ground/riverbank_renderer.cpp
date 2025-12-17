@@ -123,6 +123,7 @@ void RiverbankRenderer::build_meshes() {
       float const t =
           static_cast<float>(i) / static_cast<float>(length_steps - 1);
       QVector3D center_pos = segment.start + dir * (length * t);
+      float const center_height = sample_height(center_pos.x(), center_pos.z());
 
       constexpr float k_edge_noise_freq_1 = 2.0F;
       constexpr float k_edge_noise_freq_2 = 5.0F;
@@ -172,6 +173,8 @@ void RiverbankRenderer::build_meshes() {
             center_pos -
             perpendicular * (half_width + width_variation + ring_dist);
         float const terrain_height = sample_height(ring_pos.x(), ring_pos.z());
+        float const clamped_height =
+            std::min(terrain_height, center_height + 0.05F);
 
         if (ring == 0) {
           samples.push_back(ring_pos);
@@ -179,7 +182,7 @@ void RiverbankRenderer::build_meshes() {
 
         Vertex vtx{};
         vtx.position[0] = ring_pos.x();
-        vtx.position[1] = terrain_height + ring_height;
+        vtx.position[1] = clamped_height + ring_height;
         vtx.position[2] = ring_pos.z();
 
         QVector3D normal;
@@ -192,9 +195,11 @@ void RiverbankRenderer::build_meshes() {
                    k_left_rings[1].distance_from_water * base_bank_width);
           float const next_terrain =
               sample_height(next_ring_pos.x(), next_ring_pos.z());
+          float const next_clamped =
+              std::min(next_terrain, center_height + 0.05F);
           QVector3D slope_vec(next_ring_pos.x() - ring_pos.x(),
-                              (next_terrain + k_left_rings[1].height_offset) -
-                                  (terrain_height + ring_height),
+                              (next_clamped + k_left_rings[1].height_offset) -
+                                  (clamped_height + ring_height),
                               next_ring_pos.z() - ring_pos.z());
           normal = QVector3D::crossProduct(slope_vec, dir).normalized();
         } else if (ring == k_rings_per_side - 1) {
@@ -204,7 +209,7 @@ void RiverbankRenderer::build_meshes() {
                              vertices[prev_idx].position[1],
                              vertices[prev_idx].position[2]);
           QVector3D slope_vec(ring_pos.x() - prev_pos.x(),
-                              (terrain_height + ring_height) - prev_pos.y(),
+                              (clamped_height + ring_height) - prev_pos.y(),
                               ring_pos.z() - prev_pos.z());
           normal = QVector3D::crossProduct(slope_vec, dir).normalized();
         } else {
@@ -221,6 +226,8 @@ void RiverbankRenderer::build_meshes() {
                                    base_bank_width);
           float const next_terrain =
               sample_height(next_ring_pos.x(), next_ring_pos.z());
+          float const next_clamped =
+              std::min(next_terrain, center_height + 0.05F);
 
           QVector3D slope_from_prev(ring_pos.x() - prev_pos.x(),
                                     (terrain_height + ring_height) -
@@ -228,8 +235,8 @@ void RiverbankRenderer::build_meshes() {
                                     ring_pos.z() - prev_pos.z());
           QVector3D slope_to_next(
               next_ring_pos.x() - ring_pos.x(),
-              (next_terrain + k_left_rings[ring + 1].height_offset) -
-                  (terrain_height + ring_height),
+              (next_clamped + k_left_rings[ring + 1].height_offset) -
+                  (clamped_height + ring_height),
               next_ring_pos.z() - ring_pos.z());
 
           QVector3D n1 =
@@ -256,6 +263,8 @@ void RiverbankRenderer::build_meshes() {
             center_pos +
             perpendicular * (half_width + width_variation + ring_dist);
         float const terrain_height = sample_height(ring_pos.x(), ring_pos.z());
+        float const clamped_height =
+            std::min(terrain_height, center_height + 0.05F);
 
         if (ring == 0) {
           samples.push_back(ring_pos);
@@ -263,7 +272,7 @@ void RiverbankRenderer::build_meshes() {
 
         Vertex vtx{};
         vtx.position[0] = ring_pos.x();
-        vtx.position[1] = terrain_height + ring_height;
+        vtx.position[1] = clamped_height + ring_height;
         vtx.position[2] = ring_pos.z();
 
         QVector3D normal;
@@ -275,9 +284,11 @@ void RiverbankRenderer::build_meshes() {
                    k_left_rings[1].distance_from_water * base_bank_width);
           float const next_terrain =
               sample_height(next_ring_pos.x(), next_ring_pos.z());
+          float const next_clamped =
+              std::min(next_terrain, center_height + 0.05F);
           QVector3D slope_vec(next_ring_pos.x() - ring_pos.x(),
-                              (next_terrain + k_left_rings[1].height_offset) -
-                                  (terrain_height + ring_height),
+                              (next_clamped + k_left_rings[1].height_offset) -
+                                  (clamped_height + ring_height),
                               next_ring_pos.z() - ring_pos.z());
           normal = QVector3D::crossProduct(dir, slope_vec).normalized();
         } else if (ring == k_rings_per_side - 1) {
@@ -286,7 +297,7 @@ void RiverbankRenderer::build_meshes() {
                              vertices[prev_idx].position[1],
                              vertices[prev_idx].position[2]);
           QVector3D slope_vec(ring_pos.x() - prev_pos.x(),
-                              (terrain_height + ring_height) - prev_pos.y(),
+                              (clamped_height + ring_height) - prev_pos.y(),
                               ring_pos.z() - prev_pos.z());
           normal = QVector3D::crossProduct(dir, slope_vec).normalized();
         } else {
@@ -302,15 +313,17 @@ void RiverbankRenderer::build_meshes() {
                                    base_bank_width);
           float const next_terrain =
               sample_height(next_ring_pos.x(), next_ring_pos.z());
+          float const next_clamped =
+              std::min(next_terrain, center_height + 0.05F);
 
           QVector3D slope_from_prev(ring_pos.x() - prev_pos.x(),
-                                    (terrain_height + ring_height) -
+                                    (clamped_height + ring_height) -
                                         prev_pos.y(),
                                     ring_pos.z() - prev_pos.z());
           QVector3D slope_to_next(
               next_ring_pos.x() - ring_pos.x(),
-              (next_terrain + k_left_rings[ring + 1].height_offset) -
-                  (terrain_height + ring_height),
+              (next_clamped + k_left_rings[ring + 1].height_offset) -
+                  (clamped_height + ring_height),
               next_ring_pos.z() - ring_pos.z());
 
           QVector3D n1 =
