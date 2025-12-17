@@ -1592,22 +1592,25 @@ Rectangle {
                 height: builderProductionContent.height + 16
                 color: "#1a252f"
                 radius: 6
-                border.color: "#8b4513"
-                border.width: 2
+                border.color: "#34495e"
+                border.width: 1
                 visible: has_builder
 
                 Column {
                     id: builderProductionContent
 
+                    property var builderProd: (productionPanel.selectionTick, (productionPanel.gameInstance && productionPanel.gameInstance.get_selected_builder_production_state) ? productionPanel.gameInstance.get_selected_builder_production_state() : {"in_progress": false, "build_time": 10.0, "time_remaining": 0, "product_type": ""})
+
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.top: parent.top
                     anchors.margins: 8
                     spacing: 8
+                    width: parent.width - 16
 
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: qsTr("🔨 BUILDER CONSTRUCTION")
-                        color: "#d4a574"
+                        color: "#3498db"
                         font.pointSize: 9
                         font.bold: true
                     }
@@ -1615,8 +1618,62 @@ Rectangle {
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: qsTr("Build siege weapons and structures")
-                        color: "#8b7355"
+                        color: "#7f8c8d"
                         font.pointSize: 7
+                    }
+
+                    // Progress bar - visible when constructing
+                    Rectangle {
+                        width: parent.width - 20
+                        height: 20
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        radius: 10
+                        color: "#0a0f14"
+                        border.color: "#2c3e50"
+                        border.width: 2
+                        visible: builderProductionContent.builderProd.in_progress
+
+                        Rectangle {
+                            anchors.left: parent.left
+                            anchors.verticalCenter: parent.verticalCenter
+                            anchors.margins: 2
+                            height: parent.height - 4
+                            width: {
+                                if (!builderProductionContent.builderProd.in_progress || builderProductionContent.builderProd.build_time <= 0)
+                                    return 0;
+                                var progress = 1 - (Math.max(0, builderProductionContent.builderProd.time_remaining) / builderProductionContent.builderProd.build_time);
+                                return Math.max(0, (parent.width - 4) * progress);
+                            }
+                            color: "#27ae60"
+                            radius: 8
+
+                            SequentialAnimation on opacity {
+                                running: parent.width > 0
+                                loops: Animation.Infinite
+                                NumberAnimation { from: 0.8; to: 1; duration: 600 }
+                                NumberAnimation { from: 1; to: 0.8; duration: 600 }
+                            }
+                        }
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: builderProductionContent.builderProd.in_progress ? Math.max(0, builderProductionContent.builderProd.time_remaining).toFixed(1) + "s" : "Idle"
+                            color: "#ecf0f1"
+                            font.pointSize: 9
+                            font.bold: true
+                            style: Text.Outline
+                            styleColor: "#000000"
+                        }
+                    }
+
+                    // Currently building indicator
+                    Text {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        text: builderProductionContent.builderProd.in_progress ? qsTr("Building: %1").arg(builderProductionContent.builderProd.product_type) : qsTr("Select an item to build")
+                        color: builderProductionContent.builderProd.in_progress ? "#27ae60" : "#7f8c8d"
+                        font.pointSize: 8
+                        font.bold: builderProductionContent.builderProd.in_progress
+                        visible: true
                     }
 
                     Grid {
@@ -1627,14 +1684,14 @@ Rectangle {
 
                         // Catapult
                         Rectangle {
-                            property bool isEnabled: true
+                            property bool isEnabled: !builderProductionContent.builderProd.in_progress
                             property bool isHovered: builderCatapultMouseArea.containsMouse
 
                             width: 110
                             height: 80
                             radius: 6
-                            color: isEnabled ? (isHovered ? "#6b4423" : "#4a3520") : "#1a1a1a"
-                            border.color: isEnabled ? (isHovered ? "#d4a574" : "#8b4513") : "#2a2a2a"
+                            color: isEnabled ? (isHovered ? "#1f8dd9" : "#2c3e50") : "#1a1a1a"
+                            border.color: isEnabled ? (isHovered ? "#00d4ff" : "#4a6572") : "#2a2a2a"
                             border.width: isHovered && isEnabled ? 4 : 2
                             opacity: isEnabled ? 1 : 0.5
                             scale: isHovered && isEnabled ? 1.1 : 1
@@ -1652,7 +1709,7 @@ Rectangle {
                                 anchors.bottom: parent.bottom
                                 anchors.bottomMargin: 6
                                 text: qsTr("Catapult")
-                                color: parent.isEnabled ? "#d4a574" : "#5a5a5a"
+                                color: parent.isEnabled ? "#bdc3c7" : "#5a5a5a"
                                 font.pointSize: 8
                                 font.bold: true
                             }
@@ -1663,12 +1720,12 @@ Rectangle {
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 onClicked: {
-                                    if (parent.isEnabled)
-                                        productionPanel.recruitUnit("catapult");
+                                    if (parent.isEnabled && productionPanel.gameInstance && productionPanel.gameInstance.start_builder_construction)
+                                        productionPanel.gameInstance.start_builder_construction("catapult");
                                 }
                                 cursorShape: parent.isEnabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
-                                ToolTip.text: qsTr("Build Catapult\nLong-range siege weapon\nEffective against structures")
+                                ToolTip.text: parent.isEnabled ? qsTr("Build Catapult\nLong-range siege weapon\nEffective against structures\nBuild time: 15s") : qsTr("Already building...")
                                 ToolTip.delay: 300
                             }
 
@@ -1679,29 +1736,21 @@ Rectangle {
                                 radius: parent.radius
                             }
 
-                            Behavior on color {
-                                ColorAnimation { duration: 150 }
-                            }
-
-                            Behavior on border.color {
-                                ColorAnimation { duration: 150 }
-                            }
-
-                            Behavior on scale {
-                                NumberAnimation { duration: 100 }
-                            }
+                            Behavior on color { ColorAnimation { duration: 150 } }
+                            Behavior on border.color { ColorAnimation { duration: 150 } }
+                            Behavior on scale { NumberAnimation { duration: 100 } }
                         }
 
                         // Ballista
                         Rectangle {
-                            property bool isEnabled: true
+                            property bool isEnabled: !builderProductionContent.builderProd.in_progress
                             property bool isHovered: builderBallistaMouseArea.containsMouse
 
                             width: 110
                             height: 80
                             radius: 6
-                            color: isEnabled ? (isHovered ? "#6b4423" : "#4a3520") : "#1a1a1a"
-                            border.color: isEnabled ? (isHovered ? "#d4a574" : "#8b4513") : "#2a2a2a"
+                            color: isEnabled ? (isHovered ? "#1f8dd9" : "#2c3e50") : "#1a1a1a"
+                            border.color: isEnabled ? (isHovered ? "#00d4ff" : "#4a6572") : "#2a2a2a"
                             border.width: isHovered && isEnabled ? 4 : 2
                             opacity: isEnabled ? 1 : 0.5
                             scale: isHovered && isEnabled ? 1.1 : 1
@@ -1719,7 +1768,7 @@ Rectangle {
                                 anchors.bottom: parent.bottom
                                 anchors.bottomMargin: 6
                                 text: qsTr("Ballista")
-                                color: parent.isEnabled ? "#d4a574" : "#5a5a5a"
+                                color: parent.isEnabled ? "#bdc3c7" : "#5a5a5a"
                                 font.pointSize: 8
                                 font.bold: true
                             }
@@ -1730,12 +1779,12 @@ Rectangle {
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 onClicked: {
-                                    if (parent.isEnabled)
-                                        productionPanel.recruitUnit("ballista");
+                                    if (parent.isEnabled && productionPanel.gameInstance && productionPanel.gameInstance.start_builder_construction)
+                                        productionPanel.gameInstance.start_builder_construction("ballista");
                                 }
                                 cursorShape: parent.isEnabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
-                                ToolTip.text: qsTr("Build Ballista\nPrecision siege weapon\nEffective against units")
+                                ToolTip.text: parent.isEnabled ? qsTr("Build Ballista\nPrecision siege weapon\nEffective against units\nBuild time: 12s") : qsTr("Already building...")
                                 ToolTip.delay: 300
                             }
 
@@ -1746,29 +1795,21 @@ Rectangle {
                                 radius: parent.radius
                             }
 
-                            Behavior on color {
-                                ColorAnimation { duration: 150 }
-                            }
-
-                            Behavior on border.color {
-                                ColorAnimation { duration: 150 }
-                            }
-
-                            Behavior on scale {
-                                NumberAnimation { duration: 100 }
-                            }
+                            Behavior on color { ColorAnimation { duration: 150 } }
+                            Behavior on border.color { ColorAnimation { duration: 150 } }
+                            Behavior on scale { NumberAnimation { duration: 100 } }
                         }
 
                         // Defense Tower
                         Rectangle {
-                            property bool isEnabled: true
+                            property bool isEnabled: !builderProductionContent.builderProd.in_progress
                             property bool isHovered: builderDefenseTowerMouseArea.containsMouse
 
                             width: 110
                             height: 80
                             radius: 6
-                            color: isEnabled ? (isHovered ? "#6b4423" : "#4a3520") : "#1a1a1a"
-                            border.color: isEnabled ? (isHovered ? "#d4a574" : "#8b4513") : "#2a2a2a"
+                            color: isEnabled ? (isHovered ? "#1f8dd9" : "#2c3e50") : "#1a1a1a"
+                            border.color: isEnabled ? (isHovered ? "#00d4ff" : "#4a6572") : "#2a2a2a"
                             border.width: isHovered && isEnabled ? 4 : 2
                             opacity: isEnabled ? 1 : 0.5
                             scale: isHovered && isEnabled ? 1.1 : 1
@@ -1786,7 +1827,7 @@ Rectangle {
                                 anchors.bottom: parent.bottom
                                 anchors.bottomMargin: 6
                                 text: qsTr("Defense Tower")
-                                color: parent.isEnabled ? "#d4a574" : "#5a5a5a"
+                                color: parent.isEnabled ? "#bdc3c7" : "#5a5a5a"
                                 font.pointSize: 8
                                 font.bold: true
                             }
@@ -1797,12 +1838,12 @@ Rectangle {
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 onClicked: {
-                                    if (parent.isEnabled)
-                                        productionPanel.buildTower();
+                                    if (parent.isEnabled && productionPanel.gameInstance && productionPanel.gameInstance.start_builder_construction)
+                                        productionPanel.gameInstance.start_builder_construction("defense_tower");
                                 }
                                 cursorShape: parent.isEnabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
-                                ToolTip.text: qsTr("Build Defense Tower\nClick map to place\nShoots arrows at nearby enemies")
+                                ToolTip.text: parent.isEnabled ? qsTr("Build Defense Tower\nStationary defense structure\nShoots arrows at enemies\nBuild time: 20s") : qsTr("Already building...")
                                 ToolTip.delay: 300
                             }
 
@@ -1813,17 +1854,9 @@ Rectangle {
                                 radius: parent.radius
                             }
 
-                            Behavior on color {
-                                ColorAnimation { duration: 150 }
-                            }
-
-                            Behavior on border.color {
-                                ColorAnimation { duration: 150 }
-                            }
-
-                            Behavior on scale {
-                                NumberAnimation { duration: 100 }
-                            }
+                            Behavior on color { ColorAnimation { duration: 150 } }
+                            Behavior on border.color { ColorAnimation { duration: 150 } }
+                            Behavior on scale { NumberAnimation { duration: 100 } }
                         }
                     }
                 }
