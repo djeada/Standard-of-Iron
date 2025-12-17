@@ -79,6 +79,27 @@ void Healer::init(const SpawnParams &params) {
     m_mv->target_y = params.position.z();
   }
 
+  m_atk = e->add_component<Engine::Core::AttackComponent>();
+  if (m_atk != nullptr) {
+    m_atk->range = profile.combat.ranged_range;
+    m_atk->damage = profile.combat.ranged_damage;
+    m_atk->cooldown = profile.combat.ranged_cooldown;
+
+    m_atk->melee_range = profile.combat.melee_range;
+    m_atk->melee_damage = profile.combat.melee_damage;
+    m_atk->melee_cooldown = profile.combat.melee_cooldown;
+
+    m_atk->preferred_mode =
+        profile.combat.can_ranged
+            ? Engine::Core::AttackComponent::CombatMode::Ranged
+            : Engine::Core::AttackComponent::CombatMode::Melee;
+    m_atk->current_mode = profile.combat.can_ranged
+                              ? Engine::Core::AttackComponent::CombatMode::Ranged
+                              : Engine::Core::AttackComponent::CombatMode::Melee;
+    m_atk->can_ranged = profile.combat.can_ranged;
+    m_atk->can_melee = profile.combat.can_melee;
+  }
+
   auto *healer_comp = e->add_component<Engine::Core::HealerComponent>();
   if (healer_comp != nullptr) {
     healer_comp->healing_range = profile.combat.vision_range * 0.6F;
