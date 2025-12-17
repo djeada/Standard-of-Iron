@@ -134,6 +134,9 @@ QtObject {
         "builder": "🔨",
         "catapult": "🛞",
         "ballista": "🎯",
+        "defense_tower": "🏰",
+        "wall": "🧱",
+        "home": "🏠",
         "default": "👤"
     })
     readonly property var unitIconSources: ({
@@ -186,6 +189,21 @@ QtObject {
             "default": root.iconPath("ballista_rome.png"),
             "roman_republic": root.iconPath("ballista_rome.png"),
             "carthage": root.iconPath("ballista_cartaghe.png")
+        }),
+        "defense_tower": ({
+            "default": root.iconPath("defense_tower_rome.png"),
+            "roman_republic": root.iconPath("defense_tower_rome.png"),
+            "carthage": root.iconPath("defense_tower_cartaghe.png")
+        }),
+        "wall": ({
+            "default": root.iconPath("wall_rome.png"),
+            "roman_republic": root.iconPath("wall_rome.png"),
+            "carthage": root.iconPath("wall_cartaghe.png")
+        }),
+        "home": ({
+            "default": root.iconPath("house_rome.png"),
+            "roman_republic": root.iconPath("house_rome.png"),
+            "carthage": root.iconPath("house_cartaghe.png")
         }),
         "default": ({
             "default": ""

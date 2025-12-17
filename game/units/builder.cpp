@@ -102,7 +102,6 @@ void Builder::init(const SpawnParams &params) {
     m_atk->can_melee = profile.combat.can_melee;
   }
 
-  // Add builder production component for siege weapon construction
   e->add_component<Engine::Core::BuilderProductionComponent>();
 
   Engine::Core::EventManager::instance().publish(

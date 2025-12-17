@@ -233,6 +233,9 @@ public:
   Q_INVOKABLE [[nodiscard]] QString pending_building_type() const;
   Q_INVOKABLE [[nodiscard]] QVariantMap get_selected_production_state() const;
   Q_INVOKABLE [[nodiscard]] QVariantMap
+  get_selected_builder_production_state() const;
+  Q_INVOKABLE void start_builder_construction(const QString &item_type);
+  Q_INVOKABLE [[nodiscard]] QVariantMap
   get_unit_production_info(const QString &unit_type) const;
   Q_INVOKABLE [[nodiscard]] QString get_selected_units_command_mode() const;
   Q_INVOKABLE [[nodiscard]] QVariantMap
