@@ -482,7 +482,10 @@ RowLayout {
                     bottomRoot.selectionTick;
                     return (typeof game !== 'undefined' && game.any_selected_in_formation_mode) ? game.any_selected_in_formation_mode() : false;
                 }
-                property int selectedCount: (typeof game !== 'undefined' && game.selected_units_model) ? game.selected_units_model.rowCount() : 0
+                property int selectedCount: {
+                    bottomRoot.selectionTick;
+                    return (typeof game !== 'undefined' && game.selected_units_model) ? game.selected_units_model.rowCount() : 0;
+                }
 
                 Layout.fillWidth: true
                 Layout.preferredHeight: 38
