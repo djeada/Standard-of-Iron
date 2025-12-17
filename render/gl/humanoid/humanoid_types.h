@@ -32,6 +32,8 @@ struct AnimationInputs {
   bool is_healing{false};
   float healing_target_dx{0.0F};
   float healing_target_dz{0.0F};
+  bool is_constructing{false};
+  float construction_progress{0.0F};
 };
 
 struct FormationParams {

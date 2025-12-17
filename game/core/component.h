@@ -265,6 +265,17 @@ public:
   bool is_being_captured{false};
 };
 
+class BuilderProductionComponent : public Component {
+public:
+  BuilderProductionComponent() = default;
+
+  bool in_progress{false};
+  float build_time{10.0F};
+  float time_remaining{0.0F};
+  std::string product_type{};
+  bool construction_complete{false};
+};
+
 class PendingRemovalComponent : public Component {
 public:
   PendingRemovalComponent() = default;
