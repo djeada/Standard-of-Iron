@@ -425,14 +425,9 @@ void CombatDustPipeline::collect_catapult_impacts(Engine::Core::World *world,
     QVector3D impact_pos =
         stone_proj->get_start() + delta * stone_proj->get_progress();
 
-    float const arc_h = stone_proj->get_arc_height() * 4.0F *
-                        stone_proj->get_progress() *
-                        (1.0F - stone_proj->get_progress());
-    impact_pos.setY(impact_pos.y() + arc_h);
-
     CombatDustData data;
-    data.position =
-        QVector3D(impact_pos.x(), kStoneImpactYOffset, impact_pos.z());
+    data.position = QVector3D(impact_pos.x(), stone_proj->get_end().y() + kStoneImpactYOffset,
+                              impact_pos.z());
     data.radius = kStoneImpactRadius;
     data.intensity = kStoneImpactIntensity;
     data.color =
