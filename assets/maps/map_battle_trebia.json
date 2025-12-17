@@ -1,0 +1,106 @@
+{
+  "name": "Battle of Trebia",
+  "description": "Winter ambush at the frozen Trebia River - trap the Romans in icy waters",
+  "coordSystem": "grid",
+  "maxTroopsPerPlayer": 2200,
+  "grid": {
+    "width": 140,
+    "height": 120,
+    "tileSize": 1.0
+  },
+  "biome": {
+    "groundType": "forest_mud",
+    "seed": 10003,
+    "patchDensity": 3.2,
+    "patchJitter": 0.88,
+    "plantDensity": 0.65,
+    "groundIrregularityEnabled": true,
+    "irregularityScale": 0.15,
+    "irregularityAmplitude": 0.07
+  },
+  "camera": {
+    "center": [70, 0, 60],
+    "distance": 32.0,
+    "tiltDeg": 45.0,
+    "yaw": 225.0,
+    "fovY": 45.0,
+    "near": 1.0,
+    "far": 400.0
+  },
+  "spawns": [],
+  "firecamps": [
+    {
+      "x": 55,
+      "z": 75,
+      "intensity": 1.1,
+      "radius": 3.2
+    },
+    {
+      "x": 65,
+      "z": 85,
+      "intensity": 1.0,
+      "radius": 3.0
+    },
+    {
+      "x": 25,
+      "z": 45,
+      "intensity": 0.9,
+      "radius": 2.8
+    },
+    {
+      "x": 95,
+      "z": 45,
+      "intensity": 0.9,
+      "radius": 2.8
+    }
+  ],
+  "terrain": [
+    {
+      "type": "river",
+      "path": [
+        {"x": 20, "z": 55},
+        {"x": 40, "z": 55},
+        {"x": 60, "z": 57},
+        {"x": 80, "z": 55},
+        {"x": 100, "z": 55},
+        {"x": 120, "z": 55}
+      ],
+      "width": 10.0,
+      "depth": 2.5,
+      "description": "The freezing Trebia River"
+    },
+    {
+      "type": "crossing",
+      "x": 60,
+      "z": 55,
+      "width": 12,
+      "description": "Main crossing point"
+    },
+    {
+      "type": "forest",
+      "x": 30,
+      "z": 50,
+      "radius": 15,
+      "density": 0.6,
+      "description": "Ambush forest west"
+    },
+    {
+      "type": "forest",
+      "x": 90,
+      "z": 50,
+      "radius": 15,
+      "density": 0.6,
+      "description": "Ambush forest east"
+    }
+  ],
+  "victory": {
+    "type": "elimination",
+    "description": "Destroy the Roman army"
+  },
+  "weather": {
+    "type": "snow",
+    "intensity": 0.6,
+    "temperature": "freezing",
+    "description": "Heavy winter conditions"
+  }
+}

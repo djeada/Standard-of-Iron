@@ -1,0 +1,93 @@
+{
+  "name": "Battle of Zama",
+  "description": "The final confrontation in Africa - Hannibal faces Scipio Africanus",
+  "coordSystem": "grid",
+  "maxTroopsPerPlayer": 2800,
+  "grid": {
+    "width": 220,
+    "height": 120,
+    "tileSize": 1.0
+  },
+  "biome": {
+    "groundType": "grass_dry",
+    "seed": 10008,
+    "patchDensity": 2.6,
+    "patchJitter": 0.8,
+    "plantDensity": 0.38,
+    "groundIrregularityEnabled": true,
+    "irregularityScale": 0.12,
+    "irregularityAmplitude": 0.06
+  },
+  "camera": {
+    "center": [110, 0, 60],
+    "distance": 42.0,
+    "tiltDeg": 45.0,
+    "yaw": 225.0,
+    "fovY": 45.0,
+    "near": 1.0,
+    "far": 600.0
+  },
+  "spawns": [],
+  "firecamps": [
+    {
+      "x": 55,
+      "z": 55,
+      "intensity": 1.0,
+      "radius": 3.0
+    },
+    {
+      "x": 55,
+      "z": 65,
+      "intensity": 1.0,
+      "radius": 3.0
+    },
+    {
+      "x": 165,
+      "z": 55,
+      "intensity": 1.0,
+      "radius": 3.0
+    },
+    {
+      "x": 165,
+      "z": 65,
+      "intensity": 1.0,
+      "radius": 3.0
+    },
+    {
+      "x": 110,
+      "z": 60,
+      "intensity": 1.1,
+      "radius": 3.2
+    }
+  ],
+  "terrain": [
+    {
+      "type": "plain",
+      "x": 110,
+      "z": 60,
+      "width": 180,
+      "depth": 90,
+      "description": "Open battlefield - no terrain advantage"
+    },
+    {
+      "type": "hill",
+      "x": 60,
+      "z": 30,
+      "radius": 10,
+      "height": 2.0,
+      "description": "Minor elevation"
+    },
+    {
+      "type": "hill",
+      "x": 160,
+      "z": 90,
+      "radius": 10,
+      "height": 2.0,
+      "description": "Minor elevation"
+    }
+  ],
+  "victory": {
+    "type": "elimination",
+    "description": "Defeat Scipio's Roman army"
+  }
+}

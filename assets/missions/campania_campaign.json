@@ -1,0 +1,197 @@
+{
+  "id": "campania_campaign",
+  "title": "Campania Campaign",
+  "summary": "Hold and defend the rich Campanian territory against Roman counterattacks while maintaining your strategic position in Italy",
+  "teaching_goal": "Defensive operations and resource management. Teaches players to hold territory, defend multiple points, and manage reinforcements.",
+  "narrative_intent": "Represents the long grind of the war - holding gains while Rome refuses to surrender. Tests player's defensive skills.",
+  "map_path": ":/assets/maps/map_campania_campaign.json",
+  "player_setup": {
+    "nation": "carthage",
+    "faction": "carthaginian",
+    "color": "blue",
+    "starting_units": [
+      {
+        "type": "spearman",
+        "count": 15,
+        "position": {"x": 60, "z": 60}
+      },
+      {
+        "type": "swordsman",
+        "count": 12,
+        "position": {"x": 62, "z": 58}
+      },
+      {
+        "type": "horse_swordsman",
+        "count": 8,
+        "position": {"x": 58, "z": 62}
+      },
+      {
+        "type": "archer",
+        "count": 10,
+        "position": {"x": 60, "z": 56}
+      }
+    ],
+    "starting_buildings": [
+      {
+        "type": "barracks",
+        "position": {"x": 60, "z": 60},
+        "max_population": 200
+      },
+      {
+        "type": "village",
+        "position": {"x": 80, "z": 80},
+        "note": "Strategic village to defend"
+      },
+      {
+        "type": "village",
+        "position": {"x": 40, "z": 80},
+        "note": "Strategic village to defend"
+      }
+    ],
+    "starting_resources": {
+      "gold": 1200,
+      "food": 800
+    }
+  },
+  "ai_setups": [
+    {
+      "id": "roman_counterattack_north",
+      "nation": "roman_republic",
+      "faction": "roman",
+      "color": "red",
+      "difficulty": "hard",
+      "personality": {
+        "aggression": 0.7,
+        "defense": 0.5,
+        "harassment": 0.6
+      },
+      "starting_units": [
+        {
+          "type": "spearman",
+          "count": 12,
+          "position": {"x": 60, "z": 120}
+        },
+        {
+          "type": "swordsman",
+          "count": 10,
+          "position": {"x": 62, "z": 118}
+        }
+      ],
+      "starting_buildings": [
+        {
+          "type": "barracks",
+          "position": {"x": 60, "z": 130},
+          "max_population": 180
+        }
+      ],
+      "reinforcement_phases": [
+        {
+          "trigger_time": 180.0,
+          "units": [
+            {"type": "spearman", "count": 10, "position": {"x": 60, "z": 130}},
+            {"type": "archer", "count": 8, "position": {"x": 62, "z": 132}}
+          ]
+        },
+        {
+          "trigger_time": 360.0,
+          "units": [
+            {"type": "swordsman", "count": 12, "position": {"x": 60, "z": 130}},
+            {"type": "horse_swordsman", "count": 6, "position": {"x": 58, "z": 132}}
+          ]
+        }
+      ]
+    },
+    {
+      "id": "roman_counterattack_south",
+      "nation": "roman_republic",
+      "faction": "roman",
+      "color": "red",
+      "difficulty": "hard",
+      "personality": {
+        "aggression": 0.7,
+        "defense": 0.5,
+        "harassment": 0.6
+      },
+      "starting_units": [
+        {
+          "type": "spearman",
+          "count": 12,
+          "position": {"x": 60, "z": 20}
+        },
+        {
+          "type": "swordsman",
+          "count": 10,
+          "position": {"x": 58, "z": 22}
+        }
+      ],
+      "starting_buildings": [
+        {
+          "type": "barracks",
+          "position": {"x": 60, "z": 10},
+          "max_population": 180
+        }
+      ],
+      "reinforcement_phases": [
+        {
+          "trigger_time": 240.0,
+          "units": [
+            {"type": "spearman", "count": 10, "position": {"x": 60, "z": 10}},
+            {"type": "archer", "count": 8, "position": {"x": 58, "z": 12}}
+          ]
+        }
+      ]
+    }
+  ],
+  "victory_conditions": [
+    {
+      "type": "survive_duration",
+      "duration": 720.0,
+      "description": "Hold Campania for 12 minutes"
+    },
+    {
+      "type": "control_structures",
+      "structure_types": ["village"],
+      "min_count": 2,
+      "description": "Maintain control of at least 2 villages"
+    }
+  ],
+  "defeat_conditions": [
+    {
+      "type": "lose_all_structures",
+      "description": "Do not lose all your buildings"
+    }
+  ],
+  "optional_objectives": [
+    {
+      "type": "minimize_losses",
+      "max_unit_losses": 30,
+      "description": "Complete mission with fewer than 30 unit losses"
+    }
+  ],
+  "events": [
+    {
+      "trigger": {
+        "type": "timer",
+        "time": 120.0
+      },
+      "actions": [
+        {
+          "type": "show_message",
+          "text": "Roman reinforcements approaching from the north!"
+        }
+      ]
+    },
+    {
+      "trigger": {
+        "type": "timer",
+        "time": 300.0
+      },
+      "actions": [
+        {
+          "type": "show_message",
+          "text": "Another Roman army attacks from the south! Defend all positions!"
+        }
+      ]
+    }
+  ]
+}
