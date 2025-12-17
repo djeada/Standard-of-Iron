@@ -30,8 +30,7 @@ public:
   }
 
 private:
-  void apply_impact_damage(Engine::Core::World *world,
-                           const Projectile *projectile);
+  void apply_impact_damage(Engine::Core::World *world, Projectile *projectile);
 
   std::vector<ProjectilePtr> m_projectiles;
   ArrowConfig m_arrow_config;
