@@ -284,14 +284,13 @@ auto SaveStorage::list_slots(QString *out_error) const -> QVariantList {
 
 auto SaveStorage::list_campaigns(QString *out_error) const -> QVariantList {
   QVariantList result;
-  
-  // Load campaigns from JSON files in assets/campaigns/
+
   const QString campaigns_path = Utils::Resources::resolveResourcePath(
       QStringLiteral(":/assets/campaigns"));
-  
+
   QDir campaigns_dir(campaigns_path);
   if (!campaigns_dir.exists()) {
-    // Fallback to file system path if resource path doesn't work
+
     campaigns_dir = QDir(QStringLiteral("assets/campaigns"));
     if (!campaigns_dir.exists()) {
       if (out_error != nullptr) {
@@ -300,28 +299,28 @@ auto SaveStorage::list_campaigns(QString *out_error) const -> QVariantList {
       return result;
     }
   }
-  
+
   const QStringList campaign_files = campaigns_dir.entryList(
       QStringList() << QStringLiteral("*.json"), QDir::Files);
-  
+
   for (const auto &campaign_file : campaign_files) {
     const QString campaign_path = campaigns_dir.filePath(campaign_file);
-    
+
     Game::Campaign::CampaignDefinition campaign;
     QString error;
-    if (!Game::Campaign::CampaignLoader::loadFromJsonFile(campaign_path, campaign, &error)) {
+    if (!Game::Campaign::CampaignLoader::loadFromJsonFile(campaign_path,
+                                                          campaign, &error)) {
       qWarning() << "Failed to load campaign" << campaign_file << ":" << error;
       continue;
     }
-    
+
     QVariantMap campaign_map;
     campaign_map.insert(QStringLiteral("id"), campaign.id);
     campaign_map.insert(QStringLiteral("title"), campaign.title);
     campaign_map.insert(QStringLiteral("description"), campaign.description);
-    campaign_map.insert(QStringLiteral("unlocked"), true); // For now, all campaigns are unlocked
-    campaign_map.insert(QStringLiteral("completed"), false); // Progress tracking can be added later
-    
-    // Add missions info
+    campaign_map.insert(QStringLiteral("unlocked"), true);
+    campaign_map.insert(QStringLiteral("completed"), false);
+
     QVariantList missions_list;
     for (const auto &mission : campaign.missions) {
       QVariantMap mission_map;
@@ -336,10 +335,10 @@ auto SaveStorage::list_campaigns(QString *out_error) const -> QVariantList {
       missions_list.append(mission_map);
     }
     campaign_map.insert(QStringLiteral("missions"), missions_list);
-    
+
     result.append(campaign_map);
   }
-  
+
   return result;
 }
 
