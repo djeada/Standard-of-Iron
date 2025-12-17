@@ -25,7 +25,8 @@ static inline auto team_color(int owner_id) -> QVector3D {
 
 namespace Game::Units {
 
-Builder::Builder(Engine::Core::World &world) : Unit(world, TroopType::Builder) {}
+Builder::Builder(Engine::Core::World &world)
+    : Unit(world, TroopType::Builder) {}
 
 auto Builder::Create(Engine::Core::World &world,
                      const SpawnParams &params) -> std::unique_ptr<Builder> {

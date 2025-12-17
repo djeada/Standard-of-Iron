@@ -24,5 +24,26 @@
         <file>ui/qml/GameView.qml</file>
         <file>ui/qml/CursorManager.qml</file>
         <file>ui/qml/LoadScreen.qml</file>
+        <!-- Icon assets mirrored under the QML module prefix for Qt6 -->
+        <file alias="assets/visuals/icons/archer_cartaghe.png">assets/visuals/icons/archer_cartaghe.png</file>
+        <file alias="assets/visuals/icons/archer_rome.png">assets/visuals/icons/archer_rome.png</file>
+        <file alias="assets/visuals/icons/ballista_cartaghe.png">assets/visuals/icons/ballista_cartaghe.png</file>
+        <file alias="assets/visuals/icons/ballista_rome.png">assets/visuals/icons/ballista_rome.png</file>
+        <file alias="assets/visuals/icons/builder_cartaghe.png">assets/visuals/icons/builder_cartaghe.png</file>
+        <file alias="assets/visuals/icons/builder_rome.png">assets/visuals/icons/builder_rome.png</file>
+        <file alias="assets/visuals/icons/catapult_cartaghe.png">assets/visuals/icons/catapult_cartaghe.png</file>
+        <file alias="assets/visuals/icons/catapult_rome.png">assets/visuals/icons/catapult_rome.png</file>
+        <file alias="assets/visuals/icons/healer_cartaghe.png">assets/visuals/icons/healer_cartaghe.png</file>
+        <file alias="assets/visuals/icons/healer_rome.png">assets/visuals/icons/healer_rome.png</file>
+        <file alias="assets/visuals/icons/horse_archer_cartaghe.png">assets/visuals/icons/horse_archer_cartaghe.png</file>
+        <file alias="assets/visuals/icons/horse_archer_rome.png">assets/visuals/icons/horse_archer_rome.png</file>
+        <file alias="assets/visuals/icons/horse_spearman_cartaghe.png">assets/visuals/icons/horse_spearman_cartaghe.png</file>
+        <file alias="assets/visuals/icons/horse_spearman_rome.png">assets/visuals/icons/horse_spearman_rome.png</file>
+        <file alias="assets/visuals/icons/horse_swordsman_cartaghe.png">assets/visuals/icons/horse_swordsman_cartaghe.png</file>
+        <file alias="assets/visuals/icons/horse_swordsman_rome.png">assets/visuals/icons/horse_swordsman_rome.png</file>
+        <file alias="assets/visuals/icons/spearman_cartaghe.png">assets/visuals/icons/spearman_cartaghe.png</file>
+        <file alias="assets/visuals/icons/spearman_rome.png">assets/visuals/icons/spearman_rome.png</file>
+        <file alias="assets/visuals/icons/swordsman_cartaghe.png">assets/visuals/icons/swordsman_cartaghe.png</file>
+        <file alias="assets/visuals/icons/swordsman_rome.png">assets/visuals/icons/swordsman_rome.png</file>
     </qresource>
 </RCC>

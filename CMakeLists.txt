@@ -295,6 +295,8 @@ if(QT_VERSION_MAJOR EQUAL 6)
             assets/visuals/icons/catapult_cartaghe.png
             assets/visuals/icons/ballista_rome.png
             assets/visuals/icons/ballista_cartaghe.png
+            assets/visuals/icons/builder_rome.png
+            assets/visuals/icons/builder_cartaghe.png
             translations/app_en.qm
             translations/app_de.qm
             translations/app_pt_br.qm
@@ -396,4 +398,3 @@ add_custom_target(validate-content
 # Optionally make validation run as part of the build
 # Uncomment the following line to make build fail on invalid content:
 # add_dependencies(standard_of_iron validate-content)
-

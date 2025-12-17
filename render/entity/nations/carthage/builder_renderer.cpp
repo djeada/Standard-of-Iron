@@ -175,9 +175,10 @@ public:
     QVector3D const handle_top = hand_r + up * 0.06F;
     QVector3D const handle_bottom = handle_top - up * handle_length;
 
-    out.mesh(get_unit_cylinder(),
-             cylinder_between(ctx.model, handle_bottom, handle_top, handle_radius),
-             wood_color, nullptr, 1.0F);
+    out.mesh(
+        get_unit_cylinder(),
+        cylinder_between(ctx.model, handle_bottom, handle_top, handle_radius),
+        wood_color, nullptr, 1.0F);
 
     float const head_radius = 0.035F;
     QVector3D const head_center = handle_top + up * 0.035F;
@@ -255,8 +256,10 @@ public:
         float const sin2 = std::sin(angle2);
         float const cos2 = std::cos(angle2);
 
-        float const r1 = (std::abs(cos1) * depth + (1.0F - std::abs(cos1)) * width);
-        float const r2 = (std::abs(cos2) * depth + (1.0F - std::abs(cos2)) * width);
+        float const r1 =
+            (std::abs(cos1) * depth + (1.0F - std::abs(cos1)) * width);
+        float const r2 =
+            (std::abs(cos2) * depth + (1.0F - std::abs(cos2)) * width);
 
         QVector3D const p1 = origin + right * (r1 * sin1) +
                              forward * (r1 * cos1) + up * (y_pos - origin.y());
@@ -278,18 +281,21 @@ public:
     float const torso_fill_bot = y_waist + 0.04F;
     constexpr int torso_fill_layers = 7;
     for (int i = 0; i < torso_fill_layers; ++i) {
-      float const t = static_cast<float>(i) / static_cast<float>(torso_fill_layers - 1);
+      float const t =
+          static_cast<float>(i) / static_cast<float>(torso_fill_layers - 1);
       float const y = torso_fill_top + (torso_fill_bot - torso_fill_top) * t;
       float const width = torso_r * (1.06F - t * 0.18F);
       float const depth = torso_depth * (0.98F - t * 0.14F);
       float const thickness = 0.028F - t * 0.008F;
-      QVector3D const c = (t < 0.4F) ? robe_light : robe_tan * (1.0F - (t - 0.4F) * 0.25F);
+      QVector3D const c =
+          (t < 0.4F) ? robe_light : robe_tan * (1.0F - (t - 0.4F) * 0.25F);
       drawRobeRing(y, width, depth, c, thickness, k_mat_tunic);
     }
 
     constexpr int skirt_layers = 7;
     for (int layer = 0; layer < skirt_layers; ++layer) {
-      float const t = static_cast<float>(layer) / static_cast<float>(skirt_layers - 1);
+      float const t =
+          static_cast<float>(layer) / static_cast<float>(skirt_layers - 1);
       float const y = y_waist - t * 0.22F;
       float const flare = 1.0F + t * 0.30F;
       QVector3D const skirt_color = robe_tan * (1.0F - t * 0.06F);
@@ -310,30 +316,33 @@ public:
                                    up * (y_waist - 0.18F - origin.y());
     float const apron_width = torso_r * 0.65F;
 
-    out.mesh(get_unit_cube(),
-             [&]() {
-               QMatrix4x4 m = ctx.model;
-               QVector3D const center = (apron_top + apron_bottom) * 0.5F;
-               m.translate(center);
-               m.scale(apron_width, (apron_top.y() - apron_bottom.y()) * 0.5F, 0.012F);
-               return m;
-             }(),
-             apron_color, nullptr, 1.0F, k_mat_leather);
+    out.mesh(
+        get_unit_cube(),
+        [&]() {
+          QMatrix4x4 m = ctx.model;
+          QVector3D const center = (apron_top + apron_bottom) * 0.5F;
+          m.translate(center);
+          m.scale(apron_width, (apron_top.y() - apron_bottom.y()) * 0.5F,
+                  0.012F);
+          return m;
+        }(),
+        apron_color, nullptr, 1.0F, k_mat_leather);
 
     QVector3D const pouch_pos = origin + right * (torso_r * 0.70F) +
                                 up * (belt_y - 0.05F - origin.y()) +
                                 forward * (torso_depth * 0.10F);
-    out.mesh(get_unit_cube(),
-             [&]() {
-               QMatrix4x4 m = ctx.model;
-               m.translate(pouch_pos);
-               m.scale(0.035F, 0.045F, 0.025F);
-               return m;
-             }(),
-             leather_color * 0.85F, nullptr, 1.0F, k_mat_leather);
+    out.mesh(
+        get_unit_cube(),
+        [&]() {
+          QMatrix4x4 m = ctx.model;
+          m.translate(pouch_pos);
+          m.scale(0.035F, 0.045F, 0.025F);
+          return m;
+        }(),
+        leather_color * 0.85F, nullptr, 1.0F, k_mat_leather);
 
-    QVector3D const buckle_pos = origin + forward * (torso_depth * 0.82F) +
-                                 up * (belt_y - origin.y());
+    QVector3D const buckle_pos =
+        origin + forward * (torso_depth * 0.82F) + up * (belt_y - origin.y());
     out.mesh(get_unit_sphere(), sphere_at(ctx.model, buckle_pos, 0.016F),
              bronze_color, nullptr, 1.0F, k_mat_tools);
 
@@ -357,7 +366,8 @@ public:
   }
 
 private:
-  auto resolve_style(const DrawContext &ctx) const -> const BuilderStyleConfig & {
+  auto
+  resolve_style(const DrawContext &ctx) const -> const BuilderStyleConfig & {
     ensure_builder_styles_registered();
     auto &styles = style_registry();
     std::string nation_id;
