@@ -90,34 +90,35 @@ void draw_colonnade(const DrawContext &p, ISubmitter &out, Mesh *unit,
   float const col_radius = 0.10F;
   static constexpr float FRONT_COLUMN_SPACING_RANGE = 2.5F;
   static constexpr float SIDE_COLUMN_SPACING_RANGE = 2.0F;
-  
-  // Reduce column height for damaged/destroyed states
+
   float height_multiplier = 1.0F;
   int num_columns = 6;
   if (state == BuildingState::Damaged) {
     height_multiplier = 0.7F;
-    num_columns = 4;  // Fewer columns for damaged state
+    num_columns = 4;
   } else if (state == BuildingState::Destroyed) {
     height_multiplier = 0.4F;
-    num_columns = 2;  // Even fewer columns for destroyed state
+    num_columns = 2;
   }
 
   for (int i = 0; i < num_columns; ++i) {
-    float const x = -1.25F + float(i) * (num_columns > 1 ? FRONT_COLUMN_SPACING_RANGE / (num_columns - 1) : 0.0F);
+    float const x =
+        -1.25F + float(i) * (num_columns > 1 ? FRONT_COLUMN_SPACING_RANGE /
+                                                   (num_columns - 1)
+                                             : 0.0F);
     float const z = 1.4F;
 
     draw_box(out, unit, white, p.model, QVector3D(x, 0.25F, z),
              QVector3D(col_radius * 1.2F, 0.05F, col_radius * 1.2F), c.marble);
 
     draw_cyl(out, p.model, QVector3D(x, 0.2F, z),
-             QVector3D(x, 0.2F + col_height * height_multiplier, z), col_radius, c.limestone,
-             white);
+             QVector3D(x, 0.2F + col_height * height_multiplier, z), col_radius,
+             c.limestone, white);
 
     draw_box(out, unit, white, p.model,
              QVector3D(x, 0.2F + col_height * height_multiplier + 0.05F, z),
              QVector3D(col_radius * 1.5F, 0.08F, col_radius * 1.5F), c.marble);
 
-    // Skip gold decorations if destroyed
     if (state != BuildingState::Destroyed) {
       draw_box(out, unit, white, p.model,
                QVector3D(x, 0.2F + col_height * height_multiplier + 0.12F, z),
@@ -127,27 +128,32 @@ void draw_colonnade(const DrawContext &p, ISubmitter &out, Mesh *unit,
 
   int side_columns = (state == BuildingState::Destroyed) ? 2 : 3;
   for (int i = 0; i < side_columns; ++i) {
-    float const z = -1.0F + float(i) * (side_columns > 1 ? SIDE_COLUMN_SPACING_RANGE / (side_columns - 1) : 0.0F);
+    float const z =
+        -1.0F + float(i) * (side_columns > 1
+                                ? SIDE_COLUMN_SPACING_RANGE / (side_columns - 1)
+                                : 0.0F);
 
     float const x_left = -1.6F;
     draw_box(out, unit, white, p.model, QVector3D(x_left, 0.25F, z),
              QVector3D(col_radius * 1.2F, 0.05F, col_radius * 1.2F), c.marble);
     draw_cyl(out, p.model, QVector3D(x_left, 0.2F, z),
-             QVector3D(x_left, 0.2F + col_height * height_multiplier, z), col_radius, c.limestone,
-             white);
-    draw_box(out, unit, white, p.model,
-             QVector3D(x_left, 0.2F + col_height * height_multiplier + 0.05F, z),
-             QVector3D(col_radius * 1.5F, 0.08F, col_radius * 1.5F), c.marble);
+             QVector3D(x_left, 0.2F + col_height * height_multiplier, z),
+             col_radius, c.limestone, white);
+    draw_box(
+        out, unit, white, p.model,
+        QVector3D(x_left, 0.2F + col_height * height_multiplier + 0.05F, z),
+        QVector3D(col_radius * 1.5F, 0.08F, col_radius * 1.5F), c.marble);
 
     float const x_right = 1.6F;
     draw_box(out, unit, white, p.model, QVector3D(x_right, 0.25F, z),
              QVector3D(col_radius * 1.2F, 0.05F, col_radius * 1.2F), c.marble);
     draw_cyl(out, p.model, QVector3D(x_right, 0.2F, z),
-             QVector3D(x_right, 0.2F + col_height * height_multiplier, z), col_radius, c.limestone,
-             white);
-    draw_box(out, unit, white, p.model,
-             QVector3D(x_right, 0.2F + col_height * height_multiplier + 0.05F, z),
-             QVector3D(col_radius * 1.5F, 0.08F, col_radius * 1.5F), c.marble);
+             QVector3D(x_right, 0.2F + col_height * height_multiplier, z),
+             col_radius, c.limestone, white);
+    draw_box(
+        out, unit, white, p.model,
+        QVector3D(x_right, 0.2F + col_height * height_multiplier + 0.05F, z),
+        QVector3D(col_radius * 1.5F, 0.08F, col_radius * 1.5F), c.marble);
   }
 }
 
@@ -200,7 +206,7 @@ void draw_chamber(const DrawContext &p, ISubmitter &out, Mesh *unit,
 void draw_terrace(const DrawContext &p, ISubmitter &out, Mesh *unit,
                   Texture *white, const CarthagePalette &c,
                   BuildingState state) {
-  // Skip terrace if destroyed
+
   if (state == BuildingState::Destroyed) {
     return;
   }
@@ -329,61 +335,57 @@ void draw_health_bar(const DrawContext &p, ISubmitter &out, Mesh *unit,
     return;
   }
 
-  // Health bar dimensions
   float const bar_width = 1.0F;
   float const bar_height = 0.06F;
   float const bar_y = 2.65F;
   float const border_thickness = 0.008F;
-  
-  // Background with border
+
   QVector3D const border_color(0.15F, 0.15F, 0.15F);
   draw_box(out, unit, white, p.model, QVector3D(0.0F, bar_y, 0.0F),
-           QVector3D(bar_width * 0.5F + border_thickness, bar_height * 0.5F + border_thickness, 0.08F), 
+           QVector3D(bar_width * 0.5F + border_thickness,
+                     bar_height * 0.5F + border_thickness, 0.08F),
            border_color);
-  
-  // Inner background (dark)
+
   QVector3D const bg(0.04F, 0.04F, 0.04F);
   draw_box(out, unit, white, p.model, QVector3D(0.0F, bar_y + 0.002F, 0.0F),
            QVector3D(bar_width * 0.5F, bar_height * 0.5F, 0.075F), bg);
 
-  // Color based on health ratio with smoother gradients
   QVector3D fg_color;
   if (ratio >= 0.70F) {
-    // Normal state: vibrant green
+
     fg_color = QVector3D(0.15F, 0.85F, 0.15F);
   } else if (ratio >= 0.30F) {
-    // Damaged state: transition from green to orange/yellow
+
     float t = (ratio - 0.30F) / 0.40F;
-    QVector3D damaged_color(0.95F, 0.65F, 0.10F);  // Orange
-    QVector3D normal_color(0.15F, 0.85F, 0.15F);   // Green
+    QVector3D damaged_color(0.95F, 0.65F, 0.10F);
+    QVector3D normal_color(0.15F, 0.85F, 0.15F);
     fg_color = normal_color * t + damaged_color * (1.0F - t);
   } else {
-    // Destroyed state: transition from orange to red
+
     float t = ratio / 0.30F;
-    QVector3D critical_color(0.95F, 0.10F, 0.10F);  // Red
-    QVector3D damaged_color(0.95F, 0.65F, 0.10F);   // Orange
+    QVector3D critical_color(0.95F, 0.10F, 0.10F);
+    QVector3D damaged_color(0.95F, 0.65F, 0.10F);
     fg_color = damaged_color * t + critical_color * (1.0F - t);
   }
-  
-  // Main health bar fill with slight offset for 3D effect
-  draw_box(out, unit, white, p.model,
-           QVector3D(-(bar_width * (1.0F - ratio)) * 0.5F, bar_y + 0.004F, 0.0F),
-           QVector3D(bar_width * ratio * 0.5F, bar_height * 0.45F, 0.07F), fg_color);
-  
-  // Add subtle highlight on top for glossy effect
+
+  draw_box(
+      out, unit, white, p.model,
+      QVector3D(-(bar_width * (1.0F - ratio)) * 0.5F, bar_y + 0.004F, 0.0F),
+      QVector3D(bar_width * ratio * 0.5F, bar_height * 0.45F, 0.07F), fg_color);
+
   QVector3D const highlight = fg_color * 1.3F;
   draw_box(out, unit, white, p.model,
-           QVector3D(-(bar_width * (1.0F - ratio)) * 0.5F, bar_y + bar_height * 0.35F, 0.0F),
-           QVector3D(bar_width * ratio * 0.5F, bar_height * 0.15F, 0.068F), 
+           QVector3D(-(bar_width * (1.0F - ratio)) * 0.5F,
+                     bar_y + bar_height * 0.35F, 0.0F),
+           QVector3D(bar_width * ratio * 0.5F, bar_height * 0.15F, 0.068F),
            clampVec01(highlight));
-  
-  // Draw segment markers for 70% and 30% thresholds
+
   QVector3D const segment_color(0.2F, 0.2F, 0.2F);
-  // 70% marker
+
   draw_box(out, unit, white, p.model,
            QVector3D(bar_width * 0.5F * (0.70F - 0.5F), bar_y, 0.0F),
            QVector3D(0.01F, bar_height * 0.55F, 0.08F), segment_color);
-  // 30% marker
+
   draw_box(out, unit, white, p.model,
            QVector3D(bar_width * 0.5F * (0.30F - 0.5F), bar_y, 0.0F),
            QVector3D(0.01F, bar_height * 0.55F, 0.08F), segment_color);
@@ -413,7 +415,6 @@ void draw_barracks(const DrawContext &p, ISubmitter &out) {
     return;
   }
 
-  // Determine building state based on health
   BuildingState state = BuildingState::Normal;
   if (u != nullptr) {
     float const health_ratio =
