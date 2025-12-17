@@ -6,6 +6,7 @@ in vec3 v_tangent;
 in vec3 v_bitangent;
 in vec2 v_texCoord;
 in vec3 v_worldPos;
+in vec3 v_localPos;
 in float v_armorLayer;
 in float v_bodyHeight;
 in float v_helmetDetail;
@@ -204,24 +205,28 @@ void main() {
 
   else if (is_shield) {
 
-    float boss_dist = length(v_worldPos.xy);
+    vec2 shield_uv = v_localPos.xy;
+    vec2 shield_tex = v_texCoord;
+
+    float boss_dist = length(shield_uv);
     float boss = smoothstep(0.12, 0.08, boss_dist) * 0.6;
     float boss_rim = smoothstep(0.14, 0.12, boss_dist) *
                      smoothstep(0.10, 0.12, boss_dist) * 0.3;
 
-    float edge_dist = max(abs(v_worldPos.x), abs(v_worldPos.y));
+    float edge_dist = max(abs(shield_uv.x), abs(shield_uv.y));
     float edge_wear = smoothstep(0.42, 0.48, edge_dist);
-    float wood_layers = edge_wear * noise(uv * 40.0) * 0.25;
+    float wood_layers = edge_wear * noise(shield_tex * 40.0) * 0.25;
 
-    float fabric_grain = noise(uv * 25.0) * 0.08;
-    float canvas_weave = sin(uv.x * 60.0) * sin(uv.y * 58.0) * 0.04;
+    float fabric_grain = noise(shield_tex * 25.0) * 0.08;
+    float canvas_weave =
+        sin(shield_tex.x * 60.0) * sin(shield_tex.y * 58.0) * 0.04;
 
     float metal_edge = smoothstep(0.46, 0.48, edge_dist) * 0.45;
     vec3 bronze_edge = vec3(0.75, 0.55, 0.30);
 
-    float dents = noise(uv * 8.0) * v_polishLevel * 0.20;
-    float cuts = step(0.88, noise(uv * 12.0)) * 0.32;
-    float scratches = noise(uv * 50.0) * 0.15;
+    float dents = noise(shield_tex * 8.0) * v_polishLevel * 0.20;
+    float cuts = step(0.88, noise(shield_tex * 12.0)) * 0.32;
+    float scratches = noise(shield_tex * 50.0) * 0.15;
 
     vec3 V = normalize(vec3(0.0, 1.0, 0.5));
     float view_angle = max(dot(normalize(v_worldNormal), V), 0.0);
