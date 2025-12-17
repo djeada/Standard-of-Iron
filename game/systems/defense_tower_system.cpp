@@ -52,7 +52,8 @@ auto find_nearest_enemy_in_range(Engine::Core::Entity *tower,
       continue;
     }
 
-    if (owner_registry.are_allies(tower_unit->owner_id, target_unit->owner_id)) {
+    if (owner_registry.are_allies(tower_unit->owner_id,
+                                  target_unit->owner_id)) {
       continue;
     }
 
@@ -66,10 +67,8 @@ auto find_nearest_enemy_in_range(Engine::Core::Entity *tower,
       continue;
     }
 
-    float const dx =
-        target_transform->position.x - tower_transform->position.x;
-    float const dz =
-        target_transform->position.z - tower_transform->position.z;
+    float const dx = target_transform->position.x - tower_transform->position.x;
+    float const dz = target_transform->position.z - tower_transform->position.z;
     float const dist_sq = dx * dx + dz * dz;
 
     if (dist_sq < best_dist_sq) {
@@ -81,8 +80,8 @@ auto find_nearest_enemy_in_range(Engine::Core::Entity *tower,
   return best_target;
 }
 
-void spawn_tower_arrows(Engine::Core::Entity *tower, Engine::Core::Entity *target,
-                        ArrowSystem *arrow_sys) {
+void spawn_tower_arrows(Engine::Core::Entity *tower,
+                        Engine::Core::Entity *target, ArrowSystem *arrow_sys) {
   if (arrow_sys == nullptr) {
     return;
   }
@@ -109,7 +108,8 @@ void spawn_tower_arrows(Engine::Core::Entity *tower, Engine::Core::Entity *targe
   QVector3D const perpendicular(-dir.z(), 0.0F, dir.x());
   float const lateral_offset = spread_dist(gen);
 
-  QVector3D const start = tower_pos + dir * 0.5F + perpendicular * lateral_offset;
+  QVector3D const start =
+      tower_pos + dir * 0.5F + perpendicular * lateral_offset;
   QVector3D const end =
       target_pos + QVector3D(0.0F, 0.8F, 0.0F) + perpendicular * lateral_offset;
 
@@ -152,7 +152,8 @@ void DefenseTowerSystem::update(Engine::Core::World *world, float delta_time) {
       continue;
     }
 
-    auto *target = find_nearest_enemy_in_range(tower, world, attack_comp->range);
+    auto *target =
+        find_nearest_enemy_in_range(tower, world, attack_comp->range);
     if (target == nullptr) {
       continue;
     }
