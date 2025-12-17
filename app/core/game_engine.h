@@ -406,6 +406,7 @@ signals:
   void save_slots_changed();
   void hold_mode_changed(bool active);
   void guard_mode_changed(bool active);
+  void formation_mode_changed(bool active);
   void spectator_mode_changed();
   void is_loading_changed();
   void loading_progress_changed(float progress);
