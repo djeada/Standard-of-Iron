@@ -70,7 +70,6 @@ void render_combat_dust(Renderer *renderer, ResourceManager *,
                           animation_time);
   }
 
-  // Render dust for builders during construction
   auto builders =
       world->get_entities_with<Engine::Core::BuilderProductionComponent>();
 
@@ -79,7 +78,8 @@ void render_combat_dust(Renderer *renderer, ResourceManager *,
       continue;
     }
 
-    auto *transform = builder->get_component<Engine::Core::TransformComponent>();
+    auto *transform =
+        builder->get_component<Engine::Core::TransformComponent>();
     auto *production =
         builder->get_component<Engine::Core::BuilderProductionComponent>();
     auto *unit_comp = builder->get_component<Engine::Core::UnitComponent>();
@@ -92,7 +92,6 @@ void render_combat_dust(Renderer *renderer, ResourceManager *,
       continue;
     }
 
-    // Only show dust when actively building
     if (!production->in_progress) {
       continue;
     }
