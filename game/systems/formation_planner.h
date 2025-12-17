@@ -45,7 +45,6 @@ public:
     FormationType formation_type = FormationType::Roman;
     bool formation_type_determined = false;
 
-    // First pass: check if all units are in formation mode and determine nation
     for (auto unit_id : units) {
       auto *entity = world.get_entity(unit_id);
       if (entity == nullptr) {
@@ -77,7 +76,6 @@ public:
       return spreadFormation(int(units.size()), center, spacing);
     }
 
-    // Gather unit information for advanced formation
     std::vector<UnitFormationInfo> unit_infos;
     unit_infos.reserve(units.size());
 
@@ -110,12 +108,10 @@ public:
       return spreadFormation(int(units.size()), center, spacing);
     }
 
-    // Get formation positions with facing information
     auto formation_positions =
         FormationSystem::instance().get_formation_positions_with_facing(
             formation_type, unit_infos, center, spacing);
 
-    // Convert to simple positions (facing will be handled later via transform)
     std::vector<QVector3D> positions;
     positions.reserve(formation_positions.size());
     for (const auto &fpos : formation_positions) {

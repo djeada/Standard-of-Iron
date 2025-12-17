@@ -55,7 +55,8 @@ void InputCommandHandler::on_right_click(qreal sx, qreal sy, int local_owner_id,
 
   if (m_cursor_manager->mode() == CursorMode::Patrol ||
       m_cursor_manager->mode() == CursorMode::Attack ||
-      m_cursor_manager->mode() == CursorMode::Guard) {
+      m_cursor_manager->mode() == CursorMode::Guard ||
+      m_cursor_manager->mode() == CursorMode::PlaceBuilding) {
     m_cursor_manager->set_mode(CursorMode::Normal);
     return;
   }

@@ -688,9 +688,12 @@ auto CommandController::on_formation_command() -> CommandResult {
       center.setY(center.y() / static_cast<float>(valid_count));
       center.setZ(center.z() / static_cast<float>(valid_count));
 
-      auto targets = Game::Systems::FormationPlanner::spread_formation_by_nation(
-          *m_world, selected, center,
-          Game::GameConfig::instance().gameplay().formation_spacing_default);
+      auto targets =
+          Game::Systems::FormationPlanner::spread_formation_by_nation(
+              *m_world, selected, center,
+              Game::GameConfig::instance()
+                  .gameplay()
+                  .formation_spacing_default);
 
       Game::Systems::CommandService::MoveOptions opts;
       opts.group_move = selected.size() > 1;

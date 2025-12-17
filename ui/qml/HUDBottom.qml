@@ -568,6 +568,11 @@ RowLayout {
                 gameView.setRallyMode = !gameView.setRallyMode;
 
         }
+        onBuildTower: {
+            if (typeof game !== 'undefined' && game.start_building_placement)
+                game.start_building_placement("defense_tower");
+
+        }
     }
 
 }

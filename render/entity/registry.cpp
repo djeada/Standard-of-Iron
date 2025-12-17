@@ -3,6 +3,7 @@
 #include "ballista_renderer.h"
 #include "barracks_renderer.h"
 #include "catapult_renderer.h"
+#include "defense_tower_renderer.h"
 #include "nations/carthage/archer_renderer.h"
 #include "nations/carthage/ballista_renderer.h"
 #include "nations/carthage/catapult_renderer.h"
@@ -66,6 +67,8 @@ void registerBuiltInEntityRenderers(EntityRendererRegistry &registry) {
   register_ballista_renderer(registry);
 
   register_barracks_renderer(registry);
+
+  register_defense_tower_renderer(registry);
 }
 
 } // namespace Render::GL
