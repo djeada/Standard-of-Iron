@@ -149,35 +149,47 @@ auto CombatDustPipeline::create_dust_geometry() -> bool {
   constexpr int segments = 16;
   constexpr float pi = std::numbers::pi_v<float>;
 
-  vertices.reserve(static_cast<size_t>((rings + 1) * (segments + 1)));
+  constexpr int height_levels = 8;
+  constexpr int angle_segments = 12;
+  constexpr float max_height = 1.0F;
 
-  for (int i = 0; i <= rings; ++i) {
-    float r = static_cast<float>(i) / static_cast<float>(rings);
+  vertices.reserve(
+      static_cast<size_t>((height_levels + 1) * (angle_segments + 1)));
 
-    for (int j = 0; j <= segments; ++j) {
-      float theta =
-          (static_cast<float>(j) / static_cast<float>(segments)) * pi * 2.0F;
-      float x = r * std::cos(theta);
-      float z = r * std::sin(theta);
+  for (int h = 0; h <= height_levels; ++h) {
+    float height_t = static_cast<float>(h) / static_cast<float>(height_levels);
+    float y = height_t * max_height;
+
+    float radius_at_height = 1.0F - height_t * 0.3F;
+
+    for (int a = 0; a <= angle_segments; ++a) {
+      float angle_t =
+          static_cast<float>(a) / static_cast<float>(angle_segments);
+      float theta = angle_t * pi * 2.0F;
+      float x = radius_at_height * std::cos(theta);
+      float z = radius_at_height * std::sin(theta);
 
       DustVertex v;
       v.position[0] = x;
-      v.position[1] = 0.0F;
+      v.position[1] = y;
       v.position[2] = z;
-      v.normal[0] = 0.0F;
-      v.normal[1] = 1.0F;
-      v.normal[2] = 0.0F;
-      v.tex_coord[0] = static_cast<float>(j) / static_cast<float>(segments);
-      v.tex_coord[1] = r;
+
+      v.normal[0] = std::cos(theta);
+      v.normal[1] = 0.3F;
+      v.normal[2] = std::sin(theta);
+
+      v.tex_coord[0] = angle_t;
+      v.tex_coord[1] = height_t;
       vertices.push_back(v);
     }
   }
 
-  indices.reserve(static_cast<size_t>(rings * segments * 6));
-  for (int i = 0; i < rings; ++i) {
-    for (int j = 0; j < segments; ++j) {
-      unsigned int curr = static_cast<unsigned int>(i * (segments + 1) + j);
-      unsigned int next = curr + static_cast<unsigned int>(segments + 1);
+  indices.reserve(static_cast<size_t>(height_levels * angle_segments * 6));
+  for (int h = 0; h < height_levels; ++h) {
+    for (int a = 0; a < angle_segments; ++a) {
+      unsigned int curr =
+          static_cast<unsigned int>(h * (angle_segments + 1) + a);
+      unsigned int next = curr + static_cast<unsigned int>(angle_segments + 1);
 
       indices.push_back(curr);
       indices.push_back(next);
@@ -324,18 +336,49 @@ void CombatDustPipeline::collect_building_flames(Engine::Core::World *world,
       continue;
     }
 
-    float flame_intensity = kDefaultFlameIntensity * (1.0F - health_ratio);
+    float base_intensity = kDefaultFlameIntensity * (1.0F - health_ratio);
 
-    CombatDustData data;
-    data.position =
-        QVector3D(transform->position.x, kFlameYOffset, transform->position.z);
-    data.radius = kDefaultFlameRadius;
-    data.intensity = flame_intensity;
-    data.color = QVector3D(kFlameColorR, kFlameColorG, kFlameColorB);
-    data.time = animation_time;
-    data.effect_type = EffectType::Flame;
+    float cx = transform->position.x;
+    float cz = transform->position.z;
 
-    m_dust_data.push_back(data);
+    constexpr float kBuildingHalfWidth = 1.5F;
+    constexpr float kBuildingHalfDepth = 1.2F;
+    constexpr float kFlameSpacing = 0.8F;
+
+    struct FlamePoint {
+      float dx, dz, height_offset, intensity_mult, radius_mult;
+    };
+
+    FlamePoint flame_points[] = {
+
+        {-kBuildingHalfWidth * 0.7F, -kBuildingHalfDepth * 0.7F, 0.8F, 1.0F,
+         0.9F},
+        {kBuildingHalfWidth * 0.7F, -kBuildingHalfDepth * 0.7F, 0.7F, 0.95F,
+         0.85F},
+        {-kBuildingHalfWidth * 0.7F, kBuildingHalfDepth * 0.7F, 0.6F, 0.9F,
+         0.8F},
+        {kBuildingHalfWidth * 0.7F, kBuildingHalfDepth * 0.7F, 0.75F, 1.0F,
+         0.9F},
+
+        {0.0F, -kBuildingHalfDepth * 0.8F, 0.9F, 0.85F, 0.7F},
+        {0.0F, kBuildingHalfDepth * 0.8F, 0.7F, 0.8F, 0.65F},
+        {-kBuildingHalfWidth * 0.8F, 0.0F, 0.65F, 0.75F, 0.7F},
+        {kBuildingHalfWidth * 0.8F, 0.0F, 0.8F, 0.85F, 0.75F},
+
+        {0.0F, 0.0F, 1.0F, 1.1F, 1.0F},
+    };
+
+    for (const auto &fp : flame_points) {
+      CombatDustData data;
+      data.position =
+          QVector3D(cx + fp.dx, kFlameYOffset + fp.height_offset, cz + fp.dz);
+      data.radius = kDefaultFlameRadius * fp.radius_mult;
+      data.intensity = base_intensity * fp.intensity_mult;
+      data.color = QVector3D(kFlameColorR, kFlameColorG, kFlameColorB);
+      data.time = animation_time;
+      data.effect_type = EffectType::Flame;
+      m_dust_data.push_back(data);
+    }
   }
 }
 

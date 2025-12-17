@@ -39,44 +39,61 @@ void main() {
 
     frag_color = vec4(color, final_alpha * 0.6);
   } else {
-    // Flame effect - realistic fire colors with strong visibility
+
     float flame_height = v_texcoord.y;
+    float angle_t = v_texcoord.x;
 
-    // More vibrant fire colors - hot white/yellow at base, orange in middle, red at tips
-    vec3 base_color = vec3(1.8, 1.4, 0.6);  // Hot yellow-white base
-    vec3 mid_color = vec3(1.6, 0.7, 0.2);   // Bright orange middle
-    vec3 tip_color = vec3(1.2, 0.35, 0.1);  // Red-orange tips
+    float tongue_count = 8.0;
+    float tongue_id = floor(angle_t * tongue_count);
+    float tongue_local = fract(angle_t * tongue_count);
+    float tongue_phase = tongue_id * 1.618;
 
-    // Create gradient from base to tip
-    color = mix(base_color, mid_color, smoothstep(0.0, 0.5, flame_height));
-    color = mix(color, tip_color, smoothstep(0.5, 1.0, flame_height));
+    float noise_hi = fract(
+        sin(dot(v_texcoord * 20.0 + u_time * 0.5, vec2(12.9898, 78.233))) *
+        43758.5453);
+    float noise_lo =
+        fract(sin(dot(v_texcoord * 8.0 + u_time * 0.2 + tongue_phase,
+                      vec2(93.9898, 67.345))) *
+              23421.631);
+    float flame_noise = mix(noise_lo, noise_hi, 0.5);
 
-    // Add intense core glow for realism
-    float core_glow_factor = pow(1.0 - flame_height, 2.0) * smoothstep(0.3, 0.0, dist_from_center);
-    color += vec3(2.0, 1.5, 0.8) * core_glow_factor;
+    vec3 core_color = vec3(1.5, 1.4, 1.0);
+    vec3 inner_color = vec3(1.4, 0.9, 0.3);
+    vec3 mid_color = vec3(1.3, 0.5, 0.15);
+    vec3 outer_color = vec3(1.0, 0.25, 0.1);
+    vec3 tip_color = vec3(0.4, 0.15, 0.1);
 
-    // Strong flicker using noise for dynamic fire
-    float flicker = mix(0.9, 1.4, combined_noise);
+    if (flame_height < 0.15) {
+      color = mix(core_color, inner_color, flame_height / 0.15);
+    } else if (flame_height < 0.35) {
+      color = mix(inner_color, mid_color, (flame_height - 0.15) / 0.2);
+    } else if (flame_height < 0.65) {
+      color = mix(mid_color, outer_color, (flame_height - 0.35) / 0.3);
+    } else {
+      color = mix(outer_color, tip_color, (flame_height - 0.65) / 0.35);
+    }
+
+    float hue_shift = sin(tongue_phase * 2.0) * 0.1;
+    color.r += hue_shift;
+    color.g -= hue_shift * 0.5;
+
+    float flicker = 0.8 + 0.2 * sin(u_time * 10.0 + tongue_phase * 4.0 +
+                                    flame_height * 8.0);
     color *= flicker;
 
-    // Apply intensity
-    color *= v_intensity;
+    color *= (0.85 + 0.3 * flame_noise);
 
-    // Additional bright glow at the base
-    float base_glow = pow(1.0 - flame_height, 3.0) * 1.8;
-    color += vec3(1.8, 1.0, 0.3) * base_glow * v_intensity;
+    color *= v_intensity * 1.2;
 
-    // Less aggressive edge fade - keep flames visible
-    float edge_fade = smoothstep(0.0, 0.15, v_texcoord.x) *
-                      smoothstep(0.0, 0.15, 1.0 - v_texcoord.x);
+    float glow = pow(1.0 - flame_height, 2.5) * 0.8;
+    color += vec3(1.2, 0.8, 0.4) * glow * v_intensity;
 
-    // Keep more of the flame visible at height
-    float height_fade = smoothstep(1.0, 0.3, flame_height);
+    float tongue_fade = smoothstep(0.0, 0.15, tongue_local) *
+                        smoothstep(1.0, 0.85, tongue_local);
 
-    // Much stronger alpha - multiply by 1.8 instead of 0.8
-    float flame_alpha = edge_fade * height_fade * final_alpha * 1.8;
+    float flame_alpha = v_alpha * tongue_fade * (0.7 + 0.3 * flame_noise);
 
-    color = clamp(color, 0.0, 5.0);
+    color = clamp(color, 0.0, 4.0);
     frag_color = vec4(color, clamp(flame_alpha, 0.0, 1.0));
   }
 }
