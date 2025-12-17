@@ -1,0 +1,62 @@
+{
+  "id": "second_punic_war",
+  "title": "The Second Punic War",
+  "description": "Follow Hannibal's legendary campaign against Rome through eight epic battles, from crossing the Rhône to the final confrontation at Zama. Master Carthaginian tactics and challenge the might of Rome.",
+  "missions": [
+    {
+      "mission_id": "crossing_the_rhone",
+      "order_index": 0,
+      "intro_text": "218 BC: Hannibal's army reaches the Rhône River. Roman forces block the crossing. Secure the river crossing and defeat the Roman advance guard to continue the march toward Italy.",
+      "outro_text": "The Rhône is crossed! Your army marches onward, one step closer to Rome. The Republic now knows that Hannibal cannot be stopped by rivers alone."
+    },
+    {
+      "mission_id": "battle_of_ticino",
+      "order_index": 1,
+      "intro_text": "218 BC: First engagement on Italian soil. Consul Publius Scipio's cavalry meets Hannibal's forces at the Ticino River. Use your superior cavalry to outmaneuver the Romans.",
+      "outro_text": "Victory! The Roman consul is wounded and retreats. Your cavalry has proven its superiority. Rome begins to fear the Carthaginian threat.",
+      "difficulty_modifier": 1.1
+    },
+    {
+      "mission_id": "battle_of_trebia",
+      "order_index": 2,
+      "intro_text": "218 BC, Winter: The Trebia River runs cold. Consul Sempronius leads a full Roman army. Lure the enemy into the freezing waters, then strike from ambush with your concealed forces.",
+      "outro_text": "A crushing victory! The Roman army is shattered in the frozen river. Your ambush tactics have proven devastating. Rome's confidence wavers.",
+      "difficulty_modifier": 1.2
+    },
+    {
+      "mission_id": "battle_of_trasimene",
+      "order_index": 3,
+      "intro_text": "217 BC: Consul Flaminius pursues your army along Lake Trasimene. The morning mist conceals your trap. Execute the perfect ambush and annihilate the Roman legion.",
+      "outro_text": "Complete destruction! Flaminius is dead, his army annihilated in the greatest ambush in history. Rome appoints a dictator in desperation.",
+      "difficulty_modifier": 1.3
+    },
+    {
+      "mission_id": "battle_of_cannae",
+      "order_index": 4,
+      "intro_text": "216 BC: The decisive moment. Rome's largest army ever assembled stands before you at Cannae. Execute the double envelopment - your masterpiece of tactical warfare.",
+      "outro_text": "Immortal victory! The Roman army is encircled and destroyed. 50,000 Romans lie dead. Your name will echo through history as the greatest tactical commander.",
+      "difficulty_modifier": 1.5
+    },
+    {
+      "mission_id": "campania_campaign",
+      "order_index": 5,
+      "intro_text": "215-212 BC: Control the rich region of Campania. Defend against Roman counterattacks while maintaining your army's strength. Hold the strategic cities and villages.",
+      "outro_text": "Campania secured! Your army has resupplied and allies have joined your cause. But Rome refuses to surrender, and the war grinds on.",
+      "difficulty_modifier": 1.4
+    },
+    {
+      "mission_id": "crossing_the_alps",
+      "order_index": 6,
+      "intro_text": "218 BC (Flashback): Before Italy, before the victories - the impossible crossing. Lead your army through the snow-covered Alps. Survive nature's fury and hostile mountain tribes.",
+      "outro_text": "Against all odds, you have crossed the Alps! Though you've lost many men and elephants, you have achieved the impossible. Italy lies before you.",
+      "difficulty_modifier": 1.3
+    },
+    {
+      "mission_id": "battle_of_zama",
+      "order_index": 7,
+      "intro_text": "202 BC: Called back to Africa, you face Scipio Africanus - Rome's answer to your tactics. The final confrontation. Can you overcome Rome's best general?",
+      "outro_text": "The war ends. Whether in victory or honorable defeat, Hannibal's campaign has changed warfare forever. Rome has survived its greatest test, but will never forget Hannibal's genius.",
+      "difficulty_modifier": 1.6
+    }
+  ]
+}

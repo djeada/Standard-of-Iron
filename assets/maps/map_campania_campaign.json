@@ -1,0 +1,94 @@
+{
+  "name": "Campania Campaign",
+  "description": "Defend the rich Campanian territories against Roman counteroffensives",
+  "coordSystem": "grid",
+  "maxTroopsPerPlayer": 2500,
+  "grid": {
+    "width": 140,
+    "height": 160,
+    "tileSize": 1.0
+  },
+  "biome": {
+    "groundType": "soil_rocky",
+    "seed": 10006,
+    "patchDensity": 3.0,
+    "patchJitter": 0.86,
+    "plantDensity": 0.5,
+    "groundIrregularityEnabled": true,
+    "irregularityScale": 0.13,
+    "irregularityAmplitude": 0.07
+  },
+  "camera": {
+    "center": [70, 0, 80],
+    "distance": 38.0,
+    "tiltDeg": 45.0,
+    "yaw": 225.0,
+    "fovY": 45.0,
+    "near": 1.0,
+    "far": 480.0
+  },
+  "spawns": [],
+  "firecamps": [
+    {
+      "x": 55,
+      "z": 55,
+      "intensity": 1.0,
+      "radius": 3.0
+    },
+    {
+      "x": 65,
+      "z": 65,
+      "intensity": 1.0,
+      "radius": 3.0
+    },
+    {
+      "x": 75,
+      "z": 75,
+      "intensity": 1.1,
+      "radius": 3.2
+    },
+    {
+      "x": 85,
+      "z": 85,
+      "intensity": 1.0,
+      "radius": 3.0
+    },
+    {
+      "x": 35,
+      "z": 75,
+      "intensity": 1.0,
+      "radius": 3.0
+    }
+  ],
+  "terrain": [
+    {
+      "type": "hill",
+      "x": 60,
+      "z": 60,
+      "radius": 12,
+      "height": 3.0,
+      "description": "Central defensive position"
+    },
+    {
+      "type": "hill",
+      "x": 80,
+      "z": 80,
+      "radius": 10,
+      "height": 2.5,
+      "description": "Eastern village position"
+    },
+    {
+      "type": "hill",
+      "x": 40,
+      "z": 80,
+      "radius": 10,
+      "height": 2.5,
+      "description": "Western village position"
+    }
+  ],
+  "victory": {
+    "type": "defend_duration",
+    "duration": 720.0,
+    "description": "Hold territory for 12 minutes"
+  }
+}
