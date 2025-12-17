@@ -33,7 +33,6 @@ void render_combat_dust(Renderer *renderer, ResourceManager *,
   float animation_time = renderer->get_animation_time();
   auto &visibility = Game::Systems::CameraVisibilityService::instance();
 
-  // Render dust for units in combat
   auto units = world->get_entities_with<Engine::Core::AttackComponent>();
 
   for (auto *unit : units) {
@@ -71,7 +70,6 @@ void render_combat_dust(Renderer *renderer, ResourceManager *,
                           animation_time);
   }
 
-  // Render flames for damaged buildings
   auto buildings = world->get_entities_with<Engine::Core::BuildingComponent>();
 
   for (auto *building : buildings) {
@@ -79,7 +77,8 @@ void render_combat_dust(Renderer *renderer, ResourceManager *,
       continue;
     }
 
-    auto *transform = building->get_component<Engine::Core::TransformComponent>();
+    auto *transform =
+        building->get_component<Engine::Core::TransformComponent>();
     auto *unit_comp = building->get_component<Engine::Core::UnitComponent>();
 
     if (transform == nullptr || unit_comp == nullptr) {
@@ -90,9 +89,9 @@ void render_combat_dust(Renderer *renderer, ResourceManager *,
       continue;
     }
 
-    float health_ratio = static_cast<float>(unit_comp->health) / 
+    float health_ratio = static_cast<float>(unit_comp->health) /
                          static_cast<float>(unit_comp->max_health);
-    
+
     if (health_ratio > kBuildingHealthThreshold) {
       continue;
     }
@@ -104,7 +103,7 @@ void render_combat_dust(Renderer *renderer, ResourceManager *,
     }
 
     float flame_intensity = kFlameIntensity * (1.0F - health_ratio);
-    
+
     QVector3D position(transform->position.x, kFlameYOffset,
                        transform->position.z);
     QVector3D color(kFlameColorR, kFlameColorG, kFlameColorB);

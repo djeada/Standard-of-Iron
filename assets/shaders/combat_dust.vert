@@ -10,7 +10,7 @@ uniform float u_time;
 uniform vec3 u_center;
 uniform float u_radius;
 uniform float u_intensity;
-uniform int u_effect_type; // 0 = Dust, 1 = Flame
+uniform int u_effect_type;
 
 out vec3 v_world_pos;
 out vec3 v_normal;
@@ -27,7 +27,7 @@ void main() {
   float normalized_dist = dist / max(u_radius, 0.001);
 
   if (u_effect_type == 0) {
-    // Dust effect - swirl and rise
+
     float swirl_angle = u_time * 1.5 + normalized_dist * 3.14159;
     float swirl_strength = 0.15 * (1.0 - normalized_dist);
     pos.x += sin(swirl_angle) * swirl_strength;
@@ -43,20 +43,17 @@ void main() {
     float time_pulse = 0.7 + 0.3 * sin(u_time * 1.5);
     v_alpha = edge_fade * time_pulse * u_intensity;
   } else {
-    // Flame effect - vertical movement and flicker
+
     float flame_wave = sin(u_time * 3.0 + pos.x * 5.0) * 0.08;
     pos.x += flame_wave;
     pos.z += cos(u_time * 3.5 + pos.z * 5.0) * 0.08;
 
-    // Flames rise upward
     float flame_rise = a_texcoord.y * 1.5;
     pos.y += flame_rise;
 
-    // Flicker effect
     float flicker = 0.9 + 0.1 * sin(u_time * 8.0 + normalized_dist * 10.0);
     pos.y *= flicker;
 
-    // Fade at edges and top
     float edge_fade = smoothstep(1.0, 0.5, normalized_dist);
     float height_fade = smoothstep(1.0, 0.3, a_texcoord.y);
     float flicker_alpha = 0.8 + 0.2 * sin(u_time * 5.0);

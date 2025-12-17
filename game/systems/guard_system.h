@@ -1,14 +1,13 @@
 #pragma once
 
-namespace Engine::Core {
-class World;
-}
+#include "../core/system.h"
+#include "../core/world.h"
 
 namespace Game::Systems {
 
-class GuardSystem {
+class GuardSystem : public Engine::Core::System {
 public:
-  static void update(Engine::Core::World *world, float delta_time);
+  void update(Engine::Core::World *world, float delta_time) override;
 };
 
 } // namespace Game::Systems

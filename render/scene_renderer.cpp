@@ -365,7 +365,7 @@ void Renderer::combat_dust(const QVector3D &position, const QVector3D &color,
 }
 
 void Renderer::building_flame(const QVector3D &position, const QVector3D &color,
-                               float radius, float intensity, float time) {
+                              float radius, float intensity, float time) {
   BuildingFlameCmd cmd;
   cmd.position = position;
   cmd.color = color;
