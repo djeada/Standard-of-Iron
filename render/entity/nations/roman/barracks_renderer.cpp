@@ -87,8 +87,7 @@ void drawFortressWalls(const DrawContext &p, ISubmitter &out, Mesh *unit,
                        Texture *white, const RomanPalette &c,
                        BuildingState state) {
   float const wall_height = 1.2F;
-  
-  // Reduce wall height for damaged/destroyed states
+
   float height_multiplier = 1.0F;
   if (state == BuildingState::Damaged) {
     height_multiplier = 0.7F;
@@ -96,20 +95,25 @@ void drawFortressWalls(const DrawContext &p, ISubmitter &out, Mesh *unit,
     height_multiplier = 0.4F;
   }
 
-  draw_box(out, unit, white, p.model,
-           QVector3D(0.0F, wall_height * 0.5F * height_multiplier + 0.3F, -1.3F),
-           QVector3D(1.5F, wall_height * 0.5F * height_multiplier, 0.12F), c.stone_light);
+  draw_box(
+      out, unit, white, p.model,
+      QVector3D(0.0F, wall_height * 0.5F * height_multiplier + 0.3F, -1.3F),
+      QVector3D(1.5F, wall_height * 0.5F * height_multiplier, 0.12F),
+      c.stone_light);
   draw_box(out, unit, white, p.model,
            QVector3D(0.0F, wall_height * 0.5F * height_multiplier + 0.3F, 1.3F),
-           QVector3D(1.5F, wall_height * 0.5F * height_multiplier, 0.12F), c.stone_light);
-  draw_box(out, unit, white, p.model,
-           QVector3D(-1.6F, wall_height * 0.5F * height_multiplier + 0.3F, 0.0F),
-           QVector3D(0.12F, wall_height * 0.5F * height_multiplier, 1.2F), c.stone_light);
+           QVector3D(1.5F, wall_height * 0.5F * height_multiplier, 0.12F),
+           c.stone_light);
+  draw_box(
+      out, unit, white, p.model,
+      QVector3D(-1.6F, wall_height * 0.5F * height_multiplier + 0.3F, 0.0F),
+      QVector3D(0.12F, wall_height * 0.5F * height_multiplier, 1.2F),
+      c.stone_light);
   draw_box(out, unit, white, p.model,
            QVector3D(1.6F, wall_height * 0.5F * height_multiplier + 0.3F, 0.0F),
-           QVector3D(0.12F, wall_height * 0.5F * height_multiplier, 1.2F), c.stone_light);
+           QVector3D(0.12F, wall_height * 0.5F * height_multiplier, 1.2F),
+           c.stone_light);
 
-  // Skip decorative bricks if destroyed
   if (state != BuildingState::Destroyed) {
     for (int i = 0; i < 6; ++i) {
       float const x = -1.2F + float(i) * 0.5F;
@@ -127,7 +131,6 @@ void drawCornerTowers(const DrawContext &p, ISubmitter &out, Mesh *unit,
       QVector3D(-1.5F, 0.0F, -1.2F), QVector3D(1.5F, 0.0F, -1.2F),
       QVector3D(-1.5F, 0.0F, 1.2F), QVector3D(1.5F, 0.0F, 1.2F)};
 
-  // Reduce tower height for damaged/destroyed states
   float height_multiplier = 1.0F;
   if (state == BuildingState::Damaged) {
     height_multiplier = 0.7F;
@@ -137,22 +140,24 @@ void drawCornerTowers(const DrawContext &p, ISubmitter &out, Mesh *unit,
 
   for (int i = 0; i < 4; ++i) {
 
-    draw_box(out, unit, white, p.model,
-             QVector3D(corners[i].x(), 0.65F * height_multiplier, corners[i].z()),
-             QVector3D(0.25F, 0.65F * height_multiplier, 0.25F), c.stone_dark);
+    draw_box(
+        out, unit, white, p.model,
+        QVector3D(corners[i].x(), 0.65F * height_multiplier, corners[i].z()),
+        QVector3D(0.25F, 0.65F * height_multiplier, 0.25F), c.stone_dark);
 
-    // Skip top decorations if destroyed
     if (state != BuildingState::Destroyed) {
-      draw_box(out, unit, white, p.model,
-               QVector3D(corners[i].x(), 1.45F * height_multiplier, corners[i].z()),
-               QVector3D(0.28F, 0.15F, 0.28F), c.brick_dark);
+      draw_box(
+          out, unit, white, p.model,
+          QVector3D(corners[i].x(), 1.45F * height_multiplier, corners[i].z()),
+          QVector3D(0.28F, 0.15F, 0.28F), c.brick_dark);
 
       for (int j = 0; j < 4; ++j) {
         float angle = float(j) * 1.57F;
         float ox = sinf(angle) * 0.18F;
         float oz = cosf(angle) * 0.18F;
         draw_box(out, unit, white, p.model,
-                 QVector3D(corners[i].x() + ox, 1.68F * height_multiplier, corners[i].z() + oz),
+                 QVector3D(corners[i].x() + ox, 1.68F * height_multiplier,
+                           corners[i].z() + oz),
                  QVector3D(0.06F, 0.08F, 0.06F), c.stone_light);
       }
     }
@@ -173,9 +178,8 @@ void drawCourtyard(const DrawContext &p, ISubmitter &out, Mesh *unit,
 }
 
 void drawRomanRoof(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                   Texture *white, const RomanPalette &c,
-                   BuildingState state) {
-  // Skip roof if destroyed
+                   Texture *white, const RomanPalette &c, BuildingState state) {
+
   if (state == BuildingState::Destroyed) {
     return;
   }
@@ -295,61 +299,57 @@ void draw_health_bar(const DrawContext &p, ISubmitter &out, Mesh *unit,
     return;
   }
 
-  // Health bar dimensions
   float const bar_width = 1.0F;
   float const bar_height = 0.06F;
   float const bar_y = 2.35F;
   float const border_thickness = 0.008F;
-  
-  // Background with border
+
   QVector3D const border_color(0.15F, 0.15F, 0.15F);
   draw_box(out, unit, white, p.model, QVector3D(0.0F, bar_y, 0.0F),
-           QVector3D(bar_width * 0.5F + border_thickness, bar_height * 0.5F + border_thickness, 0.08F), 
+           QVector3D(bar_width * 0.5F + border_thickness,
+                     bar_height * 0.5F + border_thickness, 0.08F),
            border_color);
-  
-  // Inner background (dark)
+
   QVector3D const bg(0.04F, 0.04F, 0.04F);
   draw_box(out, unit, white, p.model, QVector3D(0.0F, bar_y + 0.002F, 0.0F),
            QVector3D(bar_width * 0.5F, bar_height * 0.5F, 0.075F), bg);
 
-  // Color based on health ratio with smoother gradients
   QVector3D fg_color;
   if (ratio >= 0.70F) {
-    // Normal state: vibrant green
+
     fg_color = QVector3D(0.15F, 0.85F, 0.15F);
   } else if (ratio >= 0.30F) {
-    // Damaged state: transition from green to orange/yellow
+
     float t = (ratio - 0.30F) / 0.40F;
-    QVector3D damaged_color(0.95F, 0.65F, 0.10F);  // Orange
-    QVector3D normal_color(0.15F, 0.85F, 0.15F);   // Green
+    QVector3D damaged_color(0.95F, 0.65F, 0.10F);
+    QVector3D normal_color(0.15F, 0.85F, 0.15F);
     fg_color = normal_color * t + damaged_color * (1.0F - t);
   } else {
-    // Destroyed state: transition from orange to red
+
     float t = ratio / 0.30F;
-    QVector3D critical_color(0.95F, 0.10F, 0.10F);  // Red
-    QVector3D damaged_color(0.95F, 0.65F, 0.10F);   // Orange
+    QVector3D critical_color(0.95F, 0.10F, 0.10F);
+    QVector3D damaged_color(0.95F, 0.65F, 0.10F);
     fg_color = damaged_color * t + critical_color * (1.0F - t);
   }
-  
-  // Main health bar fill with slight offset for 3D effect
-  draw_box(out, unit, white, p.model,
-           QVector3D(-(bar_width * (1.0F - ratio)) * 0.5F, bar_y + 0.004F, 0.0F),
-           QVector3D(bar_width * ratio * 0.5F, bar_height * 0.45F, 0.07F), fg_color);
-  
-  // Add subtle highlight on top for glossy effect
+
+  draw_box(
+      out, unit, white, p.model,
+      QVector3D(-(bar_width * (1.0F - ratio)) * 0.5F, bar_y + 0.004F, 0.0F),
+      QVector3D(bar_width * ratio * 0.5F, bar_height * 0.45F, 0.07F), fg_color);
+
   QVector3D const highlight = fg_color * 1.3F;
   draw_box(out, unit, white, p.model,
-           QVector3D(-(bar_width * (1.0F - ratio)) * 0.5F, bar_y + bar_height * 0.35F, 0.0F),
-           QVector3D(bar_width * ratio * 0.5F, bar_height * 0.15F, 0.068F), 
+           QVector3D(-(bar_width * (1.0F - ratio)) * 0.5F,
+                     bar_y + bar_height * 0.35F, 0.0F),
+           QVector3D(bar_width * ratio * 0.5F, bar_height * 0.15F, 0.068F),
            clampVec01(highlight));
-  
-  // Draw segment markers for 70% and 30% thresholds
+
   QVector3D const segment_color(0.2F, 0.2F, 0.2F);
-  // 70% marker
+
   draw_box(out, unit, white, p.model,
            QVector3D(bar_width * 0.5F * (0.70F - 0.5F), bar_y, 0.0F),
            QVector3D(0.01F, bar_height * 0.55F, 0.08F), segment_color);
-  // 30% marker
+
   draw_box(out, unit, white, p.model,
            QVector3D(bar_width * 0.5F * (0.30F - 0.5F), bar_y, 0.0F),
            QVector3D(0.01F, bar_height * 0.55F, 0.08F), segment_color);
@@ -379,7 +379,6 @@ void draw_barracks(const DrawContext &p, ISubmitter &out) {
     return;
   }
 
-  // Determine building state based on health
   BuildingState state = BuildingState::Normal;
   if (u != nullptr) {
     float const health_ratio =
