@@ -50,6 +50,7 @@ public:
     for (auto unit_id : units) {
       auto *entity = world.get_entity(unit_id);
       if (entity == nullptr) {
+        all_in_formation_mode = false;
         continue;
       }
 
@@ -57,13 +58,14 @@ public:
           entity->get_component<Engine::Core::FormationModeComponent>();
       if ((formation_mode == nullptr) || !formation_mode->active) {
         all_in_formation_mode = false;
-        break;
+        continue;
       }
 
       if (!formation_type_determined) {
         auto *unit_comp = entity->get_component<Engine::Core::UnitComponent>();
         if (unit_comp != nullptr) {
-          auto *nation = NationRegistry::instance().getNation(unit_comp->nation_id);
+          auto *nation =
+              NationRegistry::instance().getNation(unit_comp->nation_id);
           if (nation != nullptr) {
             formation_type = nation->formation_type;
             formation_type_determined = true;
@@ -72,7 +74,7 @@ public:
       }
     }
 
-    if (!all_in_formation_mode) {
+    if (!all_in_formation_mode || !formation_type_determined) {
       return spreadFormation(int(units.size()), center, spacing);
     }
 
