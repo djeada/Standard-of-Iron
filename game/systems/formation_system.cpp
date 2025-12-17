@@ -123,6 +123,7 @@ auto RomanFormation::calculateFormationPositions(
       pos.position =
           QVector3D(center.x() + x_offset, center.y(), center.z() + z_offset);
       pos.facing_angle = forward_facing;
+      pos.entity_id = infantry[i].entity_id;
       positions.push_back(pos);
     }
 
@@ -148,6 +149,7 @@ auto RomanFormation::calculateFormationPositions(
       pos.position =
           QVector3D(center.x() + x_offset, center.y(), center.z() + z_offset);
       pos.facing_angle = forward_facing;
+      pos.entity_id = archers[i].entity_id;
       positions.push_back(pos);
     }
 
@@ -175,6 +177,7 @@ auto RomanFormation::calculateFormationPositions(
       pos.position =
           QVector3D(center.x() + x_offset, center.y(), cavalry_z_offset);
       pos.facing_angle = forward_facing;
+      pos.entity_id = cavalry[i].entity_id;
       positions.push_back(pos);
     }
   }
@@ -192,6 +195,7 @@ auto RomanFormation::calculateFormationPositions(
       pos.position =
           QVector3D(center.x() + x_offset, center.y(), center.z() + z_offset);
       pos.facing_angle = forward_facing;
+      pos.entity_id = siege[i].entity_id;
       positions.push_back(pos);
     }
 
@@ -211,6 +215,7 @@ auto RomanFormation::calculateFormationPositions(
       pos.position =
           QVector3D(center.x() + x_offset, center.y(), center.z() + z_offset);
       pos.facing_angle = forward_facing;
+      pos.entity_id = support[i].entity_id;
       positions.push_back(pos);
     }
   }
@@ -226,10 +231,11 @@ auto BarbarianFormation::calculateFormationPositions(
   auto simple_pos =
       calculatePositions(static_cast<int>(units.size()), center, base_spacing);
 
-  for (const auto &pos : simple_pos) {
+  for (size_t i = 0; i < simple_pos.size() && i < units.size(); ++i) {
     FormationPosition fpos;
-    fpos.position = pos;
+    fpos.position = simple_pos[i];
     fpos.facing_angle = 0.0F;
+    fpos.entity_id = units[i].entity_id;
     positions.push_back(fpos);
   }
 
@@ -317,6 +323,7 @@ auto CarthageFormation::calculateFormationPositions(
       pos.position =
           QVector3D(center.x() + x_offset, center.y(), center.z() + row_offset);
       pos.facing_angle = forward_facing;
+      pos.entity_id = siege[i].entity_id;
       positions.push_back(pos);
     }
 
@@ -344,6 +351,7 @@ auto CarthageFormation::calculateFormationPositions(
       pos.position =
           QVector3D(center.x() + x_offset, center.y(), center.z() + z_offset);
       pos.facing_angle = forward_facing;
+      pos.entity_id = center_units[i].entity_id;
       positions.push_back(pos);
     }
 
@@ -371,6 +379,7 @@ auto CarthageFormation::calculateFormationPositions(
       pos.position = QVector3D(center.x() + x_offset, center.y(),
                                cavalry_z_offset + z_forward);
       pos.facing_angle = forward_facing;
+      pos.entity_id = cavalry[static_cast<size_t>(i)].entity_id;
       positions.push_back(pos);
     }
 
@@ -382,6 +391,8 @@ auto CarthageFormation::calculateFormationPositions(
       pos.position = QVector3D(center.x() + x_offset, center.y(),
                                cavalry_z_offset + z_forward);
       pos.facing_angle = forward_facing;
+      pos.entity_id =
+          cavalry[static_cast<size_t>(right_flank_count + i)].entity_id;
       positions.push_back(pos);
     }
   }
@@ -399,6 +410,7 @@ auto CarthageFormation::calculateFormationPositions(
       pos.position =
           QVector3D(center.x() + x_offset, center.y(), center.z() + z_offset);
       pos.facing_angle = forward_facing;
+      pos.entity_id = support[i].entity_id;
       positions.push_back(pos);
     }
   }

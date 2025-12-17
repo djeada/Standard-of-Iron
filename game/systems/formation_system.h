@@ -25,6 +25,7 @@ struct UnitFormationInfo {
 struct FormationPosition {
   QVector3D position;
   float facing_angle;
+  Engine::Core::EntityID entity_id{0};
 };
 
 } // namespace Game::Systems
