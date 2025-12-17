@@ -62,6 +62,12 @@ public:
     // Not used in helmet rendering
   }
 
+  void stone_impact(const QVector3D & /*position*/, const QVector3D & /*color*/,
+                    float /*radius*/, float /*intensity*/,
+                    float /*time*/) override {
+    // Not used in helmet rendering
+  }
+
   void mode_indicator(const QMatrix4x4 & /*model*/, int /*mode_type*/,
                       const QVector3D & /*color*/, float /*alpha*/) override {
     // Not used in helmet rendering
