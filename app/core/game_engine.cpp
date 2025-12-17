@@ -88,6 +88,7 @@
 #include "game/systems/formation_planner.h"
 #include "game/systems/game_state_serializer.h"
 #include "game/systems/global_stats_registry.h"
+#include "game/systems/guard_system.h"
 #include "game/systems/healing_beam_system.h"
 #include "game/systems/healing_system.h"
 #include "game/systems/movement_system.h"
