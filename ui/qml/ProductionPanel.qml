@@ -11,6 +11,7 @@ Rectangle {
 
     signal recruitUnit(string unitType)
     signal rallyModeToggled()
+    signal buildTower()
 
     function defaultProductionState() {
         return {
@@ -1339,6 +1340,127 @@ Rectangle {
                         color: "#7f8c8d"
                         font.pointSize: 8
                         font.italic: true
+                    }
+
+                }
+
+            }
+
+            Rectangle {
+                property bool has_barracks: (productionPanel.selectionTick, (productionPanel.gameInstance && productionPanel.gameInstance.has_selected_type && productionPanel.gameInstance.has_selected_type("barracks")))
+
+                width: parent.width
+                height: 1
+                color: "#34495e"
+                visible: has_barracks
+            }
+
+            Rectangle {
+                property bool has_barracks: (productionPanel.selectionTick, (productionPanel.gameInstance && productionPanel.gameInstance.has_selected_type && productionPanel.gameInstance.has_selected_type("barracks")))
+
+                width: parent.width
+                height: buildingsContent.height + 16
+                color: "#1a252f"
+                radius: 6
+                border.color: "#34495e"
+                border.width: 1
+                visible: has_barracks
+
+                Column {
+                    id: buildingsContent
+
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.top: parent.top
+                    anchors.margins: 8
+                    spacing: 8
+
+                    Text {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        text: qsTr("BUILD STRUCTURES")
+                        color: "#3498db"
+                        font.pointSize: 8
+                        font.bold: true
+                    }
+
+                    Grid {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        columns: 3
+                        columnSpacing: 8
+                        rowSpacing: 8
+
+                        Rectangle {
+                            property bool isEnabled: true
+                            property bool isHovered: defenseTowerMouseArea.containsMouse
+
+                            width: 110
+                            height: 80
+                            radius: 6
+                            color: isEnabled ? (isHovered ? "#1f8dd9" : "#2c3e50") : "#1a1a1a"
+                            border.color: isEnabled ? (isHovered ? "#00d4ff" : "#4a6572") : "#2a2a2a"
+                            border.width: isHovered && isEnabled ? 4 : 2
+                            opacity: isEnabled ? 1 : 0.5
+                            scale: isHovered && isEnabled ? 1.1 : 1
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: "🏰"
+                                color: parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
+                                font.pointSize: 36
+                                opacity: parent.isEnabled ? 0.9 : 0.4
+                            }
+
+                            Text {
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                anchors.bottom: parent.bottom
+                                anchors.bottomMargin: 6
+                                text: qsTr("Defense Tower")
+                                color: parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
+                                font.pointSize: 8
+                                font.bold: true
+                            }
+
+                            MouseArea {
+                                id: defenseTowerMouseArea
+
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                onClicked: {
+                                    if (parent.isEnabled)
+                                        productionPanel.buildTower();
+                                }
+                                cursorShape: parent.isEnabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
+                                ToolTip.visible: containsMouse
+                                ToolTip.text: qsTr("Build Defense Tower\nClick map to place.\nShoots arrows at nearby enemies.")
+                                ToolTip.delay: 300
+                            }
+
+                            Rectangle {
+                                anchors.fill: parent
+                                color: "#ffffff"
+                                opacity: defenseTowerMouseArea.pressed ? 0.2 : 0
+                                radius: parent.radius
+                            }
+
+                            Behavior on color {
+                                ColorAnimation {
+                                    duration: 150
+                                }
+                            }
+
+                            Behavior on border.color {
+                                ColorAnimation {
+                                    duration: 150
+                                }
+                            }
+
+                            Behavior on scale {
+                                NumberAnimation {
+                                    duration: 100
+                                }
+                            }
+
+                        }
+
                     }
 
                 }
