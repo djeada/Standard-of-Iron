@@ -29,20 +29,18 @@
         "type": "archer",
         "count": 12,
         "position": {"x": 60, "z": 76}
-      }
-    ],
-    "hidden_units": [
+      },
       {
         "type": "swordsman",
         "count": 15,
         "position": {"x": 90, "z": 50},
-        "reveal_trigger": "enemy_crosses_river"
+        "hidden": true
       },
       {
         "type": "horse_swordsman",
         "count": 8,
         "position": {"x": 30, "z": 50},
-        "reveal_trigger": "enemy_crosses_river"
+        "hidden": true
       }
     ],
     "starting_buildings": [],
@@ -146,10 +144,6 @@
         {
           "type": "show_message",
           "text": "Now! Strike from both flanks!"
-        },
-        {
-          "type": "reveal_units",
-          "unit_groups": ["hidden_flanking_forces"]
         }
       ]
     }

@@ -146,9 +146,6 @@
         {
           "type": "show_message",
           "text": "The trap is sprung! Attack from all sides!"
-        },
-        {
-          "type": "reveal_all_units"
         }
       ]
     }
