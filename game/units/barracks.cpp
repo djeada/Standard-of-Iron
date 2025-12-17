@@ -77,7 +77,7 @@ void Barracks::init(const SpawnParams &params) {
           Game::Systems::TroopProfileService::instance().get_profile(
               nation_id, prod->product_type);
       prod->build_time = profile.production.build_time;
-      prod->villager_cost = profile.individuals_per_unit;
+      prod->villager_cost = profile.production.cost;
     }
   }
 
