@@ -1640,6 +1640,18 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       m_lastBoundShader = nullptr;
       break;
     }
+    case BuildingFlameCmdIndex: {
+      const auto &flame = std::get<BuildingFlameCmdIndex>(cmd);
+      if (m_combatDustPipeline == nullptr ||
+          !m_combatDustPipeline->is_initialized()) {
+        break;
+      }
+      m_combatDustPipeline->render_single_flame(flame.position, flame.color,
+                                                flame.radius, flame.intensity,
+                                                flame.time, view_proj);
+      m_lastBoundShader = nullptr;
+      break;
+    }
     case ModeIndicatorCmdIndex: {
       const auto &mc = std::get<ModeIndicatorCmdIndex>(cmd);
 
